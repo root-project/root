@@ -222,14 +222,11 @@ void REveGeoShape::SetShape(TGeoShape *s)
 
 void REveGeoShape::ComputeBBox()
 {
+   BBoxInit();
    TGeoBBox *bb = dynamic_cast<TGeoBBox *>(fShape);
    if (bb) {
-      BBoxInit();
       const Double_t *o = bb->GetOrigin();
-      BBoxCheckPoint(o[0] - bb->GetDX(), o[0] - bb->GetDY(), o[0] - bb->GetDZ());
-      BBoxCheckPoint(o[0] + bb->GetDX(), o[0] + bb->GetDY(), o[0] + bb->GetDZ());
-   } else {
-      BBoxZero();
+      BBoxCheckBox(REveVector(o[0], o[1], o[2]), REveVector(bb->GetDX(), bb->GetDY(), bb->GetDZ()));
    }
 }
 
@@ -370,8 +367,9 @@ TClass *REveGeoShape::ProjectedClass(const REveProjection* p) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a TBuffer3D suitable for presentation of the shape.
-/// Transformation matrix is also applied.
+/// Create a TBuffer3D suitable for presentation of the shape, in the shape's
+/// own frame. The projected classes apply the shape's matrix and those of its
+/// ancestors, through REveProjectionManager::GetModelTrans().
 
 std::unique_ptr<TBuffer3D> REveGeoShape::MakeBuffer3D()
 {
@@ -387,14 +385,6 @@ std::unique_ptr<TBuffer3D> REveGeoShape::MakeBuffer3D()
    REveGeoManagerHolder gmgr(fgGeoManager, fNSegments);
 
    buff.reset(fShape->MakeBuffer3D());
-   REveTrans &mx    = RefMainTrans();
-   if (mx.GetUseTrans()) {
-      Int_t n = buff->NbPnts();
-      Double_t *pnts = buff->fPnts;
-      for(Int_t k = 0; k < n; ++k) {
-         mx.MultiplyIP(&pnts[3*k]);
-      }
-   }
    return buff;
 }
 
@@ -463,10 +453,12 @@ void REveGeoShapeProjected::UpdateProjection()
    {
       fBuff->SetSectionsValid(TBuffer3D::kCore | TBuffer3D::kRawSizes | TBuffer3D::kRaw);
 
+      REveTrans mt;
+      const REveTrans *trans = fManager->GetModelTrans(gre, mt);
       Double_t *p = fBuff->fPnts;
       for (UInt_t i = 0; i < fBuff->NbPnts(); ++i, p+=3)
       {
-         prj->ProjectPointdv(p, 0);
+         prj->ProjectPointdv(trans, p, p, 0);
       }
    }
 
@@ -474,22 +466,17 @@ void REveGeoShapeProjected::UpdateProjection()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Override of virtual method from TAttBBox.
+/// Fill the bounding box (virtual from REveElement).
 
 void REveGeoShapeProjected::ComputeBBox()
 {
+   BBoxInit();
    if (fBuff && fBuff->NbPnts() > 0)
    {
-      BBoxInit();
-
       Double_t *p = fBuff->fPnts;
       for (UInt_t i = 0; i < fBuff->NbPnts(); ++i, p+=3)
       {
          BBoxCheckPoint(p[0], p[1], p[2]);
       }
-   }
-   else
-   {
-      BBoxZero();
    }
 }

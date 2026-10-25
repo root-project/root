@@ -394,7 +394,7 @@ private:
       boxset->SetAlwaysSecSelect(true);
       boxset->SetDetIdsAsSecondaryIndices(true);
       boxset->SetSelectionMaster(((REveDataCollection *)collection)->GetItemList());
-      boxset->Reset(REveBoxSet::kBT_FreeBox, true, collection->GetNItems());
+      boxset->Reset(REveBoxSet::kBT_Vertices, true, collection->GetNItems());
       TRandom r(0);
 
 #define RND_BOX(x) (Float_t) r.Uniform(-(x), (x))
@@ -413,7 +413,7 @@ private:
                               x - a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d), x - a + RND_BOX(d),
                               y + a + RND_BOX(d), z + a + RND_BOX(d), x + a + RND_BOX(d), y + a + RND_BOX(d),
                               z + a + RND_BOX(d), x + a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d)};
-         boxset->AddBox(verts);
+         boxset->AddVertices(verts);
 
          boxset->DigitValue(item->GetVisible() ? 1 : 0);
          if (item->GetVisible())

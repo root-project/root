@@ -1,0 +1,24 @@
+add_library(bvh INTERFACE)
+find_package(Threads)
+if (Threads_FOUND)
+    # Link with the threading library of the system, which may
+    # be required by standard header <thread> on some systems
+    target_link_libraries(bvh INTERFACE Threads::Threads)
+endif()
+
+target_include_directories(bvh INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:include>)
+
+set_target_properties(bvh PROPERTIES CXX_STANDARD 20)
+
+if (CMAKE_CXX_STANDARD LESS 20)
+  # backup implementation of span
+  target_include_directories(bvh INTERFACE ${CMAKE_SOURCE_DIR}/core/foundation/inc) # for ROOT/span.hxx
+endif()
+
+add_library(bvh::bvh ALIAS bvh)
+
+if (BVH_BUILD_C_API)
+    add_subdirectory(c_api)
+endif()

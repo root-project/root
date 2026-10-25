@@ -302,25 +302,8 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 {
    SetDefaults();
 
-   if (img.IsValid()) {
-      fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage   = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
-      fGrayImage     = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
-
-      if (img.fImage->alt.vector) {
-         Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
-         fImage->alt.vector = (double*)malloc(size);
-         memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
-      }
-
-      fZoomUpdate = kNoZoom;
-      fZoomOffX   = img.fZoomOffX;
-      fZoomOffY   = img.fZoomOffY;
-      fZoomWidth  = img.fZoomWidth;
-      fZoomHeight = img.fZoomHeight;
-      fEditable   = img.fEditable;
-      fIsGray     = img.fIsGray;
-   }
+   if (img.IsValid())
+      CloneImageData(img);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,24 +317,7 @@ TASImage &TASImage::operator=(const TASImage &img)
       DestroyImage();
       DestroyScaledImage();
 
-      fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
-      fGrayImage = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
-
-      if (img.fImage->alt.vector) {
-         Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
-         fImage->alt.vector = (double*)malloc(size);
-         memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
-      }
-
-      fZoomUpdate = kNoZoom;
-      fZoomOffX   = img.fZoomOffX;
-      fZoomOffY   = img.fZoomOffY;
-      fZoomWidth  = img.fZoomWidth;
-      fZoomHeight = img.fZoomHeight;
-      fEditable   = img.fEditable;
-      fIsGray     = img.fIsGray;
-      fPaintMode  = 1;
+      CloneImageData(img);
    }
 
    return *this;
@@ -365,6 +331,42 @@ TASImage::~TASImage()
    DestroyImage();
    DestroyScaledImage();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clone image data
+/// Used for clones and assign operator
+
+void TASImage::CloneImageData(const TASImage &img)
+{
+   fImage = img.fImage ? clone_asimage(img.fImage, SCL_DO_ALL) : nullptr;
+   fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
+   fGrayImage = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
+
+   if (img.fImage && img.fImage->alt.vector) {
+      Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
+      fImage->alt.vector = (double*)malloc(size);
+      memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
+   }
+
+   if (img.fImage && img.fImage->alt.argb32) {
+      Int_t size = img.fImage->width * img.fImage->height * sizeof(ARGB32);
+      fImage->alt.argb32 = (ARGB32*)safemalloc(size);
+      memcpy(fImage->alt.argb32, img.fImage->alt.argb32, size);
+   }
+
+   fPaintMode  = img.fPaintMode;
+   fZoomOffX   = img.fZoomOffX;
+   fZoomOffY   = img.fZoomOffY;
+   fZoomWidth  = img.fZoomWidth;
+   fZoomHeight = img.fZoomHeight;
+   fZoomUpdate = img.fZoomUpdate;
+   fEditable   = img.fEditable;
+   fIsGray     = img.fIsGray;
+   fMaxValue   = img.fMaxValue;
+   fMinValue   = img.fMinValue;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set icons paths.
@@ -2159,75 +2161,81 @@ void TASImage::StartPaletteEditor()
    TAttImage::StartPaletteEditor();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns image X11 pixmap.
+/// Workrs only on the platforms with support of X11
+/// The pixmap must deleted by user.
+
+Pixmap_t TASImage::GetX11Pixmap(Window_t root_window)
+{
+   if (!InitVisual()) {
+      Warning("GetX11Pixmap", "Visual not initiated");
+      return 0;
+   }
+
+   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+
+   return (Pixmap_t)asimage2pixmap(fgVisual, root_window, img, nullptr, kTRUE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
 /// Returns image pixmap.
 /// The pixmap must deleted by user.
 
 Pixmap_t TASImage::GetPixmap()
 {
-   if (!InitVisual()) {
-      Warning("GetPixmap", "Visual not initiated");
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11)
+      return GetX11Pixmap(gVirtualX->GetDefaultRootWindow());
+
+   auto argb = GetArgbArray();
+   if (!argb) {
+      Error("GetPixmap", "ARGB array is not exists");
       return 0;
    }
 
-   Pixmap_t ret;
-
-   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
-
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
-
-   if (x11) {   // use builtin version
-      ret = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
-                                       img, nullptr, kTRUE);
-   } else {
-      if (!fImage->alt.argb32) {
-         BeginPaint();
-      }
-      ret = gVirtualX->CreatePixmapFromData((unsigned char*)fImage->alt.argb32,
-                                             fImage->width, fImage->height);
-   }
-
-   return ret;
+   return gVirtualX->CreatePixmapFromData((unsigned char*) argb, GetScaledWidth(), GetScaledHeight());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns image mask pixmap (alpha channel).
-/// The pixmap must deleted by user.
+/// Returns image mask bits - only alpha channel of the image.
+/// Also provides width and height which is aligned to 8 bits
+/// Returns kTRUE if operation was successful
 
-Pixmap_t TASImage::GetMask()
+Bool_t TASImage::GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits)
 {
-   Pixmap_t pxmap = 0;
-
    if (!InitVisual()) {
-      Warning("GetMask", "Visual not initiated");
-      return pxmap;
+      Warning("GetMaskBits", "Visual not initiated");
+      return kFALSE;
    }
 
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
    if (!img) {
-      Warning("GetMask", "No image");
-      return pxmap;
+      Warning("GetMaskBits", "No image");
+      return kFALSE;
    }
 
-   UInt_t hh = img->height;
-   UInt_t ow = img->width%8;
-   UInt_t ww = img->width - ow + (ow ? 8 : 0);
+   height = img->height;
+   UInt_t ow = img->width % 8;
+   width = img->width - ow + (ow ? 8 : 0);
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
-                                                0, 0, ww, 0, nullptr);
+                                                0, 0, width, 0, nullptr);
    if (!imdec)
-      return pxmap;
+      return kFALSE;
 
-   std::vector<char> bits(ww * hh / 8); //an array of bits
+   bits.resize(height * width / 8); //an array of bits
 
    UInt_t bit = 0, i = 0;
-   for (UInt_t y = 0; y < hh; y++) {
+   for (UInt_t y = 0; y < height; y++) {
       imdec->decode_image_scanline(imdec);
       CARD32 *a = imdec->buffer.alpha;
 
-      for (UInt_t x = 0; x < ww; x++) {
+      for (UInt_t x = 0; x < width; x++) {
          if (a[x]) {
             SETBIT(bits[i], bit);
          } else {
@@ -2241,8 +2249,25 @@ Pixmap_t TASImage::GetMask()
    }
 
    stop_image_decoding(&imdec);
-   pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), ww, hh);
-   return pxmap;
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED! Method left for backward compatibility and will be removed in ROOT7!
+/// Returns image mask pixmap (alpha channel).
+/// The pixmap must deleted by user.
+
+Pixmap_t TASImage::GetMask()
+{
+   Pixmap_t pixmap = 0;
+
+   UInt_t ww = 0, hh = 0;
+   std::vector<char> bits;
+   if (GetMaskBits(ww, hh, bits))
+      pixmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), ww, hh);
+
+   return pixmap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2669,37 +2694,11 @@ void TASImage::Blur(Double_t hr, Double_t vr)
 
 TObject *TASImage::Clone(const char *newname) const
 {
-   if (!InitVisual() || !fImage) {
-      Warning("Clone", "Image not initiated");
-      return nullptr;
-   }
-
-   TASImage *im = static_cast<TASImage *>(TImage::Create());
-
-   if (!im) {
-      Warning("Clone", "Failed to create image");
-      return nullptr;
-   }
-
-   im->SetName(newname);
-
-   im->fImage = clone_asimage(fImage, SCL_DO_ALL);
-   im->fMaxValue = fMaxValue;
-   im->fMinValue = fMinValue;
-   im->fZoomOffX = fZoomOffX;
-   im->fZoomOffY = fZoomOffY;
-   im->fZoomWidth = fZoomWidth;
-   im->fZoomHeight = fZoomHeight;
-   im->fZoomUpdate = fZoomUpdate;
-   im->fScaledImage = fScaledImage ? static_cast<TASImage *>(fScaledImage->Clone()) : nullptr;
-
-   if (fImage->alt.argb32) {
-      UInt_t sz = fImage->width * fImage->height;
-      im->fImage->alt.argb32 = (ARGB32*)safemalloc(sz*sizeof(ARGB32));
-      memcpy(im->fImage->alt.argb32, fImage->alt.argb32, sz * sizeof(ARGB32));
-   }
-
-   return im;
+   auto newimg = new TASImage();
+   if (newname)
+      newimg->SetName(newname);
+   newimg->CloneImageData(*this);
+   return newimg;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3382,7 +3381,9 @@ void TASImage::Append(const TImage *im, const char *option, const char *color )
    }
 
    if (!fImage) {
-      fImage = ((TASImage*)im)->fImage;
+      // if image not exists - just clone data from source image
+      if (auto asimg = dynamic_cast<const TASImage *>(im))
+         CloneImageData(*asimg);
       return;
    }
 

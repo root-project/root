@@ -337,7 +337,7 @@ TEST_F(RNTupleProcessorTest, RequestExistingField)
          err.what(),
          testing::HasSubstr(
             "attempted to request a field with user-provided value pointer to field \"x\", which already exists in the "
-            "entry. To change the underlying value pointer, use RNTupleProcessorOptionalPtr::Bind instead."));
+            "entry. To change the underlying value pointer, use RNTupleProcessorValuePtr::Bind instead."));
    }
 }
 
@@ -387,7 +387,7 @@ TEST_F(RNTupleProcessorTest, Subfields)
 TEST_F(RNTupleProcessorTest, AddAllFields)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
-   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto entry = ROOT::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
    auto fieldIdxs = entry->GetFieldIndices();
 
    EXPECT_EQ(fieldIdxs.size(), 4);
@@ -396,7 +396,7 @@ TEST_F(RNTupleProcessorTest, AddAllFields)
 TEST_F(RNTupleProcessorTest, AddAllFieldsAndSubfields)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
-   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto entry = ROOT::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
    auto fieldIdxs = entry->GetFieldIndices();
 
    EXPECT_EQ(fieldIdxs.size(), 13);
@@ -918,7 +918,7 @@ TEST_F(RNTupleProcessorTest, AddAllFieldsComposed)
 
    auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {});
 
-   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto entry = ROOT::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
    auto fieldIdxs = entry->GetFieldIndices();
 
    // 11 fields instead of 10, because the join field is also included.
@@ -939,7 +939,7 @@ TEST_F(RNTupleProcessorTest, AddAllFieldsAndSubfieldsComposed)
 
    auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {});
 
-   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto entry = ROOT::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
    auto fieldIdxs = entry->GetFieldIndices();
 
    // 36 fields instead of 25, because the join field is also included.
@@ -1117,11 +1117,11 @@ protected:
 
 TEST_F(GH16805ProcessorTest, JoinReading)
 {
-   std::vector<RNTupleOpenSpec> stepOneSpecs{{"stepone", fStepOneFile}};
+   std::vector<RNTupleInputSpec> stepOneSpecs{{"stepone", fStepOneFile}};
 
-   std::vector<RNTupleOpenSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
+   std::vector<RNTupleInputSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
 
-   std::vector<RNTupleOpenSpec> joinSpecs{
+   std::vector<RNTupleInputSpec> joinSpecs{
       {"topLevelJoin", fJoinFiles[0]}, {"topLevelJoin", fJoinFiles[1]}, {"topLevelJoin", fJoinFiles[2]}};
 
    auto stepOneProc = RNTupleProcessor::CreateChain(stepOneSpecs);
@@ -1238,7 +1238,7 @@ protected:
    CreateStepProcessor(std::string_view ntupleName, std::string_view fileName, bool useChain)
    {
       if (useChain) {
-         std::vector<RNTupleOpenSpec> specs{{std::string(ntupleName), std::string(fileName)}};
+         std::vector<RNTupleInputSpec> specs{{std::string(ntupleName), std::string(fileName)}};
          return RNTupleProcessor::CreateChain(specs);
       }
 
@@ -1247,7 +1247,7 @@ protected:
 
    std::unique_ptr<RNTupleProcessor> CreateJoinedProcessor()
    {
-      std::vector<RNTupleOpenSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
+      std::vector<RNTupleInputSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
 
       auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs);
 

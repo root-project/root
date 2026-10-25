@@ -62,14 +62,6 @@ void pa_distortion(float d)
       mng->UpdateName();
       mng->ProjectChildren();
    }
-   // Update the ticks and the read-out, as REveProjectionManager::BumpDistortion()
-   // does for the overlay buttons.
-   for (auto ax : {gPaAxisRPhi, gPaAxisRhoZ}) {
-      if (!ax)
-         continue;
-      ax->UpdateTicks();
-      ax->UpdateDistortionLabel();
-   }
 }
 
 //------------------------------------------------------------------------------
@@ -109,10 +101,10 @@ static void makeProjectedView(REveManager *eveMng, REveElement *content, REvePro
    mng = new REveProjectionManager(type);
    mng->ImportElements(content, scene);
 
-   // Add the manager to the element tree. This gives it an element id, which the
-   // overlay buttons need as their MIR target, and streams its name, which shows
-   // the distortion, e.g. "RhoPhi (5.0)".
-   eveMng->GetWorld()->AddElement(mng);
+   // Add the manager to the scene it fills. This gives it an element id, which
+   // the overlay buttons need as their MIR target, and streams its name, which
+   // shows the distortion, e.g. "RhoPhi (5.0)".
+   scene->AddElement(mng);
 
    auto ovl = eveMng->SpawnNewScene(Form("%s Axis", name), name);
    ovl->SetIsOverlay(true);

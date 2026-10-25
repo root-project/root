@@ -65,6 +65,8 @@ public:
 
    void addToCodeBody(std::string const &in, bool isScopeIndep = false);
 
+   bool isScopeIndependent(RooAbsArg const *in) const;
+
    /// @brief Build the code to call the function with name `funcname`, passing some arguments.
    /// The arguments can either be doubles or some RooFit arguments whose
    /// results will be looked up in the context.
@@ -129,8 +131,6 @@ private:
    void popScope();
    template <class T>
    std::string buildArgSpanImpl(std::span<const T> arr);
-
-   bool isScopeIndependent(RooAbsArg const *in) const;
 
    void endLoop(LoopScope const &scope);
 

@@ -621,7 +621,7 @@ against an upstream LLVM 22 release (via `compiler-research/ci-workflows`'s
 may still lag the CMake build.
 
 The Bazel build consumes a local LLVM/Clang tree rather than building one (LLVM
-20–22 are supported, matching the CMake version range). Point it at one with the
+21–23 are supported, matching the CMake version range). Point it at one with the
 `LLVM_DIR` environment variable -- either an LLVM *build* tree or a release
 *install* tree; the build adapts to whichever (static-archive or shared
 `libLLVM.so`) layout the tree ships:

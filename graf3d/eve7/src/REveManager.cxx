@@ -885,6 +885,7 @@ void REveManager::StreamToNewConnection(unsigned connid)
    fWorld->StreamElements();
 
    printf("   sending json, len = %d\n", (int)fWorld->fOutputJson.size());
+   REveUtil::StampServerTime(fWorld->fOutputJson);
    Send(connid, fWorld->fOutputJson);
    printf("   for now assume world-scene has no render data, binary-size=%d\n", fWorld->fTotalBinarySize);
    assert(fWorld->fTotalBinarySize == 0);
@@ -901,6 +902,7 @@ void REveManager::StreamToNewConnection(unsigned connid)
       scene->StreamElements();
 
       printf("   sending json, len = %d\n", (int)scene->fOutputJson.size());
+      REveUtil::StampServerTime(scene->fOutputJson);
       Send(connid, scene->fOutputJson);
 
       if (scene->fTotalBinarySize > 0) {
@@ -1151,13 +1153,22 @@ void REveManager::StreamSceneChangesToJson()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Send transformation-only changes on the motion channel: the same websocket,
-/// outside the BeginChanges/EndChanges cycle, with no acknowledgement. A
-/// connection for which RWebWindow::CanSend(id, true) is false skips the
-/// message. Each message is absolute state, but a client that skips the last
-/// one keeps the old state until the element changes again.
+/// outside the BeginChanges/EndChanges cycle, with no acknowledgement. The
+/// message is sent directly, so it goes only when every connection can take a
+/// direct send. Otherwise the elements stay stamped and go out with the
+/// regular changes, which carry the same matrix and motion. The motion's t0 is
+/// stamped by REveTrans::SetMotion(), so the delay does not shift the
+/// trajectory.
 
 void REveManager::SendMotionChanges()
 {
+   if (fConnList.empty())
+      return;
+
+   for (auto &conn : fConnList)
+      if (!fWebWindow->CanSend(conn.fId, true))
+         return;
+
    nlohmann::json arr = nlohmann::json::array();
 
    fWorld->StreamMotionChanges(arr);
@@ -1167,21 +1178,22 @@ void REveManager::SendMotionChanges()
          s->StreamMotionChanges(arr);
    }
 
-   if (arr.empty() || fConnList.empty())
+   if (arr.empty())
       return;
 
    nlohmann::json msg = {};
    // clang-format off
    msg["content"] = "Motion";
-   msg["t"]       = REveUtil::ServerTimeMs();
    msg["els"]     = arr;
    // clang-format on
 
    std::string data = msg.dump();
+   REveUtil::AppendServerTime(data);
 
-   for (auto &conn : fConnList)
-      if (fWebWindow->CanSend(conn.fId, true))
-         fWebWindow->Send(conn.fId, data);
+   for (auto &conn : fConnList) {
+      REveUtil::StampServerTime(data);
+      fWebWindow->Send(conn.fId, data);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1414,7 +1426,8 @@ void REveManager::BeginChange()
 /// Stop accepting changes and stream them. If the clients have not yet
 /// acknowledged the previous changes, keep the stamps and let the last
 /// acknowledgement in WindowData() flush them. Stamps coalesce per element.
-/// Motion changes are sent in either case. Changes made by a MIR are not held
+/// Motion changes are sent in either case when the connections can take a
+/// direct send, see SendMotionChanges(). Changes made by a MIR are not held
 /// back.
 
 void REveManager::EndChange()
@@ -1426,7 +1439,7 @@ void REveManager::EndChange()
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
 
    // Motion is outside the change cycle, so it is sent even when changes
-   // are held.
+   // are held. What cannot be sent now stays stamped and goes with them.
    SendMotionChanges();
 
    if (!fConnList.empty() && !ClientConnectionsFree()) {

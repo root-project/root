@@ -16,14 +16,7 @@
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
-#include "RooMsgService.h"
-
-#include "TBuffer.h"
-#include "TString.h"
-
-#include <string>
-#include <map>
-#include <vector>
+#include "RooFit/Detail/CFunctionBinding.h"
 
 namespace RooFit {
 
@@ -47,50 +40,8 @@ RooAbsPdf* bindPdf(const char* name,CFUNCD2II func,RooAbsReal& x, RooAbsReal& y)
 
 }
 
-template<class VO, class VI1, class VI2>
-class RooCFunction2Map {
- public:
-  RooCFunction2Map() {} ;
-
-  void add(const char* name, VO (*ptr)(VI1,VI2), const char* arg1name="x", const char* arg2name="y") {
-    // Register function with given name and argument name
-    _ptrmap[name] = ptr ;
-    _namemap[ptr] = name ;
-    _argnamemap[ptr].push_back(arg1name) ;
-    _argnamemap[ptr].push_back(arg2name) ;
-  }
-
-
-  const char* lookupName(VO (*ptr)(VI1,VI2)) {
-    // Return name of function given by pointer
-    return _namemap[ptr].c_str() ;
-  }
-
-  VO (*lookupPtr(const char* name))(VI1,VI2) {
-    // Return pointer of function given by name
-    return _ptrmap[name] ;
-  }
-
-  const char* lookupArgName(VO (*ptr)(VI1,VI2), UInt_t iarg) {
-    // Return name of i-th argument of function. If function is
-    // not registered, argument names 0,1,2 are x,y,z
-    if (iarg<_argnamemap[ptr].size()) {
-      return (_argnamemap[ptr])[iarg].c_str() ;
-    }
-    switch (iarg) {
-    case 0: return "x" ;
-    case 1: return "y" ;
-    case 2: return "z" ;
-    }
-    return "w" ;
-  }
-
- private:
-
-  std::map<std::string,VO (*)(VI1,VI2)> _ptrmap ; // Pointer-to-name map
-  std::map<VO (*)(VI1,VI2),std::string> _namemap ; // Name-to-pointer map
-  std::map<VO (*)(VI1,VI2),std::vector<std::string> > _argnamemap ; // Pointer-to-argnamelist map
-} ;
+template <class VO, class VI1, class VI2>
+using RooCFunction2Map = RooFit::Detail::CFunctionMap<VO (*)(VI1, VI2)>;
 
 
 
@@ -110,17 +61,7 @@ class RooCFunction2Ref : public TObject {
     // Return registered name of embedded function. If function
     // is not registered return string with hex presentation
     // of function pointer value
-    const char* result = fmap().lookupName(_ptr) ;
-    if (result && strlen(result)) {
-      return result ;
-    }
-    // This union is to avoid a warning message:
-    union {
-       void *_ptr;
-       func_t _funcptr;
-    } temp;
-    temp._funcptr = _ptr;
-    return Form("(%p)",temp._ptr) ;
+    return fmap().nameOrAddress(_ptr);
   }
 
   const char* argName(Int_t iarg) {
@@ -160,66 +101,7 @@ RooCFunction2Map<VO,VI1,VI2>* RooCFunction2Ref<VO,VI1,VI2>::_fmap = nullptr;
 template<class VO, class VI1, class VI2>
 void RooCFunction2Ref<VO,VI1,VI2>::Streamer(TBuffer &R__b)
 {
-  // Custom streamer for function pointer reference object. When writing,
-  // the function pointer is substituted by its registered name. When function
-  // is unregistered name 'UNKNOWN' is written and a warning is issues. When
-  // reading back, the embedded name is converted back to a function pointer
-  // using the mapping service. When name UNKNOWN is encountered a warning is
-  // issues and a dummy null function is substituted. When the registered function
-  // name can not be mapped to a function pointer an ERROR is issued and a pointer
-  // to the dummy null function is substituted
-
-  typedef ::RooCFunction2Ref<VO,VI1,VI2> thisClass;
-
-   // Stream an object of class RooCFunction2Ref
-   if (R__b.IsReading()) {
-
-     UInt_t R__s;
-     UInt_t R__c;
-     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-
-     // Read name from file
-     TString tmpName ;
-     tmpName.Streamer(R__b) ;
-
-     if (tmpName=="UNKNOWN" && R__v>0) {
-
-       coutW(ObjectHandling) << "WARNING: Objected embeds function pointer to unknown function, object will not be functional" << std::endl ;
-       _ptr = dummyFunction ;
-
-     } else {
-
-       // Lookup pointer to C function with given name
-       _ptr = fmap().lookupPtr(tmpName.Data()) ;
-
-       if (_ptr==nullptr) {
-    coutW(ObjectHandling) << "ERROR: Objected embeds pointer to function named " << tmpName
-                << " but no such function is registered, object will not be functional" << std::endl ;
-       }
-     }
-
-
-     R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
-
-   } else {
-
-     UInt_t R__c;
-     R__c = R__b.WriteVersion(thisClass::IsA(), true);
-
-     // Lookup name of reference C function
-     TString tmpName = fmap().lookupName(_ptr) ;
-     if (tmpName.Length()==0) {
-       coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("0x%zx", (size_t)_ptr)
-              << " written object will not be functional when read back" <<  std::endl ;
-       tmpName="UNKNOWN" ;
-     }
-
-     // Persist the name
-     tmpName.Streamer(R__b) ;
-
-     R__b.SetByteCount(R__c, true);
-
-   }
+   RooFit::Detail::streamCFunctionRef(R__b, *this, _ptr, dummyFunction, fmap());
 }
 
 
@@ -236,15 +118,7 @@ public:
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
-    os << "[ function=" << func.name() << " " ;
-    for (Int_t i=0 ; i<numProxies() ; i++) {
-      RooAbsProxy* p = getProxy(i) ;
-      if (!TString(p->name()).BeginsWith("!")) {
-   p->print(os) ;
-   os << " " ;
-      }
-    }
-    os << "]" ;
+    RooFit::Detail::printCFunctionArgs(os, *this, func.name());
   }
 
 protected:
@@ -303,15 +177,7 @@ public:
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
-    os << "[ function=" << func.name() << " " ;
-    for (Int_t i=0 ; i<numProxies() ; i++) {
-      RooAbsProxy* p = getProxy(i) ;
-      if (!TString(p->name()).BeginsWith("!")) {
-   p->print(os) ;
-   os << " " ;
-      }
-    }
-    os << "]" ;
+    RooFit::Detail::printCFunctionArgs(os, *this, func.name());
   }
 
 protected:

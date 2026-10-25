@@ -117,6 +117,18 @@ a specific named entity (functions, enums, etcetera).}];
   ];
 }
 
+def IsVisibleName : CppInterOpAPI {
+  let Doc = [{Checks whether unqualified name lookup of \c name from within
+\c parent (the global scope if null) finds any declaration, including
+overload sets and declarations made visible by using-directives.}];
+
+  let ReturnType = "bool";
+  let Args = [
+    Arg<"const std::string&", "name">,
+    Arg<"ConstDeclRef", "parent", "nullptr">
+  ];
+}
+
 def GetGlobalScope : CppInterOpAPI {
   let Doc = "Gets the global scope of the whole C++  instance.";
 
@@ -771,13 +783,17 @@ def GetOperator : CppInterOpAPI {
 }
 
 def GetBaseClassOffset : CppInterOpAPI {
-  let Doc = [{Each base has its own offset in a Derived Class. This offset can be
-used to get to the Base Class fields.}];
+  let Doc = [{Returns the byte offset from derived to base. Without an address,
+the offset comes from the record layout of a complete derived object. If address
+points to a live derived object or subobject and the path to base contains a
+virtual base, the offset is read from its vtable/vbtable. This also works when
+the complete object's dynamic type is unknown to the interpreter.}];
 
   let ReturnType = "int64_t";
   let Args = [
     Arg<"ConstDeclRef", "derived">,
-    Arg<"ConstDeclRef", "base">
+    Arg<"ConstDeclRef", "base">,
+    Arg<"const void*", "address", "nullptr">
   ];
 }
 
@@ -1365,10 +1381,18 @@ def IsAllocator : CppInterOpAPI {
 }
 
 def IsDeallocator : CppInterOpAPI {
-  let Doc = "Checks if the provided function is a deallocator function";
+  let Doc = [{Records the memory deallocation behaviour of each parameter of
+  the given function, as declared by its attributes. Appends one entry per
+  parameter to VPP, preceded by one entry for the object parameter if the
+  function has an implicit this; whatever VPP already holds is left
+  untouched. A parameter labelled cppDeallocNone is reported as None, while
+  one carrying no deallocation attribute is reported as Opaque. Labelling
+  the object parameter is not supported and is ignored. Returns false if
+  func is not a function, in which case VPP is not modified.}];
   let ReturnType = "bool";
   let Args = [
-    Arg<"ConstFuncRef", "func">
+    Arg<"ConstFuncRef", "func">,
+    OutArg<"std::vector<DeallocType>&", "VPP">
   ];
 }
 
@@ -1503,6 +1527,14 @@ def IsTemplateParmType : CppInterOpAPI {
   ];
 }
 
+def IsPackExpansionType : CppInterOpAPI {
+  let Doc = "Checks if the given type is a pack expansion type (e.g. `Ts...`).";
+  let ReturnType = "bool";
+  let Args = [
+    Arg<"ConstTypeRef", "TyRef">
+  ];
+}
+
 def IsFunction : CppInterOpAPI {
   let Doc = "Checks if the scope is a function.";
   let ReturnType = "bool";
@@ -1519,6 +1551,20 @@ def IsMethod : CppInterOpAPI {
   let Doc = "Checks if the provided parameter is a method.";
   let ReturnType = "bool";
   let Args = [Arg<"ConstFuncRef", "method">];
+}
+
+def IsOperator : CppInterOpAPI {
+  let Doc = [{Checks if the provided function (or function template) is an
+overloaded operator.}];
+  let ReturnType = "bool";
+  let Args = [Arg<"ConstFuncRef", "func">];
+}
+
+def IsConversionOperator : CppInterOpAPI {
+  let Doc = [{Checks if the provided function (or function template) is a
+conversion operator, e.g. `operator int()`.}];
+  let ReturnType = "bool";
+  let Args = [Arg<"ConstFuncRef", "func">];
 }
 
 def IsPODType : CppInterOpAPI {

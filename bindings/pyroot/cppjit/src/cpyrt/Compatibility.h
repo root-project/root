@@ -3,6 +3,7 @@
 
 #include "Python.h"
 
+#include "PyStrings.h"
 #include "cppjit_interop.h"
 
 #include <string>
@@ -41,6 +42,61 @@ inline PyObject* GetClingPrintValue() {
 inline std::string ObjToString(interop::TCppScope_t /*klass*/,
                                interop::TCppObject_t /*obj*/) {
   return "";
+}
+
+//- cppyy legacy API ----------------------------------------------------------
+// Backwards compatibility with the API that former cppyy users have in their
+// code. The macro is deliberately not a build option: it only exists so that
+// the legacy code paths are easy to find, and to remove once there is a
+// transition plan. Keep all such shims in this section.
+#define CPPYY_LEGACY_API 1
+
+// Name under which pyclass defines its explicit pythonization hook, looked up
+// in its own __dict__ only (no fall-through to base classes). Prefers the
+// __cppjit_* spelling over the old __cppyy_* one. Returns a borrowed reference,
+// or nullptr with no error set if there is no such hook.
+inline PyObject* ExplicitPythonizeHookName(PyObject* pyclass) {
+  // go through __dict__ instead of tp_getattr, see HasAttrDirect in
+  // Pythonize.cxx for the rationale
+  PyObject* name = nullptr;
+  PyObject* dct = PyObject_GetAttr(pyclass, PyStrings::gDict);
+  if (dct) {
+    PyObject* candidates[] = {
+        PyStrings::gExPythonize,
+#if CPPYY_LEGACY_API
+        PyStrings::gCppyyExPythonize,
+#endif
+    };
+    for (PyObject* candidate : candidates) {
+      PyObject* attr = PyObject_GetItem(dct, candidate);
+      if (attr) {
+        Py_DECREF(attr);
+        name = candidate;
+        break;
+      }
+      PyErr_Clear();
+    }
+    Py_DECREF(dct);
+  }
+  PyErr_Clear();
+  return name;
+}
+
+// Normal pythonization hook of pyclass, through regular attribute lookup (so
+// it falls through to base classes). Prefers the __cppjit_* spelling over the
+// old __cppyy_* one. Returns a new reference, or nullptr with no error set if
+// there is no such hook.
+inline PyObject* GetPythonizeHook(PyObject* pyclass) {
+  PyObject* func = PyObject_GetAttr(pyclass, PyStrings::gPythonize);
+#if CPPYY_LEGACY_API
+  if (!func) {
+    PyErr_Clear();
+    func = PyObject_GetAttr(pyclass, PyStrings::gCppyyPythonize);
+  }
+#endif
+  if (!func)
+    PyErr_Clear();
+  return func;
 }
 
 } // namespace cppjit::cpyrt::compat

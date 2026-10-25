@@ -6,6 +6,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    "use strict";
 
+   const kIdentity = [1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1];
+
    /// constructor, handle for REveScene class
 
    class EveScene {
@@ -16,11 +18,18 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          this.id      = sceneInfo.fSceneId;
          this.glctrl  = glctrl;
          this.creator = glctrl.viewer.creator;
-         this.id2obj_map  = new Map; // base on element id
+         this.id2obj_map  = new Map; // element id -> the object that draws the element
+         this.id2node_map = new Map; // element id -> the element's node, see makeNode()
+
+         // Raised when an element is added, removed or rebuilt; the viewer then
+         // recomputes this scene's box.
+         this.content_stamp = 0;
+         // Raised when an element's matrix changes, from the server or by Motion;
+         // near and far follow the scene's current box.
+         this.trans_stamp = 0;
 
          this.IsOverlay = mgr.GetElement(sceneInfo.fSceneId).IsOverlay;
          this.first_time = true;
-         this.need_visibility_update = false;
 
          // register ourself for scene events
          this.mgr.RegisterSceneReceiver(this.id, this);
@@ -56,16 +65,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                obj3d.geo_object = elem.fMasterId || elem.fElementId;
                obj3d.geo_name = elem.fName; // used for highlight
 
-               if (elem.render_data.matrix) {
-                  if (this.mgr.is_rcore) {
-                     obj3d.setMatrixFromArray(elem.render_data.matrix);
-                  } else {
-                     obj3d.matrix.fromArray(elem.render_data.matrix);
-                     obj3d.updateMatrixWorld(true);
-                     obj3d.matrixAutoUpdate = false;
-                  }
-               }
-
                return obj3d;
             }
          }
@@ -79,67 +78,226 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          return this.id2obj_map.get(elementId);
       }
 
-      create3DObjects(all_ancestor_children_visible, prnt, res3d)
+      //------------------------------------------------------------------------
+      // The element tree
+      //
+      // Each element has a node, in id2node_map, that carries its matrix. A
+      // leaf that draws is its own node. Any other element has a group node:
+      // its `self` is the element's drawing, at identity, and its other
+      // children are the nodes of the element's children. fRnrSelf is the
+      // drawing's `visible`, fRnrChildren the group's `visibleChildren`.
+      //
+      // Motion moves nodes, and a scene's box is the server boxes moved by the
+      // world matrices of their nodes.
+      //
+      // three.js has no `self` and `visibleChildren`. There the node helpers
+      // keep the children's nodes in a `kids` object and use its `visible`.
+      //------------------------------------------------------------------------
+
+      /** A new group node for `elem`, with its matrix. It has no eve_el, so
+        * picking passes it by. */
+      makeNode(elem)
       {
-         if (prnt === undefined) {
-            prnt = this.mgr.GetElement(this.id);
-            res3d = [];
+         let node = this.glctrl.viewer.make_object("el " + elem.fElementId);
+         if (!this.mgr.is_rcore) node.eve_group = true;
+         this.setNodeMatrix(node, elem);
+         this.nodeSetChildrenVisible(node, elem.fRnrChildren);
+         return node;
+      }
+
+      /** Add `child` to `node`, a group node or the scene container. */
+      nodeAdd(node, child)
+      {
+         if (this.mgr.is_rcore || !node.eve_group) { node.add(child); return; }
+         if (!node.eve_kids) {
+            node.eve_kids = this.glctrl.viewer.make_object("kids");
+            node.eve_kids.eve_owner = node;
+            node.eve_kids.visible = node.eve_vis_children !== false;
+            node.add(node.eve_kids);
          }
+         node.eve_kids.add(child);
+      }
 
-         if (!prnt || !prnt.childs) return res3d;
+      /** The node `child` belongs to; on three.js the group, not its `kids`. */
+      nodeParent(child)
+      {
+         let p = child.parent;
+         return (p && p.eve_owner) || p;
+      }
 
-         for (let k = 0; k < prnt.childs.length; ++k)
-         {
-            let elem = prnt.childs[k];
-            if (elem.render_data)
-            {
-               let fname = elem.render_data.rnr_func;
-               if ( ! this.creator[fname])
-               {
-                  console.error("Function " + fname + " missing in creator");
-               }
-               else
-               {
-                  let obj3d = this.makeGLRepresentation(elem);
-                  if (obj3d)
-                  {
-                     // MT - should maintain hierarchy ????
-                     // Easier to remove ... but might need sub-class of
-                     // Object3D to separate "graphical" children and structural children.
+      /** Make `obj` the drawing of group node `node`, at identity, in place of
+        * the previous one; null removes it. */
+      nodeSetSelf(node, obj)
+      {
+         if (this.mgr.is_rcore) { node.self = obj; return; }
+         if (node.eve_self) node.remove(node.eve_self);
+         node.eve_self = obj;
+         if (!obj) return;
+         node.add(obj);
+         obj.matrix.identity();
+         obj.matrixAutoUpdate = false;
+         obj.updateMatrixWorld(true);
+      }
 
-                     res3d.push(obj3d);
+      /** Show or hide the children of group node `node`; not its drawing. */
+      nodeSetChildrenVisible(node, vis)
+      {
+         if (this.mgr.is_rcore) { node.visibleChildren = vis; return; }
+         node.eve_vis_children = vis;
+         if (node.eve_kids) node.eve_kids.visible = vis;
+      }
 
-                     this.id2obj_map.set(elem.fElementId, obj3d);
+      /** Replace `obj`, the own node of `elem`, by a group node with `obj` as
+        * its drawing. The group takes obj's current matrix, motion included. */
+      wrapInGroup(obj, elem)
+      {
+         let node = this.glctrl.viewer.make_object("el " + elem.fElementId);
+         if (this.mgr.is_rcore) {
+            node.setMatrixFromArray(obj.matrix.elements);
+         } else {
+            node.eve_group = true;
+            node.matrix.copy(obj.matrix);
+            node.matrixAutoUpdate = false;
+         }
+         this.nodeSetChildrenVisible(node, elem.fRnrChildren);
+         let parent = obj.parent;
+         if (parent) { parent.remove(obj); parent.add(node); }
+         this.nodeSetSelf(node, obj);
+         if (!this.mgr.is_rcore) node.updateMatrixWorld(true);
+         return node;
+      }
 
-                     obj3d.visible = elem.fRnrSelf && all_ancestor_children_visible;
-                     obj3d.all_ancestor_children_visible = all_ancestor_children_visible;
-                  }
-               }
+      /** Make the node of `elem` under `parentNode` and register it, see
+        * "The element tree" above. */
+      addElementNode(elem, parentNode)
+      {
+         let node = null;
+         if (!(elem.childs && elem.childs.length)) {
+            node = this.makeContent(elem);
+            if (node) {
+               this.setNodeMatrix(node, elem);
+               node.visible = elem.fRnrSelf;
+               this.id2obj_map.set(elem.fElementId, node);
             }
-
-            this.create3DObjects(elem.fRnrChildren && all_ancestor_children_visible, elem, res3d);
          }
+         if (!node) {
+            node = this.makeNode(elem);
+            this.addContent(elem, node);
+         }
+         this.nodeAdd(parentNode, node);
+         this.id2node_map.set(elem.fElementId, node);
+         this.applyMotion(elem, node);
+         return node;
+      }
 
-         return res3d;
+      /** Register the trajectory of `elem` on `node`, or drop it when `elem`
+        * does not move. The node must hold the matrix the server sent, which
+        * is the start of the trajectory. */
+      applyMotion(elem, node)
+      {
+         let mo = this.glctrl.viewer.motion;
+         if (!mo) return;
+         if (elem.motion)
+            mo.update(elem.fElementId, node, elem.motion, this);
+         else
+            mo.remove(elem.fElementId);
+      }
+
+      /** Give `elem`, a leaf, a group node, so that it can hold children. */
+      promoteToGroup(elem)
+      {
+         let node = this.wrapInGroup(this.id2node_map.get(elem.fElementId), elem);
+         this.id2node_map.set(elem.fElementId, node);
+
+         // The group carries the matrix now, so the trajectory moves it.
+         let mo = this.glctrl.viewer.motion;
+         if (mo) mo.retarget(elem.fElementId, node);
+         return node;
+      }
+
+      /** Set the matrix of `elem`'s full state on `node`; identity when it has
+        * none. Moves and motion set the node themselves. */
+      setNodeMatrix(node, elem)
+      {
+         this.applyMatrix(node, EveManager.decodeMatrix(elem.matrix) || kIdentity);
+      }
+
+      /** Set the 16 values of `m`, column-major, as the matrix of `node`. */
+      applyMatrix(node, m)
+      {
+         if (this.mgr.is_rcore) {
+            node.setMatrixFromArray(m);
+         } else {
+            node.matrix.fromArray(m);
+            node.matrixAutoUpdate = false;
+            node.updateMatrixWorld(true);
+         }
+      }
+
+      /** Make the object that draws `elem`, or null if it does not draw. */
+      makeContent(elem)
+      {
+         if (!elem.render_data) return null;
+         if (!this.creator[elem.render_data.rnr_func]) {
+            console.error("Function " + elem.render_data.rnr_func + " missing in creator");
+            return null;
+         }
+         return this.makeGLRepresentation(elem) || null;
+      }
+
+      /** Make the drawing of `elem` and set it as the drawing of group node
+        * `node`. Returns it, or null when `elem` does not draw. */
+      addContent(elem, node)
+      {
+         let obj3d = this.makeContent(elem);
+         if (!obj3d) return null;
+         obj3d.visible = elem.fRnrSelf;
+         this.nodeSetSelf(node, obj3d);
+         this.id2obj_map.set(elem.fElementId, obj3d);
+         return obj3d;
+      }
+
+      /** The node to put the node of `elem` under: the mother's, made a group
+        * if it is a leaf. Until the mother's node exists, the scene container;
+        * the mother adopts it when it is added. */
+      parentNodeOf(elem)
+      {
+         if (elem.fMotherId !== this.id) {
+            let pn = this.id2node_map.get(elem.fMotherId);
+            if (pn && pn === this.id2obj_map.get(elem.fMotherId))
+               pn = this.promoteToGroup(this.mgr.GetElement(elem.fMotherId));
+            if (pn) return pn;
+         }
+         return this.glctrl.getSceneContainer(this);
+      }
+
+      /** Build the nodes and drawing objects of `elem` and everything below it. */
+      buildSubtree(elem, parentNode)
+      {
+         let node = this.addElementNode(elem, parentNode);
+         if (elem.childs)
+            for (let c of elem.childs)
+               this.buildSubtree(c, node);
       }
 
       //==============================================================================
 
-      /** method insert all objects into three.js container */
+      /** Build the scene's element tree under the scene container. */
       redrawScene()
       {
          let eveScene = this.mgr.GetElement(this.id);
-         if (!this.glctrl) return;
-
-         let res3d = this.create3DObjects(true);
-         if ( ! res3d.length && this.first_time) return;
+         let childs = (eveScene && eveScene.childs) || [];
+         if (!childs.length && this.first_time) return;
 
          let cont = this.glctrl.getSceneContainer(this);
          while (cont.children.length > 0)
             cont.remove(cont.children[0]);
+         this.id2obj_map.clear();
+         this.id2node_map.clear();
 
-         for (let k = 0; k < res3d.length; ++k)
-            cont.add(res3d[k]);
+         for (let c of childs)
+            this.buildSubtree(c, cont);
+         ++this.content_stamp;
 
          this.applySelectionOnSceneCreate(this.mgr.global_selection_id);
          this.applySelectionOnSceneCreate(this.mgr.global_highlight_id);
@@ -149,8 +307,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       removeScene()
       {
-         if (!this.glctrl) return;
-
          let cont = this.glctrl.getSceneContainer(this);
          while (cont.children.length > 0)
             cont.remove(cont.children[0]);
@@ -159,25 +315,14 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          this.first_time = true;
       }
 
-      update3DObjectsVisibility(arr, all_ancestor_children_visible)
+      /** Apply fRnrSelf to the element's drawing and fRnrChildren to its group
+        * node. */
+      applyVisibility(el)
       {
-         if (!arr) return;
-
-         for (let k = 0; k < arr.length; ++k)
-         {
-            let elem = arr[k];
-            if (elem.render_data)
-            {
-               let obj3d = this.getObj3D(elem.fElementId);
-               if (obj3d)
-               {
-                  obj3d.visible = elem.fRnrSelf && all_ancestor_children_visible;
-                  obj3d.all_ancestor_children_visible = all_ancestor_children_visible;
-               }
-            }
-
-            this.update3DObjectsVisibility(elem.childs, elem.fRnrChildren && all_ancestor_children_visible);
-         }
+         let obj3d = this.getObj3D(el.fElementId);
+         if (obj3d) obj3d.visible = el.fRnrSelf;
+         let node = this.id2node_map.get(el.fElementId);
+         if (node && node !== obj3d) this.nodeSetChildrenVisible(node, el.fRnrChildren);
       }
 
       onSceneCreate(/* id */)
@@ -195,118 +340,124 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       endChanges()
       {
-         if (this.glctrl) {
-            if (this.need_visibility_update) {
-               let p = this.mgr.GetElement(this.id);
-               this.update3DObjectsVisibility(p.childs, true);
-               this.need_visibility_update = false;
-            }
-
-            // Recompute the scene bounding box only after elements were added,
-            // removed or rebuilt, not after changes that only moved them. The
-            // 3D axis is sized from this box and would otherwise follow moving
-            // objects. REveViewer::SetAxesBBox() fixes the axis extent instead.
-            this.glctrl.viewer.request_render(this.need_bbox_update);
-            this.need_bbox_update = false;
-         }
+         // Recompute the scene box after content changes, not after moves: the
+         // 3D axis is sized from it and would follow moving objects.
+         // REveViewer::SetAxesBBox() fixes the axis extent instead.
+         this.glctrl.viewer.request_render(this.need_bbox_update);
+         this.need_bbox_update = false;
       }
 
       elementAdded(el)
       {
          this.need_bbox_update = true;
-         if ( ! this.glctrl) return;
+         ++this.content_stamp;
+         let node = this.addElementNode(el, this.parentNodeOf(el));
 
-         let obj3d =  this.makeGLRepresentation(el);
-         if ( ! obj3d) return;
-
-         // let scene = this.mgr.GetElement(this.id);
-         let container = this.glctrl.getSceneContainer(this);
-
-         container.add(obj3d);
-
-         this.id2obj_map.set(el.fElementId, obj3d);
-
-         this.need_visibility_update = true;
+         // Adopt the nodes of children that were added before this element.
+         if (el.childs)
+            for (let c of el.childs) {
+               let cn = this.id2node_map.get(c.fElementId);
+               if (cn && this.nodeParent(cn) !== node) {
+                  if (cn.parent) cn.parent.remove(cn);
+                  this.nodeAdd(node, cn);
+               }
+            }
       }
 
-      replaceElement(el) {
-         if (!this.glctrl) return;
+      /** Rebuild the drawing of `el`. With `keepMatrix`, for a rebuild without
+        * new state, the node keeps its matrix. */
+      replaceElement(el, keepMatrix) {
+         // The trajectory stays with the node; a new leaf node registers it
+         // again, see addElementNode().
+         ++this.content_stamp;
 
-         // Drop the trajectory: it refers to the object about to be replaced.
-         // The next transformation update registers it on the new object.
-         let mo = this.glctrl.viewer.motion;
-         if (mo) mo.remove(el.fElementId);
-
-         let container = this.glctrl.getSceneContainer(this);
+         let node = this.id2node_map.get(el.fElementId);
+         if (!node) { this.elementAdded(el); return; }
 
          try {
             let obj3d = this.getObj3D(el.fElementId);
-
-            if(obj3d) container.remove(obj3d);
-
-            obj3d = this.makeGLRepresentation(el);
-            if (obj3d) {
-               container.add(obj3d);
-               this.id2obj_map.set(el.fElementId, obj3d);
+            this.id2obj_map.delete(el.fElementId);
+            if (obj3d && obj3d === node) {
+               // The element is its own node: the new drawing takes its place.
+               let m = keepMatrix ? Array.from(node.matrix.elements) : null;
+               let parent = node.parent;
+               if (parent) parent.remove(node);
+               this.id2node_map.delete(el.fElementId);
+               let n = this.addElementNode(el, parent || this.glctrl.getSceneContainer(this));
+               if (m) this.applyMatrix(n, m);
+            } else {
+               if (!keepMatrix) this.setNodeMatrix(node, el);
+               if (!this.addContent(el, node)) this.nodeSetSelf(node, null);
             }
          }
          catch (e) {
             console.error("replace element", e);
          }
-         this.need_visibility_update = true;
       }
 
       /** Apply one element of a "Motion" message: the same update as a
-        * kCBTransBBox change, outside the BeginChanges/EndChanges cycle. */
+        * kCBTrans change, outside the BeginChanges/EndChanges cycle. */
       sceneElementMotion(msg)
       {
          let el = this.mgr.GetElement(msg.fElementId);
          if (!el) return;
 
-         // The viewer's rate cap. Dropping an update is safe because each
-         // carries absolute state.
-         let mo = this.glctrl ? this.glctrl.viewer.motion : null;
-         if (mo && !mo.acceptUpdate(msg.msg_t)) return;
-
          this.updateElementTrans(el, msg);
 
          // No endChanges() follows, so request the render here. Going through
          // Motion applies the viewer's render cap.
+         let mo = this.glctrl.viewer.motion;
          if (mo)
             mo.requestRender();
-         else if (this.glctrl && this.glctrl.viewer)
+         else
             this.glctrl.viewer.request_render();
+      }
+
+      /** Remove the drawing of `elem`, which no longer draws. A leaf gets an
+        * empty group node in its place. */
+      dropContent(elem)
+      {
+         let obj3d = this.getObj3D(elem.fElementId);
+         if (!obj3d) return;
+         this.id2obj_map.delete(elem.fElementId);
+         this.need_bbox_update = true;
+         ++this.content_stamp;
+
+         let node = this.id2node_map.get(elem.fElementId);
+         if (obj3d === node) {
+            node = this.wrapInGroup(obj3d, elem);
+            this.id2node_map.set(elem.fElementId, node);
+            let mo = this.glctrl.viewer.motion;
+            if (mo) mo.retarget(elem.fElementId, node);
+         }
+         this.nodeSetSelf(node, null);
       }
 
       /** Apply a transformation-only change to the existing renderer object by
         * setting msg.matrix on it. Requests no render; the callers do. */
       updateElementTrans(el, msg)
       {
-         let obj3d = this.getObj3D(msg.fElementId);
-         if (!obj3d) return;
+         let node = this.id2node_map.get(msg.fElementId);
+         if (!node) return;
 
-         let mot_viewer = this.glctrl ? this.glctrl.viewer : null;
+         let mo = this.glctrl.viewer.motion;
 
-         if (msg.matrix) {
-            if (this.mgr.is_rcore) {
-               obj3d.setMatrixFromArray(msg.matrix);
-            } else {
-               obj3d.matrix.fromArray(msg.matrix);
-               obj3d.updateMatrixWorld(true);
-            }
-         }
+         // Every transformation update carries the matrix; none means identity.
+         this.applyMatrix(node, EveManager.decodeMatrix(msg.matrix) || kIdentity);
+         ++this.trans_stamp;
 
          // After the matrix is applied: Motion takes the start position from it.
-         // Every transformation update carries "mot"; null clears the trajectory.
-         if (mot_viewer && mot_viewer.motion && msg.mot !== undefined)
-            mot_viewer.motion.update(msg.fElementId, obj3d, msg.mot);
+         // Every transformation update carries "motion"; null clears the trajectory.
+         if (mo && msg.motion !== undefined)
+            mo.update(msg.fElementId, node, msg.motion, this);
       }
 
       elementsRemoved(ids)
       {
          this.need_bbox_update = true;
+         ++this.content_stamp;
 
-         let mo = this.glctrl ? this.glctrl.viewer.motion : null;
+         let mo = this.glctrl.viewer.motion;
 
          for (let i = 0; i < ids.length; i++)
          {
@@ -315,18 +466,14 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             // Drop the trajectory. Nothing else removes it, and a live
             // trajectory keeps Motion's render loop running.
             if (mo) mo.remove(elId);
+
+            // Removing the node removes the subtree below it from the scene.
+            let node = this.id2node_map.get(elId);
+            if (node && node.parent) node.parent.remove(node);
+            this.id2node_map.delete(elId);
+
             let obj3d = this.getObj3D(elId);
-            if (!obj3d) {
-               let el = this.mgr.GetElement(elId);
-               if (el && el.render_data) {
-                  console.warn("EveScene.elementsRemoved can't find obj3d ", this.mgr.GetElement(el));
-               }
-               continue;
-            }
-
-            let container = this.glctrl.getSceneContainer(this);
-            container.remove(obj3d);
-
+            if (!obj3d) continue;
             this.id2obj_map.delete(elId);
 
             if (!this.mgr.is_rcore) {
@@ -344,23 +491,47 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
          // visibility
          if (msg.changeBit & this.mgr.EChangeBits.kCBVisibility) {
-            this.need_visibility_update = true;
+            this.applyVisibility(el);
          }
 
-         // Update the transformation in place. When kCBObjProps is also set the
-         // server sends render data instead of a matrix, and the rebuild below
-         // carries the new position.
-         if (msg.changeBit & this.mgr.EChangeBits.kCBTransBBox) {
+         // Update the transformation in place.
+         if (msg.changeBit & this.mgr.EChangeBits.kCBTrans) {
             this.updateElementTrans(el, msg);
          }
 
-         // other change bits
-         if (el.render_data) {
-            if ((el.changeBit & this.mgr.EChangeBits.kCBObjProps) || (el.changeBit & this.mgr.EChangeBits.kCBColorSelection))
-            {
-               this.need_bbox_update = true;
-               this.replaceElement(el);
+         // A full update without render data: drop the drawing, set the matrix.
+         if (!el.render_data && (msg.changeBit & this.mgr.EChangeBits.kCBObjProps)) {
+            this.dropContent(el);
+            let node = this.id2node_map.get(el.fElementId);
+            if (node) {
+               this.setNodeMatrix(node, el);
+               ++this.trans_stamp;
             }
+         }
+
+         // A full update rebuilds the drawing. A core JSON change calls
+         // refresh(el) of a drawing that has one, else rebuilds it from the
+         // cached render data and keeps the node's matrix.
+         if (el.render_data) {
+            let rebuild = !!(msg.changeBit & this.mgr.EChangeBits.kCBObjProps);
+            if (!rebuild && (msg.changeBit & this.mgr.EChangeBits.kCBCoreJson)) {
+               let obj3d = this.getObj3D(el.fElementId);
+               if (obj3d && typeof obj3d.refresh === 'function')
+                  obj3d.refresh(el);
+               else
+                  rebuild = true;
+            }
+            if (rebuild) {
+               this.need_bbox_update = true;
+               this.replaceElement(el, !(msg.changeBit & this.mgr.EChangeBits.kCBObjProps));
+            }
+         }
+
+         // A full update carries the whole transformation, motion included,
+         // and has just set the node to the matrix the server sent.
+         if (msg.changeBit & this.mgr.EChangeBits.kCBObjProps) {
+            let node = this.id2node_map.get(el.fElementId);
+            if (node) this.applyMotion(el, node);
          }
       }
 

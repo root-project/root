@@ -446,7 +446,9 @@ TEST(RNTuple, PageSize)
       }
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath(), opts);
    const auto &col0_pages = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0);
    // 1000 column elements / 50 elements per page
    EXPECT_EQ(20, col0_pages.GetPageInfos().size());

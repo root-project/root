@@ -1,3 +1,5 @@
+#include "TH1F.h"
+
 Int_t server_hash = 0;
 TString server_url;
 TString unix_socket;
@@ -54,9 +56,12 @@ void test_suite(THttpServer &serv)
 
    TNamed obj1("obj1", "title1");
    TNamed obj2("obj2", "title2");
+   TH1F h1("h1", "title", 100, -10, 10);
+
 
    serv.Register("/", &obj1);
    serv.Register("/", &obj2);
+   serv.Register("/", &h1);
 
    // check JSON representation for the object
    std::string res = execute_request("/obj1/root.json");
@@ -140,6 +145,12 @@ void test_suite(THttpServer &serv)
    // by default methods execution is not allowed
    res = execute_request("/obj1/exe.json?method=GetTitle");
    EXPECT_EQ(res, "") << "exe.json should be empty in readonly";
+
+
+   res = execute_request("/h1/root.png?w=500&h=500");
+   EXPECT_NE(res.length(), 0) << "root.png should not be empty";
+   EXPECT_NEAR(res.length(), 5558, 2000) << "root.png should be around 5K";
+
 
 
    // disable readonly to get extra functionality

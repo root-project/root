@@ -7,6 +7,8 @@
 
 #include "gtest/gtest.h"
 
+#include <array>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 
@@ -16,6 +18,36 @@ TYPED_TEST(CppInterOpTest, CAPI_DeclareAndProcess) {
   TestFixture::CreateInterpreter();
   EXPECT_EQ(0, cppinterop_Declare("int capi_var = 42;", false));
   EXPECT_EQ(0, cppinterop_Process("capi_var++;"));
+}
+
+TYPED_TEST(CppInterOpTest, CAPI_GetBaseClassOffsetWithAddress) {
+  TestFixture::CreateInterpreter();
+#define Stringify(s) Stringifyx(s)
+#define Stringifyx(...) #__VA_ARGS__
+#define CODE                                                                   \
+  struct CAPIBase {                                                            \
+    int value;                                                                 \
+  };                                                                           \
+  struct CAPIDerived : virtual CAPIBase {                                      \
+    int value;                                                                 \
+  };
+
+  CODE;
+  ASSERT_EQ(cppinterop_Declare(Stringify(CODE), false), 0);
+#undef Stringifyx
+#undef Stringify
+#undef CODE
+
+  struct Hidden : CAPIDerived {
+    std::array<long, 8> padding;
+  };
+  Hidden hidden;
+  CAPIDerived* p = &hidden;
+  auto derived = cppinterop_GetScope("CAPIDerived", nullptr);
+  auto base = cppinterop_GetScope("CAPIBase", nullptr);
+  int64_t expected = (char*)(CAPIBase*)p - (char*)p;
+  ASSERT_NE(cppinterop_GetBaseClassOffset(derived, base, nullptr), expected);
+  EXPECT_EQ(cppinterop_GetBaseClassOffset(derived, base, p), expected);
 }
 
 TYPED_TEST(CppInterOpTest, CAPI_LoadLibrary) {

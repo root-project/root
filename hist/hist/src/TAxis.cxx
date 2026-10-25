@@ -445,10 +445,17 @@ const char *TAxis::GetBinLabel(Int_t bin) const
 {
    if (!fLabels) return "";
    if (bin <= 0 || bin > fNbins) return "";
+   // Try to find the bin, assuming they are ordered
+   if (auto obj = (TObjString *)fLabels->At(bin - 1)) {
+      const auto binid = (Int_t)obj->GetUniqueID();
+      if (binid == bin) {
+         return obj->GetName();
+      }
+   }
+   // The shortcut did not bring results. We cannot but search linearly
    TIter next(fLabels);
-   TObjString *obj;
-   while ((obj=(TObjString*)next())) {
-      Int_t binid = (Int_t)obj->GetUniqueID();
+   while (auto obj=(TObjString*)next()) {
+      const auto binid = (Int_t)obj->GetUniqueID();
       if (binid == bin) return obj->GetName();
    }
    return "";

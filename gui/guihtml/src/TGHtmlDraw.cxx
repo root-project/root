@@ -891,12 +891,13 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
       w -= sw;
    }
 #else
-   if (!image->GetPixmap()) return;
+   auto img_pixmap = TGWindow::GetImagePixmap(image);
+   if (!img_pixmap) return;
    GContext_t gc = GetAnyGC();
    GCValues_t gcv;
    // unsigned int mask = kGCTile | kGCFillStyle |
    //                     kGCTileStipXOrigin | kGCTileStipYOrigin;
-   gcv.fTile      = image->GetPixmap();
+   gcv.fTile      = img_pixmap;
    gcv.fFillStyle = kFillTiled;
    gcv.fTsXOrigin = -fVisible.fX - fDirtyLeft;
    gcv.fTsYOrigin = -fVisible.fY - fDirtyTop;

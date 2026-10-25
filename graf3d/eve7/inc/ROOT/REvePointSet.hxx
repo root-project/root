@@ -18,7 +18,6 @@
 #include <ROOT/REveSecondarySelectable.hxx>
 
 #include <TAttMarker.h>
-#include <TAttBBox.h>
 
 #include <cassert>
 
@@ -32,12 +31,7 @@ namespace Experimental {
 // external TRef or a number of integer indices.
 ////////////////////////////////////////////////////////////////////////////////
 
-class REvePointSet : public REveElement,
-                     public REveProjectable,
-                     public TAttMarker,
-                     public TAttBBox,
-                     public REveSecondarySelectable
-{
+class REvePointSet : public REveElement, public REveProjectable, public TAttMarker, public REveSecondarySelectable {
    friend class REvePointSetArray;
 
 private:

@@ -86,14 +86,7 @@ Cpp::DeclRef DeclareBase() {
   return Cpp::GetNamed("OverlayB");
 }
 
-Cpp::FuncRef Method(Cpp::DeclRef scope, const char* name) {
-  std::vector<Cpp::FuncRef> methods;
-  Cpp::GetClassMethods(scope, methods);
-  for (auto m : methods)
-    if (Cpp::GetName(Cpp::DeclRef{m.data}) == name)
-      return m;
-  return nullptr;
-}
+using TestUtils::FindMethod;
 
 // Dispatch through the installed vtable slot. Calling beta() directly in
 // this TU would let the compiler devirtualize and bypass the overlay;
@@ -119,7 +112,7 @@ TEST(VTableOverlay, ReplacesSlotPreservingOthers) {
   void* inst = Cpp::Construct(B).data;
   ASSERT_NE(inst, nullptr);
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}});
+      inst, B, {{FindMethod(B, "beta"), MethodAddr(&Repl::negate)}});
   ASSERT_TRUE(ov);
   EXPECT_EQ(call_slot(inst, kBeta, 5), -5);  // overlaid
   EXPECT_EQ(call_slot(inst, kAlpha, 5), 15); // preserved: alpha -> x+10
@@ -141,7 +134,7 @@ TEST(VTableOverlay, PreservesPrefixAndUnrelatedSlots) {
 #endif
   void* alpha_slot = aot[kAlpha];
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}});
+      inst, B, {{FindMethod(B, "beta"), MethodAddr(&Repl::negate)}});
   ASSERT_TRUE(ov);
   void** now = *reinterpret_cast<void***>(inst);
   EXPECT_EQ(now[-1], prefix_m1);
@@ -160,7 +153,7 @@ TEST(VTableOverlay, RestoresOnDestroy) {
   void* aot = *reinterpret_cast<void**>(inst);
   {
     auto ov = Cpp::MakeUniqueVTableOverlay(
-        inst, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}});
+        inst, B, {{FindMethod(B, "beta"), MethodAddr(&Repl::negate)}});
     ASSERT_TRUE(ov);
     EXPECT_NE(*reinterpret_cast<void**>(inst), aot);
   }
@@ -175,8 +168,8 @@ TEST(VTableOverlay, ReplacesMultipleSlots) {
   ASSERT_NE(inst, nullptr);
   auto ov = Cpp::MakeUniqueVTableOverlay(
       inst, B,
-      {{Method(B, "alpha"), MethodAddr(&Repl::negate)},
-       {Method(B, "beta"), MethodAddr(&Repl::twice)}});
+      {{FindMethod(B, "alpha"), MethodAddr(&Repl::negate)},
+       {FindMethod(B, "beta"), MethodAddr(&Repl::twice)}});
   ASSERT_TRUE(ov);
   EXPECT_EQ(call_slot(inst, kAlpha, 5), -5);
   EXPECT_EQ(call_slot(inst, kBeta, 5), 10);
@@ -188,7 +181,7 @@ TEST(VTableOverlay, RejectsInvalidInput) {
   auto B = DeclareBase();
   void* inst = Cpp::Construct(B).data;
   ASSERT_NE(inst, nullptr);
-  Cpp::ConstFuncRef beta = Method(B, "beta");
+  Cpp::ConstFuncRef beta = FindMethod(B, "beta");
   Cpp::ConstFuncRef none = nullptr;
   void* fn = MethodAddr(&Repl::negate);
 
@@ -210,7 +203,7 @@ TEST(VTableOverlay, OverlayIsPerInstance) {
   void* b_vptr_before = *reinterpret_cast<void**>(b);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      a, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}});
+      a, B, {{FindMethod(B, "beta"), MethodAddr(&Repl::negate)}});
   ASSERT_TRUE(ov);
 
   EXPECT_NE(*reinterpret_cast<void**>(a), b_vptr_before); // a swapped
@@ -240,7 +233,7 @@ TEST(VTableOverlay, ThunkReadsThisAndDataMember) {
   ASSERT_NE(inst, nullptr);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, T, {{Method(T, "frob"), MethodAddr(&Repl::read_value)}});
+      inst, T, {{FindMethod(T, "frob"), MethodAddr(&Repl::read_value)}});
   ASSERT_TRUE(ov);
 
   // First user virtual lives at kAlpha (Itanium D1/D0 prefix; MSVC single
@@ -270,7 +263,7 @@ TEST(VTableOverlay, DerivedClassWithOverride) {
   EXPECT_EQ(call_slot(inst, kAlpha, 5), 7);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, D, {{Method(D, "frob"), MethodAddr(&Repl::negate)}});
+      inst, D, {{FindMethod(D, "frob"), MethodAddr(&Repl::negate)}});
   ASSERT_TRUE(ov);
   EXPECT_EQ(call_slot(inst, kAlpha, 5), -5);
   ov.reset();
@@ -292,7 +285,7 @@ TEST(VTableOverlay, MultiLevelInheritance) {
   EXPECT_EQ(call_slot(inst, kAlpha, 5), 8); // MlC::frob: x+3
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, C, {{Method(C, "frob"), MethodAddr(&Repl::twice)}});
+      inst, C, {{FindMethod(C, "frob"), MethodAddr(&Repl::twice)}});
   ASSERT_TRUE(ov);
   EXPECT_EQ(call_slot(inst, kAlpha, 5), 10); // overlay: x*2
   ov.reset();
@@ -318,7 +311,7 @@ TEST(VTableOverlay, RejectsMultipleInheritance) {
   ASSERT_NE(inst, nullptr);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, C, {{Method(C, "af"), MethodAddr(&Repl::negate)}});
+      inst, C, {{FindMethod(C, "af"), MethodAddr(&Repl::negate)}});
   EXPECT_FALSE(ov); // refuses the layout
 
   Cpp::Destruct(inst, C);
@@ -338,7 +331,7 @@ TEST(VTableOverlay, RejectsNonPolymorphicBase) {
   ASSERT_NE(PH, nullptr);
   void* inst = Cpp::Construct(NP).data;
   ASSERT_NE(inst, nullptr);
-  Cpp::ConstFuncRef dummy = Method(PH, "dummy");
+  Cpp::ConstFuncRef dummy = FindMethod(PH, "dummy");
   void* fn = MethodAddr(&Repl::negate);
   EXPECT_EQ(Cpp::MakeVTableOverlay(inst, NP, &dummy, &fn, 1), nullptr);
   Cpp::Destruct(inst, NP);
@@ -372,7 +365,7 @@ TEST(VTableOverlay, RejectsOutOfRangeMethodSlot) {
   ASSERT_NE(Large, nullptr);
   void* inst = Cpp::Construct(Small).data;
   ASSERT_NE(inst, nullptr);
-  Cpp::ConstFuncRef v10 = Method(Large, "v10");
+  Cpp::ConstFuncRef v10 = FindMethod(Large, "v10");
   void* fn = MethodAddr(&Repl::negate);
   EXPECT_EQ(Cpp::MakeVTableOverlay(inst, Small, &v10, &fn, 1), nullptr);
   Cpp::Destruct(inst, Small);
@@ -411,11 +404,11 @@ TEST(VTableOverlay, OverlayThroughHierarchyAccessesDataMembers) {
 
   auto ov_a = Cpp::MakeUniqueVTableOverlay(
       &a, A_scope,
-      {{Method(A_scope, "method"), MethodAddr(&Repl::foo)}});
+      {{FindMethod(A_scope, "method"), MethodAddr(&Repl::foo)}});
   ASSERT_TRUE(ov_a);
   auto ov_b = Cpp::MakeUniqueVTableOverlay(
       &b, B_scope,
-      {{Method(B_scope, "method"), MethodAddr(&Repl::bar)}});
+      {{FindMethod(B_scope, "method"), MethodAddr(&Repl::bar)}});
   ASSERT_TRUE(ov_b);
 
   EXPECT_EQ(call_slot_no_arg(&a, kAlpha), 15); // foo: A::m_x(5) + 10
@@ -447,7 +440,7 @@ TEST(VTableOverlay, RejectsVirtualInheritance) {
   ASSERT_NE(inst, nullptr);
 
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, D, {{Method(D, "frob"), MethodAddr(&Repl::negate)}});
+      inst, D, {{FindMethod(D, "frob"), MethodAddr(&Repl::negate)}});
   EXPECT_FALSE(ov); // refuses the layout
 
   Cpp::Destruct(inst, D);
@@ -592,7 +585,7 @@ TEST(VTableOverlay, SetsExtraPrefixSlots) {
   void* inst = Cpp::Construct(B).data;
   ASSERT_NE(inst, nullptr);
   auto ov = Cpp::MakeUniqueVTableOverlay(
-      inst, B, {{Method(B, "beta"), MethodAddr(&Repl::negate)}},
+      inst, B, {{FindMethod(B, "beta"), MethodAddr(&Repl::negate)}},
       /*n_extra_prefix_slots=*/2);
   ASSERT_TRUE(ov);
   void*& slot0 = Cpp::VTableOverlayExtraSlot(inst, 0);

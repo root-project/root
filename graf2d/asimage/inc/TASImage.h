@@ -55,6 +55,8 @@ private:
    void DestroyScaledImage();
    const char *TypeFromMagicNumber(const char *file);
 
+   void CloneImageData(const TASImage &src);
+
 protected:
    ASImage  *fImage;                ///<! pointer to image structure of original image
    TASImage *fScaledImage;          ///<! temporary scaled and zoomed image produced from original image
@@ -186,14 +188,16 @@ public:
    // Utilities
    UInt_t     GetWidth() const override;
    UInt_t     GetHeight() const override;
-   UInt_t     GetScaledWidth() const;
-   UInt_t     GetScaledHeight() const;
+   UInt_t     GetScaledWidth() const override;
+   UInt_t     GetScaledHeight() const override;
    Bool_t     IsValid() const override { return fImage ? kTRUE : kFALSE; }
    Bool_t     IsGray() const override { return fIsGray; }
    ASImage   *GetImage() const { return fImage; }
    void       SetImage(ASImage *image) { DestroyImage(); fImage = image; }
    TImage    *GetScaledImage() const override { return fScaledImage; }
+   Pixmap_t   GetX11Pixmap(Window_t root_window) override;
    Pixmap_t   GetPixmap() override;
+   Bool_t     GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits) override;
    Pixmap_t   GetMask() override;
    TArrayL   *GetPixels(Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
    TArrayD   *GetArray(UInt_t w = 0, UInt_t h = 0, TImagePalette *pal = gWebImagePalette) override;

@@ -33,9 +33,7 @@ class by Rene Brun.
 #include "TH1.h"
 #include "TF3.h"
 #include "TView.h"
-#define ROOT_Hoption_cxx
 #include "Hoption.h"
-#define ROOT_Hparam_cxx
 #include "Hparam.h"
 #include "TMath.h"
 #include "TStyle.h"

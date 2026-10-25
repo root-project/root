@@ -785,7 +785,8 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///      WebGui.ReconnectTmout: time to reconnect for already existing connection, if negative - no reconnecting possible (default 15 s)
 ///      WebGui.BatchTimeout: time required to produce images in headless (batch) mode (default 30 s)
-///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
+///      WebGui.Qt6Timer: periodic timer to run Qt6 event loop, used with 'qt6' web display (default 10 ms)
+///      WebGui.CefTimer: periodic timer to run CEF event loop, used with 'cef' web display (default 10 ms)
 ///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
 ///      WebGui.CefLogSeveriry: "disable", "fatal", "error", "warning", "info", "verbose" (default is "fatal")
 ///      WebGui.CefHeadlessTimeout: timeout to wait produce result of headless output (default is 30 s)
@@ -899,7 +900,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
                "Or one can use rootssh script to configure port forwarding and display web widgets automatically\n"
-               "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
+               "Find more info on https://root.cern/doc/master/classROOT_1_1RBrowser.html\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }
       }

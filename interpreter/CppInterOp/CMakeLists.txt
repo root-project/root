@@ -27,7 +27,8 @@ option(CPPINTEROP_SHARED_LIBRARY_VERSIONING
 set(CPPINTEROP_BAKED_INTERPRETER_ARGS "" CACHE STRING
   "Space-separated arguments passed at interpreter creation (no quoting: arguments containing spaces are not supported)")
 if(EMSCRIPTEN)
-  set(CPPINTEROP_EXTRA_WASM_FLAGS "-fwasm-exceptions" CACHE STRING "Extra flags for wasm")
+  set(CPPINTEROP_LIBRARY_WASM_FLAGS "-Oz -flto" CACHE STRING "Extra flags for build of CppInterOp library")
+  set(CPPINTEROP_EXTRA_WASM_FLAGS "-fwasm-exceptions" CACHE STRING "Extra flags for wasm (all targets)")
 endif()
 
 if (CPPINTEROP_USE_CLING AND CPPINTEROP_USE_REPL)
@@ -104,15 +105,15 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
 include(GNUInstallDirs)
   ## Define supported version of clang and llvm
 
-  set(CLANG_MIN_SUPPORTED 20.0)
-  set(CLANG_MAX_SUPPORTED "22.1.x")
-  set(CLANG_VERSION_UPPER_BOUND 23.0.0)
-  set(LLD_MIN_SUPPORTED 20.0)
-  set(LLD_MAX_SUPPORTED "22.1.x")
-  set(LLD_VERSION_UPPER_BOUND 23.0.0)
-  set(LLVM_MIN_SUPPORTED 20.0)
-  set(LLVM_MAX_SUPPORTED "22.1.x")
-  set(LLVM_VERSION_UPPER_BOUND 23.0.0)
+  set(CLANG_MIN_SUPPORTED 21.0)
+  set(CLANG_MAX_SUPPORTED "23.1.x")
+  set(CLANG_VERSION_UPPER_BOUND 24.0.0)
+  set(LLD_MIN_SUPPORTED 21.0)
+  set(LLD_MAX_SUPPORTED "23.1.x")
+  set(LLD_VERSION_UPPER_BOUND 24.0.0)
+  set(LLVM_MIN_SUPPORTED 21.0)
+  set(LLVM_MAX_SUPPORTED "23.1.x")
+  set(LLVM_VERSION_UPPER_BOUND 24.0.0)
 
   ## Set Cmake packages search order
 

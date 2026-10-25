@@ -505,7 +505,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             // situation we rely on field emulation instead.
             else if (cl->GetState() >= TClass::kInterpreted) {
                if (!ROOT::Internal::GetRNTupleSoARecord(cl).empty()) {
-                  result = std::make_unique<ROOT::Experimental::RSoAField>(fieldName, typeName);
+                  result = std::make_unique<RSoAField>(fieldName, typeName);
                } else if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
                           ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
                   result = std::make_unique<RStreamerField>(fieldName, typeName);
@@ -541,8 +541,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                memberFields.emplace_back(std::move(field));
             }
             R__ASSERT(typeName == fieldDesc.GetTypeName());
-            auto recordField =
-               Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
+            auto recordField = Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc);
             recordField->fTypeAlias = fieldDesc.GetTypeAlias();
             return recordField;
          } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
@@ -553,8 +552,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             const auto &itemFieldDesc = desc->GetFieldDescriptor(itemFieldId);
             auto itemField =
                Create(itemFieldDesc.GetFieldName(), itemFieldDesc.GetTypeName(), options, desc, itemFieldId).Unwrap();
-            auto vecField =
-               ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc.GetTypeName());
+            auto vecField = ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc);
             vecField->fTypeAlias = fieldDesc.GetTypeAlias();
             return vecField;
          } else if (ROOT::Internal::IsCustomEnumFieldDesc(*desc, fieldDesc)) {
@@ -1048,7 +1046,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
 
    if (!fIsArtificial) {
       auto descGuard = pageSource.GetSharedDescriptorGuard();
-      ReconcileOnDiskField(descGuard.GetRef());
+      ReconcileOnDiskField(descGuard.GetConstRef());
    }
 
    for (auto &f : fSubfields) {
@@ -1061,7 +1059,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    // Do not generate columns nor set fColumnRepresentatives for artificial fields.
    if (!fIsArtificial) {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetConstRef();
       GenerateColumns(desc);
       if (fColumnRepresentatives.empty()) {
          // If we didn't get columns from the descriptor, ensure that we actually expect a field without columns

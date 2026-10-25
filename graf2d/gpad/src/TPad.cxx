@@ -3168,7 +3168,8 @@ Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t
    return kFALSE;
 }
 
-#define NotFree(i, j) fCollideGrid[TMath::Max(TMath::Min(i+j*fCGnx,fCGnx*fCGny),0)] = kFALSE;
+// Set the specific cell element in the grid to false, clamp to (fCGnx*fCGny) - 1 to avoid going out of bounds
+#define NotFree(i, j) fCollideGrid[TMath::Max(TMath::Min(i + j * fCGnx, (fCGnx * fCGny) - 1), 0)] = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark as "not free" the cells along a line.

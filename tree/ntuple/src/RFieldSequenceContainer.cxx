@@ -8,10 +8,9 @@
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RFieldUtils.hxx>
 
-#include <cstdlib> // for malloc, free
 #include <limits>
 #include <memory>
-#include <new> // hardware_destructive_interference_size
+#include <new> // hardware_destructive_interference_size, operator new
 
 namespace {
 
@@ -199,7 +198,7 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
      fNWritten(0)
 {
    if (itemField->GetAlignment() > sizeof(std::max_align_t)) {
-      // RVec uses malloc() and free()
+      // RVec uses operator new without alignment info
       throw RException(R__FAIL("RVec does not support over-aligned types"));
    }
 
@@ -282,26 +281,49 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
    }
 
    // Resize RVec (capacity and size)
-   if (std::int32_t(nItems) > *capacityPtr) { // must reallocate
+   // In the regime between 0 and 16 items, grow by doubling the size. Grow larger vectors by a factor 1.5 at most.
+   // If the new size is larger than the grown capacity, set the new capacity to the new size (i.e., don't allocate
+   // a larger capacity for vectors the are suddenly vastly larger than their previous state).
+   // TODO(jblomer): investigate a longer look back window to avoid shrinking for an unusual small entry and consider
+   // returning to average or median size (see TBasket::WriteReset()).
+   static constexpr std::int32_t kSmallThreshold = 16;
+   if ((std::int32_t(nItems) > *capacityPtr) || /* must grow */
+       ((std::int32_t(nItems) > kSmallThreshold) && (std::int32_t(nItems) < *capacityPtr / 4))) /* must shrink */ {
       // Destroy old elements: useless work for trivial types, but in case the element type's constructor
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
       if (needsDestruct) {
-         for (std::size_t i = 0u; i < oldSize; ++i) {
+         // Excess elements were destructed earlier.
+         for (std::size_t i = 0u; i < std::min(oldSize, nItems); ++i) {
             itemDeleter->operator()(*beginPtr + (i * itemSize), true /* dtorOnly */);
          }
       }
 
-      // TODO Increment capacity by a factor rather than just enough to fit the elements.
-      Internal::DestroyRVecWithChecks(itemField->GetAlignment(), beginPtr, capacityPtr);
-      // We trust that malloc returns a buffer with large enough alignment.
-      // This might not be the case if T in RVec<T> is over-aligned.
-      *beginPtr = static_cast<unsigned char *>(malloc(nItems * itemSize));
-      R__ASSERT(*beginPtr != nullptr);
-      *capacityPtr = nItems;
+      // Increment / decrement capacity geometrically
+      std::size_t newCapacity = nItems;
+      if (*capacityPtr > 0) {
+         constexpr std::size_t maxSize = static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max());
+         const std::size_t oldCap = static_cast<std::size_t>(*capacityPtr);
+         if (nItems > oldCap) {
+            const std::size_t grown = oldCap + ((oldCap < kSmallThreshold) ? oldCap : (oldCap / 2));
+            newCapacity = std::min(maxSize, std::max(nItems, grown));
+         } else {
+            newCapacity = oldCap / 2;
+            assert(nItems <= newCapacity);
+         }
+      }
 
-      // Placement new for elements that were already there before the resize
+      Internal::DestroyRVecWithChecks(itemField->GetAlignment(), beginPtr, capacityPtr);
+      // We checked that the item type is not over-aligned
+      *beginPtr = static_cast<unsigned char *>(::operator new(newCapacity * itemSize, std::nothrow));
+      R__ASSERT(*beginPtr != nullptr);
+      *capacityPtr = static_cast<std::int32_t>(newCapacity);
+
+      // Placement new for elements that were already there before the resize. When shrank, we only need to construct
+      // nItems items, because that's what we going to read. When grown, the remaining elements from oldSize until
+      // nItems is constructed a few lines down (we need to do this always when the size grows, even when not changing
+      // the capacity).
       if (needsConstruct) {
-         for (std::size_t i = 0u; i < oldSize; ++i)
+         for (std::size_t i = 0u; i < std::min(oldSize, nItems); ++i)
             CallConstructValueOn(*itemField, *beginPtr + (i * itemSize));
       }
    }
@@ -507,8 +529,9 @@ void ROOT::RRVecField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 //------------------------------------------------------------------------------
 
 ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                                 std::optional<std::string_view> emulatedFromType)
-   : ROOT::RFieldBase(fieldName, emulatedFromType ? *emulatedFromType : "std::vector<" + itemField->GetTypeName() + ">",
+                                 const ROOT::RFieldDescriptor *emulatedFrom)
+   : ROOT::RFieldBase(fieldName,
+                      emulatedFrom ? emulatedFrom->GetTypeName() : "std::vector<" + itemField->GetTypeName() + ">",
                       ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
@@ -518,8 +541,13 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
          R__FAIL(std::string("Unsupported vector item alignment: ") + std::to_string(itemField->GetAlignment())));
    }
 
-   if (emulatedFromType && !emulatedFromType->empty())
+   if (emulatedFrom && !emulatedFrom->GetTypeName().empty()) {
       fTraits |= kTraitEmulatedField;
+      if (emulatedFrom->IsSoACollection())
+         fTraits |= kTraitSoACollection;
+      fEmulatedTypeVersion = emulatedFrom->GetTypeVersion();
+      fEmulatedTypeChecksum = emulatedFrom->GetTypeChecksum().value_or(0);
+   }
 
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = "std::vector<" + itemField->GetTypeAlias() + ">";
@@ -530,22 +558,36 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
 }
 
 ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
-   : RVectorField(fieldName, std::move(itemField), {})
+   : RVectorField(fieldName, std::move(itemField), nullptr)
 {
 }
 
 std::unique_ptr<ROOT::RVectorField>
 ROOT::RVectorField::CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
 {
-   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, itemField->Clone("_0"), ""));
+   ROOT::RFieldDescriptor desc;
+   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, itemField->Clone("_0"), &desc));
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    auto isUntyped = GetTypeName().empty() || ((fTraits & kTraitEmulatedField) != 0);
-   auto emulatedFromType = isUntyped ? std::make_optional(GetTypeName()) : std::nullopt;
-   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(newName, std::move(newItemField), emulatedFromType));
+   ROOT::RFieldDescriptor desc;
+   if (isUntyped) {
+      ROOT::Internal::RFieldDescriptorBuilder builder;
+      desc = builder.TypeVersion(GetTypeVersion())
+                .TypeChecksum(GetTypeChecksum())
+                .TypeName(GetTypeName())
+                // we need an Id for MoveDescriptor to succeed, but we're not going to use it.
+                .FieldId(42)
+                // we also need a Structure for the same reason.
+                .Structure(ENTupleStructure::kCollection)
+                .MoveDescriptor()
+                .Unwrap();
+   }
+   return std::unique_ptr<ROOT::RVectorField>(
+      new RVectorField(newName, std::move(newItemField), isUntyped ? &desc : nullptr));
 }
 
 std::size_t ROOT::RVectorField::AppendImpl(const void *from)

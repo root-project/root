@@ -61,15 +61,17 @@ static const char *gFileTypes[] = {
    nullptr,              nullptr
 };
 
-static UShort_t gRedRainbow[12] = {
+constexpr size_t kNRainbowElems = 10;
+
+static UShort_t gRedRainbow[kNRainbowElems] = {
    0x0000, 0x7000, 0x0000, 0x0000, 0x0000,
    0xffff, 0xffff, 0x7000, 0x8000, 0xffff
 };
-static UShort_t gGreenRainbow[12] = {
+static UShort_t gGreenRainbow[kNRainbowElems] = {
    0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
    0xffff, 0x0000, 0x0000, 0x8000, 0xffff
 };
-static UShort_t gBlueRainbow[12] = {
+static UShort_t gBlueRainbow[kNRainbowElems] = {
    0x0000, 0x7000, 0xffff, 0xffff, 0x0000,
    0x0000, 0x0000, 0x0000, 0xa000, 0xffff
 };
@@ -672,13 +674,11 @@ void TASPaletteEditor::NewPalette(Long_t id)
    if (id == 5) // empty entry
       return;
 
-   TImagePalette *newPalette;
-
    Double_t delta = fPalette->fPoints[fPalette->fNumPoints-2] - fPalette->fPoints[1];
-   UInt_t   numPt;
 
-   numPt = id == 0 ? 12 : 13;
-   newPalette = new TImagePalette(numPt);
+   UInt_t numPt = id == 0 ? kNRainbowElems + 2 : 13;
+   TImagePalette *newPalette = new TImagePalette(numPt);
+
    Int_t pt;
    for (pt = 1; pt < Int_t(numPt - 1); pt++) {
       newPalette->fPoints[pt] = fPalette->fPoints[1] + (pt - 1) * delta / (numPt - 3);
@@ -687,9 +687,9 @@ void TASPaletteEditor::NewPalette(Long_t id)
 
    switch (id) {
       case 0:  // rainbow
-         memcpy(newPalette->fColorRed + 1,   gRedRainbow,   12 * sizeof(UShort_t));
-         memcpy(newPalette->fColorGreen + 1, gGreenRainbow, 12 * sizeof(UShort_t));
-         memcpy(newPalette->fColorBlue + 1,  gBlueRainbow,  12 * sizeof(UShort_t));
+         memcpy(newPalette->fColorRed + 1,   gRedRainbow,   kNRainbowElems * sizeof(UShort_t));
+         memcpy(newPalette->fColorGreen + 1, gGreenRainbow, kNRainbowElems * sizeof(UShort_t));
+         memcpy(newPalette->fColorBlue + 1,  gBlueRainbow,  kNRainbowElems * sizeof(UShort_t));
          break;
 
       case 1:  // gray

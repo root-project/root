@@ -80,8 +80,6 @@ public:
 /// The generic field for a `std::bitset<N>`.
 /// GCC and Clang store the bits in an array of unsigned long, whereas MSVC uses either a single uint32_t for `N <= 32`
 /// or an array of uint64_t for `N > 32` (reference: https://github.com/microsoft/STL/blob/main/stl/inc/bitset).
-/// TODO(jblomer): reading and writing efficiency should be improved; currently it is one bit at a time
-/// with an array of bools on the page level.
 class RBitsetField : public RFieldBase {
 protected:
    std::size_t fN;

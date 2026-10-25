@@ -877,8 +877,11 @@ cpyrt::Executor* cpyrt::CreateExecutor(const std::string& fullType,
   if (h != gExecFactories.end())
     return (h->second)(dims);
 
-  // resolve typedefs etc.
-  const std::string resolvedType = interop::ResolveName(fullType);
+  // resolve typedefs etc. (the type itself is kept for function pointers)
+  interop::TCppType_t type =
+      interop::GetType(fullType, /*enable_slow_lookup=*/true);
+  const std::string resolvedType =
+      type ? interop::GetTypeAsString(interop::ResolveType(type)) : fullType;
 
   // a full, qualified matching executor is preferred
   if (resolvedType != fullType) {
@@ -949,16 +952,10 @@ cpyrt::Executor* cpyrt::CreateExecutor(const std::string& fullType,
         result = new InstancePtrRefExecutor(klass);
     } else
       result = new InstancePtrExecutor(klass);
-  } else if (resolvedType.find("(*)") != std::string::npos ||
-             (resolvedType.find("::*)") != std::string::npos)) {
+  } else if (std::string fnRet, fnSig;
+             interop::GetFnTypeSigAsString(type, fnRet, fnSig)) {
     // this is a function pointer
-    // TODO: find better way of finding the type
-    auto pos1 = resolvedType.find('(');
-    auto pos2 = resolvedType.find("*)");
-    auto pos3 = resolvedType.rfind(')');
-    result = new FunctionPointerExecutor(
-        resolvedType.substr(0, pos1),
-        resolvedType.substr(pos2 + 2, pos3 - pos2 - 1));
+    result = new FunctionPointerExecutor(fnRet, fnSig);
   } else {
     // unknown: void* may work ("user knows best"), void will fail on use of
     // return value
@@ -1091,16 +1088,12 @@ cpyrt::Executor* cpyrt::CreateExecutor(interop::TCppType_t type, cdims_t dims) {
         result = new InstancePtrRefExecutor(klass);
     } else
       result = new InstancePtrExecutor(klass);
-  } else if (realTypeStr.find("(*)") != std::string::npos ||
-             (realTypeStr.find("::*)") != std::string::npos)) {
-    // this is a function pointer
-    // TODO: find better way of finding the type
-    auto pos1 = realTypeStr.find('(');
-    auto pos2 = realTypeStr.find("*)");
-    auto pos3 = realTypeStr.rfind(')');
-    result = new FunctionPointerExecutor(
-        realTypeStr.substr(0, pos1),
-        realTypeStr.substr(pos2 + 2, pos3 - pos2 - 1));
+  } else if (std::string fnRet, fnSig;
+             interop::GetFnTypeSigAsString(resolvedType, fnRet, fnSig)) {
+    // this is a function pointer (checked on the resolved type: the real type
+    // of a member function pointer is a bare function type, which must not
+    // pass here, as it would return 16 bytes through an 8-byte return slot)
+    result = new FunctionPointerExecutor(fnRet, fnSig);
   } else {
     // unknown: void* may work ("user knows best"), void will fail on use of
     // return value
@@ -1131,23 +1124,6 @@ bool cpyrt::RegisterExecutor(const std::string& name, ef_t fac) {
     return false;
 
   gExecFactories[name] = fac;
-  return true;
-}
-
-//----------------------------------------------------------------------------
-CPYRT_EXPORT
-bool cpyrt::RegisterExecutorAlias(const std::string& name,
-                                  const std::string& target) {
-  // register a custom executor that is a reference to an existing converter
-  auto f = gExecFactories.find(name);
-  if (f != gExecFactories.end())
-    return false;
-
-  auto t = gExecFactories.find(target);
-  if (t == gExecFactories.end())
-    return false;
-
-  gExecFactories[name] = t->second;
   return true;
 }
 

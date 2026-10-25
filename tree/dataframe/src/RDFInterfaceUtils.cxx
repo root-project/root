@@ -177,10 +177,21 @@ ParsedExpression ParseRDFExpression(std::string_view expr, const ROOT::Internal:
 {
    // transform `#var` into `R_rdf_sizeof_var`
    TString preProcessedExpr(expr);
-   // match #varname at beginning of the sentence or after not-a-word, but exclude preprocessor directives like #ifdef
+   // regex explanation:
+   // #
+   //     - matches the literal character #
+   // (?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))
+   //     - negative lookahead (i.e. don't match these  occurrences) to exclude preprocessor directives e.g. #ifdef
+   // ([a-zA-Z_][a-zA-Z0-9_]*)
+   //     - match characters that make up the variable name after the #
+   // (?=(?:[^"]*"[^"]*")*[^"]*$)
+   //     - positive lookahead (i.e. match these occurrences) checking that there is always an even number of quotes
+   //       *after* the matched character sequence, using the non-capturing group (?:[^"]*"[^"]*"). We leverage the
+   //       fact that for any character sequence to be within quotes there must be an odd number of quotes after the
+   //       sequence and before the end of the line.
    TPRegexp colSizeReplacer(
-      "(^|\\W)#(?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))([a-zA-Z_][a-zA-Z0-9_]*)");
-   colSizeReplacer.Substitute(preProcessedExpr, "$1R_rdf_sizeof_$3", "g");
+      R"REGEX(#(?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))([a-zA-Z_][a-zA-Z0-9_]*)(?=(?:[^"]*"[^"]*")*[^"]*$))REGEX");
+   colSizeReplacer.Substitute(preProcessedExpr, "R_rdf_sizeof_$2", "g");
 
    ColumnNames_t usedCols;
    ColumnNames_t usedAliases;

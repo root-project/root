@@ -12,6 +12,7 @@
 #include <ROOT/REveLine.hxx>
 #include <ROOT/REveProjectionManager.hxx>
 #include <ROOT/REveRenderData.hxx>
+#include <ROOT/REveTrans.hxx>
 
 #include "TClass.h"
 
@@ -352,12 +353,10 @@ void REveLineProjected::SetProjection(REveProjectionManager* mng,
 
 void REveLineProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 
-   Int_t    n = fSize;
-   Float_t *p = & fPoints[0].fZ;
-   for (Int_t i = 0; i < n; ++i, p+=3)
-      *p = fDepth;
+   for (Int_t i = 0; i < fSize; ++i)
+      fPoints[i].fZ = fDepth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -368,7 +367,8 @@ void REveLineProjected::UpdateProjection()
 {
    REveProjection& proj = * fManager->GetProjection();
    REveLine      & als  = * dynamic_cast<REveLine*>(fProjectable);
-   REveTrans      *tr   =   als.PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *tr = fManager->GetModelTrans(&als, mt);
 
    Int_t n = als.GetSize();
    Reset(n);

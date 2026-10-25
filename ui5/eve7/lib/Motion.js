@@ -19,38 +19,13 @@ sap.ui.define([], function() {
       constructor(viewer) {
          this.viewer  = viewer;
          this.objects = new Map();   // element id -> entry
-         this.offset  = null;        // performance.now() - server ms
          this.raf     = 0;
          this.enabled = true;
-
-         /** Cap on applied updates per second; 0 freezes. See setMaxHz(). */
-         this.max_hz    = 60;
-         this._last_app = 0;
-         /** Server timestamp of the message the last accept/drop decision was
-           * made for, and that decision. Every element of one message shares it. */
-         this._msg_t    = null;
-         this._msg_ok   = false;
 
          /** Cap on animation-driven redraws per second; 0 is uncapped. */
          this.render_max_hz = 0;
          this._last_render  = 0;
          this._pending      = 0;
-      }
-
-      /** How often this viewer may apply streamed motion, from
-        * REveViewer::SetMotionMaxHz. A negative value means 60.
-        *
-        * Zero freezes the viewer: updates are dropped and extrapolation stops.
-        * setEnabled(false) differs: it stops only the extrapolation, and
-        * objects still step at the server's update rate.
-        */
-      setMaxHz(hz) {
-         hz = (hz >= 0) ? hz : 60;
-         if (hz === this.max_hz) return;
-         this.max_hz = hz;
-
-         if (hz === 0) this.stop();
-         else          this.start();
       }
 
       /** How often the animation loop may redraw, from
@@ -90,28 +65,6 @@ sap.ui.define([], function() {
          }
       }
 
-      /** Gate for an incoming motion update: false means drop it.
-        *
-        * `t` is the server timestamp of the whole message (msg_t, set in
-        * EveManager). The decision is made once per message and reused for
-        * every element in it. Deciding per element would let the first element
-        * spend the budget and refuse the rest every time.
-        */
-      acceptUpdate(t) {
-         if (this.max_hz === 0) return false;
-
-         if (t !== undefined && t === this._msg_t)
-            return this._msg_ok;
-
-         const now = performance.now();
-         const ok  = (now - this._last_app) >= 1000 / this.max_hz;
-         if (ok) this._last_app = now;
-
-         this._msg_t  = t;
-         this._msg_ok = ok;
-         return ok;
-      }
-
       /** Per-viewer switch for extrapolation, from
         * REveViewer::SetExtrapolateMotion.
         *
@@ -136,64 +89,42 @@ sap.ui.define([], function() {
                   m[o] = r[cIdx*3]; m[o+1] = r[cIdx*3+1]; m[o+2] = r[cIdx*3+2];
                }
                e.obj3d.matrixChanged();
+               if (e.scene) ++e.scene.trans_stamp;
             }
             this.viewer.request_render();
          }
       }
 
-      //--------------------------------------------------------------------
-      // The shared clock
-      //--------------------------------------------------------------------
-
-      /** Feed one observation of the server clock; t0 is in server ms.
-        *
-        * A sample is performance.now() - t0: the true offset plus the one-way
-        * delay plus local processing delay. The additions are positive, so the
-        * smallest sample is the best estimate, as in NTP. A sample above the
-        * estimate pulls it up by 0.0005 of the difference, so one fast outlier
-        * does not pin it low and clock drift is followed.
-        *
-        * The residual error is a constant lag of about the one-way latency. It
-        * shifts every object equally, so objects do not jitter against each
-        * other.
-        */
-      noteServerTime(t0) {
-         const s = performance.now() - t0;
-
-         if (this.offset === null || s < this.offset)
-            this.offset = s;
-         else
-            this.offset += (s - this.offset) * 0.0005;
-      }
-
+      /** The server's time now, in ms, from EveManager's clock. */
       serverNow() {
-         return (this.offset === null) ? 0 : performance.now() - this.offset;
+         return this.viewer.get_manager().serverNow();
       }
 
       //--------------------------------------------------------------------
 
-      /** Take the `mot` block of a transformation update. Null clears it. */
-      update(id, obj3d, mot) {
-         if (!mot) { this.remove(id); return; }
-
-         this.noteServerTime(mot.t0);
+      /** Take the `motion` block of a transformation update. Null clears it.
+        * `scene` is the EveScene of `obj3d`; moving the object raises its
+        * trans_stamp. */
+      update(id, obj3d, motion, scene) {
+         if (!motion) { this.remove(id); return; }
 
          const m = obj3d._matrix ? obj3d._matrix.elements : null;
          if (!m) return;
 
          this.objects.set(id, {
             obj3d:  obj3d,
+            scene:  scene,
             // Where the server says it was at t0 -- the matrix it sent in the
             // same message, before anything here has touched it. The rotation
             // is kept as the three basis columns, scale and all.
             p0:     [m[12], m[13], m[14]],
             r0:     [m[0], m[1], m[2],  m[4], m[5], m[6],  m[8], m[9], m[10]],
-            t0:     mot.t0,
-            vel:    mot.vel,
-            acc:    mot.acc,
-            axis:   mot.axis  || [0, 0, 1],
-            rate:   mot.rate  || 0,
-            max_dt: mot.max_dt
+            t0:     motion.t0,
+            vel:    motion.vel,
+            acc:    motion.acc,
+            axis:   motion.axis  || [0, 0, 1],
+            rate:   motion.rate  || 0,
+            max_dt: motion.max_dt
          });
 
          this.start();
@@ -201,6 +132,13 @@ sap.ui.define([], function() {
 
       remove(id) {
          this.objects.delete(id);
+      }
+
+      /** Move the trajectory of element `id` to `obj3d`, which takes over the
+        * element's matrix, as when EveScene gives a leaf a group node. */
+      retarget(id, obj3d) {
+         const e = this.objects.get(id);
+         if (e) e.obj3d = obj3d;
       }
 
       clear() {
@@ -211,7 +149,7 @@ sap.ui.define([], function() {
       //--------------------------------------------------------------------
 
       start() {
-         if (this.raf || this.objects.size === 0 || !this.enabled || this.max_hz === 0) return;
+         if (this.raf || this.objects.size === 0 || !this.enabled) return;
          this.raf = requestAnimationFrame(this.tick.bind(this));
       }
 
@@ -292,7 +230,11 @@ sap.ui.define([], function() {
                touched = true;
             }
 
-            if (touched) { e.obj3d.matrixChanged(); moved = true; }
+            if (touched) {
+               e.obj3d.matrixChanged();
+               if (e.scene) ++e.scene.trans_stamp;
+               moved = true;
+            }
          }
          return moved;
       }

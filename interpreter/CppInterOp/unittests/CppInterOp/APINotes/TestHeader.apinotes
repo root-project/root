@@ -18,3 +18,26 @@ Functions:
     SwiftReturnOwnership: cppAllocNone
   - Name: testWeirdAttr
     SwiftReturnOwnership: someWeirdAttr
+  - Name: testDeallocFree
+    SwiftReturnOwnership: cppDeallocFree_1
+  - Name: testDeallocDelete
+    SwiftReturnOwnership: cppDeallocDelete_1
+  - Name: testDeallocDeleteArr
+    SwiftReturnOwnership: cppDeallocDeleteArr_1
+  - Name: testDeallocNone
+    SwiftReturnOwnership: cppDeallocNone_1
+  - Name: testDeallocMulti
+    SwiftReturnOwnership: "cppDeallocDelete_1 cppDeallocFree_2"
+  - Name: testDeallocWeirdAttr
+    SwiftReturnOwnership: someWeirdDeallocAttr
+Tags:
+  - Name: KlassNotes
+    Methods:
+      - Name: releaseArg
+        SwiftReturnOwnership: cppDeallocFree_2
+      - Name: releaseSelf
+        SwiftReturnOwnership: cppDeallocDelete_1
+      - Name: releaseBoth
+        SwiftReturnOwnership: "cppDeallocDelete_1 cppDeallocFree_2"
+      - Name: releaseBare
+        SwiftReturnOwnership: cppDeallocDelete

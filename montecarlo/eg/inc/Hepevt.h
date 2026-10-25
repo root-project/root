@@ -13,6 +13,10 @@
 
 #include "Rtypes.h"
 
+#if !defined(ROOT_TGenerator_cxx) && !defined(G__DICTIONARY)
+#warning "This header is an implementation detail, is deprecated and will be moved to ROOT/Hepevt.h in ROOT 6.44, and may be removed later on from public interface. Use instead the `TGenerator.h` public interface"
+#endif
+
 #include "cfortran.h"
 
 extern "C" {

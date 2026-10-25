@@ -102,6 +102,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The header `Riostream.h` is deprecated and will be removed after ROOT 6.44, use `<iostream>` or `<fstream>` or `<iomanip>` instead.
 * The header `Rstrstream.h` is deprecated and will be removed after ROOT 6.44, use instead `<sstream>`.
 * The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
+* The headers `Hepevt.h` and `cfortran.h` are deprecated and will be moved to  `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
 * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
 
 ## Build System
@@ -151,6 +152,23 @@ Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 ## I/O
 
 * Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
+
+### RFile
+
+RFile, ROOT's modern interface to ROOT file, has moved out of the `ROOT::Experimental` namespace.
+
+### RNTupleProcessor
+
+The RNTupleProcessor is a new, standalone interface for creating *chains* (similar to TTree's `TChain`) and *joins* (similar to TTree friends) from RNTuples in a composable way, and iterating over their entries.
+Until this release, it was available in the experimental namespace.
+With ROOT v6.42:
+
+* The RNTupleProcessor for single RNTuples and chained RNTuples has moved out of `ROOT::Experimental`.
+They can be created with `ROOT::RNTupleProcessor::Create()` and `ROOT::RNTupleProcessor::CreateChain()`, respectively.
+Processing joined RNTuples will remain available in the experimental namespace for this release, in order to address a few additional (potentially interface-breaking) improvements.
+Creating an RNTupleProcessor for joins can (for now) be done by calling `ROOT::Experimental::CreateRNTupleJoinProcessor`.
+* An experimental RDataFrame datasource using the RNTupleProcessor has been added.
+RDataFrames can be created from an existing RNTupleProcessor by calling `ROOT::Experimental::RDF::FromRNTupleProcessor()`.
 
 ## Core
 

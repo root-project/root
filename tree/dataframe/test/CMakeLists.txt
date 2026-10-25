@@ -117,6 +117,7 @@ ROOT_ADD_GTEST(datasource_ntuple_processor datasource_ntuple_processor.cxx LIBRA
 
 if(MSVC)
   set_source_files_properties(datasource_ntuple.cxx PROPERTIES COMPILE_FLAGS /bigobj)
+  set_source_files_properties(datasource_ntuple_processor.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 ROOT_ADD_GTEST(dataframe_unified_constructor dataframe_unified_constructor.cxx LIBRARIES ROOTDataFrame)
 

@@ -20,6 +20,9 @@
 #include <limits>
 #include <ostream>
 #include <type_traits>
+#include <variant>
+
+class TDirectory; // For RNTupleInputSpec
 
 namespace ROOT {
 
@@ -317,6 +320,41 @@ public:
    void SetPosition(std::uint64_t position);
    void SetPosition(RNTupleLocatorObject64 position);
    void SetPosition(RNTupleLocatorMulti position);
+};
+
+namespace Internal {
+class RPageSource; // For RNTupleInputSpec
+}
+
+// clang-format off
+   /**
+   \class ROOT::Experimental::RNTupleInputSpec
+   \ingroup NTuple
+   \brief Specification of the name and location of an RNTuple, used for creating a new RNTupleProcessor.
+
+   An RNTupleInputSpec can be created by providing either a string with a path to the ROOT file or a pointer to the
+   TDirectory (or any of its subclasses) that contains the RNTuple.
+
+   Note that the RNTupleInputSpec is *write-only*, to prevent usability issues with Python.
+   */
+// clang-format on
+class RNTupleInputSpec {
+   friend class RNTupleProcessor;
+   friend class RNTupleSingleProcessor;
+
+public:
+   using Storage_t = std::variant<std::string, TDirectory *>;
+
+private:
+   std::string fNTupleName;
+   Storage_t fStorage;
+
+public:
+   RNTupleInputSpec(std::string_view n, TDirectory *s) : fNTupleName(n), fStorage(s) {}
+   RNTupleInputSpec(std::string_view n, const std::string &s) : fNTupleName(n), fStorage(s) {}
+
+   const std::string &GetNTupleName() const { return fNTupleName; }
+   const Storage_t &GetStorage() const { return fStorage; }
 };
 
 namespace Internal {

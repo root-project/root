@@ -44,7 +44,7 @@ using namespace ROOT::Experimental;
 ////////////////////////////////////////////////////////////////////////////////
 /// Declare how this transformation is changing; position still comes from the
 /// matrix. Does not stamp the owning element, which must be stamped with
-/// kCBTransBBox for the motion to be streamed.
+/// kCBTrans for the motion to be streamed.
 
 void REveTrans::SetMotion(const REveVectorD &vel, const REveVectorD &acc, Double_t max_dt)
 {

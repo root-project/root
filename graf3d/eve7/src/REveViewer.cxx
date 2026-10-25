@@ -152,15 +152,6 @@ void REveViewer::SetRenderMaxHz(Float_t hz)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Cap the rate at which this viewer applies streamed motion; 0 freezes it.
-
-void REveViewer::SetMotionMaxHz(Float_t hz)
-{
-   fMotionMaxHz = hz < 0.f ? 0.f : (hz > 240.f ? 240.f : hz);
-   StampObjProps();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set the point the camera looks at and orbits around, either the world
 /// origin or the center of the scene bounding box. Clients reset their camera
 /// when this changes.
@@ -290,7 +281,6 @@ int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["CameraCenter"] = fCameraCenter;
    j["ExtrapolateMotion"] = fExtrapolateMotion;
    j["AxesUpAxis"] = fAxesUpAxis;
-   j["MotionMaxHz"] = fMotionMaxHz;
    j["RenderMaxHz"] = fRenderMaxHz;
    // clang-format off
    if (fHasAxesBBox)

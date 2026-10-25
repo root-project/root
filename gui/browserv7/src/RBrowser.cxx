@@ -276,7 +276,7 @@ Following `.rootrc` parameters can be configured for the browser:
    * WebGui.Browser.LastCycle: show only last key cycle (default off)
    * WebGui.Browser.Expand: expand browsable area (default off)
 
-\note See major settings in RWebWindowWindowsManager::CreateServer and RWebWindowsManager::ShowWindow
+\note See major settings in RWebWindowsManager::CreateServer and RWebWindowsManager::ShowWindow
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////////

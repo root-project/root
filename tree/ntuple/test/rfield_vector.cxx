@@ -154,7 +154,6 @@ TEST(RNTuple, InsideCollection)
    // TODO: test reading of "klassVec.v1"
 }
 
-
 TEST(RNTuple, RVec)
 {
    FileRaii fileGuard("test_ntuple_rvec.root");
@@ -304,6 +303,107 @@ TEST(RNTuple, ReadVectorAsRVec)
    EXPECT_TRUE(rvec->empty());
 }
 
+TEST(RNTuple, RVecGeometricResize)
+{
+   FileRaii fileGuard("test_ntuple_rvec_geometric_resize.root");
+
+   {
+      auto m = RNTupleModel::Create();
+      auto rvec = m->MakeField<ROOT::RVec<int>>("v");
+      auto w = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
+
+      for (int i = 0; i < 6; ++i) {
+         w->Fill();
+         rvec->push_back(i);
+      }
+
+      *rvec = {10};
+      w->Fill();
+
+      *rvec = ROOT::RVec(11, 0);
+      w->Fill();
+
+      *rvec = ROOT::RVec(23, 0);
+      w->Fill();
+
+      rvec->clear();
+      w->Fill();
+
+      *rvec = ROOT::RVec(100, 0);
+      w->Fill();
+
+      *rvec = ROOT::RVec(101, 0);
+      w->Fill();
+
+      *rvec = {1, 2};
+      w->Fill();
+
+      *rvec = {1, 2, 3};
+      w->Fill();
+   }
+
+   auto m = RNTupleModel::Create();
+   auto rvec = m->MakeField<ROOT::RVec<int>>("v");
+   auto reader = RNTupleReader::Open(std::move(m), "ntpl", fileGuard.GetPath());
+   EXPECT_EQ(14u, reader->GetNEntries());
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(rvec->size(), 0u);
+   EXPECT_EQ(rvec->capacity(), 0u);
+
+   reader->LoadEntry(1);
+   EXPECT_EQ(rvec->size(), 1u);
+   EXPECT_EQ(rvec->capacity(), 1u);
+
+   reader->LoadEntry(2);
+   EXPECT_EQ(rvec->size(), 2u);
+   EXPECT_EQ(rvec->capacity(), 2u);
+
+   reader->LoadEntry(3);
+   EXPECT_EQ(rvec->size(), 3u);
+   EXPECT_EQ(rvec->capacity(), 4u);
+
+   reader->LoadEntry(4);
+   EXPECT_EQ(rvec->size(), 4u);
+   EXPECT_EQ(rvec->capacity(), 4u);
+
+   reader->LoadEntry(5);
+   EXPECT_EQ(rvec->size(), 5u);
+   EXPECT_EQ(rvec->capacity(), 8u);
+
+   reader->LoadEntry(6);
+   EXPECT_EQ(rvec->size(), 1u);
+   EXPECT_GE(rvec->capacity(), 8u);
+
+   reader->LoadEntry(7);
+   EXPECT_EQ(rvec->size(), 11u);
+   EXPECT_GE(rvec->capacity(), 16u);
+
+   reader->LoadEntry(8);
+   EXPECT_EQ(rvec->size(), 23u);
+   EXPECT_GE(rvec->capacity(), 24u);
+
+   reader->LoadEntry(9);
+   EXPECT_EQ(rvec->size(), 0u);
+   EXPECT_GE(rvec->capacity(), 24u);
+
+   reader->LoadEntry(10);
+   EXPECT_EQ(rvec->size(), 100u);
+   EXPECT_GE(rvec->capacity(), 100u);
+
+   reader->LoadEntry(11);
+   EXPECT_EQ(rvec->size(), 101u);
+   EXPECT_GE(rvec->capacity(), 150u);
+
+   reader->LoadEntry(12);
+   EXPECT_EQ(rvec->size(), 2u);
+   EXPECT_GE(rvec->capacity(), 75u);
+
+   reader->LoadEntry(13);
+   EXPECT_EQ(rvec->size(), 3u);
+   EXPECT_GE(rvec->capacity(), 37u);
+}
+
 TEST(RNTuple, BoolVector)
 {
    FileRaii fileGuard("test_ntuple_boolvec.root");
@@ -352,6 +452,8 @@ void FillComplexVector(const std::string &fname)
    auto model = RNTupleModel::Create();
    auto wrV = model->MakeField<Coll_t<ComplexStruct>>("v");
 
+   // Sequence of number of elements: 0, 10, 10000, 100, 200, 0, 1
+
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "T", fname);
    ntuple->Fill();
    for (unsigned i = 0; i < 10; ++i)
@@ -377,6 +479,7 @@ void FillComplexVector(const std::string &fname)
 template <template <typename> class Coll_t>
 void TestComplexVector(const std::string &fname)
 {
+   static constexpr bool canShrink = std::is_base_of_v<ROOT::Internal::VecOps::SmallVectorBase, Coll_t<ComplexStruct>>;
    ComplexStruct::SetNCallConstructor(0);
    ComplexStruct::SetNCallDestructor(0);
    {
@@ -396,23 +499,23 @@ void TestComplexVector(const std::string &fname)
       EXPECT_EQ(10, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(10000u, rdV->size());
       ntuple->LoadEntry(3);
-      EXPECT_EQ(10010, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(9910, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(canShrink ? 10110 : 10010, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(canShrink ? 10010 : 9910, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(100u, rdV->size());
       ntuple->LoadEntry(4);
-      EXPECT_EQ(10110, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(9910, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(canShrink ? 10310 : 10110, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(canShrink ? 10110 : 9910, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(200u, rdV->size());
       ntuple->LoadEntry(5);
-      EXPECT_EQ(10110, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10110, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(canShrink ? 10310 : 10110, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(canShrink ? 10310 : 10110, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(0u, rdV->size());
       ntuple->LoadEntry(6);
-      EXPECT_EQ(10111, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10110, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(canShrink ? 10311 : 10111, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(canShrink ? 10310 : 10110, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(1u, rdV->size());
    }
-   EXPECT_EQ(10111u, ComplexStruct::GetNCallDestructor());
+   EXPECT_EQ(canShrink ? 10311 : 10111u, ComplexStruct::GetNCallDestructor());
 }
 
 TEST(RNTuple, ComplexVector)

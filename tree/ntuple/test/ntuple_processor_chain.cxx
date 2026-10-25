@@ -74,7 +74,7 @@ protected:
 TEST(RNTupleChainProcessor, EmptySpec)
 {
    try {
-      auto proc = RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec>{});
+      auto proc = RNTupleProcessor::CreateChain(std::vector<RNTupleInputSpec>{});
       FAIL() << "creating a processor without at least one RNTuple should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("at least one RNTuple must be provided"));
@@ -148,7 +148,7 @@ TEST_F(RNTupleChainProcessorTest, AddAllFields)
 {
    auto proc = RNTupleProcessor::CreateChain(
       {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}, {fNTupleName, fFileNames[1]}});
-   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto entry = ROOT::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
    auto fieldIdxs = entry->GetFieldIndices();
 
    EXPECT_EQ(fieldIdxs.size(), 2);
@@ -158,7 +158,7 @@ TEST_F(RNTupleChainProcessorTest, AddAllFieldsAndSubfields)
 {
    auto proc = RNTupleProcessor::CreateChain(
       {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}, {fNTupleName, fFileNames[1]}});
-   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto entry = ROOT::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
    auto fieldIdxs = entry->GetFieldIndices();
 
    EXPECT_EQ(fieldIdxs.size(), 3);
@@ -174,7 +174,7 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fileGuard.GetPath());
    }
 
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fileGuard.GetPath()}, {fNTupleName, fFileNames[0]}};
+   std::vector<RNTupleInputSpec> ntuples = {{fNTupleName, fileGuard.GetPath()}, {fNTupleName, fFileNames[0]}};
 
    // Empty ntuples are skipped (as long as their model complies)
    auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fileGuard.GetPath()},
@@ -191,7 +191,7 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
 struct RNTupleProcessorEntryLoader {
    static ROOT::RResult<void> LoadEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
    {
@@ -204,11 +204,11 @@ struct RNTupleProcessorEntryLoader {
       return RResult<void>::Success();
    }
 };
-} // namespace ROOT::Experimental::Internal
+} // namespace ROOT::Internal
 
 TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
 {
-   using ROOT::Experimental::Internal::RNTupleProcessorEntryLoader;
+   using ROOT::Internal::RNTupleProcessorEntryLoader;
 
    auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}});
 
@@ -285,7 +285,7 @@ TEST_F(RNTupleChainProcessorTest, OpenFileLimit)
 {
    // Assuming the open file limit is 1024, this should exceed that. Only one RNTuple page source at the should be
    // attached, so this should not be an issue.
-   std::vector<RNTupleOpenSpec> chain(2000, {fNTupleName, fFileNames[0]});
+   std::vector<RNTupleInputSpec> chain(2000, {fNTupleName, fFileNames[0]});
    auto proc = RNTupleProcessor::CreateChain(std::move(chain));
    auto x = proc->RequestField<float>("x");
 

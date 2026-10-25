@@ -913,6 +913,39 @@ TEST(RDataFrameInterface, StressShortSyntaxForCollectionSizes)
    EXPECT_EQ(c, 42ull);
 }
 
+// Regression tests for https://github.com/root-project/root/issues/23790
+TEST(RDataFrameInterface, ShortSyntaxForCollectionSizesMultipleStringsAndVars)
+{
+   // We need to define first four target columns that have the longer name for collection size
+   auto df = ROOT::RDF::RNode(ROOT::RDataFrame(1));
+   for (auto i = 1; i <= 4; i++)
+      df = df.Define("R_rdf_sizeof_var" + std::to_string(i), []() -> int { return 1; });
+   std::string code{R"CODE(
+      auto value1 = #var1; // comment
+      #ifdef NONEXISTENTMACRO
+      // comment with "quoted string"
+      #endif
+      std::string simplestr("#simplestr"); // comment
+      std::string mystr("anything#hello"); // comment
+      auto value2 = #var2; // comment with "another string"
+      std::string anotherstr("We don't want #var3 and #var4 to be replaced");
+      auto value5 = #var1 + #var2; std::string innerRawString{R"INNER(
+       This raw string contains #myvar which should
+       not be changed.)INNER"};
+      return #var1 + #var2 + #var3 + #var4 + value1 + value2 + value5;
+   )CODE"};
+   auto sum = df.Define("target_col", code).Sum<int>("target_col");
+   EXPECT_EQ(*sum, 8);
+}
+
+// Regression test for https://github.com/root-project/root/issues/23790
+TEST(RDataFrameInterface, StringWithPotentialAmbiguityWithSortSyntaxForCollectionSizes)
+{
+   auto df = ROOT::RDataFrame(1).Define("col", "std::string(\"#a\")").Filter("col == \"#a\"");
+   EXPECT_EQ(df.Count().GetValue(), 1ull);
+   EXPECT_EQ(*df.Take<std::string>("col")->begin(), "#a");
+}
+
 TEST(RDataFrameInterface, MutableForeach)
 {
    int i = 0;

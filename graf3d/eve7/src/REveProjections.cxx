@@ -93,7 +93,7 @@ void REveProjection::ProjectPointfv(const REveTrans* t, const Float_t* p, Float_
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Project double array, converting it to global coordinate system first if
-/// transformation matrix is set.
+/// transformation matrix is set. `p` and `v` may be the same array.
 /// This is a bit piggish as we convert the doubles to floats and back.
 
 void REveProjection::ProjectPointdv(const REveTrans* t, const Double_t* p, Double_t* v, Float_t d)
@@ -101,8 +101,11 @@ void REveProjection::ProjectPointdv(const REveTrans* t, const Double_t* p, Doubl
    Float_t x, y, z;
    if (t)
    {
-      t->Multiply(p, v);
-      x = v[0]; y = v[1]; z = v[2];
+      Double_t buf[3];
+      t->Multiply(p, buf);
+      x = buf[0];
+      y = buf[1];
+      z = buf[2];
    }
    else
    {

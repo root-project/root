@@ -29,14 +29,14 @@
 namespace ROOT::Experimental::Internal::RDF {
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleProcessorColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
-   RNTupleProcessorOptionalPtr<void> fValuePtr; ///< Container for the value of the column
+   RNTupleProcessorValuePtr<void> fValuePtr; ///< Container for the value of the column
    Long64_t fLastLoadedEntry = ROOT::kInvalidNTupleIndex;
 
 public:
-   RNTupleProcessorColumnReader(RNTupleProcessorOptionalPtr<void> &valuePtr) : fValuePtr(std::move(valuePtr)) {}
+   RNTupleProcessorColumnReader(RNTupleProcessorValuePtr<void> &valuePtr) : fValuePtr(std::move(valuePtr)) {}
    ~RNTupleProcessorColumnReader() override = default;
 
-   void *GetImpl(Long64_t entry) final
+   void *GetImpl(Long64_t entry [[maybe_unused]]) final
    {
       assert(entry == fLastLoadedEntry);
       return fValuePtr.GetPtr().get();
@@ -49,7 +49,7 @@ RNTupleProcessorDS::~RNTupleProcessorDS() = default;
 
 // TODO: see if common parts of this and RNTupleDS::AddField can be factored out.
 void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_view colName,
-                                  Internal::RNTupleProcessorProvenance procProvenance,
+                                  ROOT::Internal::RNTupleProcessorProvenance procProvenance,
                                   std::deque<RNTupleProcessorDS::RFieldInfo> &fieldInfos, bool convertToRVec)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple
@@ -89,7 +89,9 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
       // The field is a collection or a fixed-size array.
       // We open a new collection scope with fieldID being the inner most collection. E.g. for "event.tracks.hits",
       // fieldInfos would already contain the fieldID of "event.tracks"
-      fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions);
+      const std::string name = (procProvenance.Empty() ? "" : procProvenance.Get() + ".") + std::string(colName);
+      fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions,
+                              *fProcessor->GetEntry().FindFieldIndex(name));
       nFieldInfosAdded++;
    }
 
@@ -127,7 +129,14 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
 
    // The fieldID could be the root field or the class of fieldId might not be loaded.
    // In these cases, only the inner fields are exposed as RDF columns.
-   auto fieldOrException = ROOT::RFieldBase::Create(field.GetFieldName(), field.GetTypeName());
+   std::string fieldName = field.GetFieldName();
+   auto fieldInfoIt = fieldInfos.begin();
+   while (fieldName == "_0") {
+      assert(fieldInfoIt != fieldInfos.end());
+      fieldName = fieldInfoIt->fFieldName;
+      fieldInfoIt++;
+   }
+   auto fieldOrException = ROOT::RFieldBase::Create(fieldName, field.GetTypeName());
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
@@ -160,7 +169,7 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
       } else {
          cardinalityField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::size_t>>(name);
       }
-      cardinalityField->SetOnDiskId(info.fFieldId);
+      cardinalityField->SetOnDiskId(info.fOnDiskId);
    }
 
    for (auto i = fieldInfos.rbegin(); i != fieldInfos.rend(); ++i) {
@@ -183,7 +192,7 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
          }
       }
 
-      valueField->SetOnDiskId(fieldInfo.fFieldId);
+      valueField->SetOnDiskId(fieldInfo.fOnDiskId);
 
       // Skip the inner-most collection level to construct the cardinality column
       // It's taken care of by the `if (!fieldInfos.empty())` scope above
@@ -198,29 +207,36 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
             cardinalityField = std::make_unique<ROOT::RRVecField>(cardinalityFieldName, cardinalityField->Clone("_0"));
          }
 
-         cardinalityField->SetOnDiskId(fieldInfo.fFieldId);
+         cardinalityField->SetOnDiskId(fieldInfo.fOnDiskId);
       }
    }
 
-   if (cardinalityField) {
-      std::string cardinalityFieldName =
-         (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + "_R_rdf_sizeof_") + std::string(colName);
-      fColumnNames.emplace_back(cardinalityFieldName);
-      fColumnTypes.emplace_back(cardinalityField->GetTypeName());
-      fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
-                                  Internal::RNTupleProcessorProvenance());
-   }
-
-   fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions);
-   nFieldInfosAdded++;
    std::string canonicalName = (procProvenance.Empty() ? "" : procProvenance.Get() + ".") + std::string(colName);
    fColumnNames.emplace_back(canonicalName);
    fColumnTypes.emplace_back(valueField->GetTypeName());
 
-   // Add nested fields explicitly to the entry, because they may be mapped differently.
-   if (fieldInfos.size() > 1) {
-      fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
-                                  Internal::RNTupleProcessorProvenance());
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx;
+   if (auto optFieldIdx = fProcessor->GetEntry().FindFieldIndex(canonicalName);
+       optFieldIdx && fProcessor->GetEntry().GetField(*optFieldIdx).GetTypeName() == field.GetTypeName()) {
+      fieldIdx = *optFieldIdx;
+   } else {
+      fieldIdx = fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
+                                             ROOT::Internal::RNTupleProcessorProvenance());
+   }
+
+   if (cardinalityField) {
+      // FIXME(fdegeus): Make cardinality field name work properly with "#colname"
+      std::string cardinalityFieldName =
+         (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + ".R_rdf_sizeof_") + std::string(colName);
+      fColumnNames.emplace_back(cardinalityFieldName);
+      fColumnTypes.emplace_back(cardinalityField->GetTypeName());
+      auto cardinalityFieldIdx = fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
+                                                             ROOT::Internal::RNTupleProcessorProvenance());
+      if (!fieldInfos.empty()) {
+         const auto &fieldInfo = fieldInfos.back();
+         fieldIdx = fieldInfo.fEntryFieldIdx;
+      }
+      fProcessor->GetEntry().SetFieldOriginIdx(cardinalityFieldIdx, fieldIdx);
    }
 
    for (std::uint16_t i = 0; i < nFieldInfosAdded; i++) {
@@ -228,11 +244,11 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
    }
 }
 
-RNTupleProcessorDS::RNTupleProcessorDS(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor)
+RNTupleProcessorDS::RNTupleProcessorDS(std::unique_ptr<ROOT::RNTupleProcessor> processor)
    : fProcessor(std::move(processor))
 {
    // Do not add the subfields now, this is handled by AddField.
-   fProcessor->AddAllFieldsToEntry(Internal::RNTupleProcessorProvenance(), /*includeSubfields=*/false);
+   fProcessor->AddAllFieldsToEntry(ROOT::Internal::RNTupleProcessorProvenance(), /*includeSubfields=*/false);
    const auto &entry = fProcessor->GetEntry();
    for (auto fieldIdx : entry.GetFieldIndices()) {
       const auto &field = entry.GetValue(fieldIdx).GetField();
@@ -321,7 +337,7 @@ RNTupleProcessorDS::GetColumnReaders(unsigned int /* slot */, std::string_view n
    newField->SetOnDiskId(field.GetOnDiskId());
 
    try {
-      fProcessor->AddFieldToEntry(std::move(newField), strName, nullptr, Internal::RNTupleProcessorProvenance());
+      fProcessor->AddFieldToEntry(std::move(newField), strName, nullptr, ROOT::Internal::RNTupleProcessorProvenance());
    } catch (const ROOT::RException &) {
       std::string msg = "RNTupleProcessorDS: invalid type \"" + requestedType + "\" for column \"" + strName +
                         "\" with on-disk type \"" + field.GetTypeName() + "\"";
@@ -375,7 +391,7 @@ bool RNTupleProcessorDS::HasColumn(std::string_view colName) const
 void RNTupleProcessorDS::Initialize()
 {
    fCurrentRanges.clear();
-   fProcessor->Connect(fProcessor->GetEntry().GetFieldIndices(), Internal::RNTupleProcessorProvenance(),
+   fProcessor->Connect(fProcessor->GetEntry().GetFieldIndices(), ROOT::Internal::RNTupleProcessorProvenance(),
                        /*updateFields=*/false);
 }
 
@@ -425,8 +441,7 @@ ROOT::RDF::RSampleInfo RNTupleProcessorDS::CreateSampleInfo(
 }
 } // namespace ROOT::Experimental::Internal::RDF
 
-ROOT::RDataFrame
-ROOT::Experimental::RDF::FromRNTupleProcessor(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor)
+ROOT::RDataFrame ROOT::Experimental::RDF::FromRNTupleProcessor(std::unique_ptr<ROOT::RNTupleProcessor> processor)
 {
    return ROOT::RDataFrame(
       std::make_unique<ROOT::Experimental::Internal::RDF::RNTupleProcessorDS>(std::move(processor)));

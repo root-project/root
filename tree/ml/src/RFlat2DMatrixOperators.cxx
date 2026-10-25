@@ -1,21 +1,35 @@
-#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
+#include "RFlat2DMatrixOperators.hxx"
 
 #include <algorithm>
 #include <numeric>
 #include <random>
 
 #include "ROOT/ML/RFlat2DMatrix.hxx"
-#include "Rtypes.h"
 
 namespace ROOT::Experimental::Internal::ML {
 
 RFlat2DMatrixOperators::~RFlat2DMatrixOperators() = default;
 
-RFlat2DMatrix &RFlat2DMatrixOperators::ShuffleTensor(RFlat2DMatrix &ShuffledTensor, RFlat2DMatrix &Tensor)
+std::vector<std::size_t> RFlat2DMatrixOperators::MakePermutation(std::size_t rows)
 {
-   // nothing to permute, no copy
    if (!fShuffle) {
-      return Tensor;
+      return {};
+   }
+
+   // make an identity permutation map
+   std::vector<std::size_t> indices(rows);
+   std::iota(indices.begin(), indices.end(), 0);
+
+   // shuffle the identity permutation to create a new permutation
+   ShuffleIndices(indices);
+
+   return indices;
+}
+
+void RFlat2DMatrixOperators::ShuffleIndices(std::vector<std::size_t> &indices)
+{
+   if (!fShuffle) {
+      return;
    }
 
    std::random_device rd;
@@ -27,61 +41,34 @@ RFlat2DMatrix &RFlat2DMatrixOperators::ShuffleTensor(RFlat2DMatrix &ShuffledTens
       g.seed(fSetSeed);
    }
 
-   std::size_t rows = Tensor.GetRows();
-   std::size_t cols = Tensor.GetCols();
-   ShuffledTensor.Resize(rows, cols);
-
-   // make an identity permutation map
-   std::vector<Long_t> indices(rows);
-   std::iota(indices.begin(), indices.end(), 0);
-
-   // shuffle the identity permutation to create a new permutation
    std::shuffle(indices.begin(), indices.end(), g);
-
-   // shuffle data in the tensor with the permutation map defined above
-   for (std::size_t i = 0; i < rows; i++) {
-      std::copy(Tensor.GetData() + indices[i] * cols, Tensor.GetData() + (indices[i] + 1) * cols,
-                ShuffledTensor.GetData() + i * cols);
-   }
-
-   return ShuffledTensor;
 }
 
-void RFlat2DMatrixOperators::SliceTensor(RFlat2DMatrix &SlicedTensor, RFlat2DMatrix &Tensor,
-                                         const std::vector<std::vector<std::size_t>> &slice)
+void RFlat2DMatrixOperators::AppendRows(RFlat2DMatrix &Dest, const RFlat2DMatrix &Tensor,
+                                        const std::vector<std::size_t> &permutation, std::size_t begin, std::size_t end)
 {
-   const auto &rowSlice = slice[0];
-   const auto &colSlice = slice[1];
-
-   std::size_t rowStart = rowSlice[0];
-   std::size_t rowEnd = rowSlice[1];
-   std::size_t colStart = colSlice[0];
-   std::size_t colEnd = colSlice[1];
-
-   std::size_t rows = rowEnd - rowStart;
-   std::size_t cols = colEnd - colStart;
-
-   SlicedTensor.Resize(rows, cols);
-   std::copy(Tensor.GetData() + rowStart * cols, Tensor.GetData() + rowStart * cols + rows * cols,
-             SlicedTensor.GetData());
-}
-
-void RFlat2DMatrixOperators::ConcatenateTensors(RFlat2DMatrix &ConcatTensor, const std::vector<RFlat2DMatrix> &Tensors)
-{
-   std::size_t cols = Tensors[0].GetCols();
-   std::size_t rows = 0;
-
-   for (const auto &t : Tensors) {
-      rows += t.GetRows();
+   if (begin == end) {
+      return;
    }
 
-   ConcatTensor.Resize(rows, cols);
+   const std::size_t cols = Tensor.GetCols();
+   const float *data = Tensor.GetData();
+   auto &values = Dest.fRVec;
 
-   std::size_t index = 0;
-   for (std::size_t i = 0; i < Tensors.size(); i++) {
-      std::size_t tensorRows = Tensors[i].GetRows();
-      std::copy(Tensors[i].GetData(), Tensors[i].GetData() + tensorRows * cols, ConcatTensor.GetData() + index * cols);
-      index += tensorRows;
+   // grow once and copy the rows in place, cheaper than inserting them one by one
+   const std::size_t offset = values.size();
+   values.resize(offset + (end - begin) * cols);
+   float *out = values.data() + offset;
+
+   if (permutation.empty()) {
+      std::copy(data + begin * cols, data + end * cols, out);
+   } else {
+      for (std::size_t i = begin; i < end; i++) {
+         out = std::copy_n(data + permutation[i] * cols, cols, out);
+      }
    }
+
+   Dest.Reshape(values.size() / cols, cols);
 }
+
 } // namespace ROOT::Experimental::Internal::ML

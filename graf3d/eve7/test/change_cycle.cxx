@@ -21,9 +21,12 @@
 #include <ROOT/REveRenderData.hxx>
 #include <ROOT/REveTrans.hxx>
 
+#include "TBase64.h"
+
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <cstring>
 #include <memory>
 
 namespace REX = ROOT::Experimental;
@@ -125,6 +128,30 @@ TEST(REveChangeCycle, AddedElementIsStreamed)
    EXPECT_EQ((int)out.fBinarySize, bin);
 }
 
+// A name change stamps kCBCoreJson, which streams the new name without
+// render data.
+TEST(REveChangeCycle, NameStreamsCoreJson)
+{
+   auto eve = REX::REveManager::Create();
+   auto s = NewScene("cc_name");
+   auto ps = MakePoints("points", 3);
+   s->AddElement(ps);
+
+   eve->BeginChange();
+   ps->SetName("renamed");
+   EXPECT_EQ(ps->GetChangeBits(), REX::REveElement::kCBCoreJson);
+   auto out = EndChangeKeepingOutput(s);
+
+   auto &j = out.fJson;
+   ASSERT_EQ(j["arr"].size(), 1u);
+   auto &e = j["arr"][0];
+   EXPECT_EQ(e["fElementId"], ps->GetElementId());
+   EXPECT_EQ(e["changeBit"], REX::REveElement::kCBCoreJson);
+   EXPECT_EQ(e["fName"], "renamed");
+   EXPECT_FALSE(e.contains("render_data"));
+   EXPECT_EQ(out.fBinarySize, 0u);
+}
+
 // The id reported as removed is the removed element's, not its mother's.
 TEST(REveChangeCycle, RemovedElementIsReported)
 {
@@ -158,7 +185,7 @@ TEST(REveChangeCycle, TransOnlyGoesToMotion)
 
    eve->BeginChange();
    moved->RefMainTrans().SetPos(1, 2, 3);
-   moved->StampTransBBox();
+   moved->StampTrans();
    edited->StampObjProps();
 
    nlohmann::json arr = nlohmann::json::array();
@@ -167,12 +194,16 @@ TEST(REveChangeCycle, TransOnlyGoesToMotion)
    ASSERT_EQ(arr.size(), 1u);
    EXPECT_EQ(arr[0]["fElementId"], moved->GetElementId());
    EXPECT_EQ(arr[0]["fSceneId"], s->GetElementId());
-   ASSERT_EQ(arr[0]["matrix"].size(), 16u);
-   // Column-major, translation in elements 12 to 14.
-   EXPECT_DOUBLE_EQ(arr[0]["matrix"][12].get<double>(), 1.);
-   EXPECT_DOUBLE_EQ(arr[0]["matrix"][13].get<double>(), 2.);
-   EXPECT_DOUBLE_EQ(arr[0]["matrix"][14].get<double>(), 3.);
-   EXPECT_TRUE(arr[0]["mot"].is_null());
+   // Base64 of 16 doubles, column-major, translation in elements 12 to 14.
+   ASSERT_TRUE(arr[0]["matrix"].is_string());
+   const TString bytes = TBase64::Decode(arr[0]["matrix"].get<std::string>().c_str());
+   ASSERT_EQ(bytes.Length(), 16 * (int)sizeof(Double_t));
+   Double_t m[16];
+   std::memcpy(m, bytes.Data(), sizeof(m));
+   EXPECT_DOUBLE_EQ(m[12], 1.);
+   EXPECT_DOUBLE_EQ(m[13], 2.);
+   EXPECT_DOUBLE_EQ(m[14], 3.);
+   EXPECT_TRUE(arr[0]["motion"].is_null());
 
    EXPECT_EQ(moved->GetChangeBits(), 0);
    EXPECT_NE(edited->GetChangeBits(), 0);
@@ -182,4 +213,68 @@ TEST(REveChangeCycle, TransOnlyGoesToMotion)
    ASSERT_EQ(j["arr"].size(), 1u);
    EXPECT_EQ(j["arr"][0]["fElementId"], edited->GetElementId());
    EXPECT_EQ(j["header"]["numRepresentationChanged"], 1);
+}
+
+// A full update writes the whole transformation, the motion included, so a
+// motion set in the same cycle is not lost; without a motion "motion" is absent.
+// The header carries the server time, the client's clock for motion.
+TEST(REveChangeCycle, FullUpdateCarriesMotion)
+{
+   auto eve = REX::REveManager::Create();
+   auto s = NewScene("cc_full_motion");
+   auto ps = MakePoints("points", 2);
+   s->AddElement(ps);
+
+   eve->BeginChange();
+   ps->RefMainTrans().SetMotion({0, 0, 10}, {0, 0, 0}, 1.);
+   ps->StampTrans();
+   ps->StampObjProps();
+   auto out = EndChangeKeepingOutput(s);
+
+   auto &j = out.fJson;
+   EXPECT_TRUE(j["server_time"].is_number());
+   ASSERT_EQ(j["arr"].size(), 1u);
+   auto &e = j["arr"][0];
+   EXPECT_TRUE(e["matrix"].is_string());
+   ASSERT_TRUE(e["motion"].is_object());
+   EXPECT_EQ(e["motion"]["vel"], nlohmann::json({0., 0., 10.}));
+
+   eve->BeginChange();
+   ps->RefMainTrans().ClearMotion();
+   ps->StampObjProps();
+   auto out2 = EndChangeKeepingOutput(s);
+   ASSERT_EQ(out2.fJson["arr"].size(), 1u);
+   EXPECT_FALSE(out2.fJson["arr"][0].contains("motion"));
+
+   // The full stream for a new client carries the motion and the time too.
+   ps->RefMainTrans().SetMotion({1, 0, 0}, {0, 0, 0}, 1.);
+   s->StreamElements();
+   auto full = nlohmann::json::parse(s->GetOutputJson());
+   EXPECT_TRUE(full.back()["server_time"].is_number());
+   bool found = false;
+   for (auto &el : full)
+      if (el.contains("fElementId") && el["fElementId"] == ps->GetElementId()) {
+         found = true;
+         EXPECT_TRUE(el["motion"].is_object());
+      }
+   EXPECT_TRUE(found);
+}
+
+// Creating and destroying the main transformation are transformation changes.
+TEST(REveChangeCycle, MainTransInitAndDestroyStamp)
+{
+   auto eve = REX::REveManager::Create();
+   auto s = NewScene("cc_trans_stamp");
+   auto el = new REX::REveElement("holder");
+   s->AddElement(el);
+
+   eve->BeginChange();
+   el->InitMainTrans();
+   EXPECT_TRUE(el->GetChangeBits() & REX::REveElement::kCBTrans);
+   eve->EndChange();
+
+   eve->BeginChange();
+   el->DestroyMainTrans();
+   EXPECT_TRUE(el->GetChangeBits() & REX::REveElement::kCBTrans);
+   eve->EndChange();
 }

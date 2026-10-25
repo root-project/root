@@ -14,6 +14,7 @@
 
 #include "REveTypes.hxx"
 
+#include <string>
 #include <string_view>
 #include <map>
 
@@ -62,6 +63,8 @@ public:
    // Math utilities
 
    static double ServerTimeMs();
+   static void AppendServerTime(std::string &msg);
+   static void StampServerTime(std::string &msg);
 
    static Bool_t IsU1IntervalContainedByMinMax(Float_t minM, Float_t maxM, Float_t minQ, Float_t maxQ);
    static Bool_t IsU1IntervalOverlappingByMinMax(Float_t minM, Float_t maxM, Float_t minQ, Float_t maxQ);

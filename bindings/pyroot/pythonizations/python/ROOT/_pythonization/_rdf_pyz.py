@@ -7,10 +7,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+import inspect
 import re
-import textwrap
 import typing
-import warnings
 
 from .._numbadeclare import _NumbaDeclareDecorator
 
@@ -226,7 +225,8 @@ class FunctionJitter:
             return self.func_call
 
         self.get_function_params_args_call(func, cols_list, extra_args)
-        _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
+        if not hasattr(self.func, "__cpp_wrapper__"):  # not already declared with ROOT.Numba.Declare
+            _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
 
@@ -257,30 +257,36 @@ def _resolve_overload_based_on_cols(func, rdf, cols):
         return func.__overload__(signature)
 
 
-class _WarnOnce:
-    called = False
+# The C++ wrapper of a Python callable only holds a weak reference to it, but the event loop calls it later,
+# so we keep the callables alive here
+_python_callables = set()
 
-    @classmethod
-    def warn(cls):
-        if not cls.called:
-            msg = """
-                RDataFrame is implicitly calling numba to JIT compile your Python functions. This behaviour will be in the
-                future only opt-in. You can silence this warning and achieve the same behaviour by explicitly calling the
-                ROOT.Numba.Declare decorator on your Python function and pass a string expression to RDataFrame that calls
-                the same function, for example:
+_PYTHON_TO_CPP_TYPES = {bool: "bool", int: "int", float: "double", str: "std::string"}
 
-                ```
-                @ROOT.Numba.Declare([input_type_1, input_type_2], ret_type)
-                def foo(x, y):
-                    return x + y
-                
-                df.Define("sum", "Numba::foo(x, y)")
-                ```
-                
-                See more details at https://root.cern/doc/master/classROOT_1_1RDataFrame.html#python
-            """
-            warnings.warn(textwrap.dedent(msg), FutureWarning)
-        cls.called = True
+
+def _cpp_type_name(func, annotation):
+    if isinstance(annotation, str):  # already a C++ type name
+        return annotation
+    if annotation in _PYTHON_TO_CPP_TYPES:
+        return _PYTHON_TO_CPP_TYPES[annotation]
+    if hasattr(annotation, "__cpp_name__"):  # ROOT class
+        return annotation.__cpp_name__
+    raise TypeError(f"Cannot convert the type annotation {annotation!r} of '{func.__name__}' to a C++ type.")
+
+
+def _function_pointer_type(func):
+    """
+    Returns the C++ function pointer type of an annotated Python callable, e.g. "double (*)(int, double)".
+    """
+    signature = inspect.signature(func)
+    params = [p.annotation for p in signature.parameters.values()]
+    if signature.return_annotation is inspect.Signature.empty or any(p is inspect.Parameter.empty for p in params):
+        raise TypeError(
+            f"The Python callable '{func.__name__}' needs type annotations for all its parameters and for its "
+            "return value, e.g. 'def f(x: float) -> float'."
+        )
+    ret = _cpp_type_name(func, signature.return_annotation)
+    return f"{ret} (*)({', '.join(_cpp_type_name(func, p) for p in params)})"
 
 
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
@@ -289,30 +295,38 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     Arguments:
         callable_or_str: The condition according to which the RDF is to be filtered.
             It can be either a python callable or a c style string.
+            A python callable runs in the Python interpreter and needs type annotations for its parameters and
+            return value, unless it is decorated with ROOT.Numba.Declare to be JIT compiled with Numba.
         *args:
             Can be at most two of them.
             a. List of columns that the callable will receive as argument.
                 If not provided then it tries maps the name of the parameter to a column name of the RDF.
             b. The name of the Filter as a string.
-        extra_args: non-columnar arguments to be passed to the callable.
+        extra_args: non-columnar arguments to be passed to a callable decorated with ROOT.Numba.Declare.
     Returns:
         RDataFrame: result of transforming the rdf argument by applying the requested filter operation.
 
     Examples:
-    1. rdf.Filter(lambda x,y: x>y)
+    1. def x_more_than_y(x: float, y: float) -> bool:
+            return x>y
+       rdf.Filter(x_more_than_y)
         Filter using a python callable.
-    2. rdf.Filter(lambda x,y: x>y, ["y", "x"])
+    2. rdf.Filter(x_more_than_y, ["y", "x"])
         Filter using a python callable with column list passed explicitly.
         When the column list is passed, the function maps the starting input parameters to those columns instead.
         Here the function param x is mapped to column y, and the second function param y is mapped to column x.
         This is equivalent to the filter "y>x".
-    3. rdf.Filter(lambda col1, const1: col1>const1, ["x"], extra_args = {"const1":0.5})
+    3. @ROOT.Numba.Declare(["double", "double"], "bool")
+       def col1_more_than_const1(col1, const1):
+            return col1>const1
+       rdf.Filter(col1_more_than_const1, ["x"], extra_args = {"const1":0.5})
         Filter using a python callable with column list passed explicitly and extra_args.
         Here the function parameter col1 is mapped to col "x" of the RDF, and the const1 parameter is mapped to the float value 0.5
         This is equivalent to the filter x>0.5"
     4. y = 0.5
+       @ROOT.Numba.Declare(["double"], "bool")
        def x_more_than_y(x):
-            x>y
+            return x>y
        rdf.Filter(x_more_than_y)
        Here the value of y is captured from scope. Thus this is equivalent to the filter "x>0.5".
        Note: Any modifications to the value of y will not be reflected in the function as y would be treated as a compile time constant during the first jit.
@@ -359,7 +373,16 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     if isinstance(func, ROOT._cppyy.types.Instance):
         return rdf._OriginalFilter(func, *args)
 
-    _WarnOnce.warn()
+    if not hasattr(func, "__cpp_wrapper__"):  # not decorated with ROOT.Numba.Declare
+        if extra_args:
+            raise TypeError(
+                "extra_args is only supported for callables decorated with ROOT.Numba.Declare. "
+                "A Python callable can reference the values directly, e.g. from the enclosing scope."
+            )
+        _python_callables.add(func)
+        col_list = col_list or list(inspect.signature(func).parameters)  # map the parameters to columns by name
+        return rdf._OriginalFilter[_function_pointer_type(func)](func, col_list, filter_name)
+
     jitter = FunctionJitter(rdf)
     func.__annotations__["return"] = (
         "bool"  # return type for Filters is bool # Note: You can keep double and Filter still works.
@@ -376,24 +399,32 @@ def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     1. col_name: The name of the new column to be defined
     2. callable_or_str: The definition of the contents of the new columns
         It can be either a python callable or a c style string.
+        A python callable runs in the Python interpreter and needs type annotations for its parameters and
+        return value, unless it is decorated with ROOT.Numba.Declare to be JIT compiled with Numba.
     3. cols: list of columns that the callable will receive as argument.
                 If not provided then it tries maps the name of the parameter to a column name of the RDF.
-    4. extra_args: non-columnar arguments to be passed to the callable.
+    4. extra_args: non-columnar arguments to be passed to a callable decorated with ROOT.Numba.Declare.
     Returns:
         RDataFrame: rdf with new column defined
 
     Examples:
-    1. rdf.Define("x", lambda: np.random.rand())
-        Define using a python lambda
-    2. rdf.Define("x2", lambda x: x*x, ["y"])
+    1. def random() -> float:
+            return np.random.rand()
+       rdf.Define("x", random)
+        Define using a python callable
+    2. def square(x: float) -> float:
+            return x*x
+       rdf.Define("x2", square, ["y"])
         Maps the function argument to column y.
     3. scale = 0.5
+        @ROOT.Numba.Declare(["double"], "double")
         def x_scaled(x):
             return x*scale
        rdf.Define("X_scaled", x_scaled)
        The scale is captured from scope and treated as a compile time constant during first jit.
        Note: Any changes to scale will not be reflected in the jitted function as jitting is a one time operation.
-    4. def x_scaled(x, u):
+    4. @ROOT.Numba.Declare(["double", "double"], "double")
+       def x_scaled(x, u):
             return x*u
        rdf.Define("x_scaled", x_scaled, extra_args = {"u":0.5})
 
@@ -423,7 +454,16 @@ def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     if isinstance(func, ROOT._cppyy.types.Instance):
         return rdf._OriginalDefine(col_name, func, cols)
 
-    _WarnOnce.warn()
+    if not hasattr(func, "__cpp_wrapper__"):  # not decorated with ROOT.Numba.Declare
+        if extra_args:
+            raise TypeError(
+                "extra_args is only supported for callables decorated with ROOT.Numba.Declare. "
+                "A Python callable can reference the values directly, e.g. from the enclosing scope."
+            )
+        _python_callables.add(func)
+        cols = cols or list(inspect.signature(func).parameters)  # map the parameters to columns by name
+        return rdf._OriginalDefine[_function_pointer_type(func)](col_name, func, cols)
+
     jitter = FunctionJitter(rdf)
     func_call = jitter.jit_function(func, cols, extra_args)
     return rdf._OriginalDefine(col_name, "Numba::" + func_call)

@@ -1733,3 +1733,116 @@ class TestREGRESSION:
 
         assert ns.pick(ns.S.A) == 1
         assert ns.pick(ns.S.B) == 5
+
+    def test57_function_pointer_types_from_ast(self):
+        """Function pointer return and argument types are taken from the AST"""
+
+        import cppjit
+
+        cppjit.cppdef(r"""\
+        namespace FnPtrTypes {
+            unsigned int one() { return 1u; }
+            typedef unsigned int (*uf_t)();
+            uf_t get_one() { return one; }
+            unsigned int call(uf_t f) { return f() + 1; }
+
+            double scale(double x, const char* s) { return x * (s[0] - '0'); }
+            typedef double (*sf_t)(double, const char*);
+            sf_t get_scale() { return scale; }
+            double apply(sf_t f, double x, const char* s) { return f(x, s); }
+
+            int noop(int i) noexcept { return i; }
+            typedef int (*nf_t)(int) noexcept;
+            nf_t get_noop() { return noop; }
+
+            struct M { int f(double) { return 42; } };
+            typedef int (M::*mf_t)(double);
+            mf_t get_mf() { return &M::f; }
+        }""")
+
+        ns = cppjit.gbl.FnPtrTypes
+
+        # multi-word return type (was mangled to "unsignedint" by string parsing)
+        assert ns.get_one()() == 1
+        assert ns.call(ns.one) == 2
+        assert ns.call(lambda: 5) == 6
+
+        # multi-word and pointer argument types
+        assert ns.get_scale()(2.0, "3") == 6.0
+        assert ns.apply(ns.scale, 2.0, "4") == 8.0
+        assert ns.apply(lambda x, s: x + 1, 2.0, "4") == 3.0
+
+        # noexcept function pointers
+        assert ns.get_noop()(7) == 7
+
+        # member function pointers are not function pointers; they are not
+        # supported, but must not crash either
+        ns.get_mf()
+
+    def test58_repeated_enum_constant_template_argument(self):
+        """A template argument spelled as an enum constant resolves repeatedly"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace RepeatedEnumArg {
+            enum E { A = 1, B = 2 };
+            template <E e> struct T1 { static constexpr int v = (int)e; };
+            template <E e> struct T2 { static constexpr int v = (int)e; };
+        }""")
+
+        ns = cppjit.gbl.RepeatedEnumArg
+
+        # the resolved argument is memoized by name; its integral value is a
+        # string the first instantiation frees, so the second needs its own
+        assert ns.T1["RepeatedEnumArg::E::A"].v == 1
+        assert ns.T2["RepeatedEnumArg::E::A"].v == 1
+        assert ns.T2["RepeatedEnumArg::E::B"].v == 2
+
+    def test59_repeated_implicit_tuple_conversion(self):
+        """Repeated implicit tuple-to-pair conversion does not grow the overload set"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        #include <utility>
+        namespace RepeatedImplicitTuple {
+            int first(std::pair<int, int>&& p) { return p.first; }
+        }""")
+
+        ns = cppjit.gbl.RepeatedImplicitTuple
+        pair = cppjit.gbl.std.pair["int", "int"]
+
+        def n_ctor_overloads():
+            # the instantiated converting constructor is cached on the class
+            # under the constructor's own name
+            ol = pair.__dict__.get("pair")
+            return len(ol.__doc__.split("\n")) if ol is not None else 0
+
+        assert ns.first((1, 2)) == 1
+        n = n_ctor_overloads()
+        assert n > 0
+
+        for i in range(20):
+            assert ns.first((i, 2)) == i
+        assert n_ctor_overloads() == n
+
+    def test60_repeated_template_scope_lookup(self):
+        """Binding to a templated class by name does not grow the memory"""
+
+        from pytest import importorskip
+
+        psutil = importorskip("psutil")
+
+        import cppjit
+
+        v = cppjit.gbl.std.vector[int]()
+        addr = cppjit.addressof(v)
+        process = psutil.Process()
+        cppjit.bind_object(addr, "std::vector<int>")
+        before = process.memory_info().rss
+        for _ in range(2000):
+            assert type(cppjit.bind_object(addr, "std::vector<int>")) is type(v)
+        # resolving the name used to declare code in the interpreter on every
+        # call, growing the memory by several kB each time
+        assert process.memory_info().rss - before < 4 * 1024 * 1024

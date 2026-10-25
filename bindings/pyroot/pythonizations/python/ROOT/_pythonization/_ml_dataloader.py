@@ -44,6 +44,16 @@ def _exclude_target_and_weights(columns: list[str], target_columns: list[str], w
     return [str(f) for f in columns if str(f) not in excluded]
 
 
+def _raise_if_implicit_mt(rdfs: list) -> None:
+    """Raise if ImplicitMT is enabled, or was when one of the RDataFrames was created."""
+    import ROOT
+
+    if ROOT.IsImplicitMTEnabled() or any(rdf.GetNSlots() > 1 for rdf in rdfs):
+        raise RuntimeError(
+            "Cannot use RDataLoader with implicit multi-threading enabled, call ROOT.DisableImplicitMT() before creating the data loader and its inputs."
+        )
+
+
 class _RDataLoader:
     def _resolve_columns(
         self,
@@ -52,10 +62,9 @@ class _RDataLoader:
         target_columns: list[str],
         weights_column: str,
         max_vec_sizes: dict[str, int] | None = None,
-    ) -> Tuple[str, list[int]]:
+    ) -> list[int]:
         """
-        Generate a template for the DataLoader based on the given
-        RDataFrame and columns.
+        Resolve the columns to load based on the given RDataFrame and columns.
 
         Args:
             x_rdf (RNode): RDataFrame or RNode object.
@@ -70,7 +79,7 @@ class _RDataLoader:
                                  Required when using vector based columns.
 
         Returns:
-            Tuple[str, list[int]]: Template string for the DataLoader and list of max vector sizes
+            list[int]: List of max vector sizes
         """
         if max_vec_sizes is None:
             max_vec_sizes = {}
@@ -83,8 +92,6 @@ class _RDataLoader:
 
         ordered_columns = columns + target_columns + ([weights_column] if weights_column else [])
 
-        template_string = ""
-
         self.given_columns = []
         self.all_columns = []
 
@@ -96,7 +103,6 @@ class _RDataLoader:
             name_str = str(name)
             self.given_columns.append(name_str)
             column_type = x_rdf.GetColumnType(name_str)
-            template_string = f"{template_string}{column_type},"
 
             if "RVec" in column_type:
                 # Add column for each element if column is a vector
@@ -125,7 +131,7 @@ class _RDataLoader:
         self.target_slice = slice(num_feature_expanded, num_feature_expanded + num_target_expanded)
         self.feature_columns = self.all_columns[self.train_slice]
 
-        return template_string[:-1], max_vec_sizes_list
+        return max_vec_sizes_list
 
     def __init__(
         self,
@@ -209,6 +215,7 @@ class _RDataLoader:
         if not hasattr(rdataframes, "__iter__"):
             rdataframes = [rdataframes]
         self.noded_rdfs = [RDF.AsRNode(rdf) for rdf in rdataframes]
+        _raise_if_implicit_mt(self.noded_rdfs)
 
         self.target_columns = _normalize_target(target)
         self.weights_column = weights
@@ -218,7 +225,7 @@ class _RDataLoader:
         if self.weights_given and not self.target_given:
             raise ValueError("Weights can only be used when a target is provided")
 
-        template, max_vec_sizes_list = self._resolve_columns(
+        max_vec_sizes_list = self._resolve_columns(
             self.noded_rdfs[0], columns, self.target_columns, self.weights_column, max_vec_sizes
         )
 
@@ -237,7 +244,7 @@ class _RDataLoader:
         # cling via cppyy) and the I/O thread.
         ROOT.EnableThreadSafety()
 
-        self.engine = ROOT.Experimental.Internal.ML.RDataLoaderEngine(template)(
+        self.engine = ROOT.Experimental.Internal.ML.RDataLoaderEngine(
             self.noded_rdfs,
             batch_size,
             batches_in_memory,
@@ -276,10 +283,12 @@ class _RDataLoader:
 
     def ActivateTrainingEpoch(self):
         """Activate the training epoch of the generator"""
+        _raise_if_implicit_mt(self.noded_rdfs)
         self.engine.ActivateTrainingEpoch()
 
     def ActivateValidationEpoch(self):
         """Activate the validation epoch of the generator"""
+        _raise_if_implicit_mt(self.noded_rdfs)
         self.engine.ActivateValidationEpoch()
 
     def DeActivateTrainingEpoch(self):
@@ -497,6 +506,7 @@ class _RDataLoader:
         return batch if (batch and batch.GetSize() > 0) else None
 
     def Save(self, dataset_name: str, filename: str, is_training: bool, output_format: str) -> None:
+        _raise_if_implicit_mt(self.noded_rdfs)
         self.engine.Save(dataset_name, filename, is_training, output_format)
 
 

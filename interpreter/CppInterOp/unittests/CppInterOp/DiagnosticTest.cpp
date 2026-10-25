@@ -117,8 +117,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Consumer_CapturesParseError) {
   ASSERT_EQ(Cpp::GetPendingDiagnosticCount(), 0U);
 
   // Trigger a parse error. silent=false lets the diagnostic reach the
-  // consumer; silent=true sets SuppressAllDiagnostics, which short-
-  // circuits before the consumer chain.
+  // consumer; silent=true swaps the engine's client for a discarding one,
+  // so the consumer chain never sees it.
   EXPECT_NE(0, Cpp::Declare("int err = ;", /*silent=*/false));
 
   ASSERT_GT(Cpp::GetPendingDiagnosticCount(), 0U);
@@ -145,13 +145,35 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Consumer_OkDeclareLeavesBufferEmpty) {
   Cpp::ClearPendingDiagnostics();
 }
 
-// silent=true sets SuppressAllDiagnostics on the engine, which
-// short-circuits before any consumer in the chain runs. Pin this
-// contract: a failed declare under silent=true reports failure via
-// the return code but the consumer captures nothing.
+// silent=true unplugs the whole consumer chain for the duration of the
+// declare, so nothing reaches the capturing consumer. Pin this contract:
+// a failed declare under silent=true reports failure via the return code
+// but the consumer captures nothing.
 TYPED_TEST(CPPINTEROP_TEST_MODE, Consumer_SilentSuppressesCapture) {
   TestFixture::CreateInterpreter();
   Cpp::ClearPendingDiagnostics();
   EXPECT_NE(0, Cpp::Declare("int err = ;", /*silent=*/true));
   EXPECT_EQ(Cpp::GetPendingDiagnosticCount(), 0U);
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Consumer_SilentDeclareSurvivesFailedCodegen) {
+  TestFixture::CreateInterpreter();
+
+  EXPECT_EQ(0, Cpp::Declare(R"(
+    namespace SilentCodegen {
+    struct Event { int num; union Shared { double a; int b; } shrd; };
+    })"));
+
+  // compiling bad code
+  EXPECT_NE(0, Cpp::Declare(R"(
+    namespace SilentCodegen {
+    void init(Shared** self, const double& a = 0, const int& b = 0) {
+      *self = new Shared{a, b};
+    }
+    })",
+                            /*silent=*/true));
+
+  // The interpreter is still usable afterwards.
+  EXPECT_EQ(0, Cpp::Declare("int after_failed_probe = 42;"));
+  EXPECT_TRUE(Cpp::GetNamed("after_failed_probe"));
 }

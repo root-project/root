@@ -714,7 +714,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---build the path exclusion switches----------------------
   set(excludepathsargs "")
-  foreach(excludepath ${excludepaths})
+  foreach(excludepath ${excludepaths} ${ROOT_DICTIONARY_EXCLUDE_PATHS})
     set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
   endforeach()
 

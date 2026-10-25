@@ -70,4 +70,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
   LIBRARIES
     ${ROOT_ATOMIC_LIBS}
 )
+# Suppress deprecation warnings across compilation units and during dictionary generation, remove with NetErrors.h
+target_compile_definitions(Net PRIVATE ROOT_NetErrors_cxx)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -25,10 +25,14 @@
 #include "TClass.h"
 #include "TPRegexp.h"
 #include "TROOT.h"
+#include "TBase64.h"
 #include "TColor.h"
 
 #include <cassert>
 #include <algorithm>
+#include <limits>
+#include <mutex>
+#include <set>
 
 #include <nlohmann/json.hpp>
 
@@ -287,12 +291,12 @@ void REveElement::SetNameTitle(const std::string& name, const std::string& title
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual function called when a name or title of the element has
-/// been changed.
+/// been changed. Stamps kCBCoreJson, which streams both to the client.
 /// If you override this, call also the version of your direct base-class.
 
 void REveElement::NameTitleChanged()
 {
-   // Should send out some message. Need a new stamp type?
+   StampCoreJson();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -405,7 +409,7 @@ void REveElement::CopyVizParams(const REveElement* el)
    fMainTransparency        = el->fMainTransparency;
    if (fMainColorPtr == & fDefaultColor) fDefaultColor = el->GetMainColor();
 
-   AddStamp(kCBColorSelection | kCBObjProps);
+   AddStamp(kCBCoreJson | kCBObjProps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -728,7 +732,7 @@ void REveElement::SetMainColor(Color_t color)
    if (fMainColorPtr)
    {
       *fMainColorPtr = color;
-      StampColorSelection();
+      StampCoreJson();
    }
 
    PropagateMainColorToProjecteds(color, old_color);
@@ -780,7 +784,7 @@ void REveElement::SetMainTransparency(Char_t t)
 
    if (t > 100) t = 100;
    fMainTransparency = t;
-   StampColorSelection();
+   StampCoreJson();
 
    PropagateMainTransparencyToProjecteds(t, old_t);
 }
@@ -833,27 +837,32 @@ REveTrans &REveElement::RefMainTrans()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialize the main transformation to identity matrix.
+/// Initialize the main transformation to identity matrix, without motion.
 /// If can_edit is true (default), the user will be able to edit the
 /// transformation parameters via GUI.
 
 void REveElement::InitMainTrans(Bool_t can_edit)
 {
-   if (fMainTrans)
+   if (fMainTrans) {
       fMainTrans->UnitTrans();
-   else
+      fMainTrans->ClearMotion();
+   } else {
       fMainTrans = std::make_unique<REveTrans>();
+   }
    fCanEditMainTrans = can_edit;
+   StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy the main transformation matrix, it will always be taken
 /// as identity. Editing of transformation parameters is disabled.
+/// The motion goes with it.
 
 void REveElement::DestroyMainTrans()
 {
    fMainTrans.reset(nullptr);
    fCanEditMainTrans = kFALSE;
+   StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -862,7 +871,7 @@ void REveElement::DestroyMainTrans()
 void REveElement::SetTransMatrix(Double_t* carr)
 {
    RefMainTrans().SetFrom(carr);
-   StampTransBBox();
+   StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -871,7 +880,26 @@ void REveElement::SetTransMatrix(Double_t* carr)
 void REveElement::SetTransMatrix(const TGeoMatrix& mat)
 {
    RefMainTrans().SetFrom(mat);
-   StampTransBBox();
+   StampTrans();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compose into `t` the matrices of this element and of its mothers up to,
+/// not including, its REveScene: the frame the client draws the element in.
+/// Returns the number of matrices; `t` is set only when it is non-zero.
+
+Int_t REveElement::ComposeSceneTrans(REveTrans &t) const
+{
+   Int_t n = 0;
+   for (const REveElement *el = this; el && !dynamic_cast<const REveScene *>(el); el = el->fMother) {
+      if (const REveTrans *m = el->fMainTrans.get()) {
+         if (n++ == 0)
+            t = *m;
+         else
+            t.MultLeft(*m);
+      }
+   }
+   return n;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1463,6 +1491,9 @@ void REveElement::RecheckImpliedSelections()
 
 void REveElement::AddStamp(UChar_t bits)
 {
+   if (bits & kCBObjProps)
+      fBBoxState = kBBoxInvalid;
+
    if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
    {
       if (gDebug > 0)
@@ -1478,45 +1509,126 @@ void REveElement::AddStamp(UChar_t bits)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write transformation Matrix to render data
-////////////////////////////////////////////////////////////////////////////////
+/// Start filling the bounding box with BBoxCheckPoint(): min at +infinity,
+/// max at -infinity, so the first point sets both. A box that no point
+/// reached stays inverted, and AssertBBox() reports it as kBBoxNone.
 
-void REveElement::BuildRenderData()
+void REveElement::BBoxInit()
 {
-   if (fMainTrans.get())
-   {
-      fRenderData->SetMatrix(fMainTrans->Array());
+   const Float_t inf = std::numeric_limits<Float_t>::infinity();
+   fBBoxMin.Set(inf, inf, inf);
+   fBBoxMax.Set(-inf, -inf, -inf);
+   fBBoxState = kBBoxSet;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the bounding box to a cube of half-side `epsilon` at (`x`, `y`, `z`);
+/// with the defaults, a point at the origin.
+
+void REveElement::BBoxZero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
+{
+   fBBoxMin.Set(x - epsilon, y - epsilon, z - epsilon);
+   fBBoxMax.Set(x + epsilon, y + epsilon, z + epsilon);
+   fBBoxState = kBBoxSet;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Widen every side of the bounding box shorter than `epsilon` to `epsilon`,
+/// keeping its centre.
+
+void REveElement::AssertBBoxExtents(Float_t epsilon)
+{
+   if (fBBoxMin.fX > fBBoxMax.fX)
+      return; // empty, see BBoxInit()
+   for (Int_t i = 0; i < 3; ++i) {
+      if (fBBoxMax[i] - fBBoxMin[i] < epsilon) {
+         Float_t c = 0.5f * (fBBoxMin[i] + fBBoxMax[i]);
+         fBBoxMin[i] = c - 0.5f * epsilon;
+         fBBoxMax[i] = c + 0.5f * epsilon;
+      }
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write the main transformation and its motion for a kCBTransBBox update.
+/// Compute the bounding box in the element's own frame, before fMainTrans.
+/// Overrides fill it with BBoxInit() and BBoxCheckPoint(), or BBoxZero(), or
+/// call BBoxNotInWorld() for screen-space content. This default is for an
+/// element with no geometry of its own.
+
+void REveElement::ComputeBBox()
+{
+   fBBoxState = kBBoxNone;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the bounding box if it is invalid, and return its state.
+
+REveElement::EBBoxState REveElement::AssertBBox()
+{
+   if (fBBoxState == kBBoxInvalid) {
+      ComputeBBox();
+      if (fBBoxState == kBBoxSet && fBBoxMin.fX > fBBoxMax.fX)
+         fBBoxState = kBBoxNone; // no point reached the box, see BBoxInit()
+   }
+   return fBBoxState;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Build fRenderData, what the client draws. An element with nothing to draw
+/// leaves it empty, as this base does. The matrix goes as JSON, see
+/// WriteCoreJson().
+
+void REveElement::BuildRenderData()
+{
+}
+
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// The 16 doubles of `t`, column-major, as base64 of their bytes. Exact, and
+/// about half the size of the numbers as text.
+
+std::string TransBase64(const REveTrans &t)
+{
+   return TBase64::Encode(reinterpret_cast<const char *>(t.Array()), 16 * sizeof(Double_t)).Data();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The motion of `d` as JSON: start time, velocity, acceleration, spin and
+/// trust window, see REveTrans::SetMotion().
+
+nlohmann::json MotionJson(const REveDeltaTrans &d)
+{
+   const REveVectorD &v = d.fVel, &a = d.fAcc, &s = d.fSpinAxis;
+   // clang-format off
+   return { {"t0",     d.fMotionT0},
+            {"vel",    {v.fX, v.fY, v.fZ}},
+            {"acc",    {a.fX, a.fY, a.fZ}},
+            {"axis",   {s.fX, s.fY, s.fZ}},
+            {"rate",   d.fSpinRate},
+            {"max_dt", d.fMaxDt} };
+   // clang-format on
+}
+
+} // namespace
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write the main transformation and its motion for a kCBTrans update.
 /// No render data is written; the client applies it to the object it already
 /// has. It goes out as JSON, so no offset is reserved in the binary blob for a
 /// message that carries no geometry.
 
 void REveElement::WriteTransJson(nlohmann::json &cj)
 {
-   if (fMainTrans.get()) {
-      const Double_t *m = fMainTrans->Array();
-      cj["matrix"] = std::vector<double>(m, m + 16);
-   }
+   if (fMainTrans)
+      cj["matrix"] = TransBase64(*fMainTrans);
 
    if (fMainTrans && fMainTrans->HasMotion()) {
-      const REveDeltaTrans &d = *fMainTrans->GetDeltaTrans();
-      const REveVectorD &v = d.fVel, &a = d.fAcc, &s = d.fSpinAxis;
-      // clang-format off
-      cj["mot"] = { {"t0",     d.fMotionT0},
-                    {"vel",    {v.fX, v.fY, v.fZ}},
-                    {"acc",    {a.fX, a.fY, a.fZ}},
-                    {"axis",   {s.fX, s.fY, s.fZ}},
-                    {"rate",   d.fSpinRate},
-                    {"max_dt", d.fMaxDt} };
-      // clang-format on
+      cj["motion"] = MotionJson(*fMainTrans->GetDeltaTrans());
    } else {
       // Sent explicitly so that a stopped element cancels the client's
       // trajectory: a missing field in a partial update means unchanged.
-      cj["mot"] = nullptr;
+      cj["motion"] = nullptr;
    }
 }
 
@@ -1557,6 +1669,9 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    Int_t ret = 0;
 
    if (rnr_offset >= 0) {
+      // An element with nothing to draw builds no render data. Without the
+      // reset it would send the render data of its previous contents again.
+      fRenderData.reset();
       BuildRenderData();
 
       if (fRenderData) {
@@ -1567,11 +1682,33 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          rd["vert_size"]  = fRenderData->SizeV();
          rd["norm_size"]  = fRenderData->SizeN();
          rd["index_size"] = fRenderData->SizeI();
-         rd["trans_size"] = fRenderData->SizeT();
 
          j["render_data"] = rd;
 
          ret = fRenderData->GetBinarySize();
+
+         // kCBObjProps invalidates the box, see AddStamp().
+         switch (AssertBBox()) {
+         case kBBoxSet:
+            j["bbox"] = {fBBoxMin.fX, fBBoxMin.fY, fBBoxMin.fZ, fBBoxMax.fX, fBBoxMax.fY, fBBoxMax.fZ};
+            break;
+         case kBBoxNotInWorld: j["bbox_not_in_world"] = true; break;
+         default: {
+            static std::mutex mtx;
+            static std::set<std::string> warned;
+            std::lock_guard<std::mutex> lock(mtx);
+            if (warned.insert(IsA()->GetName()).second)
+               ::Warning("REveElement::WriteCoreJson", "%s has render data but no bounding box.", IsA()->GetName());
+         }
+         }
+      }
+
+      // With or without render data: the client sets it on the element's node.
+      // A full write holds the whole transformation, so no motion means none.
+      if (fMainTrans) {
+         j["matrix"] = TransBase64(*fMainTrans);
+         if (fMainTrans->HasMotion())
+            j["motion"] = MotionJson(*fMainTrans->GetDeltaTrans());
       }
    }
 

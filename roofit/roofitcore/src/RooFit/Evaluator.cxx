@@ -127,7 +127,6 @@ struct NodeInfo {
 
    std::shared_ptr<RooBatchCompute::AbsBuffer> buffer;
    std::size_t iNode = 0;
-   int remClients = 0;
    bool copyAfterEvaluation = false;
    bool fromArrayInput = false;
    bool isVariable = false;
@@ -142,21 +141,6 @@ struct NodeInfo {
    double scalarBuffer = 0.0;
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
-
-   /// Check the servers of a node that has been computed and release its
-   /// resources if they are no longer needed. Buffers of nodes whose results
-   /// are copied between host and device (copyAfterEvaluation) must not be
-   /// released eagerly: their pinned host memory can still be the source of
-   /// an asynchronous copy that was enqueued on the CUDA stream, and a new
-   /// owner would overwrite it from the CPU without any stream ordering.
-   /// Those buffers are released at the beginning of the next evaluation
-   /// instead, after the stream was synchronized at the end of this one.
-   void decrementRemainingClients()
-   {
-      if (--remClients == 0 && !fromArrayInput && !copyAfterEvaluation) {
-         buffer.reset();
-      }
-   }
 };
 
 /// Construct a new Evaluator. The constructor analyzes and saves metadata about the graph,
@@ -513,38 +497,45 @@ std::span<const double> Evaluator::run()
 /// Returns the value of the top node in the computation graph
 std::span<const double> Evaluator::getValHeterogeneous()
 {
-   for (auto &info : _nodes) {
-      info.remClients = info.clientInfos.size();
-      if (info.buffer && !info.fromArrayInput) {
-         info.buffer.reset();
-      }
-   }
-
-   // Iterate over the nodes in topological order. Nodes that are computed on
-   // the GPU only enqueue their computation on the single CUDA stream and
-   // return immediately, so independent CPU nodes that come later in the
-   // ordering naturally overlap with the GPU computations. Ordering by the
-   // stream guarantees that GPU nodes see the results of their GPU servers,
-   // and host-side reads of GPU results synchronize on the stream in the
-   // buffer implementation.
+   // Iterate over the nodes in topological order. Like in the CPU-only path
+   // in run(), only dirty nodes are recomputed: a node is dirty if one of its
+   // value servers was recomputed in this evaluation, or if a variable
+   // changed its value since the last evaluation. Clean nodes keep the output
+   // buffers from their last evaluation, which is why the buffers persist
+   // across evaluations in this mode instead of being released as soon as
+   // the clients of a node are computed. During a minimization, most
+   // likelihood evaluations change only one or two parameters (e.g. for the
+   // numeric gradient and the Hessian), so skipping the clean nodes saves
+   // most of the GPU work and the kernel launches. The price is the device
+   // memory for the intermediate results of the whole computation graph,
+   // which is small compared to the input data for the usual graphs where
+   // most nodes are scalars.
+   //
+   // Nodes that are computed on the GPU only enqueue their computation on the
+   // single CUDA stream and return immediately, so independent CPU nodes that
+   // come later in the ordering naturally overlap with the GPU computations.
+   // Ordering by the stream guarantees that GPU nodes see the results of
+   // their GPU servers, and host-side reads of GPU results synchronize on the
+   // stream in the buffer implementation. Since no buffer is recycled within
+   // an evaluation, the results of clean nodes can't be overwritten by
+   // enqueued work either.
    try {
       for (auto &info : _nodes) {
-         if (!info.fromArrayInput) {
+         if (info.fromArrayInput) {
+            continue;
+         }
+         if (info.isVariable) {
+            processVariable(info);
+         } else if (info.isCategory) {
+            processCategory(info);
+         } else if (info.isDirty) {
+            setClientsDirty(info);
             if (info.computeInGPU) {
                assignToGPU(info);
             } else {
                computeCPUNode(info.absArg, info);
             }
-         }
-
-         // Release the buffers of server nodes that are no longer needed. For
-         // device-only buffers this is safe to do right away even if GPU work
-         // is still in flight, because any reuse of a released device buffer
-         // happens through operations that are enqueued later on the same
-         // stream. Pinned buffers are exempted from the eager release, see
-         // the comment in NodeInfo::decrementRemainingClients().
-         for (auto *serverInfo : info.serverInfos) {
-            serverInfo->decrementRemainingClients();
+            info.isDirty = false;
          }
       }
    } catch (...) {
@@ -552,6 +543,8 @@ std::span<const double> Evaluator::getValHeterogeneous()
       // deferred may still be armed. Deliver them now, while the destination
       // memory in the nodes of the computation graph is guaranteed to be
       // alive, so that no armed readback survives into a later evaluation.
+      // The node that threw stays dirty and gets recomputed in the next
+      // evaluation, together with its clients that were already flagged.
       try {
          RooBatchCompute::dispatchCUDA->synchronizeCudaStream(_cudaStream);
       } catch (...) {
@@ -566,10 +559,8 @@ std::span<const double> Evaluator::getValHeterogeneous()
 
    // Ensure that all enqueued GPU work has completed when run() returns. For
    // the usual likelihood evaluations this is mostly a no-op, because the
-   // final reduction has synchronized the stream already. It also guarantees
-   // that recycling the buffers at the beginning of the next evaluation is
-   // safe, and it delivers the deferred readbacks like the evaluation error
-   // counters.
+   // final reduction has synchronized the stream already. It also delivers
+   // the deferred readbacks like the evaluation error counters.
    RooBatchCompute::dispatchCUDA->synchronizeCudaStream(_cudaStream);
 
    // Run the deferred actions now that all results have arrived on the host,
@@ -601,8 +592,10 @@ void Evaluator::assignToGPU(NodeInfo &info)
       buffer = &info.scalarBuffer;
       _evalContextCPU.set(node, {buffer, nOut});
    } else {
-      info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, _cudaStream)
-                                             : _bufferManager->makeGpuBuffer(nOut);
+      if (!info.buffer) {
+         info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, _cudaStream)
+                                                : _bufferManager->makeGpuBuffer(nOut);
+      }
       buffer = info.buffer->deviceWritePtr();
    }
    assignSpan(_evalContextCUDA._currentOutput, {buffer, nOut});

@@ -54,14 +54,19 @@ class RNTupleProcessorDS final : public ROOT::RDF::RDataSource {
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Holds useful information about fields added to the RNTupleProcessorDS
    struct RFieldInfo {
-      ROOT::DescriptorId_t fFieldId;
+      ROOT::DescriptorId_t fOnDiskId;
       std::string fFieldName;
       std::string fTypeName;
       std::size_t fNRepetitions;
+      ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fEntryFieldIdx;
       // Enable `std::vector::emplace_back` for this type
-      RFieldInfo(ROOT::DescriptorId_t fieldId, std::string_view fieldName, std::string_view typeName,
-                 std::size_t nRepetitions)
-         : fFieldId(fieldId), fFieldName(fieldName), fTypeName(typeName), fNRepetitions(nRepetitions)
+      RFieldInfo(ROOT::DescriptorId_t onDiskId, std::string_view fieldName, std::string_view typeName,
+                 std::size_t nRepetitions, ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t entryFieldIdx)
+         : fOnDiskId(onDiskId),
+           fFieldName(fieldName),
+           fTypeName(typeName),
+           fNRepetitions(nRepetitions),
+           fEntryFieldIdx(entryFieldIdx)
       {
       }
    };
@@ -92,11 +97,11 @@ class RNTupleProcessorDS final : public ROOT::RDF::RDataSource {
    /// be added as `ROOT::VecOps::RVec` (e.g., `std::set<Jet> will be added as a `std::set`, but `Jet.[pt|eta] will be
    /// added as `ROOT::VecOps::RVec<float>).
    void AddField(const ROOT::RFieldBase &field, std::string_view colName,
-                 Internal::RNTupleProcessorProvenance procProvenance, std::deque<RFieldInfo> &fieldInfos,
+                 ROOT::Internal::RNTupleProcessorProvenance procProvenance, std::deque<RFieldInfo> &fieldInfos,
                  bool convertToRVec = true);
 
 public:
-   RNTupleProcessorDS(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor);
+   RNTupleProcessorDS(std::unique_ptr<ROOT::RNTupleProcessor> processor);
    RNTupleProcessorDS(const RNTupleProcessorDS &) = delete;
    RNTupleProcessorDS &operator=(const RNTupleProcessorDS &) = delete;
    RNTupleProcessorDS(RNTupleProcessorDS &&) = delete;
@@ -132,7 +137,7 @@ protected:
 } // namespace ROOT::Experimental::Internal::RDF
 
 namespace ROOT::Experimental::RDF {
-RDataFrame FromRNTupleProcessor(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor);
+RDataFrame FromRNTupleProcessor(std::unique_ptr<ROOT::RNTupleProcessor> processor);
 } // namespace ROOT::Experimental::RDF
 
 #endif // ROOT_RNTupleProcessorDS

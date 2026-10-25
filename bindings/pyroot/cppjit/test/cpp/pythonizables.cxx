@@ -110,3 +110,31 @@ std::string pyzables::WithCallback2::klass_name{"not set"};
 
 int pyzables::WithCallback3::get_int() { return 2 * m_int; }
 void pyzables::WithCallback3::set_int(int i) { m_int = 2 * i; }
+
+pyzables::WithCppyyCallback1::WithCppyyCallback1(int i) : m_int(i) {}
+
+int pyzables::WithCppyyCallback1::get_int() { return m_int; }
+void pyzables::WithCppyyCallback1::set_int(int i) { m_int = i; }
+
+void pyzables::WithCppyyCallback1::__cppyy_explicit_pythonize__(
+    PyObject* klass, const std::string& name) {
+  replace_method_name(klass, "get_int", "GetInt");
+  replace_method_name(klass, "set_int", "SetInt");
+  klass_name = name;
+}
+
+std::string pyzables::WithCppyyCallback1::klass_name{"not set"};
+
+pyzables::WithCppyyCallback2::WithCppyyCallback2(int i) : m_int(i) {}
+
+int pyzables::WithCppyyCallback2::get_int() { return m_int; }
+void pyzables::WithCppyyCallback2::set_int(int i) { m_int = i; }
+
+void pyzables::WithCppyyCallback2::__cppyy_pythonize__(
+    PyObject* klass, const std::string& name) {
+  replace_method_name(klass, "get_int", "GetInt");
+  replace_method_name(klass, "set_int", "SetInt");
+  klass_name = name;
+}
+
+std::string pyzables::WithCppyyCallback2::klass_name{"not set"};

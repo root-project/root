@@ -73,11 +73,6 @@ if (LLVM_LINK_LLVM_DYLIB)
   # Do NOT expand to every LLVM library: some (e.g. LLVMInterpreter) require
   # optional dependencies (libffi) that may not be installed.
   set(llvm_component_libs LLVMFrontendDriver)
-  foreach(component_lib ${llvm_component_libs})
-    if(NOT TARGET ${component_lib})
-      list(REMOVE_ITEM llvm_component_libs ${component_lib})
-    endif()
-  endforeach()
   while(NOT "${new_libs}" STREQUAL "")
     foreach(lib ${new_libs})
       if(TARGET ${lib})
@@ -132,6 +127,10 @@ if (LLVM_LINK_LLVM_DYLIB)
     Option
     TargetParser
     )
+  # Since LLVM 23 clangCodeGen lowers call ABIs through llvm/lib/ABI.
+  if(LLVM_VERSION_MAJOR GREATER 22)
+    list(APPEND LLVM_LINK_COMPONENTS ABI)
+  endif()
 endif(LLVM_LINK_LLVM_DYLIB)
 
 # Generate .inc files from CppInterOp.td using cppinterop-tblgen.
@@ -269,23 +268,23 @@ if(EMSCRIPTEN)
   string(REPLACE "\n" " " SYMBOLS_LIST "${SYMBOLS_LIST}")
 
   target_compile_options(clangCppInterOp
-    PRIVATE "SHELL: -Oz"
-    PRIVATE "SHELL: -flto"
+    PRIVATE "SHELL: ${CPPINTEROP_LIBRARY_WASM_FLAGS}"
     PRIVATE "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
   )
   target_link_options(clangCppInterOp
     PRIVATE "SHELL: -s WASM_BIGINT"
     PRIVATE "SHELL: -s SIDE_MODULE=1"
     PRIVATE "SHELL: ${SYMBOLS_LIST}"
-    PRIVATE "SHELL: -Oz"
-    PRIVATE "SHELL: -flto"
+    PRIVATE "SHELL: ${CPPINTEROP_LIBRARY_WASM_FLAGS}"
     PRIVATE "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
   )
   else()
   target_compile_options(clangCppInterOp
+    PRIVATE "SHELL: ${CPPINTEROP_LIBRARY_WASM_FLAGS}"
     PRIVATE "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
   )
   target_link_options(clangCppInterOp
+      PRIVATE "SHELL: ${CPPINTEROP_LIBRARY_WASM_FLAGS}"
       PRIVATE "SHELL: -s WASM_BIGINT"
       PRIVATE "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
   )
@@ -330,6 +329,15 @@ if(NOT _clang_resource_dir AND NOT CODE_COVERAGE
   if(EXISTS "${_detected_resource_dir}/include")
     set(_clang_resource_dir "${_detected_resource_dir}")
   endif()
+endif()
+# Some distributions split the clang driver from the libraries and headers
+# (e.g. a Nix clang package with lib/clang/<major>/include but no bin/clang).
+# Fall back to the resource directory's standard location under the prefix.
+set(_prefix_resource_dir
+  "${CLANG_INSTALL_PREFIX}/lib${LLVM_LIBDIR_SUFFIX}/clang/${LLVM_VERSION_MAJOR}")
+if(NOT _clang_resource_dir AND NOT CODE_COVERAGE AND CLANG_INSTALL_PREFIX
+   AND EXISTS "${_prefix_resource_dir}/include")
+  set(_clang_resource_dir "${_prefix_resource_dir}")
 endif()
 message(STATUS "Clang resource directory: ${_clang_resource_dir}")
 

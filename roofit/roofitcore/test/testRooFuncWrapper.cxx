@@ -650,6 +650,15 @@ auto testValues = testing::Values(
       "RooRealSumPdf1",
       {"Gaussian::gx(x[-10,10],m[0],1.0)", "Chebychev::ch(x,{0.1,0.2,-0.3})", "RealSumPdf::model({gx, ch}, {f[0,1]})"},
       6e-3, false),
+   // Extended RooRealSumPdf (one coefficient per function, like in HistFactory
+   // models). The expected number of events is the integral of the sum, which
+   // the NLL reads after the event loop. Here, the same integral is also the
+   // normalization of the pdf inside the loop, so this checks that the
+   // generated integral code is placed outside the loop.
+   makeTestParams("RooRealSumPdfExtended",
+                  {"Gaussian::gx(x[-10,10],m[0,-3,3],1.5)", "Exponential::ex(x,-0.1)",
+                   "ASUM::model(n1[100,0,1000]*gx, n2[100,0,1000]*ex)"},
+                  6e-3, true),
    // Express a Gaussian as a RooFormulaVar/expr and put in a RooWrapper pdf to
    // get test coverage for RooWrapperPdf.
    makeTestParams("RooWrapperPdf",
@@ -671,3 +680,51 @@ INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });
+
+// https://github.com/root-project/root/issues/23724: the slope derivative of
+// the RooExponential normalization integral was inaccurate for small slopes
+// and zero at exactly zero slope. References from 80-digit arithmetic: for
+// uniform data, the NLL gradient is 50 * I'(c) / I(c) - sum(x) and the Hessian
+// 50 * (I''(c) / I(c) - (I'(c) / I(c))^2), with I(c) the integral of exp(c * x)
+// over the observable range.
+TEST(RooFuncWrapper, ExponentialGradientNearZeroSlope)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl{RooFit::WARNING};
+
+   RooRealVar x{"x", "x", 140., 100., 180.};
+   RooRealVar slope{"slope", "slope", -0.01, -0.1, 0.1};
+   RooExponential pdf{"exponential", "exponential", x, slope};
+
+   RooArgSet observables{x};
+   RooDataSet data{"uniform_data", "uniform_data", observables};
+   for (int i = 0; i < 50; ++i) {
+      x.setVal(100. + (i + 0.5) * 80. / 50);
+      data.add(observables);
+   }
+
+   std::unique_ptr<RooAbsReal> nll{pdf.createNLL(data, RooFit::EvalBackend::Codegen())};
+   auto &nllWrapper = static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nll);
+   nllWrapper.generateGradient();
+   nllWrapper.generateHessian();
+
+   struct Reference {
+      double slope;
+      double gradient;
+      double hessian;
+   };
+
+   const std::vector<Reference> refs{{-0.001, -26.663822655592037, 26658.135500043750},
+                                     {-1.497412393733355e-11, -3.9930997166222800e-7, 26666.666666666667},
+                                     {0.0, 0.0, 26666.666666666667}};
+
+   for (auto const &ref : refs) {
+      slope.setVal(ref.slope);
+      nll->getVal();
+      double gradient = 0.;
+      nll->gradient(&gradient);
+      EXPECT_NEAR(gradient, ref.gradient, 1e-9) << "gradient at slope " << ref.slope;
+      double hessian = 0.;
+      nll->hessian(&hessian);
+      EXPECT_NEAR(hessian, ref.hessian, 1e-9 * ref.hessian) << "Hessian at slope " << ref.slope;
+   }
+}

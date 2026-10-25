@@ -1021,6 +1021,24 @@ Bool_t TH1Merger::LabelMerge(bool newLimits) {
             }
          }
       }
+      // Cache bins in vectors
+      auto getLabelsCache = [](TAxis *axis) {
+         std::vector<const char *> labels;
+         const auto nBins = axis->GetNbins();
+         if (nBins == 0) {
+            return labels;
+         }
+         const auto nBinsUfOf = nBins + 2;
+         labels.resize(nBinsUfOf, nullptr); // underflow and overflow
+         for (int i = 0; i < nBinsUfOf; ++i) {
+            labels[i] = axis->GetBinLabel(i);
+         }
+         return labels;
+      };
+      auto xlabels = getLabelsCache(hist->GetXaxis());
+      auto ylabels = getLabelsCache(hist->GetYaxis());
+      auto zlabels = getLabelsCache(hist->GetZaxis());
+
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
 
          // if bin is empty we can skip it
@@ -1030,9 +1048,9 @@ Bool_t TH1Merger::LabelMerge(bool newLimits) {
          hist->GetBinXYZ(ibin, binx, biny, binz);
 
          // here only in the case of bins with labels
-         const char * labelX = hist->GetXaxis()->GetBinLabel(binx);
-         const char * labelY = (fH0->fDimension > 1) ? hist->GetYaxis()->GetBinLabel(biny) : nullptr;
-         const char * labelZ = (fH0->fDimension > 2) ? hist->GetYaxis()->GetBinLabel(binz) : nullptr;
+         const char * labelX = xlabels[binx];
+         const char * labelY = (fH0->fDimension > 1) ? ylabels[biny] : nullptr;
+         const char * labelZ = (fH0->fDimension > 2) ? zlabels[binz] : nullptr;
 
          // do we need to support case when there are bins with labels and bins without them ??
          // this case should have been detected before when examining the histograms

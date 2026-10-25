@@ -9,9 +9,20 @@ sap.ui.define([], function() {
 
    class EveManager {
 
+      /** An element's matrix as streamed by REveElement: base64 of its 16
+        * doubles, column-major. Returns a Float64Array, or null for none. */
+      static decodeMatrix(m) {
+         if (!m) return null;
+         const bin = atob(m), bytes = new Uint8Array(bin.length);
+         for (let i = 0; i < bin.length; ++i)
+            bytes[i] = bin.charCodeAt(i);
+         return new Float64Array(bytes.buffer, 0, 16);
+      }
+
       constructor()
       {
          this.map    = {}; // use object, not array
+         this.server_time_offset = null; // performance.now() - server ms
          this.childs = [];
          this.last_json = null;
          this.scene_changes = null;
@@ -25,7 +36,7 @@ sap.ui.define([], function() {
          this.global_selection_id = null;
          this.global_highlight_id = null;
 
-         this.EChangeBits = { "kCBColorSelection": 1, "kCBTransBBox": 2, "kCBObjProps": 4, "kCBVisibility": 8,  "kCBAdded": 16 };
+         this.EChangeBits = { "kCBCoreJson": 1, "kCBTrans": 2, "kCBObjProps": 4, "kCBVisibility": 8,  "kCBAdded": 16 };
 
          this.controllers = [];
          this.gl_controllers = [];
@@ -58,6 +69,23 @@ sap.ui.define([], function() {
 
          handle.setReceiver(this);
          handle.connect();
+      }
+
+      /** For a router page (expanded view) of viewer viewName: the manager and
+       * viewer element id of the main page in the same app, what switchSingle()
+       * passes in EVE.$eve7tmp. Needed when the page is reached without it,
+       * e.g. by browser forward. The name can be shortened at the first space
+       * (Views menu), so a prefix also matches. Returns null when there is no
+       * main page or no such viewer. */
+      static FindMainPageViewer(view, viewName)
+      {
+         let app = view.getParent();
+         let main = app?.getPages?.().find(p => p.getViewName?.() === "rootui5.eve7.view.Main");
+         let mgr = main?.getController()?.mgr;
+         let viewers = (viewName && mgr?.FindViewers()) || [];
+         let viewer = viewers.find(v => v.fName === viewName) ||
+                      viewers.find(v => v.fName.indexOf(viewName) === 0);
+         return viewer ? { mgr: mgr, eveViewerId: viewer.fElementId } : null;
       }
 
       onWebsocketClosed() {
@@ -134,9 +162,13 @@ sap.ui.define([], function() {
             }
 
             else if (resp[0] && resp[0].content == "REveScene::StreamElements") {
+               // The last entry is a trailer with the server time, see
+               // REveScene::AppendServerTime(); the rest are header and elements.
+               this.noteServerTime(resp.pop().server_time);
                this.ImportSceneJson(resp);
             }
             else if (resp.header && resp.header.content == "ElementsRepresentaionChanges") {
+               this.noteServerTime(resp.server_time);
                this.ImportSceneChangeJson(resp);
             }
             else if (resp.content == "BeginChanges") {
@@ -156,6 +188,7 @@ sap.ui.define([], function() {
                }
             }
             else if (resp.content == "Motion") {
+               this.noteServerTime(resp.server_time);
                this.ImportMotion(resp);
             }
             else if (resp.content == "BrowseElement") {
@@ -233,7 +266,7 @@ sap.ui.define([], function() {
       }
 
       /** Dispatch an element change to the scene's receivers, skipping any whose
-        * `changeBitMask` excludes its bits. Summary masks out kCBTransBBox, which
+        * `changeBitMask` excludes its bits. Summary masks out kCBTrans, which
         * a moving element streams several times a second. */
       callSceneElementChange(scene, em) {
          if ( ! scene.$receivers) return;
@@ -260,6 +293,40 @@ sap.ui.define([], function() {
              }
          }
      }
+
+      //==============================================================================
+      // The server clock, for motion
+      //==============================================================================
+
+      /** Feed one observation of the server clock: `t` is the server time, in
+        * ms, at which the message carrying it was sent.
+        *
+        * A sample is performance.now() - t: the true offset plus the one-way
+        * delay plus local processing delay. The additions are positive, so the
+        * smallest sample is the best estimate, as in NTP. A sample above the
+        * estimate pulls it up by 0.0005 of the difference, so one fast outlier
+        * does not pin it low and clock drift is followed.
+        *
+        * The residual error is a constant lag of about the one-way latency. It
+        * shifts every object equally, so objects do not jitter against each
+        * other.
+        */
+      noteServerTime(t) {
+         if (t === undefined) return;
+         const s = performance.now() - t;
+
+         if (this.server_time_offset === null || s < this.server_time_offset)
+            this.server_time_offset = s;
+         else
+            this.server_time_offset += (s - this.server_time_offset) * 0.0005;
+      }
+
+      /** The server's time now, in ms; 0 before the first message. */
+      serverNow() {
+         return (this.server_time_offset === null) ? 0 : performance.now() - this.server_time_offset;
+      }
+
+      //==============================================================================
 
       ImportSceneJson(arr)
       {
@@ -440,27 +507,27 @@ sap.ui.define([], function() {
             }
 
             if (em.changeBit & this.EChangeBits.kCBObjProps) {
+               // Optional keys: clear the old values; the message brings the
+               // current ones, if any.
                delete obj.render_data;
-               // AMT note ... the REveSelection changes fall here
-               // I think this should be a separate change bit
-               // Yes, or maybe Color should be be json only, ObjProps for RnrData.
-               // Although some classes might have an extended json part --
-               // and this case could be separated out.
+               delete obj.bbox;
+               delete obj.bbox_not_in_world;
                delete obj.sel_list;
+               delete obj.matrix;
+               delete obj.motion;
                jQuery.extend(obj, em);
                this.ParseUpdateTriggersAndProcessPostStream(obj);
             }
-            else if (em.changeBit & this.EChangeBits.kCBColorSelection) {
-               delete em.render_data;
-               Object.assign(obj, em);
-            }
-            else if (em.changeBit & this.EChangeBits.kCBTransBBox) {
-               // Transformation-only update: no render data is streamed.
-               // render_data.matrix is updated here because a later rebuild,
-               // e.g. on a colour change, reads it.
-               Object.assign(obj, em);
-               if (em.matrix && obj.render_data)
-                  obj.render_data.matrix = em.matrix;
+            else {
+               if (em.changeBit & this.EChangeBits.kCBCoreJson) {
+                  delete em.render_data;
+                  Object.assign(obj, em);
+               }
+               if (em.changeBit & this.EChangeBits.kCBTrans) {
+                  // Matrix and motion; EveScene sets them on the element's node.
+                  delete obj.matrix;
+                  Object.assign(obj, em);
+               }
             }
 
             this.callSceneElementChange(scene, em);
@@ -514,20 +581,18 @@ sap.ui.define([], function() {
             if (off !== lastoff)
                console.error('Element ' + elem.fName + ' offset mismatch ' + off + ' != ' + lastoff);
 
-            if (rd.trans_size) {
-               rd.matrix = new Float32Array(rawdata, off, rd.trans_size);
-               off += rd.trans_size*4;
-            }
+            // Copies, not views: the message's buffer is then freed, and each
+            // element's arrays go with the element.
             if (rd.vert_size) {
-               rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size);
+               rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size).slice();
                off += rd.vert_size*4;
             }
             if (rd.norm_size) {
-               rd.nrmBuff = new Float32Array(rawdata, off, rd.norm_size);
+               rd.nrmBuff = new Float32Array(rawdata, off, rd.norm_size).slice();
                off += rd.norm_size*4;
             }
             if (rd.index_size) {
-               rd.idxBuff = new Uint32Array(rawdata, off, rd.index_size);
+               rd.idxBuff = new Uint32Array(rawdata, off, rd.index_size).slice();
                off += rd.index_size*4;
             }
 
@@ -811,15 +876,10 @@ sap.ui.define([], function() {
             let obj = this.map[em.fElementId];
             if (!obj) continue;   // removed, or not yet created
 
-            // The message's own timestamp, so a viewer's rate cap can decide
-            // once for the whole message rather than once per element.
-            em.msg_t = resp.t;
-
-            // Keep the model in step: a later rebuild reads render_data.matrix,
-            // and a stale one would put the object back where it used to be.
-            if (em.matrix && obj.render_data)
-               obj.render_data.matrix = em.matrix;
-            obj.mot = em.mot;
+            // The element mirrors what the server sent; a view that is built
+            // again, see EveScene.redrawScene(), places its node from it.
+            if (em.matrix) obj.matrix = em.matrix; else delete obj.matrix;
+            obj.motion = em.motion;
 
             let scene = this.GetElement(em.fSceneId);
             if (scene)

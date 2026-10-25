@@ -82,6 +82,7 @@ public:
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
    void BuildRenderData() override;
+   void ComputeBBox() override { BBoxNotInWorld(); }
 };
 
 } // namespace Experimental
