@@ -353,6 +353,21 @@ ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ROOT::DescriptorId_
    return columnRange.GetFirstElementIndex() + columnRange.GetNElements();
 }
 
+void ROOT::Internal::RPageSource::PinCluster(ROOT::DescriptorId_t clusterId)
+{
+   fPinnedClusters.insert(clusterId);
+   ++fPinnedClusterGroups[FindClusterGroupId(clusterId)];
+}
+
+void ROOT::Internal::RPageSource::UnpinCluster(ROOT::DescriptorId_t clusterId)
+{
+   fPinnedClusters.erase(clusterId);
+   auto itr = fPinnedClusterGroups.find(FindClusterGroupId(clusterId));
+   assert(itr != fPinnedClusterGroups.end() && itr->second > 0);
+   if (--itr->second == 0)
+      fPinnedClusterGroups.erase(itr);
+}
+
 ROOT::Internal::RPageSource::RAnyDescriptorGuard
 ROOT::Internal::RPageSource::FindNextClusterId(ROOT::DescriptorId_t clusterId, ROOT::DescriptorId_t &nextId)
 {
