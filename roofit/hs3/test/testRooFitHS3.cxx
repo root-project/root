@@ -3034,3 +3034,36 @@ TEST(RooFitHS3, ParametersOnlyInParameterPoints)
    ASSERT_NE(channelInSnapshot, nullptr);
    EXPECT_EQ(channelInSnapshot->getCurrentLabel(), std::string("CR"));
 }
+
+// HS3 forbids binning information on the axes of unbinned data, regardless of
+// the binning of the observable in RooFit.
+TEST(RooFitHS3, UnbinnedDatasetAxesHaveNoBinning)
+{
+   RooWorkspace ws;
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   RooRealVar y{"y", "y", 0.0, 3.0};
+   x.setBins(5);
+   std::vector<double> edges{0.0, 1.0, 3.0};
+   y.setBinning(RooBinning{2, edges.data()});
+   RooDataSet ds{"ds", "ds", RooArgSet{x, y}};
+   for (double val : {1.0, 2.0, 2.5}) {
+      x.setVal(val);
+      y.setVal(val);
+      ds.add(RooArgSet{x, y});
+   }
+   ws.import(ds, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   const auto *dataNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "ds");
+   ASSERT_NE(dataNode, nullptr) << json;
+   EXPECT_EQ((*dataNode)["type"].val(), "unbinned");
+   ASSERT_EQ((*dataNode)["axes"].num_children(), 2u);
+   for (const auto &axis : (*dataNode)["axes"].children()) {
+      EXPECT_TRUE(axis.has_child("name"));
+      EXPECT_TRUE(axis.has_child("min"));
+      EXPECT_TRUE(axis.has_child("max"));
+      EXPECT_FALSE(axis.has_child("nbins")) << json;
+      EXPECT_FALSE(axis.has_child("edges")) << json;
+   }
+}

@@ -1498,7 +1498,12 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    auto &observablesNode = output["axes"].set_seq();
    for (auto *var : static_range_cast<RooRealVar *>(variables)) {
       _domains->readVariable(*var);
-      exportAxis(observablesNode.append_child().set_map(), *var);
+      // HS3 forbids binning information on the axes of unbinned data.
+      auto &axis = observablesNode.append_child().set_map();
+      testValidName(var->GetName(), false);
+      axis["name"] << var->GetName();
+      axis["min"] << var->getMin();
+      axis["max"] << var->getMax();
    }
    auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
