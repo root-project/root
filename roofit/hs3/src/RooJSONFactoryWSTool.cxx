@@ -631,8 +631,28 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
       }
    }
 
-   if (analysisNode.has_child("init") && workspace.getSnapshot(analysisNode["init"].val().c_str())) {
-      mc->SetSnapshot(*workspace.getSnapshot(analysisNode["init"].val().c_str()));
+   if (analysisNode.has_child("init")) {
+      const std::string initName = analysisNode["init"].val();
+      RooArgSet const *init = workspace.getSnapshot(initName.c_str());
+      if (!init) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the parameter point '" + initName +
+                                       "' used as \"init\" of analysis '" + analysisName + "' does not exist.");
+         return;
+      }
+      // ModelConfig::SetSnapshot() saves the snapshot as "<mc name>_<set name>_snapshot". If "init" already follows
+      // this pattern, which is the case for files written by RooFit, pick the set name such that it is preserved.
+      std::string setName = initName;
+      const std::string prefix = mcname + "_";
+      const std::string suffix = "_snapshot";
+      if (initName.size() >= prefix.size() + suffix.size() && startsWith(initName, prefix) &&
+          endsWith(initName, suffix)) {
+         setName = initName.substr(prefix.size(), initName.size() - prefix.size() - suffix.size());
+      }
+      // Take an owning copy: SetSnapshot() might replace the workspace snapshot that `init` points to.
+      RooArgSet initSet;
+      init->snapshot(initSet);
+      initSet.setName(setName.c_str());
+      mc->SetSnapshot(initSet);
    }
 }
 
@@ -1771,6 +1791,22 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
    writeProductDomain("_nuisance_parameters", mc.GetNuisanceParameters());
    writeProductDomain("_global_observables", mc.GetGlobalObservables());
    writeProductDomain("_parameters_of_interest", mc.GetParametersOfInterest());
+
+   // ModelConfig::SetSnapshot() saves the snapshot as "<mc name>_<set name>_snapshot", and the snapshots are exported
+   // as parameter points. Reference it as the initial values of the analysis.
+   if (std::unique_ptr<const RooArgSet> snapshot{mc.GetSnapshot()}) {
+      const std::string prefix = std::string(mc.GetName()) + "_";
+      std::vector<std::string> candidates;
+      for (TObject *snsh : _workspace.getSnapshots()) {
+         const std::string snshName = snsh->GetName();
+         if (startsWith(snshName, prefix) && endsWith(snshName, "_snapshot") && _workspace.set(snshName)) {
+            candidates.push_back(snshName);
+         }
+      }
+      if (candidates.size() == 1) {
+         analysisNode["init"] << candidates.front();
+      }
+   }
 
    auto &modelConfigAux = getRooFitInternal(rootnode, "ModelConfigs", analysisName);
    modelConfigAux.set_map();
