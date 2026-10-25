@@ -1,6 +1,8 @@
+set(OPENUI5_VERSION "1.152.0")
+
 ExternalProject_Add(
     OPENUI5
-    URL https://github.com/UI5/openui5/releases/download/1.152.0/openui5-runtime-1.152.0.zip
+    URL ${lcgpackages}/openui5-runtime-${OPENUI5_VERSION}.zip
     URL_HASH SHA256=4882023d4760ed4c20602e36dd183b02a538fc7e8bbfda607b6e25bd1cbbcdb1
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
