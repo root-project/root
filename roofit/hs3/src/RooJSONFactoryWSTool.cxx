@@ -105,7 +105,7 @@ tool.writedoc("hs3.tex")
 ~~~
 */
 
-constexpr auto hs3VersionTag = "0.2";
+constexpr auto hs3VersionTag = "0.3";
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;

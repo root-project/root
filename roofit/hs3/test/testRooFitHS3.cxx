@@ -3452,12 +3452,9 @@ TEST(RooFitHS3, HistFactoryMissingInterpolation)
    // RooFit always writes a "default_interpolation" if a modifier relies on it.
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_NE(exported.find("default_interpolation"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("hs3_version":"0.3")"), std::string::npos) << exported;
    RooWorkspace ws2;
-   std::string exportedCurrent = exported;
-   const std::string exportedVersion = R"("hs3_version":"0.2")";
-   ASSERT_NE(exportedCurrent.find(exportedVersion), std::string::npos) << exported;
-   exportedCurrent.replace(exportedCurrent.find(exportedVersion), exportedVersion.size(), R"("hs3_version":"0.3")");
-   EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exportedCurrent));
+   EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
 }
 
 // Malformed matrices, error arrays and bin edges are rejected instead of being read out of bounds.
