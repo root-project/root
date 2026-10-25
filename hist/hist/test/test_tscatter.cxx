@@ -21,6 +21,7 @@ TEST(TScatterLog, NonPositivePointsInLogScale)
    double size[n] = {2.0, 2.0, 2.0, 2.0, 2.0};
 
    TScatter scatter(n, x, y, col, size);
+   scatter.GetZaxis()->SetRangeUser(1.0, 5.0);
    scatter.Draw("A");
    c.Update();
 
