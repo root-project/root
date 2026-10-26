@@ -96,12 +96,12 @@ endif()
 
 ExternalProject_Add(BUILTIN_CIVETWEB
   PREFIX ${ROOT_CIVETWEB_PREFIX}
-  # URL ${lcgpackages}/civetweb-${ROOT_CIVETWEB_VERSION}.tar.gz
-  # URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
   # TODO: once 1.17 released, bump SearchInstalledSoftware find_package to 1.17 plus remove patches
   # and potentially install civetweb in root-ci-images via homebrew and change builtin to OFF in ci-configs
-  GIT_REPOSITORY https://github.com/civetweb/civetweb.git
-  GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
+  # The git tag is 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
+  #URL ${lcgpackages}/civetweb-588860.tar.gz
+  URL https://root.cern/download/civetweb-588860.tar.gz
+  URL_HASH SHA256=abf422a3642a9946a651210cbf7c8ad7ec0b46c85ca07a70b3d059e383957665
   ${ROOT_CIVETWEB_PATCH_COMMAND}
   UPDATE_COMMAND ""
   LOG_DOWNLOAD  TRUE
@@ -146,14 +146,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     -DOPENSSL_CRYPTO_LIBRARY=${OPENSSL_CRYPTO_LIBRARY}
     -DOPENSSL_SSL_LIBRARY=${OPENSSL_SSL_LIBRARY}
     -DOPENSSL_LIBRARIES=${OPENSSL_LIBRARIES}
-    #-DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
     -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}
-    #-DOPENSSL_FOUND=TRUE
-    #-DOpenSSL_FOUND=TRUE
-    #-DOpenSSL_ROOT=${OPENSSL_ROOT} #For CMake <3.27
-    #-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-    #-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-    # -DCMAKE_INSTALL_RPATH:STRING=${rpath_origin}
     -DZLIB_LIBRARY=${ZLIB_LIBRARIES}
     -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
     ${ZLIB_ROOT_OPTION}
