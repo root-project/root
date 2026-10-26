@@ -69,8 +69,9 @@ void RClusterLoader::SplitDataset()
       for (const RClusterRange &c : fAllClusters) {
          const std::size_t sz = c.GetNumEntries();
          cumulativeEntries += sz;
+         // the validation entries are rounded down, as in the unshuffled split and the eager loading
          const std::size_t targetCumulativeTrain =
-            static_cast<std::size_t>(cumulativeEntries * (1.0f - fValidationSplit));
+            cumulativeEntries - static_cast<std::size_t>(fValidationSplit * cumulativeEntries);
          const std::size_t trainSz = targetCumulativeTrain - currentCumulativeTrain;
          currentCumulativeTrain = targetCumulativeTrain;
          const std::size_t valSz = sz - trainSz;
