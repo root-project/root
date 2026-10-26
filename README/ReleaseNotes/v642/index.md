@@ -411,6 +411,7 @@ The version of the following packages has been updated:
  - gl2ps: 1.4.2
  - libmathtext: 2016
  - libpng: 1.6.59
+ - libjpeg-turbo: 3.2.0
  - libtiff: 4.7.26
  - openssl: 3.5.9
  - openui5: 1.152.0
