@@ -335,7 +335,12 @@ private:
    static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
    static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
                                                 //stored in TObject::fUniqueID
-   static TDeclNameRegistry fNoInfoOrEmuOrFwdDeclNameRegistry; // Store decl names of the forwardd and no info instances
+   // Store decl names of the forward and no info instances. Returned by an
+   // accessor rather than being a plain static object so that it is
+   // constructed on first use and never destroyed: it must outlive every
+   // other static object, because ~TGenericClassInfo -> RemoveClass ->
+   // SetUnloaded touches it during __cxa_finalize at exit(). See issue #13200.
+   static TDeclNameRegistry &GetNoInfoOrEmuOrFwdDeclNameRegistry();
    static Bool_t HasNoInfoOrEmuOrFwdDeclaredDecl(const char*);
 
    // Internal status bits, set and reset only during initialization and thus under the protection of the global lock.
