@@ -88,7 +88,7 @@ protected:
    UInt_t   ReserveByteCount(const TClass *cl) override;
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
-   bool ShouldNotReadCollection(Int_t lengthInBytes, Int_t nElements=1) const;
+   bool ShouldNotReadCollection(Long64_t lengthInBytes, Long64_t nElements=1) const;
 
 public:
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
@@ -193,7 +193,7 @@ public:
    void     ReadFastArray(ULong_t   *l, Int_t n) override;
    void     ReadFastArray(Long64_t  *l, Int_t n) override;
    void     ReadFastArray(ULong64_t *l, Int_t n) override;
-   void     ReadFastArray(Float_t   *f, Int_t n) override;
+   void     ReadFastArray(Float_t   *f, Long64_t n) override;
    void     ReadFastArray(Double_t  *d, Int_t n) override;
    void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele = nullptr) override;
    void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele = nullptr) override;
@@ -300,7 +300,7 @@ public:
 //---------------------- TBufferFile inlines ---------------------------------------
 
 //______________________________________________________________________________
-inline bool TBufferFile::ShouldNotReadCollection(Int_t lengthInBytes, Int_t nElements) const
+inline bool TBufferFile::ShouldNotReadCollection(Long64_t lengthInBytes, Long64_t nElements) const
 {
    // Three cases here in which we should not read the collection:
    // 1. The collection has zero or a negative number of elements or
