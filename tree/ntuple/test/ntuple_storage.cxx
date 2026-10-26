@@ -1321,11 +1321,12 @@ TEST(RPageSource, MetadataMode)
    FileRaii fileGuard("test_ntuple_page_source_metadata_mode.root");
 
    auto model = RNTupleModel::Create();
-   auto ptrCtr = model->MakeField<int>("ctr");
+   auto ptrCtr = model->MakeField<std::vector<int>>("ctr");
+   ptrCtr->resize(1);
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       for (int i = 0; i < 1000; ++i) {
-         *ptrCtr = i;
+         (*ptrCtr)[0] = i;
          writer->Fill();
          writer->CommitCluster(true /* commit cluster group */);
       }
@@ -1350,13 +1351,66 @@ TEST(RPageSource, MetadataMode)
    EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusters());
    EXPECT_EQ(0u, reader->GetDescriptor().GetNActiveClusters());
 
-   ptrCtr = reader->GetModel().GetDefaultEntry().GetPtr<int>("ctr");
+   ptrCtr = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<int>>("ctr");
    reader->LoadEntry(500);
-   EXPECT_EQ(500, *ptrCtr);
+   EXPECT_EQ(500, (*ptrCtr)[0]);
    reader->LoadEntry(999);
-   EXPECT_EQ(999, *ptrCtr);
+   EXPECT_EQ(999, (*ptrCtr)[0]);
    reader->LoadEntry(0);
-   EXPECT_EQ(0, *ptrCtr);
+   EXPECT_EQ(0, (*ptrCtr)[0]);
    EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
    EXPECT_GT(1000, reader->GetDescriptor().GetNActiveClusters());
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that we don't do full binary search on the cluster groups for sequential iteration
+      auto viewInt = reader->GetView<int>("ctr._0");
+      for (unsigned int i = 0; i < 10; ++i) {
+         EXPECT_EQ(i, viewInt(i));
+      }
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(15, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that we don't do full binary search on the cluster groups for multi-stream iteration
+      auto viewInt = reader->GetView<int>("ctr._0");
+      auto stream1 = reader->CreateActiveEntryToken();
+      auto stream2 = reader->CreateActiveEntryToken();
+      for (unsigned int i = 0; i < 10; ++i) {
+         if (i >= 5) {
+            stream2.SetEntryNumber(i - 5);
+            EXPECT_EQ(i - 5, viewInt(i - 5));
+         }
+         stream1.SetEntryNumber(i);
+         EXPECT_EQ(i, viewInt(i));
+      }
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(15, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that random access on top-level fields does not trigger full binary search in cluster groups
+      auto viewCtr = reader->GetView<std::vector<int>>("ctr");
+      // We will initially look into the first cluster (group). Then hit the cluster groups exactly. We also
+      // prefetch up to two clusters per read.
+      viewCtr(500);
+      viewCtr(300);
+
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GE(9, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Cross-check: random access on collection columns actually do require full binary search in the cluster groups
+      // (but not worse)
+      auto viewInt = reader->GetView<int>("ctr._0");
+      viewInt(500);
+
+      EXPECT_LT(10, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(20, reader->GetDescriptor().GetNActiveClusters());
+   }
 }

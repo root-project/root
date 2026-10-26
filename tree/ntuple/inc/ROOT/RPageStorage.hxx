@@ -809,8 +809,9 @@ private:
    /// Pages of pinned clusters won't be evicted from the page pool.
    std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
    /// Reference counted map of pinned cluster groups. This map is edited by PinCluster() and UnpinCluster()
-   /// and stores the number of pinned clusters in a certain cluster group.
-   std::unordered_map<ROOT::DescriptorId_t, std::size_t> fPinnedClusterGroups;
+   /// and stores the number of pinned clusters in a certain cluster group. We use a map because we iterate the sorted
+   /// list of cluster group IDs in the element-wise FindClusterId().
+   std::map<ROOT::DescriptorId_t, std::size_t> fPinnedClusterGroups;
 
    /// Ensures that fDescriptor has cluster details loaded for the given cluster group ID. This method is expected
    /// to be called while holding the lock passed by descGuard. The returned descriptor guard is either the
