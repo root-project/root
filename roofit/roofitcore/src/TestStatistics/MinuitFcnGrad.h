@@ -21,7 +21,6 @@
 #include "../RooAbsMinimizerFcn.h"
 
 #include <Fit/ParameterSettings.h>
-#include "Math/IFunction.h" // ROOT::Math::IMultiGradFunction
 
 class RooMinimizer;
 
@@ -34,19 +33,24 @@ public:
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                  LikelihoodGradientMode likelihoodGradientMode);
 
-   void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) override;
-
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
    bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    bool returnsInMinuit2ParameterSpace() const { return _gradient->usesMinuitInternalValues(); }
 
-   double operator()(const double *x) const;
-
-   /// IMultiGradFunction overrides necessary for Minuit
-   void Gradient(const double *x, double *grad) const;
-   void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                               double *previous_gstep, double fValAtX) const;
+   /// \name ROOT::Minuit2::FCNBase interface
+   /// @{
+   double operator()(std::vector<double> const &x) const override;
+   bool HasGradient() const override { return true; }
+   std::vector<double> Gradient(std::vector<double> const &x) const override;
+   // Unhide the 4-argument overload from FCNBase, which forwards to Gradient().
+   // Otherwise GCC's -Woverloaded-virtual (enabled with -Werror on some CI
+   // targets) complains because we only override the 5-argument overload here.
+   using FCNBase::GradientWithPrevResult;
+   std::vector<double> GradientWithPrevResult(std::vector<double> const &x, double *previous_grad, double *previous_g2,
+                                              double *previous_gstep, double fValAtX) const override;
+   ROOT::Minuit2::GradientParameterSpace gradParameterSpace() const override;
+   /// @}
 
    inline std::string getFunctionName() const override { return _likelihood->GetName(); }
 

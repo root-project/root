@@ -16,8 +16,10 @@
 
 //////////////////////////////////////////////////////////////////////////////
 /// \class RooMinimizerFcn
-/// RooMinimizerFcn is an interface to the ROOT::Math::IBaseFunctionMultiDim,
-/// a function that ROOT's minimisers use to carry out minimisations.
+/// RooMinimizerFcn adapts a RooAbsReal to the function interface of the
+/// minimizers used by RooMinimizer: the ROOT::Minuit2::FCNBase interface for
+/// Minuit2, and ROOT::Math::IBaseFunctionMultiDim for the other minimizers
+/// that are reached via ROOT::Math::Minimizer.
 ///
 
 #include "RooMinimizerFcn.h"
@@ -35,7 +37,6 @@
 #include "RooRealVar.h"
 
 #include "Math/Functor.h"
-#include "Minuit2/Minuit2Minimizer.h"
 #include "TMatrixDSym.h"
 
 #include <fstream>
@@ -151,14 +152,18 @@ RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
 {
    unsigned int nDim = getNDim();
 
-   if (context->_cfg.useGradient && funct->hasGradient()) {
+   _useGradient = context->_cfg.useGradient && funct->hasGradient();
+   _useHessian = context->_cfg.useHessian && funct->hasHessian();
+
+   auto evalFunc = [this](const double *x) { return (*this)(x); };
+   if (_useGradient) {
       _gradientOutput.resize(_allParams.size());
-      _multiGenFcn = std::make_unique<ROOT::Math::GradFunctor>(this, &RooMinimizerFcn::operator(),
-                                                               &RooMinimizerFcn::evaluateGradient, nDim);
+      auto gradFunc = [this](const double *x, double *out) { evaluateGradient(x, out); };
+      _multiGenFcn = std::make_unique<ROOT::Math::GradFunctor>(evalFunc, nDim, gradFunc);
    } else {
-      _multiGenFcn = std::make_unique<ROOT::Math::Functor>(std::cref(*this), nDim);
+      _multiGenFcn = std::make_unique<ROOT::Math::Functor>(evalFunc, nDim);
    }
-   if (context->_cfg.useHessian) {
+   if (_useHessian) {
       _hessianOutput.resize(_allParams.size() * _allParams.size());
    }
 }
@@ -267,7 +272,7 @@ RooArgSet RooMinimizerFcn::freezeDisconnectedParameters() const
    return changedSet;
 }
 
-bool RooMinimizerFcn::evaluateHessian(std::span<const double> x, double *out) const
+std::vector<double> RooMinimizerFcn::Hessian(std::vector<double> const &x) const
 {
    // Set the parameter values for this iteration
    for (unsigned index = 0; index < getNDim(); index++) {
@@ -280,6 +285,7 @@ bool RooMinimizerFcn::evaluateHessian(std::span<const double> x, double *out) co
 
    std::size_t m = _allParamsInit.size();
    std::size_t n = getNDim();
+   std::vector<double> out(n * n);
    std::size_t iAll = 0;
    std::size_t iFloating = 0;
    for (RooAbsArg *param_i : _allParamsInit) {
@@ -308,24 +314,19 @@ bool RooMinimizerFcn::evaluateHessian(std::span<const double> x, double *out) co
          std::cout << std::endl;
       }
    }
-   return true;
+   return out;
 }
 
-void RooMinimizerFcn::initMinimizer(ROOT::Math::Minimizer &minim, RooMinimizer *context)
+std::vector<double> RooMinimizerFcn::Gradient(std::vector<double> const &x) const
+{
+   std::vector<double> out(getNDim());
+   evaluateGradient(x.data(), out.data());
+   return out;
+}
+
+void RooMinimizerFcn::initMinimizer(ROOT::Math::Minimizer &minim) const
 {
    minim.SetFunction(*_multiGenFcn);
-   if (context->_cfg.useHessian && _funct->hasHessian()) {
-      minim.SetHessianFunction(
-         std::bind(&RooMinimizerFcn::evaluateHessian, this, std::placeholders::_1, std::placeholders::_2));
-   }
-   // The independence information for skipping vanishing second derivatives
-   // in numerical Hessian computations is a Minuit2-only feature, so it is
-   // wired up directly with the concrete minimizer type instead of going
-   // through the ROOT::Math::Minimizer interface.
-   if (auto *minuit2 = dynamic_cast<ROOT::Minuit2::Minuit2Minimizer *>(&minim)) {
-      minuit2->SetSecondDerivativeAlwaysVanishesFunc(
-         [this](unsigned int i, unsigned int j) { return secondDerivativeAlwaysVanishes(i, j); });
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,7 +366,7 @@ void RooMinimizerFcn::buildSecondDerivMask() const
 /// (indices in the space of all floatable parameters, matching Minuit's
 /// external parameter indices) is identically zero because the parameters
 /// share no additive term of the minimized function.
-bool RooMinimizerFcn::secondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const
+bool RooMinimizerFcn::SecondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const
 {
    std::call_once(_secondDerivMaskOnce, &RooMinimizerFcn::buildSecondDerivMask, this);
    return !_secondDerivMask[getNDim() * i + j];
