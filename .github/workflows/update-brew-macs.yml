@@ -13,10 +13,21 @@ on:
     branches:
       - 'master'
     paths:
-      - '.github/workflow/update-brew-macs.yml'
+      - '.github/workflows/update-brew-macs.yml'
+
+  pull_request:
+    branches:
+      - 'master'
+    paths:
+      - '.github/workflows/update-brew-macs.yml'
 
 env:
   VENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 
 jobs:
   update-macos:
@@ -75,6 +86,7 @@ jobs:
           $(brew --prefix "${PYTHON_PACKAGE_BREW}")/bin/${PYTHON_EXECUTABLE} -m venv "${VENV_DIR}"
           source "${VENV_DIR}"/bin/activate
           pip3 install --upgrade pip
+          pip3 install openstacksdk
           while read -r PACKAGE; do
             PACKAGE="${PACKAGE%%#*}" # Skip comments
             if [ -n "${PACKAGE}" ]; then
