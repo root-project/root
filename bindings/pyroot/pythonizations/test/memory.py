@@ -113,8 +113,8 @@ class MemoryStlString(unittest.TestCase):
             "TGraph2D": (100,),
             "TEntryList": ("name", "title"),
             "TEventList": ("name", "title"),
-            "TTree": ("name", "title"),
-            "TNtuple": ("name", "title", "x:y:z"),
+            # TTree and TNtuple are absent from this list because the test
+            # relies on Clone(), which is disabled for TTree.
         }
         for klass, args in objs.items():
             with self.subTest(klass=klass):

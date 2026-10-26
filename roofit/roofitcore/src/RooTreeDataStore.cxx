@@ -327,11 +327,15 @@ void RooTreeDataStore::createTree(RooStringView name, RooStringView title)
 /// structure when retrieving information from it.
 void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, const char* /*rangeName*/, Int_t /*nStart*/, Int_t /*nStop*/)
 {
-  // Make our local copy of the tree, so we can safely loop through it.
+  // Make our local copy of the tree, so we can safely loop through it. The
+  // streamer-based metadata copy done by CloneObject() is deliberate (it is
+  // what TTree::Clone() did before it was disabled): it gives us an
+  // independent read cursor and branch addresses over the same data, without
+  // duplicating the baskets.
   // We need a custom deleter, because if we don't deregister the Tree from the directory
   // of the original, it tears it down at destruction time!
   auto deleter = [](TTree* tree){tree->SetDirectory(nullptr); delete tree;};
-  std::unique_ptr<TTree, decltype(deleter)> tClone(static_cast<TTree*>(t->Clone()), deleter);
+  std::unique_ptr<TTree, decltype(deleter)> tClone{static_cast<TTree*>(gDirectory->CloneObject(t)), deleter};
   tClone->SetDirectory(t->GetDirectory());
 
   // Clone list of variables
