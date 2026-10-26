@@ -1271,7 +1271,7 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
 
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
-   if (Cpp::Destruct(address, info->GetDecl(), nary, withFree))
+   if (Cpp::Destruct(address, info->GetDecl(), withFree, nary))
       return;
 
    ::Error("TClingCallFunc::ExecDestructor", "Called with no wrapper, not implemented!");
