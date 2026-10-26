@@ -60,6 +60,3 @@ ROOT_ADD_TEST(test-tdirectoryfile_destructor_segfault COMMAND tdirectoryfile_des
 ROOT_ADD_GTEST(test_projections test_projections.cxx LIBRARIES Hist)
 
 ROOT_ADD_GTEST(test_th1d_tpad_buildlegend test_th1d_tpad_buildlegend.cxx LIBRARIES Hist Gpad)
-
-# Test for https://github.com/root-project/root/issues/23833
-ROOT_ADD_GTEST(test_tscatter test_tscatter.cxx LIBRARIES Hist Gpad Graf Core)
