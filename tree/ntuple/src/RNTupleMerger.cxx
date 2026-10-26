@@ -415,6 +415,9 @@ struct RDescriptorsComparison {
    std::vector<const ROOT::RFieldDescriptor *> fExtraDstFields;
    std::vector<const ROOT::RFieldDescriptor *> fExtraSrcFields;
    std::vector<RCommonField> fCommonFields;
+   // { parentId => subfields }
+   // This is currently only used for the _userData attribute field.
+   std::unordered_map<ROOT::DescriptorId_t, std::vector<const ROOT::RFieldDescriptor *>> fExtraSrcSubfields;
 
    // Empty if and only if the source can be fast merged.
    std::string fFastMergeErrors;
@@ -531,11 +534,13 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
    }
 }
 
-static RDescriptorsComparison
-FillCommonAndExtraFields(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTupleDescriptor &src)
+static ROOT::RResult<RDescriptorsComparison> FillCommonAndExtraFields(const ROOT::RNTupleDescriptor &dst,
+                                                                      const ROOT::RNTupleDescriptor &src,
+                                                                      bool forAttributeMerging)
 {
    RDescriptorsComparison res;
 
+   // collect common and extra dst fields
    for (const auto &dstField : dst.GetTopLevelFields()) {
       const auto srcFieldId = src.FindFieldId(dstField.GetFieldName());
       if (srcFieldId != ROOT::kInvalidDescriptorId) {
@@ -545,10 +550,29 @@ FillCommonAndExtraFields(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTuple
          res.fExtraDstFields.emplace_back(&dstField);
       }
    }
+
+   // collect extra src fields
    for (const auto &srcField : src.GetTopLevelFields()) {
       const auto dstFieldId = dst.FindFieldId(srcField.GetFieldName());
       if (dstFieldId == ROOT::kInvalidDescriptorId) {
          res.fExtraSrcFields.push_back(&srcField);
+      }
+   }
+
+   if (forAttributeMerging) {
+      using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+      const auto userDataFieldId = src.FindFieldId(kMetaFieldNames[kMetaFieldIndex_UserData]);
+      if (userDataFieldId == ROOT::kInvalidDescriptorId) {
+         return R__FAIL("attribute user data field not found. The RNTuple is corrupted and cannot be merged.");
+      }
+      const auto &userDataField = src.GetFieldDescriptor(userDataFieldId);
+      for (const auto subfieldId : userDataField.GetLinkIds()) {
+         const auto subfieldName = src.GetQualifiedFieldName(subfieldId);
+         const auto dstFieldId = dst.FindFieldId(subfieldName);
+         if (dstFieldId == ROOT::kInvalidDescriptorId) {
+            const auto &subfield = src.GetFieldDescriptor(subfieldId);
+            res.fExtraSrcSubfields[userDataFieldId].push_back(&subfield);
+         }
       }
    }
 
@@ -582,8 +606,9 @@ static void VerifyProjectedFieldsCompatibility(const ROOT::RNTupleDescriptor &ds
 
 /// Compares the top level fields of `dst` and `src` and determines whether they can be merged or not.
 /// In addition, returns the differences between `dst` and `src`'s structures
-static ROOT::RResult<RDescriptorsComparison>
-CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTupleDescriptor &src)
+static ROOT::RResult<RDescriptorsComparison> CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst,
+                                                                        const ROOT::RNTupleDescriptor &src,
+                                                                        bool forAttributeMerging = false)
 {
    // Cases:
    // 1. dst == src
@@ -591,7 +616,11 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    // 3. src has fields that dst hasn't
    // 4. dst and src have fields that differ (compatible or incompatible)
 
-   RDescriptorsComparison res = FillCommonAndExtraFields(dst, src);
+   auto descCmpRes = FillCommonAndExtraFields(dst, src, forAttributeMerging);
+   if (!descCmpRes)
+      return R__FORWARD_RESULT(descCmpRes);
+
+   auto res = descCmpRes.Unwrap();
    std::vector<std::string> slowMergeErrors;
    std::vector<std::string> errors;
 
@@ -776,7 +805,6 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
                        ROOT::NTupleSize_t nEntries, bool verbose, bool forSlowMerge)
 {
    const auto &newFields = descCmp.fExtraSrcFields;
-   auto &commonFields = descCmp.fCommonFields;
 
    dstModel.Unfreeze();
    ROOT::Internal::RNTupleModelChangeset changeset{dstModel};
@@ -793,14 +821,15 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
                                     << " to the destination model (entry #" << nEntries << ").";
    }
 
+   ROOT::RCreateFieldOptions cfOpts;
+   cfOpts.SetEmulateUnknownTypes(true);
+
    changeset.fAddedFields.reserve(newFields.size());
    // First add all non-projected fields...
    for (const auto *fieldDesc : newFields) {
       if (fieldDesc->IsProjectedField())
          continue;
 
-      ROOT::RCreateFieldOptions cfOpts;
-      cfOpts.SetEmulateUnknownTypes(true);
       auto field = fieldDesc->CreateField(srcDesc, cfOpts);
       if (!forSlowMerge) {
          // Explicitly set the field representatives. This prevents UpdateSchema() from changing our column
@@ -819,14 +848,12 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       }
       changeset.AddField(std::move(field));
    }
-   // ...then add all projected fields.
+   // ...then add all projected fields...
    for (const auto *fieldDesc : newFields) {
       if (!fieldDesc->IsProjectedField())
          continue;
 
       ROOT::Internal::RProjectedFields::FieldMap_t fieldMap;
-      ROOT::RCreateFieldOptions cfOpts;
-      cfOpts.SetEmulateUnknownTypes(true);
       auto field = fieldDesc->CreateField(srcDesc, cfOpts);
       const auto sourceId = fieldDesc->GetProjectionSourceId();
       const auto &sourceField = dstModel.GetConstField(srcDesc.GetQualifiedFieldName(sourceId));
@@ -841,6 +868,17 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       changeset.fAddedProjectedFields.emplace_back(field.get());
       ROOT::Internal::GetProjectedFieldsOfModel(dstModel).Add(std::move(field), fieldMap);
    }
+   // ...finally add all subfields.
+   if (forSlowMerge) { // TODO(gparolini): figure out if this makes sense also in default merging
+      for (const auto &[parentId, subfields] : descCmp.fExtraSrcSubfields) {
+         const auto parentFQName = srcDesc.GetQualifiedFieldName(parentId);
+         // TODO(gparolini): should we RegisterSubfield(parentFQName) here if the parent is not a top-level field?
+         for (const auto *subfield : subfields) {
+            auto field = subfield->CreateField(srcDesc, cfOpts);
+            changeset.AddField(std::move(field), parentFQName);
+         }
+      }
+   }
    dstModel.Freeze();
    try {
       // FIXME: here we are connecting the new fields/columns to the sink!
@@ -853,6 +891,7 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       return R__FAIL(ex.what());
    }
 
+   auto &commonFields = descCmp.fCommonFields;
    commonFields.reserve(commonFields.size() + newFields.size());
    // NOTE(gparolini): Insert the new fields at the beginning of `commonFields`.
    // We need to make sure the extended fields appear before all other common fields for the following reason:
@@ -1967,14 +2006,15 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          attrStrat.InitSource(*attrSource);
 
          descCmpRes = CompareDescriptorStructure(attrSetData.fSink->GetDescriptor(),
-                                                 attrSource->GetSharedDescriptorGuard().GetConstRef());
+                                                 attrSource->GetSharedDescriptorGuard().GetConstRef(),
+                                                 /*forAttributeMerging=*/true);
          if (!descCmpRes) {
             SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
                           descCmpRes.GetError()->GetReport())
          }
          descCmp = descCmpRes.Unwrap();
 
-         if (!descCmp.fExtraSrcFields.empty()) {
+         if (!descCmp.fExtraSrcFields.empty() || !descCmp.fExtraSrcSubfields.empty()) {
             auto res = attrStrat.ExtendDestinationModel(descCmp);
             if (!res)
                return R__FORWARD_ERROR(res);
