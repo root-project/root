@@ -78,6 +78,9 @@ public:
    REveVectorT& operator+=(const REveVectorT& v) { fX += v.fX; fY += v.fY; fZ += v.fZ; return *this; }
    REveVectorT& operator-=(const REveVectorT& v) { fX -= v.fX; fY -= v.fY; fZ -= v.fZ; return *this; }
 
+   bool operator==(const REveVectorT& v) const { return fX == v.fX && fY == v.fY && fZ == v.fZ; }
+   bool operator!=(const REveVectorT& v) const { return !(*this == v); }
+
    void Set(const Float_t*  v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
    void Set(const Double_t* v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
    void Set(TT x, TT  y, TT z) { fX = x; fY = y; fZ = z; }
@@ -116,6 +119,7 @@ public:
 
    TT   Perp2() const { return fX*fX + fY*fY;        }
    TT   Perp()  const { return TMath::Sqrt(Perp2()); }
+   // Transverse radius, not the 3D R() of ROOT::Math vectors (that is Mag()).
    TT   R()     const { return Perp();               }
 
    TT   Distance(const REveVectorT& v) const;
@@ -156,7 +160,7 @@ inline TT REveVectorT<TT>::Theta() const
 template<typename TT>
 inline TT REveVectorT<TT>::CosTheta() const
 {
-   Float_t ptot = Mag(); return ptot == 0 ? 1 : fZ/ptot;
+   TT ptot = Mag(); return ptot == 0 ? 1 : fZ/ptot;
 }
 
 //______________________________________________________________________________
@@ -277,6 +281,9 @@ public:
    REveVector4T& operator+=(const REveVector4T& v) { TP::operator+=(v); fT += v.fT; return *this; }
    REveVector4T& operator-=(const REveVector4T& v) { TP::operator-=(v); fT -= v.fT; return *this; }
 
+   bool operator==(const REveVector4T& v) const { return TP::operator==(v) && fT == v.fT; }
+   bool operator!=(const REveVector4T& v) const { return !(*this == v); }
+
    using TP::operator+=;
    using TP::operator-=;
 };
@@ -339,6 +346,9 @@ public:
    REveVector2T& operator*=(TT s)                  { fX *= s;    fY *= s;    return *this; }
    REveVector2T& operator+=(const REveVector2T& v) { fX += v.fX; fY += v.fY; return *this; }
    REveVector2T& operator-=(const REveVector2T& v) { fX -= v.fX; fY -= v.fY; return *this; }
+
+   bool operator==(const REveVector2T& v) const { return fX == v.fX && fY == v.fY; }
+   bool operator!=(const REveVector2T& v) const { return !(*this == v); }
 
    TT& operator[](Int_t idx)       { return (&fX)[idx]; }
    TT  operator[](Int_t idx) const { return (&fX)[idx]; }
