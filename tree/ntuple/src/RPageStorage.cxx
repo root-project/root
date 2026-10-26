@@ -519,7 +519,73 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
    if (descGuard->GetNClusterGroups() == 0)
       return descGuard;
 
+   // Shortcuts: most cases do not require a full binary search in the list of cluster groups.
+
+   // Case 1: look around the last used cluster
+   const std::vector<DescriptorId_t> *clusterIds = nullptr;
+   const DescriptorId_t cgGuess =
+      ((index == 0) || (fLastUsedCluster == kInvalidDescriptorId)) ? 0 : FindClusterGroupId(fLastUsedCluster);
+   DescriptorId_t cgHint = cgGuess;
+   // Try twice: if the column index is not found in the cluster group of the last used cluster, cgHint will point
+   // to the adjacent cluster group either preceeding or following the cluster group and we'll try again.
+   for (int i = 0; i < 2; ++i) {
+      descGuard = EnsureClusterDetails(cgHint, std::move(descGuard));
+      if ((clusterIds = SearchInClusterGroup(physicalColumnId, index, cgHint, descGuard))) {
+         cid = FindClusterIdInList(physicalColumnId, index, *clusterIds, descGuard);
+         return descGuard;
+      }
+      if (cgHint == kInvalidDescriptorId)
+         return descGuard;
+   }
+   assert(cgHint != cgGuess);
+
+   // Case 2: look into the pinned cluster groups
+   // We expect only few pinned cluster groups, so we do a linear search with pruning
+   const bool isRightSided = cgHint > cgGuess; // whether to look to the right or to the left of cgHint (cgGuess)
+   for (auto [cgPinned, _] : fPinnedClusterGroups) {
+      if (isRightSided && (cgPinned < cgHint)) {
+         // Skip the left side of pinned cluster groups if we already know the column index cannot be here
+         continue;
+      } else if (!isRightSided && (cgPinned > cgHint)) {
+         // Prune the search on the right side of pinned cluster groups
+         break;
+      }
+
+      descGuard = EnsureClusterDetails(cgPinned, std::move(descGuard));
+      cgHint = cgPinned;
+      if ((clusterIds = SearchInClusterGroup(physicalColumnId, index, cgHint, descGuard))) {
+         cid = FindClusterIdInList(physicalColumnId, index, *clusterIds, descGuard);
+         return descGuard;
+      }
+
+      if (cgHint < cgPinned) {
+         // No point in moving further to the right of the pinned cluster groups
+         break;
+      }
+   }
+
+   // Case 3: top-level columns can use the entry-based search
+   const auto &columnDesc = descGuard->GetColumnDescriptor(physicalColumnId);
+   if (columnDesc.GetIndex() == 0) {
+      // Start search with the parent field of the current column
+      auto fieldId = descGuard->GetFieldDescriptor(columnDesc.GetFieldId()).GetParentId();
+      while (fieldId != descGuard->GetFieldZeroId()) {
+         const auto &fieldDesc = descGuard->GetFieldDescriptor(fieldId);
+         if ((fieldDesc.GetStructure() != ENTupleStructure::kPlain) &&
+             (fieldDesc.GetStructure() != ENTupleStructure::kRecord)) {
+            break;
+         }
+         fieldId = fieldDesc.GetParentId();
+      }
+      if (fieldId == descGuard->GetFieldZeroId()) {
+         descGuard.Release();
+         return FindClusterId(index, cid);
+      }
+   }
+
    // Binary search in the cluster group list, followed by a binary search in the clusters of that cluster group
+   // We could use the information from the shortcut search to restrict the left and right borders further.
+   // Left out for simplicity.
 
    std::size_t cgLeft = 0;
    std::size_t cgRight = descGuard->GetNClusterGroups() - 1;
@@ -527,8 +593,8 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
       const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
       descGuard = EnsureClusterDetails(cgMidpoint, std::move(descGuard));
 
-      auto cgHint = cgMidpoint;
-      const std::vector<DescriptorId_t> *clusterIds = SearchInClusterGroup(physicalColumnId, index, cgHint, descGuard);
+      cgHint = cgMidpoint;
+      clusterIds = SearchInClusterGroup(physicalColumnId, index, cgHint, descGuard);
 
       if (clusterIds) {
          cid = FindClusterIdInList(physicalColumnId, index, *clusterIds, descGuard);
