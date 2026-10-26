@@ -69,9 +69,9 @@ template<typename TT> TT REveVectorT<TT>::Normalize(TT length)
 
 template<typename TT> REveVectorT<TT> REveVectorT<TT>::Orthogonal() const
 {
-   Float_t xx = fX < 0 ? -fX : fX;
-   Float_t yy = fY < 0 ? -fY : fY;
-   Float_t zz = fZ < 0 ? -fZ : fZ;
+   TT xx = fX < 0 ? -fX : fX;
+   TT yy = fY < 0 ? -fY : fY;
+   TT zz = fZ < 0 ? -fZ : fZ;
    if (xx < yy) {
       return xx < zz ? REveVectorT<TT>(0,fZ,-fY) : REveVectorT<TT>(fY,-fX,0);
    } else {
@@ -127,7 +127,7 @@ Also used in VSD.
 
 template<typename TT> void REveVector2T<TT>::Normalize(TT length)
 {
-   Float_t m = Mag();
+   TT m = Mag();
    if (m != 0)
    {
       m = length / m;
