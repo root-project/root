@@ -25,6 +25,7 @@
  If unsure, first consider model 3, 4 or 5.
 
 1: SetPoissonBkgBinomEff(x,y,z,tau,m)
+\warning This model is removed due to an implementation error that may lead to wrong limits estimation and can't be fixed without massive changes in the algorithm
 ~~~
    Background: Poisson
    Efficiency: Binomial
@@ -190,30 +191,6 @@ TRolke::~TRolke()
 {
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Model 1: Background - Poisson, Efficiency - Binomial
-///   - x   : number of observed events in the experiment
-///   - y   : number of observed events in background region
-///   - z   : number of MC events observed
-///   - tau : ratio parameter (read TRolke.cxx for details)
-///   - m   : number of MC events generated
-
-void TRolke::SetPoissonBkgBinomEff(Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
-{
-   SetModelParameters(
-         x  ,       //   Int_t x,
-         y  ,       //   Int_t y,
-         z  ,       //   Int_t z,
-         0  ,       //   Double_t bm,
-         0  ,       //   Double_t em,
-         0  ,       //   Double_t e,
-         1  ,       //   Int_t mid,
-         0  ,       //   Double_t sde,
-         0  ,       //   Double_t sdb,
-         tau,       //   Double_t tau,
-         0  ,       //   Double_t b,
-         m);        //   Int_t m
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Model 2: Background - Poisson, Efficiency - Gaussian
@@ -934,7 +911,10 @@ Double_t TRolke::Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm,
 {
    switch (mid) {
       case 1:
-         return EvalLikeMod1(mu, x, y, z, tau, m, what);
+         std::cerr << "TRolke is removed due to an implementation error " <<
+         "that may lead to wrong limits estimation and can't be " <<
+         "fixed without massive changes in the algorithm" << std::endl;
+         return 0;
       case 2:
          return EvalLikeMod2(mu, x, y, em, sde, tau, what);
       case 3:
@@ -956,119 +936,9 @@ Double_t TRolke::Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm,
    return 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Calculates the Profile Likelihood for MODEL 1:
-/// Poisson background/ Binomial Efficiency
-///  - what = 1: Maximum likelihood estimate is returned
-///  - what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-///  - what = 3: Profile Likelihood of Test hypothesis is returned
-/// otherwise parameters as described in the beginning of the class)
-
-Double_t TRolke::EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m, Int_t what)
-{
-   Double_t f  = 0;
-   Double_t zm = Double_t(z) / m;
-
-   if (what == 1) {
-      f = (x - y / tau) / zm;
-   }
-
-   if (what == 2) {
-      mu = (x - y / tau) / zm;
-      Double_t b  = y / tau;
-      Double_t e = zm;
-      f = LikeMod1(mu, b, e, x, y, z, tau, m);
-   }
-
-   if (what == 3) {
-      if (mu == 0) {
-         Double_t b = (x + y) / (1.0 + tau);
-         Double_t e = zm;
-         f = LikeMod1(mu, b, e, x, y, z, tau, m);
-      } else {
-         Double_t e = 0;
-         Double_t b = 0;
-         ProfLikeMod1(mu, b, e, x, y, z, tau, m);
-         f = LikeMod1(mu, b, e, x, y, z, tau, m);
-      }
-   }
-
-   return f;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Profile Likelihood function for MODEL 1:
-/// Poisson background/ Binomial Efficiency
-
-Double_t TRolke::LikeMod1(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
-{
-   double s = e*mu+b;
-   double lls = - s;
-   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
-   double bg = tau*b;
-   double llb =  -bg;
-   if ( y > 0) llb =  y*TMath::Log( bg) - bg - LogFactorial(y);
-
-   double lle = 0;  // binomial log-like
-   if (z == 0)         lle = m * TMath::Log(1-e);
-   else if ( z == m)   lle = m * TMath::Log(e);
-   else                lle =   z * TMath::Log(e) + (m - z)*TMath::Log(1 - e) + LogFactorial(m) - LogFactorial(m-z) - LogFactorial(z);
-
-   double f = 2*( lls + llb + lle);
-   return f;
-}
-
-
 // this code is non-sense - // need to solve using Minuit
 struct LikeFunction1 {
 };
-
-////////////////////////////////////////////////////////////////////////////////
-/// Helper for calculation of estimates of efficiency and background for model 1
-
-void TRolke::ProfLikeMod1(Double_t mu, Double_t &b, Double_t &e, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
-{
-   Double_t med = 0.0, fmid;
-   Int_t maxiter = 1000;
-   Double_t acc = 0.00001;
-   Double_t emin = ((m + mu * tau) - TMath::Sqrt((m + mu * tau) * (m + mu * tau) - 4 * mu * tau * z)) / 2 / mu / tau;
-
-   Double_t low  = TMath::Max(1e-10, emin + 1e-10);
-   Double_t high = 1 - 1e-10;
-
-   for (Int_t i = 0; i < maxiter; i++) {
-      med = (low + high) / 2.;
-
-      fmid = LikeGradMod1(med, mu, x, y, z, tau, m);
-
-      if (high < 0.5) acc = 0.00001 * high;
-      else           acc = 0.00001 * (1 - high);
-
-      if ((high - low) < acc*high) break;
-
-      if (fmid > 0) low  = med;
-      else         high = med;
-   }
-
-   e = med;
-   Double_t eta = Double_t(z) / e - Double_t(m - z) / (1 - e);
-
-   b = Double_t(y) / (tau - eta / mu);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Gradient model likelihood
-
-Double_t TRolke::LikeGradMod1(Double_t e, Double_t mu, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
-{
-   Double_t eta, etaprime, bprime, f;
-   eta = static_cast<double>(z) / e - static_cast<double>(m - z) / (1.0 - e);
-   etaprime = (-1) * (static_cast<double>(m - z) / ((1.0 - e) * (1.0 - e)) + static_cast<double>(z) / (e * e));
-   Double_t b = y / (tau - eta / mu);
-   bprime = (b * b * etaprime) / mu / y;
-   f = (mu + bprime) * (x / (e * mu + b) - 1) + (y / b - tau) * bprime + eta;
-   return f;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates the Profile Likelihood for MODEL 2:
