@@ -444,6 +444,72 @@ ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::De
    return descGuard;
 }
 
+namespace {
+
+// Searches the index of a column in a certain cluster group. If the column index is found, returns the list
+// of cluster IDs in that group. Otherwise, increment or decrement the given clusterGroupId to indicate to which
+// side of the cluster groups the search should continue.
+const std::vector<ROOT::DescriptorId_t> *
+SearchInClusterGroup(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index,
+                     ROOT::DescriptorId_t &clusterGroupId, ROOT::Internal::RPageSource::RAnyDescriptorGuard &descGuard)
+{
+   const auto &clusterIds = descGuard->GetClusterGroupDescriptor(clusterGroupId).GetClusterIds();
+   R__ASSERT(!clusterIds.empty());
+
+   const auto &firstColumnRange = descGuard->GetClusterDescriptor(clusterIds.front()).GetColumnRange(physicalColumnId);
+   if (firstColumnRange.GetFirstElementIndex() > index) {
+      // Look into previous cluster groups
+      R__ASSERT(clusterGroupId > 0);
+      clusterGroupId--;
+      return nullptr;
+   }
+
+   const auto &lastColumnRange = descGuard->GetClusterDescriptor(clusterIds.back()).GetColumnRange(physicalColumnId);
+   if ((lastColumnRange.GetFirstElementIndex() + lastColumnRange.GetNElements()) <= index) {
+      // Look into the following cluster groups (if applicable)
+      if (++clusterGroupId == descGuard->GetNClusterGroups())
+         clusterGroupId = ROOT::kInvalidDescriptorId;
+      return nullptr;
+   }
+
+   return &clusterIds;
+}
+
+// Binary search in the sorted list clusterIdList. The caller has to ensure that the index of the given column
+// is in fact in the list of provided cluster IDs.
+ROOT::DescriptorId_t FindClusterIdInList(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index,
+                                         const std::vector<ROOT::DescriptorId_t> &clusterIds,
+                                         ROOT::Internal::RPageSource::RAnyDescriptorGuard &descGuard)
+{
+   std::size_t clusterLeft = 0;
+   std::size_t clusterRight = clusterIds.size() - 1;
+   while (clusterLeft <= clusterRight) {
+      const std::size_t clusterMidpoint = (clusterLeft + clusterRight) / 2;
+      const auto clusterId = clusterIds[clusterMidpoint];
+      const auto &columnRange = descGuard->GetClusterDescriptor(clusterId).GetColumnRange(physicalColumnId);
+
+      if (columnRange.Contains(index)) {
+         return clusterId;
+      }
+
+      if (columnRange.GetFirstElementIndex() > index) {
+         R__ASSERT(clusterMidpoint > 0);
+         clusterRight = clusterMidpoint - 1;
+         continue;
+      }
+
+      if (columnRange.GetFirstElementIndex() + columnRange.GetNElements() <= index) {
+         clusterLeft = clusterMidpoint + 1;
+         continue;
+      }
+   }
+
+   R__ASSERT(false);
+   return ROOT::kInvalidDescriptorId;
+}
+
+} // anonymous namespace
+
 ROOT::Internal::RPageSource::RAnyDescriptorGuard
 ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index, DescriptorId_t &cid)
 {
@@ -461,52 +527,23 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
       const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
       descGuard = EnsureClusterDetails(cgMidpoint, std::move(descGuard));
 
-      const auto cgIter = descGuard->GetClusterGroupIterable().begin();
-      const auto &clusterIds = (cgIter + cgMidpoint)->GetClusterIds();
-      R__ASSERT(!clusterIds.empty());
+      auto cgHint = cgMidpoint;
+      const std::vector<DescriptorId_t> *clusterIds = SearchInClusterGroup(physicalColumnId, index, cgHint, descGuard);
 
-      const auto &firstColumnRange =
-         descGuard->GetClusterDescriptor(clusterIds.front()).GetColumnRange(physicalColumnId);
-      if (firstColumnRange.GetFirstElementIndex() > index) {
-         // Look into the lower half of cluster groups
-         R__ASSERT(cgMidpoint > 0);
-         cgRight = cgMidpoint - 1;
-         continue;
+      if (clusterIds) {
+         cid = FindClusterIdInList(physicalColumnId, index, *clusterIds, descGuard);
+         break;
       }
 
-      const auto &lastColumnRange = descGuard->GetClusterDescriptor(clusterIds.back()).GetColumnRange(physicalColumnId);
-      if ((lastColumnRange.GetFirstElementIndex() + lastColumnRange.GetNElements()) <= index) {
+      if (cgHint == ROOT::kInvalidDescriptorId) {
+         break;
+      } else if (cgHint < cgMidpoint) {
+         // Look into the lower half of cluster groups
+         cgRight = cgMidpoint - 1;
+      } else {
          // Look into the upper half of cluster groups
          cgLeft = cgMidpoint + 1;
-         continue;
       }
-
-      // Binary search in the current cluster group; since we already checked the element range boundaries,
-      // the element must be in that cluster group.
-      std::size_t clusterLeft = 0;
-      std::size_t clusterRight = clusterIds.size() - 1;
-      while (clusterLeft <= clusterRight) {
-         const std::size_t clusterMidpoint = (clusterLeft + clusterRight) / 2;
-         const auto clusterId = clusterIds[clusterMidpoint];
-         const auto &columnRange = descGuard->GetClusterDescriptor(clusterId).GetColumnRange(physicalColumnId);
-
-         if (columnRange.Contains(index)) {
-            cid = clusterId;
-            return descGuard;
-         }
-
-         if (columnRange.GetFirstElementIndex() > index) {
-            R__ASSERT(clusterMidpoint > 0);
-            clusterRight = clusterMidpoint - 1;
-            continue;
-         }
-
-         if (columnRange.GetFirstElementIndex() + columnRange.GetNElements() <= index) {
-            clusterLeft = clusterMidpoint + 1;
-            continue;
-         }
-      }
-      R__ASSERT(false);
    }
    return descGuard;
 }
