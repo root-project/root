@@ -4114,8 +4114,78 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             self.teardown_file(file_name2)
             raise
 
-    # TODO(staider) Fix the implementation to support multiple filtered dataframes
-    def test08_filtered(self): ...
+    def test08_filtered(self):
+        self.create_file1()
+        self.create_file2()
+
+        try:
+            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
+            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
+
+            dff1 = df1.Filter("b1 % 2 == 0", "name")
+            dff2 = df2.Filter("b1 % 2 != 0", "name")
+
+            dff1_entries_before = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
+            dff2_entries_before = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+            dl = ROOT.Experimental.ML.RDataLoader(
+                [dff1, dff2],
+                batch_size=4,
+                target="b2",
+                shuffle=False,
+                drop_remainder=False,
+                load_eager=False,
+            )
+
+            gen_train, gen_validation = dl.train_test_split(0.4)
+
+            # dff1 keeps the even entries 0, 2, 4 and dff2 the odd entries 5, 7, 9. Unshuffled, the first
+            # 4 of these 6 entries (0, 2, 4, 5) go to training and the last 2 (7, 9) to validation
+            results_x_train = [0.0, 2.0, 4.0, 5.0]
+            results_x_val = [7.0, 9.0]
+            results_y_train = [0.0, 4.0, 16.0, 25.0]
+            results_y_val = [49.0, 81.0]
+
+            collected_x_train = []
+            collected_x_val = []
+            collected_y_train = []
+            collected_y_val = []
+
+            train_iter = iter(gen_train.as_numpy())
+            val_iter = iter(gen_validation.as_numpy())
+
+            x, y = next(train_iter)
+            self.assertTrue(x.shape == (4, 1))
+            self.assertTrue(y.shape == (4, 1))
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+            x, y = next(val_iter)
+            self.assertTrue(x.shape == (2, 1))
+            self.assertTrue(y.shape == (2, 1))
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+            self.assertEqual(results_x_train, flat_x_train)
+            self.assertEqual(results_x_val, flat_x_val)
+            self.assertEqual(results_y_train, flat_y_train)
+            self.assertEqual(results_y_val, flat_y_val)
+
+            dff1_entries_after = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
+            dff2_entries_after = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+            # check if the dataframes are correctly reset
+            self.assertTrue(np.array_equal(dff1_entries_before, dff1_entries_after))
+            self.assertTrue(np.array_equal(dff2_entries_before, dff2_entries_after))
+
+        finally:
+            self.teardown_file(self.file_name1)
+            self.teardown_file(self.file_name2)
 
     def test09_filtered_last_chunk(self):
         file_name1 = "filtered_last_chunk_1.root"
