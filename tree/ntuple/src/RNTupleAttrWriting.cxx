@@ -17,12 +17,16 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
 {
    const auto &projFields = ROOT::Internal::GetProjectedFieldsOfModel(model);
    if (!projFields.IsEmpty())
-      return R__FAIL("The Model used to create an AttributeSet cannot contain projected fields.");
+      return R__FAIL("The Model used to create an attribute set cannot contain projected fields.");
 
    for (const auto &field : model.GetConstFieldZero()) {
       if (field.GetStructure() == ROOT::ENTupleStructure::kStreamer)
-         return R__FAIL(std::string("The Model used to create an AttributeSet cannot contain Streamer field '") +
+         return R__FAIL(std::string("The Model used to create an attribute set cannot contain Streamer field '") +
                         field.GetQualifiedFieldName() + "'");
+      if (field.GetTypeName().empty())
+         return R__FAIL(
+            std::string("Untyped records or collections are currently unsupported as attribute types (field '") +
+            field.GetQualifiedFieldName() + "')");
    }
    return ROOT::RResult<void>::Success();
 }
