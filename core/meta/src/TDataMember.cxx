@@ -446,7 +446,12 @@ const char *TDataMember::GetTrueTypeName() const
 
 Longptr_t TDataMember::GetOffset() const
 {
-   if (fOffset>=0) return fOffset;
+   if (Property() & (kIsStatic | kIsEnum)) {
+      Error("GetOffset", "Cannot get offset of static or enum data member %s", GetName());
+      return -1;
+   }
+
+   if (fOffset >= 0) return fOffset;
 
    R__LOCKGUARD(gInterpreterMutex);
    //case of an interpreted or emulated class
@@ -495,13 +500,17 @@ Longptr_t TDataMember::GetOffset() const
 
 Longptr_t TDataMember::GetOffsetCint() const
 {
-   if (fOffset>=0) return fOffset;
+   if (fOffset >= 0) return fOffset;
 
    R__LOCKGUARD(gInterpreterMutex);
    TDataMember *dm = const_cast<TDataMember*>(this);
 
-   if (dm->IsValid()) return gCling->DataMemberInfo_Offset(dm->fInfo);
-   else return -1;
+   if (dm->IsValid()) {
+      Longptr_t offset = gCling->DataMemberInfo_Offset(dm->fInfo);
+      dm->fOffset = offset;
+      return offset;
+   }
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
