@@ -235,3 +235,28 @@ TEST_F(TBranchTest, branchInheritsCompression)
    for(int mode = 4; mode >= 0; --mode)
       ASSERT_TRUE(nocomp(mode)) << "Failed for mode: " << mode;
 }
+
+// Inspired by issue #8027
+TEST(Regression, InvalidRead)
+{
+   const char *ofileName = "test_8027.root";
+   struct PathRAII {
+      std::string fPath;
+      PathRAII(const char *path) : fPath(path) {}
+      ~PathRAII() { std::remove(fPath.c_str()); }
+   };
+   PathRAII pr(ofileName);
+   std::unique_ptr<TFile> tf{TFile::Open(ofileName, "RECREATE")};
+   auto t = new TTree("tree", "tree");
+
+   auto f = new TNamed("foo", "bar");
+   auto b = t->Branch("FileMetaData", &f);
+
+   delete f;
+   f = nullptr;
+   b->SetAddress(nullptr);
+
+   t->Fill();
+   t->Write();
+   tf->Close();
+}
