@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from ROOT._distrdf import DataFrame, HeadNode
@@ -58,7 +59,7 @@ class DistRDataFrameInvariants(unittest.TestCase):
 
         def make_dataframe(self, *args, **kwargs):
             """Dummy make_dataframe"""
-            pass
+            return args[0]
     
         def optimize_npartitions(self):
             pass
@@ -80,3 +81,67 @@ class DistRDataFrameInvariants(unittest.TestCase):
             headnode = HeadNode.get_headnode(backend, npartitions, treename, filenames)
             rdf = DataFrame.RDataFrame(headnode)
             self.assertEqual(rdf.Count().GetValue(), 100)
+
+    def test_snapshot_return_filenames(self):
+        """Test Snapshot with return_filenames=True returns list of partial files."""
+        treename = "entries"
+        filenames = ["1cluster_20entries.root"] * 2
+        backend = DistRDataFrameInvariants.TestBackend()
+        headnode = HeadNode.get_headnode(backend, 2, treename, filenames)
+        rdf = DataFrame.RDataFrame(headnode)
+        output_file = "test_snapshot_return_filenames_output.root"
+        try:
+            files = rdf.Snapshot(treename, output_file, return_filenames=True)
+            self.assertIsInstance(files, list)
+            self.assertEqual(len(files), 2)
+            for f in files:
+                self.assertTrue(os.path.exists(f))
+        finally:
+            for i in range(2):
+                p = f"test_snapshot_return_filenames_output_{i}.root"
+                if os.path.exists(p):
+                    os.remove(p)
+
+    def test_snapshot_merge(self):
+        """Test Snapshot with merge=True merges partial files into target file."""
+        treename = "entries"
+        filenames = ["1cluster_20entries.root"] * 2
+        backend = DistRDataFrameInvariants.TestBackend()
+        headnode = HeadNode.get_headnode(backend, 2, treename, filenames)
+        rdf = DataFrame.RDataFrame(headnode)
+        output_file = "test_snapshot_merge_output.root"
+        try:
+            rdf.Snapshot(treename, output_file, merge=True)
+            self.assertTrue(os.path.exists(output_file))
+            for i in range(2):
+                self.assertFalse(os.path.exists(f"test_snapshot_merge_output_{i}.root"))
+        finally:
+            if os.path.exists(output_file):
+                os.remove(output_file)
+            for i in range(2):
+                p = f"test_snapshot_merge_output_{i}.root"
+                if os.path.exists(p):
+                    os.remove(p)
+
+    def test_snapshot_merge_and_return_filenames(self):
+        """Test Snapshot with merge=True and return_filenames=True."""
+        treename = "entries"
+        filenames = ["1cluster_20entries.root"] * 2
+        backend = DistRDataFrameInvariants.TestBackend()
+        headnode = HeadNode.get_headnode(backend, 2, treename, filenames)
+        rdf = DataFrame.RDataFrame(headnode)
+        output_file = "test_snapshot_merge_return_output.root"
+        try:
+            files = rdf.Snapshot(treename, output_file, merge=True, return_filenames=True)
+            self.assertEqual(files, [output_file])
+            self.assertTrue(os.path.exists(output_file))
+            for i in range(2):
+                self.assertFalse(os.path.exists(f"test_snapshot_merge_return_output_{i}.root"))
+        finally:
+            if os.path.exists(output_file):
+                os.remove(output_file)
+            for i in range(2):
+                p = f"test_snapshot_merge_return_output_{i}.root"
+                if os.path.exists(p):
+                    os.remove(p)
+

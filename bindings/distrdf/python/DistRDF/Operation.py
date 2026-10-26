@@ -95,7 +95,12 @@ class AsNumpy(InstantAction):
 class Snapshot(InstantAction):
     """A 'Snapshot' instant action attached to a distributed RDataFrame graph node."""
 
-    pass
+    def __init__(self, name: str, *args, **kwargs):
+        self.return_filenames = kwargs.pop("return_filenames", False)
+        self.merge = kwargs.pop("merge", False)
+        self.lazy = kwargs.pop("lazy", False)
+        self.target_file = str(args[1]) if len(args) > 1 and args[1] is not None else None
+        super().__init__(name, *args, **kwargs)
 
 
 class Transformation(Operation):
