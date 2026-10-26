@@ -123,6 +123,9 @@ public:
       return FitUtil::Evaluate<T>::EvalPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, h, BaseFCN::IsAGradFCN(), fullHessian);
    }
 
+   /// flag to indicate if can compute Hessian (never for unbinned data)
+   bool HasHessian() const override { return false; }
+
    // need to be virtual to be instantiated
    void Gradient(const double *x, double *g) const override {
       // evaluate the chi2 gradient
