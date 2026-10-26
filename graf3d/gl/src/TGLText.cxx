@@ -32,6 +32,8 @@
 # include "FTGLBitmapFont.h"
 #endif
 
+#include <fontconfig/fontconfig.h>
+
 #define FTGL_BITMAP  0
 #define FTGL_PIXMAP  1
 #define FTGL_OUTLINE 2
@@ -175,27 +177,35 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
 {
    int fontid = fontnumber / 10;
 
-   const char *fontname=0;
-   if (fontid == 0)  fontname = "arialbd.ttf";
-   if (fontid == 1)  fontname = "timesi.ttf";
-   if (fontid == 2)  fontname = "timesbd.ttf";
-   if (fontid == 3)  fontname = "timesbi.ttf";
-   if (fontid == 4)  fontname = "arial.ttf";
-   if (fontid == 5)  fontname = "ariali.ttf";
-   if (fontid == 6)  fontname = "arialbd.ttf";
-   if (fontid == 7)  fontname = "arialbi.ttf";
-   if (fontid == 8)  fontname = "cour.ttf";
-   if (fontid == 9)  fontname = "couri.ttf";
-   if (fontid == 10) fontname = "courbd.ttf";
-   if (fontid == 11) fontname = "courbi.ttf";
-   if (fontid == 12) fontname = "symbol.ttf";
-   if (fontid == 13) fontname = "times.ttf";
-   if (fontid == 14) fontname = "wingding.ttf";
+   static const char *fonttable[] = {
+      "freesans:bold",
+      "freeserif:italic",
+      "freeserif:bold",
+      "freeserif:bold:italic",
+      "freesans",
+      "freesans:italic",
+      "freesans:bold",
+      "freesans:bold:italic",
+      "freemono",
+      "freemono:italic",
+      "freemono:bold",
+      "freemono:bold:italic",
+      "standardsymbolsps",
+      "freeserif",
+      "dingbats",
+   };
 
-   // try to load font (font must be in Root.TTFontPath resource)
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                       TROOT::GetTTFFontDir());
-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
+   char *ttfont;
+
+   FcPattern *pat, *match;
+   FcResult result;
+
+   pat = FcNameParse ((const FcChar8*) fonttable[fontid]);
+
+   FcConfigSubstitute (nullptr, pat, FcMatchPattern);
+   FcDefaultSubstitute (pat);
+   match = FcFontMatch (nullptr, pat, &result);
+   FcPatternGetString (match, FC_FILE, 0, (FcChar8**) &ttfont);
 
    if (fGLTextFont) delete fGLTextFont;
 
@@ -203,7 +213,9 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
 
    fGLTextFont = new FTGLPolygonFont(ttfont);
 
+   FcPatternDestroy (match);
+   FcPatternDestroy (pat);
+
    if (!fGLTextFont->FaceSize(1))
       Error("SetGLTextFont","Cannot set FTGL::FaceSize");
-   delete [] ttfont;
 }

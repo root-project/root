@@ -208,6 +208,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     ZLIB::ZLIB
     ${X11_LIBRARIES}
     ROOTGlad
+    fontconfig
   DEPENDENCIES
     Hist
     Gui
