@@ -151,6 +151,46 @@ if(MSVC)
     _Smtx_lock_shared
     _Smtx_unlock_shared
   )
+  if(MSVC_VERSION GREATER_EQUAL 1951)
+    set(cling_exports ${cling_exports}
+      __std_replace_copy_2
+    )
+  endif()
+  # Export the missing std::filesystem symbols (not exposed by MSVCP140.dll)
+  set(cling_exports ${cling_exports}
+    __std_fs_change_permissions
+    __std_fs_close_handle
+    __std_fs_code_page
+    __std_fs_convert_narrow_to_wide
+    __std_fs_convert_wide_to_narrow
+    __std_fs_convert_wide_to_narrow_replace_chars
+    __std_fs_copy_file
+    __std_fs_create_directory
+    __std_fs_create_directory_symbolic_link
+    __std_fs_create_hard_link
+    __std_fs_create_symbolic_link
+    __std_fs_directory_iterator_advance
+    __std_fs_directory_iterator_close
+    __std_fs_directory_iterator_open
+    __std_fs_equivalent
+    __std_fs_get_current_path
+    __std_fs_get_file_attributes_by_handle
+    __std_fs_get_final_path_name_by_handle
+    __std_fs_get_full_path_name
+    __std_fs_get_stats
+    __std_fs_get_temp_path
+    __std_fs_is_junction_from_reparse_data_buffer
+    __std_fs_open_handle
+    __std_fs_read_name_from_reparse_data_buffer
+    __std_fs_read_reparse_data_buffer
+    __std_fs_remove
+    __std_fs_rename
+    __std_fs_resize_file
+    __std_fs_set_current_path
+    __std_fs_set_last_write_time
+    __std_fs_space
+    __std_fs_write_reparse_data_buffer
+  )
 
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(cling_exports ${cling_exports}
