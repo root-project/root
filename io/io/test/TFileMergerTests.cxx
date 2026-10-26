@@ -522,12 +522,13 @@ TEST(TFileMerger, NestedDirMaxOpenedFiles)
          tree->Fill();
       }
 
-      TH1F hist("hist", "Test Hist", 10, 0, 10);
+      auto hist = std::make_unique<TH1F>("hist", "Test Hist", 10, 0, 10);
       for (int i = 0; i < input.second; ++i) {
-         hist.Fill(i % 10);
+         hist->Fill(i % 10);
       }
 
-      f->Write();
+      tree->Write();
+      hist->Write();
    }
 
    // Merge the input files into the output file. The original issue was triggered by the use of the `-n` parameter in
