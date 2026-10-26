@@ -126,6 +126,10 @@ namespace cling {
                     bool isChildInterpreter);
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
+
+    ///\brief Destroy the Parser. It writes to Sema in its destructor, so
+    /// it must go before Interpreter::ShutDown() frees Sema.
+    void destroyParser();
     clang::CodeGenerator* getCodeGenerator() const { return m_CodeGen; }
     bool hasCodeGenerator() const { return m_CodeGen; }
 

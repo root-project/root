@@ -459,6 +459,8 @@ namespace cling {
     return Result.getLocWithOffset(m_VirtualFileLocOffset++);
   }
 
+  void IncrementalParser::destroyParser() { m_Parser.reset(); }
+
   IncrementalParser::~IncrementalParser() {
     Transaction* T = const_cast<Transaction*>(getFirstTransaction());
     while (T) {
