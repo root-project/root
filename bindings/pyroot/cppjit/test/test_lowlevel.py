@@ -1325,3 +1325,216 @@ class TestCSTRINGARRAY:
 
         s.names = "abc"
         assert ns.as_chars(s) == "abc"
+
+
+class TestASSTDANY:
+    def setup_class(cls):
+        import cppjit
+
+        cppjit.cppdef(r"""\
+        #include <any>
+        #include <thread>
+        #include <vector>
+        namespace AsStdAny {
+            std::vector<std::any> gStore;
+            void store(std::any a) { gStore.push_back(a); }
+            void clear() { gStore.clear(); }
+            void clear_in_thread() { std::thread([] { gStore.clear(); }).join(); }
+        }""")
+        # clearing in another thread takes the GIL, so it must not be held
+        cppjit.gbl.AsStdAny.clear_in_thread.__release_gil__ = True
+
+    def _holder(self):
+        import weakref
+
+        class Holder:
+            pass
+
+        obj = Holder()
+        return obj, weakref.ref(obj)
+
+    def test01_keeps_alive(self):
+        """The std::any and its copies in C++ keep the object alive"""
+
+        import cppjit
+        import cppjit.ll
+
+        ns = cppjit.gbl.AsStdAny
+        obj, ref = self._holder()
+        a = cppjit.ll.as_std_any(obj)
+        assert type(a) is cppjit.gbl.std.any
+        ns.store(a)
+        del obj, a
+        assert ref() is not None
+        ns.clear()
+        assert ref() is None
+
+    def test02_released_in_other_thread(self):
+        """The last reference can be released by a thread without the GIL"""
+
+        import cppjit
+        import cppjit.ll
+
+        ns = cppjit.gbl.AsStdAny
+        obj, ref = self._holder()
+        ns.store(cppjit.ll.as_std_any(obj))
+        del obj
+        assert ref() is not None
+        ns.clear_in_thread()
+        assert ref() is None
+
+
+class TestREDUCEMETHOD:
+    def test01_set_and_unset(self):
+        """The __reduce__ method of all instances can be set and unset"""
+
+        import pickle
+
+        import cppjit
+
+        cppjit.cppdef("namespace ReduceMethod { struct S { int x = 3; }; }")
+
+        def reduce_s(obj):
+            return (int, (obj.x,))
+
+        cppjit._backend._set_reduce_method(reduce_s)
+        try:
+            assert pickle.loads(pickle.dumps(cppjit.gbl.ReduceMethod.S())) == 3
+        finally:
+            cppjit._backend._set_reduce_method(None)
+        raises(NotImplementedError, pickle.dumps, cppjit.gbl.ReduceMethod.S())
+        raises(TypeError, cppjit._backend._set_reduce_method, 42)
+
+
+class TestWARNINGHANDLER:
+    def setup_class(cls):
+        import cppjit
+
+        cppjit.cppdef(r"""\
+        namespace WarningHandler {
+            using handler_t = bool (*)(const char *location, const char *msg);
+            handler_t gHandler = nullptr;
+            int gHandled = 0;
+            void set(handler_t h) { gHandler = h; }
+            void warn_twice() {
+                gHandled = gHandler("first", "message 1");
+                gHandled += gHandler("second", "message 2");
+            }
+        }""")
+
+    def test01_warnings(self):
+        """C++ warnings become Python warnings with the location as file name"""
+
+        import warnings
+
+        import cppjit
+
+        ns = cppjit.gbl.WarningHandler
+        ns.set(cppjit._backend.warning_handler())
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            ns.warn_twice()
+        assert ns.gHandled == 2
+        assert [(w.category, str(w.message), w.filename, w.lineno) for w in caught] == [
+            (RuntimeWarning, "message 1", "first", 0),
+            (RuntimeWarning, "message 2", "second", 0),
+        ]
+
+    def test02_category_and_module(self):
+        """The category and the module the filters see can be configured"""
+
+        import warnings
+
+        import cppjit
+
+        ns = cppjit.gbl.WarningHandler
+        ns.set(
+            cppjit._backend.warning_handler(
+                category=UserWarning, module="warning_handler_test"
+            )
+        )
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("ignore")
+            warnings.filterwarnings("always", module="warning_handler_test")
+            ns.warn_twice()
+        assert [w.category for w in caught] == [UserWarning, UserWarning]
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("ignore")
+            warnings.filterwarnings("always", module="other_module")
+            ns.warn_twice()
+        assert not caught
+        raises(TypeError, cppjit._backend.warning_handler, category=int)
+
+    def test03_raised_and_declined(self):
+        """A warning turned into an error is raised once C++ returns; until
+        then, further warnings are declined"""
+
+        import warnings
+
+        import cppjit
+
+        ns = cppjit.gbl.WarningHandler
+        ns.set(cppjit._backend.warning_handler())
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            with raises(RuntimeWarning, match="message 1"):
+                ns.warn_twice()
+        assert ns.gHandled == 1
+
+
+class TestINPUTHOOK:
+    def setup_class(cls):
+        import cppjit
+
+        cppjit.cppdef(r"""\
+        namespace InputHook {
+            int gCalls = 0;
+            void hook() { ++gCalls; }
+            void with_arg(int) {}
+        }""")
+
+    def test01_install_and_chain(self):
+        """The hook calls the C++ function, then the previous hook"""
+
+        import ctypes
+
+        import cppjit
+
+        ns = cppjit.gbl.InputHook
+        hook_type = ctypes.CFUNCTYPE(ctypes.c_int)
+        hook_ptr = ctypes.c_void_p.in_dll(ctypes.pythonapi, "PyOS_InputHook")
+        original = hook_ptr.value
+
+        previous_calls = []
+        previous_hook = hook_type(lambda: previous_calls.append(1) or 42)
+        previous_address = ctypes.cast(previous_hook, ctypes.c_void_p).value
+        hook_ptr.value = previous_address
+        try:
+            cppjit._backend.set_input_hook(ns.hook)
+            installed = hook_ptr.value
+            assert installed != previous_address
+            assert hook_type(installed)() == 42
+            assert ns.gCalls == 1
+            assert previous_calls == [1]
+
+            # installing again replaces the function, not the chain
+            cppjit._backend.set_input_hook(ns.hook)
+            assert hook_ptr.value == installed
+            assert hook_type(installed)() == 42
+            assert ns.gCalls == 2
+            assert previous_calls == [1, 1]
+
+            cppjit._backend.set_input_hook(None)
+            assert hook_ptr.value == previous_address
+        finally:
+            hook_ptr.value = original
+
+    def test02_rejects_other_arguments(self):
+        """Only a C++ function taking no arguments can be the hook"""
+
+        import cppjit
+
+        ns = cppjit.gbl.InputHook
+        raises(TypeError, cppjit._backend.set_input_hook, ns.with_arg)
+        raises(TypeError, cppjit._backend.set_input_hook, lambda: None)
+        raises(TypeError, cppjit._backend.set_input_hook, 42)
