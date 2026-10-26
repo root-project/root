@@ -636,7 +636,7 @@ TEST(RNTupleAttributes, MultipleSetsTFile)
    auto reader = RNTupleReader::Open(*ntpl);
    EXPECT_EQ(reader->GetDescriptor().GetNAttributeSets(), 2);
 
-  // Extract the headers' offsets
+   // Extract the headers' offsets
    std::uint64_t mainHeaderOff = ntpl->GetSeekHeader();
    std::uint64_t attrSet1Off = 0, attrSet2Off = 0;
    int n = 0;
@@ -1347,4 +1347,25 @@ TEST(RNTupleAttributes, WriteZeroAttributes)
    // We should never produce empty cluster groups
    auto iterCG = attrSetReader->GetDescriptor().GetClusterGroupIterable();
    EXPECT_EQ(iterCG.begin(), iterCG.end());
+}
+
+TEST(RNTupleAttributes, UntypedRecord)
+{
+   FileRaii fileGuard1("test_ntuple_attr_untyped_record_1.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldFoo = model->MakeField<int>("foo");
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+   auto attrSetModel = RNTupleModel::Create();
+   std::vector<std::unique_ptr<RFieldBase>> children;
+   children.push_back(std::make_unique<RField<int>>("int"));
+   children.push_back(std::make_unique<RField<char>>("char"));
+   auto record = std::make_unique<ROOT::RRecordField>("record", std::move(children));
+   attrSetModel->AddField(std::move(record));
+   try {
+      auto attrSet = writer->CreateAttributeSet(std::move(attrSetModel), "AttrSet1");
+      FAIL() << "using Untyped records as attributes should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("Untyped records or collections are currently unsupported"));
+   }
 }
