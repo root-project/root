@@ -43,6 +43,7 @@ if(NOT MSVC)
   # These unit tests rely on fork(), which is not available on Windows.
   ROOT_ADD_GTEST(ntuple_evolution_shape ntuple_evolution_shape.cxx LIBRARIES ROOTNTuple)
   ROOT_ADD_GTEST(ntuple_evolution_soa ntuple_evolution_soa.cxx LIBRARIES ROOTNTuple)
+  ROOT_ADD_GTEST(ntuple_evolution_merge ntuple_evolution_merge.cxx LIBRARIES ROOTNTuple)
   ROOT_ADD_GTEST(ntuple_emulated ntuple_emulated.cxx LIBRARIES ROOTNTuple)
   ROOT_ADD_GTEST(ntuple_merge_emulated ntuple_merge_emulated.cxx ntuple_test.cxx LIBRARIES ROOTNTuple xxHash::xxHash)
 endif()
