@@ -187,6 +187,42 @@ GenerateGemmCode(const std::string &fileName, const std::vector<TestTensor> &inp
    return code.str();
 }
 
+// Write a model holding a single PRelu node and return the code SOFIE generates
+// for it. The slope is a graph input like X, which keeps the model file tiny.
+std::string GeneratePReluCode(const std::string &fileName, const TestTensor &x, const TestTensor &slope)
+{
+   std::string node;
+   AppendBytesField(node, 1, x.name);     // input
+   AppendBytesField(node, 1, slope.name); // input
+   AppendBytesField(node, 2, "y");        // output
+   AppendBytesField(node, 3, "prelu_0");  // name
+   AppendBytesField(node, 4, "PRelu");    // op_type
+
+   std::string graph;
+   AppendBytesField(graph, 1, node);                           // node
+   AppendBytesField(graph, 2, "test_graph");                   // name
+   AppendBytesField(graph, 11, FloatValueInfo(x));             // input
+   AppendBytesField(graph, 11, FloatValueInfo(slope));         // input
+   AppendBytesField(graph, 12, FloatValueInfo({"y", x.dims})); // output
+
+   std::string opset;
+   AppendVarintField(opset, 2, 16); // version
+   std::string model;
+   AppendVarintField(model, 1, 8);    // ir_version
+   AppendBytesField(model, 7, graph); // graph
+   AppendBytesField(model, 8, opset); // opset_import
+
+   std::ofstream file(fileName, std::ios::binary);
+   file.write(model.data(), model.size());
+   file.close();
+
+   RModel rmodel = RModelParser_ONNX{}.Parse(fileName);
+   rmodel.Generate(Options::kNoWeightFile);
+   std::ostringstream code;
+   rmodel.PrintGenerated(code);
+   return code.str();
+}
+
 } // namespace
 
 // The "location" key of a tensor's external_data names the data file relative
@@ -311,4 +347,22 @@ TEST(SOFIEParser, InputOfUnsupportedTypeThrows)
 
    RModel rmodel = RModelParser_ONNX{}.Parse("float16_input.onnx");
    EXPECT_THROW(rmodel.Generate(Options::kNoWeightFile), std::runtime_error);
+}
+
+// A slope that cannot be unidirectionally broadcast to the shape of X is an
+// error, not a silent out-of-bounds read in the generated code.
+TEST(SOFIEParser, PReluWithNonBroadcastableSlopeThrows)
+{
+   EXPECT_THROW(GeneratePReluCode("prelu_bad_slope.onnx", {"x", {"3", "4", "5"}}, {"slope", {"4"}}),
+                std::runtime_error);
+}
+
+// The per-channel slope exported by PyTorch's nn.PReLU is indexed in place
+// instead of being expanded to the shape of X.
+TEST(SOFIEParser, PReluIndexesAPerChannelSlopeWithoutExpandingIt)
+{
+   const std::string code =
+      GeneratePReluCode("prelu_channel.onnx", {"x", {"1", "3", "2", "2"}}, {"slope", {"3", "1", "1"}});
+
+   EXPECT_NE(code.find("tensor_slope[(id / 4) % 3]"), std::string::npos);
 }
