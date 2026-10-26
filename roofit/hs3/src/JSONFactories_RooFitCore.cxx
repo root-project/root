@@ -341,6 +341,11 @@ template <bool DivideByBinWidth>
 bool importBinWidthFunction(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
+   if (p.has_child("variables")) {
+      tool->wsEmplace<RooBinWidthFunction>(name, tool->requestArgList<RooAbsReal>(p, "variables"), DivideByBinWidth);
+      return true;
+   }
+   // Accept the legacy histogram-reference representation.
    RooHistFunc *hf = dynamic_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
    if (!hf) {
       RooJSONFactoryWSTool::error("histogram '" + p["histogram"].val() + "' of '" + name + "' is not a RooHistFunc");
@@ -779,7 +784,7 @@ bool exportBinWidthFunction(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONN
 {
    const RooBinWidthFunction *pdf = static_cast<const RooBinWidthFunction *>(func);
    elem["type"] << (pdf->divideByBinWidth() ? "inverse_binvolume" : "binvolume");
-   elem["histogram"] << pdf->histFunc().GetName();
+   elem["variables"].fill_seq(pdf->variables(), [](auto *arg) { return arg->GetName(); });
    return true;
 }
 
