@@ -156,6 +156,7 @@ if (NOT dataframe)
     list(APPEND dataframe_veto io/ntuple/ntpl008_import.C)
     # RFile tutorials depending on RDataFrame
     list(APPEND dataframe_veto io/rfile/rfile003_ttree.C)
+    list(APPEND dataframe_veto io/rfile/rfile003_ttree.py)
 endif()
 
 if(NOT sqlite)
