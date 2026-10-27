@@ -21,7 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#warning "The header Htypes.h is deprecated and will be removed in ROOT 6.44, include instead Rtypes.h"
+#warning "This header is deprecated and will be removed after ROOT 7. Include instead Rtypes.h"
 
 #include "Rtypes.h"
 

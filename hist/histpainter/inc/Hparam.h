@@ -25,7 +25,7 @@ Used internally by THistPainter to manage histogram parameters.
 #include "RtypesCore.h"
 
 #if !defined(ROOT_Hparam_cxx) && !defined(G__DICTIONARY)
-#warning "This header is deprecated and will be removed in ROOT 6.44, use instead `THistPainter`, `TGraph2DPainter` public interfaces."
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead `THistPainter`, `TGraph2DPainter` public interfaces."
 #endif
 
 typedef struct Hparam_t {

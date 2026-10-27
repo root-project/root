@@ -10,7 +10,7 @@
 #ifndef ROOT_ZipZSTD
 #define ROOT_ZipZSTD
 
-#warning "This header is deprecated and will be removed in 6.46, use instead methods within RZip.h"
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead methods within RZip.h"
 
 // NOTE: the ROOT compression libraries aren't consistently written in C++; hence the
 // #ifdef's to avoid problems with C code.

@@ -11,7 +11,7 @@
 #define ROOT_Bswapcpy
 
 #ifndef USE_BSWAPCPY
-#warning "This header is an implementation detail of TBufferFile on Unix i386 GNUC, and is deprecated and will no longer be public after ROOT 6.44"
+#warning "This header is deprecated and will be removed in ROOT 7"
 #endif
 
 

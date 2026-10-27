@@ -12,7 +12,7 @@
 #define ROOT_Hoption
 
 #if !defined(ROOT_Hoption_cxx) && !defined(G__DICTIONARY)
-#warning "This header is deprecated and will be removed in ROOT 6.44, use instead `THistPainter`, `TGraph2DPainter` public interfaces."
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead `THistPainter`, `TGraph2DPainter` public interfaces."
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

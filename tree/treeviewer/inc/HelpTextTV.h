@@ -13,7 +13,7 @@
 #define ROOT_HelpTextTV
 
 #if !defined(ROOT_HelpTextTV_cxx) && !defined(G__DICTIONARY)
-#warning "This header is deprecated and will be removed in ROOT 6.44"
+#warning "This header is deprecated and will be removed after ROOT 7."
 #endif
 #include <RtypesCore.h>
 
