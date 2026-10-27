@@ -222,6 +222,7 @@ class TPiePainter extends ObjectPainter {
          af -= entry.value / total * 2 * Math.PI;
          entry.a1 = af;
 
+         entry.large_arc = entry.value > total * 0.5 ? 1 : 0;
          entry.x1 = Math.round(rx * Math.cos(entry.a1));
          entry.y1 = Math.round(ry * Math.sin(entry.a1));
          entry.x2 = Math.round(rx * Math.cos(entry.a2));
@@ -284,7 +285,7 @@ class TPiePainter extends ObjectPainter {
                entry.pie_path += `a${rx},${ry},0,0,1,${xx2 - xx1},${yy2 - yy1}`;
             });
          } else
-            entry.pie_path = `a${rx},${ry},0,0,1,${entry.x2 - entry.x1},${entry.y2 - entry.y1}`;
+            entry.pie_path = `a${rx},${ry},0,${entry.large_arc},1,${entry.x2 - entry.x1},${entry.y2 - entry.y1}`;
       }
 
       // code to create 3d effect

@@ -99,7 +99,7 @@ function getMaterialArgs(color, args) {
 function createSVGRenderer(as_is, precision, doc) {
    if (as_is) {
       if (doc !== undefined)
-         globalThis.docuemnt = doc;
+         globalThis.document = doc;
       const rndr = new THREE.SVGRenderer();
       rndr.setPrecision(precision);
       return rndr;

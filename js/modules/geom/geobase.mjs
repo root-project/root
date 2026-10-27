@@ -2208,9 +2208,9 @@ function provideObjectInfo(obj) {
          info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`);
          break;
       case clTGeoTrd2:
-         info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+         info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy2)}`); // no break
       case clTGeoTrd1:
-         info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`);
+         info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx2)}`);
          break;
       case clTGeoSphere:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
@@ -2367,7 +2367,7 @@ function createMaterial(cfg, args0) {
       args.color = 'red';
    args.side = THREE.FrontSide;
    args.transparent = args.opacity < 1;
-   args.depthWrite = args.opactity === 1;
+   args.depthWrite = args.opacity === 1;
 
    let material;
 
@@ -2853,7 +2853,7 @@ class ClonedNodes {
 
    /** @summary Assign only visibility flags, extracted with getVisibleFlags */
    setVisibleFlags(flags) {
-      if (!this.nodes || !flags || !flags.length !== this.nodes.length)
+      if (!this.nodes || !flags || (flags.length !== this.nodes.length))
          return 0;
 
       let res = 0;
@@ -3735,7 +3735,7 @@ class ClonedNodes {
             else
                camVol = 0;
 
-            camFact = maxVol / ((camVol > 0) ? (camVol > 0) : minVol);
+            camFact = maxVol / (camVol > 0 ? camVol : minVol);
          }
       }
 

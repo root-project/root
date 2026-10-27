@@ -2144,6 +2144,15 @@ async function treeProcess(tree, selector, args) {
             if (!streamer) {
                elem = null;
                console.warn('not found streamer!');
+            } else if (branch.fType === -1) {
+               // object written by custom streamer of the class, it has version and bytecount
+               member = {
+                  name: target_name,
+                  typename: branch.fClassName,
+                  func(buf, obj) {
+                     obj[this.name] = buf.classStreamer({}, this.typename);
+                  }
+               };
             } else {
                member = {
                   name: target_name,

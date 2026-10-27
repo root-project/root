@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.11.3
+// https://root.cern/js/ v7.11.4
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -10,11 +10,11 @@ var _documentCurrentScript = typeof document !== 'undefined' ? document.currentS
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.11.3',
+const version_id = '7.11.4',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '20/10/2026',
+version_date = '27/10/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -11520,7 +11520,7 @@ function repairMathJaxSvgSize(painter, mj_node, svg, arg) {
 
    if (valign && (valign.length > 18) && valign.indexOf('vertical-align:') === 0) {
       const p = valign.indexOf('ex;');
-      valign = ((p > 0) && (p === valign.length - 3)) ? transform(valign.slice(16, valign.length - 1)) : null;
+      valign = ((p > 0) && (p === valign.length - 3)) ? transform(valign.slice(15, valign.length - 1)) : null;
    } else
       valign = null;
 
@@ -12586,7 +12586,7 @@ class TAttLineHandler {
          if (Math.abs(this.width) > 99) {
             // exclusion graph
             this.excl_side = (this.width < 0) ? -1 : 1;
-            this.excl_width = Math.floor(this.width / 100) * 5;
+            this.excl_width = Math.floor(Math.abs(this.width) / 100) * 5;
             this.width = Math.abs(this.width % 100); // line width
          }
       }
@@ -12602,7 +12602,7 @@ class TAttLineHandler {
          this.excl_width = width;
       if (side !== undefined) {
          this.excl_side = side;
-         if ((this.excl_width === 0) && this.excl_side)
+         if (side && !this.excl_width)
             this.excl_width = 20;
       }
       this.changed = true;
@@ -81802,7 +81802,7 @@ class JSRootMenu {
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
       this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
-         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
+         settings.ProgressBox = (value === 'off') ? false : (value === 'on' ? true : value);
       });
       this.endsub();
 
@@ -84902,7 +84902,7 @@ class TooltipHandler extends ObjectPainter {
             if ((gapminx === -1111) && (gapmaxx === -1111))
                gapminx = gapmaxx = hint.x;
             gapminx = Math.min(gapminx, hint.x);
-            gapmaxx = Math.min(gapmaxx, hint.x);
+            gapmaxx = Math.max(gapmaxx, hint.x);
          }
 
          group.attr('x', posx)
@@ -93663,7 +93663,7 @@ class TPavePainter extends ObjectPainter {
                      if (pt.fY1NDC > pt.fY2NDC)
                         pt.fY2NDC = Math.min(0.995, pt.fY1NDC + stath + extrah);
                      if (pt.fX1NDC > pt.fX2NDC)
-                        pt.fY2NDC = Math.min(0.995, pt.fX1NDC + statw);
+                        pt.fX2NDC = Math.min(0.995, pt.fX1NDC + statw);
                   }
                }
             }
@@ -97931,11 +97931,11 @@ class THistPainter extends ObjectPainter {
                   need_redraw = true;
                   fp.fY2NDC = pal.fY1NDC - 0.01;
                   if (fp.fY1NDC > fp.fY2NDC - 0.1)
-                     fp.fY1NDC = Math.max(0, fp.fXYNDC - 0.1);
+                     fp.fY1NDC = Math.max(0, fp.fY2NDC - 0.1);
                } else if ((pal.fY2NDC < 0.5) && (fp.fY1NDC < pal.fY2NDC)) {
                   need_redraw = true;
                   fp.fY1NDC = pal.fY2NDC + 0.05;
-                  if (fp.fXYNDC < fp.fY1NDC + 0.1)
+                  if (fp.fY2NDC < fp.fY1NDC + 0.1)
                      fp.fY2NDC = Math.min(1, fp.fY1NDC + 0.1);
                }
                if (need_redraw && pad) {
@@ -98225,7 +98225,7 @@ class THistPainter extends ObjectPainter {
             res = { low: err, up: err },
             kind = this.getOptions().Poisson || histo.fBinStatErrOpt;
 
-      if (!kind || (histo.fSumw2.fN && histo.fTsumw !== histo.fTsumw2) || (content < 0))
+      if (!kind || (histo.fSumw2?.length && histo.fTsumw !== histo.fTsumw2) || (content < 0))
          return res;
 
       const alpha = (kind === kPoisson2) ? 0.05 : 1 - 0.682689492,
@@ -98277,7 +98277,7 @@ class THistPainter extends ObjectPainter {
       }).then(() => {
          return painter.drawHistTitle();
       }).then(() => {
-         if (!painter.Mode3D && painter.options.AutoZoom)
+         if (!painter.options.Mode3D && painter.options.AutoZoom)
             return painter.autoZoom();
       }).then(() => {
          if (painter.options.Project && !painter.mode3d && isFunc(painter.toggleProjection))
@@ -99615,7 +99615,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if ((print_under > 0) || (print_over > 0)) {
          const get = i => data.matrix[i].toFixed(0);
 
-         stat.addText(`${get(6)} | ${get(7)} | ${get(7)}`);
+         stat.addText(`${get(6)} | ${get(7)} | ${get(8)}`);
          stat.addText(`${get(3)} | ${get(4)} | ${get(5)}`);
          stat.addText(`${get(0)} | ${get(1)} | ${get(2)}`);
       }
@@ -104729,11 +104729,11 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
       }
 
-      // account overflow/underflow bins
-      if (is_profile)
-         hsum += histo.fBinEntries[0] + histo.fBinEntries[this.nbinsx + 1];
-      else
-         hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
+      // account underflow and overflow bin, check if already was included
+      if (imin >= 0)
+         hsum += is_profile ? histo.fBinEntries[0] : histo.getBinContent(0);
+      if (imax <= this.nbinsx)
+         hsum += is_profile ? histo.fBinEntries[this.nbinsx + 1] : histo.getBinContent(this.nbinsx + 1);
 
       this.stat_entries = hsum;
 
@@ -105399,7 +105399,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          for (i = left; i <= right; ++i) {
             x = xaxis.GetBinLowEdge(i + 1);
 
-            if (this.logx && (x <= 0))
+            if (funcs.logx && (x <= 0))
                continue;
 
             grx = Math.round(funcs.grx(x));
@@ -106329,7 +106329,7 @@ function drawTH2PolyLego(painter) {
             z1: this.draw_z0,
             z2: this.draw_z1,
             bin: this.bins_index,
-            value: bin.fContent,
+            value: tbin.fContent,
             color: this.tip_color,
             lines: p.getPolyBinTooltips(this.bins_index)
          };
@@ -106615,10 +106615,10 @@ class TH3Painter extends THistPainter {
                   np += w;
                   sumx3 += w * Math.pow(xx - res.meanx, 3);
                   sumy3 += w * Math.pow(yy - res.meany, 3);
-                  sumz3 += w * Math.pow(zz - res.meany, 3);
+                  sumz3 += w * Math.pow(zz - res.meanz, 3);
                   sumx4 += w * Math.pow(xx - res.meanx, 4);
                   sumy4 += w * Math.pow(yy - res.meany, 4);
-                  sumz4 += w * Math.pow(yy - res.meany, 4);
+                  sumz4 += w * Math.pow(zz - res.meanz, 4);
                }
             }
          }
@@ -107958,7 +107958,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       const line_events_handling = !this.isBatchMode() && (options.Line || options.Errors) ? 'none' : null;
 
       if (main_block && lineatt.excl_side) {
-         excl_width = lineatt.excl_width;
+         excl_width = lineatt.excl_width * lineatt.excl_side;
          if ((lineatt.width > 0) && !options.Line && !options.Curve)
             options.Line = 1;
       }
@@ -112682,9 +112682,9 @@ function provideObjectInfo(obj) {
          info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`);
          break;
       case clTGeoTrd2:
-         info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+         info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy2)}`); // no break
       case clTGeoTrd1:
-         info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`);
+         info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx2)}`);
          break;
       case clTGeoSphere:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
@@ -112839,7 +112839,7 @@ function createMaterial(cfg, args0) {
       args.color = 'red';
    args.side = THREE.FrontSide;
    args.transparent = args.opacity < 1;
-   args.depthWrite = args.opactity === 1;
+   args.depthWrite = args.opacity === 1;
 
    let material;
 
@@ -113325,7 +113325,7 @@ class ClonedNodes {
 
    /** @summary Assign only visibility flags, extracted with getVisibleFlags */
    setVisibleFlags(flags) {
-      if (!this.nodes || !flags || !flags.length !== this.nodes.length)
+      if (!this.nodes || !flags || (flags.length !== this.nodes.length))
          return 0;
 
       let res = 0;
@@ -114206,7 +114206,7 @@ class ClonedNodes {
             else
                camVol = 0;
 
-            camFact = maxVol / ((camVol > 0) ? (camVol > 0) : minVol);
+            camFact = maxVol / (camVol > 0 ? camVol : minVol);
          }
       }
 
@@ -121169,9 +121169,9 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Search for created shape for nodeid
     * @desc Used in ROOT geometry painter */
    findNodeShape(nodeid) {
-      if ((nodeid !== undefined) && !this.#draw_nodes) {
+      if ((nodeid !== undefined) && this.#draw_nodes) {
          for (let k = 0; k < this.#draw_nodes.length; ++k) {
-            const item = this.geo_painter._draw_nodes[k];
+            const item = this.#draw_nodes[k];
             if ((item.nodeid === nodeid) && item.server_shape)
                return item.server_shape;
          }
@@ -129778,6 +129778,15 @@ async function treeProcess(tree, selector, args) {
             if (!streamer) {
                elem = null;
                console.warn('not found streamer!');
+            } else if (branch.fType === -1) {
+               // object written by custom streamer of the class, it has version and bytecount
+               member = {
+                  name: target_name,
+                  typename: branch.fClassName,
+                  func(buf, obj) {
+                     obj[this.name] = buf.classStreamer({}, this.typename);
+                  }
+               };
             } else {
                member = {
                   name: target_name,
@@ -177851,7 +177860,7 @@ class TSplinePainter extends ObjectPainter {
          knot = spline.fPoly[indx];
          yy = this.eval(knot, xx);
 
-         if ((indx < spline.fN - 1) && (Math.abs(spline.fPoly[indx + 1].fX - xx) < Math.abs(xx - knot.fX)))
+         if ((indx < spline.fNp - 1) && (Math.abs(spline.fPoly[indx + 1].fX - xx) < Math.abs(xx - knot.fX)))
             knot = spline.fPoly[++indx];
 
          if (Math.abs(funcs.grx(knot.fX) - pnt.x) < 0.5 * this.#knot_size) {
@@ -178274,6 +178283,7 @@ class TPiePainter extends ObjectPainter {
          af -= entry.value / total * 2 * Math.PI;
          entry.a1 = af;
 
+         entry.large_arc = entry.value > total * 0.5 ? 1 : 0;
          entry.x1 = Math.round(rx * Math.cos(entry.a1));
          entry.y1 = Math.round(ry * Math.sin(entry.a1));
          entry.x2 = Math.round(rx * Math.cos(entry.a2));
@@ -178336,7 +178346,7 @@ class TPiePainter extends ObjectPainter {
                entry.pie_path += `a${rx},${ry},0,0,1,${xx2 - xx1},${yy2 - yy1}`;
             });
          } else
-            entry.pie_path = `a${rx},${ry},0,0,1,${entry.x2 - entry.x1},${entry.y2 - entry.y1}`;
+            entry.pie_path = `a${rx},${ry},0,${entry.large_arc},1,${entry.x2 - entry.x1},${entry.y2 - entry.y1}`;
       }
 
       // code to create 3d effect
@@ -179859,11 +179869,10 @@ function decodeZigzag32(view) {
  * @private */
 function decodeZigzag64(view) {
    for (let o = 0; o < view.byteLength; o += 8) {
-        const x = view.getBigUint64(o, LITTLE_ENDIAN);
-        view.setBigInt64(o, (x >> 1n) ^ (-(x & 1n)), LITTLE_ENDIAN);
-    }
+      const x = view.getBigUint64(o, LITTLE_ENDIAN);
+      view.setBigInt64(o, (x >> 1n) ^ (-(x & 1n)), LITTLE_ENDIAN);
+   }
 }
-
 
 // Envelope Types
 // TODO: Define usage logic for envelope types in future

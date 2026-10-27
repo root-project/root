@@ -642,7 +642,7 @@ class TooltipHandler extends ObjectPainter {
             if ((gapminx === -1111) && (gapmaxx === -1111))
                gapminx = gapmaxx = hint.x;
             gapminx = Math.min(gapminx, hint.x);
-            gapmaxx = Math.min(gapmaxx, hint.x);
+            gapmaxx = Math.max(gapmaxx, hint.x);
          }
 
          group.attr('x', posx)

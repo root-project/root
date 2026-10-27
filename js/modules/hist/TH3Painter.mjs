@@ -155,10 +155,10 @@ class TH3Painter extends THistPainter {
                   np += w;
                   sumx3 += w * Math.pow(xx - res.meanx, 3);
                   sumy3 += w * Math.pow(yy - res.meany, 3);
-                  sumz3 += w * Math.pow(zz - res.meany, 3);
+                  sumz3 += w * Math.pow(zz - res.meanz, 3);
                   sumx4 += w * Math.pow(xx - res.meanx, 4);
                   sumy4 += w * Math.pow(yy - res.meany, 4);
-                  sumz4 += w * Math.pow(yy - res.meany, 4);
+                  sumz4 += w * Math.pow(zz - res.meanz, 4);
                }
             }
          }

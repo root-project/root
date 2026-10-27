@@ -2613,11 +2613,11 @@ class THistPainter extends ObjectPainter {
                   need_redraw = true;
                   fp.fY2NDC = pal.fY1NDC - 0.01;
                   if (fp.fY1NDC > fp.fY2NDC - 0.1)
-                     fp.fY1NDC = Math.max(0, fp.fXYNDC - 0.1);
+                     fp.fY1NDC = Math.max(0, fp.fY2NDC - 0.1);
                } else if ((pal.fY2NDC < 0.5) && (fp.fY1NDC < pal.fY2NDC)) {
                   need_redraw = true;
                   fp.fY1NDC = pal.fY2NDC + 0.05;
-                  if (fp.fXYNDC < fp.fY1NDC + 0.1)
+                  if (fp.fY2NDC < fp.fY1NDC + 0.1)
                      fp.fY2NDC = Math.min(1, fp.fY1NDC + 0.1);
                }
                if (need_redraw && pad) {
@@ -2907,7 +2907,7 @@ class THistPainter extends ObjectPainter {
             res = { low: err, up: err },
             kind = this.getOptions().Poisson || histo.fBinStatErrOpt;
 
-      if (!kind || (histo.fSumw2.fN && histo.fTsumw !== histo.fTsumw2) || (content < 0))
+      if (!kind || (histo.fSumw2?.length && histo.fTsumw !== histo.fTsumw2) || (content < 0))
          return res;
 
       const alpha = (kind === kPoisson2) ? 0.05 : 1 - 0.682689492,
@@ -2959,7 +2959,7 @@ class THistPainter extends ObjectPainter {
       }).then(() => {
          return painter.drawHistTitle();
       }).then(() => {
-         if (!painter.Mode3D && painter.options.AutoZoom)
+         if (!painter.options.Mode3D && painter.options.AutoZoom)
             return painter.autoZoom();
       }).then(() => {
          if (painter.options.Project && !painter.mode3d && isFunc(painter.toggleProjection))

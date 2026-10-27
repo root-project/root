@@ -196,7 +196,7 @@ function drawTH2PolyLego(painter) {
             z1: this.draw_z0,
             z2: this.draw_z1,
             bin: this.bins_index,
-            value: bin.fContent,
+            value: tbin.fContent,
             color: this.tip_color,
             lines: p.getPolyBinTooltips(this.bins_index)
          };

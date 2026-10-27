@@ -4077,9 +4077,9 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Search for created shape for nodeid
     * @desc Used in ROOT geometry painter */
    findNodeShape(nodeid) {
-      if ((nodeid !== undefined) && !this.#draw_nodes) {
+      if ((nodeid !== undefined) && this.#draw_nodes) {
          for (let k = 0; k < this.#draw_nodes.length; ++k) {
-            const item = this.geo_painter._draw_nodes[k];
+            const item = this.#draw_nodes[k];
             if ((item.nodeid === nodeid) && item.server_shape)
                return item.server_shape;
          }
