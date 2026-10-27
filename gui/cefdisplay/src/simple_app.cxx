@@ -238,7 +238,7 @@ void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const st
          //   window_info.SetAsWindowless(kNullWindowHandle);
       #else
          if (!rect.IsEmpty())
-            window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
+            window_info.SetAsChild(0, rect );
          //if (is_batch)
          //   window_info.SetAsWindowless(kNullWindowHandle);
       #endif
