@@ -95,22 +95,23 @@ public:
                               "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
    }
 
-   void CallExec(unsigned int slot, Long64_t entry)
+   void CallExec(unsigned int slot, std::size_t idx)
    {
       auto &untypedValues = fValueAddresses[slot];
       auto nReaders = fValues[slot].size();
       untypedValues.resize(nReaders);
       for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
-         untypedValues[readerIdx] = GetValue(slot, readerIdx, entry);
+         untypedValues[readerIdx] = GetValue(slot, readerIdx, idx);
 
       fHelper.Exec(slot, untypedValues);
    }
 
-   void Run(unsigned int slot, Long64_t entry) final
+   void Run(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
-
-      if (fPrevNodes.front()->CheckFilters(slot, entry))
-         CallExec(slot, entry);
+      const auto mask = fPrevNodes.front()->CheckFilters(slot, bulkBeginEntry, bulkSize);
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
+      if (mask[0])
+         CallExec(slot, /*idx=*/0u);
    }
 
    void TriggerChildrenCount() final
