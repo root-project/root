@@ -773,6 +773,22 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(touch_byproducts_command COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${dictionary_byproducts})
   endif()
 
+  # The Makefile generators of CMake < 4.0 merge the entries of a custom
+  # command's DEPFILE into CMakeFiles/<target>.dir/compiler_depend.internal
+  # instead of replacing them (CMake issue 26399). A header, LinkDef or pcm
+  # that rootcling read once but that has since disappeared, e.g. because the
+  # build tree is reused across a checkout, then stays recorded as a missing
+  # prerequisite, and make regenerates the dictionary on every build. Dropping
+  # the cached list after rootcling has run makes the next dependency scan
+  # start from the fresh depfile only, as CMake itself does for library
+  # targets whenever it regenerates.
+  set(drop_cached_depends_command)
+  if(CMAKE_GENERATOR MATCHES "Makefiles" AND CMAKE_VERSION VERSION_LESS 4.0)
+    get_filename_component(dictionary_target ${dictionary} NAME)
+    set(drop_cached_depends_command COMMAND ${CMAKE_COMMAND} -E rm -f
+        ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${dictionary_target}.dir/compiler_depend.internal)
+  endif()
+
   #---call rootcling------------------------------------------
   add_custom_command(
     OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
@@ -789,6 +805,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                        -DR__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
                        -MF ${depfile_path}
     ${touch_byproducts_command}
+    ${drop_cached_depends_command}
     DEPFILE ${depfile_path}
     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCLINGDEP}
             ${pcm_dependencies}
