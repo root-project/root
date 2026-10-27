@@ -91,9 +91,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_misc misc_pyz.py)
 
 # RVec and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec rvec.py)
-if(NOT MSVC OR win_broken_tests)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py PYTHON_DEPS numpy)
-endif()
+ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py PYTHON_DEPS numpy)
 
 # RDataFrame and subclasses pythonizations
 if (dataframe)
@@ -117,14 +115,12 @@ if(roofit)
 endif()
 
 if (dataframe)
-    if(NOT MSVC OR win_broken_tests)
-        # Test wrapping Python callables for use in C++ using numba
-        ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
-        ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
-        ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
-        # std::string_view in CPyCppyy
-        ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
-    endif()
+    # Test wrapping Python callables for use in C++ using numba
+    ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
+    ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
+    ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
+    # std::string_view in CPyCppyy
+    ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
 endif()
 
 # Tests with memory usage
@@ -143,9 +139,4 @@ ROOT_ADD_PYUNITTEST(package_metadata package_metadata.py)
 
 ROOT_ADD_PYUNITTEST(regression_23728 regression_23728.py)
 
-if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR win_broken_tests)
-    # Test the conversion and low level views of interpreter-defined C++ arrays to NumPy
-    # We do not run this test on Windows x86 due to an interpreter issue with arrays:
-    # https://github.com/root-project/root/issues/9809
-    ROOT_ADD_PYUNITTEST(pyroot_array_numpy_views array_conversions.py PYTHON_DEPS numpy)
-endif()
+ROOT_ADD_PYUNITTEST(pyroot_array_numpy_views array_conversions.py PYTHON_DEPS numpy)
