@@ -7,35 +7,57 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT graf2d/asimage package
 # @author Pere Mato, CERN
+# @author Sergey Linev, GSI
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
-  NO_INSTALL_HEADERS
-  HEADERS
-    TASImage.h
-    TASImagePlugin.h
-    TASPluginGS.h
-    TASPngWriter.h
-  SOURCES
-    TASImage.cxx
-    TASPluginGS.cxx
-    TASPngWriter.cxx
-  DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
-  LIBRARIES
-    libAfterImage
-  DEPENDENCIES
-    Core
-    Graf
-    Postscript
-)
+if(asimage)
 
-if (x11)
-  target_link_libraries(ASImage PRIVATE X11::X11)
+  ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
+    NO_INSTALL_HEADERS
+    HEADERS
+      TASImage.h
+      TASImagePlugin.h
+      TASPluginGS.h
+      TASPngWriter.h
+    SOURCES
+      TASImage.cxx
+      TASPluginGS.cxx
+      TASPngWriter.cxx
+    DICTIONARY_OPTIONS
+      -writeEmptyRootPCM
+    LIBRARIES
+      libAfterImage
+    DEPENDENCIES
+      Core
+      Graf
+      Postscript
+  )
+
+  if (x11)
+    target_link_libraries(ASImage PRIVATE X11::X11)
+  endif()
+
+  ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
+    NO_INSTALL_HEADERS
+    HEADERS
+      TASPaletteEditor.h
+    SOURCES
+      src/TASPaletteEditor.cxx
+    LINKDEF
+      LinkDefGui.h
+    DICTIONARY_OPTIONS
+      -writeEmptyRootPCM
+    LIBRARIES
+      libAfterImage
+    DEPENDENCIES
+      Gui
+      ASImage
+  )
+
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImageUtils
-  NO_INSTALL_HEADERS
+ NO_INSTALL_HEADERS
   HEADERS
     TASUtils.h
   SOURCES
@@ -44,30 +66,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImageUtils
     LinkDefUtils.h
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
-  LIBRARIES
-    libAfterImage
   DEPENDENCIES
-    ASImage
     Gpad
 )
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
-  NO_INSTALL_HEADERS
-  HEADERS
-    TASPaletteEditor.h
-  SOURCES
-    src/TASPaletteEditor.cxx
-  LINKDEF
-    LinkDefGui.h
-  DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
-  LIBRARIES
-    libAfterImage
-  DEPENDENCIES
-    Gui
-    ASImage
-)
+if(asimage)
+  target_link_libraries(ASImageUtils PRIVATE libAfterImage)
+  target_link_libraries(ASImageUtils PUBLIC ASImage)
+else()
+  target_compile_definitions(ASImageUtils PRIVATE NO_ASIMAGE)
+endif()
 
 ROOT_INSTALL_HEADERS()
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+if(asimage)
+  ROOT_ADD_TEST_SUBDIRECTORY(test)
+endif()

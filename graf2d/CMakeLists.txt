@@ -17,9 +17,9 @@ elseif(x11)
   add_subdirectory(x11)         # special CMakeLists.txt
   add_subdirectory(x11ttf)      # special CMakeLists.txt
 endif()
-if(asimage)
-  add_subdirectory(asimage)     # special CMakeLists.txt
-endif()
+
+add_subdirectory(asimage)     # special CMakeLists.txt
+
 add_subdirectory(padpainter)
 if(gviz)
   add_subdirectory(gviz)
