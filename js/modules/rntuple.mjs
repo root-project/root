@@ -234,11 +234,10 @@ function decodeZigzag32(view) {
  * @private */
 function decodeZigzag64(view) {
    for (let o = 0; o < view.byteLength; o += 8) {
-        const x = view.getBigUint64(o, LITTLE_ENDIAN);
-        view.setBigInt64(o, (x >> 1n) ^ (-(x & 1n)), LITTLE_ENDIAN);
-    }
+      const x = view.getBigUint64(o, LITTLE_ENDIAN);
+      view.setBigInt64(o, (x >> 1n) ^ (-(x & 1n)), LITTLE_ENDIAN);
+   }
 }
-
 
 // Envelope Types
 // TODO: Define usage logic for envelope types in future

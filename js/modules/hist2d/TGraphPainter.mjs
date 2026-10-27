@@ -670,7 +670,7 @@ class TGraphPainter extends ObjectPainter {
       const line_events_handling = !this.isBatchMode() && (options.Line || options.Errors) ? 'none' : null;
 
       if (main_block && lineatt.excl_side) {
-         excl_width = lineatt.excl_width;
+         excl_width = lineatt.excl_width * lineatt.excl_side;
          if ((lineatt.width > 0) && !options.Line && !options.Curve)
             options.Line = 1;
       }

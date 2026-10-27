@@ -1335,7 +1335,7 @@ class TH2Painter extends THistPainter {
       if ((print_under > 0) || (print_over > 0)) {
          const get = i => data.matrix[i].toFixed(0);
 
-         stat.addText(`${get(6)} | ${get(7)} | ${get(7)}`);
+         stat.addText(`${get(6)} | ${get(7)} | ${get(8)}`);
          stat.addText(`${get(3)} | ${get(4)} | ${get(5)}`);
          stat.addText(`${get(0)} | ${get(1)} | ${get(2)}`);
       }

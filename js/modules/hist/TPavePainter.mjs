@@ -292,7 +292,7 @@ class TPavePainter extends ObjectPainter {
                      if (pt.fY1NDC > pt.fY2NDC)
                         pt.fY2NDC = Math.min(0.995, pt.fY1NDC + stath + extrah);
                      if (pt.fX1NDC > pt.fX2NDC)
-                        pt.fY2NDC = Math.min(0.995, pt.fX1NDC + statw);
+                        pt.fX2NDC = Math.min(0.995, pt.fX1NDC + statw);
                   }
                }
             }
