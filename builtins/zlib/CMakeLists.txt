@@ -9,7 +9,6 @@
 set(ROOT_ZLIB_VERSION 1.3.2)
 set(ROOT_ZLIB_HASH "bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16")
 
-set(ROOT_ZLIB_PREFIX ${CMAKE_BINARY_DIR}/builtins/ZLIB-prefix PARENT_SCOPE)
 set(ROOT_ZLIB_PREFIX ${CMAKE_BINARY_DIR}/builtins/ZLIB-prefix)
 
 # Here we need two cases because the library has two different names on Linux/macOS and Windows
@@ -74,6 +73,7 @@ set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR} PARENT_SCOPE)
 set(ZLIB_LIBRARIES ${ROOT_ZLIB_LIBRARY} PARENT_SCOPE)
 set(ZLIB_FOUND TRUE PARENT_SCOPE)
 set(ZLIB_VERSION ${ROOT_ZLIB_VERSION} PARENT_SCOPE)
+set(ROOT_ZLIB_PREFIX ${ROOT_ZLIB_PREFIX} PARENT_SCOPE)
 
 # The following variables can be set by users to override the behaviour of FindZLIB.cmake,
 # so packages executing their own find_package(ZLIB) will find the builtin library.
