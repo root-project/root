@@ -36,10 +36,10 @@ public:
    RNTupleProcessorColumnReader(RNTupleProcessorValuePtr<void> &valuePtr) : fValuePtr(std::move(valuePtr)) {}
    ~RNTupleProcessorColumnReader() override = default;
 
-   void *GetImpl(Long64_t entry [[maybe_unused]]) final
+   void *GetImpl(std::size_t /*idx*/) final { return fValuePtr.GetPtr().get(); }
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final
    {
-      assert(entry == fLastLoadedEntry);
-      return fValuePtr.GetPtr().get();
+      // Loading happens in RNTupleProcessorDS
    }
 
    void SetEntryLoaded(Long64_t entry) { fLastLoadedEntry = entry; }
