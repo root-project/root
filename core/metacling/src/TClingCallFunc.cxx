@@ -79,6 +79,19 @@ using std::string, std::map, std::ostringstream, std::make_pair;
 static unsigned long long gWrapperSerial = 0LL;
 static const string kIndentString("   ");
 
+// Caches of the JIT-compiled call, constructor and destructor wrappers, keyed on
+// the declaration they were generated for. They are globals of libCling on
+// purpose: a function-local static would register its destructor on first use,
+// which for the destructor wrappers can be in the middle of the user's program,
+// i.e. after ROOT registered its atexit handlers. The cache would then be
+// destroyed before TROOT::EndOfProcessCleanups() releases the remaining objects
+// (e.g. a TTree branch of a class without compiled dictionary), and the lookup
+// of the destructor wrapper would run on a dead map, see
+// https://github.com/root-project/root/issues/23728.
+static map<const Decl *, void *> gWrapperStore;
+static map<const Decl *, void *> gCtorWrapperStore;
+static map<const Decl *, void *> gDtorWrapperStore;
+
 static
 inline
 void
@@ -1009,8 +1022,6 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
 
 tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
-   static map<const Decl *, void *> gWrapperStore;
-
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
    const Decl *D = GetFunctionOrShadowDecl();
@@ -1136,8 +1147,6 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    // CINT did.
    //
    //--
-
-   static map<const Decl *, void *> gCtorWrapperStore;
 
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
@@ -1286,8 +1295,6 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    // }
    //
    //--
-
-   static map<const Decl *, void *> gDtorWrapperStore;
 
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
