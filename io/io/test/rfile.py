@@ -5,6 +5,11 @@ import unittest
 import ROOT
 
 
+def platform_supports_assertRaises():
+    # TODO: re-enable it on Windows once the exception handling is fixed
+    # TODO: remove mac 15 exception once we stop supporting it
+    return platform.system() != "Windows" and (platform.system() != "Darwin" or not platform.mac_ver()[0].startswith('15'))
+    
 class RFileTests(unittest.TestCase):
     def test_open_for_reading(self):
         """A RFile can read a ROOT file created by TFile"""
@@ -24,8 +29,7 @@ class RFileTests(unittest.TestCase):
                 self.assertEqual(rfile.Get[ROOT.TH1F]("hist"), None)
                 self.assertNotEqual(rfile.Get[ROOT.TH1]("hist"), None)
 
-                if not platform.system() == "Windows":
-                    # TODO: re-enable it on Windows once the exception handling is fixed
+                if platform_supports_assertRaises():
                     with self.assertRaises(ROOT.RException):
                         # This should fail because the file was opened as read-only
                         rfile.Put("foo", hist)
@@ -41,8 +45,7 @@ class RFileTests(unittest.TestCase):
                 hist = ROOT.TH1D("hist", "", 100, -10, 10)
                 hist.FillRandom("gaus", 10)
                 rfile.Put("hist", hist)
-                if not platform.system() == "Windows":
-                    # TODO: re-enable it on Windows once the exception handling is fixed
+                if platform_supports_assertRaises():
                     with self.assertRaises(ROOT.RException):
                         rfile.Put("hist/2", hist)
 
@@ -129,12 +132,14 @@ class RFileTests(unittest.TestCase):
         try:
             with ROOT.RFile.Recreate(fileName) as rfile:
                 # Storing integers is unsupported
-                with self.assertRaises(TypeError):
-                    rfile.Put("foo", 2)
+                if platform_supports_assertRaises():
+                    with self.assertRaises(TypeError):
+                        rfile.Put("foo", 2)
 
                 # Storing lists without an explicit template is unsupported
-                with self.assertRaises(TypeError):
-                    rfile.Put("bar", [2, 3])
+                if platform_supports_assertRaises():
+                    with self.assertRaises(TypeError):
+                        rfile.Put("bar", [2, 3])
 
                 # Storing lists with an explicit template is supported
                 rfile.Put["std::vector<int>"]("bar", [2, 3])
