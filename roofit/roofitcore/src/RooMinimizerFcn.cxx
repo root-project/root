@@ -92,11 +92,16 @@ struct VariableGroups {
    std::unordered_map<TNamed const *, std::vector<int>> groups;
 
    /// Register one additive term: record for every leaf in the collection
-   /// that it appears in this term.
+   /// that it appears in this term. The collection doesn't need to be
+   /// deduplicated: a leaf that is listed several times, or several distinct
+   /// leaves sharing a name, are recorded for this term only once.
    void registerTerm(RooAbsCollection const &leaves)
    {
       for (RooAbsArg const *arg : leaves) {
-         groups[arg->namePtr()].push_back(_nextIndex);
+         std::vector<int> &indices = groups[arg->namePtr()];
+         if (indices.empty() || indices.back() != _nextIndex) {
+            indices.push_back(_nextIndex);
+         }
       }
       ++_nextIndex;
    }
@@ -133,14 +138,16 @@ void fillVariableGroups(RooAbsArg const &arg, VariableGroups &out)
       return;
    }
 
-   // Get the set of leaves in the computation graph. Do the detour via
-   // RooArgList to avoid deduplication done after adding each element.
-   RooArgSet leafSet;
+   // Get the leaves of the computation graph. A RooArgList is used on purpose
+   // and not a RooArgSet: the list is filled without the per-element
+   // deduplication of a set, and it also doesn't complain about distinct
+   // leaves that share a name, which does happen in compiled computation
+   // graphs (e.g. several "1" constants replacing the RooBinWidthFunctions of
+   // a HistFactory model). The VariableGroups registry deals with both.
    RooArgList leafList;
    arg.treeNodeServerList(&leafList, nullptr, /*branches*/ false, /*leaves*/ true, /*valueOnly*/ false,
                           /*recurseFundamental*/ true);
-   leafSet.add(leafList.begin(), leafList.end());
-   out.registerTerm(leafSet);
+   out.registerTerm(leafList);
 }
 
 } // namespace
