@@ -46,8 +46,8 @@ namespace ROOT::Internal {
 
 /// Number and size of the blocks in which a buffer is compressed.
 struct RZipBlocks {
-   int fNBlocks;
-   int fBlockSize;
+   int fNBlocks = 0;
+   int fBlockSize = 0;
 };
 
 /// Number of blocks and the size of the blocks in which a buffer of `nbytes` > 0 bytes is compressed.
@@ -55,7 +55,7 @@ struct RZipBlocks {
 /// of the same size but the last, which is smaller by less than the number of blocks. Full blocks followed by
 /// the remainder would end a buffer just above a multiple of kMAXZIPBUF in a block of a few bytes, which cannot
 /// be compressed, so that the whole buffer would be stored uncompressed.
-constexpr RZipBlocks GetZipBlocks(std::uint64_t nbytes)
+constexpr RZipBlocks GetZipBlocks(int nbytes)
 {
    assert(nbytes > 0);
    const std::uint64_t nblocks = 1 + (nbytes - 1) / kMAXZIPBUF;
