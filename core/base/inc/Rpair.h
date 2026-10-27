@@ -12,7 +12,7 @@
 #ifndef ROOT_Rpair
 #define ROOT_Rpair
 
-#warning "This header is obsolete and will be removed after 6.44, use instead <utility>"
+#warning "This header is obsolete and will be removed in ROOT 7, use instead <utility>"
 
 // Include the definition of pairs
 #include <utility>

@@ -11,7 +11,7 @@
 #ifndef ROOT_PosixThreadInc
 #define ROOT_PosixThreadInc
 
-#warning "This header is deprecated and will be removed after ROOT 6.44, use instead <cstdlib> and <ctime>"
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead <cstdlib> and <ctime>"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -11,7 +11,7 @@
 #ifndef ROOT_Strlen
 #define ROOT_Strlen
 
-#warning "This header is deprecated and will be removed in ROOT 6.44, use <cstring> instead"
+#warning "This header is deprecated and will be removed after ROOT 7. Use <cstring> instead"
 
 #ifdef NEED_STRING
 #error "ROOT no longer provides implementation for strlen, NEED_STRING macro should not be defined."

@@ -12,7 +12,7 @@
 #ifndef ROOT_Rstrstream
 #define ROOT_Rstrstream
 
-#warning "This header is deprecated and will be removed after ROOT 6.44, used instead <sstream>"
+#warning "This header is deprecated and will be removed after ROOT 7, used instead <sstream>"
 
 #include <ROOT/RConfig.hxx>
 

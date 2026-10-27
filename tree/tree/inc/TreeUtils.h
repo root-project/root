@@ -23,7 +23,7 @@
 #define ROOT_TreeUtils
 
 #if !defined(ROOT_TreeUtils_cxx) && !defined(G__DICTIONARY) && !defined(__ROOTCLING__) && !defined(__CLING__)
-#warning "This header is deprecated and will be removed in ROOT 6.44, use instead TNtuple::ReadStream or TNtupleD::ReadStream"
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead TNtuple::ReadStream or TNtupleD::ReadStream"
 #endif
 
 #include <iosfwd>

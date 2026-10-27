@@ -11,7 +11,7 @@
 #ifndef ROOT_Varargs
 #define ROOT_Varargs
 
-#warning "The header Varargs.h is deprecated and will be removed in ROOT 6.46, include <cstdarg> instead."
+#warning "This header is deprecated and will be removed after ROOT 7. Include <cstdarg> instead."
 
 #if defined(sparc) && defined(__CC_ATT301__)
 
