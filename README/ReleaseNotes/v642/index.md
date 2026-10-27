@@ -412,7 +412,7 @@ The version of the following packages has been updated:
  - libmathtext: 2016
  - libpng: 1.6.59
  - libjpeg-turbo: 3.2.0
- - libtiff: 4.7.26
+ - libtiff: 4.7.2
  - openssl: 3.5.9
  - openui5: 1.152.0
  - pcre: now pcre2, version 10.47
