@@ -239,6 +239,16 @@ if(MSVC)
       ??1LifetimeHandler@internal@runtime@cling@@QAE@XZ
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
     )
+    if(MSVC_VERSION GREATER_EQUAL 1951)
+      set(cling_exports ${cling_exports}
+        __std_replace_copy_2@20=___std_replace_copy_2@20
+      )
+    endif()
+    set(cling_exports ${cling_exports}
+      __std_fs_close_handle@4=___std_fs_close_handle@4
+      __std_fs_get_final_path_name_by_handle@16=___std_fs_get_final_path_name_by_handle@16
+      __std_fs_open_handle@16=___std_fs_open_handle@16
+    )
     if(MSVC_VERSION GREATER_EQUAL 1938 AND MSVC_VERSION LESS 1940)
       set(cling_exports ${cling_exports}
         ??$__std_find_trivial@$$CBDD@@YAPBDPBD0D@Z
