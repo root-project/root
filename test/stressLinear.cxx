@@ -937,7 +937,7 @@ public:
   MakeHilbert() { }
 };
 
-#if !defined (__CLING__) || defined (__ROOTCLING__)
+#ifndef __CLING__
 class TestUnit : public TElementPosActionD {
   mutable Int_t fIsUnit;
   void Operation(Double_t &element) const override
