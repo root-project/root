@@ -170,6 +170,11 @@ Creating an RNTupleProcessor for joins can (for now) be done by calling `ROOT::E
 * An experimental RDataFrame datasource using the RNTupleProcessor has been added.
 RDataFrames can be created from an existing RNTupleProcessor by calling `ROOT::Experimental::RDF::FromRNTupleProcessor()`.
 
+### RNTuple SoA I/O
+
+The RNTuple SoA I/O classes moved out of experimental. These classes and the related dictionary options provide a mechanism to read and write a collection of a class, i.e. an "array of struct" (AoS),
+as "struct of array" (SoA) in memory. This is useful, e.g., for efficient consumption of data structures by GPUs. This new feature comes with a technical documentation (`SoA.md`) and a tutorial (`ntpl020_SoA.C`).
+
 ## Core
 
 * `TClass::IsTriviallyRelocatable()` reports whether an object of a class can be moved to a new address with a raw memory copy, i.e. without running a move or copy constructor (trivial relocatability in the C++26 sense). It is backed by the new `kClassIsTriviallyRelocatable` class property, which `TInterpreter::ClassInfo_ClassProperty()` now fills in. A class the interpreter does not know about, in particular an emulated one, is conservatively reported as not relocatable.
