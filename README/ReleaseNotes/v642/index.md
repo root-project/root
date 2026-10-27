@@ -153,6 +153,8 @@ Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 
 * Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
 
+* An `RNTupleReader` will now by default not load all metadata on open. Metadata related to the on-disk location of data pages will instead be loaded during iteration. To restore the old behavior, set the metadata mode in the `RNTupleReadOptions` to `kEager`.
+
 ### RFile
 
 RFile, ROOT's modern interface to ROOT file, has moved out of the `ROOT::Experimental` namespace.
