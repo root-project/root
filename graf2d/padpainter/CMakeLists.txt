@@ -19,13 +19,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPadPainter
     -writeEmptyRootPCM
   DEPENDENCIES
     Gpad
+    ASImageUtils
 )
-
-
-if(asimage)
-  target_link_libraries(ROOTPadPainter PUBLIC ASImageUtils)
-  target_compile_definitions(ROOTPadPainter PRIVATE USE_ASIMAGEUTILS)
-endif()
 
 
 ROOT_INSTALL_HEADERS()

@@ -17,6 +17,7 @@
 #include "TPadPainter.h"
 #include "TVirtualX.h"
 #include "TSystem.h"
+#include "TASUtils.h"
 #include "TCanvas.h"
 #include "TPoint.h"
 #include "TError.h"
@@ -24,10 +25,6 @@
 #include "TROOT.h"
 #include "TMath.h"
 #include "TPad.h"
-
-#ifdef USE_ASIMAGEUTILS
-#include "TASUtils.h"
-#endif
 
 namespace {
 
@@ -234,17 +231,9 @@ void TPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 
    // use old API to draw image on gVirtualX window
    // img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
-#ifdef USE_ASIMAGEUTILS
+
    // new API invokes
    TASUtils::PaintImage(img, wid, x, y, !flags);
-#else
-   ::Error("TPadPainter::DrawImage", "TASImage not compiled, image painting is not possible");
-   (void) wid;
-   (void) img;
-   (void) x;
-   (void) y;
-   (void) flags;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -596,7 +585,6 @@ Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
    if (!image || !pad)
       return kFALSE;
 
-#ifdef USE_ASIMAGEUTILS
    auto width = pad->GetPadWidth();
    auto height = pad->GetPadHeight();
 
@@ -604,14 +592,7 @@ Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
    gVirtualX->SelectWindow(wid);
 
    Window_t wd = gVirtualX->GetCurrentWindow();
-
    return TASUtils::FillImageFromWindow(image, wd, width, height);
-#else
-   ::Error("TPadPainter::FillImageFromPad", "Cannot work without TASImage class");
-   (void) image;
-   (void) pad;
-   return kFALSE;
-#endif
 }
 
 //Aux. private functions.
