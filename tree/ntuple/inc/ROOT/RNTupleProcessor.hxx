@@ -371,6 +371,30 @@ protected:
       friend bool operator!=(const REntryMapping &lhs, const REntryMapping &rhs) { return !(lhs == rhs); }
 
    public:
+      REntryMapping() = default;
+      REntryMapping(const REntryMapping &other) : REntryMapping()
+      {
+         fEntryNumber = other.fEntryNumber;
+         fInnerProcessorIdx = other.fInnerProcessorIdx;
+         fInnerMapping = other.fInnerMapping ? std::make_unique<REntryMapping>(*other.fInnerMapping) : nullptr;
+         fPrimaryMapping = other.fPrimaryMapping ? std::make_unique<REntryMapping>(*other.fPrimaryMapping) : nullptr;
+         fAuxiliaryMapping =
+            other.fAuxiliaryMapping ? std::make_unique<REntryMapping>(*other.fAuxiliaryMapping) : nullptr;
+      }
+      REntryMapping(REntryMapping &&other) = default;
+      REntryMapping &operator=(const REntryMapping &other)
+      {
+         fEntryNumber = other.fEntryNumber;
+         fInnerProcessorIdx = other.fInnerProcessorIdx;
+         fInnerMapping = other.fInnerMapping ? std::make_unique<REntryMapping>(*other.fInnerMapping) : nullptr;
+         fPrimaryMapping = other.fPrimaryMapping ? std::make_unique<REntryMapping>(*other.fPrimaryMapping) : nullptr;
+         fAuxiliaryMapping =
+            other.fAuxiliaryMapping ? std::make_unique<REntryMapping>(*other.fAuxiliaryMapping) : nullptr;
+         return *this;
+      }
+      REntryMapping &operator=(REntryMapping &&other) = default;
+      ~REntryMapping() = default;
+
       ROOT::NTupleSize_t GetEntryNumber() const { return fEntryNumber; }
 
       ROOT::NTupleSize_t operator*() const { return fEntryNumber; }
@@ -654,9 +678,9 @@ public:
          return *this;
       }
 
-      const iterator &operator++(int)
+      iterator operator++(int)
       {
-         auto &obj = *this;
+         auto obj = *this;
          ++(*this);
          return obj;
       }
