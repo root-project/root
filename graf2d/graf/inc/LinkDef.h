@@ -58,6 +58,7 @@
 #pragma link C++ class TText-;
 #pragma link C++ class TTF;
 #pragma link C++ class TTFhandle;
+#pragma link C++ class TVirtualImageUtils;
 #pragma link C++ class TWbox+;
 
 #pragma link C++ enum TImage::EImageFileTypes;
