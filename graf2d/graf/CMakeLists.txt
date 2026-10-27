@@ -47,6 +47,7 @@ set(GRAF_HEADERS
   TTF.h
   TTFhandle.h
   TText.h
+  TVirtualImageUtils.h
   TWbox.h
 )
 
@@ -91,6 +92,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     src/TTF.cxx
     src/TTFhandle.cxx
     src/TText.cxx
+    src/TVirtualImageUtils.cxx
     src/TWbox.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM

@@ -7,9 +7,13 @@
 ROOT_ADD_GTEST(TRatioPlot ratioplot.cxx LIBRARIES Gpad)
 ROOT_ADD_GTEST(TPad pdftitle.cxx LIBRARIES Gpad)
 ROOT_ADD_GTEST(TPDF pdfurl.cxx LIBRARIES Gpad)
+ROOT_ADD_GTEST(TCanvasPainter canvaspainter.cxx LIBRARIES Gpad Hist)
+add_dependencies(TCanvasPainter ROOTPadPainter HistPainter)
 
 if(asimage)
   ROOT_ADD_GTEST(TASImagePDF tasimage_pdf.cxx LIBRARIES Gpad ASImage ZLIB::ZLIB)
+  ROOT_ADD_GTEST(TPadPainterImage padpainter_image.cxx LIBRARIES Gpad)
+  add_dependencies(TPadPainterImage ROOTPadPainter ASImageUtils)
 endif()
 
 if(webgui)

@@ -14,6 +14,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class TASImageUtils;
 #pragma link C++ class TASUtils;
 
 #endif
