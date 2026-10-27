@@ -1,6 +1,3 @@
-#disable until JupyROOT works on Windows
-if(NOT MSVC OR win_broken_tests)
-
 # Do not run with classic build or if tests are vetoed
 if (pyroot AND NOT ROOT_CLASSIC_BUILD)
 
@@ -60,7 +57,5 @@ ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
                   COMMAND ${Python3_EXECUTABLE} ${NBDIFFUTIL} ${TCOLOR_NB} "OFF"
                   RUN_SERIAL
                   PYTHON_DEPS jupyter)
-
-endif()
 
 endif()

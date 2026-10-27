@@ -27,6 +27,9 @@ class StringView(unittest.TestCase):
 
         df = ROOT.RDataFrame(treename, filename)
         self.assertEqual(df.GetNRuns(), 0)
+        # The RDataFrame keeps the file open; release it before removing the
+        # file, which otherwise fails on Windows.
+        del df
         os.remove(filename)
 
 if __name__ == '__main__':
