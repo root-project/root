@@ -31,7 +31,7 @@ class THistDrawOptions {
          Bar: false, BarStyle: 0, Curve: false,
          Hist: 1, Line: false, Fill: false,
          Error: 0, ErrorKind: -1, errorX: gStyle.fErrorX,
-         Mark: false, Same: false, Scat: false, ScatCoef: 1.0, Func: true, AllFunc: false,
+         Mark: false, Same: false, Scat: 0, ScatCoef: 1.0, Func: true, AllFunc: false,
          Arrow: false, Box: false, BoxStyle: 0,
          Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
          Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: gStyle.fOrthoCamera,
@@ -94,7 +94,7 @@ class THistDrawOptions {
 
    /** @summary Decode histogram draw options */
    decode(opt, hdim, histo, pp, pad, painter) {
-      this.orginal = opt; // will be overwritten by storeDrawOpt call
+      this.original = opt; // will be overwritten by storeDrawOpt call
 
       this.cutg_name = '';
       if (isStr(opt) && (hdim === 2)) {
@@ -517,14 +517,16 @@ class THistDrawOptions {
       }
 
       if (d.check('SCAT=', true)) {
-         this.Scat = true;
+         this.Scat = 1;
          this.ScatCoef = parseFloat(d.part);
          if (!Number.isFinite(this.ScatCoef) || (this.ScatCoef <= 0))
             this.ScatCoef = 1.0;
       }
 
+      if (d.check('SCAT1'))
+         this.Scat = 11;
       if (d.check('SCAT'))
-         this.Scat = true;
+         this.Scat = 1;
 
       if (d.check('TRI', true)) {
          this.Color = false;
@@ -1360,9 +1362,9 @@ class THistPainter extends ObjectPainter {
    }
 
    /** @summary Update histogram object
-     * @param obj - new histogram instance
-     * @param opt - new drawing option (optional)
-     * @return {Boolean} - true if histogram was successfully updated */
+     * @param {object} obj - new histogram instance
+     * @param {string} [opt] - new drawing option
+     * @return {boolean} - true if histogram was successfully updated */
    updateObject(obj, opt) {
       const histo = this.getHisto(),
             fp = this.getFramePainter(),
@@ -1743,7 +1745,6 @@ class THistPainter extends ObjectPainter {
       } else
          statpainter = pp.findPainterFor(stat);
 
-
       if (arg === kOnlyCheck)
          return statpainter?.Enabled || false;
 
@@ -1768,7 +1769,7 @@ class THistPainter extends ObjectPainter {
          statpainter.redraw();
          has_stats = statpainter.Enabled;
       } else {
-         // return promise which will be used to process
+         // return promise
          has_stats = TPavePainter.draw(pp, stat);
       }
 
@@ -2511,7 +2512,7 @@ class THistPainter extends ObjectPainter {
          else
             Object.assign(pal, { fX1NDC: gStyle.fPadLeftMargin, fX2NDC: 1 - gStyle.fPadRightMargin, fY1NDC: 1.005 - gStyle.fPadTopMargin, fY2NDC: 1.045 - gStyle.fPadTopMargin });
 
-         Object.assign(pal.fAxis, { fChopt: '+', fLineSyle: 1, fLineWidth: 1, fTextAngle: 0, fTextAlign: 11 });
+         Object.assign(pal.fAxis, { fChopt: '+', fLineStyle: 1, fLineWidth: 1, fTextAngle: 0, fTextAlign: 11 });
 
          if (this.getDimension() === 2) {
             const zaxis = this.getHisto().fZaxis;
@@ -2628,11 +2629,11 @@ class THistPainter extends ObjectPainter {
                   need_redraw = true;
                   fp.fY2NDC = pal.fY1NDC - 0.01;
                   if (fp.fY1NDC > fp.fY2NDC - 0.1)
-                     fp.fY1NDC = Math.max(0, fp.fXYNDC - 0.1);
+                     fp.fY1NDC = Math.max(0, fp.fY2NDC - 0.1);
                } else if ((pal.fY2NDC < 0.5) && (fp.fY1NDC < pal.fY2NDC)) {
                   need_redraw = true;
                   fp.fY1NDC = pal.fY2NDC + 0.05;
-                  if (fp.fXYNDC < fp.fY1NDC + 0.1)
+                  if (fp.fY2NDC < fp.fY1NDC + 0.1)
                      fp.fY2NDC = Math.min(1, fp.fY1NDC + 0.1);
                }
                if (need_redraw && pad) {
@@ -2743,7 +2744,7 @@ class THistPainter extends ObjectPainter {
                height: funcs?.getFrameHeight() ?? 400
             };
 
-      if (args.use3d && !funcs.size_x3d || !funcs.size_y3d)
+      if (args.use3d && (!funcs.size_x3d || !funcs.size_y3d))
          args.use3d = false;
 
       if (args.cutg) {
@@ -2922,7 +2923,7 @@ class THistPainter extends ObjectPainter {
             res = { low: err, up: err },
             kind = this.getOptions().Poisson || histo.fBinStatErrOpt;
 
-      if (!kind || (histo.fSumw2.fN && histo.fTsumw !== histo.fTsumw2) || (content < 0))
+      if (!kind || (histo.fSumw2?.length && histo.fTsumw !== histo.fTsumw2) || (content < 0))
          return res;
 
       const alpha = (kind === kPoisson2) ? 0.05 : 1 - 0.682689492,
@@ -2974,7 +2975,7 @@ class THistPainter extends ObjectPainter {
       }).then(() => {
          return painter.drawHistTitle();
       }).then(() => {
-         if (!painter.Mode3D && painter.options.AutoZoom)
+         if (!painter.options.Mode3D && painter.options.AutoZoom)
             return painter.autoZoom();
       }).then(() => {
          if (painter.options.Project && !painter.mode3d && isFunc(painter.toggleProjection))

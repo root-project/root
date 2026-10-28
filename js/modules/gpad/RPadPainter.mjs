@@ -100,7 +100,7 @@ class RPadPainter extends RObjectPainter {
    isButton() { return false; }
 
    /** @summary Returns true if it is canvas
-    * @param {Boolean} [is_online = false] - if specified, checked if it is canvas with configured connection to server */
+    * @param {boolean} [is_online = false] - if specified, checked if it is canvas with configured connection to server */
    isCanvas(is_online = false) {
       if (!this.#iscan)
          return false;
@@ -418,7 +418,7 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Call function for each painter in pad
-     * @param {function} userfunc - function to call
+     * @param {Function} userfunc - function to call
      * @param {string} kind - 'all' for all objects (default), 'pads' only pads and sub-pads, 'objects' only for object in current pad
      * @private */
    forEachPainterInPad(userfunc, kind) {
@@ -1533,7 +1533,7 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Search active pad
-     * @return {Object} pad painter for active pad */
+     * @return {object} pad painter for active pad */
    findActivePad() { return null; }
 
    /** @summary Produce image for the pad

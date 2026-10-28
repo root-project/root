@@ -47,7 +47,7 @@ class TSelector {
     * If second parameter not specified, branch name (here 'px') will be used
     * If branch object specified as first parameter and second parameter missing,
     * then member like 'br0', 'br1' and so on will be assigned
-    * @param {string|Object} branch - name of branch (or branch object itself}
+    * @param {string|object} branch - name of branch (or branch object itself}
     * @param {string} [name] - member name in tgtobj where data will be read
     * @param {boolean} [direct] - if only branch without any children should be read */
    addBranch(branch, name, direct) {
@@ -75,26 +75,26 @@ class TSelector {
 
    /** @summary function called during TTree processing
     * @abstract
-    * @param {number} progress - current value between 0 and 1 */
-   ShowProgress(/* progress */) {}
+    * @param {number} _progress - current value between 0 and 1 */
+   ShowProgress(_progress) {}
 
    /** @summary call this function to abort processing */
    Abort() { this._break = -1111; }
 
    /** @summary function called before start processing
     * @abstract
-    * @param {object} tree - tree object */
-   Begin(/* tree */) {}
+    * @param {object} _tree - tree object */
+   Begin(_tree) {}
 
    /** @summary function called when next entry extracted from the tree
     * @abstract
-    * @param {number} entry - read entry number */
-   Process(/* entry */) {}
+    * @param {number} _entry - read entry number */
+   Process(_entry) {}
 
    /** @summary function called at the very end of processing
     * @abstract
-    * @param {boolean} res - true if all data were correctly processed */
-   Terminate(/* res */) {}
+    * @param {boolean} _res - true if all data were correctly processed */
+   Terminate(_res) {}
 
 } // class TSelector
 
@@ -261,7 +261,7 @@ class ArrayIterator {
 /** @summary return TStreamerElement associated with the branch - if any
   * @desc unfortunately, branch.fID is not number of element in streamer info
   * @private */
-function findBrachStreamerElement(branch, file) {
+function findBranchStreamerElement(branch, file) {
    if (!branch || !file || (branch._typename !== clTBranchElement) || (branch.fID < 0) || (branch.fStreamerType < 0))
       return null;
 
@@ -324,7 +324,7 @@ function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = fa
    if (with_clones && branch.fClonesName && ((branch.fType === kClonesNode) || (branch.fType === kSTLNode)))
       return branch.fClonesName;
 
-   const s_elem = findBrachStreamerElement(branch, tree.$file);
+   const s_elem = findBranchStreamerElement(branch, tree.$file);
    if ((branch.fType === kBaseClassNode) && s_elem && (s_elem.fTypeName === kBaseClass))
       return s_elem.fName;
 
@@ -347,7 +347,7 @@ function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = fa
 
 /** @summary Get branch with specified id
   * @desc All sub-branches checked as well
-  * @return {Object} branch
+  * @return {object} branch
   * @private */
 function getTreeBranch(tree, id) {
    if (!Number.isInteger(id))
@@ -369,8 +369,9 @@ function getTreeBranch(tree, id) {
 
 /** @summary Special branch search
   * @desc Name can include extra part, which will be returned in the result
+  * @param {object} tree - tree where branch is searched
   * @param {string} name - name of the branch
-  * @return {Object} with 'branch' and 'rest' members
+  * @return {object} with 'branch' and 'rest' members
   * @private */
 function findBranchComplex(tree, name, lst = undefined, only_search = false) {
    let top_search = false, search = name, res = null;
@@ -441,31 +442,15 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
 
 
 /** @summary Search branch with specified name
+  * @param {object} tree - tree where branch is searched
   * @param {string} name - name of the branch
-  * @return {Object} found branch
+  * @return {object} found branch
   * @private */
 function findBranch(tree, name) {
    const res = findBranchComplex(tree, name, tree.fBranches, true);
    return (!res || res.rest) ? null : res.branch;
 }
 
-
-/** summary Returns number of branches in the TTree
-  * desc Checks also sub-branches in the branches
-  * return {number} number of branches
-  * private
-function getNumBranches(tree) {
-   function count(obj) {
-      if (!obj?.fBranches)
-         return 0;
-      let nchld = 0;
-      obj.fBranches.arr.forEach(sub => { nchld += count(sub); });
-      return obj.fBranches.arr.length + nchld;
-   }
-
-   return count(tree);
-}
-*/
 
 /**
  * @summary object with single variable in TTree::Draw expression
@@ -1230,7 +1215,7 @@ class TDrawSelector extends TSelector {
          res.max = this.hist_args[axisid * 3 + 2];
       } else {
          let is_any = false;
-         for (let i = 1; i < arr.length; ++i) {
+         for (let i = 0; i < arr.length; ++i) {
             const v = arr[i];
             if (!Number.isFinite(v))
                continue;
@@ -1892,6 +1877,7 @@ async function treeProcess(tree, selector, args) {
          read_entry: -1,  // last entry which is already read
          staged_entry: -1, // entry which is staged for reading
          first_readentry: -1, // first entry to read
+         first_entry: 0, // first entry in basket, returned by getBasketEntry
          staged_basket: 0,  // last basket staged for reading
          eindx: 0, // index of last checked entry when selecting baskets
          selected_baskets: [],   // array of selected baskets, used when specific events are selected
@@ -1971,7 +1957,7 @@ async function treeProcess(tree, selector, args) {
          if (!BranchCount2 && (branch.fBranchCount.fStreamerType === kSTL) &&
             ((branch.fStreamerType === kStreamLoop) || (branch.fStreamerType === kOffsetL + kStreamLoop))) {
             // special case when count member from kStreamLoop not assigned as fBranchCount2
-            const elemd = findBrachStreamerElement(branch, handle.file),
+            const elemd = findBranchStreamerElement(branch, handle.file),
                   arrd = branch.fBranchCount.fBranches.arr;
 
             if (elemd?.fCountName && arrd) {
@@ -2036,7 +2022,7 @@ async function treeProcess(tree, selector, args) {
                continue;
             }
 
-            const elem2 = findBrachStreamerElement(br, handle.file);
+            const elem2 = findBranchStreamerElement(br, handle.file);
             if (elem2?.fTypeName === kBaseClass) {
                // if branch is data of base class, map it to original target
                if (br.fTotBytes && !addBranchForReading(br, target_object, target_name, read_mode))
@@ -2144,6 +2130,15 @@ async function treeProcess(tree, selector, args) {
             if (!streamer) {
                elem = null;
                console.warn('not found streamer!');
+            } else if (branch.fType === -1) {
+               // object written by custom streamer of the class, it has version and bytecount
+               member = {
+                  name: target_name,
+                  typename: branch.fClassName,
+                  func(buf, obj) {
+                     obj[this.name] = buf.classStreamer({}, this.typename);
+                  }
+               };
             } else {
                member = {
                   name: target_name,
@@ -2164,7 +2159,7 @@ async function treeProcess(tree, selector, args) {
          // only STL containers here
          // if (!elem.fSTLtype) elem = null;
       } else if (is_brelem && (nb_leaves <= 1)) {
-         elem = findBrachStreamerElement(branch, handle.file);
+         elem = findBranchStreamerElement(branch, handle.file);
 
          // this is basic type - can try to solve problem differently
          if (!elem && branch.fStreamerType && (branch.fStreamerType < 20))
@@ -2889,6 +2884,7 @@ async function treeProcess(tree, selector, args) {
 }
 
 /** @summary implementation of TTree::Draw
+  * @param {object} tree - TTree object
   * @param {object|string} args - different setting or simply draw expression
   * @param {string} args.expr - draw expression
   * @param {string} [args.cut=undefined] - cut expression (also can be part of 'expr' after '::')
@@ -2896,11 +2892,11 @@ async function treeProcess(tree, selector, args) {
   * @param {number} [args.firstentry=0] - first entry to process
   * @param {number} [args.numentries=undefined] - number of entries to process, all by default
   * @param {Array} [args.elist=undefined] - array of entries id to process, all by default
-  * @param {Boolean} [args.dump] - dump values of expression instead creating histogram
-  * @param {Boolean} [args.dump_entries] - if array of entries should be return which match cut condition
-  * @param {Boolean} [args.staged] - staged processing, first apply cut to select entries and then perform drawing for selected entries
+  * @param {boolean} [args.dump] - dump values of expression instead creating histogram
+  * @param {boolean} [args.dump_entries] - if array of entries should be return which match cut condition
+  * @param {boolean} [args.staged] - staged processing, first apply cut to select entries and then perform drawing for selected entries
   * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
-  * @param {function} [args.progress=undefined] - function called during histogram accumulation with obj argument
+  * @param {Function} [args.progress=undefined] - function called during histogram accumulation with obj argument
   * @return {Promise} with produced object */
 async function treeDraw(tree, args) {
    if (isStr(args))
@@ -2993,7 +2989,7 @@ function treeIOTest(tree, args) {
 
       selector.Terminate = function(res) {
          if (!isStr(res))
-            res = (!res || this.fails) ? 'FAIL' : 'ok';
+            res = (!res || this.fail) ? 'FAIL' : 'ok';
 
          names[nbr] = res + ' ' + names[nbr];
       };

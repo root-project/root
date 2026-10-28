@@ -1,7 +1,7 @@
 /**
  * lil-gui
  * https://lil-gui.georgealways.com
- * @version 0.20.0
+ * @version 0.21.0
  * @author George Michael Brower
  * @license MIT
  */
@@ -56,7 +56,7 @@ class Controller {
 		 * @type {HTMLElement}
 		 */
 		this.domElement = document.createElement( elementType );
-		this.domElement.classList.add( 'controller' );
+		this.domElement.classList.add( 'lil-controller' );
 		this.domElement.classList.add( className );
 
 		/**
@@ -64,7 +64,7 @@ class Controller {
 		 * @type {HTMLElement}
 		 */
 		this.$name = document.createElement( 'div' );
-		this.$name.classList.add( 'name' );
+		this.$name.classList.add( 'lil-name' );
 
 		Controller.nextNameID = Controller.nextNameID || 0;
 		this.$name.id = `lil-gui-name-${++Controller.nextNameID}`;
@@ -74,7 +74,7 @@ class Controller {
 		 * @type {HTMLElement}
 		 */
 		this.$widget = document.createElement( 'div' );
-		this.$widget.classList.add( 'widget' );
+		this.$widget.classList.add( 'lil-widget' );
 
 		/**
 		 * The DOM element that receives the disabled attribute when using disable().
@@ -238,7 +238,7 @@ class Controller {
 
 		this._disabled = disabled;
 
-		this.domElement.classList.toggle( 'disabled', disabled );
+		this.domElement.classList.toggle( 'lil-disabled', disabled );
 		this.$disable.toggleAttribute( 'disabled', disabled );
 
 		return this;
@@ -452,7 +452,7 @@ class BooleanController extends Controller {
 
 	constructor( parent, object, property ) {
 
-		super( parent, object, property, 'boolean', 'label' );
+		super( parent, object, property, 'lil-boolean', 'label' );
 
 		this.$input = document.createElement( 'input' );
 		this.$input.setAttribute( 'type', 'checkbox' );
@@ -522,11 +522,7 @@ const INT = {
 
 const ARRAY = {
 	isPrimitive: false,
-
-	// The arrow function is here to appease tree shakers like esbuild or webpack.
-	// See https://esbuild.github.io/api/#tree-shaking
-	match: v => Array.isArray( v ),
-
+	match: v => Array.isArray( v ) || ArrayBuffer.isView( v ),
 	fromHexString( string, target, rgbScale = 1 ) {
 
 		const int = INT.fromHexString( string );
@@ -540,9 +536,9 @@ const ARRAY = {
 
 		rgbScale = 255 / rgbScale;
 
-		const int = ( r * rgbScale ) << 16 ^
-			( g * rgbScale ) << 8 ^
-			( b * rgbScale ) << 0;
+		const int = r * rgbScale << 16 ^
+			 g * rgbScale << 8 ^
+			 b * rgbScale << 0;
 
 		return INT.toHexString( int );
 
@@ -565,9 +561,9 @@ const OBJECT = {
 
 		rgbScale = 255 / rgbScale;
 
-		const int = ( r * rgbScale ) << 16 ^
-			( g * rgbScale ) << 8 ^
-			( b * rgbScale ) << 0;
+		const int = r * rgbScale << 16 ^
+			 g * rgbScale << 8 ^
+			 b * rgbScale << 0;
 
 		return INT.toHexString( int );
 
@@ -584,7 +580,7 @@ class ColorController extends Controller {
 
 	constructor( parent, object, property, rgbScale ) {
 
-		super( parent, object, property, 'color' );
+		super( parent, object, property, 'lil-color' );
 
 		this.$input = document.createElement( 'input' );
 		this.$input.setAttribute( 'type', 'color' );
@@ -597,7 +593,7 @@ class ColorController extends Controller {
 		this.$text.setAttribute( 'aria-labelledby', this.$name.id );
 
 		this.$display = document.createElement( 'div' );
-		this.$display.classList.add( 'display' );
+		this.$display.classList.add( 'lil-display' );
 
 		this.$display.appendChild( this.$input );
 		this.$widget.appendChild( this.$display );
@@ -688,7 +684,7 @@ class FunctionController extends Controller {
 
 	constructor( parent, object, property ) {
 
-		super( parent, object, property, 'function' );
+		super( parent, object, property, 'lil-function' );
 
 		// Buttons are the only case where widget contains name
 		this.$button = document.createElement( 'button' );
@@ -714,7 +710,7 @@ class NumberController extends Controller {
 
 	constructor( parent, object, property, min, max, step ) {
 
-		super( parent, object, property, 'number' );
+		super( parent, object, property, 'lil-number' );
 
 		this._initInput();
 
@@ -957,15 +953,15 @@ class NumberController extends Controller {
 		// ---------------------------------------------------------------------
 
 		this.$slider = document.createElement( 'div' );
-		this.$slider.classList.add( 'slider' );
+		this.$slider.classList.add( 'lil-slider' );
 
 		this.$fill = document.createElement( 'div' );
-		this.$fill.classList.add( 'fill' );
+		this.$fill.classList.add( 'lil-fill' );
 
 		this.$slider.appendChild( this.$fill );
 		this.$widget.insertBefore( this.$slider, this.$input );
 
-		this.domElement.classList.add( 'hasSlider' );
+		this.domElement.classList.add( 'lil-has-slider' );
 
 		// Map clientX to value
 		// ---------------------------------------------------------------------
@@ -1111,10 +1107,10 @@ class NumberController extends Controller {
 
 	_setDraggingStyle( active, axis = 'horizontal' ) {
 		if ( this.$slider ) {
-			this.$slider.classList.toggle( 'active', active );
+			this.$slider.classList.toggle( 'lil-active', active );
 		}
-		document.body.classList.toggle( 'lil-gui-dragging', active );
-		document.body.classList.toggle( `lil-gui-${axis}`, active );
+		document.body.classList.toggle( 'lil-dragging', active );
+		document.body.classList.toggle( `lil-${axis}`, active );
 	}
 
 	_getImplicitStep() {
@@ -1231,13 +1227,13 @@ class OptionController extends Controller {
 
 	constructor( parent, object, property, options ) {
 
-		super( parent, object, property, 'option' );
+		super( parent, object, property, 'lil-option' );
 
 		this.$select = document.createElement( 'select' );
 		this.$select.setAttribute( 'aria-labelledby', this.$name.id );
 
 		this.$display = document.createElement( 'div' );
-		this.$display.classList.add( 'display' );
+		this.$display.classList.add( 'lil-display' );
 
 		this.$select.addEventListener( 'change', () => {
 			this.setValue( this._values[ this.$select.selectedIndex ] );
@@ -1245,11 +1241,11 @@ class OptionController extends Controller {
 		} );
 
 		this.$select.addEventListener( 'focus', () => {
-			this.$display.classList.add( 'focus' );
+			this.$display.classList.add( 'lil-focus' );
 		} );
 
 		this.$select.addEventListener( 'blur', () => {
-			this.$display.classList.remove( 'focus' );
+			this.$display.classList.remove( 'lil-focus' );
 		} );
 
 		this.$widget.appendChild( this.$select );
@@ -1294,7 +1290,7 @@ class StringController extends Controller {
 
 	constructor( parent, object, property ) {
 
-		super( parent, object, property, 'string' );
+		super( parent, object, property, 'lil-string' );
 
 		this.$input = document.createElement( 'input' );
 		this.$input.setAttribute( 'type', 'text' );
@@ -1375,31 +1371,31 @@ var stylesheet = `.lil-gui {
   margin: 0;
   padding: 0;
 }
-.lil-gui.root {
+.lil-gui.lil-root {
   width: var(--width, 245px);
   display: flex;
   flex-direction: column;
   background: var(--background-color);
 }
-.lil-gui.root > .title {
+.lil-gui.lil-root > .lil-title {
   background: var(--title-background-color);
   color: var(--title-text-color);
 }
-.lil-gui.root > .children {
+.lil-gui.lil-root > .lil-children {
   overflow-x: hidden;
   overflow-y: auto;
 }
-.lil-gui.root > .children::-webkit-scrollbar {
+.lil-gui.lil-root > .lil-children::-webkit-scrollbar {
   width: var(--scrollbar-width);
   height: var(--scrollbar-width);
   background: var(--background-color);
 }
-.lil-gui.root > .children::-webkit-scrollbar-thumb {
+.lil-gui.lil-root > .lil-children::-webkit-scrollbar-thumb {
   border-radius: var(--scrollbar-width);
   background: var(--focus-color);
 }
 @media (pointer: coarse) {
-  .lil-gui.allow-touch-styles, .lil-gui.allow-touch-styles .lil-gui {
+  .lil-gui.lil-allow-touch-styles, .lil-gui.lil-allow-touch-styles .lil-gui {
     --widget-height: 28px;
     --padding: 6px;
     --spacing: 6px;
@@ -1411,7 +1407,7 @@ var stylesheet = `.lil-gui {
     --color-input-min-width: 65px;
   }
 }
-.lil-gui.force-touch-styles, .lil-gui.force-touch-styles .lil-gui {
+.lil-gui.lil-force-touch-styles, .lil-gui.lil-force-touch-styles .lil-gui {
   --widget-height: 28px;
   --padding: 6px;
   --spacing: 6px;
@@ -1422,7 +1418,7 @@ var stylesheet = `.lil-gui {
   --slider-input-min-width: 50px;
   --color-input-min-width: 65px;
 }
-.lil-gui.autoPlace {
+.lil-gui.lil-auto-place, .lil-gui.autoPlace {
   max-height: 100%;
   position: fixed;
   top: 0;
@@ -1430,46 +1426,46 @@ var stylesheet = `.lil-gui {
   z-index: 1001;
 }
 
-.lil-gui .controller {
+.lil-controller {
   display: flex;
   align-items: center;
   padding: 0 var(--padding);
   margin: var(--spacing) 0;
 }
-.lil-gui .controller.disabled {
+.lil-controller.lil-disabled {
   opacity: 0.5;
 }
-.lil-gui .controller.disabled, .lil-gui .controller.disabled * {
+.lil-controller.lil-disabled, .lil-controller.lil-disabled * {
   pointer-events: none !important;
 }
-.lil-gui .controller > .name {
+.lil-controller > .lil-name {
   min-width: var(--name-width);
   flex-shrink: 0;
   white-space: pre;
   padding-right: var(--spacing);
   line-height: var(--widget-height);
 }
-.lil-gui .controller .widget {
+.lil-controller .lil-widget {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
   min-height: var(--widget-height);
 }
-.lil-gui .controller.string input {
+.lil-controller.lil-string input {
   color: var(--string-color);
 }
-.lil-gui .controller.boolean {
+.lil-controller.lil-boolean {
   cursor: pointer;
 }
-.lil-gui .controller.color .display {
+.lil-controller.lil-color .lil-display {
   width: 100%;
   height: var(--widget-height);
   border-radius: var(--widget-border-radius);
   position: relative;
 }
 @media (hover: hover) {
-  .lil-gui .controller.color .display:hover:before {
+  .lil-controller.lil-color .lil-display:hover:before {
     content: " ";
     display: block;
     position: absolute;
@@ -1481,26 +1477,26 @@ var stylesheet = `.lil-gui {
     left: 0;
   }
 }
-.lil-gui .controller.color input[type=color] {
+.lil-controller.lil-color input[type=color] {
   opacity: 0;
   width: 100%;
   height: 100%;
   cursor: pointer;
 }
-.lil-gui .controller.color input[type=text] {
+.lil-controller.lil-color input[type=text] {
   margin-left: var(--spacing);
   font-family: var(--font-family-mono);
   min-width: var(--color-input-min-width);
   width: var(--color-input-width);
   flex-shrink: 0;
 }
-.lil-gui .controller.option select {
+.lil-controller.lil-option select {
   opacity: 0;
   position: absolute;
   width: 100%;
   max-width: 100%;
 }
-.lil-gui .controller.option .display {
+.lil-controller.lil-option .lil-display {
   position: relative;
   pointer-events: none;
   border-radius: var(--widget-border-radius);
@@ -1514,14 +1510,14 @@ var stylesheet = `.lil-gui {
   background: var(--widget-color);
 }
 @media (hover: hover) {
-  .lil-gui .controller.option .display.focus {
+  .lil-controller.lil-option .lil-display.lil-focus {
     background: var(--focus-color);
   }
 }
-.lil-gui .controller.option .display.active {
+.lil-controller.lil-option .lil-display.lil-active {
   background: var(--focus-color);
 }
-.lil-gui .controller.option .display:after {
+.lil-controller.lil-option .lil-display:after {
   font-family: "lil-gui";
   content: "↕";
   position: absolute;
@@ -1530,25 +1526,25 @@ var stylesheet = `.lil-gui {
   bottom: 0;
   padding-right: 0.375em;
 }
-.lil-gui .controller.option .widget,
-.lil-gui .controller.option select {
+.lil-controller.lil-option .lil-widget,
+.lil-controller.lil-option select {
   cursor: pointer;
 }
 @media (hover: hover) {
-  .lil-gui .controller.option .widget:hover .display {
+  .lil-controller.lil-option .lil-widget:hover .lil-display {
     background: var(--hover-color);
   }
 }
-.lil-gui .controller.number input {
+.lil-controller.lil-number input {
   color: var(--number-color);
 }
-.lil-gui .controller.number.hasSlider input {
+.lil-controller.lil-number.lil-has-slider input {
   margin-left: var(--spacing);
   width: var(--slider-input-width);
   min-width: var(--slider-input-min-width);
   flex-shrink: 0;
 }
-.lil-gui .controller.number .slider {
+.lil-controller.lil-number .lil-slider {
   width: 100%;
   height: var(--widget-height);
   background: var(--widget-color);
@@ -1559,34 +1555,33 @@ var stylesheet = `.lil-gui {
   touch-action: pan-y;
 }
 @media (hover: hover) {
-  .lil-gui .controller.number .slider:hover {
+  .lil-controller.lil-number .lil-slider:hover {
     background: var(--hover-color);
   }
 }
-.lil-gui .controller.number .slider.active {
+.lil-controller.lil-number .lil-slider.lil-active {
   background: var(--focus-color);
 }
-.lil-gui .controller.number .slider.active .fill {
+.lil-controller.lil-number .lil-slider.lil-active .lil-fill {
   opacity: 0.95;
 }
-.lil-gui .controller.number .fill {
+.lil-controller.lil-number .lil-fill {
   height: 100%;
   border-right: var(--slider-knob-width) solid var(--number-color);
   box-sizing: content-box;
 }
 
-.lil-gui-dragging .lil-gui {
+.lil-dragging .lil-gui {
   --hover-color: var(--widget-color);
 }
-.lil-gui-dragging * {
+.lil-dragging * {
   cursor: ew-resize !important;
 }
-
-.lil-gui-dragging.lil-gui-vertical * {
+.lil-dragging.lil-vertical * {
   cursor: ns-resize !important;
 }
 
-.lil-gui .title {
+.lil-gui .lil-title {
   height: var(--title-height);
   font-weight: 600;
   padding: 0 var(--padding);
@@ -1595,46 +1590,46 @@ var stylesheet = `.lil-gui {
   background: none;
   text-decoration-skip: objects;
 }
-.lil-gui .title:before {
+.lil-gui .lil-title:before {
   font-family: "lil-gui";
   content: "▾";
   padding-right: 2px;
   display: inline-block;
 }
-.lil-gui .title:active {
+.lil-gui .lil-title:active {
   background: var(--title-background-color);
   opacity: 0.75;
 }
 @media (hover: hover) {
-  body:not(.lil-gui-dragging) .lil-gui .title:hover {
+  body:not(.lil-dragging) .lil-gui .lil-title:hover {
     background: var(--title-background-color);
     opacity: 0.85;
   }
-  .lil-gui .title:focus {
+  .lil-gui .lil-title:focus {
     text-decoration: underline var(--focus-color);
   }
 }
-.lil-gui.root > .title:focus {
+.lil-gui.lil-root > .lil-title:focus {
   text-decoration: none !important;
 }
-.lil-gui.closed > .title:before {
+.lil-gui.lil-closed > .lil-title:before {
   content: "▸";
 }
-.lil-gui.closed > .children {
+.lil-gui.lil-closed > .lil-children {
   transform: translateY(-7px);
   opacity: 0;
 }
-.lil-gui.closed:not(.transition) > .children {
+.lil-gui.lil-closed:not(.lil-transition) > .lil-children {
   display: none;
 }
-.lil-gui.transition > .children {
+.lil-gui.lil-transition > .lil-children {
   transition-duration: 300ms;
   transition-property: height, opacity, transform;
   transition-timing-function: cubic-bezier(0.2, 0.6, 0.35, 1);
   overflow: hidden;
   pointer-events: none;
 }
-.lil-gui .children:empty:before {
+.lil-gui .lil-children:empty:before {
   content: "Empty";
   padding: 0 var(--padding);
   margin: var(--spacing) 0;
@@ -1644,28 +1639,28 @@ var stylesheet = `.lil-gui {
   line-height: var(--widget-height);
   opacity: 0.5;
 }
-.lil-gui.root > .children > .lil-gui > .title {
+.lil-gui.lil-root > .lil-children > .lil-gui > .lil-title {
   border: 0 solid var(--widget-color);
   border-width: 1px 0;
   transition: border-color 300ms;
 }
-.lil-gui.root > .children > .lil-gui.closed > .title {
+.lil-gui.lil-root > .lil-children > .lil-gui.lil-closed > .lil-title {
   border-bottom-color: transparent;
 }
-.lil-gui + .controller {
+.lil-gui + .lil-controller {
   border-top: 1px solid var(--widget-color);
   margin-top: 0;
   padding-top: var(--spacing);
 }
-.lil-gui .lil-gui .lil-gui > .title {
+.lil-gui .lil-gui .lil-gui > .lil-title {
   border: none;
 }
-.lil-gui .lil-gui .lil-gui > .children {
+.lil-gui .lil-gui .lil-gui > .lil-children {
   border: none;
   margin-left: var(--folder-indent);
   border-left: 2px solid var(--widget-color);
 }
-.lil-gui .lil-gui .controller {
+.lil-gui .lil-gui .lil-controller {
   border: none;
 }
 
@@ -1731,27 +1726,27 @@ var stylesheet = `.lil-gui {
   width: 100%;
   border: none;
 }
-.lil-gui .controller button {
+.lil-gui .lil-controller button {
   height: var(--widget-height);
   text-transform: none;
   background: var(--widget-color);
   border-radius: var(--widget-border-radius);
 }
 @media (hover: hover) {
-  .lil-gui .controller button:hover {
+  .lil-gui .lil-controller button:hover {
     background: var(--hover-color);
   }
-  .lil-gui .controller button:focus {
+  .lil-gui .lil-controller button:focus {
     box-shadow: inset 0 0 0 1px var(--focus-color);
   }
 }
-.lil-gui .controller button:active {
+.lil-gui .lil-controller button:active {
   background: var(--focus-color);
 }
 
 @font-face {
   font-family: "lil-gui";
-  src: url("data:application/font-woff;charset=utf-8;base64,d09GRgABAAAAAAUsAAsAAAAACJwAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABHU1VCAAABCAAAAH4AAADAImwmYE9TLzIAAAGIAAAAPwAAAGBKqH5SY21hcAAAAcgAAAD0AAACrukyyJBnbHlmAAACvAAAAF8AAACEIZpWH2hlYWQAAAMcAAAAJwAAADZfcj2zaGhlYQAAA0QAAAAYAAAAJAC5AHhobXR4AAADXAAAABAAAABMAZAAAGxvY2EAAANsAAAAFAAAACgCEgIybWF4cAAAA4AAAAAeAAAAIAEfABJuYW1lAAADoAAAASIAAAIK9SUU/XBvc3QAAATEAAAAZgAAAJCTcMc2eJxVjbEOgjAURU+hFRBK1dGRL+ALnAiToyMLEzFpnPz/eAshwSa97517c/MwwJmeB9kwPl+0cf5+uGPZXsqPu4nvZabcSZldZ6kfyWnomFY/eScKqZNWupKJO6kXN3K9uCVoL7iInPr1X5baXs3tjuMqCtzEuagm/AAlzQgPAAB4nGNgYRBlnMDAysDAYM/gBiT5oLQBAwuDJAMDEwMrMwNWEJDmmsJwgCFeXZghBcjlZMgFCzOiKOIFAB71Bb8AeJy1kjFuwkAQRZ+DwRAwBtNQRUGKQ8OdKCAWUhAgKLhIuAsVSpWz5Bbkj3dEgYiUIszqWdpZe+Z7/wB1oCYmIoboiwiLT2WjKl/jscrHfGg/pKdMkyklC5Zs2LEfHYpjcRoPzme9MWWmk3dWbK9ObkWkikOetJ554fWyoEsmdSlt+uR0pCJR34b6t/TVg1SY3sYvdf8vuiKrpyaDXDISiegp17p7579Gp3p++y7HPAiY9pmTibljrr85qSidtlg4+l25GLCaS8e6rRxNBmsnERunKbaOObRz7N72ju5vdAjYpBXHgJylOAVsMseDAPEP8LYoUHicY2BiAAEfhiAGJgZWBgZ7RnFRdnVJELCQlBSRlATJMoLV2DK4glSYs6ubq5vbKrJLSbGrgEmovDuDJVhe3VzcXFwNLCOILB/C4IuQ1xTn5FPilBTj5FPmBAB4WwoqAHicY2BkYGAA4sk1sR/j+W2+MnAzpDBgAyEMQUCSg4EJxAEAwUgFHgB4nGNgZGBgSGFggJMhDIwMqEAYAByHATJ4nGNgAIIUNEwmAABl3AGReJxjYAACIQYlBiMGJ3wQAEcQBEV4nGNgZGBgEGZgY2BiAAEQyQWEDAz/wXwGAAsPATIAAHicXdBNSsNAHAXwl35iA0UQXYnMShfS9GPZA7T7LgIu03SSpkwzYTIt1BN4Ak/gKTyAeCxfw39jZkjymzcvAwmAW/wgwHUEGDb36+jQQ3GXGot79L24jxCP4gHzF/EIr4jEIe7wxhOC3g2TMYy4Q7+Lu/SHuEd/ivt4wJd4wPxbPEKMX3GI5+DJFGaSn4qNzk8mcbKSR6xdXdhSzaOZJGtdapd4vVPbi6rP+cL7TGXOHtXKll4bY1Xl7EGnPtp7Xy2n00zyKLVHfkHBa4IcJ2oD3cgggWvt/V/FbDrUlEUJhTn/0azVWbNTNr0Ens8de1tceK9xZmfB1CPjOmPH4kitmvOubcNpmVTN3oFJyjzCvnmrwhJTzqzVj9jiSX911FjeAAB4nG3HMRKCMBBA0f0giiKi4DU8k0V2GWbIZDOh4PoWWvq6J5V8If9NVNQcaDhyouXMhY4rPTcG7jwYmXhKq8Wz+p762aNaeYXom2n3m2dLTVgsrCgFJ7OTmIkYbwIbC6vIB7WmFfAAAA==") format("woff");
+  src: url("data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAALkAAsAAAAABtQAAAKVAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHFQGYACDMgqBBIEbATYCJAMUCwwABCAFhAoHgQQbHAbIDiUFEYVARAAAYQTVWNmz9MxhEgodq49wYRUFKE8GWNiUBxI2LBRaVnc51U83Gmhs0Q7JXWMiz5eteLwrKwuxHO8VFxUX9UpZBs6pa5ABRwHA+t3UxUnH20EvVknRerzQgX6xC/GH6ZUvTcAjAv122dF28OTqCXrPuyaDER30YBA1xnkVutDDo4oCi71Ca7rrV9xS8dZHbPHefsuwIyCpmT7j+MnjAH5X3984UZoFFuJ0yiZ4XEJFxjagEBeqs+e1iyK8Xf/nOuwF+vVK0ur765+vf7txotUi0m3N0m/84RGSrBCNrh8Ee5GjODjF4gnWP+dJrH/Lk9k4oT6d+gr6g/wssA2j64JJGP6cmx554vUZnpZfn6ZfX2bMwPPrlANsB86/DiHjhl0OP+c87+gaJo/gY084s3HoYL/ZkWHTRfBXvvoHnnkHvngKun4KBE/ede7tvq3/vQOxDXB1/fdNz6XbPdcr0Vhpojj9dG+owuSKFsslCi1tgEjirjXdwMiov2EioadxmqTHUCIwo8NgQaeIasAi0fTYSPTbSmwbMOFduyh9wvBrESGY0MtgRjtgQR8Q1bRPohn2UoCRZf9wyYANMXFeJTysqAe0I4mrherOekFdKMrYvJjLvOIUM9SuwYB5DVZUwwVjJJOaUnZCmcEkIZZrKqNvRGRMvmFZsmhP4VMKCSXBhSqUBxgMS7h0cZvEd71AWkEhGWaeMFcNnpqyJkyXgYL7PQ1MoSq0wDAkRtJIijkZSmqYTiSImfLiSWXIZwhRh3Rug2X0kk1Dgj+Iu43u5p98ghopcpSo0Uyc8SnjlYX59WUeaMoDqmVD2TOWD9a4pCRAzf2ECgwGcrHjPOWY9bNxq/OL3I/QjwEAAAA=") format("woff2");
 }`;
 
 function _injectStyles( cssContent ) {
@@ -1780,7 +1775,7 @@ class GUI {
 	 * @param {boolean} [options.autoPlace=true]
 	 * Adds the GUI to `document.body` and fixes it to the top right of the page.
 	 *
-	 * @param {HTMLElement} [options.container]
+	 * @param {Node} [options.container]
 	 * Adds the GUI to this DOM element. Overrides `autoPlace`.
 	 *
 	 * @param {number} [options.width=245]
@@ -1868,7 +1863,7 @@ class GUI {
 		 * @type {HTMLElement}
 		 */
 		this.$title = document.createElement( 'button' );
-		this.$title.classList.add( 'title' );
+		this.$title.classList.add( 'lil-title' );
 		this.$title.setAttribute( 'aria-expanded', true );
 
 		this.$title.addEventListener( 'click', () => this.openAnimated( this._closed ) );
@@ -1881,7 +1876,7 @@ class GUI {
 		 * @type {HTMLElement}
 		 */
 		this.$children = document.createElement( 'div' );
-		this.$children.classList.add( 'children' );
+		this.$children.classList.add( 'lil-children' );
 
 		this.domElement.appendChild( this.$title );
 		this.domElement.appendChild( this.$children );
@@ -1900,10 +1895,10 @@ class GUI {
 
 		}
 
-		this.domElement.classList.add( 'root' );
+		this.domElement.classList.add( 'lil-root' );
 
 		if ( touchStyles ) {
-			this.domElement.classList.add( 'allow-touch-styles' );
+			this.domElement.classList.add( 'lil-allow-touch-styles' );
 		}
 
 		// Inject stylesheet if we haven't done that yet
@@ -1918,7 +1913,10 @@ class GUI {
 
 		} else if ( autoPlace ) {
 
-			this.domElement.classList.add( 'autoPlace' );
+			// https://github.com/georgealways/lil-gui/pull/154
+			// .autoPlace is deprecated in 0.21.0, but unlikely to conflict with user styles.
+			// keeping it for backwards compatibility.
+			this.domElement.classList.add( 'lil-auto-place', 'autoPlace' );
 			document.body.appendChild( this.domElement );
 
 		}
@@ -2133,7 +2131,7 @@ class GUI {
 		this._setClosed( !open );
 
 		this.$title.setAttribute( 'aria-expanded', !this._closed );
-		this.domElement.classList.toggle( 'closed', this._closed );
+		this.domElement.classList.toggle( 'lil-closed', this._closed );
 
 		return this;
 
@@ -2194,12 +2192,12 @@ class GUI {
 			const initialHeight = this.$children.clientHeight;
 			this.$children.style.height = initialHeight + 'px';
 
-			this.domElement.classList.add( 'transition' );
+			this.domElement.classList.add( 'lil-transition' );
 
 			const onTransitionEnd = e => {
 				if ( e.target !== this.$children ) return;
 				this.$children.style.height = '';
-				this.domElement.classList.remove( 'transition' );
+				this.domElement.classList.remove( 'lil-transition' );
 				this.$children.removeEventListener( 'transitionend', onTransitionEnd );
 			};
 
@@ -2208,7 +2206,7 @@ class GUI {
 			// todo: this is wrong if children's scrollHeight makes for a gui taller than maxHeight
 			const targetHeight = !open ? 0 : this.$children.scrollHeight;
 
-			this.domElement.classList.toggle( 'closed', !open );
+			this.domElement.classList.toggle( 'lil-closed', !open );
 
 			requestAnimationFrame( () => {
 				this.$children.style.height = targetHeight + 'px';
@@ -2282,6 +2280,7 @@ class GUI {
 				controller
 			} );
 		}
+
 	}
 
 	/**
@@ -2320,6 +2319,7 @@ class GUI {
 				controller
 			} );
 		}
+
 	}
 
 	/**

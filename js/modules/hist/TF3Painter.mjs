@@ -1,6 +1,6 @@
 import { createHistogram, setHistogramTitle, kNoStats, settings, clTF3, clTH2F } from '../core.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
-import { proivdeEvalPar } from '../base/func.mjs';
+import { provideEvalPar } from '../base/func.mjs';
 import { produceTAxisLogScale, scanTF1Options } from '../hist/TF1Painter.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { getElementPadPainter } from '../base/ObjectPainter.mjs';
@@ -71,7 +71,7 @@ class TF3Painter extends TH2Painter {
    /** @summary Redraw TF2
      * @private */
    redraw(reason) {
-      if (!this.#use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'logy' || reason === 'zoom')) {
+      if (!this.#use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'logz' || reason === 'zoom')) {
          this.createTF3Histogram(this.#func, this.getHisto());
          this.scanContent();
       }
@@ -144,7 +144,7 @@ class TF3Painter extends TH2Painter {
       if (!this.#use_saved_points) {
          let iserror = false;
 
-         if (!func.evalPar && !proivdeEvalPar(func))
+         if (!func.evalPar && !provideEvalPar(func))
             iserror = true;
 
          ensureBins(npx, npy);

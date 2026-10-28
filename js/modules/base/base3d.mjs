@@ -88,7 +88,7 @@ function getMaterialArgs(color, args) {
 
    if (isStr(color) && (((color[0] === '#') && (color.length === 9)) || (color.indexOf('rgba') >= 0))) {
       const col = d3_color(color);
-      args.color = new THREE.Color(col.r, col.g, col.b);
+      args.color = new THREE.Color(col.r / 255, col.g / 255, col.b / 255);
       args.opacity = col.opacity ?? 1;
       args.transparent = args.opacity < 1;
    } else
@@ -99,7 +99,7 @@ function getMaterialArgs(color, args) {
 function createSVGRenderer(as_is, precision, doc) {
    if (as_is) {
       if (doc !== undefined)
-         globalThis.docuemnt = doc;
+         globalThis.document = doc;
       const rndr = new THREE.SVGRenderer();
       rndr.setPrecision(precision);
       return rndr;
@@ -700,7 +700,7 @@ function afterRender3D(renderer) {
 class TooltipFor3D {
 
    /** @summary constructor
-     * @param {object} dom - DOM element
+     * @param {object} prnt - parent tooltip object
      * @param {object} canvas - canvas for 3D rendering */
    constructor(prnt, canvas) {
       this.tt = null;
@@ -836,6 +836,8 @@ class TooltipFor3D {
   * @private */
 function createOrbitControl(painter, camera, scene, renderer, lookat) {
    const enable_zoom = settings.Zooming && settings.ZoomMouse,
+         enable_wheel = settings.Zooming && settings.ZoomWheel,
+         enable_keys = settings.HandleKeys && !isNodeJs() && (typeof window !== 'undefined'),
          enable_select = isFunc(painter.processMouseClick);
 
    let control = null;
@@ -963,7 +965,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    // assign own handler before creating OrbitControl
 
-   if (settings.Zooming && settings.ZoomWheel)
+   if (enable_wheel)
       renderer.domElement.addEventListener('wheel', control_mousewheel);
 
    if (enable_zoom || enable_select) {
@@ -976,7 +978,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
    control.enableDamping = false;
    control.dampingFactor = 1.0;
    control.enableZoom = true;
-   control.enableKeys = settings.HandleKeys;
+   if (enable_keys)
+      control.listenToKeyEvents(window);
 
    if (lookat) {
       control.target.copy(lookat);
@@ -1002,14 +1005,18 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
    control.mouse_ctxt = { x: 0, y: 0, on: false };
    control.enable_zoom = enable_zoom;
    control.enable_select = enable_select;
+   control.enable_wheel = enable_wheel;
+   control.enable_keys = enable_keys;
 
    control.cleanup = function() {
-      if (settings.Zooming && settings.ZoomWheel)
+      if (this.enable_wheel)
          this.domElement.removeEventListener('wheel', control_mousewheel);
       if (this.enable_zoom || this.enable_select) {
          this.domElement.removeEventListener('pointerdown', control_mousedown);
          this.domElement.removeEventListener('pointerup', control_mouseup);
       }
+      if (this.enable_keys)
+         this.stopListenToKeyEvents();
 
       this.domElement.removeEventListener('click', this.lstn_click);
       this.domElement.removeEventListener('dblclick', this.lstn_dblclick);

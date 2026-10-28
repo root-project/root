@@ -137,8 +137,13 @@ async function treeDrawProgress(obj, final) {
 
 /** @summary Create painter to perform tree drawing on server side
   * @private */
-function createTreePlayer(player) {
+function createTreePlayer(player, tree, rntuple) {
    player.draw_first = true;
+
+   if (tree)
+      player.local_tree = tree;
+   else if (rntuple)
+      player.local_rntuple = rntuple;
 
    player.configureOnline = function(itemname, url, askey, root_version, expr) {
       this.setItemName(itemname, '', this);
@@ -148,13 +153,9 @@ function createTreePlayer(player) {
       this.draw_expr = expr;
    };
 
-   player.configureTree = function(tree) {
-      this.local_tree = tree;
-   };
-
    player.showExtraButtons = function(args) {
       const main = this.selectDom(),
-            numentries = this.local_tree?.fEntries || 0;
+            numentries = this.local_tree?.fEntries || (this.local_rntuple ? 10000000 : 0);
 
       main.select('.treedraw_more').remove(); // remove more button first
 
@@ -171,6 +172,15 @@ function createTreePlayer(player) {
       main.select('.treedraw_number').attr('value', args?.numentries || ''); // .on('change', () => this.performDraw());
       main.select('.treedraw_first').attr('value', args?.firstentry || ''); // .on('change', () => this.performDraw());
       main.select('.treedraw_clear').on('click', () => cleanup(this.drawid));
+
+      const expr = this.getValue('.treedraw_varexp');
+      if (isStr(expr)) {
+         const p = expr.indexOf('::');
+         if (p >= 0) {
+            main.select('.treedraw_varexp').attr('value', expr.slice(0, p));
+            main.select('.treedraw_cut').attr('value', expr.slice(p + 2));
+         }
+      }
    };
 
    player.showPlayer = function(args) {
@@ -182,9 +192,9 @@ function createTreePlayer(player) {
 
       main.html('<div style="display:flex; flex-flow:column; height:100%; width:100%;">' +
                    '<div class="treedraw_buttons" style="flex: 0 1 auto;margin-top:0.2em;">' +
-                      '<button class="treedraw_exe" title="Execute draw expression" style="margin-left:0.5em">Draw</button>' +
+                      '<button class="treedraw_exe" title="Execute draw expression" style="margin-inline:0.5em">Draw</button>' +
                       'Expr:<input class="treedraw_varexp treedraw_varexp_info" style="width:12em;margin-left:5px" title="draw expression"></input>' +
-                      '<label class="treedraw_varexp_info">\u24D8</label>' +
+                      '<label class="treedraw_varexp_info" style="margin-inline:0.5em">\u24D8</label>' +
                      '<button class="treedraw_more">More</button>' +
                    '</div>' +
                    '<div style="flex: 0 1 auto"><hr/></div>' +
@@ -195,13 +205,13 @@ function createTreePlayer(player) {
       // ObjectPainter allow such usage of methods from BasePainter
       this.setTopPainter();
 
-      if (this.local_tree) {
-         main.select('.treedraw_buttons')
-             .attr('title', 'Tree draw player for: ' + this.local_tree.fName);
-      }
+      if (this.local_tree)
+         main.select('.treedraw_buttons').attr('title', 'Tree draw player for: ' + this.local_tree.fName);
+      else if (this.local_rntuple)
+         main.select('.treedraw_buttons').attr('title', 'RNTuple draw player for local rntuple');
       main.select('.treedraw_exe').on('click', () => this.performDraw());
       main.select('.treedraw_varexp')
-          .attr('value', args?.parse_expr || this.draw_expr || 'px:py')
+          .attr('value', args?.parse_expr || args?.expr || this.draw_expr || 'px:py')
           .on('change', () => this.performDraw());
       main.select('.treedraw_varexp_info')
           .attr('title', 'Example of valid draw expressions:\n' +
@@ -232,9 +242,6 @@ function createTreePlayer(player) {
    };
 
    player.performLocalDraw = function() {
-      if (!this.local_tree)
-         return;
-
       const frame = this.selectDom(),
             args = { expr: this.getValue('.treedraw_varexp') };
 
@@ -260,13 +267,23 @@ function createTreePlayer(player) {
             delete args.firstentry;
       }
 
+      const json = JSON.stringify(args);
+
+      // prevent execute same expression twice because of some extra browser events
+      if (this._last_args_json && this._last_args_json === json)
+         return;
+      this._last_args_json = json;
+
       cleanup(this.drawid);
 
       args.drawid = this.drawid;
 
       args.progress = treeDrawProgress.bind(args);
 
-      treeDraw(this.local_tree, args).then(obj => args.progress(obj, true));
+      if (this.local_tree)
+         treeDraw(this.local_tree, args).then(obj => args.progress(obj, true));
+      else if (this.local_rntuple && isFunc(this.rntupleDraw))
+         this.rntupleDraw(this.local_rntuple, args).then(obj => args.progress(obj, true));
    };
 
    player.getDrawOpt = function() {
@@ -278,7 +295,7 @@ function createTreePlayer(player) {
    };
 
    player.performDraw = function() {
-      if (this.local_tree)
+      if (this.local_tree || this.local_rntuple)
          return this.performLocalDraw();
 
       const frame = this.selectDom();
@@ -471,8 +488,7 @@ async function drawTree(dom, obj, opt) {
 
    if (args.player) {
       painter = new ObjectPainter(dom, obj, opt);
-      createTreePlayer(painter);
-      painter.configureTree(tree);
+      createTreePlayer(painter, tree);
       painter.showPlayer(args);
       args.drawid = painter.drawid;
    } else
@@ -496,4 +512,4 @@ async function drawTree(dom, obj, opt) {
    return pr.then(res => args.progress(res, true));
 }
 
-export { drawTree, drawTreePlayer, drawTreePlayerKey, drawLeafPlayer, treeDrawProgress };
+export { drawTree, drawTreePlayer, drawTreePlayerKey, drawLeafPlayer, treeDrawProgress, createTreePlayer };

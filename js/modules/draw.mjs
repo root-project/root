@@ -136,7 +136,7 @@ const drawFuncs = { lst: [
    { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump;dumpall', noinspect: true, transform: true },
    { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump;dumpall', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true, transform: true },
    { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump;dumpall', ctrl: 'dump', ignore_online: true, always_draw: true, transform: true },
-   { name: 'ROOT::RNTuple', icon: 'img_tree', get_expand: () => import('./rntuple.mjs').then(h => h.tupleHierarchy), draw: () => import('./draw/RNTuple.mjs').then(h => h.drawRNTuple), dflt: 'expand', pm: true, transform: true },
+   { name: 'ROOT::RNTuple', icon: 'img_tree', get_expand: () => import('./rntuple.mjs').then(h => h.tupleHierarchy), draw: () => import('./draw/RNTuple.mjs').then(h => h.drawRNTuple), dflt: 'expand', opt: 'player', pm: true, transform: true },
    { name: 'ROOT::RNTupleField', icon: 'img_leaf', draw: () => import('./draw/RNTuple.mjs').then(h => h.drawRNTuple), opt: ';dump;dumpall', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true, transform: true },
    { name: clTList, icon: 'img_list', draw: () => import_h().then(h => h.drawList), get_expand: () => import_h().then(h => h.listHierarchy), dflt: 'expand' },
    { name: clTHashList, sameas: clTList },
@@ -170,11 +170,11 @@ const drawFuncs = { lst: [
 
 /** @summary Register draw function for the class
   * @param {object} args - arguments
-  * @param {string|regexp} args.name - class name or regexp pattern or '*'
-  * @param {function} [args.func] - draw function
+  * @param {string|RegExp} args.name - class name or regexp pattern or '*'
+  * @param {Function} [args.func] - draw function
   * @param {string} [args.sameas] - let behave same as specified class
-  * @param {function} [args.draw] - async function to load draw function
-  * @param {function} [args.class] - async function to load painter class with static draw function
+  * @param {Function} [args.draw] - async function to load draw function
+  * @param {Function} [args.class] - async function to load painter class with static draw function
   * @param {boolean} [args.direct] - if true, function is just Redraw() method of ObjectPainter
   * @param {string} [args.opt] - list of supported draw options (separated with semicolon) like 'col;scat;'
   * @param {string} [args.icon] - icon name shown for the class in hierarchy browser

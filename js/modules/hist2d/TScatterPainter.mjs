@@ -1,5 +1,6 @@
 import { clTPaletteAxis, isFunc, create, kNoZoom } from '../core.mjs';
 import { getColorPalette } from '../base/colors.mjs';
+import { floatToString } from '../base/BasePainter.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
 import { HistContour } from './THistPainter.mjs';
@@ -118,6 +119,55 @@ class TScatterPainter extends TGraphPainter {
       this.#color_palette = undefined;
    }
 
+   /** @summary Fill tooltip lines */
+   getTooltips(bin) {
+      const lines = super.getTooltips(bin),
+            scatter = this.getObject();
+
+      if (scatter.fColor && scatter.fColor[bin.indx] !== undefined)
+         lines.push('col = ' + floatToString(scatter.fColor[bin.indx], '6.4g'));
+      if (scatter.fSize && scatter.fSize[bin.indx] !== undefined)
+         lines.push('size = ' + floatToString(scatter.fSize[bin.indx], '6.4g'));
+
+      return lines;
+   }
+
+   /** @summary Extract tooltop for scatter */
+   extractTooltip(pnt) {
+      if (!pnt)
+         return null;
+      const fp = this.get_fp(),
+            funcs = fp.getGrFuncs(),
+            bins = this._getBins();
+      let findbin = null, best_dist2 = 400;
+      for (let i = 0; i < bins.length; ++i) {
+         const bin = bins[i],
+               grx = funcs.grx(bin.x),
+               gry = funcs.gry(bin.y),
+               dist2 = (grx - pnt.x) ** 2 + (gry - pnt.y) ** 2;
+         if (dist2 < best_dist2) {
+            best_dist2 = dist2;
+            findbin = bin;
+         }
+      }
+      if (findbin === null)
+         return null;
+
+      const scatter = this.getGraph();
+      return {
+         bin: findbin.indx,
+         name: scatter.fName, title: scatter.fTitle,
+         x: funcs.grx(findbin.x),
+         gry1: funcs.gry(findbin.y),
+         gry2: funcs.gry(findbin.y),
+         radius: findbin.r,
+         color: 'blue',
+         lines: this.getTooltips(findbin),
+         usepath: true
+      };
+   }
+
+
    /** @summary Actual drawing of TScatter */
    async drawGraph() {
       const fp = this.get_fp(),
@@ -192,6 +242,8 @@ class TScatterPainter extends TGraphPainter {
          g.append('svg:path')
           .attr('d', handle.create(grx, gry))
           .call(handle.func);
+
+         pnt.r = handle.getFullSize() / 2;
       }
 
       return this;

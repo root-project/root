@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2023 yWorks GmbH
+ * Copyright (c) 2015-2026 yWorks GmbH
  * Copyright (c) 2013-2015 by Vitaly Puzrin
  *
  *
@@ -40,7 +40,7 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
-/* global Reflect, Promise */
+/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
 
 var extendStatics = function(d, b) {
     extendStatics = Object.setPrototypeOf ||
@@ -79,12 +79,12 @@ function __awaiter(thisArg, _arguments, P, generator) {
 }
 
 function __generator(thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -105,6 +105,11 @@ function __generator(thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 }
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
 
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types */
 var RGBColor = /** @class */ (function () {
@@ -397,7 +402,7 @@ var RGBColor = /** @class */ (function () {
                 listItem.appendChild(listItemValue);
                 xml.appendChild(listItem);
             }
-            catch (e) { }
+            catch (_a) { }
         }
         return xml;
     };
@@ -888,12 +893,12 @@ var svgNamespaceURI = 'http://www.w3.org/2000/svg';
 function toPixels(value, pdfFontSize) {
     var match;
     // em
-    match = value && value.toString().match(/^([\-0-9.]+)em$/);
+    match = value && value.toString().match(/^([-0-9.]+)em$/);
     if (match) {
         return parseFloat(match[1]) * pdfFontSize;
     }
     // pixels
-    match = value && value.toString().match(/^([\-0-9.]+)(px|)$/);
+    match = value && value.toString().match(/^([-0-9.]+)(px|)$/);
     if (match) {
         return parseFloat(match[1]);
     }
@@ -905,7 +910,7 @@ function mapAlignmentBaseline(value) {
 
 function parseFloats(str) {
     var floats = [];
-    var regex = /[+-]?(?:(?:\d+\.?\d*)|(?:\d*\.?\d+))(?:[eE][+-]?\d+)?/g;
+    var regex = /[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/g;
     var match;
     while ((match = regex.exec(str))) {
         floats.push(parseFloat(match[0]));
@@ -931,7 +936,7 @@ function parseColor(colorString, contextColors) {
     if (contextColors && colorString.toLowerCase() === 'context-fill') {
         return contextColors.contextFill || new RGBColor('rgb(0,0,0)');
     }
-    var match = /\s*rgba\(((?:[^,\)]*,){3}[^,\)]*)\)\s*/.exec(colorString);
+    var match = /\s*rgba\(((?:[^,)]*,){3}[^,)]*)\)\s*/.exec(colorString);
     if (match) {
         var floats = parseFloats(match[1]);
         var color = new RGBColor('rgb(' + floats.slice(0, 3).join(',') + ')');
@@ -1753,7 +1758,8 @@ var PatternFill = /** @class */ (function () {
                         if (this.pattern.element.hasAttribute('patternContentUnits') &&
                             this.pattern.element.getAttribute('patternContentUnits').toLowerCase() ===
                                 'objectboundingbox') {
-                            bBox || (bBox = forNode.getBoundingBox(context));
+                            if (!bBox)
+                                bBox = forNode.getBoundingBox(context);
                             patternContentUnitsMatrix = context.pdf.Matrix(bBox[2], 0, 0, bBox[3], 0, 0);
                             fillBBox = patternData.boundingBox || this.pattern.getBoundingBox(context);
                             x = fillBBox[0] / bBox[0] || 0;
@@ -1999,8 +2005,10 @@ function applyAttributes(childContext, parentContext, node) {
     }
     if (hasFillOpacity || hasStrokeOpacity) {
         var gState = {};
-        hasFillOpacity && (gState['opacity'] = fillOpacity);
-        hasStrokeOpacity && (gState['stroke-opacity'] = strokeOpacity);
+        if (hasFillOpacity)
+            gState['opacity'] = fillOpacity;
+        if (hasStrokeOpacity)
+            gState['stroke-opacity'] = strokeOpacity;
         childContext.pdf.setGState(new GState(gState));
     }
     if (childContext.attributeState.fill &&
@@ -2397,9 +2405,12 @@ var GeometryNode = /** @class */ (function (_super) {
         var markerEnd = getAttribute(this.element, context.styleSheets, 'marker-end');
         var markers = new MarkerList();
         if (markerStart || markerMid || markerEnd) {
-            markerEnd && (markerEnd = iri(markerEnd));
-            markerStart && (markerStart = iri(markerStart));
-            markerMid && (markerMid = iri(markerMid));
+            if (markerEnd)
+                markerEnd = iri(markerEnd);
+            if (markerStart)
+                markerStart = iri(markerStart);
+            if (markerMid)
+                markerMid = iri(markerMid);
             var list_1 = path.segments;
             var prevAngle = [1, 0], curAngle = void 0, first = false, firstAngle = [1, 0], last_1 = false;
             var _loop_1 = function (i) {
@@ -2421,12 +2432,14 @@ var GeometryNode = /** @class */ (function (_super) {
                 var prev = list_1[i - 1] || null;
                 if (prev instanceof MoveTo || prev instanceof LineTo || prev instanceof CurveTo) {
                     if (curr instanceof CurveTo) {
-                        hasStartMarker &&
+                        if (hasStartMarker) {
                             markers.addMarker(new Marker(markerStart, [prev.x, prev.y], 
                             // @ts-ignore
                             getAngle(last_1 ? [last_1.x, last_1.y] : [prev.x, prev.y], [curr.x1, curr.y1]), true));
-                        hasEndMarker &&
+                        }
+                        if (hasEndMarker) {
                             markers.addMarker(new Marker(markerEnd, [curr.x, curr.y], getAngle([curr.x2, curr.y2], [curr.x, curr.y])));
+                        }
                         if (hasMidMarker) {
                             curAngle = getDirectionVector([prev.x, prev.y], [curr.x1, curr.y1]);
                             curAngle =
@@ -2442,8 +2455,9 @@ var GeometryNode = /** @class */ (function (_super) {
                             var angle = last_1 ? getDirectionVector([last_1.x, last_1.y], [curr.x, curr.y]) : curAngle;
                             markers.addMarker(new Marker(markerStart, [prev.x, prev.y], Math.atan2(angle[1], angle[0]), true));
                         }
-                        hasEndMarker &&
+                        if (hasEndMarker) {
                             markers.addMarker(new Marker(markerEnd, [curr.x, curr.y], Math.atan2(curAngle[1], curAngle[0])));
+                        }
                         if (hasMidMarker) {
                             var angle = curr instanceof MoveTo
                                 ? prevAngle
@@ -3101,7 +3115,7 @@ var TextNode = /** @class */ (function (_super) {
     };
     TextNode.prototype.renderCore = function (context) {
         return __awaiter(this, void 0, void 0, function () {
-            var xOffset, charSpace, lengthAdjustment, pdfFontSize, textX, textY, dx, dy, textLength, visibility, tSpanCount, textContent, trimmedText, transformedText, defaultSize, shouldPreserve, alignmentBaseline, textRenderingMode, textChunks, currentTextSegment, initialSpace, trimRight, r, totalDefaultWidth_1, totalLength_1;
+            var xOffset, charSpace, lengthAdjustment, pdfFontSize, textX, textY, dx, dy, textLength, visibility, tSpanCount, textContent, trimmedText, transformedText, defaultSize, shouldPreserve, alignmentBaseline, textRenderingMode, textBottom, textChunks, currentTextSegment, initialSpace, trimRight, r, totalDefaultWidth_1, totalLength_1;
             return __generator(this, function (_a) {
                 context.pdf.saveGraphicsState();
                 xOffset = 0;
@@ -3122,7 +3136,8 @@ var TextNode = /** @class */ (function (_super) {
                     xOffset = context.textMeasure.getTextOffset(transformedText, context.attributeState);
                     if (textLength > 0) {
                         defaultSize = context.textMeasure.measureTextWidth(transformedText, context.attributeState);
-                        shouldPreserve = context.attributeState.xmlSpace === 'preserve' || context.attributeState.whiteSpace === 'pre';
+                        shouldPreserve = context.attributeState.xmlSpace === 'preserve' ||
+                            context.attributeState.whiteSpace === 'pre';
                         if (!shouldPreserve && textContent.match(/^\s/)) {
                             lengthAdjustment = 0;
                         }
@@ -3137,9 +3152,10 @@ var TextNode = /** @class */ (function (_super) {
                             renderingMode: textRenderingMode === 'fill' ? void 0 : textRenderingMode,
                             charSpace: charSpace === 0 ? void 0 : charSpace
                         });
+                        textBottom = textY + dy + 0.1 * pdfFontSize;
                         this.boundingBox = [
                             textX + dx - xOffset,
-                            textY + dy + 0.1 * pdfFontSize,
+                            textBottom - pdfFontSize,
                             context.textMeasure.measureTextWidth(transformedText, context.attributeState),
                             pdfFontSize
                         ];
@@ -3797,7 +3813,7 @@ function requireA2c () {
 
 	  // rounding errors, e.g. -1.0000000000000002 can screw up this
 	  if (dot >  1.0) { dot =  1.0; }
-	  if (dot < -1.0) { dot = -1.0; }
+	  if (dot < -1) { dot = -1; }
 
 	  return sign * Math.acos(dot);
 	}
@@ -4827,19 +4843,30 @@ var PathNode = /** @class */ (function (_super) {
 var dataUriRegex = /^\s*data:(([^/,;]+\/[^/,;]+)(?:;([^,;=]+=[^,;=]+))?)?(?:;(base64))?,((?:.|\s)*)$/i;
 var ImageNode = /** @class */ (function (_super) {
     __extends(ImageNode, _super);
-    function ImageNode(element, children) {
+    function ImageNode(element, children, context) {
         var _this = _super.call(this, element, children) || this;
         _this.imageLoadingPromise = null;
         _this.imageUrl = _this.element.getAttribute('xlink:href') || _this.element.getAttribute('href');
-        if (_this.imageUrl) {
+        if (_this.imageUrl &&
+            ImageNode.shouldLoadImage(_this.imageUrl, context.svg2pdfParameters.loadImages)) {
             // start loading the image as early as possible
             _this.imageLoadingPromise = ImageNode.fetchImageData(_this.imageUrl);
         }
         return _this;
     }
+    ImageNode.shouldLoadImage = function (imageUrl, loadImages) {
+        if (loadImages === false) {
+            return false;
+        }
+        if (loadImages instanceof RegExp) {
+            loadImages.lastIndex = 0;
+            return loadImages.test(imageUrl);
+        }
+        return true;
+    };
     ImageNode.prototype.renderCore = function (context) {
         return __awaiter(this, void 0, void 0, function () {
-            var width, height, x, y, _a, data, format, parser, svgElement, preserveAspectRatio, idMap, svgnode, dataUri, _b, imgWidth, imgHeight, viewBox, transform, e_1;
+            var width, height, x, y, _a, data, format, parser, svgElement, preserveAspectRatio, idMap, nestedContext, svgNode, dataUri, _b, imgWidth, imgHeight, viewBox, transform, e_1;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -4868,14 +4895,15 @@ var ImageNode = /** @class */ (function (_super) {
                         svgElement.setAttribute('width', String(width));
                         svgElement.setAttribute('height', String(height));
                         idMap = {};
-                        svgnode = parse(svgElement, idMap);
-                        return [4 /*yield*/, svgnode.render(new Context(context.pdf, {
-                                refsHandler: new ReferencesHandler(idMap),
-                                styleSheets: context.styleSheets,
-                                viewport: new Viewport(width, height),
-                                svg2pdfParameters: context.svg2pdfParameters,
-                                textMeasure: context.textMeasure
-                            }))];
+                        nestedContext = new Context(context.pdf, {
+                            refsHandler: new ReferencesHandler(idMap),
+                            styleSheets: context.styleSheets,
+                            viewport: new Viewport(width, height),
+                            svg2pdfParameters: context.svg2pdfParameters,
+                            textMeasure: context.textMeasure
+                        });
+                        svgNode = parse(svgElement, nestedContext, idMap);
+                        return [4 /*yield*/, svgNode.render(nestedContext)];
                     case 2:
                         _c.sent();
                         return [2 /*return*/];
@@ -4895,9 +4923,9 @@ var ImageNode = /** @class */ (function (_super) {
                         return [3 /*break*/, 7];
                     case 6:
                         e_1 = _c.sent();
-                        typeof console === 'object' &&
-                            console.warn &&
+                        if (typeof console === 'object' && console.warn) {
                             console.warn("Could not load image ".concat(this.imageUrl, ". \n").concat(e_1));
+                        }
                         return [3 /*break*/, 7];
                     case 7: return [2 /*return*/];
                 }
@@ -5249,10 +5277,7 @@ var Svg = /** @class */ (function (_super) {
                         if (!context.withinUse &&
                             getAttribute(this.element, context.styleSheets, 'overflow') !== 'visible') {
                             // establish a new viewport
-                            context.pdf
-                                .rect(x, y, width, height)
-                                .clip()
-                                .discardPath();
+                            context.pdf.rect(x, y, width, height).clip().discardPath();
                         }
                         return [4 /*yield*/, _super.prototype.render.call(this, context.clone({
                                 transform: context.pdf.unitMatrix,
@@ -5479,7 +5504,8 @@ var ClipPath = /** @class */ (function (_super) {
                         _i++;
                         return [3 /*break*/, 1];
                     case 4:
-                        hasClipRuleFromFirstChild = this.children.length > 0 && !!getAttribute(this.children[0].element, context.styleSheets, 'clip-rule');
+                        hasClipRuleFromFirstChild = this.children.length > 0 &&
+                            !!getAttribute(this.children[0].element, context.styleSheets, 'clip-rule');
                         clipRule = hasClipRuleFromFirstChild
                             ? this.getClipRuleAttr(this.children[0].element, context.styleSheets)
                             : this.getClipRuleAttr(this.element, context.styleSheets);
@@ -5504,10 +5530,10 @@ var ClipPath = /** @class */ (function (_super) {
     return ClipPath;
 }(NonRenderedNode));
 
-function parse(node, idMap) {
+function parse(node, context, idMap) {
     var svgnode;
     var children = [];
-    forEachChild(node, function (i, n) { return children.push(parse(n, idMap)); });
+    forEachChild(node, function (i, n) { return children.push(parse(n, context, idMap)); });
     switch (node.tagName.toLowerCase()) {
         case 'a':
             svgnode = new Anchor(node, children);
@@ -5528,7 +5554,7 @@ function parse(node, idMap) {
             svgnode = new LinearGradient(node, children);
             break;
         case 'image':
-            svgnode = new ImageNode(node, children);
+            svgnode = new ImageNode(node, children, context);
             break;
         case 'line':
             svgnode = new Line(node, children);
@@ -5672,9 +5698,12 @@ var StyleSheets = /** @class */ (function () {
         }
     };
     StyleSheets.splitSelectorAtCommas = function (selectorText) {
+        if (selectorText.trim().length === 0) {
+            return [];
+        }
         var initialRegex = /,|["']/g;
-        var closingDoubleQuotesRegex = /[^\\]["]/g;
-        var closingSingleQuotesRegex = /[^\\][']/g;
+        var closingDoubleQuotesRegex = /\\[\s\S]|"/g;
+        var closingSingleQuotesRegex = /\\[\s\S]|'/g;
         var parts = [];
         var state = 'initial';
         var match;
@@ -5705,11 +5734,15 @@ var StyleSheets = /** @class */ (function () {
                 case 'withinQuotes':
                     closingQuotesRegex.lastIndex = i;
                     match = closingQuotesRegex.exec(selectorText);
-                    if (match) {
-                        i = closingQuotesRegex.lastIndex;
-                        state = 'initial';
+                    if (!match) {
+                        i = selectorText.length;
                     }
-                    // else this is a syntax error - omit the last part...
+                    else {
+                        i = closingQuotesRegex.lastIndex;
+                        if (match[0].length === 1) {
+                            state = 'initial';
+                        }
+                    }
                     break;
             }
         }
@@ -5900,7 +5933,7 @@ function svg2pdf(element_1, pdf_1) {
                     pdf.setFont(context.attributeState.fontFamily);
                     // correct for a jsPDF-instance measurement unit that differs from `pt`
                     pdf.setFontSize(context.attributeState.fontSize * pdf.internal.scaleFactor);
-                    node = parse(element, idMap);
+                    node = parse(element, context, idMap);
                     return [4 /*yield*/, node.render(context)];
                 case 2:
                     _d.sent();

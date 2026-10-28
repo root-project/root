@@ -106,11 +106,11 @@ class TH1Painter extends THistPainter {
          }
       }
 
-      // account overflow/underflow bins
-      if (is_profile)
-         hsum += histo.fBinEntries[0] + histo.fBinEntries[this.nbinsx + 1];
-      else
-         hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
+      // account underflow and overflow bin, check if already was included
+      if (imin >= 0)
+         hsum += is_profile ? histo.fBinEntries[0] : histo.getBinContent(0);
+      if (imax <= this.nbinsx)
+         hsum += is_profile ? histo.fBinEntries[this.nbinsx + 1] : histo.getBinContent(this.nbinsx + 1);
 
       this.stat_entries = hsum;
 
@@ -776,7 +776,7 @@ class TH1Painter extends THistPainter {
          for (i = left; i <= right; ++i) {
             x = xaxis.GetBinLowEdge(i + 1);
 
-            if (this.logx && (x <= 0))
+            if (funcs.logx && (x <= 0))
                continue;
 
             grx = Math.round(funcs.grx(x));

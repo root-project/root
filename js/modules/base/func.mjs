@@ -4,7 +4,7 @@ import * as jsroot_math from './math.mjs';
 /** @summary Assign `evalPar` function for TF1 object
   * @private */
 
-function proivdeEvalPar(obj, check_save) {
+function provideEvalPar(obj, check_save) {
    obj.$math = jsroot_math;
 
    let _func = obj.fTitle, isformula = false, pprefix = '[';
@@ -46,11 +46,13 @@ function proivdeEvalPar(obj, check_save) {
                 .replace(/\b(TMath::ACos)\b/g, 'Math.acos')
                 .replace(/\b(TMath::Atan)\b/g, 'Math.atan')
                 .replace(/\b(TMath::ATan2)\b/g, 'Math.atan2')
+                .replace(/\b(TMath::Sqrt)\b/g, 'Math.sqrt')
                 .replace(/\b(sin|SIN|TMath::Sin)\b/g, 'Math.sin')
                 .replace(/\b(cos|COS|TMath::Cos)\b/g, 'Math.cos')
                 .replace(/\b(tan|TAN|TMath::Tan)\b/g, 'Math.tan')
                 .replace(/\b(exp|EXP|TMath::Exp)\b/g, 'Math.exp')
                 .replace(/\b(log|LOG|TMath::Log)\b/g, 'Math.log')
+                .replace(/\b(TMath::Log2)\b/g, 'Math.log2')
                 .replace(/\b(log10|LOG10|TMath::Log10)\b/g, 'Math.log10')
                 .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
                 .replace(/\b(pi|PI)\b/g, 'Math.PI')
@@ -150,7 +152,7 @@ function getTF1Value(func, x, skip_eval = undefined) {
 
    if (!skip_eval && !func.evalPar) {
       try {
-         if (!proivdeEvalPar(func))
+         if (!provideEvalPar(func))
             iserr = true;
       } catch {
          iserr = true;
@@ -166,8 +168,8 @@ function getTF1Value(func, x, skip_eval = undefined) {
       }
    }
 
-   const np = func.fSave.length - 3;
+   const np = (func.fSave?.length ?? 0) - 3;
    return (np < 2) || (func.fSave[np + 1] === func.fSave[np + 2]) ? 0 : _getTF1Save(func, x);
 }
 
-export { proivdeEvalPar, getTF1Value, _getTF1Save };
+export { provideEvalPar, getTF1Value, _getTF1Save };

@@ -16,7 +16,7 @@ const root_line_styles = [
 class TAttLineHandler {
 
    /** @summary constructor
-     * @param {object} attr - attributes, see {@link TAttLineHandler#setArgs} */
+     * @param {object} args - attributes or arguments of {@link TAttLineHandler#setArgs} */
    constructor(args) {
       this.func = this.apply.bind(this);
       this.used = true;
@@ -59,7 +59,7 @@ class TAttLineHandler {
          if (Math.abs(this.width) > 99) {
             // exclusion graph
             this.excl_side = (this.width < 0) ? -1 : 1;
-            this.excl_width = Math.floor(this.width / 100) * 5;
+            this.excl_width = Math.floor(Math.abs(this.width) / 100) * 5;
             this.width = Math.abs(this.width % 100); // line width
          }
       }
@@ -75,7 +75,7 @@ class TAttLineHandler {
          this.excl_width = width;
       if (side !== undefined) {
          this.excl_side = side;
-         if ((this.excl_width === 0) && this.excl_side)
+         if (side && !this.excl_width)
             this.excl_width = 20;
       }
       this.changed = true;

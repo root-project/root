@@ -202,7 +202,7 @@ function produceNormal(x1, y1, z1, x2, y2, z2, x3, y3, z3) {
 class GeometryCreator {
 
    /** @summary Constructor
-     * @param numfaces - number of faces */
+     * @param {number} numfaces - number of faces */
    constructor(numfaces) {
       this.nfaces = numfaces;
       this.indx = 0;
@@ -961,8 +961,8 @@ function createTubeBuffer(shape, faces_limit) {
 
    const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces),
          calcZ = (shape._typename !== clTGeoCtub) ? null : (x, y, z) => {
-            const arr = (z < 0) ? shape.fNlow : shape.fNhigh;
-            return ((z < 0) ? -shape.fDz : shape.fDz) - (x * arr[0] + y * arr[1]) / arr[2];
+            const arr = z < 0 ? shape.fNlow : shape.fNhigh;
+            return (z < 0 ? -shape.fDz : shape.fDz) - (x * arr[0] + y * arr[1]) / arr[2];
          };
 
    // create outer/inner tube
@@ -974,7 +974,7 @@ function createTubeBuffer(shape, faces_limit) {
       let nxy = 1, nz = 0;
 
       if (R[0] !== R[1]) {
-         const angle = Math.atan2((R[1] - R[0]), 2 * shape.fDZ);
+         const angle = Math.atan2((R[1] - R[0]), 2 * shape.fDz);
          nxy = Math.cos(angle);
          nz = Math.sin(angle);
       }
@@ -988,10 +988,10 @@ function createTubeBuffer(shape, faces_limit) {
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(
-            R[0] * _cos[seg + d1], R[0] * _sin[seg + d1], shape.fDZ,
-            R[1] * _cos[seg + d1], R[1] * _sin[seg + d1], -shape.fDZ,
-            R[1] * _cos[seg + d2], R[1] * _sin[seg + d2], -shape.fDZ,
-            R[0] * _cos[seg + d2], R[0] * _sin[seg + d2], shape.fDZ,
+            R[0] * _cos[seg + d1], R[0] * _sin[seg + d1], shape.fDz,
+            R[1] * _cos[seg + d1], R[1] * _sin[seg + d1], -shape.fDz,
+            R[1] * _cos[seg + d2], R[1] * _sin[seg + d2], -shape.fDz,
+            R[0] * _cos[seg + d2], R[0] * _sin[seg + d2], shape.fDz,
             reduce);
 
          if (calcZ)
@@ -1015,10 +1015,10 @@ function createTubeBuffer(shape, faces_limit) {
          creator.startPolygon(side === 0);
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(
-            innerR[side] * _cos[seg + d1], innerR[side] * _sin[seg + d1], sign * shape.fDZ,
-            outerR[side] * _cos[seg + d1], outerR[side] * _sin[seg + d1], sign * shape.fDZ,
-            outerR[side] * _cos[seg + d2], outerR[side] * _sin[seg + d2], sign * shape.fDZ,
-            innerR[side] * _cos[seg + d2], innerR[side] * _sin[seg + d2], sign * shape.fDZ,
+            innerR[side] * _cos[seg + d1], innerR[side] * _sin[seg + d1], sign * shape.fDz,
+            outerR[side] * _cos[seg + d1], outerR[side] * _sin[seg + d1], sign * shape.fDz,
+            outerR[side] * _cos[seg + d2], outerR[side] * _sin[seg + d2], sign * shape.fDz,
+            innerR[side] * _cos[seg + d2], innerR[side] * _sin[seg + d2], sign * shape.fDz,
             reduce);
          if (calcZ) {
             creator.recalcZ(calcZ);
@@ -1032,19 +1032,19 @@ function createTubeBuffer(shape, faces_limit) {
 
    // create cut surfaces
    if (thetaLength < 360) {
-      creator.addFace4(innerR[1] * _cos[0], innerR[1] * _sin[0], -shape.fDZ,
-                       outerR[1] * _cos[0], outerR[1] * _sin[0], -shape.fDZ,
-                       outerR[0] * _cos[0], outerR[0] * _sin[0], shape.fDZ,
-                       innerR[0] * _cos[0], innerR[0] * _sin[0], shape.fDZ,
+      creator.addFace4(innerR[1] * _cos[0], innerR[1] * _sin[0], -shape.fDz,
+                       outerR[1] * _cos[0], outerR[1] * _sin[0], -shape.fDz,
+                       outerR[0] * _cos[0], outerR[0] * _sin[0], shape.fDz,
+                       innerR[0] * _cos[0], innerR[0] * _sin[0], shape.fDz,
                        (outerR[0] === innerR[0]) ? 2 : ((innerR[1] === outerR[1]) ? 1 : 0));
       if (calcZ)
          creator.recalcZ(calcZ);
       creator.calcNormal();
 
-      creator.addFace4(innerR[0] * _cos[radiusSegments], innerR[0] * _sin[radiusSegments], shape.fDZ,
-                       outerR[0] * _cos[radiusSegments], outerR[0] * _sin[radiusSegments], shape.fDZ,
-                       outerR[1] * _cos[radiusSegments], outerR[1] * _sin[radiusSegments], -shape.fDZ,
-                       innerR[1] * _cos[radiusSegments], innerR[1] * _sin[radiusSegments], -shape.fDZ,
+      creator.addFace4(innerR[0] * _cos[radiusSegments], innerR[0] * _sin[radiusSegments], shape.fDz,
+                       outerR[0] * _cos[radiusSegments], outerR[0] * _sin[radiusSegments], shape.fDz,
+                       outerR[1] * _cos[radiusSegments], outerR[1] * _sin[radiusSegments], -shape.fDz,
+                       innerR[1] * _cos[radiusSegments], innerR[1] * _sin[radiusSegments], -shape.fDz,
                        (outerR[0] === innerR[0]) ? 1 : ((innerR[1] === outerR[1]) ? 2 : 0));
 
       if (calcZ)
@@ -1747,7 +1747,7 @@ function getNodeMatrix(kind, node) {
             typ = finder._typename;
       if (finder.fBits & kPatternReflected)
          geoWarn(`Unsupported reflected pattern ${typ}`);
-      if (typ.indexOf('TGeoPattern'))
+      if (typ.indexOf('TGeoPattern') !== 0)
          geoWarn(`Abnormal pattern type ${typ}`);
       const part = typ.slice(11);
       matrix = new THREE.Matrix4();
@@ -1798,7 +1798,7 @@ function getNodeMatrix(kind, node) {
 }
 
 /** @summary Returns number of faces for provided geometry
-  * @param geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
+  * @param {object} geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
   * @private */
 function numGeometryFaces(geom) {
    if (!geom)
@@ -1816,7 +1816,7 @@ function numGeometryFaces(geom) {
 }
 
 /** @summary Returns number of faces for provided geometry
-  * @param {Object} geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
+  * @param {object} geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
   * @private */
 function numGeometryVertices(geom) {
    if (!geom)
@@ -2028,8 +2028,8 @@ function projectGeometry(geom, matrix, projection, position = 0, flippedMesh = f
 }
 
 /** @summary Creates geometry model for the provided shape
-  * @param {Object} shape - instance of TGeoShape object
-  * @param {Number} limit - defines return value, see details
+  * @param {object} shape - instance of TGeoShape object
+  * @param {number} limit - defines return value, see details
   * @desc
   *  - if limit === 0 returns BufferGeometry
   *  - if limit < 0 just returns estimated number of faces
@@ -2172,7 +2172,7 @@ function createServerGeometry(rd, nsegm) {
 }
 
 /** @summary Provides info about geo object, used for tooltip info
-  * @param {Object} obj - any kind of TGeo-related object like shape or node or volume
+  * @param {object} obj - any kind of TGeo-related object like shape or node or volume
   * @private */
 function provideObjectInfo(obj) {
    let info = [], shape = null;
@@ -2208,9 +2208,9 @@ function provideObjectInfo(obj) {
          info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`);
          break;
       case clTGeoTrd2:
-         info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+         info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy2)}`); // no break
       case clTGeoTrd1:
-         info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`);
+         info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx2)}`);
          break;
       case clTGeoSphere:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
@@ -2367,7 +2367,7 @@ function createMaterial(cfg, args0) {
       args.color = 'red';
    args.side = THREE.FrontSide;
    args.transparent = args.opacity < 1;
-   args.depthWrite = args.opactity === 1;
+   args.depthWrite = args.opacity === 1;
 
    let material;
 
@@ -2411,7 +2411,7 @@ function createMaterial(cfg, args0) {
 }
 
 /** @summary Compares two stacks.
-  * @return {Number} 0 if same, -1 when stack1 < stack2, +1 when stack1 > stack2
+  * @return {number} 0 if same, -1 when stack1 < stack2, +1 when stack1 > stack2
   * @private */
 function compare_stacks(stack1, stack2) {
    if (stack1 === stack2)
@@ -2509,8 +2509,8 @@ function createFlippedGeom(geom) {
 /** @summary Create flipped mesh for the shape
   * @desc When transformation matrix includes one or several inversion of axis,
   * one should inverse geometry object, otherwise three.js cannot correctly draw it
-  * @param {Object} shape - TGeoShape object
-  * @param {Object} material - material
+  * @param {object} shape - TGeoShape object
+  * @param {object} material - material
   * @private */
 function createFlippedMesh(shape, material) {
    if (shape.geomZ === undefined)
@@ -2853,7 +2853,7 @@ class ClonedNodes {
 
    /** @summary Assign only visibility flags, extracted with getVisibleFlags */
    setVisibleFlags(flags) {
-      if (!this.nodes || !flags || !flags.length !== this.nodes.length)
+      if (!this.nodes || (flags?.length !== this.nodes.length))
          return 0;
 
       let res = 0;
@@ -3547,6 +3547,7 @@ class ClonedNodes {
 
                instance.entries.forEach(entry => {
                   const info = this.resolveStack(entry.stack, true);
+                  // FIXME: probably here must be > 0
                   if (info.matrix.determinant() > -0.9) {
                      arr1.push(info.matrix);
                      stacks1.push(entry.stack);
@@ -3735,7 +3736,7 @@ class ClonedNodes {
             else
                camVol = 0;
 
-            camFact = maxVol / ((camVol > 0) ? (camVol > 0) : minVol);
+            camFact = maxVol / (camVol > 0 ? camVol : minVol);
          }
       }
 
@@ -4030,10 +4031,10 @@ function cleanupShape(shape) {
 
 /** @summary Set rendering order for created hierarchy
   * @desc depending from provided method sort differently objects
-  * @param toplevel - top element
-  * @param origin - camera position used to provide sorting
-  * @param method - name of sorting method like 'pnt', 'ray', 'size', 'dflt'  */
-function produceRenderOrder(toplevel, origin, method, clones) {
+  * @param {object} toplevel - top element
+  * @param {object} origin - camera position used to provide sorting
+  * @param {string} method - name of sorting method like 'pnt', 'ray', 'size', 'dflt'  */
+function produceRenderOrder(toplevel, origin, method /* , clones */) {
    const raycast = new THREE.Raycaster();
 
    function setdefaults(top) {
@@ -4146,9 +4147,6 @@ function produceRenderOrder(toplevel, origin, method, clones) {
                }
 
                intersects = unique;
-
-               if ((intersects.indexOf(mesh) < 0) && (ntry > 0))
-                  console.log(`MISS ${clones?.resolveStack(mesh.stack)?.name}`);
 
                if ((intersects.indexOf(mesh) >= 0) || (ntry > 0))
                   break;

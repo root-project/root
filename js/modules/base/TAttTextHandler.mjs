@@ -19,7 +19,7 @@ function calcTextSize(sz, sz0, fact, pp) {
 class TAttTextHandler {
 
    /** @summary constructor
-     * @param {object} attr - attributes, see {@link TAttTextHandler#setArgs} */
+     * @param {object} args - attributes or arguments of {@link TAttTextHandler#setArgs} */
    constructor(args) {
       this.used = true;
       if (args._typename && (args.fTextFont !== undefined))

@@ -6,6 +6,8 @@ import { createMenu } from './menu.mjs';
 import { detectRightButton, injectStyle } from './utils.mjs';
 
 
+const kBrFloat = 'float', kBrFix = 'fix';
+
 /** @summary Current hierarchy painter
   * @desc Instance of {@link HierarchyPainter} object
   * @private */
@@ -57,14 +59,14 @@ class MDIDisplay extends BasePainter {
    }
 
    /** @summary method dedicated to iterate over existing panels
-     * @param {function} userfunc is called with arguments (frame)
+     * @param {Function} userfunc is called with arguments (frame)
      * @param {boolean} only_visible let select only visible frames */
    forEachFrame(userfunc, only_visible) {
       console.warn(`forEachFrame not implemented in MDIDisplay ${typeof userfunc} ${only_visible}`);
    }
 
    /** @summary method dedicated to iterate over existing panels
-     * @param {function} userfunc is called with arguments (painter, frame)
+     * @param {Function} userfunc is called with arguments (painter, frame)
      * @param {boolean} only_visible let select only visible frames */
    forEachPainter(userfunc, only_visible) {
       this.forEachFrame(frame => {
@@ -342,7 +344,7 @@ class GridDisplay extends MDIDisplay {
             group.node = elem.node();
 
          if (handle.vertical)
-            elem.style('float', 'bottom').style('height', group.size.toFixed(2) + '%').style('width', '100%');
+            elem.style('height', group.size.toFixed(2) + '%').style('width', '100%');
          else
             elem.style('float', 'left').style('width', group.size.toFixed(2) + '%').style('height', '100%');
 
@@ -1214,7 +1216,7 @@ class BatchDisplay extends MDIDisplay {
 
       const frame =
          this.jsdom_body.append('div')
-             .style('visible', 'hidden')
+             .style('visibility', 'hidden')
              .attr('width', this.width).attr('height', this.height)
              .style('width', this.width + 'px').style('height', this.height + 'px')
              .attr('id', 'jsroot_batch_' + this.frames.length)
@@ -1453,7 +1455,7 @@ class BrowserLayout {
       if (!keep_status)
          this.createStatusLine(0, 'delete');
 
-      this.toggleBrowserVisisbility(true);
+      this.toggleBrowserVisibility(true);
 
       if (keep_status) {
          // try to delete only content, not status
@@ -1481,7 +1483,7 @@ class BrowserLayout {
       const main = this.browser(),
             elem = !main.empty() ? main.select('.jsroot_browser_title') : null;
       if (elem)
-         elem.text(title).style('cursor', this.browser_kind === 'flex' ? 'move' : null);
+         elem.text(title).style('cursor', this.browser_kind === kBrFloat ? 'move' : null);
       return elem;
    }
 
@@ -1490,7 +1492,7 @@ class BrowserLayout {
    toggleKind(browser_kind) {
       if (this.browser_visible !== 'changing') {
          if (browser_kind === this.browser_kind)
-            this.toggleBrowserVisisbility();
+            this.toggleBrowserVisibility();
          else
             this.toggleBrowserKind(browser_kind);
       }
@@ -1672,7 +1674,7 @@ class BrowserLayout {
    }
 
    /** @summary Toggle browser visibility */
-   toggleBrowserVisisbility(fast_close) {
+   toggleBrowserVisibility(fast_close) {
       if (!this.gui_div || isStr(this.browser_visible))
          return;
 
@@ -1728,7 +1730,7 @@ class BrowserLayout {
          drawing.transition().style('left', tgt_drawing).duration(_duration).on('end', this.checkResize.bind(this));
       }
 
-      if (this.status_layout && (this.browser_kind === 'fix')) {
+      if (this.status_layout && (this.browser_kind === kBrFix)) {
          main.select('.jsroot_h_separator').transition().style('left', tgt_drawing).duration(_duration);
          main.select('.jsroot_status_area').transition().style('left', tgt_drawing).duration(_duration);
       }
@@ -1736,7 +1738,7 @@ class BrowserLayout {
 
    /** @summary Adjust browser size */
    adjustBrowserSize(onlycheckmax) {
-      if (!this.gui_div || (this.browser_kind !== 'float'))
+      if (!this.gui_div || (this.browser_kind !== kBrFloat))
          return;
 
       const main = this.browser();
@@ -1790,20 +1792,20 @@ class BrowserLayout {
       if (!kind) {
          if (!this.browser_kind)
             return null;
-         kind = (this.browser_kind === 'float') ? 'fix' : 'float';
+         kind = (this.browser_kind === kBrFloat) ? kBrFix : kBrFloat;
       }
 
       const main = this.browser(),
             area = main.select('.jsroot_browser_area');
 
-      if (this.browser_kind === 'float') {
+      if (this.browser_kind === kBrFloat) {
          area.style('bottom', '0px')
              .style('top', '0px')
              .style('width', '')
              .style('height', '')
              .classed('jsroot_float_browser', false)
              .style('border', null);
-      } else if (this.browser_kind === 'fix') {
+      } else if (this.browser_kind === kBrFix) {
          main.select('.jsroot_v_separator').remove();
          area.style('left', '0px');
          this.drawing().style('left', '0px'); // reset size
@@ -1815,10 +1817,10 @@ class BrowserLayout {
       this.browser_kind = kind;
       this.browser_visible = true;
 
-      main.select('.jsroot_browser_resize').style('display', (kind === 'float') ? null : 'none');
-      main.select('.jsroot_browser_title').style('cursor', (kind === 'float') ? 'move' : null);
+      main.select('.jsroot_browser_resize').style('display', kind === kBrFloat ? null : 'none');
+      main.select('.jsroot_browser_title').style('cursor', kind === kBrFloat ? 'move' : null);
 
-      if (kind === 'float') {
+      if (kind === kBrFloat) {
          area.style('bottom', '40px')
              .classed('jsroot_float_browser', true)
              .style('border', 'solid 3px white');
@@ -1899,4 +1901,4 @@ class BrowserLayout {
 } // class BrowserLayout
 
 export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay,
-         BrowserLayout, getHPainter, setHPainter };
+         BrowserLayout, getHPainter, setHPainter, kBrFix, kBrFloat };

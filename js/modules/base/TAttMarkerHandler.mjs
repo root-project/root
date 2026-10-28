@@ -27,7 +27,7 @@ const root_50_67 = [2, 3, 5, 4, 25, 26, 27, 28, 30, 32, 35, 36, 37, 38, 40, 42, 
 class TAttMarkerHandler {
 
    /** @summary constructor
-     * @param {object} args - attributes, see {@link TAttMarkerHandler#setArgs} for details */
+     * @param {object} args - attributes or arguments of {@link TAttMarkerHandler#setArgs} */
    constructor(args) {
       this.x0 = this.y0 = 0;
       this.color = 'black';
@@ -173,6 +173,9 @@ class TAttMarkerHandler {
             s34 = (size * 3 / 4).toFixed(this.ndig);
 
       switch (shape) {
+         case 0: // empty
+            this.marker = '';
+            break;
          case 1: // dot
             this.marker = 'h1';
             break;
@@ -289,7 +292,7 @@ class TAttMarkerHandler {
    getFillColor() { return this.fill ? this.color : 'none'; }
 
    /** @summary returns true if marker attributes will produce empty (invisible) output */
-   empty() { return (this.color === 'none') || (!this.fill && !this.stroke); }
+   empty() { return (this.color === 'none') || (!this.fill && !this.stroke) || !this.marker; }
 
    /** @summary Apply marker styles to created element */
    apply(selection) {

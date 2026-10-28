@@ -3,67 +3,7 @@
  * Copyright 2010-2025 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-import { ExtrudeGeometry, ShapePath, Ray, Plane, MathUtils, Vector3, Controls, MOUSE, TOUCH, Quaternion, Spherical, Vector2, OrthographicCamera, BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial, UniformsUtils, WebGLRenderTarget, HalfFloatType, NoBlending, Timer, Color, AdditiveBlending, MeshBasicMaterial, Vector4, Box3, Matrix4, Frustum, Matrix3, DoubleSide, Box2, SRGBColorSpace, Camera } from './three.mjs';
-
-/**
- * A class for generating text as a single geometry. It is constructed by providing a string of text, and a set of
- * parameters consisting of a loaded font and extrude settings.
- *
- * See the {@link FontLoader} page for additional details.
- *
- * `TextGeometry` uses [typeface.json](http://gero3.github.io/facetype.js/) generated fonts.
- * Some existing fonts can be found located in `/examples/fonts`.
- *
- * ```js
- * const loader = new FontLoader();
- * const font = await loader.loadAsync( 'fonts/helvetiker_regular.typeface.json' );
- * const geometry = new TextGeometry( 'Hello three.js!', {
- * 	font: font,
- * 	size: 80,
- * 	depth: 5,
- * 	curveSegments: 12
- * } );
- * ```
- *
- * @augments ExtrudeGeometry
- * @three_import import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
- */
-class TextGeometry extends ExtrudeGeometry {
-
-	/**
-	 * Constructs a new text geometry.
-	 *
-	 * @param {string} text - The text that should be transformed into a geometry.
-	 * @param {TextGeometry~Options} [parameters] - The text settings.
-	 */
-	constructor( text, parameters = {} ) {
-
-		const font = parameters.font;
-
-		if ( font === undefined ) {
-
-			super(); // generate default extrude geometry
-
-		} else {
-
-			const shapes = font.generateShapes( text, parameters.size, parameters.direction );
-
-			// defaults
-
-			if ( parameters.depth === undefined ) parameters.depth = 50;
-			if ( parameters.bevelThickness === undefined ) parameters.bevelThickness = 10;
-			if ( parameters.bevelSize === undefined ) parameters.bevelSize = 8;
-			if ( parameters.bevelEnabled === undefined ) parameters.bevelEnabled = false;
-
-			super( shapes, parameters );
-
-		}
-
-		this.type = 'TextGeometry';
-
-	}
-
-}
+import { ShapePath, ExtrudeGeometry, Ray, Plane, MathUtils, Vector3, Controls, MOUSE, TOUCH, Quaternion, Spherical, Vector2, OrthographicCamera, BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial, UniformsUtils, WebGLRenderTarget, HalfFloatType, NoBlending, Timer, Color, AdditiveBlending, MeshBasicMaterial, Vector4, Box3, Matrix4, Frustum, Matrix3, DoubleSide, Box2, SRGBColorSpace, Camera } from './three.mjs';
 
 /**
  * Class representing a font.
@@ -248,6 +188,82 @@ function createPath( char, scale, offsetX, offsetY, data ) {
 	}
 
 	return { offsetX: glyph.ha * scale, path: path };
+
+}
+
+/**
+ * A class for generating text as a single geometry. It is constructed by providing a string of text, and a set of
+ * parameters consisting of a loaded font and extrude settings.
+ *
+ * See the {@link FontLoader} page for additional details.
+ *
+ * `TextGeometry` uses [typeface.json](http://gero3.github.io/facetype.js/) generated fonts.
+ * Some existing fonts can be found located in `/examples/fonts`.
+ *
+ * ```js
+ * const loader = new FontLoader();
+ * const font = await loader.loadAsync( 'fonts/helvetiker_regular.typeface.json' );
+ * const geometry = new TextGeometry( 'Hello three.js!', {
+ * 	font: font,
+ * 	size: 80,
+ * 	depth: 5,
+ * 	curveSegments: 12
+ * } );
+ * ```
+ *
+ * @augments ExtrudeGeometry
+ * @three_import import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+ */
+class TextGeometry extends ExtrudeGeometry {
+
+	/**
+	 * Constructs a new text geometry.
+	 *
+	 * @param {string} text - The text that should be transformed into a geometry.
+	 * @param {TextGeometry~Options} [parameters] - The text settings.
+	 */
+	constructor( text, parameters = {} ) {
+
+		const font = parameters.font;
+
+		if ( font === undefined ) {
+
+			super(); // generate default extrude geometry
+
+		} else {
+
+			const shapes = font.generateShapes( text, parameters.size, parameters.direction );
+
+			// defaults
+
+			if ( parameters.depth === undefined ) parameters.depth = 50;
+			if ( parameters.bevelThickness === undefined ) parameters.bevelThickness = 10;
+			if ( parameters.bevelSize === undefined ) parameters.bevelSize = 8;
+			if ( parameters.bevelEnabled === undefined ) parameters.bevelEnabled = false;
+
+			super( shapes, parameters );
+
+		}
+
+		this.type = 'TextGeometry';
+
+	}
+
+	toJSON() {
+
+		const data = super.toJSON();
+		return data;
+
+	}
+
+	static fromJSON( data ) {
+
+		const options = data.options;
+
+		options.font = new Font( options.font.data );
+		return new TextGeometry( options.text, options );
+
+	}
 
 }
 
@@ -745,11 +761,13 @@ class OrbitControls extends Controls {
 		const document = this.domElement.getRootNode(); // offscreen canvas compatibility
 		document.addEventListener( 'keydown', this._interceptControlDown, { passive: true, capture: true } );
 
-		this.domElement.style.touchAction = 'none'; // disable touch scroll
+		this.domElement.style.touchAction = 'none'; // Disable touch scroll
 
 	}
 
 	disconnect() {
+
+		this.state = _STATE.NONE;
 
 		this.domElement.removeEventListener( 'pointerdown', this._onPointerDown );
 		this.domElement.ownerDocument.removeEventListener( 'pointermove', this._onPointerMove );
@@ -763,8 +781,15 @@ class OrbitControls extends Controls {
 
 		const document = this.domElement.getRootNode(); // offscreen canvas compatibility
 		document.removeEventListener( 'keydown', this._interceptControlDown, { capture: true } );
+		document.removeEventListener( 'keyup', this._interceptControlUp, { capture: true } );
 
-		this.domElement.style.touchAction = 'auto';
+		this._controlActive = false;
+
+		this._pointers.length = 0;
+		this._pointerPositions = {};
+
+		this.domElement.style.touchAction = ''; // Restore touch scroll
+		this.domElement.style.cursor = 'auto';
 
 	}
 
@@ -3915,20 +3940,20 @@ class UnrealBloomPass extends Pass {
 		let resx = Math.round( this.resolution.x / 2 );
 		let resy = Math.round( this.resolution.y / 2 );
 
-		this.renderTargetBright = new WebGLRenderTarget( resx, resy, { type: HalfFloatType } );
+		this.renderTargetBright = new WebGLRenderTarget( resx, resy, { type: HalfFloatType, depthBuffer: false } );
 		this.renderTargetBright.texture.name = 'UnrealBloomPass.bright';
 		this.renderTargetBright.texture.generateMipmaps = false;
 
 		for ( let i = 0; i < this.nMips; i ++ ) {
 
-			const renderTargetHorizontal = new WebGLRenderTarget( resx, resy, { type: HalfFloatType } );
+			const renderTargetHorizontal = new WebGLRenderTarget( resx, resy, { type: HalfFloatType, depthBuffer: false } );
 
 			renderTargetHorizontal.texture.name = 'UnrealBloomPass.h' + i;
 			renderTargetHorizontal.texture.generateMipmaps = false;
 
 			this.renderTargetsHorizontal.push( renderTargetHorizontal );
 
-			const renderTargetVertical = new WebGLRenderTarget( resx, resy, { type: HalfFloatType } );
+			const renderTargetVertical = new WebGLRenderTarget( resx, resy, { type: HalfFloatType, depthBuffer: false } );
 
 			renderTargetVertical.texture.name = 'UnrealBloomPass.v' + i;
 			renderTargetVertical.texture.generateMipmaps = false;
@@ -4200,17 +4225,35 @@ class UnrealBloomPass extends Pass {
 
 		}
 
+		// merge adjacent taps into single bilinear fetches (linear sampling)
+
+		const offsets = [];
+		const weights = [];
+
+		for ( let i = 1; i < kernelRadius; i += 2 ) {
+
+			const wa = coefficients[ i ];
+			const wb = ( i + 1 < kernelRadius ) ? coefficients[ i + 1 ] : 0;
+			const w = wa + wb;
+
+			offsets.push( ( i * wa + ( i + 1 ) * wb ) / w );
+			weights.push( w );
+
+		}
+
 		return new ShaderMaterial( {
 
 			defines: {
-				'KERNEL_RADIUS': kernelRadius
+				'KERNEL_PAIRS': offsets.length
 			},
 
 			uniforms: {
 				'colorTexture': { value: null },
 				'invSize': { value: new Vector2( 0.5, 0.5 ) }, // inverse texture size
 				'direction': { value: new Vector2( 0.5, 0.5 ) },
-				'gaussianCoefficients': { value: coefficients } // precomputed Gaussian coefficients
+				'centerWeight': { value: coefficients[ 0 ] },
+				'gaussianOffsets': { value: offsets },
+				'gaussianWeights': { value: weights }
 			},
 
 			vertexShader: /* glsl */`
@@ -4233,21 +4276,20 @@ class UnrealBloomPass extends Pass {
 				uniform sampler2D colorTexture;
 				uniform vec2 invSize;
 				uniform vec2 direction;
-				uniform float gaussianCoefficients[KERNEL_RADIUS];
+				uniform float centerWeight;
+				uniform float gaussianOffsets[KERNEL_PAIRS];
+				uniform float gaussianWeights[KERNEL_PAIRS];
 
 				void main() {
 
-					float weightSum = gaussianCoefficients[0];
-					vec3 diffuseSum = texture2D( colorTexture, vUv ).rgb * weightSum;
+					vec3 diffuseSum = texture2D( colorTexture, vUv ).rgb * centerWeight;
 
-					for ( int i = 1; i < KERNEL_RADIUS; i ++ ) {
+					for ( int i = 0; i < KERNEL_PAIRS; i ++ ) {
 
-						float x = float( i );
-						float w = gaussianCoefficients[i];
-						vec2 uvOffset = direction * invSize * x;
+						vec2 uvOffset = direction * invSize * gaussianOffsets[ i ];
 						vec3 sample1 = texture2D( colorTexture, vUv + uvOffset ).rgb;
 						vec3 sample2 = texture2D( colorTexture, vUv - uvOffset ).rgb;
-						diffuseSum += ( sample1 + sample2 ) * w;
+						diffuseSum += ( sample1 + sample2 ) * gaussianWeights[ i ];
 
 					}
 
@@ -4634,18 +4676,18 @@ class Projector {
 				const v2 = _vertexPool[ b ];
 				const v3 = _vertexPool[ c ];
 
-				// Get homogeneous clip space positions (before perspective divide)
-				_clipPos1.copy( v1.positionWorld ).applyMatrix4( _viewProjectionMatrix );
-				_clipPos2.copy( v2.positionWorld ).applyMatrix4( _viewProjectionMatrix );
-				_clipPos3.copy( v3.positionWorld ).applyMatrix4( _viewProjectionMatrix );
+				// Derive near/far clip distances from NDC z and stored clip-space w
+				// (projectVertex already computed positionScreen = clipPos / w, with w preserved)
+				const w1 = v1.positionScreen.w;
+				const w2 = v2.positionScreen.w;
+				const w3 = v3.positionScreen.w;
 
-				// Check if triangle needs clipping
-				const nearDist1 = _clipPos1.z + _clipPos1.w;
-				const nearDist2 = _clipPos2.z + _clipPos2.w;
-				const nearDist3 = _clipPos3.z + _clipPos3.w;
-				const farDist1 = - _clipPos1.z + _clipPos1.w;
-				const farDist2 = - _clipPos2.z + _clipPos2.w;
-				const farDist3 = - _clipPos3.z + _clipPos3.w;
+				const nearDist1 = w1 * ( v1.positionScreen.z + 1 );
+				const nearDist2 = w2 * ( v2.positionScreen.z + 1 );
+				const nearDist3 = w3 * ( v3.positionScreen.z + 1 );
+				const farDist1 = w1 * ( 1 - v1.positionScreen.z );
+				const farDist2 = w2 * ( 1 - v2.positionScreen.z );
+				const farDist3 = w3 * ( 1 - v3.positionScreen.z );
 
 				// Check if completely outside
 				if ( ( nearDist1 < 0 && nearDist2 < 0 && nearDist3 < 0 ) ||
@@ -4709,7 +4751,10 @@ class Projector {
 
 				}
 
-				// Triangle needs clipping
+				// Triangle needs clipping - reconstruct clip-space positions from NDC + w
+				_clipPos1.set( v1.positionScreen.x * w1, v1.positionScreen.y * w1, v1.positionScreen.z * w1, w1 );
+				_clipPos2.set( v2.positionScreen.x * w2, v2.positionScreen.y * w2, v2.positionScreen.z * w2, w2 );
+				_clipPos3.set( v3.positionScreen.x * w3, v3.positionScreen.y * w3, v3.positionScreen.z * w3, w3 );
 				_clipInputVertices[ 0 ] = _clipPos1;
 				_clipInputVertices[ 1 ] = _clipPos2;
 				_clipInputVertices[ 2 ] = _clipPos3;
@@ -4901,7 +4946,7 @@ class Projector {
 
 			if ( sortObjects === true ) {
 
-				painterSortStable( _renderData.objects, 0, _renderData.objects.length );
+				_renderData.objects.sort( painterSort );
 
 			}
 
@@ -5167,7 +5212,7 @@ class Projector {
 
 			if ( sortElements === true ) {
 
-				painterSortStable( _renderData.elements, 0, _renderData.elements.length );
+				_renderData.elements.sort( painterSort );
 
 			}
 
@@ -5306,29 +5351,6 @@ class Projector {
 			} else {
 
 				return 0;
-
-			}
-
-		}
-
-		function painterSortStable( array, start, length ) {
-
-			// A stable insertion sort for sorting render items
-			// This avoids the GC overhead of Array.prototype.sort()
-
-			for ( let i = start + 1; i < start + length; i ++ ) {
-
-				const item = array[ i ];
-				let j = i - 1;
-
-				while ( j >= start && painterSort( array[ j ], item ) > 0 ) {
-
-					array[ j + 1 ] = array[ j ];
-					j --;
-
-				}
-
-				array[ j + 1 ] = item;
 
 			}
 
@@ -5742,29 +5764,6 @@ class SVGRenderer {
 
 		}
 
-		function arraySortStable( array, start, length ) {
-
-			// A stable insertion sort for sorting the render list
-			// This avoids the GC overhead of Array.prototype.sort()
-
-			for ( let i = start + 1; i < start + length; i ++ ) {
-
-				const item = array[ i ];
-				let j = i - 1;
-
-				while ( j >= start && renderSort( array[ j ], item ) > 0 ) {
-
-					array[ j + 1 ] = array[ j ];
-					j --;
-
-				}
-
-				array[ j + 1 ] = item;
-
-			}
-
-		}
-
 		/**
 		 * Performs a manual clear with the defined clear color.
 		 */
@@ -5858,9 +5857,13 @@ class SVGRenderer {
 
 			} );
 
-			if ( this.sortElements ) {
+			_renderListPool.length = _renderListCount;
 
-				arraySortStable( _renderListPool, 0, _renderListCount );
+			if ( this.sortElements && _svgObjectCount > 0 ) {
+
+				// Elements are already sorted by the Projector.
+				// Only re-sort when SVGObjects need depth-interleaving.
+				_renderListPool.sort( renderSort );
 
 			}
 

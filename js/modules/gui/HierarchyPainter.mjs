@@ -10,7 +10,8 @@ import { prJSON, BasePainter, getElementRect, _loadJSDOM, getTDatime, convertDat
 import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
 import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redraw } from '../draw.mjs';
-import { BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout, getHPainter, setHPainter } from './display.mjs';
+import { BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout,
+         getHPainter, setHPainter, kBrFix, kBrFloat } from './display.mjs';
 import { showProgress, ToolbarIcons, registerForResize, injectStyle, saveFile } from './utils.mjs';
 
 
@@ -593,8 +594,8 @@ function objectHierarchy(top, obj, args = undefined) {
 }
 
 /** @summary Create hierarchy elements for TTask object
-  * @desc function can be used for different derived classes
-  * we show not only child tasks, but all complex data members
+  * @desc function can be used for different derived classes.
+  * We show not only child tasks, but all complex data members
   * @private */
 function taskHierarchy(item, obj) {
    if (!obj?.fTasks)
@@ -944,7 +945,7 @@ class HierarchyPainter extends BasePainter {
    }
 
    /** @summary Iterate over all items in hierarchy
-     * @param {function} func - function called for every item
+     * @param {Function} func - function called for every item
      * @param {object} [top] - top item to start from
      * @private */
    forEachItem(func, top) {
@@ -1015,8 +1016,8 @@ class HierarchyPainter extends BasePainter {
                }
 
                // if first child online, check its elements
-               if ((top._kind === kTopFolder) && (top._childs[0]._online !== undefined)) {
-                  for (let i = 0; i < top._childs[0]._childs.length; ++i) {
+               if ((top._kind === kTopFolder) && (top._childs[0]?._online !== undefined)) {
+                  for (let i = 0; i < top._childs[0]._childs?.length; ++i) {
                      if (top._childs[0]._childs[i]._name === localname)
                         return process_child(top._childs[0]._childs[i], true);
                   }
@@ -1088,8 +1089,8 @@ class HierarchyPainter extends BasePainter {
    }
 
    /** @summary Produce full string name for item
-     * @param {Object} node - item element
-     * @param {Object} [uptoparent] - up to which parent to continue
+     * @param {object} node - item element
+     * @param {object} [uptoparent] - up to which parent to continue
      * @param {boolean} [compact] - if specified, top parent is not included
      * @return {string} produced name
      * @private */
@@ -1119,14 +1120,15 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Executes item marked as 'Command'
      * @desc If command requires additional arguments, they could be specified as extra arguments arg1, arg2, ...
-     * @param {String} itemname - name of command item
-     * @param {Object} [elem] - HTML element for command execution
-     * @param [arg1] - first optional argument
-     * @param [arg2] - second optional argument and so on
+     * @param {string} itemname - name of command item
+     * @param {object} [elem] - HTML element for command execution
      * @return {Promise} with command result */
    async executeCommand(itemname, elem, ...userargs) {
-      const hitem = this.findItem(itemname),
-            url = this.getOnlineItemUrl(hitem) + '/cmd.json',
+      const hitem = this.findItem(itemname);
+      if (!hitem)
+         return false;
+
+      const url = this.getOnlineItemUrl(hitem) + '/cmd.json',
             d3node = d3_select(elem),
             cmdargs = [];
 
@@ -1174,9 +1176,9 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Get object item with specified name
      * @desc depending from provided option, same item can generate different object types
-     * @param {Object} arg - item name or config object
+     * @param {object} arg - item name or config object
      * @param {string} arg.name - item name
-     * @param {Object} arg.item - or item itself
+     * @param {object} arg.item - or item itself
      * @param {string} options - supposed draw options
      * @return {Promise} with object like { item, obj, itemname }
      * @private */
@@ -1663,7 +1665,7 @@ class HierarchyPainter extends BasePainter {
    }
 
    /** @summary Focus on hierarchy item
-     * @param {Object|string} hitem - item to open or its name
+     * @param {object|string} hitem - item to open or its name
      * @desc all parents to the item will be opened first
      * @return {Promise} when done
      * @private */
@@ -2204,7 +2206,7 @@ class HierarchyPainter extends BasePainter {
    /** @summary Display specified item
      * @param {string} itemname - item name
      * @param {string} [drawopt] - draw option for the item
-     * @param {string|Object} [dom] - place where to draw item, same as for @ref draw function
+     * @param {string|object} [dom] - place where to draw item, same as for {@link draw} function
      * @param {boolean} [interactive] - if display was called in interactive mode, will activate selected drawing
      * @return {Promise} with created painter object */
    async display(itemname, drawopt, dom = null, interactive = false) {
@@ -2456,7 +2458,7 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Update specified items
      * @desc Method can be used to fetch new objects and update all existing drawings
-     * @param {string|array|boolean} arg - either item name or array of items names to update or true if only automatic items will be updated
+     * @param {string|Array|boolean} arg - either item name or array of items names to update or true if only automatic items will be updated
      * @return {Promise} when ready */
    async updateItems(arg) {
       if (!this.disp)
@@ -2670,7 +2672,7 @@ class HierarchyPainter extends BasePainter {
 
          // Than create empty frames for each item
          for (let i = 0; i < items.length; ++i) {
-            if (options[i].indexOf('update:')) {
+            if (options[i].indexOf('update:') !== 0) {
                mdi.createFrame(frame_names[i]);
                doms[i] = 'frame:' + frame_names[i];
             }
@@ -2809,9 +2811,9 @@ class HierarchyPainter extends BasePainter {
 
       if (force && this.brlayout) {
          if (!this.brlayout.browser_kind)
-            return this.createBrowser('float', true).then(() => find_next());
+            return this.createBrowser(kBrFloat, true).then(() => find_next());
          if (!this.brlayout.browser_visible)
-            this.brlayout.toggleBrowserVisisbility();
+            this.brlayout.toggleBrowserVisibility();
       }
 
       // use recursion
@@ -2830,7 +2832,7 @@ class HierarchyPainter extends BasePainter {
    }
 
    /** @summary expand specified item
-     * @param {String} itemname - item name
+     * @param {string} itemname - item name
      * @return {Promise} when ready */
    async expandItem(itemname, d3cont, silent) {
       const hitem = this.findItem(itemname), hpainter = this;
@@ -3272,7 +3274,7 @@ class HierarchyPainter extends BasePainter {
       }
 
       if (!itemname && item && this.#cached_draw_object && !req) {
-         // special handling for online draw when cashed
+         // special handling for online draw when cached
          const obj = this.#cached_draw_object;
          this.#cached_draw_object = undefined;
          return obj;
@@ -3448,7 +3450,7 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Configures monitoring interval
      * @param {number} interval - repetition interval in ms
-     * @param {boolean} flag - initial monitoring state */
+     * @param {boolean} monitor_on - initial monitoring state */
    setMonitoring(interval, monitor_on) {
       this.#runMonitoring('cleanup');
 
@@ -3641,8 +3643,8 @@ class HierarchyPainter extends BasePainter {
    }
 
    /** @summary If possible, creates custom MDIDisplay for given item
-     * @param itemname - name of item, for which drawing is created
-     * @param custom_kind - display kind
+     * @param {string} itemname - name of item, for which drawing is created
+     * @param {string} custom_kind - display kind
      * @return {Promise} with mdi object created
      * @private */
    async createCustomDisplay(itemname, custom_kind) {
@@ -3814,15 +3816,15 @@ class HierarchyPainter extends BasePainter {
          monitor = parseInt(monitor);
 
       if (getOption('float') !== null) {
-         browser_kind = 'float';
+         browser_kind = kBrFloat;
          browser_configured = true;
       } else if (getOption('fix') !== null) {
-         browser_kind = 'fix';
+         browser_kind = kBrFix;
          browser_configured = true;
       }
 
       if (!browser_configured && (browser.screenWidth <= 640))
-         browser_kind = 'float';
+         browser_kind = kBrFloat;
 
       this.no_select ??= getOption('noselect');
       this.top_info ??= getOption('info');
@@ -3849,8 +3851,8 @@ class HierarchyPainter extends BasePainter {
       if (!this.disp_kind) {
          if (isStr(layout) && layout)
             this.disp_kind = layout;
-         else if (settings.DislpayKind && settings.DislpayKind !== 'simple')
-            this.disp_kind = settings.DislpayKind;
+         else if (settings.DisplayKind && settings.DisplayKind !== 'simple')
+            this.disp_kind = settings.DisplayKind;
          else {
             const _kinds = ['simple', 'simple', 'vert2', 'vert21', 'vert22', 'vert32',
                             'vert222', 'vert322', 'vert332', 'vert333'];
@@ -3875,7 +3877,7 @@ class HierarchyPainter extends BasePainter {
          this.no_select = true;
 
       if (!browser_kind)
-         browser_kind = 'fix';
+         browser_kind = kBrFix;
       else if (browser_kind === 'no')
          browser_kind = '';
       else if (browser_kind === 'off') {
@@ -4010,11 +4012,11 @@ class HierarchyPainter extends BasePainter {
          return;
 
       ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos browser', 'browser')
-                  .style('margin', '3px').on('click', () => this.createBrowser('fix', true));
+                  .style('margin', '3px').on('click', () => this.createBrowser(kBrFix, true));
 
       if (!this.float_browser_disabled) {
          ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float browser', 'browser')
-                     .style('margin', '3px').on('click', () => this.createBrowser('float', true));
+                     .style('margin', '3px').on('click', () => this.createBrowser(kBrFloat, true));
       }
 
       if (!this.status_disabled) {
@@ -4032,7 +4034,7 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Create status line
      * @param {number} [height] - size of the status line
-     * @param [mode] - false / true / 'toggle'
+     * @param {boolean} [mode] - false / true / 'toggle'
      * @return {Promise} when ready */
    async createStatusLine(height, mode) {
       if (this.status_disabled || !this.gui_div || !this.brlayout)
@@ -4064,8 +4066,8 @@ class HierarchyPainter extends BasePainter {
       if (main.empty())
          return false;
 
-      if ((browser_kind === 'float') && this.float_browser_disabled)
-         browser_kind = 'fix';
+      if ((browser_kind === kBrFloat) && this.float_browser_disabled)
+         browser_kind = kBrFix;
 
       if (!main.select('.jsroot_browser_area').empty()) {
          // this is case when browser created,
@@ -4125,16 +4127,16 @@ class HierarchyPainter extends BasePainter {
             menu.show();
          });
       }).on('dblclick', () => {
-         this.createBrowser(this.brlayout?.browser_kind === 'float' ? 'fix' : 'float', true);
+         this.createBrowser(this.brlayout?.browser_kind === kBrFloat ? kBrFix : kBrFloat, true);
       });
 
       if (!this.is_online && !this.no_select) {
          this.readSelectedFile = function() {
-            const filename = main.select('.gui_urlToLoad').property('value').trim();
-            if (!filename)
+            const filename = main.select('.gui_urlToLoad').property('value').trim(),
+                  lf = isStr(filename) ? filename.toLowerCase() : '';
+            if (!lf)
                return;
-
-            if (filename.toLowerCase().lastIndexOf('.json') === filename.length - 5)
+            if ((lf.lastIndexOf('.json') === lf.length - 5) || (lf.lastIndexOf('.json.gz') === lf.length - 8))
                this.openJsonFile(filename);
             else
                this.openRootFile(filename);
@@ -4172,7 +4174,7 @@ class HierarchyPainter extends BasePainter {
          layout.on('change', ev => {
             const kind = ev.target.value || 'flex';
             this.setDisplay(kind, this.gui_div + '_drawing');
-            settings.DislpayKind = kind;
+            settings.DisplayKind = kind;
          });
       }
 
@@ -4183,7 +4185,7 @@ class HierarchyPainter extends BasePainter {
          this.initializeBrowser();
       }
 
-      return this.brlayout.toggleBrowserKind(browser_kind || 'fix');
+      return this.brlayout.toggleBrowserKind(browser_kind || kBrFix);
    }
 
    /** @summary Initialize browser elements */

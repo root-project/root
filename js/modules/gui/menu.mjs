@@ -77,7 +77,8 @@ class JSRootMenu {
    /** @summary Add checked menu item
      * @param {boolean} flag - flag
      * @param {string} name - item name
-     * @param {function} func - func called when item is selected
+     * @param {number|string} arg - argument associated with the checked item
+     * @param {Function} func - func called when item is selected
      * @param {string} [title] - optional title */
    addchk(flag, name, arg, func, title) {
       let handler = func;
@@ -280,7 +281,7 @@ class JSRootMenu {
       if (values.findIndex(match) < 0) {
          miss_current = true;
          values.push(size_value);
-         values = values.sort((a, b) => a > b);
+         values = values.sort((a, b) => a - b);
       }
 
       this.sub(name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
@@ -413,11 +414,11 @@ class JSRootMenu {
    }
 
    /** @summary Add selection menu entries
-     * @param {String} name - name of submenu
+     * @param {string} name - name of submenu
      * @param {Array} values - array of string entries used as list for selection
-     * @param {String|Number} value - currently selected value, either name or index
+     * @param {string|number} value - currently selected value, either name or index
      * @param {Function} set_func - function called when item selected, either name or index depending from value parameter
-     * @param {String} [title] - optional title for menu items
+     * @param {string} [title] - optional title for menu items
      * @protected */
    addSelectMenu(name, values, value, set_func, title) {
       const use_number = (typeof value === 'number');
@@ -606,15 +607,15 @@ class JSRootMenu {
      * like TAttFill, TAttLine, TAttText
      * There is special handling for the frame where attributes handled by the pad
      * @private */
-   addAttributesMenu(painter, preffix) {
+   addAttributesMenu(painter, prefix) {
       const is_frame = painter === painter.getFramePainter(),
             pp = is_frame ? painter.getPadPainter() : null,
-            redraw_arg = !preffix && !is_frame ? 'attribute' : true;
-      if (!preffix)
-         preffix = '';
+            redraw_arg = !prefix && !is_frame ? 'attribute' : true;
+      if (!prefix)
+         prefix = '';
 
       if (painter.lineatt?.used) {
-         this.sub(`${preffix}Line att`);
+         this.sub(`${prefix}Line att`);
          this.addSizeMenu('width', 1, 10, 1, painter.lineatt.width, arg => {
             painter.lineatt.change(undefined, arg);
             changeObjectMember(painter, 'fLineWidth', arg);
@@ -654,7 +655,7 @@ class JSRootMenu {
       }
 
       if (painter.fillatt?.used) {
-         this.sub(`${preffix}Fill att`);
+         this.sub(`${prefix}Fill att`);
          this.addColorMenu('color', painter.fillatt.colorindx, arg => {
             painter.fillatt.change(arg, undefined, painter.getCanvSvg());
             changeObjectMember(painter, 'fFillColor', arg, true);
@@ -671,7 +672,7 @@ class JSRootMenu {
       }
 
       if (painter.markeratt?.used) {
-         this.sub(`${preffix}Marker att`);
+         this.sub(`${prefix}Marker att`);
          this.addColorMenu('color', painter.markeratt.color, arg => {
             changeObjectMember(painter, 'fMarkerColor', arg, true);
             painter.markeratt.change(arg);
@@ -698,7 +699,7 @@ class JSRootMenu {
       }
 
       if (painter.textatt?.used) {
-         this.sub(`${preffix}Text att`);
+         this.sub(`${prefix}Text att`);
 
          this.addFontMenu('font', painter.textatt.font, arg => {
             changeObjectMember(painter, 'fTextFont', arg);
@@ -896,7 +897,7 @@ class JSRootMenu {
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
       this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
-         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
+         settings.ProgressBox = (value === 'off') ? false : (value === 'on' ? true : value);
       });
       this.endsub();
 
@@ -1069,7 +1070,7 @@ class JSRootMenu {
       this.separator();
 
       this.add('Save settings', () => {
-         const promise = readSettings(true) ? Promise.resolve(true) : this.confirm('Save settings', 'Pressing OK one agreess that JSROOT will store settings in browser local storage');
+         const promise = readSettings(true) ? Promise.resolve(true) : this.confirm('Save settings', 'Pressing OK one agrees that JSROOT will store settings in browser local storage');
          promise.then(res => {
             if (res) {
                saveSettings();
@@ -1094,16 +1095,16 @@ class JSRootMenu {
    }
 
    /** @summary Show modal info dialog
-     * @param {String} title - title
-     * @param {String} message - message
+     * @param {string} title - title
+     * @param {string} message - message
      * @protected */
    info(title, message) {
       return this.runModal(title, `<p>${message}</p>`, { height: 120, width: 400, resizable: true });
    }
 
    /** @summary Show confirm dialog
-     * @param {String} title - title
-     * @param {String} message - message
+     * @param {string} title - title
+     * @param {string} message - message
      * @return {Promise} with true when 'Ok' pressed or false when 'Cancel' pressed
      * @protected */
    async confirm(title, message) {
@@ -1113,7 +1114,7 @@ class JSRootMenu {
    /** @summary Input value
      * @return {Promise} with input value
      * @param {string} title - input dialog title
-     * @param value - initial value
+     * @param {any} value - initial value
      * @param {string} [kind] - use 'text' (default), 'number', 'float' or 'int'
      * @protected */
    async input(title, value, kind, min, max) {
@@ -1268,7 +1269,8 @@ class StandaloneMenu extends JSRootMenu {
 
    /** @summary Add menu item
      * @param {string} name - item name
-     * @param {function} func - func called when item is selected */
+     * @param {number|string} arg - argument associated with the item
+     * @param {Function} func - func called when item is selected */
    add(name, arg, func, title) {
       let curr = this.stack.at(-1);
 
@@ -1723,7 +1725,7 @@ class StandaloneMenu extends JSRootMenu {
   * @param {string} [menuname] - optional menu name
   * @example
   * import { createMenu } from 'https://root.cern/js/latest/modules/gui/menu.mjs';
-  * let menu = await createMenu());
+  * let menu = await createMenu();
   * menu.add('First', () => console.log('Click first'));
   * let flag = true;
   * menu.addchk(flag, 'Checked', arg => console.log(`Now flag is ${arg}`));

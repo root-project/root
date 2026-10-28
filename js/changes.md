@@ -1,24 +1,47 @@
 # JSROOT changelog
 
-## Changes in dev
-1. Add textendash and textemdash `TLatex` symbols #407
-1. Let store canvas as html file via context menu
-1. Improve `TGraph` update
-1. When draw `TH2`/`TF2` with "surf same" draw option, only lines are drawn
-1. Implement new "POLF" and "POLN" draw options for polar coordinates for `TH2`
-1. Adjust automatic colors handling in `THStack` and `TMultiGraph`
-1. Let copy and paste histogram title, `TLatex` text and `TPave` label via context menu
-1. Use "JSROOT" label for main pad button, hide it after 5 seconds from the drawing
-1. Let preserve `BigInt` values when calling `rntupleProcess()` function #418
-1. Use `8.6g`/`10.8g` format for float/double historgam content-to-text conversion in tooltips
-1. Add `@vite-ignore` comment to dynamic imports to suppress Vite/Rollup analysis warnings
-1. Fix - read all cluster groups from ntuple #415
-1. Fix - correctly handle empty clusters in ntuple #420
-1. Fix - reading of negative 64-bit integers #422
+## Changes in 7.12.0
+1. Add textendash and textemdash `TLatex` symbols #407 (@ferdymercury)
+2. Let store canvas as HTML file via context menu
+3. Improve `TGraph` update
+4. When drawing `TH2`/`TF2` with "surf same" draw option, only lines are drawn
+5. Implement new polar draw options "POLF" and "POLN" for `TH2`
+6. Implement tooltips handling for `TScatter`
+7. Adjust automatic colors handling in `THStack` and `TMultiGraph`
+8. Let copy and paste histogram title, `TLatex` text and `TPave` label via context menu
+9. Use "JSROOT" label for main pad button, hide it after 5 seconds from the drawing
+10. Let preserve `BigInt` values when calling `rntupleProcess()` function #418 (@undefined-panda)
+11. Let use primitive "player" for `RNTuple` to allow edititing draw expressions
+12. Use `8.6g`/`10.8g` format for float/double histogram content-to-text conversion in tooltips
+13. Add `@vite-ignore` comment to dynamic imports to suppress Vite/Rollup analysis warnings #409 (@prawnsgupta)
+14. Upgrade three.js r183 -> r186 #424
+15. Upgrade openui5 1.135.0 -> 1.152.0
+16. Upgrade svg2pdf.js 2.6.0 -> 2.8.1
+17. Upgrade jsPDF 3.0.3 -> 4.2.1
+18. Upgrade lil-gui 0.20.0 -> 0.21.0
+19. Fix - read all cluster groups from ntuples #415 (@undefined-panda)
+20. Fix - correctly handle empty clusters in ntuples #420 (@undefined-panda)
+21. Fix - reading of RNTuple std::bitset of 32 to 48 bits #430 (@sebxt)
+22. Fix - decoding large LZMA buffers #431 (@Prafyl)
+
+
+## Changes in 7.11.4
+1. Fix - bug in `TH2` overflow counts display in stat box
+2. Fix - reading of objects with custom streamer stored in `TTree` branch #432 (@Prafyl)
+3. Fix - `TH3` stats calculation
+4. Fix - large angle display in `TPieSlice`
+5. Fix - interactive change of `TGraph` exclusion side and width
+6. Fix - multiple typos in tooltips and stats (AI assisted)
+
+
+## Changes in 7.11.3
+1. Fix - reading of negative 64-bit integers #422 (@Prafyl)
+2. Fix - include first value in TTree::Draw histogram range #427 (@sebxt)
+3. Fix - `TH2` scat drawing for large histogram stats #428 (@Prafyl)
 
 
 ## Changes in 7.11.2
-1. Fix - exclude @resvg/resvg-js from browser bundlers #421
+1. Fix - exclude @resvg/resvg-js from browser bundlers #421 (@wiso)
 2. Fix - hstack autocolor handling in `TWebCanvas`
 
 
@@ -27,11 +50,11 @@
 2. Fix - JSON production for TWebCanvas
 3. Fix - check evaluated value of TF1
 4. Fix - corrupted page layout in SWAN after calling %rootbrowse
-5. Fix - RNtuple decodeZigzag64 for SplitInt64 columns #410
+5. Fix - RNTuple decodeZigzag64 for SplitInt64 columns #410 (@undefined-panda)
 
 
 ## Changes in 7.11.0
-1. Implement new data types in `RNtuple`
+1. Implement new data types in `RNTuple`
    - reduced float types kFloat16, kReal32Trunc, kReal32Quant
    - `std::vector`
    - `std::map`, `std::unordered_map`, `std::multimap`, `std::unordered_multimap` with `std::pair`
@@ -69,8 +92,8 @@
 ## Changes in 7.10.2
 1. Fix - correctly process `TLeafB` arrays in tree draw #384
 2. Fix - better detect default ranges in `TGraph` histogram
-3. Fix - convert BigInt before `RNtuple` drawing
-4. Fix - pages and clusters processing in `RNtuple` #390
+3. Fix - convert BigInt before `RNTuple` drawing
+4. Fix - pages and clusters processing in `RNTuple` #390
 5. Fix - extra row for legend header, proper horizontal align https://github.com/root-project/root/issues/21173
 
 
@@ -80,7 +103,7 @@
 
 
 ## Changes in 7.10.0
-1. `RNtuple` support, thanks to Kriti Mahajan https://github.com/Krmjn09
+1. `RNTuple` support, thanks to Kriti Mahajan https://github.com/Krmjn09
 2. Implement `RTreeMapPainter` to display `RNTuple` structure, thanks to Patryk Pilichowski https://github.com/magnustymoteus
 3. Implement `build3d` function for building three.js objects for `TH1/2/3`, `TLatex` `TGeo`, `TGraph2D` classes #368
 4. Draw `TAnnotation3D` in real 3D with handling scene rotation
