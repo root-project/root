@@ -35,6 +35,21 @@ sap.ui.define([
       return jsrp.substring(0, jsrp.length - 'jsrootsys/'.length);
    }
 
+   /** Add the eveGlView flex rule to the document, once. It lives here, not in
+     * css/eve.css, so that applications that embed the GL view with their own
+     * copy of eve.css (e.g. FireworksWeb) get it too; without it the canvas
+     * div collapses to the canvas default height of 150 px. */
+   function ensureGlViewStyle()
+   {
+      const id = "eveGlViewStyle";
+      if (document.getElementById(id))
+         return;
+      let style = document.createElement("style");
+      style.id = id;
+      style.textContent = ".sapUiView.eveGlView:not(.sapMNavItemHidden) { display: flex; flex-direction: column; }";
+      document.head.appendChild(style);
+   }
+
    class GlViewerRCore extends GlViewer {
 
       constructor(viewer_class)
@@ -198,9 +213,10 @@ sap.ui.define([
          // height as a flex item. height:100% would overhang the view's bottom
          // edge by the toolbar height, and GL would draw into the hidden strip.
          // min-height:0 lets the flex item shrink below its content.
-         // The flex layout comes from the eveGlView class (css/eve.css), not an
-         // inline style: when the view is a router page, an inline display
-         // would override the display:none that hides it after navigating back.
+         // The flex layout comes from the eveGlView class, not an inline style:
+         // when the view is a router page, an inline display would override the
+         // display:none that hides it after navigating back.
+         ensureGlViewStyle();
          this.get_view().addStyleClass("eveGlView");
          canvasParentDOM.style.flex = "1 1 0";
          canvasParentDOM.style.minHeight = "0";
