@@ -124,7 +124,7 @@ public:
 
 
    // Create an image from bitmap. (See TASImage::FromBitmap)
-   virtual void FromBitmap(const UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
+   virtual void FromBitmap(const UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/, const UChar_t * /* mask */ = nullptr) {}
 
    // Create an image from the given pad. (See TASImage::FromPad)
    virtual void FromPad(TVirtualPad * /*pad*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
