@@ -118,6 +118,21 @@ void logMissingCudaSupport(RooAbsArg const &arg)
 
 /// A struct used by the Evaluator to store information on the RooAbsArgs in
 /// the computation graph.
+/// A client of all nodes in the computation graph, to know in the Evaluator
+/// destructor which nodes are still alive: a RooAbsArg unregisters itself from
+/// the server lists of its clients when it is destroyed. The Evaluator doesn't
+/// own its nodes, and the leaves of the graph are typically the users' original
+/// parameters and conditional observables, which can die before the Evaluator
+/// (for example at the teardown of a Python session, where objects are not
+/// destroyed in the reverse order of creation like in a C++ scope).
+class NodeTracker : public RooAbsReal {
+public:
+   NodeTracker() : RooAbsReal{"nodeTracker", "Evaluator node tracker"} {}
+   NodeTracker(NodeTracker const &other, const char *name = nullptr) : RooAbsReal{other, name} {}
+   TObject *clone(const char *newname = nullptr) const override { return new NodeTracker{*this, newname}; }
+   double evaluate() const override { return 0.0; }
+};
+
 struct NodeInfo {
 
    bool isScalar() const { return outputSize == 1; }
@@ -197,6 +212,14 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
       }
 
       ++iNode;
+   }
+
+   // The tracker is neither a value nor a shape client of the nodes: there is
+   // no dirty state propagation involved, it only gets notified when a node is
+   // destroyed.
+   _nodeTracker = std::make_unique<NodeTracker>();
+   for (NodeInfo &info : _nodes) {
+      _nodeTracker->addServer(*info.absArg, /*valueProp=*/false, /*shapeProp=*/false);
    }
 
    for (NodeInfo &info : _nodes) {
@@ -357,8 +380,17 @@ Evaluator::~Evaluator()
    // compiled. If we would leave the token set, creating a second Evaluator
    // for such a graph would wrongly complain that the same object is evaluated
    // by multiple Evaluator instances.
+   //
+   // Only the nodes that still exist are touched. The nodes that died before
+   // this Evaluator have unregistered themselves from the tracker.
+   std::unordered_set<RooAbsArg const *> aliveNodes;
+   for (RooAbsArg const *node : _nodeTracker->servers()) {
+      aliveNodes.insert(node);
+   }
    for (auto &info : _nodes) {
-      info.absArg->resetDataToken();
+      if (aliveNodes.find(info.absArg) != aliveNodes.end()) {
+         info.absArg->resetDataToken();
+      }
    }
    if (_cudaStream) {
       RooBatchCompute::dispatchCUDA->deleteCudaStream(_cudaStream);
