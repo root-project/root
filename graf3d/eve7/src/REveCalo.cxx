@@ -709,7 +709,7 @@ void REveCalo3D::ComputeBBox()
 {
    BBoxInit();
 
-   Float_t th = (fData) ? GetValToHeight() * fData->GetMaxVal(fPlotEt) : 0;
+   Float_t th = (fData && !fData->Empty()) ? GetValToHeight() * fData->GetMaxVal(fPlotEt) : 0;
    Float_t r = fBarrelRadius + th;
 
    fBBoxMin.Set(-r, -r, fEndCapPosB - th);
