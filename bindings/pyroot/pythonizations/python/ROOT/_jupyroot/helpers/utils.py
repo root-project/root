@@ -82,7 +82,7 @@ _jsCode = """function execCode_{jsDivId}(Core) {{
    Core.settings.HandleKeys = false;
    {jsDrawCode}
 }}
-const servers = ['/static/', 'https://root.cern/js/7.11.0/', 'https://jsroot.gsi.de/7.11.0/'],
+const servers = ['/static/', 'https://root.cern/js/7.12.0/', 'https://jsroot.gsi.de/7.12.0/'],
       path = 'build/jsroot';
 if (typeof JSROOT !== 'undefined')
    execCode_{jsDivId}(JSROOT);
