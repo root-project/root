@@ -87,11 +87,22 @@ elseif(IS_ABSOLUTE ${CMAKE_INSTALL_JSROOTDIR})
 else()
   set(jsroot_config "#HttpServ.JSRootPath:         ${prefix}/${CMAKE_INSTALL_JSROOTDIR}")
 endif()
+
 if(IS_ABSOLUTE ${CMAKE_INSTALL_OPENUI5DIR})
   set(openui5dir ${CMAKE_INSTALL_OPENUI5DIR})
 else()
   set(openui5dir ${prefix}/${CMAKE_INSTALL_OPENUI5DIR})
 endif()
+
+if(NOT "${OPENUI5_CUSTOM_LOCATION}" STREQUAL "")
+  set(openui5_config "WebGui.openui5src:         ${OPENUI5_CUSTOM_LOCATION}")
+elseif(IS_ABSOLUTE ${CMAKE_INSTALL_OPENUI5DIR})
+  set(openui5_config "#WebGui.openui5src:         ${CMAKE_INSTALL_OPENUI5DIR}/distribution")
+else()
+  set(openui5_config "#WebGui.openui5src:         ${prefix}/${CMAKE_INSTALL_OPENUI5DIR}/distribution")
+endif()
+
+
 if(IS_ABSOLUTE ${CMAKE_INSTALL_MACRODIR})
   set(macrodir ${CMAKE_INSTALL_MACRODIR})
 else()

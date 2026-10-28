@@ -251,7 +251,9 @@ WebGui.ChromeVersion:      @chromemajor@
 WebGui.Edge:               @edgeexe@
 WebGui.Firefox:            @firefoxexe@
 # location of OpenUi5 applications for ROOT like canvas, eve, fitpanel, ...
-#WebGui.RootUi5Path:        @openui5dir@
+#WebGui.RootUi5Path:       @openui5dir@
+# location of OpenUi5 framework
+@openui5_config@
 
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user
