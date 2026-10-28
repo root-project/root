@@ -799,12 +799,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
-   ROOT::NTupleSize_t GetNEntries() final
-   {
-      if (fNEntries == ROOT::kInvalidNTupleIndex)
-         Initialize();
-      return fNEntries;
-   }
+   ROOT::NTupleSize_t GetNEntries() final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Check if a field exists on-disk and can be read by the processor.
