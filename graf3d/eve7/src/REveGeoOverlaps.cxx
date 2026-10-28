@@ -4,6 +4,7 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REvePointSet.hxx>
 #include <ROOT/REveStraightLineSet.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include "TGeoBBox.h"
 #include "TGeoManager.h"
@@ -412,7 +413,11 @@ void REveGeoOverlapTable::AddPlacement(const Entry &ent, const TGeoHMatrix &glob
       // do not take part in that scheme, so handing one over directly means the
       // geometry's own shape is deleted as soon as these elements are destroyed --
       // which happens on the very next selection. Give each element a private clone.
-      auto *geoShape = static_cast<TGeoShape *>(vol->GetShape()->Clone());
+      TGeoShape *geoShape = nullptr;
+      {
+         REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager());
+         geoShape = static_cast<TGeoShape *>(vol->GetShape()->Clone());
+      }
       if (!geoShape)
          return;
       geoShape->SetUniqueID(0);
