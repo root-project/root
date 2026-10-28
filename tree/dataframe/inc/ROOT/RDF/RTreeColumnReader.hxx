@@ -37,7 +37,8 @@ namespace RDF {
 
 class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
-   void *fValuePtr{nullptr};
+   std::uint64_t fLastEntry{std::numeric_limits<std::uint64_t>::max()};
+   ROOT::RVec<void *> fCachedValues{};
 
    void *GetImpl(std::size_t) override;
    void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;

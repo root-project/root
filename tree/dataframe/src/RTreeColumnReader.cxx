@@ -6,21 +6,33 @@
 #include <bitset>
 #include <list>
 
-void *ROOT::Internal::RDF::RTreeOpaqueColumnReader::GetImpl(std::size_t)
+void *ROOT::Internal::RDF::RTreeOpaqueColumnReader::GetImpl(std::size_t entryInBulk)
 {
-   return fValuePtr;
+   return fCachedValues[entryInBulk];
 }
 
 void ROOT::Internal::RDF::RTreeOpaqueColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
+   if (fLastEntry == mask.GetFirstEntry())
+      return;
+
+   const auto validIndices = mask.GetValidIndices();
+   fLastEntry = mask.GetFirstEntry();
+   if (validIndices.empty())
+      return;
+
+   std::fill(fCachedValues.begin(), fCachedValues.end(), nullptr);
+
    // Assume 1-size bulk for now
-   if (mask[0])
-      fValuePtr = fTreeValue->GetAddress();
+   for (auto idx : validIndices)
+      fCachedValues[idx] = fTreeValue->GetAddress();
 }
 
 ROOT::Internal::RDF::RTreeOpaqueColumnReader::RTreeOpaqueColumnReader(TTreeReader &r, std::string_view colName)
    : fTreeValue(std::make_unique<ROOT::Internal::TTreeReaderOpaqueValue>(r, colName.data()))
 {
+   // Assume 1-size bulk for now
+   fCachedValues = ROOT::RVec<void *>(1);
 }
 
 ROOT::Internal::RDF::RTreeOpaqueColumnReader::~RTreeOpaqueColumnReader() = default;
