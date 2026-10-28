@@ -24,12 +24,16 @@
 #include "TROOT.h"
 #include "TMath.h"
 #include "TPad.h"
-
-#ifdef USE_ASIMAGEUTILS
-#include "TASUtils.h"
-#endif
+#include "TVirtualImageUtils.h"
 
 namespace {
+
+// Image helpers must not become a load-time dependency of ordinary pad painting.
+TVirtualImageUtils *GetImageUtils()
+{
+   static const std::unique_ptr<TVirtualImageUtils> imageUtils(TVirtualImageUtils::Create());
+   return imageUtils.get();
+}
 
 //Typedef is fine, but let's pretend we look cool and modern:
 using size_type = std::vector<TPoint>::size_type;
@@ -232,19 +236,13 @@ void TPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 {
    Window_t wid = gVirtualX->GetWindowID(fPad->GetPixmapID());
 
-   // use old API to draw image on gVirtualX window
-   // img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
-#ifdef USE_ASIMAGEUTILS
-   // new API invokes
-   TASUtils::PaintImage(img, wid, x, y, !flags);
-#else
-   ::Error("TPadPainter::DrawImage", "TASImage not compiled, image painting is not possible");
-   (void) wid;
-   (void) img;
-   (void) x;
-   (void) y;
-   (void) flags;
-#endif
+   auto imageUtils = GetImageUtils();
+   if (!imageUtils) {
+      ::Error("TPadPainter::DrawImage", "Cannot load image utility plugin");
+      return;
+   }
+
+   imageUtils->PaintImage(img, wid, x, y, !flags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,29 +587,28 @@ TVirtualPadPainter::ESaveImageResult TPadPainter::SaveAsImage(TVirtualPad *pad, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill image object with the pixel data from the pad
-/// Use TASUtils::FillImageFromWindow method which provides native X11 handling
+/// Use the image utility plugin, which provides native X11 handling.
 
 Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
 {
    if (!image || !pad)
       return kFALSE;
 
-#ifdef USE_ASIMAGEUTILS
-   auto width = pad->GetPadWidth();
-   auto height = pad->GetPadHeight();
+   auto imageUtils = GetImageUtils();
+   if (!imageUtils) {
+      ::Error("TPadPainter::FillImageFromPad", "Cannot load image utility plugin");
+      return kFALSE;
+   }
+
+   Int_t width = pad->GetPadWidth();
+   Int_t height = pad->GetPadHeight();
 
    Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
 
    Window_t wd = gVirtualX->GetCurrentWindow();
 
-   return TASUtils::FillImageFromWindow(image, wd, width, height);
-#else
-   ::Error("TPadPainter::FillImageFromPad", "Cannot work without TASImage class");
-   (void) image;
-   (void) pad;
-   return kFALSE;
-#endif
+   return imageUtils->FillImageFromWindow(image, wd, width, height);
 }
 
 //Aux. private functions.
