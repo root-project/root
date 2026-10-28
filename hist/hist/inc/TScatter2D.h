@@ -48,11 +48,14 @@ public:
 
    Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
    void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   char     *GetObjectInfo(Int_t px, Int_t py) const override;
    Double_t *GetColor()  const {return fColor;}                ///< Get the array of colors
    Double_t *GetSize()   const {return fSize;}                 ///< Get the array of marker sizes
    Double_t  GetMargin() const {return fMargin;}               ///< Set the margin around the plot in %
    Double_t  GetMaxMarkerSize() const {return fMaxMarkerSize;} ///< Get the largest marker size used to paint the markers
    Double_t  GetMinMarkerSize() const {return fMinMarkerSize;} ///< Get the smallest marker size used to paint the markers
+   Double_t  GetMinimum() const;
+   Double_t  GetMaximum() const;
    TGraph2D *GetGraph()  const {return fGraph;}                ///< Get the graph holding X, Y and Z positions
    TH2D     *GetHistogram() const;                             ///< Get the graph histogram used for drawing axis
    TAxis    *GetXaxis() const ;
@@ -62,6 +65,8 @@ public:
    void      SetMaxMarkerSize(Double_t max) {fMaxMarkerSize = max;} ///< Set the largest marker size used to paint the markers
    void      SetMinMarkerSize(Double_t min) {fMinMarkerSize = min;} ///< Set the smallest marker size used to paint the markers
    void      SetMargin(Double_t);
+   void      SetMinimum(Double_t min);
+   void      SetMaximum(Double_t max);
    void      Print(Option_t *chopt="") const override;
    void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void      Paint(Option_t *chopt="") override;

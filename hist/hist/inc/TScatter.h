@@ -50,6 +50,7 @@ public:
 
    Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
    void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   char     *GetObjectInfo(Int_t px, Int_t py) const override;
    Double_t *GetColor()  const {return fColor;}                ///< Get the array of colors
    Double_t *GetSize()   const {return fSize;}                 ///< Get the array of marker sizes
    Double_t  GetMargin() const {return fMargin;}               ///< Set the margin around the plot in %
