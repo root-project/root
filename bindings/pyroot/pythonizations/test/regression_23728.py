@@ -29,7 +29,11 @@ class Regression23728(unittest.TestCase):
             with ROOT.TFile(fname, "RECREATE") as f:
                 t = ROOT.TTree("t", "t")
                 v = ROOT.std.vector[ROOT.std.vector[int]]()
-                t.Branch("vv", v)
+                # Use the overload taking the class name and the address: the
+                # templated Branch() refuses collections without a compiled
+                # CollectionProxy, which would silently leave the tree without
+                # the branch and the test without its purpose.
+                t.Branch("vv", "vector<vector<int> >", ROOT.AddressOf(v))
                 v.push_back(ROOT.std.vector[int]([1, 2]))
                 t.Fill()
                 f.Write()
@@ -53,8 +57,15 @@ class Regression23728(unittest.TestCase):
                 if t.GetDirectory() != f:
                     raise RuntimeError("the tree is not owned by the file")
 
-                # Make the interpreter JIT-compile a destructor before exit.
-                ROOT.std.vector[ROOT.TNamed]()
+                # Make the interpreter JIT-compile the destructor of the branch
+                # class before exit. This creates the destructor cache before the
+                # end-of-process cleanup needs it (and, before the fix, destroyed
+                # it again before that). Using the very same class keeps the
+                # exit-time destructor call a pure cache lookup: compiling code
+                # at that point is not possible on Windows, where the atexit
+                # handler of libCore runs only when libCling's statics have
+                # already been torn down by its DLL_PROCESS_DETACH.
+                ROOT.std.vector[ROOT.std.vector[int]]()
 
                 print("end of script")
                 """
@@ -65,12 +76,16 @@ class Regression23728(unittest.TestCase):
             # whatever the heap layout and the interpreter internals.
             env = dict(os.environ, MALLOC_PERTURB_="85")
 
+            # Without the fix, ROOT's crash handler can hang on the way out
+            # of the segfault instead of terminating the process: fail
+            # instead of waiting for the ctest timeout.
             res = subprocess.run(
                 [sys.executable, "-c", script],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
                 env=env,
+                timeout=300,
             )
 
             self.assertEqual(res.returncode, 0, msg=res.stdout)
