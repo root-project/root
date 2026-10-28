@@ -2,9 +2,11 @@
 ## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ## This tutorial illustrates how PyROOT supports declaring C++ callables from
-## Python callables making them, for example, usable with RDataFrame. The feature
-## uses the numba Python package for just-in-time compilation of the Python callable
-## and supports fundamental types and ROOT::RVec thereof.
+## Python callables making them, for example, usable with RDataFrame. The Python
+## function is translated to C++ source and declared to the interpreter, so the
+## result is an ordinary C++ function that is inlined into the event loop.
+## Fundamental types are supported, along with ROOT::RVec, std::vector and
+## std::array of them, and any C++ class the interpreter already knows.
 ##
 ## \macro_code
 ## \macro_output
@@ -16,10 +18,14 @@ import ROOT
 
 # To mark a Python callable to be used from C++, you have to use the decorator
 # provided by PyROOT passing the C++ types of the input arguments and the return
-# value.
+# value. The generated C++ is available afterwards as pypow.__cpp_wrapper__.
 @ROOT.Numba.Declare(['float', 'int'], 'float')
 def pypow(x, y):
     return x**y
+
+# The decorator is also available as ROOT.Py.Declare, which is the same thing
+# declared into the Py C++ namespace; ROOT.Numba.Declare predates the C++
+# translation and is kept so that existing code keeps working.
 
 # The Python callable is now available from C++ in the Numba namespace.
 # For example, we can use it from the interpreter.
@@ -32,10 +38,9 @@ data = ROOT.RDataFrame(4).Define('x', '(float)rdfentry_')\
 
 print('pypow({}, 3) = {}'.format(data['x'], data['x_pow3']))
 
-# ROOT uses the numba Python package to create C++ functions from python ones.
-# We support as input and return types of the callable fundamental types and
-# ROOT::RVec thereof. See the following callable computing the power of the
-# elements in an array.
+# The supported input and return types are the fundamental types and the
+# containers of them: ROOT::RVec, std::vector and std::array. See the following
+# callable computing the power of the elements in an array.
 @ROOT.Numba.Declare(['RVecF', 'int'], 'RVecF')
 def pypowarray(x, y):
     return x**y

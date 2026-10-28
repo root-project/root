@@ -11,12 +11,12 @@ import inspect
 import re
 import typing
 
-from .._numbadeclare import _NumbaDeclareDecorator
+from .._pydeclare import DeclareInNumbaNamespace
 
 
 class FunctionJitter:
     """
-    This class allows to jit a python callable with Numba, being able to infer the signature of the function from the types of the RDF columns.
+    This class allows to translate a python callable to C++, being able to infer the signature of the function from the types of the RDF columns.
     It takes a python callable, an RDF and optionally a column list and dictionary containing any other arguments for the callable.
     It determines the function signature and Declares the function and returns the corresponding function call.
 
@@ -74,27 +74,40 @@ class FunctionJitter:
             import numpy as np
         except ImportError:
             raise ImportError("Failed to import numpy during call to determine function signature.")
-        from ._rdf_conversion_maps import FUNDAMENTAL_PYTHON_TYPES, NUMPY_TO_TREE, TREE_TO_NUMBA
+        from ._rdf_conversion_maps import FUNDAMENTAL_PYTHON_TYPES, NUMPY_TO_TREE, TREE_TO_CPP
 
         if isinstance(x, str):
             # Can be string constant or can be column name
             if x in self.col_names:  # If x is a column
                 t = self.rdf.GetColumnType(x)
-                if t in TREE_TO_NUMBA:  # The column is a fundamental type from tree
-                    return TREE_TO_NUMBA[t]
+                if t in TREE_TO_CPP:  # The column is a fundamental type from tree
+                    return TREE_TO_CPP[t]
 
                 match = re.match(r"([\w:]+)<(.+)>", t)
                 if match:
                     container_type, inner_type = match.groups()
                     container_type = container_type.strip()
                     inner_type = inner_type.strip()
-                    inner_mapped = TREE_TO_NUMBA.get(inner_type, inner_type)
+                    inner_mapped = TREE_TO_CPP.get(inner_type, inner_type)
                     return f"{container_type}<{inner_mapped}>"
                 else:
                     return t
             else:
                 return "str"
-                #! Numba Declare does not support "string" type. Check _numbadeclare.Thus, Cannot pass string constants to the filter/Defines..
+                #! The translation does not support the "string" type, so string constants
+                #! cannot be passed to the Filters/Defines.
+        elif type(x) is int:
+            # A Python int has no width; pick a C++ type that can hold this one,
+            # rather than truncating anything above 2**31 to a negative int.
+            if -(2**31) <= x < 2**31:
+                return "int"
+            if 2**31 <= x < 2**32:
+                return "unsigned int"
+            if -(2**63) <= x < 2**63:
+                return "long long"
+            if 2**63 <= x < 2**64:
+                return "unsigned long long"
+            raise TypeError("The integer {} does not fit in any C++ integer type.".format(x))
         elif type(x) in FUNDAMENTAL_PYTHON_TYPES:
             return FUNDAMENTAL_PYTHON_TYPES[type(x)]
         elif isinstance(x, np.ndarray):
@@ -208,7 +221,7 @@ class FunctionJitter:
 
     def jit_function(self, func, cols_list, extra_args):
         """
-        Jits the provided function using ROOT's NumbaDeclare.
+        Declares the provided function as C++ using ROOT's Numba.Declare.
         Also checks if the function was jitted earlier in which case it won't jit again but if signature does not match. It raises an error.
 
         Arguments:
@@ -226,7 +239,7 @@ class FunctionJitter:
 
         self.get_function_params_args_call(func, cols_list, extra_args)
         if not hasattr(self.func, "__cpp_wrapper__"):  # not already declared with ROOT.Numba.Declare
-            _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
+            DeclareInNumbaNamespace(self.func_sign, self.return_type)(self.func)
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
 
