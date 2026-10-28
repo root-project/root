@@ -124,6 +124,19 @@ std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource(const ROOT::RNTupl
 }
 } // anonymous namespace
 
+ROOT::NTupleSize_t ROOT::RNTupleSingleProcessor::GetNEntries()
+{
+   // We do not cache the page source to avoid side-effects e.g. keeping too many files opened in the case of a chain.
+   // We could still cache it, then invalidate it elsewhere, but the invalidation would need to be propagated to any
+   // RNTupleProcessorEntry objects in flight, which may require more complexity than necessary.
+   if (fNEntries == ROOT::kInvalidNTupleIndex) {
+      auto source = CreatePageSource(fNTupleSpec);
+      source->Attach();
+      fNEntries = source->GetNEntries();
+   }
+   return fNEntries;
+}
+
 void ROOT::RNTupleSingleProcessor::Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry)
 {
    // The processor has already been initialized.
@@ -436,7 +449,6 @@ ROOT::NTupleSize_t ROOT::RNTupleChainProcessor::GetNEntries()
 
       for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
          if (fInnerNEntries[i] == kInvalidNTupleIndex) {
-            fInnerProcessors[i]->Initialize(fEntry);
             fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
          }
 
