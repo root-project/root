@@ -339,6 +339,9 @@ add_custom_command(OUTPUT ${stamp_file}
 set(directories_to_copy test icons fonts macros tutorials)
 if(http)
   list(APPEND directories_to_copy js)
+  if(builtin_jsroot)
+    list(APPEND directories_deps BUILTIN_JSROOT)
+  endif()
 endif()
 if(webgui)
   list(APPEND directories_to_copy ui5)
@@ -356,7 +359,7 @@ foreach(dir_to_copy ${directories_to_copy})
   add_custom_command(OUTPUT ${artifacts_out}
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/${dir_to_copy} ${CMAKE_BINARY_DIR}/${dir_to_copy}
       COMMENT "Copy ${dir_to_copy}"
-      DEPENDS ${artifacts_in})
+      DEPENDS ${artifacts_in} ${directories_deps})
 endforeach()
 
 #---Copy etc/* files individually to the build area at build time---------------------------------

@@ -1103,6 +1103,23 @@ if (testing OR testsupport)
 endif()
 
 #------------------------------------------------------------------------------------
+
+if(builtin_jsroot)
+  ROOT_CHECK_CONNECTION("builtin_jsroot=OFF")
+  if (NO_CONNECTION)
+    message(SEND_ERROR "builtin_jsroot=ON requires internet connection, check it or disable feature")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_jsroot=OFF)
+  endif()
+  add_subdirectory(builtins/jsroot)
+elseif(NOT "$ENV{JSROOTSYS}" STREQUAL "")
+  # use preconfigured JSROOT to run web widgets
+elseif(http OR webgui)
+  message(SEND_ERROR "Without builtin_jsroot option http and webgui is not working, either disable http/webgui or enable builtin_jsroot")
+  list(APPEND HOTFIX_BUILD_FLAGS -Dhttp=OFF -Dwebgui=OFF)
+endif()
+
+
+#------------------------------------------------------------------------------------
 if(http)
   if(builtin_mathjax)
     ROOT_CHECK_CONNECTION("builtin_mathjax=OFF")
