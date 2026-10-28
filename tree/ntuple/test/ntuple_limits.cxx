@@ -241,6 +241,7 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
 
    RNTupleReadOptions options;
    options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
+   options.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
@@ -286,7 +287,9 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
       writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   RNTupleReadOptions options;
+   options.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
