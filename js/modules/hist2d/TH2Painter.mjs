@@ -261,7 +261,8 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
    }
 }
 
-/** @summary Handle 3D triangles with color levels */
+/** @summary Handle 3D triangles with color levels
+ * @private */
 
 class Triangles3DHandler {
 
@@ -1335,7 +1336,7 @@ class TH2Painter extends THistPainter {
       if ((print_under > 0) || (print_over > 0)) {
          const get = i => data.matrix[i].toFixed(0);
 
-         stat.addText(`${get(6)} | ${get(7)} | ${get(7)}`);
+         stat.addText(`${get(6)} | ${get(7)} | ${get(8)}`);
          stat.addText(`${get(3)} | ${get(4)} | ${get(5)}`);
          stat.addText(`${get(0)} | ${get(1)} | ${get(2)}`);
       }
@@ -2846,7 +2847,7 @@ class TH2Painter extends THistPainter {
 
       handle.ScatterPlot = true;
 
-      if (scale * handle.sumz < 1e5) {
+      if ((scale * handle.sumz < 1e5) && (o.Scat !== 11)) {
          // one can use direct drawing of scatter plot without any patterns
 
          this.createAttMarker({ attr: histo });
@@ -2928,7 +2929,7 @@ class TH2Painter extends THistPainter {
       }
 
       const pp = this.getPadPainter(),
-            layer = pp.selectChild('.main_layer');
+            layer = pp.getFrameSvg().selectChild('.main_layer');
       let defs = layer.selectChild('defs');
       if (defs.empty() && colPaths.length)
          defs = layer.insert('svg:defs', ':first-child');

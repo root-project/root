@@ -2,11 +2,11 @@
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = 'dev',
+const version_id = '7.12.0',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '12/10/2026',
+version_date = '28/10/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -141,7 +141,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
 }
 
 /** @summary Check if prototype string match to array (typed on untyped)
-  * @return {Number} 0 - not array, 1 - regular array, 2 - typed array
+  * @return {number} 0 - not array, 1 - regular array, 2 - typed array
   * @private */
 function isArrayProto(proto) {
     if ((proto.length < 14) || proto.indexOf('[object '))
@@ -321,7 +321,7 @@ settings = {
    /** @summary how many items shown on one level of hierarchy */
    HierarchyLimit: 250,
    /** @summary default display kind for the hierarchy painter */
-   DislpayKind: 'simple',
+   DisplayKind: 'simple',
    /** @summary default left area width in browser layout */
    BrowserWidth: 250,
    /** @summary custom format for all X values, when not specified {@link gStyle.fStatFormat} is used */
@@ -591,7 +591,7 @@ let _ensureJSROOT = null;
 
 /** @summary Generate mask for given bit
   * @param {number} n bit number
-  * @return {Number} produced mask
+  * @return {number} produced mask
   * @private */
 function BIT(n) { return 1 << n; }
 
@@ -879,7 +879,7 @@ function toJSON(obj, spacing) {
 /** @summary decodes URL options after '?' mark
   * @desc Following options supported ?opt1&opt2=3
   * @param {string} [url] URL string with options, document.URL will be used when not specified
-  * @return {Object} with ```.has(opt)``` and ```.get(opt,dflt)``` methods
+  * @return {object} with ```.has(opt)``` and ```.get(opt,dflt)``` methods
   * @example
   * import { decodeUrl } from 'https://root.cern/js/latest/modules/core.mjs';
   * let d = decodeUrl('any?opt1&op2=3');
@@ -1176,7 +1176,7 @@ async function injectCode(code) {
 }
 
 /** @summary Load ES6 modules
-  * @param {String} arg - single URL or array of URLs
+  * @param {string} arg - single URL or array of URLs
   * @return {Promise} */
 async function loadModules(arg) {
    if (isStr(arg))
@@ -1187,7 +1187,7 @@ async function loadModules(arg) {
 }
 
 /** @summary Load script or CSS file into the browser
-  * @param {String} url - script or css file URL (or array, in this case they all loaded sequentially)
+  * @param {string} url - script or css file URL (or array, in this case they all loaded sequentially)
   * @return {Promise} */
 async function loadScript(url) {
    if (!url)
@@ -1612,7 +1612,7 @@ function create(typename, target) {
   * @param {number} nbinsx - number of bins on X-axis
   * @param {number} [nbinsy] - number of bins on Y-axis (for 2D/3D histograms)
   * @param {number} [nbinsz] - number of bins on Z-axis (for 3D histograms)
-  * @return {Object} created histogram object
+  * @return {object} created histogram object
   * @example
   * import { createHistogram } from 'https://root.cern/js/latest/modules/core.mjs';
   * let h1 = createHistogram('TH1I', 20);
@@ -1714,8 +1714,8 @@ function createTPolyLine(npoints, use_int32) {
 
 /** @summary Creates TGraph object
   * @param {number} npoints - number of points in TGraph
-  * @param {array} [xpts] - array with X coordinates
-  * @param {array} [ypts] - array with Y coordinates */
+  * @param {Array} [xpts] - array with X coordinates
+  * @param {Array} [ypts] - array with Y coordinates */
 function createTGraph(npoints, xpts, ypts) {
    const graph = extend(create(clTGraph), { fBits: 0x408, fName: 'graph', fTitle: 'title' });
 

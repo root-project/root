@@ -1,4 +1,4 @@
-import { settings, create, BIT } from '../core.mjs';
+import { settings, create, BIT, clTGraphPolargram } from '../core.mjs';
 import { scaleLinear, pointer as d3_pointer } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
@@ -616,7 +616,7 @@ class TGraphPolarPainter extends ObjectPainter {
    createPolargram(gr) {
       const o = this.getOptions();
       if (!gr.fPolargram) {
-         gr.fPolargram = create('TGraphPolargram');
+         gr.fPolargram = create(clTGraphPolargram);
          if (o.radian)
             gr.fPolargram.fRadian = true;
          else if (o.degree)
@@ -628,9 +628,12 @@ class TGraphPolarPainter extends ObjectPainter {
       let rmin = gr.fY[0] || 0, rmax = rmin;
       const has_err = gr.fEY?.length;
       for (let n = 0; n < gr.fNpoints; ++n) {
-         rmin = Math.min(rmin, gr.fY[n] - (has_err ? gr.fEY[n] : 0));
-         rmax = Math.max(rmax, gr.fY[n] + (has_err ? gr.fEY[n] : 0));
+         const err = has_err ? gr.fEY[n] : 0;
+         rmin = Math.min(rmin, gr.fY[n] - err);
+         rmax = Math.max(rmax, gr.fY[n] + err);
       }
+      if (rmin === rmax)
+         rmax += 1;
 
       gr.fPolargram.fRwrmin = rmin - (rmax - rmin) * 0.1;
       gr.fPolargram.fRwrmax = rmax + (rmax - rmin) * 0.1;

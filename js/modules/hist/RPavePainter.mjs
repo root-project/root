@@ -19,6 +19,24 @@ class RPavePainter extends RObjectPainter {
      * @desc assigned depending on pave class */
    async drawContent() { return this; }
 
+   async drawPaveContent() {
+      return this.drawContent().then(() => {
+         if (!this.isBatchMode()) {
+            // TODO: provide pave context menu as in v6
+            if (settings.ContextMenu && this.paveContextMenu)
+               this.getG().on('contextmenu', evnt => this.paveContextMenu(evnt));
+
+            addDragHandler(this, {
+               x: this.pave_x, y: this.pave_y, width: this.pave_width, height: this.pave_height,
+               minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d)
+            });
+         }
+
+         return this;
+      });
+   }
+
+
    /** @summary Draw pave */
    async drawPave() {
       const rect = this.getPadPainter().getPadRect(),
@@ -44,27 +62,26 @@ class RPavePainter extends RObjectPainter {
       this.createv7AttFill();
 
       const fr = this.onFrame ? fp.getFrameRect() : rect;
-      let pave_x = 0, pave_y = 0;
       switch (this.corner) {
          case ECorner.kTopLeft:
-            pave_x = fr.x + offsetx;
-            pave_y = fr.y + offsety;
+            this.pave_x = fr.x + offsetx;
+            this.pave_y = fr.y + offsety;
             break;
          case ECorner.kBottomLeft:
-            pave_x = fr.x + offsetx;
-            pave_y = fr.y + fr.height - offsety - pave_height;
+            this.pave_x = fr.x + offsetx;
+            this.pave_y = fr.y + fr.height - offsety - pave_height;
             break;
          case ECorner.kBottomRight:
-            pave_x = fr.x + fr.width - offsetx - pave_width;
-            pave_y = fr.y + fr.height - offsety - pave_height;
+            this.pave_x = fr.x + fr.width - offsetx - pave_width;
+            this.pave_y = fr.y + fr.height - offsety - pave_height;
             break;
          case ECorner.kTopRight:
          default:
-            pave_x = fr.x + fr.width - offsetx - pave_width;
-            pave_y = fr.y + offsety;
+            this.pave_x = fr.x + fr.width - offsetx - pave_width;
+            this.pave_y = fr.y + offsety;
       }
 
-      makeTranslate(g, pave_x, pave_y);
+      makeTranslate(g, this.pave_x, this.pave_y);
 
       g.append('svg:rect')
        .attr('x', 0)
@@ -77,53 +94,39 @@ class RPavePainter extends RObjectPainter {
       this.pave_width = pave_width;
       this.pave_height = pave_height;
 
-      // here should be fill and draw of text
-
-      return this.drawContent().then(() => {
-         if (!this.isBatchMode()) {
-            // TODO: provide pave context menu as in v6
-            if (settings.ContextMenu && this.paveContextMenu)
-               g.on('contextmenu', evnt => this.paveContextMenu(evnt));
-
-            addDragHandler(this, {
-               x: pave_x, y: pave_y, width: pave_width, height: pave_height,
-               minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d)
-            });
-         }
-
-         return this;
-      });
+      // draw content and append interactivity
+      return this.drawPaveContent();
    }
 
    /** @summary Process interactive moving of the stats box */
    sizeChanged(drag) {
       this.pave_width = drag.width;
       this.pave_height = drag.height;
+      this.pave_x = drag.x;
+      this.pave_y = drag.y;
 
-      const pave_x = drag.x,
-            pave_y = drag.y,
-            rect = this.getPadPainter().getPadRect(),
+      const rect = this.getPadPainter().getPadRect(),
             fr = this.onFrame ? this.getFramePainter().getFrameRect() : rect,
             changes = {};
       let offsetx, offsety;
 
       switch (this.corner) {
          case ECorner.kTopLeft:
-            offsetx = pave_x - fr.x;
-            offsety = pave_y - fr.y;
+            offsetx = this.pave_x - fr.x;
+            offsety = this.pave_y - fr.y;
             break;
          case ECorner.kBottomLeft:
-            offsetx = pave_x - fr.x;
-            offsety = fr.y + fr.height - pave_y - this.pave_height;
+            offsetx = this.pave_x - fr.x;
+            offsety = fr.y + fr.height - this.pave_y - this.pave_height;
             break;
          case ECorner.kBottomRight:
-            offsetx = fr.x + fr.width - pave_x - this.pave_width;
-            offsety = fr.y + fr.height - pave_y - this.pave_height;
+            offsetx = fr.x + fr.width - this.pave_x - this.pave_width;
+            offsety = fr.y + fr.height - this.pave_y - this.pave_height;
             break;
          case ECorner.kTopRight:
          default:
-            offsetx = fr.x + fr.width - pave_x - this.pave_width;
-            offsety = pave_y - fr.y;
+            offsetx = fr.x + fr.width - this.pave_x - this.pave_width;
+            offsety = this.pave_y - fr.y;
       }
 
       this.v7AttrChange(changes, 'offsetX', offsetx / rect.width);
@@ -132,11 +135,13 @@ class RPavePainter extends RObjectPainter {
       this.v7AttrChange(changes, 'height', this.pave_height / rect.height);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
 
-      this.getG().selectChild('rect')
-                 .attr('width', this.pave_width)
-                 .attr('height', this.pave_height);
+      const g = this.getG(),
+            main = g.selectChild('rect');
+      main.attr('width', this.pave_width)
+          .attr('height', this.pave_height);
+      g.selectAll('*').filter(function() { return this !== main.node(); }).remove();
 
-      this.drawContent();
+      return this.drawPaveContent();
    }
 
    /** @summary Redraw RPave object */

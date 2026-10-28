@@ -10,7 +10,7 @@ import { getRootColors } from '../base/colors.mjs';
   * if no argument specified, any shown messages will be removed
   * @param {string} msg - message to display
   * @param {number} [tmout] - optional timeout in milliseconds, after message will disappear
-  * @param {function} [click_handle] - optional handle to process click events
+  * @param {Function} [click_handle] - optional handle to process click events
   * @private */
 function showProgress(msg, tmout, click_handle) {
    if (isBatchMode() || (typeof document === 'undefined'))
@@ -436,7 +436,7 @@ function addMoveHandler(painter, enabled = true, hover_handler = false) {
 }
 
 /** @summary Inject style
-  * @param {String} code - css string
+  * @param {string} code - css string
   * @private */
 function injectStyle(code, node, tag) {
    if (isBatchMode() || !code || (typeof document === 'undefined'))
@@ -514,16 +514,16 @@ function readLocalStorage(name) {
 }
 
 /** @summary Save JSROOT settings in local storage
-  * @param {Number} [expires] - delete settings when negative
-  * @param {String} [name] - storage name, 'settings' by default
+  * @param {number} [expires] - delete settings when negative
+  * @param {string} [name] - storage name, 'settings' by default
   * @private */
 function saveSettings(expires = 365, name = 'settings') {
    saveLocalStorage(settings, expires, name);
 }
 
 /** @summary Read JSROOT settings from specified cookie parameter
-  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} [name] - storage name, 'settings' by default
+  * @param {boolean} only_check - when true just checks if settings were stored before with provided name
+  * @param {string} [name] - storage name, 'settings' by default
   * @private */
 function readSettings(only_check = false, name = 'settings') {
    const s = readLocalStorage(name);
@@ -535,16 +535,16 @@ function readSettings(only_check = false, name = 'settings') {
 }
 
 /** @summary Save JSROOT gStyle object in local storage
-  * @param {Number} [expires] - delete style when negative
-  * @param {String} [name] - storage name, 'style' by default
+  * @param {number} [expires] - delete style when negative
+  * @param {string} [name] - storage name, 'style' by default
   * @private */
 function saveStyle(expires = 365, name = 'style') {
    saveLocalStorage(gStyle, expires, name);
 }
 
 /** @summary Read JSROOT gStyle object from local storage
-  * @param {Boolean} [only_check] - when true just checks if settings were stored before with provided name
-  * @param {String} [name] - storage name, 'style' by default
+  * @param {boolean} [only_check] - when true just checks if settings were stored before with provided name
+  * @param {string} [name] - storage name, 'style' by default
   * @private */
 function readStyle(only_check = false, name = 'style') {
    const s = readLocalStorage(name);

@@ -167,7 +167,7 @@ class FontHandler {
    addCustomFontToSvg(svg) {
       if (!this.base64 || !this.name)
          return;
-      const clname = 'custom_font_' + this.name, fmt = 'ttf';
+      const clname = 'custom_font_' + this.name.replace(/[^a-zA-Z0-9]/g, '_'), fmt = 'ttf';
       let defs = svg.selectChild('.canvas_defs');
       if (defs.empty())
          defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');

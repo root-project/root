@@ -10,7 +10,8 @@ let sessionKey = '';
 
 /** @summary HMAC implementation
  * @desc see https://en.wikipedia.org/wiki/HMAC for more details
- * @private */
+ * @private
+ */
 function HMAC(key, m, o) {
    const kbis = sha256(sessionKey + key),
          block_size = 64,
@@ -369,10 +370,10 @@ class WebWindowHandle {
 
    /** @summary Set callbacks receiver.
      * @param {object} obj - object with receiver functions
-     * @param {function} obj.onWebsocketMsg - called when new data received from RWebWindow
-     * @param {function} obj.onWebsocketOpened - called when connection established
-     * @param {function} obj.onWebsocketClosed - called when connection closed
-     * @param {function} obj.onWebsocketError - called when get error via the connection */
+     * @param {Function} obj.onWebsocketMsg - called when new data received from RWebWindow
+     * @param {Function} obj.onWebsocketOpened - called when connection established
+     * @param {Function} obj.onWebsocketClosed - called when connection closed
+     * @param {Function} obj.onWebsocketError - called when get error via the connection */
    setReceiver(obj) { this.#receiver = obj; }
 
    /** @summary Cleanup and close connection. */
@@ -579,7 +580,7 @@ class WebWindowHandle {
    }
 
    /** @summary Method open channel, which will share same connection, but can be used independently from main
-     * If @param url is provided - creates fully independent instance and perform connection with it
+     * @param {string} [url] - when provided creates fully independent instance and perform connection with it
      * @private */
    createChannel(url) {
       if (url)
@@ -663,7 +664,7 @@ class WebWindowHandle {
    }
 
    /** @summary Connect to the server
-     * @param [href] - optional URL to widget, use document URL instead
+     * @param {string} [href] - optional URL to widget, use document URL instead
      * @private */
    connect(href) {
       // ignore connect if channel from master connection configured

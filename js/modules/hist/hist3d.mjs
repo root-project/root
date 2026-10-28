@@ -609,7 +609,7 @@ function render3D(tmout) {
 function getRenderer() { return this.renderer; }
 
 /** @summary Check is 3D drawing need to be resized
-  * @desc If @par is_main === false, return last resize result called by main painter
+  * @param {boolean} is_main - when false, return last resize result called by main painter
   * @private */
 function resize3D(is_main) {
    if (is_main === false)

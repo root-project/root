@@ -2128,9 +2128,9 @@ function ZIP_inflate(arr, tgt) {
  * If the output buffer is too small, an error will be thrown.
  * If the returned value is negative, an error occurred at the returned offset.
  *
- * @param input {Buffer} input data
- * @param output {Buffer} output data
- * @return {Number} number of decoded bytes
+ * @param {Buffer} input  input data
+ * @param {Buffer} output  output data
+ * @return {number} number of decoded bytes
  * @private */
 function LZ4_uncompress(input, output, sIdx, eIdx) {
    sIdx = sIdx || 0;
@@ -2911,7 +2911,7 @@ class TDirectory {
    }
 
    /** @summary Read object from the directory
-     * @param {string} name - object name
+     * @param {string} obj_name - object name
      * @param {number} [cycle] - cycle number
      * @return {Promise} with read object */
    readObject(obj_name, cycle) {
@@ -2970,7 +2970,6 @@ class TFile {
       this.fSeekInfo = 0;
       this.fNbytesInfo = 0;
       this.fTagOffset = 0;
-      this.fStreamers = 0;
       this.fStreamerInfos = null;
       this.fFileName = '';
       this.fTimeout = settings.FilesTimeout ?? 0;
@@ -2985,10 +2984,9 @@ class TFile {
          this.fAcceptRanges = false;
       }
 
-      if (this.fURL.at(-1) === '^') {
+      // DEPRECATED just for compatibility with old function, remove in version 8
+      if (this.fURL.at(-1) === '^')
          this.fURL = this.fURL.slice(0, this.fURL.length - 1);
-         this.fSkipHeadRequest = true;
-      }
 
       if (this.fURL.at(-1) === '-') {
          this.fURL = this.fURL.slice(0, this.fURL.length - 1);
@@ -3018,9 +3016,9 @@ class TFile {
 
    /** @summary Assign remap for web servers
     * @desc Allows to specify fallback server if main server fails
-    * @param {Object} remap - looks like { 'https://original.server/': 'https://fallback.server/' } */
+    * @param {object} remap - looks like { 'https://original.server/': 'https://fallback.server/' } */
    assignRemap(remap) {
-      if (!remap && !isObject(remap))
+      if (!isObject(remap))
          return;
 
       for (const key in remap) {
@@ -3032,7 +3030,7 @@ class TFile {
       }
    }
 
-   /** @summary Assign BufferArray with file contentOpen file
+   /** @summary Assign BufferArray with file content
      * @private */
    assignFileContent(bufArray) {
       this.fFileContent = new TBuffer(new DataView(bufArray));
@@ -3710,7 +3708,7 @@ class TFile {
    }
 
    /** @summary Search streamer info
-     * @param {string} clanme - class name
+     * @param {string} clname - class name
      * @param {number} [clversion] - class version
      * @param {number} [checksum] - streamer info checksum, have to match when specified
      * @private */
@@ -4143,8 +4141,8 @@ class TProxyFile extends TFile {
   *  - [FileProxy]{@link FileProxy} let access arbitrary files via tiny proxy API
   * @param {string|object} arg - argument for file open like url, see details
   * @param {object} [opts] - extra arguments
-  * @param {Number} [opts.timeout=0] - read timeout for http requests in ms
-  * @param {Object} [opts.remap={}] - http server remap to fallback when main server fails, like { 'https://original.server/': 'https://fallback.server/' }
+  * @param {number} [opts.timeout=0] - read timeout for http requests in ms
+  * @param {object} [opts.remap={}] - http server remap to fallback when main server fails, like { 'https://original.server/': 'https://fallback.server/' }
   * @return {object} - Promise with {@link TFile} instance when file is opened
   * @example
   *

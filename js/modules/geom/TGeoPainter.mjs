@@ -109,7 +109,7 @@ function buildCompositeVolume(comp, maxlvl, side) {
 
 
 /** @summary Provides 3D rendering configuration from histogram painter
-  * @return {Object} with scene, renderer and other attributes
+  * @return {object} with scene, renderer and other attributes
   * @private */
 function getHistPainter3DCfg(painter) {
    const main = painter?.getFramePainter();
@@ -491,6 +491,7 @@ class TGeoPainter extends ObjectPainter {
          vislevel: undefined,
          maxnodes: undefined,
          dflt_colors: false,
+         notoolbar: false, // used in ROOT geom viewer
 
          info: { num_meshes: 0, num_faces: 0, num_shapes: 0 },
          depthTest: true,
@@ -512,7 +513,6 @@ class TGeoPainter extends ObjectPainter {
          depthMethodItems: [
             { name: 'Default', value: 'dflt' },
             { name: 'Raytraicing', value: 'ray' },
-            { name: 'Boundary box', value: 'box' },
             { name: 'Mesh size', value: 'size' },
             { name: 'Central point', value: 'pnt' }
          ],
@@ -930,7 +930,6 @@ class TGeoPainter extends ObjectPainter {
             separ = opt.length;
          res.script_name = opt.slice(macro + 6, separ);
          opt = opt.slice(0, macro) + opt.slice(separ + 1);
-         console.log(`script ${res.script_name} rest ${opt}`);
       }
 
       while (true) {
@@ -1375,8 +1374,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Method used to set transparency for all geometrical shapes
-     * @param {number|Function} transparency - one could provide function
-     * @param {boolean} [skip_render] - if specified, do not perform rendering */
+     * @param {number|Function} transparency - one could provide function */
    changedGlobalTransparency(transparency) {
       const func = isFunc(transparency) ? transparency : null;
       if (func || (transparency === undefined))
@@ -1618,7 +1616,7 @@ class TGeoPainter extends ObjectPainter {
             this.ctrl.vislevel = this.#clones?.getVisLevel() ?? 3;
          if (!this.ctrl.maxfaces)
             this.ctrl.maxfaces = 200000 * this.ctrl.more;
-         this.ctrl.more = 1;
+         this.ctrl.more = 1; // prevent autoincrease every next time drawing is started
 
          selection.add(this.ctrl, 'vislevel', 1, 99, 1)
                      .name('Visibility level')
@@ -3094,7 +3092,6 @@ class TGeoPainter extends ObjectPainter {
       const dataUrl = this.#renderer.domElement.toDataURL('image/png');
       if (filename === 'asis')
          return dataUrl;
-      dataUrl.replace('image/png', 'image/octet-stream');
       const doc = getDocument(),
             link = doc.createElement('a');
       if (isStr(link.download)) {
@@ -3178,8 +3175,8 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Place camera to default position,
-     * @param arg - true forces camera readjustment, 'first' is called when suppose to be first after complete drawing
-     * @param keep_zoom - tries to keep zooming factor of the camera */
+     * @param {boolean|string} arg - true forces camera readjustment, 'first' is called when suppose to be first after complete drawing
+     * @param {boolean} keep_zoom - tries to keep zooming factor of the camera */
    adjustCameraPosition(arg, keep_zoom) {
       if (!this.#toplevel || this.#superimpose)
          return;
@@ -3623,7 +3620,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Handle drop operation
-     * @desc opt parameter can include function name like opt$func_name
+     * @desc opt parameter can include function name like 'func_name$opt'
      * Such function should be possible to find via {@link findFunction}
      * Function has to return Promise with objects to draw on geometry
      * By default function with name 'extract_geo_tracks' is checked
@@ -4077,9 +4074,9 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Search for created shape for nodeid
     * @desc Used in ROOT geometry painter */
    findNodeShape(nodeid) {
-      if ((nodeid !== undefined) && !this.#draw_nodes) {
+      if ((nodeid !== undefined) && this.#draw_nodes) {
          for (let k = 0; k < this.#draw_nodes.length; ++k) {
-            const item = this.geo_painter._draw_nodes[k];
+            const item = this.#draw_nodes[k];
             if ((item.nodeid === nodeid) && item.server_shape)
                return item.server_shape;
          }
@@ -4451,7 +4448,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Checks camera position and recalculate rendering order if needed
-     * @param force - if specified, forces calculations of render order */
+     * @param {boolean} [force] - if specified, forces calculations of render order */
    testCameraPosition(force) {
       this.#camera.updateMatrixWorld();
 
@@ -4480,8 +4477,8 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Call 3D rendering of the geometry
-     * @param tmout - specifies delay, after which actual rendering will be invoked
-     * @param [measure] - when true, for the first time printout rendering time
+     * @param {number} tmout - specifies delay, after which actual rendering will be invoked
+     * @param {boolean} [measure] - when true, for the first time printout rendering time
      * @return {Promise} when tmout bigger than 0 is specified
      * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
      * superimposed with each other. If tmout <= 0, rendering performed immediately
@@ -6349,12 +6346,12 @@ function drawAxis3D() {
 }
 
 /** @summary Build three.js model for given geometry object
-  * @param {Object} obj - TGeo-related object
-  * @param {Object} [opt] - options
-  * @param {Number} [opt.vislevel] - visibility level like TGeoManager, when not specified - show all
-  * @param {Number} [opt.numnodes=1000] - maximal number of visible nodes
-  * @param {Number} [opt.numfaces=100000] - approx maximal number of created triangles
-  * @param {Number} [opt.instancing=-1] - <0 disable use of InstancedMesh, =0 only for large geometries, >0 enforce usage of InstancedMesh
+  * @param {object} obj - TGeo-related object
+  * @param {object} [opt] - options
+  * @param {number} [opt.vislevel] - visibility level like TGeoManager, when not specified - show all
+  * @param {number} [opt.numnodes=1000] - maximal number of visible nodes
+  * @param {number} [opt.numfaces=100000] - approx maximal number of created triangles
+  * @param {number} [opt.instancing=-1] - <0 disable use of InstancedMesh, =0 only for large geometries, >0 enforce usage of InstancedMesh
   * @param {boolean} [opt.doubleside=false] - use double-side material
   * @param {boolean} [opt.wireframe=false] - show wireframe for created shapes
   * @param {boolean} [opt.transparency=0] - make nodes transparent

@@ -30,7 +30,7 @@ class TMultiGraphPainter extends ObjectPainter {
 
    /** @summary Constructor
      * @param {object|string} dom - DOM element for drawing or element id
-     * @param {object} obj - TMultiGraph object to draw */
+     * @param {object} mgraph - TMultiGraph object to draw */
    constructor(dom, mgraph, opt) {
       super(dom, mgraph, opt);
       this.#firstpainter = null;

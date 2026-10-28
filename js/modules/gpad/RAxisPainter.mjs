@@ -605,7 +605,7 @@ class RAxisPainter extends RObjectPainter {
    }
 
    /** @summary Draw axis ticks
-     * @return {Object} with gaps on left and right side
+     * @return {object} with gaps on left and right side
      * @private */
    drawTicks(axis_g, side, main_draw) {
       if (main_draw)

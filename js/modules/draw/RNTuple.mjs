@@ -1,5 +1,6 @@
 import { isStr } from '../core.mjs';
-import { treeDrawProgress } from './TTree.mjs';
+import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { createTreePlayer, treeDrawProgress } from './TTree.mjs';
 import { rntupleDraw } from '../rntuple.mjs';
 
 /** @summary function called from draw()
@@ -23,16 +24,42 @@ async function drawRNTuple(dom, obj, opt) {
    } else {
       tuple = obj;
       args.expr = opt;
+      if (args.expr && isStr(args.expr)) {
+         const p = args.expr.indexOf('player');
+         if (p === 0) {
+            args.player = true;
+            args.expr = args.expr.slice(6);
+            if (args.expr[0] === ':')
+               args.expr = args.expr.slice(1);
+         } else if ((p >= 0) && (p === args.expr.length - 6)) {
+            args.player = true;
+            args.expr = args.expr.slice(0, p);
+            if ((p > 0) && (args.expr[p - 1] === ';'))
+               args.expr = args.expr.slice(0, p - 1);
+         }
+      }
    }
 
    if (!tuple)
       throw Error('No RNTuple object available for drawing');
 
-   args.drawid = dom;
+   let painter;
+
+   if (args.player) {
+      painter = new ObjectPainter(dom, obj, opt);
+      createTreePlayer(painter, null, tuple);
+      painter.rntupleDraw = rntupleDraw;
+      painter.showPlayer(args);
+      args.drawid = painter.drawid;
+   } else
+      args.drawid = dom;
 
    args.progress = treeDrawProgress.bind(args);
 
-   return rntupleDraw(tuple, args).then(res => args.progress(res, true));
+   if (args.expr || args.branch)
+      return rntupleDraw(tuple, args).then(res => args.progress(res, true));
+
+   return painter;
 }
 
 export { drawRNTuple };

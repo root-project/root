@@ -292,7 +292,7 @@ class TPavePainter extends ObjectPainter {
                      if (pt.fY1NDC > pt.fY2NDC)
                         pt.fY2NDC = Math.min(0.995, pt.fY1NDC + stath + extrah);
                      if (pt.fX1NDC > pt.fX2NDC)
-                        pt.fY2NDC = Math.min(0.995, pt.fX1NDC + statw);
+                        pt.fX2NDC = Math.min(0.995, pt.fX1NDC + statw);
                   }
                }
             }
@@ -1378,7 +1378,7 @@ class TPavePainter extends ObjectPainter {
             remain = remain.slice(0, p) + remain.slice(p + nn.length);
          }
       });
-      menu.addSelectMenu('positon', posarr, value || 'nb', arg => {
+      menu.addSelectMenu('position', posarr, value || 'nb', arg => {
          arg += remain;
          this.setPaveDrawOption(arg);
          this.interactiveRedraw(true, `exec:${set_opt}("${arg}")`);
@@ -1497,7 +1497,7 @@ class TPavePainter extends ObjectPainter {
          menu.endsub();
 
          menu.sub('SetOptFit', () => {
-            menu.input('Enter OptStat', pave.fOptFit, 'int').then(fmt => {
+            menu.input('Enter OptFit', pave.fOptFit, 'int').then(fmt => {
                pave.fOptFit = fmt;
                this.interactiveRedraw(true, `exec:SetOptFit(${fmt})`);
             });
@@ -1614,17 +1614,17 @@ class TPavePainter extends ObjectPainter {
       return this.matchObjectType(clTPaveStats);
    }
 
-   /** @summary Returns true when stat box is drawn */
+   /** @summary Returns true when pave text is drawn */
    isPaveText() {
       return this.matchObjectType(clTPaveText);
    }
 
-   /** @summary Returns true when stat box is drawn */
+   /** @summary Returns true when paves text is drawn */
    isPavesText() {
       return this.matchObjectType(clTPavesText);
    }
 
-   /** @summary Returns true when stat box is drawn */
+   /** @summary Returns true when palette is drawn */
    isPalette() {
       return this.matchObjectType(clTPaletteAxis);
    }

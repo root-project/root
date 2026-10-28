@@ -257,8 +257,8 @@ function readStyleFromURL(url) {
 
 /** @summary Build main GUI
   * @desc Used in many HTML files to create JSROOT GUI elements
-  * @param {String} gui_element - id of the `<div>` element
-  * @param {String} gui_kind - either 'online', 'nobrowser', 'draw'
+  * @param {string} gui_element - id of the `<div>` element
+  * @param {string} gui_kind - either 'online', 'nobrowser', 'draw'
   * @return {Promise} with {@link HierarchyPainter} instance
   * @example
   * import { buildGUI } from 'https://root.cern/js/latest/modules/gui.mjs';

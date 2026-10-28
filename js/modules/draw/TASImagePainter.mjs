@@ -293,7 +293,7 @@ class TASImagePainter extends ObjectPainter {
          if (!res?.url)
             return this;
 
-         const img = this.createG(fp)
+         const img = this.createG(Boolean(fp))
              .append('image')
              .attr('href', res.url)
              .attr('width', rect.width)

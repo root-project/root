@@ -169,7 +169,7 @@ function adoptRootColors(objarr) {
 
 /** @summary Return ROOT color by index
   * @desc Color numbering corresponds typical ROOT colors
-  * @return {String} with RGB color code or existing color name like 'cyan'
+  * @return {string} with RGB color code or existing color name like 'cyan'
   * @private */
 function getColor(indx) {
    return gbl_colors_list[indx];
@@ -190,8 +190,8 @@ function findColor(name) {
 
 /** @summary Add new color
   * @param {string} rgb - color name or just string with rgb value
-  * @param {array} [lst] - optional colors list, to which add colors
-  * @param {array} [lst] - optional colors list, to which add colors
+  * @param {Array} [lst] - optional colors list, to which add colors
+  * @param {number} [indx] - optional color index in provided colors list
   * @return {number} index of new color
   * @private */
 function addColor(rgb, lst, indx) {

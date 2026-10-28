@@ -986,10 +986,10 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Zooming of single axis
-     * @param {String} name - axis name like x/y/z but also second axis x2 or y2
-     * @param {Number} vmin - axis minimal value, 0 for unzoom
-     * @param {Number} vmax - axis maximal value, 0 for unzoom
-     * @param {Boolean} [interactive] - if change was performed interactively
+     * @param {string} name - axis name like x/y/z but also second axis x2 or y2
+     * @param {number} vmin - axis minimal value, 0 for unzoom
+     * @param {number} vmax - axis maximal value, 0 for unzoom
+     * @param {boolean} [interactive] - if change was performed interactively
      * @protected */
    async zoomSingle(name, vmin, vmax, interactive) {
       const names = ['x', 'y', 'z', 'x2', 'y2'], indx = names.indexOf(name);

@@ -101,7 +101,7 @@ class TGraphTimePainter extends ObjectPainter {
       } else {
          let sleeptime = Math.max(gr.fSleepTime, 10);
 
-         if (++this.#step > gr.fSteps.arr.length) {
+         if (++this.#step >= gr.fSteps.arr.length) {
             if (o.repeat) {
                this.#step = 0; // start again
                sleeptime = Math.max(5000, 5 * sleeptime); // increase sleep time

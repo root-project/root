@@ -150,7 +150,7 @@ class RBufferReader {
 
 /** @summary Rearrange bytes from split format to normal format (row-wise) for decoding
  * @private */
-function recontructUnsplitBuffer(view, coltype) {
+function reconstructUnsplitBuffer(view, coltype) {
    // Determine byte size based on column type
    let byteSize;
    switch (coltype) {
@@ -191,7 +191,7 @@ function recontructUnsplitBuffer(view, coltype) {
    return outView;
 }
 
-/** @summary Decode a 32 bit intex buffer
+/** @summary Decode a 32 bit index buffer
  * @private */
 function decodeIndex32(view) {
    for (let o = 0, prev = 0; o < view.byteLength; o += 4) {
@@ -201,7 +201,7 @@ function decodeIndex32(view) {
    }
 }
 
-/** @summary Decode a 64 bit intex buffer
+/** @summary Decode a 64 bit index buffer
  * @private */
 function decodeIndex64(view, shift) {
    for (let o = 0, prev = 0n; o < view.byteLength; o += (8 + shift)) {
@@ -450,7 +450,7 @@ class RNTupleDescriptorBuilder {
             index: i
          };
          column.isDeferred = function() {
-            return (this.flags & RNTupleDescriptorBuilder.kFlagDeferredColumn) !== 0;
+            return (this.flags & kFlagDeferredColumn) !== 0;
          };
          column.isSuppressed = function() {
             return this.firstElementIndex !== null && this.firstElementIndex < 0;
@@ -704,7 +704,7 @@ async function readHeaderFooter(tuple) {
       if (!header_blob || !footer_blob)
          throw new Error('Failure when uncompress header and footer blobs');
 
-      tuple.builder = new RNTupleDescriptorBuilder;
+      tuple.builder = new RNTupleDescriptorBuilder();
       tuple.builder.deserializeHeader(header_blob);
       tuple.builder.deserializeFooter(footer_blob);
 
@@ -752,7 +752,7 @@ async function readHeaderFooter(tuple) {
 }
 
 
-/** @class Base class to read columns/fields from RNtuple
+/** @class Base class to read columns/fields from RNTuple
  * @private */
 
 class ReaderItem {
@@ -1060,7 +1060,7 @@ class ReaderItem {
          throw new Error(`Invalid blob type for column ${this.id}: ${Object.prototype.toString.call(rawblob)}`);
 
       const originalColtype = this.column.coltype,
-            view = recontructUnsplitBuffer(rawblob, originalColtype);
+            view = reconstructUnsplitBuffer(rawblob, originalColtype);
 
       // Handle split index types
       switch (originalColtype) {
@@ -1210,7 +1210,7 @@ class BitsetReaderItem extends ReaderItem {
             if (this.bigint)
                res |= (1n << BigInt(len));
             else
-               res |= 1 << len;
+               res += 2 ** len;
          }
          len++;
       }
@@ -1348,9 +1348,9 @@ class PairReaderItem extends ReaderItem {
 }
 
 
-/** @summary Process selector for the RNtuple
+/** @summary Process selector for the RNTuple
   * @desc function similar to the {@link treeProcess}
-  * @param {object} rntuple - instance of RNtuple class
+  * @param {object} rntuple - instance of RNTuple class
   * @param {object} selector - instance of {@link TSelector} class
   * @param {object} [args] - different arguments
   * @param {number} [args.firstentry] - first entry to process, 0 when not specified
@@ -1545,7 +1545,7 @@ async function rntupleProcess(rntuple, selector, args = {}) {
 
    return readHeaderFooter(rntuple).then(builder => {
       if (!builder)
-         throw new Error('Not able to read header for the RNtuple');
+         throw new Error('Not able to read header for the RNTuple');
 
       for (let i = 0; i < selector.numBranches(); ++i) {
          const br = selector.getBranch(i),
@@ -1570,7 +1570,7 @@ async function rntupleProcess(rntuple, selector, args = {}) {
       builder.clusterSummaries.forEach(summary => { handle.lastentry += summary.numEntries; });
 
       if (handle.firstentry >= handle.lastentry)
-         throw new Error('Not able to find entries in the RNtuple');
+         throw new Error('Not able to find entries in the RNTuple');
 
       // select range of entries to process
       handle.process_min = handle.firstentry;
@@ -1603,7 +1603,7 @@ async function rntupleProcess(rntuple, selector, args = {}) {
       }
 
       if (handle.current_cluster < 0)
-         throw new Error(`Not able to find cluster for entry ${handle.process_min} in the RNtuple`);
+         throw new Error(`Not able to find cluster for entry ${handle.process_min} in the RNTuple`);
 
       handle.current_entry = handle.process_min;
 
@@ -1644,7 +1644,7 @@ class TDrawSelectorTuple extends TDrawSelector {
  * @param {Array} [args.elist=undefined] - array of entries id to process, all by default
  * @param {boolean} [args.staged] - staged processing, first apply cut to select entries and then perform drawing for selected entries
  * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
- * @param {function} [args.progress=undefined] - function called during histogram accumulation with obj argument
+ * @param {Function} [args.progress=undefined] - function called during histogram accumulation with obj argument
  * @return {Promise} with produced object */
 
 async function rntupleDraw(rntuple, args) {
@@ -1676,7 +1676,7 @@ async function tupleHierarchy(tuple_node, tuple) {
             _name: field.fieldName,
             _typename: 'ROOT::RNTupleField', // pseudo class name, used in draw.mjs
             _kind: 'ROOT::RNTupleField',
-            _title: `Filed of type ${field.typeName}`,
+            _title: `Field of type ${field.typeName}`,
             $tuple: tuple, // reference on tuple, need for drawing
             $field: field
          };

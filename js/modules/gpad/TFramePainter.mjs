@@ -425,10 +425,10 @@ class TooltipHandler extends ObjectPainter {
             scale = pp?.getPadScale() ?? 1,
             textheight = (pnt?.touch ? 15 : 11) * scale,
             font = new FontHandler(160, textheight),
-            disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
+            disable_tooltips = !this.isTooltipAllowed() || !this.tooltip_enabled;
 
       if (pnt) {
-         pnt.disabled = disable_tootlips; // indicate that highlighting is not required
+         pnt.disabled = disable_tooltips; // indicate that highlighting is not required
          pnt.painters = true; // get also painter
       }
 
@@ -540,7 +540,7 @@ class TooltipHandler extends ObjectPainter {
       this.showObjectStatus(name, title, info, coordinates);
 
       // end of closing tooltips
-      if (!pnt || disable_tootlips || !hints.length || (maxlen === 0) || (show_only_best && !best_hint)) {
+      if (!pnt || disable_tooltips || !hints.length || (maxlen === 0) || (show_only_best && !best_hint)) {
          hintsg.remove();
          return;
       }
@@ -588,7 +588,7 @@ class TooltipHandler extends ObjectPainter {
             viewmode = 'right';
             posx = frame_rect.width - 60;
          } else
-            posx = hintsg.property('startx');
+            posx = hintsg.property('startx') ?? 20;
       }
 
       if (viewmode !== hintsg.property('viewmode')) {
@@ -640,7 +640,7 @@ class TooltipHandler extends ObjectPainter {
             if ((gapminx === -1111) && (gapmaxx === -1111))
                gapminx = gapmaxx = hint.x;
             gapminx = Math.min(gapminx, hint.x);
-            gapmaxx = Math.min(gapmaxx, hint.x);
+            gapmaxx = Math.max(gapmaxx, hint.x);
          }
 
          group.attr('x', posx)
@@ -944,7 +944,8 @@ class FrameInteractive extends TooltipHandler {
       if (zoom.dleft || zoom.dright) {
          if (!settings.Zooming)
             return false;
-         // in 3d mode with orbit control ignore simple arrows
+         // in 3d mode with orbit control ignore simple arrows,
+         // intentionally no compare for indexOf while only Ctrl is allowed
          if (this.mode3d && key.indexOf('Ctrl'))
             return false;
          this.analyzeMouseWheelEvent(null, zoom, 0.5);
@@ -2983,13 +2984,13 @@ class TFramePainter extends FrameInteractive {
 
    /** @summary Function can be used for zooming into specified range
      * @desc if both limits for each axis 0 (like xmin === xmax === 0), axis will be un-zoomed
-     * @param {number} xmin
-     * @param {number} xmax
-     * @param {number} [ymin]
-     * @param {number} [ymax]
-     * @param {number} [zmin]
-     * @param {number} [zmax]
-     * @param [interactive] - if changes was performed interactively
+     * @param {number} xmin - X minimum
+     * @param {number} xmax - X maximum
+     * @param {number} [ymin] - Y minimum
+     * @param {number} [ymax] - Y maximum
+     * @param {number} [zmin] - Z minimum
+     * @param {number} [zmax] - Z maximum
+     * @param {boolean} [interactive] - if changes was performed interactively
      * @return {Promise} with boolean flag if zoom operation was performed */
    async zoom(xmin, xmax, ymin, ymax, zmin, zmax, interactive) {
       if (xmin === 'x') {
@@ -3143,10 +3144,10 @@ class TFramePainter extends FrameInteractive {
    }
 
    /** @summary Zooming of single axis
-     * @param {String} name - axis name like x/y/z but also second axis x2 or y2
-     * @param {Number} vmin - axis minimal value, 0 for unzoom
-     * @param {Number} vmax - axis maximal value, 0 for unzoom
-     * @param {Boolean} [interactive] - if change was performed interactively
+     * @param {string} name - axis name like x/y/z but also second axis x2 or y2
+     * @param {number} vmin - axis minimal value, 0 for unzoom
+     * @param {number} vmax - axis maximal value, 0 for unzoom
+     * @param {boolean} [interactive] - if change was performed interactively
      * @protected */
    async zoomSingle(name, vmin, vmax, interactive) {
       const handle = this[`${name}_handle`], name_min = `zoom_${name}min`, name_max = `zoom_${name}max`;

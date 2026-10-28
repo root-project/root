@@ -1077,7 +1077,8 @@ class TGraphDelaunay {
 
 } // class TGraphDelaunay
 
-/** @summary Function handles tooltips in the mesh */
+/** @summary Function handles tooltips in the mesh
+ * @private */
 function _graph2DTooltip(intersect) {
    let indx = Math.floor(intersect.index / this.nvertex);
    if ((indx < 0) || (indx >= this.index.length))

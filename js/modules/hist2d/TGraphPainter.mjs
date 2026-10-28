@@ -352,7 +352,7 @@ class TGraphPainter extends ObjectPainter {
     * @protected */
    _getBins() { return this.#bins; }
 
-   /** @summary Create bins for TF1 drawing */
+   /** @summary Create bins for TGraph drawing */
    createBins() {
       const gr = this.getGraph(),
             o = this.getOptions();
@@ -674,7 +674,7 @@ class TGraphPainter extends ObjectPainter {
       const line_events_handling = !this.isBatchMode() && (options.Line || options.Errors) ? 'none' : null;
 
       if (main_block && lineatt.excl_side) {
-         excl_width = lineatt.excl_width;
+         excl_width = lineatt.excl_width * lineatt.excl_side;
          if ((lineatt.width > 0) && !options.Line && !options.Curve)
             options.Line = 1;
       }
@@ -1772,7 +1772,6 @@ class TGraphPainter extends ObjectPainter {
 
       stats.AddText(func.fName);
 
-      // while TF1 was found, one can be sure that stats is existing
       this.getGraph().fFunctions.Add(stats);
 
       return stats;

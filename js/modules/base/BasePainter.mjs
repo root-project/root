@@ -15,10 +15,10 @@ const prSVG = 'data:image/svg+xml;charset=utf-8,',
 
 /** @summary Returns visible rect of element
   * @param {object} elem - d3.select object with element
-  * @param {string} [kind] - which size method is used
-  * @desc kind = 'bbox' use getBBox, works only with SVG
-  * kind = 'full' - full size of element, using getBoundingClientRect function
-  * kind = 'nopadding' - excludes padding area
+  * @param {string} [sizearg] - which size method is used
+  * @desc sizearg = 'bbox' use getBBox, works only with SVG
+  * sizearg = 'full' - full size of element, using getBoundingClientRect function
+  * sizearg = 'nopadding' - excludes padding area
   * With node.js can use 'width' and 'height' attributes when provided in element
   * @private */
 function getElementRect(elem, sizearg) {

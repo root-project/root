@@ -6,7 +6,7 @@ import { TFramePainter } from '../gpad/TFramePainter.mjs';
 import { createLineSegments, PointsCreator, Box3D, THREE } from '../base/base3d.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { crete3DFrame } from './hist3d.mjs';
-import { proivdeEvalPar, getTF1Value } from '../base/func.mjs';
+import { provideEvalPar, getTF1Value } from '../base/func.mjs';
 
 
 /**
@@ -155,10 +155,10 @@ class TH3Painter extends THistPainter {
                   np += w;
                   sumx3 += w * Math.pow(xx - res.meanx, 3);
                   sumy3 += w * Math.pow(yy - res.meany, 3);
-                  sumz3 += w * Math.pow(zz - res.meany, 3);
+                  sumz3 += w * Math.pow(zz - res.meanz, 3);
                   sumx4 += w * Math.pow(xx - res.meanx, 4);
                   sumy4 += w * Math.pow(yy - res.meany, 4);
-                  sumz4 += w * Math.pow(yy - res.meany, 4);
+                  sumz4 += w * Math.pow(zz - res.meanz, 4);
                }
             }
          }
@@ -488,7 +488,7 @@ class TH3Painter extends THistPainter {
       const cntr = use_colors ? this.getContour() : null,
             palette = use_colors ? this.getHistPalette() : null,
             bins_matrixes = [], bins_colors = [], bins_ids = [], negative_matrixes = [], bin_opacities = [],
-            transfer = (this.transferFunc && proivdeEvalPar(this.transferFunc, true)) ? this.transferFunc : null,
+            transfer = (this.transferFunc && provideEvalPar(this.transferFunc, true)) ? this.transferFunc : null,
             get_bin_weight = content => {
                if ((exclude_content >= 0) && (content < exclude_content))
                   return 0;

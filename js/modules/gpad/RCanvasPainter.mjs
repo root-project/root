@@ -736,7 +736,7 @@ function drawRPadSnapshot(dom, snap, opt) {
 }
 
 /** @summary Ensure RCanvas and RFrame for the painter object
-  * @param {Object} painter  - painter object to process
+  * @param {object} painter  - painter object to process
   * @desc Assigns DOM, creates and draw RCanvas and RFrame if necessary, add painter to pad list of painters
   * @return {Promise} for ready
   * @private */

@@ -1,7 +1,7 @@
 /** @license
  *
  * jsPDF - PDF Document creation from JavaScript
- * Version 3.0.3
+ * Version 4.2.1
  *
  * Copyright (c) 2010-2025 James Hall <james@parall.ax>, https://github.com/MrRio/jsPDF
  *               2015-2025 yWorks GmbH, http://www.yworks.com
@@ -3888,7 +3888,7 @@ function jsPDF(options) {
         }
         return (
           "data:application/pdf;filename=" +
-          options.filename +
+          encodeURIComponent(options.filename) +
           ";base64," +
           dataURI
         );
@@ -6695,7 +6695,9 @@ function jsPDF(options) {
     getEncryptor: getEncryptor,
     output: output,
     getNumberOfPages: getNumberOfPages,
-    pages: pages,
+    get pages() {
+      return pages;
+    },
     out: out,
     f2: f2,
     f3: f3,
@@ -6774,7 +6776,7 @@ jsPDF.API = {
  * @type {string}
  * @memberof jsPDF#
  */
-jsPDF.version = "3.0.3";
+jsPDF.version = "4.2.1";
 
 /* global jsPDF */
 
@@ -6792,6 +6794,23 @@ var pdfUnescape = function(value) {
     .replace(/\\\\/g, "\\")
     .replace(/\\\(/g, "(")
     .replace(/\\\)/g, ")");
+};
+
+/**
+ * Escapes a PDF Name Object.
+ * Replaces special characters (delimiter, whitespace, #) with their hex representation.
+ */
+var pdfEscapeName = function(value) {
+  return value
+    .toString()
+    .replace(/#/g, "#23")
+    .replace(/[\s\n\r()<>[\]{}\/%]/g, c => {
+      const hex = c
+        .charCodeAt(0)
+        .toString(16)
+        .toUpperCase();
+      return "#" + (hex.length === 1 ? "0" + hex : hex);
+    });
 };
 
 var f2 = function(number) {
@@ -7506,12 +7525,12 @@ var arrayToPdfArray = (jsPDFAPI.__acroform__.arrayToPdfArray = function(
           content += array[i].toString();
           break;
         case "string":
-          if (array[i].substr(0, 1) !== "/") {
+          if (array[i].substr(0, 1) === "/") {
+            content += "/" + pdfEscapeName(array[i].substr(1));
+          } else {
             if (typeof objId !== "undefined" && scope)
               encryptor = scope.internal.getEncryptor(objId);
             content += "(" + pdfEscape(encryptor(array[i].toString())) + ")";
-          } else {
-            content += array[i].toString();
           }
           break;
       }
@@ -7523,6 +7542,7 @@ var arrayToPdfArray = (jsPDFAPI.__acroform__.arrayToPdfArray = function(
     "Invalid argument passed to jsPDF.__acroform__.arrayToPdfArray"
   );
 });
+
 function getMatches(string, regex, index) {
   index || (index = 1); // default to the first capturing group
   var matches = [];
@@ -8158,7 +8178,7 @@ var AcroFormField = function() {
     set: function(value) {
       value = value.toString();
       if (this instanceof AcroFormButton === true) {
-        _DV = "/" + value;
+        _DV = "/" + pdfEscapeName(value);
       } else {
         _DV = value;
       }
@@ -8225,7 +8245,7 @@ var AcroFormField = function() {
     set: function(value) {
       value = value.toString();
       if (this instanceof AcroFormButton === true) {
-        _V = "/" + value;
+        _V = "/" + pdfEscapeName(value);
       } else {
         _V = value;
       }
@@ -8889,7 +8909,11 @@ var AcroFormButton = function() {
       return _AS;
     },
     set: function(value) {
-      _AS = value;
+      var name = value === undefined || value === null ? "" : value.toString();
+      if (name.substr(0, 1) === "/") {
+        name = name.substr(1);
+      }
+      _AS = "/" + pdfEscapeName(name);
     }
   });
 
@@ -8906,7 +8930,7 @@ var AcroFormButton = function() {
       return _AS.substr(1, _AS.length - 1);
     },
     set: function(value) {
-      _AS = "/" + value;
+      _AS = "/" + pdfEscapeName(value);
     }
   });
 };
@@ -9042,7 +9066,11 @@ var AcroFormChildClass = function() {
       return _AS;
     },
     set: function(value) {
-      _AS = value;
+      var name = value === undefined || value === null ? "" : value.toString();
+      if (name.substr(0, 1) === "/") {
+        name = name.substr(1);
+      }
+      _AS = "/" + pdfEscapeName(name);
     }
   });
 
@@ -9059,7 +9087,11 @@ var AcroFormChildClass = function() {
       return _AS.substr(1, _AS.length - 1);
     },
     set: function(value) {
-      _AS = "/" + value;
+      var name = value === undefined || value === null ? "" : value.toString();
+      if (name.substr(0, 1) === "/") {
+        name = name.substr(1);
+      }
+      _AS = "/" + pdfEscapeName(name);
     }
   });
   this.caption = "l";
@@ -10700,6 +10732,8 @@ var AcroForm = jsPDF.AcroForm;
    * @param {string} compression compression of the generated JPEG, can have the values 'NONE', 'FAST', 'MEDIUM' and 'SLOW'
    * @param {number} rotation rotation of the image in degrees (0-359)
    *
+   * @throws {Error} if the input is invalid, such as invalid image data.
+   *
    * @returns jsPDF
    */
   jsPDFAPI.addImage = function() {
@@ -11066,6 +11100,9 @@ var AcroForm = jsPDF.AcroForm;
               getVerticalCoordinateString(anno.bounds.y + anno.bounds.h) +
               "] ";
             var color = anno.color || "#000000";
+            var defaultStyle =
+              "font: Helvetica,sans-serif 12.0pt; text-align:left; color:#" +
+              color;
             line =
               "<</Type /Annot /Subtype /" +
               "FreeText" +
@@ -11074,10 +11111,7 @@ var AcroForm = jsPDF.AcroForm;
               "/Contents (" +
               escape(encryptor(anno.contents)) +
               ")";
-            line +=
-              " /DS(font: Helvetica,sans-serif 12.0pt; text-align:left; color:#" +
-              color +
-              ")";
+            line += " /DS(" + escape(encryptor(defaultStyle)) + ")";
             line += " /Border [0 0 0]";
             line += " >>";
             this.internal.write(line);
@@ -12137,7 +12171,8 @@ var AcroForm = jsPDF.AcroForm;
         arguments[2],
         arguments[3],
         arguments[4],
-        arguments[5]
+        arguments[5],
+        arguments[6]
       );
     }
     _initialize.call(this);
@@ -13356,14 +13391,19 @@ function parseFontFamily(input) {
     });
 
     var _fontFaceMap = null;
+    var _cachedFontList = null;
 
     function getFontFaceMap(pdf, fontFaces) {
-      if (_fontFaceMap === null) {
-        var fontMap = pdf.getFontList();
+      var currentFontMap = pdf.getFontList();
 
-        var convertedFontFaces = convertToFontFaces(fontMap);
+      // Check if the font list has changed by comparing the JSON representation
+      var currentFontMapString = JSON.stringify(currentFontMap);
+
+      if (_fontFaceMap === null || _cachedFontList !== currentFontMapString) {
+        var convertedFontFaces = convertToFontFaces(currentFontMap);
 
         _fontFaceMap = buildFontFaceMap(convertedFontFaces.concat(fontFaces));
+        _cachedFontList = currentFontMapString;
       }
 
       return _fontFaceMap;
@@ -13439,6 +13479,7 @@ function parseFontFamily(input) {
       },
       set: function(value) {
         _fontFaceMap = null;
+        _cachedFontList = null;
         _fontFaces = value;
       }
     });
@@ -13453,7 +13494,7 @@ function parseFontFamily(input) {
 
         //source: https://stackoverflow.com/a/10136041
         // eslint-disable-next-line no-useless-escape
-        rx = /^\s*(?=(?:(?:[-a-z]+\s*){0,2}(italic|oblique))?)(?=(?:(?:[-a-z]+\s*){0,2}(small-caps))?)(?=(?:(?:[-a-z]+\s*){0,2}(bold(?:er)?|lighter|[1-9]00))?)(?:(?:normal|\1|\2|\3)\s*){0,3}((?:xx?-)?(?:small|large)|medium|smaller|larger|[.\d]+(?:\%|in|[cem]m|ex|p[ctx]))(?:\s*\/\s*(normal|[.\d]+(?:\%|in|[cem]m|ex|p[ctx])))?\s*([-_,\"\'\sa-z]+?)\s*$/i;
+        rx = /^\s*(?=(?:(?:[-a-z]+\s*){0,2}(italic|oblique))?)(?=(?:(?:[-a-z]+\s*){0,2}(small-caps))?)(?=(?:(?:[-a-z]+\s*){0,2}(bold(?:er)?|lighter|[1-9]00))?)(?:(?:normal|\1|\2|\3)\s*){0,3}((?:xx?-)?(?:small|large)|medium|smaller|larger|[.\d]+(?:\%|in|[cem]m|ex|p[ctx]))(?:\s*\/\s*(normal|[.\d]+(?:\%|in|[cem]m|ex|p[ctx])))?\s*([-_,\"\'\sa-z0-9]+?)\s*$/i;
         matches = rx.exec(value);
         if (matches !== null) {
           var fontStyle = matches[1];
@@ -14513,18 +14554,19 @@ function parseFontFamily(input) {
         sheight * factorY
       )
     );
-    var pageArray = getPagesByPath.call(this, xRect);
-    var pages = [];
-    for (var ii = 0; ii < pageArray.length; ii += 1) {
-      if (pages.indexOf(pageArray[ii]) === -1) {
-        pages.push(pageArray[ii]);
-      }
-    }
 
-    sortPages(pages);
-
-    var clipPath;
     if (this.autoPaging) {
+      var pageArray = getPagesByPath.call(this, xRect);
+      var pages = [];
+      for (var ii = 0; ii < pageArray.length; ii += 1) {
+        if (pages.indexOf(pageArray[ii]) === -1) {
+          pages.push(pageArray[ii]);
+        }
+      }
+
+      sortPages(pages);
+
+      var clipPath;
       var min = pages[0];
       var max = pages[pages.length - 1];
       for (var i = min; i < max + 1; i++) {
@@ -14730,32 +14772,32 @@ function parseFontFamily(input) {
     var lineWidth = Math.abs(oldLineWidth * this.ctx.transform.scaleX);
     var lineJoin = this.lineJoin;
 
-    var origPath = JSON.parse(JSON.stringify(this.path));
-    var xPath = JSON.parse(JSON.stringify(this.path));
-    var clipPath;
-    var tmpPath;
-    var pages = [];
+    if (this.autoPaging) {
+      var origPath = JSON.parse(JSON.stringify(this.path));
+      var xPath = JSON.parse(JSON.stringify(this.path));
+      var clipPath;
+      var tmpPath;
+      var pages = [];
 
-    for (var i = 0; i < xPath.length; i++) {
-      if (typeof xPath[i].x !== "undefined") {
-        var page = getPagesByPath.call(this, xPath[i]);
+      for (var i = 0; i < xPath.length; i++) {
+        if (typeof xPath[i].x !== "undefined") {
+          var page = getPagesByPath.call(this, xPath[i]);
 
-        for (var ii = 0; ii < page.length; ii += 1) {
-          if (pages.indexOf(page[ii]) === -1) {
-            pages.push(page[ii]);
+          for (var ii = 0; ii < page.length; ii += 1) {
+            if (pages.indexOf(page[ii]) === -1) {
+              pages.push(page[ii]);
+            }
           }
         }
       }
-    }
 
-    for (var j = 0; j < pages.length; j++) {
-      while (this.pdf.internal.getNumberOfPages() < pages[j]) {
-        addPage.call(this);
+      for (var j = 0; j < pages.length; j++) {
+        while (this.pdf.internal.getNumberOfPages() < pages[j]) {
+          addPage.call(this);
+        }
       }
-    }
-    sortPages(pages);
+      sortPages(pages);
 
-    if (this.autoPaging) {
       var min = pages[0];
       var max = pages[pages.length - 1];
       for (var k = min; k < max + 1; k++) {
@@ -14819,12 +14861,12 @@ function parseFontFamily(input) {
         }
         this.lineWidth = oldLineWidth;
       }
+      this.path = origPath;
     } else {
       this.lineWidth = lineWidth;
       drawPaths.call(this, rule, isClip);
       this.lineWidth = oldLineWidth;
     }
-    this.path = origPath;
   };
 
   /**
@@ -15149,30 +15191,32 @@ function parseFontFamily(input) {
     var yTop = yBottom - textDimensions.h;
 
     var pt = this.ctx.transform.applyToPoint(new Point(options.x, yBaseLine));
-    var decomposedTransformationMatrix = this.ctx.transform.decompose();
-    var matrix = new Matrix();
-    matrix = matrix.multiply(decomposedTransformationMatrix.translate);
-    matrix = matrix.multiply(decomposedTransformationMatrix.skew);
-    matrix = matrix.multiply(decomposedTransformationMatrix.scale);
-
-    var baselineRect = this.ctx.transform.applyToRectangle(
-      new Rectangle(options.x, yBaseLine, textDimensions.w, textDimensions.h)
-    );
-    var textBounds = matrix.applyToRectangle(
-      new Rectangle(options.x, yTop, textDimensions.w, textDimensions.h)
-    );
-    var pageArray = getPagesByPath.call(this, textBounds);
-    var pages = [];
-    for (var ii = 0; ii < pageArray.length; ii += 1) {
-      if (pages.indexOf(pageArray[ii]) === -1) {
-        pages.push(pageArray[ii]);
-      }
-    }
-
-    sortPages(pages);
 
     var clipPath, oldSize, oldLineWidth;
+
     if (this.autoPaging) {
+      var decomposedTransformationMatrix = this.ctx.transform.decompose();
+      var matrix = new Matrix();
+      matrix = matrix.multiply(decomposedTransformationMatrix.translate);
+      matrix = matrix.multiply(decomposedTransformationMatrix.skew);
+      matrix = matrix.multiply(decomposedTransformationMatrix.scale);
+
+      var baselineRect = this.ctx.transform.applyToRectangle(
+        new Rectangle(options.x, yBaseLine, textDimensions.w, textDimensions.h)
+      );
+      var textBounds = matrix.applyToRectangle(
+        new Rectangle(options.x, yTop, textDimensions.w, textDimensions.h)
+      );
+      var pageArray = getPagesByPath.call(this, textBounds);
+      var pages = [];
+      for (var ii = 0; ii < pageArray.length; ii += 1) {
+        if (pages.indexOf(pageArray[ii]) === -1) {
+          pages.push(pageArray[ii]);
+        }
+      }
+
+      sortPages(pages);
+
       var min = pages[0];
       var max = pages[pages.length - 1];
       for (var i = min; i < max + 1; i++) {
@@ -16324,7 +16368,6 @@ catch (e) { }
  * @module
  */
 (function(jsPDFAPI) {
-  var jsNamesObj, jsJsObj, text;
   /**
    * @name addJS
    * @function
@@ -16332,7 +16375,32 @@ catch (e) { }
    * @returns {jsPDF}
    */
   jsPDFAPI.addJS = function(javascript) {
-    text = javascript;
+    var jsNamesObj;
+    var jsJsObj;
+    // Escape only unescaped parentheses, without double-escaping already escaped ones
+    function escapeParens(str) {
+      let out = "";
+      for (let i = 0; i < str.length; i++) {
+        const ch = str[i];
+        if (ch === "(" || ch === ")") {
+          // Count preceding backslashes to determine if the paren is already escaped
+          let bs = 0;
+          for (let j = i - 1; j >= 0 && str[j] === "\\"; j--) {
+            bs++;
+          }
+          if (bs % 2 === 0) {
+            out += "\\" + ch;
+          } else {
+            out += ch;
+          }
+        } else {
+          out += ch;
+        }
+      }
+      return out;
+    }
+    const text = escapeParens(javascript);
+
     this.internal.events.subscribe("postPutResources", function() {
       jsNamesObj = this.internal.newObject();
       this.internal.out("<<");
@@ -16343,10 +16411,12 @@ catch (e) { }
       jsJsObj = this.internal.newObject();
       this.internal.out("<<");
       this.internal.out("/S /JavaScript");
+      // The sanitized 'text' is now safe to be enclosed in parentheses
       this.internal.out("/JS (" + text + ")");
       this.internal.out(">>");
       this.internal.out("endobj");
     });
+
     this.internal.events.subscribe("putCatalog", function() {
       if (jsNamesObj !== undefined && jsJsObj !== undefined) {
         this.internal.out("/Names <</JavaScript " + jsNamesObj + " 0 R>>");
@@ -27003,85 +27073,91 @@ function safeSetUint16(view, byteIndex, value) {
  * ====================================================================
  */
 
-/**
- * @name xmp_metadata
- * @module
- */
-(function(jsPDFAPI) {
+function postPutResources() {
+  const metadata = this.internal.__metadata__.metadata;
+  const utf8Metadata = unescape(encodeURIComponent(metadata));
 
-  var postPutResources = function() {
-    var xmpmeta_beginning = '<x:xmpmeta xmlns:x="adobe:ns:meta/">';
-    var rdf_beginning =
+  const rawXml = this.internal.__metadata__.rawXml;
+  let content;
+  if (rawXml) {
+    content = utf8Metadata;
+  } else {
+    const xmpmetaBeginning = '<x:xmpmeta xmlns:x="adobe:ns:meta/">';
+    const rdfBeginning =
       '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:jspdf="' +
-      this.internal.__metadata__.namespaceuri +
+      this.internal.__metadata__.namespaceUri +
       '"><jspdf:metadata>';
-    var rdf_ending = "</jspdf:metadata></rdf:Description></rdf:RDF>";
-    var xmpmeta_ending = "</x:xmpmeta>";
-    var utf8_xmpmeta_beginning = unescape(
-      encodeURIComponent(xmpmeta_beginning)
-    );
-    var utf8_rdf_beginning = unescape(encodeURIComponent(rdf_beginning));
-    var utf8_metadata = unescape(
-      encodeURIComponent(this.internal.__metadata__.metadata)
-    );
-    var utf8_rdf_ending = unescape(encodeURIComponent(rdf_ending));
-    var utf8_xmpmeta_ending = unescape(encodeURIComponent(xmpmeta_ending));
+    const rdfEnding = "</jspdf:metadata></rdf:Description></rdf:RDF>";
+    const xmpmetaEnding = "</x:xmpmeta>";
 
-    var total_len =
-      utf8_rdf_beginning.length +
-      utf8_metadata.length +
-      utf8_rdf_ending.length +
-      utf8_xmpmeta_beginning.length +
-      utf8_xmpmeta_ending.length;
+    content =
+      xmpmetaBeginning +
+      rdfBeginning +
+      escapeXml(utf8Metadata) +
+      rdfEnding +
+      xmpmetaEnding;
+  }
 
-    this.internal.__metadata__.metadata_object_number = this.internal.newObject();
+  this.internal.__metadata__.metadataObjectNumber = this.internal.newObject();
+  this.internal.write(
+    "<< /Type /Metadata /Subtype /XML /Length " + content.length + " >>"
+  );
+  this.internal.write("stream");
+  this.internal.write(content);
+  this.internal.write("endstream");
+  this.internal.write("endobj");
+}
+
+function putCatalog() {
+  if (this.internal.__metadata__.metadataObjectNumber) {
     this.internal.write(
-      "<< /Type /Metadata /Subtype /XML /Length " + total_len + " >>"
+      "/Metadata " + this.internal.__metadata__.metadataObjectNumber + " 0 R"
     );
-    this.internal.write("stream");
-    this.internal.write(
-      utf8_xmpmeta_beginning +
-        utf8_rdf_beginning +
-        utf8_metadata +
-        utf8_rdf_ending +
-        utf8_xmpmeta_ending
-    );
-    this.internal.write("endstream");
-    this.internal.write("endobj");
-  };
+  }
+}
 
-  var putCatalog = function() {
-    if (this.internal.__metadata__.metadata_object_number) {
-      this.internal.write(
-        "/Metadata " +
-          this.internal.__metadata__.metadata_object_number +
-          " 0 R"
-      );
-    }
-  };
+function escapeXml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
 
-  /**
-   * Adds XMP formatted metadata to PDF
-   *
-   * @name addMetadata
-   * @function
-   * @param {String} metadata The actual metadata to be added. The metadata shall be stored as XMP simple value. Note that if the metadata string contains XML markup characters "<", ">" or "&", those characters should be written using XML entities.
-   * @param {String} namespaceuri Sets the namespace URI for the metadata. Last character should be slash or hash.
-   * @returns {jsPDF} jsPDF-instance
-   */
-  jsPDFAPI.addMetadata = function(metadata, namespaceuri) {
-    if (typeof this.internal.__metadata__ === "undefined") {
-      this.internal.__metadata__ = {
-        metadata: metadata,
-        namespaceuri: namespaceuri || "http://jspdf.default.namespaceuri/"
-      };
-      this.internal.events.subscribe("putCatalog", putCatalog);
+/**
+ * Adds XMP formatted metadata to PDF.
+ *
+ * WARNING: Passing raw XML is potentially insecure! Always sanitize user input before passing it to this function!
+ * @name addMetadata
+ * @function
+ * @param {string} metadata The actual metadata to be added. The interpretation of this parameter depends on the
+ *   second parameter.
+ * @param {boolean|string|undefined} rawXmlOrNamespaceUri If a string is passed it sets the namespace URI for the
+ *   metadata and the metadata shall be stored as XMP simple value. The last character should be a slash or hash.
+ *
+ *   If this argument is omitted, a string is passed, or `false` is passed, the `metadata` argument will be
+ *   XML-escaped before including it in the PDF.
+ *
+ *   If `true` is passed, the `metadata` argument will be interpreted as raw XMP and will be included verbatim
+ *   in the PDF. The passed metadata must be complete (including surrounding `xmpmeta` and `RDF` tags).
+ * @returns {jsPDF} jsPDF-instance
+ */
+jsPDF.API.addMetadata = function(metadata, rawXmlOrNamespaceUri) {
+  if (typeof this.internal.__metadata__ === "undefined") {
+    this.internal.__metadata__ = {
+      metadata: metadata,
+      namespaceUri:
+        rawXmlOrNamespaceUri ?? "http://jspdf.default.namespaceuri/",
+      rawXml:
+        typeof rawXmlOrNamespaceUri === "boolean" ? rawXmlOrNamespaceUri : false
+    };
+    this.internal.events.subscribe("putCatalog", putCatalog);
 
-      this.internal.events.subscribe("postPutResources", postPutResources);
-    }
-    return this;
-  };
-})(jsPDF.API);
+    this.internal.events.subscribe("postPutResources", postPutResources);
+  }
+  return this;
+};
 
 /**
  * @name utf8

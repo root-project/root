@@ -11,12 +11,14 @@ import { FontHandler } from './FontHandler.mjs';
 import { getRootColors } from './colors.mjs';
 
 
-/** @summary returns true if pad painter @private */
+/** @summary returns true if pad painter
+ * @private */
 function isPadPainter(p) {
    return isFunc(p?.getRootPad) && isFunc(p?.forEachPainterInPad);
 }
 
-/** @summary returns canvas painter from DOM element @private */
+/** @summary returns canvas painter from DOM element
+ * @private */
 function getDomCanvasPainter(dom) {
    const elem = dom?.select('.root_canvas');
    return !elem || elem.empty() ? null : elem.property('pad_painter');
@@ -41,7 +43,7 @@ class ObjectPainter extends BasePainter {
    #options_store;   // stored draw options used to check changes
    #user_tooltip_handler; // configured user tooltip handler
    #user_tooltip_timeout; // timeout configured with tooltip handler
-   #user_toottip_handle; // timeout handle processing user tooltip
+   #user_tooltip_timerid; // setTimemout id for processing user tooltip
    #user_context_menu; // function for user context menu
    #special_draw_area; // current special draw area like projection
    #root_colors;     // custom colors list
@@ -223,7 +225,7 @@ class ObjectPainter extends BasePainter {
    getDrawDom() { return this.getPadPainter() || this.getDom(); }
 
    /** @summary Return actual draw options as string
-     * @param ignore_pad - do not include pad settings into histogram draw options
+     * @param {boolean} ignore_pad - do not include pad settings into histogram draw options
      * @desc if options are not modified - returns original string which was specified for object draw */
    getDrawOpt(ignore_pad) {
       if (!this.#options)
@@ -288,9 +290,9 @@ class ObjectPainter extends BasePainter {
    /** @summary Generic method to update object content.
      * @desc Default implementation just copies first-level members to current object
      * @param {object} obj - object with new data
-     * @param {string} [opt] - option which will be used for redrawing
+     * @param {string} [_opt] - option which will be used for redrawing
      * @protected */
-   updateObject(obj /* , opt */) {
+   updateObject(obj, _opt) {
       if (!this.matchObjectType(obj))
          return false;
       Object.assign(this.getObject(), obj);
@@ -496,9 +498,7 @@ class ObjectPainter extends BasePainter {
      * @protected */
    getCanvSvg() { return this.selectDom().select('.root_canvas'); }
 
-   /** @summary Method selects current pad name
-     * @param {string} [new_name] - when specified, new current pad name will be configured
-     * @return {string} previous selected pad or actual pad when new_name not specified
+   /** @summary Method did selects current pad name, now does nothing
      * @private
      * @deprecated to be removed in v8 */
    selectCurrentPad() {
@@ -510,7 +510,7 @@ class ObjectPainter extends BasePainter {
      * @desc X and Y coordinates can be converted by calling func.x(x) and func.y(y)
      * Only can be used for painting in the pad, means CreateG() should be called without arguments
      * @param {boolean} isndc - if NDC coordinates will be used
-     * @param {boolean} [noround] - if set, return coordinates will not be rounded
+     * @param {boolean} [nornd] - if set, return coordinates will not be rounded
      * @param {boolean} [use_frame_coordinates] - use frame coordinates even when drawing on the pad
      * @protected */
    getAxisToSvgFunc(isndc, nornd, use_frame_coordinates) {
@@ -1247,8 +1247,7 @@ class ObjectPainter extends BasePainter {
      * @desc The only legal way to draw text, support plain, latex and math text output
      * @param {object} arg - different text draw options
      * @param {string} arg.text - text to draw
-     * @param {number} [arg.align = 12] - int value like 12 or 31
-     * @param {string} [arg.align = undefined] - end;bottom
+     * @param {number|string} [arg.align = 12] - int value like 12 or 31 or string 'end;bottom'
      * @param {number} [arg.x = 0] - x position
      * @param {number} [arg.y = 0] - y position
      * @param {number} [arg.width] - when specified, adjust font size in the specified box
@@ -1259,7 +1258,7 @@ class ObjectPainter extends BasePainter {
      * @param {number} [arg.rotate] - rotation angle
      * @param {number} [arg.font_size] - fixed font size
      * @param {object} [arg.draw_g] - element where to place text, if not specified central draw_g container is used
-     * @param {function} [arg.post_process] - optional function called when specified text is drawn
+     * @param {Function} [arg.post_process] - optional function called when specified text is drawn
      * @protected */
    drawText(arg) {
       if (!arg.text)
@@ -1389,7 +1388,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Finish text drawing
      * @desc Should be called to complete all text drawing operations
-     * @param {function} [draw_g] - <g> element for text drawing, default is getG()
+     * @param {Function} [draw_g] - <g> element for text drawing, default is getG()
      * @return {Promise} when text drawing completed
      * @protected */
    async finishTextDrawing(draw_g, try_optimize) {
@@ -1410,7 +1409,7 @@ class ObjectPainter extends BasePainter {
      * Arguments fillmenu_func are (menu,kind)
      * First is menu object, second is object sub-element like axis 'x' or 'y'
      * Function should return promise with menu when items are filled
-     * @param {function} fillmenu_func - function to fill custom context menu for object */
+     * @param {Function} fillmenu_func - function to fill custom context menu for object */
    configureUserContextMenu(fillmenu_func) {
       this.#user_context_menu = isFunc(fillmenu_func) ? fillmenu_func : undefined;
    }
@@ -1545,7 +1544,7 @@ class ObjectPainter extends BasePainter {
    /** @summary Configure user-defined tooltip handler
      * @desc Hook for the users to get tooltip information when mouse cursor moves over then object
      * Handler function will be called every time when new data is selected
-     * @param {function} handler - function called when tooltip is produced
+     * @param {Function} handler - function called when tooltip is produced
      * @param {number} [tmout = 100] - delay in ms before tooltip delivered */
    configureUserTooltipHandler(handler, tmout = 100) {
       if (!handler || !isFunc(handler)) {
@@ -1561,7 +1560,7 @@ class ObjectPainter extends BasePainter {
       * @desc Function will be called every time when frame click was performed
       * As argument, tooltip object with selected bins will be provided
       * If handler function returns true, default handling of click will be disabled
-      * @param {function} handler - function called when mouse click is done */
+      * @param {Function} handler - function called when mouse click is done */
    configureUserClickHandler(handler) {
       const fp = this.getFramePainter();
       if (isFunc(fp?.configureUserClickHandler))
@@ -1572,7 +1571,7 @@ class ObjectPainter extends BasePainter {
      * @desc Function will be called every time when double click was called
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of dblclick (unzoom) will be disabled
-     * @param {function} handler - function called when mouse double click is done */
+     * @param {Function} handler - function called when mouse double click is done */
    configureUserDblclickHandler(handler) {
       const fp = this.getFramePainter();
       if (isFunc(fp?.configureUserDblclickHandler))
@@ -1595,24 +1594,24 @@ class ObjectPainter extends BasePainter {
       if (this.#user_tooltip_timeout <= 0)
          return this.#user_tooltip_handler(data);
 
-      if (this.#user_toottip_handle) {
-         clearTimeout(this.#user_toottip_handle);
-         this.#user_toottip_handle = undefined;
+      if (this.#user_tooltip_timerid) {
+         clearTimeout(this.#user_tooltip_timerid);
+         this.#user_tooltip_timerid = undefined;
       }
 
       if (!data)
          return this.#user_tooltip_handler(data);
 
       // only after timeout user function will be called
-      this.#user_toottip_handle = setTimeout(() => {
-         this.#user_toottip_handle = undefined;
+      this.#user_tooltip_timerid = setTimeout(() => {
+         this.#user_tooltip_timerid = undefined;
          if (this.#user_tooltip_handler)
             this.#user_tooltip_handler(data);
       }, this.#user_tooltip_timeout);
    }
 
    /** @summary Provide projection areas
-     * @param kind - 'X', 'Y', 'XY' or ''
+     * @param {string} kind - 'X', 'Y', 'XY' or ''
      * @private */
    async provideSpecialDrawArea(kind) {
       if (kind === this.#special_draw_area)
@@ -1625,9 +1624,9 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Draw in special projection areas
-     * @param obj - object to draw
-     * @param opt - draw option
-     * @param kind - '', 'X', 'Y'
+     * @param {object} obj - object to draw
+     * @param {string} opt - draw option
+     * @param {string} kind - '', 'X', 'Y'
      * @private */
    async drawInSpecialArea(obj, opt, kind) {
       const canp = this.getCanvPainter();
@@ -1638,7 +1637,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Get tooltip for painter and specified event position
-     * @param {Object} evnt - object with clientX and clientY positions
+     * @param {object} evnt - object with clientX and clientY positions
      * @private */
    getToolTip(evnt) {
       if ((evnt?.clientX === undefined) || (evnt?.clientY === undefined))

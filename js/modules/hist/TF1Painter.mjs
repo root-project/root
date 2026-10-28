@@ -3,7 +3,7 @@ import { floatToString } from '../base/BasePainter.mjs';
 import { getElementPadPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
-import { proivdeEvalPar, _getTF1Save } from '../base/func.mjs';
+import { provideEvalPar, _getTF1Save } from '../base/func.mjs';
 
 
 /** @summary Create log scale for axis bins
@@ -148,13 +148,13 @@ class TF1Painter extends TH1Painter {
          if (!tf1.evalPar) {
             try {
                if (this.isTF12()) {
-                  if (proivdeEvalPar(tf1.fF2)) {
+                  if (provideEvalPar(tf1.fF2)) {
                      tf1.evalPar = function(x) {
                         return this.fCase ? this.fF2.evalPar(x, this.fXY) : this.fF2.evalPar(this.fXY, x);
                      };
                   } else
                      iserror = true;
-               } else if (!proivdeEvalPar(tf1))
+               } else if (!provideEvalPar(tf1))
                   iserror = true;
             } catch {
                iserror = true;
