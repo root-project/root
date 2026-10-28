@@ -295,7 +295,7 @@ std::unique_ptr<TImage> TASUtils::FromPixmap(Pixmap_t pxm, Pixmap_t mask)
 
       unsigned char *mask_bits = mask ? gVirtualX->GetColorBits(mask, 0, 0, w, h) : nullptr;
 
-      asimg->fImage = bitmap2asimage(bits, w, h, 0, mask_bits);
+      asimg->FromBitmap(bits, w, h, mask_bits);
 
       if (mask_bits)
          delete [] mask_bits;

@@ -112,7 +112,7 @@ public:
    const char *GetTitle() const override;
    const char *GetIconName() const override { return GetTitle(); }
 
-   void  FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height) override;
+   void  FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height, const UChar_t *mask = nullptr) override;
    void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
    void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
    void  FromGLBuffer(UChar_t *buf, UInt_t width, UInt_t height) override;
