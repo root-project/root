@@ -1111,11 +1111,13 @@ if(builtin_jsroot)
     list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_jsroot=OFF)
   endif()
   add_subdirectory(builtins/jsroot)
+  set(JSROOT_CUSTOM_LOCATION "")
 elseif(NOT "$ENV{JSROOTSYS}" STREQUAL "")
   # use preconfigured JSROOT to run web widgets
+  set(JSROOT_CUSTOM_LOCATION $ENV{JSROOTSYS})
 elseif(http OR webgui)
-  message(SEND_ERROR "Without builtin_jsroot option http and webgui is not working, either disable http/webgui or enable builtin_jsroot")
-  list(APPEND HOTFIX_BUILD_FLAGS -Dhttp=OFF -Dwebgui=OFF)
+  message(WARNING "Without builtin_jsroot option http and webgui components are not working offline")
+  set(JSROOT_CUSTOM_LOCATION "https://root.cern/js/7.12.0/")
 endif()
 
 
