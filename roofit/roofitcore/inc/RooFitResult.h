@@ -169,6 +169,7 @@ public:
 
 protected:
 
+  void fillGlobalCorr() const ;
   void fillLegacyCorrMatrix() const ;
   void fillPrefitCorrMatrix();
   double correlation(Int_t row, Int_t col) const;
@@ -192,7 +193,7 @@ protected:
 
   TMatrixDSym* _CM = nullptr;  ///< Correlation matrix
   TMatrixDSym* _VM = nullptr;  ///< Covariance matrix
-  TVectorD* _GC = nullptr;     ///< Global correlation coefficients
+  mutable TVectorD* _GC = nullptr; ///< Global correlation coefficients, computed on demand if not set
 
   std::vector<std::pair<std::string,int> > _statusHistory ; ///< History of status codes
 
