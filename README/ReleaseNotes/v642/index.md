@@ -83,26 +83,26 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The `ROOT::Math::ParamFunctionBase`, `ROOT::Math::ParamFunctorHandler` and `ROOT::Math::ParamMemFunHandler` classes in `Math/ParamFunctor.h` are removed, together with the `ParamFunctor::GetImpl()` and `ParamFunctor::SetFunction()` methods that exposed them. They implemented the type erasure that `ParamFunctor` now gets from `std::function`, mirroring what was already done for `ROOT::Math::Functor`. Constructing and calling a `ParamFunctor` is unchanged, except that the constructor from an object and one of its member functions now takes a plain pointer to the object instead of anything dereferenceable, so smart pointers are no longer accepted there.
 * The header `compiledata.h` will be renamed in ROOT 6.44. It did not have header guards and is not meant to be used directly. It is solely used by ROOT internally to setup `ACLiC`, consider using `gSystem` instead to access its content.
 * Including `RConfig.h` and `RVersion.h` is now deprecated and will be removed after ROOT 6.44, use instead `ROOT/RConfig.hxx` and `ROOT/RVersion.hxx`.
-* The header `Rpair.h` is deprecated and will be removed after ROOT 6.44, use `<utility>` instead.
-* The header `Hparam.h` and `Hoption.h` are now deprecated and will be removed in ROOT 6.44, use instead `THistPainter`, `TGraph2DPainter` public interfaces.
-* The headers `Htypes.h` and `Gtypes.h` that were deprecated in ROOT 6.20 will now emit warnings and will be fully removed in ROOT 6.44. Use instead `Rtypes.h`.
 * The headers of the `bvh` library in `Geom` are no longer public in ROOT 6.42.
-* The header `GLConstants.h` is no longer part of ROOT installed headers.
-* The header `Bswapcpy.h` is deprecated and will be removed from the public interface after ROOT 6.44, it's an implementation detail for Unix i386 GNUC used by TBufferFile.
-* The header `VectorizedTMath.h` is deprecated and will be removed in ROOT 6.44. Use instead `TMathVectorized.h`.
-* The header `PosixThreadInc.h` is deprecated and will be removed after ROOT 6.44. Use instead `<ctime>` and `<cstdlib>`.
-* The header `RStringView.h` deprecated in ROOT 6.14  will now emit warnings and will be fully removed after ROOT 6.44. Use `ROOT/RStringView.hxx` instead.
-* The header `NetErrors.h` is an implementation detail, is deprecated and will be removed in ROOT 6.44. Use instead `TSocket` public interface.
-* The headers `strlcpy.h` and `strtok.h` are deprecated (but will not emit warnings) and will no longer be part of ROOT installed headers in ROOT 6.44.
-* The header `snprintf.h` is deprecated (will emit warnings) and will be removed in ROOT 6.44. Use instead `<cstdio>`.
-* The header `Strlen.h` is deprecated and will be removed in ROOT 6.44. Use `<cstring>` directly as a replacement. `NEED_STRING` macro should not be defined or an error will be raised.
-* The header `HelpTextTV.h` is deprecated and will be removed in ROOT 6.44.
-* The header `Varargs.h` and the macro `R__VA_COPY` are deprecated and will be removed in ROOT 6.46, use `<cstdarg>` instead.
-* The header `TreeUtils.h` is deprecated and will be removed in ROOT 6.44, use instead `TNtuple::ReadStream` or `TNtupleD::ReadStream`.
-* The header `Riostream.h` is deprecated and will be removed after ROOT 6.44, use `<iostream>` or `<fstream>` or `<iomanip>` instead.
-* The header `Rstrstream.h` is deprecated and will be removed after ROOT 6.44, use instead `<sstream>`.
-* The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
-* The headers `Hepevt.h` and `cfortran.h` are deprecated and will be moved to  `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
+* Usage of the following headers is now deprecated. These will be removed during the lifetime of ROOT 7:
+  * `Rpair.h`: use `<utility>` instead.
+  * `Hparam.h` and `Hoption.h`: use instead `THistPainter`, `TGraph2DPainter` public interfaces.
+  * `Htypes.h` and `Gtypes.h`: Use instead `Rtypes.h`.
+  * `Bswapcpy.h`: no replacement.
+  * `VectorizedTMath.h`: use instead `TMathVectorized.h`.
+  * `PosixThreadInc.h`: use instead `<ctime>` and `<cstdlib>`.
+  * `RStringView.h`: use `<string_view>` or `ROOT/RStringView.hxx` instead.
+  * `NetErrors.h`: Use instead `TSocket` public interface.
+  * `strlcpy.h` and `strtok.h`: are deprecated (but will not emit warnings) and will no longer be part of ROOT installed headers in ROOT 6.44.
+  * `snprintf.h`: use instead `<cstdio>`.
+  * `Strlen.h`: use `<cstring>` directly as a replacement. `NEED_STRING` macro should not be defined or an error will be raised.
+  * `HelpTextTV.h`: no replacement.
+  * `Varargs.h` and the macro `R__VA_COPY`: use `<cstdarg>` instead.
+  * `TreeUtils.h`: use instead `TNtuple::ReadStream` or `TNtupleD::ReadStream`.
+  * `Riostream.h`: use `<iostream>`, `<fstream>` or `<iomanip>` instead.
+  * `Rstrstream.h`: use instead `<sstream>`.
+  * `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h`: use instead the public methods in the `RZip.h` interface.
+  * `Hepevt.h` and `cfortran.h`: these will be moved to `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
 * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
 
 ## Build System
