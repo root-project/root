@@ -2015,14 +2015,14 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          descCmp = descCmpRes.Unwrap();
 
          if (!descCmp.fExtraSrcFields.empty() || !descCmp.fExtraSrcSubfields.empty()) {
-            auto res = attrStrat.ExtendDestinationModel(descCmp);
-            if (!res)
-               return R__FORWARD_ERROR(res);
+            auto edmRes = attrStrat.ExtendDestinationModel(descCmp);
+            if (!edmRes)
+               return R__FORWARD_ERROR(edmRes);
          }
 
-         auto res = attrStrat.MergeSource(*attrSource, descCmp);
-         if (!res)
-            return R__FORWARD_ERROR(res);
+         auto mergeSourceRes = attrStrat.MergeSource(*attrSource, descCmp);
+         if (!mergeSourceRes)
+            return R__FORWARD_ERROR(mergeSourceRes);
       }
    } // end loop over sources
 
