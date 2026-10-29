@@ -11,7 +11,6 @@
 
 
 import operator
-import warnings
 
 from ._rooabscollection import RooAbsCollection
 
@@ -30,18 +29,17 @@ class RooArgSet(RooAbsCollection):
         # argument is added, hence the `len(kwargs) == 0` check breaks the
         # implicit conversion!
         if len(args) == 1 and isinstance(args[0], set):
-            warnings.warn(
-                "Constructing a RooArgSet from a Python set is deprecated and "
-                "will be removed in ROOT 6.44. Python sets are unordered, while "
-                "a RooArgSet is ordered, so this conversion can silently change "
-                "the order of the elements. Construct the RooArgSet from the "
-                "individual RooFit objects, or from a list or tuple of them "
-                "instead.",
-                FutureWarning,
-                stacklevel=2,
+            import textwrap
+
+            raise TypeError(
+                textwrap.dedent(
+                    """
+                Python sets are unordered, while a RooArgSet is ordered, so this conversion can silently change the
+                order of the elements. Construct the RooArgSet from the individual RooFit objects, or from a list or
+                tuple of them instead.
+                """
+                )
             )
-            self._init(*args[0], **kwargs)
-            return
         self._init(*args, **kwargs)
 
     def __getitem__(self, key):
