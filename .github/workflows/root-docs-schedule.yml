@@ -21,7 +21,7 @@ jobs:
     uses: root-project/root/.github/workflows/root-docs-ci.yml@v6-40-00-patches
     secrets: inherit
 
-  Docs_6-40:
+  Docs_6-42:
     if: ${{ github.event.schedule == '20 1 * * *' }}
     uses: root-project/root/.github/workflows/root-docs-ci.yml@v6-42-00-patches
     secrets: inherit
