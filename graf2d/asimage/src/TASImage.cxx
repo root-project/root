@@ -2677,6 +2677,7 @@ TObject *TASImage::Clone(const char *newname) const
    if (newname)
       newimg->SetName(newname);
    newimg->CloneImageData(*this);
+   newimg->fEditable = kFALSE;
    return newimg;
 }
 
