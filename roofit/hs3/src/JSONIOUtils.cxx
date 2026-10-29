@@ -1,7 +1,9 @@
 #include "JSONIOUtils.h"
 
 #include <RooAbsBinning.h>
+#include <RooFitHS3/RooJSONFactoryWSTool.h>
 
+#include <cctype>
 #include <string>
 
 using RooFit::Detail::JSONNode;
@@ -99,4 +101,46 @@ void writeAxisBinning(JSONNode &node, const RooAbsBinning &binning)
    for (int i = 0; i < binning.numBins(); ++i) {
       edges.append_child() << binning.binHigh(i);
    }
+}
+
+// Parse the leading "MAJOR.MINOR" of an HS3 version string like "0.2", "0.2.9" or "0.3".
+bool parseHS3Version(std::string const &version, int &major, int &minor)
+{
+   std::size_t pos = 0;
+   auto readNumber = [&](int &out) {
+      const std::size_t begin = pos;
+      while (pos < version.size() && std::isdigit(static_cast<unsigned char>(version[pos]))) {
+         ++pos;
+      }
+      // Reject empty and absurdly long numbers, which std::stoi could not represent.
+      if (pos == begin || pos - begin > 9) {
+         return false;
+      }
+      out = std::stoi(version.substr(begin, pos - begin));
+      return true;
+   };
+   if (!readNumber(major) || pos >= version.size() || version[pos] != '.') {
+      return false;
+   }
+   ++pos;
+   return readNumber(minor);
+}
+
+// Read the bin edges of an axis, which must be at least two strictly ascending numbers.
+std::vector<double> readEdges(const JSONNode &node, std::string const &context)
+{
+   if (!node.is_seq()) {
+      RooJSONFactoryWSTool::error("\"edges\" of " + context + " must be a list");
+   }
+   std::vector<double> edges;
+   for (auto const &edge : node.children()) {
+      edges.push_back(edge.val_double());
+      if (edges.size() > 1 && !(edges.back() > edges[edges.size() - 2])) {
+         RooJSONFactoryWSTool::error("\"edges\" of " + context + " must be strictly ascending");
+      }
+   }
+   if (edges.size() < 2) {
+      RooJSONFactoryWSTool::error("\"edges\" of " + context + " must contain at least two values");
+   }
+   return edges;
 }

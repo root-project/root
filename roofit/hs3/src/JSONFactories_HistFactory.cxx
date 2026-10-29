@@ -32,6 +32,7 @@
 #include <RooProduct.h>
 #include <RooWorkspace.h>
 #include <RooFitImplHelpers.h>
+#include <RooMsgService.h>
 
 #include <charconv>
 #include <iterator>
@@ -336,8 +337,27 @@ std::vector<int> readInterpolations(const JSONNode &object, std::size_t nParamet
    return codes;
 }
 
+// Whether an imported document predates HS3 v0.3. Before that, RooFit did not write the interpolation of modifiers
+// that used its implicit default.
+bool isLegacyHS3Version(std::string const &version)
+{
+   int major = 0;
+   int minor = 0;
+   if (!parseHS3Version(version, major, minor)) {
+      return true;
+   }
+   return std::make_pair(major, minor) <= std::make_pair(0, 2);
+}
+
+// The fallback for modifiers without interpolation in documents that predate HS3 v0.3, see interpolationCode().
+struct LegacyInterpolationDefault {
+   bool allowed = false;
+   bool warned = false;
+};
+
 int interpolationCode(const JSONNode &modifier, const std::optional<Interpolation> &defaultInterpolation,
-                      InterpolationClass interpolationClass, const std::string &context)
+                      InterpolationClass interpolationClass, const std::string &context,
+                      LegacyInterpolationDefault &legacyDefault)
 {
    const auto toCode = [&](const Interpolation &interpolation) {
       return codeFromInterpolation(interpolation, interpolationClass, context);
@@ -355,9 +375,20 @@ int interpolationCode(const JSONNode &modifier, const std::optional<Interpolatio
       return toCode(*defaultInterpolation);
    }
 
+   // HS3 forbids implementation-specific default interpolations.
+   if (!legacyDefault.allowed) {
+      RooJSONFactoryWSTool::error(context + " is not given, and the channel has no \"default_interpolation\"");
+   }
+
    // Before structured interpolation was introduced, both modifier classes
    // used the integer code 4 as their implicit default. The meaning of code 4
-   // is class-dependent.
+   // is class-dependent. Files written by these ROOT versions are still read.
+   if (!legacyDefault.warned) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: " + context +
+                                    " is not given, and the channel has no \"default_interpolation\". Using the "
+                                    "implicit default of older RooFit versions (code 4), which is deprecated.");
+      legacyDefault.warned = true;
+   }
    return 4;
 }
 
@@ -425,6 +456,23 @@ void exportGammaParameters(JSONNode &mod, std::vector<RooAbsReal *> const &param
    mod["parameters"].fill_seq(paramNames);
 }
 
+/// Export the names of the constraint distributions of a modifier, with null for unconstrained parameters. Nothing is
+/// written if all parameters are unconstrained.
+void exportConstraintNames(JSONNode &mod, std::vector<RooAbsPdf const *> const &constraints)
+{
+   if (std::none_of(constraints.begin(), constraints.end(), [](auto *pdf) { return pdf != nullptr; })) {
+      return;
+   }
+   auto &names = mod["constraints"].set_seq();
+   for (auto *constraint : constraints) {
+      if (constraint) {
+         names.append_child() << constraint->GetName();
+      } else {
+         names.append_child().set_null();
+      }
+   }
+}
+
 RooRealVar &createNominal(RooWorkspace &ws, std::string const &parname, double val, double min, double max)
 {
    RooRealVar &nom = getOrCreate<RooRealVar>(ws, "nom_" + parname, val, min, max);
@@ -441,7 +489,8 @@ std::string constraintName(std::string const &paramName)
 
 bool isLegacyConstraintType(std::string const &value)
 {
-   return value == "Gauss" || value == "Poisson" || value == "Const" || value == "Lognormal";
+   // HS3 spells "LogNormal", older RooFit versions used "Lognormal".
+   return value == "Gauss" || value == "Poisson" || value == "Const" || value == "LogNormal" || value == "Lognormal";
 }
 
 RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, std::string const &sample)
@@ -466,8 +515,8 @@ RooAbsPdf &createLegacyConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mo
 {
    if (constraintType == "Gauss") {
       param.setError(1.0);
-      return getOrCreate<RooGaussian>(*tool.workspace(), constraintName(param.GetName()), param,
-                                      *tool.workspace()->var(std::string("nom_") + param.GetName()), 1.);
+      RooRealVar &nominal = createNominal(*tool.workspace(), param.GetName(), 0.0, -10, 10);
+      return getOrCreate<RooGaussian>(*tool.workspace(), constraintName(param.GetName()), param, nominal, 1.);
    }
 
    RooJSONFactoryWSTool::error("legacy constraint value '" + constraintType + "' for modifier '" +
@@ -528,9 +577,72 @@ const JSONNode *findStaterror(const JSONNode &comp)
    return nullptr;
 }
 
+// The entries of the HS3 "constraints" of a modifier: the names of the constraint distributions, or std::nullopt for
+// unconstrained parameters (null entries).
+std::vector<std::optional<std::string>> constraintNames(const JSONNode &mod)
+{
+   std::vector<std::optional<std::string>> out;
+   auto *constraints = mod.find("constraints");
+   if (!constraints) {
+      return out;
+   }
+   if (!constraints->is_seq()) {
+      RooJSONFactoryWSTool::error("\"constraints\" of modifier '" + RooJSONFactoryWSTool::name(mod) +
+                                  "' must be a list");
+   }
+   for (const auto &entry : constraints->children()) {
+      out.push_back(entry.is_null() ? std::nullopt : std::make_optional(entry.val()));
+   }
+   return out;
+}
+
+// The parameter of a modifier with a single parameter, given in the HS3 "parameters" or in the legacy "parameter".
+std::optional<std::string> modifierParameter(const JSONNode &mod)
+{
+   if (auto *parameters = mod.find("parameters")) {
+      if (!parameters->is_seq() || parameters->num_children() != 1) {
+         RooJSONFactoryWSTool::error("\"parameters\" of the " + mod["type"].val() +
+                                     " modifier must be a list with one entry");
+      }
+      return parameters->child(0).val();
+   }
+   if (auto *parameter = mod.find("parameter")) {
+      return parameter->val();
+   }
+   return std::nullopt;
+}
+
+// The constraint distribution named in the HS3 "constraints" of a modifier with a single parameter. Returns an empty
+// string if the parameter is explicitly unconstrained, and std::nullopt if the modifier has no "constraints".
+std::optional<std::string> singleConstraintName(const JSONNode &mod)
+{
+   if (!mod.has_child("constraints")) {
+      return std::nullopt;
+   }
+   const auto names = constraintNames(mod);
+   if (names.size() != 1) {
+      RooJSONFactoryWSTool::error("\"constraints\" of the " + mod["type"].val() +
+                                  " modifier must have one entry per parameter");
+   }
+   return names.front().value_or("");
+}
+
 RooAbsPdf &
 getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, const std::string &sample)
 {
+   // HS3 references the constraint distributions by name.
+   if (auto name = singleConstraintName(mod); name && !name->empty()) {
+      auto *constraint = findNamedConstraint(tool, *name, sample);
+      if (!constraint) {
+         RooJSONFactoryWSTool::error("unable to find the constraint distribution '" + *name + "' of the modifier of '" +
+                                     param.GetName() + "'");
+      }
+      if (auto gauss = dynamic_cast<RooGaussian *>(constraint)) {
+         param.setError(gauss->getSigma().getVal());
+      }
+      return *constraint;
+   }
+
    JSONNode const *constrName = mod.find("constraint_name");
    if (constrName) {
       auto constraint_name = constrName->val();
@@ -573,6 +685,27 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
    }
    RooJSONFactoryWSTool::error("unknown or invalid constraint for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
 }
+bool hasConstraint(const JSONNode &mod)
+{
+   if (auto name = singleConstraintName(mod)) {
+      return !name->empty();
+   }
+   return mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type");
+}
+
+// Create the constraint of a normsys or histosys modifier. Without a constraint, the parameter is unconstrained.
+void addSysConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, std::string const &sysname,
+                      std::string const &sample, RooArgSet &constraints)
+{
+   if (!hasConstraint(mod)) {
+      oocoutI(nullptr, IO) << "RooFitHS3: modifier '" << sysname << "' of sample '" << sample
+                           << "' has no constraint, so its parameter '" << param.GetName() << "' is unconstrained"
+                           << std::endl;
+      return;
+   }
+   constraints.add(getOrCreateConstraint(tool, mod, param, sample));
+}
+
 double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
 {
    auto const *mean = dynamic_cast<RooProduct const *>(&constraint.getMean());
@@ -620,7 +753,8 @@ double constraintRelError(RooAbsPdf const &constraint, RooAbsArg const &gamma)
 
 bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
                       RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
-                      const std::optional<Interpolation> &defaultInterpolation, RooArgSet &constraints)
+                      const std::optional<Interpolation> &defaultInterpolation,
+                      LegacyInterpolationDefault &legacyInterpolationDefault, RooArgSet &constraints)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -660,31 +794,32 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
       int idx = 0;
       for (const auto &mod : p["modifiers"].children()) {
          std::string const &modtype = mod["type"].val();
+         const std::optional<std::string> parameter =
+            modtype == "normfactor" || modtype == "normsys" || modtype == "histosys" ? modifierParameter(mod)
+                                                                                     : std::nullopt;
          std::string const &sysname =
-            mod.has_child("name")
-               ? mod["name"].val()
-               : (mod.has_child("parameter") ? mod["parameter"].val() : "syst_" + std::to_string(idx));
+            mod.has_child("name") ? mod["name"].val() : parameter.value_or("syst_" + std::to_string(idx));
          ++idx;
          if (modtype == "staterror") {
             // this is dealt with at a different place, ignore it for now
          } else if (modtype == "normfactor") {
-            RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5);
+            // The "name" is only a label of the modifier, the parameter is given by "parameters" if present.
+            RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, parameter.value_or(sysname), 1., -3, 5);
             constrParam.setError(0.0);
             normElems.add(constrParam);
-            if (mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type")) {
+            if (hasConstraint(mod)) {
                // for norm factors, constraints are optional
                constraints.add(getOrCreateConstraint(tool, mod, constrParam, sampleName));
             }
          } else if (modtype == "normsys") {
-            auto *parameter = mod.find("parameter");
-            std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
-            createNominal(ws, parname, 0.0, -10, 10);
+            std::string parname(parameter.value_or("alpha_" + sysname));
             auto &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
             overall_nps.add(par);
             auto &data = mod["data"];
             const std::string context = "interpolation for normsys modifier '" + sysname + "' in sample '" +
                                         sampleName + "' of channel '" + channelName + "'";
-            const int interp = interpolationCode(mod, defaultInterpolation, InterpolationClass::Flexible, context);
+            const int interp = interpolationCode(mod, defaultInterpolation, InterpolationClass::Flexible, context,
+                                                 legacyInterpolationDefault);
             double low = data["lo"].val_double();
             double high = data["hi"].val_double();
 
@@ -701,11 +836,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             overall_high.push_back(high);
             overall_interp.push_back(interp);
 
-            constraints.add(getOrCreateConstraint(tool, mod, par, sampleName));
+            addSysConstraint(tool, mod, par, sysname, sampleName, constraints);
          } else if (modtype == "histosys") {
-            auto *parameter = mod.find("parameter");
-            std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
-            createNominal(ws, parname, 0.0, -10, 10);
+            std::string parname(parameter.value_or("alpha_" + sysname));
             auto &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
             histNps.add(par);
             auto &data = mod["data"];
@@ -717,8 +850,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                RooJSONFactoryWSTool::readBinnedData(data["hi"], sysname + "High_" + prefixedName, varlist)));
             const std::string context = "interpolation for histosys modifier '" + sysname + "' in sample '" +
                                         sampleName + "' of channel '" + channelName + "'";
-            histoInterp.push_back(interpolationCode(mod, defaultInterpolation, InterpolationClass::Piecewise, context));
-            constraints.add(getOrCreateConstraint(tool, mod, par, sampleName));
+            histoInterp.push_back(interpolationCode(mod, defaultInterpolation, InterpolationClass::Piecewise, context,
+                                                    legacyInterpolationDefault));
+            addSysConstraint(tool, mod, par, sysname, sampleName, constraints);
          } else if (modtype == "shapesys" || modtype == "shapefactor") {
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
             // funcName should be "<channel_name>_<sysname>_ShapeSys"
@@ -847,6 +981,8 @@ public:
       std::vector<double> sumW;
       std::vector<double> sumW2;
       std::vector<std::string> gammaParnames;
+      std::string modifierStatErrType;
+      std::optional<std::vector<std::optional<std::string>>> statErrConstraintNames;
       RooArgSet observables = RooJSONFactoryWSTool::readAxes(p);
 
       std::string fprefix = name;
@@ -873,9 +1009,34 @@ public:
                   }
                }
             }
+            // HS3 names the constraint distributions of the gammas in "constraints".
+            if (!statErrConstraintNames && staterror->has_child("constraints")) {
+               statErrConstraintNames = constraintNames(*staterror);
+            }
+            // The legacy constraint type given on the staterror modifier takes precedence over the channel-level
+            // setting.
+            if (modifierStatErrType.empty()) {
+               if (auto constraint = staterror->find("constraint")) {
+                  modifierStatErrType = constraint->val();
+                  if (modifierStatErrType != "Poisson" && modifierStatErrType != "Gauss") {
+                     RooJSONFactoryWSTool::error("unsupported constraint '" + modifierStatErrType +
+                                                 "' of the staterror modifier in channel '" + name +
+                                                 "', supported are \"Poisson\" and \"Gauss\"");
+                  }
+               }
+            }
          }
          data.emplace_back(std::move(dh));
       }
+
+      if (!modifierStatErrType.empty()) {
+         statErrType = modifierStatErrType;
+      }
+      // Without any constraint information, the gammas are unconstrained in HS3. Older documents relied on RooFit
+      // creating Poisson constraints.
+      const bool legacyStatErrConstraints = statErrConstraintNames || !modifierStatErrType.empty() ||
+                                            p.has_child(::Literals::staterror) ||
+                                            isLegacyHS3Version(tool->hs3VersionInput());
 
       RooAbsArg *mcStatObject = nullptr;
       RooArgSet constraints;
@@ -894,17 +1055,39 @@ public:
             errs[i] = std::max(errs[i], 0.);
          }
 
-         mcStatObject =
-            &createPHF("mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs, *tool, constraints,
-                       observables, statErrType, defaultGammaMin, defaultStatErrorGammaMax, statErrThresh);
+         const bool createConstraints = !statErrConstraintNames && legacyStatErrConstraints;
+         mcStatObject = &createPHF("mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs, *tool,
+                                   constraints, observables, statErrType, defaultGammaMin, defaultStatErrorGammaMax,
+                                   statErrThresh, createConstraints);
+         if (statErrConstraintNames) {
+            if (statErrConstraintNames->size() != errs.size()) {
+               RooJSONFactoryWSTool::error("the staterror modifier of channel '" + name + "' has " +
+                                           std::to_string(statErrConstraintNames->size()) + " constraints, but " +
+                                           std::to_string(errs.size()) + " parameters");
+            }
+            for (auto const &constraintName : *statErrConstraintNames) {
+               if (!constraintName) {
+                  continue;
+               }
+               auto *constraint = findNamedConstraint(*tool, *constraintName, name);
+               if (!constraint) {
+                  RooJSONFactoryWSTool::error("unable to find the constraint distribution '" + *constraintName +
+                                              "' of the staterror modifier of channel '" + name + "'");
+               }
+               constraints.add(*constraint);
+            }
+         }
       }
+
+      LegacyInterpolationDefault legacyInterpolationDefault;
+      legacyInterpolationDefault.allowed = isLegacyHS3Version(tool->hs3VersionInput());
 
       int idx = 0;
       RooArgList funcs;
       RooArgList coefs;
       for (const auto &comp : p["samples"].children()) {
          importHistSample(*tool, *data[idx], observables, mcStatObject, fprefix, comp, defaultInterpolation,
-                          constraints);
+                          legacyInterpolationDefault, constraints);
          ++idx;
 
          std::string const &compName = RooJSONFactoryWSTool::name(comp);
@@ -1242,6 +1425,7 @@ struct Sample {
    std::vector<GenericElement> otherElements;
    bool useBarlowBeestonLight = false;
    std::vector<RooAbsReal *> staterrorParameters;
+   std::vector<RooAbsPdf const *> staterrorConstraints;
    Sample(const std::string &n) : name{n} {}
 };
 
@@ -1329,17 +1513,14 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                   RooAbsReal *var = static_cast<RooAbsReal *>(fip->variables().at(i));
                   std::string sysname(var->GetName());
                   erasePrefix(sysname, "alpha_");
+                  // A parameter without constraint is unconstrained, see checkUnconstrainedModifiers().
                   const auto *constraint = findConstraint(var);
-                  if (!constraint && !var->isConstant()) {
-                     RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
-                  } else {
-                     const std::string context = "normsys modifier '" + sysname + "' in sample '" + sample.name +
-                                                 "' of channel '" + channel.name + "'";
-                     sample.normsys.emplace_back(
-                        sysname, var, fip->high()[i], fip->low()[i],
-                        interpolationFromCode(fip->interpolationCodes()[i], InterpolationClass::Flexible, context),
-                        constraint);
-                  }
+                  const std::string context = "normsys modifier '" + sysname + "' in sample '" + sample.name +
+                                              "' of channel '" + channel.name + "'";
+                  sample.normsys.emplace_back(
+                     sysname, var, fip->high()[i], fip->low()[i],
+                     interpolationFromCode(fip->interpolationCodes()[i], InterpolationClass::Flexible, context),
+                     constraint);
                }
             } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
                // nothing to do here, already assigned
@@ -1412,17 +1593,14 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
             erasePrefix(sysname, "alpha_");
             if (auto lo = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
                if (auto hi = dynamic_cast<RooHistFunc *>(pip->highList().at(i))) {
+                  // A parameter without constraint is unconstrained, see checkUnconstrainedModifiers().
                   const auto *constraint = findConstraint(var);
-                  if (!constraint && !var->isConstant()) {
-                     RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
-                  } else {
-                     const std::string context = "histosys modifier '" + sysname + "' in sample '" + sample.name +
-                                                 "' of channel '" + channel.name + "'";
-                     sample.histosys.emplace_back(
-                        sysname, var, lo, hi,
-                        interpolationFromCode(pip->interpolationCodes()[i], InterpolationClass::Piecewise, context),
-                        constraint);
-                  }
+                  const std::string context = "histosys modifier '" + sysname + "' in sample '" + sample.name +
+                                              "' of channel '" + channel.name + "'";
+                  sample.histosys.emplace_back(
+                     sysname, var, lo, hi,
+                     interpolationFromCode(pip->interpolationCodes()[i], InterpolationClass::Piecewise, context),
+                     constraint);
                }
             }
          }
@@ -1436,6 +1614,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                sample.staterrorParameters.push_back(static_cast<RooRealVar *>(g));
                ++idx;
                RooAbsPdf *constraint = findConstraint(g);
+               sample.staterrorConstraints.push_back(constraint);
                channel.tot_yield[idx] += sample.hist[idx - 1];
                channel.tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
                if (constraint) {
@@ -1676,12 +1855,10 @@ std::optional<Interpolation> defaultInterpolation(const Channel &channel)
 
 bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
 {
-   // Write the constraint reference for any modifier that supports an
-   // external Gaussian/Poisson/etc. constraint.
-   auto writeConstraint = [](JSONNode &mod, auto const &sys) {
-      if (sys.constraint) {
-         mod["constraint"] << sys.constraint->GetName();
-      }
+   // Write the parameter and the name of the constraint distribution of a modifier with a single parameter.
+   auto writeParameter = [](JSONNode &mod, RooAbsReal const &param, RooAbsPdf const *constraint) {
+      mod["parameters"].set_seq().append_child() << param.GetName();
+      exportConstraintNames(mod, {constraint});
    };
    auto addModifier = [](JSONNode &modifiers, std::string const &name, const char *type) -> JSONNode & {
       auto &mod = modifiers.append_child();
@@ -1709,21 +1886,19 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          auto &mod = modifiers.append_child();
          mod.set_map();
          mod["name"] << nf.name;
-         mod["parameter"] << nf.param->GetName();
+         writeParameter(mod, *nf.param, nf.constraint);
          mod["type"] << "normfactor";
          if (nf.constraint) {
-            mod["constraint"] << nf.constraint->GetName();
             tool->queueExport(*nf.constraint);
          }
       }
 
       for (const auto &sys : sample.normsys) {
          auto &mod = addModifier(modifiers, sys.name, "normsys");
-         mod["parameter"] << sys.param->GetName();
+         writeParameter(mod, *sys.param, sys.constraint);
          if (!channelDefaultInterpolation || sys.interpolation != *channelDefaultInterpolation) {
             writeInterpolation(mod["interpolation"], sys.interpolation);
          }
-         writeConstraint(mod, sys);
          auto &data = mod["data"].set_map();
          data["lo"] << sys.low;
          data["hi"] << sys.high;
@@ -1731,11 +1906,10 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
 
       for (const auto &sys : sample.histosys) {
          auto &mod = addModifier(modifiers, sys.name, "histosys");
-         mod["parameter"] << sys.param->GetName();
+         writeParameter(mod, *sys.param, sys.constraint);
          if (!channelDefaultInterpolation || sys.interpolation != *channelDefaultInterpolation) {
             writeInterpolation(mod["interpolation"], sys.interpolation);
          }
-         writeConstraint(mod, sys);
          auto &data = mod["data"].set_map();
          if (channel.nBins != sys.low.size() || channel.nBins != sys.high.size()) {
             RooJSONFactoryWSTool::error("inconsistent binning: " + std::to_string(channel.nBins) +
@@ -1749,18 +1923,8 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
       for (const auto &sys : sample.shapesys) {
          auto &mod = addModifier(modifiers, sys.name, "shapesys");
          exportGammaParameters(mod, sys.parameters);
-         if (std::any_of(sys.constraintPdfs.begin(), sys.constraintPdfs.end(),
-                         [](auto *pdf) { return pdf != nullptr; })) {
-            auto &constraintNames = mod["constraints"].set_seq();
-            for (auto *constraint : sys.constraintPdfs) {
-               if (constraint) {
-                  constraintNames.append_child() << constraint->GetName();
-               } else {
-                  constraintNames.append_child().set_null();
-               }
-            }
-         }
-         mod["data"].set_map()["vals"].fill_seq(sys.constraints);
+         // The relative uncertainties are encoded in the constraint distributions.
+         exportConstraintNames(mod, sys.constraintPdfs);
       }
 
       for (const auto &other : sample.otherElements) {
@@ -1773,6 +1937,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
       if (sample.useBarlowBeestonLight) {
          auto &mod = addModifier(modifiers, ::Literals::staterror, ::Literals::staterror);
          exportGammaParameters(mod, sample.staterrorParameters);
+         exportConstraintNames(mod, sample.staterrorConstraints);
       }
 
       if (!observablesWritten) {
@@ -1845,6 +2010,29 @@ std::vector<RooAbsPdf *> findLostConstraints(const Channel &channel, const std::
    return lostConstraints;
 }
 
+// A normsys or histosys modifier without a recognized constraint is exported as unconstrained. That is only correct if
+// none of the other constraint terms of the channel depends on its parameter.
+void checkUnconstrainedModifiers(const Channel &channel, const std::vector<RooAbsPdf *> &constraints)
+{
+   auto check = [&](auto const &modifiers) {
+      for (auto const &sys : modifiers) {
+         if (sys.constraint || sys.param->isConstant()) {
+            continue;
+         }
+         for (RooAbsPdf const *pdf : constraints) {
+            if (pdf->dependsOn(*sys.param)) {
+               RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(sys.param->GetName()) +
+                                           ": the constraint term '" + pdf->GetName() + "' is not supported");
+            }
+         }
+      }
+   };
+   for (const auto &sample : channel.samples) {
+      check(sample.normsys);
+      check(sample.histosys);
+   }
+}
+
 bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
                           std::vector<RooAbsPdf *> constraints, JSONNode &elem)
 {
@@ -1871,6 +2059,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    }
 
    canonicalizeModifiers(channel);
+   checkUnconstrainedModifiers(channel, constraints);
 
    // stat error handling
    configureStatError(channel);
@@ -1902,6 +2091,11 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             if (constraint) {
                tool->queueExport(*constraint);
             }
+         }
+      }
+      for (auto *constraint : sample.staterrorConstraints) {
+         if (constraint) {
+            tool->queueExport(*constraint);
          }
       }
    }

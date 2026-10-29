@@ -29,6 +29,7 @@ constexpr static auto defaultDomainName = "default_domain";
 
 namespace {
 
+// An absent bound is infinite. Older RooFit versions wrote infinite bounds as null, which is still accepted.
 double readBound(RooFit::Detail::JSONNode const &node, const char *key, double defaultValue)
 {
    if (!node.has_child(key)) {
@@ -38,12 +39,11 @@ double readBound(RooFit::Detail::JSONNode const &node, const char *key, double d
    return bound.is_null() ? defaultValue : bound.val_double();
 }
 
-void writeBound(RooFit::Detail::JSONNode &node, double value)
+// JSON can't represent infinity, so an infinite bound is expressed by omitting it.
+void writeBound(RooFit::Detail::JSONNode &node, const char *key, double value)
 {
-   if (RooNumber::isInfinite(value)) {
-      node.set_null();
-   } else {
-      node << value;
+   if (!RooNumber::isInfinite(value)) {
+      node[key] << value;
    }
 }
 
@@ -54,6 +54,12 @@ void Domains::populate(RooWorkspace &ws) const
    auto default_domain = _map.find(defaultDomainName);
    if (default_domain != _map.end()) {
       default_domain->second.populate(ws);
+   } else {
+      // Without the RooFit-specific "default_domain", the variables are created with the range of the domain that
+      // mentions them.
+      for (const auto &domain : _map) {
+         domain.second.populate(ws);
+      }
    }
    for (const auto &domain : _map) {
       if (domain.first == defaultDomainName)
@@ -78,15 +84,20 @@ void Domains::writeVariable(RooRealVar &var) const
    auto default_domain = _map.find(defaultDomainName);
    if (default_domain != _map.end()) {
       default_domain->second.writeVariable(var);
+      return;
+   }
+   // Without the RooFit-specific "default_domain", use the first domain that mentions the variable.
+   for (const auto &domain : _map) {
+      if (domain.second.hasVariable(var.GetName())) {
+         domain.second.writeVariable(var);
+         return;
+      }
    }
 }
 
 void Domains::readJSON(RooFit::Detail::JSONNode const &node)
 {
-   auto default_domain_element = RooJSONFactoryWSTool::findNamedChild(node, defaultDomainName);
-   if (!default_domain_element) {
-      RooJSONFactoryWSTool::error("\"domains\" do not contain \"" + std::string{defaultDomainName} + "\"");
-   }
+   // The "default_domain" is written by RooFit, but it is not required by the HS3 standard.
    for (auto &domain : node.children()) {
       if (!domain.has_child("name")) {
          RooJSONFactoryWSTool::error("encountered domain without \"name\"");
@@ -256,9 +267,14 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
    for (auto const &item : _map) {
       auto const &elem = item.second;
       RooFit::Detail::JSONNode &varnode = RooJSONFactoryWSTool::appendNamedChild(variablesNode, item.first);
-      writeBound(varnode["min"], elem.hasMin ? elem.min : -RooNumber::infinity());
-      writeBound(varnode["max"], elem.hasMax ? elem.max : RooNumber::infinity());
-      writeBinning(varnode, elem);
+      const double min = elem.hasMin ? elem.min : -RooNumber::infinity();
+      const double max = elem.hasMax ? elem.max : RooNumber::infinity();
+      writeBound(varnode, "min", min);
+      writeBound(varnode, "max", max);
+      // A binning requires a bounded range.
+      if (!RooNumber::isInfinite(min) && !RooNumber::isInfinite(max)) {
+         writeBinning(varnode, elem);
+      }
    }
 }
 void Domains::ProductDomain::populate(RooWorkspace &ws) const

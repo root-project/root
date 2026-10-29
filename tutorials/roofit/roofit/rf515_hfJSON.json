@@ -41,6 +41,25 @@
             "data": ["observed_channel1"]
         }
     ],
+    "domains": [
+        {
+            "name": "staterror_parameters",
+            "type": "product_domain",
+            "axes": [
+                {"name": "gamma_bin_0", "min": 0.0, "max": 5.0},
+                {"name": "gamma_bin_1", "min": 0.0, "max": 5.0}
+            ]
+        }
+    ],
+    "parameter_points": [
+        {
+            "name": "default_values",
+            "parameters": [
+                {"name": "gamma_bin_0", "value": 1.0},
+                {"name": "gamma_bin_1", "value": 1.0}
+            ]
+        }
+    ],
     "distributions": [
         {
             "name": "model_channel1",
@@ -52,6 +71,7 @@
                     "nbins": 2
                 }
             ],
+            "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
             "samples": [
                 {
                     "data": {
@@ -63,11 +83,14 @@
                                 "hi": 1.05,
                                 "lo": 0.95
                             },
+                            "constraints": ["alpha_syst1_constraint"],
                             "name": "syst1",
+                            "parameters": ["alpha_syst1"],
                             "type": "normsys"
                         },
                         {
                             "name": "mu",
+                            "parameters": ["mu"],
                             "type": "normfactor"
                         }
                     ],
@@ -84,11 +107,15 @@
                                 "hi": 1.05,
                                 "lo": 0.95
                             },
+                            "constraints": ["alpha_syst2_constraint"],
                             "name": "syst2",
+                            "parameters": ["alpha_syst2"],
                             "type": "normsys"
                         },
                         {
+                            "constraints": ["gamma_bin_0_constraint", "gamma_bin_1_constraint"],
                             "name": "mcstat",
+                            "parameters": ["gamma_bin_0", "gamma_bin_1"],
                             "type": "staterror"
                         }
                     ],
@@ -105,11 +132,15 @@
                                 "hi": 1.05,
                                 "lo": 0.95
                             },
+                            "constraints": ["alpha_syst3_constraint"],
                             "name": "syst3",
+                            "parameters": ["alpha_syst3"],
                             "type": "normsys"
                         },
                         {
+                            "constraints": ["gamma_bin_0_constraint", "gamma_bin_1_constraint"],
                             "name": "mcstat",
+                            "parameters": ["gamma_bin_0", "gamma_bin_1"],
                             "type": "staterror"
                         }
                     ],
@@ -117,6 +148,53 @@
                 }
             ],
             "type": "histfactory_dist"
+        },
+        {
+            "name": "alpha_syst1_constraint",
+            "type": "gaussian_dist",
+            "x": "alpha_syst1",
+            "mean": 0.0,
+            "sigma": 1.0
+        },
+        {
+            "name": "alpha_syst2_constraint",
+            "type": "gaussian_dist",
+            "x": "alpha_syst2",
+            "mean": 0.0,
+            "sigma": 1.0
+        },
+        {
+            "name": "alpha_syst3_constraint",
+            "type": "gaussian_dist",
+            "x": "alpha_syst3",
+            "mean": 0.0,
+            "sigma": 1.0
+        },
+        {
+            "name": "gamma_bin_0_constraint",
+            "type": "poisson_dist",
+            "x": 400,
+            "mean": "gamma_bin_0_expected",
+            "integer": false
+        },
+        {
+            "name": "gamma_bin_1_constraint",
+            "type": "poisson_dist",
+            "x": 100,
+            "mean": "gamma_bin_1_expected",
+            "integer": false
+        }
+    ],
+    "functions": [
+        {
+            "name": "gamma_bin_0_expected",
+            "type": "product",
+            "factors": ["gamma_bin_0", 400]
+        },
+        {
+            "name": "gamma_bin_1_expected",
+            "type": "product",
+            "factors": ["gamma_bin_1", 100]
         }
     ],
     "data": [
@@ -135,6 +213,6 @@
         }
     ],
     "metadata": {
-        "hs3_version" : "0.1.90"
+        "hs3_version" : "0.3"
     }
 }
