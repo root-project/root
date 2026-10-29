@@ -306,28 +306,36 @@ ROOT::Internal::RDF::RMaskedColumnReader::RMaskedColumnReader(
      fTreeValueMask{std::make_unique<TTreeReaderValue<uint64_t>>(r, maskName.data())},
      fMaskIndex{maskIndex}
 {
+   // Assume 1-size bulk for now
+   fCachedValues = ROOT::RVec<void *>(1);
 }
 
 ROOT::Internal::RDF::RMaskedColumnReader::~RMaskedColumnReader() = default;
 
-void *ROOT::Internal::RDF::RMaskedColumnReader::GetImpl(std::size_t)
+void *ROOT::Internal::RDF::RMaskedColumnReader::GetImpl(std::size_t entryInBulk)
 {
-   return fValuePtr;
+   return fCachedValues[entryInBulk];
 }
 
 void ROOT::Internal::RDF::RMaskedColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
-   if (!mask[0]) {
-      fValuePtr = nullptr;
+   if (fLastEntry == mask.GetFirstEntry())
       return;
-   }
 
-   const std::bitset<64> treeMask{*fTreeValueMask->Get()};
-   if (treeMask.test(fMaskIndex) == false) {
-      fValuePtr = nullptr;
+   const auto validIndices = mask.GetValidIndices();
+   fLastEntry = mask.GetFirstEntry();
+   if (validIndices.empty())
       return;
-   }
 
+   std::fill(fCachedValues.begin(), fCachedValues.end(), nullptr);
    fValueReader->Load(mask);
-   fValuePtr = fValueReader->TryGet<void>(/*idx=*/0u);
+   auto size = fCachedValues.size();
+   for (decltype(size) i = 0; i < size; i++) {
+      const std::bitset<64> treeMask{*fTreeValueMask->Get()};
+      if (treeMask.test(fMaskIndex) == false)
+         fCachedValues[i] = nullptr;
+      else {
+         fCachedValues[i] = fValueReader->TryGet<void>(i);
+      }
+   }
 }
