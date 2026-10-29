@@ -903,6 +903,7 @@ if(pyroot)
       hist/hist007_TH1_liveupdate_uhi.py
       hist/hist010_TH1_two_scales_uhi.py
       hist/hist015_TH1_read_and_draw_uhi.py
+      machine_learning/ml_dataloader_Higgs_Classification.py
   )
 
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -950,6 +951,7 @@ if(pyroot)
       hist/hist007_TH1_liveupdate_uhi.py
       hist/hist010_TH1_two_scales_uhi.py
       hist/hist015_TH1_read_and_draw_uhi.py
+      machine_learning/ml_dataloader_Higgs_Classification.py
   )
 
   file(GLOB requires_mplhep RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
