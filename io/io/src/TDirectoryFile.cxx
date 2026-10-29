@@ -2011,8 +2011,12 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    return nbytes;
 }
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *title, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl,
+                                     std::pair<const char *, const char *> nameAndTitle, Option_t *option,
+                                     Int_t bufsize)
 {
+   const auto [name, title] = nameAndTitle;
+
    TDirectory::TContext ctxt(this);
 
    if (!fFile) return 0;
@@ -2159,7 +2163,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
 
 Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
 {
-   return WriteObjectAny(obj, /*title=*/ "", cl, name, option, bufsize);
+   return WriteObjectAny(obj, cl, {name, ""}, option, bufsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

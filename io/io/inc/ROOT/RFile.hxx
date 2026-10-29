@@ -258,9 +258,9 @@ class RFile final {
    /// Flags used in PutInternal()
    enum EPutFlags {
       /// When encountering an object at the specified path, overwrite it with the new one instead of erroring out.
-      kPutFlag_AllowOverwrite = 0x1,
+      kPutFlag_AllowOverwrite = BIT(0),
       /// When overwriting an object, preserve the existing one and create a new cycle, rather than removing it.
-      kPutFlag_OverwriteKeepCycle = 0x2,
+      kPutFlag_OverwriteKeepCycle = BIT(1),
    };
 
    std::unique_ptr<TFile> fFile;
@@ -277,9 +277,8 @@ class RFile final {
    void PutUntyped(std::string_view path, const std::type_info &type, const void *obj, std::uint32_t flags,
                    std::string_view title);
 
-   /// \see Put
    template <typename T>
-   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags, std::string_view title = "")
+   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags, std::string_view title)
    {
       PutUntyped(path, typeid(T), &obj, flags, title);
    }
@@ -361,7 +360,8 @@ public:
       return std::unique_ptr<T>(static_cast<T *>(obj));
    }
 
-   /// Puts object `obj` into the file, optionally giving it a title.
+   /// Puts object `obj` into the file and gives it a title.
+   /// The application retains ownership of the object.
    /// The object will be effectively copied into the file, so any further modifications won't be seen by the object
    /// inside the file.
    /// Note that the object is not necessarily written to storage until the RFile is closed or `Flush()` is called.
@@ -377,6 +377,11 @@ public:
       static_assert(!std::is_base_of_v<TTree, T>, "Writing TTree with RFile is unsupported.");
       PutInternal(path, obj, /* flags = */ 0, title);
    }
+
+   /// Puts object `namedObj` in the file under the path `dirPath/namedObj.GetName()`, giving it a title equal to
+   /// `namedObj.GetTitle()`.
+   /// If `dirPath` is empty (default), the object is put at the top level of the file.
+   void Put(const class TNamed &namedObj, std::string_view dirPath = "");
 
    /// Puts an object into the file, overwriting any previously-existing object at that path.
    /// See Put for more details.
