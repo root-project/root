@@ -2592,7 +2592,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
                                             const TString &includes, const TString &defines)
 {
 #ifdef WIN32
-   TString compiler = "\"" COMPILER "\""; // 'Program Files' contains spaces on Windows
+   TString compiler = CXX;
 #else
    TString compiler = COMPILER;
 #endif
