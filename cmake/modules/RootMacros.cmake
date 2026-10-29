@@ -3327,15 +3327,6 @@ function(ROOTTEST_ADD_TEST testname)
     set(precmd PRECMD ${ARG_PRECMD})
   endif()
 
-  # Copy files into the build directory first.
-  if(ARG_COPY_TO_BUILDDIR)
-    foreach(copyfile ${ARG_COPY_TO_BUILDDIR})
-      get_filename_component(absfilep ${copyfile} ABSOLUTE)
-      set(copy_files ${copy_files} ${absfilep})
-    endforeach()
-    set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
-  endif()
-
   # Execute a custom command after executing the test.
   if(ARG_POSTCMD)
     set(postcmd POSTCMD ${ARG_POSTCMD})
@@ -3411,6 +3402,21 @@ function(ROOTTEST_ADD_TEST testname)
     get_filename_component(test_working_dir ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
   endif()
 
+  # Copy files into the working directory now, at configure time, rather than
+  # letting the test driver copy them when the test runs. Several tests in one
+  # directory often copy the same file, and `ctest -j` can run them at the same
+  # time; `cmake -E copy` unlinks and recreates the destination, so concurrent
+  # copies race and fail with "No such file or directory". configure_file()
+  # also registers the source as a configure dependency, so editing it
+  # triggers a reconfigure on the next build.
+  if(ARG_COPY_TO_BUILDDIR)
+    foreach(copyfile ${ARG_COPY_TO_BUILDDIR})
+      get_filename_component(absfilep ${copyfile} ABSOLUTE)
+      get_filename_component(copyname ${absfilep} NAME)
+      configure_file(${absfilep} ${test_working_dir}/${copyname} COPYONLY)
+    endforeach()
+  endif()
+
   get_filename_component(logfile "${CMAKE_CURRENT_BINARY_DIR}/${testname}.log" ABSOLUTE)
   if(ARG_ERRREF)
     get_filename_component(errfile "${CMAKE_CURRENT_BINARY_DIR}/${testname}.err" ABSOLUTE)
@@ -3484,7 +3490,6 @@ function(ROOTTEST_ADD_TEST testname)
                         ${run_serial}
                         ${failregex}
                         ${passregex}
-                        ${copy_to_builddir}
                         PYTHON_DEPS ${pythondeps}
                         DEPENDS ${deplist}
                         FIXTURES_SETUP ${fixtures_setup}
