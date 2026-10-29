@@ -1303,7 +1303,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
    }
 
    if (x11) { //use built-in optimized version
-      asimage2drawable(vis, wid, im, (GC)gc, xsrc, ysrc, x, y, wsrc, hsrc, 1);
+      ASImage2Drawable(vis, im, wid, gc, xsrc, ysrc, x, y, wsrc, hsrc);
    } else {
       ASImage *img = nullptr;
       unsigned char *bits = (unsigned char *)im->alt.argb32;
@@ -2101,6 +2101,72 @@ void TASImage::GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create ASVisual for X11 display
+/// For internal use in TASUtils class
+
+ASVisual *TASImage::CreateX11Visual(Display_t display, Int_t screen, Int_t depth, Visual_t visual, Colormap_t cmap)
+{
+#ifndef X_DISPLAY_MISSING
+   if (visual && cmap)
+      return create_asvisual_for_id((Display *)display, screen, depth, XVisualIDFromVisual((Visual *) visual), (Colormap) cmap, nullptr);
+#else
+   (void)display;
+   (void)screen;
+   (void)depth;
+   (void)visual;
+   (void)cmap;
+#endif
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy ASVisual for X11 display
+/// For internal use in TASUtils class
+
+void TASImage::DestroyVisual(ASVisual *visual)
+{
+   if (visual)
+      destroy_asvisual(visual, 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert ASImage to pixmap for X11
+/// For internal use in TASUtils class
+
+Pixmap_t TASImage::ASImage2Pixmap(struct ASVisual *visual, Window_t root_window, ASImage *image)
+{
+   return (Pixmap_t)asimage2pixmap(visual, root_window, image, nullptr, kTRUE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert region of X11 window to ASImage
+/// For internal use in TASUtils class
+
+ASImage *TASImage::Pixmap2ASImage(struct ASVisual *visual, Window_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height)
+{
+   return pixmap2asimage(visual, wid, x, y, width, height, kAllPlanes, 0, 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert picture (X11 pixmap with mask) to ASImage
+/// For internal use in TASUtils class
+
+ASImage *TASImage::Picture2ASImage(struct ASVisual *visual, Pixmap_t pxm, Pixmap_t mask, UInt_t width, UInt_t height)
+{
+   return picture2asimage(visual, pxm, mask, 0, 0, width, height, kAllPlanes, 1, 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Output ASImage on X11 drawable
+/// For internal use in TASUtils class
+
+void TASImage::ASImage2Drawable(struct ASVisual *visual, ASImage *image, Drawable_t wid, GContext_t gc, Int_t xsrc, Int_t ysrc, Int_t x, Int_t y, UInt_t width, UInt_t height)
+{
+   asimage2drawable(visual, wid, image, (GC)gc, xsrc, ysrc, x, y, width, height, 1);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// @deprecated
 /// Will be removed in ROOT7
 /// Static internal method to initialize the ASVisual
@@ -2119,22 +2185,12 @@ ASVisual *TASImage::InitVisual()
 
 #ifndef WIN32
 #ifndef R__HAS_COCOA
-   Display *disp = (Display*) gVirtualX->GetDisplay();
-   Int_t screen  = gVirtualX->GetScreen();
-   Int_t depth   = gVirtualX->GetDepth();
-   Visual *vis   = (Visual*) gVirtualX->GetVisual();
-   Colormap cmap = (Colormap) gVirtualX->GetColormap();
-
-   if (vis && cmap)
-      gVis = create_asvisual_for_id(disp, screen, depth,
-                                        XVisualIDFromVisual(vis), cmap, nullptr);
+   gVis = CreateX11Visual(gVirtualX->GetDisplay(), gVirtualX->GetScreen(), gVirtualX->GetDepth(),
+                          gVirtualX->GetVisual(), gVirtualX->GetColormap());
 #endif
 #endif
 
-   if (gVis)
-      return gVis;
-
-   return bholder();
+   return gVis ? gVis : bholder();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2202,7 +2258,7 @@ Pixmap_t TASImage::GetPixmap()
    if (x11) {
       ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
-      return (Pixmap_t)asimage2pixmap(vis, gVirtualX->GetDefaultRootWindow(), img, nullptr, kTRUE);
+      return ASImage2Pixmap(vis, gVirtualX->GetDefaultRootWindow(), img);
    }
 
    auto argb = GetArgbArray();
@@ -2314,7 +2370,7 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11) { //use built-in optimized version
-      fImage = picture2asimage(vis, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
+      fImage = Picture2ASImage(vis, pxm, mask, w, h);
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(pxm, 0, 0, w, h);
       if (!bits) {   // error
@@ -6362,11 +6418,10 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    DestroyImage();
    DestroyScaledImage();
 
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11) { //use built-in optimized version
-      fImage = pixmap2asimage(vis, wid, x, y, w, h, kAllPlanes, 0, 0);
+      fImage = Pixmap2ASImage(vis, wid, x, y, w, h);
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(wid, 0, 0, w, h);
 
