@@ -46,6 +46,8 @@ public:
 
    std::unique_ptr<ChangeOperModeRAII> setOperModes(RooAbsArg::OperMode opMode);
 
+   void unregisterNode(RooAbsArg const &arg);
+
 private:
    void processVariable(NodeInfo &nodeInfo);
    void processCategory(NodeInfo &nodeInfo);
