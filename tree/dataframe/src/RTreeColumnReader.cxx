@@ -5,9 +5,16 @@
 
 #include <bitset>
 
-void *ROOT::Internal::RDF::RTreeOpaqueColumnReader::GetImpl(Long64_t)
+void *ROOT::Internal::RDF::RTreeOpaqueColumnReader::GetImpl(std::size_t)
 {
-   return fTreeValue->GetAddress();
+   return fValuePtr;
+}
+
+void ROOT::Internal::RDF::RTreeOpaqueColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
+{
+   // Assume size-1 bulk for now
+   if (mask[0])
+      fValuePtr = fTreeValue->GetAddress();
 }
 
 ROOT::Internal::RDF::RTreeOpaqueColumnReader::RTreeOpaqueColumnReader(TTreeReader &r, std::string_view colName)
@@ -17,9 +24,16 @@ ROOT::Internal::RDF::RTreeOpaqueColumnReader::RTreeOpaqueColumnReader(TTreeReade
 
 ROOT::Internal::RDF::RTreeOpaqueColumnReader::~RTreeOpaqueColumnReader() = default;
 
-void *ROOT::Internal::RDF::RTreeUntypedValueColumnReader::GetImpl(Long64_t)
+void *ROOT::Internal::RDF::RTreeUntypedValueColumnReader::GetImpl(std::size_t)
 {
-   return fTreeValue->Get();
+   return fValuePtr;
+}
+
+void ROOT::Internal::RDF::RTreeUntypedValueColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
+{
+   // Assume size-1 bulk for now
+   if (mask[0])
+      fValuePtr = fTreeValue->Get();
 }
 
 ROOT::Internal::RDF::RTreeUntypedValueColumnReader::RTreeUntypedValueColumnReader(TTreeReader &r,
@@ -31,7 +45,7 @@ ROOT::Internal::RDF::RTreeUntypedValueColumnReader::RTreeUntypedValueColumnReade
 
 ROOT::Internal::RDF::RTreeUntypedValueColumnReader::~RTreeUntypedValueColumnReader() = default;
 
-void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadStdArray(Long64_t entry)
+void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadStdArray(Long64_t entry)
 {
    if (entry == fLastEntry)
       return fRVec.data(); // We return the RVec we already created
@@ -61,7 +75,7 @@ void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadStdArray(Long64_t 
    return fRVec.data();
 }
 
-void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadStdVector(Long64_t entry)
+void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadStdVector(Long64_t entry)
 {
    if (entry == fLastEntry)
       return &fStdVector; // We return the std::vector we already created
@@ -95,7 +109,7 @@ void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadStdVector(Long64_t
    return &fStdVector;
 }
 
-void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadRVec(Long64_t entry)
+void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadRVec(Long64_t entry)
 {
    if (entry == fLastEntry)
       return &fRVec; // We return the RVec we already created
@@ -160,15 +174,22 @@ void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadRVec(Long64_t entr
    return &fRVec;
 }
 
-void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::GetImpl(Long64_t entry)
+void ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
-   if (fCollectionType == ECollectionType::kStdArray)
-      return ReadStdArray(entry);
+   // Assume size-1 bulk for now
+   if (mask[0]) {
+      if (fCollectionType == ECollectionType::kStdArray)
+         fValuePtr = LoadStdArray(mask.GetFirstEntry());
+      else if (fCollectionType == ECollectionType::kStdVector)
+         fValuePtr = LoadStdVector(mask.GetFirstEntry());
+      else
+         fValuePtr = LoadRVec(mask.GetFirstEntry());
+   }
+}
 
-   if (fCollectionType == ECollectionType::kStdVector)
-      return ReadStdVector(entry);
-
-   return ReadRVec(entry);
+void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::GetImpl(std::size_t)
+{
+   return fValuePtr;
 }
 
 ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::RTreeUntypedArrayColumnReader(TTreeReader &r,
@@ -193,11 +214,24 @@ ROOT::Internal::RDF::RMaskedColumnReader::RMaskedColumnReader(
 
 ROOT::Internal::RDF::RMaskedColumnReader::~RMaskedColumnReader() = default;
 
-void *ROOT::Internal::RDF::RMaskedColumnReader::GetImpl(Long64_t event)
+void *ROOT::Internal::RDF::RMaskedColumnReader::GetImpl(std::size_t)
 {
-   const std::bitset<64> mask{*fTreeValueMask->Get()};
-   if (mask.test(fMaskIndex) == false)
-      return nullptr;
+   return fValuePtr;
+}
 
-   return fValueReader->TryGet<void>(event);
+void ROOT::Internal::RDF::RMaskedColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
+{
+   if (!mask[0]) {
+      fValuePtr = nullptr;
+      return;
+   }
+
+   const std::bitset<64> treeMask{*fTreeValueMask->Get()};
+   if (treeMask.test(fMaskIndex) == false) {
+      fValuePtr = nullptr;
+      return;
+   }
+
+   fValueReader->Load(mask);
+   fValuePtr = fValueReader->TryGet<void>(/*idx=*/0u);
 }
