@@ -72,6 +72,7 @@ private:
    RooFit::EvalContext _evalContextCUDA;
    std::vector<NodeInfo> _nodes;                             // the ordered computation graph
    std::unordered_map<TNamed const *, NodeInfo *> _nodesMap; // for quick lookup of nodes
+   std::unique_ptr<RooAbsArg> _nodeTracker;                  // client of all nodes, to know which are still alive
    std::unique_ptr<ChangeOperModeRAII> _operModeChanges;
    // the single CUDA stream on which all GPU work of this Evaluator is enqueued
    RooBatchCompute::CudaInterface::CudaStream *_cudaStream = nullptr;
