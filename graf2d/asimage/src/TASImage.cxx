@@ -116,11 +116,6 @@ extern "C" {
 #include "TASPolyUtils.c"
 
 
-ASVisual *TASImage::fgVisual = nullptr;
-ASVisual *TASImage::fgBatchVisual = nullptr;
-Bool_t TASImage::fgInit = kFALSE;
-Bool_t TASImage::fgBatch = kFALSE;
-
 static unsigned long kAllPlanes = ~0;
 THashTable *TASImage::fgPlugList = new THashTable(50);
 
@@ -267,9 +262,11 @@ void TASImage::SetDefaults()
    fIsGray        = kFALSE;
    fPaletteEnabled = kFALSE;
 
+   static bool fgInit = false;
+
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
-      fgInit = kTRUE;
+      fgInit = true;
    }
 }
 
@@ -1233,7 +1230,9 @@ void TASImage::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DEPRECATED. Will be removed in ROOT7. Use TASUtils::PaintImage() instead
+/// @deprecated
+/// Will be removed in ROOT7.
+/// Use TASUtils::PaintImage() instead
 /// Draw asimage on drawable.
 
 void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
@@ -1248,6 +1247,8 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
 
    static int x11 = gVirtualX->InheritsFrom("TGX11");
 
+   auto vis = InitVisual();
+
    Pixmap_t mask = kNone;
 
    if (x11) {
@@ -1259,7 +1260,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
 
       std::vector<char> bits(ww*hh); //an array of bits
 
-      ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
+      ASImageDecoder *imdec = start_image_decoding(vis, im, SCL_DO_ALPHA,
                                                    xsrc, ysrc, ww, 0, nullptr);
       if (imdec) {
          for (UInt_t yy = 0; yy < hh; yy++) {
@@ -1302,12 +1303,12 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
    }
 
    if (x11) { //use built-in optimized version
-      asimage2drawable(fgVisual, wid, im, (GC)gc, xsrc, ysrc, x, y, wsrc, hsrc, 1);
+      asimage2drawable(vis, wid, im, (GC)gc, xsrc, ysrc, x, y, wsrc, hsrc, 1);
    } else {
       ASImage *img = nullptr;
       unsigned char *bits = (unsigned char *)im->alt.argb32;
       if (!bits) {
-         img = tile_asimage(fgVisual, im, xsrc, ysrc, wsrc, hsrc,
+         img = tile_asimage(vis, im, xsrc, ysrc, wsrc, hsrc,
                             0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
          if (img)
             bits = (unsigned char *)img->alt.argb32;
@@ -2100,22 +2101,21 @@ void TASImage::GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @deprecated
+/// Will be removed in ROOT7
 /// Static internal method to initialize the ASVisual
-/// Many operations do not require X11 display so plain "batch" visual can be used
 
-ASVisual *TASImage::InitVisual(Bool_t plain)
+ASVisual *TASImage::InitVisual()
 {
-   // this is new API, means return value must be used
-   if (fgBatchVisual && plain)
-      return fgBatchVisual;
+   Bool_t noX = gROOT->IsBatch() || !gVirtualX->InheritsFrom("TGX11");
 
-   Bool_t noX = plain || gROOT->IsBatch() || !gVirtualX->InheritsFrom("TGX11");
+   if (noX)
+      return bholder();
 
-   if (fgVisual && !noX && !fgBatch)
-      return fgVisual;
+   static ASVisual *gVis = nullptr;
 
-   fgVisual = nullptr;
-   fgBatch = false;
+   if (gVis)
+      return gVis;
 
 #ifndef WIN32
 #ifndef R__HAS_COCOA
@@ -2125,28 +2125,16 @@ ASVisual *TASImage::InitVisual(Bool_t plain)
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
    Colormap cmap = (Colormap) gVirtualX->GetColormap();
 
-   static ASVisual *vis_x = nullptr;
-
-   if (vis && cmap && !noX) {
-      if (!vis_x)
-         vis_x = create_asvisual_for_id(disp, screen, depth,
+   if (vis && cmap)
+      gVis = create_asvisual_for_id(disp, screen, depth,
                                         XVisualIDFromVisual(vis), cmap, nullptr);
-      fgVisual = vis_x;
-   }
 #endif
 #endif
 
-   if (!fgVisual) {
-      if (!fgBatchVisual) {
-         // create dummy visual for batch mode
-         fgBatchVisual = create_asvisual(nullptr, 0, 0, nullptr);
-         fgBatchVisual->dpy = nullptr; // fake (not used)
-      }
-      fgVisual = fgBatchVisual;
-      fgBatch = true;
-   }
+   if (gVis)
+      return gVis;
 
-   return fgVisual;
+   return bholder();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2194,13 +2182,17 @@ void TASImage::StartPaletteEditor()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
+/// @deprecated
+/// Method left for backward compatibility and will be removed in ROOT7!
+/// Use TASUtils::GetPixmap() instead
 /// Returns image pixmap.
 /// The pixmap must deleted by user.
 
 Pixmap_t TASImage::GetPixmap()
 {
-   if (!InitVisual()) {
+   auto vis = InitVisual();
+
+   if (!vis) {
       Warning("GetPixmap", "Visual not initiated");
       return 0;
    }
@@ -2210,7 +2202,7 @@ Pixmap_t TASImage::GetPixmap()
    if (x11) {
       ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
-      return (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(), img, nullptr, kTRUE);
+      return (Pixmap_t)asimage2pixmap(vis, gVirtualX->GetDefaultRootWindow(), img, nullptr, kTRUE);
    }
 
    auto argb = GetArgbArray();
@@ -2277,7 +2269,9 @@ Bool_t TASImage::GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &b
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DEPRECATED! Method left for backward compatibility and will be removed in ROOT7!
+/// @deprecated
+/// Method left for backward compatibility and will be removed in ROOT7!
+/// Use TASUtils::GetMask instead
 /// Returns image mask pixmap (alpha channel).
 /// The pixmap must deleted by user.
 
@@ -2294,12 +2288,15 @@ Pixmap_t TASImage::GetMask()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
+/// @deprecated
+/// Method left for backward compatibility and will be removed in ROOT7!
+/// Use Use TASUtils::FromPixmap() instead
 /// Create image from pixmap.
 
 void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
 {
-   if (!InitVisual()) {
+   auto vis = InitVisual();
+   if (!vis) {
       Warning("SetImage", "Visual not initiated");
       return;
    }
@@ -2317,7 +2314,7 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11) { //use built-in optimized version
-      fImage = picture2asimage(fgVisual, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
+      fImage = picture2asimage(vis, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(pxm, 0, 0, w, h);
       if (!bits) {   // error
@@ -4969,11 +4966,13 @@ UInt_t TASImage::AlphaBlend(UInt_t bot, UInt_t top)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @deprecated
+/// Will be removed in ROOT7
 /// Return visual.
 
 const ASVisual *TASImage::GetVisual()
 {
-   return fgVisual;
+   return InitVisual();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6325,7 +6324,9 @@ void TASImage::Gray(Bool_t on)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
+/// @deprecated
+/// Method left for backward compatibility and will be removed in ROOT7!
+/// Use TASUtils::FromWindow() instead
 /// Create an image (screenshot) from specified window.
 
 void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
@@ -6352,7 +6353,8 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
       return;
    }
 
-   if (!InitVisual()) {
+   auto vis = InitVisual();
+   if (!vis) {
       Warning("FromWindow", "Visual not initiated");
       return;
    }
@@ -6364,20 +6366,20 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11) { //use built-in optimized version
-      fImage = pixmap2asimage(fgVisual, wid, x, y, w, h, kAllPlanes, 0, 0);
+      fImage = pixmap2asimage(vis, wid, x, y, w, h, kAllPlanes, 0, 0);
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(wid, 0, 0, w, h);
 
-      if (!bits) { // error
+      if (!bits)  // error
          return;
-      }
       fImage = bitmap2asimage(bits, w, h, 0, nullptr);
       delete [] bits;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
+/// @deprecated
+/// Method left for backward compatibility and will be removed in ROOT7!
 /// Creates an image (screenshot) from a RGBA buffer provided by GL.
 
 void TASImage::FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h)
