@@ -121,7 +121,6 @@ ASVisual *TASImage::fgBatchVisual = nullptr;
 Bool_t TASImage::fgInit = kFALSE;
 Bool_t TASImage::fgBatch = kFALSE;
 
-static ASFontManager *gFontManager = nullptr;
 static unsigned long kAllPlanes = ~0;
 THashTable *TASImage::fgPlugList = new THashTable(50);
 
@@ -177,7 +176,7 @@ typedef struct {
 /// Only this instance must be used in all applications
 class BatchASVisualHolder {
    ASVisual *fVisual = nullptr;
-
+   ASFontManager *fFontManager = nullptr;
 public:
 
    ASVisual *operator()()
@@ -189,12 +188,25 @@ public:
       return fVisual;
    }
 
+   ASFontManager *font_manager()
+   {
+      if (!fFontManager)
+         fFontManager = create_font_manager(nullptr, nullptr, nullptr);
+      return fFontManager;
+   }
+
    ~BatchASVisualHolder()
    {
       if (fVisual) {
          destroy_asvisual(fVisual, 0);
          fVisual = nullptr;
       }
+
+      if (fFontManager) {
+         destroy_font_manager(fFontManager, 0);
+         fFontManager = nullptr;
+      }
+
    }
 };
 
@@ -2150,7 +2162,7 @@ ASVisual *TASImage::InitVisual(Bool_t plain)
 /// Static function to initialize the image.
 Bool_t TASImage::InitImage(const char *caller)
 {
-   if (!InitVisual()) {
+   if (!bholder()) {
       Warning(caller, "Visual not initiated");
       return false;
    }
@@ -2515,9 +2527,8 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    ASImage *text_im = nullptr;
    Bool_t ttfont = kFALSE;
 
-   if (!InitImage("DrawText")) {
+   if (!InitImage("DrawText"))
       return;
-   }
 
    TString fn = font_name;
    fn.Strip();
@@ -2544,19 +2555,16 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       return;
    }
 
-   if (!gFontManager) {
-      gFontManager = create_font_manager(fgVisual->dpy, nullptr, nullptr);
-   }
-
-   if (!gFontManager) {
-      Warning("DrawText", "cannot create Font Manager");
+   auto font_manager = bholder.font_manager();
+   if (!font_manager) {
+      Warning("DrawText", "Fail to create font manager missing");
       return;
    }
 
-   ASFont *font = fn.IsNull() ? nullptr : get_asfont(gFontManager, fn.Data(), 0, size, ASF_GuessWho);
+   ASFont *font = fn.IsNull() ? nullptr : get_asfont(font_manager, fn.Data(), 0, size, ASF_GuessWho);
 
    if (!font) {
-      font = get_asfont(gFontManager, "fixed", 0, size, ASF_GuessWho);
+      font = get_asfont(font_manager, "fixed", 0, size, ASF_GuessWho);
       if (!font) {
          Warning("DrawText", "cannot find a font %s", font_name);
          return;
@@ -2567,7 +2575,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
    if (!fImage) {
       fImage = create_asimage(width, height, 0);
-      fill_asimage(fgVisual, fImage, 0, 0, width, height, 0xFFFFFFFF);
+      fill_asimage(bholder(), fImage, 0, 0, width, height, 0xFFFFFFFF);
    }
 
    text_im = draw_text(text, font, (ASText3DType)type, 0);
@@ -2578,7 +2586,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       ASImage *tmp = file2ASImage(fore_file, 0xFFFFFFFF, SCREEN_GAMMA, 0, 0);
       if (tmp) {
          if ((tmp->width != width) || (tmp->height != height)) {
-            fore_im = tile_asimage(fgVisual, tmp, 0, 0, width, height, 0,
+            fore_im = tile_asimage(bholder(), tmp, 0, 0, width, height, 0,
                                    ASA_ASImage, GetImageCompression(), GetImageQuality());
          }
          destroy_asimage(&tmp);
@@ -2614,7 +2622,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       layers[1].clip_width = fore_im->width;
       layers[1].clip_height = fore_im->height;
 
-      rendered_im = merge_layers(fgVisual, &(layers[0]), 2, rimg->width, rimg->height,
+      rendered_im = merge_layers(bholder(), &(layers[0]), 2, rimg->width, rimg->height,
                                  ASA_ASImage, GetImageCompression(), GetImageQuality());
 
       destroy_asimage(&fore_im);
