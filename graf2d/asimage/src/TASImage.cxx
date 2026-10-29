@@ -3452,22 +3452,21 @@ void TASImage::Append(const TImage *im, const char *option, const char *color )
 
 void TASImage::BeginPaint(Bool_t mode)
 {
-   if (!InitVisual()) {
+   if (!fImage)
+      return;
+
+   fPaintMode = mode;
+
+   if (!fPaintMode || fImage->alt.argb32)
+      return;
+
+   auto vis = bholder();
+   if (!vis) {
       Warning("BeginPaint", "Visual not initiated");
       return;
    }
 
-   if (!fImage) {
-      return;
-   }
-
-   fPaintMode = mode;
-
-   if (!fPaintMode || fImage->alt.argb32) {
-      return;
-   }
-
-   ASImage *img = tile_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height,
+   ASImage *img = tile_asimage(vis, fImage, 0, 0, fImage->width, fImage->height,
                                0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
 
    if (!img) {
@@ -3489,9 +3488,10 @@ void TASImage::EndPaint()
       return;
    }
 
-   if (!fImage->alt.argb32) return;
+   if (!fImage->alt.argb32)
+      return;
 
-   ASImage *img = tile_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height,
+   ASImage *img = tile_asimage(bholder(), fImage, 0, 0, fImage->width, fImage->height,
                                0, ASA_ASImage, 0, ASIMAGE_QUALITY_DEFAULT);
 
    if (!img) {
@@ -3591,7 +3591,13 @@ UInt_t *TASImage::GetScanline(UInt_t y)
       return nullptr;
    }
 
-   ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALL,
+   auto vis = bholder();
+   if (!vis) {
+      Warning("GetScanline", "no visual");
+      return nullptr;
+   }
+
+   ASImageDecoder *imdec = start_image_decoding(vis, img, SCL_DO_ALL,
                                                 0, y, img->width, 1, nullptr);
 
    if (!imdec) {
@@ -3682,7 +3688,7 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
    height = y + height > fImage->height ? fImage->height - y : height;
 
    if (!fImage->alt.argb32) {
-      fill_asimage(fgVisual, fImage, x, y, width, height, color);
+      fill_asimage(bholder(), fImage, x, y, width, height, color);
    } else {
       int yyy = y*fImage->width;
       if (!has_alpha) { // use faster memset
@@ -5782,7 +5788,8 @@ void TASImage::CreateThumbnail()
       return;
    }
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("CreateThumbnail", "Visual not initiated");
       return;
    }
@@ -5802,7 +5809,7 @@ void TASImage::CreateThumbnail()
    w = w < 8 ? 8 : w;
    h = h < 8 ? 8 : h;
 
-   img = scale_asimage(fgVisual, fImage, w, h, ASA_ASImage,
+   img = scale_asimage(vis, fImage, w, h, ASA_ASImage,
                        GetImageCompression(), GetImageQuality());
    if (!img) {
       return;
@@ -5824,7 +5831,7 @@ void TASImage::CreateThumbnail()
    layers[1].clip_width = img->width;
    layers[1].clip_height = img->height;
    layers[1].merge_scanlines = blend_scanlines_name2func("tint");
-   rendered_im = merge_layers(fgVisual, &(layers[0]), 2, img->width, img->height,
+   rendered_im = merge_layers(vis, &(layers[0]), 2, img->width, img->height,
                               ASA_ASImage, GetImageCompression(), GetImageQuality());
    destroy_asimage(&img);
    img = rendered_im;
@@ -5835,11 +5842,11 @@ void TASImage::CreateThumbnail()
 
    if (w == sz) {
       d = (sz - h) >> 1;
-      padimg = pad_asimage(fgVisual, img, 0, d, sz, sz, 0x00ffffff,
+      padimg = pad_asimage(vis, img, 0, d, sz, sz, 0x00ffffff,
                            ASA_ASImage, GetImageCompression(), GetImageQuality());
    } else {
       d = (sz - w) >> 1;
-      padimg = pad_asimage(fgVisual, img, d, 0, sz, sz, 0x00ffffff,
+      padimg = pad_asimage(vis, img, d, 0, sz, sz, 0x00ffffff,
                            ASA_ASImage, GetImageCompression(), GetImageQuality());
    }
 
@@ -6234,7 +6241,8 @@ void TASImage::Gray(Bool_t on)
       return;
    }
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Gray", "Visual not initiated");
       return;
    }
@@ -6260,7 +6268,7 @@ void TASImage::Gray(Bool_t on)
    UInt_t i, j;
 
    if (fImage->alt.argb32) {
-      fGrayImage = tile_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height,
+      fGrayImage = tile_asimage(vis, fImage, 0, 0, fImage->width, fImage->height,
                                 0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
 
       for (i = 0; i < fImage->height; i++) {
@@ -6278,7 +6286,7 @@ void TASImage::Gray(Bool_t on)
    } else {
       fGrayImage = create_asimage(fImage->width, fImage->height, 0);
 
-      ASImageDecoder *imdec = start_image_decoding(fgVisual, fImage, SCL_DO_ALL,
+      ASImageDecoder *imdec = start_image_decoding(vis, fImage, SCL_DO_ALL,
                                                    0, 0, fImage->width, fImage->height, nullptr);
 
       if (!imdec) {
@@ -6287,7 +6295,7 @@ void TASImage::Gray(Bool_t on)
 #ifdef HAVE_MMX
    mmx_init();
 #endif
-      ASImageOutput *imout = start_image_output(fgVisual, fGrayImage, ASA_ASImage,
+      ASImageOutput *imout = start_image_output(vis, fGrayImage, ASA_ASImage,
                                                 GetImageCompression(), GetImageQuality());
       if (!imout) {
          Warning("ToGray", "Failed to start image output");
@@ -6302,7 +6310,7 @@ void TASImage::Gray(Bool_t on)
       CARD32 *bb = imdec->buffer.blue;
 
       ASScanline result;
-      prepare_scanline(fImage->width, 0, &result, fgVisual->BGR_mode);
+      prepare_scanline(fImage->width, 0, &result, vis->BGR_mode);
 
       for (i = 0; i < fImage->height; i++) {
          imdec->decode_image_scanline(imdec);
@@ -6421,10 +6429,12 @@ void TASImage::FromGradient(ASGradient *as_gradient, UInt_t width, UInt_t height
    DestroyImage();
    DestroyScaledImage();
 
-   if (!InitVisual())
+   auto vis = bholder();
+
+   if (!vis)
       Warning("FromGradient", "Visual not initiated");
    else
-      fImage = make_gradient(fgVisual, as_gradient, width, height, SCL_DO_COLOR, ASA_ARGB32, 0, GetImageQuality());
+      fImage = make_gradient(vis, as_gradient, width, height, SCL_DO_COLOR, ASA_ARGB32, 0, GetImageQuality());
 }
 
 
