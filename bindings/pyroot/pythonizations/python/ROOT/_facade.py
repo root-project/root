@@ -186,18 +186,6 @@ class ROOTFacade(types.ModuleType):
         self.__class__.__getattr__ = self._getattr
         self.__class__.__setattr__ = self._setattr
 
-    def SetHeuristicMemoryPolicy(self, enabled):
-        import textwrap
-        import warnings
-
-        msg = """ROOT.SetHeuristicMemoryPolicy() is deprecated and will be removed in ROOT 6.44.
-        Since ROOT 6.40, the heuristic memory policy is disabled by default, and with
-        ROOT 6.44 it won't be possible to re-enable it with ROOT.SetHeuristicMemoryPolicy(),
-        which was only meant to be used during a transition period and will be removed.
-        """
-        warnings.warn(textwrap.dedent(msg), FutureWarning, stacklevel=0)
-        return self._cppyy._backend.SetHeuristicMemoryPolicy(enabled)
-
     def AddressOf(self, obj):
         # Return an indexable buffer of length 1, whose only element
         # is the address of the object.
