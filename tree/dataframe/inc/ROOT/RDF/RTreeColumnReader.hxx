@@ -135,7 +135,9 @@ class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RCo
    std::unique_ptr<TTreeReaderValue<uint64_t>> fTreeValueMask;
    unsigned int fMaskIndex = 0;
 
-   void *fValuePtr{nullptr};
+   std::uint64_t fLastEntry{std::numeric_limits<std::uint64_t>::max()};
+   ROOT::RVec<void *> fCachedValues{};
+
    void *GetImpl(std::size_t) override;
    void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
