@@ -4497,13 +4497,15 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
       if (theColor || theSize) theScatter->TAttMarker::Modify();
       if (logx) {
         if (theX[i]>0) x = log10(theX[i]);
-        else break;
+        else
+           continue;
       } else {
         x = theX[i];
       }
       if (logy) {
         if (theY[i]>0) y = log10(theY[i]);
-        else break;
+        else
+           continue;
       } else {
         y = theY[i];
       }
@@ -4731,19 +4733,22 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
       theScatter->TAttMarker::Modify();
       if (logx) {
         if (theX[i]>0) x = log10(theX[i]);
-        else break;
+        else
+           continue;
       } else {
         x = theX[i];
       }
       if (logy) {
         if (theY[i]>0) y = log10(theY[i]);
-        else break;
+        else
+           continue;
       } else {
         y = theY[i];
       }
       if (logz) {
         if (theZ[i]>0) z = log10(theZ[i]);
-        else break;
+        else
+           continue;
       } else {
         z = theZ[i];
       }
