@@ -1,7 +1,7 @@
 # Author: Giacomo Parolini CERN 04/2025
 
 r"""
-\pythondoc RFile
+\pythondoc ROOT::RFile
 
 RFile is a modern, minimal interface to ROOT files with a focus on simplicity.
 It allows to perform the basic actions of getting objects from a file, putting objects into it and query the file
@@ -63,7 +63,7 @@ pass to Get or Put (like in the examples above) and it uses '/' as the directory
 group multiple related objects and it can be used alongside ListKeys:
 
 \code{.py}
-# lists all objects under the "myDir" directory. 
+# lists all objects under the "myDir" directory.
 for key in file.ListKeys("myDir"):
     # will print something like "myDir/myObjName"
     print(key.GetPath())
