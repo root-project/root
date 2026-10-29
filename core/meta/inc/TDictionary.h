@@ -197,24 +197,6 @@ public:
    static TDictionary* GetDictionary(const char* name);
    static TDictionary* GetDictionary(const std::type_info &typeinfo);
 
-   // Type of STL container (returned by IsSTLContainer).
-   enum R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") ESTLType {
-      kNone              R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kNotSTL,
-      kVector            R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLvector,
-      kList              R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLlist,
-      kForwardlist       R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLforwardlist,
-      kDeque             R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLdeque,
-      kMap               R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmap,
-      kMultimap          R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmultimap,
-      kSet               R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLset,
-      kMultiset          R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmultiset,
-      kUnorderedSet      R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedset,
-      kUnorderedMultiset R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmultiset,
-      kUnorderedMap      R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmap,
-      kUnorderedMultimap R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmultimap,
-      kBitset            R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLbitset
-   };
-
    /// Kinds of members to include in lists.
    enum class EMemberSelection {
       kNoUsingDecls,
