@@ -63,7 +63,7 @@ public:
    std::string GetName() const;
    std::string GetTypeName() const;
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   virtual void Update(unsigned int slot, Long64_t entry, bool mask) = 0;
    /// Update function to be called once per sample, used if the derived type is a RDefinePerSample
    virtual void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) {}
    /// Clean-up operations to be performed at the end of a task.
