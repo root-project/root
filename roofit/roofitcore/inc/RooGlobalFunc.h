@@ -242,16 +242,6 @@ RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
 RooCmdArg TimingAnalysis(bool timingAnalysis) ;
 
-RooCmdArg BatchMode(std::string const &batchMode = "cpu")
-   R__DEPRECATED(6, 44, "Use EvalBackend() instead of BatchMode().");
-// The const char * overload is necessary, otherwise the compiler will cast a
-// C-Style string to a bool and choose the BatchMode(bool) overload if one
-// calls for example BatchMode("off").
-RooCmdArg BatchMode(const char *batchMode)
-   R__DEPRECATED(6, 44, "Use EvalBackend() instead of BatchMode().");
-RooCmdArg BatchMode(bool batchModeOn)
-   R__DEPRECATED(6, 44, "Use EvalBackend() instead of BatchMode().");
-
 RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments

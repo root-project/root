@@ -990,23 +990,6 @@ TEST(CreateNLL, LegacyBackendDeprecationWarning)
 }
 #endif // ROOFIT_LEGACY_EVAL_BACKEND
 
-/// The deprecated BatchMode() command argument must still map to the right
-/// evaluation backends and emit a deprecation warning. This also guards
-/// against the C++ declarations going missing again, like they accidentally
-/// did between ROOT 6.30 and 6.40.
-TEST(CreateNLL, BatchModeDeprecationWarning)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-   RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
-   EXPECT_EQ(RooFit::BatchMode("cpu").getInt(0), static_cast<int>(RooFit::EvalBackend::Value::Cpu));
-   EXPECT_EQ(RooFit::BatchMode("off").getInt(0), static_cast<int>(RooFit::EvalBackend::Value::Legacy));
-   EXPECT_EQ(RooFit::BatchMode(true).getInt(0), static_cast<int>(RooFit::EvalBackend::Value::Cpu));
-   EXPECT_NE(hijack.str().find("deprecated and will be removed in ROOT 6.44"), std::string::npos) << hijack.str();
-#pragma GCC diagnostic pop
-}
-
 TEST(CreateNLL, CombineStyleConstraints)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);

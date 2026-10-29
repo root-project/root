@@ -236,7 +236,6 @@
          }\
          }";
 #pragma link C++ class RooTObjWrap+ ;
-#pragma link C++ class RooTrace+ ;
 #pragma link C++ class RooUniformBinning+ ;
 #pragma link C++ class RooSimultaneous+ ;
 #pragma link C++ class RooRealSumPdf+ ;
