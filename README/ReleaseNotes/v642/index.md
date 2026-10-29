@@ -149,6 +149,42 @@ resolve its symbols from the `libROOTPythonizations` Python extension module.
 Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 `obj.Connect(signal, callable)`.
 
+## Machine Learning integration
+
+`ROOT.Experimental.ML.RDataLoader` can now read files directly, save its training and validation datasets to disk and return batches as JAX arrays. Loading is faster and uses less memory.
+
+### File paths as input
+`RDataLoader` can now be created directly from files without building the RDataFrame first if the dataset doesn't need to be manipulated before training.
+A `(dataset_name, files)` tuple reads the TTree or RNTuple `dataset_name` from one file path or a list of them.
+
+Usage:
+```python
+dl = ROOT.Experimental.ML.RDataLoader(("events", ["data_1.root", "data_2.root"]), batch_size=1024, target="label")
+```
+
+### Saving the training and validation datasets
+The new `save()` method writes a dataset to disk as it would be loaded for training, i.e. after filtering, splitting, shuffling and padding, as a TTree (default) or an RNTuple.
+
+Usage:
+```python
+train, val = dl.train_test_split(test_size=0.2)
+
+train.save("tree", "train.root")
+val.save("tree", "val.root", output_format="rntuple")
+```
+
+### JAX output format
+Batches can now be returned as [`jax.Array`](https://docs.jax.dev/en/latest/_autosummary/jax.Array.html) objects with `as_jax()`, which takes an optional `device` parameter like `as_torch()`.
+
+### Performance improvements
+The loader no longer needs to be just-in-time compiled for the column types of each dataset, as the columns are now read by a custom RDataFrame action.
+The eager loading path avoids most copies of the dataset, and both loading modes read the data in fewer event loops.
+
+### Interface changes
+* All `RDataLoader` arguments but the inputs are now keyword-only, e.g. `RDataLoader(df, batch_size=64)` instead of `RDataLoader(df, 64)`, and the first argument is renamed from `rdataframes` to `inputs`.
+* `RDataLoader` does not support `ImplicitMT` yet: a `RuntimeError` is now raised if it is enabled when the input RDataFrames or the loader are created.
+
+
 ## I/O
 
 * Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
