@@ -1243,6 +1243,7 @@ void TASImage::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Will be removed in ROOT7. Use TASUtils::PaintImage() instead
 /// Draw asimage on drawable.
 
 void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
@@ -2655,14 +2656,16 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
 void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
 {
-   if (!im) return;
+   auto asimg = dynamic_cast<const TASImage *>(im);
+   if (!asimg)
+      return;
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Merge", "Visual not initiated");
       return;
    }
 
-   ASImage *rendered_im;
    ASImageLayer layers[2];
 
    init_image_layers(&(layers[0]), 2);
@@ -2672,15 +2675,15 @@ void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
    layers[0].clip_width = fImage->width;
    layers[0].clip_height = fImage->height;
    layers[0].bevel = nullptr;
-   layers[1].im = ((TASImage*)im)->fImage;
+   layers[1].im = asimg->fImage;
    layers[1].dst_x = x;
    layers[1].dst_y = y;
-   layers[1].clip_width  = im->GetWidth();
-   layers[1].clip_height = im->GetHeight();
+   layers[1].clip_width  = asimg->GetWidth();
+   layers[1].clip_height = asimg->GetHeight();
    layers[1].merge_scanlines = blend_scanlines_name2func(op ? op : "add");
 
-   rendered_im = merge_layers(fgVisual, &(layers[0]), 2, fImage->width, fImage->height,
-                              ASA_ASImage, GetImageCompression(), GetImageQuality());
+   ASImage *rendered_im = merge_layers(vis, &(layers[0]), 2, fImage->width, fImage->height,
+                                        ASA_ASImage, GetImageCompression(), GetImageQuality());
 
    DestroyImage();
    fImage = rendered_im;
@@ -2694,7 +2697,8 @@ void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
 
 void TASImage::Blur(Double_t hr, Double_t vr)
 {
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Blur", "Visual not initiated");
       return;
    }
@@ -2707,10 +2711,10 @@ void TASImage::Blur(Double_t hr, Double_t vr)
          return;
       }
 
-      fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
+      fill_asimage(vis, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
    }
 
-   ASImage *rendered_im = blur_asimage_gauss(fgVisual, fImage, hr > 0 ? hr : 3,
+   ASImage *rendered_im = blur_asimage_gauss(vis, fImage, hr > 0 ? hr : 3,
                                              vr > 0 ? vr : 3, SCL_DO_ALL,
                                              ASA_ASImage, GetImageCompression(), GetImageQuality());
    DestroyImage();
@@ -2744,7 +2748,8 @@ TObject *TASImage::Clone(const char *newname) const
 
 Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_threshold)
 {
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Vectorize", "Visual not initiated");
       return nullptr;
    }
@@ -2757,16 +2762,15 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
          return nullptr;
       }
 
-      fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
+      fill_asimage(vis, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
    }
 
    ASColormap cmap;
-   int *res;
-   UInt_t r=0, g=0, b=0;
+   UInt_t r = 0, g = 0, b = 0;
 
    dither = dither > 7 ? 7 : dither;
 
-   res = colormap_asimage(fImage, &cmap, max_colors, dither, opaque_threshold);
+   int *res = colormap_asimage(fImage, &cmap, max_colors, dither, opaque_threshold);
 
    Double_t *vec = new Double_t[fImage->height*fImage->width];
    UInt_t v;
@@ -2813,7 +2817,8 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
    fImage->alt.vector = vec;
    UnZoom();
    // ROOT-7647: res is allocated with `safemalloc` by colormap_asimage
-   if (res) safefree(res);
+   if (res)
+      safefree(res);
    return (Double_t*)fImage->alt.vector;
 }
 
@@ -2858,8 +2863,9 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
 void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
                    Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   if (!InitVisual()) {
-      Warning("HSV", "Visual not initiated");
+   auto vis = bholder();
+   if (!vis) {
+   Warning("HSV", "Visual not initiated");
       return;
    }
 
@@ -2873,7 +2879,7 @@ void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
 
       x = 0;
       y = 0;
-      fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
+      fill_asimage(vis, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
    }
 
    width = !width ? fImage->width : width;
@@ -2882,7 +2888,7 @@ void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
    ASImage *rendered_im = nullptr;
 
    if (H || S || V) {
-      rendered_im = adjust_asimage_hsv(fgVisual, fImage, x, y, width, height,
+      rendered_im = adjust_asimage_hsv(vis, fImage, x, y, width, height,
                                        hue, radius, H, S, V, ASA_ASImage, 100,
                                        ASIMAGE_QUALITY_TOP);
    }
@@ -2921,10 +2927,12 @@ void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
 /// \param[in] y y position coordinate
 /// \param[in] width image width, if 0, it will be read from fImage
 /// \param[in] height image height, if 0, it will be read from fImage
+
 void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
                         Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Gradient", "Visual not initiated");
       return;
    }
@@ -3048,7 +3056,7 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
             gradient.offset[i] = 1.0 - gradient.offset[i];
          }
       }
-      rendered_im = make_gradient(fgVisual, &gradient, width, height, SCL_DO_ALL,
+      rendered_im = make_gradient(vis, &gradient, width, height, SCL_DO_ALL,
                                   ASA_ASImage, GetImageCompression(), GetImageQuality());
 
       delete [] gradient.color;
@@ -3081,7 +3089,7 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
    layers[1].clip_height = height;
    layers[1].merge_scanlines = alphablend_scanlines;
 
-   ASImage *merge_im = merge_layers(fgVisual, &(layers[0]), 2, fImage->width, fImage->height,
+   ASImage *merge_im = merge_layers(vis, &(layers[0]), 2, fImage->width, fImage->height,
                                     ASA_ASImage, GetImageCompression(), GetImageQuality());
    if (!merge_im) {
       Warning("Gradient", "Failed to create merged image");
@@ -3165,7 +3173,8 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
                      const char *hi_color, const char *lo_color, UShort_t thick,
                      Bool_t reverse)
 {
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Bevel", "Visual not initiated");
       return;
    }
@@ -3223,7 +3232,7 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
 
       x = 0;
       y = 0;
-      fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, fill);
+      fill_asimage(vis, fImage, 0, 0, fImage->width, fImage->height, fill);
    }
 
    width = !width ? fImage->width : width;
@@ -3249,7 +3258,7 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
    }
 
    layers[1].im = bevel_im;
-   fill_asimage(fgVisual, bevel_im, 0, 0, w, h, fill);
+   fill_asimage(vis, bevel_im, 0, 0, w, h, fill);
 
    layers[1].dst_x = x;
    layers[1].dst_y = y;
@@ -3258,7 +3267,7 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
    layers[1].bevel = &bevel;
    layers[1].merge_scanlines = alphablend_scanlines;
 
-   merge_im = merge_layers(fgVisual, &(layers[0]), 2, fImage->width, fImage->height,
+   merge_im = merge_layers(vis, &(layers[0]), 2, fImage->width, fImage->height,
                            ASA_ASImage, GetImageCompression(), GetImageQuality());
    destroy_asimage(&bevel_im);
 
@@ -3282,7 +3291,8 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
    Int_t x, y;
    UInt_t w, h;
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Pad", "Visual not initiated");
       return;
    }
@@ -3295,7 +3305,7 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
          return;
       }
 
-      fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
+      fill_asimage(vis, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
    }
 
    ARGB32 color = ARGB32_White;
@@ -3306,7 +3316,7 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
    w = l + fImage->width + r;
    h = t + fImage->height + b;
 
-   ASImage *img = pad_asimage(fgVisual, fImage, x, y, w, h, color,
+   ASImage *img = pad_asimage(vis, fImage, x, y, w, h, color,
                               ASA_ASImage, GetImageCompression(), GetImageQuality());
 
    if (!img) {
@@ -3326,7 +3336,8 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
 
 void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Crop", "Visual not initiated");
       return;
    }
@@ -3352,7 +3363,7 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
       return;
    }
 
-   ASImageDecoder *imdec = start_image_decoding(fgVisual, fImage, SCL_DO_ALL,
+   ASImageDecoder *imdec = start_image_decoding(vis, fImage, SCL_DO_ALL,
                                                 x, y, width, height, nullptr);
 
    if (!imdec) {
@@ -3368,7 +3379,7 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
       return;
    }
 
-   ASImageOutput *imout = start_image_output(fgVisual, img, ASA_ASImage,
+   ASImageOutput *imout = start_image_output(vis, img, ASA_ASImage,
                                              GetImageCompression(), GetImageQuality());
 
    if (!imout) {
