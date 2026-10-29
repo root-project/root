@@ -812,6 +812,10 @@ private:
    /// and stores the number of pinned clusters in a certain cluster group. We use a map because we iterate the sorted
    /// list of cluster group IDs in the element-wise FindClusterId().
    std::map<ROOT::DescriptorId_t, std::size_t> fPinnedClusterGroups;
+   /// List of loaded cluster groups, ordered by last access. The size of the list is usually bounded by the
+   /// page list budget in the read options. Pinned cluster groups can cause overspending of the budget.
+   /// We except a small number of loaded cluster groups, thus we accept O(n) complexity to edit this list.
+   std::deque<ROOT::DescriptorId_t> fClusterGroupAccessSequence;
 
    /// Ensures that fDescriptor has cluster details loaded for the given cluster group ID. This method is expected
    /// to be called while holding the lock passed by descGuard. The returned descriptor guard is either the
