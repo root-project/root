@@ -190,7 +190,7 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
       if (dynamic_cast<RooRealVar const *>(arg)) {
          nodeInfo.isVariable = true;
       } else {
-         arg->setDataToken(iNode);
+         arg->setDataToken(iNode, this);
       }
       if (dynamic_cast<RooAbsCategory const *>(arg)) {
          nodeInfo.isCategory = true;
@@ -351,12 +351,25 @@ void Evaluator::updateOutputSizes()
 Evaluator::~Evaluator()
 {
    for (auto &info : _nodes) {
-      if (!info.isVariable) {
+      // Nodes that were deleted before the Evaluator were unregistered
+      if (!info.isVariable && info.absArg) {
          info.absArg->resetDataToken();
       }
    }
    if (_cudaStream) {
       RooBatchCompute::dispatchCUDA->deleteCudaStream(_cudaStream);
+   }
+}
+
+/// Called from RooAbsArg::~RooAbsArg() when a node of the computation graph is
+/// deleted while this Evaluator is still alive. The Evaluator can't be used
+/// anymore after that, but its destructor must not touch the deleted node.
+/// For internal use only.
+void Evaluator::unregisterNode(RooAbsArg const &arg)
+{
+   auto found = _nodesMap.find(arg.namePtr());
+   if (found != _nodesMap.end() && found->second->absArg == &arg) {
+      found->second->absArg = nullptr;
    }
 }
 
