@@ -1,15 +1,15 @@
-# \file
-# \ingroup ROOT7 tutorial_io
-# Demonstrate how to read a TTree with RFile.
-#
-# Note that, due to how TTree handles lifetime and its relationship with TDirectory, writing TTree through RFile
-# is currently unsupported.
-#
-# \macro_code
-# \macro_output
-#
-# \date 2026-10-12
-# \author Giacomo Parolini <giacomo.parolini@cern.ch>
+## \file
+## \ingroup ROOT7 tutorial_io
+## Demonstrate how to read a TTree with RFile.
+##
+## Note that, due to how TTree handles lifetime and its relationship with TDirectory, writing TTree through RFile
+## is currently unsupported.
+##
+## \macro_code
+## \macro_output
+##
+## \date 2026-10-12
+## \author Giacomo Parolini <giacomo.parolini@cern.ch>
 
 import array
 import os
