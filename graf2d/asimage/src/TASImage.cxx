@@ -539,11 +539,6 @@ const char *TASImage::TypeFromMagicNumber(const char *file)
 
 void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 {
-   if (!InitVisual()) {
-      Warning("ReadImage", "Visual not initiated");
-      return;
-   }
-
    Bool_t xpm = filename && (filename[0] == '/' &&
                 filename[1] == '*') && filename[2] == ' ';
 
@@ -1132,11 +1127,6 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t /* x */, Int_t /* y */, UInt_t /*
 {
    if (!pad) {
       Error("FromPad", "pad cannot be 0");
-      return;
-   }
-
-   if (!InitVisual()) {
-      Warning("FromPad", "Visual not initiated");
       return;
    }
 
@@ -3420,12 +3410,8 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
 
 void TASImage::Append(const TImage *im, const char *option, const char *color )
 {
-   if (!im) return;
-
-   if (!InitVisual()) {
-      Warning("Append", "Visual not initiated");
+   if (!im)
       return;
-   }
 
    if (!fImage) {
       // if image not exists - just clone data from source image
@@ -3734,16 +3720,10 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
 
 void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   if (!InitVisual()) {
-      Warning("FillRectangle", "Visual not initiated");
-      return;
-   }
-
    ARGB32 color = ARGB32_White;
 
-   if (col) {
+   if (col)
       parse_argb_color(col, &color);
-   }
 
    if (!fImage) {
       fImage = create_asimage(width ? width : 20, height ? height : 20, 0);
@@ -3996,11 +3976,6 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
                              const char *col, UInt_t thick)
 {
-   if (!InitVisual()) {
-      Warning("DrawRectangle", "Visual not initiated");
-      return;
-   }
-
    if (!fImage) {
       w = w ? w : 20;
       h = h ? h : 20;
@@ -4847,18 +4822,16 @@ void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
 void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h,
                         Int_t xdst, Int_t ydst, Int_t gfunc, EColorChan)
 {
-   if (!InitVisual()) {
-      Warning("CopyArea", "Visual not initiated");
-      return;
-   }
-
    if (!fImage) {
       Warning("CopyArea", "no image");
       return;
    }
-   if (!dst) return;
 
-   ASImage *out = ((TASImage*)dst)->GetImage();
+   auto dstimg = dynamic_cast<TASImage *> (dst);
+   if (!dstimg)
+      return;
+
+   ASImage *out = dstimg->GetImage();
 
    int x = 0;
    int y = 0;
@@ -4873,12 +4846,12 @@ void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h
    h = ysrc + h > fImage->height ? fImage->height - ysrc : h;
    UInt_t yy = (ysrc + y)*fImage->width;
 
-   if (!fImage->alt.argb32) {
+   if (!fImage->alt.argb32)
       BeginPaint();
-   }
+
    if (!out->alt.argb32) {
-      dst->BeginPaint();
-      out = ((TASImage*)dst)->GetImage();
+      dstimg->BeginPaint();
+      out = dstimg->GetImage();
    }
 
    if (fImage->alt.argb32 && out->alt.argb32) {
