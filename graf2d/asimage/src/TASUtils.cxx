@@ -120,8 +120,11 @@ public:
    }
 };
 
+namespace {
+
 thread_local ASVisualHolder holder;
 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns image pixmap.
