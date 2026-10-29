@@ -1,8 +1,7 @@
 import os
 import unittest
+
 import ROOT
-import cppyy
-import platform
 
 
 class StringView(unittest.TestCase):
@@ -11,8 +10,7 @@ class StringView(unittest.TestCase):
     """
 
     def test_interpreter(self):
-        ROOT.gInterpreter.Declare(
-            "std::string TestStringView(std::string_view x) { return std::string(x); }")
+        ROOT.gInterpreter.Declare("std::string TestStringView(std::string_view x) { return std::string(x); }")
         x = ROOT.TestStringView("foo")
         self.assertEqual(str(x), "foo")
 
@@ -32,5 +30,6 @@ class StringView(unittest.TestCase):
         finally:
             os.remove(filename)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
