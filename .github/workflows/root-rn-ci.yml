@@ -1,0 +1,76 @@
+name: 'ROOT Release Notes'
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The branch for which the RN have to be generated, e.g. "master" or "v6-38-00-patches"'
+        type: string
+        required: true
+        default: "master"
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        required: true
+    secrets:
+      RWEBEOS_KT:
+        required: true
+      KRB5REALM:
+        required: true
+      KRB5USER:
+        required: true
+      
+jobs:
+  create_release_notes:
+    runs-on: ubuntu-latest
+    env:
+      WORKDIR: /home/runner/work/root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+      - name: Install Kerberos utilities
+        run: sudo apt-get install -y krb5-user
+
+      - name: Install XRootD client
+        run: sudo apt-get -y install xrootd-client
+
+      - name: Setup Pandoc
+        run: sudo apt-get -y install pandoc
+
+      - name: Download Release Notes creation script
+        working-directory: ${{ env.WORKDIR }}
+        run: wget https://raw.githubusercontent.com/root-project/rootspi/refs/heads/master/rdoc/relnotes_gh.py
+
+      - name: Create Release Notes
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          echo +++ Running the command
+          python relnotes_gh.py root ${{ inputs.branch }}
+          echo +++ New Content
+          ls
+
+      - name: Sync documentation to EOS
+        env:
+          RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
+          KT_FILE_NAME: /tmp/decoded.keytab
+          EOS_PATH: /eos/project/r/root-eos/website/doc
+          EOS_ENDPOINT: root://eosproject-r.cern.ch
+          KRB5CCNAME: /tmp/krb5cc
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          echo +++ Content
+          ls
+          echo +++ Retrieving the secret
+          echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
+          echo +++ Creating the token
+          kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+          echo +++ Running the copy
+          export DIRNAME=`ls -1|grep -v relnotes|grep -v root`
+          xrdcp -rf ${DIRNAME} ${EOS_ENDPOINT}/${EOS_PATH}/
