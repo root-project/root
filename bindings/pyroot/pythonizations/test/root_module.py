@@ -129,6 +129,10 @@ class ROOTModule(unittest.TestCase):
         if version >= (6, 43, 0) and hasattr(ROOT, "RooArgSet"):
             # Verify that the implicit conversion from Python set to RooArgSet
             # is gone
+            # Currently the test will pass i.e. the Pythonization raises TypeError, but not for the correct reason.
+            # It will print errors coming from trying all overloads of the RooDataSet constructor, while we would expect
+            # the TypeError coming from the _rooargset.py pythonization.
+            # TODO: investigate cause and fix.
             x = ROOT.RooRealVar("x", "x", 1.0)
             y = ROOT.RooRealVar("y", "y", -1.0)
             with self.assertRaises(TypeError):

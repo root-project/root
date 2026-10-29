@@ -246,7 +246,6 @@ set(ROOFITCORE_HEADERS
   RooTable.h
   RooTemplateProxy.h
   RooThresholdCategory.h
-  RooTrace.h
   RooTreeDataStore.h
   RooTruthModel.h
   RooUniformBinning.h
@@ -445,7 +444,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooTFormulaEvaluator.cxx
     src/RooTObjWrap.cxx
     src/RooThresholdCategory.cxx
-    src/RooTrace.cxx
     src/RooTreeDataStore.cxx
     src/RooTruthModel.cxx
     src/RooUniformBinning.cxx
