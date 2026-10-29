@@ -48,24 +48,6 @@ protected:
    friend class TStreamerSTL;
 
 public:
-
-   enum R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") ESTLtype {
-      kSTL                  R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLany,
-      kSTLstring            R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLstring,
-      kSTLvector            R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLvector,
-      kSTLlist              R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLlist,
-      kSTLforwardlist       R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLforwardlist,
-      kSTLdeque             R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLdeque,
-      kSTLmap               R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmap,
-      kSTLmultimap          R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmultimap,
-      kSTLset               R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLset,
-      kSTLmultiset          R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLmultiset,
-      kSTLunorderedset      R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedset,
-      kSTLunorderedmultiset R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmultiset,
-      kSTLunorderedmap      R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmap,
-      kSTLunorderedmultimap R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLunorderedmultimap,
-      kSTLbitset            R__DEPRECATED(6, 44, "Please use ROOT::ESTLType instead.") = ROOT::kSTLbitset
-   };
    // TStreamerElement status bits
    enum EStatusBits {
       kHasRange     = BIT(6),
