@@ -87,6 +87,13 @@ protected:
 
    void FromGradient(struct ASGradient *as_gradient, UInt_t width, UInt_t height);
 
+   static struct ASVisual *CreateX11Visual(Display_t display, Int_t screen, Int_t depth, Visual_t visual, Colormap_t cmap);
+   static void DestroyVisual(struct ASVisual *visual);
+   static Pixmap_t ASImage2Pixmap(struct ASVisual *visual, Window_t root_window, ASImage *image);
+   static ASImage *Pixmap2ASImage(struct ASVisual *visual, Window_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   static ASImage *Picture2ASImage(struct ASVisual *visual, Pixmap_t pxm, Pixmap_t mask, UInt_t width, UInt_t height);
+   static void ASImage2Drawable(struct ASVisual *visual, ASImage *image, Drawable_t wid, GContext_t gc, Int_t xsrc, Int_t ysrc, Int_t x, Int_t y, UInt_t width, UInt_t height);
+
 public:
    TASImage();
    TASImage(UInt_t w, UInt_t h);
