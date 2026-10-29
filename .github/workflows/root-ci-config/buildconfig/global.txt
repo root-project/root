@@ -88,7 +88,6 @@ testing=ON
 tmva-cpu=ON
 tmva-gpu=OFF
 tmva-cudnn=OFF
-tmva-pymva=OFF
 tmva=ON
 unfold=ON
 unuran=ON

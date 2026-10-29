@@ -59,7 +59,6 @@
 #@hastmvacpu@ R__HAS_TMVACPU /**/
 #@hastmvagpu@ R__HAS_TMVAGPU /**/
 #@hastmvacudnn@ R__HAS_CUDNN /**/
-#@haspymva@ R__HAS_PYMVA /**/
 
 #@hasuring@ R__HAS_URING /**/
 

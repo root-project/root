@@ -480,15 +480,12 @@ set(Python3_FIND_FRAMEWORK LAST)
 
 # Even if we don't build PyROOT, one still need python executable to run some scripts
 list(APPEND python_components Interpreter)
-if(pyroot AND NOT (tpython OR tmva-pymva))
+if(pyroot AND NOT tpython)
   # We have to only look for the Python development module in order to be able to build ROOT with a pip backend
   # In particular, it is forbidden to link against libPython.so, see https://peps.python.org/pep-0513/#libpythonx-y-so-1
   list(APPEND python_components Development.Module)
-elseif(tpython OR tmva-pymva)
+elseif(tpython)
   list(APPEND python_components Development)
-endif()
-if(tmva-pymva)
-  list(APPEND python_components NumPy)
 endif()
 find_package(Python3 3.11 COMPONENTS ${python_components})
 
@@ -1027,16 +1024,9 @@ if(tmva)
   else()
     set(tmva-cudnn OFF CACHE BOOL "Disabled because 'tmva-gpu' unavailable (${tmva-cudnn_description})" FORCE)
   endif()
-  if(tmva-pymva)
-    if(NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND)
-      message(SEND_ERROR "TMVA: numpy python package or Python development package not found and tmva-pymva component required"
-                          " (python executable: ${Python3_EXECUTABLE})")
-    endif()
-  endif()
 else()
   set(tmva-gpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-gpu_description})"   FORCE)
   set(tmva-cudnn OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-cudnn_description})"  FORCE)
-  set(tmva-pymva OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-pymva_description})" FORCE)
 endif(tmva)
 
 #---Check for PyROOT---------------------------------------------------------------------

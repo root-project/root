@@ -131,10 +131,8 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
    }
 
    bool useTMVACNN = (opt.size() > 0) ? opt[0] : false;
-   bool useKerasCNN = (opt.size() > 1) ? opt[1] : false;
    bool useTMVADNN = (opt.size() > 2) ? opt[2] : false;
    bool useTMVABDT = (opt.size() > 3) ? opt[3] : false;
-   bool usePyTorchCNN = (opt.size() > 4) ? opt[4] : false;
 #ifndef R__HAS_TMVACPU
 #ifndef R__HAS_TMVAGPU
    Warning("TMVA_CNN_Classification",
@@ -160,15 +158,6 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
 
 
    std::cout << "Running with nthreads  = " << ROOT::GetThreadPoolSize() << std::endl;
-
-#ifdef R__HAS_PYMVA
-   gSystem->Setenv("KERAS_BACKEND", "tensorflow");
-   // for using Keras
-   TMVA::PyMethodBase::PyInitialize();
-#else
-   useKerasCNN = false;
-   usePyTorchCNN = false;
-#endif
 
    TFile *outputFile = nullptr;
    if (writeOutputFile)
@@ -432,74 +421,6 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
       ### Book Convolutional Neural Network in Keras using a generated model
 
    **/
-
-#ifdef R__HAS_PYMVA
-   // The next section uses Python packages, execute it only if PyMVA is available
-   TString tmva_python_exe{TMVA::Python_Executable()};
-   TString python_exe = tmva_python_exe.IsNull() ? "python" : tmva_python_exe;
-
-   if (useKerasCNN) {
-
-      Info("TMVA_CNN_Classification", "Building convolutional keras model");
-      // create python script which can be executed
-      // create 2 conv2d layer + maxpool + dense
-      TMacro m;
-      m.AddLine("import tensorflow");
-      m.AddLine("from tensorflow.keras.models import Sequential");
-      m.AddLine("from tensorflow.keras.optimizers import Adam");
-      m.AddLine(
-         "from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape, BatchNormalization");
-      m.AddLine("");
-      m.AddLine("model = Sequential() ");
-      m.AddLine("model.add(Reshape((16, 16, 1), input_shape = (256, )))");
-      m.AddLine("model.add(Conv2D(10, kernel_size = (3, 3), kernel_initializer = 'glorot_normal',activation = "
-                "'relu', padding = 'same'))");
-      m.AddLine("model.add(BatchNormalization())");
-      m.AddLine("model.add(Conv2D(10, kernel_size = (3, 3), kernel_initializer = 'glorot_normal',activation = "
-                "'relu', padding = 'same'))");
-      // m.AddLine("model.add(BatchNormalization())");
-      m.AddLine("model.add(MaxPooling2D(pool_size = (2, 2), strides = (1,1))) ");
-      m.AddLine("model.add(Flatten())");
-      m.AddLine("model.add(Dense(256, activation = 'relu')) ");
-      m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
-      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
-      m.AddLine("model.save('model_cnn.keras')");
-      m.AddLine("model.summary()");
-
-      m.SaveSource("make_cnn_model.py");
-      // execute
-      gSystem->Exec(python_exe + " make_cnn_model.py");
-
-      if (gSystem->AccessPathName("model_cnn.keras")) {
-         Warning("TMVA_CNN_Classification", "Error creating Keras model file - skip using Keras");
-      } else {
-         // book PyKeras method only if Keras model could be created
-         Info("TMVA_CNN_Classification", "Booking tf.Keras CNN model");
-         factory.BookMethod(
-            &loader, TMVA::Types::kPyKeras, "PyKeras",
-            "H:!V:VarTransform=None:FilenameModel=model_cnn.keras:tf.keras:"
-            "FilenameTrainedModel=trained_model_cnn.keras:NumEpochs=10:BatchSize=100:");
-      }
-   }
-
-   if (usePyTorchCNN) {
-
-      Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model");
-      TString pyTorchFileName = gROOT->GetTutorialDir() + TString("/machine_learning/PyTorch_Generate_CNN_Model.py");
-      // check that pytorch can be imported and file defining the model and used later when booking the method is
-      // existing
-      if (gSystem->Exec(python_exe + " -c 'import torch'") || gSystem->AccessPathName(pyTorchFileName)) {
-         Warning("TMVA_CNN_Classification", "PyTorch is not installed or model building file is not existing - skip using PyTorch");
-      } else {
-         // book PyTorch method only if PyTorch model could be created
-         Info("TMVA_CNN_Classification", "Booking PyTorch CNN model");
-         TString methodOpt = "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
-                             "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=10:BatchSize=100";
-         methodOpt += TString(":UserCode=") + pyTorchFileName;
-         factory.BookMethod(&loader, TMVA::Types::kPyTorch, "PyTorch", methodOpt);
-      }
-   }
-#endif
 
    ////  ## Train Methods
 

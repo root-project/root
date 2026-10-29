@@ -20,6 +20,7 @@ The following people have contributed to this new version:
 * A `RooArgSet` cannot be constructed with an implicit conversion from Python `set` anymore. The problem is that Python sets are unordered while RooArgSets are ordered, and this mismatch can lead to subtle problems later on. Prefer conversion from Python lists or tuples, which are ordered too.
 * The `RooFit::BatchMode` command argument has been removed, use `RooFit::EvalBackend` instead.
 * The `RooTrace` class was untested and is now removed. For memory debugging, please use general-purpose tools such as AddressSanitizer or Valgrind instead.
+* The PyMVA library and the associated `tmva-pymva` build option that were deprecated in ROOT 6.42 have been removed
 
 ## Python Interface
 
