@@ -1760,7 +1760,8 @@ void TASImage::SetPalette(const TImagePalette *palette)
 {
    TAttImage::SetPalette(palette);
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("SetPalette", "Visual not initiated");
       return;
    }
@@ -1792,7 +1793,7 @@ void TASImage::SetPalette(const TImagePalette *palette)
       asPalette.points[point] = fMinValue + (fMaxValue - fMinValue) * pal.fPoints[point];
 
    // use the new palette in this image
-   colorize_asimage_vector(fgVisual, fImage, &asPalette, ASA_ASImage, GetImageQuality());
+   colorize_asimage_vector(vis, fImage, &asPalette, ASA_ASImage, GetImageQuality());
 
    delete [] asPalette.points;
    for (Int_t col = 0; col < 4; col++)
@@ -1817,7 +1818,8 @@ void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
       return;
    }
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Scale", "Visual not initiated");
       return;
    }
@@ -1831,7 +1833,7 @@ void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
    if (toHeight > 30000)
       toHeight = 30000;
 
-   ASImage *img = scale_asimage(fgVisual, fImage, toWidth, toHeight,
+   ASImage *img = scale_asimage(vis, fImage, toWidth, toHeight,
                                 ASA_ASImage, GetImageCompression(),
                                 GetImageQuality());
    DestroyImage();
@@ -1852,7 +1854,8 @@ void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
       return;
    }
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Slice", "Visual not initiated");
       return;
    }
@@ -1866,7 +1869,7 @@ void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
    if (toHeight > 30000)
       toHeight = 30000;
 
-   ASImage *img = slice_asimage(fgVisual, fImage, xStart, xEnd,
+   ASImage *img = slice_asimage(vis, fImage, xStart, xEnd,
                                 yStart, yEnd, toWidth, toHeight,
                                 ASA_ASImage, GetImageCompression(),
                                 GetImageQuality());
@@ -1887,7 +1890,8 @@ void TASImage::Tile(UInt_t toWidth, UInt_t toHeight)
       return;
    }
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Tile", "Visual not initiated");
       return;
    }
@@ -1901,7 +1905,7 @@ void TASImage::Tile(UInt_t toWidth, UInt_t toHeight)
    if (toHeight > 30000)
       toHeight = 30000;
 
-   ASImage *img = tile_asimage(fgVisual, fImage, 0, 0, toWidth, toHeight, 0,
+   ASImage *img = tile_asimage(vis, fImage, 0, 0, toWidth, toHeight, 0,
                                 ASA_ASImage, GetImageCompression(), GetImageQuality());
    DestroyImage();
    fImage = img;
@@ -1975,7 +1979,8 @@ void TASImage::Flip(Int_t flip)
       Warning("Flip", "Image not valid");
       return;
    }
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("Flip", "Visual not initiated");
       return;
    }
@@ -1995,7 +2000,7 @@ void TASImage::Flip(Int_t flip)
       h = fImage->width;
    }
 
-   ASImage *img = flip_asimage(fgVisual, fImage, 0, 0, w, h, rflip,
+   ASImage *img = flip_asimage(vis, fImage, 0, 0, w, h, rflip,
                                ASA_ASImage, GetImageCompression(),
                                GetImageQuality());
    DestroyImage();
@@ -2023,7 +2028,7 @@ void TASImage::Mirror(Bool_t vert)
       return;
    }
 
-   auto vis = InitVisual(true);
+   auto vis = bholder();
    if (!vis) {
       Warning("Mirror", "Visual not initiated");
       return;
@@ -2221,7 +2226,8 @@ Pixmap_t TASImage::GetPixmap()
 
 Bool_t TASImage::GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits)
 {
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("GetMaskBits", "Visual not initiated");
       return kFALSE;
    }
@@ -2237,7 +2243,7 @@ Bool_t TASImage::GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &b
    UInt_t ow = img->width % 8;
    width = img->width - ow + (ow ? 8 : 0);
 
-   ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
+   ASImageDecoder *imdec = start_image_decoding(vis, img, SCL_DO_ALPHA,
                                                 0, 0, width, 0, nullptr);
    if (!imdec)
       return kFALSE;
