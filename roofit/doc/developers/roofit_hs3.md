@@ -196,6 +196,49 @@ For more complicated cases where members are lists of elements, the
 methods `is_seq()`, `set_seq()`, `is_map()`, `set_map()` and
 ranged-based for-loops via `children()` might come in handy.
 
+### Conformance testing
+
+The HS3 conformance test suite checks that RooFit imports and evaluates a
+set of frozen HS3 files like the reference implementation. It consists of
+two repositories: the fixtures in
+[HS3TestSuite](https://github.com/hep-statistics-serialization-standard/HS3TestSuite)
+and the Python runner in
+[HS3TestSuiteCode](https://github.com/hep-statistics-serialization-standard/HS3TestSuiteCode).
+
+The suite is enabled with the CMake option `-Dtest_roofit_hs3testsuite=ON`,
+which requires `-Dtesting=ON`, `-Dpyroot=ON` and the `jsonschema` Python
+package. Both repositories are fetched at configuration time, so the option
+requires network access; alternatively, point
+`FETCHCONTENT_SOURCE_DIR_HS3TESTSUITE` and
+`FETCHCONTENT_SOURCE_DIR_HS3TESTSUITECODE` to local checkouts. The option is
+enabled in the ROOT CI. Run the suite with
+
+``` {.sh}
+    ctest -R roofit-hs3-hs3-suite --output-on-failure
+```
+
+Each check of each fixture is reported as a separate test case by
+`roofit/hs3/test/test_hs3_suite.py`, which uses
+`roofit/hs3/test/hs3testsuite_roofit_backend.py` to run the checks with
+RooFit.
+
+Both repositories are pinned to explicit commits in
+`roofit/hs3/test/CMakeLists.txt`. Checks that are known to fail with the
+current RooFit are listed in
+`roofit/hs3/test/hs3testsuite_expected_failures.txt`, one
+`<test_id>::<check_id>` per line, together with a one-line reason. They are
+run as expected failures: if one of them starts to pass, or if an entry
+matches no check, the test fails, so that the list can only shrink. When you
+fix a conformance issue in RooFit, remove the corresponding entries in the
+same pull request.
+
+To bump the pinned commits, update `hs3testsuite_tag` and
+`hs3testsuitecode_tag` in
+`roofit/hs3/test/CMakeLists.txt`, re-run the suite and update the list of
+expected failures accordingly. Make sure the runner and the fixtures are
+compatible, and adapt the RooFit backend if the backend interface of the
+runner has changed.
+
 ### Contributing
 
 If you encounter a missing importer or exporter, please consider
