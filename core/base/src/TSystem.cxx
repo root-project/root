@@ -2591,11 +2591,7 @@ static void R__AddPath(TString &target, const TString &path) {
 static bool R__GenerateCompilerDependencies(const TString &depfilename, const TString &filename, const TString &targetname,
                                             const TString &includes, const TString &defines)
 {
-#ifdef WIN32
    TString compiler = CXX;
-#else
-   TString compiler = COMPILER;
-#endif
 
    TString cmd = compiler;
    cmd += " " CXXOPT;
