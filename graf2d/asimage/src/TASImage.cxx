@@ -170,6 +170,40 @@ typedef struct {
 }\
 
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Holder of batch ASVisual instance, destroyed when thread or application closed
+/// Only this instance must be used in all applications
+class BatchASVisualHolder {
+   ASVisual *fVisual = nullptr;
+
+public:
+
+   ASVisual *operator()()
+   {
+      if (!fVisual) {
+         fVisual = create_asvisual(nullptr, 0, 0, nullptr);
+         fVisual->dpy = nullptr; // fake (not used)
+      }
+      return fVisual;
+   }
+
+   ~BatchASVisualHolder()
+   {
+      if (fVisual) {
+         destroy_asvisual(fVisual, 0);
+         fVisual = nullptr;
+      }
+   }
+};
+
+namespace {
+
+thread_local BatchASVisualHolder bholder;
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy image.
 
@@ -1001,7 +1035,8 @@ void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
 {
    TAttImage::SetPalette(palette);
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+   if (!vis) {
       Warning("SetImage", "Visual not initiated");
       return;
    }
@@ -1022,8 +1057,7 @@ void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
    ASVectorPalette asPalette;
 
    asPalette.npoints = pal.fNumPoints;
-   Int_t col;
-   for (col = 0; col < 4; col++)
+   for (Int_t col = 0; col < 4; col++)
       asPalette.channels[col] = new UShort_t[asPalette.npoints];
 
    memcpy(asPalette.channels[0], pal.fColorBlue,  pal.fNumPoints * sizeof(UShort_t));
@@ -1035,12 +1069,12 @@ void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
    for (Int_t point = 0; point < Int_t(asPalette.npoints); point++)
       asPalette.points[point] = fMinValue + (fMaxValue - fMinValue) * pal.fPoints[point];
 
-   fImage = create_asimage_from_vector(fgVisual, (Double_t*)imageData, width,
+   fImage = create_asimage_from_vector(vis, (Double_t*)imageData, width,
                                        height, &asPalette, ASA_ASImage,
                                        GetImageCompression(), GetImageQuality());
 
    delete [] asPalette.points;
-   for (col = 0; col < 4; col++)
+   for (Int_t col = 0; col < 4; col++)
       delete [] asPalette.channels[col];
 
    fZoomUpdate = 0;
@@ -1342,7 +1376,9 @@ void TASImage::Paint(Option_t *option)
       return;
    }
 
-   if (!InitVisual()) {
+   auto vis = bholder();
+
+   if (!vis) {
       Warning("Paint", "Visual not initiated");
       return;
    }
@@ -1434,7 +1470,7 @@ void TASImage::Paint(Option_t *option)
                           (((ARGB32)(pal.fColorAlpha[oldPt] & 0xff00)) << 16);
       }
 
-      grad_im = make_gradient(fgVisual, &grad , UInt_t(pal_w),
+      grad_im = make_gradient(vis, &grad , UInt_t(pal_w),
                               pal_h, SCL_DO_COLOR,
                               ASA_ARGB32, GetImageCompression(), GetImageQuality());
 
@@ -1446,7 +1482,7 @@ void TASImage::Paint(Option_t *option)
       DestroyScaledImage();
       fScaledImage = (TASImage*) TImage::Create();
       if (!fScaledImage) return;
-      fScaledImage->fImage = tile_asimage(fgVisual, fImage, tile_x, tile_y,
+      fScaledImage->fImage = tile_asimage(vis, fImage, tile_x, tile_y,
                                           to_w, to_h, tile_tint, ASA_ASImage,
                                           GetImageCompression(), GetImageQuality());
       image = fScaledImage->fImage;
@@ -1473,20 +1509,20 @@ void TASImage::Paint(Option_t *option)
             if (fZoomWidth && fZoomHeight &&
                 ((fImage->width != fZoomWidth) || (fImage->height != fZoomHeight))) {
                // zoom and scale image
-               ASImage *tmpImage = tile_asimage(fgVisual, fImage, fZoomOffX,
+               ASImage *tmpImage = tile_asimage(vis, fImage, fZoomOffX,
                                           fImage->height - fZoomHeight - fZoomOffY,
                                           fZoomWidth, fZoomHeight, 0, ASA_ASImage,
                                           GetImageCompression(), GetImageQuality());
 
                if (tmpImage) {
-                  fScaledImage->fImage = scale_asimage(fgVisual, tmpImage, to_w, to_h,
+                  fScaledImage->fImage = scale_asimage(vis, tmpImage, to_w, to_h,
                                                        ASA_ASImage, GetImageCompression(),
-                                                      GetImageQuality());
+                                                       GetImageQuality());
                   destroy_asimage(&tmpImage);
                }
             } else {
                // scale image, no zooming
-               fScaledImage->fImage = scale_asimage(fgVisual, fImage, to_w, to_h,
+               fScaledImage->fImage = scale_asimage(vis, fImage, to_w, to_h,
                                                     ASA_ASImage, GetImageCompression(),
                                                     GetImageQuality());
             }
