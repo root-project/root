@@ -1120,7 +1120,7 @@ endif()
 
 
 #------------------------------------------------------------------------------------
-if(http)
+if(http AND builtin_jsroot)
   if(builtin_mathjax)
     ROOT_CHECK_CONNECTION("builtin_mathjax=OFF")
     if (NO_CONNECTION)
