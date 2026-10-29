@@ -1,73 +1,98 @@
 #include "gtest/gtest.h"
 
+#include "TEnv.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
-#include "TEnv.h"
+#include "TString.h"
 #include "TSystem.h"
 #include "TUUID.h"
 
 #include <fstream>
+#include <vector>
 
-// Regression test for https://github.com/root-project/root/issues/23536:
-// TPluginManager::FindHandler must correctly resolve plugins across all directories
-// when Root.PluginPath contains multiple colon-separated directory paths.
-TEST(TPluginManager, MultiDirectoryPluginPath)
-{
-   // Save original Root.PluginPath
-   const char *origPluginPath = gEnv->GetValue("Root.PluginPath", (char *)nullptr);
-   TString savedPath = origPluginPath ? origPluginPath : "";
+namespace {
 
-   // Construct default plugin path ($ROOTSYS/etc/plugins)
-   TString defaultPath = "plugins";
-   gSystem->PrependPathName(TROOT::GetEtcDir(), defaultPath);
+class TPluginManagerTest : public testing::Test {
+protected:
+   TEnv fEnv;
+   TPluginManager fPluginManager;
+   TEnv *fSavedEnv = nullptr;
+   TPluginManager *fSavedPluginManager = nullptr;
+   std::vector<TString> fPaths;
+   TString fBase;
 
-   // Create a temporary custom plugin directory with a custom macro
-   TUUID uuid;
-   TString tempDir = gSystem->TempDirectory();
-   TString customDir = TString::Format("test_plugins_%s", uuid.AsString());
-   gSystem->PrependPathName(tempDir.Data(), customDir);
-
-   TString baseSubdir = "TCustomPluginBase";
-   gSystem->PrependPathName(customDir.Data(), baseSubdir);
-   ASSERT_EQ(0, gSystem->mkdir(baseSubdir.Data(), /*recursive=*/true));
-
-   TString macroFile = "P010_TCustomPlugin.C";
-   gSystem->PrependPathName(baseSubdir.Data(), macroFile);
-
+   void SetUp() override
    {
-      std::ofstream f(macroFile.Data());
-      ASSERT_TRUE(f.is_open());
-      f << "void P010_TCustomPlugin()\n"
-        << "{\n"
-        << "   gPluginMgr->AddHandler(\"TCustomPluginBase\", \".*\", \"TCustomClass\",\n"
-        << "      \"CustomLib\", \"TCustomClass()\");\n"
-        << "}\n";
+      // Initialize ROOT before replacing the globals used by interpreted plugin macros.
+      (void)gROOT->GetPluginManager();
+      fSavedEnv = gEnv;
+      fSavedPluginManager = gPluginMgr;
+      gEnv = &fEnv;
+      gPluginMgr = &fPluginManager;
+
+      TUUID uuid;
+      TString id = uuid.AsString();
+      id.ReplaceAll("-", "_");
+      fBase = "TestPluginBase_" + id;
+      TString rootDir = "test_plugins_" + id;
+      gSystem->PrependPathName(gSystem->TempDirectory(), rootDir);
+      ASSERT_EQ(0, gSystem->mkdir(rootDir));
+      fPaths.push_back(rootDir);
+
+      TString pluginPath;
+      for (int i = 0; i < 3; ++i) {
+         TString dir = TString::Format("dir%d", i);
+         gSystem->PrependPathName(rootDir, dir);
+         ASSERT_EQ(0, gSystem->mkdir(dir));
+         fPaths.push_back(dir);
+
+         TString baseDir = fBase;
+         gSystem->PrependPathName(dir, baseDir);
+         ASSERT_EQ(0, gSystem->mkdir(baseDir));
+         fPaths.push_back(baseDir);
+
+         TString macroName = TString::Format("P010_TestPlugin%d_", i) + id;
+         TString macroFile = macroName + ".C";
+         gSystem->PrependPathName(baseDir, macroFile);
+         fPaths.push_back(macroFile);
+         std::ofstream macro(macroFile.Data());
+         ASSERT_TRUE(macro.is_open());
+         macro << "#include \"TPluginManager.h\"\n"
+               << "void " << macroName << "()\n{\n"
+               << "   gPluginMgr->AddHandler(\"" << fBase << "\", \"^test" << i << ":\", \"TestPlugin" << i
+               << "\", \"TestPluginLib\", \"TestPlugin" << i << "()\");\n}\n";
+         macro.close();
+         ASSERT_TRUE(macro.good());
+
+         if (i != 0) {
+#ifdef R__WIN32
+            pluginPath += ";";
+#else
+            pluginPath += ":";
+#endif
+         }
+         pluginPath += dir;
+      }
+      fEnv.SetValue("Root.PluginPath", pluginPath);
    }
 
-   // Set multi-directory Root.PluginPath: custom directory prepended before default directory
-   TString multiPath = customDir + ":" + defaultPath;
-   gEnv->SetValue("Root.PluginPath", multiPath.Data());
+   void TearDown() override
+   {
+      gPluginMgr = fSavedPluginManager;
+      gEnv = fSavedEnv;
+      for (auto it = fPaths.rbegin(); it != fPaths.rend(); ++it)
+         EXPECT_EQ(0, gSystem->Unlink(*it)) << *it;
+   }
+};
 
-   // 1. Verify that the custom plugin from the first directory is resolved
-   TPluginHandler *hCustom = gPluginMgr->FindHandler("TCustomPluginBase", "custom://test");
-   ASSERT_NE(hCustom, nullptr);
-   EXPECT_STREQ(hCustom->GetClass(), "TCustomClass");
-
-   // 2. Verify that built-in plugins from subsequent directories are resolved properly (not dropped or corrupted)
-   TPluginHandler *hArchive = gPluginMgr->FindHandler("TArchiveFile", "test.zip");
-   ASSERT_NE(hArchive, nullptr);
-   EXPECT_STREQ(hArchive->GetClass(), "TZIPFile");
-
-   TPluginHandler *hSQL = gPluginMgr->FindHandler("TSQLServer", "sqlite://test.db");
-   ASSERT_NE(hSQL, nullptr);
-   EXPECT_STREQ(hSQL->GetClass(), "TSQLiteServer");
-
-   // Clean up
-   gSystem->Unlink(macroFile.Data());
-   gSystem->Unlink(baseSubdir.Data());
-   gSystem->Unlink(customDir.Data());
-
-   if (!savedPath.IsNull()) {
-      gEnv->SetValue("Root.PluginPath", savedPath.Data());
+// Regression test for https://github.com/root-project/root/issues/23536.
+TEST_F(TPluginManagerTest, MultiDirectoryPluginPath)
+{
+   for (int i = 0; i < 3; ++i) {
+      auto *handler = fPluginManager.FindHandler(fBase, TString::Format("test%d:example", i));
+      ASSERT_NE(handler, nullptr) << "Plugin directory " << i;
+      EXPECT_STREQ(handler->GetClass(), TString::Format("TestPlugin%d", i).Data());
    }
 }
+
+} // namespace
