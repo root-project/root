@@ -829,15 +829,6 @@ if(pyroot)
   # Disable tutorial showing connection to the HTCondor service at CERN
   list(APPEND pyveto analysis/dataframe/distrdf004_dask_lxbatch.py)
 
-  if(NOT tmva-pymva)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
-    list(APPEND pyveto ${tmva_veto_py})
-  endif()
-
-  if(NOT tmva-pymva)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/pytorch/*.py)
-    list(APPEND pyveto ${tmva_veto_py})
-  endif()
   # disable PyTorch model file used by TMVA_CNN_Classification.C
   list(APPEND pyveto machine_learning/PyTorch_Generate_CNN_Model.py)
 

@@ -29,10 +29,8 @@ import ROOT
 
 opt = [1, 1, 1, 1, 1]
 useTMVACNN = opt[0] if len(opt) > 0  else False
-useKerasCNN = opt[1] if len(opt) > 1 else False
 useTMVADNN = opt[2] if len(opt) > 2 else False
 useTMVABDT = opt[3] if len(opt) > 3 else False
-usePyTorchCNN = opt[4] if len(opt) > 4 else False
 
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
@@ -116,12 +114,6 @@ if (not hasCPU and not hasGPU) :
     ROOT.Warning("TMVA_CNN_Classificaton","ROOT is not supporting tmva-cpu and tmva-gpu skip using TMVA-DNN and TMVA-CNN")
     useTMVACNN = False
     useTMVADNN = False
-
-if "tmva-pymva" not in ROOT.gROOT.GetConfigFeatures():
-    useKerasCNN = False
-    usePyTorchCNN = False
-else:
-    TMVA.PyMethodBase.PyInitialize()
 
 if not useTMVACNN:
     ROOT.Warning(
@@ -406,86 +398,6 @@ if useTMVACNN:
         TrainingStrategy=trainingString1,
         Architecture=cnnOptions,
     )
-
-
-### Book Convolutional Neural Network in Keras using a generated model
-
-
-if usePyTorchCNN:
-    ROOT.Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model")
-    pyTorchFileName = str(ROOT.gROOT.GetTutorialDir())
-    pyTorchFileName += "/machine_learning/PyTorch_Generate_CNN_Model.py"
-    # check that pytorch can be imported and file defining the model exists
-    torch_spec = importlib.util.find_spec("torch")
-    if torch_spec is not None and os.path.exists(pyTorchFileName):
-        #cmd = str(ROOT.TMVA.Python_Executable()) + "  " + pyTorchFileName
-        #os.system(cmd)
-        #import PyTorch_Generate_CNN_Model
-        ROOT.Info("TMVA_CNN_Classification", "Booking PyTorch CNN model")
-        factory.BookMethod(
-            loader,
-            TMVA.Types.kPyTorch,
-            "PyTorch",
-            H=True,
-            V=False,
-            VarTransform=None,
-            FilenameModel="PyTorchModelCNN.pt",
-            FilenameTrainedModel="PyTorchTrainedModelCNN.pt",
-            NumEpochs=max_epochs,
-            BatchSize=100,
-            UserCode=str(pyTorchFileName)
-        )
-    else:
-        ROOT.Warning(
-            "TMVA_CNN_Classification",
-            "PyTorch is not installed or model building file is not existing - skip using PyTorch",
-        )
-
-if useKerasCNN:
-    ROOT.Info("TMVA_CNN_Classification", "Building convolutional keras model")
-    # create python script which can be executed
-    # create 2 conv2d layer + maxpool + dense
-    # from keras.initializers import TruncatedNormal
-    # from keras import initializations
-    from tensorflow.keras.layers import Conv2D, Dense, Flatten, MaxPooling2D, Reshape
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.optimizers import Adam
-
-    # from keras.callbacks import ReduceLROnPlateau
-    model = Sequential()
-    model.add(Reshape((16, 16, 1), input_shape=(256,)))
-    model.add(Conv2D(10, kernel_size=(3, 3), kernel_initializer="TruncatedNormal", activation="relu", padding="same"))
-    model.add(Conv2D(10, kernel_size=(3, 3), kernel_initializer="TruncatedNormal", activation="relu", padding="same"))
-    # stride for maxpool is equal to pool size
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Flatten())
-    model.add(Dense(64, activation="tanh"))
-    # model.add(Dropout(0.2))
-    model.add(Dense(2, activation="sigmoid"))
-    model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), weighted_metrics=["accuracy"])
-    model.save("model_cnn.keras")
-    model.summary()
-
-    if not os.path.exists("model_cnn.keras"):
-        raise FileNotFoundError("Error creating Keras model file - skip using Keras")
-    else:
-        # book PyKeras method only if Keras model could be created
-        ROOT.Info("TMVA_CNN_Classification", "Booking convolutional keras model")
-        factory.BookMethod(
-            loader,
-            TMVA.Types.kPyKeras,
-            "PyKeras",
-            H=True,
-            V=False,
-            VarTransform=None,
-            FilenameModel="model_cnn.keras",
-            FilenameTrainedModel="trained_model_cnn.keras",
-            NumEpochs=max_epochs,
-            BatchSize=100,
-            GpuOptions="allow_growth=True",
-        )  # needed for RTX NVidia card and to avoid TF allocates all GPU memory
-
-
 
 ## Train Methods
 

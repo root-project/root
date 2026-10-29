@@ -6,7 +6,6 @@ builtin_vdt=ON
 builtin_unuran=ON
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
-tmva-pymva=ON
 pythia8=OFF
 cefweb=ON
 qt6canv=ON

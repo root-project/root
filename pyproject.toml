@@ -72,9 +72,8 @@ CMAKE_CXX_STANDARD="20"
 _wheel_build="ON"
 
 # Explicitly list components that gminimal implicitly turns off as documentation
-# tmva-pymva and tpython are disabled for manylinux compatibility
+# tpython is disabled for manylinux compatibility
 # see https://peps.python.org/pep-0513/#libpythonx-y-so-1 
-tmva-pymva="OFF"
 tpython="OFF"
 thisroot_scripts="OFF" # the thisroot.* scripts are broken if CMAKE_INSTALL_PYTHONDIR!=CMAKE_INSTALL_LIBDIR
 
