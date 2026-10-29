@@ -16,21 +16,21 @@ class StringView(unittest.TestCase):
         x = ROOT.TestStringView("foo")
         self.assertEqual(str(x), "foo")
 
-    def test_rdataframe(self):
+    def _check_rdf_constructor_taking_string_view(self, treename, filename):
         # Create file.root to avoid errors in the RDF constructor
-        treename = "tree"
-        filename = "string_view_backport_test_file.root"
-
         with ROOT.TFile(filename, "recreate") as f:
-            t = ROOT.TTree(treename, treename)
-            f.WriteObject(t, treename)
-
+            _ = ROOT.TTree(treename, treename)
+            f.Write()
         df = ROOT.RDataFrame(treename, filename)
         self.assertEqual(df.GetNRuns(), 0)
-        # The RDataFrame keeps the file open; release it before removing the
-        # file, which otherwise fails on Windows.
-        del df
-        os.remove(filename)
+
+    def test_rdataframe(self):
+        try:
+            treename = "tree"
+            filename = "string_view_backport_test_file.root"
+            self._check_rdf_constructor_taking_string_view(treename, filename)
+        finally:
+            os.remove(filename)
 
 if __name__ == '__main__':
     unittest.main()
