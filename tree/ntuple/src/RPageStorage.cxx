@@ -268,6 +268,9 @@ void ROOT::Internal::RPageSource::LoadAllPageLists()
    for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
       LoadPageList(cgDesc.GetId(), descGuard);
    }
+   // By clearing the access sequence with all page lists loaded, we make EnsureClusterDetails() always take the
+   // fast path that doesn't try further maintaining the list.
+   fClusterGroupAccessSequence.clear();
 }
 
 void ROOT::Internal::RPageSource::LoadPageList(DescriptorId_t clusterGroupId, const RExclDescriptorGuard &exclGuard)
@@ -303,18 +306,58 @@ ROOT::Internal::RPageSource::RAnyDescriptorGuard
 ROOT::Internal::RPageSource::EnsureClusterDetails(DescriptorId_t cgId, RAnyDescriptorGuard descGuard)
 {
    assert(descGuard.IsValid());
-   if ((cgId == kInvalidDescriptorId) || descGuard->GetClusterGroupDescriptor(cgId).HasClusterDetails())
+   if (cgId == kInvalidDescriptorId)
       return descGuard;
+
+   // After LoadAllPages(), itrSeq == fClusterGroupAccessSequence.begin() == fClusterGroupAccessSequence.end()
+   auto itrSeq = std::find(fClusterGroupAccessSequence.begin(), fClusterGroupAccessSequence.end(), cgId);
+
+   if (descGuard->GetClusterGroupDescriptor(cgId).HasClusterDetails() &&
+       (itrSeq == fClusterGroupAccessSequence.begin())) {
+      return descGuard;
+   }
 
    descGuard.Release();
 
    auto exclGuard = GetExclDescriptorGuard();
 
+   itrSeq = std::find(fClusterGroupAccessSequence.begin(), fClusterGroupAccessSequence.end(), cgId);
+
    if (exclGuard->GetClusterGroupDescriptor(cgId).HasClusterDetails()) {
-      // unlikely, but between releasing the shared guard and acquiring the exclusive guard, the cluster details
-      // may have appeared
+      // Either between releasing the shared guard and acquiring the exclusive guard the cluster group details appeared
+      // or the cluster group details were present initially but we need to update the access sequence.
+      assert(itrSeq != fClusterGroupAccessSequence.end());
+      fClusterGroupAccessSequence.erase(itrSeq);
+      fClusterGroupAccessSequence.push_front(cgId);
       return exclGuard;
    }
+
+   assert(itrSeq == fClusterGroupAccessSequence.end());
+   const auto nClusterGroups = fClusterGroupAccessSequence.size();
+   const auto clusterGroupBudget = Internal::RNTupleReadOptionsManip::GetClusterGroupBudget(fOptions);
+   assert(clusterGroupBudget > 0);
+   if ((nClusterGroups >= clusterGroupBudget) && (nClusterGroups > fPinnedClusterGroups.size())) {
+      // Remove as many cluster group details as necessary to allow for adding one more and still staying within
+      // the budget. Take into account, however, that pinned cluster groups cannot be removed.
+      auto nRemove = std::min(nClusterGroups - fPinnedClusterGroups.size(), nClusterGroups - clusterGroupBudget + 1);
+      // We iterate from the back to the front of the list, in reverse order of last access (i.e.: starting from the
+      // least recently used), and we skip pinned cluster groups.
+      for (auto lru = fClusterGroupAccessSequence.rbegin(); nRemove > 0;) {
+         if (fPinnedClusterGroups.count(*lru) > 0) {
+            ++lru;
+            continue;
+         }
+         exclGuard->DropClusterGroupDetails(*lru);
+         // The forward iterator corresponding to the reverse iterator lru is prev(lru.base).
+         // After removal, next points to the element following the removed one. All other iterators are invalid.
+         auto next = fClusterGroupAccessSequence.erase(std::prev(lru.base()));
+         // make_reverse_iterator brings lru back to the element before the removed one
+         lru = std::make_reverse_iterator(next);
+         nRemove--;
+      };
+      assert(fClusterGroupAccessSequence.size() > 0);
+   }
+   fClusterGroupAccessSequence.push_front(cgId);
 
    LoadPageList(cgId, exclGuard);
 
