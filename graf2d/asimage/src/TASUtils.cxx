@@ -21,6 +21,11 @@
 
 #include "TImage.h"
 
+ASVisual *TASUtils::GetX11Visual()
+{
+   return nullptr;
+}
+
 
 Pixmap_t TASUtils::GetPixmap(TImage *)
 {
@@ -79,18 +84,25 @@ std::unique_ptr<TImage> TASUtils::FromPixmap(Pixmap_t, Pixmap_t)
 const unsigned long kAllPlanes = ~0;
 #endif
 
-// Holder of ASVisual instance, destroyed when application closed
-class ASVisualHolder {
-   ASVisual *fVisual = nullptr;
-
-public:
-
-   GContext_t fGC = 0; // context used in PaintImage
-
-   ASVisual *operator()()
-   {
+ASVisual *TASUtils::GetX11Visual()
+{
 #ifndef X_DISPLAY_MISSING
-      if (!fVisual) {
+
+   thread_local struct ASHolder {
+      ASVisual *fVisual = nullptr;
+      ~ASHolder()
+      {
+         if (fVisual) {
+            destroy_asvisual(fVisual, 0);
+            fVisual = nullptr;
+         }
+      }
+   } holder;
+
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11) {
+      if (!holder.fVisual) {
          Display *disp = (Display*) gVirtualX->GetDisplay();
          Int_t screen  = gVirtualX->GetScreen();
          Int_t depth   = gVirtualX->GetDepth();
@@ -98,33 +110,15 @@ public:
          Colormap cmap = (Colormap) gVirtualX->GetColormap();
 
          if (vis && cmap)
-            fVisual = create_asvisual_for_id(disp, screen, depth, XVisualIDFromVisual(vis), cmap, nullptr);
+            holder.fVisual = create_asvisual_for_id(disp, screen, depth, XVisualIDFromVisual(vis), cmap, nullptr);
       }
+      return holder.fVisual;
+   }
+
 #endif
-      if (!fVisual) {
-         fVisual = create_asvisual(nullptr, 0, 0, nullptr);
-         fVisual->dpy = nullptr; // fake (not used)
-      }
-
-      return fVisual;
-   }
-
-   ~ASVisualHolder()
-   {
-      if (fVisual) {
-         destroy_asvisual(fVisual, 0);
-         fVisual = nullptr;
-      }
-      if (fGC && gVirtualX)
-         gVirtualX->DeleteGC(fGC);
-   }
-};
-
-namespace {
-
-thread_local ASVisualHolder holder;
-
+   return nullptr;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns image pixmap.
@@ -138,30 +132,19 @@ Pixmap_t TASUtils::GetPixmap(TImage *timg)
       ::Error("TASUtils::GetPixmap", "Image not provided");
       return 0;
    }
-   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
 
-   if (x11) {
-#ifndef X_DISPLAY_MISSING
+   auto vis = GetX11Visual();
+
+   if (vis) {
       auto asimg = dynamic_cast<TASImage *>(timg);
       if (!asimg) {
          ::Warning("TASUtils::GetPixmap", "ASImage not provided");
          return 0;
       }
 
-      auto vis = holder();
-
-      if (!vis) {
-         ::Warning("TASUtils::GetPixmap", "Visual not initiated");
-         return 0;
-      }
-
       ASImage *img = asimg->fScaledImage ? asimg->fScaledImage->fImage : asimg->fImage;
 
       return (Pixmap_t)asimage2pixmap(vis, gVirtualX->GetDefaultRootWindow(), img, nullptr, kTRUE);
-#else
-      ::Error("TASUtils::GetPixmap", "Invoke X11-specific methods on unsupported platform");
-      return 0;
-#endif
    }
 
    auto argb = timg->GetArgbArray();
@@ -213,21 +196,10 @@ Bool_t TASUtils::FillImageFromWindow(TImage *img, Window_t wid, Int_t width, Int
       gSystem->ProcessEvents();
    }
 
-   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+   auto vis = GetX11Visual();
 
-   if (x11) {
-      auto vis = holder();
-
-      if (!vis) {
-         ::Error("TASUtils::FillImageFromWindow", "Visual not initiated");
-         return kFALSE;
-      }
-
-#ifndef X_DISPLAY_MISSING
+   if (vis) {
       asimg->fImage = pixmap2asimage(vis, wid, 0, 0, width, height, kAllPlanes, 0, 0);
-#else
-      ::Error("TASUtils::FillImageFromWindow", "Invoke X11-specific methods on unsupported platform");
-#endif
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(wid, 0, 0, width, height);
       if (!bits) {
@@ -278,19 +250,10 @@ std::unique_ptr<TImage> TASUtils::FromPixmap(Pixmap_t pxm, Pixmap_t mask)
 
    asimg->SetName(TString::Format("img_%dx%d",w, h));
 
-   if (gVirtualX->InheritsFrom("TGX11")) { //use built-in optimized version
-      auto vis = holder();
+   auto vis = GetX11Visual();
 
-      if (!vis) {
-         ::Warning("TASUtils::FromPixmap", "Visual not initiated");
-         return nullptr;
-      }
-
-#ifndef X_DISPLAY_MISSING
+   if (vis) { //use built-in optimized version
       asimg->fImage = picture2asimage(vis, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
-#else
-      ::Error("TASUtils::FromPixmap", "Invoke X11-specific methods on unsupported platform");
-#endif
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(pxm, 0, 0, w, h);
       if (!bits)    // error
@@ -339,29 +302,21 @@ Bool_t TASUtils::PaintImage(TImage *timg, Drawable_t wid, Int_t x, Int_t y, Bool
    gv.fClipXOrigin = x;
    gv.fClipYOrigin = y;
 
-   if (!holder.fGC) {
-      holder.fGC = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gv);
-   } else {
-      gVirtualX->ChangeGC(holder.fGC, &gv);
-   }
+   GContext_t fGC = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gv);
 
    UInt_t width = asimg->GetScaledWidth();
    UInt_t height = asimg->GetScaledHeight();
 
    Bool_t res = kTRUE;
 
-   if (isX11) { //use built-in optimized version
-      #ifndef X_DISPLAY_MISSING
+   auto vis = GetX11Visual();
+
+   if (isX11 && vis) { //use built-in optimized version
       ASImage *im = asimg->fScaledImage ? asimg->fScaledImage->fImage : asimg->fImage;
-      auto vis = holder();
-      if (vis && im)
-         asimage2drawable(vis, wid, im, (GC)holder.fGC, 0, 0, x, y, width, height, 1);
+      if (im)
+         asimage2drawable(vis, wid, im, (GC)fGC, 0, 0, x, y, width, height, 1);
       else
          res = kFALSE;
-      #else
-      ::Error("TASUtils::PaintImage", "Invoke X11-specific methods on unsupported platform");
-      res = kFALSE;
-      #endif
    } else {
        auto argb =  asimg->GetArgbArray();
 
@@ -372,7 +327,7 @@ Bool_t TASUtils::PaintImage(TImage *timg, Drawable_t wid, Int_t x, Int_t y, Bool
              SETBIT(width, 31);
              SETBIT(height, 31);
           }
-          gVirtualX->CopyArea(pic, wid, holder.fGC, 0, 0, width, height, x, y);
+          gVirtualX->CopyArea(pic, wid, fGC, 0, 0, width, height, x, y);
           gVirtualX->DeletePixmap(pic);
        } else
           res = kFALSE;
@@ -384,8 +339,10 @@ Bool_t TASUtils::PaintImage(TImage *timg, Drawable_t wid, Int_t x, Int_t y, Bool
 
    gv.fMask = kGCClipMask;
    gv.fClipMask = kNone;
-   if (holder.fGC)
-      gVirtualX->ChangeGC(holder.fGC, &gv);
+   if (fGC) {
+      gVirtualX->ChangeGC(fGC, &gv);
+      gVirtualX->DeleteGC(fGC);
+   }
 
    return res;
 }

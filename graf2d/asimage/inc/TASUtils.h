@@ -27,6 +27,9 @@
 class TImage;
 
 class TASUtils {
+
+   static struct ASVisual *GetX11Visual();
+
 public:
    static Pixmap_t GetPixmap(TImage *timg);
    static Pixmap_t GetMask(TImage *timg);
