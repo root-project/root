@@ -149,6 +149,36 @@ resolve its symbols from the `libROOTPythonizations` Python extension module.
 Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 `obj.Connect(signal, callable)`.
 
+### Pure Python callables in RDataFrame
+
+A Python function passed to `RDataFrame.Define()` or `Filter()` now runs as it is in the Python interpreter instead of being compiled with Numba behind the scenes.
+It can therefore use any Python code, including ROOT classes and their methods, and **any Python library**.
+The function needs type annotations for its parameters and its return value, which RDataFrame reads to know their C++ types: these can be C++ type names, Python types (`bool`, `int`, `float`, `str`) or ROOT classes.
+As before, if no column list is given, the parameters are read from the columns with the same names.
+
+Usage:
+```python
+from particle import Particle
+
+def mass_difference(p: ROOT.Math.PtEtaPhiMVector, pdg: int) -> float:
+    return p.M() - Particle.from_pdgid(pdg).mass / 1000
+
+df = df.Define("dm", mass_difference)  # reads the columns `p` and `pdg`
+```
+
+Numba is now opt-in: a function decorated with `ROOT.Numba.Declare` is still JIT compiled with Numba, as before.
+
+```python
+@ROOT.Numba.Declare(["double"], "double")
+def square(x):
+    return x * x
+
+df = df.Define("x2", square, ["x"])
+```
+
+Behavior changes:
+* A Python callable without type annotations, e.g. a lambda, now raises a `TypeError`: annotate its parameters and return value, or decorate it with `ROOT.Numba.Declare`.
+
 ## Machine Learning integration
 
 `ROOT.Experimental.ML.RDataLoader` can now read files directly, save its training and validation datasets to disk and return batches as JAX arrays. Loading is faster and uses less memory.
@@ -256,6 +286,8 @@ The parameter indices in this interface always refer to the function's own full 
   of a column on a per-sample basis. This operation is supported in local and distributed mode.
 * Added `Median` action. Computes the exact median of the input column. At the moment this action is supported in local
   mode only.
+* Python callables passed to `Define` and `Filter` now run in the Python interpreter, and Numba compilation is opt-in,
+  see [Pure Python callables in RDataFrame](#pure-python-callables-in-rdataframe).
 
 ## Trees
 
