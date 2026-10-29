@@ -403,7 +403,7 @@ void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, cons
    const char *objName = tokens[tokens.size() - 1].c_str();
    assert(dynamic_cast<TDirectoryFile *>(dir));
    int success =
-      static_cast<TDirectoryFile *>(dir)->WriteObjectAny(obj, std::string(title).c_str(), cls, objName, writeOpts);
+      static_cast<TDirectoryFile *>(dir)->WriteObjectAny(obj, cls, {objName, std::string(title).c_str()}, writeOpts);
 
    if (!success) {
       throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));
