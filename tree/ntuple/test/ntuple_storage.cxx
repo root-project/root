@@ -1334,6 +1334,7 @@ TEST(RPageSource, MetadataMode)
 
    RNTupleReadOptions opts;
    opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   ROOT::Internal::RNTupleReadOptionsManip::SetClusterGroupBudget(opts, 100); // make sure page lists are not evicted
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
    EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusterGroups());
    EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusters());
@@ -1413,4 +1414,43 @@ TEST(RPageSource, MetadataMode)
       EXPECT_LT(10, reader->GetDescriptor().GetNActiveClusters());
       EXPECT_GT(20, reader->GetDescriptor().GetNActiveClusters());
    }
+}
+
+TEST(RPageSource, ClusterGroupBudget)
+{
+   FileRaii fileGuard("test_ntuple_page_source_cluster_group_bedget.root");
+
+   auto model = RNTupleModel::Create();
+   auto ptrCtr = model->MakeField<std::vector<int>>("ctr");
+   ptrCtr->resize(1);
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int c = 0; c < 10; ++c) {
+         for (int i = 0; i < 10; ++i) {
+            (*ptrCtr)[0] = 10 * c + i;
+            writer->Fill();
+            writer->CommitCluster((i == 9));
+         }
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(20u, reader->GetDescriptor().GetNActiveClusters());
+
+   auto token1 = reader->CreateActiveEntryToken();
+   token1.SetEntryNumber(5);
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(20u, reader->GetDescriptor().GetNActiveClusters());
+
+   auto token2 = reader->CreateActiveEntryToken();
+   token2.SetEntryNumber(50);
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(30u, reader->GetDescriptor().GetNActiveClusters());
 }
