@@ -53,10 +53,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImageUtils
     Gpad
 )
 
-
 if(asimage)
-
-  target_link_libraries(ASImageUtils PRIVATE libAfterImage)
 
   target_link_libraries(ASImageUtils PUBLIC ASImage)
 

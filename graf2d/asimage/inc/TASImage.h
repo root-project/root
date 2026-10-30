@@ -78,19 +78,21 @@ protected:
    Bool_t    fIsGray;               ///<! kTRUE if image is gray
    static THashTable *fgPlugList;   ///<! hash table containing loaded plugins
 
-   static ASVisual *fgVisual;      ///< pointer to visual structure
-   static ASVisual *fgBatchVisual; ///< pointer to "batch" visual structure
-   static Bool_t    fgInit;        ///< global flag to init afterimage only once
-   static Bool_t    fgBatch;       ///< global flag to signal if batch mode is active ie fgVisual->dpy was set to nullptr
-
    EImageFileTypes GetFileType(const char *ext);
    void MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas = kTRUE);
    void MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas = kTRUE);
 
-   static ASVisual *InitVisual(Bool_t plain = kFALSE);
+   static ASVisual *InitVisual();
    Bool_t InitImage(const char *caller);
 
    void FromGradient(struct ASGradient *as_gradient, UInt_t width, UInt_t height);
+
+   static struct ASVisual *CreateX11Visual(Display_t display, Int_t screen, Int_t depth, Visual_t visual, Colormap_t cmap);
+   static void DestroyVisual(struct ASVisual *visual);
+   static Pixmap_t ASImage2Pixmap(struct ASVisual *visual, Window_t root_window, ASImage *image);
+   static ASImage *Pixmap2ASImage(struct ASVisual *visual, Window_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   static ASImage *Picture2ASImage(struct ASVisual *visual, Pixmap_t pxm, Pixmap_t mask, UInt_t width, UInt_t height);
+   static void ASImage2Drawable(struct ASVisual *visual, ASImage *image, Drawable_t wid, GContext_t gc, Int_t xsrc, Int_t ysrc, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
 public:
    TASImage();
@@ -218,7 +220,7 @@ public:
    void       SetPaletteEnabled(Bool_t on = kTRUE) override;  // *TOGGLE*
    void       SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   static const ASVisual *GetVisual();
+   static const ASVisual *  R__DEPRECATED(7,00, "No longer provided") GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);
    static void Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y, Int_t xsrc = 0, Int_t ysrc = 0, UInt_t wsrc = 0, UInt_t hsrc = 0, Option_t *opt = "");
 
