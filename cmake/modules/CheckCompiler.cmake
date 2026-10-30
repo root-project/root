@@ -56,12 +56,17 @@ else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
 endif()
 
-#---Enable CUDA if found on the system---
-check_language(CUDA)
-if (CMAKE_CUDA_COMPILER)
-  enable_language(CUDA)
-  if(NOT DEFINED CMAKE_CUDA_STANDARD)
-    set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+#---Check CUDA only for requested features or to select their defaults with 'all'----------------
+# Both CUDA options default to OFF. With 'all', discover availability unless both are explicitly
+# disabled or 'gminimal' will disable their defaults again.
+if(cuda OR tmva-gpu OR
+   (all AND NOT gminimal AND (NOT DEFINED cuda OR NOT DEFINED tmva-gpu)))
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    if(NOT DEFINED CMAKE_CUDA_STANDARD)
+      set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+    endif()
   endif()
 endif()
 
