@@ -179,6 +179,16 @@ df = df.Define("x2", square, ["x"])
 Behavior changes:
 * A Python callable without type annotations, e.g. a lambda, now raises a `TypeError`: annotate its parameters and return value, or decorate it with `ROOT.Numba.Declare`.
 
+### UHI
+
+- ROOT histograms can now be constructed directly from any object implementing the UHI serialization method `_to_uhi_`, such as [hist](https://hist.readthedocs.io) and [boost-histogram](https://boost-histogram.readthedocs.io) histograms, without an intermediate dictionary or JSON string:
+```python
+h = hist.Hist.new.Reg(10, -5, 5).Double()
+h.fill(np.random.normal(size=1000))
+
+h_root = ROOT.TH1D(h)
+```
+
 ## Machine Learning integration
 
 `ROOT.Experimental.ML.RDataLoader` can now read files directly, save its training and validation datasets to disk and return batches as JAX arrays. Loading is faster and uses less memory.
