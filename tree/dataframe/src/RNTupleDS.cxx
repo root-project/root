@@ -138,10 +138,10 @@ public:
 
    void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      // Assume 1-size bulk for now
-      if (mask[0]) {
-         fValue->Read(mask.GetFirstEntry() - fEntryOffset);
-      }
+      auto bulkSize = mask.GetBulkSize();
+      for (decltype(bulkSize) i = 0; i < bulkSize; i++)
+         if (mask[i])
+            fValue->Read(mask.GetFirstEntry() + i - fEntryOffset);
    }
 };
 } // namespace ROOT::Internal::RDF

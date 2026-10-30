@@ -220,8 +220,10 @@ public:
       } else {
          const auto mask = fPrevNodes.front()->CheckFilters(slot, bulkBeginEntry, bulkSize);
          std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
-         if (mask[0])
-            CallExec(slot, /*idx=*/0u);
+         for (decltype(bulkSize) i = 0; i < bulkSize; i++) {
+            if (mask[i])
+               CallExec(slot, i);
+         }
       }
    }
 

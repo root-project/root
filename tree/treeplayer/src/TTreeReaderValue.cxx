@@ -299,7 +299,23 @@ void *ROOT::Internal::TTreeReaderValueBase::GetAddress()
    return (Byte_t *)fProxy->GetWhere();
 }
 
-std::function<void(void *)> ROOT::Internal::TTreeReaderValueBase::SetAddress(void *addr, void *addrOfAddr)
+std::function<void(void *)> ROOT::Internal::TTreeReaderValueBase::GetDeleter()
+{
+   // Requesting a deleter only makes sense after the proxy has been setup and we can know the type of the value
+   // that's going to be read
+   if (!fProxy) {
+      // Most probably this is a case of a missing branch that has not been found yet, we can just return early
+      return nullptr;
+   }
+
+   auto *selectedDict = [&] { return (fActualDict && fDict && fActualDict != fDict) ? fActualDict : fDict; }();
+   if (auto dictAsClass = dynamic_cast<TClass *>(selectedDict))
+      return [dictAsClass](void *p) { dictAsClass->Destructor(p, /*dtorOnly=*/true); };
+
+   return [](void *) {};
+}
+
+void ROOT::Internal::TTreeReaderValueBase::SetAddress(void *addr, void *addrOfAddr)
 {
    // assume we are connected to a TTreeReader and in turn it is connected to a TTree and we have information about
    // the data type of the branch
@@ -309,7 +325,7 @@ std::function<void(void *)> ROOT::Internal::TTreeReaderValueBase::SetAddress(voi
 
    if (!fProxy) {
       // Most probably this is a case of a missing branch that has not been found yet, we can just return early
-      return nullptr;
+      return;
    }
 
    TClass *cl{nullptr};
@@ -322,7 +338,6 @@ std::function<void(void *)> ROOT::Internal::TTreeReaderValueBase::SetAddress(voi
       // prepare_proxy();
       fProxy->fRead = -1;
       fProxy->fWhere = addr;
-      return nullptr;
    } else if (auto dictAsClass = dynamic_cast<TClass *>(selectedDict)) {
       // Case of non-POD top-level branch
       cl = dictAsClass;
@@ -344,7 +359,6 @@ std::function<void(void *)> ROOT::Internal::TTreeReaderValueBase::SetAddress(voi
       // prepare_proxy();
       fProxy->fRead = -1;
       fProxy->fWhere = addr;
-      return [cl](void *p) { cl->Destructor(p, /*dtorOnly=*/true); };
    } else if (auto dictAsDataType = dynamic_cast<TDataType *>(selectedDict)) {
       // Case of POD top-level branch
       dt = static_cast<EDataType>(dictAsDataType->GetType()); // returns Int_t but the data member is an EDataType
@@ -354,11 +368,9 @@ std::function<void(void *)> ROOT::Internal::TTreeReaderValueBase::SetAddress(voi
       // prepare_proxy();
       fProxy->fRead = -1;
       fProxy->fWhere = addr;
-      return nullptr;
+   } else {
+      Error("TTreeReaderValueBase::SetAddress", "Unrecognized TTreeReaderValue branch (or leaf) setup.");
    }
-
-   Error("TTreeReaderValueBase::SetAddress", "Unrecognized TTreeReaderValue branch (or leaf) setup.");
-   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -928,23 +940,35 @@ void ROOT::Internal::TTreeReaderValueBase::ErrorAboutMissingProxyIfNeeded()
 
 std::size_t ROOT::Internal::TTreeReaderValueBase::GetValueSize() const
 {
-   // Prioritize true on-disk type information over user-requested type information
-   if (fActualDict && fDict && fActualDict != fDict) {
-      if (auto dataType = dynamic_cast<TDataType *>(fActualDict))
-         return dataType->Size();
-      if (auto cl = dynamic_cast<TClass *>(fActualDict))
-         return cl->Size();
-   }
-
    // Attempt querying size information from available dictionary
-   if (fDict) {
+   // This first attempt is for the case of missing values: the proxy may not be
+   // set yet because we are looking at a missing entry, but we have enough
+   // dictionary information to attempt preparing the target destination area
+   // for later
+   if (fDict && !fProxy) {
       if (auto dataType = dynamic_cast<TDataType *>(fDict))
          return dataType->Size();
       if (auto cl = dynamic_cast<TClass *>(fDict))
          return cl->Size();
    }
 
-   // If that failed, try with TBranchProxy, needs to be initialized
+   if (fDict && fProxy) {
+      // If we are querying the value size and the proxy has already been setup,
+      // prioritize true on-disk type information over user-requested type information
+      if (fActualDict && fDict && fActualDict != fDict) {
+         if (auto dataType = dynamic_cast<TDataType *>(fActualDict))
+            return dataType->Size();
+         if (auto cl = dynamic_cast<TClass *>(fActualDict))
+            return cl->Size();
+      }
+      // Otherwise, try with the dictionary itself
+      if (auto dataType = dynamic_cast<TDataType *>(fDict))
+         return dataType->Size();
+      if (auto cl = dynamic_cast<TClass *>(fDict))
+         return cl->Size();
+   }
+
+   // If the above failed, try with TBranchProxy
    if (!fProxy) {
       Error("TTreeReaderValueBase::GetValueSize()", "Proxy not set for branch %s. Cannot determine value size.",
             fBranchName.Data());

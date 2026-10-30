@@ -1179,7 +1179,8 @@ RColumnReaderBase *RLoopManager::AddDataSourceColumnReader(unsigned int slot, st
    assert(readers.find(key) == readers.end() || readers[key] == nullptr);
    assert(fDataSource && "Missing RDataSource to add column reader.");
 
-   readers[key] = ROOT::Internal::RDF::CreateColumnReader(*fDataSource, slot, col, ti, treeReader);
+   readers[key] =
+      ROOT::Internal::RDF::CreateColumnReader(*fDataSource, slot, col, ti, treeReader, GetCurrentBulkSize());
 
    return readers[key].get();
 }

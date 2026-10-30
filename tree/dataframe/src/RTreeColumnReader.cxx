@@ -23,16 +23,15 @@ void ROOT::Internal::RDF::RTreeOpaqueColumnReader::LoadImpl(const ROOT::Internal
 
    std::fill(fCachedValues.begin(), fCachedValues.end(), nullptr);
 
-   // Assume 1-size bulk for now
    for (auto idx : validIndices)
       fCachedValues[idx] = fTreeValue->GetAddress();
 }
 
-ROOT::Internal::RDF::RTreeOpaqueColumnReader::RTreeOpaqueColumnReader(TTreeReader &r, std::string_view colName)
+ROOT::Internal::RDF::RTreeOpaqueColumnReader::RTreeOpaqueColumnReader(TTreeReader &r, std::string_view colName,
+                                                                      std::size_t maxBulkSize)
    : fTreeValue(std::make_unique<ROOT::Internal::TTreeReaderOpaqueValue>(r, colName.data()))
 {
-   // Assume 1-size bulk for now
-   fCachedValues = ROOT::RVec<void *>(1);
+   fCachedValues = ROOT::RVec<void *>(maxBulkSize);
 }
 
 ROOT::Internal::RDF::RTreeOpaqueColumnReader::~RTreeOpaqueColumnReader() = default;
@@ -43,77 +42,85 @@ void *ROOT::Internal::RDF::RTreeUntypedValueColumnReader::GetImpl(std::size_t en
    if (fAddrOfTypeThatCannotBeReadInBulk)
       return fAddrOfTypeThatCannotBeReadInBulk;
 
-   assert(fValueSize > 0 && "Could not retrieve size of value type in RDataFrame column reader.");
-   if (fCachedResultsInvalidIndices.end() !=
-       std::find(fCachedResultsInvalidIndices.begin(), fCachedResultsInvalidIndices.end(), entryInBulk)) {
+   if (!fIsCachedValueValidAtIdx[entryInBulk]) {
       // This entry was marked as invalid during loading, return nullptr to signal this to the caller
       return nullptr;
    }
 
-   return fCachedResults.data() + entryInBulk * fValueSize;
+   return fCachedValues.data() + entryInBulk * fValueSize;
 }
 
 void ROOT::Internal::RDF::RTreeUntypedValueColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
+   if (fLastEntry == mask.GetFirstEntry())
+      return;
+
    // Early return for the case of TBranchObject with split level zero, which cannot be read in a bulk
    if (fTreeValue->IsBranchObjectUnsplit()) {
       fAddrOfTypeThatCannotBeReadInBulk = fTreeValue->Get();
       return;
    }
 
-   if (fLastEntry == mask.GetFirstEntry())
-      return;
-
+   // This can only happen at first loading time, when the TTreeReader has begun traversing entries and the branch
+   // proxy is set.
    if (fValueSize == 0)
       fValueSize = fTreeValue->GetValueSize();
-   assert(fValueSize > 0 && "Could not retrieve size of value type in RDataFrame column reader.");
+   assert(fValueSize > 0 && "Could not retrieve size of value type in RDataFrame TTree value column reader.");
+   // First time setup for cache of bulk values
+   if (fCachedValues.empty()) {
+      fCachedValues.resize(fCachedBranchAddresses.size() * fValueSize);
+   }
 
-   // Assume 1-size bulk for now
+   // If we tried to load an entry and it was missing, there might not be enough information to get a deleter, so retry
+   // as long as we don't have one
+   if (!fObjDeleter)
+      fObjDeleter = fTreeValue->GetDeleter();
+
    const auto validIndices = mask.GetValidIndices();
-   fLastEntry = mask.GetFirstEntry();
    if (validIndices.empty())
       return;
 
-   fCachedResultsInvalidIndices.clear();
-   if (fObjDeleter)
-      for (auto *addr : fCachedBranchAddresses)
-         fObjDeleter(addr);
-   fCachedBranchAddressesOfAddresses.clear();
-   fCachedBranchAddresses.clear();
-   fCachedResults.clear();
-
-   fCachedResultsInvalidIndices.reserve(validIndices.size());
-   fCachedBranchAddressesOfAddresses.reserve(validIndices.size() * fValueSize);
-   fCachedBranchAddresses.reserve(validIndices.size() * fValueSize);
-   fCachedResults.resize(validIndices.size() * fValueSize);
+   std::fill(fIsCachedValueValidAtIdx.begin(), fIsCachedValueValidAtIdx.end(), true);
+   std::fill(fCachedBranchAddressesRAII.begin(), fCachedBranchAddressesRAII.end(), nullptr);
+   std::fill(fCachedBranchAddresses.begin(), fCachedBranchAddresses.end(), nullptr);
+   std::fill(fCachedBranchAddressesOfAddresses.begin(), fCachedBranchAddressesOfAddresses.end(), nullptr);
+   std::fill(fCachedValues.begin(), fCachedValues.end(), std::byte{});
 
    for (auto idx : validIndices) {
-      fCachedBranchAddresses.push_back(fCachedResults.data() + idx * fValueSize);
+      fCachedBranchAddresses[idx] = fCachedValues.data() + idx * fValueSize;
       // Crucial for reading non-PODs. Also crucial that this specific address
       // survives until the end of the Get method which reads the actual value
       // from the branch into the memory location above
-      fCachedBranchAddressesOfAddresses.push_back(&fCachedBranchAddresses.back());
+      fCachedBranchAddressesOfAddresses[idx] = &fCachedBranchAddresses[idx];
+      fCachedBranchAddressesRAII[idx] = std::unique_ptr<void, std::function<void(void *)>>(
+         fCachedBranchAddresses[idx], fObjDeleter ? fObjDeleter : [](void *) {});
 
-      fObjDeleter = fTreeValue->SetAddress(fCachedBranchAddresses.back(), fCachedBranchAddressesOfAddresses.back());
-      auto *readAddress = fTreeValue->Get();
-      if (!readAddress)
-         fCachedResultsInvalidIndices.push_back(idx);
+      fTreeValue->SetAddress(fCachedBranchAddresses[idx], fCachedBranchAddressesOfAddresses[idx]);
+      fIsCachedValueValidAtIdx[idx] = bool(fTreeValue->Get());
    }
+
+   fLastEntry = mask.GetFirstEntry();
 }
 
 ROOT::Internal::RDF::RTreeUntypedValueColumnReader::RTreeUntypedValueColumnReader(TTreeReader &r,
                                                                                   std::string_view colName,
-                                                                                  std::string_view typeName)
-   : fTreeValue(std::make_unique<ROOT::Internal::TTreeReaderUntypedValue>(r, colName, typeName))
+                                                                                  std::string_view typeName,
+                                                                                  std::size_t maxBulkSize)
+   : fTreeValue(std::make_unique<ROOT::Internal::TTreeReaderUntypedValue>(r, colName, typeName)),
+     fCachedValues(),
+     fCachedBranchAddresses(maxBulkSize),
+     fCachedBranchAddressesOfAddresses(maxBulkSize),
+     fObjDeleter(nullptr),
+     fCachedBranchAddressesRAII(maxBulkSize),
+     fIsCachedValueValidAtIdx(maxBulkSize),
+     fValueSize(),
+     fLastEntry(std::numeric_limits<std::uint64_t>::max()),
+     fAddrOfTypeThatCannotBeReadInBulk(nullptr),
+     fColName(colName)
 {
 }
 
-ROOT::Internal::RDF::RTreeUntypedValueColumnReader::~RTreeUntypedValueColumnReader()
-{
-   if (fObjDeleter)
-      for (auto *addr : fCachedBranchAddresses)
-         fObjDeleter(addr);
-};
+ROOT::Internal::RDF::RTreeUntypedValueColumnReader::~RTreeUntypedValueColumnReader() = default;
 
 void ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadStdArray(std::size_t entryInBulk)
 {
@@ -237,7 +244,6 @@ void ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadImpl(const ROOT::In
    if (fLastEntry == mask.GetFirstEntry())
       return;
 
-   // Assume 1-size bulk for now
    const auto validIndices = mask.GetValidIndices();
    fLastEntry = mask.GetFirstEntry();
    if (validIndices.empty())
@@ -253,7 +259,6 @@ void ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadImpl(const ROOT::In
       },
       fCachedValues);
 
-   // Assume 1-size bulk for now
    for (auto idx : validIndices) {
       switch (fCollectionType) {
       case ECollectionType::kStdArray: LoadStdArray(idx); break;
@@ -286,28 +291,27 @@ void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::GetImpl(std::size_t en
 ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::RTreeUntypedArrayColumnReader(TTreeReader &r,
                                                                                   std::string_view colName,
                                                                                   std::string_view valueTypeName,
-                                                                                  ECollectionType collType)
+                                                                                  ECollectionType collType,
+                                                                                  std::size_t maxBulkSize)
    : fTreeArray(std::make_unique<ROOT::Internal::TTreeReaderUntypedArray>(r, colName, valueTypeName)),
      fCollectionType(collType)
 {
-   // Assume 1-size bulk for now
    if (fCollectionType == ECollectionType::kStdVector)
-      fCachedValues = std::vector<std::vector<std::byte>>(1);
+      fCachedValues = std::vector<std::vector<std::byte>>(maxBulkSize);
    else
-      fCachedValues = std::vector<ROOT::RVec<std::byte>>(1);
+      fCachedValues = std::vector<ROOT::RVec<std::byte>>(maxBulkSize);
 }
 
 ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::~RTreeUntypedArrayColumnReader() = default;
 
 ROOT::Internal::RDF::RMaskedColumnReader::RMaskedColumnReader(
    TTreeReader &r, std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> valueReader, std::string_view maskName,
-   unsigned int maskIndex)
+   unsigned int maskIndex, std::size_t maxBulkSize)
    : fValueReader{std::move(valueReader)},
      fTreeValueMask{std::make_unique<TTreeReaderValue<uint64_t>>(r, maskName.data())},
      fMaskIndex{maskIndex}
 {
-   // Assume 1-size bulk for now
-   fCachedValues = ROOT::RVec<void *>(1);
+   fCachedValues = ROOT::RVec<void *>(maxBulkSize);
 }
 
 ROOT::Internal::RDF::RMaskedColumnReader::~RMaskedColumnReader() = default;

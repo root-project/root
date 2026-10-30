@@ -119,9 +119,9 @@ public:
         fValues(lm.GetNSlots())
    {
       fLoopManager->Register(this);
-      // Assume 1-size bulk for now
+      // Cannot use constructor because would require ret_type to be copyable, resize the bulks here
       for (decltype(lm.GetNSlots()) i = 0; i < lm.GetNSlots(); ++i) {
-         fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<ROOT::RVec<ret_type>>()].resize(1ul);
+         fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<ROOT::RVec<ret_type>>()].resize(lm.GetCurrentBulkSize());
       }
    }
 
@@ -150,12 +150,9 @@ public:
           fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()])
          return;
 
+      auto bulkSize = mask.GetBulkSize();
       std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
-      // Assume 1-size bulk for now
-      const std::size_t bulkSize = 1;
       auto &result = fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<ret_type>>()];
-      result.clear();
-      result.resize(bulkSize);
       for (std::size_t i = 0; i < bulkSize; ++i) {
          if (mask[i]) {
             result[i] = UpdateHelper(slot, i, mask.GetFirstEntry() + i, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});

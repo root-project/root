@@ -1227,9 +1227,8 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::InitTask(TTreeReader *, 
 /// call the Fill of the output tree, and clear the mask bits that show whether a variation was reached.
 void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(
    unsigned int /*slot*/, const std::vector<void *> &values,
-   std::vector<ROOT::Internal::RDF::RMaskedEntryRange> const &filterPassed)
+   const std::vector<ROOT::Internal::RDF::RMaskedEntryRange> &filterPassed)
 {
-   // Assume 1-size bulk for now
    // Rebind branch pointers to RDF values
    assert(fBranchData.size() == values.size());
    for (std::size_t i = 0; i < values.size(); i++) {

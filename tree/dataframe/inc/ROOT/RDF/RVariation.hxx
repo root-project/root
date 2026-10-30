@@ -187,7 +187,7 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
                                   std::to_string(fVariationNames.size()) + " were expected.");
       }
 
-      AssignResults(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<Result_t>>()][0],
+      AssignResults(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<Result_t>>()][idx],
                     std::move(results));
    }
 
@@ -202,11 +202,12 @@ public:
    {
       fLoopManager->Register(this);
 
-      // Assume 1-size bulk for now
-      for (decltype(lm.GetNSlots()) i = 0; i < lm.GetNSlots(); ++i) {
+      auto nSlots = lm.GetNSlots();
+      for (decltype(nSlots) i = 0; i < nSlots; ++i) {
          auto &cachedResultsForThisSlot = fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<ROOT::RVec<Result_t>>()];
-         cachedResultsForThisSlot.resize(1ul);
-         ResizeResults(cachedResultsForThisSlot[0], colNames.size(), variationTags.size());
+         cachedResultsForThisSlot.resize(lm.GetCurrentBulkSize());
+         for (auto &variationsPerCol : cachedResultsForThisSlot)
+            ResizeResults(variationsPerCol, colNames.size(), variationTags.size());
       }
    }
 
@@ -244,12 +245,11 @@ public:
          return;
 
       std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
-      // Assume 1-size bulk for now
-      const std::size_t bulkSize = 1;
-      for (std::size_t i = 0; i < bulkSize; ++i) {
+      fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = mask.GetFirstEntry();
+      auto bulkSize = mask.GetBulkSize();
+      for (decltype(bulkSize) i = 0; i < bulkSize; ++i) {
          if (mask[i]) {
             UpdateHelper(slot, i, ColumnTypes_t{}, TypeInd_t{});
-            fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = mask.GetFirstEntry();
          }
       }
    }

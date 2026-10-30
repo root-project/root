@@ -97,7 +97,7 @@ void RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun);
 void ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RDF::RLoopManager &lm);
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 CreateColumnReader(ROOT::RDF::RDataSource &ds, unsigned int slot, std::string_view col, const std::type_info &tid,
-                   TTreeReader *treeReader);
+                   TTreeReader *treeReader, std::size_t maxBulkSize);
 } // namespace RDF
 
 } // ns Internal
@@ -178,7 +178,7 @@ protected:
 
    friend std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
    ROOT::Internal::RDF::CreateColumnReader(ROOT::RDF::RDataSource &, unsigned int, std::string_view,
-                                           const std::type_info &, TTreeReader *);
+                                           const std::type_info &, TTreeReader *, std::size_t);
    /**
     * \brief Creates a column reader for the requested column
     *
@@ -192,7 +192,7 @@ protected:
     * refactoring the TTreeProcessorMT scheduling into RTTreeDS altogether.
     */
    virtual std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
-   CreateColumnReader(unsigned int slot, std::string_view col, const std::type_info &tid, TTreeReader *)
+   CreateColumnReader(unsigned int slot, std::string_view col, const std::type_info &tid, TTreeReader *, std::size_t)
    {
       return GetColumnReaders(slot, col, tid);
    }

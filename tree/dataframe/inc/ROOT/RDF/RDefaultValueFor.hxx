@@ -78,9 +78,8 @@ public:
       fLoopManager->Register(this);
       // We suppress errors that TTreeReader prints regarding the missing branch
       fLoopManager->InsertSuppressErrorsForMissingBranch(fColumnNames[0]);
-      // Assume 1-size bulk for now
       for (decltype(lm.GetNSlots()) i = 0; i < lm.GetNSlots(); ++i) {
-         fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<ROOT::RVec<T>>()].resize(1ul);
+         fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<ROOT::RVec<T>>()].resize(lm.GetCurrentBulkSize());
       }
    }
 
@@ -115,13 +114,12 @@ public:
           fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()])
          return;
 
-      // Assume 1-size bulk for now
+      auto bulkSize = mask.GetBulkSize();
       fValues[slot]->Load(mask);
-      const std::size_t bulkSize = fLoopManager->GetCurrentBulkSize();
       auto &result = fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<T>>()];
       result.clear();
       result.resize(bulkSize);
-      for (std::size_t i = 0; i < bulkSize; ++i) {
+      for (decltype(bulkSize) i = 0; i < bulkSize; ++i) {
          if (mask[i])
             fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<T>>()][i] = GetValueOrDefault(slot, i);
       }
