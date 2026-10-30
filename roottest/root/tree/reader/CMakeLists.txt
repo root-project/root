@@ -16,6 +16,9 @@ ROOTTEST_ADD_TEST(ChainNoDict
                   MACRO ChainNoDict.C
                   FIXTURES_REQUIRED root-tree-reader-ChainNoDict-fixture)
 
+ROOTTEST_ADD_TEST(CopyCollectionProxy
+                  MACRO CopyCollectionProxy.C+)
+
 # ROOT-10046
 ROOTTEST_ADD_TEST(oddName
                   COPY_TO_BUILDDIR root-10046.root

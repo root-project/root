@@ -14,8 +14,10 @@ struct ChainNoDictHit {
 };
 
 #ifdef __ROOTCLING__
+// clang-format off
 #pragma link C++ class ChainNoDictHit+;
 #pragma link C++ class std::vector<ChainNoDictHit>+;
+// clang-format on
 #endif
 
 // Write two files with a split std::vector of a struct. They are read in

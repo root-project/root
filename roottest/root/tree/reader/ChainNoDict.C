@@ -1,7 +1,19 @@
+#include "TChain.h"
+#include "TClass.h"
+#include "TInterpreter.h"
+#include "TTreeReader.h"
+#include "TTreeReaderArray.h"
+
+#include <cmath>
+#include <iostream>
+
 // Read a data member of a split collection of a class without a dictionary
 // over a TChain, which re-runs TBranchProxy::Setup() when switching files.
 int ChainNoDict()
 {
+   gInterpreter->SetClassAutoLoading(false);
+   gInterpreter->SetClassAutoparsing(false);
+
    auto c = TClass::GetClass("ChainNoDictHit");
    if (c && c->HasDictionary()) {
       std::cerr << "Class ChainNoDictHit has a dictionary and it should not." << std::endl;
@@ -32,6 +44,11 @@ int ChainNoDict()
    }
    if (nValues != 90) {
       std::cerr << "Read " << nValues << " values, expected 90" << std::endl;
+      return 1;
+   }
+   c = TClass::GetClass("ChainNoDictHit", false);
+   if (!c || c->IsLoaded()) {
+      std::cerr << "Class ChainNoDictHit should be emulated after reading both files." << std::endl;
       return 1;
    }
    return 0;
