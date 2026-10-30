@@ -128,7 +128,13 @@ ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
 
 # ML dataloader tests
 if (dataframe)
-  ROOT_ADD_PYUNITTEST(ml_dataloader ml_dataloader.py PYTHON_DEPS numpy tensorflow torch)
+  ROOT_ADD_PYUNITTEST(ml_dataloader_single_dataframe ml_dataloader_single_dataframe.py GENERIC PYTHON_DEPS jax numpy pytest tensorflow torch)
+  ROOT_ADD_PYUNITTEST(ml_dataloader_multiple_dataframes ml_dataloader_multiple_dataframes.py GENERIC PYTHON_DEPS numpy pytest tensorflow torch)
+  ROOT_ADD_PYUNITTEST(ml_dataloader_undersampling ml_dataloader_undersampling.py GENERIC PYTHON_DEPS numpy pytest tensorflow torch)
+  ROOT_ADD_PYUNITTEST(ml_dataloader_oversampling ml_dataloader_oversampling.py GENERIC PYTHON_DEPS numpy pytest tensorflow torch)
+  ROOT_ADD_PYUNITTEST(ml_dataloader_save ml_dataloader_save.py GENERIC PYTHON_DEPS numpy pytest)
+  ROOT_ADD_PYUNITTEST(ml_dataloader_implicit_mt ml_dataloader_implicit_mt.py GENERIC PYTHON_DEPS numpy pytest)
+  ROOT_ADD_PYUNITTEST(ml_dataloader_from_files ml_dataloader_from_files.py GENERIC PYTHON_DEPS numpy pytest)
 endif()
 
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
