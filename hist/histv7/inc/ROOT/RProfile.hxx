@@ -163,6 +163,47 @@ public:
          }
          return fSumValues / fSum;
       }
+
+      /// Compute the variance in this bin.
+      ///
+      /// This function computes the uncorrected sample variance:
+      /// \f[
+      /// \sigma^2 = \frac{1}{\sum w_i} \sum(w_i \cdot x_i - \mu)^2
+      /// \f]
+      /// With some rewriting, this is equivalent to:
+      /// \f[
+      /// \sigma^2 = \frac{\sum w_i \cdot x_i^2}{\sum w_i} - \mu^2
+      /// \f]
+      ///
+      /// This function does not include Bessel's correction needed for an unbiased estimator of population variance.
+      /// In other words, the return value is a biased estimation lower than the actual population variance.
+      ///
+      /// \return the variance in this bin
+      double ComputeVariance() const
+      {
+         if (fSum == 0) {
+            return std::numeric_limits<double>::signaling_NaN();
+         }
+         double mean = ComputeMean();
+         return fSumValues2 / fSum - mean * mean;
+      }
+
+      /// Compute the standard deviation in this bin.
+      ///
+      /// This function computes the uncorrected sample standard deviation:
+      /// \f[
+      /// \sigma = \sqrt{\frac{1}{\sum w_i} \sum(w_i \cdot x_i - \mu)^2}
+      /// \f]
+      /// With some rewriting, this is equivalent to:
+      /// \f[
+      /// \sigma = \sqrt{\frac{\sum w_i \cdot x_i^2}{\sum w_i} - \frac{(\sum w_i \cdot x_i)^2}{(\sum w_i)^2}}
+      /// \f]
+      ///
+      /// This function does not include Bessel's correction needed for an unbiased estimator of population variance.
+      /// In other words, the return value is a biased estimation lower than the actual population standard deviation.
+      ///
+      /// \return the standard deviation in this bin
+      double ComputeStdDev() const { return std::sqrt(ComputeVariance()); }
    };
 
 private:
