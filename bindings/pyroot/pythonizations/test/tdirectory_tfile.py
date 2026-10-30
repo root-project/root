@@ -242,8 +242,13 @@ class TFileGetOwnership(unittest.TestCase):
                 # registration
                 registered = bool(f.GetList().FindObject(name))
                 self.assertEqual(obj.__python_owns__, not registered, msg=name)
-                # The object is still alive
-                self.assertEqual(f.Get(name).GetName(), name)
+                # The directory must keep the object alive after the Python
+                # object is gone
+                del obj
+                if registered:
+                    # Check before Get(), which could reload the object from disk.
+                    self.assertTrue(f.GetList().FindObject(name), msg=name)
+                    self.assertEqual(f.Get(name).GetName(), name)
 
     def test_owned_by_python(self):
         with TFile(self.filename) as f:
