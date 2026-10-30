@@ -130,6 +130,7 @@ std::vector<std::string> supportedOperators = parser.GetRegisteredOperators();
 - [x] Min
 - [x] Mul
 - [x] Neg
+- [x] PRelu
 - [x] Pad
 - [x] Pow
 - [x] RNN
