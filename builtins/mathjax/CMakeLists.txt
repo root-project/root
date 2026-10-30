@@ -8,3 +8,5 @@ ExternalProject_Add(
    SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
    TIMEOUT 600
 )
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/js/mathjax/ DESTINATION ${CMAKE_INSTALL_JSROOTDIR}/mathjax ${DIR_PERMISSIONS})
