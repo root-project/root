@@ -21,7 +21,7 @@
 
 #include <sys/types.h>
 #if !defined(ROOT_Match_cxx) && !defined(G__DICTIONARY)
-#warning "This header is deprecated and will be removed in ROOT 6.44, use instead public interface of `TRegExp.h`"
+#warning "This header is deprecated and will be removed in ROOT 7, use instead public interface of `TRegExp.h`"
 #endif
 
 typedef unsigned short Pattern_t;
