@@ -557,7 +557,7 @@ static ROOT::RResult<RDescriptorsComparison> FillCommonAndExtraFields(const ROOT
    }
 
    if (forAttributeMerging) {
-      using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+      using namespace ROOT::Internal::RNTupleAttributes;
       const auto userDataFieldId = src.FindFieldId(kMetaFieldNames[kMetaFieldIndex_UserData]);
       if (userDataFieldId == ROOT::kInvalidDescriptorId) {
          return R__FAIL("attribute user data field not found. The RNTuple is corrupted and cannot be merged.");
@@ -1050,7 +1050,7 @@ public:
 
    ENTupleMergeActionResult OnFill(ROOT::REntry &entry, const RNTupleMergeActionContext &) final
    {
-      using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+      using namespace ROOT::Internal::RNTupleAttributes;
 
       // Cache pointer per source
       if (!fRangeStartPtr)

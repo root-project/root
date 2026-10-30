@@ -177,6 +177,10 @@ RDataFrames can be created from an existing RNTupleProcessor by calling `ROOT::E
 The RNTuple SoA I/O classes moved out of experimental. These classes and the related dictionary options provide a mechanism to read and write a collection of a class, i.e. an "array of struct" (AoS),
 as "struct of array" (SoA) in memory. This is useful, e.g., for efficient consumption of data structures by GPUs. This new feature comes with a technical documentation (`SoA.md`) and a tutorial (`ntpl020_SoA.C`).
 
+### RNTuple attributes
+
+* The RNTuple attributes, RNTuple's native metadata system, is moving out of experimental. Attributes can be written to an RNTuple via `RNTupleWriter::CreateAttributeSet`, read via `RNTupleReader::OpenAttributeSet` and they are automatically merged alongside their main RNTuple via `TFileMerger` and `hadd`.
+
 ## Core
 
 * `TClass::IsTriviallyRelocatable()` reports whether an object of a class can be moved to a new address with a raw memory copy, i.e. without running a move or copy constructor (trivial relocatability in the C++26 sense). It is backed by the new `kClassIsTriviallyRelocatable` class property, which `TInterpreter::ClassInfo_ClassProperty()` now fills in. A class the interpreter does not know about, in particular an emulated one, is conservatively reported as not relocatable.
