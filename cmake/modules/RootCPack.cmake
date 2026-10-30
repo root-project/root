@@ -153,9 +153,8 @@ elseif(APPLE)
   set(CPACK_GENERATOR "TGZ;productbuild")
   set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2")
 else()
-  set(CPACK_THREADS 8)
-  set(CPACK_GENERATOR "TZST")
-  set(CPACK_SOURCE_GENERATOR "TZST")
+  set(CPACK_GENERATOR "TGZ")
+  set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2")
 endif()
 
 #----------------------------------------------------------------------------------------------------
