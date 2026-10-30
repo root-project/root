@@ -28,6 +28,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGtk4Canvas
     TGtk4Canvas.h
     TGtk4GuiFactory.h
     TGtk4PadPainter.h
+    TGtk4GedEditor.h
   SOURCES
     Gtk4DrawArea.cxx
     Gtk4CanvasWindow.cxx
@@ -36,6 +37,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGtk4Canvas
     TGtk4Canvas.cxx
     TGtk4GuiFactory.cxx
     TGtk4PadPainter.cxx
+    TGtk4GedEditor.cxx
   LIBRARIES
     PkgConfig::GTKMM
   DEPENDENCIES

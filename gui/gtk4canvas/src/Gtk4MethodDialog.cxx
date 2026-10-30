@@ -20,12 +20,6 @@
 #include "TContextMenu.h"
 #include "TColor.h"
 
-#include "TAttLine.h"
-#include "TAttFill.h"
-#include "TAttText.h"
-#include "TAttMarker.h"
-
-
 #include <iostream>
 
 /** \class Gtk4MethodDialog
@@ -44,14 +38,23 @@ Gtk4MethodDialog::Gtk4MethodDialog(unsigned width, unsigned height)
    set_default_size(width, height);
 
    m_main_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 10);
-   m_main_box->set_margin(20);
+   m_main_box->set_margin(5);
    set_child(*m_main_box);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// clear all elements inside dialog main box
+
+void Gtk4MethodDialog::clearAllElements()
+{
+   while (auto* child = m_main_box->get_first_child())
+      m_main_box->remove(*child);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// add line with color button
 
-void Gtk4MethodDialog::addColorInput(Int_t colindx)
+Gtk::ColorDialogButton *Gtk4MethodDialog::addColorInput(const char *title, Int_t colindx)
 {
    TColor *rootColor = gROOT->GetColor(colindx);
    Gdk::RGBA initial_color;
@@ -65,13 +68,15 @@ void Gtk4MethodDialog::addColorInput(Int_t colindx)
    color_dialog->set_modal(true);
 
    // Instantiate the specific ColorDialogButton using our dialog rules
-   m_color_button = Gtk::make_managed<Gtk::ColorDialogButton>(color_dialog);
+   auto m_color_button = Gtk::make_managed<Gtk::ColorDialogButton>(color_dialog);
    m_color_button->set_halign(Gtk::Align::END);
 
    // Set an initial default color (e.g., solid Red)
    m_color_button->set_rgba(initial_color);
 
-   addLine("Color", m_color_button);
+   addLine(title, m_color_button);
+
+   return m_color_button;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +125,7 @@ void Gtk4MethodDialog::addArg(const char *argname, const char *value, const char
 ////////////////////////////////////////////////////////////////////////////////
 /// Add Ok and Cancel buttons
 
-void Gtk4MethodDialog::addOkCancelButtons()
+Gtk::Button *Gtk4MethodDialog::addOkCancelButtons()
 {
    auto hbox = Gtk::make_managed<Gtk::Box>();
    hbox->set_hexpand(true);
@@ -128,13 +133,14 @@ void Gtk4MethodDialog::addOkCancelButtons()
    m_main_box->append(*hbox);
 
    auto button1 = Gtk::make_managed<Gtk::Button>("Ok");
-   button1->signal_clicked().connect(sigc::mem_fun(*this, &Gtk4MethodDialog::on_ok_button_clicked));
 
    auto button2 = Gtk::make_managed<Gtk::Button>("Cancel");
    button2->signal_clicked().connect([this]() { close(); });
 
    hbox->append(*button1);
    hbox->append(*button2);
+
+   return button1;
 }
 
 
@@ -226,74 +232,15 @@ void Gtk4MethodDialog::methodDialog(TContextMenu *menu, TObject *object, TFuncti
       }
    }
 
-   addOkCancelButtons();
+   auto okBtn = addOkCancelButtons();
+
+   okBtn->signal_clicked().connect(sigc::mem_fun(*this, &Gtk4MethodDialog::on_ok_button_clicked));
 
    present();
 
    fMenu = menu;
    fObject = object;
    fFunc = func;
-}
-
-
-void Gtk4MethodDialog::attLineDialog(TAttLine *att)
-{
-   addColorInput(att->GetLineColor());
-
-   auto style_list = Gtk::StringList::create({"None", "Style 1", "Style 2", "Style 3", "Style 4", "Style 5", "Style 6", "Style 7", "Style 8", "Style 9"});
-   m_line_style = Gtk::make_managed<Gtk::DropDown>(style_list);
-   m_line_style->set_selected(att->GetLineStyle());
-
-   addLine("Line style", m_line_style);
-
-   auto adjustment = Gtk::Adjustment::create(/* value */ att->GetLineWidth(), /* lower */ 1, /* upper */ 20,
-                                            /* step_increment */ 1, /* page_increment */ 5.0);
-
-   m_line_width = Gtk::make_managed<Gtk::SpinButton>(adjustment);
-   m_line_width->set_digits(0); // 0 decimal places -> integer display
-
-   addLine("Line width", m_line_width);
-
-   addOkCancelButtons();
-
-   present();
-
-   fAttLine = att;
-}
-
-
-void Gtk4MethodDialog::attFillDialog(TAttFill *att)
-{
-   addColorInput(att->GetFillColor());
-
-   addOkCancelButtons();
-
-   present();
-
-   fAttFill = att;
-}
-
-void Gtk4MethodDialog::attTextDialog(TAttText *att)
-{
-   addColorInput(att->GetTextColor());
-
-   addOkCancelButtons();
-
-   present();
-
-   fAttText = att;
-
-}
-
-void Gtk4MethodDialog::attMarkerDialog(TAttMarker *att)
-{
-   addColorInput(att->GetMarkerColor());
-
-   addOkCancelButtons();
-
-   present();
-
-   fAttMarker = att;
 }
 
 
@@ -311,35 +258,7 @@ void Gtk4MethodDialog::on_ok_button_clicked()
       close();
 
       fMenu->Execute(fObject, fFunc, &argslist);
-
-      return;
+   } else {
+      close();
    }
-
-   Gdk::RGBA selected_color;
-   Color_t newColorIdx = 0;
-   if (m_color_button) {
-      auto selected_color = m_color_button->get_rgba();
-      newColorIdx = TColor::GetColor(selected_color.get_red(),
-                                     selected_color.get_green(),
-                                     selected_color.get_blue(),
-                                     selected_color.get_alpha());
-   }
-
-   if (fAttLine) {
-      fAttLine->SetLineColor(newColorIdx);
-      fAttLine->SetLineStyle(m_line_style->get_selected());
-      fAttLine->SetLineWidth(m_line_width->get_value());
-   } else if (fAttFill) {
-      fAttFill->SetFillColor(newColorIdx);
-   } else if (fAttText) {
-      fAttText->SetTextColor(newColorIdx);
-   } else if (fAttMarker) {
-      fAttMarker->SetMarkerColor(newColorIdx);
-   }
-
-   close();
-
-   if (gPad)
-      gPad->ModifiedUpdate();
-
 }
