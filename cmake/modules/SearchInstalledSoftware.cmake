@@ -1112,9 +1112,6 @@ if(builtin_jsroot)
   endif()
   add_subdirectory(builtins/jsroot)
   set(JSROOT_CUSTOM_LOCATION "")
-elseif(NOT "$ENV{JSROOTSYS}" STREQUAL "")
-  # use preconfigured JSROOT to run web widgets
-  set(JSROOT_CUSTOM_LOCATION $ENV{JSROOTSYS})
 elseif(http OR webgui)
   message(WARNING "Without builtin_jsroot option http and webgui components are not working offline")
   set(JSROOT_CUSTOM_LOCATION "https://root.cern/js/7.12.0/")
@@ -1137,16 +1134,7 @@ endif()
 
 #------------------------------------------------------------------------------------
 if(webgui)
-  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core.js")
-    # create symbolic link on existing openui5 installation
-    # should be used only for debug purposes to be able try different openui5 version
-    # cannot be used for installation purposes
-    message(STATUS "openui5 - use from $ENV{OPENUI5DIR}, only for debug purposes")
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/ui5)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-       $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
-    set(OPENUI5_CUSTOM_LOCATION "")
-  elseif(builtin_openui5)
+  if(builtin_openui5)
     ROOT_CHECK_CONNECTION("builtin_openui5=OFF")
     if (NO_CONNECTION)
       message(SEND_ERROR "builtin_openui5=ON requires internet connection, check it or disable feature")
