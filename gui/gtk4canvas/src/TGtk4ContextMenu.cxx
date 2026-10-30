@@ -348,6 +348,7 @@ void TGtk4ContextMenu::executeMenu(int id)
    if (id < kToggleStart) {
       auto m = (TMethod *) ud;
 
+      /*
       if (!strcmp(m->GetName(), "SetLineAttributes")) {
          auto attline = dynamic_cast<TAttLine *>(fContextMenu->GetSelectedObject());
          if (attline) {
@@ -373,8 +374,9 @@ void TGtk4ContextMenu::executeMenu(int id)
             widget->attMarkerDialog(attmark);
          }
       } else {
-         fContextMenu->Action(m);
-      }
+      */
+      fContextMenu->Action(m);
+
    } else if (id >= kToggleStart && id < kToggleListStart) {
       TToggle *t = (TToggle *) ud;
       fContextMenu->Action(t);
