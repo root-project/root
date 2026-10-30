@@ -718,9 +718,9 @@ void ROOT::Internal::RDF::ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RD
 
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 ROOT::Internal::RDF::CreateColumnReader(ROOT::RDF::RDataSource &ds, unsigned int slot, std::string_view col,
-                                        const std::type_info &tid, TTreeReader *treeReader)
+                                        const std::type_info &tid, TTreeReader *treeReader, std::size_t maxBulkSize)
 {
-   return ds.CreateColumnReader(slot, col, tid, treeReader);
+   return ds.CreateColumnReader(slot, col, tid, treeReader, maxBulkSize);
 }
 
 std::vector<ROOT::RDF::Experimental::RSample> ROOT::Internal::RDF::MoveOutSamples(ROOT::RDF::Experimental::RDatasetSpec &spec)

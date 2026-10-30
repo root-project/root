@@ -502,7 +502,7 @@ std::string ROOT::Internal::RDF::RTTreeDS::DescribeDataset()
 
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 ROOT::Internal::RDF::RTTreeDS::CreateColumnReader(unsigned int /*slot*/, std::string_view col, const std::type_info &ti,
-                                                  TTreeReader *treeReader)
+                                                  TTreeReader *treeReader, std::size_t maxBulkSize)
 {
    // In a single thread run, use the TTreeReader data member.
    if (fTreeReader) {
@@ -517,14 +517,15 @@ ROOT::Internal::RDF::RTTreeDS::CreateColumnReader(unsigned int /*slot*/, std::st
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> colReader;
 
    if (ti == typeid(void)) {
-      colReader = std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, col);
+      colReader = std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, col, maxBulkSize);
    } else {
       const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(ti);
       if (auto &&[toConvert, innerTypeName, collType] = GetCollectionInfo(typeName); toConvert)
-         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(*treeReader, col,
-                                                                                          innerTypeName, collType);
+         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(
+            *treeReader, col, innerTypeName, collType, maxBulkSize);
       else
-         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(*treeReader, col, typeName);
+         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(*treeReader, col, typeName,
+                                                                                          maxBulkSize);
    }
 
    if (TDirectory *treeDir = treeReader->GetTree()->GetDirectory(); treeDir) {
@@ -534,7 +535,7 @@ ROOT::Internal::RDF::RTTreeDS::CreateColumnReader(unsigned int /*slot*/, std::st
       if (Map_t const *columnMaskMap = treeDir->Get<Map_t>(bitmaskMapName.c_str()); columnMaskMap) {
          if (auto it = columnMaskMap->find(std::string(col)); it != columnMaskMap->end()) {
             colReader = std::make_unique<RMaskedColumnReader>(*treeReader, std::move(colReader), it->second.first,
-                                                              it->second.second);
+                                                              it->second.second, maxBulkSize);
          }
       }
    }

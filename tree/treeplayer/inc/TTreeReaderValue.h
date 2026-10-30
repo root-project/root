@@ -99,7 +99,8 @@ public:
    TLeaf *GetLeaf() { return fLeaf; }
 
    void *GetAddress();
-   std::function<void(void *)> SetAddress(void *addr, void *addrOfAddr);
+   std::function<void(void *)> GetDeleter();
+   void SetAddress(void *addr, void *addrOfAddr);
 
    const char *GetBranchName() const { return fBranchName; }
 

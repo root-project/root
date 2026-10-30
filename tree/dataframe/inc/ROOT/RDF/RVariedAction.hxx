@@ -168,9 +168,9 @@ public:
          std::for_each(fInputValues[slot][varIdx].begin(), fInputValues[slot][varIdx].end(),
                        [&mask](auto *v) { v->Load(mask); });
 
-         // Assume 1-size bulk for now
-         if (mask[0])
-            CallExec(slot, varIdx, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
+         for (decltype(bulkSize) i = 0; i < bulkSize; i++)
+            if (mask[i])
+               CallExec(slot, varIdx, i, ColumnTypes_t{}, TypeInd_t{});
       }
    }
 

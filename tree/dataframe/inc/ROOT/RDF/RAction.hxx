@@ -123,10 +123,9 @@ public:
    {
       const auto mask = fPrevNode.CheckFilters(slot, bulkBeginEntry, bulkSize);
       std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
-
-      // Assume 1-size bulk for now
-      if (mask[0])
-         CallExec(slot, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
+      for (decltype(bulkSize) i = 0; i < bulkSize; i++)
+         if (mask[i])
+            CallExec(slot, i, ColumnTypes_t{}, TypeInd_t{});
    }
 
    void TriggerChildrenCount() final { fPrevNode.IncrChildrenCount(); }
