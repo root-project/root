@@ -826,19 +826,26 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProperAtO
                                                                                       std::uint64_t compSize,
                                                                                       std::uint64_t uncompLen)
 {
+   if (compSize > uncompLen) {
+      return R__FAIL("Invalid size and length combination of anchor at offset " + std::to_string(payloadOffset) +
+                     " (length: " + std::to_string(uncompLen) + ", bytes on disk: " + std::to_string(compSize) + ")");
+   }
+
    // The object length can be smaller than the size of RTFNTuple if it comes from a past RNTuple class version,
    // or larger than it if it comes from a future RNTuple class version.
    auto bufAnchor = MakeUninitArray<unsigned char>(std::max<size_t>(uncompLen, sizeof(RTFNTuple)));
    RTFNTuple *ntuple = new (bufAnchor.get()) RTFNTuple;
 
-   if (compSize != uncompLen) {
+   if (compSize < uncompLen) {
       // Read into a temporary buffer
-      auto unzipBuf = MakeUninitArray<unsigned char>(std::max<size_t>(uncompLen, sizeof(RTFNTuple)));
-      ReadBuffer(unzipBuf.get(), compSize, payloadOffset);
+      auto zipBuf = MakeUninitArray<unsigned char>(compSize);
+      ReadBuffer(zipBuf.get(), compSize, payloadOffset);
       // Unzip into the final buffer
-      RNTupleDecompressor::Unzip(unzipBuf.get(), compSize, uncompLen, ntuple);
+      RNTupleDecompressor::Unzip(zipBuf.get(), compSize, uncompLen, ntuple);
    } else {
-      ReadBuffer(ntuple, compSize, payloadOffset);
+      // We can directly decompress into ntuple because this RTFNTuple object has been constructed in a memory area
+      // of (max(uncompLen, sizeof(RTFNTuple))) bytes.
+      ReadBuffer(ntuple, uncompLen, payloadOffset);
    }
 
    // We require that future class versions only append members and store the checksum in the last 8 bytes
