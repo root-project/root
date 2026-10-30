@@ -10,4 +10,5 @@ ExternalProject_Add(
    DEPENDS BUILTIN_JSROOT
 )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/js/mathjax/ DESTINATION ${CMAKE_INSTALL_JSROOTDIR}/mathjax ${DIR_PERMISSIONS})
+# install no longer necessary - will be performed together with jsroot
+# install(DIRECTORY ${CMAKE_BINARY_DIR}/js/mathjax/ DESTINATION ${CMAKE_INSTALL_JSROOTDIR}/mathjax ${DIR_PERMISSIONS})
