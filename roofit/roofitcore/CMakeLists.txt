@@ -341,6 +341,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooErrorVar.cxx
     src/RooEvaluatorWrapper.cxx
     src/RooExpensiveObjectCache.cxx
+    src/RooExprEvaluator.cxx
     src/RooExtendPdf.cxx
     src/RooExtendedBinding.cxx
     src/RooExtendedTerm.cxx
@@ -354,6 +355,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFitLegacy/RooCatTypeLegacy.cxx
     src/RooFitResult.cxx
     src/RooFoamGenerator.cxx
+    src/RooFormulaParser.cxx
     src/RooFormulaUtils.cxx
     src/RooFormulaVar.cxx
     src/RooFracRemainder.cxx
@@ -543,8 +545,10 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
           inc/LinkDef.h
           inc/RooFit/UniqueId.h # Was not being included in ROOT_STL_PACKAGE call
           src/RooConvIntegrandBinding.h
-          src/RooFormulaUtils.h
+          src/RooExprEvaluator.h
           src/RooFormulaEvaluator.h
+          src/RooFormulaParser.h
+          src/RooFormulaUtils.h
           src/RooTFormulaEvaluator.h
           src/RooFitLegacy/RooAbsCategoryLegacyIterator.h
           src/RooMCIntegrator.h

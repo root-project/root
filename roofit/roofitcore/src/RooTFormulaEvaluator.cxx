@@ -88,4 +88,17 @@ std::unique_ptr<RooFormulaEvaluator> RooTFormulaEvaluator::clone() const
    return std::make_unique<RooTFormulaEvaluator>(*this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of the cling-JIT-compiled function that evaluates this
+/// formula, which the codegen fallback path calls by name in generated code.
+std::string RooTFormulaEvaluator::uniqueFuncName() const
+{
+   return _tFormula->GetUniqueFuncName().Data();
+}
+
+void RooTFormulaEvaluator::setName(const char *name)
+{
+   _tFormula->SetName(name);
+}
+
 /// \endcond
