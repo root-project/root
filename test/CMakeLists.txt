@@ -12,6 +12,15 @@ set(root_exe $<TARGET_FILE:root.exe>)
 #---environment-------------------------------------------------------------------------------
 ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 
+#---CUDA compiler detection--------------------------------------------------------------------
+foreach(case default disabled cached-disabled cuda tmva-gpu all all-disabled all-cuda-disabled
+             all-tmva-disabled minimal gminimal all-gminimal unavailable)
+  ROOT_ADD_TEST(cmake-cuda-${case}
+    COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cuda
+                            -B ${CMAKE_CURRENT_BINARY_DIR}/cmake/cuda-${case}
+                            -DROOT_SOURCE_DIR=${CMAKE_SOURCE_DIR} -DCASE=${case})
+endforeach()
+
 #---hworld------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 
