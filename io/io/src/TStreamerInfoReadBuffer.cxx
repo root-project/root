@@ -25,6 +25,7 @@
 #include "TVirtualArray.h"
 #include "TVirtualObject.h"
 #include "ThreadLocalStorage.h"
+#include "ROOT/CheckCollectionSize.hxx"
 
 // GetCurrentElement.
 // Currently only used by TRef::Streamer.
@@ -258,12 +259,9 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       // skip char*
       case TStreamerInfo::kSkip + TStreamerInfo::kCharStar: {
          DOLOOP {
-            Int_t nch; b >> nch;
-            if (nch>0) {
-               char* readbuf = new char[nch];
-               b.ReadFastArray(readbuf,nch);
-               delete[] readbuf;
-            }
+            char *readbuf = nullptr;
+            b.ReadCharStar(readbuf);
+            delete[] readbuf;
          }
          break;
       }
@@ -1193,6 +1191,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
                            Int_t nobjects;
                            b >> nobjects;
+                           nobjects = ROOT::Internal::CheckCollectionSize(
+                              b, nobjects, "TStreamerInfo::ReadBuffer", cle->GetName(),
+                              [&] { return ROOT::Internal::MemberWiseElementsUseBytes(subinfo); });
                            env = newProxy->Allocate(nobjects,true);
                            if (!nobjects && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,
@@ -1303,6 +1304,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
                            Int_t nobjects;
                            b >> nobjects;
+                           nobjects = ROOT::Internal::CheckCollectionSize(
+                              b, nobjects, "TStreamerInfo::ReadBuffer", cle->GetName(),
+                              [&] { return ROOT::Internal::MemberWiseElementsUseBytes(subinfo); });
                            void* env = newProxy->Allocate(nobjects,true);
                            if (!nobjects && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,

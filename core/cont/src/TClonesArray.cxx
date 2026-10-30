@@ -131,8 +131,10 @@ When investigating misuse of TClonesArray, please make sure of the following:
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjectTable.h"
+#include "ROOT/CheckCollectionSize.hxx"
 
 #include <cstdio>
+#include <limits>
 #include <cstdlib>
 
 
@@ -779,9 +781,16 @@ void TClonesArray::Streamer(TBuffer &b)
       }
 
       b >> nobjects;
-      if (nobjects < 0)
+      if (nobjects < 0 && nobjects != std::numeric_limits<Int_t>::min())
          nobjects = -nobjects;  // still there for backward compatibility
       b >> fLowerBound;
+      // Without bypassing the streamer, each object starts with a byte telling whether it is present. Otherwise, the
+      // objects are read below with the layout of fClass, which stays the target class if the user changed it.
+      nobjects = ROOT::Internal::CheckCollectionSize(b, nobjects, "TClonesArray::Streamer", "TClonesArray", [&] {
+         TClass *readClass = fClass && classv != fClass->GetName() ? fClass : cl;
+         return !CanBypassStreamer() || b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming) ||
+                ROOT::Internal::MemberWiseElementsUseBytes(readClass->GetStreamerInfo(clv));
+      });
       if (!fClass) {
          fClass = cl;
          if (!fKeep) {
