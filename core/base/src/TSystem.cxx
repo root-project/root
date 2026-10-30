@@ -2619,7 +2619,6 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
       } else {
          needToUnlinkTempFile = true;
          devnullfile = depfilename + ".stderr.tmp";
-         gSystem->PrependPathName(build_loc, devnullfile);
       }
    }
 #endif
