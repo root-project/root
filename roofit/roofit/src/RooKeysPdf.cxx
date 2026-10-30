@@ -52,6 +52,13 @@ subtracts the reflected events, which is appropriate when the true density is
 expected to vanish at the boundary. See the RooKeysPdf::Mirror enum for the list
 of options.
 
+The input dataset can be weighted, and the weights can be negative, as it is
+the case for sWeights or for simulated samples with negative event weights.
+Each event then contributes a kernel scaled by its weight, so the events with
+negative weights subtract from the estimate. The kernel width only depends on
+the magnitude of the weight. If the estimate becomes negative somewhere, the pdf
+is evaluated as zero there. The sum of weights must be positive.
+
 For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 **/
 
@@ -60,6 +67,7 @@ For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooDataSet.h"
+#include "RooMsgService.h"
 
 #include "TError.h"
 #include "TMath.h"
@@ -69,7 +77,8 @@ For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 #include <cstdio>
 #include <iostream>
 #include <limits>
-
+#include <sstream>
+#include <stdexcept>
 
 const double RooKeysPdf::_nSigma = std::sqrt(-2. *
     std::log(std::numeric_limits<double>::epsilon()));
@@ -241,8 +250,25 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
     tmp2.swap(tmp);
   }
 
+  // Negative event weights are supported (e.g. sWeights, or simulated samples
+  // with negative weights), but the weights must describe a non-empty
+  // distribution with a positive width, otherwise no density can be estimated.
+  if (!(_sumWgt > 0.)) {
+     std::stringstream ss;
+     ss << "RooKeysPdf::LoadDataSet(" << GetName() << ") : the sum of event weights is " << _sumWgt
+        << ", but it must be positive.";
+     coutE(InputArguments) << ss.str() << std::endl;
+     throw std::invalid_argument(ss.str());
+  }
   double meanv=x1/x0;
   double sigmav=std::sqrt(x2/x0-meanv*meanv);
+  if (!(sigmav > 0.)) {
+     std::stringstream ss;
+     ss << "RooKeysPdf::LoadDataSet(" << GetName() << ") : the weighted standard deviation of the data is " << sigmav
+        << ", but it must be positive.";
+     coutE(InputArguments) << ss.str() << std::endl;
+     throw std::invalid_argument(ss.str());
+  }
   double h=std::pow(double(4)/double(3),0.2)*std::pow(_sumWgt,-0.2)*_rho;
   double hmin=h*sigmav*std::sqrt(2.)/10;
   // Dividing by 2*sqrt(3) = sqrt(12) turns a width into the standard deviation
@@ -257,10 +283,14 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
   // The same factor appears in RooNDKeysPdf::calculateBandWidth().
   double norm=h*std::sqrt(sigmav * _sumWgt)/(2.0*std::sqrt(3.0));
 
+  // The kernel width only depends on the magnitude of the event weight: a
+  // negative weight subtracts its kernel, but it must not make the width
+  // undefined.
   _weights=new double[_nEvents];
   for(Int_t j=0;j<_nEvents;++j) {
-    _weights[j] = norm / std::sqrt(_dataWgts[j] * g(_dataPts[j],h*sigmav));
-    if (_weights[j]<hmin) _weights[j]=hmin;
+     _weights[j] = norm / std::sqrt(std::abs(_dataWgts[j]) * g(_dataPts[j], h * sigmav));
+     if (_weights[j] < hmin)
+        _weights[j] = hmin;
   }
 
   // The idea below is that beyond nSigma sigma, the value of the exponential
