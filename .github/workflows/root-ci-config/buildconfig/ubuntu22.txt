@@ -1,5 +1,0 @@
-builtin_civetweb=ON
-builtin_unuran=ON
-builtin_vdt=ON
-test_distrdf_dask=OFF
-test_distrdf_pyspark=OFF
