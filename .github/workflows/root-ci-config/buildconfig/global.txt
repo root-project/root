@@ -71,6 +71,7 @@ pyroot=ON
 pythia8=OFF
 qt6web=OFF
 qt6canv=OFF
+gtk4canv=OFF
 roofit=ON
 root7=ON
 rootbench=OFF
