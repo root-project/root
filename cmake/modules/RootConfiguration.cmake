@@ -710,7 +710,7 @@ else()
     # Only set the compiledata parameter if the CMake variable is 'true'
     set(local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES ${ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES})
   endif()
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
+  execute_process(COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
