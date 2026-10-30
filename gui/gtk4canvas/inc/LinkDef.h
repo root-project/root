@@ -17,5 +17,6 @@
 #pragma link C++ class ROOT::Experimental::TGtk4Canvas+;
 #pragma link C++ class ROOT::Experimental::TGtk4PadPainter+;
 #pragma link C++ class ROOT::Experimental::TGtk4GuiFactory+;
+#pragma link C++ class ROOT::Experimental::TGtk4GedEditor+;
 
 #endif
