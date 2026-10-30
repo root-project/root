@@ -62,9 +62,13 @@ int mnvert(ROOT::Minuit2::LASymMatrix &a)
             a(k, j) = 0.;
          }
       }
-      for (unsigned int j = 0; j < nrow; j++)
-         for (k = j; k < nrow; k++)
-            a(j, k) += (pp(j) * q(k));
+      // Loop over the packed storage in memory order: element (j, k) with j <= k is at j + k * (k + 1) / 2.
+      double *data = a.Data();
+      for (k = 0; k < nrow; k++) {
+         double *col = data + k * (k + 1) / 2;
+         for (unsigned int j = 0; j <= k; j++)
+            col[j] += (pp(j) * q(k));
+      }
    }
 
    for (unsigned int j = 0; j < nrow; j++)

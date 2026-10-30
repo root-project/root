@@ -22,6 +22,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <random>
+#include <vector>
 
 class QuadraticFCNBase : public ROOT::Minuit2::FCNBase {
 public:
@@ -610,4 +612,38 @@ TEST(Minuit2, MnPosDef)
    // Same matrix with one negative eigenvalue: corrected.
    cov(0, 1) = 1.2 * std::sqrt(2.);
    EXPECT_TRUE(MnPosDef()(MinimumError(cov, 0.), prec).IsMadePosDef());
+}
+
+// The inverse of a random positive-definite matrix must satisfy A * A^-1 = 1.
+TEST(Minuit2, InvertSymMatrix)
+{
+   using namespace ROOT::Minuit2;
+
+   const unsigned int n = 50;
+   std::mt19937 rng{42};
+   std::uniform_real_distribution<double> uniform{-1., 1.};
+   std::vector<double> b(n * n);
+   for (double &x : b)
+      x = uniform(rng);
+   // A = B * B^T + n * 1 is positive definite
+   MnAlgebraicSymMatrix a(n);
+   for (unsigned int i = 0; i < n; i++) {
+      for (unsigned int j = 0; j <= i; j++) {
+         double sum = (i == j) ? n : 0.;
+         for (unsigned int k = 0; k < n; k++)
+            sum += b[i * n + k] * b[j * n + k];
+         a(i, j) = sum;
+      }
+   }
+
+   MnAlgebraicSymMatrix inv = a;
+   ASSERT_EQ(Invert(inv), 0);
+   for (unsigned int i = 0; i < n; i++) {
+      for (unsigned int j = 0; j < n; j++) {
+         double sum = 0.;
+         for (unsigned int k = 0; k < n; k++)
+            sum += a(i, k) * inv(k, j);
+         EXPECT_NEAR(sum, i == j ? 1. : 0., 1e-12) << "(" << i << ", " << j << ")";
+      }
+   }
 }
