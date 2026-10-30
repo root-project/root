@@ -28,3 +28,21 @@ const int ROOT8499<T>::s_info = ROOT8499<T>::initHelper();");
   EXPECT_NE(0, dm->GetOffsetCint());
 }
 
+TEST(TDataMemberTests, Issue23777)
+{
+   // Test that calling GetOffset() does not corrupt or interfere with GetOffsetCint()
+   TClass *cl = TClass::GetClass("TAttImage");
+   ASSERT_NE(nullptr, cl);
+   TObject *obj = cl->GetListOfDataMembers()->FindObject("kImgBest");
+   ASSERT_NE(nullptr, obj);
+   TDataMember *dm = dynamic_cast<TDataMember *>(obj);
+   ASSERT_NE(nullptr, dm);
+
+   EXPECT_STREQ("TAttImage::EImageQuality", dm->GetTypeName());
+   // Static and enum members do not have an instance offset; GetOffset() must return -1
+   EXPECT_EQ(-1, dm->GetOffset());
+   // GetOffsetCint() must return a non-zero address/offset from Cling even after GetOffset() was called
+   EXPECT_NE(0, dm->GetOffsetCint());
+   // GetOffset() must still return -1 even after GetOffsetCint() cached the address
+   EXPECT_EQ(-1, dm->GetOffset());
+}
