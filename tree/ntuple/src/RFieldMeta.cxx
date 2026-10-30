@@ -1311,8 +1311,10 @@ ROOT::RProxiedCollectionField::RCollectionIterableOnce::GetIteratorFuncs(TVirtua
    ifuncs.fCreateIterators = proxy->GetFunctionCreateIterators(readFromDisk);
    ifuncs.fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators(readFromDisk);
    ifuncs.fNext = proxy->GetFunctionNext(readFromDisk);
-   R__ASSERT((ifuncs.fCreateIterators != nullptr) && (ifuncs.fDeleteTwoIterators != nullptr) &&
-             (ifuncs.fNext != nullptr));
+   if (!ifuncs.fCreateIterators || !ifuncs.fDeleteTwoIterators || !ifuncs.fNext) {
+      throw RException(R__FAIL(std::string("collection proxy for ") + proxy->GetCollectionClass()->GetName() +
+                               " has no compiled iterator functions available"));
+   }
    return ifuncs;
 }
 
