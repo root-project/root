@@ -330,8 +330,6 @@ protected:
   virtual RooPlot *plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCat, PlotOpt o) const ;
 
 
-  // Constant term optimizer interface
-  friend class RooAbsOptTestStatistic ;
   // for access into copied dataset:
   friend class RooFit::TestStatistics::RooAbsL;
 

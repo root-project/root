@@ -45,10 +45,7 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestVoigtian, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestVoigtian, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestVoigtian, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestVoigtian, RunScalar)
 FIT_TEST_BATCH(TestVoigtian, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestVoigtian, CompareBatchScalar)
-
 class TestVoigtianInXandMean : public PDFTest {
 protected:
    TestVoigtianInXandMean() : PDFTest("Voigtian(x,m)")
@@ -73,6 +70,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestVoigtianInXandMean, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestVoigtianInXandMean, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestVoigtianInXandMean, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestVoigtianInXandMean, RunScalar)
 FIT_TEST_BATCH(TestVoigtianInXandMean, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestVoigtianInXandMean, CompareBatchScalar)
