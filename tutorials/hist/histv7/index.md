@@ -1,4 +1,4 @@
-\defgroup tutorial_histv7 RHist tutorials
+\defgroup tutorial_histv7 Experimental histogram tutorials
 \ingroup tutorial_hist
 
 Examples demonstrating ROOT's histogram package.
@@ -10,6 +10,7 @@ Examples demonstrating ROOT's histogram package.
 | hist003_RHist_multi.C | Multidimensional RHist with different axis types. |
 | hist004_RHist_concurrent.C | Concurrent filling of RHist. |
 | hist005_RHist_convert_TH1.C | Conversion of RHist to TH1. |
+| hist010_RProfile.C | Profile histograms with RProfile. |
 
 A second set of tutorials demonstrates usage with RDataFrame.
 
