@@ -3345,11 +3345,12 @@ public:
       if (!curLexer) return;
       auto fileEntry = curLexer->getFileEntry();
       if (!fileEntry) return;
-      auto thisFileName = fileEntry->getName();
+      auto thisFileName = llvm::sys::path::filename(fileEntry->getName()).str();
       auto fileNameAsString = FileName.str();
-      auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName.data());
+      auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName.c_str());
       if (isThisLinkdef) {
-         auto isTheIncludedLinkdef = ROOT::TMetaUtils::IsLinkdefFile(fileNameAsString.c_str());
+         auto includedFileName = llvm::sys::path::filename(FileName).str();
+         auto isTheIncludedLinkdef = ROOT::TMetaUtils::IsLinkdefFile(includedFileName.c_str());
          if (isTheIncludedLinkdef) {
             fFilesIncludedByLinkdef.clear();
             isLocked = true;
