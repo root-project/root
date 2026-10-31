@@ -12,6 +12,17 @@ set(root_exe $<TARGET_FILE:root.exe>)
 #---environment-------------------------------------------------------------------------------
 ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 
+if(thisroot_scripts AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  foreach(shell IN ITEMS bash zsh)
+    find_program(THISROOT_${shell}_EXECUTABLE NAMES ${shell})
+    if(THISROOT_${shell}_EXECUTABLE)
+      ROOT_ADD_TEST(test-thisroot-${shell}
+                    COMMAND ${THISROOT_${shell}_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testThisroot.sh
+                            ${THISROOT_${shell}_EXECUTABLE} ${CMAKE_BINARY_DIR})
+    endif()
+  endforeach()
+endif()
+
 #---hworld------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 
