@@ -38,4 +38,5 @@ target_link_libraries(XMLParser
   PRIVATE
     ${LIBXML2_LIBRARIES}
     $<$<PLATFORM_ID:Windows>:ws2_32.lib>
+    ROOTclib
 )

@@ -164,6 +164,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RIO
     Matrix
     MathCore
+  LIBRARIES
+    ROOTclib # strlcpy.h
   ${EXTRA_DICT_OPTS}
 )
 

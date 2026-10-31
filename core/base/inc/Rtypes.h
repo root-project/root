@@ -22,14 +22,6 @@
 
 #include "RtypesCore.h"
 // #include "DllImport.h" // included via RtypesCore.h, not used here
-
-#ifndef R__LESS_INCLUDES
-#include <cstdio>
-#include "strtok.h"     // provides R__STRTOK_R with <cstring> include
-#include "strlcpy.h"    // part of string.h on systems that have it
-#include <type_traits>
-#endif
-
 #include <typeinfo>
 #include <atomic>
 
