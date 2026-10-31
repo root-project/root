@@ -4,14 +4,8 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
-if("${CMAKE_VERSION}" VERSION_LESS "3.26.0")
-  message(WARNING
-    "Your CMake version is ${CMAKE_VERSION}. Starting with ROOT 6.44, the "
-    "minimum version of CMake required to build ROOT will become 3.26.0, and "
-    "using an older CMake will raise an error. After ROOT 6.44, the CMake version "
-    "may rise to 3.31.0 if an upgrade to LLVM 24 or later is performed.")
-elseif("${CMAKE_VERSION}" VERSION_LESS "3.31.0")
+cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
+if("${CMAKE_VERSION}" VERSION_LESS "3.31.0")
   message(STATUS
     "Your CMake version is ${CMAKE_VERSION}. After ROOT 6.44, the "
     "minimum version of CMake required to build ROOT may become 3.31.0 if "
@@ -53,6 +47,13 @@ set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
+set(policy_old CMP0126)
+foreach(policy ${policy_old})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} OLD)
   endif()
 endforeach()
 
