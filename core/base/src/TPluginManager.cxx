@@ -532,7 +532,8 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       }
       if (!skip) {
          if (sbase != "") {
-            const char *p = gSystem->PrependPathName(d, sbase);
+            TString temp = sbase;
+            const char *p = gSystem->PrependPathName(d, temp);
             LoadHandlerMacros(p);
          } else {
             void *dirp = gSystem->OpenDirectory(d);

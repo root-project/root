@@ -4,6 +4,7 @@
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TString.h"
 
 #include "gmock/gmock.h"
 
@@ -62,6 +63,24 @@ TEST_F(TClingTests, GenerateDictionaryRegression)
    EXPECT_TRUE(gInterpreter->GenerateDictionary("std::set<int>"));
    EXPECT_TRUE(gInterpreter->GenerateDictionary("std::set<int>", ""));
    EXPECT_TRUE(gInterpreter->GenerateDictionary("std::set<int>", "set"));
+
+   auto *sequentialExecutor = TClass::GetClass("ROOT::TSequentialExecutor");
+   ASSERT_NE(sequentialExecutor, nullptr);
+   TString headerDir = gSystem->GetDirName(sequentialExecutor->GetDeclFileName());
+   ASSERT_STREQ(gSystem->BaseName(headerDir), "ROOT");
+
+   ASSERT_TRUE(gInterpreter->Declare(
+      "#include <string>\n"
+      "#include <vector>\n"
+      "int TCling_GenerateDictionary(const std::vector<std::string>&, const std::vector<std::string>&,\n"
+      "                              const std::vector<std::string>&, const std::vector<std::string>&);"));
+   TString includePath = gSystem->GetIncludePath();
+   const auto result =
+      gInterpreter->ProcessLine("std::vector<std::string> classes{\"std::list<ROOT::TSequentialExecutor*>\"};"
+                                "std::vector<std::string> emptyvector, unknown{\"ROOT::TSequentialExecutor\"};"
+                                "return TCling_GenerateDictionary(classes, emptyvector, emptyvector, unknown);");
+   gSystem->SetIncludePath(includePath);
+   EXPECT_EQ(result, 0);
 
    // FIXME: This makes the linkdef parser go in an infinite loop.
    //EXPECT_TRUE(gInterpreter->GenerateDictionary("std::vector<std::array<int, 5>>", ""));
