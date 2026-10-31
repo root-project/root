@@ -257,7 +257,10 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
       }
       fBufferRef->SetReadMode();
    } else {
-      fBufferRef = new TBufferFile(TBuffer::kRead, len);
+      // Same as above: CopyTo() writes the key header into this buffer, so it must be sized for writing. A buffer
+      // sized for reading would have to grow, and CopyTo() would then write the freed memory.
+      fBufferRef = new TBufferFile(TBuffer::kWrite, len);
+      fBufferRef->SetReadMode();
    }
    fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
@@ -1096,7 +1099,10 @@ void TBasket::Streamer(TBuffer &b)
          fEntryOffset = reinterpret_cast<Int_t *>(-1);
       }
       if (flag == 1 || flag > 10) {
-         fBufferRef = new TBufferFile(TBuffer::kRead,fBufferSize);
+         // This basket may be written again (fast cloning flushes a copy of a basket that is still in memory), and
+         // WriteBuffer() then writes the key header into this buffer, so size it for writing as in LoadBasketBuffers().
+         fBufferRef = new TBufferFile(TBuffer::kWrite, fBufferSize);
+         fBufferRef->SetReadMode();
          fBufferRef->SetParent(b.GetParent());
          char *buf  = fBufferRef->Buffer();
          if (v > 1) b.ReadFastArray(buf,fLast);
