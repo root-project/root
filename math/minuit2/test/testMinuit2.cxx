@@ -14,10 +14,16 @@
 #include <Minuit2/MnMatrix.h>
 #include <Minuit2/FunctionMinimum.h>
 #include <Minuit2/MnPrint.h>
+#include <Minuit2/MnPosDef.h>
+#include <Minuit2/MnMachinePrecision.h>
+#include <Minuit2/MinimumError.h>
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cmath>
+#include <random>
+#include <vector>
 
 class QuadraticFCNBase : public ROOT::Minuit2::FCNBase {
 public:
@@ -544,4 +550,100 @@ TEST(Minuit2, SecondDerivativeAlwaysVanishesFixedParameter)
    EXPECT_NEAR(hessian(0, 0), 4.0, tol);
    EXPECT_NEAR(hessian(0, 1), -2.0, tol);
    EXPECT_NEAR(hessian(1, 1), 6.0, tol);
+}
+
+namespace {
+
+// Covariance matrix with variances 4 and 9 and correlation coefficient r.
+ROOT::Minuit2::MnAlgebraicSymMatrix Covariance2D(double r)
+{
+   ROOT::Minuit2::MnAlgebraicSymMatrix cov(2);
+   cov(0, 0) = 4.;
+   cov(1, 1) = 9.;
+   cov(0, 1) = r * 2. * 3.;
+   return cov;
+}
+
+bool SameMatrix(const ROOT::Minuit2::MnAlgebraicSymMatrix &a, const ROOT::Minuit2::MnAlgebraicSymMatrix &b)
+{
+   return a.size() == b.size() && std::equal(a.Data(), a.Data() + a.size(), b.Data());
+}
+
+} // namespace
+
+// MnPosDef must leave a positive-definite matrix untouched, both when the cheap Cholesky test accepts it and when
+// the matrix is so close to singular that only the eigenvalue computation can accept it, and it must still correct
+// a matrix whose smallest eigenvalue is below the threshold or negative.
+TEST(Minuit2, MnPosDef)
+{
+   using namespace ROOT::Minuit2;
+
+   const MnMachinePrecision prec;
+
+   // Correlation matrix eigenvalues are 1 - r and 1 + r. The threshold is about 8e-8 for the smallest one.
+   for (double r : {0., 0.5, -0.9, 1. - 1e-6}) {
+      const MnAlgebraicSymMatrix cov = Covariance2D(r);
+      const MinimumError result = MnPosDef()(MinimumError(cov, 0.25), prec);
+      EXPECT_TRUE(result.IsPosDef()) << "r = " << r;
+      EXPECT_EQ(result.Dcovar(), 0.25) << "r = " << r;
+      EXPECT_TRUE(SameMatrix(result.InvHessian(), cov)) << "r = " << r;
+   }
+
+   for (double r : {1. - 1e-9, 1., 1.5}) {
+      const MnAlgebraicSymMatrix cov = Covariance2D(r);
+      const MinimumError result = MnPosDef()(MinimumError(cov, 0.25), prec);
+      EXPECT_TRUE(result.IsMadePosDef()) << "r = " << r;
+      MnAlgebraicSymMatrix inv = result.InvHessian();
+      EXPECT_EQ(Invert(inv), 0) << "r = " << r;
+   }
+
+   // Large, well-conditioned matrix: returned untouched.
+   const unsigned int n = 300;
+   MnAlgebraicSymMatrix cov(n);
+   for (unsigned int i = 0; i < n; i++) {
+      cov(i, i) = 1. + i;
+      if (i + 1 < n)
+         cov(i, i + 1) = 0.4 * std::sqrt((1. + i) * (2. + i));
+   }
+   const MinimumError result = MnPosDef()(MinimumError(cov, 0.), prec);
+   EXPECT_TRUE(result.IsPosDef());
+   EXPECT_TRUE(SameMatrix(result.InvHessian(), cov));
+
+   // Same matrix with one negative eigenvalue: corrected.
+   cov(0, 1) = 1.2 * std::sqrt(2.);
+   EXPECT_TRUE(MnPosDef()(MinimumError(cov, 0.), prec).IsMadePosDef());
+}
+
+// The inverse of a random positive-definite matrix must satisfy A * A^-1 = 1.
+TEST(Minuit2, InvertSymMatrix)
+{
+   using namespace ROOT::Minuit2;
+
+   const unsigned int n = 50;
+   std::mt19937 rng{42};
+   std::uniform_real_distribution<double> uniform{-1., 1.};
+   std::vector<double> b(n * n);
+   for (double &x : b)
+      x = uniform(rng);
+   // A = B * B^T + n * 1 is positive definite
+   MnAlgebraicSymMatrix a(n);
+   for (unsigned int i = 0; i < n; i++) {
+      for (unsigned int j = 0; j <= i; j++) {
+         double sum = (i == j) ? n : 0.;
+         for (unsigned int k = 0; k < n; k++)
+            sum += b[i * n + k] * b[j * n + k];
+         a(i, j) = sum;
+      }
+   }
+
+   MnAlgebraicSymMatrix inv = a;
+   ASSERT_EQ(Invert(inv), 0);
+   for (unsigned int i = 0; i < n; i++) {
+      for (unsigned int j = 0; j < n; j++) {
+         double sum = 0.;
+         for (unsigned int k = 0; k < n; k++)
+            sum += a(i, k) * inv(k, j);
+         EXPECT_NEAR(sum, i == j ? 1. : 0., 1e-12) << "(" << i << ", " << j << ")";
+      }
+   }
 }
