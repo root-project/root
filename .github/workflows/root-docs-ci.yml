@@ -37,7 +37,7 @@ jobs:
       DOC_DIR: v6-42-00-patches
       DOC_LOCATION: /github/home
       BASE_REF: v6-42-00-patches
-      WEB_DIR_NAME: v6-42-00-patches
+      WEB_DIR_NAME: v642
       TAR_NAME: htmlv6-42-00-patches.tar
 
     permissions:
