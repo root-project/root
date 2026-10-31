@@ -1103,7 +1103,23 @@ if (testing OR testsupport)
 endif()
 
 #------------------------------------------------------------------------------------
-if(http)
+
+if(builtin_jsroot)
+  ROOT_CHECK_CONNECTION("builtin_jsroot=OFF")
+  if (NO_CONNECTION)
+    message(SEND_ERROR "builtin_jsroot=ON requires internet connection, check it or disable feature")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_jsroot=OFF)
+  endif()
+  add_subdirectory(builtins/jsroot)
+  set(JSROOT_CUSTOM_LOCATION "")
+elseif(http OR webgui)
+  message(WARNING "Without builtin_jsroot option http and webgui components are not working offline")
+  set(JSROOT_CUSTOM_LOCATION "https://root.cern/js/7.12.0/")
+endif()
+
+
+#------------------------------------------------------------------------------------
+if(http AND builtin_jsroot)
   if(builtin_mathjax)
     ROOT_CHECK_CONNECTION("builtin_mathjax=OFF")
     if (NO_CONNECTION)
@@ -1118,26 +1134,17 @@ endif()
 
 #------------------------------------------------------------------------------------
 if(webgui)
-  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core.js")
-     # create symbolic link on existing openui5 installation
-     # should be used only for debug purposes to be able try different openui5 version
-     # cannot be used for installation purposes
-     message(STATUS "openui5 - use from $ENV{OPENUI5DIR}, only for debug purposes")
-     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/ui5)
-     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-        $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
-  else()
-    if(builtin_openui5)
-      ROOT_CHECK_CONNECTION("builtin_openui5=OFF")
-      if (NO_CONNECTION)
-         message(SEND_ERROR "builtin_openui5=ON requires internet connection, check it or disable feature")
-         list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_openui5=OFF)
-      endif()
-      add_subdirectory(builtins/openui5)
-    else()
-      message(SEND_ERROR "Without builtin_openui5 option most of webgui components will not work, either disable webgui or enable builtin_openui5")
-      list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_openui5=ON)
+  if(builtin_openui5)
+    ROOT_CHECK_CONNECTION("builtin_openui5=OFF")
+    if (NO_CONNECTION)
+      message(SEND_ERROR "builtin_openui5=ON requires internet connection, check it or disable feature")
+      list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_openui5=OFF)
     endif()
+    add_subdirectory(builtins/openui5)
+    set(OPENUI5_CUSTOM_LOCATION "")
+  else()
+    message(WARNING "Without builtin_openui5 option webgui components will not work offline")
+    set(OPENUI5_CUSTOM_LOCATION "https://sdk.openui5.org/1.152.0/")
   endif()
   add_subdirectory(builtins/rendercore)
 endif()

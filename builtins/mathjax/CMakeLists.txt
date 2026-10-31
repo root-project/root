@@ -1,5 +1,5 @@
 ExternalProject_Add(
-   MATHJAX
+   BUILTIN_MATHJAX
    URL ${lcgpackages}/mathjax-3.2.0.tar.gz
    URL_HASH SHA256=6847f1cfdd980afbe31b466474da301a56ab859a67d8035442b052dd4ac2fa03
    CONFIGURE_COMMAND ""
@@ -7,6 +7,8 @@ ExternalProject_Add(
    INSTALL_COMMAND ""
    SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
    TIMEOUT 600
+   DEPENDS BUILTIN_JSROOT
 )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/js/mathjax/ DESTINATION ${CMAKE_INSTALL_JSROOTDIR}/mathjax ${DIR_PERMISSIONS})
+# install no longer necessary - will be performed together with jsroot
+# install(DIRECTORY ${CMAKE_BINARY_DIR}/js/mathjax/ DESTINATION ${CMAKE_INSTALL_JSROOTDIR}/mathjax ${DIR_PERMISSIONS})
