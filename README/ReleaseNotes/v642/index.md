@@ -83,8 +83,10 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The `ROOT::Math::ParamFunctionBase`, `ROOT::Math::ParamFunctorHandler` and `ROOT::Math::ParamMemFunHandler` classes in `Math/ParamFunctor.h` are removed, together with the `ParamFunctor::GetImpl()` and `ParamFunctor::SetFunction()` methods that exposed them. They implemented the type erasure that `ParamFunctor` now gets from `std::function`, mirroring what was already done for `ROOT::Math::Functor`. Constructing and calling a `ParamFunctor` is unchanged, except that the constructor from an object and one of its member functions now takes a plain pointer to the object instead of anything dereferenceable, so smart pointers are no longer accepted there.
 * The header `compiledata.h` will be renamed in ROOT 6.44. It did not have header guards and is not meant to be used directly. It is solely used by ROOT internally to setup `ACLiC`, consider using `gSystem` instead to access its content.
 * Including `RConfig.h` and `RVersion.h` is now deprecated and will be removed after ROOT 6.44, use instead `ROOT/RConfig.hxx` and `ROOT/RVersion.hxx`.
+* The header `GLconstants.h` is no longer public in ROOT 6.42.
 * The headers of the `bvh` library in `Geom` are no longer public in ROOT 6.42.
 * Usage of the following headers is now deprecated. These will be removed during the lifetime of ROOT 7:
+  * `Match.h`: use instead public interface of `TRegExp.h`
   * `Rpair.h`: use `<utility>` instead.
   * `Hparam.h` and `Hoption.h`: use instead `THistPainter`, `TGraph2DPainter` public interfaces.
   * `Htypes.h` and `Gtypes.h`: Use instead `Rtypes.h`.
