@@ -754,9 +754,48 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
      endforeach()
   endif()
 
+  # rootcling does not promote compiler default include directories to -I,
+  # assuming that cling adds them by itself. Cling, however, only adds the C++
+  # standard library directories, its own builtin headers and the sysroot
+  # directories added by the clang driver. Directories injected by compiler
+  # wrappers or environment variables like CPATH are unknown to cling at
+  # runtime, so only report the former as compiler defaults.
+  if(CMAKE_SYSROOT)
+    set(sysroot "${CMAKE_SYSROOT}")
+  elseif(APPLE AND _CMAKE_OSX_SYSROOT_PATH)
+    # The SDK path that CMake resolves from CMAKE_OSX_SYSROOT (possibly empty
+    # or a bare SDK name) and passes to the compiler as -isysroot.
+    set(sysroot "${_CMAKE_OSX_SYSROOT_PATH}")
+  elseif(APPLE AND IS_DIRECTORY "${CMAKE_OSX_SYSROOT}")
+    set(sysroot "${CMAKE_OSX_SYSROOT}")
+  else()
+    set(sysroot "")
+  endif()
+  # Normalize like the implicit include directories (no trailing slash).
+  if(sysroot)
+    get_filename_component(sysroot "${sysroot}" ABSOLUTE)
+    string(REGEX REPLACE "/+$" "" sysroot "${sysroot}")
+  endif()
+  # What the clang driver adds, see AddClangSystemIncludeArgs() in
+  # clang/lib/Driver/ToolChains/{Linux,Darwin}.cpp. The multiarch directory
+  # <sysroot>/usr/include/<triple> is matched below. C library directories that
+  # the builtin clang is configured with (C_INCLUDE_DIRS, colon-separated) are
+  # reported in addition: a C library directory must never be promoted to -I.
+  set(sysrootIncDirs "${sysroot}/usr/local/include" "${sysroot}/include" "${sysroot}/usr/include")
+  set(clingCIncDirs)
+  if(C_INCLUDE_DIRS AND NOT WIN32)
+    string(REPLACE ":" ";" clingCIncDirs "${C_INCLUDE_DIRS}")
+    list(TRANSFORM clingCIncDirs REPLACE "/+$" "")
+  endif()
   set(compIncPaths)
   foreach(implinc IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
-    list(APPEND compIncPaths "-compilerI${implinc}")
+    get_filename_component(implincParent "${implinc}" DIRECTORY)
+    get_filename_component(implincName "${implinc}" NAME)
+    if(implinc MATCHES "/c\\+\\+(/|$)" OR implinc MATCHES "/lib(64)?/(gcc|clang)/"
+       OR implinc IN_LIST sysrootIncDirs OR implinc IN_LIST clingCIncDirs
+       OR (implincParent STREQUAL "${sysroot}/usr/include" AND implincName MATCHES "^[^-]+-[^-]+-[^-]+"))
+      list(APPEND compIncPaths "-compilerI${implinc}")
+    endif()
   endforeach()
 
   # Keep the byproducts (rdict pcm, rootmap, C++ module) newer than the
