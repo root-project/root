@@ -13,7 +13,17 @@ if(NOT UNIX)
 endif()
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TUnixSystem.h)
-target_sources(Core PRIVATE src/TUnixSystem.cxx)
+target_sources(Core
+PRIVATE
+  src/TUnixSystem.cxx
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    inc/TUnixSystem.h
+    inc/LinkDef.h
+)
 target_include_directories(Core PRIVATE inc ../../builtins/clib/res)
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)

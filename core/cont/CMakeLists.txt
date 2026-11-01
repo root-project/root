@@ -7,8 +7,7 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/cont package
 ############################################################################
-
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
+set(CONT_HEADERS
   ROOT/TSeq.hxx
   TArrayC.h
   TArrayD.h
@@ -40,7 +39,13 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TVirtualCollectionProxy.h
 )
 
-target_sources(Core PRIVATE
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${CONT_HEADERS})
+
+set(RELATIVE_INC_HEADERS ${CONT_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(Core
+PRIVATE
   src/TArrayC.cxx
   src/TArray.cxx
   src/TArrayD.cxx
@@ -67,6 +72,12 @@ target_sources(Core PRIVATE
   src/TRefTable.cxx
   src/TSeqCollection.cxx
   src/TSortedList.cxx
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
 )
 
 target_include_directories(Core
