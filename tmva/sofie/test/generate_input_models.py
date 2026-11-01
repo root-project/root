@@ -278,6 +278,47 @@ def make_ArgMax_NegAxis_SelectLast():
     return _argmax_model("argmax_select_last_test", [2, 1], axis=-1, keepdims=1, select_last_index=1)
 
 
+def _prelu_model(name, x_shape, slope_shape, slope_vals):
+    """PRelu on a float tensor X with the slope given as an initializer."""
+    nodes = [
+        helper.make_node("PRelu", ["X", "Slope"], ["Y"]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        name,
+        inputs=[
+            _vi("X", FLOAT, x_shape),
+        ],
+        outputs=[
+            _vi("Y", FLOAT, x_shape),
+        ],
+        initializer=[
+            _tensor("Slope", FLOAT, slope_shape, slope_vals),
+        ],
+    )
+    return _model(graph, opset=16, ir_version=8)
+
+
+def make_PRelu():
+    """Ops: PRelu (slope with the same shape as X)"""
+    return _prelu_model("prelu_test", [3, 4, 5], [3, 4, 5], np.linspace(0.05, 0.6, 60).tolist())
+
+
+def make_PRelu_Broadcast():
+    """Ops: PRelu (slope broadcast along the last axis)"""
+    return _prelu_model("prelu_broadcast_test", [3, 4, 5], [5], [0.1, 0.2, 0.3, 0.4, 0.5])
+
+
+def make_PRelu_Channel():
+    """Ops: PRelu (per-channel slope, as exported by PyTorch nn.PReLU)"""
+    return _prelu_model("prelu_channel_test", [1, 3, 2, 2], [3, 1, 1], [0.1, 0.2, 0.3])
+
+
+def make_PRelu_Scalar():
+    """Ops: PRelu (single slope value)"""
+    return _prelu_model("prelu_scalar_test", [2, 3], [1], [0.25])
+
+
 def make_AveragePool1d_CeilMode_Overhang():
     """Ops: AveragePool"""
     nodes = [
@@ -6336,6 +6377,10 @@ MODELS = {
     "NonZero_Constant": make_NonZero_Constant,
     "NonZeroTwice": make_NonZeroTwice,
     "NotIsNaN": make_NotIsNaN,
+    "PRelu": make_PRelu,
+    "PRelu_Broadcast": make_PRelu_Broadcast,
+    "PRelu_Channel": make_PRelu_Channel,
+    "PRelu_Scalar": make_PRelu_Scalar,
     "Pad": make_Pad,
     "Pow": make_Pow,
     "Pow_broadcast": make_Pow_broadcast,
@@ -7462,6 +7507,10 @@ TEST_INPUTS = {
             (12,),
         )
     ],
+    "PRelu": [f32(np.arange(-30, 30) / 10, (3, 4, 5))],
+    "PRelu_Broadcast": [f32(np.arange(-30, 30) / 10, (3, 4, 5))],
+    "PRelu_Channel": [f32([-2.0, 1.0, -0.5, 0.0, -1.0, 2.0, 0.0, -3.0, 3.0, -4.0, -1.5, 0.5], (1, 3, 2, 2))],
+    "PRelu_Scalar": [f32([-2.0, -1.0, 0.0, 0.5, 1.0, 3.0], (2, 3))],
     "Pow": [
         f32([1.0, 2.0, 3.0], (3,)),
         f32([4.0, 5.0, 6.0], (3,)),
