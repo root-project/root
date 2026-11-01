@@ -40,6 +40,8 @@ After ROOT 6.44, the minimum may rise to 3.31 if an upgrade to LLVM 24 or later 
 
 ## RooFit
 
+* `RooKeysPdf` and `RooNDKeysPdf` now support datasets with negative event weights, such as sWeights or simulated samples with negative weights ([#12639](https://github.com/root-project/root/issues/12639)). Before, a single negative weight made `RooKeysPdf` return NaN everywhere, and `RooNDKeysPdf` could return NaN as well. The kernel widths are now computed from the magnitudes of the weights, and the events with negative weights subtract their kernels from the estimate. A dataset with a non-positive sum of weights now raises a `std::invalid_argument` exception, as it does not describe a distribution. Results for datasets without negative weights are unchanged.
+
 ## Graphics and GUI
 
 ## Geometry
