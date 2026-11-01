@@ -173,7 +173,7 @@ getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
    local trueExe nextTarget 2>/dev/null # ignore error in shells without `local`
    # Determine the shell executable filename.
    if [ -r "/proc/$$/cmdline" ]; then
-      trueExe=$(cut -d '' -f1 /proc/$$/cmdline 2>/dev/null) || trueExe=$(xargs -0 -n 1 < /proc/$$/cmdline | head -n 1) || return 1
+      trueExe=$(tr '\0' '\n' < /proc/$$/cmdline 2>/dev/null | sed -n '1p') || trueExe=$(xargs -0 -n 1 < /proc/$$/cmdline | head -n 1) || return 1
       # Qemu emulation has cmdline start with the emulator
       if [ "${trueExe##*qemu*}" != "${trueExe}" ]; then
          # but qemu sets comm to the emulated command
