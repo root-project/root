@@ -88,6 +88,22 @@ void Measurement::AddPreprocessFunction(std::string name, std::string expression
    AddFunctionObject(func);
 }
 
+void Measurement::AddPreprocessFunctionCallback(PreprocessFunctionCallback callback)
+{
+   if (callback) {
+      fPreprocessFunctionCallbacks.push_back(callback);
+   }
+}
+
+void Measurement::ApplyPreprocessFunctionCallbacks(RooWorkspace &ws) const
+{
+   for (const auto &callback : fPreprocessFunctionCallbacks) {
+      if (callback) {
+         callback(ws);
+      }
+   }
+}
+
 /// Returns a list of defined preprocess function expressions
 std::vector<std::string> Measurement::GetPreprocessFunctions() const
 {
