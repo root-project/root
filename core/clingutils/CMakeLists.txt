@@ -126,11 +126,33 @@ if (runtime_cxxmodules)
   if (APPLE)
       set(GENERATED_MODULEMAP ${CMAKE_CURRENT_BINARY_DIR}/std_darwin.modulemap)
 
+      # The generated modulemap must match the libc++ that cling uses at
+      # runtime, which is the one of the compiler (cling queries the compiler
+      # for its C++ include directory). This is not necessarily the libc++ of
+      # the SDK: the compiler can ship its own, for example in Homebrew LLVM,
+      # Nix or conda-forge. Hence, look for the libc++ include directory in the
+      # implicit include directories of the compiler. If it is not found, the
+      # script falls back to the libc++ of the SDK.
+      set(libcxx_include_dir)
+      foreach(dir IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
+        if(EXISTS "${dir}/__config" AND EXISTS "${dir}/module.modulemap")
+          set(libcxx_include_dir "${dir}")
+          break()
+        endif()
+      endforeach()
+
+      # Regenerate the modulemap when the libc++ modulemap changes, e.g. after
+      # an update of the toolchain in place.
+      set(std_modulemap_deps ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py)
+      if(libcxx_include_dir)
+        list(APPEND std_modulemap_deps ${libcxx_include_dir}/module.modulemap)
+      endif()
+
       add_custom_command(
         OUTPUT ${GENERATED_MODULEMAP}
-        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py ${CMAKE_OSX_SYSROOT} ${GENERATED_MODULEMAP}
-        DEPENDS ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py
-        COMMENT "Generating wrapped std modulemap for macOS SDK"
+        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py ${CMAKE_OSX_SYSROOT} ${GENERATED_MODULEMAP} ${libcxx_include_dir}
+        DEPENDS ${std_modulemap_deps}
+        COMMENT "Generating wrapped std modulemap for libc++"
       )
       add_custom_target(generate_std_modulemap DEPENDS ${GENERATED_MODULEMAP})
       list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${GENERATED_MODULEMAP} ${CMAKE_BINARY_DIR}/etc/cling/std_darwin.modulemap)
