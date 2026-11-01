@@ -284,7 +284,7 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
    NodeInfo &info = *found->second;
 
    info.fromArrayInput = true;
-   info.absArg->setDataToken(info.iNode);
+   info.absArg->setDataToken(info.iNode, this);
    info.outputSize = inputArray.size();
 
    if (!_useGPU) {
@@ -350,9 +350,16 @@ void Evaluator::updateOutputSizes()
 
 Evaluator::~Evaluator()
 {
+   // Also the variables that got a data token in setInput() need to have it
+   // reset. They are not necessarily owned by the computation graph that this
+   // Evaluator was created for: the conditional observables of a likelihood,
+   // for example, are not cloned when the computation graph is compiled. If we
+   // would leave the token set, creating a second Evaluator for such a graph
+   // would wrongly complain that the same object is evaluated by multiple
+   // Evaluator instances.
    for (auto &info : _nodes) {
       // Nodes that were deleted before the Evaluator were unregistered
-      if (!info.isVariable && info.absArg) {
+      if (info.absArg && (!info.isVariable || info.fromArrayInput)) {
          info.absArg->resetDataToken();
       }
    }
