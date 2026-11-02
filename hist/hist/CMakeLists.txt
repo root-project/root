@@ -8,94 +8,101 @@
 # CMakeLists.txt file for building ROOT hist/hist package
 ############################################################################
 
+set(HIST_HEADERS
+  Foption.h
+  HFitInterface.h
+  TAxis.h
+  TAxisModLab.h
+  TBackCompFitter.h
+  TBinomialEfficiencyFitter.h
+  TConfidenceLevel.h
+  TEfficiency.h
+  TF1.h
+  TF12.h
+  TF1AbsComposition.h
+  TF1Convolution.h
+  TF1NormSum.h
+  TF2.h
+  TF3.h
+  TFitResult.h
+  TFitResultPtr.h
+  TFormula.h
+  TFractionFitter.h
+  TGraph.h
+  TGraph2D.h
+  TGraph2DAsymmErrors.h
+  TGraph2DErrors.h
+  TGraphAsymmErrors.h
+  TGraphBentErrors.h
+  TGraphDelaunay.h
+  TGraphDelaunay2D.h
+  TGraphErrors.h
+  TGraphMultiErrors.h
+  TGraphSmooth.h
+  TGraphTime.h
+  TH1.h
+  TH1C.h
+  TH1D.h
+  TH1F.h
+  TH1I.h
+  TH1L.h
+  TH1S.h
+  TH2.h
+  TH2C.h
+  TH2D.h
+  TH2F.h
+  TH2I.h
+  TH2L.h
+  TH2Poly.h
+  TH2S.h
+  TH3.h
+  TH3C.h
+  TH3D.h
+  TH3F.h
+  TH3I.h
+  TH3L.h
+  TH3S.h
+  THLimitsFinder.h
+  THStack.h
+  THistRange.h
+  THn.h
+  THnBase.h
+  THnChain.h
+  THnSparse.h
+  THnSparse_Internal.h
+  TKDE.h
+  TLimit.h
+  TLimitDataSource.h
+  TMultiDimFit.h
+  TMultiGraph.h
+  TNDArray.h
+  TPolyMarker.h
+  TPrincipal.h
+  TProfile.h
+  TProfile2D.h
+  TProfile2Poly.h
+  TProfile3D.h
+  TSVDUnfold.h
+  TScatter.h
+  TScatter2D.h
+  TSpline.h
+  TVirtualFitter.h
+  TVirtualGraphPainter.h
+  TVirtualHistPainter.h
+  TVirtualPaveStats.h
+  Math/WrappedMultiTF1.h
+  Math/WrappedTF1.h
+  v5/TF1Data.h
+  v5/TFormula.h
+  v5/TFormulaPrimitive.h
+)
+
+set(RELATIVE_INC_HEADERS ${HIST_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Hist
   HEADERS
-    Foption.h
-    HFitInterface.h
-    TAxis.h
-    TAxisModLab.h
-    TBackCompFitter.h
-    TBinomialEfficiencyFitter.h
-    TConfidenceLevel.h
-    TEfficiency.h
-    TF12.h
-    TF1AbsComposition.h
-    TF1Convolution.h
-    TF1.h
-    TF1NormSum.h
-    TF2.h
-    TF3.h
-    TFitResult.h
-    TFitResultPtr.h
-    TFormula.h
-    TFractionFitter.h
-    THistRange.h
-    TGraph2DErrors.h
-    TGraph2DAsymmErrors.h
-    TGraph2D.h
-    TGraphAsymmErrors.h
-    TGraphMultiErrors.h
-    TGraphBentErrors.h
-    TGraphDelaunay2D.h
-    TGraphDelaunay.h
-    TGraphErrors.h
-    TGraph.h
-    TGraphSmooth.h
-    TGraphTime.h
-    TScatter.h
-    TScatter2D.h
-    TH1C.h
-    TH1D.h
-    TH1F.h
-    TH1.h
-    TH1I.h
-    TH1L.h
-    TH1S.h
-    TH2C.h
-    TH2D.h
-    TH2F.h
-    TH2.h
-    TH2I.h
-    TH2L.h
-    TH2Poly.h
-    TH2S.h
-    TH3C.h
-    TH3D.h
-    TH3F.h
-    TH3.h
-    TH3I.h
-    TH3L.h
-    TH3S.h
-    THLimitsFinder.h
-    THnBase.h
-    THnChain.h
-    THn.h
-    THnSparse.h
-    THnSparse_Internal.h
-    THStack.h
-    TKDE.h
-    TLimitDataSource.h
-    TLimit.h
-    TMultiDimFit.h
-    TMultiGraph.h
-    TNDArray.h
-    TPolyMarker.h
-    TPrincipal.h
-    TProfile2D.h
-    TProfile2Poly.h
-    TProfile3D.h
-    TProfile.h
-    TSpline.h
-    TSVDUnfold.h
-    TVirtualFitter.h
-    TVirtualGraphPainter.h
-    TVirtualHistPainter.h
-    TVirtualPaveStats.h
-    Math/WrappedMultiTF1.h
-    Math/WrappedTF1.h
-    v5/TF1Data.h
-    v5/TFormula.h
-    v5/TFormulaPrimitive.h
+    ${HIST_HEADERS}
   SOURCES
     AnalyticalIntegrals.cxx
     Haxis.cxx
@@ -171,6 +178,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     MathCore
     Matrix
     RIO
+)
+
+target_sources(Hist
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    src/AnalyticalIntegrals.h
+    src/Rebin2DHelpers.h
+    src/TEfficiencyHelper.h
+    src/TF1Helper.h
+    src/TH1Merger.h
+    src/TProfileHelper.h
+    inc/LinkDef.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
