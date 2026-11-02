@@ -19,7 +19,7 @@ if(WIN32)
 endif()
 # check if the patch has already been applied
 if(NOT EXISTS "${ROOT_CIVETWEB_PREFIX}/src/BUILTIN_CIVETWEB/._patched")
-  set(ROOT_CIVETWEB_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply ${GIT_PATCH_ARGS}
+  set(ROOT_CIVETWEB_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init -b master COMMAND ${GIT_EXECUTABLE} apply ${GIT_PATCH_ARGS}
          ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
          ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
          ${CMAKE_CURRENT_SOURCE_DIR}/1423.patch # https://github.com/civetweb/civetweb/pull/1423 for OpenSSL4 compatibility
@@ -96,13 +96,22 @@ endif()
 
 ExternalProject_Add(BUILTIN_CIVETWEB
   PREFIX ${ROOT_CIVETWEB_PREFIX}
-  # URL ${lcgpackages}/civetweb-${ROOT_CIVETWEB_VERSION}.tar.gz
-  # URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
+
+  #  ------- tarball of 588860e3 commit, see Readme.md how to build it ------
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
+  URL ${lcgpackages}/civetweb-588860e3.tar.gz
+      https://jsroot.gsi.de/packages/civetweb-588860e3.tar.gz
+  URL_HASH SHA256=8d5d809f36e94b67257c5d61156a9b9eae7ab34de769dc82330c31841ac21771
+  # while we extract directly repository, we need to patch it
+  ${ROOT_CIVETWEB_PATCH_COMMAND}
+
   # TODO: once 1.17 released, bump SearchInstalledSoftware find_package to 1.17 plus remove patches
   # and potentially install civetweb in root-ci-images via homebrew and change builtin to OFF in ci-configs
-  GIT_REPOSITORY https://github.com/civetweb/civetweb.git
-  GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
-  ${ROOT_CIVETWEB_PATCH_COMMAND}
+
+  # ------- use next three lines when direct checkout from git repository required --------
+  # GIT_REPOSITORY https://github.com/civetweb/civetweb.git
+  # GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
+  # ${ROOT_CIVETWEB_PATCH_COMMAND}
   UPDATE_COMMAND ""
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE FALSE
