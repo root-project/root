@@ -243,10 +243,6 @@ if(all)
  set(x11_defvalue ON)
  set(xml_defvalue ON)
  set(xrootd_defvalue ON)
- if(CMAKE_CUDA_COMPILER)
-   set(cuda_defvalue ON)
-   set(tmva-gpu_defvalue ON)
- endif()
 endif()
 
 #--- The 'builtin_all' option switches ON all the built in options but GPL-------------------------------
