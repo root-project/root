@@ -224,10 +224,6 @@ if(NOT unfold)
   list(APPEND xml_veto analysis/unfold/*.C)
 endif()
 
-if(NOT mpi)
-  set(mpi_veto io/testTMPIFile.C)
-endif()
-
 if(NOT xrootd)
   set(xrootd_veto analysis/dataframe/df101_h1Analysis.C
                   analysis/dataframe/df101_h1Analysis.py
@@ -569,15 +565,6 @@ list(REMOVE_ITEM tutorials ${tutorials_veto})
 list(LENGTH tutorials nAfterVeto)
 message(STATUS "${nAfterVeto}/${nTotal} C++ tutorials have been activated.")
 
-
-if(mpi)
-  set (temp_list ${tutorials})
-  list(FILTER tutorials INCLUDE REGEX "MPI")
-  set(mpi_tutorials ${tutorials})
-  set(tutorials ${temp_list})
-  list(REMOVE_ITEM tutorials ${mpi_tutorials})
-endif()
-
 #---Special return code------------------------------------------------
 set(returncode_1 math/fit/fit2a.C
                  visualisation/graphics/earth.C
@@ -739,26 +726,6 @@ foreach(t ${tutorials})
   if(${t} IN_LIST multithreaded)
     set_tests_properties(tutorial-${tname} PROPERTIES PROCESSORS ${NProcessors})
   endif()
-endforeach()
-
-#---Loop over all MPI tutorials and define the corresponding test---------
-foreach(t ${mpi_tutorials})
-  list(FIND returncode_1 ${t} index)
-  if(index EQUAL -1)
-    set(rc 0)
-  else()
-    set(rc 255)
-  endif()
-  string(REPLACE ".C" "" tname ${t})
-  string(REPLACE "/" "-" tname ${tname})
-
-  ROOT_ADD_TEST(tutorial-${tname}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
-                LABELS tutorial
-                DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${TUTORIAL_ENV}
-                TIMEOUT 1200) # 20m
 endforeach()
 
 #---Python tutorials-----------------------------------------------------

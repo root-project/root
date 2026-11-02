@@ -11,10 +11,8 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(RMPI
   HEADERS
      TMPIClientInfo.h
-     TMPIFile.h
   SOURCES
      src/TMPIClientInfo.cxx
-     src/TMPIFile.cxx
   DEPENDENCIES
      RIO
      MathCore
