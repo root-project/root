@@ -104,10 +104,19 @@ add_custom_command( OUTPUT ${gdklib} ${gdkdll}
 add_custom_target(GDKLIB DEPENDS ${gdklib})
 set_target_properties(GDKLIB PROPERTIES FOLDER Builtins)
 
+set(WIN32GDK_HEADERS
+  TGWin32.h
+  TGWin32GL.h
+  TGWin32ProxyBase.h
+  TGWin32ProxyDefs.h
+  TGWin32VirtualGLProxy.h
+  TGWin32VirtualXProxy.h
+  xatom.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   HEADERS
-    TGWin32.h
-    TGWin32GL.h
+    ${WIN32GDK_HEADERS}
   SOURCES
     ../gifencode/gifdecode.cxx
     ../gifencode/gifencode.cxx
@@ -127,6 +136,20 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   DEPENDENCIES
     Core
     Graf
+)
+
+set(RELATIVE_INC_HEADERS ${WIN32GDK_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Win32gdk
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ ../gifencode
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    ../gifencode/gifencode.h
+    ../gifencode/gifdecode.h
 )
 
 target_include_directories(Win32gdk PRIVATE ../gifencode)

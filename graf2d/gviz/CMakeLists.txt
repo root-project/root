@@ -9,11 +9,15 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(GVIZ_HEADERS
+  TGraphEdge.h
+  TGraphNode.h
+  TGraphStruct.h  
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Gviz
   HEADERS
-    TGraphEdge.h
-    TGraphNode.h
-    TGraphStruct.h
+    ${GVIZ_HEADERS}
   SOURCES
     src/TGraphEdge.cxx
     src/TGraphNode.cxx
@@ -26,6 +30,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gviz
     Hist
     Graf
 )
+
+set(RELATIVE_INC_HEADERS ${GVIZ_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Gviz
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
+
 if(MSVC)
   set_target_properties(Gviz PROPERTIES COMPILE_FLAGS "-DGVDLL")
 endif()

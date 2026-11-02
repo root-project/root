@@ -9,9 +9,11 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(FITSIO_HEADERS TFITS.h)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(FITSIO
   HEADERS
-    TFITS.h
+    ${FITSIO_HEADERS}
   SOURCES
     TFITS.cxx
   DICTIONARY_OPTIONS
@@ -23,4 +25,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(FITSIO
     Graf
     Hist
     Matrix
+)
+
+set(RELATIVE_INC_HEADERS ${FITSIO_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(FITSIO
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
