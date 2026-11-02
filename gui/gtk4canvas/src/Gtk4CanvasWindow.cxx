@@ -55,7 +55,6 @@ Gtk4CanvasWindow::Gtk4CanvasWindow(unsigned width, unsigned height)
   m_action_group->add_action("close", [this]() { close(); });
   m_action_group->add_action("quit", []() {
 
-    printf("Quit ROOT action\n");
      gROOT->SetInterrupt(kTRUE);
 
      if (gApplication)
@@ -119,14 +118,21 @@ Gtk4CanvasWindow::Gtk4CanvasWindow(unsigned width, unsigned height)
   m_DrawArea.set_vexpand(true);
   m_Box.append(m_DrawArea);
 
+  m_DrawArea.status_changed().connect(sigc::mem_fun(*this, &Gtk4CanvasWindow::on_status_changed));
 
-  unsigned int context_id = m_StatusBar.get_context_id("main_status");
-  m_StatusBar.push("Ready to draw", context_id);
+  fContextId = m_StatusBar.get_context_id("main_status");
+  m_StatusBar.push("Ready to draw", fContextId);
   m_Box.append(m_StatusBar);
 }
 
 Gtk4CanvasWindow::~Gtk4CanvasWindow()
 {
+}
+
+void Gtk4CanvasWindow::on_status_changed(const char *msg)
+{
+   m_StatusBar.remove_all_messages(fContextId);
+   m_StatusBar.push(msg, fContextId);
 }
 
 /*

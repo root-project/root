@@ -27,6 +27,8 @@ public:
 
     void ShowContextMenu(Glib::RefPtr<Gio::Menu> menu_model, int x, int y);
 
+    sigc::signal<void(const char *)> status_changed();
+
 protected:
     // The render function for gtkmm 4
     void on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height);
@@ -35,6 +37,7 @@ protected:
     Cairo::Context *fContext = nullptr;
     double fLastMouseX = 0;
     double fLastMouseY = 0;
+    bool fShowEventStatus = true;
 
     void on_mouse_click(int n_press, double x, double y);
     void on_mouse_released(int n_press, double x, double y);
@@ -42,6 +45,8 @@ protected:
     void on_mouse_move(double x, double y);
     void on_mouse_leave();
     bool on_mouse_scroll(double dx, double dy);
+
+    sigc::signal<void(const char *)> m_status_changed;
 
     Glib::RefPtr<Gtk::GestureClick> m_click_gesture;
     Glib::RefPtr<Gtk::EventControllerMotion> m_motion_controller;
