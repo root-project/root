@@ -335,7 +335,7 @@ TCanvasImp *TGtk4Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t 
       timer->TurnOn();
    }
 
-   auto widget = new Gtk4CanvasWindow(width, height);
+   auto widget = new Gtk4CanvasWindow(c, width, height);
 
    auto draw_area = widget->GetDrawArea();
 

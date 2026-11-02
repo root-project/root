@@ -22,6 +22,7 @@ public:
     virtual ~Gtk4DrawArea() = default;
 
     void SetCanvas(TCanvas *c) { fCanvas = c; }
+    TCanvas *GetCanvas() const { return fCanvas; }
 
     Cairo::Context *GetContext() const { return fContext; }
 

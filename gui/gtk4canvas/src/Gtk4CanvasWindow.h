@@ -31,10 +31,12 @@
 
 #include "Gtk4DrawArea.h"
 
+class TCanvas;
+
 class Gtk4CanvasWindow : public Gtk::Window
 {
 public:
-  Gtk4CanvasWindow(unsigned width = 400, unsigned height = 200);
+  Gtk4CanvasWindow(TCanvas *canv = nullptr, unsigned width = 400, unsigned height = 200);
   virtual ~Gtk4CanvasWindow();
 
   Gtk4DrawArea *GetDrawArea() { return &m_DrawArea; }
@@ -44,11 +46,23 @@ private:
 
 
   void on_status_changed(const char *msg);
+  void on_show_toolbar_changed(const Glib::VariantBase&);
+  void on_show_eventstatus_changed(const Glib::VariantBase&);
+  void on_show_tooltip_changed(const Glib::VariantBase&);
+  void on_openRootFile();
+  void on_saveCanvasAs();
+  void on_printCanvas();
 
   //void on_action_file_new();
   //void on_action_file_quit();
   //void on_action_others();
   //void on_action_toggle();
+
+  void fillMenuBar(TCanvas *canv);
+
+  void fillToolBar();
+
+  void clickToolButton(int id);
 
 
   //Child widgets:
@@ -56,9 +70,11 @@ private:
 
   Glib::RefPtr<Gio::SimpleActionGroup> m_action_group;
 
+  Gtk::Box m_ToolBar;
   Gtk4DrawArea  m_DrawArea;
   Gtk::Statusbar m_StatusBar;
   unsigned int fContextId = 0;
+
 
 };
 
