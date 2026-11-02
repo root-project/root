@@ -12,6 +12,96 @@ if(WIN32 OR cocoa)
   set(installoptions FILTER "TX11GL")
 endif()
 
+set(RGL_HEADERS
+  TArcBall.h
+  TF2GL.h
+  TGL5D.h
+  TGL5DDataSetEditor.h
+  TGL5DPainter.h
+  TGLAdapter.h
+  TGLAnnotation.h
+  TGLAutoRotator.h
+  TGLAxis.h
+  TGLAxisPainter.h
+  TGLBoundingBox.h
+  TGLBoxPainter.h
+  TGLCamera.h
+  TGLCameraGuide.h
+  TGLCameraOverlay.h
+  TGLClip.h
+  TGLClipSetEditor.h
+  TGLContext.h
+  TGLCylinder.h
+  TGLEmbeddedViewer.h
+  TGLEventHandler.h
+  TGLFaceSet.h
+  TGLFBO.h
+  TGLFontManager.h
+  TGLFormat.h
+  TGLH2PolyPainter.h
+  TGLHistPainter.h
+  TGLIsoMesh.h
+  TGLLegoPainter.h
+  TGLLightSet.h
+  TGLLightSetEditor.h
+  TGLLockable.h
+  TGLLogicalShape.h
+  TGLManip.h
+  TGLManipSet.h
+  TGLMarchingCubes.h
+  TGLObject.h
+  TGLOrthoCamera.h
+  TGLOutput.h
+  TGLOverlay.h
+  TGLOverlayButton.h
+  TGLPadPainter.h
+  TGLPadUtils.h
+  TGLParametric.h
+  TGLParametricEquationGL.h
+  TGLPerspectiveCamera.h
+  TGLPhysicalShape.h
+  TGLPlot3D.h
+  TGLPlotBox.h
+  TGLPlotCamera.h
+  TGLPlotPainter.h
+  TGLPolyLine.h
+  TGLPolyMarker.h
+  TGLPShapeObj.h
+  TGLPShapeObjEditor.h
+  TGLPShapeRef.h
+  TGLQuadric.h
+  TGLRnrCtx.h
+  TGLRotateManip.h
+  TGLSAFrame.h
+  TGLSAViewer.h
+  TGLScaleManip.h
+  TGLScene.h
+  TGLSceneBase.h
+  TGLSceneInfo.h
+  TGLScenePad.h
+  TGLSdfFontMaker.h
+  TGLSelectBuffer.h
+  TGLSelectRecord.h
+  TGLSphere.h
+  TGLStopwatch.h
+  TGLSurfacePainter.h
+  TGLText.h
+  TGLTF3Painter.h
+  TGLTH3Composition.h
+  TGLTransManip.h
+  TGLUtil.h
+  TGLViewer.h
+  TGLViewerBase.h
+  TGLViewerEditor.h
+  TGLVoxelPainter.h
+  TGLWidget.h
+  TH2GL.h
+  TH3GL.h
+  TKDEAdapter.h
+  TKDEFGT.h
+  TPointSet3DGL.h
+)
+
 if(x11)
   set(RGL_EXTRA_HEADERS TX11GL.h)
   set(RGL_EXTRA_SOURCES TX11GL.cxx)
@@ -19,88 +109,7 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RGL
   HEADERS
-    TArcBall.h
-    TF2GL.h
-    TGL5DDataSetEditor.h
-    TGL5D.h
-    TGLAdapter.h
-    TGLAnnotation.h
-    TGLAutoRotator.h
-    TGLAxis.h
-    TGLAxisPainter.h
-    TGLBoundingBox.h
-    TGLBoxPainter.h
-    TGLCameraGuide.h
-    TGLCamera.h
-    TGLCameraOverlay.h
-    TGLClip.h
-    TGLClipSetEditor.h
-    TGLContext.h
-    TGLCylinder.h
-    TGLEmbeddedViewer.h
-    TGLEventHandler.h
-    TGLFaceSet.h
-    TGLFBO.h
-    TGLFontManager.h
-    TGLFormat.h
-    TGLH2PolyPainter.h
-    TGLHistPainter.h
-    TGLLegoPainter.h
-    TGLLightSetEditor.h
-    TGLLightSet.h
-    TGLLockable.h
-    TGLLogicalShape.h
-    TGLManip.h
-    TGLManipSet.h
-    TGLObject.h
-    TGLOrthoCamera.h
-    TGLOutput.h
-    TGLOverlayButton.h
-    TGLOverlay.h
-    TGLPadPainter.h
-    TGLPadUtils.h
-    TGLParametricEquationGL.h
-    TGLParametric.h
-    TGLPerspectiveCamera.h
-    TGLPhysicalShape.h
-    TGLPlot3D.h
-    TGLPlotBox.h
-    TGLPlotCamera.h
-    TGLPlotPainter.h
-    TGLPolyLine.h
-    TGLPolyMarker.h
-    TGLPShapeObjEditor.h
-    TGLPShapeObj.h
-    TGLPShapeRef.h
-    TGLQuadric.h
-    TGLRnrCtx.h
-    TGLRotateManip.h
-    TGLSAFrame.h
-    TGLSAViewer.h
-    TGLScaleManip.h
-    TGLSceneBase.h
-    TGLScene.h
-    TGLSceneInfo.h
-    TGLScenePad.h
-    TGLSelectBuffer.h
-    TGLSelectRecord.h
-    TGLSphere.h
-    TGLStopwatch.h
-    TGLSurfacePainter.h
-    TGLText.h
-    TGLTF3Painter.h
-    TGLTH3Composition.h
-    TGLTransManip.h
-    TGLUtil.h
-    TGLViewerBase.h
-    TGLViewerEditor.h
-    TGLViewer.h
-    TGLVoxelPainter.h
-    TGLWidget.h
-    TH2GL.h
-    TH3GL.h
-    TPointSet3DGL.h
-    TGLSdfFontMaker.h
+    ${RGL_HEADERS}
     ${RGL_EXTRA_HEADERS}
   SOURCES
     src/TArcBall.cxx
@@ -122,7 +131,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     src/TGLClipSetEditor.cxx
     src/TGLContext.cxx
     src/TGLContextPrivate.cxx
-    src/TGLContextPrivate.h
     src/TGLCylinder.cxx
     src/TGLEmbeddedViewer.cxx
     src/TGLEventHandler.cxx
@@ -186,7 +194,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     src/TGLViewerEditor.cxx
     src/TGLVoxelPainter.cxx
     src/TGLWidget.cxx
-    src/TGLWSIncludes.h
     src/TH2GL.cxx
     src/TH3GL.cxx
     src/TKDEAdapter.cxx
@@ -216,9 +223,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     ${installoptions}
 )
 
+set(RELATIVE_INC_HEADERS ${RGL_HEADERS} ${RGL_EXTRA_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(RGL
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+  ${RELATIVE_INC_HEADERS}
+  inc/LinkDef.h
+  src/TGLWSIncludes.h
+  src/TGLContextPrivate.h
+)
 
 target_include_directories(RGL PRIVATE
-     ${OPENGL_INCLUDE_DIR}
+  ${OPENGL_INCLUDE_DIR}
 )
 
 if(MACOSX_GLU_DEPRECATED)
