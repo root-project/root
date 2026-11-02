@@ -31,6 +31,7 @@
 
 #include "TROOT.h"
 #include "TTimer.h"
+#include "TFile.h"
 #include "TCanvas.h"
 #include "TApplication.h"
 
@@ -130,7 +131,7 @@ void Gtk4CanvasWindow::fillMenuBar(TCanvas *canv)
   m_action_group = Gio::SimpleActionGroup::create();
 
   m_action_group->add_action("new", []() { std::cout << "New canvas Clicked!\n"; });
-  m_action_group->add_action("open", []() { std::cout << "Open File Clicked!\n"; });
+  m_action_group->add_action("open", [this]() { on_openRootFile(); });
 
   m_action_group->add_action("close", [this]() { close(); });
   m_action_group->add_action("quit", []() {
@@ -403,6 +404,51 @@ void Gtk4CanvasWindow::on_show_tooltip_changed(const Glib::VariantBase &value)
 
 void Gtk4CanvasWindow::on_openRootFile()
 {
+   if (!m_file_dialog) {
+      m_file_dialog = Gtk::FileDialog::create();
+      m_file_dialog->set_title("Select a ROOT File");
+      m_file_dialog->set_modal(true);
+
+      auto filter_root_files = Gtk::FileFilter::create();
+      filter_root_files->set_name("ROOT files (*.root)");
+      filter_root_files->add_pattern("*.root");
+
+      auto filter_xml_files = Gtk::FileFilter::create();
+      filter_xml_files->set_name("ROOT XML files (*.xml)");
+      filter_xml_files->add_pattern("*.xml");
+
+      auto filter_all_files = Gtk::FileFilter::create();
+      filter_all_files->set_name("All files (*.*)");
+      filter_all_files->add_pattern("*.*");
+
+      auto filters_list = Gio::ListStore<Gtk::FileFilter>::create();
+      filters_list->append(filter_root_files);
+      filters_list->append(filter_xml_files);
+      filters_list->append(filter_all_files);
+
+      m_file_dialog->set_filters(filters_list);
+
+      // Optional: Set which filter is selected by default (e.g., Images)
+      m_file_dialog->set_default_filter(filter_root_files);
+   }
+
+   m_file_dialog->open(*this, sigc::mem_fun(*this, &Gtk4CanvasWindow::on_file_selected));
+}
+
+void Gtk4CanvasWindow::on_file_selected(const Glib::RefPtr<Gio::AsyncResult> &result)
+{
+   try {
+      // Retrieve the selected file reference
+      Glib::RefPtr<Gio::File> file = m_file_dialog->open_finish(result);
+
+      std::cout << "Selected File Path: " << file->get_path() << std::endl;
+
+      TFile::Open(file->get_path().c_str(), "update");
+
+   } catch (const Gtk::DialogError &err) {
+      // Triggers if the user cancels or closes the dialog window
+      // std::cout << "Dialog closed or dismissed: " << err.what() << std::endl;
+   }
 }
 
 void Gtk4CanvasWindow::on_saveCanvasAs()

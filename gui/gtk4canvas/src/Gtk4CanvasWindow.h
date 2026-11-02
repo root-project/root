@@ -49,6 +49,7 @@ private:
   void on_show_toolbar_changed(const Glib::VariantBase&);
   void on_show_eventstatus_changed(const Glib::VariantBase&);
   void on_show_tooltip_changed(const Glib::VariantBase&);
+  void on_file_selected(const Glib::RefPtr<Gio::AsyncResult> &result);
   void on_openRootFile();
   void on_saveCanvasAs();
   void on_printCanvas();
@@ -69,6 +70,8 @@ private:
   Gtk::Box m_Box;
 
   Glib::RefPtr<Gio::SimpleActionGroup> m_action_group;
+
+  Glib::RefPtr<Gtk::FileDialog> m_file_dialog;
 
   Gtk::Box m_ToolBar;
   Gtk4DrawArea  m_DrawArea;
