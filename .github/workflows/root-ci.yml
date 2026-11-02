@@ -426,6 +426,11 @@ jobs:
             is_special: true
             property: "clang Ninja builtins auto-registration off"
             overrides: ["CMAKE_CXX_STANDARD=20"]
+          - image: alma10-cuda
+            platform_config: alma10
+            is_special: true
+            property: "Alma10 cuda enabled"
+            overrides: ["CMAKE_CXX_STANDARD=20", "cuda=On"]
           # Asan build
           - image: alma10
             platform_config: alma10-asan
@@ -450,11 +455,6 @@ jobs:
             is_special: true
             property: "benchmark build"
             overrides: ["CMAKE_CXX_STANDARD=20"]
-          # Disable GPU builds until the DNS problem is solved
-          # - image: ubuntu2404-cuda
-          #   is_special: true
-          #   property: gpu
-          #   extra-runs-on: gpu
           # openSUSE Leap
           - image: opensuse16
             platform_config: opensuse16-march_native
@@ -473,12 +473,12 @@ jobs:
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # KEEP IN SYNC WITH env key below
-      options: --security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }} # KEEP IN SYNC WITH env key below
+      options: --security-opt label=disable --rm # KEEP IN SYNC WITH env key below
       volumes:
         - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
       env:
         CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
-        CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
+        CONTAINER_OPTIONS: "--security-opt label=disable --rm " #KEEP IN SYNC WITH ABOVE
 
     env:
       BUILD_DIR: /github/home/ROOT-CI/build
@@ -603,6 +603,21 @@ jobs:
           path: /github/home/ROOT-CI/packages/root_v*
           if-no-files-found: error
 
+      # Tar and upload build tree for cuda tests.
+      # An extra tar step is necessary to retain permissions.
+      - name: Pack src + build directory
+        if: ${{ !cancelled() && matrix.image == 'alma10-cuda' }}
+        run: tar -C /github/home/ROOT-CI -cf /github/home/ROOT-CI/build.tar src build
+      - name: Upload src + build directory
+        if: ${{ !cancelled() && matrix.image == 'alma10-cuda' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Alma10 cuda build
+          path: /github/home/ROOT-CI/build.tar
+          if-no-files-found: error
+          compression-level: 1
+          retention-days: 1
+
       - name: ccache info (post)
         run: |
           ccache -s || true
@@ -683,3 +698,54 @@ jobs:
       KRB5USER: ${{ secrets.KRB5USER }}
     with:
       branch: ${{ github.head_ref || github.ref_name }}
+
+  test-cuda:
+    name: Cuda tests alma10
+    needs: build-linux
+    # build-linux is a matrix, so this waits for all entries; skipped only if
+    # the whole build job was skipped (e.g. [skip ci]).
+    if: ${{ !cancelled() && needs.build-linux.result != 'skipped' }}
+    permissions:
+      contents: read
+    runs-on:
+      - dyngpu-root-a100
+    container:
+      image: registry.cern.ch/root-ci/alma10-cuda:buildready
+      options: --security-opt label=disable --rm
+    env:
+      WORKDIR: /github/home/ROOT-CI
+      PYTHON_VENV: /py-venv/ROOT-CI
+    steps:
+      - name: Set up environment
+        run: |
+          if [ -d "$PYTHON_VENV/bin/" ]; then
+            . "$PYTHON_VENV/bin/activate" && echo PATH=$PATH >> $GITHUB_ENV
+          fi
+
+#      - name: Checkout
+#        uses: actions/checkout@v6
+#        with:
+#          ref: ${{ inputs.ref_name }}
+#          path: src/
+
+      - name: Download src + build directory
+        uses: actions/download-artifact@v8
+        with:
+          name: Alma10 cuda build
+          path: ${{ env.WORKDIR }}
+
+      - name: Unpack build directory
+        run: |
+          tar -C "$WORKDIR" -xf "$WORKDIR/build.tar"
+          rm "$WORKDIR/build.tar"
+
+      - name: Run tests
+        working-directory: /github/home/ROOT-CI/build
+        run: ctest --output-on-failure --parallel $(nproc) --output-junit TestResults.xml -R "roofit|tmva"
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: Test Results alma10-cuda
+          path: /github/home/ROOT-CI/build/TestResults.xml
