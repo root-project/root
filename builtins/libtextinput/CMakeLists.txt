@@ -32,7 +32,6 @@ target_sources(textinput PRIVATE
   BASE_DIRS ./ # to be able to call #include "textinput/header.h" from ROOT core files
   FILES
     textinput/Callbacks.h
-    textinput/Callbacks.h
     textinput/Color.h
     textinput/Display.h
     textinput/Editor.h
