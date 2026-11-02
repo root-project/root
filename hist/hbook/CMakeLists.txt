@@ -8,12 +8,19 @@
 # CMakeLists.txt file for building ROOT hist/hbook package
 ############################################################################
 
+set(HBOOK_HEADERS
+  THbookBranch.h
+  THbookFile.h
+  THbookKey.h
+  THbookTree.h
+)
+
+set(RELATIVE_INC_HEADERS ${HBOOK_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Hbook
   HEADERS
-    THbookBranch.h
-    THbookFile.h
-    THbookKey.h
-    THbookTree.h
+    ${HBOOK_HEADERS}
   SOURCES
     src/THbookBranch.cxx
     src/THbookFile.cxx
@@ -29,6 +36,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hbook
     Graf
     TreePlayer
     RIO
+)
+
+target_sources(Hbook
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 # This is needed in particular for macOS, where the path of the GNU Fortran
