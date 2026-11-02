@@ -108,7 +108,7 @@ Gtk4CanvasWindow::Gtk4CanvasWindow(TCanvas *canv, unsigned width, unsigned heigh
   m_ToolBar.set_visible(canv->TestBit(TCanvas::kShowToolBar));
   m_Box.append(m_ToolBar);
 
-
+  m_DrawArea.set_has_tooltip(canv->TestBit(TCanvas::kShowToolTips));
   m_DrawArea.set_hexpand(true);
   m_DrawArea.set_vexpand(true);
   m_Box.append(m_DrawArea);
@@ -147,7 +147,6 @@ void Gtk4CanvasWindow::fillMenuBar(TCanvas *canv)
   bool isShowToolTips = canv->TestBit(TCanvas::kShowToolTips);
 
   bool isShowMenuBar = canv->TestBit(TCanvas::kMenuBar);
-
 
   auto toggle_toolbar = Gio::SimpleAction::create_bool("show-toolbar", isShowToolbar);
   toggle_toolbar->signal_change_state().connect(sigc::mem_fun(*this, &Gtk4CanvasWindow::on_show_toolbar_changed));
@@ -391,7 +390,7 @@ void Gtk4CanvasWindow::on_show_tooltip_changed(const Glib::VariantBase &value)
 {
    bool is_checked = Glib::VariantBase::cast_dynamic<Glib::Variant<bool>>(value).get();
 
-   // m_StatusBar.set_visible(is_checked);
+   m_DrawArea.set_has_tooltip(is_checked);
 
    // Remember to update the actual action state so the checkmark reflects visually
    auto action = m_action_group->lookup_action("show-tooltip");
