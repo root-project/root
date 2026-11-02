@@ -342,10 +342,10 @@ public:
 #endif
 
 private:
-   ScalarType fPt = 0.;
-   ScalarType fEta = 0.;
-   ScalarType fPhi = 0.;
-   ScalarType fE = 0.;
+   ScalarType fPt{0.};
+   ScalarType fEta{0.};
+   ScalarType fPhi{0.};
+   ScalarType fE{0.};
 };
 
 

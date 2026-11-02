@@ -255,9 +255,9 @@ public:
 #endif
 
   private:
-     T fRho = 0;
-     T fEta = 0;
-     T fPhi = 0;
+     T fRho{0};
+     T fEta{0};
+     T fPhi{0};
 };
 
   } // end namespace Math
