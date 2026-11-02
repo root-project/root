@@ -182,7 +182,29 @@ void Gtk4DrawArea::on_mouse_move(double x, double y)
    }
 
    fCanvas->HandleInput(evnt, (int) x, (int) y);
+
+   if (fShowEventStatus) {
+      TObject *selected = fCanvas->GetSelected();
+      Int_t px = fCanvas->GetEventX();
+      Int_t py = fCanvas->GetEventY();
+      TString buffer = "";
+      if (selected) {
+         buffer = selected->GetName();
+         buffer.Append("  ");
+         buffer.Append(selected->GetObjectInfo(px, py));
+      } else {
+         buffer.Form("No selected object x = %d y = %d", px, py);
+      }
+
+      m_status_changed.emit(buffer.Data());
+   }
 }
+
+sigc::signal<void(const char *)> Gtk4DrawArea::status_changed()
+{
+   return m_status_changed;
+}
+
 
 bool Gtk4DrawArea::on_mouse_scroll(double dx, double dy)
 {
