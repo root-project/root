@@ -20,6 +20,8 @@ The following people have contributed to this new version:
 * The `RooFit::BatchMode` command argument has been removed, use `RooFit::EvalBackend` instead.
 * The `RooTrace` class was untested and is now removed. For memory debugging, please use general-purpose tools such as AddressSanitizer or Valgrind instead.
 * The PyMVA library and the associated `tmva-pymva` build option that were deprecated in ROOT 6.42 have been removed
+* The **TMPIFile** class and the associated `mpi` build option (not to be confused with `minuit2_mpi`, which is unaffected) have been removed.
+
 
 ## Build system
 
