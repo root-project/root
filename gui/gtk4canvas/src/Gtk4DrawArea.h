@@ -46,6 +46,7 @@ protected:
     void on_mouse_move(double x, double y);
     void on_mouse_leave();
     bool on_mouse_scroll(double dx, double dy);
+    bool on_my_query_tooltip(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
     sigc::signal<void(const char *)> m_status_changed;
 
