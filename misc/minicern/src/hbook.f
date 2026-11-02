@@ -1735,7 +1735,11 @@
      +       NCHAR ,NRHIST,IERR  ,NV
       COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
      +       NCHAR ,NRHIST,IERR  ,NV
-      INTEGER        IDD, ADDRES, HNBPTR
+      INTEGER        IDD, HNBPTR
+*     The address is passed in as the full 64 bit value. It must not be
+*     truncated to 32 bits, since LOCF (used to compute the offset
+*     relative to the PAWC store) returns the full address too.
+      INTEGER*8      ADDRES, IADD
       CHARACTER*(*)  BLKNA1, FORM1
       PARAMETER     (MAXTOK = 50)
       CHARACTER*8    BLKNAM
@@ -2527,7 +2531,7 @@
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
       CHARACTER*(*) VAR1
       CHARACTER*32  NAME, VAR
-      INTEGER       IADD
+      INTEGER*8     IADD, IADDW, LOCF
       LOGICAL       ISCHAR, ALL, LDUM
       VAR  = VAR1
       CALL CLTOU(VAR)
@@ -2558,9 +2562,12 @@
             IELEM = IELEM*IE
    10    CONTINUE
          IADDW = ISHFT(IADD, -2)
-         IBYOF = IAND(IADD, IBYPW-1)
+         IBYOF = IAND(INT(IADD,4), IBYPW-1)
          IF (IBYOF .NE. 0) GOTO 40
-         IQ(LNAME+IOFF+ZNADDR) = IADDW - LOCF(IQ(1))
+*        Word offset of the user variable relative to IQ(1), computed
+*        from the full 64 bit addresses so that it does not depend on
+*        where the buffer and the PAWC common happen to be mapped.
+         IQ(LNAME+IOFF+ZNADDR) = INT(IADDW - LOCF(IQ(1)), 4)
          IADD = IADD + IELEM*ISIZE
    20    IOFF = IOFF + ZNADDR
    30 CONTINUE
