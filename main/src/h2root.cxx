@@ -31,6 +31,7 @@
 #include "TMath.h"
 #include "strlcpy.h"
 
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
@@ -205,9 +206,9 @@ extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFC
 #endif
 
 #ifndef WIN32
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,fortran_charlen_t,fortran_charlen_t);
+extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const std::int64_t&,DEFCHAR,const int&,fortran_charlen_t,fortran_charlen_t);
 #else
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&);
+extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const std::int64_t&,DEFCHAR,const int&);
 #endif
 
 extern "C" void  type_of_call hprntu(const int&);
@@ -715,7 +716,7 @@ void convert_cwn(Int_t id)
 #else
    hgiven(id,chtitl,80,nvar,chtag_out,kNchar,rmin[0],rmax[0]);
 #endif
-   Long_t add= (Long_t)&bigbuf[0];
+   std::int64_t add = reinterpret_cast<std::int64_t>(&bigbuf[0]);
 #ifndef WIN32
    hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0,1,6);
 #else
@@ -825,7 +826,7 @@ void convert_cwn(Int_t id)
          strlcpy(oldblock,block,512);
          oldischar = ischar;
          Int_t lblock   = strlen(block);
-         add= (Long_t)&bigbuf[bufpos];
+         add = reinterpret_cast<std::int64_t>(&bigbuf[bufpos]);
 #ifndef WIN32
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
 #else
