@@ -9,10 +9,14 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set (GEOMCHECKER_HEADERS
+  TGeoOverlap.h
+  TGeoChecker.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(GeomChecker
   HEADERS
-    TGeoOverlap.h
-    TGeoChecker.h
+    ${GEOMCHECKER_HEADERS}
   SOURCES
     src/TGeoOverlap.cxx
     src/TGeoChecker.cxx
@@ -23,4 +27,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GeomChecker
     Hist
     RIO
     Tree
+)
+
+
+set(RELATIVE_INC_HEADERS ${GEOMCHECKER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(GeomChecker
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
