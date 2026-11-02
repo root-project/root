@@ -40,13 +40,21 @@ elseif(MSVC)
    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Frameworks/cef/locales)
    file(COPY ${CEF_RESOURCES}/locales/ DESTINATION ${CMAKE_BINARY_DIR}/Frameworks/cef/locales)
 else()
+   # check if libvulkan exists and avoid its copy from cef release dir
+   find_library(SYSTEM_VULKAN NAMES libvulkan.so.1 vulkan
+                PATHS /usr/lib64 /usr/lib /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu
+                NO_DEFAULT_PATH)
+   set(_cef_exclude)
+   if(SYSTEM_VULKAN)
+     list(APPEND _cef_exclude PATTERN "libvulkan*" EXCLUDE)
+   endif()
    set(CEF_platform src/gui_handler_linux.cxx)
    set(CEF_RESOURCES ${CEF_root}/Resources)
    set(CEF_RELEASE_DIR ${CEF_root}/Release)
    set(CEF_LIBRARY ${CEF_RELEASE_DIR}/libcef.so)
    set(CEF_DLL_WRAPPER ${CEF_root}/build/libcef_dll_wrapper/libcef_dll_wrapper.a)
    set(CEF_LIB_DEPENDENCY ${X11_LIBRARIES})
-   file(COPY ${CEF_RELEASE_DIR}/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+   file(COPY ${CEF_RELEASE_DIR}/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${_cef_exclude})
    # copy shared libraries plus some extras to library directory to let CEF find them without extra configuration
    file(COPY ${CEF_RESOURCES}/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} PATTERN "locales" EXCLUDE)
    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Frameworks/cef/locales)
