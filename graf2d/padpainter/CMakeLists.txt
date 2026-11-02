@@ -9,10 +9,14 @@
 # @author Sergey Linev, GSI
 ############################################################################
 
+set(PADPAINTER_HEADERS
+  TPadPainter.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPadPainter
   NO_INSTALL_HEADERS
   HEADERS
-    TPadPainter.h
+    ${PADPAINTER_HEADERS}
   SOURCES
     TPadPainter.cxx
   DICTIONARY_OPTIONS
@@ -22,5 +26,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPadPainter
     ASImageUtils
 )
 
+set(RELATIVE_INC_HEADERS ${PADPAINTER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTPadPainter
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
 
 ROOT_INSTALL_HEADERS()

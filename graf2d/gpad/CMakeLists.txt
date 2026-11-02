@@ -9,29 +9,33 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(GPAD_HEADERS
+  TAnnotation.h
+  TAttCanvas.h
+  TButton.h
+  TCanvas.h
+  TClassTree.h
+  TColorWheel.h
+  TControlBarButton.h
+  TControlBar.h
+  TCreatePrimitives.h
+  TDialogCanvas.h
+  TGroupButton.h
+  TInspectCanvas.h
+  TPad.h
+  TPadPainterBase.h
+  TPadPainterPS.h
+  TPaveClass.h
+  TRatioPlot.h
+  TSliderBox.h
+  TSlider.h
+  TViewer3DPad.h
+  TView.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
   HEADERS
-    TAnnotation.h
-    TAttCanvas.h
-    TButton.h
-    TCanvas.h
-    TClassTree.h
-    TColorWheel.h
-    TControlBarButton.h
-    TControlBar.h
-    TCreatePrimitives.h
-    TDialogCanvas.h
-    TGroupButton.h
-    TInspectCanvas.h
-    TPad.h
-    TPadPainterBase.h
-    TPadPainterPS.h
-    TPaveClass.h
-    TRatioPlot.h
-    TSliderBox.h
-    TSlider.h
-    TViewer3DPad.h
-    TView.h
+    ${GPAD_HEADERS}
   SOURCES
     src/TAnnotation.cxx
     src/TAttCanvas.cxx
@@ -59,6 +63,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
   DEPENDENCIES
     Graf
     Hist
+)
+
+set(RELATIVE_INC_HEADERS ${GPAD_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Gpad
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 target_include_directories(Gpad PRIVATE ../graf/src)

@@ -9,46 +9,50 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(GRAF_HEADERS
+  TArc.h
+  TArrow.h
+  TAttImage.h
+  TBox.h
+  TCandle.h
+  TCrown.h
+  TCurlyArc.h
+  TCurlyLine.h
+  TCutG.h
+  TDiamond.h
+  TEllipse.h
+  TFrame.h
+  TGaxis.h
+  TGraphPolar.h
+  TGraphPolargram.h
+  TGraphQQ.h
+  TImage.h
+  TImagePlugin.h
+  TLatex.h
+  TLegend.h
+  TLegendEntry.h
+  TLine.h
+  TLink.h
+  TMarker.h
+  TMathText.h
+  TPave.h
+  TPaveLabel.h
+  TPaveStats.h
+  TPaveText.h
+  TPavesText.h
+  TPie.h
+  TPieSlice.h
+  TPoints.h
+  TPolyLine.h
+  TTF.h
+  TTFhandle.h
+  TText.h
+  TWbox.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Graf
   HEADERS
-    TArc.h
-    TArrow.h
-    TAttImage.h
-    TBox.h
-    TCandle.h
-    TCrown.h
-    TCurlyArc.h
-    TCurlyLine.h
-    TCutG.h
-    TDiamond.h
-    TEllipse.h
-    TFrame.h
-    TGaxis.h
-    TGraphPolar.h
-    TGraphPolargram.h
-    TGraphQQ.h
-    TImage.h
-    TImagePlugin.h
-    TLatex.h
-    TLegend.h
-    TLegendEntry.h
-    TLine.h
-    TLink.h
-    TMarker.h
-    TMathText.h
-    TPave.h
-    TPaveLabel.h
-    TPaveStats.h
-    TPaveText.h
-    TPavesText.h
-    TPie.h
-    TPieSlice.h
-    TPoints.h
-    TPolyLine.h
-    TTF.h
-    TTFhandle.h
-    TText.h
-    TWbox.h
+    ${GRAF_HEADERS}
   SOURCES
     src/TArc.cxx
     src/TArrow.cxx
@@ -99,4 +103,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     Matrix
     MathCore
     RIO
+)
+
+set(RELATIVE_INC_HEADERS ${GRAF_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Graf
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/TBoxInteractive.h
+    src/TLineInteractive.h
 )
