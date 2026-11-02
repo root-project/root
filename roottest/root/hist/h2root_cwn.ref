@@ -1,0 +1,31 @@
+ Converting directory //example
+ Converting CWN with ID= 100, nentries = 7
+Creating branch:Ivar, block:SCALARS, fullname:Ivar/I, nsub=0, itype=2, isize=4, ielem=1
+Creating branch:Fvar, block:SCALARS, fullname:Fvar/F, nsub=0, itype=1, isize=4, ielem=1
+Creating branch:Nel, block:ARRAYS, fullname:Nel/I, nsub=0, itype=2, isize=4, ielem=1
+Creating branch:Arr, block:ARRAYS, fullname:Arr[Nel]/F, nsub=1, itype=1, isize=4, ielem=3
+******************************************************************************
+*Tree    :h100      : cwn                                                    *
+*Entries :        7 : Total =            3010 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :Ivar      : Ivar/I                                                 *
+*Entries :        7 : Total  Size=        667 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      64000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :Fvar      : Fvar/F                                                 *
+*Entries :        7 : Total  Size=        667 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      64000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :Nel       : Nel/I                                                  *
+*Entries :        7 : Total  Size=        661 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      64000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :Arr       : Arr[Nel]/F                                             *
+*Entries :        7 : Total  Size=        796 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      64000 bytes  Compression=   1.00     *
+*............................................................................*
+TFile**		cwn.root	HBOOK file: cwn.hbook converted to ROOT
+ TFile*		cwn.root	HBOOK file: cwn.hbook converted to ROOT
+  KEY: TH1F	h1;1	FVAR
+  KEY: TTree	h100;1	cwn
