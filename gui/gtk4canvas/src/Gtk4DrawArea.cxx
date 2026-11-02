@@ -64,6 +64,9 @@ Gtk4DrawArea::Gtk4DrawArea()
    );
 
    add_controller(m_scroll_controller);
+
+
+   signal_query_tooltip().connect(sigc::mem_fun(*this, &Gtk4DrawArea::on_my_query_tooltip), true);
 }
 
 void Gtk4DrawArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height)
@@ -80,7 +83,7 @@ void Gtk4DrawArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, i
       return;
    }
 
-   if ((width != fCanvas->GetPadWidth()) || (height != fCanvas->GetPadHeight())) {
+   if ((width != (int) fCanvas->GetPadWidth()) || (height != (int) fCanvas->GetPadHeight())) {
       fCanvas->Resize();
       // printf("After resize user coordinates pX %d pY %d  relative coordinates pX %d pY %d\n",
       //        fCanvas->XtoAbsPixel(0.5), fCanvas->YtoAbsPixel(0.5),
@@ -126,6 +129,8 @@ void Gtk4DrawArea::on_mouse_click(int n_press, double x, double y)
 
 void Gtk4DrawArea::on_mouse_released(int n_press, double x, double y)
 {
+   (void) n_press;
+
    if (!fCanvas)
       return;
 
@@ -211,6 +216,7 @@ sigc::signal<void(const char *)> Gtk4DrawArea::status_changed()
 
 bool Gtk4DrawArea::on_mouse_scroll(double dx, double dy)
 {
+   (void) dx;
    if (fCanvas)
       fCanvas->HandleInput(dy < 0 ? kWheelUp : kWheelDown, (int) fLastMouseX, (int) fLastMouseY);
 
@@ -232,4 +238,29 @@ void Gtk4DrawArea::ShowContextMenu(Glib::RefPtr<Gio::Menu> menu_model, int x, in
    // 3. Open the popup menu smoothly on screen
    menu->popup();
 
+}
+
+
+bool Gtk4DrawArea::on_my_query_tooltip(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip)
+{
+   if (keyboard_tooltip)
+      return false; // Skip if triggered by keyboard focus
+
+   auto canv = GetCanvas();
+   if (!canv)
+      return false;
+
+   TObject *selected = canv->GetSelected();
+   Int_t px = canv->GetEventX();
+   Int_t py = canv->GetEventY();
+   TString customText;
+   if (selected)
+      customText.Form("%s::%s\n%s\n%d, %d\n%s",selected->ClassName() ,selected->GetName(),
+                       selected->GetTitle(), px, py, selected->GetObjectInfo(px, py));
+   else
+      customText.Form("No selected object\n%d, %d", x, y);
+
+   tooltip->set_text(customText.Data());
+
+   return true; // Return true to instruct GTK to show the tooltip
 }
