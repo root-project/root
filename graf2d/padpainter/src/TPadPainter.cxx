@@ -18,6 +18,7 @@
 #include "TVirtualX.h"
 #include "TSystem.h"
 #include "TCanvas.h"
+#include "TClass.h"
 #include "TPoint.h"
 #include "TError.h"
 #include "TImage.h"
@@ -27,6 +28,14 @@
 #include "TVirtualImageUtils.h"
 
 namespace {
+
+Bool_t InheritsFromLoadedClass(const char *className)
+{
+   // The string overload of InheritsFrom can autoload an unused graphics backend.
+   // Its dictionary is already registered if the backend is in use.
+   auto dict = TClass::GetDict(className);
+   return dict && gVirtualX->InheritsFrom(dict());
+}
 
 // Image helpers must not become a load-time dependency of ordinary pad painting.
 TVirtualImageUtils *GetImageUtils()
@@ -128,7 +137,7 @@ Int_t TPadPainter::ResizeDrawable(Int_t device, UInt_t w, UInt_t h)
 
 Bool_t TPadPainter::IsX11() const
 {
-   return gVirtualX->InheritsFrom("TGX11");
+   return InheritsFromLoadedClass("TGX11");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +145,7 @@ Bool_t TPadPainter::IsX11() const
 
 Bool_t TPadPainter::IsCocoa() const
 {
-   return gVirtualX->InheritsFrom("TGCocoa");
+   return InheritsFromLoadedClass("TGCocoa");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +153,7 @@ Bool_t TPadPainter::IsCocoa() const
 
 Bool_t TPadPainter::IsSupportAlpha() const
 {
-   return gVirtualX->InheritsFrom("TGQuartz");
+   return InheritsFromLoadedClass("TGQuartz");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
