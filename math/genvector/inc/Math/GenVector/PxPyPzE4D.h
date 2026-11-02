@@ -322,10 +322,10 @@ private:
       (contiguous) data containing the coordinate values x,y,z,t
    */
 
-   ScalarType fX = 0;
-   ScalarType fY = 0;
-   ScalarType fZ = 0;
-   ScalarType fT = 0;
+   ScalarType fX{0};
+   ScalarType fY{0};
+   ScalarType fZ{0};
+   ScalarType fT{0};
 };
 
 } // end namespace Math
