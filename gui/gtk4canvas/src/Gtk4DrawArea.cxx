@@ -68,36 +68,35 @@ Gtk4DrawArea::Gtk4DrawArea()
 
 void Gtk4DrawArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, int height)
 {
-    if (!fCanvas) {
-       cr->set_source_rgb(0.15, 0.15, 0.15);
-       cr->paint();
+   if (!fCanvas) {
+      cr->set_source_rgb(0.15, 0.15, 0.15);
+      cr->paint();
 
-       // 2. Draw a blue circle in the center that scales with the window
-       double radius = std::min(width, height) / 4.0;
-       cr->set_source_rgb(0.2, 0.5, 0.8);
-       cr->arc(width / 2.0, height / 2.0, radius, 0.0, 2.0 * M_PI);
-       cr->fill();
-       return;
-    }
+      // 2. Draw a blue circle in the center that scales with the window
+      double radius = std::min(width, height) / 4.0;
+      cr->set_source_rgb(0.2, 0.5, 0.8);
+      cr->arc(width / 2.0, height / 2.0, radius, 0.0, 2.0 * M_PI);
+      cr->fill();
+      return;
+   }
 
-    if ((width != fCanvas->GetPadWidth()) || (height != fCanvas->GetPadHeight())) {
-       fCanvas->Resize();
-       // printf("After resize user coordinates pX %d pY %d  relative coordinates pX %d pY %d\n",
-       //        fCanvas->XtoAbsPixel(0.5), fCanvas->YtoAbsPixel(0.5),
-       //         fCanvas->UtoAbsPixel(0.5), fCanvas->VtoAbsPixel(0.5));
-    }
+   if ((width != fCanvas->GetPadWidth()) || (height != fCanvas->GetPadHeight())) {
+      fCanvas->Resize();
+      // printf("After resize user coordinates pX %d pY %d  relative coordinates pX %d pY %d\n",
+      //        fCanvas->XtoAbsPixel(0.5), fCanvas->YtoAbsPixel(0.5),
+      //         fCanvas->UtoAbsPixel(0.5), fCanvas->VtoAbsPixel(0.5));
+   }
 
+   // clear
+   cr->set_source_rgb(1., 1., 1.);
+   cr->paint();
 
-    // clear
-    cr->set_source_rgb(1., 1., 1.);
-    cr->paint();
+   // main place where painting happens - only here fContext pointer is set
+   fContext = cr.get();
 
-    fContext = cr.get();
+   fCanvas->Paint();
 
-    // TODO: call canvas->paint instead
-    fCanvas->Paint();
-
-    fContext = nullptr;
+   fContext = nullptr;
 }
 
 void Gtk4DrawArea::on_mouse_click(int n_press, double x, double y)

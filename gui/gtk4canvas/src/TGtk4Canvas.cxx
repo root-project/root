@@ -264,27 +264,13 @@ UInt_t TGtk4Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
    return 0;
 }
 
-bool IsAnyModified(TPad *pad)
-{
-   if (!pad)
-      return kFALSE;
-   if (pad->IsModified())
-      return kTRUE;
-   TIter next(pad->GetListOfPrimitives());
-   while (auto obj = next())
-      if (IsAnyModified(dynamic_cast<TPad*>(obj)))
-         return kTRUE;
-   return kFALSE;
-}
-
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// if canvas or any subpad was modified,
 /// invoke gtk4 queue_draw() which will trigger redraw area
 
 Bool_t TGtk4Canvas::PerformUpdate(Bool_t async)
 {
-   if (!IsAnyModified(Canvas()) || !fDrawArea)
+   if (!Canvas()->IsAnyNeedRepaint() || !fDrawArea)
       return kTRUE;
 
    fDrawArea->queue_draw();
