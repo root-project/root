@@ -9,6 +9,8 @@ ROOT_ADD_GTEST(TPad pdftitle.cxx LIBRARIES Gpad)
 ROOT_ADD_GTEST(TPDF pdfurl.cxx LIBRARIES Gpad)
 ROOT_ADD_GTEST(TCanvasPainter canvaspainter.cxx LIBRARIES Gpad Hist)
 add_dependencies(TCanvasPainter ROOTPadPainter HistPainter)
+ROOT_ADD_GTEST(TPadPainterBackend padpainter_backend.cxx LIBRARIES Gpad)
+add_dependencies(TPadPainterBackend ROOTPadPainter)
 
 if(asimage)
   ROOT_ADD_GTEST(TASImagePDF tasimage_pdf.cxx LIBRARIES Gpad ASImage ZLIB::ZLIB)
