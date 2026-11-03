@@ -128,6 +128,33 @@ Gtk4CanvasWindow::~Gtk4CanvasWindow()
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Fill or update canvas save menu
+/// Only performed when canvas name is changed
+
+void Gtk4CanvasWindow::fillSaveMenu(TCanvas *canv)
+{
+   std::string name = canv ? canv->GetName() : "";
+   if (name.empty())
+      name = "c1";
+
+   if (fCanvasFileName == name)
+      return;
+
+   fCanvasFileName = name;
+
+   fSaveMenu->remove_all();
+
+   auto fmts = GetSupportedFileFormats();
+   for (std::size_t p = 0; p < fmts.size(); p += 3) {
+      std::string ext = fmts[p+1];
+      // cannot define filters with same extension - cannot distinguish which was selected
+      if ((ext != "C") && (ext != fmts[p + 2]))
+         continue;
+      fSaveMenu->append(fCanvasFileName + "." + ext, "canvas.save_" + ext);
+   }
+}
+
 void Gtk4CanvasWindow::fillMenuBar(TCanvas *canv)
 {
   m_action_group = Gio::SimpleActionGroup::create();
@@ -135,6 +162,16 @@ void Gtk4CanvasWindow::fillMenuBar(TCanvas *canv)
   m_action_group->add_action("new", []() { std::cout << "New canvas Clicked!\n"; });
   m_action_group->add_action("open", [this]() { on_openRootFile(); });
   m_action_group->add_action("saveas", [this]() { on_saveCanvasAs(); });
+
+  auto fmts = GetSupportedFileFormats();
+  for (std::size_t p = 0; p < fmts.size(); p += 3) {
+      std::string ext = fmts[p+1];
+      std::string opt = fmts[p+2];
+      // cannot define filters with same extension - cannot distinguish which was selected
+      if ((ext != "C") && (ext != opt))
+         continue;
+      m_action_group->add_action("save_" + ext, [this, ext, opt]() { on_saveCanvas(ext, opt); });
+  }
 
   m_action_group->add_action("close", [this]() { close(); });
   m_action_group->add_action("quit", []() {
@@ -180,8 +217,11 @@ void Gtk4CanvasWindow::fillMenuBar(TCanvas *canv)
   sec1->append("Close Canvas", "canvas.close");
 
   auto sec2 = Gio::Menu::create();
-  sec2->append("Save", "canvas.save");
-  sec2->append("Save as", "canvas.saveas");
+
+  fSaveMenu = Gio::Menu::create();
+  fillSaveMenu(canv);
+  sec2->append_submenu("Save", fSaveMenu);
+  sec2->append("Save as...", "canvas.saveas");
 
   auto sec3 = Gio::Menu::create();
   sec3->append("Quit ROOT", "canvas.quit");
@@ -226,6 +266,10 @@ void Gtk4CanvasWindow::fillMenuBar(TCanvas *canv)
   auto menu_bar = Gtk::make_managed<Gtk::PopoverMenuBar>(menu_model);
 
   menu_bar->set_visible(isShowMenuBar);
+
+  menu_bar->signal_state_flags_changed().connect([this](Gtk::StateFlags) {
+     fillSaveMenu(m_DrawArea.GetCanvas());
+  });
 
   m_Box.append(*menu_bar);
 }
@@ -479,6 +523,19 @@ std::vector<std::string> Gtk4CanvasWindow::GetSupportedFileFormats()
       "json file", "json", "json",
       "html file", "html", "html",
       "root file", "root", "root" };
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save canvas with specified format
+
+void Gtk4CanvasWindow::on_saveCanvas(const std::string &fmt, const std::string &opt)
+{
+   auto canv = m_DrawArea.GetCanvas();
+   if (!canv)
+      return;
+   std::string fname = fCanvasFileName + "." + fmt;
+   canv->Print(fname.c_str(), opt.c_str());
 }
 
 
