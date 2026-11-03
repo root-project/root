@@ -8,15 +8,19 @@
 # CMakeLists.txt file for building ROOT math/unuran package
 ############################################################################
 
+set(UNURAN_HEADERS
+  TUnuran.h
+  TUnuranBaseDist.h
+  TUnuranContDist.h
+  TUnuranDiscrDist.h
+  TUnuranEmpDist.h
+  TUnuranMultiContDist.h
+  TUnuranSampler.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Unuran
   HEADERS
-    TUnuran.h
-    TUnuranBaseDist.h
-    TUnuranContDist.h
-    TUnuranDiscrDist.h
-    TUnuranEmpDist.h
-    TUnuranMultiContDist.h
-    TUnuranSampler.h
+    ${UNURAN_HEADERS}
   SOURCES
     src/TUnuran.cxx
     src/TUnuranContDist.cxx
@@ -30,6 +34,20 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Unuran
     Core
     Hist
     MathCore
+)
+
+set(RELATIVE_INC_HEADERS ${UNURAN_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Unuran
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/UnuranDistrAdapter.h
+    src/UnuranRng.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

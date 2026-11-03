@@ -8,12 +8,16 @@
 # CMakeLists.txt file for building ROOT math/mlp package
 ############################################################################
 
+set(MLP_HEADERS
+  TMLPAnalyzer.h
+  TMultiLayerPerceptron.h
+  TNeuron.h
+  TSynapse.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(MLP
   HEADERS
-    TMLPAnalyzer.h
-    TMultiLayerPerceptron.h
-    TNeuron.h
-    TSynapse.h
+    ${MLP_HEADERS}
   SOURCES
     src/TMLPAnalyzer.cxx
     src/TMultiLayerPerceptron.cxx
@@ -27,4 +31,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MLP
     Gpad
     TreePlayer
     MathCore
+)
+
+set(RELATIVE_INC_HEADERS ${MLP_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(MLP
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
