@@ -54,6 +54,7 @@ private:
    void on_file_selected(const Glib::RefPtr<Gio::AsyncResult> &result);
    void on_save_selected(const Glib::RefPtr<Gio::AsyncResult> &result);
    void on_openRootFile();
+   void on_saveCanvas(const std::string &fname, const std::string &opt);
    void on_saveCanvasAs();
    void on_printCanvas();
 
@@ -62,6 +63,7 @@ private:
    // void on_action_others();
    // void on_action_toggle();
 
+   void fillSaveMenu(TCanvas *canv);
    void fillMenuBar(TCanvas *canv);
 
    void fillToolBar();
@@ -72,6 +74,8 @@ private:
    Gtk::Box m_Box;
 
    Glib::RefPtr<Gio::SimpleActionGroup> m_action_group;
+   std::string fCanvasFileName;
+   Glib::RefPtr<Gio::Menu> fSaveMenu;
 
    Glib::RefPtr<Gtk::FileDialog> m_file_dialog;
    Glib::RefPtr<Gtk::FileDialog> m_save_dialog;
