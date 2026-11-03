@@ -50,6 +50,7 @@ endif()
 
 ExternalProject_Add(BUILTIN_PCRE
   URL ${lcgpackages}/pcre2-${ROOT_PCRE2_VERSION}.tar.bz2
+      https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${ROOT_PCRE2_VERSION}/pcre2-${ROOT_PCRE2_VERSION}.tar.bz2
   URL_HASH SHA256=${ROOT_PCRE2_HASH}
 
   LOG_DOWNLOAD  TRUE
