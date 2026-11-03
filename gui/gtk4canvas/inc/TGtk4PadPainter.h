@@ -84,6 +84,8 @@ public:
 
    void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
 
+   Bool_t   FillImageFromPad(TImage *image, TVirtualPad *pad) const override;
+
    Bool_t   IsSupportAlpha() const override { return kTRUE; }
 
 private:
