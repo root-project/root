@@ -8,15 +8,19 @@
 # CMakeLists.txt file for building ROOT gui/guibuilder package
 ############################################################################
 
+set(GUIBLD_HEADERS
+  TGuiBldDragManager.h
+  TGuiBldEditor.h
+  TGuiBldGeometryFrame.h
+  TGuiBldHintsButton.h
+  TGuiBldHintsEditor.h
+  TGuiBldNameFrame.h
+  TRootGuiBuilder.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(GuiBld
   HEADERS
-    TGuiBldDragManager.h
-    TGuiBldEditor.h
-    TGuiBldGeometryFrame.h
-    TGuiBldHintsButton.h
-    TGuiBldHintsEditor.h
-    TGuiBldNameFrame.h
-    TRootGuiBuilder.h
+    ${GUIBLD_HEADERS}
   SOURCES
     src/TGuiBldDragManager.cxx
     src/TGuiBldEditor.cxx
@@ -30,4 +34,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiBld
     Graf
     MathCore
     ASImageUtils
+)
+
+set(RELATIVE_INC_HEADERS ${GUIBLD_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(GuiBld
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

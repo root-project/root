@@ -8,11 +8,15 @@
 # CMakeLists.txt file for building ROOT gui/guihtml package
 ############################################################################
 
+set(GUIHTML_HEADERS
+  TGHtml.h
+  TGHtmlTokens.h
+  TGHtmlUri.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(GuiHtml
   HEADERS
-    TGHtml.h
-    TGHtmlTokens.h
-    TGHtmlUri.h
+    ${GUIHTML_HEADERS}
   SOURCES
     src/TGHtml.cxx
     src/TGHtmlDraw.cxx
@@ -30,4 +34,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiHtml
     Gui
     Graf
     ASImageUtils
+)
+
+set(RELATIVE_INC_HEADERS ${GUIHTML_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(GuiHtml
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
