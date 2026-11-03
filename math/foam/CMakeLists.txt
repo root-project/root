@@ -8,14 +8,18 @@
 # CMakeLists.txt file for building ROOT math/foam package
 ############################################################################
 
+set(FOAM_HEADERS
+  TFoam.h
+  TFoamCell.h
+  TFoamIntegrand.h
+  TFoamMaxwt.h
+  TFoamSampler.h
+  TFoamVect.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Foam
   HEADERS
-    TFoam.h
-    TFoamCell.h
-    TFoamIntegrand.h
-    TFoamMaxwt.h
-    TFoamSampler.h
-    TFoamVect.h
+    ${FOAM_HEADERS}
   SOURCES
     src/TFoam.cxx
     src/TFoamCell.cxx
@@ -26,6 +30,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Foam
   DEPENDENCIES
     Hist
     MathCore
+)
+
+set(RELATIVE_INC_HEADERS ${FOAM_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Foam
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

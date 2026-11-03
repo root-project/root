@@ -31,117 +31,121 @@ ROOT_LINKER_LIBRARY(GenVector
     MathCore
 )
 
+set(GENVECTORDICT_HEADERS
+  Math/AxisAngle.h
+  Math/Boost.h
+  Math/BoostX.h
+  Math/BoostY.h
+  Math/BoostZ.h
+  Math/Cartesian2D.h
+  Math/Cartesian3D.h
+  Math/Cylindrical3D.h
+  Math/CylindricalEta3D.h
+  Math/DisplacementVector2D.h
+  Math/DisplacementVector3D.h
+  Math/EulerAngles.h
+  Math/GenVector/3DConversions.h
+  Math/GenVector/3DDistances.h
+  Math/GenVector/AxisAnglefwd.h
+  Math/GenVector/AxisAngle.h
+  Math/GenVector/BitReproducible.h
+  Math/GenVector/Boostfwd.h
+  Math/GenVector/Boost.h
+  Math/GenVector/BoostXfwd.h
+  Math/GenVector/BoostX.h
+  Math/GenVector/BoostYfwd.h
+  Math/GenVector/BoostY.h
+  Math/GenVector/BoostZfwd.h
+  Math/GenVector/BoostZ.h
+  Math/GenVector/Cartesian2Dfwd.h
+  Math/GenVector/Cartesian2D.h
+  Math/GenVector/Cartesian3Dfwd.h
+  Math/GenVector/Cartesian3D.h
+  Math/GenVector/CoordinateSystemTags.h
+  Math/GenVector/Cylindrical3Dfwd.h
+  Math/GenVector/Cylindrical3D.h
+  Math/GenVector/CylindricalEta3Dfwd.h
+  Math/GenVector/CylindricalEta3D.h
+  Math/GenVector/DisplacementVector2Dfwd.h
+  Math/GenVector/DisplacementVector2D.h
+  Math/GenVector/DisplacementVector3Dfwd.h
+  Math/GenVector/DisplacementVector3D.h
+  Math/GenVector/eta.h
+  Math/GenVector/etaMax.h
+  Math/GenVector/EulerAnglesfwd.h
+  Math/GenVector/EulerAngles.h
+  Math/GenVector/GenVector_exception.h
+  Math/GenVector/GenVectorIO.h
+  Math/GenVector/LorentzRotationfwd.h
+  Math/GenVector/LorentzRotation.h
+  Math/GenVector/LorentzVectorfwd.h
+  Math/GenVector/LorentzVector.h
+  Math/GenVector/Plane3D.h
+  Math/GenVector/Polar2Dfwd.h
+  Math/GenVector/Polar2D.h
+  Math/GenVector/Polar3Dfwd.h
+  Math/GenVector/Polar3D.h
+  Math/GenVector/PositionVector2Dfwd.h
+  Math/GenVector/PositionVector2D.h
+  Math/GenVector/PositionVector3Dfwd.h
+  Math/GenVector/PositionVector3D.h
+  Math/GenVector/PtEtaPhiE4Dfwd.h
+  Math/GenVector/PtEtaPhiE4D.h
+  Math/GenVector/PtEtaPhiM4Dfwd.h
+  Math/GenVector/PtEtaPhiM4D.h
+  Math/GenVector/PxPyPzE4Dfwd.h
+  Math/GenVector/PxPyPzE4D.h
+  Math/GenVector/PxPyPzM4Dfwd.h
+  Math/GenVector/PxPyPzM4D.h
+  Math/GenVector/Quaternionfwd.h
+  Math/GenVector/Quaternion.h
+  Math/GenVector/Rotation3Dfwd.h
+  Math/GenVector/Rotation3D.h
+  Math/GenVector/RotationXfwd.h
+  Math/GenVector/RotationX.h
+  Math/GenVector/RotationYfwd.h
+  Math/GenVector/RotationY.h
+  Math/GenVector/RotationZfwd.h
+  Math/GenVector/RotationZ.h
+  Math/GenVector/RotationZYXfwd.h
+  Math/GenVector/RotationZYX.h
+  Math/GenVector/Transform3D.h
+  Math/GenVector/Translation3D.h
+  Math/GenVector/VectorUtil.h
+  Math/LorentzRotation.h
+  Math/LorentzVector.h
+  Math/Plane3D.h
+  Math/Point2Dfwd.h
+  Math/Point2D.h
+  Math/Point3Dfwd.h
+  Math/Point3D.h
+  Math/Polar2D.h
+  Math/Polar3D.h
+  Math/PositionVector2D.h
+  Math/PositionVector3D.h
+  Math/PtEtaPhiE4D.h
+  Math/PtEtaPhiM4D.h
+  Math/PxPyPzE4D.h
+  Math/PxPyPzM4D.h
+  Math/Quaternion.h
+  Math/Rotation3D.h
+  Math/RotationX.h
+  Math/RotationY.h
+  Math/RotationZ.h
+  Math/RotationZYX.h
+  Math/Transform3D.h
+  Math/Translation3D.h
+  Math/Vector2Dfwd.h
+  Math/Vector2D.h
+  Math/Vector3Dfwd.h
+  Math/Vector3D.h
+  Math/Vector4Dfwd.h
+  Math/Vector4D.h
+  Math/VectorUtil.h
+)
+
 ROOT_GENERATE_DICTIONARY(G__GenVector
-    Math/AxisAngle.h
-    Math/Boost.h
-    Math/BoostX.h
-    Math/BoostY.h
-    Math/BoostZ.h
-    Math/Cartesian2D.h
-    Math/Cartesian3D.h
-    Math/Cylindrical3D.h
-    Math/CylindricalEta3D.h
-    Math/DisplacementVector2D.h
-    Math/DisplacementVector3D.h
-    Math/EulerAngles.h
-    Math/GenVector/3DConversions.h
-    Math/GenVector/3DDistances.h
-    Math/GenVector/AxisAnglefwd.h
-    Math/GenVector/AxisAngle.h
-    Math/GenVector/BitReproducible.h
-    Math/GenVector/Boostfwd.h
-    Math/GenVector/Boost.h
-    Math/GenVector/BoostXfwd.h
-    Math/GenVector/BoostX.h
-    Math/GenVector/BoostYfwd.h
-    Math/GenVector/BoostY.h
-    Math/GenVector/BoostZfwd.h
-    Math/GenVector/BoostZ.h
-    Math/GenVector/Cartesian2Dfwd.h
-    Math/GenVector/Cartesian2D.h
-    Math/GenVector/Cartesian3Dfwd.h
-    Math/GenVector/Cartesian3D.h
-    Math/GenVector/CoordinateSystemTags.h
-    Math/GenVector/Cylindrical3Dfwd.h
-    Math/GenVector/Cylindrical3D.h
-    Math/GenVector/CylindricalEta3Dfwd.h
-    Math/GenVector/CylindricalEta3D.h
-    Math/GenVector/DisplacementVector2Dfwd.h
-    Math/GenVector/DisplacementVector2D.h
-    Math/GenVector/DisplacementVector3Dfwd.h
-    Math/GenVector/DisplacementVector3D.h
-    Math/GenVector/eta.h
-    Math/GenVector/etaMax.h
-    Math/GenVector/EulerAnglesfwd.h
-    Math/GenVector/EulerAngles.h
-    Math/GenVector/GenVector_exception.h
-    Math/GenVector/GenVectorIO.h
-    Math/GenVector/LorentzRotationfwd.h
-    Math/GenVector/LorentzRotation.h
-    Math/GenVector/LorentzVectorfwd.h
-    Math/GenVector/LorentzVector.h
-    Math/GenVector/Plane3D.h
-    Math/GenVector/Polar2Dfwd.h
-    Math/GenVector/Polar2D.h
-    Math/GenVector/Polar3Dfwd.h
-    Math/GenVector/Polar3D.h
-    Math/GenVector/PositionVector2Dfwd.h
-    Math/GenVector/PositionVector2D.h
-    Math/GenVector/PositionVector3Dfwd.h
-    Math/GenVector/PositionVector3D.h
-    Math/GenVector/PtEtaPhiE4Dfwd.h
-    Math/GenVector/PtEtaPhiE4D.h
-    Math/GenVector/PtEtaPhiM4Dfwd.h
-    Math/GenVector/PtEtaPhiM4D.h
-    Math/GenVector/PxPyPzE4Dfwd.h
-    Math/GenVector/PxPyPzE4D.h
-    Math/GenVector/PxPyPzM4Dfwd.h
-    Math/GenVector/PxPyPzM4D.h
-    Math/GenVector/Quaternionfwd.h
-    Math/GenVector/Quaternion.h
-    Math/GenVector/Rotation3Dfwd.h
-    Math/GenVector/Rotation3D.h
-    Math/GenVector/RotationXfwd.h
-    Math/GenVector/RotationX.h
-    Math/GenVector/RotationYfwd.h
-    Math/GenVector/RotationY.h
-    Math/GenVector/RotationZfwd.h
-    Math/GenVector/RotationZ.h
-    Math/GenVector/RotationZYXfwd.h
-    Math/GenVector/RotationZYX.h
-    Math/GenVector/Transform3D.h
-    Math/GenVector/Translation3D.h
-    Math/GenVector/VectorUtil.h
-    Math/LorentzRotation.h
-    Math/LorentzVector.h
-    Math/Plane3D.h
-    Math/Point2Dfwd.h
-    Math/Point2D.h
-    Math/Point3Dfwd.h
-    Math/Point3D.h
-    Math/Polar2D.h
-    Math/Polar3D.h
-    Math/PositionVector2D.h
-    Math/PositionVector3D.h
-    Math/PtEtaPhiE4D.h
-    Math/PtEtaPhiM4D.h
-    Math/PxPyPzE4D.h
-    Math/PxPyPzM4D.h
-    Math/Quaternion.h
-    Math/Rotation3D.h
-    Math/RotationX.h
-    Math/RotationY.h
-    Math/RotationZ.h
-    Math/RotationZYX.h
-    Math/Transform3D.h
-    Math/Translation3D.h
-    Math/Vector2Dfwd.h
-    Math/Vector2D.h
-    Math/Vector3Dfwd.h
-    Math/Vector3D.h
-    Math/Vector4Dfwd.h
-    Math/Vector4D.h
-    Math/VectorUtil.h
+  ${GENVECTORDICT_HEADERS}
   MODULE
     GenVector
   LINKDEF
@@ -153,12 +157,29 @@ ROOT_GENERATE_DICTIONARY(G__GenVector
     MathCore
 )
 
+set(RELATIVE_INC_HEADERS ${GENVECTORDICT_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(G__GenVector
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/Math/LinkDef_GenVector.h
+    inc/Math/LinkDef_GenVector2.h
+)
+
+set(GENVECTOR32DICT_HEADERS
+  Math/Point2D.h
+  Math/Point3D.h
+  Math/Vector2D.h
+  Math/Vector3D.h
+  Math/Vector4D.h
+)
+
 ROOT_GENERATE_DICTIONARY(G__GenVector32
-    Math/Point2D.h
-    Math/Point3D.h
-    Math/Vector2D.h
-    Math/Vector3D.h
-    Math/Vector4D.h
+  ${GENVECTOR32DICT_HEADERS}
   MODULE
     GenVector
   MULTIDICT
@@ -169,6 +190,18 @@ ROOT_GENERATE_DICTIONARY(G__GenVector32
   DEPENDENCIES
     Core
     MathCore
+)
+
+set(RELATIVE_INC_HEADERS ${GENVECTOR32DICT_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(G__GenVector32
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/Math/LinkDef_GenVector32.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
