@@ -248,6 +248,45 @@ class RFileTests(unittest.TestCase):
         finally:
             os.remove(fileName)
 
+    def test_getitem(self):
+        """Objects may be retrieved from RFile via the [] operator. KeyError is thrown if the object isn't there."""
+
+        fileName = "test_rfile_getitem_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist)
+                # There is no setitem support.
+                if platform_supports_assertRaises():
+                    with self.assertRaisesRegex(TypeError, "does not support item assignment"):
+                        rfile["hist2"] = hist
+
+            with ROOT.RFile.Open(fileName) as rfile:
+                hist = rfile["hist"]
+                self.assertNotEqual(hist, None)
+                if platform_supports_assertRaises():
+                    with self.assertRaises(KeyError):
+                        _hist2 = rfile["hist2"]
+
+        finally:
+            os.remove(fileName)
+
+    def test_contains(self):
+        """Can query presence of objects via `'key' in rfile`"""
+
+        fileName = "test_rfile_contains_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist)
+                self.assertTrue("hist" in rfile)
+                self.assertFalse("hist2" in rfile)
+
+        finally:
+            os.remove(fileName)
+
 
 if __name__ == "__main__":
     unittest.main()
