@@ -36,7 +36,8 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBGIF
     PREFIX ${ROOT_LIBGIF_PREFIX}
-    URL https://root.cern/download/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
+    URL ${lcgpackages}/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
+        https://downloads.sourceforge.net/project/giflib/giflib-6.x/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBGIF_HASH}
     ${LIBGIF_PATCH_COMMAND}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}

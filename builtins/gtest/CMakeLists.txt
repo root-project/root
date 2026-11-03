@@ -55,6 +55,7 @@ ExternalProject_Add(
   # GIT_SHALLOW 1
   # GIT_TAG v1.17.0
   URL ${lcgpackages}/googletest-${ROOT_GOOGLETEST_VERSION}.tar.gz
+      https://github.com/google/googletest/releases/download/v${ROOT_GOOGLETEST_VERSION}/googletest-${ROOT_GOOGLETEST_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_GOOGLETEST_HASH}
   INSTALL_DIR ${CMAKE_BINARY_DIR}/builtins/gtest
   UPDATE_COMMAND ""
