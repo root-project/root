@@ -30,55 +30,56 @@
 #include <gtkmm.h>
 
 #include "Gtk4DrawArea.h"
+#include <vector>
+#include <string>
 
 class TCanvas;
 
-class Gtk4CanvasWindow : public Gtk::Window
-{
+class Gtk4CanvasWindow : public Gtk::Window {
 public:
-  Gtk4CanvasWindow(TCanvas *canv = nullptr, unsigned width = 400, unsigned height = 200);
-  virtual ~Gtk4CanvasWindow();
+   Gtk4CanvasWindow(TCanvas *canv = nullptr, unsigned width = 400, unsigned height = 200);
+   virtual ~Gtk4CanvasWindow();
 
-  Gtk4DrawArea *GetDrawArea() { return &m_DrawArea; }
+   Gtk4DrawArea *GetDrawArea() { return &m_DrawArea; }
 
 private:
-  //Signal handlers:
+   std::vector<std::string> GetSupportedFileFormats();
 
+   // Signal handlers:
 
-  void on_status_changed(const char *msg);
-  void on_show_toolbar_changed(const Glib::VariantBase&);
-  void on_show_eventstatus_changed(const Glib::VariantBase&);
-  void on_show_tooltip_changed(const Glib::VariantBase&);
-  void on_file_selected(const Glib::RefPtr<Gio::AsyncResult> &result);
-  void on_openRootFile();
-  void on_saveCanvasAs();
-  void on_printCanvas();
+   void on_status_changed(const char *msg);
+   void on_show_toolbar_changed(const Glib::VariantBase &);
+   void on_show_eventstatus_changed(const Glib::VariantBase &);
+   void on_show_tooltip_changed(const Glib::VariantBase &);
+   void on_file_selected(const Glib::RefPtr<Gio::AsyncResult> &result);
+   void on_save_selected(const Glib::RefPtr<Gio::AsyncResult> &result);
+   void on_openRootFile();
+   void on_saveCanvasAs();
+   void on_printCanvas();
 
-  //void on_action_file_new();
-  //void on_action_file_quit();
-  //void on_action_others();
-  //void on_action_toggle();
+   // void on_action_file_new();
+   // void on_action_file_quit();
+   // void on_action_others();
+   // void on_action_toggle();
 
-  void fillMenuBar(TCanvas *canv);
+   void fillMenuBar(TCanvas *canv);
 
-  void fillToolBar();
+   void fillToolBar();
 
-  void clickToolButton(int id);
+   void clickToolButton(int id);
 
+   // Child widgets:
+   Gtk::Box m_Box;
 
-  //Child widgets:
-  Gtk::Box m_Box;
+   Glib::RefPtr<Gio::SimpleActionGroup> m_action_group;
 
-  Glib::RefPtr<Gio::SimpleActionGroup> m_action_group;
+   Glib::RefPtr<Gtk::FileDialog> m_file_dialog;
+   Glib::RefPtr<Gtk::FileDialog> m_save_dialog;
 
-  Glib::RefPtr<Gtk::FileDialog> m_file_dialog;
-
-  Gtk::Box m_ToolBar;
-  Gtk4DrawArea  m_DrawArea;
-  Gtk::Statusbar m_StatusBar;
-  unsigned int fContextId = 0;
-
-
+   Gtk::Box m_ToolBar;
+   Gtk4DrawArea m_DrawArea;
+   Gtk::Statusbar m_StatusBar;
+   unsigned int fContextId = 0;
 };
 
 #endif //GTKMM_Gtk4CanvasWindow_H
