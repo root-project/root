@@ -27,14 +27,16 @@
 #include "Gtk4CanvasWindow.h"
 
 #include <gtkmm.h>
+
 #include <iostream>
+#include <filesystem>
 
 #include "TROOT.h"
 #include "TTimer.h"
 #include "TFile.h"
 #include "TCanvas.h"
+#include "TError.h"
 #include "TApplication.h"
-
 
 
 enum { kFileNewCanvas, kFileOpen, kFileSaveAs, kFilePrint, kOptionInterrupt, kOptionRefresh,
@@ -132,6 +134,7 @@ void Gtk4CanvasWindow::fillMenuBar(TCanvas *canv)
 
   m_action_group->add_action("new", []() { std::cout << "New canvas Clicked!\n"; });
   m_action_group->add_action("open", [this]() { on_openRootFile(); });
+  m_action_group->add_action("saveas", [this]() { on_saveCanvasAs(); });
 
   m_action_group->add_action("close", [this]() { close(); });
   m_action_group->add_action("quit", []() {
@@ -435,13 +438,14 @@ void Gtk4CanvasWindow::on_openRootFile()
    m_file_dialog->open(*this, sigc::mem_fun(*this, &Gtk4CanvasWindow::on_file_selected));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Signal handler when open file dialog select file
+
 void Gtk4CanvasWindow::on_file_selected(const Glib::RefPtr<Gio::AsyncResult> &result)
 {
    try {
       // Retrieve the selected file reference
       Glib::RefPtr<Gio::File> file = m_file_dialog->open_finish(result);
-
-      std::cout << "Selected File Path: " << file->get_path() << std::endl;
 
       TFile::Open(file->get_path().c_str(), "update");
 
@@ -451,9 +455,115 @@ void Gtk4CanvasWindow::on_file_selected(const Glib::RefPtr<Gio::AsyncResult> &re
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return vector with supported file formats with description and print option
+/// To be moved in base class
+
+const std::vector<std::string> &Gtk4CanvasWindow::GetSupportedFileFormats() const
+{
+   static std::vector<std::string> lst = {
+      "Post Script", "ps", "ps",
+      "Post Script Portrait", "ps", "Portrait",
+      "Post Script Landscape", "ps", "Landscape",
+      "Encapsulated Post Script", "eps", "eps",
+      "Encapsulated Post Script preview", "eps", "Preview",
+      "GIF format", "gif", "gif",
+      "PDF format", "pdf", "pdf",
+      "SVG format", "svg", "svg",
+      "XPM format", "xpm", "xpm",
+      "PNG format", "png", "png",
+      "JPG format", "jpg", "jpg",
+      "BMP format", "bmp", "bmp",
+      "TIFF format", "tiff", "tiff",
+      "C++ Macro", "C", "cxx",
+      "json file", "json", "json",
+      "html file", "html", "html",
+      "root file", "root", "root"
+   };
+   return lst;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Start Save as dialog
+
 void Gtk4CanvasWindow::on_saveCanvasAs()
 {
+   if (!m_save_dialog) {
+      m_save_dialog = Gtk::FileDialog::create();
+      m_save_dialog->set_title("Save canvas as");
+      m_save_dialog->set_modal(true);
+
+      auto filters_list = Gio::ListStore<Gtk::FileFilter>::create();
+
+      auto &fmts = GetSupportedFileFormats();
+      R__ASSERT(fmts.size() % 3 == 0);
+      for (std::size_t p = 0; p < fmts.size(); p += 3) {
+         std::string ext = fmts[p + 1];
+         // cannot define filters with same extension - cannot distinguish which was selected
+         if ((ext != "C") && (ext != fmts[p + 2]))
+            continue;
+         auto name = TString::Format("%s (*.%s)", fmts[p].c_str(), ext.c_str());
+         auto pattern = TString::Format("(*.%s)", ext.c_str());
+
+         auto filter = Gtk::FileFilter::create();
+         filter->set_name(name.Data());
+         filter->add_pattern(pattern.Data());
+         filters_list->append(filter);
+
+         if (fmts[p+1] == "png")
+            m_save_dialog->set_default_filter(filter);
+      }
+
+      m_save_dialog->set_filters(filters_list);
+   }
+
+   auto canv = m_DrawArea.GetCanvas();
+   if (canv) {
+      std::string name = canv->GetName();
+      m_save_dialog->set_initial_name(name + ".png");
+   }
+
+   m_save_dialog->save(*this, sigc::mem_fun(*this, &Gtk4CanvasWindow::on_save_selected));
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Signal handler when save as dialog select file
+
+void Gtk4CanvasWindow::on_save_selected(const Glib::RefPtr<Gio::AsyncResult> &result)
+{
+   auto canv = m_DrawArea.GetCanvas();
+   if (!canv)
+      return;
+
+   try {
+      Glib::RefPtr<Gio::File> file = m_save_dialog->save_finish(result);
+
+      std::string raw_path = file->get_path();
+      std::filesystem::path sys_path(raw_path);
+      std::string extension = sys_path.extension().string(); //
+      std::string print_opt;
+
+      auto &fmts = GetSupportedFileFormats();
+      R__ASSERT(fmts.size() % 3 == 0);
+      for (std::size_t p = 0; p < fmts.size(); p += 3) {
+         if (extension == "." + fmts[p + 1]) {
+            print_opt = fmts[p + 2];
+            break;
+         }
+      }
+
+      if (print_opt.empty())
+         ::Error("Gtk4CanvasWindow::on_save_selected", "Cannot detect file format from selected extension %s", extension.c_str());
+      else {
+         printf("Store canvas %s as %s opt %s\n", canv->ClassName(), raw_path.c_str(), print_opt.c_str());
+         canv->Print(raw_path.c_str(), print_opt.c_str());
+      }
+
+   } catch (const Gtk::DialogError &err) {
+   }
+}
+
 
 void Gtk4CanvasWindow::on_printCanvas()
 {
