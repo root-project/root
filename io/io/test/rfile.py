@@ -8,8 +8,11 @@ import ROOT
 def platform_supports_assertRaises():
     # TODO: re-enable it on Windows once the exception handling is fixed
     # TODO: remove mac 15 exception once we stop supporting it
-    return platform.system() != "Windows" and (platform.system() != "Darwin" or not platform.mac_ver()[0].startswith('15'))
-    
+    return platform.system() != "Windows" and (
+        platform.system() != "Darwin" or not platform.mac_ver()[0].startswith("15")
+    )
+
+
 class RFileTests(unittest.TestCase):
     def test_open_for_reading(self):
         """A RFile can read a ROOT file created by TFile"""
@@ -81,7 +84,6 @@ class RFileTests(unittest.TestCase):
         finally:
             os.remove(fileName)
 
-
     def test_listkeys(self):
         """A RFile can query the keys of its objects and directories"""
 
@@ -108,17 +110,25 @@ class RFileTests(unittest.TestCase):
                     ["foo/hist", "foo/bar/hist", "foo/bar/hist2", "foo/hist2"],
                 )
 
-                self.assertEqual([key.GetPath() for key in rfile.ListKeys("foo/bar")], ["foo/bar/hist", "foo/bar/hist2"])
+                self.assertEqual(
+                    [key.GetPath() for key in rfile.ListKeys("foo/bar")], ["foo/bar/hist", "foo/bar/hist2"]
+                )
 
                 self.assertEqual(
                     [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listObjects=False)], ["foo", "foo/bar"]
                 )
                 self.assertEqual(
-                    [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listObjects=False, listRecursive=False)],
+                    [
+                        key.GetPath()
+                        for key in rfile.ListKeys("", listDirs=True, listObjects=False, listRecursive=False)
+                    ],
                     ["foo"],
                 )
                 self.assertEqual(
-                    [key.GetPath() for key in rfile.ListKeys("foo", listDirs=True, listObjects=False, listRecursive=False)],
+                    [
+                        key.GetPath()
+                        for key in rfile.ListKeys("foo", listDirs=True, listObjects=False, listRecursive=False)
+                    ],
                     ["foo/bar"],
                 )
                 self.assertEqual(
@@ -236,8 +246,7 @@ class RFileTests(unittest.TestCase):
                 self.assertTrue(isinstance(hist, ROOT.TH1F))
 
         finally:
-            # os.remove(fileName)
-            pass
+            os.remove(fileName)
 
 
 if __name__ == "__main__":
