@@ -37,6 +37,7 @@ endif()
 ExternalProject_Add(
     BUILTIN_ZSTD
     URL ${lcgpackages}/zstd-${ROOT_ZSTD_VERSION}.tar.gz
+        https://github.com/facebook/zstd/archive/refs/tags/v${ROOT_ZSTD_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_ZSTD_HASH}
     PREFIX ${ROOT_ZSTD_PREFIX}
     SOURCE_SUBDIR "build/cmake"

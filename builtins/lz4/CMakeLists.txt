@@ -33,6 +33,7 @@ endif()
 ExternalProject_Add(
     BUILTIN_LZ4
     URL ${lcgpackages}/lz4-${ROOT_LZ4_VERSION}.tar.gz
+        https://github.com/lz4/lz4/releases/download/v${ROOT_LZ4_VERSION}/lz4-${ROOT_LZ4_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LZ4_HASH}
     PREFIX ${ROOT_LZ4_PREFIX}
     SOURCE_SUBDIR "build/cmake"
