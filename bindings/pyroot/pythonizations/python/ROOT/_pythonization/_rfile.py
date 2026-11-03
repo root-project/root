@@ -172,7 +172,7 @@ class _RFile_Overwrite:
     def __init__(self, rfile):
         self._rfile = rfile
 
-    def __call__(self, path, obj = None, title = "", *, createNewCycle = True):
+    def __call__(self, path, obj=None, title="", *, createNewCycle=True):
         """
         Non-templated Overwrite()
         """
@@ -187,6 +187,7 @@ class _RFile_Overwrite:
             className = objType.__cpp_name__
 
         from ROOT import RFile
+
         flags = (0 if createNewCycle else 1) * RFile.kOverwrite_NoNewCycle
         self._rfile.Overwrite[className](path, obj, title, flags)
 
@@ -273,9 +274,9 @@ def _ListKeys(rfile, basePath="", **kwargs):
     """
     from ROOT import RFile
 
-    listObjects = kwargs['listObjects'] if 'listObjects' in kwargs else True
-    listDirs = kwargs['listDirs'] if 'listDirs' in kwargs else False
-    listRecursive = kwargs['listRecursive'] if 'listRecursive' in kwargs else True
+    listObjects = kwargs["listObjects"] if "listObjects" in kwargs else True
+    listDirs = kwargs["listDirs"] if "listDirs" in kwargs else False
+    listRecursive = kwargs["listRecursive"] if "listRecursive" in kwargs else True
 
     flags = (listObjects * RFile.kListObjects) | (listDirs * RFile.kListDirs) | (listRecursive * RFile.kListRecursive)
     iter = rfile._OriginalListKeys(basePath, flags)
