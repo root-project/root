@@ -9,14 +9,18 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(XMLPARSER_HEADERS
+  TDOMParser.h
+  TSAXParser.h
+  TXMLAttr.h
+  TXMLDocument.h
+  TXMLNode.h
+  TXMLParser.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(XMLParser
   HEADERS
-     TDOMParser.h
-     TSAXParser.h
-     TXMLAttr.h
-     TXMLDocument.h
-     TXMLNode.h
-     TXMLParser.h
+     ${XMLPARSER_HEADERS}
   SOURCES
      src/TDOMParser.cxx
      src/TSAXParser.cxx
@@ -26,6 +30,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(XMLParser
      src/TXMLParser.cxx
   DEPENDENCIES
     Core
+)
+
+set(RELATIVE_INC_HEADERS ${XMLPARSER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(XMLParser
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 # not needed to propagate includes to rootcling

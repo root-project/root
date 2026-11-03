@@ -80,7 +80,7 @@ endif()
 set_source_files_properties(src/RConcurrentHashColl.cxx
   PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
 
-ROOT_GENERATE_DICTIONARY(G__RIO
+set(IO_HEADERS
   ROOT/RConcurrentHashColl.hxx
   ROOT/RFile.hxx
   ROOT/RRawFile.hxx
@@ -89,33 +89,50 @@ ROOT_GENERATE_DICTIONARY(G__RIO
   ROOT/TBufferMerger.hxx
   TArchiveFile.h
   TBufferFile.h
-  TBufferText.h
   TBufferIO.h
   TBufferJSON.h
+  TBufferText.h
   TCollectionProxyFactory.h
   TContainerConverters.h
-  TEmulatedMapProxy.h
-  TEmulatedCollectionProxy.h
   TDirectoryFile.h
-  TFileCacheRead.h
-  TFileMerger.h
-  TFree.h
-  TFileCacheWrite.h
-  TFilePrefetch.h
-  TFile.h
+  TEmulatedCollectionProxy.h
+  TEmulatedMapProxy.h
   TFPBlock.h
-  TGenCollectionStreamer.h
+  TFile.h
+  TFileCacheRead.h
+  TFileCacheWrite.h
+  TFileMerger.h
+  TFilePrefetch.h
+  TFree.h
   TGenCollectionProxy.h
+  TGenCollectionStreamer.h
   TKey.h
   TKeyMapFile.h
   TLockFile.h
-  TMemFile.h
-  TMapFile.h
   TMakeProject.h
+  TMapFile.h
+  TMemFile.h
+  TStreamerInfo.h
   TStreamerInfoActions.h
   TVirtualCollectionIterators.h
-  TStreamerInfo.h
   TZIPFile.h
+)
+
+set(RELATIVE_INC_HEADERS ${IO_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(RIO
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
+
+ROOT_GENERATE_DICTIONARY(G__RIO
+  ${IO_HEADERS}
   STAGE1
   MODULE
     RIO

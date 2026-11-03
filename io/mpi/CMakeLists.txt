@@ -8,10 +8,14 @@
 # CMakeLists.txt file for building ROOT io/mpi package
 ############################################################################
 
+set(RMPI_HEADERS
+  TMPIClientInfo.h
+  TMPIFile.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RMPI
   HEADERS
-     TMPIClientInfo.h
-     TMPIFile.h
+     ${RMPI_HEADERS}
   SOURCES
      src/TMPIClientInfo.cxx
      src/TMPIFile.cxx
@@ -26,3 +30,17 @@ target_link_libraries(RMPI
     MPI::MPI_CXX
     $<$<PLATFORM_ID:Windows>:ws2_32.lib>
 )
+
+set(RELATIVE_INC_HEADERS ${RMPI_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(RMPI
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
+

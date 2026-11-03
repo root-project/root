@@ -14,3 +14,13 @@ target_include_directories(RootPcmObjs PRIVATE
    ${CMAKE_SOURCE_DIR}/io/io/inc
    ${CMAKE_SOURCE_DIR}/core/zip/inc
 )
+
+target_sources(RootPcmObjs
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS res/
+  FILES
+    res/rootclingIO.h
+)
+
