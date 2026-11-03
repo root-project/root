@@ -6,10 +6,12 @@
 
 include(ExternalProject)
 
-set(XROOTD_VERSION "6.2.0")
+set(ROOT_XROOTD_VERSION "6.2.0")
+set(ROOT_XROOTD_HASH "cf41ba9f56b3baceb4860dfafad50e2f4724062650e125a59b9dbc5ebd6861e0")
+
 set(XROOTD_PREFIX ${CMAKE_BINARY_DIR}/XROOTD-prefix)
 
-message(STATUS "Downloading and building XROOTD version ${XROOTD_VERSION}")
+message(STATUS "Downloading and building XROOTD version ${ROOT_XROOTD_VERSION}")
 
 set(XROOTD_INCLUDE_DIRS ${XROOTD_PREFIX}/include/xrootd)
 set(XRDCL_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}XrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -26,8 +28,9 @@ endif()
 
 ExternalProject_Add(
     BUILTIN_XROOTD
-    URL ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz
-    URL_HASH SHA256=cf41ba9f56b3baceb4860dfafad50e2f4724062650e125a59b9dbc5ebd6861e0
+    URL ${lcgpackages}/xrootd-${ROOT_XROOTD_VERSION}.tar.gz
+        https://github.com/xrootd/xrootd/releases/download/v${ROOT_XROOTD_VERSION}/xrootd-${ROOT_XROOTD_VERSION}.tar.gz
+    URL_HASH SHA256=${ROOT_XROOTD_HASH}
     INSTALL_DIR ${XROOTD_PREFIX}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}

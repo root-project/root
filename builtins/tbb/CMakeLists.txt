@@ -1,5 +1,5 @@
-set(ROOT_TBB_URL ${lcgpackages}/oneTBB-2021.9.0.tar.gz)
-set(ROOT_TBB_HASH 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
+set(ROOT_TBB_VERSION 2021.9.0)
+set(ROOT_TBB_HASH "1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e")
 
 if(MSVC)
   if(CMAKE_GENERATOR MATCHES Ninja)
@@ -29,7 +29,8 @@ endif()
 
 ExternalProject_Add(
   BUILTIN_TBB
-  URL ${ROOT_TBB_URL}
+  URL ${lcgpackages}/oneTBB-${ROOT_TBB_VERSION}.tar.gz
+      https://github.com/uxlfoundation/oneTBB/archive/refs/tags/v${ROOT_TBB_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_TBB_HASH}
   INSTALL_DIR ${CMAKE_BINARY_DIR}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}

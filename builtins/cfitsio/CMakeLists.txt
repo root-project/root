@@ -4,7 +4,8 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(CFITSIO_VERSION 4.6.3)
+set(ROOT_CFITSIO_VERSION 4.6.3)
+set(ROOT_CFITSIO_HASH "fad44fff274fdda5ffcc0c0fff3bc3c596362722b9292fc8944db91187813600")
 
 set(CFITSIO_PREFIX ${CMAKE_BINARY_DIR}/CFITSIO-prefix)
 set(CFITSIO_LIBRARIES ${CFITSIO_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -36,8 +37,9 @@ endif()
 ExternalProject_Add(
   BUILTIN_CFITSIO
   PREFIX ${CFITSIO_PREFIX}
-  URL ${lcgpackages}/cfitsio-${CFITSIO_VERSION}.tar.gz
-  URL_HASH SHA256=fad44fff274fdda5ffcc0c0fff3bc3c596362722b9292fc8944db91187813600
+  URL ${lcgpackages}/cfitsio-${ROOT_CFITSIO_VERSION}.tar.gz
+      https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-${ROOT_CFITSIO_VERSION}.tar.gz
+  URL_HASH SHA256=${ROOT_CFITSIO_HASH}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_POLICY_VERSION_MINIMUM=3.5
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}

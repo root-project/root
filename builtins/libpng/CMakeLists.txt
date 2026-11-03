@@ -45,6 +45,7 @@ ExternalProject_Add(
     BUILTIN_LIBPNG
     PREFIX ${ROOT_LIBPNG_PREFIX}
     URL https://root.cern/download/libpng-${ROOT_LIBPNG_VERSION}.tar.gz
+        https://downloads.sourceforge.net/project/libpng/libpng16/${ROOT_LIBPNG_VERSION}/libpng-${ROOT_LIBPNG_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBPNG_HASH}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5

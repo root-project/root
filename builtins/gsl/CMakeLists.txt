@@ -1,4 +1,5 @@
 set(ROOT_GSL_VERSION 2.8)
+set(ROOT_GSL_HASH "6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190")
 message(STATUS "Downloading and building GSL version ${ROOT_GSL_VERSION}")
 set(ROOT_GSL_PREFIX ${CMAKE_BINARY_DIR}/builtins/GSL-prefix)
 set(ROOT_GSL_LIBRARY ${ROOT_GSL_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gsl${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -11,9 +12,9 @@ endif()
 ExternalProject_Add(
   BUILTIN_GSL
   PREFIX ${ROOT_GSL_PREFIX}
-  # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${ROOT_GSL_VERSION}.tar.gz
   URL ${lcgpackages}/gsl-${ROOT_GSL_VERSION}.tar.gz
-  URL_HASH SHA256=6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190
+      https://ftp.gnu.org/gnu/gsl/gsl-${ROOT_GSL_VERSION}.tar.gz
+  URL_HASH SHA256=${ROOT_GSL_HASH}
   SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
   INSTALL_DIR ${ROOT_GSL_PREFIX}
   CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
