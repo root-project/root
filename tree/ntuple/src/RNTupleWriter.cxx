@@ -124,6 +124,18 @@ ROOT::RNTupleWriter::Append(std::unique_ptr<ROOT::RNTupleModel> model, std::stri
    return Create(std::move(model), std::move(sink), options);
 }
 
+void ROOT::RNTupleWriter::CommitCluster()
+{
+   FlushCluster();
+}
+
+void ROOT::RNTupleWriter::CommitCluster(bool commitClusterGroup)
+{
+   FlushCluster();
+   if (commitClusterGroup)
+      CommitClusterGroup();
+}
+
 void ROOT::RNTupleWriter::CommitClusterGroup()
 {
    if (GetNEntries() == fLastCommittedClusterGroup)
