@@ -36,6 +36,17 @@ if(cocoa)
 
   target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
 
+  target_sources(Macosx
+  PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/
+    FILES
+      inc/CocoaUtils.h
+      inc/TMacOSXSystem.h
+      inc/LinkDef.h
+  )
+
 endif()
 
 ROOT_INSTALL_HEADERS()

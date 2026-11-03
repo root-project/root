@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/meta package
 ############################################################################
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
+set(META_HEADERS
   TBaseClass.h
   TClassGenerator.h
   TClass.h
@@ -52,7 +52,13 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TVirtualObject.h
 )
 
-target_sources(Core PRIVATE
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${META_HEADERS})
+
+set(RELATIVE_INC_HEADERS ${META_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(Core
+PRIVATE
   src/TBaseClass.cxx
   src/TClass.cxx
   src/TClassGenerator.cxx
@@ -86,6 +92,12 @@ target_sources(Core PRIVATE
   src/TViewPubDataMembers.cxx
   src/TViewPubFunctions.cxx
   src/TVirtualStreamerInfo.cxx
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
 )
 
 target_include_directories(Core

@@ -25,6 +25,19 @@ ROOT_OBJECT_LIBRARY(ClingUtils
   src/TClingUtils.cxx
 )
 
+set(RELATIVE_RES_HEADERS RStl.h TClingUtils.h)
+list(TRANSFORM RELATIVE_RES_HEADERS PREPEND res/)
+
+target_sources(ClingUtils
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS res/ inc/
+  FILES
+    ${RELATIVE_RES_HEADERS}
+    inc/root_std_complex.h
+)
+
 if(NOT MSVC)
   target_compile_options(ClingUtils PRIVATE -Wno-error)
 endif()

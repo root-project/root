@@ -4,7 +4,16 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-target_sources(Core PRIVATE src/ZipLZ4.cxx)
+target_sources(Core
+PRIVATE
+  src/ZipLZ4.cxx
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    inc/ZipLZ4.h
+)
 target_link_libraries(Core PRIVATE xxHash::xxHash LZ4::LZ4)
 target_include_directories(Core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>

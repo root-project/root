@@ -10,9 +10,17 @@
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS Getline.h)
 
-target_sources(Core PRIVATE
+target_sources(Core
+PRIVATE
   src/Getline_color.cxx
   src/Getline.cxx
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    inc/Getline.h
+    src/Getline_color.h
 )
 
 target_include_directories(Core

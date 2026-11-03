@@ -12,16 +12,21 @@ if(WIN32)
   return()
 endif()
 
+
+set(MULTIPROC_HEADERS
+  MPCode.h
+  MPSendRecv.h
+  PoolUtils.h
+  TMPClient.h
+  TMPWorker.h
+  TMPWorkerExecutor.h
+  TProcPool.h
+  ROOT/TProcessExecutor.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc STAGE1
   HEADERS
-    MPCode.h
-    MPSendRecv.h
-    PoolUtils.h
-    TMPClient.h
-    TMPWorker.h
-    TMPWorkerExecutor.h
-    TProcPool.h
-    ROOT/TProcessExecutor.hxx
+    ${MULTIPROC_HEADERS}
   SOURCES
     src/MPSendRecv.cxx
     src/TMPClient.cxx
@@ -32,4 +37,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc STAGE1
   DEPENDENCIES
     Core
     Net
+)
+
+set(RELATIVE_INC_HEADERS ${MULTIPROC_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(MultiProc
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

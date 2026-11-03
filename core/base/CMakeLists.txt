@@ -198,23 +198,23 @@ set(BASE_SOURCES
   src/TVirtualX.cxx
 )
 
-set(RELATIVE_BASE_INC_HEADERS ${BASE_HEADERS})
-list(TRANSFORM RELATIVE_BASE_INC_HEADERS PREPEND inc/)
+set(RELATIVE_INC_HEADERS ${BASE_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
 
 # only here complete list of headers can be propogated to parent cmake file
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${BASE_HEADERS})
 
-target_sources(Core PRIVATE ${BASE_SOURCES})
-
-target_sources(
-    Core
-    PRIVATE
-    FILE_SET private_header_files
-    TYPE HEADERS
-    BASE_DIRS inc/ src/
-    FILES
-        ${RELATIVE_BASE_INC_HEADERS}
-        src/TListOfTypes.h
+target_sources(Core
+PRIVATE
+  ${BASE_SOURCES}
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/TListOfTypes.h
 )
 
 target_include_directories(Core PUBLIC

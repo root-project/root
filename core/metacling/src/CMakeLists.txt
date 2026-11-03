@@ -37,6 +37,34 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingValue.cxx
 )
 
+set (METACLING_HEADERS
+  ClingRAII.h
+  TClingBaseClassInfo.h
+  TClingCallbacks.h
+  TClingCallFunc.h
+  TClingClassInfo.h
+  TClingDataMemberInfo.h
+  TClingDeclInfo.h
+  TClingDiagnostics.h
+  TCling.h
+  TClingMemberIter.h
+  TClingMethodArgInfo.h
+  TClingMethodInfo.h
+  TClingRdictModuleFileExtension.h
+  TClingTypedefInfo.h
+  TClingTypeInfo.h
+  TClingValue.h
+)
+
+target_sources(MetaCling
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS ./
+  FILES
+    ${METACLING_HEADERS}
+)
+
 # This directory contains files that include llvm, which can give warnings.
 if(NOT MSVC)
   target_compile_options(MetaCling PRIVATE -Wno-error)
