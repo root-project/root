@@ -164,12 +164,10 @@ typedef struct {
 }\
 
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Holder of batch ASVisual instance, destroyed when thread or application closed
-/// Only this instance must be used in all applications
-class BatchASVisualHolder {
+/// Holder of plain ASVisual instance (no any X11), destroyed when thread or application closed
+/// Only this instance must be used in all public operations with TASImage
+class ASVisualHolder {
    ASVisual *fVisual = nullptr;
    ASFontManager *fFontManager = nullptr;
 public:
@@ -183,31 +181,30 @@ public:
       return fVisual;
    }
 
-   ASFontManager *font_manager()
+   ASFontManager *FontManager()
    {
       if (!fFontManager)
          fFontManager = create_font_manager(nullptr, nullptr, nullptr);
       return fFontManager;
    }
 
-   ~BatchASVisualHolder()
+   ~ASVisualHolder()
    {
-      if (fVisual) {
-         destroy_asvisual(fVisual, 0);
-         fVisual = nullptr;
-      }
-
       if (fFontManager) {
          destroy_font_manager(fFontManager, 0);
          fFontManager = nullptr;
       }
 
+      if (fVisual) {
+         destroy_asvisual(fVisual, 0);
+         fVisual = nullptr;
+      }
    }
 };
 
 namespace {
 
-thread_local BatchASVisualHolder bholder;
+thread_local ASVisualHolder gVisualHolder;
 
 }
 
@@ -1039,7 +1036,7 @@ void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
 {
    TAttImage::SetPalette(palette);
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("SetImage", "Visual not initiated");
       return;
@@ -1380,7 +1377,7 @@ void TASImage::Paint(Option_t *option)
       return;
    }
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
 
    if (!vis) {
       Warning("Paint", "Visual not initiated");
@@ -1764,7 +1761,7 @@ void TASImage::SetPalette(const TImagePalette *palette)
 {
    TAttImage::SetPalette(palette);
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("SetPalette", "Visual not initiated");
       return;
@@ -1822,7 +1819,7 @@ void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
       return;
    }
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Scale", "Visual not initiated");
       return;
@@ -1858,7 +1855,7 @@ void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
       return;
    }
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Slice", "Visual not initiated");
       return;
@@ -1894,7 +1891,7 @@ void TASImage::Tile(UInt_t toWidth, UInt_t toHeight)
       return;
    }
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Tile", "Visual not initiated");
       return;
@@ -1983,7 +1980,7 @@ void TASImage::Flip(Int_t flip)
       Warning("Flip", "Image not valid");
       return;
    }
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Flip", "Visual not initiated");
       return;
@@ -2032,7 +2029,7 @@ void TASImage::Mirror(Bool_t vert)
       return;
    }
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Mirror", "Visual not initiated");
       return;
@@ -2176,7 +2173,7 @@ ASVisual *TASImage::InitVisual()
    Bool_t noX = gROOT->IsBatch() || !gVirtualX->InheritsFrom("TGX11");
 
    if (noX)
-      return bholder();
+      return gVisualHolder();
 
    static ASVisual *gVis = nullptr;
 
@@ -2190,14 +2187,14 @@ ASVisual *TASImage::InitVisual()
 #endif
 #endif
 
-   return gVis ? gVis : bholder();
+   return gVis ? gVis : gVisualHolder();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to initialize the image.
 Bool_t TASImage::InitImage(const char *caller)
 {
-   if (!bholder()) {
+   if (!gVisualHolder()) {
       Warning(caller, "Visual not initiated");
       return false;
    }
@@ -2277,7 +2274,7 @@ Pixmap_t TASImage::GetPixmap()
 
 Bool_t TASImage::GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits)
 {
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("GetMaskBits", "Visual not initiated");
       return kFALSE;
@@ -2599,9 +2596,9 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       return;
    }
 
-   auto font_manager = bholder.font_manager();
+   auto font_manager = gVisualHolder.FontManager();
    if (!font_manager) {
-      Warning("DrawText", "Fail to create font manager missing");
+      Warning("DrawText", "Fail to create font manager");
       return;
    }
 
@@ -2619,7 +2616,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
    if (!fImage) {
       fImage = create_asimage(width, height, 0);
-      fill_asimage(bholder(), fImage, 0, 0, width, height, 0xFFFFFFFF);
+      fill_asimage(gVisualHolder(), fImage, 0, 0, width, height, 0xFFFFFFFF);
    }
 
    text_im = draw_text(text, font, (ASText3DType)type, 0);
@@ -2630,7 +2627,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       ASImage *tmp = file2ASImage(fore_file, 0xFFFFFFFF, SCREEN_GAMMA, 0, 0);
       if (tmp) {
          if ((tmp->width != width) || (tmp->height != height)) {
-            fore_im = tile_asimage(bholder(), tmp, 0, 0, width, height, 0,
+            fore_im = tile_asimage(gVisualHolder(), tmp, 0, 0, width, height, 0,
                                    ASA_ASImage, GetImageCompression(), GetImageQuality());
          }
          destroy_asimage(&tmp);
@@ -2666,7 +2663,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       layers[1].clip_width = fore_im->width;
       layers[1].clip_height = fore_im->height;
 
-      rendered_im = merge_layers(bholder(), &(layers[0]), 2, rimg->width, rimg->height,
+      rendered_im = merge_layers(gVisualHolder(), &(layers[0]), 2, rimg->width, rimg->height,
                                  ASA_ASImage, GetImageCompression(), GetImageQuality());
 
       destroy_asimage(&fore_im);
@@ -2703,7 +2700,7 @@ void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
    if (!asimg)
       return;
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Merge", "Visual not initiated");
       return;
@@ -2740,7 +2737,7 @@ void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
 
 void TASImage::Blur(Double_t hr, Double_t vr)
 {
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Blur", "Visual not initiated");
       return;
@@ -2791,7 +2788,7 @@ TObject *TASImage::Clone(const char *newname) const
 
 Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_threshold)
 {
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Vectorize", "Visual not initiated");
       return nullptr;
@@ -2906,7 +2903,7 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
 void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
                    Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
    Warning("HSV", "Visual not initiated");
       return;
@@ -2974,7 +2971,7 @@ void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
 void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
                         Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Gradient", "Visual not initiated");
       return;
@@ -3216,7 +3213,7 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
                      const char *hi_color, const char *lo_color, UShort_t thick,
                      Bool_t reverse)
 {
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Bevel", "Visual not initiated");
       return;
@@ -3334,7 +3331,7 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
    Int_t x, y;
    UInt_t w, h;
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Pad", "Visual not initiated");
       return;
@@ -3379,7 +3376,7 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
 
 void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Crop", "Visual not initiated");
       return;
@@ -3510,7 +3507,7 @@ void TASImage::BeginPaint(Bool_t mode)
    if (!fPaintMode || fImage->alt.argb32)
       return;
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("BeginPaint", "Visual not initiated");
       return;
@@ -3541,7 +3538,7 @@ void TASImage::EndPaint()
    if (!fImage->alt.argb32)
       return;
 
-   ASImage *img = tile_asimage(bholder(), fImage, 0, 0, fImage->width, fImage->height,
+   ASImage *img = tile_asimage(gVisualHolder(), fImage, 0, 0, fImage->width, fImage->height,
                                0, ASA_ASImage, 0, ASIMAGE_QUALITY_DEFAULT);
 
    if (!img) {
@@ -3641,7 +3638,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
       return nullptr;
    }
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("GetScanline", "no visual");
       return nullptr;
@@ -3738,7 +3735,7 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
    height = y + height > fImage->height ? fImage->height - y : height;
 
    if (!fImage->alt.argb32) {
-      fill_asimage(bholder(), fImage, x, y, width, height, color);
+      fill_asimage(gVisualHolder(), fImage, x, y, width, height, color);
    } else {
       int yyy = y*fImage->width;
       if (!has_alpha) { // use faster memset
@@ -5827,7 +5824,7 @@ void TASImage::CreateThumbnail()
       return;
    }
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("CreateThumbnail", "Visual not initiated");
       return;
@@ -6280,7 +6277,7 @@ void TASImage::Gray(Bool_t on)
       return;
    }
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
    if (!vis) {
       Warning("Gray", "Visual not initiated");
       return;
@@ -6470,7 +6467,7 @@ void TASImage::FromGradient(ASGradient *as_gradient, UInt_t width, UInt_t height
    DestroyImage();
    DestroyScaledImage();
 
-   auto vis = bholder();
+   auto vis = gVisualHolder();
 
    if (!vis)
       Warning("FromGradient", "Visual not initiated");
