@@ -14,7 +14,7 @@
 #include "TStyle.h"
 #include "TEnv.h"
 #include "TMath.h"
-#include "TPad.h"
+#include "TCanvas.h"
 #include "TPoint.h"
 #include "TROOT.h"
 #include "TColor.h"
@@ -524,7 +524,7 @@ void TGtk4PadPainter::DrawTTFglyphs(Int_t px, Int_t py, TTFhandle &ttf, ETextMod
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Render TTF glyphs on drawable area
+/// Render image on drawable area
 
 void TGtk4PadPainter::DrawImage(TImage *img, Int_t px, Int_t py, Int_t)
 {
@@ -540,15 +540,70 @@ void TGtk4PadPainter::DrawImage(TImage *img, Int_t px, Int_t py, Int_t)
 
    int stride = Cairo::ImageSurface::format_stride_for_width(Cairo::Surface::Format::ARGB32, width);
 
-    // 2. Wrap your raw memory pointer into a Cairo Surface.
-    // This borrows the memory pointer without making a deep copy.
-    Cairo::RefPtr<Cairo::ImageSurface> surface =
-        Cairo::ImageSurface::create(argbBuffer, Cairo::Surface::Format::ARGB32, width, height, stride);
+   Cairo::RefPtr<Cairo::ImageSurface> surface =
+      Cairo::ImageSurface::create(argbBuffer, Cairo::Surface::Format::ARGB32, width, height, stride);
 
-    // 3. Set the surface as the source pattern in the context
-    // (0, 0) specifies the top-left offset to place the image
-    ctx->set_source(surface, px, py);
+   ctx->set_source(surface, px, py);
 
-    // 4. Paint the pattern onto the context canvas
-    ctx->paint();
+   ctx->paint();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// extract image from recent drawing
+
+Bool_t TGtk4PadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
+{
+   auto canv = pad->GetCanvas();
+
+   if (canv != fDrawArea->GetCanvas()) {
+      ::Error("TGtk4PadPainter::FillImageFromPad", "Provided pad does not belong to the canvas");
+      return kFALSE;
+   }
+
+   auto cache = fDrawArea->GetCache();
+   if (!cache) {
+      ::Error("TGtk4PadPainter::FillImageFromPad", "Canvas was not rendered yet");
+      return kFALSE;
+   }
+
+   if (cache->get_format() != Cairo::Surface::Format::ARGB32) {
+      ::Error("TGtk4PadPainter::FillImageFromPad", "Wrong internal format of cached image");
+      return kFALSE;
+   }
+
+   int width = cache->get_width();
+   int height = cache->get_height();
+   int stride = cache->get_stride();
+   const uint8_t* raw_data = cache->get_data();
+
+   int x = 0, y = 0, w = width, h = height;
+
+   if (pad != canv) {
+      x = pad->UtoAbsPixel(0);
+      y = pad->VtoAbsPixel(1);
+      w = pad->GetPadWidth();
+      h = pad->GetPadHeight();
+   } else if (stride == width * 4) {
+      // special case when raw data can be used as is
+      image->FromBitmap((const UChar_t *) raw_data, width, height);
+      return kTRUE;
+   }
+
+   std::vector<UChar_t> pixels(w * h * 4);
+
+   for (int i = 0; i < h; ++i) {
+      // Find the start of the current row in the Cairo surface
+      const uint8_t* row_src = raw_data + (i + y) * stride + x * 4;
+
+      // Find where to put it in our tightly packed output vector
+      auto row_dest = pixels.data() + i * w * 4;
+
+      std::copy(row_src, row_src + w * 4, row_dest);
+    }
+
+   image->FromBitmap(pixels.data(), w, h);
+
+   return kTRUE;
+
+
 }
