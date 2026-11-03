@@ -26,9 +26,13 @@ public:
 
     Cairo::Context *GetContext() const { return fContext; }
 
+    Cairo::ImageSurface *GetCache() const { return fDrawingCache.get(); }
+
     void ShowContextMenu(Glib::RefPtr<Gio::Menu> menu_model, int x, int y);
 
     sigc::signal<void(const char *)> status_changed();
+
+
 
 protected:
     // The render function for gtkmm 4
