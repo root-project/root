@@ -252,3 +252,69 @@ TEST(TClingDataMemberInfo, Offset)
    EXPECT_EQ(-1L, (ptrdiff_t)GeoManagerInfo->GetAddress());
 #endif // R__USE_CXXMODULES and R__HAS_GEOM
 }
+
+// https://github.com/root-project/root/issues/23055
+// The elaborated type keyword ('typename', 'struct', 'class', 'enum') is part
+// of the spelling of a type, not of its identity: it must not end up in the
+// normalized type name, which is what the I/O uses to match a member against
+// the on-file description.
+TEST(TClingDataMemberInfo, ElaboratedTypeKeyword)
+{
+   gInterpreter->Declare(R"CODE(
+#include <vector>
+namespace ROOT23055 {
+struct Track {
+   int value = 0;
+};
+enum Color { kRed };
+namespace Inner {
+template <class T>
+struct Vec {
+   T *p;
+};
+}
+using Inner::Vec;
+
+template <class T>
+struct Container {
+   typedef typename std::vector<T *> seq_type;
+   typedef seq_type                  alias_of_alias;
+   typedef typename ROOT23055::Vec<T> using_type;
+   typedef struct ROOT23055::Track   record_type;
+   typedef enum ROOT23055::Color     enum_type;
+
+   seq_type                                          fSequential;
+   alias_of_alias                                    fThroughSecondAlias;
+   using_type                                        fUsing;
+   typename std::vector<T *>                         fWritten;
+   const typename std::vector<T *>                   fQualified{};
+   std::vector<typename std::vector<T *>::value_type> fNested;
+   record_type                                       fRecord;
+   enum_type                                         fEnum;
+};
+}
+)CODE");
+
+   TClass *cl = TClass::GetClass("ROOT23055::Container<ROOT23055::Track>");
+   ASSERT_NE(cl, nullptr);
+   auto *members = cl->GetListOfDataMembers();
+
+   auto trueTypeName = [members](const char *memberName) -> const char * {
+      auto *dm = (TDataMember *)members->FindObject(memberName);
+      EXPECT_NE(dm, nullptr) << " for member " << memberName;
+      return dm ? dm->GetTrueTypeName() : "";
+   };
+
+   EXPECT_STREQ(trueTypeName("fSequential"), "vector<ROOT23055::Track*>");
+   // Desugaring walks the whole alias chain before the keyword is looked at, so
+   // an alias of an alias behaves exactly like the direct case.
+   EXPECT_STREQ(trueTypeName("fThroughSecondAlias"), "vector<ROOT23055::Track*>");
+   // The using-declaration spelling is kept, as before; only the keyword goes.
+   EXPECT_STREQ(trueTypeName("fUsing"), "ROOT23055::Vec<ROOT23055::Track>");
+   EXPECT_STREQ(trueTypeName("fWritten"), "vector<ROOT23055::Track*>");
+   EXPECT_STREQ(trueTypeName("fQualified"), "const vector<ROOT23055::Track*>");
+   EXPECT_STREQ(trueTypeName("fNested"), "vector<ROOT23055::Track*>");
+   // Not only 'typename': the tag keywords leak the same way.
+   EXPECT_STREQ(trueTypeName("fRecord"), "ROOT23055::Track");
+   EXPECT_STREQ(trueTypeName("fEnum"), "ROOT23055::Color");
+}
