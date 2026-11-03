@@ -30,3 +30,14 @@ ROOT_LINKER_LIBRARY(ROOTQt6WebDisplay
     RHTTP
     ROOTWebDisplay
 )
+
+target_sources(ROOTQt6WebDisplay
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS ./
+  FILES
+    rooturlschemehandler.h
+    rootwebpage.h
+    rootwebview.h
+)
