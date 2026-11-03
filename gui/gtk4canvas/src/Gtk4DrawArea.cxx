@@ -87,16 +87,28 @@ void Gtk4DrawArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr, int width, i
    if ((width != (int) fCanvas->GetPadWidth()) || (height != (int) fCanvas->GetPadHeight()))
       fCanvas->Resize();
 
-   // clear
-   cr->set_source_rgb(1., 1., 1.);
-   cr->paint();
+   if (!fDrawingCache || fDrawingCache->get_width() != width || fDrawingCache->get_height() != height)
+      fDrawingCache = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, width, height);
+
+   // TODO: extend caching for each pad, making it very similar to double-buffer model of gVirtualX
+
+   auto cache_context = Cairo::Context::create(fDrawingCache);
+
+   cache_context->set_source_rgb(1., 1., 1.);
+   cache_context->paint();
 
    // main place where painting happens - only here fContext pointer is set
-   fContext = cr.get();
+   // TODO: really repaint pad only when something changed
+
+   fContext = cache_context.get();
 
    fCanvas->Paint();
 
    fContext = nullptr;
+
+   // and now copy image to real context
+   cr->set_source(fDrawingCache, 0, 0);
+   cr->paint();
 }
 
 void Gtk4DrawArea::on_mouse_click(int n_press, double x, double y)
