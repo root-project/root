@@ -206,7 +206,7 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     set(ROOT_genreflex_CMD ${ROOT_BINDIR}/genreflex)
   endif()
   add_custom_command(
-    COMMAND ${ROOT_genreflex_CMD}
+    COMMAND ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
          ${ARG_OPTIONS}
          "-I$<JOIN:$<REMOVE_DUPLICATES:$<FILTER:${include_dirs},EXCLUDE,^$>>,;-I>"
