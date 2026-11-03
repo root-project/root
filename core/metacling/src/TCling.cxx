@@ -774,16 +774,18 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
          if (cl && cl->GetDeclFileName()) {
             TString header = gSystem->BaseName(cl->GetDeclFileName());
             TString dir = gSystem->GetDirName(cl->GetDeclFileName());
-            TString dirbase(gSystem->BaseName(dir));
-            while (dirbase.Length() && dirbase != "."
-                   && dirbase != "include" && dirbase != "inc"
-                   && dirbase != "prec_stl") {
+            TString dirbase;
+            if (!dir.IsNull())
+               dirbase = gSystem->BaseName(dir);
+            while (dirbase.Length() && dirbase != "." && dirbase != "include" && dirbase != "inc" &&
+                   dirbase != "prec_stl") {
                TString parent = gSystem->GetDirName(dir);
-               if (parent == dir)
+               const Bool_t isDriveRoot = dir.Length() == 3 && dir[1] == ':' && (dir[2] == '/' || dir[2] == '\\');
+               if (parent == dir || isDriveRoot)
                   break;
                gSystem->PrependPathName(dirbase, header);
                dir = parent;
-               dirbase = gSystem->BaseName(dir);
+               dirbase = dir.IsNull() ? "" : gSystem->BaseName(dir);
             }
             fileContent += TString("#include \"") + header + "\"\n";
          }

@@ -29,6 +29,13 @@ ROOT_ADD_GTEST(
   RIO
   GTest::gmock
 )
+ROOT_GENERATE_DICTIONARY(
+  TClingDictionaryPathProbeDict
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/ROOT/TClingDictionaryPathProbe.hxx
+  LINKDEF TClingDictionaryPathProbeLinkDef.h
+  OPTIONS -I${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_sources(TClingTest PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/TClingDictionaryPathProbeDict.cxx)
 
 ROOT_ADD_GTEST(TClingLoadUnloadFile TClingLoadUnloadFileTests.cxx LIBRARIES Core RIO)
 
