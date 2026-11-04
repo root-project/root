@@ -2106,7 +2106,8 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    bool resetStats = true;
    double eps = 1.E-12;
    if (IsA() == TH3F::Class() ) eps = 1.E-6;
-   if (fTsumw != 0 && TMath::Abs( fTsumw - totcont) <  TMath::Abs(fTsumw) * eps) resetStats = false;
+   if (!useWidth && fTsumw != 0 && TMath::Abs(fTsumw - totcont) < TMath::Abs(fTsumw) * eps)
+      resetStats = false;
 
    bool resetEntries = resetStats;
    // entries are calculated using underflow/overflow. If excluded entries must be reset
@@ -2337,7 +2338,8 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    bool resetStats = true;
    double eps = 1.E-12;
    if (IsA() == TH3F::Class() ) eps = 1.E-6;
-   if (fTsumw != 0 && TMath::Abs( fTsumw - totcont) <  TMath::Abs(fTsumw) * eps) resetStats = false;
+   if (!useWidth && fTsumw != 0 && TMath::Abs(fTsumw - totcont) < TMath::Abs(fTsumw) * eps)
+      resetStats = false;
 
    bool resetEntries = resetStats;
    // entries are calculated using underflow/overflow. If excluded entries must be reset
