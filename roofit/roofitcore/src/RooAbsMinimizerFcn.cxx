@@ -154,7 +154,7 @@ bool RooAbsMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &
 /// Transfer MINUIT fit results back into RooFit objects.
 void RooAbsMinimizerFcn::BackProp()
 {
-   auto const &results = _context->fitter()->Result();
+   auto const &results = *_context->_result;
 
    for (std::size_t index = 0; index < getNDim(); index++) {
 

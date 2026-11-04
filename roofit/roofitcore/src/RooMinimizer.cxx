@@ -18,10 +18,11 @@
 \class RooMinimizer
 \ingroup Roofitcore
 
-Wrapper class around ROOT::Math::Minimizer that
-provides a seamless interface between the minimizer functionality
+RooMinimizer provides a seamless interface between the minimizer functionality
 and the native RooFit interface.
-By default the Minimizer is Minuit 2.
+By default the Minimizer is Minuit 2, which RooMinimizer drives directly via the
+Minuit2 library interface. Other minimizer types are reached via the
+ROOT::Math::Minimizer plugin interface.
 RooMinimizer can minimize any RooAbsReal function with respect to
 its parameters. Usual choices for minimization are the object returned by
 RooAbsPdf::createNLL() or RooAbsReal::createChi2().
@@ -64,11 +65,26 @@ Various methods are available to control verbosity or profiling.
 #include "RooFitImplHelpers.h"
 
 #include <Fit/BasicFCN.h>
+#include <Math/IOptions.h>
 #include <Math/Minimizer.h>
+#include <Minuit2/CombinedMinimizer.h>
+#include <Minuit2/FunctionMinimum.h>
+#include <Minuit2/MinosError.h>
+#include <Minuit2/MnContours.h>
+#include <Minuit2/MnHesse.h>
+#include <Minuit2/MnMinos.h>
+#include <Minuit2/MnPrint.h>
+#include <Minuit2/MnStrategy.h>
+#include <Minuit2/MnUserParameterState.h>
+#include <Minuit2/ScanMinimizer.h>
+#include <Minuit2/SimplexMinimizer.h>
+#include <Minuit2/VariableMetricMinimizer.h>
 #include <TClass.h>
 #include <TGraph.h>
 #include <TMarker.h>
 
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <stdexcept> // logic_error
@@ -138,7 +154,131 @@ std::unique_ptr<ChangeOperModeRAII> setOperModesDirty(RooAbsReal &function)
    return {};
 }
 
+// Set the global Minuit2 print level for the duration of a Minuit2 call.
+class Minuit2PrintLevelRAII {
+public:
+   Minuit2PrintLevelRAII(int level) : _prevLevel{ROOT::Minuit2::MnPrint::SetGlobalLevel(level)} {}
+   ~Minuit2PrintLevelRAII() { ROOT::Minuit2::MnPrint::SetGlobalLevel(_prevLevel); }
+
+private:
+   int _prevLevel;
+};
+
+// The Minuit2-specific extra options, either set on the minimizer options
+// explicitly or taken from the global defaults for Minuit2.
+ROOT::Math::IOptions const *minuit2ExtraOptions(ROOT::Math::MinimizerOptions const &options)
+{
+   if (auto *opts = options.ExtraOptions()) {
+      return opts;
+   }
+   return ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+}
+
+// Build the Minuit2 strategy from the strategy level and the Minuit2-specific
+// extra options.
+ROOT::Minuit2::MnStrategy makeMinuit2Strategy(ROOT::Math::MinimizerOptions const &options)
+{
+   ROOT::Minuit2::MnStrategy st{static_cast<unsigned int>(options.Strategy())};
+   ROOT::Math::IOptions const *minuit2Opt = minuit2ExtraOptions(options);
+   if (!minuit2Opt) {
+      return st;
+   }
+   auto customize = [&minuit2Opt](const char *name, auto val) {
+      minuit2Opt->GetValue(name, val);
+      return val;
+   };
+   st.SetGradientNCycles(customize("GradientNCycles", int(st.GradientNCycles())));
+   st.SetHessianNCycles(customize("HessianNCycles", int(st.HessianNCycles())));
+   st.SetHessianGradientNCycles(customize("HessianGradientNCycles", int(st.HessianGradientNCycles())));
+
+   st.SetGradientTolerance(customize("GradientTolerance", st.GradientTolerance()));
+   st.SetGradientStepTolerance(customize("GradientStepTolerance", st.GradientStepTolerance()));
+   st.SetHessianStepTolerance(customize("HessianStepTolerance", st.HessianStepTolerance()));
+   st.SetHessianG2Tolerance(customize("HessianG2Tolerance", st.HessianG2Tolerance()));
+
+   st.SetHessianCentralFDMixedDerivatives(
+      customize("HessianCentralFDMixedDerivatives", int(st.HessianCentralFDMixedDerivatives())));
+   st.SetHessianForcePosDef(customize("HessianForcePosDef", int(st.HessianForcePosDef())));
+
+   return st;
+}
+
+// Create the Minuit2 minimization algorithm for the given algorithm name.
+// Returns nullptr for algorithms that RooFit can't use.
+std::unique_ptr<ROOT::Minuit2::ModularFunctionMinimizer> makeMinuit2Minimizer(std::string algo)
+{
+   std::transform(algo.begin(), algo.end(), algo.begin(), [](unsigned char c) { return std::tolower(c); });
+   using namespace ROOT::Minuit2;
+   if (algo == "simplex")
+      return std::make_unique<SimplexMinimizer>();
+   if (algo == "minimize")
+      return std::make_unique<CombinedMinimizer>();
+   if (algo == "scan")
+      return std::make_unique<ScanMinimizer>();
+   if (algo == "bfgs")
+      return std::make_unique<VariableMetricMinimizer>(VariableMetricMinimizer::BFGSType());
+   if (algo == "fumili" || algo == "fumili2") {
+      // Fumili needs a FumiliFCNBase, which RooFit does not provide.
+      return nullptr;
+   }
+   // MIGRAD is the default algorithm, also for unknown algorithm names.
+   return std::make_unique<VariableMetricMinimizer>();
+}
+
+bool isFixedOrConst(ROOT::Minuit2::MinuitParameter const &par)
+{
+   return par.IsFixed() || par.IsConst();
+}
+
+// Covariance matrix element in the external parameter space, zero for fixed
+// parameters and when no covariance matrix is available.
+double minuit2Covariance(ROOT::Minuit2::MnUserParameterState const &state, unsigned int i, unsigned int j)
+{
+   if (!state.HasCovariance() || isFixedOrConst(state.Parameter(i)) || isFixedOrConst(state.Parameter(j))) {
+      return 0.;
+   }
+   return state.Covariance()(state.IntOfExt(i), state.IntOfExt(j));
+}
+
+// Covariance matrix status code with the convention of ROOT::Math::Minimizer:
+//  -1: not available (inversion failed or Hesse failed)
+//   0: available but not positive defined
+//   1: covariance only approximate
+//   2: full matrix but forced positive definite
+//   3: full accurate matrix
+int minuit2CovMatrixStatus(ROOT::Minuit2::FunctionMinimum const *minimum,
+                           ROOT::Minuit2::MnUserParameterState const &state)
+{
+   if (!minimum) {
+      return state.CovarianceStatus();
+   }
+   if (minimum->HasAccurateCovar())
+      return 3;
+   if (minimum->HasMadePosDefCovar())
+      return 2;
+   if (minimum->HasValidCovariance())
+      return 1;
+   if (minimum->HasCovariance())
+      return 0;
+   return -1;
+}
+
 } // namespace
+
+/// State of the direct Minuit2 interface.
+struct RooMinimizer::Minuit2State {
+   /// Minuit2 parameter state: the starting point for the next minimization,
+   /// and the result of the last operation.
+   ROOT::Minuit2::MnUserParameterState state;
+   /// Result of the last minimization, needed for Hesse, Minos and contours.
+   std::unique_ptr<ROOT::Minuit2::FunctionMinimum> minimum;
+   /// Status code with the same convention as ROOT::Minuit2::Minuit2Minimizer.
+   int status = 0;
+   /// Status of the last Minos run.
+   int minosStatus = -1;
+   /// Whether the parameter state was initialized from the parameter settings.
+   bool initialized = false;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct MINUIT interface to given function. Function can be anything,
@@ -211,6 +351,7 @@ void RooMinimizer::initMinimizerFirstPart()
 {
    RooSentinel::activate();
    setMinimizerType("");
+   _minuit2 = std::make_unique<Minuit2State>();
 
    _config.SetMinimizer(_cfg.minimizerType.c_str());
    setEps(1.0); // default tolerance
@@ -428,7 +569,7 @@ int RooMinimizer::exec(std::string const &algoName, std::string const &statusNam
 
 int RooMinimizer::hesse()
 {
-   if (_minimizer == nullptr) {
+   if (_result == nullptr) {
       coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!" << std::endl;
       _status = -1;
       return _status;
@@ -445,7 +586,7 @@ int RooMinimizer::hesse()
 
 int RooMinimizer::minos()
 {
-   if (_minimizer == nullptr) {
+   if (_result == nullptr) {
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << std::endl;
       _status = -1;
       return _status;
@@ -462,7 +603,7 @@ int RooMinimizer::minos()
 
 int RooMinimizer::minos(const RooArgSet &minosParamList)
 {
-   if (_minimizer == nullptr) {
+   if (_result == nullptr) {
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << std::endl;
       _status = -1;
    } else if (!minosParamList.empty()) {
@@ -570,7 +711,7 @@ void RooMinimizer::optimizeConst(int /*flag*/) {}
 
 RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const char *userTitle)
 {
-   if (_minimizer == nullptr) {
+   if (_result == nullptr) {
       coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << std::endl;
       return nullptr;
    }
@@ -584,7 +725,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
    fitRes->setNumInvalidNLL(_fcn->GetNumInvalidNLL());
 
    fitRes->setStatus(_status);
-   fitRes->setCovQual(_minimizer->CovMatrixStatus());
+   fitRes->setCovQual(_result->fCovStatus);
    fitRes->setMinNLL(_result->fVal - _fcn->getOffset());
    fitRes->setEDM(_result->fEdm);
 
@@ -628,7 +769,7 @@ void RooMinimizer::fillCorrMatrix(RooFitResult &fitRes)
    const std::size_t nParams = _fcn->getNDim();
    TMatrixDSym corrs(nParams);
    TMatrixDSym covs(nParams);
-   std::vector<double> globalCC = _minimizer->GlobalCC();
+   std::vector<double> globalCC = _result->fGlobalCC;
    globalCC.resize(nParams); // pad with zeros
    for (std::size_t ic = 0; ic < nParams; ic++) {
       for (std::size_t ii = 0; ii < nParams; ii++) {
@@ -684,15 +825,23 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    TMarker *point = new TMarker(var1.getVal(), var2.getVal(), 8);
    frame->addObject(point);
 
-   // check first if a inimizer is available. If not means
-   // the minimization is not done , so do it
-   if (_minimizer == nullptr) {
+   // check first if a minimization was done
+   if (_result == nullptr) {
       coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!" << std::endl;
       return frame;
    }
 
    // remember our original value of ERRDEF
-   double errdef = _minimizer->ErrorDef();
+   const double errdef = _config.MinimizerOptions().ErrorDef();
+
+   // compute a contour at the given error level
+   auto computeContour = [&](double up, double *xcoor, double *ycoor) {
+      if (useMinuit2Directly()) {
+         return minuit2Contour(index1, index2, npoints, up, xcoor, ycoor);
+      }
+      _minimizer->SetErrorDef(up);
+      return _minimizer->Contour(index1, index2, npoints, xcoor, ycoor);
+   };
 
    double n[6];
    n[0] = n1;
@@ -706,13 +855,10 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    for (int ic = 0; ic < 6; ic++) {
       if (n[ic] > 0) {
 
-         // set the value corresponding to an n1-sigma contour
-         _minimizer->SetErrorDef(n[ic] * n[ic] * errdef);
-
-         // calculate and draw the contour
+         // calculate and draw the contour at the level corresponding to n-sigma
          std::vector<double> xcoor(npoints + 1);
          std::vector<double> ycoor(npoints + 1);
-         bool ret = _minimizer->Contour(index1, index2, npoints, xcoor.data(), ycoor.data());
+         bool ret = computeContour(n[ic] * n[ic] * errdef, xcoor.data(), ycoor.data());
 
          if (!ret) {
             coutE(Minimization) << "RooMinimizer::contour(" << GetName()
@@ -734,7 +880,11 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    }
 
    // restore the original ERRDEF
-   _minimizer->SetErrorDef(errdef);
+   if (useMinuit2Directly()) {
+      setMinuit2ErrorDef(errdef);
+   } else {
+      _minimizer->SetErrorDef(errdef);
+   }
 
    // restore parameter values
    params.assign(paramSave);
@@ -805,7 +955,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit()
    // Import the results of the last fit performed, interpreting
    // the fit parameters as the given varList of parameters.
 
-   if (_minimizer == nullptr) {
+   if (_result == nullptr) {
       oocoutE(nullptr, InputArguments) << "RooMinimizer::save: Error, run minimization before!" << std::endl;
       return nullptr;
    }
@@ -851,7 +1001,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit()
    res->setFinalParList(floatPars);
    res->setMinNLL(_result->fVal);
    res->setEDM(_result->fEdm);
-   res->setCovQual(_minimizer->CovMatrixStatus());
+   res->setCovQual(_result->fCovStatus);
    res->setStatus(_result->fStatus);
    fillCorrMatrix(*res);
 
@@ -954,10 +1104,7 @@ bool RooMinimizer::fitFCN()
    if (nPdfs == 0) {
       coutI(Minimization) << "[fitFCN] No discrete parameters, performing continuous minimization only" << std::endl;
       FreezeDisconnectedParametersRAII freeze(this, *_fcn);
-      bool isValid = _minimizer->Minimize();
-      if (!_result)
-         _result = std::make_unique<FitResult>();
-      fillResult(isValid);
+      bool isValid = runMinimizer();
       if (isValid)
          updateFitConfig();
       return isValid;
@@ -994,12 +1141,12 @@ bool RooMinimizer::fitFCN()
             pdfIndices[i]->setConstant(true);
          }
          FreezeDisconnectedParametersRAII freeze(this, *_fcn);
-         _minimizer->Minimize();
+         runMinimizer();
 
          for (size_t i = 0; i < nPdfs; ++i)
             pdfIndices[i]->setConstant(wasConst[i]);
 
-         double val = _minimizer->MinValue();
+         double val = _result->fVal;
          tried.insert(combo);
          nllMap[combo] = val;
 
@@ -1016,7 +1163,7 @@ bool RooMinimizer::fitFCN()
    }
 
    FreezeDisconnectedParametersRAII freeze(this, *_fcn);
-   _minimizer->Minimize();
+   runMinimizer();
 
    coutI(Minimization) << "All NLL Values per Combination:" << std::endl;
    for (const auto &entry : nllMap) {
@@ -1046,13 +1193,24 @@ bool RooMinimizer::fitFCN()
 
    coutI(Minimization) << ssBest.str() << std::endl;
 
-   if (!_result)
-      _result = std::make_unique<FitResult>();
-   fillResult(true);
+   _result->fValid = true;
    updateFitConfig();
 
    return true;
 }
+
+/// Run the minimization algorithm from the current minimizer state and store
+/// the outcome in the internal fit result. Returns whether a valid minimum was
+/// found.
+bool RooMinimizer::runMinimizer()
+{
+   bool isValid = useMinuit2Directly() ? minuit2Minimize() : _minimizer->Minimize();
+   if (!_result)
+      _result = std::make_unique<FitResult>();
+   fillResult(isValid);
+   return isValid;
+}
+
 bool RooMinimizer::calculateHessErrors()
 {
    // compute the Hesse errors according to configuration
@@ -1060,21 +1218,19 @@ bool RooMinimizer::calculateHessErrors()
 
    auto operModeRAII = setOperModesDirty(_function);
 
-   // update  minimizer (recreate if not done or if name has changed
-   if (!updateMinimizerOptions()) {
-      coutE(Minimization) << "RooMinimizer::calculateHessErrors() Error re-initializing the minimizer" << std::endl;
-      return false;
+   bool ret = false;
+   if (useMinuit2Directly()) {
+      ret = minuit2Hesse();
+   } else {
+      // update  minimizer (recreate if not done or if name has changed
+      if (!updateMinimizerOptions()) {
+         coutE(Minimization) << "RooMinimizer::calculateHessErrors() Error re-initializing the minimizer" << std::endl;
+         return false;
+      }
+      ret = _minimizer->Hesse();
    }
-
-   // run Hesse
-   bool ret = _minimizer->Hesse();
    if (!ret)
       coutE(Minimization) << "RooMinimizer::calculateHessErrors() Error when calculating Hessian" << std::endl;
-
-   // update minimizer results with what comes out from Hesse
-   // in case is empty - create from a FitConfig
-   if (_result->fParams.empty())
-      _result = std::make_unique<FitResult>(_config);
 
    // re-give a minimizer instance in case it has been changed
    ret |= update(ret);
@@ -1097,8 +1253,8 @@ bool RooMinimizer::calculateMinosErrors()
    auto operModeRAII = setOperModesDirty(_function);
 
    // update  minimizer (but cannot re-create in this case). Must use an existing one
-   if (!updateMinimizerOptions(false)) {
-      coutE(Minimization) << "RooMinimizer::calculateHessErrors() Error re-initializing the minimizer" << std::endl;
+   if (!useMinuit2Directly() && !updateMinimizerOptions(false)) {
+      coutE(Minimization) << "RooMinimizer::calculateMinosErrors() Error re-initializing the minimizer" << std::endl;
       return false;
    }
 
@@ -1119,9 +1275,17 @@ bool RooMinimizer::calculateMinosErrors()
       for (int i = 0; i < iparMax; ++i) {
          double elow, eup;
          unsigned int index = (!ipars.empty()) ? ipars[i] : i;
-         bool ret = _minimizer->GetMinosError(index, elow, eup);
+         bool ret = false;
+         int minosStatus = 0;
+         if (useMinuit2Directly()) {
+            ret = minuit2Minos(index, elow, eup);
+            minosStatus = _minuit2->minosStatus;
+         } else {
+            ret = _minimizer->GetMinosError(index, elow, eup);
+            minosStatus = _minimizer->MinosStatus();
+         }
          // flags case when a new minimum has been found
-         if ((_minimizer->MinosStatus() & 8) != 0) {
+         if ((minosStatus & 8) != 0) {
             iparNewMin = i;
          }
          if (ret)
@@ -1147,8 +1311,20 @@ bool RooMinimizer::calculateMinosErrors()
 
 void RooMinimizer::initMinimizer()
 {
+   if (useMinuit2Directly()) {
+      initMinuit2();
+      return;
+   }
+   // Only RooMinimizerFcn supports minimizers other than Minuit2: the
+   // multiprocess MinuitFcnGrad is tied to Minuit2, which the constructor
+   // enforces.
+   auto *fcn = dynamic_cast<RooMinimizerFcn *>(_fcn.get());
+   if (!fcn) {
+      throw std::logic_error("RooMinimizer: minimizer type " + _cfg.minimizerType +
+                             " is only supported with the default (non-parallel) likelihood function");
+   }
    _minimizer = std::unique_ptr<ROOT::Math::Minimizer>(_config.CreateMinimizer());
-   _fcn->initMinimizer(*_minimizer, this);
+   fcn->initMinimizer(*_minimizer);
    _minimizer->SetVariables(_config.ParamsSettings().begin(), _config.ParamsSettings().end());
 
    if (_cfg.setInitialCovariance) {
@@ -1203,36 +1379,12 @@ void RooMinimizer::updateFitConfig()
    }
 }
 
-RooMinimizer::FitResult::FitResult(const ROOT::Fit::FitConfig &fconfig)
-   : fStatus(-99), // use this special convention to flag it when printing result
-     fCovStatus(0),
-     fParams(fconfig.NPar()),
-     fErrors(fconfig.NPar())
-{
-   // create a Fit result from a fit config (i.e. with initial parameter values
-   // and errors equal to step values
-   // The model function is NULL in this case
-
-   // set minimizer type and algorithm
-   fMinimType = fconfig.MinimizerType();
-   // append algorithm name for minimizer that support it
-   if ((fMinimType.find("Fumili") == std::string::npos) && (fMinimType.find("GSLMultiFit") == std::string::npos)) {
-      if (!fconfig.MinimizerAlgoType().empty())
-         fMinimType += " / " + fconfig.MinimizerAlgoType();
-   }
-
-   // get parameter values and errors (step sizes)
-   for (unsigned int i = 0; i < fconfig.NPar(); ++i) {
-      const ROOT::Fit::ParameterSettings &par = fconfig.ParSettings(i);
-      fParams[i] = par.Value();
-      fErrors[i] = par.StepSize();
-      if (par.IsFixed())
-         fFixedParams[i] = true;
-   }
-}
-
 void RooMinimizer::fillResult(bool isValid)
 {
+   if (useMinuit2Directly()) {
+      fillResultFromMinuit2(isValid);
+      return;
+   }
    ROOT::Math::Minimizer &min = *_minimizer;
    ROOT::Fit::FitConfig const &fconfig = _config;
 
@@ -1270,6 +1422,7 @@ void RooMinimizer::fillResult(bool isValid)
    // if minimizer provides error provides also error matrix
    // clear in case of re-filling an existing result
    _result->fCovMatrix.clear();
+   _result->fGlobalCC.clear();
 
    if (min.Errors() != nullptr) {
       updateErrors();
@@ -1278,6 +1431,10 @@ void RooMinimizer::fillResult(bool isValid)
 
 bool RooMinimizer::update(bool isValid)
 {
+   if (useMinuit2Directly()) {
+      fillResultFromMinuit2(isValid);
+      return true;
+   }
    ROOT::Math::Minimizer &min = *_minimizer;
    ROOT::Fit::FitConfig const &fconfig = _config;
 
@@ -1312,6 +1469,7 @@ void RooMinimizer::updateErrors()
 
    _result->fErrors.resize(npar);
    std::copy(min.Errors(), min.Errors() + npar, _result->fErrors.begin());
+   _result->fGlobalCC = min.GlobalCC();
 
    if (_result->fCovStatus != 0) {
 
@@ -1325,6 +1483,574 @@ void RooMinimizer::updateErrors()
       }
    }
    // minos errors are set separately when calling Fitter::CalculateMinosErrors()
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the Minuit2 parameter state from the parameter settings, and
+/// forget about any previous function minimum.
+
+void RooMinimizer::initMinuit2()
+{
+   using ROOT::Minuit2::MnUserParameterState;
+
+   _minuit2->state = MnUserParameterState{};
+   _minuit2->minimum.reset();
+   _minuit2->status = 0;
+   _minuit2->minosStatus = -1;
+
+   MnUserParameterState &state = _minuit2->state;
+
+   for (ROOT::Fit::ParameterSettings const &par : _config.ParamsSettings()) {
+      if (par.IsFixed()) {
+         // Fixed parameters still need a step size, otherwise Minuit2 would
+         // treat them as constants that can't be released anymore.
+         const double step = par.Value() != 0 ? 0.1 * std::abs(par.Value()) : 0.1;
+         state.Add(par.Name(), par.Value(), step);
+         state.Fix(par.Name());
+         continue;
+      }
+      if (par.StepSize() <= 0) {
+         // A parameter without a valid step size is treated as a constant.
+         state.Add(par.Name(), par.Value());
+      } else {
+         state.Add(par.Name(), par.Value(), par.StepSize());
+      }
+      if (par.IsDoubleBound()) {
+         state.SetLimits(par.Name(), par.LowerLimit(), par.UpperLimit());
+      } else if (par.HasLowerLimit()) {
+         state.SetLowerLimit(par.Name(), par.LowerLimit());
+      } else if (par.HasUpperLimit()) {
+         state.SetUpperLimit(par.Name(), par.UpperLimit());
+      }
+   }
+
+   if (_cfg.setInitialCovariance) {
+      // Diagonal covariance matrix from the parameter errors, in the packed
+      // lower-triangular storage of MnUserCovariance.
+      const unsigned int n = _fcn->getNDim();
+      ROOT::Minuit2::MnUserCovariance cov{n};
+      for (unsigned int i = 0; i < n; ++i) {
+         const double err = _fcn->floatableParam(i).getError();
+         cov(i, i) = err * err;
+      }
+      state.AddCovariance(cov);
+   }
+
+   _minuit2->initialized = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the error definition on the function and on the function minimum, if
+/// there is one.
+
+void RooMinimizer::setMinuit2ErrorDef(double up)
+{
+   _fcn->SetErrorDef(up);
+   if (_minuit2->minimum && _minuit2->minimum->Up() != up) {
+      _minuit2->minimum->SetErrorDef(up);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Run the configured Minuit2 minimization algorithm, starting from the current
+/// parameter state. Returns whether a valid minimum was found.
+
+bool RooMinimizer::minuit2Minimize()
+{
+   using namespace ROOT::Minuit2;
+
+   ROOT::Math::MinimizerOptions const &options = _config.MinimizerOptions();
+
+   if (!_minuit2->initialized) {
+      initMinuit2();
+   }
+
+   auto minimizer = makeMinuit2Minimizer(options.MinimizerAlgorithm());
+   if (!minimizer) {
+      coutE(Minimization) << "RooMinimizer::minimize: the Minuit2 algorithm \"" << options.MinimizerAlgorithm()
+                          << "\" is not supported by RooFit" << std::endl;
+      return false;
+   }
+
+   MnUserParameterState &state = _minuit2->state;
+
+   // delete result of previous minimization
+   _minuit2->minimum.reset();
+
+   const unsigned int maxfcn = options.MaxFunctionCalls();
+   const double tol = options.Tolerance();
+   const int printLevel = options.PrintLevel();
+   _fcn->SetErrorDef(options.ErrorDef());
+
+   if (printLevel >= 1) {
+      // print the real number of maxfcn used (defined in ModularFunctionMinimizer)
+      unsigned int maxfcnUsed = maxfcn;
+      if (maxfcnUsed == 0) {
+         const unsigned int nvar = state.VariableParameters();
+         maxfcnUsed = 200 + 100 * nvar + 5 * nvar * nvar;
+      }
+      std::cout << "RooMinimizer: Minuit2 minimize with max-calls " << maxfcnUsed << " convergence for edm < " << tol
+                << " strategy " << options.Strategy() << std::endl;
+   }
+
+   minimizer->Builder().SetPrintLevel(printLevel);
+   Minuit2PrintLevelRAII printLevelRAII{printLevel};
+
+   if (options.Precision() > 0) {
+      state.SetPrecision(options.Precision());
+   }
+
+   if (ROOT::Math::IOptions const *minuit2Opt = minuit2ExtraOptions(options)) {
+      int storageLevel = 1;
+      if (minuit2Opt->GetValue("StorageLevel", storageLevel)) {
+         minimizer->Builder().SetStorageLevel(storageLevel);
+      }
+      if (printLevel > 0) {
+         std::cout << "RooMinimizer: Minuit2 - Changing default options" << std::endl;
+         minuit2Opt->Print();
+      }
+   }
+
+   const MnStrategy strategy = makeMinuit2Strategy(options);
+
+   _minuit2->minimum = std::make_unique<FunctionMinimum>(minimizer->Minimize(*_fcn, state, strategy, maxfcn, tol));
+   FunctionMinimum const &minimum = *_minuit2->minimum;
+
+   // copy minimum state (parameter values and errors)
+   state = minimum.UserState();
+
+   // Determine the status code, with the same convention as Minuit2Minimizer.
+   int &status = _minuit2->status;
+   status = 0;
+   std::string txt;
+   if (!minimum.HasPosDefCovar()) {
+      // this happens normally when Hesse failed
+      // it can happen in case MnSeed failed (see ROOT-9522)
+      txt = "Covar is not pos def";
+      status = 5;
+   }
+   if (minimum.HasMadePosDefCovar()) {
+      txt = "Covar was made pos def";
+      status = 1;
+   }
+   if (minimum.HesseFailed()) {
+      txt = "Hesse is not valid";
+      status = 2;
+   }
+   if (minimum.IsAboveMaxEdm()) {
+      txt = "Edm is above max";
+      status = 3;
+   }
+   if (minimum.HasReachedCallLimit()) {
+      txt = "Reached call limit";
+      status = 4;
+   }
+
+   MnPrint print("RooMinimizer::minimize", printLevel);
+   const bool validMinimum = minimum.IsValid();
+   if (validMinimum) {
+      // print a warning message in case something is not ok
+      if (status != 0 && printLevel > 0)
+         print.Warn(txt);
+   } else {
+      // minimum is not valid when state is not valid and edm is over max or has passed call limits
+      if (status == 0) {
+         // this should not happen
+         txt = "unknown failure";
+         status = 6;
+      }
+      print.Warn("Minimization did NOT converge,", txt);
+   }
+
+   if (printLevel >= 1) {
+      std::cout << "RooMinimizer: Minuit2 " << (validMinimum ? "valid" : "invalid") << " minimum - status = " << status
+                << std::endl;
+      const int prec = std::cout.precision(18);
+      std::cout << "FVAL  = " << state.Fval() << std::endl;
+      std::cout << "Edm   = " << state.Edm() << std::endl;
+      std::cout.precision(prec);
+      std::cout << "Nfcn  = " << state.NFcn() << std::endl;
+      if (validMinimum) {
+         for (MinuitParameter const &par : state.MinuitParameters()) {
+            std::cout << par.Name() << "\t  = " << par.Value() << "\t ";
+            if (par.IsFixed())
+               std::cout << "(fixed)" << std::endl;
+            else if (par.IsConst())
+               std::cout << "(const)" << std::endl;
+            else if (par.HasLimits())
+               std::cout << "+/-  " << par.Error() << "\t(limited)" << std::endl;
+            else
+               std::cout << "+/-  " << par.Error() << std::endl;
+         }
+      }
+   }
+
+   return validMinimum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Run Minuit2's HESSE. If a function minimum from a previous minimization
+/// exists, it is updated with the result. Returns whether a valid covariance
+/// matrix was obtained.
+
+bool RooMinimizer::minuit2Hesse()
+{
+   using namespace ROOT::Minuit2;
+
+   ROOT::Math::MinimizerOptions const &options = _config.MinimizerOptions();
+
+   if (!_minuit2->initialized) {
+      initMinuit2();
+   }
+
+   const unsigned int maxfcn = options.MaxFunctionCalls();
+   const int printLevel = options.PrintLevel();
+
+   MnPrint print("RooMinimizer::hesse", printLevel);
+   print.Info("Using max-calls", maxfcn);
+
+   Minuit2PrintLevelRAII printLevelRAII{printLevel};
+
+   MnUserParameterState &state = _minuit2->state;
+   if (options.Precision() > 0) {
+      state.SetPrecision(options.Precision());
+   }
+
+   setMinuit2ErrorDef(options.ErrorDef());
+
+   MnHesse hesse(makeMinuit2Strategy(options));
+
+   if (_minuit2->minimum) {
+      // run hesse and function minimum will be updated with Hesse result
+      hesse(*_fcn, *_minuit2->minimum, maxfcn);
+      state = _minuit2->minimum->UserState();
+   } else {
+      // run Hesse on point stored in current state (independent of function minimum validity)
+      state = hesse(*_fcn, state, maxfcn);
+   }
+
+   if (printLevel >= 3) {
+      std::cout << "RooMinimizer::hesse - State returned from Hesse " << std::endl;
+      std::cout << state << std::endl;
+   }
+
+   const int covStatus = state.CovarianceStatus();
+   std::string covStatusType = "not valid";
+   if (covStatus == 1)
+      covStatusType = "approximate";
+   if (covStatus == 2)
+      covStatusType = "full but made positive defined";
+   if (covStatus == 3)
+      covStatusType = "accurate";
+   if (covStatus == 0)
+      covStatusType = "full but not positive defined";
+
+   if (!state.HasCovariance()) {
+      // if false means error is not valid and this is due to a failure in Hesse
+      // update minimizer error status
+      int hstatus = 4;
+      // information on error state can be retrieved only if the minimum is available
+      if (_minuit2->minimum) {
+         if (_minuit2->minimum->Error().HesseFailed())
+            hstatus = 1;
+         if (_minuit2->minimum->Error().InvertFailed())
+            hstatus = 2;
+         else if (!(_minuit2->minimum->Error().IsPosDef()))
+            hstatus = 3;
+      }
+
+      print.Warn("Hesse failed - matrix is", covStatusType);
+      print.Warn(hstatus);
+
+      _minuit2->status += 100 * hstatus;
+      return false;
+   }
+
+   print.Info("Hesse is valid - matrix is", covStatusType);
+
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Run Minuit2's MINOS for the parameter with the given index. If a new
+/// minimum is found, the minimization is repeated from there and MINOS is run
+/// again. Returns whether both errors are valid.
+
+bool RooMinimizer::minuit2Minos(unsigned int index, double &errLow, double &errUp)
+{
+   using namespace ROOT::Minuit2;
+
+   errLow = 0;
+   errUp = 0;
+
+   const int printLevel = _config.MinimizerOptions().PrintLevel();
+   MnPrint print("RooMinimizer::minos", printLevel);
+
+   if (!_minuit2->minimum) {
+      print.Error("Failed - no function minimum existing");
+      return false;
+   }
+
+   MnUserParameterState &state = _minuit2->state;
+
+   // need to know if parameter is const or fixed
+   if (isFixedOrConst(state.Parameter(index))) {
+      return false;
+   }
+
+   if (!_minuit2->minimum->IsValid()) {
+      print.Error("Failed - invalid function minimum");
+      return false;
+   }
+
+   setMinuit2ErrorDef(_config.MinimizerOptions().ErrorDef());
+
+   int mstatus = runMinuit2Minos(index, errLow, errUp);
+
+   // run again the Minimization in case of a new minimum
+   // bit 8 is set
+   if ((mstatus & 8) != 0) {
+      print.Info([&](std::ostream &os) {
+         os << "Found a new minimum: run again the Minimization starting from the new point";
+         os << "\nFVAL  = " << state.Fval();
+         for (MinuitParameter const &par : state.MinuitParameters()) {
+            os << '\n' << par.Name() << "\t  = " << par.Value();
+         }
+      });
+      // release parameter that was fixed in the returned state from Minos
+      state.Release(index);
+      if (!minuit2Minimize())
+         return false;
+      // run again Minos from new Minimum (also lower error needs to be re-computed)
+      print.Info("Run now again Minos from the new found Minimum");
+      mstatus = runMinuit2Minos(index, errLow, errUp);
+
+      // do not reset new minimum bit to flag for other parameters
+      mstatus |= 8;
+   }
+
+   _minuit2->status += 10 * mstatus;
+   _minuit2->minosStatus = mstatus;
+
+   return ((mstatus & 1) == 0) && ((mstatus & 2) == 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Run MINOS once for the parameter with the given index and return the MINOS
+/// status bits, with the same convention as Minuit2Minimizer:
+///   bit 1: lower error invalid, bit 2: upper error invalid, bit 4: invalid
+///   because the maximum number of function calls was reached, bit 8: invalid
+///   because a new minimum was found, bit 16: parameter is at a limit.
+
+int RooMinimizer::runMinuit2Minos(unsigned int index, double &errLow, double &errUp)
+{
+   using namespace ROOT::Minuit2;
+
+   ROOT::Math::MinimizerOptions const &options = _config.MinimizerOptions();
+   const int printLevel = options.PrintLevel();
+   MnPrint print("RooMinimizer::minos", printLevel);
+
+   Minuit2PrintLevelRAII printLevelRAII{printLevel};
+
+   MnUserParameterState &state = _minuit2->state;
+   if (options.Precision() > 0) {
+      state.SetPrecision(options.Precision());
+   }
+
+   // Like Minuit2Minimizer, use the default strategy for Minos.
+   MnMinos minos(*_fcn, *_minuit2->minimum);
+
+   const unsigned int maxfcn = options.MaxFunctionCalls();
+   // Tolerance for the migrad calls inside Minos. Cut off too small values,
+   // which are not needed.
+   const double tol = std::max(options.Tolerance(), 0.01);
+
+   const char *parName = state.Name(index);
+
+   if (printLevel >= 1) {
+      // get the real number of maxfcn used (defined in MnMinos) to be printed
+      unsigned int maxfcnUsed = maxfcn;
+      if (maxfcnUsed == 0) {
+         const unsigned int nvar = state.VariableParameters();
+         maxfcnUsed = 2 * (nvar + 1) * (200 + 100 * nvar + 5 * nvar * nvar);
+      }
+      std::cout << "RooMinimizer::minos - Run MINOS for parameter #" << index << " : " << parName << " using max-calls "
+                << maxfcnUsed << ", tolerance " << tol << std::endl;
+   }
+
+   const MinosError me = minos.Minos(index, maxfcn, tol);
+
+   // Note that the only invalid condition can happen when the (npar-1) minimization fails
+   // The error is also invalid when the maximum number of calls is reached or a new function minimum is found
+   // in case of the parameter at the limit the error is not invalid.
+   // When the error is invalid the returned error is the Hessian error.
+   if (!me.LowerValid()) {
+      print.Warn("Invalid lower error for parameter", parName);
+   }
+   if (!me.UpperValid()) {
+      print.Warn("Invalid upper error for parameter", parName);
+   }
+   if (me.AtLowerLimit()) {
+      print.Warn("Lower error for parameter", parName, "is at the Lower limit!");
+   }
+   if (me.AtUpperLimit()) {
+      print.Warn("Upper error for parameter", parName, "is at the Upper limit!");
+   }
+   if (me.AtLowerMaxFcn()) {
+      print.Warn("Maximum number of function calls exceeded when running for lower error for parameter", parName);
+   }
+   if (me.AtUpperMaxFcn()) {
+      print.Warn("Maximum number of function calls exceeded when running for upper error for parameter", parName);
+   }
+   if (me.LowerNewMin()) {
+      print.Warn("New Minimum found while running Minos for lower error for parameter", parName);
+   }
+   if (me.UpperNewMin()) {
+      print.Warn("New Minimum found while running Minos for upper error for parameter", parName);
+   }
+   if (printLevel >= 1) {
+      if (me.LowerValid())
+         std::cout << "Minos: Lower error for parameter " << parName << "  :  " << me.Lower() << std::endl;
+      if (me.UpperValid())
+         std::cout << "Minos: Upper error for parameter " << parName << "  :  " << me.Upper() << std::endl;
+   }
+
+   int mstatus = 0;
+   if (!me.LowerValid()) {
+      mstatus |= 1;
+      if (me.AtLowerMaxFcn())
+         mstatus |= 4;
+      if (me.LowerNewMin())
+         mstatus |= 8;
+   }
+   if (!me.UpperValid()) {
+      mstatus |= 2;
+      if (me.AtUpperMaxFcn())
+         mstatus |= 4;
+      if (me.UpperNewMin())
+         mstatus |= 8;
+   }
+   if (me.AtUpperLimit() || me.AtLowerLimit())
+      mstatus |= 16;
+
+   errLow = me.Lower();
+   errUp = me.Upper();
+
+   // in case of new minimum found update also the minimum state
+   if (me.LowerNewMin() && me.UpperNewMin()) {
+      // take state with lower function value
+      state = (me.LowerState().Fval() < me.UpperState().Fval()) ? me.LowerState() : me.UpperState();
+   } else if (me.LowerNewMin()) {
+      state = me.LowerState();
+   } else if (me.UpperNewMin()) {
+      state = me.UpperState();
+   }
+
+   return mstatus;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute a contour for parameters ipar and jpar at the given error level
+/// with Minuit2's MnContours, which requires a valid function minimum.
+
+bool RooMinimizer::minuit2Contour(unsigned int ipar, unsigned int jpar, unsigned int npoints, double errorDef,
+                                  double *x, double *y)
+{
+   using namespace ROOT::Minuit2;
+
+   ROOT::Math::MinimizerOptions const &options = _config.MinimizerOptions();
+   const int printLevel = options.PrintLevel();
+   MnPrint print("RooMinimizer::contour", printLevel);
+
+   if (!_minuit2->minimum) {
+      print.Error("No function minimum existing; must minimize function before");
+      return false;
+   }
+
+   if (!_minuit2->minimum->IsValid()) {
+      print.Error("Invalid function minimum");
+      return false;
+   }
+
+   setMinuit2ErrorDef(errorDef);
+
+   print.Info("Computing contours at level -", errorDef);
+
+   // switch off Minuit2 printing (for level of 0,1)
+   Minuit2PrintLevelRAII printLevelRAII{printLevel - 1};
+
+   if (options.Precision() > 0) {
+      _minuit2->state.SetPrecision(options.Precision());
+   }
+
+   // eventually one should specify tolerance in contours
+   MnContours contour(*_fcn, *_minuit2->minimum, makeMinuit2Strategy(options));
+
+   std::vector<std::pair<double, double>> result = contour(ipar, jpar, npoints);
+   if (result.size() != npoints) {
+      print.Error("Invalid result from MnContours");
+      return false;
+   }
+   for (unsigned int i = 0; i < npoints; ++i) {
+      x[i] = result[i].first;
+      y[i] = result[i].second;
+   }
+
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the internal fit result from the Minuit2 parameter state.
+
+void RooMinimizer::fillResultFromMinuit2(bool isValid)
+{
+   using namespace ROOT::Minuit2;
+
+   MnUserParameterState const &state = _minuit2->state;
+   std::vector<MinuitParameter> const &params = state.MinuitParameters();
+   const unsigned int npar = params.size();
+
+   _result->fValid = isValid;
+   _result->fStatus = _minuit2->status;
+   _result->fCovStatus = minuit2CovMatrixStatus(_minuit2->minimum.get(), state);
+   _result->fVal = state.Fval();
+   _result->fEdm = state.Edm();
+   _result->fMinimType = _config.MinimizerName();
+
+   _result->fParams.resize(npar);
+   _result->fErrors.resize(npar);
+   for (unsigned int i = 0; i < npar; ++i) {
+      _result->fParams[i] = params[i].Value();
+      _result->fErrors[i] = isFixedOrConst(params[i]) ? 0. : params[i].Error();
+   }
+
+   // check for fixed parameters
+   for (unsigned int ipar = 0; ipar < npar; ++ipar) {
+      if (_config.ParSettings(ipar).IsFixed())
+         _result->fFixedParams[ipar] = true;
+   }
+
+   // fill error matrix in packed lower-triangular storage
+   _result->fCovMatrix.clear();
+   if (_result->fCovStatus != 0) {
+      _result->fCovMatrix.reserve(npar * (npar + 1) / 2);
+      for (unsigned int i = 0; i < npar; ++i) {
+         for (unsigned int j = 0; j <= i; ++j) {
+            _result->fCovMatrix.push_back(minuit2Covariance(state, i, j));
+         }
+      }
+   }
+
+   // global correlation coefficients, zero for fixed parameters
+   _result->fGlobalCC.clear();
+   MnGlobalCorrelationCoeff const globalCC = state.GlobalCC();
+   if (globalCC.IsValid()) {
+      _result->fGlobalCC.resize(npar);
+      for (unsigned int i = 0; i < npar; ++i) {
+         _result->fGlobalCC[i] = isFixedOrConst(params[i]) ? 0. : globalCC.GlobalCC()[state.IntOfExt(i)];
+      }
+   }
+   // minos errors are set separately when calling calculateMinosErrors()
 }
 
 double RooMinimizer::FitResult::lowerError(unsigned int i) const
