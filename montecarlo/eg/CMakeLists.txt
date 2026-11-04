@@ -9,18 +9,22 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(EG_HEADERS
+  TAttParticle.h
+  TDatabasePDG.h
+  TDecayChannel.h
+  TGenerator.h
+  TPDGCode.h
+  TParticleClassPDG.h
+  TParticle.h
+  TParticlePDG.h
+  TPrimary.h
+  TVirtualMCDecayer.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(EG
   HEADERS
-    TAttParticle.h
-    TDatabasePDG.h
-    TDecayChannel.h
-    TGenerator.h
-    TPDGCode.h
-    TParticleClassPDG.h
-    TParticle.h
-    TParticlePDG.h
-    TPrimary.h
-    TVirtualMCDecayer.h
+    ${EG_HEADERS}
   SOURCES
     src/TAttParticle.cxx
     src/TDatabasePDG.cxx
@@ -39,6 +43,20 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EG
     Physics
   LIBRARIES
     ROOTX3dViewer
+)
+
+set(RELATIVE_INC_HEADERS ${EG_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(EG
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    inc/Hepevt.h
+    inc/cfortran.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
