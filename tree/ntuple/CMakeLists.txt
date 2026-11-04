@@ -18,7 +18,7 @@ endif()
 
 # Enable RNTuple support for Intel DAOS
 if(daos OR daos_mock)
-  list(APPEND ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx ROOT/RDaos.hxx)
+  list(APPEND ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
   list(APPEND ROOTNTuple_EXTRA_SOURCES src/RDaos.cxx src/RPageStorageDaos.cxx)
 
   if(daos_mock)
@@ -140,7 +140,7 @@ set(ROOTNTuple_NONSTANDALONE_HEADERS
 
 set(RELATIVE_INC_HEADERS ${ROOTNTuple_HEADERS} ${ROOTNTuple_EXTRA_HEADERS} ${ROOTNTuple_NONSTANDALONE_HEADERS})
 if(daos_mock)
-  list(APPEND RELATIVE_INC_HEADERS ROOT/libdaos_mock/daos.h)
+  list(APPEND RELATIVE_INC_HEADERS ROOT/libdaos_mock/daos.h ROOT/RDaos.hxx)
 endif()    
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
 target_sources(ROOTNTuple
