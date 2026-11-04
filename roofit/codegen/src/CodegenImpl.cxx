@@ -677,10 +677,10 @@ void codegenImpl(RooFFTConvPdf &arg, CodegenContext &ctx)
       std::stringstream ss;
       ss.imbue(std::locale::classic()); // the generated code is C++, not locale-dependent text
       ss << "   " << obsArr << "[0] = " << lowStr << " + (" << idx << " + 0.5) * " << doubleToString(grid.binWidth)
-         << " - " << doubleToString(arg.shift1()) << ";\n"
+         << " - " << doubleToString(grid.shift1) << ";\n"
          << "   " << in1 << "[" << index << "] = " << func1 << "(params, " << obsArr << ", xlArr);\n"
          << "   " << obsArr << "[0] = " << lowStr << " + (" << idx << " + 0.5) * " << doubleToString(grid.binWidth)
-         << " - " << doubleToString(arg.shift2()) << ";\n"
+         << " - " << doubleToString(grid.shift2) << ";\n"
          << "   " << in2 << "[" << index << "] = " << func2 << "(params, " << obsArr << ", xlArr);\n";
       return ss.str();
    };

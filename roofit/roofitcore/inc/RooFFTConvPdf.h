@@ -62,13 +62,16 @@ public:
   /// Layout of the grid on which the input pdfs are sampled for the FFT: the
   /// `numBins` bins of the "cache" binning of the convolution observable plus
   /// `numBufferBins` bins on either side (see setBufferFraction()). Sample `k`
-  /// is taken at the center of extended bin `k`, `lowExt() + (k + 0.5) * binWidth`.
+  /// of input pdf `j` is taken at `lowExt() + (k + 0.5) * binWidth - shift_j`.
   struct SamplingGrid {
     int numBins = 0;        ///< Number of bins of the convolution observable
     int numBufferBins = 0;  ///< Number of buffer bins added below and above the observable range
     double low = 0.0;       ///< Lower boundary of the convolution observable
     double high = 0.0;      ///< Upper boundary of the convolution observable
     double binWidth = 0.0;  ///< Width of the (uniform) bins
+    double shift1 = 0.0;    ///< Shift of the convolution observable when sampling the first input pdf, see setShift()
+    double shift2 = 0.0;    ///< Shift when sampling the second input pdf: the one from setShift(), corrected by up to
+                            ///< half a bin width so that the convolution output is exact at the cache bin centers
     int outputOffset = 0;   ///< Index offset of the convolution output with respect to the cache bins, see fillCacheSlice()
 
     /// Total number of samples, including the buffer bins.

@@ -262,9 +262,11 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
    string refName = Form("refrange_fft_%s",self.GetName()) ;
    convObs->setRange(refName.c_str(),convObs->getMin(),convObs->getMax()) ;
 
-   if (self._shift1!=0) {
+   const SamplingGrid grid = self.samplingGrid();
+
+   if (grid.shift1!=0) {
      RooLinearVar* shiftObs1 = new RooLinearVar(Form("%s_shifted_FFTBuffer1",convObs->GetName()),"shiftObs1",
-                      *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift1)) ;
+                      *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*grid.shift1)) ;
 
     RooArgSet clonedBranches1 ;
     RooCustomizer cust(*clonePdf1,"fft") ;
@@ -279,9 +281,9 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
     pdf1Clone.reset(clonePdf1) ;
   }
 
-  if (self._shift2!=0) {
+  if (grid.shift2!=0) {
     RooLinearVar* shiftObs2 = new RooLinearVar(Form("%s_shifted_FFTBuffer2",convObs->GetName()),"shiftObs2",
-                      *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift2)) ;
+                      *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*grid.shift2)) ;
 
     RooArgSet clonedBranches2 ;
     RooCustomizer cust(*clonePdf2,"fft") ;
@@ -327,7 +329,6 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
   // Save copy of original histX binning and make alternate binning
   // for extended range scanning
 
-  const SamplingGrid grid = self.samplingGrid();
   const Int_t N = grid.numBins;
   if (N < 900) {
     oocoutW(&self, Eval) << "The FFT convolution '" << self.GetName() << "' will run with " << N
@@ -471,7 +472,8 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 /// arguments of the two sampled pdfs add up to `x` in every term. Cache bin
 /// `i` is extended bin `i + numBufferBins`, so its value is found at index
 /// `n = i + numBufferBins + (shift1 + shift2 - lowExt) / binWidth - 0.5`,
-/// rounded and taken modulo N2, which is `i + outputOffset`.
+/// taken modulo N2. samplingGrid() corrects the second shift such that this
+/// is an integer, which is `i + outputOffset`.
 
 void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos) const
 {
@@ -810,14 +812,20 @@ RooFFTConvPdf::SamplingGrid RooFFTConvPdf::samplingGrid() const
   grid.low = binning.lowBound();
   grid.high = binning.highBound();
   grid.binWidth = (grid.high - grid.low) / grid.numBins;
+  grid.shift1 = _shift1;
 
-  // The shifts displace the convolution output by the index of the extended
-  // bin that contains their sum, see fillCacheSlice(). The epsilon keeps the
-  // rounding stable when the sum lies exactly on a bin boundary, as it does
-  // with the default shifts for an even number of bins.
-  const long long shiftBins = static_cast<long long>(std::floor((_shift1 + _shift2 - grid.lowExt()) / grid.binWidth + 1e-6));
+  // The shifts displace the convolution output by
+  // (shift1 + shift2 - lowExt) / binWidth - 0.5 bins, see fillCacheSlice().
+  // Rounding that would shift the convolution by up to half a bin, so the
+  // second shift absorbs the fraction instead. The epsilon keeps the rounding
+  // stable when the sum of the shifts lies exactly between two bin centers,
+  // as it does with the default shifts for an even number of bins.
+  const double shiftBins = (_shift1 + _shift2 - grid.lowExt()) / grid.binWidth - 0.5;
+  const double shiftBinsRounded = std::floor(shiftBins + 0.5 + 1e-6);
+  grid.shift2 = _shift2 + (shiftBinsRounded - shiftBins) * grid.binWidth;
+
   const long long n2 = grid.numSamples();
-  long long offset = (grid.numBufferBins + shiftBins) % n2;
+  long long offset = (grid.numBufferBins + static_cast<long long>(shiftBinsRounded)) % n2;
   if (offset < 0) {
     offset += n2;
   }
