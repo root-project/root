@@ -1809,6 +1809,9 @@ void TProfile2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TProfile2D::Scale(Double_t c1, Option_t * option)
 {
    TProfileHelper::Scale(this, c1, option);
+   // the z values are scaled, so are their sums used for the mean and standard deviation of z
+   fTsumwz *= c1;
+   fTsumwz2 *= c1 * c1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
