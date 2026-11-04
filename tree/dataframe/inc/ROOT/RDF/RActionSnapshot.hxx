@@ -166,55 +166,62 @@ public:
       fHelper.InitTask(r, slot);
    }
 
-   void *GetValue(unsigned int slot, std::size_t readerIdx, Long64_t entry)
+   void *GetValue(unsigned int slot, std::size_t readerIdx, std::size_t idx)
    {
       assert(slot < fValues.size());
       assert(readerIdx < fValues[slot].size());
-      if (auto *val = fValues[slot][readerIdx]->template TryGet<void>(entry))
+      if (auto *val = fValues[slot][readerIdx]->template TryGet<void>(idx))
          return val;
 
       throw std::out_of_range{"RDataFrame: Action (" + fHelper.GetActionName() +
                               ") could not retrieve value for column '" + fColumnNames[readerIdx] + "' for entry " +
-                              std::to_string(entry) +
+                              std::to_string(idx) +
                               ". You can use the DefaultValueFor operation to provide a default value, or "
                               "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
    }
 
-   void CallExec(unsigned int slot, Long64_t entry)
+   void CallExec(unsigned int slot, std::size_t idx)
    {
       std::vector<void *> untypedValues;
       auto nReaders = fValues[slot].size();
       untypedValues.reserve(nReaders);
       for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
-         untypedValues.push_back(GetValue(slot, readerIdx, entry));
+         untypedValues.push_back(GetValue(slot, readerIdx, idx));
 
       fHelper.Exec(slot, untypedValues);
    }
 
-   void Run(unsigned int slot, Long64_t entry) final
+   void Run(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
       if constexpr (std::is_same_v<Helper, SnapshotHelperWithVariations>) {
          // check if entry passes all filters
-         std::vector<bool> filterPassed(fPrevNodes.size(), false);
+         std::vector<ROOT::Internal::RDF::RMaskedEntryRange> filterPassed(fPrevNodes.size(), 1ul);
          for (unsigned int variation = 0; variation < fPrevNodes.size(); ++variation) {
-            filterPassed[variation] = fPrevNodes[variation]->CheckFilters(slot, entry);
+            filterPassed[variation] = fPrevNodes[variation]->CheckFilters(slot, bulkBeginEntry, bulkSize);
          }
 
          // Currently, every event where any of nominal or variations pass gets written to the output.
          // This logic could be extended for different use cases if the need arises.
-         if (std::any_of(filterPassed.begin(), filterPassed.end(), [](bool val) { return val; })) {
+         if (std::any_of(filterPassed.begin(), filterPassed.end(),
+                         [](const ROOT::Internal::RDF::RMaskedEntryRange &val) { return val[0]; })) {
             // TODO: Don't allocate
             std::vector<void *> untypedValues;
             auto nReaders = fValues[slot].size();
             untypedValues.reserve(nReaders);
+            std::for_each(fValues[slot].begin(), fValues[slot].end(), [bulkBeginEntry, bulkSize](auto *v) {
+               v->Load(
+                  ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, true, static_cast<std::uint64_t>(bulkBeginEntry)});
+            });
             for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
-               untypedValues.push_back(GetValue(slot, readerIdx, entry));
+               untypedValues.push_back(GetValue(slot, readerIdx, /*idx=*/0u));
 
             fHelper.Exec(slot, untypedValues, filterPassed);
          }
       } else {
-         if (fPrevNodes.front()->CheckFilters(slot, entry))
-            CallExec(slot, entry);
+         const auto mask = fPrevNodes.front()->CheckFilters(slot, bulkBeginEntry, bulkSize);
+         std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
+         if (mask[0])
+            CallExec(slot, /*idx=*/0u);
       }
    }
 
