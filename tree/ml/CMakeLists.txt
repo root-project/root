@@ -2,10 +2,14 @@ if(NOT pyroot OR NOT dataframe)
     return()
 endif()
 
+set(MLDATALOADER_HEADERS
+  ROOT/ML/RDataLoaderEngine.hxx
+  ROOT/ML/RFlat2DMatrix.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTMLDataLoader
   HEADERS
-    ROOT/ML/RDataLoaderEngine.hxx
-    ROOT/ML/RFlat2DMatrix.hxx
+    ${MLDATALOADER_HEADERS}
   SOURCES
     src/RBatchLoader.cxx
     src/RBatchSink.cxx
@@ -17,3 +21,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTMLDataLoader
   DEPENDENCIES
     ROOTDataFrame
 )
+
+set(RELATIVE_INC_HEADERS ${MLDATALOADER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTMLDataLoader
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/RBatchLoader.hxx
+    src/RBatchSink.hxx
+    src/RClusterLoader.hxx
+    src/RDatasetLoader.hxx
+    src/RFlat2DMatrixOperators.hxx
+    src/RSampler.hxx
+)
+

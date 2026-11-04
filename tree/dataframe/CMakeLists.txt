@@ -35,76 +35,80 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set(RDATAFRAME_HEADERS
+  ROOT/RCsvDS.hxx
+  ROOT/RVecDS.hxx
+  ROOT/RDataFrame.hxx
+  ROOT/RDataSource.hxx
+  ROOT/RDFHelpers.hxx
+  ROOT/RLazyDS.hxx
+  ROOT/RNTupleDS.hxx
+  ROOT/RNTupleProcessorDS.hxx
+  ROOT/RResultHandle.hxx
+  ROOT/RResultPtr.hxx
+  ROOT/RRootDS.hxx
+  ROOT/RSnapshotOptions.hxx
+  ROOT/RTrivialDS.hxx
+  ROOT/RTTreeDS.hxx
+  ROOT/RDF/ActionHelpers.hxx
+  ROOT/RDF/ColumnReaderUtils.hxx
+  ROOT/RDF/GraphNode.hxx
+  ROOT/RDF/GraphUtils.hxx
+  ROOT/RDF/HistoModels.hxx
+  ROOT/RDF/InterfaceUtils.hxx
+  ROOT/RDF/RActionBase.hxx
+  ROOT/RDF/RAction.hxx
+  ROOT/RDF/RActionCustomLoader.hxx
+  ROOT/RDF/RActionSnapshot.hxx
+  ROOT/RDF/RActionImpl.hxx
+  ROOT/RDF/RColumnRegister.hxx
+  ROOT/RDF/RNewSampleNotifier.hxx
+  ROOT/RDF/RSampleInfo.hxx
+  ROOT/RDF/RDefineBase.hxx
+  ROOT/RDF/RDefaultValueFor.hxx
+  ROOT/RDF/RDefine.hxx
+  ROOT/RDF/RDefinePerSample.hxx
+  ROOT/RDF/RDefineReader.hxx
+  ROOT/RDF/RDSColumnReader.hxx
+  ROOT/RDF/RColumnReaderBase.hxx
+  ROOT/RDF/RCutFlowReport.hxx
+  ROOT/RDF/RDatasetSpec.hxx
+  ROOT/RDF/RDisplay.hxx
+  ROOT/RDF/RFilterBase.hxx
+  ROOT/RDF/RFilter.hxx
+  ROOT/RDF/RInterface.hxx
+  ROOT/RDF/RInterfaceBase.hxx
+  ROOT/RDF/RJittedAction.hxx
+  ROOT/RDF/RJittedDefine.hxx
+  ROOT/RDF/RJittedFilter.hxx
+  ROOT/RDF/RJittedVariation.hxx
+  ROOT/RDF/RLazyDSImpl.hxx
+  ROOT/RDF/RLoopManager.hxx
+  ROOT/RDF/RMergeableValue.hxx
+  ROOT/RDF/RMetaData.hxx
+  ROOT/RDF/RNodeBase.hxx
+  ROOT/RDF/RRangeBase.hxx
+  ROOT/RDF/RRange.hxx
+  ROOT/RDF/RResultMap.hxx
+  ROOT/RDF/RSample.hxx
+  ROOT/RDF/RFilterWithMissingValues.hxx
+  ROOT/RDF/RTreeColumnReader.hxx
+  ROOT/RDF/RVariation.hxx
+  ROOT/RDF/RVariationBase.hxx
+  ROOT/RDF/RVariationReader.hxx
+  ROOT/RDF/RVariationsDescription.hxx
+  ROOT/RDF/RVariedAction.hxx
+  ROOT/RDF/SnapshotHelpers.hxx
+  ROOT/RDF/CustomLoaderHelpers.hxx
+  ROOT/RDF/Utils.hxx
+  ROOT/RDF/PyROOTHelpers.hxx
+  ROOT/RDF/RDFDescription.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   NO_GLOB_HEADERS # Don't install RArrowDS and similar if they are off
   HEADERS
-    ROOT/RCsvDS.hxx
-    ROOT/RVecDS.hxx
-    ROOT/RDataFrame.hxx
-    ROOT/RDataSource.hxx
-    ROOT/RDFHelpers.hxx
-    ROOT/RLazyDS.hxx
-    ROOT/RResultHandle.hxx
-    ROOT/RResultPtr.hxx
-    ROOT/RRootDS.hxx
-    ROOT/RSnapshotOptions.hxx
-    ROOT/RTrivialDS.hxx
-    ROOT/RTTreeDS.hxx
-    ROOT/RDF/ActionHelpers.hxx
-    ROOT/RDF/ColumnReaderUtils.hxx
-    ROOT/RDF/GraphNode.hxx
-    ROOT/RDF/GraphUtils.hxx
-    ROOT/RDF/HistoModels.hxx
-    ROOT/RDF/InterfaceUtils.hxx
-    ROOT/RDF/RActionBase.hxx
-    ROOT/RDF/RAction.hxx
-    ROOT/RDF/RActionCustomLoader.hxx
-    ROOT/RDF/RActionSnapshot.hxx
-    ROOT/RDF/RActionImpl.hxx
-    ROOT/RDF/RColumnRegister.hxx
-    ROOT/RDF/RNewSampleNotifier.hxx
-    ROOT/RDF/RSampleInfo.hxx
-    ROOT/RDF/RDefineBase.hxx
-    ROOT/RDF/RDefaultValueFor.hxx
-    ROOT/RDF/RDefine.hxx
-    ROOT/RDF/RDefinePerSample.hxx
-    ROOT/RDF/RDefineReader.hxx
-    ROOT/RDF/RDSColumnReader.hxx
-    ROOT/RDF/RColumnReaderBase.hxx
-    ROOT/RDF/RCutFlowReport.hxx
-    ROOT/RDF/RDatasetSpec.hxx
-    ROOT/RDF/RDisplay.hxx
-    ROOT/RDF/RFilterBase.hxx
-    ROOT/RDF/RFilter.hxx
-    ROOT/RDF/RInterface.hxx
-    ROOT/RDF/RInterfaceBase.hxx
-    ROOT/RDF/RJittedAction.hxx
-    ROOT/RDF/RJittedDefine.hxx
-    ROOT/RDF/RJittedFilter.hxx
-    ROOT/RDF/RJittedVariation.hxx
-    ROOT/RDF/RLazyDSImpl.hxx
-    ROOT/RDF/RLoopManager.hxx
-    ROOT/RDF/RMergeableValue.hxx
-    ROOT/RDF/RMetaData.hxx
-    ROOT/RDF/RNodeBase.hxx
-    ROOT/RDF/RRangeBase.hxx
-    ROOT/RDF/RRange.hxx
-    ROOT/RDF/RResultMap.hxx
-    ROOT/RDF/RSample.hxx
-    ROOT/RDF/RFilterWithMissingValues.hxx
-    ROOT/RDF/RTreeColumnReader.hxx
-    ROOT/RDF/RVariation.hxx
-    ROOT/RDF/RVariationBase.hxx
-    ROOT/RDF/RVariationReader.hxx
-    ROOT/RDF/RVariationsDescription.hxx
-    ROOT/RDF/RVariedAction.hxx
-    ROOT/RDF/SnapshotHelpers.hxx
-    ROOT/RDF/CustomLoaderHelpers.hxx
-    ROOT/RDF/Utils.hxx
-    ROOT/RDF/PyROOTHelpers.hxx
-    ROOT/RDF/RDFDescription.hxx
-    ROOT/RNTupleDS.hxx
-    ROOT/RNTupleProcessorDS.hxx
+    ${RDATAFRAME_HEADERS}
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
@@ -161,6 +165,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOTNTuple
     ${RDATAFRAME_EXTRA_DEPS}
   ${EXTRA_DICT_OPTS}
+)
+
+set(RELATIVE_INC_HEADERS ${RDATAFRAME_HEADERS} ${RDATAFRAME_EXTRA_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTDataFrame
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/RNTupleDSFields.hxx
 )
 
 if(arrow)
