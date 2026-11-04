@@ -22,7 +22,7 @@
 /// to calculate the convolution by calculating a forward FFT of both input PDFs,
 /// multiplying the complex coefficients and performing the inverse FFT to get the
 /// result in the input space. The FFT is implemented internally so that no external
-/// FFT library (e.g. FFTW3) is required.
+/// FFT library (e.g. FFTW3) is required, see RooFit::Detail::MathFuncs::fftConvolveAdd().
 ///
 /// Note that the performance in terms of speed and stability of RooFFTConvPdf is
 /// vastly superior to that of RooNumConvPdf.
@@ -91,138 +91,16 @@
 #include "RooConstVar.h"
 #include "RooUniformBinning.h"
 #include "RooFitImplHelpers.h"
+#include "RooFit/Detail/MathFuncs.h"
 
 #include "TClass.h"
 #include "TMath.h"
 
+#include <algorithm>
 #include <cmath>
-#include <complex>
 #include <iostream>
 #include <vector>
 
-namespace {
-
-using FFTComplex = std::complex<double>;
-
-// Iterative in-place radix-2 Cooley-Tukey FFT. The length of `a` must be a power
-// of two. `sign` is -1 for the forward DFT and +1 for the backward DFT (no
-// normalization is applied in either direction, matching the FFTW convention).
-void fftRadix2(std::vector<FFTComplex> &a, int sign)
-{
-   const std::size_t n = a.size();
-   if (n < 2)
-      return;
-
-   // Bit-reversal permutation.
-   for (std::size_t i = 1, j = 0; i < n; ++i) {
-      std::size_t bit = n >> 1;
-      for (; j & bit; bit >>= 1) {
-         j ^= bit;
-      }
-      j ^= bit;
-      if (i < j) {
-         std::swap(a[i], a[j]);
-      }
-   }
-
-   // Twiddle factors of the largest stage: tw[k] = exp(sign * 2*pi*i * k / n)
-   // for k < n/2. A stage of length `len` uses the subset with stride n/len.
-   // Computing each factor directly (instead of advancing a running phase by
-   // repeated multiplication) keeps the round-off error at the epsilon level
-   // independently of n.
-   std::vector<FFTComplex> tw(n >> 1);
-   const double angle = sign * 2.0 * TMath::Pi() / static_cast<double>(n);
-   for (std::size_t k = 0; k < tw.size(); ++k) {
-      tw[k] = std::polar(1.0, angle * static_cast<double>(k));
-   }
-
-   // Butterfly stages.
-   for (std::size_t len = 2; len <= n; len <<= 1) {
-      const std::size_t half = len >> 1;
-      const std::size_t stride = n / len;
-      for (std::size_t i = 0; i < n; i += len) {
-         for (std::size_t k = 0; k < half; ++k) {
-            const FFTComplex u = a[i + k];
-            const FFTComplex v = a[i + k + half] * tw[k * stride];
-            a[i + k] = u + v;
-            a[i + k + half] = u - v;
-         }
-      }
-   }
-}
-
-// Replicates the FFTW r2c -> multiply -> c2r pipeline used by RooFFTConvPdf.
-// The convention is unnormalized (matching FFTW), so the output equals
-// n * (input1 ⊛ input2) where ⊛ denotes circular convolution. The absolute
-// scale does not matter since RooHistPdf renormalizes the cached histogram.
-//
-// If n is a power of two, the circular convolution is computed directly with
-// two transforms of length n. Otherwise, the inputs are zero-padded to the
-// smallest power of two m >= 2n - 1, which yields their linear convolution,
-// and the circular convolution is recovered exactly by folding the result
-// back modulo n. Both real inputs are packed into a single complex sequence
-// z = input1 + i*input2, so that one forward transform yields both spectra
-// via Hermitian symmetry.
-void doFFT(int n, double const *input1, double const *input2, double *output)
-{
-   if (n <= 0)
-      return;
-   const std::size_t N = static_cast<std::size_t>(n);
-
-   std::size_t m = N;
-   if ((N & (N - 1)) != 0) {
-      m = 1;
-      while (m < 2 * N - 1) {
-         m <<= 1;
-      }
-   }
-
-   std::vector<FFTComplex> z(m, FFTComplex(0.0, 0.0));
-   bool nonNegativeInputs = true;
-   for (std::size_t k = 0; k < N; ++k) {
-      nonNegativeInputs &= input1[k] >= 0.0 && input2[k] >= 0.0;
-      z[k] = FFTComplex(input1[k], input2[k]);
-   }
-   fftRadix2(z, -1);
-
-   // Unpack the spectra A = FFT(input1) and B = FFT(input2) from z and
-   // overwrite z with the product A*B. Both spectra are Hermitian
-   // (A[m-k] = conj(A[k])), and so is their product, so only half of the
-   // bins need to be computed. Each iteration reads and writes the pair
-   // (k, m-k), so the update can safely be done in place.
-   for (std::size_t k = 0; k <= m / 2; ++k) {
-      const std::size_t j = (m - k) & (m - 1); // (m - k) mod m
-      const FFTComplex zk = z[k];
-      const FFTComplex zjc = std::conj(z[j]);
-      const FFTComplex ak = 0.5 * (zk + zjc);
-      const FFTComplex bk = FFTComplex(0.0, -0.5) * (zk - zjc);
-      const FFTComplex pk = ak * bk;
-      z[k] = pk;
-      z[j] = std::conj(pk);
-   }
-   fftRadix2(z, +1);
-
-   // The unnormalized round trip yields m times the (linear) convolution.
-   // Rescale to the documented n * (input1 ⊛ input2) convention, and for the
-   // padded case fold the linear convolution (length 2n - 1 <= m) modulo n.
-   const double scale = static_cast<double>(N) / static_cast<double>(m);
-   for (std::size_t k = 0; k < N; ++k) {
-      double val = z[k].real();
-      if (m != N) {
-         val += z[k + N].real();
-      }
-      val *= scale;
-      // The convolution of two non-negative sequences is non-negative, but
-      // round-off can push bins whose true value is ~0 slightly negative,
-      // which RooFit later reports as pdf evaluation errors. Clamp those.
-      if (nonNegativeInputs && val < 0.0) {
-         val = 0.0;
-      }
-      output[k] = val;
-   }
-}
-
-} // namespace
 
 using std::endl, std::string, std::ostream;
 
@@ -620,7 +498,14 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
   if (_bufStrat==Extend) histX->setBinning(*aux.histBinning) ;
 
   std::vector<double> output(N2);
-  doFFT(N2, input1.data(), input2.data(), output.data());
+  RooFit::Detail::MathFuncs::fftConvolveAdd(N2, input1.data(), input2.data(), output.data());
+
+  // The convolution of two non-negative inputs is non-negative, but round-off
+  // can push bins whose true value is ~0 slightly negative, which RooFit later
+  // reports as pdf evaluation errors. Clamp those.
+  auto nonNegative = [](double val) { return val >= 0.0; };
+  const bool nonNegativeInputs = std::all_of(input1.begin(), input1.end(), nonNegative) &&
+                                 std::all_of(input2.begin(), input2.end(), nonNegative);
 
   // Store FFT result in cache
 
@@ -629,10 +514,11 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
 
     // Index of the convolution output that corresponds to cache bin i
     const Int_t j = (i + grid.outputOffset) % N2;
+    const double val = nonNegativeInputs && output[j] < 0.0 ? 0.0 : output[j];
 
     iter->Next() ;
     const std::size_t binIdx = cacheHist.getIndex(*cacheHist.get(), /*fast=*/true);
-    cacheHist.set(binIdx, output[j], -1.);
+    cacheHist.set(binIdx, val, -1.);
   }
 }
 

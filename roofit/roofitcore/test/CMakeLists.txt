@@ -24,6 +24,7 @@ ROOT_ADD_GTEST(testRooFitCore
     loadOldWorkspace.cxx
     testGenericPdf.cxx
     testGlobalObservables.cxx
+    testMathFuncs.cxx
     testRooAbsCollection.cxx
     testRooCacheManager.cxx
     testRooCategory.cxx

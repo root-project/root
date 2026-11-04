@@ -22,8 +22,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <complex>
 #include <limits>
 #include <stdexcept>
+#include <vector>
 
 namespace RooFit::Detail::MathFuncs {
 
@@ -912,6 +914,117 @@ double stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, DoubleA
    return out;
 }
 
+/// In-place iterative radix-2 Cooley-Tukey FFT of the complex sequence `a`,
+/// whose length must be a power of two. `sign` is -1 for the forward and +1 for
+/// the backward transform. No normalization is applied in either direction.
+inline void fftRadix2(std::vector<std::complex<double>> &a, int sign)
+{
+   const std::size_t n = a.size();
+   if (n < 2)
+      return;
+
+   // Bit-reversal permutation.
+   for (std::size_t i = 1, j = 0; i < n; ++i) {
+      std::size_t bit = n >> 1;
+      for (; j & bit; bit >>= 1) {
+         j ^= bit;
+      }
+      j ^= bit;
+      if (i < j) {
+         std::swap(a[i], a[j]);
+      }
+   }
+
+   // Twiddle factors of the largest stage: tw[k] = exp(sign * 2*pi*i * k / n)
+   // for k < n/2. A stage of length `len` uses the subset with stride n/len.
+   // Computing each factor directly (instead of advancing a running phase by
+   // repeated multiplication) keeps the round-off error at the epsilon level
+   // independently of n.
+   std::vector<std::complex<double>> tw(n >> 1);
+   const double angle = sign * 2.0 * TMath::Pi() / static_cast<double>(n);
+   for (std::size_t k = 0; k < tw.size(); ++k) {
+      tw[k] = std::polar(1.0, angle * static_cast<double>(k));
+   }
+
+   // Butterfly stages.
+   for (std::size_t len = 2; len <= n; len <<= 1) {
+      const std::size_t half = len >> 1;
+      const std::size_t stride = n / len;
+      for (std::size_t i = 0; i < n; i += len) {
+         for (std::size_t k = 0; k < half; ++k) {
+            const std::complex<double> u = a[i + k];
+            const std::complex<double> v = a[i + k + half] * tw[k * stride];
+            a[i + k] = u + v;
+            a[i + k + half] = u - v;
+         }
+      }
+   }
+}
+
+/// Adds the circular convolution of the two real sequences `in1` and `in2` of
+/// length `n` to `out`:
+/// \f[
+///   \mathrm{out}[k] \mathrel{+}= \sum_{j=0}^{n-1} \mathrm{in1}[j] \cdot \mathrm{in2}[(k - j) \bmod n]
+/// \f]
+/// The sum is computed with FFTs. If `n` is a power of two, the circular
+/// convolution is computed directly with two transforms of length `n`.
+/// Otherwise, the inputs are zero-padded to the smallest power of two
+/// `m >= 2n - 1`, which yields their linear convolution, and the circular
+/// convolution is recovered exactly by folding the result modulo `n`. Both
+/// real inputs are packed into a single complex sequence `z = in1 + i * in2`,
+/// so that one forward transform yields both spectra via Hermitian symmetry.
+///
+/// Adding to the output instead of overwriting it lets the pushforward for
+/// clad (see the end of this file) be expressed with the function itself.
+inline void fftConvolveAdd(unsigned int n, double const *in1, double const *in2, double *out)
+{
+   if (n == 0)
+      return;
+   const std::size_t N = n;
+
+   std::size_t m = N;
+   if ((N & (N - 1)) != 0) {
+      m = 1;
+      while (m < 2 * N - 1) {
+         m <<= 1;
+      }
+   }
+
+   std::vector<std::complex<double>> z(m, std::complex<double>(0.0, 0.0));
+   for (std::size_t k = 0; k < N; ++k) {
+      z[k] = std::complex<double>(in1[k], in2[k]);
+   }
+   fftRadix2(z, -1);
+
+   // Unpack the spectra A = FFT(in1) and B = FFT(in2) from z and overwrite z
+   // with the product A*B. Both spectra are Hermitian (A[m-k] = conj(A[k])),
+   // and so is their product, so only half of the bins need to be computed.
+   // Each iteration reads and writes the pair (k, m-k), so the update can
+   // safely be done in place.
+   for (std::size_t k = 0; k <= m / 2; ++k) {
+      const std::size_t j = (m - k) & (m - 1); // (m - k) mod m
+      const std::complex<double> zk = z[k];
+      const std::complex<double> zjc = std::conj(z[j]);
+      const std::complex<double> ak = 0.5 * (zk + zjc);
+      const std::complex<double> bk = std::complex<double>(0.0, -0.5) * (zk - zjc);
+      const std::complex<double> pk = ak * bk;
+      z[k] = pk;
+      z[j] = std::conj(pk);
+   }
+   fftRadix2(z, +1);
+
+   // The unnormalized round trip yields m times the (linear) convolution. For
+   // the padded case, fold the linear convolution (length 2n - 1 <= m) modulo n.
+   const double scale = 1.0 / static_cast<double>(m);
+   for (std::size_t k = 0; k < N; ++k) {
+      double val = z[k].real();
+      if (m != N) {
+         val += z[k + N].real();
+      }
+      out[k] += val * scale;
+   }
+}
+
 } // namespace RooFit::Detail::MathFuncs
 
 namespace clad {
@@ -995,6 +1108,36 @@ exponentialIntegral_pushforward(double xMin, double xMax, double constant, doubl
    return {::RooFit::Detail::MathFuncs::exponentialIntegral(xMin, xMax, constant),
            -std::exp(constant * xMin) * d_xMin + std::exp(constant * xMax) * d_xMax +
               ::RooFit::Detail::MathFuncs::exponentialIntegralDConstant(xMin, xMax, constant) * d_constant};
+}
+
+// Derivatives of fftConvolveAdd(), which is bilinear in its inputs. With
+// `rev(v)[k] = v[(n - k) mod n]`, the pullback is
+//   d_in1 += d_out (*) rev(in2),  d_in2 += d_out (*) rev(in1),
+// and d_out is unchanged because the function adds to `out`. The pushforward
+// `d_out += d_in1 (*) in2 + in1 (*) d_in2` only calls fftConvolveAdd(), so
+// clad can differentiate it again for Hessians. `::std` has to be qualified
+// because clad::custom_derivatives::std would be found first.
+
+inline void fftConvolveAdd_pullback(unsigned int n, double const *in1, double const *in2, double * /*out*/,
+                                    unsigned int * /*d_n*/, double *d_in1, double *d_in2, double *d_out)
+{
+   ::std::vector<double> reversed(n);
+   for (unsigned int k = 0; k < n; ++k) {
+      reversed[k] = in2[(n - k) % n];
+   }
+   ::RooFit::Detail::MathFuncs::fftConvolveAdd(n, d_out, reversed.data(), d_in1);
+   for (unsigned int k = 0; k < n; ++k) {
+      reversed[k] = in1[(n - k) % n];
+   }
+   ::RooFit::Detail::MathFuncs::fftConvolveAdd(n, d_out, reversed.data(), d_in2);
+}
+
+inline void fftConvolveAdd_pushforward(unsigned int n, double const *in1, double const *in2, double *out,
+                                       unsigned int /*d_n*/, double const *d_in1, double const *d_in2, double *d_out)
+{
+   ::RooFit::Detail::MathFuncs::fftConvolveAdd(n, in1, in2, out);
+   ::RooFit::Detail::MathFuncs::fftConvolveAdd(n, d_in1, in2, d_out);
+   ::RooFit::Detail::MathFuncs::fftConvolveAdd(n, in1, d_in2, d_out);
 }
 
 } // namespace RooFit::Detail::MathFuncs
