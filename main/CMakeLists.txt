@@ -142,20 +142,33 @@ endif()
 add_dependencies(genreflex rootcling)
 add_dependencies(rootcint rootcint)
 
+add_library(rootexecutableHelpers INTERFACE)
+target_sources(rootexecutableHelpers
+PUBLIC
+  FILE_SET HEADERS
+  TYPE HEADERS
+  BASE_DIRS src/
+  FILES
+    src/RootObjTree.hxx
+    src/RootObjTree.cxx
+    src/logging.hxx
+    src/wildcards.hpp
+)
+
 if (TARGET Gui)
-  ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core Rint Gui)
+  ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core Rint Gui rootexecutableHelpers)
   target_include_directories(rootbrowse PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 endif()
 
-ROOT_EXECUTABLE(rootcp src/rootcp.cxx LIBRARIES RIO Tree Core Rint)
+ROOT_EXECUTABLE(rootcp src/rootcp.cxx LIBRARIES RIO Tree Core Rint rootexecutableHelpers)
 target_include_directories(rootcp PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 
-ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
+ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple rootexecutableHelpers)
 target_include_directories(rootls PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 
-ROOT_EXECUTABLE(rootmkdir src/rootmkdir.cxx LIBRARIES RIO Core Rint)
+ROOT_EXECUTABLE(rootmkdir src/rootmkdir.cxx LIBRARIES RIO Core Rint rootexecutableHelpers)
 target_include_directories(rootmkdir PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 
-ROOT_EXECUTABLE(rootrm src/rootrm.cxx LIBRARIES RIO Core Rint)
+ROOT_EXECUTABLE(rootrm src/rootrm.cxx LIBRARIES RIO Core Rint rootexecutableHelpers)
 target_include_directories(rootrm PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 
