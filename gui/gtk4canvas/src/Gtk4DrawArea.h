@@ -28,7 +28,7 @@ public:
 
     Cairo::ImageSurface *GetCache() const { return fDrawingCache.get(); }
 
-    void ShowContextMenu(Glib::RefPtr<Gio::Menu> menu_model, int x, int y);
+    void ShowContextMenu(Glib::RefPtr<Gio::Menu> menu_model, const char *title, int x, int y);
 
     sigc::signal<void(const char *)> status_changed();
 
