@@ -14,7 +14,7 @@ ROOT_OBJECT_LIBRARY(ReadSpeed
   src/ReadSpeedCLI.cxx
 )
 
-target_sources(ROOTNTupleBrowse
+target_sources(ReadSpeed
 PRIVATE
   FILE_SET private_header_files
   TYPE HEADERS
