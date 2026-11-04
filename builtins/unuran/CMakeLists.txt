@@ -35,6 +35,7 @@ endif()
 ExternalProject_Add(
   BUILTIN_UNURAN
   PREFIX ${ROOT_UNURAN_PREFIX}
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
   URL ${lcgpackages}/unuran-${ROOT_UNURAN_VERSION}.tar.gz
       https://statmath.wu.ac.at/unuran/unuran-${ROOT_UNURAN_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_UNURAN_HASH}

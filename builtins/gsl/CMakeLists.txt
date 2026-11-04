@@ -12,6 +12,7 @@ endif()
 ExternalProject_Add(
   BUILTIN_GSL
   PREFIX ${ROOT_GSL_PREFIX}
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
   URL ${lcgpackages}/gsl-${ROOT_GSL_VERSION}.tar.gz
       https://ftp.gnu.org/gnu/gsl/gsl-${ROOT_GSL_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_GSL_HASH}

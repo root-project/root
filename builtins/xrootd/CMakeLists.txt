@@ -28,6 +28,7 @@ endif()
 
 ExternalProject_Add(
     BUILTIN_XROOTD
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL ${lcgpackages}/xrootd-${ROOT_XROOTD_VERSION}.tar.gz
         https://github.com/xrootd/xrootd/releases/download/v${ROOT_XROOTD_VERSION}/xrootd-${ROOT_XROOTD_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_XROOTD_HASH}

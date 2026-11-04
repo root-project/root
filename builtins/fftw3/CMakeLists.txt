@@ -6,6 +6,7 @@ set(ROOT_FFTW_LIBRARY ${ROOT_FFTW_PREFIX}/lib/libfftw3.a)
 ExternalProject_Add(
     BUILTIN_FFTW3
     PREFIX ${ROOT_FFTW_PREFIX}
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL ${lcgpackages}/fftw-${ROOT_FFTW_VERSION}.tar.gz
         https://fftw.org/fftw-${ROOT_FFTW_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_FFTW_HASH}
