@@ -10,6 +10,8 @@
 #ifndef CLING_INCREMENTAL_PARSER_H
 #define CLING_INCREMENTAL_PARSER_H
 
+#include "ValueExtractionSynthesizer.h"
+
 #include "clang/Basic/SourceLocation.h"
 
 #include "llvm/ADT/PointerIntPair.h"
@@ -62,6 +64,8 @@ namespace cling {
     // compiler instance.
     std::unique_ptr<clang::CompilerInstance> m_CI;
 
+    std::unique_ptr<ValueExtractionSynthesizer> synthesizer;
+
     // parser (incremental)
     std::unique_ptr<clang::Parser> m_Parser;
 
@@ -103,6 +107,10 @@ namespace cling {
 
     using ModuleFileExtensions =
         std::vector<std::shared_ptr<clang::ModuleFileExtension>>;
+
+    /// When CodeGen is created the first llvm::Module gets cached in many places
+    /// and we must keep it alive.
+    std::unique_ptr<llvm::Module> CachedInCodeGenModule;
 
   public:
     enum EParseResult {
@@ -232,6 +240,10 @@ namespace cling {
     ///
     bool runStaticInitOnTransaction(Transaction* T) const;
 
+    void SetSynthesizer(bool isChildInterpreter);
+
+    ValueExtractionSynthesizer* GetSynthesizer() const { return synthesizer.get(); }
+
     ///\brief Add the trnasformers to the Incremental Parser.
     ///
     void SetTransformers(bool isChildInterpreter);
@@ -264,6 +276,7 @@ namespace cling {
     ///
     llvm::Module* StartModule();
 
+    std::unique_ptr<llvm::Module> GenModule();
   };
 } // end namespace cling
 #endif // CLING_INCREMENTAL_PARSER_H
