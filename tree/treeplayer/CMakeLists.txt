@@ -33,7 +33,6 @@ set(TREEPLAYER_HEADERS
   TBranchProxyClassDescriptor.h
   TBranchProxyDescriptor.h
   TBranchProxyDirector.h
-  TBranchProxyTemplate.h
   TBranchProxy.h
   TChainIndex.h
   TFileDrawMap.h
@@ -132,6 +131,7 @@ PRIVATE
   BASE_DIRS inc/
   FILES
     ${RELATIVE_INC_HEADERS}
+    inc/TBranchProxyTemplate.h
     inc/LinkDef.h
 )
 
