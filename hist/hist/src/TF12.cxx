@@ -121,7 +121,7 @@ void TF12::Copy(TObject &obj) const
 /// Note that the default value is "F". Therefore to draw on top
 /// of an existing picture, specify option "SL"
 ///
-/// Beware: this function dos not clone the underlying TF2 instance,
+/// Beware: this function does not clone the underlying TF2 instance,
 /// it just clones the TF12 objects but the all point to the same
 /// TF2. As a result, this function is only useful if you change
 /// the TF12 parameters.
