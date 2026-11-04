@@ -47,11 +47,11 @@
 /// ```
 ///     original:                -5 -4 -3 -2 -1 0 +1 +2 +3 +4 +5
 ///     add buffer zones:    U U -5 -4 -3 -2 -1 0 +1 +2 +3 +4 +5 O O
-///     rotate:              0 +1 +2 +3 +4 +5 O O U U -5 -4 -3 -2 -1
 /// ```
 /// The buffer bins are stripped away when the FFT output values
 /// are transferred back to the p.d.f cache. The default buffer size is 10% of the
 /// observable domain size, and can be changed with the `setBufferFraction()` member function.
+/// The layout of the sampling grid is described by samplingGrid().
 ///
 /// The RooFFTConvPdf uses caching inherited from a RooAbsCachedPdf. If it is
 /// evaluated for a particular value of x, the FFT and convolution is calculated
@@ -449,17 +449,16 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
   // Save copy of original histX binning and make alternate binning
   // for extended range scanning
 
-  const Int_t N = convObs->numBins();
+  const SamplingGrid grid = self.samplingGrid();
+  const Int_t N = grid.numBins;
   if (N < 900) {
     oocoutW(&self, Eval) << "The FFT convolution '" << self.GetName() << "' will run with " << N
         << " bins. A decent accuracy for difficult convolutions is typically only reached with n >= 1000. Suggest to increase the number"
         " of bins of the observable '" << convObs->GetName() << "'." << std::endl;
   }
-  Int_t Nbuf = static_cast<Int_t>((N*self.bufferFraction())/2 + 0.5) ;
-  double obw = (convObs->getMax() - convObs->getMin())/N ;
-  Int_t N2 = N+2*Nbuf ;
+  const Int_t N2 = grid.numSamples();
 
-  scanBinning = std::make_unique<RooUniformBinning>(convObs->getMin()-Nbuf*obw,convObs->getMax()+Nbuf*obw,N2);
+  scanBinning = std::make_unique<RooUniformBinning>(grid.lowExt(), grid.high + grid.numBufferBins * grid.binWidth, N2);
   histBinning.reset(convObs->getBinning().clone());
 
   // Deactivate dirty state propagation on datahist observables
@@ -580,50 +579,56 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a slice of cachePdf with the output of the FFT convolution calculation
+/// Fill a slice of cachePdf with the output of the FFT convolution calculation.
+///
+/// Sample `k` of input pdf `j` is its value at `x_k - shift_j`, where
+/// `x_k = lowExt + (k + 0.5) * binWidth` is the center of extended bin `k` of
+/// samplingGrid() (Flat and Mirror fill the buffer samples from the ones
+/// inside the observable range). The circular convolution
+/// ```
+///     c[n] = sum_m in1[m] * in2[(n - m) mod N2]
+/// ```
+/// approximates `(pdf1 * pdf2)(x) / binWidth` at
+/// `x = 2 * lowExt + (n + 1) * binWidth - shift1 - shift2`, because the
+/// arguments of the two sampled pdfs add up to `x` in every term. Cache bin
+/// `i` is extended bin `i + numBufferBins`, so its value is found at index
+/// `n = i + numBufferBins + (shift1 + shift2 - lowExt) / binWidth - 0.5`,
+/// rounded and taken modulo N2, which is `i + outputOffset`.
 
 void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos) const
 {
   // Extract histogram that is the basis of the RooHistPdf
   RooDataHist& cacheHist = *aux.hist() ;
 
-  // Sample array of input points from both pdfs
-  // Note that returned arrays have optional buffers zones below and above range ends
-  // to reduce cyclical effects and have been cyclically rotated so that bin containing
-  // zero value is at position zero. Example:
+  const SamplingGrid grid = samplingGrid();
+  const Int_t N = grid.numBins;
+  const Int_t N2 = grid.numSamples();
+
+  // Sample array of input points from both pdfs. Note that returned arrays
+  // have optional buffers zones below and above range ends to reduce cyclical
+  // effects. Example:
   //
   //     original:                -5 -4 -3 -2 -1 0 +1 +2 +3 +4 +5
   //     add buffer zones:    U U -5 -4 -3 -2 -1 0 +1 +2 +3 +4 +5 O O
-  //     rotate:              0 +1 +2 +3 +4 +5 O O U U -5 -4 -3 -2 -1
   //
-  //
-
-  Int_t N;
-  Int_t N2;
-  Int_t binShift1;
-  Int_t binShift2;
 
   RooRealVar* histX = static_cast<RooRealVar*>(cacheHist.get()->find(_x.arg().GetName())) ;
   if (_bufStrat==Extend) histX->setBinning(*aux.scanBinning) ;
   RooRealVar &xVar = const_cast<RooRealVar &>(static_cast<RooRealVar const&>(_x.arg()));
-  std::vector<double> input1 = scanPdf(xVar,*aux.pdf1Clone,aux.normVal1,cacheHist,slicePos,N,N2,binShift1,_shift1) ;
-  std::vector<double> input2 = scanPdf(xVar,*aux.pdf2Clone,aux.normVal2,cacheHist,slicePos,N,N2,binShift2,_shift2) ;
+  std::vector<double> input1 = scanPdf(xVar, *aux.pdf1Clone, aux.normVal1, cacheHist, slicePos, grid);
+  std::vector<double> input2 = scanPdf(xVar, *aux.pdf2Clone, aux.normVal2, cacheHist, slicePos, grid);
   if (_bufStrat==Extend) histX->setBinning(*aux.histBinning) ;
 
   std::vector<double> output(N2);
   doFFT(N2, input1.data(), input2.data(), output.data());
-
-  Int_t totalShift = binShift1 + (N2-N)/2 ;
 
   // Store FFT result in cache
 
   std::unique_ptr<TIterator> iter{const_cast<RooDataHist&>(cacheHist).sliceIterator(const_cast<RooAbsReal&>(_x.arg()),slicePos)};
   for (Int_t i =0 ; i<N ; i++) {
 
-    // Cyclically shift array back so that bin containing zero is back in zeroBin
-    Int_t j = i + totalShift ;
-    while (j<0) j+= N2 ;
-    while (j>=N2) j-= N2 ;
+    // Index of the convolution output that corresponds to cache bin i
+    const Int_t j = (i + grid.outputOffset) % N2;
 
     iter->Next() ;
     const std::size_t binIdx = cacheHist.getIndex(*cacheHist.get(), /*fast=*/true);
@@ -633,23 +638,19 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Scan the values of 'pdf' in observable 'obs' using the bin values stored in 'hist' at slice position 'slicePos'
-/// N is filled with the number of bins defined in hist, N2 is filled with N plus the number of buffer bins
-/// The return value is an array of doubles of length N2 with the sampled values. The caller takes ownership
-/// of the array
+/// Scan the values of 'pdf' in observable 'obs' using the bin values stored in 'hist' at slice position 'slicePos'.
+/// Entry `k` of the returned array of length `grid.numSamples()` is the value at the center of extended bin `k` of
+/// the sampling grid (see samplingGrid()). The buffer bins are filled according to the buffer strategy.
 
 std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, double normVal, const RooDataHist &hist,
-                                           const RooArgSet &slicePos, Int_t &N, Int_t &N2, Int_t &zeroBin,
-                                           double shift) const
+                                           const RooArgSet &slicePos, SamplingGrid const &grid) const
 {
 
   RooRealVar* histX = static_cast<RooRealVar*>(hist.get()->find(obs.GetName())) ;
 
-  // Calculate number of buffer bins on each size to avoid cyclical flow
-  N = histX->numBins(binningName()) ;
-  Int_t Nbuf = static_cast<Int_t>((N*bufferFraction())/2 + 0.5) ;
-  N2 = N+2*Nbuf ;
-
+  const Int_t N = grid.numBins;
+  const Int_t Nbuf = grid.numBufferBins;
+  const Int_t N2 = grid.numSamples();
 
   // Allocate array of sampling size plus optional buffer zones
   std::vector<double> array(N2);
@@ -657,32 +658,12 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
   // Set position of non-convolution observable to that of the cache slice that were are processing now
   hist.get(slicePos) ;
 
-  // Find bin ID that contains zero value
-  zeroBin = 0 ;
-  if (histX->getMax()>=0 && histX->getMin()<=0) {
-    zeroBin = histX->getBinning().binNumber(0) ;
-  } else if (histX->getMin()>0) {
-    double bw = (histX->getMax() - histX->getMin())/N2 ;
-    zeroBin = Int_t(-histX->getMin()/bw) ;
-  } else {
-    double bw = (histX->getMax() - histX->getMin())/N2 ;
-    zeroBin = Int_t(-1*histX->getMax()/bw) ;
-  }
-
-  Int_t binShift = Int_t((N2* shift) / (histX->getMax()-histX->getMin())) ;
-
-  zeroBin += binShift ;
-  while(zeroBin>=N2) zeroBin-= N2 ;
-  while(zeroBin<0) zeroBin+= N2 ;
-
   // To mimic exactly the normalization code in RooAbsPdf::getValV()
   auto getPdfVal = [&]() {
      double rawVal = pdf.getVal();
      return RooFit::Detail::normalizeWithNaNPacking(pdf, rawVal, normVal);
   };
 
-  // First scan hist into temp array
-  std::vector<double> tmp(N2);
   Int_t k(0) ;
   switch(_bufStrat) {
 
@@ -690,7 +671,7 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
     // Sample entire extended range (N2 samples)
     for (k=0 ; k<N2 ; k++) {
       histX->setBin(k) ;
-      tmp[k] = getPdfVal();
+      array[k] = getPdfVal();
     }
     break ;
 
@@ -701,16 +682,16 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
       histX->setBin(0) ;
       double val = getPdfVal();
       for (k=0 ; k<Nbuf ; k++) {
-   tmp[k] = val ;
+   array[k] = val ;
       }
       for (k=0 ; k<N ; k++) {
    histX->setBin(k) ;
-   tmp[k+Nbuf] = getPdfVal();
+   array[k+Nbuf] = getPdfVal();
       }
       histX->setBin(N-1) ;
       val = getPdfVal();
       for (k=0 ; k<Nbuf ; k++) {
-   tmp[N+Nbuf+k] = val ;
+   array[N+Nbuf+k] = val ;
       }
     }
     break ;
@@ -720,24 +701,15 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
     // bins with mirror image of sampled range
     for (k=0 ; k<N ; k++) {
       histX->setBin(k) ;
-      tmp[k+Nbuf] = getPdfVal();
+      array[k+Nbuf] = getPdfVal();
     }
     for (k=1 ; k<=Nbuf ; k++) {
       histX->setBin(k) ;
-      tmp[Nbuf-k] = getPdfVal();
+      array[Nbuf-k] = getPdfVal();
       histX->setBin(N-k) ;
-      tmp[Nbuf+N+k-1] = getPdfVal();
+      array[Nbuf+N+k-1] = getPdfVal();
     }
     break ;
-  }
-
-  // Scan function and store values in array
-  for (Int_t i=0 ; i<N2 ; i++) {
-    // Cyclically shift writing location by zero bin position
-    Int_t j = i - (zeroBin) ;
-    if (j<0) j+= N2 ;
-    if (j>=N2) j-= N2 ;
-    array[i] = tmp[j] ;
   }
 
   return array ;
@@ -919,6 +891,38 @@ void RooFFTConvPdf::setBufferFraction(double frac)
 void RooFFTConvPdf::setBufferStrategy(BufStrat bs)
 {
   _bufStrat = bs ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Layout of the grid on which the input pdfs are sampled for the FFT. See
+/// fillCacheSlice() for how the output offset is used.
+
+RooFFTConvPdf::SamplingGrid RooFFTConvPdf::samplingGrid() const
+{
+  RooAbsBinning const &binning = static_cast<RooAbsRealLValue const &>(_x.arg()).getBinning(binningName());
+
+  SamplingGrid grid;
+  grid.numBins = binning.numBins();
+  grid.numBufferBins = static_cast<int>((grid.numBins * _bufFrac) / 2 + 0.5);
+  grid.low = binning.lowBound();
+  grid.high = binning.highBound();
+  grid.binWidth = (grid.high - grid.low) / grid.numBins;
+
+  // The shifts displace the convolution output by the index of the extended
+  // bin that contains their sum, see fillCacheSlice(). The epsilon keeps the
+  // rounding stable when the sum lies exactly on a bin boundary, as it does
+  // with the default shifts for an even number of bins.
+  const long long shiftBins = static_cast<long long>(std::floor((_shift1 + _shift2 - grid.lowExt()) / grid.binWidth + 1e-6));
+  const long long n2 = grid.numSamples();
+  long long offset = (grid.numBufferBins + shiftBins) % n2;
+  if (offset < 0) {
+    offset += n2;
+  }
+  grid.outputOffset = static_cast<int>(offset);
+
+  return grid;
 }
 
 

@@ -54,6 +54,30 @@ public:
   void setBufferStrategy(BufStrat bs) ;
   void setBufferFraction(double frac) ;
 
+  /// Shift applied to the convolution observable before sampling the first input pdf, see setShift()
+  double shift1() const { return _shift1; }
+  /// Shift applied to the convolution observable before sampling the second input pdf, see setShift()
+  double shift2() const { return _shift2; }
+
+  /// Layout of the grid on which the input pdfs are sampled for the FFT: the
+  /// `numBins` bins of the "cache" binning of the convolution observable plus
+  /// `numBufferBins` bins on either side (see setBufferFraction()). Sample `k`
+  /// is taken at the center of extended bin `k`, `lowExt() + (k + 0.5) * binWidth`.
+  struct SamplingGrid {
+    int numBins = 0;        ///< Number of bins of the convolution observable
+    int numBufferBins = 0;  ///< Number of buffer bins added below and above the observable range
+    double low = 0.0;       ///< Lower boundary of the convolution observable
+    double high = 0.0;      ///< Upper boundary of the convolution observable
+    double binWidth = 0.0;  ///< Width of the (uniform) bins
+    int outputOffset = 0;   ///< Index offset of the convolution output with respect to the cache bins, see fillCacheSlice()
+
+    /// Total number of samples, including the buffer bins.
+    int numSamples() const { return numBins + 2 * numBufferBins; }
+    /// Lower boundary of the extended range covered by the samples.
+    double lowExt() const { return low - numBufferBins * binWidth; }
+  };
+  SamplingGrid samplingGrid() const;
+
   void printMetaArgs(std::ostream& os) const override ;
 
   // Propagate maximum value estimate of pdf1 as convolution can only result in lower max values
@@ -78,7 +102,8 @@ public:
 
   void calcParams() ;
 
-  std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, double normVal, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, double shift) const ;
+  std::vector<double> scanPdf(RooRealVar &obs, RooAbsPdf &pdf, double normVal, const RooDataHist &hist,
+                              const RooArgSet &slicePos, SamplingGrid const &grid) const;
 
   class FFTCacheElem : public PdfCacheElem {
   public:
