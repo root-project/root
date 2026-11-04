@@ -13,9 +13,13 @@
 # wire-format decoder (src/onnx.hxx), so this package has no external
 # dependency on protobuf / libprotobuf / protoc.
 
+set(TMVASOFIEPARSER_HEADERS
+  TMVA/RModelParser_ONNX.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
   HEADERS
-   TMVA/RModelParser_ONNX.hxx
+   ${TMVASOFIEPARSER_HEADERS}
   SOURCES
     src/RModelParser_ONNX.cxx
     src/ParseBasicUnary.cxx
@@ -82,4 +86,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParsePRelu.cxx
   DEPENDENCIES
     ROOTTMVASofie
+)
+
+set(RELATIVE_INC_HEADERS ${TMVASOFIEPARSER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTTMVASofieParser
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/onnx.hxx
 )
