@@ -397,9 +397,15 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       _valid= false;
     }
     if (!function.dependsOn(*arg)) {
-      std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
-      _facList.add(*argClone);
-      addOwnedComponents(std::move(argClone));
+      // Note that the factorizing observable itself is added, and not a clone
+      // of it. A clone would be a second node with the same name in the
+      // computation graph, and such duplicates can't be resolved by name
+      // anymore, for example when the observables of a compiled computation
+      // graph are connected to the dataset columns. Since the factorizing
+      // observables are only shape servers, the integral is not recomputed
+      // when their value changes, but only when their range changes, which is
+      // what we want.
+      _facList.add(*arg);
     }
   }
 
@@ -1112,9 +1118,14 @@ Int_t RooRealIntegral::getCacheAllNumeric()
 }
 
 std::unique_ptr<RooAbsArg>
-RooRealIntegral::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+RooRealIntegral::compileForNormSet(RooArgSet const & /*normSet*/, RooFit::Detail::CompileContext &ctx) const
 {
-   return RooAbsReal::compileForNormSet(_funcNormSet ? *_funcNormSet : normSet, ctx);
+   // The integrand is compiled with the function normalization set of this
+   // integral, and not with the normalization set of the client: a raw
+   // integral (no function normalization set) evaluates its integrand
+   // unnormalized, so passing down the outer normalization set would wrongly
+   // wrap the integrand in a normalized pdf.
+   return RooAbsReal::compileForNormSet(_funcNormSet ? *_funcNormSet : RooArgSet{}, ctx);
 }
 
 /// Sort numeric integration variables in summation and integration lists.
