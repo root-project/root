@@ -54,6 +54,7 @@ ExternalProject_Add(
   # GIT_REPOSITORY https://github.com/google/googletest.git
   # GIT_SHALLOW 1
   # GIT_TAG v1.17.0
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
   URL ${lcgpackages}/googletest-${ROOT_GOOGLETEST_VERSION}.tar.gz
       https://github.com/google/googletest/releases/download/v${ROOT_GOOGLETEST_VERSION}/googletest-${ROOT_GOOGLETEST_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_GOOGLETEST_HASH}

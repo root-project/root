@@ -29,6 +29,7 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBJPEG
     PREFIX ${ROOT_LIBJPEG_PREFIX}
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL https://root.cern/download/libjpeg-turbo-${ROOT_LIBJPEG_VERSION}.tar.gz
         https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/${ROOT_LIBJPEG_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBJPEG_HASH}

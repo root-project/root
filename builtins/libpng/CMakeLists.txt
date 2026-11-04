@@ -44,6 +44,7 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBPNG
     PREFIX ${ROOT_LIBPNG_PREFIX}
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL https://root.cern/download/libpng-${ROOT_LIBPNG_VERSION}.tar.gz
         https://downloads.sourceforge.net/project/libpng/libpng16/${ROOT_LIBPNG_VERSION}/libpng-${ROOT_LIBPNG_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBPNG_HASH}

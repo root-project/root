@@ -37,6 +37,7 @@ endif()
 ExternalProject_Add(
   BUILTIN_CFITSIO
   PREFIX ${CFITSIO_PREFIX}
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
   URL ${lcgpackages}/cfitsio-${ROOT_CFITSIO_VERSION}.tar.gz
       https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-${ROOT_CFITSIO_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_CFITSIO_HASH}

@@ -36,6 +36,7 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBGIF
     PREFIX ${ROOT_LIBGIF_PREFIX}
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL ${lcgpackages}/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
         https://downloads.sourceforge.net/project/giflib/giflib-6.x/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBGIF_HASH}
