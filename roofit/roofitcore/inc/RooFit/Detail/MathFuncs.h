@@ -217,27 +217,6 @@ unsigned int binNumber(double x, double coef, DoubleArray boundaries, unsigned i
    return coef * std::max(0, tmp);
 }
 
-template <typename DoubleArray>
-double interpolate1d(double low, double high, double val, unsigned int numBins, DoubleArray vals)
-{
-   double binWidth = (high - low) / numBins;
-   int idx = val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
-
-   // interpolation
-   double central = low + (idx + 0.5) * binWidth;
-   if (val > low + 0.5 * binWidth && val < high - 0.5 * binWidth) {
-      double slope;
-      if (val < central) {
-         slope = vals[idx] - vals[idx - 1];
-      } else {
-         slope = vals[idx + 1] - vals[idx];
-      }
-      return vals[idx] + slope * (val - central) / binWidth;
-   }
-
-   return vals[idx];
-}
-
 /// Polynomial interpolation of the contents `vals` of a uniformly binned 1D
 /// histogram, like RooDataHist::weight() does it: the polynomial of degree
 /// `intOrder` goes through the centers of the `intOrder + 1` bins closest to

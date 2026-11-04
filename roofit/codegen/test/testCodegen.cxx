@@ -9,9 +9,12 @@
 #include <RooArgSet.h>
 #include <RooChebychev.h>
 #include <RooConstVar.h>
+#include <RooDataHist.h>
 #include <RooFFTConvPdf.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
+#include <RooHistFunc.h>
+#include <RooHistPdf.h>
 #include <RooLandau.h>
 #include <RooLognormal.h>
 #include <RooRealVar.h>
@@ -25,6 +28,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -64,9 +68,11 @@ std::string normalized(std::string const &code)
 /// Generate the code for `arg` as a standalone function of `params`, compile
 /// it with the interpreter like RooFuncWrapper does, and return a pointer to
 /// it. The signature is the one that CodegenContext::buildFunction() emits.
+/// If the generated code needs constant arrays, they are returned in `xlArr`
+/// and have to be passed to the function.
 using CodegenFunc = double (*)(double *params, double const *obs, double const *xlArr);
 
-CodegenFunc compileFunction(RooAbsArg &arg, RooArgList const &params)
+CodegenFunc compileFunction(RooAbsArg &arg, RooArgList const &params, std::vector<double> *xlArr = nullptr)
 {
    RooFit::Experimental::CodegenContext ctx;
    for (std::size_t i = 0; i < params.size(); ++i) {
@@ -77,6 +83,9 @@ CodegenFunc compileFunction(RooAbsArg &arg, RooArgList const &params)
    if (!gInterpreter->Declare(ctx.collectedCode().c_str())) {
       ADD_FAILURE() << "generated code does not compile:\n" << ctx.collectedCode();
       return nullptr;
+   }
+   if (xlArr) {
+      *xlArr = ctx.xlArr();
    }
    return reinterpret_cast<CodegenFunc>(gInterpreter->ProcessLine((funcName + ";").c_str()));
 }
@@ -282,5 +291,51 @@ TEST(RooFitCodegen, FFTConvPdfSubRangeIntegral)
          ctx.addResult(&params[i], "params[" + std::to_string(i) + "]");
       }
       EXPECT_THROW(ctx.buildFunction(*integral), std::runtime_error) << "intOrder " << intOrder;
+   }
+}
+
+// RooHistPdf and RooHistFunc for interpolation orders 0 to 3, compared to the
+// reference implementation.
+TEST(RooFitCodegen, HistInterpolation)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl{RooFit::WARNING};
+
+   RooRealVar x{"x", "x", -2.0, 3.0};
+   x.setBins(10);
+   RooDataHist dh{"dh", "dh", x};
+   const double weights[] = {0.5, 1.5, 2.5, 1.0, 3.0, 2.0, 1.2, 0.8, 1.7, 0.9};
+   for (int i = 0; i < 10; ++i) {
+      dh.set(i, weights[i], 0.0);
+   }
+
+   RooArgList params{x};
+   RooArgSet normSet{x};
+
+   for (int intOrder : {0, 1, 2, 3}) {
+      RooHistPdf histPdf{"histPdf", "histPdf", x, dh, intOrder};
+      RooHistFunc histFunc{"histFunc", "histFunc", x, dh, intOrder};
+      std::unique_ptr<RooAbsReal> integral{histPdf.createIntegral(x)};
+
+      // The bin contents end up in the constant arrays of each function
+      std::vector<double> pdfConsts;
+      std::vector<double> funcConsts;
+      std::vector<double> integralConsts;
+      CodegenFunc pdfFunc = compileFunction(histPdf, params, &pdfConsts);
+      CodegenFunc funcFunc = compileFunction(histFunc, params, &funcConsts);
+      CodegenFunc integralFunc = compileFunction(*integral, params, &integralConsts);
+      ASSERT_NE(pdfFunc, nullptr) << "intOrder " << intOrder;
+      ASSERT_NE(funcFunc, nullptr) << "intOrder " << intOrder;
+      ASSERT_NE(integralFunc, nullptr) << "intOrder " << intOrder;
+
+      for (double xVal = -1.99; xVal < 3.0; xVal += 0.0137) {
+         x.setVal(xVal);
+         double paramVals[] = {xVal};
+         EXPECT_NEAR(pdfFunc(paramVals, nullptr, pdfConsts.data()) /
+                        integralFunc(paramVals, nullptr, integralConsts.data()),
+                     histPdf.getVal(normSet), 1e-12)
+            << "intOrder " << intOrder << ", x " << xVal;
+         EXPECT_NEAR(funcFunc(paramVals, nullptr, funcConsts.data()), histFunc.getVal(), 1e-12)
+            << "intOrder " << intOrder << ", x " << xVal;
+      }
    }
 }

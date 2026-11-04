@@ -67,6 +67,7 @@
 
 #include <TInterpreter.h>
 
+#include <cmath>
 #include <locale>
 #include <memory>
 #include <unordered_set>
@@ -100,21 +101,39 @@ std::string fftConvSumName(RooFFTConvPdf const &arg)
    return RooFit::Detail::makeValidVarName(arg.GetName()) + "_fftConvSum";
 }
 
+/// Whether all bins of the binning have the same width. RooAbsBinning::isUniform()
+/// is only true for RooUniformBinning, but a RooBinning can be uniform too.
+bool hasUniformBins(RooAbsBinning const &binning)
+{
+   if (binning.isUniform()) {
+      return true;
+   }
+   const int nBins = binning.numBins();
+   const double width = (binning.highBound() - binning.lowBound()) / nBins;
+   for (int i = 0; i < nBins; ++i) {
+      if (std::abs(binning.binWidth(i) - width) > 1e-10 * std::abs(width)) {
+         return false;
+      }
+   }
+   return true;
+}
+
 void rooHistTranslateImpl(RooAbsArg const &arg, CodegenContext &ctx, int intOrder, RooDataHist const &dataHist,
                           const RooArgSet &obs, bool correctForBinSize, bool cdfBoundaries)
 {
-   if (intOrder != 0 && !(!cdfBoundaries && !correctForBinSize && intOrder == 1 && obs.size() == 1)) {
-      ooccoutE(&arg, InputArguments) << "RooHistPdf::weight(" << arg.GetName()
-                                     << ") ERROR: codegen currently only supports non-interpolation cases."
-                                     << std::endl;
-      return;
-   }
-
-   if (intOrder == 1) {
-      RooAbsBinning const &binning = *dataHist.getBinnings()[0];
+   if (intOrder != 0) {
+      RooAbsBinning const *binning = obs.size() == 1 ? dataHist.getBinnings()[0].get() : nullptr;
+      if (cdfBoundaries || !binning || !hasUniformBins(*binning)) {
+         std::stringstream errorMsg;
+         errorMsg << "RooHistPdf::weight(" << arg.GetName()
+                  << ") ERROR: codegen only supports interpolation for one-dimensional histograms with uniform "
+                     "binning and without cdf boundaries.";
+         ooccoutE(&arg, InputArguments) << errorMsg.str() << std::endl;
+         throw std::runtime_error(errorMsg.str());
+      }
       std::string weightArr = dataHist.declWeightArrayForCodeSquash(ctx, correctForBinSize);
-      ctx.addResult(&arg, ctx.buildCall(mathFunc("interpolate1d"), binning.lowBound(), binning.highBound(), *obs[0],
-                                        binning.numBins(), weightArr));
+      ctx.addResult(&arg, ctx.buildCall(mathFunc("interpolate1dPolynomial"), binning->lowBound(), binning->highBound(),
+                                        *obs[0], binning->numBins(), weightArr, intOrder));
       return;
    }
    std::string const &offset = dataHist.calculateTreeIndexForCodeSquash(ctx, obs);
@@ -754,6 +773,12 @@ void codegenImpl(RooHistPdf &arg, CodegenContext &ctx)
 {
    rooHistTranslateImpl(arg, ctx, arg.getInterpolationOrder(), arg.dataHist(), arg.variables(), !arg.haveUnitNorm(),
                         arg.getCdfBoundaries());
+   if (arg.getInterpolationOrder() > 1) {
+      // The interpolating polynomial can undershoot zero between the bins,
+      // which RooHistPdf::evaluate() clamps.
+      std::string const &res = ctx.getResult(arg);
+      ctx.addResult(&arg, res + " < 0. ? 0. : " + res);
+   }
 }
 
 void codegenImpl(RooLandau &arg, CodegenContext &ctx)
