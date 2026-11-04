@@ -29,6 +29,7 @@ endif()
 
 ExternalProject_Add(
   BUILTIN_TBB
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
   URL ${lcgpackages}/oneTBB-${ROOT_TBB_VERSION}.tar.gz
       https://github.com/uxlfoundation/oneTBB/archive/refs/tags/v${ROOT_TBB_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_TBB_HASH}

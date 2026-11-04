@@ -36,6 +36,7 @@ endif()
 
 ExternalProject_Add(
     BUILTIN_ZSTD
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL ${lcgpackages}/zstd-${ROOT_ZSTD_VERSION}.tar.gz
         https://github.com/facebook/zstd/archive/refs/tags/v${ROOT_ZSTD_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_ZSTD_HASH}
