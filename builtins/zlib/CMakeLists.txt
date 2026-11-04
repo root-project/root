@@ -37,6 +37,7 @@ endif()
 
 ExternalProject_Add(
     BUILTIN_ZLIB
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL ${lcgpackages}/zlib-${ROOT_ZLIB_VERSION}.tar.gz
         https://github.com/madler/zlib/releases/download/v${ROOT_ZLIB_VERSION}/zlib-${ROOT_ZLIB_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_ZLIB_HASH}

@@ -5,6 +5,7 @@ set(VDT_FOUND True)
 set(VDT_LIBRARIES "${VDT_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}")
 ExternalProject_Add(
   BUILTIN_VDT
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
   URL ${lcgpackages}/vdt-${ROOT_VDT_VERSION}.tar.gz
       https://github.com/dpiparo/vdt/archive/refs/tags/v${ROOT_VDT_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_VDT_HASH}

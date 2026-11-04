@@ -36,6 +36,7 @@ endif()
 ExternalProject_Add(
   BUILTIN_XXHASH
   PREFIX ${ROOT_XXHASH_PREFIX}
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
   URL ${lcgpackages}/xxHash-${ROOT_XXHASH_VERSION}.tar.gz
       https://github.com/Cyan4973/xxHash/archive/refs/tags/v${ROOT_XXHASH_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_XXHASH_HASH}

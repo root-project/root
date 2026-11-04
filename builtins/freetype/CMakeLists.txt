@@ -34,6 +34,7 @@ set(FREETYPE_LIBRARY ${FREETYPE_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freety
 
 ExternalProject_Add(
     BUILTIN_FREETYPE
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL ${lcgpackages}/freetype-${ROOT_FREETYPE_VERSION}.tar.gz
         https://download-mirror.savannah.gnu.org/releases/freetype/freetype-${ROOT_FREETYPE_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_FREETYPE_HASH}

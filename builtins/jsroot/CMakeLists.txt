@@ -10,6 +10,7 @@ set(ROOT_JSROOT_HASH "e5d82888750bda70090ac4bff355734000372c983a3eff11d67efa09f3
 string(REPLACE "." "" ROOT_JSROOT_VERSION_COMPACT ${ROOT_JSROOT_VERSION})
 
 ExternalProject_Add(BUILTIN_JSROOT
+  DOWNLOAD_DIR   ${ROOT_DOWNLOAD_DIR}
   URL            ${lcgpackages}/jsroot-${ROOT_JSROOT_VERSION}.tar.gz
                  https://github.com/root-project/jsroot/releases/download/${ROOT_JSROOT_VERSION}/JsRoot${ROOT_JSROOT_VERSION_COMPACT}.tar.gz
   URL_HASH       SHA256=${ROOT_JSROOT_HASH}
