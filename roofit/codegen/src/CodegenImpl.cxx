@@ -28,6 +28,7 @@
 #include <RooEfficiency.h>
 #include <RooExponential.h>
 #include <RooExtendPdf.h>
+#include <RooFFTConvPdf.h>
 #include <RooFit/Detail/RooNLLVarNew.h>
 #include <RooFit/Detail/RooNormalizedPdf.h>
 #include <RooFormulaVar.h>
@@ -67,6 +68,7 @@
 #include <TInterpreter.h>
 
 #include <locale>
+#include <memory>
 #include <unordered_set>
 
 namespace RooFit::Experimental {
@@ -87,6 +89,15 @@ std::string doubleToString(double val)
 std::string mathFunc(std::string const &name)
 {
    return "RooFit::Detail::MathFuncs::" + name;
+}
+
+/// Name of the variable in the generated code that holds the sum of the cache
+/// bins of a RooFFTConvPdf, shared between the code for the pdf value and for
+/// its normalization integral. Like other variables named after objects, it
+/// assumes that makeValidVarName() maps different names to different strings.
+std::string fftConvSumName(RooFFTConvPdf const &arg)
+{
+   return RooFit::Detail::makeValidVarName(arg.GetName()) + "_fftConvSum";
 }
 
 void rooHistTranslateImpl(RooAbsArg const &arg, CodegenContext &ctx, int intOrder, RooDataHist const &dataHist,
@@ -561,6 +572,161 @@ void codegenImpl(RooExtendPdf &arg, CodegenContext &ctx)
    ctx.addResult(&arg, ctx.getResult(arg.pdf()));
 }
 
+void codegenImpl(RooFFTConvPdf &arg, CodegenContext &ctx)
+{
+   // Like RooFFTConvPdf::fillCacheSlice(), the generated code samples both
+   // input pdfs on the extended grid, convolves the samples and reads out the
+   // cache bins, which it then interpolates at the observable value. All but
+   // the interpolation only depends on the parameters and is placed outside
+   // of the loop over the data.
+
+   if (arg.getPdfConvVar()) {
+      std::stringstream errorMsg;
+      errorMsg << "RooFFTConvPdf \"" << arg.GetName()
+               << "\": a convolution observable that is a function of the actual observable (pdfConvVar) is not "
+                  "supported by codegen.";
+      oocoutE(&arg, Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+
+   RooAbsReal const &convVar = arg.getConvVar();
+
+   // The convolution would have to be redone for each value of any other
+   // observable of the input pdfs (RooFFTConvPdf caches slices for them).
+   for (RooAbsReal const *pdf : {&arg.getPdf1(), &arg.getPdf2()}) {
+      std::unique_ptr<RooArgSet> vars{pdf->getVariables()};
+      for (RooAbsArg const *var : *vars) {
+         if (var->namePtr() != convVar.namePtr() && ctx.observableIndexOf(*var) >= 0) {
+            std::stringstream errorMsg;
+            errorMsg << "RooFFTConvPdf \"" << arg.GetName() << "\": the input pdf \"" << pdf->GetName()
+                     << "\" depends on the observable \"" << var->GetName()
+                     << "\" besides the convolution observable, which is not supported by codegen.";
+            oocoutE(&arg, Minimization) << errorMsg.str() << std::endl;
+            throw std::runtime_error(errorMsg.str());
+         }
+      }
+   }
+
+   RooFFTConvPdf::SamplingGrid const grid = arg.samplingGrid();
+   const int nBins = grid.numBins;
+   const int nBuf = grid.numBufferBins;
+   const int nSamples = grid.numSamples();
+
+   // The sampled arrays live on the stack of the generated function, and so do
+   // their adjoints in the derivatives that clad generates from it.
+   constexpr int maxSamples = 32768;
+   if (nSamples > maxSamples) {
+      std::stringstream errorMsg;
+      errorMsg << "RooFFTConvPdf \"" << arg.GetName() << "\": the " << nBins << " bins of the cache binning of \""
+               << convVar.GetName() << "\" give " << nSamples << " samples including the buffers, more than the "
+               << maxSamples << " supported by codegen. Reduce the number of bins or use another evaluation backend.";
+      oocoutE(&arg, Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+
+   // Generate the functions that evaluate the input pdfs, with the convolution
+   // observable as their observable argument. The inputs were compiled for the
+   // observables of the cache (see RooFFTConvPdf::compileServersNormSet()),
+   // but their overall normalization is a constant factor that cancels, so a
+   // RooNormalizedPdf wrapper is bypassed instead of evaluating its integral
+   // at every grid point.
+   auto sampledInput = [](RooAbsReal const &pdf) -> RooAbsReal const & {
+      if (auto *normalized = dynamic_cast<RooFit::Detail::RooNormalizedPdf const *>(&pdf)) {
+         return normalized->pdf();
+      }
+      return pdf;
+   };
+
+   std::string const convVarResult = ctx.getResult(convVar);
+   ctx.addResult(convVar.GetName(), "obs[0]");
+   std::string const func1 = ctx.buildFunction(sampledInput(arg.getPdf1()), {});
+   std::string const func2 = ctx.buildFunction(sampledInput(arg.getPdf2()), {});
+   ctx.addResult(convVar.GetName(), convVarResult);
+
+   std::string const in1 = ctx.getTmpVarName();
+   std::string const in2 = ctx.getTmpVarName();
+   std::string const obsArr = ctx.getTmpVarName();
+   std::string const conv = ctx.getTmpVarName();
+   std::string const cache = ctx.getTmpVarName();
+   std::string const sum = fftConvSumName(arg);
+   std::string const idx = "i_" + ctx.getTmpVarName();
+
+   // The samples are taken at the bin centers, shifted for each pdf (see
+   // RooFFTConvPdf::setShift()). Flat and Mirror only sample the observable
+   // range and fill the buffer bins from it, like RooFFTConvPdf::scanPdf().
+   auto sampleAt = [&](std::string const &lowStr, std::string const &index) {
+      std::stringstream ss;
+      ss.imbue(std::locale::classic()); // the generated code is C++, not locale-dependent text
+      ss << "   " << obsArr << "[0] = " << lowStr << " + (" << idx << " + 0.5) * " << doubleToString(grid.binWidth)
+         << " - " << doubleToString(arg.shift1()) << ";\n"
+         << "   " << in1 << "[" << index << "] = " << func1 << "(params, " << obsArr << ", xlArr);\n"
+         << "   " << obsArr << "[0] = " << lowStr << " + (" << idx << " + 0.5) * " << doubleToString(grid.binWidth)
+         << " - " << doubleToString(arg.shift2()) << ";\n"
+         << "   " << in2 << "[" << index << "] = " << func2 << "(params, " << obsArr << ", xlArr);\n";
+      return ss.str();
+   };
+
+   std::stringstream code;
+   code.imbue(std::locale::classic()); // the generated code is C++, not locale-dependent text
+   code << "double " << in1 << "[" << nSamples << "];\n"
+        << "double " << in2 << "[" << nSamples << "];\n"
+        << "double " << obsArr << "[1];\n";
+
+   if (arg.bufferStrategy() == RooFFTConvPdf::Extend) {
+      code << "#pragma clad checkpoint loop\n"
+           << "for (int " << idx << " = 0; " << idx << " < " << nSamples << "; ++" << idx << ") {\n"
+           << sampleAt(doubleToString(grid.lowExt()), idx) << "}\n";
+   } else {
+      std::string const inner = std::to_string(nBuf) + " + " + idx;
+      code << "#pragma clad checkpoint loop\n"
+           << "for (int " << idx << " = 0; " << idx << " < " << nBins << "; ++" << idx << ") {\n"
+           << sampleAt(doubleToString(grid.low), inner) << "}\n";
+      if (arg.bufferStrategy() == RooFFTConvPdf::Flat) {
+         // Buffers hold the values at the boundaries of the observable range
+         for (std::string const &in : {in1, in2}) {
+            code << "for (int " << idx << " = 0; " << idx << " < " << nBuf << "; ++" << idx << ") {\n"
+                 << "   " << in << "[" << idx << "] = " << in << "[" << nBuf << "];\n"
+                 << "   " << in << "[" << nBuf + nBins << " + " << idx << "] = " << in << "[" << nBuf + nBins - 1
+                 << "];\n"
+                 << "}\n";
+         }
+      } else {
+         // Buffers hold the mirror image of the sampled range
+         for (std::string const &in : {in1, in2}) {
+            code << "for (int " << idx << " = 1; " << idx << " <= " << nBuf << "; ++" << idx << ") {\n"
+                 << "   " << in << "[" << nBuf << " - " << idx << "] = " << in << "[" << nBuf << " + " << idx << "];\n"
+                 << "   " << in << "[" << nBuf + nBins - 1 << " + " << idx << "] = " << in << "[" << nBuf + nBins
+                 << " - " << idx << "];\n"
+                 << "}\n";
+         }
+      }
+   }
+
+   // Convolve and read out the cache bins, clamping round-off negatives like
+   // RooFFTConvPdf does. The sum of the cache bins is the normalization
+   // integral, see codegenIntegralImpl() for RooFFTConvPdf.
+   code << "double " << conv << "[" << nSamples << "] = {0.};\n"
+        << mathFunc("fftConvolveAdd") << "(" << nSamples << ", " << in1 << ", " << in2 << ", " << conv << ");\n"
+        << "double " << cache << "[" << nBins << "];\n"
+        << "double " << sum << " = 0.;\n"
+        << "for (int " << idx << " = 0; " << idx << " < " << nBins << "; ++" << idx << ") {\n"
+        << "   const double val = " << conv << "[(" << idx << " + " << grid.outputOffset << ") % " << nSamples << "];\n"
+        << "   " << cache << "[" << idx << "] = val < 0. ? 0. : val;\n"
+        << "   " << sum << " += " << cache << "[" << idx << "];\n"
+        << "}\n";
+
+   ctx.addToCodeBody(code.str(), /*isScopeIndep=*/true);
+
+   // Interpolate the cache at the observable value, with the bin size
+   // correction and the clamping at zero of RooHistPdf::evaluate().
+   std::string const interp = ctx.buildCall(mathFunc("interpolate1dPolynomial"), grid.low, grid.high, convVar, nBins,
+                                            cache, arg.getInterpolationOrder());
+   std::string const result = ctx.getTmpVarName();
+   ctx.addToCodeBody(&arg, "double " + result + " = " + interp + " / " + doubleToString(grid.binWidth) + ";\n" +
+                              result + " = " + result + " < 0. ? 0. : " + result + ";\n");
+   ctx.addResult(&arg, result);
+}
+
 void codegenImpl(RooGaussian &arg, CodegenContext &ctx)
 {
    // Build a call to the stateless gaussian defined later.
@@ -807,6 +973,16 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
       throw std::runtime_error(errorMsg.str().c_str());
    }
 
+   if (dynamic_cast<RooFFTConvPdf const *>(&arg.integrand())) {
+      // Sub-range integrals of an interpolated cache end up here, where the
+      // integrand would redo the FFT at every integration point.
+      std::stringstream errorMsg;
+      errorMsg << "RooFFTConvPdf \"" << arg.integrand().GetName()
+               << "\": only the integral over the full range of the convolution observable is supported by codegen.";
+      oocoutE(&arg, Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+
    auto &intVar = static_cast<RooAbsRealLValue &>(*arg.numIntRealVars()[0]);
 
    std::string obsName = ctx.getTmpVarName();
@@ -982,6 +1158,25 @@ std::string codegenIntegralImpl(RooExponential &arg, int code, const char *range
    }
 
    return ctx.buildCall(mathFunc("exponentialIntegral"), min, max, constant);
+}
+
+std::string codegenIntegralImpl(RooFFTConvPdf &arg, int /*code*/, const char *rangeName, CodegenContext &ctx)
+{
+   // Like for RooHistPdf, the integral over the full range is the sum of the
+   // cache bins, which the code of the convolution computes. Sub-range
+   // integrals would be partial sums, which are not supported.
+   auto const &convVar = static_cast<RooAbsRealLValue const &>(arg.getConvVar());
+   RooFFTConvPdf::SamplingGrid const grid = arg.samplingGrid();
+   if (convVar.getMin(rangeName) != grid.low || convVar.getMax(rangeName) != grid.high) {
+      std::stringstream errorMsg;
+      errorMsg << "RooFFTConvPdf \"" << arg.GetName()
+               << "\": only the integral over the full range of the convolution observable is supported by codegen.";
+      oocoutE(&arg, Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+   // Make sure the convolution code, which includes the sum, is generated
+   ctx.getResult(arg);
+   return fftConvSumName(arg);
 }
 
 std::string codegenIntegralImpl(RooGamma &arg, int, const char *rangeName, CodegenContext &ctx)

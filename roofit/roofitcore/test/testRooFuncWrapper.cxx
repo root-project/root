@@ -97,13 +97,15 @@ class FactoryTestParams {
 public:
    FactoryTestParams() = default;
    FactoryTestParams(std::string const &name, WorkspaceSetupFunc setupWorkspace, CreateNLLFunc createNLL,
-                     double fitResultTolerance, bool randomizeParameters, std::size_t nEvents = 100)
+                     double fitResultTolerance, bool randomizeParameters, std::size_t nEvents = 100,
+                     double numDerivativeEps = 1e-8)
       : _name{name},
         _setupWorkspace{setupWorkspace},
         _createNLL{createNLL},
         _fitResultTolerance{fitResultTolerance},
         _randomizeParameters{randomizeParameters},
-        _nEvents{nEvents}
+        _nEvents{nEvents},
+        _numDerivativeEps{numDerivativeEps}
    {
    }
 
@@ -113,6 +115,10 @@ public:
    double _fitResultTolerance = 1e-4;
    bool _randomizeParameters = true;
    std::size_t _nEvents = 100;
+   /// Step size for the numeric derivatives of the reference likelihood.
+   /// Models with a large round-off error (like FFT convolutions) need a
+   /// larger step than the default.
+   double _numDerivativeEps = 1e-8;
 };
 
 class FactoryTest : public testing::TestWithParam<FactoryTestParams> {
@@ -192,7 +198,9 @@ TEST_P(FactoryTest, NLLFit)
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), observables), dMyNLL[i], tol);
+      EXPECT_NEAR(
+         getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), observables, _params._numDerivativeEps),
+         dMyNLL[i], tol);
    }
 
    // Remember parameter state before minimization
@@ -582,7 +590,8 @@ FactoryTestParams param13{"RooFunctor",
                           /*randomizeParameters=*/true};
 
 FactoryTestParams makeTestParams(const char *name, std::vector<std::string> const &expressions,
-                                 double fitResultTolerance, bool randomizeParameters = true, std::size_t nEvents = 100)
+                                 double fitResultTolerance, bool randomizeParameters = true, std::size_t nEvents = 100,
+                                 double numDerivativeEps = 1e-8)
 {
    return {name,
            [=](RooWorkspace &ws) {
@@ -597,7 +606,8 @@ FactoryTestParams makeTestParams(const char *name, std::vector<std::string> cons
            },
            fitResultTolerance,
            randomizeParameters,
-           nEvents};
+           nEvents,
+           numDerivativeEps};
 }
 
 auto testValues = testing::Values(
@@ -674,7 +684,22 @@ auto testValues = testing::Values(
    ,
    param13
 #endif
-);
+   ,
+   // Last, so that the random sequence of the other tests is not changed.
+   // Numeric convolution of a Landau with a Gaussian, like in the rf208
+   // tutorial. The round-off error of the FFT makes the numeric reference
+   // derivatives too noisy with the default step size.
+   makeTestParams("RooFFTConvPdf",
+                  {"x[-10., 30.]", "Landau::lx(x, ml[5., -20., 20.], sl[1., 0.1, 10.])",
+                   "Gaussian::gauss(x, mg[0.], sg[2., 0.1, 10.])", "FCONV::model(x, lx, gauss)"},
+                  5e-3, false, 1000, /*numDerivativeEps=*/1e-5),
+   // The same with a RooAddPdf as input, whose shape depends on the
+   // normalization of its components over the convolution observable.
+   makeTestParams("RooFFTConvPdfAddPdf",
+                  {"x[-10., 30.]", "Gaussian::gA(x, 6., sA[0.8, 0.1, 5.])", "Gaussian::gB(x, 14., sB[3., 0.5, 10.])",
+                   "SUM::sumAB(fAB[0.3, 0., 1.] * gA, gB)", "Gaussian::res(x, 0., sg[2., 0.1, 10.])",
+                   "FCONV::model(x, sumAB, res)"},
+                  5e-3, false, 1000, /*numDerivativeEps=*/1e-5));
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
@@ -726,5 +751,58 @@ TEST(RooFuncWrapper, ExponentialGradientNearZeroSlope)
       double hessian = 0.;
       nll->hessian(&hessian);
       EXPECT_NEAR(hessian, ref.hessian, 1e-9 * ref.hessian) << "Hessian at slope " << ref.slope;
+   }
+}
+
+// The Hessian goes through the custom pushforward of the FFT convolution,
+// which clad differentiates again. Compare it with finite differences of the
+// generated gradient.
+TEST(RooFuncWrapper, FFTConvPdfHessian)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl{RooFit::WARNING};
+
+   RooWorkspace ws;
+   ws.factory("x[-10., 30.]");
+   ws.factory("Landau::lx(x, ml[5., -20., 20.], sl[1., 0.1, 10.])");
+   ws.factory("Gaussian::gauss(x, mg[0.], sg[2., 0.1, 10.])");
+   ws.factory("FCONV::model(x, lx, gauss)");
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &model = *ws.pdf("model");
+
+   // Expected data, so that no random numbers are drawn, which would change
+   // the random sequence of the parameterized tests that run afterwards.
+   std::unique_ptr<RooDataHist> binnedData{model.generateBinned(x, 1000, RooFit::ExpectedData())};
+
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*binnedData, RooFit::EvalBackend::Codegen())};
+   auto &nllWrapper = static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nll);
+   nllWrapper.generateHessian();
+
+   // The parameters in the order of the gradient and Hessian elements
+   RooArgSet observables{x};
+   RooArgSet params;
+   nll->getParameters(&observables, params);
+   const std::size_t n = params.size();
+
+   std::vector<double> hessian(n * n);
+   nll->hessian(hessian.data());
+
+   // The step size balances the truncation error against the round-off error
+   // of the FFT convolution in the gradient.
+   const double eps = 1e-4;
+   for (std::size_t j = 0; j < n; ++j) {
+      auto &param = static_cast<RooRealVar &>(*params[j]);
+      const double orig = param.getVal();
+      std::vector<double> gradPlus(n);
+      std::vector<double> gradMinus(n);
+      param.setVal(orig + eps);
+      nll->gradient(gradPlus.data());
+      param.setVal(orig - eps);
+      nll->gradient(gradMinus.data());
+      param.setVal(orig);
+      for (std::size_t i = 0; i < n; ++i) {
+         const double ref = (gradPlus[i] - gradMinus[i]) / (2 * eps);
+         EXPECT_NEAR(hessian[i * n + j], ref, 1e-4 * std::abs(ref) + 1e-3)
+            << "d2 NLL / d" << params[i]->GetName() << " d" << param.GetName();
+      }
    }
 }

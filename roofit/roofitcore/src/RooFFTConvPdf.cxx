@@ -682,6 +682,21 @@ RooFit::OwningPtr<RooArgSet> RooFFTConvPdf::actualParameters(const RooArgSet& ns
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// The input pdfs are sampled normalized over the observables of the cache
+/// (see FFTCacheElem), which also fixes the coefficient normalization of
+/// RooAddPdf inputs. Compile them for the same normalization set, so that the
+/// code generation backend samples inputs with the same shape.
+
+RooArgSet RooFFTConvPdf::compileServersNormSet(RooArgSet const &normSet) const
+{
+  RooArgSet out;
+  out.add(*std::unique_ptr<RooArgSet>{actualObservables(normSet)});
+  return out;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return p.d.f. observable (which can be a function) to substitute given
 /// p.d.f. observable. Substitutes x by xprime if xprime is set.
 

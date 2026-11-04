@@ -409,7 +409,7 @@ RooAbsCachedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
       return RooAbsPdf::compileForNormSet(normSet, ctx);
    }
    std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
-   ctx.compileServers(*pdfClone, {});
+   ctx.compileServers(*pdfClone, compileServersNormSet(normSet));
 
    // Pin a stable normalization set on the clone so that doEval() and the
    // analytical integration path triggered inside RooNormalizedPdf below hit

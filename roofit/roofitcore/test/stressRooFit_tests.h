@@ -945,11 +945,6 @@ public:
    {
    }
 
-   bool isTestAvailable() override
-   {
-      return !useCodegenBackend();
-   }
-
    double ctol() override { return 1e-2; } // Account for difficult shape of Landau distribution
 
    bool testCode() override

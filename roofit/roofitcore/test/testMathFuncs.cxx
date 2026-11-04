@@ -3,6 +3,10 @@
 
 #include <RooFit/Detail/MathFuncs.h>
 
+#include <RooArgSet.h>
+#include <RooDataHist.h>
+#include <RooRealVar.h>
+
 #include <TRandom3.h>
 
 #include <gtest/gtest.h>
@@ -31,6 +35,36 @@ TEST(MathFuncs, FFTConvolveAdd)
             ref += in1[j] * in2[(k + n - j) % n];
          }
          EXPECT_NEAR(out[k], ref, 1e-12 * n) << "n = " << n << ", k = " << k;
+      }
+   }
+}
+
+// The interpolation must reproduce RooDataHist::weight(), including the
+// mirroring at the boundaries.
+TEST(MathFuncs, Interpolate1dPolynomial)
+{
+   const int nBins = 10;
+   const double low = -2.0;
+   const double high = 3.0;
+   RooRealVar x{"x", "x", low, high};
+   x.setBins(nBins);
+   RooDataHist dh{"dh", "dh", x};
+
+   TRandom3 rng{42};
+   std::vector<double> vals(nBins);
+   for (int i = 0; i < nBins; ++i) {
+      vals[i] = rng.Uniform(0.5, 2.0);
+      dh.set(i, vals[i], 0.0);
+   }
+
+   RooArgSet coords{x};
+   for (int intOrder : {0, 1, 2, 3, 4}) {
+      for (double val = low; val < high; val += 0.0137) {
+         x.setVal(val);
+         const double ref = dh.weight(coords, intOrder, /*correctForBinSize=*/false, /*cdfBoundaries=*/false);
+         const double res =
+            RooFit::Detail::MathFuncs::interpolate1dPolynomial(low, high, val, nBins, vals.data(), intOrder);
+         EXPECT_NEAR(res, ref, 1e-12) << "intOrder = " << intOrder << ", x = " << val;
       }
    }
 }

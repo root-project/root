@@ -238,6 +238,53 @@ double interpolate1d(double low, double high, double val, unsigned int numBins, 
    return vals[idx];
 }
 
+/// Polynomial interpolation of the contents `vals` of a uniformly binned 1D
+/// histogram, like RooDataHist::weight() does it: the polynomial of degree
+/// `intOrder` goes through the centers of the `intOrder + 1` bins closest to
+/// `val`, where the histogram is mirrored at its boundaries.
+template <typename DoubleArray>
+double
+interpolate1dPolynomial(double low, double high, double val, unsigned int numBins, DoubleArray vals, int intOrder)
+{
+   const int nBins = numBins;
+   const double binWidth = (high - low) / nBins;
+
+   // Bin containing val, clamped to the histogram like RooAbsBinning::binNumber()
+   int binC = static_cast<int>((val - low) / binWidth);
+   if (binC < 0) {
+      binC = 0;
+   } else if (binC >= nBins) {
+      binC = nBins - 1;
+   }
+   const double centerC = low + (binC + 0.5) * binWidth;
+
+   // First of the intOrder + 1 bins used for the interpolation, as in
+   // RooDataHist::interpolateDim(), and the position of val relative to its
+   // center in units of the bin width.
+   const int binLo = intOrder == 0 ? binC : binC - intOrder / 2 - (val < centerC ? 1 : 0);
+   const double t = (val - low) / binWidth - 0.5 - binLo;
+
+   // Lagrange interpolation on the uniform nodes t = 0, 1, ..., intOrder. The
+   // bin contents outside the histogram are those of the mirrored bins.
+   double result = 0.0;
+   for (int k = 0; k <= intOrder; ++k) {
+      double weight = 1.0;
+      for (int j = 0; j <= intOrder; ++j) {
+         if (j != k) {
+            weight *= (t - j) / (k - j);
+         }
+      }
+      int iBin = binLo + k;
+      if (iBin < 0) {
+         iBin = -iBin - 1;
+      } else if (iBin >= nBins) {
+         iBin = 2 * nBins - iBin - 1;
+      }
+      result += weight * vals[iBin];
+   }
+   return result;
+}
+
 inline double poisson(double x, double par)
 {
    if (par < 0)
