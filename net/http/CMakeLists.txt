@@ -14,14 +14,18 @@ if(NOT FASTCGI_FOUND)
   set(FASTCGI_LIBRARY "")
 endif()
 
+set(RHTTP_HEADERS
+  THttpCallArg.h
+  THttpEngine.h
+  THttpServer.h
+  THttpWSHandler.h
+  TRootSniffer.h
+  TRootSnifferStore.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
   HEADERS
-    THttpCallArg.h
-    THttpEngine.h
-    THttpServer.h
-    THttpWSHandler.h
-    TRootSniffer.h
-    TRootSnifferStore.h
+    ${RHTTP_HEADERS}
   SOURCES
     src/TCivetweb.cxx
     src/TCivetweb.h
@@ -42,6 +46,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
     Thread
   DEPENDENCIES
     RIO
+)
+
+set(RELATIVE_INC_HEADERS ${RHTTP_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(RHTTP
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/TCivetweb.h
+    src/TFastCgi.h
+    src/THttpLongPollEngine.h
+    src/THttpWSEngine.h
 )
 
 if(TARGET FastCGI::FastCGI)
