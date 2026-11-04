@@ -235,12 +235,53 @@ bool Gtk4DrawArea::on_mouse_scroll(double dx, double dy)
    return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Shows context menu with provided items and title at specified position
 
-void Gtk4DrawArea::ShowContextMenu(Glib::RefPtr<Gio::Menu> menu_model, int x, int y)
+void Gtk4DrawArea::ShowContextMenu(Glib::RefPtr<Gio::Menu> menu_model, const char *title, int x, int y)
 {
+   if (title && *title) {
+      auto item = Gio::MenuItem::create("", "");
+      item->set_attribute_value("custom", Glib::Variant<Glib::ustring>::create("header"));
+      menu_model->prepend_item(item);
+   }
+
    auto menu = Gtk::make_managed<Gtk::PopoverMenu>(menu_model);
    menu->set_parent(*this);
    menu->set_has_arrow(false); // Removes the little popover triangle point
+
+   menu->add_css_class("compact-menu");
+
+   static bool has_compact_style = false;
+   if (!has_compact_style) {
+      auto css_provider = Gtk::CssProvider::create();
+      std::string css_data =
+         "popover.compact-menu contents modelbutton, "
+         "popover.compact-menu contents button.model { "
+         "  padding-top: 1px; "
+         "  padding-bottom: 0px; "
+         "  margin-top: 0px; "
+         "  margin-bottom: 0px; "
+         "  min-height: 10px; "
+         "}";
+
+      css_provider->load_from_data(css_data);
+
+      // 4. Inject into the display context
+      Gtk::StyleContext::add_provider_for_display(
+         Gdk::Display::get_default(),
+         css_provider,
+         GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+      );
+
+      has_compact_style = true;
+   }
+
+   if (title && *title) {
+      auto label = Gtk::make_managed<Gtk::Label>(title);
+      label->add_css_class("heading");
+      menu->add_child(*label, "header");
+   }
 
    Gdk::Rectangle rect(x, y, 1, 1);
 
@@ -249,9 +290,7 @@ void Gtk4DrawArea::ShowContextMenu(Glib::RefPtr<Gio::Menu> menu_model, int x, in
 
    // 3. Open the popup menu smoothly on screen
    menu->popup();
-
 }
-
 
 bool Gtk4DrawArea::on_my_query_tooltip(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip)
 {

@@ -124,7 +124,7 @@ void TGtk4ContextMenu::DisplayPopup(Int_t x, Int_t y)
       if (checked != 0) {
          TString action_name = TString::Format("toggle-item-%d", id);
          auto action = Gio::SimpleAction::create_bool(action_name.Data(), checked > 0);
-         action->signal_activate().connect([action,this, id](const Glib::VariantBase & parameter) {
+         action->signal_activate().connect([action,this, id](const Glib::VariantBase &) {
             bool current;
             action->get_state(current);
             action->set_state(Glib::Variant<bool>::create(!current));
@@ -150,9 +150,9 @@ void TGtk4ContextMenu::DisplayPopup(Int_t x, Int_t y)
    };
 
    // Add a title
-   TString buffer = fContextMenu->CreatePopupTitle(object);
-   addMenuAction(buffer, -1, nullptr);
-   addSeparator();
+   TString title = fContextMenu->CreatePopupTitle(object);
+   // addMenuAction(title, -1, nullptr);
+   // addSeparator();
    bool last_separ = true;
 
    int entry = 0, toggle = kToggleStart, togglelist = kToggleListStart;
@@ -277,7 +277,7 @@ void TGtk4ContextMenu::DisplayPopup(Int_t x, Int_t y)
 
    widget->insert_action_group("context", action_group);
 
-   widget->ShowContextMenu(menu_model, x, y);
+   widget->ShowContextMenu(menu_model, title.Data(), x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
