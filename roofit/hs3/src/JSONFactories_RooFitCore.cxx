@@ -420,7 +420,7 @@ bool importAddPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
       const std::size_t nCoefficients = p.has_child("coefficients") ? p["coefficients"].num_children() : 0;
       const std::string counts =
          std::to_string(nCoefficients) + " coefficients for " + std::to_string(nSummands) + " summands";
-      if (extended && nCoefficients + 1 == nSummands) {
+      if (extended && nCoefficients > 0 && nCoefficients + 1 == nSummands) {
          RooJSONFactoryWSTool::error("mixture_dist '" + name + "' is declared as extended, but it has " + counts +
                                      ", which defines a non-extended mixture");
       }

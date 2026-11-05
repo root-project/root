@@ -3726,3 +3726,19 @@ TEST(RooFitHS3, UnbinnedDataWithInfiniteBounds)
    EXPECT_TRUE(RooNumber::isInfinite(ws2.var("y")->getMin()));
    EXPECT_TRUE(RooNumber::isInfinite(ws2.var("y")->getMax()));
 }
+
+// A RooAddPdf of a single extended pdf has no coefficients, and it is still extended.
+TEST(RooFitHS3, MixtureOfOneExtendedSummand)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   RooRealVar mean{"mean", "mean", 5.0, 0.0, 10.0};
+   RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 5.0};
+   RooRealVar nEvents{"nEvents", "nEvents", 100.0, 0.0, 1000.0};
+   RooGaussian gauss{"gauss", "", x, mean, sigma};
+   RooExtendPdf extended{"extended", "", gauss, nEvents};
+   RooAddPdf mixture{"mixture", "", RooArgList{extended}};
+   ASSERT_NE(mixture.extendMode(), RooAbsPdf::CanNotBeExtended);
+   EXPECT_EQ(validate(mixture), 0);
+}
