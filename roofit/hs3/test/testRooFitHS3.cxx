@@ -3729,6 +3729,53 @@ TEST(RooFitHS3, CrystalBallTypes)
       "sigma": 1.0, "alpha": 1.2, "n": 3.0, "alpha_R": 2.0, "n_R": 5.0})"),
                                "must not combine");
 }
+// A HistFactory sample without "errors" contributes no statistical uncertainty to the staterror in HS3 >= 0.3.
+// Before, RooFit assumed Poisson uncertainties for it.
+TEST(RooFitHS3, HistFactorySampleWithoutErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &version) {
+      const std::string staterror = R"({"type": "staterror", "parameters": ["g0", "g1"], "constraint": "Gauss"})";
+      return R"({
+      "metadata": {"hs3_version": ")" +
+             version + R"("},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [
+               {"name": "a", "data": {"contents": [10.0, 20.0], "errors": [4.0, 6.0]}, "modifiers": [)" +
+             staterror + R"(]},
+               {"name": "b", "data": {"contents": [10.0, 20.0]}, "modifiers": [)" +
+             staterror + R"(]}
+            ]
+         }
+      ]
+   })";
+   };
+   auto relativeErrors = [](RooWorkspace &ws) {
+      std::vector<double> result;
+      for (const char *name : {"g0_sigma", "g1_sigma"}) {
+         auto *sigma = dynamic_cast<RooAbsReal *>(ws.arg(name));
+         result.push_back(sigma ? sigma->getVal() : -1.0);
+      }
+      return result;
+   };
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("0.3")));
+   const auto errors = relativeErrors(ws);
+   EXPECT_DOUBLE_EQ(errors[0], 4.0 / 20.0);
+   EXPECT_DOUBLE_EQ(errors[1], 6.0 / 40.0);
+
+   RooWorkspace wsLegacy;
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(makeJSON("0.2")));
+   const auto legacyErrors = relativeErrors(wsLegacy);
+   EXPECT_DOUBLE_EQ(legacyErrors[0], std::sqrt(16.0 + 10.0) / 20.0);
+   EXPECT_DOUBLE_EQ(legacyErrors[1], std::sqrt(36.0 + 20.0) / 40.0);
+}
 
 // A RooRealVar that is constant in all parameter points must stay a RooRealVar, and a RooConstVar must stay a
 // RooConstVar. In the parameter points both are written the same way (a value and "const": true). The only

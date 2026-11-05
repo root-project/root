@@ -916,9 +916,13 @@ public:
                sumW.resize(nbins);
                sumW2.resize(nbins);
             }
+            // A sample without "errors" contributes no statistical uncertainty in HS3. Before HS3 0.3, RooFit
+            // assumed Poisson uncertainties for it.
+            const bool useWeightSquared =
+               comp["data"].has_child("errors") || isHS3VersionBefore(tool->hs3VersionInput(), 0, 3);
             for (size_t i = 0; i < nbins; ++i) {
                sumW[i] += dh->weight(i);
-               sumW2[i] += dh->weightSquared(i);
+               sumW2[i] += useWeightSquared ? dh->weightSquared(i) : 0.;
             }
             if (gammaParnames.empty()) {
                if (auto staterrorParams = staterror->find("parameters")) {
