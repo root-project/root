@@ -37,6 +37,7 @@
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
 #include <RooSpline.h>
 #include <RooUniformBinning.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
@@ -5496,4 +5497,187 @@ TEST(RooFitHS3, HistFactoryMultiDimensionalBinOrder)
                      "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "y", "min": 0.0, "max": 3.0, "nbins": 1}]}]
    })",
                                "Documents before HS3 0.3 don't define the order");
+}
+
+// A RooSimultaneous is a "combined_dist" (HS3 #119): the components are selected by a key with one label per column,
+// and the columns are declared as categorical axes of the default domain. The ROOT-internal form of older files is
+// still read.
+TEST(RooFitHS3, CombinedDist)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::model(x[-8, 8], mean[0, -8, 8], sigma[0.3, 0.1, 10])");
+   ws.factory("Gaussian::model_ctl(x, mean, 1.0)");
+   // The states are defined in this order, with non-contiguous indices.
+   ws.factory("SIMUL::simPdf(sample[physics=3, control=7], physics=model, control=model_ctl)");
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+
+   // Structure of the written document.
+   auto const *simPdfNode = RooJSONFactoryWSTool::findNamedChild(root["distributions"], "simPdf");
+   ASSERT_NE(simPdfNode, nullptr) << json;
+   EXPECT_EQ((*simPdfNode)["type"].val(), "combined_dist");
+   ASSERT_EQ((*simPdfNode)["columns"].num_children(), 1u);
+   EXPECT_EQ((*simPdfNode)["columns"].child(0).val(), "sample");
+   auto const &components = (*simPdfNode)["components"];
+   ASSERT_EQ(components.num_children(), 2u);
+   EXPECT_EQ(components.child(0)["key"].num_children(), 1u);
+   EXPECT_EQ(components.child(0)["key"].child(0).val(), "physics");
+   EXPECT_EQ(components.child(0)["dist"].val(), "model");
+   EXPECT_EQ(components.child(1)["key"].child(0).val(), "control");
+   EXPECT_EQ(components.child(1)["dist"].val(), "model_ctl");
+   EXPECT_FALSE(root.find("misc", "ROOT_internal", "combined_distributions")) << json;
+   // The column is a categorical axis of the default domain, with the states in their order.
+   auto const *domain = RooJSONFactoryWSTool::findNamedChild(root["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr);
+   auto const *axis = RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "sample");
+   ASSERT_NE(axis, nullptr) << json;
+   ASSERT_EQ((*axis)["categories"].num_children(), 2u);
+   EXPECT_EQ((*axis)["categories"].child(0).val(), "physics");
+   EXPECT_EQ((*axis)["categories"].child(1).val(), "control");
+
+   // Round trip: the same RooSimultaneous, with the index category from the domain (indices = positions).
+   EXPECT_EQ(validate(ws, "simPdf"), 0);
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   auto *simPdf = dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf"));
+   ASSERT_NE(simPdf, nullptr);
+   EXPECT_STREQ(simPdf->indexCat().GetName(), "sample");
+   EXPECT_EQ(simPdf->indexCat().lookupIndex("physics"), 0);
+   EXPECT_EQ(simPdf->indexCat().lookupIndex("control"), 1);
+   EXPECT_STREQ(simPdf->getPdf("physics")->GetName(), "model");
+   EXPECT_STREQ(simPdf->getPdf("control")->GetName(), "model_ctl");
+
+   // Files written by earlier ROOT versions describe the RooSimultaneous in misc.ROOT_internal.
+   RooWorkspace wsLegacy;
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [{"name": "default_domain", "type": "product_domain",
+                   "axes": [{"name": "x", "min": -8.0, "max": 8.0}, {"name": "mean", "min": -8.0, "max": 8.0}]}],
+      "distributions": [
+         {"name": "model", "type": "gaussian_dist", "x": "x", "mean": "mean", "sigma": 0.3},
+         {"name": "model_ctl", "type": "gaussian_dist", "x": "x", "mean": "mean", "sigma": 1.0}
+      ],
+      "misc": {"ROOT_internal": {"combined_distributions": {"simPdf": {
+         "index_cat": "sample", "labels": ["physics", "control"], "indices": [3, 7],
+         "distributions": ["model", "model_ctl"]}}}}
+   })"));
+   auto *legacySimPdf = dynamic_cast<RooSimultaneous *>(wsLegacy.pdf("simPdf"));
+   ASSERT_NE(legacySimPdf, nullptr);
+   EXPECT_EQ(legacySimPdf->indexCat().lookupIndex("control"), 7);
+   EXPECT_STREQ(legacySimPdf->getPdf("control")->GetName(), "model_ctl");
+   // Its export is in the standard form.
+   const std::string fromLegacy = RooJSONFactoryWSTool{wsLegacy}.exportJSONtoString();
+   EXPECT_NE(fromLegacy.find(R"("type":"combined_dist")"), std::string::npos) << fromLegacy;
+   EXPECT_EQ(fromLegacy.find("combined_distributions"), std::string::npos) << fromLegacy;
+}
+
+// A RooSimultaneous over a RooSuperCategory has several columns, sorted by name, and keys with one label per column.
+TEST(RooFitHS3, CombinedDistSeveralColumns)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   x.setBins(5);
+   RooGaussian sr{"sr", "sr", x, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", x, 6.0, 1.0};
+   RooGaussian srGlobal{"sr_global", "sr_global", x, 5.0, 2.0};
+   // The super category is built over (region, kind); the columns are written sorted by name: (kind, region).
+   RooCategory region{"region", "region", {{"SR", 0}, {"CR", 1}}};
+   RooCategory kind{"kind", "kind", {{"physics", 0}, {"global", 1}}};
+   RooSuperCategory index{"index", "index", RooArgSet{region, kind}};
+   // Three of the four keys have a component.
+   RooSimultaneous simPdf{
+      "simPdf", "simPdf", {{"{SR;physics}", &sr}, {"{CR;physics}", &cr}, {"{SR;global}", &srGlobal}}, index};
+
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *simPdfNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "simPdf");
+   ASSERT_NE(simPdfNode, nullptr) << json;
+   ASSERT_EQ((*simPdfNode)["columns"].num_children(), 2u);
+   EXPECT_EQ((*simPdfNode)["columns"].child(0).val(), "kind");
+   EXPECT_EQ((*simPdfNode)["columns"].child(1).val(), "region");
+   std::map<std::string, std::vector<std::string>> keys;
+   for (auto const &component : (*simPdfNode)["components"].children()) {
+      ASSERT_EQ(component["key"].num_children(), 2u);
+      keys[component["dist"].val()] = {component["key"].child(0).val(), component["key"].child(1).val()};
+   }
+   const std::map<std::string, std::vector<std::string>> expectedKeys{
+      {"sr", {"physics", "SR"}}, {"cr", {"physics", "CR"}}, {"sr_global", {"global", "SR"}}};
+   EXPECT_EQ(keys, expectedKeys) << json;
+
+   // Round trip: the super category is rebuilt over the columns, and every component evaluates to the same values.
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   auto *simPdf2 = dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf"));
+   ASSERT_NE(simPdf2, nullptr);
+   ASSERT_NE(dynamic_cast<RooSuperCategory const *>(&simPdf2->indexCat()), nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+   RooArgSet nset{x};
+   RooArgSet nset2{*ws2.var("x")};
+   for (auto const &item : expectedKeys) {
+      kind.setLabel(item.second[0]);
+      region.setLabel(item.second[1]);
+      ws2.cat("kind")->setLabel(item.second[0]);
+      ws2.cat("region")->setLabel(item.second[1]);
+      EXPECT_STREQ(simPdf2->getPdf(simPdf2->indexCat().getCurrentLabel())->GetName(), item.first.c_str());
+      for (int i = 0; i < x.numBins(); ++i) {
+         x.setBin(i);
+         ws2.var("x")->setBin(i);
+         EXPECT_DOUBLE_EQ(simPdf2->getVal(nset2), simPdf.getVal(nset)) << item.first << " bin " << i;
+      }
+   }
+}
+
+TEST(RooFitHS3, CombinedDistImportErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &columns, std::string const &components,
+                      std::string const &axes = R"({"name": "sample", "categories": ["a", "b"]})") {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain",
+                   "axes": [{"name": "x", "min": 0.0, "max": 10.0}, )" +
+             axes + R"(]}],
+      "distributions": [
+         {"name": "ga", "type": "gaussian_dist", "x": "x", "mean": 3.0, "sigma": 1.0},
+         {"name": "gb", "type": "gaussian_dist", "x": "x", "mean": 6.0, "sigma": 1.0},
+         {"name": "simPdf", "type": "combined_dist", "columns": )" +
+             columns + R"(, "components": )" + components + R"(}
+      ]
+   })";
+   };
+   const std::string good = R"([{"key": ["a"], "dist": "ga"}, {"key": ["b"], "dist": "gb"}])";
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"(["sample"])", good)));
+      EXPECT_NE(dynamic_cast<RooSimultaneous *>(ws.pdf("simPdf")), nullptr);
+   }
+   expectImportThrowsWithError(
+      makeJSON(R"(["channel"])", good),
+      "the column 'channel' of the combined_dist 'simPdf' is not declared by a categorical axis");
+   expectImportThrowsWithError(makeJSON(R"([])", good), "must be a non-empty list of names of categorical axes");
+   expectImportThrowsWithError(makeJSON(R"(["sample", "sample"])", R"([{"key": ["a", "a"], "dist": "ga"}])"),
+                               "the column 'sample' of the combined_dist 'simPdf' is listed twice");
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([{"key": ["a", "b"], "dist": "ga"}])"),
+                               "must have a \"key\" with 1 labels");
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([{"key": ["c"], "dist": "ga"}])"),
+                               "the label 'c' in position 0 of a key of the combined_dist 'simPdf' is not one of the "
+                               "categories of 'sample'");
+   expectImportThrowsWithError(
+      makeJSON(R"(["sample"])", R"([{"key": ["a"], "dist": "ga"}, {"key": ["a"], "dist": "gb"}])"),
+      "the key [\"a\"] is used by two components");
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([])"),
+                               "\"components\" of the combined_dist 'simPdf' must be a non-empty list");
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([{"key": ["a"]}])"), "must have a \"key\" and a \"dist\"");
+   // The column must be categorical.
+   expectImportThrowsWithError(
+      makeJSON(R"(["sample"])", good, R"({"name": "sample", "min": 0.0, "max": 1.0})"),
+      "the column 'sample' of the combined_dist 'simPdf' is not declared by a categorical axis");
 }

@@ -157,6 +157,8 @@ struct RooFit::HS3::ToolExportState {
    JSONNode *root = nullptr;
    /// The ranges and binnings of the exported variables, by domain and variable name.
    std::map<std::string, std::map<std::string, HS3::DomainAxis>> domains;
+   /// The categories that are declared by categorical axes of the "default_domain", by name.
+   std::map<std::string, HS3::CategoricalAxis> categories;
    /// Set by the exporter of an object that is interpreted by the document.
    std::optional<HistFactoryDist> typedObject;
    std::vector<DistributionRef> channelConstraints;
@@ -213,12 +215,21 @@ void recordDomains(std::map<std::string, std::map<std::string, HS3::DomainAxis>>
    }
 }
 
+// Append a domain with the axes in the order of their names, continuous and categorical ones mixed.
 void appendDomain(std::vector<HS3::Domain> &domains, std::string const &name,
-                  std::map<std::string, HS3::DomainAxis> axes)
+                  std::map<std::string, HS3::DomainAxis> axes,
+                  std::map<std::string, HS3::CategoricalAxis> categories = {})
 {
+   std::map<std::string, std::variant<HS3::DomainAxis, HS3::CategoricalAxis>> sorted;
+   for (auto &item : axes) {
+      sorted.emplace(item.first, std::move(item.second));
+   }
+   for (auto &item : categories) {
+      sorted.emplace(item.first, std::move(item.second));
+   }
    HS3::Domain &domain = domains.emplace_back();
    domain.name = name;
-   for (auto &item : axes) {
+   for (auto &item : sorted) {
       domain.axes.emplace_back(std::move(item.second));
    }
 }
@@ -1459,21 +1470,11 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
    exportedObjectNames.insert(name);
 
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
-      // RooSimultaneous is not used in the HS3 standard, we only export the
-      // dependents and some ROOT internal information.
-      exportObjects(func.servers(), exportedObjectNames);
-
-      HS3::CombinedDistribution &info = _export->doc.rooFit.combinedDistributions[simPdf->GetName()];
-      info.indexCat = simPdf->indexCat().GetName();
-      for (auto const &item : simPdf->indexCat()) {
-         info.labels.push_back(makeValidNameOrError(item.first));
-         info.indices.push_back(item.second);
-         info.distributions.push_back({simPdf->getPdf(item.first.c_str())->GetName()});
-      }
-
+      exportSimultaneous(*simPdf, exportedObjectNames);
       return;
    } else if (dynamic_cast<RooAbsCategory const *>(&func)) {
-      // categories are created by the respective RooSimultaneous, so we're skipping the export here
+      // Categories are not objects of the document: the index category of a RooSimultaneous is declared by the
+      // categorical axes of the domain that its "columns" name.
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
       exportVariable(&func, _export->doc.parameterPoints.front(), true);
@@ -1596,6 +1597,62 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       }
       this->exportObject(*s, exportedObjectNames);
    }
+}
+
+/**
+ * @brief Export a RooSimultaneous as a "combined_dist".
+ *
+ * The components are selected by a key with one label per column. The columns are the index category of the
+ * RooSimultaneous or, for a RooSuperCategory index, its input categories, sorted by name. They are declared as
+ * categorical axes of the default domain. States without a pdf are not written: HS3 does not require a component
+ * for every key.
+ */
+void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames)
+{
+   RooAbsCategory const &indexCat = simPdf.indexCat();
+   std::vector<RooCategory const *> columns = selectionColumns(indexCat);
+
+   JSONNode &elem = appendNamedChild((*_export->root)["distributions"], simPdf.GetName());
+   elem["type"] << "combined_dist";
+   auto &columnsNode = elem["columns"].set_seq();
+   for (RooCategory const *column : columns) {
+      columnsNode.append_child() << column->GetName();
+      recordCategory(*column);
+   }
+   auto &components = elem["components"].set_seq();
+   // In the order of the columns and of their states, which is the order in which the categories are written to
+   // the domain. This does not depend on the order of the inputs of a RooSuperCategory, so the document is the same
+   // after a round trip.
+   for (std::vector<std::string> const &key : selectionKeys(columns)) {
+      RooAbsPdf const *pdf = simPdf.getPdf(selectionLabel(indexCat, columns, key));
+      if (!pdf) {
+         continue;
+      }
+      JSONNode &component = components.append_child().set_map();
+      component["key"].fill_seq(key);
+      component["dist"] << pdf->GetName();
+   }
+   recordGenericObject(_export->doc, true, simPdf.GetName(), elem);
+
+   exportObjects(simPdf.servers(), exportedObjectNames);
+}
+
+// Declare a category as a categorical axis of the "default_domain". The states are written in their insertion order:
+// this is the order of the bins of a RooDataHist over the category, and the position becomes the index when the
+// document is read back.
+void RooJSONFactoryWSTool::recordCategory(RooAbsCategory const &cat)
+{
+   HS3::CategoricalAxis axis;
+   axis.name = cat.GetName();
+   for (unsigned int i = 0; i < cat.size(); ++i) {
+      axis.categories.push_back(cat.getOrdinal(i).first);
+   }
+   auto found = _export->categories.find(axis.name);
+   if (found != _export->categories.end() && found->second.categories != axis.categories) {
+      RooJSONFactoryWSTool::error("the category '" + axis.name +
+                                  "' is written to the domain twice, with different states");
+   }
+   _export->categories[axis.name] = std::move(axis);
 }
 
 /**
@@ -1864,10 +1921,16 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 
    // Find a RooSimultaneous model that would fit to this dataset
    RooSimultaneous const *simPdf = nullptr;
-   for (auto const &item : _export->doc.rooFit.combinedDistributions) {
-      if (item.second.indexCat == cat->GetName()) {
-         simPdf = static_cast<RooSimultaneous const *>(_workspace.pdf(item.first));
+   std::vector<RooSimultaneous const *> candidates;
+   for (RooAbsArg *arg : _workspace.allPdfs()) {
+      auto *candidate = dynamic_cast<RooSimultaneous const *>(arg);
+      if (candidate && std::string(candidate->indexCat().GetName()) == cat->GetName()) {
+         candidates.push_back(candidate);
       }
+   }
+   if (!candidates.empty()) {
+      sortByName(candidates);
+      simPdf = candidates.front();
    }
 
    // If there is an associated simultaneous pdf for the index category, we
@@ -2307,11 +2370,21 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          this->exportVariables(snapshotSorted, doc.parameterPoints.back(), true);
       }
    }
+   // The categories are categorical axes of the "default_domain", which must not list them as continuous.
+   auto &defaultAxes = _export->domains[HS3::defaultDomainName];
+   for (auto const &item : _export->categories) {
+      if (defaultAxes.count(item.first)) {
+         RooJSONFactoryWSTool::error("the variable '" + item.first +
+                                     "' is categorical, but the domain already lists it as continuous");
+      }
+   }
    // The domains of the analyses take precedence.
    for (auto &item : _export->domains) {
       if (std::none_of(doc.domains.begin(), doc.domains.end(),
                        [&](HS3::Domain const &domain) { return domain.name == item.first; })) {
-         appendDomain(doc.domains, item.first, std::move(item.second));
+         appendDomain(doc.domains, item.first, std::move(item.second),
+                      item.first == HS3::defaultDomainName ? std::move(_export->categories)
+                                                           : std::map<std::string, HS3::CategoricalAxis>{});
       }
    }
 

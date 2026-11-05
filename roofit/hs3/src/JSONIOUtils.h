@@ -6,9 +6,12 @@
 #include <RooFit/Detail/JSONInterface.h>
 
 class RooAbsBinning;
+class RooAbsCategory;
 class RooAbsCollection;
 class RooAbsReal;
 class RooArgList;
+class RooCategory;
+class RooWorkspace;
 class ParamHistFunc;
 
 bool startsWith(std::string_view str, std::string_view prefix);
@@ -30,5 +33,30 @@ RooArgList toParamHistFuncOrder(RooArgList const &paramsInBinOrder, RooAbsCollec
 // are known; they are rejected instead of being guessed.
 void checkParamHistFuncOrderIsDefined(std::string const &hs3Version, RooAbsCollection const &vars,
                                       std::string const &context);
+
+// Selection keys (HS3 "combined" data sets and "combined_dist"): a key is one label per column, and the columns are
+// categories declared by categorical axes of the domains. In RooFit, the columns are the index category of a
+// RooSimultaneous (a RooCategory), or the input categories of a RooSuperCategory index, or the category observables
+// of a combined data set. They are sorted by name, so that a distribution and a data set agree on the order of the
+// columns without looking at each other.
+std::vector<RooCategory const *> selectionColumns(RooAbsCategory const &indexCat);
+std::vector<RooCategory const *> selectionColumns(RooAbsCollection const &vars);
+// All keys of the columns, in the order of the columns and of their states, with the first column varying slowest.
+std::vector<std::vector<std::string>> selectionKeys(std::vector<RooCategory const *> const &columns);
+// The state label of a RooCategory (one column) or of a RooSuperCategory over the columns in that order.
+std::string selectionLabel(std::vector<std::string> const &key);
+// The state label of `indexCat` for a key with the labels in the order of `columns`: the label itself for a
+// RooCategory, or "{a;b}" with the labels in the order of the inputs for a RooSuperCategory.
+std::string selectionLabel(RooAbsCategory const &indexCat, std::vector<RooCategory const *> const &columns,
+                           std::vector<std::string> const &key);
+// A key as written in the document, for messages: ["a", "b"].
+std::string selectionKeyToString(std::vector<std::string> const &key);
+// Read the columns of a combined distribution or data set from the list `field` of `node`: each entry must be the
+// name of a category in the workspace, i.e. declared by a categorical axis of a domain.
+std::vector<RooCategory *> readSelectionColumns(RooWorkspace const &ws, RooFit::Detail::JSONNode const &node,
+                                                const char *field, std::string const &context);
+// Read and validate the "key" of a component: one label per column, each one of the categories of its column.
+std::vector<std::string> readSelectionKey(RooFit::Detail::JSONNode const &component,
+                                          std::vector<RooCategory *> const &columns, std::string const &context);
 
 #endif
