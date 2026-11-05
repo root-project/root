@@ -634,7 +634,12 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    RooArgSet pois;
    if (poiNode) {
       for (auto const &child : poiNode->children()) {
-         pois.add(*workspace.arg(child.val()));
+         RooAbsArg *arg = workspace.arg(child.val());
+         if (!arg) {
+            RooJSONFactoryWSTool::error("the object '" + child.val() + "' in \"" + poiNode->key() +
+                                        "\" of analysis '" + analysisName + "' does not exist");
+         }
+         pois.add(*arg);
       }
    }
    mc->SetParametersOfInterest(pois);
