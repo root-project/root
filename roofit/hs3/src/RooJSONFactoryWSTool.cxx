@@ -1212,6 +1212,34 @@ void combineDatasets(HS3Document const &doc, std::vector<std::unique_ptr<RooAbsD
    }
 }
 
+// The names of the variables that appear in more than one of `datasets`.
+template <class DataSets, class GetData>
+std::vector<std::string> sharedVariableNames(DataSets const &datasets, GetData getData)
+{
+   std::map<std::string, int> counts;
+   for (auto const &item : datasets) {
+      for (RooAbsArg const *var : *getData(item)->get()) {
+         ++counts[var->GetName()];
+      }
+   }
+   std::vector<std::string> shared;
+   for (auto const &[name, count] : counts) {
+      if (count > 1) {
+         shared.push_back(name);
+      }
+   }
+   return shared;
+}
+
+std::string joinQuoted(std::vector<std::string> const &names)
+{
+   std::string out;
+   for (std::string const &name : names) {
+      out += (out.empty() ? "'" : ", '") + name + "'";
+   }
+   return out;
+}
+
 // Build the combined data sets of the document: a RooDataSet with one category column per entry of "columns" and the
 // variables of all components, filled row by row from the components, which are then no longer imported on their own.
 // The columns are categories declared by categorical axes of the domains. A key without a sub-data set is a state
@@ -1259,6 +1287,15 @@ void assembleCombinedData(HS3Document const &doc, RooWorkspace const &workspace,
                                         "another combined data set");
          }
          components.push_back({&c.key, std::move(*found)});
+      }
+      // HS3 requires distinct axis names, since the components of a combined distribution share no variate. RooFit
+      // can still read such a document.
+      std::vector<std::string> shared = sharedVariableNames(components, [](auto const &c) { return c.data.get(); });
+      if (!shared.empty()) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the sub-data sets of " + context + " share the axes " +
+                                       joinQuoted(shared) +
+                                       ". HS3 requires distinct axis names, because the components of a combined "
+                                       "distribution share no variate. RooFit reads the document anyway.");
       }
 
       // The variables: the columns first, then those of the components. A weight variable if any component is
@@ -2109,6 +2146,18 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
       (*found)->SetName(subName.c_str());
       combined.components.push_back({key, {subName}});
       subDataSets.push_back(found->get());
+   }
+   // In HS3, the components of a combined distribution share no variate: a quantity measured in several components is a
+   // separate variate in each of them, e.g. "mass_SR" and "mass_CR". The sub-data sets, which are split by the
+   // components of the RooSimultaneous, must therefore not share observables.
+   if (simPdf) {
+      std::vector<std::string> shared = sharedVariableNames(subDataSets, [](RooAbsData const *d) { return d; });
+      if (!shared.empty()) {
+         error("the data set '" + info.name + "' is split by the components of '" + simPdf->GetName() +
+               "', which share the observables " + joinQuoted(shared) +
+               ". HS3 requires each component of a combined distribution to have its own variates: give the "
+               "observable a separate name in each component (e.g. 'mass_SR' and 'mass_CR' instead of 'mass').");
+      }
    }
    _export->doc.data.push_back({info.name, std::move(combined)});
    for (RooAbsData *subData : subDataSets) {
