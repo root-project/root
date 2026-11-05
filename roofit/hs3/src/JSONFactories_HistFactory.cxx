@@ -753,7 +753,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                       RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
                       const std::optional<Interpolation> &defaultInterpolation,
                       LegacyInterpolationDefault &legacyInterpolationDefault, bool &warnedUnconstrained,
-                      RooArgSet &constraints)
+                      bool &warnedShapeSys, RooArgSet &constraints)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -853,8 +853,13 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                                                     legacyInterpolationDefault));
             addSysConstraint(tool, mod, par, sysname, sampleName, warnedUnconstrained, constraints);
          } else if (modtype == "shapesys" || modtype == "shapefactor") {
-            std::string funcName = channelName + "_" + sysname + "_ShapeSys";
-            // funcName should be "<channel_name>_<sysname>_ShapeSys"
+            // HS3 has a single per-bin modifier type, "shapefactor", whose parameters are constrained by the
+            // distributions in "constraints", if given. "shapesys" is a deprecated alias.
+            if (modtype == "shapesys" && !isHS3VersionBefore(tool.hs3VersionInput(), 0, 3) && !warnedShapeSys) {
+               RooJSONFactoryWSTool::warning("RooFitHS3: the modifier type \"shapesys\" is deprecated, please use "
+                                             "\"shapefactor\" instead.");
+               warnedShapeSys = true;
+            }
             std::vector<double> vals;
             if (mod["data"].has_child("vals")) {
                for (const auto &v : mod["data"]["vals"].children()) {
@@ -906,9 +911,26 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                                               "not a supported legacy constraint type");
                }
             }
+            // Without "constraints", only the legacy constraint keys, or documents before HS3 0.3, make RooFit
+            // create constraints from "data.vals". Otherwise, the parameters are free.
+            const bool legacyConstraint = mod.has_child("constraint_type") || mod.has_child("constraint");
+            const bool createConstraints =
+               !hasConstraintList && (legacyConstraint || isHS3VersionBefore(tool.hs3VersionInput(), 0, 3));
+            if (!hasConstraintList && !createConstraints && !vals.empty()) {
+               oocoutW(nullptr, ObjectHandling)
+                  << "RooFitHS3: the \"data.vals\" of modifier '" << sysname << "' of sample '" << sampleName
+                  << "' are ignored, because it names no constraints, so its "
+                  << "parameters are free" << std::endl;
+               vals.clear();
+            }
+            const bool constrained = createConstraints ? !vals.empty() && constraint != "Const"
+                                                       : std::any_of(constraintPdfs.begin(), constraintPdfs.end(),
+                                                                     [](RooAbsPdf *pdf) { return pdf != nullptr; });
+            // Follow the naming of HistFactory: "<channel>_<name>_ShapeSys" for constrained and
+            // "<channel>_<name>_shapeFactor" for free parameters.
+            const std::string funcName = channelName + "_" + sysname + (constrained ? "_ShapeSys" : "_shapeFactor");
             shapeElems.add(createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint,
-                                     defaultGammaMin, defaultShapeSysGammaMax, minShapeUncertainty,
-                                     /*createConstraints=*/!hasConstraintList));
+                                     defaultGammaMin, defaultShapeSysGammaMax, minShapeUncertainty, createConstraints));
             for (auto *constraintPdf : constraintPdfs) {
                if (constraintPdf) {
                   constraints.add(*constraintPdf);
@@ -1090,13 +1112,14 @@ public:
       LegacyInterpolationDefault legacyInterpolationDefault;
       legacyInterpolationDefault.allowed = isHS3VersionBefore(tool->hs3VersionInput(), 0, 3);
       bool warnedUnconstrained = false;
+      bool warnedShapeSys = false;
 
       int idx = 0;
       RooArgList funcs;
       RooArgList coefs;
       for (const auto &comp : p["samples"].children()) {
          importHistSample(*tool, *data[idx], observables, mcStatObject, fprefix, comp, defaultInterpolation,
-                          legacyInterpolationDefault, warnedUnconstrained, constraints);
+                          legacyInterpolationDefault, warnedUnconstrained, warnedShapeSys, constraints);
          ++idx;
 
          std::string const &compName = RooJSONFactoryWSTool::name(comp);
@@ -1274,9 +1297,9 @@ struct HistoSys {
       high.assign(h->dataHist().weightArray(), h->dataHist().weightArray() + h->dataHist().numEntries());
    }
 };
+// A per-bin modifier ("shapefactor"): HistFactory's ShapeSys (constrained) or ShapeFactor (free).
 struct ShapeSys {
    std::string name;
-   std::vector<double> constraints;
    std::vector<RooAbsPdf const *> constraintPdfs;
    std::vector<RooAbsReal *> parameters;
    ShapeSys(const std::string &n) : name{n} {}
@@ -1634,32 +1657,22 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                }
             }
             sample.useBarlowBeestonLight = true;
-         } else { // other ShapeSys
+         } else { // ShapeSys or ShapeFactor
             ShapeSys sys(phf->GetName());
             erasePrefix(sys.name, channel.name + "_");
-            bool isshapesys = eraseSuffix(sys.name, "_ShapeSys") || eraseSuffix(sys.name, "_shapeSys");
-            bool isshapefactor = eraseSuffix(sys.name, "_ShapeFactor") || eraseSuffix(sys.name, "_shapeFactor");
+            for (std::string_view suffix : {"_ShapeSys", "_shapeSys", "_ShapeFactor", "_shapeFactor"}) {
+               if (eraseSuffix(sys.name, suffix))
+                  break;
+            }
 
+            // Both are written as "shapefactor": the constrained parameters name their constraint distribution in
+            // "constraints", the others are free.
             for (const auto &g : phf->paramList()) {
                sys.parameters.push_back(static_cast<RooRealVar *>(g));
-               RooAbsPdf *constraint = nullptr;
-               if (isshapesys) {
-                  constraint = findConstraint(g);
-                  if (!constraint)
-                     constraint = ws->pdf(constraintName(g->GetName()));
-                  if (!constraint && !g->isConstant()) {
-                     RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(g->GetName()));
-                  }
-               } else if (!isshapefactor) {
-                  RooJSONFactoryWSTool::error("unknown type of shapesys " + std::string(phf->GetName()));
-               }
-               if (!constraint) {
-                  sys.constraints.push_back(0.0);
-                  sys.constraintPdfs.push_back(nullptr);
-               } else {
-                  sys.constraints.push_back(constraintRelError(*constraint, *g));
-                  sys.constraintPdfs.push_back(constraint);
-               }
+               RooAbsPdf *constraint = findConstraint(g);
+               if (!constraint)
+                  constraint = ws->pdf(constraintName(g->GetName()));
+               sys.constraintPdfs.push_back(constraint);
             }
             sample.shapesys.emplace_back(std::move(sys));
          }
@@ -1801,7 +1814,7 @@ void ensureUniqueModifiers(const Channel &channel, const Sample &sample)
    for (const auto &modifier : sample.histosys)
       add("histosys", modifier.name);
    for (const auto &modifier : sample.shapesys)
-      add("shapesys", modifier.name);
+      add("shapefactor", modifier.name);
    for (const auto &modifier : sample.otherElements)
       add("custom", modifier.name);
    for (const auto &modifier : sample.tmpElements)
@@ -1933,7 +1946,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
       }
 
       for (const auto &sys : sample.shapesys) {
-         auto &mod = addModifier(modifiers, sys.name, "shapesys");
+         auto &mod = addModifier(modifiers, sys.name, "shapefactor");
          exportGammaParameters(mod, sys.parameters);
          // The relative uncertainties are encoded in the constraint distributions.
          exportConstraintNames(mod, sys.constraintPdfs);
