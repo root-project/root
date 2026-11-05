@@ -1635,6 +1635,49 @@ std::string makeValidNameOrError(std::string const &in)
    return out;
 }
 
+// The labels of a selection key, made valid names and joined by "_". Used in the names of sub-data sets and of
+// renamed observables.
+std::string selectionKeyName(std::vector<std::string> const &key)
+{
+   std::string out;
+   for (std::string const &label : key) {
+      out += (out.empty() ? "" : "_") + makeValidNameOrError(label);
+   }
+   return out;
+}
+
+// The names of the category columns of `vars`.
+std::vector<std::string> selectionColumnNames(RooAbsCollection const &vars)
+{
+   std::vector<std::string> names;
+   for (RooCategory const *column : selectionColumns(vars)) {
+      names.push_back(column->GetName());
+   }
+   return names;
+}
+
+// The RooSimultaneous of the workspace (the first by name) whose columns are `columns`, or nullptr.
+RooSimultaneous const *findMatchingSimultaneous(RooWorkspace const &workspace, std::vector<std::string> const &columns)
+{
+   std::vector<RooSimultaneous const *> candidates;
+   for (RooAbsArg *arg : workspace.allPdfs()) {
+      if (auto *candidate = dynamic_cast<RooSimultaneous const *>(arg)) {
+         candidates.push_back(candidate);
+      }
+   }
+   sortByName(candidates);
+   for (RooSimultaneous const *candidate : candidates) {
+      std::vector<std::string> candidateColumns;
+      for (RooCategory const *column : selectionColumns(candidate->indexCat())) {
+         candidateColumns.push_back(column->GetName());
+      }
+      if (candidateColumns == columns) {
+         return candidate;
+      }
+   }
+   return nullptr;
+}
+
 } // namespace
 
 namespace {
@@ -2013,6 +2056,18 @@ void RooJSONFactoryWSTool::importFunction(const std::string &jsonString, bool im
  * @param var The RooRealVar representing the axis to be exported.
  * @return void
  */
+// A categorical axis: the labels in the order of the states of the category, which is the order of the bins of a
+// RooDataHist.
+void RooJSONFactoryWSTool::exportCategoricalAxis(JSONNode &obsNode, RooCategory const &cat)
+{
+   testValidName(cat.GetName(), false);
+   obsNode["name"] << cat.GetName();
+   auto &labels = obsNode["categories"].set_seq();
+   for (unsigned int i = 0; i < cat.size(); ++i) {
+      labels.append_child() << cat.getOrdinal(i).first;
+   }
+}
+
 void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
 {
    std::string name = var.GetName();
@@ -2038,8 +2093,12 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
 {
    auto &observablesNode = output["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
-   for (auto *var : static_range_cast<RooRealVar *>(vars)) {
-      exportAxis(observablesNode.append_child().set_map(), *var);
+   for (RooAbsArg const *var : vars) {
+      if (auto const *cat = dynamic_cast<RooCategory const *>(var)) {
+         exportCategoricalAxis(observablesNode.append_child().set_map(), *cat);
+      } else {
+         exportAxis(observablesNode.append_child().set_map(), static_cast<RooRealVar const &>(*var));
+      }
    }
 
    return exportArray(n, contents, output["contents"]);
@@ -2091,24 +2150,7 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
    }
 
    // Split the data by the key: by the index category of a matching RooSimultaneous, or by the columns themselves.
-   RooSimultaneous const *simPdf = nullptr;
-   std::vector<RooSimultaneous const *> candidates;
-   for (RooAbsArg *arg : _workspace.allPdfs()) {
-      if (auto *candidate = dynamic_cast<RooSimultaneous const *>(arg)) {
-         candidates.push_back(candidate);
-      }
-   }
-   sortByName(candidates);
-   for (RooSimultaneous const *candidate : candidates) {
-      std::vector<std::string> candidateColumns;
-      for (RooCategory const *column : selectionColumns(candidate->indexCat())) {
-         candidateColumns.push_back(column->GetName());
-      }
-      if (candidateColumns == info.columns) {
-         simPdf = candidate;
-         break;
-      }
-   }
+   RooSimultaneous const *simPdf = findMatchingSimultaneous(_workspace, info.columns);
    std::unique_ptr<RooSuperCategory> superCat;
    RooAbsCategory const *indexCat = nullptr;
    std::vector<std::unique_ptr<RooAbsData>> parts;
@@ -2139,10 +2181,7 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
       if (found == parts.end() || ((*found)->numEntries() == 0 && simPdf && !simPdf->getPdf(label))) {
          continue;
       }
-      std::string subName = info.name;
-      for (std::string const &l : key) {
-         subName += "_" + makeValidNameOrError(l);
-      }
+      const std::string subName = info.name + "_" + selectionKeyName(key);
       (*found)->SetName(subName.c_str());
       combined.components.push_back({key, {subName}});
       subDataSets.push_back(found->get());
@@ -2170,7 +2209,7 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 {
    for (RooAbsArg const *obs : *data.get()) {
-      if (dynamic_cast<RooAbsCategory const *>(obs)) {
+      if (dynamic_cast<RooAbsCategory const *>(obs) && !dynamic_cast<RooCategory const *>(obs)) {
          error("the data set '" + std::string(data.GetName()) + "' has the categorical observable '" + obs->GetName() +
                "', which is not a RooCategory, and can't be written as a combined data set");
       }
@@ -2190,9 +2229,26 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       variables.remove(*weightVar);
    }
 
+   // Categories are categorical axes, declared by a categorical axis of the default domain.
+   auto categoricalAxis = [&](RooCategory const &cat) {
+      recordCategory(cat);
+      HS3::CategoricalAxis axis;
+      axis.name = cat.GetName();
+      testValidName(axis.name, false);
+      for (unsigned int i = 0; i < cat.size(); ++i) {
+         axis.categories.push_back(cat.getOrdinal(i).first);
+      }
+      return axis;
+   };
+
    auto exportBinned = [&](std::size_t n, double const *contents) {
       HS3::BinnedData binned;
-      for (auto *var : static_range_cast<RooRealVar *>(variables)) {
+      for (RooAbsArg const *arg : variables) {
+         if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
+            binned.axes.emplace_back(categoricalAxis(*cat));
+            continue;
+         }
+         auto const *var = static_cast<RooRealVar const *>(arg);
          recordDomains(_export->domains, *var);
          binned.axes.emplace_back(HS3::toBinnedAxis(*var));
       }
@@ -2213,7 +2269,8 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    // coordinates are redundant information with the binning. We only do this
    // for 1D data for now. A variable without bins can't be binned data: unbinned data sets leave their axes without
    // binning, and would otherwise be written as binned once they have no entries.
-   if (data.isWeighted() && variables.size() == 1 && static_cast<RooRealVar const &>(*variables[0]).getBins() > 0) {
+   if (data.isWeighted() && variables.size() == 1 && dynamic_cast<RooRealVar const *>(variables[0]) &&
+       static_cast<RooRealVar const &>(*variables[0]).getBins() > 0) {
       bool isBinnedData = false;
       auto &x = static_cast<RooRealVar const &>(*variables[0]);
       std::vector<double> contents;
@@ -2233,7 +2290,12 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    // this really is an unbinned dataset
    HS3::UnbinnedData unbinned;
-   for (auto *var : static_range_cast<RooRealVar *>(variables)) {
+   for (RooAbsArg const *arg : variables) {
+      if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
+         unbinned.axes.emplace_back(categoricalAxis(*cat));
+         continue;
+      }
+      auto const *var = static_cast<RooRealVar const *>(arg);
       recordDomains(_export->domains, *var);
       // HS3 forbids binning information on the axes of unbinned data.
       testValidName(var->GetName(), false);
@@ -2243,8 +2305,13 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    bool hasNonUnityWeights = false;
    for (int i = 0; i < data.numEntries(); ++i) {
       data.get(i);
-      for (auto *var : static_range_cast<RooRealVar *>(variables)) {
-         unbinned.entries.push_back(var->getVal());
+      // The entries of a categorical axis are the positions of the labels in its "categories".
+      for (RooAbsArg const *arg : variables) {
+         if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
+            unbinned.entries.push_back(cat->getCurrentOrdinalNumber());
+         } else {
+            unbinned.entries.push_back(static_cast<RooRealVar const *>(arg)->getVal());
+         }
       }
       if (data.isWeighted()) {
          weightVals.push_back(data.weight());
@@ -2548,7 +2615,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    std::vector<RooAbsData *> singleData;
    std::vector<RooJSONFactoryWSTool::CombinedData> combData;
    for (auto &d : alldata) {
-      if (selectionColumns(*d->get()).empty()) {
+      // Without a matching RooSimultaneous, the categories of a data set are ordinary observables, written as
+      // categorical axes.
+      if (selectionColumns(*d->get()).empty() ||
+          !findMatchingSimultaneous(_workspace, selectionColumnNames(*d->get()))) {
          singleData.push_back(d);
          this->exportData(*d);
       } else {
