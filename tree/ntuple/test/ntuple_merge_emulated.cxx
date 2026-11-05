@@ -1,5 +1,6 @@
 #include "ntuple_test.hxx"
 #include "ntuple_fork.hxx"
+#include <TSystem.h>
 
 static void DoMerge(std::initializer_list<std::reference_wrapper<const FileRaii>> inputPaths, const FileRaii &outPath,
                     ENTupleMergingMode mergeMode = {})
@@ -270,10 +271,12 @@ TEST(RNTupleMergeEmulated, MergeLateEmulatedVector)
 
       writer2.reset();
 
+      EXPECT_TRUE(TClass::GetClass("CustomMergeVec")->IsLoaded());
       DoMerge({fileGuard1, fileGuard2}, fileGuardOut, ENTupleMergingMode::kUnion);
    });
 
    // Gather the input sources
    DoMerge({fileGuard1, fileGuard2}, fileGuardOut2, ENTupleMergingMode::kUnion);
+   EXPECT_FALSE(TClass::GetClass("CustomMergeVec")->IsLoaded());
    CompareOnDiskInfo(fileGuardOut, fileGuardOut2);
 }
