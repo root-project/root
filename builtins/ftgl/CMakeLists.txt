@@ -23,17 +23,9 @@ set(ROOT_FTGL_PATCH_FILE_3 "${CMAKE_CURRENT_SOURCE_DIR}/0003-fix-nullptr.patch")
 set(ROOT_FTGL_PREFIX ${CMAKE_BINARY_DIR}/builtins/FTGL-prefix)
 set(ROOT_FTGL_LIBRARY ${ROOT_FTGL_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ftgl${ROOT_FTGL_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-if (NOT DEFINED GIT_EXECUTABLE)
-  set(GIT_EXECUTABLE "git")
-endif()
-
-if(NOT EXISTS "${ROOT_FTGL_PREFIX}/src/BUILTIN_FTGL/._patched")
-  set(ROOT_FTGL_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace
-                ${ROOT_FTGL_PATCH_FILE_1}
-                ${ROOT_FTGL_PATCH_FILE_2}
-                ${ROOT_FTGL_PATCH_FILE_3}
-                ${CMAKE_CURRENT_SOURCE_DIR}/ftgl-marker.diff)
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(ROOT_FTGL_PATCH_COMMAND
+                           PATCHES ${ROOT_FTGL_PATCH_FILE_1} ${ROOT_FTGL_PATCH_FILE_2} ${ROOT_FTGL_PATCH_FILE_3}
+                           GIT_APPLY_ARGS --ignore-space-change --ignore-whitespace)
 
 include(ExternalProject)
 

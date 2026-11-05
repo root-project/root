@@ -11,20 +11,14 @@ set(ROOT_CIVETWEB_VERSION 1.16) # with some patches, so almost 1.17
 set(ROOT_CIVETWEB_PREFIX ${CMAKE_BINARY_DIR}/builtins/CIVETWEB-prefix)
 set(ROOT_CIVETWEB_LIBRARY ${ROOT_CIVETWEB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}civetweb${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-if (NOT DEFINED GIT_EXECUTABLE)
-  set(GIT_EXECUTABLE "git")
-endif()
 if(WIN32)
   set(GIT_PATCH_ARGS "--ignore-space-change")
 endif()
-# check if the patch has already been applied
-if(NOT EXISTS "${ROOT_CIVETWEB_PREFIX}/src/BUILTIN_CIVETWEB/._patched")
-  set(ROOT_CIVETWEB_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init -b master COMMAND ${GIT_EXECUTABLE} apply ${GIT_PATCH_ARGS}
-         ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
-         ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
-         ${CMAKE_CURRENT_SOURCE_DIR}/1423.patch # https://github.com/civetweb/civetweb/pull/1423 for OpenSSL4 compatibility
-         ${CMAKE_CURRENT_SOURCE_DIR}/civetweb-marker.diff)
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(ROOT_CIVETWEB_PATCH_COMMAND
+  PATCHES ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
+          ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
+          ${CMAKE_CURRENT_SOURCE_DIR}/1423.patch # https://github.com/civetweb/civetweb/pull/1423 for OpenSSL4 compatibility
+  GIT_APPLY_ARGS ${GIT_PATCH_ARGS})
 
 include(ExternalProject)
 

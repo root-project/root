@@ -11,9 +11,8 @@ set(ROOT_UNURAN_HASH "098793854c590b4c2c7e98bc48a45408875f48c5ad47650b5fabbd3e94
 set(ROOT_UNURAN_PREFIX ${CMAKE_BINARY_DIR}/builtins/UNURAN-prefix)
 set(ROOT_UNURAN_LIBRARY ${ROOT_UNURAN_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}unuran${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(ROOT_UNURAN_PATCH_FILE_1 "${CMAKE_CURRENT_SOURCE_DIR}/0001-allow-compilation-from-CMake.patch")
-if (NOT DEFINED GIT_EXECUTABLE)
-  set(GIT_EXECUTABLE "git")
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(ROOT_UNURAN_PATCH_COMMAND PATCHES ${ROOT_UNURAN_PATCH_FILE_1}
+                           GIT_APPLY_ARGS --ignore-space-change --ignore-whitespace)
 
 include(ExternalProject)
 
@@ -39,8 +38,7 @@ ExternalProject_Add(
   URL ${lcgpackages}/unuran-${ROOT_UNURAN_VERSION}.tar.gz
       https://statmath.wu.ac.at/unuran/unuran-${ROOT_UNURAN_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_UNURAN_HASH}
-  PATCH_COMMAND ${GIT_EXECUTABLE} init -q
-        COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${ROOT_UNURAN_PATCH_FILE_1}
+  ${ROOT_UNURAN_PATCH_COMMAND}
   SOURCE_SUBDIR src
   LOG_DOWNLOAD  TRUE
 # The following three are disabled to avoid CI failure in Ubuntu22 that has outdated CMake version

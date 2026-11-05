@@ -15,13 +15,8 @@ set(ROOT_XXHASH_PATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/xxhash_add_cmakelists.pat
 
 set(ROOT_XXHASH_PREFIX ${CMAKE_BINARY_DIR}/builtins/XXHASH-prefix)
 
-if (NOT DEFINED GIT_EXECUTABLE)
-  set(GIT_EXECUTABLE "git")
-endif()
-# check if the patch has already been applied
-if(NOT EXISTS "${ROOT_XXHASH_PREFIX}/src/BUILTIN_XXHASH/CMakeLists.txt")
-  set(XXHASH_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${ROOT_XXHASH_PATCH_FILE})
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(XXHASH_PATCH_COMMAND PATCHES ${ROOT_XXHASH_PATCH_FILE}
+                           GIT_APPLY_ARGS --ignore-space-change --ignore-whitespace)
 
 set(ROOT_XXHASH_LIBRARY ${ROOT_XXHASH_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}xxhash${CMAKE_STATIC_LIBRARY_SUFFIX})
 
