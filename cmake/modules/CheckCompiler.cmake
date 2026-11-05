@@ -261,3 +261,21 @@ endif()
 if(gnuinstall)
   set(R__HAVE_CONFIG 1)
 endif()
+
+
+#---Check if the std::vector implementation is using three pointers or one pointer and two integers
+message(STATUS "Checking std::vector layout")
+try_run(RUN_CHECK_LIBCPP_VECTOR_RESULT COMPILE_CHECK_LIBCPP_VECTOR_RESULT
+      ${CMAKE_BINARY_DIR}
+      SOURCES "${CMAKE_SOURCE_DIR}/cmake/modules/check_libcpp_vector.cpp"
+      COMPILE_OUTPUT_VARIABLE COMPILE_CHECK_LIBCPP_VECTOR_OUTPUT)
+
+if(NOT COMPILE_CHECK_LIBCPP_VECTOR_RESULT)
+   message(FATAL_ERROR "Failed to compile vector layout check, "
+           "likely an issue with the compiler installation: ${COMPILE_CHECK_LIBCPP_VECTOR_OUTPUT}")
+endif()
+
+if(NOT RUN_CHECK_LIBCPP_VECTOR_RESULT EQUAL 0)
+  message(FATAL_ERROR "Size based std::vector layout is unsupported; "
+          "run result='${RUN_CHECK_LIBCPP_VECTOR_RESULT}' (1 = size based, 2 = unexpected).")
+endif()
