@@ -107,6 +107,7 @@ public:
 
    void StreamMotionChanges(nlohmann::json &arr);
    void SendChangesToSubscribers();
+   void ClearOutput();
 
    /// Output of the last StreamElements() or StreamRepresentationChanges().
    const std::string &GetOutputJson() const { return fOutputJson; }
