@@ -59,6 +59,7 @@ private:
    std::unique_ptr<ROOT::MacOSX::Details::MacOSXSystem> fPimpl; ///<!
    bool fCocoaInitialized; ///<!
    bool fFirstDispatch; ///<!
+   bool fPostEvents = false; ///<! special mode for GTK4 when events remain in the queue
 
    TMacOSXSystem(const TMacOSXSystem &rhs);
    TMacOSXSystem &operator = (const TMacOSXSystem &rhs);

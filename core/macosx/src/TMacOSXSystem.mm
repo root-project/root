@@ -17,9 +17,11 @@
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TEnv.h"
 
 #include <stdexcept>
 #include <vector>
+#include <list>
 #include <map>
 #include <set>
 
@@ -138,7 +140,7 @@ public:
    MacOSXSystem();
    ~MacOSXSystem();
 
-   void InitializeCocoa();
+   void InitializeCocoa(bool with_pool);
 
    bool SetFileDescriptors(const TSeqCollection *fileHandlers);
    void UnregisterFileDescriptor(CFFileDescriptorRef fd);
@@ -223,12 +225,13 @@ MacOSXSystem::~MacOSXSystem()
 }
 
 //______________________________________________________________________________
-void MacOSXSystem::InitializeCocoa()
+void MacOSXSystem::InitializeCocoa(bool with_pool)
 {
    assert(fCocoaInitialized == false && "InitializeCocoa, Cocoa was initialized already");
 
    [NSApplication sharedApplication];
-   fPool.Reset();//TODO: test, should it be BEFORE shared application???
+   if (with_pool)
+      fPool.Reset();//TODO: test, should it be BEFORE shared application???
    fCocoaInitialized = true;
 }
 
@@ -347,6 +350,8 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
    //I'm not even sure, I need all this code :)
 
    if (fFirstDispatch) {
+      fPostEvents = gEnv->GetValue("MacOSX.PostEvents", (Int_t) 0) != 0;
+
       if (!fCocoaInitialized && !gROOT->IsBatch())
          InitializeCocoa();
 
@@ -359,49 +364,57 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
    Bool_t pollOnce = pendingOnly;
 
    while (true) {
-      const ROOT::MacOSX::Util::AutoreleasePool pool;
+      {
+         const ROOT::MacOSX::Util::AutoreleasePool pool1;
 
-      if (ProcessPendingEvents()) {
-         //If we had some events in a system queue, probably,
-         //now we have some events in our own event-queue.
-         if (gXDisplay && gXDisplay->Notify()) {
-            gVirtualX->Update(2);
-            gVirtualX->Update(3);
-            if (!pendingOnly)
-               return;
+         if (!fPostEvents && ProcessPendingEvents()) {
+            //If we had some events in a system queue, probably,
+            //now we have some events in our own event-queue.
+            if (gXDisplay && gXDisplay->Notify()) {
+               gVirtualX->Update(2);
+               gVirtualX->Update(3);
+               if (!pendingOnly)
+                  return;
+            }
          }
+
+         //Check for file descriptors ready for reading/writing.
+         if (fNfd > 0 && fFileHandler && fFileHandler->GetSize() > 0)
+            if (CheckDescriptors())
+               if (!pendingOnly)
+                  return;
+
+         fNfd = 0;
+         fReadready->Zero();
+         fWriteready->Zero();
+
+         if (pendingOnly && !pollOnce)
+            return;
+
+         // check synchronous signals
+         if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
+            if (CheckSignals(kTRUE))
+               if (!pendingOnly) return;
+
+         fSigcnt = 0;
+         fSignals->Zero();
       }
 
-      //Check for file descriptors ready for reading/writing.
-      if (fNfd > 0 && fFileHandler && fFileHandler->GetSize() > 0)
-         if (CheckDescriptors())
-            if (!pendingOnly)
-               return;
+      Bool_t did_dispatch = kFALSE;
+      // check synchronous timers - outside of autoreleasepool block
+      // it is required for GTK4 which can conflict with
 
-      fNfd = 0;
-      fReadready->Zero();
-      fWriteready->Zero();
+      if (fTimers && fTimers->GetSize() > 0)
+         did_dispatch = DispatchTimers(kTRUE);
 
-      if (pendingOnly && !pollOnce)
-         return;
+      const ROOT::MacOSX::Util::AutoreleasePool pool2;
 
-      // check synchronous signals
-      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
-         if (CheckSignals(kTRUE))
-            if (!pendingOnly) return;
-
-      fSigcnt = 0;
-      fSignals->Zero();
-
-      // check synchronous timers
       Long_t nextto = 0;
-      if (fTimers && fTimers->GetSize() > 0) {
-         if (DispatchTimers(kTRUE)) {
-            // prevent timers from blocking file descriptor monitoring
-            nextto = NextTimeOut(kTRUE);
-            if (nextto > kItimerResolution || nextto == -1)
-               return;
-         }
+      if (did_dispatch) {
+         // prevent timers from blocking file descriptor monitoring
+         nextto = NextTimeOut(kTRUE);
+         if (nextto > kItimerResolution || nextto == -1)
+            return;
       }
 
       // if in pendingOnly mode poll once file descriptor activity
@@ -417,7 +430,7 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
       //Wait for GUI events and for something else, like read/write from stdin/stdout (?).
       WaitEvents(nextto);
 
-      if (gXDisplay && gXDisplay->Notify()) {
+      if (!fPostEvents && gXDisplay && gXDisplay->Notify()) {
          gVirtualX->Update(2);
          gVirtualX->Update(3);
          if (!pendingOnly)
@@ -443,7 +456,7 @@ void TMacOSXSystem::InitializeCocoa()
 
    //TODO: add error handling and results check.
 
-   fPimpl->InitializeCocoa();
+   fPimpl->InitializeCocoa(!fPostEvents);
 
    const ROOT::MacOSX::Util::AutoreleasePool pool;
 
@@ -499,11 +512,15 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
    fWriteready->Zero();
    fNfd = 0;
 
+   std::list<NSEvent *> post_events;
+
    NSEvent *event = [NSApp nextEventMatchingMask : Private::kEventMaskAny
                      untilDate : untilDate inMode : NSDefaultRunLoopMode dequeue : YES];
    if (event) {
       if (event.type == Private::kApplicationDefined)
          ProcessApplicationDefinedEvent(event);
+      else if (fPostEvents)
+         post_events.emplace_front(event);
       else
          [NSApp sendEvent : event];
    }
@@ -513,14 +530,25 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
    {
       if (event.type == Private::kApplicationDefined)
          ProcessApplicationDefinedEvent(event);
-      else
+      else if (fPostEvents) {
+         post_events.emplace_front(event);
+         // maximal 5 events take from the queue
+         if (post_events.size() > 4)
+            break;
+      } else
          [NSApp sendEvent : event];
    }
 
    fPimpl->CloseFileDescriptors();
 
-   gVirtualX->Update(2);
-   gVirtualX->Update(3);
+   if (fPostEvents) {
+      for (auto ev : post_events)
+         [NSApp postEvent : ev atStart:YES];
+
+   } else {
+      gVirtualX->Update(2);
+      gVirtualX->Update(3);
+   }
 }
 
 //______________________________________________________________________________
