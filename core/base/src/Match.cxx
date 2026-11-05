@@ -9,6 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+// Note: this a hard-coded builtin file, originally stemming from https://ftp.math.utah.edu/pub/mirrors/minnie.tuhs.org/Unix_Usenet/comp.lang.c/1991-February/017374.html
+// and slighlty adapted / trimmed down for ROOT: https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/base/src/Match.cxx
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Author:    Allen I. Holub                                            //
@@ -22,7 +25,7 @@
 #include <cctype>
 #include <cstring>
 
-
+#define ROOT_Match_cxx
 #include "Match.h"
 
 
