@@ -77,6 +77,10 @@ class RTTreeDS final : public ROOT::RDF::RDataSource {
    CreateSampleInfo(unsigned int,
                     const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const final;
 
+   static ROOT::RDF::RSampleInfo
+   CreateSampleInfo(TTreeReader &r,
+                    const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap);
+
    void RunFinalChecks(bool nodesLeftNotRun) const final;
 
    void Setup(std::shared_ptr<TTree> &&tree, const ROOT::TreeUtils::RFriendInfo *friendInfo = nullptr);
