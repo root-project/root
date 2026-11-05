@@ -3888,6 +3888,102 @@ TEST(RooFitHS3, HistFactorySampleWithoutErrors)
    EXPECT_DOUBLE_EQ(legacyErrors[1], std::sqrt(36.0 + 20.0) / 40.0);
 }
 
+// HS3 has one per-bin modifier type, "shapefactor", whose parameters are constrained by the distributions named in
+// "constraints", if given, and free otherwise. "shapesys" is a deprecated alias. HistFactory's ShapeSys (constrained)
+// and ShapeFactor (free) are both written as "shapefactor".
+TEST(RooFitHS3, HistFactoryShapeFactor)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &version, std::string const &modifiers,
+                      std::string const &constraintDist = "") {
+      return R"({
+      "metadata": {"hs3_version": ")" +
+             version + R"("},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]}, "modifiers": [)" +
+             modifiers + R"(]}]
+         })" +
+             constraintDist + R"(
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "g_free_0", "min": 0, "max": 5}, {"name": "g_free_1", "min": 0, "max": 5},
+         {"name": "g_c_0", "min": 0, "max": 5}, {"name": "g_c_1", "min": 0, "max": 5}]}]
+   })";
+   };
+   auto countGammaConstraints = [](RooWorkspace &ws) {
+      std::size_t n = 0;
+      for (RooAbsArg *pdf : ws.allPdfs()) {
+         if (dynamic_cast<RooGaussian *>(pdf) || dynamic_cast<RooPoisson *>(pdf)) {
+            ++n;
+         }
+      }
+      return n;
+   };
+   const std::string freeModifier =
+      R"({"type": "shapefactor", "name": "free", "parameters": ["g_free_0", "g_free_1"]})";
+   const std::string constrainedModifier = R"({"type": "shapefactor", "name": "constr",
+      "parameters": ["g_c_0", "g_c_1"], "constraints": ["g_c_0_constraint", null]})";
+   const std::string json =
+      makeJSON("0.3", freeModifier + "," + constrainedModifier,
+               R"(, {"name": "g_c_0_constraint", "type": "gaussian_dist", "x": "g_c_0", "mean": 1.0, "sigma": 0.1})");
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   // The functions are named as in HistFactory: ShapeFactor for free, ShapeSys for constrained parameters.
+   EXPECT_NE(ws.function("channel0_free_shapeFactor"), nullptr);
+   EXPECT_NE(ws.function("channel0_constr_ShapeSys"), nullptr);
+   EXPECT_EQ(countGammaConstraints(ws), 1u);
+   ASSERT_NE(ws.var("g_free_0"), nullptr);
+   EXPECT_FALSE(ws.var("g_free_0")->isConstant());
+
+   // Both are written as "shapefactor", and free parameters don't prevent the round trip.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(countOccurrences(exported, R"("type":"shapefactor")"), 2u) << exported;
+   EXPECT_EQ(exported.find("shapesys"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["g_c_0_constraint",null])"), std::string::npos) << exported;
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // "shapesys" is a deprecated alias.
+   std::string withAlias = json;
+   withAlias.replace(withAlias.find(R"("type": "shapefactor")"), std::string(R"("type": "shapefactor")").size(),
+                     R"("type": "shapesys")");
+   RooWorkspace ws3;
+   const std::string aliasWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(withAlias));
+   });
+   EXPECT_NE(aliasWarnings.find(R"(the modifier type "shapesys" is deprecated)"), std::string::npos) << aliasWarnings;
+   EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), exported);
+
+   // In HS3 >= 0.3, "data.vals" without "constraints" don't create constraints.
+   RooWorkspace ws4;
+   const std::string valsWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws4}.importJSONfromString(
+         makeJSON("0.3", R"({"type": "shapefactor", "name": "free", "parameters": ["g_free_0", "g_free_1"],
+                    "data": {"vals": [0.1, 0.2]}})")));
+   });
+   EXPECT_NE(valsWarnings.find(R"(the "data.vals" of modifier 'free' of sample 'sig' are ignored)"), std::string::npos)
+      << valsWarnings;
+   EXPECT_NE(ws4.function("channel0_free_shapeFactor"), nullptr);
+   EXPECT_EQ(countGammaConstraints(ws4), 0u);
+
+   // Before HS3 0.3, a "shapesys" with "data.vals" is constrained as before, without deprecation warning.
+   RooWorkspace ws5;
+   const std::string legacyWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws5}.importJSONfromString(
+         makeJSON("0.2", R"({"type": "shapesys", "name": "constr", "data": {"vals": [0.1, 0.2]}})")));
+   });
+   EXPECT_EQ(legacyWarnings.find("deprecated"), std::string::npos) << legacyWarnings;
+   EXPECT_NE(ws5.function("channel0_constr_ShapeSys"), nullptr);
+   EXPECT_EQ(countGammaConstraints(ws5), 2u);
+}
+
 // A RooRealVar that is constant in all parameter points must stay a RooRealVar, and a RooConstVar must stay a
 // RooConstVar. In the parameter points both are written the same way (a value and "const": true). The only
 // difference is that the RooRealVar is listed in a domain and the RooConstVar is not: a parameter without domain is

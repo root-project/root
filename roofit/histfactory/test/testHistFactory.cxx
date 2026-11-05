@@ -700,15 +700,10 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                                           testing::Values(ROOFIT_EVAL_BACKENDS_WITH_CODEGEN)),
                          getNameFromInfo);
 
-// Regression test for the HS3 importer's handling of "shapefactor" modifiers.
-// HistFactory's ShapeFactor is exported with type "shapesys" (the only
-// modifier type the writer ever emits for a ParamHistFunc), but valid HS3 JSON
-// may also use the dedicated "shapefactor" type for an unconstrained
-// ParamHistFunc - and the importer must accept it. This test starts from a
-// HistFactory model built with MakeModelAndMeasurementFast, rewrites the
-// modifier type to "shapefactor" in the JSON, and checks that the importer
-// recognises it. Without the fix in JSONFactories_HistFactory.cxx the import
-// throws "modifier ... of unknown type 'shapefactor'".
+// HS3 round trip of a free HistFactory ShapeFactor. It is written as a
+// "shapefactor" modifier without "constraints", and must survive the
+// JSON -> workspace -> JSON round trip with free gammas. The deprecated
+// "shapesys" alias is read as well.
 TEST(HistFactory, HS3ImportShapeFactorModifier)
 {
    using namespace RooStats::HistFactory;
@@ -745,12 +740,9 @@ TEST(HistFactory, HS3ImportShapeFactorModifier)
    chan.AddSample(sig);
 
    // ShapeFactor on the background: an unconstrained, bin-by-bin scaling.
-   // Make the gammas constant so that the workspace is well-defined for
-   // re-export (free shapefactor gammas have no constraints attached).
    Sample bkg("background", "background", inputFile);
    ShapeFactor sf;
    sf.SetName("bkgShape");
-   sf.SetConstant(true);
    bkg.AddShapeFactor(sf);
    chan.AddSample(bkg);
 
@@ -762,26 +754,30 @@ TEST(HistFactory, HS3ImportShapeFactorModifier)
 
    const std::string js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
 
-   // Rewrite the modifier type for "bkgShape" from "shapesys" to "shapefactor".
-   // The HistFactory exporter always writes "shapesys", but the importer should
-   // accept the more accurate "shapefactor" type as well.
-   const std::regex pattern{"\"name\":\"bkgShape\",\"parameters\":\\[([^\\]]*)\\],\"type\":\"shapesys\""};
-   const std::string jsShapeFactor =
-      std::regex_replace(js, pattern, "\"name\":\"bkgShape\",\"parameters\":[$1],\"type\":\"shapefactor\"");
-   ASSERT_NE(js, jsShapeFactor) << "Failed to substitute shapesys -> shapefactor in JSON";
+   // The free ShapeFactor is written as "shapefactor", without constraints.
+   const std::regex pattern{"\"name\":\"bkgShape\",\"parameters\":\\[[^\\]]*\\],\"type\":\"shapefactor\""};
+   EXPECT_TRUE(std::regex_search(js, pattern)) << js;
+   EXPECT_EQ(js.find("shapesys"), std::string::npos) << js;
 
    RooWorkspace wsFromJson{"new"};
-   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(jsShapeFactor))
-      << "Importer rejected the 'shapefactor' modifier type";
+   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(js));
 
-   // The imported workspace should expose the same ParamHistFunc gammas.
-   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_0"), nullptr);
-   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_1"), nullptr);
+   // The imported workspace should expose the same free ParamHistFunc gammas.
+   ASSERT_NE(wsFromJson.var("gamma_bkgShape_bin_0"), nullptr);
+   ASSERT_NE(wsFromJson.var("gamma_bkgShape_bin_1"), nullptr);
+   EXPECT_FALSE(wsFromJson.var("gamma_bkgShape_bin_0")->isConstant());
 
-   // Re-exporting should give back the original JSON, since the writer emits
-   // type "shapesys" in both cases.
+   // Re-exporting should give back the original JSON.
    const std::string js2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
    EXPECT_EQ(js, js2) << "JSON -> WS -> JSON roundtrip changed the JSON";
+
+   // The deprecated "shapesys" alias gives the same model.
+   const std::string jsShapeSys =
+      std::regex_replace(js, std::regex{"\"type\":\"shapefactor\""}, "\"type\":\"shapesys\"");
+   ASSERT_NE(js, jsShapeSys);
+   RooWorkspace wsFromAlias{"alias"};
+   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromAlias}.importJSONfromString(jsShapeSys));
+   EXPECT_EQ(RooJSONFactoryWSTool{wsFromAlias}.exportJSONtoString(), js);
 }
 
 // Issue #20697: Sample::AddShapeFactor() now allows to set the initial value
