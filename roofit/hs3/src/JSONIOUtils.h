@@ -1,6 +1,7 @@
 #ifndef JSONIOUtils_h
 #define JSONIOUtils_h
 
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -23,13 +24,22 @@ inline constexpr const char *arrayDistTag = "hs3_array_dist";
 // True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
 bool isLiteralConstVar(RooAbsArg const &arg);
 
-// The HS3 type of `pdf` as a component of an array distribution (RooPoisson, RooGaussian or RooLognormal in the
-// standard parametrization, over a named observable), or std::nullopt if `pdf` cannot be a component.
-std::optional<std::string> arrayComponentType(RooAbsPdf const &pdf);
+// The HS3 type and the observable of `pdf` as a component of an array distribution (RooPoisson, RooGaussian or
+// RooLognormal in the standard parametrization, over a named observable), or std::nullopt if `pdf` cannot be a
+// component.
+// If `observable` names the mean of a RooGaussian, the Gaussian is written with x and mean swapped (see
+// RooJSONFactoryWSTool::setConstraintObservable()).
+struct ArrayComponentInfo {
+   std::string type;
+   std::string observable;
+};
+std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable = nullptr);
 
-// Write the array distribution `name` with the given components into `elem`.
+// Write the array distribution `name` with the given components into `elem`. `observableOf` gives the observable
+// recorded for a component by name, if any.
 void writeArrayDist(RooFit::Detail::JSONNode &elem, std::string const &name,
-                    std::vector<RooAbsPdf const *> const &components);
+                    std::vector<RooAbsPdf const *> const &components,
+                    std::map<std::string, std::string> const &observableOf);
 
 bool startsWith(std::string_view str, std::string_view prefix);
 bool endsWith(std::string_view str, std::string_view suffix);

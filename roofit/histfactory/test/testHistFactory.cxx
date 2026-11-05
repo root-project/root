@@ -19,6 +19,7 @@
 #include <RooArgSet.h>
 #include <RooSimultaneous.h>
 #include <RooRealSumPdf.h>
+#include <RooGaussian.h>
 #include <RooRealVar.h>
 #include <RooHelpers.h>
 #include <RooFitResult.h>
@@ -35,6 +36,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <regex>
 #include <sstream>
 #include <set>
@@ -168,6 +170,17 @@ TEST(HistFactory, HS3ArrayDistRoundTrip_ROOT6_16_Combined_Model)
    const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "simPdf_poisson_constraints");
    ASSERT_NE(pois, nullptr) << js;
    EXPECT_EQ((*pois)["components"].num_children(), 2u) << js;
+   // HistFactory builds the Gaussian constraints with the parameter as x and the global observable as mean; they
+   // are written the other way round, so that the observable is x. Also for the constant parameter Lumi.
+   std::map<std::string, std::string> gaussMeans;
+   for (auto const &component : (*gauss)["components"].children()) {
+      gaussMeans[component["x"].val()] = component["mean"].val();
+   }
+   EXPECT_EQ(gaussMeans, (std::map<std::string, std::string>{{"nominalLumi", "Lumi"},
+                                                             {"nom_alpha_syst1", "alpha_syst1"},
+                                                             {"nom_alpha_syst2", "alpha_syst2"},
+                                                             {"nom_alpha_syst3", "alpha_syst3"}}))
+      << js;
 
    // The parameter sections of this workspace from ROOT 6.16 are not stable under a round trip independently of the
    // arrays (its legacy bin-width variables come back as different objects), so the model sections are compared.
@@ -183,6 +196,32 @@ TEST(HistFactory, HS3ArrayDistRoundTrip_ROOT6_16_Combined_Model)
    for (const char *key : {"distributions", "functions", "likelihoods", "analyses"}) {
       EXPECT_EQ(section(js2, key), section(js, key)) << key;
    }
+   // The re-imported Gaussians have the observable as x.
+   auto *reimported = dynamic_cast<RooGaussian *>(wsFromJson.pdf("nom_alpha_syst2_constraint"));
+   ASSERT_NE(reimported, nullptr);
+   EXPECT_STREQ(reimported->getX().GetName(), "nom_alpha_syst2");
+   EXPECT_STREQ(reimported->getMean().GetName(), "alpha_syst2");
+   auto *lumi = dynamic_cast<RooGaussian *>(wsFromJson.pdf("nominalLumi_constraint"));
+   ASSERT_NE(lumi, nullptr);
+   EXPECT_STREQ(lumi->getX().GetName(), "nominalLumi");
+   EXPECT_STREQ(lumi->getMean().GetName(), "Lumi");
+
+   // The same without arrays: the standalone gaussian_dist nodes have the observable as x too.
+   RooJSONFactoryWSTool::config().exportArrayDist = false;
+   const std::string plain = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().exportArrayDist = true;
+   auto plainTree = RooFit::Detail::JSONTree::create(plain);
+   const auto *standalone =
+      RooJSONFactoryWSTool::findNamedChild(plainTree->rootnode()["distributions"], "alpha_syst2Constraint");
+   ASSERT_NE(standalone, nullptr) << plain;
+   EXPECT_EQ((*standalone)["type"].val(), "gaussian_dist") << plain;
+   EXPECT_EQ((*standalone)["x"].val(), "nom_alpha_syst2") << plain;
+   EXPECT_EQ((*standalone)["mean"].val(), "alpha_syst2") << plain;
+   RooWorkspace wsPlain("plain");
+   RooJSONFactoryWSTool{wsPlain}.importJSONfromString(plain);
+   auto *plainGauss = dynamic_cast<RooGaussian *>(wsPlain.pdf("alpha_syst2Constraint"));
+   ASSERT_NE(plainGauss, nullptr);
+   EXPECT_STREQ(plainGauss->getX().GetName(), "nom_alpha_syst2");
 
    // The likelihood is compared up to a constant: whether RooFit uses its binned likelihood for the channels (which
    // differs from the event-wise one by a constant) is not part of the document.

@@ -474,7 +474,7 @@ void exportConstraintNames(JSONNode &mod, std::vector<RooAbsPdf const *> const &
 std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constraint)
 {
    if (RooJSONFactoryWSTool::config().exportArrayDist) {
-      if (auto type = arrayComponentType(constraint)) {
+      if (auto info = arrayComponentInfo(constraint)) {
          std::string arrayName;
          for (RooAbsArg const *client : constraint.clients()) {
             if (client->getAttribute(arrayDistTag)) {
@@ -484,7 +484,7 @@ std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constr
          }
          if (arrayName.empty()) {
             // "poisson_dist" -> "<root>_poisson_constraints"
-            arrayName = tool.exportRootName() + "_" + removeSuffix(*type, "_dist") + "_constraints";
+            arrayName = tool.exportRootName() + "_" + removeSuffix(info->type, "_dist") + "_constraints";
          }
          return tool.exportAsArrayComponent(constraint, arrayName);
       }
@@ -1566,20 +1566,14 @@ struct Sample {
    Sample(const std::string &n) : name{n} {}
 };
 
-void addNormFactor(RooRealVar const *par, Sample &sample, RooWorkspace *ws)
+void addNormFactor(RooRealVar const *par, Sample &sample)
 {
-   std::string parname = par->GetName();
-   bool isConstrained = false;
-   for (RooAbsArg const *pdf : ws->allPdfs()) {
-      if (auto gauss = dynamic_cast<RooGaussian const *>(pdf)) {
-         if (parname == gauss->getX().GetName()) {
-            sample.normfactors.emplace_back(*par, gauss);
-            isConstrained = true;
-         }
-      }
-   }
-   if (!isConstrained)
+   // The constraint is found among the clients of the parameter, whichever of x and mean of a Gaussian it is.
+   if (RooAbsPdf const *constraint = findConstraint(const_cast<RooRealVar *>(par))) {
+      sample.normfactors.emplace_back(*par, constraint);
+   } else {
       sample.normfactors.emplace_back(*par);
+   }
 }
 
 struct Channel {
@@ -1651,7 +1645,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                   sample.normfactors.emplace_back(*constVar);
                }
             } else if (auto par = dynamic_cast<RooRealVar *>(e)) {
-               addNormFactor(par, sample, ws);
+               addNormFactor(par, sample);
             } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
                updateObservables(hf->dataHist());
             } else if (ParamHistFunc *phf = dynamic_cast<ParamHistFunc *>(e); phf && allRooRealVar(phf->paramList())) {
@@ -2207,42 +2201,59 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    // stat error handling
    configureStatError(channel);
 
-   auto lostConstraints = findLostConstraints(channel, constraints);
-   // Export all the lost constraints
-   for (const auto *constraint : lostConstraints) {
-      RooJSONFactoryWSTool::warning(
-         "losing constraint term '" + std::string(constraint->GetName()) +
-         "', implicit constraints are not supported by HS3 yet! The term will appear in the HS3 file, but will not be "
-         "picked up when creating a likelihood from it! You will have to add it manually as an external constraint.");
-      tool->queueExport(*constraint);
-   }
-
-   // Export the constraints of the modifiers, in the order in which the modifiers are written.
+   // Export the constraints of the modifiers, in the order in which the modifiers are written. The terms under
+   // which they are written are recorded for the likelihoods of the models that contain this channel.
    ConstraintNames constraintNames;
-   auto exportConstraintOf = [&](RooAbsPdf const *constraint) {
+   std::vector<std::string> terms;
+   auto exportConstraintOf = [&](RooAbsReal const *param, RooAbsPdf const *constraint) {
       if (constraint && constraintNames.find(constraint) == constraintNames.end()) {
-         constraintNames[constraint] = exportConstraint(*tool, *constraint);
+         // HistFactory builds the Gaussian constraints with the parameter as x and the global observable as mean.
+         // The observable is the side that does not depend on the parameter; recording it makes the Gaussian be
+         // written with the observable as x.
+         if (auto const *gauss = dynamic_cast<RooGaussian const *>(constraint)) {
+            RooAbsReal const &observable = gauss->getX().dependsOn(*param) ? gauss->getMean() : gauss->getX();
+            if (!isLiteralConstVar(observable)) {
+               tool->setConstraintObservable(*constraint, observable.GetName());
+            }
+         }
+         const std::string term = exportConstraint(*tool, *constraint);
+         constraintNames[constraint] = term;
+         if (std::find(terms.begin(), terms.end(), term) == terms.end()) {
+            terms.push_back(term);
+         }
       }
    };
    for (const auto &sample : channel.samples) {
       for (auto &modifier : sample.normfactors) {
-         exportConstraintOf(modifier.constraint);
+         exportConstraintOf(modifier.param, modifier.constraint);
       }
       for (auto &modifier : sample.normsys) {
-         exportConstraintOf(modifier.constraint);
+         exportConstraintOf(modifier.param, modifier.constraint);
       }
       for (auto &modifier : sample.histosys) {
-         exportConstraintOf(modifier.constraint);
+         exportConstraintOf(modifier.param, modifier.constraint);
       }
       for (auto &modifier : sample.shapesys) {
-         for (auto *constraint : modifier.constraintPdfs) {
-            exportConstraintOf(constraint);
+         for (std::size_t i = 0; i < modifier.constraintPdfs.size(); ++i) {
+            exportConstraintOf(modifier.parameters[i], modifier.constraintPdfs[i]);
          }
       }
-      for (auto *constraint : sample.staterrorConstraints) {
-         exportConstraintOf(constraint);
+      for (std::size_t i = 0; i < sample.staterrorConstraints.size(); ++i) {
+         exportConstraintOf(sample.staterrorParameters[i], sample.staterrorConstraints[i]);
       }
    }
+
+   // Constraint terms that are not attached to any modifier parameter are written on their own; the likelihood
+   // lists them with the other constraint terms.
+   for (const auto *constraint : findLostConstraints(channel, constraints)) {
+      oocoutI(nullptr, IO) << "RooFitHS3: the constraint term '" << constraint->GetName() << "' of '" << pdfname
+                           << "' is not attached to any modifier parameter; it is written on its own and listed in "
+                              "the likelihood"
+                           << std::endl;
+      tool->queueExport(*constraint);
+      terms.push_back(constraint->GetName());
+   }
+   tool->recordConstraintTerms(pdfname, terms);
 
    // Export all the custom modifiers
    for (const auto &sample : channel.samples) {

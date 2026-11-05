@@ -36,6 +36,8 @@
 #include <TROOT.h>
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
 #include <iterator>
 #include <set>
 #include <fstream>
@@ -596,7 +598,7 @@ loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Dom
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, const JSONNode &likelihoodsNode,
                     const JSONNode &domainsNode, RooWorkspace &workspace,
-                    const std::vector<std::unique_ptr<RooAbsData>> &datasets)
+                    std::vector<std::unique_ptr<RooAbsData>> &datasets)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = RooJSONFactoryWSTool::name(analysisNode);
@@ -621,24 +623,99 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    if (!nllNode->has_child("data")) {
       throw std::runtime_error("likelihood node has no data attached!");
    }
-   std::vector<std::string> nllDistNames = valsToStringVec((*nllNode)["distributions"]);
+   std::vector<std::string> const listedDistNames = valsToStringVec((*nllNode)["distributions"]);
+   std::vector<std::string> const listedDataNames = valsToStringVec((*nllNode)["data"]);
+
+   // The constraint terms of the HistFactory distributions of the likelihood enter through those distributions.
+   // Listed in "aux_distributions", they are not added again; paired with a data set in "distributions", they are
+   // not channels, and the data set gives the observed values of their observables.
+   std::vector<std::unique_ptr<RooArgSet>> trees;
+   for (std::string const &name : listedDistNames) {
+      RooAbsPdf *listed = workspace.pdf(name);
+      trees.push_back(listed ? std::unique_ptr<RooArgSet>{listed->getComponents()} : nullptr);
+   }
+   auto isConstraintTermOfOthers = [&](RooAbsArg const &term, std::size_t self) {
+      auto isPartOf = [&term](RooArgSet const &tree) {
+         if (tree.find(term.GetName())) {
+            return true;
+         }
+         if (term.getAttribute(arrayDistTag)) {
+            if (auto const *array = dynamic_cast<RooProdPdf const *>(&term)) {
+               for (RooAbsArg const *component : array->pdfList()) {
+                  if (tree.find(component->GetName())) {
+                     return true;
+                  }
+               }
+            }
+         }
+         return false;
+      };
+      for (std::size_t i = 0; i < trees.size(); ++i) {
+         if (i != self && trees[i] && isPartOf(*trees[i])) {
+            return true;
+         }
+      }
+      return false;
+   };
+
    RooArgSet extConstraints;
    for (auto &nameNode : (*nllNode)["aux_distributions"].children()) {
       if (RooAbsArg *extConstraint = workspace.arg(nameNode.val())) {
-         extConstraints.add(*extConstraint);
+         if (!isConstraintTermOfOthers(*extConstraint, listedDistNames.size())) {
+            extConstraints.add(*extConstraint);
+         }
       }
    }
+
+   std::vector<std::string> nllDistNames;
+   std::vector<std::string> nllDataNames;
+   RooArgSet constraintObservables;
+   for (std::size_t i = 0; i < listedDistNames.size(); ++i) {
+      std::string const &distName = listedDistNames[i];
+      std::string const dataName = i < listedDataNames.size() ? listedDataNames[i] : "0";
+      RooAbsPdf *listed = workspace.pdf(distName);
+      if (!listed || !isConstraintTermOfOthers(*listed, i)) {
+         nllDistNames.push_back(distName);
+         nllDataNames.push_back(dataName);
+         continue;
+      }
+      for (auto &d : datasets) {
+         if (!d || d->GetName() != dataName) {
+            continue;
+         }
+         if (d->numEntries() != 1) {
+            throw std::runtime_error("the data set '" + dataName + "' paired with the constraint term '" + distName +
+                                     "' must have exactly one entry");
+         }
+         for (RooAbsArg const *obs : *d->get(0)) {
+            auto *var = workspace.var(obs->GetName());
+            auto const *value = dynamic_cast<RooAbsReal const *>(obs);
+            if (!var || !value) {
+               RooJSONFactoryWSTool::warning("RooFitHS3: cannot set the observed value of '" +
+                                             std::string(obs->GetName()) + "' from the data set '" + dataName +
+                                             "': it is not a variable of the workspace");
+               continue;
+            }
+            var->setVal(value->getVal());
+            var->setConstant(true);
+            constraintObservables.add(*var);
+         }
+         // The values live in the variables now; the data set is not imported.
+         d.reset();
+      }
+   }
+
    RooArgSet observables;
-   for (auto &nameNode : (*nllNode)["data"].children()) {
+   for (std::size_t i = 0; i < nllDataNames.size(); ++i) {
       bool found = false;
       for (const auto &d : datasets) {
-         if (d->GetName() == nameNode.val()) {
+         if (d && d->GetName() == nllDataNames[i]) {
             found = true;
             observables.add(*d->get(), true);
          }
       }
-      if (nameNode.val() != "0" && !found)
-         throw std::runtime_error("dataset '" + nameNode.val() + "' cannot be found!");
+      if (nllDataNames[i] != "0" && !found)
+         throw std::runtime_error("dataset '" + nllDataNames[i] + "' cannot be found!");
    }
 
    JSONNode const *pdfNameNode = mcAuxNode ? mcAuxNode->find("pdfName") : nullptr;
@@ -735,6 +812,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
       }
    }
 
+   globs.add(constraintObservables, /*silent=*/true);
    mc->SetGlobalObservables(globs);
    mc->SetNuisanceParameters(nps);
 
@@ -1412,13 +1490,93 @@ void RooJSONFactoryWSTool::exportArrayDists()
       written.insert(next->first);
       // Exporting the servers may add to the registry, so the components are copied.
       const std::vector<RooAbsPdf const *> components = next->second;
-      writeArrayDist(appendNamedChild((*_rootnodeOutput)["distributions"], next->first), next->first, components);
+      writeArrayDist(appendNamedChild((*_rootnodeOutput)["distributions"], next->first), next->first, components,
+                     _constraintObservables);
       for (RooAbsPdf const *pdf : components) {
          exportObjects(pdf->servers());
       }
    }
-   _arrayComponents.clear();
-   _arrayOfComponent.clear();
+}
+
+void RooJSONFactoryWSTool::setConstraintObservable(RooAbsPdf const &pdf, std::string const &observable)
+{
+   _constraintObservables[pdf.GetName()] = observable;
+}
+
+std::string const *RooJSONFactoryWSTool::constraintObservable(std::string const &pdfName) const
+{
+   auto found = _constraintObservables.find(pdfName);
+   return found == _constraintObservables.end() ? nullptr : &found->second;
+}
+
+void RooJSONFactoryWSTool::recordConstraintTerms(std::string const &pdfName, std::vector<std::string> const &terms)
+{
+   auto &out = _constraintTermsOfPdf[pdfName];
+   for (auto const &term : terms) {
+      if (std::find(out.begin(), out.end(), term) == out.end()) {
+         out.push_back(term);
+      }
+   }
+}
+
+// Write the data set "<term>_data" with the observed values of the observables of the constraint term `term` (an
+// array distribution written in this export, or a single constraint pdf) and return true, or return false if the
+// observables of the term are not all global observables of the model.
+bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgSet const *globalObservables,
+                                                JSONNode &rootnode)
+{
+   std::vector<RooAbsPdf const *> components;
+   if (auto found = _arrayComponents.find(term); found != _arrayComponents.end()) {
+      components = found->second;
+   } else if (RooAbsPdf *pdf = _workspace.pdf(term)) {
+      components.push_back(pdf);
+   }
+   std::vector<std::string> observables;
+   for (RooAbsPdf const *pdf : components) {
+      auto info = arrayComponentInfo(*pdf, constraintObservable(pdf->GetName()));
+      if (!info || !globalObservables || !globalObservables->find(info->observable.c_str())) {
+         return false;
+      }
+      observables.push_back(info->observable);
+   }
+   if (observables.empty()) {
+      return false;
+   }
+   const std::string dataName = term + "_data";
+   if (!_writtenConstraintData.insert(dataName).second) {
+      return true;
+   }
+   if (_workspace.data(dataName)) {
+      error("cannot write the observed values of the constraint term '" + term + "' as the data set '" + dataName +
+            "': the workspace has a data set of that name");
+   }
+   JSONNode &node = appendNamedChild(rootnode["data"], dataName);
+   node["type"] << "unbinned";
+   auto &axes = node["axes"].set_seq();
+   auto &entry = node["entries"].set_seq().append_child().set_seq();
+   for (std::string const &name : observables) {
+      auto const *var = dynamic_cast<RooAbsReal const *>(_workspace.arg(name));
+      if (!var) {
+         error("the observable '" + name + "' of the constraint term '" + term + "' is not in the workspace");
+      }
+      auto &axis = axes.append_child().set_map();
+      axis["name"] << name;
+      // A range without a bound gets the largest representable value, so that other engines see a finite axis.
+      double min = -std::numeric_limits<double>::max();
+      double max = std::numeric_limits<double>::max();
+      if (auto const *rrv = dynamic_cast<RooRealVar const *>(var)) {
+         if (std::isfinite(rrv->getMin())) {
+            min = rrv->getMin();
+         }
+         if (std::isfinite(rrv->getMax())) {
+            max = rrv->getMax();
+         }
+      }
+      axis["min"] << min;
+      axis["max"] << max;
+      entry.append_child() << var->getVal();
+   }
+   return true;
 }
 
 /**
@@ -2099,12 +2257,51 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
       nllNode["data"].append_child() << 0;
    }
 
-   if (mc.GetExternalConstraints()) {
-      auto &extConstrNode = nllNode["aux_distributions"];
-      extConstrNode.set_seq();
-      for (const auto &constr : *mc.GetExternalConstraints()) {
-         extConstrNode.append_child() << constr->GetName();
+   // The additional terms of the likelihood: the external constraints of the ModelConfig, and the constraint terms
+   // of the HistFactory channels of the model. The latter are listed in "aux_distributions" with the observed values
+   // of their observables as constant parameters, or (config().exportConstraintData) in "distributions", each paired
+   // with a data set that holds the observed values.
+   std::vector<std::string> auxTerms;
+   auto addAuxTerm = [&](std::string const &term) {
+      if (std::find(auxTerms.begin(), auxTerms.end(), term) == auxTerms.end()) {
+         auxTerms.push_back(term);
       }
+   };
+   if (mc.GetExternalConstraints()) {
+      for (const auto &constr : *mc.GetExternalConstraints()) {
+         addAuxTerm(constr->GetName());
+      }
+   }
+   std::vector<std::string> channels;
+   if (auto simPdf = dynamic_cast<RooSimultaneous const *>(pdf)) {
+      for (auto const &item : simPdf->indexCat()) {
+         channels.push_back(simPdf->getPdf(item.first)->GetName());
+      }
+   } else {
+      channels.push_back(pdf->GetName());
+   }
+   std::vector<std::string> constraintTerms;
+   for (std::string const &channel : channels) {
+      auto found = _constraintTermsOfPdf.find(channel);
+      if (found == _constraintTermsOfPdf.end()) {
+         continue;
+      }
+      for (std::string const &term : found->second) {
+         if (std::find(constraintTerms.begin(), constraintTerms.end(), term) == constraintTerms.end()) {
+            constraintTerms.push_back(term);
+         }
+      }
+   }
+   for (std::string const &term : constraintTerms) {
+      if (config().exportConstraintData && exportConstraintData(term, mc.GetGlobalObservables(), rootnode)) {
+         nllNode["distributions"].append_child() << term;
+         nllNode["data"].append_child() << term + "_data";
+      } else {
+         addAuxTerm(term);
+      }
+   }
+   if (!auxTerms.empty()) {
+      nllNode["aux_distributions"].fill_seq(auxTerms);
    }
 
    auto writeList = [&](const char *name, RooArgSet const *args) {
@@ -2170,6 +2367,9 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    _exportedObjectNames.clear();
    _arrayComponents.clear();
    _arrayOfComponent.clear();
+   _constraintTermsOfPdf.clear();
+   _writtenConstraintData.clear();
+   _constraintObservables.clear();
    exportObjects(allpdfs);
 
    // export all toplevel functions
@@ -2251,6 +2451,11 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    _domains.reset();
    _rootnodeOutput = nullptr;
    _exportedObjectNames.clear();
+   _arrayComponents.clear();
+   _arrayOfComponent.clear();
+   _constraintTermsOfPdf.clear();
+   _writtenConstraintData.clear();
+   _constraintObservables.clear();
 }
 
 /**

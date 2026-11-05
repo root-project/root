@@ -568,8 +568,9 @@ ArrayFieldValue nameOrNumber(RooAbsReal const &arg)
 }
 
 // The type, observable and fields of `pdf` as a component of an array distribution, with the fields of the standalone
-// exporters, or std::nullopt if `pdf` cannot be a component.
-std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf)
+// exporters, or std::nullopt if `pdf` cannot be a component. A Gaussian whose mean is the recorded `observable` is
+// written with x and mean swapped.
+std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf, std::string const *observable = nullptr)
 {
    ArrayComponent out;
    RooAbsReal const *x = nullptr;
@@ -580,7 +581,13 @@ std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf)
    } else if (auto const *gauss = dynamic_cast<RooGaussian const *>(&pdf)) {
       out.type = "gaussian_dist";
       x = &gauss->getX();
-      out.fields = {{"mean", nameOrNumber(gauss->getMean())}, {"sigma", nameOrNumber(gauss->getSigma())}};
+      RooAbsReal const *mean = &gauss->getMean();
+      // A Gaussian constraint built by HistFactory has the parameter as x and the global observable as mean. The
+      // Gaussian is symmetric in the two, so it is written with the observable as x where the observable is known.
+      if (observable && *observable == mean->GetName() && !isLiteralConstVar(*mean)) {
+         std::swap(x, mean);
+      }
+      out.fields = {{"mean", nameOrNumber(*mean)}, {"sigma", nameOrNumber(gauss->getSigma())}};
    } else if (auto const *lognormal = dynamic_cast<RooLognormal const *>(&pdf)) {
       if (!lognormal->useStandardParametrization()) {
          return std::nullopt;
@@ -1551,6 +1558,25 @@ bool exportGaussModel(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
    return true;
 }
 
+// A Gaussian constraint whose recorded observable (see RooJSONFactoryWSTool::setConstraintObservable()) is its
+// mean is written with x and mean swapped, so that the observable is x. Other Gaussians use the generic export.
+bool exportGaussianConstraint(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+{
+   auto const *gauss = static_cast<RooGaussian const *>(func);
+   std::string const *observable = tool->constraintObservable(gauss->GetName());
+   if (!observable || *observable != gauss->getMean().GetName() || isLiteralConstVar(gauss->getMean())) {
+      return false;
+   }
+   auto write = [](JSONNode &node, ArrayFieldValue const &value) {
+      std::visit([&node](auto const &v) { node << v; }, value);
+   };
+   elem["type"] << key;
+   elem["x"] << gauss->getMean().GetName();
+   write(elem["mean"], nameOrNumber(gauss->getX()));
+   write(elem["sigma"], nameOrNumber(gauss->getSigma()));
+   return true;
+}
+
 bool exportLogNormal(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
    auto *pdf = static_cast<const RooLognormal *>(func);
@@ -1862,6 +1888,7 @@ STATIC_EXECUTE([]() {
    registerExporter<exportHist<RooHistFunc>>(RooHistFunc::Class(), "step", false);
    registerExporter<exportHist<RooHistPdf>>(RooHistPdf::Class(), "histogram_dist", false);
    registerExporter<exportLogNormal>(RooLognormal::Class(), "lognormal_dist", false);
+   registerExporter<exportGaussianConstraint>(RooGaussian::Class(), "gaussian_dist", true);
    registerExporter<exportMultiVarGaussian>(RooMultiVarGaussian::Class(), "multivariate_normal_dist", false);
    registerExporter<exportPoisson>(RooPoisson::Class(), "poisson_dist", false);
    registerExporter<exportDecay>(RooDecay::Class(), "decay_dist", false, /*autoExportDependants=*/false);
@@ -1882,16 +1909,17 @@ STATIC_EXECUTE([]() {
 
 } // namespace
 
-std::optional<std::string> arrayComponentType(RooAbsPdf const &pdf)
+std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable)
 {
-   auto component = arrayComponentOf(pdf);
+   auto component = arrayComponentOf(pdf, observable);
    if (!component) {
       return std::nullopt;
    }
-   return component->type;
+   return ArrayComponentInfo{component->type, component->x};
 }
 
-void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsPdf const *> const &components)
+void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsPdf const *> const &components,
+                    std::map<std::string, std::string> const &observableOf)
 {
    auto error = [&name](std::string const &message) {
       RooJSONFactoryWSTool::error("cannot write the array distribution '" + name + "': " + message);
@@ -1902,7 +1930,8 @@ void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsP
    std::vector<ArrayComponent> comps;
    std::set<std::string> observables;
    for (RooAbsPdf const *pdf : components) {
-      auto comp = arrayComponentOf(*pdf);
+      auto recorded = observableOf.find(pdf->GetName());
+      auto comp = arrayComponentOf(*pdf, recorded != observableOf.end() ? &recorded->second : nullptr);
       if (!comp) {
          error("'" + std::string(pdf->GetName()) +
                "' cannot be a component, only RooPoisson, RooGaussian and RooLognormal (standard parametrization) "
