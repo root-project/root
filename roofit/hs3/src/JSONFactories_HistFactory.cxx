@@ -498,6 +498,56 @@ RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &co
    return nullptr;
 }
 
+// A description of a modifier for error messages.
+std::string modifierContext(const JSONNode &mod, std::string const &sample)
+{
+   std::string out = "the " + mod["type"].val() + " modifier";
+   if (mod.has_child("name")) {
+      out += " '" + mod["name"].val() + "'";
+   }
+   return out + " of sample '" + sample + "'";
+}
+
+// The component of the array distribution `array` that constrains `param`: the one that depends on it.
+RooAbsPdf &arrayComponentFor(RooProdPdf const &array, RooAbsArg const &param, std::string const &context)
+{
+   std::vector<RooAbsPdf *> matches;
+   for (RooAbsPdf *pdf : static_range_cast<RooAbsPdf *>(array.pdfList())) {
+      if (pdf->dependsOn(param)) {
+         matches.push_back(pdf);
+      }
+   }
+   if (matches.size() == 1) {
+      return *matches.front();
+   }
+   const std::string what = "the array distribution '" + std::string(array.GetName()) +
+                            "' named as the constraint of '" + param.GetName() + "' (" + context + ") has ";
+   if (matches.empty()) {
+      RooJSONFactoryWSTool::error(what + "no component that depends on this parameter");
+   }
+   RooJSONFactoryWSTool::error(what + std::to_string(matches.size()) +
+                               " components that depend on this parameter, but a parameter can only be constrained "
+                               "by one component");
+}
+
+// Find the constraint distribution `constraintName` of the parameter `param`. If the name resolves to an array
+// distribution, the component that depends on the parameter is returned: that is the term that enters the likelihood
+// for this parameter, and the whole array enters once through the components of all of its parameters. Returns
+// nullptr if the name cannot be resolved.
+RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, std::string const &sample,
+                               RooAbsArg const &param, std::string const &context)
+{
+   RooAbsPdf *constraint = findNamedConstraint(tool, constraintName, sample);
+   if (!constraint || !constraint->getAttribute(arrayDistTag)) {
+      return constraint;
+   }
+   auto const *array = dynamic_cast<RooProdPdf const *>(constraint);
+   if (!array) {
+      return constraint;
+   }
+   return &arrayComponentFor(*array, param, context);
+}
+
 RooAbsPdf &createLegacyConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param,
                                   std::string const &constraintType)
 {
@@ -626,9 +676,10 @@ std::optional<std::string> singleConstraintName(const JSONNode &mod)
 RooAbsPdf &
 getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, const std::string &sample)
 {
+   const std::string context = modifierContext(mod, sample);
    // HS3 references the constraint distributions by name.
    if (auto name = singleConstraintName(mod); name && !name->empty()) {
-      auto *constraint = findNamedConstraint(tool, *name, sample);
+      auto *constraint = findNamedConstraint(tool, *name, sample, param, context);
       if (!constraint) {
          RooJSONFactoryWSTool::error("unable to find the constraint distribution '" + *name + "' of the modifier of '" +
                                      param.GetName() + "'");
@@ -642,7 +693,7 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
    JSONNode const *constrName = mod.find("constraint_name");
    if (constrName) {
       auto constraint_name = constrName->val();
-      auto constraint = findNamedConstraint(tool, constraint_name, sample);
+      auto constraint = findNamedConstraint(tool, constraint_name, sample, param, context);
       if (!constraint) {
          RooJSONFactoryWSTool::error("unable to find definition of of constraint '" + constraint_name +
                                      "' for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
@@ -655,7 +706,7 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
 
    if (auto constr = mod.find("constraint")) {
       std::string constraintValue = constr->val();
-      if (auto *constraint = findNamedConstraint(tool, constraintValue, sample)) {
+      if (auto *constraint = findNamedConstraint(tool, constraintValue, sample, param, context)) {
          if (auto gauss = dynamic_cast<RooGaussian *const>(constraint)) {
             param.setError(gauss->getSigma().getVal());
          }
@@ -878,26 +929,12 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                                            "' with neither values nor parameters!");
             }
             std::string constraint = "unknown";
-            std::vector<RooAbsPdf *> constraintPdfs;
             bool const hasConstraintList = mod.has_child("constraints");
             if (hasConstraintList) {
-               for (const auto &v : mod["constraints"].children()) {
-                  if (v.is_null()) {
-                     constraintPdfs.push_back(nullptr);
-                  } else {
-                     std::string constraintName = v.val();
-                     auto *constraintPdf = findNamedConstraint(tool, constraintName, sampleName);
-                     if (!constraintPdf) {
-                        RooJSONFactoryWSTool::error("unable to find definition of constraint '" + constraintName +
-                                                    "' for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
-                     }
-                     constraintPdfs.push_back(constraintPdf);
-                  }
-               }
                std::size_t const nGammas = std::max(vals.size(), parnames.size());
-               if (constraintPdfs.size() != nGammas) {
+               if (mod["constraints"].num_children() != nGammas) {
                   std::stringstream ss;
-                  ss << "modifier '" << RooJSONFactoryWSTool::name(mod) << "' has " << constraintPdfs.size()
+                  ss << "modifier '" << RooJSONFactoryWSTool::name(mod) << "' has " << mod["constraints"].num_children()
                      << " constraints, but " << nGammas << " parameters";
                   RooJSONFactoryWSTool::error(ss.str());
                }
@@ -926,16 +963,36 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                   << "parameters are free" << std::endl;
                vals.clear();
             }
-            const bool constrained = createConstraints ? !vals.empty() && constraint != "Const"
-                                                       : std::any_of(constraintPdfs.begin(), constraintPdfs.end(),
-                                                                     [](RooAbsPdf *pdf) { return pdf != nullptr; });
+            bool constrained = createConstraints && !vals.empty() && constraint != "Const";
+            if (hasConstraintList) {
+               for (const auto &v : mod["constraints"].children()) {
+                  constrained |= !v.is_null();
+               }
+            }
             // Follow the naming of HistFactory: "<channel>_<name>_ShapeSys" for constrained and
             // "<channel>_<name>_shapeFactor" for free parameters.
             const std::string funcName = channelName + "_" + sysname + (constrained ? "_ShapeSys" : "_shapeFactor");
-            shapeElems.add(createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint,
-                                     defaultGammaMin, defaultShapeSysGammaMax, minShapeUncertainty, createConstraints));
-            for (auto *constraintPdf : constraintPdfs) {
-               if (constraintPdf) {
+            ParamHistFunc &phf =
+               createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint, defaultGammaMin,
+                         defaultShapeSysGammaMax, minShapeUncertainty, createConstraints);
+            shapeElems.add(phf);
+            if (hasConstraintList) {
+               // The constraints are resolved per gamma (in bin order, like "constraints"), which also picks the
+               // right component out of an array distribution.
+               const std::vector<RooAbsReal *> gammas = paramHistFuncParamsInBinOrder(phf);
+               std::size_t i = 0;
+               for (const auto &v : mod["constraints"].children()) {
+                  RooAbsReal const &gamma = *gammas[i++];
+                  if (v.is_null()) {
+                     continue;
+                  }
+                  std::string constraintName = v.val();
+                  auto *constraintPdf =
+                     findNamedConstraint(tool, constraintName, sampleName, gamma, modifierContext(mod, sampleName));
+                  if (!constraintPdf) {
+                     RooJSONFactoryWSTool::error("unable to find definition of constraint '" + constraintName +
+                                                 "' for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
+                  }
                   constraints.add(*constraintPdf);
                }
             }
@@ -1104,11 +1161,15 @@ public:
                                            std::to_string(statErrConstraintNames->size()) + " constraints, but " +
                                            std::to_string(errs.size()) + " parameters");
             }
-            for (auto const &constraintName : *statErrConstraintNames) {
+            const std::vector<RooAbsReal *> gammas =
+               paramHistFuncParamsInBinOrder(static_cast<ParamHistFunc &>(*mcStatObject));
+            for (std::size_t i = 0; i < statErrConstraintNames->size(); ++i) {
+               auto const &constraintName = (*statErrConstraintNames)[i];
                if (!constraintName) {
                   continue;
                }
-               auto *constraint = findNamedConstraint(*tool, *constraintName, name);
+               auto *constraint = findNamedConstraint(*tool, *constraintName, name, *gammas[i],
+                                                      "the staterror modifier of channel '" + name + "'");
                if (!constraint) {
                   RooJSONFactoryWSTool::error("unable to find the constraint distribution '" + *constraintName +
                                               "' of the staterror modifier of channel '" + name + "'");
