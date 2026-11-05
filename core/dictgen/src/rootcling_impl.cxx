@@ -144,6 +144,10 @@ namespace genreflex {
 ////////////////////////////////////////////////////////////////////////////////
 
 static llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
+// rootcling's options are registered in their own subcommand instead of the top-level one, where LLVM registers its
+// options. Otherwise, when linking against a shared libLLVM, names that exist in both (like -W) abort at startup with
+// "Option 'W' registered more than once!". RootClingMain selects this subcommand before parsing the command line.
+static llvm::cl::SubCommand gRootclingSubcommand("rootcling", "Generate a dictionary.");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3386,17 +3390,17 @@ public:
 
 static llvm::cl::opt<bool> gOptSystemModuleByproducts("mSystemByproducts", llvm::cl::Hidden,
                                                       llvm::cl::desc("Allow implicit build of system modules."),
-                                                      llvm::cl::cat(gRootclingOptions));
+                                                      llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
                      llvm::cl::Hidden,
                      llvm::cl::desc("The list of the expected implicit modules build as part of building the current module."),
-                     llvm::cl::cat(gRootclingOptions));
+                     llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 // Really llvm::cl::Required, will be changed in RootClingMain below.
 static llvm::cl::opt<std::string>
 gOptDictionaryFileName(llvm::cl::Positional,
                       llvm::cl::desc("<output dictionary file>"),
-                      llvm::cl::cat(gRootclingOptions));
+                      llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
@@ -3533,10 +3537,10 @@ static void MaybeSuppressWin32CrashDialogs() {
 }
 
 static llvm::cl::opt<bool> gOptForce("f", llvm::cl::desc("Overwrite <file>s."),
-                                    llvm::cl::cat(gRootclingOptions));
+                                    llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool> gOptRootBuild("rootbuild", llvm::cl::desc("If we are building ROOT."),
                                         llvm::cl::Hidden,
-                                        llvm::cl::cat(gRootclingOptions));
+                                        llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 enum VerboseLevel {
    v = ROOT::TMetaUtils::kError,
    v0 = ROOT::TMetaUtils::kFatal,
@@ -3554,96 +3558,96 @@ gOptVerboseLevel(llvm::cl::desc("Choose verbosity level:"),
                                  clEnumVal(v3, "Show notes."),
                                  clEnumVal(v4, "Show information.")),
                 llvm::cl::init(v2),
-                llvm::cl::cat(gRootclingOptions));
+                llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 
 static llvm::cl::opt<bool>
 gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
         llvm::cl::Hidden,
-        llvm::cl::cat(gRootclingOptions));
+        llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptReflex("reflex", llvm::cl::desc("Behave internally like genreflex."),
-          llvm::cl::cat(gRootclingOptions));
+          llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptGccXml("gccxml", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
           llvm::cl::Hidden,
-          llvm::cl::cat(gRootclingOptions));
+          llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<std::string>
 gOptLibListPrefix("lib-list-prefix",
                  llvm::cl::desc("An ACLiC feature which exports the list of dependent libraries."),
                  llvm::cl::Hidden,
-                 llvm::cl::cat(gRootclingOptions));
+                 llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptGeneratePCH("generate-pch",
                llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
                llvm::cl::Hidden,
-               llvm::cl::cat(gRootclingOptions));
+               llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptC("c", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-     llvm::cl::cat(gRootclingOptions));
+     llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptP("p", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-     llvm::cl::cat(gRootclingOptions));
+     llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptRootmapLibNames("rml", llvm::cl::ZeroOrMore,
                    llvm::cl::desc("Generate rootmap file."),
-                   llvm::cl::cat(gRootclingOptions));
+                   llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<std::string>
 gOptRootMapFileName("rmf",
                    llvm::cl::desc("Generate a rootmap file with the specified name."),
-                   llvm::cl::cat(gRootclingOptions));
+                   llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptCxxModule("cxxmodule",
              llvm::cl::desc("Generate a C++ module."),
-             llvm::cl::cat(gRootclingOptions));
+             llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptModuleMapFiles("moduleMapFile",
                    llvm::cl::desc("Specify a C++ modulemap file."),
-                   llvm::cl::cat(gRootclingOptions));
+                   llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 // FIXME: Figure out how to combine the code of -umbrellaHeader and inlineInputHeader
 static llvm::cl::opt<bool>
 gOptUmbrellaInput("umbrellaHeader",
                   llvm::cl::desc("A single header including all headers instead of specifying them on the command line."),
-                  llvm::cl::cat(gRootclingOptions));
+                  llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptMultiDict("multiDict",
              llvm::cl::desc("If this library has multiple separate LinkDef files."),
-             llvm::cl::cat(gRootclingOptions));
+             llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptNoGlobalUsingStd("noGlobalUsingStd",
              llvm::cl::desc("Do not declare {using namespace std} in dictionary global scope."),
-             llvm::cl::cat(gRootclingOptions));
+             llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptInterpreterOnly("interpreteronly",
                    llvm::cl::desc("Generate minimal dictionary for interactivity (without IO information)."),
-                   llvm::cl::cat(gRootclingOptions));
+                   llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptSplit("split",
          llvm::cl::desc("Split the dictionary into two parts: one containing the IO (ClassDef)\
 information and another the interactivity support."),
-         llvm::cl::cat(gRootclingOptions));
+         llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptNoDictSelection("noDictSelection",
                    llvm::cl::Hidden,
                    llvm::cl::desc("Do not run the selection rules. Useful when in -onepcm mode."),
-                   llvm::cl::cat(gRootclingOptions));
+                   llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<std::string>
 gOptSharedLibFileName("s",
                      llvm::cl::desc("The path to the library of the built dictionary."),
-                     llvm::cl::cat(gRootclingOptions));
+                     llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptModuleDependencies("m",
                       llvm::cl::desc("The list of dependent modules of the dictionary."),
-                      llvm::cl::cat(gRootclingOptions));
+                      llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptExcludePaths("excludePath", llvm::cl::ZeroOrMore,
                 llvm::cl::desc("Do not store the <path> in the dictionary."),
-                llvm::cl::cat(gRootclingOptions));
+                llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 // FIXME: This does not seem to work. We have one use of -inlineInputHeader in
 // ROOT and it does not produce the expected result.
 static llvm::cl::opt<bool>
 gOptInlineInput("inlineInputHeader",
                llvm::cl::desc("Does not generate #include <header> but expands the header content."),
-               llvm::cl::cat(gRootclingOptions));
+               llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 // FIXME: This is totally the wrong concept. We should not expose an interface
 // to be able to tell which component is in the pch and which needs extra
 // scaffolding for interactive use. Moreover, some of the ROOT components are
@@ -3654,61 +3658,61 @@ static llvm::cl::opt<bool>
 gOptWriteEmptyRootPCM("writeEmptyRootPCM",
                      llvm::cl::Hidden,
                      llvm::cl::desc("Does not include the header files as it assumes they exist in the pch."),
-                     llvm::cl::cat(gRootclingOptions));
+                     llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptCheckSelectionSyntax("selSyntaxOnly",
                         llvm::cl::desc("Check the selection syntax only."),
-                        llvm::cl::cat(gRootclingOptions));
+                        llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptFailOnWarnings("failOnWarnings",
                   llvm::cl::desc("Fail if there are warnings."),
-                  llvm::cl::cat(gRootclingOptions));
+                  llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<bool>
 gOptNoIncludePaths("noIncludePaths",
                   llvm::cl::desc("Do not store include paths but rely on the env variable ROOT_INCLUDE_PATH."),
-                  llvm::cl::cat(gRootclingOptions));
+                  llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<std::string>
 gOptISysRoot("isysroot", llvm::cl::Prefix, llvm::cl::Hidden,
             llvm::cl::desc("Specify an isysroot."),
-            llvm::cl::cat(gRootclingOptions),
+            llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand),
             llvm::cl::init("-"));
 static llvm::cl::list<std::string>
 gOptIncludePaths("I", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
                 llvm::cl::desc("Specify an include path."),
-                llvm::cl::cat(gRootclingOptions));
+                llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptCompDefaultIncludePaths("compilerI", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
                     llvm::cl::desc("Specify a compiler default include path, to suppress unneeded `-isystem` arguments."),
-                    llvm::cl::cat(gRootclingOptions));
+                    llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptSysIncludePaths("isystem", llvm::cl::ZeroOrMore,
                     llvm::cl::desc("Specify a system include path."),
-                    llvm::cl::cat(gRootclingOptions));
+                    llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptPPDefines("D", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
              llvm::cl::desc("Specify defined macros."),
-             llvm::cl::cat(gRootclingOptions));
+             llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptPPUndefines("U", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
              llvm::cl::desc("Specify undefined macros."),
-             llvm::cl::cat(gRootclingOptions));
+             llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
           llvm::cl::desc("Specify compiler diagnostics options."),
-          llvm::cl::cat(gRootclingOptions));
+          llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::opt<std::string>
 gOptDepFile("MF",
             llvm::cl::desc("Write dependency output to the specified file."),
-            llvm::cl::cat(gRootclingOptions));
+            llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 // Really OneOrMore, will be changed in RootClingMain below.
 static llvm::cl::list<std::string>
 gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
                          llvm::cl::desc("<list of dictionary header files> <LinkDef file | selection xml file>"),
-                         llvm::cl::cat(gRootclingOptions));
+                         llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 static llvm::cl::list<std::string>
 gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
          llvm::cl::desc("Consumes all unrecognized options."),
-         llvm::cl::cat(gRootclingOptions));
+         llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gRootclingSubcommand));
 
 static llvm::cl::SubCommand
 gBareClingSubcommand("bare-cling", "Call directly cling and exit.");
@@ -3905,10 +3909,10 @@ int RootClingMain(int argc,
 #endif
 
    // Hide options from llvm which we got from static initialization of libCling.
-   llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions);
+   llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions, gRootclingSubcommand);
 
    // Define Options aliasses
-   auto &opts = llvm::cl::getRegisteredOptions();
+   auto &opts = llvm::cl::getRegisteredOptions(gRootclingSubcommand);
    llvm::cl::Option* optHelp = opts["help"];
    llvm::cl::alias optHelpAlias1("h",
                       llvm::cl::desc("Alias for -help"),
@@ -3917,7 +3921,11 @@ int RootClingMain(int argc,
                       llvm::cl::desc("Alias for -help"),
                       llvm::cl::aliasopt(*optHelp));
 
-   llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
+   // llvm::cl selects a subcommand by the first argument, so name ours unless bare-cling was asked for.
+   std::vector<const char *> clArgs(argv, argv + argc);
+   if (argc < 2 || gBareClingSubcommand.getName() != argv[1])
+      clArgs.insert(clArgs.begin() + 1, gRootclingSubcommand.getName().data());
+   llvm::cl::ParseCommandLineOptions(clArgs.size(), clArgs.data(), "rootcling");
 
    const char *etcDir = gDriverConfig->fTROOT__GetEtcDir();
    std::string llvmResourceDir = etcDir ? std::string(etcDir) + "/cling" : "";
