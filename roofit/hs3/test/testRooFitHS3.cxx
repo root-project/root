@@ -2326,8 +2326,8 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws1}.importJSONfromString(jsonStr));
 
    std::string exported;
-   const std::string warnings =
-      captureMessages(RooFit::WARNING, RooFit::IO, [&] { exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString(); });
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                                                [&] { exported = RooJSONFactoryWSTool{ws1}.exportJSONtoString(); });
 
    EXPECT_NE(warnings.find("combined 2 duplicate modifiers named 'norm' of type 'normsys'"), std::string::npos)
       << warnings;
@@ -2405,8 +2405,9 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    }
 
    // The operation must be logged as a warning, not as an error.
-   const std::string sentinelErrors = captureMessages(
-      RooFit::ERROR, RooFit::IO, [] { RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel"); });
+   const std::string sentinelErrors = captureMessages(RooFit::ERROR, RooFit::ObjectHandling, [] {
+      RooJSONFactoryWSTool::warning("duplicate-modifier warning-level sentinel");
+   });
    EXPECT_TRUE(sentinelErrors.empty()) << sentinelErrors;
 }
 
@@ -2912,13 +2913,15 @@ TEST(RooFitHS3, VersionStringHandling)
    expectImportThrowsWithError(R"({"metadata": {"hs3_version": 0.2}})", "must be a string");
 
    std::string warnings =
-      captureMessages(RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(importWithVersion("\"0.2\"")); });
+      captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] { EXPECT_TRUE(importWithVersion("\"0.2\"")); });
    EXPECT_EQ(warnings.find("hs3_version"), std::string::npos) << warnings;
 
-   warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(importWithVersion("\"99.1.4\"")); });
+   warnings =
+      captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] { EXPECT_TRUE(importWithVersion("\"99.1.4\"")); });
    EXPECT_NE(warnings.find("'99.1.4', which is newer"), std::string::npos) << warnings;
 
-   warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(importWithVersion("\"latest\"")); });
+   warnings =
+      captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] { EXPECT_TRUE(importWithVersion("\"latest\"")); });
    EXPECT_NE(warnings.find("cannot parse hs3_version 'latest'"), std::string::npos) << warnings;
 }
 
@@ -2951,8 +2954,9 @@ TEST(RooFitHS3, DuplicateNamesAreRejected)
    const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_NE(json.find(R"("likelihood":"ModelConfig_likelihood")"), std::string::npos) << json;
    RooWorkspace ws2;
-   const std::string warnings = captureMessages(
-      RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json)); });
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   });
    EXPECT_EQ(warnings.find("not allowed by the HS3 standard"), std::string::npos) << warnings;
 
    // Files written by older ROOT versions named the likelihood (and the analysis) after the pdf. They can still be
@@ -2963,8 +2967,9 @@ TEST(RooFitHS3, DuplicateNamesAreRejected)
       legacyJson.replace(pos, likelihoodName.size(), "pdf");
    }
    RooWorkspace ws3;
-   const std::string legacyWarnings = captureMessages(
-      RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(legacyJson)); });
+   const std::string legacyWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(legacyJson));
+   });
    EXPECT_NE(legacyWarnings.find(R"(the name 'pdf' is used in "distributions" and in "likelihoods")"),
              std::string::npos)
       << legacyWarnings << legacyJson;
@@ -3125,8 +3130,9 @@ TEST(RooFitHS3, AnalysisInitRoundTrip)
    missingInit.replace(missingInit.find(R"("init":"ModelConfig_POI_snapshot")"),
                        std::string(R"("init":"ModelConfig_POI_snapshot")").size(), R"("init":"does_not_exist")");
    RooWorkspace ws3;
-   const std::string warnings = captureMessages(
-      RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(missingInit)); });
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(missingInit));
+   });
    EXPECT_NE(warnings.find("'does_not_exist' used as \"init\""), std::string::npos) << warnings;
 
    // The snapshot of an unnamed set is called "<mc name>__snapshot", which must be stable as well.
@@ -3175,7 +3181,7 @@ TEST(RooFitHS3, TypeKeysMatchTheCatalog)
       EXPECT_NE(json.find(R"("type":"argus_dist")"), std::string::npos) << json;
    }
    std::unique_ptr<RooWorkspace> argus;
-   const std::string argusWarnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
+   const std::string argusWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
       argus = importPdf(
          R"({"name": "argus", "type": "ARGUS_dist", "mass": "m", "resonance": 9.0, "slope": -1.0, "power": 0.5})");
    });
@@ -3275,7 +3281,7 @@ TEST(RooFitHS3, MixtureDistExtendedFlag)
    expectImportThrowsWithError(makeJSON(R"(["f"])", "true"), "is declared as extended, but it has 1 coefficients");
 
    RooWorkspace ws;
-   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
       EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"(["n1", "n2"])", "false")));
    });
    EXPECT_NE(warnings.find("is declared as not extended"), std::string::npos) << warnings;
@@ -3426,8 +3432,9 @@ TEST(RooFitHS3, HistFactoryMissingInterpolation)
                                "'channel0' is not given, and the channel has no \"default_interpolation\"");
 
    RooWorkspace ws;
-   const std::string warnings = captureMessages(
-      RooFit::WARNING, RooFit::IO, [&] { ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json)); });
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   });
    EXPECT_EQ(countOccurrences(warnings, "implicit default of older RooFit versions"), 1u) << warnings;
    auto *norm = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(ws.function("sig_channel0_epsilon"));
    ASSERT_NE(norm, nullptr);
@@ -3500,7 +3507,7 @@ TEST(RooFitHS3, UnbinnedAxisRangesOnImport)
    {
       // A disagreeing domain range is kept, with a warning.
       RooWorkspace ws;
-      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
          EXPECT_TRUE(
             RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"({"name": "x", "min": -10, "max": 10})")));
       });
@@ -3672,8 +3679,9 @@ TEST(RooFitHS3, NameClashesInOlderDocuments)
 
    auto expectImportWarns = [](std::string const &json, std::string const &name) {
       RooWorkspace ws;
-      const std::string warnings = captureMessages(
-         RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json)); });
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+      });
       EXPECT_NE(warnings.find("the name '" + name + "' is used"), std::string::npos) << warnings << json;
    };
 
@@ -3927,8 +3935,9 @@ TEST(RooFitHS3, HistFactoryUnconstrainedModifierWarning)
       {"name": "norm2", "parameter": "alpha_norm2", "type": "normsys", "data": {"lo": 0.9, "hi": 1.1}})",
                                                 R"({"type": "mult", "in": "poly6", "out": "exp"})");
    RooWorkspace ws;
-   const std::string warnings = captureMessages(
-      RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json)); });
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   });
    EXPECT_EQ(countOccurrences(warnings, "has no constraint"), 1u) << warnings;
 }
 
@@ -4009,4 +4018,14 @@ TEST(RooFitHS3, ParameterPointsWithDocumentCategories)
       ASSERT_NE(channel, nullptr) << value;
       EXPECT_EQ(channel->getCurrentLabel(), std::string("b")) << value;
    }
+}
+
+// The warnings of the RooJSONFactoryWSTool are shown with the default message streams.
+TEST(RooFitHS3, WarningsAreShownByDefault)
+{
+   EXPECT_TRUE(
+      RooMsgService::instance().isActive(static_cast<RooAbsArg *>(nullptr), RooFit::ObjectHandling, RooFit::WARNING));
+   const std::string warnings =
+      captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [] { RooJSONFactoryWSTool::warning("test message"); });
+   EXPECT_NE(warnings.find("test message"), std::string::npos) << warnings;
 }

@@ -1415,7 +1415,7 @@ std::string makeValidNameOrError(std::string const &in)
    }
    std::string out = RooFit::Detail::makeValidVarName(in);
    if (out != in) {
-      oocoutW(nullptr, IO) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
+      oocoutW(nullptr, ObjectHandling) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
    }
    return out;
 }
@@ -2336,7 +2336,7 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
  */
 std::ostream &RooJSONFactoryWSTool::warning(std::string const &str)
 {
-   return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::IO) << str << std::endl;
+   return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::ObjectHandling) << str << std::endl;
 }
 
 /**
