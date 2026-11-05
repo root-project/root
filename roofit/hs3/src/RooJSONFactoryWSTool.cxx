@@ -692,14 +692,10 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       pdf->setStringAttribute("combined_data_name", mcInfo->combinedDataName->c_str());
    }
 
-   if (analysis.init) {
+   // A missing parameter point was reported by HS3::validate().
+   RooArgSet const *init = analysis.init ? workspace.getSnapshot(analysis.init->name.c_str()) : nullptr;
+   if (init) {
       const std::string &initName = analysis.init->name;
-      RooArgSet const *init = workspace.getSnapshot(initName.c_str());
-      if (!init) {
-         RooJSONFactoryWSTool::warning("RooFitHS3: the parameter point '" + initName +
-                                       "' used as \"init\" of analysis '" + analysisName + "' does not exist.");
-         return;
-      }
       // ModelConfig::SetSnapshot() saves the snapshot as "<mc name>_<set name>_snapshot". If "init" already follows
       // this pattern, which is the case for files written by RooFit, pick the set name such that it is preserved.
       std::string setName = initName;
@@ -803,49 +799,6 @@ RooAbsCategory *findCategoryObservable(RooAbsData const &data)
       }
    }
    return cat;
-}
-
-/// HS3 requires the names of all top-level objects to be unique within a document. If `strict`, throw if a name is
-/// used twice within one section or by a distribution and a function. Other clashes, and all clashes if not
-/// `strict`, only warn: RooFit's own export still produces them, e.g. for a range and a pdf of one name, and it
-/// must be able to read its own output.
-void checkUniqueNames(HS3Document const &doc, bool strict)
-{
-   std::map<std::string, std::string> sectionOfName;
-   auto check = [&](const char *section, std::string const &name) {
-      auto inserted = sectionOfName.emplace(name, section);
-      if (inserted.second) {
-         return;
-      }
-      std::string const &firstSection = inserted.first->second;
-      // RooFit used to give analyses and likelihoods the name of the pdf or the analysis. Accept this for backwards
-      // compatibility: analyses are not referenced by name, and likelihoods only from analyses, so there is no
-      // ambiguity.
-      auto isLegacyNamed = [](std::string const &s) { return s == "likelihoods" || s == "analyses"; };
-      // Within one section, and between distributions and functions (both can be referenced by name), a clash is
-      // ambiguous. Other clashes are produced by RooFit itself (a range, snapshot or data set named like a pdf).
-      auto isReferable = [](std::string const &s) { return s == "distributions" || s == "functions"; };
-      const bool ambiguous = firstSection == section || (isReferable(firstSection) && isReferable(section));
-      if (!strict || !ambiguous || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
-         RooJSONFactoryWSTool::warning("RooFitHS3: the name '" + name + "' is used in \"" + firstSection +
-                                       "\" and in \"" + section + "\", which is not allowed by the HS3 standard.");
-         return;
-      }
-      RooJSONFactoryWSTool::error("duplicate name '" + name + "': it is defined in \"" + firstSection + "\" and in \"" +
-                                  section + "\", but names must be unique within the document");
-   };
-   auto checkSection = [&](const char *section, auto const &objects) {
-      for (auto const &object : objects) {
-         check(section, object.name);
-      }
-   };
-   checkSection("distributions", doc.distributions);
-   checkSection("functions", doc.functions);
-   checkSection("data", doc.data);
-   checkSection("domains", doc.domains);
-   checkSection("parameter_points", doc.parameterPoints);
-   checkSection("likelihoods", doc.likelihoods);
-   checkSection("analyses", doc.analyses);
 }
 
 } // namespace
@@ -2120,8 +2073,16 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
 
    HS3::Diagnostics diagnostics;
    HS3::upgradeDocument(n, diagnostics, options);
-   HS3Document doc = HS3::parseDocument(n, diagnostics, options);
+   HS3Document parsed = HS3::parseDocument(n, diagnostics, options);
+   std::optional<RooFit::ValidatedHS3Document> validated;
+   if (!HS3::hasErrors(diagnostics)) {
+      HS3::ValidateOptions validateOptions;
+      validateOptions.strict = !isHS3VersionBefore(parsed.metadata.hs3Version, 0, 3);
+      validateOptions.isExternal = [this](std::string const &name) { return _workspace.obj(name) != nullptr; };
+      validated = HS3::validate(std::move(parsed), diagnostics, validateOptions);
+   }
    HS3::report(diagnostics);
+   HS3Document const &doc = validated->doc();
 
    // The state of the import refers to the document, so it must not survive it, not even if there is an exception.
    struct ImportScope {
@@ -2135,7 +2096,6 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    } importScope{*this};
 
    _hs3VersionInput = doc.metadata.hs3Version;
-   checkUniqueNames(doc, !isHS3VersionBefore(_hs3VersionInput, 0, 3));
 
    _import = std::make_unique<HS3::ToolImportState>(doc);
 

@@ -13,6 +13,7 @@
 #ifndef RooFit_HS3Document_h
 #define RooFit_HS3Document_h
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -436,6 +437,15 @@ bool hasErrors(Diagnostics const &diagnostics);
 
 } // namespace HS3
 
+class HS3Document;
+class ValidatedHS3Document;
+
+namespace HS3 {
+struct ValidateOptions;
+std::optional<ValidatedHS3Document>
+validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options);
+} // namespace HS3
+
 /// An HS3 document. It is move-only, because generic objects refer to the JSON tree that the document was read from.
 class HS3Document {
 public:
@@ -483,6 +493,40 @@ HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagn
 
 /// Reads an interpolation that doesn't come with a document.
 Interpolation parseInterpolation(Detail::JSONNode const &interpolation, Diagnostics &diagnostics);
+
+/// Options for validate().
+struct ValidateOptions {
+   /// Whether the document has to follow the current standard, or if older conventions of RooFit are tolerated.
+   bool strict = false;
+   /// Whether a name that is not defined in the document is known in some other way, e.g. in the workspace.
+   std::function<bool(std::string const &)> isExternal;
+};
+
+} // namespace HS3
+
+/// A document that passed validate(). Only validate() can create it, so the code that builds RooFit objects can rely on
+/// the checks.
+class ValidatedHS3Document {
+public:
+   HS3Document const &doc() const { return _doc; }
+
+private:
+   explicit ValidatedHS3Document(HS3Document doc) : _doc{std::move(doc)} {}
+   friend std::optional<ValidatedHS3Document>
+   HS3::validate(HS3Document doc, HS3::Diagnostics &diagnostics, HS3::ValidateOptions const &options);
+
+   HS3Document _doc;
+};
+
+namespace HS3 {
+
+/// Checks what can be checked without knowing how the objects are built: unique names, that the references can be
+/// resolved, and that the sizes of arrays are consistent. Gives nothing if there are errors.
+std::optional<ValidatedHS3Document>
+validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options = {});
+
+/// Same as validate(), but for a single HistFactory distribution that doesn't come with a document.
+void validateHistFactoryDist(HistFactoryDist const &dist, std::string const &name, Diagnostics &diagnostics);
 
 /// Reads the leading "MAJOR.MINOR" and the optional ".PATCH" of an HS3 version string.
 bool parseVersion(std::string const &version, Version &out);

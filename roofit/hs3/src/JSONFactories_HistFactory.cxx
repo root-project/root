@@ -792,6 +792,9 @@ public:
       HS3::Diagnostics diagnostics;
       HS3::upgradeHistFactoryDist(tree->rootnode(), version, diagnostics);
       HS3::HistFactoryDist dist = HS3::parseHistFactoryDist(tree->rootnode(), diagnostics);
+      if (!HS3::hasErrors(diagnostics)) {
+         HS3::validateHistFactoryDist(dist, name, diagnostics);
+      }
       HS3::report(diagnostics);
       HS3::buildHistFactoryDist(*tool, name, dist);
       return true;
