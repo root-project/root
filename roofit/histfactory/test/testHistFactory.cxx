@@ -32,6 +32,7 @@
 
 #include "../../roofitcore/test/gtest_wrapper.h"
 
+#include <algorithm>
 #include <regex>
 #include <set>
 
@@ -914,4 +915,78 @@ TEST(HistFactory, ShapeFactorValueAndRange)
          EXPECT_DOUBLE_EQ(gamma->getMax(), sfHigh) << name;
       }
    }
+}
+
+/// The reference workspace of ROOT 6.16 is the standard case of a RooSimultaneous with combined data sets: it is
+/// written as a "combined_dist" and "combined" data sets (HS3 #119), read back into the same objects, and the
+/// likelihood is the same. The document is stable from the third export on: the 6.16 workspace has "binWidth_*"
+/// constants that the imported model doesn't use, and the HistFactory importer sets the default parameter errors
+/// (step widths), which the 6.16 workspace lacks. Both are unrelated to the combined objects.
+TEST(HistFactory, HS3RoundTripOfReferenceWorkspace)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   std::unique_ptr<TFile> file(TFile::Open("./ref_6.16_example_UsingC_combined_meas_model.root"));
+   ASSERT_TRUE(file && file->IsOpen());
+   RooWorkspace *ws = nullptr;
+   file->GetObject("combined", ws);
+   ASSERT_NE(ws, nullptr);
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   ASSERT_NE(mc, nullptr);
+
+   const std::string json = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+   EXPECT_NE(json.find(R"("type":"combined_dist")"), std::string::npos);
+   EXPECT_NE(json.find(R"("type":"combined")"), std::string::npos);
+   EXPECT_EQ(json.find("combined_datasets"), std::string::npos);
+   EXPECT_EQ(json.find("combined_distributions"), std::string::npos);
+
+   RooWorkspace wsFromJson("new");
+   RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(json);
+
+   auto *newmc = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
+   ASSERT_NE(newmc, nullptr);
+   auto *newpdf = dynamic_cast<RooSimultaneous *>(newmc->GetPdf());
+   ASSERT_NE(newpdf, nullptr);
+   EXPECT_STREQ(newpdf->indexCat().GetName(), "channelCat");
+   EXPECT_NE(newmc->GetObservables()->find("channelCat"), nullptr);
+   EXPECT_EQ(wsFromJson.allData().size(), ws->allData().size());
+   for (const char *dataName : {"obsData", "asimovData"}) {
+      RooAbsData *data = ws->data(dataName);
+      RooAbsData *newdata = wsFromJson.data(dataName);
+      ASSERT_NE(data, nullptr) << dataName;
+      ASSERT_NE(newdata, nullptr) << dataName;
+      EXPECT_EQ(newdata->numEntries(), data->numEntries()) << dataName;
+      EXPECT_DOUBLE_EQ(newdata->sumEntries(), data->sumEntries()) << dataName;
+      EXPECT_NE(newdata->get()->find("channelCat"), nullptr) << dataName;
+
+      // The likelihood is compared up to a constant: whether RooFit uses its binned likelihood for the channels
+      // (which differs from the event-wise one by a constant) is not part of the document.
+      using namespace RooFit;
+      std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*data, GlobalObservables(*mc->GetGlobalObservables()))};
+      std::unique_ptr<RooAbsReal> newnll{
+         newpdf->createNLL(*newdata, GlobalObservables(*newmc->GetGlobalObservables()))};
+      const double nominal = nll->getVal();
+      const double newNominal = newnll->getVal();
+      const double alpha = ws->var("alpha_syst2")->getVal();
+      const double mu = ws->var("SigXsecOverSM")->getVal();
+      for (RooWorkspace *w : {ws, &wsFromJson}) {
+         w->var("alpha_syst2")->setVal(alpha + 0.5);
+         w->var("SigXsecOverSM")->setVal(mu + 0.5);
+      }
+      const double difference = nll->getVal() - nominal;
+      EXPECT_NE(difference, 0.0) << dataName;
+      EXPECT_NEAR(newnll->getVal() - newNominal, difference, 1e-8 * std::max(1.0, std::abs(difference))) << dataName;
+      for (RooWorkspace *w : {ws, &wsFromJson}) {
+         w->var("alpha_syst2")->setVal(alpha);
+         w->var("SigXsecOverSM")->setVal(mu);
+      }
+   }
+
+   const std::string json2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
+   RooWorkspace wsFromJson2("new2");
+   RooJSONFactoryWSTool{wsFromJson2}.importJSONfromString(json2);
+   const std::string json3 = RooJSONFactoryWSTool{wsFromJson2}.exportJSONtoString();
+   RooWorkspace wsFromJson3("new3");
+   RooJSONFactoryWSTool{wsFromJson3}.importJSONfromString(json3);
+   EXPECT_EQ(RooJSONFactoryWSTool{wsFromJson3}.exportJSONtoString(), json3);
 }
