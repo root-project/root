@@ -117,6 +117,11 @@ ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit Gpad ${ROOFITMORE
 if(mathmore)
     target_compile_definitions(stressRooFit PRIVATE ROOFITMORE)
 endif()
+# workaround to include privately headers that are not public, from a "friend" target
+get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)
+if(RooFitCore_Friend_Dirs)
+  target_include_directories(stressRooFit PRIVATE ${RooFitCore_Friend_Dirs})
+endif()
 
 configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
 if(roofit_legacy_eval_backend)
