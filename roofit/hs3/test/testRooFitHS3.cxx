@@ -9,9 +9,11 @@
 #include <RooAddition.h>
 #include <RooBinWidthFunction.h>
 #include <RooBinning.h>
+#include <RooCBShape.h>
 #include <RooCategory.h>
 #include <RooBinSamplingPdf.h>
 #include <RooConstVar.h>
+#include <RooCrystalBall.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooExtendPdf.h>
@@ -3585,6 +3587,147 @@ TEST(RooFitHS3, AnalysisLegacySingularKeys)
    ASSERT_NE(mc2, nullptr);
    EXPECT_NE(mc2->GetParametersOfInterest()->find("mu"), nullptr);
    EXPECT_NE(mc2->GetNuisanceParameters()->find("sigma"), nullptr);
+}
+
+// "crystalball_dist" is the single-sided Crystal Ball, "crystalball_doublesided_dist" the double-sided one. Before
+// HS3 0.3, "crystalball_dist" with the "_L"/"_R" fields was the double-sided one, which is still read.
+TEST(RooFitHS3, CrystalBallTypes)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   x.setBins(20);
+   RooRealVar mean{"mean", "mean", 5.0, 0.0, 10.0};
+   RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 5.0};
+   RooRealVar sigmaR{"sigmaR", "sigmaR", 1.5, 0.1, 5.0};
+   RooRealVar alphaL{"alphaL", "alphaL", 1.2, 0.1, 5.0};
+   RooRealVar nL{"nL", "nL", 3.0, 0.5, 10.0};
+   RooRealVar alphaR{"alphaR", "alphaR", 2.0, 0.1, 5.0};
+   RooRealVar nR{"nR", "nR", 5.0, 0.5, 10.0};
+   RooRealVar alphaNeg{"alphaNeg", "alphaNeg", -1.2, -5.0, -0.1};
+
+   auto exportToString = [](RooAbsArg const &arg) {
+      RooWorkspace ws;
+      ws.import(arg, RooFit::Silence());
+      return RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   };
+
+   // RooCBShape is the single-sided crystalball_dist.
+   RooCBShape cbShape{"cbShape", "", x, mean, sigma, alphaL, nL};
+   EXPECT_EQ(validate(cbShape), 0);
+   EXPECT_NE(exportToString(cbShape).find(R"("type":"crystalball_dist")"), std::string::npos);
+
+   // A single-sided RooCrystalBall is a crystalball_dist too, for both signs of alpha. It is read back as a
+   // RooCBShape, which is the same function.
+   for (RooRealVar *alpha : {&alphaL, &alphaNeg}) {
+      RooCrystalBall cbSingle{"cbSingle", "", x, mean, sigma, *alpha, nL, /*doubleSided=*/false};
+      const std::string json = exportToString(cbSingle);
+      EXPECT_NE(json.find(R"("type":"crystalball_dist")"), std::string::npos) << json;
+      EXPECT_NE(json.find(std::string(R"("alpha":")") + alpha->GetName() + "\""), std::string::npos) << json;
+      EXPECT_EQ(json.find("alpha_L"), std::string::npos) << json;
+
+      // The class changes on the way back, so validate() can't be used: the parameter points are written in a
+      // different order. Compare the values instead, and check that the JSON is stable from the second export on.
+      RooWorkspace ws2;
+      RooJSONFactoryWSTool{ws2}.importJSONfromString(json);
+      auto *cbShapeBack = dynamic_cast<RooCBShape *>(ws2.pdf("cbSingle"));
+      ASSERT_NE(cbShapeBack, nullptr);
+      RooRealVar &x2 = *ws2.var("x");
+      RooArgSet nset1{x};
+      RooArgSet nset2{x2};
+      for (int i = 0; i < x.numBins(); ++i) {
+         x.setBin(i);
+         x2.setBin(i);
+         EXPECT_NEAR(cbShapeBack->getVal(nset2), cbSingle.getVal(nset1), 1e-10) << alpha->GetName() << " bin " << i;
+      }
+      const std::string json2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+      RooWorkspace ws3;
+      RooJSONFactoryWSTool{ws3}.importJSONfromString(json2);
+      EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), json2);
+   }
+
+   // Double-sided RooCrystalBall shapes are crystalball_doublesided_dist, with the tails always written for both
+   // sides, and the width written as "sigma" if both sides share it.
+   RooCrystalBall cbSymmetric{"cbSymmetric", "", x, mean, sigma, alphaL, nL, /*doubleSided=*/true};
+   RooCrystalBall cbAsymmetric{"cbAsymmetric", "", x, mean, sigma, sigmaR, alphaL, nL, alphaR, nR};
+   EXPECT_EQ(validate(cbSymmetric), 0);
+   EXPECT_EQ(validate(cbAsymmetric), 0);
+   {
+      const std::string json = exportToString(cbSymmetric);
+      EXPECT_NE(json.find(R"("type":"crystalball_doublesided_dist")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("sigma":"sigma")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("alpha_R":"alphaL")"), std::string::npos) << json;
+      EXPECT_EQ(json.find(R"("alpha":)"), std::string::npos) << json;
+   }
+   {
+      const std::string json = exportToString(cbAsymmetric);
+      EXPECT_NE(json.find(R"("type":"crystalball_doublesided_dist")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("sigma_R":"sigmaR")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("alpha_R":"alphaR")"), std::string::npos) << json;
+   }
+
+   auto document = [](std::string const &distribution) {
+      return R"({
+         "metadata": {"hs3_version": "0.3"},
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "m", "min": 0, "max": 10}]}],
+         "distributions": [)" +
+             distribution + R"(]
+      })";
+   };
+   auto importPdf = [&](std::string const &distribution, std::string *warnings = nullptr) {
+      auto ws = std::make_unique<RooWorkspace>();
+      const std::string messages = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         RooJSONFactoryWSTool{*ws}.importJSONfromString(document(distribution));
+      });
+      if (warnings) {
+         *warnings = messages;
+      }
+      return ws;
+   };
+
+   // Import of the two standard types.
+   auto single = importPdf(R"({"name": "cb", "type": "crystalball_dist", "m": "m", "m0": 5.0, "sigma": 1.0,
+                               "alpha": -1.2, "n": 3.0})");
+   EXPECT_NE(dynamic_cast<RooCBShape *>(single->pdf("cb")), nullptr);
+   auto doubleSided = importPdf(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m", "m0": 5.0,
+                                    "sigma": 1.0, "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0, "n_R": 5.0})");
+   EXPECT_NE(dynamic_cast<RooCrystalBall *>(doubleSided->pdf("cb")), nullptr);
+
+   // The double-sided form of crystalball_dist from before HS3 0.3 is still read, with a deprecation warning. This
+   // includes the symmetric tails given as "alpha"/"n" with asymmetric widths.
+   std::string warnings;
+   auto legacy = importPdf(R"({"name": "cb", "type": "crystalball_dist", "m": "m", "m0": 5.0, "sigma": 1.0,
+                               "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0, "n_R": 5.0})",
+                           &warnings);
+   auto *legacyCb = dynamic_cast<RooCrystalBall *>(legacy->pdf("cb"));
+   ASSERT_NE(legacyCb, nullptr);
+   ASSERT_NE(legacyCb->alphaR(), nullptr);
+   EXPECT_DOUBLE_EQ(legacyCb->alphaR()->getVal(), 2.0);
+   EXPECT_NE(warnings.find("please use \"crystalball_doublesided_dist\""), std::string::npos) << warnings;
+   auto legacySymmetric = importPdf(R"({"name": "cb", "type": "crystalball_dist", "m": "m", "m0": 5.0,
+                                        "sigma_L": 1.0, "sigma_R": 1.5, "alpha": 1.2, "n": 3.0})");
+   auto *legacySymmetricCb = dynamic_cast<RooCrystalBall *>(legacySymmetric->pdf("cb"));
+   ASSERT_NE(legacySymmetricCb, nullptr);
+   ASSERT_NE(legacySymmetricCb->alphaR(), nullptr);
+   EXPECT_DOUBLE_EQ(legacySymmetricCb->alphaR()->getVal(), 1.2);
+
+   // Invalid field combinations.
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m",
+      "m0": 5.0, "sigma": 1.0, "alpha": 1.2, "n": 3.0})"),
+                               "must not have \"alpha\" or \"n\"");
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m",
+      "m0": 5.0, "sigma": 1.0, "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0})"),
+                               "is missing \"n_R\"");
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m",
+      "m0": 5.0, "sigma": 1.0, "sigma_L": 1.0, "sigma_R": 1.0, "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0,
+      "n_R": 5.0})"),
+                               "must not combine \"sigma\"");
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m",
+      "m0": 5.0, "sigma_L": 1.0, "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0, "n_R": 5.0})"),
+                               "needs both \"sigma_L\" and \"sigma_R\"");
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_dist", "m": "m", "m0": 5.0,
+      "sigma": 1.0, "alpha": 1.2, "n": 3.0, "alpha_R": 2.0, "n_R": 5.0})"),
+                               "must not combine");
 }
 
 // A RooRealVar that is constant in all parameter points must stay a RooRealVar, and a RooConstVar must stay a
