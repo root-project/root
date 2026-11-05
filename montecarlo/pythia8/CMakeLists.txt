@@ -12,10 +12,14 @@
 # required also for cling
 include_directories(${PYTHIA8_INCLUDE_DIR})
 
+set(EGPYTHIA8_HEADERS
+  TPythia8.h
+  TPythia8Decayer.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia8
   HEADERS
-    TPythia8.h
-    TPythia8Decayer.h
+    ${EGPYTHIA8_HEADERS}
   SOURCES
     src/TPythia8.cxx
     src/TPythia8Decayer.cxx
@@ -24,6 +28,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia8
     EG
     Graf
     Physics
+)
+
+set(RELATIVE_INC_HEADERS ${EGPYTHIA8_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(EGPythia8
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 ROOT_ADD_CXX_FLAG(_EGPythia8_FLAGS -Wno-delete-non-virtual-dtor)

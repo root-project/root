@@ -8,11 +8,16 @@
 # CMakeLists.txt file for building TPython
 ###########################################################
 
+set(TPYTHON_HEADERS
+  TPyArg.h
+  TPyClassGenerator.h
+  TPyReturn.h
+  TPython.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
   HEADERS
-    TPyArg.h
-    TPyReturn.h
-    TPython.h
+    ${TPYTHON_HEADERS}
   SOURCES
     src/TPyArg.cxx
     src/TPyClassGenerator.cxx
@@ -28,6 +33,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
     # is built with unresolved symbols. If we didn't do this, invoking TPython from C++
     # would not work.
     Python3::Python
+)
+
+set(RELATIVE_INC_HEADERS ${TPYTHON_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTTPython
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 # On Windows we can't use the stable ABI yet: it requires linking against a
