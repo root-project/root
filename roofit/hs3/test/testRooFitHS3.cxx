@@ -3870,3 +3870,28 @@ TEST(RooFitHS3, AnalysisInitWithSeveralSnapshots)
    expectSnapshotValue("ModelConfig", 1.5);
    expectSnapshotValue("ModelConfig_with_poi_0", 0.0);
 }
+
+// A normsys parameter that is a function, as created by HistFactory::Measurement::AddLogNormSyst(), can't be exported.
+// It would come back as a free parameter.
+TEST(RooFitHS3, NormSysWithFunctionAsParameter)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+   RooRealVar beta{"beta_sys", "beta_sys", 1.0, 0.0, 5.0};
+   RooRealVar nominal{"nom_beta_sys", "nom_beta_sys", 1.0};
+   RooRealVar sigma{"sigma_beta_sys", "sigma_beta_sys", 0.05};
+   RooFormulaVar alphaOfBeta{"alphaOfBeta_sys", "(beta_sys-1)/0.05", RooArgList{beta}};
+   RooStats::HistFactory::FlexibleInterpVar norm{"sig_norm", "", RooArgList{alphaOfBeta}, 1.0, {0.95}, {1.05}};
+   RooHistFunc hist{"hist_sig", "hist_sig", RooArgSet{x}, makeDataHist("hist_sig_data", x, {100.0, 200.0})};
+   RooBinWidthFunction binWidth{"sig_binWidth", "sig_binWidth", hist, true};
+   RooProduct shapes{"model_ch_sig_shapes", "", RooArgList{hist, binWidth}};
+   RooRealSumPdf sum{"ch_model", "ch_model", RooArgList{shapes}, RooArgList{norm}, true};
+   RooGaussian constraint{"beta_sysConstraint", "", beta, nominal, sigma};
+   RooProdPdf prod{"model_ch", "model_ch", RooArgSet{constraint}, RooFit::Conditional(sum, x)};
+
+   RooWorkspace ws;
+   ws.import(prod, RooFit::Silence());
+   expectExportThrowsWithError(ws, "cannot find constraint for alphaOfBeta_sys");
+}

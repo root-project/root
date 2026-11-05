@@ -1914,13 +1914,17 @@ std::vector<RooAbsPdf *> findLostConstraints(const Channel &channel, const std::
 }
 
 // A normsys or histosys modifier without a recognized constraint is exported as unconstrained. That is only correct if
-// none of the other constraint terms of the channel depends on its parameter.
+// its parameter is a variable, and none of the other constraint terms of the channel depends on it.
 void checkUnconstrainedModifiers(const Channel &channel, const std::vector<RooAbsPdf *> &constraints)
 {
    auto check = [&](auto const &modifiers) {
       for (auto const &sys : modifiers) {
          if (sys.constraint || sys.param->isConstant()) {
             continue;
+         }
+         if (!dynamic_cast<RooRealVar const *>(sys.param)) {
+            RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(sys.param->GetName()) +
+                                        ": functions are not supported as parameters of this modifier");
          }
          for (RooAbsPdf const *pdf : constraints) {
             if (pdf->dependsOn(*sys.param)) {
