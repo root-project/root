@@ -1836,20 +1836,9 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
    writeProductDomain("_global_observables", mc.GetGlobalObservables());
    writeProductDomain("_parameters_of_interest", mc.GetParametersOfInterest());
 
-   // ModelConfig::SetSnapshot() saves the snapshot as "<mc name>_<set name>_snapshot", and the snapshots are exported
-   // as parameter points. Reference it as the initial values of the analysis.
-   if (std::unique_ptr<const RooArgSet> snapshot{mc.GetSnapshot()}) {
-      const std::string prefix = std::string(mc.GetName()) + "_";
-      std::vector<std::string> candidates;
-      for (TObject *snsh : _workspace.getSnapshots()) {
-         const std::string snshName = snsh->GetName();
-         if (startsWith(snshName, prefix) && endsWith(snshName, "_snapshot") && _workspace.set(snshName)) {
-            candidates.push_back(snshName);
-         }
-      }
-      if (candidates.size() == 1) {
-         analysisNode["init"] << candidates.front();
-      }
+   // The snapshots are exported as parameter points. Reference the one of the ModelConfig as the initial values.
+   if (_workspace.getSnapshot(mc.GetSnapshotName().c_str())) {
+      analysisNode["init"] << mc.GetSnapshotName();
    }
 
    auto &modelConfigAux = getRooFitInternal(rootnode, "ModelConfigs", analysisName);

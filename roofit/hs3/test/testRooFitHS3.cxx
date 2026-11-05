@@ -3799,3 +3799,74 @@ TEST(RooFitHS3, FormulaNormSysVariations)
          << "alpha=" << alpha;
    }
 }
+
+// Exporting the snapshot of a ModelConfig doesn't change the variables in the workspace.
+TEST(RooFitHS3, ExportKeepsVariableStateWithSnapshot)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::pdf(x[0, -5, 5], mu[0, -5, 5], 1.0)");
+   RooFit::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf("pdf");
+   mc.SetParametersOfInterest("mu");
+   mc.SetObservables("x");
+   RooRealVar &mu = *ws.var("mu");
+   mu.setVal(1.5);
+   mc.SetSnapshot(RooArgSet{mu});
+   ws.import(mc);
+
+   mu.setVal(0.0);
+   mu.setError(0.25);
+   mu.setConstant(true);
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_DOUBLE_EQ(mu.getVal(), 0.0);
+   EXPECT_DOUBLE_EQ(mu.getError(), 0.25);
+   EXPECT_TRUE(mu.isConstant());
+   EXPECT_NE(parameterStepWidthsNode(json).find(R"("step_width":0.25)"), std::string::npos) << json;
+   EXPECT_EQ(RooJSONFactoryWSTool{ws}.exportJSONtoString(), json);
+}
+
+// The "init" of an analysis is the snapshot of its ModelConfig, whatever other snapshots exist.
+TEST(RooFitHS3, AnalysisInitWithSeveralSnapshots)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::pdf(x[0, -5, 5], mu[0, -5, 5], 1.0)");
+   RooRealVar &mu = *ws.var("mu");
+   RooFit::ModelConfig mc{"ModelConfig", &ws};
+   // The name of the second ModelConfig starts with the name of the first one.
+   RooFit::ModelConfig mcBkgOnly{"ModelConfig_with_poi_0", &ws};
+   for (RooFit::ModelConfig *config : {&mc, &mcBkgOnly}) {
+      config->SetPdf("pdf");
+      config->SetParametersOfInterest("mu");
+      config->SetObservables("x");
+   }
+
+   // Only the last call of SetSnapshot() counts.
+   mu.setVal(1.0);
+   RooArgSet firstSet{mu};
+   firstSet.setName("first");
+   mc.SetSnapshot(firstSet);
+   mu.setVal(1.5);
+   RooArgSet secondSet{mu};
+   secondSet.setName("second");
+   mc.SetSnapshot(secondSet);
+   mu.setVal(0.0);
+   mcBkgOnly.SetSnapshot(RooArgSet{mu});
+   ws.import(mc);
+   ws.import(mcBkgOnly);
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(RooJSONFactoryWSTool{ws}.exportJSONtoString()));
+
+   auto expectSnapshotValue = [&](const char *name, double expected) {
+      std::unique_ptr<const RooArgSet> snapshot{static_cast<RooFit::ModelConfig *>(imported.obj(name))->GetSnapshot()};
+      ASSERT_NE(snapshot, nullptr) << name;
+      EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(snapshot->find("mu"))->getVal(), expected) << name;
+   };
+   expectSnapshotValue("ModelConfig", 1.5);
+   expectSnapshotValue("ModelConfig_with_poi_0", 0.0);
+}
