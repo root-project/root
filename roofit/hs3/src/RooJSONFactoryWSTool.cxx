@@ -1065,6 +1065,10 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
                                                     const std::string &formula)
 {
    std::string newname = std::string(original->GetName()) + suffix;
+   // Another object that shares the parameter might have exported the helper already.
+   if (findNamedChild((*_rootnodeOutput)["functions"], newname)) {
+      return newname;
+   }
    RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_rootnodeOutput)["functions"], newname);
    trafo_node["type"] << "generic";
    trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();

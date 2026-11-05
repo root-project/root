@@ -3596,3 +3596,24 @@ TEST(RooFitHS3, ConstRooRealVarStaysDistinctFromRooConstVar)
    // The round trip is stable.
    EXPECT_EQ(RooJSONFactoryWSTool{imported}.exportJSONtoString(), json);
 }
+
+// Pdfs that share a parameter also share the helper functions that are exported for it.
+TEST(RooFitHS3, SharedTransformedParameters)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace wsExponential;
+   wsExponential.factory("Exponential::exponential_1(x[0, 10], c[-0.1, -5, 0])");
+   wsExponential.factory("Exponential::exponential_2(y[0, 10], c)");
+   const std::string jsonExponential = RooJSONFactoryWSTool{wsExponential}.exportJSONtoString();
+   EXPECT_EQ(countOccurrences(jsonExponential, R"("name":"c_exponential_inverted")"), 1u) << jsonExponential;
+   EXPECT_EQ(validate(wsExponential, "exponential_1"), 0);
+
+   RooWorkspace wsLognormal;
+   wsLognormal.factory("Lognormal::lognormal_1(x[2, 1.1, 10], m0[2, 1.1, 10], k[2, 1.1, 5])");
+   wsLognormal.factory("Lognormal::lognormal_2(y[2, 1.1, 10], m0, k)");
+   const std::string jsonLognormal = RooJSONFactoryWSTool{wsLognormal}.exportJSONtoString();
+   EXPECT_EQ(countOccurrences(jsonLognormal, R"("name":"m0_lognormal_log")"), 1u) << jsonLognormal;
+   EXPECT_EQ(countOccurrences(jsonLognormal, R"("name":"k_lognormal_log")"), 1u) << jsonLognormal;
+   EXPECT_EQ(validate(wsLognormal, "lognormal_1"), 0);
+}
