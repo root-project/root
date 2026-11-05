@@ -839,6 +839,7 @@ protected:
 
    void SetUp() override
    {
+      ROOT::EnableThreadSafety();
       fServer = std::make_unique<TServerSocket>(0, false, TServerSocket::kDefaultBacklog, -1,
                                                 ESocketBindOption::kInaddrLoopback);
       fHost = fServer->GetLocalInetAddress().GetHostAddress();
