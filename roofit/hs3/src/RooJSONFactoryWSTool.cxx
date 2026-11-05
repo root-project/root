@@ -2120,6 +2120,9 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
    this->importDependants(n);
 
+   // This creates the index categories, which the parameter points can refer to.
+   combinePdfs(*_rootnodeInput, _workspace);
+
    if (auto paramPointsNode = n.find("parameter_points")) {
       for (const auto &snsh : paramPointsNode->children()) {
          std::string name = RooJSONFactoryWSTool::name(snsh);
@@ -2163,8 +2166,6 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
          _workspace.saveSnapshot(name, vars);
       }
    }
-
-   combinePdfs(*_rootnodeInput, _workspace);
 
    // Import attributes
    if (_attributesNode) {

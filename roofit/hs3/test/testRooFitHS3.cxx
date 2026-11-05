@@ -3984,3 +3984,29 @@ TEST(RooFitHS3, BinnedDataAllErrorsZero)
    EXPECT_DOUBLE_EQ(data->weightSquared(0), 0.0);
    EXPECT_DOUBLE_EQ(data->weightSquared(1), 0.0);
 }
+
+// Parameter points can set the index categories of combined distributions in the same document.
+TEST(RooFitHS3, ParameterPointsWithDocumentCategories)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   for (std::string value : {R"("b")", "1"}) {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+         "metadata": {"hs3_version": "0.2"},
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "x", "min": -5, "max": 5}]}],
+         "distributions": [
+            {"name": "pdf_a", "type": "gaussian_dist", "x": "x", "mean": 0.0, "sigma": 1.0},
+            {"name": "pdf_b", "type": "gaussian_dist", "x": "x", "mean": 1.0, "sigma": 1.0}
+         ],
+         "parameter_points": [{"name": "point", "parameters": [{"name": "channel", "value": )" +
+                                                                value + R"(}]}],
+         "misc": {"ROOT_internal": {"combined_distributions": {"sim_pdf": {
+            "distributions": ["pdf_a", "pdf_b"], "index_cat": "channel", "indices": [0, 1], "labels": ["a", "b"]}}}}
+      })"));
+      ASSERT_NE(ws.cat("channel"), nullptr) << value;
+      auto *channel = dynamic_cast<RooCategory *>(ws.getSnapshot("point")->find("channel"));
+      ASSERT_NE(channel, nullptr) << value;
+      EXPECT_EQ(channel->getCurrentLabel(), std::string("b")) << value;
+   }
+}
