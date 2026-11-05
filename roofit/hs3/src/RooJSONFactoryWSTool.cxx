@@ -168,6 +168,9 @@ struct RooFit::HS3::ToolExportState {
    /// Array distributions to write at the end of the export: their components, and the array of each component.
    std::map<std::string, std::vector<RooAbsPdf const *>> arrayComponents;
    std::map<std::string, std::string> arrayOfComponent;
+   /// The name of the top-level object whose export is in progress, and the depth of the export recursion.
+   std::string rootName;
+   int depth = 0;
    /// Set by the exporter of an object that is interpreted by the document.
    std::optional<HistFactoryDist> typedObject;
    std::vector<DistributionRef> channelConstraints;
@@ -2172,6 +2175,16 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
 
    exportedObjectNames.insert(name);
 
+   // Exporters that group objects per top-level pdf (the HistFactory constraints) ask for the root of the recursion.
+   if (_export->depth == 0) {
+      _export->rootName = name;
+   }
+   struct DepthGuard {
+      int &depth;
+      DepthGuard(int &d) : depth{d} { ++depth; }
+      ~DepthGuard() { --depth; }
+   } depthGuard{_export->depth};
+
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       exportSimultaneous(*simPdf);
       return;
@@ -2316,6 +2329,11 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
       }
       this->exportObject(*s);
    }
+}
+
+std::string const &RooJSONFactoryWSTool::exportRootName() const
+{
+   return _export->rootName;
 }
 
 std::string RooJSONFactoryWSTool::exportAsArrayComponent(RooAbsPdf const &pdf, std::string const &arrayName)

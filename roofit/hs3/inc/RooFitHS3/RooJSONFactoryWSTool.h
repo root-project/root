@@ -234,6 +234,8 @@ public:
 
    std::string exportTransformed(const RooAbsReal *original, const std::string &suffix, const std::string &formula);
    std::string exportAsArrayComponent(RooAbsPdf const &pdf, std::string const &arrayName);
+   /// The name of the top-level object whose export is in progress (the root of the current export recursion).
+   std::string const &exportRootName() const;
 
    void setAttribute(const std::string &obj, const std::string &attrib);
    bool hasAttribute(const std::string &obj, const std::string &attrib);

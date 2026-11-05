@@ -1366,6 +1366,71 @@ void configureStatError(ExportedChannel &channel)
    }
 }
 
+// Register the constraint `constraint` of a modifier parameter for the export and return the name under which it is
+// written. Constraints are collected into one array distribution per type and top-level pdf (or, if the constraint
+// already belongs to an array distribution, that one), unless the arrays are switched off or the constraint cannot be
+// a component. In those cases it is written on its own.
+std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constraint)
+{
+   if (RooJSONFactoryWSTool::config().exportArrayDist) {
+      if (auto type = arrayComponentType(constraint)) {
+         std::string arrayName;
+         for (RooAbsArg const *client : constraint.clients()) {
+            if (client->getAttribute(arrayDistTag)) {
+               arrayName = client->GetName();
+               break;
+            }
+         }
+         if (arrayName.empty()) {
+            // "poisson_dist" -> "<root>_poisson_constraints"
+            arrayName = tool.exportRootName() + "_" + removeSuffix(*type, "_dist") + "_constraints";
+         }
+         return tool.exportAsArrayComponent(constraint, arrayName);
+      }
+   }
+   tool.queueExport(constraint);
+   return constraint.GetName();
+}
+
+// Export the constraints that the modifiers name, in the order in which the modifiers are written, and replace their
+// names by the names under which they are written: an array distribution that holds them, or their own name.
+void exportNamedConstraints(RooJSONFactoryWSTool &tool, ExportedChannel &channel)
+{
+   std::map<std::string, std::string> writtenAs;
+   auto rename = [&](std::string &name) {
+      auto found = writtenAs.find(name);
+      if (found == writtenAs.end()) {
+         found = writtenAs.emplace(name, exportConstraint(tool, *channel.constraints.at(name))).first;
+      }
+      name = found->second;
+   };
+   auto renameConstraint = [&](HS3::Constraint &constraint) {
+      if (auto *pdf = std::get_if<HS3::ConstraintPdf>(&constraint)) {
+         rename(pdf->pdf.name);
+      }
+   };
+   auto renameGammas = [&](HS3::GammaConstraint &constraint) {
+      if (auto *pdfs = std::get_if<HS3::GammaConstraintPdfs>(&constraint)) {
+         for (auto &pdf : pdfs->pdfs) {
+            if (pdf) {
+               rename(pdf->name);
+            }
+         }
+      }
+   };
+   for (HS3::Sample &sample : channel.dist.samples) {
+      for (HS3::Modifier &modifier : sample.modifiers) {
+         std::visit(HS3::overloaded{[&](HS3::NormFactor &m) { renameConstraint(m.constraint); },
+                                    [&](HS3::NormSys &m) { renameConstraint(m.constraint); },
+                                    [&](HS3::HistoSys &m) { renameConstraint(m.constraint); },
+                                    [&](HS3::ShapeSys &m) { renameGammas(m.constraint); },
+                                    [&](HS3::StatError &m) { renameGammas(m.constraint); },
+                                    [](HS3::CustomModifier &) {}},
+                    modifier);
+      }
+   }
+}
+
 // The modifiers name only the constraint terms of the channel. A pdf of a parameter that is not, like an external
 // constraint or a prior, stays where it is. Returns the named constraint terms.
 std::set<RooAbsPdf const *>
@@ -1453,9 +1518,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    }
 
    std::set<RooAbsPdf const *> namedConstraints = nameChannelConstraints(channel, constraints);
-   for (RooAbsPdf const *pdf : namedConstraints) {
-      tool->queueExport(*pdf);
-   }
+   exportNamedConstraints(*tool, channel);
 
    for (RooAbsReal *modifier : channel.customModifiers) {
       tool->queueExport(*modifier);
