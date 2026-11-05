@@ -47,7 +47,7 @@ TF12::TF12()
 /// TF12 normal constructor.
 ///
 /// Create a TF12 (special TF1) from a projection of a TF2
-/// for a fix value of Y if option="X" or X if option="Y"
+/// for a fix value `xy` of Y if option="X" or X if option="Y"
 /// This value may be changed at any time via TF12::SetXY(xy)
 
 TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option, EAddToList addToGlobList)
@@ -61,7 +61,6 @@ TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option, EAddToList 
       Error("TF12","Pointer to TF2 is null");
       return;
    }
-   SetXY(xy);
    if (opt.Contains("y")) {
       fXmin = f2->GetYmin();
       fXmax = f2->GetYmax();
@@ -71,6 +70,7 @@ TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option, EAddToList 
       fXmax = f2->GetXmax();
       fCase = 0;
    }
+   SetXY(xy); // has to be called after fCase is set, since it also sets the title
 }
 
 
@@ -212,6 +212,8 @@ void TF12::SetXY(Double_t xy)
 {
    fXY = xy;
    if (!fF2) return;
+   // option == "X" --> fCase = 0, project on X axis, X varies, Y constant 
+   // option == "Y" --> fCase = 1, project on Y axis, Y varies, X constant 
    if (fCase == 0) SetTitle(TString::Format("%s (y=%g)",fF2->GetTitle(),xy));
    else            SetTitle(TString::Format("%s (x=%g)",fF2->GetTitle(),xy));
    if (fHistogram) fHistogram->SetTitle(GetTitle());
