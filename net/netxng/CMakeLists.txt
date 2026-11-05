@@ -9,12 +9,16 @@
 # @author Lukasz Janyst <ljanyst@cern.ch>
 ############################################################################
 
+set(NETXNG_HEADERS
+  TNetXNGFile.h
+  TNetXNGFileStager.h
+  TNetXNGSystem.h
+  ROOT/RRawFileNetXNG.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
   HEADERS
-    TNetXNGFile.h
-    TNetXNGFileStager.h
-    TNetXNGSystem.h
-    ROOT/RRawFileNetXNG.hxx
+    ${NETXNG_HEADERS}
   SOURCES
     src/TNetXNGFile.cxx
     src/TNetXNGFileStager.cxx
@@ -24,6 +28,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NetxNG
     Net
     RIO
     Thread
+)
+
+set(RELATIVE_INC_HEADERS ${NETXNG_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(NetxNG
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 target_link_libraries(NetxNG PRIVATE XRootD::XrdCl XRootD::XrdUtils)
