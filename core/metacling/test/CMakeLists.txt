@@ -26,7 +26,6 @@ ROOT_ADD_GTEST(
 
   LIBRARIES
   Core
-  Cling
   RIO
   GTest::gmock
 )
