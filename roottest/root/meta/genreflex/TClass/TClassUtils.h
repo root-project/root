@@ -51,10 +51,11 @@ void printMemberNames(const std::string& className, const std::string indent="",
          std::cout << std::endl;
       if (mbProp.count(dmName)!=0){
          TDictAttributeMap* attrMap = dm->GetAttributeMap();
-         for (propertiesNames::iterator prop=mbProp[dmName].begin();
-              prop!=mbProp[dmName].end();prop++){
-            const char* propVals = attrMap->GetPropertyAsString(prop->c_str());
-            std::cout << "    - " << *prop << ": " << propVals <<  std::endl;            
+         propertiesNames &props = mbProp[dmName];
+         for (size_t i = 0; i < props.size(); ++i) {
+            const std::string &prop = props[i];
+            const char* propVals = attrMap->GetPropertyAsString(prop.c_str());
+            std::cout << "    - " << prop << ": " << propVals << std::endl;            
          }
       }
    }
