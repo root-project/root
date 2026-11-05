@@ -30,6 +30,7 @@
 
 #include "JSONIOUtils.h"
 #include "Domains.h"
+#include "HS3Builder.h"
 #include "HS3Schema.h"
 
 #include <TROOT.h>
@@ -148,14 +149,36 @@ struct RooFit::HS3::ToolImportState {
 
 namespace {
 
-// Forward the warnings to the message service, and throw if there are errors.
-void report(HS3::Diagnostics const &diagnostics)
+// Keeps track of the objects that are being imported. Objects that depend on each other would otherwise recurse until
+// the stack overflows.
+class ImportGuard {
+public:
+   ImportGuard(std::vector<std::string> &stack, std::string const &name) : _stack{stack}
+   {
+      if (std::find(_stack.begin(), _stack.end(), name) != _stack.end()) {
+         std::string chain;
+         for (std::string const &ancestor : _stack) {
+            chain += ancestor + " -> ";
+         }
+         RooJSONFactoryWSTool::error("circular dependency in the document: " + chain + name);
+      }
+      _stack.push_back(name);
+   }
+   ~ImportGuard() { _stack.pop_back(); }
+
+private:
+   std::vector<std::string> &_stack;
+};
+
+} // namespace
+
+void RooFit::HS3::report(Diagnostics const &diagnostics)
 {
    std::string errors;
-   for (HS3::Diagnostic const &diagnostic : diagnostics) {
+   for (Diagnostic const &diagnostic : diagnostics) {
       const std::string text =
          diagnostic.path.empty() ? diagnostic.message : diagnostic.path + ": " + diagnostic.message;
-      if (diagnostic.severity == HS3::Diagnostic::Severity::Error) {
+      if (diagnostic.severity == Diagnostic::Severity::Error) {
          errors += (errors.empty() ? "" : "\n") + text;
       } else {
          RooJSONFactoryWSTool::warning("RooFitHS3: " + text);
@@ -165,6 +188,8 @@ void report(HS3::Diagnostics const &diagnostics)
       RooJSONFactoryWSTool::error(errors);
    }
 }
+
+namespace {
 
 // True if the number of components in `data` matches the number of categories in `pdf`.
 bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneous *pdf)
@@ -438,6 +463,21 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
    }
 }
 
+std::unique_ptr<RooRealVar> createObservable(HS3::BinnedAxis const &axis)
+{
+   auto obs = std::make_unique<RooRealVar>(axis.name.c_str(), axis.name.c_str(), axis.min, axis.max);
+   if (auto const *edges = std::get_if<HS3::EdgesBinning>(&axis.binning)) {
+      RooBinning bins(obs->getMin(), obs->getMax());
+      for (double edge : edges->edges) {
+         bins.addBoundary(edge);
+      }
+      obs->setBinning(bins);
+   } else {
+      obs->setBins(std::get<HS3::RegularBinning>(axis.binning).nbins);
+   }
+   return obs;
+}
+
 // Create the variables for the axes of binned data.
 RooArgSet createBinnedObservables(std::vector<std::variant<HS3::BinnedAxis, HS3::CategoricalAxis>> const &axes)
 {
@@ -447,44 +487,9 @@ RooArgSet createBinnedObservables(std::vector<std::variant<HS3::BinnedAxis, HS3:
       if (!axis) {
          RooJSONFactoryWSTool::error("categorical axes of binned data are not supported yet");
       }
-      auto obs = std::make_unique<RooRealVar>(axis->name.c_str(), axis->name.c_str(), axis->min, axis->max);
-      if (auto const *edges = std::get_if<HS3::EdgesBinning>(&axis->binning)) {
-         RooBinning bins(obs->getMin(), obs->getMax());
-         for (double edge : edges->edges) {
-            bins.addBoundary(edge);
-         }
-         obs->setBinning(bins);
-      } else {
-         obs->setBins(std::get<HS3::RegularBinning>(axis->binning).nbins);
-      }
-      vars.addOwned(std::move(obs));
+      vars.addOwned(createObservable(*axis));
    }
    return vars;
-}
-
-// Create the RooDataHist with the contents and errors. Negative errors stand for no error.
-std::unique_ptr<RooDataHist> createDataHist(std::string const &name, RooArgSet const &vars,
-                                            std::vector<double> const &contents, std::vector<double> const *errors)
-{
-   if (errors && errors->size() != contents.size()) {
-      RooJSONFactoryWSTool::error("inconsistent number of errors and contents in '" + name + "': errors=" +
-                                  std::to_string(errors->size()) + ", contents=" + std::to_string(contents.size()));
-   }
-   auto bins = generateBinIndices(vars);
-   if (contents.size() != bins.size()) {
-      RooJSONFactoryWSTool::error("inconsistent bin numbers: contents=" + std::to_string(contents.size()) +
-                                  ", bins=" + std::to_string(bins.size()));
-   }
-   auto dh = std::make_unique<RooDataHist>(name, name, vars);
-   // RooDataHist only starts to store squared weights when it sees a positive error, and then initializes them from
-   // the weights so far. Trigger that before setting any weight, so that errors of zero stay zero.
-   if (errors && !errors->empty()) {
-      dh->set(0, 0., 1.);
-   }
-   for (std::size_t ibin = 0; ibin < bins.size(); ++ibin) {
-      dh->set(ibin, contents[ibin], errors ? (*errors)[ibin] : -1);
-   }
-   return dh;
 }
 
 // Make the range of an observable of unbinned data consistent with the "min" and "max" of the axis. Variables that
@@ -541,8 +546,8 @@ loadData(HS3::Data const &input, RooWorkspace &workspace, RooFit::JSONIO::Detail
    RooJSONFactoryWSTool::testValidName(input.name, true);
 
    if (auto const *binned = std::get_if<HS3::BinnedData>(&input.body)) {
-      return createDataHist(input.name, createBinnedObservables(binned->axes), binned->contents,
-                            binned->uncertainty ? &binned->uncertainty->sigma : nullptr);
+      return HS3::createDataHist(input.name, createBinnedObservables(binned->axes), binned->contents,
+                                 binned->uncertainty ? &binned->uncertainty->sigma : nullptr);
    }
    if (auto const *unbinned = std::get_if<HS3::UnbinnedData>(&input.body)) {
       return createUnbinnedData(input.name, *unbinned, workspace, domains);
@@ -843,6 +848,40 @@ void checkUniqueNames(HS3Document const &doc, bool strict)
 
 } // namespace
 
+RooArgSet RooFit::HS3::createObservables(std::vector<BinnedAxis> const &axes)
+{
+   RooArgSet vars;
+   for (BinnedAxis const &axis : axes) {
+      vars.addOwned(createObservable(axis));
+   }
+   return vars;
+}
+
+std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name, RooArgSet const &vars,
+                                                         std::vector<double> const &contents,
+                                                         std::vector<double> const *errors)
+{
+   if (errors && errors->size() != contents.size()) {
+      RooJSONFactoryWSTool::error("inconsistent number of errors and contents in '" + name + "': errors=" +
+                                  std::to_string(errors->size()) + ", contents=" + std::to_string(contents.size()));
+   }
+   auto bins = generateBinIndices(vars);
+   if (contents.size() != bins.size()) {
+      RooJSONFactoryWSTool::error("inconsistent bin numbers: contents=" + std::to_string(contents.size()) +
+                                  ", bins=" + std::to_string(bins.size()));
+   }
+   auto dh = std::make_unique<RooDataHist>(name, name, vars);
+   // RooDataHist only starts to store squared weights when it sees a positive error, and then initializes them from
+   // the weights so far. Trigger that before setting any weight, so that errors of zero stay zero.
+   if (errors && !errors->empty()) {
+      dh->set(0, 0., 1.);
+   }
+   for (std::size_t ibin = 0; ibin < bins.size(); ++ibin) {
+      dh->set(ibin, contents[ibin], errors ? (*errors)[ibin] : -1);
+   }
+   return dh;
+}
+
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() = default;
@@ -972,7 +1011,7 @@ RooAbsPdf *RooJSONFactoryWSTool::requestImpl<RooAbsPdf>(const std::string &objna
    if (_import) {
       auto it = _import->distributions.find(objname);
       if (it != _import->distributions.end()) {
-         this->importFunction(*it->second->body.node, true);
+         this->importDistribution(*it->second);
          if (RooAbsPdf *retval = _workspace.pdf(objname))
             return retval;
       }
@@ -1238,19 +1277,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    if (_workspace.arg(name)) {
       return;
    }
-   // Objects that depend on each other would otherwise recurse until the stack overflows.
-   if (std::find(_importStack.begin(), _importStack.end(), name) != _importStack.end()) {
-      std::string chain;
-      for (std::string const &ancestor : _importStack) {
-         chain += ancestor + " -> ";
-      }
-      RooJSONFactoryWSTool::error("circular dependency in the document: " + chain + name);
-   }
-   _importStack.push_back(name);
-   struct PopOnExit {
-      std::vector<std::string> &stack;
-      ~PopOnExit() { stack.pop_back(); }
-   } popOnExit{_importStack};
+   ImportGuard importGuard{_importStack, name};
    // if the key we found is not a map, it's an error
    if (!p.is_map()) {
       RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() function node " + name + " is not a map!");
@@ -1325,6 +1352,25 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    if (!func) {
       RooJSONFactoryWSTool::error("something went wrong importing function '" + name + "'.");
    }
+}
+
+// Import a distribution of the document, which is interpreted by the document or by the registered importers.
+void RooJSONFactoryWSTool::importDistribution(HS3::Distribution const &distribution)
+{
+   if (auto const *generic = std::get_if<HS3::GenericObject>(&distribution.body)) {
+      this->importFunction(*generic->node, true);
+      return;
+   }
+   std::string const &name = distribution.name;
+   if (hasAttribute(name, "roofit_skip")) {
+      return;
+   }
+   RooJSONFactoryWSTool::testValidName(name, true);
+   if (_workspace.arg(name)) {
+      return;
+   }
+   ImportGuard importGuard{_importStack, name};
+   HS3::buildHistFactoryDist(*this, name, std::get<HS3::HistFactoryDist>(distribution.body));
 }
 
 /**
@@ -1645,13 +1691,13 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
    contentVals << contents;
 
    if (!n.has_child("errors")) {
-      return createDataHist(name, vars, contentVals, nullptr);
+      return HS3::createDataHist(name, vars, contentVals, nullptr);
    }
    if (!n["errors"].is_seq())
       RooJSONFactoryWSTool::error("errors are not in list form");
    std::vector<double> errorVals;
    errorVals << n["errors"];
-   return createDataHist(name, vars, contentVals, &errorVals);
+   return HS3::createDataHist(name, vars, contentVals, &errorVals);
 }
 
 // Import a single variable (RooRealVar or RooConstVar) from the parameter `p` into the workspace.
@@ -2056,11 +2102,19 @@ void RooJSONFactoryWSTool::setStringAttribute(const std::string &obj, const std:
 }
 
 // Import the JSON document rooted at `n` into the workspace.
-void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
+void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
 {
+   HS3::ParseOptions options;
+   // A user can replace how HistFactory distributions are imported by registering their own importer.
+   auto const &importers = RooFit::JSONIO::importers();
+   auto histFactoryImporters = importers.find("histfactory_dist");
+   options.typedHistFactory = histFactoryImporters != importers.end() && !histFactoryImporters->second.empty() &&
+                              HS3::isBuiltinHistFactoryImporter(*histFactoryImporters->second.front());
+
    HS3::Diagnostics diagnostics;
-   HS3Document doc = HS3::parseDocument(n, diagnostics);
-   report(diagnostics);
+   HS3::upgradeDocument(n, diagnostics, options);
+   HS3Document doc = HS3::parseDocument(n, diagnostics, options);
+   HS3::report(diagnostics);
 
    // The state of the import refers to the document, so it must not survive it, not even if there is an exception.
    struct ImportScope {
@@ -2091,7 +2145,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
       this->importFunction(*function.body.node, true);
    }
    for (auto const &distribution : doc.distributions) {
-      this->importFunction(*distribution.body.node, true);
+      this->importDistribution(distribution);
    }
 
    // This creates the index categories, which the parameter points can refer to.
@@ -2245,7 +2299,7 @@ void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std:
       HS3::Diagnostics diagnostics;
       HS3::Data data;
       readValue(HS3::Cursor{n, diagnostics}, data);
-      report(diagnostics);
+      HS3::report(diagnostics);
       _workspace.import(*loadData(data, _workspace, nullptr), RooFit::Silence());
    } else {
       this->importFunction(n, false);
@@ -2260,7 +2314,7 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
    HS3::ParseOptions options;
    options.requireMetadata = false;
    HS3Document doc = HS3::parseDocument(tree->rootnode(), diagnostics, options);
-   report(diagnostics);
+   HS3::report(diagnostics);
 
    _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
    _domains->read(doc.domains);

@@ -88,6 +88,7 @@ void readValue(Cursor const &c, int &out);
 void readValue(Cursor const &c, bool &out);
 void readValue(Cursor const &c, ParameterValue &out);
 void readValue(Cursor const &c, Data &out);
+void readValue(Cursor const &c, Interpolation &out);
 
 template <class Tag>
 void readValue(Cursor const &c, Ref<Tag> &out)

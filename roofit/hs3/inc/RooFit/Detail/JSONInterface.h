@@ -92,6 +92,8 @@ public:
    JSONNode &set_seq();
    JSONNode &set_null();
    void clear();
+   /// Remove a child of a map, if it exists.
+   void erase(std::string const &key);
 
    std::string key() const;
    std::string val() const;

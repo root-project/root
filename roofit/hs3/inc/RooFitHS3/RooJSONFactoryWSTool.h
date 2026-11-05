@@ -32,6 +32,7 @@ class Domains;
 }
 } // namespace JSONIO
 namespace HS3 {
+struct Distribution;
 struct ParameterValue;
 struct ToolImportState;
 } // namespace HS3
@@ -239,7 +240,8 @@ private:
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
 
-   void importAllNodes(const RooFit::Detail::JSONNode &n);
+   void importAllNodes(RooFit::Detail::JSONNode &n);
+   void importDistribution(RooFit::HS3::Distribution const &distribution);
 
    void importVariable(RooFit::HS3::ParameterValue const &p);
    void checkFixedValue(RooFit::HS3::ParameterValue const &p, std::string const &pointName);

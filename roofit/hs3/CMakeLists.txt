@@ -21,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
   SOURCES
     src/Domains.cxx
     src/HS3Parser.cxx
+    src/HS3Upgrade.cxx
     src/JSONInterface.cxx
     src/JSONIO.cxx
     src/RooJSONFactoryWSTool.cxx
@@ -50,6 +51,7 @@ target_sources(
         ${RELATIVE_INC_HEADERS}
         # LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
         src/Domains.h
+        src/HS3Builder.h
         src/HS3Document.h
         src/HS3Schema.h
         src/JSONIOUtils.h

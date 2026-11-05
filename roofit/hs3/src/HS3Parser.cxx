@@ -27,6 +27,69 @@ namespace HS3 {
 
 constexpr auto supportedVersion = "0.3";
 
+namespace {
+
+// Single source of truth for the mapping between the structured HS3 interpolation
+// descriptors and the RooFit integer codes of PiecewiseInterpolation and
+// FlexibleInterpVar. A code of `kUnrepresentable` means the descriptor cannot be
+// expressed by that class: FlexibleInterpVar internally remaps code 4 to code 5,
+// so it has no additive-linear or multiplicative-linear poly6 variant.
+struct InterpolationCodes {
+   Interpolation descriptor;
+   int piecewise;
+   int flexible;
+};
+
+constexpr int kUnrepresentable = -1;
+
+// clang-format off
+constexpr InterpolationCodes interpolationTable[]{
+   {additivePiecewiseLinear,             0, 0},
+   {multiplicativePiecewiseExponential,  1, 1},
+   {additiveQuadraticLinear,             2, 2},
+   {additivePolynomialLinear,            4, kUnrepresentable},
+   {multiplicativePolynomialExponential, 5, 4},
+   {multiplicativePolynomialLinear,      6, kUnrepresentable},
+};
+// clang-format on
+
+int codeForClass(InterpolationCodes const &row, InterpolationClass interpolationClass)
+{
+   return interpolationClass == InterpolationClass::Piecewise ? row.piecewise : row.flexible;
+}
+
+} // namespace
+
+std::optional<Interpolation> interpolationFromCode(int code, InterpolationClass interpolationClass)
+{
+   // Code 3 was historically an unimplemented alias of code 2 for both classes,
+   // and FlexibleInterpVar treats code 5 identically to its canonical code 4.
+   if (code == 3) {
+      code = 2;
+   }
+   if (interpolationClass == InterpolationClass::Flexible && code == 5) {
+      code = 4;
+   }
+   for (auto const &row : interpolationTable) {
+      const int rowCode = codeForClass(row, interpolationClass);
+      if (rowCode != kUnrepresentable && rowCode == code) {
+         return row.descriptor;
+      }
+   }
+   return std::nullopt;
+}
+
+std::optional<int> codeFromInterpolation(Interpolation const &interpolation, InterpolationClass interpolationClass)
+{
+   for (auto const &row : interpolationTable) {
+      const int rowCode = codeForClass(row, interpolationClass);
+      if (rowCode != kUnrepresentable && row.descriptor == interpolation) {
+         return rowCode;
+      }
+   }
+   return std::nullopt;
+}
+
 bool hasErrors(Diagnostics const &diagnostics)
 {
    return std::any_of(diagnostics.begin(), diagnostics.end(),
@@ -539,8 +602,356 @@ void describe(Reader &ar, Analysis &analysis)
 
 namespace {
 
-template <class Object_t>
-void readGenericObject(Cursor const &c, Object_t &out)
+// The strings of the interpolation types and functions in the standard.
+std::optional<InterpolationType> interpolationTypeFromString(std::string const &str)
+{
+   for (auto type : {InterpolationType::Add, InterpolationType::Mult}) {
+      if (str == toString(type)) {
+         return type;
+      }
+   }
+   return std::nullopt;
+}
+
+std::optional<InterpolationFunction> interpolationFunctionFromString(std::string const &str)
+{
+   for (auto function : {InterpolationFunction::Poly1, InterpolationFunction::Poly2, InterpolationFunction::Poly6,
+                         InterpolationFunction::Exp}) {
+      if (str == toString(function)) {
+         return function;
+      }
+   }
+   return std::nullopt;
+}
+
+} // namespace
+
+char const *toString(InterpolationType type)
+{
+   return type == InterpolationType::Add ? "add" : "mult";
+}
+
+char const *toString(InterpolationFunction function)
+{
+   switch (function) {
+   case InterpolationFunction::Poly1: return "poly1";
+   case InterpolationFunction::Poly2: return "poly2";
+   case InterpolationFunction::Poly6: return "poly6";
+   case InterpolationFunction::Exp: return "exp";
+   }
+   return "";
+}
+
+char const *toString(ConstraintType type)
+{
+   switch (type) {
+   case ConstraintType::Gauss: return "Gauss";
+   case ConstraintType::Poisson: return "Poisson";
+   case ConstraintType::LogNormal: return "LogNormal";
+   }
+   return "";
+}
+
+void readValue(Cursor const &c, Interpolation &out)
+{
+   JSONNode const &node = c.node();
+   if (!node.is_map()) {
+      c.error("must be a struct with components 'type', 'in', and 'out'");
+      return;
+   }
+   for (const char *component : {"type", "in", "out"}) {
+      if (!node.has_child(component)) {
+         c.error(std::string("does not define the required '") + component + "' component");
+         return;
+      }
+   }
+   JSONNode const &typeNode = node["type"];
+   JSONNode const &inNode = node["in"];
+   JSONNode const &outNode = node["out"];
+   if (typeNode.is_container() || typeNode.is_null() || inNode.is_container() || inNode.is_null()) {
+      c.error("components 'type' and 'in' must be strings");
+      return;
+   }
+
+   auto type = interpolationTypeFromString(typeNode.val());
+   if (!type) {
+      c.error("has unknown interpolation type '" + typeNode.val() + "'");
+      return;
+   }
+   auto in = interpolationFunctionFromString(inNode.val());
+   if (!in) {
+      c.error("has unknown interpolation function '" + inNode.val() + "'");
+      return;
+   }
+   out.type = *type;
+   out.in = *in;
+   out.out.reset();
+
+   if (!outNode.is_null()) {
+      if (outNode.is_container()) {
+         c.error("component 'out' must be a string or null");
+         return;
+      }
+      out.out = interpolationFunctionFromString(outNode.val());
+      if (!out.out) {
+         c.error("has unknown extrapolation function '" + outNode.val() + "'");
+      }
+   }
+}
+
+namespace {
+
+// Constraints: "constraints" names the constraint distribution of each parameter, or is null for an unconstrained one.
+// Older documents give a type in "constraint", or a distribution in "constraint_name", to which upgradeDocument()
+// translated the even older forms.
+std::optional<ConstraintType> readConstraintType(Cursor const &c)
+{
+   std::string value;
+   readValue(c, value);
+   for (auto type : {ConstraintType::Gauss, ConstraintType::Poisson, ConstraintType::LogNormal}) {
+      if (value == toString(type)) {
+         return type;
+      }
+   }
+   c.error("unknown constraint type '" + value + "', supported are \"Gauss\", \"Poisson\" and \"LogNormal\"");
+   return std::nullopt;
+}
+
+void readConstraint(Reader &ar, Constraint &out)
+{
+   if (ar.has("constraints")) {
+      Cursor c{ar.cursor().node()["constraints"], ar.cursor(), "constraints"};
+      if (!c.node().is_seq() || c.node().num_children() != 1) {
+         c.error("must be an array with one entry");
+         return;
+      }
+      JSONNode const &item = c.node().child(0);
+      if (item.is_null()) {
+         out = Unconstrained{};
+         return;
+      }
+      ConstraintPdf pdf;
+      readValue(Cursor{item, c, std::size_t{0}}, pdf.pdf);
+      out = std::move(pdf);
+   } else if (ar.has("constraint_name")) {
+      ConstraintPdf pdf;
+      ar("constraint_name", pdf.pdf);
+      out = std::move(pdf);
+   } else if (ar.has("constraint")) {
+      if (auto type = readConstraintType(Cursor{ar.cursor().node()["constraint"], ar.cursor(), "constraint"})) {
+         out = *type;
+      }
+   }
+}
+
+void readGammaConstraint(Reader &ar, GammaConstraint &out)
+{
+   if (ar.has("constraints")) {
+      GammaConstraintPdfs constraints;
+      Cursor c{ar.cursor().node()["constraints"], ar.cursor(), "constraints"};
+      if (!c.node().is_seq()) {
+         c.error("must be an array");
+         return;
+      }
+      std::size_t i = 0;
+      for (JSONNode const &item : c.node().children()) {
+         constraints.pdfs.emplace_back();
+         if (!item.is_null()) {
+            constraints.pdfs.back().emplace();
+            readValue(Cursor{item, c, i}, *constraints.pdfs.back());
+         }
+         ++i;
+      }
+      out = std::move(constraints);
+   } else if (ar.has("constraint")) {
+      Cursor c{ar.cursor().node()["constraint"], ar.cursor(), "constraint"};
+      // "Const" is a RooFit extension.
+      if (!c.node().is_container() && !c.node().is_null() && c.node().val() == "Const") {
+         out = ConstantGammas{};
+      } else if (auto type = readConstraintType(c)) {
+         out = *type;
+      }
+   }
+}
+
+} // namespace
+
+// The standard doesn't require a name for modifiers, but RooFit uses it to name the objects it creates.
+void readModifierName(Reader &ar, std::string &name)
+{
+   std::optional<std::string> optionalName;
+   ar("name", optionalName);
+   name = optionalName.value_or("");
+}
+
+// The parameter of a modifier with a single parameter is given in "parameters", or in "parameter" in older documents.
+void readParameter(Reader &ar, ParameterRef &parameter)
+{
+   if (!ar.has("parameters")) {
+      ar("parameter", parameter);
+      return;
+   }
+   Cursor c{ar.cursor().node()["parameters"], ar.cursor(), "parameters"};
+   if (!c.node().is_seq() || c.node().num_children() != 1) {
+      c.error("must be an array with one entry");
+      return;
+   }
+   readValue(Cursor{c.node().child(0), c, std::size_t{0}}, parameter);
+}
+
+void describe(Reader &ar, NormFactor &m)
+{
+   readModifierName(ar, m.name);
+   readParameter(ar, m.parameter);
+   readConstraint(ar, m.constraint);
+}
+
+void describe(Reader &ar, NormSys &m)
+{
+   readModifierName(ar, m.name);
+   readParameter(ar, m.parameter);
+   ar.nested("data", [&](Reader &data) {
+      data("hi", m.hi);
+      data("lo", m.lo);
+   });
+   readConstraint(ar, m.constraint);
+   ar("interpolation", m.interpolation);
+}
+
+void describe(Reader &ar, HistoSysVariation &variation)
+{
+   ar("contents", variation.contents);
+   ar("errors", variation.errors);
+}
+
+void describe(Reader &ar, HistoSys &m)
+{
+   readModifierName(ar, m.name);
+   readParameter(ar, m.parameter);
+   ar.nested("data", [&](Reader &data) {
+      data("hi", m.hi);
+      data("lo", m.lo);
+   });
+   readConstraint(ar, m.constraint);
+   ar("interpolation", m.interpolation);
+}
+
+void describe(Reader &ar, ShapeSys &m)
+{
+   readModifierName(ar, m.name);
+   if (ar.has("parameter")) {
+      // A single name stands for one parameter per bin, which are named after it.
+      ar("parameter", m.name);
+   }
+   ar.list("parameters", m.parameters);
+   if (ar.has("data")) {
+      ar.nested("data", [&](Reader &data) { data.list("vals", m.vals); });
+   }
+   readGammaConstraint(ar, m.constraint);
+}
+
+void describe(Reader &ar, StatError &m)
+{
+   readModifierName(ar, m.name);
+   ar.list("parameters", m.parameters);
+   readGammaConstraint(ar, m.constraint);
+}
+
+void describe(Reader &ar, CustomModifier &m)
+{
+   ar("name", m.name);
+}
+
+void readValue(Cursor const &c, Modifier &out)
+{
+   if (!c.node().is_map()) {
+      c.error("must be a struct");
+      return;
+   }
+   Reader ar{c};
+   std::string type;
+   ar("type", type);
+   auto read = [&](auto modifier) {
+      describe(ar, modifier);
+      out = std::move(modifier);
+   };
+   if (type == "normfactor") {
+      read(NormFactor{});
+   } else if (type == "normsys") {
+      read(NormSys{});
+   } else if (type == "histosys") {
+      read(HistoSys{});
+   } else if (type == "shapesys" || type == "shapefactor") {
+      read(ShapeSys{});
+   } else if (type == "staterror") {
+      read(StatError{});
+   } else if (type == "custom") {
+      read(CustomModifier{});
+   } else if (ar.has("type")) {
+      std::string name;
+      if (ar.has("name")) {
+         ar("name", name);
+      }
+      c.error("modifier '" + name + "' of unknown type '" + type + "'");
+   }
+}
+
+void describe(Reader &ar, Sample &sample)
+{
+   ar("name", sample.name);
+   ar.nested("data", [&](Reader &data) {
+      data("contents", sample.contents);
+      data("errors", sample.errors);
+   });
+   ar.list("modifiers", sample.modifiers);
+}
+
+void describe(Reader &ar, StatErrorConfig &config)
+{
+   std::optional<double> relThreshold;
+   ar("relThreshold", relThreshold);
+   config.relThreshold = relThreshold.value_or(0.0);
+   readGammaConstraint(ar, config.constraint);
+   // Written by upgradeDocument() for older documents.
+   std::optional<bool> impliedPoissonErrors;
+   ar("implied_poisson_errors", impliedPoissonErrors);
+   config.impliedPoissonErrors = impliedPoissonErrors.value_or(false);
+}
+
+void describe(Reader &ar, HistFactoryDist &dist)
+{
+   ar("axes", dist.axes);
+   ar("default_interpolation", dist.defaultInterpolation);
+   ar("samples", dist.samples);
+   if (ar.has("staterror")) {
+      readValue(Cursor{ar.cursor().node()["staterror"], ar.cursor(), "staterror"}, dist.statError);
+   }
+}
+
+namespace {
+
+void readDistribution(Cursor const &c, Distribution &out, ParseOptions const &options)
+{
+   if (!c.node().is_map()) {
+      c.error("must be a struct");
+      return;
+   }
+   Reader ar{c};
+   ar("name", out.name);
+   std::string type;
+   ar("type", type);
+   if (options.typedHistFactory && type == "histfactory_dist") {
+      HistFactoryDist body;
+      describe(ar, body);
+      out.body = std::move(body);
+   } else {
+      out.body = GenericObject{type, &c.node()};
+   }
+}
+
+} // namespace
+
+void readValue(Cursor const &c, Function &out)
 {
    if (!c.node().is_map()) {
       c.error("must be a struct");
@@ -550,18 +961,6 @@ void readGenericObject(Cursor const &c, Object_t &out)
    ar("name", out.name);
    ar("type", out.body.type);
    out.body.node = &c.node();
-}
-
-} // namespace
-
-void readValue(Cursor const &c, Distribution &out)
-{
-   readGenericObject(c, out);
-}
-
-void readValue(Cursor const &c, Function &out)
-{
-   readGenericObject(c, out);
 }
 
 void describe(Reader &ar, Attributes &attributes)
@@ -735,8 +1134,21 @@ HS3Document parseDocument(JSONNode const &root, Diagnostics &diagnostics, ParseO
       return doc;
    }
 
+   if (root.has_child("distributions") && !root["distributions"].is_null()) {
+      Cursor distributions{root["distributions"], cursor, "distributions"};
+      if (!distributions.node().is_seq()) {
+         distributions.error("must be an array");
+      } else {
+         std::size_t i = 0;
+         doc.distributions.reserve(distributions.node().num_children());
+         for (JSONNode const &item : distributions.node().children()) {
+            doc.distributions.emplace_back();
+            readDistribution(Cursor{item, distributions, i}, doc.distributions.back(), options);
+            ++i;
+         }
+      }
+   }
    Reader ar{cursor};
-   ar.list("distributions", doc.distributions);
    ar.list("functions", doc.functions);
    ar.list("data", doc.data);
    ar.list("likelihoods", doc.likelihoods);
@@ -745,6 +1157,20 @@ HS3Document parseDocument(JSONNode const &root, Diagnostics &diagnostics, ParseO
    ar.list("analyses", doc.analyses);
    readMisc(cursor, doc.rooFit);
    return doc;
+}
+
+HistFactoryDist parseHistFactoryDist(JSONNode const &distribution, Diagnostics &diagnostics)
+{
+   HistFactoryDist out;
+   readValue(Cursor{distribution, diagnostics}, out);
+   return out;
+}
+
+Interpolation parseInterpolation(JSONNode const &interpolation, Diagnostics &diagnostics)
+{
+   Interpolation out;
+   readValue(Cursor{interpolation, diagnostics}, out);
+   return out;
 }
 
 } // namespace HS3

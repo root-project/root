@@ -33,19 +33,31 @@
 #include <RooWorkspace.h>
 #include <RooFitImplHelpers.h>
 
+#include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <cmath>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <optional>
 #include <regex>
 #include <set>
-#include <tuple>
+#include <sstream>
+#include <variant>
 
 #include "static_execute.h"
+#include "HS3Builder.h"
 #include "JSONIOUtils.h"
 
 using RooFit::Detail::JSONNode;
+using RooFit::HS3::additivePolynomialLinear;
+using RooFit::HS3::Interpolation;
+using RooFit::HS3::InterpolationClass;
+using RooFit::HS3::multiplicativePiecewiseExponential;
+using RooFit::HS3::multiplicativePolynomialExponential;
+
+namespace HS3 = RooFit::HS3;
 
 using namespace RooStats::HistFactory;
 using namespace RooStats::HistFactory::Detail;
@@ -70,37 +82,12 @@ namespace Literals {
 constexpr auto staterror = "staterror";
 }
 
-struct Interpolation {
-   std::string type;
-   std::string in;
-   std::optional<std::string> out;
-
-   bool operator==(const Interpolation &other) const
-   {
-      return std::tie(type, in, out) == std::tie(other.type, other.in, other.out);
-   }
-
-   bool operator!=(const Interpolation &other) const { return !(*this == other); }
-
-   bool operator<(const Interpolation &other) const
-   {
-      return std::tie(type, in, out) < std::tie(other.type, other.in, other.out);
-   }
-};
-
-const Interpolation additivePiecewiseLinear{"add", "poly1", std::nullopt};
-const Interpolation multiplicativePiecewiseExponential{"mult", "exp", std::nullopt};
-const Interpolation additiveQuadraticLinear{"add", "poly2", "poly1"};
-const Interpolation additivePolynomialLinear{"add", "poly6", "poly1"};
-const Interpolation multiplicativePolynomialExponential{"mult", "poly6", "exp"};
-const Interpolation multiplicativePolynomialLinear{"mult", "poly6", "poly1"};
-
 std::string interpolationString(const Interpolation &interpolation)
 {
    std::stringstream ss;
-   ss << R"({"type":")" << interpolation.type << R"(","in":")" << interpolation.in << R"(","out":)";
+   ss << R"({"type":")" << toString(interpolation.type) << R"(","in":")" << toString(interpolation.in) << R"(","out":)";
    if (interpolation.out) {
-      ss << '"' << *interpolation.out << '"';
+      ss << '"' << toString(*interpolation.out) << '"';
    } else {
       ss << "null";
    }
@@ -108,57 +95,23 @@ std::string interpolationString(const Interpolation &interpolation)
    return ss.str();
 }
 
-bool isInterpolationFunction(std::string_view function)
-{
-   return function == "poly1" || function == "poly2" || function == "poly6" || function == "exp";
-}
-
 Interpolation readInterpolation(const JSONNode &node, const std::string &context)
 {
-   if (!node.is_map()) {
-      RooJSONFactoryWSTool::error(context + " must be a struct with components 'type', 'in', and 'out'");
+   HS3::Diagnostics diagnostics;
+   const Interpolation interpolation = HS3::parseInterpolation(node, diagnostics);
+   if (!diagnostics.empty()) {
+      RooJSONFactoryWSTool::error(context + " " + diagnostics.front().message);
    }
-   for (const char *component : {"type", "in", "out"}) {
-      if (!node.has_child(component)) {
-         RooJSONFactoryWSTool::error(context + " does not define the required '" + component + "' component");
-      }
-   }
-
-   const auto &typeNode = node["type"];
-   const auto &inNode = node["in"];
-   const auto &outNode = node["out"];
-   if (typeNode.is_container() || typeNode.is_null() || inNode.is_container() || inNode.is_null()) {
-      RooJSONFactoryWSTool::error(context + " components 'type' and 'in' must be strings");
-   }
-
-   Interpolation interpolation{typeNode.val(), inNode.val(), std::nullopt};
-   if (interpolation.type != "add" && interpolation.type != "mult") {
-      RooJSONFactoryWSTool::error(context + " has unknown interpolation type '" + interpolation.type + "'");
-   }
-   if (!isInterpolationFunction(interpolation.in)) {
-      RooJSONFactoryWSTool::error(context + " has unknown interpolation function '" + interpolation.in + "'");
-   }
-
-   if (!outNode.is_null()) {
-      if (outNode.is_container()) {
-         RooJSONFactoryWSTool::error(context + " component 'out' must be a string or null");
-      }
-      interpolation.out = outNode.val();
-      if (!isInterpolationFunction(*interpolation.out)) {
-         RooJSONFactoryWSTool::error(context + " has unknown extrapolation function '" + *interpolation.out + "'");
-      }
-   }
-
    return interpolation;
 }
 
 void writeInterpolation(JSONNode &node, const Interpolation &interpolation)
 {
    node.set_map();
-   node["type"] << interpolation.type;
-   node["in"] << interpolation.in;
+   node["type"] << toString(interpolation.type);
+   node["in"] << toString(interpolation.in);
    if (interpolation.out) {
-      node["out"] << *interpolation.out;
+      node["out"] << toString(*interpolation.out);
    } else {
       node["out"].set_null();
    }
@@ -179,40 +132,6 @@ int readLegacyInterpolationCode(const JSONNode &node, const std::string &context
    return code;
 }
 
-enum class InterpolationClass {
-   Piecewise,
-   Flexible
-};
-
-// Single source of truth for the mapping between the structured HS3 interpolation
-// descriptors and the RooFit integer codes of PiecewiseInterpolation and
-// FlexibleInterpVar. A code of `kUnrepresentable` means the descriptor cannot be
-// expressed by that class: FlexibleInterpVar internally remaps code 4 to code 5,
-// so it has no additive-linear or multiplicative-linear poly6 variant.
-struct InterpolationCodes {
-   const Interpolation &descriptor;
-   int piecewise;
-   int flexible;
-};
-
-constexpr int kUnrepresentable = -1;
-
-// clang-format off
-const std::vector<InterpolationCodes> interpolationTable{
-   {additivePiecewiseLinear,             0, 0},
-   {multiplicativePiecewiseExponential,  1, 1},
-   {additiveQuadraticLinear,             2, 2},
-   {additivePolynomialLinear,            4, kUnrepresentable},
-   {multiplicativePolynomialExponential, 5, 4},
-   {multiplicativePolynomialLinear,      6, kUnrepresentable},
-};
-// clang-format on
-
-int codeForClass(const InterpolationCodes &row, InterpolationClass interpolationClass)
-{
-   return interpolationClass == InterpolationClass::Piecewise ? row.piecewise : row.flexible;
-}
-
 const char *interpolationClassName(InterpolationClass interpolationClass)
 {
    return interpolationClass == InterpolationClass::Piecewise ? "PiecewiseInterpolation" : "FlexibleInterpVar";
@@ -220,19 +139,8 @@ const char *interpolationClassName(InterpolationClass interpolationClass)
 
 Interpolation interpolationFromCode(int code, InterpolationClass interpolationClass, const std::string &context)
 {
-   // Code 3 was historically an unimplemented alias of code 2 for both classes,
-   // and FlexibleInterpVar treats code 5 identically to its canonical code 4.
-   if (code == 3) {
-      code = 2;
-   }
-   if (interpolationClass == InterpolationClass::Flexible && code == 5) {
-      code = 4;
-   }
-   for (const auto &row : interpolationTable) {
-      const int rowCode = codeForClass(row, interpolationClass);
-      if (rowCode != kUnrepresentable && rowCode == code) {
-         return row.descriptor;
-      }
+   if (auto interpolation = HS3::interpolationFromCode(code, interpolationClass)) {
+      return *interpolation;
    }
    RooJSONFactoryWSTool::error(context + " has unsupported " + interpolationClassName(interpolationClass) + " code " +
                                std::to_string(code));
@@ -241,11 +149,8 @@ Interpolation interpolationFromCode(int code, InterpolationClass interpolationCl
 int codeFromInterpolation(const Interpolation &interpolation, InterpolationClass interpolationClass,
                           const std::string &context)
 {
-   for (const auto &row : interpolationTable) {
-      const int rowCode = codeForClass(row, interpolationClass);
-      if (rowCode != kUnrepresentable && row.descriptor == interpolation) {
-         return rowCode;
-      }
+   if (auto code = HS3::codeFromInterpolation(interpolation, interpolationClass)) {
+      return *code;
    }
    RooJSONFactoryWSTool::error(context + " " + interpolationString(interpolation) + " cannot be represented by " +
                                interpolationClassName(interpolationClass));
@@ -338,48 +243,18 @@ std::vector<int> readInterpolations(const JSONNode &object, std::size_t nParamet
    return codes;
 }
 
-// The fallback for modifiers without interpolation in documents that predate HS3 v0.3, see interpolationCode(). Before
-// that, RooFit did not write the interpolation of modifiers that used its implicit default.
-struct LegacyInterpolationDefault {
-   bool allowed = false;
-   bool warned = false;
-};
-
-int interpolationCode(const JSONNode &modifier, const std::optional<Interpolation> &defaultInterpolation,
-                      InterpolationClass interpolationClass, const std::string &context,
-                      LegacyInterpolationDefault &legacyDefault)
+int interpolationCode(std::optional<Interpolation> const &interpolation,
+                      std::optional<Interpolation> const &defaultInterpolation, InterpolationClass interpolationClass,
+                      std::string const &context)
 {
-   const auto toCode = [&](const Interpolation &interpolation) {
-      return codeFromInterpolation(interpolation, interpolationClass, context);
-   };
-
-   if (const auto *interpolationNode = modifier.find("interpolation")) {
-      if (interpolationNode->is_map()) {
-         return toCode(readInterpolation(*interpolationNode, context));
-      }
-      const int legacyCode = readLegacyInterpolationCode(*interpolationNode, context);
-      const Interpolation interpolation = interpolationFromCode(legacyCode, interpolationClass, context);
-      return toCode(interpolation);
+   if (interpolation) {
+      return codeFromInterpolation(*interpolation, interpolationClass, context);
    }
-   if (defaultInterpolation) {
-      return toCode(*defaultInterpolation);
-   }
-
    // HS3 forbids implementation-specific default interpolations.
-   if (!legacyDefault.allowed) {
+   if (!defaultInterpolation) {
       RooJSONFactoryWSTool::error(context + " is not given, and the channel has no \"default_interpolation\"");
    }
-
-   // Before structured interpolation was introduced, both modifier classes
-   // used the integer code 4 as their implicit default. The meaning of code 4
-   // is class-dependent. Files written by these ROOT versions are still read.
-   if (!legacyDefault.warned) {
-      RooJSONFactoryWSTool::warning("RooFitHS3: " + context +
-                                    " is not given, and the channel has no \"default_interpolation\". Using the "
-                                    "implicit default of older RooFit versions (code 4), which is deprecated.");
-      legacyDefault.warned = true;
-   }
-   return 4;
+   return codeFromInterpolation(*defaultInterpolation, interpolationClass, context);
 }
 
 void erasePrefix(std::string &str, std::string_view prefix)
@@ -477,12 +352,6 @@ std::string constraintName(std::string const &paramName)
    return paramName + "Constraint";
 }
 
-bool isLegacyConstraintType(std::string const &value)
-{
-   // HS3 spells "LogNormal", older RooFit versions used "Lognormal".
-   return value == "Gauss" || value == "Poisson" || value == "Const" || value == "LogNormal" || value == "Lognormal";
-}
-
 RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, std::string const &sample)
 {
    if (auto *constraint = tool.workspace()->pdf(constraintName)) {
@@ -500,210 +369,157 @@ RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &co
    return nullptr;
 }
 
-RooAbsPdf &createLegacyConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param,
-                                  std::string const &constraintType)
+// The parameter of a modifier, which is created if the document doesn't define it. It's a variable, or a constant if
+// the document doesn't give it a domain.
+RooAbsReal &getOrCreateParameter(RooJSONFactoryWSTool &tool, std::string const &name, double val, double min,
+                                 double max, std::string const &modifier)
 {
-   if (constraintType == "Gauss") {
-      param.setError(1.0);
-      RooRealVar &nominal = createNominal(*tool.workspace(), param.GetName(), 0.0, -10, 10);
-      return getOrCreate<RooGaussian>(*tool.workspace(), constraintName(param.GetName()), param, nominal, 1.);
+   RooWorkspace &ws = *tool.workspace();
+   TObject *existing = ws.obj(name);
+   if (!existing) {
+      return getOrCreate<RooRealVar>(ws, name, val, min, max);
    }
-
-   RooJSONFactoryWSTool::error("legacy constraint value '" + constraintType + "' for modifier '" +
-                               RooJSONFactoryWSTool::name(mod) +
-                               "' is a known constraint type, but it cannot be resolved in this context");
+   if (dynamic_cast<RooRealVar *>(existing) || dynamic_cast<RooConstVar *>(existing)) {
+      return *static_cast<RooAbsReal *>(existing);
+   }
+   RooJSONFactoryWSTool::error("the parameter '" + name + "' of the modifier '" + modifier +
+                               "' is neither a variable nor a constant");
 }
 
-ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
-                         const std::vector<std::string> &parnames, const std::vector<double> &vals,
-                         RooJSONFactoryWSTool &tool, RooAbsCollection &constraints, const RooArgSet &observables,
-                         const std::string &constraintType, double gammaMin, double gammaMax, double minSigma,
-                         bool createConstraints = true)
+void setErrorIfVariable(RooAbsReal &param, double error)
+{
+   if (auto *var = dynamic_cast<RooRealVar *>(&param)) {
+      var->setError(error);
+   }
+}
+
+// All constraints of parameters that control a whole sample are created here. Following the HS3 standard, the nominal
+// value is defined by the type of the modifier, and the standard deviation is one.
+void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint, RooAbsReal &param, double nominal,
+                   std::string const &modifier, std::string const &sample, RooArgSet &constraints)
+{
+   RooWorkspace &ws = *tool.workspace();
+   std::visit(HS3::overloaded{
+                 [](HS3::Unconstrained) {},
+                 [&](HS3::ConstraintType type) {
+                    if (type != HS3::ConstraintType::Gauss) {
+                       RooJSONFactoryWSTool::error(std::string("legacy constraint value '") + toString(type) +
+                                                   "' for modifier '" + modifier +
+                                                   "' is a known constraint type, but it cannot be resolved in this "
+                                                   "context");
+                    }
+                    RooRealVar &nom = createNominal(ws, param.GetName(), nominal, -10, 10);
+                    setErrorIfVariable(param, 1.0);
+                    const std::string name = constraintName(param.GetName());
+                    RooAbsPdf *pdf = ws.pdf(name);
+                    constraints.add(pdf ? *pdf : tool.wsEmplace<RooGaussian>(name, param, nom, 1.));
+                 },
+                 [&](HS3::ConstraintPdf const &constraintPdf) {
+                    RooAbsPdf *pdf = findNamedConstraint(tool, constraintPdf.pdf.name, sample);
+                    if (!pdf) {
+                       RooJSONFactoryWSTool::error("unable to find definition of of constraint '" +
+                                                   constraintPdf.pdf.name + "' for modifier '" + modifier + "'");
+                    }
+                    if (auto gauss = dynamic_cast<RooGaussian *>(pdf)) {
+                       setErrorIfVariable(param, gauss->getSigma().getVal());
+                    }
+                    constraints.add(*pdf);
+                 },
+              },
+              constraint);
+}
+
+// Create the ParamHistFunc of the gamma parameters, together with their constraints.
+ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname, std::string const &sysname,
+                         std::vector<HS3::ParameterRef> const &parnames, std::vector<double> const &vals,
+                         HS3::GammaConstraint const &constraint, RooArgSet &constraints, RooArgSet const &observables,
+                         double gammaMax, double minSigma, std::size_t nBins)
 {
    RooWorkspace &ws = *tool.workspace();
 
-   size_t n = std::max(vals.size(), parnames.size());
+   std::size_t n = std::max(vals.size(), parnames.size());
+   if (n == 0) {
+      n = nBins;
+   }
+   if (!parnames.empty() && !vals.empty() && parnames.size() != vals.size()) {
+      RooJSONFactoryWSTool::error("the modifier '" + sysname + "' has " + std::to_string(vals.size()) +
+                                  " values, but " + std::to_string(parnames.size()) + " parameters");
+   }
    RooArgList gammas;
    for (std::size_t i = 0; i < n; ++i) {
-      const std::string name = parnames.empty() ? defaultGammaName(sysname, i) : parnames[i];
-      auto *e = dynamic_cast<RooAbsReal *>(ws.obj(name.c_str()));
-      if (e)
-         gammas.add(*e);
-      else
-         gammas.add(getOrCreate<RooRealVar>(ws, name, 1., gammaMin, gammaMax));
+      const std::string name = parnames.empty() ? defaultGammaName(sysname, i) : parnames[i].name;
+      if (auto *existing = dynamic_cast<RooAbsReal *>(ws.obj(name))) {
+         gammas.add(*existing);
+      } else {
+         gammas.add(getOrCreate<RooRealVar>(ws, name, 1., defaultGammaMin, gammaMax));
+      }
    }
 
+   // Shape modifiers of the same name in a channel share the function, so they need the same parameters.
+   if (RooAbsArg *existing = ws.arg(phfname.c_str())) {
+      auto *existingPHF = dynamic_cast<ParamHistFunc *>(existing);
+      bool same = existingPHF && existingPHF->paramList().size() == gammas.size();
+      for (std::size_t i = 0; same && i < gammas.size(); ++i) {
+         same = &existingPHF->paramList()[i] == &gammas[i];
+      }
+      if (!same) {
+         RooJSONFactoryWSTool::error("the modifier '" + sysname + "' has other parameters than another modifier " +
+                                     "of this name in the channel");
+      }
+   }
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
 
-   if (vals.size() > 0) {
-      if (!createConstraints) {
-         configureConstrainedGammas(gammas, vals, minSigma);
-      } else if (constraintType != "Const") {
-         if (constraintType == "LogNormal" || constraintType == "Lognormal") {
-            RooJSONFactoryWSTool::error("unsupported constraint '" + constraintType +
-                                        "' for the gamma parameters of '" + sysname +
-                                        "', supported are \"Poisson\" and \"Gauss\"");
+   auto addGammaConstraints = [&](Constraint::Type type) {
+      for (auto const &term : createGammaConstraints(gammas, vals, minSigma, type).constraints) {
+         ws.import(*term, RooFit::RecycleConflictNodes(), RooFit::Silence());
+         constraints.add(*ws.pdf(term->GetName()));
+      }
+   };
+
+   if (auto const *pdfs = std::get_if<HS3::GammaConstraintPdfs>(&constraint)) {
+      if (pdfs->pdfs.size() != n) {
+         RooJSONFactoryWSTool::error("modifier '" + sysname + "' has " + std::to_string(pdfs->pdfs.size()) +
+                                     " constraints, but " + std::to_string(n) + " parameters");
+      }
+      for (auto const &pdfName : pdfs->pdfs) {
+         if (!pdfName) {
+            continue;
          }
-         auto constraintsInfo = createGammaConstraints(
-            gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
-         for (auto const &term : constraintsInfo.constraints) {
-            ws.import(*term, RooFit::RecycleConflictNodes(), RooFit::Silence());
-            constraints.add(*ws.pdf(term->GetName()));
+         auto *pdf = findNamedConstraint(tool, pdfName->name, sysname);
+         if (!pdf) {
+            RooJSONFactoryWSTool::error("unable to find definition of constraint '" + pdfName->name +
+                                        "' for modifier '" + sysname + "'");
          }
-      } else {
-         for (auto *gamma : static_range_cast<RooRealVar *>(gammas)) {
-            gamma->setConstant(true);
-         }
+         constraints.add(*pdf);
       }
    }
+
+   if (vals.empty()) {
+      return phf;
+   }
+
+   std::visit(HS3::overloaded{
+                 [&](HS3::Unconstrained) { configureConstrainedGammas(gammas, vals, minSigma); },
+                 [&](HS3::GammaConstraintPdfs const &) { configureConstrainedGammas(gammas, vals, minSigma); },
+                 [&](HS3::ConstantGammas) {
+                    for (auto *gamma : static_range_cast<RooRealVar *>(gammas)) {
+                       gamma->setConstant(true);
+                    }
+                 },
+                 [&](HS3::ConstraintType type) {
+                    switch (type) {
+                    case HS3::ConstraintType::Gauss: addGammaConstraints(Constraint::Gaussian); break;
+                    case HS3::ConstraintType::Poisson: addGammaConstraints(Constraint::Poisson); break;
+                    case HS3::ConstraintType::LogNormal:
+                       RooJSONFactoryWSTool::error(std::string("unsupported constraint '") + toString(type) +
+                                                   "' for the gamma parameters of '" + sysname +
+                                                   "', supported are \"Poisson\" and \"Gauss\"");
+                    }
+                 },
+              },
+              constraint);
 
    return phf;
-}
-
-/// Find the staterror modifier of a sample, or return nullptr if there is none.
-const JSONNode *findStaterror(const JSONNode &comp)
-{
-   if (comp.has_child("modifiers")) {
-      for (const auto &mod : comp["modifiers"].children()) {
-         if (mod["type"].val() == ::Literals::staterror)
-            return &mod;
-      }
-   }
-   return nullptr;
-}
-
-// The entries of the HS3 "constraints" of a modifier: the names of the constraint distributions, or std::nullopt for
-// unconstrained parameters (null entries).
-std::vector<std::optional<std::string>> constraintNames(const JSONNode &mod)
-{
-   std::vector<std::optional<std::string>> out;
-   auto *constraints = mod.find("constraints");
-   if (!constraints) {
-      return out;
-   }
-   if (!constraints->is_seq()) {
-      RooJSONFactoryWSTool::error("\"constraints\" of modifier '" + RooJSONFactoryWSTool::name(mod) +
-                                  "' must be a list");
-   }
-   for (const auto &entry : constraints->children()) {
-      out.push_back(entry.is_null() ? std::nullopt : std::make_optional(entry.val()));
-   }
-   return out;
-}
-
-// The parameter of a modifier with a single parameter, given in the HS3 "parameters" or in the legacy "parameter".
-std::optional<std::string> modifierParameter(const JSONNode &mod)
-{
-   if (auto *parameters = mod.find("parameters")) {
-      if (!parameters->is_seq() || parameters->num_children() != 1) {
-         RooJSONFactoryWSTool::error("\"parameters\" of the " + mod["type"].val() +
-                                     " modifier must be a list with one entry");
-      }
-      return parameters->child(0).val();
-   }
-   if (auto *parameter = mod.find("parameter")) {
-      return parameter->val();
-   }
-   return std::nullopt;
-}
-
-// The constraint distribution named in the HS3 "constraints" of a modifier with a single parameter. Returns an empty
-// string if the parameter is explicitly unconstrained, and std::nullopt if the modifier has no "constraints".
-std::optional<std::string> singleConstraintName(const JSONNode &mod)
-{
-   if (!mod.has_child("constraints")) {
-      return std::nullopt;
-   }
-   const auto names = constraintNames(mod);
-   if (names.size() != 1) {
-      RooJSONFactoryWSTool::error("\"constraints\" of the " + mod["type"].val() +
-                                  " modifier must have one entry per parameter");
-   }
-   return names.front().value_or("");
-}
-
-RooAbsPdf &
-getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, const std::string &sample)
-{
-   // HS3 references the constraint distributions by name.
-   if (auto name = singleConstraintName(mod); name && !name->empty()) {
-      auto *constraint = findNamedConstraint(tool, *name, sample);
-      if (!constraint) {
-         RooJSONFactoryWSTool::error("unable to find the constraint distribution '" + *name + "' of the modifier of '" +
-                                     param.GetName() + "'");
-      }
-      if (auto gauss = dynamic_cast<RooGaussian *>(constraint)) {
-         param.setError(gauss->getSigma().getVal());
-      }
-      return *constraint;
-   }
-
-   JSONNode const *constrName = mod.find("constraint_name");
-   if (constrName) {
-      auto constraint_name = constrName->val();
-      auto constraint = findNamedConstraint(tool, constraint_name, sample);
-      if (!constraint) {
-         RooJSONFactoryWSTool::error("unable to find definition of of constraint '" + constraint_name +
-                                     "' for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
-      }
-      if (auto gauss = dynamic_cast<RooGaussian *const>(constraint)) {
-         param.setError(gauss->getSigma().getVal());
-      }
-      return *constraint;
-   }
-
-   if (auto constr = mod.find("constraint")) {
-      std::string constraintValue = constr->val();
-      if (auto *constraint = findNamedConstraint(tool, constraintValue, sample)) {
-         if (auto gauss = dynamic_cast<RooGaussian *const>(constraint)) {
-            param.setError(gauss->getSigma().getVal());
-         }
-         return *constraint;
-      }
-
-      if (isLegacyConstraintType(constraintValue)) {
-         return createLegacyConstraint(tool, mod, param, constraintValue);
-      }
-
-      RooJSONFactoryWSTool::error("unable to resolve constraint value '" + constraintValue + "' for modifier '" +
-                                  RooJSONFactoryWSTool::name(mod) +
-                                  "': this looks like a legacy workspace where the 'constraint' field is neither a "
-                                  "constraint pdf name nor a supported legacy constraint type");
-   }
-
-   std::string constraint_type = "Gauss";
-   if (auto constrType = mod.find("constraint_type")) {
-      constraint_type = constrType->val();
-   }
-   if (isLegacyConstraintType(constraint_type)) {
-      return createLegacyConstraint(tool, mod, param, constraint_type);
-   }
-   RooJSONFactoryWSTool::error("unknown or invalid constraint for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
-}
-bool hasConstraint(const JSONNode &mod)
-{
-   if (auto name = singleConstraintName(mod)) {
-      return !name->empty();
-   }
-   return mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type");
-}
-
-// Create the constraint of a normsys or histosys modifier. Without a constraint, the parameter is unconstrained. Only
-// documents that predate HS3 v0.2 imply a unit Gaussian, like the ones written by the former HistFactory::JSONTool.
-void addSysConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, std::string const &sysname,
-                      std::string const &sample, bool &warnedUnconstrained, RooArgSet &constraints)
-{
-   if (!hasConstraint(mod) && !isHS3VersionBefore(tool.hs3VersionInput(), 0, 2)) {
-      if (!warnedUnconstrained) {
-         RooJSONFactoryWSTool::warning("RooFitHS3: modifier '" + sysname + "' of sample '" + sample +
-                                       "' has no constraint, so its parameter '" + param.GetName() +
-                                       "' is unconstrained. Older RooFit versions implied a unit Gaussian. Other "
-                                       "modifiers of this channel are not reported.");
-         warnedUnconstrained = true;
-      }
-      return;
-   }
-   constraints.add(getOrCreateConstraint(tool, mod, param, sample));
 }
 
 double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
@@ -751,401 +567,233 @@ double constraintRelError(RooAbsPdf const &constraint, RooAbsArg const &gamma)
    return std::numeric_limits<double>::quiet_NaN();
 }
 
-bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
-                      RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
-                      const std::optional<Interpolation> &defaultInterpolation,
-                      LegacyInterpolationDefault &legacyInterpolationDefault, bool &warnedUnconstrained,
-                      bool &warnedShapeSys, RooArgSet &constraints)
-{
-   RooWorkspace &ws = *tool.workspace();
+struct ChannelContext {
+   RooJSONFactoryWSTool &tool;
+   HS3::HistFactoryDist const &dist;
+   RooArgSet const &observables;
+   std::string fprefix;
+   std::string channelName;
+   std::size_t nBins;
+   RooAbsArg const *mcStatObject;
+   RooArgSet &constraints;
+};
 
-   std::string sampleName = RooJSONFactoryWSTool::name(p);
-   std::string prefixedName = fprefix + "_" + sampleName;
-
-   std::string channelName = fprefix;
-   erasePrefix(channelName, "model_");
-
-   if (!p.has_child("data")) {
-      RooJSONFactoryWSTool::error("sample '" + sampleName + "' does not define a 'data' key");
-   }
-
-   auto &hf = tool.wsEmplace<RooHistFunc>("hist_" + prefixedName, varlist, dh);
-   hf.SetTitle(RooJSONFactoryWSTool::name(p).c_str());
-
+// Collects what the modifiers of a sample contribute to the RooFit objects.
+struct SampleElements {
    RooArgList shapeElems;
    RooArgList normElems;
 
-   shapeElems.add(tool.wsEmplace<RooBinWidthFunction>(prefixedName + "_binWidth", hf, true));
+   RooArgList overallNps;
+   std::vector<double> overallLow;
+   std::vector<double> overallHigh;
+   std::vector<int> overallInterp;
 
-   if (findStaterror(p)) {
-      shapeElems.add(*mcStatObject);
+   RooArgList histNps;
+   RooArgList histoLo;
+   RooArgList histoHi;
+   std::vector<int> histoInterp;
+};
+
+void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHist &dh)
+{
+   RooJSONFactoryWSTool &tool = ctx.tool;
+   RooWorkspace &ws = *tool.workspace();
+
+   std::string const &sampleName = sample.name;
+   std::string prefixedName = ctx.fprefix + "_" + sampleName;
+
+   // The objects of a sample are not shared, so an existing object of the same name is a name clash.
+   auto newName = [&](std::string name) {
+      if (ws.arg(name.c_str())) {
+         RooJSONFactoryWSTool::error("the object '" + name + "' for sample '" + sampleName + "' of channel '" +
+                                     ctx.channelName + "' has the name of an existing object");
+      }
+      return name;
+   };
+
+   auto &hf = tool.wsEmplace<RooHistFunc>(newName("hist_" + prefixedName), ctx.observables, dh);
+   hf.SetTitle(sampleName.c_str());
+
+   SampleElements elems;
+   elems.shapeElems.add(tool.wsEmplace<RooBinWidthFunction>(newName(prefixedName + "_binWidth"), hf, true));
+
+   const bool hasStatError = std::any_of(sample.modifiers.begin(), sample.modifiers.end(),
+                                         [](auto const &m) { return std::holds_alternative<HS3::StatError>(m); });
+   if (hasStatError) {
+      elems.shapeElems.add(*ctx.mcStatObject);
    }
 
-   if (p.has_child("modifiers")) {
-      RooArgList overall_nps;
-      std::vector<double> overall_low;
-      std::vector<double> overall_high;
-      std::vector<int> overall_interp;
+   auto context = [&](const char *type, std::string const &name) {
+      return std::string("interpolation for ") + type + " modifier '" + name + "' in sample '" + sampleName +
+             "' of channel '" + ctx.channelName + "'";
+   };
 
-      RooArgList histNps;
-      RooArgList histoLo;
-      RooArgList histoHi;
-      std::vector<int> histoInterp;
-
-      int idx = 0;
-      for (const auto &mod : p["modifiers"].children()) {
-         std::string const &modtype = mod["type"].val();
-         const std::optional<std::string> parameter =
-            modtype == "normfactor" || modtype == "normsys" || modtype == "histosys" ? modifierParameter(mod)
-                                                                                     : std::nullopt;
-         std::string const &sysname =
-            mod.has_child("name") ? mod["name"].val() : parameter.value_or("syst_" + std::to_string(idx));
-         ++idx;
-         if (modtype == "staterror") {
-            // this is dealt with at a different place, ignore it for now
-         } else if (modtype == "normfactor") {
-            // The "name" is only a label of the modifier, the parameter is given by "parameters" if present.
-            RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, parameter.value_or(sysname), 1., -3, 5);
-            constrParam.setError(0.0);
-            normElems.add(constrParam);
-            if (hasConstraint(mod)) {
+   for (HS3::Modifier const &modifier : sample.modifiers) {
+      std::visit(
+         HS3::overloaded{
+            [&](HS3::StatError const &) {
+               // this is dealt with at a different place, ignore it for now
+            },
+            [&](HS3::NormFactor const &mod) {
+               RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 1., -3, 5, mod.name);
+               setErrorIfVariable(param, 0.0);
+               elems.normElems.add(param);
                // for norm factors, constraints are optional
-               constraints.add(getOrCreateConstraint(tool, mod, constrParam, sampleName));
-            }
-         } else if (modtype == "normsys") {
-            std::string parname(parameter.value_or("alpha_" + sysname));
-            auto &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
-            overall_nps.add(par);
-            auto &data = mod["data"];
-            const std::string context = "interpolation for normsys modifier '" + sysname + "' in sample '" +
-                                        sampleName + "' of channel '" + channelName + "'";
-            const int interp = interpolationCode(mod, defaultInterpolation, InterpolationClass::Flexible, context,
-                                                 legacyInterpolationDefault);
-            double low = data["lo"].val_double();
-            double high = data["hi"].val_double();
+               addConstraint(tool, mod.constraint, param, 1.0, mod.name, sampleName, ctx.constraints);
+            },
+            [&](HS3::NormSys const &mod) {
+               RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
+               elems.overallNps.add(param);
+               const int interp = interpolationCode(mod.interpolation, ctx.dist.defaultInterpolation,
+                                                    InterpolationClass::Flexible, context("normsys", mod.name));
+               double low = mod.lo;
+               double high = mod.hi;
 
-            // the below contains a a hack to cut off variations that go below 0
-            // This is needed because FlexibleInterpVar code 4 interpolates in log-space. Hence, values <= 0 result in
-            // NaN, which propagates throughout the model and causes evaluations to fail. If you know a nicer way to
-            // solve this, please go ahead and fix the lines below.
-            if (interp == 4 && low <= 0)
-               low = std::numeric_limits<double>::epsilon();
-            if (interp == 4 && high <= 0)
-               high = std::numeric_limits<double>::epsilon();
+               // the below contains a a hack to cut off variations that go below 0
+               // This is needed because FlexibleInterpVar code 4 interpolates in log-space. Hence, values <= 0 result
+               // in NaN, which propagates throughout the model and causes evaluations to fail. If you know a nicer way
+               // to solve this, please go ahead and fix the lines below.
+               if (interp == 4 && low <= 0)
+                  low = std::numeric_limits<double>::epsilon();
+               if (interp == 4 && high <= 0)
+                  high = std::numeric_limits<double>::epsilon();
 
-            overall_low.push_back(low);
-            overall_high.push_back(high);
-            overall_interp.push_back(interp);
+               elems.overallLow.push_back(low);
+               elems.overallHigh.push_back(high);
+               elems.overallInterp.push_back(interp);
 
-            addSysConstraint(tool, mod, par, sysname, sampleName, warnedUnconstrained, constraints);
-         } else if (modtype == "histosys") {
-            std::string parname(parameter.value_or("alpha_" + sysname));
-            auto &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
-            histNps.add(par);
-            auto &data = mod["data"];
-            histoLo.add(tool.wsEmplace<RooHistFunc>(
-               sysname + "Low_" + prefixedName, varlist,
-               RooJSONFactoryWSTool::readBinnedData(data["lo"], sysname + "Low_" + prefixedName, varlist)));
-            histoHi.add(tool.wsEmplace<RooHistFunc>(
-               sysname + "High_" + prefixedName, varlist,
-               RooJSONFactoryWSTool::readBinnedData(data["hi"], sysname + "High_" + prefixedName, varlist)));
-            const std::string context = "interpolation for histosys modifier '" + sysname + "' in sample '" +
-                                        sampleName + "' of channel '" + channelName + "'";
-            histoInterp.push_back(interpolationCode(mod, defaultInterpolation, InterpolationClass::Piecewise, context,
-                                                    legacyInterpolationDefault));
-            addSysConstraint(tool, mod, par, sysname, sampleName, warnedUnconstrained, constraints);
-         } else if (modtype == "shapesys" || modtype == "shapefactor") {
-            // HS3 has a single per-bin modifier type, "shapefactor", whose parameters are constrained by the
-            // distributions in "constraints", if given. "shapesys" is a deprecated alias.
-            if (modtype == "shapesys" && !isHS3VersionBefore(tool.hs3VersionInput(), 0, 3) && !warnedShapeSys) {
-               RooJSONFactoryWSTool::warning("RooFitHS3: the modifier type \"shapesys\" is deprecated, please use "
-                                             "\"shapefactor\" instead.");
-               warnedShapeSys = true;
-            }
-            std::vector<double> vals;
-            if (mod["data"].has_child("vals")) {
-               for (const auto &v : mod["data"]["vals"].children()) {
-                  vals.push_back(v.val_double());
-               }
-            }
-            std::vector<std::string> parnames;
-            for (const auto &v : mod["parameters"].children()) {
-               parnames.push_back(v.val());
-            }
-            if (vals.empty() && parnames.empty()) {
-               RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname +
-                                           "' with neither values nor parameters!");
-            }
-            std::string constraint = "unknown";
-            std::vector<RooAbsPdf *> constraintPdfs;
-            bool const hasConstraintList = mod.has_child("constraints");
-            if (hasConstraintList) {
-               for (const auto &v : mod["constraints"].children()) {
-                  if (v.is_null()) {
-                     constraintPdfs.push_back(nullptr);
-                  } else {
-                     std::string constraintName = v.val();
-                     auto *constraintPdf = findNamedConstraint(tool, constraintName, sampleName);
-                     if (!constraintPdf) {
-                        RooJSONFactoryWSTool::error("unable to find definition of constraint '" + constraintName +
-                                                    "' for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
-                     }
-                     constraintPdfs.push_back(constraintPdf);
-                  }
-               }
-               std::size_t const nGammas = std::max(vals.size(), parnames.size());
-               if (constraintPdfs.size() != nGammas) {
-                  std::stringstream ss;
-                  ss << "modifier '" << RooJSONFactoryWSTool::name(mod) << "' has " << constraintPdfs.size()
-                     << " constraints, but " << nGammas << " parameters";
-                  RooJSONFactoryWSTool::error(ss.str());
-               }
-            } else if (mod.has_child("constraint_type")) {
-               constraint = mod["constraint_type"].val();
-            } else if (mod.has_child("constraint")) {
-               std::string constraintValue = mod["constraint"].val();
-               if (isLegacyConstraintType(constraintValue)) {
-                  constraint = constraintValue;
+               addConstraint(tool, mod.constraint, param, 0.0, mod.name, sampleName, ctx.constraints);
+            },
+            [&](HS3::HistoSys const &mod) {
+               RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
+               elems.histNps.add(param);
+               auto addVariation = [&](RooArgList &list, HS3::HistoSysVariation const &variation, const char *suffix) {
+                  const std::string name = newName(mod.name + suffix + prefixedName);
+                  list.add(
+                     tool.wsEmplace<RooHistFunc>(name, ctx.observables,
+                                                 HS3::createDataHist(name, ctx.observables, variation.contents,
+                                                                     variation.errors ? &*variation.errors : nullptr)));
+               };
+               addVariation(elems.histoLo, mod.lo, "Low_");
+               addVariation(elems.histoHi, mod.hi, "High_");
+               elems.histoInterp.push_back(interpolationCode(mod.interpolation, ctx.dist.defaultInterpolation,
+                                                             InterpolationClass::Piecewise,
+                                                             context("histosys", mod.name)));
+               addConstraint(tool, mod.constraint, param, 0.0, mod.name, sampleName, ctx.constraints);
+            },
+            [&](HS3::ShapeSys const &mod) {
+               const bool constrained = std::visit(
+                  HS3::overloaded{[](HS3::Unconstrained) { return false; }, [](HS3::ConstantGammas) { return false; },
+                                  [&](HS3::ConstraintType) { return !mod.vals.empty(); },
+                                  [](HS3::GammaConstraintPdfs const &constraints) {
+                                     return std::any_of(constraints.pdfs.begin(), constraints.pdfs.end(),
+                                                        [](auto const &pdf) { return pdf.has_value(); });
+                                  }},
+                  mod.constraint);
+               // Follow the naming of HistFactory: "<channel>_<name>_ShapeSys" for constrained and
+               // "<channel>_<name>_shapeFactor" for free parameters.
+               const std::string funcName =
+                  ctx.channelName + "_" + mod.name + (constrained ? "_ShapeSys" : "_shapeFactor");
+               elems.shapeElems.add(createPHF(tool, funcName, mod.name, mod.parameters, mod.vals, mod.constraint,
+                                              ctx.constraints, ctx.observables, defaultShapeSysGammaMax,
+                                              minShapeUncertainty, ctx.nBins));
+            },
+            [&](HS3::CustomModifier const &mod) {
+               // The function can come later in the document.
+               RooAbsReal *obj = tool.request<RooAbsReal>(mod.name, ctx.channelName);
+               if (obj->dependsOn(ctx.observables)) {
+                  elems.shapeElems.add(*obj);
                } else {
-                  RooJSONFactoryWSTool::error("unable to resolve constraint value '" + constraintValue +
-                                              "' for modifier '" + RooJSONFactoryWSTool::name(mod) +
-                                              "': this looks like a legacy workspace where the 'constraint' field is "
-                                              "not a supported legacy constraint type");
+                  elems.normElems.add(*obj);
                }
-            }
-            // Without "constraints", only the legacy constraint keys, or documents before HS3 0.3, make RooFit
-            // create constraints from "data.vals". Otherwise, the parameters are free.
-            const bool legacyConstraint = mod.has_child("constraint_type") || mod.has_child("constraint");
-            const bool createConstraints =
-               !hasConstraintList && (legacyConstraint || isHS3VersionBefore(tool.hs3VersionInput(), 0, 3));
-            if (!hasConstraintList && !createConstraints && !vals.empty()) {
-               oocoutW(nullptr, ObjectHandling)
-                  << "RooFitHS3: the \"data.vals\" of modifier '" << sysname << "' of sample '" << sampleName
-                  << "' are ignored, because it names no constraints, so its "
-                  << "parameters are free" << std::endl;
-               vals.clear();
-            }
-            const bool constrained = createConstraints ? !vals.empty() && constraint != "Const"
-                                                       : std::any_of(constraintPdfs.begin(), constraintPdfs.end(),
-                                                                     [](RooAbsPdf *pdf) { return pdf != nullptr; });
-            // Follow the naming of HistFactory: "<channel>_<name>_ShapeSys" for constrained and
-            // "<channel>_<name>_shapeFactor" for free parameters.
-            const std::string funcName = channelName + "_" + sysname + (constrained ? "_ShapeSys" : "_shapeFactor");
-            shapeElems.add(createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint,
-                                     defaultGammaMin, defaultShapeSysGammaMax, minShapeUncertainty, createConstraints));
-            for (auto *constraintPdf : constraintPdfs) {
-               if (constraintPdf) {
-                  constraints.add(*constraintPdf);
-               }
-            }
-         } else if (modtype == "custom") {
-            RooAbsReal *obj = ws.function(sysname);
-            if (!obj) {
-               RooJSONFactoryWSTool::error("unable to find custom modifier '" + sysname + "'");
-            }
-            if (obj->dependsOn(varlist)) {
-               shapeElems.add(*obj);
-            } else {
-               normElems.add(*obj);
-            }
-         } else {
-            RooJSONFactoryWSTool::error("modifier '" + sysname + "' of unknown type '" + modtype + "'");
+            },
+         },
+         modifier);
+   }
+
+   if (!elems.overallNps.empty()) {
+      std::string interpName = newName(sampleName + "_" + ctx.channelName + "_epsilon");
+      elems.normElems.add(tool.wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(
+         interpName, elems.overallNps, 1., elems.overallLow, elems.overallHigh, elems.overallInterp));
+   }
+   if (!elems.histNps.empty()) {
+      auto &v = tool.wsEmplace<PiecewiseInterpolation>(newName("histoSys_" + prefixedName), hf, elems.histoLo,
+                                                       elems.histoHi, elems.histNps, elems.histoInterp);
+      v.setPositiveDefinite();
+      elems.shapeElems.add(v);
+   } else {
+      elems.shapeElems.add(hf);
+   }
+
+   tool.wsEmplace<RooProduct>(newName(prefixedName + "_shapes"), elems.shapeElems);
+   if (!elems.normElems.empty()) {
+      tool.wsEmplace<RooProduct>(newName(prefixedName + "_scaleFactors"), elems.normElems);
+   } else {
+      ws.factory("RooConstVar::" + newName(prefixedName + "_scaleFactors") + "(1.)");
+   }
+}
+
+// The constraint of the gamma parameters of the staterror modifiers. Without one, the gamma parameters are free.
+HS3::GammaConstraint statErrorConstraint(HS3::HistFactoryDist const &dist)
+{
+   // The constraint distributions named by a staterror modifier take precedence over a constraint type, and a type
+   // given on a staterror modifier over the channel-level setting.
+   HS3::GammaConstraint const *modifierConstraint = nullptr;
+   for (auto const &sample : dist.samples) {
+      for (auto const &modifier : sample.modifiers) {
+         auto const *statError = std::get_if<HS3::StatError>(&modifier);
+         if (!statError) {
+            continue;
+         }
+         if (std::holds_alternative<HS3::GammaConstraintPdfs>(statError->constraint)) {
+            return statError->constraint;
+         }
+         if (!modifierConstraint && !std::holds_alternative<HS3::Unconstrained>(statError->constraint)) {
+            modifierConstraint = &statError->constraint;
          }
       }
+   }
+   return modifierConstraint ? *modifierConstraint : dist.statError.constraint;
+}
 
-      std::string interpName = sampleName + "_" + channelName + "_epsilon";
-      if (!overall_nps.empty()) {
-         auto &v = tool.wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(interpName, overall_nps, 1., overall_low,
-                                                                            overall_high, overall_interp);
-         normElems.add(v);
-      }
-      if (!histNps.empty()) {
-         auto &v = tool.wsEmplace<PiecewiseInterpolation>("histoSys_" + prefixedName, hf, histoLo, histoHi, histNps,
-                                                          histoInterp);
-         v.setPositiveDefinite();
-         shapeElems.add(v);
-      } else {
-         shapeElems.add(hf);
+// Reject constraints of staterror modifiers that make no sense for gamma parameters.
+void checkStatErrorConstraints(HS3::HistFactoryDist const &dist, std::string const &name)
+{
+   for (auto const &sample : dist.samples) {
+      for (auto const &modifier : sample.modifiers) {
+         auto const *statError = std::get_if<HS3::StatError>(&modifier);
+         auto const *type = statError ? std::get_if<HS3::ConstraintType>(&statError->constraint) : nullptr;
+         if (type && *type == HS3::ConstraintType::LogNormal) {
+            RooJSONFactoryWSTool::error(std::string("unsupported constraint '") + toString(*type) +
+                                        "' of the staterror modifier in channel '" + name +
+                                        "', supported are \"Poisson\" and \"Gauss\"");
+         }
       }
    }
-
-   tool.wsEmplace<RooProduct>(prefixedName + "_shapes", shapeElems);
-   if (!normElems.empty()) {
-      tool.wsEmplace<RooProduct>(prefixedName + "_scaleFactors", normElems);
-   } else {
-      ws.factory("RooConstVar::" + prefixedName + "_scaleFactors(1.)");
-   }
-
-   return true;
 }
 
 class HistFactoryImporter : public RooFit::JSONIO::Importer {
 public:
+   // This is only used for HistFactory distributions that don't come with a document. The upgrade rewrites the JSON, so
+   // it has to work on a copy.
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name = RooJSONFactoryWSTool::name(p);
       if (!p.has_child("samples")) {
          RooJSONFactoryWSTool::error("no samples in '" + name + "', skipping.");
       }
-      double statErrThresh = 0;
-      std::string statErrType = "Poisson";
-      std::optional<Interpolation> defaultInterpolation;
-      if (p.has_child("default_interpolation")) {
-         defaultInterpolation =
-            readInterpolation(p["default_interpolation"], "default_interpolation of channel '" + name + "'");
-      }
-      if (p.has_child(::Literals::staterror)) {
-         auto &staterr = p[::Literals::staterror];
-         if (staterr.has_child("relThreshold"))
-            statErrThresh = staterr["relThreshold"].val_double();
-         if (staterr.has_child("constraint_type"))
-            statErrType = staterr["constraint_type"].val();
-      }
-      std::vector<double> sumW;
-      std::vector<double> sumW2;
-      std::vector<std::string> gammaParnames;
-      std::string modifierStatErrType;
-      std::optional<std::vector<std::optional<std::string>>> statErrConstraintNames;
-      RooArgSet observables = RooJSONFactoryWSTool::readAxes(p);
+      std::stringstream ss;
+      p.writeJSON(ss);
+      std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(ss.str());
 
-      std::string fprefix = name;
+      HS3::Version version;
+      HS3::parseVersion(tool->hs3VersionInput(), version);
 
-      std::vector<std::unique_ptr<RooDataHist>> data;
-      for (const auto &comp : p["samples"].children()) {
-         std::unique_ptr<RooDataHist> dh = RooJSONFactoryWSTool::readBinnedData(
-            comp["data"], fprefix + "_" + RooJSONFactoryWSTool::name(comp) + "_dataHist", observables);
-         size_t nbins = dh->numEntries();
-
-         if (const JSONNode *staterror = findStaterror(comp)) {
-            if (sumW.empty()) {
-               sumW.resize(nbins);
-               sumW2.resize(nbins);
-            }
-            // A sample without "errors" contributes no statistical uncertainty in HS3. Before HS3 0.3, RooFit
-            // assumed Poisson uncertainties for it.
-            const bool useWeightSquared =
-               comp["data"].has_child("errors") || isHS3VersionBefore(tool->hs3VersionInput(), 0, 3);
-            for (size_t i = 0; i < nbins; ++i) {
-               sumW[i] += dh->weight(i);
-               sumW2[i] += useWeightSquared ? dh->weightSquared(i) : 0.;
-            }
-            if (gammaParnames.empty()) {
-               if (auto staterrorParams = staterror->find("parameters")) {
-                  for (const auto &v : staterrorParams->children()) {
-                     gammaParnames.push_back(v.val());
-                  }
-               }
-            }
-            // HS3 names the constraint distributions of the gammas in "constraints".
-            if (!statErrConstraintNames && staterror->has_child("constraints")) {
-               statErrConstraintNames = constraintNames(*staterror);
-            }
-            // The legacy constraint type given on the staterror modifier takes precedence over the channel-level
-            // setting.
-            if (modifierStatErrType.empty()) {
-               // ROOT 6.38 and 6.40.00 wrote "constraint_type".
-               auto constraint = staterror->find("constraint");
-               if (!constraint) {
-                  constraint = staterror->find("constraint_type");
-               }
-               if (constraint) {
-                  modifierStatErrType = constraint->val();
-                  if (modifierStatErrType != "Poisson" && modifierStatErrType != "Gauss") {
-                     RooJSONFactoryWSTool::error("unsupported constraint '" + modifierStatErrType +
-                                                 "' of the staterror modifier in channel '" + name +
-                                                 "', supported are \"Poisson\" and \"Gauss\"");
-                  }
-               }
-            }
-         }
-         data.emplace_back(std::move(dh));
-      }
-
-      if (!modifierStatErrType.empty()) {
-         statErrType = modifierStatErrType;
-      }
-      // Without any constraint information, the gammas are unconstrained in HS3. Older documents relied on RooFit
-      // creating Poisson constraints.
-      const bool legacyStatErrConstraints = statErrConstraintNames || !modifierStatErrType.empty() ||
-                                            p.has_child(::Literals::staterror) ||
-                                            isHS3VersionBefore(tool->hs3VersionInput(), 0, 3);
-
-      RooAbsArg *mcStatObject = nullptr;
-      RooArgSet constraints;
-      if (!sumW.empty()) {
-         std::string channelName = name;
-         erasePrefix(channelName, "model_");
-
-         std::vector<double> errs(sumW.size());
-         for (size_t i = 0; i < sumW.size(); ++i) {
-            if (sumW[i] == 0.) {
-               errs[i] = 0.;
-               continue;
-            }
-            errs[i] = std::sqrt(sumW2[i]) / sumW[i];
-            // avoid negative sigma. This NP will be set constant anyway later
-            errs[i] = std::max(errs[i], 0.);
-         }
-
-         const bool createConstraints = !statErrConstraintNames && legacyStatErrConstraints;
-         mcStatObject = &createPHF("mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs, *tool,
-                                   constraints, observables, statErrType, defaultGammaMin, defaultStatErrorGammaMax,
-                                   statErrThresh, createConstraints);
-         if (statErrConstraintNames) {
-            if (statErrConstraintNames->size() != errs.size()) {
-               RooJSONFactoryWSTool::error("the staterror modifier of channel '" + name + "' has " +
-                                           std::to_string(statErrConstraintNames->size()) + " constraints, but " +
-                                           std::to_string(errs.size()) + " parameters");
-            }
-            for (auto const &constraintName : *statErrConstraintNames) {
-               if (!constraintName) {
-                  continue;
-               }
-               auto *constraint = findNamedConstraint(*tool, *constraintName, name);
-               if (!constraint) {
-                  RooJSONFactoryWSTool::error("unable to find the constraint distribution '" + *constraintName +
-                                              "' of the staterror modifier of channel '" + name + "'");
-               }
-               constraints.add(*constraint);
-            }
-         }
-      }
-
-      LegacyInterpolationDefault legacyInterpolationDefault;
-      legacyInterpolationDefault.allowed = isHS3VersionBefore(tool->hs3VersionInput(), 0, 3);
-      bool warnedUnconstrained = false;
-      bool warnedShapeSys = false;
-
-      int idx = 0;
-      RooArgList funcs;
-      RooArgList coefs;
-      for (const auto &comp : p["samples"].children()) {
-         importHistSample(*tool, *data[idx], observables, mcStatObject, fprefix, comp, defaultInterpolation,
-                          legacyInterpolationDefault, warnedUnconstrained, warnedShapeSys, constraints);
-         ++idx;
-
-         std::string const &compName = RooJSONFactoryWSTool::name(comp);
-         funcs.add(*tool->request<RooAbsReal>(fprefix + "_" + compName + "_shapes", name));
-         coefs.add(*tool->request<RooAbsReal>(fprefix + "_" + compName + "_scaleFactors", name));
-      }
-
-      // A histfactory_dist is a product of Poisson distributions of the bin counts. RooFit's binned likelihood
-      // computes exactly that (it differs from the event-wise likelihood only by a constant), and binned generation
-      // generates bin counts, so both are enabled, as HistFactory does by default.
-      auto enableBinned = [](RooRealSumPdf &sum) {
-         sum.setAttribute("BinnedLikelihood");
-         sum.setAttribute("GenerateBinned");
-      };
-      if (constraints.empty()) {
-         enableBinned(tool->wsEmplace<RooRealSumPdf>(name, funcs, coefs, true));
-      } else {
-         std::string sumName = name + "_model";
-         erasePrefix(sumName, "model_");
-         auto &sum = tool->wsEmplace<RooRealSumPdf>(sumName, funcs, coefs, true);
-         sum.SetTitle(name.c_str());
-         enableBinned(sum);
-         tool->wsEmplace<RooProdPdf>(name, constraints, RooFit::Conditional(sum, observables));
-      }
+      HS3::Diagnostics diagnostics;
+      HS3::upgradeHistFactoryDist(tree->rootnode(), version, diagnostics);
+      HS3::HistFactoryDist dist = HS3::parseHistFactoryDist(tree->rootnode(), diagnostics);
+      HS3::report(diagnostics);
+      HS3::buildHistFactoryDist(*tool, name, dist);
       return true;
    }
 };
@@ -2330,3 +1978,103 @@ STATIC_EXECUTE([]() {
 });
 
 } // namespace
+
+void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist)
+{
+   checkStatErrorConstraints(dist, name);
+
+   RooArgSet observables = createObservables(dist.axes);
+
+   std::vector<std::unique_ptr<RooDataHist>> data;
+   data.reserve(dist.samples.size());
+   std::vector<double> sumW;
+   std::vector<double> sumW2;
+   std::vector<ParameterRef> gammaParnames;
+   for (auto const &sample : dist.samples) {
+      auto dh = createDataHist(name + "_" + sample.name + "_dataHist", observables, sample.contents,
+                               sample.errors ? &*sample.errors : nullptr);
+      const std::size_t nbins = dh->numEntries();
+
+      auto found = std::find_if(sample.modifiers.begin(), sample.modifiers.end(),
+                                [](auto const &m) { return std::holds_alternative<StatError>(m); });
+      if (found != sample.modifiers.end()) {
+         if (sumW.empty()) {
+            sumW.resize(nbins);
+            sumW2.resize(nbins);
+         }
+         // A sample without "errors" contributes no statistical uncertainty, unless Poisson uncertainties are implied.
+         const bool hasErrors = sample.errors || dist.statError.impliedPoissonErrors;
+         for (std::size_t i = 0; i < nbins; ++i) {
+            sumW[i] += dh->weight(i);
+            sumW2[i] += hasErrors ? dh->weightSquared(i) : 0.;
+         }
+         if (gammaParnames.empty()) {
+            gammaParnames = std::get<StatError>(*found).parameters;
+         }
+      }
+      data.emplace_back(std::move(dh));
+   }
+
+   std::string channelName = name;
+   erasePrefix(channelName, "model_");
+
+   std::size_t nBins = 1;
+   for (auto const &axis : dist.axes) {
+      nBins *= std::visit(overloaded{[](RegularBinning const &b) { return static_cast<std::size_t>(b.nbins); },
+                                     [](EdgesBinning const &b) { return b.edges.size() - 1; }},
+                          axis.binning);
+   }
+
+   RooAbsArg *mcStatObject = nullptr;
+   RooArgSet constraints;
+   if (!sumW.empty()) {
+      std::vector<double> errs(sumW.size());
+      for (std::size_t i = 0; i < sumW.size(); ++i) {
+         if (sumW[i] == 0.) {
+            errs[i] = 0.;
+            continue;
+         }
+         errs[i] = std::sqrt(sumW2[i]) / sumW[i];
+         // avoid negative sigma. This NP will be set constant anyway later
+         errs[i] = std::max(errs[i], 0.);
+      }
+
+      mcStatObject = &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
+                                statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
+                                dist.statError.relThreshold, nBins);
+   }
+
+   ChannelContext ctx{tool, dist, observables, name, channelName, nBins, mcStatObject, constraints};
+
+   RooArgList funcs;
+   RooArgList coefs;
+   for (std::size_t i = 0; i < dist.samples.size(); ++i) {
+      HS3::Sample const &sample = dist.samples[i];
+      buildSample(ctx, sample, *data[i]);
+      funcs.add(*tool.request<RooAbsReal>(name + "_" + sample.name + "_shapes", name));
+      coefs.add(*tool.request<RooAbsReal>(name + "_" + sample.name + "_scaleFactors", name));
+   }
+
+   // A histfactory_dist is a product of Poisson distributions of the bin counts. RooFit's binned likelihood
+   // computes exactly that (it differs from the event-wise likelihood only by a constant), and binned generation
+   // generates bin counts, so both are enabled, as HistFactory does by default.
+   auto enableBinned = [](RooRealSumPdf &sum) {
+      sum.setAttribute("BinnedLikelihood");
+      sum.setAttribute("GenerateBinned");
+   };
+   if (constraints.empty()) {
+      enableBinned(tool.wsEmplace<RooRealSumPdf>(name, funcs, coefs, true));
+   } else {
+      std::string sumName = name + "_model";
+      erasePrefix(sumName, "model_");
+      auto &sum = tool.wsEmplace<RooRealSumPdf>(sumName, funcs, coefs, true);
+      sum.SetTitle(name.c_str());
+      enableBinned(sum);
+      tool.wsEmplace<RooProdPdf>(name, constraints, RooFit::Conditional(sum, observables));
+   }
+}
+
+bool RooFit::HS3::isBuiltinHistFactoryImporter(RooFit::JSONIO::Importer const &importer)
+{
+   return dynamic_cast<HistFactoryImporter const *>(&importer) != nullptr;
+}

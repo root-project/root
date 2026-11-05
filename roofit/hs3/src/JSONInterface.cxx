@@ -210,6 +210,11 @@ void JSONNode::clear()
    json(_value).clear();
 }
 
+void JSONNode::erase(std::string const &key)
+{
+   json(_value).erase(key);
+}
+
 std::string JSONNode::key() const
 {
    return _key;

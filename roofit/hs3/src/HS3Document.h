@@ -48,6 +48,14 @@ inline bool operator<(Version const &l, Version const &r)
    return l.patch < r.patch;
 }
 
+/// Combines lambdas into one visitor for std::visit(). The compiler complains about the alternatives without lambda.
+template <class... Ts>
+struct overloaded : Ts... {
+   using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
 /// A name that says what it refers to, so that for example a DataRef can't be used as a DomainRef.
 template <class Tag>
 struct Ref {
@@ -192,9 +200,177 @@ struct GenericObject {
    Detail::JSONNode const *node = nullptr;
 };
 
+enum class InterpolationType {
+   Add,
+   Mult
+};
+
+enum class InterpolationFunction {
+   Poly1,
+   Poly2,
+   Poly6,
+   Exp
+};
+
+/// How a modifier of a HistFactory distribution interpolates and extrapolates its effect.
+struct Interpolation {
+   InterpolationType type = InterpolationType::Add;
+   InterpolationFunction in = InterpolationFunction::Poly1;
+   std::optional<InterpolationFunction> out; ///< If not set, the function inside the bounds is used outside as well.
+};
+
+inline bool operator==(Interpolation const &l, Interpolation const &r)
+{
+   return l.type == r.type && l.in == r.in && l.out == r.out;
+}
+inline bool operator!=(Interpolation const &l, Interpolation const &r)
+{
+   return !(l == r);
+}
+inline bool operator<(Interpolation const &l, Interpolation const &r)
+{
+   if (l.type != r.type) {
+      return l.type < r.type;
+   }
+   if (l.in != r.in) {
+      return l.in < r.in;
+   }
+   return l.out < r.out;
+}
+
+inline constexpr Interpolation additivePiecewiseLinear{InterpolationType::Add, InterpolationFunction::Poly1,
+                                                       std::nullopt};
+inline constexpr Interpolation multiplicativePiecewiseExponential{InterpolationType::Mult, InterpolationFunction::Exp,
+                                                                  std::nullopt};
+inline constexpr Interpolation additiveQuadraticLinear{InterpolationType::Add, InterpolationFunction::Poly2,
+                                                       InterpolationFunction::Poly1};
+inline constexpr Interpolation additivePolynomialLinear{InterpolationType::Add, InterpolationFunction::Poly6,
+                                                        InterpolationFunction::Poly1};
+inline constexpr Interpolation multiplicativePolynomialExponential{
+   InterpolationType::Mult, InterpolationFunction::Poly6, InterpolationFunction::Exp};
+inline constexpr Interpolation multiplicativePolynomialLinear{InterpolationType::Mult, InterpolationFunction::Poly6,
+                                                              InterpolationFunction::Poly1};
+
+char const *toString(InterpolationType type);
+char const *toString(InterpolationFunction function);
+
+/// The RooFit classes that implement the interpolations, which encode them with integer codes.
+enum class InterpolationClass {
+   Piecewise,
+   Flexible
+};
+
+/// The interpolation for an integer code, or nothing if the class doesn't support the code.
+std::optional<Interpolation> interpolationFromCode(int code, InterpolationClass interpolationClass);
+/// The integer code of an interpolation, or nothing if the class can't represent the interpolation.
+std::optional<int> codeFromInterpolation(Interpolation const &interpolation, InterpolationClass interpolationClass);
+
+/// The constraint types that older documents named, for which RooFit creates the constraint terms.
+enum class ConstraintType {
+   Gauss,
+   Poisson,
+   LogNormal
+};
+
+char const *toString(ConstraintType type);
+
+/// The parameter of the modifier is not constrained.
+struct Unconstrained {};
+
+/// The constraint term is a distribution of the document, named in "constraints".
+struct ConstraintPdf {
+   DistributionRef pdf;
+};
+
+using Constraint = std::variant<Unconstrained, ConstraintType, ConstraintPdf>;
+
+struct NormFactor {
+   std::string name;
+   ParameterRef parameter;
+   Constraint constraint;
+};
+
+struct NormSys {
+   std::string name;
+   ParameterRef parameter;
+   double hi = 1.0;
+   double lo = 1.0;
+   Constraint constraint;
+   std::optional<Interpolation> interpolation;
+};
+
+struct HistoSysVariation {
+   std::vector<double> contents;
+   std::optional<std::vector<double>> errors; ///< Not in the standard, but older versions of RooFit read them.
+};
+
+struct HistoSys {
+   std::string name;
+   ParameterRef parameter;
+   HistoSysVariation hi;
+   HistoSysVariation lo;
+   Constraint constraint;
+   std::optional<Interpolation> interpolation;
+};
+
+/// The gamma parameters are constant, which is a RooFit extension.
+struct ConstantGammas {};
+
+/// Every gamma parameter has its own constraint term, or none, as named in "constraints".
+struct GammaConstraintPdfs {
+   std::vector<std::optional<DistributionRef>> pdfs;
+};
+
+using GammaConstraint = std::variant<Unconstrained, ConstraintType, ConstantGammas, GammaConstraintPdfs>;
+
+/// Scales each bin by its own parameter. The modifier type "shapesys" is a deprecated alias of "shapefactor".
+struct ShapeSys {
+   std::string name;
+   std::vector<ParameterRef> parameters; ///< If empty, the parameters are named after the modifier.
+   std::vector<double> vals;
+   GammaConstraint constraint;
+};
+
+/// Scales each bin by a parameter, that is constrained by the statistical uncertainty of all samples that have this
+/// modifier.
+struct StatError {
+   std::string name;
+   std::vector<ParameterRef> parameters; ///< If empty, the parameters are named after the channel.
+   GammaConstraint constraint;
+};
+
+/// Multiplies the sample with a function of the document.
+struct CustomModifier {
+   std::string name;
+};
+
+using Modifier = std::variant<NormFactor, NormSys, HistoSys, ShapeSys, StatError, CustomModifier>;
+
+struct Sample {
+   std::string name;
+   std::vector<double> contents;
+   std::optional<std::vector<double>> errors;
+   std::vector<Modifier> modifiers;
+};
+
+/// Settings of the staterror modifiers that apply to the whole channel. This is a RooFit extension.
+struct StatErrorConfig {
+   double relThreshold = 0.0;
+   GammaConstraint constraint;
+   /// Samples without "errors" have Poisson uncertainties, as in documents before HS3 0.3.
+   bool impliedPoissonErrors = false;
+};
+
+struct HistFactoryDist {
+   std::vector<BinnedAxis> axes;
+   std::optional<Interpolation> defaultInterpolation;
+   std::vector<Sample> samples;
+   StatErrorConfig statError;
+};
+
 struct Distribution {
    std::string name;
-   GenericObject body;
+   std::variant<GenericObject, HistFactoryDist> body;
 };
 
 struct Function {
@@ -282,15 +458,31 @@ public:
 
 namespace HS3 {
 
-/// Options for parseDocument().
+/// Options for upgradeDocument() and parseDocument().
 struct ParseOptions {
    /// Fragments of a document can be imported without metadata.
    bool requireMetadata = true;
+   /// If false, HistFactory distributions stay generic objects, because a user registered their own importer.
+   bool typedHistFactory = true;
 };
+
+/// Rewrites everything that older versions of RooFit wrote in a way that is not part of the standard into the form that
+/// parseDocument() understands.
+void upgradeDocument(Detail::JSONNode &root, Diagnostics &diagnostics, ParseOptions const &options = {});
+
+/// Same as upgradeDocument(), but for a single HistFactory distribution that doesn't come with a document. Names that
+/// can't be resolved in the document are assumed to refer to distributions.
+void upgradeHistFactoryDist(Detail::JSONNode &distribution, Version const &version, Diagnostics &diagnostics);
 
 /// Reads a document. The generic objects in the document refer to nodes of the JSON tree, so the tree must outlive the
 /// document. Problems are reported in `diagnostics`, and if there are errors the document must not be used.
 HS3Document parseDocument(Detail::JSONNode const &root, Diagnostics &diagnostics, ParseOptions const &options = {});
+
+/// Reads a HistFactory distribution that doesn't come with a document.
+HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
+
+/// Reads an interpolation that doesn't come with a document.
+Interpolation parseInterpolation(Detail::JSONNode const &interpolation, Diagnostics &diagnostics);
 
 /// Reads the leading "MAJOR.MINOR" and the optional ".PATCH" of an HS3 version string.
 bool parseVersion(std::string const &version, Version &out);

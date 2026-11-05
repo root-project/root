@@ -4019,7 +4019,7 @@ TEST(RooFitHS3, HistFactoryLogNormalGammaConstraint)
       for (std::string key : {"constraint", "constraint_type"}) {
          expectImportThrowsWithError(makeHistFactoryJSON(R"({"name": "shape", "type": "shapesys", ")" + key +
                                                          R"(": ")" + type + R"(", "data": {"vals": [0.1, 0.2]}})"),
-                                     "unsupported constraint '" + type + "'");
+                                     "unsupported constraint 'LogNormal'");
       }
    }
 
