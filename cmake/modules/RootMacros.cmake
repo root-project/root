@@ -3784,3 +3784,33 @@ function (ROOT_GET_CLANG_LIBRARIES clang_libraries)
   endforeach(extra_lib)
   SET(${clang_libraries} "${found_libraries}" PARENT_SCOPE)
 endfunction(ROOT_GET_CLANG_LIBRARIES)
+
+#---------------------------------------------------------------------------------------------------
+# ROOT_BUILTIN_PATCH_COMMAND(<var> PATCHES <file>... [GIT_APPLY_ARGS <arg>...])
+#
+# Sets <var> to the PATCH_COMMAND for ExternalProject_Add that applies the given patches, in this
+# order, to the sources of a builtin with git apply.
+#
+# The patch step always starts again from the pristine sources (see
+# cmake/scripts/apply_builtin_patches.cmake), so that it doesn't matter why ExternalProject re-runs
+# it: after a new download, or because the patch command changed. The command contains a hash of
+# the patches, so that also changing the content of a patch re-runs the patch step.
+#---------------------------------------------------------------------------------------------------
+function(ROOT_BUILTIN_PATCH_COMMAND var)
+  cmake_parse_arguments(ARG "" "" "PATCHES;GIT_APPLY_ARGS" ${ARGN})
+  set(script ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../scripts/apply_builtin_patches.cmake)
+
+  set(hashes)
+  foreach(file IN LISTS ARG_PATCHES ITEMS ${script})
+    file(SHA256 ${file} hash)
+    list(APPEND hashes ${hash})
+  endforeach()
+  string(SHA256 hash "${hashes}")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${ARG_PATCHES} ${script})
+
+  # ExternalProject doesn't replace <STAMP_DIR> in the commands, but <LOG_DIR> is
+  # the same directory, unless LOG_DIR is set.
+  set(${var} PATCH_COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=<SOURCE_DIR> -DSTAMP_DIR=<LOG_DIR>
+                           -DPATCHES_HASH=${hash} -P ${script} -- ${ARG_GIT_APPLY_ARGS} ${ARG_PATCHES}
+      PARENT_SCOPE)
+endfunction()
