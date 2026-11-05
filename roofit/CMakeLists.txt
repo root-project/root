@@ -5,7 +5,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 add_subdirectory(batchcompute)
-add_subdirectory(codegen)
 if(NOT WIN32)
   add_subdirectory(multiprocess)
 endif()
@@ -16,6 +15,7 @@ if(mathmore)
 endif()
 add_subdirectory(roostats)
 add_subdirectory(histfactory)
+add_subdirectory(codegen)
 add_subdirectory(hs3)
 if(NOT MSVC)
   add_subdirectory(xroofit)
