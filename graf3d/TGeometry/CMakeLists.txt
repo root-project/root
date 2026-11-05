@@ -8,33 +8,37 @@
 # CMakeLists.txt file for building ROOT's TGeometry package
 ############################################################################
 
+set(TGEOMETRY_HEADERS
+  TGeometry.h
+  TMaterial.h
+  TNode.h
+  TRotMatrix.h
+  TShape.h
+  TMixture.h
+  TBRIK.h
+  TCONE.h
+  TCONS.h
+  TCTUB.h
+  TELTU.h
+  TGTRA.h
+  THelix.h
+  THYPE.h
+  TNodeDiv.h
+  TPARA.h
+  TPCON.h
+  TPGON.h
+  TSPHE.h
+  TTRAP.h
+  TTRD1.h
+  TTRD2.h
+  TTUBE.h
+  TTUBS.h
+  TXTRU.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TGeometry
   HEADERS
-    TGeometry.h
-    TMaterial.h
-    TNode.h
-    TRotMatrix.h
-    TShape.h
-    TMixture.h
-    TBRIK.h
-    TCONE.h
-    TCONS.h
-    TCTUB.h
-    TELTU.h
-    TGTRA.h
-    THelix.h
-    THYPE.h
-    TNodeDiv.h
-    TPARA.h
-    TPCON.h
-    TPGON.h
-    TSPHE.h
-    TTRAP.h
-    TTRD1.h
-    TTRD2.h
-    TTUBE.h
-    TTUBS.h
-    TXTRU.h
+    ${TGEOMETRY_HEADERS}
   SOURCES
     TGeometry.cxx
     TMaterial.cxx
@@ -65,6 +69,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TGeometry
     Graf3d
   LIBRARIES
     ROOTX3dViewer
+)
+
+set(RELATIVE_INC_HEADERS ${TGEOMETRY_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(TGeometry
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+  ${RELATIVE_INC_HEADERS}
+  inc/LinkDef.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
