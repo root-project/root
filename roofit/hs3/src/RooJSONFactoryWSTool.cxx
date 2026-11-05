@@ -572,14 +572,23 @@ loadData(HS3::Data const &input, RooWorkspace &workspace, RooFit::JSONIO::Detail
 {
    RooJSONFactoryWSTool::testValidName(input.name, true);
 
+   // What RooFit can't store is reported, instead of being dropped silently.
    if (auto const *binned = std::get_if<HS3::BinnedData>(&input.body)) {
+      if (binned->uncertainty && !binned->uncertainty->correlation.empty()) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the correlations of the uncertainties of the dataset '" +
+                                       input.name + "' are ignored, because RooDataHist can't store them.");
+      }
       return HS3::createDataHist(input.name, createBinnedObservables(binned->axes), binned->contents,
                                  binned->uncertainty ? &binned->uncertainty->sigma : nullptr);
    }
    if (auto const *unbinned = std::get_if<HS3::UnbinnedData>(&input.body)) {
+      if (unbinned->hasEntriesUncertainties) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the \"entries_uncertainties\" of the dataset '" + input.name +
+                                       "' are ignored, because RooDataSet can't store them.");
+      }
       return createUnbinnedData(input.name, *unbinned, workspace, domains);
    }
-   RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() failed to create dataset " + input.name);
+   RooJSONFactoryWSTool::error("datasets of type \"point\" like '" + input.name + "' are not supported yet");
 }
 
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
