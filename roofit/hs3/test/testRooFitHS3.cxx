@@ -4597,3 +4597,198 @@ TEST(RooFitHS3, CategoricalAxesInDomainsAndData)
                    "contents": [1.0, 2.0]})"),
       "is categorical and must not have \"nbins\"");
 }
+
+// RooFit writes per-bin arrays in the order HS3 prescribes for the axes it writes (last axis fastest): the contents of
+// binned data and of RooHistFunc ("step"), and the parameters of ParamHistFunc ("step"). Each is built with its
+// variables in both orders, and with a known value (or parameter name) per bin.
+TEST(RooFitHS3, ExportedBinOrderFollowsAxes)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+   RooRealVar y{"y", "y", 0.0, 3.0};
+   y.setBins(3);
+   auto valueOf = [](int ix, int iy) { return 10.0 * ix + iy + 1.0; };
+   auto paramName = [](int ix, int iy) { return "g_" + std::to_string(ix) + "_" + std::to_string(iy); };
+
+   // Call `check(entry, ix, iy)` for the entry of `array` that HS3 assigns to the bin (ix, iy), given the axes of
+   // `node`.
+   auto forEachBin = [&](RooFit::Detail::JSONNode const &node, RooFit::Detail::JSONNode const &array, auto &&check) {
+      auto const &axes = node["axes"];
+      ASSERT_EQ(axes.num_children(), 2u);
+      const bool xFirst = axes.child(0)["name"].val() == "x";
+      EXPECT_EQ(axes.child(xFirst ? 1 : 0)["name"].val(), "y");
+      ASSERT_EQ(array.num_children(), 6u);
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            const std::size_t k = xFirst ? ix * 3 + iy : iy * 2 + ix;
+            check(array.child(k), ix, iy);
+         }
+      }
+   };
+   // Evaluate `name` in `ws` at the center of each bin.
+   auto expectValues = [&](RooWorkspace &ws, const char *name) {
+      RooAbsReal *func = ws.function(name);
+      ASSERT_NE(func, nullptr) << name;
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            ws.var("x")->setBin(ix);
+            ws.var("y")->setBin(iy);
+            EXPECT_DOUBLE_EQ(func->getVal(), valueOf(ix, iy)) << name << " bin (" << ix << ", " << iy << ")";
+         }
+      }
+   };
+
+   for (bool xFirst : {true, false}) {
+      SCOPED_TRACE(xFirst ? "variables (x, y)" : "variables (y, x)");
+      RooArgList vars = xFirst ? RooArgList{x, y} : RooArgList{y, x};
+
+      // Binned data and RooHistFunc.
+      RooDataHist dh{"dh", "dh", vars};
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            x.setBin(ix);
+            y.setBin(iy);
+            dh.set(RooArgSet{x, y}, valueOf(ix, iy));
+         }
+      }
+      RooHistFunc histFunc{"hist_func", "hist_func", vars, dh};
+
+      // ParamHistFunc: its parameters are ordered like the bins of a TH1, with the first variable varying fastest.
+      std::vector<std::unique_ptr<RooRealVar>> params;
+      RooArgList paramList;
+      auto &first = static_cast<RooRealVar &>(vars[0]);
+      auto &second = static_cast<RooRealVar &>(vars[1]);
+      for (int i1 = 0; i1 < second.getBins(); ++i1) {
+         for (int i0 = 0; i0 < first.getBins(); ++i0) {
+            const int ix = xFirst ? i0 : i1;
+            const int iy = xFirst ? i1 : i0;
+            params.push_back(std::make_unique<RooRealVar>(paramName(ix, iy).c_str(), "", valueOf(ix, iy), 0.0, 100.0));
+            paramList.add(*params.back());
+         }
+      }
+      ParamHistFunc paramHistFunc{"param_hist_func", "param_hist_func", vars, paramList};
+      // Check the assumption about ParamHistFunc that this test relies on.
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            x.setBin(ix);
+            y.setBin(iy);
+            ASSERT_DOUBLE_EQ(paramHistFunc.getVal(), valueOf(ix, iy)) << "bin (" << ix << ", " << iy << ")";
+         }
+      }
+
+      RooWorkspace ws;
+      ws.import(dh, RooFit::Silence());
+      ws.import(histFunc, RooFit::RecycleConflictNodes(), RooFit::Silence());
+      ws.import(paramHistFunc, RooFit::RecycleConflictNodes(), RooFit::Silence());
+      const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      auto tree = RooFit::Detail::JSONTree::create(json);
+      auto &root = tree->rootnode();
+
+      auto const *dataNode = RooJSONFactoryWSTool::findNamedChild(root["data"], "dh");
+      ASSERT_NE(dataNode, nullptr) << json;
+      forEachBin(*dataNode, (*dataNode)["contents"], [&](auto const &entry, int ix, int iy) {
+         EXPECT_DOUBLE_EQ(entry.val_double(), valueOf(ix, iy)) << "data bin (" << ix << ", " << iy << ")";
+      });
+
+      auto const *histNode = RooJSONFactoryWSTool::findNamedChild(root["functions"], "hist_func");
+      ASSERT_NE(histNode, nullptr) << json;
+      forEachBin((*histNode)["data"], (*histNode)["data"]["contents"], [&](auto const &entry, int ix, int iy) {
+         EXPECT_DOUBLE_EQ(entry.val_double(), valueOf(ix, iy)) << "RooHistFunc bin (" << ix << ", " << iy << ")";
+      });
+
+      auto const *paramNode = RooJSONFactoryWSTool::findNamedChild(root["functions"], "param_hist_func");
+      ASSERT_NE(paramNode, nullptr) << json;
+      forEachBin(*paramNode, (*paramNode)["parameters"], [&](auto const &entry, int ix, int iy) {
+         EXPECT_EQ(entry.val(), paramName(ix, iy)) << "ParamHistFunc bin (" << ix << ", " << iy << ")";
+      });
+
+      // Read back, the functions have the same value in every bin.
+      RooWorkspace imported;
+      ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+      expectValues(imported, "hist_func");
+      expectValues(imported, "param_hist_func");
+   }
+}
+
+// The per-bin parameters of a multi-dimensional HistFactory modifier follow the order of HS3 (last axis fastest), like
+// the bin contents. Each gamma gets the relative uncertainty of its own bin, and the export keeps the order.
+TEST(RooFitHS3, HistFactoryMultiDimensionalBinOrder)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto gammaName = [](int ix, int iy) { return "g_" + std::to_string(ix) + "_" + std::to_string(iy); };
+   auto content = [](int ix, int iy) { return 100.0 * (1 + 3 * ix + iy); };
+   auto relError = [](int ix, int iy) { return 0.01 * (1 + 3 * ix + iy); };
+   auto makeJSON = [&](std::string const &version) {
+      std::string params;
+      std::string contents;
+      std::string errors;
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            const std::string sep = params.empty() ? "" : ", ";
+            params += sep + "\"" + gammaName(ix, iy) + "\"";
+            contents += sep + std::to_string(content(ix, iy));
+            errors += sep + std::to_string(content(ix, iy) * relError(ix, iy));
+         }
+      }
+      return R"({
+      "metadata": {"hs3_version": ")" +
+             version + R"("},
+      "distributions": [{
+         "name": "model_channel0", "type": "histfactory_dist",
+         "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "y", "min": 0.0, "max": 3.0, "nbins": 3}],
+         "samples": [{"name": "sig", "data": {"contents": [)" +
+             contents + R"(], "errors": [)" + errors + R"(]},
+                      "modifiers": [{"type": "staterror", "parameters": [)" +
+             params + R"(], "constraint": "Gauss"}]}]
+      }]
+   })";
+   };
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("0.3")));
+   auto *phf = dynamic_cast<ParamHistFunc *>(ws.function("mc_stat_channel0"));
+   ASSERT_NE(phf, nullptr);
+   for (int ix = 0; ix < 2; ++ix) {
+      for (int iy = 0; iy < 3; ++iy) {
+         // The constraint of each gamma has the relative uncertainty of its bin.
+         auto *sigma = dynamic_cast<RooAbsReal *>(ws.arg((gammaName(ix, iy) + "_sigma").c_str()));
+         ASSERT_NE(sigma, nullptr) << gammaName(ix, iy);
+         EXPECT_NEAR(sigma->getVal(), relError(ix, iy), 1e-12) << gammaName(ix, iy);
+         // In its bin, the ParamHistFunc takes the value of that gamma.
+         ws.var(gammaName(ix, iy))->setVal(1.0 + 0.001 * (1 + 3 * ix + iy));
+      }
+   }
+   for (int ix = 0; ix < 2; ++ix) {
+      for (int iy = 0; iy < 3; ++iy) {
+         ws.var("x")->setBin(ix);
+         ws.var("y")->setBin(iy);
+         EXPECT_DOUBLE_EQ(phf->getVal(), ws.var(gammaName(ix, iy))->getVal()) << "bin (" << ix << ", " << iy << ")";
+      }
+   }
+   for (int ix = 0; ix < 2; ++ix) {
+      for (int iy = 0; iy < 3; ++iy) {
+         ws.var(gammaName(ix, iy))->setVal(1.0);
+      }
+   }
+
+   // The export writes the gammas in the same order.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"("parameters":["g_0_0","g_0_1","g_0_2","g_1_0","g_1_1","g_1_2"])"), std::string::npos)
+      << exported;
+
+   // Documents before HS3 0.3 don't define the order; they are rejected.
+   expectImportThrowsWithError(makeJSON("0.2"), "Documents before HS3 0.3 don't define the order");
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x", "min": 0.0, "max": 2.0}, {"name": "y", "min": 0.0, "max": 3.0},
+         {"name": "a", "min": 0.0, "max": 5.0}, {"name": "b", "min": 0.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [{"name": "a", "value": 1.0}, {"name": "b", "value": 2.0}]}],
+      "functions": [{"name": "phf", "type": "step", "variables": ["x", "y"], "parameters": ["a", "b"],
+                     "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "y", "min": 0.0, "max": 3.0, "nbins": 1}]}]
+   })",
+                               "Documents before HS3 0.3 don't define the order");
+}

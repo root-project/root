@@ -531,7 +531,10 @@ ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
          gammas.add(getOrCreate<RooRealVar>(ws, name, 1., gammaMin, gammaMax));
    }
 
-   auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
+   // The gammas and `vals` are given in the order of HS3 (last axis fastest), which is also the order in which they
+   // are paired below. ParamHistFunc expects its parameters in TH1 order.
+   checkParamHistFuncOrderIsDefined(tool.hs3VersionInput(), observables, "the modifier '" + sysname + "'");
+   auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, toParamHistFuncOrder(gammas, observables));
 
    if (vals.size() > 0) {
       if (!createConstraints) {
@@ -1664,7 +1667,8 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
       for (ParamHistFunc *phf : phfs) {
          if (startsWith(std::string(phf->GetName()), "mc_stat_")) { // MC stat uncertainty
             int idx = 0;
-            for (const auto &g : phf->paramList()) {
+            // In the order of the bins (last axis fastest), like the contents of the samples.
+            for (RooAbsReal *g : paramHistFuncParamsInBinOrder(*phf)) {
                sample.staterrorParameters.push_back(static_cast<RooRealVar *>(g));
                ++idx;
                RooAbsPdf *constraint = findConstraint(g);
@@ -1686,7 +1690,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
 
             // Both are written as "shapefactor": the constrained parameters name their constraint distribution in
             // "constraints", the others are free.
-            for (const auto &g : phf->paramList()) {
+            for (RooAbsReal *g : paramHistFuncParamsInBinOrder(*phf)) {
                sys.parameters.push_back(static_cast<RooRealVar *>(g));
                RooAbsPdf *constraint = findConstraint(g);
                if (!constraint)
