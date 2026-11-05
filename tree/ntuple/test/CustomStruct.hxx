@@ -497,10 +497,17 @@ struct AlignmentEnvelope {
    std::array<OverAligned, 2> fArr;
 };
 
-struct CustomMergeMap {
-   int fA = 1;
+// ----------------------------
+#define DefCustomMergeClass(Suffix)         \
+   struct CustomMerge##Suffix {             \
+      int fA = 1;                           \
+      CustomMerge##Suffix() = default;      \
+      CustomMerge##Suffix(int a) : fA(a) {} \
+      ClassDefNV(CustomMerge##Suffix, 2);   \
+   }
 
-   ClassDefNV(CustomMergeMap, 2);
-};
+DefCustomMergeClass(Basic);
+DefCustomMergeClass(Vec);
+DefCustomMergeClass(Map);
 
 #endif

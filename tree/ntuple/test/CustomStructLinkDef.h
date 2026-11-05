@@ -186,6 +186,8 @@
 #pragma link C++ class OverAligned+;
 #pragma link C++ class AlignmentEnvelope+;
 
+#pragma link C++ class CustomMergeBasic+;
+#pragma link C++ class CustomMergeVec+;
 #pragma link C++ class CustomMergeMap+;
 #pragma link C++ class std::map<std::string, CustomMergeMap>+;
 
