@@ -291,9 +291,10 @@ endfunction(ROOT_REPLACE_BUILD_INTERFACE)
 #---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_TARGET_DICTIONARY( target OPTIONS opt1 opt2 ...)
 #
-# Creates the dictionary of a predefined CMake target
+# Creates the dictionary of a predefined CMake target defined following FILE_SET naming conventions:
+# linkDefs for Linkdef.h, HEADERS for public headers
 # <target> is the CMake target on which header file sets and link libraries have been defined
-# The output dictionary will be another CMake target called G__<target> prepended.;
+# The output dictionary will be another CMake target called G__<target>, ie with G__ prepended.;
 # the macro creates (among other files) the dictionary source as G__<target>.cxx
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_TARGET_DICTIONARY target options)
@@ -313,16 +314,39 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
     list(TRANSFORM SrcList PREPEND ${SrcDir}/)
   endif()
   get_target_property(HeaderList ${target} HEADER_SET)
+  get_target_property(HeaderBaseDirs ${target} HEADER_DIRS)
   get_target_property(LinkdefList ${target} HEADER_SET_linkDefs)
-  # get_target_property(ModuleList ${target} CXX_MODULE_SET) needs 3.28
+  # get_target_property(ModuleList ${target} CXX_MODULE_SET) needs CMake 3.28
   if("HeaderList-NOTFOUND" IN_LIST HeaderList)
     message(SEND_ERROR "ROOT_GENERATE_TARGET_DICTIONARY: Missing header file set in ${target}")
   endif()
   if("LinkdefList-NOTFOUND" IN_LIST LinkdefList)
     message(SEND_ERROR "ROOT_GENERATE_TARGET_DICTIONARY: Missing Linkdef file set in ${target}")
   endif()
+
+  # Transform absolute header paths to relative paths based on BASE_DIRS
+  set(RelativeHeaderList "")
+  foreach(header_file ${HeaderList})
+    set(resolved_path "")
+    foreach(base_dir ${HeaderBaseDirs})
+      file(RELATIVE_PATH rel_path "${base_dir}" "${header_file}")
+      # If the path doesn't start with "../", it means it's under this base directory
+      if(NOT "${rel_path}" MATCHES "^\\.\\./")
+        set(resolved_path "${rel_path}")
+        break()
+      endif()
+    endforeach()
+
+    if(resolved_path)
+      list(APPEND RelativeHeaderList "${resolved_path}")
+    else()
+      # Fallback to absolute if it couldn't be resolved relative to any base dir
+      list(APPEND RelativeHeaderList "${header_file}")
+    endif()
+  endforeach()
+
   get_target_property(LinkedLibraries ${target} LINK_LIBRARIES)
-  ROOT_GENERATE_DICTIONARY(G__${target} ${HeaderList} LINKDEF ${LinkdefList} DEPENDENCIES ${LinkedLibraries} OPTIONS ${options})
+  ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${LinkedLibraries} OPTIONS ${options})
   # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
 endfunction(ROOT_GENERATE_TARGET_DICTIONARY)
 
@@ -1381,6 +1405,33 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
   endif()
   set(${result_dirs} ${dirs} PARENT_SCOPE)
 endfunction()
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_INSTALL_TARGET(target)
+# Declare the install command for CMake target defined according to the following naming conventions
+# for FILE_SETS:
+# - linkDefs for LinkDef*.h files
+# - HEADERS for public headers
+# - extraHEADERS for public headers purposely excluded from dictionaries
+#---------------------------------------------------------------------------------------------------
+function(ROOT_INSTALL_TARGET target)
+  install(TARGETS ${target}
+    EXPORT ${CMAKE_PROJECT_NAME}Exports
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT applications
+
+    # with this we no longer need the moveheader target etc
+    FILE_SET HEADERS
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+
+    FILE_SET extraHEADERS
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+
+    FILE_SET linkDefs
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+  )
+endfunction(ROOT_INSTALL_TARGET)
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>] [HEADERS <header1> ...])
