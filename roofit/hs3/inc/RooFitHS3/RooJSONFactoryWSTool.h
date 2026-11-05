@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <set>
 #include <unordered_map>
+#include <vector>
 
 namespace RooFit {
 namespace JSONIO {
@@ -274,5 +275,8 @@ private:
    // every sibling node.
    std::unordered_map<std::string, RooFit::Detail::JSONNode const *> _functionsByName;
    std::unordered_map<std::string, RooFit::Detail::JSONNode const *> _distributionsByName;
+
+   // The objects that are currently being imported, innermost last, to detect circular dependencies.
+   std::vector<std::string> _importStack;
 };
 #endif

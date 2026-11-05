@@ -1279,6 +1279,19 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    if (_workspace.arg(name)) {
       return;
    }
+   // Objects that depend on each other would otherwise recurse until the stack overflows.
+   if (std::find(_importStack.begin(), _importStack.end(), name) != _importStack.end()) {
+      std::string chain;
+      for (std::string const &ancestor : _importStack) {
+         chain += ancestor + " -> ";
+      }
+      RooJSONFactoryWSTool::error("circular dependency in the document: " + chain + name);
+   }
+   _importStack.push_back(name);
+   struct PopOnExit {
+      std::vector<std::string> &stack;
+      ~PopOnExit() { stack.pop_back(); }
+   } popOnExit{_importStack};
    // if the key we found is not a map, it's an error
    if (!p.is_map()) {
       RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() function node " + name + " is not a map!");
