@@ -3617,3 +3617,47 @@ TEST(RooFitHS3, SharedTransformedParameters)
    EXPECT_EQ(countOccurrences(jsonLognormal, R"("name":"k_lognormal_log")"), 1u) << jsonLognormal;
    EXPECT_EQ(validate(wsLognormal, "lognormal_1"), 0);
 }
+
+// ModelConfigs that share the pdf and the dataset, like an S+B and B-only pair, are exported as separate analyses.
+TEST(RooFitHS3, ModelConfigsSharingPdfAndData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto roundTrip = [](RooWorkspace &ws, const char *pdf, const char *observables) {
+      for (const char *name : {"ModelConfig", "ModelConfig_with_poi_0"}) {
+         RooFit::ModelConfig mc{name, &ws};
+         mc.SetPdf(pdf);
+         mc.SetParametersOfInterest("mu");
+         mc.SetNuisanceParameters("sigma");
+         mc.SetObservables(observables);
+         ws.import(mc);
+      }
+      RooWorkspace imported;
+      ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(RooJSONFactoryWSTool{ws}.exportJSONtoString()));
+      EXPECT_NE(imported.obj("ModelConfig"), nullptr);
+      EXPECT_NE(imported.obj("ModelConfig_with_poi_0"), nullptr);
+   };
+
+   {
+      RooWorkspace ws;
+      ws.factory("Gaussian::pdf(x[0, -5, 5], mu[0, -5, 5], sigma[1, 0.1, 5])");
+      RooDataSet data{"data", "data", *ws.var("x")};
+      data.add(*ws.var("x"));
+      ws.import(data, RooFit::Silence());
+      roundTrip(ws, "pdf", "x");
+   }
+   {
+      RooWorkspace ws;
+      ws.factory("Gaussian::pdf_a(x[0, -5, 5], mu[0, -5, 5], sigma[1, 0.1, 5])");
+      ws.factory("Gaussian::pdf_b(x, mu, sigma)");
+      ws.factory("SIMUL::sim_pdf(channel[a=0, b=1], a=pdf_a, b=pdf_b)");
+      RooArgSet observables{*ws.var("x"), *ws.cat("channel")};
+      RooDataSet data{"data", "data", observables};
+      for (int index : {0, 1}) {
+         ws.cat("channel")->setIndex(index);
+         data.add(observables);
+      }
+      ws.import(data, RooFit::Silence());
+      roundTrip(ws, "sim_pdf", "x,channel");
+   }
+}

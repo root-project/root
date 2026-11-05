@@ -1734,7 +1734,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
          if (hasdata && !matches(combDataSets.at(i), simpdf))
             continue;
 
-         std::string analysisName(simpdf->GetName());
+         std::string analysisName(mc.GetName());
          if (hasdata)
             analysisName += "_" + combDataSets[i].name;
 
@@ -1747,12 +1747,11 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
          if (observables.equals(*(data->get()))) {
             std::map<std::string, std::string> mapping;
             mapping[pdf->GetName()] = data->GetName();
-            exportSingleModelConfig(rootnode, mc, std::string(pdf->GetName()) + "_" + data->GetName(), &mapping);
+            exportSingleModelConfig(rootnode, mc, std::string(mc.GetName()) + "_" + data->GetName(), &mapping);
             ++founddata;
          }
       }
       if (founddata == 0) {
-         // Named after the ModelConfig, because the name of the pdf is already taken by the distribution.
          exportSingleModelConfig(rootnode, mc, mc.GetName(), nullptr);
       }
    }
