@@ -84,9 +84,10 @@ struct EdgesBinning {
 using Binning = std::variant<RegularBinning, EdgesBinning>;
 
 /// The axis of a domain. Infinite bounds are written as null, and bounds can be missing in older documents. The binning
-/// is a RooFit extension.
+/// is a RooFit extension. A fixed axis has a single value instead, which excludes bounds and a binning.
 struct DomainAxis {
    std::string name;
+   std::optional<double> fixedValue;
    std::optional<double> min;
    std::optional<double> max;
    std::optional<Binning> binning;
@@ -206,6 +207,7 @@ struct Function {
 struct Attributes {
    std::map<std::string, std::string> dict;
    std::vector<std::string> tags;
+   bool isConstVar = false; ///< How ROOT versions before HS3 0.3 marked named RooConstVars.
 };
 
 struct CombinedDistribution {

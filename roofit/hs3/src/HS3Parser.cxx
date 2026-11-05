@@ -11,6 +11,7 @@
  */
 
 #include "HS3Schema.h"
+#include "JSONIOUtils.h"
 
 #include <algorithm>
 #include <cctype>
@@ -188,6 +189,18 @@ void describe(Reader &ar, Package &p)
 void describe(Reader &ar, DomainAxis &axis)
 {
    ar("name", axis.name);
+   if (ar.has(fixedValueKey)) {
+      // The domain of the parameter is the set with this single value: no range, binning or categories.
+      for (const char *key : {"min", "max", "nbins", "edges", "categories"}) {
+         if (ar.has(key)) {
+            ar.cursor().error("the axis '" + axis.name + "' has \"" + fixedValueKey + "\" and \"" + key +
+                              "\", which exclude each other");
+         }
+      }
+      // Not read as an optional component, for which null would be the same as leaving it out.
+      ar(fixedValueKey, axis.fixedValue.emplace());
+      return;
+   }
    readBound(ar, "min", axis.min, -infinity);
    readBound(ar, "max", axis.max, infinity);
    if (ar.has("edges")) {
@@ -256,7 +269,8 @@ void readAxis(Cursor const &c, std::variant<ContinuousAxis_t, CategoricalAxis> &
       return;
    }
    Reader reader{c};
-   if (reader.has("categories")) {
+   // A fixed axis is not categorical. That it has no categories is checked when it is read.
+   if (reader.has("categories") && !(std::is_same_v<ContinuousAxis_t, DomainAxis> && reader.has(fixedValueKey))) {
       CategoricalAxis axis;
       describe(reader, axis);
       out = std::move(axis);
@@ -563,6 +577,11 @@ void describe(Reader &ar, Attributes &attributes)
       }
    }
    ar.list("tags", attributes.tags);
+   if (ar.has("is_const_var")) {
+      int isConstVar = 0;
+      ar("is_const_var", isConstVar);
+      attributes.isConstVar = isConstVar == 1;
+   }
 }
 
 void describe(Reader &ar, CombinedDistribution &info)

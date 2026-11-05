@@ -5048,6 +5048,7 @@ TEST(RooFitHS3, FixedDomainAxis)
                                   "has \"value\" and");
    }
    expectImportThrowsWithError(document(R"({"name": "mZ", "value": "heavy"})"), "must be a number");
+   expectImportThrowsWithError(document(R"({"name": "mZ", "value": null})"), "must be a number");
 
    // All domains that list the parameter give it the same single value.
    expectImportThrowsWithError(

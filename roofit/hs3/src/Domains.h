@@ -26,6 +26,9 @@ namespace Detail {
 class JSONNode;
 class JSONTree;
 } // namespace Detail
+namespace HS3 {
+struct Domain;
+}
 } // namespace RooFit
 
 namespace RooFit {
@@ -41,7 +44,7 @@ public:
    // The single value of the parameter `name` if a domain has one for it, otherwise nullptr.
    double const *fixedValue(const char *name) const;
 
-   void readJSON(RooFit::Detail::JSONNode const &);
+   void read(std::vector<RooFit::HS3::Domain> const &);
    void writeJSON(RooFit::Detail::JSONNode &) const;
 
    bool hasVariable(const char *name) const;
@@ -56,7 +59,7 @@ public:
       void readVariable(const char *name, RooAbsBinning const &binning);
       void writeVariable(RooRealVar &) const;
 
-      void readJSON(RooFit::Detail::JSONNode const &);
+      void read(RooFit::HS3::Domain const &);
       void writeJSON(RooFit::Detail::JSONNode &) const;
 
       bool hasVariable(const char *name) const;

@@ -79,10 +79,6 @@ std::unique_ptr<RooFit::Detail::JSONTree> varJSONString(const JSONNode &treeRoot
 
    if (isConstant && !isRange) {
       _parameters["const"] << true;
-      JSONNode &_misc = n["misc"].set_map();
-      JSONNode &rootInternal = _misc["ROOT_internal"].set_map();
-      JSONNode &_var = rootInternal[varName].set_map();
-      _var["tags"] << "Constant";
    }
 
    return jsonDict;

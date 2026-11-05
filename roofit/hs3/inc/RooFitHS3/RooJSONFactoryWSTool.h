@@ -23,7 +23,6 @@
 #include <map>
 #include <stdexcept>
 #include <set>
-#include <unordered_map>
 #include <vector>
 
 namespace RooFit {
@@ -32,6 +31,10 @@ namespace Detail {
 class Domains;
 }
 } // namespace JSONIO
+namespace HS3 {
+struct ParameterValue;
+struct ToolImportState;
+} // namespace HS3
 } // namespace RooFit
 namespace RooStats {
 class ModelConfig;
@@ -238,8 +241,8 @@ private:
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
-   void importVariable(const RooFit::Detail::JSONNode &p);
-   void checkFixedValue(std::string const &name, const RooFit::Detail::JSONNode &p, std::string const &pointName);
+   void importVariable(RooFit::HS3::ParameterValue const &p);
+   void checkFixedValue(RooFit::HS3::ParameterValue const &p, std::string const &pointName);
    void warnIfFreeWithoutDomain(RooRealVar const &var);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
@@ -257,8 +260,6 @@ private:
                                 std::map<std::string, std::string> const *dataComponents);
 
    // member variables
-   const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
-   const RooFit::Detail::JSONNode *_attributesNode = nullptr;
    RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
    RooFit::Detail::JSONNode *_varsNode = nullptr;
    std::string _hs3VersionInput;
@@ -266,15 +267,9 @@ private:
 
    // objects to represent intermediate information
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
+   std::unique_ptr<RooFit::HS3::ToolImportState> _import;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
-
-   // Name-keyed indices over the top-level "functions" and "distributions"
-   // sequences of the input JSON. Built once at the start of importAllNodes()
-   // so that requestImpl() lookups become O(1) instead of an O(N) scan over
-   // every sibling node.
-   std::unordered_map<std::string, RooFit::Detail::JSONNode const *> _functionsByName;
-   std::unordered_map<std::string, RooFit::Detail::JSONNode const *> _distributionsByName;
 
    // The objects that are currently being imported, innermost last, to detect circular dependencies.
    std::vector<std::string> _importStack;

@@ -11,6 +11,7 @@
  */
 
 #include "Domains.h"
+#include "HS3Document.h"
 #include "JSONIOUtils.h"
 
 #include <RooAbsBinning.h>
@@ -93,15 +94,11 @@ void Domains::writeVariable(RooRealVar &var) const
    }
 }
 
-void Domains::readJSON(RooFit::Detail::JSONNode const &node)
+void Domains::read(std::vector<RooFit::HS3::Domain> const &domains)
 {
    // The "default_domain" is written by RooFit, but it is not required by the HS3 standard.
-   for (auto &domain : node.children()) {
-      if (!domain.has_child("name")) {
-         RooJSONFactoryWSTool::error("encountered domain without \"name\"");
-      }
-      auto &name = domain["name"];
-      _map[name.val()].readJSON(domain);
+   for (auto const &domain : domains) {
+      _map[domain.name].read(domain);
    }
    // A parameter with a single value has no other domain: every domain that lists it must give it the same value.
    for (auto const &[domainName, domain] : _map) {
@@ -269,61 +266,35 @@ void Domains::ProductDomain::readFixedValue(const char *name, double value)
    elem.fixedValue = value;
 }
 
-void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
+void Domains::ProductDomain::read(RooFit::HS3::Domain const &domain)
 {
-   if (!node.has_child("type") || node["type"].val() != "product_domain") {
-      RooJSONFactoryWSTool::error("only domains of type \"product_domain\" are currently supported!");
-   }
-   for (auto const &varNode : node["axes"].children()) {
-      const std::string varName = RooJSONFactoryWSTool::name(varNode);
-      auto &elem = _map[varName];
-
-      if (varNode.has_child(fixedValueKey)) {
-         // The domain of the parameter is the set with this single value: no range, binning or categories.
-         for (const char *key : {"min", "max", "nbins", "edges", "categories"}) {
-            if (varNode.has_child(key)) {
-               RooJSONFactoryWSTool::error("the axis '" + varName + "' of the domain '" +
-                                           RooJSONFactoryWSTool::name(node) + "' has \"" + fixedValueKey + "\" and \"" +
-                                           key + "\", which exclude each other");
-            }
-         }
-         auto const &valueNode = varNode[fixedValueKey];
-         if (!valueNode.is_number()) {
-            RooJSONFactoryWSTool::error("the \"" + std::string(fixedValueKey) + "\" of the axis '" + varName +
-                                        "' must be a number");
-         }
-         elem = ProductDomainElement{};
-         elem.hasFixedValue = true;
-         elem.fixedValue = valueNode.val_double();
+   for (auto const &axisVariant : domain.axes) {
+      auto const *axis = std::get_if<RooFit::HS3::DomainAxis>(&axisVariant);
+      if (!axis) {
          continue;
       }
+      if (axis->fixedValue) {
+         readFixedValue(axis->name.c_str(), *axis->fixedValue);
+         continue;
+      }
+      auto &elem = _map[axis->name];
 
-      if (varNode.has_child("min")) {
-         elem.min = readBound(varNode, "min", -RooNumber::infinity());
+      if (axis->min) {
+         elem.min = *axis->min;
          elem.hasMin = true;
       }
-      if (varNode.has_child("max")) {
-         elem.max = readBound(varNode, "max", RooNumber::infinity());
+      if (axis->max) {
+         elem.max = *axis->max;
          elem.hasMax = true;
       }
-      if (varNode.has_child("edges")) {
+      if (!axis->binning) {
+         continue;
+      }
+      if (auto const *edges = std::get_if<RooFit::HS3::EdgesBinning>(&*axis->binning)) {
          elem.hasNBins = false;
-         elem.edges.clear();
-         for (auto const &edge : varNode["edges"].children()) {
-            elem.edges.push_back(edge.val_double());
-         }
-         if (!elem.edges.empty()) {
-            if (!elem.hasMin) {
-               elem.min = elem.edges.front();
-               elem.hasMin = true;
-            }
-            if (!elem.hasMax) {
-               elem.max = elem.edges.back();
-               elem.hasMax = true;
-            }
-         }
-      } else if (varNode.has_child("nbins")) {
-         elem.nBins = varNode["nbins"].val_int();
+         elem.edges = edges->edges;
+      } else {
+         elem.nBins = std::get<RooFit::HS3::RegularBinning>(*axis->binning).nbins;
          elem.hasNBins = elem.nBins != 0;
          elem.edges.clear();
       }
