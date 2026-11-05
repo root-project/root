@@ -5811,9 +5811,15 @@ size_t TClass::GetClassAlignment() const
 
 Int_t TClass::Size() const
 {
-   if (fSizeof!=-1) return fSizeof;
+   auto size = fSizeof.load(std::memory_order_relaxed);
+   if (size != -1) return size;
    if (fCollectionProxy) return fCollectionProxy->Sizeof();
-   if (HasInterpreterInfo()) return gCling->ClassInfo_Size(GetClassInfo());
+   if (HasInterpreterInfo()) {
+      size = gCling->ClassInfo_Size(GetClassInfo());
+      if (size >= 0)
+         fSizeof.store(size, std::memory_order_relaxed);
+      return size;
+   }
    return GetStreamerInfo()->GetSize();
 }
 
