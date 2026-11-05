@@ -1263,6 +1263,9 @@ NormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula
          sys.low = -sign * p2->getVal();
       }
 
+      // A recognized formula has exactly one constrained parameter.
+      sys.constraint = constr2 ? constr2 : constr3;
+
       // Preserve the legacy export behaviour for recognized explicit formulae.
       sys.interpolation = multiplicativePiecewiseExponential;
 

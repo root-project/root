@@ -3742,3 +3742,40 @@ TEST(RooFitHS3, MixtureOfOneExtendedSummand)
    ASSERT_NE(mixture.extendMode(), RooAbsPdf::CanNotBeExtended);
    EXPECT_EQ(validate(mixture), 0);
 }
+
+namespace {
+
+// Imports a channel with a normsys that is encoded in an explicit formula and has a RooGaussian constraint.
+void importFormulaNormSysChannel(RooWorkspace &ws)
+{
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+   RooRealVar alpha{"alpha_sys", "alpha_sys", 0.0, -5.0, 5.0};
+   RooRealVar nominal{"nom_alpha_sys", "nom_alpha_sys", 0.0};
+   RooRealVar sigma{"sigma_alpha_sys", "sigma_alpha_sys", 1.0};
+   RooRealVar mu{"mu", "mu", 1.0, 0.0, 5.0};
+   RooHistFunc hist{"hist_sig", "hist_sig", RooArgSet{x}, makeDataHist("hist_sig_data", x, {100.0, 200.0})};
+   RooBinWidthFunction binWidth{"sig_binWidth", "sig_binWidth", hist, true};
+   RooProduct shapes{"model_ch_sig_shapes", "", RooArgList{hist, binWidth}};
+   RooFormulaVar norm{"sig_norm", "(1+alpha_sys*0.1)*mu", RooArgList{alpha, mu}};
+   RooRealSumPdf sum{"ch_model", "ch_model", RooArgList{shapes}, RooArgList{norm}, true};
+   RooGaussian constraint{"alpha_sysConstraint", "", alpha, nominal, sigma};
+   RooProdPdf prod{"model_ch", "model_ch", RooArgSet{constraint}, RooFit::Conditional(sum, x)};
+   ws.import(prod, RooFit::Silence());
+}
+
+} // namespace
+
+TEST(RooFitHS3, FormulaNormSysConstraint)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws1;
+   importFormulaNormSysChannel(ws1);
+   const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   EXPECT_NE(json.find(R"("constraint":"alpha_sysConstraint")"), std::string::npos) << json;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_NE(ws2.pdf("alpha_sysConstraint"), nullptr);
+}
