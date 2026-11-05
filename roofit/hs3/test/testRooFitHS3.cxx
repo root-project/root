@@ -12,6 +12,7 @@
 #include <RooCategory.h>
 #include <RooBinSamplingPdf.h>
 #include <RooConstVar.h>
+#include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooExtendPdf.h>
 #include <RooExponential.h>
@@ -3504,3 +3505,22 @@ TEST(RooFitHS3, UnbinnedAxisRangesOnImport)
       EXPECT_NE(warnings.find("of the axis 'x' of the dataset 'data' differs"), std::string::npos) << warnings;
    }
 }
+
+// Errors of zero in binned data stay zero, also before the first positive error.
+TEST(RooFitHS3, BinnedDataZeroErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "data": [{"name": "d", "type": "binned", "axes": [{"name": "x", "min": 0.0, "max": 3.0, "nbins": 3}],
+                "contents": [10.0, 20.0, 30.0], "errors": [0.0, 2.0, 0.0]}]
+   })"));
+   auto *data = dynamic_cast<RooDataHist *>(ws.data("d"));
+   ASSERT_NE(data, nullptr);
+   EXPECT_DOUBLE_EQ(data->weightSquared(0), 0.0);
+   EXPECT_DOUBLE_EQ(data->weightSquared(1), 4.0);
+   EXPECT_DOUBLE_EQ(data->weightSquared(2), 0.0);
+}
+
