@@ -205,6 +205,8 @@ public:
 
    std::string exportTransformed(const RooAbsReal *original, const std::string &suffix, const std::string &formula);
    std::string exportAsArrayComponent(RooAbsPdf const &pdf, std::string const &arrayName);
+   /// The name of the top-level object whose export is in progress (the root of the current export recursion).
+   std::string const &exportRootName() const { return _exportRootName; }
 
    void setAttribute(const std::string &obj, const std::string &attrib);
    bool hasAttribute(const std::string &obj, const std::string &attrib);
@@ -272,6 +274,8 @@ private:
    // Array distributions to write at the end of the export: their components, and the array of each component.
    std::map<std::string, std::vector<RooAbsPdf const *>> _arrayComponents;
    std::map<std::string, std::string> _arrayOfComponent;
+   std::string _exportRootName;
+   int _exportDepth = 0;
 
    // Name-keyed indices over the top-level "functions" and "distributions"
    // sequences of the input JSON. Built once at the start of importAllNodes()

@@ -9,6 +9,7 @@
 #endif
 #include <RooFit/ModelConfig.h>
 
+#include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
@@ -32,7 +33,10 @@
 
 #include "../../roofitcore/test/gtest_wrapper.h"
 
+#include <algorithm>
+#include <limits>
 #include <regex>
+#include <sstream>
 #include <set>
 
 namespace {
@@ -136,6 +140,68 @@ TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 
    EXPECT_NEAR(pdf->getVal(), 0.17488817, 1.E-8);
    EXPECT_NEAR(pdf->getVal(*obs), 0.95652174, 1.E-8);
+}
+
+// The reference workspace round-trips through HS3 with its constraints collected into array distributions: the
+// re-export gives the same document, and the likelihood is the same.
+TEST(HistFactory, HS3ArrayDistRoundTrip_ROOT6_16_Combined_Model)
+{
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
+
+   std::string filename = "./ref_6.16_example_UsingC_combined_meas_model.root";
+   std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
+   ASSERT_TRUE(file && file->IsOpen());
+   RooWorkspace *ws;
+   file->GetObject("combined", ws);
+   ASSERT_NE(ws, nullptr);
+
+   const std::string js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(js);
+   auto const &distributions = tree->rootnode()["distributions"];
+   for (auto const &dist : distributions.children()) {
+      EXPECT_NE(dist["type"].val(), "gaussian_dist") << js;
+      EXPECT_NE(dist["type"].val(), "poisson_dist") << js;
+   }
+   const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "simPdf_gaussian_constraints");
+   ASSERT_NE(gauss, nullptr) << js;
+   EXPECT_EQ((*gauss)["components"].num_children(), 4u) << js; // Lumi, alpha_syst1, alpha_syst2, alpha_syst3
+   const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "simPdf_poisson_constraints");
+   ASSERT_NE(pois, nullptr) << js;
+   EXPECT_EQ((*pois)["components"].num_children(), 2u) << js;
+
+   // The parameter sections of this workspace from ROOT 6.16 are not stable under a round trip independently of the
+   // arrays (its legacy bin-width variables come back as different objects), so the model sections are compared.
+   RooWorkspace wsFromJson("new");
+   RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(js);
+   const std::string js2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
+   auto section = [](std::string const &json, const char *key) {
+      auto t = RooFit::Detail::JSONTree::create(json);
+      std::stringstream ss;
+      t->rootnode()[key].writeJSON(ss);
+      return ss.str();
+   };
+   for (const char *key : {"distributions", "functions", "likelihoods", "analyses"}) {
+      EXPECT_EQ(section(js2, key), section(js, key)) << key;
+   }
+
+   // The likelihood is compared up to a constant: whether RooFit uses its binned likelihood for the channels (which
+   // differs from the event-wise one by a constant) is not part of the document.
+   auto nllDifference = [](RooWorkspace &w) {
+      auto *mc = dynamic_cast<RooStats::ModelConfig *>(w.obj("ModelConfig"));
+      if (!mc || !w.data("obsData")) {
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+      std::unique_ptr<RooAbsReal> nll{
+         mc->GetPdf()->createNLL(*w.data("obsData"), RooFit::GlobalObservables(*mc->GetGlobalObservables()))};
+      const double nominal = nll->getVal();
+      w.var("alpha_syst2")->setVal(0.5);
+      w.var("gamma_stat_channel1_bin_0")->setVal(1.1);
+      return nll->getVal() - nominal;
+   };
+   const double reference = nllDifference(*ws);
+   EXPECT_FALSE(std::isnan(reference));
+   EXPECT_NE(reference, 0.0);
+   EXPECT_NEAR(nllDifference(wsFromJson), reference, 1e-8 * std::max(1.0, std::abs(reference)));
 }
 
 /// What kind of model is set up. Use this to instantiate

@@ -1217,6 +1217,16 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
 
    _exportedObjectNames.insert(name);
 
+   // Exporters that group objects per top-level pdf (the HistFactory constraints) ask for the root of the recursion.
+   if (_exportDepth == 0) {
+      _exportRootName = name;
+   }
+   struct DepthGuard {
+      int &depth;
+      DepthGuard(int &d) : depth{d} { ++depth; }
+      ~DepthGuard() { --depth; }
+   } depthGuard{_exportDepth};
+
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       // RooSimultaneous is not used in the HS3 standard, we only export the
       // dependents and some ROOT internal information.

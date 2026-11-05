@@ -444,21 +444,53 @@ void exportGammaParameters(JSONNode &mod, std::vector<RooAbsReal *> const &param
    mod["parameters"].fill_seq(paramNames);
 }
 
+// The names under which the constraint distributions of a model are written: the array distribution that holds
+// the constraint, or its own name.
+using ConstraintNames = std::map<RooAbsPdf const *, std::string>;
+
 /// Export the names of the constraint distributions of a modifier, with null for unconstrained parameters. Nothing is
 /// written if all parameters are unconstrained.
-void exportConstraintNames(JSONNode &mod, std::vector<RooAbsPdf const *> const &constraints)
+void exportConstraintNames(JSONNode &mod, std::vector<RooAbsPdf const *> const &constraints,
+                           ConstraintNames const &names)
 {
    if (std::none_of(constraints.begin(), constraints.end(), [](auto *pdf) { return pdf != nullptr; })) {
       return;
    }
-   auto &names = mod["constraints"].set_seq();
+   auto &out = mod["constraints"].set_seq();
    for (auto *constraint : constraints) {
-      if (constraint) {
-         names.append_child() << constraint->GetName();
-      } else {
-         names.append_child().set_null();
+      if (!constraint) {
+         out.append_child().set_null();
+         continue;
+      }
+      auto found = names.find(constraint);
+      out.append_child() << (found != names.end() ? found->second : std::string(constraint->GetName()));
+   }
+}
+
+// Register the constraint `constraint` of a modifier parameter for the export and return the name under which it is
+// written. Constraints are collected into one array distribution per type and top-level pdf (or, if the constraint
+// already belongs to an array distribution, that one), unless the arrays are switched off or the constraint cannot be
+// a component. In those cases it is written on its own.
+std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constraint)
+{
+   if (RooJSONFactoryWSTool::config().exportArrayDist) {
+      if (auto type = arrayComponentType(constraint)) {
+         std::string arrayName;
+         for (RooAbsArg const *client : constraint.clients()) {
+            if (client->getAttribute(arrayDistTag)) {
+               arrayName = client->GetName();
+               break;
+            }
+         }
+         if (arrayName.empty()) {
+            // "poisson_dist" -> "<root>_poisson_constraints"
+            arrayName = tool.exportRootName() + "_" + removeSuffix(*type, "_dist") + "_constraints";
+         }
+         return tool.exportAsArrayComponent(constraint, arrayName);
       }
    }
+   tool.queueExport(constraint);
+   return constraint.GetName();
 }
 
 RooRealVar &createNominal(RooWorkspace &ws, std::string const &parname, double val, double min, double max)
@@ -1962,12 +1994,13 @@ std::optional<Interpolation> defaultInterpolation(const Channel &channel)
    return best->first;
 }
 
-bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
+bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, ConstraintNames const &constraintNames,
+                   JSONNode &elem)
 {
    // Write the parameter and the name of the constraint distribution of a modifier with a single parameter.
-   auto writeParameter = [](JSONNode &mod, RooAbsReal const &param, RooAbsPdf const *constraint) {
+   auto writeParameter = [&](JSONNode &mod, RooAbsReal const &param, RooAbsPdf const *constraint) {
       mod["parameters"].set_seq().append_child() << param.GetName();
-      exportConstraintNames(mod, {constraint});
+      exportConstraintNames(mod, {constraint}, constraintNames);
    };
    auto addModifier = [](JSONNode &modifiers, std::string const &name, const char *type) -> JSONNode & {
       auto &mod = modifiers.append_child();
@@ -1997,9 +2030,6 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << nf.name;
          writeParameter(mod, *nf.param, nf.constraint);
          mod["type"] << "normfactor";
-         if (nf.constraint) {
-            tool->queueExport(*nf.constraint);
-         }
       }
 
       for (const auto &sys : sample.normsys) {
@@ -2033,7 +2063,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          auto &mod = addModifier(modifiers, sys.name, "shapefactor");
          exportGammaParameters(mod, sys.parameters);
          // The relative uncertainties are encoded in the constraint distributions.
-         exportConstraintNames(mod, sys.constraintPdfs);
+         exportConstraintNames(mod, sys.constraintPdfs, constraintNames);
       }
 
       for (const auto &other : sample.otherElements) {
@@ -2046,7 +2076,7 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
       if (sample.useBarlowBeestonLight) {
          auto &mod = addModifier(modifiers, ::Literals::staterror, ::Literals::staterror);
          exportGammaParameters(mod, sample.staterrorParameters);
-         exportConstraintNames(mod, sample.staterrorConstraints);
+         exportConstraintNames(mod, sample.staterrorConstraints, constraintNames);
       }
 
       if (!observablesWritten) {
@@ -2187,29 +2217,30 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       tool->queueExport(*constraint);
    }
 
-   // Export all the regular modifiers
-   auto queueConstraints = [&](auto const &modifiers) {
-      for (auto &modifier : modifiers) {
-         if (modifier.constraint) {
-            tool->queueExport(*modifier.constraint);
-         }
+   // Export the constraints of the modifiers, in the order in which the modifiers are written.
+   ConstraintNames constraintNames;
+   auto exportConstraintOf = [&](RooAbsPdf const *constraint) {
+      if (constraint && constraintNames.find(constraint) == constraintNames.end()) {
+         constraintNames[constraint] = exportConstraint(*tool, *constraint);
       }
    };
    for (const auto &sample : channel.samples) {
-      queueConstraints(sample.normfactors);
-      queueConstraints(sample.normsys);
-      queueConstraints(sample.histosys);
+      for (auto &modifier : sample.normfactors) {
+         exportConstraintOf(modifier.constraint);
+      }
+      for (auto &modifier : sample.normsys) {
+         exportConstraintOf(modifier.constraint);
+      }
+      for (auto &modifier : sample.histosys) {
+         exportConstraintOf(modifier.constraint);
+      }
       for (auto &modifier : sample.shapesys) {
          for (auto *constraint : modifier.constraintPdfs) {
-            if (constraint) {
-               tool->queueExport(*constraint);
-            }
+            exportConstraintOf(constraint);
          }
       }
       for (auto *constraint : sample.staterrorConstraints) {
-         if (constraint) {
-            tool->queueExport(*constraint);
-         }
+         exportConstraintOf(constraint);
       }
    }
 
@@ -2233,7 +2264,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
    }
 
-   return exportChannel(tool, channel, elem);
+   return exportChannel(tool, channel, constraintNames, elem);
 }
 
 class HistFactoryStreamer_ProdPdf : public RooFit::JSONIO::Exporter {
