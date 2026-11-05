@@ -883,6 +883,75 @@ void requirePdf(RooAbsArg const *arg, std::string const &what)
    }
 }
 
+// Check that a combined data set paired with a RooSimultaneous in a likelihood has a sub-data set for every component.
+// RooFit has no notion of an unobserved component: a key without sub-data set is a channel without entries, which
+// adds the expected number of events of an extended component to the likelihood. That changes the fit, so it is an
+// error (https://github.com/root-project/root/issues/24004). For a non-extended component it changes nothing, and a
+// sub-data set without component is ignored by RooFit; both are reported as warnings.
+void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &dataName, HS3::CombinedData const &data)
+{
+   std::vector<RooCategory const *> columns = selectionColumns(simPdf.indexCat());
+   std::vector<std::string> columnNames;
+   for (RooCategory const *column : columns) {
+      columnNames.push_back(column->GetName());
+   }
+   std::vector<std::string> dataColumns = data.columns;
+   std::sort(dataColumns.begin(), dataColumns.end());
+   if (dataColumns != columnNames) {
+      RooJSONFactoryWSTool::error("the likelihood pairs '" + std::string(simPdf.GetName()) +
+                                  "' with the combined data set '" + dataName + "', but their columns differ");
+   }
+   // The keys of the data, each as a map from the column to the label.
+   std::set<std::map<std::string, std::string>> dataKeys;
+   for (HS3::CombinedDataComponent const &component : data.components) {
+      std::map<std::string, std::string> key;
+      for (std::size_t i = 0; i < data.columns.size(); ++i) {
+         key[data.columns[i]] = component.key[i];
+      }
+      dataKeys.insert(key);
+   }
+   auto keyToString = [&](std::map<std::string, std::string> const &key) {
+      std::vector<std::string> labels;
+      for (std::string const &column : data.columns) {
+         labels.push_back(key.at(column));
+      }
+      return selectionKeyToString(labels);
+   };
+   std::set<std::map<std::string, std::string>> pdfKeys;
+   for (std::vector<std::string> const &labels : selectionKeys(columns)) {
+      RooAbsPdf const *component = simPdf.getPdf(selectionLabel(simPdf.indexCat(), columns, labels));
+      if (!component) {
+         continue;
+      }
+      std::map<std::string, std::string> key;
+      for (std::size_t i = 0; i < columns.size(); ++i) {
+         key[columnNames[i]] = labels[i];
+      }
+      pdfKeys.insert(key);
+      if (dataKeys.count(key) > 0) {
+         continue;
+      }
+      if (component->canBeExtended()) {
+         RooJSONFactoryWSTool::error(
+            "the combined data set '" + dataName + "' has no sub-data set for the key " + keyToString(key) +
+            " of the extended component '" + component->GetName() + "' of '" + simPdf.GetName() +
+            "'. RooFit cannot leave a component unobserved: it would add the expected number of events of the " +
+            "component to the likelihood, see https://github.com/root-project/root/issues/24004");
+      }
+      RooJSONFactoryWSTool::warning("RooFitHS3: the combined data set '" + dataName +
+                                    "' has no sub-data set for the key " + keyToString(key) + " of the component '" +
+                                    component->GetName() + "' of '" + simPdf.GetName() +
+                                    "', which RooFit treats as present and empty.");
+   }
+   for (auto const &key : dataKeys) {
+      if (pdfKeys.count(key) == 0) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the sub-data set for the key " + keyToString(key) +
+                                       " of the combined data set '" + dataName + "' is ignored, because '" +
+                                       simPdf.GetName() + "' has no component for it.");
+      }
+   }
+}
+
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
                     const std::vector<std::unique_ptr<RooAbsData>> &datasets)
@@ -958,6 +1027,21 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       }
       if (!found)
          throw std::runtime_error("dataset '" + dataRef->name + "' cannot be found!");
+   }
+
+   // A combined distribution paired with a combined data set must have a sub-data set for every component.
+   for (auto const &term : likelihood.terms) {
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
+      auto *simPdf = dynamic_cast<RooSimultaneous const *>(workspace.pdf(term.distribution.name));
+      if (!dataRef || !simPdf) {
+         continue;
+      }
+      for (HS3::Data const &data : doc.data) {
+         auto const *combined = std::get_if<HS3::CombinedData>(&data.body);
+         if (combined && data.name == dataRef->name) {
+            checkCombinedPairing(*simPdf, data.name, *combined);
+         }
+      }
    }
 
    std::string const pdfName = mcInfo && mcInfo->pdfName ? *mcInfo->pdfName : "simPdf";

@@ -5933,3 +5933,103 @@ TEST(RooFitHS3, CombinedDataImportErrors)
          R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "da"}, {"key": ["a"], "dataset": "db"}])"),
       "the key [\"a\"] is used by two components of the combined data set 'obs'");
 }
+
+// A likelihood that pairs a combined_dist with a combined data set: HS3 treats a key without sub-data set as an
+// unobserved component, which RooFit cannot represent (it would be a channel without entries, adding the expected
+// events of an extended component to the likelihood). This is an error for extended components and a warning
+// otherwise; a sub-data set without component is ignored with a warning.
+TEST(RooFitHS3, CombinedDataPairing)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // `components` of the distribution and of the data, and whether the components are extended.
+   auto makeJSON = [](std::string const &pdfComponents, std::string const &dataComponents, bool extended) {
+      auto component = [&](std::string const &label, double mean) {
+         const std::string gauss = R"({"name": "g_)" + label + R"(", "type": "gaussian_dist", "x": "x_)" + label +
+                                   R"(", "mean": )" + std::to_string(mean) + R"(, "sigma": 1.0})";
+         if (!extended) {
+            return gauss;
+         }
+         return gauss + R"(, {"name": "e_)" + label + R"(", "type": "rate_extended_dist", "dist": "g_)" + label +
+                R"(", "rate": "n_)" + label + R"("})";
+      };
+      auto data = [](std::string const &label) {
+         return R"({"name": "d_)" + label + R"(", "type": "unbinned", "axes": [{"name": "x_)" + label +
+                R"(", "min": 0.0, "max": 10.0}], "entries": [[5.0]]})";
+      };
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x_a", "min": 0.0, "max": 10.0}, {"name": "x_b", "min": 0.0, "max": 10.0},
+         {"name": "x_c", "min": 0.0, "max": 10.0}, {"name": "n_a", "min": 0.0, "max": 100.0},
+         {"name": "n_b", "min": 0.0, "max": 100.0}, {"name": "n_c", "min": 0.0, "max": 100.0},
+         {"name": "sample", "categories": ["a", "b", "c"]}]}],
+      "distributions": [)" +
+             component("a", 3.0) + ", " + component("b", 4.0) + ", " + component("c", 5.0) + R"(,
+         {"name": "simPdf", "type": "combined_dist", "columns": ["sample"], "components": )" +
+             pdfComponents + R"(}],
+      "data": [)" +
+             data("a") + ", " + data("b") + ", " + data("c") + R"(,
+         {"name": "obs", "type": "combined", "columns": ["sample"], "components": )" +
+             dataComponents + R"(}],
+      "likelihoods": [{"name": "nll", "distributions": ["simPdf"], "data": ["obs"]}],
+      "analyses": [{"name": "fit", "likelihood": "nll", "domains": ["default_domain"]}]
+   })";
+   };
+   auto pdfComponents = [](std::string const &prefix, std::vector<std::string> const &labels) {
+      std::string out = "[";
+      for (auto const &label : labels) {
+         out += std::string(out.size() > 1 ? ", " : "") + R"({"key": [")" + label + R"("], "dist": ")" + prefix +
+                label + "\"}";
+      }
+      return out + "]";
+   };
+   auto dataComponents = [](std::vector<std::string> const &labels) {
+      std::string out = "[";
+      for (auto const &label : labels) {
+         out +=
+            std::string(out.size() > 1 ? ", " : "") + R"({"key": [")" + label + R"("], "dataset": "d_)" + label + "\"}";
+      }
+      return out + "]";
+   };
+
+   // Every component has a sub-data set: no messages.
+   {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+            makeJSON(pdfComponents("e_", {"a", "b", "c"}), dataComponents({"a", "b", "c"}), true)));
+      });
+      EXPECT_EQ(warnings, "");
+      auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("fit"));
+      ASSERT_NE(mc, nullptr);
+      EXPECT_EQ(mc->GetPdf(), ws.pdf("simPdf"));
+   }
+   // An extended component without sub-data set is an error.
+   expectImportThrowsWithError(makeJSON(pdfComponents("e_", {"a", "b", "c"}), dataComponents({"a", "b"}), true),
+                               "the combined data set 'obs' has no sub-data set for the key [\"c\"] of the extended "
+                               "component 'e_c' of 'simPdf'");
+   // A non-extended component without sub-data set is a warning, and so is a sub-data set without component.
+   {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+            makeJSON(pdfComponents("g_", {"a", "b", "c"}), dataComponents({"a", "b"}), false)));
+      });
+      EXPECT_NE(warnings.find("the combined data set 'obs' has no sub-data set for the key [\"c\"] of the component "
+                              "'g_c' of 'simPdf', which RooFit treats as present and empty"),
+                std::string::npos)
+         << warnings;
+   }
+   {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+            makeJSON(pdfComponents("e_", {"a", "b"}), dataComponents({"a", "b", "c"}), true)));
+      });
+      EXPECT_NE(warnings.find("the sub-data set for the key [\"c\"] of the combined data set 'obs' is ignored, "
+                              "because 'simPdf' has no component for it"),
+                std::string::npos)
+         << warnings;
+   }
+}
