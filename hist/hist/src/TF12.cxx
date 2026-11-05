@@ -108,7 +108,7 @@ void TF12::Copy(TObject &obj) const
 /// Draw a copy of this function with its current attributes.
 ///
 /// This function MUST be used instead of Draw when you want to draw
-/// the same function with different TF12 parameters settings in the same canvas.
+/// the same function with different TF12 options settings in the same canvas.
 ///
 /// Possible option values are:
 ///
