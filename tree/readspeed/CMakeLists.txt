@@ -9,26 +9,23 @@
 # @author Bertrand Bellenot CERN
 ############################################################################
 
-ROOT_OBJECT_LIBRARY(ReadSpeed
-  src/ReadSpeed.cxx
-  src/ReadSpeedCLI.cxx
-)
-
+add_library(ReadSpeed OBJECT)
 target_sources(ReadSpeed
 PRIVATE
-  FILE_SET private_header_files
-  TYPE HEADERS
-  BASE_DIRS inc/
-  FILES
-    inc/ReadSpeed.hxx
+  src/ReadSpeed.cxx
+  src/ReadSpeedCLI.cxx
+PUBLIC
+  FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
     inc/ReadSpeedCLI.hxx
+    inc/ReadSpeed.hxx
 )
 
-target_include_directories(ReadSpeed PRIVATE
-  ${CMAKE_SOURCE_DIR}/io/io/inc
-  ${CMAKE_SOURCE_DIR}/tree/tree/inc
-  ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc
-  ${CMAKE_SOURCE_DIR}/core/imt/inc
+target_sources(ReadSpeed INTERFACE $<TARGET_OBJECTS:ReadSpeed>)
+target_link_libraries(ReadSpeed PUBLIC
+  RIO
+  Tree
+  TreePlayer
+  Imt
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
