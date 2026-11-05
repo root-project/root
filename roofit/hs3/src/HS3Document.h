@@ -494,6 +494,19 @@ HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagn
 /// Reads an interpolation that doesn't come with a document.
 Interpolation parseInterpolation(Detail::JSONNode const &interpolation, Diagnostics &diagnostics);
 
+/// Writes everything but the distributions and functions, which are written one by one while they are exported: the
+/// generic ones by the exporters, and the others with functions like writeHistFactoryDist().
+void writeDocument(Detail::JSONNode &root, HS3Document const &doc);
+
+/// Writes a HistFactory distribution, without its name.
+void writeHistFactoryDist(Detail::JSONNode &node, HistFactoryDist const &dist);
+
+/// Writes a number, as an integer if it has no fractional part.
+void writeNumber(Detail::JSONNode &node, double value);
+
+/// Writes an array of numbers, each as an integer if it has no fractional part.
+void writeContents(Detail::JSONNode &node, std::vector<double> const &values);
+
 /// Options for validate().
 struct ValidateOptions {
    /// Whether the document has to follow the current standard, or if older conventions of RooFit are tolerated.
@@ -524,6 +537,9 @@ namespace HS3 {
 /// resolved, and that the sizes of arrays are consistent. Gives nothing if there are errors.
 std::optional<ValidatedHS3Document>
 validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options = {});
+
+/// The checks of validate(), for a document that is still needed if it doesn't pass them.
+void checkDocument(HS3Document const &doc, Diagnostics &diagnostics, ValidateOptions const &options = {});
 
 /// Same as validate(), but for a single HistFactory distribution that doesn't come with a document.
 void validateHistFactoryDist(HistFactoryDist const &dist, std::string const &name, Diagnostics &diagnostics);

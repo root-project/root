@@ -23,6 +23,7 @@
 
 class RooDataHist;
 class RooJSONFactoryWSTool;
+class RooRealVar;
 
 namespace RooFit {
 namespace JSONIO {
@@ -37,12 +38,18 @@ void report(Diagnostics const &diagnostics);
 /// Create the variables for the axes of binned data.
 RooArgSet createObservables(std::vector<BinnedAxis> const &axes);
 
+/// The axis of binned data for a variable.
+BinnedAxis toBinnedAxis(RooRealVar const &var);
+
 /// Create a RooDataHist with the contents and errors. If there are no errors, it doesn't store squared weights.
 std::unique_ptr<RooDataHist> createDataHist(std::string const &name, RooArgSet const &vars,
                                             std::vector<double> const &contents, std::vector<double> const *errors);
 
 /// Create the RooFit objects of a HistFactory distribution in the workspace of the tool.
 void buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist);
+
+/// Called by the exporter of a HistFactory distribution, which is then written by the tool.
+void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist);
 
 /// Whether this is the importer that RooFit registers for HistFactory distributions, as opposed to the one of a user.
 bool isBuiltinHistFactoryImporter(JSONIO::Importer const &importer);

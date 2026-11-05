@@ -149,6 +149,19 @@ struct RooFit::HS3::ToolImportState {
    std::unordered_map<std::string, HS3::ParameterValue const *> defaultValuesByName;
 };
 
+/// The document that the tool is exporting.
+struct RooFit::HS3::ToolExportState {
+   HS3Document doc;
+   JSONNode *root = nullptr;
+   /// Set by the exporter of an object that is interpreted by the document.
+   std::optional<HistFactoryDist> typedObject;
+};
+
+void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist)
+{
+   tool._export->typedObject = std::move(dist);
+}
+
 namespace {
 
 // Keeps track of the objects that are being imported. Objects that depend on each other would otherwise recurse until
@@ -319,7 +332,7 @@ void collectParameterStepWidthCandidatesFromPdfs(std::vector<RooAbsPdf *> const 
 }
 
 void exportParameterStepWidths(RooWorkspace const &workspace, std::vector<RooAbsPdf *> const &pdfs,
-                               std::vector<RooAbsData *> const &data, JSONNode &rootnode)
+                               std::vector<RooAbsData *> const &data, std::vector<HS3::StepWidth> &out)
 {
    RooArgSet candidates;
    RooArgSet excluded;
@@ -329,7 +342,6 @@ void exportParameterStepWidths(RooWorkspace const &workspace, std::vector<RooAbs
 
    candidates.sort();
 
-   JSONNode *parameterStepWidthsNode = nullptr;
    for (RooAbsArg *arg : candidates) {
       if (excluded.find(*arg)) {
          continue;
@@ -340,12 +352,7 @@ void exportParameterStepWidths(RooWorkspace const &workspace, std::vector<RooAbs
          continue;
       }
 
-      if (!parameterStepWidthsNode) {
-         parameterStepWidthsNode = &rootnode["misc"]["minimization"]["parameter_stepwidths"].set_seq();
-      }
-
-      JSONNode &stepWidthNode = RooJSONFactoryWSTool::appendNamedChild(*parameterStepWidthsNode, var->GetName());
-      stepWidthNode["step_width"] << var->getError();
+      out.push_back({var->GetName(), var->getError()});
    }
 }
 
@@ -423,47 +430,62 @@ bool isLiteralConstVar(RooAbsArg const &arg)
    return isRooConstVar && isNumber(arg.GetName());
 }
 
-// Export the string attributes and tags of `arg` into the ROOT-internal attributes node.
-void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
+// Export the string attributes and tags of `arg` into the ROOT-internal attributes.
+void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attributes> &attributes)
 {
    // If this RooConst is a literal number, we don't need to export the attributes.
-   if (isLiteralConstVar(*arg)) {
+   if (isLiteralConstVar(*arg) || dynamic_cast<RooConstVar const *>(arg)) {
       return;
    }
 
-   JSONNode *node = nullptr;
-
-   auto initializeNode = [&]() {
-      if (node)
-         return;
-
-      node = &RooJSONFactoryWSTool::getRooFitInternal(rootnode, "attributes").set_map()[arg->GetName()].set_map();
+   HS3::Attributes *out = nullptr;
+   auto initialize = [&]() {
+      if (!out) {
+         out = &attributes[arg->GetName()];
+      }
    };
 
-   if (dynamic_cast<RooConstVar const *>(arg)) {
-      return;
-   }
-
    // export all string attributes of an object
-   if (!arg->stringAttributes().empty()) {
-      for (const auto &it : arg->stringAttributes()) {
-         // Skip some RooFit internals
-         if (it.first == "factory_tag" || it.first == "PROD_TERM_TYPE")
-            continue;
-         initializeNode();
-         (*node)["dict"].set_map()[it.first] << it.second;
-      }
+   for (const auto &it : arg->stringAttributes()) {
+      // Skip some RooFit internals
+      if (it.first == "factory_tag" || it.first == "PROD_TERM_TYPE")
+         continue;
+      initialize();
+      out->dict[it.first] = it.second;
    }
-   if (!arg->attributes().empty()) {
-      for (auto const &attr : arg->attributes()) {
-         // Skip some RooFit internals
-         if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object")
-            continue;
-         initializeNode();
-         (*node)["tags"].set_seq().append_child() << attr;
-      }
+   for (auto const &attr : arg->attributes()) {
+      // Skip some RooFit internals
+      if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object")
+         continue;
+      initialize();
+      out->tags.push_back(attr);
    }
 }
+
+} // namespace
+
+HS3::BinnedAxis RooFit::HS3::toBinnedAxis(RooRealVar const &var)
+{
+   RooJSONFactoryWSTool::testValidName(var.GetName(), false);
+   RooAbsBinning const &binning = var.getBinning();
+   HS3::BinnedAxis axis;
+   axis.name = var.GetName();
+   axis.min = binning.lowBound();
+   axis.max = binning.highBound();
+   if (binning.isUniform()) {
+      axis.binning = HS3::RegularBinning{binning.numBins()};
+   } else {
+      HS3::EdgesBinning edges;
+      edges.edges.push_back(binning.binLow(0));
+      for (int i = 0; i < binning.numBins(); ++i) {
+         edges.edges.push_back(binning.binHigh(i));
+      }
+      axis.binning = std::move(edges);
+   }
+   return axis;
+}
+
+namespace {
 
 std::unique_ptr<RooRealVar> createObservable(HS3::BinnedAxis const &axis)
 {
@@ -998,8 +1020,8 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
    return nullptr;
 }
 
-// Export a single variable (RooRealVar or RooConstVar) `v` as a named child of `node`.
-void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bool storeConstant, bool storeBins)
+// Export a single variable (RooRealVar or RooConstVar) `v` to the parameter point.
+void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoint &point, bool storeConstant)
 {
    auto *cv = dynamic_cast<const RooConstVar *>(v);
    auto *rrv = dynamic_cast<const RooRealVar *>(v);
@@ -1018,30 +1040,19 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bo
       return;
    }
 
-   JSONNode &var = appendNamedChild(node, v->GetName());
-
-   if (rrv) {
-      var["value"] << rrv->getVal();
-      if (storeConstant && (rrv->isConstant() || rrv->getMin() >= rrv->getMax())) {
-         var["const"] << true;
-      } else if (storeBins) {
-         var["min"] << rrv->getMin();
-         var["max"] << rrv->getMax();
-      }
-      if (rrv->getBins() != 0 && storeBins) {
-         var["nbins"] << rrv->getBins();
-      }
-      _domains->readVariable(*rrv);
-   }
+   HS3::ParameterValue var;
+   var.name = v->GetName();
+   var.value = rrv->getVal();
+   var.isConst = storeConstant && (rrv->isConstant() || rrv->getMin() >= rrv->getMax());
+   _domains->readVariable(*rrv);
+   point.parameters.push_back(std::move(var));
 }
 
-// Export all variables in `allElems` as a sequence under `n`.
-void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &n, bool storeConstant, bool storeBins)
+// Export all variables in `allElems` to the parameter point.
+void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, HS3::ParameterPoint &point, bool storeConstant)
 {
-   // export a list of RooRealVar objects
-   n.set_seq();
    for (RooAbsArg *arg : allElems) {
-      exportVariable(arg, n, storeConstant, storeBins);
+      exportVariable(arg, point, storeConstant);
    }
 }
 
@@ -1050,15 +1061,51 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
 {
    std::string newname = std::string(original->GetName()) + suffix;
    // Another object that shares the parameter might have exported the helper already.
-   if (findNamedChild((*_rootnodeOutput)["functions"], newname)) {
+   auto &functions = _export->doc.functions;
+   if (std::find_if(functions.begin(), functions.end(), [&](auto const &f) { return f.name == newname; }) !=
+       functions.end()) {
       return newname;
    }
-   RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_rootnodeOutput)["functions"], newname);
+   RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_export->root)["functions"], newname);
    trafo_node["type"] << "generic";
    trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();
+   functions.push_back({newname, {"generic", nullptr}});
    this->setAttribute(newname, "roofit_skip"); // this function should not be imported back in
    return newname;
 }
+
+namespace {
+
+// Turn an arbitrary string into a valid variable name, but refuse to change the
+// first character (which would silently rename the object).
+std::string makeValidNameOrError(std::string const &in)
+{
+   if (!std::isalpha(in[0])) {
+      RooJSONFactoryWSTool::error("refusing to change first character of string '" + in + "' to make a valid name!");
+   }
+   std::string out = RooFit::Detail::makeValidVarName(in);
+   if (out != in) {
+      oocoutW(nullptr, ObjectHandling) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
+   }
+   return out;
+}
+
+} // namespace
+
+namespace {
+
+// Record an object that was written by an exporter in the document.
+void recordGenericObject(HS3Document &doc, bool isPdf, std::string const &name, JSONNode const &elem)
+{
+   std::string type = elem.has_child("type") ? elem["type"].val() : "";
+   if (isPdf) {
+      doc.distributions.push_back({name, HS3::GenericObject{std::move(type), nullptr}});
+   } else {
+      doc.functions.push_back({name, {std::move(type), nullptr}});
+   }
+}
+
+} // namespace
 
 // Export a single object `func` (pdf, function, variable or category) to the output JSON, recording its name in
 // `exportedObjectNames` to avoid exporting it twice.
@@ -1077,18 +1124,12 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       // dependents and some ROOT internal information.
       exportObjects(func.servers(), exportedObjectNames);
 
-      std::vector<std::string> channelNames;
+      HS3::CombinedDistribution &info = _export->doc.rooFit.combinedDistributions[simPdf->GetName()];
+      info.indexCat = simPdf->indexCat().GetName();
       for (auto const &item : simPdf->indexCat()) {
-         channelNames.push_back(item.first);
-      }
-
-      auto &infoNode = getRooFitInternal(*_rootnodeOutput, "combined_distributions").set_map();
-      auto &child = infoNode[simPdf->GetName()].set_map();
-      child["index_cat"] << simPdf->indexCat().GetName();
-      exportCategory(simPdf->indexCat(), child);
-      child["distributions"].set_seq();
-      for (auto const &item : simPdf->indexCat()) {
-         child["distributions"].append_child() << simPdf->getPdf(item.first.c_str())->GetName();
+         info.labels.push_back(makeValidNameOrError(item.first));
+         info.indices.push_back(item.second);
+         info.distributions.push_back({simPdf->getPdf(item.first.c_str())->GetName()});
       }
 
       return;
@@ -1096,11 +1137,12 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       // categories are created by the respective RooSimultaneous, so we're skipping the export here
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
-      exportVariable(&func, *_varsNode, true, false);
+      exportVariable(&func, _export->doc.parameterPoints.front(), true);
       return;
    }
 
-   auto &collectionNode = (*_rootnodeOutput)[dynamic_cast<RooAbsPdf const *>(&func) ? "distributions" : "functions"];
+   const bool isPdf = dynamic_cast<RooAbsPdf const *>(&func);
+   auto &collectionNode = (*_export->root)[isPdf ? "distributions" : "functions"];
 
    auto const &exporters = RooFit::JSONIO::exporters();
    auto const &exportKeys = RooFit::JSONIO::exportKeys();
@@ -1123,6 +1165,15 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
                elem["name"] << name;
             }
             continue;
+         }
+         // Objects that are interpreted by the document are written here, the others were written by the exporter.
+         if (_export->typedObject) {
+            HS3::writeHistFactoryDist(elem, *_export->typedObject);
+            elem["name"] << name;
+            _export->doc.distributions.push_back({name, std::move(*_export->typedObject)});
+            _export->typedObject.reset();
+         } else {
+            recordGenericObject(_export->doc, isPdf, name, elem);
          }
          if (exp->autoExportDependants()) {
             exportObjects(func.servers(), exportedObjectNames);
@@ -1157,6 +1208,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
    }
 
    elem["type"] << dict->second.type;
+   recordGenericObject(_export->doc, isPdf, name, elem);
 
    size_t nprox = func.numProxies();
 
@@ -1417,24 +1469,6 @@ void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, JS
    }
 }
 
-namespace {
-
-// Turn an arbitrary string into a valid variable name, but refuse to change the
-// first character (which would silently rename the object).
-std::string makeValidNameOrError(std::string const &in)
-{
-   if (!std::isalpha(in[0])) {
-      RooJSONFactoryWSTool::error("refusing to change first character of string '" + in + "' to make a valid name!");
-   }
-   std::string out = RooFit::Detail::makeValidVarName(in);
-   if (out != in) {
-      oocoutW(nullptr, ObjectHandling) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
-   }
-   return out;
-}
-
-} // namespace
-
 /**
  * @brief Export a RooAbsCategory object to a JSONNode.
  *
@@ -1472,18 +1506,18 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
    datamap.name = data.GetName();
 
    // Write information necessary to reconstruct the combined dataset upon import
-   auto &child = getRooFitInternal(*_rootnodeOutput, "combined_datasets").set_map()[data.GetName()].set_map();
-   child["index_cat"] << cat->GetName();
-   exportCategory(*cat, child);
+   HS3::CombinedDataset &info = _export->doc.rooFit.combinedDatasets[data.GetName()];
+   info.indexCat = cat->GetName();
+   for (auto const &item : *cat) {
+      info.labels.push_back(makeValidNameOrError(item.first));
+      info.indices.push_back(item.second);
+   }
 
    // Find a RooSimultaneous model that would fit to this dataset
    RooSimultaneous const *simPdf = nullptr;
-   auto *combinedPdfInfoNode = findRooFitInternal(*_rootnodeOutput, "combined_distributions");
-   if (combinedPdfInfoNode) {
-      for (auto &info : combinedPdfInfoNode->children()) {
-         if (info["index_cat"].val() == cat->GetName()) {
-            simPdf = static_cast<RooSimultaneous const *>(_workspace.pdf(info.key()));
-         }
+   for (auto const &item : _export->doc.rooFit.combinedDistributions) {
+      if (item.second.indexCat == cat->GetName()) {
+         simPdf = static_cast<RooSimultaneous const *>(_workspace.pdf(item.first));
       }
    }
 
@@ -1503,7 +1537,7 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
    return datamap;
 }
 
-// Export a single dataset `data` (binned or unbinned) to the output JSON.
+// Export a single dataset `data` (binned or unbinned) to the output document.
 void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 {
    RooAbsCategory *cat = findCategoryObservable(data);
@@ -1511,7 +1545,8 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    if (cat)
       return;
 
-   JSONNode &output = appendNamedChild((*_rootnodeOutput)["data"], data.GetName());
+   HS3::Data output;
+   output.name = data.GetName();
 
    // This works around a problem in RooStats/HistFactory that was only fixed
    // in ROOT 6.30: until then, the weight variable of the observed dataset,
@@ -1524,13 +1559,20 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       variables.remove(*weightVar);
    }
 
-   // this is a regular binned dataset
-   if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
-      output["type"] << "binned";
+   auto exportBinned = [&](std::size_t n, double const *contents) {
+      HS3::BinnedData binned;
       for (auto *var : static_range_cast<RooRealVar *>(variables)) {
          _domains->readVariable(*var);
+         binned.axes.emplace_back(HS3::toBinnedAxis(*var));
       }
-      return exportHisto(variables, dh->numEntries(), dh->weightArray(), output);
+      binned.contents.assign(contents, contents + n);
+      output.body = std::move(binned);
+      _export->doc.data.push_back(std::move(output));
+   };
+
+   // this is a regular binned dataset
+   if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
+      return exportBinned(dh->numEntries(), dh->weightArray());
    }
 
    // Check if this actually represents a binned dataset, and then import it
@@ -1553,32 +1595,25 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       if (i == x.getBins())
          isBinnedData = true;
       if (isBinnedData) {
-         output["type"] << "binned";
-         for (auto *var : static_range_cast<RooRealVar *>(variables)) {
-            _domains->readVariable(*var);
-         }
-         return exportHisto(variables, data.numEntries(), contents.data(), output);
+         return exportBinned(data.numEntries(), contents.data());
       }
    }
 
    // this really is an unbinned dataset
-   output["type"] << "unbinned";
-   auto &observablesNode = output["axes"].set_seq();
+   HS3::UnbinnedData unbinned;
    for (auto *var : static_range_cast<RooRealVar *>(variables)) {
       _domains->readVariable(*var);
       // HS3 forbids binning information on the axes of unbinned data.
-      auto &axis = observablesNode.append_child().set_map();
       testValidName(var->GetName(), false);
-      axis["name"] << var->GetName();
-      axis["min"] << var->getMin();
-      axis["max"] << var->getMax();
+      unbinned.axes.emplace_back(HS3::ContinuousAxis{var->GetName(), var->getMin(), var->getMax()});
    }
-   auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
    bool hasNonUnityWeights = false;
    for (int i = 0; i < data.numEntries(); ++i) {
       data.get(i);
-      coords.append_child().fill_seq(variables, [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
+      for (auto *var : static_range_cast<RooRealVar *>(variables)) {
+         unbinned.entries.push_back(var->getVal());
+      }
       if (data.isWeighted()) {
          weightVals.push_back(data.weight());
          if (data.weight() != 1.)
@@ -1586,8 +1621,10 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       }
    }
    if (data.isWeighted() && hasNonUnityWeights) {
-      output["weights"].fill_seq(weightVals);
+      unbinned.weights = std::move(weightVals);
    }
+   output.body = std::move(unbinned);
+   _export->doc.data.push_back(std::move(output));
 }
 
 /**
@@ -1723,7 +1760,7 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
    }
 }
 
-void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelConfig const &mc,
+void RooJSONFactoryWSTool::exportModelConfig(RooFit::ModelConfig const &mc,
                                              const std::vector<CombinedData> &combDataSets,
                                              const std::vector<RooAbsData *> &singleDataSets)
 {
@@ -1739,7 +1776,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
          if (hasdata)
             analysisName += "_" + combDataSets[i].name;
 
-         exportSingleModelConfig(rootnode, mc, analysisName, hasdata ? &combDataSets[i].components : nullptr);
+         exportSingleModelConfig(mc, analysisName, hasdata ? &combDataSets[i].components : nullptr);
       }
    } else {
       RooArgSet observables(*mc.GetObservables());
@@ -1748,87 +1785,76 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
          if (observables.equals(*(data->get()))) {
             std::map<std::string, std::string> mapping;
             mapping[pdf->GetName()] = data->GetName();
-            exportSingleModelConfig(rootnode, mc, std::string(mc.GetName()) + "_" + data->GetName(), &mapping);
+            exportSingleModelConfig(mc, std::string(mc.GetName()) + "_" + data->GetName(), &mapping);
             ++founddata;
          }
       }
       if (founddata == 0) {
-         exportSingleModelConfig(rootnode, mc, mc.GetName(), nullptr);
+         exportSingleModelConfig(mc, mc.GetName(), nullptr);
       }
    }
 }
 
-void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::ModelConfig const &mc,
-                                                   std::string const &analysisName,
+void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc, std::string const &analysisName,
                                                    std::map<std::string, std::string> const *dataComponents)
 {
+   HS3Document &doc = _export->doc;
    auto pdf = mc.GetPdf();
 
-   JSONNode &analysisNode = appendNamedChild(rootnode["analyses"], analysisName);
-
-   auto &domains = analysisNode["domains"].set_seq();
+   HS3::Analysis analysis;
+   analysis.name = analysisName;
 
    // HS3 names must be unique across all top-level components, so the likelihood can't have the analysis name.
-   const std::string likelihoodName = analysisName + "_likelihood";
-   analysisNode["likelihood"] << likelihoodName;
-
-   auto &nllNode = appendNamedChild(rootnode["likelihoods"], likelihoodName);
-   nllNode["distributions"].set_seq();
-   nllNode["data"].set_seq();
+   HS3::Likelihood likelihood;
+   likelihood.name = analysisName + "_likelihood";
+   analysis.likelihood.name = likelihood.name;
 
    if (dataComponents) {
       auto simPdf = dynamic_cast<RooSimultaneous const *>(pdf);
       if (simPdf) {
          for (auto const &item : simPdf->indexCat()) {
             const auto &dataComp = dataComponents->find(item.first);
-            nllNode["distributions"].append_child() << simPdf->getPdf(item.first)->GetName();
-            nllNode["data"].append_child() << dataComp->second;
+            likelihood.terms.push_back({{simPdf->getPdf(item.first)->GetName()}, HS3::DataRef{dataComp->second}});
          }
       } else {
          for (auto it : *dataComponents) {
-            nllNode["distributions"].append_child() << it.first;
-            nllNode["data"].append_child() << it.second;
+            likelihood.terms.push_back({{it.first}, HS3::DataRef{it.second}});
          }
       }
    } else {
-      nllNode["distributions"].append_child() << pdf->GetName();
-      nllNode["data"].append_child() << 0;
+      likelihood.terms.push_back({{pdf->GetName()}, 0.0});
    }
 
    if (mc.GetExternalConstraints()) {
-      auto &extConstrNode = nllNode["aux_distributions"];
-      extConstrNode.set_seq();
       for (const auto &constr : *mc.GetExternalConstraints()) {
-         extConstrNode.append_child() << constr->GetName();
+         likelihood.auxDistributions.push_back({constr->GetName()});
       }
    }
+   doc.likelihoods.push_back(std::move(likelihood));
 
-   auto writeList = [&](const char *name, RooArgSet const *args) {
-      if (!args || !args->size())
-         return;
-
+   if (RooArgSet const *pois = mc.GetParametersOfInterest()) {
       std::vector<std::string> names;
-      names.reserve(args->size());
-      for (RooAbsArg const *arg : *args)
+      names.reserve(pois->size());
+      for (RooAbsArg const *arg : *pois)
          names.push_back(arg->GetName());
       std::sort(names.begin(), names.end());
-      analysisNode[name].fill_seq(names);
-   };
-
-   writeList("parameters_of_interest", mc.GetParametersOfInterest());
-
-   auto &domainsNode = rootnode["domains"];
+      for (auto const &name : names) {
+         analysis.parametersOfInterest.push_back({name});
+      }
+   }
 
    auto writeProductDomain = [&](const char *suffix, RooArgSet const *args) {
       if (!args || args->empty())
          return;
       const std::string domainName = analysisName + suffix;
-      domains.append_child() << domainName;
+      analysis.domains.push_back({domainName});
       RooFit::JSONIO::Detail::Domains::ProductDomain domain;
       for (auto *var : static_range_cast<const RooRealVar *>(*args)) {
          domain.readVariable(*var);
       }
-      domain.writeJSON(appendNamedChild(domainsNode, domainName));
+      doc.domains.emplace_back();
+      doc.domains.back().name = domainName;
+      domain.write(doc.domains.back());
    };
 
    writeProductDomain("_nuisance_parameters", mc.GetNuisanceParameters());
@@ -1837,21 +1863,39 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
 
    // The snapshots are exported as parameter points. Reference the one of the ModelConfig as the initial values.
    if (_workspace.getSnapshot(mc.GetSnapshotName().c_str())) {
-      analysisNode["init"] << mc.GetSnapshotName();
+      analysis.init = HS3::ParameterPointRef{mc.GetSnapshotName()};
    }
+   doc.analyses.push_back(std::move(analysis));
 
-   auto &modelConfigAux = getRooFitInternal(rootnode, "ModelConfigs", analysisName);
-   modelConfigAux.set_map();
-   modelConfigAux["pdfName"] << pdf->GetName();
-   modelConfigAux["mcName"] << mc.GetName();
+   HS3::ModelConfigInfo &info = doc.rooFit.modelConfigs[analysisName];
+   info.pdfName = pdf->GetName();
+   info.mcName = mc.GetName();
 }
 
 // Export all top-level pdfs, functions, datasets and ModelConfigs of the workspace into `n`.
 void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
-   _varsNode = &makeVariablesNode(n);
-   _rootnodeOutput = &n;
+   _export = std::make_unique<HS3::ToolExportState>();
+   _export->root = &n;
+   // The state of the export must not survive it, not even if there is an exception.
+   struct ExportScope {
+      RooJSONFactoryWSTool &tool;
+      ~ExportScope()
+      {
+         tool._export.reset();
+         tool._domains.reset();
+      }
+   } exportScope{*this};
+
+   HS3Document &doc = _export->doc;
+   doc.metadata.hs3Version = hs3VersionTag;
+   // Add information about the ROOT version that was used to generate this file. We want to consistently use dots
+   // such that the version name can be easily digested automatically.
+   std::string versionName = gROOT->GetVersion();
+   std::replace(versionName.begin(), versionName.end(), '/', '.');
+   doc.metadata.packages.push_back({"ROOT", versionName});
+   doc.parameterPoints.push_back({"default_values", {}});
 
    // export all toplevel pdfs
    std::vector<RooAbsPdf *> allpdfs;
@@ -1880,7 +1924,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 
    // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {
-      exportAttributes(arg, n);
+      exportAttributes(arg, doc.rooFit.attributes);
    }
 
    // collect all datasets
@@ -1907,11 +1951,11 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    // export all ModelConfig objects and attached Pdfs
    for (TObject *obj : _workspace.allGenericObjects()) {
       if (auto mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
-         exportModelConfig(n, *mc, combData, singleData);
+         exportModelConfig(*mc, combData, singleData);
       }
    }
 
-   exportParameterStepWidths(_workspace, allpdfs, alldata, n);
+   exportParameterStepWidths(_workspace, allpdfs, alldata, doc.rooFit.stepWidths);
 
    for (auto *snsh : static_range_cast<RooArgSet const *>(_workspace.getSnapshots())) {
       RooArgSet snapshotSorted;
@@ -1933,14 +1977,25 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       snapshotSorted.sort();
       std::string name(snsh->GetName());
       if (name != "default_values") {
-         this->exportVariables(snapshotSorted, appendNamedChild(n["parameter_points"], name)["parameters"], true,
-                               false);
+         doc.parameterPoints.push_back({name, {}});
+         this->exportVariables(snapshotSorted, doc.parameterPoints.back(), true);
       }
    }
-   _varsNode = nullptr;
-   _domains->writeJSON(n["domains"]);
-   _domains.reset();
-   _rootnodeOutput = nullptr;
+   _domains->write(doc.domains);
+
+   // The document that RooFit writes has to pass the same checks as the ones that it reads. Until RooFit writes
+   // documents that follow the current standard, problems are only reported.
+   HS3::Diagnostics diagnostics;
+   HS3::ValidateOptions validateOptions;
+   validateOptions.isExternal = [](std::string const &) { return false; };
+   doc.metadata.version = HS3::Version{};
+   HS3::checkDocument(doc, diagnostics, validateOptions);
+   for (auto &diagnostic : diagnostics) {
+      diagnostic.severity = HS3::Diagnostic::Severity::Warning;
+      diagnostic.message = "the exported document is not valid: " + diagnostic.message;
+   }
+   HS3::report(diagnostics);
+   HS3::writeDocument(n, doc);
 }
 
 /**
@@ -2001,8 +2056,8 @@ std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
  */
 bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
 {
-   std::unique_ptr<JSONTree> tree = createNewJSONTree();
-   JSONNode &n = tree->rootnode();
+   std::unique_ptr<JSONTree> tree = JSONTree::create();
+   JSONNode &n = tree->rootnode().set_map();
    this->exportAllObjects(n);
    n.writeJSON(os);
    return true;
@@ -2035,10 +2090,7 @@ bool RooJSONFactoryWSTool::hasAttribute(const std::string &obj, const std::strin
 }
 void RooJSONFactoryWSTool::setAttribute(const std::string &obj, const std::string &attrib)
 {
-   auto node = &RooJSONFactoryWSTool::getRooFitInternal(*_rootnodeOutput, "attributes").set_map()[obj].set_map();
-   auto &tags = (*node)["tags"];
-   tags.set_seq();
-   tags.append_child() << attrib;
+   _export->doc.rooFit.attributes[obj].tags.push_back(attrib);
 }
 
 std::string RooJSONFactoryWSTool::getStringAttribute(const std::string &obj, const std::string &attrib)
@@ -2055,10 +2107,7 @@ std::string RooJSONFactoryWSTool::getStringAttribute(const std::string &obj, con
 void RooJSONFactoryWSTool::setStringAttribute(const std::string &obj, const std::string &attrib,
                                               const std::string &value)
 {
-   auto node = &RooJSONFactoryWSTool::getRooFitInternal(*_rootnodeOutput, "attributes").set_map()[obj].set_map();
-   auto &dict = (*node)["dict"];
-   dict.set_map();
-   dict[attrib] << value;
+   _export->doc.rooFit.attributes[obj].dict[attrib] = value;
 }
 
 // Import the JSON document rooted at `n` into the workspace.

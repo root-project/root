@@ -509,9 +509,14 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
 
 } // namespace
 
-std::optional<ValidatedHS3Document> validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options)
+void checkDocument(HS3Document const &doc, Diagnostics &diagnostics, ValidateOptions const &options)
 {
    Validator{doc, diagnostics, options}.run();
+}
+
+std::optional<ValidatedHS3Document> validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options)
+{
+   checkDocument(doc, diagnostics, options);
    if (hasErrors(diagnostics)) {
       return std::nullopt;
    }

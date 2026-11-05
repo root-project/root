@@ -25,6 +25,8 @@
 #include <set>
 #include <vector>
 
+class RooJSONFactoryWSTool;
+
 namespace RooFit {
 namespace JSONIO {
 namespace Detail {
@@ -33,8 +35,12 @@ class Domains;
 } // namespace JSONIO
 namespace HS3 {
 struct Distribution;
+struct HistFactoryDist;
+struct ParameterPoint;
 struct ParameterValue;
+struct ToolExportState;
 struct ToolImportState;
+void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist);
 } // namespace HS3
 } // namespace RooFit
 namespace RooStats {
@@ -248,28 +254,28 @@ private:
    void warnIfFreeWithoutDomain(RooRealVar const &var);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n, bool storeConstant, bool storeBins);
-   void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n, bool storeConstant, bool storeBins);
+   void exportVariable(const RooAbsArg *v, RooFit::HS3::ParameterPoint &point, bool storeConstant);
+   void exportVariables(const RooArgSet &allElems, RooFit::HS3::ParameterPoint &point, bool storeConstant);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
-   void exportModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
+   void exportModelConfig(RooStats::ModelConfig const &mc,
                           const std::vector<RooJSONFactoryWSTool::CombinedData> &combined,
                           const std::vector<RooAbsData *> &single);
 
-   void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                                std::string const &analysisName,
+   void exportSingleModelConfig(RooStats::ModelConfig const &mc, std::string const &analysisName,
                                 std::map<std::string, std::string> const *dataComponents);
 
+   friend void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, RooFit::HS3::HistFactoryDist dist);
+
    // member variables
-   RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
-   RooFit::Detail::JSONNode *_varsNode = nullptr;
    std::string _hs3VersionInput;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
    std::unique_ptr<RooFit::HS3::ToolImportState> _import;
+   std::unique_ptr<RooFit::HS3::ToolExportState> _export;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
 

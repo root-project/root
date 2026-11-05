@@ -311,33 +311,6 @@ inline std::string defaultGammaName(std::string const &sysname, std::size_t i)
    return "gamma_" + sysname + "_bin_" + std::to_string(i);
 }
 
-/// Export the names of the gamma parameters to the modifier struct
-void exportGammaParameters(JSONNode &mod, std::vector<RooAbsReal *> const &params)
-{
-   std::vector<std::string> paramNames;
-   for (RooAbsReal *param : params) {
-      paramNames.emplace_back(param->GetName());
-   }
-   mod["parameters"].fill_seq(paramNames);
-}
-
-/// Export the names of the constraint distributions of a modifier, with null for unconstrained parameters. Nothing is
-/// written if all parameters are unconstrained.
-void exportConstraintNames(JSONNode &mod, std::vector<RooAbsPdf const *> const &constraints)
-{
-   if (std::none_of(constraints.begin(), constraints.end(), [](auto *pdf) { return pdf != nullptr; })) {
-      return;
-   }
-   auto &names = mod["constraints"].set_seq();
-   for (auto *constraint : constraints) {
-      if (constraint) {
-         names.append_child() << constraint->GetName();
-      } else {
-         names.append_child().set_null();
-      }
-   }
-}
-
 RooRealVar &createNominal(RooWorkspace &ws, std::string const &parname, double val, double min, double max)
 {
    RooRealVar &nom = getOrCreate<RooRealVar>(ws, "nom_" + parname, val, min, max);
@@ -1640,116 +1613,122 @@ std::optional<Interpolation> defaultInterpolation(const Channel &channel)
    return best->first;
 }
 
-bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
+HS3::Constraint toConstraint(RooAbsPdf const *constraint)
 {
-   // Write the parameter and the name of the constraint distribution of a modifier with a single parameter.
-   auto writeParameter = [](JSONNode &mod, RooAbsReal const &param, RooAbsPdf const *constraint) {
-      mod["parameters"].set_seq().append_child() << param.GetName();
-      exportConstraintNames(mod, {constraint});
-   };
-   auto addModifier = [](JSONNode &modifiers, std::string const &name, const char *type) -> JSONNode & {
-      auto &mod = modifiers.append_child();
-      mod.set_map();
-      mod["name"] << name;
-      mod["type"] << type;
-      return mod;
+   if (!constraint) {
+      return HS3::Unconstrained{};
+   }
+   return HS3::ConstraintPdf{{constraint->GetName()}};
+}
+
+// The constraint distributions of gamma parameters, with null for the unconstrained ones. Nothing is written if all
+// parameters are unconstrained.
+HS3::GammaConstraint toGammaConstraint(std::vector<RooAbsPdf const *> const &constraints)
+{
+   if (std::none_of(constraints.begin(), constraints.end(), [](auto *pdf) { return pdf != nullptr; })) {
+      return HS3::Unconstrained{};
+   }
+   HS3::GammaConstraintPdfs pdfs;
+   for (auto *constraint : constraints) {
+      pdfs.pdfs.push_back(constraint ? std::make_optional(HS3::DistributionRef{constraint->GetName()}) : std::nullopt);
+   }
+   return pdfs;
+}
+
+void checkBinning(std::size_t nBins, std::size_t size, const char *what)
+{
+   if (nBins != size) {
+      RooJSONFactoryWSTool::error("inconsistent binning: " + std::to_string(nBins) + " bins expected, but " +
+                                  std::to_string(size) + " found in " + what + "!");
+   }
+}
+
+// The channel as it is written to the document, which the tool writes to the JSON.
+bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel)
+{
+   HS3::HistFactoryDist dist;
+   dist.defaultInterpolation = defaultInterpolation(channel);
+   auto interpolationIfNotDefault = [&](Interpolation const &interpolation) -> std::optional<Interpolation> {
+      if (dist.defaultInterpolation && interpolation == *dist.defaultInterpolation) {
+         return std::nullopt;
+      }
+      return interpolation;
    };
 
-   elem["type"] << "histfactory_dist";
-   const auto channelDefaultInterpolation = defaultInterpolation(channel);
-   if (channelDefaultInterpolation) {
-      writeInterpolation(elem["default_interpolation"], *channelDefaultInterpolation);
+   for (auto *obs : static_range_cast<RooRealVar *>(*channel.varSet)) {
+      dist.axes.push_back(HS3::toBinnedAxis(*obs));
    }
 
-   bool observablesWritten = false;
    for (const auto &sample : channel.samples) {
-
-      auto &s = RooJSONFactoryWSTool::appendNamedChild(elem["samples"], sample.name);
-
-      auto &modifiers = s["modifiers"];
-      modifiers.set_seq();
+      HS3::Sample &s = dist.samples.emplace_back();
+      s.name = sample.name;
 
       for (const auto &nf : sample.normfactors) {
-         auto &mod = modifiers.append_child();
-         mod.set_map();
-         mod["name"] << nf.name;
-         writeParameter(mod, *nf.param, nf.constraint);
-         mod["type"] << "normfactor";
+         s.modifiers.push_back(HS3::NormFactor{nf.name, {nf.param->GetName()}, toConstraint(nf.constraint)});
          if (nf.constraint) {
             tool->queueExport(*nf.constraint);
          }
       }
 
       for (const auto &sys : sample.normsys) {
-         auto &mod = addModifier(modifiers, sys.name, "normsys");
-         writeParameter(mod, *sys.param, sys.constraint);
-         if (!channelDefaultInterpolation || sys.interpolation != *channelDefaultInterpolation) {
-            writeInterpolation(mod["interpolation"], sys.interpolation);
-         }
-         auto &data = mod["data"].set_map();
-         data["lo"] << sys.low;
-         data["hi"] << sys.high;
+         s.modifiers.push_back(HS3::NormSys{sys.name,
+                                            {sys.param->GetName()},
+                                            sys.high,
+                                            sys.low,
+                                            toConstraint(sys.constraint),
+                                            interpolationIfNotDefault(sys.interpolation)});
       }
 
       for (const auto &sys : sample.histosys) {
-         auto &mod = addModifier(modifiers, sys.name, "histosys");
-         writeParameter(mod, *sys.param, sys.constraint);
-         if (!channelDefaultInterpolation || sys.interpolation != *channelDefaultInterpolation) {
-            writeInterpolation(mod["interpolation"], sys.interpolation);
-         }
-         auto &data = mod["data"].set_map();
-         if (channel.nBins != sys.low.size() || channel.nBins != sys.high.size()) {
-            RooJSONFactoryWSTool::error("inconsistent binning: " + std::to_string(channel.nBins) +
-                                        " bins expected, but " + std::to_string(sys.low.size()) + "/" +
-                                        std::to_string(sys.high.size()) + " found in nominal histogram errors!");
-         }
-         RooJSONFactoryWSTool::exportArray(channel.nBins, sys.low.data(), data["lo"].set_map()["contents"]);
-         RooJSONFactoryWSTool::exportArray(channel.nBins, sys.high.data(), data["hi"].set_map()["contents"]);
+         checkBinning(channel.nBins, sys.low.size(), "nominal histogram errors");
+         checkBinning(channel.nBins, sys.high.size(), "nominal histogram errors");
+         HS3::HistoSys mod;
+         mod.name = sys.name;
+         mod.parameter.name = sys.param->GetName();
+         mod.hi.contents = sys.high;
+         mod.lo.contents = sys.low;
+         mod.constraint = toConstraint(sys.constraint);
+         mod.interpolation = interpolationIfNotDefault(sys.interpolation);
+         s.modifiers.push_back(std::move(mod));
       }
 
       for (const auto &sys : sample.shapesys) {
-         auto &mod = addModifier(modifiers, sys.name, "shapefactor");
-         exportGammaParameters(mod, sys.parameters);
+         HS3::ShapeSys mod;
+         mod.name = sys.name;
+         for (RooAbsReal *param : sys.parameters) {
+            mod.parameters.push_back({param->GetName()});
+         }
          // The relative uncertainties are encoded in the constraint distributions.
-         exportConstraintNames(mod, sys.constraintPdfs);
+         mod.constraint = toGammaConstraint(sys.constraintPdfs);
+         s.modifiers.push_back(std::move(mod));
       }
 
       for (const auto &other : sample.otherElements) {
-         addModifier(modifiers, other.name, "custom");
+         s.modifiers.push_back(HS3::CustomModifier{other.name});
       }
       for (const auto &other : sample.tmpElements) {
-         addModifier(modifiers, other.name, "custom");
+         s.modifiers.push_back(HS3::CustomModifier{other.name});
       }
 
       if (sample.useBarlowBeestonLight) {
-         auto &mod = addModifier(modifiers, ::Literals::staterror, ::Literals::staterror);
-         exportGammaParameters(mod, sample.staterrorParameters);
-         exportConstraintNames(mod, sample.staterrorConstraints);
+         HS3::StatError mod;
+         mod.name = ::Literals::staterror;
+         for (RooAbsReal *param : sample.staterrorParameters) {
+            mod.parameters.push_back({param->GetName()});
+         }
+         mod.constraint = toGammaConstraint(sample.staterrorConstraints);
+         s.modifiers.push_back(std::move(mod));
       }
 
-      if (!observablesWritten) {
-         auto &output = elem["axes"].set_seq();
-         for (auto *obs : static_range_cast<RooRealVar *>(*channel.varSet)) {
-            RooJSONFactoryWSTool::exportAxis(output.append_child().set_map(), *obs);
-         }
-         observablesWritten = true;
-      }
-      auto &dataNode = s["data"].set_map();
-      if (channel.nBins != sample.hist.size()) {
-         RooJSONFactoryWSTool::error("inconsistent binning: " + std::to_string(channel.nBins) + " bins expected, but " +
-                                     std::to_string(sample.hist.size()) + " found in nominal histogram!");
-      }
-      RooJSONFactoryWSTool::exportArray(channel.nBins, sample.hist.data(), dataNode["contents"]);
+      checkBinning(channel.nBins, sample.hist.size(), "nominal histogram");
+      s.contents = sample.hist;
       if (!sample.histError.empty()) {
-         if (channel.nBins != sample.histError.size()) {
-            RooJSONFactoryWSTool::error("inconsistent binning: " + std::to_string(channel.nBins) +
-                                        " bins expected, but " + std::to_string(sample.histError.size()) +
-                                        " found in nominal histogram errors!");
-         }
-         RooJSONFactoryWSTool::exportArray(channel.nBins, sample.histError.data(), dataNode["errors"]);
+         checkBinning(channel.nBins, sample.histError.size(), "nominal histogram errors");
+         s.errors = sample.histError;
       }
    }
 
+   HS3::setExportedObject(*tool, std::move(dist));
    return true;
 }
 
@@ -1825,7 +1804,7 @@ void checkUnconstrainedModifiers(const Channel &channel, const std::vector<RooAb
 }
 
 bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
-                          std::vector<RooAbsPdf *> constraints, JSONNode &elem)
+                          std::vector<RooAbsPdf *> constraints)
 {
    // some preliminary checks
    if (!sumpdf) {
@@ -1911,13 +1890,13 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
    }
 
-   return exportChannel(tool, channel, elem);
+   return exportChannel(tool, channel);
 }
 
 class HistFactoryStreamer_ProdPdf : public RooFit::JSONIO::Exporter {
 public:
    bool autoExportDependants() const override { return false; }
-   bool tryExport(RooJSONFactoryWSTool *tool, const RooProdPdf *prodpdf, JSONNode &elem) const
+   bool tryExport(RooJSONFactoryWSTool *tool, const RooProdPdf *prodpdf) const
    {
       std::vector<RooAbsPdf *> constraints;
       RooRealSumPdf *sumpdf = nullptr;
@@ -1935,36 +1914,35 @@ public:
       if (!sumpdf)
          return false;
 
-      bool ok = tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, constraints, elem);
-      return ok;
+      return tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, constraints);
    }
    std::string const &key() const override
    {
       static const std::string keystring = "histfactory_dist";
       return keystring;
    }
-   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *p, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *p, JSONNode &) const override
    {
-      return tryExport(tool, static_cast<const RooProdPdf *>(p), elem);
+      return tryExport(tool, static_cast<const RooProdPdf *>(p));
    }
 };
 
 class HistFactoryStreamer_SumPdf : public RooFit::JSONIO::Exporter {
 public:
    bool autoExportDependants() const override { return false; }
-   bool tryExport(RooJSONFactoryWSTool *tool, const RooRealSumPdf *sumpdf, JSONNode &elem) const
+   bool tryExport(RooJSONFactoryWSTool *tool, const RooRealSumPdf *sumpdf) const
    {
       std::vector<RooAbsPdf *> constraints;
-      return tryExportHistFactory(tool, sumpdf->GetName(), sumpdf, constraints, elem);
+      return tryExportHistFactory(tool, sumpdf->GetName(), sumpdf, constraints);
    }
    std::string const &key() const override
    {
       static const std::string keystring = "histfactory_dist";
       return keystring;
    }
-   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *p, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *p, JSONNode &) const override
    {
-      return tryExport(tool, static_cast<const RooRealSumPdf *>(p), elem);
+      return tryExport(tool, static_cast<const RooRealSumPdf *>(p));
    }
 };
 

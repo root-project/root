@@ -45,7 +45,8 @@ public:
    double const *fixedValue(const char *name) const;
 
    void read(std::vector<RooFit::HS3::Domain> const &);
-   void writeJSON(RooFit::Detail::JSONNode &) const;
+   /// Append the domains that are not in the list yet.
+   void write(std::vector<RooFit::HS3::Domain> &) const;
 
    bool hasVariable(const char *name) const;
 
@@ -60,7 +61,7 @@ public:
       void writeVariable(RooRealVar &) const;
 
       void read(RooFit::HS3::Domain const &);
-      void writeJSON(RooFit::Detail::JSONNode &) const;
+      void write(RooFit::HS3::Domain &) const;
 
       bool hasVariable(const char *name) const;
       double const *fixedValue(const char *name) const;
@@ -86,7 +87,6 @@ public:
 
       static void applyBinning(RooRealVar &var, ProductDomainElement const &elem, const char *name = nullptr);
       static void readBinning(ProductDomainElement &elem, RooAbsBinning const &binning);
-      static void writeBinning(RooFit::Detail::JSONNode &node, ProductDomainElement const &elem);
 
       std::map<std::string, ProductDomainElement> _map;
    };

@@ -25,24 +25,13 @@
 
 #include <RooFit/Detail/JSONInterface.h>
 
+#include <algorithm>
+
 namespace RooFit {
 namespace JSONIO {
 namespace Detail {
 
 constexpr static auto defaultDomainName = "default_domain";
-
-namespace {
-
-// JSON can't represent infinity, so an infinite bound is expressed by omitting it. An absent bound is read as
-// infinite by readBound() in JSONIOUtils.
-void writeBound(RooFit::Detail::JSONNode &node, const char *key, double value)
-{
-   if (!RooNumber::isInfinite(value)) {
-      node[key] << value;
-   }
-}
-
-} // namespace
 
 void Domains::populate(RooWorkspace &ws) const
 {
@@ -142,12 +131,15 @@ double const *Domains::fixedValue(const char *name) const
    return nullptr;
 }
 
-void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
+void Domains::write(std::vector<RooFit::HS3::Domain> &domains) const
 {
    for (auto const &domain : _map) {
       // Avoid writing a domain that was already written
-      if (!RooJSONFactoryWSTool::findNamedChild(node, domain.first)) {
-         domain.second.writeJSON(RooJSONFactoryWSTool::appendNamedChild(node, domain.first));
+      auto found = std::find_if(domains.begin(), domains.end(), [&](auto const &d) { return d.name == domain.first; });
+      if (found == domains.end()) {
+         domains.emplace_back();
+         domains.back().name = domain.first;
+         domain.second.write(domains.back());
       }
    }
 }
@@ -213,17 +205,6 @@ void Domains::ProductDomain::applyBinning(RooRealVar &var, ProductDomainElement 
    }
 }
 
-void Domains::ProductDomain::writeBinning(RooFit::Detail::JSONNode &node, ProductDomainElement const &elem)
-{
-   if (!elem.edges.empty()) {
-      auto &edges = node["edges"].set_seq();
-      for (double edge : elem.edges) {
-         edges.append_child() << edge;
-      }
-   } else if (elem.hasNBins && elem.nBins != 0) {
-      node["nbins"] << elem.nBins;
-   }
-}
 void Domains::ProductDomain::writeVariable(RooRealVar &var) const
 {
    auto found = _map.find(var.GetName());
@@ -300,29 +281,33 @@ void Domains::ProductDomain::read(RooFit::HS3::Domain const &domain)
       }
    }
 }
-void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
-
+void Domains::ProductDomain::write(RooFit::HS3::Domain &domain) const
 {
-   node.set_map();
-   node["type"] << "product_domain";
-
-   auto &variablesNode = node["axes"];
-
    for (auto const &item : _map) {
       auto const &elem = item.second;
-      RooFit::Detail::JSONNode &varnode = RooJSONFactoryWSTool::appendNamedChild(variablesNode, item.first);
+      RooFit::HS3::DomainAxis axis;
+      axis.name = item.first;
       if (elem.hasFixedValue) {
-         varnode[fixedValueKey] << elem.fixedValue;
+         axis.fixedValue = elem.fixedValue;
+         domain.axes.emplace_back(std::move(axis));
          continue;
       }
-      const double min = elem.hasMin ? elem.min : -RooNumber::infinity();
-      const double max = elem.hasMax ? elem.max : RooNumber::infinity();
-      writeBound(varnode, "min", min);
-      writeBound(varnode, "max", max);
-      // A binning requires a bounded range.
-      if (!RooNumber::isInfinite(min) && !RooNumber::isInfinite(max)) {
-         writeBinning(varnode, elem);
+      // An infinite bound is expressed by omitting it.
+      if (elem.hasMin && !RooNumber::isInfinite(elem.min)) {
+         axis.min = elem.min;
       }
+      if (elem.hasMax && !RooNumber::isInfinite(elem.max)) {
+         axis.max = elem.max;
+      }
+      // A binning requires a bounded range.
+      if (axis.min && axis.max) {
+         if (!elem.edges.empty()) {
+            axis.binning = RooFit::HS3::EdgesBinning{elem.edges};
+         } else if (elem.hasNBins && elem.nBins != 0) {
+            axis.binning = RooFit::HS3::RegularBinning{elem.nBins};
+         }
+      }
+      domain.axes.emplace_back(std::move(axis));
    }
 }
 void Domains::ProductDomain::populate(RooWorkspace &ws) const

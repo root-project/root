@@ -23,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     src/HS3Parser.cxx
     src/HS3Upgrade.cxx
     src/HS3Validate.cxx
+    src/HS3Writer.cxx
     src/JSONInterface.cxx
     src/JSONIO.cxx
     src/RooJSONFactoryWSTool.cxx
