@@ -574,7 +574,7 @@ target_sources(
 )
 
 if (NOT WIN32)
-  # we include privately headers that are not public, from a "friend" target
+  # workaround to include privately headers that are not public, from a "friend" target
   get_target_property(RooFitMultiProcess_Friend_Dirs RooFitMultiProcess HEADER_DIRS_friend_header_files)
   if(RooFitMultiProcess_Friend_Dirs)
     target_include_directories(RooFitCore PRIVATE ${RooFitMultiProcess_Friend_Dirs})
