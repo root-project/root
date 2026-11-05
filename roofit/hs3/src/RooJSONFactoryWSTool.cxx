@@ -14,6 +14,7 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <RooConstVar.h>
+#include <RooNumber.h>
 #include <RooRealVar.h>
 #include <RooBinning.h>
 #include <RooAbsCategory.h>
@@ -456,8 +457,8 @@ void applyUnbinnedAxisRanges(const JSONNode &p, RooWorkspace &workspace, RooFit:
       if (!var) {
          continue; // reported by getObservables()
       }
-      const double min = axis["min"].val_double();
-      const double max = axis["max"].val_double();
+      const double min = readBound(axis, "min", -RooNumber::infinity());
+      const double max = readBound(axis, "max", RooNumber::infinity());
       if (domains && !domains->hasVariable(name.c_str())) {
          var->setRange(min, max);
       } else if (var->getMin() != min || var->getMax() != max) {

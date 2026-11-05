@@ -11,6 +11,7 @@
  */
 
 #include "Domains.h"
+#include "JSONIOUtils.h"
 
 #include <RooAbsBinning.h>
 #include <RooBinning.h>
@@ -28,15 +29,6 @@ namespace Detail {
 constexpr static auto defaultDomainName = "default_domain";
 
 namespace {
-
-double readBound(RooFit::Detail::JSONNode const &node, const char *key, double defaultValue)
-{
-   if (!node.has_child(key)) {
-      return defaultValue;
-   }
-   auto const &bound = node[key];
-   return bound.is_null() ? defaultValue : bound.val_double();
-}
 
 void writeBound(RooFit::Detail::JSONNode &node, double value)
 {

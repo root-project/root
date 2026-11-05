@@ -27,6 +27,7 @@
 #include <RooHistPdf.h>
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
+#include <RooNumber.h>
 #include <RooPoisson.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
@@ -3703,4 +3704,25 @@ TEST(RooFitHS3, NameClashesInOlderDocuments)
       ws.import(data, RooFit::Silence());
       expectImportWarns(RooJSONFactoryWSTool{ws}.exportJSONtoString(), "model");
    }
+}
+
+// Infinite bounds of unbinned observables are written as null and have to be read back.
+TEST(RooFitHS3, UnbinnedDataWithInfiniteBounds)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 1.0, 0.0, RooNumber::infinity()};
+   RooRealVar y{"y", "y", 1.0, -RooNumber::infinity(), RooNumber::infinity()};
+   RooDataSet ds{"ds", "ds", RooArgSet{x, y}};
+   ds.add(RooArgSet{x, y});
+
+   RooWorkspace ws1;
+   ws1.import(ds, RooFit::Silence());
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString()));
+   EXPECT_EQ(ws2.data("ds")->numEntries(), 1);
+   EXPECT_DOUBLE_EQ(ws2.var("x")->getMin(), 0.0);
+   EXPECT_TRUE(RooNumber::isInfinite(ws2.var("x")->getMax()));
+   EXPECT_TRUE(RooNumber::isInfinite(ws2.var("y")->getMin()));
+   EXPECT_TRUE(RooNumber::isInfinite(ws2.var("y")->getMax()));
 }

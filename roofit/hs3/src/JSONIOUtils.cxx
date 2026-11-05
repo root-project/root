@@ -104,6 +104,16 @@ void writeAxisBinning(JSONNode &node, const RooAbsBinning &binning)
    }
 }
 
+// Read a bound of an axis. Infinite bounds are written as null.
+double readBound(JSONNode const &node, const char *key, double defaultValue)
+{
+   if (!node.has_child(key)) {
+      return defaultValue;
+   }
+   auto const &bound = node[key];
+   return bound.is_null() ? defaultValue : bound.val_double();
+}
+
 // Parse the leading "MAJOR.MINOR" of an HS3 version string like "0.2", "0.2.9" or "0.3".
 bool parseHS3Version(std::string const &version, int &major, int &minor)
 {
