@@ -47,12 +47,16 @@ implementation(s) take precedence.
 ### Writing your own importers and exporters: Proxy-based
 
 Proxy-based implementations can be added very easily and without
-actually writing any `C++` code -- you only need to add a short item
-to a list in a `JSON` file, namely the
-[export keys](https://github.com/root-project/root/blob/master/etc/RooFitHS3_wsexportkeys.json)
+actually writing any `C++` logic -- you only need to add a short item
+to a `JSON` catalog, namely the
+[export keys](https://github.com/root-project/root/blob/master/roofit/hs3/src/RooFitHS3_wsexportkeys.cxx)
 for an exporter, or the
-[factory expressions](https://github.com/root-project/root/blob/master/etc/RooFitHS3_wsfactoryexpressions.json)
-for an importer.
+[factory expressions](https://github.com/root-project/root/blob/master/roofit/hs3/src/RooFitHS3_wsfactoryexpressions.cxx)
+for an importer. The built-in catalogs are `JSON` documents embedded as
+raw string literals in these two source files. They are compiled into
+the `RooFitHS3` library and loaded automatically when the library is
+loaded, so there are no separate `JSON` files to install or find at
+runtime.
 
 This works in the following way: Every `RooFit` class performs
 dependency tracking via proxies, which have names. This can be
@@ -67,7 +71,7 @@ interface. Hence:
    expression`.
 
 For the importer, an entry in the
-[factory expressions](https://github.com/root-project/root/blob/master/etc/RooFitHS3_wsfactoryexpressions.json)
+[factory expressions](https://github.com/root-project/root/blob/master/roofit/hs3/src/RooFitHS3_wsfactoryexpressions.cxx)
 needs to be added as follows:
 
 ``` {.json}
@@ -82,7 +86,7 @@ needs to be added as follows:
 ```
 
 Similarly, for the exporter, an entry in the
-[export keys](https://github.com/root-project/root/blob/master/etc/RooFitHS3_wsexportkeys.json)
+[export keys](https://github.com/root-project/root/blob/master/roofit/hs3/src/RooFitHS3_wsexportkeys.cxx)
 needs to be added as follows:
 
 ``` {.json}
@@ -97,12 +101,18 @@ needs to be added as follows:
 ```
 
 
-If you don't want to edit the central `json` files containing the
-factory expressions or export keys, you can also put your custom
-export keys or factory expressions into a different json file and load
-that using `RooFit::JSONIO::loadExportKeys(const std::string
+To contribute a catalog entry to `ROOT`, edit the embedded catalog in
+`roofit/hs3/src/RooFitHS3_wsexportkeys.cxx` or
+`roofit/hs3/src/RooFitHS3_wsfactoryexpressions.cxx` and rebuild `ROOT`.
+If you don't want to change `ROOT` itself, you can put your custom
+export keys or factory expressions into your own `JSON` file (with the
+same format as the embedded catalogs) and add them to the built-in ones
+at runtime using `RooFit::JSONIO::loadExportKeys(const std::string
 &fname)` and `RooFit::JSONIO::loadFactoryExpressions(const
-std::string &fname)`.
+std::string &fname)`. Both functions also have an overload that reads
+from a `std::istream`. You can inspect the currently known entries with
+`RooFit::JSONIO::printExportKeys()` and
+`RooFit::JSONIO::printFactoryExpressions()`.
 
 If either the importer or the exporter cannot be created with factory
 expressions and export keys, you can instead write a custom `C++`
@@ -121,9 +131,11 @@ in `ROOT`.
 Any importer should take the following form:
 
 ``` {.cpp}
+    using RooFit::Detail::JSONNode;
+
     class MyClassFactory : public RooFit::JSONIO::Importer {
     public:
-       bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+       bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
        {
           std::string name(RooJSONFactoryWSTool::name(p));
 
@@ -145,14 +157,24 @@ Any importer should take the following form:
     };
 ```
 
-If the class you are trying to import inherits from `RooAbsPdf` rather
-than from `RooAbsReal`, you should define `importPdf` instead of
-`importFunction`, with the same signature.
+The same `importArg` function is used for functions (inheriting from
+`RooAbsReal`) and pdfs (inheriting from `RooAbsPdf`). If the importer
+can't handle a given `JSON` node, it should return `false` so that the
+next importer is tried. The functions `importFunction` and `importPdf`
+of older `ROOT` versions are still called for backwards compatibility,
+so existing importers that override them keep working, but new code
+should override `importArg`.
 
 Once your importer implementation exists, you need to register it with the tool using a line like the following:
 
 ``` {.cpp}
-    RooFit::JSONIO::registerImporter("<json key>", new MyClassFactory(), true);
+    RooFit::JSONIO::registerImporter<MyClassFactory>("<json key>", true);
+```
+
+This is a shorthand for passing an instance owned by a `std::unique_ptr`:
+
+``` {.cpp}
+    RooFit::JSONIO::registerImporter("<json key>", std::make_unique<MyClassFactory>(), true);
 ```
 
 As there can be several importers for the same `json` key, the last
@@ -189,8 +211,19 @@ The implementation of an exporter works in a very similar fashion:
 Also this needs to be registered with the tool
 
 ``` {.cpp}
-    RooFit::JSONIO::registerExporter(MyClass::Class(), new MyClassStreamer(), true);
+    RooFit::JSONIO::registerExporter<MyClassStreamer>(MyClass::Class(), true);
 ```
+
+or equivalently
+
+``` {.cpp}
+    RooFit::JSONIO::registerExporter(MyClass::Class(), std::make_unique<MyClassStreamer>(), true);
+```
+
+If the `TClass` of your class is not available where you register the
+exporter, you can also pass the class name as a string instead of
+`MyClass::Class()`. If `exportObject` returns `false`, the next
+exporter is tried, and finally the export keys.
 
 For more complicated cases where members are lists of elements, the
 methods `is_seq()`, `set_seq()`, `is_map()`, `set_map()` and

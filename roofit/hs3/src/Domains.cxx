@@ -11,6 +11,7 @@
  */
 
 #include "Domains.h"
+#include "JSONIOUtils.h"
 
 #include <RooAbsBinning.h>
 #include <RooBinning.h>
@@ -29,15 +30,6 @@ constexpr static auto defaultDomainName = "default_domain";
 
 namespace {
 
-double readBound(RooFit::Detail::JSONNode const &node, const char *key, double defaultValue)
-{
-   if (!node.has_child(key)) {
-      return defaultValue;
-   }
-   auto const &bound = node[key];
-   return bound.is_null() ? defaultValue : bound.val_double();
-}
-
 void writeBound(RooFit::Detail::JSONNode &node, double value)
 {
    if (RooNumber::isInfinite(value)) {
@@ -54,6 +46,12 @@ void Domains::populate(RooWorkspace &ws) const
    auto default_domain = _map.find(defaultDomainName);
    if (default_domain != _map.end()) {
       default_domain->second.populate(ws);
+   } else {
+      // Without the RooFit-specific "default_domain", the variables are created with the range of the domain that
+      // mentions them.
+      for (const auto &domain : _map) {
+         domain.second.populate(ws);
+      }
    }
    for (const auto &domain : _map) {
       if (domain.first == defaultDomainName)
@@ -78,15 +76,20 @@ void Domains::writeVariable(RooRealVar &var) const
    auto default_domain = _map.find(defaultDomainName);
    if (default_domain != _map.end()) {
       default_domain->second.writeVariable(var);
+      return;
+   }
+   // Without the RooFit-specific "default_domain", use the first domain that mentions the variable.
+   for (const auto &domain : _map) {
+      if (domain.second.hasVariable(var.GetName())) {
+         domain.second.writeVariable(var);
+         return;
+      }
    }
 }
 
 void Domains::readJSON(RooFit::Detail::JSONNode const &node)
 {
-   auto default_domain_element = RooJSONFactoryWSTool::findNamedChild(node, defaultDomainName);
-   if (!default_domain_element) {
-      RooJSONFactoryWSTool::error("\"domains\" do not contain \"" + std::string{defaultDomainName} + "\"");
-   }
+   // The "default_domain" is written by RooFit, but it is not required by the HS3 standard.
    for (auto &domain : node.children()) {
       if (!domain.has_child("name")) {
          RooJSONFactoryWSTool::error("encountered domain without \"name\"");
