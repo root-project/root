@@ -55,7 +55,7 @@ public:
 
    struct CombinedData {
       std::string name;
-      std::map<std::string, std::string> components;
+      std::vector<std::string> columns;
    };
 
    RooJSONFactoryWSTool(RooWorkspace &ws);
@@ -191,8 +191,6 @@ public:
 
    static void exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
-   void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
-
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
    void queueExportTemporary(RooAbsArg *arg)
    {
@@ -248,8 +246,7 @@ private:
                           const std::vector<RooAbsData *> &single);
 
    void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                                std::string const &analysisName,
-                                std::map<std::string, std::string> const *dataComponents);
+                                std::string const &analysisName, std::string const *dataName);
 
    // member variables
    const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;

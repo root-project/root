@@ -25,6 +25,7 @@
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
 #include <RooFit/ModelConfig.h>
 #include <RooFitImplHelpers.h>
 #include <RooAbsCollection.h>
@@ -124,12 +125,6 @@ std::vector<std::string> valsToStringVec(JSONNode const &node)
       out.push_back(elem.val());
    }
    return out;
-}
-
-// True if the number of components in `data` matches the number of categories in `pdf`.
-bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneous *pdf)
-{
-   return data.components.size() == pdf->indexCat().size();
 }
 
 // True if the entire string parses as a number (integer or floating-point).
@@ -638,7 +633,8 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    for (auto &nameNode : (*nllNode)["data"].children()) {
       bool found = false;
       for (const auto &d : datasets) {
-         if (d->GetName() == nameNode.val()) {
+         // Components of combined data sets have been moved out of the list.
+         if (d && d->GetName() == nameNode.val()) {
             found = true;
             observables.add(*d->get(), true);
          }
@@ -861,6 +857,100 @@ void sortByName(T &coll)
    std::sort(coll.begin(), coll.end(), [](auto &l, auto &r) { return strcmp(l->GetName(), r->GetName()) < 0; });
 }
 
+// Build the combined data sets of the document ("type": "combined"): a RooDataSet with one category column per entry
+// of "columns" and the variables of all components, filled row by row from the components, which are then no longer
+// imported on their own. The columns are categories declared by categorical axes of the domains. A key without a
+// sub-data set is a state without entries: RooFit has no notion of an absent component.
+void assembleCombinedData(JSONNode const &dataNode, RooWorkspace const &workspace,
+                          std::vector<std::unique_ptr<RooAbsData>> &datasets)
+{
+   for (JSONNode const &p : dataNode.children()) {
+      if (!p.is_map() || !p.has_child("type") || p["type"].val() != "combined") {
+         continue;
+      }
+      std::string const name = RooJSONFactoryWSTool::name(p);
+      RooJSONFactoryWSTool::testValidName(name, true);
+      std::string const context = "the combined data set '" + name + "'";
+      if (p.has_child("axes")) {
+         RooJSONFactoryWSTool::error(context + " must not have \"axes\": its columns are declared by the domains");
+      }
+      std::vector<RooCategory *> columns = readSelectionColumns(workspace, p, "columns", context);
+      auto const *componentsNode = p.find("components");
+      if (!componentsNode || !componentsNode->is_seq() || componentsNode->num_children() == 0) {
+         RooJSONFactoryWSTool::error("\"components\" of " + context + " must be a non-empty list");
+      }
+
+      struct Component {
+         std::vector<std::string> key;
+         std::unique_ptr<RooAbsData> data;
+      };
+      std::vector<Component> components;
+      std::set<std::string> labels;
+      for (JSONNode const &c : componentsNode->children()) {
+         if (!c.is_map() || !c.has_child("dataset")) {
+            RooJSONFactoryWSTool::error("every component of " + context + " must have a \"key\" and a \"dataset\"");
+         }
+         std::vector<std::string> key = readSelectionKey(c, columns, context);
+         if (!labels.insert(selectionLabel(key)).second) {
+            RooJSONFactoryWSTool::error("the key " + selectionKeyToString(key) + " is used by two components of " +
+                                        context);
+         }
+         std::string const dataName = c["dataset"].val();
+         auto found =
+            std::find_if(datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == dataName; });
+         if (found == datasets.end()) {
+            RooJSONFactoryWSTool::error("the component '" + dataName + "' of " + context +
+                                        " is not a data set of the document, or it is already a component of " +
+                                        "another combined data set");
+         }
+         components.push_back({std::move(key), std::move(*found)});
+      }
+
+      // The variables: the columns first, then those of the components. A weight variable if any component is
+      // weighted, with errors if any component is binned, like RooDataSet does when importing a map of data sets.
+      RooArgSet columnClones; // owns the clones; `vars` must not own anything, it also lists the components' variables
+      for (RooCategory const *column : columns) {
+         columnClones.addClone(*column);
+      }
+      RooArgSet vars{columnClones};
+      bool weighted = false;
+      bool storeErrors = false;
+      std::string weightName = RooFit::WeightVar().getString(0);
+      for (auto const &c : components) {
+         vars.add(*c.data->get(), /*silent=*/true);
+         weighted |= c.data->isWeighted();
+         if (auto *ds = dynamic_cast<RooDataSet const *>(c.data.get()); ds && ds->isWeighted()) {
+            weightName = ds->weightVar()->GetName();
+         }
+         storeErrors |= dynamic_cast<RooDataHist const *>(c.data.get()) != nullptr;
+      }
+      std::unique_ptr<RooDataSet> combined;
+      if (weighted) {
+         RooRealVar weightVar{weightName.c_str(), weightName.c_str(), 1.0};
+         vars.add(weightVar);
+         RooArgSet errorSet{weightVar};
+         combined = std::make_unique<RooDataSet>(name.c_str(), name.c_str(), vars, RooFit::WeightVar(weightVar),
+                                                 storeErrors ? RooFit::StoreError(errorSet) : RooCmdArg::none());
+      } else {
+         combined = std::make_unique<RooDataSet>(name.c_str(), name.c_str(), vars);
+      }
+      for (auto const &c : components) {
+         for (std::size_t i = 0; i < columns.size(); ++i) {
+            static_cast<RooCategory &>(vars[columns[i]->GetName()]).setLabel(c.key[i].c_str());
+         }
+         for (int i = 0; i < c.data->numEntries(); ++i) {
+            vars.assign(*c.data->get(i));
+            if (weighted) {
+               combined->add(vars, c.data->weight(), storeErrors ? c.data->weightError(RooAbsData::SumW2) : 0.0);
+            } else {
+               combined->add(vars);
+            }
+         }
+      }
+      datasets.emplace_back(std::move(combined));
+   }
+}
+
 /// Check whether an object is a top-level object of the workspace, i.e. not a
 /// component of some other workspace object. Only clients that are part of the
 /// workspace count: RooFit also registers evaluation artifacts as clients,
@@ -876,22 +966,6 @@ bool isTopLevel(RooAbsArg const &arg, RooWorkspace const &ws)
       }
    }
    return true;
-}
-
-/// Find the single category observable of a dataset, if any.
-RooAbsCategory *findCategoryObservable(RooAbsData const &data)
-{
-   RooAbsCategory *cat = nullptr;
-   for (RooAbsArg *obs : *data.get()) {
-      if (auto *c = dynamic_cast<RooAbsCategory *>(obs)) {
-         if (cat) {
-            RooJSONFactoryWSTool::error("dataset '" + std::string(data.GetName()) +
-                                        " has several category observables!");
-         }
-         cat = c;
-      }
-   }
-   return cat;
 }
 
 /// Warn if the HS3 version of an imported document is not understood or newer than what RooFit writes.
@@ -1544,83 +1618,103 @@ std::string makeValidNameOrError(std::string const &in)
 } // namespace
 
 /**
- * @brief Export a RooAbsCategory object to a JSONNode.
+ * @brief Export a data set with category observables as a "combined" data set.
  *
- * This function exports a RooAbsCategory object, represented by the provided categories and indices,
- * to a JSONNode. The category labels and corresponding indices are added to the JSONNode as key-value pairs.
- *
- * @param cat The RooAbsCategory object to be exported.
- * @param node The JSONNode to which the category data will be exported.
- * @return void
+ * The categories are the columns, sorted by name, and are declared as categorical axes of the default domain. There
+ * is one sub-data set per key, i.e. per combination of states, written like any other data set and named after the
+ * data set and the labels of the key. A key is written also without entries: RooFit treats a channel without entries
+ * as present and empty. If the workspace has a RooSimultaneous with the same columns, each sub-data set only carries
+ * the observables of the corresponding component, and keys without entries for which it has no component are left
+ * out; otherwise, every sub-data set carries all observables.
  */
-void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, JSONNode &node)
-{
-   auto &labels = node["labels"].set_seq();
-   auto &indices = node["indices"].set_seq();
-
-   for (auto const &item : cat) {
-      labels.append_child() << makeValidNameOrError(item.first);
-      indices.append_child() << item.second;
-   }
-}
-
-// Split `data` by its index category into per-channel datasets and export each, returning the resulting
-// component-name map.
 RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooAbsData const &data)
 {
-   RooAbsCategory *cat = findCategoryObservable(data);
+   std::vector<RooCategory const *> columns = selectionColumns(*data.get());
+   CombinedData info;
+   info.name = data.GetName();
+   for (RooCategory const *column : columns) {
+      info.columns.push_back(column->GetName());
+      _domains->readCategory(*column);
+   }
 
-   // prepare return value
-   RooJSONFactoryWSTool::CombinedData datamap;
-
-   if (!cat)
-      return datamap;
-   // this is a combined dataset
-
-   datamap.name = data.GetName();
-
-   // Write information necessary to reconstruct the combined dataset upon import
-   auto &child = getRooFitInternal(*_rootnodeOutput, "combined_datasets").set_map()[data.GetName()].set_map();
-   child["index_cat"] << cat->GetName();
-   exportCategory(*cat, child);
-
-   // Find a RooSimultaneous model that would fit to this dataset
+   // Split the data by the key: by the index category of a matching RooSimultaneous, or by the columns themselves.
    RooSimultaneous const *simPdf = nullptr;
    std::vector<RooSimultaneous const *> candidates;
    for (RooAbsArg *arg : _workspace.allPdfs()) {
-      auto *candidate = dynamic_cast<RooSimultaneous const *>(arg);
-      if (candidate && std::string(candidate->indexCat().GetName()) == cat->GetName()) {
+      if (auto *candidate = dynamic_cast<RooSimultaneous const *>(arg)) {
          candidates.push_back(candidate);
       }
    }
-   if (!candidates.empty()) {
-      sortByName(candidates);
-      simPdf = candidates.front();
+   sortByName(candidates);
+   for (RooSimultaneous const *candidate : candidates) {
+      std::vector<std::string> candidateColumns;
+      for (RooCategory const *column : selectionColumns(candidate->indexCat())) {
+         candidateColumns.push_back(column->GetName());
+      }
+      if (candidateColumns == info.columns) {
+         simPdf = candidate;
+         break;
+      }
+   }
+   std::unique_ptr<RooSuperCategory> superCat;
+   RooAbsCategory const *indexCat = nullptr;
+   std::vector<std::unique_ptr<RooAbsData>> parts;
+   if (simPdf) {
+      indexCat = &simPdf->indexCat();
+      parts = data.split(*simPdf, true);
+   } else if (columns.size() == 1) {
+      indexCat = columns.front();
+      parts = data.split(*indexCat, true);
+   } else {
+      RooArgSet inputs;
+      for (RooCategory const *column : columns) {
+         inputs.add(*column);
+      }
+      const std::string superName = info.name + "_key";
+      superCat = std::make_unique<RooSuperCategory>(superName.c_str(), superName.c_str(), inputs);
+      indexCat = superCat.get();
+      parts = data.split(*indexCat, true);
    }
 
-   // If there is an associated simultaneous pdf for the index category, we
-   // use the RooAbsData::split() overload that takes the RooSimultaneous.
-   // Like this, the observables that are not relevant for a given channel
-   // are automatically split from the component datasets.
-   std::vector<std::unique_ptr<RooAbsData>> dataList{simPdf ? data.split(*simPdf, true) : data.split(*cat, true)};
-
-   for (std::unique_ptr<RooAbsData> const &absData : dataList) {
-      std::string catName(absData->GetName());
-      std::string dataName = makeValidNameOrError(catName);
-      absData->SetName((std::string(data.GetName()) + "_" + dataName).c_str());
-      datamap.components[catName] = absData->GetName();
-      this->exportData(*absData);
+   // Fill the "combined" entry before exporting the sub-data sets: appending to "data" can invalidate references.
+   std::vector<RooAbsData *> subDataSets;
+   {
+      JSONNode &output = appendNamedChild((*_rootnodeOutput)["data"], info.name);
+      output["type"] << "combined";
+      output["columns"].fill_seq(info.columns);
+      auto &components = output["components"].set_seq();
+      for (std::vector<std::string> const &key : selectionKeys(columns)) {
+         std::string const label = selectionLabel(*indexCat, columns, key);
+         auto found = std::find_if(parts.begin(), parts.end(), [&](auto &d) { return d->GetName() == label; });
+         if (found == parts.end() || ((*found)->numEntries() == 0 && simPdf && !simPdf->getPdf(label))) {
+            continue;
+         }
+         std::string subName = info.name;
+         for (std::string const &l : key) {
+            subName += "_" + makeValidNameOrError(l);
+         }
+         (*found)->SetName(subName.c_str());
+         JSONNode &component = components.append_child().set_map();
+         component["key"].fill_seq(key);
+         component["dataset"] << subName;
+         subDataSets.push_back(found->get());
+      }
    }
-   return datamap;
+   for (RooAbsData *subData : subDataSets) {
+      exportData(*subData);
+   }
+   return info;
 }
 
 // Export a single dataset `data` (binned or unbinned) to the output JSON.
 void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 {
-   RooAbsCategory *cat = findCategoryObservable(data);
-
-   if (cat)
-      return;
+   for (RooAbsArg const *obs : *data.get()) {
+      if (dynamic_cast<RooAbsCategory const *>(obs)) {
+         error("the data set '" + std::string(data.GetName()) + "' has the categorical observable '" + obs->GetName() +
+               "', which is not a RooCategory, and can't be written as a combined data set");
+      }
+   }
 
    JSONNode &output = appendNamedChild((*_rootnodeOutput)["data"], data.GetName());
 
@@ -1649,8 +1743,9 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    // RooDataSets from binned data to fit HistFactory models. In this case, it
    // doesn't make sense to export them like an unbinned dataset, because the
    // coordinates are redundant information with the binning. We only do this
-   // for 1D data for now.
-   if (data.isWeighted() && variables.size() == 1) {
+   // for 1D data for now. A variable without bins can't be binned data: unbinned data sets leave their axes without
+   // binning, and would otherwise be written as binned once they have no entries.
+   if (data.isWeighted() && variables.size() == 1 && static_cast<RooRealVar const &>(*variables[0]).getBins() > 0) {
       bool isBinnedData = false;
       auto &x = static_cast<RooRealVar const &>(*variables[0]);
       std::vector<double> contents;
@@ -1949,40 +2044,40 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
                                              const std::vector<CombinedData> &combDataSets,
                                              const std::vector<RooAbsData *> &singleDataSets)
 {
+   // The analyses are named after the ModelConfig, so that ModelConfigs sharing a pdf and a data set (like an S+B
+   // and B-only pair) get separate analyses.
    auto pdf = mc.GetPdf();
    auto simpdf = dynamic_cast<RooSimultaneous const *>(pdf);
+   int founddata = 0;
    if (simpdf) {
-      for (std::size_t i = 0; i < std::max(combDataSets.size(), std::size_t(1)); ++i) {
-         const bool hasdata = i < combDataSets.size();
-         if (hasdata && !matches(combDataSets.at(i), simpdf))
-            continue;
-
-         std::string analysisName(mc.GetName());
-         if (hasdata)
-            analysisName += "_" + combDataSets[i].name;
-
-         exportSingleModelConfig(rootnode, mc, analysisName, hasdata ? &combDataSets[i].components : nullptr);
+      // One analysis per combined data set with the same columns.
+      std::vector<std::string> columns;
+      for (RooCategory const *column : selectionColumns(simpdf->indexCat())) {
+         columns.push_back(column->GetName());
       }
-   } else {
-      RooArgSet observables(*mc.GetObservables());
-      int founddata = 0;
-      for (auto *data : singleDataSets) {
-         if (observables.equals(*(data->get()))) {
-            std::map<std::string, std::string> mapping;
-            mapping[pdf->GetName()] = data->GetName();
-            exportSingleModelConfig(rootnode, mc, std::string(mc.GetName()) + "_" + data->GetName(), &mapping);
+      for (auto const &data : combDataSets) {
+         if (data.columns == columns) {
+            exportSingleModelConfig(rootnode, mc, std::string(mc.GetName()) + "_" + data.name, &data.name);
             ++founddata;
          }
       }
-      if (founddata == 0) {
-         exportSingleModelConfig(rootnode, mc, mc.GetName(), nullptr);
+   } else {
+      RooArgSet observables(*mc.GetObservables());
+      for (auto *data : singleDataSets) {
+         if (observables.equals(*(data->get()))) {
+            const std::string dataName = data->GetName();
+            exportSingleModelConfig(rootnode, mc, std::string(mc.GetName()) + "_" + dataName, &dataName);
+            ++founddata;
+         }
       }
+   }
+   if (founddata == 0) {
+      exportSingleModelConfig(rootnode, mc, mc.GetName(), nullptr);
    }
 }
 
 void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::ModelConfig const &mc,
-                                                   std::string const &analysisName,
-                                                   std::map<std::string, std::string> const *dataComponents)
+                                                   std::string const &analysisName, std::string const *dataName)
 {
    auto pdf = mc.GetPdf();
 
@@ -1998,22 +2093,10 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
    nllNode["distributions"].set_seq();
    nllNode["data"].set_seq();
 
-   if (dataComponents) {
-      auto simPdf = dynamic_cast<RooSimultaneous const *>(pdf);
-      if (simPdf) {
-         for (auto const &item : simPdf->indexCat()) {
-            const auto &dataComp = dataComponents->find(item.first);
-            nllNode["distributions"].append_child() << simPdf->getPdf(item.first)->GetName();
-            nllNode["data"].append_child() << dataComp->second;
-         }
-      } else {
-         for (auto it : *dataComponents) {
-            nllNode["distributions"].append_child() << it.first;
-            nllNode["data"].append_child() << it.second;
-         }
-      }
+   nllNode["distributions"].append_child() << pdf->GetName();
+   if (dataName) {
+      nllNode["data"].append_child() << *dataName;
    } else {
-      nllNode["distributions"].append_child() << pdf->GetName();
       nllNode["data"].append_child() << 0;
    }
 
@@ -2111,19 +2194,16 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       alldata.push_back(d);
    }
    sortByName(alldata);
-   // first, take care of combined datasets
+   // Data sets with category observables are combined data sets.
    std::vector<RooAbsData *> singleData;
    std::vector<RooJSONFactoryWSTool::CombinedData> combData;
    for (auto &d : alldata) {
-      auto data = this->exportCombinedData(*d);
-      if (!data.components.empty())
-         combData.push_back(data);
-      else
+      if (selectionColumns(*d->get()).empty()) {
          singleData.push_back(d);
-   }
-   // next, take care datasets
-   for (auto &d : alldata) {
-      this->exportData(*d);
+         this->exportData(*d);
+      } else {
+         combData.push_back(this->exportCombinedData(*d));
+      }
    }
 
    // export all ModelConfig objects and attached Pdfs
@@ -2401,15 +2481,19 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
    _attributesNode = nullptr;
 
-   // We delay the import of the data to after combineDatasets(), because it
-   // might be that some datasets are merged to combined datasets there. In
-   // that case, we will remove the components from the "datasets" vector so they
-   // don't get imported.
+   // The components of combined data sets are moved out of the "datasets" vector when the combined data set is
+   // assembled, so they don't get imported on their own. The ROOT-internal form of older files (combineDatasets())
+   // is handled after the analyses, because their likelihoods refer to the components.
    std::vector<std::unique_ptr<RooAbsData>> datasets;
    if (auto dataNode = n.find("data")) {
       for (const auto &p : dataNode->children()) {
+         // Combined data sets are assembled from the others once all of them are loaded.
+         if (p.is_map() && p.has_child("type") && p["type"].val() == "combined") {
+            continue;
+         }
          datasets.push_back(loadData(p, _workspace, _domains.get()));
       }
+      assembleCombinedData(*dataNode, _workspace, datasets);
    }
 
    // Now, read in analyses and likelihoods if there are any

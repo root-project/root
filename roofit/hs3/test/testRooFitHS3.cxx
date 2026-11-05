@@ -4976,3 +4976,255 @@ TEST(RooFitHS3, CombinedDistImportErrors)
       makeJSON(R"(["sample"])", good, R"({"name": "sample", "min": 0.0, "max": 1.0})"),
       "the column 'sample' of the combined_dist 'simPdf' is not declared by a categorical axis");
 }
+
+// A data set with a category observable is a "combined" data set (HS3 #119): one sub-data set per state, selected
+// by a key, with the category declared as a categorical axis of the default domain. A likelihood pairs the combined
+// data set with the combined_dist. The ROOT-internal form of older files is still read.
+TEST(RooFitHS3, CombinedData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws"};
+   ws.factory("Gaussian::model_1(x_1[0, 10], mean[5, 0, 10], sigma_1[0.5, 0.1, 10])");
+   ws.factory("Gaussian::model_2(x_2[0, 10], mean, sigma_2[0.8, 0.1, 10])");
+   ws.factory("SIMUL::simPdf(channelCat[channel_1=0, channel_2=1], channel_1=model_1, channel_2=model_2)");
+   std::unique_ptr<RooDataSet> d1{ws.pdf("model_1")->generate(*ws.var("x_1"), 20)};
+   std::unique_ptr<RooDataSet> d2{ws.pdf("model_2")->generate(*ws.var("x_2"), 30)};
+   std::map<std::string, RooDataSet *> parts{{"channel_1", d1.get()}, {"channel_2", d2.get()}};
+   RooDataSet obsData{"obsData",
+                      "obsData",
+                      {*ws.var("x_1"), *ws.var("x_2")},
+                      RooFit::Index(*ws.cat("channelCat")),
+                      RooFit::Import(parts)};
+   ws.import(obsData);
+   RooFit::ModelConfig mc{"ModelConfig"};
+   mc.SetWS(ws);
+   mc.SetPdf("simPdf");
+   mc.SetParametersOfInterest("mean");
+   mc.SetObservables("x_1,x_2,channelCat");
+   ws.import(mc);
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+
+   // Structure: the combined entry, one sub-data set per state with only the observables of its component, the
+   // domain axis, the likelihood pairing the combined objects.
+   auto const *combined = RooJSONFactoryWSTool::findNamedChild(root["data"], "obsData");
+   ASSERT_NE(combined, nullptr) << json;
+   EXPECT_EQ((*combined)["type"].val(), "combined");
+   ASSERT_EQ((*combined)["columns"].num_children(), 1u);
+   EXPECT_EQ((*combined)["columns"].child(0).val(), "channelCat");
+   EXPECT_FALSE(combined->has_child("axes"));
+   ASSERT_EQ((*combined)["components"].num_children(), 2u);
+   EXPECT_EQ((*combined)["components"].child(0)["key"].child(0).val(), "channel_1");
+   EXPECT_EQ((*combined)["components"].child(0)["dataset"].val(), "obsData_channel_1");
+   EXPECT_EQ((*combined)["components"].child(1)["key"].child(0).val(), "channel_2");
+   EXPECT_EQ((*combined)["components"].child(1)["dataset"].val(), "obsData_channel_2");
+   for (const char *channel : {"1", "2"}) {
+      auto const *part = RooJSONFactoryWSTool::findNamedChild(root["data"], std::string("obsData_channel_") + channel);
+      ASSERT_NE(part, nullptr) << json;
+      EXPECT_EQ((*part)["type"].val(), "unbinned");
+      ASSERT_EQ((*part)["axes"].num_children(), 1u);
+      EXPECT_EQ((*part)["axes"].child(0)["name"].val(), std::string("x_") + channel);
+   }
+   EXPECT_FALSE(root.find("misc", "ROOT_internal", "combined_datasets")) << json;
+   auto const *domain = RooJSONFactoryWSTool::findNamedChild(root["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr);
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "channelCat"), nullptr) << json;
+   auto const *likelihood = RooJSONFactoryWSTool::findNamedChild(root["likelihoods"], "ModelConfig_obsData_likelihood");
+   ASSERT_NE(likelihood, nullptr) << json;
+   ASSERT_EQ((*likelihood)["distributions"].num_children(), 1u);
+   EXPECT_EQ((*likelihood)["distributions"].child(0).val(), "simPdf");
+   ASSERT_EQ((*likelihood)["data"].num_children(), 1u);
+   EXPECT_EQ((*likelihood)["data"].child(0).val(), "obsData");
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(root["analyses"], "ModelConfig_obsData"), nullptr) << json;
+
+   // Round trip: one data set with the category column, the same entries per state, the ModelConfig observes the
+   // category, and the document is stable.
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_EQ(ws2.allData().size(), 1u);
+   RooAbsData *obsData2 = ws2.data("obsData");
+   ASSERT_NE(obsData2, nullptr);
+   EXPECT_EQ(obsData2->numEntries(), 50);
+   auto *channelCat2 = dynamic_cast<RooCategory *>(obsData2->get()->find("channelCat"));
+   ASSERT_NE(channelCat2, nullptr);
+   auto split2 = obsData2->split(*channelCat2);
+   ASSERT_EQ(split2.size(), 2u);
+   for (auto const &part : split2) {
+      EXPECT_EQ(part->numEntries(), std::string(part->GetName()) == "channel_1" ? 20 : 30) << part->GetName();
+   }
+   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+   ASSERT_NE(mc2, nullptr);
+   EXPECT_EQ(mc2->GetPdf(), ws2.pdf("simPdf"));
+   EXPECT_NE(mc2->GetObservables()->find("channelCat"), nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+
+   // Without a RooSimultaneous over the category, the sub-data sets carry all observables.
+   {
+      RooWorkspace wsDataOnly;
+      wsDataOnly.import(obsData);
+      const std::string dataOnly = RooJSONFactoryWSTool{wsDataOnly}.exportJSONtoString();
+      auto dataOnlyTree = RooFit::Detail::JSONTree::create(dataOnly);
+      auto const *part = RooJSONFactoryWSTool::findNamedChild(dataOnlyTree->rootnode()["data"], "obsData_channel_1");
+      ASSERT_NE(part, nullptr) << dataOnly;
+      EXPECT_EQ((*part)["axes"].num_children(), 2u) << dataOnly;
+   }
+
+   // Files written by earlier ROOT versions: components named after the data set and the state, the combination
+   // described in misc.ROOT_internal, and the likelihood listing the components.
+   RooWorkspace wsLegacy;
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x_1", "min": 0.0, "max": 10.0}, {"name": "x_2", "min": 0.0, "max": 10.0}, {"name": "mean", "min": 0.0, "max": 10.0}]}],
+      "distributions": [
+         {"name": "model_1", "type": "gaussian_dist", "x": "x_1", "mean": "mean", "sigma": 0.5},
+         {"name": "model_2", "type": "gaussian_dist", "x": "x_2", "mean": "mean", "sigma": 0.8}],
+      "data": [
+         {"name": "obsData_channel_1", "type": "unbinned", "axes": [{"name": "x_1", "min": 0.0, "max": 10.0}], "entries": [[1.0], [2.0]]},
+         {"name": "obsData_channel_2", "type": "unbinned", "axes": [{"name": "x_2", "min": 0.0, "max": 10.0}], "entries": [[3.0]]}],
+      "likelihoods": [{"name": "simPdf_obsData_likelihood", "distributions": ["model_1", "model_2"],
+                       "data": ["obsData_channel_1", "obsData_channel_2"]}],
+      "analyses": [{"name": "simPdf_obsData", "likelihood": "simPdf_obsData_likelihood", "parameters_of_interest": ["mean"]}],
+      "misc": {"ROOT_internal": {
+         "combined_datasets": {"obsData": {"index_cat": "channelCat", "labels": ["channel_1", "channel_2"], "indices": [0, 1]}},
+         "combined_distributions": {"simPdf": {"index_cat": "channelCat", "labels": ["channel_1", "channel_2"],
+                                               "indices": [0, 1], "distributions": ["model_1", "model_2"]}},
+         "ModelConfigs": {"simPdf_obsData": {"mcName": "ModelConfig", "pdfName": "simPdf"}}}}
+   })"));
+   EXPECT_EQ(wsLegacy.allData().size(), 1u);
+   ASSERT_NE(wsLegacy.data("obsData"), nullptr);
+   EXPECT_EQ(wsLegacy.data("obsData")->numEntries(), 3);
+   auto *mcLegacy = dynamic_cast<RooFit::ModelConfig *>(wsLegacy.obj("ModelConfig"));
+   ASSERT_NE(mcLegacy, nullptr);
+   EXPECT_EQ(mcLegacy->GetPdf(), wsLegacy.pdf("simPdf"));
+   const std::string fromLegacy = RooJSONFactoryWSTool{wsLegacy}.exportJSONtoString();
+   EXPECT_NE(fromLegacy.find(R"("type":"combined")"), std::string::npos) << fromLegacy;
+   EXPECT_EQ(fromLegacy.find("combined_datasets"), std::string::npos) << fromLegacy;
+}
+
+// A data set with several category observables has several columns, sorted by name. Keys without entries are
+// written if the matching RooSimultaneous has a component for them, and left out otherwise.
+TEST(RooFitHS3, CombinedDataSeveralColumns)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   RooCategory region{"region", "region", {{"SR", 0}, {"CR", 1}}};
+   RooCategory kind{"kind", "kind", {{"physics", 0}, {"global", 1}}};
+   RooGaussian sr{"sr", "sr", x, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", x, 6.0, 1.0};
+   RooGaussian srGlobal{"sr_global", "sr_global", x, 5.0, 2.0};
+   RooSuperCategory index{"index", "index", RooArgSet{region, kind}};
+   RooSimultaneous simPdf{
+      "simPdf", "simPdf", {{"{SR;physics}", &sr}, {"{CR;physics}", &cr}, {"{SR;global}", &srGlobal}}, index};
+   // Entries per key; none for (physics, CR), and (global, CR) has no component.
+   const std::map<std::vector<std::string>, int> entries{{{"physics", "SR"}, 3}, {{"global", "SR"}, 1}};
+   RooDataSet obs{"obs", "obs", {x, region, kind}};
+   for (auto const &item : entries) {
+      kind.setLabel(item.first[0].c_str());
+      region.setLabel(item.first[1].c_str());
+      for (int i = 0; i < item.second; ++i) {
+         x.setVal(1.0 + i);
+         obs.add({x, region, kind});
+      }
+   }
+
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   ws.import(obs);
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *combined = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "obs");
+   ASSERT_NE(combined, nullptr) << json;
+   ASSERT_EQ((*combined)["columns"].num_children(), 2u);
+   EXPECT_EQ((*combined)["columns"].child(0).val(), "kind");
+   EXPECT_EQ((*combined)["columns"].child(1).val(), "region");
+   std::map<std::vector<std::string>, std::string> components;
+   for (auto const &component : (*combined)["components"].children()) {
+      components[{component["key"].child(0).val(), component["key"].child(1).val()}] = component["dataset"].val();
+   }
+   const std::map<std::vector<std::string>, std::string> expected{{{"physics", "SR"}, "obs_physics_SR"},
+                                                                  {{"physics", "CR"}, "obs_physics_CR"},
+                                                                  {{"global", "SR"}, "obs_global_SR"}};
+   EXPECT_EQ(components, expected) << json;
+   auto const *emptyPart = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "obs_physics_CR");
+   ASSERT_NE(emptyPart, nullptr) << json;
+   EXPECT_EQ((*emptyPart)["entries"].num_children(), 0u);
+
+   // Round trip: one data set with both category columns and the same entries per key; stable document.
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_EQ(ws2.allData().size(), 1u);
+   RooAbsData *obs2 = ws2.data("obs");
+   ASSERT_NE(obs2, nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+   std::map<std::vector<std::string>, int> entries2;
+   for (int i = 0; i < obs2->numEntries(); ++i) {
+      RooArgSet const &row = *obs2->get(i);
+      ++entries2[{static_cast<RooCategory const &>(row["kind"]).getCurrentLabel(),
+                  static_cast<RooCategory const &>(row["region"]).getCurrentLabel()}];
+   }
+   EXPECT_EQ(entries2, entries);
+   // The RooSimultaneous splits it by its RooSuperCategory, which is rebuilt over the columns.
+   auto parts = obs2->split(*dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf")), /*createEmptyDataSets=*/true);
+   std::map<std::string, int> partEntries;
+   for (auto const &part : parts) {
+      partEntries[part->GetName()] = part->numEntries();
+   }
+   const std::map<std::string, int> expectedParts{
+      {"{physics;SR}", 3}, {"{physics;CR}", 0}, {"{global;SR}", 1}, {"{global;CR}", 0}};
+   EXPECT_EQ(partEntries, expectedParts);
+}
+
+TEST(RooFitHS3, CombinedDataImportErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &combined, std::string const &axes = "") {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain",
+                   "axes": [{"name": "x", "min": 0.0, "max": 10.0}, {"name": "sample", "categories": ["a", "b"]}]}],
+      "data": [
+         {"name": "da", "type": "unbinned", "axes": [{"name": "x", "min": 0.0, "max": 10.0}], "entries": [[1.0]]},
+         {"name": "db", "type": "unbinned", "axes": [{"name": "x", "min": 0.0, "max": 10.0}], "entries": [[2.0], [3.0]]},
+         {"name": "obs", "type": "combined", )" +
+             axes + combined + R"(}
+      ]
+   })";
+   };
+   const std::string good =
+      R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "da"}, {"key": ["b"], "dataset": "db"}])";
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(good)));
+      EXPECT_EQ(ws.allData().size(), 1u);
+      ASSERT_NE(ws.data("obs"), nullptr);
+      EXPECT_EQ(ws.data("obs")->numEntries(), 3);
+   }
+   expectImportThrowsWithError(makeJSON(good, R"("axes": [{"name": "x", "min": 0.0, "max": 10.0}], )"),
+                               "the combined data set 'obs' must not have \"axes\"");
+   expectImportThrowsWithError(
+      makeJSON(R"("columns": ["channel"], "components": [{"key": ["a"], "dataset": "da"}])"),
+      "the column 'channel' of the combined data set 'obs' is not declared by a categorical axis");
+   expectImportThrowsWithError(makeJSON(R"("columns": ["sample"], "components": [])"),
+                               "\"components\" of the combined data set 'obs' must be a non-empty list");
+   expectImportThrowsWithError(makeJSON(R"("columns": ["sample"], "components": [{"key": ["a"]}])"),
+                               "must have a \"key\" and a \"dataset\"");
+   expectImportThrowsWithError(makeJSON(R"("columns": ["sample"], "components": [{"key": ["c"], "dataset": "da"}])"),
+                               "the label 'c' in position 0 of a key of the combined data set 'obs'");
+   expectImportThrowsWithError(makeJSON(R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "dc"}])"),
+                               "the component 'dc' of the combined data set 'obs' is not a data set of the document");
+   expectImportThrowsWithError(
+      makeJSON(
+         R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "da"}, {"key": ["b"], "dataset": "da"}])"),
+      "the component 'da' of the combined data set 'obs' is not a data set of the document, or it is already a "
+      "component");
+   expectImportThrowsWithError(
+      makeJSON(
+         R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "da"}, {"key": ["a"], "dataset": "db"}])"),
+      "the key [\"a\"] is used by two components of the combined data set 'obs'");
+}
