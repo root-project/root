@@ -12,8 +12,11 @@
 
 #include <RooFit/Detail/JSONInterface.h>
 
+#include "JSONReadRecorder.h"
+
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <deque>
 #include <istream>
 #include <memory>
@@ -88,10 +91,19 @@ public:
       return list;
    }
 
+   // Tells the recorders that the component `key` of `value` is read, where nullptr means all components.
+   void recordRead(void const *value, std::string const *key)
+   {
+      for (JSONReadRecorder *recorder : recorders) {
+         recorder->record(value, key);
+      }
+   }
+
    nlohmann::json root;
    JSONNode rootNode;
    std::vector<std::unique_ptr<JSONNode>> nodes;
    std::deque<std::vector<JSONNode *>> childLists;
+   std::vector<JSONReadRecorder *> recorders;
 };
 
 // JSONNode
@@ -103,6 +115,7 @@ JSONNode::JSONNode(Storage &storage, void *value, std::string key)
 
 void JSONNode::writeJSON(std::ostream &os) const
 {
+   _storage->recordRead(_value, nullptr);
    os << json(_value);
 }
 
@@ -143,6 +156,7 @@ JSONNode &JSONNode::operator[](std::string const &k)
 
 const JSONNode &JSONNode::operator[](std::string const &k) const
 {
+   _storage->recordRead(_value, &k);
    return _storage->makeNode(json(_value)[k], k);
 }
 
@@ -275,6 +289,7 @@ bool JSONNode::has_val() const
 
 bool JSONNode::has_child(std::string const &c) const
 {
+   _storage->recordRead(_value, &c);
    return json(_value).find(c) != json(_value).end();
 }
 
@@ -296,6 +311,7 @@ JSONNode &JSONNode::child(size_t pos)
 
 const JSONNode &JSONNode::child(size_t pos) const
 {
+   _storage->recordRead(_value, nullptr);
    return _storage->makeNode(json(_value).at(pos), "");
 }
 
@@ -307,6 +323,7 @@ JSONNode::children_view JSONNode::children()
 
 JSONNode::const_children_view JSONNode::children() const
 {
+   _storage->recordRead(_value, nullptr);
    std::vector<JSONNode *> const &list = _storage->makeChildren(json(_value));
    return {const_child_iterator{list.data()}, const_child_iterator{list.data() + list.size()}};
 }
@@ -342,6 +359,46 @@ std::unique_ptr<JSONTree> JSONTree::create(std::string const &str)
 {
    std::stringstream ss{str};
    return JSONTree::create(ss);
+}
+
+// JSONReadRecorder
+
+JSONReadRecorder::JSONReadRecorder(JSONNode const &node) : _node{node}
+{
+   _node._storage->recorders.push_back(this);
+}
+
+JSONReadRecorder::~JSONReadRecorder()
+{
+   auto &recorders = _node._storage->recorders;
+   recorders.erase(std::find(recorders.begin(), recorders.end(), this));
+}
+
+void JSONReadRecorder::record(void const *value, std::string const *key)
+{
+   if (value != _node._value) {
+      return;
+   }
+   if (key) {
+      _read.insert(*key);
+   } else {
+      _readAll = true;
+   }
+}
+
+std::vector<std::string> JSONReadRecorder::unreadComponents() const
+{
+   std::vector<std::string> out;
+   nlohmann::json const &value = json(_node._value);
+   if (!value.is_object() || _readAll) {
+      return out;
+   }
+   for (auto const &item : value.items()) {
+      if (_read.count(item.key()) == 0) {
+         out.push_back(item.key());
+      }
+   }
+   return out;
 }
 
 } // namespace Detail

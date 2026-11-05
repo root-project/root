@@ -332,22 +332,68 @@ void upgradeHistFactory(JSONNode &dist, Version const &version, IsDistribution c
    }
 }
 
-} // namespace
-
-void upgradeDocument(JSONNode &root, Diagnostics &diagnostics, ParseOptions const &options)
+// Older versions of RooFit wrote the binning of the observables also for unbinned data, which the standard forbids.
+// The edges were written without "min" and "max".
+void upgradeUnbinnedAxes(JSONNode &data)
 {
-   if (!root.is_map() || !root.has_child("distributions") || !root["distributions"].is_seq()) {
+   if (!data.has_child("axes") || !data["axes"].is_seq()) {
       return;
    }
-   if (!options.typedHistFactory) {
-      return;
+   for (JSONNode &axis : data["axes"].children()) {
+      if (!axis.is_map()) {
+         continue;
+      }
+      if (axis.has_child("edges") && axis["edges"].is_seq() && axis["edges"].num_children() > 0) {
+         JSONNode &edges = axis["edges"];
+         JSONNode const &first = edges.child(0);
+         JSONNode const &last = edges.child(edges.num_children() - 1);
+         if (!axis.has_child("min") && first.is_number()) {
+            axis["min"] << first.val_double();
+         }
+         if (!axis.has_child("max") && last.is_number()) {
+            axis["max"] << last.val_double();
+         }
+      }
+      axis.erase("edges");
+      axis.erase("nbins");
    }
+}
 
+void upgradeData(JSONNode &root, Version const &version)
+{
+   if (!root.has_child("data") || !root["data"].is_seq() || !(version < explicitInterpolationVersion)) {
+      return;
+   }
+   for (JSONNode &data : root["data"].children()) {
+      if (data.is_map() && data.has_child("type") && isScalar(data["type"]) && data["type"].val() == "unbinned") {
+         upgradeUnbinnedAxes(data);
+      }
+   }
+}
+
+Version documentVersion(JSONNode const &root)
+{
    Version version;
    if (JSONNode const *versionNode = root.find("metadata", "hs3_version")) {
       if (isScalar(*versionNode)) {
          parseVersion(versionNode->val(), version);
       }
+   }
+   return version;
+}
+
+} // namespace
+
+void upgradeDocument(JSONNode &root, Diagnostics &diagnostics, ParseOptions const &options)
+{
+   if (!root.is_map()) {
+      return;
+   }
+   const Version version = documentVersion(root);
+   upgradeData(root, version);
+
+   if (!root.has_child("distributions") || !root["distributions"].is_seq() || !options.typedHistFactory) {
+      return;
    }
 
    std::set<std::string> distributionNames;

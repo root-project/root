@@ -45,6 +45,7 @@ public:
    std::string path() const;
    void error(std::string const &message) const;
    void warning(std::string const &message) const;
+   std::size_t numErrors() const;
 
 private:
    Detail::JSONNode const &_node;
@@ -58,7 +59,11 @@ private:
 /// single function can describe both directions.
 class Reader {
 public:
-   explicit Reader(Cursor const &cursor) : _cursor{cursor} {}
+   explicit Reader(Cursor const &cursor);
+   /// Reports the components that were not read, unless reading the struct gave an error.
+   ~Reader();
+   Reader(Reader const &) = delete;
+   Reader &operator=(Reader const &) = delete;
 
    /// Read a required component, or an optional one if the field is a std::optional.
    template <class T>
@@ -74,12 +79,15 @@ public:
    template <class Fn>
    void nested(const char *key, Fn &&fn);
 
-   bool has(const char *key) const { return _cursor.node().has_child(key); }
+   /// Whether the struct has a component. Checking for a component counts as reading it.
+   bool has(const char *key);
 
    Cursor const &cursor() const { return _cursor; }
 
 private:
    Cursor const &_cursor;
+   std::vector<std::string> _seen;
+   std::size_t _nErrorsBefore = 0;
 };
 
 void readValue(Cursor const &c, std::string &out);

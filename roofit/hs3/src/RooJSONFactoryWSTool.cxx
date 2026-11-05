@@ -32,12 +32,14 @@
 #include "Domains.h"
 #include "HS3Builder.h"
 #include "HS3Schema.h"
+#include "JSONReadRecorder.h"
 
 #include <TROOT.h>
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 
@@ -1260,6 +1262,8 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
  */
 void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDependants)
 {
+   // To report the components that no importer understands.
+   const RooFit::Detail::JSONReadRecorder recorder{p};
    std::string name(RooJSONFactoryWSTool::name(p));
 
    // If this node if marked to be skipped by RooFit, exit
@@ -1351,6 +1355,9 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    RooAbsReal *func = _workspace.function(name);
    if (!func) {
       RooJSONFactoryWSTool::error("something went wrong importing function '" + name + "'.");
+   }
+   for (std::string const &component : recorder.unreadComponents()) {
+      warning("RooFitHS3: " + name + ": unknown component \"" + component + "\" is ignored");
    }
 }
 

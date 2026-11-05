@@ -126,6 +126,40 @@ void Cursor::warning(std::string const &message) const
    _diagnostics.push_back({Diagnostic::Severity::Warning, path(), message});
 }
 
+std::size_t Cursor::numErrors() const
+{
+   return std::count_if(_diagnostics.begin(), _diagnostics.end(),
+                        [](Diagnostic const &d) { return d.severity == Diagnostic::Severity::Error; });
+}
+
+Reader::Reader(Cursor const &cursor) : _cursor{cursor}, _nErrorsBefore{cursor.numErrors()} {}
+
+bool Reader::has(const char *key)
+{
+   if (!_cursor.node().has_child(key)) {
+      return false;
+   }
+   if (std::find(_seen.begin(), _seen.end(), key) == _seen.end()) {
+      _seen.emplace_back(key);
+   }
+   return true;
+}
+
+Reader::~Reader()
+{
+   JSONNode const &node = _cursor.node();
+   // There is nothing to report if all components were read, and after an error it would only be noise.
+   if (!node.is_map() || node.num_children() == _seen.size() || _cursor.numErrors() != _nErrorsBefore) {
+      return;
+   }
+   for (JSONNode const &child : node.children()) {
+      const std::string key = child.key();
+      if (std::find(_seen.begin(), _seen.end(), key) == _seen.end()) {
+         _cursor.warning("unknown component \"" + key + "\" is ignored");
+      }
+   }
+}
+
 void readValue(Cursor const &c, std::string &out)
 {
    if (c.node().is_container() || c.node().is_null()) {
@@ -695,7 +729,12 @@ void readValue(Cursor const &c, Interpolation &out)
       out.out = interpolationFunctionFromString(outNode.val());
       if (!out.out) {
          c.error("has unknown extrapolation function '" + outNode.val() + "'");
+         return;
       }
+   }
+   Reader reader{c};
+   for (const char *component : {"type", "in", "out"}) {
+      reader.has(component);
    }
 }
 
@@ -946,6 +985,10 @@ void readDistribution(Cursor const &c, Distribution &out, ParseOptions const &op
       out.body = std::move(body);
    } else {
       out.body = GenericObject{type, &c.node()};
+      // The importers read the other components.
+      for (JSONNode const &child : c.node().children()) {
+         ar.has(child.key().c_str());
+      }
    }
 }
 
@@ -961,6 +1004,10 @@ void readValue(Cursor const &c, Function &out)
    ar("name", out.name);
    ar("type", out.body.type);
    out.body.node = &c.node();
+   // The importers read the other components.
+   for (JSONNode const &child : c.node().children()) {
+      ar.has(child.key().c_str());
+   }
 }
 
 void describe(Reader &ar, Attributes &attributes)
@@ -1117,6 +1164,7 @@ void readMetadata(Cursor const &root, Metadata &out, ParseOptions const &options
    }
 
    Reader ar{metadataCursor};
+   ar.has("hs3_version");
    ar.list("packages", out.packages);
    ar.list("authors", out.authors);
    ar.list("publications", out.publications);
@@ -1134,7 +1182,10 @@ HS3Document parseDocument(JSONNode const &root, Diagnostics &diagnostics, ParseO
       return doc;
    }
 
-   if (root.has_child("distributions") && !root["distributions"].is_null()) {
+   Reader ar{cursor};
+   ar.has("metadata");
+   ar.has("misc");
+   if (ar.has("distributions") && !root["distributions"].is_null()) {
       Cursor distributions{root["distributions"], cursor, "distributions"};
       if (!distributions.node().is_seq()) {
          distributions.error("must be an array");
@@ -1148,7 +1199,6 @@ HS3Document parseDocument(JSONNode const &root, Diagnostics &diagnostics, ParseO
          }
       }
    }
-   Reader ar{cursor};
    ar.list("functions", doc.functions);
    ar.list("data", doc.data);
    ar.list("likelihoods", doc.likelihoods);
@@ -1162,7 +1212,15 @@ HS3Document parseDocument(JSONNode const &root, Diagnostics &diagnostics, ParseO
 HistFactoryDist parseHistFactoryDist(JSONNode const &distribution, Diagnostics &diagnostics)
 {
    HistFactoryDist out;
-   readValue(Cursor{distribution, diagnostics}, out);
+   Cursor cursor{distribution, diagnostics};
+   if (!distribution.is_map()) {
+      cursor.error("must be a struct");
+      return out;
+   }
+   Reader ar{cursor};
+   ar.has("name");
+   ar.has("type");
+   describe(ar, out);
    return out;
 }
 
