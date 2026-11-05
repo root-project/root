@@ -594,10 +594,78 @@ loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Dom
    RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() failed to create dataset " + name);
 }
 
+// What the document says about a combined data set: its columns and the keys with a sub-data set, each key as a
+// map from the column to the label. Used to check the pairing with a combined distribution in a likelihood.
+struct CombinedDataInfo {
+   std::vector<std::string> columns;
+   std::set<std::map<std::string, std::string>> keys;
+};
+
+// Check that a combined data set paired with a RooSimultaneous in a likelihood has a sub-data set for every component.
+// RooFit has no notion of an unobserved component: a key without sub-data set is a channel without entries, which
+// adds the expected number of events of an extended component to the likelihood. That changes the fit, so it is an
+// error (https://github.com/root-project/root/issues/24004). For a non-extended component it changes nothing, and a
+// sub-data set without component is ignored by RooFit; both are reported as warnings.
+void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &dataName, CombinedDataInfo const &info)
+{
+   std::vector<RooCategory const *> columns = selectionColumns(simPdf.indexCat());
+   std::vector<std::string> columnNames;
+   for (RooCategory const *column : columns) {
+      columnNames.push_back(column->GetName());
+   }
+   std::vector<std::string> dataColumns = info.columns;
+   std::sort(dataColumns.begin(), dataColumns.end());
+   if (dataColumns != columnNames) {
+      RooJSONFactoryWSTool::error("the likelihood pairs '" + std::string(simPdf.GetName()) +
+                                  "' with the combined data set '" + dataName + "', but their columns differ");
+   }
+   auto keyToString = [&](std::map<std::string, std::string> const &key) {
+      std::vector<std::string> labels;
+      for (std::string const &column : info.columns) {
+         labels.push_back(key.at(column));
+      }
+      return selectionKeyToString(labels);
+   };
+   std::set<std::map<std::string, std::string>> pdfKeys;
+   for (std::vector<std::string> const &labels : selectionKeys(columns)) {
+      RooAbsPdf const *component = simPdf.getPdf(selectionLabel(simPdf.indexCat(), columns, labels));
+      if (!component) {
+         continue;
+      }
+      std::map<std::string, std::string> key;
+      for (std::size_t i = 0; i < columns.size(); ++i) {
+         key[columnNames[i]] = labels[i];
+      }
+      pdfKeys.insert(key);
+      if (info.keys.count(key) > 0) {
+         continue;
+      }
+      if (component->canBeExtended()) {
+         RooJSONFactoryWSTool::error(
+            "the combined data set '" + dataName + "' has no sub-data set for the key " + keyToString(key) +
+            " of the extended component '" + component->GetName() + "' of '" + simPdf.GetName() +
+            "'. RooFit cannot leave a component unobserved: it would add the expected number of events of the " +
+            "component to the likelihood, see https://github.com/root-project/root/issues/24004");
+      }
+      RooJSONFactoryWSTool::warning("RooFitHS3: the combined data set '" + dataName +
+                                    "' has no sub-data set for the key " + keyToString(key) + " of the component '" +
+                                    component->GetName() + "' of '" + simPdf.GetName() +
+                                    "', which RooFit treats as present and empty.");
+   }
+   for (auto const &key : info.keys) {
+      if (pdfKeys.count(key) == 0) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the sub-data set for the key " + keyToString(key) +
+                                       " of the combined data set '" + dataName + "' is ignored, because '" +
+                                       simPdf.GetName() + "' has no component for it.");
+      }
+   }
+}
+
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, const JSONNode &likelihoodsNode,
                     const JSONNode &domainsNode, RooWorkspace &workspace,
-                    const std::vector<std::unique_ptr<RooAbsData>> &datasets)
+                    const std::vector<std::unique_ptr<RooAbsData>> &datasets,
+                    std::map<std::string, CombinedDataInfo> const &combinedData)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = RooJSONFactoryWSTool::name(analysisNode);
@@ -641,6 +709,16 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
       }
       if (nameNode.val() != "0" && !found)
          throw std::runtime_error("dataset '" + nameNode.val() + "' cannot be found!");
+   }
+
+   // A combined distribution paired with a combined data set must have a sub-data set for every component.
+   std::vector<std::string> const nllDataNames = valsToStringVec((*nllNode)["data"]);
+   for (std::size_t i = 0; i < std::min(nllDistNames.size(), nllDataNames.size()); ++i) {
+      auto *simPdf = dynamic_cast<RooSimultaneous const *>(workspace.pdf(nllDistNames[i]));
+      auto info = combinedData.find(nllDataNames[i]);
+      if (simPdf && info != combinedData.end()) {
+         checkCombinedPairing(*simPdf, nllDataNames[i], info->second);
+      }
    }
 
    JSONNode const *pdfNameNode = mcAuxNode ? mcAuxNode->find("pdfName") : nullptr;
@@ -861,9 +939,10 @@ void sortByName(T &coll)
 // of "columns" and the variables of all components, filled row by row from the components, which are then no longer
 // imported on their own. The columns are categories declared by categorical axes of the domains. A key without a
 // sub-data set is a state without entries: RooFit has no notion of an absent component.
-void assembleCombinedData(JSONNode const &dataNode, RooWorkspace const &workspace,
-                          std::vector<std::unique_ptr<RooAbsData>> &datasets)
+std::map<std::string, CombinedDataInfo> assembleCombinedData(JSONNode const &dataNode, RooWorkspace const &workspace,
+                                                             std::vector<std::unique_ptr<RooAbsData>> &datasets)
 {
+   std::map<std::string, CombinedDataInfo> infos;
    for (JSONNode const &p : dataNode.children()) {
       if (!p.is_map() || !p.has_child("type") || p["type"].val() != "combined") {
          continue;
@@ -948,7 +1027,20 @@ void assembleCombinedData(JSONNode const &dataNode, RooWorkspace const &workspac
          }
       }
       datasets.emplace_back(std::move(combined));
+
+      CombinedDataInfo &info = infos[name];
+      for (RooCategory const *column : columns) {
+         info.columns.push_back(column->GetName());
+      }
+      for (auto const &c : components) {
+         std::map<std::string, std::string> key;
+         for (std::size_t i = 0; i < columns.size(); ++i) {
+            key[columns[i]->GetName()] = c.key[i];
+         }
+         info.keys.insert(key);
+      }
    }
+   return infos;
 }
 
 /// Check whether an object is a top-level object of the workspace, i.e. not a
@@ -2485,6 +2577,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    // assembled, so they don't get imported on their own. The ROOT-internal form of older files (combineDatasets())
    // is handled after the analyses, because their likelihoods refer to the components.
    std::vector<std::unique_ptr<RooAbsData>> datasets;
+   std::map<std::string, CombinedDataInfo> combinedData;
    if (auto dataNode = n.find("data")) {
       for (const auto &p : dataNode->children()) {
          // Combined data sets are assembled from the others once all of them are loaded.
@@ -2493,14 +2586,15 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
          }
          datasets.push_back(loadData(p, _workspace, _domains.get()));
       }
-      assembleCombinedData(*dataNode, _workspace, datasets);
+      combinedData = assembleCombinedData(*dataNode, _workspace, datasets);
    }
 
    // Now, read in analyses and likelihoods if there are any
 
    if (auto analysesNode = n.find("analyses")) {
       for (JSONNode const &analysisNode : analysesNode->children()) {
-         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], n["domains"], _workspace, datasets);
+         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], n["domains"], _workspace, datasets,
+                        combinedData);
       }
    }
 
