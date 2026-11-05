@@ -5062,15 +5062,34 @@ TEST(RooFitHS3, CombinedData)
    EXPECT_NE(mc2->GetObservables()->find("channelCat"), nullptr);
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
 
-   // Without a RooSimultaneous over the category, the sub-data sets carry all observables.
+   // Without a RooSimultaneous over the category, the category is an ordinary observable: the data set is written
+   // with a categorical axis (HS3 combined data sets require a combined distribution to pair with), and read back
+   // with the same entries per state.
    {
       RooWorkspace wsDataOnly;
       wsDataOnly.import(obsData);
       const std::string dataOnly = RooJSONFactoryWSTool{wsDataOnly}.exportJSONtoString();
       auto dataOnlyTree = RooFit::Detail::JSONTree::create(dataOnly);
-      auto const *part = RooJSONFactoryWSTool::findNamedChild(dataOnlyTree->rootnode()["data"], "obsData_channel_1");
-      ASSERT_NE(part, nullptr) << dataOnly;
-      EXPECT_EQ((*part)["axes"].num_children(), 2u) << dataOnly;
+      auto const &dataNode = dataOnlyTree->rootnode()["data"];
+      EXPECT_EQ(RooJSONFactoryWSTool::findNamedChild(dataNode, "obsData_channel_1"), nullptr) << dataOnly;
+      auto const *single = RooJSONFactoryWSTool::findNamedChild(dataNode, "obsData");
+      ASSERT_NE(single, nullptr) << dataOnly;
+      EXPECT_EQ((*single)["type"].val(), "unbinned") << dataOnly;
+      auto const *channelAxis = RooJSONFactoryWSTool::findNamedChild((*single)["axes"], "channelCat");
+      ASSERT_NE(channelAxis, nullptr) << dataOnly;
+      EXPECT_EQ((*channelAxis)["categories"].num_children(), 2u) << dataOnly;
+
+      RooWorkspace wsDataOnly2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{wsDataOnly2}.importJSONfromString(dataOnly));
+      RooAbsData *read = wsDataOnly2.data("obsData");
+      ASSERT_NE(read, nullptr);
+      EXPECT_EQ(read->numEntries(), 50);
+      auto split = read->split(*static_cast<RooCategory *>(read->get()->find("channelCat")));
+      ASSERT_EQ(split.size(), 2u);
+      for (auto const &part : split) {
+         EXPECT_EQ(part->numEntries(), std::string(part->GetName()) == "channel_1" ? 20 : 30) << part->GetName();
+      }
+      EXPECT_EQ(RooJSONFactoryWSTool{wsDataOnly2}.exportJSONtoString(), dataOnly);
    }
 
    // Files written by earlier ROOT versions: components named after the data set and the state, the combination

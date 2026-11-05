@@ -21,6 +21,7 @@
 #include <RooWorkspace.h>
 
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <set>
 #include <unordered_map>
@@ -36,6 +37,8 @@ namespace RooStats {
 class ModelConfig;
 }
 class RooRealVar;
+class RooAbsPdf;
+class RooCategory;
 class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
@@ -185,6 +188,7 @@ public:
    }
 
    static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
+   static void exportCategoricalAxis(RooFit::Detail::JSONNode &obsNode, RooCategory const &cat);
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
