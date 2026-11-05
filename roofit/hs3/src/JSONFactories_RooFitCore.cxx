@@ -57,6 +57,9 @@
 
 #include <TF1.h>
 
+#include <RooCategory.h>
+#include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
 #include "JSONIOUtils.h"
 
 #include <type_traits>
@@ -410,6 +413,46 @@ bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    tool->wsEmplace<RooAddition>(name, tool->requestArgList<RooAbsReal>(p, "summands"));
+   return true;
+}
+
+// A "combined_dist" is a RooSimultaneous. Its index category is the single column, or a RooSuperCategory over the
+// columns in the order of the document; the columns are categories declared by categorical axes of the domains.
+bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   std::string const name(RooJSONFactoryWSTool::name(p));
+   std::string const context = "the combined_dist '" + name + "'";
+   std::vector<RooCategory *> columns = readSelectionColumns(*tool->workspace(), p, "columns", context);
+
+   auto const *componentsNode = p.find("components");
+   if (!componentsNode || !componentsNode->is_seq() || componentsNode->num_children() == 0) {
+      RooJSONFactoryWSTool::error("\"components\" of " + context + " must be a non-empty list");
+   }
+   std::map<std::string, RooAbsPdf *> pdfMap;
+   for (JSONNode const &component : componentsNode->children()) {
+      if (!component.is_map() || !component.has_child("dist")) {
+         RooJSONFactoryWSTool::error("every component of " + context + " must have a \"key\" and a \"dist\"");
+      }
+      std::vector<std::string> const key = readSelectionKey(component, columns, context);
+      std::string const label = selectionLabel(key);
+      if (pdfMap.find(label) != pdfMap.end()) {
+         RooJSONFactoryWSTool::error("the key " + selectionKeyToString(key) + " is used by two components of " +
+                                     context);
+      }
+      pdfMap[label] = tool->request<RooAbsPdf>(component["dist"].val(), name);
+   }
+
+   if (columns.size() == 1) {
+      tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, *columns.front()});
+      return true;
+   }
+   RooArgSet inputs;
+   for (RooCategory *column : columns) {
+      inputs.add(*column);
+   }
+   std::string const indexName = name + "_index";
+   RooSuperCategory indexCat{indexName.c_str(), indexName.c_str(), inputs};
+   tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, indexCat});
    return true;
 }
 
@@ -1625,6 +1668,7 @@ STATIC_EXECUTE([]() {
    registerImporter<importProdPdf>("product_dist", false);
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
+   registerImporter<importCombinedDist>("combined_dist", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);
    registerImporter<importBinSamplingPdf>("binsampling_dist", false);
    registerImporter<importBinSamplingPdf>("binsampling", false);

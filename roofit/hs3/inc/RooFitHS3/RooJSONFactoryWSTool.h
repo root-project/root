@@ -36,6 +36,7 @@ namespace RooStats {
 class ModelConfig;
 }
 class RooRealVar;
+class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
 public:
@@ -228,6 +229,7 @@ private:
       }
    }
 
+   void exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames);
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
 

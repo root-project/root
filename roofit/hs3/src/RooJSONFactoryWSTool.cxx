@@ -1185,27 +1185,11 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
    exportedObjectNames.insert(name);
 
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
-      // RooSimultaneous is not used in the HS3 standard, we only export the
-      // dependents and some ROOT internal information.
-      exportObjects(func.servers(), exportedObjectNames);
-
-      std::vector<std::string> channelNames;
-      for (auto const &item : simPdf->indexCat()) {
-         channelNames.push_back(item.first);
-      }
-
-      auto &infoNode = getRooFitInternal(*_rootnodeOutput, "combined_distributions").set_map();
-      auto &child = infoNode[simPdf->GetName()].set_map();
-      child["index_cat"] << simPdf->indexCat().GetName();
-      exportCategory(simPdf->indexCat(), child);
-      child["distributions"].set_seq();
-      for (auto const &item : simPdf->indexCat()) {
-         child["distributions"].append_child() << simPdf->getPdf(item.first.c_str())->GetName();
-      }
-
+      exportSimultaneous(*simPdf, exportedObjectNames);
       return;
    } else if (dynamic_cast<RooAbsCategory const *>(&func)) {
-      // categories are created by the respective RooSimultaneous, so we're skipping the export here
+      // Categories are not objects of the document: the index category of a RooSimultaneous is declared by the
+      // categorical axes of the domain that its "columns" name.
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
       exportVariable(&func, *_varsNode, true, false);
@@ -1313,6 +1297,43 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       }
       this->exportObject(*s, exportedObjectNames);
    }
+}
+
+/**
+ * @brief Export a RooSimultaneous as a "combined_dist".
+ *
+ * The components are selected by a key with one label per column. The columns are the index category of the
+ * RooSimultaneous or, for a RooSuperCategory index, its input categories, sorted by name. They are declared as
+ * categorical axes of the default domain. States without a pdf are not written: HS3 does not require a component
+ * for every key.
+ */
+void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames)
+{
+   RooAbsCategory const &indexCat = simPdf.indexCat();
+   std::vector<RooCategory const *> columns = selectionColumns(indexCat);
+
+   JSONNode &elem = appendNamedChild((*_rootnodeOutput)["distributions"], simPdf.GetName());
+   elem["type"] << "combined_dist";
+   auto &columnsNode = elem["columns"].set_seq();
+   for (RooCategory const *column : columns) {
+      columnsNode.append_child() << column->GetName();
+      _domains->readCategory(*column);
+   }
+   auto &components = elem["components"].set_seq();
+   // In the order of the columns and of their states, which is the order in which the categories are written to
+   // the domain. This does not depend on the order of the inputs of a RooSuperCategory, so the document is the same
+   // after a round trip.
+   for (std::vector<std::string> const &key : selectionKeys(columns)) {
+      RooAbsPdf const *pdf = simPdf.getPdf(selectionLabel(indexCat, columns, key));
+      if (!pdf) {
+         continue;
+      }
+      JSONNode &component = components.append_child().set_map();
+      component["key"].fill_seq(key);
+      component["dist"] << pdf->GetName();
+   }
+
+   exportObjects(simPdf.servers(), exportedObjectNames);
 }
 
 /**
@@ -1565,13 +1586,16 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 
    // Find a RooSimultaneous model that would fit to this dataset
    RooSimultaneous const *simPdf = nullptr;
-   auto *combinedPdfInfoNode = findRooFitInternal(*_rootnodeOutput, "combined_distributions");
-   if (combinedPdfInfoNode) {
-      for (auto &info : combinedPdfInfoNode->children()) {
-         if (info["index_cat"].val() == cat->GetName()) {
-            simPdf = static_cast<RooSimultaneous const *>(_workspace.pdf(info.key()));
-         }
+   std::vector<RooSimultaneous const *> candidates;
+   for (RooAbsArg *arg : _workspace.allPdfs()) {
+      auto *candidate = dynamic_cast<RooSimultaneous const *>(arg);
+      if (candidate && std::string(candidate->indexCat().GetName()) == cat->GetName()) {
+         candidates.push_back(candidate);
       }
+   }
+   if (!candidates.empty()) {
+      sortByName(candidates);
+      simPdf = candidates.front();
    }
 
    // If there is an associated simultaneous pdf for the index category, we

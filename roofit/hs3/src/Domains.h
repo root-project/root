@@ -18,6 +18,7 @@
 #include <vector>
 
 class RooAbsBinning;
+class RooAbsCategory;
 class RooRealVar;
 class RooWorkspace;
 
@@ -35,6 +36,7 @@ namespace Detail {
 class Domains {
 public:
    void readVariable(RooRealVar const &);
+   void readCategory(RooAbsCategory const &);
    void writeVariable(RooRealVar &) const;
 
    void readJSON(RooFit::Detail::JSONNode const &);
@@ -49,6 +51,7 @@ public:
    public:
       void readVariable(const RooRealVar &);
       void readVariable(const char *name, RooAbsBinning const &binning);
+      void readCategory(const char *name, std::vector<std::string> const &labels);
       void writeVariable(RooRealVar &) const;
 
       void readJSON(RooFit::Detail::JSONNode const &);

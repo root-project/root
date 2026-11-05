@@ -120,6 +120,17 @@ void Domains::readVariable(RooRealVar const &var)
    }
 }
 
+void Domains::readCategory(RooAbsCategory const &cat)
+{
+   // The states in their insertion order: this is the order of the bins of a RooDataHist over the category, and the
+   // position becomes the index when the document is read back.
+   std::vector<std::string> labels;
+   for (unsigned int i = 0; i < cat.size(); ++i) {
+      labels.push_back(cat.getOrdinal(i).first);
+   }
+   _map[defaultDomainName].readCategory(cat.GetName(), labels);
+}
+
 void Domains::writeVariable(RooRealVar &var) const
 {
    auto default_domain = _map.find(defaultDomainName);
@@ -230,6 +241,20 @@ void Domains::ProductDomain::writeBinning(RooFit::Detail::JSONNode &node, Produc
       node["nbins"] << elem.nBins;
    }
 }
+void Domains::ProductDomain::readCategory(const char *name, std::vector<std::string> const &labels)
+{
+   auto &elem = _map[name];
+   if (elem.hasMin || elem.hasMax || elem.hasNBins || !elem.edges.empty()) {
+      RooJSONFactoryWSTool::error(std::string("the variable '") + name +
+                                  "' is categorical, but the domain already lists it as continuous");
+   }
+   if (!elem.categories.empty() && elem.categories != labels) {
+      RooJSONFactoryWSTool::error(std::string("the category '") + name +
+                                  "' is written to the domain twice, with different states");
+   }
+   elem.categories = labels;
+}
+
 void Domains::ProductDomain::writeVariable(RooRealVar &var) const
 {
    auto found = _map.find(var.GetName());
