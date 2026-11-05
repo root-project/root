@@ -543,4 +543,12 @@ target_sources(
         res/RooUnitTest.h
 )
 
+if (NOT WIN32)
+  # we include privately headers that are not public, from a "friend" target
+  get_target_property(RooFitMultiProcess_Friend_Dirs RooFitMultiProcess HEADER_DIRS_friend_header_files)
+  if(RooFitMultiProcess_Friend_Dirs)
+    target_include_directories(RooFitCore PRIVATE ${RooFitMultiProcess_Friend_Dirs})
+  endif()
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
