@@ -6218,3 +6218,95 @@ TEST(RooFitHS3, CombinedComponentsMustNotShareObservables)
    ASSERT_NE(data, nullptr);
    EXPECT_EQ(data->numEntries(), 2);
 }
+
+// With RooJSONFactoryWSTool::config().renameCombinedObservables, the observables of combined data sets are renamed
+// per key on export ("obs_SR", or "obs_SR_x" with several observables), and the components of the matching
+// RooSimultaneous are written with them; nodes that depend on a renamed observable get one copy per component. This
+// allows exporting a RooSimultaneous whose components share an observable. The likelihood stays the same, and a
+// second export gives the same document.
+TEST(RooFitHS3, RenameCombinedObservables)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   struct FlagGuard {
+      bool old = RooJSONFactoryWSTool::config().renameCombinedObservables;
+      FlagGuard() { RooJSONFactoryWSTool::config().renameCombinedObservables = true; }
+      ~FlagGuard() { RooJSONFactoryWSTool::config().renameCombinedObservables = old; }
+   } flagGuard;
+
+   RooRealVar mass{"mass", "mass", 0.0, 10.0};
+   RooCategory channel{"channel", "channel", {{"SR", 0}, {"CR", 1}}};
+   // A function of the observable, shared by both components.
+   RooFormulaVar shift{"shift", "mass - 1.0", {mass}};
+   RooGaussian sr{"sr", "sr", shift, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", shift, 6.0, 1.5};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"SR", &sr}, {"CR", &cr}}, channel};
+   RooDataSet obs{"data", "data", {mass, channel}};
+   for (auto const &[label, value] :
+        std::vector<std::pair<const char *, double>>{{"SR", 3.5}, {"SR", 4.5}, {"CR", 6.0}, {"CR", 7.5}, {"CR", 8.0}}) {
+      channel.setLabel(label);
+      mass.setVal(value);
+      obs.add({mass, channel});
+   }
+   std::unique_ptr<RooAbsReal> nll{simPdf.createNLL(obs)};
+   const double expectedNll = nll->getVal();
+
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   ws.import(obs);
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+
+   // The components and the functions of the observable, one per key, with the renamed observables.
+   auto const *combined = RooJSONFactoryWSTool::findNamedChild(root["distributions"], "simPdf");
+   ASSERT_NE(combined, nullptr) << json;
+   std::map<std::string, std::string> components;
+   for (auto const &component : (*combined)["components"].children()) {
+      components[component["key"].child(0).val()] = component["dist"].val();
+   }
+   EXPECT_EQ(components, (std::map<std::string, std::string>{{"SR", "sr_SR"}, {"CR", "cr_CR"}})) << json;
+   for (const char *key : {"SR", "CR"}) {
+      auto const *func = RooJSONFactoryWSTool::findNamedChild(root["functions"], std::string("shift_") + key);
+      ASSERT_NE(func, nullptr) << json;
+      EXPECT_NE((*func)["expression"].val().find(std::string("obs_") + key), std::string::npos) << json;
+      auto const *part = RooJSONFactoryWSTool::findNamedChild(root["data"], std::string("data_") + key);
+      ASSERT_NE(part, nullptr) << json;
+      ASSERT_EQ((*part)["axes"].num_children(), 1u) << json;
+      EXPECT_EQ((*part)["axes"].child(0)["name"].val(), std::string("obs_") + key) << json;
+   }
+   EXPECT_EQ(RooJSONFactoryWSTool::findNamedChild(root["functions"], "shift"), nullptr) << json;
+
+   // Read back, the likelihood is the same.
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *simPdf2 = dynamic_cast<RooSimultaneous *>(imported.pdf("simPdf"));
+   ASSERT_NE(simPdf2, nullptr);
+   RooAbsData *obs2 = imported.data("data");
+   ASSERT_NE(obs2, nullptr);
+   std::unique_ptr<RooAbsReal> nll2{simPdf2->createNLL(*obs2)};
+   EXPECT_NEAR(nll2->getVal(), expectedNll, 1e-10);
+
+   // The observables already have their new names, so a second export gives the same document.
+   EXPECT_EQ(RooJSONFactoryWSTool{imported}.exportJSONtoString(), json);
+
+   // Several observables per key: "obs_<key>_<observable>". Without a RooSimultaneous, all observables of the data
+   // set are renamed.
+   RooRealVar x{"x", "x", 0.0, 1.0};
+   RooRealVar y{"y", "y", 0.0, 1.0};
+   RooDataSet xy{"xy", "xy", {x, y, channel}};
+   for (const char *label : {"SR", "CR"}) {
+      channel.setLabel(label);
+      xy.add({x, y, channel});
+   }
+   RooWorkspace wsXY;
+   wsXY.import(xy);
+   const std::string jsonXY = RooJSONFactoryWSTool{wsXY}.exportJSONtoString();
+   auto treeXY = RooFit::Detail::JSONTree::create(jsonXY);
+   auto const *partSR = RooJSONFactoryWSTool::findNamedChild(treeXY->rootnode()["data"], "xy_SR");
+   ASSERT_NE(partSR, nullptr) << jsonXY;
+   std::set<std::string> axes;
+   for (auto const &axis : (*partSR)["axes"].children()) {
+      axes.insert(axis["name"].val());
+   }
+   EXPECT_EQ(axes, (std::set<std::string>{"obs_SR_x", "obs_SR_y"})) << jsonXY;
+}

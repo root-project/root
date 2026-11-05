@@ -62,6 +62,13 @@ public:
       /// before ROOT 6.26 by their structure, and don't write them, since `histfactory_dist` implies them. Turn this
       /// off if a workspace has such factors that are not meant as bin widths: they are then written as normfactors.
       bool identifyLegacyBinWidthFactors = true;
+      /// HS3 requires the components of a combined distribution to have distinct variates, e.g. "mass_SR" and
+      /// "mass_CR" instead of one "mass". If enabled, the observables of every combined data set are renamed on
+      /// export to "obs_<key>" (the labels of the key joined by "_"), or "obs_<key>_<observable>" if a component
+      /// has several observables; the components of the matching RooSimultaneous are written with the renamed
+      /// observables (functions depending on them get the suffix "_<key>"). This allows exporting workspaces whose
+      /// components share an observable. Off by default: without it, such workspaces can't be exported.
+      bool renameCombinedObservables = false;
    };
 
    static Config &config();
@@ -281,6 +288,13 @@ private:
    std::unique_ptr<RooFit::HS3::ToolExportState> _export;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
+   // Renaming of the observables of combined data sets, see Config::renameCombinedObservables: for each data set and
+   // each selection label, the new name of each observable; for each RooSimultaneous and selection label, the
+   // component with renamed observables to export instead of the original one. The objects are owned here.
+   std::map<std::string, std::map<std::string, std::map<std::string, std::string>>> _combinedObservableRenames;
+   std::map<std::string, std::map<std::string, RooAbsPdf const *>> _renamedComponents;
+   std::vector<std::unique_ptr<RooAbsArg>> _renamedObjects;
+   void prepareCombinedObservableRenaming();
 
    // The objects that are currently being imported, innermost last, to detect circular dependencies.
    std::vector<std::string> _importStack;
