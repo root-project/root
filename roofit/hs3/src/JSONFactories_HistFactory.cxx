@@ -929,7 +929,12 @@ public:
             }
             // The constraint type given on the staterror modifier takes precedence over the channel-level setting.
             if (modifierStatErrType.empty()) {
-               if (auto constraint = staterror->find("constraint")) {
+               // ROOT 6.38 and 6.40.00 wrote "constraint_type".
+               auto constraint = staterror->find("constraint");
+               if (!constraint) {
+                  constraint = staterror->find("constraint_type");
+               }
+               if (constraint) {
                   modifierStatErrType = constraint->val();
                   if (modifierStatErrType != "Poisson" && modifierStatErrType != "Gauss") {
                      RooJSONFactoryWSTool::error("unsupported constraint '" + modifierStatErrType +

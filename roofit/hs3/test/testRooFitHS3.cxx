@@ -3955,3 +3955,14 @@ TEST(RooFitHS3, HistFactoryLogNormalGammaConstraint)
    })",
                                "unsupported constraint 'LogNormal'");
 }
+
+// ROOT 6.38 and 6.40.00 wrote the constraint type of the staterror modifier as "constraint_type".
+TEST(RooFitHS3, HistFactoryStatErrorConstraintType)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+      makeHistFactoryJSON(R"({"name": "staterror", "type": "staterror", "constraint_type": "Gauss"})")));
+   EXPECT_NE(dynamic_cast<RooGaussian *>(ws.pdf("gamma_stat_channel0_bin_0_constraint")), nullptr);
+}
