@@ -31,6 +31,11 @@ Begin_Macro(source)
 }
 End_Macro
 
+Side note: TF12 derives from TF1 but it does not store the number of parameters:
+so `GetNpar()` will be 0. Instead, it contains a private member pointing to the
+original TF2. Hence, one should not modify the (zero) parameters of the TF12
+but rather modify the original TF2 the TF12 is pointing to.
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +113,7 @@ void TF12::Copy(TObject &obj) const
 /// Draw a copy of this function with its current attributes.
 ///
 /// This function MUST be used instead of Draw when you want to draw
-/// the same function with different TF12 options settings in the same canvas.
+/// the same function with different TF12 options (settings) in the same canvas.
 ///
 /// Possible option values are:
 ///
@@ -124,7 +129,7 @@ void TF12::Copy(TObject &obj) const
 /// Beware: this function does not clone the underlying TF2 instance,
 /// it just clones the TF12 objects but the all point to the same
 /// TF2. As a result, this function is only useful if you change
-/// the TF12 parameters.
+/// the TF12 options (settings).
 /// If you want to draw projections of the same function with
 /// different TF2 parameters, you can do so by previously cloning
 /// the TF2 object for each variation.
