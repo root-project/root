@@ -406,6 +406,147 @@ bool importProdPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// The name of the pdf that represents the component of an array distribution over the observable `observable`.
+std::string arrayComponentName(std::string const &observable)
+{
+   return observable + "_constraint";
+}
+
+// Copy the value of a JSON node, keeping numbers and booleans as such.
+void copyValue(JSONNode &target, JSONNode const &source)
+{
+   if (source.is_number()) {
+      target << source.val_double();
+      return;
+   }
+   const std::string value = source.val();
+   if (value == "true" || value == "false") {
+      target << (value == "true");
+   } else {
+      target << value;
+   }
+}
+
+// An HS3 `array_dist` is a product of one-dimensional distributions of one type (`component_type`), each over its own
+// observable `x`. RooFit has no dedicated class for it: every component is imported as an individual pdf of the
+// component type, named after its observable, and a RooProdPdf with the attribute `arrayDistTag` that carries the
+// name of the array holds them together, so that the array can be written back as `array_dist`. HistFactory modifiers
+// that name an array as the constraint of a parameter pick their component out of it (see
+// JSONFactories_HistFactory.cxx).
+bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   const std::string name = RooJSONFactoryWSTool::name(p);
+   auto error = [&name](std::string const &message) {
+      RooJSONFactoryWSTool::error("array_dist '" + name + "': " + message);
+   };
+
+   static const std::set<std::string> supportedComponentTypes{"poisson_dist", "gaussian_dist", "normal_dist",
+                                                              "lognormal_dist"};
+   if (!p.has_child("component_type")) {
+      error("missing \"component_type\"");
+   }
+   const std::string componentType = p["component_type"].val();
+   if (supportedComponentTypes.find(componentType) == supportedComponentTypes.end()) {
+      error("the component_type '" + componentType +
+            "' is not supported, supported are poisson_dist, gaussian_dist and lognormal_dist");
+   }
+
+   const JSONNode *defaults = p.find("default_parameters");
+   if (defaults) {
+      if (!defaults->is_map()) {
+         error("\"default_parameters\" must be a struct");
+      }
+      if (defaults->has_child("x")) {
+         error("\"x\" must be given per component, not in \"default_parameters\"");
+      }
+   }
+   const JSONNode *components = p.find("components");
+   if (!components || !components->is_seq() || components->num_children() == 0) {
+      error("\"components\" must be a non-empty list");
+   }
+
+   RooWorkspace &ws = *tool->workspace();
+
+   // The components are imported through the importer of the component type, from a node per component that
+   // combines its own fields with the defaults.
+   auto tree = RooFit::Detail::JSONTree::create();
+   JSONNode &nodes = tree->rootnode().set_seq();
+   std::vector<std::string> observables;
+   RooArgList pdfs;
+   for (JSONNode const &component : components->children()) {
+      const std::string context = "component " + std::to_string(observables.size());
+      if (!component.is_map()) {
+         error(context + " must be a struct");
+      }
+      const JSONNode *xNode = component.find("x");
+      if (!xNode) {
+         error(context + " has no \"x\"");
+      }
+      if (xNode->is_number() || !xNode->has_val()) {
+         error(context + ": \"x\" must be the name of the observable");
+      }
+      const std::string x = xNode->val();
+      if (std::find(observables.begin(), observables.end(), x) != observables.end()) {
+         error("the observable '" + x + "' is used by two components");
+      }
+      observables.push_back(x);
+
+      const std::string pdfName = arrayComponentName(x);
+      if (ws.arg(pdfName)) {
+         error("cannot create the component for '" + x + "' as '" + pdfName +
+               "', the workspace already has an object of that name");
+      }
+      JSONNode &node = nodes.append_child().set_map();
+      node["name"] << pdfName;
+      node["type"] << componentType;
+      if (defaults) {
+         for (JSONNode const &field : defaults->children()) {
+            copyValue(node[field.key()], field);
+         }
+      }
+      for (JSONNode const &field : component.children()) {
+         copyValue(node[field.key()], field);
+      }
+      // RooFit's "integer" flag of poisson_dist (not part of HS3) defaults to the continued Poisson distribution,
+      // which is what HistFactory constraints are and which gives the usual value at integer x.
+      if (componentType == "poisson_dist" && !node.has_child("integer")) {
+         node["integer"] << false;
+      }
+      tool->importFunction(node, true);
+      RooAbsPdf *pdf = ws.pdf(pdfName);
+      if (!pdf) {
+         error(context + " did not produce a distribution");
+      }
+      pdfs.add(*pdf);
+   }
+
+   // The parameters of a component must not depend on any observable of the array, otherwise the product would not
+   // be normalized.
+   for (std::size_t i = 0; i < observables.size(); ++i) {
+      RooAbsArg const *x = ws.arg(observables[i]);
+      if (!x) {
+         error("the observable '" + observables[i] + "' is not a parameter or function");
+      }
+      for (std::size_t k = 0; k < observables.size(); ++k) {
+         if (k != i && pdfs[i].dependsOn(*ws.arg(observables[k]))) {
+            error("component " + std::to_string(i) + " depends on the observable '" + observables[k] +
+                  "' of component " + std::to_string(k));
+         }
+      }
+      for (RooAbsArg const *server : pdfs[i].servers()) {
+         if (server != x && server->dependsOn(*x)) {
+            error("the parameters of component " + std::to_string(i) + " depend on its own observable '" +
+                  observables[i] + "'");
+         }
+      }
+   }
+
+   RooProdPdf array{name.c_str(), name.c_str(), pdfs};
+   array.setAttribute(arrayDistTag);
+   tool->wsImport(array);
+   return true;
+}
+
 bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
@@ -1623,6 +1764,7 @@ STATIC_EXECUTE([]() {
                                     std::make_unique<DeprecatedKeyImporter>("binsampling", "binsampling_dist"));
    registerImporter<importProduct>("product", false);
    registerImporter<importProdPdf>("product_dist", false);
+   registerImporter<importArrayDist>("array_dist", false);
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);

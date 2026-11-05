@@ -53,6 +53,7 @@
 #include <vector>
 
 #include <TF3.h>
+#include <TMath.h>
 #include <TROOT.h>
 
 #include <gtest/gtest.h>
@@ -3796,6 +3797,163 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
    auto *model3 = dynamic_cast<RooProdPdf *>(ws3.pdf("model_channel0"));
    ASSERT_NE(model3, nullptr);
    EXPECT_EQ(model3->pdfList().size(), 2u); // the sum and alpha_a_constraint
+}
+
+// An array_dist is imported as one distribution per component, named after its observable, held together by a
+// RooProdPdf with the attribute hs3_array_dist that carries the name of the array. The component types are built by
+// their own importers, with "default_parameters" filled in where a component omits a parameter.
+TEST(RooFitHS3, ArrayDistImport)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "pois", "type": "array_dist", "component_type": "poisson_dist",
+          "default_parameters": {"mean": "lambda_default"},
+          "components": [{"x": "n_1", "mean": "lambda_1"}, {"x": "n_2"}, {"x": "n_3", "mean": 7.5, "integer": true}]},
+         {"name": "gauss", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_a", "mean": "a", "sigma": "sigma_a"}, {"x": "nom_b", "mean": "b"},
+                         {"x": "nom_c", "mean": 0.5, "sigma": 2.0}]},
+         {"name": "logn", "type": "array_dist", "component_type": "lognormal_dist",
+          "components": [{"x": "y_1", "mu": "mu_1", "sigma": 1.5}, {"x": "y_2", "mu": 2.0, "sigma": "sigma_y"}]}
+      ],
+      "functions": [
+         {"name": "lambda_1", "type": "product", "factors": [20.0, "np_1"]},
+         {"name": "lambda_default", "type": "product", "factors": [10.0, "np_2"]}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "n_1", "min": 0.0, "max": 100.0}, {"name": "n_2", "min": 0.0, "max": 100.0},
+         {"name": "n_3", "min": 0.0, "max": 100.0},
+         {"name": "np_1", "min": 0.0, "max": 5.0}, {"name": "np_2", "min": 0.0, "max": 5.0},
+         {"name": "nom_a", "min": -5.0, "max": 5.0}, {"name": "nom_b", "min": -5.0, "max": 5.0},
+         {"name": "nom_c", "min": -5.0, "max": 5.0}, {"name": "a", "min": -5.0, "max": 5.0},
+         {"name": "b", "min": -5.0, "max": 5.0}, {"name": "sigma_a", "min": 0.1, "max": 10.0},
+         {"name": "y_1", "min": 0.1, "max": 10.0}, {"name": "y_2", "min": 0.1, "max": 10.0},
+         {"name": "mu_1", "min": 0.1, "max": 10.0}, {"name": "sigma_y", "min": 1.0, "max": 10.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "n_1", "value": 20.0}, {"name": "n_2", "value": 10.0}, {"name": "n_3", "value": 8.0},
+         {"name": "np_1", "value": 1.1}, {"name": "np_2", "value": 0.9},
+         {"name": "nom_a", "value": 0.3}, {"name": "nom_b", "value": -0.2}, {"name": "nom_c", "value": 1.0},
+         {"name": "a", "value": 0.1}, {"name": "b", "value": 0.4}, {"name": "sigma_a", "value": 0.5},
+         {"name": "y_1", "value": 2.0}, {"name": "y_2", "value": 3.0}, {"name": "mu_1", "value": 1.5},
+         {"name": "sigma_y", "value": 1.2}]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+
+   auto checkArray = [&](const char *name, std::vector<std::string> const &components) {
+      auto *array = dynamic_cast<RooProdPdf *>(ws.pdf(name));
+      ASSERT_NE(array, nullptr) << name;
+      EXPECT_TRUE(array->getAttribute("hs3_array_dist")) << name;
+      ASSERT_EQ(array->pdfList().size(), components.size()) << name;
+      double product = 1.0;
+      for (std::size_t i = 0; i < components.size(); ++i) {
+         EXPECT_STREQ(array->pdfList()[i].GetName(), components[i].c_str()) << name;
+         product *= static_cast<RooAbsReal &>(array->pdfList()[i]).getVal();
+      }
+      // The array is the product of its components.
+      EXPECT_DOUBLE_EQ(array->getVal(), product) << name;
+   };
+   checkArray("pois", {"n_1_constraint", "n_2_constraint", "n_3_constraint"});
+   checkArray("gauss", {"nom_a_constraint", "nom_b_constraint", "nom_c_constraint"});
+   checkArray("logn", {"y_1_constraint", "y_2_constraint"});
+
+   // Poisson: own parameter, default parameter, number. Without "integer", the continued form is used.
+   auto *p1 = dynamic_cast<RooPoisson *>(ws.pdf("n_1_constraint"));
+   auto *p2 = dynamic_cast<RooPoisson *>(ws.pdf("n_2_constraint"));
+   auto *p3 = dynamic_cast<RooPoisson *>(ws.pdf("n_3_constraint"));
+   ASSERT_NE(p1, nullptr);
+   ASSERT_NE(p2, nullptr);
+   ASSERT_NE(p3, nullptr);
+   EXPECT_STREQ(p1->getX().GetName(), "n_1");
+   EXPECT_STREQ(p1->getMean().GetName(), "lambda_1");
+   EXPECT_STREQ(p2->getMean().GetName(), "lambda_default");
+   EXPECT_DOUBLE_EQ(p3->getMean().getVal(), 7.5);
+   EXPECT_TRUE(p1->getNoRounding());
+   EXPECT_TRUE(p2->getNoRounding());
+   EXPECT_FALSE(p3->getNoRounding());
+   EXPECT_DOUBLE_EQ(p1->getVal(), TMath::Poisson(20.0, 22.0));
+   EXPECT_DOUBLE_EQ(p2->getVal(), TMath::Poisson(10.0, 9.0));
+
+   // Gaussian: parameters by name, default sigma, numbers.
+   auto *ga = dynamic_cast<RooGaussian *>(ws.pdf("nom_a_constraint"));
+   auto *gb = dynamic_cast<RooGaussian *>(ws.pdf("nom_b_constraint"));
+   auto *gc = dynamic_cast<RooGaussian *>(ws.pdf("nom_c_constraint"));
+   ASSERT_NE(ga, nullptr);
+   ASSERT_NE(gb, nullptr);
+   ASSERT_NE(gc, nullptr);
+   EXPECT_STREQ(ga->getX().GetName(), "nom_a");
+   EXPECT_STREQ(ga->getMean().GetName(), "a");
+   EXPECT_STREQ(ga->getSigma().GetName(), "sigma_a");
+   EXPECT_STREQ(gb->getMean().GetName(), "b");
+   EXPECT_DOUBLE_EQ(gb->getSigma().getVal(), 1.0);
+   EXPECT_DOUBLE_EQ(gc->getMean().getVal(), 0.5);
+   EXPECT_DOUBLE_EQ(gc->getSigma().getVal(), 2.0);
+   EXPECT_DOUBLE_EQ(ga->getVal(), std::exp(-0.5 * std::pow((0.3 - 0.1) / 0.5, 2)));
+   EXPECT_DOUBLE_EQ(gb->getVal(), std::exp(-0.5 * std::pow((-0.2 - 0.4) / 1.0, 2)));
+   EXPECT_DOUBLE_EQ(gc->getVal(), std::exp(-0.5 * std::pow((1.0 - 0.5) / 2.0, 2)));
+
+   // LogNormal in the standard parametrization.
+   auto *l1 = dynamic_cast<RooLognormal *>(ws.pdf("y_1_constraint"));
+   auto *l2 = dynamic_cast<RooLognormal *>(ws.pdf("y_2_constraint"));
+   ASSERT_NE(l1, nullptr);
+   ASSERT_NE(l2, nullptr);
+   EXPECT_TRUE(l1->useStandardParametrization());
+   EXPECT_STREQ(l1->getMedian().GetName(), "mu_1");
+   EXPECT_DOUBLE_EQ(l1->getShapeK().getVal(), 1.5);
+   EXPECT_DOUBLE_EQ(l2->getMedian().getVal(), 2.0);
+   EXPECT_STREQ(l2->getShapeK().GetName(), "sigma_y");
+   RooLognormal ref{"ref", "ref", *ws.var("y_1"), *ws.var("mu_1"), RooFit::RooConst(1.5), true};
+   EXPECT_DOUBLE_EQ(l1->getVal(), ref.getVal());
+}
+
+// Invalid array distributions are rejected with explicit errors.
+TEST(RooFitHS3, ArrayDistImportErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto document = [](std::string const &array, std::string const &functions = "") {
+      return R"({"metadata": {"hs3_version": "0.3"}, "distributions": [)" + array + R"(],
+         "functions": [)" +
+             functions + R"(],
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+            {"name": "n_1", "min": 0.0, "max": 100.0}, {"name": "n_2", "min": 0.0, "max": 100.0},
+            {"name": "mu_1", "min": 0.0, "max": 100.0}, {"name": "mu_2", "min": 0.0, "max": 100.0}]}]})";
+   };
+   auto array = [](std::string const &body) { return R"({"name": "arr", "type": "array_dist", )" + body + "}"; };
+
+   expectImportThrowsWithError(document(array(R"("components": [{"x": "n_1", "mean": "mu_1"}])")),
+                               "missing \"component_type\"");
+   expectImportThrowsWithError(
+      document(array(R"("component_type": "exponential_dist", "components": [{"x": "n_1", "c": 1.0}])")),
+      "the component_type 'exponential_dist' is not supported");
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist", "components": [])")),
+                               "\"components\" must be a non-empty list");
+   expectImportThrowsWithError(
+      document(array(R"("component_type": "poisson_dist", "default_parameters": {"x": "n_1", "mean": "mu_1"},
+                        "components": [{"x": "n_1"}])")),
+      "\"x\" must be given per component, not in \"default_parameters\"");
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist",
+      "components": [{"x": "n_1", "mean": "mu_1"}, {"x": "n_1", "mean": "mu_2"}])")),
+                               "the observable 'n_1' is used by two components");
+   expectImportThrowsWithError(
+      document(array(R"("component_type": "poisson_dist", "components": [{"x": 3.0, "mean": "mu_1"}])")),
+      "\"x\" must be the name of the observable");
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist", "components": [{"mean": "mu_1"}])")),
+                               "component 0 has no \"x\"");
+   // A parameter given neither in the component nor in the defaults: the error of the component type's importer.
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist", "components": [{"x": "n_1"}])")),
+                               "no \"mean\" given in \"n_1_constraint\"");
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist",
+      "components": [{"x": "n_1", "mean": "n_2"}, {"x": "n_2", "mean": "mu_2"}])")),
+                               "component 0 depends on the observable 'n_2' of component 1");
+   expectImportThrowsWithError(
+      document(array(R"("component_type": "poisson_dist", "components": [{"x": "n_1", "mean": "f"}])"),
+               R"({"name": "f", "type": "product", "factors": ["n_1", 2.0]})"),
+      "the parameters of component 0 depend on its own observable 'n_1'");
 }
 
 // Binned axes with an irregular binning carry "min" and "max" in addition to the "edges".
