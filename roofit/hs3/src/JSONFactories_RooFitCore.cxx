@@ -548,7 +548,8 @@ bool importDecay(RooJSONFactoryWSTool *tool, const JSONNode &p)
    std::string name(RooJSONFactoryWSTool::name(p));
    RooRealVar *t = tool->requestArg<RooRealVar>(p, "t");
    RooAbsReal *tau = tool->requestArg<RooAbsReal>(p, "tau");
-   RooResolutionModel *model = dynamic_cast<RooResolutionModel *>(tool->requestArg<RooAbsPdf>(p, "resolutionModel"));
+   // HS3 lists some resolution models as functions.
+   RooResolutionModel *model = dynamic_cast<RooResolutionModel *>(tool->requestArg<RooAbsReal>(p, "resolutionModel"));
    if (!model) {
       RooJSONFactoryWSTool::error("resolutionModel of '" + name + "' is not a RooResolutionModel");
    }
@@ -1611,10 +1612,17 @@ STATIC_EXECUTE([]() {
    RooFit::JSONIO::registerImporter("ARGUS_dist", std::make_unique<DeprecatedKeyImporter>("ARGUS_dist", "argus_dist"));
    RooFit::JSONIO::registerImporter("binsampling",
                                     std::make_unique<DeprecatedKeyImporter>("binsampling", "binsampling_dist"));
+   RooFit::JSONIO::registerImporter(
+      "mixture_resolution_model", std::make_unique<DeprecatedKeyImporter>("mixture_resolution_model", "mixture_model"));
+   RooFit::JSONIO::registerImporter("delta_resolution_model", std::make_unique<DeprecatedKeyImporter>(
+                                                                 "delta_resolution_model", "truth_model_function"));
+   RooFit::JSONIO::registerImporter("gauss_resolution_model", std::make_unique<DeprecatedKeyImporter>(
+                                                                 "gauss_resolution_model", "gauss_model_function"));
    registerImporter<importProduct>("product", false);
    registerImporter<importProdPdf>("product_dist", false);
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
+   registerImporter<importAddModel>("mixture_model", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);
    registerImporter<importBinSamplingPdf>("binsampling_dist", false);
    registerImporter<importBinSamplingPdf>("binsampling", false);
@@ -1632,7 +1640,9 @@ STATIC_EXECUTE([]() {
    registerImporter<importMultiVarGaussian>("multivariate_normal_dist", false);
    registerImporter<importPoisson>("poisson_dist", false);
    registerImporter<importDecay>("decay_dist", false);
+   registerImporter<importTruthModel>("truth_model_function", false);
    registerImporter<importTruthModel>("delta_resolution_model", false);
+   registerImporter<importGaussModel>("gauss_model_function", false);
    registerImporter<importGaussModel>("gauss_resolution_model", false);
    registerImporter<importPolynomial<RooPolynomial>>("polynomial_dist", false);
    registerImporter<importPolynomial<RooPolyVar>>("polynomial", false);
@@ -1647,7 +1657,7 @@ STATIC_EXECUTE([]() {
 
    registerExporter<exportWrapperPdf>(RooWrapperPdf::Class(), "density_function_dist");
    registerExporter<exportAddPdf<RooAddPdf>>(RooAddPdf::Class(), "mixture_dist", false);
-   registerExporter<exportAddPdf<RooAddModel>>(RooAddModel::Class(), "mixture_resolution_model", false);
+   registerExporter<exportAddPdf<RooAddModel>>(RooAddModel::Class(), "mixture_model", false);
    registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling_dist", false);
    registerExporter<exportCrystalBall>(RooCrystalBall::Class(), "crystalball_doublesided_dist", false);
    registerExporter<exportBinWidthFunction>(RooBinWidthFunction::Class(), "binvolume", false);
@@ -1661,8 +1671,8 @@ STATIC_EXECUTE([]() {
    registerExporter<exportMultiVarGaussian>(RooMultiVarGaussian::Class(), "multivariate_normal_dist", false);
    registerExporter<exportPoisson>(RooPoisson::Class(), "poisson_dist", false);
    registerExporter<exportDecay>(RooDecay::Class(), "decay_dist", false, /*autoExportDependants=*/false);
-   registerExporter<exportTruthModel>(RooTruthModel::Class(), "delta_resolution_model", false);
-   registerExporter<exportGaussModel>(RooGaussModel::Class(), "gauss_resolution_model", false);
+   registerExporter<exportTruthModel>(RooTruthModel::Class(), "truth_model_function", false);
+   registerExporter<exportGaussModel>(RooGaussModel::Class(), "gauss_model_function", false);
    registerExporter<exportPolynomial<RooPolynomial>>(RooPolynomial::Class(), "polynomial_dist", false);
    registerExporter<exportPolynomial<RooPolyVar>>(RooPolyVar::Class(), "polynomial", false);
    registerExporter<exportRealSum<RooRealSumFunc>>(RooRealSumFunc::Class(), "weighted_sum", false);

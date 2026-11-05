@@ -992,6 +992,13 @@ RooAbsPdf *RooJSONFactoryWSTool::requestImpl<RooAbsPdf>(const std::string &objna
          if (RooAbsPdf *retval = _workspace.pdf(objname))
             return retval;
       }
+      // HS3 lists some resolution models, which are pdfs in RooFit, as functions.
+      auto function = _import->functions.find(objname);
+      if (function != _import->functions.end()) {
+         this->importFunction(*function->second->body.node, true);
+         if (RooAbsPdf *retval = _workspace.pdf(objname))
+            return retval;
+      }
    }
    return nullptr;
 }
@@ -1141,7 +1148,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       return;
    }
 
-   const bool isPdf = dynamic_cast<RooAbsPdf const *>(&func);
+   // HS3 lists some resolution models as functions.
+   const bool isPdf = dynamic_cast<RooAbsPdf const *>(&func) && !func.InheritsFrom("RooGaussModel") &&
+                      !func.InheritsFrom("RooTruthModel");
    auto &collectionNode = (*_export->root)[isPdf ? "distributions" : "functions"];
 
    auto const &exporters = RooFit::JSONIO::exporters();
