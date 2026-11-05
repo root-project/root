@@ -6053,3 +6053,95 @@ TEST(RooFitHS3, CombinedDataPairing)
          << warnings;
    }
 }
+
+// The names of a RooSimultaneous and of a combined data set are part of the standard document now, not of
+// misc.ROOT_internal: a document without "misc" imports with the same names, and the ModelConfig finds its pdf
+// through the likelihood.
+TEST(RooFitHS3, CombinedObjectsKeepNamesWithoutMisc)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // Remove the top-level key `key` (and the comma before it) from a compact JSON document.
+   auto removeTopLevelKey = [](std::string json, std::string const &key) {
+      const std::string needle = ",\"" + key + "\":";
+      const std::size_t begin = json.find(needle);
+      if (begin == std::string::npos) {
+         return json;
+      }
+      std::size_t pos = begin + needle.size();
+      int depth = 0;
+      bool inString = false;
+      for (; pos < json.size(); ++pos) {
+         const char c = json[pos];
+         if (inString) {
+            if (c == '\\') {
+               ++pos;
+            } else if (c == '"') {
+               inString = false;
+            }
+         } else if (c == '"') {
+            inString = true;
+         } else if (c == '{' || c == '[') {
+            ++depth;
+         } else if (c == '}' || c == ']') {
+            if (--depth == 0) {
+               ++pos;
+               break;
+            }
+         }
+      }
+      return json.erase(begin, pos - begin);
+   };
+
+   RooWorkspace ws{"ws"};
+   ws.factory("Gaussian::model_1(x_1[0, 10], mean[5, 0, 10], sigma_1[0.5, 0.1, 10])");
+   ws.factory("Gaussian::model_2(x_2[0, 10], mean, sigma_2[0.8, 0.1, 10])");
+   // Not named "simPdf", which older documents relied on as the default name.
+   ws.factory("SIMUL::channels(region[SR=0, CR=1], SR=model_1, CR=model_2)");
+   std::unique_ptr<RooDataSet> d1{ws.pdf("model_1")->generate(*ws.var("x_1"), 20)};
+   std::unique_ptr<RooDataSet> d2{ws.pdf("model_2")->generate(*ws.var("x_2"), 30)};
+   std::map<std::string, RooDataSet *> parts{{"SR", d1.get()}, {"CR", d2.get()}};
+   RooDataSet observed{"observed",
+                       "observed",
+                       {*ws.var("x_1"), *ws.var("x_2")},
+                       RooFit::Index(*ws.cat("region")),
+                       RooFit::Import(parts)};
+   ws.import(observed);
+   RooFit::ModelConfig mc{"ModelConfig"};
+   mc.SetWS(ws);
+   mc.SetPdf("channels");
+   mc.SetParametersOfInterest("mean");
+   mc.SetObservables("x_1,x_2,region");
+   ws.import(mc);
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   const std::string withoutMisc = removeTopLevelKey(json, "misc");
+   ASSERT_NE(withoutMisc, json);
+   EXPECT_EQ(withoutMisc.find("\"misc\""), std::string::npos) << withoutMisc;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(withoutMisc));
+   auto *channels = dynamic_cast<RooSimultaneous *>(ws2.pdf("channels"));
+   ASSERT_NE(channels, nullptr);
+   EXPECT_STREQ(channels->indexCat().GetName(), "region");
+   EXPECT_STREQ(channels->getPdf("SR")->GetName(), "model_1");
+   EXPECT_STREQ(channels->getPdf("CR")->GetName(), "model_2");
+   EXPECT_EQ(ws2.allData().size(), 1u);
+   RooAbsData *observed2 = ws2.data("observed");
+   ASSERT_NE(observed2, nullptr);
+   EXPECT_EQ(observed2->numEntries(), 50);
+   EXPECT_NE(observed2->get()->find("region"), nullptr);
+   // Without misc.ROOT_internal.ModelConfigs, the ModelConfig is named after the analysis.
+   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig_observed"));
+   ASSERT_NE(mc2, nullptr);
+   EXPECT_EQ(mc2->GetPdf(), channels);
+   EXPECT_NE(mc2->GetObservables()->find("region"), nullptr);
+   EXPECT_NE(mc2->GetParametersOfInterest()->find("mean"), nullptr);
+
+   // The analysis is named after the ModelConfig, which got the name of the analysis: the names of the analysis and
+   // the likelihood change once on the re-export. From then on, the document is stable.
+   const std::string json2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   RooWorkspace ws3;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(json2));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), json2);
+}
