@@ -1521,6 +1521,19 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
          if (channel.varSet == nullptr) {
             channel.varSet = dataHist.get();
             channel.nBins = dataHist.numEntries();
+         } else {
+            // The bin contents of all samples are written in the order of the axes of the channel (the last axis
+            // varies fastest), which is the order of the observables of the first histogram.
+            RooArgSet const &vars = *dataHist.get();
+            bool sameOrder = vars.size() == channel.varSet->size();
+            for (std::size_t i = 0; sameOrder && i < vars.size(); ++i) {
+               sameOrder = std::string(vars[i]->GetName()) == (*channel.varSet)[i]->GetName();
+            }
+            if (!sameOrder) {
+               RooJSONFactoryWSTool::error("the histograms of channel '" + channel.name +
+                                           "' don't have their observables in the same order, so their bin "
+                                           "contents can't be written along the same axes");
+            }
          }
          if (sample.hist.empty()) {
             auto *w = dataHist.weightArray();
