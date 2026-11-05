@@ -8,6 +8,8 @@
 
 #include "gmock/gmock.h"
 
+#include <fstream>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -81,16 +83,30 @@ TEST_F(TClingTests, GenerateDictionaryRegression)
    declFile.ReplaceAll("\\", "/");
    EXPECT_STREQ(declFile, "ROOT/TClingDictionaryPathProbe.hxx");
 
+   TString generatedDictionaryPath = "AutoDict_std__list_TClingDictionaryPathProbe__.cxx";
+   gSystem->PrependPathName(gSystem->pwd(), generatedDictionaryPath);
+   // The public GenerateDictionary API passes no unknown classes, so use its helper to exercise this path.
    ASSERT_TRUE(gInterpreter->Declare(
       "#include <string>\n"
       "#include <vector>\n"
       "int TCling_GenerateDictionary(const std::vector<std::string>&, const std::vector<std::string>&,\n"
       "                              const std::vector<std::string>&, const std::vector<std::string>&);"));
+   TInterpreter::EErrorCode error = TInterpreter::kNoError;
    const auto result =
-      gInterpreter->ProcessLine("std::vector<std::string> classes{\"std::list<TClingDictionaryPathProbe*>\"};"
-                                "std::vector<std::string> emptyvector, unknown{\"TClingDictionaryPathProbe\"};"
-                                "return TCling_GenerateDictionary(classes, emptyvector, emptyvector, unknown);");
+      gInterpreter->ProcessLine("[] {"
+                                "std::vector<std::string> classes{\"std::list<TClingDictionaryPathProbe*>\"};"
+                                "std::vector<std::string> empty, unknown{\"TClingDictionaryPathProbe\"};"
+                                "return TCling_GenerateDictionary(classes, empty, empty, unknown);"
+                                "}()",
+                                &error);
+   EXPECT_EQ(error, TInterpreter::kNoError);
    EXPECT_EQ(result, 0);
+
+   std::ifstream generatedDictionary(generatedDictionaryPath.Data());
+   ASSERT_TRUE(generatedDictionary.is_open());
+   const std::string generatedSource((std::istreambuf_iterator<char>(generatedDictionary)),
+                                     std::istreambuf_iterator<char>());
+   EXPECT_NE(generatedSource.find("#include \"ROOT/TClingDictionaryPathProbe.hxx\""), std::string::npos);
 
    // FIXME: This makes the linkdef parser go in an infinite loop.
    // EXPECT_TRUE(gInterpreter->GenerateDictionary("std::vector<std::array<int, 5>>", ""));

@@ -1,8 +1,44 @@
 #include "gtest/gtest.h"
 #include "TSystem.h"
-#include "TUUID.h"
+#include "TString.h"
 
 #include <string>
+
+#ifdef WIN32
+namespace {
+struct ComspecGuard {
+   TString fOriginal;
+
+   ~ComspecGuard()
+   {
+      gSystem->Setenv("COMSPEC", fOriginal);
+   }
+};
+
+} // namespace
+#endif
+
+TEST(TSystem, ExecWithComspec)
+{
+#ifdef WIN32
+   ASSERT_TRUE(gSystem);
+
+   const char *comspec = gSystem->Getenv("COMSPEC");
+   ASSERT_NE(comspec, nullptr);
+   TString cmdPath = comspec;
+   if (cmdPath.BeginsWith("\"") && cmdPath.EndsWith("\"")) {
+      cmdPath.Remove(0, 1);
+      cmdPath.Chop();
+   }
+   TString normalizedCmdPath = cmdPath;
+   normalizedCmdPath.ToLower();
+   ASSERT_TRUE(normalizedCmdPath.EndsWith("cmd.exe")) << "This regression test needs cmd.exe as the process shell";
+
+   ComspecGuard comspecGuard{comspec};
+   gSystem->Setenv("COMSPEC", cmdPath);
+   ASSERT_EQ(0, gSystem->Exec("exit 0"));
+#endif
+}
 
 TEST(TSystem, IncludePath)
 {
@@ -16,17 +52,6 @@ TEST(TSystem, IncludePath)
 #endif
 
 #ifdef WIN32
-   struct ComspecGuard {
-      TString fOriginal;
-      TString fAlias;
-
-      ~ComspecGuard()
-      {
-         gSystem->Setenv("COMSPEC", fOriginal);
-         gSystem->Unlink(fAlias);
-      }
-   };
-
    const char *comspec = gSystem->Getenv("COMSPEC");
    ASSERT_NE(comspec, nullptr);
    TString cmdPath = comspec;
@@ -38,16 +63,8 @@ TEST(TSystem, IncludePath)
    normalizedCmdPath.ToLower();
    ASSERT_TRUE(normalizedCmdPath.EndsWith("cmd.exe")) << "This regression test needs cmd.exe as the process shell";
 
-   TUUID uuid;
-   TString alias = TString::Format("root_test_shell_%s.exe", uuid.AsString());
-   gSystem->PrependPathName(gSystem->TempDirectory(), alias);
-   ComspecGuard comspecGuard{comspec, alias};
-   ASSERT_EQ(0, gSystem->CopyFile(cmdPath, alias));
-
-   // Use a copied cmd.exe under a different name to exercise the temporary
-   // stderr-file path without changing the shell used to execute commands.
-   gSystem->Setenv("COMSPEC", alias);
-   ASSERT_EQ(0, gSystem->Exec("exit 0"));
+   ComspecGuard comspecGuard{comspec};
+   gSystem->Setenv("COMSPEC", cmdPath);
 #endif
 
    testing::internal::CaptureStderr();
