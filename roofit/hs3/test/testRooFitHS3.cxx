@@ -3779,3 +3779,23 @@ TEST(RooFitHS3, FormulaNormSysConstraint)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
    EXPECT_NE(ws2.pdf("alpha_sysConstraint"), nullptr);
 }
+
+// The +1 and -1 sigma variations of a normsys that is encoded in a formula survive the round trip.
+TEST(RooFitHS3, FormulaNormSysVariations)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws1;
+   importFormulaNormSysChannel(ws1);
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString()));
+
+   RooArgSet nset1{*ws1.var("x")};
+   RooArgSet nset2{*ws2.var("x")};
+   for (double alpha : {-1.0, 0.0, 1.0}) {
+      ws1.var("alpha_sys")->setVal(alpha);
+      ws2.var("alpha_sys")->setVal(alpha);
+      EXPECT_NEAR(ws2.pdf("ch_model")->expectedEvents(nset2), ws1.pdf("ch_model")->expectedEvents(nset1), 1e-8)
+         << "alpha=" << alpha;
+   }
+}

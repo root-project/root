@@ -1244,23 +1244,23 @@ NormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula
       if (constr2 && !p3) {
          sys.name = p2->GetName();
          sys.param = p2;
-         sys.high = sign * toDouble(token3);
-         sys.low = -sign * toDouble(token3);
+         sys.high = 1.0 + sign * toDouble(token3);
+         sys.low = 1.0 - sign * toDouble(token3);
       } else if (!p2 && constr3) {
          sys.name = p3->GetName();
          sys.param = p3;
-         sys.high = sign * toDouble(token2);
-         sys.low = -sign * toDouble(token2);
+         sys.high = 1.0 + sign * toDouble(token2);
+         sys.low = 1.0 - sign * toDouble(token2);
       } else if (constr2 && p3 && !constr3) {
          sys.name = v2->GetName();
          sys.param = v2;
-         sys.high = sign * p3->getVal();
-         sys.low = -sign * p3->getVal();
+         sys.high = 1.0 + sign * p3->getVal();
+         sys.low = 1.0 - sign * p3->getVal();
       } else if (p2 && !constr2 && constr3) {
          sys.name = v3->GetName();
          sys.param = v3;
-         sys.high = sign * p2->getVal();
-         sys.low = -sign * p2->getVal();
+         sys.high = 1.0 + sign * p2->getVal();
+         sys.low = 1.0 - sign * p2->getVal();
       }
 
       // A recognized formula has exactly one constrained parameter.
