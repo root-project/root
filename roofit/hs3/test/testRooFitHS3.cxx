@@ -3524,3 +3524,75 @@ TEST(RooFitHS3, BinnedDataZeroErrors)
    EXPECT_DOUBLE_EQ(data->weightSquared(2), 0.0);
 }
 
+// A RooRealVar that is constant in all parameter points must stay a RooRealVar, and a RooConstVar must stay a
+// RooConstVar. In the parameter points both are written the same way (a value and "const": true). The only
+// difference is that the RooRealVar is listed in a domain and the RooConstVar is not: a parameter without domain is
+// constant (it has no range to vary in), and RooFit reads it back as a RooConstVar.
+TEST(RooFitHS3, ConstRooRealVarStaysDistinctFromRooConstVar)
+{
+   ScopedNoDomainConstVarImportFlag flagGuard{true};
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+   RooConstVar meanConst{"mean_const", "mean_const", 1.0};
+   RooRealVar sigmaFixed{"sigma_fixed", "sigma_fixed", 1.0, 0.1, 10.0};
+   sigmaFixed.setConstant(true);
+   RooGaussian gauss{"gauss", "gauss", x, meanConst, sigmaFixed};
+
+   RooWorkspace ws;
+   ws.import(gauss, RooFit::Silence());
+   // The RooRealVar is constant in every snapshot, with different values.
+   RooRealVar &sigmaInWs = *ws.var("sigma_fixed");
+   ws.saveSnapshot("snapshot_a", RooArgSet{sigmaInWs});
+   sigmaInWs.setVal(2.0);
+   ws.saveSnapshot("snapshot_b", RooArgSet{sigmaInWs});
+   sigmaInWs.setVal(1.0);
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto &root = tree->rootnode();
+
+   // In every parameter point, the two are written the same way.
+   std::size_t nSigmaEntries = 0;
+   for (auto const &point : root["parameter_points"].children()) {
+      for (auto const &param : point["parameters"].children()) {
+         const std::string name = param["name"].val();
+         if (name != "sigma_fixed" && name != "mean_const") {
+            continue;
+         }
+         EXPECT_TRUE(param.has_child("const") && param["const"].val_bool())
+            << name << " in " << point["name"].val() << ": " << json;
+         EXPECT_FALSE(param.has_child("min") || param.has_child("max")) << name << ": " << json;
+         nSigmaEntries += name == "sigma_fixed";
+      }
+   }
+   EXPECT_EQ(nSigmaEntries, 3u) << json; // default_values, snapshot_a, snapshot_b
+
+   // Only the domains tell them apart.
+   auto inAnyDomain = [&](std::string const &name) {
+      for (auto const &domain : root["domains"].children()) {
+         if (RooJSONFactoryWSTool::findNamedChild(domain["axes"], name)) {
+            return true;
+         }
+      }
+      return false;
+   };
+   EXPECT_TRUE(inAnyDomain("sigma_fixed")) << json;
+   EXPECT_FALSE(inAnyDomain("mean_const")) << json;
+
+   // On import, the types and the constness are restored, also from the snapshots.
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   EXPECT_NE(dynamic_cast<RooConstVar *>(imported.obj("mean_const")), nullptr);
+   EXPECT_EQ(imported.var("mean_const"), nullptr);
+   RooRealVar *sigmaImported = imported.var("sigma_fixed");
+   ASSERT_NE(sigmaImported, nullptr);
+   EXPECT_TRUE(sigmaImported->isConstant());
+   ASSERT_TRUE(imported.loadSnapshot("snapshot_b"));
+   EXPECT_DOUBLE_EQ(sigmaImported->getVal(), 2.0);
+   EXPECT_TRUE(sigmaImported->isConstant());
+   ASSERT_TRUE(imported.loadSnapshot("snapshot_a")); // back to the value of the default parameter point
+
+   // The round trip is stable.
+   EXPECT_EQ(RooJSONFactoryWSTool{imported}.exportJSONtoString(), json);
+}
