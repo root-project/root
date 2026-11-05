@@ -346,7 +346,7 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
   endforeach()
 
   get_target_property(LinkedLibraries ${target} LINK_LIBRARIES)
-  ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${LinkedLibraries} OPTIONS ${options})
+  ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${LinkedLibraries} OPTIONS ${options} USE_FILE_SETS)
   # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
 endfunction(ROOT_GENERATE_TARGET_DICTIONARY)
 
@@ -365,7 +365,7 @@ endfunction(ROOT_GENERATE_TARGET_DICTIONARY)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE;USE_FILE_SETS"
     "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
@@ -389,8 +389,24 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
     set(headerdirs)
 
-    get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
+    if(ARG_USE_FILE_SETS)
+       get_target_property(target_incdirs ${ARG_MODULE} INTERFACE_INCLUDE_DIRECTORIES)
+       if(NOT target_incdirs)
+          set(target_incdirs "")
+       endif()
+       get_target_property(target_fileset_dirs ${ARG_MODULE} HEADER_DIRS)
+       if(target_fileset_dirs)
+          list(APPEND target_incdirs ${target_fileset_dirs})
+       endif()
+    else()
+       get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
+       if(NOT target_incdirs)
+          set(target_incdirs "")
+       endif()
+    endif()
+
     if(target_incdirs)
+       list(REMOVE_DUPLICATES target_incdirs)
        foreach(dir ${target_incdirs})
           ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
           # check that dir not a empty dir like $<BUILD_INTERFACE:>
