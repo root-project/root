@@ -14,6 +14,7 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <RooConstVar.h>
+#include <RooNumber.h>
 #include <RooRealVar.h>
 #include <RooBinning.h>
 #include <RooAbsCategory.h>
@@ -442,8 +443,36 @@ void getObservables(RooWorkspace const &ws, const JSONNode &node, RooAbsCollecti
    }
 }
 
+// Make the ranges of the observables of unbinned data consistent with the "min" and "max" of the axes. Variables that
+// didn't get their range from a domain take it from the axis. If `domains` is null, all ranges are considered explicit.
+void applyUnbinnedAxisRanges(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Domains const *domains)
+{
+   for (const auto &axis : p["axes"].children()) {
+      if (!axis.has_child("min") || !axis.has_child("max")) {
+         continue;
+      }
+      const std::string name = RooJSONFactoryWSTool::name(axis);
+      RooRealVar *var = workspace.var(name);
+      if (!var) {
+         continue; // reported by getObservables()
+      }
+      const double min = readBound(axis, "min", -RooNumber::infinity());
+      const double max = readBound(axis, "max", RooNumber::infinity());
+      if (domains && !domains->hasVariable(name.c_str())) {
+         var->setRange(min, max);
+      } else if (var->getMin() != min || var->getMax() != max) {
+         std::stringstream ss;
+         ss << "RooFitHS3: the range [" << min << ", " << max << "] of the axis '" << name << "' of the dataset '"
+            << RooJSONFactoryWSTool::name(p) << "' differs from the range [" << var->getMin() << ", " << var->getMax()
+            << "] of the variable.";
+         RooJSONFactoryWSTool::warning(ss.str());
+      }
+   }
+}
+
 // Create a RooAbsData (binned or unbinned) from the JSON node `p`.
-std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
+std::unique_ptr<RooAbsData>
+loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Domains const *domains)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
 
@@ -457,6 +486,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
       // unbinned
       RooArgList varlist;
       getObservables(workspace, p, varlist);
+      applyUnbinnedAxisRanges(p, workspace, domains);
       RooArgSet vars(varlist);
       auto data = std::make_unique<RooDataSet>(name, name, vars, RooFit::WeightVar());
       auto &coords = p["entries"];
@@ -631,8 +661,28 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
       }
    }
 
-   if (analysisNode.has_child("init") && workspace.getSnapshot(analysisNode["init"].val().c_str())) {
-      mc->SetSnapshot(*workspace.getSnapshot(analysisNode["init"].val().c_str()));
+   if (analysisNode.has_child("init")) {
+      const std::string initName = analysisNode["init"].val();
+      RooArgSet const *init = workspace.getSnapshot(initName.c_str());
+      if (!init) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the parameter point '" + initName +
+                                       "' used as \"init\" of analysis '" + analysisName + "' does not exist.");
+         return;
+      }
+      // ModelConfig::SetSnapshot() saves the snapshot as "<mc name>_<set name>_snapshot". If "init" already follows
+      // this pattern, which is the case for files written by RooFit, pick the set name such that it is preserved.
+      std::string setName = initName;
+      const std::string prefix = mcname + "_";
+      const std::string suffix = "_snapshot";
+      if (initName.size() >= prefix.size() + suffix.size() && startsWith(initName, prefix) &&
+          endsWith(initName, suffix)) {
+         setName = initName.substr(prefix.size(), initName.size() - prefix.size() - suffix.size());
+      }
+      // Take an owning copy: SetSnapshot() might replace the workspace snapshot that `init` points to.
+      RooArgSet initSet;
+      init->snapshot(initSet);
+      initSet.setName(setName.c_str());
+      mc->SetSnapshot(initSet);
    }
 }
 
@@ -753,6 +803,62 @@ RooAbsCategory *findCategoryObservable(RooAbsData const &data)
       }
    }
    return cat;
+}
+
+/// Warn if the HS3 version of an imported document is not understood or newer than what RooFit writes.
+void checkHS3Version(std::string const &version)
+{
+   int major = 0;
+   int minor = 0;
+   int supportedMajor = 0;
+   int supportedMinor = 0;
+   parseHS3Version(hs3VersionTag, supportedMajor, supportedMinor);
+   if (!parseHS3Version(version, major, minor)) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: cannot parse hs3_version '" + version +
+                                    "', expected a string of the form \"MAJOR.MINOR\".");
+      return;
+   }
+   if (std::make_pair(major, minor) > std::make_pair(supportedMajor, supportedMinor)) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: the document has hs3_version '" + version +
+                                    "', which is newer than the version supported by this RooFit ('" + hs3VersionTag +
+                                    "'). Some content might not be imported correctly.");
+   }
+}
+
+/// HS3 requires the names of all top-level objects to be unique within a document. Throw if a name is used twice, or
+/// only warn if not `strict`: RooFit wrote such documents before HS3 v0.3, e.g. for a range and a pdf of one name.
+void checkUniqueNames(JSONNode const &rootnode, bool strict)
+{
+   std::map<std::string, std::string> sectionOfName;
+   for (const char *section :
+        {"distributions", "functions", "data", "domains", "parameter_points", "likelihoods", "analyses"}) {
+      auto seq = rootnode.find(section);
+      if (!seq || !seq->is_seq()) {
+         continue;
+      }
+      for (JSONNode const &child : seq->children()) {
+         if (!child.is_map() || !child.has_child("name")) {
+            continue; // malformed entries are reported when they are imported
+         }
+         std::string const name = child["name"].val();
+         auto inserted = sectionOfName.emplace(name, section);
+         if (inserted.second) {
+            continue;
+         }
+         std::string const &firstSection = inserted.first->second;
+         // RooFit used to give analyses and likelihoods the name of the pdf or the analysis. Accept this for backwards
+         // compatibility: analyses are not referenced by name, and likelihoods only from analyses, so there is no
+         // ambiguity.
+         auto isLegacyNamed = [](std::string const &s) { return s == "likelihoods" || s == "analyses"; };
+         if (!strict || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
+            RooJSONFactoryWSTool::warning("RooFitHS3: the name '" + name + "' is used in \"" + firstSection +
+                                          "\" and in \"" + section + "\", which is not allowed by the HS3 standard.");
+            continue;
+         }
+         RooJSONFactoryWSTool::error("duplicate name '" + name + "': it is defined in \"" + firstSection +
+                                     "\" and in \"" + section + "\", but names must be unique within the document");
+      }
+   }
 }
 
 } // namespace
@@ -960,6 +1066,10 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
                                                     const std::string &formula)
 {
    std::string newname = std::string(original->GetName()) + suffix;
+   // Another object that shares the parameter might have exported the helper already.
+   if (findNamedChild((*_rootnodeOutput)["functions"], newname)) {
+      return newname;
+   }
    RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_rootnodeOutput)["functions"], newname);
    trafo_node["type"] << "generic";
    trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();
@@ -1305,7 +1415,7 @@ std::string makeValidNameOrError(std::string const &in)
    }
    std::string out = RooFit::Detail::makeValidVarName(in);
    if (out != in) {
-      oocoutW(nullptr, IO) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
+      oocoutW(nullptr, ObjectHandling) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
    }
    return out;
 }
@@ -1443,7 +1553,12 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    auto &observablesNode = output["axes"].set_seq();
    for (auto *var : static_range_cast<RooRealVar *>(variables)) {
       _domains->readVariable(*var);
-      exportAxis(observablesNode.append_child().set_map(), *var);
+      // HS3 forbids binning information on the axes of unbinned data.
+      auto &axis = observablesNode.append_child().set_map();
+      testValidName(var->GetName(), false);
+      axis["name"] << var->GetName();
+      axis["min"] << var->getMin();
+      axis["max"] << var->getMax();
    }
    auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
@@ -1477,10 +1592,7 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
 
    for (JSONNode const &node : topNode["axes"].children()) {
       if (node.has_child("edges")) {
-         std::vector<double> edges;
-         for (auto const &bound : node["edges"].children()) {
-            edges.push_back(bound.val_double());
-         }
+         std::vector<double> edges = readEdges(node["edges"], "axis '" + node["name"].val() + "'");
          auto obs = std::make_unique<RooRealVar>(node["name"].val().c_str(), node["name"].val().c_str(), edges[0],
                                                  edges[edges.size() - 1]);
          RooBinning bins(obs->getMin(), obs->getMax());
@@ -1527,6 +1639,11 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
       errors = &n["errors"];
       if (!errors->is_seq())
          RooJSONFactoryWSTool::error("errors are not in list form");
+      if (errors->num_children() != contents.num_children()) {
+         RooJSONFactoryWSTool::error("inconsistent number of errors and contents in '" + name +
+                                     "': errors=" + std::to_string(errors->num_children()) +
+                                     ", contents=" + std::to_string(contents.num_children()));
+      }
    }
 
    auto bins = generateBinIndices(vars);
@@ -1546,6 +1663,11 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
       for (auto const &err : errors->children()) {
          errorVals.push_back(err.val_double());
       }
+   }
+   // RooDataHist only starts to store squared weights when it sees a positive error, and then initializes them from
+   // the weights so far. Trigger that before setting any weight, so that errors of zero stay zero.
+   if (!errorVals.empty()) {
+      dh->set(0, 0., 1.);
    }
    for (size_t ibin = 0; ibin < bins.size(); ++ibin) {
       const double err = errors ? errorVals[ibin] : -1;
@@ -1611,7 +1733,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
          if (hasdata && !matches(combDataSets.at(i), simpdf))
             continue;
 
-         std::string analysisName(simpdf->GetName());
+         std::string analysisName(mc.GetName());
          if (hasdata)
             analysisName += "_" + combDataSets[i].name;
 
@@ -1624,12 +1746,12 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
          if (observables.equals(*(data->get()))) {
             std::map<std::string, std::string> mapping;
             mapping[pdf->GetName()] = data->GetName();
-            exportSingleModelConfig(rootnode, mc, std::string(pdf->GetName()) + "_" + data->GetName(), &mapping);
+            exportSingleModelConfig(rootnode, mc, std::string(mc.GetName()) + "_" + data->GetName(), &mapping);
             ++founddata;
          }
       }
       if (founddata == 0) {
-         exportSingleModelConfig(rootnode, mc, pdf->GetName(), nullptr);
+         exportSingleModelConfig(rootnode, mc, mc.GetName(), nullptr);
       }
    }
 }
@@ -1644,9 +1766,11 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
 
    auto &domains = analysisNode["domains"].set_seq();
 
-   analysisNode["likelihood"] << analysisName;
+   // HS3 names must be unique across all top-level components, so the likelihood can't have the analysis name.
+   const std::string likelihoodName = analysisName + "_likelihood";
+   analysisNode["likelihood"] << likelihoodName;
 
-   auto &nllNode = appendNamedChild(rootnode["likelihoods"], analysisName);
+   auto &nllNode = appendNamedChild(rootnode["likelihoods"], likelihoodName);
    nllNode["distributions"].set_seq();
    nllNode["data"].set_seq();
 
@@ -1708,6 +1832,11 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
    writeProductDomain("_nuisance_parameters", mc.GetNuisanceParameters());
    writeProductDomain("_global_observables", mc.GetGlobalObservables());
    writeProductDomain("_parameters_of_interest", mc.GetParametersOfInterest());
+
+   // The snapshots are exported as parameter points. Reference the one of the ModelConfig as the initial values.
+   if (_workspace.getSnapshot(mc.GetSnapshotName().c_str())) {
+      analysisNode["init"] << mc.GetSnapshotName();
+   }
 
    auto &modelConfigAux = getRooFitInternal(rootnode, "ModelConfigs", analysisName);
    modelConfigAux.set_map();
@@ -1939,12 +2068,11 @@ void RooJSONFactoryWSTool::setStringAttribute(const std::string &obj, const std:
 void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 {
    // Per HS3 standard, the hs3_version in the metadata is required. So we
-   // error out if it is missing. TODO: now we are only checking if the
-   // hs3_version tag exists, but in the future when the HS3 specification
-   // versions are actually frozen, we should also check if the hs3_version is
-   // one that RooFit can actually read.
+   // error out if it is missing or not a string, and warn if the document is
+   // newer than what this version of RooFit was written for.
    auto metadata = n.find("metadata");
-   if (!metadata || !metadata->find("hs3_version")) {
+   auto versionNode = metadata ? metadata->find("hs3_version") : nullptr;
+   if (!versionNode) {
       std::stringstream ss;
       ss << "The HS3 version is missing in the JSON!\n"
          << "Please include the HS3 version in the metadata field, e.g.:\n"
@@ -1954,6 +2082,12 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
          << "    }";
       error(ss.str());
    }
+   if (versionNode->is_container() || versionNode->is_null() || versionNode->is_number()) {
+      error(std::string("The HS3 version in the metadata must be a string, e.g. \"") + hs3VersionTag + "\"");
+   }
+   _hs3VersionInput = versionNode->val();
+   checkHS3Version(_hs3VersionInput);
+   checkUniqueNames(n, !isHS3VersionBefore(_hs3VersionInput, 0, 3));
 
    _rootnodeInput = &n;
 
@@ -1986,6 +2120,9 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
    this->importDependants(n);
 
+   // This creates the index categories, which the parameter points can refer to.
+   combinePdfs(*_rootnodeInput, _workspace);
+
    if (auto paramPointsNode = n.find("parameter_points")) {
       for (const auto &snsh : paramPointsNode->children()) {
          std::string name = RooJSONFactoryWSTool::name(snsh);
@@ -1993,16 +2130,42 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
          RooArgSet vars;
          for (const auto &var : snsh["parameters"].children()) {
-            if (RooRealVar *rrv = _workspace.var(RooJSONFactoryWSTool::name(var))) {
+            const std::string varName = RooJSONFactoryWSTool::name(var);
+            JSONNode const *valueNode = var.find("value");
+            const bool hasStringValue = valueNode && !valueNode->is_number();
+            if (RooCategory *cat = _workspace.cat(varName)) {
+               if (hasStringValue) {
+                  cat->setLabel(valueNode->val().c_str());
+               } else if (valueNode) {
+                  cat->setIndex(valueNode->val_int());
+               }
+               vars.add(*cat);
+               continue;
+            }
+            if (hasStringValue) {
+               warning("RooFitHS3: ignoring the string value of parameter '" + varName + "' in parameter point '" +
+                       name + "', because there is no category with that name.");
+               continue;
+            }
+            RooRealVar *rrv = _workspace.var(varName);
+            if (!rrv && !_workspace.arg(varName)) {
+               // The parameter is not used by any other component: create it. It is constant if "const" is true or
+               // if no domain lists it, since there is no range to vary it in. "const": false is the same as no
+               // "const" at all.
+               testValidName(varName, true);
+               rrv = &wsEmplace<RooRealVar>(varName, 1.);
                configureVariable(*_domains, var, *rrv);
+               rrv->setConstant(rrv->isConstant() || !_domains->hasVariable(varName.c_str()));
+            } else if (rrv) {
+               configureVariable(*_domains, var, *rrv);
+            }
+            if (rrv) {
                vars.add(*rrv);
             }
          }
          _workspace.saveSnapshot(name, vars);
       }
    }
-
-   combinePdfs(*_rootnodeInput, _workspace);
 
    // Import attributes
    if (_attributesNode) {
@@ -2021,7 +2184,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    std::vector<std::unique_ptr<RooAbsData>> datasets;
    if (auto dataNode = n.find("data")) {
       for (const auto &p : dataNode->children()) {
-         datasets.push_back(loadData(p, _workspace));
+         datasets.push_back(loadData(p, _workspace, _domains.get()));
       }
    }
 
@@ -2047,6 +2210,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    }
 
    _rootnodeInput = nullptr;
+   _hs3VersionInput.clear();
    _domains.reset();
    _functionsByName.clear();
    _distributionsByName.clear();
@@ -2123,7 +2287,7 @@ void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std:
    if (isVariable) {
       this->importVariableElement(n);
    } else if (isData) {
-      auto absData = loadData(n, _workspace);
+      auto absData = loadData(n, _workspace, nullptr);
       _workspace.import(*absData);
    } else {
       this->importFunction(n, false);
@@ -2172,7 +2336,7 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
  */
 std::ostream &RooJSONFactoryWSTool::warning(std::string const &str)
 {
-   return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::IO) << str << std::endl;
+   return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::ObjectHandling) << str << std::endl;
 }
 
 /**
