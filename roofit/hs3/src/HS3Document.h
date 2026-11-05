@@ -188,9 +188,21 @@ struct BinnedData {
    std::optional<GaussianUncertainty> uncertainty;
 };
 
+/// The sub-data set of a combined data set for one key, which has one label per column.
+struct CombinedDataComponent {
+   std::vector<std::string> key;
+   DataRef data;
+};
+
+/// Data sets that are selected by a key (HS3 #119). The columns are categorical axes of the domains.
+struct CombinedData {
+   std::vector<std::string> columns;
+   std::vector<CombinedDataComponent> components;
+};
+
 struct Data {
    std::string name;
-   std::variant<PointData, UnbinnedData, BinnedData> body;
+   std::variant<PointData, UnbinnedData, BinnedData, CombinedData> body;
 };
 
 struct LikelihoodTerm {

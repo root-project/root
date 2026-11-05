@@ -272,6 +272,16 @@ void writeData(JSONNode &dataArray, Data const &data)
                        node["weights"].fill_seq(*d.weights);
                     }
                  },
+                 [&](CombinedData const &d) {
+                    node["type"] << "combined";
+                    writeStrings(node["columns"], d.columns);
+                    JSONNode &components = node["components"].set_seq();
+                    for (CombinedDataComponent const &component : d.components) {
+                       JSONNode &out = components.append_child().set_map();
+                       writeStrings(out["key"], component.key);
+                       out["dataset"] << component.data.name;
+                    }
+                 },
                  [&](PointData const &d) {
                     node["type"] << "point";
                     node["value"] << d.value;

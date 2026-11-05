@@ -574,6 +574,60 @@ void describe(Reader &ar, BinnedData &data)
    }
 }
 
+// A combined data set. Only the structure is checked here: the columns and keys are checked against the domains by the
+// validation, and the sub-data sets when the data set is built.
+void readCombinedData(Reader &ar, std::string const &name, CombinedData &data)
+{
+   std::string const context = "the combined data set '" + name + "'";
+   Cursor const &c = ar.cursor();
+   if (ar.has("axes")) {
+      c.error(context + " must not have \"axes\": its columns are declared by the domains");
+      return;
+   }
+   auto nonEmptyList = [&](const char *key) -> JSONNode const * {
+      if (!ar.has(key) || !c.node()[key].is_seq() || c.node()[key].num_children() == 0) {
+         return nullptr;
+      }
+      return &c.node()[key];
+   };
+   JSONNode const *columns = nonEmptyList("columns");
+   for (std::size_t i = 0; columns && i < columns->num_children(); ++i) {
+      JSONNode const &column = columns->child(i);
+      if (column.is_container() || column.val().empty()) {
+         columns = nullptr;
+         break;
+      }
+      data.columns.push_back(column.val());
+   }
+   if (!columns) {
+      c.error("\"columns\" of " + context + " must be a non-empty list of names of categorical axes");
+      return;
+   }
+   JSONNode const *components = nonEmptyList("components");
+   if (!components) {
+      c.error("\"components\" of " + context + " must be a non-empty list");
+      return;
+   }
+   for (JSONNode const &component : components->children()) {
+      if (!component.is_map() || !component.has_child("key") || !component.has_child("dataset")) {
+         c.error("every component of " + context + " must have a \"key\" and a \"dataset\"");
+         return;
+      }
+      JSONNode const &key = component["key"];
+      CombinedDataComponent &out = data.components.emplace_back();
+      if (key.is_seq() && key.num_children() == data.columns.size()) {
+         for (JSONNode const &label : key.children()) {
+            out.key.push_back(label.is_container() ? std::string{} : label.val());
+         }
+      } else {
+         c.error("every component of " + context + " must have a \"key\" with " + std::to_string(data.columns.size()) +
+                 " labels, one per column");
+         return;
+      }
+      out.data.name = component["dataset"].val();
+   }
+}
+
 void readValue(Cursor const &c, Data &out)
 {
    if (!c.node().is_map()) {
@@ -595,6 +649,10 @@ void readValue(Cursor const &c, Data &out)
    } else if (type == "point") {
       PointData body;
       describe(ar, body);
+      out.body = std::move(body);
+   } else if (type == "combined") {
+      CombinedData body;
+      readCombinedData(ar, out.name, body);
       out.body = std::move(body);
    } else if (ar.has("type")) {
       c.error("unknown type of dataset '" + type + "'");
