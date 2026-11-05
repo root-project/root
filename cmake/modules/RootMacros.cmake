@@ -1394,9 +1394,9 @@ endfunction()
 function(ROOT_INSTALL_TARGET target)
   install(TARGETS ${target}
     EXPORT ${CMAKE_PROJECT_NAME}Exports
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT applications
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
 
     # with this we no longer need the moveheader target etc
     FILE_SET HEADERS
@@ -1407,6 +1407,9 @@ function(ROOT_INSTALL_TARGET target)
 
     FILE_SET linkDefs
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+  )
+  export(TARGETS ${target} NAMESPACE ROOT::
+    APPEND FILE ${PROJECT_BINARY_DIR}/ROOTConfig-Targets.cmake
   )
 endfunction(ROOT_INSTALL_TARGET)
 
