@@ -28,10 +28,7 @@ if(WIN32)
   set(patch_args --ignore-whitespace)
 endif()
 
-# check if the patch has already been applied
-if(NOT EXISTS "${ROOT_LIBGIF_PREFIX}/src/BUILTIN_LIBGIF/CMakeLists.txt")
-  set(LIBGIF_PATCH_COMMAND PATCH_COMMAND git init COMMAND git apply ${patch_args} ${ROOT_LIBGIF_PATCH_FILE})
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(LIBGIF_PATCH_COMMAND PATCHES ${ROOT_LIBGIF_PATCH_FILE} GIT_APPLY_ARGS ${patch_args})
 
 ExternalProject_Add(
     BUILTIN_LIBGIF
