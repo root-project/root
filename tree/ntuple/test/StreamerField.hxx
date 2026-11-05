@@ -101,4 +101,14 @@ struct TemperatureKelvin {
    float fValue;
 };
 
+template <typename T>
+struct MEtoEDMStreamer {
+   T fMember;
+};
+
+template <typename T>
+struct MEtoEDMClass {
+   T fMember;
+};
+
 #endif // ROOT_RNTuple_Test_StreamerField
