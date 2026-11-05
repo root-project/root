@@ -248,7 +248,7 @@ private:
    //Wrapper around this class custom conversion Streamer member function.
    ClassConvStreamerFunc_t fConvStreamerFunc = nullptr;
    Int_t               fSizeof = -1;            //Sizeof the class.
-   std::size_t         fAlignment = 0;          //Alignment of the class (0 for unknown alignment)
+   mutable std::atomic<std::size_t> fAlignment{0}; //Alignment of the class (0 for unknown alignment)
 
    std::atomic<Char_t> fCanSplit = -1; ///<!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
 
@@ -314,7 +314,7 @@ private:
 
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
-   void               SetClassAlignment(std::size_t align) { fAlignment = align; }
+   void               SetClassAlignment(std::size_t align) { fAlignment.store(align, std::memory_order_relaxed); }
    TVirtualStreamerInfo* DetermineCurrentStreamerInfo();
 
    void SetStreamerImpl(Int_t streamerType);
