@@ -14,9 +14,6 @@
 #include <string>
 #include <vector>
 
-int TCling_GenerateDictionary(const std::vector<std::string>& classes, const std::vector<std::string>& headers,
-                              const std::vector<std::string>& fwdDecls, const std::vector<std::string>& unknown);
-
 // FIXME: We should probably have such a facility in TCling.
 static void cleanup()
 {
@@ -88,10 +85,21 @@ TEST_F(TClingTests, GenerateDictionaryRegression)
 
    TString generatedDictionaryPath = "AutoDict_std__list_TClingDictionaryPathProbe__.cxx";
    gSystem->PrependPathName(gSystem->pwd(), generatedDictionaryPath);
-   const std::vector<std::string> classes{"std::list<TClingDictionaryPathProbe*>"};
-   const std::vector<std::string> empty, unknown{"TClingDictionaryPathProbe"};
    // The public GenerateDictionary API passes no unknown classes, so use its helper to exercise this path.
-   const auto result = TCling_GenerateDictionary(classes, empty, empty, unknown);
+   ASSERT_TRUE(gInterpreter->Declare(
+      "#include <string>\n"
+      "#include <vector>\n"
+      "int TCling_GenerateDictionary(const std::vector<std::string>&, const std::vector<std::string>&,\n"
+      "                              const std::vector<std::string>&, const std::vector<std::string>&);"));
+   TInterpreter::EErrorCode error = TInterpreter::kNoError;
+   const auto result = gInterpreter->ProcessLine(
+      "[] {"
+      "std::vector<std::string> classes{\"std::list<TClingDictionaryPathProbe*>\"};"
+      "std::vector<std::string> empty, unknown{\"TClingDictionaryPathProbe\"};"
+      "return TCling_GenerateDictionary(classes, empty, empty, unknown);"
+      "}()",
+      &error);
+   EXPECT_EQ(error, TInterpreter::kNoError);
    EXPECT_EQ(result, 0);
 
    std::ifstream generatedDictionary(generatedDictionaryPath.Data());
