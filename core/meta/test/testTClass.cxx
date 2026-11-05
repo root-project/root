@@ -16,13 +16,14 @@
 #include <mutex>
 #include <thread>
 
-TEST(TClass, CachedInterpretedAlignmentDoesNotTakeInterpreterLock)
+TEST(TClass, CachedInterpretedLayoutDoesNotTakeInterpreterLock)
 {
    ROOT::EnableThreadSafety();
    ASSERT_TRUE(gInterpreter->Declare("struct TClassAlignmentLockTest { alignas(128) char value; };"));
 
    auto cl = TClass::GetClass("TClassAlignmentLockTest");
    ASSERT_NE(cl, nullptr);
+   ASSERT_EQ(cl->Size(), 128);
    ASSERT_EQ(cl->GetClassAlignment(), 128u);
 
    std::atomic<bool> lockHeld{false};
@@ -40,8 +41,10 @@ TEST(TClass, CachedInterpretedAlignmentDoesNotTakeInterpreterLock)
    std::mutex completionMutex;
    std::condition_variable completionCondition;
    bool completed = false;
+   Int_t size = 0;
    size_t alignment = 0;
    std::thread queryThread([&] {
+      size = cl->Size();
       alignment = cl->GetClassAlignment();
       {
          std::lock_guard<std::mutex> lock(completionMutex);
@@ -59,6 +62,7 @@ TEST(TClass, CachedInterpretedAlignmentDoesNotTakeInterpreterLock)
    queryThread.join();
 
    EXPECT_TRUE(returnedWithoutInterpreterLock);
+   EXPECT_EQ(size, 128);
    EXPECT_EQ(alignment, 128u);
 }
 
