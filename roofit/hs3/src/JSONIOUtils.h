@@ -6,6 +6,11 @@
 #include <vector>
 #include <RooFit/Detail/JSONInterface.h>
 
+// A RooProdPdf with this attribute represents an HS3 `array_dist`: a product of one-dimensional distributions of one
+// type, each over its own observable. The factors are the components, imported as individual pdfs named after their
+// observable.
+inline constexpr const char *arrayDistTag = "hs3_array_dist";
+
 class RooAbsBinning;
 class RooAbsCategory;
 class RooAbsCollection;
