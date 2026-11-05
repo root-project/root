@@ -3966,3 +3966,21 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraintType)
       makeHistFactoryJSON(R"({"name": "staterror", "type": "staterror", "constraint_type": "Gauss"})")));
    EXPECT_NE(dynamic_cast<RooGaussian *>(ws.pdf("gamma_stat_channel0_bin_0_constraint")), nullptr);
 }
+
+// Errors of zero also stay zero if there is no positive error at all.
+TEST(RooFitHS3, BinnedDataAllErrorsZero)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "data": [{"name": "d", "type": "binned", "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+                "contents": [10.0, 20.0], "errors": [0.0, 0.0]}]
+   })"));
+   auto *data = dynamic_cast<RooDataHist *>(ws.data("d"));
+   ASSERT_NE(data, nullptr);
+   EXPECT_DOUBLE_EQ(data->weight(1), 20.0);
+   EXPECT_DOUBLE_EQ(data->weightSquared(0), 0.0);
+   EXPECT_DOUBLE_EQ(data->weightSquared(1), 0.0);
+}

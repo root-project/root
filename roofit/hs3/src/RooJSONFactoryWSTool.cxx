@@ -34,7 +34,6 @@
 #include <TROOT.h>
 
 #include <algorithm>
-#include <iterator>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -1665,12 +1664,10 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
          errorVals.push_back(err.val_double());
       }
    }
-   // RooDataHist only starts to store squared weights when it sees the first positive error, and then initializes
-   // them from the weights of the bins set so far. Set that bin first, so that errors of zero before it stay zero.
-   auto firstPositive = std::find_if(errorVals.begin(), errorVals.end(), [](double err) { return err > 0.; });
-   if (firstPositive != errorVals.end()) {
-      const std::size_t ibin = std::distance(errorVals.begin(), firstPositive);
-      dh->set(ibin, contentVals[ibin], errorVals[ibin]);
+   // RooDataHist only starts to store squared weights when it sees a positive error, and then initializes them from
+   // the weights so far. Trigger that before setting any weight, so that errors of zero stay zero.
+   if (!errorVals.empty()) {
+      dh->set(0, 0., 1.);
    }
    for (size_t ibin = 0; ibin < bins.size(); ++ibin) {
       const double err = errors ? errorVals[ibin] : -1;
