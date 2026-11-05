@@ -27,12 +27,10 @@ if(WIN32)
   set(patch_args --ignore-whitespace)
 endif()
 
-if(NOT EXISTS "${CFITSIO_PREFIX}/src/BUILTIN_CFITSIO/._patched")
-  set(CFITSIO_PATCH_COMMAND PATCH_COMMAND git init COMMAND git apply ${patch_args}
-                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
-                ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
-                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-marker.diff)
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(CFITSIO_PATCH_COMMAND
+                           PATCHES ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
+                                   ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
+                           GIT_APPLY_ARGS ${patch_args})
 
 ExternalProject_Add(
   BUILTIN_CFITSIO
