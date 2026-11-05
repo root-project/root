@@ -825,8 +825,9 @@ void checkHS3Version(std::string const &version)
    }
 }
 
-/// HS3 requires the names of all top-level objects to be unique within a document. Throw if a name is used twice.
-void checkUniqueNames(JSONNode const &rootnode)
+/// HS3 requires the names of all top-level objects to be unique within a document. Throw if a name is used twice, or
+/// only warn if not `strict`: RooFit wrote such documents before HS3 v0.3, e.g. for a range and a pdf of one name.
+void checkUniqueNames(JSONNode const &rootnode, bool strict)
 {
    std::map<std::string, std::string> sectionOfName;
    for (const char *section :
@@ -849,7 +850,7 @@ void checkUniqueNames(JSONNode const &rootnode)
          // compatibility: analyses are not referenced by name, and likelihoods only from analyses, so there is no
          // ambiguity.
          auto isLegacyNamed = [](std::string const &s) { return s == "likelihoods" || s == "analyses"; };
-         if (isLegacyNamed(firstSection) || isLegacyNamed(section)) {
+         if (!strict || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
             RooJSONFactoryWSTool::warning("RooFitHS3: the name '" + name + "' is used in \"" + firstSection +
                                           "\" and in \"" + section + "\", which is not allowed by the HS3 standard.");
             continue;
@@ -2099,7 +2100,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    }
    _hs3VersionInput = versionNode->val();
    checkHS3Version(_hs3VersionInput);
-   checkUniqueNames(n);
+   checkUniqueNames(n, !isHS3VersionBefore(_hs3VersionInput, 0, 3));
 
    _rootnodeInput = &n;
 

@@ -2924,7 +2924,7 @@ TEST(RooFitHS3, DuplicateNamesAreRejected)
 {
    // The same name used for a distribution and a function.
    expectImportThrowsWithError(R"({
-      "metadata": {"hs3_version": "0.2"},
+      "metadata": {"hs3_version": "0.3"},
       "distributions": [{"name": "dup", "type": "gaussian_dist", "x": "x", "mean": 0.0, "sigma": 1.0}],
       "functions": [{"name": "dup", "type": "sum", "summands": ["x"]}]
    })",
@@ -2932,7 +2932,7 @@ TEST(RooFitHS3, DuplicateNamesAreRejected)
 
    // The same name used twice within one section.
    expectImportThrowsWithError(R"({
-      "metadata": {"hs3_version": "0.2"},
+      "metadata": {"hs3_version": "0.3"},
       "parameter_points": [{"name": "pp", "parameters": []}, {"name": "pp", "parameters": []}]
    })",
                                "duplicate name 'pp'");
@@ -3659,5 +3659,48 @@ TEST(RooFitHS3, ModelConfigsSharingPdfAndData)
       }
       ws.import(data, RooFit::Silence());
       roundTrip(ws, "sim_pdf", "x,channel");
+   }
+}
+
+// Before HS3 v0.3, name clashes only give a warning. RooFit still writes such documents.
+TEST(RooFitHS3, NameClashesInOlderDocuments)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto expectImportWarns = [](std::string const &json, std::string const &name) {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(
+         RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json)); });
+      EXPECT_NE(warnings.find("the name '" + name + "' is used"), std::string::npos) << warnings << json;
+   };
+
+   expectImportWarns(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "parameter_points": [{"name": "pp", "parameters": []}, {"name": "pp", "parameters": []}]
+   })",
+                     "pp");
+
+   // A named range and a pdf.
+   {
+      RooWorkspace ws;
+      ws.factory("Gaussian::signal(x[0, -5, 5], mu[0, -5, 5], 1.0)");
+      ws.var("x")->setRange("signal", -1, 1);
+      expectImportWarns(RooJSONFactoryWSTool{ws}.exportJSONtoString(), "signal");
+   }
+   // A snapshot and a pdf.
+   {
+      RooWorkspace ws;
+      ws.factory("Gaussian::model(x[0, -5, 5], mu[0, -5, 5], 1.0)");
+      ws.saveSnapshot("model", *ws.var("mu"));
+      expectImportWarns(RooJSONFactoryWSTool{ws}.exportJSONtoString(), "model");
+   }
+   // A dataset and a pdf.
+   {
+      RooWorkspace ws;
+      ws.factory("Gaussian::model(x[0, -5, 5], mu[0, -5, 5], 1.0)");
+      RooDataSet data{"model", "model", *ws.var("x")};
+      data.add(*ws.var("x"));
+      ws.import(data, RooFit::Silence());
+      expectImportWarns(RooJSONFactoryWSTool{ws}.exportJSONtoString(), "model");
    }
 }

@@ -5,6 +5,7 @@
 
 #include <cctype>
 #include <string>
+#include <utility>
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
@@ -124,6 +125,18 @@ bool parseHS3Version(std::string const &version, int &major, int &minor)
    }
    ++pos;
    return readNumber(minor);
+}
+
+// Whether an HS3 version predates `major.minor`. Versions that can't be parsed count as old. That includes the empty
+// version of objects that are imported without a document.
+bool isHS3VersionBefore(std::string const &version, int major, int minor)
+{
+   int versionMajor = 0;
+   int versionMinor = 0;
+   if (!parseHS3Version(version, versionMajor, versionMinor)) {
+      return true;
+   }
+   return std::make_pair(versionMajor, versionMinor) < std::make_pair(major, minor);
 }
 
 // Read the bin edges of an axis, which must be at least two strictly ascending numbers.

@@ -337,19 +337,8 @@ std::vector<int> readInterpolations(const JSONNode &object, std::size_t nParamet
    return codes;
 }
 
-// Whether an imported document predates HS3 v0.3. Before that, RooFit did not write the interpolation of modifiers
-// that used its implicit default.
-bool isLegacyHS3Version(std::string const &version)
-{
-   int major = 0;
-   int minor = 0;
-   if (!parseHS3Version(version, major, minor)) {
-      return true;
-   }
-   return std::make_pair(major, minor) <= std::make_pair(0, 2);
-}
-
-// The fallback for modifiers without interpolation in documents that predate HS3 v0.3, see interpolationCode().
+// The fallback for modifiers without interpolation in documents that predate HS3 v0.3, see interpolationCode(). Before
+// that, RooFit did not write the interpolation of modifiers that used its implicit default.
 struct LegacyInterpolationDefault {
    bool allowed = false;
    bool warned = false;
@@ -970,7 +959,7 @@ public:
       }
 
       LegacyInterpolationDefault legacyInterpolationDefault;
-      legacyInterpolationDefault.allowed = isLegacyHS3Version(tool->hs3VersionInput());
+      legacyInterpolationDefault.allowed = isHS3VersionBefore(tool->hs3VersionInput(), 0, 3);
 
       int idx = 0;
       RooArgList funcs;
