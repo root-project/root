@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 
 struct TestLogger {
    class Handler : public ROOT::RLogHandler {
@@ -305,3 +306,14 @@ TEST(Logger, ROOTErrorHandlerDiagString)
 
    SetErrorHandler(prevErrorHandler);
 }
+
+TEST(Logger, EnvVarParsing)
+{
+   std::map<std::string, ROOT::ELogLevel> cfg;
+   ROOT::Internal::ParseRootLogStr("ROOT.InterpreterPerf=Debug(3),ROOT.RBrowser=Error,Info", cfg);
+   EXPECT_EQ(cfg.size(), 3);
+   EXPECT_EQ(cfg[""], ROOT::ELogLevel::kInfo);
+   EXPECT_EQ(cfg["ROOT.RBrowser"], ROOT::ELogLevel::kError);
+   EXPECT_EQ(cfg["ROOT.InterpreterPerf"], static_cast<ROOT::ELogLevel>(static_cast<int>(ROOT::ELogLevel::kDebug) + 3));
+}
+

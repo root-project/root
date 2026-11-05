@@ -15,6 +15,7 @@
 
 #include <atomic>
 #include <list>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -99,7 +100,8 @@ class RLogChannel : public RLogDiagCount {
    std::string fName;
 
    /// Verbosity of this channel. By default, use the global verbosity.
-   ELogLevel fVerbosity = ELogLevel::kUnset;
+   mutable ELogLevel fVerbosity = ELogLevel::kUnset;
+   mutable bool fVerbosityInitialized{false};
 
 public:
    /// Construct an anonymous channel.
@@ -114,6 +116,7 @@ public:
    ELogLevel SetVerbosity(ELogLevel verbosity)
    {
       std::swap(fVerbosity, verbosity);
+      fVerbosityInitialized = true;
       return verbosity;
    }
    ELogLevel GetVerbosity() const { return fVerbosity; }
@@ -141,6 +144,8 @@ public:
    }
 
    static RLogManager &Get();
+
+   ELogLevel GetConfiguredVerbosity(const std::string &name) const;
 
    /// Add a RLogHandler in the front - to be called before all others.
    void PushFront(std::unique_ptr<RLogHandler> handler) { fHandlers.emplace_front(std::move(handler)); }
@@ -294,6 +299,7 @@ public:
 };
 
 namespace Internal {
+void ParseRootLogStr(const std::string& env, std::map<std::string, ELogLevel>& out);
 
 inline RLogChannel &GetChannelOrManager()
 {
@@ -308,6 +314,12 @@ inline RLogChannel &GetChannelOrManager(RLogChannel &channel)
 
 inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) const
 {
+   if (!fVerbosityInitialized) {
+      fVerbosityInitialized = true;
+      ELogLevel cfg = mgr.GetConfiguredVerbosity(fName);
+      if (cfg != ELogLevel::kUnset)
+         fVerbosity = cfg;
+   }
    if (fVerbosity == ELogLevel::kUnset)
       return mgr.GetVerbosity();
    return fVerbosity;
