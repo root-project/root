@@ -4000,7 +4000,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    if (sinfo->TStreamerInfo::IsRecovered()) R__c=0; // 'TStreamerInfo::' avoids going via a virtual function.
 
    if (current != fByteCountStack.size())
-      Fatal("ReadClassBuffer", "We are out of sync at level %lld vs %zu for %s", current, fByteCountStack.size(), cl->GetName());
+      Fatal("ReadClassBuffer", "We are out of sync at level %zu vs %zu for %s", current, fByteCountStack.size(), cl->GetName());
    --current;
    // Check that the buffer position corresponds to the byte count.
    CheckByteCount(R__s, R__c, cl);
@@ -4074,7 +4074,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter).PrintDebug(*this,obj);
          (*iter)(*this,obj);
          if (current != fByteCountStack.size())
-            Fatal("ApplySequence", "We are out of sync starting at level %lld vs %zu", current, fByteCountStack.size());
+            Fatal("ApplySequence", "We are out of sync starting at level %zu vs %zu", current, fByteCountStack.size());
       }
 
    } else {
