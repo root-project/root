@@ -4109,17 +4109,18 @@ TEST(RooFitHS3, ModelConfigsSharingPdfAndData)
    }
    {
       RooWorkspace ws;
-      ws.factory("Gaussian::pdf_a(x[0, -5, 5], mu[0, -5, 5], sigma[1, 0.1, 5])");
-      ws.factory("Gaussian::pdf_b(x, mu, sigma)");
+      // Each component has its own observable, as HS3 requires.
+      ws.factory("Gaussian::pdf_a(x_a[0, -5, 5], mu[0, -5, 5], sigma[1, 0.1, 5])");
+      ws.factory("Gaussian::pdf_b(x_b[0, -5, 5], mu, sigma)");
       ws.factory("SIMUL::sim_pdf(channel[a=0, b=1], a=pdf_a, b=pdf_b)");
-      RooArgSet observables{*ws.var("x"), *ws.cat("channel")};
+      RooArgSet observables{*ws.var("x_a"), *ws.var("x_b"), *ws.cat("channel")};
       RooDataSet data{"data", "data", observables};
       for (int index : {0, 1}) {
          ws.cat("channel")->setIndex(index);
          data.add(observables);
       }
       ws.import(data, RooFit::Silence());
-      roundTrip(ws, "sim_pdf", "x,channel");
+      roundTrip(ws, "sim_pdf", "x_a,x_b,channel");
    }
 }
 
@@ -5111,24 +5112,28 @@ TEST(RooFitHS3, CombinedDataSeveralColumns)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-   RooRealVar x{"x", "x", 0.0, 10.0};
+   // Each component has its own observable, as HS3 requires.
+   RooRealVar xSR{"x_sr", "x_sr", 0.0, 10.0};
+   RooRealVar xCR{"x_cr", "x_cr", 0.0, 10.0};
+   RooRealVar xGlobal{"x_sr_global", "x_sr_global", 0.0, 10.0};
    RooCategory region{"region", "region", {{"SR", 0}, {"CR", 1}}};
    RooCategory kind{"kind", "kind", {{"physics", 0}, {"global", 1}}};
-   RooGaussian sr{"sr", "sr", x, 3.0, 1.0};
-   RooGaussian cr{"cr", "cr", x, 6.0, 1.0};
-   RooGaussian srGlobal{"sr_global", "sr_global", x, 5.0, 2.0};
+   RooGaussian sr{"sr", "sr", xSR, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", xCR, 6.0, 1.0};
+   RooGaussian srGlobal{"sr_global", "sr_global", xGlobal, 5.0, 2.0};
    RooSuperCategory index{"index", "index", RooArgSet{region, kind}};
    RooSimultaneous simPdf{
       "simPdf", "simPdf", {{"{SR;physics}", &sr}, {"{CR;physics}", &cr}, {"{SR;global}", &srGlobal}}, index};
    // Entries per key; none for (physics, CR), and (global, CR) has no component.
    const std::map<std::vector<std::string>, int> entries{{{"physics", "SR"}, 3}, {{"global", "SR"}, 1}};
-   RooDataSet obs{"obs", "obs", {x, region, kind}};
+   RooDataSet obs{"obs", "obs", {xSR, xCR, xGlobal, region, kind}};
    for (auto const &item : entries) {
       kind.setLabel(item.first[0].c_str());
       region.setLabel(item.first[1].c_str());
+      RooRealVar &x = item.first[0] == "global" ? xGlobal : xSR;
       for (int i = 0; i < item.second; ++i) {
          x.setVal(1.0 + i);
-         obs.add({x, region, kind});
+         obs.add({xSR, xCR, xGlobal, region, kind});
       }
    }
 
@@ -5510,4 +5515,53 @@ TEST(RooFitHS3, CombinedObjectsKeepNamesWithoutMisc)
    RooWorkspace ws3;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(json2));
    EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), json2);
+}
+
+// In HS3, the components of a combined distribution share no variate: a quantity measured in several components is a
+// separate variate in each of them ("mass_SR", "mass_CR"). A RooSimultaneous whose components share an observable can
+// therefore not be written with its data set. A document whose sub-data sets share an axis is still read, with a
+// warning.
+TEST(RooFitHS3, CombinedComponentsMustNotShareObservables)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar mass{"mass", "mass", 0.0, 10.0};
+   RooCategory channel{"channel", "channel", {{"SR", 0}, {"CR", 1}}};
+   RooGaussian sr{"sr", "sr", mass, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", mass, 6.0, 1.0};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"SR", &sr}, {"CR", &cr}}, channel};
+   RooDataSet obs{"obs", "obs", {mass, channel}};
+   for (const char *label : {"SR", "CR"}) {
+      channel.setLabel(label);
+      mass.setVal(4.0);
+      obs.add({mass, channel});
+   }
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   ws.import(obs);
+   const std::string errors = captureMessages(RooFit::ERROR, RooFit::IO, [&] {
+      EXPECT_THROW(RooJSONFactoryWSTool{ws}.exportJSONtoString(), std::runtime_error);
+   });
+   EXPECT_NE(errors.find("which share the observables 'mass'"), std::string::npos) << errors;
+   EXPECT_NE(errors.find("'mass_SR' and 'mass_CR'"), std::string::npos) << errors;
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "channel", "categories": ["SR", "CR"]}, {"name": "mass", "min": 0.0, "max": 10.0}]}],
+      "data": [
+         {"name": "obs_SR", "type": "unbinned", "axes": [{"name": "mass", "min": 0.0, "max": 10.0}], "entries": [[4.0]]},
+         {"name": "obs_CR", "type": "unbinned", "axes": [{"name": "mass", "min": 0.0, "max": 10.0}], "entries": [[5.0]]},
+         {"name": "obs", "type": "combined", "columns": ["channel"],
+          "components": [{"key": ["SR"], "dataset": "obs_SR"}, {"key": ["CR"], "dataset": "obs_CR"}]}
+      ]
+   })";
+   RooWorkspace imported;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   });
+   EXPECT_NE(warnings.find("share the axes 'mass'"), std::string::npos) << warnings;
+   RooAbsData *data = imported.data("obs");
+   ASSERT_NE(data, nullptr);
+   EXPECT_EQ(data->numEntries(), 2);
 }
