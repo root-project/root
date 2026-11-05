@@ -45,6 +45,7 @@ public:
       checkLikelihoods();
       checkAnalyses();
       checkData();
+      checkCombinedData();
       for (std::size_t i = 0; i < _doc.distributions.size(); ++i) {
          auto const &dist = _doc.distributions[i];
          if (auto const *histFactory = std::get_if<HistFactoryDist>(&dist.body)) {
@@ -130,6 +131,7 @@ private:
    void checkLikelihoods();
    void checkAnalyses();
    void checkData();
+   void checkCombinedData();
 
    HS3Document const &_doc;
    Diagnostics &_diagnostics;
@@ -324,6 +326,74 @@ void Validator::checkCategoricalAxes()
          if (found != categorical.end()) {
             error(at("domains", i, domain.name),
                   "the axis '" + continuous->name + "' is listed in a domain as categorical and as continuous");
+         }
+      }
+   }
+}
+
+// The columns of combined data sets are categorical axes of the domains, or categories that exist already, and the keys
+// consist of their categories. Every sub-data set is a data set of the document that belongs to one combined data set.
+void Validator::checkCombinedData()
+{
+   std::map<std::string, std::vector<std::string> const *> categorical;
+   for (Domain const &domain : _doc.domains) {
+      for (auto const &axis : domain.axes) {
+         if (auto const *cat = std::get_if<CategoricalAxis>(&axis)) {
+            categorical.emplace(cat->name, &cat->categories);
+         }
+      }
+   }
+   std::set<std::string> combinedNames;
+   for (auto const &data : _doc.data) {
+      if (std::holds_alternative<CombinedData>(data.body)) {
+         combinedNames.insert(data.name);
+      }
+   }
+   std::set<std::string> usedComponents;
+   for (std::size_t i = 0; i < _doc.data.size(); ++i) {
+      auto const *combined = std::get_if<CombinedData>(&_doc.data[i].body);
+      if (!combined) {
+         continue;
+      }
+      std::string const path = at("data", i, _doc.data[i].name);
+      std::string const context = "the combined data set '" + _doc.data[i].name + "'";
+      std::vector<std::vector<std::string> const *> columnCategories;
+      std::set<std::string> columns;
+      for (std::string const &column : combined->columns) {
+         auto found = categorical.find(column);
+         if (found == categorical.end() && !isExternal(column)) {
+            error(path,
+                  "the column '" + column + "' of " + context + " is not declared by a categorical axis of a domain");
+            return;
+         }
+         if (!columns.insert(column).second) {
+            error(path, "the column '" + column + "' of " + context + " is listed twice");
+            return;
+         }
+         columnCategories.push_back(found != categorical.end() ? found->second : nullptr);
+      }
+      std::set<std::vector<std::string>> keys;
+      for (CombinedDataComponent const &component : combined->components) {
+         for (std::size_t k = 0; k < component.key.size(); ++k) {
+            auto const *categories = columnCategories[k];
+            if (categories &&
+                std::find(categories->begin(), categories->end(), component.key[k]) == categories->end()) {
+               error(path, "the label '" + component.key[k] + "' in position " + std::to_string(k) + " of a key of " +
+                              context + " is not one of the categories of '" + combined->columns[k] + "'");
+            }
+         }
+         if (!keys.insert(component.key).second) {
+            std::string key = "[";
+            for (std::size_t k = 0; k < component.key.size(); ++k) {
+               key += (k == 0 ? "\"" : ", \"") + component.key[k] + "\"";
+            }
+            error(path, "the key " + key + "] is used by two components of " + context);
+         }
+         std::string const &name = component.data.name;
+         if (!isDefinedIn(name, "data") || combinedNames.count(name) || !usedComponents.insert(name).second) {
+            error(path, "the component '" + name + "' of " + context +
+                           " is not a data set of the document, or it is already a component of another combined "
+                           "data set");
          }
       }
    }
