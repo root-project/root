@@ -4382,11 +4382,31 @@ TEST_P(HFFixture, HS3ClosureLoop)
    // Chack that JSON > WS > JSON doesn't change the JSON
    EXPECT_EQ(js, js3) << "The JSON -> WS -> JSON roundtrip did not result in the original JSON!";
 
-   auto *newmc = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
-   EXPECT_TRUE(newmc != nullptr);
+   // The RooSimultaneous and its data sets are the standard case of combined objects (HS3 #119): they are written
+   // as a "combined_dist" and "combined" data sets, and read back into a RooSimultaneous and data sets with the
+   // index category.
+   EXPECT_NE(js.find(R"("type":"combined_dist")"), std::string::npos) << js;
+   EXPECT_NE(js.find(R"("type":"combined")"), std::string::npos) << js;
+   EXPECT_EQ(js.find("combined_datasets"), std::string::npos) << js;
+   EXPECT_EQ(js.find("combined_distributions"), std::string::npos) << js;
 
-   RooAbsPdf *newpdf = newmc->GetPdf();
-   EXPECT_TRUE(newpdf != nullptr);
+   auto *newmc = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
+   ASSERT_NE(newmc, nullptr);
+
+   auto *newpdf = dynamic_cast<RooSimultaneous *>(newmc->GetPdf());
+   ASSERT_NE(newpdf, nullptr);
+   EXPECT_STREQ(newpdf->indexCat().GetName(), "channelCat");
+   EXPECT_NE(newmc->GetObservables()->find("channelCat"), nullptr);
+   EXPECT_EQ(wsFromJson.allData().size(), ws->allData().size());
+   for (const char *dataName : {"obsData", "asimovData"}) {
+      RooAbsData *origData = ws->data(dataName);
+      RooAbsData *readData = wsFromJson.data(dataName);
+      ASSERT_NE(origData, nullptr) << dataName;
+      ASSERT_NE(readData, nullptr) << dataName;
+      EXPECT_EQ(readData->numEntries(), origData->numEntries()) << dataName;
+      EXPECT_DOUBLE_EQ(readData->sumEntries(), origData->sumEntries()) << dataName;
+      EXPECT_NE(readData->get()->find("channelCat"), nullptr) << dataName;
+   }
 
    RooAbsData *data = ws->data("obsData");
    EXPECT_TRUE(data != nullptr);
