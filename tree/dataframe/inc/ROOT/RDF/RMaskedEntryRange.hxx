@@ -33,6 +33,7 @@ public:
    std::uint64_t GetFirstEntry() const { return fBegin; }
    void SetFirstEntry(std::uint64_t e) { fBegin = e; }
    std::size_t GetBulkSize() const { return fMask.size(); }
+   void SetAll(bool val) { std::fill(fMask.begin(), fMask.end(), val); }
    ROOT::RVec<std::size_t> GetValidIndices() const
    {
       ROOT::RVec<std::size_t> validIndices{};
@@ -42,6 +43,25 @@ public:
       }
       return validIndices;
    }
+   void Union(const RMaskedEntryRange &other)
+   {
+      for (std::size_t i = 0u; i < other.GetBulkSize(); ++i)
+         fMask[i] |= other[i];
+   }
+
+   // Return std::numeric_limits<std::size_t>::max() if this mask is a superset of other.
+   // Otherwise return the index of the first entry in other that is not contained in this mask.
+   // Does _not_ check whether this->fBegin is equal to other.fBegin.
+   std::size_t Contains(const RMaskedEntryRange &other)
+   {
+      for (std::size_t i = 0u; i < other.GetBulkSize(); ++i)
+         if (other.fMask[i] && !fMask[i])
+            return i;
+
+      return std::numeric_limits<std::size_t>::max();
+   }
+
+   const ROOT::RVec<bool> &GetMask() const { return fMask; }
 };
 
 } // namespace ROOT::Internal::RDF

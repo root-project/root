@@ -231,6 +231,78 @@ void ROOT::RFieldBase::RBulkValues::AdoptBuffer(void *buf, std::size_t capacity)
    fIsAdopted = true;
 }
 
+void ROOT::RFieldBase::RBulkValues::Reset(ROOT::NTupleSize_t firstIndex, std::size_t size)
+{
+   if (fCapacity < size) {
+      if (fIsAdopted) {
+         throw RException(R__FAIL("invalid attempt to bulk read beyond the adopted buffer"));
+      }
+      ReleaseValues();
+      fValues = operator new(size * fValueSize, std::align_val_t(fField->GetAlignment()));
+
+      if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
+         for (std::size_t i = 0; i < size; ++i) {
+            fField->ConstructValue(GetValuePtrAt(i));
+         }
+      }
+
+      fMaskAvail = std::make_unique<bool[]>(size);
+      fCapacity = size;
+   }
+
+   std::fill(fMaskAvail.get(), fMaskAvail.get() + size, false);
+   fNValidValues = 0;
+
+   fGlobalFirstIndex = firstIndex;
+   fSize = size;
+}
+
+bool ROOT::RFieldBase::RBulkValues::ContainsRange(ROOT::NTupleSize_t firstIndex, std::size_t size) const
+{
+   return (fGlobalFirstIndex <= firstIndex) && ((firstIndex + size) <= (fGlobalFirstIndex + fSize));
+}
+
+void *ROOT::RFieldBase::RBulkValues::ReadBulk(ROOT::NTupleSize_t firstIndex, const bool *maskReq, std::size_t size)
+{
+   if (!ContainsRange(firstIndex, size))
+      Reset(firstIndex, size);
+
+   // We may read a subrange of the currently available range
+   auto offset = firstIndex - fGlobalFirstIndex;
+
+   if (fNValidValues == fSize)
+      return GetValuePtrAt(offset);
+
+   RBulkSpec bulkSpec;
+   bulkSpec.fFirstIndex = firstIndex;
+   bulkSpec.fCount = size;
+   bulkSpec.fMaskReq = maskReq;
+   bulkSpec.fMaskAvail = &fMaskAvail[offset];
+   bulkSpec.fValues = GetValuePtrAt(offset);
+   bulkSpec.fAuxData = &fAuxData;
+   auto nRead = fField->ReadBulk(bulkSpec);
+   if (nRead == RBulkSpec::kAllSet) {
+      // We expect that field implementations consistently return kAllSet either in all cases or never. This avoids
+      // the following case where we would have to manually count how many valid values we actually have:
+      // 1. A partial ReadBulk, according to maskReq, with values potentially missing in the middle.
+      // 2. A second ReadBulk that reads a complete subrange. If this returned kAllSet, we don't know how to update
+      // fNValidValues, other than counting. The field should return a concrete number of how many new values it read
+      // in addition to those already present.
+      R__ASSERT((offset == 0) && (size == fSize));
+      fNValidValues = fSize;
+   } else {
+      fNValidValues += nRead;
+   }
+   return GetValuePtrAt(offset);
+}
+
+std::pair<void *, std::size_t> ROOT::Internal::ReadBulkAndValueSize(ROOT::RFieldBase::RBulkValues &bulk,
+                                                                    ROOT::NTupleSize_t globalIndex, const bool *maskReq,
+                                                                    std::size_t count)
+{
+   return std::make_pair(bulk.ReadBulk(globalIndex, maskReq, count), bulk.fValueSize);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::RFieldBase::RCreateObjectDeleter<void>::operator()(void *)
@@ -648,24 +720,58 @@ void ROOT::RFieldBase::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
    ReadGlobalImpl(fPrincipalColumn->ForReading()->GetGlobalIndex(localIndex), to);
 }
 
-std::size_t ROOT::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
+std::size_t ROOT::RFieldBase::ReadBulkImplGlobalIndex(ROOT::NTupleSize_t globalIndex, void *values, std::size_t count,
+                                                      const bool *maskReq, bool *maskAvail)
 {
    const auto valueSize = GetValueSize();
    std::size_t nRead = 0;
-   for (std::size_t i = 0; i < bulkSpec.fCount; ++i) {
+   for (std::size_t i = 0; i < count; ++i) {
       // Value not needed
-      if (bulkSpec.fMaskReq && !bulkSpec.fMaskReq[i])
+      if (maskReq && !maskReq[i])
          continue;
 
       // Value already present
-      if (bulkSpec.fMaskAvail[i])
+      if (maskAvail[i])
          continue;
 
-      Read(bulkSpec.fFirstIndex + i, reinterpret_cast<unsigned char *>(bulkSpec.fValues) + i * valueSize);
-      bulkSpec.fMaskAvail[i] = true;
+      Read(globalIndex + i, reinterpret_cast<unsigned char *>(values) + i * valueSize);
+      maskAvail[i] = true;
       nRead++;
    }
    return nRead;
+}
+std::size_t ROOT::RFieldBase::ReadBulkImplLocalIndex(ROOT::RNTupleLocalIndex localIndex, void *values,
+                                                     std::size_t count, const bool *maskReq, bool *maskAvail)
+{
+   const auto valueSize = GetValueSize();
+   std::size_t nRead = 0;
+   for (std::size_t i = 0; i < count; ++i) {
+      // Value not needed
+      if (maskReq && !maskReq[i])
+         continue;
+
+      // Value already present
+      if (maskAvail[i])
+         continue;
+
+      Read(localIndex + i, reinterpret_cast<unsigned char *>(values) + i * valueSize);
+      maskAvail[i] = true;
+      nRead++;
+   }
+   return nRead;
+}
+
+std::size_t ROOT::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
+{
+   if (const auto *localIndex = std::get_if<RNTupleLocalIndex>(&bulkSpec.fFirstIndex)) {
+      return ReadBulkImplLocalIndex(*localIndex, bulkSpec.fValues, bulkSpec.fCount, bulkSpec.fMaskReq,
+                                    bulkSpec.fMaskAvail);
+   } else if (const auto *globalIndex = std::get_if<ROOT::NTupleSize_t>(&bulkSpec.fFirstIndex)) {
+      return ReadBulkImplGlobalIndex(*globalIndex, bulkSpec.fValues, bulkSpec.fCount, bulkSpec.fMaskReq,
+                                     bulkSpec.fMaskAvail);
+   } else {
+      throw std::runtime_error("Unrecognized index type");
+   }
 }
 
 void *ROOT::RFieldBase::CreateObjectRawPtr() const
@@ -844,7 +950,11 @@ std::size_t ROOT::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
 {
    if (fIsSimple) {
       /// For simple types, ignore the mask and memcopy the values into the destination
-      fPrincipalColumn->ForReading()->ReadV(bulkSpec.fFirstIndex, bulkSpec.fCount, bulkSpec.fValues);
+      if (const auto *localIndex = std::get_if<RNTupleLocalIndex>(&bulkSpec.fFirstIndex)) {
+         fPrincipalColumn->ForReading()->ReadV(*localIndex, bulkSpec.fCount, bulkSpec.fValues);
+      } else if (const auto *globalIndex = std::get_if<ROOT::NTupleSize_t>(&bulkSpec.fFirstIndex)) {
+         fPrincipalColumn->ForReading()->ReadV(*globalIndex, bulkSpec.fCount, bulkSpec.fValues);
+      }
       std::fill(bulkSpec.fMaskAvail, bulkSpec.fMaskAvail + bulkSpec.fCount, true);
       return RBulkSpec::kAllSet;
    }

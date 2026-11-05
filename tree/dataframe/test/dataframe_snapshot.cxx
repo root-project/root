@@ -1011,15 +1011,7 @@ void ReadWriteTClonesArray()
       // write as TClonesArray
       auto out_df =
          ROOT::RDataFrame("t", "df_readwritetclonesarray.root").Snapshot("t", "df_readwriteclonesarray1.root", {"arr"});
-      RVec<TH1D> hvec;
-
-#ifndef NDEBUG
-      ROOT_EXPECT_WARNING(
-         hvec = out_df->Take<RVec<TH1D>>("arr")->at(0), "RTreeColumnReader::Get",
-         "Branch arr hangs from a non-split branch. A copy is being performed in order to properly read the content.");
-#else
-      ROOT_EXPECT_NODIAG(hvec = out_df->Take<RVec<TH1D>>("arr")->at(0));
-#endif
+      RVec<TH1D> hvec{out_df->Take<RVec<TH1D>>("arr")->at(0)};
       CheckTClonesArrayOutput(hvec);
    }
 
@@ -1038,14 +1030,7 @@ void ReadWriteTClonesArray()
       // write as Snapshot wants
       auto out_df =
          ROOT::RDataFrame("t", "df_readwritetclonesarray.root").Snapshot("t", "df_readwriteclonesarray3.root", {"arr"});
-      RVec<TH1D> hvec;
-#ifndef NDEBUG
-      ROOT_EXPECT_WARNING(
-         hvec = out_df->Take<RVec<TH1D>>("arr")->at(0), "RTreeColumnReader::Get",
-         "Branch arr hangs from a non-split branch. A copy is being performed in order to properly read the content.");
-#else
-      ROOT_EXPECT_NODIAG(hvec = out_df->Take<RVec<TH1D>>("arr")->at(0));
-#endif
+      RVec<TH1D> hvec{out_df->Take<RVec<TH1D>>("arr")->at(0)};
       CheckTClonesArrayOutput(hvec);
    }
 

@@ -40,7 +40,8 @@ protected:
    const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
    std::unordered_map<std::string, std::shared_ptr<RRangeBase>> fVariedRanges;
 
-   std::vector<ROOT::RVec<bool>> fCachedResults;
+   /// Which entries in the current bulk are valid, per slot
+   std::vector<ROOT::Internal::RDF::RMaskedEntryRange> fMaskPerSlot;
 
 public:
    RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,

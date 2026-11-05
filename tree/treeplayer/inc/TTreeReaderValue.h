@@ -100,7 +100,9 @@ public:
 
    void *GetAddress();
    std::function<void(void *)> GetDeleter();
+   TDictionary *GetOnDiskDictionary() const;
    void SetAddress(void *addr, void *addrOfAddr);
+   TBranch *GetBranch();
 
    const char *GetBranchName() const { return fBranchName; }
 

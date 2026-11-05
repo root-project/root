@@ -60,11 +60,6 @@ TEST(RDFRegressionTests, AliasAndSubBranches)
    t.Fill();
    t.Fill();
 
-#ifndef NDEBUG
-   ROOT::TestSupport::CheckDiagsRAII diagRAII{kWarning, "RTreeColumnReader::Get",
-                                              "Branch topbranch.fCoordinates.fX hangs from a non-split branch. A copy "
-                                              "is being performed in order to properly read the content."};
-#endif
    auto df = ROOT::RDataFrame(t).Alias("alias", "topbranch");
    // Here, before the fix for #11207 we transformed `"alias.fCoordinates.fX.size() == 2"` into
    // `[](std::vector<XYZTVector> &var0) { return var0.fCoordinates.fX.size() == 2; }`, which is not valid C++
@@ -140,11 +135,39 @@ TEST_P(RDFRegressionTests, EmptyTree)
 
 // check that rdfentry_ contains all expected values,
 // also in multi-thread runs over multiple ROOT files
-TEST_P(RDFRegressionTests, UniqueEntryNumbers)
+TEST_P(RDFRegressionTests, UniqueEntryNumbersTTree)
 {
    const auto treename = "t";
    const auto fname = "df_uniqueentrynumbers.root";
    ROOT::RDataFrame(10).Snapshot(treename, fname, {"rdfslot_"}); // does not matter what column we write
+
+   ROOT::RDataFrame df(treename, {fname, fname});
+   auto entries = *df.Take<ULong64_t>("rdfentry_");
+   std::sort(entries.begin(), entries.end());
+   const auto nEntries = entries.size();
+   for (auto i = 0u; i < nEntries; ++i)
+      EXPECT_EQ(i, entries[i]);
+
+   gSystem->Unlink(fname);
+}
+
+TEST_P(RDFRegressionTests, UniqueEntryNumbersEmpty)
+{
+   ROOT::RDataFrame df{20};
+   auto entries = *df.Take<ULong64_t>("rdfentry_");
+   std::sort(entries.begin(), entries.end());
+   const auto nEntries = entries.size();
+   for (auto i = 0u; i < nEntries; ++i)
+      EXPECT_EQ(i, entries[i]);
+}
+
+TEST_P(RDFRegressionTests, UniqueEntryNumbersRNTuple)
+{
+   const auto treename = "rnt";
+   const auto fname = "df_uniqueentrynumbers_rntuple.root";
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+   ROOT::RDataFrame(10).Snapshot(treename, fname, {"rdfslot_"}, opts); // does not matter what column we write
 
    ROOT::RDataFrame df(treename, {fname, fname});
    auto entries = *df.Take<ULong64_t>("rdfentry_");
@@ -176,22 +199,29 @@ TEST_P(RDFRegressionTests, ReadWriteVector3)
       delete c;
    }
 
-   const std::string snap_fname = std::string("snap_") + filename;
+   const std::string snap_fname_a = std::string("snap_a_") + filename;
+   const std::string snap_fname_b = std::string("snap_b_") + filename;
 
-   ROOT::RDataFrame rdf("t", filename);
-   auto ha = rdf.Define("aval", "a.X()").Histo1D("aval");
-   auto hb = rdf.Define("bval", "b.X()").Histo1D("bval");
+   ROOT::RDataFrame rdf_a("t", filename);
+   auto ha = rdf_a.Define("aval", "a.X()").Histo1D("aval");
    EXPECT_EQ(ha->GetMean(), 4.5);
-   EXPECT_EQ(ha->GetMean(), hb->GetMean());
-
-   auto out_df = rdf.Snapshot("t", snap_fname, {"a", "b"});
-
-   auto ha_snap = out_df->Define("aval", "a.X()").Histo1D("aval");
-   auto hb_snap = out_df->Define("bval", "b.X()").Histo1D("bval");
+   auto out_df_a = rdf_a.Snapshot("t", snap_fname_a, {"a"});
+   auto ha_snap = out_df_a->Define("aval", "a.X()").Histo1D("aval");
    EXPECT_EQ(ha_snap->GetMean(), 4.5);
-   EXPECT_EQ(ha_snap->GetMean(), hb_snap->GetMean());
 
-   gSystem->Unlink(snap_fname.c_str());
+   // Unsplit TBranchObject of a polymorphic type cannot be read with bulk size greater than one
+   ROOT::RDataFrame rdf_b("t", filename);
+   ROOT::RDF::RNode node = rdf_b;
+   ROOT::Internal::RDF::SetMaxBulkSize(node, 1);
+   auto hb = rdf_b.Define("bval", "b.X()").Histo1D("bval");
+   EXPECT_EQ(ha->GetMean(), hb->GetMean());
+   auto out_df_b = rdf_b.Snapshot("t", snap_fname_b, {"b"});
+   node = *out_df_b;
+   ROOT::Internal::RDF::SetMaxBulkSize(node, 1);
+   auto hb_snap = out_df_b->Define("bval", "b.X()").Histo1D("bval");
+   EXPECT_EQ(ha_snap->GetMean(), hb_snap->GetMean());
+   gSystem->Unlink(snap_fname_a.c_str());
+   gSystem->Unlink(snap_fname_b.c_str());
    gSystem->Unlink(filename.c_str());
 }
 
@@ -238,10 +268,14 @@ TEST_P(RDFRegressionTests, PolymorphicTBranchObject)
    // which has trickier edge cases due to object addresses changing
    // when switching from one file to the other.
    ROOT::RDataFrame rdf("t", {filename, filename});
+   ROOT::RDF::RNode node = rdf;
+   ROOT::Internal::RDF::SetMaxBulkSize(node, 1);
    ASSERT_EQ(rdf.Count().GetValue(), 4ull);
    rdf.Foreach(checkEntries, {"o", "rdfentry_"});
 
    auto out_df = rdf.Snapshot("t", snap_fname, {"o"});
+   node = *out_df;
+   ROOT::Internal::RDF::SetMaxBulkSize(node, 1);
    out_df->Foreach(checkEntries, {"o", "rdfentry_"});
 
    TFile f(snap_fname.c_str());

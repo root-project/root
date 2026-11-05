@@ -71,24 +71,27 @@ public:
    ROOT::Internal::RDF::RMaskedEntryRange
    CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
-      if (bulkBeginEntry == fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()])
-         return {fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()],
-                 static_cast<std::uint64_t>(bulkBeginEntry)};
+      auto &thisNodeMask = fMaskPerSlot[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()];
+      // Early return if we have already seen this bulk within this run of the computation graph
+      if (thisNodeMask.GetFirstEntry() == static_cast<std::uint64_t>(bulkBeginEntry)) {
+         return thisNodeMask;
+      }
+
+      thisNodeMask =
+         ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, false, static_cast<std::uint64_t>(bulkBeginEntry)};
 
       if (fHasStopped)
-         return {bulkSize, false, static_cast<std::uint64_t>(bulkBeginEntry)};
+         return thisNodeMask;
 
-      fLastCheckedEntry[slot * ROOT::Internal::RDF::CacheLineStep<Long64_t>()] = bulkBeginEntry;
       auto mask = fPrevNode.CheckFilters(slot, bulkBeginEntry, bulkSize);
-      fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()].clear();
-      fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()].resize(bulkSize);
-      for (std::size_t i = 0; i < bulkSize; ++i) {
-         if (mask[i]) {
-            fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()][i] =
-               fNProcessedEntries >= fStart && (fStop == 0 || fNProcessedEntries < fStop) &&
-               (fStride == 1 || (fNProcessedEntries - fStart) % fStride == 0);
-            ++fNProcessedEntries;
-         }
+      const auto validIndices = mask.GetValidIndices();
+      if (validIndices.empty())
+         return thisNodeMask;
+
+      for (auto idx : validIndices) {
+         thisNodeMask[idx] = fNProcessedEntries >= fStart && (fStop == 0 || fNProcessedEntries < fStop) &&
+                             (fStride == 1 || (fNProcessedEntries - fStart) % fStride == 0);
+         ++fNProcessedEntries;
       }
 
       if (fStop > 0 && fNProcessedEntries >= fStop) {
@@ -96,8 +99,7 @@ public:
          fPrevNode.StopProcessing();
       }
 
-      return {fCachedResults[slot * RDFInternal::CacheLineStep<ROOT::RVec<bool>>()],
-              static_cast<std::uint64_t>(bulkBeginEntry)};
+      return thisNodeMask;
    }
 
    // recursive chain of `Report`s

@@ -53,12 +53,15 @@ TEST(RLazyDS, Constructor)
 
    std::vector<double> col0Vals = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13.};
    std::vector<float> col1Vals = {2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f};
+   // Mimicking the bulk processing
    for (auto &&range : ranges) {
+      ROOT::Internal::RDF::RMaskedEntryRange mask{range.second - range.first, true, range.first};
       tds.InitSlot(slot, range.first);
+      col0Readers[slot]->Load(mask);
+      col1Readers[slot]->Load(mask);
       for (auto i : ROOT::TSeqI(range.first, range.second)) {
-         tds.SetEntry(slot, i);
-         auto val0 = *col0Readers[slot]->TryGet<double>(i);
-         auto val1 = *col1Readers[slot]->TryGet<float>(i);
+         auto val0 = *col0Readers[slot]->TryGet<double>(i - range.first);
+         auto val1 = *col1Readers[slot]->TryGet<float>(i - range.first);
          EXPECT_EQ(col0Vals[i], val0);
          EXPECT_EQ(col1Vals[i], val1);
       }

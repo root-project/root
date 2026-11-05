@@ -121,6 +121,12 @@ void ROOT::Internal::RNTupleProcessorEntry::ReadValue(FieldIndex_t fieldIdx, ROO
    }
 }
 
+ROOT::RFieldBase::RValue ROOT::Internal::RNTupleProcessorEntry::CreateValue(FieldIndex_t fieldIdx)
+{
+   assert(fieldIdx < fProcessorValues.size());
+   return fProcessorValues[fieldIdx].fField->CreateValue();
+}
+
 std::unordered_set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t>
 ROOT::Internal::RNTupleProcessorEntry::GetFieldIndices() const
 {

@@ -546,6 +546,7 @@ void RLoopManager::RunEmptySourceMT()
          auto bulkBeginEntry = range.first;
          std::size_t bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(range.second - bulkBeginEntry));
          while (bulkBeginEntry < range.second) {
+            fUniqueRDFEntry[slot] = bulkBeginEntry;
             RunAndCheckFilters(slot, bulkBeginEntry, bulkSize);
             bulkBeginEntry += bulkSize;
             bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(range.second - bulkBeginEntry));
@@ -576,6 +577,7 @@ void RLoopManager::RunEmptySource()
       std::size_t bulkSize =
          std::min(GetCurrentBulkSize(), static_cast<std::size_t>(fEmptyEntryRange.second - bulkBeginEntry));
       while (bulkBeginEntry < fEmptyEntryRange.second) {
+         fUniqueRDFEntry[0] = bulkBeginEntry;
          RunAndCheckFilters(0, bulkBeginEntry, bulkSize);
          bulkBeginEntry += bulkSize;
          bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(fEmptyEntryRange.second - bulkBeginEntry));
@@ -602,7 +604,6 @@ namespace {
 /// accordingly.
 bool validTTreeReaderRead(TTreeReader &treeReader)
 {
-   treeReader.Next();
    switch (treeReader.GetEntryStatus()) {
    case TTreeReader::kEntryValid: return true;
    case TTreeReader::kIndexedFriendNoMatch: return true;
@@ -669,26 +670,33 @@ void RLoopManager::RunDataSource()
 
       fSampleInfos[0] = ROOT::Internal::RDF::CreateSampleInfo(*fDataSource, /*slot*/ 0, fSampleMap);
 
-      try {
-         for (const auto &range : ranges) {
-            const auto start = range.first;
-            const auto end = range.second;
-            R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
-            auto bulkBeginEntry = start;
-            std::size_t bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
-            while (bulkBeginEntry < end && fNStopsReceived < fNChildren) {
-               if (fDataSource->SetEntry(0u, bulkBeginEntry)) {
-                  RunAndCheckFilters(0u, bulkBeginEntry, bulkSize);
-               }
-               bulkBeginEntry += bulkSize;
-               processedEntries += bulkSize;
-               bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
+      // try {
+      for (const auto &range : ranges) {
+         std::uint64_t bulkBegin = range.first;
+         std::uint64_t rangeEnd = range.second;
+         R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), bulkBegin, rangeEnd, 0u});
+         do {
+            std::size_t bulkSize =
+               ROOT::Internal::RDF::PickBulkSize(*fDataSource, GetCurrentBulkSize(), bulkBegin, rangeEnd, nullptr);
+            if (fDataSource->SetEntry(0u, bulkBegin)) {
+               fUniqueRDFEntry[0] = bulkBegin;
+               RunAndCheckFilters(0u, bulkBegin, bulkSize);
             }
-         }
-      } catch (...) {
-         std::cerr << "RDataFrame::Run: event loop was interrupted\n";
-         throw;
+            bulkBegin += bulkSize;
+            processedEntries += bulkSize;
+            // Needed to prepare for the following call to PickBulkSize, e.g. to move cursors of data sources supporting
+            // more than one file being read to the next file
+            if (bulkBegin < rangeEnd)
+               fDataSource->SetEntry(0, bulkBegin);
+         } while (bulkBegin < rangeEnd && fNStopsReceived < fNChildren);
+
+         // Move to end of the range, ensuring the data source can detect it.
+         fDataSource->SetEntry(0u, (rangeEnd == 0) ? rangeEnd : rangeEnd - 1);
       }
+      // } catch (...) {
+      //    std::cerr << "RDataFrame::Run: event loop was interrupted\n";
+      //    throw;
+      // }
 
    } while (!ranges.empty() && fNStopsReceived < fNChildren);
 
@@ -744,8 +752,6 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t bulkBeginEntry
       actionPtr->Run(slot, bulkBeginEntry, bulkSize);
    for (auto *namedFilterPtr : fBookedNamedFilters)
       namedFilterPtr->CheckFilters(slot, bulkBeginEntry, bulkSize);
-   for (auto &callback : fCallbacksEveryNEvents)
-      callback(slot);
 }
 
 /// Build TTreeReaderValues for all nodes
@@ -863,7 +869,6 @@ void RLoopManager::CleanUpNodes()
    for (auto *ptr : fBookedRanges)
       ptr->ResetChildrenCount();
 
-   fCallbacksEveryNEvents.clear();
    fCallbacksOnce.clear();
 }
 
@@ -968,6 +973,9 @@ void RLoopManager::EvalChildrenCounts()
 /// The jitting phase is skipped if the `jit` parameter is `false` (unsafe, use with care).
 void RLoopManager::Run(bool jit)
 {
+   // Restarting the computation graph, reset unique RDF entry numbers per slot
+   fUniqueRDFEntry = std::vector<std::uint64_t>(fNSlots, 0);
+
    // Change value of TTree::GetMaxTreeSize only for this scope. Revert when #6640 will be solved.
    MaxTreeSizeRAII ctxtmts;
 
@@ -1087,8 +1095,10 @@ void RLoopManager::Deregister(RDFInternal::RVariationBase *v)
 
 // dummy call, end of recursive chain of calls
 ROOT::Internal::RDF::RMaskedEntryRange
-RLoopManager::CheckFilters(unsigned int, Long64_t bulkBeginEntry, std::size_t bulkSize)
+RLoopManager::CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize)
 {
+   if (fDataSource)
+      return ROOT::Internal::RDF::CheckFilters(*fDataSource, slot, bulkBeginEntry, bulkSize);
    return ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, true, static_cast<std::uint64_t>(bulkBeginEntry)};
 }
 
@@ -1139,12 +1149,9 @@ void RLoopManager::RegisterJitHelperCall(const std::string &funcBody,
    }
 }
 
-void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)
+void RLoopManager::RegisterCallbackOnce(std::function<void(unsigned int)> &&f)
 {
-   if (everyNEvents == 0ull)
-      fCallbacksOnce.emplace_back(std::move(f), fNSlots);
-   else
-      fCallbacksEveryNEvents.emplace_back(everyNEvents, std::move(f), fNSlots);
+   fCallbacksOnce.emplace_back(std::move(f), fNSlots);
 }
 
 std::vector<std::string> RLoopManager::GetFiltersNames()
@@ -1368,9 +1375,10 @@ void ROOT::Detail::RDF::RLoopManager::SetDataSource(std::unique_ptr<ROOT::RDF::R
    }
 }
 
-void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange,
-                                                           ROOT::Internal::RSlotStack &slotStack,
-                                                           std::atomic<ULong64_t> &entryCount)
+void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(
+   const std::pair<ULong64_t, ULong64_t> &entryRange, ROOT::Internal::RSlotStack &slotStack,
+   std::atomic<ULong64_t> &entryCount,
+   std::function<std::size_t(std::size_t, std::uint64_t &, std::uint64_t &, void *)> pickBulkSizeFn)
 {
 #ifdef R__USE_IMT
    ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
@@ -1378,7 +1386,7 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
 
    const auto &[start, end] = entryRange;
    const auto nEntries = end - start;
-   entryCount.fetch_add(nEntries);
+   fUniqueRDFEntry[slot] = entryCount.fetch_add(nEntries);
 
    RDSRangeRAII _{*this, slot, start};
    RCallCleanUpTask cleanup(*this, slot);
@@ -1388,14 +1396,16 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
    R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
 
    try {
-      auto bulkBeginEntry = start;
-      std::size_t bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
-      while (bulkBeginEntry < end) {
+      std::uint64_t bulkBeginEntry = start;
+      std::uint64_t rangeEnd = end;
+      std::size_t bulkSize = pickBulkSizeFn(GetCurrentBulkSize(), bulkBeginEntry, rangeEnd, nullptr);
+      while (bulkBeginEntry < rangeEnd) {
          if (fDataSource->SetEntry(slot, bulkBeginEntry)) {
             RunAndCheckFilters(slot, bulkBeginEntry, bulkSize);
          }
          bulkBeginEntry += bulkSize;
-         bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
+         fUniqueRDFEntry[slot] += bulkSize;
+         bulkSize = pickBulkSizeFn(GetCurrentBulkSize(), bulkBeginEntry, rangeEnd, nullptr);
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
@@ -1408,8 +1418,9 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
 #endif
 }
 
-void ROOT::Detail::RDF::RLoopManager::RNTupleThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange,
-                                                        unsigned int slot, std::uint64_t columnReaderOffset)
+void ROOT::Detail::RDF::RLoopManager::RNTupleThreadTask(
+   const std::pair<ULong64_t, ULong64_t> &entryRange, unsigned int slot, std::uint64_t columnReaderOffset,
+   std::function<std::size_t(std::size_t, std::uint64_t &, std::uint64_t &, void *)> pickBulkSizeFn)
 {
 #ifdef R__USE_IMT
    // These are begin and end entries of the current cluster in the file currently opened by the thread who owns the
@@ -1426,14 +1437,17 @@ void ROOT::Detail::RDF::RLoopManager::RNTupleThreadTask(const std::pair<ULong64_
       {fDataSource->GetLabel(), begin - columnReaderOffset, end - columnReaderOffset, slot});
 
    try {
-      auto bulkBeginEntry = begin;
-      std::size_t bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
+      std::uint64_t bulkBeginEntry = begin;
+      std::uint64_t rangeEnd = end;
+      fUniqueRDFEntry[slot] = bulkBeginEntry;
+      std::size_t bulkSize = pickBulkSizeFn(GetCurrentBulkSize(), bulkBeginEntry, rangeEnd, nullptr);
       while (bulkBeginEntry < end) {
          if (fDataSource->SetEntry(slot, bulkBeginEntry)) {
             RunAndCheckFilters(slot, bulkBeginEntry, bulkSize);
          }
          bulkBeginEntry += bulkSize;
-         bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
+         fUniqueRDFEntry[slot] += bulkSize;
+         bulkSize = pickBulkSizeFn(GetCurrentBulkSize(), bulkBeginEntry, rangeEnd, nullptr);
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
@@ -1446,8 +1460,9 @@ void ROOT::Detail::RDF::RLoopManager::RNTupleThreadTask(const std::pair<ULong64_
 #endif
 }
 
-void ROOT::Detail::RDF::RLoopManager::TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack,
-                                                      std::atomic<ULong64_t> &entryCount)
+void ROOT::Detail::RDF::RLoopManager::TTreeThreadTask(
+   TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &entryCount,
+   std::function<std::size_t(std::size_t, std::uint64_t &, std::uint64_t &, void *)> pickBulkSizeFn)
 {
 #ifdef R__USE_IMT
    ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
@@ -1456,30 +1471,37 @@ void ROOT::Detail::RDF::RLoopManager::TTreeThreadTask(TTreeReader &treeReader, R
    const auto entryRange = treeReader.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
    const auto &[start, end] = entryRange;
    const auto nEntries = end - start;
-   auto count = entryCount.fetch_add(nEntries);
+   fUniqueRDFEntry[slot] = entryCount.fetch_add(nEntries);
 
    RDSRangeRAII _{*this, slot, static_cast<ULong64_t>(start), &treeReader};
    RCallCleanUpTask cleanup(*this, slot, &treeReader);
 
    R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(
       {fDataSource->GetLabel(), static_cast<ULong64_t>(start), static_cast<ULong64_t>(end), slot});
+   std::uint64_t bulkBegin = start;
+   std::uint64_t rangeEnd = end;
    try {
-      // recursive call to check filters and conditionally execute actions
-      while (validTTreeReaderRead(treeReader)) {
+      do {
+         treeReader.SetEntry(bulkBegin);
+         std::size_t bulkSize =
+            pickBulkSizeFn(GetCurrentBulkSize(), bulkBegin, rangeEnd, reinterpret_cast<void *>(&treeReader));
+
          if (fNewSampleNotifier.CheckFlag(slot)) {
             UpdateSampleInfo(slot, treeReader);
          }
-         std::size_t curBulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - start));
-         RunAndCheckFilters(slot, count, curBulkSize);
-         count += curBulkSize;
-      }
+         RunAndCheckFilters(slot, bulkBegin, bulkSize);
+         bulkBegin += bulkSize;
+         fUniqueRDFEntry[slot] += bulkSize;
+      } while (bulkBegin < rangeEnd && validTTreeReaderRead(treeReader));
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
-   // fNStopsReceived < fNChildren is always true at the moment as we don't support event loop early quitting in
+   // fNStopsReceived == fNChildren is always false at the moment as we don't support event loop early quitting in
    // multi-thread runs, but it costs nothing to be safe and future-proof in case we add support for that later.
-   if (treeReader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
+   bool successfulEnd = (bulkBegin == rangeEnd || treeReader.GetEntryStatus() == TTreeReader::kEntryBeyondEnd ||
+                         fNStopsReceived == fNChildren);
+   if (!successfulEnd) {
       // something went wrong in the TTreeReader event loop
       throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                std::to_string(treeReader.GetEntryStatus()));

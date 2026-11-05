@@ -63,8 +63,11 @@ public:
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
 
-   /// Return the (type-erased) address of the value of one variation of one column (can be safely cast back to a T*).
-   virtual void *GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) = 0;
+   /// Return the (type-erased) address of the beginning of the bulk of values for of one variation of one column, as
+   /// well as the size of each value. The pointer can be safely cast back to a T*, and using the size readers can move
+   /// to the correct location of the type-erased array.
+   virtual std::pair<void *, std::size_t>
+   GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    const std::vector<std::string> &GetColumnNames() const;
    const std::vector<std::string> &GetVariationNames() const;

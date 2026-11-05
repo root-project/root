@@ -407,8 +407,12 @@ void ROOT::Internal::RDF::RTTreeDS::ProcessMT(ROOT::Detail::RDF::RLoopManager &l
                                                          suppressErrorsForMissingBranches)
               : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots, suppressErrorsForMissingBranches)};
 
-   tp->Process([&lm, &slotStack, &entryCount](TTreeReader &treeReader) {
-      lm.TTreeThreadTask(treeReader, slotStack, entryCount);
+   tp->Process([this, &lm, &slotStack, &entryCount](TTreeReader &treeReader) {
+      lm.TTreeThreadTask(
+         treeReader, slotStack, entryCount,
+         [this](std::size_t maxBulkSize, std::uint64_t &bulkBegin, std::uint64_t &rangeEnd, void *extraArg) {
+            return this->PickBulkSize(maxBulkSize, bulkBegin, rangeEnd, extraArg);
+         });
    });
 
    if (fGlobalEntryRange.has_value()) {
@@ -500,6 +504,37 @@ std::string ROOT::Internal::RDF::RTTreeDS::DescribeDataset()
    return ss.str();
 }
 
+namespace {
+
+using TypeInfoRef = std::reference_wrapper<const std::type_info>;
+struct TypeInfoRefHash {
+   std::size_t operator()(TypeInfoRef id) const { return id.get().hash_code(); }
+};
+
+struct TypeInfoRefEqualComp {
+   bool operator()(TypeInfoRef left, TypeInfoRef right) const { return left.get() == right.get(); }
+};
+
+std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+MakePrimaryColumnReader(std::string_view col, const std::type_info &ti, TTreeReader *treeReader,
+                        std::size_t maxBulkSize)
+{
+
+   if (ti == typeid(void))
+      return std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, col, maxBulkSize);
+   const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(ti);
+
+   if (auto &&[toConvert, innerTypeName, collType] = GetCollectionInfo(typeName); toConvert) {
+      const std::type_info &innerTypeInfo = ROOT::Internal::RDF::TypeName2TypeID(innerTypeName);
+      return std::make_unique<ROOT::Internal::RDF::RTreeGenericCollectionColumnReader>(
+         *treeReader, col, innerTypeName, innerTypeInfo, collType, maxBulkSize);
+   } else {
+      return std::make_unique<ROOT::Internal::RDF::RTreeGenericValueColumnReader>(*treeReader, col, typeName, ti,
+                                                                                  maxBulkSize);
+   }
+}
+} // namespace
+
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 ROOT::Internal::RDF::RTTreeDS::CreateColumnReader(unsigned int /*slot*/, std::string_view col, const std::type_info &ti,
                                                   TTreeReader *treeReader, std::size_t maxBulkSize)
@@ -514,19 +549,8 @@ ROOT::Internal::RDF::RTTreeDS::CreateColumnReader(unsigned int /*slot*/, std::st
    if (!treeReader)
       return nullptr;
 
-   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> colReader;
-
-   if (ti == typeid(void)) {
-      colReader = std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, col, maxBulkSize);
-   } else {
-      const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(ti);
-      if (auto &&[toConvert, innerTypeName, collType] = GetCollectionInfo(typeName); toConvert)
-         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(
-            *treeReader, col, innerTypeName, collType, maxBulkSize);
-      else
-         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(*treeReader, col, typeName,
-                                                                                          maxBulkSize);
-   }
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> colReader{
+      MakePrimaryColumnReader(col, ti, treeReader, maxBulkSize)};
 
    if (TDirectory *treeDir = treeReader->GetTree()->GetDirectory(); treeDir) {
       using Map_t = std::unordered_map<std::string, std::pair<std::string, unsigned int>>;
@@ -534,13 +558,47 @@ ROOT::Internal::RDF::RTTreeDS::CreateColumnReader(unsigned int /*slot*/, std::st
          std::string{"R_rdf_column_to_bitmask_mapping_"} + treeReader->GetTree()->GetName();
       if (Map_t const *columnMaskMap = treeDir->Get<Map_t>(bitmaskMapName.c_str()); columnMaskMap) {
          if (auto it = columnMaskMap->find(std::string(col)); it != columnMaskMap->end()) {
-            colReader = std::make_unique<RMaskedColumnReader>(*treeReader, std::move(colReader), it->second.first,
-                                                              it->second.second, maxBulkSize);
+            return std::make_unique<RMaskedColumnReader>(*treeReader, std::move(colReader), it->second.first,
+                                                         it->second.second, maxBulkSize);
          }
       }
    }
 
    return colReader;
+}
+
+ROOT::Internal::RDF::RMaskedEntryRange
+ROOT::Internal::RDF::RTTreeDS::CheckFilters(unsigned int, Long64_t bulkBeginEntry, std::size_t bulkSize)
+{
+   return ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, true, static_cast<std::uint64_t>(bulkBeginEntry)};
+   // if (ROOT::IsImplicitMTEnabled())
+   //    return ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, true, static_cast<std::uint64_t>(bulkBeginEntry)};
+
+   // assert(fTreeReader);
+   // auto *tree = fTreeReader->GetTree();
+   // assert(tree);
+   // auto *entryList = tree->GetEntryList();
+   // if (!entryList)
+   //    return ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, true, static_cast<std::uint64_t>(bulkBeginEntry)};
+
+   // Long64_t nEntriesInList = entryList->GetN();
+   // Long64_t bulkEnd = bulkBeginEntry + bulkSize;
+   // auto ret = ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, false, static_cast<std::uint64_t>(bulkBeginEntry)};
+   // for (Long64_t idx = 0; idx < nEntriesInList; idx++) {
+   //    Long64_t datasetEntryFromList = entryList->GetEntry(idx);
+   //    // If we found an entry within the bulk range, we enable its reading
+   //    if (datasetEntryFromList >= bulkBeginEntry && datasetEntryFromList < bulkEnd)
+   //       ret[datasetEntryFromList - bulkBeginEntry] = true;
+   // }
+   // return ret;
+}
+
+bool ROOT::Internal::RDF::RTTreeDS::CheckValidRead(unsigned int, std::uint64_t entry)
+{
+   // The first entry of each tree in a chain is read in GetEntryRanges, we avoid repeating it here
+   if (fTreeReader->GetCurrentEntry() != static_cast<Long64_t>(entry))
+      fTreeReader->SetEntry(entry);
+   return ValidRead(fTreeReader->GetEntryStatus());
 }
 
 bool ROOT::Internal::RDF::RTTreeDS::SetEntry(unsigned int, ULong64_t entry)
@@ -606,7 +664,40 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::Internal::RDF::RTTreeDS::GetT
    const ULong64_t rangeEnd =
       fGlobalEntryRange.has_value() ? std::min(thisTreeEnd, fGlobalEntryRange->second) : thisTreeEnd;
    return std::vector<std::pair<ULong64_t, ULong64_t>>{{rangeBegin, rangeEnd}};
+
+   // auto *entryList = chain.GetEntryList();
+   // if(!entryList)
+   //    return std::vector<std::pair<ULong64_t, ULong64_t>>{{rangeBegin, rangeEnd}};
+
+   // auto localEntry = entryList->GetEntry(rangeBegin);
+   // auto curEntry = rangeBegin;
+   // while (localEntry < static_cast<decltype(localEntry)>(rangeEnd) && localEntry != -1) {
+   //    ++curEntry;
+   //    localEntry = entryList->GetEntry(curEntry);
+   // }
+
+   // return std::vector<std::pair<ULong64_t, ULong64_t>>{{rangeBegin, rangeBegin + curEntry}};
 }
+
+namespace {
+
+bool IsReaderAtEndOfDataset(TTreeReader &treeReader, TTree &dataset,
+                            const std::optional<std::pair<ULong64_t, ULong64_t>> &globalEntryRange)
+{
+   if (treeReader.GetCurrentEntry() >= dataset.GetEntriesFast() - 1)
+      return true;
+
+   if (globalEntryRange.has_value() &&
+       (static_cast<ULong64_t>(treeReader.GetCurrentEntry()) >= globalEntryRange->first &&
+        static_cast<ULong64_t>(treeReader.GetCurrentEntry()) == globalEntryRange->second - 1))
+      return true;
+
+   if (auto *entryList = treeReader.GetEntryList(); entryList && treeReader.GetCurrentEntry() >= entryList->GetN() - 1)
+      return true;
+
+   return false;
+}
+} // namespace
 
 std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::Internal::RDF::RTTreeDS::GetEntryRanges()
 {
@@ -615,10 +706,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::Internal::RDF::RTTreeDS::GetE
    assert(treeOrChain && "Could not retrieve TTree from TTreeReader, something went wrong.");
 
    // End of dataset or entry range
-   if (fTreeReader->GetCurrentEntry() >= treeOrChain->GetEntriesFast() - 1 ||
-       (fGlobalEntryRange.has_value() &&
-        (static_cast<ULong64_t>(fTreeReader->GetCurrentEntry()) >= fGlobalEntryRange->first &&
-         static_cast<ULong64_t>(fTreeReader->GetCurrentEntry()) == fGlobalEntryRange->second - 1))) {
+   if (IsReaderAtEndOfDataset(*fTreeReader, *treeOrChain, fGlobalEntryRange)) {
       // Place the TTreeReader beyond the end of the dataset, so RunFinalChecks can work properly
       fTreeReader->Next();
       return {};
@@ -672,4 +760,126 @@ TTree *ROOT::Internal::RDF::RTTreeDS::GetTree()
 {
    assert(fTree);
    return fTree.get();
+}
+
+namespace {
+
+/// Calculate how many more entries we have in this tree, taking TEntryLists into account if present
+Long64_t RemainingEntriesInCurrentTree(TTreeReader &r, std::uint64_t &bulkBegin, std::uint64_t &rangeEnd)
+{
+   auto *entryList = r.GetEntryList();
+
+   if (!entryList) {
+      const auto treeOffset = r.GetTree()->GetChainOffset();
+      const auto localEntry = bulkBegin - treeOffset;
+      // auto it = r.GetTree()->GetTree()->GetClusterIterator(localEntry);
+      // const auto clusterEnd = (it.Next(), it.Next()); // calling it twice to get the beginning of the _next_ cluster
+      const auto curTreeEntries = r.GetTree()->GetTree()->GetEntries();
+      return curTreeEntries - localEntry;
+   }
+
+   // In the MT case, TTreeProcessorMT creates one thread-local TTreeReader per task, which has already taken into
+   // account the TEntryList boundaries. bulkBegin and rangeEnd will be "localised" to the valid range of this
+   // TTreeReader within the boundaries of the associated TEntryList
+   if (ROOT::IsImplicitMTEnabled())
+      return rangeEnd - bulkBegin;
+
+   const Long64_t nEntriesInList = entryList->GetN();
+   const Long64_t curTreeEntries = r.GetTree()->GetTree()->GetEntries();
+   Long64_t entryListEntriesInTree = 0u;
+   Long64_t newBulkBegin = -1;
+   for (Long64_t idx = 0; idx < nEntriesInList; idx++) {
+      Long64_t datasetEntryFromList = entryList->GetEntry(idx);
+      if (datasetEntryFromList >= static_cast<Long64_t>(bulkBegin) && datasetEntryFromList < curTreeEntries) {
+         if (newBulkBegin == -1)
+            newBulkBegin = idx;
+         entryListEntriesInTree++;
+      }
+   }
+   bulkBegin = newBulkBegin;
+   rangeEnd = bulkBegin + entryListEntriesInTree;
+   return entryListEntriesInTree;
+
+   // // Otherwise we have a TEntryList and we must:
+   // // 1. convert bulkBegin (i.e. the index in the entry list) to the actual local entry number
+   // auto localEntry = entryList->GetEntry(bulkBegin);
+   // // 2. find end of cluster according to TTree
+   // // auto it = r.GetTree()->GetTree()->GetClusterIterator(localEntry);
+   // // const auto clusterEnd = (it.Next(), it.Next()); // calling it twice to get the beginning of the _next_ cluster
+   // // 3. find end of current tree
+   // const auto curTreeEntries = r.GetTree()->GetTree()->GetEntries();
+   // // 3. walk TEntryList to find out how many of its entries are within that cluster boundary
+   // Long64_t entryListEntriesInTree = 0u;
+   // while (localEntry < curTreeEntries && localEntry != -1) {
+   //    ++entryListEntriesInTree;
+   //    ++bulkBegin;
+   //    localEntry = entryList->GetEntry(bulkBegin);
+   // }
+
+   // return entryListEntriesInTree;
+}
+
+/// Calculate how many more entries are available in each friend.
+/// Return the minimum across all friends.
+Long64_t RemainingEntriesInFriends(TTreeReader &r, std::uint64_t bulkBegin)
+{
+   Long64_t minEntriesInFriends = TTree::kMaxEntries;
+
+   auto *t = r.GetTree();
+   auto *friends = t->GetListOfFriends();
+   if (!friends || friends->GetSize() == 0)
+      return minEntriesInFriends;
+
+   for (auto *friendElement : *friends) {
+      auto *fr = static_cast<TFriendElement *>(friendElement)->GetTree();
+      assert(fr);
+      // We do not consider friends with an index
+      if (fr->GetTreeIndex())
+         continue;
+      const Long64_t treeOffset = fr->GetChainOffset();
+      const Long64_t localEntry = bulkBegin - treeOffset;
+      const Long64_t entriesInSubTree = fr->GetTree()->GetEntries();
+      const Long64_t remainingEntriesInSubTree = entriesInSubTree - localEntry;
+      minEntriesInFriends = std::min(minEntriesInFriends, remainingEntriesInSubTree);
+   }
+
+   return minEntriesInFriends;
+}
+
+/// Select a reasonable bulk size depending on the state of the TTree event loop
+/// The main heuristic is that we try to return a number that's as large as possible while staying within the same
+/// TTree cluster (the TTreeCache is tree-wide (not per-branch) and we don't want it to switch back and forth as we
+/// read entries for each branch across cluster boundaries).
+std::size_t
+PickBulkSizeForTree(TTreeReader &r, std::uint64_t &bulkBegin, std::uint64_t &rangeEnd, std::size_t maxEventsPerBulk)
+{
+   const Long64_t remainingEntriesInCluster = RemainingEntriesInCurrentTree(r, bulkBegin, rangeEnd);
+   // we don't want to cross into a new friend tree while reading a bulk: downstream logic cannot handle it
+   const Long64_t minRemainingEntriesInFriends = RemainingEntriesInFriends(r, bulkBegin);
+   const Long64_t remainingEntriesInRange = rangeEnd - bulkBegin;
+
+   auto bulkSize = std::min({static_cast<Long64_t>(maxEventsPerBulk), remainingEntriesInCluster,
+                             minRemainingEntriesInFriends, remainingEntriesInRange});
+
+   return bulkSize;
+}
+} // namespace
+
+std::size_t ROOT::Internal::RDF::RTTreeDS::PickBulkSize(std::size_t maxBulkSize, std::uint64_t &bulkBegin,
+                                                        std::uint64_t &rangeEnd, void *extraArg)
+{
+   TTreeReader *treeReader{nullptr};
+
+   if (!ROOT::IsImplicitMTEnabled()) {
+      // With IMT disabled, the TTreeReader is owned by RTTreeDS
+      assert(!extraArg);
+      assert(fTreeReader);
+      treeReader = fTreeReader.get();
+   } else {
+      // With IMT enabled, we expect a TTreeReader coming from the TTreeProcessorMT
+      assert(extraArg);
+      treeReader = reinterpret_cast<TTreeReader *>(extraArg);
+   }
+
+   return PickBulkSizeForTree(*treeReader, bulkBegin, rangeEnd, maxBulkSize);
 }

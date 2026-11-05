@@ -265,7 +265,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree,
    // TObject branch, see https://bit.ly/2EjLMId ).
    // A user-provided basket size value takes precedence.
    const auto bufSize = (basketSize > 0) ? basketSize : (inputBranch ? inputBranch->GetBasketSize() : 32000);
-   const auto splitLevel = inputBranch ? inputBranch->GetSplitLevel() : 99;
+   auto splitLevel = inputBranch ? inputBranch->GetSplitLevel() : 99;
 
    auto *dictionary = TDictionary::GetDictionary(*branchData->fInputTypeID);
    if (dynamic_cast<TDataType *>(dictionary)) {
@@ -300,10 +300,22 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree,
             ROOT::Internal::TreeUtils::CallBranchImp(outputTree, branchData->fOutputBranchName.c_str(), classPtr,
                                                      inputBranch->GetAddress(), bufSize, splitLevel);
       // General case, with valid address
-      else if (valueAddress)
+      else if (valueAddress) {
+         if (classPtr->HasCustomStreamerMember() && !classPtr->CanSplit()) {
+            // The input branch type has a custom streamer and cannot be split. If the splitLevel is zero, it could have
+            // been automatically reset by the call to TTree::BronchExec done by the user when writing the TTree. A
+            // specific line of that function changes any splitLevel greater than zero to zero (with a warning, that is
+            // unfortunately silenced if the splitLevel has the default value of 99). We reset the splitLevel back to
+            // its default value of 99, hoping that this matches the way the branch was originally written. An example
+            // situation where this may happen is:
+            // TVector3 vec;
+            // tree->Branch("v", &vec); // default basket size and split level
+            splitLevel = 99;
+         }
          branchData->fOutputBranch = ROOT::Internal::TreeUtils::CallBranchImpRef(
             outputTree, branchData->fOutputBranchName.c_str(), classPtr, TDataType::GetType(*branchData->fInputTypeID),
             valueAddress, bufSize, splitLevel);
+      }
       // No value was passed, we're just creating a hollow branch to populate the dataset schema
       else
          branchData->fOutputBranch =
@@ -465,12 +477,13 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::InitTask(TTreeReader *, un
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::Exec(unsigned int, const std::vector<void *> &values)
 {
-   if (!fBranchAddressesNeedReset) {
-      UpdateCArraysPtrs(values);
-   } else {
-      SetBranches(values);
-      fBranchAddressesNeedReset = false;
-   }
+   SetBranches(values);
+   // if (!fBranchAddressesNeedReset) {
+   //    UpdateCArraysPtrs(values);
+   // } else {
+   //    SetBranches(values);
+   //    fBranchAddressesNeedReset = false;
+   // }
 
    fOutputTree->Fill();
 }
@@ -694,12 +707,13 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::FinalizeTask(unsigned in
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::Exec(unsigned int slot, const std::vector<void *> &values)
 {
-   if (fBranchAddressesNeedReset[slot] == 0) {
-      UpdateCArraysPtrs(slot, values);
-   } else {
-      SetBranches(slot, values);
-      fBranchAddressesNeedReset[slot] = 0;
-   }
+   SetBranches(slot, values);
+   // if (fBranchAddressesNeedReset[slot] == 0) {
+   //    UpdateCArraysPtrs(slot, values);
+   // } else {
+   //    SetBranches(slot, values);
+   //    fBranchAddressesNeedReset[slot] = 0;
+   // }
    fOutputTrees[slot]->Fill();
    auto entries = fOutputTrees[slot]->GetEntries();
    auto autoFlush = fOutputTrees[slot]->GetAutoFlush();
@@ -1226,9 +1240,11 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::InitTask(TTreeReader *, 
 /// Connect all output fields to the values pointed to by `values`, fill the output dataset,
 /// call the Fill of the output tree, and clear the mask bits that show whether a variation was reached.
 void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(
-   unsigned int /*slot*/, const std::vector<void *> &values,
+   unsigned int /*slot*/, const std::vector<void *> &values, std::size_t entryInBulk,
    const std::vector<ROOT::Internal::RDF::RMaskedEntryRange> &filterPassed)
 {
+   // Values corresponds to values for all input readers at a specific bulk idx
+
    // Rebind branch pointers to RDF values
    assert(fBranchData.size() == values.size());
    for (std::size_t i = 0; i < values.size(); i++) {
@@ -1238,14 +1254,14 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(
          SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
       } else {
          // Nominal will always be written, systematics only if needed
-         if (variationIndex == 0 || filterPassed[variationIndex][0]) {
+         if (variationIndex == 0 || filterPassed[variationIndex][entryInBulk]) {
             const bool fundamentalType = fBranchData[i].WriteValueIfFundamental(values[i]);
             if (!fundamentalType) {
                SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
             }
          }
 
-         if (filterPassed[variationIndex][0]) {
+         if (filterPassed[variationIndex][entryInBulk]) {
             fOutputHandle->SetMaskBit(variationIndex);
          }
       }

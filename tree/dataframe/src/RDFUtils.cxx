@@ -727,3 +727,19 @@ std::vector<ROOT::RDF::Experimental::RSample> ROOT::Internal::RDF::MoveOutSample
 {
    return std::move(spec.fSamples);
 }
+
+ROOT::Internal::RDF::RCallback::RCallback(std::uint64_t everyNEntries, std::function<void(unsigned int)> &&fun,
+                                          unsigned int nSlots)
+   : fFun(std::move(fun)), fEveryNEntries(everyNEntries), fCounterAtSlot(nSlots, 0ull)
+{
+}
+
+void ROOT::Internal::RDF::RCallback::operator()(unsigned int slot)
+{
+   auto &c = fCounterAtSlot[slot];
+   ++c;
+   if (c == fEveryNEntries) {
+      c = 0ull;
+      fFun(slot);
+   }
+}

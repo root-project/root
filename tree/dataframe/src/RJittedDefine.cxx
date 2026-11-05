@@ -22,7 +22,7 @@ void RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
    fConcreteDefine->InitSlot(r, slot);
 }
 
-void *RJittedDefine::GetValuePtr(unsigned int slot)
+std::pair<void *, std::size_t> RJittedDefine::GetValuePtr(unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);
    return fConcreteDefine->GetValuePtr(slot);

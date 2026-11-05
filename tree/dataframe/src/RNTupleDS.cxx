@@ -46,6 +46,8 @@
 #include <ROOT/TThreadExecutor.hxx>
 #endif
 
+#include <iostream>
+
 // clang-format off
 /**
 * \class ROOT::RDF::RNTupleDS
@@ -75,6 +77,10 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    /// The entry offset stores the logical entry number (sum of all previous physical entries) when a file of the
    /// corresponding data source was opened.
    Long64_t fEntryOffset = 0;
+   std::unique_ptr<RFieldBase::RBulkValues> fBulk;
+   std::size_t fValueSize{};
+   void *fReadBulkBegin{nullptr};
+   std::uint64_t fLastBulkBeginIdx{std::numeric_limits<std::uint64_t>::max()};
 
 public:
    RNTupleColumnReader(RNTupleDS *ds, RFieldBase *protoField) : fDataSource(ds), fProtoField(protoField) {}
@@ -115,33 +121,46 @@ public:
       }
       fField = std::move(fieldZero.ReleaseSubfields()[0]);
 
-      if (fValuePtr) {
-         // When the reader reconnects to a new file, the fValuePtr is already set
-         fValue = std::make_unique<RFieldBase::RValue>(fField->BindValue(fValuePtr));
-         fValuePtr = nullptr;
-      } else {
-         // For the first file, create a new object for this field (reader)
-         fValue = std::make_unique<RFieldBase::RValue>(fField->CreateValue());
-      }
+      fBulk = std::make_unique<ROOT::RFieldBase::RBulkValues>(fField->CreateBulk());
+
+      // if (fValuePtr) {
+      //    // When the reader reconnects to a new file, the fValuePtr is already set
+      //    fValue = std::make_unique<RFieldBase::RValue>(fField->BindValue(fValuePtr));
+      //    fValuePtr = nullptr;
+      // } else {
+      //    // For the first file, create a new object for this field (reader)
+      //    fValue = std::make_unique<RFieldBase::RValue>(fField->CreateValue());
+      // }
    }
 
-   void Disconnect(bool keepValue)
+   void Disconnect()
    {
-      if (fValue && keepValue) {
-         fValuePtr = fValue->GetPtr<void>();
-      }
-      fValue = nullptr;
-      fField = nullptr;
+      // if (fValue && keepValue) {
+      //    fValuePtr = fValue->GetPtr<void>();
+      // }
+      // fValue = nullptr;
+      fReadBulkBegin = nullptr;
+      fLastBulkBeginIdx = std::numeric_limits<std::uint64_t>::max();
+      fValueSize = -1;
+      fBulk.reset();
+      fField.reset();
    }
 
-   void *GetImpl(std::size_t /*idx*/) final { return fValue->GetPtr<void>().get(); }
+   void *GetImpl(std::size_t entryInBulk) final
+   {
+      return reinterpret_cast<std::byte *>(fReadBulkBegin) + entryInBulk * fValueSize;
+   }
 
    void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      auto bulkSize = mask.GetBulkSize();
-      for (decltype(bulkSize) i = 0; i < bulkSize; i++)
-         if (mask[i])
-            fValue->Read(mask.GetFirstEntry() + i - fEntryOffset);
+      if (mask.GetFirstEntry() == fLastBulkBeginIdx)
+         return;
+      auto bulkBeginAndValueSize = ROOT::Internal::ReadBulkAndValueSize(*fBulk, mask.GetFirstEntry() - fEntryOffset,
+                                                                        mask.GetMask().data(), mask.GetBulkSize());
+      fReadBulkBegin = bulkBeginAndValueSize.first;
+      fValueSize = bulkBeginAndValueSize.second;
+
+      fLastBulkBeginIdx = mask.GetFirstEntry();
    }
 };
 } // namespace ROOT::Internal::RDF
@@ -558,7 +577,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
    // InitSlot is called for every returned range, thus rewiring the column readers takes place in
    // InitSlot and FinalizeSlot.
    for (auto r : fActiveColumnReaders[0]) {
-      r->Disconnect(true /* keepValue */);
+      r->Disconnect();
    }
 
    // If we have fewer files than slots and we run multiple event loops, we can reuse fCurrentRanges and don't need
@@ -700,7 +719,7 @@ void ROOT::RDF::RNTupleDS::FinalizeSlot(unsigned int slot)
       return;
 
    for (auto r : fActiveColumnReaders[slot]) {
-      r->Disconnect(true /* keepValue */);
+      r->Disconnect();
    }
 }
 
@@ -750,7 +769,7 @@ void ROOT::RDF::RNTupleDS::Finalize()
 {
    for (unsigned int i = 0; i < fNSlots; ++i) {
       for (auto r : fActiveColumnReaders[i]) {
-         r->Disconnect(false /* keepValue */);
+         r->Disconnect();
       }
    }
    {
@@ -963,7 +982,11 @@ void ROOT::RDF::RNTupleDS::ParallelForBody(std::shared_ptr<ROOT::Internal::RPage
    // operations e.g. connecting the column readers as well as populating sample information.
    InsertActiveEntryRange(slot, fileName, std::move(localPageSource), beginEntry, endEntry, columnReaderOffset);
 
-   lm.RNTupleThreadTask({beginEntry + columnReaderOffset, endEntry + columnReaderOffset}, slot, columnReaderOffset);
+   lm.RNTupleThreadTask(
+      {beginEntry + columnReaderOffset, endEntry + columnReaderOffset}, slot, columnReaderOffset,
+      [this](std::size_t maxBulkSize, std::uint64_t bulkBeginEntry, std::uint64_t rangeEndEntry, void *extraArg) {
+         return this->PickBulkSize(maxBulkSize, bulkBeginEntry, rangeEndEntry, extraArg);
+      });
 
    // Clear the active range after having processed it, to avoid keeping around the page source for longer than intended
    fActiveRangesPerSlot.at(slot * ROOT::Internal::RDF::CacheLineStep<REntryRangeDS>()) = {};

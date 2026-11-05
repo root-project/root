@@ -26,12 +26,32 @@
 
 namespace ROOT::Internal::RDF {
 class R__CLING_PTRCHECK(off) RLazyDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
-   ROOT::Internal::RDF::TPointerHolder *fPtr;
-   void *GetImpl(std::size_t) final { return fPtr->GetPointer(); }
-   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final {}
+   unsigned int fSlot;
+   std::function<bool(unsigned int, ULong64_t)> fSetEntryFn;
+   std::byte **fCachedArrayBegin;
+   std::size_t fValueSize;
+   std::uint64_t fLastEntry;
+
+   void *GetImpl(std::size_t entryInBulk) final { return *fCachedArrayBegin + entryInBulk * fValueSize; }
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
+   {
+      if (fLastEntry == mask.GetFirstEntry())
+         return;
+
+      fLastEntry = mask.GetFirstEntry();
+      fSetEntryFn(fSlot, fLastEntry);
+   }
 
 public:
-   RLazyDSColumnReader(ROOT::Internal::RDF::TPointerHolder *ptr) : fPtr(ptr) {}
+   RLazyDSColumnReader(unsigned int slot, std::function<bool(unsigned int, ULong64_t)> fn, std::byte **arrayBeginPtr,
+                       std::size_t valueSize)
+      : fSlot(slot),
+        fSetEntryFn(fn),
+        fCachedArrayBegin(arrayBeginPtr),
+        fValueSize(valueSize),
+        fLastEntry(std::numeric_limits<std::uint64_t>::max())
+   {
+   }
 };
 } // namespace ROOT::Internal::RDF
 
@@ -53,8 +73,10 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    using PointerHolderPtrs_t = std::vector<ROOT::Internal::RDF::TPointerHolder *>;
 
    std::tuple<RResultPtr<std::vector<ColumnTypes>>...> fColumns;
+   ROOT::RVec<ROOT::RVec<std::byte *>> fBulkValuesPerColumnPerSlot; // outer is slot, inner is column
    const std::vector<std::string> fColNames;
    const std::map<std::string, std::string> fColTypesMap;
+   const std::map<std::string, std::size_t> fColSizeMap;
    // The role of the fPointerHoldersModels is to be initialized with the pack
    // of arguments in the constrcutor signature at construction time
    // Once the number of slots is known, the fPointerHolders are initialized
@@ -73,9 +95,7 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    template <std::size_t... S>
    void SetEntryHelper(unsigned int slot, ULong64_t entry, std::index_sequence<S...>)
    {
-      std::initializer_list<int> expander{
-         (*static_cast<ColumnTypes *>(fPointerHolders[S][slot]->GetPointer()) = (*std::get<S>(fColumns))[entry], 0)...};
-      (void)expander; // avoid unused variable warnings
+      ((fBulkValuesPerColumnPerSlot[slot][S] = reinterpret_cast<std::byte *>(&(*std::get<S>(fColumns))[entry])), ...);
    }
 
    template <std::size_t... S>
@@ -107,6 +127,7 @@ public:
       : fColumns(std::tuple<RResultPtr<std::vector<ColumnTypes>>...>(colsNameVals.second...)),
         fColNames({colsNameVals.first...}),
         fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
+        fColSizeMap({{colsNameVals.first, sizeof(ColumnTypes)}...}),
         fPointerHoldersModels({new ROOT::Internal::RDF::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...})
    {
    }
@@ -156,6 +177,10 @@ public:
    {
       fNSlots = nSlots;
       const auto nCols = fColNames.size();
+      fBulkValuesPerColumnPerSlot.resize(nSlots);
+      for (auto &v : fBulkValuesPerColumnPerSlot)
+         v.resize(nCols);
+
       fPointerHolders.resize(nCols); // now we need to fill it with the slots, all of the same type
       auto colIndex = 0U;
       for (auto &&ptrHolderv : fPointerHolders) {
@@ -210,7 +235,10 @@ public:
 
       if (auto colNameIt = std::find(fColNames.begin(), fColNames.end(), colName); colNameIt != fColNames.end()) {
          const auto index = std::distance(fColNames.begin(), colNameIt);
-         return std::make_unique<ROOT::Internal::RDF::RLazyDSColumnReader>(fPointerHolders[index][slot]);
+         const auto valueSize = fColSizeMap.at(*colNameIt);
+         return std::make_unique<ROOT::Internal::RDF::RLazyDSColumnReader>(
+            slot, [this](unsigned int slotInner, ULong64_t entry) { return this->SetEntry(slotInner, entry); },
+            &fBulkValuesPerColumnPerSlot[slot][index], valueSize);
       }
 
       throw std::runtime_error("Could not find column name \"" + std::string(colName) +

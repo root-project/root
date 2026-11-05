@@ -22,7 +22,8 @@ void RJittedVariation::InitSlot(TTreeReader *r, unsigned int slot)
    fConcreteVariation->InitSlot(r, slot);
 }
 
-void *RJittedVariation::GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation)
+std::pair<void *, std::size_t>
+RJittedVariation::GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation)
 {
    assert(fConcreteVariation != nullptr);
    return fConcreteVariation->GetValuePtr(slot, column, variation);

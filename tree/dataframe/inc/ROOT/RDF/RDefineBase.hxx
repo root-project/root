@@ -41,7 +41,6 @@ class RDefineBase {
 protected:
    const std::string fName; ///< The name of the custom column
    const std::string fType; ///< The type of the custom column as a text string
-   std::vector<Long64_t> fLastCheckedEntry; /// Starting entry of the last bulk processed, per slot
    /// Which entries in the current bulk are valid, per slot
    std::vector<ROOT::Internal::RDF::RMaskedEntryRange> fMaskPerSlot;
    RDFInternal::RColumnRegister fColRegister;
@@ -60,8 +59,10 @@ public:
    RDefineBase &operator=(RDefineBase &&) = delete;
    virtual ~RDefineBase();
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   /// Return the (type-erased) address of the Define'd value for the given processing slot.
-   virtual void *GetValuePtr(unsigned int slot) = 0;
+   /// Return the (type-erased) address of the beginning of the bulk of defined values, as well as the size of each
+   /// value. The pointer can be safely cast back to a T*, and using the size readers can move to the correct location
+   /// of the type-erased array.
+   virtual std::pair<void *, std::size_t> GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    std::string GetName() const;
    std::string GetTypeName() const;

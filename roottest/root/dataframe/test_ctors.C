@@ -3,8 +3,14 @@
 #include "TTree.h"
 #include "ROOT/RDataFrame.hxx"
 #include "Sentinel.h"
+
+unsigned int Sentinel::fCtorCalls{};
+unsigned int Sentinel::fDtorCalls{};
+unsigned int Sentinel::fCopyCtorCalls{};
+
 // test objects read from tree are constructed once per entry
-void FillTree(const char* filename, const char* treeName) {
+void FillTree(const char *filename, const char *treeName)
+{
    TFile f(filename, "RECREATE");
    TTree t(treeName, treeName);
    Sentinel o;
@@ -17,25 +23,28 @@ void FillTree(const char* filename, const char* treeName) {
    f.Close();
 }
 
-void test_ctors() {
+int test_ctors()
+{
    // Prepare an input tree to run on
    auto fileName = "test_ctors.root";
    auto treeName = "myTree";
-   std::cout << "filling tree...\n";
-   FillTree(fileName,treeName);
-   std::cout << "done\n";
+   FillTree(fileName, treeName);
 
-   // Filter, Define, Count and Foreach. We want one printout
-   std::cout << "building dataframe...\n";
-   ROOT::RDataFrame d(treeName, fileName, {"obj"});
-   std::cout << "done\nbuilding chain...\n";
-   auto dd = d.Filter([](const Sentinel& o) { std::cout << "filter\n"; return o.get() > 0; })
-              .Define("ox", [](const Sentinel& o) { std::cout << "addbranch\n"; return o.get(); });
+   ROOT::RDataFrame d(treeName, fileName);
+   auto dd = d.Filter([](const Sentinel &o) { return o.get() > 0; }, {"obj"})
+                .Define("ox", [](const Sentinel &o) { return o.get(); }, {"obj"});
    auto r = dd.Count();
-   std::cout << "done\n";
-   std::cout << "running chain...\n";
-   dd.Foreach([](const Sentinel& o) { std::cout << "foreach: " << o.get() << std::endl; });
+   dd.Foreach([](const Sentinel &) {}, {"obj"});
    auto c = *r;
-   std::cout << "done\n";
-   std::cout << "count: " << c << std::endl;
+
+   auto ctor_calls = Sentinel::GetCtorCalls();
+   auto copy_ctor_calls = Sentinel::GetCopyCtorCalls();
+   auto dtor_calls = Sentinel::GetDtorCalls();
+
+   // Exactly 3 Sentinel objects should have been constructed/destroyed: one in the FillTree function and one per each
+   // of the two entries read by RDataFrame.
+   if (c == 2 && ctor_calls == 3 && dtor_calls == 3 && copy_ctor_calls == 0)
+      return 0;
+
+   return 1;
 }

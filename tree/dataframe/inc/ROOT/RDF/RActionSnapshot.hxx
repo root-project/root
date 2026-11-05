@@ -195,27 +195,29 @@ public:
    {
       if constexpr (std::is_same_v<Helper, SnapshotHelperWithVariations>) {
          // check if entry passes all filters
-         std::vector<ROOT::Internal::RDF::RMaskedEntryRange> filterPassed(fPrevNodes.size(), 1ul);
+         std::vector<ROOT::Internal::RDF::RMaskedEntryRange> filterPassed;
+         filterPassed.reserve(fPrevNodes.size());
          for (unsigned int variation = 0; variation < fPrevNodes.size(); ++variation) {
-            filterPassed[variation] = fPrevNodes[variation]->CheckFilters(slot, bulkBeginEntry, bulkSize);
+            filterPassed.push_back(fPrevNodes[variation]->CheckFilters(slot, bulkBeginEntry, bulkSize));
          }
 
          // Currently, every event where any of nominal or variations pass gets written to the output.
          // This logic could be extended for different use cases if the need arises.
-         if (std::any_of(filterPassed.begin(), filterPassed.end(),
-                         [](const ROOT::Internal::RDF::RMaskedEntryRange &val) { return val[0]; })) {
-            // TODO: Don't allocate
-            std::vector<void *> untypedValues;
-            auto nReaders = fValues[slot].size();
-            untypedValues.reserve(nReaders);
-            std::for_each(fValues[slot].begin(), fValues[slot].end(), [bulkBeginEntry, bulkSize](auto *v) {
-               v->Load(
-                  ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, true, static_cast<std::uint64_t>(bulkBeginEntry)});
-            });
-            for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
-               untypedValues.push_back(GetValue(slot, readerIdx, /*idx=*/0u));
+         std::for_each(fValues[slot].begin(), fValues[slot].end(), [&bulkBeginEntry, &bulkSize](auto *v) {
+            v->Load(ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, true, static_cast<std::uint64_t>(bulkBeginEntry)});
+         });
+         for (decltype(bulkSize) i = 0; i < bulkSize; i++) {
+            if (std::any_of(filterPassed.begin(), filterPassed.end(),
+                            [&](const ROOT::Internal::RDF::RMaskedEntryRange &val) { return val[i]; })) {
+               // TODO: Don't allocate
+               std::vector<void *> untypedValues;
+               auto nReaders = fValues[slot].size();
+               untypedValues.reserve(nReaders);
+               for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
+                  untypedValues.push_back(GetValue(slot, readerIdx, /*idx=*/i));
 
-            fHelper.Exec(slot, untypedValues, filterPassed);
+               fHelper.Exec(slot, untypedValues, /*entryInBulk*/ i, filterPassed);
+            }
          }
       } else {
          const auto mask = fPrevNodes.front()->CheckFilters(slot, bulkBeginEntry, bulkSize);
@@ -223,6 +225,8 @@ public:
          for (decltype(bulkSize) i = 0; i < bulkSize; i++) {
             if (mask[i])
                CallExec(slot, i);
+            for (auto &callback : fCallbacksEveryNEntries)
+               callback(slot);
          }
       }
    }

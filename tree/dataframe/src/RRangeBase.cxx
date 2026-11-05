@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RRangeBase.hxx"
+#include <ROOT/RDF/RLoopManager.hxx>
 
 using ROOT::Detail::RDF::RRangeBase;
 
@@ -19,7 +20,9 @@ RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int s
      fStop(stop),
      fStride(stride),
      fNSlots(nSlots),
-     fCachedResults(nSlots * ROOT::Internal::RDF::CacheLineStep<ROOT::RVec<bool>>())
+     fMaskPerSlot(fNSlots * RDFInternal::CacheLineStep<ROOT::Internal::RDF::RMaskedEntryRange>(),
+                  ROOT::Internal::RDF::RMaskedEntryRange{implPtr->GetCurrentBulkSize(), false,
+                                                         std::numeric_limits<std::uint64_t>::max()})
 {
 }
 
@@ -27,6 +30,9 @@ void RRangeBase::InitNode()
 {
    fNProcessedEntries = 0;
    fHasStopped = false;
+   for (unsigned slot = 0; slot < fNSlots; slot++)
+      fMaskPerSlot[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()].SetFirstEntry(
+         std::numeric_limits<std::uint64_t>::max());
 }
 
 // outlined to pin virtual table

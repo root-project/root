@@ -10,7 +10,10 @@ const auto lastEvt = 20;
 const auto sumRef = 27.6706;
 const auto epsilon = 0.001;
 const auto refNBytes = 166;
-const auto refNBytesRDF = 332;
+// RDataFrame reads more than TTree in this particular case: the input branch is of a fundamental type (double), so
+// RDataFrame will create an appropriate bulk column reader. For TTree leaves of fundamental types, the bulk API of
+// TBranch will read the entire basket at every call, even if in this case we may actually use less.
+const auto refNBytesRDF = 498;
 
 class RBytesReadRAII
 {
@@ -134,8 +137,8 @@ int WithRDF()
    chain.GetTree()->PrintCacheStats();
 
    if (refNBytesRDF != rbRAII.GetBytesRead()) {
-      std::cout << "With RDF: the bytes read (" << rbRAII.GetBytesRead()
-                << ") are different from the reference (" << refNBytes << ")\n";
+      std::cout << "With RDF: the bytes read (" << rbRAII.GetBytesRead() << ") are different from the reference ("
+                << refNBytesRDF << ")\n";
       ret +=1;
    }
 

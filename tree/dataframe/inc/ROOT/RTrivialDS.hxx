@@ -17,11 +17,41 @@
 namespace ROOT::Internal::RDF {
 class R__CLING_PTRCHECK(off) RTrivialDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    ULong64_t *fValuePtr;
-   void *GetImpl(std::size_t) final { return fValuePtr; }
-   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final {}
+   ROOT::RVec<ULong64_t> fCachedValues;
+   std::uint64_t fLastEntry{std::numeric_limits<std::uint64_t>::max()};
+   bool fSkipEvenEntries;
+   ROOT::RVec<bool> fIsCachedValueValidAtIdx;
+   void *GetImpl(std::size_t entryInBulk) final
+   {
+      if (fIsCachedValueValidAtIdx[entryInBulk])
+         return &fCachedValues[entryInBulk];
+
+      return nullptr;
+   }
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
+   {
+      if (fLastEntry == mask.GetFirstEntry())
+         return;
+
+      if (fSkipEvenEntries && mask.GetBulkSize() > 1)
+         throw std::runtime_error(
+            "Execution of RTrivialDS skipping even entries with bulk size greater than one is not supported.");
+
+      fLastEntry = mask.GetFirstEntry();
+      fCachedValues = ROOT::RVec<ULong64_t>(mask.GetBulkSize());
+      fIsCachedValueValidAtIdx = ROOT::RVec<bool>(mask.GetBulkSize());
+      for (std::uint64_t entry = fLastEntry; entry < fLastEntry + static_cast<std::uint64_t>(mask.GetBulkSize());
+           entry++) {
+         fIsCachedValueValidAtIdx[entry - fLastEntry] = (fSkipEvenEntries && entry % 2 == 0) ? false : true;
+      }
+      std::iota(fCachedValues.begin(), fCachedValues.end(), *fValuePtr);
+   }
 
 public:
-   RTrivialDSColumnReader(ULong64_t *valuePtr) : fValuePtr(valuePtr) {}
+   RTrivialDSColumnReader(ULong64_t *valuePtr, bool skipEvenEntries)
+      : fValuePtr(valuePtr), fSkipEvenEntries(skipEvenEntries)
+   {
+   }
 };
 } // namespace ROOT::Internal::RDF
 
@@ -80,8 +110,8 @@ RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame(ULong64_t size, bool sk
 /// \brief Make a RDF wrapping a RTrivialDS with infinite entries, for demo purposes.
 RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame();
 
-} // ns RDF
+} // namespace RDF
 
-} // ns ROOT
+} // namespace ROOT
 
 #endif

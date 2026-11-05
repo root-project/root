@@ -18,6 +18,10 @@
 #include <TFile.h>
 #include <TTree.h>
 
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
+#include <TChain.h>
+
 using namespace ROOT;
 using namespace ROOT::RDF::Experimental;
 
@@ -95,7 +99,8 @@ std::vector<RTestSample> data{
 // The helper class is also responsible for the creation and the deletion of the root specTestFiles
 class RDatasetSpecTest : public ::testing::TestWithParam<bool> {
 protected:
-   RDatasetSpecTest() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
+   // RDatasetSpecTest() : NSLOTS(GetParam() ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
+   RDatasetSpecTest() : NSLOTS(GetParam() ? 2 : 1u)
    {
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
@@ -475,6 +480,40 @@ TEST_P(RDatasetSpecTest, FriendsShorter)
                               "main tree. Make sure all trees of the dataset have the same number of entries.";
       EXPECT_STREQ(err.what(), msg.c_str());
    }
+
+   // The following lines reproduce a problem in current ROOT master, to be added as a separate test
+   // TChain main{data[1].trees[0][0].tree.c_str()};
+   // for (const auto &fn: data[1].fileGlobs){
+   //    std::cout << fn << "\n";
+   //    main.Add(fn.c_str());
+   // }
+
+   // const auto &d = data[0];
+   // std::vector<std::string> treeNames{};
+   // std::vector<std::string> fileGlobs{};
+   // for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+   //    treeNames.emplace_back(d.trees[i][0].tree);
+   //    fileGlobs.emplace_back(d.fileGlobs[i]);
+   // }
+   // TChain fr{("friend_glob_" + d.name).c_str()};
+   // for(decltype(fileGlobs.size()) i = 0; i < fileGlobs.size(); i++){
+   //    std::cout << fileGlobs[i] + "?#" + treeNames[i] << "\n";
+   //    fr.Add((fileGlobs[i] + "?#" + treeNames[i]).c_str());
+   // }
+   // main.AddFriend(&fr);
+   // std::cout << "main " << main.GetEntries() << ", friend " << fr.GetEntries() << "\n";
+
+   // TTreeReader r{&main};
+   // auto *tree = r.GetTree();
+   // auto *br = tree->GetBranch(("friend_glob_" + d.name + ".x").c_str());
+   // TTreeReaderValue<unsigned long long> rv{r, ("friend_glob_" + d.name + ".x").c_str()};
+   // // r.SetEntriesRange(0, 7);
+   // // r.SetEntry(0);
+   // // r.SetEntry(0);
+   // // r.SetEntry(4);
+   // while (r.Next()){
+   //    std::cout << r.GetEntryStatus() << "\n";
+   // }
 }
 
 TEST_P(RDatasetSpecTest, Histo1D)

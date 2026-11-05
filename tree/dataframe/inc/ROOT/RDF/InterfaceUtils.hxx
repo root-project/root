@@ -680,6 +680,7 @@ void CallBuildAction(const ColumnNames_t &cols, RColumnRegister &colRegister, RO
 
    auto actionPtr =
       BuildAction<ColTypes...>(cols, *helperArg, nSlots, jittedAction->MoveOutPrevNode(), ActionTag{}, colRegister);
+   actionPtr->SetCallbacksEveryNEntries(jittedAction->MoveOutCallbacksEveryNEntries());
    jittedAction->SetAction(std::move(actionPtr));
 }
 

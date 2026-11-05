@@ -1587,7 +1587,10 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
    // ReadBasketSerialized
 
    // TODO: eventually support multiple leaves.
-   if (R__unlikely(fNleaves != 1)) { return -1; }
+   if (R__unlikely(fNleaves != 1)) {
+      Error("GetEntriesSerialized", "fNleaves != 1 %s", std::to_string(fNleaves).c_str());
+      return -1;
+   }
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
    if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {
       Error("GetEntriesSerialized", "Encountered a branch with destructive deserialization; failing.");
@@ -1598,11 +1601,17 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
    fReadEntry = entry;
 
    bool enabled = !TestBit(kDoNotProcess);
-   if (R__unlikely(!enabled)) { return -1; }
+   if (R__unlikely(!enabled)) {
+      Error("GetEntriesSerialized", "kDoNotProcess");
+      return -1;
+   }
    TBasket *basket = nullptr;
    Long64_t first;
    Int_t result = GetBasketAndFirst(basket, first, &user_buf);
-   if (R__unlikely(result < 0)) { return -1; }
+   if (R__unlikely(result < 0)) {
+      Error("GetEntriesSerialized", "GetBasketAndFirst res < 0");
+      return -1;
+   }
    // Only support reading from full clusters.
    if (R__unlikely(entry != first)) {
        Error("GetEntriesSerialized", "Failed to read from full cluster; first entry is %lld; requested entry is %lld.\n", first, entry);
@@ -1679,6 +1688,10 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
       basket->DisownBuffer();
    }
 
+   if (N == -1) {
+      Error("GetEntriesSerialized", "Unaccounted N==-1\n");
+   }
+
    return N;
 }
 
@@ -1710,6 +1723,14 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
 
    TBasket *basket; // will be initialized in the if/then clauses.
    Long64_t first;
+
+   // Probably an interleaved call with the experimental bulk API, which has left an orphaned extra basket. We remove
+   // it because we cannot create a local TBuffer to hold its data, and there is no immediate use for it.
+   if (R__unlikely(fExtraBasket)) {
+      assert(fExtraBasket->GetBufferRef() == nullptr);
+      delete fExtraBasket;
+      fExtraBasket = nullptr;
+   }
 
    Int_t result = GetBasketAndFirst(basket, first, nullptr);
    if (R__unlikely(result < 0)) { return result + 1; }

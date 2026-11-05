@@ -123,7 +123,7 @@ public:
    void Finalize() final;
 
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
-   GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info &) final;
+   CreateColumnReader(unsigned int, std::string_view, const std::type_info &, TTreeReader *, std::size_t) final;
 
    ROOT::RDF::RSampleInfo
    CreateSampleInfo(unsigned int,

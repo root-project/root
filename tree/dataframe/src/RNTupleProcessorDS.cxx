@@ -29,20 +29,50 @@
 namespace ROOT::Experimental::Internal::RDF {
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleProcessorColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
+   RNTupleProcessorDS &fProc;
    RNTupleProcessorValuePtr<void> fValuePtr; ///< Container for the value of the column
-   Long64_t fLastLoadedEntry = ROOT::kInvalidNTupleIndex;
+   ROOT::RVec<ROOT::RFieldBase::RValue> fCachedValues;
+   ROOT::RVec<bool> fIsCachedValueValidAtIdx;
+   std::uint64_t fLastEntry;
 
 public:
-   RNTupleProcessorColumnReader(RNTupleProcessorValuePtr<void> &valuePtr) : fValuePtr(std::move(valuePtr)) {}
+   RNTupleProcessorColumnReader(RNTupleProcessorDS &proc, RNTupleProcessorValuePtr<void> &valuePtr,
+                                std::size_t maxBulkSize)
+      : fProc(proc),
+        fValuePtr(std::move(valuePtr)),
+        fIsCachedValueValidAtIdx(maxBulkSize, false),
+        fLastEntry(std::numeric_limits<std::uint64_t>::max())
+   {
+      fCachedValues.reserve(maxBulkSize);
+      for (std::size_t i = 0; i < maxBulkSize; i++)
+         fCachedValues.push_back(fValuePtr.CreateValue());
+   }
    ~RNTupleProcessorColumnReader() override = default;
 
-   void *GetImpl(std::size_t /*idx*/) final { return fValuePtr.GetPtr().get(); }
-   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final
+   void *GetImpl(std::size_t entryInBulk) final
    {
-      // Loading happens in RNTupleProcessorDS
+      if (fIsCachedValueValidAtIdx[entryInBulk])
+         return fCachedValues[entryInBulk].GetPtr<void>().get();
+      return nullptr;
    }
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
+   {
+      if (fLastEntry == mask.GetFirstEntry())
+         return;
 
-   void SetEntryLoaded(Long64_t entry) { fLastLoadedEntry = entry; }
+      const auto validIndices = mask.GetValidIndices();
+      if (validIndices.empty())
+         return;
+
+      fLastEntry = mask.GetFirstEntry();
+
+      std::fill(fIsCachedValueValidAtIdx.begin(), fIsCachedValueValidAtIdx.end(), false);
+
+      for (auto idx : validIndices) {
+         fValuePtr.Bind(fCachedValues[idx].GetPtr<void>());
+         fIsCachedValueValidAtIdx[idx] = fProc.SetEntry(/*slot*/ 0, mask.GetFirstEntry() + idx);
+      }
+   }
 };
 
 RNTupleProcessorDS::~RNTupleProcessorDS() = default;
@@ -265,7 +295,8 @@ RNTupleProcessorDS::GetColumnReadersImpl(std::string_view /* name */, const std:
 }
 
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
-RNTupleProcessorDS::GetColumnReaders(unsigned int /* slot */, std::string_view name, const std::type_info &tid)
+RNTupleProcessorDS::CreateColumnReader(unsigned int, std::string_view name, const std::type_info &tid, TTreeReader *,
+                                       std::size_t maxBulkSize)
 {
    // At this point we can assume that `name` will be found in fColumnNames
    const auto requestedType = ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::RDF::TypeID2TypeName(tid));
@@ -274,7 +305,7 @@ RNTupleProcessorDS::GetColumnReaders(unsigned int /* slot */, std::string_view n
    // column reader for it.
    if (fProcessor->GetEntry().FindFieldIndex(name, requestedType)) {
       auto valuePtr = fProcessor->RequestField(std::string(name), requestedType);
-      auto reader = std::make_unique<Internal::RDF::RNTupleProcessorColumnReader>(valuePtr);
+      auto reader = std::make_unique<Internal::RDF::RNTupleProcessorColumnReader>(*this, valuePtr, maxBulkSize);
       fColumnReaders.emplace_back(reader.get());
 
       return reader;
@@ -289,7 +320,7 @@ RNTupleProcessorDS::GetColumnReaders(unsigned int /* slot */, std::string_view n
       std::unique_ptr<Internal::RDF::RNTupleProcessorColumnReader> reader;
       try {
          auto valuePtr = fProcessor->RequestField(std::string(name), requestedType);
-         reader = std::make_unique<Internal::RDF::RNTupleProcessorColumnReader>(valuePtr);
+         reader = std::make_unique<Internal::RDF::RNTupleProcessorColumnReader>(*this, valuePtr, maxBulkSize);
          fColumnReaders.emplace_back(reader.get());
       } catch (const ROOT::RException &) {
          throw std::runtime_error("RNTupleProcessorDS: Column \"" + std::string(name) + "\" does not exist");
@@ -345,7 +376,7 @@ RNTupleProcessorDS::GetColumnReaders(unsigned int /* slot */, std::string_view n
    }
 
    auto valuePtr = fProcessor->RequestField(std::string(name), requestedType);
-   auto reader = std::make_unique<Internal::RDF::RNTupleProcessorColumnReader>(valuePtr);
+   auto reader = std::make_unique<Internal::RDF::RNTupleProcessorColumnReader>(*this, valuePtr, maxBulkSize);
    fColumnReaders.emplace_back(reader.get());
 
    return reader;
@@ -416,10 +447,6 @@ bool RNTupleProcessorDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
       return false;
 
    fProcessor->LoadEntry(fEntryMapping);
-
-   for (auto colReader : fColumnReaders) {
-      colReader->SetEntryLoaded(entry);
-   }
 
    return true;
 }

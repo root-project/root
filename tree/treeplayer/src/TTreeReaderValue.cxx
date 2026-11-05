@@ -315,6 +315,12 @@ std::function<void(void *)> ROOT::Internal::TTreeReaderValueBase::GetDeleter()
    return [](void *) {};
 }
 
+TDictionary *ROOT::Internal::TTreeReaderValueBase::GetOnDiskDictionary() const
+{
+   assert(fActualDict);
+   return fActualDict;
+}
+
 void ROOT::Internal::TTreeReaderValueBase::SetAddress(void *addr, void *addrOfAddr)
 {
    // assume we are connected to a TTreeReader and in turn it is connected to a TTree and we have information about
@@ -371,6 +377,21 @@ void ROOT::Internal::TTreeReaderValueBase::SetAddress(void *addr, void *addrOfAd
    } else {
       Error("TTreeReaderValueBase::SetAddress", "Unrecognized TTreeReaderValue branch (or leaf) setup.");
    }
+}
+
+TBranch *ROOT::Internal::TTreeReaderValueBase::GetBranch()
+{
+   if (!fProxy) {
+      // Most probably this is a case of a missing branch that has not been found yet, we can just return early
+      return nullptr;
+   }
+
+   if (!fProxy->IsInitialized())
+      fProxy->Setup();
+
+   // This could return nullptr in case there is no branch set at the current entry (e.g. because the branch itself is
+   // missing)
+   return fProxy->fBranch;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

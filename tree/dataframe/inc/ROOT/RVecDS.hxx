@@ -28,13 +28,21 @@
 
 namespace ROOT::Internal::RDF {
 
+class RMaskedEntryRange;
+
 class R__CLING_PTRCHECK(off) RVecDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
-   TPointerHolder *fPtrHolder;
-   void *GetImpl(std::size_t) final { return fPtrHolder->GetPointer(); }
-   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final {}
+   unsigned int fSlot;
+   std::function<bool(unsigned int, ULong64_t)> fSetEntryFn;
+   std::byte **fCachedArrayBegin;
+   std::size_t fValueSize;
+   std::uint64_t fLastEntry;
+
+   void *GetImpl(std::size_t entryInBulk) final;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final;
 
 public:
-   RVecDSColumnReader(TPointerHolder *ptrHolder) : fPtrHolder(ptrHolder) {}
+   RVecDSColumnReader(unsigned int slot, std::function<bool(unsigned int, ULong64_t)> fn, std::byte **arrayBeginPtr,
+                      std::size_t valueSize);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,6 +61,7 @@ class RVecDS final : public ROOT::RDF::RDataSource {
    std::tuple<ROOT::RVec<ColumnTypes>...> fColumns;
    std::vector<std::string> fColNames;
    std::unordered_map<std::string, std::string> fColTypesMap;
+   std::map<std::string, std::size_t> fColSizeMap;
    // The role of the fPointerHoldersModels is to be initialised with the pack
    // of arguments in the constrcutor signature at construction time
    // Once the number of slots is known, the fPointerHolders are initialised
@@ -61,6 +70,7 @@ class RVecDS final : public ROOT::RDF::RDataSource {
    std::vector<PointerHolderPtrs_t> fPointerHolders;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
    std::any fLifeline;
+   ROOT::RVec<ROOT::RVec<std::byte *>> fBulkValuesPerColumnPerSlot; // outer is slot, inner is column
 
    Record_t GetColumnReadersImpl(std::string_view, const std::type_info &) { return {}; }
 
@@ -68,9 +78,7 @@ class RVecDS final : public ROOT::RDF::RDataSource {
    template <std::size_t... S>
    void SetEntryHelper(unsigned int slot, ULong64_t entry, std::index_sequence<S...>)
    {
-      std::initializer_list<int> expander{
-         (*static_cast<ColumnTypes *>(fPointerHolders[S][slot]->GetPointer()) = std::get<S>(fColumns)[entry], 0)...};
-      (void)expander; // avoid unused variable warnings
+      ((fBulkValuesPerColumnPerSlot[slot][S] = reinterpret_cast<std::byte *>(&std::get<S>(fColumns)[entry])), ...);
    }
 
    template <std::size_t... S>
@@ -102,6 +110,7 @@ public:
       : fColumns(colsNameVals.second...),
         fColNames{colsNameVals.first...},
         fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
+        fColSizeMap({{colsNameVals.first, sizeof(ColumnTypes)}...}),
         fPointerHoldersModels({new ROOT::Internal::RDF::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...}),
         fLifeline{std::move(lifeline)}
    {
@@ -142,7 +151,10 @@ public:
 
       if (auto colNameIt = std::find(fColNames.begin(), fColNames.end(), colNameStr); colNameIt != fColNames.end()) {
          const auto index = std::distance(fColNames.begin(), colNameIt);
-         return std::make_unique<ROOT::Internal::RDF::RVecDSColumnReader>(fPointerHolders[index][slot]);
+         const auto valueSize = fColSizeMap.at(*colNameIt);
+         return std::make_unique<ROOT::Internal::RDF::RVecDSColumnReader>(
+            slot, [this](unsigned int slotInner, ULong64_t entry) { return this->SetEntry(slotInner, entry); },
+            &fBulkValuesPerColumnPerSlot[slot][index], valueSize);
       }
 
       throw std::runtime_error("Could not find column name \"" + colNameStr + "\" in available column names.");
@@ -179,6 +191,11 @@ public:
    {
       fNSlots = nSlots;
       const auto nCols = fColNames.size();
+
+      fBulkValuesPerColumnPerSlot.resize(nSlots);
+      for (auto &v : fBulkValuesPerColumnPerSlot)
+         v.resize(nCols);
+
       fPointerHolders.resize(nCols); // now we need to fill it with the slots, all of the same type
       auto colIndex = 0U;
       for (auto &&ptrHolderv : fPointerHolders) {

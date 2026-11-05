@@ -57,10 +57,11 @@ public:
    ~RDefinePerSample() { fLoopManager->Deregister(this); }
 
    /// Return the beginning of the cached results of the current bulk for the input processing slot
-   void *GetValuePtr(unsigned int slot) final
+   std::pair<void *, std::size_t> GetValuePtr(unsigned int slot) final
    {
-      return static_cast<void *>(
-         fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<RetType_t>>()].data());
+      return std::make_pair(
+         static_cast<void *>(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<RetType_t>>()].data()),
+         sizeof(RetType_t));
    }
 
    void Update(unsigned int, const ROOT::Internal::RDF::RMaskedEntryRange &) final
@@ -71,8 +72,10 @@ public:
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
    void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id) final
    {
+      // Call expression only once per sample
+      auto val = fExpression(slot, id);
       for (auto &res : fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<RetType_t>>()])
-         res = fExpression(slot, id);
+         res = val;
    }
 
    const std::type_info &GetTypeId() const final { return typeid(RetType_t); }

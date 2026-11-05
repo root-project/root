@@ -133,32 +133,40 @@ public:
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
-      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
+      fMaskPerSlot[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()].SetFirstEntry(
+         std::numeric_limits<std::uint64_t>::max());
    }
 
    /// Return the beginning of the cached results of the current bulk for the input processing slot
-   void *GetValuePtr(unsigned int slot) final
+   std::pair<void *, std::size_t> GetValuePtr(unsigned int slot) final
    {
-      return static_cast<void *>(
-         fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<ret_type>>()].data());
+      return std::make_pair(
+         static_cast<void *>(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<ret_type>>()].data()),
+         sizeof(ret_type));
    }
 
    /// Update the values at the array returned by GetValuePtr with the content corresponding to the given mask
    void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      if (static_cast<Long64_t>(mask.GetFirstEntry()) ==
-          fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()])
+      auto &thisNodeMask = fMaskPerSlot[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()];
+      // New bulk of entries
+      if (thisNodeMask.GetFirstEntry() != mask.GetFirstEntry()) {
+         thisNodeMask.SetFirstEntry(mask.GetFirstEntry());
+         thisNodeMask.SetAll(false);
+      }
+
+      // Early return if this node has loaded all values contained in the input mask
+      if (thisNodeMask.Contains(mask) == std::numeric_limits<std::size_t>::max())
          return;
 
       auto bulkSize = mask.GetBulkSize();
       std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
       auto &result = fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<ret_type>>()];
-      for (std::size_t i = 0; i < bulkSize; ++i) {
-         if (mask[i]) {
-            result[i] = UpdateHelper(slot, i, mask.GetFirstEntry() + i, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
-            fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = mask.GetFirstEntry();
-         }
-      }
+      for (std::size_t i = 0; i < bulkSize; ++i)
+         if (mask[i] && !thisNodeMask[i])
+            result[i] = UpdateHelper(slot, i, fLoopManager->GetUniqueRDFEntry(slot) + i, ColumnTypes_t{}, TypeInd_t{},
+                                     ExtraArgsTag{});
+      thisNodeMask.Union(mask);
    }
 
    void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) final {}
