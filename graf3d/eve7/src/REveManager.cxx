@@ -889,6 +889,9 @@ void REveManager::StreamToNewConnection(unsigned connid)
    Send(connid, fWorld->fOutputJson);
    printf("   for now assume world-scene has no render data, binary-size=%d\n", fWorld->fTotalBinarySize);
    assert(fWorld->fTotalBinarySize == 0);
+   // Sent to this connection only; the next SendSceneChanges() must not send
+   // it to everyone again.
+   fWorld->ClearOutput();
 
    for (auto &c : fScenes->RefChildren()) {
       REveScene *scene = dynamic_cast<REveScene *>(c);
@@ -911,6 +914,7 @@ void REveManager::StreamToNewConnection(unsigned connid)
       } else {
          printf("   NOT sending binary, len = %d\n", scene->fTotalBinarySize);
       }
+      scene->ClearOutput();
    }
 
    fServerState.fCV.notify_all();
@@ -1302,6 +1306,9 @@ void REveManager::MIRExecThread()
             Send(mir->fConnId, scene->fOutputJson);
             if (scene->fTotalBinarySize > 0)
                SendBinary(mir->fConnId, &scene->fOutputBinary[0], scene->fTotalBinarySize);
+            // Streamed to this connection only; SendSceneChanges() below must
+            // not send it to every subscriber.
+            scene->ClearOutput();
          }
 
          SendSceneChanges();
