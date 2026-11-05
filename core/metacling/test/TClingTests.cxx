@@ -92,13 +92,13 @@ TEST_F(TClingTests, GenerateDictionaryRegression)
       "int TCling_GenerateDictionary(const std::vector<std::string>&, const std::vector<std::string>&,\n"
       "                              const std::vector<std::string>&, const std::vector<std::string>&);"));
    TInterpreter::EErrorCode error = TInterpreter::kNoError;
-   const auto result = gInterpreter->ProcessLine(
-      "[] {"
-      "std::vector<std::string> classes{\"std::list<TClingDictionaryPathProbe*>\"};"
-      "std::vector<std::string> empty, unknown{\"TClingDictionaryPathProbe\"};"
-      "return TCling_GenerateDictionary(classes, empty, empty, unknown);"
-      "}()",
-      &error);
+   const auto result =
+      gInterpreter->ProcessLine("[] {"
+                                "std::vector<std::string> classes{\"std::list<TClingDictionaryPathProbe*>\"};"
+                                "std::vector<std::string> empty, unknown{\"TClingDictionaryPathProbe\"};"
+                                "return TCling_GenerateDictionary(classes, empty, empty, unknown);"
+                                "}()",
+                                &error);
    EXPECT_EQ(error, TInterpreter::kNoError);
    EXPECT_EQ(result, 0);
 
