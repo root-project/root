@@ -3931,3 +3931,27 @@ TEST(RooFitHS3, HistFactoryUnconstrainedModifierWarning)
       RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json)); });
    EXPECT_EQ(countOccurrences(warnings, "has no constraint"), 1u) << warnings;
 }
+
+// Gamma parameters can't have log-normal constraints. Requesting one must not silently give a Gaussian.
+TEST(RooFitHS3, HistFactoryLogNormalGammaConstraint)
+{
+   for (std::string type : {"LogNormal", "Lognormal"}) {
+      for (std::string key : {"constraint", "constraint_type"}) {
+         expectImportThrowsWithError(makeHistFactoryJSON(R"({"name": "shape", "type": "shapesys", ")" + key +
+                                                         R"(": ")" + type + R"(", "data": {"vals": [0.1, 0.2]}})"),
+                                     "unsupported constraint '" + type + "'");
+      }
+   }
+
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "distributions": [{
+         "name": "model_channel0", "type": "histfactory_dist",
+         "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+         "staterror": {"constraint_type": "LogNormal"},
+         "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]},
+                      "modifiers": [{"name": "mcstat", "type": "staterror"}]}]
+      }]
+   })",
+                               "unsupported constraint 'LogNormal'");
+}

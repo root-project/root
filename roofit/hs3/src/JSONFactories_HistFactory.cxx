@@ -520,6 +520,11 @@ ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
       if (!createConstraints) {
          configureConstrainedGammas(gammas, vals, minSigma);
       } else if (constraintType != "Const") {
+         if (constraintType == "LogNormal" || constraintType == "Lognormal") {
+            RooJSONFactoryWSTool::error("unsupported constraint '" + constraintType +
+                                        "' for the gamma parameters of '" + sysname +
+                                        "', supported are \"Poisson\" and \"Gauss\"");
+         }
          auto constraintsInfo = createGammaConstraints(
             gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
          for (auto const &term : constraintsInfo.constraints) {
