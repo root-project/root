@@ -24,6 +24,7 @@
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
+#include <RooCustomizer.h>
 #include <RooSimultaneous.h>
 #include <RooSuperCategory.h>
 #include <RooFit/ModelConfig.h>
@@ -1858,13 +1859,26 @@ void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf, std
       recordCategory(*column);
    }
    auto &components = elem["components"].set_seq();
+   // Components with renamed observables replace the original ones (Config::renameCombinedObservables).
+   auto renamed = _renamedComponents.find(simPdf.GetName());
+   std::set<RooAbsArg const *> replaced;
+   std::vector<RooAbsArg const *> replacements;
    // In the order of the columns and of their states, which is the order in which the categories are written to
    // the domain. This does not depend on the order of the inputs of a RooSuperCategory, so the document is the same
    // after a round trip.
    for (std::vector<std::string> const &key : selectionKeys(columns)) {
-      RooAbsPdf const *pdf = simPdf.getPdf(selectionLabel(indexCat, columns, key));
+      const std::string label = selectionLabel(indexCat, columns, key);
+      RooAbsPdf const *pdf = simPdf.getPdf(label);
       if (!pdf) {
          continue;
+      }
+      if (renamed != _renamedComponents.end()) {
+         auto found = renamed->second.find(label);
+         if (found != renamed->second.end()) {
+            replaced.insert(pdf);
+            pdf = found->second;
+            replacements.push_back(pdf);
+         }
       }
       JSONNode &component = components.append_child().set_map();
       component["key"].fill_seq(key);
@@ -1872,7 +1886,14 @@ void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf, std
    }
    recordGenericObject(_export->doc, true, simPdf.GetName(), elem);
 
-   exportObjects(simPdf.servers(), exportedObjectNames);
+   std::vector<RooAbsArg const *> servers;
+   for (RooAbsArg const *server : simPdf.servers()) {
+      if (replaced.count(server) == 0) {
+         servers.push_back(server);
+      }
+   }
+   servers.insert(servers.end(), replacements.begin(), replacements.end());
+   exportObjects(servers, exportedObjectNames);
 }
 
 // Declare a category as a categorical axis of the "default_domain". The states are written in their insertion order:
@@ -2129,6 +2150,87 @@ void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, JS
    }
 }
 
+// Config::renameCombinedObservables: work out, before anything is exported, the new names of the observables of
+// every combined data set, and the components of the matching RooSimultaneous with these observables. One
+// observable per key is named "obs_<key>", several are named "obs_<key>_<observable>". Observables that already
+// have their new name are left alone, so that a second export of an imported document gives the same result.
+void RooJSONFactoryWSTool::prepareCombinedObservableRenaming()
+{
+   _combinedObservableRenames.clear();
+   _renamedComponents.clear();
+   _renamedObjects.clear();
+   if (!config().renameCombinedObservables) {
+      return;
+   }
+   std::vector<RooAbsData *> datasets;
+   for (RooAbsData *data : _workspace.allData()) {
+      datasets.push_back(data);
+   }
+   sortByName(datasets);
+   for (RooAbsData const *data : datasets) {
+      std::vector<RooCategory const *> columns = selectionColumns(*data->get());
+      if (columns.empty()) {
+         continue;
+      }
+      RooSimultaneous const *simPdf = findMatchingSimultaneous(_workspace, selectionColumnNames(*data->get()));
+      for (std::vector<std::string> const &key : selectionKeys(columns)) {
+         const std::string keyName = selectionKeyName(key);
+         RooArgSet candidates;
+         RooAbsPdf const *component = nullptr;
+         std::string label;
+         if (simPdf) {
+            label = selectionLabel(simPdf->indexCat(), columns, key);
+            component = simPdf->getPdf(label);
+            if (!component) {
+               continue;
+            }
+            std::unique_ptr<RooArgSet> observables{component->getObservables(*data->get())};
+            candidates.add(*observables);
+         } else {
+            candidates.add(*data->get());
+         }
+         std::vector<RooAbsArg *> observables;
+         for (RooAbsArg *arg : candidates) {
+            if (!dynamic_cast<RooAbsCategory *>(arg)) {
+               observables.push_back(arg);
+            }
+         }
+         sortByName(observables);
+         std::map<std::string, std::string> renames;
+         for (RooAbsArg const *obs : observables) {
+            std::string const newName =
+               "obs_" + keyName + (observables.size() == 1 ? "" : "_" + std::string(obs->GetName()));
+            if (newName == obs->GetName()) {
+               continue;
+            }
+            if (_workspace.arg(newName.c_str())) {
+               error("can't rename the observable '" + std::string(obs->GetName()) + "' of the data set '" +
+                     data->GetName() + "' to '" + newName + "': an object of that name already exists");
+            }
+            renames[obs->GetName()] = newName;
+         }
+         if (renames.empty()) {
+            continue;
+         }
+         _combinedObservableRenames[data->GetName()][keyName] = renames;
+         if (!simPdf || _renamedComponents[simPdf->GetName()].count(label) > 0) {
+            continue;
+         }
+         // The component with the renamed observables. Nodes that depend on them are cloned with the suffix
+         // "_<key>", so that nodes shared by several components get one copy per component.
+         RooCustomizer customizer{*component, keyName.c_str()};
+         for (auto const &[from, to] : renames) {
+            RooAbsArg *original = candidates.find(from.c_str());
+            _renamedObjects.emplace_back(static_cast<RooAbsArg *>(original->clone(to.c_str())));
+            customizer.replaceArg(*original, *_renamedObjects.back());
+         }
+         auto *renamedComponent = static_cast<RooAbsPdf *>(customizer.build());
+         _renamedObjects.emplace_back(renamedComponent);
+         _renamedComponents[simPdf->GetName()][label] = renamedComponent;
+      }
+   }
+}
+
 /**
  * @brief Export a data set with category observables as a "combined" data set.
  *
@@ -2181,8 +2283,19 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
       if (found == parts.end() || ((*found)->numEntries() == 0 && simPdf && !simPdf->getPdf(label))) {
          continue;
       }
-      const std::string subName = info.name + "_" + selectionKeyName(key);
+      const std::string keyName = selectionKeyName(key);
+      const std::string subName = info.name + "_" + keyName;
       (*found)->SetName(subName.c_str());
+      // Config::renameCombinedObservables: give the observables of this key their own names.
+      auto renamesOfData = _combinedObservableRenames.find(info.name);
+      if (renamesOfData != _combinedObservableRenames.end()) {
+         auto renames = renamesOfData->second.find(keyName);
+         if (renames != renamesOfData->second.end()) {
+            for (auto const &[from, to] : renames->second) {
+               (*found)->changeObservableName(from.c_str(), to.c_str());
+            }
+         }
+      }
       combined.components.push_back({key, {subName}});
       subDataSets.push_back(found->get());
    }
@@ -2574,6 +2687,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    doc.metadata.hs3Version = hs3VersionTag;
    doc.metadata.packages.push_back({"ROOT", rootVersion()});
    doc.parameterPoints.push_back({"default_values", {}});
+   prepareCombinedObservableRenaming();
 
    // export all toplevel pdfs
    std::vector<RooAbsPdf *> allpdfs;
@@ -2616,9 +2730,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    std::vector<RooJSONFactoryWSTool::CombinedData> combData;
    for (auto &d : alldata) {
       // Without a matching RooSimultaneous, the categories of a data set are ordinary observables, written as
-      // categorical axes.
+      // categorical axes, unless its observables are renamed per key (Config::renameCombinedObservables).
       if (selectionColumns(*d->get()).empty() ||
-          !findMatchingSimultaneous(_workspace, selectionColumnNames(*d->get()))) {
+          (!config().renameCombinedObservables &&
+           !findMatchingSimultaneous(_workspace, selectionColumnNames(*d->get())))) {
          singleData.push_back(d);
          this->exportData(*d);
       } else {
