@@ -14,6 +14,16 @@ ROOT_OBJECT_LIBRARY(ReadSpeed
   src/ReadSpeedCLI.cxx
 )
 
+target_sources(ReadSpeed
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    inc/ReadSpeed.hxx
+    inc/ReadSpeedCLI.hxx
+)
+
 target_include_directories(ReadSpeed PRIVATE
   ${CMAKE_SOURCE_DIR}/io/io/inc
   ${CMAKE_SOURCE_DIR}/tree/tree/inc
