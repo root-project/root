@@ -41,6 +41,7 @@ public:
    void writeJSON(RooFit::Detail::JSONNode &) const;
 
    bool hasVariable(const char *name) const;
+   std::vector<std::string> const *categories(const char *name) const;
 
    void populate(RooWorkspace &ws) const;
 
@@ -54,6 +55,7 @@ public:
       void writeJSON(RooFit::Detail::JSONNode &) const;
 
       bool hasVariable(const char *name) const;
+      std::vector<std::string> const *categories(const char *name) const;
 
       void populate(RooWorkspace &ws) const;
       void registerBinnings(const char *name, RooWorkspace &ws) const;
@@ -67,8 +69,11 @@ public:
          bool hasNBins = false;
          int nBins = 0;
          std::vector<double> edges;
+         // The labels of a categorical axis, in the order given in the document. Empty for continuous axes.
+         std::vector<std::string> categories;
       };
 
+      static void populateCategory(std::string const &name, std::vector<std::string> const &labels, RooWorkspace &ws);
       static void applyBinning(RooRealVar &var, ProductDomainElement const &elem, const char *name = nullptr);
       static void readBinning(ProductDomainElement &elem, RooAbsBinning const &binning);
       static void writeBinning(RooFit::Detail::JSONNode &node, ProductDomainElement const &elem);

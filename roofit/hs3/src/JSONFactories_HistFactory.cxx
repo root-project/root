@@ -1004,6 +1004,12 @@ public:
       std::vector<std::string> gammaParnames;
       std::string modifierStatErrType;
       std::optional<std::vector<std::optional<std::string>>> statErrConstraintNames;
+      for (auto const &axis : p["axes"].children()) {
+         if (axis.has_child("categories")) {
+            RooJSONFactoryWSTool::error("the axis '" + axis["name"].val() + "' of '" + name +
+                                        "' is categorical, but the axes of a HistFactory prediction are binned");
+         }
+      }
       RooArgSet observables = RooJSONFactoryWSTool::readAxes(p);
 
       std::string fprefix = name;
