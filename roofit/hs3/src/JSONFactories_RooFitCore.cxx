@@ -28,6 +28,7 @@
 #include <RooFormulaVar.h>
 #include <RooGenericPdf.h>
 #include <RooHistFunc.h>
+#include <RooParamHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooLegacyExpPoly.h>
 #include <RooLognormal.h>
@@ -1338,6 +1339,56 @@ bool exportParamHistFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode
    return true;
 }
 
+// Whether two binnings have the same bins.
+bool sameBins(RooAbsBinning const &a, RooAbsBinning const &b)
+{
+   if (a.numBins() != b.numBins()) {
+      return false;
+   }
+   for (int i = 0; i < a.numBins(); ++i) {
+      if (a.binLow(i) != b.binLow(i) || a.binHigh(i) != b.binHigh(i)) {
+         return false;
+      }
+   }
+   return true;
+}
+
+// RooParamHistFunc (relative parameters): the value in bin i is p_i times the content of bin i of its histogram. This
+// is written like a HistFactory sample, as the product of a "step" with the histogram (RooHistFunc) and a "step" with
+// the parameters (ParamHistFunc). It is read back as a RooProduct of these two.
+bool exportRooParamHistFunc(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+{
+   auto const *phf = static_cast<const RooParamHistFunc *>(func);
+   const std::string name = phf->GetName();
+   if (!phf->relParam()) {
+      RooJSONFactoryWSTool::error("RooParamHistFunc '" + name +
+                                  "' with absolute parameters (paramRelative = false) can't be exported to HS3: "
+                                  "only relative parameters are supported");
+   }
+   if (phf->xList().size() != 1) {
+      RooJSONFactoryWSTool::error("RooParamHistFunc '" + name + "' must have exactly one observable");
+   }
+   auto *x = dynamic_cast<RooRealVar *>(phf->xList().at(0));
+   RooDataHist const &dh = phf->dataHist();
+   if (!x || !sameBins(x->getBinning(), *dh.getBinnings()[0])) {
+      RooJSONFactoryWSTool::error("RooParamHistFunc '" + name +
+                                  "': the binning of its observable differs from the binning of its histogram");
+   }
+
+   auto nominal =
+      std::make_unique<RooHistFunc>((name + "_nominal").c_str(), (name + "_nominal").c_str(), RooArgSet{*x}, dh);
+   auto scale = std::make_unique<ParamHistFunc>((name + "_scale").c_str(), (name + "_scale").c_str(), RooArgList{*x},
+                                                phf->paramList());
+
+   elem["type"] << key;
+   auto &factors = elem["factors"].set_seq();
+   factors.append_child() << nominal->GetName();
+   factors.append_child() << scale->GetName();
+   tool->queueExportTemporary(nominal.release());
+   tool->queueExportTemporary(scale.release());
+   return true;
+}
+
 bool exportSpline(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
    auto const *rs = static_cast<RooSpline const *>(func);
@@ -1523,6 +1574,9 @@ STATIC_EXECUTE([]() {
    registerExporter<exportFFTConvPdf>(RooFFTConvPdf::Class(), "fft_convolution_dist", false);
    registerExporter<exportExtendPdf>(RooExtendPdf::Class(), "rate_extended_dist", false);
    registerExporter<exportParamHistFunc>(ParamHistFunc::Class(), "step", false);
+   // The dependants are the two temporary step functions queued by the exporter.
+   registerExporter<exportRooParamHistFunc>(RooParamHistFunc::Class(), "product", false,
+                                            /*autoExportDependants=*/false);
    registerExporter<exportSpline>(RooSpline::Class(), "spline", false);
 });
 

@@ -28,6 +28,7 @@
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
 #include <RooNumber.h>
+#include <RooParamHistFunc.h>
 #include <RooPoisson.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
@@ -4028,4 +4029,89 @@ TEST(RooFitHS3, WarningsAreShownByDefault)
    const std::string warnings =
       captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [] { RooJSONFactoryWSTool::warning("test message"); });
    EXPECT_NE(warnings.find("test message"), std::string::npos) << warnings;
+}
+
+// A RooParamHistFunc with relative parameters (value in bin i = p_i times the content of bin i) is written like a
+// HistFactory sample: a product of a "step" with the histogram and a "step" with the parameters. It is read back as a
+// RooProduct of a RooHistFunc and a ParamHistFunc, with the same values and integral. Absolute parameters are not
+// supported.
+TEST(RooFitHS3, RooParamHistFuncAsHistFactoryProduct)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+   RooDataHist dh{"dh", "dh", x};
+   x.setBin(0);
+   dh.set(x, 2.0);
+   x.setBin(1);
+   dh.set(x, 3.0);
+
+   RooParamHistFunc func{"func", "func", dh, x};
+   static_cast<RooRealVar &>(func.paramList()[1]).setVal(1.5);
+   const std::vector<double> expected{2.0 * 1.0, 3.0 * 1.5};
+   for (int i = 0; i < 2; ++i) {
+      x.setBin(i);
+      ASSERT_DOUBLE_EQ(func.getVal(), expected[i]);
+   }
+   std::unique_ptr<RooAbsReal> integral{func.createIntegral(x)};
+   const double expectedIntegral = integral->getVal();
+
+   RooWorkspace ws;
+   ws.import(func, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &functions = tree->rootnode()["functions"];
+   auto const *product = RooJSONFactoryWSTool::findNamedChild(functions, "func");
+   ASSERT_NE(product, nullptr) << json;
+   EXPECT_EQ((*product)["type"].val(), "product");
+   ASSERT_EQ((*product)["factors"].num_children(), 2u);
+   EXPECT_EQ((*product)["factors"].child(0).val(), "func_nominal");
+   EXPECT_EQ((*product)["factors"].child(1).val(), "func_scale");
+   auto const *nominal = RooJSONFactoryWSTool::findNamedChild(functions, "func_nominal");
+   ASSERT_NE(nominal, nullptr) << json;
+   EXPECT_TRUE(nominal->has_child("data")) << json;
+   auto const *scale = RooJSONFactoryWSTool::findNamedChild(functions, "func_scale");
+   ASSERT_NE(scale, nullptr) << json;
+   EXPECT_TRUE(scale->has_child("parameters")) << json;
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *importedFunc = dynamic_cast<RooProduct *>(imported.function("func"));
+   ASSERT_NE(importedFunc, nullptr);
+   EXPECT_NE(dynamic_cast<RooHistFunc *>(imported.function("func_nominal")), nullptr);
+   EXPECT_NE(dynamic_cast<ParamHistFunc *>(imported.function("func_scale")), nullptr);
+   RooRealVar &xImported = *imported.var("x");
+   for (int i = 0; i < 2; ++i) {
+      xImported.setBin(i);
+      EXPECT_DOUBLE_EQ(importedFunc->getVal(), expected[i]) << "bin " << i;
+   }
+   std::unique_ptr<RooAbsReal> importedIntegral{importedFunc->createIntegral(xImported)};
+   EXPECT_NEAR(importedIntegral->getVal(), expectedIntegral, 1e-12);
+
+   // From the second export on, the JSON is stable.
+   const std::string json2 = RooJSONFactoryWSTool{imported}.exportJSONtoString();
+   RooWorkspace imported2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported2}.importJSONfromString(json2));
+   EXPECT_EQ(RooJSONFactoryWSTool{imported2}.exportJSONtoString(), json2);
+
+   // Absolute parameters are not supported.
+   RooParamHistFunc absolute{"absolute", "absolute", dh, x, nullptr, /*paramRelative=*/false};
+   RooWorkspace wsAbsolute;
+   wsAbsolute.import(absolute, RooFit::Silence());
+   const std::string errors = captureMessages(RooFit::ERROR, RooFit::IO, [&] {
+      EXPECT_THROW(RooJSONFactoryWSTool{wsAbsolute}.exportJSONtoString(), std::runtime_error);
+   });
+   EXPECT_NE(errors.find("with absolute parameters (paramRelative = false) can't be exported"), std::string::npos)
+      << errors;
+
+   // The bins of the observable must be those of the histogram.
+   RooParamHistFunc otherBinning{"other_binning", "other_binning", dh, x};
+   RooWorkspace wsOtherBinning;
+   wsOtherBinning.import(otherBinning, RooFit::Silence());
+   wsOtherBinning.var("x")->setBins(4);
+   const std::string binningErrors = captureMessages(RooFit::ERROR, RooFit::IO, [&] {
+      EXPECT_THROW(RooJSONFactoryWSTool{wsOtherBinning}.exportJSONtoString(), std::runtime_error);
+   });
+   EXPECT_NE(binningErrors.find("differs from the binning of its histogram"), std::string::npos) << binningErrors;
 }
