@@ -50,8 +50,8 @@ std::pair<std::string_view, std::string_view> SplitAt(std::string_view str, char
 
 /**
  * \brief Convert (round) a value and its uncertainty to string using one or two significant digits of the error
- * \param error the error. If the error is negative or zero, only the value is returned with no specific rounding
- * applied, using std::to_string
+ * \param error the error. If the error is negative, zero, infinite or NaN, only the value is returned with no
+ * specific rounding applied, using std::to_string
  * \param cutoff should lay between 0 and 9. If first significant digit of error starts with value <= cutoff,
  * use two significant digits instead of two for rounding. Set this value to zero to always use a
  * single digit; set this value to 9 to always use two digits.
@@ -64,7 +64,7 @@ std::pair<std::string_view, std::string_view> SplitAt(std::string_view str, char
  */
 std::string Round(double value, double error, unsigned int cutoff, std::string_view delim)
 {
-   if (error <= 0.) {
+   if (error <= 0. || !std::isfinite(error)) {
       return std::to_string(value);
    }
 

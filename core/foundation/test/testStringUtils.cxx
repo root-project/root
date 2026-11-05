@@ -2,6 +2,8 @@
 
 #include "gtest/gtest.h"
 
+#include <limits>
+
 TEST(StringUtils, Split)
 {
    // Test that ROOT::Split behaves like str.split from Python.
@@ -80,6 +82,9 @@ TEST(StringUtils, Round)
    EXPECT_EQ(ROOT::Round(-30000., 1000000000., 99), "(-0.0#pm1.0)*1e9");
    EXPECT_EQ(ROOT::Round(-30000., 1000000000., 0), "(-0#pm1)*1e9");
    EXPECT_EQ(ROOT::Round(110., 0.24, 1, "+-"), "110.0+-0.2");
+   // Without a finite error there is nothing to round to, so only the value is returned
+   EXPECT_EQ(ROOT::Round(110., std::numeric_limits<double>::infinity()), std::to_string(110.));
+   EXPECT_EQ(ROOT::Round(110., std::numeric_limits<double>::quiet_NaN()), std::to_string(110.));
 }
 
 TEST(StringUtils, SplitAt) {
