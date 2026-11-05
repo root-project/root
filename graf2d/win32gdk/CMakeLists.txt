@@ -107,11 +107,6 @@ set_target_properties(GDKLIB PROPERTIES FOLDER Builtins)
 set(WIN32GDK_HEADERS
   TGWin32.h
   TGWin32GL.h
-  TGWin32ProxyBase.h
-  TGWin32ProxyDefs.h
-  TGWin32VirtualGLProxy.h
-  TGWin32VirtualXProxy.h
-  xatom.h
 )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
@@ -147,6 +142,11 @@ PRIVATE
   BASE_DIRS inc/ ../gifencode
   FILES
     ${RELATIVE_INC_HEADERS}
+    inc/TGWin32ProxyBase.h
+    inc/TGWin32ProxyDefs.h
+    inc/TGWin32VirtualGLProxy.h
+    inc/TGWin32VirtualXProxy.h
+    inc/xatom.h
     inc/LinkDef.h
     ../gifencode/gifencode.h
     ../gifencode/gifdecode.h
