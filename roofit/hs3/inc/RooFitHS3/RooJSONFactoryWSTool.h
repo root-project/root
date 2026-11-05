@@ -260,6 +260,8 @@ private:
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
+   // The columns of the exported combined distributions: they are not parameters, and don't appear in parameter points.
+   std::set<std::string> _columnCategories;
 
    // Name-keyed indices over the top-level "functions" and "distributions"
    // sequences of the input JSON. Built once at the start of importAllNodes()

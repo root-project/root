@@ -716,7 +716,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    for (std::size_t i = 0; i < std::min(nllDistNames.size(), nllDataNames.size()); ++i) {
       auto *simPdf = dynamic_cast<RooSimultaneous const *>(workspace.pdf(nllDistNames[i]));
       auto info = combinedData.find(nllDataNames[i]);
-      if (simPdf && info != combinedData.end()) {
+      if (simPdf && !simPdf->getAttribute(categoryConditionalTag) && info != combinedData.end()) {
          checkCombinedPairing(*simPdf, nllDataNames[i], info->second);
       }
    }
@@ -1283,6 +1283,16 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
 // Export a single variable (RooRealVar or RooConstVar) `v` as a named child of `node`.
 void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bool storeConstant, bool storeBins)
 {
+   // A categorical parameter: its value is the label. The columns of combined distributions are not parameters.
+   if (auto *cat = dynamic_cast<const RooCategory *>(v)) {
+      if (_columnCategories.count(cat->GetName()) > 0) {
+         return;
+      }
+      JSONNode &var = appendNamedChild(node, cat->GetName());
+      var["value"] << cat->getCurrentLabel();
+      _domains->readCategory(*cat);
+      return;
+   }
    auto *cv = dynamic_cast<const RooConstVar *>(v);
    auto *rrv = dynamic_cast<const RooRealVar *>(v);
    if (!cv && !rrv)
@@ -1466,24 +1476,31 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
 }
 
 /**
- * @brief Export a RooSimultaneous as a "combined_dist".
+ * @brief Export a RooSimultaneous as a "combined_dist", or as a "category_conditional_dist" if it carries the tag.
  *
  * The components are selected by a key with one label per column. The columns are the index category of the
  * RooSimultaneous or, for a RooSuperCategory index, its input categories, sorted by name. They are declared as
  * categorical axes of the default domain. States without a pdf are not written: HS3 does not require a component
  * for every key.
+ *
+ * For a "category_conditional_dist" the columns are categorical parameters ("categorical_parameter") selecting
+ * the component the RooSimultaneous evaluates to, and their values are written to the parameter points.
  */
 void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames)
 {
    RooAbsCategory const &indexCat = simPdf.indexCat();
    std::vector<RooCategory const *> columns = selectionColumns(indexCat);
+   const bool conditional = simPdf.getAttribute(categoryConditionalTag);
 
    JSONNode &elem = appendNamedChild((*_rootnodeOutput)["distributions"], simPdf.GetName());
-   elem["type"] << "combined_dist";
-   auto &columnsNode = elem["columns"].set_seq();
+   elem["type"] << (conditional ? "category_conditional_dist" : "combined_dist");
+   auto &columnsNode = elem[conditional ? "categorical_parameter" : "columns"].set_seq();
    for (RooCategory const *column : columns) {
       columnsNode.append_child() << column->GetName();
       _domains->readCategory(*column);
+      if (!conditional) {
+         _columnCategories.insert(column->GetName());
+      }
    }
    auto &components = elem["components"].set_seq();
    // In the order of the columns and of their states, which is the order in which the categories are written to
@@ -2141,7 +2158,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
    auto pdf = mc.GetPdf();
    auto simpdf = dynamic_cast<RooSimultaneous const *>(pdf);
    int founddata = 0;
-   if (simpdf) {
+   if (simpdf && !simpdf->getAttribute(categoryConditionalTag)) {
       // One analysis per combined data set with the same columns.
       std::vector<std::string> columns;
       for (RooCategory const *column : selectionColumns(simpdf->indexCat())) {
@@ -2249,6 +2266,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
    _varsNode = &makeVariablesNode(n);
    _rootnodeOutput = &n;
+   _columnCategories.clear();
 
    // export all toplevel pdfs
    std::vector<RooAbsPdf *> allpdfs;

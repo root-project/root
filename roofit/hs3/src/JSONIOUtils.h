@@ -33,6 +33,13 @@ RooArgList toParamHistFuncOrder(RooArgList const &paramsInBinOrder, RooAbsCollec
 void checkParamHistFuncOrderIsDefined(std::string const &hs3Version, RooAbsCollection const &vars,
                                       std::string const &context);
 
+// A RooSimultaneous with this attribute is a "category_conditional_dist": its index category is a parameter, and it
+// evaluates to the component selected by the current state ("switch mode"). Without it, a RooSimultaneous is a
+// "combined_dist", whose index category is the column of the paired combined data set. RooFit decides between the
+// two by the normalization set, i.e. by context; the attribute makes the export context-free and is set when a
+// "category_conditional_dist" is imported.
+inline constexpr const char *categoryConditionalTag = "hs3_category_conditional_dist";
+
 // Selection keys (HS3 "combined" data sets and "combined_dist"): a key is one label per column, and the columns are
 // categories declared by categorical axes of the domains. In RooFit, the columns are the index category of a
 // RooSimultaneous (a RooCategory), or the input categories of a RooSuperCategory index, or the category observables
