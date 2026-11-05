@@ -32,7 +32,6 @@
 #include <RooProduct.h>
 #include <RooWorkspace.h>
 #include <RooFitImplHelpers.h>
-#include <RooMsgService.h>
 
 #include <charconv>
 #include <iterator>
@@ -602,12 +601,16 @@ bool hasConstraint(const JSONNode &mod)
 // Create the constraint of a normsys or histosys modifier. Without a constraint, the parameter is unconstrained. Only
 // documents that predate HS3 v0.2 imply a unit Gaussian, like the ones written by the former HistFactory::JSONTool.
 void addSysConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, std::string const &sysname,
-                      std::string const &sample, RooArgSet &constraints)
+                      std::string const &sample, bool &warnedUnconstrained, RooArgSet &constraints)
 {
    if (!hasConstraint(mod) && !isHS3VersionBefore(tool.hs3VersionInput(), 0, 2)) {
-      oocoutI(nullptr, IO) << "RooFitHS3: modifier '" << sysname << "' of sample '" << sample
-                           << "' has no constraint, so its parameter '" << param.GetName() << "' is unconstrained"
-                           << std::endl;
+      if (!warnedUnconstrained) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: modifier '" + sysname + "' of sample '" + sample +
+                                       "' has no constraint, so its parameter '" + param.GetName() +
+                                       "' is unconstrained. Older RooFit versions implied a unit Gaussian. Other "
+                                       "modifiers of this channel are not reported.");
+         warnedUnconstrained = true;
+      }
       return;
    }
    createNominal(*tool.workspace(), param.GetName(), 0.0, -10, 10);
@@ -662,7 +665,8 @@ double constraintRelError(RooAbsPdf const &constraint, RooAbsArg const &gamma)
 bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
                       RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
                       const std::optional<Interpolation> &defaultInterpolation,
-                      LegacyInterpolationDefault &legacyInterpolationDefault, RooArgSet &constraints)
+                      LegacyInterpolationDefault &legacyInterpolationDefault, bool &warnedUnconstrained,
+                      RooArgSet &constraints)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -745,7 +749,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             overall_high.push_back(high);
             overall_interp.push_back(interp);
 
-            addSysConstraint(tool, mod, par, sysname, sampleName, constraints);
+            addSysConstraint(tool, mod, par, sysname, sampleName, warnedUnconstrained, constraints);
          } else if (modtype == "histosys") {
             auto *parameter = mod.find("parameter");
             std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
@@ -762,7 +766,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                                         sampleName + "' of channel '" + channelName + "'";
             histoInterp.push_back(interpolationCode(mod, defaultInterpolation, InterpolationClass::Piecewise, context,
                                                     legacyInterpolationDefault));
-            addSysConstraint(tool, mod, par, sysname, sampleName, constraints);
+            addSysConstraint(tool, mod, par, sysname, sampleName, warnedUnconstrained, constraints);
          } else if (modtype == "shapesys" || modtype == "shapefactor") {
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
             // funcName should be "<channel_name>_<sysname>_ShapeSys"
@@ -961,13 +965,14 @@ public:
 
       LegacyInterpolationDefault legacyInterpolationDefault;
       legacyInterpolationDefault.allowed = isHS3VersionBefore(tool->hs3VersionInput(), 0, 3);
+      bool warnedUnconstrained = false;
 
       int idx = 0;
       RooArgList funcs;
       RooArgList coefs;
       for (const auto &comp : p["samples"].children()) {
          importHistSample(*tool, *data[idx], observables, mcStatObject, fprefix, comp, defaultInterpolation,
-                          legacyInterpolationDefault, constraints);
+                          legacyInterpolationDefault, warnedUnconstrained, constraints);
          ++idx;
 
          std::string const &compName = RooJSONFactoryWSTool::name(comp);

@@ -3916,3 +3916,18 @@ TEST(RooFitHS3, HistFactoryImplicitConstraintInOldDocuments)
    EXPECT_NE(ws.pdf("alpha_shapeConstraint"), nullptr);
    EXPECT_NE(ws.var("nom_alpha_norm"), nullptr);
 }
+
+// Parameters without constraint are reported once per channel, because older RooFit versions constrained them.
+TEST(RooFitHS3, HistFactoryUnconstrainedModifierWarning)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = makeHistFactoryJSON(R"(
+      {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "data": {"lo": 0.8, "hi": 1.2}},
+      {"name": "norm2", "parameter": "alpha_norm2", "type": "normsys", "data": {"lo": 0.9, "hi": 1.1}})",
+                                                R"({"type": "mult", "in": "poly6", "out": "exp"})");
+   RooWorkspace ws;
+   const std::string warnings = captureMessages(
+      RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json)); });
+   EXPECT_EQ(countOccurrences(warnings, "has no constraint"), 1u) << warnings;
+}
