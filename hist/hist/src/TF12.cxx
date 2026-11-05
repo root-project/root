@@ -108,7 +108,7 @@ void TF12::Copy(TObject &obj) const
 /// Draw a copy of this function with its current attributes.
 ///
 /// This function MUST be used instead of Draw when you want to draw
-/// the same function with different parameters settings in the same canvas.
+/// the same function with different TF12 options settings in the same canvas.
 ///
 /// Possible option values are:
 ///
@@ -120,6 +120,17 @@ void TF12::Copy(TObject &obj) const
 ///
 /// Note that the default value is "F". Therefore to draw on top
 /// of an existing picture, specify option "SL"
+///
+/// Beware: this function does not clone the underlying TF2 instance,
+/// it just clones the TF12 objects but the all point to the same
+/// TF2. As a result, this function is only useful if you change
+/// the TF12 parameters.
+/// If you want to draw projections of the same function with
+/// different TF2 parameters, you can do so by previously cloning
+/// the TF2 object for each variation.
+/// A clone-less alternative is to create a snapshot of the TF12 by
+/// creating a `new TGraph(tf12)` after each variation and then
+/// adding it to a TMultiGraph.
 
 TF1 *TF12::DrawCopy(Option_t *option) const
 {
