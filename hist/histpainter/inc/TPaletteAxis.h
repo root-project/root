@@ -52,6 +52,7 @@ public:
    TH1*          GetHistogram(){return fH;}
    char *GetObjectInfo(Int_t px, Int_t py) const override;
    Int_t         GetValueColor(Double_t zc);
+   Bool_t        GetSymmetricRangeUser() const;
    void  Paint(Option_t *option="") override;
    void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
    Int_t         GetLog() const;
@@ -71,6 +72,8 @@ public:
    virtual void  SetTitle(const char *title="")               {if (fH) fH->GetZaxis()->SetTitle(title);           else fAxis.SetTitle(title);}         // *MENU*
    virtual void  SetAxisColor(Int_t color=1, Float_t alpha=1) {if (fH) fH->GetZaxis()->SetAxisColor(color,alpha);} // *MENU*
    void  SetLineWidth(Width_t width) override {fAxis.SetLineWidth(width);} // *MENU*
+   void          SetRangeUser(Double_t ufirst, Double_t ulast); // *MENU*
+   void          SetSymmetricRangeUser(Bool_t sym = kTRUE); // *TOGGLE* *GETTER=GetSymmetricRangeUser
 
    virtual void  UnZoom();  // *MENU*
 

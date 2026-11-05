@@ -129,6 +129,7 @@ public:
            Bool_t     GetNoExponent() const { return TestBit(kNoExponent); }
    virtual TObject   *GetParent() const {return fParent;}
            Bool_t     GetRotateTitle() const { return TestBit(kRotateTitle); }
+           Bool_t     GetSymmetricRangeUser() const;
    virtual const char *GetTicks() const;
    virtual Bool_t     GetTimeDisplay() const {return fTimeDisplay;}
    virtual const char *GetTimeFormat() const {return fTimeFormat.Data();}
@@ -169,6 +170,7 @@ public:
    virtual void       SetParent(TObject *obj) {fParent = obj;}
    virtual void       SetRange(Int_t first=0, Int_t last=0);  // *MENU*
    virtual void       SetRangeUser(Double_t ufirst, Double_t ulast);  // *MENU*
+           void       SetSymmetricRangeUser(Bool_t sym = kTRUE); // *TOGGLE* *GETTER=GetSymmetricRangeUser
    virtual void       SetTicks(Option_t *option="+"); // *MENU*
    virtual void       SetTimeDisplay(Int_t value) {fTimeDisplay = (value != 0);} // *TOGGLE*
    virtual void       SetTimeFormat(const char *format="");  // *MENU*
