@@ -5843,14 +5843,18 @@ void TClass::SetCurrentStreamerInfo(TVirtualStreamerInfo *info)
 
 size_t TClass::GetClassAlignment() const
 {
-   if (fAlignment != 0)
-      return fAlignment;
+   auto alignment = fAlignment.load(std::memory_order_relaxed);
+   if (alignment != 0)
+      return alignment;
    if (fState < kEmulated && !fCollectionProxy)
       return 0;
    if (HasInterpreterInfo()) {
       if (Property() & (kIsNamespace | kIsEnum))
          return 0;
-      return gCling->ClassInfo_AlignOf(GetClassInfo());
+      alignment = gCling->ClassInfo_AlignOf(GetClassInfo());
+      if (alignment != 0)
+         fAlignment.store(alignment, std::memory_order_relaxed);
+      return alignment;
    }
    if (fCollectionProxy) {
       // If the collection proxy has a dictionary, it will have return earlier,
