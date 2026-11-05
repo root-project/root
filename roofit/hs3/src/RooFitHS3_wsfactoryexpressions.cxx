@@ -139,12 +139,6 @@ auto RooFitHS3_wsfactoryexpressions = R"({
         "arguments": [
             "x"
         ]
-    },
-    "crystalball_doublesided_dist": {
-        "class": "RooCrystalBall",
-        "arguments": [
-            "m", "m0", "sigma_L", "sigma_R", "alpha_L", "n_L", "alpha_R", "n_R"
-        ]
     }
 })";
 
