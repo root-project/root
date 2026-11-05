@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <set>
 #include <unordered_map>
+#include <vector>
 
 namespace RooFit {
 namespace JSONIO {
@@ -45,6 +46,9 @@ public:
       bool allowExportInvalidNames = true;
       bool allowSanitizeNames = true;
       bool importNoDomainParametersAsRooConstVars = true;
+      // Write array distributions (HS3 `array_dist`). If false, no `array_dist` is written: HistFactory constraints
+      // are named individually, and a RooProdPdf tagged as array distribution is written as `product_dist`.
+      bool exportArrayDist = true;
    };
 
    static Config &config();
@@ -200,6 +204,7 @@ public:
    }
 
    std::string exportTransformed(const RooAbsReal *original, const std::string &suffix, const std::string &formula);
+   std::string exportAsArrayComponent(RooAbsPdf const &pdf, std::string const &arrayName);
 
    void setAttribute(const std::string &obj, const std::string &attrib);
    bool hasAttribute(const std::string &obj, const std::string &attrib);
@@ -212,11 +217,11 @@ public:
 private:
    template <class T>
    T *requestImpl(const std::string &objname);
-   void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
+   void exportObject(RooAbsArg const &func);
 
    // To export multiple objects sorted alphabetically
    template <class T>
-   void exportObjects(T const &args, std::set<std::string> &exportedObjectNames)
+   void exportObjects(T const &args)
    {
       RooArgSet argSet;
       for (RooAbsArg const *arg : args) {
@@ -224,9 +229,10 @@ private:
       }
       argSet.sort();
       for (RooAbsArg *arg : argSet) {
-         exportObject(*arg, exportedObjectNames);
+         exportObject(*arg);
       }
    }
+   void exportArrayDists();
 
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
@@ -261,6 +267,11 @@ private:
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
+   // Names of the objects written so far, to export each object once.
+   std::set<std::string> _exportedObjectNames;
+   // Array distributions to write at the end of the export: their components, and the array of each component.
+   std::map<std::string, std::vector<RooAbsPdf const *>> _arrayComponents;
+   std::map<std::string, std::string> _arrayOfComponent;
 
    // Name-keyed indices over the top-level "functions" and "distributions"
    // sequences of the input JSON. Built once at the start of importAllNodes()

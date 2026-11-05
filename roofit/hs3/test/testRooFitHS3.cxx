@@ -3956,6 +3956,220 @@ TEST(RooFitHS3, ArrayDistImportErrors)
       "the parameters of component 0 depend on its own observable 'n_1'");
 }
 
+// A RooProdPdf with the attribute hs3_array_dist is written as array_dist: one component per factor with the fields
+// of the standalone distribution, values shared by all components in "default_parameters". The written document
+// has no standalone distribution for the components, and it is stable under a round trip.
+TEST(RooFitHS3, ArrayDistExport)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "pois", "type": "array_dist", "component_type": "poisson_dist",
+          "default_parameters": {"mean": "lambda_default"},
+          "components": [{"x": "n_1", "mean": "lambda_1"}, {"x": "n_2"}, {"x": "n_3", "mean": 7.5, "integer": true}]},
+         {"name": "gauss", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_a", "mean": "a"}, {"x": "nom_b", "mean": "b"}, {"x": "nom_c", "mean": 0.5}]}
+      ],
+      "functions": [
+         {"name": "lambda_1", "type": "product", "factors": [20.0, "np_1"]},
+         {"name": "lambda_default", "type": "product", "factors": [10.0, "np_2"]}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "n_1", "min": 0.0, "max": 100.0}, {"name": "n_2", "min": 0.0, "max": 100.0},
+         {"name": "n_3", "min": 0.0, "max": 100.0},
+         {"name": "np_1", "min": 0.0, "max": 5.0}, {"name": "np_2", "min": 0.0, "max": 5.0},
+         {"name": "nom_a", "min": -5.0, "max": 5.0}, {"name": "nom_b", "min": -5.0, "max": 5.0},
+         {"name": "nom_c", "min": -5.0, "max": 5.0}, {"name": "a", "min": -5.0, "max": 5.0},
+         {"name": "b", "min": -5.0, "max": 5.0}]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   // The components are not written on their own.
+   EXPECT_EQ(distributions.num_children(), 2u) << exported;
+   const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "pois");
+   ASSERT_NE(pois, nullptr) << exported;
+   EXPECT_EQ((*pois)["type"].val(), "array_dist");
+   EXPECT_EQ((*pois)["component_type"].val(), "poisson_dist");
+   // The Poisson components have different "integer" flags, so nothing is shared.
+   EXPECT_FALSE(pois->has_child("default_parameters")) << exported;
+   ASSERT_EQ((*pois)["components"].num_children(), 3u);
+   EXPECT_EQ((*pois)["components"].child(0)["x"].val(), "n_1");
+   EXPECT_EQ((*pois)["components"].child(0)["mean"].val(), "lambda_1");
+   EXPECT_FALSE((*pois)["components"].child(0)["integer"].val_bool());
+   EXPECT_EQ((*pois)["components"].child(1)["x"].val(), "n_2");
+   EXPECT_EQ((*pois)["components"].child(1)["mean"].val(), "lambda_default");
+   EXPECT_EQ((*pois)["components"].child(2)["x"].val(), "n_3");
+   EXPECT_DOUBLE_EQ((*pois)["components"].child(2)["mean"].val_double(), 7.5);
+   EXPECT_TRUE((*pois)["components"].child(2)["integer"].val_bool());
+
+   const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "gauss");
+   ASSERT_NE(gauss, nullptr) << exported;
+   EXPECT_EQ((*gauss)["component_type"].val(), "gaussian_dist");
+   ASSERT_TRUE(gauss->has_child("default_parameters")) << exported;
+   EXPECT_DOUBLE_EQ((*gauss)["default_parameters"]["sigma"].val_double(), 1.0);
+   ASSERT_EQ((*gauss)["components"].num_children(), 3u);
+   for (auto const &component : (*gauss)["components"].children()) {
+      EXPECT_FALSE(component.has_child("sigma")) << exported;
+   }
+   EXPECT_EQ((*gauss)["components"].child(0)["mean"].val(), "a");
+   EXPECT_DOUBLE_EQ((*gauss)["components"].child(2)["mean"].val_double(), 0.5);
+
+   // The tag is not written as an attribute; it is restored from the type on import.
+   EXPECT_EQ(exported.find("hs3_array_dist"), std::string::npos) << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_TRUE(ws2.pdf("gauss")->getAttribute("hs3_array_dist"));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+}
+
+// An array distribution built in RooFit (a tagged RooProdPdf), the opt-out that writes it as product_dist, and the
+// products that cannot be written as array_dist.
+TEST(RooFitHS3, ArrayDistExportOfTaggedProduct)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar nomA{"nom_a", "nom_a", 0.0, -5.0, 5.0};
+   RooRealVar nomB{"nom_b", "nom_b", 0.0, -5.0, 5.0};
+   RooRealVar a{"a", "a", 0.0, -5.0, 5.0};
+   RooRealVar b{"b", "b", 0.0, -5.0, 5.0};
+   RooGaussian gaussA{"gauss_a", "gauss_a", nomA, a, RooFit::RooConst(1.0)};
+   RooGaussian gaussB{"gauss_b", "gauss_b", nomB, b, RooFit::RooConst(1.0)};
+   RooProdPdf array{"constraints", "constraints", {gaussA, gaussB}};
+   array.setAttribute("hs3_array_dist");
+
+   RooWorkspace ws;
+   ws.import(array, RooFit::Silence());
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   ASSERT_EQ(distributions.num_children(), 1u) << exported;
+   const auto *node = RooJSONFactoryWSTool::findNamedChild(distributions, "constraints");
+   ASSERT_NE(node, nullptr) << exported;
+   EXPECT_EQ((*node)["type"].val(), "array_dist");
+   EXPECT_EQ((*node)["component_type"].val(), "gaussian_dist");
+   EXPECT_DOUBLE_EQ((*node)["default_parameters"]["sigma"].val_double(), 1.0);
+   ASSERT_EQ((*node)["components"].num_children(), 2u);
+   EXPECT_EQ((*node)["components"].child(0)["x"].val(), "nom_a");
+   EXPECT_EQ((*node)["components"].child(0)["mean"].val(), "a");
+   EXPECT_EQ((*node)["components"].child(1)["x"].val(), "nom_b");
+
+   // Round trip: the components get the names of their observables, the product is tagged again.
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   auto *imported = dynamic_cast<RooProdPdf *>(ws2.pdf("constraints"));
+   ASSERT_NE(imported, nullptr);
+   EXPECT_TRUE(imported->getAttribute("hs3_array_dist"));
+   EXPECT_NE(dynamic_cast<RooGaussian *>(ws2.pdf("nom_a_constraint")), nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // Opt-out: no array_dist is written, the tagged product is an ordinary product_dist.
+   RooJSONFactoryWSTool::config().exportArrayDist = false;
+   const std::string plain = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().exportArrayDist = true;
+   auto plainTree = RooFit::Detail::JSONTree::create(plain);
+   auto const &plainDistributions = plainTree->rootnode()["distributions"];
+   EXPECT_EQ(plainDistributions.num_children(), 3u) << plain;
+   const auto *product = RooJSONFactoryWSTool::findNamedChild(plainDistributions, "constraints");
+   ASSERT_NE(product, nullptr) << plain;
+   EXPECT_EQ((*product)["type"].val(), "product_dist");
+   const auto *component = RooJSONFactoryWSTool::findNamedChild(plainDistributions, "gauss_a");
+   ASSERT_NE(component, nullptr) << plain;
+   EXPECT_EQ((*component)["type"].val(), "gaussian_dist");
+   EXPECT_EQ(plain.find("array_dist"), std::string::npos) << plain;
+
+   // Products that cannot be written as array_dist: a factor of another class, two factors over the same
+   // observable, and a tag on something that is not a product.
+   {
+      RooRealVar x{"x", "x", 1.0, 0.0, 10.0};
+      RooRealVar c{"c", "c", -1.0, -10.0, 0.0};
+      RooExponential expo{"expo", "expo", x, c};
+      RooProdPdf mixed{"mixed", "mixed", {gaussA, expo}};
+      mixed.setAttribute("hs3_array_dist");
+      RooWorkspace wsMixed;
+      wsMixed.import(mixed, RooFit::Silence());
+      expectExportThrowsWithError(wsMixed, "'expo' cannot be a component");
+   }
+   {
+      RooGaussian gaussA2{"gauss_a2", "gauss_a2", nomA, b, RooFit::RooConst(2.0)};
+      RooProdPdf sameX{"same_x", "same_x", {gaussA, gaussA2}};
+      sameX.setAttribute("hs3_array_dist");
+      RooWorkspace wsSameX;
+      wsSameX.import(sameX, RooFit::Silence());
+      expectExportThrowsWithError(wsSameX, "two components have the observable 'nom_a'");
+   }
+   {
+      RooGaussian tagged{"tagged", "tagged", nomA, a, RooFit::RooConst(1.0)};
+      tagged.setAttribute("hs3_array_dist");
+      RooWorkspace wsTagged;
+      wsTagged.import(tagged, RooFit::Silence());
+      expectExportThrowsWithError(wsTagged, "is not a RooProdPdf");
+   }
+}
+
+// An array distribution paired with an unbinned data set with one entry (the form of the HS3 appendix on auxiliary
+// measurements) gives a likelihood with one term per component.
+TEST(RooFitHS3, ArrayDistLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "gauss_constraints", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_alpha_1", "mean": "alpha_1"}, {"x": "nom_alpha_2", "mean": "alpha_2"},
+                         {"x": "nom_alpha_3", "mean": "alpha_3", "sigma": 2.0}]}
+      ],
+      "data": [{"name": "global_observables", "type": "unbinned", "entries": [[0.5, -0.5, 1.0]],
+                "axes": [{"name": "nom_alpha_1", "min": -5.0, "max": 5.0}, {"name": "nom_alpha_2", "min": -5.0, "max": 5.0},
+                         {"name": "nom_alpha_3", "min": -5.0, "max": 5.0}]}],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "nom_alpha_1", "min": -5.0, "max": 5.0}, {"name": "nom_alpha_2", "min": -5.0, "max": 5.0},
+         {"name": "nom_alpha_3", "min": -5.0, "max": 5.0}, {"name": "alpha_1", "min": -5.0, "max": 5.0},
+         {"name": "alpha_2", "min": -5.0, "max": 5.0}, {"name": "alpha_3", "min": -5.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "alpha_1", "value": 0.2}, {"name": "alpha_2", "value": 0.1}, {"name": "alpha_3", "value": -0.3}]}],
+      "likelihoods": [{"name": "likelihood", "distributions": ["gauss_constraints"], "data": ["global_observables"]}],
+      "analyses": [{"name": "analysis", "likelihood": "likelihood", "domains": ["default_domain"]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("analysis"));
+   ASSERT_NE(mc, nullptr);
+   ASSERT_NE(mc->GetPdf(), nullptr);
+   EXPECT_STREQ(mc->GetPdf()->GetName(), "gauss_constraints");
+   auto *data = ws.data("global_observables");
+   ASSERT_NE(data, nullptr);
+   ASSERT_EQ(data->numEntries(), 1);
+
+   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*data)};
+   double expected = 0.0;
+   for (const char *name : {"nom_alpha_1_constraint", "nom_alpha_2_constraint", "nom_alpha_3_constraint"}) {
+      auto *component = ws.pdf(name);
+      ASSERT_NE(component, nullptr) << name;
+      RooArgSet observable;
+      component->getObservables(data->get(), observable);
+      expected -= std::log(component->getVal(observable));
+   }
+   EXPECT_NEAR(nll->getVal(), expected, 1e-10 * std::abs(expected));
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+}
+
 // Binned axes with an irregular binning carry "min" and "max" in addition to the "edges".
 TEST(RooFitHS3, IrregularBinnedAxesHaveRange)
 {

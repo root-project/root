@@ -24,6 +24,7 @@
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
+#include <RooProdPdf.h>
 #include <RooSimultaneous.h>
 #include <RooFit/ModelConfig.h>
 #include <RooFitImplHelpers.h>
@@ -385,13 +386,6 @@ JSONNode const *findRooFitInternal(JSONNode const &node, Keys_t const &...keys)
    return node.find("misc", "ROOT_internal", keys...);
 }
 
-// True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
-bool isLiteralConstVar(RooAbsArg const &arg)
-{
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
-   return isRooConstVar && isNumber(arg.GetName());
-}
-
 // Export the string attributes and tags of `arg` into the ROOT-internal attributes node.
 void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
 {
@@ -425,8 +419,8 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
    }
    if (!arg->attributes().empty()) {
       for (auto const &attr : arg->attributes()) {
-         // Skip some RooFit internals
-         if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object")
+         // Skip some RooFit internals. The array distribution tag is restored from the type on import.
+         if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object" || attr == arrayDistTag)
             continue;
          initializeNode();
          (*node)["tags"].set_seq().append_child() << attr;
@@ -958,6 +952,12 @@ void checkUniqueNames(JSONNode const &rootnode, bool strict)
 
 } // namespace
 
+bool isLiteralConstVar(RooAbsArg const &arg)
+{
+   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
+   return isRooConstVar && isNumber(arg.GetName());
+}
+
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() {}
@@ -1173,21 +1173,21 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
 }
 
 // Export a single object `func` (pdf, function, variable or category) to the output JSON, recording its name in
-// `exportedObjectNames` to avoid exporting it twice.
-void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames)
+// `_exportedObjectNames` to avoid exporting it twice.
+void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
 {
    std::string name = func.GetName();
 
    // if this element was already exported, skip
-   if (exportedObjectNames.find(name) != exportedObjectNames.end())
+   if (_exportedObjectNames.find(name) != _exportedObjectNames.end())
       return;
 
-   exportedObjectNames.insert(name);
+   _exportedObjectNames.insert(name);
 
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       // RooSimultaneous is not used in the HS3 standard, we only export the
       // dependents and some ROOT internal information.
-      exportObjects(func.servers(), exportedObjectNames);
+      exportObjects(func.servers());
 
       std::vector<std::string> channelNames;
       for (auto const &item : simPdf->indexCat()) {
@@ -1209,6 +1209,22 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
       exportVariable(&func, *_varsNode, true, false);
+      return;
+   } else if (config().exportArrayDist && func.getAttribute(arrayDistTag)) {
+      // An array distribution (HS3 `array_dist`): its components are registered here, and the array is written at
+      // the end of the export, see exportAsArrayComponent().
+      auto const *prod = dynamic_cast<RooProdPdf const *>(&func);
+      if (!prod) {
+         error("'" + name + "' has the attribute '" + arrayDistTag +
+               "' of an array distribution, but it is not a RooProdPdf");
+      }
+      for (RooAbsPdf *pdf : static_range_cast<RooAbsPdf *>(prod->pdfList())) {
+         const std::string writtenIn = exportAsArrayComponent(*pdf, name);
+         if (writtenIn != name) {
+            error("cannot write '" + name + "' as an array distribution: its component '" + pdf->GetName() +
+                  "' is already written as '" + writtenIn + "'");
+         }
+      }
       return;
    }
 
@@ -1237,9 +1253,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
             continue;
          }
          if (exp->autoExportDependants()) {
-            exportObjects(func.servers(), exportedObjectNames);
+            exportObjects(func.servers());
          } else {
-            exportObjects(_serversToExport, exportedObjectNames);
+            exportObjects(_serversToExport);
          }
          for (auto &s : _serversToDelete) {
             delete s;
@@ -1311,8 +1327,55 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
          std::cerr << "unable to locate server of " << func.GetName() << std::endl;
          continue;
       }
-      this->exportObject(*s, exportedObjectNames);
+      this->exportObject(*s);
    }
+}
+
+std::string RooJSONFactoryWSTool::exportAsArrayComponent(RooAbsPdf const &pdf, std::string const &arrayName)
+{
+   const std::string pdfName = pdf.GetName();
+   if (auto it = _arrayOfComponent.find(pdfName); it != _arrayOfComponent.end()) {
+      return it->second;
+   }
+   // Already written on its own: it is referenced by its name.
+   if (_exportedObjectNames.find(pdfName) != _exportedObjectNames.end()) {
+      return pdfName;
+   }
+   if (_arrayComponents.find(arrayName) == _arrayComponents.end()) {
+      RooAbsArg const *existing = _workspace.arg(arrayName);
+      if (existing && !existing->getAttribute(arrayDistTag)) {
+         error("cannot write the array distribution '" + arrayName +
+               "': the workspace has another object of that name");
+      }
+      _exportedObjectNames.insert(arrayName);
+   }
+   _arrayComponents[arrayName].push_back(&pdf);
+   _arrayOfComponent[pdfName] = arrayName;
+   _exportedObjectNames.insert(pdfName);
+   return arrayName;
+}
+
+// Write the array distributions registered with exportAsArrayComponent(), in alphabetical order, each followed by the
+// servers of its components.
+void RooJSONFactoryWSTool::exportArrayDists()
+{
+   std::set<std::string> written;
+   for (;;) {
+      auto next = std::find_if(_arrayComponents.begin(), _arrayComponents.end(),
+                               [&](auto const &item) { return written.find(item.first) == written.end(); });
+      if (next == _arrayComponents.end()) {
+         break;
+      }
+      written.insert(next->first);
+      // Exporting the servers may add to the registry, so the components are copied.
+      const std::vector<RooAbsPdf const *> components = next->second;
+      writeArrayDist(appendNamedChild((*_rootnodeOutput)["distributions"], next->first), next->first, components);
+      for (RooAbsPdf const *pdf : components) {
+         exportObjects(pdf->servers());
+      }
+   }
+   _arrayComponents.clear();
+   _arrayOfComponent.clear();
 }
 
 /**
@@ -2061,8 +2124,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
    sortByName(allpdfs);
-   std::set<std::string> exportedObjectNames;
-   exportObjects(allpdfs, exportedObjectNames);
+   _exportedObjectNames.clear();
+   _arrayComponents.clear();
+   _arrayOfComponent.clear();
+   exportObjects(allpdfs);
 
    // export all toplevel functions
    std::vector<RooAbsReal *> allfuncs;
@@ -2074,7 +2139,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
    sortByName(allfuncs);
-   exportObjects(allfuncs, exportedObjectNames);
+   exportObjects(allfuncs);
+
+   // The array distributions are written after the objects that use them, see exportAsArrayComponent().
+   exportArrayDists();
 
    // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {
@@ -2139,6 +2207,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    _domains->writeJSON(n["domains"]);
    _domains.reset();
    _rootnodeOutput = nullptr;
+   _exportedObjectNames.clear();
 }
 
 /**
