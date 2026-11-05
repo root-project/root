@@ -238,12 +238,14 @@ std::size_t countOccurrences(std::string_view haystack, std::string_view needle)
    return result;
 }
 
-std::string makeHistFactoryJSON(std::string const &modifiers, std::string const &defaultInterpolation = "")
+std::string makeHistFactoryJSON(std::string const &modifiers, std::string const &defaultInterpolation = "",
+                                std::string const &version = "0.2")
 {
    const std::string defaultNode =
       defaultInterpolation.empty() ? "" : "\"default_interpolation\":" + defaultInterpolation + ",";
    return R"({
-      "metadata": {"hs3_version": "0.2"},
+      "metadata": {"hs3_version": ")" +
+          version + R"("},
       "distributions": [
          {
             "name": "model_channel0",
@@ -3894,4 +3896,23 @@ TEST(RooFitHS3, NormSysWithFunctionAsParameter)
    RooWorkspace ws;
    ws.import(prod, RooFit::Silence());
    expectExportThrowsWithError(ws, "cannot find constraint for alphaOfBeta_sys");
+}
+
+// Documents that predate HS3 v0.2 imply a unit Gaussian constraint for normsys and histosys modifiers.
+TEST(RooFitHS3, HistFactoryImplicitConstraintInOldDocuments)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string modifiers = R"(
+      {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "data": {"lo": 0.8, "hi": 1.2}},
+      {"name": "shape", "parameter": "alpha_shape", "type": "histosys",
+       "data": {"lo": {"contents": [8.0, 18.0]}, "hi": {"contents": [12.0, 22.0]}}})";
+   const std::string defaultInterpolation = R"({"type": "mult", "in": "poly6", "out": "exp"})";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(
+      RooJSONFactoryWSTool{ws}.importJSONfromString(makeHistFactoryJSON(modifiers, defaultInterpolation, "0.1.90")));
+   EXPECT_NE(ws.pdf("alpha_normConstraint"), nullptr);
+   EXPECT_NE(ws.pdf("alpha_shapeConstraint"), nullptr);
+   EXPECT_NE(ws.var("nom_alpha_norm"), nullptr);
 }

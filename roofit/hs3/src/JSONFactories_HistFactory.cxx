@@ -599,11 +599,12 @@ bool hasConstraint(const JSONNode &mod)
    return mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type");
 }
 
-// Create the constraint of a normsys or histosys modifier. Without a constraint, the parameter is unconstrained.
+// Create the constraint of a normsys or histosys modifier. Without a constraint, the parameter is unconstrained. Only
+// documents that predate HS3 v0.2 imply a unit Gaussian, like the ones written by the former HistFactory::JSONTool.
 void addSysConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, std::string const &sysname,
                       std::string const &sample, RooArgSet &constraints)
 {
-   if (!hasConstraint(mod)) {
+   if (!hasConstraint(mod) && !isHS3VersionBefore(tool.hs3VersionInput(), 0, 2)) {
       oocoutI(nullptr, IO) << "RooFitHS3: modifier '" << sysname << "' of sample '" << sample
                            << "' has no constraint, so its parameter '" << param.GetName() << "' is unconstrained"
                            << std::endl;
