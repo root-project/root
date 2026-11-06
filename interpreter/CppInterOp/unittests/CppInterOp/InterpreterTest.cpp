@@ -853,6 +853,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DetectSystemCompilerIncludePaths) {
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_IncludePaths) {
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
+  TestFixture::CreateInterpreter();
   std::vector<std::string> includes;
   Cpp::GetIncludePaths(includes);
   EXPECT_FALSE(includes.empty());
@@ -955,7 +956,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageStandardGNU) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ExternalInterpreter) {
-
+  // UseExternalInterpreter must refuse while an interpreter is registered.
+  TestFixture::CreateInterpreter();
 
 #ifndef CPPINTEROP_USE_CLING
   llvm::ExitOnError ExitOnErr;
