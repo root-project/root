@@ -17,6 +17,8 @@
 #include <RooBinning.h>
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
+#include <RooConstVar.h>
+#include <RooCrystalBall.h>
 #include <RooDataHist.h>
 #include <RooDecay.h>
 #include <RooDerivative.h>
@@ -66,7 +68,9 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <initializer_list>
 #include <set>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -789,10 +793,16 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
          << ". Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
          << "Root version that supports custom ParamHistFunc binnings(>=6.38.00)." << std::endl;
       RooJSONFactoryWSTool::warning(ss.str());
-      tool->wsEmplace<ParamHistFunc>(name, varList, tool->requestArgList<RooAbsReal>(p, "parameters"));
+      checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), varList, "the ParamHistFunc '" + name + "'");
+      tool->wsEmplace<ParamHistFunc>(name, varList,
+                                     toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), varList));
       return true;
    }
-   tool->wsEmplace<ParamHistFunc>(name, readBinning(p, varList), tool->requestArgList<RooAbsReal>(p, "parameters"));
+   RooArgList binning = readBinning(p, varList);
+   checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), binning, "the ParamHistFunc '" + name + "'");
+   // The parameters are given in the order of HS3 (last axis fastest); ParamHistFunc expects TH1 order.
+   tool->wsEmplace<ParamHistFunc>(name, binning,
+                                  toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), binning));
    return true;
 }
 
@@ -869,9 +879,152 @@ private:
    mutable bool _warned = false;
 };
 
+namespace CrystalBall {
+
+constexpr const char *tailKeys[] = {"alpha_L", "n_L", "alpha_R", "n_R"};
+
+bool hasAny(const JSONNode &p, std::initializer_list<const char *> keys)
+{
+   for (const char *key : keys) {
+      if (p.has_child(key)) {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool hasDoubleSidedKeys(const JSONNode &p)
+{
+   return hasAny(p, {"alpha_L", "n_L", "alpha_R", "n_R", "sigma_L", "sigma_R"});
+}
+
+// Create a RooCrystalBall with two tails. With `symmetricShorthand`, the tails may also be given as "alpha" and "n"
+// for both sides, as in the "crystalball_dist" of HS3 versions before 0.3.
+void importDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p, std::string const &type, bool symmetricShorthand)
+{
+   const std::string name(RooJSONFactoryWSTool::name(p));
+   const std::string context = type + " '" + name + "'";
+
+   const bool asymmetricTails = hasAny(p, {"alpha_L", "n_L", "alpha_R", "n_R"});
+   const bool symmetricTails = hasAny(p, {"alpha", "n"});
+   if (symmetricTails && !symmetricShorthand) {
+      RooJSONFactoryWSTool::error(context + " must not have \"alpha\" or \"n\", the tails are given by \"alpha_L\", " +
+                                  "\"n_L\", \"alpha_R\" and \"n_R\"");
+   }
+   if (symmetricTails && asymmetricTails) {
+      RooJSONFactoryWSTool::error(context +
+                                  " must not combine \"alpha\"/\"n\" with \"alpha_L\"/\"n_L\"/\"alpha_R\"/\"n_R\"");
+   }
+   if (asymmetricTails || !symmetricTails) {
+      for (const char *key : tailKeys) {
+         if (!p.has_child(key)) {
+            RooJSONFactoryWSTool::error(context + " is missing \"" + key +
+                                        "\": \"alpha_L\", \"n_L\", \"alpha_R\" and \"n_R\" are all required");
+         }
+      }
+   } else if (!p.has_child("alpha") || !p.has_child("n")) {
+      RooJSONFactoryWSTool::error(context + " needs both \"alpha\" and \"n\"");
+   }
+
+   const bool asymmetricWidths = hasAny(p, {"sigma_L", "sigma_R"});
+   if (asymmetricWidths && p.has_child("sigma")) {
+      RooJSONFactoryWSTool::error(context + " must not combine \"sigma\" with \"sigma_L\"/\"sigma_R\"");
+   }
+   if (asymmetricWidths && !(p.has_child("sigma_L") && p.has_child("sigma_R"))) {
+      RooJSONFactoryWSTool::error(context + " needs both \"sigma_L\" and \"sigma_R\"");
+   }
+   if (!asymmetricWidths && !p.has_child("sigma")) {
+      RooJSONFactoryWSTool::error(context + " needs either \"sigma\" or both \"sigma_L\" and \"sigma_R\"");
+   }
+
+   RooAbsReal *m = tool->requestArg<RooAbsReal>(p, "m");
+   RooAbsReal *m0 = tool->requestArg<RooAbsReal>(p, "m0");
+   RooAbsReal *sigmaL = tool->requestArg<RooAbsReal>(p, asymmetricWidths ? "sigma_L" : "sigma");
+   RooAbsReal *sigmaR = tool->requestArg<RooAbsReal>(p, asymmetricWidths ? "sigma_R" : "sigma");
+   RooAbsReal *alphaL = tool->requestArg<RooAbsReal>(p, symmetricTails ? "alpha" : "alpha_L");
+   RooAbsReal *nL = tool->requestArg<RooAbsReal>(p, symmetricTails ? "n" : "n_L");
+   RooAbsReal *alphaR = tool->requestArg<RooAbsReal>(p, symmetricTails ? "alpha" : "alpha_R");
+   RooAbsReal *nR = tool->requestArg<RooAbsReal>(p, symmetricTails ? "n" : "n_R");
+   tool->wsEmplace<RooCrystalBall>(name, *m, *m0, *sigmaL, *sigmaR, *alphaL, *nL, *alphaR, *nR);
+}
+
+} // namespace CrystalBall
+
+// "crystalball_dist" is the single-sided Crystal Ball, which is left to the factory expression (RooCBShape). Before
+// HS3 0.3, it was also the double-sided Crystal Ball, recognizable by the "_L"/"_R" fields. Such documents are still
+// read, with a deprecation warning.
+class CrystalBallImporter : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      if (!CrystalBall::hasDoubleSidedKeys(p)) {
+         return false;
+      }
+      if (!_warned) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: \"crystalball_dist\" with the fields \"alpha_L\", \"n_L\", "
+                                       "\"alpha_R\", \"n_R\", \"sigma_L\" or \"sigma_R\" is deprecated, please use "
+                                       "\"crystalball_doublesided_dist\" for the double-sided Crystal Ball.");
+         _warned = true;
+      }
+      CrystalBall::importDoubleSided(tool, p, "crystalball_dist", /*symmetricShorthand=*/true);
+      return true;
+   }
+
+private:
+   mutable bool _warned = false;
+};
+
+bool importCrystalBallDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   CrystalBall::importDoubleSided(tool, p, "crystalball_doublesided_dist", /*symmetricShorthand=*/false);
+   return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+// Write a reference to `arg`: the value if it is a literal constant, and the name otherwise.
+void writeReference(JSONNode &node, RooAbsArg const &arg)
+{
+   auto const *constVar = dynamic_cast<RooConstVar const *>(&arg);
+   std::istringstream stream(arg.GetName());
+   double value = 0.0;
+   if (constVar && (stream >> value) && stream.eof()) {
+      node << constVar->getVal();
+   } else {
+      node << arg.GetName();
+   }
+}
+
+// A RooCrystalBall with one tail is the single-sided "crystalball_dist" (read back as RooCBShape, which follows the
+// same convention for the sign of alpha). With two tails, it is a "crystalball_doublesided_dist", whose tails are
+// always written as "alpha_L"/"n_L"/"alpha_R"/"n_R": there is no shorthand for symmetric tails.
+bool exportCrystalBall(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+{
+   auto const *pdf = static_cast<const RooCrystalBall *>(func);
+   writeReference(elem["m"], pdf->x());
+   writeReference(elem["m0"], pdf->x0());
+   if (!pdf->alphaR() || !pdf->nR()) {
+      elem["type"] << "crystalball_dist";
+      writeReference(elem["sigma"], pdf->sigmaL());
+      writeReference(elem["alpha"], pdf->alphaL());
+      writeReference(elem["n"], pdf->nL());
+      return true;
+   }
+   elem["type"] << key;
+   if (&pdf->sigmaL() == &pdf->sigmaR()) {
+      writeReference(elem["sigma"], pdf->sigmaL());
+   } else {
+      writeReference(elem["sigma_L"], pdf->sigmaL());
+      writeReference(elem["sigma_R"], pdf->sigmaR());
+   }
+   writeReference(elem["alpha_L"], pdf->alphaL());
+   writeReference(elem["n_L"], pdf->nL());
+   writeReference(elem["alpha_R"], *pdf->alphaR());
+   writeReference(elem["n_R"], *pdf->nR());
+   return true;
+}
+
 template <class RooArg_t>
 bool exportAddPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
@@ -1329,7 +1482,11 @@ bool exportParamHistFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode
    auto *pdf = static_cast<const ParamHistFunc *>(func);
    elem["type"] << key;
    RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
-   RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
+   // One parameter per bin, in the order of HS3 (last axis fastest), not in ParamHistFunc's internal TH1 order.
+   auto &paramsNode = elem["parameters"].set_seq();
+   for (RooAbsReal *param : paramHistFuncParamsInBinOrder(*pdf)) {
+      paramsNode.append_child() << param->GetName();
+   }
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
@@ -1459,6 +1616,8 @@ void registerExporter(TClass const *cl, std::string key, bool topPriority = true
 STATIC_EXECUTE([]() {
    registerImporter<importWrapperPdf>("density_function_dist");
    registerImporter<importExtendPdf>("rate_extended_dist");
+   RooFit::JSONIO::registerImporter("crystalball_dist", std::make_unique<CrystalBallImporter>());
+   registerImporter<importCrystalBallDoubleSided>("crystalball_doublesided_dist");
    RooFit::JSONIO::registerImporter("ARGUS_dist", std::make_unique<DeprecatedKeyImporter>("ARGUS_dist", "argus_dist"));
    RooFit::JSONIO::registerImporter("binsampling",
                                     std::make_unique<DeprecatedKeyImporter>("binsampling", "binsampling_dist"));
@@ -1500,6 +1659,7 @@ STATIC_EXECUTE([]() {
    registerExporter<exportAddPdf<RooAddPdf>>(RooAddPdf::Class(), "mixture_dist", false);
    registerExporter<exportAddPdf<RooAddModel>>(RooAddModel::Class(), "mixture_resolution_model", false);
    registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling_dist", false);
+   registerExporter<exportCrystalBall>(RooCrystalBall::Class(), "crystalball_doublesided_dist", false);
    registerExporter<exportBinWidthFunction>(RooBinWidthFunction::Class(), "binvolume", false);
    registerExporter<exportPolynomial<RooLegacyExpPoly>>(RooLegacyExpPoly::Class(), "legacy_exp_poly_dist", false);
    registerExporter<exportExponential>(RooExponential::Class(), "exponential_dist", false);

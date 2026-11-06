@@ -20,6 +20,7 @@
 #include <RooAbsCategory.h>
 #include <RooArgProxy.h>
 #include <RooAbsProxy.h>
+#include <RooAbsLValue.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
@@ -34,6 +35,8 @@
 #include <TROOT.h>
 
 #include <algorithm>
+#include <iterator>
+#include <set>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -106,7 +109,7 @@ tool.writedoc("hs3.tex")
 ~~~
 */
 
-constexpr auto hs3VersionTag = "0.2";
+constexpr auto hs3VersionTag = "0.3";
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
@@ -367,8 +370,9 @@ std::vector<std::vector<int>> generateBinIndices(const RooArgSet &vars)
    std::vector<std::vector<int>> combinations;
    std::vector<int> vars_numbins;
    vars_numbins.reserve(vars.size());
-   for (const auto *absv : static_range_cast<RooRealVar *>(vars)) {
-      vars_numbins.push_back(absv->getBins());
+   for (const RooAbsArg *arg : vars) {
+      // Continuous variables and categories (one bin per state)
+      vars_numbins.push_back(dynamic_cast<RooAbsLValue const &>(*arg).numBins());
    }
    std::vector<int> curr_comb(vars.size());
    ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
@@ -435,7 +439,27 @@ void getObservables(RooWorkspace const &ws, const JSONNode &node, RooAbsCollecti
 {
    for (const auto &p : node["axes"].children()) {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (ws.var(name)) {
+      if (p.has_child("categories")) {
+         RooCategory *cat = ws.cat(name);
+         if (!cat) {
+            RooJSONFactoryWSTool::error("The categorical observable \"" + name +
+                                        "\" could not be found in the workspace! Categorical observables are "
+                                        "declared by a categorical axis in a domain.");
+         }
+         std::set<std::string> labels;
+         for (auto const &label : p["categories"].children()) {
+            labels.insert(label.val());
+         }
+         std::set<std::string> states;
+         for (auto const &state : *cat) {
+            states.insert(state.first);
+         }
+         if (labels != states) {
+            RooJSONFactoryWSTool::error("The categories of the axis \"" + name +
+                                        "\" differ from the states of the category \"" + name + "\"");
+         }
+         out.add(*cat);
+      } else if (ws.var(name)) {
          out.add(*ws.var(name));
       } else {
          RooJSONFactoryWSTool::error("The observable \"" + name + "\" could not be found in the workspace!");
@@ -470,6 +494,40 @@ void applyUnbinnedAxisRanges(const JSONNode &p, RooWorkspace &workspace, RooFit:
    }
 }
 
+// Give the categories among `vars` the states of the categories with the same name in the workspace: the same
+// label-to-index mapping and the same order. RooDataHist looks up the bin of a category by the order of the states of
+// the category it is given, so data and workspace category have to agree on it. The workspace categories come from
+// the domains; the labels must be the same, but the data may list them in a different order (HS3 identifies
+// categories by name). readBinnedData() then permutes the bin contents accordingly.
+void alignCategoriesWithWorkspace(RooArgSet &vars, RooWorkspace const &workspace, std::string const &dataName)
+{
+   for (RooAbsArg *arg : vars) {
+      auto *cat = dynamic_cast<RooCategory *>(arg);
+      if (!cat) {
+         continue;
+      }
+      RooCategory const *wsCat = workspace.cat(cat->GetName());
+      if (!wsCat) {
+         continue;
+      }
+      std::vector<std::string> labels;
+      for (int i = 0; i < cat->numTypes(); ++i) {
+         labels.push_back(cat->lookupName(i));
+      }
+      if (static_cast<int>(labels.size()) != wsCat->numTypes() ||
+          std::any_of(labels.begin(), labels.end(), [&](auto const &l) { return !wsCat->hasLabel(l); })) {
+         RooJSONFactoryWSTool::error("the categories of the axis '" + std::string(cat->GetName()) +
+                                     "' of the dataset '" + dataName + "' differ from those of the category '" +
+                                     cat->GetName() + "'");
+      }
+      cat->clear();
+      for (unsigned int i = 0; i < wsCat->size(); ++i) {
+         auto const &state = wsCat->getOrdinal(i);
+         cat->defineType(state.first, state.second);
+      }
+   }
+}
+
 // Create a RooAbsData (binned or unbinned) from the JSON node `p`.
 std::unique_ptr<RooAbsData>
 loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Domains const *domains)
@@ -481,7 +539,9 @@ loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Dom
    std::string const &type = p["type"].val();
    if (type == "binned") {
       // binned
-      return RooJSONFactoryWSTool::readBinnedData(p, name, RooJSONFactoryWSTool::readAxes(p));
+      RooArgSet axes = RooJSONFactoryWSTool::readAxes(p);
+      alignCategoriesWithWorkspace(axes, workspace, name);
+      return RooJSONFactoryWSTool::readBinnedData(p, name, axes);
    } else if (type == "unbinned") {
       // unbinned
       RooArgList varlist;
@@ -513,8 +573,17 @@ loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Dom
          }
          std::size_t j = 0;
          for (auto const &pointj : point.children()) {
-            auto *v = static_cast<RooRealVar *>(varlist.at(j));
-            v->setVal(pointj.val_double());
+            if (auto *cat = dynamic_cast<RooCategory *>(varlist.at(j))) {
+               // The entries of a categorical axis are the labels of the categories.
+               if (pointj.is_number() || !cat->hasLabel(pointj.val())) {
+                  RooJSONFactoryWSTool::error("entry " + std::to_string(i) + " of the dataset '" + name +
+                                              "' has the value '" + pointj.val() + "' on the categorical axis '" +
+                                              cat->GetName() + "', which is not one of its categories");
+               }
+               cat->setLabel(pointj.val());
+            } else {
+               static_cast<RooRealVar *>(varlist.at(j))->setVal(pointj.val_double());
+            }
             ++j;
          }
          if (weightVals.size() > 0) {
@@ -609,15 +678,35 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    if (!extConstraints.empty())
       mc->SetExternalConstraints(extConstraints);
 
-   auto readArgSet = [&](std::string const &name) {
-      RooArgSet out;
-      for (auto const &child : analysisNode[name].children()) {
-         out.add(*workspace.arg(child.val()));
+   // HS3 v0.2.9 used the singular keys "parameter_of_interest" (a list) and "domain" (a single name). They are still
+   // accepted, but the plural keys take precedence.
+   auto findAnalysisKey = [&](const char *key, const char *legacyKey) -> JSONNode const * {
+      if (auto node = analysisNode.find(key)) {
+         return node;
       }
-      return out;
+      if (auto node = analysisNode.find(legacyKey)) {
+         RooJSONFactoryWSTool::warning(std::string("RooFitHS3: the key \"") + legacyKey + "\" of analysis '" +
+                                       analysisName + "' is deprecated, please use \"" + key + "\" instead.");
+         return node;
+      }
+      return nullptr;
    };
+   JSONNode const *poiNode = findAnalysisKey("parameters_of_interest", "parameter_of_interest");
+   JSONNode const *domainsNodeOfAnalysis = findAnalysisKey("domains", "domain");
+   std::vector<std::string> analysisDomains;
+   if (domainsNodeOfAnalysis && domainsNodeOfAnalysis->is_seq()) {
+      analysisDomains = valsToStringVec(*domainsNodeOfAnalysis);
+   } else if (domainsNodeOfAnalysis) {
+      analysisDomains.push_back(domainsNodeOfAnalysis->val());
+   }
 
-   mc->SetParametersOfInterest(readArgSet("parameters_of_interest"));
+   RooArgSet pois;
+   if (poiNode) {
+      for (auto const &child : poiNode->children()) {
+         pois.add(*workspace.arg(child.val()));
+      }
+   }
+   mc->SetParametersOfInterest(pois);
    mc->SetObservables(observables);
    RooArgSet pars;
    pdf->getParameters(&observables, pars);
@@ -629,8 +718,8 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    pdf->getAllConstraints(observables, mainPars, /*stripDisconnected*/ true);
 
    RooArgSet domainPars;
-   for (auto &domain : analysisNode["domains"].children()) {
-      const auto &thisDomain = RooJSONFactoryWSTool::findNamedChild(domainsNode, domain.val());
+   for (std::string const &domain : analysisDomains) {
+      const auto &thisDomain = RooJSONFactoryWSTool::findNamedChild(domainsNode, domain);
       if (!thisDomain || !thisDomain->has_child("axes"))
          continue;
       for (auto &var : (*thisDomain)["axes"].children()) {
@@ -825,8 +914,10 @@ void checkHS3Version(std::string const &version)
    }
 }
 
-/// HS3 requires the names of all top-level objects to be unique within a document. Throw if a name is used twice, or
-/// only warn if not `strict`: RooFit wrote such documents before HS3 v0.3, e.g. for a range and a pdf of one name.
+/// HS3 requires the names of all top-level objects to be unique within a document. If `strict`, throw if a name is
+/// used twice within one section or by a distribution and a function. Other clashes, and all clashes if not
+/// `strict`, only warn: RooFit's own export still produces them, e.g. for a range and a pdf of one name, and it
+/// must be able to read its own output.
 void checkUniqueNames(JSONNode const &rootnode, bool strict)
 {
    std::map<std::string, std::string> sectionOfName;
@@ -850,7 +941,11 @@ void checkUniqueNames(JSONNode const &rootnode, bool strict)
          // compatibility: analyses are not referenced by name, and likelihoods only from analyses, so there is no
          // ambiguity.
          auto isLegacyNamed = [](std::string const &s) { return s == "likelihoods" || s == "analyses"; };
-         if (!strict || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
+         // Within one section, and between distributions and functions (both can be referenced by name), a clash is
+         // ambiguous. Other clashes are produced by RooFit itself (a range, snapshot or data set named like a pdf).
+         auto isReferable = [](std::string const &s) { return s == "distributions" || s == "functions"; };
+         const bool ambiguous = firstSection == section || (isReferable(firstSection) && isReferable(section));
+         if (!strict || !ambiguous || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
             RooJSONFactoryWSTool::warning("RooFitHS3: the name '" + name + "' is used in \"" + firstSection +
                                           "\" and in \"" + section + "\", which is not allowed by the HS3 standard.");
             continue;
@@ -1354,6 +1449,11 @@ void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
    obsNode["name"] << name;
 
    writeAxisBinning(obsNode, var.getBinning());
+   // Binned axes always carry their range, also if it is redundant with the "edges" of an irregular binning.
+   if (!obsNode.has_child("min")) {
+      obsNode["min"] << var.getBinning().lowBound();
+      obsNode["max"] << var.getBinning().highBound();
+   }
 }
 
 /**
@@ -1591,7 +1691,28 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
    RooArgSet vars;
 
    for (JSONNode const &node : topNode["axes"].children()) {
-      if (node.has_child("edges")) {
+      if (node.has_child("categories")) {
+         // One state per category, in the order of the document, with the position as index. The bins of a
+         // RooDataHist then follow the order of "categories".
+         const std::string axisName = node["name"].val();
+         for (const char *key : {"min", "max", "nbins", "edges"}) {
+            if (node.has_child(key)) {
+               error("the axis '" + axisName + "' is categorical and must not have \"" + key + "\"");
+            }
+         }
+         auto cat = std::make_unique<RooCategory>(axisName.c_str(), axisName.c_str());
+         int index = 0;
+         for (JSONNode const &label : node["categories"].children()) {
+            if (label.val().empty() || cat->hasLabel(label.val())) {
+               error("the categories of the axis '" + axisName + "' must be unique non-empty strings");
+            }
+            cat->defineType(label.val(), index++);
+         }
+         if (index == 0) {
+            error("the categorical axis '" + axisName + "' has no categories");
+         }
+         vars.addOwned(std::move(cat));
+      } else if (node.has_child("edges")) {
          std::vector<double> edges = readEdges(node["edges"], "axis '" + node["name"].val() + "'");
          auto obs = std::make_unique<RooRealVar>(node["name"].val().c_str(), node["name"].val().c_str(), edges[0],
                                                  edges[edges.size() - 1]);
@@ -1611,6 +1732,82 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
 
    return vars;
 }
+
+namespace {
+
+// For binned data in `n` with categorical axes, the document lays out the bins in the order of its "categories" (last
+// axis fastest), while RooFit lays them out in the order of the states of the categories in `vars`. Returns, for each
+// bin in RooFit's order, the position of that bin in the document. Empty if the orders agree.
+std::vector<std::size_t> binOrderOfDocument(const JSONNode &n, RooArgSet const &vars)
+{
+   JSONNode const *axes = n.find("axes");
+   if (!axes || static_cast<std::size_t>(axes->num_children()) != vars.size()) {
+      return {};
+   }
+   std::vector<std::size_t> nBins;
+   // For each axis, the position in the document of the bin with a given position in RooFit's order.
+   std::vector<std::vector<std::size_t>> axisPositions;
+   bool reordered = false;
+   std::size_t iAxis = 0;
+   for (JSONNode const &axis : axes->children()) {
+      RooAbsArg const *var = vars[iAxis++];
+      auto const *cat = dynamic_cast<RooAbsCategory const *>(var);
+      const auto numBins = static_cast<std::size_t>(dynamic_cast<RooAbsLValue const &>(*var).numBins());
+      nBins.push_back(numBins);
+      std::vector<std::size_t> positions(numBins);
+      for (std::size_t i = 0; i < numBins; ++i) {
+         positions[i] = i;
+      }
+      if (cat && axis.has_child("categories")) {
+         std::vector<std::string> labels;
+         for (JSONNode const &label : axis["categories"].children()) {
+            labels.push_back(label.val());
+         }
+         for (std::size_t i = 0; i < numBins; ++i) {
+            auto found = std::find(labels.begin(), labels.end(), cat->getOrdinal(i).first);
+            positions[i] = std::distance(labels.begin(), found);
+            reordered |= positions[i] != i;
+         }
+      }
+      axisPositions.push_back(std::move(positions));
+   }
+   if (!reordered) {
+      return {};
+   }
+   std::size_t total = 1;
+   for (std::size_t nb : nBins) {
+      total *= nb;
+   }
+   std::vector<std::size_t> order(total);
+   for (std::size_t k = 0; k < total; ++k) {
+      // Decompose RooFit's bin index (last axis fastest) and recompose it with the document's positions.
+      std::size_t rest = k;
+      std::size_t docIndex = 0;
+      std::size_t stride = 1;
+      for (std::size_t j = nBins.size(); j-- > 0;) {
+         const std::size_t i = rest % nBins[j];
+         rest /= nBins[j];
+         docIndex += axisPositions[j][i] * stride;
+         stride *= nBins[j];
+      }
+      order[k] = docIndex;
+   }
+   return order;
+}
+
+std::vector<double> permute(std::vector<double> const &values, std::vector<std::size_t> const &order)
+{
+   if (order.empty() || values.size() != order.size()) {
+      return values;
+   }
+   std::vector<double> out(values.size());
+   for (std::size_t k = 0; k < order.size(); ++k) {
+      out[k] = values[order[k]];
+   }
+   return out;
+}
+
+} // namespace
 
 /**
  * @brief Read binned data from the JSONNode and create a RooDataHist object.
@@ -1652,17 +1849,20 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
                                   ", bins=" + std::to_string(bins.size()));
    }
    auto dh = std::make_unique<RooDataHist>(name, name, vars);
+   const std::vector<std::size_t> binOrder = binOrderOfDocument(n, vars);
    std::vector<double> contentVals;
    contentVals.reserve(contents.num_children());
    for (auto const &cont : contents.children()) {
       contentVals.push_back(cont.val_double());
    }
+   contentVals = permute(contentVals, binOrder);
    std::vector<double> errorVals;
    if (errors) {
       errorVals.reserve(errors->num_children());
       for (auto const &err : errors->children()) {
          errorVals.push_back(err.val_double());
       }
+      errorVals = permute(errorVals, binOrder);
    }
    // RooDataHist only starts to store squared weights when it sees a positive error, and then initializes them from
    // the weights so far. Trigger that before setting any weight, so that errors of zero stay zero.
