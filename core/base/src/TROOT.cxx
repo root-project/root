@@ -2890,6 +2890,7 @@ void TROOT::SetEditorMode(const char *mode)
    if (!strcmp(mode,"CurlyLine")){fEditorMode = kCurlyLine;  return;}
    if (!strcmp(mode,"CurlyArc")) {fEditorMode = kCurlyArc;   return;}
    if (!strcmp(mode,"Text"))     {fEditorMode = kText;       return;}
+   if (!strcmp(mode,"Editor"))   {fEditorMode = kEditor;     return;}
    if (!strcmp(mode,"Marker"))   {fEditorMode = kMarker;     return;}
    if (!strcmp(mode,"CutG"))     {fEditorMode = kCutG;       return;}
 }
