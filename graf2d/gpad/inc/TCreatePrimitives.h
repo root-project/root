@@ -1,7 +1,7 @@
 // @(#)root/gpad:$Id: TCreatePrimitives.h,v 1.0
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -28,10 +28,6 @@ class TCreatePrimitives {
 
 private:
 
-   static TLine *fgLine;
-   static TCurlyLine *fgCLine;
-   static TArrow *fgArrow;
-   static TCurlyArc *fgCArc;
    static TArc *fgArc;
    static TEllipse *fgEllipse;
    static TPave *fgPave;
@@ -42,6 +38,7 @@ private:
    static TGraph *fgPolyLine;
    static TBox *fgPadBBox;
 
+   static void ExecuteLine(TPad &pad, Int_t mode, Int_t event, Int_t px, Int_t py);
    static void ExecuteText(TPad &pad, Int_t mode, Int_t event, Int_t px, Int_t py);
 
 public:
@@ -49,7 +46,7 @@ public:
    TCreatePrimitives();
    virtual ~TCreatePrimitives();
    static void Ellipse(Int_t event, Int_t px, Int_t py,Int_t mode);
-   static void Line(Int_t event, Int_t px, Int_t py, Int_t mode);
+   static void R__DEPRECATED(7,00, "Will be removed from public API") Line(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void Pad(Int_t event, Int_t px, Int_t py, Int_t);
    static void Pave(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode);
