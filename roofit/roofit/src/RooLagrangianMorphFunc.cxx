@@ -1610,6 +1610,14 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
       obsExists = true;
    }
 
+// Support for the deprecated RooParamHistFunc, to be removed in ROOT 6.46
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
    if (mode && mode->InheritsFrom(RooHistFunc::Class())) {
       obs = static_cast<RooRealVar *>(dynamic_cast<RooHistFunc *>(inputExample)->getHistObsList().first());
       obsExists = true;
@@ -1619,6 +1627,11 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
       obsExists = true;
       _observables.add(*obs);
    }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
    //   Note: "found!" will be printed if s2 is a substring of s1, both s1 and s2
    //   are of type std::string. s1.find(s2)
