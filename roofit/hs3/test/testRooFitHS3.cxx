@@ -4240,6 +4240,40 @@ TEST(RooFitHS3, FormulaNormSysConstraint)
    EXPECT_NE(ws2.pdf("alpha_sysConstraint"), nullptr);
 }
 
+// A sample coefficient that is a sum at the top level, like "1 + 0.2 * k", is not a product of its terms: before, the
+// HistFactory exporter split it at the "*" into the factors "1 + 0.2" and "k", which changes the model.
+TEST(RooFitHS3, FormulaWithTopLevelSumIsNotSplit)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   for (std::string expression : {"1 + 0.2 * k", "1.5 - k * 0.2", "2e-1 * k + 1"}) {
+      RooWorkspace ws1;
+      {
+         RooRealVar x{"x", "x", 0.0, 2.0};
+         x.setBins(2);
+         RooRealVar k{"k", "k", 0.0, -1.0, 1.0};
+         RooHistFunc hist{"hist_sig", "hist_sig", RooArgSet{x}, makeDataHist("hist_sig_data", x, {100.0, 200.0})};
+         RooBinWidthFunction binWidth{"sig_binWidth", "sig_binWidth", hist, true};
+         RooProduct shapes{"model_ch_sig_shapes", "", RooArgList{hist, binWidth}};
+         RooFormulaVar norm{"sig_norm", expression.c_str(), RooArgList{k}};
+         RooRealSumPdf sum{"model_ch", "model_ch", RooArgList{shapes}, RooArgList{norm}, true};
+         ws1.import(sum, RooFit::Silence());
+      }
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString()));
+      ASSERT_NE(ws2.pdf("model_ch"), nullptr);
+
+      RooArgSet nset1{*ws1.var("x")};
+      RooArgSet nset2{*ws2.var("x")};
+      for (double k : {-1.0, 0.0, 0.5}) {
+         ws1.var("k")->setVal(k);
+         ws2.var("k")->setVal(k);
+         EXPECT_NEAR(ws2.pdf("model_ch")->expectedEvents(nset2), ws1.pdf("model_ch")->expectedEvents(nset1), 1e-9)
+            << expression << " at k = " << k;
+      }
+   }
+}
+
 // The +1 and -1 sigma variations of a normsys that is encoded in a formula survive the round trip.
 TEST(RooFitHS3, FormulaNormSysVariations)
 {
