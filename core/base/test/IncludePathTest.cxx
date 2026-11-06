@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "TSystem.h"
-#include "TUUID.h"
+#include "TString.h"
 
 #include <string>
 
@@ -18,12 +18,10 @@ TEST(TSystem, IncludePath)
 #ifdef WIN32
    struct ComspecGuard {
       TString fOriginal;
-      TString fAlias;
 
       ~ComspecGuard()
       {
          gSystem->Setenv("COMSPEC", fOriginal);
-         gSystem->Unlink(fAlias);
       }
    };
 
@@ -38,15 +36,11 @@ TEST(TSystem, IncludePath)
    normalizedCmdPath.ToLower();
    ASSERT_TRUE(normalizedCmdPath.EndsWith("cmd.exe")) << "This regression test needs cmd.exe as the process shell";
 
-   TUUID uuid;
-   TString alias = TString::Format("root_test_shell_%s.exe", uuid.AsString());
-   gSystem->PrependPathName(gSystem->TempDirectory(), alias);
-   ComspecGuard comspecGuard{comspec, alias};
-   ASSERT_EQ(0, gSystem->CopyFile(cmdPath, alias));
+   ComspecGuard comspecGuard{comspec};
 
-   // Use a copied cmd.exe under a different name to exercise the temporary
-   // stderr-file path without changing the shell used to execute commands.
-   gSystem->Setenv("COMSPEC", alias);
+   // A quoted cmd.exe path takes the nonstandard-shell branch while remaining executable.
+   TString quotedCmdPath = TString::Format("\"%s\"", cmdPath.Data());
+   gSystem->Setenv("COMSPEC", quotedCmdPath);
    ASSERT_EQ(0, gSystem->Exec("exit 0"));
 #endif
 
