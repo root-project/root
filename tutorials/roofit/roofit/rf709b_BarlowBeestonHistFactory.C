@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofit_main
 /// \notebook -js
 /// Implementing the Barlow-Beeston method for taking into account the statistical
 /// uncertainty of a Monte-Carlo fit template.
@@ -23,14 +23,19 @@
 #include "RooDataHist.h"
 #include "RooHistFunc.h"
 #include "RooRealSumPdf.h"
-#include "RooParamHistFunc.h"
-#include "RooHistConstraint.h"
+#include "RooProduct.h"
+#include "RooConstVar.h"
+#include "RooPoisson.h"
 #include "RooProdPdf.h"
+#include "RooFitResult.h"
 #include "RooPlot.h"
+#include "RooMsgService.h"
+#include "RooStats/HistFactory/ParamHistFunc.h"
 
 #include "TCanvas.h"
 #include "TPaveText.h"
 
+#include <cmath>
 #include <iostream>
 #include <memory>
 
@@ -38,7 +43,7 @@ RooArgSet createConstraints(RooArgList const &gammas, RooArgList const &samples,
 {
    RooArgSet constraints;
    for (std::size_t i = 0; i < gammas.size(); ++i) {
-      RooAbsReal *gamma = static_cast<RooAbsReal *>(&gammas[i]);
+      auto *gamma = static_cast<RooRealVar *>(&gammas[i]);
 
       auto nomName = "nom_" + std::string(gamma->GetName());
       auto tauName = std::string(gamma->GetName()) + "_tau";
@@ -49,6 +54,15 @@ RooArgSet createConstraints(RooArgList const &gammas, RooArgList const &samples,
       for (auto *func : static_range_cast<RooHistFunc *>(samples)) {
          nomVal += func->dataHist().weight(i);
       }
+
+      // Like in HistFactory, the gamma of an empty bin is fixed and not
+      // constrained. Otherwise, it would be a flat direction of the likelihood.
+      // The other gammas get the relative Poisson uncertainty as initial error.
+      if (nomVal == 0.0) {
+         gamma->setConstant(true);
+         continue;
+      }
+      gamma->setError(1.0 / std::sqrt(nomVal));
 
       auto nominal = std::make_unique<RooRealVar>(nomName.c_str(), nomName.c_str(), nomVal, 0.0, RooNumber::infinity());
       nominal->setConstant(true);
@@ -141,13 +155,10 @@ void rf709b_BarlowBeestonHistFactory()
 
    // ***** Case 2 - 'Barlow Beeston' light (one parameter per bin for all samples) *****
 
-   // Construct the histogram shapes, using the same parameters for signal and background
-   // This requires passing the first histogram to the second, so that their common parameters
-   // can be re-used.
-   // The first ParamHistFunc will create one parameter per bin, such as `p_ph_sig2_gamma_bin_0`.
-   // This allows bin 0 to fluctuate up and down.
-   // Then, the SAME parameters are connected to the background histogram, so the bins flucutate
-   // synchronously. This reduces the number of parameters.
+   // Construct the histogram shapes, using the same parameters for signal and background.
+   // There is one parameter per bin, such as `p_ph_gamma_bin_0`. This allows bin 0 to
+   // fluctuate up and down. The SAME ParamHistFunc scales both the signal and the background
+   // histogram, so the bins fluctuate synchronously. This reduces the number of parameters.
    RooArgList gammas2{ParamHistFunc::createParamSet("p_ph_gamma", x.numBins(), 0, 10)};
 
    ParamHistFunc p_phf2{"p_phf2", "p_phf2", x, gammas2};
