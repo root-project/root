@@ -59,6 +59,7 @@ have to appear in any specific place in the list.
 #include "RooCustomizer.h"
 #include "RooRealIntegral.h"
 #include "RooFitImplHelpers.h"
+#include "RooFit/Detail/RooNormalizedPdf.h"
 #include "strtok.h"
 
 #include <ROOT/StringUtils.hxx>
@@ -67,6 +68,9 @@ have to appear in any specific place in the list.
 #include <array>
 #include <cstring>
 #include <sstream>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 #ifndef _WIN32
 #include <strings.h>
@@ -2073,6 +2077,26 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
       }
    }
 
+   // Pdfs with overlapping normalization observables end up in the same term,
+   // which a RooGenProdProj normalizes as a whole. Like in the scalar
+   // evaluation, it should integrate the unnormalized pdfs. The RooGenProdProj
+   // clones its pdfs, and the clone of a RooNormalizedPdf owns a copy of the
+   // normalization integral that the RooFit::Evaluator doesn't keep up to
+   // date. Also, the integrals of normalized pdfs are smaller, so the absolute
+   // tolerance of the numerical integration costs more precision.
+   std::unordered_set<std::string> jointlyNormalized;
+   if (!normSet.empty()) {
+      Factorized factorized;
+      prodPdfClone->factorizeProduct(normSet, RooArgSet{}, factorized);
+      for (auto *term : static_range_cast<RooArgSet *>(factorized.terms)) {
+         if (term->size() > 1) {
+            for (RooAbsArg *pdf : *term) {
+               jointlyNormalized.insert(pdf->GetName());
+            }
+         }
+      }
+   }
+
    for (const auto server : prodPdfClone->servers()) {
       auto nsetForServer = fillNormSetForServer(normSet, *server);
       RooArgSet const &nset = nsetForServer ? *nsetForServer : normSet;
@@ -2087,14 +2111,31 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
       pdf->setNormRange(oldRange.empty() ? nullptr : oldRange.c_str());
    }
 
+   // The computation graph is created from a shallow clone with the jointly
+   // normalized pdfs unwrapped. The RooFixedProdPdf forwards analytical
+   // integrals to prodPdfClone, which keeps them wrapped so that these
+   // integrals match the normalized value, e.g. in a nested RooProdPdf.
+   std::unordered_map<RooAbsArg *, RooAbsArg *> unwrapped;
+   for (RooAbsArg *pdf : prodPdfClone->_pdfList) {
+      auto *normalized = dynamic_cast<RooFit::Detail::RooNormalizedPdf *>(pdf);
+      if (normalized && jointlyNormalized.count(normalized->pdf().GetName())) {
+         unwrapped[normalized] = const_cast<RooAbsPdf *>(&normalized->pdf());
+      }
+   }
+   std::unique_ptr<RooProdPdf> cacheProdPdf;
+   if (!unwrapped.empty()) {
+      cacheProdPdf.reset(static_cast<RooProdPdf *>(prodPdfClone->Clone()));
+      cacheProdPdf->redirectServers(unwrapped);
+   }
+
    // The RooFixedProdPdf keeps the normalization set around to create its
    // cache elements and to evaluate the expected number of events. It must
    // refer to the observables in the compiled computation graph, because the
    // original ones can get out of sync with it: RooSimultaneous prefixes the
    // observable names of each channel after compilation, and the stale
    // observables would then not be found anymore by name.
-   auto fixedProdPdf =
-      std::make_unique<RooFit::Detail::RooFixedProdPdf>(std::move(prodPdfClone), ctx.mapToCompiled(normSet));
+   auto fixedProdPdf = std::make_unique<RooFit::Detail::RooFixedProdPdf>(
+      std::move(prodPdfClone), ctx.mapToCompiled(normSet), cacheProdPdf.get());
    ctx.markAsCompiled(*fixedProdPdf);
 
    return fixedProdPdf;
@@ -2102,13 +2143,20 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
 
 namespace RooFit::Detail {
 
-RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet)
+/// \param[in] prodPdf The product with the fixed normalization set.
+/// \param[in] normSet The normalization set.
+/// \param[in] cacheProdPdf If not null, the cache elements that make up the
+///            computation graph are created from this product instead of
+///            `prodPdf`. It must have the same observables and the same pdfs,
+///            but they may be normalized differently.
+RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet,
+                                 RooProdPdf const *cacheProdPdf)
    : RooAbsPdf(prodPdf->GetName(), prodPdf->GetTitle()),
      _normSet{normSet},
      _servers("!servers", "List of servers", this),
      _prodPdf{std::move(prodPdf)}
 {
-   auto cache = _prodPdf->createCacheElem(&_normSet, nullptr);
+   auto cache = (cacheProdPdf ? cacheProdPdf : _prodPdf.get())->createCacheElem(&_normSet, nullptr);
    _isRearranged = cache->_isRearranged;
 
    // We don't want to carry the full cache object around, so we let it go out
