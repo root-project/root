@@ -381,6 +381,9 @@ public:
    /// Puts object `namedObj` in the file under the path `dirPath/namedObj.GetName()`, giving it a title equal to
    /// `namedObj.GetTitle()`.
    /// If `dirPath` is empty (default), the object is put at the top level of the file.
+   ///
+   /// \throws ROOT::RException if `dirPath/namedObj.GetName()` results in an invalid object path. Notably, this
+   /// includes the case where `namedObj.GetName()` contains a slash character.
    void Put(const class TNamed &namedObj, std::string_view dirPath = "");
 
    /// Puts an object into the file, overwriting any previously-existing object at that path.
