@@ -149,6 +149,11 @@ if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
                              ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/librfield_streamer_rdict.pcm
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/StreamerFieldXMLDict_rdict.pcm
                              ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/StreamerFieldXMLDict_rdict.pcm)
+  if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    add_custom_command(TARGET rfield_streamer_beyond POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/librfield_streamer_beyond_rdict.pcm
+                               ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/librfield_streamer_beyond_rdict.pcm)
+    endif()
 endif()
 
 configure_file(SoAFieldXML.h . COPYONLY)
