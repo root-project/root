@@ -454,8 +454,9 @@ private:
    /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
    ROOT::Internal::RNTupleSerializer::RContext fSerializationContext;
 
-   /// Remembers the starting cluster id for the next cluster group
-   std::uint64_t fNextClusterInGroup = 0;
+   /// Remembers the starting cluster id for the next group. Used also to check if there are new clusters to commit
+   /// for a cluster group (otherwise committing a cluster group is a noop)
+   ROOT::NTupleSize_t fPrevGroupNClusters = 0;
    /// Used to calculate the number of entries in the current cluster
    ROOT::NTupleSize_t fPrevClusterNEntries = 0;
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.

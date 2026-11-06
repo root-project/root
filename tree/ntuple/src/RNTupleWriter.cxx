@@ -138,8 +138,6 @@ void ROOT::RNTupleWriter::CommitCluster(bool commitClusterGroup)
 
 void ROOT::RNTupleWriter::CommitClusterGroup()
 {
-   if (GetNEntries() == fLastCommittedClusterGroup)
-      return;
    fFillContext.fSink->CommitClusterGroup();
    fLastCommittedClusterGroup = GetNEntries();
 }

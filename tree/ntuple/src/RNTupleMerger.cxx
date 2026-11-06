@@ -2026,9 +2026,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    // Commit the output
    for (auto &[attrSetName, attrSetData] : attrSetsData) {
       attrSetData.fStrategy.BeforeCommit();
-      if (attrSetData.fSink->GetNEntries() > 0) {
-         attrSetData.fSink->CommitClusterGroup();
-      }
+      attrSetData.fSink->CommitClusterGroup();
       auto anchorLink = attrSetData.fSink->CommitDataset();
       fDestination->CommitAttributeSet(attrSetName, anchorLink);
    }
@@ -2038,9 +2036,8 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    // Commit the output
    if (fDestination->GetNEntries() == 0)
       R__LOG_WARNING(NTupleMergeLog()) << "Output RNTuple '" << fDestination->GetNTupleName() << "' has no entries.";
-   else
-      fDestination->CommitClusterGroup();
 
+   fDestination->CommitClusterGroup();
    fDestination->CommitDataset();
 
    return RResult<void>::Success();

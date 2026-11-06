@@ -804,6 +804,8 @@ TEST(RPageSink, MultipleClusterGroups)
       // This pattern should work: CommitCluster(false) followed by CommitCluster(true) and
       // be identical to a single call to CommitCluster(true)
       ntuple->CommitCluster(true);
+      // Calling this a second time should be a noop
+      ntuple->CommitCluster(true);
       *wrPt = 24.0;
       ntuple->Fill();
       ntuple->CommitCluster();
