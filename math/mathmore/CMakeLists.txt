@@ -8,39 +8,51 @@
 # CMakeLists.txt file for building ROOT math/mathmore package
 ############################################################################
 
+set(MATHMORE_HEADERS
+  Math/ChebyshevApprox.h
+  Math/Derivator.h
+  Math/DistFuncMathMore.h
+  Math/GSLFunctionAdapter.h
+  Math/GSLIntegrator.h
+  Math/GSLMCIntegrator.h
+  Math/GSLMinimizer.h
+  Math/GSLMinimizer1D.h
+  Math/GSLMultiRootFinder.h
+  Math/GSLNLSMinimizer.h
+  Math/GSLQuasiRandom.h
+  Math/GSLRandom.h
+  Math/GSLRandomFunctions.h
+  Math/GSLRndmEngines.h
+  Math/GSLRootFinder.h
+  Math/GSLRootFinderDeriv.h
+  Math/GSLRootHelper.h
+  Math/GSLSimAnMinimizer.h
+  Math/GSLSimAnnealing.h
+  Math/IntegrationTypes.h
+  Math/InterpolationTypes.h
+  Math/Interpolator.h
+  Math/MCIntegrationTypes.h
+  Math/MCParameters.h
+  Math/MultiNumGradFunction.h
+  Math/MultiRootFinder.h
+  Math/ParamFunction.h
+  Math/PdfFuncMathMore.h
+  Math/Polynomial.h
+  Math/QuantFuncMathMore.h
+  Math/QuasiRandom.h
+  Math/RootFinderAlgorithms.h
+  Math/SpecFuncMathMore.h
+  Math/Vavilov.h
+  Math/VavilovAccurate.h
+  Math/VavilovAccurateCdf.h
+  Math/VavilovAccuratePdf.h
+  Math/VavilovAccurateQuantile.h
+  Math/VavilovFast.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(MathMore
   HEADERS
-    Math/ChebyshevApprox.h
-    Math/Derivator.h
-    Math/DistFuncMathMore.h
-    Math/GSLIntegrator.h
-    Math/GSLMCIntegrator.h
-    Math/GSLMinimizer.h
-    Math/GSLMinimizer1D.h
-    Math/GSLMultiRootFinder.h
-    Math/GSLNLSMinimizer.h
-    Math/GSLQuasiRandom.h
-    Math/GSLRandom.h
-    Math/GSLRandomFunctions.h
-    Math/GSLRndmEngines.h
-    Math/GSLRootFinder.h
-    Math/GSLRootFinderDeriv.h
-    Math/GSLSimAnMinimizer.h
-    Math/InterpolationTypes.h
-    Math/Interpolator.h
-    Math/MCParameters.h
-    Math/PdfFuncMathMore.h
-    Math/Polynomial.h
-    Math/ParamFunction.h
-    Math/QuasiRandom.h
-    Math/RootFinderAlgorithms.h
-    Math/SpecFuncMathMore.h
-    Math/Vavilov.h
-    Math/VavilovAccurate.h
-    Math/VavilovAccurateCdf.h
-    Math/VavilovAccuratePdf.h
-    Math/VavilovAccurateQuantile.h
-    Math/VavilovFast.h
+    ${MATHMORE_HEADERS}
 SOURCES
     src/ChebyshevApprox.cxx
     src/Derivator.cxx
@@ -82,5 +94,46 @@ SOURCES
 )
 
 target_link_libraries(MathMore PRIVATE GSL::gsl GSL::gslcblas)
+
+
+set(RELATIVE_INC_HEADERS ${MATHMORE_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(MathMore
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/Math/LinkDef.h
+    inc/Math/LinkDef_Func.h
+    inc/Math/LinkDef_RootFinding.h
+    src/GSL1DMinimizerWrapper.h
+    src/GSLChebSeries.h
+    src/GSLDerivator.h
+    src/GSLFunctionWrapper.h
+    src/GSLIntegrationWorkspace.h
+    src/GSLInterpolator.h
+    src/GSLMCIntegrationWorkspace.h
+    src/GSLMonteFunctionAdapter.h
+    src/GSLMonteFunctionWrapper.h
+    src/GSLMultiFit.h
+    src/GSLMultiFit2.h
+    src/GSLMultiFitFunctionAdapter.h
+    src/GSLMultiFitFunctionWrapper.h
+    src/GSLMultiMinFunctionAdapter.h
+    src/GSLMultiMinFunctionWrapper.h
+    src/GSLMultiMinimizer.h
+    src/GSLMultiRootFunctionAdapter.h
+    src/GSLMultiRootFunctionWrapper.h
+    src/GSLMultiRootSolver.h
+    src/GSLQRngWrapper.h
+    src/GSLRngROOTWrapper.h
+    src/GSLRngWrapper.h
+    src/GSLRootFSolver.h
+    src/GSLRootFdFSolver.h
+    src/complex_quartic.h
+)
+
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

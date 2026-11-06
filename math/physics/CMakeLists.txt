@@ -8,18 +8,22 @@
 # CMakeLists.txt file for building ROOT math/physics package
 ############################################################################
 
+set(PHYSICS_HEADERS
+  TFeldmanCousins.h
+  TGenPhaseSpace.h
+  TLorentzRotation.h
+  TLorentzVector.h
+  TQuaternion.h
+  TRobustEstimator.h
+  TRolke.h
+  TRotation.h
+  TVector2.h
+  TVector3.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Physics
   HEADERS
-    TFeldmanCousins.h
-    TGenPhaseSpace.h
-    TLorentzRotation.h
-    TLorentzVector.h
-    TQuaternion.h
-    TRobustEstimator.h
-    TRolke.h
-    TRotation.h
-    TVector2.h
-    TVector3.h
+    ${PHYSICS_HEADERS}
   SOURCES
     src/TFeldmanCousins.cxx
     src/TGenPhaseSpace.cxx
@@ -38,3 +42,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Physics
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
 )
+
+set(RELATIVE_INC_HEADERS ${PHYSICS_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Physics
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
+
