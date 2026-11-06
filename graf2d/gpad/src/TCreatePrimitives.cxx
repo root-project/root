@@ -1,7 +1,7 @@
 // @(#)root/gpad:$Id: TCreatePrimitives.cxx,v 1.0
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -30,10 +30,6 @@ to create new primitives in gPad from the TPad toolbar.
 #include "KeySymbols.h"
 #include "TCutG.h"
 
-TCurlyLine *TCreatePrimitives::fgCLine = nullptr;
-TArrow *TCreatePrimitives::fgArrow = nullptr;
-TLine *TCreatePrimitives::fgLine = nullptr;
-TCurlyArc *TCreatePrimitives::fgCArc = nullptr;
 TArc *TCreatePrimitives::fgArc = nullptr;
 TEllipse *TCreatePrimitives::fgEllipse = nullptr;
 TPave *TCreatePrimitives::fgPave = nullptr;
@@ -144,119 +140,131 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
 }
 
+/////////////////////////////////////////////
+/// Internal class implementing tlatex editing
+class TLineEditInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   TLineEditInteractive(Int_t mode, Double_t x0, Double_t y0, Int_t px0, Int_t py0)
+   {
+      fMode = mode;
+      fX0 = x0;
+      fY0 = y0;
+      fPX0 = px0;
+      fPY0 = py0;
+   }
+
+   template<typename T, typename... Rest>
+   T *Make(TPad &parent, Rest&&... rest)
+   {
+      if (fObject) {
+         auto res = dynamic_cast<T *>(fObject);
+         if (!res)
+            fObject = nullptr; // failure, interactive will be deleted
+         return res;
+      }
+      auto res2 = new T(std::forward<Rest>(rest)...);
+      parent.Add(res2);
+      fObject = res2;
+      return res2;
+   }
+
+
+   Int_t fMode = 0;
+   Double_t fX0 = 0, fY0 = 0;
+   Int_t fPX0 = 0, fPY0 = 0;
+   TObject *fObject = nullptr;
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new line/arrow in this gPad.
+/// Create a new line/arrow in the specified pad
 ///
 ///  - Click left button to indicate arrow starting position.
+///  - Move mouse pointer when left button clicked to specify second position
 ///  - Release left button to terminate the arrow.
+
+void TCreatePrimitives::ExecuteLine(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py)
+{
+   Double_t x = parent.PadtoX(parent.AbsPixeltoX(px));
+   Double_t y = parent.PadtoY(parent.AbsPixeltoY(py));
+
+   // first mouse click
+   if (event == kButton1Down) {
+      parent.MakeInteractive<TLineEditInteractive>(&parent, mode, x, y, px, py);
+      return;
+   }
+
+   auto inter = parent.GetInteractive<TLineEditInteractive>(&parent);
+   if (!inter)
+      return;
+
+   // verify that object is still there or mode is changed
+   if ((inter->fObject && !parent.FindObject(inter->fObject)) || (mode != inter->fMode)) {
+      parent.FreeInteractive(&parent);
+      return;
+   }
+
+   // when mouse released - finish interactive
+   if (event == kButton1Up) {
+      if (inter->fObject)
+         parent.GetCanvas()->Selected(&parent, inter->fObject, kButton1Down);
+      parent.FreeInteractive(&parent);
+      gROOT->SetEditorMode();
+      return;
+   }
+
+   // ignore all other events
+   if (event != kButton1Motion)
+      return;
+
+   switch (mode) {
+   case kLine:
+      if (auto line = inter->Make<TLine>(parent, inter->fX0, inter->fY0, x, y)) {
+         line->SetX2(x);
+         line->SetY2(y);
+      }
+      break;
+   case kArrow:
+      if (auto arrow = inter->Make<TArrow>(parent, inter->fX0, inter->fY0, x, y, TArrow::GetDefaultArrowSize(),
+                                           TArrow::GetDefaultOption())) {
+         arrow->SetX2(x);
+         arrow->SetY2(y);
+      }
+      break;
+   case kCurlyLine:
+      if (auto cline = inter->Make<TCurlyLine>(parent, inter->fX0, inter->fY0, x, y, TCurlyLine::GetDefaultWaveLength(),
+                                               TCurlyLine::GetDefaultAmplitude()))
+         cline->SetEndPoint(x, y);
+      break;
+   case kCurlyArc:
+      if (auto carc = inter->Make<TCurlyArc>(parent, inter->fX0, inter->fY0, 1., 0., 360.,
+                                             TCurlyArc::GetDefaultWaveLength(), TCurlyArc::GetDefaultAmplitude())) {
+         auto pradius = TMath::Sqrt((px - inter->fPX0) * (px - inter->fPX0) + (py - inter->fPY0) * (py - inter->fPY0));
+         auto radius = parent.PixeltoX((Int_t)pradius) - parent.PixeltoX(0);
+         carc->SetRadius(radius);
+      }
+      break;
+   default: break;
+   }
+
+   if (inter->fObject) {
+      parent.Modified(kTRUE);
+      parent.Update();
+   } else
+      parent.FreeInteractive(&parent);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// @deprecated
+/// Create a new line/arrow in this gPad.
 
 void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   static Double_t x0, y0, x1, y1;
-
-   static Int_t pxold, pyold;
-   static Int_t px0, py0;
-   Double_t radius, phimin,phimax;
-
-   switch (event) {
-
-   case kButton1Down:
-      x0    = gPad->AbsPixeltoX(px);
-      y0    = gPad->AbsPixeltoY(py);
-      px0   = px; py0   = py;
-      pxold = px; pyold = py;
-      if (gPad->GetLogx()) x0   = TMath::Power(10,x0);
-      if (gPad->GetLogy()) y0   = TMath::Power(10,y0);
-      break;
-
-   case kButton1Motion:
-      pxold = px;
-      pyold = py;
-
-      x1 = gPad->AbsPixeltoX(pxold);
-      y1 = gPad->AbsPixeltoY(pyold);
-      if (gPad->GetLogx()) x1 = TMath::Power(10,x1);
-      if (gPad->GetLogy()) y1 = TMath::Power(10,y1);
-
-      if (mode == kLine) {
-         if (fgLine){
-            fgLine->SetX2(x1);
-            fgLine->SetY2(y1);
-         } else {
-            fgLine = new TLine(x0,y0,x1,y1);
-            fgLine->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-
-      if (mode == kArrow) {
-         if (fgArrow){
-            fgArrow->SetX2(x1);
-            fgArrow->SetY2(y1);
-         } else {
-            fgArrow = new TArrow(x0,y0,x1,y1
-                                 , TArrow::GetDefaultArrowSize()
-                                 , TArrow::GetDefaultOption());
-            fgArrow->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-
-      if (mode == kCurlyLine) {
-         if (fgCLine) fgCLine->SetEndPoint(x1, y1);
-         else  {
-            fgCLine = new TCurlyLine(x0,y0,x1,y1
-                                     , TCurlyLine::GetDefaultWaveLength()
-                                     , TCurlyLine::GetDefaultAmplitude());
-            fgCLine->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-
-      if (mode == kCurlyArc) {
-         //calculate radius in pixels and convert to users x
-         radius = gPad->PixeltoX((Int_t)(TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)))))
-                 - gPad->PixeltoX(0);
-         if (fgCArc) {
-            fgCArc->SetStartPoint(x1, y1);
-            fgCArc->SetRadius(radius);
-         } else {
-            phimin = 0;
-            phimax = 360;
-            fgCArc = new TCurlyArc(x0,y0,radius,phimin,phimax
-                                   , TCurlyArc::GetDefaultWaveLength()
-                                   , TCurlyArc::GetDefaultAmplitude());
-            fgCArc->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-      break;
-
-   case kButton1Up:
-      if (mode == kLine) {
-         gPad->GetCanvas()->Selected(gPad, fgLine, kButton1Down);
-         fgLine = nullptr;
-      }
-      if (mode == kArrow) {
-         gPad->GetCanvas()->Selected(gPad, fgArrow, kButton1Down);
-         fgArrow = nullptr;
-      }
-      if (mode == kCurlyLine) {
-         gPad->GetCanvas()->Selected(gPad, fgCLine, kButton1Down);
-         fgCLine = nullptr;
-      }
-      if (mode == kCurlyArc) {
-         gPad->GetCanvas()->Selected(gPad, fgCArc, kButton1Down);
-         fgCArc = nullptr;
-      }
-      gROOT->SetEditorMode();
-      break;
-   }
+   if (auto pad = dynamic_cast<TPad *>(gPad))
+      ExecuteLine(*pad, mode, event, px, py);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new pad in gPad.
@@ -792,9 +800,6 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
 
 void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, Int_t px, Int_t py)
 {
-   if (edit_mode != kEditor)
-      pad.FreeInteractive(&pad); // delete any interactive object for pad itself
-
    switch (edit_mode) {
    case kPad: Pad(event, px, py, 0); break;
    case kMarker:
@@ -803,7 +808,7 @@ void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, In
    case kLine:
    case kArrow:
    case kCurlyLine:
-   case kCurlyArc: Line(event, px, py, edit_mode); break;
+   case kCurlyArc: ExecuteLine(pad, edit_mode, event, px, py); break;
    case kPolyLine:
    case kCutG: PolyLine(event, px, py, edit_mode); break;
    case kArc:
