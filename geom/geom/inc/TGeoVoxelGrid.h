@@ -12,6 +12,7 @@
 #ifndef ROOT_TGeoVoxelGrid
 #define ROOT_TGeoVoxelGrid
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <limits>
