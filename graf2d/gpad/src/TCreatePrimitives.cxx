@@ -774,3 +774,35 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Handle edit mode in the TPad
+/// Executed when editmode is not 0
+
+void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, Int_t px, Int_t py)
+{
+   if (edit_mode != kEditor)
+      pad.FreeInteractive(&pad); // delete any interactive object for pad itself
+
+   switch (edit_mode) {
+   case kPad: Pad(event, px, py, 0); break;
+   case kMarker:
+   case kText:
+   case kEditor: Text(event, px, py, edit_mode); break;
+   case kLine:
+   case kArrow:
+   case kCurlyLine:
+   case kCurlyArc: Line(event, px, py, edit_mode); break;
+   case kPolyLine:
+   case kCutG: PolyLine(event, px, py, edit_mode); break;
+   case kArc:
+   case kEllipse: Ellipse(event, px, py, edit_mode); break;
+   case kButton:
+   case kPave:
+   case kPaveLabel:
+   case kPaveText:
+   case kPavesText:
+   case kDiamond: Pave(event, px, py, edit_mode); break;
+   default: break;
+   }
+}
