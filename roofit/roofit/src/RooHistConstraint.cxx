@@ -16,8 +16,6 @@
  *
  * It can therefore be used to estimate the Monte Carlo uncertainty of a fit.
  *
- * Check also the tutorial rf709_BarlowBeeston.C
- *
  */
 
 #include <RooHistConstraint.h>
