@@ -21,6 +21,7 @@
 #include <RooWorkspace.h>
 
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <set>
 #include <unordered_map>
@@ -36,6 +37,9 @@ namespace RooStats {
 class ModelConfig;
 }
 class RooRealVar;
+class RooAbsPdf;
+class RooCategory;
+class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
 public:
@@ -45,6 +49,13 @@ public:
       bool allowExportInvalidNames = true;
       bool allowSanitizeNames = true;
       bool importNoDomainParametersAsRooConstVars = true;
+      /// HS3 requires the components of a combined distribution to have distinct variates, e.g. "mass_SR" and
+      /// "mass_CR" instead of one "mass". If enabled, the observables of every combined data set are renamed on
+      /// export to "obs_<key>" (the labels of the key joined by "_"), or "obs_<key>_<observable>" if a component
+      /// has several observables; the components of the matching RooSimultaneous are written with the renamed
+      /// observables (functions depending on them get the suffix "_<key>"). This allows exporting workspaces whose
+      /// components share an observable. Off by default: without it, such workspaces can't be exported.
+      bool renameCombinedObservables = false;
    };
 
    static Config &config();
@@ -54,7 +65,7 @@ public:
 
    struct CombinedData {
       std::string name;
-      std::map<std::string, std::string> components;
+      std::vector<std::string> columns;
    };
 
    RooJSONFactoryWSTool(RooWorkspace &ws);
@@ -184,13 +195,12 @@ public:
    }
 
    static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
+   static void exportCategoricalAxis(RooFit::Detail::JSONNode &obsNode, RooCategory const &cat);
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
    static void exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
-
-   void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
    void queueExportTemporary(RooAbsArg *arg)
@@ -228,6 +238,7 @@ private:
       }
    }
 
+   void exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames);
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
 
@@ -246,8 +257,7 @@ private:
                           const std::vector<RooAbsData *> &single);
 
    void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                                std::string const &analysisName,
-                                std::map<std::string, std::string> const *dataComponents);
+                                std::string const &analysisName, std::string const *dataName);
 
    // member variables
    const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
@@ -261,6 +271,15 @@ private:
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
+   // The columns of the exported combined distributions: they are not parameters, and don't appear in parameter points.
+   std::set<std::string> _columnCategories;
+   // Renaming of the observables of combined data sets, see Config::renameCombinedObservables: for each data set and
+   // each selection label, the new name of each observable; for each RooSimultaneous and selection label, the
+   // component with renamed observables to export instead of the original one. The objects are owned here.
+   std::map<std::string, std::map<std::string, std::map<std::string, std::string>>> _combinedObservableRenames;
+   std::map<std::string, std::map<std::string, RooAbsPdf const *>> _renamedComponents;
+   std::vector<std::unique_ptr<RooAbsArg>> _renamedObjects;
+   void prepareCombinedObservableRenaming();
 
    // Name-keyed indices over the top-level "functions" and "distributions"
    // sequences of the input JSON. Built once at the start of importAllNodes()

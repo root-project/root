@@ -9,9 +9,11 @@
 #include <RooAddition.h>
 #include <RooBinWidthFunction.h>
 #include <RooBinning.h>
+#include <RooCBShape.h>
 #include <RooCategory.h>
 #include <RooBinSamplingPdf.h>
 #include <RooConstVar.h>
+#include <RooCrystalBall.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooExtendPdf.h>
@@ -35,6 +37,7 @@
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
 #include <RooSpline.h>
 #include <RooUniformBinning.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
@@ -514,12 +517,11 @@ TEST(RooFitHS3, ProductDomainEntriesExportExplicitBounds)
    EXPECT_DOUBLE_EQ((*xAxis)["min"].val_double(), -10.0);
    EXPECT_DOUBLE_EQ((*xAxis)["max"].val_double(), 10.0);
 
+   // Infinite bounds are expressed by omitting them, since JSON has no literal for infinity.
    auto const *meanAxis = RooJSONFactoryWSTool::findNamedChild((*defaultDomain)["axes"], "mean");
    ASSERT_NE(meanAxis, nullptr);
-   ASSERT_TRUE(meanAxis->has_child("min"));
-   ASSERT_TRUE(meanAxis->has_child("max"));
-   EXPECT_TRUE((*meanAxis)["min"].is_null());
-   EXPECT_TRUE((*meanAxis)["max"].is_null());
+   EXPECT_FALSE(meanAxis->has_child("min"));
+   EXPECT_FALSE(meanAxis->has_child("max"));
 
    RooWorkspace imported;
    ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
@@ -529,6 +531,21 @@ TEST(RooFitHS3, ProductDomainEntriesExportExplicitBounds)
    EXPECT_LT(importedMean->getMin(), 0.0);
    EXPECT_TRUE(std::isinf(importedMean->getMax()));
    EXPECT_GT(importedMean->getMax(), 0.0);
+
+   // Files written by older RooFit versions express infinite bounds as null, which is still understood.
+   const std::string legacyJson = R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [{"name": "default_domain", "type": "product_domain",
+                   "axes": [{"name": "a", "min": null, "max": 3.0}, {"name": "b", "min": 1.0}]}]
+   })";
+   RooWorkspace legacy;
+   ASSERT_TRUE(RooJSONFactoryWSTool{legacy}.importJSONfromString(legacyJson));
+   ASSERT_NE(legacy.var("a"), nullptr);
+   EXPECT_TRUE(std::isinf(legacy.var("a")->getMin()));
+   EXPECT_DOUBLE_EQ(legacy.var("a")->getMax(), 3.0);
+   ASSERT_NE(legacy.var("b"), nullptr);
+   EXPECT_DOUBLE_EQ(legacy.var("b")->getMin(), 1.0);
+   EXPECT_TRUE(std::isinf(legacy.var("b")->getMax()));
 }
 
 TEST(RooFitHS3, ProductDomainEntriesExportBinning)
@@ -865,14 +882,14 @@ TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
    EXPECT_NE(domainAxes.find("\"name\":\"sigma_real\""), std::string::npos) << domainAxes;
 
    // The unbounded constant RooRealVar is still a RooRealVar, so it gets a
-   // domain axis with explicit null bounds that distinguishes it from a RooConstVar.
+   // domain axis without bounds that distinguishes it from a RooConstVar.
    auto tree = RooFit::Detail::JSONTree::create(json);
    auto const *defaultDomain = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["domains"], "default_domain");
    ASSERT_NE(defaultDomain, nullptr);
    auto const *meanAxis = RooJSONFactoryWSTool::findNamedChild((*defaultDomain)["axes"], "mean");
    ASSERT_NE(meanAxis, nullptr);
-   EXPECT_TRUE((*meanAxis)["min"].is_null());
-   EXPECT_TRUE((*meanAxis)["max"].is_null());
+   EXPECT_FALSE(meanAxis->has_child("min"));
+   EXPECT_FALSE(meanAxis->has_child("max"));
 
    RooWorkspace imported;
    ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
@@ -2622,7 +2639,8 @@ TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(jsonStr));
 
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-   EXPECT_NE(exported.find("\"constraint\":\"muConstraint\""), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["muConstraint"])"), std::string::npos) << exported;
+   EXPECT_EQ(exported.find("\"constraint\":"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("constraint_name"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("constraint_type"), std::string::npos) << exported;
 }
@@ -2687,8 +2705,8 @@ TEST(RooFitHS3, HistFactoryLegacyConstraintTypeInConstraintKey)
    EXPECT_DOUBLE_EQ(alpha->getError(), 1.0);
 
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-   EXPECT_NE(exported.find("\"constraint\":\"alpha_lumiConstraint\""), std::string::npos) << exported;
-   EXPECT_EQ(exported.find("\"constraint\":\"Gauss\""), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["alpha_lumiConstraint"])"), std::string::npos) << exported;
+   EXPECT_EQ(exported.find("\"constraint\":"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("constraint_name"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("constraint_type"), std::string::npos) << exported;
 }
@@ -3330,9 +3348,9 @@ TEST(RooFitHS3, HistFactoryModifierWithoutConstraintIsUnconstrained)
    auto tree = RooFit::Detail::JSONTree::create(json1);
    const auto *channel = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_channel0");
    ASSERT_NE(channel, nullptr) << json1;
-   EXPECT_FALSE(findModifier(*channel, "norm")->has_child("constraint")) << json1;
-   EXPECT_FALSE(findModifier(*channel, "shape")->has_child("constraint")) << json1;
-   EXPECT_TRUE(findModifier(*channel, "constrained")->has_child("constraint")) << json1;
+   EXPECT_FALSE(findModifier(*channel, "norm")->has_child("constraints")) << json1;
+   EXPECT_FALSE(findModifier(*channel, "shape")->has_child("constraints")) << json1;
+   EXPECT_TRUE(findModifier(*channel, "constrained")->has_child("constraints")) << json1;
 
    RooWorkspace ws2;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json1));
@@ -3340,8 +3358,9 @@ TEST(RooFitHS3, HistFactoryModifierWithoutConstraintIsUnconstrained)
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json1);
 }
 
-// The constraint type of the staterror is read from the modifier, with the
-// channel-level setting as fallback, and written to both places.
+// The legacy constraint type of the staterror is read from the modifier, with
+// the channel-level setting as fallback. On export, the constraint
+// distributions are referenced by name.
 TEST(RooFitHS3, HistFactoryStatErrorConstraint)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
@@ -3386,14 +3405,22 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraint)
       ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("Gauss", "Poisson")));
       EXPECT_TRUE(hasGaussianStatConstraints(ws));
 
+      // The constraints are exported as distributions that the staterror modifier references by name.
       const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
       auto tree = RooFit::Detail::JSONTree::create(json);
       const auto *channel = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_channel0");
       ASSERT_NE(channel, nullptr) << json;
-      EXPECT_EQ((*channel)["staterror"]["constraint_type"].val(), "Gauss") << json;
+      EXPECT_FALSE(channel->has_child("staterror")) << json;
       const auto *modifier = findModifier(*channel, "staterror");
       ASSERT_NE(modifier, nullptr) << json;
-      EXPECT_EQ((*modifier)["constraint"].val(), "Gauss") << json;
+      EXPECT_FALSE(modifier->has_child("constraint")) << json;
+      ASSERT_EQ((*modifier)["constraints"].num_children(), 2u) << json;
+      for (auto const &constraintName : (*modifier)["constraints"].children()) {
+         const auto *constraint =
+            RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], constraintName.val());
+         ASSERT_NE(constraint, nullptr) << json;
+         EXPECT_EQ((*constraint)["type"].val(), "gaussian_dist") << json;
+      }
 
       RooWorkspace ws2;
       ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
@@ -3443,12 +3470,9 @@ TEST(RooFitHS3, HistFactoryMissingInterpolation)
    // RooFit always writes a "default_interpolation" if a modifier relies on it.
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_NE(exported.find("default_interpolation"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("hs3_version":"0.3")"), std::string::npos) << exported;
    RooWorkspace ws2;
-   std::string exportedCurrent = exported;
-   const std::string exportedVersion = R"("hs3_version":"0.2")";
-   ASSERT_NE(exportedCurrent.find(exportedVersion), std::string::npos) << exported;
-   exportedCurrent.replace(exportedCurrent.find(exportedVersion), exportedVersion.size(), R"("hs3_version":"0.3")");
-   EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exportedCurrent));
+   EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
 }
 
 // Malformed matrices, error arrays and bin edges are rejected instead of being read out of bounds.
@@ -3516,6 +3540,289 @@ TEST(RooFitHS3, UnbinnedAxisRangesOnImport)
    }
 }
 
+// The analysis keys "parameters_of_interest" and "domains" are written. The
+// singular keys of HS3 v0.2.9 are still read, with a deprecation warning.
+TEST(RooFitHS3, AnalysisLegacySingularKeys)
+{
+   RooWorkspace ws1;
+   ws1.factory("Gaussian::pdf(x[0, -5, 5], mu[0, -5, 5], sigma[1, 0.1, 5])");
+   RooFit::ModelConfig mc1{"ModelConfig", &ws1};
+   mc1.SetPdf("pdf");
+   mc1.SetParametersOfInterest("mu");
+   mc1.SetNuisanceParameters("sigma");
+   mc1.SetObservables("x");
+   ws1.import(mc1);
+
+   const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   EXPECT_NE(json.find(R"("parameters_of_interest":["mu"])"), std::string::npos) << json;
+   EXPECT_NE(json.find(R"("domains":["ModelConfig_nuisance_parameters","ModelConfig_parameters_of_interest"])"),
+             std::string::npos)
+      << json;
+
+   // Turn the analysis into the singular HS3 v0.2.9 form, with only the nuisance parameter domain.
+   std::string legacyJson = json;
+   auto replace = [&](std::string const &from, std::string const &to) {
+      const auto pos = legacyJson.find(from);
+      ASSERT_NE(pos, std::string::npos) << legacyJson;
+      legacyJson.replace(pos, from.size(), to);
+   };
+   replace(R"("parameters_of_interest":["mu"])", R"("parameter_of_interest":["mu"])");
+   replace(R"("domains":["ModelConfig_nuisance_parameters","ModelConfig_parameters_of_interest"])",
+           R"("domain":"ModelConfig_nuisance_parameters")");
+
+   RooWorkspace ws2;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(legacyJson));
+   });
+   EXPECT_NE(warnings.find(R"(the key "parameter_of_interest" of analysis)"), std::string::npos) << warnings;
+   EXPECT_NE(warnings.find(R"(the key "domain" of analysis)"), std::string::npos) << warnings;
+   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+   ASSERT_NE(mc2, nullptr);
+   EXPECT_NE(mc2->GetParametersOfInterest()->find("mu"), nullptr);
+   EXPECT_NE(mc2->GetNuisanceParameters()->find("sigma"), nullptr);
+}
+
+// "crystalball_dist" is the single-sided Crystal Ball, "crystalball_doublesided_dist" the double-sided one. Before
+// HS3 0.3, "crystalball_dist" with the "_L"/"_R" fields was the double-sided one, which is still read.
+TEST(RooFitHS3, CrystalBallTypes)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   x.setBins(20);
+   RooRealVar mean{"mean", "mean", 5.0, 0.0, 10.0};
+   RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 5.0};
+   RooRealVar sigmaR{"sigmaR", "sigmaR", 1.5, 0.1, 5.0};
+   RooRealVar alphaL{"alphaL", "alphaL", 1.2, 0.1, 5.0};
+   RooRealVar nL{"nL", "nL", 3.0, 0.5, 10.0};
+   RooRealVar alphaR{"alphaR", "alphaR", 2.0, 0.1, 5.0};
+   RooRealVar nR{"nR", "nR", 5.0, 0.5, 10.0};
+   RooRealVar alphaNeg{"alphaNeg", "alphaNeg", -1.2, -5.0, -0.1};
+
+   auto exportToString = [](RooAbsArg const &arg) {
+      RooWorkspace ws;
+      ws.import(arg, RooFit::Silence());
+      return RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   };
+
+   // RooCBShape is the single-sided crystalball_dist.
+   RooCBShape cbShape{"cbShape", "", x, mean, sigma, alphaL, nL};
+   EXPECT_EQ(validate(cbShape), 0);
+   EXPECT_NE(exportToString(cbShape).find(R"("type":"crystalball_dist")"), std::string::npos);
+
+   // A single-sided RooCrystalBall is a crystalball_dist too, for both signs of alpha. It is read back as a
+   // RooCBShape, which is the same function.
+   for (RooRealVar *alpha : {&alphaL, &alphaNeg}) {
+      RooCrystalBall cbSingle{"cbSingle", "", x, mean, sigma, *alpha, nL, /*doubleSided=*/false};
+      const std::string json = exportToString(cbSingle);
+      EXPECT_NE(json.find(R"("type":"crystalball_dist")"), std::string::npos) << json;
+      EXPECT_NE(json.find(std::string(R"("alpha":")") + alpha->GetName() + "\""), std::string::npos) << json;
+      EXPECT_EQ(json.find("alpha_L"), std::string::npos) << json;
+
+      // The class changes on the way back, so validate() can't be used: the parameter points are written in a
+      // different order. Compare the values instead, and check that the JSON is stable from the second export on.
+      RooWorkspace ws2;
+      RooJSONFactoryWSTool{ws2}.importJSONfromString(json);
+      auto *cbShapeBack = dynamic_cast<RooCBShape *>(ws2.pdf("cbSingle"));
+      ASSERT_NE(cbShapeBack, nullptr);
+      RooRealVar &x2 = *ws2.var("x");
+      RooArgSet nset1{x};
+      RooArgSet nset2{x2};
+      for (int i = 0; i < x.numBins(); ++i) {
+         x.setBin(i);
+         x2.setBin(i);
+         EXPECT_NEAR(cbShapeBack->getVal(nset2), cbSingle.getVal(nset1), 1e-10) << alpha->GetName() << " bin " << i;
+      }
+      const std::string json2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+      RooWorkspace ws3;
+      RooJSONFactoryWSTool{ws3}.importJSONfromString(json2);
+      EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), json2);
+   }
+
+   // Double-sided RooCrystalBall shapes are crystalball_doublesided_dist, with the tails always written for both
+   // sides, and the width written as "sigma" if both sides share it.
+   RooCrystalBall cbSymmetric{"cbSymmetric", "", x, mean, sigma, alphaL, nL, /*doubleSided=*/true};
+   RooCrystalBall cbAsymmetric{"cbAsymmetric", "", x, mean, sigma, sigmaR, alphaL, nL, alphaR, nR};
+   EXPECT_EQ(validate(cbSymmetric), 0);
+   EXPECT_EQ(validate(cbAsymmetric), 0);
+   {
+      const std::string json = exportToString(cbSymmetric);
+      EXPECT_NE(json.find(R"("type":"crystalball_doublesided_dist")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("sigma":"sigma")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("alpha_R":"alphaL")"), std::string::npos) << json;
+      EXPECT_EQ(json.find(R"("alpha":)"), std::string::npos) << json;
+   }
+   {
+      const std::string json = exportToString(cbAsymmetric);
+      EXPECT_NE(json.find(R"("type":"crystalball_doublesided_dist")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("sigma_R":"sigmaR")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("alpha_R":"alphaR")"), std::string::npos) << json;
+   }
+
+   auto document = [](std::string const &distribution) {
+      return R"({
+         "metadata": {"hs3_version": "0.3"},
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "m", "min": 0, "max": 10}]}],
+         "distributions": [)" +
+             distribution + R"(]
+      })";
+   };
+   auto importPdf = [&](std::string const &distribution, std::string *warnings = nullptr) {
+      auto ws = std::make_unique<RooWorkspace>();
+      const std::string messages = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         RooJSONFactoryWSTool{*ws}.importJSONfromString(document(distribution));
+      });
+      if (warnings) {
+         *warnings = messages;
+      }
+      return ws;
+   };
+
+   // Import of the two standard types.
+   auto single = importPdf(R"({"name": "cb", "type": "crystalball_dist", "m": "m", "m0": 5.0, "sigma": 1.0,
+                               "alpha": -1.2, "n": 3.0})");
+   EXPECT_NE(dynamic_cast<RooCBShape *>(single->pdf("cb")), nullptr);
+   auto doubleSided = importPdf(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m", "m0": 5.0,
+                                    "sigma": 1.0, "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0, "n_R": 5.0})");
+   EXPECT_NE(dynamic_cast<RooCrystalBall *>(doubleSided->pdf("cb")), nullptr);
+
+   // The double-sided form of crystalball_dist from before HS3 0.3 is still read, with a deprecation warning. This
+   // includes the symmetric tails given as "alpha"/"n" with asymmetric widths.
+   std::string warnings;
+   auto legacy = importPdf(R"({"name": "cb", "type": "crystalball_dist", "m": "m", "m0": 5.0, "sigma": 1.0,
+                               "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0, "n_R": 5.0})",
+                           &warnings);
+   auto *legacyCb = dynamic_cast<RooCrystalBall *>(legacy->pdf("cb"));
+   ASSERT_NE(legacyCb, nullptr);
+   ASSERT_NE(legacyCb->alphaR(), nullptr);
+   EXPECT_DOUBLE_EQ(legacyCb->alphaR()->getVal(), 2.0);
+   EXPECT_NE(warnings.find("please use \"crystalball_doublesided_dist\""), std::string::npos) << warnings;
+   auto legacySymmetric = importPdf(R"({"name": "cb", "type": "crystalball_dist", "m": "m", "m0": 5.0,
+                                        "sigma_L": 1.0, "sigma_R": 1.5, "alpha": 1.2, "n": 3.0})");
+   auto *legacySymmetricCb = dynamic_cast<RooCrystalBall *>(legacySymmetric->pdf("cb"));
+   ASSERT_NE(legacySymmetricCb, nullptr);
+   ASSERT_NE(legacySymmetricCb->alphaR(), nullptr);
+   EXPECT_DOUBLE_EQ(legacySymmetricCb->alphaR()->getVal(), 1.2);
+
+   // Invalid field combinations.
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m",
+      "m0": 5.0, "sigma": 1.0, "alpha": 1.2, "n": 3.0})"),
+                               "must not have \"alpha\" or \"n\"");
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m",
+      "m0": 5.0, "sigma": 1.0, "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0})"),
+                               "is missing \"n_R\"");
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m",
+      "m0": 5.0, "sigma": 1.0, "sigma_L": 1.0, "sigma_R": 1.0, "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0,
+      "n_R": 5.0})"),
+                               "must not combine \"sigma\"");
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_doublesided_dist", "m": "m",
+      "m0": 5.0, "sigma_L": 1.0, "alpha_L": 1.2, "n_L": 3.0, "alpha_R": 2.0, "n_R": 5.0})"),
+                               "needs both \"sigma_L\" and \"sigma_R\"");
+   expectImportThrowsWithError(document(R"({"name": "cb", "type": "crystalball_dist", "m": "m", "m0": 5.0,
+      "sigma": 1.0, "alpha": 1.2, "n": 3.0, "alpha_R": 2.0, "n_R": 5.0})"),
+                               "must not combine");
+}
+
+// HistFactory modifiers reference their parameters with "parameters" and their constraint distributions by name with
+// "constraints", where null leaves a parameter unconstrained.
+TEST(RooFitHS3, HistFactoryConstraintsByName)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
+                  "modifiers": [
+                     {"type": "normfactor", "parameters": ["mu"]},
+                     {"type": "normsys", "parameters": ["alpha_a"], "constraints": ["alpha_a_constraint"],
+                      "data": {"lo": 0.9, "hi": 1.1}},
+                     {"type": "normsys", "parameters": ["alpha_b"], "constraints": [null],
+                      "data": {"lo": 0.8, "hi": 1.2}},
+                     {"type": "staterror", "parameters": ["gamma_0", "gamma_1"],
+                      "constraints": ["gamma_0_constraint", null]}
+                  ]
+               }
+            ]
+         },
+         {"name": "alpha_a_constraint", "type": "gaussian_dist", "x": "alpha_a", "mean": 0.0, "sigma": 1.0},
+         {"name": "gamma_0_constraint", "type": "gaussian_dist", "x": "gamma_0", "mean": 1.0, "sigma": 0.1}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "alpha_a", "min": -5, "max": 5}, {"name": "alpha_b", "min": -5, "max": 5},
+         {"name": "gamma_0", "min": 0, "max": 5}, {"name": "gamma_1", "min": 0, "max": 5}]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   auto *model = dynamic_cast<RooProdPdf *>(ws.pdf("model_channel0"));
+   ASSERT_NE(model, nullptr);
+   RooArgSet constraintNames;
+   for (RooAbsArg *pdf : model->pdfList()) {
+      if (!dynamic_cast<RooRealSumPdf *>(pdf)) {
+         constraintNames.add(*pdf);
+      }
+   }
+   // Exactly the two named constraints, and no constraints created by RooFit.
+   EXPECT_EQ(constraintNames.size(), 2u);
+   EXPECT_NE(constraintNames.find("alpha_a_constraint"), nullptr);
+   EXPECT_NE(constraintNames.find("gamma_0_constraint"), nullptr);
+   EXPECT_NE(ws.var("mu"), nullptr);
+
+   // The export references the same constraints by name, and the result is stable under a round trip.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"("constraints":["alpha_a_constraint"])"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["gamma_0_constraint",null])"), std::string::npos) << exported;
+   EXPECT_EQ(exported.find(R"("parameter":)"), std::string::npos) << exported;
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // In HS3 >= 0.3, a staterror without any constraint information is unconstrained.
+   std::string unconstrained = json;
+   const std::string statConstraints = R"(,
+                      "constraints": ["gamma_0_constraint", null])";
+   ASSERT_NE(unconstrained.find(statConstraints), std::string::npos);
+   unconstrained.replace(unconstrained.find(statConstraints), statConstraints.size(), "");
+   RooWorkspace ws3;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(unconstrained));
+   auto *model3 = dynamic_cast<RooProdPdf *>(ws3.pdf("model_channel0"));
+   ASSERT_NE(model3, nullptr);
+   EXPECT_EQ(model3->pdfList().size(), 2u); // the sum and alpha_a_constraint
+}
+
+// Binned axes with an irregular binning carry "min" and "max" in addition to the "edges".
+TEST(RooFitHS3, IrregularBinnedAxesHaveRange)
+{
+   RooRealVar x{"x", "x", 0.0, 3.0};
+   std::vector<double> edges{0.0, 1.0, 3.0};
+   x.setBinning(RooBinning{2, edges.data()});
+   RooDataHist dh{"dh", "dh", RooArgSet{x}};
+   RooWorkspace ws;
+   ws.import(dh, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   const auto *dataNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "dh");
+   ASSERT_NE(dataNode, nullptr) << json;
+   const auto &axis = (*dataNode)["axes"].child(0);
+   EXPECT_TRUE(axis.has_child("edges")) << json;
+   EXPECT_DOUBLE_EQ(axis["min"].val_double(), 0.0) << json;
+   EXPECT_DOUBLE_EQ(axis["max"].val_double(), 3.0) << json;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+}
+
 // Errors of zero in binned data stay zero, also before the first positive error.
 TEST(RooFitHS3, BinnedDataZeroErrors)
 {
@@ -3532,6 +3839,150 @@ TEST(RooFitHS3, BinnedDataZeroErrors)
    EXPECT_DOUBLE_EQ(data->weightSquared(0), 0.0);
    EXPECT_DOUBLE_EQ(data->weightSquared(1), 4.0);
    EXPECT_DOUBLE_EQ(data->weightSquared(2), 0.0);
+}
+
+// A HistFactory sample without "errors" contributes no statistical uncertainty to the staterror in HS3 >= 0.3.
+// Before, RooFit assumed Poisson uncertainties for it.
+TEST(RooFitHS3, HistFactorySampleWithoutErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &version) {
+      const std::string staterror = R"({"type": "staterror", "parameters": ["g0", "g1"], "constraint": "Gauss"})";
+      return R"({
+      "metadata": {"hs3_version": ")" +
+             version + R"("},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [
+               {"name": "a", "data": {"contents": [10.0, 20.0], "errors": [4.0, 6.0]}, "modifiers": [)" +
+             staterror + R"(]},
+               {"name": "b", "data": {"contents": [10.0, 20.0]}, "modifiers": [)" +
+             staterror + R"(]}
+            ]
+         }
+      ]
+   })";
+   };
+   auto relativeErrors = [](RooWorkspace &ws) {
+      std::vector<double> result;
+      for (const char *name : {"g0_sigma", "g1_sigma"}) {
+         auto *sigma = dynamic_cast<RooAbsReal *>(ws.arg(name));
+         result.push_back(sigma ? sigma->getVal() : -1.0);
+      }
+      return result;
+   };
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("0.3")));
+   const auto errors = relativeErrors(ws);
+   EXPECT_DOUBLE_EQ(errors[0], 4.0 / 20.0);
+   EXPECT_DOUBLE_EQ(errors[1], 6.0 / 40.0);
+
+   RooWorkspace wsLegacy;
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(makeJSON("0.2")));
+   const auto legacyErrors = relativeErrors(wsLegacy);
+   EXPECT_DOUBLE_EQ(legacyErrors[0], std::sqrt(16.0 + 10.0) / 20.0);
+   EXPECT_DOUBLE_EQ(legacyErrors[1], std::sqrt(36.0 + 20.0) / 40.0);
+}
+
+// HS3 has one per-bin modifier type, "shapefactor", whose parameters are constrained by the distributions named in
+// "constraints", if given, and free otherwise. "shapesys" is a deprecated alias. HistFactory's ShapeSys (constrained)
+// and ShapeFactor (free) are both written as "shapefactor".
+TEST(RooFitHS3, HistFactoryShapeFactor)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &version, std::string const &modifiers,
+                      std::string const &constraintDist = "") {
+      return R"({
+      "metadata": {"hs3_version": ")" +
+             version + R"("},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]}, "modifiers": [)" +
+             modifiers + R"(]}]
+         })" +
+             constraintDist + R"(
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "g_free_0", "min": 0, "max": 5}, {"name": "g_free_1", "min": 0, "max": 5},
+         {"name": "g_c_0", "min": 0, "max": 5}, {"name": "g_c_1", "min": 0, "max": 5}]}]
+   })";
+   };
+   auto countGammaConstraints = [](RooWorkspace &ws) {
+      std::size_t n = 0;
+      for (RooAbsArg *pdf : ws.allPdfs()) {
+         if (dynamic_cast<RooGaussian *>(pdf) || dynamic_cast<RooPoisson *>(pdf)) {
+            ++n;
+         }
+      }
+      return n;
+   };
+   const std::string freeModifier =
+      R"({"type": "shapefactor", "name": "free", "parameters": ["g_free_0", "g_free_1"]})";
+   const std::string constrainedModifier = R"({"type": "shapefactor", "name": "constr",
+      "parameters": ["g_c_0", "g_c_1"], "constraints": ["g_c_0_constraint", null]})";
+   const std::string json =
+      makeJSON("0.3", freeModifier + "," + constrainedModifier,
+               R"(, {"name": "g_c_0_constraint", "type": "gaussian_dist", "x": "g_c_0", "mean": 1.0, "sigma": 0.1})");
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   // The functions are named as in HistFactory: ShapeFactor for free, ShapeSys for constrained parameters.
+   EXPECT_NE(ws.function("channel0_free_shapeFactor"), nullptr);
+   EXPECT_NE(ws.function("channel0_constr_ShapeSys"), nullptr);
+   EXPECT_EQ(countGammaConstraints(ws), 1u);
+   ASSERT_NE(ws.var("g_free_0"), nullptr);
+   EXPECT_FALSE(ws.var("g_free_0")->isConstant());
+
+   // Both are written as "shapefactor", and free parameters don't prevent the round trip.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(countOccurrences(exported, R"("type":"shapefactor")"), 2u) << exported;
+   EXPECT_EQ(exported.find("shapesys"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["g_c_0_constraint",null])"), std::string::npos) << exported;
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // "shapesys" is a deprecated alias.
+   std::string withAlias = json;
+   withAlias.replace(withAlias.find(R"("type": "shapefactor")"), std::string(R"("type": "shapefactor")").size(),
+                     R"("type": "shapesys")");
+   RooWorkspace ws3;
+   const std::string aliasWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(withAlias));
+   });
+   EXPECT_NE(aliasWarnings.find(R"(the modifier type "shapesys" is deprecated)"), std::string::npos) << aliasWarnings;
+   EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), exported);
+
+   // In HS3 >= 0.3, "data.vals" without "constraints" don't create constraints.
+   RooWorkspace ws4;
+   const std::string valsWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws4}.importJSONfromString(
+         makeJSON("0.3", R"({"type": "shapefactor", "name": "free", "parameters": ["g_free_0", "g_free_1"],
+                    "data": {"vals": [0.1, 0.2]}})")));
+   });
+   EXPECT_NE(valsWarnings.find(R"(the "data.vals" of modifier 'free' of sample 'sig' are ignored)"), std::string::npos)
+      << valsWarnings;
+   EXPECT_NE(ws4.function("channel0_free_shapeFactor"), nullptr);
+   EXPECT_EQ(countGammaConstraints(ws4), 0u);
+
+   // Before HS3 0.3, a "shapesys" with "data.vals" is constrained as before, without deprecation warning.
+   RooWorkspace ws5;
+   const std::string legacyWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws5}.importJSONfromString(
+         makeJSON("0.2", R"({"type": "shapesys", "name": "constr", "data": {"vals": [0.1, 0.2]}})")));
+   });
+   EXPECT_EQ(legacyWarnings.find("deprecated"), std::string::npos) << legacyWarnings;
+   EXPECT_NE(ws5.function("channel0_constr_ShapeSys"), nullptr);
+   EXPECT_EQ(countGammaConstraints(ws5), 2u);
 }
 
 // A RooRealVar that is constant in all parameter points must stay a RooRealVar, and a RooConstVar must stay a
@@ -3658,17 +4109,18 @@ TEST(RooFitHS3, ModelConfigsSharingPdfAndData)
    }
    {
       RooWorkspace ws;
-      ws.factory("Gaussian::pdf_a(x[0, -5, 5], mu[0, -5, 5], sigma[1, 0.1, 5])");
-      ws.factory("Gaussian::pdf_b(x, mu, sigma)");
+      // Each component has its own observable, as HS3 requires.
+      ws.factory("Gaussian::pdf_a(x_a[0, -5, 5], mu[0, -5, 5], sigma[1, 0.1, 5])");
+      ws.factory("Gaussian::pdf_b(x_b[0, -5, 5], mu, sigma)");
       ws.factory("SIMUL::sim_pdf(channel[a=0, b=1], a=pdf_a, b=pdf_b)");
-      RooArgSet observables{*ws.var("x"), *ws.cat("channel")};
+      RooArgSet observables{*ws.var("x_a"), *ws.var("x_b"), *ws.cat("channel")};
       RooDataSet data{"data", "data", observables};
       for (int index : {0, 1}) {
          ws.cat("channel")->setIndex(index);
          data.add(observables);
       }
       ws.import(data, RooFit::Silence());
-      roundTrip(ws, "sim_pdf", "x,channel");
+      roundTrip(ws, "sim_pdf", "x_a,x_b,channel");
    }
 }
 
@@ -3783,7 +4235,7 @@ TEST(RooFitHS3, FormulaNormSysConstraint)
    RooWorkspace ws1;
    importFormulaNormSysChannel(ws1);
    const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
-   EXPECT_NE(json.find(R"("constraint":"alpha_sysConstraint")"), std::string::npos) << json;
+   EXPECT_NE(json.find(R"("constraints":["alpha_sysConstraint"])"), std::string::npos) << json;
 
    RooWorkspace ws2;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
@@ -4028,4 +4480,1203 @@ TEST(RooFitHS3, WarningsAreShownByDefault)
    const std::string warnings =
       captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [] { RooJSONFactoryWSTool::warning("test message"); });
    EXPECT_NE(warnings.find("test message"), std::string::npos) << warnings;
+}
+
+// Binned contents are flattened with the last axis varying fastest (HS3 "Flattening of Binned Contents"). RooFit
+// writes and reads them in that order.
+TEST(RooFitHS3, FlatteningOrderOfBinnedContents)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "data": [{"name": "d", "type": "binned",
+                "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "y", "min": 0.0, "max": 3.0, "nbins": 3}],
+                "contents": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]}]
+   })";
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   auto *data = dynamic_cast<RooDataHist *>(ws.data("d"));
+   ASSERT_NE(data, nullptr);
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+   for (int ix = 0; ix < 2; ++ix) {
+      for (int iy = 0; iy < 3; ++iy) {
+         x.setBin(ix);
+         y.setBin(iy);
+         EXPECT_DOUBLE_EQ(data->weight(RooArgSet{x, y}, 0), 3.0 * ix + iy) << "bin (" << ix << ", " << iy << ")";
+      }
+   }
+
+   // The export writes the same order back.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"("contents":[0,1,2,3,4,5])"), std::string::npos) << exported;
+}
+
+// Categorical axes in domains create RooCategory objects, with one state per category. Binned and unbinned data can
+// have categorical axes. Categories are identified by name: the data may list them in a different order than the
+// domain, and the bins of binned data follow the order of the data axis.
+TEST(RooFitHS3, CategoricalAxesInDomainsAndData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &data, std::string const &channelAxis = R"(["SR", "CR"])") {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "channel", "categories": )" +
+             channelAxis + R"(}, {"name": "x", "min": 0.0, "max": 2.0}]}],
+      "parameter_points": [{"name": "point", "parameters": [{"name": "channel", "value": "CR"}]}],
+      "data": [)" +
+             data + R"(]
+   })";
+   };
+   const std::string binned = R"({"name": "binned", "type": "binned",
+      "axes": [{"name": "channel", "categories": ["CR", "SR"]}, {"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+      "contents": [1.0, 2.0, 3.0, 4.0]})";
+   const std::string unbinned = R"({"name": "unbinned", "type": "unbinned",
+      "axes": [{"name": "channel", "categories": ["SR", "CR"]}, {"name": "x", "min": 0.0, "max": 2.0}],
+      "entries": [["SR", 0.5], ["CR", 1.5], ["CR", 0.25]]})";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(binned + "," + unbinned)));
+
+   // The domain defines the category, with the position in "categories" as index.
+   RooCategory *channel = ws.cat("channel");
+   ASSERT_NE(channel, nullptr);
+   EXPECT_EQ(channel->size(), 2u);
+   EXPECT_EQ(channel->lookupIndex("SR"), 0);
+   EXPECT_EQ(channel->lookupIndex("CR"), 1);
+
+   // A parameter point sets the category by its label.
+   const RooArgSet *point = ws.getSnapshot("point");
+   ASSERT_NE(point, nullptr);
+   auto *channelInPoint = dynamic_cast<RooCategory *>(point->find("channel"));
+   ASSERT_NE(channelInPoint, nullptr);
+   EXPECT_EQ(channelInPoint->getCurrentLabel(), std::string("CR"));
+
+   // Binned data: the bins follow the order of the data axis ("CR" first), and are found by label.
+   auto *binnedData = dynamic_cast<RooDataHist *>(ws.data("binned"));
+   ASSERT_NE(binnedData, nullptr);
+   RooRealVar &x = *ws.var("x");
+   x.setBins(2);
+   const std::map<std::pair<std::string, int>, double> expected{
+      {{"CR", 0}, 1.0}, {{"CR", 1}, 2.0}, {{"SR", 0}, 3.0}, {{"SR", 1}, 4.0}};
+   for (auto const &item : expected) {
+      channel->setLabel(item.first.first);
+      x.setBin(item.first.second);
+      EXPECT_DOUBLE_EQ(binnedData->weight(RooArgSet{*channel, x}, 0), item.second)
+         << item.first.first << ", bin " << item.first.second;
+   }
+
+   // Unbinned data: the entries of a categorical axis are the labels.
+   RooAbsData *unbinnedData = ws.data("unbinned");
+   ASSERT_NE(unbinnedData, nullptr);
+   ASSERT_EQ(unbinnedData->numEntries(), 3);
+   const std::vector<std::string> labels{"SR", "CR", "CR"};
+   for (int i = 0; i < 3; ++i) {
+      auto const &row = *unbinnedData->get(i);
+      EXPECT_EQ(static_cast<RooCategory const &>(row["channel"]).getCurrentLabel(), labels[i]) << "entry " << i;
+   }
+
+   // Invalid documents.
+   expectImportThrowsWithError(
+      makeJSON(R"({"name": "u", "type": "unbinned", "axes": [{"name": "channel", "categories": ["SR", "CR"]}],
+                   "entries": [["VR"]]})"),
+      "is not one of its categories");
+   expectImportThrowsWithError(
+      makeJSON(R"({"name": "u", "type": "unbinned", "axes": [{"name": "channel", "categories": ["SR", "VR"]}],
+                   "entries": [["SR"]]})"),
+      "differ from the states of the category");
+   expectImportThrowsWithError(
+      makeJSON(R"({"name": "b", "type": "binned", "axes": [{"name": "channel", "categories": ["SR", "VR"]}],
+                   "contents": [1.0, 2.0]})"),
+      "differ from those of the category");
+   expectImportThrowsWithError(makeJSON("", R"(["SR", "SR"])"), "is listed twice");
+   expectImportThrowsWithError(makeJSON("", R"([])"), "non-empty list of strings");
+   expectImportThrowsWithError(
+      makeJSON(R"({"name": "b", "type": "binned", "axes": [{"name": "channel", "categories": ["SR", "CR"], "nbins": 2}],
+                   "contents": [1.0, 2.0]})"),
+      "is categorical and must not have \"nbins\"");
+}
+
+// RooFit writes per-bin arrays in the order HS3 prescribes for the axes it writes (last axis fastest): the contents of
+// binned data and of RooHistFunc ("step"), and the parameters of ParamHistFunc ("step"). Each is built with its
+// variables in both orders, and with a known value (or parameter name) per bin.
+TEST(RooFitHS3, ExportedBinOrderFollowsAxes)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+   RooRealVar y{"y", "y", 0.0, 3.0};
+   y.setBins(3);
+   auto valueOf = [](int ix, int iy) { return 10.0 * ix + iy + 1.0; };
+   auto paramName = [](int ix, int iy) { return "g_" + std::to_string(ix) + "_" + std::to_string(iy); };
+
+   // Call `check(entry, ix, iy)` for the entry of `array` that HS3 assigns to the bin (ix, iy), given the axes of
+   // `node`.
+   auto forEachBin = [&](RooFit::Detail::JSONNode const &node, RooFit::Detail::JSONNode const &array, auto &&check) {
+      auto const &axes = node["axes"];
+      ASSERT_EQ(axes.num_children(), 2u);
+      const bool xFirst = axes.child(0)["name"].val() == "x";
+      EXPECT_EQ(axes.child(xFirst ? 1 : 0)["name"].val(), "y");
+      ASSERT_EQ(array.num_children(), 6u);
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            const std::size_t k = xFirst ? ix * 3 + iy : iy * 2 + ix;
+            check(array.child(k), ix, iy);
+         }
+      }
+   };
+   // Evaluate `name` in `ws` at the center of each bin.
+   auto expectValues = [&](RooWorkspace &ws, const char *name) {
+      RooAbsReal *func = ws.function(name);
+      ASSERT_NE(func, nullptr) << name;
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            ws.var("x")->setBin(ix);
+            ws.var("y")->setBin(iy);
+            EXPECT_DOUBLE_EQ(func->getVal(), valueOf(ix, iy)) << name << " bin (" << ix << ", " << iy << ")";
+         }
+      }
+   };
+
+   for (bool xFirst : {true, false}) {
+      SCOPED_TRACE(xFirst ? "variables (x, y)" : "variables (y, x)");
+      RooArgList vars = xFirst ? RooArgList{x, y} : RooArgList{y, x};
+
+      // Binned data and RooHistFunc.
+      RooDataHist dh{"dh", "dh", vars};
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            x.setBin(ix);
+            y.setBin(iy);
+            dh.set(RooArgSet{x, y}, valueOf(ix, iy));
+         }
+      }
+      RooHistFunc histFunc{"hist_func", "hist_func", vars, dh};
+
+      // ParamHistFunc: its parameters are ordered like the bins of a TH1, with the first variable varying fastest.
+      std::vector<std::unique_ptr<RooRealVar>> params;
+      RooArgList paramList;
+      auto &first = static_cast<RooRealVar &>(vars[0]);
+      auto &second = static_cast<RooRealVar &>(vars[1]);
+      for (int i1 = 0; i1 < second.getBins(); ++i1) {
+         for (int i0 = 0; i0 < first.getBins(); ++i0) {
+            const int ix = xFirst ? i0 : i1;
+            const int iy = xFirst ? i1 : i0;
+            params.push_back(std::make_unique<RooRealVar>(paramName(ix, iy).c_str(), "", valueOf(ix, iy), 0.0, 100.0));
+            paramList.add(*params.back());
+         }
+      }
+      ParamHistFunc paramHistFunc{"param_hist_func", "param_hist_func", vars, paramList};
+      // Check the assumption about ParamHistFunc that this test relies on.
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            x.setBin(ix);
+            y.setBin(iy);
+            ASSERT_DOUBLE_EQ(paramHistFunc.getVal(), valueOf(ix, iy)) << "bin (" << ix << ", " << iy << ")";
+         }
+      }
+
+      RooWorkspace ws;
+      ws.import(dh, RooFit::Silence());
+      ws.import(histFunc, RooFit::RecycleConflictNodes(), RooFit::Silence());
+      ws.import(paramHistFunc, RooFit::RecycleConflictNodes(), RooFit::Silence());
+      const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      auto tree = RooFit::Detail::JSONTree::create(json);
+      auto &root = tree->rootnode();
+
+      auto const *dataNode = RooJSONFactoryWSTool::findNamedChild(root["data"], "dh");
+      ASSERT_NE(dataNode, nullptr) << json;
+      forEachBin(*dataNode, (*dataNode)["contents"], [&](auto const &entry, int ix, int iy) {
+         EXPECT_DOUBLE_EQ(entry.val_double(), valueOf(ix, iy)) << "data bin (" << ix << ", " << iy << ")";
+      });
+
+      auto const *histNode = RooJSONFactoryWSTool::findNamedChild(root["functions"], "hist_func");
+      ASSERT_NE(histNode, nullptr) << json;
+      forEachBin((*histNode)["data"], (*histNode)["data"]["contents"], [&](auto const &entry, int ix, int iy) {
+         EXPECT_DOUBLE_EQ(entry.val_double(), valueOf(ix, iy)) << "RooHistFunc bin (" << ix << ", " << iy << ")";
+      });
+
+      auto const *paramNode = RooJSONFactoryWSTool::findNamedChild(root["functions"], "param_hist_func");
+      ASSERT_NE(paramNode, nullptr) << json;
+      forEachBin(*paramNode, (*paramNode)["parameters"], [&](auto const &entry, int ix, int iy) {
+         EXPECT_EQ(entry.val(), paramName(ix, iy)) << "ParamHistFunc bin (" << ix << ", " << iy << ")";
+      });
+
+      // Read back, the functions have the same value in every bin.
+      RooWorkspace imported;
+      ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+      expectValues(imported, "hist_func");
+      expectValues(imported, "param_hist_func");
+   }
+}
+
+// The per-bin parameters of a multi-dimensional HistFactory modifier follow the order of HS3 (last axis fastest), like
+// the bin contents. Each gamma gets the relative uncertainty of its own bin, and the export keeps the order.
+TEST(RooFitHS3, HistFactoryMultiDimensionalBinOrder)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto gammaName = [](int ix, int iy) { return "g_" + std::to_string(ix) + "_" + std::to_string(iy); };
+   auto content = [](int ix, int iy) { return 100.0 * (1 + 3 * ix + iy); };
+   auto relError = [](int ix, int iy) { return 0.01 * (1 + 3 * ix + iy); };
+   auto makeJSON = [&](std::string const &version) {
+      std::string params;
+      std::string contents;
+      std::string errors;
+      for (int ix = 0; ix < 2; ++ix) {
+         for (int iy = 0; iy < 3; ++iy) {
+            const std::string sep = params.empty() ? "" : ", ";
+            params += sep + "\"" + gammaName(ix, iy) + "\"";
+            contents += sep + std::to_string(content(ix, iy));
+            errors += sep + std::to_string(content(ix, iy) * relError(ix, iy));
+         }
+      }
+      return R"({
+      "metadata": {"hs3_version": ")" +
+             version + R"("},
+      "distributions": [{
+         "name": "model_channel0", "type": "histfactory_dist",
+         "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "y", "min": 0.0, "max": 3.0, "nbins": 3}],
+         "samples": [{"name": "sig", "data": {"contents": [)" +
+             contents + R"(], "errors": [)" + errors + R"(]},
+                      "modifiers": [{"type": "staterror", "parameters": [)" +
+             params + R"(], "constraint": "Gauss"}]}]
+      }]
+   })";
+   };
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("0.3")));
+   auto *phf = dynamic_cast<ParamHistFunc *>(ws.function("mc_stat_channel0"));
+   ASSERT_NE(phf, nullptr);
+   for (int ix = 0; ix < 2; ++ix) {
+      for (int iy = 0; iy < 3; ++iy) {
+         // The constraint of each gamma has the relative uncertainty of its bin.
+         auto *sigma = dynamic_cast<RooAbsReal *>(ws.arg((gammaName(ix, iy) + "_sigma").c_str()));
+         ASSERT_NE(sigma, nullptr) << gammaName(ix, iy);
+         EXPECT_NEAR(sigma->getVal(), relError(ix, iy), 1e-12) << gammaName(ix, iy);
+         // In its bin, the ParamHistFunc takes the value of that gamma.
+         ws.var(gammaName(ix, iy))->setVal(1.0 + 0.001 * (1 + 3 * ix + iy));
+      }
+   }
+   for (int ix = 0; ix < 2; ++ix) {
+      for (int iy = 0; iy < 3; ++iy) {
+         ws.var("x")->setBin(ix);
+         ws.var("y")->setBin(iy);
+         EXPECT_DOUBLE_EQ(phf->getVal(), ws.var(gammaName(ix, iy))->getVal()) << "bin (" << ix << ", " << iy << ")";
+      }
+   }
+   for (int ix = 0; ix < 2; ++ix) {
+      for (int iy = 0; iy < 3; ++iy) {
+         ws.var(gammaName(ix, iy))->setVal(1.0);
+      }
+   }
+
+   // The export writes the gammas in the same order.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"("parameters":["g_0_0","g_0_1","g_0_2","g_1_0","g_1_1","g_1_2"])"), std::string::npos)
+      << exported;
+
+   // Documents before HS3 0.3 don't define the order; they are rejected.
+   expectImportThrowsWithError(makeJSON("0.2"), "Documents before HS3 0.3 don't define the order");
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x", "min": 0.0, "max": 2.0}, {"name": "y", "min": 0.0, "max": 3.0},
+         {"name": "a", "min": 0.0, "max": 5.0}, {"name": "b", "min": 0.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [{"name": "a", "value": 1.0}, {"name": "b", "value": 2.0}]}],
+      "functions": [{"name": "phf", "type": "step", "variables": ["x", "y"], "parameters": ["a", "b"],
+                     "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "y", "min": 0.0, "max": 3.0, "nbins": 1}]}]
+   })",
+                               "Documents before HS3 0.3 don't define the order");
+}
+
+// A RooSimultaneous is a "combined_dist" (HS3 #119): the components are selected by a key with one label per column,
+// and the columns are declared as categorical axes of the default domain. The ROOT-internal form of older files is
+// still read.
+TEST(RooFitHS3, CombinedDist)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::model(x[-8, 8], mean[0, -8, 8], sigma[0.3, 0.1, 10])");
+   ws.factory("Gaussian::model_ctl(x, mean, 1.0)");
+   // The states are defined in this order, with non-contiguous indices.
+   ws.factory("SIMUL::simPdf(sample[physics=3, control=7], physics=model, control=model_ctl)");
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+
+   // Structure of the written document.
+   auto const *simPdfNode = RooJSONFactoryWSTool::findNamedChild(root["distributions"], "simPdf");
+   ASSERT_NE(simPdfNode, nullptr) << json;
+   EXPECT_EQ((*simPdfNode)["type"].val(), "combined_dist");
+   ASSERT_EQ((*simPdfNode)["columns"].num_children(), 1u);
+   EXPECT_EQ((*simPdfNode)["columns"].child(0).val(), "sample");
+   auto const &components = (*simPdfNode)["components"];
+   ASSERT_EQ(components.num_children(), 2u);
+   EXPECT_EQ(components.child(0)["key"].num_children(), 1u);
+   EXPECT_EQ(components.child(0)["key"].child(0).val(), "physics");
+   EXPECT_EQ(components.child(0)["dist"].val(), "model");
+   EXPECT_EQ(components.child(1)["key"].child(0).val(), "control");
+   EXPECT_EQ(components.child(1)["dist"].val(), "model_ctl");
+   EXPECT_FALSE(root.find("misc", "ROOT_internal", "combined_distributions")) << json;
+   // The column is a categorical axis of the default domain, with the states in their order.
+   auto const *domain = RooJSONFactoryWSTool::findNamedChild(root["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr);
+   auto const *axis = RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "sample");
+   ASSERT_NE(axis, nullptr) << json;
+   ASSERT_EQ((*axis)["categories"].num_children(), 2u);
+   EXPECT_EQ((*axis)["categories"].child(0).val(), "physics");
+   EXPECT_EQ((*axis)["categories"].child(1).val(), "control");
+
+   // Round trip: the same RooSimultaneous, with the index category from the domain (indices = positions).
+   EXPECT_EQ(validate(ws, "simPdf"), 0);
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   auto *simPdf = dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf"));
+   ASSERT_NE(simPdf, nullptr);
+   EXPECT_STREQ(simPdf->indexCat().GetName(), "sample");
+   EXPECT_EQ(simPdf->indexCat().lookupIndex("physics"), 0);
+   EXPECT_EQ(simPdf->indexCat().lookupIndex("control"), 1);
+   EXPECT_STREQ(simPdf->getPdf("physics")->GetName(), "model");
+   EXPECT_STREQ(simPdf->getPdf("control")->GetName(), "model_ctl");
+
+   // Files written by earlier ROOT versions describe the RooSimultaneous in misc.ROOT_internal.
+   RooWorkspace wsLegacy;
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [{"name": "default_domain", "type": "product_domain",
+                   "axes": [{"name": "x", "min": -8.0, "max": 8.0}, {"name": "mean", "min": -8.0, "max": 8.0}]}],
+      "distributions": [
+         {"name": "model", "type": "gaussian_dist", "x": "x", "mean": "mean", "sigma": 0.3},
+         {"name": "model_ctl", "type": "gaussian_dist", "x": "x", "mean": "mean", "sigma": 1.0}
+      ],
+      "misc": {"ROOT_internal": {"combined_distributions": {"simPdf": {
+         "index_cat": "sample", "labels": ["physics", "control"], "indices": [3, 7],
+         "distributions": ["model", "model_ctl"]}}}}
+   })"));
+   auto *legacySimPdf = dynamic_cast<RooSimultaneous *>(wsLegacy.pdf("simPdf"));
+   ASSERT_NE(legacySimPdf, nullptr);
+   EXPECT_EQ(legacySimPdf->indexCat().lookupIndex("control"), 7);
+   EXPECT_STREQ(legacySimPdf->getPdf("control")->GetName(), "model_ctl");
+   // Its export is in the standard form.
+   const std::string fromLegacy = RooJSONFactoryWSTool{wsLegacy}.exportJSONtoString();
+   EXPECT_NE(fromLegacy.find(R"("type":"combined_dist")"), std::string::npos) << fromLegacy;
+   EXPECT_EQ(fromLegacy.find("combined_distributions"), std::string::npos) << fromLegacy;
+}
+
+// A RooSimultaneous over a RooSuperCategory has several columns, sorted by name, and keys with one label per column.
+TEST(RooFitHS3, CombinedDistSeveralColumns)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   x.setBins(5);
+   RooGaussian sr{"sr", "sr", x, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", x, 6.0, 1.0};
+   RooGaussian srGlobal{"sr_global", "sr_global", x, 5.0, 2.0};
+   // The super category is built over (region, kind); the columns are written sorted by name: (kind, region).
+   RooCategory region{"region", "region", {{"SR", 0}, {"CR", 1}}};
+   RooCategory kind{"kind", "kind", {{"physics", 0}, {"global", 1}}};
+   RooSuperCategory index{"index", "index", RooArgSet{region, kind}};
+   // Three of the four keys have a component.
+   RooSimultaneous simPdf{
+      "simPdf", "simPdf", {{"{SR;physics}", &sr}, {"{CR;physics}", &cr}, {"{SR;global}", &srGlobal}}, index};
+
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *simPdfNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "simPdf");
+   ASSERT_NE(simPdfNode, nullptr) << json;
+   ASSERT_EQ((*simPdfNode)["columns"].num_children(), 2u);
+   EXPECT_EQ((*simPdfNode)["columns"].child(0).val(), "kind");
+   EXPECT_EQ((*simPdfNode)["columns"].child(1).val(), "region");
+   std::map<std::string, std::vector<std::string>> keys;
+   for (auto const &component : (*simPdfNode)["components"].children()) {
+      ASSERT_EQ(component["key"].num_children(), 2u);
+      keys[component["dist"].val()] = {component["key"].child(0).val(), component["key"].child(1).val()};
+   }
+   const std::map<std::string, std::vector<std::string>> expectedKeys{
+      {"sr", {"physics", "SR"}}, {"cr", {"physics", "CR"}}, {"sr_global", {"global", "SR"}}};
+   EXPECT_EQ(keys, expectedKeys) << json;
+
+   // Round trip: the super category is rebuilt over the columns, and every component evaluates to the same values.
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   auto *simPdf2 = dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf"));
+   ASSERT_NE(simPdf2, nullptr);
+   ASSERT_NE(dynamic_cast<RooSuperCategory const *>(&simPdf2->indexCat()), nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+   RooArgSet nset{x};
+   RooArgSet nset2{*ws2.var("x")};
+   for (auto const &item : expectedKeys) {
+      kind.setLabel(item.second[0]);
+      region.setLabel(item.second[1]);
+      ws2.cat("kind")->setLabel(item.second[0]);
+      ws2.cat("region")->setLabel(item.second[1]);
+      EXPECT_STREQ(simPdf2->getPdf(simPdf2->indexCat().getCurrentLabel())->GetName(), item.first.c_str());
+      for (int i = 0; i < x.numBins(); ++i) {
+         x.setBin(i);
+         ws2.var("x")->setBin(i);
+         EXPECT_DOUBLE_EQ(simPdf2->getVal(nset2), simPdf.getVal(nset)) << item.first << " bin " << i;
+      }
+   }
+}
+
+TEST(RooFitHS3, CombinedDistImportErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &columns, std::string const &components,
+                      std::string const &axes = R"({"name": "sample", "categories": ["a", "b"]})") {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain",
+                   "axes": [{"name": "x", "min": 0.0, "max": 10.0}, )" +
+             axes + R"(]}],
+      "distributions": [
+         {"name": "ga", "type": "gaussian_dist", "x": "x", "mean": 3.0, "sigma": 1.0},
+         {"name": "gb", "type": "gaussian_dist", "x": "x", "mean": 6.0, "sigma": 1.0},
+         {"name": "simPdf", "type": "combined_dist", "columns": )" +
+             columns + R"(, "components": )" + components + R"(}
+      ]
+   })";
+   };
+   const std::string good = R"([{"key": ["a"], "dist": "ga"}, {"key": ["b"], "dist": "gb"}])";
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"(["sample"])", good)));
+      EXPECT_NE(dynamic_cast<RooSimultaneous *>(ws.pdf("simPdf")), nullptr);
+   }
+   expectImportThrowsWithError(
+      makeJSON(R"(["channel"])", good),
+      "the column 'channel' of the combined_dist 'simPdf' is not declared by a categorical axis");
+   expectImportThrowsWithError(makeJSON(R"([])", good), "must be a non-empty list of names of categorical axes");
+   expectImportThrowsWithError(makeJSON(R"(["sample", "sample"])", R"([{"key": ["a", "a"], "dist": "ga"}])"),
+                               "the column 'sample' of the combined_dist 'simPdf' is listed twice");
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([{"key": ["a", "b"], "dist": "ga"}])"),
+                               "must have a \"key\" with 1 labels");
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([{"key": ["c"], "dist": "ga"}])"),
+                               "the label 'c' in position 0 of a key of the combined_dist 'simPdf' is not one of the "
+                               "categories of 'sample'");
+   expectImportThrowsWithError(
+      makeJSON(R"(["sample"])", R"([{"key": ["a"], "dist": "ga"}, {"key": ["a"], "dist": "gb"}])"),
+      "the key [\"a\"] is used by two components");
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([])"),
+                               "\"components\" of the combined_dist 'simPdf' must be a non-empty list");
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([{"key": ["a"]}])"), "must have a \"key\" and a \"dist\"");
+   // Whether a combined distribution is extended follows from its components: declaring it is not allowed, whatever
+   // the value.
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", good + R"(, "extended": false)"),
+                               "the combined_dist 'simPdf' must not have \"extended\"");
+   // The column must be categorical.
+   expectImportThrowsWithError(
+      makeJSON(R"(["sample"])", good, R"({"name": "sample", "min": 0.0, "max": 1.0})"),
+      "the column 'sample' of the combined_dist 'simPdf' is not declared by a categorical axis");
+}
+
+// A data set with a category observable is a "combined" data set (HS3 #119): one sub-data set per state, selected
+// by a key, with the category declared as a categorical axis of the default domain. A likelihood pairs the combined
+// data set with the combined_dist. The ROOT-internal form of older files is still read.
+TEST(RooFitHS3, CombinedData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws"};
+   ws.factory("Gaussian::model_1(x_1[0, 10], mean[5, 0, 10], sigma_1[0.5, 0.1, 10])");
+   ws.factory("Gaussian::model_2(x_2[0, 10], mean, sigma_2[0.8, 0.1, 10])");
+   ws.factory("SIMUL::simPdf(channelCat[channel_1=0, channel_2=1], channel_1=model_1, channel_2=model_2)");
+   std::unique_ptr<RooDataSet> d1{ws.pdf("model_1")->generate(*ws.var("x_1"), 20)};
+   std::unique_ptr<RooDataSet> d2{ws.pdf("model_2")->generate(*ws.var("x_2"), 30)};
+   std::map<std::string, RooDataSet *> parts{{"channel_1", d1.get()}, {"channel_2", d2.get()}};
+   RooDataSet obsData{"obsData",
+                      "obsData",
+                      {*ws.var("x_1"), *ws.var("x_2")},
+                      RooFit::Index(*ws.cat("channelCat")),
+                      RooFit::Import(parts)};
+   ws.import(obsData);
+   RooFit::ModelConfig mc{"ModelConfig"};
+   mc.SetWS(ws);
+   mc.SetPdf("simPdf");
+   mc.SetParametersOfInterest("mean");
+   mc.SetObservables("x_1,x_2,channelCat");
+   ws.import(mc);
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+
+   // Structure: the combined entry, one sub-data set per state with only the observables of its component, the
+   // domain axis, the likelihood pairing the combined objects.
+   auto const *combined = RooJSONFactoryWSTool::findNamedChild(root["data"], "obsData");
+   ASSERT_NE(combined, nullptr) << json;
+   EXPECT_EQ((*combined)["type"].val(), "combined");
+   ASSERT_EQ((*combined)["columns"].num_children(), 1u);
+   EXPECT_EQ((*combined)["columns"].child(0).val(), "channelCat");
+   EXPECT_FALSE(combined->has_child("axes"));
+   ASSERT_EQ((*combined)["components"].num_children(), 2u);
+   EXPECT_EQ((*combined)["components"].child(0)["key"].child(0).val(), "channel_1");
+   EXPECT_EQ((*combined)["components"].child(0)["dataset"].val(), "obsData_channel_1");
+   EXPECT_EQ((*combined)["components"].child(1)["key"].child(0).val(), "channel_2");
+   EXPECT_EQ((*combined)["components"].child(1)["dataset"].val(), "obsData_channel_2");
+   for (const char *channel : {"1", "2"}) {
+      auto const *part = RooJSONFactoryWSTool::findNamedChild(root["data"], std::string("obsData_channel_") + channel);
+      ASSERT_NE(part, nullptr) << json;
+      EXPECT_EQ((*part)["type"].val(), "unbinned");
+      ASSERT_EQ((*part)["axes"].num_children(), 1u);
+      EXPECT_EQ((*part)["axes"].child(0)["name"].val(), std::string("x_") + channel);
+   }
+   EXPECT_FALSE(root.find("misc", "ROOT_internal", "combined_datasets")) << json;
+   auto const *domain = RooJSONFactoryWSTool::findNamedChild(root["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr);
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "channelCat"), nullptr) << json;
+   auto const *likelihood = RooJSONFactoryWSTool::findNamedChild(root["likelihoods"], "ModelConfig_obsData_likelihood");
+   ASSERT_NE(likelihood, nullptr) << json;
+   ASSERT_EQ((*likelihood)["distributions"].num_children(), 1u);
+   EXPECT_EQ((*likelihood)["distributions"].child(0).val(), "simPdf");
+   ASSERT_EQ((*likelihood)["data"].num_children(), 1u);
+   EXPECT_EQ((*likelihood)["data"].child(0).val(), "obsData");
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(root["analyses"], "ModelConfig_obsData"), nullptr) << json;
+
+   // Round trip: one data set with the category column, the same entries per state, the ModelConfig observes the
+   // category, and the document is stable.
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_EQ(ws2.allData().size(), 1u);
+   RooAbsData *obsData2 = ws2.data("obsData");
+   ASSERT_NE(obsData2, nullptr);
+   EXPECT_EQ(obsData2->numEntries(), 50);
+   auto *channelCat2 = dynamic_cast<RooCategory *>(obsData2->get()->find("channelCat"));
+   ASSERT_NE(channelCat2, nullptr);
+   auto split2 = obsData2->split(*channelCat2);
+   ASSERT_EQ(split2.size(), 2u);
+   for (auto const &part : split2) {
+      EXPECT_EQ(part->numEntries(), std::string(part->GetName()) == "channel_1" ? 20 : 30) << part->GetName();
+   }
+   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+   ASSERT_NE(mc2, nullptr);
+   EXPECT_EQ(mc2->GetPdf(), ws2.pdf("simPdf"));
+   EXPECT_NE(mc2->GetObservables()->find("channelCat"), nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+
+   // Without a RooSimultaneous over the category, the category is an ordinary observable: the data set is written
+   // with a categorical axis (HS3 combined data sets require a combined distribution to pair with), and read back
+   // with the same entries per state.
+   {
+      RooWorkspace wsDataOnly;
+      wsDataOnly.import(obsData);
+      const std::string dataOnly = RooJSONFactoryWSTool{wsDataOnly}.exportJSONtoString();
+      auto dataOnlyTree = RooFit::Detail::JSONTree::create(dataOnly);
+      auto const &dataNode = dataOnlyTree->rootnode()["data"];
+      EXPECT_EQ(RooJSONFactoryWSTool::findNamedChild(dataNode, "obsData_channel_1"), nullptr) << dataOnly;
+      auto const *single = RooJSONFactoryWSTool::findNamedChild(dataNode, "obsData");
+      ASSERT_NE(single, nullptr) << dataOnly;
+      EXPECT_EQ((*single)["type"].val(), "unbinned") << dataOnly;
+      auto const *channelAxis = RooJSONFactoryWSTool::findNamedChild((*single)["axes"], "channelCat");
+      ASSERT_NE(channelAxis, nullptr) << dataOnly;
+      EXPECT_EQ((*channelAxis)["categories"].num_children(), 2u) << dataOnly;
+
+      RooWorkspace wsDataOnly2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{wsDataOnly2}.importJSONfromString(dataOnly));
+      RooAbsData *read = wsDataOnly2.data("obsData");
+      ASSERT_NE(read, nullptr);
+      EXPECT_EQ(read->numEntries(), 50);
+      auto split = read->split(*static_cast<RooCategory *>(read->get()->find("channelCat")));
+      ASSERT_EQ(split.size(), 2u);
+      for (auto const &part : split) {
+         EXPECT_EQ(part->numEntries(), std::string(part->GetName()) == "channel_1" ? 20 : 30) << part->GetName();
+      }
+      EXPECT_EQ(RooJSONFactoryWSTool{wsDataOnly2}.exportJSONtoString(), dataOnly);
+   }
+
+   // Files written by earlier ROOT versions: components named after the data set and the state, the combination
+   // described in misc.ROOT_internal, and the likelihood listing the components.
+   RooWorkspace wsLegacy;
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x_1", "min": 0.0, "max": 10.0}, {"name": "x_2", "min": 0.0, "max": 10.0}, {"name": "mean", "min": 0.0, "max": 10.0}]}],
+      "distributions": [
+         {"name": "model_1", "type": "gaussian_dist", "x": "x_1", "mean": "mean", "sigma": 0.5},
+         {"name": "model_2", "type": "gaussian_dist", "x": "x_2", "mean": "mean", "sigma": 0.8}],
+      "data": [
+         {"name": "obsData_channel_1", "type": "unbinned", "axes": [{"name": "x_1", "min": 0.0, "max": 10.0}], "entries": [[1.0], [2.0]]},
+         {"name": "obsData_channel_2", "type": "unbinned", "axes": [{"name": "x_2", "min": 0.0, "max": 10.0}], "entries": [[3.0]]}],
+      "likelihoods": [{"name": "simPdf_obsData_likelihood", "distributions": ["model_1", "model_2"],
+                       "data": ["obsData_channel_1", "obsData_channel_2"]}],
+      "analyses": [{"name": "simPdf_obsData", "likelihood": "simPdf_obsData_likelihood", "parameters_of_interest": ["mean"]}],
+      "misc": {"ROOT_internal": {
+         "combined_datasets": {"obsData": {"index_cat": "channelCat", "labels": ["channel_1", "channel_2"], "indices": [0, 1]}},
+         "combined_distributions": {"simPdf": {"index_cat": "channelCat", "labels": ["channel_1", "channel_2"],
+                                               "indices": [0, 1], "distributions": ["model_1", "model_2"]}},
+         "ModelConfigs": {"simPdf_obsData": {"mcName": "ModelConfig", "pdfName": "simPdf"}}}}
+   })"));
+   EXPECT_EQ(wsLegacy.allData().size(), 1u);
+   ASSERT_NE(wsLegacy.data("obsData"), nullptr);
+   EXPECT_EQ(wsLegacy.data("obsData")->numEntries(), 3);
+   auto *mcLegacy = dynamic_cast<RooFit::ModelConfig *>(wsLegacy.obj("ModelConfig"));
+   ASSERT_NE(mcLegacy, nullptr);
+   EXPECT_EQ(mcLegacy->GetPdf(), wsLegacy.pdf("simPdf"));
+   const std::string fromLegacy = RooJSONFactoryWSTool{wsLegacy}.exportJSONtoString();
+   EXPECT_NE(fromLegacy.find(R"("type":"combined")"), std::string::npos) << fromLegacy;
+   EXPECT_EQ(fromLegacy.find("combined_datasets"), std::string::npos) << fromLegacy;
+}
+
+// A data set with several category observables has several columns, sorted by name. Keys without entries are
+// written if the matching RooSimultaneous has a component for them, and left out otherwise.
+TEST(RooFitHS3, CombinedDataSeveralColumns)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // Each component has its own observable, as HS3 requires.
+   RooRealVar xSR{"x_sr", "x_sr", 0.0, 10.0};
+   RooRealVar xCR{"x_cr", "x_cr", 0.0, 10.0};
+   RooRealVar xGlobal{"x_sr_global", "x_sr_global", 0.0, 10.0};
+   RooCategory region{"region", "region", {{"SR", 0}, {"CR", 1}}};
+   RooCategory kind{"kind", "kind", {{"physics", 0}, {"global", 1}}};
+   RooGaussian sr{"sr", "sr", xSR, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", xCR, 6.0, 1.0};
+   RooGaussian srGlobal{"sr_global", "sr_global", xGlobal, 5.0, 2.0};
+   RooSuperCategory index{"index", "index", RooArgSet{region, kind}};
+   RooSimultaneous simPdf{
+      "simPdf", "simPdf", {{"{SR;physics}", &sr}, {"{CR;physics}", &cr}, {"{SR;global}", &srGlobal}}, index};
+   // Entries per key; none for (physics, CR), and (global, CR) has no component.
+   const std::map<std::vector<std::string>, int> entries{{{"physics", "SR"}, 3}, {{"global", "SR"}, 1}};
+   RooDataSet obs{"obs", "obs", {xSR, xCR, xGlobal, region, kind}};
+   for (auto const &item : entries) {
+      kind.setLabel(item.first[0].c_str());
+      region.setLabel(item.first[1].c_str());
+      RooRealVar &x = item.first[0] == "global" ? xGlobal : xSR;
+      for (int i = 0; i < item.second; ++i) {
+         x.setVal(1.0 + i);
+         obs.add({xSR, xCR, xGlobal, region, kind});
+      }
+   }
+
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   ws.import(obs);
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const *combined = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "obs");
+   ASSERT_NE(combined, nullptr) << json;
+   ASSERT_EQ((*combined)["columns"].num_children(), 2u);
+   EXPECT_EQ((*combined)["columns"].child(0).val(), "kind");
+   EXPECT_EQ((*combined)["columns"].child(1).val(), "region");
+   std::map<std::vector<std::string>, std::string> components;
+   for (auto const &component : (*combined)["components"].children()) {
+      components[{component["key"].child(0).val(), component["key"].child(1).val()}] = component["dataset"].val();
+   }
+   const std::map<std::vector<std::string>, std::string> expected{{{"physics", "SR"}, "obs_physics_SR"},
+                                                                  {{"physics", "CR"}, "obs_physics_CR"},
+                                                                  {{"global", "SR"}, "obs_global_SR"}};
+   EXPECT_EQ(components, expected) << json;
+   auto const *emptyPart = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "obs_physics_CR");
+   ASSERT_NE(emptyPart, nullptr) << json;
+   EXPECT_EQ((*emptyPart)["entries"].num_children(), 0u);
+
+   // Round trip: one data set with both category columns and the same entries per key; stable document.
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_EQ(ws2.allData().size(), 1u);
+   RooAbsData *obs2 = ws2.data("obs");
+   ASSERT_NE(obs2, nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+   std::map<std::vector<std::string>, int> entries2;
+   for (int i = 0; i < obs2->numEntries(); ++i) {
+      RooArgSet const &row = *obs2->get(i);
+      ++entries2[{static_cast<RooCategory const &>(row["kind"]).getCurrentLabel(),
+                  static_cast<RooCategory const &>(row["region"]).getCurrentLabel()}];
+   }
+   EXPECT_EQ(entries2, entries);
+   // The RooSimultaneous splits it by its RooSuperCategory, which is rebuilt over the columns.
+   auto parts = obs2->split(*dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf")), /*createEmptyDataSets=*/true);
+   std::map<std::string, int> partEntries;
+   for (auto const &part : parts) {
+      partEntries[part->GetName()] = part->numEntries();
+   }
+   const std::map<std::string, int> expectedParts{
+      {"{physics;SR}", 3}, {"{physics;CR}", 0}, {"{global;SR}", 1}, {"{global;CR}", 0}};
+   EXPECT_EQ(partEntries, expectedParts);
+}
+
+TEST(RooFitHS3, CombinedDataImportErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &combined, std::string const &axes = "") {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain",
+                   "axes": [{"name": "x", "min": 0.0, "max": 10.0}, {"name": "sample", "categories": ["a", "b"]}]}],
+      "data": [
+         {"name": "da", "type": "unbinned", "axes": [{"name": "x", "min": 0.0, "max": 10.0}], "entries": [[1.0]]},
+         {"name": "db", "type": "unbinned", "axes": [{"name": "x", "min": 0.0, "max": 10.0}], "entries": [[2.0], [3.0]]},
+         {"name": "obs", "type": "combined", )" +
+             axes + combined + R"(}
+      ]
+   })";
+   };
+   const std::string good =
+      R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "da"}, {"key": ["b"], "dataset": "db"}])";
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(good)));
+      EXPECT_EQ(ws.allData().size(), 1u);
+      ASSERT_NE(ws.data("obs"), nullptr);
+      EXPECT_EQ(ws.data("obs")->numEntries(), 3);
+   }
+   expectImportThrowsWithError(makeJSON(good, R"("axes": [{"name": "x", "min": 0.0, "max": 10.0}], )"),
+                               "the combined data set 'obs' must not have \"axes\"");
+   expectImportThrowsWithError(
+      makeJSON(R"("columns": ["channel"], "components": [{"key": ["a"], "dataset": "da"}])"),
+      "the column 'channel' of the combined data set 'obs' is not declared by a categorical axis");
+   expectImportThrowsWithError(makeJSON(R"("columns": ["sample"], "components": [])"),
+                               "\"components\" of the combined data set 'obs' must be a non-empty list");
+   expectImportThrowsWithError(makeJSON(R"("columns": ["sample"], "components": [{"key": ["a"]}])"),
+                               "must have a \"key\" and a \"dataset\"");
+   expectImportThrowsWithError(makeJSON(R"("columns": ["sample"], "components": [{"key": ["c"], "dataset": "da"}])"),
+                               "the label 'c' in position 0 of a key of the combined data set 'obs'");
+   expectImportThrowsWithError(makeJSON(R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "dc"}])"),
+                               "the component 'dc' of the combined data set 'obs' is not a data set of the document");
+   expectImportThrowsWithError(
+      makeJSON(
+         R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "da"}, {"key": ["b"], "dataset": "da"}])"),
+      "the component 'da' of the combined data set 'obs' is not a data set of the document, or it is already a "
+      "component");
+   expectImportThrowsWithError(
+      makeJSON(
+         R"("columns": ["sample"], "components": [{"key": ["a"], "dataset": "da"}, {"key": ["a"], "dataset": "db"}])"),
+      "the key [\"a\"] is used by two components of the combined data set 'obs'");
+}
+
+// A likelihood that pairs a combined_dist with a combined data set: HS3 treats a key without sub-data set as an
+// unobserved component, which RooFit cannot represent (it would be a channel without entries, adding the expected
+// events of an extended component to the likelihood). This is an error for extended components and a warning
+// otherwise; a sub-data set without component is ignored with a warning.
+TEST(RooFitHS3, CombinedDataPairing)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // `components` of the distribution and of the data, and whether the components are extended.
+   auto makeJSON = [](std::string const &pdfComponents, std::string const &dataComponents, bool extended) {
+      auto component = [&](std::string const &label, double mean) {
+         const std::string gauss = R"({"name": "g_)" + label + R"(", "type": "gaussian_dist", "x": "x_)" + label +
+                                   R"(", "mean": )" + std::to_string(mean) + R"(, "sigma": 1.0})";
+         if (!extended) {
+            return gauss;
+         }
+         return gauss + R"(, {"name": "e_)" + label + R"(", "type": "rate_extended_dist", "dist": "g_)" + label +
+                R"(", "rate": "n_)" + label + R"("})";
+      };
+      auto data = [](std::string const &label) {
+         return R"({"name": "d_)" + label + R"(", "type": "unbinned", "axes": [{"name": "x_)" + label +
+                R"(", "min": 0.0, "max": 10.0}], "entries": [[5.0]]})";
+      };
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x_a", "min": 0.0, "max": 10.0}, {"name": "x_b", "min": 0.0, "max": 10.0},
+         {"name": "x_c", "min": 0.0, "max": 10.0}, {"name": "n_a", "min": 0.0, "max": 100.0},
+         {"name": "n_b", "min": 0.0, "max": 100.0}, {"name": "n_c", "min": 0.0, "max": 100.0},
+         {"name": "sample", "categories": ["a", "b", "c"]}]}],
+      "distributions": [)" +
+             component("a", 3.0) + ", " + component("b", 4.0) + ", " + component("c", 5.0) + R"(,
+         {"name": "simPdf", "type": "combined_dist", "columns": ["sample"], "components": )" +
+             pdfComponents + R"(}],
+      "data": [)" +
+             data("a") + ", " + data("b") + ", " + data("c") + R"(,
+         {"name": "obs", "type": "combined", "columns": ["sample"], "components": )" +
+             dataComponents + R"(}],
+      "likelihoods": [{"name": "nll", "distributions": ["simPdf"], "data": ["obs"]}],
+      "analyses": [{"name": "fit", "likelihood": "nll", "domains": ["default_domain"]}]
+   })";
+   };
+   auto pdfComponents = [](std::string const &prefix, std::vector<std::string> const &labels) {
+      std::string out = "[";
+      for (auto const &label : labels) {
+         out += std::string(out.size() > 1 ? ", " : "") + R"({"key": [")" + label + R"("], "dist": ")" + prefix +
+                label + "\"}";
+      }
+      return out + "]";
+   };
+   auto dataComponents = [](std::vector<std::string> const &labels) {
+      std::string out = "[";
+      for (auto const &label : labels) {
+         out +=
+            std::string(out.size() > 1 ? ", " : "") + R"({"key": [")" + label + R"("], "dataset": "d_)" + label + "\"}";
+      }
+      return out + "]";
+   };
+
+   // Every component has a sub-data set: no messages.
+   {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+            makeJSON(pdfComponents("e_", {"a", "b", "c"}), dataComponents({"a", "b", "c"}), true)));
+      });
+      EXPECT_EQ(warnings, "");
+      auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("fit"));
+      ASSERT_NE(mc, nullptr);
+      EXPECT_EQ(mc->GetPdf(), ws.pdf("simPdf"));
+   }
+   // An extended component without sub-data set is an error.
+   expectImportThrowsWithError(makeJSON(pdfComponents("e_", {"a", "b", "c"}), dataComponents({"a", "b"}), true),
+                               "the combined data set 'obs' has no sub-data set for the key [\"c\"] of the extended "
+                               "component 'e_c' of 'simPdf'");
+   // A non-extended component without sub-data set is a warning, and so is a sub-data set without component.
+   {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+            makeJSON(pdfComponents("g_", {"a", "b", "c"}), dataComponents({"a", "b"}), false)));
+      });
+      EXPECT_NE(warnings.find("the combined data set 'obs' has no sub-data set for the key [\"c\"] of the component "
+                              "'g_c' of 'simPdf', which RooFit treats as present and empty"),
+                std::string::npos)
+         << warnings;
+   }
+   {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+            makeJSON(pdfComponents("e_", {"a", "b"}), dataComponents({"a", "b", "c"}), true)));
+      });
+      EXPECT_NE(warnings.find("the sub-data set for the key [\"c\"] of the combined data set 'obs' is ignored, "
+                              "because 'simPdf' has no component for it"),
+                std::string::npos)
+         << warnings;
+   }
+}
+
+// A "category_conditional_dist" (HS3 #119) selects a component by the value of categorical parameters. It is a
+// RooSimultaneous whose index category is a parameter: RooFit then evaluates the selected component. The
+// RooSimultaneous carries a tag so that it is written back as a category_conditional_dist, and the value of the
+// parameter is written to the parameter points.
+TEST(RooFitHS3, CategoryConditionalDist)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x", "min": 0.0, "max": 10.0}, {"name": "bkg_function", "categories": ["narrow", "wide"]}]}],
+      "parameter_points": [{"name": "point", "parameters": [{"name": "bkg_function", "value": "wide"}]}],
+      "distributions": [
+         {"name": "narrow", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 1.0},
+         {"name": "wide", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 3.0},
+         {"name": "bkg", "type": "category_conditional_dist", "categorical_parameter": ["bkg_function"],
+          "components": [{"key": ["narrow"], "dist": "narrow"}, {"key": ["wide"], "dist": "wide"}]}]
+   })";
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   auto *bkg = dynamic_cast<RooSimultaneous *>(ws.pdf("bkg"));
+   ASSERT_NE(bkg, nullptr);
+   EXPECT_TRUE(bkg->getAttribute("hs3_category_conditional_dist"));
+   RooCategory *choice = ws.cat("bkg_function");
+   ASSERT_NE(choice, nullptr);
+   EXPECT_EQ(&bkg->indexCat(), choice);
+
+   // The value is the one of the selected component, conditional on the parameter (not in the normalization set).
+   RooRealVar &x = *ws.var("x");
+   RooArgSet nset{x};
+   ASSERT_TRUE(ws.loadSnapshot("point"));
+   EXPECT_STREQ(choice->getCurrentLabel(), "wide");
+   for (double value : {2.0, 5.0, 8.0}) {
+      x.setVal(value);
+      choice->setLabel("wide");
+      EXPECT_DOUBLE_EQ(bkg->getVal(nset), ws.pdf("wide")->getVal(nset)) << "x = " << value;
+      choice->setLabel("narrow");
+      EXPECT_DOUBLE_EQ(bkg->getVal(nset), ws.pdf("narrow")->getVal(nset)) << "x = " << value;
+   }
+
+   // Export: the same type, the parameter in the domain and in the parameter point, and a stable document.
+   ws.loadSnapshot("point");
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &root = tree->rootnode();
+   auto const *bkgNode = RooJSONFactoryWSTool::findNamedChild(root["distributions"], "bkg");
+   ASSERT_NE(bkgNode, nullptr) << exported;
+   EXPECT_EQ((*bkgNode)["type"].val(), "category_conditional_dist");
+   ASSERT_EQ((*bkgNode)["categorical_parameter"].num_children(), 1u);
+   EXPECT_EQ((*bkgNode)["categorical_parameter"].child(0).val(), "bkg_function");
+   EXPECT_FALSE(bkgNode->has_child("columns"));
+   auto const *point = RooJSONFactoryWSTool::findNamedChild(root["parameter_points"], "point");
+   ASSERT_NE(point, nullptr) << exported;
+   auto const *choiceInPoint = RooJSONFactoryWSTool::findNamedChild((*point)["parameters"], "bkg_function");
+   ASSERT_NE(choiceInPoint, nullptr) << exported;
+   EXPECT_EQ((*choiceInPoint)["value"].val(), "wide");
+   auto const *domain = RooJSONFactoryWSTool::findNamedChild(root["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr);
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "bkg_function"), nullptr) << exported;
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   ws2.loadSnapshot("point");
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // A RooSimultaneous built in RooFit is a combined_dist, unless it carries the tag.
+   {
+      RooWorkspace wsRooFit;
+      wsRooFit.factory("Gaussian::narrow(x[0, 10], 5.0, 1.0)");
+      wsRooFit.factory("Gaussian::wide(x, 5.0, 3.0)");
+      wsRooFit.factory("SIMUL::bkg(bkg_function[narrow=0, wide=1], narrow=narrow, wide=wide)");
+      EXPECT_NE(RooJSONFactoryWSTool{wsRooFit}.exportJSONtoString().find(R"("type":"combined_dist")"),
+                std::string::npos);
+      wsRooFit.pdf("bkg")->setAttribute("hs3_category_conditional_dist");
+      EXPECT_NE(RooJSONFactoryWSTool{wsRooFit}.exportJSONtoString().find(R"("type":"category_conditional_dist")"),
+                std::string::npos);
+   }
+
+   // The parameter must be declared by a categorical axis of a domain.
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "x", "min": 0.0, "max": 10.0}]}],
+      "distributions": [
+         {"name": "narrow", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 1.0},
+         {"name": "bkg", "type": "category_conditional_dist", "categorical_parameter": ["bkg_function"],
+          "components": [{"key": ["narrow"], "dist": "narrow"}]}]
+   })",
+                               "the column 'bkg_function' of the category_conditional_dist 'bkg' is not declared by a "
+                               "categorical axis of a domain");
+}
+
+// The names of a RooSimultaneous and of a combined data set are part of the standard document now, not of
+// misc.ROOT_internal: a document without "misc" imports with the same names, and the ModelConfig finds its pdf
+// through the likelihood.
+TEST(RooFitHS3, CombinedObjectsKeepNamesWithoutMisc)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // Remove the top-level key `key` (and the comma before it) from a compact JSON document.
+   auto removeTopLevelKey = [](std::string json, std::string const &key) {
+      const std::string needle = ",\"" + key + "\":";
+      const std::size_t begin = json.find(needle);
+      if (begin == std::string::npos) {
+         return json;
+      }
+      std::size_t pos = begin + needle.size();
+      int depth = 0;
+      bool inString = false;
+      for (; pos < json.size(); ++pos) {
+         const char c = json[pos];
+         if (inString) {
+            if (c == '\\') {
+               ++pos;
+            } else if (c == '"') {
+               inString = false;
+            }
+         } else if (c == '"') {
+            inString = true;
+         } else if (c == '{' || c == '[') {
+            ++depth;
+         } else if (c == '}' || c == ']') {
+            if (--depth == 0) {
+               ++pos;
+               break;
+            }
+         }
+      }
+      return json.erase(begin, pos - begin);
+   };
+
+   RooWorkspace ws{"ws"};
+   ws.factory("Gaussian::model_1(x_1[0, 10], mean[5, 0, 10], sigma_1[0.5, 0.1, 10])");
+   ws.factory("Gaussian::model_2(x_2[0, 10], mean, sigma_2[0.8, 0.1, 10])");
+   // Not named "simPdf", which older documents relied on as the default name.
+   ws.factory("SIMUL::channels(region[SR=0, CR=1], SR=model_1, CR=model_2)");
+   std::unique_ptr<RooDataSet> d1{ws.pdf("model_1")->generate(*ws.var("x_1"), 20)};
+   std::unique_ptr<RooDataSet> d2{ws.pdf("model_2")->generate(*ws.var("x_2"), 30)};
+   std::map<std::string, RooDataSet *> parts{{"SR", d1.get()}, {"CR", d2.get()}};
+   RooDataSet observed{"observed",
+                       "observed",
+                       {*ws.var("x_1"), *ws.var("x_2")},
+                       RooFit::Index(*ws.cat("region")),
+                       RooFit::Import(parts)};
+   ws.import(observed);
+   RooFit::ModelConfig mc{"ModelConfig"};
+   mc.SetWS(ws);
+   mc.SetPdf("channels");
+   mc.SetParametersOfInterest("mean");
+   mc.SetObservables("x_1,x_2,region");
+   ws.import(mc);
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   const std::string withoutMisc = removeTopLevelKey(json, "misc");
+   ASSERT_NE(withoutMisc, json);
+   EXPECT_EQ(withoutMisc.find("\"misc\""), std::string::npos) << withoutMisc;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(withoutMisc));
+   auto *channels = dynamic_cast<RooSimultaneous *>(ws2.pdf("channels"));
+   ASSERT_NE(channels, nullptr);
+   EXPECT_STREQ(channels->indexCat().GetName(), "region");
+   EXPECT_STREQ(channels->getPdf("SR")->GetName(), "model_1");
+   EXPECT_STREQ(channels->getPdf("CR")->GetName(), "model_2");
+   EXPECT_EQ(ws2.allData().size(), 1u);
+   RooAbsData *observed2 = ws2.data("observed");
+   ASSERT_NE(observed2, nullptr);
+   EXPECT_EQ(observed2->numEntries(), 50);
+   EXPECT_NE(observed2->get()->find("region"), nullptr);
+   // Without misc.ROOT_internal.ModelConfigs, the ModelConfig is named after the analysis.
+   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig_observed"));
+   ASSERT_NE(mc2, nullptr);
+   EXPECT_EQ(mc2->GetPdf(), channels);
+   EXPECT_NE(mc2->GetObservables()->find("region"), nullptr);
+   EXPECT_NE(mc2->GetParametersOfInterest()->find("mean"), nullptr);
+
+   // The analysis is named after the ModelConfig, which got the name of the analysis: the names of the analysis and
+   // the likelihood change once on the re-export. From then on, the document is stable.
+   const std::string json2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   RooWorkspace ws3;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(json2));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), json2);
+}
+
+// In HS3, the components of a combined distribution share no variate: a quantity measured in several components is a
+// separate variate in each of them ("mass_SR", "mass_CR"). A RooSimultaneous whose components share an observable can
+// therefore not be written with its data set. A document whose sub-data sets share an axis is still read, with a
+// warning.
+TEST(RooFitHS3, CombinedComponentsMustNotShareObservables)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar mass{"mass", "mass", 0.0, 10.0};
+   RooCategory channel{"channel", "channel", {{"SR", 0}, {"CR", 1}}};
+   RooGaussian sr{"sr", "sr", mass, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", mass, 6.0, 1.0};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"SR", &sr}, {"CR", &cr}}, channel};
+   RooDataSet obs{"obs", "obs", {mass, channel}};
+   for (const char *label : {"SR", "CR"}) {
+      channel.setLabel(label);
+      mass.setVal(4.0);
+      obs.add({mass, channel});
+   }
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   ws.import(obs);
+   const std::string errors = captureMessages(RooFit::ERROR, RooFit::IO, [&] {
+      EXPECT_THROW(RooJSONFactoryWSTool{ws}.exportJSONtoString(), std::runtime_error);
+   });
+   EXPECT_NE(errors.find("which share the observables 'mass'"), std::string::npos) << errors;
+   EXPECT_NE(errors.find("'mass_SR' and 'mass_CR'"), std::string::npos) << errors;
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "channel", "categories": ["SR", "CR"]}, {"name": "mass", "min": 0.0, "max": 10.0}]}],
+      "data": [
+         {"name": "obs_SR", "type": "unbinned", "axes": [{"name": "mass", "min": 0.0, "max": 10.0}], "entries": [[4.0]]},
+         {"name": "obs_CR", "type": "unbinned", "axes": [{"name": "mass", "min": 0.0, "max": 10.0}], "entries": [[5.0]]},
+         {"name": "obs", "type": "combined", "columns": ["channel"],
+          "components": [{"key": ["SR"], "dataset": "obs_SR"}, {"key": ["CR"], "dataset": "obs_CR"}]}
+      ]
+   })";
+   RooWorkspace imported;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   });
+   EXPECT_NE(warnings.find("share the axes 'mass'"), std::string::npos) << warnings;
+   RooAbsData *data = imported.data("obs");
+   ASSERT_NE(data, nullptr);
+   EXPECT_EQ(data->numEntries(), 2);
+}
+
+// With RooJSONFactoryWSTool::config().renameCombinedObservables, the observables of combined data sets are renamed
+// per key on export ("obs_SR", or "obs_SR_x" with several observables), and the components of the matching
+// RooSimultaneous are written with them; nodes that depend on a renamed observable get one copy per component. This
+// allows exporting a RooSimultaneous whose components share an observable. The likelihood stays the same, and a
+// second export gives the same document.
+TEST(RooFitHS3, RenameCombinedObservables)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   struct FlagGuard {
+      bool old = RooJSONFactoryWSTool::config().renameCombinedObservables;
+      FlagGuard() { RooJSONFactoryWSTool::config().renameCombinedObservables = true; }
+      ~FlagGuard() { RooJSONFactoryWSTool::config().renameCombinedObservables = old; }
+   } flagGuard;
+
+   RooRealVar mass{"mass", "mass", 0.0, 10.0};
+   RooCategory channel{"channel", "channel", {{"SR", 0}, {"CR", 1}}};
+   // A function of the observable, shared by both components.
+   RooFormulaVar shift{"shift", "mass - 1.0", {mass}};
+   RooGaussian sr{"sr", "sr", shift, 3.0, 1.0};
+   RooGaussian cr{"cr", "cr", shift, 6.0, 1.5};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"SR", &sr}, {"CR", &cr}}, channel};
+   RooDataSet obs{"obs", "obs", {mass, channel}};
+   for (auto const &[label, value] :
+        std::vector<std::pair<const char *, double>>{{"SR", 3.5}, {"SR", 4.5}, {"CR", 6.0}, {"CR", 7.5}, {"CR", 8.0}}) {
+      channel.setLabel(label);
+      mass.setVal(value);
+      obs.add({mass, channel});
+   }
+   std::unique_ptr<RooAbsReal> nll{simPdf.createNLL(obs)};
+   const double expectedNll = nll->getVal();
+
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   ws.import(obs);
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+
+   // The components and the functions of the observable, one per key, with the renamed observables.
+   auto const *combined = RooJSONFactoryWSTool::findNamedChild(root["distributions"], "simPdf");
+   ASSERT_NE(combined, nullptr) << json;
+   std::map<std::string, std::string> components;
+   for (auto const &component : (*combined)["components"].children()) {
+      components[component["key"].child(0).val()] = component["dist"].val();
+   }
+   EXPECT_EQ(components, (std::map<std::string, std::string>{{"SR", "sr_SR"}, {"CR", "cr_CR"}})) << json;
+   for (const char *key : {"SR", "CR"}) {
+      auto const *func = RooJSONFactoryWSTool::findNamedChild(root["functions"], std::string("shift_") + key);
+      ASSERT_NE(func, nullptr) << json;
+      EXPECT_NE((*func)["expression"].val().find(std::string("obs_") + key), std::string::npos) << json;
+      auto const *part = RooJSONFactoryWSTool::findNamedChild(root["data"], std::string("obs_") + key);
+      ASSERT_NE(part, nullptr) << json;
+      ASSERT_EQ((*part)["axes"].num_children(), 1u) << json;
+      EXPECT_EQ((*part)["axes"].child(0)["name"].val(), std::string("obs_") + key) << json;
+   }
+   EXPECT_EQ(RooJSONFactoryWSTool::findNamedChild(root["functions"], "shift"), nullptr) << json;
+
+   // Read back, the likelihood is the same.
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto *simPdf2 = dynamic_cast<RooSimultaneous *>(imported.pdf("simPdf"));
+   ASSERT_NE(simPdf2, nullptr);
+   RooAbsData *obs2 = imported.data("obs");
+   ASSERT_NE(obs2, nullptr);
+   std::unique_ptr<RooAbsReal> nll2{simPdf2->createNLL(*obs2)};
+   EXPECT_NEAR(nll2->getVal(), expectedNll, 1e-10);
+
+   // The observables already have their new names, so a second export gives the same document.
+   EXPECT_EQ(RooJSONFactoryWSTool{imported}.exportJSONtoString(), json);
+
+   // Several observables per key: "obs_<key>_<observable>". Without a RooSimultaneous, all observables of the data
+   // set are renamed.
+   RooRealVar x{"x", "x", 0.0, 1.0};
+   RooRealVar y{"y", "y", 0.0, 1.0};
+   RooDataSet xy{"xy", "xy", {x, y, channel}};
+   for (const char *label : {"SR", "CR"}) {
+      channel.setLabel(label);
+      xy.add({x, y, channel});
+   }
+   RooWorkspace wsXY;
+   wsXY.import(xy);
+   const std::string jsonXY = RooJSONFactoryWSTool{wsXY}.exportJSONtoString();
+   auto treeXY = RooFit::Detail::JSONTree::create(jsonXY);
+   auto const *partSR = RooJSONFactoryWSTool::findNamedChild(treeXY->rootnode()["data"], "xy_SR");
+   ASSERT_NE(partSR, nullptr) << jsonXY;
+   std::set<std::string> axes;
+   for (auto const &axis : (*partSR)["axes"].children()) {
+      axes.insert(axis["name"].val());
+   }
+   EXPECT_EQ(axes, (std::set<std::string>{"obs_SR_x", "obs_SR_y"})) << jsonXY;
 }
