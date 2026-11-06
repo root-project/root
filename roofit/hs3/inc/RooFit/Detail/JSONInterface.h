@@ -31,43 +31,26 @@ public:
    template <class Nd>
    class child_iterator_t {
    public:
-      class Impl {
-      public:
-         virtual ~Impl() = default;
-         virtual std::unique_ptr<Impl> clone() const = 0;
-         virtual void forward() = 0;
-         virtual void backward() = 0;
-         virtual Nd &current() = 0;
-         virtual bool equal(const Impl &other) const = 0;
-      };
-
-      child_iterator_t(std::unique_ptr<Impl> impl) : it(std::move(impl)) {}
-      child_iterator_t(const child_iterator_t &other) : it(std::move(other.it->clone())) {}
+      explicit child_iterator_t(Nd *const *pos) : _pos(pos) {}
 
       child_iterator_t &operator++()
       {
-         it->forward();
+         ++_pos;
          return *this;
       }
       child_iterator_t &operator--()
       {
-         it->backward();
+         --_pos;
          return *this;
       }
-      Nd &operator*() const { return it->current(); }
-      Nd &operator->() const { return it->current(); }
+      Nd &operator*() const { return **_pos; }
+      Nd &operator->() const { return **_pos; }
 
-      friend bool operator!=(child_iterator_t const &lhs, child_iterator_t const &rhs)
-      {
-         return !lhs.it->equal(*rhs.it);
-      }
-      friend bool operator==(child_iterator_t const &lhs, child_iterator_t const &rhs)
-      {
-         return lhs.it->equal(*rhs.it);
-      }
+      friend bool operator!=(child_iterator_t const &lhs, child_iterator_t const &rhs) { return lhs._pos != rhs._pos; }
+      friend bool operator==(child_iterator_t const &lhs, child_iterator_t const &rhs) { return lhs._pos == rhs._pos; }
 
    private:
-      std::unique_ptr<Impl> it;
+      Nd *const *_pos;
    };
 
    using child_iterator = child_iterator_t<JSONNode>;
@@ -84,48 +67,52 @@ public:
       inline child_iterator_t<Nd> end() const { return e; }
    };
 
-public:
-   virtual void writeJSON(std::ostream &os) const = 0;
+   // A node refers to a value of its tree. Copying it would copy that reference, not the value.
+   JSONNode(JSONNode const &) = delete;
+   JSONNode &operator=(JSONNode const &) = delete;
 
 public:
-   virtual JSONNode &operator<<(std::string const &s) = 0;
+   void writeJSON(std::ostream &os) const;
+
+public:
+   JSONNode &operator<<(std::string const &s);
    inline JSONNode &operator<<(const char *s) { return *this << std::string(s); }
-   virtual JSONNode &operator<<(int i) = 0;
-   virtual JSONNode &operator<<(double d) = 0;
-   virtual JSONNode &operator<<(bool b) = 0;
-   virtual const JSONNode &operator>>(std::string &v) const = 0;
-   virtual JSONNode &operator[](std::string const &k) = 0;
-   virtual const JSONNode &operator[](std::string const &k) const = 0;
-   virtual bool is_container() const = 0;
-   virtual bool is_map() const = 0;
-   virtual bool is_seq() const = 0;
-   virtual bool is_null() const = 0;
-   virtual bool is_number() const;
-   virtual JSONNode &set_map() = 0;
-   virtual JSONNode &set_seq() = 0;
-   virtual JSONNode &set_null() = 0;
-   virtual void clear() = 0;
+   JSONNode &operator<<(int i);
+   JSONNode &operator<<(double d);
+   JSONNode &operator<<(bool b);
+   const JSONNode &operator>>(std::string &v) const;
+   JSONNode &operator[](std::string const &k);
+   const JSONNode &operator[](std::string const &k) const;
+   bool is_container() const;
+   bool is_map() const;
+   bool is_seq() const;
+   bool is_null() const;
+   bool is_number() const;
+   JSONNode &set_map();
+   JSONNode &set_seq();
+   JSONNode &set_null();
+   void clear();
 
-   virtual std::string key() const = 0;
-   virtual std::string val() const = 0;
-   virtual int val_int() const { return atoi(this->val().c_str()); }
-   virtual double val_double() const;
-   virtual bool val_bool() const { return atoi(this->val().c_str()); }
+   std::string key() const;
+   std::string val() const;
+   int val_int() const;
+   double val_double() const;
+   bool val_bool() const;
    template <class T>
    T val_t() const;
-   virtual bool has_key() const = 0;
-   virtual bool has_val() const = 0;
-   virtual bool has_child(std::string const &) const = 0;
-   virtual JSONNode &append_child() = 0;
-   virtual size_t num_children() const = 0;
+   bool has_key() const;
+   bool has_val() const;
+   bool has_child(std::string const &) const;
+   JSONNode &append_child();
+   size_t num_children() const;
 
    using children_view = children_view_t<JSONNode>;
    using const_children_view = children_view_t<const JSONNode>;
 
-   virtual children_view children();
-   virtual const_children_view children() const;
-   virtual JSONNode &child(size_t pos) = 0;
-   virtual const JSONNode &child(size_t pos) const = 0;
+   children_view children();
+   const_children_view children() const;
+   JSONNode &child(size_t pos);
+   const JSONNode &child(size_t pos) const;
 
    template <typename Collection>
    void fill_seq(Collection const &coll)
@@ -198,21 +185,34 @@ public:
       next.set_map();
       return next.get(keys...);
    }
+
+private:
+   friend class JSONTree;
+
+   // Owns the values and the nodes of a tree. It is defined in the only source file that knows the JSON library.
+   class Storage;
+
+   JSONNode(Storage &storage, void *value, std::string key);
+
+   Storage *_storage;
+   void *_value; // of the value type of the JSON library
+   std::string _key;
 };
 
 class JSONTree {
 public:
-   virtual ~JSONTree() = default;
+   ~JSONTree();
 
-   virtual JSONNode &rootnode() = 0;
+   JSONNode &rootnode();
 
    static std::unique_ptr<JSONTree> create();
    static std::unique_ptr<JSONTree> create(std::istream &is);
    static std::unique_ptr<JSONTree> create(std::string const &str);
 
 private:
-   template <typename... Args>
-   static std::unique_ptr<JSONTree> createImpl(Args &&...args);
+   explicit JSONTree(std::unique_ptr<JSONNode::Storage> storage);
+
+   std::unique_ptr<JSONNode::Storage> _storage;
 };
 
 std::ostream &operator<<(std::ostream &os, RooFit::Detail::JSONNode const &s);
