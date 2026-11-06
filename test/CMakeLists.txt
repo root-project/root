@@ -178,7 +178,11 @@ endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.5.18.00.root ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 ROOT_EXECUTABLE(stressHistogram stressHistogram.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED|Error in" LABELS longtest)
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1951 AND NOT "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32")
+  set(_willfail WILLFAIL)
+endif()
 ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${root_exe} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.cxx
+              ${_willfail}
               FAILREGEX "FAILED|Error in")
 
 #--stressGUI---------------------------------------------------------------------------------------

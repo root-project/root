@@ -106,6 +106,11 @@ if(MSVC AND NOT win_broken_tests)
                           io/ntuple/ntpl013_staged.C
                           io/ntuple/ntpl014_framework.C
                           io/ntuple/ntpl017_shared_reader.C)
+  # The SQliteDependencyOverVersion tutorial fails on Windows due to unresolved symbols
+  # with Visual Studio 2026
+  if(MSVC_VERSION GREATER_EQUAL 1951)
+    list(APPEND dataframe_veto analysis/dataframe/df027_SQliteDependencyOverVersion.C)
+  endif()
 endif()
 
 # TODO: fix the problem and re-enable the tutorial test. The rf615 tutorial
