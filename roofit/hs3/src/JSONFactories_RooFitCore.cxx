@@ -428,6 +428,11 @@ bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string const name(RooJSONFactoryWSTool::name(p));
    std::string const context = "the combined_dist '" + name + "'";
+   // Whether a combined distribution is extended follows from its components; HS3 forbids declaring it.
+   if (p.has_child("extended")) {
+      RooJSONFactoryWSTool::error(context + " must not have \"extended\": whether it is extended follows from its " +
+                                  "components");
+   }
    std::vector<RooCategory *> columns = readSelectionColumns(*tool->workspace(), p, "columns", context);
 
    auto const *componentsNode = p.find("components");

@@ -5697,6 +5697,10 @@ TEST(RooFitHS3, CombinedDistImportErrors)
    expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([])"),
                                "\"components\" of the combined_dist 'simPdf' must be a non-empty list");
    expectImportThrowsWithError(makeJSON(R"(["sample"])", R"([{"key": ["a"]}])"), "must have a \"key\" and a \"dist\"");
+   // Whether a combined distribution is extended follows from its components: declaring it is not allowed, whatever
+   // the value.
+   expectImportThrowsWithError(makeJSON(R"(["sample"])", good + R"(, "extended": false)"),
+                               "the combined_dist 'simPdf' must not have \"extended\"");
    // The column must be categorical.
    expectImportThrowsWithError(
       makeJSON(R"(["sample"])", good, R"({"name": "sample", "min": 0.0, "max": 1.0})"),
