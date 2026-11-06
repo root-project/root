@@ -19,11 +19,10 @@
 /// \f[
 ///       f(x) * g(x) \rightarrow F(k_i) \cdot G(k_i)
 /// \f]
-/// to calculate the convolution by calculating a Real->Complex FFT of both input PDFs,
-/// multiplying the complex coefficients and performing the reverse Complex->Real FFT
-/// to get the result in the input space. This class uses the ROOT FFT interface to
-/// the (free) FFTW3 package (www.fftw.org), and requires that your ROOT installation is
-/// compiled with the `fftw3=ON` (default). Instructions for manually installing fftw below.
+/// to calculate the convolution by calculating a forward FFT of both input PDFs,
+/// multiplying the complex coefficients and performing the inverse FFT to get the
+/// result in the input space. The FFT is implemented internally so that no external
+/// FFT library (e.g. FFTW3) is required, see RooFit::Detail::MathFuncs::fftConvolveAdd().
 ///
 /// Note that the performance in terms of speed and stability of RooFFTConvPdf is
 /// vastly superior to that of RooNumConvPdf.
@@ -48,11 +47,11 @@
 /// ```
 ///     original:                -5 -4 -3 -2 -1 0 +1 +2 +3 +4 +5
 ///     add buffer zones:    U U -5 -4 -3 -2 -1 0 +1 +2 +3 +4 +5 O O
-///     rotate:              0 +1 +2 +3 +4 +5 O O U U -5 -4 -3 -2 -1
 /// ```
 /// The buffer bins are stripped away when the FFT output values
 /// are transferred back to the p.d.f cache. The default buffer size is 10% of the
 /// observable domain size, and can be changed with the `setBufferFraction()` member function.
+/// The layout of the sampling grid is described by samplingGrid().
 ///
 /// The RooFFTConvPdf uses caching inherited from a RooAbsCachedPdf. If it is
 /// evaluated for a particular value of x, the FFT and convolution is calculated
@@ -75,38 +74,6 @@
 ///
 /// Multi-dimensional convolutions are not supported at the moment.
 ///
-/// ---
-///
-/// Installing an external version of FFTW on Linux and compiling ROOT to use it
-/// -------
-///
-/// You have two options:
-/// * **Recommended**: ROOT can automatically install FFTW for itself, see `builtin_fftw3` at https://root.cern/building-root
-/// * Install FFTW and let ROOT discover it. `fftw3` is on by default (see https://root.cern/building-root)
-///
-/// 1) Go to www.fftw.org and download the latest stable version (a .tar.gz file)
-///
-/// If you have root access to your machine and want to make a system installation of FFTW
-///
-///   2) Untar fftw-XXX.tar.gz in /tmp, cd into the untarred directory
-///       and type './configure' followed by 'make install'.
-///       This will install fftw in /usr/local/bin,lib etc...
-///
-///   3) Start from a source installation of ROOT. ROOT should discover it. See https://root.cern/building-root
-///
-///
-/// If you do not have root access and want to make a private installation of FFTW
-///
-///   2) Make a private install area for FFTW, e.g. /home/myself/fftw
-///
-///   3) Untar fftw-XXX.tar.gz in /tmp, cd into the untarred directory
-///       and type './configure --prefix=/home/myself/fftw' followed by 'make install'.
-///       Substitute /home/myself/fftw with a directory of your choice. This
-///       procedure will install FFTW in the location designated by you
-///
-///   4) Start from a source installation of ROOT.
-///      Look up and set the proper paths for ROOT to discover FFTW. See https://root.cern/building-root
-///
 
 #include "RooFFTConvPdf.h"
 
@@ -124,87 +91,16 @@
 #include "RooConstVar.h"
 #include "RooUniformBinning.h"
 #include "RooFitImplHelpers.h"
+#include "RooFit/Detail/MathFuncs.h"
 
 #include "TClass.h"
-#include "TComplex.h"
-#include "TVirtualFFT.h"
+#include "TMath.h"
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
-#include <stdexcept>
+#include <vector>
 
-#ifndef ROOFIT_MATH_FFTW3
-#include "TInterpreter.h"
-
-namespace {
-
-auto declareDoFFT()
-{
-   static void (*doFFT)(int, double *, double *, double *) = nullptr;
-
-   if (doFFT)
-      return doFFT;
-
-   bool success = gInterpreter->Declare("#include \"fftw3.h\"");
-
-   if (!success) {
-      std::stringstream ss;
-      ss << "RooFFTConvPdf evaluation Failed! The interpreter could not find the fftw3.h header.\n";
-      ss << "You have three options to fix this problem:\n";
-      ss << "    1) Install fftw3 on your system so that the interpreter can find it\n";
-      ss << "    2) In case fftw3.h is installed somewhere else,\n"
-         << "       tell ROOT with gInterpreter->AddIncludePath() where to find it\n";
-      ss << "    3) Compile ROOT with the -Dfftw3=ON in the CMake configuration,\n"
-         << "       such that ROOT comes with built-in fftw3 convolution routines\n";
-      oocoutE(nullptr, Eval) << ss.str() << std::endl;
-      throw std::runtime_error("RooFFTConvPdf evaluation Failed! The interpreter could not find the fftw3.h header");
-   }
-
-   gInterpreter->Declare(R"(
-void RooFFTConvPdf_doFFT(int n, double *input1, double *input2, double *output)
-{
-   auto fftr2c1_Out = reinterpret_cast<fftw_complex *>(fftw_malloc(sizeof(fftw_complex) * (n / 2 + 1)));
-   auto fftr2c2_Out = reinterpret_cast<fftw_complex *>(fftw_malloc(sizeof(fftw_complex) * (n / 2 + 1)));
-   auto fftc2r_In = reinterpret_cast<fftw_complex *>(fftw_malloc(sizeof(fftw_complex) * (n / 2 + 1)));
-
-   fftw_plan fftr2c1_plan = fftw_plan_dft_r2c(1, &n, input1, fftr2c1_Out, FFTW_ESTIMATE);
-   fftw_plan fftr2c2_plan = fftw_plan_dft_r2c(1, &n, input2, fftr2c2_Out, FFTW_ESTIMATE);
-   fftw_plan fftc2r_plan = fftw_plan_dft_c2r(1, &n, fftc2r_In, output, FFTW_ESTIMATE);
-
-   // Real->Complex FFT Transform on p.d.f. samplings
-   fftw_execute(fftr2c1_plan);
-   fftw_execute(fftr2c2_plan);
-
-   // Loop over first half +1 of complex output results, multiply
-   // and set as input of reverse transform
-   for (Int_t i = 0; i < n / 2 + 1; i++) {
-      double re1 = fftr2c1_Out[i][0];
-      double re2 = fftr2c2_Out[i][0];
-      double im1 = fftr2c1_Out[i][1];
-      double im2 = fftr2c2_Out[i][1];
-      fftc2r_In[i][0] = re1 * re2 - im1 * im2;
-      fftc2r_In[i][1] = re1 * im2 + re2 * im1;
-   }
-
-   // Reverse Complex->Real FFT transform product
-   fftw_execute(fftc2r_plan);
-
-   fftw_destroy_plan(fftr2c1_plan);
-   fftw_destroy_plan(fftr2c2_plan);
-   fftw_destroy_plan(fftc2r_plan);
-
-   fftw_free(fftr2c1_Out);
-   fftw_free(fftr2c2_Out);
-   fftw_free(fftc2r_In);
-}
-)");
-
-   doFFT = reinterpret_cast<void(*)(int, double*, double*, double*)>(gInterpreter->ProcessLine("RooFFTConvPdf_doFFT;"));
-   return doFFT;
-}
-
-} // namespace
-
-#endif
 
 using std::endl, std::string, std::ostream;
 
@@ -366,9 +262,11 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
    string refName = Form("refrange_fft_%s",self.GetName()) ;
    convObs->setRange(refName.c_str(),convObs->getMin(),convObs->getMax()) ;
 
-   if (self._shift1!=0) {
+   const SamplingGrid grid = self.samplingGrid();
+
+   if (grid.shift1!=0) {
      RooLinearVar* shiftObs1 = new RooLinearVar(Form("%s_shifted_FFTBuffer1",convObs->GetName()),"shiftObs1",
-                      *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift1)) ;
+                      *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*grid.shift1)) ;
 
     RooArgSet clonedBranches1 ;
     RooCustomizer cust(*clonePdf1,"fft") ;
@@ -383,9 +281,9 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
     pdf1Clone.reset(clonePdf1) ;
   }
 
-  if (self._shift2!=0) {
+  if (grid.shift2!=0) {
     RooLinearVar* shiftObs2 = new RooLinearVar(Form("%s_shifted_FFTBuffer2",convObs->GetName()),"shiftObs2",
-                      *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift2)) ;
+                      *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*grid.shift2)) ;
 
     RooArgSet clonedBranches2 ;
     RooCustomizer cust(*clonePdf2,"fft") ;
@@ -431,17 +329,15 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
   // Save copy of original histX binning and make alternate binning
   // for extended range scanning
 
-  const Int_t N = convObs->numBins();
+  const Int_t N = grid.numBins;
   if (N < 900) {
     oocoutW(&self, Eval) << "The FFT convolution '" << self.GetName() << "' will run with " << N
         << " bins. A decent accuracy for difficult convolutions is typically only reached with n >= 1000. Suggest to increase the number"
         " of bins of the observable '" << convObs->GetName() << "'." << std::endl;
   }
-  Int_t Nbuf = static_cast<Int_t>((N*self.bufferFraction())/2 + 0.5) ;
-  double obw = (convObs->getMax() - convObs->getMin())/N ;
-  Int_t N2 = N+2*Nbuf ;
+  const Int_t N2 = grid.numSamples();
 
-  scanBinning = std::make_unique<RooUniformBinning>(convObs->getMin()-Nbuf*obw,convObs->getMax()+Nbuf*obw,N2);
+  scanBinning = std::make_unique<RooUniformBinning>(grid.lowExt(), grid.high + grid.numBufferBins * grid.binWidth, N2);
   histBinning.reset(convObs->getBinning().clone());
 
   // Deactivate dirty state propagation on datahist observables
@@ -562,128 +458,87 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill a slice of cachePdf with the output of the FFT convolution calculation
+/// Fill a slice of cachePdf with the output of the FFT convolution calculation.
+///
+/// Sample `k` of input pdf `j` is its value at `x_k - shift_j`, where
+/// `x_k = lowExt + (k + 0.5) * binWidth` is the center of extended bin `k` of
+/// samplingGrid() (Flat and Mirror fill the buffer samples from the ones
+/// inside the observable range). The circular convolution
+/// ```
+///     c[n] = sum_m in1[m] * in2[(n - m) mod N2]
+/// ```
+/// approximates `(pdf1 * pdf2)(x) / binWidth` at
+/// `x = 2 * lowExt + (n + 1) * binWidth - shift1 - shift2`, because the
+/// arguments of the two sampled pdfs add up to `x` in every term. Cache bin
+/// `i` is extended bin `i + numBufferBins`, so its value is found at index
+/// `n = i + numBufferBins + (shift1 + shift2 - lowExt) / binWidth - 0.5`,
+/// taken modulo N2. samplingGrid() corrects the second shift such that this
+/// is an integer, which is `i + outputOffset`.
 
 void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos) const
 {
   // Extract histogram that is the basis of the RooHistPdf
   RooDataHist& cacheHist = *aux.hist() ;
 
-  // Sample array of input points from both pdfs
-  // Note that returned arrays have optional buffers zones below and above range ends
-  // to reduce cyclical effects and have been cyclically rotated so that bin containing
-  // zero value is at position zero. Example:
+  const SamplingGrid grid = samplingGrid();
+  const Int_t N = grid.numBins;
+  const Int_t N2 = grid.numSamples();
+
+  // Sample array of input points from both pdfs. Note that returned arrays
+  // have optional buffers zones below and above range ends to reduce cyclical
+  // effects. Example:
   //
   //     original:                -5 -4 -3 -2 -1 0 +1 +2 +3 +4 +5
   //     add buffer zones:    U U -5 -4 -3 -2 -1 0 +1 +2 +3 +4 +5 O O
-  //     rotate:              0 +1 +2 +3 +4 +5 O O U U -5 -4 -3 -2 -1
   //
-  //
-
-  Int_t N;
-  Int_t N2;
-  Int_t binShift1;
-  Int_t binShift2;
 
   RooRealVar* histX = static_cast<RooRealVar*>(cacheHist.get()->find(_x.arg().GetName())) ;
   if (_bufStrat==Extend) histX->setBinning(*aux.scanBinning) ;
   RooRealVar &xVar = const_cast<RooRealVar &>(static_cast<RooRealVar const&>(_x.arg()));
-  std::vector<double> input1 = scanPdf(xVar,*aux.pdf1Clone,aux.normVal1,cacheHist,slicePos,N,N2,binShift1,_shift1) ;
-  std::vector<double> input2 = scanPdf(xVar,*aux.pdf2Clone,aux.normVal2,cacheHist,slicePos,N,N2,binShift2,_shift2) ;
+  std::vector<double> input1 = scanPdf(xVar, *aux.pdf1Clone, aux.normVal1, cacheHist, slicePos, grid);
+  std::vector<double> input2 = scanPdf(xVar, *aux.pdf2Clone, aux.normVal2, cacheHist, slicePos, grid);
   if (_bufStrat==Extend) histX->setBinning(*aux.histBinning) ;
 
-#ifndef ROOFIT_MATH_FFTW3
-  // If ROOT was NOT built with the fftw3 interface, we try to include fftw3.h
-  // with the interpreter and run the concolution in the interpreter.
   std::vector<double> output(N2);
+  RooFit::Detail::MathFuncs::fftConvolveAdd(N2, input1.data(), input2.data(), output.data());
 
-   auto doFFT = declareDoFFT();
-   doFFT(N2, input1.data(), input2.data(), output.data());
-#else
-  // If ROOT was built with the fftw3 interface, we can use it as a TVirtualFFT
-  // plugin. The advantage here is that nothing can go wrong if fftw3.h wahs
-  // not istalled by the user separately.
-
-  // Retrieve previously defined FFT transformation plans
-  if (!aux.fftr2c1) {
-    aux.fftr2c1.reset(TVirtualFFT::FFT(1, &N2, "R2CK"));
-    aux.fftr2c2.reset(TVirtualFFT::FFT(1, &N2, "R2CK"));
-    aux.fftc2r.reset(TVirtualFFT::FFT(1, &N2, "C2RK"));
-
-    if (aux.fftr2c1 == nullptr || aux.fftr2c2 == nullptr || aux.fftc2r == nullptr) {
-      coutF(Eval) << "RooFFTConvPdf::fillCacheSlice(" << GetName() << "Cannot get a handle to fftw. Maybe ROOT was built without it?" << std::endl;
-      throw std::runtime_error("Cannot get a handle to fftw.");
-    }
-  }
-
-  // Real->Complex FFT Transform on p.d.f. 1 sampling
-  aux.fftr2c1->SetPoints(input1.data());
-  aux.fftr2c1->Transform();
-
-  // Real->Complex FFT Transform on p.d.f 2 sampling
-  aux.fftr2c2->SetPoints(input2.data());
-  aux.fftr2c2->Transform();
-
-  // Loop over first half +1 of complex output results, multiply
-  // and set as input of reverse transform
-  for (Int_t i=0 ; i<N2/2+1 ; i++) {
-    double re1;
-    double re2;
-    double im1;
-    double im2;
-    aux.fftr2c1->GetPointComplex(i,re1,im1) ;
-    aux.fftr2c2->GetPointComplex(i,re2,im2) ;
-    double re = re1*re2 - im1*im2 ;
-    double im = re1*im2 + re2*im1 ;
-    TComplex t(re,im) ;
-    aux.fftc2r->SetPointComplex(i,t) ;
-  }
-
-  // Reverse Complex->Real FFT transform product
-  aux.fftc2r->Transform() ;
-#endif
-
-  Int_t totalShift = binShift1 + (N2-N)/2 ;
+  // The convolution of two non-negative inputs is non-negative, but round-off
+  // can push bins whose true value is ~0 slightly negative, which RooFit later
+  // reports as pdf evaluation errors. Clamp those.
+  auto nonNegative = [](double val) { return val >= 0.0; };
+  const bool nonNegativeInputs = std::all_of(input1.begin(), input1.end(), nonNegative) &&
+                                 std::all_of(input2.begin(), input2.end(), nonNegative);
 
   // Store FFT result in cache
 
   std::unique_ptr<TIterator> iter{const_cast<RooDataHist&>(cacheHist).sliceIterator(const_cast<RooAbsReal&>(_x.arg()),slicePos)};
   for (Int_t i =0 ; i<N ; i++) {
 
-    // Cyclically shift array back so that bin containing zero is back in zeroBin
-    Int_t j = i + totalShift ;
-    while (j<0) j+= N2 ;
-    while (j>=N2) j-= N2 ;
+    // Index of the convolution output that corresponds to cache bin i
+    const Int_t j = (i + grid.outputOffset) % N2;
+    const double val = nonNegativeInputs && output[j] < 0.0 ? 0.0 : output[j];
 
     iter->Next() ;
     const std::size_t binIdx = cacheHist.getIndex(*cacheHist.get(), /*fast=*/true);
-#ifndef ROOFIT_MATH_FFTW3
-    cacheHist.set(binIdx, output[j], -1.);
-#else
-    cacheHist.set(binIdx, aux.fftc2r->GetPointReal(j), -1.);
-#endif
+    cacheHist.set(binIdx, val, -1.);
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Scan the values of 'pdf' in observable 'obs' using the bin values stored in 'hist' at slice position 'slicePos'
-/// N is filled with the number of bins defined in hist, N2 is filled with N plus the number of buffer bins
-/// The return value is an array of doubles of length N2 with the sampled values. The caller takes ownership
-/// of the array
+/// Scan the values of 'pdf' in observable 'obs' using the bin values stored in 'hist' at slice position 'slicePos'.
+/// Entry `k` of the returned array of length `grid.numSamples()` is the value at the center of extended bin `k` of
+/// the sampling grid (see samplingGrid()). The buffer bins are filled according to the buffer strategy.
 
 std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, double normVal, const RooDataHist &hist,
-                                           const RooArgSet &slicePos, Int_t &N, Int_t &N2, Int_t &zeroBin,
-                                           double shift) const
+                                           const RooArgSet &slicePos, SamplingGrid const &grid) const
 {
 
   RooRealVar* histX = static_cast<RooRealVar*>(hist.get()->find(obs.GetName())) ;
 
-  // Calculate number of buffer bins on each size to avoid cyclical flow
-  N = histX->numBins(binningName()) ;
-  Int_t Nbuf = static_cast<Int_t>((N*bufferFraction())/2 + 0.5) ;
-  N2 = N+2*Nbuf ;
-
+  const Int_t N = grid.numBins;
+  const Int_t Nbuf = grid.numBufferBins;
+  const Int_t N2 = grid.numSamples();
 
   // Allocate array of sampling size plus optional buffer zones
   std::vector<double> array(N2);
@@ -691,32 +546,12 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
   // Set position of non-convolution observable to that of the cache slice that were are processing now
   hist.get(slicePos) ;
 
-  // Find bin ID that contains zero value
-  zeroBin = 0 ;
-  if (histX->getMax()>=0 && histX->getMin()<=0) {
-    zeroBin = histX->getBinning().binNumber(0) ;
-  } else if (histX->getMin()>0) {
-    double bw = (histX->getMax() - histX->getMin())/N2 ;
-    zeroBin = Int_t(-histX->getMin()/bw) ;
-  } else {
-    double bw = (histX->getMax() - histX->getMin())/N2 ;
-    zeroBin = Int_t(-1*histX->getMax()/bw) ;
-  }
-
-  Int_t binShift = Int_t((N2* shift) / (histX->getMax()-histX->getMin())) ;
-
-  zeroBin += binShift ;
-  while(zeroBin>=N2) zeroBin-= N2 ;
-  while(zeroBin<0) zeroBin+= N2 ;
-
   // To mimic exactly the normalization code in RooAbsPdf::getValV()
   auto getPdfVal = [&]() {
      double rawVal = pdf.getVal();
      return RooFit::Detail::normalizeWithNaNPacking(pdf, rawVal, normVal);
   };
 
-  // First scan hist into temp array
-  std::vector<double> tmp(N2);
   Int_t k(0) ;
   switch(_bufStrat) {
 
@@ -724,7 +559,7 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
     // Sample entire extended range (N2 samples)
     for (k=0 ; k<N2 ; k++) {
       histX->setBin(k) ;
-      tmp[k] = getPdfVal();
+      array[k] = getPdfVal();
     }
     break ;
 
@@ -735,16 +570,16 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
       histX->setBin(0) ;
       double val = getPdfVal();
       for (k=0 ; k<Nbuf ; k++) {
-   tmp[k] = val ;
+   array[k] = val ;
       }
       for (k=0 ; k<N ; k++) {
    histX->setBin(k) ;
-   tmp[k+Nbuf] = getPdfVal();
+   array[k+Nbuf] = getPdfVal();
       }
       histX->setBin(N-1) ;
       val = getPdfVal();
       for (k=0 ; k<Nbuf ; k++) {
-   tmp[N+Nbuf+k] = val ;
+   array[N+Nbuf+k] = val ;
       }
     }
     break ;
@@ -754,24 +589,15 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
     // bins with mirror image of sampled range
     for (k=0 ; k<N ; k++) {
       histX->setBin(k) ;
-      tmp[k+Nbuf] = getPdfVal();
+      array[k+Nbuf] = getPdfVal();
     }
     for (k=1 ; k<=Nbuf ; k++) {
       histX->setBin(k) ;
-      tmp[Nbuf-k] = getPdfVal();
+      array[Nbuf-k] = getPdfVal();
       histX->setBin(N-k) ;
-      tmp[Nbuf+N+k-1] = getPdfVal();
+      array[Nbuf+N+k-1] = getPdfVal();
     }
     break ;
-  }
-
-  // Scan function and store values in array
-  for (Int_t i=0 ; i<N2 ; i++) {
-    // Cyclically shift writing location by zero bin position
-    Int_t j = i - (zeroBin) ;
-    if (j<0) j+= N2 ;
-    if (j>=N2) j-= N2 ;
-    array[i] = tmp[j] ;
   }
 
   return array ;
@@ -853,6 +679,21 @@ RooFit::OwningPtr<RooArgSet> RooFFTConvPdf::actualParameters(const RooArgSet& ns
   vars->remove(*std::unique_ptr<RooArgSet>{actualObservables(nset)});
 
   return RooFit::makeOwningPtr(std::move(vars));
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// The input pdfs are sampled normalized over the observables of the cache
+/// (see FFTCacheElem), which also fixes the coefficient normalization of
+/// RooAddPdf inputs. Compile them for the same normalization set, so that the
+/// code generation backend samples inputs with the same shape.
+
+RooArgSet RooFFTConvPdf::compileServersNormSet(RooArgSet const &normSet) const
+{
+  RooArgSet out;
+  out.add(*std::unique_ptr<RooArgSet>{actualObservables(normSet)});
+  return out;
 }
 
 
@@ -953,6 +794,44 @@ void RooFFTConvPdf::setBufferFraction(double frac)
 void RooFFTConvPdf::setBufferStrategy(BufStrat bs)
 {
   _bufStrat = bs ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Layout of the grid on which the input pdfs are sampled for the FFT. See
+/// fillCacheSlice() for how the output offset is used.
+
+RooFFTConvPdf::SamplingGrid RooFFTConvPdf::samplingGrid() const
+{
+  RooAbsBinning const &binning = static_cast<RooAbsRealLValue const &>(_x.arg()).getBinning(binningName());
+
+  SamplingGrid grid;
+  grid.numBins = binning.numBins();
+  grid.numBufferBins = static_cast<int>((grid.numBins * _bufFrac) / 2 + 0.5);
+  grid.low = binning.lowBound();
+  grid.high = binning.highBound();
+  grid.binWidth = (grid.high - grid.low) / grid.numBins;
+  grid.shift1 = _shift1;
+
+  // The shifts displace the convolution output by
+  // (shift1 + shift2 - lowExt) / binWidth - 0.5 bins, see fillCacheSlice().
+  // Rounding that would shift the convolution by up to half a bin, so the
+  // second shift absorbs the fraction instead. The epsilon keeps the rounding
+  // stable when the sum of the shifts lies exactly between two bin centers,
+  // as it does with the default shifts for an even number of bins.
+  const double shiftBins = (_shift1 + _shift2 - grid.lowExt()) / grid.binWidth - 0.5;
+  const double shiftBinsRounded = std::floor(shiftBins + 0.5 + 1e-6);
+  grid.shift2 = _shift2 + (shiftBinsRounded - shiftBins) * grid.binWidth;
+
+  const long long n2 = grid.numSamples();
+  long long offset = (grid.numBufferBins + static_cast<long long>(shiftBinsRounded)) % n2;
+  if (offset < 0) {
+    offset += n2;
+  }
+  grid.outputOffset = static_cast<int>(offset);
+
+  return grid;
 }
 
 

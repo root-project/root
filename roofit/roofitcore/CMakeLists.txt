@@ -506,11 +506,6 @@ if(cuda)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_CUDA)
 endif()
 
-if(fftw3)
-  target_compile_definitions(RooFitCore PUBLIC ROOFIT_MATH_FFTW3)
-  target_link_libraries(RooFitCore PRIVATE FFTW::Double)
-endif()
-
 # Used to silence deprecation warnings when testing deprecated features
 target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
 

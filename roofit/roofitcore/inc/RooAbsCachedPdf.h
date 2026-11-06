@@ -107,6 +107,10 @@ public:
   virtual RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const = 0 ;
   virtual RooAbsArg& pdfObservable(RooAbsArg& histObservable) const { return histObservable ; }
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
+  /// Normalization set that the servers are compiled for in compileForNormSet(). Empty by default, because the
+  /// cache is filled through the legacy interface, which normalizes the servers itself. Override this if the
+  /// compiled servers are needed in normalized form, like for the code generation of RooFFTConvPdf.
+  virtual RooArgSet compileServersNormSet(RooArgSet const & /*normSet*/) const { return {}; }
 
   mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
   Int_t _ipOrder ; // Interpolation order for cache histograms
