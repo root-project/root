@@ -55,8 +55,5 @@ COMPARE_FIXED_VALUES_UNNORM(TestProdPdf, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestProdPdf, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestProdPdf, CompareFixedValuesNormLog)
 
-FIT_TEST_SCALAR(TestProdPdf, FitScalar)
 FIT_TEST_BATCH(TestProdPdf, FitBatch)
 
-FIT_TEST_BATCH_VS_SCALAR(TestProdPdf, FitBatchScalar)
-FIT_TEST_BATCH_VS_SCALAR_CLONE_PDF(TestProdPdf, FitBatchScalarWithCloning)

@@ -42,10 +42,7 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestLognormal, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestLognormal, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestLognormal, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestLognormal, RunScalar)
 FIT_TEST_BATCH(TestLognormal, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestLognormal, CompareBatchScalar)
-
 class TestLognormalInMeanAndX : public PDFTest {
 protected:
    TestLognormalInMeanAndX() : PDFTest("Lognormal(x, mean)")
@@ -71,6 +68,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestLognormalInMeanAndX, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestLognormalInMeanAndX, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestLognormalInMeanAndX, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestLognormalInMeanAndX, RunScalar)
 FIT_TEST_BATCH(TestLognormalInMeanAndX, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestLognormalInMeanAndX, CompareBatchScalar)

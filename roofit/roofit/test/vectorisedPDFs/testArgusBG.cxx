@@ -46,6 +46,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestArgus, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestArgus, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestArgus, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestArgus, RunScalar)
 FIT_TEST_BATCH(TestArgus, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestArgus, CompareBatchScalar)

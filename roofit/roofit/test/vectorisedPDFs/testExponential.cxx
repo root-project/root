@@ -46,6 +46,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestExponential, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestExponential, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestExponential, CompareFixedValuesNormLog)
-FIT_TEST_SCALAR(TestExponential, RunScalar)
 FIT_TEST_BATCH(TestExponential, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestExponential, CompareBatchScalar)

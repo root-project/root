@@ -40,10 +40,7 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestChebychev2, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestChebychev2, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestChebychev2, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestChebychev2, DISABLED_RunScalar)
 FIT_TEST_BATCH(TestChebychev2, DISABLED_RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestChebychev2, CompareBatchScalar)
-
 class TestChebychev5 : public PDFTest {
 protected:
    TestChebychev5() : PDFTest("Chebychev5")
@@ -76,6 +73,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestChebychev5, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestChebychev5, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestChebychev5, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestChebychev5, RunScalar)
 FIT_TEST_BATCH(TestChebychev5, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestChebychev5, CompareBatchScalar)
