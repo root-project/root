@@ -33,6 +33,7 @@
 #include <RooWorkspace.h>
 #include <RooFitImplHelpers.h>
 
+#include <cctype>
 #include <charconv>
 #include <iterator>
 #include <map>
@@ -1339,6 +1340,32 @@ std::string stripOuterParens(const std::string &s)
    return s.substr(start, end - start);
 }
 
+/// Whether the `+` or `-` at position `i` of `expr` is a binary operator, i.e. not a sign and not part of the exponent
+/// of a number like `1e-5`.
+bool isBinaryOperator(const std::string &expr, std::size_t i)
+{
+   std::size_t j = i;
+   while (j > 0 && std::isspace(static_cast<unsigned char>(expr[j - 1]))) {
+      --j;
+   }
+   if (j == 0) {
+      return false;
+   }
+   const char prev = expr[j - 1];
+   if (prev == 'e' || prev == 'E') {
+      // An exponent if the "e" directly follows the digits of a number, which don't start a name.
+      std::size_t k = j - 1;
+      while (k > 0 && (std::isdigit(static_cast<unsigned char>(expr[k - 1])) || expr[k - 1] == '.')) {
+         --k;
+      }
+      const bool startsName = k > 0 && (std::isalpha(static_cast<unsigned char>(expr[k - 1])) || expr[k - 1] == '_');
+      if (k < j - 1 && !startsName && i == j) {
+         return false;
+      }
+   }
+   return std::isalnum(static_cast<unsigned char>(prev)) || prev == '_' || prev == '.' || prev == ')' || prev == ']';
+}
+
 std::vector<std::string> splitTopLevelProduct(const std::string &expr)
 {
    std::vector<std::string> parts;
@@ -1352,6 +1379,8 @@ std::vector<std::string> splitTopLevelProduct(const std::string &expr)
          ++depth;
       } else if (c == ')') {
          --depth;
+      } else if ((c == '+' || c == '-') && depth == 0 && isBinaryOperator(expr, i)) {
+         return {}; // A sum or difference at the top level is not a product, e.g. "1 + 0.2 * k"
       } else if (c == '*' && depth == 0) {
          foundTopLevelStar = true;
          std::string sub = expr.substr(start, i - start);
