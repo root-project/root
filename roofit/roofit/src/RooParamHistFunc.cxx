@@ -19,8 +19,6 @@
  * The \f$ \gamma_i \f$ can therefore be used to parametrise statistical uncertainties of the histogram
  * template. In conjunction with a constraint term, this can be used to implement the Barlow-Beeston method.
  * The constraint can be implemented using RooHistConstraint.
- *
- * See also the tutorial rf709_BarlowBeeston.C
  */
 
 #include <RooParamHistFunc.h>
