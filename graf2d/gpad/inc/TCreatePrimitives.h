@@ -21,6 +21,9 @@
 #include "TDiamond.h"
 #include "TGraph.h"
 
+#include "TPad.h"
+
+
 class TCreatePrimitives {
 
 private:
@@ -49,6 +52,8 @@ public:
    static void Pave(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void Text(Int_t event, Int_t px, Int_t py, Int_t mode);
+
+   static void ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, Int_t px, Int_t py);
 };
 
 #endif
