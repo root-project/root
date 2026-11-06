@@ -1879,9 +1879,12 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    const auto nClusters = descriptor.GetNActiveClusters();
+   if (fPrevGroupNClusters == nClusters)
+      return;
+
    std::vector<ROOT::DescriptorId_t> physClusterIDs;
    physClusterIDs.reserve(nClusters);
-   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+   for (auto i = fPrevGroupNClusters; i < nClusters; ++i) {
       physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
    }
 
@@ -1894,26 +1897,22 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
    RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
-   if (fNextClusterInGroup == nClusters) {
-      cgBuilder.MinEntry(0).EntrySpan(0).NClusters(0);
-   } else {
-      const auto &firstClusterDesc = descriptor.GetClusterDescriptor(fNextClusterInGroup);
-      const auto &lastClusterDesc = descriptor.GetClusterDescriptor(nClusters - 1);
-      cgBuilder.MinEntry(firstClusterDesc.GetFirstEntryIndex())
-         .EntrySpan(lastClusterDesc.GetFirstEntryIndex() + lastClusterDesc.GetNEntries() -
-                    firstClusterDesc.GetFirstEntryIndex())
-         .NClusters(nClusters - fNextClusterInGroup);
-   }
+   const auto &firstClusterDesc = descriptor.GetClusterDescriptor(fPrevGroupNClusters);
+   const auto &lastClusterDesc = descriptor.GetClusterDescriptor(nClusters - 1);
+   cgBuilder.MinEntry(firstClusterDesc.GetFirstEntryIndex())
+      .EntrySpan(lastClusterDesc.GetFirstEntryIndex() + lastClusterDesc.GetNEntries() -
+                 firstClusterDesc.GetFirstEntryIndex())
+      .NClusters(nClusters - fPrevGroupNClusters);
    std::vector<ROOT::DescriptorId_t> clusterIds;
    clusterIds.reserve(nClusters);
-   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+   for (auto i = fPrevGroupNClusters; i < nClusters; ++i) {
       clusterIds.emplace_back(i);
    }
    cgBuilder.AddSortedClusters(clusterIds);
    fDescriptorBuilder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
    fSerializationContext.MapClusterGroupId(clusterGroupId);
 
-   fNextClusterInGroup = nClusters;
+   fPrevGroupNClusters = nClusters;
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitAttributeSet(std::string_view attrSetName,
