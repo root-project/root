@@ -695,15 +695,14 @@ class TTextEditInteractive : public TVirtualPad::TInteractive {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new TLatex at the cursor position in gPad.
+/// Create a new TLatex or TMarker at the cursor position in the provided pad
 ///
 ///  - Click left button to indicate the text position.
+///  - Type text
+///  - Press Enter or click mouse once again to stop editing
 
-void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
+void TCreatePrimitives::ExecuteText(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py)
 {
-
-   auto &parent = *gPad;
-
    auto inter = (mode == kEditor) ? parent.GetInteractive<TTextEditInteractive>(&parent) : nullptr;
    if (inter && !parent.FindObject(inter->fLatex)) {
       parent.FreeInteractive(&parent);
@@ -775,6 +774,18 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// @deprectaed
+/// Create a new TLatex or TMarker at the cursor position in gPad.
+
+void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
+{
+   if (auto pad = dynamic_cast<TPad *>(gPad))
+      ExecuteText(*pad, mode, event, px, py);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle edit mode in the TPad
 /// Executed when editmode is not 0
@@ -788,7 +799,7 @@ void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, In
    case kPad: Pad(event, px, py, 0); break;
    case kMarker:
    case kText:
-   case kEditor: Text(event, px, py, edit_mode); break;
+   case kEditor: ExecuteText(pad, edit_mode, event, px, py); break;
    case kLine:
    case kArrow:
    case kCurlyLine:
