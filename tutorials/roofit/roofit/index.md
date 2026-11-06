@@ -180,6 +180,7 @@ Explore the tutorials below to discover the main features of RooFit. A more inde
 | | rf617_simulation_based_inference_multidimensional.py | Use Simulation Based Inference (SBI) in multiple dimensions in RooFit.|
 | | rf618_mixture_models.py | Use of mixture models in RooFit.|
 | rf709_BarlowBeeston.C| rf709_BarlowBeeston.py | Implementing the Barlow-Beeston method for taking into account the statistical uncertainty of a Monte-Carlo fit template.|
+| rf709b_BarlowBeestonHistFactory.C| | Implementing the Barlow-Beeston method with the same kind of RooFit models that HistFactory builds.|
 | rf710_roopoly.C| rf710_roopoly.py | Taylor expansion of RooFit functions using the taylorExpand function with RooPolyFunc.|
 | rf711_lagrangianmorph.C| rf711_lagrangianmorph.py | Morphing effective field theory distributions with RooLagrangianMorphFunc. A morphing function as a function of one coefficient is setup and can be used to obtain the distribution for any value of the coefficient.|
 | rf712_lagrangianmorphfit.C| rf712_lagrangianmorphfit.py | Performing a simple fit with RooLagrangianMorphFunc. A morphing function is setup as a function of three variables and a fit is performed on a pseudo-dataset.|
