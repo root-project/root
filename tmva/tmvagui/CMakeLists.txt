@@ -91,7 +91,7 @@ PUBLIC
     inc/TMVA/training_history.h
     inc/TMVA/variables.h
     inc/TMVA/variablesMultiClass.h
-  FILE_SET linkDefs TYPE HEADERS BASE_DIRS inc/ FILES
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef.h
 )
 target_link_libraries(TMVAGui PUBLIC

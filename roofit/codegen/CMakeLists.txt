@@ -9,29 +9,21 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCodegen
-  HEADERS
-    RooFit/CodegenImpl.h
-  SOURCES
-    src/CodegenImpl.cxx
-  DICTIONARY_OPTIONS
-    "-writeEmptyRootPCM"
-  DEPENDENCIES
-    RooFit
-    RooFitCore
-    HistFactory
+add_library(RooFitCodegen SHARED)
+target_sources(RooFitCodegen
+PRIVATE
+  src/CodegenImpl.cxx
+PUBLIC
+  FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/RooFit/CodegenImpl.h
 )
-
-target_sources(
-    RooFitCodegen
-    PRIVATE
-    FILE_SET private_header_files
-    TYPE HEADERS
-    BASE_DIRS inc/
-    FILES
-        # LinkDef.h # empty, not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
-        inc/RooFit/CodegenImpl.h
+target_link_libraries(RooFitCodegen PUBLIC
+  RooFit
+  RooFitCore
+  HistFactory
 )
+ROOT_GENERATE_TARGET_DICTIONARY(RooFitCodegen "-writeEmptyRootPCM")
+ROOT_INSTALL_TARGET(RooFitCodegen)
 
 # workaround to include privately headers that are not public, from a "friend" target
 get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)

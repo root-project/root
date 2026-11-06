@@ -292,7 +292,8 @@ endfunction(ROOT_REPLACE_BUILD_INTERFACE)
 #---ROOT_GENERATE_TARGET_DICTIONARY( target OPTIONS opt1 opt2 ...)
 #
 # Creates the dictionary of a predefined CMake target defined following FILE_SET naming conventions:
-# linkDefs for Linkdef.h, HEADERS for public headers
+# linkDef for Linkdef*.h, HEADERS for public headers, not4dict_header_files for public headers
+# that should be excluded from the rootclign call.
 # <target> is the CMake target on which header file sets and link libraries have been defined
 # The output dictionary will be another CMake target called G__<target>, ie with G__ prepended.;
 # the macro creates (among other files) the dictionary source as G__<target>.cxx
@@ -319,13 +320,13 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
     list(REMOVE_ITEM HeaderList ${NoDictList})
   endif()
   get_target_property(HeaderBaseDirs ${target} HEADER_DIRS)
-  get_target_property(LinkdefList ${target} HEADER_SET_linkDefs)
+  get_target_property(LinkdefList ${target} HEADER_SET_linkDef)
   # get_target_property(ModuleList ${target} CXX_MODULE_SET) needs CMake 3.28
   if("HeaderList-NOTFOUND" IN_LIST HeaderList)
     message(SEND_ERROR "ROOT_GENERATE_TARGET_DICTIONARY: Missing header file set in ${target}")
   endif()
   if("LinkdefList-NOTFOUND" IN_LIST LinkdefList)
-    message(SEND_ERROR "ROOT_GENERATE_TARGET_DICTIONARY: Missing Linkdef file set in ${target}")
+    set(LinkdefList)
   endif()
 
   # Transform absolute header paths to relative paths based on BASE_DIRS
@@ -1391,9 +1392,9 @@ endfunction()
 #---ROOT_INSTALL_TARGET(target)
 # Declare the install command for CMake target defined according to the following naming conventions
 # for FILE_SETS:
-# - linkDefs for LinkDef*.h files
+# - linkDef for the LinkDef*.h file
 # - HEADERS for public headers
-# - extraHEADERS for public headers purposely excluded from dictionaries
+# - not4dict_header_files for public headers purposely excluded from dictionaries
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_TARGET target)
   install(TARGETS ${target}
@@ -1409,7 +1410,7 @@ function(ROOT_INSTALL_TARGET target)
     FILE_SET not4dict_header_files
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
 
-    FILE_SET linkDefs
+    FILE_SET linkDef
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
   )
   export(TARGETS ${target} NAMESPACE ROOT::

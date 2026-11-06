@@ -81,7 +81,7 @@ PUBLIC
   FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
     inc/TMVA/RModel.hxx
     inc/TMVA/SOFIE_common.hxx
-  FILE_SET linkDefs TYPE HEADERS BASE_DIRS inc/ FILES
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef.h
 )
 target_link_libraries(ROOTTMVASofie PRIVATE Core)

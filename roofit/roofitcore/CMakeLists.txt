@@ -495,7 +495,7 @@ PUBLIC
     inc/RooWorkspace.h
     inc/RooWorkspaceHandle.h
     inc/RooWrapperPdf.h
-  FILE_SET linkDefs TYPE HEADERS BASE_DIRS inc/ FILES
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef.h
 )
 target_link_libraries(RooFitCore
