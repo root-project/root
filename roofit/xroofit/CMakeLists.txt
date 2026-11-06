@@ -24,7 +24,7 @@ PUBLIC
     inc/RooFit/xRooFit/Config.h
     inc/RooBrowser.h
     inc/XRooFit.h
-  FILE_SET linkDefs TYPE HEADERS BASE_DIRS inc/ FILES
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef.h
 )
 target_include_directories(RooFitXRooFit PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/RooFit>) # for easening life in .cxx

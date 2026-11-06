@@ -374,7 +374,7 @@ PUBLIC
     inc/TMVA/VarTransformHandler.h
     inc/TMVA/Version.h
     inc/TMVA/Volume.h
-  FILE_SET linkDefs TYPE HEADERS BASE_DIRS inc/ FILES
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef.h
   FILE_SET not4dict_header_files TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef1.h
@@ -470,7 +470,7 @@ PUBLIC
     inc/TMVA/RInferenceUtils.hxx
     inc/TMVA/RBDT.hxx
     inc/TMVA/RSofieReader.hxx
-  FILE_SET linkDefs TYPE HEADERS BASE_DIRS inc/ FILES
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDefUtils.h
 )
 target_link_libraries(TMVAUtils
