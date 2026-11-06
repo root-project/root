@@ -84,7 +84,7 @@ PUBLIC
   FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef.h
 )
-target_link_libraries(ROOTTMVASofie PRIVATE Core)
+target_link_libraries(ROOTTMVASofie PUBLIC Core)
 
 ROOT_GENERATE_TARGET_DICTIONARY(ROOTTMVASofie "")
 ROOT_INSTALL_TARGET(ROOTTMVASofie)
