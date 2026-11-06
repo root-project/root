@@ -1054,6 +1054,8 @@ ROOT::RResult<ROOT::RClusterGroupDescriptor> ROOT::Internal::RClusterGroupDescri
 {
    if (fClusterGroup.fClusterGroupId == ROOT::kInvalidDescriptorId)
       return R__FAIL("unset cluster group ID");
+   if (fClusterGroup.fEntrySpan == 0 || fClusterGroup.fNClusters == 0)
+      return R__FAIL("invalid empty cluster group");
    RClusterGroupDescriptor result;
    std::swap(result, fClusterGroup);
    return result;
