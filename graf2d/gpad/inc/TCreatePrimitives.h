@@ -28,8 +28,6 @@ class TCreatePrimitives {
 
 private:
 
-   static TArc *fgArc;
-   static TEllipse *fgEllipse;
    static TPave *fgPave;
    static TPaveText *fgPaveText;
    static TPavesText *fgPavesText;
@@ -45,7 +43,7 @@ public:
 
    TCreatePrimitives();
    virtual ~TCreatePrimitives();
-   static void Ellipse(Int_t event, Int_t px, Int_t py,Int_t mode);
+   static void R__DEPRECATED(7,00, "Will be removed from public API") Ellipse(Int_t event, Int_t px, Int_t py,Int_t mode);
    static void R__DEPRECATED(7,00, "Will be removed from public API") Line(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void Pad(Int_t event, Int_t px, Int_t py, Int_t);
    static void Pave(Int_t event, Int_t px, Int_t py, Int_t mode);
