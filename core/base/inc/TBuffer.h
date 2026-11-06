@@ -231,6 +231,7 @@ public:
    virtual TVirtualArray *PopDataCache();
    virtual void           PushDataCache(TVirtualArray *);
 
+#if 0
    TClass *ReadClass(const TClass *cl, UInt_t *objTag)
       R__DEPRECATED(6, 42, "Use the overload with ULong64_t* for objTag instead")
    {
@@ -251,6 +252,7 @@ public:
          return ReadClass(cl, static_cast<ULong64_t *>(nullptr));
       }
    }
+#endif
 
    virtual TClass    *ReadClass(const TClass *cl = nullptr, ULong64_t *objTag = nullptr) = 0;
    virtual void       WriteClass(const TClass *cl) = 0;
