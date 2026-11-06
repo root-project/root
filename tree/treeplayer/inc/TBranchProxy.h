@@ -129,7 +129,7 @@ namespace Detail {
       virtual void Print();
 
       TBranchProxy();
-      TBranchProxy(const TBranchProxy &other);
+      TBranchProxy(const TBranchProxy &other) = delete;
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char* top, const char* name = nullptr);
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
       TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = nullptr, const char* name = nullptr);
