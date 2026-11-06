@@ -331,6 +331,10 @@ void *RFile::GetUntyped(std::string_view path,
 
 void RFile::Put(const TNamed &namedObj, std::string_view dirPath)
 {
+   if (strchr(namedObj.GetName(), '/')) {
+      throw ROOT::RException(R__FAIL(std::string("TNamed object '") + namedObj.GetName() +
+                                     "' given to RFile::Put cannot have '/' in its name!"));
+   }
    std::string completePath = (dirPath.empty() ? "" : std::string(dirPath) + '/') + namedObj.GetName();
    Put(completePath, namedObj, namedObj.GetTitle());
 }
