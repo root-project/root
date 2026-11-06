@@ -45,6 +45,10 @@ public:
       bool allowExportInvalidNames = true;
       bool allowSanitizeNames = true;
       bool importNoDomainParametersAsRooConstVars = true;
+      /// Identify constant factors of HistFactory samples that are used like the inverse bin width of HistFactory
+      /// before ROOT 6.26 by their structure, and don't write them, since `histfactory_dist` implies them. Turn this
+      /// off if a workspace has such factors that are not meant as bin widths: they are then written as normfactors.
+      bool identifyLegacyBinWidthFactors = true;
    };
 
    static Config &config();
