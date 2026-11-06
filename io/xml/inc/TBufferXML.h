@@ -35,6 +35,8 @@ class TBufferXML final : public TBufferText, public TXMLSetup {
    friend class TKeyXML;
 
 public:
+   using TBuffer::ReadClass;
+
    TBufferXML(TBuffer::EMode mode);
    TBufferXML(TBuffer::EMode mode, TXMLFile *file);
    ~TBufferXML() override;

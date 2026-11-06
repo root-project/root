@@ -91,6 +91,8 @@ protected:
    bool ShouldNotReadCollection(Long64_t lengthInBytes, Long64_t nElements=1) const;
 
 public:
+   using TBuffer::ReadClass;
+
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
 
    TBufferFile(TBuffer::EMode mode);

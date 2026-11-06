@@ -232,7 +232,7 @@ public:
    virtual void           PushDataCache(TVirtualArray *);
 
    TClass *ReadClass(const TClass *cl, UInt_t *objTag)
-      R__DEPRECATED(6, 42, "Use the overload with ULong64_t* for objTag instead")
+      R__DEPRECATED(7, 00, "Use the overload with ULong64_t* for objTag instead")
    {
       if (objTag) {
          ULong64_t objTag64 = 0;

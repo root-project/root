@@ -30,6 +30,7 @@ class TJSONStackObj;
 class TBufferJSON final : public TBufferText {
 
 public:
+   using TBuffer::ReadClass;
 
    enum {
      // values 0..3 are exclusive, define text formating, JSON data are same
