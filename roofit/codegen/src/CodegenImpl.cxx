@@ -705,6 +705,14 @@ void codegenImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx)
    ctx.addResult(&arg, ctx.getResult(arg.pdf()) + "/" + ctx.getResult(arg.normIntegral()));
 }
 
+// Support for the deprecated RooParamHistFunc, to be removed in ROOT 6.46
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
 {
    std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(ctx, arg.xList());
@@ -720,6 +728,11 @@ void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
    }
    ctx.addResult(&arg, result.str());
 }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 void codegenImpl(RooPoisson &arg, CodegenContext &ctx)
 {
