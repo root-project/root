@@ -314,6 +314,10 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
     list(TRANSFORM SrcList PREPEND ${SrcDir}/)
   endif()
   get_target_property(HeaderList ${target} HEADER_SET)
+  get_target_property(NoDictList ${target} HEADER_SET_not4dict_header_files)
+  if(HeaderList AND NoDictList)
+    list(REMOVE_ITEM HeaderList ${NoDictList})
+  endif()
   get_target_property(HeaderBaseDirs ${target} HEADER_DIRS)
   get_target_property(LinkdefList ${target} HEADER_SET_linkDefs)
   # get_target_property(ModuleList ${target} CXX_MODULE_SET) needs CMake 3.28
@@ -1402,7 +1406,7 @@ function(ROOT_INSTALL_TARGET target)
     FILE_SET HEADERS
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
 
-    FILE_SET extraHEADERS
+    FILE_SET not4dict_header_files
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
 
     FILE_SET linkDefs
