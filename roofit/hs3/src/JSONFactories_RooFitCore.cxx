@@ -426,6 +426,11 @@ bool importSimultaneous(RooJSONFactoryWSTool *tool, const JSONNode &p)
    std::string const name(RooJSONFactoryWSTool::name(p));
    const char *type = Conditional ? "category_conditional_dist" : "combined_dist";
    std::string const context = "the " + std::string(type) + " '" + name + "'";
+   // Whether a combined distribution is extended follows from its components; HS3 forbids declaring it.
+   if (!Conditional && p.has_child("extended")) {
+      RooJSONFactoryWSTool::error(context + " must not have \"extended\": whether it is extended follows from its " +
+                                  "components");
+   }
    std::vector<RooCategory *> columns =
       readSelectionColumns(*tool->workspace(), p, Conditional ? "categorical_parameter" : "columns", context);
 
