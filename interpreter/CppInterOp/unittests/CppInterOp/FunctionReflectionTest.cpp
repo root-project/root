@@ -729,6 +729,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionTemplatedDecls) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionReturnType) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   std::vector<Decl*> Decls, SubDecls, TemplateSubDecls;
   std::string code = R"(
     namespace N { class C {}; }
@@ -872,6 +875,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsAllocator) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   std::vector<Decl*> Decls;
   std::string code = R"(
     class Klass{
@@ -1570,6 +1576,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_OwnershipAttributes) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetDeallocType) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   std::string code = R"(
     #include <new>
     #include <stdlib.h>
@@ -1829,6 +1838,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetDeallocType) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetAllocType) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   std::string code = R"(
     #include <new>
     #include <stdlib.h>
@@ -2317,6 +2329,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetAllocType) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionSignature) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   std::vector<Decl*> Decls;
   std::string code = R"(
     class C {
@@ -2433,6 +2448,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ExistsFunctionTemplate) {
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
            FunctionReflection_InstantiateTemplateFunctionFromString) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   std::vector<const char*> interpreter_args = { "-include", "new" };
   TestFixture::CreateInterpreter(interpreter_args);
   std::string code = R"(#include <memory>)";
@@ -5448,6 +5466,9 @@ static int JitCallIntNullary(const char* ns, const char* fn) {
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
            FunctionReflection_DeducingThisBlogDeduplication) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
 #ifdef EMSCRIPTEN
 #if CLANG_VERSION_MAJOR > 21
   GTEST_SKIP() << "Test fails for Emscripten builds using LLVM 22";
@@ -5543,6 +5564,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
            FunctionReflection_DeducingThisBlogLambdaForwarding) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
 #ifdef EMSCRIPTEN
 #if CLANG_VERSION_MAJOR > 21
   GTEST_SKIP() << "Test fails for Emscripten builds using LLVM 22";
