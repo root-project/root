@@ -313,7 +313,7 @@ ROOT_EXECUTABLE(testbits testbits.cxx LIBRARIES Core)
 ROOT_ADD_TEST(test-testbits COMMAND testbits)
 
 #--ctorture----------------------------------------------------------------------------------
-ROOT_EXECUTABLE(ctorture ctorture.cxx LIBRARIES MathCore)
+ROOT_EXECUTABLE(ctorture ctorture.cxx LIBRARIES MathCore ROOTclib)
 ROOT_ADD_TEST(test-ctorture COMMAND ctorture)
 
 #--qprandom----------------------------------------------------------------------------------

@@ -31,6 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
     MathCore
   LIBRARIES
     Matrix
+    ROOTclib # strlcpy.h
 )
 # Suppress deprecation warnings across compilation units and during dictionary generation, remove with Hoption.h Hparam.h
 target_compile_definitions(HistPainter PRIVATE ROOT_Hoption_cxx ROOT_Hparam_cxx)

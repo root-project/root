@@ -27,6 +27,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rint
 )
 
 target_include_directories(Core PRIVATE inc)
+
 set(RELATIVE_INC_HEADERS ${RINT_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
 
@@ -39,5 +40,7 @@ PRIVATE
     ${RELATIVE_INC_HEADERS}
     inc/LinkDef.h
 )
+
+target_link_libraries(Rint PRIVATE ROOTclib)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

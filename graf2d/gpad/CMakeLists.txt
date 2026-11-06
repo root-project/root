@@ -59,6 +59,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
   DEPENDENCIES
     Graf
     Hist
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )
 
 target_include_directories(Gpad PRIVATE ../graf/src)

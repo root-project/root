@@ -24,7 +24,11 @@ PRIVATE
     inc/TUnixSystem.h
     inc/LinkDef.h
 )
-target_include_directories(Core PRIVATE inc ../../builtins/clib/res)
+target_link_libraries(Core PRIVATE ROOTclib)
+target_include_directories(Core
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+)
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
   target_link_libraries(Core PRIVATE execinfo util)

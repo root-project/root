@@ -34,10 +34,10 @@ Boston, MA 02111-1307, USA.  */
    can be an unlimited number of keys, possibly using a multilevel access
    scheme of some sort. */
 
-#ifndef WIN32
+#ifndef _WIN32
 #  include <sys/types.h>
 #  include <sys/mman.h>
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 #include "mmprivate.h"
 
@@ -49,7 +49,7 @@ int mmalloc_setkey(PTR md, int keynum, PTR key)
   if ((mdp != NULL) && (keynum >= 0) && (keynum < MMALLOC_KEYS))
     {
       mdp -> keys [keynum] = key;
-#ifndef WIN32
+#ifndef _WIN32
 #ifndef VMS
 #ifndef R__LYNXOS
 #ifndef R__HURD
