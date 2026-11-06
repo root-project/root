@@ -25,3 +25,17 @@ TEST(JSONInterface, MapsOfTVectorD)
    // rootnode.writeJSON(ss);
    // std::cout << ss.str() << std::endl;
 }
+
+// Values that are no containers have no children.
+TEST(JSONInterface, ChildrenOfScalar)
+{
+   auto tree = RooFit::Detail::JSONTree::create(R"({"number": 5, "string": "s"})");
+   for (const char *key : {"number", "string"}) {
+      std::size_t nChildren = 0;
+      for (auto const &child : tree->rootnode()[key].children()) {
+         (void)child;
+         ++nChildren;
+      }
+      EXPECT_EQ(nChildren, 0u) << key;
+   }
+}
