@@ -565,13 +565,27 @@ TEST(RNTuple, SerializeClusterGroup)
 {
    RNTupleSerializer::RClusterGroup group;
    group.fMinEntry = 7;
-   group.fEntrySpan = 84600;
-   group.fNClusters = 42;
+   group.fEntrySpan = 0;
+   group.fNClusters = 0;
    group.fPageListEnvelopeLink.fLength = 42;
    group.fPageListEnvelopeLink.fLocator.SetPosition(137U);
    group.fPageListEnvelopeLink.fLocator.SetNBytesOnStorage(7);
 
    unsigned char buffer[52];
+   try {
+      RNTupleSerializer::SerializeClusterGroup(group, nullptr).Unwrap();
+      FAIL() << "empty cluster group should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("invalid serialization of empty cluster group"));
+   }
+   group.fEntrySpan = 84600;
+   try {
+      RNTupleSerializer::SerializeClusterGroup(group, nullptr).Unwrap();
+      FAIL() << "empty cluster group should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("invalid serialization of empty cluster group"));
+   }
+   group.fNClusters = 42;
    ASSERT_EQ(48u, RNTupleSerializer::SerializeClusterGroup(group, nullptr).Unwrap());
    EXPECT_EQ(48u, RNTupleSerializer::SerializeClusterGroup(group, buffer).Unwrap());
    RNTupleSerializer::RClusterGroup reco;
