@@ -120,6 +120,54 @@ TEST(RooProdPdf, TestDepsAreCond)
 #endif
 }
 
+// The RooGenProdProj that normalizes factors with overlapping normalization
+// observables must integrate the unnormalized pdfs. Then, the cpu backend
+// agrees with the scalar evaluation to high precision, also if the
+// normalization of a factor depends on an observable. Covers the HS3 test
+// suite model rf305_condcorrprod.
+TEST(RooProdPdf, NonFactorizingProductLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRandom::randomGenerator()->SetSeed(1337);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gaussy(y[-5, 5], 0.0, 3.0)");
+   ws.factory("Gaussian::gaussx(x[-5, 5], PolyVar::fy(y, {a0[-1.5, -5, 5], a1[-0.5, -1, 1]}), sigma[0.5, 0.1, 3])");
+   ws.factory("PROD::joint(gaussy, gaussx)");
+   // Here, gaussx is normalized over y only, so its normalization depends on x.
+   ws.factory("PROD::condOnX(gaussy, gaussx|x)");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+   RooRealVar &a0 = *ws.var("a0");
+
+   for (const char *name : {"joint", "condOnX"}) {
+      RooAbsPdf &model = *ws.pdf(name);
+      RooArgSet obs{x, y};
+
+      std::unique_ptr<RooDataSet> data{model.generate(obs, 1000)};
+      std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, RooFit::EvalBackend::Cpu())};
+
+      auto scalarNll = [&]() {
+         double out = 0.0;
+         for (int i = 0; i < data->numEntries(); ++i) {
+            RooArgSet const *row = data->get(i);
+            x.setVal(row->getRealValue("x"));
+            y.setVal(row->getRealValue("y"));
+            out -= std::log(model.getVal(obs));
+         }
+         return out;
+      };
+
+      for (double a0Val : {-1.5, 0.0, -1.5}) {
+         a0.setVal(a0Val);
+         const double ref = scalarNll();
+         EXPECT_NEAR(nll->getVal(), ref, 1e-10 * std::abs(ref)) << name << ", a0 = " << a0Val;
+      }
+   }
+}
+
 /// This test covers a potential problem with the custom normalization ranges
 /// of PDFs: the value of a RooProdPdf should not depend on the normalization
 /// ranges of its clients. TODO: this is still a problem! It needs to be fixed,
