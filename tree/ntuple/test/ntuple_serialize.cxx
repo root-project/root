@@ -559,6 +559,13 @@ TEST(RNTuple, SerializeClusterSummary)
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("exceed"));
    }
+   summary.fNEntries = 0;
+   try {
+      RNTupleSerializer::SerializeClusterSummary(summary, buffer);
+      FAIL() << "empty cluster should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid serialization of empty cluster"));
+   }
 }
 
 TEST(RNTuple, SerializeClusterGroup)

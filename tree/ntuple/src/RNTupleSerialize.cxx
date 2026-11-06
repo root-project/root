@@ -1258,6 +1258,8 @@ ROOT::Internal::RNTupleSerializer::SerializeClusterSummary(const RClusterSummary
 {
    if (clusterSummary.fNEntries >= (static_cast<std::uint64_t>(1) << 56)) {
       return R__FAIL("number of entries in cluster exceeds maximum of 2^56");
+   } else if (clusterSummary.fNEntries == 0) {
+      return R__FAIL("invalid serialization of empty cluster");
    }
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
