@@ -460,6 +460,8 @@ Int_t TFileCacheRead::ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, In
       if (!fAsyncReading) {
          // Then we use the vectored read to read everything now
          if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb)) {
+            // fBuffer does not hold the blocks: forget them, so that they are read from the file instead
+            TFileCacheRead::Prefetch(0, 0);
             return -1;
          }
          fIsTransferred = kTRUE;
