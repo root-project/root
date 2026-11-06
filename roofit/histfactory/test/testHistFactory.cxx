@@ -1102,9 +1102,20 @@ TEST(HistFactory, HS3ExportDoesNotDependOnNames)
    RooAbsData *dataBack = wsBack.data("obsData");
    ASSERT_NE(dataBack, nullptr);
 
-   // The first round trip loses what the HistFactory model of the import doesn't have: the attributes of the renamed
-   // RooRealSumPdfs (the importer creates its own), and the constraint term without modifier. From the second export
-   // on, the document is stable.
+   // The importer enables the binned likelihood for every channel, whatever the names.
+   std::size_t nSums = 0;
+   for (RooAbsArg *arg : wsBack.components()) {
+      if (dynamic_cast<RooRealSumPdf *>(arg)) {
+         ++nSums;
+         EXPECT_TRUE(arg->getAttribute("BinnedLikelihood")) << arg->GetName();
+         EXPECT_TRUE(arg->getAttribute("GenerateBinned")) << arg->GetName();
+      }
+   }
+   EXPECT_EQ(nSums, 2u);
+
+   // The first round trip loses what the HistFactory model of the import doesn't have: the "misc" attributes of the
+   // renamed RooRealSumPdfs (the importer creates its own, with the binned likelihood enabled), and the constraint term
+   // without modifier. From the second export on, the document is stable.
    const std::string json2 = RooJSONFactoryWSTool{wsBack}.exportJSONtoString();
    {
       RooWorkspace ws3;

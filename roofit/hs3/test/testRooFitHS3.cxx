@@ -4240,6 +4240,25 @@ TEST(RooFitHS3, FormulaNormSysConstraint)
    EXPECT_NE(ws2.pdf("alpha_sysConstraint"), nullptr);
 }
 
+// A histfactory_dist is a product of Poisson distributions of the bin counts: the imported RooRealSumPdf uses RooFit's
+// binned likelihood and binned generation, independent of its name and of the "misc" section.
+TEST(RooFitHS3, HistFactoryImportEnablesBinnedLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeHistFactoryJSON("")));
+   std::size_t nSums = 0;
+   for (RooAbsArg *arg : ws.components()) {
+      if (dynamic_cast<RooRealSumPdf *>(arg)) {
+         ++nSums;
+         EXPECT_TRUE(arg->getAttribute("BinnedLikelihood")) << arg->GetName();
+         EXPECT_TRUE(arg->getAttribute("GenerateBinned")) << arg->GetName();
+      }
+   }
+   EXPECT_EQ(nSums, 1u);
+}
+
 // A sample coefficient that is a sum at the top level, like "1 + 0.2 * k", is not a product of its terms: before, the
 // HistFactory exporter split it at the "*" into the factors "1 + 0.2" and "k", which changes the model.
 TEST(RooFitHS3, FormulaWithTopLevelSumIsNotSplit)

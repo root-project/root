@@ -1129,13 +1129,21 @@ public:
          coefs.add(*tool->request<RooAbsReal>(fprefix + "_" + compName + "_scaleFactors", name));
       }
 
+      // A histfactory_dist is a product of Poisson distributions of the bin counts. RooFit's binned likelihood
+      // computes exactly that (it differs from the event-wise likelihood only by a constant), and binned generation
+      // generates bin counts, so both are enabled, as HistFactory does by default.
+      auto enableBinned = [](RooRealSumPdf &sum) {
+         sum.setAttribute("BinnedLikelihood");
+         sum.setAttribute("GenerateBinned");
+      };
       if (constraints.empty()) {
-         tool->wsEmplace<RooRealSumPdf>(name, funcs, coefs, true);
+         enableBinned(tool->wsEmplace<RooRealSumPdf>(name, funcs, coefs, true));
       } else {
          std::string sumName = name + "_model";
          erasePrefix(sumName, "model_");
          auto &sum = tool->wsEmplace<RooRealSumPdf>(sumName, funcs, coefs, true);
          sum.SetTitle(name.c_str());
+         enableBinned(sum);
          tool->wsEmplace<RooProdPdf>(name, constraints, RooFit::Conditional(sum, observables));
       }
       return true;
