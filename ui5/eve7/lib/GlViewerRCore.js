@@ -13,6 +13,28 @@ sap.ui.define([
    let REveCameraControls;
    let datGUI;
 
+   /** Return the URL of the server's top directory, the one that holds
+     * rootui5sys/, sdf-fonts/ and eve-images/. The server's importmap maps each
+     * of its locations relative to the page (THttpServer::ReplaceJSROOTLinks).
+     * JSROOT's own directory is not a substitute: without builtin_jsroot it is
+     * on root.cern, and loading REve files from there fails on CORS. */
+   function locateTopPath()
+   {
+      const loc = 'rootui5sys/';
+      for (const s of document.querySelectorAll('script[type="importmap"]')) {
+         try {
+            const p = JSON.parse(s.textContent)?.imports?.[loc];
+            if (p)
+               return new URL(p, document.baseURI).href.slice(0, -loc.length);
+         } catch (e) {
+            console.warn('GlViewerRCore: cannot parse importmap', e);
+         }
+      }
+      // A page without an importmap: JSROOT is served next to rootui5sys/.
+      const jsrp = EVE.JSR.source_dir;
+      return jsrp.substring(0, jsrp.length - 'jsrootsys/'.length);
+   }
+
    class GlViewerRCore extends GlViewer {
 
       constructor(viewer_class)
@@ -44,9 +66,7 @@ sap.ui.define([
          this.RQ_MarkerScale = (marker_scale) ? marker_scale[0] : 1;
          this.RQ_LineScale   = (line_scale) ? line_scale[0] : 1;
 
-         let jsrp = EVE.JSR.source_dir;
-         // take out 'jsrootsys' and replace it with 'rootui5sys/eve7/'
-         this.top_path = jsrp.substring(0, jsrp.length - 10);
+         this.top_path = locateTopPath();
          this.eve_path = this.top_path + 'rootui5sys/eve7/';
 
          // 0 - error, 1 - warning, 2 - info, 3 - debug; set with RQ_LogLevel.
