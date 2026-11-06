@@ -6,6 +6,7 @@
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
 #ifdef HISTFACTORY_XML
 #include <RooStats/HistFactory/ConfigParser.h>
+#include <RooStats/HistFactory/FlexibleInterpVar.h>
 #endif
 #include <RooFit/ModelConfig.h>
 
@@ -19,6 +20,12 @@
 #include <RooArgSet.h>
 #include <RooSimultaneous.h>
 #include <RooRealSumPdf.h>
+#include <RooProdPdf.h>
+#include <RooProduct.h>
+#include <RooFormulaVar.h>
+#include <RooGaussian.h>
+#include <RooConstVar.h>
+#include <RooBinWidthFunction.h>
 #include <RooRealVar.h>
 #include <RooHelpers.h>
 #include <RooFitResult.h>
@@ -27,6 +34,8 @@
 
 #include <TROOT.h>
 #include <TFile.h>
+#include <TH1D.h>
+#include <TMath.h>
 #include <TCanvas.h>
 #include <TSystem.h>
 #include <gtest/gtest.h>
@@ -34,6 +43,7 @@
 #include "../../roofitcore/test/gtest_wrapper.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <regex>
 #include <set>
 
@@ -836,6 +846,299 @@ std::multiset<std::string> histFactoryModifiers(std::string const &json, int &nC
 }
 
 } // namespace
+
+// The HS3 export of HistFactory models must not depend on the names of the objects: many workspaces were made with
+// old or custom versions of HistFactory, or modified after their creation, and still have the structure of a
+// HistFactory model. This test builds a HistFactory model, gives every object of the model (except the observables
+// and the channel category, which the data refer to) a name that has nothing to do with the HistFactory naming
+// scheme, changes its modifiers (adds a custom one, removes one, swaps a constraint, adds a second
+// FlexibleInterpVar), uses bins of width pi/10 and, in one channel, the constant inverse bin width of HistFactory
+// before ROOT 6.26, and checks that the channels are still written as histfactory_dist, with the expected modifiers,
+// and that the likelihood is the same after the round trip.
+TEST(HistFactory, HS3ExportDoesNotDependOnNames)
+{
+   using namespace RooStats::HistFactory;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // A bin width that is not exactly representable, as for angular quantities.
+   const double binWidth = TMath::Pi() / 10.;
+
+   const std::string inputFile = "TestHS3Names.root";
+   {
+      TFile f(inputFile.c_str(), "RECREATE");
+      auto hist = [&](const char *name, std::vector<double> const &contents) {
+         auto *h = new TH1D(name, name, contents.size(), 0, binWidth * contents.size());
+         for (std::size_t i = 0; i < contents.size(); ++i) {
+            h->SetBinContent(i + 1, contents[i]);
+            h->SetBinError(i + 1, 0.1 * contents[i]);
+         }
+         f.WriteTObject(h);
+      };
+      hist("data_sr", {130, 120, 110});
+      hist("sig_sr", {20, 15, 10});
+      hist("bkg_sr", {100, 100, 100});
+      hist("bkg_sr_lo", {95, 98, 101});
+      hist("bkg_sr_hi", {105, 102, 99});
+      hist("bkg_unc_sr", {0.05, 0.1, 0.2});
+      hist("data_cr", {210, 190});
+      hist("sig_cr", {5, 5});
+      hist("bkg_cr", {200, 200});
+   }
+
+   Measurement meas("meas", "meas");
+   meas.SetOutputFilePrefix("HS3Names");
+   meas.SetPOI("mu");
+   meas.SetLumi(1.0);
+   meas.SetLumiRelErr(0.05);
+
+   Channel sr("SR");
+   sr.SetData("data_sr", inputFile);
+   sr.SetStatErrorConfig(0.0, "Poisson");
+   Sample sigSR("signal", "sig_sr", inputFile);
+   sigSR.AddNormFactor("mu", 1, 0, 5);
+   sigSR.AddOverallSys("sigSys", 0.9, 1.1);
+   sr.AddSample(sigSR);
+   Sample bkgSR("background", "bkg_sr", inputFile);
+   bkgSR.AddHistoSys("bkgShape", "bkg_sr_lo", inputFile, "", "bkg_sr_hi", inputFile, "");
+   bkgSR.AddShapeSys("bkgUnc", Constraint::Poisson, "bkg_unc_sr", inputFile);
+   bkgSR.ActivateStatError();
+   sr.AddSample(bkgSR);
+   meas.AddChannel(sr);
+
+   Channel cr("CR");
+   cr.SetData("data_cr", inputFile);
+   Sample sigCR("signal", "sig_cr", inputFile);
+   sigCR.AddNormFactor("mu", 1, 0, 5);
+   cr.AddSample(sigCR);
+   Sample bkgCR("background", "bkg_cr", inputFile);
+   bkgCR.AddOverallSys("bkgNorm", 0.8, 1.2);
+   ShapeFactor sf;
+   sf.SetName("crFree");
+   bkgCR.AddShapeFactor(sf);
+   cr.AddSample(bkgCR);
+   meas.AddChannel(cr);
+
+   meas.CollectHistograms();
+   std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
+   ASSERT_NE(ws, nullptr);
+   auto *mc = static_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   RooAbsData *data = ws->data("obsData");
+   ASSERT_NE(mc, nullptr);
+   ASSERT_NE(data, nullptr);
+
+   // A copy of the model that we can modify.
+   std::unique_ptr<RooAbsPdf> model{static_cast<RooAbsPdf *>(mc->GetPdf()->cloneTree())};
+   RooArgSet nodes;
+   model->treeNodeServerList(&nodes);
+   auto node = [&](std::string const &name) -> RooAbsArg & {
+      RooAbsArg *arg = nodes.find(name.c_str());
+      if (!arg) {
+         throw std::runtime_error("no node " + name);
+      }
+      return *arg;
+   };
+   auto sampleProduct = [&](std::string const &channel, std::string const &sample) -> RooProduct & {
+      auto &sum = static_cast<RooRealSumPdf &>(node(channel + "_model"));
+      for (RooAbsArg *func : sum.funcList()) {
+         if (std::string{func->GetName()}.find(sample + "_" + channel) != std::string::npos) {
+            return dynamic_cast<RooProduct &>(*func);
+         }
+      }
+      throw std::runtime_error("no sample " + sample + " in channel " + channel);
+   };
+   auto channelPdf = [&](std::string const &channel) -> RooProdPdf & {
+      return dynamic_cast<RooProdPdf &>(node("model_" + channel));
+   };
+
+   // Add a custom modifier to the background of the CR.
+   auto &k = *new RooRealVar("k", "k", 0., -1., 1.);
+   auto &custom = *new RooFormulaVar("customScale", "1 + 0.2 * @0", RooArgList{k});
+   sampleProduct("CR", "background").addTerm(&custom);
+   model->addOwnedComponents(RooArgSet{custom, k});
+
+   // Remove the normsys of the signal of the SR, by replacing its FlexibleInterpVar with 1. Its constraint stays in
+   // the model, attached to no modifier.
+   RooAbsArg *sigSysFiv = nullptr;
+   for (RooAbsArg *arg : nodes) {
+      if (dynamic_cast<FlexibleInterpVar *>(arg) && arg->dependsOn(node("alpha_sigSys"))) {
+         sigSysFiv = arg;
+      }
+   }
+   ASSERT_NE(sigSysFiv, nullptr);
+   auto &one = *new RooConstVar("removedSigSys", "", 1.0);
+   one.setAttribute((std::string{"ORIGNAME:"} + sigSysFiv->GetName()).c_str());
+   model->addOwnedComponents(RooArgSet{one});
+   std::vector<RooAbsArg *> fivClients(sigSysFiv->clients().begin(), sigSysFiv->clients().end());
+   for (RooAbsArg *client : fivClients) {
+      client->redirectServers(RooArgSet{one}, false, true);
+   }
+   // A constraint term without modifier is written, but not part of the likelihood after the import; with a constant
+   // parameter, it only adds a constant.
+   static_cast<RooRealVar &>(node("alpha_sigSys")).setConstant(true);
+
+   // Swap the constraint of the normsys of the CR background for a narrower Gaussian.
+   auto &alphaBkgNorm = static_cast<RooRealVar &>(node("alpha_bkgNorm"));
+   auto &nomBkgNorm = static_cast<RooRealVar &>(node("nom_alpha_bkgNorm"));
+   auto &narrow = *new RooGaussian("narrowConstraint", "", alphaBkgNorm, nomBkgNorm, RooFit::RooConst(0.5));
+   narrow.setAttribute("ORIGNAME:alpha_bkgNormConstraint");
+   model->addOwnedComponents(RooArgSet{narrow});
+   channelPdf("CR").redirectServers(RooArgSet{narrow}, false, true);
+
+   // In the CR, the division by the bin width takes the form of HistFactory before ROOT 6.26: a constant inverse bin
+   // width, with 7 significant digits as HistFactory wrote it.
+   RooAbsArg *crBinWidth = nullptr;
+   for (RooAbsArg *arg : nodes) {
+      if (dynamic_cast<RooBinWidthFunction *>(arg) && arg->dependsOn(node("obs_x_CR"))) {
+         crBinWidth = arg;
+      }
+   }
+   ASSERT_NE(crBinWidth, nullptr);
+   char inverseWidth[32];
+   std::snprintf(inverseWidth, sizeof(inverseWidth), "%e", 1. / binWidth);
+   auto &legacyWidth = *new RooRealVar("legacyInverseWidth", "", std::stod(inverseWidth));
+   legacyWidth.setConstant(true);
+   legacyWidth.setAttribute((std::string{"ORIGNAME:"} + crBinWidth->GetName()).c_str());
+   model->addOwnedComponents(RooArgSet{legacyWidth});
+   std::vector<RooAbsArg *> binWidthClients(crBinWidth->clients().begin(), crBinWidth->clients().end());
+   for (RooAbsArg *client : binWidthClients) {
+      client->redirectServers(RooArgSet{legacyWidth}, false, true);
+   }
+
+   // Add a second FlexibleInterpVar with a new constrained parameter to the background of the SR.
+   auto &extra = *new RooRealVar("extra", "extra", 0., -5., 5.);
+   auto &nomExtra = *new RooRealVar("nom_extra", "nom_extra", 0., -10., 10.);
+   nomExtra.setConstant(true);
+   auto &extraConstraint = *new RooGaussian("extraConstraint", "", extra, nomExtra, RooFit::RooConst(1.));
+   auto &extraFiv = *new FlexibleInterpVar("extraFiv", "", RooArgList{extra}, 1., {0.9}, {1.15}, {4});
+   sampleProduct("SR", "background").addTerm(&extraFiv);
+   channelPdf("SR").addPdfs(RooArgSet{extraConstraint});
+   model->addOwnedComponents(RooArgSet{extraFiv, extraConstraint, extra, nomExtra});
+
+   // Rename everything except the observables, the channel category and the weight variable. The new names are the
+   // old ones reversed, so no prefix or suffix of the HistFactory naming scheme survives. The POI gets a name that
+   // contains "binWidth".
+   RooArgSet keep{*mc->GetObservables()};
+   nodes.removeAll();
+   model->treeNodeServerList(&nodes);
+   std::map<std::string, std::string> newNames;
+   for (RooAbsArg *arg : nodes) {
+      std::string name = arg->GetName();
+      // Constants are named after their value.
+      if (keep.find(name.c_str()) || dynamic_cast<RooAbsCategory *>(arg) || dynamic_cast<RooConstVar *>(arg)) {
+         continue;
+      }
+      std::string reversed{name.rbegin(), name.rend()};
+      newNames[name] = name == "mu" ? "signal_binWidth_scale" : "x" + reversed;
+   }
+   for (RooAbsArg *arg : nodes) {
+      auto found = newNames.find(arg->GetName());
+      if (found != newNames.end()) {
+         arg->SetName(found->second.c_str());
+      }
+   }
+   auto renamed = [&](std::string const &name) { return newNames.at(name); };
+
+   RooWorkspace wsMod{"wsMod"};
+   wsMod.import(*model, RooFit::Silence());
+   wsMod.import(*data, RooFit::Silence());
+   auto collect = [&](RooArgSet const &original, std::vector<std::string> const &added) {
+      RooArgSet out;
+      for (RooAbsArg *arg : original) {
+         out.add(*wsMod.arg(renamed(arg->GetName())));
+      }
+      for (auto const &name : added) {
+         out.add(*wsMod.arg(renamed(name)));
+      }
+      return out;
+   };
+   RooStats::ModelConfig mcMod{"ModelConfig", &wsMod};
+   mcMod.SetPdf(model->GetName());
+   mcMod.SetObservables(*mc->GetObservables());
+   mcMod.SetParametersOfInterest(collect(*mc->GetParametersOfInterest(), {}));
+   mcMod.SetNuisanceParameters(collect(*mc->GetNuisanceParameters(), {"k", "extra"}));
+   mcMod.SetGlobalObservables(collect(*mc->GetGlobalObservables(), {"nom_extra"}));
+   wsMod.import(mcMod);
+
+   std::string json;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                                                [&] { json = RooJSONFactoryWSTool{wsMod}.exportJSONtoString(); });
+   if (writeJsonFiles) {
+      RooJSONFactoryWSTool{wsMod}.exportJSON("HS3Names.json");
+   }
+   // The renamed legacy inverse bin width is identified by its value, with a warning.
+   EXPECT_NE(warnings.find("'" + renamed("legacyInverseWidth") + "'"), std::string::npos) << warnings;
+
+   // Both channels are written by the HistFactory exporter, with the expected modifiers.
+   int nChannels = 0;
+   const auto modifiers = histFactoryModifiers(json, nChannels);
+   EXPECT_EQ(nChannels, 2) << json;
+   auto count = [&](std::string const &type, std::string const &param) {
+      return modifiers.count(type + ":" + param + ",");
+   };
+   EXPECT_EQ(count("normfactor", renamed("mu")), 2u) << json;
+   EXPECT_EQ(count("normsys", renamed("alpha_sigSys")), 0u) << json;
+   EXPECT_EQ(count("normsys", renamed("alpha_bkgNorm")), 1u) << json;
+   EXPECT_EQ(count("normsys", renamed("extra")), 1u) << json;
+   EXPECT_EQ(count("histosys", renamed("alpha_bkgShape")), 1u) << json;
+   EXPECT_EQ(modifiers.count("custom:" + renamed("customScale")), 1u) << json;
+   // The only custom modifier is the added one: the bin widths are not written.
+   std::size_t nCustom = 0;
+   for (auto const &mod : modifiers) {
+      nCustom += mod.rfind("custom:", 0) == 0;
+   }
+   EXPECT_EQ(nCustom, 1u) << json;
+   std::size_t nPerBin = 0;
+   for (auto const &mod : modifiers) {
+      nPerBin += mod.rfind("shapefactor:", 0) == 0 || mod.rfind("staterror:", 0) == 0;
+   }
+   // SR: shapesys and staterror of the background; CR: the free shapefactor.
+   EXPECT_EQ(nPerBin, 3u) << json;
+
+   // The likelihood is the same after the round trip, at several parameter points.
+   RooWorkspace wsBack{"wsBack"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsBack}.importJSONfromString(json));
+   auto *mcBack = static_cast<RooStats::ModelConfig *>(wsBack.obj("ModelConfig"));
+   ASSERT_NE(mcBack, nullptr);
+   RooAbsData *dataBack = wsBack.data("obsData");
+   ASSERT_NE(dataBack, nullptr);
+
+   // The first round trip loses what the HistFactory model of the import doesn't have: the attributes of the renamed
+   // RooRealSumPdfs (the importer creates its own), and the constraint term without modifier. From the second export
+   // on, the document is stable.
+   const std::string json2 = RooJSONFactoryWSTool{wsBack}.exportJSONtoString();
+   {
+      RooWorkspace ws3;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(json2));
+      EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), json2);
+   }
+
+   using RooFit::GlobalObservables;
+   std::unique_ptr<RooAbsReal> nll{
+      wsMod.pdf(model->GetName())->createNLL(*wsMod.data("obsData"), GlobalObservables(*mcMod.GetGlobalObservables()))};
+   std::unique_ptr<RooAbsReal> nllBack{
+      mcBack->GetPdf()->createNLL(*dataBack, GlobalObservables(*mcBack->GetGlobalObservables()))};
+   RooArgSet params;
+   nll->getParameters(nullptr, params);
+   // Up to a constant: the constraint terms may be written in a different but equivalent form. The tolerance allows for
+   // the 7 significant digits of the legacy inverse bin width.
+   const double nll0 = nll->getVal();
+   const double nllBack0 = nllBack->getVal();
+   const std::vector<double> shifts{0.3, -0.5, 0.2};
+   for (double shift : shifts) {
+      for (RooAbsArg *arg : params) {
+         auto *var = dynamic_cast<RooRealVar *>(arg);
+         if (!var || var->isConstant()) {
+            continue;
+         }
+         const double value = var->getVal() + shift * 0.1 * std::max(std::abs(var->getVal()), 1.);
+         var->setVal(std::clamp(value, var->getMin(), var->getMax()));
+         auto *varBack = wsBack.var(var->GetName());
+         ASSERT_NE(varBack, nullptr) << var->GetName();
+         varBack->setVal(var->getVal());
+      }
+      EXPECT_NEAR(nllBack->getVal() - nllBack0, nll->getVal() - nll0, 1e-5) << "shift " << shift;
+   }
+}
 
 // Before ROOT 6.26, HistFactory multiplied every sample with a constant inverse bin width, a RooRealVar
 // "binWidth_<observables>_<i>" in the coefficients of the RooRealSumPdf. histfactory_dist implies it, so it is not
