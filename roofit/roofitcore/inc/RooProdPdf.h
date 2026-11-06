@@ -208,7 +208,8 @@ namespace RooFit::Detail {
 /// normalization set.
 class RooFixedProdPdf : public RooAbsPdf {
 public:
-   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet);
+   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet,
+                   RooProdPdf const *cacheProdPdf = nullptr);
    RooFixedProdPdf(const RooFixedProdPdf &other, const char *name = nullptr);
 
    inline TObject *clone(const char *newname) const override { return new RooFixedProdPdf(*this, newname); }
