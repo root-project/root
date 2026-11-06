@@ -181,6 +181,28 @@ void TBufferFile::ReadLong(Long_t &l)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return whether the length of a string just read from `buf` can only come
+/// from corrupt data, i.e. it is negative or larger than the bytes left in the
+/// buffer, and report it from `method`.
+
+static bool IsCorruptStringLength(const TBufferFile &buf, Int_t length, const char *method)
+{
+   const Long64_t remaining = (Long64_t)buf.BufferSize() - buf.Length();
+   if (R__likely(length >= 0 && length <= remaining))
+      return false;
+   const char *parent = buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket";
+   if (length < 0)
+      buf.Error(method, "Corrupt data: the string read from %s has a negative length (%d); reading it as empty.",
+                parent, length);
+   else
+      buf.Error(method,
+                "Corrupt data: the string read from %s has a length of %d, but only %lld bytes are left in the "
+                "buffer; reading it as empty.",
+                parent, length, remaining);
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read TString from TBuffer.
 
 void TBufferFile::ReadTString(TString &s)
@@ -192,10 +214,16 @@ void TBufferFile::ReadTString(TString &s)
       s.UnLink();
       s.Zero();
    } else {
-      if (nwh == 255)
+      if (nwh == 255) {
          *this >> nbig;
-      else
+         if (IsCorruptStringLength(*this, nbig, "ReadTString")) {
+            s.UnLink();
+            s.Zero();
+            return;
+         }
+      } else {
          nbig = nwh;
+      }
 
       nbig = s.Clobber(nbig); // update length since Clobber clamps to MaxSize (if Fatal does not abort)
       char *data = s.GetPointer();
@@ -245,6 +273,10 @@ void TBufferFile::ReadStdString(std::string *obj)
       }
       if (nwh == 255)  {
          *this >> nbig;
+         if (IsCorruptStringLength(*this, nbig, "ReadStdString")) {
+            obj->clear();
+            return;
+         }
          obj->resize(nbig,'\0');
          ReadFastArray((char*)obj->data(),nbig);
       }
@@ -294,6 +326,8 @@ void TBufferFile::ReadCharStar(char* &s)
          Error("ReadCharStar", "Cannot allocate buffer: maximum capacity exceeded (%d bytes)!", std::numeric_limits<Int_t>::max());
          return;
       }
+      if (IsCorruptStringLength(*this, nch, "ReadCharStar"))
+         return;
       s = new char[nch+1];
       ReadFastArray(s, nch);
       s[nch] = 0;

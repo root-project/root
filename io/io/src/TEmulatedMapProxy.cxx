@@ -35,6 +35,8 @@ is separated from the TEmulatedProxy.
 #include "TClassEdit.h"
 #include "TStreamerInfo.h"
 #include "TError.h"
+#include "ROOT/CheckCollectionSize.hxx"
+#include "ObjectWiseElementsUseBytes.h"
 
 TEmulatedMapProxy::TEmulatedMapProxy(const TEmulatedMapProxy& copy)
    : TEmulatedCollectionProxy(copy)
@@ -226,6 +228,9 @@ void TEmulatedMapProxy::ReadBuffer(TBuffer &b, void *obj)
    TPushPop env(this,obj);
    int nElements = 0;
    b >> nElements;
+   nElements = ROOT::Internal::CheckCollectionSize(b, nElements, "TEmulatedMapProxy::ReadBuffer", fName.c_str(), [&] {
+      return ROOT::Internal::ObjectWiseElementsUseBytes(fKey, fVal);
+   });
    if ( fEnv->fObject )  {
       Resize(nElements,true);
    }
@@ -238,8 +243,11 @@ void TEmulatedMapProxy::Streamer(TBuffer &b)
 {
    // TClassStreamer IO overload.
    if ( b.IsReading() ) {  //Read mode
-      UInt_t nElements = 0;
+      Int_t nElements = 0;
       b >> nElements;
+      nElements = ROOT::Internal::CheckCollectionSize(b, nElements, "TEmulatedMapProxy::Streamer", fName.c_str(), [&] {
+         return ROOT::Internal::ObjectWiseElementsUseBytes(fKey, fVal);
+      });
       if ( fEnv->fObject )  {
          Resize(nElements,true);
       }

@@ -15,6 +15,7 @@ Array of doubles (64 bits per element).
 */
 
 #include "TArrayD.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include "TBuffer.h"
 
 
@@ -150,6 +151,8 @@ void TArrayD::Streamer(TBuffer &b)
    if (b.IsReading()) {
       Int_t n;
       b >> n;
+      // Each element occupies at least one byte on file.
+      n = ROOT::Internal::CheckCollectionSize(b, n, "TArrayD::Streamer", "TArrayD", [] { return true; });
       Set(n);
       b.ReadFastArray(fArray,n);
    } else {

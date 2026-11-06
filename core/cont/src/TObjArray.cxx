@@ -52,6 +52,7 @@ set to the owner of its own content.
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualMutex.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include <cstdlib>
 
 
@@ -460,6 +461,9 @@ void TObjArray::Streamer(TBuffer &b)
 
       b >> nobjects;
       b >> fLowerBound;
+      // Each object occupies at least one byte on file, as it is stored as a pointer, i.e. a tag of 4 bytes.
+      nobjects =
+         ROOT::Internal::CheckCollectionSize(b, nobjects, "TObjArray::Streamer", "TObjArray", [] { return true; });
       if (nobjects >= fSize) Expand(nobjects);
       fLast = -1;
       TObject *obj;

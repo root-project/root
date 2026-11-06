@@ -99,6 +99,7 @@ Fatal in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) has be
 #include "TRefTable.h"
 #include "TBuffer.h"
 #include "TError.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include "TBits.h"
 
 
@@ -524,6 +525,9 @@ void TRefArray::Streamer(TBuffer &R__b)
       fName.Streamer(R__b);
       R__b >> nobjects;
       R__b >> fLowerBound;
+      // Each object occupies at least one byte on file, as it is stored as its unique ID of 4 bytes.
+      nobjects =
+         ROOT::Internal::CheckCollectionSize(R__b, nobjects, "TRefArray::Streamer", "TRefArray", [] { return true; });
       if (nobjects >= fSize) Expand(nobjects);
       fLast = -1;
       R__b >> pidf;
