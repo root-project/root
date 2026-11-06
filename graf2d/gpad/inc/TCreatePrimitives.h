@@ -26,7 +26,6 @@ class TCreatePrimitives {
 private:
 
    static TLine *fgLine;
-   static TLatex *fgText;
    static TCurlyLine *fgCLine;
    static TArrow *fgArrow;
    static TCurlyArc *fgCArc;

@@ -30,7 +30,6 @@ to create new primitives in gPad from the TPad toolbar.
 #include "KeySymbols.h"
 #include "TCutG.h"
 
-TLatex *TCreatePrimitives::fgText = nullptr;
 TCurlyLine *TCreatePrimitives::fgCLine = nullptr;
 TArrow *TCreatePrimitives::fgArrow = nullptr;
 TLine *TCreatePrimitives::fgLine = nullptr;
@@ -651,6 +650,50 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
 }
 
+
+/////////////////////////////////////////////
+/// Internal class implementing tlatex editing
+class TTextEditInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   TTextEditInteractive(TLatex *ltx)
+   {
+      fLatex = ltx;
+   }
+
+   void FinishEditing()
+   {
+      TString s = fLatex->GetTitle();
+      Int_t l = s.Length();
+      if (l > 1) {
+         // keep dummy symbol to let select it afterwards
+         s.Remove(l-1);
+         fLatex->SetTitle(s.Data());
+      }
+   }
+
+   bool PressBackspace()
+   {
+      TString s(fLatex->GetTitle());
+      Int_t l = s.Length();
+      if (l < 2)
+         return false;
+      s.Replace(l-2, 2, "<");
+      fLatex->SetTitle(s.Data());
+      return true;
+   }
+
+   void AppendChar(char c)
+   {
+      TString s = fLatex->GetTitle();
+      Int_t l = s.Length();
+      s.Insert(l-1, c);
+      fLatex->SetTitle(s.Data());
+   }
+
+   TLatex *fLatex = nullptr;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TLatex at the cursor position in gPad.
 ///
@@ -658,70 +701,76 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 
 void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   static Double_t x, y;
+
+   auto &parent = *gPad;
+
+   auto inter = (mode == kEditor) ? parent.GetInteractive<TTextEditInteractive>(&parent) : nullptr;
+   if (inter && !parent.FindObject(inter->fLatex)) {
+      parent.FreeInteractive(&parent);
+      inter = nullptr;
+   }
 
    switch (event) {
 
-   case kKeyPress:
+   case kKeyPress: {
+      // only modify in editor mode
+      if (!inter)
+         break;
+
       if ((py == kKey_Return) || (py == kKey_Enter)) {
-         TString s(fgText->GetTitle());
-         Int_t l = s.Length();
-         s.Remove(l-1);
-         fgText->SetText(x,y,s.Data());
+         inter->FinishEditing();
          gSystem->ProcessEvents();
-         gPad->Modified(kTRUE);
+         parent.Modified(kTRUE);
          gROOT->SetEditorMode();
-         gPad->Update();
-         gPad->GetCanvas()->Selected(gPad, fgText, kButton1Down);
-         fgText = nullptr;
+         parent.Update();
+         parent.GetCanvas()->Selected(gPad, inter->fLatex, kButton1Down);
+         parent.FreeInteractive(&parent);
       } else if (py == kKey_Backspace) {
-         TString s(fgText->GetTitle());
-         Int_t l = s.Length();
-         if (l>1) {
-            s.Replace(l-2, 2, "<");
-            fgText->SetText(x,y,s.Data());
-            gPad->Modified(kTRUE);
-            gPad->Update();
+         if (inter->PressBackspace()) {
+            parent.Modified(kTRUE);
+            parent.Update();
          }
       } else if (isprint(py)) {
-         TString s(fgText->GetTitle());
-         Int_t l = s.Length();
-         s.Insert(l-1,(char)py);
-         fgText->SetText(x,y,s.Data());
-         gPad->Modified(kTRUE);
-         gPad->Update();
+         inter->AppendChar((char)py);
+         parent.Modified(kTRUE);
+         parent.Update();
       }
       break;
+   }
 
-   case kButton1Down:
-     if (fgText) {
-         TString s(fgText->GetTitle());
-         Int_t l = s.Length();
-         s.Remove(l-1);
-         fgText->SetText(x,y,s.Data());
-      }
-
-      x = gPad->AbsPixeltoX(px);
-      y = gPad->AbsPixeltoY(py);
-      if (gPad->GetLogx()) x = TMath::Power(10,x);
-      if (gPad->GetLogy()) y = TMath::Power(10,y);
-
-      if (mode == kMarker) {
-         TMarker *marker;
-         marker = new TMarker(x,y,28);
-         gPad->GetCanvas()->Selected(gPad, marker, kButton1Down);
-         marker->Draw();
+   case kButton1Down: {
+      if (inter) {
+         // second click during editing will finalize editor
+         inter->FinishEditing();
+         gSystem->ProcessEvents();
+         parent.Modified(kTRUE);
          gROOT->SetEditorMode();
+         parent.Update();
+         parent.GetCanvas()->Selected(gPad, inter->fLatex, kButton1Down);
+         parent.FreeInteractive(&parent);
          break;
       }
 
-      ((TPad *)gPad)->StartEditing();
-      gSystem->ProcessEvents();
+      Double_t x = parent.PadtoX(parent.AbsPixeltoX(px));
+      Double_t y = parent.PadtoY(parent.AbsPixeltoY(py));
 
-      fgText = new TLatex(x,y,"<");
-      fgText->Draw();
-      gPad->Modified(kTRUE);
-      gPad->Update();
+      if (mode == kMarker) {
+         auto marker = new TMarker(x, y, 28);
+         parent.GetCanvas()->Selected(&parent, marker, kButton1Down);
+         parent.Add(marker);
+         gROOT->SetEditorMode();
+      } else if (mode == kText) {
+         ((TPad *)&parent)->StartEditing();
+         gSystem->ProcessEvents();
+         auto ltx = new TLatex(x,y,"<");
+         parent.GetCanvas()->Selected(gPad, ltx, kButton1Down);
+         parent.Add(ltx);
+         parent.Modified(kTRUE);
+         parent.Update();
+         gROOT->SetEditorMode("Editor"); // switch to text editing
+         parent.MakeInteractive<TTextEditInteractive>(&parent, ltx);
+      }
       break;
+   }
    }
 }
