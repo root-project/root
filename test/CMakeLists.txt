@@ -198,7 +198,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.5.18.00.root ${CMAKE_
 ROOT_EXECUTABLE(stressHistogram stressHistogram.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED|Error in" LABELS longtest)
 # The stresshistogram-interpreted test fails on Windows due to unresolved symbols with Visual Studio 2026
-if(MSVC AND MSVC_VERSION GREATER_EQUAL 1951)
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1951 AND NOT "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32")
   set(_willfail WILLFAIL)
 endif()
 ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${root_exe} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.cxx
