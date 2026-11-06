@@ -402,7 +402,7 @@ Int_t TMessage::Compress()
    Int_t what = fWhat | kMESS_ZIP;
    tobuf(bufcur, what);
    if (static_cast<Long64_t>(Length()) >  static_cast<Long64_t>(std::numeric_limits<UInt_t>::max())) {
-      Error("Compress", "Original buffer length too large (%d)", Length());
+      Error("Compress", "Original buffer length too large (%zu)", Length());
       return -1;
    }
    tobuf(bufcur, (UInt_t)Length());    // original uncompressed buffer length
