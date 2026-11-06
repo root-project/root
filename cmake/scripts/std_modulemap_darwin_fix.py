@@ -17,18 +17,14 @@ def main():
     output_path = sys.argv[2]
     # The libc++ include directory of the compiler, if CMake found one in the
     # implicit include directories. It takes precedence over the libc++ in the
-    # SDK, because it is the one that cling uses at runtime.
+    # SDK, because it is the one that cling uses at runtime. This also covers
+    # toolchains whose SDK is stripped of libc++ (conda-forge, Nix): there, the
+    # compiler ships its own libc++ next to itself, which clang searches before
+    # the SDK, so it is in the implicit include directories.
     libcxx_include_dir = sys.argv[3] if len(sys.argv) > 3 else None
     cpp_modulemap = os.path.join(sdk_path, "usr/include/c++/v1/module.modulemap")
     if libcxx_include_dir and os.path.exists(os.path.join(libcxx_include_dir, "module.modulemap")):
         cpp_modulemap = os.path.join(libcxx_include_dir, "module.modulemap")
-    if not os.path.exists(cpp_modulemap):
-        # Try again if we are running a conda build. conda-forge ships the MacOS SDK stripped of libc++.
-        # Instead, the standard libraries are shipped as a separate package which must be declared as a build
-        # dependency and thus ends up in the $BUILD_PREFIX path. For explanation, see
-        # https://conda-forge.zulipchat.com/#narrow/channel/516932-compilers/topic/Organisation.20of.20libc.2B.2B.20and.20SDKs.20on.20MacOS
-        if (os.environ.get("CONDA_BUILD", "0") == "1") and (os.environ.get("BUILD_PREFIX", None) is not None):
-            cpp_modulemap = os.path.join(os.environ["BUILD_PREFIX"], "include/c++/v1/module.modulemap")
 
     if not os.path.exists(cpp_modulemap):
         raise FileNotFoundError(f"Cannot find libc++ modulemap at {cpp_modulemap}")
