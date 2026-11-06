@@ -2015,7 +2015,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (fYlowNDC < 0 && event != kButton1Down) return;
 
    Int_t newcode = gROOT->GetEditorMode();
-   if (newcode)
+   if (newcode && (newcode != kEditor))
       parent.FreeInteractive(this); // delete any interactive object
    switch (newcode) {
       case kPad:
@@ -2023,6 +2023,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       case kMarker:
       case kText:
+      case kEditor:
          TCreatePrimitives::Text(event,px,py,newcode);
          break;
       case kLine:
