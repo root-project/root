@@ -30,8 +30,6 @@ to create new primitives in gPad from the TPad toolbar.
 #include "KeySymbols.h"
 #include "TCutG.h"
 
-TArc *TCreatePrimitives::fgArc = nullptr;
-TEllipse *TCreatePrimitives::fgEllipse = nullptr;
 TPave *TCreatePrimitives::fgPave = nullptr;
 TPaveText *TCreatePrimitives::fgPaveText = nullptr;
 TPavesText *TCreatePrimitives::fgPavesText = nullptr;
@@ -55,89 +53,13 @@ TCreatePrimitives::~TCreatePrimitives()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @deprecated
 /// Create a new arc/ellipse in this gPad.
-///
-///  - Click left button to indicate arrow starting position.
-///  - Release left button to terminate the arrow.
 
 void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   static Double_t x0, y0;
-   Double_t x1,y1,xc,yc,r1,r2,xold,yold;
-
-   switch (event) {
-
-   case kButton1Down:
-      x0 = gPad->AbsPixeltoX(px);
-      if (gPad->GetLogx())
-         x0 = TMath::Power(10,x0);
-      y0 = gPad->AbsPixeltoY(py);
-      if (gPad->GetLogy())
-         y0 = TMath::Power(10,y0);
-      break;
-
-   case kButton1Motion:
-      xold = gPad->AbsPixeltoX(px);
-      yold = gPad->AbsPixeltoY(py);
-
-      if (gPad->GetLogx())
-         xold = TMath::Power(10,xold);
-      if (gPad->GetLogy())
-         yold = TMath::Power(10,yold);
-
-      xc = 0.5*(x0+xold);
-      yc = 0.5*(y0+yold);
-      if (mode == kArc) {
-         r1 = 0.5*TMath::Abs(xold-x0);
-         if (fgArc) {
-            fgArc->SetR1(r1);
-            fgArc->SetR2(r1);
-            fgArc->SetX1(xc);
-            fgArc->SetY1(yc);
-         } else {
-            fgArc = new TArc(xc, yc, r1);
-            fgArc->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-      if (mode == kEllipse) {
-         r1 = 0.5*TMath::Abs(xold-x0);
-         r2 = 0.5*TMath::Abs(yold-y0);
-         if (fgEllipse) {
-            fgEllipse->SetR1(r1);
-            fgEllipse->SetR2(r2);
-            fgEllipse->SetX1(xc);
-            fgEllipse->SetY1(yc);
-         } else {
-            fgEllipse = new TEllipse(xc, yc, r1, r2);
-            fgEllipse->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-      break;
-
-   case kButton1Up:
-      x1 = gPad->AbsPixeltoX(px);
-      y1 = gPad->AbsPixeltoY(py);
-      if (gPad->GetLogx())
-         x1 = TMath::Power(10,x1);
-      if (gPad->GetLogy())
-         y1 = TMath::Power(10,y1);
-
-      if (mode == kArc) {
-         gPad->GetCanvas()->Selected(gPad, fgArc, kButton1Down);
-         fgArc = nullptr;
-      }
-      if (mode == kEllipse) {
-         gPad->GetCanvas()->Selected(gPad, fgEllipse, kButton1Down);
-         fgEllipse = nullptr;
-      }
-
-      gROOT->SetEditorMode();
-      break;
-   }
+   if (auto pad = dynamic_cast<TPad *>(gPad))
+      ExecuteLine(*pad, mode, event, px, py);
 }
 
 /////////////////////////////////////////////
@@ -245,6 +167,23 @@ void TCreatePrimitives::ExecuteLine(TPad &parent, Int_t mode, Int_t event, Int_t
          carc->SetRadius(radius);
       }
       break;
+   case kArc:
+      if (auto arc = inter->Make<TArc>(parent, 1., 1., 1, 45, 315)) {
+         arc->SetR1(0.5 * TMath::Abs(x - inter->fX0));
+         arc->SetR2(0.5 * TMath::Abs(y - inter->fY0));
+         arc->SetX1(0.5*(x + inter->fX0));
+         arc->SetY1(0.5*(y + inter->fY0));
+      }
+      break;
+   case kEllipse:
+      if (auto ellipse = inter->Make<TEllipse>(parent, 1., 1., 1, 1)) {
+         ellipse->SetR1(0.5 * TMath::Abs(x - inter->fX0));
+         ellipse->SetR2(0.5 * TMath::Abs(y - inter->fY0));
+         ellipse->SetX1(0.5*(x + inter->fX0));
+         ellipse->SetY1(0.5*(y + inter->fY0));
+      }
+      break;
+
    default: break;
    }
 
@@ -808,11 +747,11 @@ void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, In
    case kLine:
    case kArrow:
    case kCurlyLine:
-   case kCurlyArc: ExecuteLine(pad, edit_mode, event, px, py); break;
+   case kCurlyArc:
+   case kArc:
+   case kEllipse: ExecuteLine(pad, edit_mode, event, px, py); break;
    case kPolyLine:
    case kCutG: PolyLine(event, px, py, edit_mode); break;
-   case kArc:
-   case kEllipse: Ellipse(event, px, py, edit_mode); break;
    case kButton:
    case kPave:
    case kPaveLabel:
