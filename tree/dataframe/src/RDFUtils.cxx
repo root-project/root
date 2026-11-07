@@ -29,6 +29,7 @@
 #include "TTree.h"
 
 #include <fstream>
+#include <mutex>
 #include <nlohmann/json.hpp> // nlohmann::json::parse
 #include <stdexcept>
 #include <string>
@@ -43,6 +44,30 @@ ROOT::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
 {
    static RLogChannel c("ROOT.RDF");
    return c;
+}
+
+// A static function, not in an anonymous namespace, because the function name is included in the user-visible message.
+static void WarnHist()
+{
+   R__LOG_WARNING(RDFLogChannel()) << "Filling RHist is experimental and still under development.";
+}
+
+void ROOT::Internal::RDF::WarnHist()
+{
+   static std::once_flag once;
+   std::call_once(once, ::WarnHist);
+}
+
+// A static function, not in an anonymous namespace, because the function name is included in the user-visible message.
+static void WarnProfile()
+{
+   R__LOG_WARNING(RDFLogChannel()) << "Filling RProfile is experimental and still under development.";
+}
+
+void ROOT::Internal::RDF::WarnProfile()
+{
+   static std::once_flag once;
+   std::call_once(once, ::WarnProfile);
 }
 
 namespace {
@@ -159,11 +184,20 @@ const std::type_info &TypeName2TypeID(const std::string &name)
    if (auto it = typeName2TypeIDMap.find(name); it != typeName2TypeIDMap.end())
       return it->second.get();
 
-   if (auto c = TClass::GetClass(name.c_str())) {
-      if (!c->GetTypeInfo()) {
-         throw std::runtime_error("Cannot extract type_info of type " + name + ".");
-      }
+   if (auto c = TClass::GetClass(name.c_str()); c && c->GetTypeInfo()) {
       return *c->GetTypeInfo();
+   }
+
+   // When the type_info cannot be retrieved with TClass, it might be that the interpreter still knows about it. This
+   // happens for example when a class has been declared to the interpreter in the same program where this
+   // RDataFrame is running, but has no dictionary. We attempt to retrieve the type_info via the interpreter before
+   // giving up.
+   std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
+   if (gInterpreter->Evaluate(("typeid(" + name + ')').c_str(), *v)) {
+      auto *typeIdAsVoidPtr = v->GetAsPointer();
+      const std::type_info *ti = reinterpret_cast<const std::type_info *>(typeIdAsVoidPtr);
+      if (ti)
+         return *ti;
    }
 
    throw std::runtime_error("Cannot extract type_info of type " + name + ".");
@@ -238,9 +272,14 @@ std::string GetLeafTypeName(TLeaf *leaf, const std::string &colName)
       // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
       colType = ComposeRVecTypeName(colType);
    } else if (leaf->GetLeafCount() != nullptr && leaf->GetLenStatic() > 1) {
-      // we do not know how to deal with this branch
-      throw std::runtime_error("TTree leaf " + colName +
-                               " has both a leaf count and a static length. This is not supported.");
+      // This case is encountered when a branch is a collection (e.g. std::vector) of a user-defined class which has
+      // a data member that is a fixed-size array. Here, 'leaf' is said data member, and the user could read it
+      // partially as std::vector<std::array<T, N>>. We expose it as ROOT::RVec<std::array<T, N>> for consistency with
+      // other collection types.
+      // WARNING: Currently this considers only the possibility of a 1-dim array, as TLeaf does not expose information
+      // to get all dimension lengths of a multi-dim array in a straightforward way (e.g. with one API call).
+      auto valueType = colType;
+      colType = "ROOT::VecOps::RVec<std::array<" + valueType + ", " + std::to_string(leaf->GetLenStatic()) + ">>";
    }
 
    return colType;
@@ -486,9 +525,19 @@ unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigne
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
                             const std::string &colName)
 {
-   // We want to explicitly support the reading of bools as unsigned char, as
-   // this is quite common to circumvent the std::vector<bool> specialization.
-   const bool explicitlySupported = (colType == typeid(bool) && requestedType == typeid(unsigned char)) ? true : false;
+   // We explicitly support certain type conversions
+   const bool explicitlySupported = [&colType, &requestedType]() {
+      // bool as unsigned char is common to circumvent the std::vector<bool> specialization.
+      if (colType == typeid(bool) && requestedType == typeid(unsigned char))
+         return true;
+      // char as unsigned char allows reading a vector of char as a Python numpy array of integers, avoiding the
+      // automatic conversion of 'char *' to string in Python. For more info, see
+      // https://github.com/root-project/root/issues/22554
+      if (colType == typeid(char) && requestedType == typeid(unsigned char))
+         return true;
+
+      return false;
+   }();
 
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.

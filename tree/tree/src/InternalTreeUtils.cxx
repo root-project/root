@@ -456,7 +456,7 @@ void RecursiveGlob(TList &out, const std::string &glob)
       slashLPos = -1;
    }
 
-   // Seperate the subdirectory and/or file component.
+   // Separate the subdirectory and/or file component.
    if (slashRPos != std::string::npos) {
       basename = glob.substr(slashLPos + 1, slashRPos - (slashLPos + 1));
       remainder = glob.substr(slashRPos + 1);

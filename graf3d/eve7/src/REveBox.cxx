@@ -12,6 +12,7 @@
 #include <ROOT/REveBox.hxx>
 #include <ROOT/REveProjectionManager.hxx>
 #include <ROOT/REveRenderData.hxx>
+#include <ROOT/REveTrans.hxx>
 
 #include "TClass.h"
 
@@ -155,7 +156,7 @@ REveBoxProjected::~REveBoxProjected()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute bounding-box, virtual from TAttBBox.
+/// Fill the bounding box (virtual from REveElement).
 
 void REveBoxProjected::ComputeBBox()
 {
@@ -169,7 +170,7 @@ void REveBoxProjected::ComputeBBox()
 
 void REveBoxProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +199,8 @@ void REveBoxProjected::UpdateProjection()
    vVector2_t pp[2];
    {
       REveProjection *projection = fManager->GetProjection();
-      REveTrans      *trans      = box->PtrMainTrans(kFALSE);
+      REveTrans mt;
+      const REveTrans *trans = fManager->GetModelTrans(box, mt);
 
       REveVector pbuf;
       for (Int_t i = 0; i < 8; ++i)
@@ -263,6 +265,11 @@ void REveBoxProjected::SetDebugCornerPoints(Bool_t d)
 void REveBoxProjected::BuildRenderData()
 {
    int N = fPoints.size();
+
+   // makeBoxProjected draws the projected box as a 3D mesh
+   // ignore REveBoxProjected render data if projected box is a line (N=2)
+   if ( N < 3 ) return;
+
    fRenderData = std::make_unique<REveRenderData>("makeBoxProjected", N*3);
    for (auto &v : fPoints)
    {

@@ -19,11 +19,6 @@
 //                converted to lower case
 /////////////////////////////////////////////////////////////////////////
 
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
-#include <iostream>
-
 #include "TFile.h"
 #include "TDirectoryFile.h"
 #include "TTree.h"
@@ -35,7 +30,13 @@
 #include "TGraph.h"
 #include "TMath.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <iostream>
+#include <cstdio>
 
 //  Define the names of the Fortran common blocks for the different OSs
 // Note that with gcc3.4 or above the size of PAWC_SIZE must be the same
@@ -134,11 +135,7 @@ void MAIN__() {}
 
 // As recommended in
 // https://gcc.gnu.org/onlinedocs/gfortran/Argument-passing-conventions.html
-#if __GNUC__ > 7
-typedef size_t fortran_charlen_t;
-#else
-typedef int fortran_charlen_t;
-#endif
+using fortran_charlen_t = size_t;
 
 #else
 # define hlimit  HLIMIT
@@ -209,9 +206,9 @@ extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFC
 #endif
 
 #ifndef WIN32
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,fortran_charlen_t,fortran_charlen_t);
+extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const std::int64_t&,DEFCHAR,const int&,fortran_charlen_t,fortran_charlen_t);
 #else
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&);
+extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const std::int64_t&,DEFCHAR,const int&);
 #endif
 
 extern "C" void  type_of_call hprntu(const int&);
@@ -329,11 +326,11 @@ int main(int argc, char **argv)
 
    int lun = 10;
 #ifndef WIN32
-   // "px" is a string being changed to "pxc" in the fortran side; since it's a temporary on C's side,
-   // we need a buffer of at least 3 chars on Cs side, too. Predefine it as a extra variable "px " since that way
-   // the space will be replaced by 'c' on the preallocated memory, instead of appending a new char (new memory) to "px".
-   auto opt = PASSCHAR("px ");
-   hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),opt,record_size,ier,7,strlen(file_in),2);
+   // Reminder: Argument passing convention is that string lengths go as hidden arguments
+   // at the end of the argument list.
+   constexpr auto chdir = "example";
+   constexpr auto opt = "px";
+   hropen(lun, chdir, file_in, opt, record_size, ier, strlen(chdir), strlen(file_in), strlen(opt));
 #else
    hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier);
 #endif
@@ -719,7 +716,7 @@ void convert_cwn(Int_t id)
 #else
    hgiven(id,chtitl,80,nvar,chtag_out,kNchar,rmin[0],rmax[0]);
 #endif
-   Long_t add= (Long_t)&bigbuf[0];
+   std::int64_t add = reinterpret_cast<std::int64_t>(&bigbuf[0]);
 #ifndef WIN32
    hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0,1,6);
 #else
@@ -829,7 +826,7 @@ void convert_cwn(Int_t id)
          strlcpy(oldblock,block,512);
          oldischar = ischar;
          Int_t lblock   = strlen(block);
-         add= (Long_t)&bigbuf[bufpos];
+         add = reinterpret_cast<std::int64_t>(&bigbuf[bufpos]);
 #ifndef WIN32
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
 #else

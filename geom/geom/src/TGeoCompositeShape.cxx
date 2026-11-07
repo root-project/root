@@ -383,6 +383,15 @@ void TGeoCompositeShape::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Invalidate mesh caching done by TGeoBoolNode
+
+void TGeoCompositeShape::InvalidateMeshCaches()
+{
+   if (fNode)
+      fNode->InvalidateMeshCaches();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// print shape parameters
 
 void TGeoCompositeShape::InspectShape() const

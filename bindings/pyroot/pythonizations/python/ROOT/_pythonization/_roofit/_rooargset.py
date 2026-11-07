@@ -10,15 +10,13 @@
 ################################################################################
 
 
-from ._rooabscollection import RooAbsCollection
-
-import cppyy
 import operator
+
+from ._rooabscollection import RooAbsCollection
 
 
 class RooArgSet(RooAbsCollection):
-
-    __cpp_name__ = 'RooArgSet'
+    __cpp_name__ = "RooArgSet"
 
     def __init__(self, *args, **kwargs):
         """Pythonization of RooArgSet constructor to support implicit
@@ -31,13 +29,24 @@ class RooArgSet(RooAbsCollection):
         # argument is added, hence the `len(kwargs) == 0` check breaks the
         # implicit conversion!
         if len(args) == 1 and isinstance(args[0], set):
-            return self._init(*args[0], **kwargs)
-        return self._init(*args, **kwargs)
+            import textwrap
+
+            raise TypeError(
+                textwrap.dedent(
+                    """
+                Python sets are unordered, while a RooArgSet is ordered, so this conversion can silently change the
+                order of the elements. Construct the RooArgSet from the individual RooFit objects, or from a list or
+                tuple of them instead.
+                """
+                )
+            )
+        self._init(*args, **kwargs)
 
     def __getitem__(self, key):
+        import ROOT
 
         # other than the RooArgList, the RooArgSet also supports string keys
-        if isinstance(key, (str, cppyy.gbl.TString, cppyy.gbl.std.string)):
+        if isinstance(key, (str, ROOT.TString, ROOT.std.string)):
             return self._getitem(key)
 
         try:

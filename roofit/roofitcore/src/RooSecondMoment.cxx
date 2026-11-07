@@ -20,17 +20,11 @@
 \ingroup Roofitcore
 **/
 
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooSecondMoment.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
-#include "RooErrorHandler.h"
 #include "RooArgSet.h"
-#include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "RooFunctor.h"
 #include "RooGlobalFunc.h"
 #include "RooConstVar.h"
 #include "RooRealIntegral.h"
@@ -38,10 +32,12 @@
 #include "RooFormulaVar.h"
 #include "RooLinearVar.h"
 #include "RooProduct.h"
+
 #include <string>
+#include <cmath>
+#include <ostream>
+
 using std::string;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

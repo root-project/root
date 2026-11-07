@@ -160,6 +160,27 @@ public:
    /// @param up New error definition value.
    void SetErrorDef(double up) override { fUp = up; }
 
+   /// Indicate whether the mixed second order derivative with respect to
+   /// parameters i and j is identically zero, forwarding to the user-provided
+   /// predicate if set.
+   bool SecondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const override
+   {
+      return fSecondDerivAlwaysVanishesFunc ? fSecondDerivAlwaysVanishesFunc(i, j) : false;
+   }
+
+   /// Set the predicate advertising which mixed second derivatives are
+   /// identically zero.
+   ///
+   /// @param f Function taking two parameter indices (in the FCN's full
+   ///          external parameter space) and returning `true` if the
+   ///          corresponding second derivative is zero for all parameter
+   ///          values. It must fulfill the contract documented for
+   ///          FCNBase::SecondDerivativeAlwaysVanishes().
+   void SetSecondDerivativeAlwaysVanishesFunc(std::function<bool(unsigned int, unsigned int)> f)
+   {
+      fSecondDerivAlwaysVanishesFunc = std::move(f);
+   }
+
 private:
    using Function = std::function<double(double const *)>;
    using GradFunction = std::function<void(double const *, double *)>;
@@ -173,6 +194,8 @@ private:
    GradFunction fGradFunc;               ///< Optional gradient function.
    G2Function fG2Func;                   ///< Optional diagonal second-derivative function.
    mutable HessianFunction fHessianFunc; ///< Optional Hessian function.
+   /// Optional predicate for identically-vanishing second derivatives.
+   std::function<bool(unsigned int, unsigned int)> fSecondDerivAlwaysVanishesFunc;
 };
 
 } // namespace ROOT::Minuit2

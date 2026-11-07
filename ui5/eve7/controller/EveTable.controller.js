@@ -12,10 +12,11 @@ sap.ui.define([
    "sap/ui/layout/VerticalLayout",
    "sap/ui/layout/HorizontalLayout",
    "sap/ui/table/Column",
-   "sap/m/MessageBox"
+   "sap/m/MessageBox",
+   'rootui5/eve7/lib/EveManager'
 ], function (Controller, UIComponent, JSONModel, Sorter,
    mColumn, mColumnListItem, mInput, mLabel, mButton,
-   FormattedText, VerticalLayout, HorizontalLayout, tableColumn, MessageBox) {
+   FormattedText, VerticalLayout, HorizontalLayout, tableColumn, MessageBox, EveManager) {
 
    "use strict";
 
@@ -32,10 +33,19 @@ sap.ui.define([
       },
       onTableObjectMatched: function (oEvent) {
          let args = oEvent.getParameter("arguments");
-         this.setupManagerAndViewType(EVE.$eve7tmp.eveViewerId, EVE.$eve7tmp.mgr);
+         // Main's switchSingle() passes the manager in EVE.$eve7tmp. Without it
+         // (browser forward, or this address opened directly) take it from the
+         // main page; if there is none yet, go there: this view has no
+         // standalone mode.
+         let moredata = EVE.$eve7tmp || EveManager.FindMainPageViewer(this.getView(), args.viewName);
+         delete EVE.$eve7tmp;
+         if (!moredata) {
+            UIComponent.getRouterFor(this).navTo("Default", {}, true);
+            return;
+         }
+         this.setupManagerAndViewType(moredata.eveViewerId, moredata.mgr);
 
          this.mgr.controllers[0].setToolbarExpandedAction(this);
-         delete EVE.$eve7tmp;
       },
       setupManagerAndViewType: function(eveViewerId, mgr)
       {

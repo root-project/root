@@ -11,7 +11,7 @@
 
 /**
 \class TMemFile TMemFile.cxx
-\ingroup IO
+\ingroup io_files
 
 A TMemFile is like a normal TFile except that it reads and writes
 only from memory.
@@ -453,6 +453,8 @@ Int_t TMemFile::SysReadImpl(Int_t, void *buf, Long64_t len)
       if (fSysOffset + len > fSize) {
          len = fSize - fSysOffset;
       }
+
+      R__ASSERT(len >= 0);
 
       if (fBlockOffset+len <= fBlockSeek->fSize) {
          // 'len' does not go past the end of the current block,

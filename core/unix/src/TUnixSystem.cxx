@@ -35,8 +35,9 @@
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 #include "TObjArray.h"
-#include "snprintf.h"
 #include "strlcpy.h"
+
+#include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -48,7 +49,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <sys/types.h>
-#if defined(R__SUN) || defined(R__AIX) || \
+#if defined(R__SUN) || \
     defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__FBSD) || defined(R__OBSD) || \
     defined(R__MACOSX) || defined(R__HURD)
@@ -62,12 +63,12 @@
 #if defined(ULTRIX) || defined(R__SUN)
 #   include <sgtty.h>
 #endif
-#if defined(R__AIX) || defined(R__LINUX) || \
+#if defined(R__LINUX) || \
     defined(R__FBSD) || defined(R__OBSD) || \
     defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
 #   include <sys/ioctl.h>
 #endif
-#if defined(R__AIX) || defined(R__SOLARIS)
+#if defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
 #if defined(R__MACOSX)
@@ -108,17 +109,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#if defined(R__AIX)
-#   define _XOPEN_EXTENDED_SOURCE
-#   include <arpa/inet.h>
-#   undef _XOPEN_EXTENDED_SOURCE
-#   if !defined(_AIX41) && !defined(_AIX43)
-    // AIX 3.2 doesn't have it
-#   define HASNOT_INETATON
-#   endif
-#else
-#   include <arpa/inet.h>
-#endif
+#include <arpa/inet.h>
 #include <sys/un.h>
 #include <netdb.h>
 #include <fcntl.h>
@@ -149,7 +140,7 @@
 #   endif
 #endif
 
-#if defined(R__AIX) || defined(R__FBSD) || \
+#if defined(R__FBSD) || \
     defined(R__OBSD) || defined(R__LYNXOS) || \
     (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5))
 #   define UTMP_NO_ADDR
@@ -721,37 +712,13 @@ const char *TUnixSystem::GetError()
    if (err == 0 && GetLastErrorString() != "")
       return GetLastErrorString();
 
-#if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
+#if defined(R__SOLARIS) || defined (R__LINUX) || \
     defined(R__FBSD) || defined(R__OBSD) || defined(R__HURD)
    return strerror(err);
 #else
    if (err < 0 || err >= sys_nerr)
       return Form("errno out of range %d", err);
    return sys_errlist[err];
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return cryptographic random number
-/// Fill provided buffer with random values
-/// Returns number of bytes written to buffer or -1 in case of error
-
-Int_t TUnixSystem::GetCryptoRandom(void *buf, Int_t len)
-{
-#if defined(R__ARC4_STDLIB) || defined(R__ARC4_BSDLIB)
-   arc4random_buf(buf, len);
-   return len;
-#elif defined(R__GETRANDOM_CLIB)
-   return getrandom(buf, len, GRND_NONBLOCK);
-#elif defined(R__USE_URANDOM)
-   std::ifstream urandom{"/dev/urandom"};
-   if (!urandom)
-      return -1;
-   urandom.read(reinterpret_cast<char *>(buf), len);
-   return len;
-#else
-#error "Reliable cryptographic random function not defined"
-   return -1;
 #endif
 }
 
@@ -1691,11 +1658,7 @@ int TUnixSystem::Link(const char *from, const char *to)
 
 int TUnixSystem::Symlink(const char *from, const char *to)
 {
-#if defined(R__AIX)
-   return ::symlink((char*)from, (char*)to);
-#else
    return ::symlink(from, to);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1839,18 +1802,9 @@ needshell:
 
    // read first argument
    patbuf0 = "";
-   int cnt = 0;
-#if defined(R__AIX)
-again:
-#endif
    for (ch = fgetc(pf); ch != EOF && ch != ' ' && ch != '\n'; ch = fgetc(pf)) {
       patbuf0.Append(ch);
-      cnt++;
    }
-#if defined(R__AIX)
-   // Work around bug timing problem due to delay in forking a large program
-   if (cnt == 0 && ch == EOF) goto again;
-#endif
 
    // skip rest of pipe
    while (ch != EOF) {
@@ -2348,11 +2302,6 @@ void TUnixSystem::StackTrace()
    delete [] gdb;
    return;
 
-#elif defined(R__AIX)
-   TString script = "procstack ";
-   script += GetPid();
-   Exec(script);
-   return;
 #elif defined(R__SOLARIS)
    char *cppfilt = Which(Getenv("PATH"), "c++filt", kExecutePermission);
    TString script = "pstack ";
@@ -2516,7 +2465,14 @@ void TUnixSystem::StackTrace()
                if (name[0] != '/') noPath = kTRUE;
                if (name.Contains(".so") || name.Contains(".sl")) noShare = kFALSE;
                if (noShare) offset = addr;
-               if (noPath)  name = "`which " + name + "`";
+               if (noPath) {
+                  char *fullpath = noShare ? Which(Getenv("PATH"), name, kExecutePermission)
+                                           : Which(GetDynamicPath(), name, kReadPermission);
+                  if (fullpath) {
+                     name = fullpath;
+                     delete [] fullpath;
+                  }
+               }
                snprintf(buffer, sizeof(buffer), "%s -e %s 0x%016lx", addr2line, name.Data(), offset);
 #endif
                if (FILE *pf = ::popen(buffer, "r")) {
@@ -2894,7 +2850,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       ClosePipe(p);
    }
 #endif
-#elif defined(R__LINUX) || defined(R__SOLARIS) || defined(R__AIX)
+#elif defined(R__LINUX) || defined(R__SOLARIS)
 #if defined(R__WINGCC )
    const char *cLDD="cygcheck";
    const char *cSOEXT=".dll";
@@ -2912,13 +2868,8 @@ const char *TUnixSystem::GetLinkedLibraries()
    TRegexp sovers = "\\.so\\.[0-9]+";
 #else
    const char *cLDD="ldd";
-#if defined(R__AIX)
-   const char *cSOEXT=".a";
-   TRegexp sovers = "\\.a\\.[0-9]+";
-#else
    const char *cSOEXT=".so";
    TRegexp sovers = "\\.so\\.[0-9]+";
-#endif
 #endif
    FILE *p = OpenPipe(TString::Format("%s '%s'", cLDD, exe), "r");
    if (p) {
@@ -3299,10 +3250,8 @@ void TUnixSystem::CloseConnection(int sock, Bool_t force)
 {
    if (sock < 0) return;
 
-#if !defined(R__AIX) || defined(_AIX41) || defined(_AIX43)
    if (force)
       ::shutdown(sock, 2);   // will also close connection of parent
-#endif
 
    while (::close(sock) == -1 && GetErrno() == EINTR)
       ResetErrno();
@@ -4291,7 +4240,7 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
-/// The socketBindOption parameter allows to specify how the socket will be 
+/// The socketBindOption parameter allows to specify how the socket will be
 /// bound. See the documentation of ESocketBindOption for the details.
 /// Returns socket fd or -1 if socket() failed, -2 if bind() failed
 /// or -3 if listen() failed.
@@ -4371,7 +4320,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
 /// how many sockets can be waiting to be accepted. If port is 0 a port
 /// scan will be done to find a free port. This option is mutual exlusive
 /// with the reuse option.
-/// The socketBindOption parameter allows to specify how the socket will be 
+/// The socketBindOption parameter allows to specify how the socket will be
 /// bound. See the documentation of ESocketBindOption for the details.
 
 int TUnixSystem::UnixUdpService(int port, int backlog, ESocketBindOption socketBindOption)
@@ -4656,9 +4605,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
          rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
       }
       TString ldpath;
-   #if defined (R__AIX)
-      ldpath = gSystem->Getenv("LIBPATH");
-   #elif defined(R__MACOSX)
+   #if defined(R__MACOSX)
       ldpath = gSystem->Getenv("DYLD_LIBRARY_PATH");
       if (!ldpath.IsNull())
          ldpath += ":";
@@ -5261,10 +5208,10 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
 
    /*
     * Compute memory partition like procps(free), see https://gitlab.com/procps-ng/procps/-/blob/master/proc/sysinfo.c
-    * 
+    *
     * fMemShared is a part of Cached (see https://lore.kernel.org/patchwork/patch/648763/), does not subtract twice from used
     */
-   
+
    meminfo->fMemCached = meminfo->fMemCached + meminfo->fSReclaimable - meminfo->fMemShared;
    const Int_t usedDiff = meminfo->fMemFree + meminfo->fMemCached + meminfo->fSReclaimable + meminfo->fMemBuffer;
 

@@ -86,8 +86,7 @@ TScatter2D::TScatter2D(Int_t n)
 
 TScatter2D::TScatter2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, const Double_t *col, const Double_t *size)
 {
-   Bool_t status = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+   TDirectory::TContext ctx{nullptr}; // No self-registration to directories
    fGraph     = new TGraph2D(n, x, y, z);
    fNpoints   = fGraph->GetN();
 
@@ -104,8 +103,6 @@ TScatter2D::TScatter2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, const Dou
    fMaxMarkerSize = 5.;
    fMinMarkerSize = 1.;
    fMargin = 0.1;
-
-   TH1::AddDirectory(status);
 }
 
 

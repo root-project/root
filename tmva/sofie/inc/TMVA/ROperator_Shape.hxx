@@ -69,7 +69,6 @@ public:
       else {
          // add tensor as a shape tensor (and also as initialized one??)
          //model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
-         fIsOutputConstant = true;
          model.AddShapeTensor(fNY, std::vector<Dim>(fShape.begin() + fStart, fShape.begin() + fEnd));
       }
    }

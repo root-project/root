@@ -28,7 +28,6 @@ class RItem;
 \brief Basic element of browsable hierarchy. Provides access to data, creates iterator if any
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-14
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
 class RElement {

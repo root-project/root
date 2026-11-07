@@ -26,9 +26,9 @@
 #include "TStopwatch.h"
 #include "TSystem.h"
 #include "TStreamerInfo.h"
-#include "snprintf.h"
-
 #include "TBench.h"
+
+#include <cstdio>
 
 using std::vector;
 
@@ -112,9 +112,6 @@ template <class TGen> TBenchData runTest(const char *name, int nevents, int nhit
 
 int main(int argc, char **argv)
 {
-   std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();
-   TROOT::AddExtraInterpreterArgs({inclRootSys});
-
    bool writereferences = false;
    bool memberwise = false;
    bool shortrun = false;

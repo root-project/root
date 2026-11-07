@@ -13,10 +13,7 @@
 
 **/
 
-#include "Riostream.h"
-
 #include "RooMomentMorphFunc.h"
-#include "RooAbsCategory.h"
 #include "RooRealConstant.h"
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
@@ -28,7 +25,6 @@
 #include "RooChangeTracker.h"
 
 #include "TMath.h"
-#include "TH1.h"
 
 using std::string, std::vector;
 

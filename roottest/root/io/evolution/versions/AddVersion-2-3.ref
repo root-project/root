@@ -1,4 +1,3 @@
-
 Processing runAddVersion.cxx(2, "3")...
 Loading myclass1.root
 Warning in <TClass::Init>: no dictionary for class MyClass is available

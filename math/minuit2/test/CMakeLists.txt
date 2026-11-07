@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 if(NOT DEFINED ROOT_SOURCE_DIR)
-   cmake_minimum_required(VERSION 3.10)
+   cmake_minimum_required(VERSION 3.15...4.4)
    project(minuit2_tests)
    find_package(ROOT REQUIRED)
    include(${ROOT_USE_FILE})
@@ -71,3 +71,8 @@ foreach(file ${TestSource})
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${RootLibraries} Minuit2 )
   ROOT_ADD_TEST(minuit2_${testname} COMMAND ${testname})
 endforeach()
+
+# We don't want to run the gtests if gtest is not available in Minuit2 standalone builds
+if(TARGET GTest::gtest)
+  ROOT_ADD_GTEST(testMinuit2 testMinuit2.cxx LIBRARIES Minuit2)
+endif()

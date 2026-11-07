@@ -7,6 +7,7 @@
 // definitions are implementation details and should not be exposed to a public interface.
 
 #include <ROOT/RColumnElementBase.hxx>
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RConfig.hxx>
@@ -57,7 +58,7 @@ void UnpackBits(void *dst, const void *src, std::size_t count, std::size_t sizeo
 
 } // namespace ROOT::Internal::BitPacking
 
-namespace {
+namespace { // NOLINT(misc-anonymous-namespace-in-header): this header is only used in tests and in RColumnElement.cxx
 
 // In this namespace, common routines are defined for element packing and unpacking of ints and floats.
 // The following conversions and encodings exist:
@@ -330,7 +331,7 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 } // namespace
 
 // anonymous namespace because these definitions are not meant to be exported.
-namespace {
+namespace { // NOLINT(misc-anonymous-namespace-in-header): this header is only used in tests and in RColumnElement.cxx
 
 using ROOT::ENTupleColumnType;
 using ROOT::Internal::kTestFutureColumnType;
@@ -924,16 +925,7 @@ public:
 
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
-#if R__LITTLE_ENDIAN == 0
-      // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
-      // directly in the Pack/UnpackBits functions.
-      auto bswapped = MakeUninitArray<float>(count);
-      CopyBswap<sizeof(float)>(bswapped.get(), src, count);
-      const auto *srcLe = bswapped.get();
-#else
-      const auto *srcLe = reinterpret_cast<const float *>(src);
-#endif
-      PackBits(dst, srcLe, count, sizeof(float), fBitsOnStorage);
+      PackBits(dst, src, count, sizeof(float), fBitsOnStorage);
    }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
@@ -943,9 +935,6 @@ public:
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
       UnpackBits(dst, src, count, sizeof(float), fBitsOnStorage);
-#if R__LITTLE_ENDIAN == 0
-      InPlaceBswap<sizeof(float)>(dst, count);
-#endif
    }
 };
 
@@ -965,16 +954,7 @@ public:
       for (std::size_t i = 0; i < count; ++i)
          srcFloat[i] = static_cast<float>(srcDouble[i]);
 
-#if R__LITTLE_ENDIAN == 0
-      // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
-      // directly in the Pack/UnpackBits functions.
-      auto bswapped = MakeUninitArray<float>(count);
-      CopyBswap<sizeof(float)>(bswapped.get(), srcFloat.get(), count);
-      const float *srcLe = bswapped.get();
-#else
-      const float *srcLe = reinterpret_cast<const float *>(srcFloat.get());
-#endif
-      PackBits(dst, srcLe, count, sizeof(float), fBitsOnStorage);
+      PackBits(dst, reinterpret_cast<const float *>(srcFloat.get()), count, sizeof(float), fBitsOnStorage);
    }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
@@ -986,9 +966,6 @@ public:
       // TODO(gparolini): avoid this allocation
       auto dstFloat = MakeUninitArray<float>(count);
       UnpackBits(dstFloat.get(), src, count, sizeof(float), fBitsOnStorage);
-#if R__LITTLE_ENDIAN == 0
-      InPlaceBswap<sizeof(float)>(dstFloat.get(), count);
-#endif
 
       double *dstDouble = reinterpret_cast<double *>(dst);
       for (std::size_t i = 0; i < count; ++i)
@@ -999,36 +976,6 @@ public:
 namespace Quantize {
 
 using Quantized_t = std::uint32_t;
-
-[[maybe_unused]] inline std::size_t LeadingZeroes(std::uint32_t x)
-{
-   if (x == 0)
-      return 32;
-
-#ifdef _MSC_VER
-   unsigned long idx = 0;
-   if (_BitScanReverse(&idx, x))
-      return static_cast<std::size_t>(31 - idx);
-   return 32;
-#else
-   return static_cast<std::size_t>(__builtin_clz(x));
-#endif
-}
-
-[[maybe_unused]] inline std::size_t TrailingZeroes(std::uint32_t x)
-{
-   if (x == 0)
-      return 32;
-
-#ifdef _MSC_VER
-   unsigned long idx = 0;
-   if (_BitScanForward(&idx, x))
-      return static_cast<std::size_t>(idx);
-   return 32;
-#else
-   return static_cast<std::size_t>(__builtin_ctz(x));
-#endif
-}
 
 /// Converts the array `src` of `count` floating point numbers into an array of their quantized representations.
 /// Each element of `src` is assumed to be in the inclusive range [min, max].
@@ -1062,10 +1009,9 @@ int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min,
 
       const double e = 0.5 + (elem - min) * scale;
       Quantized_t q = static_cast<Quantized_t>(e);
-      ByteSwapIfNecessary(q);
 
       // double-check we actually used at most `nQuantBits`
-      assert(outOfRange || LeadingZeroes(q) >= unusedBits);
+      assert(outOfRange || ROOT::Internal::LeadingZeroes(q) >= unusedBits);
 
       // we want to leave zeroes in the LSB, not the MSB, because we'll then drop the LSB
       // when bit packing.
@@ -1095,9 +1041,8 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
    for (std::size_t i = 0; i < count; ++i) {
       Quantized_t elem = src[i];
       // Undo the LSB-preserving shift performed by QuantizeReals
-      assert(TrailingZeroes(elem) >= unusedBits);
+      assert(ROOT::Internal::TrailingZeroes(elem) >= unusedBits);
       elem >>= unusedBits;
-      ByteSwapIfNecessary(elem);
 
       const double fq = static_cast<double>(elem);
       double e = fq * scale + min;

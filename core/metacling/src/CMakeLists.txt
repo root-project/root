@@ -37,6 +37,34 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingValue.cxx
 )
 
+set (METACLING_HEADERS
+  ClingRAII.h
+  TClingBaseClassInfo.h
+  TClingCallbacks.h
+  TClingCallFunc.h
+  TClingClassInfo.h
+  TClingDataMemberInfo.h
+  TClingDeclInfo.h
+  TClingDiagnostics.h
+  TCling.h
+  TClingMemberIter.h
+  TClingMethodArgInfo.h
+  TClingMethodInfo.h
+  TClingRdictModuleFileExtension.h
+  TClingTypedefInfo.h
+  TClingTypeInfo.h
+  TClingValue.h
+)
+
+target_sources(MetaCling
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS ./
+  FILES
+    ${METACLING_HEADERS}
+)
+
 # This directory contains files that include llvm, which can give warnings.
 if(NOT MSVC)
   target_compile_options(MetaCling PRIVATE -Wno-error)
@@ -50,13 +78,13 @@ target_include_directories(MetaCling SYSTEM PRIVATE
   ${CLANG_INCLUDE_DIRS}
   ${LLVM_INCLUDE_DIRS}
   ${CLAD_INCLUDE_DIRS}
-  ${CMAKE_SOURCE_DIR}/interpreter/CppInterOp/include
+  ${CMAKE_BINARY_DIR}/etc/cppinterop
 )
 
 target_include_directories(MetaCling PRIVATE
    ${CLING_INCLUDE_DIRS}
    ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/builtins/clib/inc
    ${CMAKE_SOURCE_DIR}/core/clingutils/res
    ${CMAKE_SOURCE_DIR}/core/cont/inc
    ${CMAKE_SOURCE_DIR}/core/foundation/inc
@@ -151,6 +179,46 @@ if(MSVC)
     _Smtx_lock_shared
     _Smtx_unlock_shared
   )
+  if(MSVC_VERSION GREATER_EQUAL 1951)
+    set(cling_exports ${cling_exports}
+      __std_replace_copy_2
+    )
+  endif()
+  # Export the missing std::filesystem symbols (not exposed by MSVCP140.dll)
+  set(cling_exports ${cling_exports}
+    __std_fs_change_permissions
+    __std_fs_close_handle
+    __std_fs_code_page
+    __std_fs_convert_narrow_to_wide
+    __std_fs_convert_wide_to_narrow
+    __std_fs_convert_wide_to_narrow_replace_chars
+    __std_fs_copy_file
+    __std_fs_create_directory
+    __std_fs_create_directory_symbolic_link
+    __std_fs_create_hard_link
+    __std_fs_create_symbolic_link
+    __std_fs_directory_iterator_advance
+    __std_fs_directory_iterator_close
+    __std_fs_directory_iterator_open
+    __std_fs_equivalent
+    __std_fs_get_current_path
+    __std_fs_get_file_attributes_by_handle
+    __std_fs_get_final_path_name_by_handle
+    __std_fs_get_full_path_name
+    __std_fs_get_stats
+    __std_fs_get_temp_path
+    __std_fs_is_junction_from_reparse_data_buffer
+    __std_fs_open_handle
+    __std_fs_read_name_from_reparse_data_buffer
+    __std_fs_read_reparse_data_buffer
+    __std_fs_remove
+    __std_fs_rename
+    __std_fs_resize_file
+    __std_fs_set_current_path
+    __std_fs_set_last_write_time
+    __std_fs_space
+    __std_fs_write_reparse_data_buffer
+  )
 
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(cling_exports ${cling_exports}
@@ -198,6 +266,16 @@ if(MSVC)
       ??0LifetimeHandler@internal@runtime@cling@@QAE@PAVDynamicExprInfo@123@PAVDeclContext@clang@@PBDPAVInterpreter@3@@Z
       ??1LifetimeHandler@internal@runtime@cling@@QAE@XZ
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
+    )
+    if(MSVC_VERSION GREATER_EQUAL 1951)
+      set(cling_exports ${cling_exports}
+        __std_replace_copy_2@20=___std_replace_copy_2@20
+      )
+    endif()
+    set(cling_exports ${cling_exports}
+      __std_fs_close_handle@4=___std_fs_close_handle@4
+      __std_fs_get_final_path_name_by_handle@16=___std_fs_get_final_path_name_by_handle@16
+      __std_fs_open_handle@16=___std_fs_open_handle@16
     )
     if(MSVC_VERSION GREATER_EQUAL 1938 AND MSVC_VERSION LESS 1940)
       set(cling_exports ${cling_exports}

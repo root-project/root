@@ -17,7 +17,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Path.h"
 
-namespace Cpp {
+namespace CppInternal {
 class Dyld;
 class InterpreterCallbacks;
 
@@ -163,13 +163,16 @@ public:
   ///\param [in] permanent - If false, the file can be unloaded later.
   ///\param [in] resolved - Whether libStem is an absolute path or resolved
   ///               from a previous call to DynamicLibraryManager::lookupLibrary
+  ///\param [out] errMsg - If non-null, receives the loader's error text on
+  ///               kLoadLibLoadError instead of it going to stderr.
   ///
   ///\returns kLoadLibSuccess on success, kLoadLibAlreadyLoaded if the library
   /// was already loaded, kLoadLibError if the library cannot be found or any
   /// other error was encountered.
   ///
   LoadLibResult loadLibrary(llvm::StringRef, bool permanent,
-                            bool resolved = false);
+                            bool resolved = false,
+                            std::string* errMsg = nullptr);
 
   void unloadLibrary(llvm::StringRef libStem);
 
@@ -219,6 +222,6 @@ public:
   static bool isSharedLibrary(llvm::StringRef libFullPath,
                               bool* exists = nullptr);
 };
-} // end namespace Cpp
+} // end namespace CppInternal
 
 #endif // CPPINTEROP_DYNAMIC_LIBRARY_MANAGER_H

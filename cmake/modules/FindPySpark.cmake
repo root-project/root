@@ -23,34 +23,36 @@
 
 message(STATUS "Looking for PySpark dependency: Java")
 if(PySpark_FIND_REQUIRED)
-    find_package(Java 1.8 REQUIRED COMPONENTS Runtime)
+    find_package(Java 17 REQUIRED COMPONENTS Runtime)
 else()
-    find_package(Java 1.8 COMPONENTS Runtime)
+    find_package(Java 17 COMPONENTS Runtime)
 endif()
 
 if(Java_FOUND)
-    message(STATUS "Found Java ${Java_JAVA_EXECUTABLE}")
-    message(STATUS "Java version ${Java_VERSION_STRING}")
-
-    # Import pyspark using the main Python executable, print its version and path to the __init__.py file
-    execute_process(
-        COMMAND ${Python3_EXECUTABLE} -c "import pyspark; print(pyspark.__version__)" 
-        RESULT_VARIABLE _PYSPARK_IMPORT_EXIT_STATUS
-        OUTPUT_VARIABLE _PYSPARK_VALUES_OUTPUT
-        ERROR_VARIABLE _PYSPARK_ERROR_VALUE
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-    # Exit status equal to zero means success
-    if(_PYSPARK_IMPORT_EXIT_STATUS EQUAL 0)
-        # Build the version string
-        string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+" PySpark_VERSION_STRING "${_PYSPARK_VALUES_OUTPUT}")
-        # Signal to CMake that the environment could import pyspark and Java runtime was found
-        set(PySpark_DEPENDENCIES_READY TRUE)
+    if(${Java_VERSION_MAJOR} VERSION_GREATER 21)
+        # It would be nice if we could use the standard find_package version range, but the FindJava module does not support that.
+        message(FATAL_ERROR "Currently, there are no Spark versions that support Java version greater than 21. Found Java version ${Java_VERSION_STRING}.")
     else()
-        message(STATUS "Python package 'pyspark' could not be imported with ${Python3_EXECUTABLE}\n"
-                    "${_PYSPARK_ERROR_VALUE}"
+        # Import pyspark using the main Python executable, print its version and path to the __init__.py file
+        execute_process(
+            COMMAND ${Python3_EXECUTABLE} -c "import pyspark; print(pyspark.__version__)" 
+            RESULT_VARIABLE _PYSPARK_IMPORT_EXIT_STATUS
+            OUTPUT_VARIABLE _PYSPARK_VALUES_OUTPUT
+            ERROR_VARIABLE _PYSPARK_ERROR_VALUE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
         )
+
+        # Exit status equal to zero means success
+        if(_PYSPARK_IMPORT_EXIT_STATUS EQUAL 0)
+            # Build the version string
+            string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+" PySpark_VERSION_STRING "${_PYSPARK_VALUES_OUTPUT}")
+            # Signal to CMake that the environment could import pyspark and Java runtime was found
+            set(PySpark_DEPENDENCIES_READY TRUE)
+        else()
+            message(STATUS "Python package 'pyspark' could not be imported with ${Python3_EXECUTABLE}\n"
+                        "${_PYSPARK_ERROR_VALUE}"
+            )
+        endif()
     endif()
 
 find_package_handle_standard_args(PySpark

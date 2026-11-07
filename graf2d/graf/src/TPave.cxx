@@ -331,18 +331,11 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    Int_t shadowcolor = GetShadowColor();
 
    // Draw first pave as a normal filled box
-   if (fBorderSize <= 0 && fillstyle <= 0) return;
-   TBox::PaintBox(x1,y1,x2,y2);
-   if (fBorderSize <= 0) return;
-   if (fBorderSize == 1) {
-      gPad->PaintLine(x1,y1,x2,y1);
-      gPad->PaintLine(x2,y1,x2,y2);
-      gPad->PaintLine(x2,y2,x1,y2);
-      gPad->PaintLine(x1,y2,x1,y1);
+   if (fBorderSize <= 0 && fillstyle <= 0)
       return;
-   }
-
-   if (fBorderSize <= 0 || opt.Contains("nb")) return;
+   TBox::PaintBox(x1,y1,x2,y2, fBorderSize == 1 ? "l" : nullptr);
+   if ((fBorderSize <= 1) || opt.Contains("nb"))
+      return;
 
    Double_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
    Double_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);

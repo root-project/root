@@ -634,12 +634,11 @@ char *rgetline(register struct filepointer *filep)
          bol = p + 1;
       }
    }
-   if (*bol != '#')
-      bol = NULL;
+   bol = NULL;
 done:
    filep->f_p = p;
    filep->f_line = lineno;
-   return(bol);
+   return bol;
 }
 
 /*

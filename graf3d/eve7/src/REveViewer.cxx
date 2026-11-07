@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include <ROOT/REveViewer.hxx>
-
+#include <ROOT/REveCamera.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveSceneInfo.hxx>
@@ -34,9 +34,10 @@ Eve representation of a GL view. In a gist, it's a camera + a list of scenes.
 /// Constructor.
 
 REveViewer::REveViewer(const std::string& n, const std::string& t) :
-   REveElement(n, t)
+   REveElement(n, t),
+   fCamera(nullptr)
 {
-   // SetChildClass(TClass::GetClass<REveSceneInfo>());
+   SetCameraType(REveCamera::kCameraPerspXOZ);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +118,111 @@ void REveViewer::SetAxesType(int at)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fix the volume the 3D axis spans, as {min, max} per coordinate, instead of
+/// following the scene contents. Only the axis and the clip box use it; camera
+/// framing uses the content.
+
+// clang-format off
+void REveViewer::SetAxesBBox(Float_t xmin, Float_t ymin, Float_t zmin,
+                             Float_t xmax, Float_t ymax, Float_t zmax)
+{
+   fAxesBBox[0] = xmin; fAxesBBox[1] = ymin; fAxesBBox[2] = zmin;
+   fAxesBBox[3] = xmax; fAxesBBox[4] = ymax; fAxesBBox[5] = zmax;
+   // clang-format on
+   fHasAxesBBox = kTRUE;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Let the 3D axis follow the scene bounding box again.
+
+void REveViewer::ClearAxesBBox()
+{
+   fHasAxesBBox = kFALSE;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Cap the redraw rate of this viewer, in frames per second; 0 is uncapped.
+
+void REveViewer::SetRenderMaxHz(Float_t hz)
+{
+   fRenderMaxHz = hz < 0.f ? 0.f : (hz > 240.f ? 240.f : hz);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the point the camera looks at and orbits around, either the world
+/// origin or the center of the scene bounding box. Clients reset their camera
+/// when this changes.
+
+void REveViewer::SetCameraCenter(ECameraCenter c)
+{
+   fCameraCenter = c;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the up axis, 0/1/2 for x/y/z; any other value means none.
+
+void REveViewer::SetAxesUpAxis(int a)
+{
+   fAxesUpAxis = (a >= 0 && a <= 2) ? a : -1;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable client-side extrapolation of streamed motion.
+
+void REveViewer::SetExtrapolateMotion(bool x)
+{
+   fExtrapolateMotion = x;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Distance attenuation of the 3D axis labels. 0 keeps a constant pixel size
+/// and 1 scales them like geometry. The clamp is [-4, 8] because inside [0, 1]
+/// the effect is hard to see on a scene viewed from outside. Below 0 the far
+/// labels are the larger ones.
+
+void REveViewer::SetAxesAtten(Float_t a)
+{
+   fAxesAtten = a < -4.f ? -4.f : (a > 8.f ? 8.f : a);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Label size for the 3D axis, as a fraction of viewport height, clamped to
+/// [0.004, 0.05]. Above 0.05 the labels of a box axis start to meet.
+
+void REveViewer::SetAxesFontSize(Float_t s)
+{
+   fAxesFontSize = s < 0.004f ? 0.004f : (s > 0.05f ? 0.05f : s);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Label size for the hover tooltip, as a fraction of viewport height. Same
+/// range as the axis labels; see SetAxesFontSize.
+
+void REveViewer::SetTooltipFontSize(Float_t s)
+{
+   fTooltipFontSize = s < 0.004f ? 0.004f : (s > 0.05f ? 0.05f : s);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Opacity of the plate behind the tooltip and kept annotations. 0 leaves the
+/// text floating on the scene, 1 hides whatever is behind it.
+
+void REveViewer::SetTooltipAlpha(Float_t a)
+{
+   fTooltipAlpha = a < 0.f ? 0.f : (a > 1.f ? 1.f : a);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //
 void REveViewer::SetBlackBackground(bool x)
 {
@@ -125,15 +231,75 @@ void REveViewer::SetBlackBackground(bool x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Multiplier on the client's light intensities, clamped at zero from below.
+
+void REveViewer::SetLightScale(Float_t s)
+{
+   fLightScale = s < 0.f ? 0.f : s;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Tone curve, as EToneMapMode.
+
+void REveViewer::SetToneMapMode(Int_t m)
+{
+   fToneMapMode = m;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Knee position for kToneKnee: colours below this pass through exactly, so
+/// raising it buys fidelity and spends highlight gradient.
+
+void REveViewer::SetToneMapKnee(Float_t k)
+{
+   fToneMapKnee = k < 0.f ? 0.f : (k > 0.99f ? 0.99f : k);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Ask the clients to pick a light scale that keeps the brightest channel just
+/// below white. Only a client can measure that, so it reports its choice back
+/// through SetLightScale().
+
+void REveViewer::AutoTuneLights()
+{
+   ++fAutoTuneSerial;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Stream Camera Info.
 /// Virtual from REveElement.
 int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   fCamera.WriteCoreJson(j, rnr_offset);
+   // fCamera.WriteCoreJson(j, rnr_offset);
 
    j["Mandatory"] = fMandatory;
    j["AxesType"] = fAxesType;
+   j["CameraCenter"] = fCameraCenter;
+   j["ExtrapolateMotion"] = fExtrapolateMotion;
+   j["AxesUpAxis"] = fAxesUpAxis;
+   j["RenderMaxHz"] = fRenderMaxHz;
+   // clang-format off
+   if (fHasAxesBBox)
+      j["AxesBBox"] = {fAxesBBox[0], fAxesBBox[1], fAxesBBox[2],
+                       fAxesBBox[3], fAxesBBox[4], fAxesBBox[5]};
+   else
+      j["AxesBBox"] = nullptr;
+   // clang-format on
+   j["AxesAtten"] = fAxesAtten;
+   j["AxesFontSize"] = fAxesFontSize;
+   j["TooltipFontSize"] = fTooltipFontSize;
+   j["TooltipAlpha"] = fTooltipAlpha;
    j["BlackBg"] = fBlackBackground;
+   j["LightScale"] = fLightScale;
+   j["ToneMapMode"] = fToneMapMode;
+   j["ToneMapKnee"] = fToneMapKnee;
+   j["AutoTuneSerial"] = fAutoTuneSerial;
+   j["fCameraId"] = fCamera ? fCamera->GetElementId() : 0;
+   j["fSyncCam"] = fSyncCamera;
 
    j["UT_PostStream"] = "UT_EveViewerUpdate";
 
@@ -168,77 +334,12 @@ void REveViewer::SetMandatory(bool x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-//  Set base vectors of camera base matrix
-//
-void REveViewer::SetCameraType(ECameraType cameraType)
+/// Set camera reference
+
+void REveViewer::SetCamera(::ROOT::Experimental::REveCamera *cam)
 {
-   switch(cameraType) {
-      case kCameraPerspXOZ:
-         fCamera.Setup(kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)); // XOZ floor
-         break;
-      case kCameraPerspYOZ:
-         fCamera.Setup(kCameraPerspYOZ, "PerspYOZ", REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0));// YOZ floor
-         break;
-      case kCameraPerspXOY:
-         fCamera.Setup(kCameraPerspXOY, "PerspXOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 0.0, 1.0));// XOY floor
-         break;
-      case kCameraOrthoXOY:
-         fCamera.Setup(kCameraOrthoXOY, "OrthoXOY", REveVector(0.0, 0.0, 1.0), REveVector(0.0, 1.0, 0.0));// Looking down  Z axis,  X horz, Y vert
-         break;
-      case kCameraOrthoXOZ:
-         fCamera.Setup(kCameraOrthoXOZ, "OrthoXOZ", REveVector(0.0, -1.0, 0.0), REveVector(0.0, 0.0, 1.0));// Looking along Y axis,  X horz, Z vert
-         break;
-      case kCameraOrthoZOY:
-         fCamera.Setup(kCameraOrthoZOY, "OrthoZOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0));// Looking along X axis,  Z horz, Y vert
-         break;
-      case kCameraOrthoZOX:
-         fCamera.Setup(kCameraOrthoZOX, "OrthoZOX", REveVector(0.0,-1.0, 0.0), REveVector(1.0, 0.0, 0.0)); // Looking along Y axis,  Z horz, X vert
-         break;
-      case kCameraOrthoXnOY:
-         fCamera.Setup(kCameraOrthoXnOY,  "OrthoXnOY", REveVector(0.0, 0.0, -1.0), REveVector(0.0, 1.0, 0.0));// Looking along Z axis, -X horz, Y vert
-         break;
-      case kCameraOrthoXnOZ:
-         fCamera.Setup(kCameraOrthoXnOZ, "OrthoXnOZ", REveVector(0.0, 1.0, 0.0), REveVector(0.0, 0.0, 1.0));// Looking down  Y axis, -X horz, Z vert
-         break;
-      case kCameraOrthoZnOY:
-         fCamera.Setup(kCameraOrthoZnOY, "OrthoZnOY", REveVector(1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)); // Looking down  X axis, -Z horz, Y vert
-         break;
-      case kCameraOrthoZnOX:
-         fCamera.Setup(kCameraOrthoZnOX, "OrthoZnOX", REveVector(0.0, 1.0, 0.0), REveVector(1.0, 0.0, 0.0)); // Looking down  Y axis, -Z horz, X vert
-         break;
-      default:
-         Error("REveViewer::SetCurrentCamera", "invalid camera type");
-         return;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Set camera base matrix
-//
-void REveViewer::REveCamera::Setup( ECameraType type, const std::string& name, REveVector v1, REveVector v2)
-{
-   fType = type;
-   fName = name;
-   fV1 = v1;
-   fV2 = v2;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-//  Stream camera info
-//
-int REveViewer::REveCamera::WriteCoreJson(nlohmann::json &j, Int_t /*rnr_offset*/)
-{
-   nlohmann::json out;
-   out["type"] = fName;
-   out["V1"] = {fV1.fX, fV1.fY, fV1.fZ};
-   out["V2"] = {fV2.fX, fV2.fY, fV2.fZ};
-
-   j["camera"] = out;
-
-   return 0;
+   fCamera = cam;
+   StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -411,29 +512,6 @@ void REveViewerList::SceneDestructing(REveScene* scene)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Show / hide tooltip for various MouseOver events.
-/// Must be called from slots where sender is TGLEventHandler.
-
-void REveViewerList::HandleTooltip()
-{
-   if (fShowTooltip)
-   {
-      // TGLViewer       *glw = dynamic_cast<TGLViewer*>((TQObject*) gTQSender);
-      // TGLEventHandler *glh = (TGLEventHandler*) glw->GetEventHandler();
-      // if (REX::gEve->GetHighlight()->NumChildren() == 1)
-      // {
-      //    TString title(REX::gEve->GetHighlight()->FirstChild()->GetHighlightTooltip());
-      //    if ( ! title.IsNull())
-      //       glh->TriggerTooltip(title);
-      // }
-      // else
-      // {
-      //    glh->RemoveTooltip();
-      // }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set color brightness.
 
 void REveViewerList::SetColorBrightness(Float_t b)
@@ -457,4 +535,72 @@ void REveViewerList::SwitchColorSet()
       //    c->UseDarkColorSet();
    // }
    // EndChanges on EveWorld;
+}
+
+void REveViewer::SetCameraByElementId(ElementId_t cameraId)
+{
+   auto element = gEve->FindElementById(cameraId);
+   auto cam = dynamic_cast<REveCamera *>(element);
+
+   if (cam) {
+      fCamera = cam;
+      StampObjProps();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set camera by type (backward compatibility with old API)
+
+void REveViewer::SetCameraType(REveCamera::ECameraType type)
+{
+   for (auto &cam : fCameraList) {
+      if (cam->GetType() == type) {
+         fCamera = cam;
+      }
+   }
+
+   fCamera = CreateCamera(type);
+   fCameraList.push_back(fCamera);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Create Camera Based on Type Enum (Lines 161-190)
+REveCamera *REveViewer::CreateCamera(ECameraType type)
+{
+   REveCamera *cam = nullptr;
+
+   struct CameraDef {
+      REveCamera::ECameraType type;
+      const char *name;
+      REveVector v1;
+      REveVector v2;
+   };
+
+   static const CameraDef predefinedCameras[] = {
+      // Perspective cameras
+      {REveCamera::kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraPerspYOZ, "PerspYOZ", REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0)},
+      {REveCamera::kCameraPerspXOY, "PerspXOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      // Orthographic cameras
+      {REveCamera::kCameraOrthoXOY, "OrthoXOY", REveVector(0.0, 0.0, 1.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoXOZ, "OrthoXOZ", REveVector(0.0, -1.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      {REveCamera::kCameraOrthoZOY, "OrthoZOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoZOX, "OrthoZOX", REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0)},
+      // Orthographic negative camera
+      {REveCamera::kCameraOrthoXnOY, "OrthoXnOY", REveVector(0.0, 0.0, -1.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoXnOZ, "OrthoXnOZ", REveVector(0.0, 1.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      {REveCamera::kCameraOrthoZnOY, "OrthoZnOY", REveVector(1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoZnOX, "OrthoZnOX", REveVector(0.0, 1.0, 0.0), REveVector(1.0, 0.0, 0.0)}};
+
+   // Create and add all predefined cameras
+   for (const auto &camDef : predefinedCameras) {
+      if (type == camDef.type) {
+         cam = new REveCamera(camDef.name);
+         gEve->GetCameras()->AddElement(cam);
+         cam->Setup(camDef.type, camDef.name, camDef.v1, camDef.v2);
+      }
+   }
+
+   return cam;
 }

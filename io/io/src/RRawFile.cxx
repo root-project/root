@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RRawFile.hxx>
 #ifdef _WIN32
 #include <ROOT/RRawFileWin.hxx>
@@ -20,6 +20,7 @@
 #include "TError.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "ROOT/InternalIOUtils.hxx"
 
 #include <algorithm>
 #include <cctype> // for towlower
@@ -68,15 +69,16 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
 #ifdef _WIN32
       return std::unique_ptr<RRawFile>(new RRawFileWin(url, options));
 #else
+      // We're assuming the input url is null-terminated in the next call
+      if (auto xurl = ROOT::Internal::GetEOSRedirectedXRootURL(url))
+         return Create(*xurl, options);
       return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
    }
-   if (transport == "http" || transport == "https" ||
-       transport == "root" || transport == "roots" ) {
-      std::string plgclass = transport.compare( 0, 4, "http" ) == 0 ?
-                             "RRawFileDavix" : "RRawFileNetXNG";
-      if (TPluginHandler *h = gROOT->GetPluginManager()->
-          FindHandler("ROOT::Internal::RRawFile", std::string(url).c_str())) {
+   if (transport == "http" || transport == "https" || transport == "root" || transport == "roots") {
+      std::string plgclass = transport.compare(0, 4, "http") == 0 ? "RRawFileDavix" : "RRawFileNetXNG";
+      if (TPluginHandler *h =
+             gROOT->GetPluginManager()->FindHandler("ROOT::Internal::RRawFile", std::string(url).c_str())) {
          if (h->LoadPlugin() == 0) {
             return std::unique_ptr<RRawFile>(reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options)));
          }
@@ -94,6 +96,7 @@ void ROOT::Internal::RRawFile::EnsureOpen()
 
    OpenImpl();
    fIsOpen = true;
+   SetDiscourageReadAheadImpl(!fIsBuffering);
 }
 
 void ROOT::Internal::RRawFile::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
@@ -202,6 +205,8 @@ void ROOT::Internal::RRawFile::SetBuffering(bool value)
    fIsBuffering = value;
    if (!fIsBuffering)
       fBufferSpace.reset();
+   if (fIsOpen)
+      SetDiscourageReadAheadImpl(!fIsBuffering);
 }
 
 bool ROOT::Internal::RRawFile::Readln(std::string &line)

@@ -9,7 +9,7 @@
 #define CaloCellLinkContainer_p2_h
 class CaloCellLinkContainer_p2;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include <string>
 

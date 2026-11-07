@@ -442,7 +442,6 @@ void TMVA::MethodLikelihood::Train( void )
       if ((*fPDFSig)[ivar]->GetSmoothedHist() != 0) (*fHistSig_smooth)[ivar] = (*fPDFSig)[ivar]->GetSmoothedHist();
       if ((*fPDFBgd)[ivar]->GetSmoothedHist() != 0) (*fHistBgd_smooth)[ivar] = (*fPDFBgd)[ivar]->GetSmoothedHist();
    }
-   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -668,8 +667,7 @@ void  TMVA::MethodLikelihood::WriteWeightsToStream( TFile& ) const
 void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
 {
    TString pname = "PDF_";
-   Bool_t addDirStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
+   TDirectory::TContext dirCtx{nullptr}; // Don't register histograms to current directory
    UInt_t nvars=0;
    gTools().ReadAttr(wghtnode, "NVariables",nvars);
    void* descnode = gTools().GetChild(wghtnode);
@@ -688,7 +686,6 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
       (*(*fPDFBgd)[ivar]).ReadXML(pdfnode);
       descnode = gTools().GetNextChild(descnode);
    }
-   TH1::AddDirectory(addDirStatus);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -698,8 +695,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
 void  TMVA::MethodLikelihood::ReadWeightsFromStream( std::istream & istr )
 {
    TString pname = "PDF_";
-   Bool_t addDirStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
+   TDirectory::TContext dirCtx{nullptr}; // Don't register histograms to current directory
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
       Log() << kDEBUG << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
@@ -711,7 +707,6 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( std::istream & istr )
       istr >> *(*fPDFSig)[ivar];
       istr >> *(*fPDFBgd)[ivar];
    }
-   TH1::AddDirectory(addDirStatus);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -720,13 +715,11 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( std::istream & istr )
 void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
 {
    TString pname = "PDF_";
-   Bool_t addDirStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
+   TDirectory::TContext dirCtx{nullptr}; // Don't register histograms to current directory
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
       (*fPDFSig)[ivar] = (TMVA::PDF*)rf.Get( TString::Format( "PDF_%s_S", GetInputVar( ivar ).Data() ) );
       (*fPDFBgd)[ivar] = (TMVA::PDF*)rf.Get( TString::Format( "PDF_%s_B", GetInputVar( ivar ).Data() ) );
    }
-   TH1::AddDirectory(addDirStatus);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

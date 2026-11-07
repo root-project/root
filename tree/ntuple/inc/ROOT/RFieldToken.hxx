@@ -1,5 +1,4 @@
 /// \file ROOT/RFieldToken.hxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2025-03-19
 
@@ -22,11 +21,9 @@ namespace ROOT {
 class REntry;
 class RNTupleModel;
 
-namespace Experimental {
 namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
-} // namespace Experimental
 
 // clang-format off
 /**
@@ -40,7 +37,7 @@ It can be used for fast indexing in REntry's methods, e.g. REntry::BindValue(). 
 class RFieldToken {
    friend class REntry;
    friend class RNTupleModel;
-   friend class Experimental::Detail::RRawPtrWriteEntry;
+   friend class Detail::RRawPtrWriteEntry;
 
    std::size_t fIndex = 0;                      ///< The index of the field (top-level or registered subfield)
    std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used

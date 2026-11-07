@@ -6,12 +6,14 @@
 
 ROOT_ADD_GTEST(testTProfile2Poly test_tprofile2poly.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTFractionFitter test_TFractionFitter.cxx LIBRARIES Hist MathCore)
+ROOT_ADD_GTEST(testTGraphErrorsPolFit test_TGraphErrors_polFit.cxx LIBRARIES Hist MathCore)
 ROOT_ADD_GTEST(testTH2PolyBinError test_TH2Poly_BinError.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH2PolyAdd test_TH2Poly_Add.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH2PolyGetNumberOfBins test_TH2Poly_GetNumberOfBins.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTHn THn.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH1 test_TH1.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTH2 test_TH2.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testRebin2D test_rebin2D.cxx LIBRARIES Hist MathCore)
 ROOT_ADD_GTEST(testTH3 test_TH3.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTHStack test_THStack.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testProject3Dname test_Project3D_name.cxx LIBRARIES Hist)
@@ -32,10 +34,7 @@ ROOT_ADD_GTEST(testTF1Simple test_tf1_simple.cxx LIBRARIES Hist RIO)
 ROOT_ADD_GTEST(testTF1DrawCopy test_tf1_drawcopy.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(test_TProfile test_TProfile.cxx LIBRARIES Hist)
 
-if(fftw3)
-  ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
-endif()
-
+ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTF2 test_tf2.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTF3 test_tf3.cxx LIBRARIES Hist)
 
@@ -59,3 +58,5 @@ ROOT_ADD_TEST(test-tdirectoryfile_destructor_segfault COMMAND tdirectoryfile_des
 
 # Test for https://github.com/root-project/root/issues/6658
 ROOT_ADD_GTEST(test_projections test_projections.cxx LIBRARIES Hist)
+
+ROOT_ADD_GTEST(test_th1d_tpad_buildlegend test_th1d_tpad_buildlegend.cxx LIBRARIES Hist Gpad)

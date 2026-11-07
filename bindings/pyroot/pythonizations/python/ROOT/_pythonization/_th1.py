@@ -11,6 +11,19 @@
 r"""
 \pythondoc TH1
 
+## Drawing histograms in Python
+
+Drawing histograms is done via TH1::Draw(). Note that in interactive scripts,TCanvas::Draw() can be
+made blocking to interactively show it on the screen before continuing execution.
+\code{.py}
+c = ROOT.TCanvas()
+h = ROOT.TH1D("h1", "h1", 100, -5, 5)
+h.FillRandom("gaus", 10000)
+h.Draw("")
+
+c.Draw(block=True)
+\endcode
+
 ## Fitting histograms in Python
 
 One-dimensional histograms can be fit in [Python](https://root.cern/manual/python) with a similar syntax as in C++.
@@ -166,13 +179,13 @@ Further examples can be found in the tutorials:
 \endpythondoc
 """
 
-from ROOT._pythonization._memory_utils import (
+from . import pythonization
+from ._memory_utils import (
     _SetDirectory_SetOwnership,
     inject_clone_releasing_ownership,
     inject_constructor_releasing_ownership,
 )
-
-from . import pythonization
+from ._uhi import _add_plotting_features, _add_serialization_features
 
 # Multiplication by constant
 
@@ -241,8 +254,6 @@ _th1_derived_classes_to_pythonize = [
 for klass in _th1_derived_classes_to_pythonize:
     pythonization(klass)(inject_constructor_releasing_ownership)
 
-    from ROOT._pythonization._uhi import _add_plotting_features
-
     # Add UHI plotting features
     pythonization(klass)(_add_plotting_features)
 
@@ -252,12 +263,15 @@ for klass in _th1_derived_classes_to_pythonize:
         klass._Fill = klass.Fill
         klass.Fill = _FillWithArrayTH1
 
+    # Add serialization features
+    pythonization(klass)(_add_serialization_features)
+
 
 @pythonization("TH1")
 def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
-    from ROOT._pythonization._uhi import _add_indexing_features
+    from ._uhi import _add_indexing_features
 
     # Support hist *= scalar
     klass.__imul__ = _imul
@@ -269,3 +283,4 @@ def pythonize_th1(klass):
     _add_indexing_features(klass)
 
     inject_clone_releasing_ownership(klass)
+    klass.Fit.__release_gil__ = True

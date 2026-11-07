@@ -25,8 +25,11 @@
 #else
 #include <unistd.h>
 #endif
+#include <cstdlib>
 #include <string>
 #include <iostream>
+#include "TClassEdit.h"
+#include "TError.h"
 #include "TInterpreter.h"
 
 //////////////////////////
@@ -154,6 +157,18 @@ std::string &JupyROOTExecutorHandler::GetStderr()
 
 JupyROOTExecutorHandler *JupyROOTExecutorHandler_ptr = nullptr;
 
+// Report exceptions that escape the interpreted code like TRint does at the
+// ROOT prompt (see TRint::HandleTermInput), instead of swallowing them
+// silently (ROOT-10589).
+static void ReportCaughtException(const char *location, const std::exception &e)
+{
+   int err = 0;
+   char *demangledType_c = TClassEdit::DemangleTypeIdName(typeid(e), err);
+   const char *demangledType = err ? "<UNKNOWN>" : demangledType_c;
+   ::Error(location, "%s caught: %s", demangledType, e.what());
+   free(demangledType_c);
+}
+
 bool JupyROOTExecutorImpl(const char *code)
 {
    auto status = false;
@@ -167,8 +182,10 @@ bool JupyROOTExecutorImpl(const char *code)
          gInterpreter->ProcessLine(".@");
          gInterpreter->ProcessLine("cerr << \"Unbalanced braces. This cell was not processed.\" << endl;");
       }
+   } catch (std::exception &e) {
+      ReportCaughtException("JupyROOTExecutor", e);
    } catch (...) {
-      status = true;
+      ::Error("JupyROOTExecutor", "Exception caught!");
    }
 
    return status;
@@ -181,8 +198,10 @@ bool JupyROOTDeclarerImpl(const char *code)
       if (gInterpreter->Declare(code)) {
          status = true;
       }
+   } catch (std::exception &e) {
+      ReportCaughtException("JupyROOTDeclarer", e);
    } catch (...) {
-      status = true;
+      ::Error("JupyROOTDeclarer", "Exception caught!");
    }
    return status;
 }

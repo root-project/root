@@ -1252,29 +1252,32 @@ HistFactory::ShapeFactor ConfigParser::MakeShapeFactor( TXMLNode* node ) {
 
     else if( attrName == TString( "Name" ) ) {
       shapeFactor.SetName( attrVal );
-    }
-    else if( attrName == TString( "Const" ) ) {
-      shapeFactor.SetConstant( CheckTrueFalse(attrVal, "ShapeFactor" ) );
-    }
-
-    else if( attrName == TString( "HistoName" ) ) {
-      shapeFactor.SetHistoName( attrVal );
-    }
-
-    else if( attrName == TString( "InputFile" ) ) {
-      ShapeInputFile = attrVal;
+    } else if (attrName == TString("Val")) {
+       shapeFactor.SetVal(toDouble(attrVal));
+    } else if (attrName == TString("Low")) {
+       shapeFactor.SetLow(toDouble(attrVal));
+    } else if (attrName == TString("High")) {
+       shapeFactor.SetHigh(toDouble(attrVal));
+    } else if (attrName == TString("Const")) {
+       shapeFactor.SetConstant(CheckTrueFalse(attrVal, "ShapeFactor"));
     }
 
-    else if( attrName == TString( "HistoPath" ) ) {
-      ShapeInputPath = attrVal;
+    else if (attrName == TString("HistoName")) {
+       shapeFactor.SetHistoName(attrVal);
+    }
+
+    else if (attrName == TString("InputFile")) {
+       ShapeInputFile = attrVal;
+    }
+
+    else if (attrName == TString("HistoPath")) {
+       ShapeInputPath = attrVal;
     }
 
     else {
-      cxcoutEHF << "Error: Encountered Element in ShapeFactor with unknown name: "
-      << attrName << std::endl;
-      throw hf_exc();
+       cxcoutEHF << "Error: Encountered Element in ShapeFactor with unknown name: " << attrName << std::endl;
+       throw hf_exc();
     }
-
   }
 
   if( shapeFactor.GetName().empty() ) {

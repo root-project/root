@@ -26,6 +26,7 @@ public:
    long double Int2ext(long double Value, long double Upper, long double Lower) const;
    long double Ext2int(long double Value, long double Upper, long double Lower, const MnMachinePrecision &) const;
    long double DInt2Ext(long double Value, long double Upper, long double Lower) const;
+   long double D2Int2Ext(long double Value, long double Upper, long double Lower) const;
    long double DExt2Int(long double Value, long double Upper, long double Lower) const;
 };
 
@@ -45,6 +46,9 @@ public:
 
    // derivative of transformation from internal to external
    long double DInt2Ext(long double Value, long double Lower) const;
+
+   // second derivative of transformation from internal to external
+   long double D2Int2Ext(long double Value, long double Lower) const;
 
    // derivative of transformation from external to internal
    long double DExt2Int(long double Value, long double Lower) const;
@@ -66,6 +70,9 @@ public:
 
    // derivative of transformation from internal to external
    long double DInt2Ext(long double Value, long double Upper) const;
+
+   // second derivative of transformation from internal to external
+   long double D2Int2Ext(long double Value, long double Upper) const;
 
    // derivative of transformation from external to internal
    long double DExt2Int(long double Value, long double Upper) const;

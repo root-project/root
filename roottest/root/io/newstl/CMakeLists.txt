@@ -30,12 +30,10 @@ ROOTTEST_ADD_TEST(run
                   FIXTURES_REQUIRED root-io-newstl-test-fixture
                   FIXTURES_SETUP root-io-newstl-run-fixture)
 
-# failing tests, crashes ROOT, was disabled in Makefile
 ROOTTEST_ADD_TEST(nolib
                   MACRO readNoLib.C
                   MACROARG "\"vector.root\""
                   OUTREF stlNoLibTest.ref
-                  WILLFAIL
                   FIXTURES_REQUIRED root-io-newstl-run-fixture)
 
 ROOTTEST_COMPILE_MACRO(ComplexTest.h

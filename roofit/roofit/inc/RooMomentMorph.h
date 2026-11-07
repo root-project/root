@@ -70,8 +70,8 @@ protected:
     const RooRealVar* frac(Int_t i ) const ;
     void calculateFractions(const RooMomentMorph& self, bool verbose=true) const;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
-  mutable RooArgSet* _curNormSet = nullptr; //! Current normalization set
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
+  mutable RooArgSet* _curNormSet = nullptr; ///<! Current normalization set
 
   friend class CacheElem ; // Cache needs to be able to clear _norm pointer
 

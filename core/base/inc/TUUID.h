@@ -42,7 +42,7 @@ class TDatime;
 class TUUID {
 
 protected:
-   UInt_t    fUUIDIndex;             //!index in the list of UUIDs in TProcessUUID
+   UInt_t    fUUIDIndex;             ///<!index in the list of UUIDs in TProcessUUID
    UInt_t    fTimeLow;               // 60 bit time, lower 32 bits
    UShort_t  fTimeMid;               // middle 16 time bits
    UShort_t  fTimeHiAndVersion;      // high 12 time bits + 4 UUID version bits
@@ -63,10 +63,15 @@ protected:
    void  GetRandomInfo(UChar_t seed[16]);
    void  SetFromString(const char *uuid_str);
 
+   struct TV4Marker {};
+   explicit TUUID(TV4Marker);
+
 public:
    TUUID();
    TUUID(const char *uuid_str);
    virtual ~TUUID();
+
+   static TUUID UUIDv4();
 
    const char  *AsString() const;
    Int_t        Compare(const TUUID &u) const;
@@ -100,5 +105,9 @@ inline Bool_t operator==(const TUUID &u1, const TUUID &u2)
 inline Bool_t operator!=(const TUUID &u1, const TUUID &u2)
 { return !(u1 == u2); }
 
+inline Bool_t operator<(const TUUID &u1, const TUUID &u2)
+{
+   return u1.Compare(u2) == -1;
+}
 
 #endif

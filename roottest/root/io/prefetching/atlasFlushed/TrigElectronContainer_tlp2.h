@@ -9,7 +9,7 @@
 #define TrigElectronContainer_tlp2_h
 class TrigElectronContainer_tlp2;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigElectronContainer_p2.h"
 #include "TrigElectron_p2.h"

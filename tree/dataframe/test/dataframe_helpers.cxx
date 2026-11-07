@@ -9,8 +9,11 @@
 
 #include <algorithm>
 #include <deque>
-#include <vector>
+#include <iomanip>
+#include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "gtest/gtest.h"
 
@@ -810,6 +813,236 @@ TEST(RDFHelpers, Cleanup_After_Exception)
       << "An exception should have been thrown during the event loop.";
    EXPECT_EQ(SimpleActionHelper::fgRefVal, testVal)
       << "The Finalize method should have changed the value of testVal during the post-exception cleanup." << std::endl;
+}
+
+struct SimpleExecLoopAction : public ROOT::Internal::RDF::ExecLoopTrait<SimpleExecLoopAction> {
+   std::vector<double> fValues;
+
+   template <typename... ColumnTypes>
+   void ExecSingle(unsigned int, const ColumnTypes &...columnValues)
+   {
+      fValues.emplace_back(columnValues...);
+   }
+};
+
+TEST(RDFHelpers, ExecLoopTrait)
+{
+   SimpleExecLoopAction execLoop;
+
+   execLoop.Exec(/*slot=*/0, 42.0);
+   ASSERT_EQ(execLoop.fValues.size(), 1);
+   EXPECT_EQ(execLoop.fValues.front(), 42.0);
+   execLoop.fValues.clear();
+
+   // One-dimensional containers are processed in order.
+   std::vector<double> v = {43.0};
+   execLoop.Exec(/*slot=*/0, v);
+   EXPECT_EQ(execLoop.fValues.size(), 1);
+   EXPECT_EQ(execLoop.fValues, v);
+   execLoop.fValues.clear();
+
+   v = {44.0, 45.0};
+   execLoop.Exec(/*slot=*/0, v);
+   EXPECT_EQ(execLoop.fValues.size(), 2);
+   EXPECT_EQ(execLoop.fValues, v);
+   execLoop.fValues.clear();
+
+   v = {};
+   execLoop.Exec(/*slot=*/0, v);
+   EXPECT_TRUE(execLoop.fValues.empty());
+   execLoop.fValues.clear();
+
+   // Multi-dimensional containers are traversed recursively.
+   std::vector<std::vector<double>> v2 = {{1.0}, {}, {2.0, 3.0}, {4.0}};
+   execLoop.Exec(/*slot=*/0, v2);
+   EXPECT_EQ(execLoop.fValues.size(), 4);
+   v = {1.0, 2.0, 3.0, 4.0};
+   EXPECT_EQ(execLoop.fValues, v);
+   execLoop.fValues.clear();
+
+   std::vector<std::vector<std::vector<double>>> v3 = {{{1.0}, {2.0}}, {}, {{3.0, 4.0}}, {{5.0}}};
+   execLoop.Exec(/*slot=*/0, v3);
+   EXPECT_EQ(execLoop.fValues.size(), 5);
+   v = {1.0, 2.0, 3.0, 4.0, 5.0};
+   EXPECT_EQ(execLoop.fValues, v);
+   execLoop.fValues.clear();
+}
+
+struct ExecLoopActionTwo : public ROOT::Internal::RDF::ExecLoopTrait<ExecLoopActionTwo> {
+   std::vector<std::pair<double, double>> fValues;
+
+   template <typename... ColumnTypes>
+   void ExecSingle(unsigned int, const ColumnTypes &...columnValues)
+   {
+      fValues.emplace_back(columnValues...);
+   }
+};
+
+TEST(RDFHelpers, ExecLoopTraitTwo)
+{
+   ExecLoopActionTwo execLoop;
+
+   execLoop.Exec(/*slot=*/0, 42.0, 43.0);
+   ASSERT_EQ(execLoop.fValues.size(), 1);
+   EXPECT_EQ(execLoop.fValues.front(), std::make_pair(42.0, 43.0));
+   execLoop.fValues.clear();
+
+   // Two containers are traversed in sync.
+   std::vector<double> v1 = {1.0, 2.0};
+   std::vector<double> v2 = {3.0, 4.0};
+   execLoop.Exec(/*slot=*/0, v1, v2);
+   ASSERT_EQ(execLoop.fValues.size(), 2);
+   EXPECT_EQ(execLoop.fValues.at(0), std::make_pair(1.0, 3.0));
+   EXPECT_EQ(execLoop.fValues.at(1), std::make_pair(2.0, 4.0));
+   execLoop.fValues.clear();
+
+   // A scalar is broadcasted to match the containers.
+   execLoop.Exec(/*slot=*/0, v1, 42.0);
+   ASSERT_EQ(execLoop.fValues.size(), 2);
+   EXPECT_EQ(execLoop.fValues.at(0), std::make_pair(1.0, 42.0));
+   EXPECT_EQ(execLoop.fValues.at(1), std::make_pair(2.0, 42.0));
+   execLoop.fValues.clear();
+
+   execLoop.Exec(/*slot=*/0, 42.0, v2);
+   ASSERT_EQ(execLoop.fValues.size(), 2);
+   EXPECT_EQ(execLoop.fValues.at(0), std::make_pair(42.0, 3.0));
+   EXPECT_EQ(execLoop.fValues.at(1), std::make_pair(42.0, 4.0));
+   execLoop.fValues.clear();
+
+   // Two nested containers are traversed in sync.
+   std::vector<std::vector<double>> v3 = {{1.0, 2.0}, {3.0}};
+   std::vector<std::vector<double>> v4 = {{4.0, 5.0}, {6.0}};
+   execLoop.Exec(/*slot=*/0, v3, v4);
+   ASSERT_EQ(execLoop.fValues.size(), 3);
+   EXPECT_EQ(execLoop.fValues.at(0), std::make_pair(1.0, 4.0));
+   EXPECT_EQ(execLoop.fValues.at(1), std::make_pair(2.0, 5.0));
+   EXPECT_EQ(execLoop.fValues.at(2), std::make_pair(3.0, 6.0));
+   execLoop.fValues.clear();
+
+   // Broadcasting works recursively in multiple dimensions.
+   execLoop.Exec(/*slot=*/0, v3, 42.0);
+   ASSERT_EQ(execLoop.fValues.size(), 3);
+   EXPECT_EQ(execLoop.fValues.at(0), std::make_pair(1.0, 42.0));
+   EXPECT_EQ(execLoop.fValues.at(1), std::make_pair(2.0, 42.0));
+   EXPECT_EQ(execLoop.fValues.at(2), std::make_pair(3.0, 42.0));
+   execLoop.fValues.clear();
+
+   execLoop.Exec(/*slot=*/0, v1, v3);
+   ASSERT_EQ(execLoop.fValues.size(), 3);
+   EXPECT_EQ(execLoop.fValues.at(0), std::make_pair(1.0, 1.0));
+   EXPECT_EQ(execLoop.fValues.at(1), std::make_pair(1.0, 2.0));
+   EXPECT_EQ(execLoop.fValues.at(2), std::make_pair(2.0, 3.0));
+   execLoop.fValues.clear();
+}
+
+TEST(RDFHelpers, ExecLoopTraitInvalid)
+{
+   ExecLoopActionTwo execLoop;
+
+   // The number of elements has to match for all columns.
+   std::vector<double> v0;
+   std::vector<double> v1 = {1.0};
+   std::vector<double> v2 = {2.0, 3.0};
+   EXPECT_THROW(execLoop.Exec(/*slot=*/0, v0, v1), std::runtime_error);
+   EXPECT_THROW(execLoop.Exec(/*slot=*/0, v0, v2), std::runtime_error);
+   EXPECT_THROW(execLoop.Exec(/*slot=*/0, v2, v1), std::runtime_error);
+
+   // For multiple dimensions, the number of elements has to match recursively.
+   std::vector<std::vector<double>> v4 = {{1.0}, {2.0}};
+   std::vector<std::vector<double>> v5 = {{3.0, 4.0}};
+   std::vector<std::vector<double>> v6 = {{3.0, 4.0}, {}};
+   EXPECT_THROW(execLoop.Exec(/*slot=*/0, v4, v5), std::runtime_error);
+   EXPECT_THROW(execLoop.Exec(/*slot=*/0, v4, v6), std::runtime_error);
+   EXPECT_THROW(execLoop.Exec(/*slot=*/0, v6, v5), std::runtime_error);
+}
+
+TEST(RDFHelpers, ProgressBarRestorePrecision)
+{
+   // Regression test for https://github.com/root-project/root/issues/21165
+   std::vector<double> values{13922869, 13599, 277, 40003186, 68.5966, 999.008, 40107.1};
+   // To ensure that all values above are printed with full precision
+   std::cout << std::setprecision(8);
+
+   struct StreamRAII{
+      std::streambuf* fOldStreamBuf;
+      std::ostringstream fStrBuf;
+      StreamRAII() : fOldStreamBuf(std::cout.rdbuf()) {
+         std::cout.rdbuf(fStrBuf.rdbuf());
+      }
+      ~StreamRAII() {
+         std::cout.rdbuf(fOldStreamBuf);
+      }
+   };
+
+   {
+      StreamRAII raii;
+      for (auto v : values)
+         std::cout << v << ", ";
+      EXPECT_EQ(raii.fStrBuf.str(), "13922869, 13599, 277, 40003186, 68.5966, 999.008, 40107.1, ");
+   }
+
+   {
+      // Just to run with the progress bar activated
+      StreamRAII raii;
+      ROOT::RDF::RNode d = ROOT::RDataFrame(1);
+      ROOT::RDF::Experimental::AddProgressBar(d);
+      d.Count().GetValue();
+   }
+
+   {
+      // Values after running with the progress bar should be printed the same way as before
+      StreamRAII raii;
+      for (auto v : values)
+         std::cout << v << ", ";
+      EXPECT_EQ(raii.fStrBuf.str(), "13922869, 13599, 277, 40003186, 68.5966, 999.008, 40107.1, ");
+   }
+}
+
+// Regression test for the final statistics line of the RDF progress bar. The events/s figure was
+// computed by dividing the event count by a duration that had already been truncated to whole
+// seconds, so an event loop shorter than one second divided by zero and printed `inf evt/s`.
+TEST(RDFHelpers, ProgressBarFinalRateIsFinite)
+{
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   {
+      ROOT::TestSupport::FileRaii raii{"fh_rate.root"};
+      auto d_write = ROOT::RDataFrame(100).Define("x", ret42).Snapshot("tree", raii.GetPath(), {"x"});
+      ROOT::RDF::RNode d = ROOT::RDataFrame("tree", raii.GetPath());
+      ROOT::RDF::Experimental::AddProgressBar(d);
+      d.Count().GetValue();
+   }
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   const std::string out = strCout.str();
+   ASSERT_NE(out.find("evt/s"), std::string::npos) << "no final statistics line was printed";
+   EXPECT_EQ(out.find("inf"), std::string::npos) << "the events/s figure is not finite: " << out;
+   EXPECT_EQ(out.find("nan"), std::string::npos) << "the events/s figure is not a number: " << out;
+}
+
+// Regression test for #15323: RDF Progress bar final stats report actual
+// processed events even when Range is applied
+TEST(RDFHelpers, ProgressBarFinalEventsWithRange)
+{
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   {
+      ROOT::TestSupport::FileRaii raii{"fh_range.root"};
+      auto d_write = ROOT::RDataFrame(100).Define("x", ret42).Snapshot("tree", raii.GetPath(), {"x"});
+      ROOT::RDF::RNode d = ROOT::RDataFrame("tree", raii.GetPath());
+      auto d_range = d.Range(20);
+      ROOT::RDF::Experimental::AddProgressBar(d_range);
+      d_range.Count().GetValue();
+   }
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   const std::string out = strCout.str();
+   EXPECT_NE(out.find("processed events: 20"), std::string::npos)
+      << "the final statistics line should report 20 events: " << out;
+   EXPECT_EQ(out.find("processed events: 100"), std::string::npos)
+      << "the final statistics line should not report 100 events: " << out;
 }
 
 // The code below is a unit test for a function called `ProgressHelper_Existence_MT` in the `RDFHelpers` class.

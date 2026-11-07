@@ -12,24 +12,42 @@
 #include "TString.h" // Printf
 
 #include <algorithm>
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 namespace ROOT {
 
 namespace RDF {
 
-void RCutFlowReport::Print()
+void RCutFlowReport::Print() const
 {
+   auto print = AsString();
+   std::cout << print;
+}
+
+std::string RCutFlowReport::AsString() const
+{
+   std::stringstream stringRepresentation;
+
    const auto allEntries = fCutInfos.empty() ? 0ULL : fCutInfos.begin()->GetAll();
    for (auto &&ci : fCutInfos) {
       const auto &name = ci.GetName();
       const auto pass = ci.GetPass();
       const auto all = ci.GetAll();
       const auto eff = ci.GetEff();
-      const auto cumulativeEff = 100.f * float(pass) / float(allEntries);
-      Printf("%-10s: pass=%-10lld all=%-10lld -- eff=%3.2f %% cumulative eff=%3.2f %%", name.c_str(), pass, all, eff, cumulativeEff);
+      const auto cumulativeEff = 100.f * double(pass) / double(allEntries);
+
+      std::string stringtodisplay = Form("%-20s: pass=%-10lld all=%-10lld -- eff=%3.2f %% cumulative eff=%3.2f %%",
+                                         name.c_str(), pass, all, eff, cumulativeEff);
+
+      stringRepresentation << stringtodisplay;
+
+      stringRepresentation << "\n";
    }
+   return stringRepresentation.str();
 }
+
 const TCutInfo &RCutFlowReport::operator[](std::string_view cutName)
 {
    if (cutName.empty()) {

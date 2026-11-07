@@ -3,6 +3,10 @@
 #define def(x) i##x(x),f##x(x/3.0)
 
 #include "TNamed.h"
+
+#include <iostream>
+using std::cout;
+using std::endl;
  
 class simple : public TNamed {
 private:
@@ -37,7 +41,7 @@ public:
 #include "TStreamerInfo.h"
 #include "TStreamerInfoActions.h"
 #include "TVirtualCollectionIterators.h"
-#include "Riostream.h"
+#include <iostream>
 #ifdef __ROOTCLING__
 #pragma link C++ class vector<simple*>+;
 #endif

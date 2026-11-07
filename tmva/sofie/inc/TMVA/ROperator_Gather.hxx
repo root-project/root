@@ -26,10 +26,12 @@ private:
    std::vector<Dim> fShapeX;
    std::vector<Dim> fShapeIndices;
    std::vector<Dim> fShapeY;
+   std::vector<Dim> fOutputShapeData;
 
    std::vector<int64_t> fIndices;  // indices vector in case they are known at initialization
 
    std::string fType;
+
 
 public:
    ROperator_Gather(){}
@@ -39,23 +41,14 @@ public:
          fOutputTensorNames = { fNY };
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = input;
-      return ret;
-   }
-
    void Initialize(RModel& model) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA SOFIE Gather Op Input Tensor " + fNX + " is not found in model");
       }
       fShapeX = model.GetDimTensorShape(fNX);
       if (model.Verbose())
-         std::cout << "Gather - initial shape " << ConvertShapeToString(fShapeX) << " shape of indices "
-               << ConvertShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
+         std::cout << "Gather - initial shape " << ConvertDimShapeToString(fShapeX) << " shape of indices "
+               << ConvertDimShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
       //  fShapeIndices can be  dynamic
       fShapeIndices = model.GetDimTensorShape(fNIndices);
       size_t q = fShapeIndices.size();
@@ -70,25 +63,31 @@ public:
       // case indices tensor is initialized
       if (model.IsInitializedTensor(fNIndices)) {
           // empty shape Indices is a scalar value for the indices
+         bool hasNegativeIndex = false;
          size_t indicesLength = ConvertShapeToLength(model.GetTensorShape(fNIndices));
-         int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
-         //flag index tensor as not writable (not sure this is needed since index tensor might be used in generated code)
-         model.SetNotWritableInitializedTensor(fNIndices);
+         int64_t* data = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
+         // copy in a vector since we may need to update the values in case of negative indices
+         fIndices =std::vector<int64_t>(data, data + indicesLength);
          // update indices data in case of negative dim values
          for (size_t i = 0; i < indicesLength; i++) {
             // move this at generation time?
             if (!fShapeX[fAttrAxis].isParam) {
-               if (indicesData[i] < 0) {
-                  indicesData[i] += fShapeX[fAttrAxis].dim;
+               if (fIndices[i] < 0) {
+                  hasNegativeIndex = true;
+                  fIndices[i] += fShapeX[fAttrAxis].dim;
                }
             }
          }
-         // Save in a vector gather Indices of size q
-         fIndices = std::vector<int64_t>(indicesData, indicesData + indicesLength);
+         // for negative indices we need to add an extra constant tensor
+         if (hasNegativeIndex) {
+            std::string nameIndicesUpdated = fNIndices + "_updated";
+            model.AddConstantTensor(nameIndicesUpdated, model.GetTensorShape(fNIndices), fIndices.data());
+            fNIndices = nameIndicesUpdated;
+         }
       }
       // Output shape
       if (model.Verbose())
-         std::cout << "Gather: q and r " << q << " " << r << " shape indices " << ConvertShapeToString(fShapeIndices) << std::endl;
+         std::cout << "Gather: q and r " << q << " " << r << " shape indices " << ConvertDimShapeToString(fShapeIndices) << std::endl;
 
       if (fShapeY.empty()) {
          fShapeY.resize(q + r - 1);
@@ -123,43 +122,52 @@ public:
       else if (model.IsShapeTensor(fNX) && q <=1  && fIndices.size() > 0) {
          auto inputData = model.GetShapeTensorValues(fNX);
          // if r == 1 and q<=1 then output length is 1 (is a scalar or tensor of size1)
-         std::vector<Dim> outputData(1);
-         outputData[0] = inputData[fIndices[0]];
-         if (outputData[0].isParam) {
-            fIsOutputConstant = true;
+         fOutputShapeData.resize(1);
+         fOutputShapeData[0] = inputData[fIndices[0]];
+         if (fOutputShapeData[0].isParam) {
+            fIsOutputParamShape = true;
             // shapeY can be scalar or vector of size1
-            model.AddShapeTensor(fNY, outputData, fShapeY.size() == 0);
+            model.AddShapeTensor(fNY, fOutputShapeData, fShapeY.size() == 0);
             if (model.Verbose())
-               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
-                   << " and values " << ConvertShapeToString(outputData) << " (shape) " << std::endl;
+               std::cout << "Gather: " << fNX << " " << ConvertDimShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY)
+                   << " and values " << ConvertDimShapeToString(fOutputShapeData) << " (shape) " << std::endl;
          } else {
-            int64_t value = static_cast<int64_t>(outputData[0].dim);
+            int64_t value = static_cast<int64_t>(fOutputShapeData[0].dim);
             auto shapeY = ConvertShapeToInt(fShapeY);
             model.AddConstantTensor(fNY, shapeY, &value);
             fIsOutputConstant = true;
             if (model.Verbose())
-               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+               std::cout << "Gather: " << fNX << " " << ConvertDimShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY)
                    << " and values {" << value <<  "} (constant) " << std::endl;
          }
       }
-      if (!fIsOutputConstant) {
+      if (!fIsOutputConstant && !fIsOutputParamShape) {
          // Add output tensor
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          fType = ConvertTypeToString(model.GetTensorType(fNX));
          if (model.Verbose())
-               std::cout <<  "Gather: input " << fNX << " " << ConvertShapeToString(fShapeX) << " indices " << fNIndices << ConvertShapeToString(fShapeIndices)
-                         << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY) << std::endl;
+               std::cout <<  "Gather: input " << fNX << " " << ConvertDimShapeToString(fShapeX) << " indices " << fNIndices << ConvertDimShapeToString(fShapeIndices)
+                         << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY) << std::endl;
       }
    }
 
    std::string Generate(std::string opName) override {
-      if (fIsOutputConstant) {
-         // no code to generate here for constant output. Tensor output is defined in Session constructor
-         return "//---------------------------------------\n";
-      }
       opName = "op_" + opName;
       std::stringstream out;
-      out << "//--------- Gather " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
+      out << "//--------- Gather " << opName << " --> " << fNY << "  " << ConvertDimShapeToString(fShapeY) << "\n";
+      if (fIsOutputConstant) {
+         // no code to generate here for constant output. Tensor output is defined in Session constructor
+         out << "//--------------------(constant)----------\n";
+         return out.str();
+      }
+      if (fIsOutputParamShape) {
+         // no code to generate here for param shape output. Tensor output is defined in Session constructor
+         out << "//--------------------(shape)----------\n";
+         for (int i = 0; i < static_cast<int>(fOutputShapeData.size()); i++) {
+            out << SP << "tensor_" << fNY << "[" << i << " ] = " << fOutputShapeData[i].GetVal() << ";\n";
+         }
+         return out.str();
+      }
       // The shape of the output is q + r - 1
       size_t r = fShapeX.size();
       // Indices of shape q
@@ -168,16 +176,6 @@ public:
       auto stridesX = UTILITY::ComputeStrideFromShape(fShapeX);
       auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
       auto stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
-
-      // case fIndices is not known we need to correct for negative axis indices at run-time
-      if (fIndices.empty()) {
-         auto indicesLength = ConvertDimShapeToLength(fShapeIndices);
-         out << SP << "// correct in case of negative gather indices\n";
-         out << SP << "for (size_t i = 0; i < " << indicesLength << "; i++){\n";
-         out << SP << SP << "if (tensor_" << fNIndices << "[i] < 0)\n";
-         out << SP << SP << SP <<  "tensor_" << fNIndices << "[i] += " << fShapeX[fAttrAxis] << ";\n";
-         out << SP << "}\n";
-      }
 
       // Fill the output Y[j_0, j_1, ..., j_{axis - 1}, i_0, i_1, ..., i_{q - 1}, j_{axis + 1}, ..., j_{r - 1}]
       // [0 ... axis) [axis ... axis + q) [axis + q ... q + r - 1)
@@ -243,8 +241,16 @@ public:
       out << ";\n";
 
       // K
+      // when the indices are not a known constant, correct at the read site for
+      // possible negative values (the indices tensor may be a const model input)
       for (size_t k = 0; k < q + r; k++) out << SP;
-      out << "size_t k = static_cast<size_t>(" << "tensor_" << fNIndices << "[i_index]" << ");\n";
+      if (fIndices.empty()) {
+         out << "int64_t k_i = static_cast<int64_t>(tensor_" << fNIndices << "[i_index]);\n";
+         for (size_t k = 0; k < q + r; k++) out << SP;
+         out << "size_t k = static_cast<size_t>(k_i < 0 ? k_i + " << fShapeX[fAttrAxis] << " : k_i);\n";
+      } else {
+         out << "size_t k = static_cast<size_t>(" << "tensor_" << fNIndices << "[i_index]" << ");\n";
+      }
       // Input
       for (size_t k = 0; k < q + r; k++) out << SP;
       out << "size_t x_index = k";

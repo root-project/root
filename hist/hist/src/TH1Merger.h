@@ -136,8 +136,8 @@ private:
    Bool_t fIsProfile1D = kFALSE;
    Bool_t fIsProfile2D = kFALSE;
    Bool_t fIsProfile3D = kFALSE;
-   TH1 *fH0;                      //! histogram on which the list is merged
-   TH1 *fHClone;                  //! copy of fH0 - managed by this class
+   TH1 *fH0;                      ///<! histogram on which the list is merged
+   TH1 *fHClone;                  ///<! copy of fH0 - managed by this class
    TList fInputList;              // input histogram List
    TAxis fNewXAxis;
    TAxis fNewYAxis;

@@ -24,13 +24,13 @@
 #endif
 
 #include <fstream>
+#include <iostream>
 #include <sys/stat.h>
 #include <system_error>
 
-namespace Cpp {
+namespace CppInternal {
 
-using namespace Cpp::utils::platform;
-using namespace Cpp::utils;
+using namespace utils;
 using namespace llvm;
 
 DynamicLibraryManager::DynamicLibraryManager() {
@@ -55,8 +55,8 @@ DynamicLibraryManager::DynamicLibraryManager() {
   for (const char* Var : kSysLibraryEnv) {
     if (const char* Env = GetEnv(Var)) {
       SmallVector<StringRef, 10> CurPaths;
-      SplitPaths(Env, CurPaths, utils::kPruneNonExistent,
-                 Cpp::utils::platform::kEnvDelim);
+      SplitPaths(Env, CurPaths, SplitMode::kPruneNonExistent,
+                 platform::kEnvDelim);
       for (const auto& Path : CurPaths)
         addSearchPath(Path);
     }
@@ -66,7 +66,7 @@ DynamicLibraryManager::DynamicLibraryManager() {
   addSearchPath(".");
 
   SmallVector<std::string, 64> SysPaths;
-  Cpp::utils::platform::GetSystemLibraryPaths(SysPaths);
+  platform::GetSystemLibraryPaths(SysPaths);
 
   for (const std::string& P : SysPaths)
     addSearchPath(P, /*IsUser*/ false);
@@ -344,7 +344,7 @@ std::string DynamicLibraryManager::lookupLibrary(
 
 DynamicLibraryManager::LoadLibResult
 DynamicLibraryManager::loadLibrary(StringRef libStem, bool permanent,
-                                   bool resolved) {
+                                   bool resolved, std::string* errMsg) {
 #define DEBUG_TYPE "Dyld::loadLibrary:"
   LLVM_DEBUG(dbgs() << "Dyld::loadLibrary: " << libStem.str() << ", "
                     << (permanent ? "permanent" : "not-permanent") << ", "
@@ -364,14 +364,19 @@ DynamicLibraryManager::loadLibrary(StringRef libStem, bool permanent,
 
   // TODO: !permanent case
 
-  std::string errMsg;
-  DyLibHandle dyLibHandle = platform::DLOpen(canonicalLoadedLib, &errMsg);
+  std::string loadErr;
+  DyLibHandle dyLibHandle = platform::DLOpen(canonicalLoadedLib, &loadErr);
   if (!dyLibHandle) {
     // We emit callback to LibraryLoadingFailed when we get error with error
     // message.
     // TODO: Implement callbacks
 
-    LLVM_DEBUG(dbgs() << "DynamicLibraryManager::loadLibrary(): " << errMsg);
+    if (errMsg)
+      *errMsg = loadErr;
+    else if (!loadErr.empty())
+      std::cerr << loadErr << '\n';
+
+    LLVM_DEBUG(dbgs() << "DynamicLibraryManager::loadLibrary(): " << loadErr);
 
     return kLoadLibLoadError;
   }
@@ -506,4 +511,4 @@ bool DynamicLibraryManager::isSharedLibrary(StringRef libFullPath,
   return result;
 }
 
-} // end namespace Cpp
+} // end namespace CppInternal

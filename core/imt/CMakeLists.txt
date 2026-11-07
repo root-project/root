@@ -19,19 +19,22 @@ ROOT_LINKER_LIBRARY(Imt
     src/TTaskGroup.cxx
   DEPENDENCIES
     ${MULTIPROC_LIB}
-  BUILTINS
-    TBB
 )
 
 target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
 
 if(imt)
-  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+  target_link_libraries(Imt PRIVATE TBB::tbb)
+  set(IMT_HEADERS
     ROOT/TTaskGroup.hxx
     ROOT/RTaskArena.hxx
     ROOT/RSlotStack.hxx
     ROOT/TExecutor.hxx
     ROOT/TThreadExecutor.hxx
+    ROOT/InternalIMTUtils.hxx
+  )
+  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+    ${IMT_HEADERS}
     LINKDEF
       LinkDef.h
     MODULE
@@ -40,8 +43,7 @@ if(imt)
       Core
       Thread
       ${MULTIPROC_LIB}
-    BUILTINS
-      TBB
+      TBB::tbb
   )
 
   # G__Imt.cxx is automatically added by ROOT_GENERATE_DICTIONARY()
@@ -51,14 +53,13 @@ if(imt)
     src/TThreadExecutor.cxx
   )
 
-  target_include_directories(Imt SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
-  target_link_libraries(Imt PRIVATE ${TBB_LIBRARIES})
-  set_target_properties(Imt PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
-
   ROOT_ADD_TEST_SUBDIRECTORY(test)
 else()
-  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+  set(IMT_HEADERS
     ROOT/TExecutor.hxx
+  )
+  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+    ${IMT_HEADERS}
     LINKDEF
       LinkDef.h
     MODULE
@@ -68,5 +69,18 @@ else()
       ${MULTIPROC_LIB}
   )
 endif()
+
+set(RELATIVE_INC_HEADERS ${IMT_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(Imt
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
 
 ROOT_INSTALL_HEADERS()

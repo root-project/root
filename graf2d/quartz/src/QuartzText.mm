@@ -18,7 +18,7 @@
 
 #include "QuartzText.h"
 #include "CocoaUtils.h"
-#include "TVirtualX.h"
+#include "TAttText.h"
 #include "TColor.h"
 #include "TError.h"
 #include "TROOT.h"
@@ -50,23 +50,6 @@ void GetTextColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b
       color->GetRGB(r, g, b);
       a = color->GetAlpha();
    }
-}
-
-//_________________________________________________________________
-CGRect BBoxForCTRun(CTFontRef font, CTRunRef run)
-{
-   assert(font != 0 && "BBoxForCTRun, parameter 'font' is null");
-   assert(run != 0 && "BBoxForCTRun, parameter 'run' is null");
-
-   CGRect bbox = {};
-   if (const CFIndex nGlyphs = CTRunGetGlyphCount(run)) {
-      std::vector<CGGlyph> glyphs(nGlyphs);
-      CTRunGetGlyphs(run, CFRangeMake(0, 0), &glyphs[0]);
-      bbox = CTFontGetBoundingRectsForGlyphs(font, defaultFontOrientation,
-                                             &glyphs[0], 0, nGlyphs);
-   }
-
-   return bbox;
 }
 
 }
@@ -186,38 +169,6 @@ void TextLine::GetBounds(UInt_t &w, UInt_t &h)const
 
 
 //_________________________________________________________________
-void TextLine::GetAscentDescent(Int_t &asc, Int_t &desc)const
-{
-   //The old 'fallback' version:
-   CGFloat ascent = 0., descent = 0., leading = 0.;
-   CTLineGetTypographicBounds(fCTLine, &ascent, &descent, &leading);
-   asc = Int_t(ascent);
-   desc = Int_t(descent);
-   //The new 'experimental':
-   //with Core Text descent for a string '2' has some
-   //quite big value, making all TText to be way too high.
-   CFArrayRef runs = CTLineGetGlyphRuns(fCTLine);
-   if (runs && CFArrayGetCount(runs) && fCTFont) {
-      CTRunRef firstRun = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, 0));
-      CGRect box = BBoxForCTRun(fCTFont, firstRun);
-      if (CGRectIsNull(box))
-         return;
-
-      for (CFIndex i = 1, e = CFArrayGetCount(runs); i < e; ++i) {
-         CTRunRef run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, i));
-         CGRect nextBox = BBoxForCTRun(fCTFont, run);
-         if (CGRectIsNull(nextBox))
-            return;
-         box = CGRectUnion(box, nextBox);
-      }
-
-      asc = Int_t(TMath::Ceil(box.size.height) + box.origin.y);
-      desc = Int_t(TMath::Abs(TMath::Floor(box.origin.y)));
-   }
-}
-
-
-//_________________________________________________________________
 void TextLine::Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values)
 {
    using MacOSX::Util::CFScopeGuard;
@@ -264,7 +215,7 @@ void TextLine::Init(const std::vector<UniChar> &unichars, UInt_t nAttribs, CFStr
 }
 
 //_________________________________________________________________
-void TextLine::DrawLine(CGContextRef ctx)const
+void TextLine::DrawLine(CGContextRef ctx) const
 {
    assert(ctx != 0 && "DrawLine, ctx parameter is null");
    CTLineDraw(fCTLine, ctx);
@@ -272,7 +223,7 @@ void TextLine::DrawLine(CGContextRef ctx)const
 
 
 //______________________________________________________________________________
-void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
+void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y, const TAttText &att) const
 {
    assert(ctx != 0 && "DrawLine, ctx parameter is null");
 
@@ -282,7 +233,7 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
    GetBounds(w, h);
 
    Double_t xc = 0., yc = 0.;
-   const UInt_t hAlign = UInt_t(gVirtualX->GetTextAlign() / 10);
+   Int_t hAlign = att.GetTextAlign() / 10;
    switch (hAlign) {
    case 1:
       xc = 0.5 * w;
@@ -294,7 +245,7 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
       break;
    }
 
-   const UInt_t vAlign = UInt_t(gVirtualX->GetTextAlign() % 10);
+   Int_t vAlign = att.GetTextAlign() % 10;
    switch (vAlign) {
    case 1:
       yc = 0.5 * h;
@@ -308,7 +259,7 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
 
    CGContextSetTextPosition(ctx, 0., 0.);
    CGContextTranslateCTM(ctx, x, y);
-   CGContextRotateCTM(ctx, gVirtualX->GetTextAngle() * TMath::DegToRad());
+   CGContextRotateCTM(ctx, att.GetTextAngle() * TMath::DegToRad());
    CGContextTranslateCTM(ctx, xc, yc);
    CGContextTranslateCTM(ctx, -0.5 * w, -0.5 * h);
 

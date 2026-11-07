@@ -36,7 +36,6 @@ using namespace std::string_literals;
 \brief Base class for provider of RNTuple drawing
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2021-03-09
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
 class RFieldProvider : public RProvider {

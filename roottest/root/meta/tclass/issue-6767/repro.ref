@@ -1,4 +1,3 @@
-
 Processing /Users/pcanal/root_working/roottest/root/meta/tclass/issue-6767/repro.C...
 Info in <GenCollectionProxy reproducer>: R__ASSERT(! (prop&kIsClass) && "Impossible code path") would have triggered
 Warning in <TClass::Init>: no dictionary for class CaloTowerTest is available

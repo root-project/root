@@ -8,7 +8,8 @@
 #include "TClass.h"
 //the next include must be the last one on systems like Windows/NT
 #include "TBench.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 THit s_hit;
 #ifdef R__HPUX

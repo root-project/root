@@ -23,198 +23,224 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set(TMVA_HEADERS
+  TMVA/BDTEventWrapper.h
+  TMVA/BinarySearchTree.h
+  TMVA/BinarySearchTreeNode.h
+  TMVA/BinaryTree.h
+  TMVA/CCPruner.h
+  TMVA/CCTreeWrapper.h
+  TMVA/ClassifierFactory.h
+  TMVA/ClassInfo.h
+  TMVA/Config.h
+  TMVA/Configurable.h
+  TMVA/ConvergenceTest.h
+  TMVA/CostComplexityPruneTool.h
+  TMVA/CrossEntropy.h
+  TMVA/CrossValidation.h
+  TMVA/CvSplit.h
+  TMVA/DataInputHandler.h
+  TMVA/DataLoader.h
+  TMVA/DataSetFactory.h
+  TMVA/DataSet.h
+  TMVA/DataSetInfo.h
+  TMVA/DataSetManager.h
+  TMVA/DecisionTree.h
+  TMVA/DecisionTreeNode.h
+  TMVA/Envelope.h
+  TMVA/Event.h
+  TMVA/ExpectedErrorPruneTool.h
+  TMVA/Executor.h
+  TMVA/Factory.h
+  TMVA/FitterBase.h
+  TMVA/GeneticAlgorithm.h
+  TMVA/GeneticFitter.h
+  TMVA/GeneticGenes.h
+  TMVA/GeneticPopulation.h
+  TMVA/GeneticRange.h
+  TMVA/GiniIndex.h
+  TMVA/GiniIndexWithLaplace.h
+  TMVA/HyperParameterOptimisation.h
+  TMVA/IFitterTarget.h
+  TMVA/IMethod.h
+  TMVA/Interval.h
+  TMVA/IPruneTool.h
+  TMVA/KDEKernel.h
+  TMVA/LDA.h
+  TMVA/LogInterval.h
+  TMVA/LossFunction.h
+  TMVA/MCFitter.h
+  TMVA/MethodANNBase.h
+  TMVA/MethodBase.h
+  TMVA/MethodBayesClassifier.h
+  TMVA/MethodBDT.h
+  TMVA/MethodBoost.h
+  TMVA/MethodCategory.h
+  TMVA/MethodCFMlpANN_def.h
+  TMVA/MethodCFMlpANN.h
+  TMVA/MethodCFMlpANN_Utils.h
+  TMVA/MethodCompositeBase.h
+  TMVA/MethodCrossValidation.h
+  TMVA/MethodCuts.h
+  TMVA/MethodDL.h
+  TMVA/MethodDNN.h
+  TMVA/MethodDT.h
+  TMVA/MethodFDA.h
+  TMVA/MethodFisher.h
+  TMVA/MethodHMatrix.h
+  TMVA/MethodKNN.h
+  TMVA/MethodLD.h
+  TMVA/MethodLikelihood.h
+  TMVA/MethodMLP.h
+  TMVA/MethodPDEFoam.h
+  TMVA/MethodPDERS.h
+  TMVA/MethodRuleFit.h
+  TMVA/MethodSVM.h
+  TMVA/MethodTMlpANN.h
+  TMVA/MinuitFitter.h
+  TMVA/MinuitWrapper.h
+  TMVA/MisClassificationError.h
+  TMVA/ModulekNN.h
+  TMVA/Monitoring.h
+  TMVA/MsgLogger.h
+  TMVA/NeuralNet.h
+  TMVA/Node.h
+  TMVA/NodekNN.h
+  TMVA/OptimizeConfigParameters.h
+  TMVA/Option.h
+  TMVA/OptionMap.h
+  TMVA/Pattern.h
+  TMVA/PDEFoamCell.h
+  TMVA/PDEFoamDecisionTreeDensity.h
+  TMVA/PDEFoamDecisionTree.h
+  TMVA/PDEFoamDensityBase.h
+  TMVA/PDEFoamDiscriminantDensity.h
+  TMVA/PDEFoamDiscriminant.h
+  TMVA/PDEFoamEventDensity.h
+  TMVA/PDEFoamEvent.h
+  TMVA/PDEFoam.h
+  TMVA/PDEFoamKernelBase.h
+  TMVA/PDEFoamKernelGauss.h
+  TMVA/PDEFoamKernelLinN.h
+  TMVA/PDEFoamKernelTrivial.h
+  TMVA/PDEFoamMultiTarget.h
+  TMVA/PDEFoamTargetDensity.h
+  TMVA/PDEFoamTarget.h
+  TMVA/PDEFoamVect.h
+  TMVA/PDF.h
+  TMVA/QuickMVAProbEstimator.h
+  TMVA/Ranking.h
+  TMVA/Reader.h
+  TMVA/RegressionVariance.h
+  TMVA/ResultsClassification.h
+  TMVA/Results.h
+  TMVA/ResultsMulticlass.h
+  TMVA/ResultsRegression.h
+  TMVA/ROCCalc.h
+  TMVA/ROCCurve.h
+  TMVA/RootFinder.h
+  TMVA/RuleCut.h
+  TMVA/RuleEnsemble.h
+  TMVA/RuleFitAPI.h
+  TMVA/RuleFit.h
+  TMVA/RuleFitParams.h
+  TMVA/Rule.h
+  TMVA/SdivSqrtSplusB.h
+  TMVA/SeparationBase.h
+  TMVA/SimulatedAnnealingFitter.h
+  TMVA/SimulatedAnnealing.h
+  TMVA/SVEvent.h
+  TMVA/SVKernelFunction.h
+  TMVA/SVKernelMatrix.h
+  TMVA/SVWorkingSet.h
+  TMVA/TActivationChooser.h
+  TMVA/TActivation.h
+  TMVA/TActivationIdentity.h
+  TMVA/TActivationRadial.h
+  TMVA/TActivationReLU.h
+  TMVA/TActivationSigmoid.h
+  TMVA/TActivationTanh.h
+  TMVA/Timer.h
+  TMVA/TNeuron.h
+  TMVA/TNeuronInputAbs.h
+  TMVA/TNeuronInputChooser.h
+  TMVA/TNeuronInput.h
+  TMVA/TNeuronInputSqSum.h
+  TMVA/TNeuronInputSum.h
+  TMVA/Tools.h
+  TMVA/TrainingHistory.h
+  TMVA/TransformationHandler.h
+  TMVA/TSpline1.h
+  TMVA/TSpline2.h
+  TMVA/TSynapse.h
+  TMVA/Types.h
+  TMVA/VariableDecorrTransform.h
+  TMVA/VariableGaussTransform.h
+  TMVA/VariableIdentityTransform.h
+  TMVA/VariableImportance.h
+  TMVA/VariableInfo.h
+  TMVA/VariableNormalizeTransform.h
+  TMVA/VariablePCATransform.h
+  TMVA/VariableRearrangeTransform.h
+  TMVA/VariableTransformBase.h
+  TMVA/VariableTransform.h
+  TMVA/VarTransformHandler.h
+  TMVA/Version.h
+  TMVA/Volume.h
+)
+
+set(TMVA_EXTRA_HEADERS
+  TMVA/DNN/Adadelta.h
+  TMVA/DNN/Adagrad.h
+  TMVA/DNN/Adam.h
+  TMVA/DNN/BatchNormLayer.h
+  TMVA/DNN/DLMinimizers.h
+  TMVA/DNN/DataLoader.h
+  TMVA/DNN/DeepNet.h
+  TMVA/DNN/DenseLayer.h
+  TMVA/DNN/Functions.h
+  TMVA/DNN/GeneralLayer.h
+  TMVA/DNN/Layer.h
+  TMVA/DNN/Minimizers.h
+  TMVA/DNN/Net.h
+  TMVA/DNN/Optimizer.h
+  TMVA/DNN/RMSProp.h
+  TMVA/DNN/ReshapeLayer.h
+  TMVA/DNN/SGD.h
+  TMVA/DNN/TensorDataLoader.h
+  TMVA/DNN/CNN/ContextHandles.h
+  TMVA/DNN/CNN/ConvLayer.h
+  TMVA/DNN/CNN/MaxPoolLayer.h
+  TMVA/DNN/RNN/GRULayer.h
+  TMVA/DNN/RNN/LSTMLayer.h
+  TMVA/DNN/RNN/RNNLayer.h
+  TMVA/DNN/Architectures/Reference.h
+  TMVA/DNN/Architectures/Reference/DataLoader.h
+  TMVA/DNN/Architectures/Reference/TensorDataLoader.h
+  TMVA/DNN/Architectures/Cpu.h
+  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
+  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
+  TMVA/DNN/Architectures/Cpu/CpuTensor.h
+)
+
+if(tmva-gpu)
+  list(APPEND TMVA_EXTRA_HEADERS
+    TMVA/DNN/Architectures/Cuda.h
+    TMVA/DNN/Architectures/Cuda/CudaBuffers.h
+    TMVA/DNN/Architectures/Cuda/CudaMatrix.h
+    TMVA/DNN/Architectures/Cuda/CudaTensor.h
+    TMVA/DNN/Architectures/Cuda/Device.h
+  )
+  if(tmva-cudnn)
+    list(APPEND TMVA_EXTRA_HEADERS
+      TMVA/DNN/Architectures/TCudnn.h
+  )
+  endif()
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
   HEADERS
-    TMVA/BDTEventWrapper.h
-    TMVA/BinarySearchTree.h
-    TMVA/BinarySearchTreeNode.h
-    TMVA/BinaryTree.h
-    TMVA/CCPruner.h
-    TMVA/CCTreeWrapper.h
-    TMVA/Classification.h
-    TMVA/ClassifierFactory.h
-    TMVA/ClassInfo.h
-    TMVA/Config.h
-    TMVA/Configurable.h
-    TMVA/ConvergenceTest.h
-    TMVA/CostComplexityPruneTool.h
-    TMVA/CrossEntropy.h
-    TMVA/CrossValidation.h
-    TMVA/CvSplit.h
-    TMVA/DataInputHandler.h
-    TMVA/DataLoader.h
-    TMVA/DataSetFactory.h
-    TMVA/DataSet.h
-    TMVA/DataSetInfo.h
-    TMVA/DataSetManager.h
-    TMVA/DecisionTree.h
-    TMVA/DecisionTreeNode.h
-    TMVA/Envelope.h
-    TMVA/Event.h
-    TMVA/ExpectedErrorPruneTool.h
-    TMVA/Executor.h
-    TMVA/Factory.h
-    TMVA/FitterBase.h
-    TMVA/GeneticAlgorithm.h
-    TMVA/GeneticFitter.h
-    TMVA/GeneticGenes.h
-    TMVA/GeneticPopulation.h
-    TMVA/GeneticRange.h
-    TMVA/GiniIndex.h
-    TMVA/GiniIndexWithLaplace.h
-    TMVA/HyperParameterOptimisation.h
-    TMVA/IFitterTarget.h
-    TMVA/IMethod.h
-    TMVA/Interval.h
-    TMVA/IPruneTool.h
-    TMVA/KDEKernel.h
-    TMVA/LDA.h
-    TMVA/LogInterval.h
-    TMVA/LossFunction.h
-    TMVA/MCFitter.h
-    TMVA/MethodANNBase.h
-    TMVA/MethodBase.h
-    TMVA/MethodBayesClassifier.h
-    TMVA/MethodBDT.h
-    TMVA/MethodBoost.h
-    TMVA/MethodCategory.h
-    TMVA/MethodCFMlpANN_def.h
-    TMVA/MethodCFMlpANN.h
-    TMVA/MethodCFMlpANN_Utils.h
-    TMVA/MethodCompositeBase.h
-    TMVA/MethodCrossValidation.h
-    TMVA/MethodCuts.h
-    TMVA/MethodDL.h
-    TMVA/MethodDNN.h
-    TMVA/MethodDT.h
-    TMVA/MethodFDA.h
-    TMVA/MethodFisher.h
-    TMVA/MethodHMatrix.h
-    TMVA/MethodKNN.h
-    TMVA/MethodLD.h
-    TMVA/MethodLikelihood.h
-    TMVA/MethodMLP.h
-    TMVA/MethodPDEFoam.h
-    TMVA/MethodPDERS.h
-    TMVA/MethodRuleFit.h
-    TMVA/MethodSVM.h
-    TMVA/MethodTMlpANN.h
-    TMVA/MinuitFitter.h
-    TMVA/MinuitWrapper.h
-    TMVA/MisClassificationError.h
-    TMVA/ModulekNN.h
-    TMVA/Monitoring.h
-    TMVA/MsgLogger.h
-    TMVA/NeuralNet.h
-    TMVA/Node.h
-    TMVA/NodekNN.h
-    TMVA/OptimizeConfigParameters.h
-    TMVA/Option.h
-    TMVA/OptionMap.h
-    TMVA/Pattern.h
-    TMVA/PDEFoamCell.h
-    TMVA/PDEFoamDecisionTreeDensity.h
-    TMVA/PDEFoamDecisionTree.h
-    TMVA/PDEFoamDensityBase.h
-    TMVA/PDEFoamDiscriminantDensity.h
-    TMVA/PDEFoamDiscriminant.h
-    TMVA/PDEFoamEventDensity.h
-    TMVA/PDEFoamEvent.h
-    TMVA/PDEFoam.h
-    TMVA/PDEFoamKernelBase.h
-    TMVA/PDEFoamKernelGauss.h
-    TMVA/PDEFoamKernelLinN.h
-    TMVA/PDEFoamKernelTrivial.h
-    TMVA/PDEFoamMultiTarget.h
-    TMVA/PDEFoamTargetDensity.h
-    TMVA/PDEFoamTarget.h
-    TMVA/PDEFoamVect.h
-    TMVA/PDF.h
-    TMVA/QuickMVAProbEstimator.h
-    TMVA/Ranking.h
-    TMVA/Reader.h
-    TMVA/RegressionVariance.h
-    TMVA/ResultsClassification.h
-    TMVA/Results.h
-    TMVA/ResultsMulticlass.h
-    TMVA/ResultsRegression.h
-    TMVA/ROCCalc.h
-    TMVA/ROCCurve.h
-    TMVA/RootFinder.h
-    TMVA/RuleCut.h
-    TMVA/RuleEnsemble.h
-    TMVA/RuleFitAPI.h
-    TMVA/RuleFit.h
-    TMVA/RuleFitParams.h
-    TMVA/Rule.h
-    TMVA/SdivSqrtSplusB.h
-    TMVA/SeparationBase.h
-    TMVA/SimulatedAnnealingFitter.h
-    TMVA/SimulatedAnnealing.h
-    TMVA/SVEvent.h
-    TMVA/SVKernelFunction.h
-    TMVA/SVKernelMatrix.h
-    TMVA/SVWorkingSet.h
-    TMVA/TActivationChooser.h
-    TMVA/TActivation.h
-    TMVA/TActivationIdentity.h
-    TMVA/TActivationRadial.h
-    TMVA/TActivationReLU.h
-    TMVA/TActivationSigmoid.h
-    TMVA/TActivationTanh.h
-    TMVA/Timer.h
-    TMVA/TNeuron.h
-    TMVA/TNeuronInputAbs.h
-    TMVA/TNeuronInputChooser.h
-    TMVA/TNeuronInput.h
-    TMVA/TNeuronInputSqSum.h
-    TMVA/TNeuronInputSum.h
-    TMVA/Tools.h
-    TMVA/TrainingHistory.h
-    TMVA/TransformationHandler.h
-    TMVA/TSpline1.h
-    TMVA/TSpline2.h
-    TMVA/TSynapse.h
-    TMVA/Types.h
-    TMVA/VariableDecorrTransform.h
-    TMVA/VariableGaussTransform.h
-    TMVA/VariableIdentityTransform.h
-    TMVA/VariableImportance.h
-    TMVA/VariableInfo.h
-    TMVA/VariableNormalizeTransform.h
-    TMVA/VariablePCATransform.h
-    TMVA/VariableRearrangeTransform.h
-    TMVA/VariableTransformBase.h
-    TMVA/VariableTransform.h
-    TMVA/VarTransformHandler.h
-    TMVA/Version.h
-    TMVA/Volume.h
-    #  TMVA/DNN/Adadelta.h
-    #  TMVA/DNN/Adagrad.h
-    #  TMVA/DNN/Adam.h
-    #  TMVA/DNN/BatchNormLayer.h
-    #  TMVA/DNN/DataLoader.h
-    #  TMVA/DNN/DeepNet.h
-    #  TMVA/DNN/DenseLayer.h
-    #  TMVA/DNN/DLMinimizers.h
-    #  TMVA/DNN/Functions.h
-    #  TMVA/DNN/GeneralLayer.h
-    #  TMVA/DNN/ReshapeLayer.h
-    #  TMVA/DNN/RMSProp.h
-    #  TMVA/DNN/SGD.h
-    #  TMVA/DNN/TensorDataLoader.h
-    #  TMVA/DNN/CNN/ContextHandles.h
-    #  TMVA/DNN/CNN/ConvLayer.h
-    #  TMVA/DNN/CNN/MaxPoolLayer.h
-    #  TMVA/DNN/RNN/RNNLayer.h
-    #   TMVA/DNN/Architectures/Reference.h
-    #  TMVA/DNN/Architectures/Reference/DataLoader.h
-    #  TMVA/DNN/Architectures/Reference/TensorDataLoader.h
-    #   TMVA/DNN/Architectures/Cpu.h
-    #  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
-    #  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
-    #  TMVA/DNN/Architectures/Cpu/CpuTensor.h
-    ${TMVA_EXTRA_HEADERS}
+    ${TMVA_HEADERS}
   SOURCES
     src/BDTEventWrapper.cxx
     src/BinarySearchTree.cxx
@@ -222,7 +248,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/BinaryTree.cxx
     src/CCPruner.cxx
     src/CCTreeWrapper.cxx
-    src/Classification.cxx
     src/ClassifierFactory.cxx
     src/ClassInfo.cxx
     src/Config.cxx
@@ -409,10 +434,7 @@ if(vdt OR builtin_vdt)
 endif()
 
 if(tmva-cpu)
-  target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
-  target_link_libraries(TMVA PRIVATE ${TBB_LIBRARIES})
-  set_target_properties(TMVA PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
-  target_link_libraries(TMVA PRIVATE ROOT::BLAS)
+  target_link_libraries(TMVA PRIVATE TBB::tbb ROOT::BLAS)
 endif()
 
 if(tmva-gpu)
@@ -433,25 +455,38 @@ if(tmva-gpu)
   endif()
 endif(tmva-gpu)
 
+set(RELATIVE_INC_HEADERS ${TMVA_HEADERS} ${TMVA_EXTRA_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(TMVA
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/TMVA/NeuralNet.icc
+    inc/LinkDef.h
+    inc/LinkDef1.h
+    inc/LinkDef2.h
+    inc/LinkDef3.h
+    inc/LinkDef4.h
+)
+
 if(dataframe)
-ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
-  NO_INSTALL_HEADERS
-  HEADERS
-  TMVA/RTensorUtils.hxx
-  TMVA/RStandardScaler.hxx
+set(TMVAUTILS_HEADERS
   TMVA/RReader.hxx
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx
   TMVA/RSofieReader.hxx
-  TMVA/BatchGenerator/RBatchGenerator.hxx
-  TMVA/BatchGenerator/RBatchLoader.hxx
-  TMVA/BatchGenerator/RChunkLoader.hxx
-  TMVA/BatchGenerator/RChunkConstructor.hxx
-  TMVA/BatchGenerator/RFlat2DMatrix.hxx
+)
+
+ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
+  NO_INSTALL_HEADERS
+  HEADERS
+    ${TMVAUTILS_HEADERS}
 
   SOURCES
-
-  src/RBDT.cxx
+    src/RBDT.cxx
 
   DEPENDENCIES
     TMVA ROOTDataFrame ROOTVecOps
@@ -463,6 +498,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
 
   ${EXTRA_DICT_OPTS}
 )
+# RBDT::LoadXGBoost parses the XGBoost native JSON serialization.
+target_link_libraries(TMVAUtils PRIVATE nlohmann_json::nlohmann_json)
+
+set(RELATIVE_INC_HEADERS ${TMVAUTILS_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(TMVAUtils
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDefUtils.h
+)
+
+
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

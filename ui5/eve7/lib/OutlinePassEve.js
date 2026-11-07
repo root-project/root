@@ -150,25 +150,17 @@ class OutlinePassEve extends THREE.Pass {
 				//for (let w = 0; w < groups[z].length; ++w)
 
 				const w = 0; // check only the first element of the group!
-				{
-					let pass = (object.type === "Points") ? (groups[z][w].material.size === object.material.size) : true;
+				let pass = (object.type === "Points") ? (groups[z][w].material.size === object.material.size) : true;
 
-					if (pass) {
-						// final check
-						if (groups[z][w]["vertShader"] === object["vertShader"] &&
+				// final check
+				if (pass &&	groups[z][w]["vertShader"] === object["vertShader"] &&
 							groups[z][w]["fragShader"] === object["fragShader"] &&
 							groups[z][w].visibleEdgeColor === object.visibleEdgeColor &&
-							groups[z][w].hiddenEdgeColor === object.hiddenEdgeColor
-						) {
-							groups[z].push(object);
-							found = true;
-							break;
-						}
-					}
-				}
-
-				if (found)
+							groups[z][w].hiddenEdgeColor === object.hiddenEdgeColor) {
+					groups[z].push(object);
+					found = true;
 					break;
+				}
 			}
 
 			if (!found) {

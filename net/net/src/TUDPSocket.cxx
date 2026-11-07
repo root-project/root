@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TUDPSocket                                                           //
-//                                                                      //
-// This class implements UDP client sockets. A socket is an endpoint    //
-// for communication between two machines.                              //
-// The actual work is done via the TSystem class (either TUnixSystem    //
-// or TWinNTSystem).                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TUDPSocket.cxx
+\class TUDPSocket
+\brief This class implements UDP client sockets.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+
+A socket is an endpoint for communication between two machines. The actual work is done via the TSystem class (either
+TUnixSystem or TWinNTSystem).
+**/
 
 #include "Bytes.h"
 #include "Compression.h"
@@ -32,9 +32,10 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TUrl.h"
-#include "TVirtualAuth.h"
 #include "TStreamerInfo.h"
 #include "TProcessID.h"
+
+#include <limits>
 
 ULong64_t TUDPSocket::fgBytesSent = 0;
 ULong64_t TUDPSocket::fgBytesRecv = 0;
@@ -58,7 +59,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -102,7 +102,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    R__ASSERT(gSystem);
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -143,7 +142,6 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -168,16 +166,7 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a socket; see CreateAuthSocket for the form of url.
-/// Connect to the specified port # on the remote host.
-/// If user is specified in url, try authentication as user.
-/// Use tcpwindowsize to specify the size of the receive buffer, it has
-/// to be specified here to make sure the window scale option is set (for
-/// tcpwindowsize > 65KB and for platforms supporting window scaling).
-/// Returns when connection has been accepted by remote side. Use IsValid()
-/// to check the validity of the socket. Every socket is added to the TROOT
-/// sockets list which will make sure that any open sockets are properly
-/// closed on program termination.
+/// Create a socket; see TSocket constructor.
 
 TUDPSocket::TUDPSocket(const char *url, Int_t port)
          : TNamed(TUrl(url).GetHost(), ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
@@ -189,7 +178,6 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    TString host(TUrl(fUrl).GetHost());
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fUrl.Contains("root"))
@@ -229,7 +217,6 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, ""),
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -257,7 +244,6 @@ TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressio
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
-   fSecContext     = 0;
    fRemoteProtocol = 0;
    fService        = (char *)kSOCKD;
    fServType       = kSOCKD;
@@ -290,7 +276,6 @@ TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -323,7 +308,6 @@ TUDPSocket::TUDPSocket(const TUDPSocket &s) : TNamed(s)
    fBytesSent      = s.fBytesSent;
    fBytesRecv      = s.fBytesRecv;
    fCompress       = s.fCompress;
-   fSecContext     = s.fSecContext;
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
    fUUIDs          = 0;
@@ -795,6 +779,11 @@ oncemore:
       return n;
    }
    len = net2host(len);  //from network to host byte order
+
+   if (len > (std::numeric_limits<decltype(len)>::max() - sizeof(decltype(len)))) {
+      Error("Recv", "Buffer length is %u and %u+sizeof(UInt_t) cannot be represented as an UInt_t.", len, len);
+      return -1;
+   }
 
    ResetBit(TUDPSocket::kBrokenConn);
    char *buf = new char[len+sizeof(UInt_t)];

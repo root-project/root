@@ -1,6 +1,5 @@
 // @(#)root/metautils:$Id$
 /// \file TClassEdit.cxx
-/// \ingroup Base
 /// \author Victor Perev
 /// \author Philippe Canal
 /// \date 04/10/2003
@@ -13,13 +12,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TClassEdit.h"
+#include "TSpinLockGuard.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
-#include "TClassEdit.h"
 #include <cctype>
-#include "Rstrstream.h"
+#include <sstream>
 #include <set>
 #include <stack>
 // for shared_ptr
@@ -27,8 +28,6 @@
 #include <string_view>
 #include <algorithm>
 #include <string>
-
-#include "TSpinLockGuard.h"
 
 using std::string, std::string_view, std::vector, std::set;
 
@@ -454,12 +453,12 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    //   do the same for all inside
    for (int i=1;i<narg; i++) {
       if (!strchr(fElements[i].c_str(),'<')) {
+         if (mode&kResolveTypedef) {
+            fElements[i] = ResolveTypedef(fElements[i].c_str(),true);
+         }
          if (mode&kDropStd) {
             unsigned int offset = (0==strncmp("const ",fElements[i].c_str(),6)) ? 6 : 0;
             RemoveStd( fElements[i], offset );
-         }
-         if (mode&kResolveTypedef) {
-            fElements[i] = ResolveTypedef(fElements[i].c_str(),true);
          }
          continue;
       }
@@ -1108,7 +1107,8 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       size_t prefix_offset = 0;
 
       if (full.compare(prefix_offset, 6, "const ") == 0) {
-         prefix_offset += isConst = true;
+         isConst = true;
+         prefix_offset += 6;
       }
       if (full.compare(prefix_offset, 5, "std::") == 0) {
          prefix_offset += 5;
@@ -1304,9 +1304,16 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
    const char* c;
 
    for(c=typeDesc;*c;c++) {
-      if (c[0]==' ') {
+      if (std::isspace(c[0])) {
          if (kbl)       continue;
          if (!isalnum(c[ 1]) && c[ 1] !='_')    continue;
+         if (c[0] != ' ') {
+            // Significant whitespace other than ' ' (e.g. \n in a multi-line
+            // class name from a selection XML) is replaced by a plain space.
+            result += ' ';
+            kbl = 1;
+            continue;
+         }
       }
       if (kbl && (mode>=2 || parensStack.empty())) { //remove "const' etc...
          int done = 0;
@@ -1598,16 +1605,16 @@ static void ResolveTypedefImpl(const char *tname,
    }
    // In Windows, we might have 'class const ...' as name,
    // (never 'const class ...'), so skip the leading 'class ', if any
-   if (strncmp(tname+cursor,"class ",6) == 0) {
+   if (cursor < len && strncmp(tname+cursor,"class ",6) == 0) {
       cursor += 6;
    }
-   if (strncmp(tname+cursor,"const ",6) == 0) {
+   if (cursor < len && strncmp(tname+cursor,"const ",6) == 0) {
       cursor += 6;
       if (modified) result += "const ";
       constprefix = true;
    }
 
-   if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
+   if (len > 2 && cursor < len && strncmp(tname+cursor,"::",2) == 0) {
       cursor += 2;
    }
 
@@ -1754,7 +1761,7 @@ static void ResolveTypedefImpl(const char *tname,
             while ((cursor+1)<len && tname[cursor+1] == ' ') ++cursor;
 
             auto next = cursor+1;
-            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == ']'))
+            if (next < len && strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == ']'))
             {
                // A first const after the type needs to be move in the front.
                if (!modified) {
@@ -1790,7 +1797,7 @@ static void ResolveTypedefImpl(const char *tname,
             if (tname[cursor] != ' ') end_of_type = cursor;
             // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
             auto next = cursor+1;
-            if (strncmp(tname+next,"const",5) == 0) {
+            if (next < len && strncmp(tname+next,"const",5) == 0) {
                if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == '[') {
                   next += 5;
                }
@@ -1799,7 +1806,7 @@ static void ResolveTypedefImpl(const char *tname,
                    (tname[next] == ' ' || tname[next] == '*' || tname[next] == '&')) {
                ++next;
                // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
-               if (strncmp(tname+next,"const",5) == 0) {
+               if (next < len && strncmp(tname+next,"const",5) == 0) {
                   if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>'|| tname[next+5] == ')' || tname[next+5] == '[') {
                      next += 5;
                   }

@@ -295,6 +295,40 @@ void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1)
    f1->SetParameters(constant, slope);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute rough values of parameters for a first-degree polynomial
+///
+/// Compute starting values for the weighted fit by using an unweighted least-squares line.
+///
+/// Only the first-degree case is handled; a higher degree returns unchanged.
+
+void InitPolynom(const ROOT::Fit::BinData &data, TF1 *f1)
+{
+   if (f1->GetNpar() != 2)
+      return;
+
+   unsigned int n = data.Size();
+   if (n < 2)
+      return;
+
+   double sumX = 0, sumY = 0, sumXSq = 0, sumXY = 0;
+   for (unsigned int i = 0; i < n; ++i) {
+      double val;
+      double x = *(data.GetPoint(i, val));
+      sumX += x;
+      sumY += val;
+      sumXSq += x * x;
+      sumXY += x * val;
+   }
+
+   // Vanishes when every point shares one x: no line to estimate, leave as is.
+   double det = n * sumXSq - sumX * sumX;
+   if (det == 0)
+      return;
+
+   double slope = (n * sumXY - sumX * sumY) / det;
+   f1->SetParameters((sumY - slope * sumX) / n, slope);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Initial values of parameters for a gaussian

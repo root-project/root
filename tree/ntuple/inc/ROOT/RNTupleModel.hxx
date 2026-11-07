@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleModel.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 
@@ -35,17 +34,16 @@ class RNTupleWriteOptions;
 class RNTupleModel;
 class RNTupleWriter;
 
-namespace Experimental {
 namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
-} // namespace Experimental
 
 namespace Internal {
 class RProjectedFields;
 
 ROOT::RFieldZero &GetFieldZeroOfModel(RNTupleModel &model);
 RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);
+const RProjectedFields &GetProjectedFieldsOfModel(const RNTupleModel &model);
 
 // clang-format off
 /**
@@ -139,6 +137,7 @@ that were used for writing and are no longer connected to a page sink.
 class RNTupleModel {
    friend ROOT::RFieldZero &Internal::GetFieldZeroOfModel(RNTupleModel &);
    friend Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(RNTupleModel &);
+   friend const Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(const RNTupleModel &);
 
 public:
    /// User-provided function that describes the mapping of existing source fields to projected fields in terms
@@ -202,6 +201,8 @@ private:
 public:
    RNTupleModel(const RNTupleModel &) = delete;
    RNTupleModel &operator=(const RNTupleModel &) = delete;
+   RNTupleModel(RNTupleModel &&) = delete;
+   RNTupleModel &operator=(RNTupleModel &&) = delete;
    ~RNTupleModel() = default;
 
    std::unique_ptr<RNTupleModel> Clone() const;
@@ -212,8 +213,8 @@ public:
    /// Creates a "bare model", i.e. an RNTupleModel with no default entry, with the given field zero.
    static std::unique_ptr<RNTupleModel> CreateBare(std::unique_ptr<ROOT::RFieldZero> fieldZero);
 
-   /// Creates a new field given a `name` or `{name, description}` pair and a
-   /// corresponding, default-constructed value that is managed by a shared pointer.
+   /// Given a `name` and an optional description, creates a new field with a
+   /// corresponding default-constructed value that is managed by a shared pointer.
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
@@ -313,7 +314,7 @@ public:
    /// ~~~
    ///
    /// Creating projections for fields containing `std::variant` or fixed-size arrays is unsupported.
-   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
+   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, const FieldMappingFunc_t &mapping);
 
    /// Transitions an RNTupleModel from the *building* state to the *frozen* state, disabling adding additional fields
    /// and enabling creating entries from it. Freezing an already-frozen model is a no-op. Throws an RException if the
@@ -343,7 +344,7 @@ public:
    /// Creates a "bare entry", i.e. a entry with all null values. The user needs to explicitly call BindValue() or
    /// BindRawPtr() to set memory addresses before serializing / deserializing the entry.
    std::unique_ptr<REntry> CreateBareEntry() const;
-   std::unique_ptr<Experimental::Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const;
+   std::unique_ptr<Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const;
    /// Creates a token to be used in REntry methods to address a field present in the entry
    ROOT::RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an RException if no field with the given name exists.
@@ -409,11 +410,15 @@ struct RNTupleModelChangeset {
    RNTupleModelChangeset(RNTupleModel &model) : fModel(model) {}
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 
-   void AddField(std::unique_ptr<ROOT::RFieldBase> field);
+   // Returns the corresponding record field for parentName. Throws on error.
+   // Returns nullptr if parentName is empty (i.e. if the parent is the zero field).
+   ROOT::RRecordField *GetParentRecordField(std::string_view parentName) const;
+
+   void AddField(std::unique_ptr<ROOT::RFieldBase> field, std::string_view parentName = "");
 
    /// \see RNTupleModel::AddProjectedField()
    ROOT::RResult<void>
-   AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, RNTupleModel::FieldMappingFunc_t mapping);
+   AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, const RNTupleModel::FieldMappingFunc_t &mapping);
 };
 
 } // namespace Internal
@@ -431,7 +436,7 @@ private:
 
 public:
    explicit RUpdater(ROOT::RNTupleWriter &writer);
-   ~RUpdater() { CommitUpdate(); }
+   ~RUpdater();
    /// Begin a new set of alterations to the underlying model. As a side effect, all REntry
    /// instances related to the model are invalidated.
    void BeginUpdate();
@@ -443,19 +448,18 @@ public:
    template <typename T>
    std::shared_ptr<T> MakeField(std::string_view name, std::string_view description = "")
    {
-      auto objPtr = fOpenChangeset.fModel.MakeField<T>(name, description);
-      auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
-      auto it =
-         std::find_if(fieldZero->begin(), fieldZero->end(), [&](const auto &f) { return f.GetFieldName() == name; });
-      R__ASSERT(it != fieldZero->end());
-      fOpenChangeset.fAddedFields.emplace_back(&(*it));
-      return objPtr;
+      auto field = std::make_unique<ROOT::RField<T>>(name);
+      field->SetDescription(description);
+      AddField(std::move(field));
+      if (fOpenChangeset.fModel.IsBare())
+         return std::shared_ptr<T>();
+      return fOpenChangeset.fModel.GetDefaultEntry().GetPtr<T>(name);
    }
 
-   void AddField(std::unique_ptr<ROOT::RFieldBase> field);
+   void AddField(std::unique_ptr<ROOT::RFieldBase> field, std::string_view parentName = "");
 
    /// \see RNTupleModel::AddProjectedField()
-   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
+   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, const FieldMappingFunc_t &mapping);
 };
 
 } // namespace ROOT

@@ -194,12 +194,12 @@ TEST(RNTuple, TypeCastReal)
       auto ptrDoubleTrunc = model->GetDefaultEntry().GetPtr<double>("double_trunc");
 
       auto fieldFloatQuant = std::make_unique<RField<float>>("float_quant");
-      fieldFloatQuant->SetQuantized(-1, 1, 12);
+      fieldFloatQuant->SetQuantized(12, {-1, 1});
       model->AddField(std::move(fieldFloatQuant));
       auto ptrFloatQuant = model->GetDefaultEntry().GetPtr<float>("float_quant");
 
       auto fieldDoubleQuant = std::make_unique<RField<double>>("double_quant");
-      fieldDoubleQuant->SetQuantized(0, 1, 32);
+      fieldDoubleQuant->SetQuantized(32, {0, 1});
       model->AddField(std::move(fieldDoubleQuant));
       auto ptrDoubleQuant = model->GetDefaultEntry().GetPtr<double>("double_quant");
 

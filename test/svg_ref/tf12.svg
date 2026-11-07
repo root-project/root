@@ -18,57 +18,9 @@ tf12.svg
  -0.847l 4.5, -0.997l 4.5, -1.1l 4.5, -1.3" fill="none" stroke="#00ff00" stroke-width="3.0"/>
 <path d="M504,464l 4.5, -1.4" fill="none" stroke="#00ff00" stroke-width="3.0"/>
 <path d="M57,490h 454" fill="none" stroke="black"/>
-<path d="M57,477v 13" fill="none" stroke="black"/>
-<path d="M66,483v 6.5" fill="none" stroke="black"/>
-<path d="M75,483v 6.5" fill="none" stroke="black"/>
-<path d="M84,483v 6.5" fill="none" stroke="black"/>
-<path d="M93,483v 6.5" fill="none" stroke="black"/>
-<path d="M103,477v 13" fill="none" stroke="black"/>
-<path d="M112,483v 6.5" fill="none" stroke="black"/>
-<path d="M121,483v 6.5" fill="none" stroke="black"/>
-<path d="M130,483v 6.5" fill="none" stroke="black"/>
-<path d="M139,483v 6.5" fill="none" stroke="black"/>
-<path d="M148,477v 13" fill="none" stroke="black"/>
-<path d="M157,483v 6.5" fill="none" stroke="black"/>
-<path d="M166,483v 6.5" fill="none" stroke="black"/>
-<path d="M175,483v 6.5" fill="none" stroke="black"/>
-<path d="M184,483v 6.5" fill="none" stroke="black"/>
-<path d="M193,477v 13" fill="none" stroke="black"/>
-<path d="M202,483v 6.5" fill="none" stroke="black"/>
-<path d="M211,483v 6.5" fill="none" stroke="black"/>
-<path d="M220,483v 6.5" fill="none" stroke="black"/>
-<path d="M230,483v 6.5" fill="none" stroke="black"/>
-<path d="M239,477v 13" fill="none" stroke="black"/>
-<path d="M248,483v 6.5" fill="none" stroke="black"/>
-<path d="M257,483v 6.5" fill="none" stroke="black"/>
-<path d="M266,483v 6.5" fill="none" stroke="black"/>
-<path d="M275,483v 6.5" fill="none" stroke="black"/>
-<path d="M284,477v 13" fill="none" stroke="black"/>
-<path d="M293,483v 6.5" fill="none" stroke="black"/>
-<path d="M302,483v 6.5" fill="none" stroke="black"/>
-<path d="M311,483v 6.5" fill="none" stroke="black"/>
-<path d="M320,483v 6.5" fill="none" stroke="black"/>
-<path d="M329,477v 13" fill="none" stroke="black"/>
-<path d="M338,483v 6.5" fill="none" stroke="black"/>
-<path d="M347,483v 6.5" fill="none" stroke="black"/>
-<path d="M357,483v 6.5" fill="none" stroke="black"/>
-<path d="M366,483v 6.5" fill="none" stroke="black"/>
-<path d="M375,477v 13" fill="none" stroke="black"/>
-<path d="M384,483v 6.5" fill="none" stroke="black"/>
-<path d="M393,483v 6.5" fill="none" stroke="black"/>
-<path d="M402,483v 6.5" fill="none" stroke="black"/>
-<path d="M411,483v 6.5" fill="none" stroke="black"/>
-<path d="M420,477v 13" fill="none" stroke="black"/>
-<path d="M429,483v 6.5" fill="none" stroke="black"/>
-<path d="M438,483v 6.5" fill="none" stroke="black"/>
-<path d="M447,483v 6.5" fill="none" stroke="black"/>
-<path d="M456,483v 6.5" fill="none" stroke="black"/>
-<path d="M465,477v 13" fill="none" stroke="black"/>
-<path d="M474,483v 6.5" fill="none" stroke="black"/>
-<path d="M484,483v 6.5" fill="none" stroke="black"/>
-<path d="M493,483v 6.5" fill="none" stroke="black"/>
-<path d="M502,483v 6.5" fill="none" stroke="black"/>
-<path d="M511,477v 13" fill="none" stroke="black"/>
+<path d="M57,477v 13M66,483v 6.5M75,483v 6.5M84,483v 6.5M93,483v 6.5M103,477v 13M112,483v 6.5M121,483v 6.5M130,483v 6.5M139,483v 6.5M148,477v 13M157,483v 6.5M166,483v 6.5M175,483v 6.5M184,483v 6.5M193,477v 13M202,483v 6.5M211,483v 6.5M220,483v
+ 6.5M230,483v 6.5M239,477v 13M248,483v 6.5M257,483v 6.5M266,483v 6.5M275,483v 6.5M284,477v 13M293,483v 6.5M302,483v 6.5M311,483v 6.5M320,483v 6.5M329,477v 13M338,483v 6.5M347,483v 6.5M357,483v 6.5M366,483v 6.5M375,477v 13M384,483v 6.5M393,483v
+ 6.5M402,483v 6.5M411,483v 6.5M420,477v 13M429,483v 6.5M438,483v 6.5M447,483v 6.5M456,483v 6.5M465,477v 13M474,483v 6.5M484,483v 6.5M493,483v 6.5M502,483v 6.5M511,477v 13" fill="none" stroke="black"/>
 <text xml:space="preserve" x="52" y="510" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="89" y="510" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">0.5
@@ -92,33 +44,8 @@ tf12.svg
 <text xml:space="preserve" x="506" y="510" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">5
 </text>
 <path d="M57,490v -435" fill="none" stroke="black"/>
-<path d="M71,464h -14" fill="none" stroke="black"/>
-<path d="M64,448h -6.8" fill="none" stroke="black"/>
-<path d="M64,432h -6.8" fill="none" stroke="black"/>
-<path d="M64,416h -6.8" fill="none" stroke="black"/>
-<path d="M71,399h -14" fill="none" stroke="black"/>
-<path d="M64,383h -6.8" fill="none" stroke="black"/>
-<path d="M64,367h -6.8" fill="none" stroke="black"/>
-<path d="M64,351h -6.8" fill="none" stroke="black"/>
-<path d="M71,335h -14" fill="none" stroke="black"/>
-<path d="M64,318h -6.8" fill="none" stroke="black"/>
-<path d="M64,302h -6.8" fill="none" stroke="black"/>
-<path d="M64,286h -6.8" fill="none" stroke="black"/>
-<path d="M71,270h -14" fill="none" stroke="black"/>
-<path d="M64,253h -6.8" fill="none" stroke="black"/>
-<path d="M64,237h -6.8" fill="none" stroke="black"/>
-<path d="M64,221h -6.8" fill="none" stroke="black"/>
-<path d="M71,205h -14" fill="none" stroke="black"/>
-<path d="M64,188h -6.8" fill="none" stroke="black"/>
-<path d="M64,172h -6.8" fill="none" stroke="black"/>
-<path d="M64,156h -6.8" fill="none" stroke="black"/>
-<path d="M71,140h -14" fill="none" stroke="black"/>
-<path d="M64,123h -6.8" fill="none" stroke="black"/>
-<path d="M64,107h -6.8" fill="none" stroke="black"/>
-<path d="M64,91h -6.8" fill="none" stroke="black"/>
-<path d="M71,75h -14" fill="none" stroke="black"/>
-<path d="M64,481h -6.8" fill="none" stroke="black"/>
-<path d="M64,58h -6.8" fill="none" stroke="black"/>
+<path d="M71,464h -14M64,448h -6.8M64,432h -6.8M64,416h -6.8M71,399h -14M64,383h -6.8M64,367h -6.8M64,351h -6.8M71,335h -14M64,318h -6.8M64,302h -6.8M64,286h -6.8M71,270h -14M64,253h -6.8M64,237h -6.8M64,221h -6.8M71,205h -14M64,188h -6.8M64,172h
+ -6.8M64,156h -6.8M71,140h -14M64,123h -6.8M64,107h -6.8M64,91h -6.8M71,75h -14M64,481h -6.8M64,58h -6.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="27" y="473" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">0.2
 </text>
 <text xml:space="preserve" x="16" y="473" fill="black" font-size="20" font-family="Times">&#8722;

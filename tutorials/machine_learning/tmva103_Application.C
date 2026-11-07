@@ -15,27 +15,30 @@ using namespace TMVA::Experimental;
 
 void tmva103_Application()
 {
-   const char* model_filename = "tmva101.root";
+   const char* model_filename = "tmva101.json";
 
    if (gSystem->AccessPathName(model_filename)) {
       Info("tmva103_Application.C", "%s does not exist", model_filename);
       return;
    }
 
-   // Load BDT model
-   RBDT bdt("myBDT", model_filename);
+   // Load BDT model from the XGBoost JSON written by tmva101_Training.py
+   RBDT bdt = RBDT::LoadXGBoost(model_filename);
 
    // Apply model on a single input
    auto y1 = bdt.Compute({1.0, 2.0, 3.0, 4.0});
 
    std::cout << "Apply model on a single input vector: " << y1[0] << std::endl;
 
-   // Apply model on a batch of inputs
+   // Apply model on a batch of inputs given as a flat, row-major array:
+   // 2 events with 4 variables each
    float data[8] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
-   RTensor<float> x(data, {2, 4});
-   auto y2 = bdt.Compute(x);
+   auto y2 = bdt.Compute(data, 4);
 
-   std::cout << "Apply model on an input tensor: " << y2 << std::endl;
+   std::cout << "Apply model on a batch of inputs:";
+   for (const auto &output : y2)
+      std::cout << " " << output;
+   std::cout << std::endl;
 
    // Apply model as part of an RDataFrame workflow
    ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/SMHiggsToZZTo4L.root");

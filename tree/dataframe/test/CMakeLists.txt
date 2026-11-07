@@ -113,8 +113,11 @@ ROOT_GENERATE_DICTIONARY(ClassWithNestedSameNameDict
                          DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(datasource_ntuple datasource_ntuple.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(datasource_ntuple_processor datasource_ntuple_processor.cxx LIBRARIES ROOTDataFrame)
+
 if(MSVC)
   set_source_files_properties(datasource_ntuple.cxx PROPERTIES COMPILE_FLAGS /bigobj)
+  set_source_files_properties(datasource_ntuple_processor.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 ROOT_ADD_GTEST(dataframe_unified_constructor dataframe_unified_constructor.cxx LIBRARIES ROOTDataFrame)
 
@@ -127,8 +130,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NTupleStruct
 configure_file(NTupleStruct.hxx . COPYONLY)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET NTupleStruct POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libNTupleStruct.dll
-                                      ${CMAKE_CURRENT_BINARY_DIR}/libNTupleStruct.dll)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libNTupleStruct.dll
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/libNTupleStruct.dll)
 endif()
 ROOT_GENERATE_DICTIONARY(ClassWithArraysDict ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithArrays.h
                           MODULE datasource_ntuple LINKDEF ClassWithArraysLinkDef.h OPTIONS -inlineInputHeader
@@ -137,6 +140,11 @@ ROOT_GENERATE_DICTIONARY(ClassWithArraysDict ${CMAKE_CURRENT_SOURCE_DIR}/ClassWi
 #### TESTS REQUIRING EXTRA ROOT FEATURES ####
 if (imt)
    ROOT_ADD_GTEST(dataframe_concurrency dataframe_concurrency.cxx LIBRARIES ROOTDataFrame)
+endif()
+
+if (root7)
+   ROOT_ADD_GTEST(dataframe_hist dataframe_hist.cxx LIBRARIES ROOTDataFrame ROOTHist)
+   ROOT_ADD_GTEST(dataframe_profile dataframe_profile.cxx LIBRARIES ROOTDataFrame ROOTHist)
 endif()
 
 if(ARROW_FOUND)
@@ -163,6 +171,25 @@ if(pyroot)
     ROOT_ADD_PYUNITTEST(dataframe_merge_results dataframe_merge_results.py)
     ROOT_ADD_PYUNITTEST(dataframe_snapshot_py dataframe_snapshot.py)
   endif()
+  if(root7)
+    ROOT_ADD_PYUNITTEST(dataframe_hist dataframe_hist.py)
+  endif()
 endif()
 
 configure_file(.rootrc . COPYONLY)
+
+# This test writes a column of an interpreted type to disk and checks its contents
+ROOT_ADD_GTEST(
+  dataframe_snapshot_interpreted_class_write
+  dataframe_snapshot_interpreted_class_write.cxx
+  LIBRARIES ROOTDataFrame
+  FIXTURES_SETUP dataframe_snapshot_interpreted_class_fixture)
+
+# Here we read back from disk the contents of that column in a different process
+# to avoid having the interpreter know about the definition of that class. Since
+# there is no dictionary, only the data members of the class can be accessed
+ROOT_ADD_GTEST(
+  dataframe_snapshot_interpreted_class_read
+  dataframe_snapshot_interpreted_class_read.cxx
+  LIBRARIES ROOTDataFrame
+  FIXTURES_REQUIRED dataframe_snapshot_interpreted_class_fixture)

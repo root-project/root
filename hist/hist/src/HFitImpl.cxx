@@ -77,7 +77,7 @@ namespace HFit {
    void StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::DataRange & range, bool, bool, const char *goption);
 
    template <class FitObject>
-   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange, ROOT::Fit::EChisquareType type );
+   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange, ROOT::Fit::EChisquareType type, bool useIntegral = false);
 
 
 
@@ -232,6 +232,10 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
       else if (special == 200)      ROOT::Fit::InitExpo  (*fitdata, f1); // exponential
 
+      // A polN reaches this point only because coordinate errors turned the
+      // linear fitter off above, so it needs a starting point like the others.
+      else if (special == 299 + npar)
+         ROOT::Fit::InitPolynom(*fitdata, f1); // polN
    }
 
 
@@ -239,7 +243,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    // if option grad is specified use gradient
    if ( (linear || fitOption.Gradient) )
       fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*f1));
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    else if(f1->IsVectorized())
       fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> &>(ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*f1)));
 #endif
@@ -695,6 +699,18 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    TString opt = option;
    opt.ToUpper();
 
+   // Parse the execution policy options first and strip them from the option
+   // string, so that the remaining letters (e.g. the "T", "E", "R" in
+   // "MULTITHREAD") are not mistaken for single-letter options below.
+   if (opt.Contains("SERIAL")) {
+      fitOption.ExecPolicy = ROOT::EExecutionPolicy::kSequential;
+      opt.ReplaceAll("SERIAL", "");
+   }
+   if (opt.Contains("MULTITHREAD")) {
+      fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
+      opt.ReplaceAll("MULTITHREAD", "");
+   }
+
    // parse firt the specific options
    if (type == EFitObjectType::kHistogram) {
 
@@ -714,16 +730,6 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       //    fitOption.ExecPolicy = ROOT::Fit::kMultiprocess;
       //    opt.ReplaceAll("MULTIPROC","");
       // }
-
-      if (opt.Contains("SERIAL")) {
-         fitOption.ExecPolicy = ROOT::EExecutionPolicy::kSequential;
-         opt.ReplaceAll("SERIAL","");
-      }
-
-      if (opt.Contains("MULTITHREAD")) {
-         fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
-         opt.ReplaceAll("MULTITHREAD","");
-      }
 
       if (opt.Contains("I"))  fitOption.Integral= 1;   // integral of function in the bin (no sense for graph)
       if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins or points have weight =1 (for chi2 fit)
@@ -1029,8 +1035,8 @@ TFitResultPtr ROOT::Fit::FitObject(THnBase * s1, TF1 *f1 , Foption_t & foption ,
 // function to compute the simple chi2 for graphs and histograms
 
 
-double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange, ROOT::Fit::EChisquareType type) {
-   return HFit::ComputeChi2(h1,f1,useRange, type);
+double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange, ROOT::Fit::EChisquareType type, bool useIntegral) {
+   return HFit::ComputeChi2(h1,f1,useRange, type, useIntegral);
 }
 
 double ROOT::Fit::Chisquare(const TGraph & g, TF1 & f1, bool useRange) {
@@ -1038,13 +1044,14 @@ double ROOT::Fit::Chisquare(const TGraph & g, TF1 & f1, bool useRange) {
 }
 
 template<class FitObject>
-double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, ROOT::Fit::EChisquareType type ) {
+double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, ROOT::Fit::EChisquareType type, bool useIntegral ) {
 
    // implement using the fitting classes
    ROOT::Fit::DataOptions opt;
    opt.fUseEmpty = (type != ROOT::Fit::EChisquareType::kNeyman);  // use empty bin when not using Neyman chisquare (observed error)
    opt.fExpErrors = (type == ROOT::Fit::EChisquareType::kPearson);
    opt.fErrors1 = (type == ROOT::Fit::EChisquareType::kPearson);  // not using observed errors in Pearson chi2
+   opt.fIntegral = useIntegral;  // use bin integral instead of value at bin center
 
    ROOT::Fit::DataRange range;
    // get range of function

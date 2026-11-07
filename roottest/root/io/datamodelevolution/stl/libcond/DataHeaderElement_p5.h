@@ -9,7 +9,6 @@
 #define DataHeaderElement_p5_h
 class DataHeaderElement_p5;
 
-#include "Riostream.h"
 #include <string>
 
 class DataHeaderElement_p5 {

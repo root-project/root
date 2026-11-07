@@ -32,9 +32,12 @@ ROOT GUI Window base class.
 #include "TGWindow.h"
 #include <iostream>
 #include "TVirtualX.h"
+#include "TVirtualPad.h"
 #include "TApplication.h"
 #include "TError.h"
 #include "TSystem.h"
+#include "TImage.h"
+#include "TASUtils.h"
 
 
 Int_t TGWindow::fgCounter = 0;

@@ -42,7 +42,7 @@ if [ $res -ne 0 ] ; then
   exit $res;
 fi
 
-root.exe -b -l -q $ROOTSYS/tutorials/net/parallelMergeServer.C+ &
+root.exe -b -q $ROOTSYS/tutorials/net/parallelMergeServer.C+ &
 res=$?
 if [ $res -ne 0 ] ; then
   exit $res;
@@ -61,7 +61,7 @@ fi
 
 for index in ${sequence}
 do
-  root.exe -b -l -q "parallelMergeTest.C+($nhist,$ndims,$nbins)" & # > output.$index &
+  root.exe -b -q "parallelMergeTest.C+($nhist,$ndims,$nbins)" & # > output.$index &
 done
 
 wait

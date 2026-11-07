@@ -17,7 +17,7 @@
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TGeometry.h"
+#include "TGeometryTransformer.h"
 #include "TMath.h"
 
 #include <cassert>
@@ -503,14 +503,14 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
       }
 
       // Transform points
-      if (gGeometry && !buffer.fLocalFrame) {
+      if (ROOT::Internal::currentTGeometryTransformer && !buffer.fLocalFrame) {
          Double_t dlocal[3];
          Double_t dmaster[3];
          for (UInt_t j=0; j<buffer.NbPnts(); j++) {
             dlocal[0] = buffer.fPnts[3*j];
             dlocal[1] = buffer.fPnts[3*j+1];
             dlocal[2] = buffer.fPnts[3*j+2];
-            gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
+            ROOT::Internal::currentTGeometryTransformer(&dlocal[0], &dmaster[0]);
             buffer.fPnts[3*j]   = dmaster[0];
             buffer.fPnts[3*j+1] = dmaster[1];
             buffer.fPnts[3*j+2] = dmaster[2];

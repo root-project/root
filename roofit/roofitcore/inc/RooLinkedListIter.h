@@ -232,7 +232,7 @@ class RooLinkedListIter final : public TIterator {
   TObject * operator*() const override {return fIterImpl->operator*();}
 
   private:
-  std::shared_ptr<TIterator> fIterImpl; //!
+  std::shared_ptr<TIterator> fIterImpl; ///<!
 };
 
 

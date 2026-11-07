@@ -116,8 +116,8 @@ def StandardHistFactoryPlotsWithCategories(
     mc.GetNuisanceParameters().Print("v")
     nPlotsMax = 1000
     print(f" check expectedData by category")
-    simData = ROOT.kNone
-    simPdf = ROOT.kNone
+    simData = ROOT.nullptr
+    simPdf = ROOT.nullptr
     if str(mc.GetPdf().ClassName()) == "RooSimultaneous":
         print(f"Is a simultaneous PDF")
         simPdf = mc.GetPdf()

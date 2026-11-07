@@ -67,15 +67,18 @@ void tessellatedNav(const char *dot_obj_file = "", bool check = false)
       converter->ConvertGeometry();
    }
 
-   if (gROOT->IsBatch())
-      return;
+   auto c1 = new TCanvas("c1", "Raytracing", 800, 600);
+
    // Set the view
    top->Draw();
-   TView *view = gPad->GetView();
+   TView *view = c1->GetView();
    if (!view)
       return;
    view->Top();
 
    // Raytracing will call VecGeom navigation
    top->Raytrace();
+
+   // one can store created image to PNG
+   c1->SaveAs("raytrace.png");
 }

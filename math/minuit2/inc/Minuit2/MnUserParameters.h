@@ -36,17 +36,13 @@ class MnMachinePrecision;
 class MnUserParameters {
 
 public:
-   MnUserParameters() : fTransformation(MnUserTransformation()) {}
+   MnUserParameters() = default;
 
    MnUserParameters(std::span<const double>, std::span<const double>);
 
-   MnUserParameters(const MnUserParameters &par) : fTransformation(par.fTransformation) {}
+   MnUserParameters(const MnUserParameters &par) = default;
 
-   MnUserParameters &operator=(const MnUserParameters &par)
-   {
-      fTransformation = par.fTransformation;
-      return *this;
-   }
+   MnUserParameters &operator=(const MnUserParameters &par) = default;
 
    const MnUserTransformation &Trafo() const { return fTransformation; }
 

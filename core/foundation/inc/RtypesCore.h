@@ -48,6 +48,7 @@ class TRootIOCtor;
 
 //---- types -------------------------------------------------------------------
 
+// clang-format off
 typedef char           Char_t;      ///< Character 1 byte (char) \warning Can be signed (most common) or unsigned depending on platform and compiler flags. \deprecated Consider replacing with `char`, `signed char` or `std::int8_t`
 typedef unsigned char  UChar_t;     ///< Unsigned Character 1 byte (unsigned char) \deprecated Consider replacing with `unsigned char` or `std::uint8_t`
 typedef short          Short_t;     ///< Signed Short integer 2 bytes (short) \deprecated Consider replacing with `short` or `std::int16_t`
@@ -64,7 +65,7 @@ typedef int            Seek_t;      ///< File pointer (int).
 typedef long           Long_t;      ///< Signed long integer 8 bytes (long). Size depends on architecture \deprecated Consider replacing with `long`
 typedef unsigned long  ULong_t;     ///< Unsigned long integer 8 bytes (unsigned long). Size depends on architecture \deprecated Consider replacing with `unsigned long`
 #else
-typedef int            Seek_t;      ///< File pointer (int). 
+typedef int            Seek_t;      ///< File pointer (int).
 typedef long           Long_t;      ///< Signed long integer 4 bytes (long). Size depends on architecture \deprecated Consider replacing with `long`
 typedef unsigned long  ULong_t;     ///< Unsigned long integer 4 bytes (unsigned long). Size depends on architecture \deprecated Consider replacing with `unsigned long`
 #endif
@@ -119,7 +120,7 @@ constexpr UInt_t kMaxUInt = UInt_t(~0);        ///< \deprecated Consider replaci
 constexpr Int_t kMaxInt = Int_t(kMaxUInt >> 1);///< \deprecated Consider replacing with `std::numeric_limits<int>::max()` (or `std::int32_t`)
 constexpr Int_t kMinInt = -kMaxInt - 1;        ///< \deprecated Consider replacing with `std::numeric_limits<int>::lowest()` (or `std::int32_t`)
 
-constexpr ULong_t kMaxULong = ULong_t(~0);         ///< \deprecated Consider replacing with `std::numeric_limits<unsigned long>::max()`
+constexpr ULong_t kMaxULong = ULong_t(-1);         ///< \deprecated Consider replacing with `std::numeric_limits<unsigned long>::max()`
 constexpr Long_t kMaxLong = Long_t(kMaxULong >> 1);///< \deprecated Consider replacing with `std::numeric_limits<long>::max()`
 constexpr Long_t kMinLong = -kMaxLong - 1;         ///< \deprecated Consider replacing with `std::numeric_limits<long>::lowest()`
 
@@ -129,6 +130,7 @@ constexpr Long64_t kMinLong64 = -kMaxLong64 - 1;           ///< \deprecated Cons
 
 constexpr ULong_t kBitsPerByte = 8; ///< \deprecated Consider replacing with `std::numeric_limits<unsigned char>::digits`.
 constexpr Ssiz_t kNPOS = ~(Ssiz_t)0;///< The equivalent of `std::string::npos` for the ROOT class TString. \note Consider using std::string instead of TString whenever possible
+// clang-format on
 
 //---- debug global ------------------------------------------------------------
 

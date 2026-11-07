@@ -69,13 +69,6 @@ namespace TMVA {
       // remove namespace in name
       const char* GetName() const override { return fClassName; }
 
-      // setting up variables for JsMVA interactive training
-      void SetIPythonInteractive(bool* ExitFromTraining, UInt_t *fIPyMaxIter_, UInt_t *fIPyCurrentIter_){
-        fExitFromTraining = ExitFromTraining;
-        fIPyMaxIter = fIPyMaxIter_;
-        fIPyCurrentIter = fIPyCurrentIter_;
-      }
-
    protected:
 
       // need to implement option declaration
@@ -85,14 +78,10 @@ namespace TMVA {
       const std::vector<TMVA::Interval*>  fRanges;       // allowed intervals
       Int_t                               fNpars;        // number of parameters
 
-      mutable MsgLogger*                  fLogger;       //! message logger
+      mutable MsgLogger*                  fLogger;       ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
       TString                             fClassName;    // remove TMVA:: from TObject name
-
-      // variables needed by JsMVA
-      UInt_t *fIPyCurrentIter = nullptr, *fIPyMaxIter = nullptr;
-      bool* fExitFromTraining = nullptr;
 
       ClassDefOverride(FitterBase,0); // Baseclass for fitters
    };

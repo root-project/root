@@ -27,7 +27,8 @@ End_Macro
 
 #include "TCurlyLine.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
+#include "TLineInteractive.h"
+#include "TROOT.h"
 #include "TMath.h"
 #include "TPoint.h"
 
@@ -79,21 +80,19 @@ void TCurlyLine::Build()
 
    Double_t wavelengthPix,amplitudePix, lengthPix, hPix;
    Double_t px1, py1, px2, py2;
+
    if (gPad) {
-      Double_t ww = (Double_t)gPad->GetWw();
-      Double_t wh = (Double_t)gPad->GetWh();
-      Double_t pxrange = gPad->GetAbsWNDC()*ww;
-      Double_t pyrange = - gPad->GetAbsHNDC()*wh;
+      Double_t pxrange = gPad->GetPadWidth();
+      Double_t pyrange = -1. * gPad->GetPadHeight();
       Double_t xrange  = gPad->GetX2() - gPad->GetX1();
       Double_t yrange  = gPad->GetY2() - gPad->GetY1();
       pixeltoX  = xrange / pxrange;
-      pixeltoY  = yrange/pyrange;
-      hPix  = TMath::Max(gPad->GetAbsHNDC() * gPad->GetWh(), gPad->GetAbsWNDC() * gPad->GetWw());
+      pixeltoY  = yrange / pyrange;
+      hPix  = TMath::Max(pxrange, -pyrange);
       px1      = gPad->XtoAbsPixel(fX1);
       py1      = gPad->YtoAbsPixel(fY1);
       px2      = gPad->XtoAbsPixel(fX2);
       py2      = gPad->YtoAbsPixel(fY2);
-
       lengthPix = TMath::Sqrt((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
       wavelengthPix = hPix*fWaveLength;
       amplitudePix  = hPix*fAmplitude;
@@ -169,6 +168,17 @@ Int_t TCurlyLine::DistancetoPrimitive(Int_t px, Int_t py)
    return DistancetoLine(px,py,fX1,fY1,fX2,fY2);
 }
 
+class TCurlyLineInteractive : public TLineInteractive {
+public:
+   using TLineInteractive::TLineInteractive;
+
+   void Apply(TCurlyLine *l, Bool_t usenew = kTRUE)
+   {
+      l->SetStartPoint(usenew ? newX1 : oldX1, usenew ? newY1 : oldY1);
+      l->SetEndPoint(usenew ? newX2 : oldX2, usenew ? newY2 : oldY2);
+   }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -182,153 +192,61 @@ Int_t TCurlyLine::DistancetoPrimitive(Int_t px, Int_t py)
 
 void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable()) return;
 
-   Int_t kMaxDiff = 20;
-   static Int_t d1,d2,px1,px2,py1,py2;
-   static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
-   static Bool_t p1, p2, pL;
-   Int_t dx, dy;
+   auto &parent = *gPad;
 
-   Bool_t opaque  = gPad->OpaqueMoving();
+   Bool_t opaque  = parent.OpaqueMoving();
+
+   auto inter = parent.GetInteractive<TCurlyLineInteractive>(this);
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-      if (!opaque) {
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();  //Change line attributes only if necessary
-      }
-
+      inter = parent.MakeInteractive<TCurlyLineInteractive>(this, GetStartX(), GetStartY(), GetEndX(), GetEndY());
       // No break !!!
 
    case kMouseMotion:
-
-      px1 = gPad->XtoAbsPixel(fX1);
-      py1 = gPad->YtoAbsPixel(fY1);
-      px2 = gPad->XtoAbsPixel(fX2);
-      py2 = gPad->YtoAbsPixel(fY2);
-
-      p1 = p2 = pL = kFALSE;
-
-      d1  = TMath::Abs(px1 - px) + TMath::Abs(py1-py); //simply take sum of pixels differences
-      if (d1 < kMaxDiff) { //*-*================>OK take point number 1
-         px1old = px1; py1old = py1;
-         p1 = kTRUE;
-         gPad->SetCursor(kPointer);
-         return;
-      }
-      d2  = TMath::Abs(px2 - px) + TMath::Abs(py2-py); //simply take sum of pixels differences
-      if (d2 < kMaxDiff) { //*-*================>OK take point number 2
-         px2old = px2; py2old = py2;
-         p2 = kTRUE;
-         gPad->SetCursor(kPointer);
-         return;
-      }
-
-      pL = kTRUE;
-      pxold = px; pyold = py;
-      gPad->SetCursor(kMove);
-
+      if (inter)
+         inter->SelectPoint(parent, px, py);
       break;
 
    case kArrowKeyRelease:
    case kButton1Motion:
-
-      if (p1) {
-         if (!opaque) {
-            gVirtualX->DrawLine(px1old, py1old, px2, py2);
-            gVirtualX->DrawLine(px, py, px2, py2);
-         }
-         else this->SetStartPoint(gPad->AbsPixeltoX(px),gPad->AbsPixeltoY(py));
-         px1old = px;
-         py1old = py;
+      if (!inter)
+         return;
+      inter->ChangeCoordinate(parent, px, py);
+      if (!opaque) {
+         TAttLine::ModifyOn(parent);
+         inter->PaintLine(parent);
+      } else {
+         inter->Apply(this);
+         char guide = inter->GetGuideChar();
+         if (guide)
+            parent.ShowGuidelines(this, event, guide, true);
+         parent.Modified();
       }
-      if (p2) {
-         if (!opaque) {
-            gVirtualX->DrawLine(px1, py1, px2old, py2old);
-            gVirtualX->DrawLine(px1, py1, px, py);
-         }
-         else this->SetEndPoint(gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py));
-         px2old = px;
-         py2old = py;
-      }
-      if (pL) {
-         if (!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
-         dx = px-pxold;  dy = py-pyold;
-         px1 += dx; py1 += dy; px2 += dx; py2 += dy;
-         if (!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
-         pxold = px;
-         pyold = py;
-         if (opaque) {
-            this->SetStartPoint(gPad->AbsPixeltoX(px1),gPad->AbsPixeltoY(py1));
-            this->SetEndPoint(gPad->AbsPixeltoX(px2), gPad->AbsPixeltoY(py2));
-         }
-      }
-
-      if (opaque) {
-         if (p1) {
-            //check in which corner the BBox is edited
-            if (fX1>fX2) {
-               if (fY1>fY2)
-                  gPad->ShowGuidelines(this, event, '2', true);
-               else
-                  gPad->ShowGuidelines(this, event, '3', true);
-            }
-            else {
-               if (fY1>fY2)
-                  gPad->ShowGuidelines(this, event, '1', true);
-               else
-                  gPad->ShowGuidelines(this, event, '4', true);
-            }
-         }
-         if (p2) {
-            //check in which corner the BBox is edited
-            if (fX1>fX2) {
-               if (fY1>fY2)
-                  gPad->ShowGuidelines(this, event, '4', true);
-               else
-                  gPad->ShowGuidelines(this, event, '1', true);
-            }
-            else {
-               if (fY1>fY2)
-                  gPad->ShowGuidelines(this, event, '3', true);
-               else
-                  gPad->ShowGuidelines(this, event, '2', true);
-            }
-         }
-         if (pL) {
-            gPad->ShowGuidelines(this, event, 'i', true);
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
+      parent.UpdateAsync();
       break;
 
    case kButton1Up:
-
-      if (opaque) {
-         gPad->ShowGuidelines(this, event);
-      } else {
-         if (p1) {
-            fX1 = gPad->AbsPixeltoX(px);
-            fY1 = gPad->AbsPixeltoY(py);
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         if (opaque && inter) {
+            inter->Apply(this, kFALSE);
+            parent.Modified();
+            parent.ShowGuidelines(this, event);
          }
-         if (p2) {
-            fX2 = gPad->AbsPixeltoX(px);
-            fY2 = gPad->AbsPixeltoY(py);
-         }
-         if (pL) {
-            fX1 = gPad->AbsPixeltoX(px1);
-            fY1 = gPad->AbsPixeltoY(py1);
-            fX2 = gPad->AbsPixeltoX(px2);
-            fY2 = gPad->AbsPixeltoY(py2);
-         }
+      } else if (opaque) {
+         parent.ShowGuidelines(this, event);
+      } else if (inter) {
+         inter->Apply(this);
+         parent.Modified();
       }
-      Build();
-      gPad->Modified();
-      if (!opaque) gVirtualX->SetLineColor(-1);
+      parent.UpdateAsync();
+      parent.FreeInteractive(this);
+      break;
    }
 }
 
@@ -457,71 +375,24 @@ Bool_t TCurlyLine::GetDefaultIsCurly()
 
 Rectangle_t TCurlyLine::GetBBox()
 {
-   Rectangle_t BBox{0,0,0,0};
+   Rectangle_t bbox{0,0,0,0};
    if (gPad) {
       Int_t px1 = gPad->XtoPixel(fX1);
       Int_t px2 = gPad->XtoPixel(fX2);
       Int_t py1 = gPad->YtoPixel(fY1);
       Int_t py2 = gPad->YtoPixel(fY2);
 
-      if (px1 > px2) {
-         Int_t tmp = px1;
-         px1 = px2;
-         px2 = tmp;
-      }
-      if (py1 > py2) {
-         Int_t tmp = py1;
-         py1 = py2;
-         py2 = tmp;
-      }
+      if (px1 > px2)
+         std::swap(px1, px2);
+      if (py1 > py2)
+         std::swap(py1, py2);
 
-      BBox.fX = px1;
-      BBox.fY = py1;
-      BBox.fWidth = px2 - px1;
-      BBox.fHeight = py2 - py1;
+      bbox.fX = px1;
+      bbox.fY = py1;
+      bbox.fWidth = px2 - px1;
+      bbox.fHeight = py2 - py1;
    }
-   return BBox;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the center of the BoundingBox as TPoint in pixels
-
-TPoint TCurlyLine::GetBBoxCenter()
-{
-   TPoint p(0,0);
-   if (gPad) {
-      p.SetX(gPad->XtoPixel(TMath::Min(fX1, fX2) + 0.5 * (TMath::Max(fX1, fX2) - TMath::Min(fX1, fX2))));
-      p.SetY(gPad->YtoPixel(TMath::Min(fY1, fY2) + 0.5 * (TMath::Max(fY1, fY2) - TMath::Min(fY1, fY2))));
-   }
-   return p;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set center of the BoundingBox
-
-void TCurlyLine::SetBBoxCenter(const TPoint &p)
-{
-   if (!gPad) return;
-   Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
-   Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
-   Double_t x1, x2, y1, y2;
-
-   if (fX2 > fX1) {
-      x1 = gPad->PixeltoX(p.GetX())-0.5*w;
-      x2 = gPad->PixeltoX(p.GetX())+0.5*w;
-   } else {
-      x2 = gPad->PixeltoX(p.GetX())-0.5*w;
-      x1 = gPad->PixeltoX(p.GetX())+0.5*w;
-   }
-   if (fY2 > fY1) {
-      y1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h;
-      y2 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h;
-   } else {
-      y2 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h;
-      y1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h;
-   }
-   this->SetStartPoint(x1, y1);
-   this->SetEndPoint(x2, y2);
+   return bbox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -529,16 +400,10 @@ void TCurlyLine::SetBBoxCenter(const TPoint &p)
 
 void TCurlyLine::SetBBoxCenterX(const Int_t x)
 {
-   if (!gPad) return;
-   Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
-   if (fX2>fX1) {
-      this->SetStartPoint(gPad->PixeltoX(x)-0.5*w, fY1);
-      this->SetEndPoint(gPad->PixeltoX(x)+0.5*w, fY2);
-   }
-   else {
-      this->SetEndPoint(gPad->PixeltoX(x)-0.5*w, fY2);
-      this->SetStartPoint(gPad->PixeltoX(x)+0.5*w, fY1);
-   }
+   Double_t w2 = 0.5 * (fX2 - fX1);
+   Double_t midx = GetXCoord(x);
+   SetStartPoint(midx - w2, fY1);
+   SetEndPoint(midx + w2, fY2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,16 +411,10 @@ void TCurlyLine::SetBBoxCenterX(const Int_t x)
 
 void TCurlyLine::SetBBoxCenterY(const Int_t y)
 {
-   if (!gPad) return;
-   Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
-   if (fY2>fY1) {
-      this->SetStartPoint(fX1, gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
-      this->SetEndPoint(fX2, gPad->PixeltoY(y-gPad->VtoPixel(0))+0.5*h);
-   }
-   else {
-      this->SetEndPoint(fX2, gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
-      this->SetStartPoint(fX1, gPad->PixeltoY(y-gPad->VtoPixel(0))+0.5*h);
-   }
+   Double_t h2 = 0.5 * (fY2 - fY1);
+   Double_t midy = GetYCoord(y);
+   SetStartPoint(fX1, midy - h2);
+   SetEndPoint(fX2, midy + h2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -564,11 +423,10 @@ void TCurlyLine::SetBBoxCenterY(const Int_t y)
 
 void TCurlyLine::SetBBoxX1(const Int_t x)
 {
-   if (!gPad) return;
-   if (fX2>fX1)
-      this->SetStartPoint(gPad->PixeltoX(x), fY1);
+   if (fX2 > fX1)
+      SetStartPoint(GetXCoord(x), fY1);
    else
-      this->SetEndPoint(gPad->PixeltoX(x), fY2);
+      SetEndPoint(GetXCoord(x), fY2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -577,11 +435,10 @@ void TCurlyLine::SetBBoxX1(const Int_t x)
 
 void TCurlyLine::SetBBoxX2(const Int_t x)
 {
-   if (!gPad) return;
-   if (fX2>fX1)
-      this->SetEndPoint(gPad->PixeltoX(x), fY2);
+   if (fX2 > fX1)
+      SetEndPoint(GetXCoord(x), fY2);
    else
-      this->SetStartPoint(gPad->PixeltoX(x), fY1);
+      SetStartPoint(GetXCoord(x), fY1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,11 +446,10 @@ void TCurlyLine::SetBBoxX2(const Int_t x)
 
 void TCurlyLine::SetBBoxY1(const Int_t y)
 {
-   if (!gPad) return;
-   if (fY2>fY1)
-      this->SetEndPoint(fX2, gPad->PixeltoY(y - gPad->VtoPixel(0)));
+   if (fY2 > fY1)
+      SetEndPoint(fX2, GetYCoord(y));
    else
-      this->SetStartPoint(fX1, gPad->PixeltoY(y - gPad->VtoPixel(0)));
+      SetStartPoint(fX1, GetYCoord(y));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -602,9 +458,8 @@ void TCurlyLine::SetBBoxY1(const Int_t y)
 
 void TCurlyLine::SetBBoxY2(const Int_t y)
 {
-   if (!gPad) return;
-   if (fY2>fY1)
-      this->SetStartPoint(fX1, gPad->PixeltoY(y - gPad->VtoPixel(0)));
+   if (fY2 > fY1)
+      SetStartPoint(fX1, GetYCoord(y));
    else
-      this->SetEndPoint(fX2, gPad->PixeltoY(y - gPad->VtoPixel(0)));
+      SetEndPoint(fX2, GetYCoord(y));
 }

@@ -5,13 +5,62 @@
 #ifndef CPPINTEROP_COMPATIBILITY_H
 #define CPPINTEROP_COMPATIBILITY_H
 
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/GlobalDecl.h"
+#include "clang/AST/PrettyPrinter.h"
+#include "clang/Basic/DiagnosticIDs.h"
+#include "clang/Basic/DiagnosticOptions.h"
+#include "clang/Basic/OffloadArch.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/Version.h"
 #include "clang/Config/config.h"
+#include "clang/Driver/Compilation.h"
+#include "clang/Driver/Driver.h"
+#if CLANG_VERSION_MAJOR < 22
+#include "clang/Driver/Options.h"
+#else
+#include "clang/Options/Options.h"
+#endif
+#include "clang/Frontend/TextDiagnosticBuffer.h"
 #include "clang/Sema/Sema.h"
+
+#include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/STLForwardCompat.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringSet.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/TargetParser/Triple.h"
+
+#include "CppInterOp/Box.h"
+
+#include <atomic>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+#if CLANG_VERSION_MAJOR < 22
+#define clang_driver_options clang::driver::options
+#else
+#define clang_driver_options clang::options
+#endif
+
+#if CLANG_VERSION_MAJOR < 22
+#define Suppress_Elab SuppressElaboration
+#else
+#define Suppress_Elab FullyQualifiedName
+#endif
 
 #ifdef _MSC_VER
 #define dup _dup
@@ -31,37 +80,8 @@ static inline char* GetEnv(const char* Var_Name) {
 #endif
 }
 
-#if CLANG_VERSION_MAJOR < 19
-#define Template_Deduction_Result Sema::TemplateDeductionResult
-#define Template_Deduction_Result_Success                                      \
-  Sema::TemplateDeductionResult::TDK_Success
-#else
-#define Template_Deduction_Result TemplateDeductionResult
-#define Template_Deduction_Result_Success TemplateDeductionResult::Success
-#endif
-
-#if CLANG_VERSION_MAJOR < 19
-#define For_Visible_Redeclaration Sema::ForVisibleRedeclaration
-#define Clang_For_Visible_Redeclaration clang::Sema::ForVisibleRedeclaration
-#else
-#define For_Visible_Redeclaration RedeclarationKind::ForVisibleRedeclaration
-#define Clang_For_Visible_Redeclaration                                        \
-  RedeclarationKind::ForVisibleRedeclaration
-#endif
-
-#if CLANG_VERSION_MAJOR < 19
-#define CXXSpecialMemberKindDefaultConstructor                                 \
-  clang::Sema::CXXDefaultConstructor
-#define CXXSpecialMemberKindCopyConstructor clang::Sema::CXXCopyConstructor
-#define CXXSpecialMemberKindMoveConstructor clang::Sema::CXXMoveConstructor
-#else
-#define CXXSpecialMemberKindDefaultConstructor                                 \
-  CXXSpecialMemberKind::DefaultConstructor
-#define CXXSpecialMemberKindCopyConstructor                                    \
-  CXXSpecialMemberKind::CopyConstructor
-#define CXXSpecialMemberKindMoveConstructor                                    \
-  CXXSpecialMemberKind::MoveConstructor
-#endif
+#define STRINGIFY(s) STRINGIFY_X(s)
+#define STRINGIFY_X(...) #__VA_ARGS__
 
 #include "clang/Interpreter/CodeCompletion.h"
 
@@ -87,9 +107,10 @@ static inline char* GetEnv(const char* Var_Name) {
 #include "cling/Utils/AST.h"
 
 #include <regex>
+#include <vector>
 
-namespace Cpp {
-namespace Cpp_utils = cling::utils;
+namespace CppInternal {
+namespace utils = cling::utils;
 }
 
 namespace compat {
@@ -200,32 +221,276 @@ inline void codeComplete(std::vector<std::string>& Results,
 #include "clang/Interpreter/Interpreter.h"
 #include "clang/Interpreter/Value.h"
 
+#include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/Error.h"
+#include "llvm/TargetParser/Host.h"
+
+#if LLVM_VERSION_MAJOR > 21
+#include "clang/Basic/Version.h"
+#include "clang/Interpreter/IncrementalExecutor.h"
+
+#include "llvm/ExecutionEngine/Orc/Debugging/DebuggerSupport.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Path.h"
+#endif
+
+#if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32)
+#include <unistd.h>
+#endif
+
+#ifndef _WIN32
+#include <dlfcn.h>
+#endif
+
+#include <algorithm>
 
 namespace compat {
 
-inline std::unique_ptr<clang::Interpreter>
-createClangInterpreter(std::vector<const char*>& args) {
-  auto has_arg = [](const char* x, llvm::StringRef match = "cuda") {
-    llvm::StringRef Arg = x;
-    Arg = Arg.trim().ltrim('-');
-    return Arg == match;
-  };
-  auto it = std::find_if(args.begin(), args.end(), has_arg);
-  std::vector<const char*> gpu_args = {it, args.end()};
-#ifdef __APPLE__
-  bool CudaEnabled = false;
+/// Detect the CUDA installation path using clang::Driver
+/// \param args user-provided interpreter arguments (may contain --cuda-path).
+/// \param[out] CudaPath the detected CUDA installation path.
+/// \returns true on success, false if not found.
+inline bool detectCudaInstallPath(const std::vector<const char*>& args,
+                                  std::string& CudaPath) {
+  // minimal driver that runs CudaInstallationDetector internally
+  std::string TT = llvm::sys::getProcessTriple();
+  llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(
+      new clang::DiagnosticIDs());
+  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+  auto* DiagsBuffer = new clang::TextDiagnosticBuffer;
+  clang::DiagnosticOptions DiagOpts;
+  clang::DiagnosticsEngine Diags(DiagID, DiagOpts, DiagsBuffer);
+
+  clang::driver::Driver D("clang", TT, Diags);
+  D.setCheckInputsExist(false);
+
+  // construct args: clang -x cuda -c <<< inputs >>> [args]
+  llvm::SmallVector<const char*, 16> Argv;
+  Argv.push_back("clang");
+  Argv.push_back("-xcuda");
+  Argv.push_back("-c");
+  Argv.push_back("<<< inputs >>>");
+  for (const auto* arg : args)
+    Argv.push_back(arg);
+
+  // build a compilation object, which runs the driver's CUDA installation
+  // detection logic and stores the paths
+  std::unique_ptr<clang::driver::Compilation> C(D.BuildCompilation(Argv));
+  if (!C)
+    return false;
+
+  // --cuda-path was explicitly provided in user args
+  if (auto* A =
+          C->getArgs().getLastArg(clang_driver_options::OPT_cuda_path_EQ)) {
+    std::string Candidate = A->getValue();
+    if (llvm::sys::fs::is_directory(Candidate + "/include")) {
+      CudaPath = Candidate;
+      return true;
+    }
+  }
+
+  // fallback: clang tries to auto-detect the install, CudaInstallationDetector
+  // stores the path internally but doesn't expose it, so we look for
+  // "-internal-isystem <cuda-path>/include" that the driver adds for CUDA
+  // headers.
+  for (const auto& Job : C->getJobs()) {
+    if (const auto* Cmd = llvm::dyn_cast<clang::driver::Command>(&Job)) {
+      const auto& Args = Cmd->getArguments();
+      for (size_t i = 0; i + 1 < Args.size(); ++i) {
+        if (llvm::StringRef(Args[i]) == "-internal-isystem") {
+          llvm::StringRef IncDir(Args[i + 1]);
+          if (IncDir.ends_with("/include") &&
+              llvm::sys::fs::exists(IncDir.str() + "/cuda.h")) {
+            CudaPath = IncDir.drop_back(strlen("/include")).str();
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+/// Detect GPU architecture via the CUDA Driver API, tweaked from clang's
+/// nvptx-arch tool (NVPTXArch.cpp) \param[out] Arch Set to "sm_XX" on success,
+/// or clang's default fallback. \returns true on success, false on error (no
+/// CUDA driver available).
+inline bool detectNVPTXArch(std::string& Arch) {
+  std::string Err;
+  // FIXME: Use ToolChain::getSystemGPUArchs() from a minimal driver compilation
+  // instead, and unify this function with detectCudaInstallPath. Ideally we
+  // should rely on the offload-arch/nvptx-arch tool in clang, but there is no
+  // public API or library to link against.
+  auto Lib = llvm::sys::DynamicLibrary::getPermanentLibrary(
+#ifdef _WIN32
+      "nvcuda.dll",
 #else
-  bool CudaEnabled = !gpu_args.empty();
+      "libcuda.so.1",
+#endif
+      &Err);
+  if (!Lib.isValid())
+    return false;
+
+  using cuInit_t = int (*)(unsigned);
+  using cuDeviceGet_t = int (*)(uint32_t*, int);
+  using cuDeviceGetAttribute_t = int (*)(int*, int, uint32_t);
+
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+  auto cuInit = reinterpret_cast<cuInit_t>(Lib.getAddressOfSymbol("cuInit"));
+  auto cuDeviceGet =
+      reinterpret_cast<cuDeviceGet_t>(Lib.getAddressOfSymbol("cuDeviceGet"));
+  auto cuDeviceGetAttribute = reinterpret_cast<cuDeviceGetAttribute_t>(
+      Lib.getAddressOfSymbol("cuDeviceGetAttribute"));
+  // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+
+  if (!cuInit || !cuDeviceGet || !cuDeviceGetAttribute)
+    return false;
+
+  uint32_t dev;
+  int maj, min;
+  if (cuInit(0) || cuDeviceGet(&dev, 0) ||
+      cuDeviceGetAttribute(&maj, /*MAJOR*/ 75, dev) ||
+      cuDeviceGetAttribute(&min, /*MINOR*/ 76, dev)) {
+    Arch = clang::OffloadArchToString(clang::OffloadArch::CudaDefault);
+    return true;
+  }
+  Arch = "sm_" + std::to_string(maj) + std::to_string(min);
+  return true;
+}
+
+#if LLVM_VERSION_MAJOR > 21
+/// Directory containing libclangCppInterOp itself, derived via
+/// `dladdr` of an in-library function pointer. Returns empty when the
+/// platform has no self-DSO discovery (Windows -- a `GetModuleHandleEx`
+/// port can be added when Windows OOP support arrives).
+inline std::string findOwnLibraryDir() {
+#if !defined(_WIN32)
+  Dl_info info{};
+  if (!dladdr(reinterpret_cast<const void*>(&findOwnLibraryDir), &info) ||
+      !info.dli_fname || !*info.dli_fname)
+    return {};
+  llvm::SmallString<256> P(info.dli_fname);
+  llvm::sys::path::remove_filename(P);
+  return std::string(P.str());
+#else
+  return {};
+#endif
+}
+
+/// Wire CppInterOp's bundled OOP runtime parts into `B`. Probes a
+/// layered list of candidate directories, in priority order:
+///   1. `$CPPINTEROP_RUNTIME_DIR` -- sysadmin override.
+///   2. `<dir of libclangCppInterOp>/cppinterop-rt` -- relocatable, follows
+///      the .so wherever a package manager moved it.
+///   3. `CPPINTEROP_RUNTIME_BUILD_DIR` -- in-tree test runs.
+///   4. `CPPINTEROP_RUNTIME_INSTALL_DIR` -- baked install path; last
+///      resort when self-DSO discovery isn't available (e.g. static
+///      link of CppInterOp into a host binary).
+/// `UpdateOrcRuntimePathCB` is replaced with a no-op so the upstream
+/// resource-dir prefix check inside
+/// `IncrementalExecutorBuilder::UpdateOrcRuntimePath`
+/// (`clang/lib/Interpreter/IncrementalExecutor.cpp`, the
+/// `consume_front(parent_path(D.Dir))` guard) doesn't run -- our
+/// runtime lives outside the host's clang resource tree.
+inline bool configureBundledOOPRuntime(clang::IncrementalExecutorBuilder& B) {
+  llvm::SmallVector<std::string, 4> Candidates;
+  if (const char* Env = std::getenv("CPPINTEROP_RUNTIME_DIR"))
+    Candidates.emplace_back(Env);
+  if (std::string OwnDir = findOwnLibraryDir(); !OwnDir.empty()) {
+    llvm::SmallString<256> P(OwnDir);
+    llvm::sys::path::append(P, "cppinterop-rt");
+    Candidates.emplace_back(P.str());
+  }
+#if defined(CPPINTEROP_RUNTIME_BUILD_DIR)
+  Candidates.emplace_back(CPPINTEROP_RUNTIME_BUILD_DIR);
+#endif
+#if defined(CPPINTEROP_RUNTIME_INSTALL_DIR)
+  Candidates.emplace_back(CPPINTEROP_RUNTIME_INSTALL_DIR);
+#endif
+  for (const std::string& Dir : Candidates) {
+    llvm::SmallString<256> OrcRT(Dir);
+    llvm::sys::path::append(OrcRT, "liborc_rt.a");
+    llvm::SmallString<256> Exec(Dir);
+    llvm::sys::path::append(Exec, "llvm-jitlink-executor");
+    if (!llvm::sys::fs::exists(OrcRT) || !llvm::sys::fs::exists(Exec))
+      continue;
+    B.OrcRuntimePath = std::string(OrcRT.str());
+    B.OOPExecutor = std::string(Exec.str());
+    B.UpdateOrcRuntimePathCB = [](const clang::driver::Compilation&) {
+      return llvm::Error::success();
+    };
+    return true;
+  }
+  return false;
+}
+#endif // LLVM_VERSION_MAJOR > 21
+
+inline std::unique_ptr<clang::Interpreter>
+createClangInterpreter(std::vector<const char*>& args, int stdin_fd = -1,
+                       int stdout_fd = -1, int stderr_fd = -1) {
+  bool CudaEnabled = false;
+  std::string OffloadArch;
+  std::string CudaPath;
+  std::vector<const char*> CompilerArgs;
+  for (const auto* arg : args) {
+    llvm::StringRef A(arg);
+    llvm::StringRef Stripped = A.trim().ltrim('-');
+    if (Stripped == "cuda") {
+      CudaEnabled = true;
+    } else if (A.starts_with("--offload-arch=")) {
+      OffloadArch = A.substr(strlen("--offload-arch="));
+    } else if (A.starts_with("--cuda-path=")) {
+      CudaPath = A.substr(strlen("--cuda-path="));
+    } else {
+      CompilerArgs.push_back(arg);
+    }
+  }
+#ifdef __APPLE__
+  CudaEnabled = false;
 #endif
 
   clang::IncrementalCompilerBuilder CB;
-  CB.SetCompilerArgs({args.begin(), it});
+  CB.SetCompilerArgs(CompilerArgs);
+
+#if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32)
+  bool outOfProcess = false;
+  const bool oopRequested =
+      std::any_of(args.begin(), args.end(), [](const char* arg) {
+        return llvm::StringRef(arg).trim() == "--use-oop-jit";
+      });
+  // The IncrementalExecutorBuilder must outlive the IncrementalCompiler
+  // it gets attached to, so it's a unique_ptr at function scope.
+  std::unique_ptr<clang::IncrementalExecutorBuilder> OutOfProcessConfig;
+  if (oopRequested) {
+    OutOfProcessConfig = std::make_unique<clang::IncrementalExecutorBuilder>();
+    OutOfProcessConfig->IsOutOfProcess = true;
+    if (configureBundledOOPRuntime(*OutOfProcessConfig)) {
+      outOfProcess = true;
+      CB.SetDriverCompilationCallback(
+          OutOfProcessConfig->UpdateOrcRuntimePathCB);
+    } else {
+      llvm::errs()
+          << "[CreateClangInterpreter]: --use-oop-jit requested but the "
+             "bundled OOP runtime "
+             "(<libdir>/cppinterop-rt/{liborc_rt.a,llvm-jitlink-executor}) "
+             "is missing from CppInterOp's build/install tree. Falling "
+             "back to in-process JIT.\n";
+      OutOfProcessConfig.reset();
+    }
+  }
+#endif
 
   std::unique_ptr<clang::CompilerInstance> DeviceCI;
   if (CudaEnabled) {
-    // FIXME: Parametrize cuda-path and offload-arch.
-    CB.SetOffloadArch("sm_35");
+    if (OffloadArch.empty())
+      detectNVPTXArch(OffloadArch);
+
+    if (CudaPath.empty())
+      detectCudaInstallPath(CompilerArgs, CudaPath);
+
+    CB.SetOffloadArch(OffloadArch);
+    if (!CudaPath.empty())
+      CB.SetCudaSDK(CudaPath);
     auto devOrErr = CB.CreateCudaDevice();
     if (!devOrErr) {
       llvm::logAllUnhandledErrors(devOrErr.takeError(), llvm::errs(),
@@ -243,11 +508,35 @@ createClangInterpreter(std::vector<const char*>& args) {
   (*ciOrErr)->LoadRequestedPlugins();
   if (CudaEnabled)
     DeviceCI->LoadRequestedPlugins();
+
+#if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32)
+  if (outOfProcess) {
+    // OrcRuntimePath and OOPExecutor were populated by
+    // configureBundledOOPRuntime() above; UpdateOrcRuntimePathCB was
+    // replaced with a no-op there too, so the upstream auto-discovery
+    // safety check doesn't run.
+    OutOfProcessConfig->UseSharedMemory = false;
+    OutOfProcessConfig->SlabAllocateSize = 0;
+    OutOfProcessConfig->CustomizeFork = [stdin_fd, stdout_fd, stderr_fd]() {
+      dup2(stdin_fd, STDIN_FILENO);
+      dup2(stdout_fd, STDOUT_FILENO);
+      dup2(stderr_fd, STDERR_FILENO);
+      setvbuf(fdopen(stdout_fd, "w+"), nullptr, _IONBF, 0);
+      setvbuf(fdopen(stderr_fd, "w+"), nullptr, _IONBF, 0);
+    };
+  }
+  auto innerOrErr =
+      CudaEnabled ? clang::Interpreter::createWithCUDA(std::move(*ciOrErr),
+                                                       std::move(DeviceCI))
+                  : clang::Interpreter::create(
+                        std::move(*ciOrErr),
+                        outOfProcess ? std::move(OutOfProcessConfig) : nullptr);
+#else
   auto innerOrErr =
       CudaEnabled ? clang::Interpreter::createWithCUDA(std::move(*ciOrErr),
                                                        std::move(DeviceCI))
                   : clang::Interpreter::create(std::move(*ciOrErr));
-
+#endif
   if (!innerOrErr) {
     llvm::logAllUnhandledErrors(innerOrErr.takeError(), llvm::errs(),
                                 "Failed to build Interpreter:");
@@ -293,11 +582,203 @@ inline void maybeMangleDeclName(const clang::GlobalDecl& GD,
   RawStr.flush();
 }
 
+#ifndef _WIN32
+// ===========================================================================
+// Bind weak globals the process already defines (in-process JIT).
+//
+// WORKAROUND: this compensates for a deficiency in clang's in-process JIT
+// (clang-repl / ORC in clang::Interpreter), which does not demote weak
+// definitions the surrounding process already exports and so ends up with a
+// second copy. The demotion policy belongs in clang's Interpreter, where it
+// covers every embedder rather than only CppInterOp; that is tracked upstream
+// by llvm/llvm-project#211786. This pass and its guarded call sites are a
+// stopgap and should be deleted once the upstream fix lands and the minimum
+// supported clang carries it -- at which point the toggle below becomes a
+// `CLANG_VERSION_MAJOR` guard that compiles the workaround out, and then it
+// is removed entirely.
+//
+// A singleton *defined* in a header -- a function-local static in an inline
+// function (Meyers) or a C++17 inline static data member -- compiles to a
+// weak/linkonce_odr global variable. When jitted code includes such a header,
+// the ORC JIT materializes its own copy: JITDylib definitions win over the
+// process-symbol generator, which is only consulted for symbols the JITDylib
+// lacks. The result is two instances of one singleton (and a double
+// destruction at teardown) where a dynamic linker would have unified them.
+//
+// Mitigation: before a module reaches the JIT, demote every mutable weak
+// global-variable definition whose symbol the dynamic linker already
+// resolves to an external declaration; the JIT then binds the process copy.
+// A dynamically initialized static's guard variable (_ZGV<...>) moves with
+// its data, and only when the process exports both: sharing the data but not
+// the guard would re-run initialization on the process copy, sharing the
+// guard but not the data would leave the jitted copy uninitialized.
+//
+// Only mutable variables are demoted: duplicated constants are harmless
+// under ODR (and folding them keeps jitted code fast); duplicated mutable
+// state is the singleton bug. thread_locals are excluded (the JIT's
+// emulated-TLS storage regime is separate), and functions are never demoted
+// -- jitted code may legitimately carry its own copies of inline functions.
+// ELF and in-process only (the probe is the process's own dlsym).
+// ===========================================================================
+//
+// Single toggle for the whole workaround (definition + call sites).
+// TODO: remove once ORC uniques globals across the process (ETA LLVM 25).
+#if LLVM_VERSION_MAJOR >= 25
+#error "ORC uniques globals now: remove bindProcessWeakGlobals"
+#endif
+#define CPPINTEROP_WORKAROUND_BIND_PROCESS_WEAK_GLOBALS 1
+#if CPPINTEROP_WORKAROUND_BIND_PROCESS_WEAK_GLOBALS
+inline bool bindProcessWeakGlobals(llvm::Module& M) {
+  if (!llvm::Triple(M.getTargetTriple()).isOSBinFormatELF())
+    return false;
+
+  auto ProcessHas = [](llvm::StringRef Name) {
+    return ::dlsym(RTLD_DEFAULT, Name.str().c_str()) != nullptr;
+  };
+
+  llvm::SmallVector<llvm::GlobalVariable*, 8> Demoted;
+  for (llvm::GlobalVariable& GV : M.globals()) {
+    if (GV.isDeclaration() || !GV.isWeakForLinker() || GV.isThreadLocal() ||
+        GV.isConstant())
+      continue;
+
+    llvm::StringRef Name = GV.getName();
+    // Guards are only ever demoted together with their variable, below.
+    if (Name.starts_with("_ZGV"))
+      continue;
+    if (!ProcessHas(Name))
+      continue;
+
+    llvm::GlobalVariable* Guard = nullptr;
+    if (Name.starts_with("_Z")) {
+      llvm::GlobalVariable* G =
+          M.getNamedGlobal(("_ZGV" + Name.drop_front(2)).str());
+      if (G && !G->isDeclaration()) {
+        if (!ProcessHas(G->getName()))
+          continue;
+        Guard = G;
+      }
+    }
+
+    Demoted.push_back(&GV);
+    if (Guard)
+      Demoted.push_back(Guard);
+  }
+  if (Demoted.empty())
+    return false;
+
+  for (llvm::GlobalVariable* GV : Demoted) {
+    GV->setInitializer(nullptr);
+    GV->setLinkage(llvm::GlobalValue::ExternalLinkage);
+    GV->setComdat(nullptr);
+    GV->setVisibility(llvm::GlobalValue::DefaultVisibility);
+    GV->setDSOLocal(false);
+  }
+
+  // Declarations may not appear in the used lists; drop demoted entries.
+  for (const char* ListName : {"llvm.used", "llvm.compiler.used"}) {
+    llvm::GlobalVariable* Used = M.getNamedGlobal(ListName);
+    if (!Used || !Used->hasInitializer())
+      continue;
+    auto* Init = llvm::cast<llvm::ConstantArray>(Used->getInitializer());
+    llvm::SmallVector<llvm::Constant*, 8> Kept;
+    for (llvm::Value* Op : Init->operand_values()) {
+      auto* C = llvm::cast<llvm::Constant>(Op);
+      if (!llvm::is_contained(Demoted, C->stripPointerCasts()))
+        Kept.push_back(C);
+    }
+    if (Kept.size() == Init->getNumOperands())
+      continue;
+    Used->eraseFromParent();
+    if (!Kept.empty()) {
+      auto* ATy = llvm::ArrayType::get(Kept.front()->getType(), Kept.size());
+      auto* NewUsed = new llvm::GlobalVariable(
+          M, ATy, /*isConstant=*/false, llvm::GlobalValue::AppendingLinkage,
+          llvm::ConstantArray::get(ATy, Kept), ListName);
+      NewUsed->setSection("llvm.metadata");
+    }
+  }
+  return true;
+}
+#endif // CPPINTEROP_WORKAROUND_BIND_PROCESS_WEAK_GLOBALS
+#endif // !_WIN32
+
+// ===========================================================================
+// Workaround for an LLVM ORC emulated-TLS discard crash (in-process JIT).
+//
+// Fixed upstream by llvm/llvm-project#208413 (reland of #207161, which was
+// reverted in #207775 over a Darwin test failure): IRMaterializationUnit's ctor
+// registered a thread_local's emulated-TLS companion (`__emutls_t.<var>` /
+// `__emutls_v.<var>`) in SymbolFlags but not SymbolToDefinition, so discarding
+// a *duplicated* weak thread_local dereferenced end() -- an assertion in
+// +Asserts builds, heap corruption otherwise. The trigger is two incremental
+// modules that each define the same weak/linkonce_odr thread_local (an inline
+// function or template static odr-used from two PTUs, as MakeFunctionCallable
+// and repeated process() do).
+//
+// Mitigation: before a module reaches the JIT, demote every *duplicate* weak
+// thread_local definition to available_externally. The IRMaterializationUnit
+// ctor skips available_externally globals, so the duplicate contributes no
+// symbol and the buggy discard is never reached; the first module stays the
+// sole definition and later modules resolve to it within the JITDylib.
+//
+// Every weak thread_local is covered regardless of initializer: a thread_local
+// with a non-trivial ctor (e.g. one holding a std::unique_ptr) is a
+// zeroinitializer in IR -- its real init runs in a __tls_init function -- yet
+// still emits the companion that trips discard, so the initializer must not be
+// used to filter. Only weak thread_locals are demoted; demoting other weak
+// globals or functions mis-resolves references/calls at runtime in the
+// incremental JIT.
+//
+// ELF only: that is where the interpreter's emulated TLS makes the buggy
+// discard reachable. On COFF the demotion orphans the comdat group's
+// associated members ("Associative COMDAT symbol ... is not a key for its
+// COMDAT"), and on Mach-O (native TLS, no comdats) it breaks the paired
+// _ZTH/_ZTW thread_local init emission -- and on both, the JIT fails to
+// resolve __emutls_get_address before the discard bug is even reachable.
+//
+// DEPRECATION: exists only for clang < 24 -- the upstream fix
+// (llvm/llvm-project#208413) ships in clang 24, and every use site carries the
+// same guard. Delete the workaround and its guarded call sites once clang-23
+// support is dropped from CppInterOp.
+// ===========================================================================
+#if CLANG_VERSION_MAJOR < 24
+inline void dedupeWeakEmulatedTLS(llvm::Module& M, llvm::StringSet<>& Defined) {
+  if (!llvm::Triple(M.getTargetTriple()).isOSBinFormatELF())
+    return;
+
+  for (llvm::GlobalVariable& GV : M.globals()) {
+    if (!GV.isThreadLocal() || GV.isDeclaration() || !GV.isWeakForLinker())
+      continue;
+
+    // First definer wins; later duplicates become references, mirroring what
+    // discard() would have done (available_externally + no comdat) but without
+    // hitting the crashing code path.
+    if (!Defined.insert(GV.getName()).second) {
+      GV.setLinkage(llvm::GlobalValue::AvailableExternallyLinkage);
+      GV.setComdat(nullptr);
+    }
+  }
+}
+#endif
+
 // Clang 18 - Add new Interpreter methods: CodeComplete
 
 inline llvm::orc::LLJIT* getExecutionEngine(clang::Interpreter& I) {
+#if CLANG_VERSION_MAJOR < 22
   auto* engine = &llvm::cantFail(I.getExecutionEngine());
   return const_cast<llvm::orc::LLJIT*>(engine);
+#else
+  // FIXME: Remove the need of exposing the low-level execution engine and kill
+  // this horrible hack.
+  struct OrcIncrementalExecutor : public clang::IncrementalExecutor {
+    std::unique_ptr<llvm::orc::LLJIT> Jit;
+  };
+
+  auto& engine = static_cast<OrcIncrementalExecutor&>(
+      llvm::cantFail(I.getExecutionEngine()));
+  return engine.Jit.get();
+#endif
 }
 
 inline llvm::Expected<llvm::JITTargetAddress>
@@ -367,31 +848,48 @@ inline void codeComplete(std::vector<std::string>& Results,
 
 #include "CppInterOpInterpreter.h"
 
-namespace Cpp {
-namespace Cpp_utils = Cpp::utils;
-}
-
 namespace compat {
-using Interpreter = Cpp::Interpreter;
+using Interpreter = CppInternal::Interpreter;
 
 class SynthesizingCodeRAII {
 private:
-  Interpreter* m_Interpreter;
+  [[maybe_unused]] Interpreter* m_Interpreter;
 
 public:
   SynthesizingCodeRAII(Interpreter* i) : m_Interpreter(i) {}
-  ~SynthesizingCodeRAII() {
-    auto GeneratedPTU = m_Interpreter->Parse("");
-    if (!GeneratedPTU)
-      llvm::logAllUnhandledErrors(GeneratedPTU.takeError(), llvm::errs(),
-                                  "Failed to generate PTU:");
-  }
+  // ~SynthesizingCodeRAII() {} // TODO: implement
 };
-}
+
+} // namespace compat
 
 #endif // CPPINTEROP_USE_REPL
 
 namespace compat {
+
+// QualType for a TypeDecl. Pass a TypeDecl base pointer: Clang 22 deleted the
+// TagDecl/TypedefDecl overloads, but the surviving TypeDecl one dispatches to
+// getCanonicalTagType for tags, covering all decl kinds on Clang 21 and 22.
+inline clang::QualType GetTypeFromDecl(const clang::TypeDecl* TD) {
+  return TD->getASTContext().getTypeDeclType(TD);
+}
+
+// Print anonymous tags as a bare "(anonymous struct)" without the trailing
+// source location. Clang 23 replaced the AnonymousTagLocations bit with the
+// AnonymousTagMode enum stored in AnonymousTagNameStyle.
+inline void SuppressAnonymousTagLocations(clang::PrintingPolicy& Policy) {
+#if CLANG_VERSION_MAJOR < 23
+  Policy.AnonymousTagLocations = false;
+#else
+  Policy.AnonymousTagNameStyle =
+      llvm::to_underlying(clang::PrintingPolicy::AnonymousTagMode::Plain);
+#endif
+}
+
+#ifdef CPPINTEROP_USE_CLING
+using Value = cling::Value;
+#else
+using Value = clang::Value;
+#endif
 
 // Clang >= 16 (=16 with Value patch) change castAs to convertTo
 #ifdef CPPINTEROP_USE_CLING
@@ -404,22 +902,79 @@ template <typename T> inline T convertTo(clang::Value V) {
 }
 #endif // CPPINTEROP_USE_CLING
 
+// Refcount-shared payload wrapping a `compat::Value` for Cpp::Box's
+// K_PtrOrObj slot. On Clang < 23 the payload must be boxed by copy, not
+// move: clang::Value's move ctor released its own storage on construction
+// until Clang 23. The copy ctor retains correctly on every supported
+// version.
+// cling::Value keeps the copy path -- cling tracks a pre-23 Clang.
+#if CLANG_VERSION_MAJOR >= 23 && !defined(CPPINTEROP_USE_CLING)
+#define CPPINTEROP_VALUE_BOX_MOVE 1
+#endif
+
+namespace detail {
+struct ValueRefCount {
+  std::atomic<unsigned> rc;
+  Value v;
+#ifdef CPPINTEROP_VALUE_BOX_MOVE
+  explicit ValueRefCount(Value&& V) noexcept : rc(1), v(std::move(V)) {}
+#else
+  explicit ValueRefCount(const Value& V) noexcept : rc(1), v(V) {}
+#endif
+
+  static void retain(void* p) noexcept {
+    static_cast<ValueRefCount*>(p)->rc.fetch_add(1, std::memory_order_relaxed);
+  }
+  static void release(void* p) noexcept {
+    auto* rc = static_cast<ValueRefCount*>(p);
+    if (rc->rc.fetch_sub(1, std::memory_order_acq_rel) == 1)
+      delete rc;
+  }
+  static constexpr Cpp::Box::ObjectOps Ops{&retain, &release};
+};
+} // namespace detail
+
+/// Wrap a compat::Value into a refcount-shared K_PtrOrObj Cpp::Box.
+/// `qt` is the opaque clang::QualType
+inline Cpp::Box MakeValueBox(Value& V, void* qt) noexcept {
+#ifdef CPPINTEROP_VALUE_BOX_MOVE
+  auto* Payload = new detail::ValueRefCount(std::move(V));
+#else
+  auto* Payload = new detail::ValueRefCount(V);
+#endif
+  return Cpp::Box::AdoptObject(Payload, &detail::ValueRefCount::Ops, qt);
+}
+
 inline void InstantiateClassTemplateSpecialization(
     Interpreter& interp, clang::ClassTemplateSpecializationDecl* CTSD) {
 #ifdef CPPINTEROP_USE_CLING
   cling::Interpreter::PushTransactionRAII RAII(&interp);
 #endif
-#if CLANG_VERSION_MAJOR < 20
   interp.getSema().InstantiateClassTemplateSpecialization(
       clang::SourceLocation::getFromRawEncoding(1), CTSD,
-      clang::TemplateSpecializationKind::TSK_Undeclared, /*Complain=*/true);
-#else
-  interp.getSema().InstantiateClassTemplateSpecialization(
-      clang::SourceLocation::getFromRawEncoding(1), CTSD,
-      clang::TemplateSpecializationKind::TSK_Undeclared, /*Complain=*/true,
+      clang::TemplateSpecializationKind::TSK_ExplicitInstantiationDefinition,
+      /*Complain=*/true,
       /*PrimaryHasMatchedPackOnParmToNonPackOnArg=*/false);
-#endif
 }
+
+class DiagnosticsEngineRAII {
+private:
+  clang::DiagnosticsEngine& diags;
+
+public:
+  bool reset_condition; // additional condition to reset diagnostics
+
+  DiagnosticsEngineRAII(clang::DiagnosticsEngine& d, bool c = true)
+      : diags(d), reset_condition(c) {}
+  ~DiagnosticsEngineRAII() {
+    if (diags.hasErrorOccurred() && reset_condition) {
+      // instantiation failed, need to reset DiagnosticsEngine
+      diags.Reset(/*soft=*/true);
+      diags.getClient()->clear();
+    }
+  }
+};
+
 } // namespace compat
 
 #endif // CPPINTEROP_COMPATIBILITY_H

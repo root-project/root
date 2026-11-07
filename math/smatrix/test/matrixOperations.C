@@ -14,7 +14,7 @@
 
 int fillCol=20;
 std::string systemName;
-bool drawSingleGraph = true;
+// bool drawSingleGraph = true;
 
 int topX=10;
 int topY=50;
@@ -33,7 +33,7 @@ void matrixOperations(std::string type = "",bool clhep=false, bool drawSingleGra
 }
 
 
-void DrawData(char *  title, TGraphErrors * h1, TGraphErrors * h2, TGraphErrors * h3 = nullptr, TGraphErrors * h4 = nullptr, TGraphErrors * h5 = nullptr, TGraphErrors * h6 = nullptr) {
+void DrawData(const char * title, TGraphErrors * h1, TGraphErrors * h2, TGraphErrors * h3 = nullptr, TGraphErrors * h4 = nullptr, TGraphErrors * h5 = nullptr, TGraphErrors * h6 = nullptr) {
 
 
    gPad->SetFillColor(fillCol);
@@ -146,6 +146,10 @@ void GetData(std::string s,double * x, double * y, double * ey) {
       fileName="testOperations.root";
 
    TFile * f = new TFile(fileName.c_str());
+   if (!f || f->IsZombie()) {
+       std::cout << "File " << fileName << " not found !!!" << std::endl;
+       return;
+   } 
    TProfile * h1 = (TProfile * ) f->Get(s.c_str() );
    if (h1 ==nullptr) {
       std::cout << "Profile " << s << " not found !!! " << std::endl;
@@ -314,4 +318,17 @@ void matrixOperations_do(std::string type, bool clhep, bool drawSingleGraph) {
    }
 
 
+}
+
+
+int main(int argc, char *argv[]) {
+   if (argc == 2)
+      matrixOperations(argv[1]);
+   else if (argc == 3)
+      matrixOperations(argv[1], atoi(argv[2]));
+   else if (argc == 4)
+      matrixOperations(argv[1], atoi(argv[2]), atoi(argv[3]));
+   else
+      matrixOperations();
+  return 0;
 }

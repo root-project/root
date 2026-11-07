@@ -49,6 +49,7 @@ drawing area. The widgets used are the new native ROOT GUI widgets.
 #include "TMath.h"
 #include <iostream>
 #include "TGDockableFrame.h"
+#include "TPadPainter.h"
 
 #include "TG3DLine.h"
 #include "TGToolBar.h"
@@ -57,6 +58,7 @@ drawing area. The widgets used are the new native ROOT GUI widgets.
 #include "TRootControlBar.h"
 #include "TGuiBuilder.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TError.h"
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
@@ -73,6 +75,45 @@ drawing area. The widgets used are the new native ROOT GUI widgets.
 
 #include "HelpText.h"
 
+namespace {
+
+bool IsGeometryPrimitive(TObject *obj)
+{
+   static TClass *geoVolumeClass = TClass::GetClass("TGeoVolume");
+   static TClass *geoShapeClass = TClass::GetClass("TGeoShape");
+   static TClass *geoOverlapClass = TClass::GetClass("TGeoOverlap");
+   static TClass *geoTrackClass = TClass::GetClass("TGeoTrack");
+
+   if (!obj)
+      return false;
+
+   return (geoVolumeClass && obj->InheritsFrom(geoVolumeClass)) ||
+          (geoShapeClass && obj->InheritsFrom(geoShapeClass)) ||
+          (geoOverlapClass && obj->InheritsFrom(geoOverlapClass)) ||
+          (geoTrackClass && obj->InheritsFrom(geoTrackClass));
+}
+
+bool PadHasGeometryContent(TVirtualPad *pad)
+{
+   if (!pad)
+      return false;
+
+   TList *primitives = pad->GetListOfPrimitives();
+   if (!primitives)
+      return false;
+
+   TIter next(primitives);
+   while (TObject *obj = next()) {
+      if (IsGeometryPrimitive(obj))
+         return true;
+      if (obj->InheritsFrom(TVirtualPad::Class()) && PadHasGeometryContent(static_cast<TVirtualPad *>(obj)))
+         return true;
+   }
+
+   return false;
+}
+
+} // namespace
 
 // Canvas menu command ids
 enum ERootCanvasCommands {
@@ -84,9 +125,12 @@ enum ERootCanvasCommands {
    kFileSaveAsPS,
    kFileSaveAsEPS,
    kFileSaveAsPDF,
+   kFileSaveAsHTML,
+   kFileSaveAsSVG,
    kFileSaveAsGIF,
    kFileSaveAsJPG,
    kFileSaveAsPNG,
+   kFileSaveAsBMP,
    kFileSaveAsTEX,
    kFilePrint,
    kFileCloseCanvas,
@@ -158,7 +202,7 @@ enum ERootCanvasCommands {
    kToolCutG
 
 };
-
+// clang-format off
 static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     "All files",    "*",
                                     0,              0 };
@@ -171,9 +215,11 @@ static const char *gSaveAsTypes[] = { "PDF",          "*.pdf",
                                       "PNG",          "*.png",
                                       "JPEG",         "*.jpg",
                                       "GIF",          "*.gif",
+                                      "BMP",          "*.bmp",
                                       "ROOT macros",  "*.C",
                                       "ROOT files",   "*.root",
                                       "XML",          "*.xml",
+                                      "HTML",         "*.html",
                                       "XPM",          "*.xpm",
                                       "TIFF",         "*.tiff",
                                       "XCF",          "*.xcf",
@@ -191,7 +237,7 @@ static ToolBarData_t gToolBarData[] = {
    { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  0 },
    { "",               "",                 kFALSE,    -1,              0 },
    { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    0 },
-   { "browser.xpm",    "Browser",          kFALSE,    kToolsBrowser, 0 },
+   { "browser.xpm",    "Browser",          kFALSE,    kToolsBrowser,   0 },
    { 0,                0,                  kFALSE,    0,               0 }
 };
 
@@ -215,6 +261,7 @@ static ToolBarData_t gToolBarData1[] = {
    { "cut.xpm",        "Graphical Cut",    kFALSE,    kToolCutG,       0 },
    { 0,                0,                  kFALSE,    0,               0 }
 };
+// clang-format on
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -263,8 +310,9 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
                          kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask, kNone, kNone);
 
-   AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
-            kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
+   AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask | kExposureMask |
+            kStructureNotifyMask | kEnterWindowMask | kLeaveWindowMask);
+
    fEditDisabled = kEditDisable;
 }
 
@@ -338,11 +386,13 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    // Create menus
    fFileSaveMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fFileSaveMenu->AddEntry(Form("%s.&ps",  name), kFileSaveAsPS);
-   fFileSaveMenu->AddEntry(Form("%s.&eps", name), kFileSaveAsEPS);
-   fFileSaveMenu->AddEntry(Form("%s.p&df", name), kFileSaveAsPDF);
-   fFileSaveMenu->AddEntry(Form("%s.&tex", name), kFileSaveAsTEX);
-   fFileSaveMenu->AddEntry(Form("%s.&gif", name), kFileSaveAsGIF);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&ps",  name), kFileSaveAsPS);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&eps", name), kFileSaveAsEPS);
+   fFileSaveMenu->AddEntry(TString::Format("%s.p&df", name), kFileSaveAsPDF);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&html", name), kFileSaveAsHTML);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&svg", name), kFileSaveAsSVG);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&tex", name), kFileSaveAsTEX);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&gif", name), kFileSaveAsGIF);
 
    static Int_t img = 0;
 
@@ -358,12 +408,13 @@ void TRootCanvas::CreateCanvas(const char *name)
       gErrorIgnoreLevel = sav;
    }
    if (img > 0) {
-      fFileSaveMenu->AddEntry(Form("%s.&jpg",name),  kFileSaveAsJPG);
-      fFileSaveMenu->AddEntry(Form("%s.&png",name),  kFileSaveAsPNG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&jpg", name), kFileSaveAsJPG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&png", name), kFileSaveAsPNG);
+      fFileSaveMenu->AddEntry(TString::Format("%s.&bmp", name), kFileSaveAsBMP);
    }
 
-   fFileSaveMenu->AddEntry(Form("%s.&C",   name), kFileSaveAsC);
-   fFileSaveMenu->AddEntry(Form("%s.&root",name), kFileSaveAsRoot);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&C",   name), kFileSaveAsC);
+   fFileSaveMenu->AddEntry(TString::Format("%s.&root",name), kFileSaveAsRoot);
 
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Canvas",   kFileNewCanvas);
@@ -473,6 +524,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fEditClearMenu->Associate(this);
    fViewMenu->Associate(this);
    fViewWithMenu->Associate(this);
+   fViewWithMenu->Connect("PoppedUp()", "TRootCanvas", this, "UpdateViewWithMenu()");
    fOptionMenu->Associate(this);
    fToolsMenu->Associate(this);
    fHelpMenu->Associate(this);
@@ -679,7 +731,11 @@ void TRootCanvas::Close()
       else gged->Hide();
    }
 
-   gVirtualX->CloseWindow();
+   if (fCanvasID != -1) {
+      gVirtualX->SelectWindow(fCanvasID);
+      gVirtualX->CloseWindow();
+      fCanvasID = -1;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -880,6 +936,7 @@ Bool_t TRootCanvas::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                         Bool_t  appendedType = kFALSE;
                         TString fn = fi.fFilename;
                         TString ft = fi.fFileTypes[fi.fFileTypeIdx+1];
+                        // clang-format off
                         dir     = fi.fIniDir;
                         typeidx = fi.fFileTypeIdx;
                         overwr  = fi.fOverwrite;
@@ -888,9 +945,11 @@ again:
                             fn.EndsWith(".ps")   ||
                             fn.EndsWith(".eps")  ||
                             fn.EndsWith(".pdf")  ||
+                            fn.EndsWith(".html") ||
                             fn.EndsWith(".svg")  ||
                             fn.EndsWith(".tex")  ||
                             fn.EndsWith(".gif")  ||
+                            fn.EndsWith(".bmp")  ||
                             fn.EndsWith(".xml")  ||
                             fn.EndsWith(".xpm")  ||
                             fn.EndsWith(".jpg")  ||
@@ -910,11 +969,11 @@ again:
                            }
                            Warning("ProcessMessage", "file %s cannot be saved with this extension", fi.fFilename);
                         }
-                        for (int i=1;gSaveAsTypes[i];i+=2) {
+                        for (int i = 1; gSaveAsTypes[i]; i += 2) {
                            TString ftype = gSaveAsTypes[i];
                            ftype.ReplaceAll("*.", ".");
                            if (fn.EndsWith(ftype.Data())) {
-                              typeidx = i-1;
+                              typeidx = i - 1;
                               break;
                            }
                         }
@@ -935,6 +994,12 @@ again:
                   case kFileSaveAsPDF:
                      fCanvas->SaveAs(".pdf");
                      break;
+                  case kFileSaveAsHTML:
+                     fCanvas->SaveAs(".html");
+                     break;
+                  case kFileSaveAsSVG:
+                     fCanvas->SaveAs(".svg");
+                     break;
                   case kFileSaveAsGIF:
                      fCanvas->SaveAs(".gif");
                      break;
@@ -943,6 +1008,9 @@ again:
                      break;
                   case kFileSaveAsPNG:
                      fCanvas->SaveAs(".png");
+                     break;
+                  case kFileSaveAsBMP:
+                     fCanvas->SaveAs(".bmp");
                      break;
                   case kFileSaveAsTEX:
                      fCanvas->SaveAs(".tex");
@@ -1044,9 +1112,14 @@ again:
                   case kViewIconify:
                      Iconify();
                      break;
-                  case kViewX3D:
-                     gPad->GetViewer3D("x3d");
+                  case kViewX3D: {
+                     TVirtualPad *pad = gPad ? gPad : (fCanvas ? fCanvas->GetSelectedPad() : nullptr);
+                     if (!pad)
+                        pad = fCanvas;
+                     if (!PadHasGeometryContent(pad))
+                        pad->GetViewer3D("x3d");
                      break;
+                  }
                   case kViewOpenGL:
                      gPad->GetViewer3D("ogl");
                      break;
@@ -1241,6 +1314,7 @@ again:
                      hd->SetText(gHelpPostscript);
                      hd->Popup();
                      break;
+                     // clang-format on
                }
             default:
                break;
@@ -1290,6 +1364,15 @@ void TRootCanvas::SetCanvasSize(UInt_t w, UInt_t h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set cursor for the canvas
+
+void TRootCanvas::SetCursor(ECursor cursor)
+{
+   if (fCanvasID != -1)
+      gVirtualX->SetCursor(fCanvasID, cursor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set canvas position (units in pixels).
 
 void TRootCanvas::SetWindowPosition(Int_t x, Int_t y)
@@ -1329,7 +1412,7 @@ void TRootCanvas::SetWindowTitle(const char *title)
 {
    SetWindowName(title);
    SetIconName(title);
-   fToolDock->SetWindowName(Form("ToolBar: %s", title));
+   fToolDock->SetWindowName(TString::Format("ToolBar: %s", title));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1617,7 +1700,7 @@ void TRootCanvas::ShowToolBar(Bool_t show)
       }
       fToolDock->MapSubwindows();
       fToolDock->Layout();
-      fToolDock->SetWindowName(Form("ToolBar: %s", GetWindowName()));
+      fToolDock->SetWindowName(TString::Format("ToolBar: %s", GetWindowName()));
       fToolDock->Connect("Docked()", "TRootCanvas", this, "AdjustSize()");
       fToolDock->Connect("Undocked()", "TRootCanvas", this, "AdjustSize()");
    }
@@ -1745,8 +1828,11 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
    if (event->fType == kButtonPress) {
       if (fToolTip && fCanvas->GetShowToolTips()) {
          fToolTip->Hide();
-         gVirtualX->UpdateWindow(0);
-         gSystem->ProcessEvents();
+         // do not sync GL canvas - avoid flicking
+         if (!fCanvas->UseGL() && (fCanvasID != -1)) {
+            gVirtualX->UpdateWindowW(gVirtualX->GetWindowContext(fCanvasID), 0);
+            gSystem->ProcessEvents();
+         }
       }
       fButton = button;
       if (button == kButton1) {
@@ -1968,6 +2054,9 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
    if (event->fType == kLeaveNotify && event->fCode == kNotifyNormal)
       fCanvas->HandleInput(kMouseLeave, x, y);
 
+   if (event->fType == kEnterNotify && event->fCode == kNotifyNormal)
+      fCanvas->HandleInput(kMouseEnter, x, y);
+
    return kTRUE;
 }
 
@@ -1986,7 +2075,7 @@ Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
       if (!obj) return kTRUE;
       gPad->Clear();
       if (obj->InheritsFrom("TKey")) {
-         TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%zx)->ReadObj();", (size_t)obj));
+         TObject *object = (TObject *)gROOT->ProcessLine(TString::Format("((TKey *)0x%zx)->ReadObj();", (size_t)obj));
          if (!object) return kTRUE;
          if (object->InheritsFrom("TGraph"))
             object->Draw("ALP");
@@ -2094,6 +2183,42 @@ void TRootCanvas::Activated(Int_t id)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Update the "View With" submenu based on the currently selected pad content.
+
+void TRootCanvas::UpdateViewWithMenu()
+{
+   TVirtualPad *pad = fCanvas ? fCanvas->GetSelectedPad() : nullptr;
+   if (!pad)
+      pad = fCanvas;
+
+   if (PadHasGeometryContent(pad))
+      fViewWithMenu->DisableEntry(kViewX3D);
+   else
+      fViewWithMenu->EnableEntry(kViewX3D);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update canvas display
+
+void TRootCanvas::UpdateDisplay(Int_t mode, Bool_t sleep)
+{
+   if (gVirtualX)
+      gVirtualX->Update(mode % 100);
+
+   if (mode == 101) {
+      // used by TGLPadPainter
+      // when requesting window atributes sync works better
+      // workaround for issue #22157
+      WindowAttributes_t attributes;
+      gVirtualX->GetWindowAttributes(GetMainFrame()->GetId(), attributes);
+   }
+
+   if (sleep)
+      gSystem->Sleep(30);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save a canvas container as a C++ statement(s) on output stream out.
 
 void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
@@ -2105,3 +2230,13 @@ void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out << "   TGCompositeFrame *" << GetName() << " = new TGCompositeFrame(gClient, winC, " << GetParent()->GetName()
        << ");\n";
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create pad painter instance
+
+TVirtualPadPainter *TRootCanvas::CreatePadPainter()
+{
+   return new TPadPainter();
+}
+

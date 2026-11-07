@@ -109,6 +109,8 @@ public:
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    ~RGeoItem() override = default;
 
+   void SetLogicalVisibility(int logicalVis) { vis = logicalVis; }
+   void SetPhysicalVisibility(int physicalVis) { pvis = physicalVis; }
    void SetTop(bool on = true) { top = on; }
 };
 
@@ -296,6 +298,10 @@ class RGeomDescription {
 
    int IsPhysNodeVisible(const std::vector<int> &stack);
 
+   virtual bool IsFullModelStreamedAtOnce() const;
+
+   virtual void RefineGeoItem(RGeoItem &item, const std::vector<int> &stack);
+
    /** clear drawing data without locking mutex */
    void _ClearDrawData()
    {
@@ -305,6 +311,7 @@ class RGeomDescription {
 
 public:
    RGeomDescription() = default;
+   virtual ~RGeomDescription() = default;
 
    void AddSignalHandler(const void *handler, RGeomSignalFunc_t func);
 

@@ -64,6 +64,7 @@ Releasing the mouse will generate the event:
 #include "TGSlider.h"
 #include "TGPicture.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TEnv.h"
 #include "TVirtualX.h"
 
@@ -129,26 +130,21 @@ void TGSlider::CreateDisabledPicture()
 {
    if (!fSliderPic) return;
 
-   TImage *img = TImage::Create();
-   if (!img) return;
-   TImage *img2 = TImage::Create();
-   if (!img2) {
-      if (img) delete img;
+   std::unique_ptr<TImage> img2(TImage::Create());
+   if (!img2)
       return;
-   }
    TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
    img2->FillRectangle(back.Data(), 0, 0, fSliderPic->GetWidth(),
                        fSliderPic->GetHeight());
-   img->SetImage(fSliderPic->GetPicture(), fSliderPic->GetMask());
-   Pixmap_t mask = img->GetMask();
-   img2->Merge(img, "overlay");
+   auto img = TASUtils::FromPixmap(fSliderPic->GetPicture(), fSliderPic->GetMask());
+   if (!img)
+      return;
+   Pixmap_t mask = TASUtils::GetMask(img.get());
+   img2->Merge(img.get(), "overlay");
 
    TString name = "disbl_";
-   name += fSliderPic->GetName();
-   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(),
-                                             img2->GetPixmap(), mask);
-   delete img;
-   delete img2;
+   name.Append(fSliderPic->GetName());
+   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(), TASUtils::GetPixmap(img2.get()), mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

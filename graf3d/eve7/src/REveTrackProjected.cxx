@@ -52,7 +52,7 @@ void REveTrackProjected::SetProjection(REveProjectionManager* mng, REveProjectab
 
 void REveTrackProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 
    for (Int_t i = 0; i < fSize; ++i)
    {
@@ -115,7 +115,8 @@ Int_t REveTrackProjected::GetBreakPointIdx(Int_t start)
 void REveTrackProjected::MakeTrack(Bool_t recurse)
 {
    REveTrack      *otrack     = dynamic_cast<REveTrack*>(fProjectable);
-   REveTrans      *trans      = otrack->PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *trans = fManager->GetModelTrans(otrack, mt);
    REveProjection *projection = fManager->GetProjection();
 
    fBreakPoints.clear();
@@ -317,7 +318,8 @@ Int_t REveTrackProjected::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    Int_t ret = REveTrack::WriteCoreJson(j, rnr_offset);
 
-   j["render_data"]["break_point_size"] = fBreakPoints.size();
+   if (j.contains("render_data"))
+      j["render_data"]["break_point_size"] = fBreakPoints.size();
 
    return ret;
 }

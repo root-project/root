@@ -1,0 +1,467 @@
+# Upstream LLVM write(buf) uninit-bytes via the EPC transport, still
+# present in release/23.x. No llvm/llvm-project issue filed yet; if you
+# touch this file, please file one and add a reference here.
+{
+   Clang 23 Out of Process: uninitialised bytes in FDSimpleRemoteEPCTransport::sendMessage
+   Memcheck:Param
+   write(buf)
+   fun:__libc_write
+   fun:write
+   fun:_ZN4llvm3orc26FDSimpleRemoteEPCTransport11sendMessageENS0_21SimpleRemoteEPCOpcodeEmNS0_12ExecutorAddrENS_8ArrayRefIcEE
+   ...
+}
+
+# llvm/llvm-project#194147: clang-23 still reads uninitialised bytes in many
+# AST/Sema/CodeGen paths (regression vs clang-20). Was x86_64-only at
+# first; aarch64 caught up after a release/22.x advance and now trips
+# its own set (TreeTransform, SemaCUDA, AsmPrinter, ValueEnumerator).
+# The blocks below started as a copy of clang22-valgrind.supp.
+# Drop the whole #194147 family of blocks once the upstream issue lands.
+
+{
+   llvm/llvm-project#194147: InitListExpr::isTransparent
+   Memcheck:Cond
+   fun:_ZNK5clang12InitListExpr13isTransparentEv
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::getInit
+   Memcheck:Cond
+   fun:_ZN5clang12InitListExpr7getInitEj
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::getInit const
+   Memcheck:Cond
+   fun:_ZNK5clang12InitListExpr7getInitEj
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::setInit
+   Memcheck:Cond
+   fun:_ZN5clang12InitListExpr7setInitEjPNS_4ExprE
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::resizeInits
+   Memcheck:Cond
+   fun:_ZN5clang12InitListExpr11resizeInitsERKNS_10ASTContextEj
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListExpr::resizeInits via memset
+   Memcheck:Cond
+   fun:memset
+   fun:_ZN5clang12InitListExpr11resizeInitsERKNS_10ASTContextEj
+   ...
+}
+
+{
+   llvm/llvm-project#194147: Sema::CheckForIntOverflow Cond
+   Memcheck:Cond
+   fun:_ZN5clang4Sema19CheckForIntOverflowEPKNS_4ExprE
+   ...
+}
+{
+   llvm/llvm-project#194147: Sema::CheckForIntOverflow Value8
+   Memcheck:Value8
+   fun:_ZN5clang4Sema19CheckForIntOverflowEPKNS_4ExprE
+   ...
+}
+{
+   llvm/llvm-project#194147: SequenceChecker::SequenceExpressionsInOrder
+   Memcheck:Cond
+   fun:*SequenceChecker*SequenceExpressionsInOrder*
+   ...
+}
+
+{
+   llvm/llvm-project#194147: Stmt::children via AnalyzeImplicitConversions
+   Memcheck:Cond
+   fun:_ZN5clang4Stmt8childrenEv
+   fun:*AnalyzeImplicitConversions*
+   ...
+}
+{
+   llvm/llvm-project#194147: AnalyzeImplicitConversions leaf
+   Memcheck:Cond
+   fun:*AnalyzeImplicitConversions*
+   ...
+}
+{
+   llvm/llvm-project#194147: CFGBuilder::Visit Cond
+   Memcheck:Cond
+   fun:*CFGBuilder*Visit*
+   ...
+}
+{
+   llvm/llvm-project#194147: CFGBuilder::Visit Value8
+   Memcheck:Value8
+   fun:*CFGBuilder*Visit*
+   ...
+}
+
+{
+   llvm/llvm-project#194147: RecordExprEvaluator::VisitCXXParenListOrInitListExpr
+   Memcheck:Cond
+   fun:*RecordExprEvaluator*VisitCXXParenListOrInitListExpr*
+   ...
+}
+{
+   llvm/llvm-project#194147: AggExprEmitter init-list visits
+   Memcheck:Cond
+   fun:*AggExprEmitter*Visit*InitListExpr*
+   ...
+}
+
+{
+   llvm/llvm-project#194147: InitListChecker::FillInEmptyInitForField
+   Memcheck:Cond
+   fun:*InitListChecker*FillInEmptyInitForField*
+   ...
+}
+{
+   llvm/llvm-project#194147: InitListChecker::FillInEmptyInitializations
+   Memcheck:Cond
+   fun:*InitListChecker*FillInEmptyInitializations*
+   ...
+}
+
+# llvm/llvm-project#194147 (continued): symbols newly tripped after
+# release/22.x advanced and the llvm-release recipe republished. The
+# FunctionProtoType ctor is the dominant top frame on x86_64; the
+# CodeGen + EHScope entries cover the lower-frequency paths.
+#
+# Earlier iterations of this file carried ~17 more blocks targeting
+# symbols extracted from "Uninitialised value was created by"
+# allocation-origin frames; valgrind's matcher only considers the
+# read-site top frame, so every one of those blocks was dead.
+# Removed. (See the matching comment in clang21-valgrind.supp for
+# why the over-broad `*FunctionProtoType*` is the only pattern that
+# matches the constructor in valgrind's wildcard matcher.)
+{
+   llvm/llvm-project#194147: FunctionProtoType (any method, see comment)
+   Memcheck:Cond
+   fun:*FunctionProtoType*
+   ...
+}
+{
+   llvm/llvm-project#194147: CodeGenFunction::EmitCall
+   Memcheck:Cond
+   fun:*CodeGenFunction*EmitCall*
+   ...
+}
+{
+   llvm/llvm-project#194147: EHScopeStack::requiresLandingPad
+   Memcheck:Cond
+   fun:*EHScopeStack*requiresLandingPad*
+   ...
+}
+{
+   # Top frame for every unsuppressed error in the llvm22-vg
+   # x86_64 row after FunctionProtoType started being silenced --
+   # 21->173 errors all surfaced here, across 3->5 contexts
+   # depending on which CppInterOpTests' OutOfProcessJIT subtests
+   # ran. Origin frame is llvm::Module::setDataLayout (stack
+   # allocation) but valgrind matches read-site, so suppress
+   # by the read-site symbol.
+   llvm/llvm-project#194147: CodeGenModule::SetLLVMFunctionAttributesForDefinition
+   Memcheck:Cond
+   fun:*CodeGenModule*SetLLVMFunctionAttributesForDefinition*
+   ...
+}
+
+# llvm/llvm-project#194147 (continued): symbols newly tripped on
+# the arm64 cell after recipe republish. The aarch64 cell was
+# previously documented as clean for #194147 (per the existing
+# top-of-file note); that's now stale. Different code paths than
+# x86_64 trips, mainly TreeTransform / SemaCUDA / AsmPrinter /
+# bitcode writer.
+{
+   llvm/llvm-project#194147: TreeTransform::TransformIfStmt
+   Memcheck:Cond
+   fun:*TreeTransform*TransformIfStmt*
+   ...
+}
+{
+   llvm/llvm-project#194147: SemaCUDA::inferTargetForImplicitSpecialMember
+   Memcheck:Cond
+   fun:*SemaCUDA*inferTargetForImplicitSpecialMember*
+   ...
+}
+{
+   llvm/llvm-project#194147: AsmPrinter::emitPatchableFunctionEntries
+   Memcheck:Cond
+   fun:*AsmPrinter*emitPatchableFunctionEntries*
+   ...
+}
+{
+   llvm/llvm-project#194147: ValueEnumerator::getAttributeGroupID Cond
+   Memcheck:Cond
+   fun:*ValueEnumerator*getAttributeGroupID*
+   ...
+}
+{
+   # Same symbol, different error class: BitcodeWriter reads an
+   # 8-byte uninit field (AttributeSet pointer pair) when the
+   # ModuleBitcodeWriter::write() path serializes the module. Cond
+   # alone doesn't catch Memcheck:Value8 — value-load errors are
+   # tracked separately by valgrind.
+   llvm/llvm-project#194147: ValueEnumerator::getAttributeGroupID Value8
+   Memcheck:Value8
+   fun:*ValueEnumerator*getAttributeGroupID*
+   ...
+}
+{
+   llvm/llvm-project#194147: TargetLowering::LowerCallTo
+   Memcheck:Cond
+   fun:*TargetLowering*LowerCallTo*
+   ...
+}
+
+# llvm/llvm-project#194147 (continued): new in release/23.x on x86_64.
+# The uninitialised bytes come from the heap allocation of X86TargetMachine
+# and are read during SelectionDAG load combining. Fires in every test that
+# JITs code; the forked children of the JitPthreadAtfork*/JitAtQuickExit*
+# tests then exit through --error-exitcode=1 and the tests fail.
+{
+   llvm/llvm-project#194147: APInt::setLowBits via computeKnownBits
+   Memcheck:Cond
+   fun:_ZN4llvm5APInt10setLowBitsEj
+   fun:*computeKnownBits*
+   ...
+}
+
+# llvm/llvm-project#194147 (continued): new in release/23.x on aarch64.
+#
+# In-process JIT: MachineFunction::getPreferredAlignment reads an
+# uninitialised field. It fires in every test that JITs code, and the
+# forked children of the JitPthreadAtfork*/JitAtQuickExit* tests then exit
+# through --error-exitcode=1.
+{
+   llvm/llvm-project#194147: MachineFunction::getPreferredAlignment
+   Memcheck:Cond
+   fun:*MachineFunction*getPreferredAlignment*
+   ...
+}
+
+# Out-of-process JIT: ORC runs with concurrent compilation, so
+# BasicIRLayerMaterializationUnit::materialize calls cloneToNewContext,
+# which writes the module to bitcode and reads it back. On aarch64 the
+# serialized bytes are already uninitialised (origins: the heap slots of
+# BitstreamWriter::EnterSubblock's Block vector and of CloneModule's
+# Users), so every reader of the reloaded module trips valgrind: the
+# bitcode reader itself, then the whole backend that compiles the module,
+# then the destruction of its LLVMContext. The read sites run to hundreds
+# of symbols, so these blocks key on a frame anywhere in the recorded
+# stack (leading `...`) instead of on the top frame.
+
+# aarch64, ORC bitcode round trip (serialize/deserialize).
+{
+   llvm/llvm-project#194147 aarch64: orc::serializeModule Cond
+   Memcheck:Cond
+   ...
+   fun:*orc*serializeModule*
+}
+{
+   llvm/llvm-project#194147 aarch64: orc::serializeModule Value8
+   Memcheck:Value8
+   ...
+   fun:*orc*serializeModule*
+}
+{
+   llvm/llvm-project#194147 aarch64: orc::deserializeModule Cond
+   Memcheck:Cond
+   ...
+   fun:*orc*deserializeModule*
+}
+{
+   llvm/llvm-project#194147 aarch64: orc::deserializeModule Value8
+   Memcheck:Value8
+   ...
+   fun:*orc*deserializeModule*
+}
+{
+   llvm/llvm-project#194147 aarch64: BitcodeReader Cond
+   Memcheck:Cond
+   ...
+   fun:*BitcodeReader*
+}
+{
+   llvm/llvm-project#194147 aarch64: BitcodeReader Value8
+   Memcheck:Value8
+   ...
+   fun:*BitcodeReader*
+}
+{
+   llvm/llvm-project#194147 aarch64: BitstreamCursor Cond
+   Memcheck:Cond
+   ...
+   fun:*BitstreamCursor*
+}
+{
+   llvm/llvm-project#194147 aarch64: BitstreamCursor Value8
+   Memcheck:Value8
+   ...
+   fun:*BitstreamCursor*
+}
+{
+   llvm/llvm-project#194147 aarch64: MetadataLoader Cond
+   Memcheck:Cond
+   ...
+   fun:*MetadataLoader*
+}
+{
+   llvm/llvm-project#194147 aarch64: MetadataLoader Value8
+   Memcheck:Value8
+   ...
+   fun:*MetadataLoader*
+}
+
+# aarch64, codegen of the reloaded module.
+{
+   llvm/llvm-project#194147 aarch64: IRTranslator Cond
+   Memcheck:Cond
+   ...
+   fun:*IRTranslator*
+}
+{
+   llvm/llvm-project#194147 aarch64: IRTranslator Value8
+   Memcheck:Value8
+   ...
+   fun:*IRTranslator*
+}
+{
+   llvm/llvm-project#194147 aarch64: GISelCSE Cond
+   Memcheck:Cond
+   ...
+   fun:*GISelCSE*
+}
+{
+   llvm/llvm-project#194147 aarch64: GISelCSE Value8
+   Memcheck:Value8
+   ...
+   fun:*GISelCSE*
+}
+{
+   llvm/llvm-project#194147 aarch64: GISelInstProfileBuilder Cond
+   Memcheck:Cond
+   ...
+   fun:*GISelInstProfileBuilder*
+}
+{
+   llvm/llvm-project#194147 aarch64: GISelInstProfileBuilder Value8
+   Memcheck:Value8
+   ...
+   fun:*GISelInstProfileBuilder*
+}
+{
+   llvm/llvm-project#194147 aarch64: MachineCSE Cond
+   Memcheck:Cond
+   ...
+   fun:*MachineCSE*
+}
+{
+   llvm/llvm-project#194147 aarch64: MachineCSE Value8
+   Memcheck:Value8
+   ...
+   fun:*MachineCSE*
+}
+{
+   llvm/llvm-project#194147 aarch64: SelectionDAGISel Cond
+   Memcheck:Cond
+   ...
+   fun:*SelectionDAGISel*
+}
+{
+   llvm/llvm-project#194147 aarch64: SelectionDAGISel Value8
+   Memcheck:Value8
+   ...
+   fun:*SelectionDAGISel*
+}
+{
+   llvm/llvm-project#194147 aarch64: ScheduleDAGSDNodes Cond
+   Memcheck:Cond
+   ...
+   fun:*ScheduleDAGSDNodes*
+}
+{
+   llvm/llvm-project#194147 aarch64: ScheduleDAGSDNodes Value8
+   Memcheck:Value8
+   ...
+   fun:*ScheduleDAGSDNodes*
+}
+{
+   llvm/llvm-project#194147 aarch64: BranchProbabilityInfo Cond
+   Memcheck:Cond
+   ...
+   fun:*BranchProbabilityInfo*
+}
+{
+   llvm/llvm-project#194147 aarch64: BranchProbabilityInfo Value8
+   Memcheck:Value8
+   ...
+   fun:*BranchProbabilityInfo*
+}
+{
+   llvm/llvm-project#194147 aarch64: AllocaInst::getAllocationSize Cond
+   Memcheck:Cond
+   ...
+   fun:*AllocaInst*getAllocationSize*
+}
+{
+   llvm/llvm-project#194147 aarch64: AllocaInst::getAllocationSize Value8
+   Memcheck:Value8
+   ...
+   fun:*AllocaInst*getAllocationSize*
+}
+{
+   llvm/llvm-project#194147 aarch64: AsmPrinter Cond
+   Memcheck:Cond
+   ...
+   fun:*AsmPrinter*
+}
+{
+   llvm/llvm-project#194147 aarch64: AsmPrinter Value8
+   Memcheck:Value8
+   ...
+   fun:*AsmPrinter*
+}
+{
+   llvm/llvm-project#194147 aarch64: AArch64 Cond
+   Memcheck:Cond
+   ...
+   fun:*AArch64*
+}
+{
+   llvm/llvm-project#194147 aarch64: AArch64 Value8
+   Memcheck:Value8
+   ...
+   fun:*AArch64*
+}
+
+# aarch64, teardown of the reloaded module's context.
+{
+   llvm/llvm-project#194147 aarch64: LLVMContextImpl Cond
+   Memcheck:Cond
+   ...
+   fun:*LLVMContextImpl*
+}
+{
+   llvm/llvm-project#194147 aarch64: LLVMContextImpl Value8
+   Memcheck:Value8
+   ...
+   fun:*LLVMContextImpl*
+}
+{
+   llvm/llvm-project#194147 aarch64: removeDeadConstantUsers Cond
+   Memcheck:Cond
+   ...
+   fun:*removeDeadConstantUsers*
+}
+{
+   llvm/llvm-project#194147 aarch64: removeDeadConstantUsers Value8
+   Memcheck:Value8
+   ...
+   fun:*removeDeadConstantUsers*
+}

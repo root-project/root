@@ -12,7 +12,7 @@ class TauRecDetails_p1;
 #include "ElementLinkVector_p1_unsigned_int_.h"
 #include "HepLorentzVector_p1.h"
 #include "TPObjRef.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class TauRecDetails_p1 {

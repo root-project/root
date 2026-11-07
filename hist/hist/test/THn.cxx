@@ -1,9 +1,10 @@
-#include "gtest/gtest.h"
-
 #include "THn.h"
 #include "THnSparse.h"
 #include "TH1.h"
 #include "TH2.h"
+
+#include "ROOT/TestSupport.hxx"
+#include "gtest/gtest.h"
 
 // Constructors for THn and THnSparse
 TEST(THn, Constructors)
@@ -213,7 +214,7 @@ TEST(THn, ErrorsOfProjection)
    EXPECT_FLOAT_EQ(proj->GetBinError(projectedBin2), 6.);
 }
 
-// https://github.com/root-project/root/issues/19366
+// #19366
 TEST(THn, CreateSparse)
 {
    Int_t bins[1] = {5};
@@ -224,4 +225,45 @@ TEST(THn, CreateSparse)
    auto hn_sparse = THnSparseD::CreateSparse("", "", &hn);
    EXPECT_EQ(hn_sparse->GetNbins(), 1);
    EXPECT_FLOAT_EQ(hn_sparse->GetSparseFractionBins(), 1. / 7); // 5 + under/overflows
+}
+
+// #21484
+TEST(THSparse, AxisTitles)
+{
+   std::vector<double> xmin = {0, 0, 0, 0, 0};
+   std::vector<double> xmax = {1, 1, 1, 1, 1};
+   std::vector<int> nbins = {1, 1, 1, 1, 1};
+   std::vector<std::string> axisTitles = {"title_0", "title_1", "title_2", "title_3", "title_4"};
+   std::string title = "title";
+   for (auto &&axisTitle : axisTitles) {
+      title += ";" + axisTitle;
+   }
+   THnSparseD h("name", title.c_str(), 5, nbins.data(), xmin.data(), xmax.data());
+   for (auto i : {0, 1, 2, 3, 4}) {
+      EXPECT_STREQ(axisTitles[i].c_str(), h.GetAxis(i)->GetTitle());
+   }
+   EXPECT_STREQ(h.GetTitle(), "title");
+
+   title += ";title_5";
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kError, "THnBase::SetTitle",
+                         "Trying to assign a title to axis 6 for a 5-dimensional histogram.");
+      h.SetTitle(title.c_str());
+   }
+
+   // now we check the constructor that takes in input a vector of TAxis instances.
+   std::vector<TAxis> axes = {{4, -2, 2}, {4, -2, 2}};
+   THnSparseD h1("name", "title;foo;bar", axes);
+   EXPECT_STREQ(h1.GetAxis(0)->GetTitle(), "foo");
+   EXPECT_STREQ(h1.GetAxis(1)->GetTitle(), "bar");
+
+   const auto axisTitle = "myAxis";
+   for(auto &axis : axes){
+      axis.SetTitle(axisTitle);
+   }
+   THnSparseD h2("name", "title;foo;bar", axes);
+   EXPECT_STREQ(h2.GetAxis(0)->GetTitle(), axisTitle);
+   EXPECT_STREQ(h2.GetAxis(1)->GetTitle(), axisTitle);
+
 }

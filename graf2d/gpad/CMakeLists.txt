@@ -24,7 +24,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     TGroupButton.h
     TInspectCanvas.h
     TPad.h
-    TPadPainter.h
+    TPadPainterBase.h
+    TPadPainterPS.h
     TPaveClass.h
     TRatioPlot.h
     TSliderBox.h
@@ -45,7 +46,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     src/TGroupButton.cxx
     src/TInspectCanvas.cxx
     src/TPad.cxx
-    src/TPadPainter.cxx
+    src/TPadPainterBase.cxx
+    src/TPadPainterPS.cxx
     src/TPaveClass.cxx
     src/TRatioPlot.cxx
     src/TSliderBox.cxx
@@ -58,5 +60,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     Graf
     Hist
 )
+
+target_include_directories(Gpad PRIVATE ../graf/src)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

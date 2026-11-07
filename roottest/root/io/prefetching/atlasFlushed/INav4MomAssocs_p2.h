@@ -10,7 +10,7 @@
 class INav4MomAssocs_p2;
 
 #include "ElementLinkContNames_p2.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include <utility>
 #include "ElementLink_p2_unsigned_int_.h"

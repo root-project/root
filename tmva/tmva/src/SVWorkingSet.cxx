@@ -392,8 +392,6 @@ void TMVA::SVWorkingSet::Train(UInt_t nMaxIter)
    std::vector<TMVA::SVEvent*>::iterator idIter;
 
    while ((numChanged > 0) || (examineAll > 0)) {
-     if (fIPyCurrentIter) *fIPyCurrentIter = numit;
-     if (fExitFromTraining && *fExitFromTraining) break;
       numChanged = 0;
       if (examineAll) {
          for (idIter = fInputData->begin(); idIter!=fInputData->end(); ++idIter){
@@ -503,7 +501,7 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
 
    // main loop
    while(!terminated) {
-      const Float_t null = 0.; //!!! dummy float null declaration because of problems with TMath::Max/Min(Float_t, Float_t) function
+      const Float_t null = 0.; // dummy float null declaration because of problems with TMath::Max/Min(Float_t, Float_t) function
       Float_t low, high;
       Float_t tmp_alpha_i, tmp_alpha_j;
       tmp_alpha_i = tmp_alpha_j = 0.;

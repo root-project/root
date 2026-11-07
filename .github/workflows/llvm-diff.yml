@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out ROOT
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: root
       - name: Determine tag in fork of monorepo
@@ -19,7 +19,7 @@ jobs:
           echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
           rm $tag_file
       - name: Check out llvm-project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: root-project/llvm-project
           ref: ${{ steps.determine-tag.outputs.tag }}
@@ -33,6 +33,10 @@ jobs:
           rm -r llvm/utils/vscode
           for f in $(ls -A); do
             [ -e ../root/interpreter/llvm-project/$f ] || rm -r $f
+          done
+          # Only compare what is already there in third-party
+          for f in $(ls -A third-party); do
+            [ -e ../root/interpreter/llvm-project/third-party/$f ] || rm -r third-party/$f
           done
       - name: Compare
         run: diff -ur llvm-project/ root/interpreter/llvm-project/

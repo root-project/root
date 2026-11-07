@@ -121,10 +121,6 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <cassert>
-#include <set>
-
 #include "RConfigure.h"
 #include "TTabCom.h"
 #include "TClass.h"
@@ -144,9 +140,14 @@
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "TInterpreter.h"
-#include "Riostream.h"
-#include "Rstrstream.h"
 #include "strlcpy.h"
+
+#include <cassert>
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <set>
+#include <sstream>
 
 #define BUF_SIZE 1024 // must be smaller than/equal to fgLineBufSize in Getline.cxx and
                       // lineBufSize in cppcompleter.py
@@ -2266,7 +2267,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    //
    // root [1] var.a.b.c[TAB]
    //
-   // will generate the sucessive calls:
+   // will generate the successive calls:
    // MakeClassFromVarName("var.a.b.c", context, 0) returns the class of "c"
    // MakeClassFromVarName("var.a.b", context, 1)   returns the class of "b"
    // MakeClassFromVarName("var.a", context, 2)     returns the class of "a"
@@ -2409,8 +2410,9 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    // not found...
    if (!varName_exists) {
-      std::cerr << std::endl << "variable " << dblquote(varName) << " not defined."
-         << std::endl;
+      if (cut == 0) {
+         std::cerr << std::endl << "variable " << dblquote(varName) << " not defined." << std::endl;
+      }
       return nullptr;                 //* RETURN *//
    }
 
@@ -2500,6 +2502,20 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
             return nullptr;           // RETURN
          }
       } else {
+         // Find the TClass and see if the object has an operator->, for example if it is a smart pointer.
+         auto cl = TClass::GetClass(className);
+         if (cl != nullptr) {
+            auto op = cl->GetMethod("operator->", "");
+            if (op != nullptr) {
+               // Get the return type and remove the '*', which should be there
+               className = op->GetReturnTypeNormalizedName();
+               if (className[className.Length() - 1] == '*') {
+                  className.Chop();
+               }
+               return TClass::GetClass(className);
+            }
+         }
+
          // user is using operator->() instead of operator.()
          // ==>
          //      1. we are in wrong context.

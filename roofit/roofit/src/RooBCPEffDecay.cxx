@@ -22,7 +22,6 @@ This function can be analytically convolved with any RooResolutionModel implemen
 */
 
 
-#include "Riostream.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooBCPEffDecay.h"

@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleView.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-05
 
@@ -38,7 +37,7 @@ namespace Internal {
 /// by the number of elements of the first principal column found in the subfields searched by BFS.
 /// If the field hierarchy is empty on columns, the returned field range is invalid (start and end set to
 /// kInvalidNTupleIndex). An attempt to use such a field range in RNTupleViewBase::GetFieldRange will throw.
-ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Internal::RPageSource &pageSource);
+ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, ROOT::Internal::RPageSource &pageSource);
 
 } // namespace Internal
 
@@ -93,7 +92,8 @@ protected:
       Internal::SetAllowFieldSubstitutions(fieldZero, true);
       std::unique_ptr<ROOT::RFieldBase> field;
       {
-         const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+         auto descGuard = pageSource.GetSharedDescriptorGuard();
+         const auto &desc = descGuard.GetConstRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if constexpr (std::is_void_v<T>) {
             if (typeName.empty())
@@ -116,7 +116,7 @@ protected:
    }
 
    RNTupleViewBase(std::unique_ptr<ROOT::RFieldBase> field, ROOT::RNTupleGlobalRange range, std::shared_ptr<T> objPtr)
-      : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(objPtr))
+      : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(std::move(objPtr)))
    {
    }
 
@@ -146,7 +146,8 @@ public:
    ROOT::RNTupleGlobalRange GetFieldRange() const
    {
       if (!fFieldRange.IsValid()) {
-         throw RException(R__FAIL("field iteration over empty fields is unsupported: " + fField->GetFieldName()));
+         throw RException(R__FAIL("field iteration over empty fields in vectors or variants is unsupported: " +
+                                  fField->GetFieldName()));
       }
       return fFieldRange;
    }
@@ -233,7 +234,7 @@ protected:
    }
 
    RNTupleView(std::unique_ptr<ROOT::RFieldBase> field, ROOT::RNTupleGlobalRange range, std::shared_ptr<void> objPtr)
-      : RNTupleViewBase<void>(std::move(field), range, objPtr)
+      : RNTupleViewBase<void>(std::move(field), range, std::move(objPtr))
    {
    }
 
@@ -273,7 +274,8 @@ protected:
 
    static ROOT::RField<T> CreateField(ROOT::DescriptorId_t fieldId, ROOT::Internal::RPageSource &pageSource)
    {
-      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+      auto descGuard = pageSource.GetSharedDescriptorGuard();
+      const auto &desc = descGuard.GetConstRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
       if (!Internal::IsMatchingFieldType<T>(fieldDesc.GetTypeName())) {
          throw RException(R__FAIL("type mismatch for field " + fieldDesc.GetFieldName() + ": " +
@@ -312,6 +314,9 @@ public:
 \class ROOT::RNTupleCollectionView
 \ingroup NTuple
 \brief A view for a collection, that can itself generate new ntuple views for its nested fields.
+*
+* The collection view's call operator returns the size of the collection. The collection view can also return
+* the element range and it can create subviews for fields inside the collection.
 */
 // clang-format on
 class RNTupleCollectionView {
@@ -334,7 +339,8 @@ private:
    {
       std::string fieldName;
       {
-         const auto &desc = source->GetSharedDescriptorGuard().GetRef();
+         auto descGuard = source->GetSharedDescriptorGuard();
+         const auto &desc = descGuard.GetConstRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if (fieldDesc.GetStructure() != ROOT::ENTupleStructure::kCollection) {
             throw RException(

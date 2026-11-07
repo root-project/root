@@ -1,4 +1,3 @@
-
 Processing restoreCanvas.C...
 Info in <TCountDeletes::~TCountDeletes>: Seen 1 monitored object being deleted and 0 object left undeleted.
 Warning in <readdata>: The frame is set as 'kCanDelete'

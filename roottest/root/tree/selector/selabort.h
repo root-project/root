@@ -14,14 +14,12 @@
 #include <TFile.h>
 #include <TSelector.h>
 #include <TRef.h>
-#ifndef __CLING__
-#include <Riostream.h>
-#endif
+
 #include <cstdio>
 
 class selabort : public TSelector {
    public :
-   TTree          *fChain;   //!pointer to the analyzed TTree or TChain
+   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain
 //Declaration of leaves types
    //Event           *event;
    Char_t          fType[20];
@@ -38,17 +36,17 @@ class selabort : public TSelector {
    TRef            fWebHistogram;
 
 //List of branches
-   TBranch        *b_fType;   //!
-   TBranch        *b_fNtrack;   //!
-   TBranch        *b_fNseg;   //!
-   TBranch        *b_fNvertex;   //!
-   TBranch        *b_fFlag;   //!
-   TBranch        *b_fTemperature;   //!
-   TBranch        *b_fMeasures;   //!
-   TBranch        *b_fMatrix;   //!
-   TBranch        *b_fClosestDistance;   //!
-   TBranch        *b_fLastTrack;   //!
-   TBranch        *b_fWebHistogram;   //!
+   TBranch        *b_fType;   ///<!
+   TBranch        *b_fNtrack;   ///<!
+   TBranch        *b_fNseg;   ///<!
+   TBranch        *b_fNvertex;   ///<!
+   TBranch        *b_fFlag;   ///<!
+   TBranch        *b_fTemperature;   ///<!
+   TBranch        *b_fMeasures;   ///<!
+   TBranch        *b_fMatrix;   ///<!
+   TBranch        *b_fClosestDistance;   ///<!
+   TBranch        *b_fLastTrack;   ///<!
+   TBranch        *b_fWebHistogram;   ///<!
 
 //Extra members
    TString MyNameIs;

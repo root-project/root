@@ -20,7 +20,7 @@
 
 namespace HepMC {
 
-    //! Container for the Weights associated with an event or vertex.
+    ///<! Container for the Weights associated with an event or vertex.
 
     ///
     /// \class  WeightContainer

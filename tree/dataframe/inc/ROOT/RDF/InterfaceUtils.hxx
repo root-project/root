@@ -15,6 +15,8 @@
 #include <ROOT/RDF/RActionSnapshot.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
 #include <ROOT/RDF/SnapshotHelpers.hxx>
+#include <ROOT/RDF/RActionCustomLoader.hxx>
+#include <ROOT/RDF/CustomLoaderHelpers.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDefine.hxx>
 #include <ROOT/RDF/RDefinePerSample.hxx>
@@ -28,6 +30,7 @@
 #include <string_view>
 #include <ROOT/RDF/RVariation.hxx>
 #include <ROOT/TypeTraits.hxx>
+#include <RConfigure.h> // for R__HAS_ROOT7
 #include <TError.h> // gErrorIgnoreLevel
 #include <TH1.h>
 #include <TROOT.h> // IsImplicitMTEnabled
@@ -90,16 +93,21 @@ struct Histo2D{};
 struct Histo3D{};
 struct HistoND{};
 struct HistoNSparseD{};
+struct Hist{};
+struct HistWithWeight{};
 struct Graph{};
 struct GraphAsymmErrors{};
 struct Profile1D{};
 struct Profile2D{};
+struct Profile{};
+struct ProfileWithWeight{};
 struct Min{};
 struct Max{};
 struct Sum{};
 struct Mean{};
 struct Fill{};
 struct StdDev{};
+struct Median{};
 struct Display{};
 struct Snapshot{};
 struct Book{};
@@ -170,6 +178,80 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
       return std::make_unique<Action_t>(Helper_t(h, histoSlots), bl, std::move(prevNode), colRegister);
    }
 }
+
+#ifdef R__HAS_ROOT7
+// Action for RHist using RHistConcurrentFiller without weights
+template <typename... ColTypes, typename BinContentType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RHist<BinContentType>> &h,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Hist,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RHistFillHelper<BinContentType>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RHist using RHistConcurrentFiller with weights
+template <typename... ColTypes, typename BinContentType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RHist<BinContentType>> &h,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::HistWithWeight,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RHistFillHelper<BinContentType, true>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RHistEngine using FillAtomic without weights
+template <typename... ColTypes, typename BinContentType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RHistEngine<BinContentType>> &h,
+            const unsigned int, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Hist,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RHistEngineFillHelper<BinContentType>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RHistEngine using FillAtomic with weights
+template <typename... ColTypes, typename BinContentType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RHistEngine<BinContentType>> &h,
+            const unsigned int, std::shared_ptr<PrevNodeType> prevNode, ActionTags::HistWithWeight,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RHistEngineFillHelper<BinContentType, true>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RProfile using RProfileConcurrentFiller without weights
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RProfile> &p,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Profile,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RProfileFillHelper<>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(p, nSlots), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RProfile using RProfileConcurrentFiller with weights
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RProfile> &p,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::ProfileWithWeight,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RProfileFillHelper<true>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(p, nSlots), columnList, std::move(prevNode), colRegister);
+}
+#endif
 
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
@@ -244,6 +326,17 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
    return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, colRegister);
+}
+
+// Median action
+template <typename ColType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Median, const RColumnRegister &colRegister)
+{
+   using Helper_t = MedianHelper;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
+   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, std::move(prevNode), colRegister);
 }
 
 using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDisplay>>;
@@ -332,6 +425,18 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    return actionPtr;
 }
 
+template <typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &colNames, const std::vector<const std::type_info *> &colTypeIDs,
+            const std::shared_ptr<ROOT::RVecF> &location, const std::vector<std::size_t> &vecSizes, float vecPadding,
+            std::shared_ptr<PrevNodeType> prevNode, const RColumnRegister &colRegister)
+{
+   using Helper_t = ROOT::Internal::RDF::CustomLoaderHelper;
+   using Action_t = ROOT::Internal::RDF::RActionCustomLoader<Helper_t, PrevNodeType>;
+   return std::make_unique<Action_t>(Helper_t(location, colTypeIDs, vecSizes, vecPadding), colNames, colTypeIDs,
+                                     prevNode, colRegister);
+}
+
 // Book with custom helper type
 template <typename... ColTypes, typename PrevNodeType, typename Helper_t>
 std::unique_ptr<RActionBase>
@@ -367,47 +472,25 @@ void CheckForNoVariations(const std::string &where, std::string_view definedColV
 
 std::string PrettyPrintAddr(const void *const addr);
 
-std::shared_ptr<RJittedFilter> BookFilterJit(std::shared_ptr<RNodeBase> *prevNodeOnHeap, std::string_view name,
+std::shared_ptr<RJittedFilter> BookFilterJit(std::shared_ptr<RNodeBase> prevNode, std::string_view name,
                                              std::string_view expression, const RColumnRegister &colRegister,
                                              TTree *tree, RDataSource *ds);
 
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                             RDataSource *ds, const RColumnRegister &colRegister,
-                                             std::shared_ptr<RNodeBase> *prevNodeOnHeap);
+                                             RDataSource *ds, const RColumnRegister &colRegister);
 
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
-                                                      RLoopManager &lm, const RColumnRegister &colRegister,
-                                                      std::shared_ptr<RNodeBase> *upcastNodeOnHeap);
+                                                      RLoopManager &lm, const RColumnRegister &colRegister);
 
 std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
                  const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
-                 RDataSource *ds, const RColumnRegister &colRegister, std::shared_ptr<RNodeBase> *upcastNodeOnHeap,
-                 bool isSingleColumn);
+                 RDataSource *ds, const RColumnRegister &colRegister, bool isSingleColumn,
+                 const std::string &varyColType);
 
-std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
-                           const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
+std::string JitBuildAction(const ColumnNames_t &bl, const std::type_info &art, const std::type_info &at, TTree *tree,
                            const unsigned int nSlots, const RColumnRegister &colRegister, RDataSource *ds,
-                           std::weak_ptr<RJittedAction> *jittedActionOnHeap, const bool vector2RVec = true);
-
-// Allocate a weak_ptr on the heap, return a pointer to it. The user is responsible for deleting this weak_ptr.
-// This function is meant to be used by RInterface's methods that book code for jitting.
-// The problem it solves is that we generate code to be lazily jitted with the addresses of certain objects in them,
-// and we need to check those objects are still alive when the generated code is finally jitted and executed.
-// So we pass addresses to weak_ptrs allocated on the heap to the jitted code, which is then responsible for
-// the deletion of the weak_ptr object.
-template <typename T>
-std::weak_ptr<T> *MakeWeakOnHeap(const std::shared_ptr<T> &shPtr)
-{
-   return new std::weak_ptr<T>(shPtr);
-}
-
-// Same as MakeWeakOnHeap, but create a shared_ptr that makes sure the object is definitely kept alive.
-template <typename T>
-std::shared_ptr<T> *MakeSharedOnHeap(const std::shared_ptr<T> &shPtr)
-{
-   return new std::shared_ptr<T>(shPtr);
-}
+                           const bool vector2RVec = true);
 
 bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 
@@ -472,45 +555,32 @@ void AddDSColumns(const std::vector<std::string> &requiredCols, ROOT::Detail::RD
                   ROOT::Internal::RDF::RColumnRegister &colRegister);
 
 // this function is meant to be called by the jitted code generated by BookFilterJit
-template <typename F, typename PrevNode>
-void JitFilterHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::string_view name,
-                     std::weak_ptr<RJittedFilter> *wkJittedFilter, std::shared_ptr<PrevNode> *prevNodeOnHeap,
-                     RColumnRegister *colRegister) noexcept
+template <typename F>
+void JitFilterHelper(F &&f, const ColumnNames_t &cols, RColumnRegister &colRegister,
+                     ROOT::Detail::RDF::RLoopManager &lm, ROOT::Detail::RDF::RJittedFilter *jittedFilter) noexcept
 {
-   if (wkJittedFilter->expired()) {
+   if (!jittedFilter) {
       // The branch of the computation graph that needed this jitted code went out of scope between the type
       // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
-      delete wkJittedFilter;
-      delete colRegister;
-      delete prevNodeOnHeap;
       return;
    }
 
-   const ColumnNames_t cols(colsPtr, colsPtr + colsSize);
-   delete[] colsPtr;
-
-   const auto jittedFilter = wkJittedFilter->lock();
-
    // mock Filter logic -- validity checks and Define-ition of RDataSource columns
    using Callable_t = std::decay_t<F>;
-   using F_t = RFilter<Callable_t, PrevNode>;
+   auto prevNode = jittedFilter->MoveOutPrevNode();
+   using PrevNode_t = typename decltype(prevNode)::element_type;
+   using F_t = RFilter<Callable_t, PrevNode_t>;
    using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
    CheckFilter(f);
 
-   auto &lm = *jittedFilter->GetLoopManagerUnchecked(); // RLoopManager must exist at this time
    auto ds = lm.GetDataSource();
 
-   if (ds != nullptr)
-      AddDSColumns(cols, lm, *ds, ColTypes_t(), *colRegister);
+   if (ds != nullptr && !cols.empty())
+      AddDSColumns(cols, lm, *ds, ColTypes_t(), colRegister);
 
    jittedFilter->SetFilter(
-      std::unique_ptr<RFilterBase>(new F_t(std::forward<F>(f), cols, *prevNodeOnHeap, *colRegister, name)));
-   // colRegister points to the columns structure in the heap, created before the jitted call so that the jitter can
-   // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
-   delete colRegister;
-   delete prevNodeOnHeap;
-   delete wkJittedFilter;
+      std::unique_ptr<RFilterBase>(new F_t(std::forward<F>(f), cols, prevNode, colRegister, jittedFilter->GetName())));
 }
 
 namespace DefineTypes {
@@ -538,136 +608,79 @@ auto MakeDefineNode(DefineTypes::RDefinePerSampleTag, std::string_view name, std
 // This function is meant to be called by jitted code right before starting the event loop.
 // If colsPtr is null, build a RDefinePerSample (it has no input columns), otherwise a RDefine.
 template <typename RDefineTypeTag, typename F>
-void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::string_view name, RLoopManager *lm,
-                     std::weak_ptr<RJittedDefine> *wkJittedDefine, RColumnRegister *colRegister,
-                     std::shared_ptr<RNodeBase> *prevNodeOnHeap) noexcept
+void JitDefineHelper(F &&f, const ColumnNames_t &cols, RColumnRegister &colRegister,
+                     ROOT::Detail::RDF::RLoopManager &lm, ROOT::Detail::RDF::RJittedDefine *jittedDefine) noexcept
 {
-   // a helper to delete objects allocated before jitting, so that the jitter can share data with lazily jitted code
-   auto doDeletes = [&] {
-      delete wkJittedDefine;
-      delete colRegister;
-      delete prevNodeOnHeap;
-      delete[] colsPtr;
-   };
 
-   if (wkJittedDefine->expired()) {
+   if (!jittedDefine) {
       // The branch of the computation graph that needed this jitted code went out of scope between the type
       // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
-      doDeletes();
       return;
    }
-
-   const ColumnNames_t cols(colsPtr, colsPtr + colsSize);
-
-   auto jittedDefine = wkJittedDefine->lock();
 
    using Callable_t = std::decay_t<F>;
    using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
 
-   auto ds = lm->GetDataSource();
-   if (ds != nullptr && colsPtr)
-      AddDSColumns(cols, *lm, *ds, ColTypes_t(), *colRegister);
+   auto ds = lm.GetDataSource();
+   if (ds != nullptr && !cols.empty())
+      AddDSColumns(cols, lm, *ds, ColTypes_t(), colRegister);
 
    // will never actually be used (trumped by jittedDefine->GetTypeName()), but we set it to something meaningful
    // to help devs debugging
    const auto dummyType = "jittedCol_t";
    // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
    std::unique_ptr<RDefineBase> newCol{
-      MakeDefineNode(RDefineTypeTag{}, name, dummyType, std::forward<F>(f), cols, *colRegister, *lm)};
+      MakeDefineNode(RDefineTypeTag{}, jittedDefine->GetName(), dummyType, std::forward<F>(f), cols, colRegister, lm)};
    jittedDefine->SetDefine(std::move(newCol));
-
-   doDeletes();
 }
 
 template <bool IsSingleColumn, typename F>
-void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const char **variedCols,
-                        std::size_t variedColsSize, const char **variationTags, std::size_t variationTagsSize,
-                        std::string_view variationName, RLoopManager *lm,
-                        std::weak_ptr<RJittedVariation> *wkJittedVariation, RColumnRegister *colRegister,
-                        std::shared_ptr<RNodeBase> *prevNodeOnHeap) noexcept
+void JitVariationHelper(F &&f, const ColumnNames_t &inputColNames, RColumnRegister &colRegister,
+                        ROOT::Detail::RDF::RLoopManager &lm, RJittedVariation *jittedVariation,
+                        const ColumnNames_t &variedColNames, const ColumnNames_t &variationTags) noexcept
 {
-   // a helper to delete objects allocated before jitting, so that the jitter can share data with lazily jitted code
-   auto doDeletes = [&] {
-      delete[] colsPtr;
-      delete[] variedCols;
-      delete[] variationTags;
 
-      delete wkJittedVariation;
-      delete colRegister;
-      delete prevNodeOnHeap;
-   };
-
-   if (wkJittedVariation->expired()) {
+   if (!jittedVariation) {
       // The branch of the computation graph that needed this jitted variation went out of scope between the type
       // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
-      doDeletes();
       return;
    }
-
-   const ColumnNames_t inputColNames(colsPtr, colsPtr + colsSize);
-   std::vector<std::string> variedColNames(variedCols, variedCols + variedColsSize);
-   std::vector<std::string> tags(variationTags, variationTags + variationTagsSize);
-
-   auto jittedVariation = wkJittedVariation->lock();
 
    using Callable_t = std::decay_t<F>;
    using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
 
-   auto ds = lm->GetDataSource();
-   if (ds != nullptr)
-      AddDSColumns(inputColNames, *lm, *ds, ColTypes_t(), *colRegister);
+   auto ds = lm.GetDataSource();
+   if (ds != nullptr && !inputColNames.empty())
+      AddDSColumns(inputColNames, lm, *ds, ColTypes_t(), colRegister);
 
    // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
    std::unique_ptr<RVariationBase> newVariation{new RVariation<std::decay_t<F>, IsSingleColumn>(
-      std::move(variedColNames), variationName, std::forward<F>(f), std::move(tags), jittedVariation->GetTypeName(),
-      *colRegister, *lm, inputColNames)};
+      variedColNames, jittedVariation->GetVariationName(), std::forward<F>(f), variationTags,
+      jittedVariation->GetTypeName(), colRegister, lm, inputColNames)};
    jittedVariation->SetVariation(std::move(newVariation));
-
-   doDeletes();
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
-template <typename ActionTag, typename... ColTypes, typename PrevNodeType, typename HelperArgType>
-void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char **colsPtr, std::size_t colsSize,
-                     const unsigned int nSlots, std::shared_ptr<HelperArgType> *helperArgOnHeap,
-                     std::weak_ptr<RJittedAction> *wkJittedActionOnHeap, RColumnRegister *colRegister) noexcept
+template <typename ActionTag, typename... ColTypes, typename HelperArgType>
+void CallBuildAction(const ColumnNames_t &cols, RColumnRegister &colRegister, ROOT::Detail::RDF::RLoopManager &lm,
+                     RJittedAction *jittedAction, unsigned int nSlots,
+                     std::shared_ptr<HelperArgType> *helperArg) noexcept
 {
-   // a helper to delete objects allocated before jitting, so that the jitter can share data with lazily jitted code
-   auto doDeletes = [&] {
-      delete[] colsPtr;
-      delete helperArgOnHeap;
-      delete wkJittedActionOnHeap;
-      // colRegister must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
-      // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
-      delete colRegister;
-      delete prevNodeOnHeap;
-   };
-
-   if (wkJittedActionOnHeap->expired()) {
+   if (!jittedAction) {
       // The branch of the computation graph that needed this jitted variation went out of scope between the type
       // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
-      doDeletes();
       return;
    }
 
-   const ColumnNames_t cols(colsPtr, colsPtr + colsSize);
-
-   auto jittedActionOnHeap = wkJittedActionOnHeap->lock();
-
-   // if we are here it means we are jitting, if we are jitting the loop manager must be alive
-   auto &prevNodePtr = *prevNodeOnHeap;
-   auto &loopManager = *prevNodePtr->GetLoopManagerUnchecked();
    using ColTypes_t = TypeList<ColTypes...>;
    constexpr auto nColumns = ColTypes_t::list_size;
-   auto ds = loopManager.GetDataSource();
-   if (ds != nullptr)
-      AddDSColumns(cols, loopManager, *ds, ColTypes_t(), *colRegister);
+   auto ds = lm.GetDataSource();
+   if (ds != nullptr && !cols.empty())
+      AddDSColumns(cols, lm, *ds, ColTypes_t(), colRegister);
 
-   auto actionPtr = BuildAction<ColTypes...>(cols, std::move(*helperArgOnHeap), nSlots, std::move(prevNodePtr),
-                                             ActionTag{}, *colRegister);
-   jittedActionOnHeap->SetAction(std::move(actionPtr));
-
-   doDeletes();
+   auto actionPtr =
+      BuildAction<ColTypes...>(cols, *helperArg, nSlots, jittedAction->MoveOutPrevNode(), ActionTag{}, colRegister);
+   jittedAction->SetAction(std::move(actionPtr));
 }
 
 /// The contained `type` alias is `double` if `T == RInferredType`, `U` if `T == std::container<U>`, `T` otherwise.
@@ -831,7 +844,7 @@ AddSizeBranches(ROOT::RDF::RDataSource *ds, std::vector<std::string> &&colsWitho
                 std::vector<std::string> &&colsWithAliases);
 
 void RemoveDuplicates(ColumnNames_t &columnNames);
-void RemoveRNTupleSubFields(ColumnNames_t &columnNames);
+void RemoveRNTupleSubfields(ColumnNames_t &columnNames);
 
 } // namespace RDF
 } // namespace Internal

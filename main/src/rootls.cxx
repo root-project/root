@@ -24,7 +24,8 @@
 
 #include "logging.hxx"
 #include "optparse.hxx"
-#include "wildcards.hpp"
+#include "RootObjTree.hxx"
+#include "RootObjTree.cxx"
 
 #include <TBranch.h>
 #include <TError.h>
@@ -47,6 +48,8 @@
 #undef GetClassName
 #endif
 
+using namespace ROOT::CmdLine;
+
 static const char *const kAnsiNone = "\x1B[0m";
 static const char *const kAnsiGreen = "\x1B[32m";
 static const char *const kAnsiBlue = "\x1B[34m";
@@ -68,16 +71,16 @@ static const char *const kLongHelp = R"(
 Display ROOT files contents in the terminal.
 
 positional arguments:
-  FILE                  Input file
+  FILE                    Input file
 
 options:
-  -h, --help            show this help message and exit
-  -1, --oneColumn       Print content in one column
-  -l, --longListing     Use a long listing format.
-  -t, --treeListing     Print tree recursively and use a long listing format.
-  -R, --rntupleListing  Print RNTuples recursively and use a long listing format.
-  -r, --recursiveListing
-                        Traverse file recursively entering any TDirectory.
+  -h, --help              show this help message and exit
+  -1, --oneColumn         Print content in one column
+  -c, --allCycles         Force display of all objects' cycles
+  -l, --longListing       Use a long listing format.
+  -t, --treeListing       Print tree recursively and use a long listing format.
+  -R, --rntupleListing    Print RNTuples recursively and use a long listing format.
+  -r, --recursiveListing  Traverse file recursively entering any TDirectory.
 
 Examples:
 - rootls example.root
@@ -115,44 +118,6 @@ static bool ClassInheritsFrom(const char *class_, const char *baseClass)
    return inherits;
 }
 
-using NodeIdx = std::uint32_t;
-
-struct RootLsNode {
-   std::string fName;
-   std::string fClassName;
-   TKey *fKey = nullptr; // This is non-null for all nodes except the root node (which is the file itself)
-
-   TDirectory *fDir = nullptr; // This is null for all non-directory nodes
-   // NOTE: by construction of the tree, all children of the same node are contiguous.
-   NodeIdx fFirstChild = 0;
-   std::uint32_t fNChildren = 0;
-   std::uint32_t fNesting = 0;
-   NodeIdx fParent = 0;
-};
-
-static RootLsNode NodeFromKey(TKey &key)
-{
-   RootLsNode node = {};
-   node.fName = key.GetName();
-   node.fClassName = key.GetClassName();
-   node.fKey = &key;
-   return node;
-}
-
-struct RootLsTree {
-   // 0th node is the root node
-   std::vector<RootLsNode> fNodes;
-   std::vector<NodeIdx> fDirList;
-   std::vector<NodeIdx> fLeafList;
-   // The file must be kept alive in order to access the nodes' keys
-   std::unique_ptr<TFile> fFile;
-};
-
-struct RootLsSource {
-   std::string fFileName;
-   RootLsTree fObjectTree;
-};
-
 struct RootLsArgs {
    enum EFlags {
       kNone = 0x0,
@@ -161,6 +126,7 @@ struct RootLsArgs {
       kTreeListing = 0x4,
       kRNTupleListing = 0x8,
       kRecursiveListing = 0x10,
+      kForceAllCycles = 0x20,
    };
 
    enum class EPrintUsage {
@@ -170,7 +136,7 @@ struct RootLsArgs {
    };
 
    std::uint32_t fFlags = 0;
-   std::vector<RootLsSource> fSources;
+   std::vector<RootSource> fSources;
    EPrintUsage fPrintUsageAndExit = EPrintUsage::kNo;
 };
 
@@ -303,7 +269,7 @@ static void PrintRNTuple(std::ostream &stream, const ROOT::RNTupleDescriptor &de
    }
 }
 
-static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
+static void PrintChildrenDetailed(std::ostream &stream, const RootObjTree &tree, NodeIdx_t nodeIdx, std::uint32_t flags,
                                   Indent indent, std::size_t minNameLen = 0, std::size_t minClassLen = 0);
 
 /// Prints a `ls -l`-like output:
@@ -320,9 +286,9 @@ static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, 
 /// \param nodesEnd The last node to be printed
 /// \param flags A bitmask of RootLsArgs::Flags that influence how stuff is printed
 /// \param indent Each line of the output will have these many leading whitespaces
-static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
-                               std::vector<NodeIdx>::const_iterator nodesBegin,
-                               std::vector<NodeIdx>::const_iterator nodesEnd, std::uint32_t flags, Indent indent,
+static void PrintNodesDetailed(std::ostream &stream, const RootObjTree &tree,
+                               std::vector<NodeIdx_t>::const_iterator nodesBegin,
+                               std::vector<NodeIdx_t>::const_iterator nodesEnd, std::uint32_t flags, Indent indent,
                                std::size_t minNameLen = 0, std::size_t minClassLen = 0)
 {
    std::size_t maxClassLen = 0, maxNameLen = 0;
@@ -335,7 +301,7 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
    maxNameLen = std::max(minNameLen, maxNameLen + 2);
 
    for (auto childIt = nodesBegin; childIt != nodesEnd; ++childIt) {
-      NodeIdx childIdx = *childIt;
+      NodeIdx_t childIdx = *childIt;
       const auto &child = tree.fNodes[childIdx];
 
       const char *cycleStr = "";
@@ -392,7 +358,7 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
 }
 
 /// \param nodeIdx The index of the node whose children should be printed
-static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
+static void PrintChildrenDetailed(std::ostream &stream, const RootObjTree &tree, NodeIdx_t nodeIdx, std::uint32_t flags,
                                   Indent indent, std::size_t minNameLen, std::size_t minClassLen)
 {
 
@@ -400,36 +366,55 @@ static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, 
    if (node.fNChildren == 0)
       return;
 
-   std::vector<NodeIdx> children(node.fNChildren);
+   std::vector<NodeIdx_t> children(node.fNChildren);
    std::iota(children.begin(), children.end(), node.fFirstChild);
    PrintNodesDetailed(stream, tree, children.begin(), children.end(), flags, indent, minNameLen, minClassLen);
 }
 
 // Prints all children of `nodeIdx`-th node in a ls-like fashion.
-static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
-                                   Indent indent);
+static void PrintChildrenInColumns(std::ostream &stream, const RootObjTree &tree, NodeIdx_t nodeIdx,
+                                   std::uint32_t flags, Indent indent);
 
 // Prints a `ls`-like output
-static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
-                                std::vector<NodeIdx>::const_iterator nodesBegin,
-                                std::vector<NodeIdx>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
+static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
+                                std::vector<NodeIdx_t>::const_iterator nodesBegin,
+                                std::vector<NodeIdx_t>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
 {
-   const auto nNodes = std::distance(nodesBegin, nodesEnd);
+   const bool displayAllCycles = (flags & RootLsArgs::kForceAllCycles);
+
+   // Calculate number of nodes, min and max name length
+   std::size_t minElemWidth = std::numeric_limits<std::size_t>::max();
+   std::size_t maxElemWidth = 0;
+   std::vector<NodeIdx_t> uniqueNodes;
+   std::string_view prevNodeName;
+   for (auto it = nodesBegin; it != nodesEnd; ++it) {
+      NodeIdx_t nodeIdx = *it;
+      const auto &node = tree.fNodes[nodeIdx];
+      // De-duplicate node names (we only print one name even if the node has multiple cycles - unless we have the
+      // kForceAllCycles flag active)
+      if (!displayAllCycles && node.fName == prevNodeName)
+         continue;
+      uniqueNodes.push_back(nodeIdx);
+      auto elemWidth = node.fName.length();
+      if (displayAllCycles) {
+         // If we're displaying the cycles we need to keep that in mind for calculating the column widths.
+         const auto cycleLen = std::to_string(node.fCycle).length();
+         elemWidth += cycleLen + 1; // +1 to account for the ';'
+      }
+      minElemWidth = std::min(elemWidth, minElemWidth);
+      maxElemWidth = std::max(elemWidth, maxElemWidth);
+      prevNodeName = node.fName;
+   }
+
+   const auto nNodes = uniqueNodes.size();
    if (nNodes == 0)
       return;
 
-   // Calculate the min and max column size
    V2i terminalSize = GetTerminalSize();
    terminalSize.x -= indent;
-   const auto [minElemWidthIt, maxElemWidthIt] =
-      std::minmax_element(nodesBegin, nodesEnd, [&tree](NodeIdx aIdx, NodeIdx bIdx) {
-         const auto &a = tree.fNodes[aIdx];
-         const auto &b = tree.fNodes[bIdx];
-         return a.fName.length() < b.fName.length();
-      });
    const int minCharsBetween = 2;
-   const auto minElemWidth = tree.fNodes[*minElemWidthIt].fName.length() + minCharsBetween;
-   const auto maxElemWidth = tree.fNodes[*maxElemWidthIt].fName.length() + minCharsBetween;
+   minElemWidth += minCharsBetween;
+   maxElemWidth += minCharsBetween;
 
    // Figure out how many columns do we need
    std::size_t nCols = 0;
@@ -449,9 +434,14 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
             int width = 0;
             for (auto j = 0u; j < nNodes; ++j) {
                if ((j % nCols) == colIdx) {
-                  NodeIdx childIdx = nodesBegin[j];
-                  const RootLsNode &child = tree.fNodes[childIdx];
-                  width = std::max<int>(width, child.fName.length() + minCharsBetween);
+                  NodeIdx_t childIdx = nodesBegin[j];
+                  const RootObjNode &child = tree.fNodes[childIdx];
+                  auto nameLen = child.fName.length();
+                  if (displayAllCycles) {
+                     const auto cycleLen = std::to_string(child.fCycle).length();
+                     nameLen += cycleLen + 1; // +1 to account for the ';'
+                  }
+                  width = std::max<int>(width, nameLen + minCharsBetween);
                }
             }
 
@@ -479,8 +469,9 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
 
    auto curCol = 0u;
    for (auto i = 0u; i < nNodes; ++i) {
-      NodeIdx childIdx = nodesBegin[i];
+      NodeIdx_t childIdx = uniqueNodes[i];
       const auto &child = tree.fNodes[childIdx];
+
       if (curCol == 0) {
          PrintIndent(stream, indent);
       }
@@ -498,12 +489,12 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
       // - when the current column number reaches the max number of columns
       // - when we are in recursive mode and the item is a directory with children
       // - when we are in recursive mode and the NEXT item is a directory with children
-      
+
       const bool isDirWithRecursiveDisplay = isDir && (flags & RootLsArgs::kRecursiveListing) && child.fNChildren > 0;
 
       bool nextIsDirWithRecursiveDisplay = false;
       if ((flags & RootLsArgs::kRecursiveListing) && i < nNodes - 1) {
-         NodeIdx nextChildIdx = nodesBegin[i + 1];
+         NodeIdx_t nextChildIdx = uniqueNodes[i + 1];
          const auto &nextChild = tree.fNodes[nextChildIdx];
          nextIsDirWithRecursiveDisplay =
             nextChild.fNChildren > 0 && ClassInheritsFrom(nextChild.fClassName.c_str(), "TDirectory");
@@ -511,10 +502,11 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
 
       const bool isExtremal = (((curCol + 1) % nCols) == 0) || (i == nNodes - 1) || isDirWithRecursiveDisplay ||
                               nextIsDirWithRecursiveDisplay;
+      auto nodeName = child.fName + (displayAllCycles ? ";" + std::to_string(child.fCycle) : "");
       if (!isExtremal) {
-         stream << std::left << std::setw(colWidths[curCol % nCols]) << child.fName;
+         stream << std::left << std::setw(colWidths[curCol % nCols]) << nodeName;
       } else {
-         stream << std::setw(1) << child.fName;
+         stream << std::setw(1) << nodeName;
       }
       stream << Color(kAnsiNone);
 
@@ -532,36 +524,16 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
 }
 
 // Prints all children of `nodeIdx`-th node in a ls-like fashion.
-static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
-                                   Indent indent)
+static void PrintChildrenInColumns(std::ostream &stream, const RootObjTree &tree, NodeIdx_t nodeIdx,
+                                   std::uint32_t flags, Indent indent)
 {
    const auto &node = tree.fNodes[nodeIdx];
    if (node.fNChildren == 0)
       return;
 
-   std::vector<NodeIdx> children(node.fNChildren);
+   std::vector<NodeIdx_t> children(node.fNChildren);
    std::iota(children.begin(), children.end(), node.fFirstChild);
    PrintNodesInColumns(stream, tree, children.begin(), children.end(), flags, indent);
-}
-
-static std::string NodeFullPath(const RootLsTree &tree, NodeIdx nodeIdx)
-{
-   std::vector<const std::string *> fragments;
-   const RootLsNode *node = &tree.fNodes[nodeIdx];
-   NodeIdx prevParent;
-   do {
-      prevParent = node->fParent;
-      fragments.push_back(&node->fName);
-      node = &tree.fNodes[node->fParent];
-   } while (node->fParent != prevParent);
-
-   assert(!fragments.empty());
-
-   std::string fullPath = **fragments.rbegin();
-   for (auto it = std::next(fragments.rbegin()), end = fragments.rend(); it != end; ++it) {
-      fullPath += '/' + **it;
-   }
-   return fullPath;
 }
 
 // Main entrypoint of the program
@@ -582,10 +554,10 @@ static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
 
       const bool manySources = source.fObjectTree.fDirList.size() + source.fObjectTree.fLeafList.size() > 1;
       const Indent indent = outerIndent + manySources * 2;
-      for (NodeIdx rootIdx : source.fObjectTree.fDirList) {
+      for (NodeIdx_t rootIdx : source.fObjectTree.fDirList) {
          if (manySources) {
             PrintIndent(stream, outerIndent);
-            stream << NodeFullPath(source.fObjectTree, rootIdx) << " :\n";
+            stream << NodeFullPath(source.fObjectTree, rootIdx, ENodeFullPathOpt::kExcludeFilename) << " :\n";
          }
 
          if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing | RootLsArgs::kRNTupleListing))
@@ -594,100 +566,6 @@ static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
             PrintChildrenInColumns(stream, source.fObjectTree, rootIdx, args.fFlags, indent);
       }
    }
-}
-
-static bool MatchesGlob(std::string_view haystack, std::string_view pattern)
-{
-   return wildcards::match(haystack, pattern);
-}
-
-/// Inspects `fileName` to match all children that match `pattern`. Returns a tree with all the matched nodes.
-/// `flags` is a bitmask of `RootLsArgs::Flags`.
-static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_view pattern, std::uint32_t flags)
-{
-   RootLsTree nodeTree;
-   nodeTree.fFile = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), "READ"));
-   if (!nodeTree.fFile)
-      return nodeTree;
-
-   const auto patternSplits = pattern.empty() ? std::vector<std::string>{} : ROOT::Split(pattern, "/");
-
-   // Match all objects at all nesting levels down to the deepest nesting level of `pattern` (or all nesting levels
-   // if we have the "recursive listing" flag). The nodes are visited breadth-first.
-   {
-      RootLsNode rootNode = {};
-      rootNode.fName = std::string(fileName);
-      rootNode.fClassName = nodeTree.fFile->Class()->GetName();
-      rootNode.fDir = nodeTree.fFile.get();
-      nodeTree.fNodes.emplace_back(std::move(rootNode));
-   }
-   std::deque<NodeIdx> nodesToVisit{0};
-
-   // Keep track of the object names found at every nesting level and only add the first one.
-   std::unordered_set<std::string> namesFound;
-
-   const bool isRecursive = flags & RootLsArgs::kRecursiveListing;
-   do {
-      NodeIdx curIdx = nodesToVisit.front();
-      nodesToVisit.pop_front();
-      RootLsNode *cur = &nodeTree.fNodes[curIdx];
-      assert(cur->fDir);
-
-      // Sort the keys by name
-      std::vector<TKey *> keys;
-      keys.reserve(cur->fDir->GetListOfKeys()->GetEntries());
-      for (TKey *key : ROOT::Detail::TRangeStaticCast<TKey>(cur->fDir->GetListOfKeys()))
-         keys.push_back(key);
-
-      std::sort(keys.begin(), keys.end(),
-                [](const auto *a, const auto *b) { return strcmp(a->GetName(), b->GetName()) < 0; });
-
-      namesFound.clear();
-
-      for (TKey *key : keys) {
-         // Don't recurse lower than requested by `pattern` unless we explicitly have the `recursive listing` flag.
-         if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
-            continue;
-
-         if (namesFound.count(key->GetName()) > 0) {
-            std::cerr << "WARNING: Several versions of '" << key->GetName() << "' are present in '" << fileName
-                      << "'. Only the most recent will be considered.\n";
-            continue;
-         }
-         namesFound.insert(key->GetName());
-
-         auto &newChild = nodeTree.fNodes.emplace_back(NodeFromKey(*key));
-         // Need to get back cur since the emplace_back() may have moved it.
-         cur = &nodeTree.fNodes[curIdx];
-         newChild.fNesting = cur->fNesting + 1;
-         newChild.fParent = curIdx;
-         if (!cur->fNChildren)
-            cur->fFirstChild = nodeTree.fNodes.size() - 1;
-         cur->fNChildren++;
-
-         if (ClassInheritsFrom(key->GetClassName(), "TDirectory"))
-            newChild.fDir = cur->fDir->GetDirectory(key->GetName());
-      }
-
-      // Only recurse into subdirectories that are up to the deepest level we ask for through `pattern`.
-      if (cur->fNesting < patternSplits.size() || isRecursive) {
-         for (auto childIdx = cur->fFirstChild; childIdx < cur->fFirstChild + cur->fNChildren; ++childIdx) {
-            auto &child = nodeTree.fNodes[childIdx];
-            if (child.fDir)
-               nodesToVisit.push_back(childIdx);
-            else if (cur->fNesting < patternSplits.size())
-               nodeTree.fLeafList.push_back(childIdx);
-         }
-      }
-      if (cur->fNesting == patternSplits.size()) {
-         if (cur->fDir)
-            nodeTree.fDirList.push_back(curIdx);
-         else
-            nodeTree.fLeafList.push_back(curIdx);
-      }
-   } while (!nodesToVisit.empty());
-
-   return nodeTree;
 }
 
 static RootLsArgs ParseArgs(const char **args, int nArgs)
@@ -700,6 +578,7 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
    opts.AddFlag({"-t", "--treeListing"});
    opts.AddFlag({"-R", "--rntupleListing"});
    opts.AddFlag({"-r", "--recursiveListing"});
+   opts.AddFlag({"-c", "--allCycles"});
 
    opts.Parse(args, nArgs);
    for (const auto &err : opts.GetErrors())
@@ -720,34 +599,11 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
    outArgs.fFlags |= opts.GetSwitch("treeListing") * RootLsArgs::kTreeListing;
    outArgs.fFlags |= opts.GetSwitch("recursiveListing") * RootLsArgs::kRecursiveListing;
    outArgs.fFlags |= opts.GetSwitch("rntupleListing") * RootLsArgs::kRNTupleListing;
+   outArgs.fFlags |= opts.GetSwitch("allCycles") * RootLsArgs::kForceAllCycles;
 
    // Positional arguments
-   for (const auto &argStr : opts.GetArgs()) {
-      const char *arg = argStr.c_str();
-      RootLsSource &newSource = outArgs.fSources.emplace_back();
-
-      // Handle known URI prefixes
-      static const char *const specialPrefixes[] = {"http", "https", "root", "gs", "s3"};
-      for (const char *prefix : specialPrefixes) {
-         const auto prefixLen = strlen(prefix);
-         if (strncmp(arg, prefix, prefixLen) == 0 && strncmp(arg + prefixLen, "://", 3) == 0) {
-            newSource.fFileName = std::string(prefix) + "://";
-            arg += prefixLen + 3;
-            break;
-         }
-      }
-
-      auto tokens = ROOT::Split(arg, ":");
-      if (tokens.empty())
-         continue;
-
-      newSource.fFileName += tokens[0];
-      if (tokens.size() > 1) {
-         newSource.fObjectTree = GetMatchingPathsInFile(newSource.fFileName, tokens[1], outArgs.fFlags);
-      } else {
-         newSource.fObjectTree = GetMatchingPathsInFile(newSource.fFileName, "", outArgs.fFlags);
-      }
-   }
+   auto flags = !!(outArgs.fFlags & RootLsArgs::kRecursiveListing) * EGetMatchingPathsFlags::kRecursive;
+   outArgs.fSources = ROOT::CmdLine::ParseRootSources(opts.GetArgs(), flags);
 
    return outArgs;
 }
@@ -773,15 +629,24 @@ int main(int argc, char **argv)
    std::sort(args.fSources.begin(), args.fSources.end(),
              [](const auto &a, const auto &b) { return a.fFileName < b.fFileName; });
 
-   // sort leaves by name
+   // sort leaves by namecycle
+   bool errors = false;
    for (auto &source : args.fSources) {
+      if (!source.fErrors.empty()) {
+         errors = true;
+         for (const auto &err : source.fErrors)
+            Err() << err << "\n";
+      }
       std::sort(source.fObjectTree.fLeafList.begin(), source.fObjectTree.fLeafList.end(),
-                [&tree = source.fObjectTree](NodeIdx aIdx, NodeIdx bIdx) {
+                [&tree = source.fObjectTree](NodeIdx_t aIdx, NodeIdx_t bIdx) {
                    const auto &a = tree.fNodes[aIdx];
                    const auto &b = tree.fNodes[bIdx];
-                   return a.fName < b.fName;
+                   // Note that we order by decreasing cycle, i.e. from most to least recent
+                   return (a.fName != b.fName) ? a.fName < b.fName : a.fCycle > b.fCycle;
                 });
    }
 
    RootLs(args);
+
+   return errors;
 }

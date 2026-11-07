@@ -123,7 +123,7 @@ TEST(RNTuple, InsideCollection)
    ASSERT_NE(idKlass, ROOT::kInvalidDescriptorId);
    auto idA = source->GetSharedDescriptorGuard()->FindFieldId("a", idKlass);
    ASSERT_NE(idA, ROOT::kInvalidDescriptorId);
-   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec_a", "float").Unwrap());
+   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("_0", "float").Unwrap());
    fieldInner->SetOnDiskId(idA);
 
    auto field = std::make_unique<ROOT::RVectorField>("klassVec", std::move(fieldInner));
@@ -153,7 +153,6 @@ TEST(RNTuple, InsideCollection)
 
    // TODO: test reading of "klassVec.v1"
 }
-
 
 TEST(RNTuple, RVec)
 {
@@ -201,6 +200,39 @@ TEST(RNTuple, RVec)
    ntupleStdVector->LoadEntry(1);
    EXPECT_EQ(1U, rdJetsAsStdVector->size());
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
+}
+
+TEST(RNTuple, RVecResizeSmall)
+{
+   FileRaii fileGuard("test_ntuple_rvec_small.root");
+
+   constexpr int N = 260; // more elements than fit in any small vector storage
+
+   {
+      auto model = RNTupleModel::Create();
+      auto v = model->MakeField<ROOT::RVec<int>>("v");
+      for (int i = 0; i < N; ++i) {
+         v->push_back(i);
+      }
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+
+   ROOT::RVec<int> v;
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsSmall(v));
+   auto e = reader->CreateEntry();
+   e->BindRawPtr("v", &v);
+
+   reader->LoadEntry(0, *e);
+   ASSERT_EQ(v.size(), N);
+   EXPECT_FALSE(ROOT::Detail::VecOps::IsSmall(v));
+   for (int i = 0; i < N; ++i) {
+      EXPECT_EQ(i, v[i]);
+   }
 }
 
 TEST(RNTuple, RVecTypeErased)
@@ -271,6 +303,107 @@ TEST(RNTuple, ReadVectorAsRVec)
    EXPECT_TRUE(rvec->empty());
 }
 
+TEST(RNTuple, RVecGeometricResize)
+{
+   FileRaii fileGuard("test_ntuple_rvec_geometric_resize.root");
+
+   {
+      auto m = RNTupleModel::Create();
+      auto rvec = m->MakeField<ROOT::RVec<int>>("v");
+      auto w = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
+
+      for (int i = 0; i < 6; ++i) {
+         w->Fill();
+         rvec->push_back(i);
+      }
+
+      *rvec = {10};
+      w->Fill();
+
+      *rvec = ROOT::RVec(11, 0);
+      w->Fill();
+
+      *rvec = ROOT::RVec(23, 0);
+      w->Fill();
+
+      rvec->clear();
+      w->Fill();
+
+      *rvec = ROOT::RVec(100, 0);
+      w->Fill();
+
+      *rvec = ROOT::RVec(101, 0);
+      w->Fill();
+
+      *rvec = {1, 2};
+      w->Fill();
+
+      *rvec = {1, 2, 3};
+      w->Fill();
+   }
+
+   auto m = RNTupleModel::Create();
+   auto rvec = m->MakeField<ROOT::RVec<int>>("v");
+   auto reader = RNTupleReader::Open(std::move(m), "ntpl", fileGuard.GetPath());
+   EXPECT_EQ(14u, reader->GetNEntries());
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(rvec->size(), 0u);
+   EXPECT_EQ(rvec->capacity(), 0u);
+
+   reader->LoadEntry(1);
+   EXPECT_EQ(rvec->size(), 1u);
+   EXPECT_EQ(rvec->capacity(), 1u);
+
+   reader->LoadEntry(2);
+   EXPECT_EQ(rvec->size(), 2u);
+   EXPECT_EQ(rvec->capacity(), 2u);
+
+   reader->LoadEntry(3);
+   EXPECT_EQ(rvec->size(), 3u);
+   EXPECT_EQ(rvec->capacity(), 4u);
+
+   reader->LoadEntry(4);
+   EXPECT_EQ(rvec->size(), 4u);
+   EXPECT_EQ(rvec->capacity(), 4u);
+
+   reader->LoadEntry(5);
+   EXPECT_EQ(rvec->size(), 5u);
+   EXPECT_EQ(rvec->capacity(), 8u);
+
+   reader->LoadEntry(6);
+   EXPECT_EQ(rvec->size(), 1u);
+   EXPECT_GE(rvec->capacity(), 8u);
+
+   reader->LoadEntry(7);
+   EXPECT_EQ(rvec->size(), 11u);
+   EXPECT_GE(rvec->capacity(), 16u);
+
+   reader->LoadEntry(8);
+   EXPECT_EQ(rvec->size(), 23u);
+   EXPECT_GE(rvec->capacity(), 24u);
+
+   reader->LoadEntry(9);
+   EXPECT_EQ(rvec->size(), 0u);
+   EXPECT_GE(rvec->capacity(), 24u);
+
+   reader->LoadEntry(10);
+   EXPECT_EQ(rvec->size(), 100u);
+   EXPECT_GE(rvec->capacity(), 100u);
+
+   reader->LoadEntry(11);
+   EXPECT_EQ(rvec->size(), 101u);
+   EXPECT_GE(rvec->capacity(), 150u);
+
+   reader->LoadEntry(12);
+   EXPECT_EQ(rvec->size(), 2u);
+   EXPECT_GE(rvec->capacity(), 75u);
+
+   reader->LoadEntry(13);
+   EXPECT_EQ(rvec->size(), 3u);
+   EXPECT_GE(rvec->capacity(), 37u);
+}
+
 TEST(RNTuple, BoolVector)
 {
    FileRaii fileGuard("test_ntuple_boolvec.root");
@@ -319,6 +452,8 @@ void FillComplexVector(const std::string &fname)
    auto model = RNTupleModel::Create();
    auto wrV = model->MakeField<Coll_t<ComplexStruct>>("v");
 
+   // Sequence of number of elements: 0, 10, 10000, 100, 200, 0, 1
+
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "T", fname);
    ntuple->Fill();
    for (unsigned i = 0; i < 10; ++i)
@@ -341,20 +476,15 @@ void FillComplexVector(const std::string &fname)
    ntuple->Fill();
 }
 
-// Note: RVec and std::vector differ in the number of construction/destruction calls when reading through
-// a file. The reason is that we can control the memory re-allocation prodedure for RVec, which allows
-// us to save destruction/construction calls.
-
-TEST(RNTuple, ComplexVector)
+template <template <typename> class Coll_t>
+void TestComplexVector(const std::string &fname)
 {
-   FileRaii fileGuard("test_ntuple_vec_complex.root");
-   FillComplexVector<Vector_t>(fileGuard.GetPath());
-
+   static constexpr bool canShrink = std::is_base_of_v<ROOT::Internal::VecOps::SmallVectorBase, Coll_t<ComplexStruct>>;
    ComplexStruct::SetNCallConstructor(0);
    ComplexStruct::SetNCallDestructor(0);
    {
-      auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<ComplexStruct>>("v");
+      auto ntuple = RNTupleReader::Open("T", fname);
+      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<Coll_t<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -369,66 +499,37 @@ TEST(RNTuple, ComplexVector)
       EXPECT_EQ(10, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(10000u, rdV->size());
       ntuple->LoadEntry(3);
-      EXPECT_EQ(10010, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(9910, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(canShrink ? 10110 : 10010, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(canShrink ? 10010 : 9910, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(100u, rdV->size());
       ntuple->LoadEntry(4);
-      EXPECT_EQ(10210, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10010, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(canShrink ? 10310 : 10110, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(canShrink ? 10110 : 9910, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(200u, rdV->size());
       ntuple->LoadEntry(5);
-      EXPECT_EQ(10210, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10210, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(canShrink ? 10310 : 10110, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(canShrink ? 10310 : 10110, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(0u, rdV->size());
       ntuple->LoadEntry(6);
-      EXPECT_EQ(10211, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10210, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(canShrink ? 10311 : 10111, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(canShrink ? 10310 : 10110, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(1u, rdV->size());
    }
-   EXPECT_EQ(10211u, ComplexStruct::GetNCallDestructor());
+   EXPECT_EQ(canShrink ? 10311 : 10111u, ComplexStruct::GetNCallDestructor());
+}
+
+TEST(RNTuple, ComplexVector)
+{
+   FileRaii fileGuard("test_ntuple_vec_complex.root");
+   FillComplexVector<Vector_t>(fileGuard.GetPath());
+   TestComplexVector<Vector_t>(fileGuard.GetPath());
 }
 
 TEST(RNTuple, ComplexRVec)
 {
    FileRaii fileGuard("test_ntuple_rvec_complex.root");
    FillComplexVector<ROOT::RVec>(fileGuard.GetPath());
-
-   ComplexStruct::SetNCallConstructor(0);
-   ComplexStruct::SetNCallDestructor(0);
-   {
-      auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<ROOT::RVec<ComplexStruct>>("v");
-
-      ntuple->LoadEntry(0);
-      EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
-      EXPECT_TRUE(rdV->empty());
-      ntuple->LoadEntry(1);
-      EXPECT_EQ(10, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(10u, rdV->size());
-      ntuple->LoadEntry(2);
-      EXPECT_EQ(10010, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(10000u, rdV->size());
-      ntuple->LoadEntry(3);
-      EXPECT_EQ(10010, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(9910, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(100u, rdV->size());
-      ntuple->LoadEntry(4);
-      EXPECT_EQ(10110, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(9910, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(200u, rdV->size());
-      ntuple->LoadEntry(5);
-      EXPECT_EQ(10110, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10110, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(0u, rdV->size());
-      ntuple->LoadEntry(6);
-      EXPECT_EQ(10111, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10110, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(1u, rdV->size());
-   }
-   EXPECT_EQ(10111u, ComplexStruct::GetNCallDestructor());
+   TestComplexVector<ROOT::RVec>(fileGuard.GetPath());
 }
 
 TEST(RNTuple, VectorOfString)
@@ -532,4 +633,68 @@ TEST(RNTuple, VectorOfTObject)
    reader->LoadEntry(1);
    ASSERT_EQ(1u, objs->size());
    EXPECT_EQ(44u, objs->at(0).GetUniqueID());
+}
+
+TEST(RNTuple, RVecAdopted)
+{
+   FileRaii fileGuard("test_ntuple_vector_of_tobject.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto vec = model->MakeField<std::vector<float>>("vec");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *vec = {1.0, 2.0};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   float buf[] = {0.0, 0.0, 0.0};
+   ROOT::RVec<float> vec(buf, 3);
+   auto view = reader->GetView("vec", &vec);
+
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(3u, vec.size());
+
+   view(0);
+   EXPECT_NE(buf, vec.data());
+   EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   vec = ROOT::RVec<float>(buf, 1);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(1u, vec.size());
+
+   view(0);
+   EXPECT_NE(buf, vec.data());
+   EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   vec = ROOT::RVec<float>(buf, 2);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   view(0);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+   EXPECT_FLOAT_EQ(1.0, buf[0]);
+   EXPECT_FLOAT_EQ(2.0, buf[1]);
+   EXPECT_FLOAT_EQ(0.0, buf[2]);
+}
+
+TEST(RNTuple, OverAligned)
+{
+   auto res = RFieldBase::Create("f", "std::vector<ROOT::Internal::RAlignedStorage<4096>>");
+   if (!res)
+      FAIL() << "Createing a vector of a 4096B aligned type should work";
+
+   res = RFieldBase::Create("f", "std::vector<ROOT::Internal::RAlignedStorage<8192>>");
+   if (res)
+      FAIL() << "Createing a vector of a 8192B aligned type should fail";
+
+   EXPECT_THAT(res.GetError()->GetReport(), ::testing::HasSubstr("Unsupported vector item alignment: 8192"));
 }

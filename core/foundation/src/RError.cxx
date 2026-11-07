@@ -1,5 +1,4 @@
 /// \file RError.cxx
-/// \ingroup Base ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-11
 
@@ -29,15 +28,15 @@ std::string ROOT::RError::GetReport() const
    return report;
 }
 
-ROOT::RError::RError(std::string_view message, RLocation &&sourceLocation) : fMessage(message)
+ROOT::RError::RError(std::string_view message, const RLocation &sourceLocation) : fMessage(message)
 
 {
    // Avoid frequent reallocations as we move up the call stack
    fStackTrace.reserve(32);
-   AddFrame(std::move(sourceLocation));
+   AddFrame(sourceLocation);
 }
 
-void ROOT::RError::AddFrame(RLocation &&sourceLocation)
+void ROOT::RError::AddFrame(const RLocation &sourceLocation)
 {
    fStackTrace.emplace_back(sourceLocation);
 }

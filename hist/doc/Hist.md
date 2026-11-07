@@ -1,4 +1,4 @@
-\defgroup Hist Histogram Library
+\defgroup Hist Histograms
 \brief A general description of the  Histogram library is documented in the class TH1.
 
 ROOT supports the following histogram types:

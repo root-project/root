@@ -61,6 +61,23 @@ struct Wrapper {
 
 using WIntRef = Wrapper<int&>;
 
+// Spurious diagnostics from non-SFINAE-safe alias templates in deleted constructor templates should not appear.
+template <bool B, typename T>
+struct NonSFINAEDep : T {};
+// Intentionally empty: no 'bad' typedef
+template <typename T>
+struct NonSFINAEX {};
+template <typename Dp>
+struct NonSFINAEPtr {
+   using S = NonSFINAEX<Dp>;
+   template <bool B>
+   using Bad = typename NonSFINAEDep<B, S>::bad;
+   template <bool B = true, typename = Bad<B>>
+   NonSFINAEPtr(int *, Bad<B>) = delete;
+   NonSFINAEPtr() = default;
+};
+
+using NSAPtr = NonSFINAEPtr<int>;
 
 void CheckTemplate(TClass *cl)
 {
@@ -238,6 +255,9 @@ void CheckEnableIf() {
 
    TClass* cl2 = TClass::GetClass("WIntRef");
    cl2->GetListOfMethods()->ls("noaddr");
+
+   TClass *cl3 = TClass::GetClass("NSAPtr");
+   cl3->GetListOfMethods()->ls("noaddr");
 }
 
 void execTemplate()

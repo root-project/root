@@ -102,7 +102,7 @@ print("fc interval is [{}, {}]".format(interval.LowerLimit(mu), interval.UpperLi
 print("bc interval is [{}, {}]".format(bcInt.LowerLimit(), bcInt.UpperLimit()))
 print("mc interval is [{}, {}]".format(mcInt.LowerLimit(mu), mcInt.UpperLimit(mu)))
 mu.setVal(0)
-print("is mu=0 in the interval? ", plInt.IsInInterval({mu}))
+print("is mu=0 in the interval? ", plInt.IsInInterval([mu]))
 
 # make a reasonable style
 ROOT.gStyle.SetCanvasColor(0)

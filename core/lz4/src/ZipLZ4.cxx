@@ -8,7 +8,33 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ZipLZ4.h"
+// TEMPORARY DUPLICATION OF ZipLZ4.h until header is removed from public interface and can be made fully private
+// Author: Brian Bockelman March 2015
+
+/*************************************************************************
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_ZipLZ4
+#define ROOT_ZipLZ4
+
+// NOTE: the ROOT compression libraries aren't consistently written in C++; hence the
+// #ifdef's to avoid problems with C code.
+#ifdef __cplusplus
+extern "C" {
+#endif
+void R__zipLZ4(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep);
+void R__unzipLZ4(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
 
 #include "ROOT/RConfig.hxx"
 
@@ -30,7 +56,7 @@ static const int kChecksumOffset = 2 + 1 + 3 + 3;
 static const int kChecksumSize = sizeof(XXH64_canonical_t);
 static const int kHeaderSize = kChecksumOffset + kChecksumSize;
 
-void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipLZ4(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
    int LZ4_version = LZ4_versionNumber();
    uint64_t out_size; /* compressed size */
@@ -51,7 +77,11 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    if (cxlevel > 9) {
       cxlevel = 9;
    }
-   if (cxlevel >= 4) {
+   // Use the same compression levels as the lz4 command line tool: level 1 is the fast compressor, level 2 is the
+   // "medium" compressor added in LZ4 1.10.0 (or the fast compressor with older versions), and higher levels use
+   // the high-compression (HC) compressor with the given level.
+   const int minHCLevel = (LZ4_version >= 11000) ? 2 : 3;
+   if (cxlevel >= minHCLevel) {
       returnStatus = LZ4_compress_HC(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize, cxlevel);
    } else {
       returnStatus = LZ4_compress_default(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize);
@@ -84,7 +114,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    *irep = (int)returnStatus + kHeaderSize;
 }
 
-void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipLZ4(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
    // NOTE: We don't check that srcsize / tgtsize is reasonable or within the ROOT-imposed limits.
    // This is assumed to be handled by the upper layers.
@@ -111,7 +141,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
    // extra function call costs?  NOTE that ROOT limits the buffer size to 16MB.
    XXH64_hash_t checksumResult = XXH64(src + kHeaderSize, inputBufferSize, 0);
    XXH64_hash_t checksumFromFile =
-      XXH64_hashFromCanonical(reinterpret_cast<XXH64_canonical_t *>(src + kChecksumOffset));
+      XXH64_hashFromCanonical(reinterpret_cast<const XXH64_canonical_t *>(src + kChecksumOffset));
 
    if (R__unlikely(checksumFromFile != checksumResult)) {
       fprintf(

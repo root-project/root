@@ -194,7 +194,6 @@ void TMVA::MethodHMatrix::Train( void )
    // invert matrix
    fInvHMatrixS->Invert();
    fInvHMatrixB->Invert();
-   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

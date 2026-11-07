@@ -8,7 +8,32 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ZipZSTD.h"
+// TEMPORARY DUPLICATION OF ZipZSTD.h until header is removed from public interface and can be made fully private
+// Original Author: Brian Bockelman
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_ZipZSTD
+#define ROOT_ZipZSTD
+
+// NOTE: the ROOT compression libraries aren't consistently written in C++; hence the
+// #ifdef's to avoid problems with C code.
+#ifdef __cplusplus
+extern "C" {
+#endif
+void R__zipZSTD(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep);
+void R__unzipZSTD(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
 
 #include "ROOT/RConfig.hxx"
 
@@ -22,7 +47,7 @@ static const int kHeaderSize = 9;
 
 static const size_t errorCodeSmallBuffer = (size_t)-70;
 
-void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipZSTD(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
     using Ctx_ptr = std::unique_ptr<ZSTD_CCtx, decltype(&ZSTD_freeCCtx)>;
     Ctx_ptr fCtx{ZSTD_createCCtx(), &ZSTD_freeCCtx};
@@ -58,7 +83,7 @@ void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
     tgt[8] = (inflate_size >> 16) & 0xff;
 }
 
-void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipZSTD(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
     using Ctx_ptr = std::unique_ptr<ZSTD_DCtx, decltype(&ZSTD_freeDCtx)>;
     Ctx_ptr fCtx{ZSTD_createDCtx(), &ZSTD_freeDCtx};

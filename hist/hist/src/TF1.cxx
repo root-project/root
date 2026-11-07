@@ -9,10 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
-#include <memory>
 #include "strlcpy.h"
-#include "snprintf.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TMath.h"
@@ -56,6 +53,10 @@
 #include "v5/TF1Data.h"
 
 #include "AnalyticalIntegrals.h"
+
+#include <cstdio>
+#include <iostream>
+#include <memory>
 
 std::atomic<Bool_t> TF1::fgAbsValue(kFALSE);
 Bool_t TF1::fgRejectPoint = kFALSE;
@@ -471,7 +472,7 @@ class  MyFunction {
 {
     ....
    MyFunction *fptr = new MyFunction(....);  // create the user function class
-   auto f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class.
+   auto f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar);   // create TF1 class.
 
    .....
 }
@@ -699,7 +700,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F1 constructor using name of an interpreted function.
+/// TF1 constructor using name of an interpreted function.
 ///
 ///  Creates a function of type C between xmin and xmax.
 ///  name is the name of an interpreted C++ function.
@@ -1453,6 +1454,29 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
    return ((TF1 *)this)->EvalPar(xx, pp);
 }
 
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
+
+// Internal to TF1. Evaluates Vectorized TF1 on data of type Double_v
+// The compiler should be able to inline this.
+double TF1::EvalParVec(const Double_t *data, const Double_t *params)
+{
+   assert(fType == EFType::kTemplVec);
+   std::vector<ROOT::Double_v> d(fNdim);
+   ROOT::Double_v res;
+
+   for (auto i = 0; i < fNdim; i++) {
+      d[i] = ROOT::Double_v(data[i]);
+   }
+
+   if (fFunctor) {
+      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *)fFunctor.get())->fImpl(d.data(), params);
+   } else {
+      //    res = GetSave(x);
+      return TMath::SignalingNaN();
+   }
+   return res[0];
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate function with given coordinates and parameters.
@@ -1508,7 +1532,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       return result;
    }
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    if (fType == EFType::kTemplVec) {
       if (fFunctor) {
          if (params) result =  EvalParVec(x, params);

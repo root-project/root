@@ -6,8 +6,42 @@
 
 if(gdml)
   configure_file(no_extrusion.gdml no_extrusion.gdml COPYONLY)
-  ROOT_ADD_GTEST(geomTests
+  configure_file(material_name_collision.gdml material_name_collision.gdml COPYONLY)
+  ROOT_ADD_GTEST(material_units
     test_material_units.cxx
-    test_boolean_extrusion.cxx
     LIBRARIES Geom)
+  ROOT_ADD_GTEST(gdml_material_name_collision
+    test_gdml_material_name_collision.cxx
+    LIBRARIES Geom)
+  ROOT_ADD_GTEST(boolean_extrusion
+    test_boolean_extrusion.cxx
+    LIBRARIES Geom GeomChecker)
+  ROOT_ADD_GTEST(gdml_reflection
+    test_gdml_reflection.cxx
+    LIBRARIES Geom)
+endif()
+ROOT_ADD_GTEST(tessellated
+  test_tessellated.cxx
+  LIBRARIES Geom)
+
+ROOT_ADD_GTEST(shape_safety
+  test_shape_safety.cxx
+  LIBRARIES Geom)
+
+ROOT_ADD_GTEST(pgon_normal
+  test_pgon_normal.cxx
+  LIBRARIES Geom)
+
+ROOT_ADD_GTEST(overlap_navigation
+  test_overlap_navigation.cxx
+  LIBRARIES Geom)
+
+ROOT_ADD_GTEST(thread_navigation
+  test_thread_navigation.cxx
+  LIBRARIES Geom)
+
+if(imt)
+  ROOT_ADD_GTEST(manager_lifetime
+    test_manager_lifetime.cxx
+    LIBRARIES Geom GeomChecker Imt)
 endif()

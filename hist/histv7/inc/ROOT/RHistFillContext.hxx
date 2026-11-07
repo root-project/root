@@ -10,6 +10,7 @@
 #include "RHistStats.hxx"
 #include "RWeight.hxx"
 
+#include <cstddef>
 #include <tuple>
 
 namespace ROOT {
@@ -39,7 +40,16 @@ private:
    RHistStats fStats;
 
    /// \sa RHistConcurrentFiller::CreateFillContent()
-   explicit RHistFillContext(RHist<BinContentType> &hist) : fHist(&hist), fStats(hist.GetNDimensions()) {}
+   explicit RHistFillContext(RHist<BinContentType> &hist) : fHist(&hist), fStats(hist.GetNDimensions())
+   {
+      // Propagate disabled dimensions to the local histogram statistics object.
+      const auto &histStats = hist.GetStats();
+      for (std::size_t i = 0; i < histStats.GetNDimensions(); i++) {
+         if (!histStats.IsEnabled(i)) {
+            fStats.DisableDimension(i);
+         }
+      }
+   }
    RHistFillContext(const RHistFillContext &) = delete;
    RHistFillContext(RHistFillContext &&) = default;
    RHistFillContext &operator=(const RHistFillContext &) = delete;
@@ -101,8 +111,11 @@ public:
    template <typename... A>
    void Fill(const A &...args)
    {
-      fHist->fEngine.FillAtomic(args...);
-      fStats.Fill(args...);
+      static_assert(sizeof...(A) >= 1, "need at least one argument to Fill");
+      if constexpr (sizeof...(A) >= 1) {
+         fHist->fEngine.FillAtomic(args...);
+         fStats.Fill(args...);
+      }
    }
 
    /// Flush locally accumulated entries to the histogram.

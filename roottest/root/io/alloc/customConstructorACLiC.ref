@@ -1,4 +1,3 @@
-
 Processing runcustomConstructorACLiC.C...
 Error in <TClass::New>: cannot create object of class Private
 Called Regular::Regular()

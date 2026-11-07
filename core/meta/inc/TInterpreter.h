@@ -194,6 +194,7 @@ public:
    virtual void     AddAvailableIndentifiers(TSeqCollection&) = 0;
    virtual void     RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
+   virtual void     RegisterAutoLoadedLibrary(const char *libname) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),
                                void (*histaddFunc)(const char* line)) = 0;
@@ -209,14 +210,20 @@ public:
    virtual void     UpdateListOfGlobals() = 0;
    virtual void     UpdateListOfGlobalFunctions() = 0;
    virtual void     UpdateListOfTypes() = 0;
-   virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE, Bool_t silent = kFALSE) = 0;
+   virtual void     SetClassInfo(TClass *cl,
+                                 Bool_t reload = kFALSE,
+                                 Bool_t silent = kFALSE,
+                                 ClassInfo_t *classInfo = nullptr) = 0;
 
    enum ECheckClassInfo {
       kUnknown = 0, // backward compatible with false
       kKnown = 1,
       kWithClassDefInline = 2
    };
-   virtual ECheckClassInfo CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE) = 0;
+   virtual ECheckClassInfo CheckClassInfo(const char *name,
+                                          Bool_t autoload,
+                                          Bool_t isClassOrNamespaceOnly = kFALSE,
+                                          ClassInfo_t **classInfo = nullptr) = 0;
 
    virtual Bool_t   CheckClassTemplate(const char *name) = 0;
    virtual Longptr_t Calc(const char *line, EErrorCode* error = nullptr) = 0;
@@ -429,6 +436,7 @@ public:
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, void * /* arena */) const {return nullptr;}
    virtual Long_t ClassInfo_Property(ClassInfo_t * /* info */) const {return 0;}
    virtual int    ClassInfo_Size(ClassInfo_t * /* info */) const {return 0;}
+   virtual size_t ClassInfo_AlignOf(ClassInfo_t * /* info */) const {return 0;}
    virtual Longptr_t ClassInfo_Tagnum(ClassInfo_t * /* info */) const {return 0;}
    virtual const char *ClassInfo_FileName(ClassInfo_t * /* info */) const {return nullptr;}
    virtual const char *ClassInfo_FullName(ClassInfo_t * /* info */) const {return nullptr;}

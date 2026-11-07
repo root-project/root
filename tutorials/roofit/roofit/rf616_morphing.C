@@ -126,8 +126,7 @@ void rf616_morphing()
    RooAbsReal *nll_gauss = gauss->createNLL(*obs_data);
 
    // Create the morphed negative log likelihood function
-   // TODO: Fix RooAddPdf::fixCoefNormalization(nset) warnings with new CPU backend
-   RooAbsReal *nll_morph = ws->pdf("morph")->createNLL(*obs_data, RooFit::EvalBackend("legacy"));
+   RooAbsReal *nll_morph = ws->pdf("morph")->createNLL(*obs_data);
 
    // Plot the negative logarithmic summed likelihood
    RooPlot *frame2 = mu_var->frame(Title("Negative log Likelihood"));

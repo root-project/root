@@ -117,12 +117,12 @@ public:
    void send_back_task_result_from_worker(std::size_t task) override
    {
       task_result_t task_result{id_, task, serial_->result_[task]};
-      zmq::message_t message(sizeof(task_result_t));
+      RooFit::MultiProcess::Message message(sizeof(task_result_t));
       memcpy(message.data(), &task_result, sizeof(task_result_t));
       get_manager()->messenger().send_from_worker_to_master(std::move(message));
    }
 
-   bool receive_task_result_on_master(const zmq::message_t &message) override
+   bool receive_task_result_on_master(const RooFit::MultiProcess::Message &message) override
    {
       auto result = message.data<task_result_t>();
       serial_->result_[result->task_id] = result->value;

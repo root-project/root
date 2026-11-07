@@ -4,6 +4,7 @@
 /// This tutorial shows how to decompose a matrix A in an orthogonal matrix Q and an upper
 /// triangular matrix R using QR Householder decomposition with the TDecompQRH class.
 /// The matrix same matrix as in this example is used: https://en.wikipedia.org/wiki/QR_decomposition#Example_2
+/// \author
 
 #include <iostream>
 #include "TMath.h"

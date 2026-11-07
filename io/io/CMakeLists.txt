@@ -21,6 +21,7 @@ if (uring)
 endif ()
 
 ROOT_LINKER_LIBRARY(RIO
+  src/InternalIOUtils.cxx
   src/RConcurrentHashColl.cxx
   src/RFile.cxx
   src/RRawFile.cxx
@@ -60,18 +61,19 @@ ROOT_LINKER_LIBRARY(RIO
   $<TARGET_OBJECTS:RootPcmObjs>
   LIBRARIES
     ${CMAKE_DL_LIBS}
+    Thread
   DEPENDENCIES
     Core
-    Thread
 )
 
-target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
+target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/builtins/clib/res)
+# PUBLIC so that dependent libraries e.g. ROOTDataFrame may find the internal header too
+target_include_directories(RIO PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 target_link_libraries(RIO PUBLIC ${ROOT_ATOMIC_LIBS})
 target_link_libraries(RIO PRIVATE nlohmann_json::nlohmann_json)
 
 if(uring)
-  target_link_libraries(RIO PUBLIC ${LIBURING_LIBRARY})
-  target_include_directories(RIO PRIVATE ${LIBURING_INCLUDE_DIR})
+  target_link_libraries(RIO PUBLIC uring::uring)
 endif()
 
 # keep include directory for ROOT/RSha256.hxx private

@@ -47,7 +47,7 @@ model = ROOT.RooAddPdf("model", "model", [sig, bkg], [nsig, nbkg])
 # Configure manager to perform binned extended likelihood fits (Binned=True, Extended=True) on data generated
 # with a Poisson fluctuation on Nobs (Extended=True)
 mcs = ROOT.RooMCStudy(
-    model, {mjjj}, Binned=True, Silence=True, Extended=True, FitOptions={"Extended": True, "PrintEvalErrors": -1}
+    model, mjjj, Binned=True, Silence=True, Extended=True, FitOptions={"Extended": True, "PrintEvalErrors": -1}
 )
 
 # Customize manager
@@ -62,7 +62,7 @@ mcs = ROOT.RooMCStudy(
 # by a single randomizer module
 
 randModule = ROOT.RooRandomizeParamMCSModule()
-randModule.sampleSumUniform({nsig, nbkg}, 50, 500)
+randModule.sampleSumUniform([nsig, nbkg], 50, 500)
 mcs.addModule(randModule)
 
 # Add profile likelihood calculation of significance. Redo each

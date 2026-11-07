@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.1.1
+# RNTuple Binary Format Specification 1.1.0.1
 
 ## Versioning Notes
 
@@ -167,7 +167,12 @@ That means that readers need to continue reading feature flags as long as their 
 
 Readers should gracefully abort reading when they encounter unknown bits set.
 
-At the moment, there are no feature flag bits defined.
+Here is the list of all currently-defined feature flags. Note that the flag name is only for informational purposes
+and is not normative.
+
+| Flag Bit | Introduced in | Name                    | Meaning                                      |
+|----------|---------------|-------------------------|----------------------------------------------|
+| 0        | 1.1.0.0       | Nested Deferred Columns | Signals that the RNTuple contains at least one deferred column that is part of a collection and was extended<br>(i.e. it appears in the footer). This can happen when merging two RNTuples that have the same collection field<br>backed by columns with different encoding, e.g. a `vector<float>` whose elements are represented by SplitReal32<br>in the first ntuple and by Real32 in the second. |
 
 
 ## Frames
@@ -392,6 +397,7 @@ The "flags" field can have any of the following bits set:
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
 | 0x02     | Projected field                                                            |
 | 0x04     | Has ROOT type checksum as reported by TClass                               |
+| 0x08     | The field is a collection that was stored using a SoA layout               |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 For fixed-size arrays, another (sub) field with `Parent Field ID` equal to the ID of this field
@@ -414,6 +420,11 @@ The following restrictions apply on field projections:
 
 If `flag==0x04` (_type checksum_) is set, the field metadata contain the checksum of the ROOT streamer info.
 This checksum is only used for I/O rules in order to find types that are identified by checksum.
+
+If `flag==0x08` (_SoA_) is set,
+the field is a collection that was represented in memory in a SoA (struct of arrays) layout.
+The flag has no impact otherwise on the on-disk representation of the collection.
+It can be used to distingush collections stored through a collection proxy from collection stored with a SoA field.
 
 Depending on the flags, the following optional values follow:
 
@@ -562,6 +573,12 @@ If the index of the first element is negative (sign bit set), the column is defe
 In this case, no (synthetic) pages exist up to and including the cluster of the first element index.
 See Section "Page List Envelope" for further information about suppressed columns.
 
+Note that an unsuppressed deferred column must only be attached to a field that has no ancestor fields
+with the structural role collection or variant.
+For instance, columns belonging to nested structs can be deferred; columns belonging to a struct under a vector cannot.
+For the latter to work, the RNTuple metadata would need to store the sum of elements written in a collection
+(or individually for all variants) per cluster and cluster group, which is not recorded in this file format version.
+
 If flag 0x02 (column with range) is set, the column metadata contains the inclusive range of valid values
 for this column (used e.g. for quantized real values).
 The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
@@ -650,6 +667,7 @@ In general, a schema extension is optional, and thus this record frame might be 
 The interpretation of the information contained therein should be identical
 as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
+In particular, it is possible to add in the extension header subfields of parents defined in the regular header.
 
 Note that the field IDs and physical column IDs given by the serialization order
 should continue from the largest IDs found in the header.
@@ -699,6 +717,7 @@ It has the following contents, followed a locator to the linked RNTuple anchor a
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 The meaning of the Schema Version is described below.
+Note that the Attribute Anchor Uncompressed Size includes the 8 bytes of the checksum.
 
 ### Page List Envelope
 
@@ -1078,6 +1097,19 @@ The on-disk representation of associative collections is identical to a `std::ma
 
 N.B., proxy-based associative collections are supported in the RNTuple binary format, but currently are not implemented in ROOT's RNTuple reader and writer. This will be added in the future.
 
+#### Classes representing a SoA layout of an underlying record type
+
+User classes that are marked in the dictionary as SoA layout classes of an underlying record type `T`
+behave as collections of the given underlying record type.
+The underlying record type must be a user-defined class with RNTuple support.
+The on-disk representation is identical to a `std::vector<T>`, using two fields:
+  - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
+  - Child field of type `T` with name `_0`.
+
+The field's type name is the type of the SoA class.
+The type checksum and the type version of the SoA class is stored as field information.
+The SoA flag of the field descriptor must be set.
+
 ### ROOT::RNTupleCardinality<SizeT>
 
 A field whose type is `ROOT::RNTupleCardinality<SizeT>` is associated to a single column of type `(Split)Index[32|64]`.
@@ -1167,9 +1199,15 @@ The anchor must provide the information to load the header and the footer **enve
 
 ### Cluster
 
-A cluster is a set of **pages** that contain all the data belonging to an entry range.
+A cluster is a non-empty set of **pages** that contain all the data belonging to an entry range.
 The data set is partitioned in clusters.
+Empty clusters are forbidden: writers must ensure that no empty clusters are committed to an RNTuple.
 A typical cluster size is tens to hundreds of megabytes.
+
+### Cluster Group
+A cluster group is a non-empty set of **clusters** associated to one page list envelope.
+In large RNTuples, clusters may be split into multiple cluster groups to allow streaming of page lists as needed, foregoing the need to keep all the RNTuple's metadata in memory at once.
+Empty cluster groups are forbidden: writers must ensure that no empty cluster groups are committed to an RNTuple.
 
 ### Column
 

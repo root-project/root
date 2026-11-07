@@ -28,6 +28,7 @@ An instance of TVirtualX itself defines a batch interface to the graphics system
 
 #include "TVirtualX.h"
 #include "TString.h"
+#include "TPoint.h"
 
 
 Atom_t    gWM_DELETE_WINDOW;
@@ -321,6 +322,19 @@ void TVirtualX::DrawPolyLine(Int_t /*n*/, TPoint * /*xy*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draws N segments between provided points
+///
+/// \param [in] n    number of segemtns
+/// \param [in] xy   list of points, size 2*n
+
+void TVirtualX::DrawLinesSegments(Int_t n, TPoint *xy)
+{
+   for(Int_t i = 0; i < 2*n; i += 2)
+      DrawPolyLine(2, &xy[i]);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draws "n" markers with the current attributes at position [x,y].
 ///
 /// \param [in] n    number of markers to draw
@@ -362,6 +376,185 @@ void TVirtualX::DrawText(Int_t /*x*/, Int_t /*y*/, Float_t /*angle*/,
                          Float_t /*mgn*/, const wchar_t * /*text*/,
                          ETextMode /*mode*/)
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get window drawing context
+/// Should remain valid until window exists
+
+WinContext_t TVirtualX::GetWindowContext(Int_t /* wid */)
+{
+   return (WinContext_t) 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill attributes for specified window
+
+void TVirtualX::SetAttFill(WinContext_t /* wctxt */, const TAttFill &att)
+{
+   SetFillColor(att.GetFillColor());
+   SetFillStyle(att.GetFillStyle());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set line attributes for specified window
+
+void TVirtualX::SetAttLine(WinContext_t /* wctxt */, const TAttLine &att)
+{
+   SetLineColor(att.GetLineColor());
+   SetLineStyle(att.GetLineStyle());
+   SetLineWidth(att.GetLineWidth());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker attributes for specified window
+
+void TVirtualX::SetAttMarker(WinContext_t /* wctxt */, const TAttMarker &att)
+{
+   SetMarkerColor(att.GetMarkerColor());
+   SetMarkerSize(att.GetMarkerSize());
+   SetMarkerStyle(att.GetMarkerStyle());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set text attributes for specified window
+
+void TVirtualX::SetAttText(WinContext_t /* wctxt */, const TAttText &att)
+{
+   SetTextAlign(att.GetTextAlign());
+   SetTextAngle(att.GetTextAngle());
+   SetTextColor(att.GetTextColor());
+   SetTextSize(att.GetTextSize());
+   SetTextFont(att.GetTextFont());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set window draw mode
+
+void TVirtualX::SetDrawModeW(WinContext_t /* wctxt */, EDrawMode mode)
+{
+   SetDrawMode(mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns window draw mode
+
+TVirtualX::EDrawMode TVirtualX::GetDrawModeW(WinContext_t /* wctxt */)
+{
+   return GetDrawMode();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear specified window
+
+void TVirtualX::ClearWindowW(WinContext_t /* wctxt */)
+{
+   ClearWindow();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update specified window
+
+void TVirtualX::UpdateWindowW(WinContext_t /* wctxt */, Int_t mode)
+{
+   UpdateWindow(mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set opactity for specified window
+
+void TVirtualX::SetOpacityW(WinContext_t /* wctxt */, Int_t percent)
+{
+   SetOpacity(percent);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy pixmap to specified window
+
+void TVirtualX::CopyPixmapW(WinContext_t /* wctxt */, Int_t wid, Int_t xpos, Int_t ypos)
+{
+   CopyPixmap(wid, xpos, ypos);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw box on specified window
+
+void TVirtualX::DrawBoxW(WinContext_t /* wctxt */, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
+{
+   DrawBox(x1, y1, x2, y2, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw fill area on specified window
+
+void TVirtualX::DrawFillAreaW(WinContext_t /* wctxt */, Int_t n, TPoint *xy)
+{
+   DrawFillArea(n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw line on specified window
+
+void TVirtualX::DrawLineW(WinContext_t /* wctxt */, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   DrawLine(x1, y1, x2, y2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw poly line on specified window
+
+void TVirtualX::DrawPolyLineW(WinContext_t /* wctxt */, Int_t n, TPoint *xy)
+{
+   DrawPolyLine(n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw line segments on specified window
+
+void TVirtualX::DrawLinesSegmentsW(WinContext_t /* wctxt */, Int_t n, TPoint *xy)
+{
+   DrawLinesSegments(n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw poly marker on specified window
+
+void TVirtualX::DrawPolyMarkerW(WinContext_t /* wctxt */, Int_t n, TPoint *xy)
+{
+   DrawPolyMarker(n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text on specified window
+
+void TVirtualX::DrawTextW(WinContext_t /* wctxt */, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode)
+{
+   DrawText(x, y, angle, mgn, text, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw wtext on specified window
+
+void TVirtualX::DrawTextW(WinContext_t /* wctxt */, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode)
+{
+   DrawText(x, y, angle, mgn, text, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw TTFglyphs on specified window
+/// Will be invoked only if HasTTFonts method returns true
+
+void TVirtualX::DrawTTFglyphsW(WinContext_t /* wctxt */, Int_t /* x */, Int_t /* y */, TTFhandle &/* handle */, ETextMode /* mode */)
+{
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save specified window as GIF image
+
+Int_t TVirtualX::WriteGIFW(WinContext_t /* wctxt */, const char *name)
+{
+   return WriteGIF((char *) name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,6 +658,34 @@ void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char * /*mess*/)
 void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t * /*mess*/)
 {
    w = h = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the size of the specified character string "mess" for font and size.
+
+Bool_t TVirtualX::GetTextExtentA(Font_t, Double_t, UInt_t &w, UInt_t &h, const char *)
+{
+   w = h = 0;
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the size of the specified character string "mess" for font and size.
+
+Bool_t TVirtualX::GetTextExtentA(Font_t, Double_t, UInt_t &w, UInt_t &h, const wchar_t *)
+{
+   w = h = 0;
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns ascent/descent for specified character string "mess" with font and size.
+
+
+Bool_t TVirtualX::GetFontAscentDescent(Font_t, Double_t, UInt_t &a, UInt_t &d, const char *)
+{
+   a = d = 0;
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1571,6 +1792,17 @@ void TVirtualX::ChangeWindowAttributes(Window_t /*id*/,
 void TVirtualX::ChangeProperty(Window_t /*id*/, Atom_t /*property*/,
                                Atom_t /*type*/, UChar_t * /*data*/,
                                Int_t /*len*/)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Alters the property for the specified window and causes the X server
+/// to generate a PropertyNotify event on that window.
+///
+/// \param [in] id   the window whose property you want to change
+/// \param [in] hint specifies the type to be changed
+
+void TVirtualX::SetWindowHint(Window_t /*id*/, EWindowHint /*hint*/)
 {
 }
 

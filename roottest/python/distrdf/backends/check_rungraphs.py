@@ -1,8 +1,6 @@
 import pytest
-
 import ROOT
-
-import DistRDF
+import ROOT._distrdf
 
 
 class TestRunGraphs:

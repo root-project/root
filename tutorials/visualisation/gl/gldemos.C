@@ -8,13 +8,18 @@
 
 void gldemos()
 {
-   TControlBar *bar = new TControlBar("vertical", "GL painter demo", 20, 20);
+   auto bar = new TControlBar("vertical", "GL painter demo", 20, 20);
    bar->AddButton("Help on demos", "help()", "Description");
-   bar->AddButton("glsurfaces", ".x $ROOTSYS/tutorials/visualisation/gl/glsurfaces.C", "Surface painter example");
-   bar->AddButton("glrose", ".x $ROOTSYS/tutorials/visualisation/gl/glrose.C", "Surface in polar system");
-   bar->AddButton("gltf3", ".x $ROOTSYS/tutorials/visualisation/gl/gltf3.C", "TF3 painter");
-   bar->AddButton("glbox", ".x $ROOTSYS/tutorials/visualisation/gl/glbox.C", "BOX painter");
-   bar->AddButton("glparametric", ".x $ROOTSYS/tutorials/visualisation/gl/glparametric.C", "Parametric surface");
+   TString prefix = TString::Format(".x %s/visualisation/gl/", gROOT->GetTutorialsDir());
+   bar->AddButton("glsurfaces", prefix + "glsurfaces.C", "Surface painter example");
+   bar->AddButton("glrose", prefix + "glrose.C", "Surface in polar system");
+   bar->AddButton("gltf3", prefix + "gltf3.C", "TF3 painter");
+   bar->AddButton("glbox", prefix + "glbox.C", "BOX painter");
+   bar->AddButton("transp", prefix + "transp.C", "Use of transparent colors");
+   bar->AddButton("grad", prefix + "grad.C", "Use of gradient colors");
+   bar->AddButton("glparametric", prefix + "glparametric.C", "Parametric surface");
+   bar->AddButton("radialgradients", prefix + "radialgradients.C", "Radial gradients");
+   bar->AddButton("exit", ".q", "Exit demo");
    bar->Show();
 }
 

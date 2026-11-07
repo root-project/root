@@ -24,13 +24,11 @@ of any RooAbsReal as calculated (numerically) by the MathCore Richardson
 derivator class.
 **/
 
-#include "Riostream.h"
 #include <cmath>
 
 #include "RooDerivative.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
-#include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
@@ -39,8 +37,7 @@ derivator class.
 #include "Math/WrappedFunction.h"
 #include "Math/RichardsonDerivator.h"
 
-
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

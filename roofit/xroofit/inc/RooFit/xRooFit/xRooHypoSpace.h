@@ -24,11 +24,8 @@
 
 BEGIN_XROOFIT_NAMESPACE
 
-class xRooHypoSpace : public xRooNLLVar::xRooHypoSpace {
-public:
-   using xRooNLLVar::xRooHypoSpace::xRooHypoSpace;
-   ClassDefOverride(xRooHypoSpace, 0)
-};
+// xRooHypoSpace class is now defined in xRooNLLVar.h,
+// to avoid incomplete type errors in an #include "xRooNLLVar.h" call
 
 END_XROOFIT_NAMESPACE
 

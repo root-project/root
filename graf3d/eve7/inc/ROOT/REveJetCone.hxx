@@ -95,7 +95,7 @@ public:
 
    void BuildRenderData() override;
 
-   // For TAttBBox:
+   // From REveElement:
    void ComputeBBox() override;
 
    // Projected:

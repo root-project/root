@@ -77,9 +77,11 @@ class RooDataSet(object):
         Returns:
             RooDataSet
         """
-        import ROOT
-        import numpy as np
         import ctypes
+
+        import numpy as np
+
+        import ROOT
 
         name = "" if name is None else name
         title = "" if title is None else title
@@ -173,8 +175,8 @@ class RooDataSet(object):
             dict: A dictionary with the variable or weight names as keys and
                   the numpy arrays as values.
         """
+
         import ROOT
-        import numpy as np
 
         data = {}
 
@@ -238,7 +240,6 @@ class RooDataSet(object):
                               column names and the a row for each variable or
                               weight in the dataset.
         """
-        import ROOT
         import pandas as pd
 
         return pd.DataFrame(self.to_numpy(copy=False))

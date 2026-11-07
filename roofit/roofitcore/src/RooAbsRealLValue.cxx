@@ -79,16 +79,6 @@ RooAbsRealLValue::RooAbsRealLValue(const RooAbsRealLValue& other, const char* na
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the input value is within our fit range. Otherwise, return
 /// false and write a clipped value into clippedValPtr if it is non-zero.
-///
-/// Implements the following check to see if the value x is in the range [a, b]:
-/// check if `[x - eps * x, x + eps * x]` overlaps with `[a, b]`, where the
-/// parameter `eps` is defined as:
-/// ```
-/// std::max(RooNumber::rangeEpsRel() * std::abs(x), RooNumber::rangeEpsAbs())
-/// ```
-/// By default, RooNumber::rangeEpsRel() and RooNumber::rangeEpsRel() are set to zero.
-/// You can change them with RooNumber::setRangeEpsRel(double) and RooNumber::setRangeEpsAbs(double),
-/// but this should be only done if there is no other solution.
 bool RooAbsRealLValue::inRange(double value, const char* rangeName, double* clippedValPtr) const
 {
   // double range = getMax() - getMin() ; // ok for +/-INFINITY
@@ -99,15 +89,13 @@ bool RooAbsRealLValue::inRange(double value, const char* rangeName, double* clip
   double min = binning.lowBound() ;
   double max = binning.highBound() ;
 
-  const double epsilon = std::max(RooNumber::rangeEpsRel() * std::abs(value), RooNumber::rangeEpsAbs());
-
   // test this value against our upper fit limit
-  if(!RooNumber::isInfinite(max) && value > (max+epsilon)) {
+  if(!RooNumber::isInfinite(max) && value > max) {
     clippedValue = max;
     isInRange = false ;
   }
   // test this value against our lower fit limit
-  if(!RooNumber::isInfinite(min) && value < min-epsilon) {
+  if(!RooNumber::isInfinite(min) && value < min) {
     clippedValue = min ;
     isInRange = false ;
   }
@@ -132,12 +120,8 @@ void RooAbsRealLValue::inRange(std::span<const double> values, std::string const
   const bool infiniteMin = RooNumber::isInfinite(min);
   const bool infiniteMax = RooNumber::isInfinite(max);
 
-  const double epsRel = RooNumber::rangeEpsRel();
-  const double epsAbs = RooNumber::rangeEpsAbs();
-
   for(std::size_t i = 0; i < values.size(); ++i) {
-    const double eps = std::max(epsRel * std::abs(values[i]), epsAbs);
-    out[i] = out[i] && ((infiniteMax | (values[i] <= (max+eps))) && (infiniteMin | (values[i] >= (min-eps))));
+    out[i] = out[i] && ((infiniteMax | (values[i] <= max)) && (infiniteMin | (values[i] >= min)));
   }
 
 }
@@ -235,7 +219,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
   RooCmdConfig pc("RooAbsRealLValue::frame(" + std::string(GetName()) + ")");
   pc.defineDouble("min","Range",0,getMin()) ;
   pc.defineDouble("max","Range",1,getMax()) ;
-  pc.defineInt("nbins","Bins",0,getBins()) ;
+  pc.defineInt("nbins","Bins",0, getBins()!=0 ? getBins() : DefaultNBins) ;
   pc.defineString("rangeName","RangeWithName",0,"") ;
   pc.defineString("name","Name",0,"") ;
   pc.defineString("title","Title",0,"") ;
@@ -332,7 +316,7 @@ RooPlot *RooAbsRealLValue::frame(double xlo, double xhi, Int_t nbins) const
 
 RooPlot *RooAbsRealLValue::frame(double xlo, double xhi) const
 {
-  return new RooPlot(*this,xlo,xhi,getBins());
+  return new RooPlot(*this,xlo,xhi, getBins()!=0 ? getBins() : DefaultNBins);
 }
 
 
@@ -382,7 +366,7 @@ RooPlot *RooAbsRealLValue::frame() const
     return nullptr ;
   }
 
-  return new RooPlot(*this,getMin(),getMax(),getBins());
+  return new RooPlot(*this,getMin(),getMax(), getBins()!=0 ? getBins() : DefaultNBins);
 }
 
 
@@ -500,29 +484,18 @@ bool RooAbsRealLValue::fitRangeOKForPlotting() const
 /// Check if current value is inside range with given name. Multiple comma-separated
 /// ranges can be passed. In this case, it will be checked if the value is in any of
 /// these ranges.
-///
-/// Implements the following check to see if the value x is in the range [a, b]:
-/// check if `[x - eps * x, x + eps * x]` overlaps with `[a, b]`, where the
-/// parameter `eps` is defined as:
-/// ```
-/// std::max(RooNumber::rangeEpsRel() * std::abs(x), RooNumber::rangeEpsAbs())
-/// ```
-/// By default, RooNumber::rangeEpsRel() and RooNumber::rangeEpsRel() are set to zero.
-/// You can change them with RooNumber::setRangeEpsRel(double) and RooNumber::setRangeEpsAbs(double),
-/// but this should be only done if there is no other solution.
 bool RooAbsRealLValue::inRange(const char* name) const
 {
   const double val = getVal() ;
-  const double epsilon = std::max(RooNumber::rangeEpsRel() * std::abs(val), RooNumber::rangeEpsAbs());
   if (!name || name[0] == '\0') {
     const auto minMax = getRange(nullptr);
-    return minMax.first - epsilon <= val && val <= minMax.second + epsilon;
+    return minMax.first <= val && val <= minMax.second;
   }
 
   const auto& ranges = ROOT::Split(name, ",");
-  return std::any_of(ranges.begin(), ranges.end(), [val,epsilon,this](const std::string& range){
+  return std::any_of(ranges.begin(), ranges.end(), [val,this](const std::string& range){
     const auto minMax = this->getRange(range.c_str());
-    return minMax.first - epsilon <= val && val <= minMax.second + epsilon;
+    return minMax.first <= val && val <= minMax.second;
   });
 }
 
@@ -628,6 +601,10 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     ownBinning[0] = true ;
   } else {
     binning[0] = &getBinning() ;
+    if (binning[0]->numBins() == 0) {
+      binning[0] = new RooUniformBinning(getMin(), getMax(), DefaultNBins) ;
+      ownBinning[0] = true ;
+    }
   }
 
   if (pc.hasProcessed("YVar")) {
@@ -644,6 +621,10 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
       ownBinning[1] = true ;
     } else {
       binning[1] = &yvar.getBinning() ;
+      if (binning[1]->numBins() == 0) {
+        binning[1] = new RooUniformBinning(yvar.getMin(), yvar.getMax(), DefaultNBins) ;
+        ownBinning[1] = true ;
+      }
     }
   }
 
@@ -661,6 +642,10 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
       ownBinning[2] = true ;
     } else {
       binning[2] = &zvar.getBinning() ;
+      if (binning[2]->numBins() == 0) {
+        binning[2] = new RooUniformBinning(zvar.getMin(), zvar.getMax(), DefaultNBins) ;
+        ownBinning[2] = true ;
+      }
     }
   }
 
@@ -695,7 +680,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   RooArgList list(*this) ;
   double xlo = getMin() ;
   double xhi = getMax() ;
-  Int_t nbins = getBins() ;
+  Int_t nbins = getBins()!=0 ? getBins() : DefaultNBins ;
 
   // coverity[ARRAY_VS_SINGLETON]
   return static_cast<TH1F*>(createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins));
@@ -782,8 +767,8 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   }
 
   if (!nBins2) {
-    nbins_fit[0] = getBins() ;
-    nbins_fit[1] = yvar.getBins() ;
+    nbins_fit[0] = getBins()!=0 ? getBins() : DefaultNBins ;
+    nbins_fit[1] = yvar.getBins()!=0 ? yvar.getBins() : DefaultNBins ;
     nBins2 = nbins_fit ;
   }
 
@@ -863,9 +848,9 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   }
 
   if (!nBins2) {
-    nbins_fit[0] = getBins() ;
-    nbins_fit[1] = yvar.getBins() ;
-    nbins_fit[2] = zvar.getBins() ;
+    nbins_fit[0] = getBins()!=0 ? getBins() : DefaultNBins ;
+    nbins_fit[1] = yvar.getBins()!=0 ? yvar.getBins() : DefaultNBins ;
+    nbins_fit[2] = zvar.getBins()!=0 ? zvar.getBins() : DefaultNBins ;
     nBins2 = nbins_fit ;
   }
 

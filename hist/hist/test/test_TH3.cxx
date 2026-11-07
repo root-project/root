@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "TH3D.h"
+#include "TList.h"
 
 #include <random>
 #include <thread>
@@ -14,7 +15,7 @@ TEST(TH3L, SetBinContent)
    EXPECT_EQ(h.GetBinContent(1, 1, 1), Large);
 }
 
-#ifdef __cpp_lib_atomic_ref
+#ifdef TH3D_FILL_THREADSAFE
 
 TEST(TH3D, FillThreadSafe)
 {
@@ -74,3 +75,59 @@ TEST(TH3D, FillAtomicNoSumW2)
 }
 
 #endif
+
+// ROOT-10678
+TEST(TH3D, InterpolateCloseToEdge)
+{
+   TH3F hist("3D", "boring histo", 20, 0, 20, 20, 0, 20, 20, 0, 20);
+
+   for (int i = 0; i < hist.GetNbinsX(); i++)
+      for (int j = 0; j < hist.GetNbinsY(); j++)
+         for (int k = 0; k < hist.GetNbinsZ(); k++)
+            hist.SetBinContent(i + 1, j + 1, k + 1, i + 100. * j + 10000. * k);
+
+   EXPECT_DOUBLE_EQ(hist.Interpolate(hist.GetXaxis()->GetBinCenter(2), hist.GetYaxis()->GetBinCenter(3),
+                                     hist.GetZaxis()->GetBinCenter(4)),
+                    1. + 100. * 2. + 10000. * 3);
+   EXPECT_DOUBLE_EQ(hist.Interpolate(hist.GetXaxis()->GetBinCenter(2) + 0.5, hist.GetYaxis()->GetBinCenter(3) + 0.4,
+                                     hist.GetZaxis()->GetBinCenter(4) + 0.3),
+                    1. + 0.5 + 100. * 2.4 + 10000. * 3.3);
+
+   EXPECT_DOUBLE_EQ(hist.Interpolate(0., 0., 5.), 10000. * 4.5);
+   EXPECT_DOUBLE_EQ(hist.Interpolate(0.3, 19.9, 5.), 100. * 19 + 10000. * 4.5);
+   EXPECT_DOUBLE_EQ(hist.Interpolate(0.8, 19.9, 5.), 0.3 + 100. * 19 + 10000. * 4.5);
+}
+
+// Test merging of 3D histos with axes with labels
+TEST(TH3D, axesLabels)
+{
+   const auto Nbins = 16;
+   TH3F h("labelHisto", "lh", Nbins, 0, Nbins, Nbins, 0, Nbins, Nbins, 0, Nbins);
+   for (int i = 1; i <= Nbins; ++i) {
+      h.GetXaxis()->SetBinLabel(i, Form("labelx%d", i));
+   }
+   for (int i = 1; i <= Nbins; ++i) {
+      h.GetYaxis()->SetBinLabel(i, Form("labely%d", i));
+   }
+   for (int i = 1; i <= Nbins; ++i) {
+      h.GetZaxis()->SetBinLabel(i, Form("labelz%d", i));
+   }
+   for (int i = 1; i <= h.GetNcells(); ++i) {
+      h.SetBinContent(i, 1); // prevent shortcut at TH1Merger.cxx#L1027
+   }
+
+   auto hSum = h;
+   TList l;
+   l.Add(&h);
+   hSum.Merge(&l);
+
+   for (int ix = 1; ix <= Nbins; ++ix) {
+      for (int iy = 1; iy <= Nbins; ++iy) {
+         for (int iz = 1; iz <= Nbins; ++iz) {
+            const auto h_bin_xyz_cont = h.GetBinContent(ix, iy, iz);
+            const auto hSum_bin_xyz_cont = hSum.GetBinContent(ix, iy, iz);
+            EXPECT_FLOAT_EQ(hSum_bin_xyz_cont, h_bin_xyz_cont + h_bin_xyz_cont);
+         }
+      }
+   }
+}

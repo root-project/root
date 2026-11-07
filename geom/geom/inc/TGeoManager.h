@@ -41,32 +41,36 @@ class TGDMLMatrix;
 class TGeoOpticalSurface;
 class TGeoSkinSurface;
 class TGeoBorderSurface;
+class TGeoColorScheme;
 
 class TGeoManager : public TNamed {
 public:
-   enum EDefaultUnits { kG4Units = 0, kRootUnits = 1 };
+   enum EDefaultUnits {
+      kG4Units = 0,
+      kRootUnits = 1
+   };
 
 protected:
-   static std::mutex fgMutex;           //! mutex for navigator booking in MT mode
-   static Bool_t fgLock;                //! Lock preventing a second geometry to be loaded
-   static Int_t fgVerboseLevel;         //! Verbosity level for Info messages (no IO).
-   static Int_t fgMaxLevel;             //! Maximum level in geometry
-   static Int_t fgMaxDaughters;         //! Maximum number of daughters
-   static Int_t fgMaxXtruVert;          //! Maximum number of Xtru vertices
-   static UInt_t fgExportPrecision;     //! Precision to be used in ASCII exports
-   static EDefaultUnits fgDefaultUnits; //! Default units in GDML if not explicit in some tags
+   static std::mutex fgMutex;           ///<! mutex for navigator booking in MT mode
+   static Bool_t fgLock;                ///<! Lock preventing a second geometry to be loaded
+   static Int_t fgVerboseLevel;         ///<! Verbosity level for Info messages (no IO).
+   static Int_t fgMaxLevel;             ///<! Maximum level in geometry
+   static Int_t fgMaxDaughters;         ///<! Maximum number of daughters
+   static Int_t fgMaxXtruVert;          ///<! Maximum number of Xtru vertices
+   static UInt_t fgExportPrecision;     ///<! Precision to be used in ASCII exports
+   static EDefaultUnits fgDefaultUnits; ///<! Default units in GDML if not explicit in some tags
 
    TGeoManager(const TGeoManager &) = delete;
    TGeoManager &operator=(const TGeoManager &) = delete;
 
 private:
-   Double_t fPhimin;                //! lowest range for phi cut
-   Double_t fPhimax;                //! highest range for phi cut
-   Double_t fTmin;                  //! lower time limit for tracks drawing
-   Double_t fTmax;                  //! upper time limit for tracks drawing
+   Double_t fPhimin;                ///<! lowest range for phi cut
+   Double_t fPhimax;                ///<! highest range for phi cut
+   Double_t fTmin;                  ///<! lower time limit for tracks drawing
+   Double_t fTmax;                  ///<! upper time limit for tracks drawing
    Int_t fNNodes;                   // total number of physical nodes
-   TString fPath;                   //! path to current node
-   TString fParticleName;           //! particles to be drawn
+   TString fPath;                   ///<! path to current node
+   TString fParticleName;           ///<! particles to be drawn
    Double_t fVisDensity;            // transparency threshold by density
    Int_t fExplodedView;             // exploded view mode
    Int_t fVisOption;                // global visualization option
@@ -74,30 +78,30 @@ private:
    Int_t fNsegments;                // number of segments to approximate circles
    Int_t fNtracks;                  // number of tracks
    Int_t fMaxVisNodes;              // maximum number of visible nodes
-   TVirtualGeoTrack *fCurrentTrack; //! current track
+   TVirtualGeoTrack *fCurrentTrack; ///<! current track
    Int_t fNpdg;                     // number of different pdg's stored
    Int_t fPdgId[1024];              // pdg conversion table
-   Bool_t fClosed;                  //! flag that geometry is closed
-   Bool_t fLoopVolumes;             //! flag volume lists loop
+   Bool_t fClosed;                  ///<! flag that geometry is closed
+   Bool_t fLoopVolumes;             ///<! flag volume lists loop
    Bool_t fStreamVoxels;            // flag to allow voxelization I/O
-   Bool_t fIsGeomReading;           //! flag set when reading geometry
-   Bool_t fIsGeomCleaning;          //! flag to notify that the manager is being destructed
+   Bool_t fIsGeomReading;           ///<! flag set when reading geometry
+   Bool_t fIsGeomCleaning;          ///<! flag to notify that the manager is being destructed
    Bool_t fPhiCut;                  // flag for phi cuts
    Bool_t fTimeCut;                 // time cut for tracks
-   Bool_t fDrawExtra;               //! flag that the list of physical nodes has to be drawn
-   Bool_t fMatrixTransform;         //! flag for using GL matrix
-   Bool_t fMatrixReflection;        //! flag for GL reflections
-   Bool_t fActivity;                //! switch ON/OFF volume activity (default OFF - all volumes active))
-   Bool_t fIsNodeSelectable;        //! flag that nodes are the selected objects in pad rather than volumes
-   TVirtualGeoPainter *fPainter;    //! current painter
-   TVirtualGeoChecker *fChecker;    //! current checker
+   Bool_t fDrawExtra;               ///<! flag that the list of physical nodes has to be drawn
+   Bool_t fMatrixTransform;         ///<! flag for using GL matrix
+   Bool_t fMatrixReflection;        ///<! flag for GL reflections
+   Bool_t fActivity;                ///<! switch ON/OFF volume activity (default OFF - all volumes active))
+   Bool_t fIsNodeSelectable;        ///<! flag that nodes are the selected objects in pad rather than volumes
+   TVirtualGeoPainter *fPainter;    ///<! current painter
+   TVirtualGeoChecker *fChecker;    ///<! current checker
 
    TObjArray *fMatrices;        //-> list of local transformations
    TObjArray *fShapes;          //-> list of shapes
    TObjArray *fVolumes;         //-> list of volumes
    TObjArray *fPhysicalNodes;   //-> list of physical nodes
-   TObjArray *fGShapes;         //! list of runtime shapes
-   TObjArray *fGVolumes;        //! list of runtime volumes
+   TObjArray *fGShapes;         ///<! list of runtime shapes
+   TObjArray *fGVolumes;        ///<! list of runtime volumes
    TObjArray *fTracks;          //-> list of tracks attached to geometry
    TObjArray *fPdgNames;        //-> list of pdg names for tracks
    TObjArray *fGDMLMatrices;    //-> list of matrices read from GDML
@@ -109,7 +113,7 @@ private:
    TObjArray *fNodes;           //-> current branch of nodes
    TObjArray *fOverlaps;        //-> list of geometrical overlaps
    TObjArray *fRegions;         //-> list of regions
-   UChar_t *fBits;              //! bits used for voxelization
+   UChar_t *fBits;              ///<! bits used for voxelization
    // Map of navigator arrays per thread
    typedef std::map<std::thread::id, TGeoNavigatorArray *> NavigatorsMap_t;
    typedef NavigatorsMap_t::iterator NavigatorsMapIt_t;
@@ -118,34 +122,34 @@ private:
    // Map of constant properties
    typedef std::map<std::string, Double_t> ConstPropMap_t;
 
-   NavigatorsMap_t fNavigators;      //! Map between thread id's and navigator arrays
-   static ThreadsMap_t *fgThreadId;  //! Thread id's map
-   static Int_t fgNumThreads;        //! Number of registered threads
-   static Bool_t fgLockNavigators;   //! Lock existing navigators
-   TGeoNavigator *fCurrentNavigator; //! current navigator
-   TGeoVolume *fCurrentVolume;       //! current volume
-   TGeoVolume *fTopVolume;           //! top level volume in geometry
-   TGeoNode *fTopNode;               //! top physical node
+   NavigatorsMap_t fNavigators;      ///<! Map between thread id's and navigator arrays
+   static ThreadsMap_t *fgThreadId;  ///<! Thread id's map
+   static Int_t fgNumThreads;        ///<! Number of registered threads
+   static Bool_t fgLockNavigators;   ///<! Lock existing navigators
+   TGeoNavigator *fCurrentNavigator; ///<! current navigator
+   TGeoVolume *fCurrentVolume;       ///<! current volume
+   TGeoVolume *fTopVolume;           ///<! top level volume in geometry
+   TGeoNode *fTopNode;               ///<! top physical node
    TGeoVolume *fMasterVolume;        // master volume
    TGeoHMatrix *fGLMatrix;           // matrix to be used for view transformations
    TObjArray *fUniqueVolumes;        //-> list of unique volumes
-   TGeoShape *fClippingShape;        //! clipping shape for raytracing
-   TGeoElementTable *fElementTable;  //! table of elements
+   TGeoShape *fClippingShape;        ///<! clipping shape for raytracing
+   TGeoElementTable *fElementTable;  ///<! table of elements
 
    Int_t fNLevel;                     // maximum accepted level in geometry
-   TGeoVolume *fPaintVolume;          //! volume currently painted
-   TGeoVolume *fUserPaintVolume;      //!
-   THashList *fHashVolumes;           //! hash list of volumes providing fast search
-   THashList *fHashGVolumes;          //! hash list of group volumes providing fast search
+   TGeoVolume *fPaintVolume;          ///<! volume currently painted
+   TGeoVolume *fUserPaintVolume;      ///<!
+   THashList *fHashVolumes;           ///<! hash list of volumes providing fast search
+   THashList *fHashGVolumes;          ///<! hash list of group volumes providing fast search
    THashList *fHashPNE;               //-> hash list of physical node entries
-   mutable TObjArray *fArrayPNE;      //! array of physical node entries
+   mutable TObjArray *fArrayPNE;      ///<! array of physical node entries
    Int_t fSizePNEId;                  // size of the array of unique ID's for PN entries
    Int_t fNPNEId;                     // number of PN entries having a unique ID
    Int_t *fKeyPNEId;                  //[fSizePNEId] array of uid values for PN entries
    Int_t *fValuePNEId;                //[fSizePNEId] array of pointers to PN entries with ID's
-   Int_t fMaxThreads;                 //! Max number of threads
-   Bool_t fMultiThread;               //! Flag for multi-threading
-   Int_t fRaytraceMode;               //! Raytrace mode: 0=normal, 1=pass through, 2=transparent
+   Int_t fMaxThreads;                 ///<! Max number of threads
+   Bool_t fMultiThread;               ///<! Flag for multi-threading
+   Int_t fRaytraceMode;               ///<! Raytrace mode: 0=normal, 1=pass through, 2=transparent
    Bool_t fUsePWNav;                  // Activate usage of parallel world in navigation
    TGeoParallelWorld *fParallelWorld; // Parallel world
    ConstPropMap_t fProperties;        // Map of user-defined constant properties
@@ -202,9 +206,9 @@ public:
    virtual void Edit(Option_t *option = ""); // *MENU*
    void BombTranslation(const Double_t *tr, Double_t *bombtr);
    void UnbombTranslation(const Double_t *tr, Double_t *bombtr);
-   void ClearAttributes(); // *MENU*
-   void DefaultAngles();   // *MENU*
-   void DefaultColors();   // *MENU*
+   void ClearAttributes();                                  // *MENU*
+   void DefaultAngles();                                    // *MENU*
+   void DefaultColors(const TGeoColorScheme *cs = nullptr); // *MENU*
    TGeoShape *GetClippingShape() const { return fClippingShape; }
    Int_t GetNsegments() const;
    TVirtualGeoPainter *GetGeomPainter();
@@ -221,12 +225,14 @@ public:
    Double_t GetVisDensity() const { return fVisDensity; }
    Int_t GetVisLevel() const;
    Int_t GetVisOption() const;
+   void InvalidateMeshCaches();
    Bool_t IsInPhiRange() const;
    Bool_t IsDrawingExtra() const { return fDrawExtra; }
    Bool_t IsNodeSelectable() const { return fIsNodeSelectable; }
    Bool_t IsVisLeaves() const { return fVisOption == 1; }
    void ModifiedPad() const;
-   void OptimizeVoxels(const char *filename = "tgeovox.C");                                     // *MENU*
+   void OptimizeVoxels(const char *filename = "tgeovox.C"); // *MENU*
+   void RebuildVoxels();
    void SetClipping(Bool_t flag = kTRUE) { SetClippingShape(flag ? fClippingShape : nullptr); } // *MENU*
    void SetClippingShape(TGeoShape *clip);
    void SetExplodedView(Int_t iopt = 0); // *MENU*
@@ -255,8 +261,10 @@ public:
    void CheckGeometryFull(Int_t ntracks = 1000000, Double_t vx = 0., Double_t vy = 0., Double_t vz = 0.,
                           Option_t *option = "ob"); // *MENU*
    void CheckGeometry(Option_t *option = "");
-   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = "");                         // *MENU*
-   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.); // *MENU*
+   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = ""); // *MENU*
+   void CheckOverlapsBySampling(Double_t ovlp, Int_t npoints);
+   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "",
+                   Double_t safety = 0.); // *MENU*
    void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option);
    void ConvertReflections();
    void DrawCurrentPoint(Int_t color = 2); // *MENU*

@@ -56,9 +56,9 @@ private:
 
    void ProcessApplicationDefinedEvent(void *event);
 
-   std::unique_ptr<ROOT::MacOSX::Details::MacOSXSystem> fPimpl; //!
-   bool fCocoaInitialized; //!
-   bool fFirstDispatch; //!
+   std::unique_ptr<ROOT::MacOSX::Details::MacOSXSystem> fPimpl; ///<!
+   bool fCocoaInitialized; ///<!
+   bool fFirstDispatch; ///<!
 
    TMacOSXSystem(const TMacOSXSystem &rhs);
    TMacOSXSystem &operator = (const TMacOSXSystem &rhs);

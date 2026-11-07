@@ -278,7 +278,7 @@ int TMVACrossValidation(bool useRandomSplitting = false)
 
 //
 // This is used if the macro is compiled. If run through ROOT with
-// `root -l -b -q MACRO.C` or similar it is unused.
+// `root -b -q MACRO.C` or similar it is unused.
 //
 int main(int argc, char **argv)
 {

@@ -145,7 +145,6 @@ void TGedFrame::SetDrawOption(Option_t *option)
    if (!fGedEditor->GetPad() || !option) return;
 
    TListIter next(fGedEditor->GetPad()->GetListOfPrimitives());
-   delete fGedEditor->GetPad()->FindObject("Tframe");
    TObject *obj;
    while ((obj = next())) {
       if (obj == fGedEditor->GetModel()) {

@@ -5,17 +5,18 @@ numpy
 pandas
 
 # TMVA: SOFIE
-dm-sonnet # used for GNNs
-graph_nets
 onnx
 onnxscript
 packaging
 
 # TMVA: PyMVA interfaces
 scikit-learn
-tensorflow
+tensorflow ; python_version < "3.14"
 torch
 xgboost
+
+# RDataLoader
+jax
 
 # PyROOT: ROOT.Numba.Declare decorator
 numba
@@ -32,15 +33,13 @@ pyspark # Spark backend
 dask>=2022.08.1 # Dask backend
 distributed>=2022.08.1 # Dask backend
 
-# JsMVA: Jupyter notebook magic for TMVA
-ipywidgets
-
 # Unified Histogram Interface (UHI)
 uhi
 matplotlib
 mplhep
 
 # For testing
-nbconvert>=7.4.0
+nbconvert>=7.17.0
 pytest
 setuptools
+jsonschema # for RooFit HS3 validation (using HS3TestSuite)

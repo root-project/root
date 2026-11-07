@@ -25,13 +25,14 @@
 #include "TF1.h"
 #include "TCanvas.h"
 
-#include <Riostream.h>
 #include "TLegend.h"
 #include "TLegendEntry.h"
 
 #include "Math/IFunction.h"
-#include <cmath>
 #include "TSystem.h"
+
+#include <cmath>
+#include <iostream>
 
 void LegendreAssoc()
 {

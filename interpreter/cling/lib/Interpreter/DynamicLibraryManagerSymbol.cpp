@@ -964,8 +964,10 @@ namespace cling {
         // All the symbols are already flagged as exported. 
         // We cannot really ignore symbols based on flags as we do on unix.
         StringRef Name;
-        if (I->getSymbolName(Name))
+        if (Error E = I->getSymbolName(Name)) {
+          consumeError(std::move(E));
           continue;
+        }
         if (Name.empty())
           continue;
 
@@ -1138,6 +1140,21 @@ namespace cling {
 
     if (!cling::DynamicLibraryManager::isSharedLibrary(FileName))
       return true;
+
+#ifdef _WIN32
+    // Never bind JIT'd code to legacy MSVC runtimes (msvcp60.dll & co, still
+    // shipped in System32, which is part of the search path): they export
+    // std::basic_string and friends with mangled names that match modern
+    // lookups but with an incompatible ABI, silently corrupting any object
+    // they touch. The runtimes this process was built against are already
+    // loaded, so their exports are found in-process before this library scan
+    // is ever consulted.
+    std::string Stem = llvm::sys::path::stem(FileName).lower();
+    if (StringRef(Stem).starts_with("msvcp") ||
+        StringRef(Stem).starts_with("msvcr") ||
+        StringRef(Stem).starts_with("msvcirt"))
+      return true;
+#endif
 
     // No need to check linked libraries, as this function is only invoked
     // for symbols that cannot be found (neither by dlsym nor in the JIT).

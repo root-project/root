@@ -28,23 +28,17 @@ classes to take care of generation of observables for which p.d.fs
 do not define internal methods
 **/
 
-#include "Riostream.h"
-
 #include "RooAcceptReject.h"
 #include "RooAbsReal.h"
 #include "RooCategory.h"
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooRandom.h"
-#include "RooErrorHandler.h"
 #include "RooPrintable.h"
 #include "RooMsgService.h"
 #include "RooRealBinding.h"
 #include "RooNumGenFactory.h"
 #include "RooNumGenConfig.h"
-
-#include "TFoam.h"
-#include "TNamed.h"
 
 #include <cassert>
 

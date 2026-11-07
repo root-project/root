@@ -74,6 +74,7 @@ for single nodes.
 #include <RooArgSet.h>
 #include <RooConstVar.h>
 #include <RooExpensiveObjectCache.h>
+#include <RooFit/Evaluator.h>
 #include <RooHelpers.h>
 #include "RooFitImplHelpers.h"
 #include <RooListProxy.h>
@@ -81,7 +82,6 @@ for single nodes.
 #include <RooRealIntegral.h>
 #include <RooResolutionModel.h>
 #include <RooSetProxy.h>
-#include <RooTrace.h>
 #include <RooTreeDataStore.h>
 #include <RooVectorDataStore.h>
 #include <RooWorkspace.h>
@@ -169,6 +169,12 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
 
 RooAbsArg::~RooAbsArg()
 {
+   // If a RooFit::Evaluator still holds a data token for this arg, tell it that
+   // the arg is gone so that it doesn't reset the token in its destructor.
+   if (_evaluator) {
+      _evaluator->unregisterNode(*this);
+   }
+
    // Notify all servers that they no longer need to serve us
    while (!_serverList.empty()) {
       removeServer(*_serverList.containedObjects().back(), true);
@@ -1284,7 +1290,10 @@ Int_t RooAbsArg::numProxies() const
 }
 
 /// Forward a change in the cached normalization argset
-/// to all the registered proxies.
+/// to all the registered proxies. Passing `nullptr` makes this object forget
+/// any normalization set previously passed to `getVal()`, which is required if
+/// that set may not outlive this object (e.g. it lived on the caller's stack),
+/// as the proxies only keep a bare pointer to it.
 
 void RooAbsArg::setProxyNormSet(const RooArgSet *nset)
 {
@@ -1624,102 +1633,6 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet &observables, RooArgSet &optim
    // Forward calls to all servers
    for (const auto server : _serverList) {
       server->optimizeCacheMode(observables, optimizedNodes, processedNodes);
-   }
-}
-
-/// Find branch nodes with all-constant parameters, and add them to the list of
-/// nodes that can be cached with a dataset in a test statistic calculation
-
-bool RooAbsArg::findConstantNodes(const RooArgSet &observables, RooArgSet &cacheList)
-{
-   RooLinkedList proc;
-   bool ret = findConstantNodes(observables, cacheList, proc);
-
-   // If node can be optimized and hasn't been identified yet, add it to the list
-   coutI(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << "): components " << cacheList
-                       << " depend exclusively on constant parameters and will be precalculated and cached"
-                       << std::endl;
-
-   return ret;
-}
-
-/// Find branch nodes with all-constant parameters, and add them to the list of
-/// nodes that can be cached with a dataset in a test statistic calculation
-
-bool RooAbsArg::findConstantNodes(const RooArgSet &observables, RooArgSet &cacheList, RooLinkedList &processedNodes)
-{
-   // Caching only applies to branch nodes
-   if (!isDerived()) {
-      return false;
-   }
-
-   // Terminate call if this node was already processed (tree structure may be cyclical)
-   if (processedNodes.findArg(this)) {
-      return false;
-   } else {
-      processedNodes.Add(this);
-   }
-
-   // Check if node depends on any non-constant parameter
-   bool canOpt(true);
-   RooArgSet paramSet;
-   getParameters(&observables, paramSet);
-   for (RooAbsArg *param : paramSet) {
-      if (!param->isConstant()) {
-         canOpt = false;
-         break;
-      }
-   }
-
-   if (getAttribute("NeverConstant")) {
-      canOpt = false;
-   }
-
-   if (canOpt) {
-      setAttribute("ConstantExpression");
-   }
-
-   // If yes, list node eligible for caching, if not test nodes one level down
-   if (canOpt || getAttribute("CacheAndTrack")) {
-
-      if (!cacheList.find(*this) && dependsOnValue(observables) && !observables.find(*this)) {
-
-         // Add to cache list
-         cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName()
-                               << ") adding self to list of constant nodes" << std::endl;
-
-         if (canOpt)
-            setAttribute("ConstantExpressionCached");
-         cacheList.add(*this, false);
-      }
-   }
-
-   if (!canOpt) {
-
-      // If not, see if next level down can be cached
-      for (const auto server : _serverList) {
-         if (server->isDerived()) {
-            server->findConstantNodes(observables, cacheList, processedNodes);
-         }
-      }
-   }
-
-   // Forward call to all cached contained in current object
-   for (Int_t i = 0; i < numCaches(); i++) {
-      getCache(i)->findConstantNodes(observables, cacheList, processedNodes);
-   }
-
-   return false;
-}
-
-/// Interface function signaling a request to perform constant term
-/// optimization. This default implementation takes no action other than to
-/// forward the calls to all servers
-
-void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
-{
-   for (const auto server : _serverList) {
-      server->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
    }
 }
 
@@ -2258,17 +2171,22 @@ RooAbsArg::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
 }
 
 /// Sets the token for retrieving results in the BatchMode. For internal use only.
-void RooAbsArg::setDataToken(std::size_t index)
+/// If an `evaluator` is passed, it is the RooFit::Evaluator that resets the
+/// token in its destructor, and this arg will notify it if it gets deleted
+/// before the Evaluator.
+void RooAbsArg::setDataToken(std::size_t index, RooFit::Evaluator *evaluator)
 {
-   if (_dataToken == index) {
-      return;
+   if (_dataToken != index) {
+      if (hasDataToken()) {
+         std::stringstream errMsg;
+         errMsg << "The data token for \"" << GetName() << "\" is already set!"
+                << " Are you trying to evaluate the same object by multiple RooFit::Evaluator instances?"
+                << " This is not allowed.";
+         throw std::runtime_error(errMsg.str());
+      }
+      _dataToken = index;
    }
-   if (_dataToken != std::numeric_limits<std::size_t>::max()) {
-      std::stringstream errMsg;
-      errMsg << "The data token for \"" << GetName() << "\" is already set!"
-             << " Are you trying to evaluate the same object by multiple RooFit::Evaluator instances?"
-             << " This is not allowed.";
-      throw std::runtime_error(errMsg.str());
+   if (evaluator) {
+      _evaluator = evaluator;
    }
-   _dataToken = index;
 }

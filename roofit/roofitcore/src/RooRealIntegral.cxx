@@ -42,11 +42,11 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooNumIntFactory.h>
 #include <RooRealBinding.h>
 #include <RooSuperCategory.h>
-#include <RooTrace.h>
+#include <RooFitImplHelpers.h>
 
 #include <iostream>
 #include <memory>
-
+#include <unordered_map>
 
 namespace {
 
@@ -131,14 +131,26 @@ void addParameterToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vec
 enum class MarkedState { Dependent, Independent, AlreadyAdded };
 
 /// Mark all args that recursively are value clients of "dep".
-void unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<MarkedState> &marked)
+void unmarkDepValueClients(RooAbsArg const &dep, std::unordered_map<RooAbsArg const *, std::size_t> const &indexMap,
+                           std::vector<MarkedState> &marked)
 {
-   assert(args.size() == marked.size());
-   auto index = args.index(dep);
-   if (index >= 0) {
-      marked[index] = MarkedState::Dependent;
-      for (RooAbsArg *client : dep.valueClients()) {
-         unmarkDepValueClients(*client, args, marked);
+   auto found = indexMap.find(&dep);
+   if (found == indexMap.end())
+      return;
+   marked[found->second] = MarkedState::Dependent;
+
+   // Iterative depth-first traversal of the value clients within the
+   // computation graph, visiting every arg at most once.
+   std::vector<RooAbsArg const *> stack{&dep};
+   while (!stack.empty()) {
+      RooAbsArg const *arg = stack.back();
+      stack.pop_back();
+      for (RooAbsArg *client : arg->valueClients()) {
+         auto foundClient = indexMap.find(client);
+         if (foundClient != indexMap.end() && marked[foundClient->second] != MarkedState::Dependent) {
+            marked[foundClient->second] = MarkedState::Dependent;
+            stack.push_back(client);
+         }
       }
    }
 }
@@ -154,6 +166,19 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    RooArgSet allArgs{allArgsList};
    allArgs.sortTopologically();
 
+   // Maps from arg to index in allArgs for constant-time lookups. Two maps,
+   // because the graph can contain same-name instances (e.g. cloned sub-trees
+   // from projections): dependent client chains are matched by instance,
+   // while the final server matching is done by name.
+   std::unordered_map<RooAbsArg const *, std::size_t> indexMap;
+   std::unordered_map<TNamed const *, std::size_t> indexMapByName;
+   indexMap.reserve(allArgs.size());
+   indexMapByName.reserve(allArgs.size());
+   for (std::size_t i = 0; i < allArgs.size(); ++i) {
+      indexMap.emplace(allArgs[i], i);
+      indexMapByName.emplace(allArgs[i]->namePtr(), i);
+   }
+
    // Figure out what are all the value servers only
    RooArgList allValueArgsList;
    function.treeNodeServerList(&allValueArgsList, nullptr, true, true, /*valueOnly=*/true, false);
@@ -161,7 +186,10 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
 
    // All "marked" args will be added as value servers to the integral
    std::vector<MarkedState> marked(allArgs.size(), MarkedState::Independent);
-   marked.back() = MarkedState::Dependent; // We don't want to consider the function itself
+   // We don't want to consider the function itself
+   if (auto foundFunc = indexMap.find(&function); foundFunc != indexMap.end()) {
+      marked[foundFunc->second] = MarkedState::Dependent;
+   }
 
    // Mark all args that are (indirect) value servers of the integration
    // variable or the integration variable itself. If something was marked,
@@ -169,7 +197,7 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    // add it to the server list.
    for (RooAbsArg *dep : depList) {
       if (RooAbsArg *depInArgs = allArgs.find(dep->GetName())) {
-         unmarkDepValueClients(*depInArgs, allArgs, marked);
+         unmarkDepValueClients(*depInArgs, indexMap, marked);
          addObservableToServers(function, *depInArgs, serversToAdd, rangeName);
       }
    }
@@ -179,10 +207,10 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    for (std::size_t i = 0; i < allArgs.size(); ++i) {
       if (marked[i] == MarkedState::Dependent) {
          for (RooAbsArg *server : allArgs[i]->servers()) {
-            int index = allArgs.index(server->GetName());
-            if (index >= 0 && marked[index] == MarkedState::Independent) {
+            auto found = indexMapByName.find(server->namePtr());
+            if (found != indexMapByName.end() && marked[found->second] == MarkedState::Independent) {
                addParameterToServers(function, *server, serversToAdd, !allValueArgs.find(*server));
-               marked[index] = MarkedState::AlreadyAdded;
+               marked[found->second] = MarkedState::AlreadyAdded;
             }
          }
       }
@@ -276,7 +304,6 @@ Int_t RooRealIntegral::_cacheAllNDim(2) ;
 
 RooRealIntegral::RooRealIntegral()
 {
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,7 +314,7 @@ RooRealIntegral::RooRealIntegral()
 /// The other integrations are performed numerically. The optional
 /// config object prescribes how these numeric integrations are configured.
 ///
-/// \Note If pdf component selection was globally overridden to always include
+/// \note If pdf component selection was globally overridden to always include
 /// all components (either with RooAbsReal::globalSelectComp(bool) or a
 /// RooAbsReal::GlobalSelectComponentRAII), then any created integral will
 /// ignore component selections during its lifetime. This is especially useful
@@ -377,7 +404,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   }
 
   if (!_facList.empty()) {
-    oocxcoutI(&function,Integration) << function.GetName() << ": Factorizing obserables are " << _facList << std::endl ;
+    oocxcoutI(&function,Integration) << function.GetName() << ": Factorizing observables are " << _facList << std::endl ;
   }
 
 
@@ -463,7 +490,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   }
 
   // Replace exclusive lvalue branch servers with lvalue branches
-  // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaroes
+  // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaries
   if (!exclLVServers.empty() && !function.isBinnedDistribution(exclLVBranches)) {
     intDepList.remove(exclLVServers) ;
     intDepList.add(exclLVBranches) ;
@@ -629,7 +656,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
   }
 
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -737,14 +763,12 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
  other._intList.snapshot(_saveInt) ;
  other._sumList.snapshot(_saveSum) ;
 
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooRealIntegral::~RooRealIntegral()
 {
-  TRACE_DESTROY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -814,28 +838,19 @@ double RooRealIntegral::evaluate() const
 
   case Hybrid:
     {
-      // Cache numeric integrals in >1d expensive object cache
-      RooDouble const* cacheVal(nullptr) ;
-      if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
-        cacheVal = static_cast<RooDouble const*>(expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters()))  ;
-      }
-
-      if (cacheVal) {
-        retVal = *cacheVal ;
-   // std::cout << "using cached value of integral" << GetName() << std::endl ;
-      } else {
-
-
-        // Find any function dependents that are AClean
-        // and switch them temporarily to ADirty
-        bool origState = inhibitDirty() ;
-        setDirtyInhibit(true) ;
-
         // try to initialize our numerical integration engine
         if(!(_valid= initNumIntegrator())) {
           coutE(Integration) << ClassName() << "::" << GetName()
                              << ":evaluate: cannot initialize numerical integrator" << std::endl;
           return 0;
+        }
+
+        // Not clear why this is still needed
+        RooArgList serverList;
+        _function->treeNodeServerList(&serverList, nullptr, true, true, false, true);
+
+        for (auto *arg : serverList) {
+           arg->syncCache();
         }
 
         // Save current integral dependent values
@@ -845,22 +860,9 @@ double RooRealIntegral::evaluate() const
         // Evaluate sum/integral
         retVal = sum() ;
 
-
-        // This must happen BEFORE restoring dependents, otherwise no dirty state propagation in restore step
-        setDirtyInhibit(origState) ;
-
         // Restore integral dependent values
         _intList.assign(_saveInt) ;
         _sumList.assign(_saveSum) ;
-
-        // Cache numeric integrals in >1d expensive object cache
-        if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
-          RooDouble* val = new RooDouble(retVal) ;
-          expensiveObjectCache().registerObject(_function->GetName(),GetName(),*val,parameters())  ;
-          //     std::cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
-        }
-
-      }
       break ;
     }
   case Analytic:
@@ -884,9 +886,7 @@ double RooRealIntegral::evaluate() const
       // integrated over later.
       assert(servers().size() == _facList.size() + 1);
 
-      //setDirtyInhibit(true) ;
       retVal= _function->getVal(actualFuncNormSet());
-      //setDirtyInhibit(false) ;
       break ;
     }
   }

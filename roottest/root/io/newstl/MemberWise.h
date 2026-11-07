@@ -1,8 +1,9 @@
-#include "Riostream.h"
 #include "TString.h"
 #include "TBuffer.h"
-#include <vector>
 #include "TClass.h"
+
+#include <iostream>
+#include <vector>
 
 class Member {
 public:
@@ -143,7 +144,7 @@ public:
    std::vector<Member>   fHasCustomStreamer;
    std::vector<Content>  fNotSplit; //||
    std::vector<WithAttachedStreamer> fAttachedStreamer;
-   std::vector<WithStreamerOnly> fStreamerOnly; //!
+   std::vector<WithStreamerOnly> fStreamerOnly; ///<!
    std::vector<WithExplicitCannotSplit> fCannotSplit;
    std::vector<WithStreamerOnly> fStreamerOnlyNoReq; //
 

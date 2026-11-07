@@ -784,52 +784,6 @@ REPLACE_HELP = "replace object if already existing"
 ##########
 
 ##########
-# ROOTCP
-
-
-def _copyObjects(fileName, pathSplitList, destFile, destPathSplit, oneFile, recursive, replace):
-    retcode = 0
-    destFileName = destFile.GetName()
-    rootFile = openROOTFile(fileName) if fileName != destFileName else destFile
-    if not rootFile:
-        return 1
-    ROOT.gROOT.GetListOfFiles().Remove(rootFile)  # Fast copy necessity
-    for pathSplit in pathSplitList:
-        oneSource = oneFile and len(pathSplitList) == 1
-        retcode += copyRootObject(rootFile, pathSplit, destFile, destPathSplit, oneSource, recursive, replace)
-    if fileName != destFileName:
-        rootFile.Close()
-    return retcode
-
-
-def rootCp(sourceList, destFileName, destPathSplit, compress=None, recreate=False, recursive=False, replace=False):
-    # Check arguments
-    if sourceList == [] or destFileName == "":
-        return 1
-    if recreate and destFileName in [n[0] for n in sourceList]:
-        logging.error("cannot recreate destination file if this is also a source file")
-        return 1
-
-    # Open destination file
-    destFile = openROOTFileCompress(destFileName, compress, recreate)
-    if not destFile:
-        return 1
-    ROOT.gROOT.GetListOfFiles().Remove(destFile)  # Fast copy necessity
-
-    # Loop on the root files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += _copyObjects(
-            fileName, pathSplitList, destFile, destPathSplit, len(sourceList) == 1, recursive, replace
-        )
-    destFile.Close()
-    return retcode
-
-
-# End of ROOTCP
-##########
-
-##########
 # ROOTEVENTSELECTOR
 
 
@@ -940,65 +894,6 @@ def rootEventselector(
 
 
 # End of ROOTEVENTSELECTOR
-##########
-
-##########
-# ROOTMKDIR
-
-MKDIR_ERROR = "cannot create directory '{0}'"
-
-
-def _createDirectories(rootFile, pathSplit, parents):
-    """Same behaviour as createDirectory but allows the possibility
-    to build an whole path recursively with the option \"parents\" """
-    retcode = 0
-    lenPathSplit = len(pathSplit)
-    if lenPathSplit == 0:
-        pass
-    elif parents:
-        for i in range(lenPathSplit):
-            currentPathSplit = pathSplit[: i + 1]
-            if not (isExisting(rootFile, currentPathSplit) and isDirectory(rootFile, currentPathSplit)):
-                retcode += createDirectory(rootFile, currentPathSplit)
-    else:
-        doMkdir = True
-        for i in range(lenPathSplit - 1):
-            currentPathSplit = pathSplit[: i + 1]
-            if not (isExisting(rootFile, currentPathSplit) and isDirectory(rootFile, currentPathSplit)):
-                doMkdir = False
-                break
-        if doMkdir:
-            retcode += createDirectory(rootFile, pathSplit)
-        else:
-            logging.warning(MKDIR_ERROR.format("/".join(pathSplit)))
-            retcode += 1
-    return retcode
-
-
-def _rootMkdirProcessFile(fileName, pathSplitList, parents):
-    retcode = 0
-    rootFile = openROOTFile(fileName, "update")
-    if not rootFile:
-        return 1
-    for pathSplit in pathSplitList:
-        retcode += _createDirectories(rootFile, pathSplit, parents)
-    rootFile.Close()
-    return retcode
-
-
-def rootMkdir(sourceList, parents=False):
-    # Check arguments
-    if sourceList == []:
-        return 1
-
-    # Loop on the ROOT files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += _rootMkdirProcessFile(fileName, pathSplitList, parents)
-    return retcode
-
-
-# End of ROOTMKDIR
 ##########
 
 ##########
@@ -1222,34 +1117,4 @@ def rootPrint(
 
 
 # End of ROOTPRINT
-##########
-
-##########
-# ROOTRM
-
-
-def _removeObjects(fileName, pathSplitList, interactive=False, recursive=False):
-    retcode = 0
-    rootFile = openROOTFile(fileName, "update")
-    if not rootFile:
-        return 1
-    for pathSplit in pathSplitList:
-        retcode += deleteRootObject(rootFile, pathSplit, interactive, recursive)
-    rootFile.Close()
-    return retcode
-
-
-def rootRm(sourceList, interactive=False, recursive=False):
-    # Check arguments
-    if sourceList == []:
-        return 1
-
-    # Loop on the root files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += _removeObjects(fileName, pathSplitList, interactive, recursive)
-    return retcode
-
-
-# End of ROOTRM
 ##########

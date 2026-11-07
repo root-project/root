@@ -5,6 +5,7 @@
 #include <TObject.h>
 #include <TRef.h>
 #include <TRotation.h>
+#include <TBuffer.h>
 #include <TVirtualStreamerInfo.h>
 
 #include <memory>
@@ -259,12 +260,14 @@ TEST(RNTuple, TClassReadRules)
       auto ptrOldCoord = model->MakeField<OldCoordinates>("oldCoord");
       auto ptrLowPrecisionFloat = model->MakeField<LowPrecisionFloatWithIORules>("lowPrecisionFloat");
       auto ptrOldName = model->MakeField<OldName<OldName<int>>>("rename");
+      auto ptrOldNameVersionChange = model->MakeField<OldName<float>>("renameVersionChange");
       auto ptrWithSource = model->MakeField<StructWithSourceStruct>("withSource");
       ptrCoord->fX = ptrOldCoord->fOldX = 1.0;
       ptrCoord->fY = ptrOldCoord->fOldY = 1.0;
       ptrLowPrecisionFloat->fFoo = 1.0;
       ptrLowPrecisionFloat->fLast8BitsZero = last8BitsZero;
       ptrOldName->fValue.fValue = 42;
+      ptrOldNameVersionChange->fValue = 1.0;
       // The following two members are transient and should not be stored.
       ptrWithSource->fSource.fTransient = 1;
       ptrWithSource->fTransient = 2;
@@ -321,6 +324,10 @@ TEST(RNTuple, TClassReadRules)
 
    auto viewRename = reader->GetView<NewName<OldName<int>>>("rename");
    EXPECT_EQ(42, viewRename(0).fValue.fValue);
+
+   EXPECT_NE(ROOT::RField<OldName<float>>("").GetTypeVersion(), ROOT::RField<NewName<float>>("").GetTypeVersion());
+   auto viewRenameVersionChange = reader->GetView<NewName<float>>("renameVersionChange");
+   EXPECT_FLOAT_EQ(1.0, viewRenameVersionChange(0).fValue);
 }
 
 // Adjusted from
@@ -404,6 +411,10 @@ TEST(RNTuple, TClassMetaName)
    ROOT::RStreamerField f6("f", "EdmWrapper<long long>");
    EXPECT_STREQ("EdmWrapper<Long64_t>", f6.GetClass()->GetName());
    EXPECT_EQ("EdmWrapper<Long64_t>", f6.GetTypeAlias());
+   auto clone = f6.Clone("f");
+   auto streamerFieldPtr = static_cast<ROOT::RStreamerField *>(clone.get());
+   EXPECT_STREQ("EdmWrapper<Long64_t>", streamerFieldPtr->GetClass()->GetName());
+   EXPECT_EQ("EdmWrapper<Long64_t>", streamerFieldPtr->GetTypeAlias());
 }
 
 TEST(RNTuple, StreamerInfoRecords)
@@ -465,4 +476,78 @@ TEST(RNTuple, StreamerInfoRecords)
          EXPECT_EQ(std::get<1>(t)[0], field->GetClass()->GetName());
       }
    }
+}
+
+// Detect custom streamers set on class members at runtime via TClass::SetMemberStreamer.
+TEST(RNTuple, MemberWithCustomStreamer)
+{
+   auto cl = TClass::GetClass("MemberWithCustomStreamer");
+   ASSERT_NE(cl, nullptr);
+
+   // CanSplit() should be true initially (it only checks compile-time properties)
+   EXPECT_TRUE(cl->CanSplit());
+
+   // Without member streamer: field creation succeeds
+   RFieldBase::Create("f", "MemberWithCustomStreamer").Unwrap();
+
+   // Set a custom streamer on the "fCustom" member at runtime
+   cl->SetMemberStreamer("fCustom", [](TBuffer &b, void *obj, Int_t) {
+      int *val = static_cast<int *>(obj);
+      if (b.IsReading()) {
+         b >> *val;
+      } else {
+         b << *val;
+      }
+   });
+
+   // CanSplit() remains true because you can still split (in TTree) even if a data member has a custom member.
+   EXPECT_TRUE(cl->CanSplit());
+
+   // After setting member streamer: field creation should throw
+   EXPECT_THROW(RFieldBase::Create("f", "MemberWithCustomStreamer").Unwrap(), ROOT::RException);
+}
+
+TEST(RNTuple, AlignmentCornerCases)
+{
+   // Alignment determined by transient member
+   EXPECT_EQ(alignof(AlignmentDeterminedByTransientMember),
+             RFieldBase::Create("", "AlignmentDeterminedByTransientMember").Unwrap()->GetAlignment());
+
+   // Respect custom alignment
+   EXPECT_EQ(alignof(AlignedAs), RFieldBase::Create("", "AlignedAs").Unwrap()->GetAlignment());
+   EXPECT_EQ(sizeof(AlignedAs), RFieldBase::Create("", "AlignedAs").Unwrap()->GetValueSize());
+   EXPECT_EQ(8u, RFieldBase::Create("", "AlignedAs").Unwrap()->GetValueSize());
+
+   // Handling of over-aligned types
+   auto f = RFieldBase::Create("", "AlignmentEnvelope").Unwrap();
+   EXPECT_GT(alignof(AlignmentEnvelope), sizeof(std::max_align_t));
+   EXPECT_EQ(alignof(AlignmentEnvelope), f->GetAlignment());
+   std::unique_ptr<AlignmentEnvelope> ptr(f->CreateObject<AlignmentEnvelope>().release());
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(ptr.get()) % alignof(AlignmentEnvelope));
+
+   f = RFieldBase::Create("", "std::vector<AlignmentEnvelope>").Unwrap();
+   auto vecPtr = f->CreateObject<std::vector<AlignmentEnvelope>>().release();
+   EXPECT_TRUE(vecPtr->data() == nullptr ||
+               reinterpret_cast<std::uintptr_t>(vecPtr->data()) % alignof(AlignmentEnvelope) == 0);
+
+   auto res = RFieldBase::Create("", "ROOT::RVec<OverAligned>");
+   EXPECT_FALSE(res);
+   EXPECT_THAT(res.GetError()->GetReport(), ::testing::HasSubstr("RVec does not support over-aligned types"));
+
+   FileRaii fileGuard("test_ntuple_alignment_corner_cases.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto p = model->MakeField<AlignmentEnvelope>("f");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      p->fVec.push_back(OverAligned{1});
+      writer->Fill();
+   }
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto bulk = reader->GetModel().CreateBulk("f");
+   auto bulkPtr = bulk.ReadBulk(ROOT::RNTupleLocalRange(0, 0, 1));
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(bulkPtr) % alignof(AlignmentEnvelope));
+
+   auto view = reader->GetView<AlignmentEnvelope>("f");
+   EXPECT_EQ(1u, view(0).fVec.size());
+   EXPECT_EQ(0, reinterpret_cast<std::uintptr_t>(view(0).fVec.data()) % alignof(OverAligned));
 }

@@ -11,9 +11,9 @@
 #include <TCollection.h>
 #include <TCanvas.h>
 #include <TROOT.h>
-#include <snprintf.h>
+#include <TVirtualX.h>
 
-
+#include <cstdio>
 
 CanvSave::CanvSave(const TGWindow *p, const TGWindow *main, UInt_t w,
                    UInt_t h, UInt_t options) :

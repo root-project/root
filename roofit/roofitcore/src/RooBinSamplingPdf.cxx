@@ -29,6 +29,10 @@
  * using integrator(). This can be used to change the integration rules, so less/more function evaluations are
  * performed. The target precision of the integrator can be set in the constructor.
  *
+ * If the wrapped PDF supports analytical integration over the sampled observable, the exact analytical integral
+ * is used for each bin instead of the numeric integrator. This is both faster and more accurate, and happens
+ * transparently without any user intervention.
+ *
  *
  * ### How to use it
  * There are two ways to use this class:
@@ -297,8 +301,63 @@ double RooBinSamplingPdf::operator()(double x) const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Integrate the wrapped PDF using our current integrator, with given norm set and limits.
-double RooBinSamplingPdf::integrate(const RooArgSet* /*normSet*/, double low, double high) const {
+/// Check once whether the wrapped PDF can integrate over the observable
+/// analytically. If so, the analytical integral code is cached so that
+/// integrate() can use the exact integral instead of the numeric integrator.
+void RooBinSamplingPdf::initializeAnalyticalIntegral(const RooArgSet* normSet) const {
+  // Setting a named range to select the bin boundaries requires a RooRealVar.
+  // For other observable types we stick to the numeric integrator.
+  auto *observable = dynamic_cast<RooRealVar *>(&*_observable);
+  if (!observable) {
+    _analyticalIntegralCode = 0;
+    return;
+  }
+
+  _analyticalIntegralRangeName = std::string("_binSampling_") + GetName();
+
+  // Define the range so that PDFs that inspect it in getAnalyticalIntegral()
+  // find a valid one. The actual bin boundaries are filled in for each bin in
+  // integrate().
+  observable->setRange(_analyticalIntegralRangeName.c_str(), observable->getMin(), observable->getMax());
+
+  RooArgSet allVars{*_observable};
+  RooArgSet analVars;
+  _analyticalIntegralCode = _pdf->getAnalyticalIntegralWN(allVars, analVars, normSet, _analyticalIntegralRangeName.c_str());
+
+  // Only use analytical integration if the observable is really integrated
+  // analytically. Otherwise, fall back to the numeric integrator.
+  if (_analyticalIntegralCode != 0 && !analVars.contains(*_observable)) {
+    _analyticalIntegralCode = 0;
+  }
+
+  if (_analyticalIntegralCode != 0) {
+    coutI(NumIntegration) << "RooBinSamplingPdf::integrate(" << GetName()
+        << "): using the analytical integral of " << _pdf->GetName()
+        << " to sample the bins instead of the numeric integrator." << std::endl;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Integrate the wrapped PDF over a single bin, with the given norm set and limits.
+/// If the wrapped PDF supports analytical integration over the observable, the
+/// exact integral is used. Otherwise, the numeric integrator is employed.
+///
+/// The result must match the numeric path, which integrates the value returned by
+/// operator(), i.e. the PDF value normalized over `normSet`. Therefore, the
+/// analytical integral is normalized over `normSet` as well via analyticalIntegralWN().
+double RooBinSamplingPdf::integrate(const RooArgSet* normSet, double low, double high) const {
+  if (_analyticalIntegralCode == -1) {
+    initializeAnalyticalIntegral(normSet);
+  }
+
+  if (_analyticalIntegralCode != 0) {
+    // The analytical path is only enabled for RooRealVar observables (see
+    // initializeAnalyticalIntegral()), so this static_cast is safe.
+    static_cast<RooRealVar &>(*_observable).setRange(_analyticalIntegralRangeName.c_str(), low, high);
+    return _pdf->analyticalIntegralWN(_analyticalIntegralCode, normSet, _analyticalIntegralRangeName.c_str());
+  }
+
   return integrator()->Integral(low, high);
 }
 

@@ -53,7 +53,6 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   RooAbsReal(name,title),
   _depList("depList","List of dependents",this),
   _dataHist(const_cast<RooDataHist*>(&dhist)),
-  _codeReg(10),
   _intOrder(intOrder)
 {
   _histObsList.addClone(vars) ;
@@ -75,7 +74,6 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
     }
   }
 
-  TRACE_CREATE;
 }
 
 
@@ -92,7 +90,6 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   RooAbsReal(name,title),
   _depList("depList","List of dependents",this),
   _dataHist(const_cast<RooDataHist*>(&dhist)),
-  _codeReg(10),
   _intOrder(intOrder)
 {
   _histObsList.addClone(histObs) ;
@@ -114,7 +111,6 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
     }
   }
 
-  TRACE_CREATE;
 }
 
 RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet &vars, std::unique_ptr<RooDataHist> dhist,
@@ -139,13 +135,11 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   RooAbsReal(other,name),
   _depList("depList",this,other._depList),
   _dataHist(other._dataHist),
-  _codeReg(other._codeReg),
   _intOrder(other._intOrder),
   _cdfBoundaries(other._cdfBoundaries),
   _totVolume(other._totVolume),
   _unitNorm(other._unitNorm)
 {
-  TRACE_CREATE;
 
   _histObsList.addClone(other._histObsList) ;
 }
@@ -156,7 +150,6 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
 
 RooHistFunc::~RooHistFunc()
 {
-  TRACE_DESTROY;
 }
 
 
@@ -247,8 +240,7 @@ double RooHistFunc::maxVal(Int_t code) const
 
   double max(-1) ;
   for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {
-    _dataHist->get(i) ;
-    double wgt = _dataHist->weight() ;
+    double wgt = _dataHist->weight(i) ;
     if (wgt>max) max=wgt ;
   }
 
@@ -349,9 +341,6 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
     }
   }
 
-  // std::cout << "RooHistFunc::bb(" << GetName() << ") histObs = " << _histObsList << std::endl ;
-  // std::cout << "RooHistFunc::bb(" << GetName() << ") pdfObs = " << _depList << std::endl ;
-
   RooAbsRealLValue* transform = nullptr;
   if (!hobs) {
 
@@ -377,9 +366,6 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
     transform = dynamic_cast<RooAbsRealLValue*>(pobs) ;
   }
 
-
-  // std::cout << "hobs = " << hobs->GetName() << std::endl ;
-  // std::cout << "transform = " << (transform?transform->GetName():"<none>") << std::endl ;
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsArg* xtmp = _dataHist->get()->find(hobs->GetName()) ;
@@ -410,7 +396,6 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
       double boundary = boundaries[i] ;
       if (transform) {
    transform->setVal(boundary) ;
-   //cout << "transform bound " << boundary << " using " << transform->GetName() << " result " << obs.getVal() << std::endl ;
    hint->push_back(obs.getVal()) ;
       } else {
    hint->push_back(boundary) ;
@@ -487,9 +472,7 @@ bool RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
   if (std::abs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
   if (dh1.numEntries() != dh2.numEntries()) return false ;
   for (int i=0 ; i < dh1.numEntries() ; i++) {
-    dh1.get(i) ;
-    dh2.get(i) ;
-    if (std::abs(dh1.weight()-dh2.weight())>1e-8) return false ;
+    if (std::abs(dh1.weight(i)-dh2.weight(i))>1e-8) return false ;
   }
   using RooHelpers::getColonSeparatedNameString;
   if (getColonSeparatedNameString(*dh1.get()) != getColonSeparatedNameString(*dh2.get())) return false ;

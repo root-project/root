@@ -2,6 +2,7 @@
 /// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
 /// Feedback is welcome!
 
+#include <ROOT/Hist/ConversionUtils.hxx>
 #include <ROOT/Hist/ConvertToTH1.hxx>
 #include <ROOT/RBinIndex.hxx>
 #include <ROOT/RHist.hxx>
@@ -27,7 +28,13 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
       throw std::invalid_argument("TH1 requires one dimension");
    }
 
-   std::unique_ptr<Hist> ret;
+   auto ret = std::make_unique<Hist>();
+   ret->SetDirectory(nullptr);
+
+   const auto &axis = engine.GetAxes()[0];
+   ROOT::Experimental::Hist::Internal::ConvertAxis(*ret->GetXaxis(), axis);
+   ret->SetBinsLength();
+
    Double_t *sumw2 = nullptr;
    auto copyBinContent = [&ret, &engine, &sumw2](Int_t i, RBinIndex index) {
       if constexpr (std::is_same_v<T, RBinWithError>) {
@@ -44,30 +51,16 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
       }
    };
 
-   const auto &axes = engine.GetAxes();
-   RBinIndexRange range;
-   if (auto *regular = std::get_if<RRegularAxis>(&axes[0])) {
-      const std::size_t nNormalBins = regular->GetNNormalBins();
-      ret.reset(new Hist("", "", nNormalBins, regular->GetLow(), regular->GetHigh()));
-
-      // Convert the flow bins, if enabled.
-      if (regular->HasFlowBins()) {
-         copyBinContent(0, RBinIndex::Underflow());
-         copyBinContent(nNormalBins + 1, RBinIndex::Overflow());
+   // Copy the bin contents, accounting for TH1 numbering conventions.
+   for (auto index : axis.GetFullRange()) {
+      if (index.IsUnderflow()) {
+         copyBinContent(0, index);
+      } else if (index.IsOverflow()) {
+         copyBinContent(axis.GetNNormalBins() + 1, index);
+      } else {
+         assert(index.IsNormal());
+         copyBinContent(index.GetIndex() + 1, index);
       }
-
-      // Get the range of normal bins for the loop below.
-      range = regular->GetNormalRange();
-   } else {
-      throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
-   }
-
-   assert(ret);
-   ret->SetDirectory(nullptr);
-
-   // Convert the normal bins, accounting for TH1 numbering conventions.
-   for (auto index : range) {
-      copyBinContent(index.GetIndex() + 1, index);
    }
 
    return ret;
@@ -76,14 +69,22 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
 template <typename Hist>
 void ConvertGlobalStatistics(Hist &h, const RHistStats &stats)
 {
+   if (stats.IsTainted()) {
+      return;
+   }
+
    h.SetEntries(stats.GetNEntries());
 
    Double_t hStats[4] = {
       stats.GetSumW(),
       stats.GetSumW2(),
-      stats.GetDimensionStats(0).fSumWX,
-      stats.GetDimensionStats(0).fSumWX2,
+      0,
+      0,
    };
+   if (stats.IsEnabled(0)) {
+      hStats[2] = stats.GetDimensionStats(0).fSumWX;
+      hStats[3] = stats.GetDimensionStats(0).fSumWX2;
+   }
    h.PutStats(hStats);
 }
 } // namespace

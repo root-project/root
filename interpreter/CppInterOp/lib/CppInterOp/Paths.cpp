@@ -23,7 +23,7 @@
 #include <dlfcn.h>
 #endif
 
-namespace Cpp {
+namespace CppInternal {
 namespace utils {
 
 namespace platform {
@@ -158,7 +158,8 @@ void CopyIncludePaths(const clang::HeaderSearchOptions& Opts,
   /// User specified include entries.
   for (unsigned i = 0, e = Opts.UserEntries.size(); i != e; ++i) {
     const HeaderSearchOptions::Entry& E = Opts.UserEntries[i];
-    if (E.IsFramework && E.Group != frontend::Angled)
+    if (E.IsFramework && E.Group != frontend::Angled &&
+        E.Group != frontend::System)
       llvm::report_fatal_error("Invalid option set!");
     switch (E.Group) {
     case frontend::After:
@@ -177,32 +178,6 @@ void CopyIncludePaths(const clang::HeaderSearchOptions& Opts,
       if (withFlags)
         incpaths.push_back("-isystem");
       break;
-      // Option was removed in llvm 20. Git log message below.
-      // git log --grep="index-header"
-      // commit 19b4f17d4c0ae12725050d09f04f85bccc686d8e
-      // Author: Jan Svoboda <jan_svoboda@apple.com>
-      // Date:   Thu Oct 31 16:04:35 2024 -0700
-      //
-      //    [clang][lex] Remove `-index-header-map` (#114459)
-      //
-      //    This PR removes the `-index-header-map` functionality from Clang.
-      //    AFAIK this was only used internally at Apple and is now dead code.
-      //    The main motivation behind this change is to enable the removal of
-      //    `HeaderFileInfo::Framework` member and reducing the size of that
-      //    data structure.
-      //
-      //    rdar://84036149
-
-#if CLANG_VERSION_MAJOR < 20
-    case frontend::IndexHeaderMap:
-      if (!withSystem)
-        continue;
-      if (withFlags)
-        incpaths.push_back("-index-header-map");
-      if (withFlags)
-        incpaths.push_back(E.IsFramework ? "-F" : "-I");
-      break;
-#endif
 
     case frontend::CSystem:
       if (!withSystem)
@@ -361,7 +336,7 @@ bool SplitPaths(llvm::StringRef PathStr,
 
 void AddIncludePaths(
     llvm::StringRef PathStr, clang::HeaderSearchOptions& HOpts,
-    const char* Delim /* = Cpp::utils::platform::kEnvDelim */) {
+    const char* Delim /* = CppInternal::utils::platform::kEnvDelim */) {
 #define DEBUG_TYPE "AddIncludePaths"
 
   llvm::SmallVector<llvm::StringRef, 10> Paths;
@@ -399,4 +374,4 @@ void AddIncludePaths(
 }
 
 } // namespace utils
-} // namespace Cpp
+} // namespace CppInternal

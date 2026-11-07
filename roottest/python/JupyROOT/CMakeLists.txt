@@ -1,10 +1,7 @@
-#disable until JupyROOT works on Windows
-if(NOT MSVC OR win_broken_tests)
-
 # Do not run with classic build or if tests are vetoed
-if (ROOT_pyroot_FOUND AND NOT ROOT_CLASSIC_BUILD)
+if (pyroot AND NOT ROOT_CLASSIC_BUILD)
 
-set(MODULES_LOCATION ${ROOTSYS}/lib/JupyROOT/helpers)
+set(MODULES_LOCATION ${ROOT_LIBRARY_DIR}/ROOT/_jupyroot/helpers)
 set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
 set(DOCTEST_LAUNCHER ${CMAKE_CURRENT_SOURCE_DIR}/doctest_launcher.py)
 
@@ -38,7 +35,7 @@ foreach(NOTEBOOK ${NOTEBOOKS})
                     PYTHON_DEPS jupyter)
 endforeach()
 
-if(ROOT_imt_FOUND)
+if(imt)
   # No need to compare output here, just check it runs with no error
   set(IMT_NB Cpp_IMT_Canvas.ipynb)
   get_filename_component(NOTEBOOKBASE ${IMT_NB} NAME_WE)
@@ -49,6 +46,16 @@ if(ROOT_imt_FOUND)
                     PYTHON_DEPS jupyter)
 endif()
 
-endif()
+# Regression test for https://github.com/root-project/root/issues/20018 :
+# TColor.DefinedColors(1) followed by drawing a canvas inline used to segfault.
+# This notebook draws a canvas, so its output (unique div ids, random data) is
+# not reproducible - just check that it runs without error ("OFF", no compare).
+set(TCOLOR_NB tcolor_definedcolors.ipynb)
+get_filename_component(NOTEBOOKBASE ${TCOLOR_NB} NAME_WE)
+ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
+                  COPY_TO_BUILDDIR ${TCOLOR_NB}
+                  COMMAND ${Python3_EXECUTABLE} ${NBDIFFUTIL} ${TCOLOR_NB} "OFF"
+                  RUN_SERIAL
+                  PYTHON_DEPS jupyter)
 
 endif()

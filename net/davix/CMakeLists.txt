@@ -20,6 +20,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RDAVIX
     src/TDavixSystem.cxx
   LIBRARIES
     Davix::Davix
+    Thread
   DEPENDENCIES
     Net
     RIO

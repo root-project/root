@@ -20,7 +20,6 @@ namespace Browsable {
 \brief Wrapper for other element - to provide different name
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-11-22
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
 class RWrapper : public RElement {

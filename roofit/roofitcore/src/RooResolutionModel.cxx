@@ -62,11 +62,10 @@
  *
  */
 
-#include "TClass.h"
-#include "TMath.h"
-#include "Riostream.h"
 #include "RooResolutionModel.h"
 #include "RooMsgService.h"
+
+#include <ostream>
 
 using std::endl, std::ostream;
 

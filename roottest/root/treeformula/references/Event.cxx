@@ -23,7 +23,7 @@
 //        TRefArray     *fHighPt;            //array of High Pt tracks only
 //        TRefArray     *fMuons;             //array of Muon tracks only
 //        TRef           fLastTrack;         //pointer to last track
-//        TRef           fHistoWeb;          //EXEC:GetHistoWeb reference to an histogram in a TWebFile
+//        TRef           fHistoWeb;          //EXEC:GetHistoWeb reference to an histogram in a remote file
 //        TH1F          *fH;
 //        TBits          fTriggerBits;       //Bits triggered by this event.
 //

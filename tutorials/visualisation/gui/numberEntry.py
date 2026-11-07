@@ -25,9 +25,8 @@ class pMyMainFrame(ROOT.TGMainFrame):
                                           ROOT.TGNumberFormat.kNEANonNegative,
                                           ROOT.TGNumberFormat.kNELLimitMinMax,
                                           0, 99999)
-        self.fLabelDispatch = ROOT.TPyDispatcher(self.DoSetlabel)
-        self.fNumber.Connect("ValueSet(Long_t)", "TPyDispatcher", self.fLabelDispatch, "Dispatch()")
-        self.fNumber.GetNumberEntry().Connect("ReturnPressed()", "TPyDispatcher", self.fLabelDispatch, "Dispatch()")
+        self.fNumber.Connect("ValueSet(Long_t)", self.DoSetlabel)
+        self.fNumber.GetNumberEntry().Connect("ReturnPressed()", self.DoSetlabel)
         self.AddFrame(self.fNumber, ROOT.TGLayoutHints(ROOT.kLHintsTop | ROOT.kLHintsLeft, 5, 5, 5, 5))
         self.fGframe = ROOT.TGGroupFrame(self, "Value")
         self.fLabel = ROOT.TGLabel(self.fGframe, "No input.")

@@ -28,11 +28,11 @@ by forwarding these calls to the RooAbsCacheElement interface functions, which
 have a sensible default implementation.
 **/
 
-#include "Riostream.h"
-#include <vector>
 #include "RooObjCacheManager.h"
 #include "RooMsgService.h"
 
+#include <ostream>
+#include <vector>
 
 bool RooObjCacheManager::_clearObsList(false) ;
 
@@ -195,25 +195,6 @@ void RooObjCacheManager::printCompactTreeHook(std::ostream& os, const char *inde
   for (Int_t i=0 ; i<cacheSize() ; i++) {
     if (_object[i]) {
       _object[i]->printCompactTreeHook(os,indent,i,cacheSize()-1) ;
-    }
-  }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// If clearOnRedirect is false, forward constant term optimization calls to
-/// cache elements
-
-void RooObjCacheManager::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes)
-{
-  if (!_allowOptimize) {
-    return ;
-  }
-
-  for (Int_t i=0 ; i<cacheSize() ; i++) {
-    if (_object[i]) {
-      _object[i]->findConstantNodes(obs,cacheList, processedNodes) ;
     }
   }
 }

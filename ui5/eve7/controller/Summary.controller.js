@@ -66,7 +66,7 @@ sap.ui.define([
                            new mText({text:" {treeModel>fName}", tooltip: "{treeModel>fTitle}" , renderWhitespace: true, wrapping: false })
                          ]
                       }),
-                      new mButton({ id: "detailBtn", visible: "{treeModel>fShowButton}", icon: "sap-icon://edit", type: "Transparent", tooltip: "Actiavte GED", press: this.pressGedButton.bind(this) })
+                      new mButton({ id: "detailBtn", visible: "{treeModel>fShowButton}", icon: "sap-icon://edit", type: "Transparent", tooltip: "Open Editor", press: this.pressGedButton.bind(this) })
                     ]
                 })
             ],
@@ -300,6 +300,11 @@ sap.ui.define([
          for (let n=0;n<src.length;++n) {
             let elem = src[n];
 
+            // exclude members of EveWorld (fElementId === 1) like Camera list
+            if (elem.fMotherId === 1 && elem.fName === "Cameras") {
+               continue;
+            }
+
             let newelem = { fName: elem.fName, fTitle: elem.fTitle || elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "", fMainColor: "", fSelected: false };
 
             this.setElementsAttributes(newelem, elem);
@@ -326,6 +331,11 @@ sap.ui.define([
          this.rebuild = true;
       },
 
+      /** Everything except kCBTrans: the tree shows structure and
+        * properties, and a moving element's transform is neither. See
+        * EveManager.callSceneElementChange. */
+      changeBitMask: 1 | 4 | 8 | 16,   // CoreJson | ObjProps | Visibility | Added
+
       sceneElementChange: function(msg) {
 
          if (this.ged)
@@ -335,8 +345,12 @@ sap.ui.define([
 
          let elem = this.mgr.GetElement(msg.fElementId);
 
-         if (newelem && elem)
+         if (newelem && elem) {
+            // createModel() copies the name and title; kCBCoreJson may change them.
+            newelem.fName = elem.fName;
+            newelem.fTitle = elem.fTitle || elem.fName;
             this.setElementsAttributes(newelem, elem);
+         }
 
          // console.log('SUMMURY: detect changed', elem.id, elem.path);
 

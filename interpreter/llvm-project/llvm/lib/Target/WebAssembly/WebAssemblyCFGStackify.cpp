@@ -21,13 +21,13 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "MCTargetDesc/WebAssemblyMCTargetDesc.h"
 #include "Utils/WebAssemblyTypeUtilities.h"
 #include "WebAssembly.h"
 #include "WebAssemblyExceptionInfo.h"
 #include "WebAssemblyMachineFunctionInfo.h"
 #include "WebAssemblySortRegion.h"
 #include "WebAssemblySubtarget.h"
+#include "WebAssemblyTargetMachine.h"
 #include "WebAssemblyUtilities.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/BinaryFormat/Wasm.h"
@@ -1503,7 +1503,7 @@ void WebAssemblyCFGStackify::addNestedTryTable(MachineInstr *RangeBegin,
   // Add a 'end_try_table' instruction in the EndTryTable BB created above.
   MachineInstr *EndTryTable = BuildMI(EndTryTableBB, RangeEnd->getDebugLoc(),
                                       TII.get(WebAssembly::END_TRY_TABLE));
-  registerTryScope(TryTable, EndTryTable, nullptr);
+  registerTryScope(TryTable, EndTryTable, TrampolineBB);
 }
 
 // In the standard (exnref) EH, we fix unwind mismatches by adding a new
@@ -1836,8 +1836,53 @@ bool WebAssemblyCFGStackify::fixCallUnwindMismatches(MachineFunction &MF) {
     for (auto &MI : reverse(MBB)) {
       if (WebAssembly::isTry(MI.getOpcode()))
         EHPadStack.pop_back();
-      else if (WebAssembly::isCatch(MI.getOpcode()))
+      else if (MI.getOpcode() == WebAssembly::DELEGATE)
+        EHPadStack.push_back(MI.getOperand(0).getMBB());
+      else if (WebAssembly::WasmUseLegacyEH &&
+               WebAssembly::isCatch(MI.getOpcode()))
         EHPadStack.push_back(MI.getParent());
+      else if (MI.getOpcode() == WebAssembly::END_TRY_TABLE)
+        // In case of the legacy EH, 'catch' instruction is always an EH pad for
+        // the 'try' body that precedes it. But in the standard EH, because
+        // fixCatchUnwindMismatches runs before this, a new try_table's
+        // trampoline BB will be separated from try_table ~ end_try_table body:
+        //
+        // bb0:
+        //   try_table (catch_all_ref %far_away_trampoline)
+        //     ...
+        //   end_try_table
+        // ...
+        // far_away_trampoline:
+        //   catch_all_ref
+        //   throw_ref
+        //
+        // And there can be multiple try_tables that target a single trampoline:
+        //
+        // bb0:
+        //   try_table (catch_all_ref %far_away_trampolinle_bb)
+        //     ...
+        //   end_try_table
+        // ...
+        // bb1:
+        //   try_table (catch_all_ref %far_away_trampolinle_bb)
+        //     ...
+        //   end_try_table
+        // ...
+        // far_away_trampoline:
+        //   catch_all_ref
+        //   throw_ref
+        //
+        // So we can't call WebAssembly::isCatch to add its parent EH pad to
+        // EHPadStack. Now we add to EHPadStack at end_try_table marker, by
+        // getting its matching try_table's destination. This works when the
+        // destination EH pad is either a normal EH pad or a trampoline created
+        // in fixCatchUnwindMismatches.
+        //
+        // Note that we don't need to distinguish this case in
+        // fixCatchUnwindMismatches because it runs before
+        // fixCallUnwindMismatches and there is no new try_tables and
+        // trampolines when it runs.
+        EHPadStack.push_back(TryToEHPad[EndToBegin[&MI]]);
 
       // In this loop we only gather calls that have an EH pad to unwind. So
       // there will be at most 1 such call (= invoke) in a BB, so after we've
@@ -1850,13 +1895,12 @@ bool WebAssemblyCFGStackify::fixCallUnwindMismatches(MachineFunction &MF) {
 
       // If the EH pad on the stack top is where this instruction should unwind
       // next, we're good.
-      MachineBasicBlock *UnwindDest = getFakeCallerBlock(MF);
+      MachineBasicBlock *UnwindDest = nullptr;
       for (auto *Succ : MBB.successors()) {
         // Even though semantically a BB can have multiple successors in case an
-        // exception is not caught by a catchpad, in our backend implementation
-        // it is guaranteed that a BB can have at most one EH pad successor. For
-        // details, refer to comments in findWasmUnwindDestinations function in
-        // SelectionDAGBuilder.cpp.
+        // exception is not caught by a catchpad, the first unwind destination
+        // should appear first in the successor list, based on the calculation
+        // in findUnwindDestinations() in SelectionDAGBuilder.cpp.
         if (Succ->isEHPad()) {
           UnwindDest = Succ;
           break;
@@ -1924,8 +1968,10 @@ bool WebAssemblyCFGStackify::fixCallUnwindMismatches(MachineFunction &MF) {
         RecordCallerMismatchRange(EHPadStack.back());
 
       // If EHPadStack is empty, that means it correctly unwinds to the caller
-      // if it throws, so we're good. If MI does not throw, we're good too.
-      else if (EHPadStack.empty() || !MayThrow) {
+      // if it throws, so we're good. A delegate targeting FakeCallerBB also
+      // correctly unwinds to the caller. If MI does not throw, we're good too.
+      else if (EHPadStack.empty() || EHPadStack.back() == FakeCallerBB ||
+               !MayThrow) {
       }
 
       // We found an instruction that unwinds to the caller but currently has an
@@ -1941,8 +1987,14 @@ bool WebAssemblyCFGStackify::fixCallUnwindMismatches(MachineFunction &MF) {
       // Update EHPadStack.
       if (WebAssembly::isTry(MI.getOpcode()))
         EHPadStack.pop_back();
-      else if (WebAssembly::isCatch(MI.getOpcode()))
+      else if (MI.getOpcode() == WebAssembly::DELEGATE)
+        EHPadStack.push_back(MI.getOperand(0).getMBB());
+      else if (WebAssembly::WasmUseLegacyEH &&
+               WebAssembly::isCatch(MI.getOpcode()))
         EHPadStack.push_back(MI.getParent());
+      else if (!WebAssembly::WasmUseLegacyEH &&
+               MI.getOpcode() == WebAssembly::END_TRY_TABLE)
+        EHPadStack.push_back(TryToEHPad[EndToBegin[&MI]]);
     }
 
     if (RangeEnd)
@@ -2170,7 +2222,8 @@ bool WebAssemblyCFGStackify::fixCatchUnwindMismatches(MachineFunction &MF) {
 
         // The EHPad's next unwind destination is the caller, but we incorrectly
         // unwind to another EH pad.
-        else if (!EHPadStack.empty() && !EHInfo->hasUnwindDest(EHPad)) {
+        else if (!EHPadStack.empty() && EHPadStack.back() != FakeCallerBB &&
+                 !EHInfo->hasUnwindDest(EHPad)) {
           EHPadToUnwindDest[EHPad] = getFakeCallerBlock(MF);
           LLVM_DEBUG(dbgs()
                      << "- Catch unwind mismatch:\nEHPad = " << EHPad->getName()
@@ -2476,8 +2529,11 @@ void WebAssemblyCFGStackify::placeMarkers(MachineFunction &MF) {
     // Add an 'unreachable' after 'end_try_table's.
     addUnreachableAfterTryTables(MF, TII);
     // Fix mismatches in unwind destinations induced by linearizing the code.
-    fixCallUnwindMismatches(MF);
+    // Run fixCatchUnwindMismatches() first so that fixCallUnwindMismatches()
+    // will see and correct any new call/rethrow unwind mismatches introduced by
+    // fixCatchUnwindMismatches().
     fixCatchUnwindMismatches(MF);
+    fixCallUnwindMismatches(MF);
     // addUnreachableAfterTryTables and fixUnwindMismatches create new BBs, so
     // we need to recalculate ScopeTops.
     recalculateScopeTops(MF);

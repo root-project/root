@@ -9,8 +9,14 @@
  *************************************************************************/
 
 /**
-  \defgroup dataframe Dataframe
-ROOT's RDataFrame allows to analyse data stored in TTrees with a high level interface.
+  \defgroup dataframe RDataFrame
+This is an overview of classes that are part of the RDataFrame package.
+\note The main entry point for the RDataFrame API is \ref ROOT::RDataFrame.
+
+ROOT::RDataFrame allows to analyse data with a high-level interface.
+It reads TTree, RNTuple, and various other inputs (see \ref ROOT::RDF::RDataSource and
+its derived classes), and supports filtering events, computing new quantities, and producing
+output such as histograms and new datasets.
 */
 
 #ifndef ROOT_RDATAFRAME
@@ -55,14 +61,6 @@ public:
    RDataFrame(ULong64_t numEntries);
    RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource>, const ColumnNames_t &defaultColumns = {});
    RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec);
-
-   // Rule of five
-
-   RDataFrame(const RDataFrame &) = default;
-   RDataFrame &operator=(const RDataFrame &) = default;
-   RDataFrame(RDataFrame &&) = default;
-   RDataFrame &operator=(RDataFrame &&) = default;
-   ~RDataFrame();
 };
 
 namespace RDF {

@@ -12,12 +12,15 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
-/// \author Timur Pocheptsov
+/// \author Timur Pocheptsov, Sergey Linev
 
-void gltf3()
+void gltf3(bool gl = true)
 {
-   gStyle->SetCanvasPreferGL(1);
+   gStyle->SetCanvasPreferGL(gl);
    TCanvas *cnv = new TCanvas("gltf3", "TF3: Klein bottle", 200, 10, 600, 600);
+   if (!cnv->UseGL() && !cnv->IsWeb())
+      ::Warning("gltf3",
+                "To use TF3 gl draw option, you need either OpenGL or Web rendering enabled");
 
    TPaveLabel *title =
       new TPaveLabel(0.04, 0.86, 0.96, 0.98, "\"gl\" option for TF3. Select plot and press 's' to change the color.");

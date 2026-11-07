@@ -1,5 +1,4 @@
 /// \file RNTupleUtils.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch> & Max Orok <maxwellorok@gmail.com>
 /// \date 2020-07-14
 /// \author Vincenzo Eduardo Padulano, CERN
@@ -15,6 +14,8 @@
 
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleUtils.hxx>
+
+#include <TError.h>
 
 #include <algorithm>
 #include <array>
@@ -47,4 +48,16 @@ ROOT::RResult<void> ROOT::Internal::EnsureValidNameForRNTuple(std::string_view n
                      "carriage return.");
 
    return RResult<void>::Success();
+}
+
+const std::string *ROOT::Internal::RStringPool::Intern(std::string_view str)
+{
+   auto itr = std::lower_bound(fStrings.begin(), fStrings.end(), str, Less);
+
+   if (itr == fStrings.end() || **itr != str) {
+      R__ASSERT(!fFrozen);
+      itr = fStrings.insert(itr, std::make_unique<std::string>(str));
+   }
+
+   return itr->get();
 }

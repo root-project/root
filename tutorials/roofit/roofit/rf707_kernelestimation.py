@@ -21,7 +21,7 @@ x = ROOT.RooRealVar("x", "x", 0, 20)
 p = ROOT.RooPolynomial("p", "p", x, [0.01, -0.01, 0.0004])
 
 # Sample 500 events from p
-data1 = p.generate({x}, 200)
+data1 = p.generate(x, 200)
 
 # Create 1D kernel estimation pdf
 # ---------------------------------------------------------------
@@ -62,7 +62,7 @@ py = ROOT.RooPolynomial(
     [0.01, 0.01, -0.0004],
 )
 pxy = ROOT.RooProdPdf("pxy", "pxy", [p, py])
-data2 = pxy.generate({x, y}, 1000)
+data2 = pxy.generate([x, y], 1000)
 
 # Create 2D kernel estimation pdf
 # ---------------------------------------------------------------

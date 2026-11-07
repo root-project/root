@@ -106,7 +106,7 @@ public:
    using RNNDescriptors_t = RNN::TRNNDescriptors<TCuda<AReal>>;
    using RNNWorkspace_t = RNN::TRNNWorkspace<TCuda<AReal>>;
 
-   static TMVA::Experimental::MemoryLayout GetTensorLayout() { return TMVA::Experimental::MemoryLayout::ColumnMajor; }
+   static MemoryLayout GetTensorLayout() { return MemoryLayout::ColumnMajor; }
 
    static Tensor_t CreateTensor(size_t n, size_t c, size_t h, size_t w) {
       return Tensor_t( {c,h*w,n}, GetTensorLayout());

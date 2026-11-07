@@ -190,8 +190,6 @@ void TKeyXML::StoreObject(const void *obj, const TClass *cl, Bool_t check_tobj)
    if (node)
       xml->AddChildFirst(fKeyNode, node);
 
-   buffer.XmlWriteBlock(fKeyNode);
-
    if (cl)
       fClassName = cl->GetName();
 }
@@ -352,7 +350,6 @@ void *TKeyXML::XmlReadAny(void *obj, const TClass *expectedClass)
          break;
       xml->ShiftToNext(blocknode);
    }
-   buffer.XmlReadBlock(blocknode);
 
    XMLNodePointer_t objnode = xml->GetChild(fKeyNode);
    xml->SkipEmpty(objnode);

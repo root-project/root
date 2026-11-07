@@ -45,8 +45,6 @@ namespace RooStats {
 
       void Add(HybridResult* other);
 
-      HybridPlot* GetPlot(const char* name,const char* title, int n_bins);
-
       void PrintMore(const char* options);
 
       /// Get test statistics values for the sb model

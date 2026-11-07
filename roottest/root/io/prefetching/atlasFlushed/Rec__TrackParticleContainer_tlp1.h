@@ -12,7 +12,7 @@ class TrackParticleContainer_tlp1;
 } // end of namespace.
 
 #include "TPCnvTokenList_p1.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "Rec__TrackParticleContainer_p1.h"
 #include "Rec__TrackParticle_p1.h"

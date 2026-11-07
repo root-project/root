@@ -19,7 +19,6 @@
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
-#include "RooAICRegistry.h"
 #include "RooDataHist.h"
 
 #include <list>
@@ -111,7 +110,6 @@ protected:
   RooSetProxy _pdfObsList;                     ///< List of observables mapped onto histogram observables
   RooDataHist* _dataHist = nullptr;            ///< Unowned pointer to underlying histogram
   std::unique_ptr<RooDataHist> _ownedDataHist; ///<! Owned pointer to underlying histogram
-  mutable RooAICRegistry _codeReg ;            ///<! Auxiliary class keeping tracking of analytical integration code
   Int_t _intOrder = 0;                         ///< Interpolation order
   bool _cdfBoundaries = false;                 ///< Use boundary conditions for CDFs.
   mutable double _totVolume = 0.0;             ///<! Total volume of space (product of ranges of observables)
@@ -147,8 +145,15 @@ private:
 
   inline void initializeOwnedDataHist(std::unique_ptr<RooDataHist> &&dataHist)
   {
-     _ownedDataHist = std::move(dataHist);
+     // The constructor may already have taken ownership of a sanitized clone
+     // of the input histogram (see clampNegativeBins()). In that case, the
+     // clone stays and the original histogram can be disposed of.
+     if (!_ownedDataHist) {
+        _ownedDataHist = std::move(dataHist);
+     }
   }
+
+  void clampNegativeBins();
 
   ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };

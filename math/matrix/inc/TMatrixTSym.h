@@ -37,7 +37,7 @@ template<class Element> class TMatrixTSym : public TMatrixTBase<Element> {
 
 protected:
 
-   Element  fDataStack[TMatrixTBase<Element>::kSizeMax]; //! data container
+   Element  fDataStack[TMatrixTBase<Element>::kSizeMax]; ///<! data container
    Element *fElements;                                   //[fNelems] elements themselves
 
    Element *New_m   (Int_t size);
@@ -51,7 +51,17 @@ public:
 
    enum {kWorkMax = 100}; // size of work array
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
-   enum EMatrixCreatorsOp2 { kPlus,kMinus };
+   enum EMatrixCreatorsOp2 {
+// clang++ <v20 (-Wshadow) complains about shadowing TAttMarker.h global enum EMarkerStyle. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kPlus,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kMinus };
 
    TMatrixTSym() { fElements = nullptr; }
    explicit TMatrixTSym(Int_t nrows);

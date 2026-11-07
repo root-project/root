@@ -588,7 +588,7 @@ TEST(RNTuple, StdMap)
 
    auto invalidInnerField = RFieldBase::Create("someIntField", "int").Unwrap();
    EXPECT_THROW(
-      std::make_unique<ROOT::RMapField>("myInvalidMap", ROOT::RMapField::EMapType::kMap, std::move(invalidInnerField)),
+      std::ignore = std::make_unique<ROOT::RMapField>("myInvalidMap", ROOT::RMapField::EMapType::kMap, std::move(invalidInnerField)),
       ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_rfield_stdmap.root");
@@ -1351,6 +1351,8 @@ TEST(RNTuple, Bitset)
    EXPECT_EQ(sizeof(std::bitset<66>), model->GetConstField("f1").GetValueSize());
    auto f2 = model->MakeField<std::bitset<8>>("f2");
    *f2 = std::bitset<8>("10101010");
+   // Test multi-chunk batching across chunk boundaries (> 256 bits)
+   auto f3 = model->MakeField<std::bitset<300>>("f3");
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
@@ -1360,19 +1362,31 @@ TEST(RNTuple, Bitset)
       f1->set(33);
       f1->set(65);
       f2->flip();
+      f3->set(0);
+      f3->set(255);
+      f3->set(256);
+      f3->set(299);
       writer->Fill();
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel().GetConstField("f1").GetTypeName());
+   EXPECT_EQ(std::string("std::bitset<300>"), reader->GetModel().GetConstField("f3").GetTypeName());
    auto bs1 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<66>>("f1");
    auto bs2 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<8>>("f2");
+   auto bs3 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<300>>("f3");
    reader->LoadEntry(0);
    EXPECT_EQ("000000000000000000000000000000000000000000000000000000000000000000", bs1->to_string());
    EXPECT_EQ("10101010", bs2->to_string());
+   EXPECT_TRUE(bs3->none());
    reader->LoadEntry(1);
    EXPECT_EQ("100000000000000000000000000000001000000000000000000000000000001001", bs1->to_string());
    EXPECT_EQ("01010101", bs2->to_string());
+   EXPECT_TRUE(bs3->test(0));
+   EXPECT_TRUE(bs3->test(255));
+   EXPECT_TRUE(bs3->test(256));
+   EXPECT_TRUE(bs3->test(299));
+   EXPECT_EQ(4u, bs3->count());
 }
 
 TEST(RNTuple, UniquePtr)
@@ -1714,7 +1728,7 @@ TEST(RNTuple, HalfPrecisionFloat)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(4, ROOT::Internal::RColumnElementBase::Generate(ROOT::ENTupleColumnType::kReal16)->GetSize());
+   EXPECT_EQ(4, ROOT::Internal::RColumnElementBase::Generate<float>(ROOT::ENTupleColumnType::kReal16)->GetSize());
 
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::ENTupleColumnType::kReal16, (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetType());
@@ -1778,6 +1792,11 @@ TEST(RNTuple, Double32)
    EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("d2").GetTypeAlias());
    auto d1 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d1");
    auto d2 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d2");
+   // Packing converts the double to a float, which yields zero for a float denormal if the floating-point unit
+   // flushes denormals, e.g. because a library compiled with -ffast-math is loaded into the process. Do the same
+   // conversion at runtime to get the expected value.
+   volatile double denormMinDouble = std::numeric_limits<float>::denorm_min();
+   const float denormMin = denormMinDouble;
    reader->LoadEntry(0);
    EXPECT_DOUBLE_EQ(0.0, *d1);
    EXPECT_DOUBLE_EQ(*d1, *d2);
@@ -1794,7 +1813,7 @@ TEST(RNTuple, Double32)
    EXPECT_DOUBLE_EQ(std::numeric_limits<float>::infinity(), *d1);
    EXPECT_DOUBLE_EQ(*d1, *d2);
    reader->LoadEntry(5);
-   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d1);
+   EXPECT_DOUBLE_EQ(denormMin, *d1);
    EXPECT_DOUBLE_EQ(*d1, *d2);
 
    auto modelFloat = RNTupleModel::Create();
@@ -1811,7 +1830,72 @@ TEST(RNTuple, Double32)
    readerFloat->LoadEntry(4);
    EXPECT_DOUBLE_EQ(std::numeric_limits<float>::infinity(), *d2Float);
    readerFloat->LoadEntry(5);
-   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d2Float);
+   EXPECT_DOUBLE_EQ(denormMin, *d2Float);
+}
+
+TEST(RNTuple, Double32Uncompressed)
+{
+   FileRaii fileGuard("test_ntuple_double32_uncompressed.root");
+
+   auto model = RNTupleModel::Create();
+   model->AddField(RFieldBase::Create("d", "Double32_t").Unwrap());
+
+   auto options = RNTupleWriteOptions();
+   options.SetCompression(0);
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      auto d = writer->GetModel().GetDefaultEntry().GetPtr<double>("d");
+      *d = 1.25;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32, reader->GetModel().GetConstField("d").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("d").GetTypeAlias());
+   reader->LoadEntry(0);
+   EXPECT_DOUBLE_EQ(1.25, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d"));
+}
+
+TEST(RNTuple, Double32Explicit64BitRejected)
+{
+   // An explicit 64-bit-only representation on a Double32_t field must be rejected: the field promises
+   // Double32_t (32-bit) precision, so storing full doubles would silently break that contract.
+   // A multi-column selection that also includes a reduced-precision representative stays legal.
+   {
+      FileRaii fileGuard("test_ntuple_double32_explicit64_split_rejected.root");
+      auto model = RNTupleModel::Create();
+      auto fld = RFieldBase::Create("d", "Double32_t").Unwrap();
+      fld->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal64}});
+      model->AddField(std::move(fld));
+      EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath()), ROOT::RException);
+   }
+   {
+      FileRaii fileGuard("test_ntuple_double32_explicit64_rejected.root");
+      auto model = RNTupleModel::Create();
+      auto fld = RFieldBase::Create("d", "Double32_t").Unwrap();
+      fld->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal64}});
+      model->AddField(std::move(fld));
+      EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath()), ROOT::RException);
+   }
+
+   {
+      FileRaii fileGuard("test_ntuple_double32_explicit64_multi.root");
+      auto model = RNTupleModel::Create();
+      auto fld = RFieldBase::Create("d", "Double32_t").Unwrap();
+      fld->SetColumnRepresentatives(
+         {{ROOT::ENTupleColumnType::kSplitReal64}, {ROOT::ENTupleColumnType::kSplitReal32}});
+      model->AddField(std::move(fld));
+      {
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+         auto d = writer->GetModel().GetDefaultEntry().GetPtr<double>("d");
+         *d = 1.25;
+         writer->Fill();
+      }
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      reader->LoadEntry(0);
+      EXPECT_DOUBLE_EQ(1.25, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d"));
+   }
 }
 
 TEST(RNTuple, Double32Extended)
@@ -2250,9 +2334,15 @@ TEST(RNTuple, ContextDependentTypes)
       auto ptr = std::make_unique<DerivedWithTypedef>();
       entry->BindRawPtr("foo", ptr.get());
       for (auto i = 0; i < 10; ++i) {
-         ptr->m.push_back(i);
+         ptr->m1.push_back(i);
+         ptr->m2.push_back(i);
+         ptr->m3.push_back(i);
+         ptr->m4.fVec.push_back(i);
          ntuple->Fill(*entry);
-         ptr->m.clear();
+         ptr->m1.clear();
+         ptr->m2.clear();
+         ptr->m3.clear();
+         ptr->m4.fVec.clear();
       }
    }
 
@@ -2263,13 +2353,16 @@ TEST(RNTuple, ContextDependentTypes)
       const auto &model = reader->GetModel();
       const auto &field = model.GetConstField("foo");
       EXPECT_EQ(field.GetTypeName(), "DerivedWithTypedef");
-      const auto &vec = model.GetConstField("foo.m");
-      EXPECT_EQ(vec.GetTypeName(), "std::vector<std::int32_t>");
-      EXPECT_EQ(vec.GetTypeAlias(), "MyVec<std::int32_t>");
 
-      auto vecView = reader->GetView<DerivedWithTypedef::MyVec<int>>("foo.m");
+      auto m1View = reader->GetView<DerivedWithTypedef::MyVec<Double32_t>>("foo.m1");
+      auto m2View = reader->GetView<DerivedWithTypedef::MyVec<Long64_t>>("foo.m2");
+      auto m3View = reader->GetView<DerivedWithTypedef::MyVec<Int_t>>("foo.m3");
+      auto m4View = reader->GetView<DerivedWithTypedef::MyVectorWrapper<Long64_t>>("foo.m4");
       for (const auto &i : reader->GetEntryRange()) {
-         EXPECT_EQ(vecView(i), std::vector{static_cast<int>(i)});
+         EXPECT_DOUBLE_EQ(m1View(i)[0], std::vector<double>{static_cast<double>(i)}[0]);
+         EXPECT_EQ(m2View(i), std::vector<Long64_t>{static_cast<Long64_t>(i)});
+         EXPECT_EQ(m3View(i), std::vector<int>{static_cast<int>(i)});
+         EXPECT_EQ(m4View(i).fVec, std::vector<Long64_t>{static_cast<Long64_t>(i)});
       }
    }
 }

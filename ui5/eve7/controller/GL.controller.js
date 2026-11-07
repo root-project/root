@@ -43,10 +43,18 @@ sap.ui.define([
          // console.log('MORE DATA', EVE.$eve7tmp);
          // console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
 
-         this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
-            args.viewName, EVE.$eve7tmp);
-         this.mgr.controllers[0].setToolbarExpandedAction(this);
+         // Main's switchSingle() passes the manager in EVE.$eve7tmp. Without it
+         // (browser forward to an expanded view) take it from the main page.
+         let moredata = EVE.$eve7tmp || EveManager.FindMainPageViewer(this.getView(), args.viewName);
          delete EVE.$eve7tmp;
+
+         this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
+            args.viewName, moredata);
+
+         // A view opened directly by URL has no main page: it is standalone,
+         // with its own manager, and nothing to go back to.
+         if (moredata)
+            this.mgr.controllers[0].setToolbarExpandedAction(this);
 
          this.checkViewReady();
       },
@@ -251,8 +259,16 @@ sap.ui.define([
       },
 
       isEveCameraPerspective: function() {
+         // get camera type from standalone REveCamera element
          let vo = this.mgr.GetElement(this.eveViewerId);
-         return vo.camera.type.startsWith("Persp");
+         let camera = this.mgr.GetElement(vo.fCameraId);
+         if (camera && camera.fType !== undefined) {
+            // REveCamera::ECameraType: 0-2 are Perspective, 3-8 are Orthographic
+            return camera.fType < 3;
+         }
+         
+         console.warn("GL.controller.isEveCameraPerspective: no camera info found, defaulting to perspective");
+         return true;
       },
 
       switchSingle: function()

@@ -1,77 +1,134 @@
 ### \file
 ### \ingroup tutorial_ml
 ### \notebook -nodraw
-### Example of inference with SOFIE using a set of models trained with Keras.
+### Example of inference with SOFIE using a set of models trained with PyTorch
+### and exported to ONNX.
 ### This tutorial shows how to store several models in a single header file and
 ### the weights in a ROOT binary file.
 ### The models are then evaluated using the RDataFrame
-### First, generate the input model by running `TMVA_Higgs_Classification.C`.
-###
-### This tutorial parses the input model and runs the inference using ROOT's JITing capability.
 ###
 ### \macro_code
 ### \macro_output
 ### \author Lorenzo Moneta
 
+import inspect
 import os
 
 import numpy as np
 import ROOT
-from sklearn.model_selection import train_test_split
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.optimizers import Adam
+import torch
+import torch.nn as nn
 
-## generate and train Keras models with different architectures
+## generate and train PyTorch models with different architectures
 
 
-def CreateModel(nlayers = 4, nunits = 64):
-   model = Sequential()
-   model.add(Dense(nunits, activation='relu',input_dim=7))
-   for i in range(1,nlayers) :
-      model.add(Dense(nunits, activation='relu'))
+def CreateModel(nlayers=4, nunits=64):
+    layers = []
+    ninputs = 7
+    for i in range(nlayers):
+        layers += [nn.Linear(ninputs, nunits), nn.ReLU()]
+        ninputs = nunits
+    layers += [nn.Linear(ninputs, 1), nn.Sigmoid()]
+    model = nn.Sequential(*layers)
+    print(model)
+    return model
 
-   model.add(Dense(1, activation='sigmoid'))
-   model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])
-   model.summary()
-   return model
 
-def PrepareData() :
-   #get the input data
-   inputFile = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"
+def TrainModel(model, x, y, epochs=5, batch_size=50):
+    x = torch.from_numpy(x)
+    y = torch.from_numpy(y)
+    criterion = nn.BCELoss()
+    optimizer = torch.optim.Adam(model.parameters())
+    nbatches = x.shape[0] // batch_size
+    for epoch in range(epochs):
+        perm = torch.randperm(x.shape[0])
+        running_loss = 0.0
+        for i in range(nbatches):
+            idx = perm[i * batch_size : (i + 1) * batch_size]
+            optimizer.zero_grad()
+            loss = criterion(model(x[idx]), y[idx])
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+        print(f"Epoch {epoch + 1}/{epochs} - average loss: {running_loss / nbatches:.4f}")
 
-   df1 = ROOT.RDataFrame("sig_tree", inputFile)
-   sigData = df1.AsNumpy(columns=['m_jj', 'm_jjj', 'm_lv', 'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'])
-   #print(sigData)
 
-   # stack all the 7 numpy array in a single array (nevents x nvars)
-   xsig = np.column_stack(list(sigData.values()))
-   data_sig_size = xsig.shape[0]
-   print("size of data", data_sig_size)
+def ExportModel(model, modelName):
+    # need to evaluate the model before exporting to ONNX
+    # and to provide a dummy input tensor to set the input model shape
+    # (the batch size is fixed to 1 for the SOFIE inference)
+    model.eval()
 
-   # make SOFIE inference on background data
-   df2 = ROOT.RDataFrame("bkg_tree", inputFile)
-   bkgData = df2.AsNumpy(columns=['m_jj', 'm_jjj', 'm_lv', 'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'])
-   xbkg = np.column_stack(list(bkgData.values()))
-   data_bkg_size = xbkg.shape[0]
+    modelFile = modelName + ".onnx"
+    dummy_x = torch.randn(1, 7)
+    model(dummy_x)
 
-   ysig = np.ones(data_sig_size)
-   ybkg = np.zeros(data_bkg_size)
-   inputs_data = np.concatenate((xsig,xbkg),axis=0)
-   inputs_targets = np.concatenate((ysig,ybkg),axis=0)
+    # check for torch.onnx.export parameters
+    def filtered_kwargs(func, **candidate_kwargs):
+        sig = inspect.signature(func)
+        return {k: v for k, v in candidate_kwargs.items() if k in sig.parameters}
 
-   #split data in training and test data
+    kwargs = filtered_kwargs(
+        torch.onnx.export,
+        input_names=["input"],
+        output_names=["output"],
+        external_data=False,  # may not exist
+        dynamo=True,  # may not exist
+    )
+    print("calling torch.onnx.export with parameters", kwargs)
 
-   x_train, x_test, y_train, y_test = train_test_split(
-        inputs_data, inputs_targets, test_size=0.50, random_state=1234)
+    torch.onnx.export(model, dummy_x, modelFile, **kwargs)
 
-   return x_train, y_train, x_test, y_test
+    print("model exported to ONNX as", modelFile)
+    return modelFile
 
-def TrainModel(model, x, y, name) :
-   model.fit(x,y,epochs=10,batch_size=50)
-   modelFile = name + '.h5'
-   model.save(modelFile)
-   return modelFile
+
+def PrepareData():
+    # get the input data
+    inputFile = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"
+
+    df1 = ROOT.RDataFrame("sig_tree", inputFile)
+    sigData = df1.AsNumpy(columns=["m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"])
+    # print(sigData)
+
+    # stack all the 7 numpy array in a single array (nevents x nvars)
+    xsig = np.column_stack(list(sigData.values()))
+    data_sig_size = xsig.shape[0]
+    print("size of data", data_sig_size)
+
+    # make SOFIE inference on background data
+    df2 = ROOT.RDataFrame("bkg_tree", inputFile)
+    bkgData = df2.AsNumpy(columns=["m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"])
+    xbkg = np.column_stack(list(bkgData.values()))
+    data_bkg_size = xbkg.shape[0]
+
+    ysig = np.ones(data_sig_size)
+    ybkg = np.zeros(data_bkg_size)
+    inputs_data = np.concatenate((xsig, xbkg), axis=0).astype(np.float32)
+    inputs_targets = np.concatenate((ysig, ybkg), axis=0).astype(np.float32)
+
+    # split data in training and test data
+    rng = np.random.default_rng(1234)
+    idx = rng.permutation(inputs_data.shape[0])
+    ntrain = inputs_data.shape[0] // 2
+
+    x_train = inputs_data[idx[:ntrain]]
+    y_train = inputs_targets[idx[:ntrain]].reshape(-1, 1)
+    x_test = inputs_data[idx[ntrain:]]
+    y_test = inputs_targets[idx[ntrain:]].reshape(-1, 1)
+
+    return x_train, y_train, x_test, y_test
+
+
+def TrainModels(x_train, y_train, modelNames):
+    # train the models with PyTorch and export them to ONNX
+    modelFiles = []
+    for modelName in modelNames:
+        model = CreateModel(4, 64)
+        TrainModel(model, x_train, y_train)
+        modelFiles.append(ExportModel(model, modelName))
+    return modelFiles
+
 
 ### run the models
 
@@ -79,119 +136,136 @@ x_train, y_train, x_test, y_test = PrepareData()
 
 ## create models and train them
 
-model1 = TrainModel(CreateModel(4,64),x_train, y_train, 'Higgs_Model_4L_50')
-model2 = TrainModel(CreateModel(4,64),x_train, y_train, 'Higgs_Model_4L_200')
-model3 = TrainModel(CreateModel(4,64),x_train, y_train, 'Higgs_Model_2L_500')
+# All three models use the same small architecture (4 layers of 64 units) to
+# keep the tutorial runtime under control, whatever their names suggest.
+modelNames = ["Higgs_Model_4L_50", "Higgs_Model_4L_200", "Higgs_Model_2L_500"]
+model1, model2, model3 = TrainModels(x_train, y_train, modelNames)
 
-#evaluate with SOFIE the 3 trained models
+# evaluate with SOFIE the 3 trained models
 
 
-def GenerateModelCode(modelFile, generatedHeaderFile):
-   model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(modelFile)
+def GenerateModelCode(modelFile, generatedHeaderFile, weightFile):
+    parser = ROOT.TMVA.Experimental.SOFIE.RModelParser_ONNX()
+    model = parser.Parse(modelFile)
 
-   print("Generating inference code for the Keras model from ",modelFile,"in the header ", generatedHeaderFile)
-   #Generating inference code using a ROOT binary file
-   model.Generate(ROOT.TMVA.Experimental.SOFIE.Options.kRootBinaryWeightFile)
-   # add option to append to the same file the generated headers (pass True for append flag)
-   model.OutputGenerated(generatedHeaderFile, True)
-   #model.PrintGenerated()
-   return generatedHeaderFile
+    print("Generating inference code for the ONNX model from ", modelFile, "in the header ", generatedHeaderFile)
+    # Generating inference code; the weights are written to a binary
+    # safetensors file
+    model.Generate(ROOT.TMVA.Experimental.SOFIE.Options.kSafetensorsWeightFile)
+    # add option to append to the same file the generated headers (pass True for append flag)
+    model.OutputGenerated(generatedHeaderFile, True)
+    # OutputGenerated writes the weights next to the header; a safetensors file
+    # holds one model's weights, so move it to a per-model file
+    os.replace(generatedHeaderFile.replace(".hxx", ".safetensors"), weightFile)
+    # model.PrintGenerated()
+    return generatedHeaderFile
 
 
 generatedHeaderFile = "Higgs_Model.hxx"
-#need to remove existing header file since we are appending on same one
-if (os.path.exists(generatedHeaderFile)):
-   weightFile = "Higgs_Model.root"
-   print("removing existing files", generatedHeaderFile,weightFile)
-   os.remove(generatedHeaderFile)
-   os.remove(weightFile)
+# need to remove existing header file since we are appending on same one
+if os.path.exists(generatedHeaderFile):
+    print("removing existing file", generatedHeaderFile)
+    os.remove(generatedHeaderFile)
 
-GenerateModelCode(model1, generatedHeaderFile)
-GenerateModelCode(model2, generatedHeaderFile)
-GenerateModelCode(model3, generatedHeaderFile)
+weightFiles = [name + ".safetensors" for name in modelNames]
+for weightFile in weightFiles:
+    if os.path.exists(weightFile):
+        print("removing existing file", weightFile)
+        os.remove(weightFile)
 
-#compile the generated code
+GenerateModelCode(model1, generatedHeaderFile, weightFiles[0])
+GenerateModelCode(model2, generatedHeaderFile, weightFiles[1])
+GenerateModelCode(model3, generatedHeaderFile, weightFiles[2])
+
+# compile the generated code
 
 ROOT.gInterpreter.Declare('#include "' + generatedHeaderFile + '"')
 
 
-#run the inference on the test data
-session1 = ROOT.TMVA_SOFIE_Higgs_Model_4L_50.Session("Higgs_Model.root")
-session2 = ROOT.TMVA_SOFIE_Higgs_Model_4L_200.Session("Higgs_Model.root")
-session3 = ROOT.TMVA_SOFIE_Higgs_Model_2L_500.Session("Higgs_Model.root")
+# run the inference on the test data
+session1 = ROOT.TMVA_SOFIE_Higgs_Model_4L_50.Session(weightFiles[0])
+session2 = ROOT.TMVA_SOFIE_Higgs_Model_4L_200.Session(weightFiles[1])
+session3 = ROOT.TMVA_SOFIE_Higgs_Model_2L_500.Session(weightFiles[2])
 
-hs1 = ROOT.TH1D("hs1","Signal result 4L 50",100,0,1)
-hs2 = ROOT.TH1D("hs2","Signal result 4L 200",100,0,1)
-hs3 = ROOT.TH1D("hs3","Signal result 2L 500",100,0,1)
+hs1 = ROOT.TH1D("hs1", "Signal result 4L 50", 100, 0, 1)
+hs2 = ROOT.TH1D("hs2", "Signal result 4L 200", 100, 0, 1)
+hs3 = ROOT.TH1D("hs3", "Signal result 2L 500", 100, 0, 1)
 
-hb1 = ROOT.TH1D("hb1","Background result 4L 50",100,0,1)
-hb2 = ROOT.TH1D("hb2","Background result 4L 200",100,0,1)
-hb3 = ROOT.TH1D("hb3","Background result 2L 500",100,0,1)
+hb1 = ROOT.TH1D("hb1", "Background result 4L 50", 100, 0, 1)
+hb2 = ROOT.TH1D("hb2", "Background result 4L 200", 100, 0, 1)
+hb3 = ROOT.TH1D("hb3", "Background result 2L 500", 100, 0, 1)
 
-def EvalModel(session, x) :
-   result = session.infer(x)
-   return result[0]
 
-for i in range(0,x_test.shape[0]):
-   result1 = EvalModel(session1, x_test[i,:])
-   result2 = EvalModel(session2, x_test[i,:])
-   result3 = EvalModel(session3, x_test[i,:])
-   if (y_test[i] == 1) :
-      hs1.Fill(result1)
-      hs2.Fill(result2)
-      hs3.Fill(result3)
-   else:
-      hb1.Fill(result1)
-      hb2.Fill(result2)
-      hb3.Fill(result3)
+def EvalModel(session, x):
+    result = session.infer(x)
+    return result[0]
 
-def PlotHistos(hs,hb):
-   hs.SetLineColor("kRed")
-   hb.SetLineColor("kBlue")
-   hs.Draw()
-   hb.Draw("same")
+
+for i in range(0, x_test.shape[0]):
+    result1 = EvalModel(session1, x_test[i, :])
+    result2 = EvalModel(session2, x_test[i, :])
+    result3 = EvalModel(session3, x_test[i, :])
+    if y_test[i] == 1:
+        hs1.Fill(result1)
+        hs2.Fill(result2)
+        hs3.Fill(result3)
+    else:
+        hb1.Fill(result1)
+        hb2.Fill(result2)
+        hb3.Fill(result3)
+
+
+def PlotHistos(hs, hb):
+    hs.SetLineColor("kRed")
+    hb.SetLineColor("kBlue")
+    hs.Draw()
+    hb.Draw("same")
+
 
 c1 = ROOT.TCanvas()
-c1.Divide(1,3)
+c1.Divide(1, 3)
 c1.cd(1)
-PlotHistos(hs1,hb1)
+PlotHistos(hs1, hb1)
 c1.cd(2)
-PlotHistos(hs2,hb2)
+PlotHistos(hs2, hb2)
 c1.cd(3)
-PlotHistos(hs3,hb3)
+PlotHistos(hs3, hb3)
 c1.Draw()
 
 ## draw also ROC curves
 
-def GetContent(h) :
-   n = h.GetNbinsX()
-   x = ROOT.std.vector['float'](n)
-   w = ROOT.std.vector['float'](n)
-   for  i in range(0,n):
-      x[i] = h.GetBinCenter(i+1)
-      w[i] = h.GetBinContent(i+1)
-   return x,w
 
-def MakeROCCurve(hs, hb) :
-   xs,ws = GetContent(hs)
-   xb,wb = GetContent(hb)
-   roc = ROOT.TMVA.ROCCurve(xs,xb,ws,wb)
-   print("ROC integral for ",hs.GetName(), roc.GetROCIntegral())
-   curve = roc.GetROCCurve()
-   curve.SetName(hs.GetName())
-   return roc,curve
+def GetContent(h):
+    n = h.GetNbinsX()
+    x = ROOT.std.vector["float"](n)
+    w = ROOT.std.vector["float"](n)
+    for i in range(0, n):
+        x[i] = h.GetBinCenter(i + 1)
+        w[i] = h.GetBinContent(i + 1)
+    return x, w
+
+
+def MakeROCCurve(hs, hb):
+    xs, ws = GetContent(hs)
+    xb, wb = GetContent(hb)
+    roc = ROOT.TMVA.ROCCurve(xs, xb, ws, wb)
+    print("ROC integral for ", hs.GetName(), roc.GetROCIntegral())
+    curve = roc.GetROCCurve()
+    curve.SetName(hs.GetName())
+    return roc, curve
+
 
 c2 = ROOT.TCanvas()
 
-r1,curve1 = MakeROCCurve(hs1,hb1)
+r1, curve1 = MakeROCCurve(hs1, hb1)
 curve1.SetLineColor("kRed")
 curve1.Draw("AC")
 
-r2,curve2 = MakeROCCurve(hs2,hb2)
+r2, curve2 = MakeROCCurve(hs2, hb2)
 curve2.SetLineColor("kBlue")
 curve2.Draw("C")
 
-r3,curve3 = MakeROCCurve(hs3,hb3)
+r3, curve3 = MakeROCCurve(hs3, hb3)
 curve3.SetLineColor("kGreen")
 curve3.Draw("C")
 

@@ -7,8 +7,8 @@
 /// data, generates a new column `x` with random numbers, and finally draws
 /// a histogram for `x`.
 ///
+/// \macro_image
 /// \macro_code
-/// \macro_output
 ///
 /// \date September 2021
 /// \author Enric Tejedor (CERN)

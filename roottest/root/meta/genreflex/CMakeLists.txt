@@ -243,4 +243,5 @@ ROOTTEST_ADD_TEST(attributesCheck
 ROOTTEST_ADD_TEST(unusedReadRule
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classes_root_3746.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/sel_root_3746.xml
+                          -o ${CMAKE_CURRENT_BINARY_DIR}/classes_root_3746_rflx.cpp
                   ERRREF root_3746.eref)

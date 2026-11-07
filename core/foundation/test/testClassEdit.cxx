@@ -310,7 +310,29 @@ TEST(TClassEdit, GetNormalizedName)
 
    n.clear();
    EXPECT_THROW(TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*"), std::runtime_error);
+}
 
+TEST(TClassEdit, GetNormalizedNameTypedef)
+{
+   std::string n;
+
+   gInterpreter->Declare(R"(
+      struct MyAlloc {};
+      using MyMap = std::map<int,int,std::less<int>,MyAlloc>;
+   )");
+
+   TClassEdit::GetNormalizedName(n, "MyMap");
+   EXPECT_STREQ("map<int,int,less<int>,MyAlloc>", n.c_str());
+
+   gInterpreter->Declare(R"(
+      using MyMapDefault = std::map<int,int,std::less<int>,std::allocator<std::pair<const int,int>>>;
+   )");
+
+   TClassEdit::GetNormalizedName(n, "MyMapDefault");
+   EXPECT_STREQ("map<int,int>", n.c_str());
+
+   TClassEdit::GetNormalizedName(n, "std::map<int,int,std::less<int>,std::allocator<std::pair<const int,int>>>");
+   EXPECT_STREQ("map<int,int>", n.c_str());
 }
 
 // https://github.com/root-project/root/issues/18654
@@ -352,4 +374,21 @@ TEST(TClassEdit, SplitType)
    auto c = TClass::GetClass("o2::dataformats::AbstractRef<25,5,2>");
    auto si = (TStreamerInfo*) c->GetStreamerInfo();
    si->ls("noaddr");
+}
+
+TEST(TClassEdit, MultiLineName)
+{
+   // A class name in a selection XML can span multiple lines. Whitespace
+   // other than ' ' used to empty out the template arguments it preceded,
+   // e.g. "Foo<,vector<float>,>" (https://github.com/root-project/root/issues/22359).
+   const char *name = "Foo<\n  std::vector<int>, std::vector<float>,\n\tunsigned int,\n  Bar ::Ref<std::vector<int>>>";
+   TClassEdit::TSplitType split(name, (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
+   std::string out;
+   split.ShortType(out, TClassEdit::kLong64 | TClassEdit::kDropStd);
+   EXPECT_STREQ("Foo<vector<int>,vector<float>,unsigned int,Bar::Ref<vector<int> > >", out.c_str());
+
+   // Whitespace that separates two identifiers is significant and must be
+   // kept as a single plain space.
+   EXPECT_STREQ("unsigned int", TClassEdit::CleanType("unsigned\nint").c_str());
+   EXPECT_STREQ("Foo<int>", TClassEdit::CleanType("\n Foo<\n  int\n>").c_str());
 }

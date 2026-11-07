@@ -304,6 +304,7 @@ void TBuffer::SetReadMode()
       // We had reserved space for the free block count,
       // release it,
       fBufSize += kExtraSpace;
+      fBufMax = fBuffer + fBufSize;
    }
    fMode = kRead;
 }
@@ -317,6 +318,7 @@ void TBuffer::SetWriteMode()
       // We had not yet reserved space for the free block count,
       // reserve it now.
       fBufSize -= kExtraSpace;
+      fBufMax = fBuffer + fBufSize;
    }
    fMode = kWrite;
 }

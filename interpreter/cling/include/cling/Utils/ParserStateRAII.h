@@ -40,7 +40,7 @@ namespace cling {
     clang::SourceLocation OldPrevTokLocation;
     unsigned short OldParenCount, OldBracketCount, OldBraceCount;
     unsigned OldTemplateParameterDepth;
-    bool OldInNonInstantiationSFINAEContext;
+    clang::Sema::NonSFINAEContext nonSFINAECtx;
     bool SkipToEOF;
     clang::EnterExpressionEvaluationContext ResetExprEvalCtx;
 

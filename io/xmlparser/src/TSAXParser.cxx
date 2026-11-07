@@ -11,7 +11,7 @@
 
 /**
 \class TSAXParser
-\ingroup IO
+\ingroup io_xml
 
 TSAXParser is a subclass of TXMLParser, it is a wraper class to
 libxml library.
@@ -35,7 +35,6 @@ occur.
 
 #include "TSAXParser.h"
 #include "TXMLAttr.h"
-#include "Varargs.h"
 #include "strlcpy.h"
 #include "TList.h"
 #include "TClass.h"
@@ -43,6 +42,7 @@ occur.
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
 
+#include <cstdarg>
 
 class TSAXParserCallback {
 public:
@@ -235,7 +235,7 @@ Int_t TSAXParser::Parse()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// It creates the parse context of the xml file, where the xml file name is
-/// filename. If context is created sucessfully, it will call Parse()
+/// filename. If context is created successfully, it will call Parse()
 /// It returns parse error code, see TXMLParser.
 
 Int_t TSAXParser::ParseFile(const char *filename)
@@ -352,15 +352,15 @@ void TSAXParserCallback::Comment(void *fParser, const xmlChar *value)
 /// Warning callback function. Warnings while parsing a xml file will
 /// be stored at fmt.
 
-void TSAXParserCallback::Warning(void * fParser, const char *va_(fmt), ...)
+void TSAXParserCallback::Warning(void *fParser, const char *fmt, ...)
 {
    TSAXParser *parser = (TSAXParser*)fParser;
 
    va_list arg;
    char buffer[2048];
 
-   va_start(arg, va_(fmt));
-   vsnprintf(buffer, 2048, va_(fmt), arg);
+   va_start(arg, fmt);
+   vsnprintf(buffer, 2048, fmt, arg);
    va_end(arg);
 
    TString buff(buffer);
@@ -372,7 +372,7 @@ void TSAXParserCallback::Warning(void * fParser, const char *va_(fmt), ...)
 /// Error callback function. Errors while parsing a xml file will be stored
 /// at fmt.
 
-void TSAXParserCallback::Error(void *fParser, const char *va_(fmt), ...)
+void TSAXParserCallback::Error(void *fParser, const char *fmt, ...)
 {
    Int_t errorcode;
    TSAXParser *parser = (TSAXParser*)fParser;
@@ -380,8 +380,8 @@ void TSAXParserCallback::Error(void *fParser, const char *va_(fmt), ...)
    va_list arg;
    char buffer[2048];
 
-   va_start(arg, va_(fmt));
-   vsnprintf(buffer, 2048, va_(fmt), arg);
+   va_start(arg, fmt);
+   vsnprintf(buffer, 2048, fmt, arg);
    va_end(arg);
 
    TString buff(buffer);
@@ -401,7 +401,7 @@ void TSAXParserCallback::Error(void *fParser, const char *va_(fmt), ...)
 /// FactalError callback function. Factal errors while parsing a xml file
 /// will be stored at fmt.
 
-void TSAXParserCallback::FatalError(void *fParser, const char *va_(fmt), ...)
+void TSAXParserCallback::FatalError(void *fParser, const char *fmt, ...)
 {
    Int_t errorcode;
    TSAXParser *parser = (TSAXParser*)fParser;
@@ -409,8 +409,8 @@ void TSAXParserCallback::FatalError(void *fParser, const char *va_(fmt), ...)
    va_list arg;
    char buffer[2048];
 
-   va_start(arg, va_(fmt));
-   vsnprintf(buffer, 2048, va_(fmt), arg);
+   va_start(arg, fmt);
+   vsnprintf(buffer, 2048, fmt, arg);
    va_end(arg);
 
    TString buff(buffer);

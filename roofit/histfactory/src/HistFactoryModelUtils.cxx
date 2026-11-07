@@ -56,7 +56,7 @@ namespace HistFactory{
     if( ! FoundSumPdf ) {
       if(verbose) {
    std::cout << "Failed to find RooRealSumPdf for channel: " << sim_channel->GetName() << std::endl;
-   sim_channel->getComponents()->Print("V");
+   components->Print("V");
       }
       sum_pdf=nullptr;
       //throw std::runtime_error("Failed to find RooRealSumPdf for channel");

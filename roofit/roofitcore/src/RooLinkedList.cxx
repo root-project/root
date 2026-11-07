@@ -34,7 +34,6 @@ Use RooAbsCollection derived objects for public use
 #include "RooAbsData.h"
 #include "RooMsgService.h"
 
-#include "Riostream.h"
 #include "TBuffer.h"
 #include "TROOT.h"
 
@@ -42,7 +41,7 @@ Use RooAbsCollection derived objects for public use
 #include <list>
 #include <memory>
 #include <vector>
-
+#include <ostream>
 
 /// \cond ROOFIT_INTERNAL
 
@@ -55,7 +54,6 @@ namespace RooLinkedListImplDetails {
    _sz(sz), _free(capacity()),
    _chunk(new RooLinkedListElem[_free]), _freelist(_chunk)
       {
-   //cout << "RLLID::Chunk ctor(" << this << ") of size " << _free << " list elements" << std::endl ;
    // initialise free list
    for (Int_t i = 0; i < _free; ++i)
      _chunk[i]._next = (i + 1 < _free) ? &_chunk[i + 1] : nullptr;
@@ -68,7 +66,7 @@ namespace RooLinkedListImplDetails {
       ~Chunk() { delete[] _chunk; }
       /// chunk capacity
       Int_t capacity() const
-      { return (1 << _sz) / sizeof(RooLinkedListElem); }
+      { return (1ULL << _sz) / sizeof(RooLinkedListElem); }
       /// chunk free elements
       Int_t free() const { return _free; }
       /// chunk occupied elements
@@ -285,7 +283,6 @@ RooLinkedList::RooLinkedList(const RooLinkedList& other) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   std::cout << "RooLinkedList::createElem(" << this << ") obj = " << obj << " elem = " << elem << std::endl ;
 
 RooLinkedListElem* RooLinkedList::createElement(TObject* obj, RooLinkedListElem* elem)
 {
@@ -342,6 +339,11 @@ void RooLinkedList::setHashTableSize(Int_t size)
       // (Re)create hash tables
       _htableName = std::make_unique<HashTableByName>(size);
       _htableLink = std::make_unique<HashTableByLink>(size);
+
+      for (RooLinkedListElem *elem = _first; elem; elem = elem->_next) {
+         _htableName->insert({elem->_arg->GetName(), elem->_arg});
+         _htableLink->insert({elem->_arg, reinterpret_cast<TObject *>(elem)});
+      }
    }
 
    _htableName->reserve(size);
@@ -421,7 +423,6 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   }
 
   if (_htableName){
-    //cout << "storing link " << _last << " with hash arg " << arg << std::endl ;
     _htableName->insert({arg->GetName(), arg});
     _htableLink->insert({arg, reinterpret_cast<TObject *>(_last)});
   }
@@ -604,7 +605,6 @@ TObject* RooLinkedList::find(const char* name) const
     if (_useNptr) {
       // See if it might have been renamed
       const TNamed* nptr= RooNameReg::known(name);
-      //cout << "RooLinkedList::find: possibly renamed '" << name << "', kRenamedArg=" << (nptr&&nptr->TestBit(RooNameReg::kRenamedArg)) << std::endl;
       if (nptr && nptr->TestBit(RooNameReg::kRenamedArg)) {
         RooLinkedListElem* ptr = _first ;
         while(ptr) {
@@ -617,7 +617,6 @@ TObject* RooLinkedList::find(const char* name) const
       }
       return nullptr ;
     }
-    //cout << "RooLinkedList::find: possibly renamed '" << name << "'" << std::endl;
   }
 
   RooLinkedListElem* ptr = _first ;
@@ -656,7 +655,6 @@ RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const
   if (_htableName) {
     RooAbsArg* a = const_cast<RooAbsArg *>(static_cast<RooAbsArg const*>((*_htableName)[arg->GetName()]));
     if (a) return a;
-    //cout << "RooLinkedList::findArg: possibly renamed '" << arg->GetName() << "', kRenamedArg=" << arg->namePtr()->TestBit(RooNameReg::kRenamedArg) << std::endl;
     // See if it might have been renamed
     if (!arg->namePtr()->TestBit(RooNameReg::kRenamedArg)) return nullptr;
   }

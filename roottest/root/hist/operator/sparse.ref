@@ -1,4 +1,3 @@
-
 Processing runsparse.C...
 Projecting a THnSparse: SUCCESS
 Projecting a THnSparse to a TH1 (TH3::Project3D): SUCCESS

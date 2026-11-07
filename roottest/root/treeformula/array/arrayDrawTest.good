@@ -1,4 +1,3 @@
-
 Processing runArrayTest.C...
 We expect an error about the dimension size:
 Error in <TTreeFormula::TTreeFormula>: Index 40 for dimension #1 in ns[40].adc[2] is too high (max is 2)

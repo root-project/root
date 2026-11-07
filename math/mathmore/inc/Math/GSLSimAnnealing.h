@@ -29,7 +29,9 @@
 
 #include "Math/IFunctionfwd.h"
 
+#include <algorithm>
 #include <vector>
+#include <algorithm>
 
 namespace ROOT {
 

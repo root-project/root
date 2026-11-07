@@ -18,6 +18,7 @@
 #include "TAttImage.h"
 #include "GuiTypes.h"
 #include "TVectorDfwd.h"
+#include <vector>
 
 class TVirtualPad;
 class TArrayD;
@@ -52,7 +53,10 @@ public:
       kTga,
       kXml,
       kUnknown,
-      kAnimGif
+      kAnimGif,
+      kHtml,
+      kSvg,
+      kPdf
    };
 
    enum EText3DType {
@@ -116,10 +120,20 @@ public:
    virtual void SetImage(const Double_t * /*imageData*/, UInt_t /*width*/, UInt_t /*height*/, TImagePalette * /*palette*/ = nullptr) {}
    virtual void SetImage(const TArrayD & /*imageData*/, UInt_t /*width*/, TImagePalette * /*palette*/ = nullptr) {}
    virtual void SetImage(const TVectorD & /*imageData*/, UInt_t /*width*/, TImagePalette * /*palette*/ = nullptr) {}
-   virtual void SetImage(Pixmap_t /*pxm*/, Pixmap_t /*mask*/ = 0) {}
+   virtual void R__DEPRECATED(7,00, "Use TASUtils::FromPixmap instead") SetImage(Pixmap_t /*pxm*/, Pixmap_t /*mask*/ = 0) {}
+
+
+   // Create an image from bitmap. (See TASImage::FromBitmap)
+   virtual void FromBitmap(const UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/, const UChar_t * /* mask */ = nullptr) {}
 
    // Create an image from the given pad. (See TASImage::FromPad)
    virtual void FromPad(TVirtualPad * /*pad*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
+
+   // Create an image from gVirtualX window. (See TASImage::FromWindow)
+   virtual void R__DEPRECATED(7,00, "Use TASUtils::FromWindow instead") FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
+
+   // Create an image from GL buffer. (See TASImage::FromGLBuffer)
+   virtual void R__DEPRECATED(7,00, "Use FromBitmap instead") FromGLBuffer(UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
 
    // Restore the image original size. (See TASImage::UnZoom)
    virtual void UnZoom() {}
@@ -201,6 +215,7 @@ public:
                          const char * /*color*/ = nullptr, const char * /*font*/ = "fixed",
                          EText3DType /*type*/ = TImage::kPlain, const char * /*fore_file*/ = nullptr, Float_t /*angle*/ = 0) { }
    virtual void DrawText(TText * /*text*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0) { }
+   virtual void DrawTextOnPad(TText * /*text*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, TVirtualPad * /* pad */ = nullptr, Int_t  /* offx */ = 0, Int_t /* offy */ = 0);
    virtual void FillPolygon(UInt_t /*npt*/, TPoint * /*ppt*/, const char * /*col*/ = "#000000",
                            const char * /*stipple*/ = nullptr, UInt_t /*w*/ = 16, UInt_t /*h*/ = 16) {}
    virtual void FillPolygon(UInt_t /*npt*/, TPoint * /*ppt*/, TImage * /*tile*/) {}
@@ -227,22 +242,23 @@ public:
 
    virtual UInt_t GetWidth() const { return 0; }
    virtual UInt_t GetHeight() const { return 0; }
+   virtual UInt_t GetScaledWidth() const { return 0; }
+   virtual UInt_t GetScaledHeight() const { return 0; }
    virtual Bool_t IsValid() const { return kTRUE; }
    virtual TImage *GetScaledImage() const { return nullptr; }
 
    virtual TArrayL  *GetPixels(Int_t /*x*/= 0, Int_t /*y*/= 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) { return nullptr; }
    virtual TArrayD  *GetArray(UInt_t /*w*/ = 0, UInt_t /*h*/ = 0, TImagePalette * = gWebImagePalette) { return nullptr; }
-   virtual Pixmap_t  GetPixmap() { return 0; }
-   virtual Pixmap_t  GetMask() { return 0; }
+   virtual Pixmap_t  R__DEPRECATED(7,00, "Use TASUtils::GetPixmap instead") GetPixmap() { return 0; }
+   virtual Bool_t    GetMaskBits(UInt_t & /* width */, UInt_t & /* height */, std::vector<char> & /* bits */) { return kFALSE; }
+   virtual Pixmap_t  R__DEPRECATED(7,00, "Use TASUtils::GetMask instead") GetMask() { return 0; }
    virtual UInt_t   *GetArgbArray() { return nullptr; }
    virtual UInt_t   *GetRgbaArray() { return nullptr; }
    virtual Double_t *GetVecArray() { return nullptr; }
    virtual UInt_t   *GetScanline(UInt_t /*y*/) { return nullptr; }
    virtual void      GetImageBuffer(char ** /*buffer*/, int* /*size*/, EImageFileTypes /*type*/ = TImage::kPng) {}
    virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }
-   virtual void      PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, Int_t /*xsrc*/ = 0, Int_t /*ysrc*/ = 0, UInt_t /*wsrc*/ = 0, UInt_t /*hsrc*/ = 0, Option_t * /*opt*/ = "") { }
-   virtual void      FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
-   virtual void      FromGLBuffer(UChar_t* /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
+   virtual void      R__DEPRECATED(7,00, "Use TASUtils::PaintImage instead") PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, Int_t /*xsrc*/ = 0, Int_t /*ysrc*/ = 0, UInt_t /*wsrc*/ = 0, UInt_t /*hsrc*/ = 0, Option_t * /*opt*/ = "") { }
    static EImageFileTypes GetImageFileTypeFromFilename(const char* opt);
 
    static TImage *Create();

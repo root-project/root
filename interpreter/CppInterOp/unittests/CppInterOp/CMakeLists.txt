@@ -1,133 +1,224 @@
 if (EMSCRIPTEN)
-  # So we create a html file, as well as the javascript file
+  # Build a .html shell alongside the .js main module.
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
-  # Omitting CUDATest.cpp since Emscripten build currently has no GPU support
-  # For Emscripten builds linking to gtest_main will not suffice for gtest to run
-  # the tests and an explicitly main.cpp is needed
-  set(EXTRA_TEST_SOURCE_FILES main.cpp)
-else()
-  # Do not need main.cpp for native builds, but we do have GPU support for native builds
-  set(EXTRA_TEST_SOURCE_FILES CUDATest.cpp)
-  set(EXTRA_PATH_TEST_BINARIES /CppInterOpTests/unittests/bin/$<CONFIG>/)
+
+  string(REPLACE "@" "@@" ESCAPED_SYSROOT_PATH "${SYSROOT_PATH}")
+  # Explanation of Emscripten-specific link flags for CppInterOp tests:
+  #
+  # MAIN_MODULE=1:
+  # Enables the test binary as the main WebAssembly module, allowing dynamic
+  # linking of side modules (TestSharedLib).
+  #
+  # WASM_BIGINT:
+  # Enables JS BigInt integration in WASM so 64-bit integer types round-trip.
+  #
+  # ALLOW_MEMORY_GROWTH=1:
+  # Lets the WebAssembly linear memory grow at runtime. Without it we hit
+  # abortOnCannotGrowMemory during the tests.
+  #
+  # STACK_SIZE=32mb / INITIAL_MEMORY=64mb:
+  # Chosen to match xeus-cpp-lite
+  # (https://github.com/jupyter-xeus/xeus/blob/main/cmake/WasmBuildOptions.cmake#L35-L36).
+  # Smaller values trigger out-of-bounds memory accesses while running the tests.
+  #
+  # --preload-file ${SYSROOT_PATH}/include@/include:
+  # Preloads the system include directory into the Emscripten VFS so headers
+  # are available at runtime.
+  #
+  # --emrun:
+  # Makes emrun drive the .html shell and pipe stdout back to the terminal.
+  set(CPPINTEROP_COMMON_WASM_TEST_COMPILE_FLAGS
+    "SHELL:${CPPINTEROP_EXTRA_WASM_FLAGS}"
+  )
+  set(CPPINTEROP_COMMON_WASM_TEST_LINK_FLAGS
+    "SHELL:${CPPINTEROP_EXTRA_WASM_FLAGS}"
+    "SHELL:-s MAIN_MODULE=1"
+    "SHELL:-s WASM_BIGINT"
+    "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+    "SHELL:-s STACK_SIZE=32mb"
+    "SHELL:-s INITIAL_MEMORY=64mb"
+    "SHELL:--preload-file ${ESCAPED_SYSROOT_PATH}/include@/include"
+    "SHELL:--emrun"
+  )
 endif()
 
 add_cppinterop_unittest(CppInterOpTests
+  CAPITest.cpp
+  CommentReflectionTest.cpp
+  CppInterOpThunksTest.cpp
+  DiagnosticTest.cpp
   EnumReflectionTest.cpp
   FunctionReflectionTest.cpp
+  HandleTypesTest.cpp
   InterpreterTest.cpp
   JitTest.cpp
+  ResultTest.cpp
   ScopeReflectionTest.cpp
   TypeReflectionTest.cpp
   Utils.cpp
   VariableReflectionTest.cpp
-  ${EXTRA_TEST_SOURCE_FILES}
 )
-
-if(EMSCRIPTEN)
-  string(REPLACE "@" "@@" ESCAPED_SYSROOT_PATH "${SYSROOT_PATH}")
-  # Explanation of Emscripten-specific link flags for CppInterOpTests:
-  #
-  # MAIN_MODULE=1:
-  # Enables building CppInterOpTests.js as the main WebAssembly module, allowing dynamic linking of side modules.
-  #
-  # WASM_BIGINT:
-  # Ensures support for 64-bit integer types by enabling JavaScript BigInt integration in WASM.
-  #
-  # ALLOW_MEMORY_GROWTH=1:
-  # Allows the WebAssembly memory to grow dynamically at runtime to accommodate increasing memory needs.
-  # Would lead to an abortOnCannotGrowMemory error if memory cannot be grown while running the tests.
-  #
-  # STACK_SIZE=32mb: Allocates 32MB of stack space to handle deep recursion or large stack-allocated objects safely.
-  # INITIAL_MEMORY=128mb: Sets the initial linear memory size to 128MB to reduce the likelihood of early memory expansion and improve performance.
-  # The STACK_SIZE and INITIAL_MEMORY values are chosen based on what has been put to use for running xeus-cpp-lite.
-  # Check https://github.com/jupyter-xeus/xeus/blob/main/cmake/WasmBuildOptions.cmake#L35-L36 for more details.
-  # Not setting these flags would lead to a memory access out of bounds error while running the tests.
-  #
-  # --preload-file ${SYSROOT_PATH}/include@/include:
-  # Preloads the system include directory into the Emscripten virtual filesystem to make headers accessible at runtime.
-  #
-  # --emrun
-  # Makes it so that we run the html file created by this target, that we can capture the standard output
-  # and output to the terminal
-  target_link_options(CppInterOpTests
-    PUBLIC "SHELL: -fexceptions"
-    PUBLIC "SHELL: -s MAIN_MODULE=1"
-    PUBLIC "SHELL: -s WASM_BIGINT"
-    PUBLIC "SHELL: -s ALLOW_MEMORY_GROWTH=1"
-    PUBLIC "SHELL: -s STACK_SIZE=32mb"
-    PUBLIC "SHELL: -s INITIAL_MEMORY=128mb"
-    PUBLIC "SHELL: --preload-file ${ESCAPED_SYSROOT_PATH}/include@/include"
-    PUBLIC "SHELL: --emrun"
-  )
+if (NOT EMSCRIPTEN)
+  # Emscripten has no GPU; CUDA tests are native-only. The VTableOverlay
+  # tests need Cpp::Construct, whose placement-new JIT wrapper does not
+  # compile under the Emscripten clang-repl (see FunctionReflection_Construct,
+  # likewise skipped there).
+  target_sources(CppInterOpTests PRIVATE CUDATest.cpp VTableOverlayTest.cpp)
 endif()
-
-target_link_libraries(CppInterOpTests
-  PRIVATE
-  clangCppInterOp
-)
-
-set_output_directory(CppInterOpTests
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
-  LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
-)
 
 if(NOT WIN32)
   set_source_files_properties(VariableReflectionTest.cpp PROPERTIES COMPILE_FLAGS
     "-Wno-pedantic"
+  )
+endif()
+
+# CAPITestC.c is a pure C compilation test. Build it as a separate object
+# library so it does not inherit C++-only flags (-Wno-deprecated-copy,
+# -fno-rtti) that GCC's C frontend rejects under -Werror.
+add_library(CAPITestC OBJECT CAPITestC.c)
+target_compile_options(CAPITestC PRIVATE
+  $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Werror -Wall -Wno-unused-command-line-argument>
+  $<$<C_COMPILER_ID:MSVC>:/WX /W3>)
+target_include_directories(CAPITestC PRIVATE
+  ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include)
+if(TARGET CppInterOpTableGen)
+  add_dependencies(CAPITestC CppInterOpTableGen)
+endif()
+target_link_libraries(CppInterOpTests PRIVATE CAPITestC)
+target_compile_definitions(CppInterOpTests PRIVATE
+  "CPPINTEROP_SRC_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../..\""
 )
+
+# cling reads its runtime modulemaps from the directory that holds
+# cling/Interpreter/RuntimeUniverse.h. A test that runs with -fmodules
+# passes this prefix as an include path.
+if (CPPINTEROP_USE_CLING)
+  target_compile_definitions(CppInterOpTests PRIVATE
+    "CPPINTEROP_CLING_INCLUDE_DIR=\"${CLING_INSTALL_PREFIX}/include\""
+  )
 endif()
 
 set_source_files_properties(InterpreterTest.cpp PROPERTIES COMPILE_DEFINITIONS
   "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\""
 )
-export_executable_symbols(CppInterOpTests)
 
-unset(LLVM_LINK_COMPONENTS)
-
-if (NOT EMSCRIPTEN)
-  set(EXTRA_TEST_SOURCE_FILES "")
-  set(EXTRA_PATH_TEST_BINARIES /TestSharedLib/unittests/bin/$<CONFIG>/)
-endif()
-
-add_cppinterop_unittest(DynamicLibraryManagerTests DynamicLibraryManagerTest.cpp ${EXTRA_TEST_SOURCE_FILES})
-
-target_link_libraries(DynamicLibraryManagerTests
-  PRIVATE
-  clangCppInterOp
+add_cppinterop_unittest(DynamicLibraryManagerTests
+  DynamicLibraryManagerTest.cpp
+  Utils.cpp
 )
-
 if(EMSCRIPTEN)
-  set(TEST_SHARED_LIBRARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/TestSharedLib/unittests/bin/$<CONFIG>/")
+  set(TEST_SHARED_LIBRARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/")
   string(REPLACE "@" "@@" ESCAPED_TEST_SHARED_LIBRARY_PATH "${TEST_SHARED_LIBRARY_PATH}")
-  # Check explanation of Emscripten-specific link flags for CppInterOpTests above for DynamicLibraryManagerTests as well.
-  target_link_options(DynamicLibraryManagerTests
-    PUBLIC "SHELL: -s MAIN_MODULE=1"
-    PUBLIC "SHELL: -s WASM_BIGINT"
-    PUBLIC "SHELL: -s ALLOW_MEMORY_GROWTH=1"
-    PUBLIC "SHELL: -s STACK_SIZE=32mb"
-    PUBLIC "SHELL: -s INITIAL_MEMORY=128mb"
-    PUBLIC "SHELL: --preload-file ${ESCAPED_SYSROOT_PATH}/include@/include"
-    PUBLIC "SHELL: --emrun"
-    PUBLIC "SHELL: --preload-file ${ESCAPED_TEST_SHARED_LIBRARY_PATH}/libTestSharedLib.so@/libTestSharedLib.so"
+  target_link_options(DynamicLibraryManagerTests PRIVATE
+    "SHELL:--preload-file ${ESCAPED_TEST_SHARED_LIBRARY_PATH}/libTestSharedLib.so@/libTestSharedLib.so"
   )
 endif()
 
-if (EMSCRIPTEN)
-  if (BUILD_SHARED_LIBS)
-    target_compile_definitions(CppInterOpTests PRIVATE "EMSCRIPTEN_SHARED_LIBRARY")
-    target_compile_definitions(DynamicLibraryManagerTests PRIVATE "EMSCRIPTEN_SHARED_LIBRARY")
-  else()
-    target_compile_definitions(CppInterOpTests PRIVATE "EMSCRIPTEN_STATIC_LIBRARY")
-    target_compile_definitions(DynamicLibraryManagerTests PRIVATE "EMSCRIPTEN_STATIC_LIBRARY")
-  endif()
+add_cppinterop_unittest(TracingTests
+  TracingTests.cpp
+  Utils.cpp
+)
+# Derive both prefixes from this directory: CMAKE_BINARY_DIR is the top
+# project's build dir when CppInterOp is a subproject. The CPPINTEROP_BIN_DIR
+# environment variable overrides the artifacts prefix at run time (TestPaths.h).
+target_compile_definitions(TracingTests PRIVATE
+  "CPPINTEROP_SRC_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../..\""
+  "CPPINTEROP_BIN_DIR=\"${CMAKE_CURRENT_BINARY_DIR}/../..\""
+)
+# GCC 12 and (less often) 13/14 emit a -Wmaybe-uninitialized false positive
+# inside libstdc++'s <regex> headers when the std::function subobject of
+# std::__detail::_State is move-constructed. The analysis only fails once the
+# inliner is perturbed, so sanitizer builds (which insert shadow-memory
+# barriers and inline less) are where this reliably surfaces. Clang and newer
+# GCCs are fine. See gcc bug 105562 and friends.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(TracingTests.cpp
+    PROPERTIES COMPILE_FLAGS "-Wno-maybe-uninitialized")
 endif()
 
-set_output_directory(DynamicLibraryManagerTests
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
-  LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
-)
-
+add_subdirectory(TestSharedLib)
 add_dependencies(DynamicLibraryManagerTests TestSharedLib)
 
-#export_executable_symbols_for_plugins(TestSharedLib)
-add_subdirectory(TestSharedLib)
+# Cross-TU VTableOverlay perf check, built as part of the test suite.
+# Standalone-only (its Google Benchmark dependency is provisioned only then;
+# keeps it out of embedded host builds such as ROOT). Excluded on WASM
+# (Google Benchmark's WASM support is shaky, and the dispatch-cost claim is
+# about CPU, not JS, execution). The dispatch loop is compiled into
+# TestSharedLib so the call site cannot be devirtualized in this TU.
+if(CPPINTEROP_BUILT_STANDALONE AND NOT EMSCRIPTEN AND BUILD_SHARED_LIBS)
+  add_cppinterop_unittest(VTableOverlayCrossTUBench
+    VTableOverlayCrossTUBench.cpp)
+  target_link_libraries(VTableOverlayCrossTUBench PRIVATE benchmark TestSharedLib)
+  add_dependencies(VTableOverlayCrossTUBench TestSharedLib)
+endif()
+
+# Downstream-DSO dlopen check that mirrors libcppyy-backend's contract:
+# a SHARED lib using <CppInterOp/Dispatch.h> without linking against
+# clangCppInterOp, dlopen'd by a standalone exec that also doesn't link.
+# Any inline-header UND ref that the host lib can't satisfy at runtime
+# trips here before the cppyy integration job.
+if(NOT EMSCRIPTEN AND BUILD_SHARED_LIBS)
+  add_subdirectory(TestDownstreamLib)
+
+  set(_downstream_lib_path
+    "${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/${CMAKE_SHARED_LIBRARY_PREFIX}TestDownstreamLib${CMAKE_SHARED_LIBRARY_SUFFIX}")
+
+  add_executable(TestDownstreamLoader EXCLUDE_FROM_ALL TestDownstreamLoader.cpp)
+  add_dependencies(CppInterOpUnitTests TestDownstreamLoader TestDownstreamLib)
+  target_compile_definitions(TestDownstreamLoader PRIVATE
+    TEST_DOWNSTREAM_LIB_PATH="${_downstream_lib_path}")
+  if(UNIX AND NOT APPLE)
+    target_link_libraries(TestDownstreamLoader PRIVATE dl)
+  endif()
+  set_output_directory(TestDownstreamLoader
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/
+    LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/
+  )
+  add_test(NAME cppinterop-DownstreamLoaderTest
+    COMMAND TestDownstreamLoader $<TARGET_FILE:clangCppInterOp>)
+  set_tests_properties(cppinterop-DownstreamLoaderTest PROPERTIES
+    TIMEOUT "${TIMEOUT_VALUE}")
+endif()
+
+# Dispatch Tests.
+# Load libclangCppInterOp via dlopen(RTLD_LOCAL) and must NOT link against it
+# directly, to verify true symbol isolation.
+if(NOT EMSCRIPTEN AND BUILD_SHARED_LIBS)
+  add_executable(DispatchTests EXCLUDE_FROM_ALL
+    DispatchInit.cpp
+    DispatchTest.cpp
+    DispatchSmokeTest.cpp
+  )
+  add_dependencies(CppInterOpUnitTests DispatchTests)
+  if(TARGET CppInterOpTableGen)
+    add_dependencies(DispatchTests CppInterOpTableGen)
+  endif()
+  target_include_directories(DispatchTests PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR})
+  target_link_libraries(DispatchTests PRIVATE ${gtest_libs} ${link_pthreads_lib})
+  # Deliberately no target_link_libraries(... clangCppInterOp).
+  # CMAKE_BINARY_DIR, not this directory: the shared library goes to the
+  # top-level lib/.
+  target_compile_definitions(DispatchTests PRIVATE
+    CPPINTEROP_BIN_DIR="${CMAKE_BINARY_DIR}"
+  )
+  set_output_directory(DispatchTests
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/
+    LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/
+  )
+  add_test(NAME cppinterop-DispatchTests COMMAND DispatchTests)
+  set_tests_properties(cppinterop-DispatchTests PROPERTIES
+    TIMEOUT "${TIMEOUT_VALUE}"
+    ENVIRONMENT "CPLUS_INCLUDE_PATH=${CMAKE_BINARY_DIR}/etc")
+  # Verify the binary is NOT linked against libclangCppInterOp. If this
+  # check fails, the dispatch tests are not truly testing RTLD_LOCAL.
+  if(UNIX AND NOT APPLE)
+    add_test(NAME cppinterop-DispatchTests-isolation
+      COMMAND sh -c "! ldd $<TARGET_FILE:DispatchTests> | grep -q $<TARGET_FILE_NAME:clangCppInterOp>"
+    )
+  elseif(APPLE)
+    add_test(NAME cppinterop-DispatchTests-isolation
+      COMMAND sh -c "! otool -L $<TARGET_FILE:DispatchTests> | grep -q $<TARGET_FILE_NAME:clangCppInterOp>"
+    )
+  endif()
+endif()

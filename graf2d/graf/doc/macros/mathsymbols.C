@@ -110,6 +110,8 @@ TCanvas *mathsymbols()
    y -= step ; Tl.DrawLatex(x1, y, "#exists")         ; Tl.DrawText(x2, y, "#exists");
    y -= step ; Tl.DrawLatex(x1, y, "#plus")           ; Tl.DrawText(x2, y, "#plus");
    y -= step ; Tl.DrawLatex(x1, y, "#minus")          ; Tl.DrawText(x2, y, "#minus");
+   y -= step ; Tl.DrawLatex(x1, y, "#textendash")     ; Tl.DrawText(x2, y, "#textendash");
+   y -= step ; Tl.DrawLatex(x1, y, "#textemdash")     ; Tl.DrawText(x2, y, "#textemdash");
 
    return Ms;
 }

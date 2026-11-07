@@ -1,6 +1,5 @@
 // Author: Sergey Linev <S.Linev@gsi.de>
 // Date: 2017-06-29
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
@@ -109,7 +108,7 @@ public:
 
    std::string MakePageUrl(THttpServer *serv, const std::string &addr);
 
-   static bool PlatformInit();
+   static void PlatformInit();
 
    static std::string GetDataURI(const std::string& data, const std::string& mime_type);
 

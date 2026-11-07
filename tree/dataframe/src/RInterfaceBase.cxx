@@ -101,6 +101,28 @@ ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetColumnNames()
 }
 
 /////////////////////////////////////////////////////////////////////////////
+/// \brief Retrieve the names of top-level field names
+///
+/// For data sources that support hierarchical dataset schemas, such as TTree
+/// or RNTuple, this function will retrieve the names of top-level fields. For
+/// example, if the schema contains a user class with a data member, only
+/// the name of the top-level field containing the user class object would be
+/// reported, but not the name of the data member sub-field.
+///
+/// For all other data sources, returns the list of all available dataset columns.
+ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetDatasetTopLevelFieldNames()
+{
+   ROOT::RDF::ColumnNames_t ret;
+   if (auto ds = GetDataSource()) {
+      ret = ROOT::Internal::RDF::GetTopLevelFieldNames(*ds);
+      // Sorting to be consistent with GetColumnNames
+      std::sort(ret.begin(), ret.end());
+   }
+
+   return ret;
+}
+
+/////////////////////////////////////////////////////////////////////////////
 /// \brief Return the type of a given column as a string.
 /// \return the type of the required column.
 ///

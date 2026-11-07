@@ -97,6 +97,11 @@ namespace ROOT {
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetThreadPoolSize();
+   namespace Experimental {
+   void EnableObjectAutoRegistration();
+   void DisableObjectAutoRegistration();
+   bool ObjectAutoRegistrationEnabled();
+   } // namespace Experimental
 }
 
 class TROOT : public TDirectory {
@@ -120,7 +125,7 @@ protected:
    TString         fConfigFeatures;                   ///< ROOT ./configure detected build features
    TString         fVersion;                          ///< ROOT version as TString, example: 0.05.01
    Int_t           fVersionInt = 0;                   ///< ROOT version in integer format (501)
-   Int_t           fVersionCode = 0;                  ///< ROOT version code as used in RVersion.h
+   Int_t           fVersionCode = 0;                  ///< ROOT version code as used in ROOT/RVersion.hxx
    Int_t           fVersionDate = 0;                  ///< Date of ROOT version (ex 951226)
    Int_t           fVersionTime = 0;                  ///< Time of ROOT version (ex 1152)
    Int_t           fBuiltDate = 0;                    ///< Date of ROOT built
@@ -166,7 +171,6 @@ protected:
    TSeqCollection  *fMessageHandlers = nullptr;       ///< List of message handlers
    TSeqCollection  *fStreamerInfo = nullptr;          ///< List of active StreamerInfo classes
    TCollection     *fClassGenerators = nullptr;       ///< List of user defined class generators;
-   TSeqCollection  *fSecContexts = nullptr;           ///< List of security contexts (TSecContext)
    TSeqCollection  *fClipboard = nullptr;             ///< List of clipboard objects
    TSeqCollection  *fDataSets = nullptr;              ///< List of data sets (TDSet or TChain)
    AListOfEnums_t   fEnums = nullptr;                 ///< List of enum types
@@ -256,7 +260,6 @@ public:
    TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
    TCollection      *GetListOfClassGenerators() const { return fClassGenerators; }
-   TSeqCollection   *GetListOfSecContexts() const { return fSecContexts; }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
    TCollection      *GetListOfEnums(Bool_t load = kFALSE);
@@ -366,7 +369,10 @@ public:
    static const TString& GetDocDir();
    static const TString& GetMacroDir();
    static const TString& GetTutorialDir();
-   static const TString& GetSourceDir();
+   static const TString &GetSourceDir() R__DEPRECATED(
+      7, 00,
+      "This function is without any effect because it made only sense in the corner case where the ROOT source is "
+      "copied inside the ROOT installation, which is never the case unless the user does it by hand.");
    static const TString& GetIconPath();
    static const TString& GetTTFFontDir();
 

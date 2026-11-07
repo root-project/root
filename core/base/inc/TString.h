@@ -27,7 +27,6 @@
 
 #include <string_view>
 #include "ROOT/TypeTraits.hxx"
-#include "snprintf.h"
 
 #include <iosfwd>
 #include <cstdarg>
@@ -220,7 +219,7 @@ private:
    };
 
 protected:
-   Rep_t          fRep;           //! String data
+   Rep_t          fRep;           ///<! String data
 
    // Special concatenation constructor
    TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2);
@@ -304,6 +303,8 @@ public:
    virtual void     FillBuffer(char *&buffer) const;
    virtual void     ReadBuffer(char *&buffer);
    virtual Int_t    Sizeof() const;
+
+   std::size_t      ReadBuffer(char *&buffer, std::size_t bufsize);
 
    static TString  *ReadString(TBuffer &b, const TClass *clReq);
    static void      WriteString(TBuffer &b, const TString *a);

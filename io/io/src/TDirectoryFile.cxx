@@ -11,7 +11,7 @@
 
 /**
  \class TDirectoryFile
- \ingroup IO
+ \ingroup io_files
 
  A ROOT file is structured in Directories (like a file system).
  Each Directory has a list of Keys (see TKeys) and a list of objects
@@ -23,8 +23,6 @@ End_Macro
  The structure of a file is shown in TFile::TFile
 */
 
-#include <iostream>
-#include "Strlen.h"
 #include "strlcpy.h"
 #include "TDirectoryFile.h"
 #include "TFile.h"
@@ -48,6 +46,9 @@ End_Macro
 #include "TProcessUUID.h"
 #include "TVirtualMutex.h"
 #include "TEmulatedCollectionProxy.h"
+
+#include <iostream>
+#include <cstring>
 
 const UInt_t kIsBigFile = BIT(16);
 const Int_t  kMaxLen = 2048;
@@ -2010,64 +2011,12 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    return nbytes;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Write object from pointer of class classname in this directory.
-///
-/// obj may not derive from TObject. See TDirectoryFile::WriteTObject for comments
-///
-/// ## Very important note
-/// The value passed as 'obj' needs to be from a pointer to the type described by classname.
-/// For example:
-/// ~~~{.cpp}
-/// TopClass *top;
-/// BottomClass *bottom;
-/// top = bottom;
-/// ~~~
-/// you can do:
-/// ~~~{.cpp}
-/// directory->WriteObjectAny(top,"top","name of object");
-/// directory->WriteObjectAny(bottom,"bottom","name of object");
-/// ~~~
-/// <b>BUT YOU CAN NOT DO</b> the following since it will fail with multiple inheritance:
-/// ~~~{.cpp}
-/// directory->WriteObjectAny(top,"bottom","name of object");
-/// ~~~
-/// We <b>STRONGLY</b> recommend to use
-/// ~~~{.cpp}
-/// TopClass *top = ....;
-/// directory->WriteObject(top,"name of object")
-/// ~~~
-/// See also remarks in TDirectoryFile::WriteTObject
-
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl,
+                                     std::pair<const char *, const char *> nameAndTitle, Option_t *option,
+                                     Int_t bufsize)
 {
-   TClass *cl = TClass::GetClass(classname);
-   if (!cl) {
-      TObject *info_obj = *(TObject**)obj;
-      TVirtualStreamerInfo *info = dynamic_cast<TVirtualStreamerInfo*>(info_obj);
-      if (!info) {
-         Error("WriteObjectAny","Unknown class: %s",classname);
-         return 0;
-      } else {
-         cl = info->GetClass();
-      }
-   }
-   return WriteObjectAny(obj,cl,name,option,bufsize);
-}
+   const auto [name, title] = nameAndTitle;
 
-////////////////////////////////////////////////////////////////////////////////
-/// Write object of class with dictionary cl in this directory.
-///
-/// obj may not derive from TObject
-/// To get the TClass* cl pointer, one can use
-///
-///     TClass *cl = TClass::GetClass("classname");
-///
-/// An alternative is to call the function WriteObjectAny above.
-/// see TDirectoryFile::WriteTObject for comments
-
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
-{
    TDirectory::TContext ctxt(this);
 
    if (!fFile) return 0;
@@ -2136,6 +2085,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
       oldkey = GetKey(oname);
    }
    key = fFile->CreateKey(this, obj, cl, oname, bsize);
+   key->SetTitle(title);
    if (newName) delete [] newName;
 
    if (!key->GetSeekKey()) {
@@ -2153,6 +2103,67 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    }
 
    return nbytes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write object from pointer of class classname in this directory.
+///
+/// obj may not derive from TObject. See TDirectoryFile::WriteTObject for comments
+///
+/// ## Very important note
+/// The value passed as 'obj' needs to be from a pointer to the type described by classname.
+/// For example:
+/// ~~~{.cpp}
+/// TopClass *top;
+/// BottomClass *bottom;
+/// top = bottom;
+/// ~~~
+/// you can do:
+/// ~~~{.cpp}
+/// directory->WriteObjectAny(top,"top","name of object");
+/// directory->WriteObjectAny(bottom,"bottom","name of object");
+/// ~~~
+/// <b>BUT YOU CAN NOT DO</b> the following since it will fail with multiple inheritance:
+/// ~~~{.cpp}
+/// directory->WriteObjectAny(top,"bottom","name of object");
+/// ~~~
+/// We <b>STRONGLY</b> recommend to use
+/// ~~~{.cpp}
+/// TopClass *top = ....;
+/// directory->WriteObject(top,"name of object")
+/// ~~~
+/// See also remarks in TDirectoryFile::WriteTObject
+
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
+{
+   TClass *cl = TClass::GetClass(classname);
+   if (!cl) {
+      TObject *info_obj = *(TObject**)obj;
+      TVirtualStreamerInfo *info = dynamic_cast<TVirtualStreamerInfo*>(info_obj);
+      if (!info) {
+         Error("WriteObjectAny","Unknown class: %s",classname);
+         return 0;
+      } else {
+         cl = info->GetClass();
+      }
+   }
+   return WriteObjectAny(obj,cl,name,option,bufsize);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write object of class with dictionary cl in this directory.
+///
+/// obj may not derive from TObject
+/// To get the TClass* cl pointer, one can use
+///
+///     TClass *cl = TClass::GetClass("classname");
+///
+/// An alternative is to call the function WriteObjectAny above.
+/// see TDirectoryFile::WriteTObject for comments
+
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
+{
+   return WriteObjectAny(obj, cl, {name, ""}, option, bufsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

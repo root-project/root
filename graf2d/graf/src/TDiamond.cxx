@@ -12,11 +12,11 @@
 #include <cstdlib>
 
 #include <iostream>
-#include "TBufferFile.h"
 #include "TROOT.h"
 #include "TDiamond.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
+#include "TBoxInteractive.h"
+#include "TCanvasImp.h"
 #include "TMath.h"
 
 
@@ -64,14 +64,8 @@ TDiamond::~TDiamond()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TDiamond::TDiamond(const TDiamond &diamond) : TPaveText()
+TDiamond::TDiamond(const TDiamond &diamond) : TPaveText(diamond)
 {
-   TBufferFile b(TBuffer::kWrite);
-   TDiamond *p = (TDiamond*)(&diamond);
-   p->Streamer(b);
-   b.SetReadMode();
-   b.SetBufferOffset(0);
-   Streamer(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +89,21 @@ void TDiamond::Draw(Option_t *option)
 
 }
 
+class TDiamondInteractive : public TBoxInteractive {
+   public:
+      using TBoxInteractive::TBoxInteractive;
+
+      void PaintOutline(TVirtualPad &parent) override
+      {
+         Double_t xd[5] = { (newX1 + newX2) / 2, newX1, (newX1 + newX2) / 2, newX2, (newX1 + newX2) / 2 };
+         Double_t yd[5] = { newY2, (newY1 + newY2)/2, newY1, (newY1 + newY2)/2, newY2 };
+
+         // "i" is interactive painting, "diamond" is id
+         parent.PaintPolyLine(5, xd, yd, "idiamond");
+      }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -107,261 +116,94 @@ void TDiamond::Draw(Option_t *option)
 
 void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable())
+      return;
 
-   const Int_t kMaxDiff = 5;
-   const Int_t kMinSize = 20;
+   auto &parent = *gPad;
 
-   static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
-   static Int_t px1p, px2p, py1p, py2p;
-   static Int_t pTx,pTy,pLx,pLy,pRx,pRy,pBx,pBy;
-   static Double_t x1c,x2c,x3c,x4c;
-   static Bool_t pTop, pL, pR, pBot, pINSIDE;
-   static Int_t i,x[5], y[5];
-   Int_t  wx, wy;
-   TVirtualPad  *parent;
-   Bool_t opaque  = gPad->OpaqueMoving();
-   Bool_t ropaque = gPad->OpaqueResizing();
+   auto inter = parent.GetInteractive<TDiamondInteractive>(this);
 
-   if (!gPad->IsEditable()) return;
-
-   parent = gPad;
+   auto setNewValues = [&inter, this]() {
+      SetX1(inter->newX1);
+      SetX2(inter->newX2);
+      SetY1(inter->newY1);
+      SetY2(inter->newY2);
+   };
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-
-      gVirtualX->SetLineColor(-1);
-      TAttLine::Modify();  //Change line attributes only if necessary
-      if (GetFillColor())
-         gVirtualX->SetLineColor(GetFillColor());
-      else
-         gVirtualX->SetLineColor(1);
-      gVirtualX->SetLineWidth(2);
-
+      inter = parent.MakeInteractive<TDiamondInteractive>(this, kFALSE, GetX1(), GetY1(), GetX2(), GetY2());
       // No break !!!
 
-   case kMouseMotion:
+   case kMouseMotion: {
 
-      px1 = gPad->XtoAbsPixel(GetX1());
-      py1 = gPad->YtoAbsPixel(GetY1());
-      px2 = gPad->XtoAbsPixel(GetX2());
-      py2 = gPad->YtoAbsPixel(GetY2());
+      TDiamondInteractive dummy(kFALSE);
+      if (!inter) inter = &dummy;
+      inter->CalcPixelCoord(parent, GetX1(), GetY1(), GetX2(), GetY2());
 
-      if (px1 < px2) {
-         pxl = px1;
-         pxt = px2;
+      if (!inter->SelectDiamondCorner(px, py)) {
+         // refuse interactive changes
+         parent.FreeInteractive(this);
       } else {
-         pxl = px2;
-         pxt = px1;
+         inter->SetCursor(parent, event == kButton1Down);
+         fResizing = inter->IsResizing() && (event != kMouseMotion);
       }
-      if (py1 < py2) {
-         pyl = py1;
-         pyt = py2;
-      } else {
-         pyl = py2;
-         pyt = py1;
-      }
-
-      px1p = parent->XtoAbsPixel(parent->GetX1()) + parent->GetBorderSize();
-      py1p = parent->YtoAbsPixel(parent->GetY1()) - parent->GetBorderSize();
-      px2p = parent->XtoAbsPixel(parent->GetX2()) - parent->GetBorderSize();
-      py2p = parent->YtoAbsPixel(parent->GetY2()) + parent->GetBorderSize();
-
-      pTx = pBx = (pxl+pxt)/2;
-      pLy = pRy = (pyl+pyt)/2;
-      pTy = pyl;
-      pBy = pyt;
-      pLx = pxl;
-      pRx = pxt;
-
-      pTop = pL = pR = pBot = pINSIDE = kFALSE;
-
-      if ((TMath::Abs(px-(pxl+pxt)/2) < kMaxDiff) &&
-          (TMath::Abs(py - pyl) < kMaxDiff)) {             // top edge
-         pxold = pxl; pyold = pyl; pTop = kTRUE;
-         gPad->SetCursor(kTopSide);
-      }
-
-      if ((TMath::Abs(px-(pxl+pxt)/2) < kMaxDiff) &&
-          (TMath::Abs(py - pyt) < kMaxDiff)) {             // bottom edge
-         pxold = pxt; pyold = pyt; pBot = kTRUE;
-         gPad->SetCursor(kBottomSide);
-      }
-
-      if ((TMath::Abs(py-(pyl+pyt)/2) < kMaxDiff) &&
-          (TMath::Abs(px - pxl) < kMaxDiff)) {             // left edge
-         pxold = pxl; pyold = pyl; pL = kTRUE;
-         gPad->SetCursor(kLeftSide);
-      }
-
-      if ((TMath::Abs(py-(pyl+pyt)/2) < kMaxDiff) &&
-          (TMath::Abs(px - pxt) < kMaxDiff)) {             // right edge
-         pxold = pxt; pyold = pyt; pR = kTRUE;
-         gPad->SetCursor(kRightSide);
-      }
-
-      x1c = (py-pTy)*(pTx-pLx)/(pTy-pLy)+pTx;
-      x2c = (py-pTy)*(pRx-pTx)/(pRy-pTy)+pTx;
-      x3c = (py-pRy)*(pRx-pBx)/(pRy-pBy)+pRx;
-      x4c = (py-pBy)*(pBx-pLx)/(pBy-pLy)+pBx;
-
-      if (px > x1c+kMaxDiff && px < x2c-kMaxDiff &&
-          px > x4c+kMaxDiff && px < x3c-kMaxDiff) {    // inside box
-         pxold = px; pyold = py; pINSIDE = kTRUE;
-         if (event == kButton1Down)
-            gPad->SetCursor(kMove);
-         else
-            gPad->SetCursor(kCross);
-      }
-
-      fResizing = kFALSE;
-      if (pTop || pL || pR || pBot)
-         fResizing = kTRUE;
-
-      if (!pTop && !pL && !pR && !pBot && !pINSIDE)
-         gPad->SetCursor(kCross);
 
       break;
+   }
 
    case kArrowKeyRelease:
-   case kButton1Motion:
+   case kButton1Motion: {
 
-      wx = wy = 0;
-      x[0] = x[2] = x[4] = (px1+px2)/2;
-      x[1] = px2;
-      x[3] = px1;
-      y[0] = y[4] = py1;
-      y[2] = py2;
-      y[1] = y[3] = (py1+py2)/2;
-      if (pTop) {
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-         py2 += py - pyold;
-         if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
-         if (py2 < py2p) { py2 = py2p; wy = py2; }
-         y[2] = py2;
-         y[1] = y[3] = (py1+py2)/2;
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-      }
-      if (pBot) {
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-         py1 += py - pyold;
-         if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
-         if (py1 > py1p) { py1 = py1p; wy = py1; }
-         y[0] = y[4] = py1;
-         y[1] = y[3] = (py1+py2)/2;
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-      }
-      if (pL) {
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-         px1 += px - pxold;
-         if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
-         if (px1 < px1p) { px1 = px1p; wx = px1; }
-         x[3] = px1;
-         x[0] = x[2] = x[4] = (px1+px2)/2;
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-      }
-      if (pR) {
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-         px2 += px - pxold;
-         if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
-         if (px2 > px2p) { px2 = px2p; wx = px2; }
-         x[1] = px2;
-         x[0] = x[2] = x[4] = (px1+px2)/2;
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-      }
-      if (pINSIDE) {
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-         Int_t dx = px - pxold;
-         Int_t dy = py - pyold;
-         px1 += dx; py1 += dy; px2 += dx; py2 += dy;
-         if (px1 < px1p) { dx = px1p - px1; px1 += dx; px2 += dx; wx = px+dx; }
-         if (px2 > px2p) { dx = px2 - px2p; px1 -= dx; px2 -= dx; wx = px-dx; }
-         if (py1 > py1p) { dy = py1 - py1p; py1 -= dy; py2 -= dy; wy = py-dy; }
-         if (py2 < py2p) { dy = py2p - py2; py1 += dy; py2 += dy; wy = py+dy; }
-         x[0] = x[2] = x[4] = (px1+px2)/2;
-         x[1] = px2;
-         x[3] = px1;
-         y[0] = y[4] = py1;
-         y[2] = py2;
-         y[1] = y[3] = (py1+py2)/2;
-         for (i=0;i<4;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
-      }
+      if (!inter)
+         return;
 
-      if (wx || wy) {
-         if (wx) px = wx;
-         if (wy) py = wy;
-         gVirtualX->Warp(px, py);
-      }
+      if (!inter->ProcessMouseMove(parent, px, py))
+         return;
 
-      pxold = px;
-      pyold = py;
+      inter->ApplyChanges(parent);
 
-      if ((pINSIDE && opaque) || (fResizing && ropaque)) {
-         if (pTop || pBot || pL || pR) {
-            fX1 = gPad->AbsPixeltoX(px1);
-            fY1 = gPad->AbsPixeltoY(py1);
-            fX2 = gPad->AbsPixeltoX(px2);
-            fY2 = gPad->AbsPixeltoY(py2);
-         }
-         if (pINSIDE) {
-            fX1 = gPad->AbsPixeltoX(px1);
-            fY1 = gPad->AbsPixeltoY(py1);
-            fX2 = gPad->AbsPixeltoX(px2);
-            fY2 = gPad->AbsPixeltoY(py2);
-            // if it was not a pad that was moved then it must have been
-            // a box or something like that so we have to redraw the pad
-            if (parent == gPad) gPad->Modified(kTRUE);
-         }
-
-         if (pINSIDE) gPad->ShowGuidelines(this, event, 'i', true);
-         if (pTop) gPad->ShowGuidelines(this, event, 't', true);
-         if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
-         if (pL) gPad->ShowGuidelines(this, event, 'l', true);
-         if (pR) gPad->ShowGuidelines(this, event, 'r', true);
-
-         if (pTop || pL || pR || pBot)
-            gPad->Modified(kTRUE);
+      if (inter->IsOpaque(parent)) {
+         setNewValues();
+         parent.ShowGuidelines(this, event, inter->GetGuideChar(), true);
+         parent.Modified(kTRUE);
       }
 
       break;
+   }
 
    case kButton1Up:
 
-      if (opaque) {
-         gPad->ShowGuidelines(this, event);
-      } else {
-         if (pTop || pBot || pL || pR || pINSIDE) {
-            fX1 = gPad->AbsPixeltoX(px1);
-            fY1 = gPad->AbsPixeltoY(py1);
-            fX2 = gPad->AbsPixeltoX(px2);
-            fY2 = gPad->AbsPixeltoY(py2);
-         }
+      if (inter && inter->IsOpaque(parent))
+         parent.ShowGuidelines(this, event);
 
-         if (pINSIDE) {
-            // if it was not a pad that was moved then it must have been
-            // a box or something like that so we have to redraw the pad
-            if (parent == gPad) gPad->Modified(kTRUE);
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         if (inter && inter->IsOpaque(parent)) {
+            SetX1(inter->oldX1);
+            SetY1(inter->oldY1);
+            SetX2(inter->oldX2);
+            SetY2(inter->oldY2);
          }
+      } else if (inter && !inter->IsOpaque(parent) && (inter->newX1 != inter->newX2)) {
+         setNewValues();
       }
 
-      if (pTop || pL || pR || pBot) gPad->Modified(kTRUE);
-
-      if (!opaque) {
-         gVirtualX->SetLineColor(-1);
-         gVirtualX->SetLineWidth(-1);
-      }
+      parent.Modified();
+      parent.FreeInteractive(this); // delete interactive object
+      fResizing = kFALSE;
 
       break;
 
    case kButton1Locate:
-
+      // Sergey: code is never used, has to be removed in ROOT7
       ExecuteEvent(kButton1Down, px, py);
 
       while (true) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1, 1, px, py);
+         event = parent.GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 

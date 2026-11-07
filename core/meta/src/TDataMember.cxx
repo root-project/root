@@ -137,7 +137,6 @@ but also in Dump() and Inspect() methods and by the THtml class.
 
 #include "TDataMember.h"
 
-#include "Strlen.h"
 #include "strtok.h"
 #include "strlcpy.h"
 #include "TBuffer.h"
@@ -152,6 +151,7 @@ but also in Dump() and Inspect() methods and by the THtml class.
 #include "TList.h"
 #include "TListOfDataMembers.h"
 #include "TMethod.h"
+#include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TRealData.h"
 #include "TROOT.h"
@@ -160,7 +160,7 @@ but also in Dump() and Inspect() methods and by the THtml class.
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
-
+#include <cstring>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +446,13 @@ const char *TDataMember::GetTrueTypeName() const
 
 Longptr_t TDataMember::GetOffset() const
 {
-   if (fOffset>=0) return fOffset;
+   if (Property() & kIsStatic) {
+      Error("GetOffset", "Cannot get offset of static data member %s", GetName());
+      return -1;
+   }
+
+   if (fOffset >= 0)
+      return fOffset;
 
    R__LOCKGUARD(gInterpreterMutex);
    //case of an interpreted or emulated class
@@ -495,13 +501,18 @@ Longptr_t TDataMember::GetOffset() const
 
 Longptr_t TDataMember::GetOffsetCint() const
 {
-   if (fOffset>=0) return fOffset;
+   if (fOffset >= 0)
+      return fOffset;
 
    R__LOCKGUARD(gInterpreterMutex);
-   TDataMember *dm = const_cast<TDataMember*>(this);
+   TDataMember *dm = const_cast<TDataMember *>(this);
 
-   if (dm->IsValid()) return gCling->DataMemberInfo_Offset(dm->fInfo);
-   else return -1;
+   if (dm->IsValid()) {
+      Longptr_t offset = gCling->DataMemberInfo_Offset(dm->fInfo);
+      dm->fOffset = offset;
+      return offset;
+   }
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -728,9 +739,16 @@ void TDataMember::ExtractOptionsFromComment()
             Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
             return;
          }
+         // setter method may accept enum data type - therefore check if it exists at all
          if (GetClass()->GetMethod(ptr1,"1"))
             // FIXME: wrong in case called derives via multiple inheritance from this class
-            fValueSetter = new TMethodCall(GetClass(),ptr1,"1");
+            fValueSetter = new TMethodCall(GetClass(), ptr1, "1");
+         else if (auto method = IsEnum() ? GetClass()->GetMethodAny(ptr1) : nullptr) {
+            // if data member is enum, take setter and cast 1 to argument data type
+            auto arg = dynamic_cast<TMethodArg *>(method->GetListOfMethodArgs()->First());
+            auto sarg = TString::Format("(%s) 1", arg ? arg->GetFullTypeName() : "int");
+            fValueSetter = new TMethodCall(GetClass(), ptr1, sarg.Data());
+         }
       }
    }
 
@@ -774,6 +792,8 @@ void TDataMember::ExtractOptionsFromComment()
    //having all options extracted and put into list, we finally can parse
    //them to create a list of options...
 
+   auto enumDict = IsEnum() ? TEnum::GetEnum(GetTypeName()) : nullptr;
+
    fOptions = new TList();                //create the list
 
    TIter next(optionlist.get());                //we'll iterate through all
@@ -803,11 +823,10 @@ void TDataMember::ExtractOptionsFromComment()
                // We'll try to find global enum existing in ROOT...
                l = (Long_t)(*value);
             } else if (IsEnum()) {
-               TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
-               if (obj)
-                  l = ((TEnumConstant *)obj)->GetValue();
+               if (auto enumConst = enumDict ? (TEnumConstant*) enumDict->GetConstants()->FindObject(ptr1) : nullptr)
+                  l = enumConst->GetValue();
                else
-                  l = gInterpreter->Calc(Form("%s;", ptr1));
+                  l = gInterpreter->Calc(TString::Format("%s;", ptr1));
             } else {
                Fatal("TDataMember", "Internal error, couldn't recognize enum/global value %s.", ptr1);
             }

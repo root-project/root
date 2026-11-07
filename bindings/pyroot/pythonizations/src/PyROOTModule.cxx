@@ -11,17 +11,16 @@
 
 // Bindings
 #include "PyROOTPythonize.h"
-#include "RPyROOTApplication.h"
 
 // Cppyy
-#include "CPyCppyy/API.h"
-#include "../../cppyy/CPyCppyy/src/CallContext.h"
-#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
+#include "cpyrt/API.h"
 
 // ROOT
+#include "TError.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TVirtualPad.h"
 #include "RConfigure.h"
 
 // Standard
@@ -37,30 +36,6 @@ namespace PyROOT {
 
 PyObject *gRootModule = nullptr;
 
-PyObject *RegisterConverterAlias(PyObject * /*self*/, PyObject *args)
-{
-   PyObject *name = nullptr;
-   PyObject *target = nullptr;
-
-   PyArg_ParseTuple(args, "UU:RegisterConverterAlias", &name, &target);
-
-   CPyCppyy::RegisterConverterAlias(PyUnicode_AsUTF8(name), PyUnicode_AsUTF8(target));
-
-   Py_RETURN_NONE;
-}
-
-PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
-{
-   PyObject *name = nullptr;
-   PyObject *target = nullptr;
-
-   PyArg_ParseTuple(args, "UU:RegisterExecutorAlias", &name, &target);
-
-   CPyCppyy::RegisterExecutorAlias(PyUnicode_AsUTF8(name), PyUnicode_AsUTF8(target));
-
-   Py_RETURN_NONE;
-}
-
 /// \brief A PyObject wrapper to track reference counting of external objects
 ///
 /// This wrapper can be useful in shared ownership scenarios when a C++ object
@@ -75,7 +50,7 @@ class PyObjRefCounter final {
    void Reset(PyObject *object)
    {
       if (fObject) {
-         Py_DECREF(fObject);
+         Py_DecRef(fObject);
          fObject = nullptr;
       }
       if (object) {
@@ -118,61 +93,102 @@ PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
    PyArg_ParseTuple(args, "O:PyObjRefCounterAsStdAny", &object);
 
    // The std::any is managed by Python
-   return CPyCppyy::Instance_FromVoidPtr(new std::any{std::in_place_type<PyObjRefCounter>, object}, "std::any",
+   return cppjit::cpyrt::Instance_FromVoidPtr(new std::any{std::in_place_type<PyObjRefCounter>, object}, "std::any",
                                          /*python_owns=*/true);
 }
 
 } // namespace PyROOT
 
+namespace {
+
+/// Turns a ROOT warning into a Python warning, see ROOT::Internal::SetWarningHandler().
+bool WarningHandler(const char *location, const char *msg)
+{
+   PyGILState_STATE state = PyGILState_Ensure();
+   // Python code can't run while an exception is pending, e.g. a previous
+   // warning turned into an error: decline, and ROOT prints the warning.
+   bool handled = !PyErr_Occurred();
+   if (handled) {
+      // Prints or, per the warnings filters, raises: the exception stays
+      // pending until the call into C++ returns to Python.
+      PyErr_WarnExplicit(nullptr, msg, location, 0, "ROOT", nullptr);
+   }
+   PyGILState_Release(state);
+   return handled;
+}
+
+int (*gPreviousInputHook)() = nullptr;
+
+/// Processes GUI events while the Python prompt waits for input. Runs no
+/// Python code, so a Ctrl-C arriving meanwhile stays pending for the prompt.
+int GUIEventInputHook()
+{
+   PyGILState_STATE state = PyGILState_Ensure();
+   if (gPad && gPad->IsWeb())
+      gPad->UpdateAsync();
+   gSystem->ProcessEvents();
+   PyGILState_Release(state);
+
+   return gPreviousInputHook ? gPreviousInputHook() : 0;
+}
+
+/// Turn ROOT warnings into Python warnings.
+PyObject *InstallWarningHandler(PyObject * /*self*/, PyObject * /*args*/)
+{
+   ROOT::Internal::SetWarningHandler(&WarningHandler);
+   Py_RETURN_NONE;
+}
+
+/// Install the PyOS_InputHook that processes GUI events, chaining to the
+/// previous hook.
+PyObject *InstallGUIEventInputHook(PyObject * /*self*/, PyObject * /*args*/)
+{
+   if (PyOS_InputHook != &GUIEventInputHook) {
+      gPreviousInputHook = PyOS_InputHook;
+      PyOS_InputHook = &GUIEventInputHook;
+   }
+   Py_RETURN_NONE;
+}
+
+} // namespace
+
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
-   {(char *)"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
-    (char *)"Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {(char *)"GetBranchAttr", (PyCFunction)PyROOT::GetBranchAttr, METH_VARARGS,
-    (char *)"Allow to access branches as tree attributes"},
-   {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
-    (char *)"Cast the void* returned by TClass::DynamicCast to the right type"},
-   {(char *)"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
-    (char *)"Fully enable the use of TTree::Branch from Python"},
-   {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
-    (char *)"Add pretty printing pythonization"},
-   {(char *)"InitApplication", (PyCFunction)PyROOT::RPyROOTApplication::InitApplication, METH_VARARGS,
-    (char *)"Initialize interactive ROOT use from Python"},
-   {(char *)"InstallGUIEventInputHook", (PyCFunction)PyROOT::RPyROOTApplication::InstallGUIEventInputHook, METH_NOARGS,
-    (char *)"Install an input hook to process GUI events"},
-   {(char *)"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
-    (char *)"Deserialize a pickled object"},
-   {(char *)"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS, (char *)"Create JupyROOTExecutor"},
-   {(char *)"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS, (char *)"Create JupyROOTDeclarer"},
-   {(char *)"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
-    (char *)"Clear JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_Ctor", (PyCFunction)JupyROOTExecutorHandler_Ctor, METH_NOARGS,
-    (char *)"Create JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_Poll", (PyCFunction)JupyROOTExecutorHandler_Poll, METH_NOARGS,
-    (char *)"Poll JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_EndCapture", (PyCFunction)JupyROOTExecutorHandler_EndCapture, METH_NOARGS,
-    (char *)"End capture JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_InitCapture", (PyCFunction)JupyROOTExecutorHandler_InitCapture, METH_NOARGS,
-    (char *)"Init capture JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_GetStdout", (PyCFunction)JupyROOTExecutorHandler_GetStdout, METH_NOARGS,
-    (char *)"Get stdout JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_GetStderr", (PyCFunction)JupyROOTExecutorHandler_GetStderr, METH_NOARGS,
-    (char *)"Get stderr JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
-    (char *)"Destruct JupyROOTExecutorHandler"},
-   {(char *)"CPyCppyyRegisterConverterAlias", (PyCFunction)PyROOT::RegisterConverterAlias, METH_VARARGS,
-    (char *)"Register a custom converter that is a reference to an existing converter"},
-   {(char *)"CPyCppyyRegisterExecutorAlias", (PyCFunction)PyROOT::RegisterExecutorAlias, METH_VARARGS,
-    (char *)"Register a custom executor that is a reference to an existing executor"},
-   {(char *)"PyObjRefCounterAsStdAny", (PyCFunction)PyROOT::PyObjRefCounterAsStdAny, METH_VARARGS,
-    (char *)"Wrap a reference count to any Python object in a std::any for resource management in C++"},
+   {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
+    "Add a custom pickling mechanism for Cppyy Python proxy objects"},
+   {"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
+    "Add pretty printing pythonization"},
+   {"InstallWarningHandler", (PyCFunction)InstallWarningHandler, METH_NOARGS,
+    "Turn ROOT warnings into Python warnings"},
+   {"InstallGUIEventInputHook", (PyCFunction)InstallGUIEventInputHook, METH_NOARGS,
+    "Install an input hook to process GUI events"},
+   {"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
+    "Deserialize a pickled object"},
+   {"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS, "Create JupyROOTExecutor"},
+   {"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS, "Create JupyROOTDeclarer"},
+   {"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
+    "Clear JupyROOTExecutorHandler"},
+   {"JupyROOTExecutorHandler_Ctor", (PyCFunction)JupyROOTExecutorHandler_Ctor, METH_NOARGS,
+    "Create JupyROOTExecutorHandler"},
+   {"JupyROOTExecutorHandler_Poll", (PyCFunction)JupyROOTExecutorHandler_Poll, METH_NOARGS,
+    "Poll JupyROOTExecutorHandler"},
+   {"JupyROOTExecutorHandler_EndCapture", (PyCFunction)JupyROOTExecutorHandler_EndCapture, METH_NOARGS,
+    "End capture JupyROOTExecutorHandler"},
+   {"JupyROOTExecutorHandler_InitCapture", (PyCFunction)JupyROOTExecutorHandler_InitCapture, METH_NOARGS,
+    "Init capture JupyROOTExecutorHandler"},
+   {"JupyROOTExecutorHandler_GetStdout", (PyCFunction)JupyROOTExecutorHandler_GetStdout, METH_NOARGS,
+    "Get stdout JupyROOTExecutorHandler"},
+   {"JupyROOTExecutorHandler_GetStderr", (PyCFunction)JupyROOTExecutorHandler_GetStderr, METH_NOARGS,
+    "Get stderr JupyROOTExecutorHandler"},
+   {"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
+    "Destruct JupyROOTExecutorHandler"},
+   {"PyObjRefCounterAsStdAny", (PyCFunction)PyROOT::PyObjRefCounterAsStdAny, METH_VARARGS,
+    "Wrap a reference count to any Python object in a std::any for resource management in C++"},
    {NULL, NULL, 0, NULL}};
 
 struct module_state {
    PyObject *error;
 };
-
-using namespace CPyCppyy;
 
 #define GETSTATE(m) ((struct module_state *)PyModule_GetState(m))
 
@@ -206,20 +222,5 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
 
-   // Initialize and acquire the GIL to allow for threading in ROOT
-#if PY_VERSION_HEX < 0x03090000
-   PyEval_InitThreads();
-#endif
-
-   // Make sure the interpreter is initialized once gROOT has been initialized
-   TInterpreter::Instance();
-
-   // signal policy: don't abort interpreter in interactive mode
-   CallContext::SetGlobalPolicy(CallContext::kProtected, !gROOT->IsBatch());
-
-   // inject ROOT namespace for convenience
-   PyModule_AddObject(gRootModule, (char *)"ROOT", CreateScopeProxy("ROOT"));
-
-   Py_INCREF(gRootModule);
    return gRootModule;
 }

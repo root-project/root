@@ -19,7 +19,7 @@
  *                                                                       *
  *************************************************************************/
 
-#include "../RVersion.h"
+#include "RVersion.hxx"
 #include "RConfigure.h"
 
 
@@ -62,17 +62,6 @@
 #   ifdef __LP64__
 #      define R__B64
 #   endif
-#   ifdef R__HPUX10
-#      define NEED_SNPRINTF
-#   endif
-#endif
-
-#ifdef _AIX
-#   define R__AIX
-#   define R__UNIX
-#   define ANSICPP
-#   define R__SEEK64
-#   define NEED_STRCASECMP
 #endif
 
 #if defined(__linux) || defined(__linux__)
@@ -107,7 +96,6 @@
 #      include <cstdlib>
 #   endif
 #   define R__UNIX
-#   define NEED_STRING
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
@@ -125,7 +113,6 @@
 #   define R__SEEK64
 #   define ANSICPP
 #   define R__UNIX
-#   define NEED_STRING
 #   define NEED_SIGJMP
 #endif
 
@@ -261,7 +248,6 @@
 #   define ANSICPP
 #   define NEED_SIGJMP
 #   define NEED_STRCASECMP
-#   define NEED_SNPRINTF
 #endif
 
 #if defined(__FreeBSD__)
@@ -326,7 +312,6 @@
 #   define R__HIUX
 #   define R__UNIX
 #   define NEED_SIGJMP
-#   define NEED_SNPRINTF
 #   define ANSICPP
 #endif
 
@@ -392,9 +377,7 @@
 #   define SC
 #   define R__SC
 #   if defined(WIN32)
-#      define NEED_STRING
 #      define NEED_STRCASECMP
-#      define NEED_SNPRINTF
 #      define ANSICPP
 #   else
 #      define MSDOS
@@ -405,15 +388,8 @@
 
 #ifdef _MSC_VER
 #   define R__VISUAL_CPLUSPLUS
-#   define NEED_STRING
 #   define NEED_STRCASECMP
-#   if _MSC_VER < 1900
-#     define NEED_SNPRINTF
-#   endif
 #   define ANSICPP
-#   if _MSC_VER >= 1400
-#     define DONTNEED_VSNPRINTF
-#   endif
 #   if _MSC_VER < 1310
 #      define R__NO_CLASS_TEMPLATE_SPECIALIZATION
 #   endif
@@ -447,6 +423,8 @@
 
 #endif
 
+#define _R_QUOTEVAL_(string) _QUOTE_(string)
+
 /* produce an identifier that is almost unique inside a file */
 #   define _R__JOIN_(X,Y) _NAME2_(X,Y)
 #   define _R__JOIN3_(F,X,Y) _NAME3_(F,X,Y)
@@ -456,7 +434,7 @@
 /*---- deprecation -----------------------------------------------------------*/
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
 # if (__GNUC__ == 5 && (__GNUC_MINOR__ == 1 || __GNUC_MINOR__ == 2)) || defined(R__NO_DEPRECATION)
-/* GCC 5.1, 5.2: false positives due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15269 
+/* GCC 5.1, 5.2: false positives due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=15269
    or deprecation turned off */
 #   define _R__DEPRECATED_LATER(REASON)
 # else
@@ -475,28 +453,24 @@
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
 #endif
 
-/* USE AS `R__DEPRECATED(6,38, "Not threadsafe; use TFoo::Bar().")`
-   To be removed by 6.38 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,37,0)
-# define _R__DEPRECATED_638(REASON) _R__DEPRECATED_LATER(REASON)
-#else
-# define _R__DEPRECATED_638(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
-#endif
-
-/* USE AS `R__DEPRECATED(6,40, "Not threadsafe; use TFoo::Bar().")`
-   To be removed by 6.40 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6, 39, 0)
-#define _R__DEPRECATED_640(REASON) _R__DEPRECATED_LATER(REASON)
-#else
-#define _R__DEPRECATED_640(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
-#endif
-
 /* USE AS `R__DEPRECATED(6,42, "Not threadsafe; use TFoo::Bar().")`
    To be removed by 6.42 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6, 41, 0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 41, 2)
 #define _R__DEPRECATED_642(REASON) _R__DEPRECATED_LATER(REASON)
 #else
 #define _R__DEPRECATED_642(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+#endif
+
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6, 43, 0)
+#define _R__DEPRECATED_644(REASON) _R__DEPRECATED_LATER(REASON)
+#else
+#define _R__DEPRECATED_644(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+#endif
+
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6, 45, 0)
+#define _R__DEPRECATED_646(REASON) _R__DEPRECATED_LATER(REASON)
+#else
+#define _R__DEPRECATED_646(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
 /* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`

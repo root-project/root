@@ -6,16 +6,22 @@
 #include <TRandom3.h>
 #include <TROOT.h>
 #include <TSystem.h>
+#include <TTree.h>
 #include <RZip.h>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
 #include <ROOT/TestSupport.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
-using ROOT::Experimental::RFile;
+#include "RFileTestIncludes.hxx"
+
+using ROOT::RFile;
 using ROOT::TestSupport::FileRaii;
 
-static std::string JoinKeyNames(const ROOT::Experimental::RFileKeyIterable &iterable)
+static std::string JoinKeyNames(const ROOT::RFileKeyIterable &iterable)
 {
    auto beg = iterable.begin();
    if (beg == iterable.end())
@@ -26,7 +32,7 @@ static std::string JoinKeyNames(const ROOT::Experimental::RFileKeyIterable &iter
 
 TEST(RFile, DecomposePath)
 {
-   using ROOT::Experimental::Detail::DecomposePath;
+   using ROOT::Detail::DecomposePath;
 
    auto Pair = [](std::string_view a, std::string_view b) { return std::make_pair(a, b); };
 
@@ -63,11 +69,38 @@ TEST(RFile, Open)
    EXPECT_FALSE(file->Get<TH1F>("hist"));
    EXPECT_TRUE(file->Get<TH1>("hist"));
 
-   // We do NOT want to globally register RFiles ever.
-   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
+   std::string foo = "foo";
+   EXPECT_THROW(file->Put("foo", foo), ROOT::RException);
+
+   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 1);
+}
+
+TEST(RFile, OpenWithoutGlobalRegistration)
+{
+   FileRaii fileGuard("test_rfile_read.root");
+
+   // Create a root file to open
+   {
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      TH1D hist("hist", "", 100, -10, 10);
+      hist.FillRandom("gaus", 1000);
+      tfile->WriteObject(&hist, "hist");
+   }
+
+   auto openOpts = RFile::ROpenOptions();
+   openOpts.fEnableBrowsability = false;
+   auto file = RFile::Open(fileGuard.GetPath(), openOpts);
+   auto hist = file->Get<TH1D>("hist");
+   EXPECT_TRUE(hist);
+
+   EXPECT_FALSE(file->Get<TH1D>("inexistent"));
+   EXPECT_FALSE(file->Get<TH1F>("hist"));
+   EXPECT_TRUE(file->Get<TH1>("hist"));
 
    std::string foo = "foo";
    EXPECT_THROW(file->Put("foo", foo), ROOT::RException);
+
+   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
 TEST(RFile, OpenInexistent)
@@ -77,7 +110,7 @@ TEST(RFile, OpenInexistent)
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.optionalDiag(kSysError, "TFile::TFile", "", false);
    diags.optionalDiag(kError, "TFile::TFile", "", false);
-   
+
    try {
       auto f = RFile::Open("does_not_exist.root");
       FAIL() << "trying to open an inexistent file should throw";
@@ -115,6 +148,22 @@ TEST(RFile, OpenForWriting)
    file->Put("hist", *hist);
    EXPECT_TRUE(file->Get<TH1D>("hist"));
 
+   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 1);
+}
+
+TEST(RFile, OpenForWritingWithoutGlobalRegistration)
+{
+   FileRaii fileGuard("test_rfile_write.root");
+
+   auto hist = std::make_unique<TH1D>("hist", "", 100, -10, 10);
+   hist->FillRandom("gaus", 1000);
+
+   auto rOpts = RFile::RRecreateOptions();
+   rOpts.fEnableBrowsability = false;
+   auto file = RFile::Recreate(fileGuard.GetPath(), rOpts);
+   file->Put("hist", *hist);
+   EXPECT_TRUE(file->Get<TH1D>("hist"));
+
    EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
@@ -126,9 +175,10 @@ TEST(RFile, CheckNoAutoRegistrationWrite)
    EXPECT_EQ(gDirectory, gROOT);
    auto hist = std::make_unique<TH1D>("hist", "", 100, -10, 10);
    file->Put("hist", *hist);
-   EXPECT_EQ(hist->GetDirectory(), gROOT);
+   TDirectory const *expectedDir = ROOT::Experimental::ObjectAutoRegistrationEnabled() ? gROOT : nullptr;
+   EXPECT_EQ(hist->GetDirectory(), expectedDir);
    file->Close();
-   EXPECT_EQ(hist->GetDirectory(), gROOT);
+   EXPECT_EQ(hist->GetDirectory(), expectedDir);
    hist.reset();
    // no double free should happen when ROOT exits
 }
@@ -211,7 +261,29 @@ TEST(RFile, OpenForUpdating)
       file->Put("hist2", *hist2);
    }
    EXPECT_TRUE(file->Get<TH1D>("hist2"));
+   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 1);
+}
 
+TEST(RFile, OpenForUpdatingWithoutGlobalRegistration)
+{
+   FileRaii fileGuard("test_rfile_update.root");
+
+   {
+      TH1D hist("hist", "", 100, -10, 10);
+      hist.FillRandom("gaus", 1000);
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      file->Put("hist", hist);
+   }
+
+   auto uOpts = RFile::RUpdateOptions();
+   uOpts.fEnableBrowsability = false;
+   auto file = RFile::Update(fileGuard.GetPath(), uOpts);
+   EXPECT_TRUE(file->Get<TH1D>("hist"));
+   {
+      auto hist2 = std::make_unique<TH1D>("hist2", "a different hist", 10, -1, 1);
+      file->Put("hist2", *hist2);
+   }
+   EXPECT_TRUE(file->Get<TH1D>("hist2"));
    EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
@@ -224,13 +296,15 @@ TEST(RFile, PutOverwrite)
    {
       TH1D hist("hist", "", 100, -10, 10);
       hist.FillRandom("gaus", 1000);
-      file->Put("hist", hist);
+      file->Put("hist", hist, "My Histo");
    }
 
    {
       auto hist = file->Get<TH1D>("hist");
       ASSERT_TRUE(hist);
       EXPECT_EQ(static_cast<int>(hist->GetEntries()), 1000);
+      auto key = file->GetKeyInfo("hist").value();
+      EXPECT_EQ(key.GetTitle(), "My Histo");
    }
 
    // Try putting another object at the same path, should fail
@@ -252,7 +326,7 @@ TEST(RFile, PutOverwrite)
 
    // Now try overwriting without preserving the existing object
    std::string s;
-   file->Overwrite("hist", s, false);
+   file->Overwrite("hist", s, ROOT::RFile::kOverwrite_NoNewCycle);
    {
       // the previous cycle should be gone...
       auto hist = file->Get<TH1D>("hist;2");
@@ -260,6 +334,8 @@ TEST(RFile, PutOverwrite)
       // ...but any cycle before the latest should still be there!
       hist = file->Get<TH1D>("hist;1");
       EXPECT_NE(hist, nullptr);
+      auto key = file->GetKeyInfo("hist;1").value();
+      EXPECT_EQ(key.GetTitle(), "My Histo");
    }
 }
 
@@ -475,10 +551,10 @@ TEST(RFile, IterateKeysOnlyDirs)
    {
       auto file = RFile::Open(fileGuard.GetPath());
       EXPECT_EQ(JoinKeyNames(file->ListKeys("", RFile::kListDirs | RFile::kListRecursive)), "a, a/b, e, e/c");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs | RFile::kListRecursive)), "a, a/b");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs | RFile::kListRecursive)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs | RFile::kListRecursive)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs | RFile::kListRecursive)), "");
       EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b/c", RFile::kListDirs | RFile::kListRecursive)), "");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs | RFile::kListRecursive)), "e, e/c");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs | RFile::kListRecursive)), "e/c");
    }
 }
 
@@ -499,16 +575,16 @@ TEST(RFile, IterateKeysOnlyDirsNonRecursive)
    {
       auto file = RFile::Open(fileGuard.GetPath());
       EXPECT_EQ(JoinKeyNames(file->ListKeys("", RFile::kListDirs)), "a, e");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs)), "a, a/b");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs)), "");
       EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b/c", RFile::kListDirs)), "");
-      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs)), "e, e/c");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs)), "e/c");
    }
 }
 
 // TODO: this test could in principle also run without davix: need to figure out a way to detect if we have
 // remote access capabilities.
-#ifdef R__HAS_DAVIX
+#if defined(R__HAS_DAVIX) || defined(R__HAS_CURL)
 TEST(RFile, RemoteRead)
 {
    constexpr const char *kFileName = "https://root.cern/files/rootcode.root";
@@ -572,11 +648,11 @@ TEST(RFile, GetAfterOverwriteNoBackup)
    std::string s = "foo";
    file->Put("s", s);
    s = "bar";
-   file->Overwrite("s", s, false);
+   file->Overwrite("s", s, ROOT::RFile::kOverwrite_NoNewCycle);
    auto ss = file->Get<std::string>("s");
    EXPECT_EQ(*ss, s);
 
-   std::vector<ROOT::Experimental::RKeyInfo> keys;
+   std::vector<ROOT::RKeyInfo> keys;
    for (const auto &key : file->ListKeys())
       keys.push_back(key);
 
@@ -685,12 +761,173 @@ TEST(RFile, GetKeyInfo)
 
    EXPECT_EQ(file->GetKeyInfo("foo"), std::nullopt);
 
-   for (const std::string_view path : { "/s", "a/b/c", "b", "/a/d" }) {
+   for (const std::string_view path : {"/s", "a/b/c", "b", "/a/d"}) {
       auto key = file->GetKeyInfo(path);
       ASSERT_NE(key, std::nullopt);
       EXPECT_EQ(key->GetPath(), path[0] == '/' ? path.substr(1) : path);
       EXPECT_EQ(key->GetClassName(), "string");
       EXPECT_EQ(key->GetTitle(), "");
       EXPECT_EQ(key->GetCycle(), 1);
+   }
+}
+
+TEST(RFile, RNTuple)
+{
+   FileRaii fileGuard("test_rfile_rntuple.root");
+
+   // Writing
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+
+      auto model = ROOT::RNTupleModel::Create();
+      *model->MakeField<float>("x") = 42;
+
+      auto writer = ROOT::RNTupleWriter::Append(std::move(model), "data", *file);
+      writer->Fill();
+   }
+
+   // Reading back
+   auto file = RFile::Open(fileGuard.GetPath());
+   auto ntuple = file->Get<ROOT::RNTuple>("data");
+   ASSERT_NE(ntuple, nullptr);
+   auto reader = ROOT::RNTupleReader::Open(*ntuple);
+   EXPECT_EQ(reader->GetNEntries(), 1);
+   EXPECT_FLOAT_EQ(reader->GetView<float>("x")(0), 42);
+}
+
+TEST(RFile, TTreeRead)
+{
+   FileRaii fileGuard("test_rfile_ttree_read.root");
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+
+   {
+      auto file = ROOT::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTree>("tree");
+      ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), 10);
+      int x;
+      tree->SetBranchAddress("x", &x);
+      for (auto i = 0u; i < tree->GetEntries(); ++i) {
+         tree->GetEntry(i);
+         EXPECT_EQ(x, i);
+      }
+   }
+}
+
+TEST(RFile, TTreeReadAfterClose)
+{
+   FileRaii fileGuard("test_rfile_ttree_read_after_close.root");
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+
+   {
+      auto file = ROOT::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTree>("tree");
+      file.reset(); // close the file
+      ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), 10);
+      EXPECT_EQ(tree->GetEntry(0), -1); // -1 means "I/O error"
+   }
+}
+
+TEST(RFile, TTreeNoDoubleFree)
+{
+   FileRaii fileGuard("test_rfile_ttree_read_no_double_free.root");
+
+   TTreeDestructorCounter::ResetTimesDestructed();
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTreeDestructorCounter>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+   EXPECT_EQ(TTreeDestructorCounter::GetTimesDestructed(), 1);
+
+   {
+      auto file = ROOT::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTreeDestructorCounter>("tree");
+      file.reset(); // close the file (does not delete the three)
+      // tree is deleted here
+   }
+
+   // destructed once during writing, once during reading.
+   EXPECT_EQ(TTreeDestructorCounter::GetTimesDestructed(), 2);
+}
+
+TEST(RFile, Compression)
+{
+   FileRaii fileGuard("test_rfile_compression.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s = "foo";
+      file->Put("foo", s);
+   }
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      EXPECT_EQ(file->GetCompressionSettings(), ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
+   }
+   {
+      auto opts = RFile::RRecreateOptions();
+      opts.fCompressionSettings = 0;
+      auto file = RFile::Recreate(fileGuard.GetPath(), opts);
+      std::string s = "foo";
+      file->Put("foo", s);
+   }
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      EXPECT_EQ(file->GetCompressionSettings(), 0);
+   }
+}
+
+TEST(RFile, PutTNamed)
+{
+   FileRaii fileGuard("test_rfile_put_tnamed.root");
+
+   {
+      TNamed named1("named1", "title 1"), named2("named2", "title 2");
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      file->Put(named1);
+      // Put named2 under a dir
+      file->Put(named2, "my");
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      auto named1 = file->Get<TNamed>("named1");
+      auto named2 = file->Get<TNamed>("my/named2");
+      EXPECT_STREQ(named1->GetTitle(), "title 1");
+      EXPECT_STREQ(named2->GetTitle(), "title 2");
+      auto key1 = file->GetKeyInfo("named1").value();
+      auto key2 = file->GetKeyInfo("my/named2").value();
+      EXPECT_EQ(key1.GetTitle(), "title 1");
+      EXPECT_EQ(key2.GetTitle(), "title 2");
    }
 }

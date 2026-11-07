@@ -162,6 +162,11 @@ void ClassSelectionRule::SetRequestedRNTupleSerializationMode(int serializationM
    fRequestedRNTupleSerializationMode = serializationMode;
 }
 
+void ClassSelectionRule::SetRequestedRNTupleSoARecord(const std::string &recordName)
+{
+   fRequestedRNTupleSoARecord = recordName;
+}
+
 bool ClassSelectionRule::RequestOnlyTClass() const
 {
    return fRequestOnlyTClass;
@@ -185,4 +190,9 @@ int ClassSelectionRule::RequestedVersionNumber() const
 int ClassSelectionRule::RequestedRNTupleSerializationMode() const
 {
    return fRequestedRNTupleSerializationMode;
+}
+
+const std::string &ClassSelectionRule::RequestedRNTupleSoARecord() const
+{
+   return fRequestedRNTupleSoARecord;
 }

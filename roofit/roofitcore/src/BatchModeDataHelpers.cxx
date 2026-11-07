@@ -15,6 +15,7 @@
 #include "RooFit/BatchModeDataHelpers.h"
 
 #include <RooAbsData.h>
+#include <RooDataHist.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 
@@ -89,6 +90,39 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
       assignSpan(weightSumW2, {bufferSumW2.data(), nNonZeroWeight});
       insert(RooFit::Detail::RooNLLVarNew::weightVarName, weight);
       insert(RooFit::Detail::RooNLLVarNew::weightVarNameSumW2, weightSumW2);
+   }
+
+   // For RooDataHist datasets, also publish per-bin volumes and asymmetric
+   // Poisson errors. These are consumed by the chi2 evaluation path in
+   // RooNLLVarNew.
+   if (auto const *dataHist = dynamic_cast<RooDataHist const *>(&data)) {
+      auto binVolumes = dataHist->binVolumes(0, static_cast<std::size_t>(data.numEntries()));
+      buffers.emplace();
+      auto &bufferBinVol = buffers.top();
+      bufferBinVol.reserve(nNonZeroWeight);
+      buffers.emplace();
+      auto &bufferErrLo = buffers.top();
+      bufferErrLo.reserve(nNonZeroWeight);
+      buffers.emplace();
+      auto &bufferErrHi = buffers.top();
+      bufferErrHi.reserve(nNonZeroWeight);
+
+      auto *dataHistMutable = const_cast<RooDataHist *>(dataHist);
+      for (std::size_t i = 0; i < binVolumes.size(); ++i) {
+         if (hasZeroWeight[i]) {
+            continue;
+         }
+         bufferBinVol.push_back(binVolumes[i]);
+         dataHistMutable->get(static_cast<int>(i));
+         double lo = 0.0;
+         double hi = 0.0;
+         dataHistMutable->weightError(lo, hi, RooAbsData::Poisson);
+         bufferErrLo.push_back(lo);
+         bufferErrHi.push_back(hi);
+      }
+      insert(RooFit::Detail::RooNLLVarNew::binVolumeVarName, {bufferBinVol.data(), bufferBinVol.size()});
+      insert(RooFit::Detail::RooNLLVarNew::weightErrorLoVarName, {bufferErrLo.data(), bufferErrLo.size()});
+      insert(RooFit::Detail::RooNLLVarNew::weightErrorHiVarName, {bufferErrHi.data(), bufferErrHi.size()});
    }
 
    // Get the real-valued batches and cast the also to double branches to put in
@@ -202,6 +236,14 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
                                            RooSimultaneous const *simPdf, bool skipZeroWeights,
                                            bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers)
 {
+   // If the index category is not among the data columns, the RooSimultaneous
+   // doesn't split the data into channels but acts as a "switch" selecting the
+   // component given by the current index state (analogous to RooMultiPdf).
+   // The data is then loaded like for any ordinary pdf.
+   if (simPdf && !simPdf->indexCatIsObservable(*data.get())) {
+      simPdf = nullptr;
+   }
+
    std::vector<std::pair<std::string, RooAbsData const *>> datasets;
    std::vector<bool> isBinnedL;
    bool splitRange = false;

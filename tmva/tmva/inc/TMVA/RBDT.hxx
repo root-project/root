@@ -20,9 +20,7 @@
 #ifndef TMVA_RBDT
 #define TMVA_RBDT
 
-#include <Rtypes.h>
 #include <ROOT/RSpan.hxx>
-#include <TMVA/RTensor.hxx>
 
 #include <array>
 #include <istream>
@@ -37,12 +35,6 @@ namespace Experimental {
 class RBDT final {
 public:
    typedef float Value_t;
-
-   /// IO constructor (both for ROOT IO and LoadText()).
-   RBDT() = default;
-
-   /// Construct backends from model in ROOT file.
-   RBDT(const std::string &key, const std::string &filename);
 
    /// Compute model prediction on a single event.
    ///
@@ -60,12 +52,21 @@ public:
    /// Compute model prediction on a single event.
    inline std::vector<Value_t> Compute(std::vector<Value_t> const &x) const { return Compute<std::vector<Value_t>>(x); }
 
-   RTensor<Value_t> Compute(RTensor<Value_t> const &x) const;
+   /// Compute model prediction on a flat batch of events.
+   ///
+   /// The input must be flat row-major with `cols` features per event and the
+   /// output is a flat row-major vector with one row of outputs per event,
+   /// contiguous at `y[row * nOut + k]`. `nOut` is the number of model output
+   /// values per event: one for regression and binary classification models,
+   /// the number of classes for multiclass ones.
+   std::vector<Value_t> Compute(std::span<const Value_t> x, unsigned int cols) const;
 
-   static RBDT LoadText(std::string const &txtpath, std::vector<std::string> &features, int nClasses, bool logistic,
-                        Value_t baseScore);
+   static RBDT LoadXGBoost(std::string const &jsonPath);
 
 private:
+   /// Private default constructor, used by the public LoadXGBoost() factory.
+   RBDT() = default;
+
    /// Map from XGBoost to RBDT indices.
    using IndexMap = std::unordered_map<int, int>;
 
@@ -75,8 +76,6 @@ private:
    static void correctIndices(std::span<int> indices, IndexMap const &nodeIndices, IndexMap const &leafIndices);
    static void terminateTree(TMVA::Experimental::RBDT &ff, int &nPreviousNodes, int &nPreviousLeaves,
                              IndexMap &nodeIndices, IndexMap &leafIndices, int &treesSkipped);
-   static RBDT
-   LoadText(std::istream &is, std::vector<std::string> &features, int nClasses, bool logistic, Value_t baseScore);
 
    std::vector<int> fRootIndices;
    std::vector<unsigned int> fCutIndices;
@@ -88,8 +87,6 @@ private:
    std::vector<Value_t> fBaseResponses;
    Value_t fBaseScore = 0.0;
    bool fLogistic = false;
-
-   ClassDefNV(RBDT, 1);
 };
 
 } // namespace Experimental

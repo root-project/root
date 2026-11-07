@@ -1,5 +1,6 @@
 #include "RQ_OBJECT.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 class MyBaseClass : public TQObject {
    RQ_OBJECT("MyBaseClass")

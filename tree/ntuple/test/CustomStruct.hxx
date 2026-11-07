@@ -1,11 +1,14 @@
 #ifndef ROOT_RNTuple_Test_CustomStruct
 #define ROOT_RNTuple_Test_CustomStruct
 
+#include <ROOT/RVec.hxx>
+
 #include <RtypesCore.h> // for Double32_t
 #include <TObject.h>
 #include <TRootIOCtor.h>
 #include <TVirtualCollectionProxy.h>
 
+#include <array>
 #include <chrono>
 #include <stdexcept>
 #include <cstddef>
@@ -44,7 +47,15 @@ struct CustomAtomicNotLockFree {
 
 struct CustomStruct {
    template <typename T>
+   struct VectorWrapper {
+      std::vector<T> fVec;
+   };
+
+   template <typename T>
    using MyVec = std::vector<T>;
+
+   template <typename T>
+   using MyVectorWrapper = VectorWrapper<T>;
 
    float a = 0.0;
    std::vector<float> v1;
@@ -72,12 +83,15 @@ struct DerivedA2 : public CustomStruct {
 };
 
 struct DerivedWithTypedef : public CustomStruct {
-   MyVec<int> m;
+   MyVec<Double32_t> m1;
+   MyVec<Long64_t> m2;
+   MyVec<Int_t> m3;
+   MyVectorWrapper<Long64_t> m4;
 };
 
 struct DerivedB : public DerivedA {
    float b_f1 = 0.0;
-   float b_f2 = 0.0; //!
+   float b_f2 = 0.0; ///<!
    std::string b_s;
 };
 
@@ -231,7 +245,7 @@ struct StructWithEnums : BaseOfStructWithEnums {
 template <typename T>
 struct StructUsingCollectionProxy {
    using ValueType = T;
-   std::vector<T> v; //! do not accidentally store via RClassField
+   std::vector<T> v; ///<! do not accidentally store via RClassField
 };
 
 /// Classes to exercise field traits
@@ -246,7 +260,7 @@ struct TrivialTraits : TrivialTraitsBase {
 };
 
 struct TransientTraits : TrivialTraitsBase {
-   float b; //! transient member
+   float b; ///<! transient member
 };
 
 struct VariantTraitsBase {
@@ -270,20 +284,20 @@ struct DestructorTraits : TrivialTraitsBase {
 
 struct StructWithIORulesBase {
    float a;
-   float b; //! transient member
+   float b; ///<! transient member
 };
 
 struct StructWithTransientString {
    char chars[4];
-   std::string str; //! transient member
+   std::string str; ///<! transient member
 };
 
 struct StructWithIORules : StructWithIORulesBase {
    StructWithTransientString s;
-   float c = 0.0f; //! transient member
-   float cDerived = 0.0f;    //! should become 2*c after rules for c applied
-   float checksumA = 0.0f;   //! transient member, edited by checksum based rule
-   float checksumB = 137.0f; //! transient member, skipped by checksum based rule due to checksum mismatch
+   float c = 0.0f; ///<! transient member
+   float cDerived = 0.0f;    ///<! should become 2*c after rules for c applied
+   float checksumA = 0.0f;   ///<! transient member, edited by checksum based rule
+   float checksumB = 137.0f; ///<! transient member, skipped by checksum based rule due to checksum mismatch
 
    StructWithIORules() = default;
    StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
@@ -297,8 +311,8 @@ struct OldCoordinates {
 struct CoordinatesWithIORules {
    float fX;
    float fY;
-   float fR;   //!
-   float fPhi; //!
+   float fR;   ///<!
+   float fPhi; ///<!
 };
 
 struct LowPrecisionFloatWithIORules {
@@ -318,7 +332,7 @@ struct NewName {
 
 struct SourceStruct {
    int fValue;
-   int fTransient; //!
+   int fTransient; ///<!
    SourceStruct()
    {
       fValue = 17;
@@ -328,7 +342,7 @@ struct SourceStruct {
 
 struct StructWithSourceStruct {
    SourceStruct fSource;
-   int fTransient = 0; //!
+   int fTransient = 0; ///<!
 };
 
 struct Cyclic {
@@ -459,5 +473,28 @@ struct ExampleMC {
    float fHelicity = 0.;
 };
 } // namespace v2
+
+// Test class for runtime member streamers set via TClass::SetMemberStreamer
+struct MemberWithCustomStreamer {
+   int fNormal = 0;
+   int fCustom = 0;
+   ClassDefNV(MemberWithCustomStreamer, 2);
+};
+
+struct AlignmentDeterminedByTransientMember {
+   short int fA;
+   float fTransient; ///<!
+};
+
+struct alignas(8) AlignedAs {};
+
+struct alignas(64) OverAligned {
+   std::uint32_t fA;
+};
+
+struct AlignmentEnvelope {
+   std::vector<OverAligned> fVec;
+   std::array<OverAligned, 2> fArr;
+};
 
 #endif

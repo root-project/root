@@ -52,7 +52,7 @@ protected:
    char            *fBufCur;        //Current position in buffer
    char            *fBufMax;        //End of buffer
    TObject         *fParent;        //Pointer to parent object owning this buffer
-   ReAllocCharFun_t fReAllocFunc;   //! Realloc function to be used when extending the buffer.
+   ReAllocCharFun_t fReAllocFunc;   ///<! Realloc function to be used when extending the buffer.
    CacheList_t      fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
 
    // Default ctor
@@ -390,7 +390,7 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
    // since the pointer could be zero (so typeid(*obj) is not usable).
 
    auto cl = TClass::GetClass<Tmpl>();
-   obj = (Tmpl *) ( (void*) buf.ReadObjectAny(cl) );
+   obj = reinterpret_cast<Tmpl *>(buf.ReadObjectAny(cl));
    return buf;
 }
 

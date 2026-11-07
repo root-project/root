@@ -1,1 +1,3 @@
 ROOTTEST_ADD_TESTDIRS()
+
+ROOT_ADD_GTEST(MathCoreTests MathCoreTests.cxx LIBRARIES ROOT::MathCore ROOT::Hist)

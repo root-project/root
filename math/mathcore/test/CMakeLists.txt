@@ -45,11 +45,6 @@ if(mathmore)
   list(APPEND Libraries MathMore)
 endif()
 
-if(r)
- add_definitions(-DROOT_HAS_R)
- list(APPEND Libraries RInterface)
-endif()
-
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
@@ -66,8 +61,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
 
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreUnitDict.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreUnitDict.dll)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreUnitDict.dll
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreUnitDict.dll)
 endif()
 
 ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cxx
@@ -75,31 +70,23 @@ ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cx
         stress/TestHelper.cxx
         LIBRARIES Core MathCore Hist RIO Tree GenVector)
 
-ROOT_ADD_GTEST(GradientUnit testGradient.cxx LIBRARIES Core MathCore Hist )
-
 ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx LIBRARIES Core MathCore Hist)
-
-ROOT_ADD_GTEST(MulmodUnitOpt mulmod_opt.cxx)
+ROOT_ADD_GTEST(GradientUnit testGradient.cxx LIBRARIES Core MathCore Hist )
 ROOT_ADD_GTEST(MulmodUnitNoInt128 mulmod_noint128.cxx)
+ROOT_ADD_GTEST(MulmodUnitOpt mulmod_opt.cxx)
 ROOT_ADD_GTEST(RanluxLCGUnit ranlux_lcg.cxx)
-
-ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx
-        LIBRARIES Core MathCore)
-
-if(veccore AND vc)
-  ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx
-        LIBRARIES Core MathCore)
-endif()
-
+ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testDelaunay2D testDelaunay2D.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testFitter testFitter.cxx LIBRARIES Core MathCore Hist)
+ROOT_ADD_GTEST(testKNNDensity testKNNDensity.cxx LIBRARIES Core MathCore Hist)
+ROOT_ADD_GTEST(testKahan testKahan.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testLFSR testLFSR.cxx LIBRARIES Core MathCore)
 ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries})
 
-ROOT_ADD_GTEST(testKahan testKahan.cxx LIBRARIES Core MathCore)
-ROOT_ADD_GTEST(testDelaunay2D testDelaunay2D.cxx LIBRARIES Core MathCore)
-ROOT_ADD_GTEST(testKNNDensity testKNNDensity.cxx LIBRARIES Core MathCore Hist)
+if(ROOT_HAVE_EXPERIMENTAL_SIMD)
+  ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx LIBRARIES Core MathCore)
+endif()
 
 if(clad)
   ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES Core MathCore)
 endif()
-
-ROOT_ADD_GTEST(testFitter testFitter.cxx LIBRARIES Core MathCore)
-ROOT_ADD_GTEST(testLFSR testLFSR.cxx LIBRARIES Core MathCore)

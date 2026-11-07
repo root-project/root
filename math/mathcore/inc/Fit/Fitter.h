@@ -82,7 +82,7 @@ public:
    typedef ROOT::Math::IParamMultiFunction                 IModelFunction;
    template <class T>
    using IModelFunctionTempl =                             ROOT::Math::IParamMultiFunctionTempl<T>;
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    typedef ROOT::Math::IParametricFunctionMultiDimTempl<ROOT::Double_v>  IModelFunction_v;
    typedef ROOT::Math::IParamMultiGradFunctionTempl<ROOT::Double_v> IGradModelFunction_v;
 #else
@@ -372,7 +372,7 @@ public:
    /**
        Set the fitted function (model function) from a vectorized parametric function interface
    */
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
    void SetFunction(const IModelFunction_v &func, bool useGradient = false);
 
@@ -572,8 +572,7 @@ private:
    const ROOT::Math::IMultiGenFunction *fExtObjFunction = nullptr; ///<! pointer to an external FCN
 };
 
-
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 template <class NotCompileIfScalarBackend>
 void Fitter::SetFunction(const IModelFunction_v &func, bool useGradient)
 {

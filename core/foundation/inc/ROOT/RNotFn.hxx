@@ -1,5 +1,4 @@
 /// \file ROOT/RNotFn.hxx
-/// \ingroup Base StdExt
 /// \author Danilo Piparo, Enrico Guiraud
 /// \date 2018-01-19
 

@@ -2,7 +2,7 @@
 
 
 ## Table of contents
-- [Basic TMVA tutorials](\ref basic)
+- [Basic TMVA tutorials](\ref ml_basic)
    - [Training](\ref training)
    - [Applications](\ref application)
    - [Others](\ref other)
@@ -12,11 +12,11 @@
 - [Deep learning in TMVA](\ref deep_learing)
 - [TMVA Keras tutorials](\ref keras)
 - [TMVA PyTorch tutorials](\ref pytorch)
-- [Inference with SOFIE](\ref inference)         
+- [Inference with SOFIE](\ref inference)
 - [Data loading for training](\ref data_loading)
 
 
-\anchor basic
+\anchor ml_basic
 ## Basic TMVA tutorials
 
 
@@ -41,7 +41,6 @@
 | TMVAClassificationApplication.C | Using the trained classifiers within an analysis module. |
 | TMVAClassificationCategoryApplication.C | Using the trained classifiers (with categories) within an analysis module. |
 | TMVACrossValidationApplication.C | Using TMVA for k-folds cross evaluation in application. |
-| TMVAMulticlassApplication.C | Using trained multiclass classifiers within an analysis module. |
 | TMVARegressionApplication.C | Using the trained regression MVAs within an analysis module. |
 
 \anchor other
@@ -67,8 +66,6 @@
 | **Tutorial** | **Description** |
 |--------------|-----------------|
 | createData.C | Plot the variables. |
-| tmva001_RTensor.C | Illustrate the basic features of the RTensor class, RTensor is a std::vector-like container with additional shape information. |
-| tmva002_RDataFrameAsTensor.C | Convert the content of an RDataFrame to an RTensor object. |
 | tmva003_RReader.C | Use modern interfaces models saved in TMVA XML files. |
 
 
@@ -96,9 +93,9 @@
 | **Tutorial** | **Description** |
 |--------------|-----------------|
 | ApplicationClassificationKeras.py | Apply a trained model to new data. |
-| ApplicationRegressionKeras.py |  Apply a trained model to new data (regression). | 
+| ApplicationRegressionKeras.py |  Apply a trained model to new data (regression). |
 | ClassificationKeras.py |  Classification in TMVA with neural networks trained with keras. |
-| GenerateModel.py |  Define and generate a keras model for use with TMVA. | 
+| GenerateModel.py |  Define and generate a keras model for use with TMVA. |
 | MulticlassKeras.py |  Multiclass classification in TMVA with neural networks trained with keras. |
 | RegressionKeras.py | Regression in TMVA with neural networks trained with keras. |
 
@@ -119,22 +116,23 @@
 
 |          **Tutorial**          || **Description** |
 |---------------|-----------------|-----------------|
-| | TMVA_SOFIE_Inference.py | Using a trained model with Keras and make inference using SOFIE directly from Numpy. |
-| TMVA_SOFIE_Keras.C | | Parsing of Keras .h5 file into RModel object and further generating the .hxx header files for inference. |
-| TMVA_SOFIE_Keras_HiggsModel.C | | Run the SOFIE parser on the Keras model obtaining running TMVA_Higgs_Classification.C. You need to run that macro before this one. |
-| | TMVA_SOFIE_Models.py | Inference with SOFIE using a set of models trained with Keras. |
+| | TMVA_SOFIE_Inference.py | Using a trained model with PyTorch and make inference using SOFIE directly from Numpy. |
+| | TMVA_SOFIE_Models.py | Inference with SOFIE using a set of models trained with PyTorch. |
 | TMVA_SOFIE_ONNX.C | | Parsing of ONNX files into RModel object and further generating the .hxx header files for inference. |
-| TMVA_SOFIE_PyTorch.C | | Parsing of PyTorch .pt file into RModel object and further generating the .hxx header files for inference. |
-| TMVA_SOFIE_RDataFrame.C | TMVA_SOFIE_RDataFrame.py | Inference with SOFIE and RDataFrame, of a model trained with Keras. |
-| TMVA_SOFIE_RDataFrame_JIT.C | | Using a trained model with Keras and make inference using SOFIE and RDataFrame. |
-| TMVA_SOFIE_RSofieReader.C | | Using a trained model with Keras and make inference using SOFIE with the RSofieReader class. |
+| | TMVA_SOFIE_PyTorch_HiggsModel.py | Train a model on the Higgs dataset with PyTorch, export it to ONNX and run the SOFIE parser on it to generate the C++ inference code used by the other Higgs SOFIE tutorials. |
+| TMVA_SOFIE_RDataFrame.C | TMVA_SOFIE_RDataFrame.py | Inference with SOFIE and RDataFrame, of a model trained with PyTorch. |
+| TMVA_SOFIE_RDataFrame_JIT.C | | Using a trained model with PyTorch and make inference using SOFIE and RDataFrame. |
+| TMVA_SOFIE_RSofieReader.C | | Using a trained model with PyTorch and make inference using SOFIE with the RSofieReader class. |
 
 \anchor data_loading
 ## Data loading for training
 
 | **Tutorial** | **Description** |
 |--------------|-----------------|
-| RBatchGenerator_NumPy.py | Loading batches of events from a ROOT dataset as Python generators of numpy arrays. |
-| RBatchGenerator_PyTorch.py | Loading batches of events from a ROOT dataset into a basic PyTorch workflow. |
-| RBatchGenerator_TensorFlow.py | Loading batches of events from a ROOT dataset into a basic TensorFlow workflow. |
+| ml_dataloader_NumPy.py | Loading batches of events from a ROOT dataset as Python generators of numpy arrays. |
+| ml_dataloader_PyTorch.py | Loading batches of events from a ROOT dataset into a basic PyTorch workflow. |
+| ml_dataloader_TensorFlow.py | Loading batches of events from a ROOT dataset into a basic TensorFlow workflow. |
+| ml_dataloader_Higgs_Classification.py | Loading batches of events from different files for a data-normalization workflow. |
+| ml_dataloader_resampling.py | Loading batches of events from an imbalanced ROOT dataset and balancing them. |
+| ml_dataloader_XGBoost.py | Training classifier models directly from remote ROOT files, shown with an XGBoost example. |
 

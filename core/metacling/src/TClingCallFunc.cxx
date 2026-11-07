@@ -114,6 +114,7 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
    // compilation and other string operations.
    PrintingPolicy Policy(C.getPrintingPolicy());
    Policy.SuppressTagKeyword = true;
+   Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
    Policy.SuppressUnwrittenScope = false;
    Policy.SuppressInitializers = false;
    Policy.AnonymousTagLocations = false;
@@ -157,10 +158,11 @@ static void GetDeclName(const clang::Decl *D, ASTContext &Context, std::string &
 
    PrintingPolicy Policy(Context.getPrintingPolicy());
    Policy.SuppressTagKeyword = true;
+   Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
    Policy.SuppressUnwrittenScope = true;
    if (const TypeDecl *TD = dyn_cast<TypeDecl>(D)) {
       // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
+      QualType QT = TD->getASTContext().getTypeDeclType(TD);
       GetTypeAsString(QT, name, Context, Policy);
    } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
       // This is a namespace member.
@@ -1123,7 +1125,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value &ret)
      R__LOCKGUARD_CLING(gInterpreterMutex);
      ASTContext &Context = FD->getASTContext();
      const TypeDecl *TD = dyn_cast<TypeDecl>(GetDeclContext());
-     QualType ClassTy(TD->getTypeForDecl(), 0);
+     QualType ClassTy = TD->getASTContext().getTypeDeclType(TD);
      QT = Context.getLValueReferenceType(ClassTy);
      ret = cling::Value(QT, *fInterp);
    } else {
@@ -1254,7 +1256,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
 
    if (Cpp::IsClass(D) || Cpp::IsConstructor(D)) {
       R__LOCKGUARD_CLING(gInterpreterMutex);
-      return Cpp::Construct(D, address, nary);
+      return Cpp::Construct(D, address, nary).data;
    }
 
    ::Error("TClingCallFunc::ExecDefaultConstructor", "ClassInfo missing a valid Scope/Constructor");
@@ -1271,7 +1273,7 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
 
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
-   if (Cpp::Destruct(address, info->GetDecl(), nary, withFree))
+   if (Cpp::Destruct(address, const_cast<clang::Decl *>(info->GetDecl()), withFree, nary))
       return;
 
    ::Error("TClingCallFunc::ExecDestructor", "Called with no wrapper, not implemented!");

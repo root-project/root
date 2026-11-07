@@ -144,8 +144,8 @@ class TObjArray;
 class TGenerator : public TNamed {
 
 protected:
-   Float_t       fPtCut;        //!Pt cut. Do not show primaries below
-   Bool_t        fShowNeutrons; //!display neutrons if true
+   Float_t       fPtCut;        ///<!Pt cut. Do not show primaries below
+   Bool_t        fShowNeutrons; ///<!display neutrons if true
    TObjArray    *fParticles;    //->static container of the primary particles
 
    TGenerator(const TGenerator& tg) :

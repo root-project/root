@@ -90,13 +90,6 @@ if ($?old_rootsys) then
                                  -e "s;^$old_rootsys/lib:;;g"   \
                                  -e "s;^$old_rootsys/lib${DOLLAR};;g"`
    endif
-   if ($?LIBPATH) then
-      setenv LIBPATH `set DOLLAR='$'; echo $LIBPATH | \
-                             sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib${DOLLAR};;g"   \
-                                 -e "s;^$old_rootsys/lib:;;g"   \
-                                 -e "s;^$old_rootsys/lib${DOLLAR};;g"`
-   endif
    if ($?PYTHONPATH) then
       setenv PYTHONPATH `set DOLLAR='$'; echo $PYTHONPATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
@@ -121,13 +114,6 @@ if ($?old_rootsys) then
    endif
    if ($?SHLIB_PATH) then
       setenv SHLIB_PATH `set DOLLAR='$'; echo $SHLIB_PATH | \
-                             sed -e "s;:$old_rootsys/lib/root:;:;g" \
-                                 -e "s;:$old_rootsys/lib/root${DOLLAR};;g"   \
-                                 -e "s;^$old_rootsys/lib/root:;;g"   \
-                                 -e "s;^$old_rootsys/lib/root${DOLLAR};;g"`
-   endif
-   if ($?LIBPATH) then
-      setenv LIBPATH `set DOLLAR='$'; echo $LIBPATH | \
                              sed -e "s;:$old_rootsys/lib/root:;:;g" \
                                  -e "s;:$old_rootsys/lib/root${DOLLAR};;g"   \
                                  -e "s;^$old_rootsys/lib/root:;;g"   \
@@ -219,12 +205,6 @@ else
    setenv SHLIB_PATH @libdir@
 endif
 
-if ($?LIBPATH) then
-   setenv LIBPATH @libdir@:$LIBPATH                      # AIX
-else
-   setenv LIBPATH @libdir@
-endif
-
 if ($?PYTHONPATH) then
    setenv PYTHONPATH @libdir@:$PYTHONPATH
 else
@@ -256,9 +236,9 @@ else
 endif
 
 if ($?ROOT_INCLUDE_PATH) then
-   setenv ROOT_INCLUDE_PATH @DEFAULT_ROOT_INLUCDE_PATH@:$ROOT_INCLUDE_PATH
+   setenv ROOT_INCLUDE_PATH @DEFAULT_ROOT_INCLUDE_PATH@:$ROOT_INCLUDE_PATH
 else
-   setenv ROOT_INCLUDE_PATH @DEFAULT_ROOT_INLUCDE_PATH@
+   setenv ROOT_INCLUDE_PATH @DEFAULT_ROOT_INCLUDE_PATH@
 endif
 
 endif # if ("$thisrootdir" != "")

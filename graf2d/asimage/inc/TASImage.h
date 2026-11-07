@@ -27,8 +27,14 @@ struct ASImage;
 struct ASVisual;
 class TBrowser;
 class THashTable;
+class TTFhandle;
+class TASPaletteEditor;
+class TASUtils;
 
 class TASImage : public TImage {
+
+friend class TASPaletteEditor; // to access FromGradient method
+friend class TASUtils; // to implement gVirtualX-specific methods
 
 private:
    enum { kNoZoom = 0, kZoom = 1, kZoomOps = -1 };
@@ -47,11 +53,14 @@ private:
    inline Int_t Idx(Int_t idx);
    void FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height);
    void DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size, UInt_t color, const char *font_name, Float_t angle);
-   void DrawGlyph(void *bitmap, UInt_t color, Int_t x, Int_t y);
+   void DrawFTGlyphs(TTFhandle &ttf, UInt_t color, Int_t x, Int_t y, TVirtualPad *clippad = nullptr, Int_t offx = 0, Int_t offy = 0);
    void SetDefaults();
    void CreateThumbnail();
    void DestroyImage();
+   void DestroyScaledImage();
    const char *TypeFromMagicNumber(const char *file);
+
+   void CloneImageData(const TASImage &src);
 
 protected:
    ASImage  *fImage;                ///<! pointer to image structure of original image
@@ -69,14 +78,21 @@ protected:
    Bool_t    fIsGray;               ///<! kTRUE if image is gray
    static THashTable *fgPlugList;   ///<! hash table containing loaded plugins
 
-   static ASVisual *fgVisual;      ///< pointer to visual structure
-   static Bool_t    fgInit;        ///< global flag to init afterimage only once
-
    EImageFileTypes GetFileType(const char *ext);
    void MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas = kTRUE);
    void MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas = kTRUE);
 
-   static Bool_t InitVisual();
+   static ASVisual *InitVisual();
+   Bool_t InitImage(const char *caller);
+
+   void FromGradient(struct ASGradient *as_gradient, UInt_t width, UInt_t height);
+
+   static struct ASVisual *CreateX11Visual(Display_t display, Int_t screen, Int_t depth, Visual_t visual, Colormap_t cmap);
+   static void DestroyVisual(struct ASVisual *visual);
+   static Pixmap_t ASImage2Pixmap(struct ASVisual *visual, Window_t root_window, ASImage *image);
+   static ASImage *Pixmap2ASImage(struct ASVisual *visual, Window_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   static ASImage *Picture2ASImage(struct ASVisual *visual, Pixmap_t pxm, Pixmap_t mask, UInt_t width, UInt_t height);
+   static void ASImage2Drawable(struct ASVisual *visual, ASImage *image, Drawable_t wid, GContext_t gc, Int_t xsrc, Int_t ysrc, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
 public:
    TASImage();
@@ -96,11 +112,14 @@ public:
    void  Browse(TBrowser *) override;
    void  SetTitle(const char *title = "") override;                              // *MENU*
    const char *GetTitle() const override;
-   const char *GetIconName() const override {  return GetTitle(); }
+   const char *GetIconName() const override { return GetTitle(); }
+
+   void  FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height, const UChar_t *mask = nullptr) override;
+   void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
+   void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
+   void  FromGLBuffer(UChar_t *buf, UInt_t width, UInt_t height) override;
 
    // Pad conversions
-   void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0,
-                 UInt_t w = 0, UInt_t h = 0) override;
    void  Draw(Option_t *option = "") override;
    void  Paint(Option_t *option = "") override;
    Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
@@ -136,6 +155,7 @@ public:
                   const char *color = nullptr, const char *font = "fixed", EText3DType type = TImage::kPlain,
                   const char *fore_file = nullptr, Float_t angle = 0) override;
    void DrawText(TText *text, Int_t x = 0, Int_t y = 0) override;
+   void DrawTextOnPad(TText *text, Int_t x = 0, Int_t y = 0, TVirtualPad *pad = nullptr, Int_t offx = 0, Int_t  offy = 0) override;
 
    // Vector graphics
    void  BeginPaint(Bool_t fast = kTRUE) override;
@@ -173,20 +193,19 @@ public:
    void  SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *palette = nullptr) override;
    void  SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette = nullptr) override;
    void  SetImage(Pixmap_t pxm, Pixmap_t mask = 0) override;
-   void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
-   void  FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h) override;
 
    // Utilities
    UInt_t     GetWidth() const override;
    UInt_t     GetHeight() const override;
-   UInt_t     GetScaledWidth() const;
-   UInt_t     GetScaledHeight() const;
+   UInt_t     GetScaledWidth() const override;
+   UInt_t     GetScaledHeight() const override;
    Bool_t     IsValid() const override { return fImage ? kTRUE : kFALSE; }
    Bool_t     IsGray() const override { return fIsGray; }
    ASImage   *GetImage() const { return fImage; }
    void       SetImage(ASImage *image) { DestroyImage(); fImage = image; }
    TImage    *GetScaledImage() const override { return fScaledImage; }
    Pixmap_t   GetPixmap() override;
+   Bool_t     GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits) override;
    Pixmap_t   GetMask() override;
    TArrayL   *GetPixels(Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
    TArrayD   *GetArray(UInt_t w = 0, UInt_t h = 0, TImagePalette *pal = gWebImagePalette) override;
@@ -201,7 +220,7 @@ public:
    void       SetPaletteEnabled(Bool_t on = kTRUE) override;  // *TOGGLE*
    void       SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   static const ASVisual *GetVisual();
+   static const ASVisual *  R__DEPRECATED(7,00, "No longer provided") GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);
    static void Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y, Int_t xsrc = 0, Int_t ysrc = 0, UInt_t wsrc = 0, UInt_t hsrc = 0, Option_t *opt = "");
 

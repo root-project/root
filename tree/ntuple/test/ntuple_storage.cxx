@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include <TKey.h>
 #include <TRandom3.h>
 #include <TMemFile.h>
 #include <TVirtualStreamerInfo.h>
@@ -53,7 +54,13 @@ protected:
    RStagedCluster StageCluster(ROOT::NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final { return {}; }
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final {}
+
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cannot clone sink"));
+   }
 
 public:
    RPageSinkMock(const ROOT::RNTupleWriteOptions &options) : RPageSink("test", options) {}
@@ -207,13 +214,15 @@ TEST(RNTuple, PageFilling)
          writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(1u, desc.GetNClusters());
    const auto colIdX = desc.FindLogicalColumnId(desc.FindFieldId("x"), 0, 0);
    const auto colIdY = desc.FindLogicalColumnId(desc.FindFieldId("y"), 0, 0);
 
-   const auto &clusterDesc = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
+   const auto &clusterDesc = *desc.GetActiveClusterIterable().begin();
    const auto &prX = clusterDesc.GetPageRange(colIdX);
    const auto &prY = clusterDesc.GetPageRange(colIdY);
    ASSERT_EQ(1u, prX.GetPageInfos().size());
@@ -255,7 +264,9 @@ TEST(RNTuple, PageFillingString)
       ntuple->Fill(); // main write page is half full here; RColumn::AppendV should flush the shadow page
    }
 
-   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
    auto viewX = ntuple->GetView<std::string>("x");
    ASSERT_EQ(5u, ntuple->GetNEntries());
    EXPECT_EQ("01234567890123456", viewX(0));
@@ -266,19 +277,24 @@ TEST(RNTuple, PageFillingString)
 
    const auto &desc = ntuple->GetDescriptor();
    EXPECT_EQ(4u, desc.GetNClusters());
-   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(1, 0));
+   auto clusterIter = desc.GetActiveClusterIterable().begin();
+   const auto &cd1 = *clusterIter;
+   ++clusterIter;
    const auto &pr1 = cd1.GetPageRange(1);
    ASSERT_EQ(2u, pr1.GetPageInfos().size());
    EXPECT_EQ(16u, pr1.GetPageInfos()[0].GetNElements());
    EXPECT_EQ(1u, pr1.GetPageInfos()[1].GetNElements());
-   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
+   const auto &cd2 = *clusterIter;
+   ++clusterIter;
    const auto &pr2 = cd2.GetPageRange(1);
    ASSERT_EQ(1u, pr2.GetPageInfos().size());
    EXPECT_EQ(16u, pr2.GetPageInfos()[0].GetNElements());
-   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
+   const auto &cd3 = *clusterIter;
+   ++clusterIter;
    const auto &pr3 = cd3.GetPageRange(1);
    ASSERT_EQ(0u, pr3.GetPageInfos().size());
-   const auto &cd4 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd3.GetId()));
+   const auto &cd4 = *clusterIter;
+   ++clusterIter;
    const auto &pr4 = cd4.GetPageRange(1);
    ASSERT_EQ(2u, pr4.GetPageInfos().size());
    EXPECT_EQ(16u, pr4.GetPageInfos()[0].GetNElements());
@@ -305,7 +321,9 @@ TEST(RNTuple, FlushColumns)
    }
 
    // If FlushColumns() worked, there will be two pages with one element each.
-   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath(), opts);
    const auto &descriptor = reader->GetDescriptor();
 
    auto fieldId = descriptor.FindFieldId("pt");
@@ -483,7 +501,7 @@ TEST(RNTuple, WritePageBudget)
    EXPECT_EQ(7u, prDD.GetPageInfos()[2].GetNElements());
 }
 
-#ifdef R__HAS_DAVIX
+#if defined(R__HAS_DAVIX) || defined(R__HAS_CURL)
 TEST(RNTuple, OpenHTTP)
 {
    std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1.root"));
@@ -912,8 +930,10 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
       auto iU = modelUcmp->MakeField<std::uint32_t>("i");
       auto fC = modelComp->MakeField<double>("f");
       auto iC = modelComp->MakeField<std::uint32_t>("i");
-      auto ntupleUcmp = RNTupleReader::Open(std::move(modelUcmp), "myNTuple", fileGuardUcmp.GetPath());
-      auto ntupleComp = RNTupleReader::Open(std::move(modelComp), "myNTuple", fileGuardComp.GetPath());
+      RNTupleReadOptions opts;
+      opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+      auto ntupleUcmp = RNTupleReader::Open(std::move(modelUcmp), "myNTuple", fileGuardUcmp.GetPath(), opts);
+      auto ntupleComp = RNTupleReader::Open(std::move(modelComp), "myNTuple", fileGuardComp.GetPath(), opts);
 
       // Verify that the pages are larger than maxKeySize
       EXPECT_GT(ntupleComp->GetDescriptor()
@@ -1087,14 +1107,15 @@ TEST(RPageSink, SamePageMerging)
       writer->Fill();
       writer.reset();
 
-      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      RNTupleReadOptions opts;
+      opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
       EXPECT_EQ(1u, reader->GetNEntries());
 
       const auto &desc = reader->GetDescriptor();
       const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0, 0);
       const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0, 0);
-      const auto clusterId = desc.FindClusterId(pxColId, 0);
-      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+      const auto &clusterDesc = *desc.GetActiveClusterIterable().begin();
       EXPECT_EQ(enable, clusterDesc.GetPageRange(pxColId).Find(0).GetLocator().GetPosition<std::uint64_t>() ==
                            clusterDesc.GetPageRange(pyColId).Find(0).GetLocator().GetPosition<std::uint64_t>());
 
@@ -1144,4 +1165,292 @@ TEST(RPageSourceFile, NameFromAnchor)
    EXPECT_EQ(source->GetNTupleName(), "");
    source->Attach();
    EXPECT_EQ(source->GetNTupleName(), "ntpl");
+}
+
+TEST(RPageSourceFile, OpenDifferentAnchor)
+{
+   FileRaii fileGuard("test_ntuple_open_diff_anchor.root");
+
+   auto model = RNTupleModel::Create();
+   auto pF = model->MakeField<float>("f");
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   {
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl1", *file);
+      for (auto i = 0; i < 100; ++i) {
+         *pF = i;
+         writer->Fill();
+      }
+   }
+   {
+      model = RNTupleModel::Create();
+      auto pI = model->MakeField<int>("i");
+      auto pC = model->MakeField<char>("c");
+
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl2", *file);
+      for (auto i = 0; i < 20; ++i) {
+         *pI = i;
+         *pC = i;
+         writer->Fill();
+      }
+   }
+
+   auto source = std::make_unique<RPageSourceFile>("ntpl1", fileGuard.GetPath(), RNTupleReadOptions());
+   source->Attach();
+   EXPECT_EQ(source->GetNEntries(), 100);
+   {
+      auto desc = source->GetSharedDescriptorGuard();
+      EXPECT_NE(desc->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+   }
+
+   TKey *anchor2Key = file->GetKey("ntpl2");
+   ROOT::RNTupleLocator anchorLoc;
+   anchorLoc.SetPosition(anchor2Key->GetSeekKey() + anchor2Key->GetKeylen());
+   anchorLoc.SetNBytesOnStorage(anchor2Key->GetNbytes() - anchor2Key->GetKeylen());
+   ROOT::Internal::RNTupleLink anchorLink{anchorLoc, static_cast<std::uint32_t>(anchor2Key->GetObjlen())};
+   auto anchor2 = file->Get<ROOT::RNTuple>("ntpl2");
+   ASSERT_NE(anchor2, nullptr);
+   auto source2 = source->OpenWithDifferentAnchor(anchorLink);
+   source2->Attach();
+   EXPECT_EQ(source2->GetNTupleName(), "ntpl2");
+   EXPECT_EQ(source2->GetNEntries(), 20);
+   {
+      auto desc2 = source2->GetSharedDescriptorGuard();
+      EXPECT_EQ(desc2->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("i"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("c"), ROOT::kInvalidDescriptorId);
+   }
+
+   source.reset();
+   // source2 should still be valid after dropping the first source.
+   EXPECT_EQ(source2->GetNEntries(), 20);
+   {
+      auto desc2 = source2->GetSharedDescriptorGuard();
+      EXPECT_EQ(desc2->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("i"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("c"), ROOT::kInvalidDescriptorId);
+   }
+}
+
+TEST(RPageSinkFile, CloneAsHidden)
+{
+   FileRaii fileGuard("test_ntuple_page_sink_file_diffname.ntuple");
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto opts = RNTupleWriteOptions();
+   auto model = RNTupleModel::Create();
+
+   {
+      auto sink1 = std::make_unique<RPageSinkFile>("ntuple1", *file, opts);
+      sink1->Init(*model);
+
+      auto sink2 = sink1->CloneAsHidden("ntuple2", opts);
+      sink2->Init(*model);
+
+      sink1->CommitDataset();
+      sink2->CommitDataset();
+   }
+
+   // We can't just use file->Get because ntuple2 is hidden.
+   bool found[2] = {false, false};
+   for (auto key : file->WalkTKeys()) {
+      found[0] |= key.fType == ROOT::Detail::TKeyMapNode::kKey && key.fKeyName == "ntuple1";
+      found[1] |= key.fType == ROOT::Detail::TKeyMapNode::kKey && key.fKeyName == "ntuple2";
+      if (found[0] && found[1])
+         break;
+   }
+   EXPECT_TRUE(found[0]);
+   EXPECT_TRUE(found[1]);
+}
+
+TEST(RPageSink, AddColumnRepresentation)
+{
+   FileRaii fileGuard("test_ntuple_page_sink_add_colrep.root");
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto sink = std::make_unique<RPageSinkFile>("ntuple", *file, RNTupleWriteOptions());
+   auto model = RNTupleModel::Create();
+   auto fInt = std::make_unique<RField<int>>("int");
+   fInt->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kInt32}});
+   model->AddField(std::move(fInt));
+   sink->Init(*model);
+
+   const auto fId = sink->GetDescriptor().FindFieldId("int");
+   const auto &desc = sink->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(fId);
+   std::vector<ROOT::Internal::RColumnFormat> newRepr{{ROOT::ENTupleColumnType::kSplitInt32}};
+   sink->AddColumnRepresentation(fdesc, newRepr, 0);
+
+   EXPECT_EQ(fdesc.GetColumnCardinality(), 1);
+   EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 2);
+
+   const auto &col1 = desc.GetColumnDescriptor(0);
+   const auto &col2 = desc.GetColumnDescriptor(1);
+   EXPECT_EQ(col1.GetType(), ROOT::ENTupleColumnType::kInt32);
+   EXPECT_EQ(col2.GetType(), ROOT::ENTupleColumnType::kSplitInt32);
+}
+
+TEST(RPageSink, AddColumnRepresentationWithData)
+{
+   FileRaii fileGuard("test_ntuple_page_sink_add_colrep_data.root");
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto sink = std::make_unique<RPageSinkFile>("ntuple", *file, RNTupleWriteOptions());
+   auto model = RNTupleModel::Create();
+   auto fInt = std::make_unique<RField<int>>("int");
+   fInt->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kInt32}});
+   model->AddField(std::move(fInt));
+   sink->Init(*model);
+
+   const auto fId = sink->GetDescriptor().FindFieldId("int");
+   const auto &desc = sink->GetDescriptor();
+   const auto &fdesc = desc.GetFieldDescriptor(fId);
+   std::vector<ROOT::Internal::RColumnFormat> newRepr{{ROOT::ENTupleColumnType::kSplitInt32}};
+   sink->AddColumnRepresentation(fdesc, newRepr, 0);
+
+   EXPECT_EQ(fdesc.GetColumnCardinality(), 1);
+   EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 2);
+
+   const auto &col1 = desc.GetColumnDescriptor(0);
+   const auto &col2 = desc.GetColumnDescriptor(1);
+   EXPECT_EQ(col1.GetType(), ROOT::ENTupleColumnType::kInt32);
+   EXPECT_EQ(col2.GetType(), ROOT::ENTupleColumnType::kSplitInt32);
+}
+
+TEST(RPageSource, MetadataMode)
+{
+   FileRaii fileGuard("test_ntuple_page_source_metadata_mode.root");
+
+   auto model = RNTupleModel::Create();
+   auto ptrCtr = model->MakeField<std::vector<int>>("ctr");
+   ptrCtr->resize(1);
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int i = 0; i < 1000; ++i) {
+         (*ptrCtr)[0] = i;
+         writer->Fill();
+         writer->CommitCluster(true /* commit cluster group */);
+      }
+   }
+
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   ROOT::Internal::RNTupleReadOptionsManip::SetClusterGroupBudget(opts, 100); // make sure page lists are not evicted
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusterGroups());
+   EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusters());
+   EXPECT_EQ(1000u, reader->GetDescriptor().GetNActiveClusters());
+
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kDefault);
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusterGroups());
+   EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusters());
+   EXPECT_EQ(0u, reader->GetDescriptor().GetNActiveClusters());
+
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kOnDemand);
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusterGroups());
+   EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusters());
+   EXPECT_EQ(0u, reader->GetDescriptor().GetNActiveClusters());
+
+   ptrCtr = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<int>>("ctr");
+   reader->LoadEntry(500);
+   EXPECT_EQ(500, (*ptrCtr)[0]);
+   reader->LoadEntry(999);
+   EXPECT_EQ(999, (*ptrCtr)[0]);
+   reader->LoadEntry(0);
+   EXPECT_EQ(0, (*ptrCtr)[0]);
+   EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+   EXPECT_GT(1000, reader->GetDescriptor().GetNActiveClusters());
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that we don't do full binary search on the cluster groups for sequential iteration
+      auto viewInt = reader->GetView<int>("ctr._0");
+      for (unsigned int i = 0; i < 10; ++i) {
+         EXPECT_EQ(i, viewInt(i));
+      }
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(15, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that we don't do full binary search on the cluster groups for multi-stream iteration
+      auto viewInt = reader->GetView<int>("ctr._0");
+      auto stream1 = reader->CreateActiveEntryToken();
+      auto stream2 = reader->CreateActiveEntryToken();
+      for (unsigned int i = 0; i < 10; ++i) {
+         if (i >= 5) {
+            stream2.SetEntryNumber(i - 5);
+            EXPECT_EQ(i - 5, viewInt(i - 5));
+         }
+         stream1.SetEntryNumber(i);
+         EXPECT_EQ(i, viewInt(i));
+      }
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(15, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that random access on top-level fields does not trigger full binary search in cluster groups
+      auto viewCtr = reader->GetView<std::vector<int>>("ctr");
+      // We will initially look into the first cluster (group). Then hit the cluster groups exactly. We also
+      // prefetch up to two clusters per read.
+      viewCtr(500);
+      viewCtr(300);
+
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GE(9, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Cross-check: random access on collection columns actually do require full binary search in the cluster groups
+      // (but not worse)
+      auto viewInt = reader->GetView<int>("ctr._0");
+      viewInt(500);
+
+      EXPECT_LT(10, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(20, reader->GetDescriptor().GetNActiveClusters());
+   }
+}
+
+TEST(RPageSource, ClusterGroupBudget)
+{
+   FileRaii fileGuard("test_ntuple_page_source_cluster_group_bedget.root");
+
+   auto model = RNTupleModel::Create();
+   auto ptrCtr = model->MakeField<std::vector<int>>("ctr");
+   ptrCtr->resize(1);
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int c = 0; c < 10; ++c) {
+         for (int i = 0; i < 10; ++i) {
+            (*ptrCtr)[0] = 10 * c + i;
+            writer->Fill();
+            writer->CommitCluster((i == 9));
+         }
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(20u, reader->GetDescriptor().GetNActiveClusters());
+
+   auto token1 = reader->CreateActiveEntryToken();
+   token1.SetEntryNumber(5);
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(20u, reader->GetDescriptor().GetNActiveClusters());
+
+   auto token2 = reader->CreateActiveEntryToken();
+   token2.SetEntryNumber(50);
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(30u, reader->GetDescriptor().GetNActiveClusters());
 }

@@ -359,6 +359,12 @@ namespace {
   //
   class FunctionTemplateDeclExt : public FunctionTemplateDecl {
   public:
+    static llvm::FoldingSetVector<FunctionTemplateSpecializationInfo>&
+    getSpecializations(FunctionTemplateDecl* self) {
+      return static_cast<FunctionTemplateDeclExt*>(self)
+          ->getCommonPtr()
+          ->Specializations;
+    }
     static void removeSpecialization(FunctionTemplateDecl* self,
                                      const FunctionDecl* spec) {
       assert(self && spec && "Cannot be null!");
@@ -383,6 +389,12 @@ namespace {
   //
   class ClassTemplateDeclExt : public ClassTemplateDecl {
   public:
+    static llvm::FoldingSetVector<ClassTemplateSpecializationDecl>&
+    getSpecializations(ClassTemplateDecl* self) {
+      return static_cast<ClassTemplateDeclExt*>(self)
+          ->getCommonPtr()
+          ->Specializations;
+    }
     static void removeSpecialization(ClassTemplateDecl* self,
                                      ClassTemplateSpecializationDecl* spec) {
       assert(!isa<ClassTemplatePartialSpecializationDecl>(spec) &&
@@ -414,6 +426,12 @@ namespace {
   //
   class VarTemplateDeclExt : public VarTemplateDecl {
   public:
+    static llvm::FoldingSetVector<VarTemplateSpecializationDecl>&
+    getSpecializations(VarTemplateDecl* self) {
+      return static_cast<VarTemplateDeclExt*>(self)
+          ->getCommonPtr()
+          ->Specializations;
+    }
     static void removeSpecialization(VarTemplateDecl* self,
                                      VarTemplateSpecializationDecl* spec) {
       assert(!isa<VarTemplatePartialSpecializationDecl>(spec) &&
@@ -493,6 +511,20 @@ namespace cling {
   }
 
   DeclUnloader::~DeclUnloader() {
+    // LLVM22 introduced UnsubstitutedConstraintSatisfactionCache:
+    // https://github.com/llvm/llvm-project/commit/e9972de
+    //
+    // This causes some stale results to persist across transactions
+    // For example, evaluating is_default_constructible_v<Inner<int>> for an
+    // incomplete Inner<int> caches the 'false' value here.
+    // Completing Inner<int> in the next transaction will see the cached 'false'
+    // instead of re-evaluating.
+    //
+    // Assuming rollback of this is a rare event.
+    // There is a TODO in clang to make this a private member, so this solution
+    // is not ideal.
+    // TODO: Look for a better solution.
+    m_Sema->UnsubstitutedConstraintSatisfactionCache.clear();
     SourceManager& SM = m_Sema->getSourceManager();
     for (FileIDs::iterator I = m_FilesToUncache.begin(),
            E = m_FilesToUncache.end(); I != E; ++I) {
@@ -513,6 +545,16 @@ namespace cling {
 
   bool DeclUnloader::VisitDecl(Decl* D) {
     assert(D && "The Decl is null");
+    if (auto* TLSD = dyn_cast<TopLevelStmtDecl>(D)) {
+      if (!TLSD->getStmt()) {
+        // Special case for TopLevelStmt. The change llvm/llvm-project@4b70d17bcf
+        // caused an invalid TopLevelStatement to be added to the AST, which
+        // can trigger assertions.
+        if (DeclContext *DC = TLSD->getDeclContext())
+          DC->removeDecl(TLSD); // unlink from TU
+        return true;
+      }
+    }
     CollectFilesToUncache(D->getBeginLoc());
 
     DeclContext* DC = D->getLexicalDeclContext();
@@ -857,8 +899,9 @@ namespace cling {
   }
 
   bool DeclUnloader::VisitRecordDecl(RecordDecl* RD) {
-    if (RD->isInjectedClassName())
-      return true;
+    if (auto *R = dyn_cast_or_null<CXXRecordDecl>(RD))
+      if (R->isInjectedClassName())
+        return true;
 
     /// The injected class name in C++ is the name of the class that
     /// appears inside the class itself. For example:
@@ -874,11 +917,17 @@ namespace cling {
     // The test show it can be either:
     // ... <- InjectedC <- C <- ..., i.e previous decl or
     // ... <- C <- InjectedC <- ...
+
+    bool isInjected = false;
     RecordDecl* InjectedRD = RD->getPreviousDecl();
-    if (!(InjectedRD && InjectedRD->isInjectedClassName())) {
+
+    if (auto *R = dyn_cast_or_null<CXXRecordDecl>(InjectedRD))
+      if (R->isInjectedClassName())
+        isInjected = true;
+    if (!(InjectedRD && isInjected)) {
       InjectedRD = RD->getMostRecentDecl();
       while (InjectedRD) {
-        if (InjectedRD->isInjectedClassName()
+        if (isInjected
             && InjectedRD->getPreviousDecl() == RD)
           break;
         InjectedRD = InjectedRD->getPreviousDecl();
@@ -887,7 +936,7 @@ namespace cling {
 
     bool Successful = true;
     if (InjectedRD) {
-      assert(InjectedRD->isInjectedClassName() && "Not injected classname?");
+      assert(isInjected && "Not injected classname?");
       Successful &= VisitRedeclarable(InjectedRD, InjectedRD->getDeclContext());
     }
 
@@ -1023,10 +1072,17 @@ namespace cling {
   bool DeclUnloader::VisitFunctionTemplateDecl(FunctionTemplateDecl* FTD) {
     bool Successful = true;
 
-    // Remove specializations, but do not invalidate the iterator!
-    for (FunctionTemplateDecl::spec_iterator I = FTD->loaded_spec_begin(),
-           E = FTD->loaded_spec_end(); I != E; ++I)
-      Successful &= VisitFunctionDecl(*I, /*RemoveSpec=*/false);
+    // Remove the specializations loaded so far. Completing the redeclaration
+    // chain of a specialization can make clang lazily load further
+    // specializations of this template, growing the specialization set and
+    // invalidating any iterators over it; take a snapshot of the raw entries
+    // first.
+    llvm::SmallVector<FunctionTemplateSpecializationInfo*, 8> Specs;
+    for (auto& S : FunctionTemplateDeclExt::getSpecializations(FTD))
+      Specs.push_back(&S);
+    for (auto* Entry : Specs)
+      Successful &= VisitFunctionDecl(Entry->getFunction()->getMostRecentDecl(),
+                                      /*RemoveSpec=*/false);
 
     Successful &= VisitRedeclarableTemplateDecl(FTD);
     Successful &= VisitFunctionDecl(FTD->getTemplatedDecl());
@@ -1036,11 +1092,18 @@ namespace cling {
   bool DeclUnloader::VisitClassTemplateDecl(ClassTemplateDecl* CTD) {
     // ClassTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
-    // Remove specializations, but do not invalidate the iterator!
-    for (ClassTemplateDecl::spec_iterator I = CTD->loaded_spec_begin(),
-           E = CTD->loaded_spec_end(); I != E; ++I)
+    // Remove the specializations loaded so far. Completing the redeclaration
+    // chain of a specialization can make clang lazily load further
+    // specializations of this template, growing the specialization set and
+    // invalidating any iterators over it; take a snapshot of the raw entries
+    // first.
+    llvm::SmallVector<ClassTemplateSpecializationDecl*, 8> Specs;
+    for (auto& S : ClassTemplateDeclExt::getSpecializations(CTD))
+      Specs.push_back(&S);
+    for (auto* Entry : Specs)
       Successful &=
-          VisitClassTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
+          VisitClassTemplateSpecializationDecl(Entry->getMostRecentDecl(),
+                                               /*RemoveSpec=*/false);
 
     // Visit all redeclarations of this template to ensure the full
     // redecl chain is unloaded properly.
@@ -1081,12 +1144,18 @@ namespace cling {
   bool DeclUnloader::VisitVarTemplateDecl(VarTemplateDecl* VTD) {
     // VarTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
-    // Remove specializations, but do not invalidate the iterator!
-    for (VarTemplateDecl::spec_iterator I = VTD->loaded_spec_begin(),
-                                        E = VTD->loaded_spec_end();
-         I != E; ++I)
+    // Remove the specializations loaded so far. Completing the redeclaration
+    // chain of a specialization can make clang lazily load further
+    // specializations of this template, growing the specialization set and
+    // invalidating any iterators over it; take a snapshot of the raw entries
+    // first.
+    llvm::SmallVector<VarTemplateSpecializationDecl*, 8> Specs;
+    for (auto& S : VarTemplateDeclExt::getSpecializations(VTD))
+      Specs.push_back(&S);
+    for (auto* Entry : Specs)
       Successful &=
-          VisitVarTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
+          VisitVarTemplateSpecializationDecl(Entry->getMostRecentDecl(),
+                                             /*RemoveSpec=*/false);
 
     Successful &= VisitRedeclarableTemplateDecl(VTD);
     Successful &= Visit(VTD->getTemplatedDecl());

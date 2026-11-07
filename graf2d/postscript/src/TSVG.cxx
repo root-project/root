@@ -13,24 +13,26 @@
 #pragma optimize("",off)
 #endif
 
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
-#include <cmath>
-#include <fstream>
-
 #include "TROOT.h"
 #include "TDatime.h"
 #include "TBase64.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
+#include "TPoint.h"
 #include "TPoints.h"
+#include "TImage.h"
 #include "TSVG.h"
 #include "TStyle.h"
 #include "TMath.h"
 #include "TObjString.h"
 #include "TObjArray.h"
-#include "snprintf.h"
+
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <cmath>
+#include <fstream>
+#include <cstdio>
 
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;
@@ -82,15 +84,7 @@ using the file extension `.svgz`.
 
 TSVG::TSVG() : TVirtualPS()
 {
-   fStream      = nullptr;
-   fType        = 0;
-   fCompact     = kFALSE;
    gVirtualPS   = this;
-   fBoundingBox = kFALSE;
-   fRange       = kFALSE;
-   fXsize       = 0.;
-   fYsize       = 0.;
-   fYsizeSVG    = 0;
    SetTitle("SVG");
 }
 
@@ -105,7 +99,6 @@ TSVG::TSVG() : TVirtualPS()
 
 TSVG::TSVG(const char *fname, Int_t wtype, Bool_t compact) : TVirtualPS(fname, wtype)
 {
-   fStream = nullptr;
    SetTitle("SVG");
    fCompact = compact;
    Open(fname, wtype);
@@ -122,7 +115,7 @@ void TSVG::Open(const char *fname, Int_t wtype)
    }
 
    fLenBuffer = 0;
-   fType      = abs(wtype);
+   fType      = std::abs(wtype);
    SetLineJoin(gStyle->GetJoinLinePS());
    SetLineCap(gStyle->GetCapLinePS());
    SetLineScale(gStyle->GetLineScalePS());
@@ -141,15 +134,14 @@ void TSVG::Open(const char *fname, Int_t wtype)
    }
 
    // Open OS file
-   fStream   = new std::ofstream(fname,std::ios::out);
-   if (!fStream || !fStream->good()) {
-      printf("ERROR in TSVG::Open: Cannot open file:%s\n",fname);
-      if (!fStream) return;
+   if (!OpenStream(fname)) {
+      Error("Open", "Cannot open file: %s", fname);
+      return;
    }
 
    gVirtualPS = this;
 
-   for (Int_t i=0;i<fSizBuffer;i++) fBuffer[i] = ' ';
+   ClearBuffer();
 
    fBoundingBox = kFALSE;
 
@@ -174,13 +166,14 @@ TSVG::~TSVG()
 
 void TSVG::Close(Option_t *)
 {
-   if (!gVirtualPS) return;
-   if (!fStream) return;
-   if (gPad) gPad->Update();
+   if (!gVirtualPS || !fStream)
+      return;
+   if (gPad)
+      gPad->Update();
    PrintStr("</svg>@");
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
+   CloseStream();
 
    gVirtualPS = nullptr;
 }
@@ -214,7 +207,7 @@ void TSVG::Off()
 
 void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-   static Double_t x[4], y[4];
+   Double_t x[4], y[4];
    Double_t ix1 = XtoSVG(TMath::Min(x1,x2));
    Double_t ix2 = XtoSVG(TMath::Max(x1,x2));
    Double_t iy1 = YtoSVG(TMath::Min(y1,y2));
@@ -302,6 +295,7 @@ void TSVG::PrintPath(Bool_t convert, Int_t n, Double_t *xps, Double_t *yps, Bool
    for (Int_t i = 1; i < n; i++) {
       Double_t ixdi = convert ? XtoSVG(xps[i]) : xps[i];
       Double_t iydi = convert ? YtoSVG(yps[i]) : yps[i];
+
       Double_t ix   = ixdi - ixd0;
       Double_t iy   = iydi - iyd0;
 
@@ -386,13 +380,8 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    PrintFast(9,"<path d=\"");
    PrintPath(kFALSE, 7, xps, yps);
    PrintFast(7,"\" fill=");
-
    SetColorAlpha(mode == -1 ? dark : light);
-
-   if (fgLineJoin)
-      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
-   if (fgLineCap)
-      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+   PrintLineJointAttributes();
    PrintFast(2,"/>");
 
    //- Draw bottom&right part of the box
@@ -409,10 +398,7 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    PrintPath(kFALSE, 7, xps, yps);
    PrintFast(7,"\" fill=");
    SetColorAlpha(mode == -1 ? light : dark);
-   if (fgLineJoin)
-      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
-   if (fgLineCap)
-      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+   PrintLineJointAttributes();
    PrintFast(2,"/>");
 }
 
@@ -449,408 +435,119 @@ void TSVG::DrawPolyLineNDC(Int_t, TPoints *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of polymarker printing
 
-template<class T>
-void TSVG::PrintPolyMarker(Int_t n, T *xw, T* yw)
+template<typename T>
+void TSVG::PrintPolyMarkerShape(Int_t n, T *xw, T* yw)
 {
-   fMarkerStyle = TMath::Abs(fMarkerStyle);
-   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
+   Float_t s2x = 1. / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
+   // Rescale size of marker on SVG coordinates
+   Float_t scale = UtoSVG(s2x) - UtoSVG(0);
 
-   if (ms == 4)
-      ms = 24;
-   else if (ms >= 6 && ms <= 8)
-      ms = 20;
-   else if (ms >= 9 && ms <= 19)
-      ms = 1;
+   Int_t markerSize = 0;
+   std::vector<TPoint> points;
+   auto shape = GetMarkerShape(markerSize, points, scale, kDotAsCircle);
 
-   // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
-   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
-   if (fMarkerStyle == 6) msize = 0.02;
-   if (fMarkerStyle == 7) msize = 0.04;
-
-   const Int_t kBASEMARKER = 8;
-   Float_t sbase = msize*kBASEMARKER;
-   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   msize = this->UtoSVG(s2x) - this->UtoSVG(0);
-
-   Double_t m  = msize;
-   Double_t m2 = m/2;
-   Double_t m3 = m/3;
-   Double_t m6 = m/6;
-   Double_t m4 = m/4.;
-   Double_t m8 = m/8.;
-   Double_t m0 = m/10.;
-
-   // Draw the marker according to the type
    PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-       ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-       ms == 47 || ms == 48 || ms == 49) {
-      PrintStr("<g fill=");
-      SetColorAlpha(Int_t(fMarkerColor), kTRUE, kFALSE);
-      PrintStr(">");
+
+   bool draw_circles = (shape == kShapeFilledCircle) || (shape == kShapeCircle);
+   bool draw_fill = (shape == kShapeFilledCircle) || (shape == kShapeFilledArea) || (shape == kShapeTriangles);
+
+   if (draw_circles)
+      PrintStr("<g ");
+   else
+      PrintStr("<path ");
+
+   if (draw_fill) {
+      PrintStr("fill=");
+      SetColorAlpha(Int_t(GetMarkerColor()), kTRUE, kFALSE);
    } else {
-      PrintStr("<g stroke=");
-      SetColorAlpha(Int_t(fMarkerColor), kFALSE, kTRUE);
+      PrintStr("stroke=");
+      SetColorAlpha(Int_t(GetMarkerColor()), kFALSE, kTRUE);
       PrintStr(" stroke-width=\"");
-      WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
+      WriteInteger(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetMarkerStyle()))), kFALSE);
       PrintStr("\" fill=\"none\"");
-      if (fgLineJoin)
-         PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
-      if (fgLineCap)
-         PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
-      PrintStr(">");
+      PrintLineJointAttributes();
    }
-   for (Int_t i = 0; i < n; i++) {
-      Double_t ix = XtoSVG(xw[i]);
-      Double_t iy = YtoSVG(yw[i]);
-      PrintStr("@");
-      // Dot (.)
-      if (ms == 1) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-1, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-      // Plus (+)
-      } else if (ms == 2) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
+   if (draw_circles)
+      PrintStr(">@");
+   else
+      PrintStr(" d=\"");
 
-         PrintStr("<line x1=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
-         PrintStr("\"/>");
-      // X shape (X)
-      } else if (ms == 5) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\"/>");
+   for (Int_t k = 0; k < n; k++) {
+      Double_t px = XtoSVG(xw[k]);
+      Double_t py = YtoSVG(yw[k]);
+      // add space between markers
+      if ((k > 0) && !draw_circles)
+         PrintStr(" ");
 
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\"/>");
-      // Asterisk shape (*)
-      } else if (ms == 3 || ms == 31) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\"/>");
-      // Circle
-      } else if (ms == 24 || ms == 20) {
-         PrintStr("<circle cx=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" cy=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" r=\"");
-         if (m2<=0) m2=1;
-         WriteReal(m2, kFALSE);
-         PrintStr("\"/>");
-      // Square
-      } else if (ms == 25 || ms == 21) {
-         PrintStr("<rect x=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" width=\"");
-         WriteReal(m, kFALSE);
-         PrintStr("\" height=\"");
-         WriteReal(m, kFALSE);
-         PrintStr("\"/>");
-      // Down triangle
-      } else if (ms == 26 || ms == 22) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      // Up triangle
-      } else if (ms == 23 || ms == 32) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      // Diamond
-      } else if (ms == 27 || ms == 33) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m3); PrintStr(","); WriteReal(iy);
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m3); PrintStr(","); WriteReal(iy);
-         PrintStr("\"/>");
-      // Cross
-      } else if (ms == 28 || ms == 34) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m6);
-         PrintStr("\"/>");
-      } else if (ms == 29 || ms == 30) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+0.112255*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix+0.47552*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix+0.181635*m); PrintStr(","); WriteReal(iy-0.05902*m);
-         WriteReal(ix+0.29389*m); PrintStr(","); WriteReal(iy-0.40451*m);
-         WriteReal(ix); PrintStr(","); WriteReal(iy-0.19098*m);
-         WriteReal(ix-0.29389*m); PrintStr(","); WriteReal(iy-0.40451*m);
-         WriteReal(ix-0.181635*m); PrintStr(","); WriteReal(iy-0.05902*m);
-         WriteReal(ix-0.47552*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix-0.112255*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         PrintStr("\"/>");
-      } else if (ms == 35) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         PrintStr("\"/>");
-      } else if (ms == 36) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         PrintStr("\"/>");
-      } else if (ms == 37 || ms == 39) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 38) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy);
-         PrintStr("\"/>");
-      } else if (ms == 40 || ms == 41) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 42 || ms == 43) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m8); PrintStr(","); WriteReal(iy+m8);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m8); PrintStr(","); WriteReal(iy-m8);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m8); PrintStr(","); WriteReal(iy-m8);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m8); PrintStr(","); WriteReal(iy+m8);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      } else if (ms == 44) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 45) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy+m0);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m0); PrintStr(","); WriteReal(iy+m0);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m0); PrintStr(","); WriteReal(iy-m0);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy-m0);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy+m0);
-         PrintStr("\"/>");
-      } else if (ms == 46 || ms == 47) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4);
-         PrintStr("\"/>");
-      } else if (ms == 48) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*1.01);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*0.99);
-         WriteReal(ix+m4*0.99); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4*0.99);
-         WriteReal(ix-m4*0.99); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*0.99);
-         PrintStr("\"/>");
-      } else if (ms == 49) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6*1.01);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6*0.99);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         PrintStr("\"/>");
-      } else {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-1, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
+      switch(shape) {
+         case kShapeDot:
+            PrintStr("M");
+            WriteReal(px-1, kFALSE);
+            PrintStr(",");
+            WriteReal(py, kFALSE);
+            PrintStr("h1");
+            break;
+         case kShapeCircle:
+         case kShapeFilledCircle: {
+            PrintStr("<circle cx=\"");
+            WriteReal(px, kFALSE);
+            PrintStr("\" cy=\"");
+            WriteReal(py, kFALSE);
+            PrintStr("\" r=\"");
+            WriteInteger(markerSize/2, kFALSE);
+            PrintStr("\"/>@");
+            break;
+         }
+         case kShapePolyLine:
+         case kShapeFilledArea:
+            PrintStr("M");
+            WriteReal(px + points.front().fX, kFALSE);
+            PrintStr(",");
+            WriteReal(py + points.front().fY, kFALSE);
+            for (std::size_t i = 1; i < points.size(); i++) {
+               PrintStr("l");
+               WriteInteger(points[i].fX - points[i-1].fX, kFALSE);
+               PrintStr(",");
+               WriteInteger(points[i].fY - points[i-1].fY, kFALSE);
+            }
+            if ((shape == kShapeFilledArea) || (points.front() == points.back()))
+               PrintStr("z");
+            break;
+         case kShapeSegments:
+            for (std::size_t i = 0; i + 1 < points.size(); i += 2) {
+               PrintStr("M");
+               WriteReal(px + points[i].fX, kFALSE);
+               PrintStr(",");
+               WriteReal(py + points[i].fY, kFALSE);
+               PrintStr("l");
+               WriteInteger(points[i+1].fX - points[i].fX, kFALSE);
+               PrintStr(",");
+               WriteInteger(points[i+1].fY - points[i].fY, kFALSE);
+            }
+            break;
+         case kShapeTriangles:
+            for (std::size_t i = 0; i + 2 < points.size(); i += 3) {
+               PrintStr("M");
+               WriteReal(px + points[i].fX, kFALSE);
+               PrintStr(",");
+               WriteReal(py + points[i].fY, kFALSE);
+               PrintStr("l");
+               WriteInteger(points[i+1].fX - points[i].fX, kFALSE);
+               PrintStr(",");
+               WriteInteger(points[i+1].fY - points[i].fY, kFALSE);
+               PrintStr("l");
+               WriteInteger(points[i+2].fX - points[i+1].fX, kFALSE);
+               PrintStr(",");
+               WriteInteger(points[i+2].fY - points[i+1].fY, kFALSE);
+               PrintStr("z");
+            }
+            break;
       }
    }
-   PrintStr("@");
-   PrintStr("</g>");
+   if (draw_circles)
+      PrintStr("</g>@");
+   else
+      PrintStr("\"/>");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -858,7 +555,7 @@ void TSVG::PrintPolyMarker(Int_t n, T *xw, T* yw)
 
 void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 {
-   PrintPolyMarker<Float_t>(n, xw, yw);
+   PrintPolyMarkerShape<Float_t>(n, xw, yw);
 }
 
 
@@ -867,8 +564,48 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
 void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   PrintPolyMarker<Double_t>(n, xw, yw);
+   PrintPolyMarkerShape<Double_t>(n, xw, yw);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print line style attributes on the end of "path" string
+
+void TSVG::PrintLineStyleOnEndOfPath()
+{
+   PrintFast(21,"\" fill=\"none\" stroke=");
+   SetColorAlpha(fLineColor, kFALSE, kTRUE);
+   if(fLineWidth > 1.) {
+      PrintFast(15," stroke-width=\"");
+      WriteReal(fLineWidth, kFALSE);
+      PrintFast(1,"\"");
+   }
+   if (fLineStyle > 1) {
+      PrintFast(19," stroke-dasharray=\"");
+      TString st = (TString)gStyle->GetLineStyleString(fLineStyle);
+      TObjArray *tokens = st.Tokenize(" ");
+      for (Int_t j = 0; j<tokens->GetEntries(); j++) {
+         Int_t it;
+         sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
+         if (j>0) PrintFast(1,",");
+         WriteReal(it/4);
+      }
+      delete tokens;
+      PrintFast(1,"\"");
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print line join attributes - if present
+
+void TSVG::PrintLineJointAttributes()
+{
+   if (fgLineJoin)
+      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function defines a path with xw and yw and draw it according the
@@ -908,28 +645,9 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
    PrintPath(kTRUE, n, xw, yw, nn < 0);
 
-   if (nn > 0) {
-      PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColorAlpha(fLineColor, kFALSE, kTRUE);
-      if(fLineWidth > 1.) {
-         PrintFast(15," stroke-width=\"");
-         WriteReal(fLineWidth, kFALSE);
-         PrintFast(1,"\"");
-      }
-      if (fLineStyle > 1) {
-         PrintFast(19," stroke-dasharray=\"");
-         TString st = (TString)gStyle->GetLineStyleString(fLineStyle);
-         TObjArray *tokens = st.Tokenize(" ");
-         for (Int_t j = 0; j<tokens->GetEntries(); j++) {
-            Int_t it;
-            sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
-            if (j>0) PrintFast(1,",");
-            WriteReal(it/4);
-         }
-         delete tokens;
-         PrintFast(1,"\"");
-      }
-   } else {
+   if (nn > 0)
+      PrintLineStyleOnEndOfPath();
+   else {
       PrintFast(7,"\" fill=");
       if (fais == 0) {
          PrintFast(14,"\"none\" stroke=");
@@ -938,12 +656,53 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          SetColorAlpha(fFillColor);
       }
    }
-   if (fgLineJoin)
-      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
-   if (fgLineCap)
-      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+   PrintLineJointAttributes();
    PrintFast(2,"/>");
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// This method draw N segments
+void TSVG::DrawSegments(Int_t n, Double_t *xw, Double_t *yw)
+{
+   if (fLineWidth < 0)
+      return;
+
+   if(n < 1) {
+      Error("DrawSegments", "At least one segment has to be provided");
+      return;
+   }
+
+   PrintStr("@");
+   PrintFast(9,"<path d=\"");
+
+   for(Int_t i = 0; i < 2*n; i += 2) {
+      Double_t ixd0 = XtoSVG(xw[i]);
+      Double_t iyd0 = YtoSVG(yw[i]);
+      Double_t ixd1 = XtoSVG(xw[i+1]);
+      Double_t iyd1 = YtoSVG(yw[i+1]);
+
+      Double_t dx   = ixd1 - ixd0;
+      Double_t dy   = iyd1 - iyd0;
+
+      if (fCompact && (TMath::Abs(dx) < kEpsilon))
+         dx = 0;
+      if (fCompact && (TMath::Abs(dy) < kEpsilon))
+         dy = 0;
+
+      if (dx || dy) {
+         PrintFast(1,"M");
+         WriteReal(ixd0, kFALSE);
+         PrintFast(1,",");
+         WriteReal(iyd0, kFALSE);
+         MovePS(dx, dy);
+      }
+   }
+
+   PrintLineStyleOnEndOfPath();
+   PrintLineJointAttributes();
+   PrintFast(2,"/>");
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Begin the Cell Array painting
@@ -990,6 +749,53 @@ void TSVG::CellArrayPng(char *buffer, int size)
 
 void TSVG::CellArrayEnd()
 {
+   PrintStr("\"></image>@");
+   PrintStr("</g>@");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image in the SVG
+/// Replaces CellArray methods calling
+
+void TSVG::DrawImage(TImage *img, Int_t x, Int_t y, Int_t)
+{
+   Int_t width = img->GetWidth();
+   Int_t height = img->GetHeight();
+
+   auto x1 = gPad->AbsPixeltoX(x);
+   auto x2 = gPad->AbsPixeltoX(x + width);
+   auto y1 = gPad->AbsPixeltoY(y);
+   auto y2 = gPad->AbsPixeltoY(y + height);
+
+   Double_t svgx1 = XtoSVG(x1);
+   Double_t svgx2 = XtoSVG(x2);
+   Double_t svgy1 = YtoSVG(y1);
+   Double_t svgy2 = YtoSVG(y2);
+
+   char *buffer = nullptr;
+   int  size = 0;
+
+   img->GetImageBuffer(&buffer, &size, TImage::kPng);
+   if (!buffer) {
+      Error("DrawImage", "Fail to get PNG format of the image");
+      return;
+   }
+
+   TString base64 = TBase64::Encode(reinterpret_cast<char *>(buffer), size);
+   free(buffer);
+
+   PrintStr("@<g transform=\"translate(");
+   WriteReal(svgx1, kFALSE);
+   WriteReal(svgy1, kTRUE);
+   PrintStr(") scale(");
+   WriteReal((svgx2 - svgx1) / width, kFALSE);
+   WriteReal((svgy2 - svgy1) / height, kTRUE);
+   PrintStr(")\">@");
+   PrintStr(TString::Format("<image width=\"%d\" height=\"%d\" href=\"data:image/png;base64,", width, height));
+
+   if (!fCompact)
+      PrintFast(base64.Length(), base64.Data());
+
    PrintStr("\"></image>@");
    PrintStr("</g>@");
 }
@@ -1311,8 +1117,8 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t txalv = fTextAlign%10;
    if (txalv <1) txalv = 1; else if (txalv > 3) txalv = 3;
 
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t     wh = (Double_t)gPad->GetPadWidth();
+   Double_t     hh = (Double_t)gPad->GetPadHeight();
    Float_t fontrap = 1.09; //scale down compared to X11
    Float_t ftsize;
 
@@ -1445,6 +1251,13 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 786) ichar =  8476;
       if (ic == 785) ichar =  8465;
       if (ic == 787) ichar =  8472;
+      if (ic == 882) ichar =  8704; // FOR ALL
+      if (ic == 884) ichar =  8707; // THERE EXISTS
+      if (ic == 815) ichar =  8659; // DOWNWARDS DOUBLE ARROW
+      if (ic == 811) ichar =  8660; // LEFT RIGHT DOUBLE ARROW
+      if (ic == 826) ichar =  124;  // VERTICAL LINE
+      if (ic == 818) ichar =  9415; // CIRCLED LATIN CAPITAL LETTER R
+      if (ic == 820) ichar =  8482; // TRADEMARK SIGN
 
       // Greek characters
       if (ic == 918) ichar = 934;
@@ -1462,7 +1275,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 935) ichar = 937;
       if (ic == 938) ichar = 918;
       if (ic == 951) ichar = 947;
-      if (ic == 798) ichar = 949;
+      if (ic == 798) ichar = 8712; // ELEMENT OF, TeX traditionally assigns \epsilon to GREEK LUNATE EPSILON SYMBOL (ϵ), compared to the curly \varepsilon to the GREEK SMALL LETTER EPSILON (Ɛ)
       if (ic == 970) ichar = 950;
       if (ic == 952) ichar = 951;
       if (ic == 961) ichar = 952;
@@ -1481,7 +1294,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 954) ichar = 966;
       if (ic == 922) ichar = 952;
       if (ic == 753) ichar = 965;
-      PrintStr(Form("&#%4.4d;",ichar));
+      PrintStr(TString::Format("&#%4.4d;",ichar));
    } else {
       Int_t len=strlen(chars);
       for (Int_t i=0; i<len;i++) {
@@ -1510,6 +1323,23 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       PrintStr("@");
       PrintFast(4,"</g>");
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text with URL.
+///
+
+void TSVG::TextUrl(Double_t x, Double_t y, const char *chars, const char *url)
+{
+   PrintStr("@");
+   PrintFast(9,"<a href=\"");
+   PrintStr(url);
+   PrintFast(2,"\">");
+   PrintStr("@");
+   Text(x, y, chars);
+   PrintStr("@");
+   PrintFast(4,"</a>");
+   PrintStr("@");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

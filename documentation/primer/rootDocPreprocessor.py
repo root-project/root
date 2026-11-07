@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
 A tool to preprocess root documentation in order to provide missing
 functionality in the documentation tools like doxygen or pandoc.
@@ -14,8 +14,8 @@ import os
 usage="Usage: %s fileToBeTreated.md\n" %__file__
 
 def printErrAndUsage(msg):
-   print msg
-   print usage
+   print(msg)
+   print(usage)
 
 def checkInvocation(argv):
    """
@@ -49,7 +49,7 @@ def includeFilter(text):
       if line.startswith("@ROOT_INCLUDE_FILE"):
          inclFileName = line.split()[1]
          if not os.path.exists(inclFileName):
-            print "[includeFilter] Error: file %s does not exist." %inclFileName
+            print("[includeFilter] Error: file", inclFileName, "does not exist.")
             retcode+=1
             continue
          for inclFileLine in open(inclFileName).readlines():
@@ -91,7 +91,7 @@ def preprocessFile():
    filename = argv[1]
    retcode = applyFilters(filename)
    if retcode != 0:
-      print "Errors during the preprocessing."
+      print("Errors during the preprocessing.")
    return retcode
 
 if __name__ == "__main__":

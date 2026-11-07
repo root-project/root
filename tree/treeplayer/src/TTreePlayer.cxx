@@ -10,7 +10,8 @@
  *************************************************************************/
 
 /**
- * \defgroup treeplayer TreePlayer Library
+ * \defgroup treeplayer TTreePlayer
+ * \ingroup tree
  * \brief It contains utilities to plot data stored in a TTree.
  * \note See also Tree package documentation
  * \note See also Chapter about Trees and Selectors in the Users Guide
@@ -24,12 +25,6 @@ extra libraries (Histogram, display, etc).
 */
 
 #include "TTreePlayer.h"
-
-#include <cstring>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -87,13 +82,18 @@ extra libraries (Histogram, display, etc).
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
 #include "HFitInterface.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"
 
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 R__EXTERN Foption_t Foption;
 
@@ -273,6 +273,48 @@ void TTreePlayer::DeleteSelectorFromFile()
    fSelectorClass = nullptr;
 }
 
+namespace {
+
+// TTree::Draw can take the name of a C++ script file (optionally with an
+// ACLiC mode suffix and arguments, e.g. "myscript.C+(2)") instead of a
+// TTreeFormula expression for both the variable expression and the
+// selection; see "Drawing a user function accessing the TTree data directly"
+// in the TTree::Draw documentation. Determine whether 'expression' names
+// such a script file.
+//
+// Besides checking that the file exists, we require that the candidate has an
+// extension: TTreeProxyGenerator::WriteProxy() needs one to derive the name of
+// the function to call. This avoids misinterpreting an expression like "abs(x)"
+// as the script "abs" called with argument "(x)" whenever an unrelated file
+// with that name happens to exist in the current directory (JIRA ROOT-8000).
+
+bool IsScriptFile(const char *expression)
+{
+   if (!expression || !expression[0])
+      return false;
+
+   const TString candidate = expression;
+
+   // These tokens only appear in TTreeFormula expressions, never in the name of
+   // a script file, so their presence rules out a script file.
+   static const std::vector<TString> formulaTokens = {
+      "Alt$", "Entries$", "LocalEntries$", "Length$",    "Entry$", "LocalEntry$", "Min$",
+      "Max$", "MinIf$",   "MaxIf$",        "Iteration$", "Sum$",   ">",           "<"};
+   for (const TString &token : formulaTokens)
+      if (candidate.Index(token) >= 0)
+         return false;
+
+   TString aclicMode, arguments, io;
+   const TString realname = gSystem->SplitAclicMode(candidate, aclicMode, arguments, io);
+   const Ssiz_t dot_pos = realname.Last('.');
+   if (dot_pos == kNPOS || dot_pos < realname.Last('/'))
+      return false;
+
+   return gSystem->IsFileInIncludePath(candidate);
+}
+
+} // anonymous namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the result of a C++ script.
 ///
@@ -356,44 +398,24 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    // Let's see if we have a filename as arguments instead of
    // a TTreeFormula expression.
 
-   TString possibleFilename = varexp0;
-   Ssiz_t dot_pos = possibleFilename.Last('.');
-   if ( dot_pos != kNPOS
-       && possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
-       && possibleFilename.Index("LocalEntries$")<0
-       && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
-       && possibleFilename.Index("LocalEntry$")<0
-       && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
-       && possibleFilename.Index("MinIf$")<0 && possibleFilename.Index("MaxIf$")<0
-       && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
-       && possibleFilename.Index(">")<0 && possibleFilename.Index("<")<0
-       && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
+   if (IsScriptFile(varexp0)) {
 
-      if (selection && strlen(selection) && !gSystem->IsFileInIncludePath(selection)) {
+      if (selection && strlen(selection) && !IsScriptFile(selection)) {
          Error("DrawSelect",
-               "Drawing using a C++ file currently requires that both the expression and the selection are files\n\t\"%s\" is not a file",
+               "Drawing using a C++ macro currently requires that both the expression and the selection are "
+               "files\n\t\"%s\" is not a file",
                selection);
          return 0;
       }
       return DrawScript("generatedSel",varexp0,selection,option,nentries,firstentry);
 
-   } else {
-      possibleFilename = selection;
-      if (possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
-          && possibleFilename.Index("LocalEntries$")<0
-          && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
-          && possibleFilename.Index("LocalEntry$")<0
-          && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
-          && possibleFilename.Index("MinIf$")<0 && possibleFilename.Index("MaxIf$")<0
-          && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
-          && possibleFilename.Index(">")<0 && possibleFilename.Index("<")<0
-          && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
+   } else if (IsScriptFile(selection)) {
 
-         Error("DrawSelect",
-               "Drawing using a C++ file currently requires that both the expression and the selection are files\n\t\"%s\" is not a file",
-               varexp0);
-         return 0;
-      }
+      Error("DrawSelect",
+            "Drawing using a C++ macro currently requires that both the expression and the selection are "
+            "files\n\t\"%s\" is not a file",
+            varexp0);
+      return 0;
    }
 
    Long64_t oldEstimate  = fTree->GetEstimate();
@@ -621,8 +643,6 @@ Long64_t TTreePlayer::GetEntriesToProcess(Long64_t firstentry, Long64_t nentries
       lastentry  = fTree->GetEntriesFriend() - 1;
       nentries   = lastentry - firstentry + 1;
    }
-   //TEventList *elist = fTree->GetEventList();
-   //if (elist && elist->GetN() < nentries) nentries = elist->GetN();
    TEntryList *elist = fTree->GetEntryList();
    if (elist && elist->GetN() < nentries) nentries = elist->GetN();
    return nentries;
@@ -869,12 +889,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (opt.Contains("selector")) {
       fprintf(fp,"class %s : public TSelector {\n",cppClassName.Data());
       fprintf(fp,"public :\n");
-      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain\n");
    } else {
       fprintf(fp,"class %s {\n",cppClassName.Data());
       fprintf(fp,"public :\n");
-      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
-      fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
+      fprintf(fp,"   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   Int_t           fCurrent; ///<!current Tree number in a TChain\n");
    }
 
    fprintf(fp,"\n// Fixed size dimensions of array or collections stored in the TTree if any.\n");
@@ -1107,7 +1127,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-      fprintf(fp,"   TBranch        *b_%s;   //!\n",R__GetBranchPointerName(leaf).Data());
+      fprintf(fp,"   TBranch        *b_%s;   ///<!\n",R__GetBranchPointerName(leaf).Data());
    }
 
 // generate class member functions prototypes
@@ -2434,6 +2454,8 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 ///       conversion specifier is given, will be suffixed by the letter g.
 ///       before being passed to fprintf.  If no format is specified for a
 ///       column, the default is used  (aka ${colsize}.${precision}g )
+///       As with printf, a leading minus sign left-justifies the column,
+///       e.g. `col=-20s` prints a 20-character-wide, left-justified column.
 ///
 /// For example:
 /// ~~~{.cpp}
@@ -2456,6 +2478,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    UInt_t ui;
    UInt_t lenmax = 0;
    UInt_t colDefaultSize = 9;
+   UInt_t colMaxResizeWidth = 20;
    UInt_t colPrecision = 9;
    std::vector<TString> colFormats;
    std::vector<Int_t> colSizes;
@@ -2481,6 +2504,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       opt.Remove(start,length("size")+numlen);
 
       colDefaultSize = atoi(num.Data());
+      colMaxResizeWidth = colDefaultSize;
       colPrecision = colDefaultSize;
       if (colPrecision>18) colPrecision = 18;
    }
@@ -2520,6 +2544,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
               || opt[numpos+numlen] == 'h'
               || opt[numpos+numlen] == 's'
               || opt[numpos+numlen] == '#'
+              || opt[numpos+numlen] == '-'
               || opt[numpos+numlen]=='.'
               || opt[numpos+numlen]==':')) numlen++;
       TString flist = opt(numpos,numlen);
@@ -2542,7 +2567,9 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
             colFormats.push_back(flist(i,next-i));
             i = next;
          }
-         UInt_t siz = atoi(colFormats[colFormats.size()-1].Data());
+         // A leading '-' requests left-justification (printf convention) and
+         // yields a negative size; a size of 0 means "use the default".
+         Int_t siz = atoi(colFormats[colFormats.size()-1].Data());
          colSizes.push_back( siz ? siz : colDefaultSize );
       }
    }
@@ -2632,9 +2659,10 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    }
    var = new TTreeFormula* [ncols];
 
-   for(ui=colFormats.size();ui<ncols;++ui) {
+   for (ui = colFormats.size(); ui < ncols; ++ui) {
       colFormats.push_back(defFormat);
-      colSizes.push_back(colDefaultSize);
+      UInt_t nameWidth = cnames[ui].size();
+      colSizes.push_back(std::clamp(nameWidth, colDefaultSize, colMaxResizeWidth));
    }
 
 //*-*- Create the TreeFormula objects corresponding to each column
@@ -2680,7 +2708,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    if (hasArray) onerow += "***********";
 
    for (ui=0;ui<ncols;ui++) {
-      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      TString starFormat = Form("*%%%d.%ds",std::abs(colSizes[ui])+2,std::abs(colSizes[ui])+2);
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
@@ -2690,8 +2718,14 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    onerow = "*    Row   ";
    if (hasArray) onerow += "* Instance ";
    for (ui=0;ui<ncols;ui++) {
-      TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
-      onerow += Form(numbFormat.Data(),var[ui]->PrintValue(-1));
+      TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],std::abs(colSizes[ui]));
+      TString varName = var[ui]->PrintValue(-1);
+      if (Int_t(varName.size()) > std::abs(colSizes[ui])) {
+         varName.Resize(std::max(1, colSizes[ui] - 3));
+         varName += "...";
+      }
+      // varName will be truncated further if necessary here (ie if colSizes[ui]<=3)
+      onerow += Form(numbFormat.Data(), varName.Data());
    }
    if (fScanRedirect)
       out<<onerow.Data()<<"*"<<std::endl;
@@ -2700,7 +2734,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    onerow = "***********";
    if (hasArray) onerow += "***********";
    for (ui=0;ui<ncols;ui++) {
-      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      TString starFormat = Form("*%%%d.%ds",std::abs(colSizes[ui])+2,std::abs(colSizes[ui])+2);
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
@@ -2768,7 +2802,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
             onerow += Form("* %8d ",inst);
          }
          for (ui=0;ui<ncols;++ui) {
-            TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
+            TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],std::abs(colSizes[ui]));
             if (var[ui]->GetNdim()) onerow += Form(numbFormat.Data(),var[ui]->PrintValue(0,inst,colFormats[ui].Data()));
             else {
                TString emptyForm = Form("* %%%dc ",colSizes[ui]);
@@ -2798,7 +2832,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    onerow = "***********";
    if (hasArray) onerow += "***********";
    for (ui=0;ui<ncols;ui++) {
-      TString starFormat = Form("*%%%d.%ds",colSizes[ui]+2,colSizes[ui]+2);
+      TString starFormat = Form("*%%%d.%ds",std::abs(colSizes[ui])+2,std::abs(colSizes[ui])+2);
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)

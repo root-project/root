@@ -1,6 +1,5 @@
 /**
  \file ROOT/RDF/SnapshotHelpers.hxx
- \ingroup dataframe
  \author Enrico Guiraud, CERN
  \author Danilo Piparo, CERN
  \date 2016-12
@@ -123,7 +122,9 @@ struct RBranchData {
    TBranch *fOutputBranch = nullptr;
    void *fBranchAddressForCArrays = nullptr; // Used to detect if branch addresses need to be updated
 
-   int fVariationIndex = -1; // For branches that are only valid if a specific filter passed
+   // A negative index indicates no variations, 0 is for nominal, >0 marks columns that are only valid if a specific
+   // filter passed
+   int fVariationIndex = -1;
    std::variant<FundamentalType, EmptyDynamicType> fTypeData = FundamentalType{0};
    bool fIsCArray = false;
    bool fIsDefine = false;

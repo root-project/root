@@ -78,7 +78,7 @@ namespace Experimental {
 
 /// Configuration options for parallel minimization with multiprocessing library
 RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1) ;
-RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4) ;
+RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=0) ;
 
 void writeCodegenDebugMacro(RooAbsReal const &absReal, std::string const &name);
 inline void writeCodegenDebugMacro(std::unique_ptr<RooAbsReal> const &absReal, std::string const &name)
@@ -242,18 +242,11 @@ RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
 RooCmdArg TimingAnalysis(bool timingAnalysis) ;
 
-//RooCmdArg BatchMode(std::string const& batchMode="cpu");
-//// The const char * overload is necessary, otherwise the compiler will cast a
-//// C-Style string to a bool and choose the BatchMode(bool) overload if one
-//// calls for example BatchMode("off").
-//inline RooCmdArg BatchMode(const char * batchMode) { return BatchMode(std::string(batchMode)); }
-//inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "cpu" : "off"); }
-
 RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
 RooCmdArg PrefitDataFraction(double data_ratio = 0.0) ;
-RooCmdArg Optimize(Int_t flag=2) ;
+RooCmdArg Optimize(Int_t flag = 2);
 
 class EvalBackend : public RooCmdArg {
 public:
@@ -263,7 +256,16 @@ public:
 
    EvalBackend(std::string const &name);
 
-   static EvalBackend Legacy();
+   static EvalBackend Legacy()
+// Deprecation macro skipped when building RooFit itself, so we don't get
+// warnings when unit testing deprecated features.
+#ifndef ROOFIT_BUILDS_ITSELF
+      R__DEPRECATED(6, 44,
+                    "The legacy evaluation backend will be removed in ROOT 6.44. "
+                    "Use the default \"cpu\" evaluation backend, i.e. simply don't pass any EvalBackend() "
+                    "command argument.")
+#endif
+         ;
    static EvalBackend Cpu();
    static EvalBackend Cuda();
    static EvalBackend Codegen();

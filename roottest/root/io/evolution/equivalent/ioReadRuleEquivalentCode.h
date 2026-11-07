@@ -15,7 +15,7 @@ public:
    void initializeTransients(){transient_=2;}
    ClassDefOverride(B,1)
 private:
-   double transient_; //!
+   double transient_; ///<!
 
 };
 

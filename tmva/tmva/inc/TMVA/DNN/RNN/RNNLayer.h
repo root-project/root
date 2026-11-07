@@ -35,7 +35,9 @@
 #include <string>
 
 #include "TMatrix.h"
+#include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ContextHandles.h"
 
 namespace TMVA
 {

@@ -60,7 +60,7 @@ protected:
       _x[0] = xx;
       return _x.data();
    }
-   std::vector<double> _x; //! Current coordinate
+   std::vector<double> _x; ///<! Current coordinate
 
    double _epsAbs;             // Absolute precision
    double _epsRel;             // Relative precision
@@ -68,8 +68,8 @@ protected:
    Int_t _maxSeg;              // Maximum number of segments
    void *_workspace = nullptr; // GSL workspace
 
-   mutable double _xmin; //! Lower integration bound
-   mutable double _xmax; //! Upper integration bound
+   mutable double _xmin; ///<! Lower integration bound
+   mutable double _xmax; ///<! Upper integration bound
 };
 
 #endif

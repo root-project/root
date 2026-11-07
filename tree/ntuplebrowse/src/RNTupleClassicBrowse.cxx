@@ -1,5 +1,4 @@
 /// \file RNTupleClassicBrowse.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2025-06-30
 

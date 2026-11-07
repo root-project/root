@@ -382,9 +382,9 @@ std::string listVars(std::vector<std::string> const &alist, std::vector<bool> co
 std::string declareVarSpans(std::vector<std::string> const &alist)
 {
    std::stringstream ss;
-   for (std::size_t i = 0; i < alist.size(); ++i) {
+   for (auto const &elem : alist) {
       ss << "   "
-         << "std::span<const double> " << alist[i] << "Span = ctx.at(" << alist[i] << ");\n";
+         << "std::span<const double> " << elem << "Span = ctx.at(" << elem << ");\n";
    }
    return ss.str();
 }
@@ -601,11 +601,18 @@ void codegenImpl(CLASS_NAME &arg, CodegenContext &ctx);
 #include <RooAbsReal.h>
 #include <RooAbsCategory.h>
 
-#include <Riostream.h>
 #include <TMath.h>
 
 #include <cmath>
-
+#ifdef __APPLE__
+// Workaround for https://github.com/llvm/llvm-project/issues/138683
+// Include <chrono> before <fstream> to ensure _FilesystemClock is defined
+// Can be removed once the upstream issue is fixed.
+#include <chrono>
+#endif
+#include <fstream>
+#include <iostream>
+#include <iomanip>
 
 CLASS_NAME::CLASS_NAME(const char *name, const char *title,
 )";

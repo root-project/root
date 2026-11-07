@@ -21,8 +21,8 @@
 #include "TDataType.h"
 #include "TRealData.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 
 
 /** \class TInspectorObject
@@ -47,8 +47,8 @@ public:
    TClass *IsA() const override { return fClass; }
 
 private:
-   void     *fObj{nullptr};   //! pointer to the foreign object
-   TClass   *fClass{nullptr}; //! pointer to class of the foreign object
+   void     *fObj{nullptr};   ///<! pointer to the foreign object
+   TClass   *fClass{nullptr}; ///<! pointer to class of the foreign object
 
 };
 

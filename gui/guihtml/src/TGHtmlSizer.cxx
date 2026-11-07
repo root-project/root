@@ -25,14 +25,15 @@
 
 // Routines used to compute the style and size of individual elements.
 
+#include "TGHtml.h"
+#include "TImage.h"
+#include "TASUtils.h"
+#include "TVirtualX.h"
+
 #include <cstring>
 #include <cstdlib>
 #include <cctype>
-
-#include "TGHtml.h"
-#include "TImage.h"
-#include "TVirtualX.h"
-#include "snprintf.h"
+#include <cstdio>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the current rendering style. In other words, get the style
@@ -353,10 +354,10 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                      // unsigned int mask;
 
                      // mask = kGCTile | kGCFillStyle | kGCGraphicsExposures;
-                     gcv.fTile = img->GetPixmap();
+                     gcv.fTile = TASUtils::GetPixmap(img);
                      gcv.fFillStyle = kFillTiled;
                      gcv.fGraphicsExposures = kTRUE;
-                     fCanvas->SetBackgroundPixmap(img->GetPixmap());
+                     fCanvas->SetBackgroundPixmap(TASUtils::GetPixmap(img));
 
                      gVirtualX->ChangeGC(fWhiteGC.GetGC(), &gcv);
 

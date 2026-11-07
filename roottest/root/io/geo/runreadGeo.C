@@ -20,6 +20,6 @@
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    gApplication->Terminate(0);
 #else
-   0; // Insure success of the test (for Makefile)
+   0; // ensure the test exits with success status
 #endif
 }

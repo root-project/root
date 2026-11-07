@@ -1,5 +1,4 @@
 /// \file RNTupleDescriptor.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2018-10-04
@@ -33,36 +32,49 @@
 #include <set>
 #include <utility>
 
-using ROOT::Internal::RNTupleSerializer;
+const std::string &ROOT::RFieldDescriptor::GetEmptyString()
+{
+   static std::string gEmpty;
+   return gEmpty;
+}
 
 bool ROOT::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {
    return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&
-          fFieldName == other.fFieldName && fFieldDescription == other.fFieldDescription &&
-          fTypeName == other.fTypeName && fTypeAlias == other.fTypeAlias && fNRepetitions == other.fNRepetitions &&
-          fStructure == other.fStructure && fParentId == other.fParentId &&
+          GetFieldName() == other.GetFieldName() && GetFieldDescription() == other.GetFieldDescription() &&
+          GetTypeName() == other.GetTypeName() && GetTypeAlias() == other.GetTypeAlias() &&
+          fNRepetitions == other.fNRepetitions && fStructure == other.fStructure && fParentId == other.fParentId &&
           fProjectionSourceId == other.fProjectionSourceId && fLinkIds == other.fLinkIds &&
-          fLogicalColumnIds == other.fLogicalColumnIds && other.fTypeChecksum == other.fTypeChecksum;
+          fLogicalColumnIds == other.fLogicalColumnIds && fTypeChecksum == other.fTypeChecksum &&
+          fIsSoACollection == other.fIsSoACollection;
+}
+
+void ROOT::RFieldDescriptor::InitFrom(const RFieldDescriptor &source, Internal::RStringPool &stringPool)
+{
+   fFieldId = source.fFieldId;
+   fFieldVersion = source.fFieldVersion;
+   fTypeVersion = source.fTypeVersion;
+   fNRepetitions = source.fNRepetitions;
+   fStructure = source.fStructure;
+   fParentId = source.fParentId;
+   fProjectionSourceId = source.fProjectionSourceId;
+   fLinkIds = source.fLinkIds;
+   fColumnCardinality = source.fColumnCardinality;
+   fLogicalColumnIds = source.fLogicalColumnIds;
+   fTypeChecksum = source.fTypeChecksum;
+   fIsSoACollection = source.fIsSoACollection;
+
+   fFieldName = stringPool.Intern(source.GetFieldName());
+   fFieldDescription = stringPool.Intern(source.GetFieldDescription());
+   fTypeName = stringPool.Intern(source.GetTypeName());
+   fTypeAlias = stringPool.Intern(source.GetTypeAlias());
 }
 
 ROOT::RFieldDescriptor ROOT::RFieldDescriptor::Clone() const
 {
    RFieldDescriptor clone;
-   clone.fFieldId = fFieldId;
-   clone.fFieldVersion = fFieldVersion;
-   clone.fTypeVersion = fTypeVersion;
-   clone.fFieldName = fFieldName;
-   clone.fFieldDescription = fFieldDescription;
-   clone.fTypeName = fTypeName;
-   clone.fTypeAlias = fTypeAlias;
-   clone.fNRepetitions = fNRepetitions;
-   clone.fStructure = fStructure;
-   clone.fParentId = fParentId;
-   clone.fProjectionSourceId = fProjectionSourceId;
-   clone.fLinkIds = fLinkIds;
-   clone.fColumnCardinality = fColumnCardinality;
-   clone.fLogicalColumnIds = fLogicalColumnIds;
-   clone.fTypeChecksum = fTypeChecksum;
+   clone.fStringPool = std::make_unique<Internal::RStringPool>();
+   clone.InitFrom(*this, *clone.fStringPool);
    return clone;
 }
 
@@ -70,7 +82,12 @@ std::unique_ptr<ROOT::RFieldBase>
 ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROOT::RCreateFieldOptions &options) const
 {
    if (GetStructure() == ROOT::ENTupleStructure::kStreamer) {
-      auto streamerField = std::make_unique<ROOT::RStreamerField>(GetFieldName(), GetTypeName());
+      const auto &typeName = GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias();
+      auto streamerField = std::make_unique<ROOT::RStreamerField>(GetFieldName(), typeName);
+      if ((streamerField->GetTraits() & RFieldBase::kTraitEmulatedField) && !options.GetEmulateUnknownTypes()) {
+         throw RException(
+            R__FAIL("streamer field " + GetFieldName() + " has an emulated class but emulation is turned off"));
+      }
       streamerField->SetOnDiskId(fFieldId);
       return streamerField;
    }
@@ -142,40 +159,11 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
       return field;
    } catch (const RException &ex) {
       if (options.GetReturnInvalidOnError())
-         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
+         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.what(),
                                                       ROOT::RInvalidField::ECategory::kGeneric);
       else
          throw ex;
    }
-}
-
-bool ROOT::RFieldDescriptor::IsCustomClass() const
-{
-   if (fStructure != ROOT::ENTupleStructure::kRecord && fStructure != ROOT::ENTupleStructure::kStreamer)
-      return false;
-
-   // Skip untyped structs
-   if (fTypeName.empty())
-      return false;
-
-   if (fStructure == ROOT::ENTupleStructure::kRecord) {
-      if (fTypeName.compare(0, 10, "std::pair<") == 0)
-         return false;
-      if (fTypeName.compare(0, 11, "std::tuple<") == 0)
-         return false;
-   }
-
-   return true;
-}
-
-bool ROOT::RFieldDescriptor::IsCustomEnum(const RNTupleDescriptor &desc) const
-{
-   return Internal::IsCustomEnumFieldDesc(desc, *this);
-}
-
-bool ROOT::RFieldDescriptor::IsStdAtomic() const
-{
-   return Internal::IsStdAtomicFieldDesc(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +187,8 @@ ROOT::RColumnDescriptor ROOT::RColumnDescriptor::Clone() const
    clone.fIndex = fIndex;
    clone.fFirstElementIndex = fFirstElementIndex;
    clone.fRepresentationIndex = fRepresentationIndex;
-   clone.fValueRange = fValueRange;
+   if (fValueRange)
+      clone.fValueRange = std::make_unique<RValueRange>(*fValueRange);
    return clone;
 }
 
@@ -208,7 +197,21 @@ ROOT::RColumnDescriptor ROOT::RColumnDescriptor::Clone() const
 ROOT::RClusterDescriptor::RPageInfoExtended
 ROOT::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) const
 {
-   const auto N = fCumulativeNElements.size();
+   if (!fCumulativeNElements) {
+      // Small range, just iterate through fPageInfos
+      NTupleSize_t pageNumber = 0;
+      NTupleSize_t firstInPage = 0;
+      for (const auto &pi : fPageInfos) {
+         if (firstInPage + pi.GetNElements() > idxInCluster) {
+            return RPageInfoExtended{pi, firstInPage, pageNumber};
+         }
+         pageNumber++;
+         firstInPage += pi.GetNElements();
+      }
+      R__ASSERT(false);
+   }
+
+   const auto N = fCumulativeNElements->size();
    R__ASSERT(N > 0);
    R__ASSERT(N == fPageInfos.size());
 
@@ -217,12 +220,12 @@ ROOT::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) cons
    std::size_t midpoint = N;
    while (left <= right) {
       midpoint = (left + right) / 2;
-      if (fCumulativeNElements[midpoint] <= idxInCluster) {
+      if ((*fCumulativeNElements)[midpoint] <= idxInCluster) {
          left = midpoint + 1;
          continue;
       }
 
-      if ((midpoint == 0) || (fCumulativeNElements[midpoint - 1] <= idxInCluster))
+      if ((midpoint == 0) || ((*fCumulativeNElements)[midpoint - 1] <= idxInCluster))
          break;
 
       right = midpoint - 1;
@@ -230,7 +233,7 @@ ROOT::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) cons
    R__ASSERT(midpoint < N);
 
    auto pageInfo = fPageInfos[midpoint];
-   decltype(idxInCluster) firstInPage = (midpoint == 0) ? 0 : fCumulativeNElements[midpoint - 1];
+   decltype(idxInCluster) firstInPage = (midpoint == 0) ? 0 : (*fCumulativeNElements)[midpoint - 1];
    R__ASSERT(firstInPage <= idxInCluster);
    R__ASSERT((firstInPage + pageInfo.GetNElements()) > idxInCluster);
    return RPageInfoExtended{pageInfo, firstInPage, midpoint};
@@ -322,6 +325,13 @@ ROOT::RExtraTypeInfoDescriptor ROOT::RExtraTypeInfoDescriptor::Clone() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ROOT::RNTupleDescriptor::RNTupleDescriptor() : fStringPool(std::make_shared<Internal::RStringPool>())
+{
+   // We need to make sure that for cloning fields, the empty string that is not explicitly entered for
+   // default constructed field descriptors is available.
+   fStringPool->Intern("");
+}
+
 bool ROOT::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
 {
    // clang-format off
@@ -356,13 +366,11 @@ ROOT::Internal::GetClusterBoundaries(const ROOT::RNTupleDescriptor &desc)
 {
    std::vector<Internal::RNTupleClusterBoundaries> boundaries;
    boundaries.reserve(desc.GetNClusters());
-   auto clusterId = desc.FindClusterId(0, 0);
-   while (clusterId != ROOT::kInvalidDescriptorId) {
-      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+   R__ASSERT(desc.GetNClusters() == desc.GetNActiveClusters());
+   for (const auto &clusterDesc : desc.GetActiveClusterIterable()) {
       R__ASSERT(clusterDesc.GetNEntries() > 0);
       boundaries.emplace_back(ROOT::Internal::RNTupleClusterBoundaries{
          clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()});
-      clusterId = desc.FindNextClusterId(clusterId);
    }
    return boundaries;
 }
@@ -399,13 +407,17 @@ std::string ROOT::RNTupleDescriptor::GetQualifiedFieldName(ROOT::DescriptorId_t 
    return prefix + "." + fieldDescriptor.GetFieldName();
 }
 
+bool ROOT::RNTupleDescriptor::FieldTypeNamesMayNeedFixup() const
+{
+   R__ASSERT(fVersionEpoch == 1);
+   return fVersionMajor == 0 && fVersionMinor == 0 && fVersionPatch < 1;
+}
+
 std::string ROOT::RNTupleDescriptor::GetTypeNameForComparison(const RFieldDescriptor &fieldDesc) const
 {
    std::string typeName = fieldDesc.GetTypeName();
 
-   // ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
-   R__ASSERT(fVersionEpoch == 1);
-   if (fVersionMajor == 0 && fVersionMinor == 0 && fVersionPatch < 1) {
+   if (FieldTypeNamesMayNeedFixup()) {
       typeName = ROOT::Internal::GetRenormalizedTypeName(typeName);
    }
 
@@ -581,13 +593,11 @@ ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindPrevClusterId(ROOT::Descriptor
 }
 
 std::vector<ROOT::DescriptorId_t>
-ROOT::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const RNTupleDescriptor &desc) const
+ROOT::RNTupleDescriptor::RHeaderExtension::GetTopMostFields(const RNTupleDescriptor &desc) const
 {
-   auto fieldZeroId = desc.GetFieldZeroId();
-
    std::vector<ROOT::DescriptorId_t> fields;
    for (const auto fieldId : fFieldIdsOrder) {
-      if (desc.GetFieldDescriptor(fieldId).GetParentId() == fieldZeroId)
+      if (fFieldIdsLookup.count(desc.GetFieldDescriptor(fieldId).GetParentId()) == 0)
          fields.emplace_back(fieldId);
    }
    return fields;
@@ -631,8 +641,11 @@ std::vector<std::uint64_t> ROOT::RNTupleDescriptor::GetFeatureFlags() const
          flags = 0;
          base += 64;
       }
+      // Note that in the following iterations of the outer loop over fFeatureFlags, we can never have the situation
+      // where base is larger than the feature flag, because they are stored ordered in the std::set.
+      assert(f >= base);
       f -= base;
-      flags |= 1 << f;
+      flags |= std::uint64_t(1) << f;
    }
    result.emplace_back(flags);
    return result;
@@ -731,7 +744,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
          const auto cat = invalid.GetCategory();
          bool mustThrow = cat != RInvalidField::ECategory::kUnknownStructure;
          if (mustThrow)
-            throw invalid.GetError();
+            throw RException(R__FAIL(invalid.GetError()));
 
          // Not a hard error: skip the field and go on.
          continue;
@@ -749,7 +762,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
    return model;
 }
 
-ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
+ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema(bool shareStringPool) const
 {
    RNTupleDescriptor clone;
    clone.fName = fName;
@@ -761,8 +774,28 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
    // and therefore not represent the actual sources's header.
    // OnDiskFooterSize not copied because it contains information beyond the schema, for example the clustering.
 
-   for (const auto &d : fFieldDescriptors)
-      clone.fFieldDescriptors.emplace(d.first, d.second.Clone());
+   if (FieldTypeNamesMayNeedFixup())
+      shareStringPool = false;
+
+   if (shareStringPool)
+      clone.fStringPool = fStringPool;
+
+   if (FieldTypeNamesMayNeedFixup()) {
+      // In case we are copying the schema from a pre-1.0.0.1 RNTuple we need to patch all field type names
+      // to use the proper normalization. In this case, the clone will get a new string pool because we may need
+      // to insert.
+      for (const auto &d : fFieldDescriptors) {
+         Internal::RFieldDescriptorBuilder fieldDescBuilder(d.second.Clone(), *clone.fStringPool);
+         fieldDescBuilder.TypeName(ROOT::Internal::GetRenormalizedTypeName(d.second.GetTypeName()));
+         clone.fFieldDescriptors.emplace(d.first, fieldDescBuilder.MoveDescriptor().Unwrap());
+      }
+   } else {
+      for (const auto &d : fFieldDescriptors) {
+         clone.fFieldDescriptors.emplace(
+            d.first, Internal::RFieldDescriptorBuilder::CloneDescriptor(d.second, *clone.fStringPool));
+      }
+   }
+
    for (const auto &d : fColumnDescriptors)
       clone.fColumnDescriptors.emplace(d.first, d.second.Clone());
 
@@ -776,7 +809,8 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
 
 ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::Clone() const
 {
-   RNTupleDescriptor clone = CloneSchema();
+   RNTupleDescriptor clone = CloneSchema(true /* shareStringPool */);
+   clone.fStringPool->Freeze();
 
    clone.fVersionEpoch = fVersionEpoch;
    clone.fVersionMajor = fVersionMajor;
@@ -938,16 +972,30 @@ ROOT::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges(const RNTuple
                // Fixup the RColumnRange and RPageRange in deferred columns. We know what the first element index and
                // number of elements should have been if the column was not deferred; fix those and let
                // `ExtendToFitColumnRange()` synthesize RPageInfos accordingly.
-               // Note that a deferred column (i.e, whose first element index is > 0) already met the criteria of
-               // `ROOT::RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the
-               // field zero excluding subfields of collection and variant fields.
                if (c.IsDeferredColumn()) {
-                  columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
-                  columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  if (c.GetRepresentationIndex() == 0) {
+                     // Note that a deferred column (i.e, whose first element index is > 0) for the 0th representation
+                     // index already met the criteria of `ROOT::RFieldBase::EntryToColumnElementIndex()`, i.e. it is a
+                     // principal column reachable from the field zero excluding subfields of collection and variant
+                     // fields.
+                     columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
+                     columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  } else {
+                     // Deferred representations which are not the first cannot count on the number of elements being
+                     // equal to Entries * nRepetitions because they might have been added in a later cluster. But they
+                     // can rely on the first representation having the correct FirstElement/NElements (by definition
+                     // the first representation cannot be an "extended" one), therefore they can just copy the value
+                     // from it.
+                     const auto &field = desc.GetFieldDescriptor(fieldId);
+                     const auto firstReprColumnId = field.GetLogicalColumnIds()[c.GetIndex()];
+                     const auto &firstReprColumnRange = fCluster.fColumnRanges[firstReprColumnId];
+                     columnRange.SetFirstElementIndex(firstReprColumnRange.GetFirstElementIndex());
+                     columnRange.SetNElements(firstReprColumnRange.GetNElements());
+                  }
                   if (!columnRange.IsSuppressed()) {
                      auto &pageRange = fCluster.fPageRanges[physicalId];
                      pageRange.fPhysicalColumnId = physicalId;
-                     const auto element = ROOT::Internal::RColumnElementBase::Generate<void>(c.GetType());
+                     const auto element = ROOT::Internal::RColumnElementBase::Generate(c);
                      pageRange.ExtendToFitColumnRange(columnRange, *element, ROOT::Internal::RPage::kPageZeroSize);
                   }
                } else if (!columnRange.IsSuppressed()) {
@@ -970,12 +1018,16 @@ ROOT::RResult<ROOT::RClusterDescriptor> ROOT::Internal::RClusterDescriptorBuilde
       if (fCluster.fColumnRanges.count(pr.first) == 0) {
          return R__FAIL("missing column range");
       }
-      pr.second.fCumulativeNElements.clear();
-      pr.second.fCumulativeNElements.reserve(pr.second.fPageInfos.size());
-      ROOT::NTupleSize_t sum = 0;
-      for (const auto &pi : pr.second.fPageInfos) {
-         sum += pi.GetNElements();
-         pr.second.fCumulativeNElements.emplace_back(sum);
+      pr.second.fCumulativeNElements.reset();
+      const auto nPages = pr.second.fPageInfos.size();
+      if (nPages > RClusterDescriptor::RPageRange::kLargeRangeThreshold) {
+         pr.second.fCumulativeNElements = std::make_unique<std::vector<NTupleSize_t>>();
+         pr.second.fCumulativeNElements->reserve(nPages);
+         ROOT::NTupleSize_t sum = 0;
+         for (const auto &pi : pr.second.fPageInfos) {
+            sum += pi.GetNElements();
+            pr.second.fCumulativeNElements->emplace_back(sum);
+         }
       }
    }
    RClusterDescriptor result;
@@ -1077,6 +1129,7 @@ ROOT::RNTupleDescriptor ROOT::Internal::RNTupleDescriptorBuilder::MoveDescriptor
                 return fDescriptor.fClusterGroupDescriptors[a].GetMinEntry() <
                        fDescriptor.fClusterGroupDescriptors[b].GetMinEntry();
              });
+   fDescriptor.fStringPool->Freeze();
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
    return result;
@@ -1102,8 +1155,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetVersionForWriting()
    fDescriptor.fVersionPatch = RNTuple::kVersionPatch;
 }
 
-void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
-                                                         const std::string_view description)
+void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(std::string_view name, std::string_view description)
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
@@ -1111,13 +1163,13 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view 
 
 void ROOT::Internal::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
 {
-   if (flag % 64 == 0)
+   if (flag > 0 && flag % 64 == 0)
       throw RException(R__FAIL("invalid feature flag: " + std::to_string(flag)));
    fDescriptor.fFeatureFlags.insert(flag);
 }
 
-ROOT::RResult<ROOT::Experimental::RNTupleAttrSetDescriptor>
-ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder::MoveDescriptor()
+ROOT::RResult<ROOT::RNTupleAttrSetDescriptor>
+ROOT::Internal::RNTupleAttrSetDescriptorBuilder::MoveDescriptor()
 {
    if (fDesc.fName.empty())
       return R__FAIL("attribute set name cannot be empty");
@@ -1129,7 +1181,7 @@ ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder::MoveDescriptor()
    return std::move(fDesc);
 }
 
-ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
+ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder::MoveDescriptor()
 {
    if (fColumn.GetLogicalId() == ROOT::kInvalidDescriptorId)
       return R__FAIL("invalid logical column id");
@@ -1149,33 +1201,29 @@ ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder:
          return R__FAIL("invalid column bit width");
    }
 
-   return fColumn.Clone();
+   RColumnDescriptor result;
+   std::swap(result, fColumn);
+   return result;
 }
 
-ROOT::Internal::RFieldDescriptorBuilder
-ROOT::Internal::RFieldDescriptorBuilder::FromField(const ROOT::RFieldBase &field)
+ROOT::RFieldDescriptor
+ROOT::Internal::RFieldDescriptorBuilder::CloneDescriptor(const RFieldDescriptor &source, RStringPool &stringPool)
 {
-   RFieldDescriptorBuilder fieldDesc;
-   fieldDesc.FieldVersion(field.GetFieldVersion())
-      .TypeVersion(field.GetTypeVersion())
-      .FieldName(field.GetFieldName())
-      .FieldDescription(field.GetDescription())
-      .TypeName(field.GetTypeName())
-      .TypeAlias(field.GetTypeAlias())
-      .Structure(field.GetStructure())
-      .NRepetitions(field.GetNRepetitions());
-   if (field.GetTraits() & ROOT::RFieldBase::kTraitTypeChecksum)
-      fieldDesc.TypeChecksum(field.GetTypeChecksum());
-   return fieldDesc;
+   RFieldDescriptor clone;
+   clone.InitFrom(source, stringPool);
+   return clone;
 }
 
-ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
+ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::MoveDescriptor()
 {
    if (fField.GetId() == ROOT::kInvalidDescriptorId) {
       return R__FAIL("invalid field id");
    }
    if (fField.GetStructure() == ROOT::ENTupleStructure::kInvalid) {
       return R__FAIL("invalid field structure");
+   }
+   if (fField.IsSoACollection() && (fField.GetStructure() != ROOT::ENTupleStructure::kCollection)) {
+      return R__FAIL("invalid SoA flag on non-collection field");
    }
    // FieldZero is usually named "" and would be a false positive here
    if (fField.GetParentId() != ROOT::kInvalidDescriptorId) {
@@ -1187,17 +1235,43 @@ ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::M
          return R__FAIL("name cannot be empty string \"\"");
       }
    }
-   return fField.Clone();
+
+   RFieldDescriptor result;
+   std::swap(result, fField);
+   return result;
 }
 
-void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor &fieldDesc)
+void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const ROOT::RFieldBase &field, DescriptorId_t fieldId)
 {
-   fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
+   RFieldDescriptorBuilder fieldDesc(GetStringPool());
+   fieldDesc.FieldId(fieldId)
+      .FieldVersion(field.GetFieldVersion())
+      .TypeVersion(field.GetTypeVersion())
+      .FieldName(field.GetFieldName())
+      .FieldDescription(field.GetDescription())
+      .TypeName(field.GetTypeName())
+      .TypeAlias(field.GetTypeAlias())
+      .Structure(field.GetStructure())
+      .NRepetitions(field.GetNRepetitions());
+   if (field.GetTraits() & ROOT::RFieldBase::kTraitTypeChecksum)
+      fieldDesc.TypeChecksum(field.GetTypeChecksum());
+   if (field.GetTraits() & ROOT::RFieldBase::kTraitSoACollection) {
+      assert(field.GetStructure() == ENTupleStructure::kCollection);
+      fieldDesc.IsSoACollection(true);
+   }
+   AddField(fieldDesc.MoveDescriptor().Unwrap());
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::AddField(RFieldDescriptor fieldDesc)
+{
+   const auto id = fieldDesc.GetId();
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->MarkExtendedField(fieldDesc);
    if (fieldDesc.GetFieldName().empty() && fieldDesc.GetParentId() == ROOT::kInvalidDescriptorId) {
-      fDescriptor.fFieldZeroId = fieldDesc.GetId();
+      fDescriptor.fFieldZeroId = id;
    }
+
+   fDescriptor.fFieldDescriptors.emplace(id, std::move(fieldDesc));
 }
 
 ROOT::RResult<void>
@@ -1300,9 +1374,9 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnD
 
    if (!columnDesc.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
-   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->MarkExtendedColumn(columnDesc);
+   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
 
    return RResult<void>::Success();
 }
@@ -1320,7 +1394,8 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddClusterGroup(RC
 
 void ROOT::Internal::RNTupleDescriptorBuilder::SetSchemaFromExisting(const RNTupleDescriptor &descriptor)
 {
-   fDescriptor = descriptor.CloneSchema();
+   // We expect the resulting descriptor to be ammended, so use a dedicated string pool
+   fDescriptor = descriptor.CloneSchema(false /* shareStringPool */);
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::BeginHeaderExtension()
@@ -1349,6 +1424,14 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(std::uint32_t o
       c.fLogicalColumnId += offset;
       R__ASSERT(fDescriptor.fColumnDescriptors.count(c.fLogicalColumnId) == 0);
       fDescriptor.fColumnDescriptors.emplace(c.fLogicalColumnId, std::move(c));
+   }
+
+   // Patch up column ids in the header extension
+   if (auto &xHeader = fDescriptor.fHeaderExtension) {
+      for (auto &columnId : xHeader->fExtendedColumnRepresentations) {
+         if (columnId >= fDescriptor.GetNPhysicalColumns())
+            columnId += offset;
+      }
    }
 }
 
@@ -1384,7 +1467,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ReplaceExtraTypeInfo(RExtraTypeIn
 }
 
 ROOT::RResult<void>
-ROOT::Internal::RNTupleDescriptorBuilder::AddAttributeSet(Experimental::RNTupleAttrSetDescriptor &&attrSetDesc)
+ROOT::Internal::RNTupleDescriptorBuilder::AddAttributeSet(RNTupleAttrSetDescriptor &&attrSetDesc)
 {
    auto &attrSets = fDescriptor.fAttributeSets;
    if (std::find_if(attrSets.begin(), attrSets.end(), [&name = attrSetDesc.GetName()](const auto &desc) {
@@ -1462,6 +1545,11 @@ ROOT::RNTupleDescriptor::RClusterGroupDescriptorIterable ROOT::RNTupleDescriptor
 
 ROOT::RNTupleDescriptor::RClusterDescriptorIterable ROOT::RNTupleDescriptor::GetClusterIterable() const
 {
+   return GetActiveClusterIterable();
+}
+
+ROOT::RNTupleDescriptor::RClusterDescriptorIterable ROOT::RNTupleDescriptor::GetActiveClusterIterable() const
+{
    return RClusterDescriptorIterable(*this);
 }
 
@@ -1470,19 +1558,19 @@ ROOT::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable ROOT::RNTupleDescripto
    return RExtraTypeInfoDescriptorIterable(*this);
 }
 
-ROOT::Experimental::RNTupleAttrSetDescriptorIterable ROOT::RNTupleDescriptor::GetAttrSetIterable() const
+ROOT::RNTupleDescriptor::RNTupleAttrSetDescriptorIterable ROOT::RNTupleDescriptor::GetAttrSetIterable() const
 {
-   return Experimental::RNTupleAttrSetDescriptorIterable(*this);
+   return RNTupleAttrSetDescriptorIterable(*this);
 }
 
-bool ROOT::Experimental::RNTupleAttrSetDescriptor::operator==(const RNTupleAttrSetDescriptor &other) const
+bool ROOT::RNTupleAttrSetDescriptor::operator==(const RNTupleAttrSetDescriptor &other) const
 {
    return fAnchorLength == other.fAnchorLength && fSchemaVersionMajor == other.fSchemaVersionMajor &&
           fSchemaVersionMinor == other.fSchemaVersionMinor && fAnchorLocator == other.fAnchorLocator &&
           fName == other.fName;
 };
 
-ROOT::Experimental::RNTupleAttrSetDescriptor ROOT::Experimental::RNTupleAttrSetDescriptor::Clone() const
+ROOT::RNTupleAttrSetDescriptor ROOT::RNTupleAttrSetDescriptor::Clone() const
 {
    RNTupleAttrSetDescriptor desc;
    desc.fAnchorLength = fAnchorLength;

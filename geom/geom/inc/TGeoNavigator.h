@@ -42,50 +42,50 @@ protected:
    void SafetyOverlaps();
 
 private:
-   Double_t fStep;               //! step to be done from current point and direction
-   Double_t fSafety;             //! safety radius from current point
-   Double_t fLastSafety;         //! last computed safety radius
-   Double_t fNormal[3];          //! cosine of incident angle on current checked surface
-   Double_t fCldir[3];           //! unit vector to current closest shape
-   Double_t fCldirChecked[3];    //! unit vector to current checked shape
-   Double_t fPoint[3];           //! current point
-   Double_t fDirection[3];       //! current direction
-   Double_t fLastPoint[3];       //! last point for which safety was computed
-   Double_t fLastPWSaftyPnt[3];  //! last point for which parallel world safety was "evaluated"
-   Double_t fLastPWSafety{-1};   //! last safety returned from parallel world (negative if invalid)
-   Int_t fThreadId;              //! thread id for this navigator
-   Int_t fLevel;                 //! current geometry level;
-   Int_t fNmany;                 //! number of overlapping nodes on current branch
-   Int_t fNextDaughterIndex;     //! next daughter index after FindNextBoundary
-   Int_t fOverlapSize;           //! current size of fOverlapClusters
-   Int_t fOverlapMark;           //! current recursive position in fOverlapClusters
-   Int_t *fOverlapClusters;      //! internal array for overlaps
-   Bool_t fSearchOverlaps;       //! flag set when an overlapping cluster is searched
-   Bool_t fCurrentOverlapping;   //! flags the type of the current node
-   Bool_t fStartSafe;            //! flag a safe start for point classification
-   Bool_t fIsEntering;           //! flag if current step just got into a new node
-   Bool_t fIsExiting;            //! flag that current track is about to leave current node
-   Bool_t fIsStepEntering;       //! flag that next geometric step will enter new volume
-   Bool_t fIsStepExiting;        //! flag that next geometric step will exit current volume
-   Bool_t fIsOutside;            //! flag that current point is outside geometry
-   Bool_t fIsOnBoundary;         //! flag that current point is on some boundary
-   Bool_t fIsSameLocation;       //! flag that a new point is in the same node as previous
-   Bool_t fIsNullStep;           //! flag that last geometric step was null
-   TGeoManager *fGeometry;       //! current geometry
-   TGeoNodeCache *fCache;        //! cache of states
-   TGeoVolume *fCurrentVolume;   //! current volume
-   TGeoNode *fCurrentNode;       //! current node
-   TGeoNode *fTopNode;           //! top physical node
-   TGeoNode *fLastNode;          //! last searched node
-   TGeoNode *fNextNode;          //! next node that will be crossed
-   TGeoNode *fForcedNode;        //! current point is supposed to be inside this node
-   TGeoCacheState *fBackupState; //! backup state
-   TGeoHMatrix *fCurrentMatrix;  //! current stored global matrix
-   TGeoHMatrix *fGlobalMatrix;   //! current pointer to cached global matrix
-   TGeoHMatrix *fDivMatrix;      //! current local matrix of the selected division cell
-   TString fPath;                //! path to current node
+   Double_t fStep;               ///<! step to be done from current point and direction
+   Double_t fSafety;             ///<! safety radius from current point
+   Double_t fLastSafety;         ///<! last computed safety radius
+   Double_t fNormal[3];          ///<! cosine of incident angle on current checked surface
+   Double_t fCldir[3];           ///<! unit vector to current closest shape
+   Double_t fCldirChecked[3];    ///<! unit vector to current checked shape
+   Double_t fPoint[3];           ///<! current point
+   Double_t fDirection[3];       ///<! current direction
+   Double_t fLastPoint[3];       ///<! last point for which safety was computed
+   Double_t fLastPWSaftyPnt[3];  ///<! last point for which parallel world safety was "evaluated"
+   Double_t fLastPWSafety{-1};   ///<! last safety returned from parallel world (negative if invalid)
+   Int_t fThreadId;              ///<! thread id for this navigator
+   Int_t fLevel;                 ///<! current geometry level;
+   Int_t fNmany;                 ///<! number of overlapping nodes on current branch
+   Int_t fNextDaughterIndex;     ///<! next daughter index after FindNextBoundary
+   Int_t fOverlapSize;           ///<! current size of fOverlapClusters
+   Int_t fOverlapMark;           ///<! current recursive position in fOverlapClusters
+   Int_t *fOverlapClusters;      ///<! internal array for overlaps
+   Bool_t fSearchOverlaps;       ///<! flag set when an overlapping cluster is searched
+   Bool_t fCurrentOverlapping;   ///<! flags the type of the current node
+   Bool_t fStartSafe;            ///<! flag a safe start for point classification
+   Bool_t fIsEntering;           ///<! flag if current step just got into a new node
+   Bool_t fIsExiting;            ///<! flag that current track is about to leave current node
+   Bool_t fIsStepEntering;       ///<! flag that next geometric step will enter new volume
+   Bool_t fIsStepExiting;        ///<! flag that next geometric step will exit current volume
+   Bool_t fIsOutside;            ///<! flag that current point is outside geometry
+   Bool_t fIsOnBoundary;         ///<! flag that current point is on some boundary
+   Bool_t fIsSameLocation;       ///<! flag that a new point is in the same node as previous
+   Bool_t fIsNullStep;           ///<! flag that last geometric step was null
+   TGeoManager *fGeometry;       ///<! current geometry
+   TGeoNodeCache *fCache;        ///<! cache of states
+   TGeoVolume *fCurrentVolume;   ///<! current volume
+   TGeoNode *fCurrentNode;       ///<! current node
+   TGeoNode *fTopNode;           ///<! top physical node
+   TGeoNode *fLastNode;          ///<! last searched node
+   TGeoNode *fNextNode;          ///<! next node that will be crossed
+   TGeoNode *fForcedNode;        ///<! current point is supposed to be inside this node
+   TGeoCacheState *fBackupState; ///<! backup state
+   TGeoHMatrix *fCurrentMatrix;  ///<! current stored global matrix
+   TGeoHMatrix *fGlobalMatrix;   ///<! current pointer to cached global matrix
+   TGeoHMatrix *fDivMatrix;      ///<! current local matrix of the selected division cell
+   TString fPath;                ///<! path to current node
 
-   static Bool_t fgUsePWSafetyCaching; //! global mode is caching enabled for parallel world safety calls
+   static Bool_t fgUsePWSafetyCaching; ///<! global mode is caching enabled for parallel world safety calls
 
 public:
    TGeoNavigator();

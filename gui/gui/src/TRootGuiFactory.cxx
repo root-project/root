@@ -66,9 +66,9 @@ void TRootGuiFactory::ShowWebCanvasWarning()
 
    std::cout << "\n"
                 "ROOT comes with a web-based canvas, which is now being started. \n"
-                "Revert to the legacy canvas by setting \"Canvas.Name: TRootCanvas\" in rootrc file or\n"
+                "Revert to the traditional canvas by setting \"Canvas.Name: TRootCanvas\" in rootrc file or\n"
                 "by starting \"root --web=off\".\n"
-                "Find more info on https://root.cern/for_developers/root7/#twebcanvas\n";
+                "Find more info on https://root.cern/doc/master/classTWebCanvas.html\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,11 +78,12 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                              UInt_t width, UInt_t height)
 {
    TString canvName = gEnv->GetValue("Canvas.Name", "TWebCanvas");
-   if (canvName == "TWebCanvas") {
-      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+   if (!canvName.IsNull() && (canvName != "TRootCanvas"))  {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", canvName);
 
       if (ph && ph->LoadPlugin() != -1) {
-         ShowWebCanvasWarning();
+         if (canvName == "TWebCanvas")
+            ShowWebCanvasWarning();
          auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, 0, 0, width, height);
          if (imp) return imp;
       }
@@ -98,11 +99,12 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                   Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
    TString canvName = gEnv->GetValue("Canvas.Name", "TWebCanvas");
-   if (canvName == "TWebCanvas") {
-      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+   if (!canvName.IsNull() && (canvName != "TRootCanvas"))  {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", canvName);
 
       if (ph && ph->LoadPlugin() != -1) {
-         ShowWebCanvasWarning();
+         if (canvName == "TWebCanvas")
+            ShowWebCanvasWarning();
          auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, x, y, width, height);
          if (imp) return imp;
       }

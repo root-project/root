@@ -2097,7 +2097,7 @@ TGeoGtra::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact
 {
    if (iact < 3 && safe) {
       // compute safe distance
-      *safe = Safety(point, kTRUE);
+      *safe = Safety(point, kFALSE);
       if (iact == 0)
          return TGeoShape::Big();
       if (iact == 1 && step < *safe)

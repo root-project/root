@@ -85,7 +85,7 @@ observable snapshots are stored in the dataset.
 #include "TMath.h"
 #include "TTree.h"
 
-#include "RooFormula.h"
+#include "RooFormulaUtils.h"
 #include "RooFormulaVar.h"
 #include "RooCmdConfig.h"
 #include "RooAbsRealLValue.h"
@@ -99,7 +99,6 @@ observable snapshots are stored in the dataset.
 #include "RooDataSet.h"
 #include "RooCompositeDataStore.h"
 #include "RooCategory.h"
-#include "RooTrace.h"
 #include "RooUniformBinning.h"
 #include "RooSimultaneous.h"
 
@@ -150,8 +149,6 @@ RooAbsData::StorageType RooAbsData::getDefaultStorageType( )
 
 RooAbsData::RooAbsData() : storageType(defaultStorageType)
 {
-
-  RooTrace::create(this) ;
 }
 
 void RooAbsData::initializeVars(RooArgSet const& vars)
@@ -185,7 +182,6 @@ void RooAbsData::initializeVars(RooArgSet const& vars)
 RooAbsData::RooAbsData(RooStringView name, RooStringView title, const RooArgSet& vars, RooAbsDataStore* dstore) :
   TNamed(name,title),
   _vars("Dataset Variables"),
-  _cachedVars("Cached Variables"),
   _dstore(dstore)
 {
    if (dynamic_cast<RooTreeDataStore *>(dstore)) {
@@ -199,8 +195,6 @@ RooAbsData::RooAbsData(RooStringView name, RooStringView title, const RooArgSet&
    initializeVars(vars);
 
    _namePtr = RooNameReg::instance().constPtr(GetName()) ;
-
-   RooTrace::create(this);
 }
 
 void RooAbsData::copyImpl(const RooAbsData &other, const char *newName)
@@ -246,12 +240,9 @@ void RooAbsData::copyImpl(const RooAbsData &other, const char *newName)
 
 RooAbsData::RooAbsData(const RooAbsData &other, const char *newName)
    : TNamed{newName ? newName : other.GetName(), other.GetTitle()},
-     RooPrintable{other},
-     _cachedVars{"Cached Variables"}
+     RooPrintable{other}
 {
    copyImpl(other, newName);
-
-   RooTrace::create(this);
 }
 
 RooAbsData &RooAbsData::operator=(const RooAbsData &other)
@@ -285,8 +276,6 @@ RooAbsData::~RooAbsData()
   for (auto& item : _ownedComponents) {
     delete item.second;
   }
-
-  RooTrace::destroy(this) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,38 +329,6 @@ const RooArgSet* RooAbsData::get(Int_t index) const
 {
   checkInit() ;
   return _dstore->get(index) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Internal method -- Cache given set of functions with data
-
-void RooAbsData::cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset, bool skipZeroWeights)
-{
-  _dstore->cacheArgs(cacheOwner,varSet,nset,skipZeroWeights) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Internal method -- Remove cached function values
-
-void RooAbsData::resetCache()
-{
-  _dstore->resetCache() ;
-  _cachedVars.removeAll() ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Internal method -- Attach dataset copied with cache contents to copied instances of functions
-
-void RooAbsData::attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars)
-{
-  _dstore->attachCache(newOwner, cachedVars) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooAbsData::setArgStatus(const RooArgSet& set, bool active)
-{
-  _dstore->setArgStatus(set,active) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -879,9 +836,9 @@ double RooAbsData::moment(const RooRealVar& var, double order, double offset, co
   }
 
   // Setup RooFormulaVar for cutSpec if it is present
-  std::unique_ptr<RooFormula> select;
+  std::unique_ptr<RooFormulaEvaluator> select;
   if (cutSpec) {
-    select = std::make_unique<RooFormula>("select",cutSpec,*get());
+     select = RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get());
   }
 
 
@@ -889,7 +846,8 @@ double RooAbsData::moment(const RooRealVar& var, double order, double offset, co
   ROOT::Math::KahanSum<double> sum;
   for(int index= 0; index < numEntries(); index++) {
     const RooArgSet* vars = get(index) ;
-    if (select && select->eval()==0) continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0)
+       continue;
     if (cutRange && vars->allInRange(cutRange)) continue ;
 
     sum += weight() * std::pow(varPtr->getVal() - offset,order);
@@ -934,8 +892,9 @@ double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char*
   }
 
   // Setup RooFormulaVar for cutSpec if it is present
-  std::unique_ptr<RooFormula> select;
-  if (cutSpec) select = std::make_unique<RooFormula>("select",cutSpec,*get());
+  std::unique_ptr<RooFormulaEvaluator> select;
+  if (cutSpec)
+     select = RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get());
 
   // Calculate requested moment
   double xysum(0);
@@ -946,7 +905,8 @@ double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char*
   const RooArgSet* vars ;
   for(int index= 0; index < numEntries(); index++) {
     vars = get(index) ;
-    if (select && select->eval()==0) continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0)
+       continue;
     if (cutRange && vars->allInRange(cutRange)) continue ;
 
     xysum += weight()*xdata->getVal()*ydata->getVal() ;
@@ -997,7 +957,8 @@ RooFit::OwningPtr<TMatrixDSym> RooAbsData::corrcovMatrix(const RooArgList& vars,
   }
 
   // Setup RooFormulaVar for cutSpec if it is present
-  std::unique_ptr<RooFormula> select = cutSpec ? std::make_unique<RooFormula>("select",cutSpec,*get()) : nullptr;
+  std::unique_ptr<RooFormulaEvaluator> select =
+     cutSpec ? RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get()) : nullptr;
 
   TMatrixDSym xysum(varList.size()) ;
   std::vector<double> xsum(varList.size()) ;
@@ -1006,7 +967,8 @@ RooFit::OwningPtr<TMatrixDSym> RooAbsData::corrcovMatrix(const RooArgList& vars,
   // Calculate <x_i> and <x_i y_j>
   for(int index= 0; index < numEntries(); index++) {
     const RooArgSet* dvars = get(index) ;
-    if (select && select->eval()==0) continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0)
+       continue;
     if (cutRange && dvars->allInRange(cutRange)) continue ;
 
     for(std::size_t iX = 0; iX < varList.size(); ++iX) {
@@ -1307,13 +1269,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   }
 
   // Create selection formula if selection cuts are specified
-  std::unique_ptr<RooFormula> select;
+  std::unique_ptr<RooFormulaEvaluator> select;
   if (cuts != nullptr && strlen(cuts) > 0) {
-    select = std::make_unique<RooFormula>(cuts, cuts, _vars, false);
-    if (!select || !select->ok()) {
-      coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: invalid cuts \"" << cuts << "\"" << std::endl;
-      return nullptr;
-    }
+     select = RooFormulaUtils::makeFormulaEvaluator(cuts, cuts, _vars);
   }
 
   // Lookup each of the variables we are binning in our tree variables
@@ -1354,10 +1312,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     get(i);
 
     // Apply expression based selection criteria
-    if (select && select->eval()==0) {
-      continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0) {
+       continue;
     }
-
 
     // Apply range based selection criteria
     bool selectByRange = true ;
@@ -2244,85 +2201,6 @@ bool RooAbsData::getRange(const RooAbsRealLValue& var, double& lowest, double& h
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Prepare dataset for use with cached constant terms listed in
-/// 'cacheList' of expression 'arg'. Deactivate tree branches
-/// for any dataset observable that is either not used at all,
-/// or is used exclusively by cached branch nodes.
-
-void RooAbsData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList)
-{
-  RooArgSet pruneSet ;
-
-  // Add unused observables in this dataset to pruneSet
-  pruneSet.add(*get()) ;
-  std::unique_ptr<RooArgSet> usedObs{arg.getObservables(*this)};
-  pruneSet.remove(*usedObs,true,true) ;
-
-  // Add observables exclusively used to calculate cached observables to pruneSet
-  for(auto * var : *get()) {
-    if (allClientsCached(var,cacheList)) {
-      pruneSet.add(*var) ;
-    }
-  }
-
-
-  if (!pruneSet.empty()) {
-
-    // Go over all used observables and check if any of them have parameterized
-    // ranges in terms of pruned observables. If so, remove those observable
-    // from the pruning list
-    for(auto const* rrv : dynamic_range_cast<RooRealVar*>(*usedObs)) {
-      if (rrv && !rrv->getBinning().isShareable()) {
-        RooArgSet depObs ;
-        RooAbsReal* loFunc = rrv->getBinning().lowBoundFunc() ;
-        RooAbsReal* hiFunc = rrv->getBinning().highBoundFunc() ;
-        if (loFunc) {
-          loFunc->leafNodeServerList(&depObs,nullptr,true) ;
-        }
-        if (hiFunc) {
-          hiFunc->leafNodeServerList(&depObs,nullptr,true) ;
-        }
-        if (!depObs.empty()) {
-          pruneSet.remove(depObs,true,true) ;
-        }
-      }
-    }
-  }
-
-
-  // Remove all observables in keep list from prune list
-  pruneSet.remove(keepObsList,true,true) ;
-
-  if (!pruneSet.empty()) {
-
-    // Deactivate tree branches here
-    cxcoutI(Optimization) << "RooTreeData::optimizeReadingForTestStatistic(" << GetName() << "): Observables " << pruneSet
-             << " in dataset are either not used at all, orserving exclusively p.d.f nodes that are now cached, disabling reading of these observables for TTree" << std::endl ;
-    setArgStatus(pruneSet,false) ;
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility function that determines if all clients of object 'var'
-/// appear in given list of cached nodes.
-
-bool RooAbsData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
-{
-  bool ret(true);
-  bool anyClient(false);
-
-  for (const auto client : var->valueClients()) {
-    anyClient = true ;
-    if (!cacheList.find(client->GetName())) {
-      // If client is not cached recurse
-      ret &= allClientsCached(client,cacheList) ;
-    }
-  }
-
-  return anyClient?ret:false ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 void RooAbsData::attachBuffers(const RooArgSet& extObs)
 {
@@ -2390,13 +2268,6 @@ void RooAbsData::checkInit() const
 void RooAbsData::Draw(Option_t* option)
 {
   if (_dstore) _dstore->Draw(option) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool RooAbsData::hasFilledCache() const
-{
-  return _dstore->hasFilledCache() ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2543,7 +2414,9 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
                                   const char *name) const
 {
    checkInit();
-   return createHistogram(var1, var2, var1.getBins(), var2.getBins(), cuts, name);
+   const int nBins1 = var1.getBins()!=0 ? var1.getBins() : RooAbsRealLValue::DefaultNBins;
+   const int nBins2 = var2.getBins()!=0 ? var2.getBins() : RooAbsRealLValue::DefaultNBins;
+   return createHistogram(var1, var2, nBins1, nBins2, cuts, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2599,12 +2472,9 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
    }
 
    // Create selection formula if selection cuts are specified
-   std::unique_ptr<RooFormula> select;
+   std::unique_ptr<RooFormulaEvaluator> select;
    if (nullptr != cuts && strlen(cuts)) {
-      select = std::make_unique<RooFormula>(cuts, cuts, _vars);
-      if (!select->ok()) {
-         return nullptr;
-      }
+      select = RooFormulaUtils::makeFormulaEvaluator(cuts, cuts, _vars);
    }
 
    std::stringstream histName;
@@ -2623,7 +2493,7 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
    for (int i = 0; i < nevent; ++i) {
       get(i);
 
-      if (select && select->eval() == 0)
+      if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0)
          continue;
       histogram->Fill(plotVarX->getVal(), plotVarY->getVal(), weight());
    }

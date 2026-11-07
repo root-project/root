@@ -56,10 +56,8 @@ calls that MINUIT needs to fit your function as function of the
 convolution precision.
 **/
 
-#include "Riostream.h"
 #include "TH2F.h"
 #include "RooNumConvolution.h"
-#include "RooArgList.h"
 #include "RooRealVar.h"
 #include "RooCustomizer.h"
 #include "RooConvIntegrandBinding.h"
@@ -68,6 +66,7 @@ convolution precision.
 #include "RooConvGenContext.h"
 #include "RooMsgService.h"
 
+#include <ostream>
 
 using std::endl, std::ostream;
 

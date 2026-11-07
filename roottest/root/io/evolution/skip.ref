@@ -1,4 +1,3 @@
-
 Processing runSkip.C...
 Warning in <TStreamerInfo::Compile>: Counter skipsize should not be skipped from class MyClass
 Reading .xml file

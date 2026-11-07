@@ -11,7 +11,7 @@ namespace Trk {
 class VxContainer_p1;
 } // end of namespace.
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TPObjRef.h"
 

@@ -82,7 +82,6 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
-  _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this)
 {
@@ -160,7 +159,6 @@ RooAddModel::RooAddModel(const RooAddModel &other, const char *name)
      _refCoefRangeName((TNamed *)other._refCoefRangeName),
      _projCacheMgr(other._projCacheMgr, this),
      _intCacheMgr(other._intCacheMgr, this),
-     _codeReg(other._codeReg),
      _pdfList("!pdfs", this, other._pdfList),
      _coefList("!coefficients", this, other._coefList),
      _haveLastCoef(other._haveLastCoef),
@@ -244,8 +242,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
   newTitle.Append(inBasis->GetName()) ;
 
   RooArgList modelList ;
-  for (auto obj : _pdfList) {
-    auto model = static_cast<RooResolutionModel*>(obj);
+  for (auto *model : static_range_cast<RooResolutionModel*>(_pdfList)) {
     // Create component convolution
     RooResolutionModel* conv = model->convolution(inBasis,owner) ;
     modelList.add(*conv) ;
@@ -281,8 +278,7 @@ Int_t RooAddModel::basisCode(const char* name) const
 {
   bool first(true);
   bool code(false);
-  for (auto obj : _pdfList) {
-    auto model = static_cast<RooResolutionModel*>(obj);
+  for (auto *model : static_range_cast<RooResolutionModel*>(_pdfList)) {
     Int_t subCode = model->basisCode(name) ;
     if (first) {
       code = subCode ;
@@ -329,14 +325,21 @@ AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* 
 /// multiply the various range and dimensional corrections needed in the
 /// current use context.
 
-void RooAddModel::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const
+void RooAddModel::updateCoefficients(AddCacheElem &cache, const RooArgSet *nset) const
 {
-  _coefCache.resize(_pdfList.size());
-  for(std::size_t i = 0; i < _coefList.size(); ++i) {
-    _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
-  }
-  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset,
-                                    _refCoefNorm, _allExtendable, _coefErrCount);
+   _coefCache.resize(_pdfList.size());
+   for (std::size_t i = 0; i < _coefList.size(); ++i) {
+      _coefCache[i] = static_cast<RooAbsReal const &>(_coefList[i]).getVal(nset);
+   }
+   if (_allExtendable) {
+      for (std::size_t i = 0; i < _pdfList.size(); ++i) {
+         auto &pdf = static_cast<RooAbsPdf &>(_pdfList[i]);
+         _coefCache[i] = pdf.expectedEvents(!_refCoefNorm.empty() ? &_refCoefNorm : nset);
+      }
+   }
+
+   RooAddHelpers::updateCoefficients(*this, _pdfList.size(), _coefCache, _haveLastCoef || _allExtendable, cache,
+                                     _coefErrCount);
 }
 
 
@@ -355,8 +358,7 @@ double RooAddModel::evaluate() const
   double snormVal ;
   double value(0) ;
   Int_t i(0) ;
-  for (auto obj : _pdfList) {
-    auto pdf = static_cast<RooAbsPdf*>(obj);
+  for (auto *pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
 
     if (_coefCache[i]!=0.) {
       snormVal = nset ? cache->suppNormVal(i) : 1.0 ;
@@ -489,8 +491,7 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
   cache = new IntCacheElem ;
 
   // Fill Cache
-  for (auto obj : _pdfList) {
-    auto model = static_cast<RooResolutionModel*>(obj);
+  for (auto *model : static_range_cast<RooResolutionModel*>(_pdfList)) {
 
     cache->_intList.addOwned(std::unique_ptr<RooAbsReal>{model->createIntegral(*iset,nset,nullptr,isetRangeName)});
   }
@@ -543,8 +544,7 @@ double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
   double snormVal ;
   double value(0) ;
   Int_t i(0) ;
-  for (const auto obj : *compIntList) {
-    auto pdfInt = static_cast<const RooAbsReal*>(obj);
+  for (auto *pdfInt : static_range_cast<const RooAbsReal*>(*compIntList)) {
     if (_coefCache[i]!=0.) {
       snormVal = nset ? pcache->suppNormVal(i) : 1.0 ;
       double intVal = pdfInt->getVal(nset) ;
@@ -572,16 +572,14 @@ double RooAddModel::expectedEvents(const RooArgSet* nset) const
   if (_allExtendable) {
 
     // Sum of the extended terms
-    for (auto obj : _pdfList) {
-      auto pdf = static_cast<RooAbsPdf*>(obj);
+    for (auto *pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
       expectedTotal += pdf->expectedEvents(nset) ;
     }
 
   } else {
 
     // Sum the coefficients
-    for (const auto obj : _coefList) {
-      auto coef = static_cast<RooAbsReal*>(obj);
+    for (auto *coef : static_range_cast<RooAbsReal*>(_coefList)) {
       expectedTotal += coef->getVal() ;
     }
   }
@@ -644,8 +642,7 @@ RooAbsGenContext* RooAddModel::genContext(const RooArgSet &vars, const RooDataSe
 
 bool RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const
 {
-  for (auto obj : _pdfList) {
-    auto pdf = static_cast<RooAbsPdf*>(obj);
+  for (auto *pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
 
     if (!pdf->isDirectGenSafe(arg)) {
       return false ;
@@ -661,8 +658,7 @@ bool RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const
 
 Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &/*generateVars*/, bool /*staticInitOK*/) const
 {
-  for (auto obj : _pdfList) {
-    auto pdf = static_cast<RooAbsPdf*>(obj);
+  for (auto *pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
 
     RooArgSet tmp ;
     if (pdf->getGenerator(directVars,tmp)==0) {

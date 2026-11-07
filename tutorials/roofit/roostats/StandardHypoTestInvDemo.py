@@ -90,7 +90,7 @@ class HypoTestInvTool {
 
    public:
    HypoTestInvTool();
-   ~HypoTestInvTool(){};
+   virtual ~HypoTestInvTool() {}
 
    HypoTestInverterResult *RunInverter(RooWorkspace *w, const char *modelSBName, const char *modelBName,
    const char *dataName, int type, int testStatType, bool useCLs, int npoints,
@@ -176,7 +176,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
 
         # RooStats.HypoTestInvTool.SetParameter(name, value):
         # def SetParameter(self, name, value):
-        elif (type(name) is str) and (type(value) is bool):
+        elif (type(name) is str) and (type(value) is int):
 
             #
             # set integer parameters
@@ -220,7 +220,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
 
         # RooStats.HypoTestInvTool.SetParameter(name, value):
         # def SetParameter(self, name, value):
-        elif (type(name) is str) and (type(value) is (float or double)):
+        elif (type(name) is str) and (type(value) is float):
 
             #
             # set string parameters
@@ -286,7 +286,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             ROOT.Info("StandardHypoTestInvDemo", "detailed output will be written in output result file")
 
         # write result in a file
-        if r != ROOT.kNone and self.mWriteResult:
+        if r != ROOT.nullptr and self.mWriteResult:
 
             # write to a file the results
             calcType = "Freq" if (calculatorType == 0) else ("Hybr" if (calculatorType == 1) else "Asym")
@@ -496,12 +496,12 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 # try to see if model has nuisance parameters first
                 constrPdf = RooStats.MakeNuisancePdf(sbModel, "nuisanceConstraintPdf_sbmodel")
                 if constrPdf:
-                    Warning(
+                    ROOT.Warning(
                         "StandardHypoTestInvDemo",
                         "Model %s has nuisance parameters but no global observables associated",
                         sbModel.GetName(),
                     )
-                    Warning(
+                    ROOT.Warning(
                         "StandardHypoTestInvDemo",
                         "\tThe effect of the nuisance parameters will not be treated correctly ",
                     )
@@ -524,7 +524,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
         doFit = self.mInitialFit
         if testStatType == 0 and self.mInitialFit == -1:
             doFit = False  # case of LEP test statistic
-        if type == 3 and self.mInitialFit == -1:
+        if Type == 3 and self.mInitialFit == -1:
             doFit = False  # case of Asymptoticcalculator with nominal Asimov
         poihat = 0
 
@@ -565,7 +565,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             )
 
             if fitres.status() != 0:
-                Warning(
+                ROOT.Warning(
                     "StandardHypoTestInvDemo",
                     "Fit to the model failed - try with strategy 1 and perform first an Hesse computation",
                 )
@@ -582,7 +582,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 )
 
             if fitres.status() != 0:
-                Warning("StandardHypoTestInvDemo", " Fit still failed - continue anyway.....")
+                ROOT.Warning("StandardHypoTestInvDemo", " Fit still failed - continue anyway.....")
 
             print("StandardHypoTestInvDemo - Best Fit value : ", poi.GetName(), " = ", poihat, " +/- ", poi.getError())
             print(f"Time for fitting : ")
@@ -689,7 +689,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             return 0
 
         # set the test statistic
-        testStat = 0
+        testStat = ROOT.nullptr
         if testStatType == 0:
             testStat = slrts
         if testStatType == 1 or testStatType == 11:
@@ -701,7 +701,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
         if testStatType == 6:
             testStat = nevtts
 
-        if testStat == 0:
+        if testStat == ROOT.nullptr:
             Error(
                 "StandardHypoTestInvDemo",
                 "Invalid - test statistic type = {testStatType} supported values are only :\n\t\t\t 0 (SLR) "
@@ -715,7 +715,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             # look if pdf is number counting or extended
             if sbModel.GetPdf().canBeExtended():
                 if useNumberCounting:
-                    Warning("StandardHypoTestInvDemo", "Pdf is extended: but number counting flag is set: ignore it ")
+                    ROOT.Warning("StandardHypoTestInvDemo", "Pdf is extended: but number counting flag is set: ignore it ")
             else:
                 # for not extended pdf
                 if not useNumberCounting:
@@ -745,7 +745,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             toymcs.SetUseMultiGen(self.mOptimize)
 
             if self.mGenerateBinned and sbModel.GetObservables().getSize() > 2:
-                Warning(
+                ROOT.Warning(
                     "StandardHypoTestInvDemo",
                     (
                         "generate binned is activated but the number of observable is {}. Too much "
@@ -765,7 +765,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             hhc = HybridCalculator(hc)
             assert hhc
 
-            hhc.SetToys(ntoys, ntoys / self.mNToysRatio)  # can use less ntoys for b hypothesis
+            hhc.SetToys(ntoys, int(ntoys / self.mNToysRatio))  # can use less ntoys for b hypothesis
 
             # remove global observables from ModelConfig (this is probably not needed anymore in 5.32)
             bModel.SetGlobalObservables(RooArgSet())
@@ -813,13 +813,13 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 nuisPdf.Print()
 
                 nuisParams = (
-                    ibModel.GetNuisanceParameters()
+                    bModel.GetNuisanceParameters()
                     if (bModel.GetNuisanceParameters())
                     else (sbModel.GetNuisanceParameters())
                 )
-                npnuisPdf.getObservables(nuisParams)
+                np = npnuisPdf.getObservables(nuisParams)
                 if np.getSize() == 0:
-                    Warning(
+                    ROOT.Warning(
                         "StandardHypoTestInvDemo",
                         "Prior nuisance does not depend on nuisance parameters. They will be smeared in their full range",
                     )
@@ -827,21 +827,21 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 hhc.ForcePriorNuisanceAlt(nuisPdf)
                 hhc.ForcePriorNuisanceNull(nuisPdf)
 
-        elif type == 2 or type == 3:
+        elif Type == 2 or Type == 3:
             if testStatType == 3:
                 hc.SetOneSided(True)
             if testStatType != 2 and testStatType != 3:
-                Warning(
+                ROOT.Warning(
                     "StandardHypoTestInvDemo",
                     "Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL",
                 )
-        elif type == 0:
-            hc.SetToys(ntoys, ntoys / self.mNToysRatio)
+        elif Type == 0:
+            hc.SetToys(ntoys, int(ntoys / self.mNToysRatio))
             # store also the fit information for each poi point used by calculator based on toys
             if self.mEnableDetOutput:
                 hc.StoreFitInfo(True)
-        elif type == 1:
-            hc.SetToys(ntoys, ntoys / self.mNToysRatio)
+        elif Type == 1:
+            hc.SetToys(ntoys, int(ntoys / self.mNToysRatio))
             # store also the fit information for each poi point used by calculator based on toys
             # if (self.mEnableDetOutput):
             #    hc.StoreFitInfo(True)
@@ -1103,7 +1103,7 @@ def StandardHypoTestInvDemo(
     w = file.Get(wsName)
     r = 0
     print(w, "\t", filename)
-    if w != ROOT.kNone:
+    if w != ROOT.nullptr:
         r = calc.RunInverter(
             w,
             modelSBName,

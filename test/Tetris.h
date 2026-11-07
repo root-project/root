@@ -16,6 +16,21 @@
 #ifndef TETRIS_H
 #define TETRIS_H
 
+#ifdef __ROOTCLING__
+#pragma link C++ class Tetris+;
+#pragma link C++ class TetrisBox+;
+#pragma link C++ class TetrisPiece+;
+#pragma link C++ class CurrentPiece+;
+#pragma link C++ class TetrisBoard+;
+#pragma link C++ class NextPiecePad+;
+#pragma link C++ class InfoPad+;
+#pragma link C++ class NewGameButton+;
+#pragma link C++ class QuitButton+;
+#pragma link C++ class PauseButton+;
+#pragma link C++ class KeyHandler+;
+#pragma link C++ class UpdateLevelTimer+;
+#endif
+
 #include <TTimer.h>
 #include <TCanvas.h>
 #include <TGFrame.h>
@@ -62,7 +77,9 @@ public:
 
    void    Erase();
    void    Paint(Option_t *option="") override;
-   void    ExecuteEvent(Int_t, Int_t, Int_t) override  { return; }  // disable any actions on it
+   void    ExecuteEvent(Int_t, Int_t, Int_t) override  {}  // disable any actions on it
+
+   ClassDefOverride(TetrisBox, 0)
 };
 
 
@@ -140,8 +157,7 @@ private:
    Int_t   fWidth;      // board width
    Bool_t  fIsDropped;  // kTRUE when piece stopped
 
-   TetrisBoxPtr *fBoard;   //! 2d array of pointers to Tetrisboxes,
-                           // if pointer is 0 - the cell is empty
+   TetrisBoxPtr *fBoard;   ///<! 2d array of pointers to Tetrisboxes, if pointer is 0 - the cell is empty
    Int_t  fFilledLines;    // number of non empty lines in pad
 
    void   AllAboveLinesDown(Int_t line)    // assume that line is empty
@@ -175,7 +191,9 @@ public:
 
    void PaintModified() override;
    void   PieceDropped(TetrisPiece *piece, Int_t height);
-   void   ExecuteEvent(Int_t, Int_t, Int_t) override  { return; }  // disable any actions on it
+   void   ExecuteEvent(Int_t, Int_t, Int_t) override  {}  // disable any actions on it
+
+   ClassDefOverride(TetrisBoard, 0)
 };
 
 
@@ -206,7 +224,9 @@ public:
    Bool_t  Notify() override;
    void    SetSpeed();
    void    Paint(Option_t *option="") override;
-   void    ExecuteEvent(Int_t, Int_t, Int_t) override  { return; }  // disable any actions on it
+   void    ExecuteEvent(Int_t, Int_t, Int_t) override  { }  // disable any actions on it
+
+   ClassDefOverride(CurrentPiece, 0)
 };
 
 
@@ -229,7 +249,9 @@ public:
    void   Show()     { fPiece->Show(); Modified(kTRUE); }
 
    TetrisPiece  *GetPiece() { return fPiece; }
-   void ExecuteEvent(Int_t, Int_t, Int_t) override  { return; }  // disable any actions on it
+   void ExecuteEvent(Int_t, Int_t, Int_t) override  { }  // disable any actions on it
+
+   ClassDefOverride(NextPiecePad, 0)
 };
 
 
@@ -245,6 +267,8 @@ public:
    ~QuitButton() override { }
 
    void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+
+   ClassDefOverride(QuitButton, 0)
 };
 
 
@@ -270,6 +294,8 @@ public:
 
    Bool_t   IsPressed()               { return fPressed; }
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+
+   ClassDefOverride(PauseButton, 0)
 };
 
 
@@ -295,6 +321,8 @@ public:
 
    Bool_t   IsPressed()               { return fPressed; }
    void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+
+   ClassDefOverride(NewGameButton, 0)
 };
 
 
@@ -316,7 +344,9 @@ public:
    virtual void AddValue(Int_t addValue=1) { fValue = fValue+addValue; Modified(kTRUE); }
 
    void PaintModified() override;
-   void ExecuteEvent(Int_t, Int_t, Int_t) override  { return; }  // disable any actions on it
+   void ExecuteEvent(Int_t, Int_t, Int_t) override  { }  // disable any actions on it
+
+   ClassDefOverride(InfoPad, 0)
 };
 
 
@@ -332,6 +362,8 @@ public:
    ~KeyHandler() override;
 
    Bool_t HandleKey(Event_t *event) override;    // handler of the key events
+
+   ClassDefOverride(KeyHandler, 0)
 };
 
 
@@ -345,6 +377,8 @@ public:
    ~UpdateLevelTimer() override { }
 
    Bool_t Notify() override;
+
+   ClassDefOverride(UpdateLevelTimer, 0)
 };
 
 

@@ -12,6 +12,7 @@
 #ifndef ROOT_Riostream
 #define ROOT_Riostream
 
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead <fstream>, <iostream> or <iomanip>."
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

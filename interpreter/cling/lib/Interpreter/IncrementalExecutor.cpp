@@ -23,6 +23,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 
 #include "llvm/ExecutionEngine/Orc/ExecutorProcessControl.h"
+#include "llvm/ExecutionEngine/Orc/SelfExecutorProcessControl.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
 #include "llvm/ADT/SmallPtrSet.h"
@@ -172,6 +173,10 @@ IncrementalExecutor::runStaticInitializersOnce(Transaction& T) {
   if (llvm::Error Err = m_JIT->runCtors()) {
     llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
                                 "[runStaticInitializersOnce]: ");
+    // The failed initializer stays pending in the platform and would fail
+    // the next initialize(); consume it now.
+    llvm::consumeError(m_JIT->runCtors());
+    return kExeUnresolvedSymbols;
   }
   return kExeSuccess;
 }

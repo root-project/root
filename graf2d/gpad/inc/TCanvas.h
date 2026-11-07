@@ -24,6 +24,7 @@ class TCanvas : public TPad {
 
 friend class TCanvasImp;
 friend class TWebCanvas;
+friend class TPad;      // to create/reset painter for PS drawing
 friend class TThread;
 friend class TInterpreter;
 
@@ -54,6 +55,7 @@ protected:
    TPad         *fSelectedPad;     ///<! Pad containing currently selected object
    TPad         *fClickSelectedPad;///<! Pad containing currently click-selected object
    TPad         *fPadSave;         ///<! Pointer to saved pad in HandleInput
+   Int_t         fHandlingInput;   ///<! use to implement posponded update of canvas
    TCanvasImp   *fCanvasImp;       ///<! Window system specific canvas implementation
    TContextMenu *fContextMenu;     ///<! Context menu pointer
    Bool_t        fBatch;           ///<! True when in batchmode
@@ -64,6 +66,8 @@ protected:
    Bool_t        fUpdated;         ///<! Set to True when Update method was called
    //
    TVirtualPadPainter *fPainter;   ///<! Canvas (pad) painter.
+
+   TVirtualPad *fHilightPadBorder = nullptr; ///<! pad which border will be hilghlighrt when paint canvas
 
    static Bool_t fgIsFolder;       ///< Indicates if canvas can be browsed as a folder
 
@@ -77,6 +81,7 @@ private:
 
    //Initialize PadPainter.
    void     CreatePainter();
+   Bool_t   EnsurePSPainter(Bool_t create, TVirtualPadPainter *&oldp);
 
 protected:
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
@@ -125,13 +130,13 @@ public:
    virtual void      EditorBar();
    void              EmbedInto(Int_t winid, Int_t ww, Int_t wh);
    void              EnterLeave(TPad *prevSelPad, TObject *prevSelObj);
-   void              FeedbackMode(Bool_t set);
+   void              FeedbackMode(Bool_t set) override;
    void              Flush();
    void              UseCurrentStyle() override; // *MENU*
    void              ForceUpdate();
    const char       *GetDISPLAY() const {return fDISPLAY.Data();}
    TContextMenu     *GetContextMenu() const {return fContextMenu;};
-   Int_t             GetDoubleBuffer() const {return fDoubleBuffer;}
+   Int_t             GetDoubleBuffer() const override { return fDoubleBuffer; }
    Int_t             GetEvent() const override { return fEvent; }
    Int_t             GetEventX() const override { return fEventX; }
    Int_t             GetEventY() const override { return fEventY; }
@@ -162,6 +167,8 @@ public:
    UInt_t            GetWindowHeight() const { return fWindowHeight; }
    UInt_t            GetWw() const override { return fCw; }
    UInt_t            GetWh() const override { return fCh; }
+   UInt_t            GetPadWidth() const override { return fCw; }
+   UInt_t            GetPadHeight() const override { return fCh; }
    virtual void      GetCanvasPar(Int_t &wtopx, Int_t &wtopy, UInt_t &ww, UInt_t &wh)
                      {wtopx=GetWindowTopX(); wtopy=fWindowTopY; ww=fWindowWidth; wh=fWindowHeight;}
    virtual void      HandleInput(EEventType button, Int_t x, Int_t y);

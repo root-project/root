@@ -8,7 +8,6 @@
 
 /**
  \file ROOT/RFriendInfo.hxx
- \ingroup tree
  \author Ivan Kabadzhov
  \author Enrico Guiraud
  \author Vincenzo Eduardo Padulano

@@ -60,13 +60,6 @@ namespace TMVA {
       Bool_t IsDiffSignificant(Float_t, Float_t, Float_t);
       void   TrainReg();
 
-      //setting up helper variables for JsMVA
-      void SetIPythonInteractive(bool* ExitFromTraining, UInt_t *fIPyCurrentIter_){
-        fExitFromTraining = ExitFromTraining;
-        fIPyCurrentIter = fIPyCurrentIter_;
-      }
-
-
    private:
 
       Bool_t fdoRegression;                     ///< TODO temporary, find nicer solution
@@ -83,10 +76,6 @@ namespace TMVA {
       Float_t                     fTolerance;   ///< documentation
 
       mutable MsgLogger*          fLogger;      ///<! message logger
-
-      // variables for JsMVA
-      UInt_t *fIPyCurrentIter = nullptr;
-      bool * fExitFromTraining = nullptr;
 
       void SetIndex( TMVA::SVEvent* );
    };

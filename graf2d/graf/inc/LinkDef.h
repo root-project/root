@@ -1,7 +1,7 @@
 /* @(#)root/graf:$Id$ */
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -57,6 +57,7 @@
 #pragma link C++ class TPolyLine-;
 #pragma link C++ class TText-;
 #pragma link C++ class TTF;
+#pragma link C++ class TTFhandle;
 #pragma link C++ class TWbox+;
 
 #pragma link C++ enum TImage::EImageFileTypes;

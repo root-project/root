@@ -313,6 +313,80 @@ Arg_t &emplace(RooWorkspace &ws, std::string const &name, Args_t &&...args)
    return *dynamic_cast<Arg_t *>(ws.arg(name));
 }
 
+
+/// Check whether all channel workspaces contain consistent datasets.
+///
+/// This function compares the datasets stored in each channel workspace against
+/// those in the first workspace.
+///
+/// \param chs Vector of channel workspaces to compare (first is the reference).
+/// \param ch_names Names of the channels, used for error reporting.
+/// \param allowedInconsistent Dataset names that are allowed to differ between channels.
+///
+/// \return A pair consisting of:
+///   - bool: true if all channels are consistent (after ignoring allowed datasets),
+///           false otherwise.
+///   - std::string: empty if consistent; otherwise, a detailed error message
+///                  describing the inconsistencies.
+
+std::pair<bool, std::string> isChannelDataConsistent(std::vector<std::unique_ptr<RooWorkspace>> const &chs,
+                                                     std::vector<std::string> const &ch_names,
+                                                     std::set<std::string> const &allowedInconsistent)
+{
+   // Collect the reference list of dataset names from the first workspace
+   std::set<std::string> referenceDataNames;
+   for (RooAbsData *data : chs[0]->allData()) {
+      referenceDataNames.insert(data->GetName());
+   }
+
+   // Check that all other workspaces have the same datasets
+   for (std::size_t i = 1; i < chs.size(); ++i) {
+      std::set<std::string> thisDataNames;
+      for (RooAbsData *data : chs[i]->allData()) {
+         thisDataNames.insert(data->GetName());
+      }
+
+      // Find missing and extra datasets in this workspace
+      std::vector<std::string> missing;
+      std::vector<std::string> extra;
+      std::set_difference(referenceDataNames.begin(), referenceDataNames.end(), thisDataNames.begin(),
+                          thisDataNames.end(), std::back_inserter(missing));
+      std::set_difference(thisDataNames.begin(), thisDataNames.end(), referenceDataNames.begin(),
+                          referenceDataNames.end(), std::back_inserter(extra));
+
+      // Remove allowed inconsistencies
+      auto isAllowed = [&](std::string const &name) { return allowedInconsistent.count(name) != 0; };
+
+      missing.erase(std::remove_if(missing.begin(), missing.end(), isAllowed), missing.end());
+      extra.erase(std::remove_if(extra.begin(), extra.end(), isAllowed), extra.end());
+
+      if (!missing.empty() || !extra.empty()) {
+         std::stringstream errMsg;
+         errMsg << "ERROR: Inconsistent datasets across channel workspaces.\n"
+                << "Workspace for channel \"" << ch_names[i] << "\" does not match "
+                << "the datasets in channel \"" << ch_names[0] << "\".\n";
+
+         if (!missing.empty()) {
+            errMsg << "  Missing datasets:\n";
+            for (const auto &name : missing) {
+               errMsg << "    - " << name << "\n";
+            }
+         }
+
+         if (!extra.empty()) {
+            errMsg << "  Extra datasets:\n";
+            for (const auto &name : extra) {
+               errMsg << "    - " << name << "\n";
+            }
+         }
+
+         errMsg << "All channel workspaces must contain exactly the same datasets.\n";
+         return {false, errMsg.str()};
+      }
+   }
+   return {true, ""};
+}
+
 } // namespace
 
 /// Create observables of type RooRealVar. Creates 1 to 3 observables, depending on the type of the histogram.
@@ -609,7 +683,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
        assert(lowVec.size() == params.size());
 
        FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
-       interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise exponential to 6th order polynomial interpolation + exponential extrapolation )
+       interp.setAllInterpCodes(5); // LM: change to 5 (piece-wise exponential to 6th order polynomial interpolation + exponential extrapolation )
        //interp.setAllInterpCodes(0); // simple linear interpolation
        proto.import(interp); // params have already been imported in first loop of this function
     } else{
@@ -974,9 +1048,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             // Get a RooArgSet of the observables:
             // Names in the list fObsNameVec:
             RooArgList theObservables;
-            std::vector<std::string>::iterator itr = fObsNameVec.begin();
-            for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
-              theObservables.add( *proto.var(*itr) );
+            for (const auto &obsName : fObsNameVec) {
+              theObservables.add( *proto.var(obsName) );
             }
 
             // Create the list of terms to
@@ -1028,13 +1101,17 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               }
 
               // Create the Parameters
-              std::string funcParams = "gamma_" + shapeFactor.GetName();
-
-              // GHL: Again, we are putting hard ranges on the gamma's
-              //      We should change this to range from 0 to /inf
-              RooArgList shapeFactorParams = ParamHistFunc::createParamSet(proto,
-                  funcParams,
-                  theObservables, defaultGammaMin, defaultShapeFactorGammaMax);
+              RooArgList shapeFactorParams =
+                 ParamHistFunc::createParamSet(proto, "gamma_" + shapeFactor.GetName(), theObservables);
+              for (auto *comp : shapeFactorParams) {
+                 // If the gamma is subject to a preprocess function, it is a RooAbsReal and
+                 // we don't need to set the initial value.
+                 if (auto var = dynamic_cast<RooRealVar *>(comp)) {
+                    var->setVal(shapeFactor.GetVal());
+                    var->setMin(shapeFactor.GetLow());
+                    var->setMax(shapeFactor.GetHigh());
+                 }
+              }
 
               // Create the Function
               ParamHistFunc shapeFactorFunc( funcName.c_str(), funcName.c_str(),
@@ -1538,6 +1615,17 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     combined->defineSet("observables",{obsList, channelCat}, /*importMissing=*/true);
     combined_config->SetObservables(*combined->set("observables"));
 
+    // Check if the channel datasets are consistent
+    {
+      bool isConsistent = false;
+      std::string errMsg;
+      std::set<std::string> allowedInconsistent{"asimovData"};
+      std::tie(isConsistent, errMsg) = isChannelDataConsistent(chs, ch_names, allowedInconsistent);
+      if (!isConsistent) {
+        cxcoutFHF << errMsg;
+        throw hf_exc();
+      }
+    }
 
     // Now merge the observable datasets across the channels
     for(RooAbsData * data : chs[0]->allData()) {

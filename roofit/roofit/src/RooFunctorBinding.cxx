@@ -39,8 +39,8 @@ class cannot be persisted in a RooWorkspace without registering the function
 pointer first using RooCFunction1Binding<T1,T2>::register().
 **/
 
-#include "Riostream.h"
 #include "RooFunctorBinding.h"
+#include <iostream>
 
 using std::endl, std::ostream, std::string;
 

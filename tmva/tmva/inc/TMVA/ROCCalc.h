@@ -80,7 +80,7 @@ namespace TMVA {
 
       Double_t        fSignalCut;  ///< MVA cut value for last demanded background rejection or signal efficiency
 
-      mutable MsgLogger* fLogger;   //! message logger
+      mutable MsgLogger* fLogger;   ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    };

@@ -180,26 +180,17 @@ public:
   bool getForceNumInt() const { return _forceNumInt ; }
 
   // Chi^2 fits to histograms
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
-                              const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
+  template <typename... CmdArgs_t>
+  RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, CmdArgs_t const&... cmdArgs)
+  {
+    return RooFit::makeOwningPtr(chi2FitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
+  }
 
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooLinkedList& cmdList) ;
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
-             const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-             const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
-
-  // Chi^2 fits to X-Y datasets
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
-                              const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
-
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
-               const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-               const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
+  template <typename... CmdArgs_t>
+  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, CmdArgs_t const&... cmdArgs)
+  {
+    return RooFit::makeOwningPtr(createChi2Impl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
+  }
 
   virtual RooFit::OwningPtr<RooAbsReal> createProfile(const RooArgSet& paramsOfInterest) ;
 
@@ -391,8 +382,14 @@ public:
   virtual void doEval(RooFit::EvalContext &) const;
 
   virtual bool hasGradient() const { return false; }
+  virtual bool hasHessian() const { return false; }
   virtual void gradient(double *) const {
     if(!hasGradient()) throw std::runtime_error("RooAbsReal::gradient(double *) not implemented by this class!");
+  }
+  virtual void hessian(double *) const
+  {
+     if (!hasHessian())
+        throw std::runtime_error("RooAbsReal::hessian(double *) not implemented by this class!");
   }
 
   // PlotOn with command list
@@ -460,7 +457,6 @@ protected:
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;
-  void setTreeBranchStatus(TTree& t, bool active) override ;
   void fillTreeBranch(TTree& t) override ;
 
   struct PlotOpt {
@@ -499,6 +495,9 @@ protected:
 
   virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const;
 
+  virtual std::unique_ptr<RooAbsReal>
+  createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, const RooAbsCategoryLValue &asymCatState) const;
+
   bool matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
 
   bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
@@ -526,6 +525,9 @@ protected:
 
 private:
 
+  std::unique_ptr<RooAbsReal> createChi2Impl(RooDataHist& data, const RooLinkedList& cmdList);
+  std::unique_ptr<RooFitResult> chi2FitToImpl(RooDataHist& data, const RooLinkedList& cmdList);
+
   /// Debug version of getVal(), which is slow and does error checking.
   double _DEBUG_getVal(const RooArgSet* normalisationSet) const;
 
@@ -541,8 +543,8 @@ private:
    TString _label;                                         ///< Plot label for objects value
    bool _forceNumInt = false;                              ///< Force numerical integration if flag set
    std::unique_ptr<RooNumIntConfig> _specIntegratorConfig; // Numeric integrator configuration specific for this object
-   TreeReadBuffer *_treeReadBuffer = nullptr;              //! A buffer for reading values from trees
-   bool _selectComp = true;                                //! Component selection flag for RooAbsPdf::plotCompOn
+   TreeReadBuffer *_treeReadBuffer = nullptr;              ///<! A buffer for reading values from trees
+   bool _selectComp = true;                                ///<! Component selection flag for RooAbsPdf::plotCompOn
    mutable RooFit::UniqueId<RooArgSet>::Value_t _lastNormSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<!
 
    static bool _globalSelectComp; // Global activation switch for component selection

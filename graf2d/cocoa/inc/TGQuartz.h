@@ -16,7 +16,6 @@
 
 #include "TGCocoa.h"
 #include "TPoint.h"
-#include "TTF.h"
 
 /** \class TGQuartz
 \ingroup cocoa
@@ -26,11 +25,6 @@ MacOS X, using CoreGraphics (Quartz).
 */
 
 class TGQuartz : public TGCocoa {
-private:
-   enum EAlign {kNone, kTLeft, kTCenter, kTRight, kMLeft,
-                kMCenter, kMRight, kBLeft, kBCenter, kBRight};
-
-   FT_Vector   fAlign; // alignment vector
 public:
    TGQuartz();
    TGQuartz(const char *name, const char *title);
@@ -71,18 +65,26 @@ public:
    Int_t     SetTextFont(char *fontname, ETextSetMode mode) override;
    void      SetTextSize(Float_t textsize) override;
 
-   void      GetTextExtent(UInt_t &w, UInt_t &h, char *text) override;
-   Int_t     GetFontAscent() const override;
-   Int_t     GetFontAscent(const char *text) const override;
-   Int_t     GetFontDescent() const override;
-   Int_t     GetFontDescent(const char *text) const override;
    Float_t   GetTextMagnitude() override;
 
-private:
+   //---- Methods used for new graphics -----
+   void      SetOpacityW(WinContext_t wctxt, Int_t percent) override;
+   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
+   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
+   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
+   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
 
-   //Unfortunately, I have to convert from
-   //top-left to bottom-left corner system.
-   std::vector<TPoint> fConvertedPoints;
+   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
+   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
+   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode) override;
+   void      DrawTTFglyphsW(WinContext_t wctxt, Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode) override;
+
+private:
 
    //Lines with AA can be quite different
    //from what we always had with X11.
@@ -93,13 +95,12 @@ private:
    bool fUseAA;
    bool fUseFAAA;
 
-   void AlignTTFString();
-   Bool_t IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void RenderTTFString(Int_t x, Int_t y, ETextMode mode);
-   void DrawFTGlyphIntoPixmap(void *pixmap, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
-
    void SetAA();
-   void *GetSelectedDrawableChecked(const char *calledFrom) const;
+   TAttFill &GetAttFill(WinContext_t wctxt);
+   TAttLine &GetAttLine(WinContext_t wctxt);
+   TAttMarker &GetAttMarker(WinContext_t wctxt);
+   TAttText &GetAttText(WinContext_t wctxt);
+   void *GetPixmapDrawable(void *drawable0, const char *calledFrom) const;
 
    TGQuartz(const TGQuartz &rhs);
    TGQuartz &operator = (const TGQuartz &rhs);

@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleDescriptor.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2018-07-19
@@ -19,6 +18,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RSpan.hxx>
 
 #include <TError.h>
@@ -49,6 +49,7 @@ class RColumnElementBase;
 }
 
 class RNTupleDescriptor;
+class RFieldDescriptor;
 
 namespace Internal {
 class RColumnDescriptorBuilder;
@@ -57,6 +58,7 @@ class RClusterGroupDescriptorBuilder;
 class RExtraTypeInfoDescriptorBuilder;
 class RFieldDescriptorBuilder;
 class RNTupleDescriptorBuilder;
+class RNTupleAttrSetDescriptorBuilder;
 
 RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
 struct RNTupleClusterBoundaries {
@@ -67,18 +69,16 @@ struct RNTupleClusterBoundaries {
 std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const RNTupleDescriptor &desc);
 } // namespace Internal
 
-namespace Experimental {
-
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrSetDescriptor
+\class ROOT::RNTupleAttrSetDescriptor
 \ingroup NTuple
 \brief Metadata stored for every Attribute Set linked to an RNTuple.
 */
 // clang-format on
 class RNTupleAttrSetDescriptor final {
-   friend class Experimental::Internal::RNTupleAttrSetDescriptorBuilder;
-
+   friend class Internal::RNTupleAttrSetDescriptorBuilder;
+   
    std::uint16_t fSchemaVersionMajor = 0;
    std::uint16_t fSchemaVersionMinor = 0;
    std::uint32_t fAnchorLength = 0; ///< uncompressed size of the linked anchor
@@ -107,10 +107,6 @@ public:
    RNTupleAttrSetDescriptor Clone() const;
 };
 
-class RNTupleAttrSetDescriptorIterable;
-
-} // namespace Experimental
-
 // clang-format off
 /**
 \class ROOT::RFieldDescriptor
@@ -123,23 +119,26 @@ class RFieldDescriptor final {
    friend class Internal::RFieldDescriptorBuilder;
 
 private:
+   static const std::string &GetEmptyString();
+
    ROOT::DescriptorId_t fFieldId = ROOT::kInvalidDescriptorId;
    /// The version of the C++-type-to-column translation mechanics
    std::uint32_t fFieldVersion = 0;
    /// The version of the C++ type itself
    std::uint32_t fTypeVersion = 0;
+   /// Optional string storage for a free-standing field descriptor. If possible, strings come from the surrounding
+   /// RNTupleDescriptor string pool and this member remains unset.
+   std::unique_ptr<Internal::RStringPool> fStringPool;
    /// The leaf name, not including parent fields
-   std::string fFieldName;
+   const std::string *fFieldName = nullptr;
    /// Free text set by the user
-   std::string fFieldDescription;
+   const std::string *fFieldDescription = nullptr;
    /// The C++ type that was used when writing the field
-   std::string fTypeName;
+   const std::string *fTypeName = nullptr;
    /// A typedef or using directive that resolved to the type name during field creation
-   std::string fTypeAlias;
+   const std::string *fTypeAlias = nullptr;
    /// The number of elements per entry for fixed-size arrays
    std::uint64_t fNRepetitions = 0;
-   /// The structural information carried by this field in the data model tree
-   ROOT::ENTupleStructure fStructure = ROOT::ENTupleStructure::kInvalid;
    /// Establishes sub field relationships, such as classes and collections
    ROOT::DescriptorId_t fParentId = ROOT::kInvalidDescriptorId;
    /// For projected fields, the source field ID
@@ -147,15 +146,21 @@ private:
    /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
    /// order of sub fields.
    std::vector<ROOT::DescriptorId_t> fLinkIds;
+   /// The ordered list of columns attached to this field: first by representation index then by column index.
+   std::vector<ROOT::DescriptorId_t> fLogicalColumnIds;
    /// The number of columns in the column representations of the field. The column cardinality helps to navigate the
    /// list of logical column ids. For example, the second column of the third column representation is
    /// fLogicalColumnIds[2 * fColumnCardinality + 1]
    std::uint32_t fColumnCardinality = 0;
-   /// The ordered list of columns attached to this field: first by representation index then by column index.
-   std::vector<ROOT::DescriptorId_t> fLogicalColumnIds;
+   /// The structural information carried by this field in the data model tree
+   ROOT::ENTupleStructure fStructure = ROOT::ENTupleStructure::kInvalid;
    /// For custom classes, we store the ROOT TClass reported checksum to facilitate the use of I/O rules that
    /// identify types by their checksum
    std::optional<std::uint32_t> fTypeChecksum;
+   /// Indicates if this is a collection that should be represented in memory by a SoA layout.
+   bool fIsSoACollection = false;
+
+   void InitFrom(const RFieldDescriptor &source, Internal::RStringPool &stringPool);
 
 public:
    RFieldDescriptor() = default;
@@ -176,10 +181,10 @@ public:
    ROOT::DescriptorId_t GetId() const { return fFieldId; }
    std::uint32_t GetFieldVersion() const { return fFieldVersion; }
    std::uint32_t GetTypeVersion() const { return fTypeVersion; }
-   const std::string &GetFieldName() const { return fFieldName; }
-   const std::string &GetFieldDescription() const { return fFieldDescription; }
-   const std::string &GetTypeName() const { return fTypeName; }
-   const std::string &GetTypeAlias() const { return fTypeAlias; }
+   const std::string &GetFieldName() const { return fFieldName ? *fFieldName : GetEmptyString(); }
+   const std::string &GetFieldDescription() const { return fFieldDescription ? *fFieldDescription : GetEmptyString(); }
+   const std::string &GetTypeName() const { return fTypeName ? *fTypeName : GetEmptyString(); }
+   const std::string &GetTypeAlias() const { return fTypeAlias ? *fTypeAlias : GetEmptyString(); }
    std::uint64_t GetNRepetitions() const { return fNRepetitions; }
    ROOT::ENTupleStructure GetStructure() const { return fStructure; }
    ROOT::DescriptorId_t GetParentId() const { return fParentId; }
@@ -189,10 +194,7 @@ public:
    std::uint32_t GetColumnCardinality() const { return fColumnCardinality; }
    std::optional<std::uint32_t> GetTypeChecksum() const { return fTypeChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != ROOT::kInvalidDescriptorId; }
-
-   bool IsCustomClass() const R__DEPRECATED(6, 42, "removed from public interface");
-   bool IsCustomEnum(const RNTupleDescriptor &desc) const R__DEPRECATED(6, 42, "removed from public interface");
-   bool IsStdAtomic() const R__DEPRECATED(6, 42, "removed from public interface");
+   bool IsSoACollection() const { return fIsSoACollection; }
 };
 
 // clang-format off
@@ -229,6 +231,8 @@ private:
    /// For deferred columns the absolute value is larger than zero.
    /// Negative values specify a suppressed and deferred column.
    std::int64_t fFirstElementIndex = 0U;
+   /// Optional value range (used e.g. by quantized real fields)
+   std::unique_ptr<RValueRange> fValueRange;
    /// A field can be serialized into several columns, which are numbered from zero to $n$
    std::uint32_t fIndex = 0;
    /// A field may use multiple column representations, which are numbered from zero to $m$.
@@ -239,8 +243,6 @@ private:
    std::uint16_t fBitsOnStorage = 0;
    /// The on-disk column type
    ROOT::ENTupleColumnType fType = ROOT::ENTupleColumnType::kUnknown;
-   /// Optional value range (used e.g. by quantized real fields)
-   std::optional<RValueRange> fValueRange;
 
 public:
    RColumnDescriptor() = default;
@@ -261,10 +263,15 @@ public:
    std::uint64_t GetFirstElementIndex() const { return std::abs(fFirstElementIndex); }
    std::uint16_t GetBitsOnStorage() const { return fBitsOnStorage; }
    ROOT::ENTupleColumnType GetType() const { return fType; }
-   std::optional<RValueRange> GetValueRange() const { return fValueRange; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
    bool IsSuppressedDeferredColumn() const { return fFirstElementIndex < 0; }
+   std::optional<RValueRange> GetValueRange() const
+   {
+      if (fValueRange)
+         return *fValueRange;
+      return std::nullopt;
+   }
 };
 
 // clang-format off
@@ -363,31 +370,31 @@ public:
    // the page belongs
    struct RPageInfo {
    private:
-      /// The sum of the elements of all the pages must match the corresponding `fNElements` field in `fColumnRanges`
-      std::uint32_t fNElements = std::uint32_t(-1);
       /// The meaning of `fLocator` depends on the storage backend.
       RNTupleLocator fLocator;
+      /// The sum of the elements of all the pages must match the corresponding `fNElements` field in `fColumnRanges`
+      std::uint32_t fNElements = std::uint32_t(-1);
       /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
       bool fHasChecksum = false;
 
    public:
       RPageInfo() = default;
       RPageInfo(std::uint32_t nElements, const RNTupleLocator &locator, bool hasChecksum)
-         : fNElements(nElements), fLocator(locator), fHasChecksum(hasChecksum)
+         : fLocator(locator), fNElements(nElements), fHasChecksum(hasChecksum)
       {
       }
 
       bool operator==(const RPageInfo &other) const
       {
-         return fNElements == other.fNElements && fLocator == other.fLocator;
+         return fLocator == other.fLocator && fNElements == other.fNElements;
       }
-
-      std::uint32_t GetNElements() const { return fNElements; }
-      void SetNElements(std::uint32_t n) { fNElements = n; }
 
       const RNTupleLocator &GetLocator() const { return fLocator; }
       RNTupleLocator &GetLocator() { return fLocator; }
       void SetLocator(const RNTupleLocator &locator) { fLocator = locator; }
+
+      std::uint32_t GetNElements() const { return fNElements; }
+      void SetNElements(std::uint32_t n) { fNElements = n; }
 
       bool HasChecksum() const { return fHasChecksum; }
       void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
@@ -445,14 +452,19 @@ public:
       std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange,
                                          const ROOT::Internal::RColumnElementBase &element, std::size_t pageSize);
 
-      /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
-      /// up to and including a given index. Used for binary search in Find().
-      std::vector<ROOT::NTupleSize_t> fCumulativeNElements;
-
-      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
       std::vector<RPageInfo> fPageInfos;
 
+      /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
+      /// up to and including a given index. Used for binary search in Find().
+      /// This vector is only created if fPageInfos has at least kLargeRangeThreshold elements.
+      std::unique_ptr<std::vector<ROOT::NTupleSize_t>> fCumulativeNElements;
+
+      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
+
    public:
+      /// Create the fCumulativeNElements only when its needed, i.e. when there are many pages to search through.
+      static constexpr std::size_t kLargeRangeThreshold = 10;
+
       RPageRange() = default;
       RPageRange(const RPageRange &other) = delete;
       RPageRange &operator=(const RPageRange &other) = delete;
@@ -464,7 +476,9 @@ public:
          RPageRange clone;
          clone.fPhysicalColumnId = fPhysicalColumnId;
          clone.fPageInfos = fPageInfos;
-         clone.fCumulativeNElements = fCumulativeNElements;
+         if (fCumulativeNElements) {
+            clone.fCumulativeNElements = std::make_unique<std::vector<ROOT::NTupleSize_t>>(*fCumulativeNElements);
+         }
          return clone;
       }
 
@@ -538,7 +552,8 @@ public:
       using pointer = const RColumnRange *;
       using reference = const RColumnRange &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -703,7 +718,10 @@ private:
 
    std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
 
-   std::set<unsigned int> fFeatureFlags;
+   /// Storage for all the field strings. Shared among descriptor clones.
+   std::shared_ptr<Internal::RStringPool> fStringPool;
+
+   std::set<unsigned int> fFeatureFlags; // needs to be ordered
    std::unordered_map<ROOT::DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<ROOT::DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
 
@@ -742,7 +760,7 @@ private:
    /// Potentially a subset of all the available clusters
    std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
    /// List of AttributeSets linked to this RNTuple
-   std::vector<Experimental::RNTupleAttrSetDescriptor> fAttributeSets;
+   std::vector<RNTupleAttrSetDescriptor> fAttributeSets;
 
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
    ROOT::DescriptorId_t FindClusterId(ROOT::NTupleSize_t entryIdx) const;
@@ -750,17 +768,40 @@ private:
    /// Creates a descriptor containing only the schema information about this RNTuple, i.e. all the information needed
    /// to create a new RNTuple with the same schema as this one but not necessarily the same clustering. This is used
    /// when merging two RNTuples.
-   RNTupleDescriptor CloneSchema() const;
+   RNTupleDescriptor CloneSchema(bool shareStringPool) const;
+
+   /// ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
+   /// This function returns true if this descriptor has a version prior to 1.0.0.1 and may therefore contain such
+   /// fields. This is only valid to call after SetVersion() or SetVersionForWriting() has been called on this
+   /// descriptor.
+   bool FieldTypeNamesMayNeedFixup() const;
 
 public:
-   static constexpr unsigned int kFeatureFlagTest = 137; // Bit reserved for forward-compatibility testing
+   /// All known feature flags.
+   /// Note that the flag values represent the bit _index_, not the already-bitshifted integer.
+   enum EFeatureFlags {
+      /// Signals that the RNTuple contains at least one deferred column that is part of a collection and was extended
+      /// (i.e. it appears in the footer). This can happen when merging two RNTuples that have the same collection field
+      /// backed by columns with different encoding, e.g. a vector<float> whose elements are represented by SplitReal32
+      /// in the first ntuple and by Real32 in the second.
+      /// Added in version 1.1.0.0 of the binary format.
+      kFeatureFlag_NestedDeferredColumns = 0,
+      // Insert new feature flags here, with contiguous values. If at any point a "hole" appears in the valid feature
+      // flags values, the check in RNTupleSerialize must be updated.
+
+      // End of regular feature flags
+      kFeatureFlag_COUNT,
+
+      /// Reserved for forward-compatibility testing
+      kFeatureFlag_Test = 137
+   };
 
    class RColumnDescriptorIterable;
    class RFieldDescriptorIterable;
    class RClusterGroupDescriptorIterable;
    class RClusterDescriptorIterable;
    class RExtraTypeInfoDescriptorIterable;
-   friend class Experimental::RNTupleAttrSetDescriptorIterable;
+   class RNTupleAttrSetDescriptorIterable;
 
    /// Modifiers passed to CreateModel()
    struct RCreateModelOptions {
@@ -795,7 +836,7 @@ public:
       bool GetEmulateUnknownTypes() const { return fEmulateUnknownTypes; }
    };
 
-   RNTupleDescriptor() = default;
+   RNTupleDescriptor();
    RNTupleDescriptor(const RNTupleDescriptor &other) = delete;
    RNTupleDescriptor &operator=(const RNTupleDescriptor &other) = delete;
    RNTupleDescriptor(RNTupleDescriptor &&other) = default;
@@ -808,6 +849,12 @@ public:
    std::uint64_t GetOnDiskHeaderXxHash3() const { return fOnDiskHeaderXxHash3; }
    std::uint64_t GetOnDiskHeaderSize() const { return fOnDiskHeaderSize; }
    std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
+   /// \see ROOT::RNTuple::GetCurrentVersion()
+   std::uint64_t GetVersion() const
+   {
+      return (static_cast<std::uint64_t>(fVersionEpoch) << 48) | (static_cast<std::uint64_t>(fVersionMajor) << 32) |
+             (static_cast<std::uint64_t>(fVersionMinor) << 16) | (static_cast<std::uint64_t>(fVersionPatch));
+   }
 
    const RFieldDescriptor &GetFieldDescriptor(ROOT::DescriptorId_t fieldId) const
    {
@@ -845,11 +892,17 @@ public:
 
    RClusterGroupDescriptorIterable GetClusterGroupIterable() const;
 
-   RClusterDescriptorIterable GetClusterIterable() const;
+   RClusterDescriptorIterable
+      R__DEPRECATED(6, 46,
+                    "This function is unsafe to use because, in general, not all cluster "
+                    "metadata are available (there may be cluster groups with unloaded cluster group details). Use the "
+                    "'GetActiveClusterIterable()' method instead if you are aware of this limitation.")
+         GetClusterIterable() const;
+   RClusterDescriptorIterable GetActiveClusterIterable() const;
 
    RExtraTypeInfoDescriptorIterable GetExtraTypeInfoIterable() const;
 
-   ROOT::Experimental::RNTupleAttrSetDescriptorIterable GetAttrSetIterable() const;
+   RNTupleAttrSetDescriptorIterable GetAttrSetIterable() const;
 
    const std::string &GetName() const { return fName; }
    const std::string &GetDescription() const { return fDescription; }
@@ -865,7 +918,11 @@ public:
 
    /// We know the number of entries from adding the cluster summaries
    ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
-   ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId) const;
+   ROOT::NTupleSize_t
+      R__DEPRECATED(6, 46,
+                    "This function is ill-conceived in the descriptor "
+                    "as not all cluster descriptors may be present. This interface is no longer publicly exposed.")
+         GetNElements(ROOT::DescriptorId_t physicalColumnId) const;
 
    /// Returns the logical parent of all top-level RNTuple data fields.
    ROOT::DescriptorId_t GetFieldZeroId() const { return fFieldZeroId; }
@@ -877,9 +934,21 @@ public:
                                             std::uint16_t representationIndex) const;
    ROOT::DescriptorId_t FindPhysicalColumnId(ROOT::DescriptorId_t fieldId, std::uint32_t columnIndex,
                                              std::uint16_t representationIndex) const;
-   ROOT::DescriptorId_t FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index) const;
-   ROOT::DescriptorId_t FindNextClusterId(ROOT::DescriptorId_t clusterId) const;
-   ROOT::DescriptorId_t FindPrevClusterId(ROOT::DescriptorId_t clusterId) const;
+   ROOT::DescriptorId_t
+      R__DEPRECATED(6, 46,
+                    "This function is ill-defined in the descriptor "
+                    "as not all cluster descriptors may be present. This interface is no longer exposed.")
+         FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index) const;
+   ROOT::DescriptorId_t
+      R__DEPRECATED(6, 46,
+                    "This function is ill-defined in the descriptor "
+                    "as not all cluster descriptors may be present. This interface is no longer exposed.")
+         FindNextClusterId(ROOT::DescriptorId_t clusterId) const;
+   ROOT::DescriptorId_t
+      R__DEPRECATED(6, 46,
+                    "This function is ill-defined in the descriptor "
+                    "as not all cluster descriptors may be present. This interface is no longer exposed.")
+         FindPrevClusterId(ROOT::DescriptorId_t clusterId) const;
 
    /// Walks up the parents of the field ID and returns a field name of the form a.b.c.d
    /// In case of invalid field ID, an empty string is returned.
@@ -924,22 +993,20 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's RNTuple.
-      const RNTupleDescriptor &fNTuple;
-      /// The enclosing range's descriptor id list.
-      const std::vector<ROOT::DescriptorId_t> &fColumns;
-      std::size_t fIndex = 0;
+      /// The enclosing RColumnDescriptorIterable.
+      const RColumnDescriptorIterable *fIterable;
+      std::size_t fIndex;
 
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
-      using value_type = RFieldDescriptor;
+      using value_type = RColumnDescriptor;
       using difference_type = std::ptrdiff_t;
       using pointer = const RColumnDescriptor *;
       using reference = const RColumnDescriptor &;
 
-      RIterator(const RNTupleDescriptor &ntuple, const std::vector<ROOT::DescriptorId_t> &columns, std::size_t index)
-         : fNTuple(ntuple), fColumns(columns), fIndex(index)
+      explicit RIterator(const RColumnDescriptorIterable *iterable = nullptr, std::size_t index = 0)
+         : fIterable(iterable), fIndex(index)
       {
       }
       iterator &operator++() /* prefix */
@@ -953,17 +1020,26 @@ public:
          operator++();
          return old;
       }
-      reference operator*() const { return fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
-      pointer operator->() const { return &fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
-      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
-      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      reference operator*() const
+      {
+         if (fIterable)
+            return fIterable->fNTuple.GetColumnDescriptor(fIterable->fColumns.at(fIndex));
+         throw RException(R__FAIL("dereference of RNTupleDescriptor::RColumnDescriptorIterable::RIterator"
+                                  " constructed without RNTupleDescriptor::RColumnDescriptorIterable"));
+      }
+      pointer operator->() const
+      {
+         return fIterable ? &fIterable->fNTuple.GetColumnDescriptor(fIterable->fColumns.at(fIndex)) : nullptr;
+      }
+      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex || fIterable != rh.fIterable; }
+      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex && fIterable == rh.fIterable; }
    };
 
    RColumnDescriptorIterable(const RNTupleDescriptor &ntuple, const RFieldDescriptor &fieldDesc);
    RColumnDescriptorIterable(const RNTupleDescriptor &ntuple);
 
-   RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
-   RIterator end() { return RIterator(fNTuple, fColumns, fColumns.size()); }
+   RIterator begin() { return RIterator(this, 0); }
+   RIterator end() { return RIterator(this, fColumns.size()); }
    size_t size() { return fColumns.size(); }
 };
 
@@ -985,11 +1061,9 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's RNTuple.
-      const RNTupleDescriptor &fNTuple;
-      /// The enclosing range's descriptor id list.
-      const std::vector<ROOT::DescriptorId_t> &fFieldChildren;
-      std::size_t fIndex = 0;
+      /// The enclosing RFieldDescriptorIterable.
+      const RFieldDescriptorIterable *fIterable;
+      std::size_t fIndex;
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -999,9 +1073,8 @@ public:
       using pointer = const RFieldDescriptor *;
       using reference = const RFieldDescriptor &;
 
-      RIterator(const RNTupleDescriptor &ntuple, const std::vector<ROOT::DescriptorId_t> &fieldChildren,
-                std::size_t index)
-         : fNTuple(ntuple), fFieldChildren(fieldChildren), fIndex(index)
+      explicit RIterator(const RFieldDescriptorIterable *iterable = nullptr, std::size_t index = 0)
+         : fIterable(iterable), fIndex(index)
       {
       }
       iterator &operator++() /* prefix */
@@ -1015,10 +1088,19 @@ public:
          operator++();
          return old;
       }
-      reference operator*() const { return fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
-      pointer operator->() const { return &fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
-      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
-      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      reference operator*() const
+      {
+         if (fIterable)
+            return fIterable->fNTuple.GetFieldDescriptor(fIterable->fFieldChildren.at(fIndex));
+         throw RException(R__FAIL("dereference of RNTupleDescriptor::RFieldDescriptorIterable::RIterator"
+                                  " constructed without RNTupleDescriptor::RFieldDescriptorIterable"));
+      }
+      pointer operator->() const
+      {
+         return fIterable ? &fIterable->fNTuple.GetFieldDescriptor(fIterable->fFieldChildren.at(fIndex)) : nullptr;
+      }
+      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex || fIterable != rh.fIterable; }
+      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex && fIterable == rh.fIterable; }
    };
    RFieldDescriptorIterable(const RNTupleDescriptor &ntuple, const RFieldDescriptor &field)
       : fNTuple(ntuple), fFieldChildren(field.GetLinkIds())
@@ -1031,15 +1113,15 @@ public:
    {
       std::sort(fFieldChildren.begin(), fFieldChildren.end(), comparator);
    }
-   RIterator begin() { return RIterator(fNTuple, fFieldChildren, 0); }
-   RIterator end() { return RIterator(fNTuple, fFieldChildren, fFieldChildren.size()); }
+   RIterator begin() { return RIterator(this, 0); }
+   RIterator end() { return RIterator(this, fFieldChildren.size()); }
 };
 
 // clang-format off
 /**
 \class ROOT::RNTupleDescriptor::RClusterGroupDescriptorIterable
 \ingroup NTuple
-\brief Used to loop over all the cluster groups of an RNTuple (in unspecified order)
+\brief Used to loop over all the cluster groups of an RNTuple in order of entry ranges
 
 Enumerate all cluster group IDs from the descriptor.  No specific order can be assumed.
 */
@@ -1051,10 +1133,18 @@ private:
 
 public:
    class RIterator final {
+      friend class RNTupleDescriptor::RClusterGroupDescriptorIterable;
+
    private:
-      using Iter_t = std::unordered_map<ROOT::DescriptorId_t, RClusterGroupDescriptor>::const_iterator;
-      /// The wrapped map iterator
-      Iter_t fIter;
+      const RNTupleDescriptor *fNTuple = nullptr;
+      const std::vector<ROOT::DescriptorId_t> *fSortedClusterGroupIds = nullptr;
+      std::size_t fIdx = 0;
+
+      RIterator(const RNTupleDescriptor *ntuple, const std::vector<ROOT::DescriptorId_t> *sortedClusterGroupIds,
+                std::size_t idx)
+         : fNTuple(ntuple), fSortedClusterGroupIds(sortedClusterGroupIds), fIdx(idx)
+      {
+      }
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -1064,38 +1154,48 @@ public:
       using pointer = const RClusterGroupDescriptor *;
       using reference = const RClusterGroupDescriptor &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      RIterator() = default;
       iterator &operator++() /* prefix */
       {
-         ++fIter;
+         ++fIdx;
          return *this;
       }
       iterator operator++(int) /* postfix */
       {
          auto old = *this;
-         operator++();
+         fIdx++;
          return old;
       }
-      reference operator*() const { return fIter->second; }
-      pointer operator->() const { return &fIter->second; }
-      bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
-      bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
+      iterator &operator+=(std::size_t n)
+      {
+         fIdx += n;
+         return *this;
+      }
+      iterator operator+(std::size_t n) const { return RIterator(fNTuple, fSortedClusterGroupIds, fIdx + n); }
+      reference operator*() const { return fNTuple->GetClusterGroupDescriptor((*fSortedClusterGroupIds)[fIdx]); }
+      pointer operator->() const { return &fNTuple->GetClusterGroupDescriptor((*fSortedClusterGroupIds)[fIdx]); }
+      bool operator==(const iterator &rh) const { return (fNTuple == rh.fNTuple) && (fIdx == rh.fIdx); }
+      bool operator!=(const iterator &rh) const { return !(*this == rh); }
    };
 
    RClusterGroupDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
-   RIterator begin() { return RIterator(fNTuple.fClusterGroupDescriptors.cbegin()); }
-   RIterator end() { return RIterator(fNTuple.fClusterGroupDescriptors.cend()); }
+   RIterator begin() { return RIterator(&fNTuple, &fNTuple.fSortedClusterGroupIds, 0); }
+   RIterator end()
+   {
+      return RIterator(&fNTuple, &fNTuple.fSortedClusterGroupIds, fNTuple.fSortedClusterGroupIds.size());
+   }
+   std::size_t size() const { return fNTuple.fSortedClusterGroupIds.size(); }
+   bool empty() const { return fNTuple.fSortedClusterGroupIds.empty(); }
 };
 
 // clang-format off
 /**
 \class ROOT::RNTupleDescriptor::RClusterDescriptorIterable
 \ingroup NTuple
-\brief Used to loop over all the clusters of an RNTuple (in unspecified order)
+\brief Loop over all the clusters of an RNTuple, ordered by first entry number
 
-Enumerate all cluster IDs from all cluster descriptors.  No specific order can be assumed, use
-RNTupleDescriptor::FindNextClusterId() and RNTupleDescriptor::FindPrevClusterId() to traverse
-clusters by entry number.
+Enumerate all the active cluster IDs from all cluster groups. Iteration is ordered by first entry number.
+Note that cluster groups without available cluster details (page lists) are silently skipped.
 */
 // clang-format on
 class RNTupleDescriptor::RClusterDescriptorIterable final {
@@ -1106,9 +1206,14 @@ private:
 public:
    class RIterator final {
    private:
-      using Iter_t = std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor>::const_iterator;
-      /// The wrapped map iterator
-      Iter_t fIter;
+      using ClusterGroupIter_t = ROOT::RNTupleDescriptor::RClusterGroupDescriptorIterable::RIterator;
+      using ClusterInGroupContainer_t = std::vector<DescriptorId_t>;
+      using ClusterInGroupIter_t = ClusterInGroupContainer_t::const_iterator;
+
+      const RNTupleDescriptor *fNTuple = nullptr;
+      ClusterGroupIter_t fClusterGroupIter;
+      ClusterGroupIter_t fClusterGroupEnd;
+      std::size_t fClusterInGroupNum = 0; // index into RClusterGroupDescriptor::GetClusterIds()
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -1118,27 +1223,41 @@ public:
       using pointer = const RClusterDescriptor *;
       using reference = const RClusterDescriptor &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(const RNTupleDescriptor &ntuple, std::size_t clusterGroupNum)
+         : fNTuple(&ntuple),
+           fClusterGroupIter(fNTuple->GetClusterGroupIterable().begin() + clusterGroupNum),
+           fClusterGroupEnd(fNTuple->GetClusterGroupIterable().end())
+      {
+      }
       iterator &operator++() /* prefix */
       {
-         ++fIter;
+         ++fClusterInGroupNum;
+         while ((fClusterGroupIter != fClusterGroupEnd) &&
+                (fClusterInGroupNum >= fClusterGroupIter->GetClusterIds().size())) {
+            ++fClusterGroupIter;
+            fClusterInGroupNum = 0;
+         }
          return *this;
       }
-      iterator operator++(int) /* postfix */
+      reference operator*() const
       {
-         auto old = *this;
-         operator++();
-         return old;
+         return fNTuple->GetClusterDescriptor(fClusterGroupIter->GetClusterIds()[fClusterInGroupNum]);
       }
-      reference operator*() const { return fIter->second; }
-      pointer operator->() const { return &fIter->second; }
-      bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
-      bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
+      pointer operator->() const
+      {
+         return &fNTuple->GetClusterDescriptor(fClusterGroupIter->GetClusterIds()[fClusterInGroupNum]);
+      }
+      bool operator==(const iterator &rh) const
+      {
+         return (fClusterGroupIter == rh.fClusterGroupIter) && (fClusterInGroupNum == rh.fClusterInGroupNum);
+      }
+      bool operator!=(const iterator &rh) const { return !(*this == rh); }
    };
 
    RClusterDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
-   RIterator begin() { return RIterator(fNTuple.fClusterDescriptors.cbegin()); }
-   RIterator end() { return RIterator(fNTuple.fClusterDescriptors.cend()); }
+   RIterator begin() { return RIterator(fNTuple, 0); }
+   RIterator end() { return RIterator(fNTuple, fNTuple.GetNClusterGroups()); }
 };
 
 // clang-format off
@@ -1168,7 +1287,8 @@ public:
       using pointer = const RExtraTypeInfoDescriptor *;
       using reference = const RExtraTypeInfoDescriptor &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1181,7 +1301,7 @@ public:
          return old;
       }
       reference operator*() const { return *fIter; }
-      pointer operator->() const { return &*fIter; }
+      pointer operator->() const { return fIter.operator->(); }
       bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
       bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
@@ -1191,16 +1311,15 @@ public:
    RIterator end() { return RIterator(fNTuple.fExtraTypeInfoDescriptors.cend()); }
 };
 
-namespace Experimental {
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrSetDescriptorIterable
+\class ROOT::RNTupleAttrSetDescriptorIterable
 \ingroup NTuple
 \brief Used to loop over all the Attribute Sets linked to an RNTuple
 */
 // clang-format on
 // TODO: move this to RNTupleDescriptor::RNTupleAttrSetDescriptorIterable when it moves out of Experimental.
-class RNTupleAttrSetDescriptorIterable final {
+class RNTupleDescriptor::RNTupleAttrSetDescriptorIterable final {
 private:
    /// The associated RNTuple for this range.
    const RNTupleDescriptor &fNTuple;
@@ -1220,7 +1339,8 @@ public:
       using pointer = const value_type *;
       using reference = const value_type &;
 
-      RIterator(Iter_t iter) : fIter(iter) {}
+      RIterator() = default;
+      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
          ++fIter;
@@ -1233,7 +1353,7 @@ public:
          return old;
       }
       reference operator*() const { return *fIter; }
-      pointer operator->() const { return &*fIter; }
+      pointer operator->() const { return fIter.operator->(); }
       bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
       bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
@@ -1242,7 +1362,6 @@ public:
    RIterator begin() { return RIterator(fNTuple.fAttributeSets.cbegin()); }
    RIterator end() { return RIterator(fNTuple.fAttributeSets.cend()); }
 };
-} // namespace Experimental
 
 // clang-format off
 /**
@@ -1301,10 +1420,11 @@ public:
       return fExtendedColumnRepresentations;
    }
    /// Return a vector containing the IDs of the top-level fields defined in the extension header, in the order
-   /// of their addition.
+   /// of their addition. Note that these fields are not necessarily top-level fields in the overall schema.
+   /// If a nested field is extended, it will return the top-most field of the extended subtree.
    /// We cannot create this vector when building the fFields because at the time when AddExtendedField is called,
    /// the field is not yet linked into the schema tree.
-   std::vector<ROOT::DescriptorId_t> GetTopLevelFields(const RNTupleDescriptor &desc) const;
+   std::vector<ROOT::DescriptorId_t> GetTopMostFields(const RNTupleDescriptor &desc) const;
 
    bool ContainsField(ROOT::DescriptorId_t fieldId) const
    {
@@ -1317,9 +1437,9 @@ public:
    }
 };
 
-namespace Experimental::Internal {
+namespace Internal {
 class RNTupleAttrSetDescriptorBuilder final {
-   ROOT::Experimental::RNTupleAttrSetDescriptor fDesc;
+   ROOT::RNTupleAttrSetDescriptor fDesc;
 
 public:
    RNTupleAttrSetDescriptorBuilder &Name(std::string_view name)
@@ -1346,11 +1466,8 @@ public:
 
    /// Attempt to make an AttributeSet descriptor. This may fail if the builder
    /// was not given enough information to make a proper descriptor.
-   RResult<ROOT::Experimental::RNTupleAttrSetDescriptor> MoveDescriptor();
+   RResult<ROOT::RNTupleAttrSetDescriptor> MoveDescriptor();
 };
-} // namespace Experimental::Internal
-
-namespace Internal {
 
 // clang-format off
 /**
@@ -1419,19 +1536,20 @@ public:
    }
    RColumnDescriptorBuilder &ValueRange(double min, double max)
    {
-      fColumn.fValueRange = {min, max};
+      fColumn.fValueRange = std::make_unique<RColumnDescriptor::RValueRange>(min, max);
       return *this;
    }
    RColumnDescriptorBuilder &ValueRange(std::optional<RColumnDescriptor::RValueRange> valueRange)
    {
-      fColumn.fValueRange = valueRange;
+      if (valueRange)
+         fColumn.fValueRange = std::make_unique<RColumnDescriptor::RValueRange>(*valueRange);
       return *this;
    }
    ROOT::DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
    ROOT::DescriptorId_t GetRepresentationIndex() const { return fColumn.fRepresentationIndex; }
    /// Attempt to make a column descriptor. This may fail if the column
    /// was not given enough information to make a proper descriptor.
-   RResult<RColumnDescriptor> MakeDescriptor() const;
+   RResult<RColumnDescriptor> MoveDescriptor();
 };
 
 // clang-format off
@@ -1451,13 +1569,27 @@ RNTupleDescriptorBuilder instance and then linked to other fields.
 class RFieldDescriptorBuilder final {
 private:
    RFieldDescriptor fField = RFieldDescriptor();
+   RStringPool *fStringPool = nullptr;
 
 public:
-   /// Make an empty dangling field descriptor.
-   RFieldDescriptorBuilder() = default;
+   RFieldDescriptorBuilder()
+   {
+      fField.fStringPool = std::make_unique<RStringPool>();
+      fStringPool = fField.fStringPool.get();
+   }
 
-   /// Make a new RFieldDescriptorBuilder based off a live RNTuple field.
-   static RFieldDescriptorBuilder FromField(const ROOT::RFieldBase &field);
+   // The passed string pool needs to live at least as long as the field descriptor to be moved out of this builder
+   explicit RFieldDescriptorBuilder(RStringPool &stringPool) : fStringPool(&stringPool) {}
+
+   // Takes an existing field descriptor to patch it up. The given string pool must be the one that is already
+   // being used by the source descriptor.
+   RFieldDescriptorBuilder(RFieldDescriptor &&source, RStringPool &stringPool)
+      : fField(std::move(source)), fStringPool(&stringPool)
+   {
+   }
+
+   // Makes a copy of the given descriptor and assigns the clone's strings to the new string pool
+   static RFieldDescriptor CloneDescriptor(const RFieldDescriptor &source, RStringPool &stringPool);
 
    RFieldDescriptorBuilder &FieldId(ROOT::DescriptorId_t fieldId)
    {
@@ -1486,22 +1618,22 @@ public:
    }
    RFieldDescriptorBuilder &FieldName(const std::string &fieldName)
    {
-      fField.fFieldName = fieldName;
+      fField.fFieldName = fStringPool->Intern(fieldName);
       return *this;
    }
    RFieldDescriptorBuilder &FieldDescription(const std::string &fieldDescription)
    {
-      fField.fFieldDescription = fieldDescription;
+      fField.fFieldDescription = fStringPool->Intern(fieldDescription);
       return *this;
    }
    RFieldDescriptorBuilder &TypeName(const std::string &typeName)
    {
-      fField.fTypeName = typeName;
+      fField.fTypeName = fStringPool->Intern(typeName);
       return *this;
    }
    RFieldDescriptorBuilder &TypeAlias(const std::string &typeAlias)
    {
-      fField.fTypeAlias = typeAlias;
+      fField.fTypeAlias = fStringPool->Intern(typeAlias);
       return *this;
    }
    RFieldDescriptorBuilder &NRepetitions(std::uint64_t nRepetitions)
@@ -1519,10 +1651,15 @@ public:
       fField.fTypeChecksum = typeChecksum;
       return *this;
    }
+   RFieldDescriptorBuilder &IsSoACollection(bool val)
+   {
+      fField.fIsSoACollection = val;
+      return *this;
+   }
    ROOT::DescriptorId_t GetParentId() const { return fField.fParentId; }
    /// Attempt to make a field descriptor. This may fail if the dangling field
    /// was not given enough information to make a proper descriptor.
-   RResult<RFieldDescriptor> MakeDescriptor() const;
+   RResult<RFieldDescriptor> MoveDescriptor();
 };
 
 // clang-format off
@@ -1701,6 +1838,7 @@ public:
    /// * Number of columns is constant across column representations
    RResult<void> EnsureValidDescriptor() const;
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
+   RStringPool &GetStringPool() { return *fDescriptor.fStringPool; }
    RNTupleDescriptor MoveDescriptor();
 
    /// Copies the "schema" part of `descriptor` into the builder's descriptor.
@@ -1711,7 +1849,9 @@ public:
                    std::uint16_t versionPatch);
    void SetVersionForWriting();
 
-   void SetNTuple(const std::string_view name, const std::string_view description);
+   void SetNTuple(std::string_view name, std::string_view description);
+   /// Sets the `flag`-th bit of the feature flag to 1.
+   /// Note that `flag` itself is not a bitmask, just the bit index of the flag to enable.
    void SetFeature(unsigned int flag);
 
    void SetOnDiskHeaderXxHash3(std::uint64_t xxhash3) { fDescriptor.fOnDiskHeaderXxHash3 = xxhash3; }
@@ -1719,7 +1859,8 @@ public:
    /// The real footer size also include the page list envelopes
    void AddToOnDiskFooterSize(std::uint64_t size) { fDescriptor.fOnDiskFooterSize += size; }
 
-   void AddField(const RFieldDescriptor &fieldDesc);
+   void AddField(RFieldDescriptor fieldDesc);
+   void AddField(const ROOT::RFieldBase &field, DescriptorId_t fieldId);
    RResult<void> AddFieldLink(ROOT::DescriptorId_t fieldId, ROOT::DescriptorId_t linkId);
    RResult<void> AddFieldProjection(ROOT::DescriptorId_t sourceId, ROOT::DescriptorId_t targetId);
 
@@ -1733,7 +1874,7 @@ public:
    RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
    void ReplaceExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
 
-   RResult<void> AddAttributeSet(Experimental::RNTupleAttrSetDescriptor &&attrSetDesc);
+   RResult<void> AddAttributeSet(RNTupleAttrSetDescriptor &&attrSetDesc);
 
    /// Mark the beginning of the header extension; any fields and columns added after a call to this function are
    /// annotated as begin part of the header extension.
@@ -1761,7 +1902,7 @@ public:
 
 inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)
 {
-   return desc.CloneSchema();
+   return desc.CloneSchema(false /* shareStringPool */);
 }
 
 /// Tells if the field describes a user-defined enum type.

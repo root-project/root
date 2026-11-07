@@ -15,7 +15,6 @@
 
 **/
 
-#include "Riostream.h"
 #include "RooMathCoreReg.h"
 #include "RooCFunction1Binding.h"
 #include "RooCFunction2Binding.h"

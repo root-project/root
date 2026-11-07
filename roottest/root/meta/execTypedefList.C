@@ -135,16 +135,16 @@ int execTypedefList() {
 #if defined(_MSC_VER)
    res = check_file("typelist_win32.v5.txt",334); if (res) return res;
    #if __cplusplus > 201402L
-      res = check_file("typelist_win32.v6.cxx17.txt",1370); if (res) return res;
+      res = check_file("typelist_win32.v6.cxx17.txt",1369); if (res) return res;
    #else
-      res = check_file("typelist_win32.v6.txt",1382); if (res) return res;
+      res = check_file("typelist_win32.v6.txt",1381); if (res) return res;
    #endif
 #elif defined(R__MACOSX) && __cplusplus > 201402L
    res = check_file("typelist.v5.txt",334); if (res) return res;
-   res = check_file("typelist.v6.cxx17.txt",1280); if (res) return res;
+   res = check_file("typelist.v6.cxx17.txt",1279); if (res) return res;
 #else   
    res = check_file("typelist.v5.txt",334); if (res) return res;
-   res = check_file("typelist.v6.txt",1292); if (res) return res;
+   res = check_file("typelist.v6.txt",1291); if (res) return res;
 #endif
 
    return 0;

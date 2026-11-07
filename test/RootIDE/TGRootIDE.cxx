@@ -9,146 +9,143 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGRootIDE                                                           //
-//                                                                      //
-//  A simple IDE editor that uses the TGTextEdit widget.                //
-//  It provides all functionalities of TGTextEdit as copy, paste, cut,  //
-//  search, go to a given line number. In addition, it provides the     //
-//  possibilities for compiling, executing or interrupting a running    //
-//  macro.                                                              //
-//                                                                      //
-//  This class can be used in following ways:                           //
-//  - with file name as argument:                                       //
-//    new TGRootIDE("hsimple.C");                                       //
-//  - with a TMacro* as argument:                                       //
-//    TMacro *macro = new TMacro("hsimple.C");                          //
-//    new TGRootIDE(macro);                                             //
-//                                                                      //
-//  Basic Features:                                                     //
-//                                                                      //
-//  New Document                                                        //
-//                                                                      //
-//  To create a new blank document, select File menu / New, or click    //
-//  the New toolbar button. It will create a new instance of            //
-//  TGRootIDE.                                                          //
-//                                                                      //
-//  Open/Save File                                                      //
-//                                                                      //
-//  To open a file, select File menu / Open or click on the Open        //
-//  toolbar button. This will bring up the standard File Dialog for     //
-//  opening files.                                                      //
-//  If the current document has not been saved yet, you will be asked   //
-//  either to save or abandon the changes.                              //
-//  To save the file using the same name, select File menu / Save or    //
-//  the toolbar Save button. To change the file name use File menu /    //
-//  Save As... or corresponding SaveAs button on the toolbar.           //
-//                                                                      //
-//  Text Selection                                                      //
-//                                                                      //
-//  You can move the cursor by simply clicking on the desired location  //
-//  with the left mouse button. To highlight some text, press the mouse //
-//  and drag the mouse while holding the left button pressed.           //
-//  To select a word, double-click on it;                               //
-//  to select the text line - triple-click on it;                       //
-//  to select all  do quadruple-click.                                  //
-//                                                                      //
-//  Cut, Copy, Paste                                                    //
-//                                                                      //
-//  After selecting some text, you can cut or copy it to the clipboard. //
-//  A subsequent paste operation will insert the contents of the        //
-//  clipboard at the current cursor location.                           //
-//                                                                      //
-//  Text Search                                                         //
-//                                                                      //
-//  The editor uses a standard Search dialog. You can specify a forward //
-//  or backward search direction starting from the current cursor       //
-//  location according to the selection made of a case sensitive mode   //
-//  or not. The last search can be repeated by pressing F3.             //
-//                                                                      //
-//  Text Font                                                           //
-//                                                                      //
-//  You can change the text font by selecting Edit menu / Set Font.     //
-//  The Font Dialog pops up and shows the Name, Style, and Size of any  //
-//  available font. The selected font sample is shown in the preview    //
-//  area.                                                               //
-//                                                                      //
-//  Executing Macros                                                    //
-//                                                                      //
-//  You can execute the currently loaded macro in the editor by         //
-//  selecting Tools menu / Execute Macro; by clicking on the            //
-//  corresponding toolbar button, or by using Ctrl+F5 accelerator keys. //
-//  This is identical to the command ".x macro.C" in the root prompt    //
-//  command line.                                                       //
-//                                                                      //
-//  Compiling Macros                                                    //
-//                                                                      //
-//  The currently loaded macro can be compiled with ACLiC if you select //
-//  Tools menu / Compile Macro; by clicking on the corresponding        //
-//  toolbar button, or by using Ctrl+F7 accelerator keys.               //
-//  This is identical to the command ".L macro.C++" in the root prompt  //
-//  command line.                                                       //
-//                                                                      //
-//  Interrupting a Running Macro                                        //
-//                                                                      //
-//  You can interrupt a running macro by selecting the Tools menu /     //
-//  Interrupt; by clicking on the corresponding toolbar button, or by   //
-//  using Shift+F5 accelerator keys.                                    //
-//                                                                      //
-//  Interface to CINT Interpreter                                       //
-//                                                                      //
-//  Any command entered in the Command combo box will be passed to      //
-//  the CINT interpreter. This combo box will keep the commands history //
-//  and will allow you to re-execute the same commands during an editor //
-//  session.                                                            //
-//                                                                      //
-//  Keyboard Bindings                                                   //
-//                                                                      //
-//  The following table lists the keyboard shortcuts and accelerator    //
-//  keys.                                                               //
-//                                                                      //
-//  Key:              Action:                                           //
-//  ====              =======                                           //
-//                                                                      //
-//  Up                Move cursor up.                                   //
-//  Shift+Up          Move cursor up and extend selection.              //
-//  Down              Move cursor down.                                 //
-//  Shift+Down        Move cursor down and extend selection.            //
-//  Left              Move cursor left.                                 //
-//  Shift+Left        Move cursor left and extend selection.            //
-//  Right             Move cursor right.                                //
-//  Shift+Right       Move cursor right and extend selection.           //
-//  Home              Move cursor to begin of line.                     //
-//  Shift+Home        Move cursor to begin of line and extend selection.//
-//  Ctrl+Home         Move cursor to top of page.                       //
-//  End               Move cursor to end of line.                       //
-//  Shift+End         Move cursor to end of line and extend selection.  //
-//  Ctrl+End          Move cursor to end of page.                       //
-//  PgUp              Move cursor up one page.                          //
-//  Shift+PgUp        Move cursor up one page and extend selection.     //
-//  PgDn              Move cursor down one page.                        //
-//  Shift+PgDn        Move cursor down one page and extend selection.   //
-//  Delete            Delete character after cursor, or text selection. //
-//  BackSpace         Delete character before cursor, or text selection.//
-//  Ctrl+B            Move cursor left.                                 //
-//  Ctrl+D            Delete character after cursor, or text selection. //
-//  Ctrl+E            Move cursor to end of line.                       //
-//  Ctrl+H            Delete character before cursor, or text selection.//
-//  Ctrl+K            Delete characters from current position to the    //
-//                    end of line.                                      //
-//  Ctrl+U            Delete current line.                              //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/TGRootIDE.gif">
+/**
+  \class TGRootIDE
+
+  A simple IDE editor that uses the TGTextEdit widget.
+  It provides all functionalities of TGTextEdit as copy, paste, cut,
+  search, go to a given line number. In addition, it provides the
+  possibilities for compiling, executing or interrupting a running
+  macro.
+
+  This class can be used in following ways:
+  - with file name as argument:
+    ~~~{.cpp}
+    new TGRootIDE("hsimple.C");
+    ~~~
+  - with a TMacro* as argument:
+    ~~~{.cpp}
+    TMacro *macro = new TMacro("hsimple.C");
+    new TGRootIDE(macro);
+    ~~~
+
+  Basic Features:
+
+  New Document
+
+  To create a new blank document, select File menu / New, or click
+  the New toolbar button. It will create a new instance of
+  TGRootIDE.
+
+  Open/Save File
+
+  To open a file, select File menu / Open or click on the Open
+  toolbar button. This will bring up the standard File Dialog for
+  opening files.
+  If the current document has not been saved yet, you will be asked
+  either to save or abandon the changes.
+  To save the file using the same name, select File menu / Save or
+  the toolbar Save button. To change the file name use File menu /
+  Save As... or corresponding SaveAs button on the toolbar.
+
+  Text Selection
+
+  You can move the cursor by simply clicking on the desired location
+  with the left mouse button. To highlight some text, press the mouse
+  and drag the mouse while holding the left button pressed.
+  To select a word, double-click on it;
+  to select the text line - triple-click on it;
+  to select all  do quadruple-click.
+
+  Cut, Copy, Paste
+
+  After selecting some text, you can cut or copy it to the clipboard.
+  A subsequent paste operation will insert the contents of the
+  clipboard at the current cursor location.
+
+  Text Search
+
+  The editor uses a standard Search dialog. You can specify a forward
+  or backward search direction starting from the current cursor
+  location according to the selection made of a case sensitive mode
+  or not. The last search can be repeated by pressing F3.
+
+  Text Font
+
+  You can change the text font by selecting Edit menu / Set Font.
+  The Font Dialog pops up and shows the Name, Style, and Size of any
+  available font. The selected font sample is shown in the preview
+  area.
+
+  Executing Macros
+
+  You can execute the currently loaded macro in the editor by
+  selecting Tools menu / Execute Macro; by clicking on the
+  corresponding toolbar button, or by using Ctrl+F5 accelerator keys.
+  This is identical to the command ".x macro.C" in the root prompt
+  command line.
+
+  Compiling Macros
+
+  The currently loaded macro can be compiled with ACLiC if you select
+  Tools menu / Compile Macro; by clicking on the corresponding
+  toolbar button, or by using Ctrl+F7 accelerator keys.
+  This is identical to the command ".L macro.C++" in the root prompt
+  command line.
+
+  Interrupting a Running Macro
+
+  You can interrupt a running macro by selecting the Tools menu /
+  Interrupt; by clicking on the corresponding toolbar button, or by
+  using Shift+F5 accelerator keys.
+
+  Interface to Cling Interpreter
+
+  Any command entered in the Command combo box will be passed to
+  the Cling interpreter. This combo box will keep the commands history
+  and will allow you to re-execute the same commands during an editor
+  session.
+
+  Keyboard Bindings
+
+  The following table lists the keyboard shortcuts and accelerator
+  keys.
+
+  Key:              Action:
+  ====              =======
+
+  Up                Move cursor up.
+  Shift+Up          Move cursor up and extend selection.
+  Down              Move cursor down.
+  Shift+Down        Move cursor down and extend selection.
+  Left              Move cursor left.
+  Shift+Left        Move cursor left and extend selection.
+  Right             Move cursor right.
+  Shift+Right       Move cursor right and extend selection.
+  Home              Move cursor to begin of line.
+  Shift+Home        Move cursor to begin of line and extend selection.
+  Ctrl+Home         Move cursor to top of page.
+  End               Move cursor to end of line.
+  Shift+End         Move cursor to end of line and extend selection.
+  Ctrl+End          Move cursor to end of page.
+  PgUp              Move cursor up one page.
+  Shift+PgUp        Move cursor up one page and extend selection.
+  PgDn              Move cursor down one page.
+  Shift+PgDn        Move cursor down one page and extend selection.
+  Delete            Delete character after cursor, or text selection.
+  BackSpace         Delete character before cursor, or text selection.
+  Ctrl+B            Move cursor left.
+  Ctrl+D            Delete character after cursor, or text selection.
+  Ctrl+E            Move cursor to end of line.
+  Ctrl+H            Delete character before cursor, or text selection.
+  Ctrl+K            Delete characters from current position to the
+                    end of line.
+  Ctrl+U            Delete current line.
 */
-//End_Html
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 
 #include "TROOT.h"
+#include "TVirtualX.h"
 #include "TApplication.h"
 #include "TSystem.h"
 #include "TMacro.h"
@@ -178,11 +175,8 @@
 #include "TGSplitter.h"
 #include "TObjArray.h"
 #include "HelpText.h"
-#include "TGHtml.h"
-#include "TUrl.h"
 #include "TSocket.h"
 #include "TImage.h"
-#include "THtml.h"
 #include "TRint.h"
 #include "TProcessID.h"
 #include "Getline.h"
@@ -204,58 +198,6 @@ const char *filters[] = {
    "*.*",
    "*.[C|c|h]*",
    "*.txt"
-};
-
-const char *HtmlError[] = {
-"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd\"> ",
-"<HTML><HEAD><TITLE>RHTML cannot display the webpage</TITLE> ",
-"<META http-equiv=Content-Type content=\"text/html; charset=UTF-8\"></HEAD> ",
-"<BODY> ",
-"<TABLE cellSpacing=0 cellPadding=0 width=730 border=0> ",
-"  <TBODY> ",
-"  <TR> ",
-"    <TD id=infoIconAlign vAlign=top align=left width=60 rowSpan=2> ",
-"    <IMG src=\"info.gif\"> ",
-"    </TD> ",
-"    <TD id=mainTitleAlign vAlign=center align=left width=*> ",
-"      <H1 id=mainTitle>RHTML cannot display the webpage</H1></TD></TR> ",
-"  <TR> ",
-"    <TD class=errorCodeAndDivider id=errorCodeAlign align=right>&nbsp;  ",
-"      <DIV class=divider></DIV></TD></TR> ",
-"  <TR> ",
-"      <UL> ",
-"      </UL> ",
-"    <TD>&nbsp; </TD> ",
-"    <TD id=MostLikelyAlign vAlign=top align=left> ",
-"      <H3 id=likelyCauses>Most likely causes:</H3> ",
-"      <UL> ",
-"        <LI id=causeNotConnected>You are not connected to the Internet.  ",
-"        <LI id=causeSiteProblem>The website is encountering problems.  ",
-"        <LI id=causeErrorInAddress>There might be a typing error in the address.  ",
-"        <LI id=causeOtherError>  ",
-"        </LI></UL></TD></TR> ",
-"  <TR> ",
-"    <TD id=infoBlockAlign vAlign=top align=right>&nbsp; </TD> ",
-"    <TD id=moreInformationAlign vAlign=center align=left> ",
-"      <H4> ",
-"      <TABLE> ",
-"        <TBODY> ",
-"        <TR> ",
-"          <TD vAlign=top><SPAN id=moreInfoContainer></SPAN><ID  ",
-"            id=moreInformation>More information</ID> ",
-"      </TD></TR></TBODY></TABLE></H4> ",
-"      <DIV class=infoBlock id=infoBlockID> ",
-"      <P><ID id=errorExpl1>This problem can be caused by a variety of issues,  ",
-"      including:</ID>  ",
-"      <UL> ",
-"        <LI id=errorExpl2>Internet connectivity has been lost.  ",
-"        <LI id=errorExpl3>The website is temporarily unavailable.  ",
-"        <LI id=errorExpl4>The Domain Name Server (DNS) is not reachable.  ",
-"        <LI id=errorExpl5>The Domain Name Server (DNS) does not have a listing  ",
-"        for the website's domain.  ",
-"      <P></P> ",
-"      <P></P></DIV></TD></TR></TBODY></TABLE></BODY></HTML> ",
-0
 };
 
 enum ETextEditorCommands {
@@ -600,8 +542,7 @@ void TGRootIDE::Build()
    fNbDoc   = 0;
    fCurrentDoc = 0;
    fPid = gSystem->GetPid(); //TProcessID::GetSessionProcessID();
-   fHtml = new THtml();
-
+   
    SetCleanup(kDeepCleanup);
    fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 1);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
@@ -780,8 +721,6 @@ void TGRootIDE::Build()
    TGVerticalFrame *vf2 = new TGVerticalFrame(hf, 100, 100, kSunkenFrame);
 
    fTab = new TGTab(vf2, 300, 300);
-   TGCompositeFrame *tf = fTab->AddTab("HTML");
-   tf->SetLayoutManager(new TGHorizontalLayout(tf));
 
    // vertical frame
    fVerticalFrame = new TGVerticalFrame(tf,727,600,kVerticalFrame);
@@ -818,35 +757,8 @@ void TGRootIDE::Build()
    fHorizontalFrame->AddFrame(fHome, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fHome->Connect("Clicked()", "TGRootIDE", this, "Selected(=\"http://root.cern\")");
 
-   // combo box
-   fURLBuf   = new TGTextBuffer(256);
-   fComboBox = new TGComboBox(fHorizontalFrame, "");
-   fURL      = fComboBox->GetTextEntry();
-   fURLBuf   = fURL->GetBuffer();
-   fComboBox->Resize(200, fURL->GetDefaultHeight());
-   fURL->Connect("ReturnPressed()", "TGRootIDE", this, "URLChanged()");
-
-   fComboBox->AddEntry("http://root.cern", 1);
-   fComboBox->AddEntry("https://root.cern/doc/master/classes.html", 2);
-   fURL->SetText("https://root.cern/doc/master/classes.html");
-
-   fComboBox->Select(0);
-   fComboBox->Connect("Selected(char *)", "TGRootIDE", this, "Selected(char *)");
-
-   fHorizontalFrame->AddFrame(fComboBox, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | kLHintsExpandX,2,2,2,2));
-
-   fVerticalFrame->AddFrame(fHorizontalFrame, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX,2,2,2,2));
-
    // embedded canvas
-   fGuiHtml = new TGHtml(fVerticalFrame, 10, 10, -1);
-   fVerticalFrame->AddFrame(fGuiHtml, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX | kLHintsExpandY,2,2,2,2));
-
    tf->AddFrame(fVerticalFrame, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX | kLHintsExpandY,2,2,2,2));
-
-   fGuiHtml->Connect("MouseOver(char *)", "TGRootIDE", this, "MouseOver(char *)");
-   fGuiHtml->Connect("MouseDown(char *)", "TGRootIDE", this, "MouseDown(char *)");
-   Selected("https://root.cern/doc/master/classes.html");
-   fGuiHtml->Layout();
 
    tf = fTab->AddTab("Untitled");
    tf->SetLayoutManager(new TGHorizontalLayout(tf));
@@ -930,35 +842,15 @@ void TGRootIDE::LoadFile(char *fname)
       }
    }
    if (fname) {
-      const char *p = fTab->GetTabTab(fTab->GetCurrent())->GetString();
-      if (!strcmp(p, "HTML")) {
-         TString filename(fname);
-         if (filename.EndsWith(".htm") ||
-             filename.EndsWith(".html")) {
-            Selected(Form("file://%s", filename.Data()));
-         }
-         else {
-            TString pathtmp = Form("%s/%s.html",
-               gSystem->UnixPathName(gSystem->TempDirectory()),
-               gSystem->BaseName(fname));
-            fHtml->Convert(fname, fname,
-               gSystem->UnixPathName(gSystem->TempDirectory()),
-               gSystem->UnixPathName(gSystem->TempDirectory()));
-            Selected(Form("file://%s", pathtmp.Data()));
-         }
-         //gSystem->Unlink(pathtmp.Data());
-      }
-      else {
-         TGDocument *doc = new TGDocument(fname, gSystem->BaseName(fname),
-                                        fTab->GetNumberOfTabs()+1, fTab,
-                                        0, 0, fDocList);
-         fDocList->Add((TObject *)doc);
-         fCurrent = fTab->GetCurrent();
-         fCurrentDoc = doc;
-         fFilename = fCurrentDoc->GetName();
-         fTextEdit = fCurrentDoc->GetTextEdit();
-         fTextEdit->SetFocus();
-      }
+      TGDocument *doc = new TGDocument(fname, gSystem->BaseName(fname),
+                                       fTab->GetNumberOfTabs()+1, fTab,
+                                       0, 0, fDocList);
+      fDocList->Add((TObject *)doc);
+      fCurrent = fTab->GetCurrent();
+      fCurrentDoc = doc;
+      fFilename = fCurrentDoc->GetName();
+      fTextEdit = fCurrentDoc->GetTextEdit();
+      fTextEdit->SetFocus();
    }
 }
 
@@ -1061,10 +953,8 @@ void TGRootIDE::CloseWindow()
    fExiting = kFALSE;
    Cleanup();
 #ifdef WIN32
-   gSystem->Exec(Form("del %s\\*.html", gSystem->TempDirectory()));
    gSystem->Exec(Form("del %s\\*.C", gSystem->TempDirectory()));
 #else
-   gSystem->Exec(Form("rm -f %s/*.html", gSystem->TempDirectory()));
    gSystem->Exec(Form("rm -f %s/*.C", gSystem->TempDirectory()));
 #endif
    delete this;
@@ -1718,209 +1608,6 @@ void TGRootIDE::DirChanged()
       TString buf = string;
       DirSelected(buf.Data());
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Temporary function to read remote pictures
-
-static char *ReadRemote(const char *url)
-{
-   static char *buf = 0;
-   TUrl fUrl(url);
-
-   TString msg = "GET ";
-   msg += fUrl.GetProtocol();
-   msg += "://";
-   msg += fUrl.GetHost();
-   msg += ":";
-   msg += fUrl.GetPort();
-   msg += "/";
-   msg += fUrl.GetFile();
-   msg += "\r\n";
-
-   TString uri(url);
-   if (!uri.BeginsWith("http://"))
-      return 0;
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid())
-      return 0;
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
-      return 0;
-   Int_t size = 1024*1024;
-   buf = (char *)calloc(size, sizeof(char));
-   if (s.RecvRaw(buf, size) == -1) {
-      free(buf);
-      return 0;
-   }
-   return buf;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// A URL has been selected, either by a click on a link or by the
-/// navigation buttons, or by history combobox / text entry.
-
-void TGRootIDE::Selected(const char *uri)
-{
-   char *buf = 0;
-   FILE *f;
-
-   gVirtualX->SetCursor(fGuiHtml->GetId(), gVirtualX->CreateCursor(kWatch));
-   TString surl(gSystem->UnixPathName(uri));
-   // if url does not contains "http://", prepend "file://" (local navigation)
-   if (!surl.BeginsWith("http://") && !surl.BeginsWith("file://"))
-      surl.Prepend("file://");
-   if (surl.EndsWith(".root")) {
-      // Open Root files directly and open a Root browser.
-      TFile *f = TFile::Open(surl.Data());
-      if (f && !f->IsZombie()) {
-         f->Browse(new TBrowser());
-      }
-      gVirtualX->SetCursor(fGuiHtml->GetId(), gVirtualX->CreateCursor(kPointer));
-      return;
-   }
-   TUrl url(surl.Data());
-   if ((!strcmp(url.GetProtocol(), "http"))) {
-      // web file...
-      buf = ReadRemote(url.GetUrl());
-      if (buf) {
-         // display html page
-         fGuiHtml->Clear();
-         fGuiHtml->Layout();
-         fGuiHtml->SetBaseUri(url.GetUrl());
-         fGuiHtml->ParseText(buf);
-         free(buf);
-         fURL->SetText(surl.Data());
-         if (!fComboBox->FindEntry(surl.Data()))
-            fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries()+1);
-      }
-      else {
-         // something went wrong --> display error
-         fGuiHtml->Clear();
-         fGuiHtml->Layout();
-         fGuiHtml->SetBaseUri("");
-         for (int i=0; HtmlError[i]; i++) {
-            fGuiHtml->ParseText((char *)HtmlError[i]);
-         }
-      }
-   }
-   else {
-      // local file...
-      f = fopen(url.GetFile(), "r");
-      if (f) {
-         // file is opened (and valid)
-         fGuiHtml->Clear();
-         fGuiHtml->Layout();
-         fGuiHtml->SetBaseUri("");
-         buf = (char *)calloc(4096, sizeof(char));
-         while (fgets(buf, 4096, f)) {
-            fGuiHtml->ParseText(buf);
-         }
-         free(buf);
-         fclose(f);
-         fURL->SetText(surl.Data());
-         if (!fComboBox->FindEntry(surl.Data()))
-            fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries()+1);
-      }
-      else {
-         // something went wrong --> display error
-         fGuiHtml->Clear();
-         fGuiHtml->Layout();
-         fGuiHtml->SetBaseUri("");
-         for (int i=0; HtmlError[i]; i++) {
-            fGuiHtml->ParseText((char *)HtmlError[i]);
-         }
-      }
-   }
-   gVirtualX->SetCursor(fGuiHtml->GetId(), gVirtualX->CreateCursor(kPointer));
-   fGuiHtml->Layout();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// The text entry of navigation history has changed.
-
-void TGRootIDE::URLChanged()
-{
-   const char *string = fURL->GetText();
-   if (string) {
-      TString buf = gSystem->UnixPathName(string);
-      Selected(buf.Data());
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Handle "Back" navigation button.
-
-void TGRootIDE::Back()
-{
-   Int_t index = 0;
-   const char *string = fURL->GetText();
-   TGLBEntry * lbe1 = fComboBox->FindEntry(string);
-   if (lbe1)
-      index = lbe1->EntryId();
-   if (index > 0) {
-      fComboBox->Select(index - 1, kTRUE);
-      TGTextLBEntry *entry = (TGTextLBEntry *)fComboBox->GetSelectedEntry();
-      if (entry) {
-         const char *string = entry->GetTitle();
-         if (string)
-            Selected(string);
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Handle "Forward" navigation button.
-
-void TGRootIDE::Forward()
-{
-   Int_t index = 0;
-   const char *string = fURL->GetText();
-   TGLBEntry * lbe1 = fComboBox->FindEntry(string);
-   if (lbe1)
-      index = lbe1->EntryId();
-   if (index < fComboBox->GetNumberOfEntries()) {
-      fComboBox->Select(index + 1, kTRUE);
-      TGTextLBEntry *entry = (TGTextLBEntry *)fComboBox->GetSelectedEntry();
-      if (entry) {
-         const char *string = entry->GetTitle();
-         if (string)
-            Selected(string);
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Handle "Reload" navigation button.
-
-void TGRootIDE::Reload()
-{
-   const char *string = fURL->GetText();
-   if (string)
-      Selected(string);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Handle "Stop Loading" navigation button.
-/// Not active for the time being.
-
-void TGRootIDE::Stop()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Handle MouseOver signal from TGHtml widget.
-
-void TGRootIDE::MouseOver(char *url)
-{
-   fStatusBar->SetText(url, 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Handle MouseDown signal from TGHtml widget.
-
-void TGRootIDE::MouseDown(char *url)
-{
-   Selected(url);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

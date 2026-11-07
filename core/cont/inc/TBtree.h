@@ -169,7 +169,7 @@ friend class  TBtInnerNode;
 private:
    Int_t      fNofKeysInTree;   // number of keys in TBtree
    TObject   *fKey;             // key
-   TBtNode   *fTree;            //! sub-tree
+   TBtNode   *fTree;            ///<! sub-tree
 
 public:
    TBtItem();

@@ -227,6 +227,7 @@ TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, Pixel_t color) 
    wattr.fOverrideRedirect = kTRUE;
    //wattr.fSaveUnder = kTRUE;
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
+   gVirtualX->SetWindowHint(fId, TVirtualX::kHintTooltip);
 
    AddInput(kStructureNotifyMask);
 

@@ -58,8 +58,6 @@ print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 
 import sys
 
-import cppyy
-
 from . import pythonization
 
 # This map includes all relevant C++ fundamental types found at
@@ -134,6 +132,8 @@ _array_interface_dtype_map = {
 
 def _get_cpp_type_from_numpy_type(dtype):
     cpptypes = {
+        "i1": "signed char",
+        "u1": "unsigned char",
         "i2": "Short_t",
         "u2": "UShort_t",
         "i4": "int",
@@ -161,7 +161,8 @@ def _AsRVec(arr):
     This function returns an RVec which adopts the memory of the given
     PyObject. The RVec takes the data pointer and the size from the array
     interface dictionary.
-    Note that for arrays of strings, the input strings are copied into the RVec.
+    Note that for arrays of strings and int8, the input data is copied into the RVec
+    rather than adopted.
     """
     import math
 
@@ -183,7 +184,7 @@ def _AsRVec(arr):
     typestr = interface["typestr"]
     dtype = typestr[1:]
 
-    # Construct an RVec of strings
+    # Construct an RVec of strings by copying the input array
     if dtype == "O" or dtype.startswith("U"):
         underlying_object_types = {type(elem) for elem in arr}
         if len(underlying_object_types) > 1:
@@ -198,6 +199,11 @@ def _AsRVec(arr):
         else:
             raise TypeError("Cannot create an RVec from a numpy array of data type object.")
 
+    # Construct an RVec of int8 by copying the input array
+    # RVec<signed char> does not expose the ptr+size contructor
+    if dtype == "i1":
+        return ROOT.VecOps.RVec["signed char"](arr)
+
     if len(typestr) != 3:
         raise RuntimeError(
             "Object not convertible: __array_interface__['typestr'] returned '"
@@ -207,7 +213,7 @@ def _AsRVec(arr):
 
     # Construct an RVec of the correct data-type
     cppdtype = _get_cpp_type_from_numpy_type(dtype)
-    out = ROOT.VecOps.RVec[cppdtype](ROOT.module.cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data), size)
+    out = ROOT.VecOps.RVec[cppdtype](ROOT._cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data), size)
 
     # Bind pyobject holding adopted memory to the RVec
     out.__adopted__ = arr
@@ -216,11 +222,13 @@ def _AsRVec(arr):
 
 
 def get_array_interface(self):
+    import ROOT
+
     cppname = type(self).__cpp_name__
     for dtype in _array_interface_dtype_map:
         if cppname.endswith("<{}>".format(dtype)):
             dtype_numpy = _array_interface_dtype_map[dtype]
-            dtype_size = cppyy.sizeof(dtype)
+            dtype_size = ROOT._cppyy.sizeof(dtype)
             endianness = "<" if sys.byteorder == "little" else ">"
             size = self.size()
             # Numpy breaks for data pointer of 0 even though the array is empty.
@@ -228,7 +236,7 @@ def get_array_interface(self):
             if self.empty():
                 pointer = 1
             else:
-                pointer = cppyy.ll.addressof(self.data())
+                pointer = ROOT._cppyy.ll.addressof(self.data())
             return {
                 "shape": (size,),
                 "typestr": "{}{}{}".format(endianness, dtype_numpy, dtype_size),

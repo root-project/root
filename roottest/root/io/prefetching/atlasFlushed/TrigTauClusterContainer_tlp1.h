@@ -9,7 +9,7 @@
 #define TrigTauClusterContainer_tlp1_h
 class TrigTauClusterContainer_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigTauClusterContainer_p1.h"
 #include "TrigTauCluster_p1.h"

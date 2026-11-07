@@ -19,7 +19,6 @@ namespace Browsable {
 \brief Holder of any object instance. Normally used with TFile, where any object can be read. Normally RShread or RUnique should be used
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-19
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
 class RAnyObjectHolder : public RHolder {

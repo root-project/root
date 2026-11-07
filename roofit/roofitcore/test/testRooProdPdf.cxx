@@ -13,6 +13,7 @@
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 #include <RooHelpers.h>
+#include <RooRandom.h>
 
 #include <Math/PdfFuncMathCore.h>
 
@@ -21,57 +22,6 @@
 #include <memory>
 #include <sstream>
 #include <string>
-
-class TestProdPdf : public ::testing::TestWithParam<std::tuple<int, RooFit::EvalBackend>> {
-public:
-   TestProdPdf() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
-
-private:
-   void SetUp() override
-   {
-      RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
-
-      datap = std::unique_ptr<RooDataSet>{prod.generate(x, 1000)};
-      a.setConstant(true);
-
-      _optimize = std::get<0>(GetParam());
-      _evalBackend = std::get<1>(GetParam());
-   }
-
-protected:
-   constexpr static double bTruth = -0.5;
-
-   RooRealVar x{"x", "x", 2., 0., 5.};
-   RooRealVar a{"a", "a", -0.2, -5., 0.};
-   RooRealVar b{"b", "b", bTruth, -5., 0.};
-
-   RooGenericPdf c1{"c1", "exp(x[0]*x[1])", {x, a}};
-   RooGenericPdf c2{"c2", "exp(x[0]*x[1])", {x, b}};
-   RooProdPdf prod{"mypdf", "mypdf", {c1, c2}};
-   std::unique_ptr<RooDataSet> datap;
-
-   int _optimize = 0;
-   RooFit::EvalBackend _evalBackend;
-};
-
-TEST_P(TestProdPdf, CachingOpt)
-{
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
-
-   using namespace RooFit;
-   prod.fitTo(*datap, Optimize(_optimize), PrintLevel(-1), _evalBackend);
-   EXPECT_LT(std::abs(b.getVal() - bTruth), b.getError() * 2.5) // 2.5-sigma compatibility check
-      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O" << _optimize << ".";
-}
-
-INSTANTIATE_TEST_SUITE_P(RooProdPdf, TestProdPdf,
-                         testing::Combine(testing::Values(0, 1, 2),
-                                          testing::Values(ROOFIT_EVAL_BACKENDS)),
-                         [](testing::TestParamInfo<TestProdPdf::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "opt" << std::get<0>(paramInfo.param) << std::get<1>(paramInfo.param).name();
-                            return ss.str();
-                         });
 
 TEST(RooProdPdf, TestGetPartIntList)
 {
@@ -160,9 +110,9 @@ TEST(RooProdPdf, TestDepsAreCond)
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
    resetParameters();
-   ResultPtr result1{pdf1.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
+   ResultPtr result1{pdf1.fitTo(*data, Save(), EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1))};
    resetParameters();
-   ResultPtr result3{pdf2.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
+   ResultPtr result3{pdf2.fitTo(*data, Save(), EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1))};
 
    EXPECT_TRUE(result2->isIdentical(*result1)) << "legacy fit is inconsistent!";
    EXPECT_TRUE(result4->isIdentical(*result1)) << "alternative model legacy fit is inconsistent!";
@@ -231,7 +181,7 @@ TEST(RooProdPdf, DISABLED_ChangeServerNormSetForProdPdfInAddPdf)
 // RooProdPdf is not considered as a constraint. Covers JIRA issue ROOT-7604.
 TEST(RooProdPdf, RooProdPdfWithExtendedTerm)
 {
-   RooHelpers::LocalChangeMsgLevel locmsg(RooFit::WARNING, 0u, RooFit::Minimization, false);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws;
    ws.factory("Gaussian::L_constraint(L_nom[10],L[10,0,20],0.2)");
@@ -247,4 +197,66 @@ TEST(RooProdPdf, RooProdPdfWithExtendedTerm)
    double refVal = -std::log(ROOT::Math::gaussian_pdf(10, 0.2, 10)) + (10. - 5 * std::log(10.));
    double nll1Val = nll1->getVal();
    EXPECT_FLOAT_EQ(nll1Val, refVal);
+}
+
+// A RooProdPdf that just wraps a (extended) RooAddPdf must give the same result
+// in a ranged fit as the bare RooAddPdf. In particular, the RooAddPdf yield must
+// be reinterpreted with respect to the full range in both cases. This is the
+// common workspace pattern of attaching constraint terms to a model via a
+// RooProdPdf. Regression test for GitHub issue #16673.
+TEST(RooProdPdf, RangedFitWrappingRooAddPdf)
+{
+   using namespace RooFit;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRandom::randomGenerator()->SetSeed(42);
+
+   RooRealVar x("x", "x", 0, 100);
+   x.setRange("LEFT", 0, 20);
+   x.setRange("RIGHT", 60, 100);
+
+   RooRealVar alphaGen("alpha", "alpha", -0.04, -0.1, -0.0);
+   RooGenericPdf modelGen("model", "exp(alpha*x)", {x, alphaGen});
+   std::unique_ptr<RooDataSet> data{modelGen.generate(x, 10000)};
+
+   // A nuisance parameter with a Gaussian constraint. Its observable does not
+   // know about the "LEFT"/"RIGHT" ranges, so the fit range must not be forced
+   // onto the constraint pdf (otherwise the ranged normalization throws).
+   RooRealVar theta("theta", "theta", 0, -5, 5);
+   RooRealVar thetaGlob("thetaGlob", "thetaGlob", 0);
+   RooRealVar thetaErr("thetaErr", "thetaErr", 1.0);
+   RooGenericPdf constraint("constraint", "exp(-0.5*(theta-thetaGlob)^2/thetaErr^2)", {theta, thetaGlob, thetaErr});
+
+   auto fitYield = [&](bool wrapInProd, bool withConstraint) {
+      RooRealVar alpha("alpha", "alpha", -0.04, -0.1, -0.0);
+      RooGenericPdf model("model", "exp(alpha*x)", {x, alpha});
+      RooRealVar nBkg("Nbkg", "Nbkg", 10000, 0, 20000);
+      RooAddPdf add("pdfadd", "", RooArgList{model}, RooArgList{nBkg});
+      std::unique_ptr<RooAbsPdf> owned;
+      RooAbsPdf *pdf = &add;
+      if (wrapInProd) {
+         RooArgList factors{add};
+         if (withConstraint) {
+            factors.add(constraint);
+         }
+         owned = std::make_unique<RooProdPdf>("pdfprod", "", factors);
+         pdf = owned.get();
+      }
+      pdf->fitTo(*data, Range("LEFT,RIGHT"), PrintLevel(-1));
+      return nBkg.getVal();
+   };
+
+   const double yieldAdd = fitYield(false, false);
+   const double yieldProd = fitYield(true, false);
+   const double yieldProdConstr = fitYield(true, true);
+
+   // The yield must refer to the full range, i.e. be clearly larger than the
+   // number of events actually inside the fit range.
+   const double nInFitRange = std::unique_ptr<RooAbsData>{data->reduce(CutRange("LEFT,RIGHT"))}->sumEntries();
+   EXPECT_GT(yieldAdd, 1.2 * nInFitRange);
+
+   // Wrapping in a RooProdPdf (with or without a constraint term) must not
+   // change the fitted yield.
+   EXPECT_NEAR(yieldProd, yieldAdd, 1e-3 * yieldAdd);
+   EXPECT_NEAR(yieldProdConstr, yieldAdd, 1e-3 * yieldAdd);
 }

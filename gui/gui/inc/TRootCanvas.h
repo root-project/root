@@ -99,6 +99,8 @@ private:
    Atom_t   HandleDNDEnter(Atom_t * typelist) override;
    Bool_t   HandleDNDLeave() override;
 
+   TVirtualPadPainter *CreatePadPainter() override;
+
 public:
    TRootCanvas(TCanvas *c = nullptr, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);
    TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -120,7 +122,11 @@ public:
    void     SetWindowSize(UInt_t w, UInt_t h) override;
    void     SetWindowTitle(const char *newTitle) override;
    void     SetCanvasSize(UInt_t w, UInt_t h) override;
+   void     SetCursor(ECursor cursor) override;
    void     SetStatusText(const char *txt = nullptr, Int_t partidx = 0) override;
+   void     UpdateViewWithMenu();
+
+   void     UpdateDisplay(Int_t mode = 0, Bool_t sleep = kFALSE) override;
 
    void     Show() override { MapRaised(); }
    void     ShowMenuBar(Bool_t show = kTRUE) override;

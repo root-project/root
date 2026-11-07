@@ -51,6 +51,8 @@ but the class metadata comes from the Clang C++ compiler, not CINT.
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "ROOT/BitUtils.hxx"
+
 #include <sstream>
 #include <string>
 
@@ -98,9 +100,8 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name, b
       }
    }
    if (!decl && type) {
-      const TagType *tagtype =type->getAs<TagType>();
-      if (tagtype) {
-         decl = tagtype->getDecl();
+      if (const auto *TD = type->getAsTagDecl()) {
+         decl = TD;
       }
    }
    SetDecl(decl);
@@ -120,12 +121,19 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
    Init(tag);
 }
 
-TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
-                                 const Decl *D)
-   : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
-     fIsIter(false), fOffsetCache(0)
+TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const Decl *D, const Type *T)
+   : TClingDeclInfo(nullptr),
+     fInterp(interp),
+     fFirstTime(true),
+     fDescend(false),
+     fIterAll(kTRUE),
+     fIsIter(false),
+     fOffsetCache(0)
 {
    Init(D);
+   // The type as found by the lookup, conserving typedefs like Double32_t
+   // (may be null).
+   fType = T;
 }
 
 void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offset)
@@ -197,6 +205,13 @@ long TClingClassInfo::ClassProperty() const
    if (CRD->isAggregate() || CRD->isPOD()) {
       // according to the C++ standard, being a POD implies being an aggregate
       property |= kClassIsAggregate;
+   }
+   if (CRD->hasDefinition() && fInterp->getSema().IsCXXTriviallyRelocatableType(*CRD)) {
+      // Trivial relocatability in the C++26 sense ([class.prop]), as computed by
+      // Sema. This is more accurate than isTriviallyCopyable(): every trivially
+      // copyable class is trivially relocatable, but not vice versa -- e.g. a
+      // polymorphic class whose bases and members are all trivially relocatable.
+      property |= kClassIsTriviallyRelocatable;
    }
    return property;
 }
@@ -745,9 +760,8 @@ void TClingClassInfo::Init(const char *name)
       }
    }
    if (!GetDecl() && fType) {
-      const TagType *tagtype =fType->getAs<TagType>();
-      if (tagtype) {
-         SetDecl(tagtype->getDecl());
+      if (const auto *TD = fType->getAsTagDecl()) {
+         SetDecl(TD);
       }
    }
 }
@@ -775,11 +789,9 @@ void TClingClassInfo::Init(const Type &tag)
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   const TagType *tagtype = fType->getAs<TagType>();
-   if (tagtype) {
-      SetDecl(tagtype->getDecl());
-   }
-   else {
+   if (const auto *TD = fType->getAsTagDecl()) {
+      SetDecl(TD);
+   } else {
       SetDecl(nullptr);
    }
    if (!GetDecl()) {
@@ -1050,7 +1062,7 @@ int TClingClassInfo::InternalNext()
             }
             if (const RecordDecl *RD =
                   llvm::dyn_cast<RecordDecl>(GetDecl())) {
-               fType = RD->getASTContext().getRecordType(RD).getTypePtr();
+               fType = RD->getASTContext().getCanonicalTagType(RD).getTypePtr();
             }
          }
          return 1;
@@ -1317,6 +1329,12 @@ int TClingClassInfo::RootFlag() const
    return 0;
 }
 
+/// Return the size of the class in bytes as reported by clang.
+///
+/// Returns -1 if the class info is invalid, 0 for a forward-declared class,
+/// an enum, or a class with no definition, and 1 for a namespace (a special
+/// value inherited from CINT).  For all other cases the actual byte size
+/// obtained from the clang ASTRecordLayout is returned.
 int TClingClassInfo::Size() const
 {
    if (!IsValid()) {
@@ -1353,6 +1371,46 @@ int TClingClassInfo::Size() const
    int64_t size = Layout.getSize().getQuantity();
    int clang_size = static_cast<int>(size);
    return clang_size;
+}
+
+/// Return the alignment of the class in bytes as reported by clang.
+///
+/// Returns (size_t)-1 if the class info is invalid, 0 for a forward-declared
+/// class, an enum, a namespace or or a class with no definition. For all other
+/// cases the actual alignment obtained from the clang ASTRecordLayout is
+/// returned.
+size_t TClingClassInfo::GetAlignOf() const
+{
+   if (!IsValid()) {
+      return -1;
+   }
+   if (!GetDecl()) {
+      // A forward declared class.
+      return 0;
+   }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   Decl::Kind DK = GetDecl()->getKind();
+   if (DK == Decl::Namespace) {
+      return 0;
+   } else if (DK == Decl::Enum) {
+      return 0;
+   }
+   const RecordDecl *RD = llvm::dyn_cast<RecordDecl>(GetDecl());
+   if (!RD) {
+      return -1;
+   }
+   if (!RD->getDefinition()) {
+      // Forward-declared class.
+      return 0;
+   }
+   ASTContext &Context = GetDecl()->getASTContext();
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   const ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
+   auto align = Layout.getAlignment().getQuantity();
+   assert(ROOT::Internal::IsValidAlignment(align));
+   return align;
 }
 
 Longptr_t TClingClassInfo::Tagnum() const

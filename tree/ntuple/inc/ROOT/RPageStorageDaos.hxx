@@ -1,5 +1,4 @@
 /// \file ROOT/RPageStorageDaos.hxx
-/// \ingroup NTuple
 /// \author Javier Lopez-Gomez <j.lopez@cern.ch>
 /// \date 2020-11-03
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -27,6 +26,7 @@
 #include <atomic>
 #include <cstdio>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <optional>
 
@@ -34,7 +34,6 @@ namespace ROOT {
 
 namespace Internal {
 class RCluster;
-class RClusterPool;
 } // namespace Internal
 
 namespace Experimental {
@@ -43,10 +42,6 @@ using ntuple_index_t = std::uint32_t;
 class RDaosPool;
 class RDaosContainer;
 class RPageAllocatorHeap;
-enum EDaosLocatorFlags {
-   // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
-   kCagedPage = 0x01,
-};
 
 // clang-format off
 /**
@@ -77,7 +72,8 @@ struct RDaosNTupleAnchor {
    /// The object class for user data OIDs, e.g. `SX`
    std::string fObjClass{};
 
-   bool operator ==(const RDaosNTupleAnchor &other) const {
+   bool operator==(const RDaosNTupleAnchor &other) const
+   {
       return fVersionAnchor == other.fVersionAnchor && fVersionEpoch == other.fVersionEpoch &&
              fVersionMajor == other.fVersionMajor && fVersionMinor == other.fVersionMinor &&
              fVersionPatch == other.fVersionPatch && fNBytesHeader == other.fNBytesHeader &&
@@ -119,12 +115,10 @@ private:
 
    RDaosNTupleAnchor fNTupleAnchor;
    ntuple_index_t fNTupleIndex{0};
-   uint32_t fCageSizeLimit{};
 
 protected:
    using RPagePersistentSink::InitImpl;
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
    RNTupleLocator
    CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator>
@@ -132,7 +126,7 @@ protected:
    std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;
-   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
+   ROOT::Internal::RNTupleLink CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
    void WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
    void WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);
    void WriteNTupleAnchor();
@@ -140,6 +134,9 @@ protected:
 public:
    RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleWriteOptions &options);
    ~RPageSinkDaos() override;
+
+   std::unique_ptr<ROOT::Internal::RPageSink>
+   CloneAsHidden(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const final;
 }; // class RPageSinkDaos
 
 // clang-format off
@@ -153,23 +150,22 @@ class RPageSourceDaos : public ROOT::Internal::RPageSource {
 private:
    ntuple_index_t fNTupleIndex{0};
 
-   /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
-   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
+   /// Protects the DAOS container
+   std::mutex fContainerLock;
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
-   /// The cluster pool asynchronously preloads the next few clusters
-   std::unique_ptr<ROOT::Internal::RClusterPool> fClusterPool;
 
+   RDaosNTupleAnchor fAnchor;
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   ROOT::Internal::RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
+   void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) final;
+   void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 protected:
-   void LoadStructureImpl() final {}
-   ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) final;
+   void LoadStructureImpl() final;
+   ROOT::RNTupleDescriptor AttachImpl() final;
    /// The cloned page source creates a new connection to the pool/container.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
@@ -177,16 +173,14 @@ public:
    RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleReadOptions &options);
    ~RPageSourceDaos() override;
 
-   void
-   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
-
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
 
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;
 
-   void LoadStreamerInfo() final;
+   std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
+                                                        const ROOT::RNTupleReadOptions &options = {}) final;
 }; // class RPageSourceDaos
 
 } // namespace Internal

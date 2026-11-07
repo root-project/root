@@ -13,6 +13,7 @@
 #include <ROOT/RBrowserRequest.hxx>
 #include <ROOT/RBrowserReply.hxx>
 #include <ROOT/RLogger.hxx>
+#define ROOT_CsgOps_cxx
 #include "CsgOps.h"
 
 #include "TMath.h"
@@ -761,6 +762,26 @@ void RGeomDescription::CollectNodes(RGeomDrawing &drawing, bool all_nodes)
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Method which allows to add/modify information in RGeoItem which
+/// will be provided to client - like title or some visibility flags
+/// Changes in the item attributes do not affect geometry drawing
+
+void RGeomDescription::RefineGeoItem(RGeoItem & /* item */, const std::vector<int> & /* stack */)
+{
+   // do nothing by default, placeholder for derived classes
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Decide if the whole model is streamed at once
+/// Function is called from ProcessBrowserRequest
+
+bool RGeomDescription::IsFullModelStreamedAtOnce() const
+{
+   return GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000);
+}
+
+/////////////////////////////////////////////////////////////////////
 /// Find description object for requested shape
 /// If not exists - will be created
 
@@ -781,7 +802,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
    if (!request)
       return res;
 
-   if (request->path.empty() && (request->first == 0) && (GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000))) {
+   if (request->path.empty() && (request->first == 0) && IsFullModelStreamedAtOnce()) {
 
       std::vector<RGeomNodeBase *> vect(fDesc.size(), nullptr);
 
@@ -830,6 +851,9 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
                   temp_nodes.back().SetExpanded(true);
                if (stack == fSelectedStack)
                   temp_nodes.back().SetTop(true);
+
+               RefineGeoItem(temp_nodes.back(), stack);
+
                request->number--;
 
                if (!stack.empty())

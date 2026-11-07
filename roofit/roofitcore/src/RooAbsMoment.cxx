@@ -23,12 +23,6 @@
 #include <RooAbsMoment.h>
 #include <RooRealVar.h>
 
-#include <Riostream.h>
-
-#include <cmath>
-#include <string>
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, bool takeRoot) :

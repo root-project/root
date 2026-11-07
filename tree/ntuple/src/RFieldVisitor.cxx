@@ -1,5 +1,4 @@
 /// \file RFieldVisitor.cxx
-/// \ingroup NTuple
 /// \author Simon Leisibach <simon.leisibach@gmail.com>
 /// \date 2019-06-11
 
@@ -62,8 +61,6 @@ void ROOT::Internal::RPrintSchemaVisitor::SetNumFields(int n)
 
 void ROOT::Internal::RPrintSchemaVisitor::VisitField(const ROOT::RFieldBase &field)
 {
-   fOutput << fFrameSymbol << ' ';
-
    std::string key = fTreePrefix;
    key += "Field " + fFieldNoPrefix + std::to_string(fFieldNo);
    fOutput << RNTupleFormatter::FitString(key, fAvailableSpaceKeyString);
@@ -72,8 +69,7 @@ void ROOT::Internal::RPrintSchemaVisitor::VisitField(const ROOT::RFieldBase &fie
    std::string value = field.GetFieldName();
    if (!field.GetTypeName().empty())
       value += " (" + field.GetTypeName() + ")";
-   fOutput << RNTupleFormatter::FitString(value, fAvailableSpaceValueString);
-   fOutput << fFrameSymbol << std::endl;
+   fOutput << value << '\n';
 
    auto subfields = field.GetConstSubfields();
    auto fieldNo = 1;
@@ -147,7 +143,7 @@ void ROOT::Internal::RPrintValueVisitor::PrintRecord(const ROOT::RFieldBase &fie
    auto elems = field.SplitValue(fValue);
    for (auto iValue = elems.begin(); iValue != elems.end();) {
       if (!fPrintOptions.fPrintSingleLine)
-         fOutput << std::endl;
+         fOutput << '\n';
 
       RPrintOptions options;
       options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
@@ -156,7 +152,7 @@ void ROOT::Internal::RPrintValueVisitor::PrintRecord(const ROOT::RFieldBase &fie
 
       if (++iValue == elems.end()) {
          if (!fPrintOptions.fPrintSingleLine)
-            fOutput << std::endl;
+            fOutput << '\n';
          break;
       } else {
          fOutput << ",";
@@ -410,6 +406,11 @@ void ROOT::Internal::RPrintValueVisitor::VisitVectorBoolField(const ROOT::RField
 void ROOT::Internal::RPrintValueVisitor::VisitRVecField(const ROOT::RRVecField &field)
 {
    PrintCollection(field);
+}
+
+void ROOT::Internal::RPrintValueVisitor::VisitSoAField(const ROOT::RSoAField &field)
+{
+   PrintRecord(field);
 }
 
 //---------------------------- RNTupleFormatter --------------------------------

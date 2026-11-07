@@ -41,9 +41,9 @@ public:
    Index   GetNPointsNode(Int_t node) const;
 
    //Getters for internal variables.
-   Int_t   GetRowT0() {return fRowT0;}      //! smallest terminal row
-   Int_t   GetCrossNode() {return fCrossNode;}  //! cross node
-   Int_t   GetOffset() {return fOffset;}     //! offset in fIndPoints
+   Int_t   GetRowT0() {return fRowT0;}      ///<! smallest terminal row
+   Int_t   GetCrossNode() {return fCrossNode;}  ///<! cross node
+   Int_t   GetOffset() {return fOffset;}     ///<! offset in fIndPoints
    Index*  GetIndPoints() {return fIndPoints;}
    Index   GetBucketSize() {return fBucketSize;}
 

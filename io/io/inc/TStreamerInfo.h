@@ -90,6 +90,7 @@ private:
    Int_t             fOnFileClassVersion;///<!Class version identifier as stored on file.
    Int_t             fNumber;            ///<!Unique identifier
    Int_t             fSize;              ///<!size of the persistent class
+   size_t            fAlignment;         ///<!alignment of the memory representation of the class
    Int_t             fNdata;             ///<!number of optimized elements
    Int_t             fNfulldata;         ///<!number of elements
    Int_t             fNslots;            ///<!total number of slots in fComp.
@@ -155,6 +156,7 @@ public:
    void                ForceWriteInfo(TFile *file, Bool_t force = kFALSE) override;
    Int_t               GenerateHeaderFile(const char *dirname, const TList *subClasses = nullptr, const TList *extrainfos = nullptr) override;
    TClass             *GetActualClass(const void *obj) const override;
+   size_t              GetClassAlignment() const override { return fAlignment; }
    TClass             *GetClass() const override { return fClass; }
    UInt_t              GetCheckSum() const override { return fCheckSum; }
    UInt_t              GetCheckSum(TClass::ECheckSum code) const;

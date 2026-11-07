@@ -9,7 +9,7 @@
 #define TrigHisto2D_p1_h
 class TrigHisto2D_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class TrigHisto2D_p1 {

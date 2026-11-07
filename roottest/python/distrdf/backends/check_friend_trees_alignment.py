@@ -1,8 +1,5 @@
 import pytest
-
 import ROOT
-from DistRDF.Backends import Dask
-
 
 TREENAMES = [
     f"distrdf_roottest_check_friend_trees_alignment_{i}" for i in range(1, 7)]

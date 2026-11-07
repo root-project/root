@@ -50,7 +50,7 @@ protected:
    Char_t         fFrameBgTransp;
 
    // move of scales
-   Int_t             fMouseX, fMouseY; //! last mouse position
+   Int_t             fMouseX, fMouseY; ///<! last mouse position
    Bool_t            fInDrag;
 
    // text top right corner

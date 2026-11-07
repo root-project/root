@@ -41,15 +41,6 @@ public:
          fOutputTensorNames = { };
       }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = input; //suggest copy to compiler
-      return ret;
-   }
-
    void Initialize(RModel& model) override {
        //input must be a graph input, or already initialized intermediate tensor
       size_t length = 1;
@@ -123,11 +114,15 @@ public:
          if (model.Verbose()) {
             std::cout << "adding constant tensor " << fNY << " with shape " << ConvertShapeToString(fShape)
             << " and values [";
-            for (auto v : fValues) std::cout << " " << v;
-            std::cout << "]" << std::endl;
+            if (!fIsConstantOfShape) {
+               ConvertValuesToString(fValues, 10);   // add maximum printing values
+            } else {  // for constant of shape is enough to print one value
+               std::cout << "... " << fValues[0] << " ....]" << std::endl;
+            }
          }
       } else {
          model.AddIntermediateTensor(fNY, ConvertStringToType(TensorType<T>::Name()), fDimOutputShape);
+         fOutputTensorNames.emplace_back(fNY);
       }
    }
 
@@ -136,15 +131,15 @@ public:
       std::stringstream out;
       if (fIsOutputConstant) {
          if (fNX.empty())
-            out <<  "// ---- Constant (no-op) " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
+            out <<  "// ---- Constant (no-op) " << opName << " --> " << fNY << " " << ConvertDimShapeToString(fDimOutputShape) << "\n";
          else
-            out << "// ---- ConstantOfShape (no-op) " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
+            out << "// ---- ConstantOfShape (no-op) " << opName << " --> " << fNY << " " << ConvertDimShapeToString(fDimOutputShape) << "\n";
          return out.str();
       }
       // Only ConstantOfShape might require generation code
       // generate constant tensor according to input
 
-      out << "\n//--------- ConstantOfShape " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
+      out << "\n//--------- ConstantOfShape " << opName << " --> " << ConvertDimShapeToString(fDimOutputShape) << "\n";
        // set shape values if needed
       if (fIsUndefinedInputShape) {
          for (size_t i = 0; i < fDimOutputShape.size(); i++) {
@@ -153,9 +148,7 @@ public:
       }
       auto length = ConvertDimShapeToLength(fDimOutputShape);
       // vector is already allocated- fill with values
-      out << SP << "if (" << length << " > fTensor_" << fNY << ".size())\n";
-      out << SP << SP << "fTensor_" << fNY << ".resize(" << length  << ");\n";
-      out << SP << "std::fill(fTensor_" << fNY << ".begin(), fTensor_" << fNY << ".end(), " << fValues[0] << ");\n";
+      out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << length << ", " << fValues[0] << ");\n";
       return out.str();
    }
 };

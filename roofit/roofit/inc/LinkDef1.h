@@ -24,6 +24,7 @@
 #pragma link C++ class RooPowerSum+ ;
 #pragma link C++ class RooGaussExpTails+ ;
 #pragma link C++ class RooGaussian+ ;
+#pragma link C++ class RooStudentT+ ;
 #pragma link C++ class RooLognormal+ ;
 #pragma link C++ class RooGamma+ ;
 #pragma link C++ class RooGaussModel+ ;
@@ -55,6 +56,7 @@
 #pragma link C++ class RooMomentMorphFunc + ;
 #pragma link C++ class RooMomentMorphFuncND + ;
 #pragma link C++ class RooMomentMorphFuncND::Grid2 + ;
+#pragma link C++ class RooFit::Detail::RooMomentMorphFraction + ;
 #pragma link C++ class RooSpline+ ;
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;
@@ -76,6 +78,8 @@
                 _nonInterfering.back().emplace_back(arg->GetName()); \
              }                                                       \
           } }";
+#pragma link C++ class RooONNXFunc- ;
+
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;

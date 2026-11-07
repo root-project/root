@@ -171,11 +171,12 @@ void REveDigitSet::SetMainColor(Color_t color)
    if (fSingleColor)
    {
       REveElement::SetMainColor(color);
+      StampObjProps();
    }
    else if (fFrame)
    {
       fFrame->SetFrameColor(color);
-      fFrame->StampBackPtrElements(kCBColorSelection);
+      fFrame->StampBackPtrElements(kCBCoreJson);
    }
 }
 

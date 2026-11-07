@@ -21,7 +21,7 @@ protected:
 
    friend class TMathTextRenderer;
 
-   TMathTextRenderer *fRenderer{nullptr}; //!TMathText Painter
+   TMathTextRenderer *fRenderer{nullptr}; ///<!TMathText Painter
    TMathText &operator=(const TMathText &);
 
    void Render(const Double_t x, const Double_t y,

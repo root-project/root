@@ -57,9 +57,7 @@ true // CHECK: (bool) true
 false // CHECK: (bool) false
 
 unordered_multiset<float> {1} // ROOT-7310
-// expected-error@input_line_42:2 {{expected ';' after expression}}
 // expected-error@input_line_42:2 {{use of undeclared identifier 'unordered_multiset'}}
-// expected-error@input_line_42:2 {{expected ';' after expression}}
 
 #include <unordered_set>
 std::unordered_multiset<float> {1}

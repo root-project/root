@@ -5,7 +5,6 @@
 ## with different scales in the "same" pad.
 ## Inspired by work of Rene Brun.
 ##
-## \macro_image
 ## \macro_code
 ##
 ## \date July 2025

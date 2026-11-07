@@ -11,6 +11,9 @@
 #ifndef ROOT_Hoption
 #define ROOT_Hoption
 
+#if !defined(ROOT_Hoption_cxx) && !defined(G__DICTIONARY)
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead `THistPainter`, `TGraph2DPainter` public interfaces."
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! \struct Hoption_t
@@ -41,6 +44,7 @@ typedef struct Hoption_t {
    int Box;         ///< <b>"BOX"</b> Draw 2D plot with proportional Boxes.
    int Char;        ///< <b>"CHAR"</b> Draw 2D plot with a character set.
    int Color;       ///< <b>"COL"</b> Draw 2D plot with Colored boxes.
+   int Polar;       ///< <b>"POL"</b> Draw 2D plot with Polar coordinates.
    int Contour;     ///< <b>"CONTn"</b> Draw 2D plot as a Contour plot (0 <= n <= 5).
    int Func;        ///< <b>"FUNC"</b> Draw only the function (for example in case of fit).
    int Hist;        ///< <b>"HIST"</b> Draw only the histogram.

@@ -15,4 +15,4 @@ One also can perform same tests with longpoll emulation of web sockets, if addin
 
 When running in batch mode, function blocked until 200 round-trip packets send by the client
 or 50s elappsed. Therefore ping.cxx test can be used for RWebWindow functionality tests 
-like `root -l -b "ping.cxx(10,2)" -q`
+like `root -b "ping.cxx(10,2)" -q`

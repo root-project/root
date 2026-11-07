@@ -1001,7 +1001,7 @@ Int_t TUnfoldBinning::GetTHxxBinningSingleNode
 }
 
 ////////////////////////////////////////////////////////////////////////
-/// calculate number of bins required to store this binning with teh
+/// calculate number of bins required to store this binning with the
 /// given axisSteering
 ///
 /// \param[in] axisSteering see method CreateHistogram()
@@ -2132,4 +2132,3 @@ void TUnfoldBinning::DecodeAxisSteering
      }
   }
 }
-

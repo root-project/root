@@ -1,0 +1,18 @@
+name: 'Test CI Scripts'
+
+on:
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - '.github/workflows/root-ci-config/*.py'
+
+jobs:
+  test-ci-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run unit tests
+        run: python3 .github/workflows/root-ci-config/test_null_build_check.py --verbose

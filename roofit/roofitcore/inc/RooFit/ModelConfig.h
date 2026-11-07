@@ -302,6 +302,9 @@ public:
    /// get RooArgSet for parameters for a particular hypothesis  (return nullptr if not existing)
    const RooArgSet *GetSnapshot() const;
 
+   /// get the name of the workspace snapshot saved by SetSnapshot() (empty if there is none)
+   const std::string &GetSnapshotName() const { return fSnapshotName; }
+
    void LoadSnapshot() const;
 
    RooWorkspace *GetWS() const override;

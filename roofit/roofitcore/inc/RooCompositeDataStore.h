@@ -89,42 +89,30 @@ public:
   void attachBuffers(const RooArgSet& extObs) override ;
   void resetBuffers() override ;
 
-  // Constant term  optimizer interface
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) override ;
-  const RooAbsArg* cacheOwner() override { return nullptr ; }
-  void setArgStatus(const RooArgSet& set, bool active) override ;
-  void resetCache() override ;
-
-  void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, bool /*skipZeroWeights*/) override ;
-  bool hasFilledCache() const override ;
-
   void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,
       std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
 
-  void forceCacheUpdate() override ;
-
-  RooAbsData::RealSpans getBatches(std::size_t first, std::size_t len) const override {
-    //TODO
-    std::cerr << "This functionality is not yet implemented for composite data stores." << std::endl;
-    throw std::logic_error("getBatches() not implemented for RooCompositeDataStore.");
-    (void)first; (void)len;
-    return {};
-  }
+  RooAbsData::RealSpans getBatches(std::size_t first, std::size_t len) const override;
+  RooAbsData::CategorySpans getCategoryBatches(std::size_t first, std::size_t len) const override;
   std::span<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
 
  protected:
+    void fillBatchBuffers() const;
 
-  void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) override ;
+    std::map<Int_t, RooAbsDataStore *> _dataMap;
+    RooCategory *_indexCat = nullptr;
+    mutable RooAbsDataStore *_curStore = nullptr; ///<! Datastore associated with current event
+    mutable Int_t _curIndex = 0;                  ///<! Index associated with current event
+    mutable std::unique_ptr<std::vector<double>>
+       _weightBuffer; ///<! Buffer for weights in case a batch of values is requested.
+    mutable std::map<RooAbsArg const *, std::vector<double>>
+       _realBatchBuffers; ///<! Buffers for real-valued columns in case batches of values are requested.
+    mutable std::map<RooAbsArg const *, std::vector<RooAbsCategory::value_type>>
+       _catBatchBuffers;    ///<! Buffers for category columns in case batches of values are requested.
+    bool _ownComps = false; ///<!
 
-  std::map<Int_t,RooAbsDataStore*> _dataMap ;
-  RooCategory* _indexCat = nullptr;
-  mutable RooAbsDataStore* _curStore = nullptr; ///<! Datastore associated with current event
-  mutable Int_t _curIndex = 0; ///<! Index associated with current event
-  mutable std::unique_ptr<std::vector<double>> _weightBuffer; ///<! Buffer for weights in case a batch of values is requested.
-  bool _ownComps = false; ///<!
-
-  ClassDefOverride(RooCompositeDataStore,1) // Composite Data Storage class
+    ClassDefOverride(RooCompositeDataStore, 1) // Composite Data Storage class
 };
 
 

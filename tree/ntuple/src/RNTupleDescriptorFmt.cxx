@@ -1,5 +1,4 @@
 /// \file RNTupleDescriptorFmt.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-08-25
 
@@ -102,7 +101,7 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements
-      auto elementSize = ROOT::Internal::RColumnElementBase::Generate(column.second.GetType())->GetSize();
+      auto elementSize = ROOT::Internal::RColumnElementBase::Generate(column.second)->GetSize();
 
       ColumnInfo info;
       info.fPhysicalColumnId = column.second.GetPhysicalId();
@@ -160,7 +159,7 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
           << float(headerSize + footerSize) / float(nBytesOnStorage) << "\n";
    output << "------------------------------------------------------------\n";
    output << "CLUSTER DETAILS\n";
-   output << "------------------------------------------------------------" << std::endl;
+   output << "------------------------------------------------------------\n";
 
    std::sort(clusters.begin(), clusters.end());
    for (unsigned int i = 0; i < clusters.size(); ++i) {
@@ -169,7 +168,7 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
       output << "         " << "   # Pages:         " << clusters[i].fNPages << "\n";
       output << "         " << "   Size on storage: " << clusters[i].fNBytesOnStorage << " B\n";
       output << "         " << "   Compression:     " << std::fixed << std::setprecision(2)
-             << float(clusters[i].fNBytesInMemory) / float(float(clusters[i].fNBytesOnStorage)) << std::endl;
+             << float(clusters[i].fNBytesInMemory) / float(float(clusters[i].fNBytesOnStorage)) << '\n';
    }
 
    output << "------------------------------------------------------------\n";
@@ -200,6 +199,6 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
       output << "    Size on storage:     " << col.fNBytesOnStorage << " B\n";
       output << "    Compression:         " << std::fixed << std::setprecision(2)
              << float(col.fElementSize * col.fNElements) / float(col.fNBytesOnStorage) << "\n";
-      output << "............................................................" << std::endl;
+      output << "............................................................\n";
    }
 }

@@ -44,7 +44,7 @@ RooErrorVar::RooErrorVar(const char *name, const char *title, const RooRealVar& 
   RooAbsRealLValue(name,title),
   _realVar("realVar","RooRealVar with error",this,(RooAbsReal&)input)
 {
-  _binning = std::make_unique<RooUniformBinning>(-1,1,100) ;
+  _binning = std::make_unique<RooUniformBinning>(-1,1) ;
 }
 
 
@@ -86,9 +86,9 @@ bool RooErrorVar::hasBinning(const char* name) const
 /// Return binning with given name. If no binning exists with such a name, clone the default
 /// binning on the fly if so requested
 
-const RooAbsBinning& RooErrorVar::getBinning(const char* name, bool verbose, bool createOnTheFly) const
+const RooAbsBinning& RooErrorVar::getBinning(const char* name, bool verbose, bool createOnTheFly, bool shared) const
 {
-  return const_cast<RooErrorVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
+  return const_cast<RooErrorVar*>(this)->getBinning(name,verbose,createOnTheFly, shared) ;
 }
 
 
@@ -97,7 +97,7 @@ const RooAbsBinning& RooErrorVar::getBinning(const char* name, bool verbose, boo
 /// Return binning with given name. If no binning exists with such a name, clone the default
 /// binning on the fly if so requested
 
-RooAbsBinning& RooErrorVar::getBinning(const char* name, bool /*verbose*/, bool createOnTheFly)
+RooAbsBinning& RooErrorVar::getBinning(const char* name, bool /*verbose*/, bool createOnTheFly, bool)
 {
   // Return default (normalization) binning and range if no name is specified
   if (name==nullptr) {
@@ -151,14 +151,6 @@ void RooErrorVar::removeMin(const char* name) {
 void RooErrorVar::removeMax(const char* name) {
   getBinning(name).setMax(RooNumber::infinity()) ;
 }
-
-
-/// Remove both upper and lower bounds from named binning, or
-/// default binning if name is null
-void RooErrorVar::removeRange(const char* name) {
-  getBinning(name).setRange(-RooNumber::infinity(),RooNumber::infinity()) ;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Store given binning with this variable under the given name

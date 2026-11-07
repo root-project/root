@@ -99,7 +99,7 @@ model = ROOT.RooProdPdf("model", "model", [gauss, constraint])
 # global observable value (the same is done in the RooStats:ToyMCSampler
 # class):
 
-dataGlob = model.generate({mu_obs}, 1)
+dataGlob = model.generate(mu_obs, 1)
 
 # Next, we temporarily set the value of `mu_obs` to the randomized value for
 # generating our toy dataset:
@@ -110,7 +110,7 @@ ROOT.RooArgSet(mu_obs).assign(dataGlob.get(0))
 # Actually generate the toy dataset. We don't generate too many events,
 # otherwise, the constraint will not have much weight in the fit and the result
 # looks like it's unaffected by it.
-data = model.generate({x}, 50)
+data = model.generate(x, 50)
 
 # When fitting the toy dataset, it is important to set the global
 # observables in the fit to the values that were used to generate the toy
@@ -118,7 +118,7 @@ data = model.generate({x}, 50)
 # can attach a snapshot with the current global observable values to the
 # dataset like this (new feature introduced in ROOT 6.26):
 
-data.setGlobalObservables({mu_obs})
+data.setGlobalObservables([mu_obs])
 
 # reset original mu_obs value
 mu_obs.setVal(mu_obs_orig_val)

@@ -8,8 +8,10 @@
 #include "RBinIndex.hxx"
 #include "RBinIndexRange.hxx"
 #include "RLinearizedIndex.hxx"
+#include "RSliceSpec.hxx"
 
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
@@ -58,7 +60,13 @@ public:
       if (fBinEdges.size() < 2) {
          throw std::invalid_argument("must have >= 2 bin edges");
       }
+      if (std::isnan(fBinEdges[0])) {
+         throw std::invalid_argument("bin egde 0 is NaN");
+      }
       for (std::size_t i = 1; i < fBinEdges.size(); i++) {
+         if (std::isnan(fBinEdges[i])) {
+            throw std::invalid_argument("bin egde " + std::to_string(i) + " is NaN");
+         }
          if (fBinEdges[i - 1] >= fBinEdges[i]) {
             std::string msg = "binEdges must be sorted, but for bin " + std::to_string(i - 1) + ": ";
             msg += std::to_string(fBinEdges[i - 1]) + " >= " + std::to_string(fBinEdges[i]);
@@ -79,9 +87,10 @@ public:
 
    /// Compute the linarized index for a single argument.
    ///
-   /// The normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$, the underflow bin has index
-   /// \f$fBinEdges.size() - 1\f$, and the overflow bin has index \f$fBinEdges.size()\f$. If the argument is outside all
-   /// bin edges and the flow bins are disabled, the return value is invalid.
+   /// If flow bins are disabled, the normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$. Otherwise the
+   /// underflow bin has index \f$0\$, the indices of all normal bins shift by one, and the overflow bin has index
+   /// \f$fBinEdges.size()\f$. If the argument is outside all bin edges and the flow bins are disabled, the return value
+   /// is invalid.
    ///
    /// \param[in] x the argument
    /// \return the linearized index that may be invalid
@@ -91,7 +100,7 @@ public:
       // Put NaNs into overflow bin.
       bool overflow = !(x < fBinEdges.back());
       if (underflow) {
-         return {fBinEdges.size() - 1, fEnableFlowBins};
+         return {0, fEnableFlowBins};
       } else if (overflow) {
          return {fBinEdges.size(), fEnableFlowBins};
       }
@@ -99,24 +108,33 @@ public:
       // TODO (for later): The following can be optimized with binary search...
       for (std::size_t bin = 0; bin < fBinEdges.size() - 2; bin++) {
          if (x < fBinEdges[bin + 1]) {
+            // If the underflow bin is enabled, shift the normal bins by one.
+            if (fEnableFlowBins) {
+               bin += 1;
+            }
             return {bin, true};
          }
       }
       std::size_t bin = fBinEdges.size() - 2;
+      // If the underflow bin is enabled, shift the normal bins by one.
+      if (fEnableFlowBins) {
+         bin += 1;
+      }
       return {bin, true};
    }
 
    /// Get the linearized index for an RBinIndex.
    ///
-   /// The normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$, the underflow bin has index
-   /// \f$fBinEdges.size() - 1\f$, and the overflow bin has index \f$fBinEdges.size()\f$.
+   /// If flow bins are disabled, the normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$. Otherwise the
+   /// underflow bin has index \f$0\$, the indices of all normal bins shift by one, and the overflow bin has index
+   /// \f$fBinEdges.size()\f$.
    ///
    /// \param[in] index the RBinIndex
    /// \return the linearized index that may be invalid
    RLinearizedIndex GetLinearizedIndex(RBinIndex index) const
    {
       if (index.IsUnderflow()) {
-         return {fBinEdges.size() - 1, fEnableFlowBins};
+         return {0, fEnableFlowBins};
       } else if (index.IsOverflow()) {
          return {fBinEdges.size(), fEnableFlowBins};
       } else if (index.IsInvalid()) {
@@ -124,7 +142,15 @@ public:
       }
       assert(index.IsNormal());
       std::uint64_t bin = index.GetIndex();
-      return {bin, bin < fBinEdges.size() - 1};
+      if (bin >= fBinEdges.size() - 1) {
+         // Index is out of range and invalid.
+         return {bin, false};
+      }
+      // If the underflow bin is enabled, shift the normal bins by one.
+      if (fEnableFlowBins) {
+         bin += 1;
+      }
+      return {bin, true};
    }
 
    /// Get the range of all normal bins.
@@ -169,6 +195,57 @@ public:
    {
       return fEnableFlowBins ? Internal::CreateBinIndexRange(RBinIndex::Underflow(), RBinIndex(), fBinEdges.size() - 1)
                              : GetNormalRange();
+   }
+
+   /// Slice this axis according to the specification.
+   ///
+   /// Throws an exception if the axis cannot be sliced:
+   ///  * A sum operation makes the dimension disappear.
+   ///  * The rebin operation must divide the number of normal bins.
+   ///
+   /// \param[in] sliceSpec the slice specification
+   /// \return the sliced axis, with enabled underflow and overflow bins
+   RVariableBinAxis Slice(const RSliceSpec &sliceSpec) const
+   {
+      if (sliceSpec.GetOperationSum() != nullptr) {
+         throw std::runtime_error("sum operation makes dimension disappear");
+      }
+
+      // Figure out the properties of the sliced axis.
+      std::size_t nNormalBins = fBinEdges.size() - 1;
+      std::size_t begin = 0;
+      std::size_t end = nNormalBins;
+
+      const auto &range = sliceSpec.GetRange();
+      if (!range.IsInvalid()) {
+         if (range.GetBegin().IsNormal()) {
+            begin = range.GetBegin().GetIndex();
+         }
+         if (range.GetEnd().IsNormal()) {
+            end = range.GetEnd().GetIndex();
+         }
+         nNormalBins = end - begin;
+      }
+
+      std::uint64_t nGroup = 1;
+      if (auto *opRebin = sliceSpec.GetOperationRebin()) {
+         nGroup = opRebin->GetNGroup();
+         if (nNormalBins % nGroup != 0) {
+            throw std::runtime_error("rebin operation does not divide number of normal bins");
+         }
+      }
+
+      // Prepare the bin edges.
+      std::vector<double> binEdges;
+      for (std::size_t bin = begin; bin < end; bin += nGroup) {
+         binEdges.push_back(fBinEdges[bin]);
+      }
+      binEdges.push_back(fBinEdges[end]);
+
+      // The sliced axis always has flow bins enabled to preserve all entries. This is the least confusing for users,
+      // even if not always strictly necessary.
+      bool enableFlowBins = true;
+      return RVariableBinAxis(std::move(binEdges), enableFlowBins);
    }
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.

@@ -9,7 +9,6 @@
 ///
 /// \authors Timur Pocheptsov, Sergey Linev
 
-// Includes for ACLiC (cling does not need them).
 #include "TPaveText.h"
 #include "TCanvas.h"
 #include "TRandom.h"
@@ -28,8 +27,9 @@ void transp_text(bool gl = true)
    gStyle->SetCanvasPreferGL(gl);
 
    auto c1 = new TCanvas("transp_text", "transparent text demo", 10, 10, 900, 500);
-   if (!c1->UseGL() && !c1->IsWeb())
-      ::Warning("transp_text", "to use this macro you need either OpenGL or Web");
+   if (!c1->UseGL() && !c1->IsWeb() && !gVirtualX->InheritsFrom("TGCocoa"))
+      ::Warning("transp_text",
+                "To have real transparency in a canvas graphics, you need either OpenGL or Mac/Cocoa or Web rendering enabled");
 
    c1->SetGrid();
    c1->SetBottomMargin(0.15);

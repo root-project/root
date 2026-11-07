@@ -74,19 +74,19 @@ def write_pyroot_block_for_class(klass):
     if klass.__doc__ is None:
         return
 
-    print("\class " + klass.__cpp_name__)
-    print("\\brief \parblock \endparblock")
-    print("\htmlonly")
-    print('<div class="pyrootbox">')
-    print("\endhtmlonly")
-    print("## PyROOT")
+    print(r"\class " + klass.__cpp_name__)
+    print(r"\brief \parblock \endparblock")
+    print(r"\htmlonly")
+    print(r'<div class="pyrootbox">')
+    print(r"\endhtmlonly")
+    print(r"## PyROOT")
 
     print(inspect.cleandoc(klass.__doc__))
 
-    print("\htmlonly")
-    print("</div>")
-    print("\endhtmlonly")
-    print("")
+    print(r"\htmlonly")
+    print(r"</div>")
+    print(r"\endhtmlonly")
+    print(r"")
 
 
 def write_pyroot_block_for_function(func):
@@ -99,19 +99,19 @@ def write_pyroot_block_for_function(func):
         sigs = [sigs]
 
     for sig in sigs:
-        print("\\fn " + clean_cpp_signature(sig))
-        print("\\brief \parblock \endparblock")
-        print("\htmlonly")
-        print('<div class="pyrootbox">')
-        print("\endhtmlonly")
-        print("## PyROOT")
+        print(r"\fn " + clean_cpp_signature(sig))
+        print(r"\brief \parblock \endparblock")
+        print(r"\htmlonly")
+        print(r'<div class="pyrootbox">')
+        print(r"\endhtmlonly")
+        print(r"## PyROOT")
 
         print(inspect.cleandoc(func.__doc__))
 
-        print("\htmlonly")
-        print("</div>")
-        print("\endhtmlonly")
-        print("")
+        print(r"\htmlonly")
+        print(r"</div>")
+        print(r"\endhtmlonly")
+        print(r"")
 
 
 def print_roofit_pythonization_page():
@@ -126,8 +126,8 @@ def print_roofit_pythonization_page():
         return funcs_have_doc
 
     # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
-    print("\defgroup RoofitPythonizations RooFit Pythonizations")
-    print("\ingroup Roofitmain")
+    print(r"\defgroup RoofitPythonizations RooFit Pythonizations")
+    print(r"\ingroup Roofitmain")
     for python_klass in _roofit.python_classes:
         if python_klass.__doc__ is None and not member_funcs_have_doc(python_klass):
             continue
@@ -148,9 +148,9 @@ def print_roofit_pythonization_page():
         if python_klass.__doc__ is None and not member_funcs_have_doc(python_klass):
             continue
 
-        print("\\anchor _" + python_klass.__name__.lower())
-        print("## " + python_klass.__name__)
-        print("\see " + python_klass.__name__)
+        print(r"\anchor _" + python_klass.__name__.lower())
+        print(r"## " + python_klass.__name__)
+        print(r"\see " + python_klass.__name__)
         if not python_klass.__doc__ is None:
             print("")
             print(inspect.cleandoc(python_klass.__doc__))
@@ -160,17 +160,17 @@ def print_roofit_pythonization_page():
             func = getattr(python_klass, func_name)
             if func.__doc__ is None:
                 continue
-            print("\\anchor _" + (python_klass.__name__ + "_" + func.__name__).lower())
-            print("### " + python_klass.__name__ + "." + func.__name__)
+            print(r"\anchor _" + (python_klass.__name__ + "_" + func.__name__).lower())
+            print(r"### " + python_klass.__name__ + "." + func.__name__)
             print(inspect.cleandoc(func.__doc__))
-            print("")
+            print(r"")
             if hasattr(func, "_cpp_signature"):
                 sigs = func._cpp_signature
                 if isinstance(sigs, str):
                     sigs = [sigs]
                 for sig in sigs:
-                    print("\see " + clean_cpp_signature(sig))
-                    print("")
+                    print(r"\see " + clean_cpp_signature(sig))
+                    print(r"")
 
 
 def print_pyroot_blocks_for_cpp_docs():
@@ -194,11 +194,11 @@ def print_pyroot_blocks_for_cpp_docs():
 if __name__ == "__main__":
 
     try:
-        print("/**")
+        print(r"/**")
         print_roofit_pythonization_page()
-        print("")
+        print(r"")
         print_pyroot_blocks_for_cpp_docs()
-        print("*/")
+        print(r"*/")
     except ImportError:
         # roofit was probably not built
         pass

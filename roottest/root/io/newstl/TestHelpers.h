@@ -99,7 +99,8 @@ class THelper : public Helper, public TObject {
 public:
    THelper() {};
    explicit THelper(int v,double d) : Helper(v,d) {};
-   virtual const char* CompMsg(const Helper& icopy) const {
+   const char *CompMsg(const Helper &icopy) const override
+   {
       const THelper *copy = dynamic_cast<const THelper*>(&icopy);
       if (copy==0) return "Wrong type (expected THelper)\n";
       return Form("THelper object wrote %d %g and read %d %g\n",val,dval,copy->val,copy->dval);

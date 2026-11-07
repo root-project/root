@@ -23,12 +23,12 @@ Abstract base class for RooStudyManager modules
 
 **/
 
-#include "Riostream.h"
-
 #include "RooAbsStudy.h"
 #include "RooMsgService.h"
 #include "RooDataSet.h"
 #include "TList.h"
+
+#include <ostream>
 
 using std::endl;
 

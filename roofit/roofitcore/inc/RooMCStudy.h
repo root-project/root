@@ -37,6 +37,11 @@ public:
              const RooCmdArg& arg3={}, const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
              const RooCmdArg& arg6={}, const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
+  RooMCStudy(const RooMCStudy&) = delete;
+  RooMCStudy(RooMCStudy &&) = delete;
+  RooMCStudy& operator=(const RooMCStudy&) = delete;
+  RooMCStudy& operator=(RooMCStudy &&) = delete;
+
   ~RooMCStudy() override ;
 
   // Method to add study modules
@@ -55,8 +60,11 @@ public:
   const RooFitResult* fitResult(Int_t sampleNum) const ;
         RooAbsData* genData(Int_t sampleNum) const ;
   const RooDataSet& fitParDataSet() ;
-  /// Return dataset with generator parameters for each toy. When constraints are used these
-  /// may generally not be the same as the fitted parameters.
+  /// Return dataset with the generator parameter values used for each toy, including any
+  /// modification by constraint-p.d.f. sampling or by study modules. When constraints are
+  /// used, the values are sampled from the constraint p.d.f.s for each toy and thus generally
+  /// differ from the fitted parameter values. Unlike fitParDataSet(), this dataset has one
+  /// entry per generated toy, including toys for which the fit did not converge.
   const RooDataSet* genParDataSet() const {
     return _genParData.get();
   }
@@ -144,10 +152,6 @@ protected:
   RooFit::OwningPtr<RooFitResult> refit(RooAbsData* genSample=nullptr) ;
   void resetFitParams() ;
   void RecursiveRemove(TObject *obj) override;
-
-private:
-
-  RooMCStudy(const RooMCStudy&) ;
 
   ClassDefOverride(RooMCStudy,0) // A general purpose toy Monte Carlo study manager
 } ;

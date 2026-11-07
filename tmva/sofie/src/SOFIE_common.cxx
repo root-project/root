@@ -4,6 +4,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <charconv>
+#include <unordered_map>
+#include <set>
 
 namespace TMVA {
 namespace Experimental {
@@ -41,6 +43,10 @@ std::vector<size_t> ConvertShapeToInt(const std::vector<Dim> & shape){
             ret_shape.clear();
             break;
          }
+         catch (const std::out_of_range& ) {
+            ret_shape.clear();
+            break;
+         }
       } else {
          ret_shape[i] = shape[i].dim;
       }
@@ -52,7 +58,8 @@ std::vector<size_t> ConvertShapeToInt(const std::vector<Dim> & shape){
 std::size_t ConvertShapeToLength(const std::vector<size_t> & shape){
    // Empty shape represent scalar values, so we return a length=1
    std::size_t fLength = 1;
-   for (auto& dim: shape) fLength *= dim;
+   for (const auto &dim : shape)
+   fLength *= dim;
    return fLength;
 }
 
@@ -89,7 +96,7 @@ std::string ConvertTypeToString(ETensorType type){
          return "double";
       }
       case ETensorType::BOOL : {
-         return "bool";
+         return "uint8_t";
       }
       default:{
          return "other_" + std::to_string( (int) type);
@@ -97,6 +104,8 @@ std::string ConvertTypeToString(ETensorType type){
    }
 }
 
+// invert function might now work correctly for booleans
+// prefer avoid using it if possible
 ETensorType ConvertStringToType(std::string type){
    if(type == "float32" || type == "float" || type == "Float"){
      return ETensorType::FLOAT;
@@ -104,10 +113,13 @@ ETensorType ConvertStringToType(std::string type){
    else if(type == "int64" || type == "int64_t"){
      return ETensorType::INT64;
    }
+   else if(type == "int32" || type == "int32_t"){
+     return ETensorType::INT32;
+   }
    else if (type == "double" || type == "float64"){
       return ETensorType::DOUBLE;
    }
-   else if (type == "bool" ){
+   else if (type == "bool" || type == "uint8_t" ){
       return ETensorType::BOOL;
    }
    else{
@@ -130,7 +142,7 @@ std::string ConvertDimShapeToString(const std::vector<Dim> & shape) {
    std::stringstream out;
    out << "{ ";
    for (size_t i = 0; i < shape.size(); i++) {
-      out << shape[i].GetVal();
+      out << shape[i];
       if (i < shape.size()-1) out << " , ";
    }
    out << " }";
@@ -143,21 +155,21 @@ std::string ConvertDimShapeToLength(const std::vector<Dim> & shape) {
    std::string length;
    // case of empty vectors return 1
    if (shape.empty()) return "1";
-   size_t int_length = 0;
+   int64_t int_length = -1;
    for (size_t i = 0; i < shape.size(); i++) {
       if (shape[i].isParam) {
          if (!length.empty()) length += " * ";
          length += shape[i].param;
       } else {
-         if (int_length == 0)
+         if (int_length == -1)
             int_length = shape[i].dim;
          else
             int_length *= shape[i].dim;
       }
    }
    // multiply the integer components to the parametric one
-   // if larger than 1
-   if (int_length > 0) {
+   // if larger than 1 - otherwise returns -1
+   if (int_length >= 0) {
       if (!length.empty() && int_length > 1) {
          length += " * ";
          length += std::to_string(int_length);
@@ -166,12 +178,6 @@ std::string ConvertDimShapeToLength(const std::vector<Dim> & shape) {
       }
    }
    return length;
-}
-std::string ConvertShapeToString(const std::vector<Dim> & shape) {
-   return ConvertDimShapeToString(shape);
-}
-std::string ConvertDynamicShapeToLength(const std::vector<Dim> & shape) {
-   return ConvertDimShapeToLength(shape);
 }
 
 
@@ -412,14 +418,15 @@ std::pair<int, std::vector<size_t>>  UTILITY::MultidirectionalBroadcastShape(std
             + " to a common shape.");
    }
 }
-// unidirectional broadcast- only B changes
+// unidirectional broadcast- of shape A to target B
 std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> & shapeA, std::vector<size_t> & shapeB)
 {
-   auto ret = UTILITY::MultidirectionalBroadcastShape(shapeA, shapeB);
+   auto ret = UTILITY::MultidirectionalBroadcastShape(shapeB, shapeA);
    if (ret.first > 1) {
-      std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
-            + ConvertShapeToString(shapeA) + " and " + ConvertShapeToString(shapeB)
-            + " to a common shape.");
+      throw
+         std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
+            + ConvertShapeToString(shapeA) + " to  " + ConvertShapeToString(shapeB)
+            + " in a common shape.");
    }
    return ret.second;
 }
@@ -511,7 +518,7 @@ std::string UTILITY::Clean_name(std::string input_tensor_name){
    std::string s (input_tensor_name);
    std::replace( s.begin(), s.end(), '-', '_');
    // replace all non-alpohanumeric character except for "_"
-   s.erase(std::remove_if(s.begin(), s.end(), []( char const& c ) -> bool { return !std::isalnum(c) && c != '_'; } ), s.end());
+   s.erase(std::remove_if(s.begin(), s.end(), []( char const& c ) -> bool { return !std::isalnum(static_cast<unsigned char>(c)) && c != '_'; } ), s.end());
    return s;
 }
 
@@ -546,6 +553,28 @@ std::vector<Dim> UTILITY::ComputeStrideFromShape(const std::vector<Dim> & shape)
    }
    return strides;
 }
+
+// utilities functions for generating code
+
+// ------------------------------------------------------------------ //
+//  Emit 'rank' nested for-loops: for(size_t idx_i=0; idx_i<dim_i; )  //
+// ------------------------------------------------------------------ //
+const std::string SP = "   ";
+void EmitNestedLoops(std::stringstream &out, size_t loopRank, const std::vector<Dim> shape) {
+   for (size_t i = 0; i < loopRank; ++i) {
+      for (size_t s = 0; s < i + 2; ++s) out << SP;
+
+      out << "for (size_t idx_" << i << " = 0; idx_" << i
+          << " < " << shape[i] << "; ++idx_" << i << ") {\n";
+   }
+}
+void CloseNestedLoops(std::stringstream &out, size_t loopRank) {
+   for (int64_t i = loopRank - 1; i >= 0; --i) {
+      for (int64_t s = 0; s < i + 2; ++s) out << SP;
+         out << "}\n";
+   }
+}
+
 
 } // namespace SOFIE
 } // namespace Experimental

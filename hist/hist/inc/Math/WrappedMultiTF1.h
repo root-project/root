@@ -373,11 +373,7 @@ namespace ROOT {
             // case of polynomial function (no parameter dependency)  (case for dim = 1)
             assert(fDim == 1);
             if (ipar == 0) return 1.0;
-#ifdef R__HAS_VECCORE
-            return vecCore::math::Pow(x[0], static_cast<T>(ipar));
-#else
-            return std::pow(x[0], static_cast<int>(ipar));
-#endif
+            return pow(x[0], static_cast<int>(ipar));
          } else {
             // case of general linear function (built in TFormula with ++ )
             return GeneralLinearFunctionDerivation<T>::DoParameterDerivative(this, x, ipar);

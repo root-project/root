@@ -437,58 +437,19 @@ TGeoSphere::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t ia
    Double_t sdist = TGeoBBox::DistFromOutside(point, dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist >= step)
       return TGeoShape::Big();
-   Double_t saf[6];
-   Double_t r1, r2, z1, z2, dz, si, ci;
-   Double_t rxy2 = point[0] * point[0] + point[1] * point[1];
-   Double_t rxy = TMath::Sqrt(rxy2);
-   r2 = rxy2 + point[2] * point[2];
-   Double_t r = TMath::Sqrt(r2);
-   Bool_t rzero = kFALSE;
-   Double_t phi = 0;
-   if (r < 1E-20)
-      rzero = kTRUE;
-   // localize theta
-   Double_t th = 0.;
-   if (TestShapeBit(kGeoThetaSeg) && (!rzero)) {
-      th = TMath::ACos(point[2] / r) * TMath::RadToDeg();
-   }
-   // localize phi
-   if (TestShapeBit(kGeoPhiSeg)) {
-      phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
-      if (phi < 0)
-         phi += 360.;
-   }
    if (iact < 3 && safe) {
-      saf[0] = (r < fRmin) ? fRmin - r : TGeoShape::Big();
-      saf[1] = (r > fRmax) ? (r - fRmax) : TGeoShape::Big();
-      saf[2] = saf[3] = saf[4] = saf[5] = TGeoShape::Big();
-      if (TestShapeBit(kGeoThetaSeg)) {
-         if (th < fTheta1) {
-            saf[2] = r * TMath::Sin((fTheta1 - th) * TMath::DegToRad());
-         }
-         if (th > fTheta2) {
-            saf[3] = r * TMath::Sin((th - fTheta2) * TMath::DegToRad());
-         }
-      }
-      if (TestShapeBit(kGeoPhiSeg)) {
-         Double_t dph1 = phi - fPhi1;
-         if (dph1 < 0)
-            dph1 += 360.;
-         if (dph1 <= 90.)
-            saf[4] = rxy * TMath::Sin(dph1 * TMath::DegToRad());
-         Double_t dph2 = fPhi2 - phi;
-         if (dph2 < 0)
-            dph2 += 360.;
-         if (dph2 > 90.)
-            saf[5] = rxy * TMath::Sin(dph2 * TMath::DegToRad());
-      }
-      *safe = saf[TMath::LocMin(6, &saf[0])];
+      // Reuse the outside lower bound, including the angular-cut constraints.
+      *safe = Safety(point, kFALSE);
       if (iact == 0)
          return TGeoShape::Big();
       if (iact == 1 && step < *safe)
          return TGeoShape::Big();
    }
    // compute distance to shape
+   Double_t r1, r2, z1, z2, dz, si, ci;
+   Double_t rxy2 = point[0] * point[0] + point[1] * point[1];
+   r2 = rxy2 + point[2] * point[2];
+   Double_t r = TMath::Sqrt(r2);
    // first check if any crossing at all
    Double_t snxt = TGeoShape::Big();
    Double_t rdotn = point[0] * dir[0] + point[1] * dir[1] + point[2] * dir[2];

@@ -340,8 +340,8 @@ void TGLabel::SetTextFont(TGFont *font, Bool_t global)
    if (!global) {
       if (gc == &GetDefaultGC() ) { // create new GC
          gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy ctor.
+         fHasOwnFont = kTRUE;
       }
-      fHasOwnFont = kTRUE;
    }
    if (oldfont != fgDefaultFont) {
       fClient->FreeFont(oldfont);
@@ -366,8 +366,8 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
    if (!global) {
       if (gc == &GetDefaultGC() ) {
          gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
+         fHasOwnFont = kTRUE;
       }
-      fHasOwnFont = kTRUE;
    }
    if (gc) {
       gc->SetForeground(color);

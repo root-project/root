@@ -11,7 +11,7 @@
 
 /**
  \class TEmulatedCollectionProxy
- \ingroup IO
+ \ingroup io_other
 
 Streamer around an arbitrary STL like container, which implements basic
 container functionality.
@@ -24,6 +24,7 @@ the class TEmulatedMapProxy.
 */
 
 #include "TEmulatedCollectionProxy.h"
+#include "TClass.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
@@ -47,8 +48,8 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProx
    fProperties |= kIsEmulated;
 }
 
-TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name, Bool_t silent)
-   : TGenCollectionProxy(typeid(std::vector<char>), sizeof(std::vector<char>::iterator))
+TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char *cl_name, Bool_t silent)
+   : TGenCollectionProxy(typeid(Cont_t), sizeof(Cont_t::iterator))
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 
@@ -88,9 +89,12 @@ void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly) const
       const_cast<TEmulatedCollectionProxy*>(this)->Clear("force");
    }
    if (dtorOnly) {
-      ((Cont_t*)p)->~Cont_t();
+      WithCont(p, [](auto *c, std::size_t) {
+         using Vec_t = std::decay_t<decltype(*c)>;
+         c->~Vec_t();
+      });
    } else {
-      delete (Cont_t*) p;
+      WithCont(p, [](auto *c, std::size_t) { delete c; });
    }
 }
 
@@ -102,7 +106,7 @@ void TEmulatedCollectionProxy::DeleteArray(void* p, Bool_t dtorOnly) const
    // how many elements are in the array.
    Warning("DeleteArray", "Cannot properly delete emulated array of %s at %p, I don't know how many elements it has!", fClass->GetName(), p);
    if (!dtorOnly) {
-      delete[] (Cont_t*) p;
+      ::operator delete(p);
    }
 }
 
@@ -133,13 +137,11 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
          // Note: an emulated collection proxy is never really associative
          // since under-neath is actually an array.
 
-         // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
-         auto alignedSize = [](size_t in) {
-            constexpr size_t kSizeOfPtr = sizeof(void*);
-            return in + (kSizeOfPtr - in%kSizeOfPtr)%kSizeOfPtr;
+         auto alignedSize = [](size_t in, TClass *align_cl) {
+            size_t align = align_cl ? align_cl->GetClassAlignment() : alignof(std::max_align_t);
+            return in + (align - in % align) % align;
          };
-         struct GenerateTemporaryTEnum
-         {
+         struct GenerateTemporaryTEnum {
             TEnum *fTemporaryTEnum = nullptr;
 
             GenerateTemporaryTEnum(UInt_t typecase, const std::string &enumname)
@@ -195,10 +197,10 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                   fProperties |= kNeedDelete;
                }
                if ( 0 == fValOffset )  {
-                  fValOffset = alignedSize(fKey->fSize);
+                  fValOffset = alignedSize(fKey->fSize, (*fValue).fType.GetClass());
                }
                if ( 0 == fValDiff )  {
-                  fValDiff = alignedSize(fValOffset + fVal->fSize);
+                  fValDiff = alignedSize(fValOffset + fVal->fSize, (*fValue).fType.GetClass());
                }
                if (num > 3 && !inside[3].empty()) {
                   if (! TClassEdit::IsDefAlloc(inside[3].c_str(),inside[0].c_str())) {
@@ -267,15 +269,14 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
 {
    // Shrink the container
 
-   typedef std::string  String_t;
-   PCont_t c   = PCont_t(fEnv->fObject);
-   char* addr  = ((char*)fEnv->fStart) + fValDiff*left;
+   typedef std::string String_t;
+   char *addr = ((char *)fEnv->fStart) + ElementOffset(left);
    size_t i;
 
    switch ( fSTL_type )  {
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
-         addr = ((char*)fEnv->fStart) + fValDiff*left;
+         addr = ((char *)fEnv->fStart) + ElementOffset(left);
          switch(fKey->fCase)  {
             case kIsFundamental:  // Only handle primitives this way
             case kIsEnum:
@@ -318,7 +319,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                }
                break;
          }
-         addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*left;
+         addr = ((char *)fEnv->fStart) + fValOffset + ElementOffset(left);
          // DO NOT break; just continue
 
          // General case for all values
@@ -363,21 +364,66 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                break;
          }
    }
-   c->resize(left*fValDiff,0);
-   fEnv->fStart = left > 0 ? c->data() : 0;
+   WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
+      assert(fValDiff % alignmentElemSize == 0);
+      c->resize(ElementOffset(left) / alignmentElemSize);
+      fEnv->fStart = left > 0 ? c->data() : nullptr;
+   });
    return;
 }
 
-void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
+void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left, Bool_t force)
 {
    // Expand the container
    size_t i;
-   PCont_t c   = PCont_t(fEnv->fObject);
-   c->resize(left*fValDiff,0);
-   void *oldstart = fEnv->fStart;
-   fEnv->fStart = left > 0 ? c->data() : 0;
 
-   char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
+   // The storage is a std::vector of raw, aligned bytes: growing it past its
+   // capacity relocates the elements with a raw memory copy. That corrupts an
+   // object holding a pointer into itself -- notably std::string (and TString)
+   // using the small-string optimization, whose data pointer would keep pointing
+   // into the old, freed, buffer and be freed again from there when the object is
+   // destroyed (https://github.com/root-project/root/issues/20882).
+   //
+   // TClass::Move (used below) does not actually move the data (in the C++ sense), so it cannot fix
+   // those up. Expand is however only reached while preparing the collection to
+   // be entirely overwritten by a member-wise read, so we destroy such elements
+   // here -- while they are still valid -- and let the code below reconstruct
+   // them at the new location instead of relocating them.
+   auto needsRealMove = [](const Value *v) {
+      if (!v || (v->fCase & kIsPointer))
+         return false; // a pointer relocates fine
+      if (v->fCase & kBIT_ISSTRING)
+         return true; // std::string, see above
+      if (v->fCase & kIsClass) {
+         // TClass is conservative for the types the interpreter does not know.
+         TClass *cl = v->fType.GetClass();
+         return !cl || !cl->IsTriviallyRelocatable();
+      }
+      return false; // fundamental types and enums
+   };
+   if (nCurr > 0) {
+      // Only worth asking about the type if the buffer actually reallocates.
+      bool willReallocate = false;
+      WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
+         willReallocate = (ElementOffset(left) / alignmentElemSize) > c->capacity();
+      });
+      if (willReallocate && (needsRealMove(fVal) || needsRealMove(fKey))) {
+         // Destroys the elements in place and resizes to 0, keeping the capacity;
+         // the buffer grows again right below with no live object to relocate.
+         // 'force' is the caller's: it decides whether pointees are deleted too.
+         Shrink(nCurr, 0, force);
+         nCurr = 0;
+      }
+   }
+
+   void *oldstart = fEnv->fStart;
+   WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
+      assert(fValDiff % alignmentElemSize == 0);
+      c->resize(ElementOffset(left) / alignmentElemSize);
+      fEnv->fStart = left > 0 ? c->data() : nullptr;
+   });
+
+   char *addr = ((char *)fEnv->fStart) + ElementOffset(nCurr);
    switch ( fSTL_type )  {
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
@@ -388,7 +434,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case kIsClass:
                if (oldstart && oldstart != fEnv->fStart) {
                   Long_t offset = 0;
-                  for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
+                  for (i = 0; i < nCurr; ++i, offset += fValDiff) {
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
@@ -409,7 +455,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                   *(void**)addr = 0;
                break;
          }
-         addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*nCurr;
+         addr = ((char *)fEnv->fStart) + fValOffset + ElementOffset(nCurr);
          // DO NOT break; just continue
 
          // General case for all values
@@ -420,8 +466,10 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                break;
             case kIsClass:
                if (oldstart && oldstart != fEnv->fStart) {
-                  Long_t offset = 0;
-                  for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
+                  // fValOffset locates the value inside the element, as it does
+                  // for the New() loop below; for a map it is past the key.
+                  Long_t offset = fValOffset;
+                  for (i = 0; i < nCurr; ++i, offset += fValDiff) {
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
@@ -462,7 +510,7 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
          Shrink(nCurr, left, force);
          return;
       }
-      Expand(nCurr, left);
+      Expand(nCurr, left, force);
       return;
    }
    Fatal("TEmulatedCollectionProxy","Resize> Logic error - no proxy object set.");
@@ -477,7 +525,7 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)
       if ( idx >= (s/fValDiff) )  {
          return 0;
       }
-      return idx < (s / fValDiff) ? c->data() + idx * fValDiff : 0;
+      return idx < (s / fValDiff) ? c->data() + ElementOffset(idx) : 0;
    }
    Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
    return 0;
@@ -535,7 +583,9 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
          }
          break;
 
-#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
+         // clang-format off
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + ElementOffset(idx)); { x ;} ++idx;} break;}
+         // clang-format on
 
       case kIsClass:
          DOLOOP( b.StreamObject(i,fVal->fType) );
@@ -583,7 +633,9 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
                Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
          }
          break;
-#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
+         // clang-format off
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + ElementOffset(idx)); { x ;} ++idx;} break;}
+         // clang-format on
       case kIsClass:
          DOLOOP( b.StreamObject(i,fVal->fType) );
       case kBIT_ISSTRING:

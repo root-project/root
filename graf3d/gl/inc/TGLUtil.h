@@ -387,8 +387,8 @@ class TGLLine3
 {
 private:
    // Fields
-   TGLVertex3 fVertex; //! Start vertex of line
-   TGLVector3 fVector; //! Vector of line from fVertex
+   TGLVertex3 fVertex; ///<! Start vertex of line
+   TGLVector3 fVector; ///<! Vector of line from fVertex
 
 public:
    TGLLine3(const TGLVertex3 & start, const TGLVertex3 & end);
@@ -422,8 +422,8 @@ class TGLRect
 {
 private:
    // Fields
-   Int_t    fX, fY;           //! Corner
-   Int_t    fWidth, fHeight;  //! Positive width/height
+   Int_t    fX, fY;           ///<! Corner
+   Int_t    fWidth, fHeight;  ///<! Positive width/height
 
 public:
    TGLRect();
@@ -1051,6 +1051,8 @@ public:
 
    static void SetSimpleAxisWidthScale(Float_t s);
    static void SetSimpleAxisBBoxScale(Float_t s);
+
+   static void SwapPixelBuffer(UChar_t *buf, UInt_t width, UInt_t height);
 
    // Frequently used colors.
    static const UChar_t fgRed[4];

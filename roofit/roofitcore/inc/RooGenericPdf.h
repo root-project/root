@@ -18,9 +18,15 @@
 
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
+#include "RooAbsBinning.h"
+
+#include <map>
+#include <memory>
+#include <string>
 
 class RooArgList ;
-class RooFormula ;
+class RooFormulaEvaluator;
+class RooAbsRealLValue;
 
 class RooGenericPdf : public RooAbsPdf {
 public:
@@ -61,24 +67,31 @@ public:
 
   std::string getUniqueFuncName() const;
 
+  void setBinning(const RooAbsRealLValue &obs, const RooAbsBinning &binning, bool checkFlatness = true);
+  const RooAbsBinning *getBinning(const RooAbsRealLValue &obs) const;
+  bool removeBinning(const RooAbsRealLValue &obs);
+
+  bool isBinnedDistribution(const RooArgSet &obs) const override;
+  std::list<double> *binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const override;
+  std::list<double> *plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const override;
+
 protected:
+   RooFormulaEvaluator &evaluator() const;
 
-  RooFormula& formula() const ;
+   // Function evaluation
+   RooListProxy _actualVars;
+   double evaluate() const override;
+   void doEval(RooFit::EvalContext &) const override;
 
-  // Function evaluation
-  RooListProxy _actualVars ;
-  double evaluate() const override ;
-  void doEval(RooFit::EvalContext &) const override;
+   bool isValidReal(double /*value*/, bool /*printError*/) const override { return true; }
 
-  // Post-processing of server redirection
-  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
+   mutable std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! Formula evaluation engine
+   TString _formExpr;                                       ///< Formula expression string
 
-  bool isValidReal(double /*value*/, bool /*printError*/) const override { return true; }
+   std::map<int, std::unique_ptr<RooAbsBinning>> _binnings; ///< User-defined binnings, keyed by the observable's index
+                                                            ///< in _actualVars, for a piecewise-flat distribution
 
-  mutable RooFormula * _formula = nullptr; ///<! Formula engine
-  TString _formExpr ;            ///< Formula expression string
-
-  ClassDefOverride(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables
+   ClassDefOverride(RooGenericPdf, 2) // Generic PDF defined by string expression and list of variables
 };
 
 #endif

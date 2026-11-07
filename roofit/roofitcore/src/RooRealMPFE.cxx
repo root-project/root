@@ -46,13 +46,12 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 
 **/
 
-#include "Riostream.h"
-
 #ifndef _WIN32
 #include "BidirMMapPipe.h"
 #endif
 
 #include <cstdlib>
+#include <memory>
 #include <sstream>
 #include "RooRealMPFE.h"
 #include "RooArgSet.h"
@@ -61,11 +60,10 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooCategory.h"
 #include "RooMsgService.h"
 #include "RooNLLVar.h"
-#include "RooTrace.h"
 
-#include "Rtypes.h"
 #include "TSystem.h"
 
+#include <ostream>
 
 class RooRealMPFE ;
 
@@ -170,7 +168,7 @@ void RooRealMPFE::initVars()
   _saveVars.removeAll() ;
 
   // Retrieve non-constant parameters
-  auto vars = _arg->getParameters(RooArgSet());
+  std::unique_ptr<RooArgSet> vars{_arg->getParameters(RooArgSet())};
   // RooArgSet *ncVars = vars->selectByAttrib("Constant", false);
   RooArgList varList(*vars) ;
 
@@ -216,7 +214,6 @@ void RooRealMPFE::initialize()
 
   if (_pipe->isChild()) {
     // Start server loop
-    RooTrace::callgrind_zero() ;
     _state = Server ;
     serverLoop();
 
@@ -348,17 +345,6 @@ void RooRealMPFE::serverLoop()
       }
       break;
 
-    case ConstOpt:
-      {
-   bool doTrack ;
-   int code;
-   *_pipe >> code >> doTrack;
-   if (_verboseServer) std::cout << "RooRealMPFE::serverLoop(" << GetName()
-             << ") IPC fromClient> ConstOpt " << code << " doTrack = " << (doTrack?"T":"F") << std::endl ;
-   ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(static_cast<RooAbsArg::ConstOpCode>(code),doTrack) ;
-   break ;
-      }
-
     case Verbose:
       {
       bool flag ;
@@ -429,13 +415,11 @@ void RooRealMPFE::calculate() const
 
   // Start asynchronous calculation of arg value
   if (_state==Initialize) {
-    //     std::cout << "RooRealMPFE::calculate(" << GetName() << ") initializing" << std::endl ;
     const_cast<RooRealMPFE*>(this)->initialize() ;
   }
 
   // Inline mode -- Calculate value now
   if (_state==Inline) {
-    //     std::cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << std::endl ;
     _value = _arg ;
     clearValueDirty() ;
   }
@@ -443,7 +427,6 @@ void RooRealMPFE::calculate() const
 #ifndef _WIN32
   // Compare current value of variables with saved values and send changes to server
   if (_state==Client) {
-    //     std::cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << std::endl ;
     Int_t i(0) ;
 
     //for (i=0 ; i<_vars.size() ; i++) {
@@ -467,7 +450,6 @@ void RooRealMPFE::calculate() const
       }
 
       if ( valChanged || constChanged || _forceCalc) {
-   //cout << "RooRealMPFE::calculate(" << GetName() << " variable " << var->GetName() << " changed " << std::endl ;
    if (_verboseClient) std::cout << "RooRealMPFE::calculate(" << GetName()
              << ") variable " << _vars.at(i)->GetName() << " changed" << std::endl ;
    if (constChanged) {
@@ -534,19 +516,15 @@ double RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet
-    //cout << "RooRealMPFE::getValF(" << GetName() << ") cache is dirty, calling calculate and evaluate" << std::endl ;
     calculate() ;
     _value = evaluate() ;
   } else if (_calcInProgress) {
-    //cout << "RooRealMPFE::getValF(" << GetName() << ") calculation in progress, calling evaluate" << std::endl ;
     // Cache is clean and calculation is in progress
     _value = evaluate() ;
   } else {
-    //cout << "RooRealMPFE::getValF(" << GetName() << ") cache is clean, doing nothing" << std::endl ;
     // Cache is clean and calculated value is in cache
   }
 
-//   std::cout << "RooRealMPFE::getValV(" << GetName() << ") value = " << Form("%5.10f",_value) << std::endl ;
   return _value ;
 }
 
@@ -673,33 +651,6 @@ void RooRealMPFE::standby()
   }
 #endif // _WIN32
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Intercept call to optimize constant term in test statistics
-/// and forward it to object on server side.
-
-void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTracking)
-{
-#ifndef _WIN32
-  if (_state==Client) {
-
-    int msg = ConstOpt ;
-    int op = opcode;
-    *_pipe << msg << op << doAlsoTracking;
-    if (_verboseServer) std::cout << "RooRealMPFE::constOptimize(" << GetName()
-              << ") IPC toServer> ConstOpt " << opcode << std::endl ;
-
-    initVars() ;
-  }
-#endif // _WIN32
-
-  if (_state==Inline) {
-    ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(opcode,doAlsoTracking) ;
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

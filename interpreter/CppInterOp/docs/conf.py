@@ -50,8 +50,10 @@ CPPINTEROP_ROOT = os.path.abspath('..')
 html_extra_path = [CPPINTEROP_ROOT + '/build/docs/']
 
 import subprocess
-command = 'mkdir {0}/build; cd {0}/build; cmake ../ -DClang_DIR=/usr/lib/llvm-16/build/lib/cmake/clang\
-         -DLLVM_DIR=/usr/lib/llvm-16/build/lib/cmake/llvm -DCPPINTEROP_ENABLE_DOXYGEN=ON\
+command = 'mkdir {0}/build; cd {0}/build; cmake ../ -DClang_DIR=/usr/lib/llvm-21/build/lib/cmake/clang\
+         -DLLVM_DIR=/usr/lib/llvm-21/build/lib/cmake/llvm -DCPPINTEROP_ENABLE_DOXYGEN=ON\
          -DCPPINTEROP_INCLUDE_DOCS=ON'.format(CPPINTEROP_ROOT)
 subprocess.call(command, shell=True)
+# Generate .inc files so doxygen can find the API declarations in CppInterOp.h.
+subprocess.call('cmake --build {0}/build --target CppInterOpTableGen'.format(CPPINTEROP_ROOT), shell=True)
 subprocess.call('doxygen {0}/build/docs/doxygen.cfg'.format(CPPINTEROP_ROOT), shell=True)

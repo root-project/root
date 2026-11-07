@@ -16,15 +16,15 @@
 /** \class TGWin32
 \ingroup win32
 This class is the basic interface to the Win32 graphics system.
-It is  an implementation of the abstract TVirtualX class.
+It is an implementation of the abstract TVirtualX class.
 
 This code was initially developed in the context of HIGZ and PAW
 by Olivier Couet (package X11INT).
 */
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
+#define ROOT_TGWin32cxx
+#include "Windows4Root.h"
+#include "gdk/gdk.h"
+#include "gdk/win32/gdkwin32.h"
 #include "TGWin32.h"
 #include <stdio.h>
 #include <string.h>
@@ -41,6 +41,7 @@ by Olivier Couet (package X11INT).
 #include "TApplication.h"
 #include "TColor.h"
 #include "TPoint.h"
+#include "TTFhandle.h"
 #include "TMath.h"
 #include "TStorage.h"
 #include "TStyle.h"
@@ -59,6 +60,9 @@ by Olivier Couet (package X11INT).
 #include "TEnv.h"
 #include "RStipples.h"
 #include "GuiTypes.h"
+
+#include "gifencode.h"
+#include "gifdecode.h"
 
 // DND protocol version
 #define XDND_PROTOCOL_VERSION   5
@@ -116,24 +120,47 @@ void gdk_win32_draw_lines     (GdkDrawable    *drawable,
 
 };
 
+const int kMAXGC = 7,
+          kGCline = 0, kGCmark = 1, kGCfill = 2,
+          kGCtext = 3, kGCinvt = 4, kGCdash = 5, kGCpxmp = 6;
+
+
 //////////// internal classes & structures (very private) ////////////////
 
 struct XWindow_t {
-   Int_t    open;                 // 1 if the window is open, 0 if not
-   Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
-   Int_t    ispixmap;             // 1 if pixmap, 0 if not
-   GdkDrawable *drawing;          // drawing area, equal to window or buffer
-   GdkDrawable *window;           // win32 window
-   GdkDrawable *buffer;           // pixmap used for double buffer
-   UInt_t   width;                // width of the window
-   UInt_t   height;               // height of the window
-   Int_t    clip;                 // 1 if the clipping is on
-   Int_t    xclip;                // x coordinate of the clipping rectangle
-   Int_t    yclip;                // y coordinate of the clipping rectangle
-   UInt_t   wclip;                // width of the clipping rectangle
-   UInt_t   hclip;                // height of the clipping rectangle
-   ULong_t *new_colors;           // new image colors (after processing)
-   Int_t    ncolors;              // number of different colors
+   Int_t    open = 0;             ///< 1 if the window is open, 0 if not
+   Int_t    shared = 0;           ///< 1 if Qt window
+   Int_t    double_buffer = 0;    ///< 1 if the double buffer is on, 0 if not
+   Int_t    ispixmap = 0;         ///< 1 if pixmap, 0 if not
+   GdkDrawable *drawing = nullptr;///< drawing area, equal to window or buffer
+   GdkDrawable *window = nullptr; ///< win32 window
+   GdkDrawable *buffer = nullptr; ///< pixmap used for double buffer
+   UInt_t   width = 0;            ///< width of the window
+   UInt_t   height = 0;           ///< height of the window
+   Int_t    clip = 0;             ///< 1 if the clipping is on
+   Int_t    xclip = 0;            ///< x coordinate of the clipping rectangle
+   Int_t    yclip = 0;            ///< y coordinate of the clipping rectangle
+   UInt_t   wclip = 0;            ///< width of the clipping rectangle
+   UInt_t   hclip = 0;            ///< height of the clipping rectangle
+   std::vector<ULong_t> new_colors; ///< new image colors for transparency (after processing)
+   GdkGC   *fGClist[kMAXGC];      ///< array of GC objects for concrete window
+   TVirtualX::EDrawMode drawMode = TVirtualX::kCopy;    ///< current draw mode
+   TAttLine  fAttLine = {-1, -1, -1};  ///< current line attributes
+   GdkLineStyle lineStyle = GDK_LINE_SOLID; ///< current line style
+   Int_t lineWidth = 0;            ///< current line width
+   std::vector<gint8> dashList;    ///< Gtk array for dashes
+   Int_t     dashLength = 0;       ///< total length of dashes
+   Int_t     dashOffset = 0;       ///< current dash offset
+   TAttFill  fAttFill = {-1, -1};  ///< current fill attributes
+   Int_t     fillHollow = 0;       ///< Flag if fill style is hollow
+   Int_t      fillFasi = -1;         ///< fasi parameter for fill pattern
+   GdkPixmap *fillPattern = nullptr; ///< current fill pattern
+   TAttMarker fAttMarker = { -1, -1, -1 }; ///< current marker attribute
+   TAttMarker::EMarkerShape markerType = TAttMarker::kShapeDot; ///< 5 differen kinds of marker
+   Int_t     markerSize = 0;          ///< size of simple markers
+   std::vector<TPoint> markerShape;   ///< marker shape points
+   Int_t markerLineWidth = 0;         ///< line width used for marker
+   TAttText fAttText;                 ///< current text attributes
 };
 
 
@@ -147,51 +174,13 @@ GdkAtom gClipboardAtom = GDK_NONE;
 static XWindow_t *gCws;         // gCws: pointer to the current window
 static XWindow_t *gTws;         // gTws: temporary pointer
 
-//
-// gColors[0]           : background also used for b/w screen
-// gColors[1]           : foreground also used for b/w screen
-// gColors[2..kMAXCOL-1]: colors which can be set by SetColor
-//
 const Int_t kBIGGEST_RGB_VALUE = 65535;
-//const Int_t kMAXCOL = 1000;
-//static struct {
-//   Int_t defined;
-//   GdkColor color;
-//} gColors[kMAXCOL];
 
-//
-// Primitives Graphic Contexts global for all windows
-//
-const int kMAXGC = 7;
-static GdkGC *gGClist[kMAXGC];
-static GdkGC *gGCline;          // = gGClist[0];  // PolyLines
-static GdkGC *gGCmark;          // = gGClist[1];  // PolyMarker
-static GdkGC *gGCfill;          // = gGClist[2];  // Fill areas
-static GdkGC *gGCtext;          // = gGClist[3];  // Text
-static GdkGC *gGCinvt;          // = gGClist[4];  // Inverse text
-static GdkGC *gGCdash;          // = gGClist[5];  // Dashed lines
-static GdkGC *gGCpxmp;          // = gGClist[6];  // Pixmap management
-
-static GdkGC *gGCecho;          // Input echo
-
-static Int_t gFillHollow;       // Flag if fill style is hollow
-static GdkPixmap *gFillPattern; // Fill pattern
-
-//
-// Text management
-//
-static const char *gTextFont = "arial.ttf";      // Current font
+static GdkGC *gGCecho;          // Input echo - global
 
 //
 // Markers
 //
-const Int_t kMAXMK = 100;
-static struct {
-   int type;
-   int n;
-   GdkPoint xy[kMAXMK];
-} gMarker;                      // Point list to draw marker
-static int  gMarkerLineWidth = 0;
 static int  gMarkerLineStyle = GDK_LINE_SOLID;
 static int  gMarkerCapStyle  = GDK_CAP_ROUND;
 static int  gMarkerJoinStyle = GDK_JOIN_ROUND;
@@ -199,14 +188,8 @@ static int  gMarkerJoinStyle = GDK_JOIN_ROUND;
 //
 // Keep style values for line GdkGC
 //
-static int  gLineWidth = 0;
-static int  gLineStyle = GDK_LINE_SOLID;
 static int  gCapStyle  = GDK_CAP_BUTT;
 static int  gJoinStyle = GDK_JOIN_MITER;
-static char gDashList[10];
-static int  gDashLength = 0;
-static int  gDashOffset = 0;
-static int  gDashSize   = 0;
 
 //
 // Event masks
@@ -552,32 +535,6 @@ static ULong_t GetPixelImage(Drawable_t id, Int_t x, Int_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Collect in orgcolors all different original image colors.
-
-static void CollectImageColors(ULong_t pixel, ULong_t * &orgcolors,
-                                 Int_t & ncolors, Int_t & maxcolors)
-{
-   if (maxcolors == 0) {
-      ncolors = 0;
-      maxcolors = 100;
-      orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
-   }
-
-   for (int i = 0; i < ncolors; i++) {
-      if (pixel == orgcolors[i]) return;
-   }
-   if (ncolors >= maxcolors) {
-      orgcolors = (ULong_t *) TStorage::ReAlloc(orgcolors,
-                                                maxcolors * 2 *
-                                                sizeof(ULong_t),
-                                                maxcolors *
-                                                sizeof(ULong_t));
-      maxcolors *= 2;
-   }
-   orgcolors[ncolors++] = pixel;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// debug function for printing event mask
 
 static char *EventMask2String(UInt_t evmask)
@@ -810,7 +767,6 @@ TGWin32MainThread::TGWin32MainThread()
 TGWin32::TGWin32(): fRefreshTimer(0)
 {
    fScreenNumber = 0;
-   fWindows      = 0;
    fColors       = 0;
 }
 
@@ -822,25 +778,11 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
    fScreenNumber = 0;
    fHasTTFonts = kFALSE;
    fUseSysPointers = kFALSE;
-   fTextAlignH = 1;
-   fTextAlignV = 1;
-   fTextAlign = 7;
    fTextMagnitude = 1;
    fCharacterUpX = 1;
    fCharacterUpY = 1;
    fDrawMode = kCopy;
-   fWindows = 0;
-   fMaxNumberOfWindows = 10;
    fXEvent = 0;
-   fFillColorModified = kFALSE;
-   fFillStyleModified = kFALSE;
-   fLineColorModified = kFALSE;
-   fPenModified = kFALSE;
-   fMarkerStyleModified = kFALSE;
-   fMarkerColorModified = kFALSE;
-
-   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
-   for (int i = 0; i < fMaxNumberOfWindows; i++) fWindows[i].open = 0;
 
    fColors = new TExMap;
 
@@ -921,9 +863,6 @@ void TGWin32::CloseDisplay()
       delete delSplash;
    }
 
-   if (fWindows) TStorage::Dealloc(fWindows);
-   fWindows = 0;
-
    if (fXEvent) gdk_event_free((GdkEvent*)fXEvent);
 
    TGWin32ProxyBase::GlobalUnlock();
@@ -972,8 +911,6 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    GdkPixmap *pixmp1, *pixmp2;
    GdkColor fore, back;
    GdkColor color;
-   GdkGCValues gcvals;
-   int i;
 
    HWND hDesktop = ::GetDesktopWindow();
    if (!IsWindow(hDesktop) || !IsWindowVisible(hDesktop))
@@ -1003,25 +940,6 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
 
    GetColor(0).fDefined = kTRUE; // default background
    gdk_color_white((GdkColormap *)fColormap, &GetColor(0).color);
-
-   // Create primitives graphic contexts
-   for (i = 0; i < kMAXGC; i++) {
-      gGClist[i]  = gdk_gc_new(GDK_ROOT_PARENT());
-      gdk_gc_set_foreground(gGClist[i], &GetColor(1).color);
-      gdk_gc_set_background(gGClist[i], &GetColor(0).color);
-   }
-
-   gGCline = gGClist[0];        // PolyLines
-   gGCmark = gGClist[1];        // PolyMarker
-   gGCfill = gGClist[2];        // Fill areas
-   gGCtext = gGClist[3];        // Text
-   gGCinvt = gGClist[4];        // Inverse text
-   gGCdash = gGClist[5];        // Dashed lines
-   gGCpxmp = gGClist[6];        // Pixmap management
-
-   gdk_gc_get_values(gGCtext, &gcvals);
-   gdk_gc_set_foreground(gGCinvt, &gcvals.background);
-   gdk_gc_set_background(gGCinvt, &gcvals.foreground);
 
    // Create input echo graphic context
    GdkGCValues echov;
@@ -1092,9 +1010,8 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    // Setup color information
    fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;
 
-   if ( gdk_visual_get_best_type() == GDK_VISUAL_TRUE_COLOR) {
-      int i;
-      for (i = 0; i < int(sizeof(fVisual->blue_mask)*kBitsPerByte); i++) {
+   if (gdk_visual_get_best_type() == GDK_VISUAL_TRUE_COLOR) {
+      for (int i = 0; i < int(sizeof(fVisual->blue_mask)*kBitsPerByte); i++) {
          if (fBlueShift == -1 && ((fVisual->blue_mask >> i) & 1)) {
             fBlueShift = i;
          }
@@ -1103,7 +1020,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
             break;
          }
       }
-      for (i = 0; i < int(sizeof(fVisual->green_mask)*kBitsPerByte); i++) {
+      for (int i = 0; i < int(sizeof(fVisual->green_mask)*kBitsPerByte); i++) {
          if (fGreenShift == -1 && ((fVisual->green_mask >> i) & 1)) {
             fGreenShift = i;
          }
@@ -1112,7 +1029,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
             break;
          }
       }
-      for (i = 0; i < int(sizeof(fVisual->red_mask)*kBitsPerByte); i++) {
+      for (int i = 0; i < int(sizeof(fVisual->red_mask)*kBitsPerByte); i++) {
          if (fRedShift == -1 && ((fVisual->red_mask >> i) & 1)) {
             fRedShift = i;
          }
@@ -1126,16 +1043,8 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    SetName("Win32TTF");
    SetTitle("ROOT interface to Win32 with TrueType fonts");
 
-   if (!TTF::IsInitialized()) TTF::Init();
-
-   if (fDepth > 8) {
-      TTF::SetSmoothing(kTRUE);
-   } else {
-      TTF::SetSmoothing(kFALSE);
-   }
-
    TGWin32VirtualXProxy::fMaxResponseTime = 1000;
-   fHasTTFonts = kTRUE;
+   fHasTTFonts = TTFhandle::Init();
    return 0;
 }
 
@@ -1195,115 +1104,162 @@ void TGWin32::QueryColors(GdkColormap *cmap, GdkColor *color, Int_t ncolors)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute alignment variables. The alignment is done on the horizontal string
-/// then the rotation is applied on the alignment variables.
-/// SetRotation and LayoutGlyphs should have been called before.
+/// Draw text using TrueType fonts. If TrueType fonts are not available the
+/// text is drawn with TGWin32::DrawText.
 
-void TGWin32::Align(void)
+void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                       const char *text, ETextMode mode)
 {
-   EAlign align = (EAlign) fTextAlign;
+   DrawTextW((WinContext_t) gCws, x, y, angle, mgn, text, mode);
+}
 
-   // vertical alignment
-   if (align == kTLeft || align == kTCenter || align == kTRight) {
-      fAlign.y = TTF::GetAscent();
-   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
-      fAlign.y = TTF::GetAscent()/2;
-   } else {
-      fAlign.y = 0;
-   }
-   // horizontal alignment
-   if (align == kTRight || align == kMRight || align == kBRight) {
-      fAlign.x = TTF::GetWidth();
-   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
-      fAlign.x = TTF::GetWidth()/2;
-   } else {
-      fAlign.x = 0;
-   }
 
-   FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
-   fAlign.x = fAlign.x >> 6;
-   fAlign.y = fAlign.y >> 6;
+template<typename CharType>
+void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle,
+                             const CharType *text, ETextMode mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   UInt_t width = 0, height = 0;
+   Int_t xy;
+   GetWindowSize((Drawable_t) ctxt->drawing, xy, xy, width, height);
+
+   TTFhandle ttf;
+   ttf.SetSmoothing(fDepth > 8);
+   ttf.SetTextFont(ctxt->fAttText.GetTextFont());
+   ttf.SetTextSize(ctxt->fAttText.GetTextSize());
+   ttf.SetRotationMatrix(angle);
+   ttf.PrepareString(text);
+
+   ttf.LayoutGlyphs();
+
+   if (ttf.ApplyAlignRotate(x, y, ctxt->fAttText.GetTextAlign(), width, height))
+      DrawTTFglyphsW(wctxt, x, y, ttf, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
-/// foreground color.
+/// Draw TTF glyphs on the specified window context
 
-void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
-                         GdkImage *xim, Int_t bx, Int_t by)
+void TGWin32::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode)
 {
-   UChar_t d = 0, *s = source->buffer;
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
 
-   if (TTF::GetSmoothing()) {
+   Int_t w    = ttf.GetGlyphsWidth();
+   Int_t h    = ttf.GetGlyphsHeight();
 
-      static GdkColor col[5];
-      GdkColor *bcol = 0, *bc;
-      Int_t    x, y;
+   // create the XImage that will contain the text
+   UInt_t depth = fDepth;
+   GdkImage *xim  = gdk_image_new(GDK_IMAGE_SHARED, gdk_visual_get_best(), w, h);
 
-      // background kClear, i.e. transparent, we take as background color
-      // the average of the rgb values of all pixels covered by this character
-      if (back == (ULong_t) -1 && (UInt_t)source->width) {
-         ULong_t r, g, b;
-         Int_t   dots, dotcnt;
-         const Int_t maxdots = 50000;
+   // use malloc since Xlib will use free() in XDestroyImage
+//   xim->data = (char *) malloc(xim->bytes_per_line * h);
+//   memset(xim->data, 0, xim->bytes_per_line * h);
 
-         dots = Int_t(source->width * source->rows);
-         dots = dots > maxdots ? maxdots : dots;
-         bcol = new GdkColor[dots];
-         if (!bcol) return;
+   ULong_t   pixel;
+   ULong_t   back;
+   GdkGCValues gcvals;
 
-         bc = bcol;
-         dotcnt = 0;
-         for (y = 0; y < (int) source->rows; y++) {
-            for (x = 0; x < (int) source->width; x++, bc++) {
-               bc->pixel = GetPixelImage((Drawable_t)xim, bx + x, by + y);
-               if (++dotcnt >= maxdots) break;
-            }
-         }
-         QueryColors(fColormap, bcol, dots);
-         r = g = b = 0;
-         bc = bcol;
-         dotcnt = 0;
-         for (y = 0; y < (int) source->rows; y++) {
-            for (x = 0; x < (int) source->width; x++, bc++) {
-               r += bc->red;
-               g += bc->green;
-               b += bc->blue;
-               if (++dotcnt >= maxdots) break;
-            }
-         }
-         if (dots != 0) {
-            r /= dots;
-            g /= dots;
-            b /= dots;
-         }
-         bc = &col[0];
-         if (bc->red == r && bc->green == g && bc->blue == b) {
-            bc->pixel = back;
-         } else {
-            bc->pixel = ~back;
-            bc->red   = (UShort_t) r;
-            bc->green = (UShort_t) g;
-            bc->blue  = (UShort_t) b;
+   gdk_gc_get_values(ctxt->fGClist[kGCtext], &gcvals);
+
+   // get the background
+   if (mode == kClear) {
+      // if mode == kClear we need to get an image of the background
+      GdkImage *bim = GetBackground(wctxt, x1, y1, w, h);
+      if (!bim) {
+         Error("DrawTTFglyphsW", "error getting background image");
+         return;
+      }
+
+      // and copy it into the text image
+      Int_t xo = x1 < 0 ? -x1 : 0;
+      Int_t yo = y1 < 0 ? -y1 : 0;
+
+      for (int yp = 0; yp < (int) bim->height; yp++) {
+         for (int xp = 0; xp < (int) bim->width; xp++) {
+            pixel = GetPixelImage((Drawable_t)bim, xp, yp);
+            PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
          }
       }
-      delete [] bcol;
 
-      // if fore or background have changed from previous character
-      // recalculate the 3 smooting colors (interpolation between fore-
-      // and background colors)
-      if (fore != col[4].pixel || back != col[0].pixel) {
-         col[4].pixel = fore;
-         if (back != (ULong_t) -1) {
-            col[3].pixel = back;
-            QueryColors(fColormap, &col[3], 2);
-            col[0] = col[3];
+      gdk_image_unref((GdkImage *)bim);
+
+   } else {
+      // if mode == kOpaque its simple, we just draw the background
+
+      GdkImage *bim = GetBackground(wctxt, x1, y1, w, h);
+      if (!bim) {
+         pixel = gcvals.background.pixel;
+      } else {
+         pixel = GetPixelImage((Drawable_t)bim, 0, 0);
+      }
+      Int_t xo = x1 < 0 ? -x1 : 0;
+      Int_t yo = y1 < 0 ? -y1 : 0;
+
+      for (int yp = 0; yp < h; yp++) {
+         for (int xp = 0; xp < w; xp++) {
+            PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
+         }
+      }
+      if (bim) {
+         gdk_image_unref((GdkImage *)bim);
+         mode = kClear;
+      } else {
+         back = pixel;
+      }
+   }
+
+   // paint the glyphs in the XImage
+   for (UInt_t nglyph = 0; nglyph < ttf.GetNumGlyphs(); nglyph++) {
+      Int_t bx = 0, by = 0;
+      UChar_t *buffer = nullptr;
+      UInt_t width = 0, rows = 0, pitch = 0;
+      if (!ttf.GetGlyphData(nglyph, bx, by, buffer, width, rows, pitch))
+         continue;
+
+      if (ttf.GetSmoothing()) {
+
+         GdkColor col[5];
+
+         // background kClear, i.e. transparent, we take as background color
+         // the average of the rgb values of all pixels covered by this character
+         if (mode == kClear) {
+            const UInt_t ndots = TMath::Min((UInt_t) 50000, width * rows);
+            std::vector<GdkColor> bcol(ndots);
+            if (!bcol.size())
+               return;
+
+            for (UInt_t y = 0, dotcnt = 0; y < rows; y++)
+               for (UInt_t x = 0; (x < width) && (dotcnt < bcol.size()); x++)
+                  bcol[dotcnt++].pixel = GetPixelImage((Drawable_t)xim, bx + x, by + y);
+            QueryColors(fColormap, bcol.data(), bcol.size());
+            ULong_t r = 0, g = 0, b = 0;
+            for (auto &bc : bcol) {
+               r += bc.red;
+               g += bc.green;
+               b += bc.blue;
+            }
+            col[0].red   = (UShort_t) (r / bcol.size());
+            col[0].green = (UShort_t) (g / bcol.size());
+            col[0].blue  = (UShort_t) (b / bcol.size());
          } else {
-            QueryColors(fColormap, &col[4], 1);
+            // query background color
+            col[0].pixel = back;
+            QueryColors(fColormap, &col[0], 1);
          }
 
+         // query foreground color
+         col[4].pixel = gcvals.foreground.pixel;
+         QueryColors(fColormap, &col[4], 1);
+
+         // calculate the 3 smooting colors
+         // (interpolation between fore- and background colors)
+
          // interpolate between fore and backgound colors
-         for (x = 3; x > 0; x--) {
+         for (int x = 3; x > 0; x--) {
             col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
             col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
             col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
@@ -1312,52 +1268,57 @@ void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
                col[x].pixel = col[x+1].pixel;
             }
          }
-      }
 
-      // put smoothed character, character pixmap values are an index
-      // into the 5 colors used for aliasing (4 = foreground, 0 = background)
-      for (y = 0; y < (int) source->rows; y++) {
-         for (x = 0; x < (int) source->width; x++) {
-            d = *s++ & 0xff;
-            d = ((d + 10) * 5) / 256;
-            if (d > 4) d = 4;
-            if (d && x < (int) source->width) {
-               ULong_t p = col[d].pixel;
-               PutPixel((Drawable_t)xim, bx + x, by + y, p);
+         // put smoothed character, character pixmap values are an index
+         // into the 5 colors used for aliasing (4 = foreground, 0 = background)
+         UChar_t* row = buffer;
+         for (unsigned y = 0; y < rows; y++) {
+            UChar_t *s = row;
+            for (unsigned x = 0; x < width; x++) {
+               UChar_t d = (((*s++ & 0xff) + 10) * 5) / 256;
+               if (d > 4)
+                  d = 4;
+               if (d > 0)
+                  PutPixel((Drawable_t)xim, bx + x, by + y, col[d].pixel);
             }
+            row += pitch;
          }
-      }
-   } else {
-      // no smoothing, just put character using foreground color
-      UChar_t* row=s;
-      for (int y = 0; y < (int) source->rows; y++) {
-         int n = 0;
-         s = row;
-         for (int x = 0; x < (int) source->width; x++) {
-            if (n == 0) d = *s++;
-            if (TESTBIT(d,7-n)) {
-               PutPixel((Drawable_t)xim, bx + x, by + y, fore);
+      } else {
+         // no smoothing, just put character using foreground color
+         UChar_t* row = buffer;
+         for (unsigned y = 0; y < rows; y++) {
+            unsigned n = 0;
+            UChar_t *s = row;
+            UChar_t d;
+            for (unsigned x = 0; x < width; x++) {
+               if (n == 0)
+                  d = *s++;
+               if (TESTBIT(d, 7-n))
+                  PutPixel((Drawable_t)xim, bx + x, by + y, gcvals.foreground.pixel);
+               if (++n == kBitsPerByte)
+                  n = 0;
             }
-            if (++n == (int) kBitsPerByte) n = 0;
+            row += pitch;
          }
-         row += source->pitch;
       }
    }
+
+   // put the Ximage on the screen
+   gdk_draw_image(ctxt->drawing, ctxt->fGClist[kGCpxmp], xim, 0, 0, x1, y1, w, h);
+
+   gdk_image_unref(xim);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw text using TrueType fonts. If TrueType fonts are not available the
+/// Draw text using TrueType fonts on specified window.
+/// If TrueType fonts are not available the
 /// text is drawn with TGWin32::DrawText.
 
-void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                       const char *text, ETextMode mode)
+void TGWin32::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t /* mgn */,
+                        const char *text, ETextMode mode)
 {
-   if (!TTF::IsInitialized()) TTF::Init();
-   TTF::SetRotationMatrix(angle);
-   TTF::PrepareString(text);
-   TTF::LayoutGlyphs();
-   Align();
-   RenderString(x, y, mode);
+   DrawTextHelper(wctxt, x, y, angle, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1367,24 +1328,31 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                        const wchar_t *text, ETextMode mode)
 {
-   if (!TTF::IsInitialized()) TTF::Init();
-   TTF::SetRotationMatrix(angle);
-   TTF::PrepareString(text);
-   TTF::LayoutGlyphs();
-   Align();
-   RenderString(x, y, mode);
+   DrawTextW((WinContext_t) gCws, x, y, angle, mgn, text, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts on specified window.
+/// If TrueType fonts are not available the
+/// text is drawn with TGWin32::DrawText.
+
+void TGWin32::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t /* mgn */,
+                        const wchar_t *text, ETextMode mode)
+{
+   DrawTextHelper(wctxt, x, y, angle, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the background of the current window in an XImage.
 
-GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
+GdkImage *TGWin32::GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   Window_t cws = GetCurrentWindow();
+   auto ctxt = (XWindow_t *) wctxt;
+
    UInt_t width;
    UInt_t height;
    Int_t xy;
-   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
+   GetWindowSize((Drawable_t) ctxt->drawing, xy, xy, width, height);
 
    if (x < 0) {
       w += x;
@@ -1398,135 +1366,7 @@ GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (x+w > width)  w = width - x;
    if (y+h > height) h = height - y;
 
-   return gdk_image_get((GdkDrawable*)cws, x, y, w, h);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Test if there is really something to render
-
-Bool_t TGWin32::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
-{
-   Window_t cws = GetCurrentWindow();
-   UInt_t width;
-   UInt_t height;
-   Int_t xy;
-   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
-
-   // If w or h is 0, very likely the string is only blank characters
-   if ((int)w == 0 || (int)h == 0)  return kFALSE;
-
-   // If string falls outside window, there is probably no need to draw it.
-   if (x + (int)w <= 0 || x >= (int)width)  return kFALSE;
-   if (y + (int)h <= 0 || y >= (int)height) return kFALSE;
-
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Perform the string rendering in the pad.
-/// LayoutGlyphs should have been called before.
-
-void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
-{
-   TTF::TTGlyph* glyph = TTF::GetGlyphs();
-   GdkGCValues gcvals;
-
-   // compute the size and position of the XImage that will contain the text
-   Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
-   Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
-   Int_t w    = TTF::GetBox().xMax + Xoff;
-   Int_t h    = TTF::GetBox().yMax + Yoff;
-   Int_t x1   = x-Xoff-fAlign.x;
-   Int_t y1   = y+Yoff+fAlign.y-h;
-
-   if (!IsVisible(x1, y1, w, h)) {
-       return;
-   }
-
-   // create the XImage that will contain the text
-   UInt_t depth = fDepth;
-   GdkImage *xim  = gdk_image_new(GDK_IMAGE_SHARED, gdk_visual_get_best(), w, h);
-
-   // use malloc since Xlib will use free() in XDestroyImage
-//   xim->data = (char *) malloc(xim->bytes_per_line * h);
-//   memset(xim->data, 0, xim->bytes_per_line * h);
-
-   ULong_t   pixel;
-   ULong_t   bg;
-
-   gdk_gc_get_values((GdkGC*)GetGC(3), &gcvals);
-
-   // get the background
-   if (mode == kClear) {
-      // if mode == kClear we need to get an image of the background
-      GdkImage *bim = GetBackground(x1, y1, w, h);
-      if (!bim) {
-         Error("DrawText", "error getting background image");
-         return;
-      }
-
-      // and copy it into the text image
-      Int_t xo = 0, yo = 0;
-      if (x1 < 0) xo = -x1;
-      if (y1 < 0) yo = -y1;
-
-      for (int yp = 0; yp < (int) bim->height; yp++) {
-         for (int xp = 0; xp < (int) bim->width; xp++) {
-            pixel = GetPixelImage((Drawable_t)bim, xp, yp);
-            PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
-         }
-      }
-
-      gdk_image_unref((GdkImage *)bim);
-
-      bg = (ULong_t) -1;
-   } else {
-      // if mode == kOpaque its simple, we just draw the background
-
-      GdkImage *bim = GetBackground(x1, y1, w, h);
-      if (!bim) {
-         pixel = gcvals.background.pixel;
-      } else {
-         pixel = GetPixelImage((Drawable_t)bim, 0, 0);
-      }
-      Int_t xo = 0, yo = 0;
-      if (x1 < 0) xo = -x1;
-      if (y1 < 0) yo = -y1;
-
-      for (int yp = 0; yp < h; yp++) {
-         for (int xp = 0; xp < (int) w; xp++) {
-            PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
-         }
-      }
-      if (bim) {
-         gdk_image_unref((GdkImage *)bim);
-         bg = (ULong_t) -1;
-      } else {
-         bg = pixel;
-      }
-   }
-
-   // paint the glyphs in the XImage
-   glyph = TTF::GetGlyphs();
-   for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage,
-                             TTF::GetSmoothing() ? ft_render_mode_normal
-                                              : ft_render_mode_mono,
-                             0, 1 )) continue;
-      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
-      FT_Bitmap*     source = &bitmap->bitmap;
-      Int_t          bx, by;
-
-      bx = bitmap->left+Xoff;
-      by = h - bitmap->top-Yoff;
-      DrawImage(source, gcvals.foreground.pixel, bg, xim, bx, by);
-   }
-
-   // put the Ximage on the screen
-   Window_t cws = GetCurrentWindow();
-   gdk_draw_image((GdkDrawable *)cws, GetGC(6), xim, 0, 0, x1, y1, w, h);
-
-   gdk_image_unref(xim);
+   return gdk_image_get(ctxt->drawing, x, y, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1534,8 +1374,12 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
 
 void TGWin32::SetTextFont(Font_t fontnumber)
 {
-   fTextFont = fontnumber;
-   TTF::SetTextFont(fontnumber);
+   TAttText::SetTextFont(fontnumber);
+
+   TAttText arg(gCws->fAttText);
+   arg.SetTextFont(fontnumber);
+
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1548,9 +1392,10 @@ void TGWin32::SetTextFont(Font_t fontnumber)
 /// Set text font to specified name. This function returns 0 if
 /// the specified font is found, 1 if not.
 
-Int_t TGWin32::SetTextFont(char *fontname, ETextSetMode mode)
+Int_t TGWin32::SetTextFont(char * /* fontname */, ETextSetMode /* mode */)
 {
-   return TTF::SetTextFont(fontname);
+   Error("SetTextFont", "Direct set of TTF font no longer supported");
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1558,8 +1403,12 @@ Int_t TGWin32::SetTextFont(char *fontname, ETextSetMode mode)
 
 void TGWin32::SetTextSize(Float_t textsize)
 {
-   fTextSize = textsize;
-   TTF::SetTextSize(textsize);
+   TAttText::SetTextSize(textsize);
+
+   TAttText arg(gCws->fAttText);
+   arg.SetTextSize(textsize);
+
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1567,17 +1416,27 @@ void TGWin32::SetTextSize(Float_t textsize)
 
 void TGWin32::ClearWindow()
 {
-   if (!fWindows) return;
+   ClearWindowW((WinContext_t) gCws);
+}
 
-   if (!gCws->ispixmap && !gCws->double_buffer) {
-      gdk_window_set_background(gCws->drawing, (GdkColor *) & GetColor(0).color);
-      gdk_window_clear(gCws->drawing);
+////////////////////////////////////////////////////////////////////////////////
+/// Clear specified window.
+
+void TGWin32::ClearWindowW(WinContext_t wctxt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   if (!ctxt->ispixmap && !ctxt->double_buffer) {
+      gdk_window_set_background(ctxt->drawing, (GdkColor *) & GetColor(0).color);
+      gdk_window_clear(ctxt->drawing);
       GdiFlush();
    } else {
-      SetColor(gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gCws->drawing, gGCpxmp, 1,
-                         0, 0, gCws->width, gCws->height);
-      SetColor(gGCpxmp, 1);
+      SetColor(ctxt, ctxt->fGClist[kGCpxmp], 0);
+      gdk_win32_draw_rectangle(ctxt->drawing, ctxt->fGClist[kGCpxmp], 1,
+                         0, 0, ctxt->width, ctxt->height);
+      SetColor(ctxt, ctxt->fGClist[kGCpxmp], 1);
    }
 }
 
@@ -1586,7 +1445,7 @@ void TGWin32::ClearWindow()
 
 void TGWin32::ClosePixmap()
 {
-   CloseWindow1();
+   CloseWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1594,46 +1453,51 @@ void TGWin32::ClosePixmap()
 
 void TGWin32::CloseWindow()
 {
-   CloseWindow1();
-}
+   if (!gCws->shared) {
+      if (gCws->ispixmap) {
+         gdk_pixmap_unref(gCws->window);
+      } else {
+         gdk_window_destroy(gCws->window, kTRUE);
+      }
+   }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Delete current window.
-
-void TGWin32::CloseWindow1()
-{
-   int wid;
-
-   if (gCws->ispixmap) {
-      gdk_pixmap_unref(gCws->window);
-   } else {
-      gdk_window_destroy(gCws->window, kTRUE);
+   if (gCws->fillPattern) {
+      gdk_pixmap_unref(gCws->fillPattern);
+      gCws->fillPattern = nullptr;
    }
 
    if (gCws->buffer) {
       gdk_pixmap_unref(gCws->buffer);
    }
-   if (gCws->new_colors) {
+   if (!gCws->new_colors.empty()) {
       gdk_colormap_free_colors((GdkColormap *) fColormap,
-                               (GdkColor *)gCws->new_colors, gCws->ncolors);
+                               (GdkColor *)gCws->new_colors.data(), gCws->new_colors.size());
 
-      delete [] gCws->new_colors;
-      gCws->new_colors = 0;
+      gCws->new_colors.clear();
    }
+
+   for (int i = 0; i < kMAXGC; i++)
+      gdk_gc_unref(gCws->fGClist[i]); //  gdk_gc_unref is equivalent to gdk_gc_destroy
 
    GdiFlush();
    gCws->open = 0;
 
-   if (!fWindows) return;
+   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
+      if (iter->second.get() == gCws) {
+         fWindows.erase(iter);
+         gCws = nullptr;
+         break;
+      }
+
+   if (gCws)
+      Fatal("CloseWindow", "Not found gCws in list of windows");
 
    // make first window in list the current window
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (fWindows[wid].open) {
-         gCws = &fWindows[wid];
+   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
+      if (iter->second && iter->second->open) {
+         gCws = iter->second.get();
          return;
       }
-   }
-   gCws = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1641,12 +1505,7 @@ void TGWin32::CloseWindow1()
 
 void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
 {
-   if (!fWindows) return;
-
-   gTws = &fWindows[wid];
-   gdk_window_copy_area(gCws->drawing, gGCpxmp, xpos, ypos, gTws->drawing,
-                        0, 0, gTws->width, gTws->height);
-   GdiFlush();
+   CopyPixmapW((WinContext_t) gCws, wid, xpos, ypos);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1656,7 +1515,19 @@ void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
 
 void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
-   if (!fWindows) return;
+   DrawBoxW((WinContext_t) gCws, x1, y1, x2, y2, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a box on specified window.
+/// mode=0 hollow  (kHollow)
+/// mode=1 solid   (kSolid)
+
+void TGWin32::DrawBoxW(WinContext_t wctxt, int x1, int y1, int x2, int y2, EBoxMode mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
 
    Int_t x = TMath::Min(x1, x2);
    Int_t y = TMath::Min(y1, y2);
@@ -1664,21 +1535,16 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    Int_t h = TMath::Abs(y2 - y1);
 
    switch (mode) {
+      case kHollow:
+         gdk_win32_draw_rectangle(ctxt->drawing, ctxt->fGClist[kGCline], 0, x, y, w, h);
+         break;
 
-   case kHollow:
-      if (fLineColorModified) UpdateLineColor();
-      if (fPenModified) UpdateLineStyle();
-      gdk_win32_draw_rectangle(gCws->drawing, gGCline, 0, x, y, w, h);
-      break;
+      case kFilled:
+         gdk_win32_draw_rectangle(ctxt->drawing, ctxt->fGClist[kGCfill], 1, x, y, w, h);
+         break;
 
-   case kFilled:
-      if (fFillStyleModified) UpdateFillStyle();
-      if (fFillColorModified) UpdateFillColor();
-      gdk_win32_draw_rectangle(gCws->drawing, gGCfill, 1, x, y, w, h);
-      break;
-
-   default:
-      break;
+      default:
+         break;
    }
 }
 
@@ -1696,28 +1562,23 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                             Int_t nx, Int_t ny, Int_t *ic)
 {
-   int i, j, icol, ix, iy, w, h, current_icol;
+   if (!gCws) return;
 
-   if (!fWindows) return;
+   int current_icol = -1;
+   int w = TMath::Max((x2 - x1) / (nx), 1);
+   int h = TMath::Max((y1 - y2) / (ny), 1);
+   int ix = x1;
 
-   current_icol = -1;
-   w = TMath::Max((x2 - x1) / (nx), 1);
-   h = TMath::Max((y1 - y2) / (ny), 1);
-   ix = x1;
-
-   if (fFillStyleModified) UpdateFillStyle();
-   if (fFillColorModified) UpdateFillColor();
-
-   for (i = 0; i < nx; i++) {
-      iy = y1 - h;
-      for (j = 0; j < ny; j++) {
-         icol = ic[i + (nx * j)];
+   for (int i = 0; i < nx; i++) {
+      int iy = y1 - h;
+      for (int j = 0; j < ny; j++) {
+         int icol = ic[i + (nx * j)];
          if (icol != current_icol) {
-            gdk_gc_set_foreground(gGCfill, (GdkColor *) & GetColor(icol).color);
+            gdk_gc_set_foreground(gCws->fGClist[kGCfill], (GdkColor *) & GetColor(icol).color);
             current_icol = icol;
          }
 
-         gdk_win32_draw_rectangle(gCws->drawing, gGCfill, kTRUE, ix,  iy, w, h);
+         gdk_win32_draw_rectangle(gCws->drawing, gCws->fGClist[kGCfill], kTRUE, ix,  iy, w, h);
          iy = iy - h;
       }
       ix = ix + w;
@@ -1731,29 +1592,30 @@ void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
 
 void TGWin32::DrawFillArea(int n, TPoint *xyt)
 {
-   int i;
-   static int lastn = 0;
-   static GdkPoint *xy = 0;
+   DrawFillAreaW((WinContext_t) gCws, n, xyt);
+}
 
-   if (!fWindows) return;
+////////////////////////////////////////////////////////////////////////////////
+/// Fill area described by polygon in a specified window.
+/// n         : number of points
+/// xy(2,n)   : list of points
 
-   if (fFillStyleModified) UpdateFillStyle();
-   if (fFillColorModified) UpdateFillColor();
+void TGWin32::DrawFillAreaW(WinContext_t wctxt, int n, TPoint *xyt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
 
-   if (lastn!=n) {
-      delete [] (GdkPoint *)xy;
-      xy = new GdkPoint[n];
-      lastn = n;
-   }
-   for (i = 0; i < n; i++) {
+   std::vector<GdkPoint> xy(n);
+   for (int i = 0; i < n; i++) {
       xy[i].x = xyt[i].fX;
       xy[i].y = xyt[i].fY;
    }
 
-   if (gFillHollow) {
-      gdk_win32_draw_lines(gCws->drawing, gGCfill, xy, n);
+   if (ctxt->fillHollow) {
+      gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCfill], xy.data(), n);
    } else {
-      gdk_win32_draw_polygon(gCws->drawing, gGCfill, 1, xy, n);
+      gdk_win32_draw_polygon(ctxt->drawing, ctxt->fGClist[kGCfill], 1, xy.data(), n);
    }
 }
 
@@ -1764,24 +1626,25 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
 
 void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   if (!fWindows) return;
+   DrawLineW((WinContext_t) gCws, x1, y1, x2, y2);
+}
 
-   if (fLineColorModified) UpdateLineColor();
-   if (fPenModified) UpdateLineStyle();
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line on specified window.
+/// x1,y1        : begin of line
+/// x2,y2        : end of line
 
-   if (gLineStyle == GDK_LINE_SOLID) {
-      gdk_draw_line(gCws->drawing, gGCline, x1, y1, x2, y2);
+void TGWin32::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   if (ctxt->lineStyle == GDK_LINE_SOLID) {
+      gdk_draw_line(ctxt->drawing, ctxt->fGClist[kGCline], x1, y1, x2, y2);
    } else {
-      int i;
-      gint8 dashes[32];
-      for (i = 0; i < gDashSize; i++) {
-         dashes[i] = (gint8) gDashList[i];
-      }
-      for (i = gDashSize; i < 32; i++) {
-         dashes[i] = (gint8) 0;
-      }
-      gdk_gc_set_dashes(gGCdash, gDashOffset, dashes, gDashSize);
-      gdk_draw_line(gCws->drawing, gGCdash, x1, y1, x2, y2);
+      gdk_gc_set_dashes(ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
+      gdk_draw_line(ctxt->drawing, ctxt->fGClist[kGCdash], x1, y1, x2, y2);
    }
 }
 
@@ -1792,54 +1655,62 @@ void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 
 void TGWin32::DrawPolyLine(int n, TPoint * xyt)
 {
-   int i;
+   DrawPolyLineW((WinContext_t) gCws, n, xyt);
+}
 
-   if (!fWindows) return;
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line through all points in specified window.
+/// n         : number of points
+/// xy        : list of points
 
-   Point_t *xy = new Point_t[n];
+void TGWin32::DrawPolyLineW(WinContext_t wctxt, int n, TPoint * xyt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt || (n < 1))
+      return;
 
-   for (i = 0; i < n; i++) {
-      xy[i].fX = xyt[i].fX;
-      xy[i].fY = xyt[i].fY;
+   std::vector<GdkPoint> xy(n);
+   for (int i = 0; i < n; i++) {
+      xy[i].x = xyt[i].fX;
+      xy[i].y = xyt[i].fY;
    }
 
-   if (fLineColorModified) UpdateLineColor();
-   if (fPenModified) UpdateLineStyle();
-
    if (n > 1) {
-      if (gLineStyle == GDK_LINE_SOLID) {
-         gdk_win32_draw_lines(gCws->drawing, gGCline, (GdkPoint *)xy, n);
+      if (ctxt->lineStyle == GDK_LINE_SOLID) {
+         gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCline], xy.data(), n);
       } else {
-         int i;
-         gint8 dashes[32];
-
-         for (i = 0; i < gDashSize; i++) {
-            dashes[i] = (gint8) gDashList[i];
-         }
-         for (i = gDashSize; i < 32; i++) {
-            dashes[i] = (gint8) 0;
-         }
-
-         gdk_gc_set_dashes(gGCdash, gDashOffset, dashes, gDashSize);
-         gdk_win32_draw_lines(gCws->drawing, (GdkGC*)gGCdash, (GdkPoint *)xy, n);
+         gdk_gc_set_dashes(ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
+         gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCdash], xy.data(), n);
 
          // calculate length of line to update dash offset
-         for (i = 1; i < n; i++) {
-            int dx = xy[i].fX - xy[i - 1].fX;
-            int dy = xy[i].fY - xy[i - 1].fY;
+         for (int i = 1; i < n; i++) {
+            int dx = xy[i].x - xy[i - 1].x;
+            int dy = xy[i].y - xy[i - 1].y;
 
             if (dx < 0) dx = -dx;
             if (dy < 0) dy = -dy;
-            gDashOffset += dx > dy ? dx : dy;
+            ctxt->dashOffset += dx > dy ? dx : dy;
          }
-         gDashOffset %= gDashLength;
+         ctxt->dashOffset %= ctxt->dashLength;
       }
    } else {
-      gdk_win32_draw_points( gCws->drawing, gLineStyle == GDK_LINE_SOLID ?
-                              gGCline : gGCdash, (GdkPoint *)xy,1);
+      gdk_win32_draw_points(ctxt->drawing,
+                            ctxt->fGClist[ctxt->lineStyle == GDK_LINE_SOLID ? kGCline : kGCdash],
+                            xy.data(), 1);
    }
-   delete [] xy;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw N segments on specified window
+/// n         : number of segments
+/// xy        : list of points, 2*N size
+
+void TGWin32::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xyt)
+{
+   for(Int_t i = 0; i < 2*n; i += 2)
+      DrawPolyLineW(wctxt, 2, &xyt[i]);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw n markers with the current attributes at position x, y.
@@ -1848,75 +1719,70 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
 
 void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
 {
-   int i;
-   static int lastn = 0;
-   static GdkPoint *xy = 0;
+   DrawPolyMarkerW((WinContext_t) gCws, n, xyt);
+}
 
-   if (!fWindows) return;
+////////////////////////////////////////////////////////////////////////////////
+/// Draw n markers with the current attributes at position x, y in specified window.
+/// n    : number of markers to draw
+/// xy   : x,y coordinates of markers
 
-   if (fMarkerStyleModified) UpdateMarkerStyle();
-   if (fMarkerColorModified) UpdateMarkerColor();
+void TGWin32::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xyt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt) return;
 
-   if (lastn!=n) {
-      delete [] (GdkPoint *)xy;
-      xy = new GdkPoint[n];
-      lastn = n;
+   if (ctxt->markerType == TAttMarker::kShapeDot) {
+      std::vector<GdkPoint> xy(n);
+      for (int i = 0; i < n; i++) {
+         xy[i].x = xyt[i].fX;
+         xy[i].y = xyt[i].fY;
+      }
+
+      gdk_win32_draw_points(ctxt->drawing, ctxt->fGClist[kGCmark], xy.data(), n);
+      return;
    }
+   int r = ctxt->markerSize / 2;
+   auto &shape0 = ctxt->markerShape;
+   std::vector<GdkPoint> shape(shape0.size());
 
-   for (i = 0; i < n; i++) {
-      xy[i].x = xyt[i].fX;
-      xy[i].y = xyt[i].fY;
-   }
-
-   if (gMarker.n <= 0) {
-       gdk_win32_draw_points(gCws->drawing, gGCmark, xy, n);
-   } else {
-      int r = gMarker.n / 2;
-      int m;
-
-      for (m = 0; m < n; m++) {
-         int hollow = 0;
-         switch (gMarker.type) {
-            int i;
-
-         case 0:               // hollow circle
-            gdk_win32_draw_arc(gCws->drawing, gGCmark, kFALSE, xy[m].x-r, xy[m].y-r,
-                              gMarker.n, gMarker.n, 0, 23040);
+   for (int m = 0; m < n; m++) {
+      for (size_t i = 0; i < shape.size(); i++) {
+         shape[i].x = xyt[m].fX + shape0[i].fX;
+         shape[i].y = xyt[m].fY + shape0[i].fY;
+      }
+      switch(ctxt->markerType) {
+         case TAttMarker::kShapeDot:
+            // handled before
             break;
-
-         case 1:               // filled circle
-            gdk_win32_draw_arc(gCws->drawing, gGCmark, kTRUE, xy[m].x-r, xy[m].y-r,
-                              gMarker.n, gMarker.n, 0, 23040);
+         case TAttMarker::kShapeCircle:
+            // hollow circle
+            gdk_win32_draw_arc(ctxt->drawing, ctxt->fGClist[kGCmark], kFALSE, xyt[m].fX - r, xyt[m].fY - r,
+                              ctxt->markerSize, ctxt->markerSize, 0, 23040);
             break;
-
-         case 2:               // hollow polygon
-            hollow = 1;
-         case 3:               // filled polygon
-            for (i = 0; i < gMarker.n; i++) {
-               gMarker.xy[i].x += xy[m].x;
-               gMarker.xy[i].y += xy[m].y;
-            }
-            if (hollow) {
-               gdk_win32_draw_lines(gCws->drawing, gGCmark, (GdkPoint *)gMarker.xy, gMarker.n);
-            } else {
-               gdk_win32_draw_polygon(gCws->drawing, gGCmark, 1, (GdkPoint *)gMarker.xy, gMarker.n);
-            }
-            for (i = 0; i < gMarker.n; i++) {
-               gMarker.xy[i].x -= xy[m].x;
-               gMarker.xy[i].y -= xy[m].y;
-            }
+         case TAttMarker::kShapeFilledCircle:
+            // filled circle
+            gdk_win32_draw_arc(ctxt->drawing, ctxt->fGClist[kGCmark], kTRUE, xyt[m].fX - r, xyt[m].fY - r,
+                                 ctxt->markerSize, ctxt->markerSize, 0, 23040);
             break;
-
-         case 4:               // segmented line
-            for (i = 0; i < gMarker.n; i += 2) {
-               gdk_draw_line(gCws->drawing, gGCmark,
-                             xy[m].x + gMarker.xy[i].x,
-                             xy[m].y + gMarker.xy[i].y,
-                             xy[m].x + gMarker.xy[i + 1].x,
-                             xy[m].y + gMarker.xy[i + 1].y);
-            }
+         case TAttMarker::kShapePolyLine:
+            // hollow polygon
+            gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCmark], shape.data(), shape.size());
             break;
-         }
+         case TAttMarker::kShapeFilledArea:
+            // fillded area
+            gdk_win32_draw_polygon(ctxt->drawing, ctxt->fGClist[kGCmark], 1, shape.data(), shape.size());
+            break;
+         case TAttMarker::kShapeSegments:
+            for (std::size_t i = 0; i < shape.size(); i += 2)
+               gdk_draw_line(ctxt->drawing, ctxt->fGClist[kGCmark],
+                              shape[i].x, shape[i].y, shape[i+1].x, shape[i+1].y);
+            break;
+         case TAttMarker::kShapeTriangles:
+            // filled triangles
+            for (std::size_t t = 0; t < shape.size(); t += 3)
+               gdk_win32_draw_polygon(ctxt->drawing, ctxt->fGClist[kGCmark], 1, shape.data() + t, 3);
+            break;
       }
    }
 }
@@ -1963,7 +1829,11 @@ GdkGC *TGWin32::GetGC(Int_t which) const
       return 0;
    }
 
-   return gGClist[which];
+   if (!gCws) {
+      Error("GetGC", "No current window selected");
+      return nullptr;
+   }
+   return gCws->fGClist[which];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1971,9 +1841,10 @@ GdkGC *TGWin32::GetGC(Int_t which) const
 
 Int_t TGWin32::GetDoubleBuffer(int wid)
 {
-   if (!fWindows) return 0;
+   if (fWindows.count(wid) == 0)
+      return 0;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
    if (!gTws->open) {
       return -1;
@@ -1992,8 +1863,6 @@ Int_t TGWin32::GetDoubleBuffer(int wid)
 void TGWin32::GetGeometry(int wid, int &x, int &y, unsigned int &w,
                           unsigned int &h)
 {
-   if (!fWindows) return;
-
    if (wid < 0) {
       x = 0;
       y = 0;
@@ -2004,7 +1873,9 @@ void TGWin32::GetGeometry(int wid, int &x, int &y, unsigned int &w,
       int depth;
       int width, height;
 
-      gTws = &fWindows[wid];
+      if (fWindows.count(wid) == 0) return;
+
+      gTws = fWindows[wid].get();
       gdk_window_get_geometry((GdkDrawable *) gTws->window, &x, &y,
                               &width, &height, &depth);
 
@@ -2053,16 +1924,28 @@ void TGWin32::GetRGB(int index, float &r, float &g, float &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the size of a character string.
+/// Return the size of a character string - no longer used
 /// iw          : text width
 /// ih          : text height
 /// mess        : message
 
 void TGWin32::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 {
-   TTF::SetTextFont(gTextFont);
-   TTF::SetTextSize(fTextSize);
-   TTF::GetTextExtent(w, h, mess);
+   TTFhandle ttf;
+   ttf.SetTextFont(GetTextFont());
+   ttf.SetTextSize(GetTextSize());
+   ttf.GetTextExtent(w, h, mess);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size of a wcharacter string - use TTF
+
+void TGWin32::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess)
+{
+   TTFhandle ttf;
+   ttf.SetTextFont(GetTextFont());
+   ttf.SetTextSize(GetTextSize());
+   ttf.GetTextExtent(w, h, mess);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2071,8 +1954,8 @@ void TGWin32::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 
 Window_t TGWin32::GetWindowID(int wid)
 {
-   if (!fWindows) return 0;
-   return (Window_t) fWindows[wid].window;
+   if (fWindows.count(wid) == 0) return 0;
+   return (Window_t) fWindows[wid]->window;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2083,13 +1966,62 @@ Window_t TGWin32::GetWindowID(int wid)
 
 void TGWin32::MoveWindow(Int_t wid, Int_t x, Int_t y)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    if (!gTws->open) return;
 
+   // prevent hiding the titlebar
+   if (x == 0 && y == 0) {
+      x = 1; y = 1;
+   }
    gdk_window_move((GdkDrawable *) gTws->window, x, y);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add new window handle
+/// Only for private usage
+
+Int_t TGWin32::AddWindowHandle()
+{
+   Int_t maxid = 0;
+   for (auto & pair : fWindows) {
+      if (pair.first > maxid)
+         maxid = pair.first;
+   }
+
+   if (fWindows.size() == (size_t) maxid) {
+      // all ids are in use - just add maximal+1
+      maxid++;
+   } else
+      for (int id = 1; id < maxid; id++) {
+         if (fWindows.count(id) == 0) {
+            maxid = id;
+            break;
+         }
+      }
+
+   fWindows.emplace(maxid, std::make_unique<XWindow_t>());
+
+   auto ctxt = fWindows[maxid].get();
+   ctxt->open = 1;
+   ctxt->shared = 0;
+   ctxt->drawing = nullptr;
+   ctxt->window = nullptr;
+   ctxt->buffer = nullptr;
+
+   ctxt->drawMode = TVirtualX::kCopy;
+
+   // Create primitives graphic contexts
+   for (int i = 0; i < kMAXGC; i++) {
+      ctxt->fGClist[i]  = gdk_gc_new(GDK_ROOT_PARENT());
+      gdk_gc_set_foreground(ctxt->fGClist[i], &GetColor(1).color);
+      gdk_gc_set_background(ctxt->fGClist[i], &GetColor(0).color);
+   }
+
+   return maxid;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a new pixmap.
@@ -2098,54 +2030,33 @@ void TGWin32::MoveWindow(Int_t wid, Int_t x, Int_t y)
 Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
 {
    int wval, hval;
-   int i, wid;
    int ww, hh, depth;
    wval = w;
    hval = h;
 
-   // Select next free window number
- again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         gCws = &fWindows[wid];
-         break;
-      }
-   }
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows = (XWindow_t *) TStorage::ReAlloc(fWindows,
-                                                 newsize * sizeof(XWindow_t),
-                                                 fMaxNumberOfWindows *
-                                                 sizeof(XWindow_t));
+   int wid = AddWindowHandle();
 
-      for (i = fMaxNumberOfWindows; i < newsize; i++) fWindows[i].open = 0;
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
+   gCws = fWindows[wid].get();
+   gCws->ispixmap = 1;
 
-   depth =gdk_visual_get_best_depth();
+   depth = gdk_visual_get_best_depth();
    gCws->window = (GdkPixmap *) gdk_pixmap_new(GDK_ROOT_PARENT(),wval,hval,depth);
    gdk_drawable_get_size((GdkDrawable *) gCws->window, &ww, &hh);
 
-   for (i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
-   }
+   for (int i = 0; i < kMAXGC; i++)
+      gdk_gc_set_clip_mask(gCws->fGClist[i], (GdkDrawable *)None);
 
-   SetColor(gGCpxmp, 0);
-   gdk_win32_draw_rectangle(gCws->window,(GdkGC *)gGCpxmp, kTRUE,
+   SetColor(gCws, gCws->fGClist[kGCpxmp], 0);
+   gdk_win32_draw_rectangle(gCws->window, gCws->fGClist[kGCpxmp], kTRUE,
                            0, 0, ww, hh);
-   SetColor(gGCpxmp, 1);
+   SetColor(gCws, gCws->fGClist[kGCpxmp], 1);
 
    // Initialise the window structure
    gCws->drawing = gCws->window;
-   gCws->buffer = 0;
    gCws->double_buffer = 0;
-   gCws->ispixmap = 1;
    gCws->clip = 0;
    gCws->width = wval;
    gCws->height = hval;
-   gCws->new_colors = 0;
 
    return wid;
 }
@@ -2158,41 +2069,18 @@ Int_t TGWin32::InitWindow(ULongptr_t win)
 {
    GdkWindowAttr attributes;
    unsigned long attr_mask = 0;
-   int wid;
    int xval, yval;
    int wval, hval, depth;
+
+   int wid = AddWindowHandle();
+
+   gCws = fWindows[wid].get();
+   gCws->ispixmap = 0;
 
    GdkWindow *wind = (GdkWindow *) win;
 
    gdk_window_get_geometry(wind, &xval, &yval, &wval, &hval, &depth);
 
-   // Select next free window number
-
- again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         fWindows[wid].double_buffer = 0;
-         gCws = &fWindows[wid];
-         break;
-      }
-   }
-
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows =
-          (XWindow_t *) TStorage::ReAlloc(fWindows,
-                                          newsize * sizeof(XWindow_t),
-                                          fMaxNumberOfWindows *
-                                          sizeof(XWindow_t));
-
-      for (int i = fMaxNumberOfWindows; i < newsize; i++) {
-         fWindows[i].open = 0;
-      }
-
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
    // Create window
    attributes.wclass = GDK_INPUT_OUTPUT;
    attributes.event_mask = 0L;  //GDK_ALL_EVENTS_MASK;
@@ -2241,13 +2129,10 @@ Int_t TGWin32::InitWindow(ULongptr_t win)
    // Initialise the window structure
 
    gCws->drawing = gCws->window;
-   gCws->buffer = 0;
    gCws->double_buffer = 0;
-   gCws->ispixmap = 0;
    gCws->clip = 0;
    gCws->width = wval;
    gCws->height = hval;
-   gCws->new_colors = 0;
 
    return wid;
 }
@@ -2490,8 +2375,9 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    // Set max response time to 2 minutes to avoid timeout
    // in TGWin32ProxyBase::ForwardCallBack during RequestString
    TGWin32VirtualXProxy::fMaxResponseTime = 120000;
-   TTF::SetTextFont(gTextFont);
-   TTF::SetTextSize(fTextSize);
+   TTFhandle ttf;
+   ttf.SetTextFont(GetTextFont());
+   ttf.SetTextSize(GetTextSize());
    do {
       char tmp[2];
       char keybuf[8];
@@ -2508,7 +2394,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
       }
 
       DrawText(x, y, 0.0, 1.0, text, kOpaque);
-      TTF::GetTextExtent(dx, h, text);
+      ttf.GetTextExtent(dx, h, text);
       DrawText(x+dx, y, 0.0, 1.0, " ", kOpaque);
 
       if (pt == 0) {
@@ -2517,7 +2403,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
          char *stmp = new char[pt+1];
          strncpy(stmp, text, pt);
          stmp[pt] = '\0';
-         TTF::GetTextExtent(ddx, h, stmp);
+         ttf.GetTextExtent(ddx, h, stmp);
          dx = ddx;
          delete[] stmp;
       }
@@ -2696,11 +2582,9 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
 
 void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
 {
-    int i;
+   if (fWindows.count(wid) == 0) return;
 
-   if (!fWindows) return;
-
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    if (!gTws->open)
       return;
 
@@ -2717,14 +2601,14 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
          gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), // NULL,
                                        w, h, gdk_visual_get_best_depth());
       }
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
-      }
-      SetColor(gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, w, h);
-      SetColor(gGCpxmp, 1);
+      for (int i = 0; i < kMAXGC; i++)
+         gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkBitmap *)None);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
+      gdk_win32_draw_rectangle(gTws->buffer, gTws->fGClist[kGCpxmp], 1, 0, 0, w, h);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
 
-      if (gTws->double_buffer) gTws->drawing = gTws->buffer;
+      if (gTws->double_buffer)
+         gTws->drawing = gTws->buffer;
    }
    gTws->width = w;
    gTws->height = h;
@@ -2738,14 +2622,13 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
 int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 {
    int wval, hval;
-   int i;
    int ww, hh, depth;
    wval = w;
    hval = h;
 
-   if (!fWindows) return 0;
+   if (fWindows.count(wid) == 0) return 0;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
    // don't do anything when size did not change
    //  if (gTws->width == wval && gTws->height == hval) return 0;
@@ -2765,13 +2648,12 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 
    gdk_drawable_get_size(gTws->window, &ww, &hh);
 
-   for (i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
-   }
+   for (int i = 0; i < kMAXGC; i++)
+      gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
 
-   SetColor(gGCpxmp, 0);
-   gdk_win32_draw_rectangle(gTws->window,(GdkGC *)gGCpxmp, kTRUE, 0, 0, ww, hh);
-   SetColor(gGCpxmp, 1);
+   SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
+   gdk_win32_draw_rectangle(gTws->window, gTws->fGClist[kGCpxmp], kTRUE, 0, 0, ww, hh);
+   SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
 
    // Initialise the window structure
    gTws->drawing = gTws->window;
@@ -2785,16 +2667,13 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 
 void TGWin32::ResizeWindow(Int_t wid)
 {
-   int i;
-   int xval = 0, yval = 0;
-   GdkWindow *win, *root = NULL;
-   int wval = 0, hval = 0, depth = 0;
+   if (fWindows.count(wid) == 0) return;
 
-   if (!fWindows) return;
+   int xval = 0, yval = 0, wval = 0, hval = 0, depth = 0;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
-   win = (GdkWindow *) gTws->window;
+   auto win = (GdkWindow *) gTws->window;
    gdk_window_get_geometry(win, &xval, &yval,
                            &wval, &hval, &depth);
 
@@ -2813,16 +2692,16 @@ void TGWin32::ResizeWindow(Int_t wid)
                                                      wval, hval, depth);
       }
 
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
-      }
+      for (int i = 0; i < kMAXGC; i++)
+         gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
 
-      SetColor(gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gTws->buffer,(GdkGC *)gGCpxmp, kTRUE, 0, 0, wval, hval);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
+      gdk_win32_draw_rectangle(gTws->buffer, gTws->fGClist[kGCpxmp], kTRUE, 0, 0, wval, hval);
 
-      SetColor(gGCpxmp, 1);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
 
-      if (gTws->double_buffer) gTws->drawing = gTws->buffer;
+      if (gTws->double_buffer)
+         gTws->drawing = gTws->buffer;
    }
 
    gTws->width = wval;
@@ -2834,28 +2713,24 @@ void TGWin32::ResizeWindow(Int_t wid)
 
 void TGWin32::SelectWindow(int wid)
 {
-   int i;
-   GdkRectangle rect;
+   if (fWindows.count(wid) == 0) return;
 
-   if (!fWindows || wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].open) {
-      return;
-   }
+   if (!fWindows[wid]->open) return;
 
-   gCws = &fWindows[wid];
+   gCws = fWindows[wid].get();
 
    if (gCws->clip && !gCws->ispixmap && !gCws->double_buffer) {
+      GdkRectangle rect;
       rect.x = gCws->xclip;
       rect.y = gCws->yclip;
       rect.width = gCws->wclip;
       rect.height = gCws->hclip;
 
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_rectangle((GdkGC *) gGClist[i], &rect);
-      }
+      for (int i = 0; i < kMAXGC; i++)
+         gdk_gc_set_clip_rectangle(gCws->fGClist[i], &rect);
    } else {
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
-      }
+      for (int i = 0; i < kMAXGC; i++)
+         gdk_gc_set_clip_mask(gCws->fGClist[i], (GdkDrawable *)None);
    }
 }
 
@@ -2893,14 +2768,13 @@ void TGWin32::SetCharacterUp(Float_t chupx, Float_t chupy)
 
 void TGWin32::SetClipOFF(int wid)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    gTws->clip = 0;
 
-   for (int i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
-   }
+   for (int i = 0; i < kMAXGC; i++)
+      gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2912,25 +2786,24 @@ void TGWin32::SetClipOFF(int wid)
 void TGWin32::SetClipRegion(int wid, int x, int y, unsigned int w,
                             unsigned int h)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    gTws->xclip = x;
    gTws->yclip = y;
    gTws->wclip = w;
    gTws->hclip = h;
    gTws->clip = 1;
-   GdkRectangle rect;
 
    if (gTws->clip && !gTws->ispixmap && !gTws->double_buffer) {
+      GdkRectangle rect;
       rect.x = gTws->xclip;
       rect.y = gTws->yclip;
       rect.width = gTws->wclip;
       rect.height = gTws->hclip;
 
-      for (int i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_rectangle((GdkGC *)gGClist[i], &rect);
-      }
+      for (int i = 0; i < kMAXGC; i++)
+         gdk_gc_set_clip_rectangle(gTws->fGClist[i], &rect);
    }
 }
 
@@ -2949,12 +2822,12 @@ ULong_t TGWin32::GetPixel(Color_t ci)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the foreground color in GdkGC.
 
-void TGWin32::SetColor(GdkGC *gc, int ci)
+void TGWin32::SetColor(XWindow_t *ctxt, GdkGC *gc, int ci)
 {
    GdkGCValues gcvals;
    GdkColor color;
 
-   if (ci<=0) ci = 10; //white
+   if (ci <= 0) ci = 10; //white
 
    TColor *clr = gROOT->GetColor(ci);
    if (clr)
@@ -2967,7 +2840,7 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
       col = GetColor(0);
    }
 
-   if (fDrawMode == kXor) {
+   if (ctxt && ctxt->drawMode == kXor) {
       gdk_gc_get_values(gc, &gcvals);
 
       color.pixel = col.color.pixel ^ gcvals.background.pixel;
@@ -2993,9 +2866,9 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
 
 void TGWin32::SetCursor(Int_t wid, ECursor cursor)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    gdk_window_set_cursor((GdkWindow *)gTws->window, (GdkCursor *)fCursors[cursor]);
 }
 
@@ -3025,11 +2898,9 @@ void TGWin32::SetCursor(Window_t id, Cursor_t curid)
 
 void TGWin32::SetDoubleBuffer(int wid, int mode)
 {
-   if (!fWindows) return;
-
    if (wid == 999) {
-      for (int i = 0; i < fMaxNumberOfWindows; i++) {
-         gTws = &fWindows[i];
+      for (auto & pair : fWindows) {
+         gTws = pair.second.get();
          if (gTws->open) {
             switch (mode) {
             case 1:
@@ -3042,7 +2913,9 @@ void TGWin32::SetDoubleBuffer(int wid, int mode)
          }
       }
    } else {
-      gTws = &fWindows[wid];
+      if (fWindows.count(wid) == 0) return;
+
+      gTws = fWindows[wid].get();
       if (!gTws->open) return;
 
       switch (mode) {
@@ -3071,20 +2944,19 @@ void TGWin32::SetDoubleBufferOFF()
 
 void TGWin32::SetDoubleBufferON()
 {
-   if (!fWindows || gTws->double_buffer || gTws->ispixmap) return;
+   if (fWindows.size() == 0 || !gTws || gTws->double_buffer || gTws->ispixmap) return;
 
    if (!gTws->buffer) {
       gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), //NULL,
                                     gTws->width, gTws->height,
                                     gdk_visual_get_best_depth());
-      SetColor(gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, gTws->width,
-                         gTws->height);
-      SetColor(gGCpxmp, 1);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
+      gdk_win32_draw_rectangle(gTws->buffer, gTws->fGClist[kGCpxmp], 1, 0, 0,
+                               gTws->width, gTws->height);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
    }
-   for (int i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
-   }
+   for (int i = 0; i < kMAXGC; i++)
+      gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkBitmap *)None);
    gTws->double_buffer = 1;
    gTws->drawing = gTws->buffer;
 }
@@ -3100,29 +2972,7 @@ void TGWin32::SetDoubleBufferON()
 
 void TGWin32::SetDrawMode(EDrawMode mode)
 {
-   int i;
-
-   switch (mode) {
-      case kCopy:
-         for (i = 0; i < kMAXGC; i++) {
-            if (gGClist[i])
-               gdk_gc_set_function(gGClist[i], GDK_COPY);
-         }
-         break;
-      case kXor:
-         for (i = 0; i < kMAXGC; i++) {
-            if (gGClist[i])
-               gdk_gc_set_function(gGClist[i], GDK_XOR);
-         }
-         break;
-      case kInvert:
-         for (i = 0; i < kMAXGC; i++) {
-            if (gGClist[i])
-               gdk_gc_set_function(gGClist[i], GDK_INVERT);
-         }
-         break;
-   }
-   fDrawMode = mode;
+   SetDrawModeW((WinContext_t) gCws, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3130,31 +2980,24 @@ void TGWin32::SetDrawMode(EDrawMode mode)
 
 void TGWin32::SetFillColor(Color_t cindex)
 {
-   Int_t indx = Int_t(cindex);
+   if (cindex < 0) return;
 
-   if (!gStyle->GetFillColor() && cindex > 1) {
-      indx = 0;
-   }
+   TAttFill::SetFillColor(cindex);
 
-   fFillColor = indx;
-   fFillColorModified = kTRUE;
+   TAttFill arg(gCws->fAttFill);
+   arg.SetFillColor(cindex);
+
+   SetAttFill((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Return current fill color
 
-void TGWin32::UpdateFillColor()
+Color_t TGWin32::GetFillColor() const
 {
-   if (fFillColor >= 0) {
-      SetColor(gGCfill, fFillColor);
-   }
+   // TODO: remove in ROOT7, no longer used in ROOT
 
-   // invalidate fill pattern
-   if (gFillPattern != NULL) {
-      gdk_pixmap_unref(gFillPattern);
-      gFillPattern = NULL;
-   }
-   fFillColorModified = kFALSE;
+   return gCws ? gCws->fAttFill.GetFillColor() : TAttFill::GetFillColor();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3164,58 +3007,78 @@ void TGWin32::UpdateFillColor()
 
 void TGWin32::SetFillStyle(Style_t fstyle)
 {
-   if (fFillStyle==fstyle) return;
+   TAttFill::SetFillStyle(fstyle);
 
-   fFillStyle = fstyle;
-   fFillStyleModified = kTRUE;
+   TAttFill arg(gCws->fAttFill);
+   arg.SetFillStyle(fstyle);
+
+   SetAttFill((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set fill area style index.
+/// Return current fill style
 
-void TGWin32::UpdateFillStyle()
+Style_t TGWin32::GetFillStyle() const
 {
-   static int current_fasi = 0;
+   // TODO: remove in ROOT7, no longer used in ROOT
 
-   Int_t style = fFillStyle / 1000;
-   Int_t fasi = fFillStyle % 1000;
+   return gCws ? gCws->fAttFill.GetFillStyle() : TAttFill::GetFillStyle();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill attributes for specified window
+
+void TGWin32::SetAttFill(WinContext_t wctxt, const TAttFill &att)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   Int_t cindex = att.GetFillColor();
+   if (!gStyle->GetFillColor() && cindex > 1)
+      cindex = 0;
+   if (cindex >= 0)
+      SetColor(ctxt, ctxt->fGClist[kGCfill], Int_t(cindex));
+   ctxt->fAttFill.SetFillColor(cindex);
+
+   Int_t style = att.GetFillStyle() / 1000;
+   Int_t fasi = att.GetFillStyle() % 1000;
 
    switch (style) {
+      case 1:                     // solid
+         ctxt->fillHollow = 0;
+         gdk_gc_set_fill(ctxt->fGClist[kGCfill], GDK_SOLID);
+         break;
 
-   case 1:                     // solid
-      gFillHollow = 0;
-      gdk_gc_set_fill(gGCfill, GDK_SOLID);
-      break;
+      case 2:                     // pattern
+         ctxt->fillHollow = 1;
+         break;
 
-   case 2:                     // pattern
-      gFillHollow = 1;
-      break;
+      case 3:                     // hatch
+         ctxt->fillHollow = 0;
+         gdk_gc_set_fill(ctxt->fGClist[kGCfill], GDK_STIPPLED);
 
-   case 3:                     // hatch
-      gFillHollow = 0;
-      gdk_gc_set_fill(gGCfill, GDK_STIPPLED);
-
-      if (fasi != current_fasi) {
-         if (gFillPattern != NULL) {
-            gdk_pixmap_unref(gFillPattern);
-            gFillPattern = NULL;
+         if (fasi != ctxt->fillFasi) {
+            if (ctxt->fillPattern) {
+               gdk_pixmap_unref(ctxt->fillPattern);
+               ctxt->fillPattern = nullptr;
+            }
+            int stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
+            char pattern[32];
+            for (int i = 0; i < 32; ++i)
+               pattern[i] = ~gStipples[stn][i];
+            ctxt->fillPattern = gdk_bitmap_create_from_data(GDK_ROOT_PARENT(),
+                                                            (const char *)&pattern, 16, 16);
+            gdk_gc_set_stipple(ctxt->fGClist[kGCfill], ctxt->fillPattern);
+            ctxt->fillFasi = fasi;
          }
-         int stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
-         char pattern[32];
-         for (int i=0;i<32;++i)
-            pattern[i] = ~gStipples[stn][i];
-         gFillPattern = gdk_bitmap_create_from_data(GDK_ROOT_PARENT(),
-                                                    (const char *)&pattern, 16, 16);
-         gdk_gc_set_stipple(gGCfill, gFillPattern);
-         current_fasi = fasi;
-      }
-      break;
+         break;
 
-   default:
-      gFillHollow = 1;
+      default:
+         ctxt->fillHollow = 1;
    }
 
-   fFillStyleModified = kFALSE;
+   ctxt->fAttFill.SetFillStyle(att.GetFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3231,20 +3094,14 @@ void TGWin32::SetInput(int inp)
 
 void TGWin32::SetLineColor(Color_t cindex)
 {
-   if ((cindex < 0) || (cindex==fLineColor)) return;
+   if (cindex < 0) return;
 
-   fLineColor =  cindex;
-   fLineColorModified = kTRUE;
-}
+   TAttLine::SetLineColor(cindex);
 
-////////////////////////////////////////////////////////////////////////////////
-///
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineColor(cindex);
 
-void TGWin32::UpdateLineColor()
-{
-   SetColor(gGCline, Int_t(fLineColor));
-   SetColor(gGCdash, Int_t(fLineColor));
-   fLineColorModified = kFALSE;
+   SetAttLine((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3257,31 +3114,9 @@ void TGWin32::UpdateLineColor()
 ///    e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
 ///    and a gap of 7 between dashes
 
-void TGWin32::SetLineType(int n, int *dash)
+void TGWin32::SetLineType(int /* n */ , int * /* dash */)
 {
-   if (n <= 0) {
-      gLineStyle = GDK_LINE_SOLID;
-      gdk_gc_set_line_attributes(gGCline, gLineWidth,
-                                 (GdkLineStyle)gLineStyle,
-                                 (GdkCapStyle) gCapStyle,
-                                 (GdkJoinStyle) gJoinStyle);
-   } else {
-      int i;
-      gDashSize = TMath::Min((int)sizeof(gDashList),n);
-      gDashLength = 0;
-      for (i = 0; i < gDashSize; i++) {
-         gDashList[i] = dash[i];
-         gDashLength += gDashList[i];
-      }
-      gDashOffset = 0;
-      gLineStyle = GDK_LINE_ON_OFF_DASH;
-      if (gLineWidth == 0) gLineWidth =1;
-      gdk_gc_set_line_attributes(gGCdash, gLineWidth,
-                                 (GdkLineStyle) gLineStyle,
-                                 (GdkCapStyle) gCapStyle,
-                                 (GdkJoinStyle) gJoinStyle);
-   }
-   fPenModified = kFALSE;
+   Warning("SetLineType", "DEPRECATED, use SetAttLine() instead");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3289,45 +3124,22 @@ void TGWin32::SetLineType(int n, int *dash)
 
 void TGWin32::SetLineStyle(Style_t lstyle)
 {
-   if (fLineStyle == lstyle) return;
+   TAttLine::SetLineStyle(lstyle);
 
-   fLineStyle = lstyle;
-   fPenModified = kTRUE;
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineStyle(lstyle);
+
+   SetAttLine((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update line style
+/// Return current line style
 
-void TGWin32::UpdateLineStyle()
+Style_t TGWin32::GetLineStyle() const
 {
-   static Int_t dashed[2] = { 3, 3 };
-   static Int_t dotted[2] = { 1, 2 };
-   static Int_t dasheddotted[4] = { 3, 4, 1, 4 };
+   // TODO: remove in ROOT7, no longer used in ROOT
 
-   if (fLineStyle <= 1) {
-      SetLineType(0, 0);
-   } else if (fLineStyle == 2) {
-      SetLineType(2, dashed);
-   } else if (fLineStyle == 3) {
-      SetLineType(2, dotted);
-   } else if (fLineStyle == 4) {
-      SetLineType(4, dasheddotted);
-   } else {
-      TString st = (TString)gStyle->GetLineStyleString(fLineStyle);
-      TObjArray *tokens = st.Tokenize(" ");
-      Int_t nt;
-      nt = tokens->GetEntries();
-      Int_t *linestyle = new Int_t[nt];
-      for (Int_t j = 0; j<nt; j++) {
-         Int_t it;
-         sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
-         linestyle[j] = (Int_t)(it/4);
-      }
-      SetLineType(nt,linestyle);
-      delete [] linestyle;
-      delete tokens;
-   }
-   fPenModified = kFALSE;
+   return gCws ? gCws->fAttLine.GetLineStyle() : TAttLine::GetLineStyle();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3336,32 +3148,97 @@ void TGWin32::UpdateLineStyle()
 
 void TGWin32::SetLineWidth(Width_t width)
 {
-   if (fLineWidth == width) return;
-   fLineWidth = width;
+   TAttLine::SetLineWidth(width);
 
-   if (width == 1 && gLineStyle == GDK_LINE_SOLID) gLineWidth = 0;
-   else gLineWidth = width;
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineWidth(width);
 
-   fPenModified = kTRUE;
+   SetAttLine((WinContext_t) gCws, arg);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current line width
+
+Width_t TGWin32::GetLineWidth() const
+{
+   // TODO: remove in ROOT7, no longer used in ROOT
+
+   return gCws ? gCws->fAttLine.GetLineWidth() : TAttLine::GetLineWidth();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set line attributes for specified window.
+
+void TGWin32::SetAttLine(WinContext_t wctxt, const TAttLine &att)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   SetColor(ctxt, ctxt->fGClist[kGCline], att.GetLineColor());
+   SetColor(ctxt, ctxt->fGClist[kGCdash], att.GetLineColor());
+
+   if (ctxt->fAttLine.GetLineStyle() != att.GetLineStyle()) { //set style index only if different
+      if (att.GetLineStyle() <= 1)
+         ctxt->dashList.clear();
+      else if (att.GetLineStyle() == 2)
+         ctxt->dashList = { 3, 3 };
+      else if (att.GetLineStyle() == 3)
+         ctxt->dashList = { 1, 2 };
+      else if (att.GetLineStyle() == 4) {
+         ctxt->dashList = { 3, 4, 1, 4} ;
+      } else {
+         TString st = (TString)gStyle->GetLineStyleString(att.GetLineStyle());
+         auto tokens = st.Tokenize(" ");
+         Int_t nt = tokens->GetEntries();
+         ctxt->dashList.resize(nt);
+         for (Int_t j = 0; j < nt; ++j) {
+            Int_t it;
+            sscanf(tokens->At(j)->GetName(), "%d", &it);
+            ctxt->dashList[j] = (Int_t) (it/4);
+         }
+         delete tokens;
+      }
+      ctxt->dashLength = 0;
+      for (auto elem : ctxt->dashList)
+         ctxt->dashLength += elem;
+      ctxt->dashOffset = 0;
+      ctxt->lineStyle = ctxt->dashList.size() == 0 ? GDK_LINE_SOLID : GDK_LINE_ON_OFF_DASH;
+   }
+
+   ctxt->lineWidth = att.GetLineWidth();
+   if (ctxt->lineWidth == 1 && ctxt->lineStyle == GDK_LINE_SOLID)
+      ctxt->lineWidth = 0;
+
+   if (ctxt->lineStyle == GDK_LINE_SOLID) {
+      gdk_gc_set_line_attributes(ctxt->fGClist[kGCline], ctxt->lineWidth,
+                                 ctxt->lineStyle,
+                                 (GdkCapStyle) gCapStyle,
+                                 (GdkJoinStyle) gJoinStyle);
+   } else {
+      gdk_gc_set_line_attributes(ctxt->fGClist[kGCdash], ctxt->lineWidth,
+                                 ctxt->lineStyle,
+                                 (GdkCapStyle) gCapStyle,
+                                 (GdkJoinStyle) gJoinStyle);
+   }
+
+   ctxt->fAttLine = att;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for markers.
 
 void TGWin32::SetMarkerColor(Color_t cindex)
 {
-   if ((cindex<0) || (cindex==fMarkerColor)) return;
-   fMarkerColor = cindex;
-   fMarkerColorModified = kTRUE;
-}
+   if (cindex < 0) return;
 
-////////////////////////////////////////////////////////////////////////////////
-///
+   TAttMarker::SetMarkerColor(cindex);
 
-void TGWin32::UpdateMarkerColor()
-{
-   SetColor(gGCmark, Int_t(fMarkerColor));
-   fMarkerColorModified = kFALSE;
+   TAttMarker arg(gCws->fAttMarker);
+   arg.SetMarkerColor(cindex);
+
+   SetAttMarker((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3370,35 +3247,15 @@ void TGWin32::UpdateMarkerColor()
 
 void TGWin32::SetMarkerSize(Float_t msize)
 {
-   if ((msize==fMarkerSize) || (msize<0)) return;
+   if ((msize == TAttMarker::GetMarkerSize()) || (msize < 0))
+      return;
 
-   fMarkerSize = msize;
-   SetMarkerStyle(-fMarkerStyle);
-}
+   TAttMarker::SetMarkerSize(msize);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Set marker type.
-/// type      : marker type
-/// n         : length of marker description
-/// xy        : list of points describing marker shape
-///
-/// if n == 0 marker is a single point
-/// if TYPE == 0 marker is hollow circle of diameter N
-/// if TYPE == 1 marker is filled circle of diameter N
-/// if TYPE == 2 marker is a hollow polygon describe by line XY
-/// if TYPE == 3 marker is a filled polygon describe by line XY
-/// if TYPE == 4 marker is described by segmented line XY
-///   e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
+   TAttMarker arg(gCws->fAttMarker);
+   arg.SetMarkerSize(msize);
 
-void TGWin32::SetMarkerType(int type, int n, GdkPoint * xy)
-{
-   gMarker.type = type;
-   gMarker.n = n < kMAXMK ? n : kMAXMK;
-   if (gMarker.type >= 2) {
-      for (int i = 0; i < gMarker.n; i++) {
-         gMarker.xy[i] = xy[i];
-      }
-   }
+   SetAttMarker((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3406,549 +3263,73 @@ void TGWin32::SetMarkerType(int type, int n, GdkPoint * xy)
 
 void TGWin32::SetMarkerStyle(Style_t markerstyle)
 {
-   if (fMarkerStyle == markerstyle) return;
-   fMarkerStyle = TMath::Abs(markerstyle);
-   fMarkerStyleModified = kTRUE;
+   if (TAttMarker::GetMarkerStyle() == markerstyle)
+      return;
+
+   TAttMarker::SetMarkerStyle(markerstyle);
+
+   TAttMarker arg(gCws->fAttMarker);
+   arg.SetMarkerStyle(markerstyle);
+
+   SetAttMarker((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Set marker attributes for speicfied window
 
-void TGWin32::UpdateMarkerStyle()
+void TGWin32::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
 {
-   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
-   gMarkerLineWidth = TAttMarker::GetMarkerLineWidth(fMarkerStyle);
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   SetColor(ctxt, ctxt->fGClist[kGCmark], att.GetMarkerColor());
+
+   Bool_t changed = (att.GetMarkerSize() != ctxt->fAttMarker.GetMarkerSize()) ||
+                    (att.GetMarkerStyle() != ctxt->fAttMarker.GetMarkerStyle());
+
+   ctxt->fAttMarker = att;
+
+   if (!changed)
+      return;
+
+   ctxt->markerLineWidth = TAttMarker::GetMarkerLineWidth(att.GetMarkerStyle());
+   ctxt->markerType = att.GetMarkerShape(ctxt->markerSize, ctxt->markerShape, 1., TAttMarker::kDotAsLines);
 
    // The fast pixel markers need to be treated separately
-   if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
-       gdk_gc_set_line_attributes(gGCmark, 0, GDK_LINE_SOLID, GDK_CAP_BUTT, GDK_JOIN_MITER);
+   if (ctxt->markerType == TAttMarker::kShapeSegments) {
+      gdk_gc_set_line_attributes(ctxt->fGClist[kGCmark], ctxt->markerLineWidth, GDK_LINE_SOLID, GDK_CAP_BUTT, GDK_JOIN_MITER);
    } else {
-       gdk_gc_set_line_attributes(gGCmark, gMarkerLineWidth,
-                                  (GdkLineStyle) gMarkerLineStyle,
-                                  (GdkCapStyle)  gMarkerCapStyle,
-                                  (GdkJoinStyle) gMarkerJoinStyle);
+      gdk_gc_set_line_attributes(ctxt->fGClist[kGCmark], ctxt->markerLineWidth,
+                                 (GdkLineStyle) gMarkerLineStyle,
+                                 (GdkCapStyle)  gMarkerCapStyle,
+                                 (GdkJoinStyle) gMarkerJoinStyle);
    }
-
-   static GdkPoint shape[30];
-
-   Float_t MarkerSizeReduced = fMarkerSize - TMath::Floor(gMarkerLineWidth/2.)/4.;
-   Int_t im = Int_t(4 * MarkerSizeReduced + 0.5);
-
-   if (markerstyle == 2) {
-      // + shaped marker
-      shape[0].x = -im;
-      shape[0].y = 0;
-      shape[1].x = im;
-      shape[1].y = 0;
-      shape[2].x = 0;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = im;
-      SetMarkerType(4, 4, shape);
-   } else if (markerstyle == 3 || markerstyle == 31) {
-      // * shaped marker
-      shape[0].x = -im;
-      shape[0].y = 0;
-      shape[1].x = im;
-      shape[1].y = 0;
-      shape[2].x = 0;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = im;
-      im = Int_t(0.707 * Float_t(im) + 0.5);
-      shape[4].x = -im;
-      shape[4].y = -im;
-      shape[5].x = im;
-      shape[5].y = im;
-      shape[6].x = -im;
-      shape[6].y = im;
-      shape[7].x = im;
-      shape[7].y = -im;
-      SetMarkerType(4, 8, shape);
-   } else if (markerstyle == 4 || markerstyle == 24) {
-      // O shaped marker
-      SetMarkerType(0, im * 2, shape);
-   } else if (markerstyle == 5) {
-      // X shaped marker
-      im = Int_t(0.707 * Float_t(im) + 0.5);
-      shape[0].x = -im;
-      shape[0].y = -im;
-      shape[1].x = im;
-      shape[1].y = im;
-      shape[2].x = -im;
-      shape[2].y = im;
-      shape[3].x = im;
-      shape[3].y = -im;
-      SetMarkerType(4, 4, shape);
-   } else if (markerstyle == 6) {
-      // + shaped marker (with 1 pixel)
-      shape[0].x = -1;
-      shape[0].y = 0;
-      shape[1].x = 1;
-      shape[1].y = 0;
-      shape[2].x = 0;
-      shape[2].y = -1;
-      shape[3].x = 0;
-      shape[3].y = 1;
-      SetMarkerType(4, 4, shape);
-   } else if (markerstyle == 7) {
-      // . shaped marker (with 9 pixel)
-      shape[0].x = -1;
-      shape[0].y = 1;
-      shape[1].x = 1;
-      shape[1].y = 1;
-      shape[2].x = -1;
-      shape[2].y = 0;
-      shape[3].x = 1;
-      shape[3].y = 0;
-      shape[4].x = -1;
-      shape[4].y = -1;
-      shape[5].x = 1;
-      shape[5].y = -1;
-      SetMarkerType(4, 6, shape);
-   } else if (markerstyle == 8 || markerstyle == 20) {
-      // O shaped marker (filled)
-      SetMarkerType(1, im * 2, shape);
-   } else if (markerstyle == 21) {
-      // full square
-      shape[0].x = -im;
-      shape[0].y = -im;
-      shape[1].x = im;
-      shape[1].y = -im;
-      shape[2].x = im;
-      shape[2].y = im;
-      shape[3].x = -im;
-      shape[3].y = im;
-      shape[4].x = -im;
-      shape[4].y = -im;
-      SetMarkerType(3, 5, shape);
-   } else if (markerstyle == 22) {
-      // full triangle up
-      shape[0].x = -im;
-      shape[0].y = im;
-      shape[1].x = im;
-      shape[1].y = im;
-      shape[2].x = 0;
-      shape[2].y = -im;
-      shape[3].x = -im;
-      shape[3].y = im;
-      SetMarkerType(3, 4, shape);
-   } else if (markerstyle == 23) {
-      // full triangle down
-      shape[0].x = 0;
-      shape[0].y = im;
-      shape[1].x = im;
-      shape[1].y = -im;
-      shape[2].x = -im;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = im;
-      SetMarkerType(3, 4, shape);
-   } else if (markerstyle == 25) {
-      // open square
-      shape[0].x = -im;
-      shape[0].y = -im;
-      shape[1].x = im;
-      shape[1].y = -im;
-      shape[2].x = im;
-      shape[2].y = im;
-      shape[3].x = -im;
-      shape[3].y = im;
-      shape[4].x = -im;
-      shape[4].y = -im;
-      SetMarkerType(2, 5, shape);
-   } else if (markerstyle == 26) {
-      // open triangle up
-      shape[0].x = -im;
-      shape[0].y = im;
-      shape[1].x = im;
-      shape[1].y = im;
-      shape[2].x = 0;
-      shape[2].y = -im;
-      shape[3].x = -im;
-      shape[3].y = im;
-      SetMarkerType(2, 4, shape);
-   } else if (markerstyle == 27) {
-      // open losange
-      Int_t imx = Int_t(2.66 * MarkerSizeReduced + 0.5);
-      shape[0].x = -imx;
-      shape[0].y = 0;
-      shape[1].x = 0;
-      shape[1].y = -im;
-      shape[2].x = imx;
-      shape[2].y = 0;
-      shape[3].x = 0;
-      shape[3].y = im;
-      shape[4].x = -imx;
-      shape[4].y = 0;
-      SetMarkerType(2, 5, shape);
-   } else if (markerstyle == 28) {
-      // open cross
-      Int_t imx = Int_t(1.33 * MarkerSizeReduced + 0.5);
-      shape[0].x = -im;
-      shape[0].y = -imx;
-      shape[1].x = -imx;
-      shape[1].y = -imx;
-      shape[2].x = -imx;
-      shape[2].y = -im;
-      shape[3].x = imx;
-      shape[3].y = -im;
-      shape[4].x = imx;
-      shape[4].y = -imx;
-      shape[5].x = im;
-      shape[5].y = -imx;
-      shape[6].x = im;
-      shape[6].y = imx;
-      shape[7].x = imx;
-      shape[7].y = imx;
-      shape[8].x = imx;
-      shape[8].y = im;
-      shape[9].x = -imx;
-      shape[9].y = im;
-      shape[10].x = -imx;
-      shape[10].y = imx;
-      shape[11].x = -im;
-      shape[11].y = imx;
-      shape[12].x = -im;
-      shape[12].y = -imx;
-      SetMarkerType(2, 13, shape);
-   } else if (markerstyle == 29) {
-      // full star pentagone
-      Int_t im1 = Int_t(0.66 * MarkerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.00 * MarkerSizeReduced + 0.5);
-      Int_t im3 = Int_t(2.66 * MarkerSizeReduced + 0.5);
-      Int_t im4 = Int_t(1.33 * MarkerSizeReduced + 0.5);
-      shape[0].x = -im;
-      shape[0].y = im4;
-      shape[1].x = -im2;
-      shape[1].y = -im1;
-      shape[2].x = -im3;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = -im2;
-      shape[4].x = im3;
-      shape[4].y = -im;
-      shape[5].x = im2;
-      shape[5].y = -im1;
-      shape[6].x = im;
-      shape[6].y = im4;
-      shape[7].x = im4;
-      shape[7].y = im4;
-      shape[8].x = 0;
-      shape[8].y = im;
-      shape[9].x = -im4;
-      shape[9].y = im4;
-      shape[10].x = -im;
-      shape[10].y = im4;
-      SetMarkerType(3, 11, shape);
-   } else if (markerstyle == 30) {
-      // open star pentagone
-      Int_t im1 = Int_t(0.66 * MarkerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.00 * MarkerSizeReduced + 0.5);
-      Int_t im3 = Int_t(2.66 * MarkerSizeReduced + 0.5);
-      Int_t im4 = Int_t(1.33 * MarkerSizeReduced + 0.5);
-      shape[0].x = -im;
-      shape[0].y = im4;
-      shape[1].x = -im2;
-      shape[1].y = -im1;
-      shape[2].x = -im3;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = -im2;
-      shape[4].x = im3;
-      shape[4].y = -im;
-      shape[5].x = im2;
-      shape[5].y = -im1;
-      shape[6].x = im;
-      shape[6].y = im4;
-      shape[7].x = im4;
-      shape[7].y = im4;
-      shape[8].x = 0;
-      shape[8].y = im;
-      shape[9].x = -im4;
-      shape[9].y = im4;
-      shape[10].x = -im;
-      shape[10].y = im4;
-      SetMarkerType(2, 11, shape);
-   } else if (markerstyle == 32) {
-      // open triangle down
-      shape[0].x =   0;  shape[0].y = im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x = -im;  shape[2].y = -im;
-      shape[3].x =   0;  shape[3].y = im;
-      SetMarkerType(2,4,shape);
-   } else if (markerstyle == 33) {
-      // full losange
-      Int_t imx = Int_t(2.66*MarkerSizeReduced + 0.5);
-      shape[0].x =-imx;  shape[0].y = 0;
-      shape[1].x =   0;  shape[1].y = -im;
-      shape[2].x = imx;  shape[2].y = 0;
-      shape[3].x =   0;  shape[3].y = im;
-      shape[4].x =-imx;  shape[4].y = 0;
-      SetMarkerType(3,5,shape);
-   } else if (markerstyle == 34) {
-      // full cross
-      Int_t imx = Int_t(1.33*MarkerSizeReduced + 0.5);
-      shape[0].x = -im;  shape[0].y =-imx;
-      shape[1].x =-imx;  shape[1].y =-imx;
-      shape[2].x =-imx;  shape[2].y = -im;
-      shape[3].x = imx;  shape[3].y = -im;
-      shape[4].x = imx;  shape[4].y =-imx;
-      shape[5].x =  im;  shape[5].y =-imx;
-      shape[6].x =  im;  shape[6].y = imx;
-      shape[7].x = imx;  shape[7].y = imx;
-      shape[8].x = imx;  shape[8].y = im;
-      shape[9].x =-imx;  shape[9].y = im;
-      shape[10].x=-imx;  shape[10].y= imx;
-      shape[11].x= -im;  shape[11].y= imx;
-      shape[12].x= -im;  shape[12].y=-imx;
-      SetMarkerType(3,13,shape);
-   } else if (markerstyle == 35) {
-      // square with diagonal cross
-      shape[0].x = -im;  shape[0].y = -im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x =  im;  shape[2].y = im;
-      shape[3].x = -im;  shape[3].y = im;
-      shape[4].x = -im;  shape[4].y = -im;
-      shape[5].x =  im;  shape[5].y = im;
-      shape[6].x = -im;  shape[6].y = im;
-      shape[7].x =  im;  shape[7].y = -im;
-      SetMarkerType(2,8,shape);
-   } else if (markerstyle == 36) {
-      // diamond with cross
-      shape[0].x =-im;  shape[0].y = 0;
-      shape[1].x =  0;  shape[1].y = -im;
-      shape[2].x = im;  shape[2].y = 0;
-      shape[3].x =  0;  shape[3].y = im;
-      shape[4].x =-im;  shape[4].y = 0;
-      shape[5].x = im;  shape[5].y = 0;
-      shape[6].x =  0;  shape[6].y = im;
-      shape[7].x =  0;  shape[7].y =-im;
-      SetMarkerType(2,8,shape);
-   } else if (markerstyle == 37) {
-      // open three triangles
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =   0;  shape[0].y =   0;
-      shape[1].x =-im2;  shape[1].y =  im;
-      shape[2].x = -im;  shape[2].y =   0;
-      shape[3].x =   0;  shape[3].y =   0;
-      shape[4].x =-im2;  shape[4].y = -im;
-      shape[5].x = im2;  shape[5].y = -im;
-      shape[6].x =   0;  shape[6].y =   0;
-      shape[7].x =  im;  shape[7].y =   0;
-      shape[8].x = im2;  shape[8].y =  im;
-      shape[9].x =   0;  shape[9].y =   0;
-      SetMarkerType(2,10,shape);
-   } else if (markerstyle == 38) {
-      // + shaped marker with octagon
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x = -im;  shape[0].y = 0;
-      shape[1].x = -im;  shape[1].y =-im2;
-      shape[2].x =-im2;  shape[2].y =-im;
-      shape[3].x = im2;  shape[3].y = -im;
-      shape[4].x =  im;  shape[4].y =-im2;
-      shape[5].x =  im;  shape[5].y = im2;
-      shape[6].x = im2;  shape[6].y = im;
-      shape[7].x =-im2;  shape[7].y = im;
-      shape[8].x = -im;  shape[8].y = im2;
-      shape[9].x = -im;  shape[9].y = 0;
-      shape[10].x = im;  shape[10].y = 0;
-      shape[11].x =  0;  shape[11].y = 0;
-      shape[12].x =  0;  shape[12].y = -im;
-      shape[13].x =  0;  shape[13].y = im;
-      shape[14].x =  0;  shape[14].y = 0;
-      SetMarkerType(2,15,shape);
-   } else if (markerstyle == 39) {
-      // filled three triangles
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =   0;  shape[0].y =   0;
-      shape[1].x =-im2;  shape[1].y =  im;
-      shape[2].x = -im;  shape[2].y =   0;
-      shape[3].x =   0;  shape[3].y =   0;
-      shape[4].x =-im2;  shape[4].y = -im;
-      shape[5].x = im2;  shape[5].y = -im;
-      shape[6].x =   0;  shape[6].y =   0;
-      shape[7].x =  im;  shape[7].y =   0;
-      shape[8].x = im2;  shape[8].y =  im;
-      SetMarkerType(3,9,shape);
-   } else if (markerstyle == 40) {
-      // four open triangles X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =     0;  shape[0].y =    0;
-      shape[1].x =   im2;  shape[1].y =   im;
-      shape[2].x =    im;  shape[2].y =  im2;
-      shape[3].x =     0;  shape[3].y =    0;
-      shape[4].x =    im;  shape[4].y = -im2;
-      shape[5].x =   im2;  shape[5].y =  -im;
-      shape[6].x =     0;  shape[6].y =    0;
-      shape[7].x =  -im2;  shape[7].y =  -im;
-      shape[8].x =   -im;  shape[8].y = -im2;
-      shape[9].x =     0;  shape[9].y =    0;
-      shape[10].x =   -im;  shape[10].y =  im2;
-      shape[11].x =  -im2;  shape[11].y =   im;
-      shape[12].x =     0;  shape[12].y =  0;
-      SetMarkerType(2,13,shape);
-   } else if (markerstyle == 41) {
-      // four filled triangles X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =     0;  shape[0].y =    0;
-      shape[1].x =   im2;  shape[1].y =   im;
-      shape[2].x =    im;  shape[2].y =  im2;
-      shape[3].x =     0;  shape[3].y =    0;
-      shape[4].x =    im;  shape[4].y = -im2;
-      shape[5].x =   im2;  shape[5].y =  -im;
-      shape[6].x =     0;  shape[6].y =    0;
-      shape[7].x =  -im2;  shape[7].y =  -im;
-      shape[8].x =   -im;  shape[8].y = -im2;
-      shape[9].x =     0;  shape[9].y =    0;
-      shape[10].x =   -im;  shape[10].y =  im2;
-      shape[11].x =  -im2;  shape[11].y =   im;
-      shape[12].x =     0;  shape[12].y =  0;
-      SetMarkerType(3,13,shape);
-   } else if (markerstyle == 42) {
-      // open double diamonds
-      Int_t imx = Int_t(MarkerSizeReduced + 0.5);
-      shape[0].x=     0;   shape[0].y= im;
-      shape[1].x=  -imx;   shape[1].y= imx;
-      shape[2].x  = -im;   shape[2].y = 0;
-      shape[3].x = -imx;   shape[3].y = -imx;
-      shape[4].x =    0;   shape[4].y = -im;
-      shape[5].x =  imx;   shape[5].y = -imx;
-      shape[6].x =   im;   shape[6].y = 0;
-      shape[7].x=   imx;   shape[7].y= imx;
-      shape[8].x=     0;   shape[8].y= im;
-      SetMarkerType(2,9,shape);
-   } else if (markerstyle == 43) {
-      // filled double diamonds
-      Int_t imx = Int_t(MarkerSizeReduced + 0.5);
-      shape[0].x =    0;   shape[0].y =   im;
-      shape[1].x = -imx;   shape[1].y =  imx;
-      shape[2].x =  -im;   shape[2].y =    0;
-      shape[3].x = -imx;   shape[3].y = -imx;
-      shape[4].x =    0;   shape[4].y =  -im;
-      shape[5].x =  imx;   shape[5].y = -imx;
-      shape[6].x =   im;   shape[6].y =    0;
-      shape[7].x =  imx;   shape[7].y =  imx;
-      shape[8].x =    0;   shape[8].y =   im;
-      SetMarkerType(3,9,shape);
-   } else if (markerstyle == 44) {
-      // open four triangles plus
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =    0;  shape[0].y =    0;
-      shape[1].x =  im2;  shape[1].y =   im;
-      shape[2].x = -im2;  shape[2].y =   im;
-      shape[3].x =  im2;  shape[3].y =  -im;
-      shape[4].x = -im2;  shape[4].y =  -im;
-      shape[5].x =    0;  shape[5].y =    0;
-      shape[6].x =   im;  shape[6].y =  im2;
-      shape[7].x =   im;  shape[7].y = -im2;
-      shape[8].x =  -im;  shape[8].y =  im2;
-      shape[9].x =  -im;  shape[9].y = -im2;
-      shape[10].x =    0;  shape[10].y =    0;
-      SetMarkerType(2,11,shape);
-   } else if (markerstyle == 45) {
-      // filled four triangles plus
-      Int_t im0 = Int_t(0.4*MarkerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =  im0;  shape[0].y =  im0;
-      shape[1].x =  im2;  shape[1].y =   im;
-      shape[2].x = -im2;  shape[2].y =   im;
-      shape[3].x = -im0;  shape[3].y =  im0;
-      shape[4].x =  -im;  shape[4].y =  im2;
-      shape[5].x =  -im;  shape[5].y = -im2;
-      shape[6].x = -im0;  shape[6].y = -im0;
-      shape[7].x = -im2;  shape[7].y =  -im;
-      shape[8].x =  im2;  shape[8].y =  -im;
-      shape[9].x =  im0;  shape[9].y = -im0;
-      shape[10].x =   im;  shape[10].y = -im2;
-      shape[11].x =   im;  shape[11].y =  im2;
-      shape[12].x =  im0;  shape[12].y =  im0;
-      SetMarkerType(3,13,shape);
-   } else if (markerstyle == 46) {
-      // open four triangles X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =    0;  shape[0].y =  im2;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2;
-      SetMarkerType(2,13,shape);
-   } else if (markerstyle == 47) {
-      // filled four triangles X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =    0;  shape[0].y =  im2;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2;
-      SetMarkerType(3,13,shape);
-   } else if (markerstyle == 48) {
-      // four filled squares X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =    0;  shape[0].y =  im2*1.005;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2*0.995;
-      shape[13].x =  im2*0.995;  shape[13].y =    0;
-      shape[14].x =    0;  shape[14].y = -im2*0.995;
-      shape[15].x = -im2*0.995;  shape[15].y =    0;
-      shape[16].x =    0;  shape[16].y =  im2*0.995;
-      SetMarkerType(3,16,shape);
-   } else if (markerstyle == 49) {
-      // four filled squares plus
-      Int_t imx = Int_t(1.33*MarkerSizeReduced + 0.5);
-      shape[0].x =-imx;  shape[0].y =-imx*1.005;
-      shape[1].x =-imx;  shape[1].y = -im;
-      shape[2].x = imx;  shape[2].y = -im;
-      shape[3].x = imx;  shape[3].y =-imx;
-      shape[4].x =  im;  shape[4].y =-imx;
-      shape[5].x =  im;  shape[5].y = imx;
-      shape[6].x = imx;  shape[6].y = imx;
-      shape[7].x = imx;  shape[7].y = im;
-      shape[8].x =-imx;  shape[8].y = im;
-      shape[9].x =-imx;  shape[9].y = imx;
-      shape[10].x = -im;  shape[10].y = imx;
-      shape[11].x = -im;  shape[11].y =-imx;
-      shape[12].x =-imx;  shape[12].y =-imx*0.995;
-      shape[13].x =-imx;  shape[13].y = imx;
-      shape[14].x = imx;  shape[14].y = imx;
-      shape[15].x = imx;  shape[15].y =-imx;
-      shape[16].x =-imx;  shape[16].y =-imx*1.005;
-      SetMarkerType(3,17,shape);
-   } else {
-      // single dot
-      SetMarkerType(0, 0, shape);
-   }
-   fMarkerStyleModified = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set opacity of a window. This image manipulation routine works
+/// Set text attributes for speicfied window
+
+void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   SetColor(ctxt, ctxt->fGClist[kGCtext], att.GetTextColor());
+
+   GdkGCValues values;
+   gdk_gc_get_values(ctxt->fGClist[kGCtext], &values);
+   gdk_gc_set_foreground(ctxt->fGClist[kGCinvt], &values.background);
+   gdk_gc_set_background(ctxt->fGClist[kGCinvt], &values.foreground);
+   gdk_gc_set_background(ctxt->fGClist[kGCtext], (GdkColor *) & GetColor(0).color);
+
+   ctxt->fAttText = att;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set opacity of a current window. This image manipulation routine works
 /// by adding to a percent amount of neutral to each pixels RGB.
 /// Since it requires quite some additional color map entries is it
 /// only supported on displays with more than > 8 color planes (> 256
@@ -3956,136 +3337,7 @@ void TGWin32::UpdateMarkerStyle()
 
 void TGWin32::SetOpacity(Int_t percent)
 {
-   Int_t depth = gdk_visual_get_best_depth();
-
-   if (depth <= 8) return;
-   if (percent == 0) return;
-
-   // if 100 percent then just make white
-   ULong_t *orgcolors = 0;
-   ULong_t *tmpc = 0;
-   Int_t maxcolors = 0, ncolors, ntmpc = 0;
-
-   // save previous allocated colors, delete at end when not used anymore
-   if (gCws->new_colors) {
-      tmpc = gCws->new_colors;
-      ntmpc = gCws->ncolors;
-   }
-   // get pixmap from server as image
-   GdkImage *image = gdk_image_get((GdkDrawable*)gCws->drawing, 0, 0,
-                                   gCws->width, gCws->height);
-
-   // collect different image colors
-   int x, y;
-   for (y = 0; y < (int) gCws->height; y++) {
-      for (x = 0; x < (int) gCws->width; x++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
-      }
-   }
-   if (ncolors == 0) {
-      gdk_image_unref(image);
-      ::operator delete(orgcolors);
-      return;
-   }
-   // create opaque counter parts
-   MakeOpaqueColors(percent, orgcolors, ncolors);
-
-   // put opaque colors in image
-   for (y = 0; y < (int) gCws->height; y++) {
-      for (x = 0; x < (int) gCws->width; x++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         PutPixel((Drawable_t)image, x, y, gCws->new_colors[idx]);
-      }
-   }
-
-   // put image back in pixmap on server
-   gdk_draw_image(gCws->drawing, gGCpxmp, (GdkImage *)image,
-                  0, 0, 0, 0, gCws->width, gCws->height);
-   GdiFlush();
-
-   // clean up
-   if (tmpc) {
-      gdk_colors_free((GdkColormap *)fColormap, tmpc, ntmpc, 0);
-      delete[]tmpc;
-   }
-   gdk_image_unref(image);
-   ::operator delete(orgcolors);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get RGB values for orgcolors, add percent neutral to the RGB and
-/// allocate new_colors.
-
-void TGWin32::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
-{
-   Int_t ret;
-   if (ncolors <= 0) return;
-   GdkColor *xcol = new GdkColor[ncolors];
-
-   int i;
-   for (i = 0; i < ncolors; i++) {
-      xcol[i].pixel = orgcolors[i];
-      xcol[i].red = xcol[i].green = xcol[i].blue = 0;
-   }
-
-   GdkColorContext *cc;
-   cc = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
-   gdk_color_context_query_colors(cc, xcol, ncolors);
-   gdk_color_context_free(cc);
-
-   UShort_t add = percent * kBIGGEST_RGB_VALUE / 100;
-
-   Int_t val;
-   for (i = 0; i < ncolors; i++) {
-      val = xcol[i].red + add;
-      if (val > kBIGGEST_RGB_VALUE) {
-         val = kBIGGEST_RGB_VALUE;
-      }
-      xcol[i].red = (UShort_t) val;
-      val = xcol[i].green + add;
-      if (val > kBIGGEST_RGB_VALUE) {
-         val = kBIGGEST_RGB_VALUE;
-      }
-      xcol[i].green = (UShort_t) val;
-      val = xcol[i].blue + add;
-      if (val > kBIGGEST_RGB_VALUE) {
-         val = kBIGGEST_RGB_VALUE;
-      }
-      xcol[i].blue = (UShort_t) val;
-
-      ret = gdk_color_alloc((GdkColormap *)fColormap, &xcol[i]);
-
-      if (!ret) {
-         Warning("MakeOpaqueColors",
-                 "failed to allocate color %hd, %hd, %hd", xcol[i].red,
-                 xcol[i].green, xcol[i].blue);
-      // assumes that in case of failure xcol[i].pixel is not changed
-      }
-   }
-
-   gCws->new_colors = new ULong_t[ncolors];
-   gCws->ncolors = ncolors;
-
-   for (i = 0; i < ncolors; i++) {
-      gCws->new_colors[i] = xcol[i].pixel;
-   }
-
-   delete []xcol;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns index in orgcolors (and new_colors) for pixel.
-
-Int_t TGWin32::FindColor(ULong_t pixel, ULong_t * orgcolors, Int_t ncolors)
-{
-   for (int i = 0; i < ncolors; i++) {
-      if (pixel == orgcolors[i]) return i;
-   }
-   Error("FindColor", "did not find color, should never happen!");
-
-   return 0;
+   SetOpacityW((WinContext_t) gCws, percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4132,59 +3384,12 @@ void TGWin32::SetRGB(int cindex, float r, float g, float b)
 
 void TGWin32::SetTextAlign(Short_t talign)
 {
-   static Short_t current = 0;
-   if (talign==current) return;
-   current = talign;
+   TAttText::SetTextAlign(talign);
 
-   Int_t txalh = talign / 10;
-   Int_t txalv = talign % 10;
-   fTextAlignH = txalh;
-   fTextAlignV = txalv;
+   TAttText arg(gCws->fAttText);
+   arg.SetTextAlign(talign);
 
-   switch (txalh) {
-
-   case 0:
-   case 1:
-      switch (txalv) {          //left
-      case 1:
-         fTextAlign = 7;        //bottom
-         break;
-      case 2:
-         fTextAlign = 4;        //center
-         break;
-      case 3:
-         fTextAlign = 1;        //top
-         break;
-      }
-      break;
-   case 2:
-      switch (txalv) {          //center
-      case 1:
-         fTextAlign = 8;        //bottom
-         break;
-      case 2:
-         fTextAlign = 5;        //center
-         break;
-      case 3:
-         fTextAlign = 2;        //top
-         break;
-      }
-      break;
-   case 3:
-      switch (txalv) {          //right
-      case 1:
-         fTextAlign = 9;        //bottom
-         break;
-      case 2:
-         fTextAlign = 6;        //center
-         break;
-      case 3:
-         fTextAlign = 3;        //top
-         break;
-      }
-      break;
-   }
-   TAttText::SetTextAlign(fTextAlign);
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4192,23 +3397,19 @@ void TGWin32::SetTextAlign(Short_t talign)
 
 void TGWin32::SetTextColor(Color_t cindex)
 {
-   static Int_t current = 0;
-   GdkGCValues values;
-   if ((cindex < 0) || (Int_t(cindex)==current)) return;
+   if (cindex < 0) return;
 
    TAttText::SetTextColor(cindex);
 
-   SetColor(gGCtext, Int_t(cindex));
-   gdk_gc_get_values(gGCtext, &values);
-   gdk_gc_set_foreground(gGCinvt, &values.background);
-   gdk_gc_set_background(gGCinvt, &values.foreground);
-   gdk_gc_set_background(gGCtext, (GdkColor *) & GetColor(0).color);
-   current = Int_t(cindex);
+   TAttText arg(gCws->fAttText);
+   arg.SetTextColor(cindex);
+
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TGWin32::Sync(int mode)
+void TGWin32::Sync(int /* mode */)
 {
 }
 
@@ -4223,12 +3424,142 @@ void TGWin32::Sync(int mode)
 
 void TGWin32::UpdateWindow(int mode)
 {
-   if (gCws && gCws->double_buffer) {
-      gdk_window_copy_area(gCws->window, gGCpxmp, 0, 0,
-                           gCws->drawing, 0, 0, gCws->width, gCws->height);
+   UpdateWindowW((WinContext_t) gCws, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update current window
+/// mode : (1) update
+///        (0) sync
+///
+/// Synchronise client and server once (not permanent).
+/// Copy the pixmap ctxt->drawing on the window ctxt->window
+/// if the double buffer is on.
+
+void TGWin32::UpdateWindowW(WinContext_t wctxt, Int_t mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+
+   if (ctxt && ctxt->double_buffer) {
+      gdk_window_copy_area(ctxt->window, ctxt->fGClist[kGCpxmp], 0, 0,
+                           ctxt->drawing, 0, 0, ctxt->width, ctxt->height);
    }
    Update(mode);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set opacity of a specified window. This image manipulation routine works
+/// by adding to a percent amount of neutral to each pixels RGB.
+/// Since it requires quite some additional color map entries is it
+/// only supported on displays with more than > 8 color planes (> 256
+/// colors)
+
+void TGWin32::SetOpacityW(WinContext_t wctxt, Int_t percent)
+{
+   Int_t depth = gdk_visual_get_best_depth();
+
+   if ((depth <= 8) || (percent <= 0)) return;
+   if (percent > 100) percent = 100;
+
+   auto ctxt = (XWindow_t *) wctxt;
+
+   // get pixmap from server as image
+   GdkImage *image = gdk_image_get((GdkDrawable*)ctxt->drawing, 0, 0,
+                                   ctxt->width, ctxt->height);
+
+   if (!image) return;
+
+   std::vector<ULong_t> orgcolors;
+
+   // collect different image colors
+   for (UInt_t y = 0; y < ctxt->height; y++) {
+      for (UInt_t x = 0; x < ctxt->width; x++) {
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
+         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
+            orgcolors.emplace_back(pixel);
+      }
+   }
+   if (orgcolors.empty()) {
+      gdk_image_unref(image);
+      return;
+   }
+
+   if (!ctxt->new_colors.empty()) {
+      gdk_colors_free((GdkColormap *)fColormap, ctxt->new_colors.data(), ctxt->new_colors.size(), 0);
+      ctxt->new_colors.clear();
+   }
+
+   std::vector<GdkColor> xcol(orgcolors.size());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      xcol[i].pixel = orgcolors[i];
+      xcol[i].red = xcol[i].green = xcol[i].blue = 0;
+   }
+
+   GdkColorContext *cc = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
+   gdk_color_context_query_colors(cc, xcol.data(), orgcolors.size());
+   gdk_color_context_free(cc);
+
+   // create new colors mixing:  "100-percent" of old color and "percent" of new background color
+   XColor_t &bkgr = GetColor(ctxt->fAttFill.GetFillColor());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++) {
+      xcol[i].red   = (UShort_t) TMath::Min((Int_t) xcol[i].red * (100 - percent) / 100  + bkgr.color.red * percent / 100, kBIGGEST_RGB_VALUE);
+      xcol[i].green = (UShort_t) TMath::Min((Int_t) xcol[i].green * (100 - percent) / 100  + bkgr.color.green * percent / 100, kBIGGEST_RGB_VALUE);
+      xcol[i].blue  = (UShort_t) TMath::Min((Int_t) xcol[i].blue * (100 - percent) / 100  + bkgr.color.blue * percent / 100, kBIGGEST_RGB_VALUE);
+
+      auto ret = gdk_color_alloc((GdkColormap *)fColormap, &xcol[i]);
+
+      if (!ret) {
+         Warning("SetOpacityW",
+                 "failed to allocate color %hd, %hd, %hd", xcol[i].red,
+                 xcol[i].green, xcol[i].blue);
+      // assumes that in case of failure xcol[i].pixel is not changed
+      }
+   }
+
+   ctxt->new_colors.resize(orgcolors.size());
+
+   for (std::size_t i = 0; i < orgcolors.size(); i++)
+      ctxt->new_colors[i] = xcol[i].pixel;
+
+   // put opaque colors in image
+   for (UInt_t y = 0; y < ctxt->height; y++) {
+      for (UInt_t x = 0; x < ctxt->width; x++) {
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
+         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+         if (iter != orgcolors.end()) {
+            auto idx = iter - orgcolors.begin();
+            PutPixel((Drawable_t)image, x, y, ctxt->new_colors[idx]);
+         }
+      }
+   }
+
+   // put image back in pixmap on server
+   gdk_draw_image(ctxt->drawing, ctxt->fGClist[kGCpxmp], (GdkImage *)image,
+                  0, 0, 0, 0, ctxt->width, ctxt->height);
+   GdiFlush();
+
+   // clean up
+   gdk_image_unref(image);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the pixmap wid at the position xpos, ypos in the specified window.
+
+void TGWin32::CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos)
+{
+   if (fWindows.count(wid) == 0)
+      return;
+
+   auto ctxt = (XWindow_t *) wctxt;
+
+   gTws = fWindows[wid].get();
+   gdk_window_copy_area(ctxt->drawing, gTws->fGClist[kGCpxmp], xpos, ypos, gTws->drawing,
+                        0, 0, gTws->width, gTws->height);
+   GdiFlush();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pointer position.
@@ -4268,180 +3599,130 @@ void TGWin32::WritePixmap(int wid, unsigned int w, unsigned int h,
    wval = w;
    hval = h;
 
-   if (!fWindows) return;
-   gTws = &fWindows[wid];
+   if (fWindows.count(wid) == 0) return;
+   gTws = fWindows[wid].get();
 //   XWriteBitmapFile(fDisplay,pxname,(Pixmap)gTws->drawing,wval,hval,-1,-1);
 }
 
+class TWin32GifEncode : public TGifEncode {
+   private:
+      GdkImage *fImage = nullptr;
+   protected:
+      void get_scline(int y, int width, unsigned char *buf) override
+      {
+         for (int x = 0; x < width; x++) {
+            ULong_t pixel = GetPixelImage((Drawable_t)fImage, x, y);
+            buf[x] = 0;
 
-//
-// Functions for GIFencode()
-//
-
-static FILE *gGifFile;           // output unit used WriteGIF and PutByte
-static GdkImage *gGifImage = 0;  // image used in WriteGIF and GetPixel
-
-extern "C" {
-   int GIFquantize(UInt_t width, UInt_t height, Int_t * ncol, Byte_t * red,
-                   Byte_t * green, Byte_t * blue, Byte_t * outputBuf,
-                   Byte_t * outputCmap);
-   long GIFencode(int Width, int Height, Int_t Ncol, Byte_t R[],
-                  Byte_t G[], Byte_t B[], Byte_t ScLine[],
-                  void (*get_scline) (int, int, Byte_t *),
-                  void (*pb) (Byte_t));
-   int GIFdecode(Byte_t * GIFarr, Byte_t * PIXarr, int *Width, int *Height,
-                 int *Ncols, Byte_t * R, Byte_t * G, Byte_t * B);
-   int GIFinfo(Byte_t * GIFarr, int *Width, int *Height, int *Ncols);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get pixels in line y and put in array scline.
-
-static void GetPixel(int y, int width, Byte_t * scline)
-{
-   for (int i = 0; i < width; i++) {
-       scline[i] = Byte_t(GetPixelImage((Drawable_t)gGifImage, i, y));
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Put byte b in output stream.
-
-static void PutByte(Byte_t b)
-{
-   if (ferror(gGifFile) == 0) fputc(b, gGifFile);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns in R G B the ncol colors of the palette used by the image.
-/// The image pixels are changed to index values in these R G B arrays.
-/// This produces a colormap with only the used colors (so even on displays
-/// with more than 8 planes we will be able to create GIF's when the image
-/// contains no more than 256 different colors). If it does contain more
-/// colors we will have to use GIFquantize to reduce the number of colors.
-/// The R G B arrays must be deleted by the caller.
-
-void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
-                             Int_t * &G, Int_t * &B)
-{
-   ULong_t *orgcolors = 0;
-   Int_t maxcolors = 0, ncolors;
-
-   // collect different image colors
-   int x, y;
-   for (x = 0; x < (int) gCws->width; x++) {
-      for (y = 0; y < (int) gCws->height; y++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
+            auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
+            if (iter != orgcolors.end()) {
+               auto idx = iter - orgcolors.begin();
+               if (idx < 256)
+                  buf[x] = (unsigned char) idx;
+            }
+         }
       }
-   }
+   public:
+      std::vector<ULong_t> orgcolors;
 
-   // get RGB values belonging to pixels
-   GdkColor *xcol = new GdkColor[ncolors];
+      TWin32GifEncode(GdkImage *image) : fImage(image) {}
+};
 
-   int i;
-   for (i = 0; i < ncolors; i++) {
-      xcol[i].pixel = orgcolors[i];
-//      xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].red = GetRValue(xcol[i].pixel);
-      xcol[i].green = GetGValue(xcol[i].pixel);
-      xcol[i].blue = GetBValue(xcol[i].pixel);
-   }
-
-   GdkColorContext *cc;
-   cc =  gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
-   gdk_color_context_query_colors(cc, xcol, ncolors);
-   gdk_color_context_free(cc);
-
-   // create RGB arrays and store RGB's for each color and set number of colors
-   // (space must be delete by caller)
-   R = new Int_t[ncolors];
-   G = new Int_t[ncolors];
-   B = new Int_t[ncolors];
-
-   for (i = 0; i < ncolors; i++) {
-      R[i] = xcol[i].red;
-      G[i] = xcol[i].green;
-      B[i] = xcol[i].blue;
-   }
-   ncol = ncolors;
-
-   // update image with indices (pixels) into the new RGB colormap
-   for (x = 0; x < (int) gCws->width; x++) {
-      for (y = 0; y < (int) gCws->height; y++) {
-         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
-         Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         PutPixel((Drawable_t)image, x, y, idx);
-      }
-   }
-
-   // cleanup
-   delete[]xcol;
-   ::operator delete(orgcolors);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes the current window into GIF file.
 
 Int_t TGWin32::WriteGIF(char *name)
 {
-   Byte_t scline[2000], r[256], b[256], g[256];
-   Int_t *R, *G, *B;
-   Int_t ncol, maxcol, i;
+   return WriteGIFW((WinContext_t)gCws, name);
+}
 
-   if (gGifImage) {
-      gdk_image_unref((GdkImage *)gGifImage);
-   }
+////////////////////////////////////////////////////////////////////////////////
+/// Writes the specified window into GIF file.
 
-   gGifImage = gdk_image_get((GdkDrawable*)gCws->drawing, 0, 0,
-                             gCws->width, gCws->height);
+Int_t TGWin32::WriteGIFW(WinContext_t wctxt, const char *name)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return 0;
 
-   ImgPickPalette(gGifImage, ncol, R, G, B);
-
-   if (ncol > 256) {
-      //GIFquantize(...);
-      Error("WriteGIF",
-            "can not create GIF of image containing more than 256 colors");
-      delete[]R;
-      delete[]G;
-      delete[]B;
+   GdkImage *image = gdk_image_get((GdkDrawable*)ctxt->drawing, 0, 0,
+                                   ctxt->width, ctxt->height);
+   if (!image) {
+      Error("WriteGIFW", "Cannot create image for writing GIF. Try in batch mode.");
       return 0;
    }
 
-   maxcol = 0;
-   for (i = 0; i < ncol; i++) {
-      if (maxcol < R[i]) maxcol = R[i];
-      if (maxcol < G[i]) maxcol = G[i];
-      if (maxcol < B[i]) maxcol = B[i];
-      r[i] = 0;
-      g[i] = 0;
-      b[i] = 0;
-   }
-   if (maxcol != 0) {
-      for (i = 0; i < ncol; i++) {
-         r[i] = R[i] * 255 / maxcol;
-         g[i] = G[i] * 255 / maxcol;
-         b[i] = B[i] * 255 / maxcol;
+   TWin32GifEncode gif(image);
+
+   /// Collect R G B of colors of the palette used by the image.
+   /// The image pixels are changed to index values in these R G B arrays.
+   /// This produces a colormap with only the used colors (so even on displays
+   /// with more than 8 planes we will be able to create GIF's when the image
+   /// contains no more than 256 different colors). If it does contain more
+   /// colors we will have to use GIFquantize to reduce the number of colors.
+
+   // collect different image colors
+   for (UInt_t x = 0; x < ctxt->width; x++) {
+      for (UInt_t y = 0; y < ctxt->height; y++) {
+         ULong_t pixel = GetPixelImage((Drawable_t)image, x, y);
+         if (std::find(gif.orgcolors.begin(), gif.orgcolors.end(), pixel) == gif.orgcolors.end())
+            gif.orgcolors.emplace_back(pixel);
       }
    }
 
-   gGifFile = fopen(name, "wb");
+   auto ncolors = gif.orgcolors.size();
 
-   if (gGifFile) {
-      GIFencode(gCws->width, gCws->height,
-          ncol, r, g, b, scline, ::GetPixel, PutByte);
-      fclose(gGifFile);
-      i = 1;
-    } else {
-      Error("WriteGIF","cannot write file: %s",name);
-      i = 0;
+   if (ncolors > 256) {
+      Error("WriteGIFW", "can not create GIF of image containing more than 256 colors");
+      gdk_image_unref(image);
+      return 0;
    }
-   delete[]R;
-   delete[]G;
-   delete[]B;
 
-   return i;
+   // get RGB values belonging to pixels
+   std::vector<GdkColor> xcol(ncolors);
+
+   for (std::size_t i = 0; i < ncolors; i++) {
+      xcol[i].pixel = gif.orgcolors[i];
+      xcol[i].red = GetRValue(xcol[i].pixel);
+      xcol[i].green = GetGValue(xcol[i].pixel);
+      xcol[i].blue = GetBValue(xcol[i].pixel);
+   }
+
+   GdkColorContext *cc = gdk_color_context_new(gdk_visual_get_system(), (GdkColormap *)fColormap);
+   gdk_color_context_query_colors(cc, xcol.data(), ncolors);
+   gdk_color_context_free(cc);
+
+   UShort_t maxcol = 0;
+   for (std::size_t i = 0; i < ncolors; i++) {
+      maxcol = TMath::Max(maxcol, xcol[i].red);
+      maxcol = TMath::Max(maxcol, xcol[i].green);
+      maxcol = TMath::Max(maxcol, xcol[i].blue);
+   }
+   if (maxcol == 0)
+      maxcol = 255;
+
+   std::vector<unsigned char> r(ncolors), b(ncolors), g(ncolors);
+
+   for (std::size_t i = 0; i < ncolors; i++) {
+      r[i] = (unsigned char) (xcol[i].red * 255 / maxcol);
+      g[i] = (unsigned char) (xcol[i].green * 255 / maxcol);
+      b[i] = (unsigned char) (xcol[i].blue * 255 / maxcol);
+   }
+
+   Int_t ret = 0;
+
+   if (gif.OpenFile(name, "wb")) {
+      auto len = gif.GIFencode(ctxt->width, ctxt->height, ncolors, r.data(), g.data(), b.data());
+      if (len > 0)
+         ret = 1;
+      gif.CloseFile();
+    } else {
+      Error("WriteGIFW", "cannot write file: %s",name);
+   }
+   gdk_image_unref(image);
+
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4457,11 +3738,14 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
    int nlines[256];
    GdkSegment lines[256][MAX_SEGMENT];
    GdkDrawable *id;
+   GdkGC *lineGC;
 
    if (wid) {
-      id = (GdkDrawable*)wid;
+      id = (GdkDrawable*) wid;
+      lineGC = gdk_gc_new(GDK_ROOT_PARENT());
    } else {
       id = gCws->drawing;
+      lineGC = gCws->fGClist[kGCline];
    }
 
    for (i = 0; i < 256; i++) nlines[i] = 0;
@@ -4484,8 +3768,8 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                lines[icol][n].x2 = x - 1;
                lines[icol][n].y2 = y;
                if (nlines[icol] == MAX_SEGMENT) {
-                  SetColor(gGCline, (int) icol + offset);
-                  gdk_win32_draw_segments(id, (GdkGC *) gGCline,
+                  SetColor(wid ? nullptr : gCws, lineGC, (int) icol + offset);
+                  gdk_win32_draw_segments(id, lineGC,
                                        (GdkSegment *) &lines[icol][0], MAX_SEGMENT);
                   nlines[icol] = 0;
                }
@@ -4501,8 +3785,8 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
          lines[icol][n].x2 = x - 1;
          lines[icol][n].y2 = y;
          if (nlines[icol] == MAX_SEGMENT) {
-            SetColor(gGCline, (int) icol + offset);
-            gdk_win32_draw_segments(id, (GdkGC *) gGCline,
+            SetColor(wid ? nullptr : gCws, lineGC, (int) icol + offset);
+            gdk_win32_draw_segments(id, lineGC,
                               (GdkSegment *)&lines[icol][0], MAX_SEGMENT);
             nlines[icol] = 0;
          }
@@ -4511,11 +3795,15 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
 
    for (i = 0; i < 256; i++) {
       if (nlines[i] != 0) {
-         SetColor(gGCline, i + offset);
-         gdk_win32_draw_segments(id, (GdkGC *) gGCline,
-                           (GdkSegment *)&lines[icol][0], nlines[i]);
+         SetColor(wid ? nullptr : gCws, lineGC, i + offset);
+         gdk_win32_draw_segments(id, lineGC,
+                                 (GdkSegment *)&lines[icol][0], nlines[i]);
       }
    }
+
+   if (wid)
+      gdk_gc_unref(lineGC);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4524,14 +3812,13 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
 
 Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
 {
-   FILE *fd;
    Seek_t filesize;
    unsigned char *GIFarr, *PIXarr, R[256], G[256], B[256], *j1, *j2, icol;
    int i, j, k, width, height, ncolor, irep, offset;
    float rr, gg, bb;
    Pixmap_t pic = 0;
 
-   fd = fopen(file, "r+b");
+   FILE *fd = fopen(file, "r+b");
    if (!fd) {
       Error("ReadGIF", "unable to open GIF file");
       return pic;
@@ -4555,7 +3842,7 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
    }
    fclose(fd);
 
-   irep = GIFinfo(GIFarr, &width, &height, &ncolor);
+   irep = TGifDecode::GIFinfo(GIFarr, &width, &height, &ncolor);
    if (irep != 0) {
       return pic;
    }
@@ -4565,7 +3852,9 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
       return pic;
    }
 
-   irep = GIFdecode(GIFarr, PIXarr, &width, &height, &ncolor, R, G, B);
+   TGifDecode gif;
+
+   irep = gif.GIFdecode(GIFarr, PIXarr, &width, &height, &ncolor, R, G, B);
    if (irep != 0) {
       return pic;
    }
@@ -4593,12 +3882,15 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
       }
    }
 
-   if (id) pic = CreatePixmap(id, width, height);
+   if (id)
+      pic = CreatePixmap(id, width, height);
    PutImage(offset, -1, x0, y0, width, height, 0, 0, width-1, height-1, PIXarr, pic);
 
-   if (pic) return pic;
-   else if (gCws->drawing) return  (Pixmap_t)gCws->drawing;
-   else return 0;
+   if (pic)
+      return pic;
+   if (gCws->drawing)
+      return (Pixmap_t)gCws->drawing;
+   return 0;
 }
 
 //////////////////////////// GWin32Gui //////////////////////////////////////////
@@ -4726,6 +4018,10 @@ void TGWin32::MoveWindow(Window_t id, Int_t x, Int_t y)
 {
    if (!id) return;
 
+   // prevent hiding the titlebar
+   if (x == 0 && y == 0) {
+      x = 1; y = 1;
+   }
    gdk_window_move((GdkDrawable *) id, x, y);
 }
 
@@ -4737,6 +4033,10 @@ void TGWin32::MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w,
 {
    if (!id) return;
 
+   // prevent hiding the titlebar
+   if (x == 0 && y == 0) {
+      x = 1; y = 1;
+   }
    gdk_window_move_resize((GdkWindow *) id, x, y, w, h);
 }
 
@@ -6585,6 +5885,10 @@ void TGWin32::SetWMPosition(Window_t id, Int_t x, Int_t y)
 {
    if (!id) return;
 
+   // prevent hiding the titlebar
+   if (x == 0 && y == 0) {
+      x = 1; y = 1;
+   }
    gdk_window_move((GdkDrawable *) id, x, y);
 }
 
@@ -7440,34 +6744,16 @@ Int_t TGWin32::AddPixmap(Window_t pix, UInt_t w, UInt_t h)
    SetBitmapDimensionEx(hBmp, w, h, &sz);
    GdkPixmap *newPix = gdk_pixmap_foreign_new(reinterpret_cast<ULongptr_t>(hBmp));
 
-   Int_t wid = 0;
-   for(; wid < fMaxNumberOfWindows; ++wid)
-      if (!fWindows[wid].open)
-         break;
+   Int_t wid = AddWindowHandle();
 
-   if (wid == fMaxNumberOfWindows) {
-      Int_t newSize = fMaxNumberOfWindows + 10;
-
-      fWindows = (XWindow_t *)TStorage::ReAlloc(fWindows, newSize * sizeof(XWindow_t),
-                                                fMaxNumberOfWindows * sizeof(XWindow_t));
-
-      for (Int_t i = fMaxNumberOfWindows; i < newSize; ++i)
-         fWindows[i].open = 0;
-
-      fMaxNumberOfWindows = newSize;
-   }
-
-   fWindows[wid].open = 1;
-   gCws = fWindows + wid;
+   gCws = fWindows[wid].get();
+   gCws->ispixmap = 1;
    gCws->window = newPix;
    gCws->drawing = gCws->window;
-   gCws->buffer = 0;
    gCws->double_buffer = 0;
-   gCws->ispixmap = 1;
    gCws->clip = 0;
    gCws->width = w;
    gCws->height = h;
-   gCws->new_colors = 0;
 
    return wid;
 }
@@ -7477,82 +6763,41 @@ Int_t TGWin32::AddPixmap(Window_t pix, UInt_t w, UInt_t h)
 
 Int_t TGWin32::AddWindow(ULongptr_t qwid, UInt_t w, UInt_t h)
 {
-   Int_t wid;
-   // Select next free window number
+   Int_t wid = AddWindowHandle();
 
- again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         fWindows[wid].double_buffer = 0;
-         gCws = &fWindows[wid];
-         break;
-      }
-   }
+   gCws = fWindows[wid].get();
 
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows =
-          (XWindow_t *) TStorage::ReAlloc(fWindows,
-                                          newsize * sizeof(XWindow_t),
-                                          fMaxNumberOfWindows *
-                                          sizeof(XWindow_t));
-
-      for (int i = fMaxNumberOfWindows; i < newsize; i++) {
-         fWindows[i].open = 0;
-      }
-
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
+   gCws->shared = true;
+   gCws->ispixmap      = 0;
 
    gCws->window = gdk_window_foreign_new(qwid);
 
    gCws->drawing       = gCws->window;
-   gCws->buffer        = 0;
    gCws->double_buffer = 0;
-   gCws->ispixmap      = 0;
    gCws->clip          = 0;
    gCws->width         = w;
    gCws->height        = h;
-   gCws->new_colors    = 0;
 
    return wid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove a window created by Qt (like CloseWindow1()).
+/// Remove a window created by Qt.
 
 void TGWin32::RemoveWindow(ULongptr_t qwid)
 {
-   int wid;
-
    SelectWindow((int)qwid);
+   CloseWindow();
+}
 
-   if (gCws->buffer) {
-      gdk_pixmap_unref(gCws->buffer);
-   }
-   if (gCws->new_colors) {
-      gdk_colormap_free_colors((GdkColormap *) fColormap,
-                               (GdkColor *)gCws->new_colors, gCws->ncolors);
+////////////////////////////////////////////////////////////////////////////////
+/// Returns window context for specified win id
 
-      delete [] gCws->new_colors;
-      gCws->new_colors = 0;
-   }
-
-   GdiFlush();
-   gCws->open = 0;
-
-   if (!fWindows) return;
-
-   // make first window in list the current window
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (fWindows[wid].open) {
-         gCws = &fWindows[wid];
-         return;
-      }
-   }
-   gCws = 0;
+WinContext_t TGWin32::GetWindowContext(Int_t wid)
+{
+   if (fWindows.count(wid) == 0)
+      return (WinContext_t) nullptr;
+   return (WinContext_t) fWindows[wid].get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7845,3 +7090,37 @@ void TGWin32::SetUserThreadId(ULong_t id)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set window draw mode
+
+void TGWin32::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
+{
+   // set TVirtualX member to support old interface
+   fDrawMode = mode;
+
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   GdkFunction func = GDK_COPY;
+   if (mode == kXor)
+      func = GDK_XOR;
+   else if (mode == kInvert)
+      func = GDK_INVERT;
+
+   for (int i = 0; i < kMAXGC; i++) {
+      if (ctxt->fGClist[i])
+         gdk_gc_set_function(ctxt->fGClist[i], func);
+   }
+
+   ctxt->drawMode = mode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns window draw mode
+
+TVirtualX::EDrawMode TGWin32::GetDrawModeW(WinContext_t wctxt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   return ctxt ? ctxt->drawMode : kCopy;
+}

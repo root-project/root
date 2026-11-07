@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 namespace RooFit::Detail::MathFuncs {
@@ -369,9 +370,6 @@ double flexibleInterp(unsigned int code, ParamsArray params, unsigned int n, Dou
                       double boundary, double nominal, int doCutoff)
 {
    double total = nominal;
-#if defined(__CLING__) && defined(R__HAS_CLAD)
-#pragma clad checkpoint loop
-#endif
    for (std::size_t i = 0; i < n; ++i) {
       total += flexibleInterpSingle(code, low[i], high[i], boundary, nominal, params[i], total);
    }
@@ -399,6 +397,53 @@ inline double logNormalStandard(double x, double sigma, double mu)
 inline double effProd(double eff, double pdf)
 {
    return eff * pdf;
+}
+
+/// Chi-squared contribution of one bin with "expected" errors:
+/// \f$ \sigma^2 = \mu \f$. Empty/no-prediction bins contribute zero; bins with
+/// non-positive \f$ \mu \f$ but non-empty data yield NaN (to let the minimizer
+/// recover).
+inline double chi2Expected(double mu, double weight)
+{
+   if (mu == 0.0 && weight == 0.0) {
+      return 0.0;
+   }
+   if (mu <= 0.0) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   const double diff = mu - weight;
+   return diff * diff / mu;
+}
+
+/// Chi-squared contribution of one bin with a user-supplied symmetric error
+/// squared (e.g. `SumW2` weights from the data).
+inline double chi2Symmetric(double mu, double weight, double sigma2)
+{
+   if (sigma2 == 0.0 && mu == 0.0 && weight == 0.0) {
+      return 0.0;
+   }
+   if (sigma2 <= 0.0) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   const double diff = mu - weight;
+   return diff * diff / sigma2;
+}
+
+/// Chi-squared contribution of one bin with asymmetric (Poisson-style) data
+/// errors. The side facing the prediction is used: `errHi` when
+/// \f$ \mu > \mathrm{weight} \f$, otherwise `errLo`.
+inline double chi2Asymmetric(double mu, double weight, double errLo, double errHi)
+{
+   const double diff = mu - weight;
+   const double err = diff > 0.0 ? errHi : errLo;
+   const double sigma2 = err * err;
+   if (sigma2 == 0.0 && mu == 0.0 && weight == 0.0) {
+      return 0.0;
+   }
+   if (sigma2 <= 0.0) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   return diff * diff / sigma2;
 }
 
 inline double nll(double pdf, double weight, int binnedL, int doBinOffset)
@@ -519,13 +564,62 @@ inline double bifurGaussIntegral(double xMin, double xMax, double mean, double s
    }
 }
 
+/// (exp(x) - 1) / x with the removable singularity at x = 0 filled in. The
+/// derivative is expm1OverXDerivative(), also registered with clad at the end
+/// of this header: differentiating the branches would give zero at x = 0.
+inline double expm1OverX(double x)
+{
+   return x == 0.0 ? 1.0 : std::expm1(x) / x;
+}
+
+/// Derivative of expm1OverX(). The closed form (x * exp(x) - expm1(x)) / x^2
+/// cancels for small x, so a Taylor expansion is used there. Both branches are
+/// accurate to about 1e-15 at the switching point.
+inline double expm1OverXDerivative(double x)
+{
+   if (std::abs(x) < 0.25) {
+      // Sum over n of (n + 1) x^n / (n + 2)!, up to n = 10 in Horner form.
+      // clang-format off
+      return 1. / 2 + x * (1. / 3 + x * (1. / 8 + x * (1. / 30 + x * (1. / 144 + x * (1. / 840
+             + x * (1. / 5760 + x * (1. / 45360 + x * (1. / 403200 + x * (1. / 3991680 + x * (1. / 43545600))))))))));
+      // clang-format on
+   }
+   return (std::exp(x) - expm1OverX(x)) / x;
+}
+
+/// Integral of exp(constant * x) from xMin to xMax. The naive form
+/// (exp(constant * xMax) - exp(constant * xMin)) / constant cancels when
+/// constant * (xMax - xMin) is small. Factoring out the larger exponential and
+/// using std::expm1 for the rest is accurate for any constant and only
+/// overflows if the integral itself does. The derivative with respect to the
+/// constant is exponentialIntegralDConstant(), also registered with clad at
+/// the end of this header (https://github.com/root-project/root/issues/23724).
 inline double exponentialIntegral(double xMin, double xMax, double constant)
 {
    if (constant == 0.0) {
       return xMax - xMin;
    }
 
-   return (std::exp(constant * xMax) - std::exp(constant * xMin)) / constant;
+   const double z = constant * (xMax - xMin);
+   if (z > 0.0) {
+      return -std::exp(constant * xMax) * std::expm1(-z) / constant;
+   }
+   return std::exp(constant * xMin) * std::expm1(z) / constant;
+}
+
+/// Derivative of exponentialIntegral() with respect to the constant, i.e. the
+/// integral of x * exp(constant * x). With a the endpoint where constant * x is
+/// larger and d the signed distance to the other one, substituting x = a + s
+/// gives exp(constant * a) * d * (a * expm1OverX(w) + d * expm1OverXDerivative(w))
+/// with w = constant * d <= 0, so the helpers only see bounded arguments.
+inline double exponentialIntegralDConstant(double xMin, double xMax, double constant)
+{
+   const bool fromMin = constant * (xMax - xMin) <= 0.0;
+   const double a = fromMin ? xMin : xMax;
+   const double d = fromMin ? xMax - xMin : xMin - xMax;
+   const double w = constant * d;
+   // The prefactor (xMax - xMin) instead of d absorbs the sign flip for a == xMax.
+   return std::exp(constant * a) * (xMax - xMin) * (a * expm1OverX(w) + d * expm1OverXDerivative(w));
 }
 
 /// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
@@ -820,17 +914,87 @@ double stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, DoubleA
 
 } // namespace RooFit::Detail::MathFuncs
 
+namespace clad {
+// Only declared, never defined here: clad's own headers exist exclusively
+// inside the interpreter, but this header is also compiled normally.
+template <typename T, typename U>
+struct ValueAndPushforward;
+} // namespace clad
+
 namespace clad::custom_derivatives {
 namespace RooFit::Detail::MathFuncs {
 
-// Clad can't generate the pullback for binNumber because of the
+// Clad can't generate the derivatives for binNumber because of the
 // std::lower_bound usage. But since binNumber returns an integer, and such
-// functions have mathematically no derivatives anyway, we just declare a
-// custom dummy pullback that does nothing.
+// functions have mathematically no derivatives anyway, we just declare custom
+// dummy derivatives that do nothing.
+//
+// Both directions have to be covered: the pullback alone is enough for
+// gradients, but Hessians also run the forward pass over binNumber, and
+// without a pushforward clad descends into std::lower_bound.
 
 template <class... Types>
 void binNumber_pullback(Types...)
 {
+}
+
+// The second parameter is unused. It is what keeps the return type of the
+// pushforward below dependent, so that clad::ValueAndPushforward only has to be
+// complete once that template is instantiated. That happens under clad and
+// nowhere else, while parsing the declaration happens in every build that
+// includes this header. A class template is needed here: an alias template
+// would be expanded eagerly and defeat the purpose.
+template <typename T, typename>
+struct ValueAndPushforwardOf {
+   using type = ::clad::ValueAndPushforward<T, T>;
+};
+
+template <typename DoubleArray, class... Types>
+typename ValueAndPushforwardOf<unsigned int, DoubleArray>::type
+binNumber_pushforward(double x, double coef, DoubleArray boundaries, unsigned int nBoundaries, int nbins, int blo,
+                      Types...)
+{
+   return {::RooFit::Detail::MathFuncs::binNumber(x, coef, boundaries, nBoundaries, nbins, blo), 0};
+}
+
+// Custom derivatives of exponentialIntegral and its helper expm1OverX, as
+// pullbacks for gradients and pushforwards for Hessians. Clad's derivatives of
+// the function bodies would be inaccurate for small constant * (xMax - xMin)
+// and identically zero in the == 0 branches
+// (https://github.com/root-project/root/issues/23724). The helper needs its
+// own because clad builds the Hessian by differentiating the pushforward body.
+//
+// The template parameters only keep the return types dependent, see
+// ValueAndPushforwardOf above. They are deliberately not deduced: clad passes
+// integer literals as derivatives of the integer literals in generated code.
+
+inline void expm1OverX_pullback(double x, double d_out, double *d_x)
+{
+   *d_x += d_out * ::RooFit::Detail::MathFuncs::expm1OverXDerivative(x);
+}
+
+template <typename T = double>
+typename ValueAndPushforwardOf<double, T>::type expm1OverX_pushforward(double x, double d_x)
+{
+   return {::RooFit::Detail::MathFuncs::expm1OverX(x), ::RooFit::Detail::MathFuncs::expm1OverXDerivative(x) * d_x};
+}
+
+inline void exponentialIntegral_pullback(double xMin, double xMax, double constant, double d_out, double *d_xMin,
+                                         double *d_xMax, double *d_constant)
+{
+   *d_xMin -= d_out * std::exp(constant * xMin);
+   *d_xMax += d_out * std::exp(constant * xMax);
+   *d_constant += d_out * ::RooFit::Detail::MathFuncs::exponentialIntegralDConstant(xMin, xMax, constant);
+}
+
+template <typename T = double>
+typename ValueAndPushforwardOf<double, T>::type
+exponentialIntegral_pushforward(double xMin, double xMax, double constant, double d_xMin, double d_xMax,
+                                double d_constant)
+{
+   return {::RooFit::Detail::MathFuncs::exponentialIntegral(xMin, xMax, constant),
+           -std::exp(constant * xMin) * d_xMin + std::exp(constant * xMax) * d_xMax +
+              ::RooFit::Detail::MathFuncs::exponentialIntegralDConstant(xMin, xMax, constant) * d_constant};
 }
 
 } // namespace RooFit::Detail::MathFuncs

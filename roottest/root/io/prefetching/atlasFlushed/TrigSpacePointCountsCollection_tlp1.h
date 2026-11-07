@@ -9,7 +9,7 @@
 #define TrigSpacePointCountsCollection_tlp1_h
 class TrigSpacePointCountsCollection_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigSpacePointCountsCollection_p1.h"
 #include "TrigSpacePointCounts_p1.h"

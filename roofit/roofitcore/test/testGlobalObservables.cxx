@@ -44,18 +44,11 @@ bool isNotIdentical(RooFitResult const &res1, RooFitResult const &res2)
 // Test environment to verify that if we use the feature of storing global
 // observables in a RooDataSet, we can reproduce the same fit results as when
 // we track the global observables separately.
-class GlobsTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
+class GlobsTest : public RooFitEvalBackendTest {
 public:
-   GlobsTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
-
    void SetUp() override
    {
-      RooRandom::randomGenerator()->SetSeed(1337ul);
-
-      // silence log output
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
-
-      _evalBackend = std::get<0>(GetParam());
+      RooFitEvalBackendTest::SetUp();
 
       // We use the global observable also in the model for the event
       // observables. It's unusual, but let's better do this to also cover the
@@ -125,16 +118,14 @@ public:
       _data.reset();
       _dataWithMeanSigmaGlobs.reset();
       _data.reset();
-      _changeMsgLvl.reset();
+      RooFitEvalBackendTest::TearDown();
    }
 
 private:
-   RooFit::EvalBackend _evalBackend;
    RooWorkspace _ws;
    std::unique_ptr<RooDataSet> _data;
    std::unique_ptr<RooDataSet> _dataWithMeanSigmaGlobs;
    std::unique_ptr<RooDataSet> _dataWithMeanGlob;
-   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 TEST_P(GlobsTest, NoConstraints)
@@ -442,8 +433,4 @@ TEST_P(GlobsTest, ResetDataButSourceFromModel)
 }
 
 INSTANTIATE_TEST_SUITE_P(TestGlobalObservables, GlobsTest, testing::Values(ROOFIT_EVAL_BACKENDS),
-                         [](testing::TestParamInfo<GlobsTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+                         EvalBackendParamName{});

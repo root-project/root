@@ -1,0 +1,11 @@
+CMAKE_CXX_FLAGS=-march=native
+CMAKE_C_FLAGS=-march=native
+CMAKE_CXX_STANDARD=20
+builtin_tbb=ON
+builtin_vdt=ON
+builtin_unuran=ON
+test_distrdf_dask=OFF
+test_distrdf_pyspark=OFF
+pythia8=OFF
+cefweb=ON
+qt6canv=ON

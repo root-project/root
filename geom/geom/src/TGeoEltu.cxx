@@ -170,38 +170,7 @@ TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
    Double_t safz2 = fDz + point[2];
 
    if (iact < 3 && safe) {
-      Double_t x0 = TMath::Abs(point[0]);
-      Double_t y0 = TMath::Abs(point[1]);
-      Double_t x1 = x0;
-      Double_t y1 = TMath::Sqrt((fRmin - x0) * (fRmin + x0)) * fRmax / fRmin;
-      Double_t y2 = y0;
-      Double_t x2 = TMath::Sqrt((fRmax - y0) * (fRmax + y0)) * fRmin / fRmax;
-      Double_t d1 = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0);
-      Double_t d2 = (x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0);
-      Double_t x3, y3;
-
-      Double_t safz = TMath::Min(safz1, safz2);
-      for (Int_t i = 0; i < 8; i++) {
-         if (fRmax < fRmin) {
-            x3 = 0.5 * (x1 + x2);
-            y3 = TMath::Sqrt((fRmin - x3) * (fRmin + x3)) * fRmax / fRmin;
-            ;
-         } else {
-            y3 = 0.5 * (y1 + y2);
-            x3 = TMath::Sqrt((fRmax - y3) * (fRmax + y3)) * fRmin / fRmax;
-         }
-         if (d1 < d2) {
-            x2 = x3;
-            y2 = y3;
-            d2 = (x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0);
-         } else {
-            x1 = x3;
-            y1 = y3;
-            d1 = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0);
-         }
-      }
-      Double_t safr = TMath::Sqrt(d1) - 1.0E-3;
-      *safe = TMath::Min(safz, safr);
+      *safe = Safety(point, kTRUE);
       if (iact == 0)
          return TGeoShape::Big();
       if ((iact == 1) && (*safe > step))
@@ -412,6 +381,10 @@ Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
       return 0.;
 
    if (in) {
+      // Within the elliptical projection, an outside point reaches the end cap first.
+      safz = fDz - TMath::Abs(point[2]);
+      if (safz < 0.)
+         return -safz;
       x1 = fRmin * TMath::Sqrt(1. - (y0 * y0) / (fRmax * fRmax));
       y1 = fRmax * TMath::Sqrt(1. - (x0 * x0) / (fRmin * fRmin));
       dx = x1 - x0;
@@ -419,7 +392,6 @@ Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
       if (TMath::Abs(dx) < TGeoShape::Tolerance())
          return 0;
       safr = dx * dy / TMath::Sqrt(dx * dx + dy * dy);
-      safz = fDz - TMath::Abs(point[2]);
       return TMath::Min(safr, safz);
    }
 

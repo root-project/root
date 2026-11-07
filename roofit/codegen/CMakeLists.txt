@@ -21,3 +21,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCodegen
     RooFitCore
     HistFactory
 )
+
+target_sources(
+    RooFitCodegen
+    PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/
+    FILES
+        # LinkDef.h # empty, not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
+        inc/RooFit/CodegenImpl.h
+)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

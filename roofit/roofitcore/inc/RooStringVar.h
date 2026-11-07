@@ -69,11 +69,10 @@ protected:
   void attachToTree(TTree& t, Int_t bufSize=32000) override;
   void attachToVStore(RooVectorDataStore&) override { }
   void fillTreeBranch(TTree& t) override;
-  void setTreeBranchStatus(TTree& t, bool active) override;
 
 private:
   std::string _string;
-  std::string* _stringAddr; //! Required to connect to TTree branch
+  std::string* _stringAddr; ///<! Required to connect to TTree branch
   ClassDefOverride(RooStringVar,2) // String-valued variable
 };
 

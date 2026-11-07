@@ -40,25 +40,8 @@ method.
 #include <mutex>
 
 // this is for the bvh acceleration stuff
-#if defined(__GNUC__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wall"
-#  pragma GCC diagnostic ignored "-Wshadow"
-#  pragma GCC diagnostic ignored "-Wunknown-pragmas"
-#  pragma GCC diagnostic ignored "-Wattributes"
-#elif defined (_MSC_VER)
-#  pragma warning( push )
-#  pragma warning( disable : 5051)
-#endif
-
-// V2 BVH
-#include <bvh/v2/bvh.h>
-#include <bvh/v2/vec.h>
-#include <bvh/v2/ray.h>
-#include <bvh/v2/node.h>
-#include <bvh/v2/stack.h>
-#include <bvh/v2/default_builder.h>
-
+#include <bvh2_third_party.h>
+#include <bvh2_extra_kernels.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -249,6 +232,8 @@ void TGeoParallelWorld::RefreshPhysicalNodes()
 
 TGeoPhysicalNode *TGeoParallelWorld::FindNodeBVH(Double_t point[3])
 {
+   using namespace bvh::v2::extra;
+
    if (!fIsClosed) {
       Fatal("FindNode", "Parallel geometry must be closed first");
    }
@@ -657,66 +642,8 @@ TGeoParallelWorld::FindNextBoundaryLoop(Double_t point[3], Double_t dir[3], Doub
 }
 
 namespace {
-// some helpers for point - axis aligned bounding box functions
-// using bvh types
-
-// determines if a point is inside the bounding box
-template <typename T>
-bool contains(bvh::v2::BBox<T, 3> const &box, bvh::v2::Vec<T, 3> const &p)
-{
-   auto min = box.min;
-   auto max = box.max;
-   return (p[0] >= min[0] && p[0] <= max[0]) && (p[1] >= min[1] && p[1] <= max[1]) &&
-          (p[2] >= min[2] && p[2] <= max[2]);
-}
-
-// determines the largest squared distance of point to any of the bounding box corners
-template <typename T>
-auto RmaxSqToNode(bvh::v2::BBox<T, 3> const &box, bvh::v2::Vec<T, 3> const &p)
-{
-   // construct the 8 corners to get the maximal distance
-   const auto minCorner = box.min;
-   const auto maxCorner = box.max;
-   using Vec3 = bvh::v2::Vec<T, 3>;
-   // these are the corners of the bounding box
-   const std::array<bvh::v2::Vec<T, 3>, 8> corners{
-      Vec3{minCorner[0], minCorner[1], minCorner[2]}, Vec3{minCorner[0], minCorner[1], maxCorner[2]},
-      Vec3{minCorner[0], maxCorner[1], minCorner[2]}, Vec3{minCorner[0], maxCorner[1], maxCorner[2]},
-      Vec3{maxCorner[0], minCorner[1], minCorner[2]}, Vec3{maxCorner[0], minCorner[1], maxCorner[2]},
-      Vec3{maxCorner[0], maxCorner[1], minCorner[2]}, Vec3{maxCorner[0], maxCorner[1], maxCorner[2]}};
-
-   T Rmax_sq{0};
-   for (const auto &corner : corners) {
-      float R_sq = 0.;
-      const auto dx = corner[0] - p[0];
-      R_sq += dx * dx;
-      const auto dy = corner[1] - p[1];
-      R_sq += dy * dy;
-      const auto dz = corner[2] - p[2];
-      R_sq += dz * dz;
-      Rmax_sq = std::max(Rmax_sq, R_sq);
-   }
-   return Rmax_sq;
-};
-
-// determines the mininum squared distance of point to a bounding box ("safey square")
-template <typename T>
-auto SafetySqToNode(bvh::v2::BBox<T, 3> const &box, bvh::v2::Vec<T, 3> const &p)
-{
-   T sqDist{0.0};
-   for (int i = 0; i < 3; i++) {
-      T v = p[i];
-      if (v < box.min[i]) {
-         sqDist += (box.min[i] - v) * (box.min[i] - v);
-      } else if (v > box.max[i]) {
-         sqDist += (v - box.max[i]) * (v - box.max[i]);
-      }
-   }
-   return sqDist;
-};
 
 // Helper classes/structs used for priority queue - BVH traversal
-
 // structure keeping cost (value) for a BVH index
 struct BVHPrioElement {
    size_t bvh_node_id;
@@ -744,6 +671,7 @@ public:
 std::pair<double, double>
 TGeoParallelWorld::GetLoopSafetyCandidates(double point[3], std::vector<int> &candidates, double margin) const
 {
+   using namespace bvh::v2::extra;
    // Given a 3D point, returns the
    // a) the min radius R such that there is at least one leaf bounding box fully enclosed
    //    in the sphere of radius R around point + the smallest squared safety
@@ -811,6 +739,7 @@ TGeoParallelWorld::GetBVHSafetyCandidates(double point[3], std::vector<int> &can
    //    in the sphere of radius R around point
    // b) the set of leaf bounding boxes who partially lie within radius + margin
 
+   using namespace bvh::v2::extra;
    using Scalar = float;
    using Vec3 = bvh::v2::Vec<Scalar, 3>;
    using Node = bvh::v2::Node<Scalar, 3>;
@@ -997,6 +926,7 @@ double TGeoParallelWorld::VoxelSafety(double point[3], double safe_max)
       }
    }
 
+   using namespace bvh::v2::extra;
    using Scalar = float;
    using Vec3 = bvh::v2::Vec<Scalar, 3>;
    using BBox = bvh::v2::BBox<Scalar, 3>;
@@ -1044,6 +974,7 @@ double TGeoParallelWorld::SafetyBVH(double point[3], double safe_max)
    float smallest_safety = safe_max;
    float smallest_safety_sq = smallest_safety * smallest_safety;
 
+   using namespace bvh::v2::extra;
    using Scalar = float;
    using Vec3 = bvh::v2::Vec<Scalar, 3>;
    using Node = bvh::v2::Node<Scalar, 3>;
@@ -1057,7 +988,7 @@ double TGeoParallelWorld::SafetyBVH(double point[3], double safe_max)
 
    auto currnode = mybvh->nodes[0]; // we start from the top BVH node
    // we do a quick check on the top node
-   bool outside_top = !::contains(currnode.get_bbox(), testpoint);
+   bool outside_top = !contains(currnode.get_bbox(), testpoint);
    const auto safety_sq_to_top = SafetySqToNode(currnode.get_bbox(), testpoint);
    if (outside_top && safety_sq_to_top > smallest_safety_sq) {
       // the top node is already further away than our limit, so we can simply return the limit
@@ -1489,9 +1420,3 @@ void TGeoParallelWorld::TestVoxelGrid()
       }
    }
 }
-
-#if defined(__GNUC__)
-#  pragma GCC diagnostic pop
-#elif defined (_MSC_VER)
-#  pragma warning( pop )
-#endif

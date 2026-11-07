@@ -118,7 +118,7 @@ protected:
    TEvePointSet **fBins;               //  Pointers to subjugated TEvePointSet's.
    Int_t        fDefPointSetCapacity;  //  Default capacity of subjugated TEvePointSet's.
    Int_t        fNBins;                //  Number of subjugated TEvePointSet's.
-   Int_t        fLastBin;              //! Index of the last filled TEvePointSet.
+   Int_t        fLastBin;              ///<! Index of the last filled TEvePointSet.
    Double_t     fMin, fCurMin;         //  Overall and current minimum value of the separating quantity.
    Double_t     fMax, fCurMax;         //  Overall and current maximum value of the separating quantity.
    Double_t     fBinWidth;             //  Separating quantity bin-width.

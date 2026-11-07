@@ -1,8 +1,7 @@
 import unittest
 
-from DistRDF import DataFrame
-from DistRDF import HeadNode
-from DistRDF.Backends import Base
+from ROOT._distrdf import DataFrame, HeadNode
+from ROOT._distrdf.Backends import Base
 
 
 class BaseBackendInitTest(unittest.TestCase):

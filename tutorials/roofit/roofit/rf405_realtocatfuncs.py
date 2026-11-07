@@ -21,7 +21,7 @@ x = ROOT.RooRealVar("x", "x", 0, 10)
 a = ROOT.RooArgusBG("a", "argus(x)", x, 10.0, -1.0)
 
 # Generate a dummy dataset
-data = a.generate({x}, 10000)
+data = a.generate(x, 10000)
 
 # Create a threshold real -> cat function
 # --------------------------------------------------------------------------

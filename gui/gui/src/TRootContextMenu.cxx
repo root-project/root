@@ -43,10 +43,12 @@ The picture below shows a canvas with a pop-up menu.
 #include "TRootBrowser.h"
 #include "TClassMenuItem.h"
 #include "TObjectSpy.h"
+#include "TApplication.h"
 #include "KeySymbols.h"
 #include "RConfigure.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
@@ -82,6 +84,24 @@ TRootContextMenu::~TRootContextMenu()
    delete fTrash;
 }
 
+thread_local TRootContextMenu *gBuildingContextMenu = nullptr;
+
+
+void TRootContextMenu::Resize(UInt_t w, UInt_t h)
+{
+   if (gBuildingContextMenu != this) {
+      TGPopupMenu::Resize(w, h);
+   } else if (w != fWidth || h != fHeight) {
+      // Mirror TGFrame::Resize's bookkeeping and layout, omitting only the
+      // native window resize. Entries still see the correct intermediate size.
+      const auto size = GetDefaultSize();
+      fWidth = w ? w : size.fWidth;
+      fHeight = h ? h : size.fHeight;
+      Layout();
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Display context popup menu for currently selected object.
 
@@ -102,8 +122,26 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
       fDialog = 0;
    }
 
+   Bool_t use_mac_x11_workaroud = kFALSE;
    // add menu items to popup menu
-   CreateMenu(fContextMenu->GetSelectedObject());
+#ifdef R__MACOSX
+   use_mac_x11_workaroud = gVirtualX->InheritsFrom("TGX11");
+#endif
+   if (use_mac_x11_workaroud) {
+      // special workaround for X11 on MacOS
+      gBuildingContextMenu = this;
+      CreateMenu(fContextMenu->GetSelectedObject());
+      gBuildingContextMenu = nullptr;
+
+      // Include the help column before mapping; submit only the final size.
+      fMenuWidth += 5;
+      fWidth = GetDefaultWidth() + 5;
+      fHeight = GetDefaultHeight();
+      TGWindow::Resize(fWidth, fHeight);
+      Layout();
+   } else {
+      CreateMenu(fContextMenu->GetSelectedObject());
+   }
 
    int    xx, yy, topx = 0, topy = 0;
    UInt_t w, h;
@@ -270,20 +308,18 @@ void TRootContextMenu::CreateMenu(TObject *object)
                TList *methodList = new TList;
                object->IsA()->GetMenuItems(methodList);
 
-               TMethod *method;
-               TClass  *classPtr = 0;
+               TClass  *classPtr = nullptr;
                TIter next(methodList);
                Bool_t needSep = kFALSE;
 
-               while ((method = (TMethod*) next())) {
+               while (auto method = (TMethod*) next()) {
                   if (classPtr != method->GetClass()) {
                      needSep = kTRUE;
                      classPtr = method->GetClass();
                   }
 
-                  TDataMember *m;
                   EMenuItemKind menuKind = method->IsMenuItem();
-                  TGPopupMenu *currentMenu = 0;
+                  TGPopupMenu *currentMenu = nullptr;
                   TString last_component;
 
                   switch (menuKind) {
@@ -297,12 +333,12 @@ void TRootContextMenu::CreateMenu(TObject *object)
                         AddEntrySorted(currentMenu,last_component.Length() ? last_component.Data() : method->GetName(), entry++, method,0,currentMenu != this);
                         break;
                      case kMenuSubMenu:
-                        if ((m = method->FindDataMember())) {
+                        if (auto member = method->FindDataMember()) {
 
                            // search for arguments to the MENU statement
                            currentMenu = FindHierarchy(method->GetCommentString(),last_component);
 
-                           if (m->GetterMethod()) {
+                           if (member->GetterMethod()) {
                               TGPopupMenu *r = new TGPopupMenu(gClient->GetDefaultRoot());
                               if (needSep && currentMenu == this) {
                                  AddSeparator();
@@ -314,18 +350,14 @@ void TRootContextMenu::CreateMenu(TObject *object)
                                  currentMenu->AddPopup(method->GetName(), r);
                               }
                               fTrash->Add(r);
-                              TIter nxt(m->GetOptions());
-                              TOptionListItem *it;
-                              while ((it = (TOptionListItem*) nxt())) {
-                                 const char *name = it->fOptName;
-                                 Long_t val = it->fValue;
-
+                              TIter nxt(member->GetOptions());
+                              while (auto it = (TOptionListItem*) nxt()) {
                                  TToggle *t = new TToggle;
-                                 t->SetToggledObject(object, method);
-                                 t->SetOnValue(val);
+                                 t->SetToggledObject(object, member);
+                                 t->SetOnValue(it->fValue);
                                  fTrash->Add(t);
 
-                                 r->AddEntry(name, togglelist++, t);
+                                 r->AddEntry(it->fOptName, togglelist++, t);
                                  if (t->GetState())
                                     r->CheckEntry(togglelist-1);
                               }
@@ -635,37 +667,17 @@ Bool_t TRootContextMenu::HandleMotion(Event_t *event)
 void TRootContextMenu::OnlineHelp()
 {
    TString clname;
-   TString cmd;
-   TString url = gEnv->GetValue("Browser.StartUrl", "https://root.cern.ch/doc/master");
-   if (url.EndsWith(".html", TString::kIgnoreCase)) {
-      if (url.Last('/') != kNPOS)
-         url.Remove(url.Last('/'));
-   }
-   if (!url.EndsWith("/")) {
-      url += '/';
-   }
    TObject *obj = fContextMenu->GetSelectedObject();
    if (obj) {
       clname = obj->ClassName();
       if (fContextMenu->GetSelectedMethod()) {
          TString smeth = fContextMenu->GetSelectedMethod()->GetName();
          TMethod *method = obj->IsA()->GetMethodAllAny(smeth.Data());
-         if (method) clname = method->GetClass()->GetName();
-         url += clname;
-         url += ".html";
-         url += "#";
-         url += clname;
-         url += ":";
-         url += smeth.Data();
+         if (method)
+            clname = method->GetClass()->GetName();
+         clname += "::" + smeth;
       }
-      else {
-         url += clname;
-         url += ".html";
-      }
-      if (fDialog) delete fDialog;
-      fDialog = 0;
-      cmd = TString::Format("new TGHtmlBrowser(\"%s\", 0, 900, 300);", url.Data());
-      gROOT->ProcessLine(cmd.Data());
+      gApplication->OpenReferenceGuideFor(clname);
    }
 }
 

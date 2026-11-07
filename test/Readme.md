@@ -12,8 +12,8 @@ MainEvent.cxx      - Simple test program that creates a ROOT Tree object and
                      histograms. This program uses the files Event.cxx,
                      EventCint.cxx and Event.h. An example of a procedure to
                      link this program is in bind_Event. Note that the Makefile
-                     invokes the rootcint utility to generate the CINT interface
-                     EventCint.cxx.
+                     invokes the rootcling utility to generate the interface
+                     EventCint.cxx (ROOT dictionary).
 
 Event.cxx          - Implementation for classes Event and Track.
 
@@ -57,6 +57,6 @@ stress.cxx         - Important ROOT stress testing program.
 
 bench.cxx          - STL and ROOT container test and benchmarking program.
 
-DrawTest.sh        - Entry script to extensive TTree query test suite.
-
-dt_*               - Scripts used by DrawTest.sh.
+DrawTest           - The extensive TTree query test suite lives in
+                     roottest (root/treeformula/event,
+                     root/tree/fastcloningeventtree, ...).

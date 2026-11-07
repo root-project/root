@@ -730,8 +730,6 @@ Long64_t TSpider::GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) co
       lastentry  = fTree->GetEntriesFriend() - 1;
       nentries   = lastentry - firstentry + 1;
    }
-   //TEventList *elist = fTree->GetEventList();
-   //if (elist && elist->GetN() < nentries) nentries = elist->GetN();
    TEntryList *elist = fTree->GetEntryList();
    if (elist && elist->GetN() < nentries) nentries = elist->GetN();
    return nentries;

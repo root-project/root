@@ -3,7 +3,6 @@
 ## \notebook -js
 ## Simple example illustrating how to use the C++ interpreter.
 ##
-## \macro_image
 ## \macro_code
 ##
 ## \date July 2025

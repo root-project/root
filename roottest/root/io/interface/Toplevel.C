@@ -1,7 +1,11 @@
 #include "ToplevelClass.C"
 #include "TFile.h"
 #include "TH1F.h"
-#include <Riostream.h>
+
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 Bool_t ReadToplevel() 
 {

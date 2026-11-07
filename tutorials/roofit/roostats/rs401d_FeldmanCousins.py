@@ -19,6 +19,8 @@ import ROOT
 
 def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
 
+    ROOT.RooRealVar.enableSilentClipping()
+
     # to time the macro
     t = ROOT.TStopwatch()
     t.Start()
@@ -173,7 +175,7 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     modelConfig.SetPdf(model)
     modelConfig.SetParametersOfInterest(parameters)
 
-    fc = RooStats.FeldmanCousins(data, modelConfig)
+    fc = ROOT.RooStats.FeldmanCousins(data, modelConfig)
     fc.SetTestSize(0.1)  # set size of test
     fc.UseAdaptiveSampling(True)
     fc.SetNBins(10)  # number of points to test per parameter
@@ -185,19 +187,19 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
 
     # ---------------------------------------------------------
     # show use of ProfileLikeihoodCalculator utility in RooStats
-    plc = RooStats.ProfileLikelihoodCalculator(data, modelConfig)
+    plc = ROOT.RooStats.ProfileLikelihoodCalculator(data, modelConfig)
     plc.SetTestSize(0.1)
 
     plcInterval = plc.GetInterval()
 
     # --------------------------------------------
     # show use of MCMCCalculator utility in RooStats
-    mcInt = ROOT.kNone
+    mcInt = ROOT.nullptr
 
     if doMCMC:
         # turn some messages back on
-        RooMsgService.instance().setStreamStatus(0, True)
-        RooMsgService.instance().setStreamStatus(1, True)
+        ROOT.RooMsgService.instance().setStreamStatus(0, True)
+        ROOT.RooMsgService.instance().setStreamStatus(1, True)
 
         mcmcWatch = ROOT.TStopwatch()
         mcmcWatch.Start()
@@ -253,16 +255,16 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
             forContour.SetLineColor(ROOT.kRed)
             forContour.Draw("cont2,same")
 
-    mcPlot = ROOT.kNone
+    mcPlot = ROOT.nullptr
     if mcInt:
         print(f"MCMC actual confidence level: ", mcInt.GetActualConfidenceLevel())
-        mcPlot = MCMCIntervalPlot(mcInt)
-        mcPlot.SetLineColor(kMagenta)
+        mcPlot = ROOT.RooStats.MCMCIntervalPlot(mcInt)
+        mcPlot.SetLineColor(ROOT.kMagenta)
         mcPlot.Draw()
 
     dataCanvas.Update()
 
-    plotInt = LikelihoodIntervalPlot(plcInterval)
+    plotInt = ROOT.RooStats.LikelihoodIntervalPlot(plcInterval)
 
     plotInt.SetTitle("90% Confidence Intervals")
     if mcInt:

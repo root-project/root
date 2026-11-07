@@ -102,6 +102,20 @@ public:
       return Gradient(parameters);
    };
 
+   /// Variant of GradientWithPrevResult() that additionally receives the
+   /// already-known function value at \p parameters (e.g. from the line search
+   /// that preceded the gradient request), so implementations can avoid
+   /// re-evaluating the function at the central point.
+   ///
+   /// \warning Not meant to be overridden! This is a requirement for an
+   /// internal optimization in RooFit that might go away with any refactoring.
+   virtual std::vector<double> GradientWithPrevResult(std::vector<double> const &parameters, double *previous_grad,
+                                                      double *previous_g2, double *previous_gstep,
+                                                      double /*fValAtParameters*/) const
+   {
+      return GradientWithPrevResult(parameters, previous_grad, previous_g2, previous_gstep);
+   };
+
    /// \warning Not meant to be overridden! This is a requirement for an
    /// internal optimization in RooFit that might go away with any refactoring.
    virtual GradientParameterSpace gradParameterSpace() const { return GradientParameterSpace::External; };
@@ -127,6 +141,26 @@ public:
    virtual bool HasHessian() const { return false; }
 
    virtual bool HasG2() const { return false; }
+
+   /// Indicate whether the mixed second order derivative with respect to
+   /// parameters i and j is identically zero, i.e. zero for *all* parameter
+   /// values. This can help to avoid expensive function calls in numerical
+   /// Hessian evaluations (see MnHesse).
+   ///
+   /// The contract for implementations:
+   ///
+   ///   * The indices refer to the FCN's own full (external) parameter
+   ///     space, including any parameters that are fixed in the minimizer.
+   ///     Callers that work with internal indices, like MnHesse, must
+   ///     translate them via MnUserTransformation::ExtOfInt() before calling
+   ///     this function.
+   ///   * The result must be symmetric in i and j.
+   ///   * Only return `true` if the second derivative vanishes for *any*
+   ///     value of the parameters: the result may be cached and is used at
+   ///     arbitrary points in parameter space.
+   ///   * The diagonal (i == j) is never queried by Minuit2, so its return
+   ///     value has no effect.
+   virtual bool SecondDerivativeAlwaysVanishes(unsigned int /*i*/, unsigned int /*j*/) const { return false; }
 };
 
 } // namespace ROOT::Minuit2

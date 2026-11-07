@@ -11,6 +11,7 @@
 
 #include "Getline_color.h"
 
+#include <cstring>
 #include <stack>
 #include <string>
 
@@ -21,6 +22,7 @@
 #include "TROOT.h"
 #include "textinput/Range.h"
 #include "textinput/Text.h"
+#include "textinput/UTF8.h"
 
 using std::stack;
 using namespace textinput;
@@ -109,8 +111,13 @@ namespace {
       return Color();
    } // ColorFromName()
 
-   bool IsAlnum_(char c) { return c == '_' || isalnum(c); }
-   bool IsAlpha_(char c) { return c == '_' || isalpha(c); }
+   // The text is UTF-32; the classification functions from <cctype> only
+   // accept values that fit in an unsigned char. Nothing above ASCII can be
+   // part of a C++ type name, so those characters are simply "not a word".
+   bool IsAlnum_(char32_t c) { return c == U'_' || (c <= 0x7F && isalnum((int)c)); }
+   bool IsAlpha_(char32_t c) { return c == U'_' || (c <= 0x7F && isalpha((int)c)); }
+   bool IsDigit_(char32_t c) { return c <= 0x7F && isdigit((int)c); }
+   bool IsSpace_(char32_t c) { return c <= 0x7F && isspace((int)c); }
 } // unnamed namespace
 
 
@@ -185,7 +192,10 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
                                                  Text& input) {
    // The text has changed; look for word that are types.
 
-   const std::string& text = input.GetText();
+   // Index characters, not bytes: the ranges and the color vector are per
+   // character, so indexing input.GetText() would drift apart from them as
+   // soon as the line contains anything outside ASCII.
+   const std::u32string& text = input.GetChars();
 
    size_t modStart = Modification.fEdit.fStart;
    size_t inputLength = input.length();
@@ -209,14 +219,14 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
    while (modStart && IsAlnum_(text[modStart])) --modStart;
 
    // Ignore spaces
-   while (modStart < modEnd && isspace(text[modStart]))
+   while (modStart < modEnd && IsSpace_(text[modStart]))
       ++modStart;
-   while (modEnd > modStart && isspace(text[modEnd]))
-      --modStart;
+   while (modEnd > modStart && IsSpace_(text[modEnd - 1]))
+      --modEnd;
 
    for (size_t i = modStart; i < modEnd;) {
       // i points to beginning of word here.
-      if (isdigit(text[i])) {
+      if (IsDigit_(text[i])) {
          // "12", or "12ull". Default color.
          ExtendRangeAndSetColor(input, i, 0, Modification.fDisplay);
          ++i;
@@ -230,7 +240,7 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
          while (i + wordLen < modEnd && IsAlnum_(text[i + wordLen])) {
             ++wordLen;
          }
-         std::string word = text.substr(i, wordLen);
+         std::string word = UTF32ToUTF8(text.substr(i, wordLen));
          char color = kColorNone;
          if (gClassTable->GetDict(word.c_str())
              || gInterpreter->GetClassSharedLibs(word.c_str())
@@ -258,7 +268,7 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
       }
 
       // skip trailing whitespace.
-      while (i < modEnd && isspace(text[i])) {
+      while (i < modEnd && IsSpace_(text[i])) {
          ExtendRangeAndSetColor(input, i, kColorNone, Modification.fDisplay);
          ++i;
       }
@@ -280,7 +290,7 @@ void ROOT::TextInputColorizer::ProcessCursorChange(size_t Cursor,
    // if so, check for its closing one and color them green.
 
    static const int numBrackets = 3;
-   static const char bTypes[numBrackets][3] = {"()", "{}", "[]"};
+   static const char32_t bTypes[numBrackets][3] = {U"()", U"{}", U"[]"};
 
    if (input.empty()) return;
 
@@ -307,7 +317,7 @@ void ROOT::TextInputColorizer::ProcessCursorChange(size_t Cursor,
    stack<size_t> locBrackets;
    int foundParenIdx = -1;
    int parenType = 0;
-   const std::string& text = input.GetText();
+   const std::u32string& text = input.GetChars();
 
    if (Cursor < input.length()) {
       // check against each bracket type

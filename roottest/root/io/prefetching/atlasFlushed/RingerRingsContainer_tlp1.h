@@ -9,7 +9,7 @@
 #define RingerRingsContainer_tlp1_h
 class RingerRingsContainer_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "RingerRingsContainer_p1.h"
 #include "RingerRings_p1.h"

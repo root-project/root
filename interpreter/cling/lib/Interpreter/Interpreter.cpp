@@ -27,7 +27,6 @@
 #include "cling/Interpreter/AutoloadCallback.h"
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/ClangInternalState.h"
-#include "cling/Interpreter/ClingCodeCompleteConsumer.h"
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/DynamicExprInfo.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
@@ -51,6 +50,7 @@
 #include "clang/Frontend/ASTConsumers.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/Utils.h"
+#include "clang/Interpreter/CodeCompletion.h"
 #include "clang/Lex/ExternalPreprocessorSource.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/HeaderSearchOptions.h"
@@ -333,12 +333,14 @@ namespace cling {
 
     m_IncrParser->SetTransformers(parentInterp);
 
-    if (!TSCtx->getContext()) {
-      // Never true, but don't tell the compiler.
-      // Force symbols needed by runtime to be included in binaries.
-      // Prevents stripping the symbol due to dead-code optimization.
-      internal::symbol_requester();
-    }
+    this->withLLVMContextDo([](llvm::LLVMContext* Ctx) {
+      if (!Ctx) {
+        // Never true, but don't tell the compiler.
+        // Force symbols needed by runtime to be included in binaries.
+        // Prevents stripping the symbol due to dead-code optimization.
+        internal::symbol_requester();
+      }
+    });
   }
 
   ///\brief Constructor for the child Interpreter.
@@ -821,7 +823,7 @@ namespace cling {
     return Value;
   }
 
-  ///\brief Maybe transform the input line to implement cint command line
+  ///\brief Maybe transform the input line to implement Cling command line
   /// semantics (declarations are global) and compile to produce a module.
   ///
   Interpreter::CompilationResult
@@ -924,7 +926,7 @@ namespace cling {
     // Fix C++20 builds caused by commit:
     // llvm-project/commit/574ee1c02ef73b66c5957cf93888234b0471695f
     // We are loading clang modules here and not C++20 modules
-    auto Path = std::make_pair(II, ValidLoc);
+    auto Path = IdentifierLoc(ValidLoc, II);
     Module* Mod = getSema().getModuleLoader().loadModule(
         ValidLoc, Path, Module::AllVisible, /*IsInclusionDirective=*/false);
     bool success = Mod && !getSema()
@@ -984,8 +986,6 @@ namespace cling {
     size_t wrapPos = utils::getWrapPoint(wrapped, getCI()->getLangOpts());
     const std::string& Src = WrapInput(wrapped, wrapped, wrapPos);
 
-    CO.CodeCompletionOffset = offset + wrapPos;
-
     StateDebuggerRAII stateDebugger(this);
 
     // This triggers the FileEntry to be created and the completion
@@ -1036,15 +1036,14 @@ namespace cling {
     std::string llvmDir = parentResourceDir.str();
 
     // arguments for constructing CI
-    auto declCollector = std::make_unique<cling::DeclCollector>();
     const ModuleFileExtensions& moduleExtensions = {};
 
     auto InterpCI = std::unique_ptr<clang::CompilerInstance>(
-        CIFactory::createCI("\n", getOptions(), llvmDir.c_str(),
-                            std::move(declCollector), moduleExtensions,
+        CIFactory::createCI("\n", getOptions(), llvmDir.c_str(), std::nullopt,
+                            moduleExtensions,
                             /*AutoComplete=*/true));
 
-    auto CC = ClingCodeCompleter();
+    auto CC = clang::ReplCodeCompleter();
     CC.codeComplete(InterpCI.get(), line, 1U, cursor + 1, this->getCI(),
                     completions);
 
@@ -1326,7 +1325,7 @@ namespace cling {
     largestream code;
     code << "extern \"C\" void " << funcname.str() << "(void* obj){(("
          << utils::TypeName::GetFullyQualifiedName(
-                clang::QualType(RD->getTypeForDecl(), 0), RD->getASTContext())
+                RD->getASTContext().getCanonicalTagType(RD), RD->getASTContext())
          << "*)obj)->~" << RD->getNameAsString() << "();}";
 
     // ifUniq = false: we know it's unique, no need to check.

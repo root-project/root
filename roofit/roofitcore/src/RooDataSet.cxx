@@ -86,7 +86,7 @@ the new `RooAbsData::uniqueId()`.
 #include "RooAbsReal.h"
 #include "Roo1DTable.h"
 #include "RooCategory.h"
-#include "RooFormula.h"
+#include "RooFormulaUtils.h"
 #include "RooFormulaVar.h"
 #include "RooArgList.h"
 #include "RooRealVar.h"
@@ -98,7 +98,6 @@ the new `RooAbsData::uniqueId()`.
 #include "RooVectorDataStore.h"
 #include "RooCompositeDataStore.h"
 #include "RooSentinel.h"
-#include "RooTrace.h"
 #include "RooFitImplHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
@@ -108,8 +107,8 @@ the new `RooAbsData::uniqueId()`.
 #include "TFile.h"
 #include "TBuffer.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <iostream>
 #include <memory>
 #include <fstream>
@@ -125,7 +124,6 @@ void RooDataSet::cleanup() {}
 
 RooDataSet::RooDataSet()
 {
-  TRACE_CREATE;
 }
 
 namespace {
@@ -275,7 +273,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
              const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)  :
   RooAbsData(name,title,{})
 {
-  TRACE_CREATE;
 
   // Define configuration for this method
   RooCmdConfig pc("RooDataSet::ctor(" + std::string(GetName()) + ")");
@@ -374,8 +371,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       }
     }
 
-    appendToDir(this,true) ;
-
     // Initialize RooDataSet with optional weight variable
     initialize(nullptr) ;
 
@@ -429,6 +424,17 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     if (indexCat) {
       auto hiter = impSliceData.begin() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",")) {
+
+        if (!indexCat->hasLabel(token)) {
+           std::stringstream errorMsgStream;
+           errorMsgStream << "RooDataSet::RooDataSet(\"" << GetName() << "\") "
+                          << "you are providing import data for the category state \"" << token
+                          << "\", but the index category \"" << indexCat->GetName() << "\" has no such state!";
+           const std::string errorMsg = errorMsgStream.str();
+           coutE(InputArguments) << errorMsg << std::endl;
+           throw std::invalid_argument(errorMsg);
+        }
+
         hmap[token] = static_cast<RooDataSet*>(*hiter);
         ++hiter;
       }
@@ -449,8 +455,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
         arg->attachToStore(*_dstore) ;
       }
     }
-
-    appendToDir(this,true) ;
 
     // Initialize RooDataSet with optional weight variable
     initialize(wgtVarName);
@@ -523,11 +527,8 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   RooAbsData(other,newname), RooDirItem()
 {
-  appendToDir(this,true) ;
-  initialize(other._wgtVar?other._wgtVar->GetName():nullptr);
-  TRACE_CREATE;
+   initialize(other._wgtVar ? other._wgtVar->GetName() : nullptr);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an empty clone of this dataset. If vars is not null, only the variables in vars
@@ -619,7 +620,6 @@ std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, co
    if (!cutRange || strchr(cutRange, ',') == nullptr) {
       auto &ds = static_cast<RooDataSet &>(*out);
       ds._dstore = _dstore->reduce(ds.GetName(), ds.GetTitle(), ds._vars, cutVar, cutRange, nStart, nStop);
-      ds._cachedVars.add(_dstore->cachedVars());
    } else {
       // Composite case: multiple ranges
       auto tokens = ROOT::Split(cutRange, ",");
@@ -632,7 +632,6 @@ std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, co
          std::unique_ptr<RooAbsData> appendedData{createEmptyClone()};
          auto &ds = static_cast<RooDataSet &>(*appendedData);
          ds._dstore = _dstore->reduce(ds.GetName(), ds.GetTitle(), ds._vars, cutVar, token.c_str(), nStart, nStop);
-         ds._cachedVars.add(_dstore->cachedVars());
          static_cast<RooDataSet &>(*out).append(ds);
       }
    }
@@ -647,7 +646,6 @@ std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, co
 RooDataSet::~RooDataSet()
 {
   removeFromDir(this) ;
-  TRACE_DESTROY;
 }
 
 
@@ -743,7 +741,7 @@ void RooDataSet::weightError(double& lo, double& hi, ErrorType etype) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \copydoc RooAbsData::weightError(ErrorType)
+/// \copydoc RooAbsData::weightError(RooAbsData::ErrorType)
 /// \param etype error type
 double RooDataSet::weightError(ErrorType etype) const
 {
@@ -775,11 +773,11 @@ double RooDataSet::sumEntries() const
 
 double RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
 {
-  // Setup RooFormulaVar for cutSpec if it is present
-  std::unique_ptr<RooFormula> select = nullptr ;
-  if (cutSpec && strlen(cutSpec) > 0) {
-    select = std::make_unique<RooFormula>("select",cutSpec,*get()) ;
-  }
+   // Setup a formula evaluator for cutSpec if it is present
+   std::unique_ptr<RooFormulaEvaluator> select = nullptr;
+   if (cutSpec && strlen(cutSpec) > 0) {
+      select = RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get());
+   }
 
   // Shortcut for unweighted unselected datasets
   if (!select && !cutRange && !isWeighted()) {
@@ -790,7 +788,8 @@ double RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
   ROOT::Math::KahanSum<double> sumw{0.0};
   for (int i = 0 ; i<numEntries() ; i++) {
     get(i) ;
-    if (select && select->eval()==0.) continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0.)
+       continue;
     if (cutRange && !_vars.allInRange(cutRange)) continue ;
     sumw += weight();
   }

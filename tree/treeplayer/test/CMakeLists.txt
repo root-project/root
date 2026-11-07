@@ -15,6 +15,8 @@ add_custom_command(TARGET treeplayer_branchobject POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/branchobject.root branchobject.root)
 endif()
 
+ROOT_ADD_GTEST(treeplayer_gh11786 gh11786.cxx LIBRARIES TreePlayer)
+
 ROOT_ADD_GTEST(treeplayer_gh16804 gh16804.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_GTEST(treeplayer_gh16805 gh16805.cxx LIBRARIES TreePlayer)
@@ -23,8 +25,7 @@ ROOT_GENERATE_DICTIONARY(CMSDASClassesDict ${CMAKE_CURRENT_SOURCE_DIR}/CMSDASCla
 ROOT_ADD_GTEST(treeplayer_gh20033 gh20033.cxx CMSDASClassesDict.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_GTEST(treeplayer_leafs leafs.cxx LIBRARIES TreePlayer)
-add_custom_command(TARGET treeplayer_leafs POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/data.h data.h)
+configure_file(data.h . COPYONLY)
 
 ROOT_ADD_GTEST(treeplayer_readerarray_iterator readerarray_iterator.cxx LIBRARIES TreePlayer)
 

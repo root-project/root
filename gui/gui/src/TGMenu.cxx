@@ -73,8 +73,8 @@ kC_COMMAND, kCM_MENU, menu id, user data.
 #include "TParameter.h"
 #include "RConfigure.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <iostream>
 
 const TGGC   *TGPopupMenu::fgDefaultGC = nullptr;
@@ -961,6 +961,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    wattr.fSaveUnder        = kTRUE;
 
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
+   gVirtualX->SetWindowHint(fId, TVirtualX::kHintPopup);
 
    AddInput(kPointerMotionMask | kEnterWindowMask | kLeaveWindowMask);
 }

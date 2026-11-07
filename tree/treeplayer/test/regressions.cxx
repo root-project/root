@@ -19,6 +19,7 @@
 
 #include "gtest/gtest.h"
 
+#include <limits>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -216,10 +217,9 @@ TEST(TTreeFormulaRegressions, ConstantAlias)
 // ROOT-8577 (JIRA)
 #define MYSTRUCT struct MyS { int x; };
 MYSTRUCT
-#define TO_LITERAL(string) _QUOTE_(string)
 TEST(TTreeFormulaRegressions, WrongName)
 {
-   gInterpreter->Declare(TO_LITERAL(MYSTRUCT));
+   gInterpreter->Declare(_R_QUOTEVAL_(MYSTRUCT));
    MyS s;
    TLorentzVector v(1, 2, 3, 4);
    TTree t("t", "t");
@@ -357,6 +357,71 @@ TEST(TTreeReaderRegressions, ValueFastTuple)
    for (auto it = reader.begin(); it != reader.end(); ++it)
       total += sqrt((*px) * (*px) + (*py) * (*py) + (*pz) * (*pz));
    EXPECT_NEAR(total, 866026269930.1345215, 100);
+}
+
+// ROOT-8000 https://its.cern.ch/jira/browse/ROOT-8000
+// An unrelated file lying around in the current directory whose name matches
+// the leading part of a formula (e.g. a file named "abs") must not make
+// TTree::Draw interpret the formula as the name of a C++ script called with
+// arguments: only files with an extension qualify as scripts.
+TEST(TTreeDrawRegressions, ExpressionNotShadowedByFile)
+{
+   ROOT::TestSupport::FileRaii shadowingFile{"abs"};
+   {
+      std::ofstream f(shadowingFile.GetPath());
+      f << "This is a text file, not a C++ script.\n";
+   }
+
+   TTree t("t", "t");
+   double x;
+   int id;
+   t.Branch("x", &x);
+   t.Branch("id", &id);
+   for (int i = 0; i < 100; ++i) {
+      x = i - 50;
+      id = (i % 2) ? 531 : -531;
+      t.Fill();
+   }
+
+   // These formulas end with a parenthesized part, which used to be stripped
+   // as ACLiC-style arguments, leaving "abs" to be found as a file.
+   EXPECT_EQ(t.Draw("abs(x)", "", "goff"), 100);
+   EXPECT_EQ(t.Draw("x", "abs(id)", "goff"), 100);
+   // The dot in "0.5" used to make the varexp pass the extension check.
+   EXPECT_EQ(t.Draw("abs(x + 0.5)", "abs(id) == 531", "goff"), 100);
+   EXPECT_EQ(t.Draw("x", "abs(id) == id", "goff"), 50);
+}
+
+// ROOT-8000 https://its.cern.ch/jira/browse/ROOT-8000
+// The flip side of the test above: a *real* macro whose name matches the
+// leading part of a formula must still be recognized as a script, precisely
+// because it has an extension. We check this without paying for the ACLiC
+// compilation of the macro: when the variable expression is a script file but
+// the selection is a plain formula (not a file), DrawSelect must reject the
+// combination with its "both must be files" error. That error is only reached
+// if "abs.C" was taken as a script - a bare "abs" would be treated as a formula
+// and the error above ("... is not a file" for the selection) would never fire.
+TEST(TTreeDrawRegressions, MacroWithExtensionRecognizedAsScript)
+{
+   ROOT::TestSupport::FileRaii macroFile{"abs.C"};
+   {
+      std::ofstream f(macroFile.GetPath());
+      f << "double abs()\n{\n   return x;\n}\n";
+   }
+
+   TTree t("t", "t");
+   double x;
+   t.Branch("x", &x);
+   for (int i = 0; i < 100; ++i) {
+      x = i - 50;
+      t.Fill();
+   }
+
+   ROOT::TestSupport::CheckDiagsRAII diags{kError, "TTreePlayer::DrawSelect",
+                                           "Drawing using a C++ macro currently requires that both the expression and "
+                                           "the selection are files",
+                                           /*matchFullMessage=*/false};
+   EXPECT_EQ(t.Draw("abs.C", "x > 0", "goff"), 0);
 }
 
 // https://github.com/root-project/root/issues/20226
@@ -508,6 +573,89 @@ TEST(TTreeScan, chainNameWithDifferentTreeName)
    }
 }
 
+// Alt$(primary, alternate) used on its own, with 'primary' a variable-length
+// array, must loop over all the elements of the array instead of just the
+// first one. Previously the array dimension of 'primary' was not propagated to
+// the enclosing TTreeFormula manager when Alt$ was the only source of
+// multiplicity, so the formula reported a single instance per entry.
+TEST(TTreeFormulaRegressions, AltDollarVariableArray)
+{
+   TTree t("t", "t");
+   Int_t n = 3;
+   Float_t x[3]{};
+   t.Branch("n", &n);
+   t.Branch("x", &x, "x[n]/F");
+   x[0] = 1;
+   x[1] = 2;
+   x[2] = 3;
+   t.Fill();
+   x[0] = 4;
+   x[1] = 5;
+   x[2] = 6;
+   t.Fill();
+   n = 2;
+   x[0] = -1;
+   x[1] = -2;
+   x[2] = -3;
+   t.Fill();
+   n = 1;
+   x[0] = 0;
+   t.Fill();
+
+   auto evalAll = [](TTree &tree, TTreeFormula &form, Long64_t entry) {
+      tree.LoadTree(entry);
+      const Int_t ndata = form.GetNdata();
+      std::vector<double> values;
+      for (Int_t i = 0; i < ndata; ++i)
+         values.push_back(form.EvalInstance(i));
+      return values;
+   };
+
+   // 1) Standalone Alt$ over the whole array loops over its elements.
+   {
+      TTreeFormula form("form", "Alt$(x,-1)", &t);
+      EXPECT_EQ(form.GetMultiplicity(), 1);
+      const std::vector<std::vector<double>> expected{{1, 2, 3}, {4, 5, 6}, {-1, -2}, {0}};
+      for (Long64_t entry = 0; entry < t.GetEntries(); ++entry)
+         EXPECT_EQ(evalAll(t, form, entry), expected[entry]) << "entry " << entry;
+   }
+
+   // 2) A fixed index into the variable-length array stays a single value per
+   // entry and falls back to the alternate when the index is out of range.
+   // This is the documented Alt$(arr[i], default) use case and must not be
+   // turned into a zero-instance (dropped) entry.
+   {
+      TTreeFormula form("form", "Alt$(x[2],-1)", &t);
+      const std::vector<std::vector<double>> expected{{3}, {6}, {-1}, {-1}}; // x[2] only exists for n==3
+      for (Long64_t entry = 0; entry < t.GetEntries(); ++entry)
+         EXPECT_EQ(evalAll(t, form, entry), expected[entry]) << "entry " << entry;
+   }
+}
+
+// Companion to AltDollarVariableArray: when Alt$ is combined with another array
+// that drives the iteration, the alternate must pad the shorter array rather
+// than shrinking the loop. See the TTree::Draw documentation for Alt$.
+TEST(TTreeFormulaRegressions, AltDollarPadsShorterArray)
+{
+   TTree t("t", "t");
+   Int_t n1 = 3, n2 = 2;
+   Float_t a1[3]{10, 20, 30};
+   Float_t a2[3]{1, 2, 3};
+   t.Branch("n1", &n1);
+   t.Branch("n2", &n2);
+   t.Branch("a1", &a1, "a1[n1]/F");
+   t.Branch("a2", &a2, "a2[n2]/F");
+   t.Fill();
+
+   // The loop is driven by a1 (3 elements); Alt$(a2,0) yields a2[0],a2[1],0.
+   TTreeFormula form("form", "a1+Alt$(a2,0)", &t);
+   t.LoadTree(0);
+   ASSERT_EQ(form.GetNdata(), 3);
+   const std::vector<double> expected{11, 22, 30};
+   for (Int_t i = 0; i < 3; ++i)
+      EXPECT_FLOAT_EQ(form.EvalInstance(i), expected[i]) << "instance " << i;
+}
+
 // https://github.com/root-project/root/issues/20249
 TEST(TTreeScan, TTreeGetBranchOfFriendTChain)
 {
@@ -585,4 +733,112 @@ TEST(TTreeScan, TTreeGetBranchOfFriendTChain)
       } else
          throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
    }
+}
+
+// https://github.com/root-project/root/issues/7844
+// TTree::Scan() used to lose precision when printing 64-bit integer branches
+// (e.g. ULong64_t): the "lld" column format, when given without an embedded
+// column size (i.e. via "colsize=N col=lld"), was not recognized as a
+// "long long" modifier because of an off-by-one in the length-modifier
+// detection in TTreeFormula::PrintValue. As a consequence the value was
+// evaluated and printed as a double, rounding anything above 2^53.
+TEST(TTreeScan, ULong64Precision)
+{
+   // The "long" ("ld") and "long long" ("lld") Scan column formats are both
+   // evaluated through `long double` (see TTreeFormula::PrintValue), so exact
+   // 64-bit integer output is only possible where `long double` has more mantissa
+   // bits than `double`. That is the case on x86-64 (80-bit, 64-bit mantissa) but
+   // not, e.g., on macOS ARM where `long double` is just a 64-bit `double` (53-bit
+   // mantissa). This test checks the exact output on the former and, on the
+   // latter, that the value's unrepresentability is reported as the
+   // known-limitation error rather than silently rounded.
+
+   // 1617047019150033926 needs 61 bits, so it cannot be represented exactly
+   // by a double (53-bit mantissa).
+   constexpr ULong64_t value{1617047019150033926ULL};
+
+   constexpr const char *treeName{"tree_7844"};
+   ROOT::TestSupport::FileRaii fileGuard{"tree_7844.root"};
+   {
+      std::unique_ptr<TFile> file{TFile::Open(fileGuard.GetPath().c_str(), "recreate")};
+      auto tree = std::make_unique<TTree>(treeName, treeName);
+
+      ULong64_t x = value;
+      tree->Branch("x", &x, "x/l");
+      tree->Fill();
+      file->Write();
+   }
+
+   std::unique_ptr<TFile> file{TFile::Open(fileGuard.GetPath().c_str())};
+   auto tree = file->Get<TTree>(treeName);
+
+   auto *treePlayer = static_cast<TTreePlayer *>(tree->GetPlayer());
+   ASSERT_TRUE(treePlayer) << "Could not retrieve TTreePlayer from main tree!";
+
+   ROOT::TestSupport::FileRaii redirectFile{"tree_7844_regression_redirect.txt"};
+   // SetScanFileName() stores the raw pointer, so keep the path string alive.
+   const std::string redirectPath{redirectFile.GetPath()};
+   treePlayer->SetScanRedirect(true);
+   treePlayer->SetScanFileName(redirectPath.c_str());
+
+   // Run a Scan with the given option string into the redirect file and return
+   // its contents.
+   auto scanToString = [&](const char *option) {
+      tree->Scan("x:x-1617047019150033925:x-1617047019150033000", "", option);
+      std::ifstream redirectStream(redirectPath.c_str());
+      std::stringstream redirectOutput;
+      redirectOutput << redirectStream.rdbuf();
+      return redirectOutput.str();
+   };
+
+   const static std::string expectedScanOut{
+      R"Scan(************************************************************************************
+*    Row   *                     x * x-1617047019150033925 * x-1617047019150033000 *
+************************************************************************************
+*        0 *   1617047019150033926 *                     1 *                   926 *
+************************************************************************************
+)Scan"};
+
+   // Each format is checked both with the column size given separately via
+   // "colsize=" (so the format reaching TTreeFormula::PrintValue is just "lld") and
+   // embedded in the token itself ("21lld"). Only the former triggered the
+   // off-by-one in the length-modifier detection, but both must behave identically.
+   // The "ld" ("long") and "lld" ("long long") formats must behave identically too,
+   // as both evaluate through `long double`.
+   if (std::numeric_limits<long double>::digits > std::numeric_limits<double>::digits) {
+      // long double holds the 61-bit value exactly: every spelling must print the
+      // exact 64-bit value and the exact result of arithmetic with large constants.
+      EXPECT_EQ(scanToString("colsize=21 col=lld:lld:lld"), expectedScanOut);
+      EXPECT_EQ(scanToString("col=21lld:21lld:21lld"), expectedScanOut);
+      EXPECT_EQ(scanToString("colsize=21 col=ld:ld:ld"), expectedScanOut);
+      EXPECT_EQ(scanToString("col=21ld:21ld:21ld"), expectedScanOut);
+   } else {
+      // long double is just a 64-bit double here, so the value is genuinely
+      // unrepresentable: PrintValue must emit the known-limitation error (once per
+      // offending value) instead of silently rounding.
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TTreeFormula::PrintValue", "may be inexact", /*matchFullMessage=*/false);
+      scanToString("colsize=21 col=lld:lld:lld");
+      scanToString("col=21lld:21lld:21lld");
+      scanToString("colsize=21 col=ld:ld:ld");
+      scanToString("col=21ld:21ld:21ld");
+   }
+}
+
+// https://github.com/root-project/root/issues/22755
+// sqrt() of a negative argument used to evaluate to sqrt(abs(x)) instead of NaN
+TEST(TTreeFormulaRegressions, SqrtOfNegative)
+{
+   TTree t("t", "t");
+   int x = 0;
+   t.Branch("x", &x, "x/I");
+   t.Fill();
+   t.GetEntry(0);
+
+   TTreeFormula tf("tf", "sqrt(-4.0)", &t);
+   EXPECT_TRUE(std::isnan(tf.EvalInstance()));
+   TTreeFormula tf2("tf2", "sqrt(x - 4)", &t);
+   EXPECT_TRUE(std::isnan(tf2.EvalInstance()));
+   TTreeFormula tf3("tf3", "sqrt(x + 9)", &t);
+   EXPECT_FLOAT_EQ(tf3.EvalInstance(), 3.);
 }

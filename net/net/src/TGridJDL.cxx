@@ -10,22 +10,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridJDL                                                             //
-//                                                                      //
-// Abstract base class to generate JDL files for job submission to the  //
-// Grid.                                                                //
-//                                                                      //
-// Related classes are TGLiteJDL.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGridJDL.h"
 #include "TObjString.h"
-#include "Riostream.h"
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup.

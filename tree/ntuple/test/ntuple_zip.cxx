@@ -47,14 +47,33 @@ TEST(RNTupleZip, LargeWithOutputBuffer)
    auto unzipBuffer = MakeUninitArray<char>(N);
    std::string data(N, 'x');
 
-   /// Trailing byte cannot be compressed, entire buffer returns uncompressed
+   /// One byte more than a block: two blocks of about the same size, both compressed (no 1-byte trailing block,
+   /// which could not be compressed and would leave the entire buffer uncompressed)
    auto szZip = RNTupleCompressor::Zip(data.data(), kMAXZIPBUF + 1, 101, zipBuffer.get());
-   EXPECT_EQ(static_cast<unsigned int>(kMAXZIPBUF) + 1, szZip);
+   EXPECT_LT(szZip, static_cast<unsigned int>(kMAXZIPBUF) + 1);
+   RNTupleDecompressor::Unzip(zipBuffer.get(), szZip, kMAXZIPBUF + 1, unzipBuffer.get());
+   EXPECT_EQ(std::string_view(data.data(), kMAXZIPBUF + 1), std::string_view(unzipBuffer.get(), kMAXZIPBUF + 1));
 
    szZip = RNTupleCompressor::Zip(data.data(), data.length(), 101, zipBuffer.get());
    EXPECT_LT(szZip, N);
    RNTupleDecompressor::Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
    EXPECT_EQ(data, std::string_view(unzipBuffer.get(), N));
+}
+
+TEST(RNTupleZip, LargeJustAboveBlocks)
+{
+   // Buffers just above one or two blocks: a page of 2^24 or 2^25 bytes must not be stored uncompressed
+   for (std::size_t n : {std::size_t(kMAXZIPBUF) + 1, std::size_t(kMAXZIPBUF) + 2, std::size_t(1) << 25}) {
+      auto zipBuffer = MakeUninitArray<unsigned char>(n);
+      auto unzipBuffer = MakeUninitArray<char>(n);
+      std::string data(n, 'x');
+      for (int compression : {101, 207, 404, 505}) {
+         auto szZip = RNTupleCompressor::Zip(data.data(), n, compression, zipBuffer.get());
+         EXPECT_LT(szZip, n) << "size " << n << ", compression " << compression;
+         RNTupleDecompressor::Unzip(zipBuffer.get(), szZip, n, unzipBuffer.get());
+         EXPECT_EQ(data, std::string_view(unzipBuffer.get(), n));
+      }
+   }
 }
 
 TEST(RNTupleZip, CorruptedInput)

@@ -11,6 +11,5 @@
 #define CXXDEBUG "@CMAKE_CXX_FLAGS_DEBUG@ @BLDCXXFLAGS@"
 #define ROOTBUILD "release"
 #define LINKEDLIBS "-LIBPATH:%ROOTSYS%\\lib libCore.lib "
-#define INCLUDEPATH "-I%ROOTSYS%\\include"
 #define OBJEXT "obj"
 #define SOEXT "dll"

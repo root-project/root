@@ -15,6 +15,9 @@
 #include "TVirtualPad.h"
 #include "TAttBBox2D.h"
 #include <vector>
+#include <string>
+#include <map>
+#include <memory>
 
 class TVirtualViewer3D;
 class TVirtualPadPainter;
@@ -24,6 +27,7 @@ class TLegend;
 class TArrow;
 class TPoint;
 class TWebCanvas;
+class TPadDrawOperation;
 
 class TPad : public TVirtualPad, public TAttBBox2D {
 
@@ -31,6 +35,8 @@ friend class TWebCanvas;
 
 private:
    TObject      *fTip{nullptr};     ///<! tool tip associated with box
+   std::unique_ptr<TInteractive> fInteractive; ///<! current interactive object
+   std::map<std::string,std::unique_ptr<TPadDrawOperation>> fDrawOper, fDrawOperXor; ///<! map of draw operations performed outside of normal paint
 
 protected:
    Double_t      fX1;               ///<  X of lower X coordinate
@@ -129,15 +135,17 @@ protected:
    void          PaintBorder(Color_t color, Bool_t tops);
    void          PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light) override;
    void          PaintDate();
+   void          PaintOperations(Bool_t withXor = kFALSE);
    void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void          SetBatch(Bool_t batch=kTRUE) override;
+
+   TInteractive *Interactive(TObject *obj = nullptr, TInteractive *init = nullptr) override;
 
 private:
    TPad(const TPad &pad) = delete;
    TPad &operator=(const TPad &rhs) = delete;
 
-   void CopyBackgroundPixmap(Int_t x, Int_t y);
-   void CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y);
+   void CopyBackgroundPixmaps(TPad *stop, Int_t x, Int_t y);
    void DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode);
 
    Bool_t            Collide(Int_t i, Int_t j, Int_t w, Int_t h);
@@ -194,6 +202,7 @@ public:
    virtual void      DrawCrosshair();
    TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") override;
    void              ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis) override;
+   void              FeedbackMode(Bool_t set) override;
    TObject          *FindObject(const char *name) const override;
    TObject          *FindObject(const TObject *obj) const override;
    void              UseCurrentStyle() override;  // *MENU*
@@ -202,6 +211,7 @@ public:
    Int_t             GetCrosshair() const;
    Int_t             GetCanvasID() const override;
    TCanvasImp       *GetCanvasImp() const override;
+   Int_t             GetDoubleBuffer() const override;
    TFrame           *GetFrame() override;
    Int_t             GetEvent() const override;
    Int_t             GetEventX() const override;
@@ -218,6 +228,8 @@ public:
    Double_t          GetHNDC() const override { return fHNDC; }
    UInt_t            GetWw() const override;
    UInt_t            GetWh() const override;
+   UInt_t            GetPadWidth() const override;
+   UInt_t            GetPadHeight() const override;
    Double_t          GetAbsXlowNDC() const override { return fAbsXlowNDC; }
    Double_t          GetAbsYlowNDC() const override { return fAbsYlowNDC; }
    Double_t          GetAbsWNDC() const override { return fAbsWNDC; }
@@ -273,6 +285,7 @@ public:
    Bool_t            IsEditable() const override { return fEditable; }
    Bool_t            IsFolder() const override { return kTRUE; }
    Bool_t            IsModified() const override { return fModified; }
+   Int_t             IsAnyNeedRepaint() const;
    Bool_t            IsRetained() const override;
    Bool_t            IsVertical() const override { return !TestBit(kHori); }
    Bool_t            IsWeb() const override;
@@ -301,12 +314,15 @@ public:
    void              PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="") override;
    void              PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="") override;
    void              PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="") override;
+   void              PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option="") override;
+   void              PaintSegmentsNDC(Int_t n, Double_t *u, Double_t *v) override;
    void              PaintMarker3D(Double_t x, Double_t y, Double_t z) override;
    void              PaintModified() override;
    void              PaintText(Double_t x, Double_t y, const char *text) override;
    void              PaintText(Double_t x, Double_t y, const wchar_t *text) override;
    void              PaintTextNDC(Double_t u, Double_t v, const char *text) override;
    void              PaintTextNDC(Double_t u, Double_t v, const wchar_t *text) override;
+   void              PaintTextUrl(Double_t x, Double_t y, const char *text, const char *url) override;
    virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj);
    Double_t          PixeltoX(Double_t px) override;
    Double_t          PixeltoY(Double_t py) override;
@@ -379,6 +395,8 @@ public:
    TObject          *WaitPrimitive(const char *pname="", const char *emode="") override;
    Int_t             XtoAbsPixel(Double_t x) const override;
    Int_t             YtoAbsPixel(Double_t y) const override;
+   Int_t             HtoAbsPixel(Double_t y1, Double_t y2) const override;
+   Int_t             WtoAbsPixel(Double_t x1, Double_t x2) const override;
    Double_t          XtoPad(Double_t x) const override;
    Double_t          YtoPad(Double_t y) const override;
    Int_t             XtoPixel(Double_t x) const override;
@@ -393,7 +411,7 @@ public:
    void              ResetToolTip(TObject *tip) override;
    void              CloseToolTip(TObject *tip) override;
 
-   Int_t             IncrementPaletteColor(Int_t i, TString opt) override;
+   Int_t             IncrementPaletteColor(Int_t i, const TString &opt) override;
    Int_t             NextPaletteColor() override;
 
    void              DrawCollideGrid();

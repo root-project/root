@@ -28,8 +28,9 @@ by the user to getVal() and on which parameters need to be tracked
 for changes to trigger a refilling of the cache histogram.
 **/
 
-#include "Riostream.h"
-using std::string, std::endl, std::ostream;
+#include <string>
+#include <ostream>
+ using std::string, std::endl, std::ostream;
 
 #include "TString.h"
 #include "RooAbsCachedReal.h"
@@ -40,19 +41,13 @@ using std::string, std::endl, std::ostream;
 #include "RooChangeTracker.h"
 #include "RooExpensiveObjectCache.h"
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder) :
-  RooAbsReal(name,title),
-  _cacheMgr(this,10),
-  _ipOrder(ipOrder),
-  _disableCache(false)
- {
- }
+RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder)
+   : RooAbsReal(name, title), _cacheMgr(this, 10), _ipOrder(ipOrder), _disableCache(false)
+{
+}
 
 
 
@@ -131,22 +126,10 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
     arg->setOperMode(ADirty);
   }
 
-  // Check if we have contents registered already in global expensive object cache
-  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
+  fillCacheObject(*cache) ;
 
-  if (histTmp) {
-
-    cache->hist()->reset() ;
-    cache->hist()->add(*histTmp) ;
-
-  } else {
-
-    fillCacheObject(*cache) ;
-
-    RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
-    eoclone->removeSelfFromDir() ;
-    expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
-  }
+  RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
+  eoclone->removeSelfFromDir() ;
 
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,nullptr,((RooAbsCacheElement*)cache),nullptr) ;

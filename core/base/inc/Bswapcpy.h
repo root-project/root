@@ -10,6 +10,11 @@
 #ifndef ROOT_Bswapcpy
 #define ROOT_Bswapcpy
 
+#ifndef USE_BSWAPCPY
+#warning "This header is deprecated and will be removed in ROOT 7"
+#endif
+
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Bswapcpy                                                             //

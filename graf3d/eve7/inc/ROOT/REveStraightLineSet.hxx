@@ -15,7 +15,6 @@
 #include "TNamed.h"
 #include "TAttMarker.h"
 #include "TAttLine.h"
-#include "TAttBBox.h"
 
 #include "ROOT/REveElement.hxx"
 #include "ROOT/REveProjectionBases.hxx"
@@ -37,9 +36,7 @@ class REveStraightLineSet : public REveElement,
                             public REveProjectable,
                             public TAttLine,
                             public TAttMarker,
-                            public TAttBBox,
-                            public REveSecondarySelectable
-{
+                            public REveSecondarySelectable {
 private:
    REveStraightLineSet(const REveStraightLineSet&) = delete;
    REveStraightLineSet& operator=(const REveStraightLineSet&) = delete;
@@ -120,7 +117,6 @@ public:
 
    void ComputeBBox() override;
 };
-
 
 ///////////////////////////////////////////////////////////////////////////////
 /// REveStraightLineSetProjected

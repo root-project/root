@@ -132,7 +132,7 @@ The examples below showcase the same functionalities through 3 different impleme
 |------------------------------------|---------------------------------|-------------------------------|------------------------|
 |**C++ macro** |**Python** |**Python+Newest Pythonization**| |
 |hist029_TRatioPlot_simple.C|hist029_TRatioPlot_simple.py||Create a simple ratio plot of two histograms using the `pois` division option.|
-|hist030_TRatioPlot_residual.C|hist030_TRatioPlot_residual.py|hist030_TRatioPlot_residual_uhi.py |Create a fit residual plot.|
+|hist030_TRatioPlot_residual.C|hist030_TRatioPlot_residual.py| |Create a fit residual plot.|
 |hist031_TRatioPlot_residual_fit.C|hist031_TRatioPlot_residual_fit.py||Create a fit residual plot and set the y-axis range for it.|
 |hist032_TRatioPlot_fit_lines.C|hist032_TRatioPlot_fit_lines.py||Set custom dashed lines specified by a vector of floats.|
 |hist033_TRatioPlot_fit_confidence.C|hist033_TRatioPlot_fit_confidence.py||Set the colors of the confidence interval bands by using|

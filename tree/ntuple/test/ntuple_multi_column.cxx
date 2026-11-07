@@ -27,7 +27,9 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
       writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
    EXPECT_EQ(3u, reader->GetView<float>("px").GetFieldRange().size());
 
    const auto &desc = reader->GetDescriptor();
@@ -377,50 +379,32 @@ TEST(RNTuple, MultiColumnRepresentationBulk)
    EXPECT_FLOAT_EQ(2.0, arr[0]);
 }
 
-TEST(RNTuple, MultiColumnRepresentationFriends)
+TEST(RNTuple, MultiColumnRepresentationVariableBitWidth)
 {
-   FileRaii fileGuard1("test_ntuple_multi_column_representation_friend1.root");
-   FileRaii fileGuard2("test_ntuple_multi_column_representation_friend2.root");
-
-   auto model1 = RNTupleModel::Create();
-   auto fldPt = RFieldBase::Create("pt", "float").Unwrap();
-   fldPt->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal16}});
-   model1->AddField(std::move(fldPt));
-   auto ptrPt = model1->GetDefaultEntry().GetPtr<float>("pt");
-
-   auto model2 = RNTupleModel::Create();
-   auto fldEta = RFieldBase::Create("eta", "float").Unwrap();
-   fldEta->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal16}, {ROOT::ENTupleColumnType::kReal32}});
-   model2->AddField(std::move(fldEta));
-   auto ptrEta = model2->GetDefaultEntry().GetPtr<float>("eta");
+   FileRaii fileGuard("test_ntuple_multi_column_representation_varbitwidth.root");
 
    {
-      auto writer = RNTupleWriter::Recreate(std::move(model1), "ntpl1", fileGuard1.GetPath());
-      *ptrPt = 1.0;
+      auto model = RNTupleModel::Create();
+      auto fldPx = std::make_unique<RField<float>>("px");
+      fldPx->SetTruncated(26);
+      fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal32Trunc}});
+      model->AddField(std::move(fldPx));
+      auto ptrPx = model->GetDefaultEntry().GetPtr<float>("px");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrPx = 1.0;
       writer->Fill();
       writer->CommitCluster();
       ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetConstField("pt")), 1);
-      *ptrPt = 2.0;
+         const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
+      *ptrPx = 2.0;
       writer->Fill();
    }
-   {
-      auto writer = RNTupleWriter::Recreate(std::move(model2), "ntpl2", fileGuard2.GetPath());
-      *ptrEta = 3.0;
-      writer->Fill();
-      writer->CommitCluster();
-      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetConstField("eta")), 1);
-      *ptrEta = 4.0;
-      writer->Fill();
-   }
-}
 
-TEST(RNTuple, MultiColumnRepresentationDedup)
-{
-   FileRaii fileGuard("test_ntuple_multi_column_representation_dedup.root");
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto fldPx = reader->GetModel().GetDefaultEntry().GetPtr<float>("px");
 
-   auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-   fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal16}, {ROOT::ENTupleColumnType::kReal16}});
-   EXPECT_EQ(fldPx->GetColumnRepresentatives().size(), 1);
+   reader->LoadEntry(0);
+   EXPECT_FLOAT_EQ(1.0, *fldPx);
+   reader->LoadEntry(1);
+   EXPECT_FLOAT_EQ(2.0, *fldPx);
 }

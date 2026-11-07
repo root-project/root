@@ -24,14 +24,12 @@ numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
 use this class in the (normalization) integral configuration interface
 **/
 
-#include "Riostream.h"
-
 #include "RooNumIntConfig.h"
 #include "RooArgSet.h"
-#include "RooAbsIntegrator.h"
 #include "RooNumIntFactory.h"
 #include "RooMsgService.h"
 
+#include <ostream>
 
 using std::endl, std::ostream;
 

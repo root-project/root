@@ -1,0 +1,5 @@
+CMAKE_CXX_STANDARD=23
+cocoa=ON
+davix=OFF
+x11=OFF
+

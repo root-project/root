@@ -371,7 +371,7 @@ private:
    // Map of radionuclides
    typedef std::map<Int_t, TGeoElementRN *> ElementRNMap_t;
    typedef ElementRNMap_t::iterator ElementRNMapIt_t;
-   ElementRNMap_t fElementsRN; //! map of RN elements with ENDF key
+   ElementRNMap_t fElementsRN; ///<! map of RN elements with ENDF key
 
 protected:
    TGeoElementTable(const TGeoElementTable &);

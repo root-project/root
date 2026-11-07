@@ -140,6 +140,42 @@ TEST(DefinePerSampleMore, ThrowOnRedefinition)
                 std::runtime_error);
 }
 
+TEST_P(DefinePerSample, ThrowOnRedefinitionExistingTree)
+{
+   const std::string prefix = "rdfdefinepersample_tree";
+   InputFilesRAII file(1u, prefix);
+   ROOT::RDataFrame df("t", prefix + "*");
+   EXPECT_THROW(df.DefinePerSample("x", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 42; }),
+                std::runtime_error);
+}
+
+TEST_P(DefinePerSample, CheckRedefinitionTree)
+{
+   const std::string prefix = "rdfdefinepersample_tree";
+   InputFilesRAII file(1u, prefix);
+   ROOT::RDataFrame df("t", prefix + "*");
+
+   std::atomic_int counter{0};
+   auto df2 = df.RedefinePerSample("x", [&counter](unsigned int, const ROOT::RDF::RSampleInfo &db) {
+      EXPECT_EQ(db.EntryRange(), std::make_pair(0ull, 1ull));
+      ++counter;
+      return 42;
+   });
+   auto xmin = df2.Min<int>("x");
+   auto xmax = df2.Max<int>("x");
+   EXPECT_EQ(*xmin, 42);
+   EXPECT_EQ(*xmax, 42);
+   const auto expected = 1u; // as the TTree only contains one cluster, we only have one "data-block"
+   EXPECT_EQ(counter, expected);
+}
+
+TEST(DefinePerSampleMore, ThrowOnNonRedefinition)
+{
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 42; });
+   EXPECT_THROW(df.RedefinePerSample("y", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 42; }),
+                std::runtime_error);
+}
+
 TEST(DefinePerSampleMore, GetColumnType)
 {
    auto df = ROOT::RDataFrame(1).DefinePerSample("x", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 42; });

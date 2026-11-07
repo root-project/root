@@ -11,9 +11,9 @@
 
 #include "TAttLine.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
-#include "TVirtualX.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
+#include "TStyle.h"
 #include "TColor.h"
 #include <cmath>
 #include <iostream>
@@ -245,17 +245,32 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
 
 void TAttLine::Modify()
 {
-   if (!gPad) return;
-   Int_t lineWidth = std::abs(fLineWidth%100);
-   if (!gPad->IsBatch()) {
-      gVirtualX->SetLineColor(fLineColor);
-      if (fLineStyle > 0 && fLineStyle < 30) gVirtualX->SetLineStyle(fLineStyle);
-      else                                   gVirtualX->SetLineStyle(1);
-      gVirtualX->SetLineWidth(lineWidth);
-   }
+   if (gPad)
+      ModifyOn(*gPad);
+}
 
-   if (fLineStyle > 0 && fLineStyle < 30) gPad->SetAttLinePS(fLineColor,fLineStyle,lineWidth);
-   else                                   gPad->SetAttLinePS(fLineColor,1,lineWidth);
+////////////////////////////////////////////////////////////////////////////////
+/// Change current line attributes on specified pad
+
+void TAttLine::ModifyOn(TVirtualPad &pad)
+{
+   auto pp = pad.GetPainter();
+   if (!pp)
+      return;
+
+   Bool_t normal_style = (fLineStyle > 0) && (fLineStyle < 30);
+   Bool_t normal_width = (fLineWidth >= 0) && (fLineWidth < 100);
+
+   if (normal_style && normal_width)
+      pp->SetAttLine(*this);
+   else {
+      TAttLine att1(*this);
+      if (!normal_style)
+         att1.SetLineStyle(1);
+      if (!normal_width)
+         att1.SetLineWidth(std::abs(fLineWidth % 100));
+      pp->SetAttLine(att1);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +312,7 @@ void TAttLine::SetLineAttributes()
 /// Set a transparent line color.
 /// \param lcolor defines the line color
 /// \param lalpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
-/// \note lalpha is ignored (treated as 1) if the TCanvas has no GL support activated.
+/// \note lalpha is used only on the [supported platforms](\ref col_trans_available).
 
 void TAttLine::SetLineColorAlpha(Color_t lcolor, Float_t lalpha)
 {

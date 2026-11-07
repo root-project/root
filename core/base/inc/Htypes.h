@@ -17,9 +17,11 @@
 //                                                                      //
 // Types used by the histogramming classes.                             //
 //                                                                      //
-// Obsolete: typedefs included in Rtypes.h                              //
+// Obsolete include: typedefs included in Rtypes.h                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#warning "This header is deprecated and will be removed after ROOT 7. Include instead Rtypes.h"
 
 #include "Rtypes.h"
 

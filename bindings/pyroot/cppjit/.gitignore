@@ -1,0 +1,33 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+
+# Built test dictionaries and extension modules
+*.so
+*.so.*.tmp
+*Dict.lock
+
+# Packaging
+build/
+dist/
+*.egg-info/
+wheelhouse/
+
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Environments and local config
+.venv/
+venv/
+.env
+.envrc
+.python-version
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

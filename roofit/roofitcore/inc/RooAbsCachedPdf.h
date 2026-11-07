@@ -108,7 +108,7 @@ public:
   virtual RooAbsArg& pdfObservable(RooAbsArg& histObservable) const { return histObservable ; }
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
   Int_t _ipOrder ; // Interpolation order for cache histograms
 
   std::string cacheNameSuffix(const RooArgSet& nset) const ;
@@ -133,6 +133,14 @@ public:
 private:
 
   bool _disableCache = false; ///< Flag to run object in passthrough (= non-caching mode)
+
+  /// Pinned at compileForNormSet() time on the cloned cache pdf, so that
+  /// doEval() looks up the same _cacheMgr slot that getAnalyticalIntegralWN()
+  /// populates while the surrounding RooNormalizedPdf is being constructed.
+  /// Without this, the two paths used different (or null) keys and the cache
+  /// was rebuilt on the first Evaluator step of every fit.
+  mutable RooArgSet _compiledNormSet;       ///<! stable normalization set for the compiled clone
+  mutable bool _hasCompiledNormSet = false; ///<! whether _compiledNormSet has been populated
 
   ClassDefOverride(RooAbsCachedPdf,2) // Abstract base class for cached p.d.f.s
 };

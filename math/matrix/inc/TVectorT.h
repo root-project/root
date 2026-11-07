@@ -36,8 +36,8 @@ protected:
    enum {kSizeMax = 5};            // size data container on stack, see New_m(),Delete_m()
    enum {kWorkMax = 100};          // size of work array's in several routines
 
-   Element  fDataStack[kSizeMax];  //! data container
-   Bool_t   fIsOwner{kTRUE};       //!default kTRUE, when Use array kFALSE
+   Element  fDataStack[kSizeMax];  ///<! data container
+   Bool_t   fIsOwner{kTRUE};       ///<!default kTRUE, when Use array kFALSE
 
    Element* New_m   (Int_t size);
    void     Delete_m(Int_t size,Element*&);

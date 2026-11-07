@@ -45,6 +45,25 @@ TEST(RooRealVar, AlternativeBinnings)
 
   auto& transferredOwnership = dynamic_cast<RooRealVar&>(survivingX["x"]).getBinning("uniform");
   EXPECT_EQ(transferredOwnership.numBins(), 2);
+
+  // test removing the binning too
+  auto& var = dynamic_cast<RooRealVar&>(survivingX["x"]);
+  EXPECT_TRUE( var.hasBinning("uniform") );
+  var.removeBinning("uniform");
+  EXPECT_FALSE( var.hasBinning("uniform") );
+
+  // test creating and removing non-shared binnings/ranges
+  EXPECT_FALSE( var.hasRange("myRange") );
+  var.setRange("myRange",0,1,false);
+  EXPECT_TRUE( var.hasRange("myRange") );
+  std::unique_ptr<RooRealVar> var2(dynamic_cast<RooRealVar*>(var.clone()));
+  var2->setRange("myRange",1,2);
+  EXPECT_EQ( var.getMin("myRange"), 0. ); // still has old range, because not shared
+  EXPECT_EQ( var2->getMin("myRange"), 1. );
+  var2->removeBinning("myRange");
+  EXPECT_FALSE( var2->hasRange("myRange") );
+  EXPECT_TRUE( var.hasRange("myRange") );
+
 }
 
 /// ROOT-10781

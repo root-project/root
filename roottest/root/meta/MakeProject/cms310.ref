@@ -1,4 +1,3 @@
-
 Processing runcms310.C...
 Warning in <TClass::Init>: no dictionary for class edm::FileFormatVersion is available
 Warning in <TClass::Init>: no dictionary for class edm::FileID is available

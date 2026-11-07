@@ -15,7 +15,6 @@
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveSystem.hxx>
 #include <ROOT/RLogger.hxx>
-
 #include <ROOT/RWebDisplayArgs.hxx>
 
 #include "TSysEvtHandler.h"
@@ -24,6 +23,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
 #include <queue>
 #include <unordered_map>
 
@@ -114,7 +116,7 @@ public:
    };
 
 protected:
-   RExceptionHandler        *fExcHandler{nullptr};   //!< exception handler
+   RExceptionHandler        *fExcHandler{nullptr};   ///<!< exception handler
 
    TMap                     *fVizDB{nullptr};
    Bool_t                    fVizDBReplace{kFALSE};
@@ -127,6 +129,7 @@ protected:
 
    REveViewerList           *fViewers{nullptr};
    REveSceneList            *fScenes{nullptr};
+   REveElement              *fCameras{nullptr}; 
 
    REveScene                *fGlobalScene{nullptr};
    REveScene                *fEventScene{nullptr};
@@ -162,6 +165,7 @@ protected:
    bool              fHttpPublic{false};
 
    void WindowConnect(unsigned connid);
+   void StreamToNewConnection(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
    void WindowDisconnect(unsigned connid);
 
@@ -169,6 +173,7 @@ protected:
    void ExecuteMIR(std::shared_ptr<MIR> mir);
 
    void StreamSceneChangesToJson();
+   void SendMotionChanges();
    void SendSceneChanges();
 
 public:
@@ -182,6 +187,7 @@ public:
 
    REveSceneList  *GetScenes()  const { return fScenes;  }
    REveViewerList *GetViewers() const { return fViewers; }
+   REveElement    *GetCameras() const { return fCameras; }
 
    REveScene *GetGlobalScene() const { return fGlobalScene; }
    REveScene *GetEventScene()  const { return fEventScene;  }
@@ -195,6 +201,9 @@ public:
 
    void AllowMultipleRemoteConnections(bool loopBack = true, bool useAuthKey = true);
 
+   void GrabImages(std::string_view event_id, std::string_view url = "", int scale = 1,
+                   const std::vector<std::string> &viewers = {});
+
    void BeginChange();
    void EndChange();
 
@@ -202,6 +211,12 @@ public:
    void SceneSubscriberWaitingResponse(unsigned cinnId);
 
    bool ClientConnectionsFree() const;
+   bool AnySceneChanged() const;
+
+   /// Changes are stamped but not yet streamed, because the clients had not
+   /// acknowledged the previous scene changes when EndChange() ran. Flushed by
+   /// the last acknowledgement. Guarded by fServerState.fMutex.
+   bool fPendingSceneChanges{false};
 
    void DisableRedraw() { printf("REveManager::DisableRedraw obsolete \n"); }
    void EnableRedraw()  { printf("REveManager::EnableRedraw obsolete \n");  }

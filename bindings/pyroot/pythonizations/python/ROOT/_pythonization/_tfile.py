@@ -81,7 +81,6 @@ def _TFileConstructor(self, *args):
 
 def _TFileOpen(klass, *args):
 
-    import ROOT
 
     # Redefinition of ROOT.TFile.Open(str, ...):
     # check if the instance of TFile is a C++ nullptr and raise a

@@ -80,7 +80,7 @@ void FFT()
    c1_6->SetFrameFillColor(42);
 
    c1_1->cd();
-   TH1::AddDirectory(kFALSE);
+   TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
 
    //A function to sample
    TF1 *fsin = new TF1("fsin", "sin(x)+sin(2*x)+sin(0.5*x)+1", 0, 4*TMath::Pi());

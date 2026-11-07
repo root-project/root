@@ -12,7 +12,7 @@ class SegmentCollection_tlp1;
 } // end of namespace.
 
 #include "TPCnvTokenList_p1.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "Trk__SegmentCollection_p1.h"
 #include "Trk__Segment_p1.h"

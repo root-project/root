@@ -2,79 +2,206 @@
 
 #include "CppInterOp/CppInterOp.h"
 
-#include "clang/Basic/Version.h"
+#include "llvm/Support/FileSystem.h"
 
 #include "gtest/gtest.h"
 
+#include <cstdint>
+#include <string>
+#include <vector>
+
 using namespace TestUtils;
 
-static bool HasCudaSDK() {
-  auto supportsCudaSDK = []() {
-#ifdef CPPINTEROP_USE_CLING
-    // FIXME: Enable this for cling.
-    return false;
-#endif
-    if (!Cpp::CreateInterpreter({}, {"--cuda"}))
-      return false;
-    return Cpp::Declare("__global__ void test_func() {}"
-                        "test_func<<<1,1>>>();") == 0;
-  };
-  static bool hasCuda = supportsCudaSDK();
-  return hasCuda;
-}
+// CUDA test fixture that runs SDK and runtime checks once for the entire suite.
+class CUDATest : public ::testing::Test {
+protected:
+  static inline bool HasSDK = false;
+  static inline bool HasRuntime = false;
 
-static bool HasCudaRuntime() {
-  auto supportsCuda = []() {
-#ifdef CPPINTEROP_USE_CLING
-    // FIXME: Enable this for cling.
-    return false;
+  static void SetUpTestSuite() {
+#if defined(CPPINTEROP_USE_CLING) || defined(_WIN32)
+    return; // FIXME: Enable for cling and Windows.
 #endif
-    if (!HasCudaSDK())
-      return false;
-
-    if (!Cpp::CreateInterpreter({}, {"--cuda"}))
-      return false;
+    auto I = Cpp::CreateInterpreter({}, {"--cuda"});
+    if (!I)
+      return;
     if (Cpp::Declare("__global__ void test_func() {}"
-                     "test_func<<<1,1>>>();"))
-      return false;
-    intptr_t result = Cpp::Evaluate("(bool)cudaGetLastError()");
-    return !(bool)result;
-  };
-  static bool hasCuda = supportsCuda();
-  return hasCuda;
-}
+                     "test_func<<<1,1>>>();") != 0)
+      return;
 
-#ifdef CPPINTEROP_USE_CLING
-TEST(DISABLED_CUDATest, Sanity) {
-#else
-TEST(CUDATest, Sanity) {
-#endif
-#ifdef _WIN32
-  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
-#endif
-  if (!HasCudaSDK())
-    GTEST_SKIP() << "Skipping CUDA tests as CUDA SDK not found";
+    HasSDK = true;
+
+    if (Cpp::Declare("cudaDeviceSynchronize();") != 0) {
+      Cpp::DeleteInterpreter(I);
+      return;
+    }
+    Cpp::Box v = Cpp::Evaluate("(int)cudaGetLastError()");
+    bool evalErr = v.getKind() == Cpp::Box::K_Unspecified;
+    int cudaErr = evalErr ? -1 : v.unbox<int>();
+    if (evalErr || cudaErr != 0)
+      GTEST_LOG_(WARNING) << "CUDA Kernel execution failed (cudaError="
+                          << cudaErr << "). Runtime tests will be skipped.";
+    else
+      HasRuntime = true;
+    Cpp::DeleteInterpreter(I);
+  }
+};
+
+#define SKIP_IF_NO_SDK                                                         \
+  if (!HasSDK) {                                                               \
+    GTEST_SKIP() << "CUDA SDK not found";                                      \
+    return;                                                                    \
+  }
+
+#define SKIP_IF_NO_RUNTIME                                                     \
+  if (!HasRuntime) {                                                           \
+    GTEST_SKIP() << "CUDA runtime not available";                              \
+    return;                                                                    \
+  }
+
+TEST_F(CUDATest, Sanity) {
+  SKIP_IF_NO_SDK;
   EXPECT_TRUE(Cpp::CreateInterpreter({}, {"--cuda"}));
 }
 
-TEST(CUDATest, CUDAH) {
-#ifdef _WIN32
-  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#ifndef CPPINTEROP_USE_CLING
+TEST_F(CUDATest, DetectCudaInstallAndArch) {
+  SKIP_IF_NO_SDK;
+
+  std::string path;
+  std::vector<const char*> args;
+
+  // no args: rely on auto-detect
+  EXPECT_TRUE(compat::detectCudaInstallPath(args, path));
+  EXPECT_TRUE(llvm::StringRef(path).starts_with("/usr/local/cuda"));
+
+  // explicit path (self-hosted CUDA runners are on 12.3)
+  args = {"--cuda-path=/usr/local/cuda-12.3"};
+  if (compat::detectCudaInstallPath(args, path)) {
+    if (llvm::sys::fs::is_directory("/usr/local/cuda-12.3/include"))
+      EXPECT_EQ(path, "/usr/local/cuda-12.3");
+    else
+      EXPECT_TRUE(llvm::StringRef(path).starts_with("/usr/local/cuda"));
+  }
+
+  // user provided path that doesn't exist should fail
+  args = {"--cuda-path=/nonexistent"};
+  EXPECT_FALSE(compat::detectCudaInstallPath(args, path));
+
+  // GPU offload arch detection
+  std::string arch;
+  EXPECT_TRUE(compat::detectNVPTXArch(arch));
+  EXPECT_TRUE(llvm::StringRef(arch).starts_with("sm_"));
+
+  EXPECT_TRUE(Cpp::CreateInterpreter(
+      {}, {"--cuda", "--cuda-path=/usr/local/cuda-12.3",
+           "--offload-arch=sm_70"}));
+}
 #endif
-  if (!HasCudaSDK())
-    GTEST_SKIP() << "Skipping CUDA tests as CUDA SDK not found";
+
+TEST_F(CUDATest, CUDAH) {
+  SKIP_IF_NO_SDK;
 
   Cpp::CreateInterpreter({}, {"--cuda"});
-  bool success = !Cpp::Declare("#include <cuda.h>");
-  EXPECT_TRUE(success);
+  EXPECT_EQ(0, Cpp::Declare("#include <cuda_runtime.h>"));
 }
 
-TEST(CUDATest, CUDARuntime) {
-#ifdef _WIN32
-  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
-#endif
-  if (!HasCudaRuntime())
-    GTEST_SKIP() << "Skipping CUDA tests as CUDA runtime not found";
+TEST_F(CUDATest, CUDARuntime) {
+  SKIP_IF_NO_RUNTIME;
 
-  EXPECT_TRUE(HasCudaRuntime());
+  Cpp::CreateInterpreter({}, {"--cuda"});
+  EXPECT_EQ(0, Cpp::Declare(R"(
+    int deviceCount = 0;
+    cudaGetDeviceCount(&deviceCount);
+  )"));
+  Cpp::Box count = Cpp::Evaluate("deviceCount");
+  EXPECT_NE(count.getKind(), Cpp::Box::K_Unspecified);
+  EXPECT_GT(count.unbox<int>(), 0);
+}
+
+TEST_F(CUDATest, Interpreter_GetLanguageCUDA) {
+  SKIP_IF_NO_RUNTIME;
+
+  Cpp::CreateInterpreter({}, {"--cuda"});
+  EXPECT_EQ(Cpp::GetLanguage(nullptr), Cpp::InterpreterLanguage::CUDA);
+}
+
+TEST_F(CUDATest, SimpleKernelExecution) {
+  SKIP_IF_NO_RUNTIME;
+
+  Cpp::CreateInterpreter({}, {"--cuda"});
+  EXPECT_EQ(0, Cpp::Declare(R"(
+    __global__ void addOne(int* x) { *x += 1; }
+    int* d;
+    cudaMallocManaged(&d, sizeof(int));
+    *d = 41;
+    addOne<<<1,1>>>(d);
+    cudaDeviceSynchronize();
+    int kernelErr = (int)cudaGetLastError();
+  )")) << "Failed to declare/launch kernel";
+
+  Cpp::Box kernelErrV = Cpp::Evaluate("kernelErr");
+  EXPECT_NE(kernelErrV.getKind(), Cpp::Box::K_Unspecified);
+  int cudaErr = kernelErrV.unbox<int>();
+  EXPECT_EQ(cudaErr, 0) << "Simple kernel launch failed";
+
+  if (cudaErr == 0) {
+    Cpp::Box result = Cpp::Evaluate("*d");
+    EXPECT_NE(result.getKind(), Cpp::Box::K_Unspecified);
+    EXPECT_EQ(result.unbox<int>(), 42);
+  }
+
+  Cpp::Declare("cudaFree(d);");
+}
+
+// demonstrate incremental CUDA compilation with CUB BlockReduce
+// with a __device__ transform, multi-block atomicAdd
+TEST_F(CUDATest, CUB_BlockReduceWithDeviceFunction) {
+  SKIP_IF_NO_RUNTIME;
+
+  Cpp::CreateInterpreter({}, {"--cuda"});
+
+  EXPECT_EQ(0, Cpp::Declare(R"(
+    #include <cub/block/block_reduce.cuh>
+
+    constexpr int BLOCK_SIZE = 128;
+
+    __device__ int transform(int x) { return x * x; }
+
+    __global__ void sumOfSquaresKernel(const int* __restrict__ input,
+                                       int* __restrict__ output, int N) {
+      using BlockReduceT = cub::BlockReduce<int, BLOCK_SIZE>;
+      __shared__ typename BlockReduceT::TempStorage temp_storage;
+
+      int idx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+      int val = (idx < N) ? transform(input[idx]) : 0;
+      int block_sum = BlockReduceT(temp_storage).Sum(val);
+      if (threadIdx.x == 0)
+        atomicAdd(output, block_sum);
+    }
+  )")) << "Failed to declare kernel";
+
+  EXPECT_EQ(0, Cpp::Declare(R"(
+    const int N = 256;
+    int* d_in;
+    int* d_out;
+    cudaMallocManaged(&d_in, N * sizeof(int));
+    cudaMallocManaged(&d_out, sizeof(int));
+    for (int i = 0; i < N; i++) d_in[i] = i + 1; // 1..256
+    *d_out = 0;
+    int numBlocks = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    sumOfSquaresKernel<<<numBlocks, BLOCK_SIZE>>>(d_in, d_out, N);
+    cudaError_t syncErr = cudaDeviceSynchronize();
+    cudaError_t lastErr = cudaGetLastError();
+  )")) << "Failed to launch kernel";
+
+  EXPECT_EQ(Cpp::Evaluate("(int)syncErr").unbox<int>(), 0);
+  EXPECT_EQ(Cpp::Evaluate("(int)lastErr").unbox<int>(), 0);
+
+  // read result directly from managed memory
+  Cpp::Box result = Cpp::Evaluate("*d_out");
+  EXPECT_NE(result.getKind(), Cpp::Box::K_Unspecified);
+  EXPECT_EQ(result.unbox<int>(), 5625216);
+
+  Cpp::Declare("cudaFree(d_in); cudaFree(d_out);");
 }

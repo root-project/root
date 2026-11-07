@@ -1,6 +1,6 @@
 #include "TMVA/RModelParser_ONNX.hxx"
 #include "TMVA/ROperator_RNN.hxx"
-#include "onnx_proto3.pb.h"
+#include "onnx.hxx"
 
 namespace TMVA {
 namespace Experimental {
@@ -36,7 +36,7 @@ ParserFuncSignature ParseRNN = [](RModelParser_ONNX &parser, const onnx::NodePro
       } else if (attribute_name == "activations") {
          attr_activations = {nodeproto.attribute(i).strings().begin(), nodeproto.attribute(i).strings().end()};
       } else if (attribute_name == "clip") {
-         attr_clip = nodeproto.attribute(i).i();
+         attr_clip = nodeproto.attribute(i).f();
       } else if (attribute_name == "direction") {
          attr_direction = nodeproto.attribute(i).s();
       } else if (attribute_name == "hidden_size") {

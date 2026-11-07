@@ -106,6 +106,21 @@ TRandom3::~TRandom3()
 
 Double_t TRandom3::Rndm()
 {
+   // 2.3283064365386963e-10 == 1./(UINT_MAX+1UL)  -> then returned value cannot be = 1.0
+   UInt_t y = operator()();
+   if (y) return ((Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
+   return Rndm();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Return a random 32-bit integer, advancing the generator state by one step.
+///
+/// Implements the std::UniformRandomBitGenerator interface. Returns the raw
+/// Mersenne Twister output directly, including zero, avoiding the round-trip
+/// through double.
+
+TRandom::result_type TRandom3::operator()()
+{
    UInt_t y;
 
    const Int_t  kM = 397;
@@ -119,12 +134,12 @@ Double_t TRandom3::Rndm()
    if (fCount624 >= kN) {
       Int_t i;
 
-      for (i=0; i < kN-kM; i++) {
+      for (i = 0; i < kN-kM; i++) {
          y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
          fMt[i] = fMt[i+kM] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
       }
 
-      for (   ; i < kN-1    ; i++) {
+      for (; i < kN-1; i++) {
          y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
          fMt[i] = fMt[i+kM-kN] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
       }
@@ -136,13 +151,11 @@ Double_t TRandom3::Rndm()
 
    y = fMt[fCount624++];
    y ^=  (y >> 11);
-   y ^= ((y << 7 ) & kTemperingMaskB );
-   y ^= ((y << 15) & kTemperingMaskC );
+   y ^= ((y << 7 ) & kTemperingMaskB);
+   y ^= ((y << 15) & kTemperingMaskC);
    y ^=  (y >> 18);
 
-   // 2.3283064365386963e-10 == 1./(UINT_MAX+1UL)  -> then returned value cannot be = 1.0
-   if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
-   return Rndm();
+   return y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

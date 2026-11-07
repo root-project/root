@@ -26,12 +26,11 @@ printing methods with versions that do not reveal the objects value
 and it has a protected version of getVal()
 **/
 
-#include "Riostream.h"
-
-#include "RooArgSet.h"
 #include "RooAbsHiddenReal.h"
 #include "RooCategory.h"
 #include "RooMsgService.h"
+
+#include <ostream>
 
 using std::ostream, std::istream, std::endl;
 

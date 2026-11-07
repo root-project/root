@@ -160,7 +160,7 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
    const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
    int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
    int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel() -1;// RooFit level starts from  -1
-   int tolerance = ROOT::Math::MinimizerOptions::DefaultTolerance();
+   double tolerance = ROOT::Math::MinimizerOptions::DefaultTolerance();
    // do global fit and store fit result for further use
 
    const auto& config = GetGlobalRooStatsConfig();
@@ -169,7 +169,6 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
    minim.setStrategy(strategy);
    minim.setEps(tolerance);
    minim.setPrintLevel(level);
-   minim.optimizeConst(2); // to optimize likelihood calculations
    minim.setEvalErrorWall(config.useEvalErrorWall);
 
    oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoMinimizeNLL - using " << minim.minimizerType()
@@ -181,18 +180,18 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
       if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
-         std::cout << "    ----> Doing a re-scan first" << std::endl;
+         oocoutW(nullptr,Minimization) << "    ----> Doing a re-scan first" << std::endl;
          minim.minimize(minimType,"Scan");
          if (tries == 2) {
             if (strategy == 0 ) {
-               std::cout << "    ----> trying with strategy = 1" << std::endl;
+               oocoutW(nullptr,Minimization) << "    ----> trying with strategy = 1" << std::endl;
                minim.setStrategy(1);
             }
             else
                tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
-            std::cout << "    ----> trying with improve" << std::endl;
+            oocoutW(nullptr,Minimization) << "    ----> trying with improve" << std::endl;
             minimType = "Minuit";
             minimAlgo = "migradimproved";
          }
@@ -237,12 +236,11 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    // t.b.f. " RooProfileLL should keep and provide possibility to query on global minimum
    // set POI to fit value (this will speed up profileLL calculation of global minimum)
    const RooArgList & fitParams = fFitResult->floatParsFinal();
-   for (std::size_t i = 0; i < fitParams.size(); ++i) {
-      RooRealVar & fitPar =  static_cast<RooRealVar &>( fitParams[i]);
-      RooRealVar * par = static_cast<RooRealVar*>(fPOI.find( fitPar.GetName() ));
+   for (auto *fitPar : static_range_cast<RooRealVar *>(fitParams)) {
+      RooRealVar * par = static_cast<RooRealVar*>(fPOI.find( fitPar->GetName() ));
       if (par) {
-         par->setVal( fitPar.getVal() );
-         par->setError( fitPar.getError() );
+         par->setVal( fitPar->getVal() );
+         par->setError( fitPar->getError() );
       }
    }
 

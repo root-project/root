@@ -42,10 +42,8 @@ class TGTabElement;
 class TGVerticalFrame;
 class TGHorizontalFrame;
 class TGPictureButton;
-class THtml;
 class TGLabel;
 class TProcessID;
-class TGHtml;
 
 class TGDocument : public TNamed {
 
@@ -118,16 +116,6 @@ protected:
 
    TGVerticalFrame   *fVerticalFrame;     // vertical frame
    TGHorizontalFrame *fHorizontalFrame;   // horizontal frame
-   TGPictureButton   *fBack;              // back button
-   TGPictureButton   *fForward;           // forward button
-   TGPictureButton   *fReload;            // reload button
-   TGPictureButton   *fStop;              // stop loading button
-   TGPictureButton   *fHome;              // home button
-   TGComboBox        *fComboBox;          // url history combo box
-   TGTextBuffer      *fURLBuf;            // url buffer
-   TGTextEntry       *fURL;               // url text entry
-   THtml             *fHtml;              // html doc
-   TGHtml            *fGuiHtml;           // html widget
 
    virtual void       Build();
 
@@ -174,15 +162,8 @@ public:
    void           DirSelected(const char *txt);
    void           DirChanged();
    void           Selected(const char *txt);
-   void           URLChanged();
-   void           Back();
-   void           Forward();
-   void           Reload();
-   void           Stop();
-   void           MouseOver(char *);
-   void           MouseDown(char *);
 
-   ClassDefOverride(TGRootIDE,0)  // Simple IDE using TGTextEdit and TGHtml widgets
-};
+   ClassDefOverride(TGRootIDE,0)  // Simple IDE using TGTextEdit widgets
+}
 
 #endif

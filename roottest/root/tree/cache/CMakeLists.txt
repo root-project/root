@@ -1,30 +1,19 @@
-if(${compression_default} STREQUAL "lz4")
-      ROOTTEST_ADD_TEST(multiTree
-                  MACRO runmultiTree.C
-                  OUTREF multiTreeLZ4.ref)
+ROOTTEST_ADD_TEST(multiTree
+          MACRO runmultiTree.C
+          OUTREF multiTree.ref)
 
-      ROOTTEST_ADD_TEST(autocache
-                  COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
-                  MACRO runautocache.C
-                  OUTREF autocacheLZ4.ref
-                  ERRREF autocache.eref)
-else(${compression_default} STREQUAL "zlib")
-      ROOTTEST_ADD_TEST(multiTree
-                  MACRO runmultiTree.C
-                  OUTREF multiTreeZLIB.ref)
-      if(ZLIB_CF)
-         ROOTTEST_ADD_TEST(autocache
-                  COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
-                  MACRO runautocache.C
-                  OUTREF autocacheZLIB_builtinzlib.ref
-                  ERRREF autocache.eref)
-      else()
-         ROOTTEST_ADD_TEST(autocache
-                  COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
-                  MACRO runautocache.C
-                  OUTREF autocacheZLIB.ref
-                  ERRREF autocache.eref)
-     endif()
+if(ZLIB_NG)
+  ROOTTEST_ADD_TEST(autocache
+            COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
+            MACRO runautocache.C
+            OUTREF autocacheZLIB-NG.ref
+            ERRREF autocache.eref)
+else()
+  ROOTTEST_ADD_TEST(autocache
+            COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
+            MACRO runautocache.C
+            OUTREF autocacheZLIB.ref
+            ERRREF autocache.eref)
 endif()
 
 ROOTTEST_ADD_TEST(cachedChain
@@ -54,14 +43,9 @@ ROOTTEST_ADD_TEST(LastCluster
                   MACRO execLastCluster.C
                   OUTREF execLastCluster.ref)
 
-if(compression_default STREQUAL "lz4")
-  set(_ref execperfstattestLZ4.oref)
-else()
-  set(_ref execperfstattestZLIB.oref)
-endif()
 ROOTTEST_ADD_TEST(perfstattest
                   MACRO execperfstattest.C
                   ROOTEXE_OPTS -e "gInterpreter->AddIncludePath(\"${CMAKE_SOURCE_DIR}/roottest/root/io/event/\")" -e "gSystem->AddDynamicPath(\"${CMAKE_BINARY_DIR}/roottest/root/io/event/\")" -e "(void)gSystem->Load(\"libTestIoEvent\")"
-                  OUTREF ${_ref}
+                  OUTREF execperfstattest.oref
                   ERRREF execperfstattest.eref
                   FIXTURES_REQUIRED root-io-event-libTestIoEvent-fixture)

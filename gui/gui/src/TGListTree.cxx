@@ -37,10 +37,6 @@ A list tree can generate the following events:
 
 */
 
-
-#include <cstdlib>
-#include <iostream>
-
 #include "TClass.h"
 #include "TGListTree.h"
 #include "TGPicture.h"
@@ -62,7 +58,10 @@ A list tree can generate the following events:
 #include "TVirtualX.h"
 #include "RConfigure.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 
 Pixel_t          TGListTree::fgGrayPixel = 0;
 const TGFont    *TGListTree::fgDefaultFont = nullptr;
@@ -221,15 +220,19 @@ Bool_t TGListTreeItemStd::HasUnCheckedChild(Bool_t first)
 
 void TGListTreeItemStd::UpdateState()
 {
+   const TGPicture *pic1 = nullptr, *pic2 = nullptr;
    if ((!fChecked && HasCheckedChild(kTRUE)) ||
        (fChecked && HasUnCheckedChild(kTRUE))) {
-      SetCheckBoxPictures(gClient->GetPicture("checked_dis_t.xpm"),
-                          gClient->GetPicture("unchecked_dis_t.xpm"));
+      pic1 = gClient->GetPicture("checked_dis_t.xpm");
+      pic2 = gClient->GetPicture("unchecked_dis_t.xpm");
    }
    else {
-      SetCheckBoxPictures(gClient->GetPicture("checked_t.xpm"),
-                          gClient->GetPicture("unchecked_t.xpm"));
+      pic1 = gClient->GetPicture("checked_t.xpm");
+      pic2 = gClient->GetPicture("unchecked_t.xpm");
    }
+   SetCheckBoxPictures(pic1, pic2);
+   gClient->FreePicture(pic1);
+   gClient->FreePicture(pic2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2744,6 +2747,7 @@ void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
 {
    if (fAutoCheckBoxPic == kFALSE) return;
 
+   const TGPicture *pic1 = nullptr, *pic2 = nullptr;
    TGListTreeItem *parent;
    TGListTreeItem *current;
    current = item->GetFirstChild();
@@ -2752,27 +2756,32 @@ void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
    while (parent && parent->HasCheckBox()) {
       if ((!parent->IsChecked() && parent->HasCheckedChild(kTRUE)) ||
           (parent->IsChecked() && parent->HasUnCheckedChild(kTRUE))) {
-         parent->SetCheckBoxPictures(fClient->GetPicture("checked_dis_t.xpm"),
-                                     fClient->GetPicture("unchecked_dis_t.xpm"));
+         pic1 = fClient->GetPicture("checked_dis_t.xpm");
+         pic2 = fClient->GetPicture("unchecked_dis_t.xpm");
       }
       else {
-         parent->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
-                                     fClient->GetPicture("unchecked_t.xpm"));
+         pic1 = fClient->GetPicture("checked_t.xpm");
+         pic2 = fClient->GetPicture("unchecked_t.xpm");
       }
+      parent->SetCheckBoxPictures(pic1, pic2);
+      fClient->FreePicture(pic1);
+      fClient->FreePicture(pic2);
       parent = parent->GetParent();
       if (parent && fCheckMode == kRecursive) {
+         pic1 = fClient->GetPicture("checked_t.xpm");
+         pic2 = fClient->GetPicture("unchecked_t.xpm");
          if (!parent->IsChecked() && parent->GetFirstChild() &&
              !parent->GetFirstChild()->HasUnCheckedChild()) {
-            parent->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
-                                        fClient->GetPicture("unchecked_t.xpm"));
+            parent->SetCheckBoxPictures(pic1, pic2);
             parent->CheckItem(kTRUE);
          }
          else if (parent->IsChecked() && parent->GetFirstChild() &&
                   !parent->GetFirstChild()->HasCheckedChild()) {
-            parent->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
-                                        fClient->GetPicture("unchecked_t.xpm"));
+            parent->SetCheckBoxPictures(pic1, pic2);
             parent->CheckItem(kFALSE);
          }
+         fClient->FreePicture(pic1);
+         fClient->FreePicture(pic2);
       }
    }
    if (redraw) {

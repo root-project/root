@@ -425,7 +425,7 @@ private:
 
   static void throwAddTypedException(TClass *klass, RooAbsArg *arg);
 
-  const RooFit::UniqueId<RooAbsCollection> _uniqueId; //!
+  const RooFit::UniqueId<RooAbsCollection> _uniqueId; ///<!
 
   ClassDefOverride(RooAbsCollection,3) // Collection of RooAbsArg objects
 };

@@ -12,12 +12,6 @@ import inspect
 import pkgutil
 import traceback
 
-import cppyy
-
-# \cond INTERNALS
-gbl_namespace = cppyy.gbl
-# \endcond
-
 
 def pythonization(class_name, ns="::", is_prefix=False):
     r"""
@@ -92,6 +86,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
             function: the user function, after being registered as a
                 pythonizor.
         """
+        import ROOT
 
         npars = _check_num_pars(user_pythonizor)
 
@@ -124,7 +119,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
                 _invoke(user_pythonizor, npars, klass, fqn)
 
         # Register pythonizor in its namespace
-        cppyy.py.add_pythonization(cppyy_pythonizor, ns)
+        ROOT._cppyy.py.add_pythonization(cppyy_pythonizor, ns)
 
         # Return the original user function.
         # We don't want to modify the user function, we just use the decorator
@@ -277,15 +272,28 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
             f"The template instantiation '{instantiation}' cannot be properly pythonized. Please report this as a bug."
         )
 
+    import cppyy.types
+
     ns_vars = vars(ns_obj)
     for var_name, var_value in ns_vars.items():
-        if str(var_value).startswith("<class cppyy.gbl."):
-            # It's a class proxy
-            pythonize_if_match(var_name, var_value)
-
-        if str(var_value).startswith("<cppyy.Template"):
-            # If this is a template, pythonize the instances. Note that in
-            # older cppyy, template instantiations are cached by
+        if isinstance(var_value, type):
+            if str(var_value).startswith("<class cppjit.gbl."):
+                # It's a class proxy (possibly a template instantiation cached
+                # in the namespace).
+                pythonize_if_match(var_name, var_value)
+        elif isinstance(var_value, cppyy.types.Instance):
+            # Never call str() on a bound C++ *instance* (e.g. cppyy.gbl holds
+            # the gInterpreter instance): its string conversion triggers C++
+            # overload resolution for operator<<, which can JIT-compile
+            # candidate implicit conversions.
+            continue
+        elif str(var_value).startswith("<cppjit.Template"):
+            # Template proxies are not Python types and cannot be reliably
+            # detected with isinstance (cppyy.types.Template is the backend
+            # proxy class, which the cppyy.Template wrapper does not derive
+            # from), so they are recognized by their repr instead.
+            # Pythonize the cached instantiations of the template. Note that
+            # in older cppyy, template instantiations are cached by
             # fully-qualified name directly in the namespace, so they are
             # covered by the code branch above.
             instantiations = getattr(var_value, "_instantiations", {})
@@ -293,7 +301,7 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
                 # Make sure we don't do any redundant pythonization, e.g. if we
                 # use a version of cppyy that caches both in the namespace and
                 # in the _instantiations attribute.
-                if instance not in ns_vars:
+                if instance not in ns_vars.values():
                     instance_name = var_name + "<" + ",".join(map(get_class_name, args)) + ">"
                     pythonize_if_match(instance_name, instance)
 
@@ -310,11 +318,12 @@ def _find_namespace(ns):
         namespace proxy object, if the namespace has already been accessed,
             otherwise None.
     """
+    import ROOT
 
     if ns == "":
-        return gbl_namespace
+        return ROOT._cppyy.gbl
 
-    ns_obj = gbl_namespace
+    ns_obj = ROOT._cppyy.gbl
     # Get all namespaces in a list
     every_ns = ns.split("::")
     for ns in every_ns:
@@ -338,9 +347,10 @@ def _register_pythonizations():
 
 
 def _wait_press_windows():
-   from ROOT import gSystem
    import msvcrt
    import time
+
+   from ROOT import gSystem
 
    while not gSystem.ProcessEvents():
       if msvcrt.kbhit():
@@ -352,12 +362,13 @@ def _wait_press_windows():
 
 
 def _wait_press_posix():
-   from ROOT import gSystem
-   import sys
    import select
-   import tty
+   import sys
    import termios
    import time
+   import tty
+
+   from ROOT import gSystem
 
    old_settings = termios.tcgetattr(sys.stdin)
 
@@ -378,9 +389,10 @@ def _wait_press_posix():
 
 
 def _run_root_event_loop():
-   from ROOT import gROOT
    import os
    import sys
+
+   from ROOT import gROOT
 
    # no special handling in batch mode
    if gROOT.IsBatch():

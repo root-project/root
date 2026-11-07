@@ -5,5 +5,5 @@ from selenium import webdriver
 driver = webdriver.Safari()
 driver.get("http://localhost:6931/" + sys.argv[1])
 
-time.sleep(60)
+time.sleep(15)
 driver.quit()

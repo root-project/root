@@ -7,7 +7,6 @@
 
 /**
 \file Initialisation.cxx
-\ingroup Roofitcore
 Run static initialisers on first load of RooFitCore.
 **/
 

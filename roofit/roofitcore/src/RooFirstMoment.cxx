@@ -31,9 +31,6 @@
 #include <RooNumIntConfig.h>
 #include <RooProduct.h>
 
-#include <Riostream.h>
-
-#include <cmath>
 #include <string>
 
 

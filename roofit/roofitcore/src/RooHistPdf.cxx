@@ -23,9 +23,11 @@ A probability density function sampled from a
 multidimensional histogram. The histogram distribution is explicitly
 normalized by RooHistPdf and can have an arbitrary number of real or
 discrete dimensions.
-**/
 
-#include "Riostream.h"
+A p.d.f. cannot be negative. If the input histogram contains bins with
+negative content, the bin contents are clipped to zero and the bin errors are kept the same.
+The input histogram is not modified.
+**/
 
 #include "RooCategory.h"
 #include "RooCurve.h"
@@ -35,27 +37,28 @@ discrete dimensions.
 #include "RooHistPdf.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "RooUniformBinning.h"
 #include "RooWorkspace.h"
 
 #include "TError.h"
 #include "TBuffer.h"
 
-
-
+#include <algorithm>
+#include <cmath>
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a RooDataHist. RooDataHist dimensions
 /// can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
 /// RooHistPdf neither owns or clone 'dhist' and the user must ensure the input histogram exists
 /// for the entire life span of this PDF.
+/// The only exception is a 'dhist' that contains bins with negative content: those are set to
+/// zero in an internally-owned clone that is used instead (see clampNegativeBins()).
 
 RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars,
              const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
   _dataHist(const_cast<RooDataHist*>(&dhist)),
-  _codeReg(10),
   _intOrder(intOrder)
 {
   _histObsList.addClone(vars) ;
@@ -87,6 +90,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
     }
   }
 
+  clampNegativeBins();
 }
 
 
@@ -104,7 +108,6 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
   _dataHist(const_cast<RooDataHist*>(&dhist)),
-  _codeReg(10),
   _intOrder(intOrder)
 {
   _histObsList.addClone(histObs) ;
@@ -141,6 +144,8 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
       (static_cast<RooRealVar*>(hobs))->setRange(dhreal->getMin(),dhreal->getMax()) ;
     }
   }
+
+  clampNegativeBins();
 }
 
 RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet &vars, std::unique_ptr<RooDataHist> dhist,
@@ -164,7 +169,6 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   RooAbsPdf(other,name),
   _pdfObsList("pdfObs",this,other._pdfObsList),
   _dataHist(other._dataHist),
-  _codeReg(other._codeReg),
   _intOrder(other._intOrder),
   _cdfBoundaries(other._cdfBoundaries),
   _totVolume(other._totVolume),
@@ -180,6 +184,51 @@ RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
    return _dataHist;
 }
 
+void RooHistPdf::clampNegativeBins()
+{
+   const std::size_t nBins = _dataHist->numEntries();
+
+   std::size_t nNegative = 0;
+   double sumNegative = 0.;
+   for (std::size_t i = 0; i < nBins; ++i) {
+      if (_dataHist->weight(i) < 0.) {
+         ++nNegative;
+         sumNegative += _dataHist->weight(i);
+      }
+   }
+   if (nNegative == 0) {
+      return;
+   }
+
+   coutW(InputArguments) << "RooHistPdf::ctor(" << GetName() << ") WARNING: input histogram \"" << _dataHist->GetName()
+                         << "\" contains " << nNegative
+                         << " bins with negative content (sum of negative contents: " << sumNegative
+                         << "). A p.d.f. cannot be negative, so these bins contents are clipped to zero while "
+                            "preserving the error. The input "
+                            "histogram is not modified. To avoid this message, remove the negative bin contents "
+                            "before constructing the RooHistPdf."
+                         << std::endl;
+
+   RooDataHist *dh = cloneAndOwnDataHist();
+   const bool hasSumW2 = dh->sumW2Array() != nullptr;
+   for (std::size_t i = 0; i < nBins; ++i) {
+      if (dh->weight(i) < 0.) {
+         // Keep the original bin error: clamping the content is a
+         // normalization-consistency measure, not a statement that the bin is
+         // now known exactly. The error still quantifies the statistical
+         // uncertainty of the original bin content estimate (e.g. whether the
+         // negative content is compatible with a fluctuation around zero),
+         // and setting it to zero would introduce undercoverage, which is
+         // always undesired. It would also irreversibly discard information
+         // for anyone retrieving the histogram via dataHist(), including any
+         // future per-bin MC-stat treatment, where a zero error would wrongly
+         // fix the bin at exactly zero.
+         const double wgtErr = hasSumW2 ? std::sqrt(std::max(dh->weightSquared(i), 0.)) : 0.;
+         dh->set(i, 0., wgtErr);
+      }
+   }
+}
+
 void RooHistPdf::doEval(RooFit::EvalContext &ctx) const
 {
    std::span<double> output = ctx.output();
@@ -192,6 +241,9 @@ void RooHistPdf::doEval(RooFit::EvalContext &ctx) const
 
    auto xVals = ctx.at(_pdfObsList[0]);
    _dataHist->weights(output.data(), xVals, _intOrder, true, _cdfBoundaries);
+   for (auto &ret : output) {
+      ret = std::max(ret, 0.0);
+   }
 }
 
 
@@ -297,6 +349,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
 
   Int_t code = 0;
   Int_t frcode = 0;
+  bool directSubRange = false;
   for (unsigned int n=0; n < pdfObsList.size() && n < histObsList.size(); ++n) {
     const auto pa = pdfObsList[n];
     const auto ha = histObsList[n];
@@ -306,6 +359,9 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
       analVars.add(*pa);
       if (fullRange(*pa, *ha, rangeName)) {
         frcode |= 2 << n;
+      } else if (pa->isFundamental()) {
+        // Sub-range integral over the histogram observable itself (no transform).
+        directSubRange = true;
       }
     }
   }
@@ -316,10 +372,12 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
     code |= 1;
   }
 
-  // Disable partial analytical integrals if interpolation is used, and we
-  // integrate over sub-ranges, but leave them enabled when we integrate over
-  // the full range of one or several variables
-  if (intOrder > 1 && !(code & 1)) {
+  // the full range. For interpolated histograms (intOrder > 0), fall back to
+  // numerical integration over a direct sub-range of the histogram observable.
+  // A derived (non-fundamental) observable, such as a linear transform used to
+  // renormalize the components of a RooMomentMorphFuncND, keeps the analytical
+  // path it relies on.
+  if (intOrder > 0 && directSubRange) {
     analVars.removeAll();
     return 0;
   }
@@ -527,8 +585,7 @@ double RooHistPdf::maxVal(Int_t code) const
 
   double max(-1) ;
   for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {
-    _dataHist->get(i) ;
-    double wgt = _dataHist->weight() ;
+    double wgt = _dataHist->weight(i) ;
     if (wgt>max) max=wgt ;
   }
 
@@ -545,9 +602,7 @@ bool RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
   if (std::abs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
   if (dh1.numEntries() != dh2.numEntries()) return false ;
   for (int i=0 ; i < dh1.numEntries() ; i++) {
-    dh1.get(i) ;
-    dh2.get(i) ;
-    if (std::abs(dh1.weight()-dh2.weight())>1e-8) return false ;
+    if (std::abs(dh1.weight(i)-dh2.weight(i))>1e-8) return false ;
   }
   return true ;
 }

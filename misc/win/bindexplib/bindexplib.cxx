@@ -346,7 +346,22 @@ public:
                   // skip symbols containing a dot
                   if (symbol.find('.') == std::string::npos) {
                      if (!pSymbolTable->Type && (SectChar & IMAGE_SCN_MEM_WRITE)) {
-                        // Read only (i.e. constants) must be excluded
+                        this->DataSymbols.insert(symbol);
+                     } else if (!pSymbolTable->Type &&
+                                (SectChar & IMAGE_SCN_MEM_READ) &&
+                                !(SectChar & IMAGE_SCN_MEM_EXECUTE) &&
+                                symbol[0] == '?' &&
+                                symbol.compare(0, 3, "??_") != 0) {
+                        // C++-mangled read-only data (const globals): export
+                        // them as DATA so they can be resolved at runtime,
+                        // e.g. by the interpreter looking up a global whose
+                        // value it cannot reconstruct otherwise. Restricting
+                        // to '?' keeps out compiler-generated constants
+                        // (__real@/__xmm@ FP pools, _CT*/_TI* throw info),
+                        // whose names the cdecl '@'-truncation above garbles
+                        // into symbols that do not exist (e.g. '_real'), and
+                        // the '??_' check keeps out vtables (??_7), RTTI
+                        // (??_R) and string literals (??_C).
                         this->DataSymbols.insert(symbol);
                      } else {
                         if (pSymbolTable->Type || !(SectChar & IMAGE_SCN_MEM_READ) ||
@@ -470,7 +485,7 @@ void bindexplib::WriteFile(FILE *file)
 }
 
 
-void
+int
 main(int argc, char **argv)
 {
    std::string cmdline;
@@ -484,7 +499,7 @@ main(int argc, char **argv)
    if (argc < 3) {
 Usage:
       fprintf(stderr, "Usage: %s ?-o outfile? ?-f(ull)? <dllname> <object filenames> ..\n", argv[0]);
-      exit(1);
+      return EXIT_FAILURE;
    }
 
    arg = 1;
@@ -515,7 +530,7 @@ Usage:
          fprintf(stderr, "Unable to open \'%s\' for writing:\n",
                  argv[arg]);
          perror("");
-         exit(1);
+         return EXIT_FAILURE;
       }
    } else {
       fout = stdout;
@@ -543,7 +558,7 @@ Usage:
             fprintf(stderr, "Unable to open \'%s\' for reading:\n",
                     argv[arg]);
             perror("");
-            exit(1);
+            return EXIT_FAILURE;
          }
          char *fargv[1000];
          for (i = 0; i < arg; i++) {
@@ -566,7 +581,7 @@ Usage:
       if (SearchFile == INVALID_HANDLE_VALUE) {
          fprintf(stderr, "Unable to find \'%s\' for reading:\n",
                  argv[arg]);
-         exit(1);
+         return EXIT_FAILURE;
       } else {
          /*
          *  Since WIN32_FIND_DATA has no path information one has to extract it oneself.
@@ -588,5 +603,5 @@ Usage:
          deffile.WriteFile(fout);
       }
    }
-   exit(0);
+   return EXIT_SUCCESS;
 }

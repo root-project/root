@@ -75,8 +75,8 @@ is a popup window.
 #include "TGButton.h"
 #include "RStipples.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <iostream>
 
 
@@ -312,6 +312,7 @@ TGedPopup::TGedPopup(const TGWindow *p, const TGWindow *m, UInt_t w, UInt_t h,
    wattr.fOverrideRedirect = kTRUE;
    wattr.fSaveUnder = kTRUE;
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
+   gVirtualX->SetWindowHint(fId, TVirtualX::kHintTooltip);
 
    AddInput(kStructureNotifyMask);
 }

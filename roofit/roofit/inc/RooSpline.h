@@ -37,6 +37,12 @@ public:
    /// \param[in] newname The name of the cloned object (optional).
    TObject *clone(const char *newname) const override { return new RooSpline(*this, newname); }
 
+   RooAbsReal const &x() const { return static_cast<RooAbsReal const &>(*_x.absArg()); }
+   int order() const;
+   TSpline const &spline() const { return *_spline; }
+   bool logx() const { return _logx; }
+   bool logy() const { return _logy; }
+
 protected:
    double evaluate() const override;
 

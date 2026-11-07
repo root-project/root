@@ -319,8 +319,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 
 void TFoam::Initialize()
 {
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+   TDirectory::TContext ctx{nullptr}; // No self-registration to directories
    Int_t i;
 
    if(fChat>0){
@@ -434,7 +433,6 @@ void TFoam::Initialize()
       BXCLO;
    }
    if(fChat==2) PrintCells();
-   TH1::AddDirectory(addStatus);
 } // Initialize
 
 ////////////////////////////////////////////////////////////////////////////////

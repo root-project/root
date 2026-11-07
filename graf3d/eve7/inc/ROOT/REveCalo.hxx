@@ -16,8 +16,6 @@
 #include "ROOT/REveProjectionBases.hxx"
 #include "ROOT/REveProjectionManager.hxx"
 
-#include "TAtt3D.h"
-#include "TAttBBox.h"
 #include "ROOT/REveCaloData.hxx"
 
 class TClass;
@@ -26,11 +24,7 @@ namespace ROOT {
 namespace Experimental {
 
 class REveRGBAPalette;
-class REveCaloViz : public REveElement,
-                    public TAtt3D,
-                    public TAttBBox,
-                    public REveProjectable
-{
+class REveCaloViz : public REveElement, public REveProjectable {
 
 private:
    REveCaloViz& operator=(const REveCaloViz&) = delete;

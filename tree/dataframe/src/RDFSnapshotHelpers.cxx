@@ -1,6 +1,5 @@
 /**
  \file RDFSnapshotHelpers.cxx
- \ingroup dataframe
  \author Enrico Guiraud, CERN
  \author Danilo Piparo, CERN
  \date 2016-12
@@ -209,88 +208,40 @@ void CreateFundamentalTypeBranch(TTree &outputTree, RBranchData &bd, void *value
    bd.fOutputBranch = outputTree.Branch(bd.fOutputBranchName.c_str(), valueAddress, leafList.c_str(), bufSize);
 }
 
-/// Ensure that the TTree with the resulting snapshot can be written to the target TFile. This means checking that the
-/// TFile can be opened in the mode specified in `opts`, deleting any existing TTrees in case
+/// Ensure that an object with the input name can be written to the target file. This means checking that the
+/// TFile can be opened in the mode specified in `opts`, deleting any pre-existing objects with the same name in case
 /// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
-void EnsureValidSnapshotTTreeOutput(const ROOT::RDF::RSnapshotOptions &opts, const std::string &treeName,
-                                    const std::string &fileName)
+void EnsureValidSnapshotOutput(const ROOT::RDF::RSnapshotOptions &opts, const std::string &objName,
+                               const std::string &fileName)
 {
    TString fileMode = opts.fMode;
    fileMode.ToLower();
    if (fileMode != "update")
       return;
 
-   // output file opened in "update" mode: must check whether output TTree is already present in file
-   std::unique_ptr<TFile> outFile{TFile::Open(fileName.c_str(), "update")};
+   // output file opened in "update" mode: must check whether target object name is already present in file
+   std::unique_ptr<TFile> outFile{TFile::Open(fileName.c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION")};
    if (!outFile || outFile->IsZombie())
       throw std::invalid_argument("Snapshot: cannot open file \"" + fileName + "\" in update mode");
 
-   TObject *outTree = outFile->Get(treeName.c_str());
-   if (outTree == nullptr)
+   // Object is not present in the file, we are good
+   if (!outFile->GetKey(objName.c_str()))
       return;
 
-   // object called treeName is already present in the file
+   // object called objName is already present in the file
    if (opts.fOverwriteIfExists) {
-      if (outTree->InheritsFrom("TTree")) {
-         static_cast<TTree *>(outTree)->Delete("all");
+      if (auto existingTree = outFile->Get<TTree>(objName.c_str()); existingTree) {
+         // Special case for TTree. TTree::Delete invalidates the 'this' pointer, so we don't wrap it in a
+         // std::unique_ptr.
+         existingTree->Delete("all");
       } else {
-         outFile->Delete(treeName.c_str());
+         // Ensure deletion of object and all its cycles.
+         outFile->Delete((objName + ";*").c_str());
       }
    } else {
-      const std::string msg = "Snapshot: tree \"" + treeName + "\" already present in file \"" + fileName +
-                              "\". If you want to delete the original tree and write another, please set "
-                              "RSnapshotOptions::fOverwriteIfExists to true.";
-      throw std::invalid_argument(msg);
-   }
-}
-
-/// Ensure that the RNTuple with the resulting snapshot can be written to the target TFile. This means checking that the
-/// TFile can be opened in the mode specified in `opts`, deleting any existing RNTuples in case
-/// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
-void EnsureValidSnapshotRNTupleOutput(const ROOT::RDF::RSnapshotOptions &opts, const std::string &ntupleName,
-                                      const std::string &fileName)
-{
-   TString fileMode = opts.fMode;
-   fileMode.ToLower();
-   if (fileMode != "update")
-      return;
-
-   // output file opened in "update" mode: must check whether output RNTuple is already present in file
-   std::unique_ptr<TFile> outFile{TFile::Open(fileName.c_str(), "update")};
-   if (!outFile || outFile->IsZombie())
-      throw std::invalid_argument("Snapshot: cannot open file \"" + fileName + "\" in update mode");
-
-   auto *outNTuple = outFile->Get<ROOT::RNTuple>(ntupleName.c_str());
-
-   if (outNTuple) {
-      if (opts.fOverwriteIfExists) {
-         outFile->Delete((ntupleName + ";*").c_str());
-         return;
-      } else {
-         const std::string msg = "Snapshot: RNTuple \"" + ntupleName + "\" already present in file \"" + fileName +
-                                 "\". If you want to delete the original ntuple and write another, please set "
-                                 "the 'fOverwriteIfExists' option to true in RSnapshotOptions.";
-         throw std::invalid_argument(msg);
-      }
-   }
-
-   // Also check if there is any object other than an RNTuple with the provided ntupleName.
-   TObject *outObj = outFile->Get(ntupleName.c_str());
-
-   if (!outObj)
-      return;
-
-   // An object called ntupleName is already present in the file.
-   if (opts.fOverwriteIfExists) {
-      if (auto tree = dynamic_cast<TTree *>(outObj)) {
-         tree->Delete("all");
-      } else {
-         outFile->Delete((ntupleName + ";*").c_str());
-      }
-   } else {
-      const std::string msg = "Snapshot: object \"" + ntupleName + "\" already present in file \"" + fileName +
-                              "\". If you want to delete the original object and write a new RNTuple, please set "
-                              "the 'fOverwriteIfExists' option to true in RSnapshotOptions.";
+      const std::string msg = "Snapshot: object \"" + objName + "\" already present in file \"" + fileName +
+                              "\". If you want to delete the original object and write another, please set the "
+                              "'fOverwriteIfExists' option to true in RSnapshotOptions.";
       throw std::invalid_argument(msg);
    }
 }
@@ -364,6 +315,37 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree,
    throw std::logic_error(
       "RDataFrame::Snapshot: something went wrong when creating a TTree branch, please report this as a bug.");
 }
+
+auto GetSnapshotCompressionSettings(const ROOT::RDF::RSnapshotOptions &options)
+{
+   using CompAlgo = ROOT::RCompressionSetting::EAlgorithm::EValues;
+   using OutputFormat = ROOT::RDF::ESnapshotOutputFormat;
+
+   if (options.fOutputFormat == OutputFormat::kTTree || options.fOutputFormat == OutputFormat::kDefault) {
+      // The default compression settings for TTree is 101
+      if (options.fCompressionAlgorithm == CompAlgo::kUndefined) {
+         return ROOT::CompressionSettings(CompAlgo::kZLIB, 1);
+      }
+      return ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel);
+   } else if (options.fOutputFormat == OutputFormat::kRNTuple) {
+      // The default compression settings for RNTuple is 505
+      if (options.fCompressionAlgorithm == CompAlgo::kUndefined) {
+         return ROOT::CompressionSettings(CompAlgo::kZSTD, 5);
+      }
+      return ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel);
+   } else {
+      throw std::invalid_argument("RDataFrame::Snapshot: unrecognized output format");
+   }
+}
+
+std::string ModeWithoutGlobalRegistration(const std::string &mode)
+{
+   if (mode.find("_WITHOUT_GLOBALREGISTRATION") != std::string::npos) {
+      return mode;
+   }
+   return mode + "_WITHOUT_GLOBALREGISTRATION";
+}
+
 } // namespace
 
 ROOT::Internal::RDF::RBranchData::RBranchData(std::string inputBranchName, std::string outputBranchName, bool isDefine,
@@ -441,7 +423,7 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
      fOutputLoopManager(loopManager),
      fInputLoopManager(inputLM)
 {
-   EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
+   EnsureValidSnapshotOutput(fOptions, fTreeName, fFileName);
 
    auto outputBranchNames = ReplaceDotWithUnderscore(bnames);
    fBranchData.reserve(vbnames.size());
@@ -534,9 +516,8 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::SetEmptyBranches(TTree *in
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::Initialize()
 {
-   fOutputFile.reset(
-      TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
-                  ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+   fOutputFile.reset(TFile::Open(fFileName.c_str(), ModeWithoutGlobalRegistration(fOptions.fMode).c_str(),
+                                 /*ftitle=*/"", GetSnapshotCompressionSettings(fOptions)));
    if (!fOutputFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
 
@@ -634,7 +615,7 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::UntypedSnapshotTTreeHelperMT(
      fOutputLoopManager(loopManager),
      fInputLoopManager(inputLM)
 {
-   EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
+   EnsureValidSnapshotOutput(fOptions, fTreeName, fFileName);
 
    auto outputBranchNames = ReplaceDotWithUnderscore(bnames);
    fBranchData.reserve(fNSlots);
@@ -774,9 +755,9 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::SetEmptyBranches(TTree *
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::Initialize()
 {
-   const auto cs = ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
    auto outFile =
-      std::unique_ptr<TFile>{TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(), cs)};
+      std::unique_ptr<TFile>{TFile::Open(fFileName.c_str(), ModeWithoutGlobalRegistration(fOptions.fMode).c_str(),
+                                         /*ftitle=*/fFileName.c_str(), GetSnapshotCompressionSettings(fOptions))};
    if (!outFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
    fOutputFile = outFile.get();
@@ -797,7 +778,8 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::Finalize()
    // filtering), create an empty TTree in the output file and create the branches to preserve the schema
    auto fullTreeName = fDirName.empty() ? fTreeName : fDirName + '/' + fTreeName;
    assert(fOutputFile && "Missing output file in Snapshot finalization.");
-   if (!fOutputFile->Get(fullTreeName.c_str())) {
+   // Use GetKey to avoid having to deal with memory management of the object in the file
+   if (!fOutputFile->GetKey(fullTreeName.c_str())) {
 
       // First find in which directory we need to write the output TTree
       TDirectory *treeDirectory = fOutputFile;
@@ -884,7 +866,7 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
      fEntries(nSlots),
      fInputColumnTypeIDs(colTypeIDs)
 {
-   EnsureValidSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
+   EnsureValidSnapshotOutput(fOptions, fNTupleName, fFileName);
 }
 
 // Define special member methods here where the definition of all the data member types is available
@@ -912,13 +894,24 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
                                ? ROOT::Internal::RDF::GetTypeNameWithOpts(*fInputLoopManager->GetDataSource(),
                                                                           fInputFieldNames[i], fOptions.fVector2RVec)
                                : ROOT::Internal::RDF::TypeID2TypeName(*fInputColumnTypeIDs[i]);
-      model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], typeName).Unwrap());
+
+      // Cardinality fields are read-only, so instead we snapshot them as their inner type.
+      if (typeName.substr(0, 25) == "ROOT::RNTupleCardinality<") {
+         // Get "T" from "ROOT::RNTupleCardinality<T>".
+         std::string cardinalityType = typeName.substr(25, typeName.size() - 26);
+         Warning("Snapshot",
+                 "Column \"%s\" is a read-only \"%s\" column. It will be snapshot as its inner type \"%s\" instead.",
+                 fInputFieldNames[i].c_str(), typeName.c_str(), cardinalityType.c_str());
+         model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], cardinalityType).Unwrap());
+      } else {
+         model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], typeName).Unwrap());
+      }
       fFieldTokens[i] = model->GetToken(fOutputFieldNames[i]);
    }
    model->Freeze();
 
    ROOT::RNTupleWriteOptions writeOptions;
-   writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
+   writeOptions.SetCompression(GetSnapshotCompressionSettings(fOptions));
    writeOptions.SetInitialUnzippedPageSize(fOptions.fInitialUnzippedPageSize);
    writeOptions.SetMaxUnzippedPageSize(fOptions.fMaxUnzippedPageSize);
    writeOptions.SetApproxZippedClusterSize(fOptions.fApproxZippedClusterSize);
@@ -926,7 +919,7 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
    writeOptions.SetEnablePageChecksums(fOptions.fEnablePageChecksums);
    writeOptions.SetEnableSamePageMerging(fOptions.fEnableSamePageMerging);
 
-   fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str()));
+   fOutputFile.reset(TFile::Open(fFileName.c_str(), ModeWithoutGlobalRegistration(fOptions.fMode).c_str()));
    if (!fOutputFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
 
@@ -978,8 +971,13 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Finalize()
    fFillContexts.clear();
    // Then destroy the RNTupleParallelWriter and write the metadata.
    fWriter.reset();
+   // Finally, close the output TFile to ensure it's properly written to disk. We don't destroy it to avoid triggering
+   // a warning about the lazy Snapshot not being triggered
+   fOutputFile->Close();
+
    // We can now set the data source of the loop manager for the RDataFrame that is returned by the Snapshot call.
-   fOutputLoopManager->SetDataSource(std::make_unique<ROOT::RDF::RNTupleDS>(fDirName + "/" + fNTupleName, fFileName));
+   const auto fullNTupleName = fDirName.empty() ? fNTupleName : fDirName + '/' + fNTupleName;
+   fOutputLoopManager->SetDataSource(std::make_unique<ROOT::RDF::RNTupleDS>(fullNTupleName, fFileName));
 }
 
 /**
@@ -1028,7 +1026,6 @@ struct SnapshotOutputWriter {
    std::unordered_map<std::string, unsigned int> fBranchToVariationMapping;
    // The corresponding ROOT dictionary is declared in core/clingutils/src
    std::unordered_map<std::string, std::pair<std::string, unsigned int>> fBranchToBitmaskMapping;
-   unsigned int fNBits = 0;
 
    SnapshotOutputWriter(TFile *file) : fFile{file} { assert(fFile); }
    ~SnapshotOutputWriter()
@@ -1076,7 +1073,6 @@ struct SnapshotOutputWriter {
       }
 
       // Neither branch nor systematic are known, so a new entry needs to be created
-      fNBits = std::max(fNBits, variationIndex);
       const auto vectorIndex = variationIndex / 64u;
       const auto bitIndex = variationIndex % 64u;
 
@@ -1117,7 +1113,7 @@ struct SnapshotOutputWriter {
    void Write() const
    {
       if (!fTree)
-         throw std::runtime_error("The TTree associated to the Snapshot action doesn't exist, any more.");
+         throw std::runtime_error("The TTree associated to the Snapshot action doesn't exist anymore.");
 
       for (auto const &mask : fBitMasks) {
          *mask.branchBuffer = mask.bitset.to_ullong();
@@ -1136,12 +1132,12 @@ ROOT::Internal::RDF::SnapshotHelperWithVariations::SnapshotHelperWithVariations(
    const std::vector<const std::type_info *> &colTypeIDs)
    : fOptions(options), fInputLoopManager{inputLoopMgr}, fOutputLoopManager{outputLoopMgr}
 {
-   EnsureValidSnapshotTTreeOutput(fOptions, std::string(treename), std::string(filename));
+   EnsureValidSnapshotOutput(fOptions, std::string(treename), std::string(filename));
 
    TDirectory::TContext fileCtxt;
    fOutputHandle = std::make_shared<SnapshotOutputWriter>(
-      TFile::Open(filename.data(), fOptions.fMode.c_str(), /*ftitle=*/"",
-                  ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+      TFile::Open(filename.data(), ModeWithoutGlobalRegistration(fOptions.fMode).c_str(), /*ftitle=*/"",
+                  GetSnapshotCompressionSettings(fOptions)));
    if (!fOutputHandle->fFile)
       throw std::runtime_error(std::string{"Snapshot: could not create output file "} + std::string{filename});
 
@@ -1189,7 +1185,10 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::RegisterVariedColumn(uns
                                                                              std::string const &variationName)
 {
    if (columnIndex == originalColumnIndex) {
-      fBranchData[columnIndex].fVariationIndex = variationIndex; // The base column has variations
+      // This is a nominal column, but it participates in variations.
+      // It always needs to be written, but we still need to create a mask bit to mark when nominal is invalid.
+      assert(variationIndex == 0);
+      fBranchData[columnIndex].fVariationIndex = 0;
       fOutputHandle->RegisterBranch(fBranchData[columnIndex].fOutputBranchName, variationIndex);
    } else if (columnIndex >= fBranchData.size()) {
       // First task, need to create branches
@@ -1234,15 +1233,20 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(unsigned int /*slot
    for (std::size_t i = 0; i < values.size(); i++) {
       const auto variationIndex = fBranchData[i].fVariationIndex;
       if (variationIndex < 0) {
-         // Branch without variations
+         // Branch without variations, it always needs to be written
          SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
-      } else if (filterPassed[variationIndex]) {
-         // Branch with variations
-         const bool fundamentalType = fBranchData[i].WriteValueIfFundamental(values[i]);
-         if (!fundamentalType) {
-            SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
+      } else {
+         // Nominal will always be written, systematics only if needed
+         if (variationIndex == 0 || filterPassed[variationIndex]) {
+            const bool fundamentalType = fBranchData[i].WriteValueIfFundamental(values[i]);
+            if (!fundamentalType) {
+               SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
+            }
          }
-         fOutputHandle->SetMaskBit(variationIndex);
+
+         if (filterPassed[variationIndex]) {
+            fOutputHandle->SetMaskBit(variationIndex);
+         }
       }
    }
 

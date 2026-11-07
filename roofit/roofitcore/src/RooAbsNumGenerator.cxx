@@ -25,20 +25,18 @@ Abstract base class for MC event generator
 implementations like RooAcceptReject and RooFoam
 **/
 
-#include "Riostream.h"
-
 #include "RooAbsNumGenerator.h"
 #include "RooAbsReal.h"
 #include "RooCategory.h"
 #include "RooRealVar.h"
 #include "RooDataSet.h"
-#include "RooRandom.h"
 #include "RooErrorHandler.h"
 
 #include "RooMsgService.h"
 #include "RooRealBinding.h"
 
 #include <cassert>
+#include <ostream>
 
 using std::endl;
 

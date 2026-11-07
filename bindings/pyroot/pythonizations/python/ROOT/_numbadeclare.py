@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
     """
     Decorator for making Python callables accessible in C++ by just-in-time compilation
@@ -233,6 +230,8 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         """
         Inner decorator without arguments, see outer decorator for documentation
         """
+        import ROOT
+
         # Jit the given Python callable with numba
         try:
             nb_return_type, nb_input_types = get_numba_signature(input_types, return_type)
@@ -244,7 +243,7 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         except:  # noqa E722
             try:
                 # Fallback to letting numba infer the signature
-                import cppyy.numba_ext  # noqa F401
+                import ROOT.NumbaExt  # noqa F401
                 import platform
 
                 if not (platform.system() == "Linux" and platform.machine() == "x86_64"):
@@ -323,15 +322,15 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
 
         # bind the arguments that are passed as void* pointers to the correct type
         pywrapper_bind_lines = "\n    ".join(
-            f'x_{i} = cppyy.bind_object(x_{i}, "{t}")'
+            f'x_{i} = ROOT._cppyy.bind_object(x_{i}, "{t}")'
             for i, t in enumerate(input_types)
             if not is_container_type(t) and map_cpp_type(t, as_ctypes=True) == ctypes.c_void_p
         )
-        # Only import cppyy if we have objects to bind.
-        # Importing cppyy inside a Numba cfunc call will fail, so we do it only if we know
+        # Only import ROOT if we have objects to bind.
+        # Importing ROOT inside a Numba cfunc call will fail, so we do it only if we know
         # we will actually go through ctypes.CFUNTYPE
         if pywrapper_bind_lines:
-            pywrapper_bind_lines = "import cppyy\n    " + pywrapper_bind_lines
+            pywrapper_bind_lines = "import ROOT\n    " + pywrapper_bind_lines
 
         # Build wrapper code
         pywrappercode = '''\
@@ -513,7 +512,7 @@ namespace Numba {{
         )
 
         # Jit wrapper C++ code
-        err = gbl_namespace.gInterpreter.Declare(cppwrappercode)
+        err = ROOT.gInterpreter.Declare(cppwrappercode)
         if not err:
             raise Exception("Failed to jit C++ wrapper code with cling:\n{}".format(cppwrappercode))
         func.__cpp_wrapper__ = cppwrappercode

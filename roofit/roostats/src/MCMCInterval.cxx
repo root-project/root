@@ -111,10 +111,8 @@ MCMCInterval::~MCMCInterval() = default;
 struct CompareDataHistBins {
    CompareDataHistBins(RooDataHist* hist) : fDataHist(hist) {}
    bool operator() (Int_t bin1 , Int_t bin2) {
-      fDataHist->get(bin1);
-      double n1 = fDataHist->weight();
-      fDataHist->get(bin2);
-      double n2 = fDataHist->weight();
+      double n1 = fDataHist->weight(bin1);
+      double n2 = fDataHist->weight(bin2);
       return (n1 < n2);
    }
    RooDataHist* fDataHist;
@@ -185,8 +183,7 @@ bool MCMCInterval::IsInInterval(const RooArgSet& point) const
             // >= cutoff
             Int_t bin;
             bin = fDataHist->getIndex(point);
-            fDataHist->get(bin);
-            return (fDataHist->weight() >= (double)fHistCutoff);
+            return (fDataHist->weight(bin) >= (double)fHistCutoff);
          }
       }
    } else if (fIntervalType == kTailFraction) {
@@ -839,8 +836,7 @@ void MCMCInterval::DetermineByDataHist()
    double content;
    Int_t i;
    for (i = numBins - 1; i >= 0; i--) {
-      fDataHist->get(bins[i]);
-      content = fDataHist->weight();
+      content = fDataHist->weight(bins[i]);
       if ((sum + content) / nEntries >= fConfidenceLevel) {
          fHistCutoff = content;
          if (fIsHistStrict) {
@@ -858,8 +854,7 @@ void MCMCInterval::DetermineByDataHist()
    if (fIsHistStrict) {
       // keep going to find the sum
       for ( ; i >= 0; i--) {
-         fDataHist->get(bins[i]);
-         content = fDataHist->weight();
+         content = fDataHist->weight(bins[i]);
          if (content == fHistCutoff) {
             sum += content;
          } else {
@@ -869,8 +864,7 @@ void MCMCInterval::DetermineByDataHist()
    } else {
       // backtrack to find the cutoff and sum
       for ( ; i < numBins; i++) {
-         fDataHist->get(bins[i]);
-         content = fDataHist->weight();
+         content = fDataHist->weight(bins[i]);
          if (content > fHistCutoff) {
             fHistCutoff = content;
             break;
@@ -1070,9 +1064,8 @@ double MCMCInterval::LowerLimitByDataHist(RooRealVar& param)
          double lowerLimit = param.getMax();
          double val;
          for (Int_t i = 0; i < numBins; i++) {
-            fDataHist->get(i);
-            if (fDataHist->weight() >= fHistCutoff) {
-               val = fDataHist->get()->getRealValue(param.GetName());
+            if (fDataHist->weight(i) >= fHistCutoff) {
+               val = fDataHist->get(i)->getRealValue(param.GetName());
                if (val < lowerLimit)
                   lowerLimit = val;
             }
@@ -1147,9 +1140,8 @@ double MCMCInterval::UpperLimitByDataHist(RooRealVar& param)
          double upperLimit = param.getMin();
          double val;
          for (Int_t i = 0; i < numBins; i++) {
-            fDataHist->get(i);
-            if (fDataHist->weight() >= fHistCutoff) {
-               val = fDataHist->get()->getRealValue(param.GetName());
+            if (fDataHist->weight(i) >= fHistCutoff) {
+               val = fDataHist->get(i)->getRealValue(param.GetName());
                if (val > upperLimit)
                   upperLimit = val;
             }
@@ -1187,9 +1179,8 @@ double MCMCInterval::LowerLimitByKeys(RooRealVar& param)
          double lowerLimit = param.getMax();
          double val;
          for (Int_t i = 0; i < numBins; i++) {
-            fKeysDataHist->get(i);
-            if (fKeysDataHist->weight() >= fKeysCutoff) {
-               val = fKeysDataHist->get()->getRealValue(param.GetName());
+            if (fKeysDataHist->weight(i) >= fKeysCutoff) {
+               val = fKeysDataHist->get(i)->getRealValue(param.GetName());
                if (val < lowerLimit)
                   lowerLimit = val;
             }
@@ -1227,9 +1218,8 @@ double MCMCInterval::UpperLimitByKeys(RooRealVar& param)
          double upperLimit = param.getMin();
          double val;
          for (Int_t i = 0; i < numBins; i++) {
-            fKeysDataHist->get(i);
-            if (fKeysDataHist->weight() >= fKeysCutoff) {
-               val = fKeysDataHist->get()->getRealValue(param.GetName());
+            if (fKeysDataHist->weight(i) >= fKeysCutoff) {
+               val = fKeysDataHist->get(i)->getRealValue(param.GetName());
                if (val > upperLimit)
                   upperLimit = val;
             }
@@ -1264,8 +1254,7 @@ double MCMCInterval::GetKeysMax()
    double max = 0;
    double w;
    for (Int_t i = 0; i < numBins; i++) {
-      fKeysDataHist->get(i);
-      w = fKeysDataHist->weight();
+      w = fKeysDataHist->weight(i);
       if (w > max)
          max = w;
    }

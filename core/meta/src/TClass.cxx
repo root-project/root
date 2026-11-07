@@ -42,7 +42,6 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TClass.h"
 
 #include "strlcpy.h"
-#include "snprintf.h"
 #include "TBaseClass.h"
 #include "TBrowser.h"
 #include "TBuffer.h"
@@ -55,6 +54,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TDataType.h"
 #include "TDatime.h"
 #include "TEnum.h"
+#include "TEnv.h"
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"
@@ -94,6 +94,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include <sstream>
 #include <string>
 #include <map>
+#include <mutex>
 #include <typeinfo>
 #include <cmath>
 #include <cassert>
@@ -123,6 +124,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TClonesArray.h"
 #include "TRef.h"
 #include "TRefArray.h"
+#include "ROOT/BitUtils.hxx"
 
 using std::multimap, std::make_pair, std::string;
 
@@ -1481,8 +1483,13 @@ void TClass::Init(const char *name, Version_t cversion,
          if (proto)
             proto->FillTClass(this);
       }
-      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
-         gInterpreter->SetClassInfo(this, kFALSE, silent);   // sets fClassInfo pointer
+      ClassInfo_t *checkedInfo = nullptr;
+      if (!fHasRootPcmInfo &&
+          gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE, /* isClassOrNamespaceOnly = */ kFALSE,
+                                       /* classInfo = */ &checkedInfo)) {
+         // Pass along the class info that CheckClassInfo may have found, so that
+         // SetClassInfo (which takes its ownership) does not repeat the lookup.
+         gInterpreter->SetClassInfo(this, kFALSE, silent, checkedInfo); // sets fClassInfo pointer
          if (fClassInfo) {
             // This should be moved out of GetCheckSum itself however the last time
             // we tried this cause problem, in particular in the end-of-process operation.
@@ -2734,6 +2741,13 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
                   if (!baseclass) return -1;
                   Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
                   if (subOffset == -2) return -2;
+                  auto align = baseclass->GetClassAlignment();
+                  if (ROOT::Internal::IsValidAlignment(align)) {
+                     offset = ROOT::Internal::AlignUp((size_t)offset, align);
+                  } else {
+                     Error("GetBaseClassOffsetRecurse", "Can not determine alignment for base class %s (got %zu)\n",
+                           baseclass->GetName(), align);
+                  }
                   if (subOffset != -1) return offset+subOffset;
                   offset += baseclass->Size();
                } else if (element->IsA() == TStreamerSTL::Class()) {
@@ -2742,6 +2756,13 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
                   if (!baseclass) return -1;
                   Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
                   if (subOffset == -2) return -2;
+                  auto align = baseclass->GetClassAlignment();
+                  if (ROOT::Internal::IsValidAlignment(align)) {
+                     offset = ROOT::Internal::AlignUp((size_t)offset, align);
+                  } else {
+                     Error("GetBaseClassOffsetRecurse", "Can not determine alignment for base class %s (got %zu)\n",
+                           baseclass->GetName(), align);
+                  }
                   if (subOffset != -1) return offset+subOffset;
                   offset += baseclass->Size();
 
@@ -2969,6 +2990,11 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 /// If silent is 'true', do not warn about missing dictionary for the class.
 /// (typically used for classes that are used only for transient members)
 /// Returns `nullptr` in case class is not found.
+///
+/// To completely disallow auto-parsing during TClass::GetClass, you can either
+/// set the shell environment variable `ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING`
+/// (to anything) or set the `rootrc` key `Root.TClass.GetClass.AutoParsing` to
+/// `false`.
 
 TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
@@ -3052,6 +3078,16 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
       // We should really not fall through to here, but if we do, let's just
       // continue as before ...
    }
+
+   bool disableAutoParsing = gInterpreter->IsAutoParsingSuspended();
+   // We could get the user choice from:
+   //   - TClass::SetGetClassAutoParsing
+   static const bool requestDisableAutoParsing =
+      !gEnv->GetValue("Root.TClass.GetClass.AutoParsing", true) ||
+      gSystem->Getenv("ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING") != nullptr;
+   if (requestDisableAutoParsing)
+      disableAutoParsing = true;
+   TInterpreter::SuspendAutoParsing autoparseFence(gInterpreter, disableAutoParsing);
 
    // Note: this variable does not always holds the fully normalized name
    // as there is information from a not yet loaded library or from header
@@ -4348,6 +4384,39 @@ void TClass::MakeCustomMenuList()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if an object of this class can be relocated to a new address
+/// with a raw memory copy, i.e. without running a move or copy constructor --
+/// trivial relocatability in the C++26 sense ([class.prop]), as answered by the
+/// interpreter. Every trivially copyable class is trivially relocatable, but not
+/// every trivially relocatable class is trivially copyable: e.g. a polymorphic
+/// class whose bases and members are all trivially relocatable qualifies too.
+///
+/// A kTRUE answer rules out both a resource being freed twice or from the wrong
+/// address (the failure mode of root-project/root#20882) and a non-trivial copy
+/// constructor being skipped. It is still not a proof that a raw memory copy
+/// preserves the class' semantics:
+/// ~~~ {.cpp}
+/// struct Foo { Foo *ptr = this; };
+/// ~~~
+/// is trivially copyable, hence trivially relocatable, yet a raw memory copy
+/// leaves `ptr` pointing at the old location -- and nothing observable here
+/// would reveal that. Such a class is relocated the way it always has been.
+///
+/// An emulated class, described only by a TStreamerInfo, gets the conservative
+/// answer since its members can be anything -- e.g. the std::string of an
+/// emulated pair<string,double>.
+
+Bool_t TClass::IsTriviallyRelocatable() const
+{
+   const Long_t classProperty = ClassProperty();
+   // No kClassIsValid means no interpreter information at all (emulated class,
+   // forward declaration, ...), so assume the worst.
+   if (!(classProperty & kClassIsValid))
+      return kFALSE;
+   return (classProperty & kClassIsTriviallyRelocatable) != 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Register the fact that an object was moved from the memory location
 /// 'arenaFrom' to the memory location 'arenaTo'.
 
@@ -4356,6 +4425,31 @@ void TClass::Move(void *arenaFrom, void *arenaTo) const
    // If/when we have access to a copy constructor (or better to a move
    // constructor), this function should also perform the data move.
    // For now we just information the repository.
+
+   // This only records the new address; a caller that relocated the data with a
+   // raw memory copy silently corrupts the types that do not support it, so warn
+   // about those rather than let it surface later as an obscure crash (typically
+   // an invalid free). A caller that did run a real move or copy constructor can
+   // ignore the message -- we have no way to tell the two apart here. The in-tree
+   // callers, in TEmulatedCollectionProxy::Expand, already avoid the memcpy for
+   // these types, so this is aimed at external users of this public method.
+   if (!IsTriviallyRelocatable()) {
+      // Keyed by name rather than by 'this': a TClass can be deleted and another
+      // one allocated at the same address, which would silence the message.
+      static std::mutex sMoveDiagMutex;
+      static std::set<std::string> sMoveDiagDone;
+      bool firstTime = false;
+      {
+         std::lock_guard<std::mutex> guard(sMoveDiagMutex);
+         firstTime = sMoveDiagDone.emplace(GetName()).second;
+      }
+      if (firstTime)
+         Error("Move",
+               "Objects of type %s are not trivially relocatable, i.e. can not be relocated with a raw memory copy. "
+               "TClass::Move does not move the data itself (here from %p to %p), so if the caller relocated it that "
+               "way the objects are now corrupted.",
+               GetName(), arenaFrom, arenaTo);
+   }
 
    if ((GetState() <= kEmulated) && !fCollectionProxy) {
       MoveAddressInRepository("TClass::Move",arenaFrom,arenaTo,this);
@@ -5738,13 +5832,57 @@ void TClass::SetCurrentStreamerInfo(TVirtualStreamerInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the alignment requirement (in bytes) for objects of this class.
+///
+/// Returns (size_t)-1 if the class info is invalid, 0 for a forward-declared
+/// class, an enum, a namespace or or a class with no definition. For all other
+/// cases the actual alignment obtained from the dictionary or the clang ASTRecordLayout,
+/// or the StreamerInfo (in that order of priority) is returned.
+///
+/// Returns `0` when the alignment cannot be determined.
+
+size_t TClass::GetClassAlignment() const
+{
+   auto alignment = fAlignment.load(std::memory_order_relaxed);
+   if (alignment != 0)
+      return alignment;
+   if (fState < kEmulated && !fCollectionProxy)
+      return 0;
+   if (HasInterpreterInfo()) {
+      if (Property() & (kIsNamespace | kIsEnum))
+         return 0;
+      alignment = gCling->ClassInfo_AlignOf(GetClassInfo());
+      if (alignment != 0)
+         fAlignment.store(alignment, std::memory_order_relaxed);
+      return alignment;
+   }
+   if (fCollectionProxy) {
+      // If the collection proxy has a dictionary, it will have return earlier,
+      // so we know that the collection proxy is emulated.
+      if (!(fCollectionProxy->GetProperties() & TVirtualCollectionProxy::kIsEmulated)) {
+         Fatal("TClass::GetClassAlignment", "Cannot determine alignment for collection proxy of class %s.", GetName());
+         return 0;
+      }
+      return alignof(std::vector<char>);
+   }
+   assert(GetStreamerInfo() && GetStreamerInfo()->GetClassAlignment() != 0);
+   return GetStreamerInfo()->GetClassAlignment();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return size of object of this class.
 
 Int_t TClass::Size() const
 {
-   if (fSizeof!=-1) return fSizeof;
+   auto size = fSizeof.load(std::memory_order_relaxed);
+   if (size != -1) return size;
    if (fCollectionProxy) return fCollectionProxy->Sizeof();
-   if (HasInterpreterInfo()) return gCling->ClassInfo_Size(GetClassInfo());
+   if (HasInterpreterInfo()) {
+      size = gCling->ClassInfo_Size(GetClassInfo());
+      if (size >= 0)
+         fSizeof.store(size, std::memory_order_relaxed);
+      return size;
+   }
    return GetStreamerInfo()->GetSize();
 }
 
@@ -6747,9 +6885,21 @@ void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)
 ////////////////////////////////////////////////////////////////////////////////
 /// Adopt the TMemberStreamer pointer to by p and use it to Stream non basic
 /// member name.
-
-void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
+/// Returns false if the member streamer could not be adopted (which happens if this class had its StreamerInfo
+/// compiled already).
+/// This function transfers ownership of the `strm` pointer to the TClass, so it should not be used anymore on the
+/// caller side. In particular, if `AdoptMemberStreamer` returns false `strm` has been deleted and becomes invalid.
+bool TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 {
+   // Too late to add member streamers!
+   if (fLastReadInfo && (*fLastReadInfo).IsCompiled()) {
+      Error("AdoptMemberStreamer",
+            "Cannot adopt member streamer for %s::%s: StreamerInfo for the class is already compiled.", GetName(),
+            name);
+      delete p;
+      return false;
+   }
+
    if (fRealData) {
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -6761,29 +6911,14 @@ void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
             // If there is a TStreamerElement that took a pointer to the
             // streamer we should inform it!
             rd->AdoptStreamer(p);
-            return;
+            return true;
          }
       }
    }
 
-   Error("AdoptMemberStreamer","Cannot adope member streamer for %s::%s",GetName(), name);
+   Error("AdoptMemberStreamer", "Cannot adopt member streamer for %s::%s", GetName(), name);
    delete p;
-
-//  NOTE: This alternative was proposed but not is not used for now,
-//  One of the major difference with the code above is that the code below
-//  did not require the RealData to have been built
-//    if (!fData) return;
-//    const char *n = name;
-//    while (*n=='*') n++;
-//    TString ts(n);
-//    int i = ts.Index("[");
-//    if (i>=0) ts.Remove(i,999);
-//    TDataMember *dm = (TDataMember*)fData->FindObject(ts.Data());
-//    if (!dm) {
-//       Warning("SetStreamer","Can not find member %s::%s",GetName(),name);
-//       return;
-//    }
-//    dm->SetStreamer(p);
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

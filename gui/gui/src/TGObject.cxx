@@ -32,8 +32,9 @@ is based on the XClass'95 code (see Copyleft in source).
 
 
 #include "TGObject.h"
-#include "TVirtualX.h"
+#include "TGWindow.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TROOT.h"
 
 
@@ -55,14 +56,9 @@ void TGObject::SaveAs(const char* filename /*= ""*/, Option_t* option /*= ""*/) 
 {
    TImage::EImageFileTypes type = TImage::GetImageFileTypeFromFilename(filename);
    if (type != TImage::kUnknown) {
-      WindowAttributes_t wattr;
-      gVirtualX->GetWindowAttributes(GetId(), wattr);
-      TImage* img = TImage::Create();
-      if (img) {
-         img->FromWindow(GetId(), 0, 0, wattr.fWidth, wattr.fHeight);
+      auto img = TASUtils::FromWindow(GetId());
+      if (img)
          img->WriteImage(filename, type);
-         delete img;
-      }
       return;
    }
 

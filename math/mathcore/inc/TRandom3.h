@@ -43,6 +43,7 @@ public:
     void      RndmArray(Int_t n, Double_t *array) override;
     void      SetSeed(ULong_t seed=0) override;
    virtual const UInt_t *GetState() const { return fMt; }
+   result_type operator()() override;
 
    ClassDefOverride(TRandom3,2)  //Random number generator: Mersenne Twister
 };

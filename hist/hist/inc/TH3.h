@@ -28,6 +28,11 @@
 class TH2D;
 class TProfile2D;
 
+#if defined R__B64 && defined __cpp_lib_atomic_ref
+// ROOT-20834 Atomic_ref on 32 bit can fail because of alignment problems
+#define TH3D_FILL_THREADSAFE
+#endif
+
 namespace ROOT::Internal {
 /// Entrypoint for thread-safe filling from RDataFrame.
 template <typename T, typename... Args>
@@ -455,7 +460,7 @@ protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return fArray[bin]; }
            void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = content; }
 private:
-#ifdef __cpp_lib_atomic_ref
+#ifdef TH3D_FILL_THREADSAFE
            void FillThreadSafe(Double_t x, Double_t y, Double_t z, Double_t w = 1.);
            template <typename T, typename... Args>
            friend auto ROOT::Internal::FillThreadSafe(T &histo, Args... args)

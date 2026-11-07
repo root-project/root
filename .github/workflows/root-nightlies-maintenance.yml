@@ -1,0 +1,39 @@
+name: 'ROOT Nightlies for Maintenance Releases'
+
+on:
+  schedule:
+    - cron: '10 2 1-31/2 * *'
+  workflow_dispatch:
+    inputs:
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: false
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use for non-Windows.
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
+
+jobs:
+  Nightly-6_26:
+    uses: root-project/root/.github/workflows/root-ci.yml@v6-26-00-patches
+    secrets: inherit
+  Nightly-6_28:
+    uses: root-project/root/.github/workflows/root-ci.yml@v6-28-00-patches
+    secrets: inherit
+  Nightly-6_30:
+    uses: root-project/root/.github/workflows/root-ci.yml@v6-30-00-patches
+    secrets: inherit
+

@@ -23,11 +23,23 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
   DEPENDENCIES
     Core
   LIBRARIES
-    CPyCppyy
+    cpyrt
     # We link libTPython against Python libraries to compensate for the fact that libcppyy
     # is built with unresolved symbols. If we didn't do this, invoking TPython from C++
     # would not work.
     Python3::Python
 )
+
+# On Windows we can't use the stable ABI yet: it requires linking against a
+# different libpython, so as long as we don't build all translation units in
+# the ROOT Pythonization library with the stable ABI we should not use it.
+# Free-threaded (Py_GIL_DISABLED) interpreters don't support the limited API.
+if(NOT MSVC AND NOT Python3_GIL_DISABLED)
+  target_compile_options(ROOTTPython PRIVATE -DPy_LIMITED_API=0x030A0000)
+endif()
+
+if(MSVC)
+  target_link_options(ROOTTPython PRIVATE "-ignore:4197")
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

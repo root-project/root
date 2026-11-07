@@ -10,7 +10,7 @@
 class CaloEnergy_p2;
 
 #include "Trk__EnergyLoss_p1.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "DepositInCalo_p2.h"
 

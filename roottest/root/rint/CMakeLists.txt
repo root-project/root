@@ -1,16 +1,48 @@
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64.*|x86.*|amd64.*|AMD64.*|i686.*|i386.*")
-  # All platforms except of ARM/AARCH64
-  ROOTTEST_ADD_TEST(TabCom
-                    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
-                    INPUT TabCom_input.txt
-                    OUTCNV filterOpt.sh
-                    OUTREF TabCom.oref
-                    ERRREF TabCom.eref
-                    COPY_TO_BUILDDIR MyClass.h)
+if (NOT MSVC)
+# ROOT-5843
+ROOTTEST_ADD_TEST(dotLibraries
+                  COMMAND $<TARGET_FILE:root> -b -q -e ".libraries"
+                  PASSREGEX "libRint")
 
-  ROOTTEST_ADD_TEST(BackslashNewline
+ROOTTEST_ADD_TEST(TabCom
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                  INPUT TabCom_input.txt
+                  OUTCNV filterOpt.sh
+                  OUTREF TabCom.oref
+                  ERRREF TabCom.eref
+                  COPY_TO_BUILDDIR MyClass.h)
+
+ROOTTEST_ADD_TEST(BackslashNewline
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                  INPUT BackslashNewline_input.txt)
+
+# issue 7626: ".> file" must redirect the output of the executed code to the
+# file while keeping the prompt and the typed characters on the terminal (so
+# they never leak into the file). driveRedirect.py emits the content of the
+# redirected file; the reference contains only that output.
+ROOTTEST_ADD_TEST(Redirect
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveRedirect.py
+                  INPUT redirect_input.txt
+                  OUTREF redirect.oref)
+
+# issue 6439
+if(dataframe)
+  ROOTTEST_ADD_TEST(failedCompilationBadState_1
                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
-                    INPUT BackslashNewline_input.txt)
+                    INPUT 6439_1_input.txt
+                    FAILREGEX "You are probably missing the definition|Assertion")
+endif()
+
+ROOTTEST_ADD_TEST(failedCompilationBadState_2
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                  INPUT 6439_2_input.txt
+                  FAILREGEX "You are probably missing the definition|Assertion")
+
+# issue 7970: The test disabled since the bug is still there on many platforms
+#ROOTTEST_ADD_TEST(failedCompilationBadState_3
+#                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+#                  INPUT 7970_input.txt
+#                  FAILREGEX "You are probably missing the definition|Assertion")
 endif()
 
 # ROOT-10425
@@ -18,14 +50,22 @@ ROOTTEST_ADD_TEST(missingSymbol
                  MACRO missingSymbol.C
                  PASSREGEX "You are probably missing the definition of.*MissingSymbol.*")
 
-if (NOT MSVC)
-# ROOT-5843
-ROOTTEST_ADD_TEST(dotLibraries
-                  COMMAND $<TARGET_FILE:root> -b -q -l -e ".libraries"
-                  PASSREGEX "libRint")
-endif()
-
 # issue 11707
 ROOTTEST_ADD_TEST(macroCalledMain
                   COPY_TO_BUILDDIR main.cpp
                   MACRO main.cpp)
+
+# issue 21457
+if(NOT MSVC) # test does not work on Windows
+  ROOTTEST_ADD_TEST(inskey
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                  INPUT 21457_input.txt
+                  FAILREGEX "Execution of your code was aborted.")
+endif()
+
+# issue 23648
+ROOTTEST_ADD_TEST(fileBeforeCommand
+                  COMMAND ${ROOT_root_CMD} t_ddsimUserPlugins.root -e "EVENT->GetEntries()" -q
+                  COPY_TO_BUILDDIR t_ddsimUserPlugins.root
+                  FAILREGEX "undeclared identifier 'EVENT'"
+                  PASSRC 10)

@@ -32,7 +32,8 @@ It is called by a pull down menu item of TASImage.
 #include "RConfigure.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 #ifdef R__HAS_COCOA
 #   define X_DISPLAY_MISSING 1
@@ -45,8 +46,8 @@ It is called by a pull down menu item of TASImage.
 #ifndef WIN32
 #   include <afterbase.h>
 #else
-#   include <win32/config.h>
-#   include <win32/afterbase.h>
+#   define X_DISPLAY_MISSING 1
+#   include <afterbase.h>
 #endif
 #   include <afterimage.h>
 extern "C" {
@@ -60,15 +61,17 @@ static const char *gFileTypes[] = {
    nullptr,              nullptr
 };
 
-static UShort_t gRedRainbow[12] = {
+constexpr size_t kNRainbowElems = 10;
+
+static UShort_t gRedRainbow[kNRainbowElems] = {
    0x0000, 0x7000, 0x0000, 0x0000, 0x0000,
    0xffff, 0xffff, 0x7000, 0x8000, 0xffff
 };
-static UShort_t gGreenRainbow[12] = {
+static UShort_t gGreenRainbow[kNRainbowElems] = {
    0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
    0xffff, 0x0000, 0x0000, 0x8000, 0xffff
 };
-static UShort_t gBlueRainbow[12] = {
+static UShort_t gBlueRainbow[kNRainbowElems] = {
    0x0000, 0x7000, 0xffff, 0xffff, 0x0000,
    0x0000, 0x0000, 0x0000, 0xa000, 0xffff
 };
@@ -671,13 +674,11 @@ void TASPaletteEditor::NewPalette(Long_t id)
    if (id == 5) // empty entry
       return;
 
-   TImagePalette *newPalette;
-
    Double_t delta = fPalette->fPoints[fPalette->fNumPoints-2] - fPalette->fPoints[1];
-   UInt_t   numPt;
 
-   numPt = id == 0 ? 12 : 13;
-   newPalette = new TImagePalette(numPt);
+   UInt_t numPt = id == 0 ? kNRainbowElems + 2 : 13;
+   TImagePalette *newPalette = new TImagePalette(numPt);
+
    Int_t pt;
    for (pt = 1; pt < Int_t(numPt - 1); pt++) {
       newPalette->fPoints[pt] = fPalette->fPoints[1] + (pt - 1) * delta / (numPt - 3);
@@ -686,9 +687,9 @@ void TASPaletteEditor::NewPalette(Long_t id)
 
    switch (id) {
       case 0:  // rainbow
-         memcpy(newPalette->fColorRed + 1,   gRedRainbow,   12 * sizeof(UShort_t));
-         memcpy(newPalette->fColorGreen + 1, gGreenRainbow, 12 * sizeof(UShort_t));
-         memcpy(newPalette->fColorBlue + 1,  gBlueRainbow,  12 * sizeof(UShort_t));
+         memcpy(newPalette->fColorRed + 1,   gRedRainbow,   kNRainbowElems * sizeof(UShort_t));
+         memcpy(newPalette->fColorGreen + 1, gGreenRainbow, kNRainbowElems * sizeof(UShort_t));
+         memcpy(newPalette->fColorBlue + 1,  gBlueRainbow,  kNRainbowElems * sizeof(UShort_t));
          break;
 
       case 1:  // gray
@@ -890,36 +891,30 @@ void TASPaletteEditor::UpdateRange()
 
 void TASPaletteEditor::PaintPalette::Paint(Option_t *)
 {
-   // get geometry of pad
-   Int_t to_w = TMath::Abs(gPad->XtoPixel(gPad->GetX2()) -
-                           gPad->XtoPixel(gPad->GetX1()));
-   Int_t to_h = TMath::Abs(gPad->YtoPixel(gPad->GetY2()) -
-                           gPad->YtoPixel(gPad->GetY1()));
+   auto &pal = **fPalette;
 
    ASGradient grad;
+   grad.npoints = pal.fNumPoints - 2;
+   std::vector<ARGB32> color(grad.npoints);
+   std::vector<double> offset(grad.npoints);
 
-   grad.npoints = (*fPalette)->fNumPoints - 2;
-   grad.type = GRADIENT_Left2Right;
-   grad.color = new ARGB32[grad.npoints];
-   grad.offset = new double[grad.npoints];
    for (Int_t pt = 0; pt < grad.npoints; pt++) {
-      grad.offset[pt] = ((*fPalette)->fPoints[pt + 1] - (*fPalette)->fPoints[1]) /
-                        ((*fPalette)->fPoints[(*fPalette)->fNumPoints - 2] - (*fPalette)->fPoints[1]);
-      grad.color[pt] = (((ARGB32)((*fPalette)->fColorBlue[pt + 1]   & 0xff00)) >>  8) |
-                        (((ARGB32)((*fPalette)->fColorGreen[pt + 1] & 0xff00))      ) |
-                        (((ARGB32)((*fPalette)->fColorRed[pt + 1]   & 0xff00)) <<  8) |
-                        (((ARGB32)((*fPalette)->fColorAlpha[pt + 1] & 0xff00)) << 16);
+      offset[pt] = (pal.fPoints[pt + 1] - pal.fPoints[1]) /
+                   (pal.fPoints[pal.fNumPoints - 2] - pal.fPoints[1]);
+      color[pt] = (((ARGB32)(pal.fColorBlue[pt + 1]  & 0xff00)) >>  8) |
+                  (((ARGB32)(pal.fColorGreen[pt + 1] & 0xff00))      ) |
+                  (((ARGB32)(pal.fColorRed[pt + 1]   & 0xff00)) <<  8) |
+                  (((ARGB32)(pal.fColorAlpha[pt + 1] & 0xff00)) << 16);
    }
 
-   ASImage * grad_im = make_gradient((ASVisual*)TASImage::GetVisual(), &grad , to_w, to_h,
-                                     SCL_DO_COLOR, ASA_ARGB32, 0,
-                                     fAttImage->GetImageQuality());
-   delete [] grad.color;
-   delete [] grad.offset;
+   grad.color = color.data();
+   grad.offset = offset.data();
+   grad.type = GRADIENT_Left2Right;
 
-   Window_t wid = (Window_t)gVirtualX->GetWindowID(gPad->GetPixmapID());
-   TASImage::Image2Drawable(grad_im, wid, 0, 0);
-   destroy_asimage(&grad_im);
+   TASImage img;
+   img.SetImageQuality(fAttImage->GetImageQuality());
+   img.FromGradient(&grad, gPad->GetPadWidth(), gPad->GetPadHeight());
+   img.Paint("x"); // x mean expand to full pad
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -947,41 +942,31 @@ void TASPaletteEditor::LimitLine::Paint(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event,
-                                               Int_t px, Int_t /*py*/)
+void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event, Int_t px, Int_t)
 {
-   static Int_t oldX;
-
    if (!gPad) return;
+
+   auto &parent = *gPad;
 
    switch(event) {
       case kMouseMotion:
-         gPad->SetCursor(kMove);
+         parent.SetCursor(kMove);
          break;
 
-      case kButton1Down:
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();  //Change line attributes only if necessary
-         oldX = gPad->XtoAbsPixel(fX1);
+      case kButton1Motion: {
+         Double_t xx[2], yy[2] = { GetY1(), GetY2() };
+         xx[0] = xx[1] = parent.AbsPixeltoX(px);
+         parent.PaintPolyLine(2, xx, yy, "iaspaletteline");
+         parent.UpdateAsync();
          break;
-
-      case kButton1Motion:
-         gVirtualX->DrawLine(oldX, gPad->YtoPixel(fY1), oldX, gPad->YtoPixel(fY2));
-         oldX = px;
-         gVirtualX->DrawLine(oldX, gPad->YtoPixel(fY1), oldX, gPad->YtoPixel(fY2));
-         gVirtualX->Update();
-         break;
-
+      }
       case kButton1Up:
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();  //Change line attributes only if necessary
-         fX1 = fX2 = gPad->AbsPixeltoX(oldX);
+         fX1 = fX2 = parent.AbsPixeltoX(px);
+         fY1 = parent.GetUymin();
+         fY2 = parent.GetUymax();
          fGui->UpdateRange();
-         gPad->Modified(kTRUE);
-         gPad->Update();
-         break;
-
-      default:
+         parent.Modified();
+         parent.UpdateAsync();
          break;
    }
 }

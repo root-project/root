@@ -9,7 +9,7 @@
 #define TrigTrackCounts_p1_h
 class TrigTrackCounts_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class TrigTrackCounts_p1 {

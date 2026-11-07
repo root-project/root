@@ -52,13 +52,9 @@ namespace TMVA {
    class Factory;  // DSMTEST
    class Reader;   // DSMTEST
    class DataSetManager;  // DSMTEST
-   namespace Experimental {
-   class Classification;
-   }
    class MethodBoost : public MethodCompositeBase {
       friend class Factory; // DSMTEST
       friend class Reader;  // DSMTEST
-      friend class Experimental::Classification;
 
    public :
 

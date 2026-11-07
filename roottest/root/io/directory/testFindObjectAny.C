@@ -1,13 +1,13 @@
 void doit()
 {
    TFile* base = new TFile("f.db","recreate");
-   TDirectory* a = base->mkdir("a","First Level Dir");
-   a->cd();
+   TDirectory *a = base->mkdir("a", "First Level Dir");
    TH1D* ha = new TH1D("ha","ha",10,0,1);
-   TDirectory* aa = a->mkdir("aa","Second Level Dira");
-   aa->cd();
+   ha->SetDirectory(a);
+   TDirectory *aa = a->mkdir("aa", "Second Level Dira");
    TH1D* haa = new TH1D("haa","haa",10,0,1);
-   
+   haa->SetDirectory(aa);
+
    a->ls();
    
    printf(" a: created@ %p  found@ %p\n", a,base->FindObjectAny("a"));
@@ -92,13 +92,13 @@ void testing(TObject *orig, TObject *found)
    }
 }
 
-int testFindObjectAny() 
-{ 
-   TDirectory* db = gROOT->mkdir("db","db"); 
-   TDirectory* a = db->mkdir("a","a"); 
-   TDirectory* aa = a->mkdir("aa","aa"); 
-   aa->cd(); 
-   TH1D* haa_new = new TH1D("haa","haa",10,0,1); 
+int testFindObjectAny()
+{
+   TDirectory *db = gROOT->mkdir("db", "db");
+   TDirectory *a = db->mkdir("a", "a");
+   TDirectory *aa = a->mkdir("aa", "aa");
+   TH1D *haa_new = new TH1D("haa", "haa", 10, 0, 1);
+   haa_new->SetDirectory(aa);
    TH1D* haa_find = (TH1D*)db->FindObjectAny("haa");
 #ifdef ClingWorkAroundMissingDynamicScope
    TH1D* haa = haa_find;
@@ -108,15 +108,15 @@ int testFindObjectAny()
    } else if (haa_new != haa_find) {
       cout << "haa not found correctly!\n";
    }
-   
+
    TFile* base = new TFile("fdb.root","recreate");
 #ifdef ClingReinstateRedeclarationAllowed
    TDirectory* a = base->mkdir("a","First Level Dir");
 #else
    a = base->mkdir("a","First Level Dir");
 #endif
-   a->cd();
    TH1D* ha = new TH1D("ha","ha",10,0,1);
+   ha->SetDirectory(a);
 #ifdef ClingReinstateRedeclarationAllowed
    TDirectory* aa = a->mkdir("aa","Second Level Dira");
 #else
@@ -128,7 +128,8 @@ int testFindObjectAny()
 #else
    TH1D* haa = new TH1D("haa","haa",10,0,1);
 #endif
-   
+   haa->SetDirectory(aa);
+
    testing(   a, base->FindObjectAny("a"));
    testing(  ha, base->FindObjectAny("ha"));
    testing(  ha,    a->FindObjectAny("ha"));

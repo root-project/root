@@ -4,7 +4,7 @@
 // you can easily create some files with the following statement:
 //
 // for i in 0 1 2 3 4 5; \\
-// do root -l -x -b -q \\
+// do root -x -b -q \\
 // "write_ntuple_to_file.cxx \\
 // (\"conductivity_experiment_${i}.root\", 100)"; \\
 //  done

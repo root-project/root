@@ -63,7 +63,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      if(asan)
        # See also core/sanitizer/README.md for what's happening.
        execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-file-name=libclang_rt.asan_osx_dynamic.dylib OUTPUT_VARIABLE ASAN_RUNTIME_LIBRARY OUTPUT_STRIP_TRAILING_WHITESPACE)
-       set(ASAN_EXTRA_CXX_FLAGS -fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope)
+       set(ASAN_EXTRA_CXX_FLAGS "-fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope")
        set(ASAN_EXTRA_SHARED_LINKER_FLAGS "-fsanitize=address")
        set(ASAN_EXTRA_EXE_LINKER_FLAGS "-fsanitize=address -Wl,-U,__asan_default_options -Wl,-U,__lsan_default_options -Wl,-U,__lsan_default_suppressions")
      endif()

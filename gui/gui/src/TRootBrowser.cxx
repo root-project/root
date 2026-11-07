@@ -74,7 +74,6 @@ Here is the list of available options:
 #include "TGLayout.h"
 #include "TGSplitter.h"
 #include "TGStatusBar.h"
-#include "Varargs.h"
 #include "TInterpreter.h"
 #include "TGFileDialog.h"
 #include "TObjString.h"
@@ -93,7 +92,10 @@ Here is the list of available options:
 #include "Getline.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
+
+#include <cstdarg>
 
 #ifdef WIN32
 #include <TWin32SplashThread.h>
@@ -209,7 +211,6 @@ void TRootBrowser::CreateBrowser(const char *name)
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("New &Editor\tCtrl+E", kNewEditor);
    fMenuFile->AddEntry("New &Canvas\tCtrl+C", kNewCanvas);
-   fMenuFile->AddEntry("New &HTML\tCtrl+H", kNewHtml);
    fMenuFile->AddSeparator();
    fMenuExecPlugin = new TGPopupMenu(fClient->GetRoot());
    fMenuExecPlugin->AddEntry("&Macro...", kExecPluginMacro);
@@ -225,9 +226,6 @@ void TRootBrowser::CreateBrowser(const char *name)
                       "HandleMenu(Int_t)");
    fPreMenuFrame->AddFrame(fMenuBar, fLH2);
    fTopMenuFrame->AddFrame(fPreMenuFrame, fLH0);
-
-   if (!TClass::GetClass("TGHtmlBrowser"))
-      fMenuFile->DisableEntry(kNewHtml);
 
    fMenuFrame = new TGHorizontalFrame(fTopMenuFrame, 100, 20, kRaisedFrame);
    fTopMenuFrame->AddFrame(fMenuFrame, fLH5);
@@ -794,11 +792,6 @@ void TRootBrowser::HandleMenu(Int_t id)
       case kNewCanvas:
          ExecPlugin("", "", "new TCanvas()", 1);
          break;
-      case kNewHtml:
-         cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot())",
-                  gEnv->GetValue("Browser.StartUrl", "http://root.cern.ch"));
-         ExecPlugin("HTML", "", cmd.Data(), 1);
-         break;
       case kExecPluginMacro:
          {
             static TString dir(".");
@@ -875,17 +868,6 @@ void TRootBrowser::InitPlugins(Option_t *opt)
          cmd.Form("new TGTextEditor((const char *)0, gClient->GetRoot());");
          ExecPlugin("Editor 1", 0, cmd.Data(), 1);
          ++fNbInitPlugins;
-      }
-
-      // HTML plugin...
-      if (opt[i] == 'H') {
-         if (gSystem->Load("libGuiHtml") >= 0) {
-            cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot());",
-                     gEnv->GetValue("Browser.StartUrl",
-                     "https://root.cern.ch/doc/master/classes.html"));
-            ExecPlugin("HTML", 0, cmd.Data(), 1);
-            ++fNbInitPlugins;
-         }
       }
 
       // Canvas plugin...

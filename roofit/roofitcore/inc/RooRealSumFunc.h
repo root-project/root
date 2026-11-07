@@ -18,7 +18,6 @@
 
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
-#include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
 
 #include <list>
@@ -55,13 +54,11 @@ public:
    static void setFloorGlobal(bool flag) { _doFloorGlobal = flag; }
    static bool getFloorGlobal() { return _doFloorGlobal; }
 
-   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised; };
-   void setCacheAndTrackHints(RooArgSet &) override;
 
    std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 protected:
-   mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
+   mutable RooObjCacheManager _normIntMgr; ///<! The integration cache manager
 
    bool _haveLastCoef;
 

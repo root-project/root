@@ -147,37 +147,6 @@ Make sure to also try the alternative calculation backends from the `RooFit::Eva
 It will depend on your use-case which combination of options gives you the best computational performance.
 
 
-## Constant term optimization
-The `RooAbsTestStatistic` based classes not only combine statistics and calculation, but also constant term optimization routines.
-These can be run on PDFs and datasets before starting a fit.
-They search the calculation graph for parts that are independent of the fit parameters, precalculates them, and adds them to (a clone of) the dataset so that these values can be used during calculation.
-
-In `RooFit::TestStatistics`, we separated this functionality out into the `ConstantTermsOptimizer` class.
-In fact, it is not so much a class, as it is a collection of static functions that can be applied to any combination of pdf and dataset.
-This class does essentially the same as `constOptimizeTestStatistic` did on a `RooNLLVar`, except that it has been factored out into a separate class.
-
-### Usage example: apply constant term optimization on pdf and dataset inside a likelihood
-Applying the default `ConstantTermsOptimizer` optimization routines on the pdf and dataset inside a `RooAbsL` likelihood is as simple as:
-
-``` {.cpp}
-likelihood.constOptimizeTestStatistic();
-```
-This applies constant term optimization to the cloned pdf and dataset inside the likelihood object.
-It will not modify anything outside of the likelihood.
-
-Optimization can also be activated through the minimizer, which may be more familiar to most users.
-Given the `RooMinimizer` object `m` as defined in the example above, we can do:
-``` {.cpp}
-m.optimizeConst(2);
-```
-
-For the adventurous user, it is also possible to apply constant term optimization to a pdf and dataset directly without needing a likelihood object, e.g. given some `RooArgSet` set of observables `normSet`:
-``` {.cpp}
-bool applyTrackingOpt = true;
-ConstantTermsOptimizer::enableConstantTermsOptimization(&pdf, &normSet, dataset, applyTrackingOpt);
-```
-We refer to RooFit documentation for more about "tracking optimization" which can be enabled or disabled using the final boolean parameter.
-
 ## Load balancing options
 
 A number of calculation strategy options are available to tune load balancing.

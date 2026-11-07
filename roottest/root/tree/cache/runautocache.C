@@ -8,7 +8,7 @@
 
 class MySelector : public TSelector {
 public :
-   TTree          *fChain;   //!pointer to the analyzed TTree or TChain
+   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain
 
    MySelector(TTree * /*tree*/ =0) : fChain(0), pfs1(0), pf1(0), first(kTRUE) { }
    ~MySelector() override { }

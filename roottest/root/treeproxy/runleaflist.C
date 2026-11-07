@@ -5,7 +5,7 @@ struct simPos {
    float X;
    float Y;
    float Z;
-   float dummy; //!
+   float dummy; ///<!
 };
 
 void runleaflist(int kase = 0) {

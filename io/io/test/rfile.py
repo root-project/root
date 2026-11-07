@@ -4,7 +4,13 @@ import unittest
 
 import ROOT
 
-RFile = ROOT.Experimental.RFile
+
+def platform_supports_assertRaises():
+    # TODO: re-enable it on Windows once the exception handling is fixed
+    # TODO: remove mac 15 exception once we stop supporting it
+    return platform.system() != "Windows" and (
+        platform.system() != "Darwin" or not platform.mac_ver()[0].startswith("15")
+    )
 
 
 class RFileTests(unittest.TestCase):
@@ -12,133 +18,275 @@ class RFileTests(unittest.TestCase):
         """A RFile can read a ROOT file created by TFile"""
 
         fileName = "test_rfile_read_py.root"
+        try:
+            # Create a root file to open
+            with ROOT.TFile.Open(fileName, "RECREATE") as tfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 100)
+                tfile.WriteObject(hist, "hist")
 
-        # Create a root file to open
-        with ROOT.TFile.Open(fileName, "RECREATE") as tfile:
-            hist = ROOT.TH1D("hist", "", 100, -10, 10)
-            hist.FillRandom("gaus", 100)
-            tfile.WriteObject(hist, "hist")
+            with ROOT.RFile.Open(fileName) as rfile:
+                hist = rfile.Get("hist")
+                self.assertNotEqual(hist, None)
+                self.assertEqual(rfile.Get[ROOT.TH1D]("inexistent"), None)
+                self.assertEqual(rfile.Get[ROOT.TH1F]("hist"), None)
+                self.assertNotEqual(rfile.Get[ROOT.TH1]("hist"), None)
 
-        with RFile.Open(fileName) as rfile:
-            hist = rfile.Get("hist")
-            self.assertNotEqual(hist, None)
-            self.assertEqual(rfile.Get[ROOT.TH1D]("inexistent"), None)
-            self.assertEqual(rfile.Get[ROOT.TH1F]("hist"), None)
-            self.assertNotEqual(rfile.Get[ROOT.TH1]("hist"), None)
-
-            if not platform.system() == "Windows":
-                # TODO: re-enable it on Windows once the exception handling is fixed
-                with self.assertRaises(ROOT.RException):
-                    # This should fail because the file was opened as read-only
-                    rfile.Put("foo", hist)
-
-        os.remove(fileName)
+                if platform_supports_assertRaises():
+                    with self.assertRaises(ROOT.RException):
+                        # This should fail because the file was opened as read-only
+                        rfile.Put("foo", hist)
+        finally:
+            os.remove(fileName)
 
     def test_writing_reading(self):
         """A RFile can be written into and read from"""
 
         fileName = "test_rfile_writeread_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist)
+                if platform_supports_assertRaises():
+                    with self.assertRaises(ROOT.RException):
+                        rfile.Put("hist/2", hist)
 
-        with RFile.Recreate(fileName) as rfile:
-            hist = ROOT.TH1D("hist", "", 100, -10, 10)
-            hist.FillRandom("gaus", 10)
-            rfile.Put("hist", hist)
-            if not platform.system() == "Windows":
-                # TODO: re-enable it on Windows once the exception handling is fixed
-                with self.assertRaises(ROOT.RException):
-                    rfile.Put("hist/2", hist)
+            with ROOT.RFile.Open(fileName) as rfile:
+                hist = rfile.Get("hist")
+                self.assertNotEqual(hist, None)
 
-        with RFile.Open(fileName) as rfile:
-            hist = rfile.Get("hist")
-            self.assertNotEqual(hist, None)
-
-        os.remove(fileName)
+        finally:
+            os.remove(fileName)
 
     def test_getkeyinfo(self):
         """A RFile can query individual keys of its objects"""
 
         fileName = "test_rfile_getkeyinfo_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist, "My Histo")
+                rfile.Put("foo/hist", hist)
+                rfile.Put("foo/bar/hist", hist)
+                rfile.Put("foo/bar/hist2", hist)
+                rfile.Put("foo/hist2", hist)
 
-        with RFile.Recreate(fileName) as rfile:
-            hist = ROOT.TH1D("hist", "", 100, -10, 10)
-            hist.FillRandom("gaus", 10)
-            rfile.Put("hist", hist)
-            rfile.Put("foo/hist", hist)
-            rfile.Put("foo/bar/hist", hist)
-            rfile.Put("foo/bar/hist2", hist)
-            rfile.Put("foo/hist2", hist)
+            with ROOT.RFile.Open(fileName) as rfile:
+                key = rfile.GetKeyInfo("hist")
+                self.assertEqual(key.GetPath(), "hist")
+                self.assertEqual(key.GetClassName(), "TH1D")
+                self.assertEqual(key.GetTitle(), "My Histo")
 
-        with RFile.Open(fileName) as rfile:
-            key = rfile.GetKeyInfo("hist")
-            self.assertEqual(key.GetPath(), "hist")
-            self.assertEqual(key.GetClassName(), "TH1D")
-
-            key = rfile.GetKeyInfo("does_not_exist")
-            self.assertEqual(key, None)
+                key = rfile.GetKeyInfo("does_not_exist")
+                self.assertEqual(key, None)
+        finally:
+            os.remove(fileName)
 
     def test_listkeys(self):
         """A RFile can query the keys of its objects and directories"""
 
         fileName = "test_rfile_listkeys_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist)
+                rfile.Put("foo/hist", hist)
+                rfile.Put("foo/bar/hist", hist)
+                rfile.Put("foo/bar/hist2", hist)
+                rfile.Put("foo/hist2", hist)
 
-        with RFile.Recreate(fileName) as rfile:
-            hist = ROOT.TH1D("hist", "", 100, -10, 10)
-            hist.FillRandom("gaus", 10)
-            rfile.Put("hist", hist)
-            rfile.Put("foo/hist", hist)
-            rfile.Put("foo/bar/hist", hist)
-            rfile.Put("foo/bar/hist2", hist)
-            rfile.Put("foo/hist2", hist)
+            with ROOT.RFile.Open(fileName) as rfile:
+                keys = [key.GetPath() for key in rfile.ListKeys()]
+                self.assertEqual(keys, ["hist", "foo/hist", "foo/bar/hist", "foo/bar/hist2", "foo/hist2"])
 
-        with RFile.Open(fileName) as rfile:
-            keys = [key.GetPath() for key in rfile.ListKeys()]
-            self.assertEqual(keys, ["hist", "foo/hist", "foo/bar/hist", "foo/bar/hist2", "foo/hist2"])
+                keys = [key.GetClassName() for key in rfile.ListKeys()]
+                self.assertEqual(keys, ["TH1D"] * len(keys))
 
-            keys = [key.GetClassName() for key in rfile.ListKeys()]
-            self.assertEqual(keys, ["TH1D"] * len(keys))
+                self.assertEqual(
+                    [key.GetPath() for key in rfile.ListKeys("foo")],
+                    ["foo/hist", "foo/bar/hist", "foo/bar/hist2", "foo/hist2"],
+                )
 
-            self.assertEqual(
-                [key.GetPath() for key in rfile.ListKeys("foo")],
-                ["foo/hist", "foo/bar/hist", "foo/bar/hist2", "foo/hist2"],
-            )
+                self.assertEqual(
+                    [key.GetPath() for key in rfile.ListKeys("foo/bar")], ["foo/bar/hist", "foo/bar/hist2"]
+                )
 
-            self.assertEqual([key.GetPath() for key in rfile.ListKeys("foo/bar")], ["foo/bar/hist", "foo/bar/hist2"])
-
-            self.assertEqual(
-                [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listObjects=False)], ["foo", "foo/bar"]
-            )
-            self.assertEqual(
-                [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listObjects=False, listRecursive=False)],
-                ["foo"],
-            )
-            self.assertEqual(
-                [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listRecursive=False)], ["hist", "foo"]
-            )
-
-        os.remove(fileName)
+                self.assertEqual(
+                    [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listObjects=False)], ["foo", "foo/bar"]
+                )
+                self.assertEqual(
+                    [
+                        key.GetPath()
+                        for key in rfile.ListKeys("", listDirs=True, listObjects=False, listRecursive=False)
+                    ],
+                    ["foo"],
+                )
+                self.assertEqual(
+                    [
+                        key.GetPath()
+                        for key in rfile.ListKeys("foo", listDirs=True, listObjects=False, listRecursive=False)
+                    ],
+                    ["foo/bar"],
+                )
+                self.assertEqual(
+                    [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listRecursive=False)], ["hist", "foo"]
+                )
+        finally:
+            os.remove(fileName)
 
     def test_putUnsupportedType(self):
         fileName = "test_rfile_putunsupported_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                # Storing integers is unsupported
+                if platform_supports_assertRaises():
+                    with self.assertRaises(TypeError):
+                        rfile.Put("foo", 2)
 
-        with RFile.Recreate(fileName) as rfile:
-            # Storing integers is unsupported
-            with self.assertRaises(TypeError):
-                rfile.Put("foo", 2)
+                # Storing lists without an explicit template is unsupported
+                if platform_supports_assertRaises():
+                    with self.assertRaises(TypeError):
+                        rfile.Put("bar", [2, 3])
 
-            # Storing lists without an explicit template is unsupported
-            with self.assertRaises(TypeError):
-                rfile.Put("bar", [2, 3])
+                # Storing lists with an explicit template is supported
+                rfile.Put["std::vector<int>"]("bar", [2, 3])
 
-            # Storing lists with an explicit template is supported
-            rfile.Put["std::vector<int>"]("bar", [2, 3])
+                # Storing strings is supported
+                rfile.Put("str", "foobar")
 
-            # Storing strings is supported
-            rfile.Put("str", "foobar")
+            with ROOT.RFile.Open(fileName) as rfile:
+                self.assertEqual(rfile.Get("str"), b"foobar")
+        finally:
+            os.remove(fileName)
 
-        with RFile.Open(fileName) as rfile:
-            self.assertEqual(rfile.Get("str"), b"foobar")
+    def test_getTree(self):
+        from array import array
 
-        os.remove(fileName)
+        fileName = "test_rfile_gettree_py.root"
+        try:
+            with ROOT.TFile.Open(fileName, "RECREATE") as _file:
+                tree = ROOT.TTree("tree", "tree")
+                x = array("i", [0])
+                tree.Branch("myColumn", x, "myColumn/I")
+                for i in range(10):
+                    x[0] = i
+                    tree.Fill()
+                tree.Write()
+
+            with ROOT.RFile.Open(fileName) as rfile:
+                tree = rfile.Get("tree")
+                self.assertIsNot(tree, None)
+                self.assertEqual(tree.GetEntries(), 10)
+                xs = [entry.myColumn for entry in tree]
+                self.assertEqual(xs, [x for x in range(10)])
+        finally:
+            os.remove(fileName)
+
+    def test_putTNamed(self):
+        named1 = ROOT.TNamed("named1", "title 1")
+        named2 = ROOT.TNamed("named2", "title 2")
+
+        fileName = "test_rfile_tnamed_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as file:
+                file.Put(named1)
+                # Put named2 under a dir
+                file.Put(named2, "my")
+                # If first argument is a TNamed, second argument must be a string (or None)
+                with self.assertRaises(TypeError):
+                    file.Put(named2, [2, 3])
+
+            with ROOT.RFile.Open(fileName) as file:
+                named1 = file.Get("named1")
+                named2 = file.Get("my/named2")
+                self.assertEqual(named1.GetTitle(), "title 1")
+                self.assertEqual(named2.GetTitle(), "title 2")
+                key1 = file.GetKeyInfo("named1")
+                key2 = file.GetKeyInfo("my/named2")
+                self.assertEqual(key1.GetTitle(), "title 1")
+                self.assertEqual(key2.GetTitle(), "title 2")
+        finally:
+            os.remove(fileName)
+
+
+    def test_overwrite(self):
+        """Objects can be overwritten through the Overwrite method"""
+
+        fileName = "test_rfile_overwrite_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1F("hist", "h1", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                # We can use Overwrite even if it's the first time we write an object.
+                rfile.Overwrite("hist", hist, title=hist.GetTitle())
+
+                hist = ROOT.TH1F("hist", "h2", 200, 0, 10)
+                hist.FillRandom("gaus", 100)
+                rfile.Overwrite("hist", hist, title=hist.GetTitle())
+
+                hist = ROOT.TH1F("hist", "h3", 200, 0, 10)
+                hist.FillRandom("gaus", 1000)
+                rfile.Overwrite("hist", hist, title=hist.GetTitle(), createNewCycle=False)
+
+            with ROOT.RFile.Open(fileName) as rfile:
+                hist = rfile.Get("hist")
+                self.assertNotEqual(hist, None)
+                self.assertEqual(hist.GetTitle(), "h3")
+                self.assertEqual(hist.GetEntries(), 1000)
+                self.assertTrue(isinstance(hist, ROOT.TH1F))
+
+                # We should have preserved the backup cycle
+                hist = rfile.Get("hist;1")
+                self.assertNotEqual(hist, None)
+                self.assertEqual(hist.GetTitle(), "h1")
+                self.assertEqual(hist.GetEntries(), 10)
+                self.assertTrue(isinstance(hist, ROOT.TH1F))
+
+        finally:
+            os.remove(fileName)
+
+    def test_getitem(self):
+        """Objects may be retrieved from RFile via the [] operator. KeyError is thrown if the object isn't there."""
+
+        fileName = "test_rfile_getitem_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist)
+                # There is no setitem support.
+                if platform_supports_assertRaises():
+                    with self.assertRaisesRegex(TypeError, "does not support item assignment"):
+                        rfile["hist2"] = hist
+
+            with ROOT.RFile.Open(fileName) as rfile:
+                hist = rfile["hist"]
+                self.assertNotEqual(hist, None)
+                if platform_supports_assertRaises():
+                    with self.assertRaises(KeyError):
+                        _hist2 = rfile["hist2"]
+
+        finally:
+            os.remove(fileName)
+
+    def test_contains(self):
+        """Can query presence of objects via `'key' in rfile`"""
+
+        fileName = "test_rfile_contains_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist)
+                self.assertTrue("hist" in rfile)
+                self.assertFalse("hist2" in rfile)
+
+        finally:
+            os.remove(fileName)
+
 
 if __name__ == "__main__":
     unittest.main()

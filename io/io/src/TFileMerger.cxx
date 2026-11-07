@@ -11,7 +11,7 @@
 
 /**
 \class TFileMerger TFileMerger.cxx
-\ingroup IO
+\ingroup io_files
 
 This class provides file copy and merging services.
 
@@ -78,7 +78,11 @@ static Int_t R__GetSystemMaxOpenedFiles()
    }
 #endif
    if (maxfiles > kClingFileNumber) {
-      return maxfiles - kClingFileNumber;
+      // Limit the maximum number of opened files to 128 to mitigate memory
+      // consumption issues that may arise during merges with many files.
+      // For further details see analysis at:
+      // https://github.com/root-project/root/issues/21660
+      return std::min(128, maxfiles - kClingFileNumber);
    } else if (maxfiles > 5) {
       return maxfiles - 5;
    } else {
@@ -494,10 +498,13 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    }
    // Check if only the listed objects are to be merged
    if (type & kOnlyListed) {
-      oldkeyname = keyname;
-      oldkeyname += " ";
-      onlyListed = fObjectNames.Contains(oldkeyname);
-      oldkeyname = keyname;
+      // Search for " key " in " a b c " to match whole words only.
+      // Without the leading space, a key that is a prefix or suffix of a listed name
+      // would match. AddObjectNames() guarantees a trailing space in fObjectNames.
+      TString searchName = " ";
+      searchName += keyname;
+      searchName += " ";
+      onlyListed = (" " + fObjectNames).Contains(searchName);
       if ((!onlyListed) && (!cl->InheritsFrom(TDirectory::Class()))) return kTRUE;
    }
 
@@ -606,8 +613,6 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    } else if (!cl->IsTObject() && cl->GetMerge()) {
       // merge objects that don't derive from TObject
       if (cl->InheritsFrom(R__RNTuple_Class)) {
-         Warning("MergeRecursive", "Merging RNTuples is experimental");
-
          // Collect all the data to be passed on to the merger
          TList mergeData;
          // First entry is the TKey of the ntuple
@@ -661,6 +666,13 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
                if (!hobj) {
                   TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(keyname);
                   if (key2) {
+                     if (strcmp(key2->GetClassName(), keyclassname) != 0) {
+                        Error("MergeRecursive",
+                              "Object type mismatch for key '%s' in file '%s': expected '%s' but found '%s'.", keyname,
+                              nextsource->GetName(), keyclassname, key2->GetClassName());
+                        nextsource = (TFile *)sourcelist->After(nextsource);
+                        return kFALSE;
+                     }
                      hobj = key2->ReadObj();
                      if (!hobj) {
                         switch (fErrBehavior) {
@@ -801,7 +813,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    target->cd();
 
    oldkeyname = keyname;
-   //!!if the object is a tree, it is stored in globChain...
+   // if the object is a tree, it is stored in globChain...
    if (cl->InheritsFrom(TDirectory::Class())) {
       // printf("cas d'une directory\n");
 
@@ -814,7 +826,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // and we are in incremental mode (because it will be reused
       // and has not been written to disk (for performance reason).
       // coverity[var_deref_model] the IsA()->InheritsFrom guarantees that the dynamic_cast will succeed.
-      if (ownobj && (!(type & kIncremental) || dirobj->GetFile() != target)) {
+      if (ownobj && (!(type & kIncremental) || dirobj->GetFile() != target->GetFile())) {
          dirobj->ResetBit(kMustCleanup);
          delete dirobj;
       }
@@ -1155,4 +1167,3 @@ void TFileMerger::SetMsgPrefix(const char *prefix)
 {
    fMsgPrefix = prefix;
 }
-

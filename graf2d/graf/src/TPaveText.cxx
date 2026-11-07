@@ -15,7 +15,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "TBufferFile.h"
+#include "TBuffer.h"
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TPaveText.h"

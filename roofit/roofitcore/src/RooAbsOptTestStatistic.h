@@ -62,15 +62,9 @@ protected:
   friend class RooAbsReal ;
   friend class RooAbsTestStatistic ;
 
-  virtual bool allowFunctionCache() { return true ;  }
-  void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt=true) override ;
-
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
   void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
-  virtual RooArgSet requiredExtraObservables() const { return RooArgSet() ; }
   void optimizeCaching() ;
-  void optimizeConstantTerms(bool,bool=true) ;
-  void runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
 
   RooArgSet*  _normSet = nullptr;           ///< Pointer to set with observables used for normalization
   RooArgSet*  _funcCloneSet = nullptr;      ///< Set owning all components of internal clone of input function
@@ -81,12 +75,9 @@ protected:
   bool      _sealed = false;      ///< Is test statistic sealed -- i.e. no access to data
   TString     _sealNotice ;  ///< User-defined notice shown when reading a sealed likelihood
   RooArgSet*  _funcObsSet = nullptr;  ///< List of observables in the pdf expression
-  RooArgSet   _cachedNodes ; ///<! List of nodes that are cached as constant expressions
-  bool _skipZeroWeights = false; ///<! Whether to skip entries with weight zero in the evaluation
 
   RooAbsReal* _origFunc = nullptr;  ///< Original function
   RooAbsData* _origData = nullptr;  ///< Original data
-  bool      _optimized = false; ///<!
   double      _integrateBinsPrecision{-1.}; // Precision for finer sampling of bins.
 };
 

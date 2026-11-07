@@ -9,7 +9,7 @@
 #define CaloCompactCellContainer_h
 class CaloCompactCellContainer;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class CaloCompactCellContainer {

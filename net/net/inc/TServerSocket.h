@@ -30,27 +30,12 @@
 
 class TSeqCollection;
 
-typedef Int_t (*SrvAuth_t)(TSocket *sock, const char *, const char *,
-                           std::string&, Int_t &, Int_t &, std::string &,
-                           TSeqCollection *);
-typedef Int_t (*SrvClup_t)(TSeqCollection *);
-
-// These mask are globally available to manipulate the option to Accept
-const UChar_t kSrvAuth   = 0x1;            // Require client authentication
-const UChar_t kSrvNoAuth = (kSrvAuth<<4);  // Force no client authentication
-
 class TServerSocket : public TSocket {
 
 private:
-   TSeqCollection  *fSecContexts; // List of TSecContext with cleanup info
-   static SrvAuth_t fgSrvAuthHook;
-   static SrvClup_t fgSrvAuthClupHook;
-   static UChar_t fgAcceptOpt;     // Default accept options
-
-   TServerSocket() : fSecContexts(nullptr) {}
+   TServerSocket() = default;
    TServerSocket(const TServerSocket &);
    void operator=(const TServerSocket &);
-   Bool_t Authenticate(TSocket *);
 
 public:
    enum { kDefaultBacklog = 10 };
@@ -61,7 +46,7 @@ public:
                  Int_t backlog = kDefaultBacklog, Int_t tcpwindowsize = -1);
    virtual ~TServerSocket();
 
-   virtual TSocket      *Accept(UChar_t Opt = 0);
+   virtual TSocket      *Accept(UChar_t opt = 0);
    TInetAddress  GetLocalInetAddress() override;
    Int_t         GetLocalPort() override;
 
@@ -87,10 +72,6 @@ public:
                     { MayNotUse("Recv(char *, Int_t, Int_t &)"); return 0; }
    Int_t         RecvRaw(void *, Int_t, ESendRecvOptions = kDefault) override
                     { MayNotUse("RecvRaw(void *, Int_t, ESendRecvOptions)"); return 0; }
-
-   static UChar_t     GetAcceptOptions();
-   static void        SetAcceptOptions(UChar_t Opt);
-   static void        ShowAcceptOptions();
 
    ClassDefOverride(TServerSocket, 0);  //This class implements server sockets
 };

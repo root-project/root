@@ -22,6 +22,7 @@ allows a simple partial implementation for new OS'es.
 */
 
 #include <ROOT/FoundationUtils.hxx>
+#include <ROOT/RCryptoRandom.hxx>
 #include "strlcpy.h"
 #include "TSystem.h"
 #include "TApplication.h"
@@ -41,6 +42,7 @@ allows a simple partial implementation for new OS'es.
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 #include "TVersionCheck.h"
+#define ROOT_compiledata_cxx
 #include "compiledata.h"
 #include "RConfigure.h"
 #include "THashList.h"
@@ -200,7 +202,7 @@ Bool_t TSystem::Init()
    fBuildNode     = BUILD_NODE;
    fFlagsDebug    = CXXDEBUG;
    fFlagsOpt      = CXXOPT;
-   fIncludePath   = INCLUDEPATH;
+   // fIncludePath is set in TROOT::InitSystem()
    fLinkedLibs    = LINKEDLIBS;
    fSoExt         = SOEXT;
    fObjExt        = OBJEXT;
@@ -258,13 +260,16 @@ const char *TSystem::GetError()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return cryptographic random number
-/// Fill provided buffer with random values
+/// Fill provided buffer with random values. The number of requested random bytes must not exceed 256.
 /// Returns number of bytes written to buffer or -1 in case of error
 
-Int_t TSystem::GetCryptoRandom(void * /* buf */, Int_t /* len */)
+Int_t TSystem::GetCryptoRandom(void *buf, Int_t len)
 {
-   Error("GetCryptoRandom", "Not implemented");
-   return -1;
+   if (len < 0) {
+      return -1;
+   }
+   const auto rv = ROOT::Internal::GetCryptoRandom(buf, len);
+   return rv ? len : -1;
 }
 
 
@@ -1268,7 +1273,13 @@ again:
    delete[] buff;
 
    if (ier || ncopy != lx) {
-      ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
+      if (fname && std::strstr(fname, "~$")) {
+         if (gDebug > 0)
+            Info("ExpandFileName", "detected MS temp file input: %s, output: %s", fname, xname);
+         return kFALSE;
+      } else {
+         ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
+      }
       return kTRUE;
    }
 
@@ -2272,6 +2283,11 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
 
    static TRegexp separator("[^ \\t\\s]+");
    static TRegexp dynload("/lib-dynload/");
+   // Skip libffi, it is a private library used by the system. This is visible in the stub .tbd file:
+   // allowable-clients:
+   //     clients:         [ '!' ]
+   // See https://github.com/Homebrew/homebrew-core/issues/272324#issuecomment-5119880493 for more info
+   static TRegexp libffiMatch("/usr/lib/libffi");
 
    Ssiz_t start, index, end;
    start = index = end = 0;
@@ -2280,7 +2296,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
       index = libs2.Index(separator, &end, start);
       if (index >= 0) {
          TString s = libs2(index, end);
-         if (s.Index(dynload) == kNPOS) {
+         if (s.Index(dynload) == kNPOS && s.Index(libffiMatch) == kNPOS) {
             if (!maclibs.IsNull()) maclibs.Append(" ");
             maclibs.Append(s);
          }
@@ -2583,19 +2599,45 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    // Generate the dependency via standard output, not searching the
    // standard include directories,
 
-#ifndef WIN32
-   const char * stderrfile = "/dev/null";
-#else
-   TString stderrfile= "stderr.tmp";
-   gSystem->PrependPathName(build_loc, stderrfile);
+   bool needToUnlinkTempFile = false;
+   TString devnullfile = "/dev/null";
+#ifdef WIN32
+   // Determine the null device based on the shell in use.
+   // COMSPEC unset or pointing to cmd.exe -> NUL
+   // COMSPEC pointing to powershell       -> $null
+   // Anything else (e.g. bash/sh on Windows) -> `depfilename`.stderr.tmp
+   const char *comspec = gSystem->Getenv("COMSPEC");
+   if (!comspec || !comspec[0]) {
+      devnullfile = "NUL";
+   } else {
+      TString comspecStr(comspec);
+      comspecStr.ToLower();
+      if (comspecStr.EndsWith("cmd.exe")) {
+         devnullfile = "NUL";
+      } else if (comspecStr.Contains("powershell.exe")) {
+         devnullfile = "$null";
+      } else {
+         needToUnlinkTempFile = true;
+         devnullfile = depfilename + ".stderr.tmp";
+         gSystem->PrependPathName(build_loc, devnullfile);
+      }
+   }
 #endif
    TString bakdepfilename = depfilename + ".bak";
 
-#ifdef WIN32
-   TString touch = "echo # > "; touch += "\"" + depfilename + "\"";
-#else
-   TString touch = "echo > "; touch += "\"" + depfilename + "\"";
-#endif
+   struct Defer {
+      bool fNeedToUnlinkTempFile;
+      const TString &fDevNullFile, &fBakdepfilename;
+      ~Defer()
+      {
+         if (fNeedToUnlinkTempFile) {
+            // Remove the temporary stderr file if it was created.
+            gSystem->Unlink(fDevNullFile);
+         }
+         gSystem->Unlink(fBakdepfilename);
+      }
+   } deferGuard{needToUnlinkTempFile, devnullfile, bakdepfilename};
+
    TString builddep = "rmkdepend";
    gSystem->PrependPathName(TROOT::GetBinDir(), builddep);
    builddep += " \"-f";
@@ -2646,10 +2688,10 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    builddep += "-t";
    R__AddPath(builddep, targetname);
    builddep += "\" > ";
-   builddep += stderrfile;
+   builddep += devnullfile;
    builddep += " 2>&1 ";
 
-   TString adddictdep = "echo ";
+   TString adddictdep;
    R__AddPath(adddictdep,targetname);
    adddictdep += ": ";
 #if defined(R__HAS_CLING_DICTVERSION)
@@ -2665,19 +2707,26 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    }
 #endif
    {
-     const char *dictHeaders[] = { "RVersion.h", "ROOT/RConfig.hxx", "TClass.h",
-       "TDictAttributeMap.h","TInterpreter.h","TROOT.h","TBuffer.h",
-       "TMemberInspector.h","TError.h","RtypesImp.h","TIsAProxy.h",
-       "TFileMergeInfo.h","TCollectionProxyInfo.h"};
+      constexpr const char *dictHeaders[] = {"ROOT/RConfig.hxx",
+                                             "TClass.h",
+                                             "TDictAttributeMap.h",
+                                             "TInterpreter.h",
+                                             "TROOT.h",
+                                             "TBuffer.h",
+                                             "TMemberInspector.h",
+                                             "TError.h",
+                                             "RtypesImp.h",
+                                             "TIsAProxy.h",
+                                             "TFileMergeInfo.h",
+                                             "TCollectionProxyInfo.h"};
 
-      for (unsigned int h=0; h < sizeof(dictHeaders)/sizeof(dictHeaders[0]); ++h)
-      {
-         char *rootVersion = gSystem->Which(incPath,dictHeaders[h]);
+      for (const char *header : dictHeaders) {
+         char *rootVersion = gSystem->Which(incPath, header);
          if (rootVersion) {
             R__AddPath(adddictdep,rootVersion);
             delete [] rootVersion;
          } else {
-            R__AddPath(adddictdep,rootsysInclude + "/" + dictHeaders[h]);
+            R__AddPath(adddictdep, rootsysInclude + "/" + header);
          }
          adddictdep += " ";
       }
@@ -2691,31 +2740,36 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
          delete [] rootCling;
       }
    }
-   adddictdep += " >> \""+depfilename+"\"";
 
-   TString addversiondep( "echo ");
-   addversiondep += libname + version_var_prefix + " \"" + ROOT_RELEASE + "\" >> \""+depfilename+"\"";
+   {
+      std::ofstream depFile(depfilename, std::ios::out | std::ios::trunc);
+      if (!depFile) {
+         ::Warning("ACLiC", "Failed to open dependency file %s for %s", depfilename.Data(), library.Data());
+         return;
+      }
+#ifdef WIN32
+      depFile << "#\n";
+#endif
+   }
 
-   if (gDebug > 4)  {
-      ::Info("ACLiC", "%s", touch.Data());
+   if (gDebug > 4) {
       ::Info("ACLiC", "%s", builddep.Data());
       ::Info("ACLiC", "%s", adddictdep.Data());
    }
-
-   Int_t depbuilt = !gSystem->Exec(touch);
-   if (depbuilt) depbuilt = !gSystem->Exec(builddep);
-   if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
-   if (depbuilt) depbuilt = !gSystem->Exec(addversiondep);
-
-   if (!depbuilt) {
-      ::Warning("ACLiC","Failed to generate the dependency file for %s",
-                library.Data());
-   } else {
-#ifdef WIN32
-      gSystem->Unlink(stderrfile);
-#endif
-      gSystem->Unlink(bakdepfilename);
+   bool depbuiltOk = !gSystem->Exec(builddep);
+   if (!depbuiltOk) {
+      ::Warning("ACLiC", "Failed to run rmkdepend for %s", library.Data());
+      return;
    }
+
+   std::ofstream depFile(depfilename, std::ios::out | std::ios::app);
+   if (!depFile) {
+      ::Warning("ACLiC", "Failed to open dependency file %s for %s after running rmkdepend", depfilename.Data(),
+                library.Data());
+      return;
+   }
+   depFile << adddictdep << "\n";
+   depFile << libname << version_var_prefix << " \"" << ROOT_RELEASE << "\"\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3736,6 +3790,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("\"$BuildDir","$BuildDir");
    cmd.ReplaceAll("$BuildDir","\"$BuildDir\"");
    cmd.ReplaceAll("$BuildDir",build_loc);
+   // Add relevant directories to RPATH:
+   // - Directory with all the ROOT libraries.
+   // - Directory where this shared library is being created. This enables creating multiple
+   //   libraries via ACLiC in the same session and have them depend on each other without
+   //   the need to set further environment variables.
+   cmd.ReplaceAll("$RPath", "-Wl,-rpath," + gROOT->GetSharedLibDir() + " -Wl,-rpath," + build_loc);
    TString optdebFlags;
    if (mode & kDebug)
       optdebFlags = fFlagsDebug + " ";
@@ -4133,7 +4193,7 @@ void TSystem::SetMakeExe(const char *directives)
 /// construct should be avoided. In particular this description can contain
 /// environment variables, like $ROOTSYS (or %ROOTSYS% on windows).
 /// ~~~ {.cpp}
-/// Five special variables will be expanded before execution:
+/// The following special variables will be expanded before execution:
 ///   Variable name       Expands to
 ///   -------------       ----------
 ///   $SourceFiles        Name of source files to be compiled
@@ -4142,6 +4202,7 @@ void TSystem::SetMakeExe(const char *directives)
 ///   $BuildDir           Directory where the files will be created
 ///   $IncludePath        value of fIncludePath
 ///   $LinkedLibs         value of fLinkedLibs
+///   $RPath              ROOT's library directory is added as -rpath
 ///   $DepLibs            libraries on which this library depends on
 ///   $ObjectFiles        Name of source files to be compiler with
 ///                       their extension changed to .o or .obj
@@ -4155,10 +4216,11 @@ void TSystem::SetMakeExe(const char *directives)
 ///  --no_exceptions --signed_chars --display_error_number
 ///  --diag_suppress 68 -o $SharedLib");
 ///
-/// gSystem->setMakeSharedLib(
+/// // Or adding an rpath to the generated libraries (ROOT's rpath is inserted automatically into $RPath):
+/// gSystem->SetMakeSharedLib(
 /// "Cxx $IncludePath -c $SourceFile;
 ///  ld  -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved
-///  \$Opt -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o
+///  \$Opt \$RPath -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o
 ///  -o $SharedLib $ObjectFile -lcxxstd -lcxx -lexc -lots -lc"
 ///
 /// gSystem->SetMakeSharedLib(

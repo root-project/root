@@ -1,4 +1,3 @@
-
 Processing runprivateConstructor.C...
 Error: can not call private or protected function runprivateConstructor.C:15:
   runprivateConstructor.C  11 bottom bottom::bottom();

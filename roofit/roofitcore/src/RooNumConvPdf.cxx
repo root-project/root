@@ -58,23 +58,17 @@ calls that MINUIT needs to fit your function as function of the
 convolution precision.
 **/
 
-#include "Riostream.h"
 #include "RooNumConvPdf.h"
-#include "RooArgList.h"
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
 #include "RooCustomizer.h"
 #include "RooConvIntegrandBinding.h"
-#include "RooNumIntFactory.h"
 #include "RooGenContext.h"
 #include "RooConvGenContext.h"
 
-
+#include <ostream>
 
 using std::ostream;
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

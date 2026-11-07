@@ -45,7 +45,7 @@ static const char *R__GetDeclSourceFileName(const clang::Decl* D)
    clang::SourceLocation SL = D->getLocation();
    // If the class decl is the result of a macpo expansion, take the location
    // where the macro is "invoked" i.e. expanded at (ExpansionLoc), not the
-   // spelling location (where the delc's tokens come from).
+   // spelling location (where the decl's tokens come from).
    if (SL.isMacroID())
       SL = SM.getExpansionLoc(SL);
 
@@ -555,5 +555,4 @@ void BaseSelectionRule::FillCache()
    }
 
 }
-
 

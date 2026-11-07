@@ -416,6 +416,15 @@ void Minuit2Minimizer::SetHessianFunction(std::function<bool(std::span<const dou
    fcn->SetHessianFunction(hfunc);
 }
 
+void Minuit2Minimizer::SetSecondDerivativeAlwaysVanishesFunc(std::function<bool(unsigned int, unsigned int)> func)
+{
+   // not supported for Fumili, whose FCN is not an FCNAdapter
+   if (fUseFumili) return;
+   auto fcn = static_cast<ROOT::Minuit2::FCNAdapter *>(fMinuitFCN.get());
+   if (!fcn) return;
+   fcn->SetSecondDerivativeAlwaysVanishesFunc(std::move(func));
+}
+
 namespace {
 
 ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::Math::MinimizerOptions const &options)
@@ -442,6 +451,11 @@ ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::M
    st.SetGradientStepTolerance(customize("GradientStepTolerance", st.GradientStepTolerance()));
    st.SetHessianStepTolerance(customize("HessianStepTolerance", st.HessianStepTolerance()));
    st.SetHessianG2Tolerance(customize("HessianG2Tolerance", st.HessianG2Tolerance()));
+
+   // These two are the parts of strategy 3 that matter most for ill-conditioned problems
+   st.SetHessianCentralFDMixedDerivatives(
+      customize("HessianCentralFDMixedDerivatives", int(st.HessianCentralFDMixedDerivatives())));
+   st.SetHessianForcePosDef(customize("HessianForcePosDef", int(st.HessianForcePosDef())));
 
    return st;
 }
@@ -787,6 +801,12 @@ bool Minuit2Minimizer::GetHessianMatrix(double *hess) const
 {
    // get value of Hessian matrix
    // this is the second derivative matrices
+   //
+   // Note: for parameters with limits, the returned external Hessian is obtained by inverting the
+   // external covariance matrix, which is transformed from the internal one with the Jacobian of the
+   // int<->ext transformation only (see MnUserTransformation::Int2extCovariance). This is correct only
+   // at the minimum, where the external gradient vanishes. Away from the minimum the transformation
+   // would need an additional second-derivative term and the result would be inaccurate.
    if (!fState.HasCovariance())
       return false; // no info available when minimization has failed
    for (unsigned int i = 0; i < fDim; ++i) {

@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <fstream>
 #include <ctime>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -124,7 +125,7 @@ Bool_t    gSvgMode = kFALSE;
 Bool_t    gSvgCompact = kTRUE;
 std::string gSvgRefPath;
 Bool_t    gWebMode = kFALSE;
-Bool_t    gSkip3D = kFALSE;
+Int_t     gSkip3D = 0;
 Bool_t    gOptionR = kFALSE;
 Bool_t    gOptionK = kFALSE;
 TH2F     *gH2 = nullptr;
@@ -195,7 +196,7 @@ int ReadRefFile(const char *fname, std::vector<RefEntry> &entries)
    FILE *sg = fopen(fname, "r");
    if (!sg) {
       printf("Could not open %s\n", fname);
-      return 0;
+      return 2;
    }
 
    entries.clear();
@@ -277,6 +278,7 @@ Int_t StatusPrint(const TString &filename, const TString &title, Int_t res, Int_
          std::cout << "         Result    = " << res << "\n";
          std::cout << "         Reference = " << ref << "\n";
          std::cout << "         Error     = " << TMath::Abs(res - ref) << " (was " << err << ")\n";
+         std::cout << "         File      = " << filename << "\n";
          gTestsFailed++;
          return 1;
       }
@@ -355,9 +357,19 @@ Int_t CompareSVGFiles(const TString &filename1, const TString &filename2, int te
       return 0;
    }
 
+   std::stringstream diffOld;
+   std::stringstream diffNew;
+   auto flushDiff = [&]() {
+      if (diffOld.tellp() != std::streampos(0)) {
+         std::cout << diffOld.str() << diffNew.str() << "\n";
+         diffOld.str("");
+         diffNew.str("");
+      }
+   };
+
    std::string line1, line2;
 
-   int cnt = 0, diffcnt = 0, finediffcnt = 0;
+   int cnt = 0, diffcnt = 0, finediffcnt = 0, lastError = -1;
 
    while (std::getline(f1, line1) && std::getline(f2, line2)) {
       ++cnt;
@@ -369,23 +381,22 @@ Int_t CompareSVGFiles(const TString &filename1, const TString &filename2, int te
       if (!gSvgCompact && (cnt == 8))
          continue;
 
-      // ignore difference in file name, only for debugging
-      // if (gSvgCompact && (cnt == 4))
-      //   continue;
+      if (lastError + 1 != cnt) {
+         flushDiff();
+         diffOld << "--- " << filename1 << "\n" << "+++ " << filename2 << "\n@@@ " << cnt << "\n";
+      }
+      lastError = cnt;
+      diffOld << "-  " << line1 << "\n";
+      diffNew << "+  " << line2 << "\n";
 
-      printf("Diff in line %d", cnt);
-      if (line1.length() != line2.length())
-         printf("  len1: %d len2: %d\n", (int) line1.length(), (int) line2.length());
-      else
-         printf("\n");
-      printf("Ref: %s\n", line1.substr(0, 200).c_str());
-      printf("New: %s\n", line2.substr(0, 200).c_str());
       if ((testsvg == kFineSvgTest) && SpecialCompareOfSVGLines(line1, line2)) {
          if (finediffcnt++ > 5)
             return 0;
       } else if (++diffcnt > 5)
-         return 0;
+         break;
    }
+
+   flushDiff();
 
    if (diffcnt > 0)
       return 0;
@@ -484,8 +495,9 @@ void TestReport(TCanvas *C, const TString &name, const TString &title, const TSt
 
    // start files generation
    if (gSvgMode) {
+      C->cd();
+      // important - create svg when main canvas selected, SVG size depends on this
       TSVG svg(e.svgfile, 111, gSvgCompact);
-      C->cd(0);
       C->Draw();
       svg.Close();
    } else {
@@ -494,13 +506,13 @@ void TestReport(TCanvas *C, const TString &name, const TString &title, const TSt
 
          C->SaveAs(e.pdffile);
       } else {
+         C->cd();
          TPostScript ps1(e.psfile, 111);
-         C->cd(0);
          C->Draw();
          ps1.Close();
 
+         C->cd();
          TPDF pdf(e.pdffile, 111);
-         C->cd(0);
          C->Draw();
          pdf.Close();
       }
@@ -554,7 +566,7 @@ void webcanv_batch_mode(int number)
 /// Starts new block of tests
 /// In web mode configure number of batch images
 
-void start_block(const TString &title)
+void start_block(const TString &title, bool is3d = false)
 {
    if (!gOptionR) {
       std::cout << "**********************************************************************\n";
@@ -562,7 +574,12 @@ void start_block(const TString &title)
       std::cout << "**********************************************************************\n";
    }
 
-   webcanv_batch_mode(80);
+   int batch_size = 80;
+   // cef makes problem with many images in 3D mode, so reduce it
+   if (is3d && TString("cef") == gROOT->GetWebDisplay())
+      batch_size = 10;
+
+   webcanv_batch_mode(batch_size);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -633,8 +650,8 @@ void print_reports()
       StatusPrint(e.pngfile, "PNG output", FileSize(e.pngfile), ref->pngref, ref->pngerr);
 
       if (e.execute_ccode) {
-         Int_t ret_code = StatusPrint(e.ps2file, "C file result",
-                                    e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), ref->ps2ref, ref->ps2err);
+         Int_t ret_code = StatusPrint(e.ps2file, gWebMode ? ".C -> .SVG file result" : ".C -> .PS file result",
+                                      e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), ref->ps2ref, ref->ps2err);
 
 #ifndef __CLING__
          if (!gOptionK && !ret_code)
@@ -711,6 +728,60 @@ void tpolyline()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Test fill hatches drawing in complex TPolyLine
+
+void hatches()
+{
+   std::vector<Double_t> vectx, vecty;
+
+   auto C = StartTest(700,500);
+   C->Range(0,0,100,100);
+
+   const int num_steps = 10;
+
+   const Double_t x0 = 5, y0 = 5,
+                  szx = 90, szy = 90.,
+                  dx = szx/num_steps, dy = szy/num_steps;
+
+    auto add_point = [&](Double_t x, Double_t y) {
+       vectx.push_back(x);
+       vecty.push_back(y);
+    };
+
+    for (int step = 0; step < num_steps; step++) {
+        add_point(step == 0 ? x0 : x0 + 0.25*dx, y0 + step*dy);
+        add_point(x0 + szx, y0 + step*dy);
+        if (step == num_steps - 1) {
+           add_point(x0 + szx, y0 + (step + 0.25)*dy);
+        } else {
+           add_point(x0 + szx, y0 + (step + 0.75)*dy);
+           add_point(x0 + 0.25*dx, y0 + (step + 0.75)*dy);
+           add_point(x0 + 0.25*dx, y0 + (step + 1)*dy);
+        }
+    }
+
+    for (int step = num_steps-1; step > 0; step--) {
+        add_point(x0, y0 + (step + 0.25)*dy);
+        add_point(x0, y0 + (step - 0.5)*dy);
+        add_point(x0 + szx - 0.25*dx, y0 + (step - 0.5)*dy);
+        add_point(x0 + szx - 0.25*dx, y0 + (step - 0.75)*dy);
+    }
+
+    add_point(x0, y0 + 0.25*dy);
+    add_point(x0, y0);
+
+   auto p = new TPolyLine(vectx.size(),vectx.data(),vecty.data());
+   p->SetLineWidth(1);
+   p->SetLineColor(2);
+   p->SetFillColor(7);
+   p->SetFillStyle(3227);
+   C->Add(p, "f");
+   C->Add(p);
+
+   TestReport(C, "hatches", "Hatches for complex TPolyLine");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Test TArrow
 
 void arrows()
@@ -724,14 +795,16 @@ void arrows()
 
    auto ar1 = new TArrow(0.1,0.1,0.1,0.7);
    C->Add(ar1);
-   auto ar2 = new TArrow(0.2,0.1,0.2,0.7,0.05,"|>");
+   auto ar2 = new TArrow(0.18,0.1,0.18,0.7,0.05,"|>");
    ar2->SetAngle(40);
    ar2->SetLineWidth(2);
    C->Add(ar2);
-   auto ar3 = new TArrow(0.3,0.1,0.3,0.7,0.05,"<|>");
+   auto ar3 = new TArrow(0.26,0.1,0.26,0.7,0.05,"<|>");
    ar3->SetAngle(40);
    ar3->SetLineWidth(2);
    C->Add(ar3);
+   auto ar33 = new TArrow(0.34,0.1,0.34,0.7,0.05,"|-->--|");
+   C->Add(ar33);
    auto ar4 = new TArrow(0.46,0.7,0.82,0.42,0.07,"|>");
    ar4->SetAngle(60);
    ar4->SetLineWidth(2);
@@ -967,7 +1040,6 @@ void ttext1()
    TestReport(C, "ttext1", "TText 1 (Text attributes)");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// 2nd TText test. A very long text string.
 
@@ -982,6 +1054,77 @@ void ttext2()
    TestReport(C, "ttext2", "TText 2 (A very long text string)");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Primitive TLatex test. Check font, size, angle, color
+
+void tlatex0()
+{
+   auto C = StartTest(1000, 1000);
+
+   auto circle = [C](Float_t x, Float_t y, Font_t font, Float_t size) {
+      auto el = new TEllipse(x, y, 0.1, 0.1);
+      el->SetLineStyle(3);
+      el->SetFillStyle(0);
+      el->SetFillColor(0);
+      C->Add(el);
+
+      auto lbl = new TLatex(x, y, TString::Format("Font %d", font));
+      lbl->SetTextFont(font);
+      lbl->SetTextSize(size);
+      lbl->SetTextAlign(22);
+      lbl->SetTextColor(kGreen);
+      C->Add(lbl);
+
+      for (int n = 0; n < 12; n++) {
+         Float_t dx = 0.1 * TMath::Cos(n / 6. * TMath::Pi());
+         Float_t dy = 0.1 * TMath::Sin(n / 6. * TMath::Pi());
+
+         Int_t align = 10 + (n % 3) * 10 + ((n / 3) % 3 + 1);
+
+         auto p = new TEllipse(x + dx, y + dy, 0.003, 0.003);
+         p->SetFillColor(kRed);
+         C->Add(p);
+
+         auto l = new TLatex(x + dx, y + dy, TString::Format("Align %d", align));
+         l->SetTextAngle(n * 30);
+         l->SetTextFont(font);
+         l->SetTextSize(size);
+         l->SetTextAlign(align);
+         C->Add(l);
+      }
+   };
+
+   auto stair = [C](Float_t x, Float_t y, Font_t font, Float_t size0, Float_t step, Float_t sizeN) {
+      Int_t cnt = 0;
+
+      for (Float_t size = size0; size <= sizeN; size += step) {
+         TString text = (font % 10 == 3) ? TString::Format("Size %2.0f", size) : TString::Format("Size %4.2f", size);
+         auto l = new TLatex(x, y, text);
+         l->SetTextFont(font);
+         l->SetTextSize(size);
+         l->SetTextAlign(x < 0.5 ? 12 : 32);
+         l->SetTextColor(cnt++ % 8 + 2);
+         C->Add(l);
+         Float_t dy = 1.1 * ((font % 10 == 3) ? size / C->GetPadHeight() : size);
+         if (dy < 0.02)
+            dy = 0.02;
+         if (x < 0.5)
+            y += dy;
+         else
+            y -= dy;
+      }
+   };
+
+   circle(0.25, 0.25, 42, 0.02);
+
+   circle(0.75, 0.75, 43, 17);
+
+   stair(0.05, 0.4, 42, 0.01, 0.01, 0.1);
+
+   stair(0.95, 0.6, 43, 8, 12, 104);
+
+   TestReport(C, "tlatex0", "TLatex 0");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 1st TLatex test.
@@ -1133,7 +1276,7 @@ void tlatex5()
    l.SetTextSize(0.03);
    l.SetTextAlign(12);
    float y, step, x1, x2;
-   y = 0.96; step = 0.0465; x1 = 0.02; x2 = x1+0.04;
+   y = 0.96; step = 0.044; x1 = 0.02; x2 = x1+0.04;
                l.DrawLatex(x1, y, "#club")           ; l.DrawText(x2, y, "#club");
    y -= step ; l.DrawLatex(x1, y, "#voidn")          ; l.DrawText(x2, y, "#voidn");
    y -= step ; l.DrawLatex(x1, y, "#leq")            ; l.DrawText(x2, y, "#leq");
@@ -1155,7 +1298,8 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#Leftrightarrow") ; l.DrawText(x2, y, "#Leftrightarrow");
    y -= step ; l.DrawLatex(x1, y, "#void8")          ; l.DrawText(x2, y, "#void8");
    y -= step ; l.DrawLatex(x1, y, "#hbar")           ; l.DrawText(x2, y, "#hbar");
-   y = 0.96; step = 0.0465; x1 = 0.27; x2 = x1+0.04;
+   y -= step ; l.DrawLatex(x1, y, "#forall")         ; l.DrawText(x2, y, "#forall");
+   y = 0.96; x1 = 0.27; x2 = x1+0.04;
                l.DrawLatex(x1, y, "#diamond")        ; l.DrawText(x2, y, "#diamond");
    y -= step ; l.DrawLatex(x1, y, "#aleph")          ; l.DrawText(x2, y, "#aleph");
    y -= step ; l.DrawLatex(x1, y, "#geq")            ; l.DrawText(x2, y, "#geq");
@@ -1177,7 +1321,8 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#prod")           ; l.DrawText(x2, y, "#prod");
    y -= step ; l.DrawLatex(x1, y, "#Box")            ; l.DrawText(x2, y, "#Box");
    y -= step ; l.DrawLatex(x1, y, "#parallel")       ; l.DrawText(x2, y, "#parallel");
-   y = 0.96; step = 0.0465; x1 = 0.52; x2 = x1+0.04;
+   y -= step ; l.DrawLatex(x1, y, "#exists")         ; l.DrawText(x2, y, "#exists");
+   y = 0.96; x1 = 0.52; x2 = x1+0.04;
                l.DrawLatex(x1, y, "#heart")          ; l.DrawText(x2, y, "#heart");
    y -= step ; l.DrawLatex(x1, y, "#Jgothic")        ; l.DrawText(x2, y, "#Jgothic");
    y -= step ; l.DrawLatex(x1, y, "#LT")             ; l.DrawText(x2, y, "#LT");
@@ -1198,7 +1343,8 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#Uparrow")        ; l.DrawText(x2, y, "#Uparrow");
    y -= step ; l.DrawLatex(x1, y-0.01, "#sum")       ; l.DrawText(x2, y, "#sum");
    y -= step ; l.DrawLatex(x1, y, "#perp")           ; l.DrawText(x2, y, "#perp");
-   y = 0.96; step = 0.0465; x1 = 0.77; x2 = x1+0.04;
+   y -= step ; l.DrawLatex(x1, y, "#textendash")     ; l.DrawText(x2, y, "#textendash");
+   y = 0.96; x1 = 0.77; x2 = x1+0.04;
                l.DrawLatex(x1, y, "#spade")          ; l.DrawText(x2, y, "#spade");
    y -= step ; l.DrawLatex(x1, y, "#Rgothic")        ; l.DrawText(x2, y, "#Rgothic");
    y -= step ; l.DrawLatex(x1, y, "#GT")             ; l.DrawText(x2, y, "#GT");
@@ -1219,6 +1365,7 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y, "#Rightarrow")     ; l.DrawText(x2, y, "#Rightarrow");
    y -= step ; l.DrawLatex(x1, y-0.015, "#int")      ; l.DrawText(x2, y, "#int");
    y -= step ; l.DrawLatex(x1, y, "#odot")           ; l.DrawText(x2, y, "#odot");
+   y -= step ; l.DrawLatex(x1, y, "#textemdash")     ; l.DrawText(x2, y, "#textemdash");
 
    TestReport(C, "tlatex5", "TLatex 5 (Mathematical Symbols)");
 }
@@ -2005,7 +2152,7 @@ void th2_cut()
    Float_t y[6] = { 2, 0, -2, -2,  0,  2 };
    TCutG *cut = new TCutG("cut", 6, x, y);
 
-   TH1 *hpxpy = (TH1*)gHsimple->Get("hpxpy");
+   TH1 *hpxpy = (TH1 *)gHsimple->Get("hpxpy")->Clone("th2_cut");
 
    hpxpy->Draw("col [cut]");
    cut->Draw("l");
@@ -3745,6 +3892,8 @@ void zoomfit()
 void hbars()
 {
    TCanvas *C = StartTest(700,800);
+   TDirectory dir("hbars_dir", "Directory for the hbars test");
+   TDirectory::TContext dirCtx{&dir};
 
    TTree *T = (TTree*)gCernstaff->Get("T");
    T->SetFillColor(45);
@@ -3758,9 +3907,10 @@ void hbars()
    //vertical bar chart
    C->cd(2); gPad->SetGrid(); gPad->SetFrameFillColor(33);
    T->Draw("Division>>hDiv","","goff");
-   TH1F *hDiv   = (TH1F*)gDirectory->Get("hDiv");
+   TH1F *hDiv = (TH1F *)dir.Get("hDiv");
    hDiv->SetStats(0);
    TH1F *hDivFR = (TH1F*)hDiv->Clone("hDivFR");
+   hDivFR->SetDirectory(&dir);
    T->Draw("Division>>hDivFR","Nation==\"FR\"","goff");
    hDiv->SetBarWidth(0.45);
    hDiv->SetBarOffset(0.1);
@@ -3817,7 +3967,7 @@ void clonepad()
 {
    TCanvas *C = StartTest(700,500);
 
-   TH1 *hpxpy = (TH1*)gHsimple->Get("hpxpy");
+   TH1 *hpxpy = (TH1 *)gHsimple->Get("hpxpy")->Clone("hpxpy_clonepad");
    hpxpy->Draw();
    TCanvas *C2 = (TCanvas*)C->DrawClone();
 
@@ -4410,15 +4560,16 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
       gErrorIgnoreLevel = 0;
 
    const char *ref_name = "stressGraphics.ref", *ref_kind = "       ";
+   ref_kind = "   ZLIB";
    if (gWebMode) {
       ref_name = "stressGraphics_web.ref";
       ref_kind = gSvgMode ? "WEB SVG" : "    WEB";
    } else if (gSvgMode) {
       ref_kind = "    SVG";
    } else {
-#ifdef R__HAS_CLOUDFLARE_ZLIB
-      ref_name = "stressGraphics_builtinzlib.ref";
-      ref_kind = "   ZLIB";
+#ifdef R__HAS_ZLIB_NG
+      ref_name = "stressGraphics_zlibng.ref";
+      ref_kind = "ZLIB_NG";
 #endif
    }
 
@@ -4440,12 +4591,14 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tline         ();
    tmarker       ();
    tpolyline     ();
+   hatches       ();
    arrows        ();
    patterns      ();
    crown         ();
    piechart      ();
    ttext1        ();
    ttext2        ();
+   tlatex0       ();
    tlatex1       ();
    tlatex2       ();
    tlatex3       ();
@@ -4499,16 +4652,16 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    graphpolar    ();
    print_reports ();
 
-   start_block("High Level 3D Primitives");
+   start_block("High Level 3D Primitives", true);
    options2d1    ();
    options2d2    ();
    options2d3    ();
-   if (!gSkip3D) {
+   if (gSkip3D <= 0) {
       options2d4 ();
       options2d5 ();
    }
    earth         ();
-   if (!gSkip3D) {
+   if (gSkip3D <= 0) {
       thstack2   ();
       tgraph2d1  ();
       tgraph2d2  ();
@@ -4523,7 +4676,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    print_reports ();
 
    start_block("complex drawing and TPad");
-   if (!gSkip3D) {
+   if (gSkip3D <= 0) {
       ntuple1    ();
    }
    quarks        ();
@@ -4671,10 +4824,12 @@ int main(int argc, char *argv[])
          gSvgMode = kTRUE;
          gSvgCompact = kFALSE;
          gSvgRefPath = argv[i] + 7;
-      } else if (strstr(argv[i], "-p="))
+      } else if (strstr(argv[i], "-p=") == argv[i])
          filePrefix = argv[i] + 3;
-      else if (strstr(argv[i], "-skip3d"))
-         gSkip3D = kTRUE;
+      else if (!strcmp(argv[i], "-skip3d"))
+         gSkip3D = 1;
+      else if (!strcmp(argv[i], "-3d"))
+         gSkip3D = -1;
       else if (!strcmp(argv[i], "-h")) {
          printf("Usage: stressGraphics [-h] [-r] [-k] [-p=prefix] [--web]\n");
          printf("Options:\n");
@@ -4683,28 +4838,30 @@ int main(int argc, char *argv[])
          printf("       to redefine the reference file.\n");
          printf("  -k : Keep the output files even for passed tests.\n");
          printf("       By default output files for passed tests are deleted.\n");
-         printf("  -p=prefix: Provide custom prefix for generated files, default \"sg\"\n");
+         printf("  -p=prefix : Provide custom prefix for generated files, default \"sg\"\n");
          printf("  -skip3d : skip 3D testing.\n");
+         printf("  -3d : force 3D testing.\n");
          printf("  -svg=<path/to/ref/files> : check compact SVG files.\n");
          printf("  -svg0=<path/to/ref/files> : check normal SVG files.\n");
          printf("  -v : increase verbosity.\n");
          printf("  --web=chrome|firefox|off : Configure web mode\n");
          printf("  -h : Print usage\n");
-         printf("  --build file1.txt file2.txt file3.txt: Build ref file\n");
+         printf("  --build file1.txt file2.txt file3.txt : Build ref file\n");
          printf("      One run stressGraphics on different platforms with -r flag and store into text files.\n");
          printf("      Based on these files one generate ref file which can be commited to repository\n");
-         printf("  Any other option is ignored.\n");
+         printf("  All other options are ignored.\n");
          return 0;
       }
    }
 
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
+
    gBenchmark = new TBenchmark();
 
    stressGraphics(verbose, generate, keep);
 
-   return 0;
+   return gTestsFailed != 0;
 }
-#endif
 
+#endif

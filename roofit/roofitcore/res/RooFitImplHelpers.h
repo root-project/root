@@ -11,9 +11,14 @@
 #ifndef RooFit_RooFitImplHelpers_h
 #define RooFit_RooFitImplHelpers_h
 
-#include <RooMsgService.h>
 #include <RooAbsArg.h>
+#include <RooAbsPdf.h>
 #include <RooAbsReal.h>
+#include <RooMsgService.h>
+
+#include <RooNaNPacker.h>
+
+#include <TMath.h>
 
 #include <sstream>
 #include <string>
@@ -41,23 +46,51 @@ private:
    bool _oldState;
 };
 
-/// Struct to temporarily change the operation mode of a RooAbsArg until it
-/// goes out of scope.
+/// Scope guard that temporarily changes the operation mode of one or more
+/// RooAbsArg instances. Each call to change() records the arg's current
+/// operMode before flipping it to the requested mode (non-recursively, i.e.
+/// value clients are not touched). Destruction (or an explicit clear())
+/// restores every recorded mode in LIFO order.
+///
+/// The class is movable but not copyable, so it can be returned from
+/// functions that build up a batch of changes to hand to the caller.
 class ChangeOperModeRAII {
 public:
-   ChangeOperModeRAII(RooAbsArg *arg, RooAbsArg::OperMode opMode) : _arg{arg}, _oldOpMode(arg->operMode())
+   ChangeOperModeRAII() = default;
+
+   /// Convenience ctor: behaves like a scope guard for a single arg.
+   ChangeOperModeRAII(RooAbsArg *arg, RooAbsArg::OperMode opMode) { change(arg, opMode); }
+
+   ~ChangeOperModeRAII() { clear(); }
+
+   ChangeOperModeRAII(ChangeOperModeRAII &&) = default;
+   ChangeOperModeRAII &operator=(ChangeOperModeRAII &&) = default;
+   ChangeOperModeRAII(ChangeOperModeRAII const &) = delete;
+   ChangeOperModeRAII &operator=(ChangeOperModeRAII const &) = delete;
+
+   /// Record arg's current operMode and flip it to opMode. If the current
+   /// mode already equals opMode, this is a no-op (nothing to restore).
+   void change(RooAbsArg *arg, RooAbsArg::OperMode opMode)
    {
-      arg->setOperMode(opMode, /*recurse=*/false);
+      if (opMode == arg->operMode())
+         return;
+      _entries.emplace_back(arg, arg->operMode());
+      arg->setOperMode(opMode, /*recurseADirty=*/false);
    }
 
-   ChangeOperModeRAII(ChangeOperModeRAII const &other) = delete;
-   ChangeOperModeRAII &operator=(ChangeOperModeRAII const &other) = delete;
+   /// Restore every recorded change right away, emptying this guard.
+   void clear()
+   {
+      for (auto it = _entries.rbegin(); it != _entries.rend(); ++it) {
+         it->first->setOperMode(it->second, /*recurseADirty=*/false);
+      }
+      _entries.clear();
+   }
 
-   ~ChangeOperModeRAII() { _arg->setOperMode(_oldOpMode, /*recurse=*/false); }
+   bool empty() const { return _entries.empty(); }
 
 private:
-   RooAbsArg *_arg = nullptr;
-   RooAbsArg::OperMode _oldOpMode;
+   std::vector<std::pair<RooAbsArg *, RooAbsArg::OperMode>> _entries;
 };
 
 namespace RooHelpers {
@@ -94,6 +127,15 @@ BinnedLOutput getBinnedL(RooAbsPdf const &pdf);
 
 void getSortedComputationGraph(RooAbsArg const &func, RooArgSet &out);
 
+/// Check that `function` is constant (flat) inside each bin defined by the
+/// sorted `boundaries` when scanning the observable `obs`. Several interior
+/// points are sampled per bin and compared to the bin's first sample; if any
+/// of them deviates by more than `relTol` (relative to the value scale), the
+/// function is not flat and false is returned. The value of `obs` is restored
+/// on return.
+bool isFunctionFlatInBins(const RooAbsReal &function, RooAbsRealLValue &obs, std::span<const double> boundaries,
+                          double relTol = 1e-9);
+
 } // namespace RooHelpers
 
 namespace RooFit::Detail {
@@ -103,6 +145,33 @@ std::string makeValidVarName(std::string const &in);
 void replaceAll(std::string &inOut, std::string_view what, std::string_view with);
 
 std::string makeSliceCutString(RooArgSet const &sliceDataSet);
+
+// Inlined because this is called inside RooAbsPdf::getValV(), and therefore
+// performance critical.
+inline double normalizeWithNaNPacking(RooAbsPdf const &pdf, double rawVal, double normVal)
+{
+
+   if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
+      // Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
+      const std::string msg = "p.d.f normalization integral is zero or negative: " + std::to_string(normVal);
+      pdf.logEvalError(msg.c_str());
+      return RooNaNPacker::packFloatIntoNaN(-normVal + (rawVal < 0. ? -rawVal : 0.));
+   }
+
+   if (rawVal < 0.) {
+      std::stringstream ss;
+      ss << "p.d.f value is less than zero (" << rawVal << "), trying to recover";
+      pdf.logEvalError(ss.str().c_str());
+      return RooNaNPacker::packFloatIntoNaN(-rawVal);
+   }
+
+   if (TMath::IsNaN(rawVal)) {
+      pdf.logEvalError("p.d.f value is Not-a-Number");
+      return rawVal;
+   }
+
+   return (rawVal == 0. && normVal == 0.) ? 0. : rawVal / normVal;
+}
 
 } // namespace RooFit::Detail
 

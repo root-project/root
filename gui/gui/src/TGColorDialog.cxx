@@ -55,9 +55,6 @@ It uses 2 TGColorPalette's and the TGColorPick widgets.
 
 */
 
-
-#include <cstdlib>
-
 #include "TGLabel.h"
 #include "TGMsgBox.h"         // for ID_OK, ID_CANCEL
 #include "TGLayout.h"
@@ -76,9 +73,9 @@ It uses 2 TGColorPalette's and the TGColorPick widgets.
 #include "TROOT.h"
 #include "TMath.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
 
-
+#include <cstdio>
+#include <cstdlib>
 
 // TODO:
 // - implement "custom" colors.

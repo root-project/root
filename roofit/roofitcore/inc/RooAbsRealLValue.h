@@ -67,15 +67,21 @@ public:
   // Get fit range limits
 
   /// Retrieve binning configuration with given name or default binning.
-  virtual const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) const = 0 ;
+  virtual const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false, bool shared=true) const = 0 ;
   /// Retrieve binning configuration with given name or default binning.
-  virtual RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) = 0 ;
+  virtual RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false, bool shared=true) = 0 ;
   /// Check if binning with given name has been defined.
   virtual bool hasBinning(const char* name) const = 0 ;
   bool inRange(const char* name) const override ;
   /// Get number of bins of currently defined range.
   /// \param name Optionally, request number of bins for range with given name.
   virtual Int_t getBins(const char* name=nullptr) const { return getBinning(name).numBins(); }
+
+  /// Historical default number of bins, injected by routines that need a
+  /// concrete bin count when a variable has no binning explicitly set
+  /// (i.e. when getBins() returns 0). Used for unbinned-data plotting,
+  /// generateBinned() and createHistogram().
+  static constexpr int DefaultNBins = 100;
   /// Get minimum of currently defined range.
   /// \param name Optionally, request minimum of range with given name.
   virtual double getMin(const char* name=nullptr) const { return getBinning(name).lowBound(); }

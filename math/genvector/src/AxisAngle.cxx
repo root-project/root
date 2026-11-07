@@ -59,16 +59,6 @@ void AxisAngle::Rectify()
    RectifyAngle();
 } // Rectify()
 
-// ======== Transformation to other Rotation Forms ==================
-
-enum ERotation3DMatrixIndex {
-   kXX = 0, kXY = 1, kXZ = 2
-   , kYX = 3, kYY = 4, kYZ = 5
-   , kZX = 6, kZY = 7, kZZ = 8
-};
-
-
-
 // ========== Operations =====================
 
 DisplacementVector3D< Cartesian3D<double> >

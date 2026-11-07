@@ -258,7 +258,6 @@ void TMVA::MethodFisher::Train( void )
    // nice output
    PrintCoefficients();
 
-   ExitFromTraining();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

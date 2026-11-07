@@ -7,7 +7,7 @@
 ///   - Open at least 2 windows
 ///   - Start ROOT in the first windows
 ///   - Execute in the first window: .x fastMergeServer.C
-///   - Execute in the other windows: root.exe -b -l -q .x treeClient.C
+///   - Execute in the other windows: root.exe -b -q .x treeClient.C
 ///     (You can put it in the background if wanted).
 /// If you want to run the hserv.C on a different host, just change
 /// "localhost" in the TSocket ctor below to the desired hostname.
@@ -93,7 +93,7 @@ void treeClient(Bool_t evol=kFALSE)
          mess.Reset(kMESS_ANY);              // re-use TMessage object
          mess.WriteInt(idx);
          mess.WriteTString(file->GetName());
-         mess.WriteLong64(file->GetEND());   // 'mess << file->GetEND();' is broken in CINT for Long64_t
+         mess.WriteLong64(file->GetEND());
          file->CopyTo(mess);
          sock->Send(mess);          // send message
          messlen  += mess.Length();

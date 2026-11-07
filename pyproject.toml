@@ -1,30 +1,120 @@
 [build-system]
-requires = ["cmake", "setuptools<72", "wheel", "numpy"]
+requires = ["scikit-build-core>=1.0"] # the dynamic metadata syntax below is a scikit-build-core 1.0 feature
+build-backend = "scikit_build_core.build"
 
 [project]
-name = "ROOT"
-version = "0.1a9"
-requires-python = ">=3.9"
+name = "root"
+dynamic = ["version"]
+requires-python = ">=3.11"
 maintainers = [
   {name = "Vincenzo Eduardo Padulano", email = "vincenzo.eduardo.padulano@cern.ch"}
 ]
-description = "An open-source data analysis framework used by high energy physics and others."
+description = "Analyzing petabytes of data, scientifically."
 readme = "README.md"
 license = {file = "LICENSE"}
 dependencies = [
   "numpy",
 ]
 
-# Demonstrate how to expose ROOT CLI tools the Python way. For now only include
-# `root`, other tools can be added later using the same approach.
+# The wheel version is derived automatically from ROOT's version macros
+# in RVersion.hxx bumped every release, with a PEP 440 pre-release suffix
+# appended. ex.: ROOT 6.42.02  ->  wheel version "6.42.2a1".
+# The "a1" marks an alpha pre-release. Bump it manually ("a1" -> "a2")
+# only to re-publish a wheel for a ROOT version already on PyPI since PyPI
+# refuses a filename it has already seen, this should only happen in case
+# of a failed/ broken upload of the first wheel.
+# Reset to "a1" for the next ROOT release.
+[[tool.dynamic-metadata]]
+provider = "scikit_build_core.metadata.regex"
+field = "version"
+input = "core/foundation/inc/ROOT/RVersion.hxx"
+regex = '''(?sx)
+  \#define \s+ ROOT_VERSION_MAJOR \s+ (?P<major>\d+) .*?
+  \#define \s+ ROOT_VERSION_MINOR \s+ (?P<minor>\d+) .*?
+  \#define \s+ ROOT_VERSION_PATCH \s+ (?P<patch>\d+)
+'''
+result = "{major}.{minor}.{patch}a1"
+
+# Point backend to python packages and to explicitly use Ninja
+[tool.scikit-build]
+install.strip = false
+wheel.packages = [
+	"bindings/pyroot/pythonizations/python/ROOT",
+	"bindings/pyroot/cppyy/cppyy/python/cppyy",
+]
+cmake.args = [
+	"-GNinja", 
+]
+
+[tool.scikit-build.cmake.define]
+# CMake install directories
+CMAKE_INSTALL_BINDIR = "ROOT/bin"
+CMAKE_INSTALL_CMAKEDIR = "ROOT/cmake"
+CMAKE_INSTALL_FONTDIR = "ROOT/fonts"
+CMAKE_INSTALL_ICONDIR = "ROOT/icons"
+CMAKE_INSTALL_INCLUDEDIR = "ROOT/include"
+CMAKE_INSTALL_LIBDIR = "ROOT/lib"
+CMAKE_INSTALL_MACRODIR = "ROOT/macros"
+CMAKE_INSTALL_MANDIR = "ROOT/man"
+CMAKE_INSTALL_PYTHONDIR = "."
+CMAKE_INSTALL_SYSCONFDIR = "ROOT/etc"
+CMAKE_INSTALL_TUTDIR = "ROOT/tutorials"
+
+# Generic minimal build config
+gminimal="ON"
+asimage="ON"
+opengl="OFF"
+runtime_cxxmodules="OFF"
+fail-on-missing="ON"
+CMAKE_CXX_STANDARD="20"
+
+# Prevent CMake from producing its own .dist-info metadata
+_wheel_build="ON"
+
+# Explicitly list components that gminimal implicitly turns off as documentation
+# tpython is disabled for manylinux compatibility
+# see https://peps.python.org/pep-0513/#libpythonx-y-so-1 
+tpython="OFF"
+thisroot_scripts="OFF" # the thisroot.* scripts are broken if CMAKE_INSTALL_PYTHONDIR!=CMAKE_INSTALL_LIBDIR
+
+# Builtins
+builtin_nlohmannjson="ON"
+builtin_tbb="ON"
+builtin_xrootd="ON"
+builtin_tiff="ON"
+builtin_lz4="ON"
+builtin_fftw3="ON"
+builtin_gsl="ON"
+builtin_lzma="ON"
+builtin_zstd="ON"
+builtin_xxhash="ON"
+pyroot="ON"
+dataframe="ON"
+xrootd="ON"
+ssl="ON"
+imt="ON"
+roofit="ON"
+mathmore="ON"
+
+# Expose the ROOT cli as an executable command via _rootcli wrapper 
 [project.scripts]
 root = "ROOT._rootcli:main"
 
 [tool.cibuildwheel]
-# Increase pip debugging output
+build-frontend = { name = "build" }
 build-verbosity = 1
 manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 
 # Install system libraries
 [tool.cibuildwheel.linux]
-before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel libjpeg-devel giflib-devel"
+# See https://github.com/pypa/manylinux/issues/1725 for the underlying image issue
+# and https://github.com/pypa/auditwheel/pull/535, which introduced both the ISA
+# check and this opt-out for wheels with executables built on manylinux_2_34
+repair-wheel-command = "auditwheel repair --disable-isa-ext-check -w {dest_dir} {wheel}"
+before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel libjpeg-devel giflib-devel libtiff-devel"
+
+[tool.cibuildwheel.macos]
+# The macOS runner images now ship OpenSSL 4, which the builtin XRootD 5.9.x does not
+# compile against, see https://github.com/actions/runner-images/issues/14856
+environment = "OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)"

@@ -9,17 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPSocket                                                             //
-//                                                                      //
-// This class implements parallel client sockets. A parallel socket is  //
-// an endpoint for communication between two machines. It is parallel   //
-// because several TSockets are open at the same time to the same       //
-// destination. This especially speeds up communication over Big Fat    //
-// Pipes (i.e. high bandwidth, high latency WAN connections).           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TPSocket.cxx
+\class TPSocket
+\brief This class implements parallel server sockets.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+
+A parallel socket is an endpoint for communication between two machines. It is parallel
+because several TSockets are open at the same time to the same
+destination. This especially speeds up communication over Big Fat
+Pipes (i.e. high bandwidth, high latency WAN connections).
+
+**/
 
 #include "TPSocket.h"
 #include "TUrl.h"
@@ -32,6 +34,7 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 
+#include <limits>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a parallel socket. Connect to the named service at address addr.
@@ -104,49 +107,8 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
    // to control the flow
    Bool_t valid = TSocket::IsValid();
 
-   // check if we are called from CreateAuthSocket()
-   Bool_t authreq = kFALSE;
-   char *pauth = (char *)strstr(host, "?A");
-   if (pauth) {
-      authreq = kTRUE;
-   }
-
    // perhaps we can use fServType here ... to be checked
    Bool_t rootdSrv = (strstr(host,"rootd")) ? kTRUE : kFALSE;
-
-   // try authentication , if required
-   if (authreq) {
-      if (valid) {
-         if (!Authenticate(TUrl(host).GetUser())) {
-            if (rootdSrv && (fRemoteProtocol > 0 && fRemoteProtocol < 10)) {
-               // We failed because we are talking to an old
-               // server: we need to re-open the connection
-               // and communicate the size first
-               Int_t tcpw = (size > 1 ? -1 : tcpwindowsize);
-               TSocket *ns = new TSocket(host, port, tcpw);
-               if (ns->IsValid()) {
-                  R__LOCKGUARD(gROOTMutex);
-                  gROOT->GetListOfSockets()->Remove(ns);
-                  fSocket = ns->GetDescriptor();
-                  fSize = size;
-                  Init(tcpwindowsize);
-               }
-               if ((valid = IsValid())) {
-                  if (!Authenticate(TUrl(host).GetUser())) {
-                     TSocket::Close();
-                     valid = kFALSE;
-                  }
-               }
-            } else {
-               TSocket::Close();
-               valid = kFALSE;
-            }
-         }
-      }
-      // reset url to the original state
-      *pauth = '\0';
-      SetUrl(host);
-   }
 
    // open the sockets ...
    if (!rootdSrv || fRemoteProtocol > 9) {
@@ -167,7 +129,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
 /// sockets list which will make sure that any open sockets are properly
 /// closed on program termination.
 
-TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
+TPSocket::TPSocket(const char *host, Int_t /* port */, Int_t size, TSocket *sock)
 {
    // To avoid uninitialization problems when Init is not called ...
    fSockets        = 0;
@@ -192,7 +154,6 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
    fBytesSent      = sock->GetBytesSent();
    fBytesRecv      = sock->GetBytesRecv();
    fCompress       = sock->GetCompressionSettings();
-   fSecContext     = sock->GetSecContext();
    fRemoteProtocol = sock->GetRemoteProtocol();
    fServType       = (TSocket::EServiceType)sock->GetServType();
    fTcpWindowSize  = sock->GetTcpWindowSize();
@@ -200,49 +161,8 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
    // to control the flow
    Bool_t valid = sock->IsValid();
 
-   // check if we are called from CreateAuthSocket()
-   Bool_t authreq = kFALSE;
-   char *pauth = (char *)strstr(host, "?A");
-   if (pauth) {
-      authreq = kTRUE;
-   }
-
    // perhaps we can use fServType here ... to be checked
    Bool_t rootdSrv = (strstr(host,"rootd")) ? kTRUE : kFALSE;
-
-   // try authentication , if required
-   if (authreq) {
-      if (valid) {
-         if (!Authenticate(TUrl(host).GetUser())) {
-            if (rootdSrv && (fRemoteProtocol > 0 && fRemoteProtocol < 10)) {
-               // We failed because we are talking to an old
-               // server: we need to re-open the connection
-               // and communicate the size first
-               Int_t tcpw = (size > 1 ? -1 : fTcpWindowSize);
-               TSocket *ns = new TSocket(host, port, tcpw);
-               if (ns->IsValid()) {
-                  R__LOCKGUARD(gROOTMutex);
-                  gROOT->GetListOfSockets()->Remove(ns);
-                  fSocket = ns->GetDescriptor();
-                  fSize = size;
-                  Init(fTcpWindowSize);
-               }
-               if ((valid = IsValid())) {
-                  if (!Authenticate(TUrl(host).GetUser())) {
-                     TSocket::Close();
-                     valid = kFALSE;
-                  }
-               }
-            } else {
-               TSocket::Close();
-               valid = kFALSE;
-            }
-         }
-      }
-      // reset url to the original state
-      *pauth = '\0';
-      SetUrl(host);
-   }
 
    // open the sockets ...
    if (!rootdSrv || fRemoteProtocol > 9) {
@@ -640,6 +560,11 @@ oncemore:
       return n;
    }
    len = net2host(len);  //from network to host byte order
+
+   if (len > (std::numeric_limits<decltype(len)>::max() - sizeof(decltype(len)))) {
+      Error("Recv", "Buffer length is %u and %u+sizeof(UInt_t) cannot be represented as an UInt_t.", len, len);
+      return -1;
+   }
 
    char *buf = new char[len+sizeof(UInt_t)];
    if ((n = RecvRaw(buf+sizeof(UInt_t), len, kDefault)) <= 0) {

@@ -9,17 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPServerSocket                                                       //
-//                                                                      //
-// This class implements parallel server sockets. A parallel server     //
-// socket waits for requests to come in over the network. It performs   //
-// some operation based on that request and then possibly returns a     //
-// full duplex parallel socket to the requester. The actual work is     //
-// done via the TSystem class (either TUnixSystem or TWinNTSystem).     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TPServerSocket.cxx
+\class TPServerSocket
+\brief This class implements parallel server sockets.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+
+This class implements parallel server sockets. A parallel server
+socket waits for requests to come in over the network. It performs
+some operation based on that request and then possibly returns a
+full duplex parallel socket to the requester. The actual work is
+done via the TSystem class (either TUnixSystem or TWinNTSystem).
+**/
 
 #include "TPServerSocket.h"
 #include "TROOT.h"
@@ -91,7 +93,7 @@ TPServerSocket::TPServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 /// In case of error 0 is returned and in case non-blocking I/O is
 /// enabled and no connections are available -1 is returned.
 
-TPSocket *TPServerSocket::Accept(UChar_t Opt)
+TPSocket *TPServerSocket::Accept(UChar_t opt)
 {
    TSocket  *setupSocket = 0;
    TSocket  **pSockets;
@@ -100,7 +102,7 @@ TPSocket *TPServerSocket::Accept(UChar_t Opt)
    Int_t size, port;
 
    // wait for the incoming connections to the server and accept them
-   setupSocket = TServerSocket::Accept(Opt);
+   setupSocket = TServerSocket::Accept(opt);
 
    if (setupSocket == 0) return 0;
 
@@ -134,10 +136,6 @@ TPSocket *TPServerSocket::Accept(UChar_t Opt)
       newPSocket = new TPSocket(pSockets, size);
 
    }
-
-   // Transmit authentication information, if any
-   if (setupSocket->IsAuthenticated())
-      newPSocket->SetSecContext(setupSocket->GetSecContext());
 
    // clean up, if needed
    if (size > 0)

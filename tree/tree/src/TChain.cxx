@@ -62,8 +62,8 @@ the trees in the chain.
 #include "TVirtualMutex.h"
 #include "TVirtualPerfStats.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <string_view>
 #include "ROOT/StringUtils.hxx"
 
@@ -752,6 +752,24 @@ void TChain::CanDeleteRefs(bool flag /* = true */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy a tree with selection.
+///
+/// See the documentation of TTree::CopyTree
+///
+/// ### Known limitations for TChain
+///   - This method is not supported if used on an instance with friends
+
+TTree* TChain::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64_t nentries /* = TTree::kMaxEntries */, Long64_t firstentry /* = 0 */)
+{
+   // A clear error for ROOT-10778
+   if (GetListOfFriends()) {
+      Error("CopyTree","TChain::CopyTree is not supported if the TChain instance has friends.");
+      return nullptr;
+   }
+   return this->TTree::CopyTree(selection, option, nentries, firstentry);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Initialize the packet descriptor string.
 
 void TChain::CreatePackets()
@@ -1114,76 +1132,6 @@ TObjArray* TChain::GetListOfLeaves()
       return fTree->GetListOfLeaves();
    }
    return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return maximum of column with name columname.
-
-Double_t TChain::GetMaximum(const char* columname)
-{
-   Double_t cmax = -DBL_MAX;
-   TLeaf *leaf = nullptr;
-   TBranch *branch = nullptr;
-   Int_t treenumber = -1;
-   for (Long64_t i = 0; i < fEntries; ++i) {
-      Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0)
-         break;
-      Long64_t localEntryNumber = this->LoadTree(entryNumber);
-      if (localEntryNumber < 0)
-         break;
-      if (treenumber != this->GetTreeNumber()) {
-         leaf = this->GetLeaf(columname);
-         if (leaf)
-            branch = leaf->GetBranch();
-      }
-      treenumber = this->GetTreeNumber();
-      if (!branch)
-         continue;
-      branch->GetEntry(localEntryNumber);
-      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
-         Double_t val = leaf->GetValue(j);
-         if (val > cmax) {
-            cmax = val;
-         }
-      }
-   }
-   return cmax;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return minimum of column with name columname.
-
-Double_t TChain::GetMinimum(const char* columname)
-{
-   Double_t cmin = DBL_MAX;
-   TLeaf *leaf = nullptr;
-   TBranch *branch = nullptr;
-   Int_t treenumber = -1;
-   for (Long64_t i = 0; i < fEntries; ++i) {
-      Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0)
-         break;
-      Long64_t localEntryNumber = this->LoadTree(entryNumber);
-      if (localEntryNumber < 0)
-         break;
-      if (treenumber != this->GetTreeNumber()) {
-         leaf = this->GetLeaf(columname);
-         if (leaf)
-            branch = leaf->GetBranch();
-      }
-      treenumber = this->GetTreeNumber();
-      if (!branch)
-         continue;
-      branch->GetEntry(localEntryNumber);
-      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
-         Double_t val = leaf->GetValue(j);
-         if (val < cmin) {
-            cmin = val;
-         }
-      }
-   }
-   return cmin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1892,7 +1840,7 @@ void TChain::ls(Option_t* option) const
 
 Long64_t TChain::Merge(const char* name, Option_t* option)
 {
-   TFile *file = TFile::Open(name, "recreate", "chain files", 1);
+   TFile *file = TFile::Open(name, "recreate", "chain files");
    return Merge(file, 0, option);
 }
 

@@ -1,5 +1,4 @@
 /// \file ROOT/RField.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -69,14 +68,18 @@ class RFieldZero final : public RFieldBase {
    /// This flag is reset on Clone().
    bool fAllowFieldSubstitutions = false;
 
+   std::unordered_set<std::string> fSubfieldNames; ///< Efficient detection of duplicate field names
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    void ConstructValue(void *) const final {}
 
 public:
-   RFieldZero() : RFieldBase("", "", ROOT::ENTupleStructure::kRecord, false /* isSimple */) {}
+   RFieldZero();
 
-   using RFieldBase::Attach;
+   /// A public version of the Attach method that allows piece-wise construction of the zero field.
+   /// Will throw on duplicate subfield names.
+   void Attach(std::unique_ptr<RFieldBase> child);
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
 
@@ -103,8 +106,6 @@ public:
       kUnknownStructure,
    };
 
-   using RCategory R__DEPRECATED(6, 42, "enum renamed to ECategory") = ECategory;
-
 private:
    std::string fError;
    ECategory fCategory;
@@ -130,17 +131,9 @@ public:
    size_t GetAlignment() const final { return 0; }
 }; // RInvalidField
 
-/// The field for a class with dictionary
-class RClassField : public RFieldBase {
-private:
-   enum ESubFieldRole {
-      kBaseClass,
-      kDataMember,
-   };
-   struct RSubFieldInfo {
-      ESubFieldRole fRole;
-      std::size_t fOffset;
-   };
+/// Base class for fields that are subject to I/O customization rules. Used by the class field and the SoA field.
+class RRuleField : public RFieldBase {
+protected:
    // Information to read into the staging area a field that is used as an input to an I/O customization rule
    struct RStagingItem {
       /// The field used to read the on-disk data. The fields type may be different from the on-disk type as long
@@ -151,19 +144,8 @@ private:
    /// Prefix used in the subfield names generated for base classes
    static constexpr const char *kPrefixInherited{":"};
 
-   class RClassDeleter : public RDeleter {
-   private:
-      TClass *fClass;
-
-   public:
-      explicit RClassDeleter(TClass *cl) : fClass(cl) {}
-      void operator()(void *objPtr, bool dtorOnly) final;
-   };
-
-   TClass *fClass;
-   /// Additional information kept for each entry in `fSubfields`
-   std::vector<RSubFieldInfo> fSubfieldsInfo;
-   std::size_t fMaxAlignment = 1;
+   /// Set by derived class to the TClass instance representing the current in-memory layout.
+   TClass *fClass = nullptr;
 
    /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
    /// "TypeName@@Version". The area is allocated depending on I/O rules resp. the source members of the I/O rules.
@@ -175,15 +157,12 @@ private:
    TClass *fStagingClass = nullptr;
    std::unordered_map<std::string, RStagingItem> fStagingItems; ///< Lookup staging items by member name
 
-private:
-   RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
-   RClassField(std::string_view fieldName, TClass *classp);
-   void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
+   RRuleField(std::string_view name, std::string_view type, TClass *classp, ROOT::ENTupleStructure structure);
 
    /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
    /// member exist. Looks recursively in base classes.
-   ROOT::DescriptorId_t
-   LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName, ROOT::DescriptorId_t classFieldId);
+   ROOT::DescriptorId_t LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName,
+                                     ROOT::DescriptorId_t classFieldId) const;
    /// Sets fStagingClass according to the given name and version
    void SetStagingClass(const std::string &className, unsigned int classVersion);
    /// If there are rules with inputs (source members), create the staging area according to the TClass instance
@@ -191,12 +170,44 @@ private:
    void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const ROOT::RNTupleDescriptor &desc,
                            const ROOT::RFieldDescriptor &classFieldId);
    /// Register post-read callback corresponding to a ROOT I/O customization rules.
-   void AddReadCallbacksFromIORule(const TSchemaRule *rule);
+   /// The sub object offset allows to apply the rule to a nested object within the passed target.
+   /// This is used to execute rules on base classes and nested classes in a SoA field.
+   void AddReadCallbacksFromIORule(const TSchemaRule *rule, std::size_t subObjectOffset = 0);
    /// Given the on-disk information from the page source, find all the I/O customization rules that apply
    /// to the class field at hand, to which the fieldDesc descriptor, if provided, must correspond.
    /// Fields may not have an on-disk representation (e.g., when inserted by schema evolution), in which case the passed
    /// field descriptor is nullptr.
-   std::vector<const TSchemaRule *> FindRules(const ROOT::RFieldDescriptor *fieldDesc);
+   std::vector<const TSchemaRule *> FindRules(const ROOT::RFieldDescriptor *fieldDesc) const;
+};
+
+/// The field for a class with dictionary
+class RClassField : public RRuleField {
+private:
+   enum ESubfieldRole {
+      kBaseClass,
+      kDataMember,
+   };
+   struct RSubfieldInfo {
+      ESubfieldRole fRole;
+      std::size_t fOffset;
+   };
+
+   class RClassDeleter : public RDeleter {
+   private:
+      TClass *fClass;
+
+   public:
+      explicit RClassDeleter(TClass *cl);
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   /// Additional information kept for each entry in `fSubfields`
+   std::vector<RSubfieldInfo> fSubfieldsInfo;
+
+private:
+   RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
+   RClassField(std::string_view fieldName, TClass *classp);
+   void Attach(std::unique_ptr<RFieldBase> child, RSubfieldInfo info);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -218,8 +229,8 @@ public:
    ~RClassField() override;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final;
-   size_t GetAlignment() const final { return fMaxAlignment; }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
    /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type
@@ -238,7 +249,7 @@ private:
       TClass *fClass;
 
    public:
-      explicit RStreamerFieldDeleter(TClass *cl) : fClass(cl) {}
+      explicit RStreamerFieldDeleter(TClass *cl);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -285,11 +296,23 @@ public:
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
+namespace Internal {
+std::unique_ptr<RFieldBase> CreateEmulatedEnumField(std::string_view fieldName, std::string_view emulatedFromType,
+                                                    std::string_view underlyingIntType);
+}
+
 /// The field for an unscoped or scoped enum with dictionary
 class REnumField : public RFieldBase {
+   friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedEnumField(std::string_view fieldName,
+                                                                        std::string_view emulatedFromType,
+                                                                        std::string_view underlyingIntType);
+
 private:
    REnumField(std::string_view fieldName, TEnum *enump);
+   // Used by CloneImpl()
    REnumField(std::string_view fieldName, std::string_view enumName, std::unique_ptr<RFieldBase> intField);
+   // Used by field emulation
+   REnumField(std::string_view fieldName, std::string_view emulatedFromType, std::string_view underlyingIntType);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -438,6 +461,7 @@ public:
 #include "RField/RFieldProxiedCollection.hxx"
 #include "RField/RFieldRecord.hxx"
 #include "RField/RFieldSequenceContainer.hxx"
+#include "RField/RFieldSoA.hxx"
 #include "RField/RFieldSTLMisc.hxx"
 
 namespace ROOT {

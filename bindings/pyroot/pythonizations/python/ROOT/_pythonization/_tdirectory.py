@@ -42,8 +42,6 @@ for more information.
 \endpythondoc
 """
 
-import cppyy
-
 
 def _TDirectory_getitem(self, key):
     """Injection of TDirectory.__getitem__ that raises AttributeError on failure.
@@ -87,8 +85,9 @@ def _TDirectory_WriteObject(self, obj, *args):
     """
     # Implement a check on whether the object is derived from TObject or not.
     # Similarly to what is done in TDirectory::WriteObject with SFINAE.
+    import ROOT
 
-    if isinstance(obj, cppyy.gbl.TObject):
+    if isinstance(obj, ROOT.TObject):
         return self.WriteTObject(obj, *args)
 
     return self.WriteObjectAny(obj, type(obj).__cpp_name__, *args)
@@ -103,7 +102,9 @@ def _ipython_key_completions_(self):
 
 
 def pythonize_tdirectory():
-    klass = cppyy.gbl.TDirectory
+    import ROOT
+
+    klass = ROOT.TDirectory
     klass.__getitem__ = _TDirectory_getitem
     klass._WriteObject = klass.WriteObject
     klass.WriteObject = _TDirectory_WriteObject

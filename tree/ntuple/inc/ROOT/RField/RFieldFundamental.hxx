@@ -1,5 +1,4 @@
 /// \file ROOT/RField/Fundamental.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -29,13 +28,6 @@
 #include <type_traits>
 
 namespace ROOT {
-namespace Experimental {
-
-namespace Detail {
-class RFieldVisitor;
-} // namespace Detail
-
-} // namespace Experimental
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for concrete C++ fundamental types
@@ -400,11 +392,11 @@ protected:
             fAvailableColumns.emplace_back(ROOT::Internal::RColumn::Create<T>(onDiskTypes[0], 0, representationIndex));
          if (onDiskTypes[0] == ROOT::ENTupleColumnType::kReal32Trunc) {
             const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
-            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[representationIndex]);
             column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
          } else if (onDiskTypes[0] == ROOT::ENTupleColumnType::kReal32Quant) {
             const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
-            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+            const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[representationIndex]);
             assert(coldesc.GetValueRange().has_value());
             const auto [valMin, valMax] = *coldesc.GetValueRange();
             column->SetBitsOnStorage(coldesc.GetBitsOnStorage());
@@ -420,14 +412,13 @@ protected:
       fPrincipalColumn = fAvailableColumns[0].get();
    }
 
-   ~RRealField() override = default;
-
 public:
    using Base::SetColumnRepresentatives;
 
    RRealField(std::string_view name, std::string_view typeName) : RSimpleField<T>(name, typeName) {}
    RRealField(RRealField &&other) = default;
    RRealField &operator=(RRealField &&other) = default;
+   ~RRealField() override = default;
 
    /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits:
    /// 1 sign bit, 5 exponent bits, 10 mantissa bits) on disk.
@@ -455,15 +446,21 @@ public:
 
    /// Sets this field to use a quantized integer representation using `nBits` per value.
    /// It must be $1 <= nBits <= 32$.
-   /// `minValue` and `maxValue` must not be infinity, `NaN` or denormal floats.
-   /// Calling this function establishes a promise by the caller to RNTuple that this field will only contain values
-   /// contained in `[minValue, maxValue]` inclusive. If a value outside this range is assigned to this field, the
-   /// behavior is undefined.
-   /// This is mutually exclusive with SetTruncated() and SetHalfPrecision() and supersedes them if called after them.
-   void SetQuantized(T minValue, T maxValue, std::size_t nBits)
+   /// `valueRange.first` and `valueRange.second` are respectively the min and max value allowed for this field.
+   /// They must not be infinity, `NaN` or denormal floats, and valueRange.second must be greater or equal to
+   /// valueRange.first.
+   /// Calling this function establishes a promise by the caller to RNTuple that this field will only
+   /// contain values contained in `[minValue, maxValue]` inclusive. If a value outside this range is assigned to this
+   /// field, the behavior is undefined. This is mutually exclusive with SetTruncated() and SetHalfPrecision() and
+   /// supersedes them if called after them.
+   void SetQuantized(std::size_t nBits, std::pair<T, T> valueRange)
    {
       const auto &[minBits, maxBits] =
          ROOT::Internal::RColumnElementBase::GetValidBitRange(ROOT::ENTupleColumnType::kReal32Quant);
+      if (valueRange.second < valueRange.first) {
+         throw RException(R__FAIL("value range given to SetQuantized() has max < min! (" +
+                                  std::to_string(valueRange.second) + " < " + std::to_string(valueRange.first) + ")"));
+      }
       if (nBits < minBits || nBits > maxBits) {
          throw RException(R__FAIL("SetQuantized() argument nBits = " + std::to_string(nBits) +
                                   " is out of valid range [" + std::to_string(minBits) + ", " +
@@ -471,8 +468,8 @@ public:
       }
       SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32Quant}});
       fBitWidth = nBits;
-      fValueMin = minValue;
-      fValueMax = maxValue;
+      fValueMin = valueRange.first;
+      fValueMax = valueRange.second;
    }
 };
 

@@ -10,26 +10,23 @@
 ## \date August 2019
 ## \author Stefan Wunsch
 
+
 import ROOT
-import pickle
-
-from tmva100_DataPreparation import variables
 from tmva101_Training import load_data
-
 
 # Load data
 x, y_true, w = load_data("test_signal.root", "test_background.root")
 
-# Load trained model
-File = "tmva101.root"
+# Load trained model from the XGBoost JSON written by tmva101_Training.py
+File = "tmva101.json"
 
-bdt = ROOT.TMVA.Experimental.RBDT("myBDT", File)
+bdt = ROOT.TMVA.Experimental.RBDT.LoadXGBoost(File)
 
 # Make prediction
 y_pred = bdt.Compute(x)
 
 # Compute ROC using sklearn
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import auc, roc_curve
 
 false_positive_rate, true_positive_rate, _ = roc_curve(y_true, y_pred, sample_weight=w)
 score = auc(false_positive_rate, true_positive_rate)

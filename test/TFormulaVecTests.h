@@ -28,10 +28,10 @@ bool testVec1D(TF1 * f1, const TString & formula, FreeFunc1D func, double x ) {
    bool ret = CheckValues(formula, y, y0);
 
    // check passing double_v interface
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    ROOT::Double_v vx = x;
    ROOT::Double_v vy = f1->EvalPar(&vx, nullptr);
-   double y2 = vecCore::Get(vy,0);
+   double y2 = vy[0];
    ret &= CheckValues(formula+TString("_v"), y2, y0);
 #endif
 
@@ -64,10 +64,10 @@ bool testVec2D(TF2 * f1, const TString & formula, FreeFunc2D func, double x, dou
    bool ret = CheckValues(formula,r,r0);
 
    // check passing double_v interface
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    ROOT::Double_v vx[2] = { x, y};
    ROOT::Double_v vy = f1->EvalPar(vx, nullptr);
-   double r2 = vecCore::Get(vy,0);
+   double r2 = vy[0];
    ret &= CheckValues(formula+TString("_v"), r2, r0);
 #endif
 
@@ -103,30 +103,24 @@ bool testVecFormula() {
    // https://github.com/root-project/root/pull/20769
 
    ok &= testVec1D("3+[0]",constant_function, 3.333);
-   ok &= testVec1D("3",constant_function, 3.333);
-#ifndef R__HAS_VC
+   ok &= testVec1D("3", constant_function, 3.333);
    ok &= testVec1D("sin(x)",std::sin,1);
-   ok &= testVec1D("cos(x)",std::cos,1);
-#endif
+   ok &= testVec1D("cos(x)", std::cos, 1);
    ok &= testVec1D("exp(x)",std::exp,1);
    ok &= testVec1D("log(x)",std::log,2);
-   ok &= testVec1D("log10(x)",TMath::Log10,2);
-#ifndef R__HAS_VC
+   ok &= testVec1D("log10(x)", TMath::Log10, 2);
    ok &= testVec1D("tan(x)",std::tan,1);
    ok &= testVec1D("sinh(x)",std::sinh,1);
    ok &= testVec1D("cosh(x)",std::cosh,1);
    ok &= testVec1D("tanh(x)",std::tanh,1);
    ok &= testVec1D("asin(x)",std::asin,.1);
-   ok &= testVec1D("acos(x)",std::acos,.1);
-#endif
+   ok &= testVec1D("acos(x)", std::acos, .1);
    ok &= testVec1D("atan(x)",std::atan,.1);
    ok &= testVec1D("sqrt(x)",std::sqrt,2);
    ok &= testVec1D("abs(x)",std::abs,-1);
-   ok &= testVec2D("pow(x,y)",std::pow,2,3);
-#ifndef R__HAS_VC
+   ok &= testVec2D("pow(x,y)", std::pow, 2, 3);
    ok &= testVec2D("min(x,y)",TMath::Min,2,3);
-   ok &= testVec2D("max(x,y)",TMath::Max,2,3);
-#endif
+   ok &= testVec2D("max(x,y)", TMath::Max, 2, 3);
    ok &= testVec2D("atan2(x,y)",TMath::ATan2,2,3);
 
    return ok; 

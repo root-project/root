@@ -12,22 +12,6 @@
 #ifndef ROOT_TGrid
 #define ROOT_TGrid
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGrid                                                                //
-//                                                                      //
-// Abstract base class defining interface to common GRID services.      //
-//                                                                      //
-// To open a connection to a GRID use the static method Connect().      //
-// The argument of Connect() is of the form:                            //
-//    <grid>://<host>[:<port>], e.g. alien://alice.cern.ch              //
-// Depending on the <grid> specified an appropriate plugin library      //
-// will be loaded which will provide the real interface.                //
-//                                                                      //
-// Related classes are TGridResult.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 
 #include "TString.h"
@@ -41,6 +25,24 @@ class TGridCollection;
 class TGridJobStatusList;
 
 
+///////////////////////////////////////////////////////////////////////////
+///                                                                      
+/// Abstract base class defining interface to common GRID services.      
+///                                                                       
+/// \note This class is deprecated. It is kept for backward compatibility 
+/// but it should not be used in new code.                                
+///                                                                      
+/// To open a connection to a GRID use the static method Connect().      
+/// The argument of Connect() is of the form:                            
+/// ~~~
+///    <grid>://<host>[:<port>], e.g. alien://alice.cern.ch              
+/// ~~~
+/// Depending on the <grid> specified an appropriate plugin library      
+/// will be loaded which will provide the real interface.                
+///                                                                      
+/// Related classes are TGridResult.                                     
+///                                                                      
+///////////////////////////////////////////////////////////////////////////
 class TGrid : public TObject {
 
 protected:

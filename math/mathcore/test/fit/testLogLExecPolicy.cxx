@@ -124,7 +124,7 @@ public:
       //wfSeq =  new ROOT::Math::WrappedMultiTF1Templ<double>(*fSeq);
       wfSeq =  new Func<double> (p);
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
       // not needed but just to test vectorized ctor of TF1
       fVec = new TF1("fvCore", Func<ROOT::Double_v>(p), 100, 200, paramSize);
       //wfVec =  new ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*fVec);
@@ -198,7 +198,7 @@ public:
       return ret;
    }
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    bool testFitVec()
    {
       std::cout << "\n////////////////////////////VECTOR TEST////////////////////////////" << std::endl << std::endl;
@@ -249,7 +249,7 @@ public:
 private:
    TF1 *fSeq;
    ROOT::Math::IParametricFunctionMultiDimTempl<double> *wfSeq;
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    TF1 *fVec;
    ROOT::Math::IParametricFunctionMultiDimTempl<ROOT::Double_v> *wfVec;
 #endif
@@ -276,7 +276,7 @@ int main()
       return -1;
    }
 
-#if defined(R__USE_IMT) || defined(R__HAS_VECCORE)
+#if defined(R__USE_IMT) || defined(R__HAS_STD_EXPERIMENTAL_SIMD)
    auto seq = test.GetFitter().Result().MinFcnValue();
 #endif
 
@@ -291,7 +291,7 @@ int main()
       return 1;
 #endif
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    //Vectorized
    if (!test.testFitVec()) {
       Error("testLogLExecPolicy", "Vectorized Fit failed!");
@@ -302,7 +302,7 @@ int main()
       return 2;
 #endif
 
-#if defined(R__USE_IMT) && defined(R__HAS_VECCORE)
+#if defined(R__USE_IMT) && defined(R__HAS_STD_EXPERIMENTAL_SIMD)
    //Multithreaded and vectorized
    if (!test.testMTFitVec()) {
       Error("testLogLExecPolicy", "Multithreaded + vectorized Fit failed!");

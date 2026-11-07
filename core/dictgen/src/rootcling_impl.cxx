@@ -15,7 +15,6 @@
 #include "RConversionRuleParser.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
-#include "snprintf.h"
 
 #include <iostream>
 #include <iomanip>
@@ -23,7 +22,6 @@
 #include <vector>
 #include <algorithm>
 #include <cstdio>
-
 #include <cerrno>
 #include <string>
 #include <list>
@@ -146,15 +144,6 @@ namespace genreflex {
 ////////////////////////////////////////////////////////////////////////////////
 
 static llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
-
-////////////////////////////////////////////////////////////////////////////////
-
-void SetRootSys();
-
-ROOT::Internal::RootCling::TROOTSYSSetter::TROOTSYSSetter() {
-   // rootcling's libCore needs "our" ROOTSYS:
-   SetRootSys();
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -467,73 +456,6 @@ bool IsLinkdefFile(const clang::PresumedLoc& PLoc)
 bool IsSelectionFile(const char *filename)
 {
    return ROOT::TMetaUtils::IsLinkdefFile(filename) || IsSelectionXml(filename);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the ROOTSYS env var based on the executable location.
-
-void SetRootSys()
-{
-   const char *exepath = GetExePath();
-   if (exepath && *exepath) {
-#if !defined(_WIN32)
-      char *ep = new char[PATH_MAX];
-      if (!realpath(exepath, ep)) {
-         fprintf(stderr, "rootcling: error getting realpath of rootcling!");
-         strlcpy(ep, exepath, PATH_MAX);
-      }
-#else
-      int nche = strlen(exepath) + 1;
-      char *ep = new char[nche];
-      strlcpy(ep, exepath, nche);
-#endif
-      char *s;
-
-      if ((s = strrchr(ep, '/'))) {
-         // $ROOTSYS/bin/rootcling
-         int removesubdirs = 2;
-         if (!strncmp(s + 1, "rootcling_stage1.exe", 20)) {
-            // $ROOTSYS/bin/rootcling_stage1.exe
-            removesubdirs = 2;
-            gBuildingROOT = true;
-         } else if (!strncmp(s + 1, "rootcling_stage1", 16)) {
-            // $ROOTSYS/core/rootcling_stage1/src/rootcling_stage1
-            removesubdirs = 4;
-            gBuildingROOT = true;
-         }
-         for (int i = 1; s && i < removesubdirs; ++i) {
-            *s = 0;
-            s = strrchr(ep, '/');
-         }
-         if (s) *s = 0;
-      } else {
-         // There was no slashes at all let now change ROOTSYS
-         delete [] ep;
-         return;
-      }
-
-      if (!gBuildingROOT) {
-         delete [] ep;
-         return; // don't mess with user's ROOTSYS.
-      }
-
-      int ncha = strlen(ep) + 10;
-      char *env = new char[ncha];
-      snprintf(env, ncha, "ROOTSYS=%s", ep);
-
-      if (gDriverConfig) {
-         // After the putenv below, gRootDir might point to the old ROOTSYS
-         // entry, i.e. to deleted memory. Update it.
-         const char** pRootDir = gDriverConfig->fPRootDir;
-         if (pRootDir) {
-            *pRootDir = env + 8;
-         }
-      }
-
-      putenv(env);
-      // intentionally not call delete [] env, while GLIBC keep use pointer
-      delete [] ep;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1269,9 +1191,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 
    dictStream << "   namespace ROOTDict {" << std::endl;
 
-#if !defined(R__AIX)
    dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
-#endif
 
    if (!Namespace__HasMethod(cl, "Dictionary", interp))
       dictStream << "      static TClass *" << mappedname.c_str() << "_Dictionary();" << std::endl;
@@ -1279,13 +1199,8 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 
               << "      // Function generating the singleton type initializer" << std::endl
 
-#if !defined(R__AIX)
               << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
               << "      {" << std::endl
-#else
-              << "      ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
-              << "      {" << std::endl
-#endif
 
               << "         static ::ROOT::TGenericClassInfo " << std::endl
 
@@ -1836,59 +1751,6 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void GenerateLinkdef(llvm::cl::list<std::string> &InputFiles,
-                     std::string &code_for_parser)
-{
-   code_for_parser += "#ifdef __CLING__\n\n";
-   code_for_parser += "#pragma link off all globals;\n";
-   code_for_parser += "#pragma link off all classes;\n";
-   code_for_parser += "#pragma link off all functions;\n\n";
-
-   for (std::string& arg : InputFiles) {
-      char trail[3];
-      int nostr = 0, noinp = 0, bcnt = 0, l = arg.length() - 1;
-      for (int j = 0; j < 3; j++) {
-         if (arg[l] == '-') {
-            arg[l] = '\0';
-            nostr = 1;
-            l--;
-         }
-         if (arg[l] == '!') {
-            arg[l] = '\0';
-            noinp = 1;
-            l--;
-         }
-         if (arg[l] == '+') {
-            arg[l] = '\0';
-            bcnt = 1;
-            l--;
-         }
-      }
-      if (nostr || noinp) {
-         trail[0] = 0;
-         if (nostr) strlcat(trail, "-", 3);
-         if (noinp) strlcat(trail, "!", 3);
-      }
-      if (bcnt) {
-         strlcpy(trail, "+", 3);
-         if (nostr)
-            ROOT::TMetaUtils::Error(nullptr, "option + mutual exclusive with -\n");
-      }
-      llvm::SmallString<256> filestem = llvm::sys::path::filename(arg);
-      llvm::sys::path::replace_extension(filestem, "");
-
-      code_for_parser += "#pragma link C++ class ";
-      code_for_parser += filestem.str().str();
-      if (nostr || noinp || bcnt)
-         code_for_parser += trail;
-      code_for_parser += ";\n";
-   }
-
-   code_for_parser += "\n#endif\n";
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Find file name in path specified via -I statements to Cling.
 /// Return false if the file can not be found.
 /// If the file is found, set pname to the full path name and return true.
@@ -1998,7 +1860,7 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> buffer;
    llvm::BitstreamWriter stream(buffer);
-   clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), /*Extensions=*/{});
+   clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), compilerInstance->getCodeGenOpts(), /*Extensions=*/{});
    std::unique_ptr<llvm::raw_ostream> out =
       compilerInstance->createOutputFile(fileName, /*Binary=*/true,
                                          /*RemoveFileOnSignal=*/false,
@@ -2128,10 +1990,6 @@ void AddPlatformDefines(std::vector<std::string> &clingArgs)
    clingArgs.push_back(platformDefines);
    snprintf(platformDefines, 64, "-DG__VISUAL=%ld", (long)_MSC_VER);
    clingArgs.push_back(platformDefines);
-#if defined(_WIN64) && defined(_DEBUG)
-   snprintf(platformDefines, 64, "-D_ITERATOR_DEBUG_LEVEL=0");
-   clingArgs.push_back(platformDefines);
-#endif
 #endif
 }
 
@@ -3838,6 +3696,10 @@ static llvm::cl::list<std::string>
 gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
           llvm::cl::desc("Specify compiler diagnostics options."),
           llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptDepFile("MF",
+            llvm::cl::desc("Write dependency output to the specified file."),
+            llvm::cl::cat(gRootclingOptions));
 // Really OneOrMore, will be changed in RootClingMain below.
 static llvm::cl::list<std::string>
 gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
@@ -4059,7 +3921,7 @@ int RootClingMain(int argc,
 
    const char *etcDir = gDriverConfig->fTROOT__GetEtcDir();
    std::string llvmResourceDir = etcDir ? std::string(etcDir) + "/cling" : "";
-   
+
    if (gBareClingSubcommand) {
       std::vector<const char *> clingArgsC;
       clingArgsC.push_back(executableFileName);
@@ -4185,8 +4047,15 @@ int RootClingMain(int argc,
    for (const std::string &PPUndefine : gOptPPUndefines)
       clingArgs.push_back(std::string("-U") + PPUndefine);
 
-   for (const std::string &IncludePath : gOptIncludePaths)
-      clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(IncludePath));
+   for (const std::string &IncludePath : gOptIncludePaths) {
+      // Do not promote compiler default include directories (e.g. the macOS SDK's
+      // usr/include, which find_package(ZLIB) reports) to -I: they would then be
+      // searched before clang's resource directory, and be stored in the
+      // dictionary payload for the runtime interpreter to do the same.
+      if (std::find(gOptCompDefaultIncludePaths.begin(), gOptCompDefaultIncludePaths.end(), IncludePath)
+          == gOptCompDefaultIncludePaths.end())
+         clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(IncludePath));
+   }
 
    for (const std::string &IncludePath : gOptSysIncludePaths) {
       // Prevent mentioning compiler default include directories as -isystem
@@ -4235,7 +4104,7 @@ int RootClingMain(int argc,
    // cling-only arguments
    if (etcDir)
       clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(etcDir));
-   
+
    // We do not want __ROOTCLING__ in the pch!
    if (!gOptGeneratePCH) {
       clingArgs.push_back("-D__ROOTCLING__");
@@ -4434,9 +4303,13 @@ int RootClingMain(int argc,
       ROOT::TMetaUtils::Info(nullptr, "== Language Options\n");
       const clang::LangOptions& LangOpts
          = interp.getCI()->getASTContext().getLangOpts();
-#define LANGOPT(Name, Bits, Default, Description) \
+
+      // FIXME: Replace with C++20 `using enum LangOptions::CompatibilityKind`.
+      using CK = clang::LangOptions::CompatibilityKind;
+#define LANGOPT(Name, Bits, Default, Compatibility, Description) \
+   if constexpr (CK::Compatibility != CK::Benign)                \
       ROOT::TMetaUtils::Info(nullptr, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
-#define ENUM_LANGOPT(Name, Type, Bits, Default, Description)
+#define ENUM_LANGOPT(Name, Type, Bits, Default, Compatibility, Description)
 #include "clang/Basic/LangOptions.def"
       ROOT::TMetaUtils::Info(nullptr, "==== END interpreter configuration ====\n\n");
    }
@@ -4639,14 +4512,14 @@ int RootClingMain(int argc,
       return 1;
    }
 
-   if (linkdef.empty()) {
-      // Generate autolinkdef
-      GenerateLinkdef(gOptDictionaryHeaderFiles, interpPragmaSource);
-   }
-
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
    string main_dictname(gOptDictionaryFileName.getValue());
+   // Keep the original dictionary output file name (with extension) for the
+   // dependency file target: `main_dictname` gets its extension stripped below
+   // and `gOptDictionaryFileName` is turned into a temporary name by the
+   // tmpCatalog a few lines down.
+   const std::string dictOutputFileName(gOptDictionaryFileName.getValue());
    std::ostream *splitDictStream = nullptr;
    std::unique_ptr<std::ostream> splitDeleter(nullptr);
    // Store the temp files
@@ -4750,7 +4623,7 @@ int RootClingMain(int argc,
       // interpPragmaSource and we still need to process it.
 
       LinkdefReader ldefr(interp, constructorTypes);
-      
+
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        llvmResourceDir.c_str())) {
          ROOT::TMetaUtils::Error(nullptr, "Parsing #pragma failed %s\n", linkdefFilename.c_str());
@@ -4793,6 +4666,12 @@ int RootClingMain(int argc,
    // Speed up the operations with rules
    selectionRules.FillCache();
    selectionRules.Optimize();
+
+   // Addresses ROOT-5174
+   if (gBuildingROOT? 0 : 2 >= selectionRules.Size() && !gOptCxxModule && !isGenreflex) {
+      ROOT::TMetaUtils::Error(nullptr, "No selection rules specified and creation of C++ module not requested: did you forget to specify a selection file or to request the creation of a C++ module?\n");
+      return 1;
+   }
 
    if (isGenreflex){
       if (0 != selectionRules.CheckDuplicates()){
@@ -5122,6 +5001,98 @@ int RootClingMain(int argc,
 
    // make sure the file is closed before committing
    fileout.close();
+
+   // Write the dependency file if requested (-MF <file>). It uses the
+   // Makefile format understood by CMake's DEPFILE and Ninja's "deps = gcc",
+   // listing every real header that was opened while generating the dictionary
+   // so that incremental builds pick up changes to transitively included files.
+   if (!gOptDepFile.empty() && rootclingRetCode == 0 && !dictOutputFileName.empty()) {
+      std::ofstream depFile(gOptDepFile.c_str());
+      if (!depFile) {
+         ROOT::TMetaUtils::Error(nullptr,
+                                 "rootcling: failed to open dependency file %s\n",
+                                 gOptDepFile.c_str());
+         rootclingRetCode = 1;
+      } else {
+         // Escape a path for the Makefile-format dependency file: forward
+         // slashes (needed on Windows) and backslash-escape the characters that
+         // are special to make (space, tab, '#', ':').
+         auto escapeForDepFile = [](std::string path) {
+            std::replace(path.begin(), path.end(), '\\', '/');
+            std::string escaped;
+            escaped.reserve(path.size());
+            for (char c : path) {
+               if (c == ' ' || c == '\t' || c == '#' || c == ':')
+                  escaped += '\\';
+               escaped += c;
+            }
+            return escaped;
+         };
+
+         // The target is the final dictionary source file. Note that
+         // gOptDictionaryFileName has been turned into a temporary name by the
+         // tmpCatalog, so we use the original name captured earlier.
+         depFile << escapeForDepFile(dictOutputFileName) << ":";
+
+         // Collect all files that were read by clang during dictionary
+         // generation (headers included directly or indirectly).
+         clang::SourceManager &SM = CI->getSourceManager();
+         clang::FileManager &FM = SM.getFileManager();
+
+         llvm::SmallVector<clang::OptionalFileEntryRef, 64> files;
+         FM.GetUniqueIDMapping(files);
+
+         llvm::SmallString<256> absDictOutput(dictOutputFileName);
+         llvm::sys::fs::make_absolute(absDictOutput);
+         llvm::SmallString<256> absDictTmp(gOptDictionaryFileName.getValue());
+         llvm::sys::fs::make_absolute(absDictTmp);
+
+         std::set<std::string> includedFiles;
+         for (const auto &FEOpt : files) {
+            if (!FEOpt)
+               continue;
+            llvm::StringRef filename = FEOpt->getName();
+            if (filename.empty())
+               continue;
+            // Skip cling's in-memory buffers, which the FileManager also
+            // reports: "input_line_N", "<<< cling interactive line includer >>>",
+            // "<built-in>", "<command line>", ... These are not real files;
+            // some contain spaces or angle brackets that would corrupt the
+            // dependency file, and all of them would make the dictionary appear
+            // perpetually out of date. Requiring the entry to exist on disk
+            // filters them out (together with the explicit angle-bracket check).
+            if (filename.contains('<') || filename.contains('>'))
+               continue;
+            // Make the path absolute so it is unambiguous regardless of the
+            // working directory: rootcling may run from a different directory
+            // than the one the dependency file is later consumed from (with
+            // CMP0116 OLD the depfile is not rewritten, and a relative entry
+            // like "./Foo.hxx" would be resolved against the wrong base and
+            // leave the dictionary permanently out of date).
+            llvm::SmallString<256> absPath(filename);
+            llvm::sys::fs::make_absolute(absPath);
+            if (!llvm::sys::fs::exists(absPath))
+               continue;
+            std::string filenameStr(absPath.str());
+            // Skip the output dictionary file itself (final or temporary name).
+            if (filenameStr == absDictOutput || filenameStr == absDictTmp)
+               continue;
+            includedFiles.insert(std::move(filenameStr));
+         }
+
+         // Each dependency line except the last ends with a backslash.
+         for (const auto &file : includedFiles)
+            depFile << " \\\n  " << escapeForDepFile(file);
+         if (!includedFiles.empty())
+            depFile << "\n";
+
+         depFile.close();
+         if (!depFile.good()) {
+            ROOT::TMetaUtils::Error(nullptr, "rootcling: failed to write dependency file %s\n", gOptDepFile.c_str());
+            rootclingRetCode = 1;
+         }
+      }
+   }
 
    // Before returning, rename the files if no errors occurred
    // otherwise clean them to avoid remnants (see ROOT-10015)
@@ -5660,6 +5631,7 @@ int GenReflexMain(int argc, char **argv)
       "        Default value is 'false'\n"
       "      - rntupleStreamerMode [true/false]: enforce streamed or native writing for RNTuple.\n"
       "        If unset, RNTuple stores classes in split mode or fails if the class cannot be split.\n"
+      "      - rntupleSoARecord [class name]: marks the class as an RNTuple SoA layout for the underlying record\n"
       "      - noInputOperator [true/false]: turns off input operator generation if set\n"
       "        to 'true'. Default value is 'false'\n"
       "      Example XML:\n"
@@ -5670,6 +5642,7 @@ int GenReflexMain(int argc, char **argv)
       "                 [id=\"xxxx\"] [noStreamer=\"true/false\"]\n"
       "                 [noInputOperator=\"true/false\"]\n"
       "                 [rntupleStreamerMode=\"true/false\"] />\n"
+      "                 [rntupleSoARecord=\"class_name\"] />\n"
       "          <class name=\"classname\" >\n"
       "            <field name=\"m_transient\" transient=\"true\"/>\n"
       "            <field name=\"m_anothertransient\" persistent=\"false\"/>\n"

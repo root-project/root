@@ -64,6 +64,7 @@ generating the toys (either via a histogram or via an independent model that is 
 #include "RooHistPdf.h"
 
 #include "RooBernstein.h"
+#include "RooMsgService.h"
 
 #include "Math/MinimizerOptions.h"
 
@@ -93,11 +94,11 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
   RooAbsData* data = wks->data(dataName);
 
   if (!x || !nominal || !data) {
-     std::cout << "Error:  wrong name for pdf or variable or dataset - return -1 " << std::endl;
+     oocoutE(nullptr,InputArguments) << "Error:  wrong name for pdf or variable or dataset - return -1 " << std::endl;
      return -1;
   }
 
-  std::cout << "BernsteinCorrection::ImportCorrectedPdf -  Doing initial Fit with nominal model " << std::endl;
+  oocoutP(nullptr,Eval) << "BernsteinCorrection::ImportCorrectedPdf -  Doing initial Fit with nominal model " << std::endl;
 
   // initialize alg, by checking how well nominal model fits
   int printLevel =  ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1;
@@ -106,7 +107,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
   double lastNll= nominalResult->minNll();
 
   if (nominalResult->status() != 0 ) {
-     std::cout << "BernsteinCorrection::ImportCorrectedPdf  - Error fit with nominal model failed - exit" << std::endl;
+     oocoutE(nullptr,Fitting) << "BernsteinCorrection::ImportCorrectedPdf  - Error fit with nominal model failed - exit" << std::endl;
      return -1;
   }
 
@@ -151,7 +152,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
     std::unique_ptr<RooFitResult> result{corrected->fitTo(*data,Save(),Minos(false), Hesse(false),PrintLevel(printLevel))};
 
     if (result->status() != 0) {
-       std::cout << "BernsteinCorrection::ImportCorrectedPdf  - Error fit with corrected model failed" << std::endl;
+       oocoutE(nullptr,Fitting) << "BernsteinCorrection::ImportCorrectedPdf  - Error fit with corrected model failed" << std::endl;
        return -1;
     }
 
@@ -188,7 +189,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
   }
 
   log << "------ End Bernstein Correction Log --------" << std::endl;
-  std::cout << log.str();
+  oocoutI(nullptr,Eval) << log.str();
 
   return degree;
 }
@@ -211,7 +212,7 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
   RooAbsData* data = wks->data(dataName);
 
   if (!x || !nominal || !data) {
-     std::cout << "Error:  wrong name for pdf or variable or dataset ! " << std::endl;
+     oocoutE(nullptr,InputArguments) << "Error:  wrong name for pdf or variable or dataset ! " << std::endl;
      return;
   }
 
@@ -265,7 +266,7 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
     = new RooEffProd("correctedExtra","",*nominal,*polyExtra);
 
 
-  std::cout << "made pdfs, make toy generator" << std::endl;
+  oocoutI(nullptr,Generation) << "made pdfs, make toy generator" << std::endl;
 
   // make a PDF to generate the toys
   RooDataHist dataHist("dataHist","",*x,*data);
@@ -284,7 +285,7 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
     double qExtra = 0;
     // do toys
     for (int i = 0; i < nToys; ++i) {
-       std::cout << "on toy " << i << std::endl;
+       oocoutP(nullptr,Generation) << "on toy " << i << std::endl;
 
        std::unique_ptr<RooDataSet> tmpData{toyGen.generate(*x, data->numEntries())};
        // check to see how well this correction fits
@@ -306,8 +307,8 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
        samplingDist->Fill(q);
        samplingDistExtra->Fill(qExtra);
        if (printLevel > 0) {
-      std::cout << "NLL Results: null " << resultNull->minNll() << " ref = " << result->minNll() << " extra"
-           << resultExtra->minNll() << std::endl;
+      oocoutI(nullptr,Eval) << "NLL Results: null " << resultNull->minNll() << " ref = " << result->minNll() << " extra"
+                            << resultExtra->minNll() << std::endl;
        }
   }
 

@@ -1,6 +1,7 @@
 #include "TFile.h"
 #include "TChain.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 void writechain(const char *filename = "missingindex.root", bool debug = false) 
 {

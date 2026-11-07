@@ -3,15 +3,15 @@ name: 'ROOT Python wheels'
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'The branch for which the Python wheel has to be generated'
+      ref:
+        description: 'The git ref to build the wheel from (branch, tag, or commit SHA).'
         type: string
         required: true
-        default: "master"
+        default: ''
   schedule:
     - cron: '01 1 * * *'
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [synchronize, reopened, labeled]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
@@ -24,39 +24,94 @@ jobs:
        (github.event_name == 'schedule' ||
         github.event_name == 'workflow_dispatch')) ||
       contains(github.event.pull_request.labels.*.name, 'build-python-wheels')
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.config.runner }}
     strategy:
       fail-fast: false
       matrix:
-        target: [cp39-manylinux_x86_64, cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64]
-    name: ${{ matrix.target }}
+        python: [cp311, cp312, cp313, cp314, cp315]
+        config:
+          # `label` is a unique artifact name for each build
+          - runner: macos-15
+            platform: macosx_arm64
+            label: macosx_arm64
+            deployment_target: "15.0"
+          - runner: macos-26
+            platform: macosx_arm64
+            label: macosx_arm64
+            deployment_target: "26.0"
+          - runner: xcode-27
+            platform: macosx_arm64
+            label: macosx_arm64
+            deployment_target: "27.0"
+          - runner: ubuntu-latest
+            platform: manylinux_x86_64
+            label: manylinux_2_28_x86_64
+            manylinux_image: manylinux_2_28
+          - runner: ubuntu-24.04-arm
+            platform: manylinux_aarch64
+            label: manylinux_2_28_aarch64
+            manylinux_image: manylinux_2_28
+          - runner: ubuntu-latest
+            platform: manylinux_x86_64
+            label: manylinux_2_34_x86_64
+            manylinux_image: manylinux_2_34
+          - runner: ubuntu-24.04-arm
+            platform: manylinux_aarch64
+            label: manylinux_2_34_aarch64
+            manylinux_image: manylinux_2_34
+    name: ${{ matrix.python }}-${{ matrix.config.label }}-${{ matrix.config.runner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/cibuildwheel-impl
+      - uses: actions/checkout@v6
         with:
-          build-tag: ${{ matrix.target }}
+          ref: ${{ github.event.inputs.ref }}
+      - uses: ./.github/workflows/cibuildwheel-impl
+        env:
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.config.deployment_target }}
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.config.manylinux_image }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.config.manylinux_image }}
+        with:
+          build-tag: ${{ matrix.python }}-${{ matrix.config.platform }}
+          artifact-name: ${{ matrix.python }}-${{ matrix.config.label }}-${{ matrix.config.runner }}
 
   test-wheels:
     needs: build-wheels
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.test_config.runner }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-    name: test-wheel-cp${{ matrix.python-version }}
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        test_config:
+          # each runner tests the wheel built on it
+          - runner: macos-15
+            build_label: macosx_arm64
+          - runner: macos-26
+            build_label: macosx_arm64
+          - runner: xcode-27
+            build_label: macosx_arm64
+          - runner: ubuntu-latest
+            build_label: manylinux_2_28_x86_64
+          - runner: ubuntu-24.04-arm
+            build_label: manylinux_2_28_aarch64
+          - runner: ubuntu-latest
+            build_label: manylinux_2_34_x86_64
+          - runner: ubuntu-24.04-arm
+            build_label: manylinux_2_34_aarch64
+    name: test-cp${{ matrix.python }}-${{ matrix.test_config.build_label }}-${{ matrix.test_config.runner }}
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.ref }}
       - name: Download produced wheels
         uses: actions/download-artifact@v4
         with:
           path: wheels
+          pattern: cp*-${{ matrix.test_config.build_label }}-${{ matrix.test_config.runner }}
           merge-multiple: true
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python }}
 
       - name: Install produced wheel
         run: |
@@ -76,7 +131,7 @@ jobs:
 
   create-and-upload-wheel-registry:
       if: github.event_name != 'pull_request' # The secrets are not available in PR
-      needs: build-wheels
+      needs: test-wheels
       runs-on: ubuntu-latest
       steps:
 
@@ -86,7 +141,9 @@ jobs:
           merge-multiple: true
 
       - name: Install required system packages
-        run: sudo apt-get install -y krb5-user xrootd-client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y krb5-user xrootd-client
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -121,3 +178,23 @@ jobs:
           kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
           echo +++ Running the copy
           xrdcp --parallel ${NFILES} -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/
+
+  publish-to-pypi:
+      if: github.event_name == 'workflow_dispatch'
+      needs: test-wheels
+      runs-on: ubuntu-latest
+      name: >-
+        Publish Python distribution to PyPI
+      environment:
+        name: pypi
+        url: https://pypi.org/p/root
+      permissions:
+        id-token: write
+      steps:
+      - name: Download produced wheels
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist/
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

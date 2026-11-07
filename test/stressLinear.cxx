@@ -88,9 +88,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <cstdlib>
-#include <iostream>
-#include <snprintf.h>
 #include <TSystem.h>
 #include <TFile.h>
 #include <TBenchmark.h>
@@ -119,6 +116,10 @@
 #include "TDecompBK.h"
 #include "TMatrixDEigen.h"
 #include "TMatrixDSymEigen.h"
+
+#include <cstdlib>
+#include <iostream>
+#include <cstdio>
 
 #ifdef __CLING__
 const auto tmp_vmatrix_file_name = "stress-vmatrix_interpreted.root";
@@ -936,7 +937,7 @@ public:
   MakeHilbert() { }
 };
 
-#if !defined (__CLING__) || defined (__ROOTCLING__)
+#ifndef __CLING__
 class TestUnit : public TElementPosActionD {
   mutable Int_t fIsUnit;
   void Operation(Double_t &element) const override

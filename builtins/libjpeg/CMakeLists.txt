@@ -1,0 +1,70 @@
+# Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
+# **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
+# 30 Jun 2026, https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.2.0
+set(ROOT_LIBJPEG_VERSION 3.2.0)
+set(ROOT_LIBJPEG_HASH "980dd81f425082aa6d7c9e47fef27554ce7a9ffc8e2f6e863b97d263c5c50858")
+
+set(ROOT_LIBJPEG_PREFIX ${CMAKE_BINARY_DIR}/builtins/LIBJPEG-prefix)
+
+# Here we need two cases because the library has two different names on Linux/macOS and Windows
+if(MSVC)
+     set(ROOT_LIBJPEG_LIBRARY ${ROOT_LIBJPEG_PREFIX}/lib/jpeg-static${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+     set(ROOT_LIBJPEG_LIBRARY ${ROOT_LIBJPEG_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
+
+if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
+    if(winrtdebug)
+        set(ROOT_LIBJPEG_BUILD_COMMAND_FLAGS "--config Debug")
+    else()
+        set(ROOT_LIBJPEG_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+    endif()
+endif()
+
+ExternalProject_Add(
+    BUILTIN_LIBJPEG
+    PREFIX ${ROOT_LIBJPEG_PREFIX}
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
+    URL https://root.cern/download/libjpeg-turbo-${ROOT_LIBJPEG_VERSION}.tar.gz
+        https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/${ROOT_LIBJPEG_VERSION}.tar.gz
+    URL_HASH SHA256=${ROOT_LIBJPEG_HASH}
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_INSTALL_LIBDIR=<INSTALL_DIR>/lib
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    -DCMAKE_CXX_VISIBILITY_PRESET=hidden
+    -DCMAKE_C_VISIBILITY_PRESET=hidden
+    -DENABLE_SHARED=OFF
+    -DWITH_TURBOJPEG=OFF
+    -DWITH_SIMD=OFF
+    -DWITH_TOOLS=OFF
+    -DWITH_JAVA=OFF
+    -DWITH_CRT_DLL=ON
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LIBJPEG_BUILD_COMMAND_FLAGS}
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LIBJPEG_BUILD_COMMAND_FLAGS} --target install
+    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+    BUILD_BYPRODUCTS ${ROOT_LIBJPEG_LIBRARY}
+    TIMEOUT 600
+)
+
+file(MAKE_DIRECTORY ${ROOT_LIBJPEG_PREFIX}/include)
+add_library(JPEG::JPEG IMPORTED STATIC GLOBAL)
+set_target_properties(JPEG::JPEG PROPERTIES
+    IMPORTED_LOCATION ${ROOT_LIBJPEG_LIBRARY}
+    INTERFACE_INCLUDE_DIRECTORIES ${ROOT_LIBJPEG_PREFIX}/include
+)
+add_dependencies(JPEG::JPEG BUILTIN_LIBJPEG)
+
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(JPEG_INCLUDE_DIRS ${ROOT_LIBJPEG_PREFIX}/include PARENT_SCOPE)
+set(JPEG_LIBRARIES ${ROOT_LIBJPEG_LIBRARY} PARENT_SCOPE)
+set(JPEG_FOUND TRUE PARENT_SCOPE)
+set(JPEG_VERSION ${ROOT_LIBJPEG_VERSION} PARENT_SCOPE)

@@ -1,6 +1,5 @@
 // Author: Sergey Linev <s.linev@gsi.de>
 // Date: 2017-10-16
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -348,28 +347,27 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
-/// One could configure concrete HTTP port, which should be used for the server,
-/// provide following entry in rootrc file:
 ///
-///      WebGui.HttpPort: 8088
+/// Server for the webgui applications by default allow communication only via
+/// `localhost` address (so-called loopback mode). Disable it calling \ref SetLoopbackMode
+/// method only if really necessary - it may open unauthorized access to your application
+/// from external nodes! When normal server is started, one can specify hostname in `rootrc`
+/// file which should be used for binding of server socket:
 ///
-/// or specify range of http ports, which can be used:
+///      WebGui.HttpBind: hostname | ipaddress
+///
+/// By default port number is not fixed (0) and range of http ports is used to locate
+/// first available port:
 ///
 ///      WebGui.HttpPortMin: 8800
 ///      WebGui.HttpPortMax: 9800
 ///
-/// By default range [8800..9800] is used
+/// To configure exact HTTP port, which should be used for the server,
+/// provide following entry in `rootrc` file:
 ///
-/// One also can bind HTTP server socket to loopback address,
-/// In that case only connection from localhost will be available:
+///      WebGui.HttpPort: 8088
 ///
-///      WebGui.HttpLoopback: yes
-///
-/// Or one could specify hostname which should be used for binding of server socket
-///
-///      WebGui.HttpBind: hostname | ipaddress
-///
-/// To use secured protocol, following parameter should be specified
+/// To use secured protocol, following parameters should be specified:
 ///
 ///      WebGui.UseHttps: yes
 ///      WebGui.ServerCert: sertificate_filename.pem
@@ -379,7 +377,7 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///      WebGui.UnixSocket: /path/to/unix/socket
 ///      WebGui.UnixSocketMode: 0700
 ///
-/// Typically one used unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
+/// Typically one uses unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
 /// then redirect it via ssh tunnel (e.g. using `rootssh`) to client node
 ///
 /// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
@@ -786,8 +784,12 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.FirefoxRandomProfile: usage of random Firefox profile "no" - disabled, "yes" - enabled (default)
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///      WebGui.ReconnectTmout: time to reconnect for already existing connection, if negative - no reconnecting possible (default 15 s)
-///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
+///      WebGui.BatchTimeout: time required to produce images in headless (batch) mode (default 30 s)
+///      WebGui.Qt6Timer: periodic timer to run Qt6 event loop, used with 'qt6' web display (default 10 ms)
+///      WebGui.CefTimer: periodic timer to run CEF event loop, used with 'cef' web display (default 10 ms)
 ///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
+///      WebGui.CefLogSeveriry: "disable", "fatal", "error", "warning", "info", "verbose" (default is "fatal")
+///      WebGui.CefHeadlessTimeout: timeout to wait produce result of headless output (default is 30 s)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
 ///      WebGui.RecordData: if specified enables data recording for each web window; "yes" or "no" (default)
 ///      WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
@@ -796,7 +798,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.Debug: "no" (default), "yes" - enable more debug output on JSROOT side
 ///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
 ///      WebGui.QueueLength: 10 - maximal number of entires in window send queue
-///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.135.0/
+///      WebGui.openui5src: alternative location for openui5 like https://sdk.openui5.org/1.152.0/
 ///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
 ///      WebGui.openui5theme: openui5 theme like sap_fiori_3 (default) or sap_horizon
 ///      WebGui.DarkMode: "no" (default), "yes" - switch to JSROOT dark mode and will use sap_fiori_3_dark theme
@@ -898,7 +900,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
                "Or one can use rootssh script to configure port forwarding and display web widgets automatically\n"
-               "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
+               "Find more info on https://root.cern/doc/master/classROOT_1_1RBrowser.html\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }
       }

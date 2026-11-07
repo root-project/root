@@ -51,6 +51,7 @@ public:
    Int_t GetNmeshVertices() const override { return 0; }
    void InspectShape() const override;
    Bool_t IsAssembly() const override { return kTRUE; }
+   Bool_t IsConvex() const final { return kFALSE; }
    Bool_t IsCylType() const override { return kFALSE; }
    void NeedsBBoxRecompute() { fBBoxOK = kFALSE; }
    void RecomputeBoxLast();

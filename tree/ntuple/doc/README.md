@@ -1,4 +1,4 @@
-\defgroup NTuple RNTuple-related classes
+\defgroup NTuple RNTuple
 \brief Classes designed for columnar data storage in modern ROOT
 
 # RNTuple Introduction
@@ -62,7 +62,15 @@ At this point, the only provided backend stores the pages in ROOT files.
 RNTuples are further grouped into **clusters**, which are, like TTree clusters, self-contained blocks of
 consecutive entries.  Clusters provide a unit of writing and provide the means for parallel writing of RNTuple data.
 
-## Related classes
+## Exploring the Contents of an RNTuple
 
-\defgroup ROOT7 ROOT7 classes
-\brief Interfaces and classes designed for future ROOT version 7
+To get first information about an RNTuple, ROOT::RNTupleReader provides RNTupleReader::PrintInfo(). To show entries,
+it provides RNTupleReader::Show().
+
+The ROOT browsers show RNTuple contents.
+
+To get more details such as the achieved compression, there is RNTupleInspector.
+
+For plotting and scanning through entries, use ROOT::RDataFrame. A table for translating TTree commands to RDataFrame
+can be found at [RDataFrame: Rosetta stone](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#rosetta-stone).
+These commands work both with TTree as well as RNTuple.

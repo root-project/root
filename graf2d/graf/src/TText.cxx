@@ -14,12 +14,10 @@
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include "TTF.h"
-#include "TVirtualX.h"
+#include "TVirtualPadPainter.h"
+#include "TCanvasImp.h"
 #include "TMath.h"
+#include "TAttMarker.h"
 #include "TPoint.h"
 
 #include <cwchar>
@@ -145,11 +143,9 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    if (!gPad) return 9999;
    Int_t ptx, pty;
 
-   TAttText::Modify();  // change text attributes only if necessary
-
    if (TestBit(kTextNDC)) {
-      ptx = gPad->UtoPixel(fX);
-      pty = gPad->VtoPixel(fY);
+      ptx = gPad->UtoAbsPixel(fX);
+      pty = gPad->VtoAbsPixel(fY);
    } else {
       ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
       pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
@@ -215,6 +211,165 @@ TText *TText::DrawTextNDC(Double_t x, Double_t y, const wchar_t *text)
    return newtext;
 }
 
+class TTextInteractive : public TVirtualPad::TInteractive {
+public:
+   Int_t px1 = 0, py1 = 0, pxold = 0, pyold = 0, height = 0, width = 0;
+   Bool_t resize = kFALSE, turn = kFALSE, right = kFALSE;
+   Double_t theta = 0;
+
+   TTextInteractive(TVirtualPad &parent, Bool_t ndc, Double_t x, Double_t y, Double_t angle)
+   {
+      if (ndc) {
+         px1 = parent.UtoAbsPixel(x);
+         py1 = parent.VtoAbsPixel(y);
+      } else {
+         px1 = parent.XtoAbsPixel(parent.XtoPad(x));
+         py1 = parent.YtoAbsPixel(parent.YtoPad(y));
+      }
+      theta  = angle;
+   }
+
+   void SelectPart(TVirtualPad &parent, Int_t part, Int_t halign, Int_t valign)
+   {
+      switch (part) {
+      case 0:
+         if (halign == 3) {
+            turn = kTRUE;
+            right = kTRUE;
+            parent.SetCursor(kRotate);
+         } else {
+            resize = kTRUE;
+            height = valign;
+            width = halign;
+            parent.SetCursor(kArrowVer);
+         }
+         break;
+      case 1: parent.SetCursor(kMove); break;
+      case 2:
+         if (halign == 3) {
+            resize = kTRUE;
+            height = valign;
+            width = halign;
+            parent.SetCursor(kArrowVer);
+         } else {
+            turn = kTRUE;
+            right = kFALSE;
+            parent.SetCursor(kRotate);
+         }
+      }
+   }
+
+   void ProcessMove(TVirtualPad &parent, TText *txt, Int_t px, Int_t py)
+   {
+      if (turn) {
+         auto norm = TMath::Sqrt(1.*(py-py1)*(py-py1)+ 1.*(px-px1)*(px-px1));
+         if (norm > 0) {
+            theta = TMath::ACos((px - px1) / norm) / TMath::Pi() * 180;
+            auto dtheta = TMath::ASin((py1 - py) / norm);
+            if (dtheta < 0)
+               theta = -theta;
+            if (right)
+               theta += 180;
+            if (theta < 0)
+               theta += 360;
+            else if (theta >= 360)
+               theta -= 360;
+         }
+      } else if (resize) {
+         Int_t valign = txt->GetTextAlign() % 10;
+         Int_t h = txt->GetTextSizePixels(parent) / 2;
+         Int_t w = h*strlen(txt->GetTitle()); // approximate width
+         auto co = TMath::Cos(txt->GetTextAngle()/180.*TMath::Pi());
+         auto si = TMath::Sin(txt->GetTextAngle()/180.*TMath::Pi());
+         Int_t ax = 0, ay = 0, bx, by;
+         if (width == 1) {
+            switch (valign) {
+            case 1:
+               ax = px1;
+               ay = py1;
+               break;
+            case 2:
+               ax = px1 + Int_t(si * h / 2);
+               ay = py1 + Int_t(co * h / 2);
+               break;
+            case 3:
+               ax = px1 + Int_t(si * h * 3 / 2);
+               ay = py1 + Int_t(co * h * 3 / 2);
+               break;
+            }
+         } else if (width == 2) {
+            switch (valign) {
+            case 1:
+               ax = px1 - Int_t(co * w / 2);
+               ay = py1 + Int_t(si * w / 2);
+               break;
+            case 2:
+               ax = px1 - Int_t(co * w / 2 + si * h / 2);
+               ay = py1 + Int_t(si * w / 2 + co * h / 2);
+               break;
+            case 3:
+               ax = px1 - Int_t(co * w / 2 + si * h * 3 / 2);
+               ay = py1 + Int_t(si * w / 2 + co * h * 3 / 2);
+               break;
+            }
+         } else if (width == 3) {
+            switch (valign) {
+            case 1:
+               ax = px1 - Int_t(co * w);
+               ay = py1 + Int_t(si * w);
+               break;
+            case 2:
+               ax = px1 - Int_t(co * w + si * h / 2);
+               ay = py1 + Int_t(si * w + co * h / 2);
+               break;
+            case 3:
+               ax = px1 - Int_t(co * w + si * h * 3 / 2);
+               ay = py1 + Int_t(si * w + co * h * 3 / 2);
+               break;
+            }
+         }
+         if (height == 3) {
+            bx = ax - Int_t(si*h);
+            by = ay - Int_t(co*h);
+         } else {
+            bx = ax;
+            by = ay;
+         }
+         Int_t cx = bx+Int_t(co*w);
+         Int_t cy = by-Int_t(si*w);
+         Double_t lambda = Double_t(((px-bx)*(cx-bx)+(py-by)*(cy-by)))/Double_t(((cx-bx)*(cx-bx)+(cy-by)*(cy-by)));
+         Double_t x2 = Double_t(px) - lambda*Double_t(cx-bx)-Double_t(bx);
+         Double_t y2 = Double_t(py) - lambda*Double_t(cy-by)-Double_t(by);
+         Int_t Size = Int_t(TMath::Sqrt(x2*x2+y2*y2)*2);
+         if (Size < 4) Size = 4;
+
+         txt->SetTextSizePixels(Size);
+      } else {
+         px1 += px - pxold;   pxold = px;
+         py1 += py - pyold;   pyold = py;
+      }
+   }
+
+   void PaintControlBox(TVirtualPad &parent, Int_t *cBoxX, Int_t *cBoxY, Bool_t show_corner)
+   {
+      Double_t xx[5], yy[5];
+      for(Int_t p = 0; p < 4; ++p) {
+         xx[p] = parent.AbsPixeltoX(cBoxX[p]);
+         yy[p] = parent.AbsPixeltoY(cBoxY[p]);
+      }
+      xx[4] = xx[0];
+      yy[4] = yy[0];
+      parent.PaintPolyLine(5, xx, yy, "itextbox");
+
+      if (show_corner) {
+         Double_t mX = parent.AbsPixeltoX(px1);
+         Double_t mY = parent.AbsPixeltoY(py1);
+         parent.PaintPolyMarker(1, &mX, &mY, "iftextcorner");
+      }
+   }
+
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -223,179 +378,69 @@ TText *TText::DrawTextNDC(Double_t x, Double_t y, const wchar_t *text)
 
 void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable())
+      return;
 
-   static Int_t px1, py1, pxold, pyold, Size, height, width;
-   static Bool_t resize,turn;
-   Int_t dx, dy;
-   const char *text = GetTitle();
-   Int_t len = strlen(text);
-   Double_t sizetowin = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
-   Double_t fh = (fTextSize*sizetowin);
-   Int_t h     = Int_t(fh/2);
-   Int_t w     = h*len;
-   Short_t halign = fTextAlign/10;
-   Short_t valign = fTextAlign - 10*halign;
-   Double_t co, si, dtheta, norm;
-   static Bool_t right, ndcsav;
-   static Double_t theta;
-   Int_t ax, ay, bx, by, cx, cy;
-   ax = ay = 0;
-   Double_t lambda, x2,y2;
-   Double_t dpx,dpy,xp1,yp1;
-   Int_t cBoxX[4], cBoxY[4], part;
-   Double_t div = 0;
-   Bool_t opaque  = gPad->OpaqueMoving();
+   auto &parent = *gPad;
 
-   if (!gPad->IsEditable()) return;
+   Short_t halign = GetTextAlign() / 10;
+   Short_t valign = GetTextAlign() % 10;
+   Bool_t opaque  = parent.OpaqueMoving();
+
+   auto inter = parent.GetInteractive<TTextInteractive>(this);
+
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-      ndcsav = TestBit(kTextNDC);
-      // No break !!!
-
-   case kMouseMotion:
-      if (TestBit(kTextNDC)) {
-         px1 = gPad->UtoPixel(fX);
-         py1 = gPad->VtoPixel(fY);
-      } else {
-         px1 = gPad->XtoAbsPixel(gPad->XtoPad(fX));
-         py1 = gPad->YtoAbsPixel(gPad->YtoPad(fY));
-      }
-      theta  = fTextAngle;
-      Size   = 0;
-      pxold  = px;
-      pyold  = py;
-      co     = TMath::Cos(fTextAngle*0.017453293);
-      si     = TMath::Sin(fTextAngle*0.017453293);
-      resize = kFALSE;
-      turn   = kFALSE;
-      GetControlBox(px1, py1, -theta, cBoxX, cBoxY);
-      div    = ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si);
-      if (TMath::Abs(div) > 1e-8) part = (Int_t)(3*((px-cBoxX[0])*co-(py-cBoxY[0])*si)/ div);
-      else part = 0;
-      switch (part) {
-      case 0:
-         if (halign == 3) {
-            turn  = kTRUE;
-            right = kTRUE;
-            gPad->SetCursor(kRotate);
-         } else {
-            resize = kTRUE;
-            height = valign;
-            width  = halign;
-            gPad->SetCursor(kArrowVer);
-         }
-         break;
-      case 1:
-         gPad->SetCursor(kMove);
-         break;
-      case 2:
-         if (halign == 3) {
-            resize = kTRUE;
-            height = valign;
-            width  = halign;
-            gPad->SetCursor(kArrowVer);
-         } else {
-            turn  = kTRUE;
-            right = kFALSE;
-            gPad->SetCursor(kRotate);
-         }
-      }
+   case kMouseMotion: {
+      inter = parent.MakeInteractive<TTextInteractive>(this, parent, TestBit(kTextNDC), GetX(), GetY(), GetTextAngle());
+      inter->pxold  = px;
+      inter->pyold  = py;
+      auto co = TMath::Cos(GetTextAngle()/180.*TMath::Pi());
+      auto si = TMath::Sin(GetTextAngle()/180.*TMath::Pi());
+      Int_t cBoxX[4], cBoxY[4];
+      GetControlBox(inter->px1, inter->py1, -inter->theta, cBoxX, cBoxY);
+      auto div = ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si);
+      Int_t part = TMath::Abs(div) < 1e-8 ? 0 : (Int_t)(3 * ((px - cBoxX[0]) * co - (py - cBoxY[0]) * si) / div);
+      inter->SelectPart(parent, part, halign, valign);
       break;
+   }
 
    case kArrowKeyRelease:
    case kButton1Motion:
-      if (!opaque) PaintControlBox(px1, py1, -theta);
-      if (turn) {
-         norm = TMath::Sqrt(Double_t((py-py1)*(py-py1)+(px-px1)*(px-px1)));
-         if (norm>0) {
-            theta = TMath::ACos((px-px1)/norm);
-            dtheta= TMath::ASin((py1-py)/norm);
-            if (dtheta<0) theta = -theta;
-            theta = theta/TMath::Pi()*180;
-            if (theta<0) theta += 360;
-            if (right) {theta = theta+180; if (theta>=360) theta -= 360;}
-         }
-      } else if (resize) {
+      if (!inter)
+         return;
 
-         co = TMath::Cos(fTextAngle*0.017453293);
-         si = TMath::Sin(fTextAngle*0.017453293);
-         if (width == 1) {
-            switch (valign) {
-               case 1 : ax = px1; ay = py1; break;
-               case 2 : ax = px1+Int_t(si*h/2); ay = py1+Int_t(co*h/2); break;
-               case 3 : ax = px1+Int_t(si*h*3/2); ay = py1+Int_t(co*h*3/2); break;
-            }
-         }
-         if (width == 2) {
-            switch (valign) {
-               case 1 : ax = px1-Int_t(co*w/2); ay = py1+Int_t(si*w/2); break;
-               case 2 : ax = px1-Int_t(co*w/2+si*h/2); ay = py1+Int_t(si*w/2+co*h/2); break;
-               case 3 : ax = px1-Int_t(co*w/2+si*h*3/2); ay = py1+Int_t(si*w/2+co*h*3/2); break;
-            }
-         }
-         if (width == 3) {
-            switch (valign) {
-               case 1 : ax = px1-Int_t(co*w); ay = py1+Int_t(si*w); break;
-               case 2 : ax = px1-Int_t(co*w+si*h/2); ay = py1+Int_t(si*w+co*h/2); break;
-               case 3 : ax = px1-Int_t(co*w+si*h*3/2); ay = py1+Int_t(si*w+co*h*3/2); break;
-            }
-         }
-         if (height == 3) {bx = ax-Int_t(si*h); by = ay-Int_t(co*h);}
-         else {bx = ax; by = ay;}
-         cx = bx+Int_t(co*w); cy = by-Int_t(si*w);
-         lambda = Double_t(((px-bx)*(cx-bx)+(py-by)*(cy-by)))/Double_t(((cx-bx)*(cx-bx)+(cy-by)*(cy-by)));
-         x2 = Double_t(px) - lambda*Double_t(cx-bx)-Double_t(bx);
-         y2 = Double_t(py) - lambda*Double_t(cy-by)-Double_t(by);
-         Size = Int_t(TMath::Sqrt(x2*x2+y2*y2)*2);
-         if (Size<4) Size = 4;
+      inter->ProcessMove(parent, this, px, py);
 
-         SetTextSize(Size/sizetowin);
-         TAttText::Modify();
-      } else {
-         dx = px - pxold;  px1 += dx;
-         dy = py - pyold;  py1 += dy;
-      }
       if (opaque) {
-         if (ndcsav) this->SetNDC(kFALSE);
-         this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
-         this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py1)));
-         if (resize) gPad->ShowGuidelines(this, event, 't', false);
-         if ((!resize)&&(!turn)) gPad->ShowGuidelines(this, event, 'i', true);
-         gPad->ShowGuidelines(this, event, !resize&!turn);
-         this->SetTextAngle(theta);
-         gPad->Modified(kTRUE);
-         gPad->Update();
+         SetX(GetXCoord(inter->px1, TestBit(kTextNDC), kTRUE));
+         SetY(GetYCoord(inter->py1, TestBit(kTextNDC), kTRUE));
+         SetTextAngle(inter->theta);
+         if (inter->resize)
+            parent.ShowGuidelines(this, event, 't', false);
+         if (!inter->resize && !inter->turn)
+            parent.ShowGuidelines(this, event, 'i', true);
+         parent.Modified();
+      } else {
+         Int_t cBoxX[4], cBoxY[4];
+         GetControlBox(inter->px1, inter->py1, -inter->theta, cBoxX, cBoxY);
+         inter->PaintControlBox(parent, cBoxX, cBoxY, (halign != 2) || (valign != 2));
       }
-      if (!opaque) PaintControlBox(px1, py1, -theta);
-      pxold = px;  pyold = py;
+      parent.UpdateAsync();
       break;
 
    case kButton1Up:
       if (opaque) {
-         if (ndcsav && !this->TestBit(kTextNDC)) {
-            this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            this->SetNDC();
-         }
-         gPad->ShowGuidelines(this, event, !resize&!turn);
+         parent.ShowGuidelines(this, event);
       } else {
-         if (TestBit(kTextNDC)) {
-            dpx  = gPad->GetX2() - gPad->GetX1();
-            dpy  = gPad->GetY2() - gPad->GetY1();
-            xp1  = gPad->GetX1();
-            yp1  = gPad->GetY1();
-            fX = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
-            fY = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
-         } else {
-            fX = gPad->PadtoX(gPad->AbsPixeltoX(px1));
-            fY = gPad->PadtoY(gPad->AbsPixeltoY(py1));
-         }
-         fTextAngle = theta;
+         SetX(GetXCoord(inter->px1, TestBit(kTextNDC), kTRUE));
+         SetY(GetYCoord(inter->py1, TestBit(kTextNDC), kTRUE));
+         SetTextAngle(inter->theta);
       }
-      gPad->Modified(kTRUE);
+      parent.Modified(kTRUE);
+      parent.FreeInteractive(this);
       break;
 
    case kButton1Locate:
@@ -403,7 +448,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       while (1) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1, 1, px, py);
+         event = parent.GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
@@ -425,10 +470,15 @@ void TText::GetControlBox(Int_t x, Int_t y, Double_t theta,
 {
    Short_t halign = fTextAlign/10;          // horizontal alignment
    Short_t valign = fTextAlign - 10*halign; // vertical alignment
-   UInt_t cBoxW, cBoxH;                     // control box width and heigh
+   UInt_t cBoxW = 0, cBoxH = 0;                     // control box width and heigh
    UInt_t Dx = 0, Dy = 0;                   // delta along x and y to align the box
 
-   GetBoundingBox(cBoxW, cBoxH);
+   if (gPad) {
+      Double_t tsize = GetTextSizePixels(*gPad);
+      auto pp = gPad->GetPainter();
+      if (pp)
+         pp->GetTextExtent(GetTextFont(), tsize, cBoxW, cBoxH, GetTitle());
+   }
 
    // compute the translations (Dx, Dy) required by the alignments
    switch (halign) {
@@ -478,13 +528,14 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       return;
    }
 
-   if (!gPad) return;
+   if (!gPad)
+      return;
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
       if (TestBit(kTextNDC)) {
-         ptx = gPad->UtoPixel(fX);
-         pty = gPad->VtoPixel(fY);
+         ptx = gPad->UtoAbsPixel(fX);
+         pty = gPad->VtoAbsPixel(fY);
       } else {
          ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
          pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
@@ -500,19 +551,13 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
          if (cBoxY[i] < y1) y1 = cBoxY[i];
          if (cBoxY[i] > y2) y2 = cBoxY[i];
       }
-      w = x2-x1;
-      h = y2-y1;
+      w = x2 - x1;
+      h = y2 - y1;
    } else {
-      if ((gVirtualX->HasTTFonts() && TTF::IsInitialized()) || gPad->IsBatch()) {
-         TTF::GetTextExtent(w, h, (char*)GetTitle());
-      } else {
-         const Font_t oldFont = gVirtualX->GetTextFont();
-         if (gVirtualX->InheritsFrom("TGCocoa"))
-            gVirtualX->SetTextFont(fTextFont);
-         gVirtualX->GetTextExtent(w, h, (char*)GetTitle());
-         if (gVirtualX->InheritsFrom("TGCocoa"))
-            gVirtualX->SetTextFont(oldFont);
-      }
+      Double_t tsize = GetTextSizePixels(*gPad);
+      auto pp = gPad->GetPainter();
+      if (pp)
+         pp->GetTextExtent(GetTextFont(), tsize, w, h, GetTitle());
    }
 }
 
@@ -523,32 +568,14 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      a = TTF::GetBox().yMax;
-      d = TMath::Abs(TTF::GetBox().yMin);
-   } else {
-      const Font_t oldFont = gVirtualX->GetTextFont();
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(fTextFont);
-      gVirtualX->SetTextSize(tsize);
-      a = gVirtualX->GetFontAscent(text);
-      if (!a) {
-         UInt_t w;
-         gVirtualX->GetTextExtent(w, a, (char*)text);
-      }
-      d = gVirtualX->GetFontDescent(text);
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(oldFont);
-   }
+   Double_t tsize = GetTextSizePixels(*gPad);
+
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->GetTextAscentDescent(GetTextFont(), tsize, a, d, text);
 }
 
 
@@ -559,27 +586,14 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch() || gVirtualX->InheritsFrom("TGCocoa")) {
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      a = TTF::GetBox().yMax;
-      d = TMath::Abs(TTF::GetBox().yMin);
-   } else {
-      gVirtualX->SetTextSize(tsize);
-      a = gVirtualX->GetFontAscent();
-      if (!a) {
-         UInt_t w;
-         gVirtualX->GetTextExtent(w, a, (wchar_t*)text);
-      }
-      d = gVirtualX->GetFontDescent();
-   }
+   Double_t tsize = GetTextSizePixels(*gPad);
+
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->GetTextAscentDescent(GetTextFont(), tsize, a, d, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,26 +603,14 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) cons
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      TTF::GetTextExtent(w, h, (char*)text);
-   } else {
-      const Font_t oldFont = gVirtualX->GetTextFont();
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(fTextFont);
-      gVirtualX->SetTextSize(tsize);
-      gVirtualX->GetTextExtent(w, h, (char*)text);
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(oldFont);
-   }
+   Double_t tsize = GetTextSizePixels(*gPad);
+
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->GetTextExtent(GetTextFont(), tsize, w, h, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -618,33 +620,14 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 
 void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
-      Bool_t kernsave = TTF::GetKerning();
-      TTF::SetKerning(kern);
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      TTF::GetTextAdvance(a, (char*)text);
-      TTF::SetKerning(kernsave);
-   } else {
-      UInt_t h;
-      const Font_t oldFont = gVirtualX->GetTextFont();
-      //how do I know what to calculate without a font???
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(fTextFont);
+   Double_t tsize = GetTextSizePixels(*gPad);
 
-      gVirtualX->SetTextSize(tsize);
-      gVirtualX->GetTextExtent(a, h, (char*)text);
-
-      if (gVirtualX->InheritsFrom("TGCocoa"))
-         gVirtualX->SetTextFont(oldFont);
-   }
+   auto pp = gPad->GetPainter();
+   if (pp)
+      a = pp->GetTextAdvance(GetTextFont(), tsize, text, kern);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -654,21 +637,14 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
 {
-   if (!gPad) return;
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   if (!gPad)
+      return;
 
-   if (gVirtualX->HasTTFonts() || gPad->IsBatch() || gVirtualX->InheritsFrom("TGCocoa")) {
-      TTF::SetTextFont(fTextFont);
-      TTF::SetTextSize(tsize);
-      TTF::GetTextExtent(w, h, (wchar_t*)text);
-   } else {
-      gVirtualX->SetTextSize(tsize);
-      gVirtualX->GetTextExtent(w, h, (wchar_t*)text);
-   }
+   Double_t tsize = GetTextSizePixels(*gPad);
+
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->GetTextExtent(GetTextFont(), tsize, w, h, text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -702,14 +678,20 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
    Short_t valign = fTextAlign - 10*halign;      // vertical alignment
 
    GetControlBox(x, y, theta, cBoxX, cBoxY);
+
+   auto pp = gPad->GetPainter();
+   if (!pp)
+      return;
+
    // Draw the text control box outline
-   gVirtualX->SetLineStyle((Style_t)1);
-   gVirtualX->SetLineWidth(1);
-   gVirtualX->SetLineColor(1);
-   gVirtualX->DrawLine(cBoxX[0], cBoxY[0], cBoxX[1], cBoxY[1]);
-   gVirtualX->DrawLine(cBoxX[1], cBoxY[1], cBoxX[2], cBoxY[2]);
-   gVirtualX->DrawLine(cBoxX[2], cBoxY[2], cBoxX[3], cBoxY[3]);
-   gVirtualX->DrawLine(cBoxX[3], cBoxY[3], cBoxX[0], cBoxY[0]);
+   pp->SetAttLine({(Style_t)1, 1, 1});
+   for (int p1 = 0; p1 < 4; ++p1) {
+      int p2 = (p1 + 1) % 4;
+      pp->DrawLine(gPad->AbsPixeltoX(cBoxX[p1]),
+                   gPad->AbsPixeltoY(cBoxY[p1]),
+                   gPad->AbsPixeltoX(cBoxX[p2]),
+                   gPad->AbsPixeltoY(cBoxY[p2]));
+   }
 
    // Draw a symbol at the text starting point
    TPoint p;
@@ -737,12 +719,10 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
          }
       break;
    }
-   p.fX = (cBoxX[ix]+cBoxX[iy])/2;
-   p.fY = (cBoxY[ix]+cBoxY[iy])/2;
-   gVirtualX->SetMarkerColor(1);
-   gVirtualX->SetMarkerStyle(24);
-   gVirtualX->SetMarkerSize(0.7);
-   gVirtualX->DrawPolyMarker(1, &p);
+   Double_t mX = gPad->AbsPixeltoX((cBoxX[ix]+cBoxX[iy])/2);
+   Double_t mY = gPad->AbsPixeltoY((cBoxY[ix]+cBoxY[iy])/2);
+   pp->SetAttMarker({(Color_t)1, 24, 0.7});
+   pp->DrawPolyMarker(1, &mX, &mY);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -864,7 +844,7 @@ void TText::Streamer(TBuffer &R__b)
 
 Rectangle_t TText::GetBBox()
 {
-   Rectangle_t BBox{0, 0, 0, 0};
+   Rectangle_t bbox{0, 0, 0, 0};
    if (gPad) {
       UInt_t w, h;
       Int_t Dx = 0, Dy = 0;
@@ -884,13 +864,17 @@ Rectangle_t TText::GetBBox()
       case 2: Dy = h / 2; break;
       case 3: Dy = 0; break;
       }
-
-      BBox.fX = gPad->XtoPixel(fX) - Dx;
-      BBox.fY = gPad->YtoPixel(fY) - Dy;
-      BBox.fWidth = w;
-      BBox.fHeight = h;
+      if (TestBit(kTextNDC)) {
+         bbox.fX = gPad->UtoPixel(GetX()) - Dx;
+         bbox.fY = gPad->VtoPixel(GetY()) - Dy;
+      } else {
+         bbox.fX = gPad->XtoPixel(gPad->XtoPad(GetX())) - Dx;
+         bbox.fY = gPad->YtoPixel(gPad->YtoPad(GetY())) - Dy;
+      }
+      bbox.fWidth = w;
+      bbox.fHeight = h;
    }
-   return BBox;
+   return bbox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -900,20 +884,15 @@ TPoint TText::GetBBoxCenter()
 {
    TPoint p(0, 0);
    if (gPad) {
-      p.SetX(gPad->XtoPixel(fX));
-      p.SetY(gPad->YtoPixel(fY));
+      if (TestBit(kTextNDC)) {
+         p.SetX(gPad->UtoPixel(GetX()));
+         p.SetY(gPad->VtoPixel(GetY()));
+      } else {
+         p.SetX(gPad->XtoPixel(gPad->XtoPad(GetX())));
+         p.SetY(gPad->YtoPixel(gPad->YtoPad(GetY())));
+      }
    }
    return p;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the point given by Alignment as 'center'
-
-void TText::SetBBoxCenter(const TPoint &p)
-{
-   if (!gPad) return;
-   this->SetX(gPad->PixeltoX(p.GetX()));
-   this->SetY(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -921,8 +900,7 @@ void TText::SetBBoxCenter(const TPoint &p)
 
 void TText::SetBBoxCenterX(const Int_t x)
 {
-   if (!gPad) return;
-   this->SetX(gPad->PixeltoX(x));
+   SetX(GetXCoord(x, TestBit(kTextNDC)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -930,41 +908,5 @@ void TText::SetBBoxCenterX(const Int_t x)
 
 void TText::SetBBoxCenterY(const Int_t y)
 {
-   if (!gPad) return;
-   this->SetY(gPad->PixeltoY(y - gPad->VtoPixel(0)));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set left hand side of BoundingBox to a value
-/// (resize in x direction on left)
-
-void TText::SetBBoxX1(const Int_t /*x*/)
-{
-   //NOT IMPLEMENTED
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set right hand side of BoundingBox to a value
-/// (resize in x direction on right)
-
-void TText::SetBBoxX2(const Int_t /*x*/)
-{
-   //NOT IMPLEMENTED
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set top of BoundingBox to a value (resize in y direction on top)
-
-void TText::SetBBoxY1(const Int_t /*y*/)
-{
-   //NOT IMPLEMENTED
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set bottom of BoundingBox to a value
-/// (resize in y direction on bottom)
-
-void TText::SetBBoxY2(const Int_t /*y*/)
-{
-   //NOT IMPLEMENTED
+   SetY(GetYCoord(y, TestBit(kTextNDC)));
 }

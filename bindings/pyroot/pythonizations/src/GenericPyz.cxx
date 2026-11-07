@@ -11,11 +11,10 @@
 
 #include "Python.h"
 
-#include "CPyCppyy/API.h"
+#include "cpyrt/API.h"
 
-#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
-#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
-#include "../../cppyy/CPyCppyy/src/Utility.h"
+#include "../../cppjit/src/interop/cppjit_interop.h"
+#include "../../cppjit/src/cpyrt/Utility.h"
 
 #include "PyROOTPythonize.h"
 
@@ -25,16 +24,7 @@
 
 #include <map>
 
-namespace {
-
-std::string GetScopedFinalNameFromPyObject(const PyObject *pyobj)
-{
-   return Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance *)pyobj)->ObjectIsA());
-}
-
-} // namespace
-
-using namespace CPyCppyy;
+using namespace cppjit::cpyrt;
 
 // We take as unique identifier the declId of the class to
 // treat the case where a class is loaded, an instance printed,
@@ -55,7 +45,7 @@ PyObject *ClingPrintValue(PyObject *self, PyObject * /* args */)
    // to the printer function.
    static std::map<ULong64_t, void *> declIDPrinterMap;
 
-   auto cppObj = CPyCppyy::Instance_AsVoidPtr(self);
+   auto cppObj = cppjit::cpyrt::Instance_AsVoidPtr(self);
    if (!cppObj)
       // Proxied cpp object is null, use cppyy's generic __repr__
       return PyObject_Repr(self);
@@ -75,7 +65,7 @@ PyObject *ClingPrintValue(PyObject *self, PyObject * /* args */)
       gInterpreter->Declare(printerCode.c_str());
    }
 
-   const std::string className = GetScopedFinalNameFromPyObject(self);
+   const std::string className = cppjit::cpyrt::Instance_GetScopedFinalName(self);
 
    std::string printResult;
 

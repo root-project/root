@@ -7,58 +7,75 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT graf2d/asimage package
 # @author Pere Mato, CERN
+# @author Sergey Linev, GSI
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
-  NO_INSTALL_HEADERS
-  HEADERS
-    TASImage.h
-    TASImagePlugin.h
-    TASPluginGS.h
-    TASPngWriter.h
-  SOURCES
-    TASImage.cxx
-    TASPluginGS.cxx
-    TASPngWriter.cxx
-  DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
-  LIBRARIES
-    ${AFTERIMAGE_LIBRARIES}
-    ${ASEXTRA_LIBRARIES}
-    ${FREETYPE_LIBRARIES}
-    ${X11_LIBRARIES}
-    ZLIB::ZLIB
-  DEPENDENCIES
-    Core
-    Graf
-    Postscript
-  BUILTINS
-    AFTERIMAGE
-)
+if(asimage)
 
-target_include_directories(ASImage SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
+  ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
+    NO_GLOB_HEADERS
+    HEADERS
+      TASImage.h
+      TASImagePlugin.h
+      TASPluginGS.h
+      TASPngWriter.h
+    SOURCES
+      TASImage.cxx
+      TASPluginGS.cxx
+      TASPngWriter.cxx
+    DICTIONARY_OPTIONS
+      -writeEmptyRootPCM
+    LIBRARIES
+      libAfterImage
+    DEPENDENCIES
+      Core
+      Graf
+      Postscript
+  )
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
-  NO_INSTALL_HEADERS
+  if (x11)
+    target_link_libraries(ASImage PRIVATE X11::X11)
+  endif()
+
+endif()
+
+ROOT_STANDARD_LIBRARY_PACKAGE(ASImageUtils
+  NO_GLOB_HEADERS
   HEADERS
-    TASPaletteEditor.h
+    TASUtils.h
   SOURCES
-    src/TASPaletteEditor.cxx
+    TASUtils.cxx
   LINKDEF
-    LinkDefGui.h
+    LinkDefUtils.h
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
-  LIBRARIES
-    ${AFTERIMAGE_LIBRARIES}
-    ${ASEXTRA_LIBRARIES}
-    ${FREETYPE_LIBRARIES}
-    ${X11_LIBRARIES}
-    ZLIB::ZLIB
   DEPENDENCIES
-    Gui
-    ASImage
+    Gpad
 )
 
-target_include_directories(ASImageGui SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
+if(asimage)
 
-ROOT_INSTALL_HEADERS()
+  target_link_libraries(ASImageUtils PUBLIC ASImage)
+
+  ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
+    NO_GLOB_HEADERS
+    HEADERS
+      TASPaletteEditor.h
+    SOURCES
+      TASPaletteEditor.cxx
+    LINKDEF
+      LinkDefGui.h
+    DICTIONARY_OPTIONS
+      -writeEmptyRootPCM
+    LIBRARIES
+      libAfterImage
+    DEPENDENCIES
+      Gui
+      ASImage
+  )
+
+  ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+else()
+  target_compile_definitions(ASImageUtils PRIVATE NO_ASIMAGE)
+endif()

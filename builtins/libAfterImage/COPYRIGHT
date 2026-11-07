@@ -1,0 +1,45 @@
+///
+///	This is AfterStep 2 COPYRIGHT
+///
+
+Copyright (C) 2000  All Rights Reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+libAfterBase
+	Copyright (C) 1999-2004 Sasha Vasko   	<sasha at aftercode.net>
+	Copyright (c) 2000,2001 Andrew Ferguson <andrew@owsla.cjb.net>
+	Copyright (C) 1999 Ethan Fischer 	<allanon@crystaltokyo.com>
+	Copyright (C) 1998 Pierre Clerissi 	<clerissi@pratique.fr>
+
+libAfterImage
+	Copyright (C) 1999-2004 Sasha Vasko <sasha at aftercode.net>
+	Copyright (c) 2004 Valeriy Onuchin <Valeri dot Onoutchine at cern dot ch>
+	Copyright (c) 2001 Eric Kowalski <eric@beancrock.net>
+	Copyright (c) 1999,2001 Ethan Fisher <allanon@crystaltokyo.com>
+	Copyright (C) 1999-2001 Free Software Foundation, Inc.
+	Copyright (c) 2004 Maxim Nikulin <nikulin at gorodok.net>        */
+
+libAfterStep
+libAfterConf
+afterstep
+ASDocGen
+Pager
+Wharf
+WinList
+WinTabs

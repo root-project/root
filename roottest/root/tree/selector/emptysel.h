@@ -22,7 +22,7 @@ public :
     // cout << "This = " << this << std::endl;i
   };
 
-  TTree          *fChain;   //!pointer to the analyzed TTree or TChain
+  TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain
 
  emptysel(TTree * /*tree*/ =0): m_testvar(-999) { 
      std::cout << "In constructor" << endl;

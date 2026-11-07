@@ -23,7 +23,7 @@ class TDatabasePDG: public TNamed {
 protected:
    THashList           *fParticleList;     // list of PDG particles
    TObjArray           *fListOfClasses;    // list of classes (leptons etc.)
-   mutable TExMap      *fPdgMap;           //!hash-map from pdg-code to particle
+   mutable TExMap      *fPdgMap;           ///<!hash-map from pdg-code to particle
 
    // make copy-constructor and assigment protected since class cannot be copied
    TDatabasePDG(const TDatabasePDG& db)

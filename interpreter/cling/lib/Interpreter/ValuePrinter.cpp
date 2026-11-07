@@ -42,12 +42,6 @@
 #include "llvm/Support/Format.h"
 
 #include <locale>
-#if __cplusplus >= 202002L
-#include <version>
-#endif
-#ifdef __cpp_lib_source_location
-#include <source_location>
-#endif
 #include <string>
 
 using namespace cling;
@@ -557,16 +551,6 @@ namespace cling {
     return toUnicode(Val, 'L', 'x');
   }
 
-#ifdef __cpp_lib_source_location
-  CLING_LIB_EXPORT
-  std::string printValue(const std::source_location* location) {
-    cling::ostrstream strm;
-    strm << location->file_name() << ":" << location->line() << ":"
-         << location->function_name();
-    return strm.str().str();
-  }
-#endif
-
 } // end namespace cling
 
 namespace {
@@ -692,7 +676,7 @@ static std::string callPrintValue(const Value& V, const void* Val) {
     name += "_callPrintValue";
     clang::DeclarationName DeclName = &Ctx.Idents.get(name);
     clang::QualType FnTy
-      = Ctx.getFunctionType(clang::QualType(StdStringTD->getTypeForDecl(), 0), {},
+      = Ctx.getFunctionType(StdStringTD->getASTContext().getTypeDeclType(StdStringTD), {},
                             clang::FunctionProtoType::ExtProtoInfo());
     clang::FunctionDecl *WrapperFD
       = clang::FunctionDecl::Create(Ctx,
@@ -892,7 +876,7 @@ static std::string printUnpackedClingValue(const Value &V) {
     if (CXXRD->isLambda())
       return printAddress(V.getPtr(), '@');
 
-    std::string Str = printStringType(V, CXXRD->getTypeForDecl());
+    std::string Str = printStringType(V, C.getCanonicalTagType(CXXRD).getTypePtr());
     if (!Str.empty())
       return Str;
   } else if (const clang::BuiltinType *BT

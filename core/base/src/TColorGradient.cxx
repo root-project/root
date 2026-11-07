@@ -111,6 +111,12 @@ void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points,
    fColors.assign(colors, colors + nPoints * 4);
 
    Double_t sum[4] = { 0., 0., 0., 0. };
+#ifdef __clang__
+   // Clang vectoriser bug (confirmed for clang 20 - 22)
+   // https://github.com/llvm/llvm-project/issues/194008
+   // The store in the loop can smash the stack with e.g. -O2 -mavx2.
+#pragma clang loop vectorize(disable)
+#endif
    for (unsigned n = 0; n < fColors.size(); ++n)
       sum[n % 4] += fColors[n];
 

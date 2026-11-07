@@ -33,13 +33,14 @@ namespace TestStatistics {
 class RooUnbinnedL : public RooAbsL {
 public:
    RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended = RooAbsL::Extended::Auto,
-                RooFit::EvalBackend evalBackend = RooFit::EvalBackend::Legacy());
+                RooFit::EvalBackend evalBackend = RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
    RooUnbinnedL(const RooUnbinnedL &other);
    ~RooUnbinnedL() override;
    bool setApplyWeightSquared(bool flag);
 
    ROOT::Math::KahanSum<double>
    evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
+
 
    std::string GetClassName() const override { return "RooUnbinnedL"; }
 
@@ -51,6 +52,7 @@ private:
    mutable ROOT::Math::KahanSum<double> cachedResult_{0.};
    std::shared_ptr<RooFit::Evaluator> evaluator_;  ///<! For batched evaluation
    std::stack<std::vector<double>> _vectorBuffers; // used for preserving resources in batched evaluation
+   std::vector<double> _unitWeights;               ///<! all-ones weights for unweighted data in batched evaluation
 };
 
 } // namespace TestStatistics

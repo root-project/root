@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleWriteOptionsDaos.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-22
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -34,10 +33,7 @@ namespace Experimental {
 */
 // clang-format on
 class RNTupleWriteOptionsDaos : public ROOT::RNTupleWriteOptions {
-   std::string fObjectClass{"SX"};
-   /// The maximum cage size is set to the equivalent of 16 uncompressed pages - 16MiB by default.
-   /// A `fMaxCageSize` of 0 disables the caging mechanism.
-   uint32_t fMaxCageSize = 16 * RNTupleWriteOptions::fMaxUnzippedPageSize;
+   std::string fObjectClass{"UNKNOWN"};
 
 public:
    ~RNTupleWriteOptionsDaos() override = default;
@@ -51,12 +47,6 @@ public:
    /// `OC_xxx` constant defined in `daos_obj_class.h` may be used here without
    /// the OC_ prefix.
    void SetObjectClass(const std::string &val) { fObjectClass = val; }
-
-   uint32_t GetMaxCageSize() const { return fMaxCageSize; }
-   /// Set the upper bound for page concatenation into cages, in bytes. It is assumed
-   /// that cage size will be no smaller than the approximate uncompressed page size.
-   /// To disable page concatenation, set this value to 0.
-   void SetMaxCageSize(uint32_t cageSz) { fMaxCageSize = cageSz; }
 };
 
 } // namespace Experimental

@@ -15,41 +15,42 @@
 
 #include "TVirtualX.h"
 
-#include "TTF.h"
-
-
-#ifndef __CLING__
-
-#include "Windows4Root.h"
-#include "gdk/gdk.h"
-#include "gdk/win32/gdkwin32.h"
-
-#else
+#include <memory>
+#include <map>
 
 typedef unsigned long DWORD;
 typedef void* HANDLE;
 
-typedef ULongptr_t XID;
-typedef XID GdkDrawable;
-typedef XID GdkCursor;
-typedef XID GdkColormap;
-typedef XID GdkWindow;
-typedef XID GdkVisual;
-
-struct GdkGC;
-struct GdkGCValues;
-struct GdkWindowAttr;
-struct GdkColor { int pixel,red,green,blue; };
-struct GdkEvent;
-struct GdkImage;
-struct GdkPoint;
-struct GdkRectangle;
-
+#ifndef __GDK_H__
+struct _GdkDrawable;
+typedef struct _GdkDrawable    GdkDrawable;
+struct _GdkWindow;
+typedef struct _GdkWindow      GdkWindow;
+struct _GdkVisual;
+typedef struct _GdkVisual      GdkVisual;
+struct _GdkColormap;
+typedef struct _GdkColormap    GdkColormap;
+struct _GdkCursor;
+typedef struct _GdkCursor      GdkCursor;
+struct _GdkGC;
+typedef struct _GdkGC          GdkGC;
+struct _GdkImage;
+typedef struct _GdkImage       GdkImage;
+union _GdkEvent;
+typedef union _GdkEvent        GdkEvent;
+struct _GdkGCValues;
+typedef struct _GdkGCValues    GdkGCValues;
+struct _GdkWindowAttr;
+typedef struct _GdkWindowAttr  GdkWindowAttr;
+struct _GdkColor { unsigned long pixel; unsigned short red; unsigned short green; unsigned short blue; };
+typedef struct _GdkColor       GdkColor;
+struct _GdkPoint;
+typedef struct _GdkPoint       GdkPoint;
+struct _GdkRectangle;
+typedef struct _GdkRectangle   GdkRectangle;
 #endif
 
 typedef unsigned long KeySym;
-
-//#define None 0 /* universal null resource or null atom */
 
 struct XWindow_t;
 
@@ -64,34 +65,23 @@ class TExMap;
 class TGWin32 : public TVirtualX {
 
 private:
-   enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
-                 kBLeft, kBCenter, kBRight };
+   GdkImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
 
-   FT_Vector        fAlign;                 ///< alignment vector
+   template<typename CharType>
+   void      DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle,
+                            const CharType *text, ETextMode mode);
 
-   void    Align(void);
-   void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, GdkImage *xim,
-                     Int_t bx, Int_t by);
-   Bool_t  IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   GdkImage *GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void    RenderString(Int_t x, Int_t y, ETextMode mode);
-
-   Int_t            fMaxNumberOfWindows;    ///< Maximum number of windows
-   XWindow_t       *fWindows;               ///< List of windows
+   std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
    TExMap          *fColors;                ///< Hash list of colors
    GdkCursor       *fCursors[kNumCursors];  ///< List of cursors
 
-   void  CloseWindow1();
+   Int_t AddWindowHandle();
    void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                   Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                   UChar_t *image, Drawable_t id);
    void  RemovePixmap(GdkDrawable *pix);
-   void  SetColor(GdkGC *gc, Int_t ci);
+   void  SetColor(XWindow_t *ctxt, GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
-   void  SetMarkerType(Int_t type, Int_t n, GdkPoint *xy);
-   void  MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
-   Int_t FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
-   void  ImgPickPalette(GdkImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
 
    //---- Private methods used for GUI ----
    void MapGCValues(GCValues_t &gval, ULong_t &xmask, GdkGCValues &xgval, Bool_t tox = kTRUE);
@@ -110,9 +100,6 @@ protected:
    Int_t       fScreenNumber;       ///< Screen number
    Bool_t      fHasTTFonts;         ///< True when TrueType fonts are used
    Bool_t      fUseSysPointers;     ///< True when using system mouse pointers
-   Int_t       fTextAlignH;         ///< Text Alignment Horizontal
-   Int_t       fTextAlignV;         ///< Text Alignment Vertical
-   Int_t       fTextAlign;          ///< Text alignment (set in SetTextAlign)
    Float_t     fCharacterUpX;       ///< Character Up vector along X
    Float_t     fCharacterUpY;       ///< Character Up vector along Y
    Float_t     fTextMagnitude;      ///< Text Magnitude
@@ -126,21 +113,6 @@ protected:
    Handle_t    fXEvent;             ///< Current native (GDK) event
    TObject*    fRefreshTimer;       ///< TGWin32RefreshTimer for GUI thread message handler
 
-   Bool_t      fFillColorModified;
-   Bool_t      fFillStyleModified;
-   Bool_t      fLineColorModified;
-   Bool_t      fPenModified;        ///< line syle || width modified
-   Bool_t      fMarkerStyleModified;
-   Bool_t      fMarkerColorModified;
-
-   void        UpdateFillColor();
-   void        UpdateFillStyle();
-   void        UpdateLineColor();
-   void        UpdateMarkerStyle();
-   void        UpdateMarkerColor();
-   void        UpdateLineStyle();
-
-   // needed by TGWin32TTF
    Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);
    void       QueryColors(GdkColormap *cmap, GdkColor *colors, Int_t ncolors);
    GdkGC     *GetGC(Int_t which) const;
@@ -178,8 +150,6 @@ public:
    ULong_t   GetPixel(Color_t cindex) override;
    void      GetPlanes(Int_t &nplanes) override;
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b) override;
-   virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess) override;
-   virtual void GetTextExtent(UInt_t &, UInt_t &, wchar_t *) override {}
    Float_t   GetTextMagnitude() override {return fTextMagnitude;}
    Window_t  GetWindowID(Int_t wid) override;
    Bool_t    HasTTFonts() const override { return fHasTTFonts; }
@@ -204,11 +174,15 @@ public:
    void      SetDoubleBufferON() override;
    void      SetDrawMode(EDrawMode mode) override;
    void      SetFillColor(Color_t cindex) override;
+   Color_t   GetFillColor() const override;
    void      SetFillStyle(Style_t style) override;
+   Style_t   GetFillStyle() const override;
    void      SetLineColor(Color_t cindex) override;
    void      SetLineType(Int_t n, Int_t *dash) override;
    void      SetLineStyle(Style_t linestyle) override;
+   Style_t   GetLineStyle() const override;
    void      SetLineWidth(Width_t width) override;
+   Width_t   GetLineWidth() const override;
    void      SetMarkerColor(Color_t cindex) override;
    void      SetMarkerSize(Float_t markersize) override;
    void      SetMarkerStyle(Style_t markerstyle) override;
@@ -223,6 +197,36 @@ public:
    Int_t     WriteGIF(char *name) override;
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname) override;
    Window_t  GetCurrentWindow() const override;
+   void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess) override;
+   void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess) override;
+
+   //---- Methods used for new graphics -----
+   WinContext_t GetWindowContext(Int_t wid) override;
+   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
+   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
+   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
+   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
+   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
+   EDrawMode GetDrawModeW(WinContext_t wctxt) override;
+   void      ClearWindowW(WinContext_t wctxt) override;
+   void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
+   void      SetOpacityW(WinContext_t wctxt, Int_t percent) override;
+   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
+   Int_t     WriteGIFW(WinContext_t wctxt, const char *name) override;
+
+   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
+   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                       const char *text, ETextMode mode) override;
+   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                       const wchar_t *text, ETextMode mode) override;
+   void      DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode) override;
+
+
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;

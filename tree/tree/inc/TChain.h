@@ -86,6 +86,7 @@ public:
    TFriendElement *AddFriend(TTree* chain, const char* alias = "", bool warn = false) override;
    void      Browse(TBrowser*) override;
    virtual void      CanDeleteRefs(bool flag = true);
+   virtual TTree    *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override;
    virtual void      CreatePackets();
    void      DirectoryAutoAdd(TDirectory *) override;
    Long64_t  Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override;
@@ -114,8 +115,6 @@ public:
    TObjArray        *GetListOfFiles() const {return fFiles;}
    TObjArray *GetListOfLeaves() override;
    const char *GetAlias(const char *aliasName) const override;
-   Double_t  GetMaximum(const char *columname) override;
-   Double_t  GetMinimum(const char *columname) override;
    Int_t     GetNbranches() override;
    Long64_t  GetReadEntry() const override;
    TList            *GetStatus() const { return fStatus; }

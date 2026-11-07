@@ -6,6 +6,8 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
+#include <ROOT/RNTupleAttrReading.hxx>
+#include <ROOT/RNTupleAttrWriting.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleJoinTable.hxx>
@@ -57,6 +59,7 @@
 using ROOT::EExtraTypeInfoIds;
 using ROOT::RNTupleLocalIndex;
 using ROOT::RNTupleLocator;
+using ROOT::RNTupleLocatorMulti;
 using ROOT::RNTupleLocatorObject64;
 using ROOT::Internal::RColumnIndex;
 using RClusterDescriptor = ROOT::RClusterDescriptor;
@@ -89,14 +92,15 @@ using RNTupleWriter = ROOT::RNTupleWriter;
 using RNTupleWriteOptions = ROOT::RNTupleWriteOptions;
 using RNTupleWriteOptionsDaos = ROOT::Experimental::RNTupleWriteOptionsDaos;
 using RNTupleMetrics = ROOT::Experimental::Detail::RNTupleMetrics;
-using RNTupleMerger = ROOT::Experimental::Internal::RNTupleMerger;
-using RNTupleMergeOptions = ROOT::Experimental::Internal::RNTupleMergeOptions;
-using ENTupleMergingMode = ROOT::Experimental::Internal::ENTupleMergingMode;
+using RNTupleMerger = ROOT::Internal::RNTupleMerger;
+using RNTupleMergeOptions = ROOT::Internal::RNTupleMergeOptions;
+using ENTupleMergingMode = ROOT::Internal::ENTupleMergingMode;
 using RNTupleModel = ROOT::RNTupleModel;
-using RNTupleOpenSpec = ROOT::Experimental::RNTupleOpenSpec;
+using RNTupleInputSpec = ROOT::RNTupleInputSpec;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
-using RNTupleProcessor = ROOT::Experimental::RNTupleProcessor;
+using RNTupleProcessor = ROOT::RNTupleProcessor;
+using RNTupleProcessorOptions = ROOT::RNTupleProcessorOptions;
 using RNTupleSerializer = ROOT::Internal::RNTupleSerializer;
 using RPage = ROOT::Internal::RPage;
 using RPageAllocatorHeap = ROOT::Internal::RPageAllocatorHeap;
@@ -128,5 +132,31 @@ struct IMTRAII {
 /// The page of px has a wrong checksum. The page of py has corrupted data. The page of pz is valid.
 /// The function is backend agnostic (file, DAOS, ...).
 void CreateCorruptedRNTuple(const std::string &uri);
+
+enum class EEndianness {
+   LE,
+   BE
+};
+
+/// Given the file at `filePath` containing an UNCOMPRESSED RNTuple, and given the seek/len of a section of this
+/// RNTuple, patches a byte range of this section with the given buffer `bytesToWrite`. After doing this, it recomputes
+/// and updates the section's checksum.
+/// `sectionSeek` must point to the start of the section's payload, excluding the key (and, in case of the Anchor, the
+/// first 6 bytes containing the object's version and nbytes).
+/// `sectionLen` must refer to the in-memory of the section's payload, excluding the key and the checksum.
+/// Note that this is assumed to be equal to the on-disk size since the section must be uncompressed.
+///
+/// This function does very minimal checks (e.g. it does not verify that the given section is actually correct or in
+/// the file at all), so the caller must validate these assumptions.
+void PatchRNTupleSection(std::string_view filePath, std::uint64_t sectionSeek, std::uint64_t sectionLen,
+                         std::uint64_t patchedOffsetIntoSection, const std::byte *bytesToWrite,
+                         std::size_t bytesToWriteLen, EEndianness sectionEndianness);
+
+// TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+// See also https://github.com/root-project/root/issues/9371
+#define EXPECT_NO_STREAMER_OR_DICTIONARY()                                                                          \
+   ROOT::TestSupport::CheckDiagsRAII diagNoStreamerOrDictRAII;                                                      \
+   diagNoStreamerOrDictRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary", false); \
+   diagNoStreamerOrDictRAII.optionalDiag(kWarning, "TClass::Init", "no dictionary for class", false)
 
 #endif

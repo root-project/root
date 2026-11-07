@@ -88,7 +88,6 @@ public:
      //LM: RooMinimizer.setPrintLevel has +1 offset - so subtract  here -1
      minim.setPrintLevel(fPrintLevel-1);
      int status = -1;
-     //   minim.optimizeConst(true);
      for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
      //    status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
         status = minim.minimize(fMinimizer, "Minimize");

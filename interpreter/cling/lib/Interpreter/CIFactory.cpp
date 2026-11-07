@@ -38,6 +38,7 @@
 #include "clang/Serialization/ASTReader.h"
 #include "clang/Serialization/ASTWriter.h"
 #include "clang/Serialization/SerializationDiagnostic.h"
+#include "clang/Options/OptionUtils.h"
 
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
@@ -211,7 +212,7 @@ namespace {
       // Note: On FreeBSD it uses getprogpath().
       // Note: Otherwise it uses dladdr().
       //
-      return CompilerInvocation::GetResourcesPath(
+      return GetResourcesPath(
           "cling", (void*)intptr_t(GetExecutablePath));
     } else {
       std::string resourcePath;
@@ -365,9 +366,50 @@ namespace {
           sArguments.addArgument("-nostdinc++");
       }
 
-  #ifdef CLING_OSX_SYSROOT
-    sArguments.addArgument("-isysroot", CLING_OSX_SYSROOT);
-  #endif
+  #ifdef __APPLE__
+  //
+  // On macOS, we try to find the SDK location through the following steps:
+  //   - We check if the -isysroot option is specified and the directory exists
+  //   - If not, we check for the directory specified by the SDKROOT env
+  //     variable, which is handled by the driver internally
+  //   - If also that is not there, we execute xcrun as a last resort
+  //
+  {
+    auto arvIt = std::find(args.begin(), args.end(), "-isysroot");
+    std::string cling_osx_sysroot_directory;
+    if(arvIt != args.end() && ++arvIt != args.end())
+      cling_osx_sysroot_directory = *arvIt;
+    if (!llvm::sys::fs::exists(cling_osx_sysroot_directory)) {
+      auto env = std::getenv("SDKROOT");
+      if (!env || !*env) {
+        std::array<char, 128> buffer;
+        const auto xcrun_cmd = "xcrun  --show-sdk-path";
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(
+            ::popen(xcrun_cmd, "r"), pclose);
+        if (!pipe) {
+          cling::errs() << "The option -isyroot was not passed to cling. "
+                        << "The command " << xcrun_cmd << " was tried to "
+                        << "find the SDK path on the  system, however, an "
+                        << "issue with the invocation occurred.\n";
+        } else {
+          cling_osx_sysroot_directory.clear();
+          // Read the output block by block
+          while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            cling_osx_sysroot_directory += buffer.data();
+          }
+          if (!cling_osx_sysroot_directory.empty()) {
+            cling_osx_sysroot_directory.pop_back();
+            sArguments.addArgument("-isysroot", cling_osx_sysroot_directory);
+          } else {
+            cling::errs() << "The command " << xcrun_cmd << " was tried to "
+                          << "find the SDK path on the system, however, no "
+                            "valid path was returned.\n";
+          }
+        }
+      }
+    }
+  }
+  #endif // __APPLE__
 
 #endif // _MSC_VER
 
@@ -434,7 +476,9 @@ namespace {
     }
 
     //Opts.Modules = 1;
+#ifndef __APPLE__
     Opts.BuiltinHeadersInSystemModules = 1;
+#endif
 
     // See test/CodeUnloading/PCH/VTables.cpp which implicitly compares clang
     // to cling lang options. They should be the same, we should not have to
@@ -729,18 +773,10 @@ namespace {
                             /*AllowModulemapOverride=*/ false);
 #elif __APPLE__
     if (Triple.isMacOSX()) {
-      if (CI.getTarget().getSDKVersion() < VersionTuple(14, 4)) {
-        maybeAppendOverlayEntry(stdIncLoc.str(),
-                                "std_darwin.MacOSX14.2.sdk.modulemap",
-                                clingIncLoc.str().str(), MOverlay,
-                                /*RegisterModuleMap=*/true,
-                                /*AllowModulemapOverride=*/false);
-      } else {
-        maybeAppendOverlayEntry(stdIncLoc.str(), "std_darwin.modulemap",
-                                clingIncLoc.str().str(), MOverlay,
-                                /*RegisterModuleMap=*/ true,
-                                /*AllowModulemapOverride=*/ false);
-      }
+      maybeAppendOverlayEntry(stdIncLoc.str(), "std_darwin.modulemap",
+                              clingIncLoc.str().str(), MOverlay,
+                              /*RegisterModuleMap=*/true,
+                              /*AllowModulemapOverride=*/false);
     }
 #else
     maybeAppendOverlayEntry(cIncLoc.str(), "libc.modulemap",
@@ -875,9 +911,6 @@ namespace {
     PPOpts.addMacroDef("__CLING__GNUC_MINOR__=" ClingStringify(__GNUC_MINOR__));
 #elif defined(_MSC_VER)
     PPOpts.addMacroDef("__CLING__MSVC__=" ClingStringify(_MSC_VER));
-#if defined(_WIN64) && defined(_DEBUG)
-    PPOpts.addMacroDef("_ITERATOR_DEBUG_LEVEL=0");
-#endif
 #endif
 
 // https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
@@ -959,12 +992,12 @@ namespace {
     llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagIDs(new DiagnosticIDs());
 
     std::unique_ptr<TextDiagnosticPrinter>
-      DiagnosticPrinter(new TextDiagnosticPrinter(cling::errs(), &DiagOpts));
+      DiagnosticPrinter(new TextDiagnosticPrinter(cling::errs(), DiagOpts));
 
     DiagnosticPrinter->setPrefix(ExeName);
 
     llvm::IntrusiveRefCntPtr<DiagnosticsEngine>
-      Diags(new DiagnosticsEngine(DiagIDs, &DiagOpts,
+      Diags(new DiagnosticsEngine(DiagIDs, DiagOpts,
                                   DiagnosticPrinter.get(), /*Owns it*/ true));
     DiagnosticPrinter.release();
 
@@ -1010,13 +1043,13 @@ namespace {
     }
 
     CI->setTarget(TargetInfo::CreateTargetInfo(Diags,
-                                               CI->getInvocation().TargetOpts));
+                                               CI->getInvocation().getTargetOpts()));
     if (!CI->hasTarget()) {
       cling::errs() << "Could not determine compiler target.\n";
       return false;
     }
 
-    CI->getTarget().adjust(Diags, LangOpts);
+    CI->getTarget().adjust(Diags, LangOpts, CI->getAuxTarget());
 
     // This may have already been done via a precompiled header
     if (Targ)
@@ -1093,15 +1126,20 @@ namespace {
                                  StringRef ModuleFilename, bool /*Complain*/,
                                  bool /*AllowCompatibleDifferences*/) override {
           Out.indent(2) << "Language options:\n";
-#define LANGOPT(Name, Bits, Default, Description)                       \
-          DUMP_BOOLEAN(LangOpts.Name, Description);
-#define ENUM_LANGOPT(Name, Type, Bits, Default, Description)            \
-          Out.indent(4) << Description << ": "                          \
-                    << static_cast<unsigned>(LangOpts.get##Name()) << "\n";
-#define VALUE_LANGOPT(Name, Bits, Default, Description) \
-          Out.indent(4) << Description << ": " << LangOpts.Name << "\n";
-#define BENIGN_LANGOPT(Name, Bits, Default, Description)
-#define BENIGN_ENUM_LANGOPT(Name, Type, Bits, Default, Description)
+
+          // FIXME: Replace with C++20 `using enum
+          // LangOptions::CompatibilityKind`.
+          using CK = clang::LangOptions::CompatibilityKind;
+#define LANGOPT(Name, Bits, Default, Compatibility, Description)               \
+  if constexpr (CK::Compatibility != CK::Benign)                               \
+    DUMP_BOOLEAN(LangOpts.Name, Description);
+#define ENUM_LANGOPT(Name, Type, Bits, Default, Compatibility, Description)    \
+  if constexpr (CK::Compatibility != CK::Benign)                               \
+    Out.indent(4) << Description << ": "                                       \
+                  << static_cast<unsigned>(LangOpts.get##Name()) << "\n";
+#define VALUE_LANGOPT(Name, Bits, Default, Compatibility, Description)         \
+  if constexpr (CK::Compatibility != CK::Benign)                               \
+    Out.indent(4) << Description << ": " << LangOpts.Name << "\n";
 #include "clang/Basic/LangOptions.def"
 
           if (!LangOpts.ModuleFeatures.empty()) {
@@ -1133,21 +1171,21 @@ namespace {
           return false;
         }
 
-        bool ReadDiagnosticOptions(IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts,
+        bool ReadDiagnosticOptions(DiagnosticOptions &DiagOpts,
                                    StringRef ModuleFilename,
                                    bool /*Complain*/) override {
           Out.indent(2) << "Diagnostic options:\n";
-#define DIAGOPT(Name, Bits, Default) DUMP_BOOLEAN(DiagOpts->Name, #Name);
+#define DIAGOPT(Name, Bits, Default) DUMP_BOOLEAN(DiagOpts.Name, #Name);
 #define ENUM_DIAGOPT(Name, Type, Bits, Default)                         \
-          Out.indent(4) << #Name << ": " << DiagOpts->get##Name() << "\n";
+          Out.indent(4) << #Name << ": " << DiagOpts.get##Name() << "\n";
 #define VALUE_DIAGOPT(Name, Bits, Default)                              \
-      Out.indent(4) << #Name << ": " << DiagOpts->Name << "\n";
+      Out.indent(4) << #Name << ": " << DiagOpts.Name << "\n";
 #include "clang/Basic/DiagnosticOptions.def"
 
           Out.indent(4) << "Diagnostic flags:\n";
-          for (const std::string &Warning : DiagOpts->Warnings)
+          for (const std::string &Warning : DiagOpts.Warnings)
             Out.indent(6) << "-W" << Warning << "\n";
-          for (const std::string &Remark : DiagOpts->Remarks)
+          for (const std::string &Remark : DiagOpts.Remarks)
             Out.indent(6) << "-R" << Remark << "\n";
 
           return false;
@@ -1276,7 +1314,7 @@ namespace {
       Out << "  Module format: " << (IsRaw ? "raw" : "obj") << "\n";
       Preprocessor &PP = CI.getPreprocessor();
       DumpModuleInfoListener Listener(Out);
-      HeaderSearchOptions &HSOpts =
+      const HeaderSearchOptions &HSOpts =
         PP.getHeaderSearchInfo().getHeaderSearchOpts();
       ASTReader::readASTFileControlBlock(CurInput, FileMgr, CI.getModuleCache(),
                                          CI.getPCHContainerReader(),
@@ -1317,6 +1355,10 @@ namespace {
 
     bool profilingEnabled =
         cling::utils::ConvertEnvValueToBool(std::getenv("CLING_PROFILE"));
+
+    // Make sure clang's driver mode is not influenced by the executable name
+    // https://github.com/llvm/llvm-project/issues/225385
+    argvCompile.push_back("--driver-mode=g++");
 
 #if __APPLE__ && __arm64__
     argvCompile.push_back("--target=arm64-apple-darwin20.3.0");
@@ -1478,7 +1520,7 @@ namespace {
     }
 
     llvm::Triple TheTriple(llvm::sys::getProcessTriple());
-    clang::driver::Driver Drvr(argv[0], TheTriple.getTriple(), *Diags);
+    clang::driver::Driver Drvr(ClingBin, TheTriple.getTriple(), *Diags);
     //Drvr.setWarnMissingInput(false);
     Drvr.setCheckInputsExist(false); // think foo.C(12)
     llvm::ArrayRef<const char*>RF(&(argvCompile[0]), argvCompile.size());
@@ -1502,8 +1544,7 @@ namespace {
     Diags->Reset();
 
     // Create and setup a compiler instance.
-    std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
-    CI->setInvocation(InvocationPtr);
+    std::unique_ptr<CompilerInstance> CI(new CompilerInstance(std::move(InvocationPtr)));
     CI->setDiagnostics(Diags.get()); // Diags is ref-counted
     if (!OnlyLex)
       CI->getDiagnosticOpts().ShowColors =
@@ -1521,8 +1562,9 @@ namespace {
 
     IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay =
         new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem());
-    auto FileMgr = CI->createFileManager(Overlay);
-    llvm::vfs::FileSystem &VFS = FileMgr->getVirtualFileSystem();
+    CI->createVirtualFileSystem(Overlay);
+    CI->createFileManager();
+    llvm::vfs::FileSystem &VFS = CI->getVirtualFileSystem();
     // Configure our handling of diagnostics.
     ProcessWarningOptions(*Diags, DiagOpts, VFS);
 
@@ -1674,7 +1716,7 @@ namespace {
       auto TO = std::make_shared<TargetOptions>();
       TO->Triple = CI->getFrontendOpts().AuxTriple;
       TO->HostTriple = CI->getTarget().getTriple().str();
-      CI->setAuxTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(), TO));
+      CI->setAuxTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(), *TO));
     }
 
     // Set up the preprocessor
@@ -1700,7 +1742,7 @@ namespace {
 
     std::vector<std::unique_ptr<ASTConsumer>> Consumers;
 
-    if (!OnlyLex) {
+    if (!OnlyLex && !AutoComplete) {
       assert(customConsumer && "Need to specify a custom consumer"
                                " when not in OnlyLex mode");
       Consumers.push_back(std::move(customConsumer));
@@ -1729,7 +1771,7 @@ namespace {
 
       Consumers.push_back(std::make_unique<PCHGenerator>(
           CI->getPreprocessor(), CI->getModuleCache(), ModuleOutputFile,
-          Sysroot, PCHBuff, CI->getFrontendOpts().ModuleFileExtensions,
+          Sysroot, PCHBuff, CI->getCodeGenOpts(), CI->getFrontendOpts().ModuleFileExtensions,
           /*AllowASTWithErrors=*/false,
           /*IncludeTimestamps=*/
           +CI->getFrontendOpts().BuildingImplicitModule));
@@ -1822,7 +1864,7 @@ namespace {
            << ModuleMapFile;
         continue;
       }
-      PP.getHeaderSearchInfo().loadModuleMapFile(*File, /*IsSystem*/ false);
+      PP.getHeaderSearchInfo().parseAndLoadModuleMapFile(*File, /*IsSystem*/ false);
     }
 
     HandleProgramActions(*CI);
@@ -1834,25 +1876,27 @@ namespace {
 
 namespace cling {
 
-  CompilerInstance*
-  CIFactory::createCI(llvm::StringRef Code, const InvocationOptions& Opts,
-                      const char* LLVMDir,
-                      std::unique_ptr<clang::ASTConsumer> consumer,
-                      const ModuleFileExtensions& moduleExtensions,
-                      bool AutoComplete /*false*/) {
+  CompilerInstance* CIFactory::createCI(
+      llvm::StringRef Code, const InvocationOptions& Opts, const char* LLVMDir,
+      std::optional<std::unique_ptr<clang::ASTConsumer>> consumerOpt,
+      const ModuleFileExtensions& moduleExtensions,
+      bool AutoComplete /*false*/) {
     return createCIImpl(llvm::MemoryBuffer::getMemBuffer(Code),
-                        Opts.CompilerOpts, LLVMDir, std::move(consumer),
+                        Opts.CompilerOpts, LLVMDir,
+                        consumerOpt ? std::move(*consumerOpt) : nullptr,
                         moduleExtensions, false /*OnlyLex*/,
                         !Opts.IsInteractive(), AutoComplete);
   }
 
-CompilerInstance* CIFactory::createCI(
-    MemBufPtr_t Buffer, int argc, const char* const* argv, const char* LLVMDir,
-    std::unique_ptr<clang::ASTConsumer> consumer,
-    const ModuleFileExtensions& moduleExtensions, bool OnlyLex /*false*/) {
-  return createCIImpl(std::move(Buffer), CompilerOptions(argc, argv),  LLVMDir,
-                      std::move(consumer), moduleExtensions, OnlyLex);
-}
+  CompilerInstance* CIFactory::createCI(
+      MemBufPtr_t Buffer, int argc, const char* const* argv,
+      const char* LLVMDir,
+      std::optional<std::unique_ptr<clang::ASTConsumer>> consumerOpt,
+      const ModuleFileExtensions& moduleExtensions, bool OnlyLex /*false*/) {
+    return createCIImpl(std::move(Buffer), CompilerOptions(argc, argv), LLVMDir,
+                        consumerOpt ? std::move(*consumerOpt) : nullptr,
+                        moduleExtensions, OnlyLex);
+  }
 
 } // namespace cling
 

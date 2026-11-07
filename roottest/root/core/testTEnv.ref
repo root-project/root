@@ -1,4 +1,3 @@
-
 string = mystring
 quotedstring = "my quoted string"
 int = 99

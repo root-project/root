@@ -9,19 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cstdlib>
-#include <iostream>
-
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
 #include "TMarker.h"
-#include "TVirtualX.h"
 #include "TMath.h"
 #include "TPoint.h"
 #include "TText.h"
-#include "snprintf.h"
 
+#include <cstdlib>
+#include <iostream>
+#include <cstdio>
 
 
 /** \class TMarker
@@ -177,8 +175,8 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
    if (!gPad) return 9999;
    Int_t pxm, pym;
    if (TestBit(kMarkerNDC)) {
-      pxm = gPad->UtoPixel(fX);
-      pym = gPad->VtoPixel(fY);
+      pxm = gPad->UtoAbsPixel(fX);
+      pym = gPad->VtoAbsPixel(fY);
    } else {
       pxm  = gPad->XtoAbsPixel(gPad->XtoPad(fX));
       pym  = gPad->YtoAbsPixel(gPad->YtoPad(fY));
@@ -198,7 +196,6 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
 void TMarker::Draw(Option_t *option)
 {
    AppendPad(option);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -223,71 +220,59 @@ TMarker *TMarker::DrawMarker(Double_t x, Double_t y)
 
 void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable()) return;
 
-   TPoint p;
-   static Int_t pxold, pyold;
-   static Bool_t ndcsav;
-   Double_t dpx, dpy, xp1,yp1;
-   Bool_t opaque  = gPad->OpaqueMoving();
+   auto &parent = *gPad;
 
-   if (!gPad->IsEditable()) return;
+   Bool_t opaque = parent.OpaqueMoving();
+
+   auto action = [this, &parent](Bool_t paint, Int_t posx, Int_t posy) {
+      Double_t x = parent.AbsPixeltoX(posx);
+      Double_t y = parent.AbsPixeltoY(posy);
+      if (paint) {
+         Double_t scale = TMath::Max(5., 4. * GetMarkerSize());
+         Double_t dx = (parent.GetX2() - parent.GetX1()) / parent.GetPadWidth() * scale;
+         Double_t dy = (parent.GetY2() - parent.GetY1()) / parent.GetPadHeight() * scale;
+
+         Double_t xc[5] = { x, x + dx, x, x - dx, x };
+         Double_t yc[5] = { y - dy, y, y + dy, y, y - dy };
+         TAttLine(1,1,1).ModifyOn(parent);
+         parent.PaintPolyLine(5, xc, yc, "imarker");
+      } else if (TestBit(kMarkerNDC)) {
+         SetX((x - parent.GetX1()) / (parent.GetX2() - parent.GetX1()));
+         SetY((y - parent.GetY1()) / (parent.GetY2() - parent.GetY1()));
+      } else {
+         SetX(parent.PadtoX(x));
+         SetY(parent.PadtoY(y));
+      }
+   };
 
    switch (event) {
 
    case kButton1Down:
-      ndcsav = TestBit(kMarkerNDC);
-      if (!opaque) {
-         gVirtualX->SetTextColor(-1);  // invalidate current text color (use xor mode)
-         TAttMarker::Modify();  //Change marker attributes only if necessary
-      }
-      // No break !!!
-
    case kMouseMotion:
-      pxold = px;  pyold = py;
-      gPad->SetCursor(kMove);
+      parent.SetCursor(kMove);
       break;
 
    case kButton1Motion:
-      p.fX = pxold; p.fY = pyold;
-      if (!opaque) gVirtualX->DrawPolyMarker(1, &p);
-      p.fX = px; p.fY = py;
-      if (!opaque) gVirtualX->DrawPolyMarker(1, &p);
-      pxold = px;  pyold = py;
       if (opaque) {
-         if (ndcsav) this->SetNDC(kFALSE);
-         this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px)));
-         this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py)));
-         gPad->ShowGuidelines(this, event, 'i', true);
-         gPad->Modified(kTRUE);
-         gPad->Update();
+         action(false, px, py);
+         parent.ShowGuidelines(this, event, 'i', true);
+         parent.Modified();
+      } else {
+         action(true, px, py);
       }
+      parent.UpdateAsync();
       break;
 
    case kButton1Up:
       if (opaque) {
-         if (ndcsav && !this->TestBit(kMarkerNDC)) {
-            this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-            this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-            this->SetNDC();
-         }
-         gPad->ShowGuidelines(this, event);
+         parent.ShowGuidelines(this, event);
       } else {
-         if (TestBit(kMarkerNDC)) {
-            dpx  = gPad->GetX2() - gPad->GetX1();
-            dpy  = gPad->GetY2() - gPad->GetY1();
-            xp1  = gPad->GetX1();
-            yp1  = gPad->GetY1();
-            fX = (gPad->AbsPixeltoX(pxold)-xp1)/dpx;
-            fY = (gPad->AbsPixeltoY(pyold)-yp1)/dpy;
-         } else {
-            fX = gPad->PadtoX(gPad->AbsPixeltoX(px));
-            fY = gPad->PadtoY(gPad->AbsPixeltoY(py));
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-         gVirtualX->SetTextColor(-1);
+         action(false, px, py);
+         parent.Modified();
       }
+      parent.UpdateAsync();
       break;
    }
 }
@@ -306,14 +291,12 @@ void TMarker::ls(Option_t *) const
 
 void TMarker::Paint(Option_t *)
 {
-   if (!gPad) return;
-   if (TestBit(kMarkerNDC)) {
-      Double_t u = gPad->GetX1() + fX*(gPad->GetX2()-gPad->GetX1());
-      Double_t v = gPad->GetY1() + fY*(gPad->GetY2()-gPad->GetY1());
-      PaintMarker(u,v);
-   } else {
-      PaintMarker(gPad->XtoPad(fX),gPad->YtoPad(fY));
-   }
+   if (!gPad)
+      return;
+   if (TestBit(kMarkerNDC))
+      PaintMarkerNDC(GetX(), GetY());
+   else
+      PaintMarker(gPad->XtoPad(GetX()), gPad->YtoPad(GetY()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -322,14 +305,17 @@ void TMarker::Paint(Option_t *)
 void TMarker::PaintMarker(Double_t x, Double_t y)
 {
    TAttMarker::Modify();  //Change line attributes only if necessary
-   if (gPad) gPad->PaintPolyMarker(-1,&x,&y,"");
+   if (gPad) gPad->PaintPolyMarker(-1, &x, &y, "");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with new coordinates in NDC.
 
-void TMarker::PaintMarkerNDC(Double_t, Double_t)
+void TMarker::PaintMarkerNDC(Double_t u, Double_t v)
 {
+   Double_t x = gPad->GetX1() + u * (gPad->GetX2() - gPad->GetX1());
+   Double_t y = gPad->GetY1() + v * (gPad->GetY2() - gPad->GetY1());
+   PaintMarker(x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -391,42 +377,22 @@ void TMarker::Streamer(TBuffer &R__b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the bounding Box of the Line
+/// Return the bounding Box of the marker
 
 Rectangle_t TMarker::GetBBox()
 {
-   Rectangle_t BBox{0, 0, 0, 0};
+   auto size = GetMarkerSize();
+   Rectangle_t bbox{0, 0, (UShort_t) (2*size), (UShort_t) (2*size) };
    if (gPad) {
-      Double_t size = GetMarkerSize();
-      BBox.fX = gPad->XtoPixel(fX) + (Int_t)(2 * size);
-      BBox.fY = gPad->YtoPixel(fY) - (Int_t)(2 * size);
-      BBox.fWidth = 2 * size;
-      BBox.fHeight = 2 * size;
+      if (TestBit(kMarkerNDC)) {
+         bbox.fX = gPad->UtoPixel(GetX()) - size;
+         bbox.fY = gPad->VtoPixel(GetY()) - size;
+      } else {
+         bbox.fX = gPad->XtoPixel(gPad->XtoPad(GetX())) - size;
+         bbox.fY = gPad->YtoPixel(gPad->YtoPad(GetY())) - size;
+      }
    }
-   return BBox;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the center of the BoundingBox as TPoint in pixels
-
-TPoint TMarker::GetBBoxCenter()
-{
-   TPoint p(0, 0);
-   if (gPad) {
-      p.SetX(gPad->XtoPixel(fX));
-      p.SetY(gPad->YtoPixel(fY));
-   }
-   return p;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set center of the BoundingBox
-
-void TMarker::SetBBoxCenter(const TPoint &p)
-{
-   if (!gPad) return;
-   fX = gPad->PixeltoX(p.GetX());
-   fY = gPad->PixeltoY(p.GetY() - gPad->VtoPixel(0));
+   return bbox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,8 +400,7 @@ void TMarker::SetBBoxCenter(const TPoint &p)
 
 void TMarker::SetBBoxCenterX(const Int_t x)
 {
-   if (!gPad) return;
-   fX = gPad->PixeltoX(x);
+   SetX(GetXCoord(x, TestBit(kMarkerNDC)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -443,8 +408,7 @@ void TMarker::SetBBoxCenterX(const Int_t x)
 
 void TMarker::SetBBoxCenterY(const Int_t y)
 {
-   if (!gPad) return;
-   fY = gPad->PixeltoY(y - gPad->VtoPixel(0));
+   SetY(GetYCoord(y, TestBit(kMarkerNDC)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -453,9 +417,7 @@ void TMarker::SetBBoxCenterY(const Int_t y)
 
 void TMarker::SetBBoxX1(const Int_t x)
 {
-   if (!gPad) return;
-   Double_t size = this->GetMarkerSize();
-   fX = gPad->PixeltoX(x + (Int_t)size);
+   SetBBoxCenterX(x + GetMarkerSize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -464,9 +426,7 @@ void TMarker::SetBBoxX1(const Int_t x)
 
 void TMarker::SetBBoxX2(const Int_t x)
 {
-   if (!gPad) return;
-   Double_t size = this->GetMarkerSize();
-   fX = gPad->PixeltoX(x - (Int_t)size);
+   SetBBoxCenterX(x - GetMarkerSize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -474,9 +434,7 @@ void TMarker::SetBBoxX2(const Int_t x)
 
 void TMarker::SetBBoxY1(const Int_t y)
 {
-   if (!gPad) return;
-   Double_t size = this->GetMarkerSize();
-   fY = gPad->PixeltoY(y - (Int_t)size - gPad->VtoPixel(0));
+   SetBBoxCenterY(y + GetMarkerSize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -485,7 +443,5 @@ void TMarker::SetBBoxY1(const Int_t y)
 
 void TMarker::SetBBoxY2(const Int_t y)
 {
-   if (!gPad) return;
-   Double_t size = this->GetMarkerSize();
-   fY = gPad->PixeltoY(y + (Int_t)size - gPad->VtoPixel(0));
+   SetBBoxCenterY(y - GetMarkerSize());
 }

@@ -1,5 +1,4 @@
 /// \file ROOT/RField/SequenceContainer.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -28,13 +27,15 @@
 
 namespace ROOT {
 
+class RSoAField;
+
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
 namespace Internal {
 std::unique_ptr<RFieldBase> CreateEmulatedVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                                                      std::string_view emulatedFromType);
+                                                      const RFieldDescriptor &emulatedFrom);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,8 +52,9 @@ private:
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      RArrayDeleter(std::size_t itemSize, std::size_t arrayLength, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemSize(itemSize), fArrayLength(arrayLength), fItemDeleter(std::move(itemDeleter))
+      RArrayDeleter(std::size_t itemSize, std::size_t arrayLength, std::size_t alignment,
+                    std::unique_ptr<RDeleter> itemDeleter)
+         : RDeleter(alignment), fItemSize(itemSize), fArrayLength(arrayLength), fItemDeleter(std::move(itemDeleter))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;
@@ -113,6 +115,7 @@ public:
 /// The type-erased field for a RVec<Type>
 class RRVecField : public RFieldBase {
    friend class RArrayAsRVecField; // to use the RRVecDeleter and to call ResizeRVec()
+   friend class ROOT::RSoAField;   // to call ResizeRVec()
 
    // Ensures that the RVec pointed to by rvec has at least nItems valid elements
    // Returns the possibly new "begin pointer" of the RVec, i.e. the pointer to the data area.
@@ -126,9 +129,15 @@ class RRVecField : public RFieldBase {
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      explicit RRVecDeleter(std::size_t itemAlignment) : fItemAlignment(itemAlignment) {}
+      explicit RRVecDeleter(std::size_t itemAlignment)
+         : RDeleter(ROOT::Internal::EvalRVecAlignment(itemAlignment)), fItemAlignment(itemAlignment)
+      {
+      }
       RRVecDeleter(std::size_t itemAlignment, std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemAlignment(itemAlignment), fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
+         : RDeleter(ROOT::Internal::EvalRVecAlignment(itemAlignment)),
+           fItemAlignment(itemAlignment),
+           fItemSize(itemSize),
+           fItemDeleter(std::move(itemDeleter))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;
@@ -203,25 +212,26 @@ class RVectorField : public RFieldBase {
    friend class RArrayAsVectorField; // to get access to the RVectorDeleter
    friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedVectorField(std::string_view fieldName,
                                                                           std::unique_ptr<RFieldBase> itemField,
-                                                                          std::string_view emulatedFromType);
+                                                                          const RFieldDescriptor &emulatedFrom);
 
    class RVectorDeleter : public RDeleter {
    private:
       std::size_t fItemSize = 0;
+      std::size_t fItemAlignment = 0;
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      RVectorDeleter() = default;
-      RVectorDeleter(std::size_t itemSize, std::unique_ptr<RDeleter> itemDeleter)
-         : fItemSize(itemSize), fItemDeleter(std::move(itemDeleter))
-      {
-      }
+      explicit RVectorDeleter(std::size_t itemAlignment);
+      RVectorDeleter(std::size_t itemSize, std::size_t itemAlignment, std::unique_ptr<RDeleter> itemDeleter);
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
    std::size_t fItemSize;
    ROOT::Internal::RColumnIndex fNWritten;
    std::unique_ptr<RDeleter> fItemDeleter;
+   // These are only valid if the record field is emulated (i.e. (fTraits & kTraitEmulatedField) != 0).
+   std::uint32_t fEmulatedTypeVersion = 0;
+   std::uint32_t fEmulatedTypeChecksum = 0;
 
    // Ensures that the std::vector pointed to by vec has at least nItems valid elements.
    static void ResizeVector(void *vec, std::size_t nItems, std::size_t itemSize, const RFieldBase &itemField,
@@ -229,10 +239,10 @@ class RVectorField : public RFieldBase {
 
 protected:
    /// Creates a possibly-untyped VectorField.
-   /// If `emulatedFromType` is not nullopt, the field is untyped. If the string is empty, it is a "regular"
+   /// If `emulatedFrom` is not null, the field is untyped. If emulatedFrom->GetTypeName() is empty, it is a "regular"
    /// untyped vector field; otherwise, it was created as an emulated field from the given type name.
    RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                std::optional<std::string_view> emulatedFromType);
+                const ROOT::RFieldDescriptor *emulatedFrom);
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
@@ -240,7 +250,7 @@ protected:
    void GenerateColumns() final;
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
-   void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
+   void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -252,6 +262,9 @@ protected:
    void CommitClusterImpl() final { fNWritten = 0; }
 
 public:
+   /// Maximum alignment of the vector's value type
+   static constexpr std::size_t kMaxItemAlignment = 4096;
+
    RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
    RVectorField(RVectorField &&other) = default;
    RVectorField &operator=(RVectorField &&other) = default;
@@ -261,8 +274,8 @@ public:
    CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -315,8 +328,8 @@ public:
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
 
-   size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
+   std::size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
+   std::size_t GetAlignment() const final { return alignof(std::vector<bool>); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -391,7 +404,7 @@ protected:
    void GenerateColumns() final;
    using RFieldBase::GenerateColumns;
 
-   void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
+   void ConstructValue(void *where) const final;
    /// Returns an RVectorField::RVectorDeleter
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
@@ -410,8 +423,8 @@ public:
    RArrayAsVectorField &operator=(RArrayAsVectorField &&other) = default;
    ~RArrayAsVectorField() final = default;
 
-   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
-   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
 
    std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;

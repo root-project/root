@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT graf3d/x3d package
+# CMakeLists.txt file for building ROOT graf3d/X3d C++ package
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(X3d
@@ -13,14 +13,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(X3d
     TViewerX3D.h
     TX3DFrame.h
   SOURCES
-    src/x3d.c
     src/TViewerX3D.cxx
     src/TX3DFrame.cxx
-  LIBRARIES
-    ${X11_LIBRARIES}
   DEPENDENCIES
     Graf3d
     Gui
+  LIBRARIES
+    ROOTX3dViewer
 )
-
-target_include_directories(X3d PRIVATE ${X11_INCLUDE_DIR})

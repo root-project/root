@@ -109,7 +109,7 @@ namespace ROOT {
 
       private:
          Generator fGen;
-         double fCONS;   //! cached value of maximum integer value generated
+         double fCONS;   ///<! cached value of maximum integer value generated
       };
 
 

@@ -43,12 +43,8 @@ REveProjectionManager class.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REvePointSet::REvePointSet(const std::string& name, const std::string& title, Int_t n_points) :
-   REveElement(name, title),
-   REveProjectable(),
-   TAttMarker(),
-   TAttBBox(),
-   REveSecondarySelectable()
+REvePointSet::REvePointSet(const std::string &name, const std::string &title, Int_t n_points)
+   : REveElement(name, title), REveProjectable(), TAttMarker(), REveSecondarySelectable()
 {
    fMarkerStyle = 20;
 
@@ -63,12 +59,8 @@ REvePointSet::REvePointSet(const std::string& name, const std::string& title, In
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-REvePointSet::REvePointSet(const REvePointSet& e) :
-   REveElement(e),
-   REveProjectable(e),
-   TAttMarker(e),
-   TAttBBox(e),
-   REveSecondarySelectable()
+REvePointSet::REvePointSet(const REvePointSet &e)
+   : REveElement(e), REveProjectable(e), TAttMarker(e), REveSecondarySelectable()
 {
    fAlwaysSecSelect = e.GetAlwaysSecSelect();
    ClonePoints(e);
@@ -239,16 +231,18 @@ void REvePointSet::BuildRenderData()
    if (fSize > 0)
    {
       if (gEve->IsRCore()) {
-         fRenderData = std::make_unique<REveRenderData>("makeHit", 4*fTexX*fTexY);
+         fRenderData = std::make_unique<REveRenderData>("makeHit", 4*fTexX*fTexY, 6);
          for (int i = 0; i < fSize; ++i) {
             fRenderData->PushV(&fPoints[i].fX, 3);
             fRenderData->PushV(0);
          }
-         fRenderData->ResizeV(4*fTexX*fTexY);
+         fRenderData->ResizeV(4 * fTexX * fTexY);
       } else {
          fRenderData = std::make_unique<REveRenderData>("makeHit", 3*fSize);
          fRenderData->PushV(&fPoints[0].fX, 3*fSize);
       }
+
+      REveElement::BuildRenderData();
    }
 }
 
@@ -257,15 +251,9 @@ void REvePointSet::BuildRenderData()
 
 void REvePointSet::ComputeBBox()
 {
-   if (fSize > 0) {
-      BBoxInit();
-      for (auto &p : fPoints)
-      {
-         BBoxCheckPoint(p.fX, p.fY, p.fZ);
-      }
-   } else {
-      BBoxZero();
-   }
+   BBoxInit();
+   for (Int_t i = 0; i < fSize; ++i)
+      BBoxCheckPoint(fPoints[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -548,7 +536,7 @@ void REvePointSetProjected::SetProjection(REveProjectionManager* proj,
 
 void REvePointSetProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 
    // XXXX rewrite
 
@@ -569,7 +557,8 @@ void REvePointSetProjected::UpdateProjection()
 {
    REveProjection &proj = * fManager->GetProjection();
    REvePointSet   &ps   = * dynamic_cast<REvePointSet*>(fProjectable);
-   REveTrans      *tr   =   ps.PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *tr = fManager->GetModelTrans(&ps, mt);
 
    fAlwaysSecSelect = ps.GetAlwaysSecSelect();
 

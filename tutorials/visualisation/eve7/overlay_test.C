@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+
 #include <ROOT/REveBox.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveManager.hxx>
@@ -13,6 +14,8 @@
 #include <ROOT/REveTrack.hxx>
 #include <ROOT/REveJetCone.hxx>
 #include <ROOT/REveText.hxx>
+
+#include "TROOT.h"
 
 using namespace ROOT::Experimental;
 const Double_t kR_min = 240;
@@ -95,7 +98,8 @@ void makeTexts(REveElement *textHolder)
       REveVector pos(0.5, 0.5, 0.2);
       text->SetPosition(pos);
       text->SetFontSize(0.1);
-      text->SetFont(2);
+      // LiberationSerif-Regular ships with ROOT. It is also REveText's default.
+      text->SetFont("LiberationSerif-Regular");
       text->SetText(text->GetCName());
       textHolder->AddElement(text);
    }
@@ -104,6 +108,13 @@ void makeTexts(REveElement *textHolder)
 void overlay_test()
 {
    auto gEve = REveManager::Create();
+
+   // Call after REveManager::Create(), which the font directory needs. Generating
+   // the atlas needs a display, so the first run cannot be in batch mode.
+   {
+      std::string rf = std::string(TROOT::GetDataDir().Data()) + "/fonts/";
+      REveText::AssertSdfFont("LiberationSerif-Regular", rf + "LiberationSerif-Regular.ttf");
+   }
 
    TRandom &r = *gRandom;
 

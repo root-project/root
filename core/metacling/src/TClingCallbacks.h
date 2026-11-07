@@ -46,6 +46,7 @@ private:
    bool fIsAutoLoading = false;
    bool fIsAutoLoadingRecursively = false;
    bool fIsAutoParsingSuspended = false;
+   bool fIsAutoLoadingForJITSymbols = false;
    bool fIsCodeGening = false;
    bool fIsLoadingModule = false;
    llvm::DenseMap<llvm::StringRef, clang::DeclarationName> m_LoadedModuleFiles;
@@ -62,6 +63,12 @@ public:
 
    void SetAutoParsingSuspended(bool val = true) { fIsAutoParsingSuspended = val; }
    bool IsAutoParsingSuspended() { return fIsAutoParsingSuspended; }
+
+   // Whether the JIT is allowed to autoload a library to resolve a symbol it
+   // genuinely needs to link and run emitted code, even while class/dictionary
+   // autoloading is suspended (as TCling::Declare does while parsing). See #16601.
+   void SetAutoLoadingForJITSymbols(bool val = true) { fIsAutoLoadingForJITSymbols = val; }
+   bool IsAutoLoadingForJITSymbols() const { return fIsAutoLoadingForJITSymbols; }
 
    bool LibraryLoadingFailed(const std::string &, const std::string &, bool, bool) override;
 

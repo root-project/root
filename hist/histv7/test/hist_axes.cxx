@@ -1,6 +1,7 @@
 #include "hist_test.hxx"
 
 #include <array>
+#include <iterator>
 #include <stdexcept>
 #include <tuple>
 #include <variant>
@@ -24,12 +25,9 @@ TEST(RAxes, Constructor)
    EXPECT_EQ(axes.GetNDimensions(), 3);
    const auto &v = axes.Get();
    ASSERT_EQ(v.size(), 3);
-   EXPECT_EQ(v[0].index(), 0);
-   EXPECT_EQ(v[1].index(), 1);
-   EXPECT_EQ(v[2].index(), 2);
-   EXPECT_TRUE(std::get_if<RRegularAxis>(&v[0]) != nullptr);
-   EXPECT_TRUE(std::get_if<RVariableBinAxis>(&v[1]) != nullptr);
-   EXPECT_TRUE(std::get_if<RCategoricalAxis>(&v[2]) != nullptr);
+   EXPECT_TRUE(v[0].GetRegularAxis() != nullptr);
+   EXPECT_TRUE(v[1].GetVariableBinAxis() != nullptr);
+   EXPECT_TRUE(v[2].GetCategoricalAxis() != nullptr);
 
    std::vector<RAxisVariant> newAxes{categoricalAxis, variableBinAxis, regularAxis};
    axes = RAxes(newAxes);
@@ -113,45 +111,65 @@ TEST(RAxes, ComputeGlobalIndex)
    const RAxes axes({regularAxis, variableBinAxis, categoricalAxis});
 
    {
+      const std::uint64_t Expected = (2 * (BinsY + 2) + 3) * (categories.size() + 1) + 2;
       auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 2.5, "c"));
-      EXPECT_EQ(globalIndex.fIndex, (1 * (BinsY + 2) + 2) * (categories.size() + 1) + 2);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {1, 2, 2};
       globalIndex = axes.ComputeGlobalIndex(indices);
-      EXPECT_EQ(globalIndex.fIndex, (1 * (BinsY + 2) + 2) * (categories.size() + 1) + 2);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, 2, 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
       // Underflow bin of the first axis.
+      const std::uint64_t Expected = (0 * (BinsY + 2) + 3) * (categories.size() + 1) + 2;
       auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(-1, 2.5, "c"));
-      EXPECT_EQ(globalIndex.fIndex, (BinsX * (BinsY + 2) + 2) * (categories.size() + 1) + 2);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {RBinIndex::Underflow(), 2, 2};
       globalIndex = axes.ComputeGlobalIndex(indices);
-      EXPECT_EQ(globalIndex.fIndex, (BinsX * (BinsY + 2) + 2) * (categories.size() + 1) + 2);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {RBinIndex::Underflow(), 2, 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
       // Overflow bin of the second axis.
+      const std::uint64_t Expected = (2 * (BinsY + 2) + BinsY + 1) * (categories.size() + 1) + 2;
       auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 42, "c"));
-      EXPECT_EQ(globalIndex.fIndex, (1 * (BinsY + 2) + BinsY + 1) * (categories.size() + 1) + 2);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {1, RBinIndex::Overflow(), 2};
       globalIndex = axes.ComputeGlobalIndex(indices);
-      EXPECT_EQ(globalIndex.fIndex, (1 * (BinsY + 2) + BinsY + 1) * (categories.size() + 1) + 2);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, RBinIndex::Overflow(), 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
       // Overflow bin of the third axis.
+      const std::uint64_t Expected = (2 * (BinsY + 2) + 3) * (categories.size() + 1) + categories.size();
       auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 2.5, "d"));
-      EXPECT_EQ(globalIndex.fIndex, (1 * (BinsY + 2) + 2) * (categories.size() + 1) + categories.size());
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {1, 2, RBinIndex::Overflow()};
       globalIndex = axes.ComputeGlobalIndex(indices);
-      EXPECT_EQ(globalIndex.fIndex, (1 * (BinsY + 2) + 2) * (categories.size() + 1) + categories.size());
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, 2, RBinIndex::Overflow()};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
    }
 }
@@ -173,12 +191,17 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
    ASSERT_EQ(axes.ComputeTotalNBins(), BinsX * BinsY * categories.size());
 
    {
+      const std::uint64_t Expected = (1 * BinsY + 2) * categories.size() + 2;
       auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 2.5, "c"));
-      EXPECT_EQ(globalIndex.fIndex, (1 * BinsY + 2) * categories.size() + 2);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {1, 2, 2};
       globalIndex = axes.ComputeGlobalIndex(indices);
-      EXPECT_EQ(globalIndex.fIndex, (1 * BinsY + 2) * categories.size() + 2);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, 2, 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
    }
 
@@ -189,6 +212,10 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
       EXPECT_FALSE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {RBinIndex::Underflow(), 2, 2};
       globalIndex = axes.ComputeGlobalIndex(indices);
+      EXPECT_EQ(globalIndex.fIndex, 0);
+      EXPECT_FALSE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {RBinIndex::Underflow(), 2, 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
       EXPECT_EQ(globalIndex.fIndex, 0);
       EXPECT_FALSE(globalIndex.fValid);
    }
@@ -202,6 +229,10 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
       globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, 0);
       EXPECT_FALSE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, RBinIndex::Overflow(), 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, 0);
+      EXPECT_FALSE(globalIndex.fValid);
    }
 
    {
@@ -213,7 +244,25 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
       globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, 0);
       EXPECT_FALSE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, 2, RBinIndex::Overflow()};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, 0);
+      EXPECT_FALSE(globalIndex.fValid);
    }
+}
+
+TEST(RAxes, ComputeGlobalIndexForward)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   const RAxes axes({axis});
+
+   std::tuple<CopyArgument> args(1.5);
+   auto globalIndex = axes.ComputeGlobalIndex(args);
+   EXPECT_EQ(globalIndex.fIndex, 2);
+   EXPECT_TRUE(globalIndex.fValid);
+
+   ASSERT_FALSE(CopyArgument::HasBeenCopied());
 }
 
 TEST(RAxes, ComputeGlobalIndexInvalidNumberOfArguments)
@@ -242,6 +291,17 @@ TEST(RAxes, ComputeGlobalIndexInvalidNumberOfArguments)
    EXPECT_THROW(axes2.ComputeGlobalIndex(indices1), std::invalid_argument);
    EXPECT_NO_THROW(axes2.ComputeGlobalIndex(indices2));
    EXPECT_THROW(axes2.ComputeGlobalIndex(indices3), std::invalid_argument);
+
+   const std::vector<RBinIndex> indicesV1 = {1};
+   const std::vector<RBinIndex> indicesV2 = {1, 2};
+   const std::vector<RBinIndex> indicesV3 = {1, 2, 3};
+
+   EXPECT_NO_THROW(axes1.ComputeGlobalIndex(indicesV1));
+   EXPECT_THROW(axes1.ComputeGlobalIndex(indicesV2), std::invalid_argument);
+
+   EXPECT_THROW(axes2.ComputeGlobalIndex(indicesV1), std::invalid_argument);
+   EXPECT_NO_THROW(axes2.ComputeGlobalIndex(indicesV2));
+   EXPECT_THROW(axes2.ComputeGlobalIndex(indicesV3), std::invalid_argument);
 }
 
 TEST(RAxes, ComputeGlobalIndexInvalidArgumentType)
@@ -263,4 +323,35 @@ TEST(RAxes, ComputeGlobalIndexInvalidArgumentType)
    EXPECT_THROW(axes.ComputeGlobalIndex(std::make_tuple("1", 2, "a")), std::invalid_argument);
    EXPECT_THROW(axes.ComputeGlobalIndex(std::make_tuple(1, "2", "a")), std::invalid_argument);
    EXPECT_THROW(axes.ComputeGlobalIndex(std::make_tuple(1, 2, 3)), std::invalid_argument);
+}
+
+TEST(RAxes, GetFullMultiDimRange)
+{
+   static constexpr std::size_t BinsX = 20;
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
+   static constexpr std::size_t BinsY = 30;
+   std::vector<double> bins;
+   for (std::size_t i = 0; i < BinsY; i++) {
+      bins.push_back(i);
+   }
+   bins.push_back(BinsY);
+   const RVariableBinAxis variableBinAxis(bins);
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis categoricalAxis(categories);
+   const RAxes axes({regularAxis, variableBinAxis, categoricalAxis});
+
+   const auto nBins = axes.ComputeTotalNBins();
+   const auto range = axes.GetFullMultiDimRange();
+   EXPECT_EQ(std::distance(range.begin(), range.end()), nBins);
+
+   // Consistency check: the multidimensional range should traverse the bins in order of their global indices.
+   auto it = range.begin();
+   for (std::uint64_t bin = 0; bin < nBins; bin++) {
+      const auto &indices = *it;
+      const auto globalIndex = axes.ComputeGlobalIndex(indices);
+      EXPECT_EQ(globalIndex.fIndex, bin);
+      EXPECT_TRUE(globalIndex.fValid);
+      it++;
+   }
+   EXPECT_EQ(it, range.end());
 }

@@ -1,5 +1,4 @@
 /// \file ROOT/RMiniFile.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-22
 
@@ -25,6 +24,7 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <variant>
 
 class TDirectory;
 class TFileMergeInfo;
@@ -32,13 +32,13 @@ class TVirtualStreamerInfo;
 
 namespace ROOT {
 
-namespace Internal {
-class RRawFile;
-}
-
 class RNTupleWriteOptions;
+class RFile;
 
 namespace Internal {
+
+class RRawFile;
+
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
 
@@ -63,14 +63,15 @@ private:
    /// what happens in `RNTupleFileWriter::WriteBlob()`.
    std::uint64_t fMaxKeySize = 0;
 
+   /// Information about the streamer info record cache on file open from the TFile header. Used in LoadStreamerInfo.
+   std::uint64_t fSeekKeyInfo = 0;
+   std::uint64_t fNbytesKeyAndInfo = 0;
+
    /// Used when the file container turns out to be a bare file
    RResult<RNTuple> GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container. The ntuplePath variable is either the ntuple name
    /// or an ntuple name preceded by a directory (`myNtuple` or `foo/bar/myNtuple` or `/foo/bar/myNtuple`)
    RResult<RNTuple> GetNTupleProper(std::string_view ntuplePath);
-   /// Loads an RNTuple anchor from a TFile at the given file offset (unzipping it if necessary).
-   RResult<RNTuple>
-   GetNTupleProperAtOffset(std::uint64_t payloadOffset, std::uint64_t compSize, std::uint64_t uncompLen);
 
    /// Searches for a key with the given name and type in the key index of the directory starting at offsetDir.
    /// The offset points to the start of the TDirectory DATA section, without the key and without the name and title
@@ -84,11 +85,17 @@ public:
    explicit RMiniFileReader(ROOT::Internal::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RResult<RNTuple> GetNTuple(std::string_view ntupleName);
+   /// Loads an RNTuple anchor from a TFile at the given file offset (unzipping it if necessary).
+   RResult<RNTuple>
+   GetNTupleProperAtOffset(std::uint64_t payloadOffset, std::uint64_t compSize, std::uint64_t uncompLen);
    /// Reads a given byte range from the file into the provided memory buffer.
    /// If `nbytes > fMaxKeySize` it will perform chunked read from multiple blobs,
    /// whose addresses are listed at the end of the first chunk.
+   /// \throw ROOT::RException if the read fails.
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
-   /// Attempts to load the streamer info from the file.
+   /// Like ReadBuffer but returns a RResult instead of throwing.
+   ROOT::RResult<void> TryReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
+   /// Load the streamer info from the file into the global list of streamer infos
    void LoadStreamerInfo();
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
@@ -114,7 +121,7 @@ public:
    static constexpr std::size_t kBlobKeyLen = 42;
 
 private:
-   struct RFileProper {
+   struct RImplTFile {
       /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
       TDirectory *fDirectory = nullptr;
       /// Low-level writing using a TFile
@@ -126,7 +133,19 @@ private:
       operator bool() const { return fDirectory; }
    };
 
-   struct RFileSimple {
+   struct RImplRFile {
+      ROOT::RFile *fFile = nullptr;
+      std::string fDir;
+      /// Low-level writing using a TFile
+      void Write(const void *buffer, size_t nbytes, std::int64_t offset);
+      /// Reserves an RBlob opaque key as data record and returns the offset of the record. If keyBuffer is specified,
+      /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
+      /// argument is actually just a pointer.)
+      std::uint64_t ReserveBlobKey(size_t nbytes, size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
+      operator bool() const { return fFile; }
+   };
+
+   struct RImplSimple {
       /// Direct I/O requires that all buffers and write lengths are aligned. It seems 512 byte alignment is the minimum
       /// for Direct I/O to work, but further testing showed that it results in worse performance than 4kB.
       static constexpr int kBlockAlign = 4096;
@@ -136,29 +155,38 @@ private:
       /// aligned to kBlockAlign...
       static constexpr std::size_t kHeaderBlockSize = 4096;
 
-      // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
-      unsigned char *fHeaderBlock = nullptr;
-      std::size_t fBlockSize = 0;
-      std::uint64_t fBlockOffset = 0;
-      unsigned char *fBlock = nullptr;
+      /// Data that is shared between a "main" RImplSimple and all its clones.
+      /// Note that only the main file will write the header and footer, while all the clones are only
+      /// used to (sequentially) push data into the same underlying file from multiple locations.
+      struct RSharedData {
+         /// For the simplest cases, a C file stream can be used for writing
+         FILE *fFile = nullptr;
+         /// Keeps track of the seek offset
+         std::uint64_t fFilePos = 0;
+         /// Keeps track of the next key offset
+         std::uint64_t fKeyOffset = 0;
+         /// Whether the C file stream has been opened with Direct I/O, introducing alignment requirements.
+         bool fDirectIO = false;
 
-      /// For the simplest cases, a C file stream can be used for writing
-      FILE *fFile = nullptr;
-      /// Whether the C file stream has been opened with Direct I/O, introducing alignment requirements.
-      bool fDirectIO = false;
-      /// Keeps track of the seek offset
-      std::uint64_t fFilePos = 0;
-      /// Keeps track of the next key offset
-      std::uint64_t fKeyOffset = 0;
-      /// Keeps track of TFile control structures, which need to be updated on committing the data set
-      std::unique_ptr<ROOT::Internal::RTFileControlBlock> fControlBlock;
+         // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
+         unsigned char *fHeaderBlock = nullptr;
+         std::size_t fBlockSize = 0;
+         std::uint64_t fBlockOffset = 0;
+         unsigned char *fBlock = nullptr;
 
-      RFileSimple();
-      RFileSimple(const RFileSimple &other) = delete;
-      RFileSimple(RFileSimple &&other) = delete;
-      RFileSimple &operator=(const RFileSimple &other) = delete;
-      RFileSimple &operator=(RFileSimple &&other) = delete;
-      ~RFileSimple();
+         /// Keeps track of TFile control structures, which need to be updated on committing the data set
+         std::unique_ptr<ROOT::Internal::RTFileControlBlock> fControlBlock;
+
+         explicit RSharedData(FILE *file);
+         ~RSharedData();
+      };
+      std::shared_ptr<RSharedData> fShared;
+
+      RImplSimple();
+      RImplSimple(const RImplSimple &other) = delete;
+      RImplSimple(RImplSimple &&other) = delete;
+      RImplSimple &operator=(const RImplSimple &other) = delete;
+      RImplSimple &operator=(RImplSimple &&other) = delete;
 
       void AllocateBuffers(std::size_t bufferSize);
       void Flush();
@@ -174,14 +202,23 @@ private:
       /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
       /// argument is actually just a pointer.)
       std::uint64_t ReserveBlobKey(std::size_t nbytes, std::size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
-      operator bool() const { return fFile; }
+      operator bool() const { return fShared->fFile; }
    };
 
-   /// RFileSimple: for simple use cases, survives without libRIO dependency
-   /// RFileProper: for updating existing files and for storing more than just an RNTuple in the file
-   std::variant<RFileSimple, RFileProper> fFile;
+   template <typename T>
+   static std::uint64_t
+   ReserveBlobKey(T &caller, TFile &file, std::size_t nbytes, std::size_t len, unsigned char keyBuffer[kBlobKeyLen]);
+
+   /// RImplSimple: for simple use cases, survives without libRIO dependency
+   /// RImplTFile: for updating existing files and for storing more than just an RNTuple in the file
+   /// RImplRFile: like RImplTFile but using RFile instead of TFile.
+   using FileType_t = std::variant<RImplSimple, RImplTFile, RImplRFile>;
+   FileType_t fFile;
+
    /// A simple file can either be written as TFile container or as NTuple bare file
    bool fIsBare = false;
+   /// True if this RNTuple's anchor must be stored as a hidden key (this is the case e.g. for attribute RNTuples).
+   bool fIsHidden = false;
    /// The identifier of the RNTuple; A single writer object can only write a single RNTuple but multiple
    /// writers can operate on the same file if (and only if) they use a proper TFile object for writing.
    std::string fNTupleName;
@@ -193,13 +230,19 @@ private:
    /// The RNTuple class description is always present.
    ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfoMap;
 
-   explicit RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize);
+   /// Private constructor used by all factory methods.
+   /// Note that, in case of "owned" files (those created via Recreate) there must be exactly one non-hidden
+   /// RNTupleFileWriter which is responsible for serializing the ROOT file metadata.
+   /// This is enforced by the public API, as the only way to create a hidden FileWriter is via CloneAsHidden (which
+   /// creates a secondary hidden writer over the same file) and Append (which never writes the file metadata because
+   /// they are already handled by the "real" TFile).
+   explicit RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize, bool isHidden);
 
    /// For a TFile container written by a C file stream, write the header and TFile object
    void WriteTFileSkeleton(int defaultCompression);
    /// The only key that will be visible in file->ls()
-   /// Returns the size on disk of the anchor object
-   std::uint64_t WriteTFileNTupleKey(int compression);
+   /// Returns the link to the RNTuple anchor.
+   ROOT::Internal::RNTupleLink WriteTFileNTupleKey(int compression);
    /// Write the TList with the RNTuple key
    void WriteTFileKeysList(std::uint64_t anchorSize);
    /// Write the compressed streamer info record with the description of the RNTuple class
@@ -223,13 +266,24 @@ public:
                                                       const ROOT::RNTupleWriteOptions &options);
    /// The directory parameter can also be a TFile object (TFile inherits from TDirectory).
    static std::unique_ptr<RNTupleFileWriter>
-   Append(std::string_view ntupleName, TDirectory &fileOrDirectory, std::uint64_t maxKeySize);
+   Append(std::string_view ntupleName, TDirectory &fileOrDirectory, std::uint64_t maxKeySize, bool isHidden);
+
+   static std::unique_ptr<RNTupleFileWriter>
+   Append(std::string_view ntupleName, ROOT::RFile &file, std::string_view dirPath, std::uint64_t maxKeySize);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;
    RNTupleFileWriter &operator=(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter &operator=(RNTupleFileWriter &&other) = delete;
    ~RNTupleFileWriter();
+
+   /// Creates a new RNTupleFileWriter with the same underlying TDirectory as this but writing to a different
+   /// RNTuple named `ntupleName`. Only one of the two writers can safely write to the file at the same time.
+   /// The RNTuple written by this cloned writer will be stored in a hidden key (this is a convenient assumption we
+   /// make now since this method is only used to create attribute RNTuples).
+   /// This method is currently only supported for TFile-based Writers and will throw an exception if that's not the
+   /// case.
+   std::unique_ptr<RNTupleFileWriter> CloneAsHidden(std::string_view ntupleName) const;
 
    /// Seek a simple writer to offset. Note that previous data is not flushed immediately, but only by the next write
    /// (if necessary).
@@ -254,8 +308,12 @@ public:
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
    /// Ensures that the streamer info records passed as argument are written to the file
    void UpdateStreamerInfos(const ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
-   /// Writes the RNTuple key to the file so that the header and footer keys can be found
-   void Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
+
+   /// Writes the RNTuple key to the file so that the header and footer keys can be found.
+   /// \return information about the committed anchor.
+   RNTupleLink Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
+
+   std::string_view GetNTupleName() const { return fNTupleName; }
 };
 
 } // namespace Internal

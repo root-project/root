@@ -12,16 +12,37 @@
 /**
 \file TFile.cxx
 \class TFile
-\ingroup IO
-\brief A ROOT file is an on-disk file, usually with extension .root, that stores objects in a file-system-like logical structure, possibly including subdirectory hierarchies.
+\ingroup io_files
+\brief A file, usually with extension .root, that stores data and code in the form of serialized objects in a
+file-system-like logical structure, possibly including subdirectory hierarchies.
+\note ROOT files contain data, and executable code, for example through TExec, TMacro, and TFormula instances. As for
+all files, **do not open ROOT files from an unknown origin!**
 \note See also \ref IO
 \note See also \ref rootio (or `io/doc/TFile` folder in your codebase)
+
+ROOT files a are an efficient mean to store C++ class instances, e.g. data,
+both as individual objects, in a so called *row-wise fashion*, and in a
+*so-called columnar fashion*. Also executable code can be stored in ROOT files,
+for example in the form of TMacro, TExec or TFormula instances, and the
+related federation of classes.
+
+For example, a TCanvas or TPad instance may rely on TExec instances stored in
+their *list of executables* to obtain certain graphics effects: in this case,
+code will be executed upon drawing. A TH1 or a TGraph instance, as well as
+their multidimensional counterparts and derived classes, may also execute code
+upon drawing through TExec instances stored in their *list of functions*.
+Another example of code which is executable is represented by TFormula
+instances, that are the "computational workhorse" of function classes such as
+TF1, its multidimensional counterparts, and related classes. There, jitted C++
+code is executed for example upon evaluation, for example during fits or
+drawing operations, to obtain maximum runtime performance.
+
 
 <details>
 <summary>ROOT file data format specification</summary>
 
 A ROOT file is composed of a header, followed by consecutive data records
-(`TKey` instances) with a well defined format.
+(TKey instances) with a well defined format.
 
 The first data record starts at byte fBEGIN (currently set to kBEGIN).
 Bytes 1->kBEGIN contain the file description, when fVersion >= 1000000
@@ -106,9 +127,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "Bytes.h"
 #include "Compression.h"
 #include "RConfigure.h"
-#include "Strlen.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 #include "TArrayC.h"
 #include "TBuffer.h"
 #include "TClass.h"
@@ -141,17 +160,22 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TMathBase.h"
 #include "TObjString.h"
 #include "TStopwatch.h"
+#define ROOT_compiledata_cxx
 #include "compiledata.h"
-#include <cmath>
-#include <iostream>
-#include <set>
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 #include "TGlobal.h"
 #include "ROOT/RConcurrentHashColl.hxx"
-#include <memory>
+#include "ROOT/InternalIOUtils.hxx"
+
 #include <cinttypes>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <iostream>
+#include <memory>
+#include <set>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>
@@ -225,18 +249,18 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///
 /// Option | Description
 /// -------|------------
-/// NEW or CREATE                     | Create a new file and open it for writing, if the file already exists the file is not opened.
-/// RECREATE                          | Create a new file, if the file already exists it will be overwritten.
-/// UPDATE                            | Open an existing file for writing. If no file exists, it is created.
-/// READ                              | Open an existing file for reading (default).
-/// NET                               | Used by derived remote file access classes, not a user callable option.
-/// WEB                               | Used by derived remote http access class, not a user callable option.
-/// READ_WITHOUT_GLOBALREGISTRATION   | Used by TTreeProcessorMT, not a user callable option.
+/// NEW or CREATE                     | Create a new file and open it for writing, if the file already exists the file
+/// is not opened. RECREATE                          | Create a new file, if the file already exists it will be
+/// overwritten. UPDATE                            | Open an existing file for writing. If no file exists, it is
+/// created. READ                              | Open an existing file for reading (default). NET | Used by derived
+/// remote file access classes, not a user callable option. WEB                               | Used by derived remote
+/// http access class, not a user callable option. READ_WITHOUT_GLOBALREGISTRATION   | Used by TTreeProcessorMT, not a
+/// user callable option.
 ///
 /// If option = "" (default), READ is assumed.
-/// \note Even in READ mode, if the file is the current directory `cd()`, and you create e.g. a new histogram in your code,
-/// the histogram will be appended (but not written) to this directory, and automatically deleted when closing the file.
-/// To avoid this behavior, call hist->SetDirectory(nullptr); after creating it.
+/// \note Even in READ mode, if the file is the current directory `cd()`, and you create e.g. a new histogram in your
+/// code, the histogram will be appended (but not written) to this directory, and automatically deleted when closing the
+/// file. To avoid this behavior, call hist->SetDirectory(nullptr); after creating it.
 ///
 /// The file can be specified as a URL of the form:
 ///
@@ -255,12 +279,12 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///
 ///     file.tar?filetype=raw
 ///
-/// This is convenient because the many remote file access plugins allow
-/// easy access to/from the many different mass storage systems.
+/// This can be convenient because the many file access plugins allow
+/// easy access to remote endpoints, e.g. mass storage pools.
 /// The title of the file (ftitle) will be shown by the ROOT browsers.
 /// A ROOT file (like a Unix file system) may contain objects and
-/// directories. There are no restrictions for the number of levels
-/// of directories.
+/// directories, as well as executable code. There are no restrictions
+/// for the number of levels of directories.
 /// A ROOT file is designed such that one can write in the file in pure
 /// sequential mode (case of BATCH jobs). In this case, the file may be
 /// read sequentially again without using the file index written
@@ -288,7 +312,9 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// The enumeration ROOT::RCompressionSetting::EAlgorithm associates each
 /// algorithm with a number. There is a utility function to help
 /// to set the value of compress. For example,
+///
 ///     ROOT::CompressionSettings(ROOT::kLZMA, 1)
+///
 /// will build an integer which will set the compression to use
 /// the LZMA algorithm and compression level 1.  These are defined
 /// in the header file <em>Compression.h</em>.
@@ -315,7 +341,7 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// }
 /// ~~~
 /// When opening the file, the system checks the validity of this directory.
-/// If something wrong is detected, an automatic Recovery is performed. In
+/// If something wrong is detected, an automatic recovery is performed. In
 /// this case, the file is scanned sequentially reading all logical blocks
 /// and attempting to rebuild a correct directory (see TFile::Recover).
 /// One can disable the automatic recovery procedure when reading one
@@ -338,6 +364,14 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// option to replace the name stored in the file.
 /// ~~~{.cpp}
 ///   TFile *f = TFile::Open("tmpname.root?reproducible=fixedname","RECREATE","File title");
+/// ~~~
+///
+/// To check for the health status of a TFile and detect corruption, you can perform the following checks after opening it:
+/// ~~~{.cpp}
+///   std::unique_ptr<TFile> f{TFile::Open("name.root", "READ")};
+///   auto bad_input = (f == nullptr); // File could not be open, e.g. if input url was incorrect or incorrect permissions.
+///   auto bad_initalization = (f && f->IsZombie()); // something went wrong in the constructor, for example when TFile is corrupt
+///   auto bad_storage = (f && f->TestBit(TFile::kRecovered)); // The TFile had to run the recovery mechanism when opening the file; often due to the file being incorrectly closed.
 /// ~~~
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
@@ -1119,8 +1153,10 @@ void TFile::DrawMap(const char *keys, Option_t *option)
 {
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TFileDrawMap"))) {
-      if (h->LoadPlugin() == -1)
+      if (h->LoadPlugin() == -1) {
+         ::Error("TFile::Open", "Failed to load plugin TFileDrawMap");
          return;
+      }
       h->ExecPlugin(3, this, keys, option);
    }
 }
@@ -1373,8 +1409,8 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
    if (fSeekInfo) {
       TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
       auto key = std::make_unique<TKey>(this);
-      std::vector<char> buffer(fNbytesInfo+1);
-      auto buf = buffer.data();
+      auto buffer = std::make_unique<char[]>(fNbytesInfo+1);
+      auto buf = buffer.get();
       Seek(fSeekInfo);                         // NOLINT: silence clang-tidy warnings
       if (ReadBuffer(buf,fNbytesInfo)) {       // NOLINT: silence clang-tidy warnings
          // ReadBuffer returns kTRUE in case of failure.
@@ -1396,8 +1432,9 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
             return {nullptr, 0, hash};
          }
       }
-      key->ReadKeyBuffer(buf);
-      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer.data()));
+      if (!key->ReadKeyBuffer(buf, fNbytesInfo))
+         return {nullptr, 1, hash};
+      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer.get()));
       if (list) list->SetOwner();
    } else {
       list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
@@ -1846,7 +1883,6 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 ///
 /// The value pos[i] is the seek position of block i of length len[i].
 /// Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
-/// This function is overloaded by TNetFile, TWebFile, etc.
 /// Returns kTRUE in case of failure.
 
 Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
@@ -2078,13 +2114,6 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
 
 Int_t TFile::Recover()
 {
-   Short_t  keylen,cycle;
-   UInt_t   datime;
-   Int_t    nbytes,date,time,objlen,nwheader;
-   Long64_t seekkey,seekpdir;
-   char     header[1024];
-   char    *buffer, *bufread;
-   char     nwhc;
    Long64_t idcur = fBEGIN;
 
    Long64_t size;
@@ -2097,12 +2126,12 @@ Int_t TFile::Recover()
 
    if (fWritable && !fFree) fFree  = new TList;
 
-   TKey *key;
    Int_t nrecov = 0;
-   nwheader = 1024;
-   Int_t nread = nwheader;
 
    while (idcur < fEND) {
+      char header[1024];
+      int nread = sizeof(header);
+
       Seek(idcur);                             // NOLINT: silence clang-tidy warnings
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
       if (ReadBuffer(header, nread)) {         // NOLINT: silence clang-tidy warnings
@@ -2111,8 +2140,8 @@ Int_t TFile::Recover()
                GetName(),idcur);
          break;
       }
-      buffer  = header;
-      bufread = header;
+      char *buffer = header;
+      Int_t nbytes;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
          Error("Recover","Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
@@ -2126,10 +2155,15 @@ Int_t TFile::Recover()
       }
       Version_t versionkey;
       frombuf(buffer, &versionkey);
+      Int_t objlen;
       frombuf(buffer, &objlen);
+      UInt_t datime;
       frombuf(buffer, &datime);
+      Short_t keylen;
       frombuf(buffer, &keylen);
+      Short_t cycle;
       frombuf(buffer, &cycle);
+      Long64_t seekkey, seekpdir;
       if (versionkey > 1000) {
          frombuf(buffer, &seekkey);
          frombuf(buffer, &seekpdir);
@@ -2138,31 +2172,34 @@ Int_t TFile::Recover()
          frombuf(buffer, &skey);  seekkey  = (Long64_t)skey;
          frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
       }
-      frombuf(buffer, &nwhc);
-      char *classname = nullptr;
-      if (nwhc <= 0 || nwhc > 100) break;
-      classname = new char[nwhc+1];
-      int i, nwhci = nwhc;
-      for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
-      classname[nwhci] = '\0';
+      char classnameLen;
+      frombuf(buffer, &classnameLen);
+      char classname[101];
+      if (classnameLen <= 0 || classnameLen > (Int_t)sizeof(classname))
+         break;
+      memcpy(classname, buffer, classnameLen);
+      buffer += classnameLen;
+      classname[static_cast<std::size_t>(classnameLen)] = '\0';
+      Int_t date, time;
       TDatime::GetDateTime(datime, date, time);
       TClass *tclass = TClass::GetClass(classname);
       if (seekpdir == fSeekDir && tclass && !tclass->InheritsFrom(TFile::Class())
                                && strcmp(classname,"TBasket")) {
-         key = new TKey(this);
-         key->ReadKeyBuffer(bufread);
-         if (!strcmp(key->GetName(),"StreamerInfo")) {
+         TKey *key = new TKey(this);
+         char *bufread = header;
+         bool keyRead = key->ReadKeyBuffer(bufread, sizeof(header));
+         if (!keyRead || !strcmp(key->GetName(), "StreamerInfo")) {
             fSeekInfo = seekkey;
             SafeDelete(fInfoCache);
             fNbytesInfo = nbytes;
+            delete key;
          } else {
-            AppendKey(key);
+            AppendKey(key); // ownership transferred, do not to delete key here
             nrecov++;
             SetBit(kRecovered);
             Info("Recover", "%s, recovered key %s:%s at address %lld",GetName(),key->GetClassName(),key->GetName(),idcur);
          }
       }
-      delete [] classname;
       idcur += nbytes;
    }
    if (fWritable) {
@@ -3214,6 +3251,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    cmd.ReplaceAll("$LinkedLibs",gSystem->GetLibraries("","SDL"));
    cmd.ReplaceAll("$LibName",sdirname);
    cmd.ReplaceAll("$BuildDir",".");
+   cmd.ReplaceAll("$RPath", "-Wl,-rpath," + gROOT->GetSharedLibDir());
    TString sOpt;
    TString rootbuild = ROOTBUILD;
    if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
@@ -3728,22 +3766,22 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// Create / open a file
 ///
 /// The type of the file can be either a
-/// TFile, TNetFile, TWebFile or any TFile derived class for which an
+/// TFile or any TFile derived class for which an
 /// plugin library handler has been registered with the plugin manager
 /// (for the plugin manager see the TPluginManager class). The returned
 /// type of TFile depends on the file name specified by 'url'.
 /// If 'url' is a '|'-separated list of file URLs, the 'URLs' are tried
 /// sequentially in the specified order until a successful open.
-/// If the file starts with "root:", "roots:" or "rootk:" a TNetFile object
-/// will be returned, with "http:" a TWebFile, with "file:" a local TFile,
+/// If the file starts with "root:", "roots:" or "rootk:" an XRootD-backed file
+/// will be returned, with "http:" a curl-based file, with "file:" a local TFile,
 /// etc. (see the list of TFile plugin handlers in $ROOTSYS/etc/system.rootrc
 /// for regular expressions that will be checked) and as last a local file will
 /// be tried.
-/// Before opening a file via TNetFile a check is made to see if the URL
+/// Before opening a file via a remote API, a check is made to see if the URL
 /// specifies a local file. If that is the case the file will be opened
 /// via a normal TFile. To force the opening of a local file via a
-/// TNetFile use either TNetFile directly or specify as host "localhost".
-/// The netopt argument is only used by TNetFile. For the meaning of the
+/// specify as host "localhost".
+/// The netopt argument is not used, any more. For the meaning of the
 /// options and other arguments see the constructors of the individual
 /// file classes. In case of error, it returns a nullptr.
 ///
@@ -3778,34 +3816,16 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
    TString expandedUrl(url);
    gSystem->ExpandPathName(expandedUrl);
 
-#ifdef R__UNIX
-   // If URL is a file on an EOS FUSE mount, attempt redirection to XRootD protocol.
-   if (gEnv->GetValue("TFile.CrossProtocolRedirects", 1) == 1) {
-      TUrl fileurl(expandedUrl, /* default is file */ kTRUE);
-      if (strcmp(fileurl.GetProtocol(), "file") == 0) {
-         ssize_t len = getxattr(fileurl.GetFile(), "eos.url.xroot", nullptr, 0);
-         if (len > 0) {
-            std::string xurl(len, 0);
-            std::string fileNameFromUrl{fileurl.GetFile()};
-            if (getxattr(fileNameFromUrl.c_str(), "eos.url.xroot", &xurl[0], len) == len) {
-               // Sometimes the `getxattr` call may return an invalid URL due
-               // to the POSIX attribute not being yet completely filled by EOS.
-               if (auto baseName = fileNameFromUrl.substr(fileNameFromUrl.find_last_of("/") + 1);
-                   std::equal(baseName.crbegin(), baseName.crend(), xurl.crbegin())) {
-                  if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
-                     if (!f->IsZombie()) {
-                        return f;
-                     } else {
-                        delete f;
-                        f = nullptr;
-                     }
-                  }
-               }
-            }
+   if (auto xurl = ROOT::Internal::GetEOSRedirectedXRootURL(expandedUrl)) {
+      if ((f = TFile::Open(xurl->c_str(), options, ftitle, compress, netopt))) {
+         if (!f->IsZombie()) {
+            return f;
+         } else {
+            delete f;
+            f = nullptr;
          }
       }
    }
-#endif
 
    // If a timeout has been specified extract the value and try to apply it (it requires
    // support for asynchronous open, though; the following is completely transparent if
@@ -3931,8 +3951,10 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
             // Network files
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-               if (h->LoadPlugin() == -1)
+               if (h->LoadPlugin() == -1) {
+                  ::Error("TFile::Open", "Failed to load plugin %s", name.Data());
                   return nullptr;
+               }
                f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
             }
 
@@ -3940,8 +3962,10 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
             // Web files
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-               if (h->LoadPlugin() == -1)
+               if (h->LoadPlugin() == -1) {
+                  ::Error("TFile::Open", "Failed to load plugin %s", name.Data());
                   return nullptr;
+               }
                f = (TFile*) h->ExecPlugin(2, name.Data(), option);
             }
 
@@ -3959,13 +3983,11 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
             // no recognized specification: try the plugin manager
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
-               if (h->LoadPlugin() == -1)
+               if (h->LoadPlugin() == -1) {
+                  ::Error("TFile::Open", "Failed to load plugin %s", name.Data());
                   return nullptr;
-               TClass *cl = TClass::GetClass(h->GetClass());
-               if (cl && cl->InheritsFrom("TNetFile"))
-                  f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
-               else
-                  f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
+               }
+               f = (TFile *)h->ExecPlugin(4, name.Data(), option, ftitle, compress);
             } else {
                // Just try to open it locally but via TFile::Open, so that we pick-up the correct
                // plug-in in the case file name contains information about a special backend (e.g.)
@@ -4391,7 +4413,7 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    cmd.Form("perl -e 'my $cachepath = \"%s\"; my $cachesize = %lld;my $findcommand=\"find $cachepath -type f -exec stat -c \\\"\\%%x::\\%%n::\\%%s\\\" \\{\\} \\\\\\;\";my $totalsize=0;open FIND, \"$findcommand | sort -k 1 |\";while (<FIND>) { my ($accesstime, $filename, $filesize) = split \"::\",$_; $totalsize += $filesize;if ($totalsize > $cachesize) {if ( ( -e \"${filename}.ROOT.cachefile\" ) || ( -e \"${filename}\" ) ) {unlink \"$filename.ROOT.cachefile\";unlink \"$filename\";}}}close FIND;' ", fgCacheFileDir.Data(),shrinksize);
 #endif
 
-   tagfile->WriteBuffer(cmd, 4096);
+   tagfile->WriteBuffer(cmd, cmd.Sizeof());
    delete tagfile;
 
    if ((gSystem->Exec(cmd)) != 0) {
@@ -4696,17 +4718,12 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t bufsize)
    TString oopt = "RECREATE";
    TString ourl = dURL.GetUrl();
 
-   // Files will be open in RAW mode
-   TString raw = "filetype=raw";
-
    // Set optimization options for the destination file
    TString opt = dURL.GetOptions();
-   if (opt != "") opt += "&";
-   opt += raw;
-
-   // AliEn files need to know where the source file is
-   if (!strcmp(dURL.GetProtocol(), "alien"))
-      opt += TString::Format("&source=%s", GetName());
+   if (opt != "")
+      opt += "&";
+   // Files will be open in RAW mode
+   opt += "filetype=raw";
 
    dURL.SetOptions(opt);
 

@@ -14,7 +14,8 @@
 #include "TH1.h"
 #include "TVectorD.h"
 #include "TRandom3.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -32,10 +32,7 @@ public:
    {
    }
 
-   MinosError(const MinosError &err)
-      : fParameter(err.fParameter), fMinParValue(err.fMinParValue), fUpper(err.fUpper), fLower(err.fLower)
-   {
-   }
+   MinosError(const MinosError &err) = default;
 
    MinosError &operator=(const MinosError &) = default;
 

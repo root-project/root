@@ -14,44 +14,48 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set(TMVAGUI_HEADERS
+  TMVA/BDT.h
+  TMVA/BDTControlPlots.h
+  TMVA/BDT_Reg.h
+  TMVA/BoostControlPlots.h
+  TMVA/CorrGui.h
+  TMVA/CorrGuiMultiClass.h
+  TMVA/MovieMaker.h
+  TMVA/PlotFoams.h
+  TMVA/TMVAGui.h
+  TMVA/TMVAMultiClassGui.h
+  TMVA/TMVARegGui.h
+  TMVA/annconvergencetest.h
+  TMVA/compareanapp.h
+  TMVA/correlations.h
+  TMVA/correlationsMultiClass.h
+  TMVA/correlationscatters.h
+  TMVA/correlationscattersMultiClass.h
+  TMVA/deviations.h
+  TMVA/efficiencies.h
+  TMVA/efficienciesMulticlass.h
+  TMVA/likelihoodrefs.h
+  TMVA/mvaeffs.h
+  TMVA/mvas.h
+  TMVA/mvasMulticlass.h
+  TMVA/mvaweights.h
+  TMVA/network.h
+  TMVA/paracoor.h
+  TMVA/probas.h
+  TMVA/regression_averagedevs.h
+  TMVA/rulevis.h
+  TMVA/rulevisCorr.h
+  TMVA/rulevisHists.h
+  TMVA/tmvaglob.h
+  TMVA/training_history.h
+  TMVA/variables.h
+  TMVA/variablesMultiClass.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
   HEADERS
-    TMVA/BDT.h
-    TMVA/BDTControlPlots.h
-    TMVA/BDT_Reg.h
-    TMVA/BoostControlPlots.h
-    TMVA/CorrGui.h
-    TMVA/CorrGuiMultiClass.h
-    TMVA/MovieMaker.h
-    TMVA/PlotFoams.h
-    TMVA/TMVAGui.h
-    TMVA/TMVAMultiClassGui.h
-    TMVA/TMVARegGui.h
-    TMVA/annconvergencetest.h
-    TMVA/compareanapp.h
-    TMVA/correlations.h
-    TMVA/correlationsMultiClass.h
-    TMVA/correlationscatters.h
-    TMVA/correlationscattersMultiClass.h
-    TMVA/deviations.h
-    TMVA/efficiencies.h
-    TMVA/efficienciesMulticlass.h
-    TMVA/likelihoodrefs.h
-    TMVA/mvaeffs.h
-    TMVA/mvas.h
-    TMVA/mvasMulticlass.h
-    TMVA/mvaweights.h
-    TMVA/network.h
-    TMVA/paracoor.h
-    TMVA/probas.h
-    TMVA/regression_averagedevs.h
-    TMVA/rulevis.h
-    TMVA/rulevisCorr.h
-    TMVA/rulevisHists.h
-    TMVA/tmvaglob.h
-    TMVA/training_history.h
-    TMVA/variables.h
-    TMVA/variablesMultiClass.h
+    ${TMVAGUI_HEADERS}
   SOURCES
     src/BDTControlPlots.cxx
     src/BoostControlPlots.cxx
@@ -103,4 +107,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
     HistPainter
     Core
    ${EXTRA_DICT_OPTS}
+)
+
+set(RELATIVE_INC_HEADERS ${TMVAGUI_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(TMVAGui
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

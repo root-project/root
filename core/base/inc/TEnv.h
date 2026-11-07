@@ -12,51 +12,6 @@
 #ifndef ROOT_TEnv
 #define ROOT_TEnv
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TEnv                                                                 //
-//                                                                      //
-// The TEnv class reads config files, by default named .rootrc. Three   //
-// types of config files are read: global, user and local files. The    //
-// global file is $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>)//
-// the user file is $HOME/<name> and the local file is ./<name>.        //
-// By setting the shell variable ROOTENV_NO_HOME=1 the reading of       //
-// the $HOME/<name> resource file will be skipped. This might be useful //
-// in case the home directory resides on an automounted remote file     //
-// system and one wants to avoid this file system from being mounted.   //
-//                                                                      //
-// The format of the .rootrc file is similar to the .Xdefaults format:  //
-//                                                                      //
-//   [+]<SystemName>.<RootName|ProgName>.<name>[(type)]:  <value>       //
-//                                                                      //
-// Where <SystemName> is either Unix, WinNT, MacOS or Vms,              //
-// <RootName> the name as given in the TApplication ctor (or "RootApp"  //
-// in case no explicit TApplication derived object was created),        //
-// <ProgName> the current program name and <name> the resource name,    //
-// with optionally a type specification. <value> can be either a        //
-// string, an integer, a float/double or a boolean with the values      //
-// TRUE, FALSE, ON, OFF, YES, NO, OK, NOT. Booleans will be returned as //
-// an integer 0 or 1. The options [+] allows the concatenation of       //
-// values to the same resouce name.                                     //
-//                                                                      //
-// E.g.:                                                                //
-//                                                                      //
-//   Unix.Rint.Root.DynamicPath: .:$ROOTSYS/lib:~/lib                   //
-//   myapp.Root.Debug:  FALSE                                           //
-//   TH.Root.Debug: YES                                                 //
-//                                                                      //
-// <SystemName> and <ProgName> or <RootName> may be the wildcard "*".   //
-// A # in the first column starts comment line.                         //
-//                                                                      //
-// For the currently defined resources (and their default values) see   //
-// $ROOTSYS/etc/system.rootrc.                                          //
-//                                                                      //
-// Note that the .rootrc config files contain the config for all ROOT   //
-// based applications.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "TString.h"
 
@@ -132,6 +87,7 @@ private:
    TEnv& operator=(const TEnv&) = delete;
 
    const char       *Getvalue(const char *name) const;
+   const char       *GetUserDirectory() const;
 
 public:
    TEnv(const char *name="");

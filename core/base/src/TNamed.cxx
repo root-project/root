@@ -20,13 +20,13 @@ Most member functions defined in this base class are in general
 overridden by the derived classes.
 */
 
-#include <iostream>
-#include "Strlen.h"
 #include "TNamed.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TClass.h"
 
+#include <iostream>
+#include <cstring>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TNamed copy ctor.

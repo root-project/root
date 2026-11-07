@@ -1,7 +1,0 @@
-TRDataFrame
-- overload [][]
-- method to remove col
-- method to get row
-- methods to get sub dataframes
-- implement error handling (exceptions are terminating the application)
-- Users guide section

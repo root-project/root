@@ -1,4 +1,3 @@
-
 Processing runcurrentFileKey.C...
 Warning in <TClass::Init>: no dictionary for class MyClass is available
 TFile**		output.root	

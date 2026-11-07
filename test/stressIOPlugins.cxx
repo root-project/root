@@ -55,8 +55,6 @@
 //_____________________________batch only_____________________
 #ifndef __CLING__
 
-#include <cstdlib>
-#include <snprintf.h>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TH1.h>
@@ -76,6 +74,9 @@
 #include <Compression.h>
 #include "Event.h"
 
+#include <cstdlib>
+#include <cstdio>
+
 R__LOAD_LIBRARY( libEvent )
 
 void stressIOPlugins();
@@ -89,9 +90,6 @@ void cleanup();
 
 int main(int argc, char **argv)
 {
-   std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();
-   TROOT::AddExtraInterpreterArgs({inclRootSys});
-
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    const char *proto = 0;

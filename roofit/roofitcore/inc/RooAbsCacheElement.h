@@ -36,12 +36,11 @@ public:
     // Destructor
   } ;
 
-  enum Action { OperModeChange,OptimizeCaching,FindConstantNodes } ;
+  enum Action { OperModeChange,OptimizeCaching } ;
   virtual RooArgList containedArgs(Action) = 0 ;
   /// Interface for changes of operation mode.
   virtual void operModeHook(RooAbsArg::OperMode) { }
   virtual void optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes)  ;
-  virtual void findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes) ;
 
   void setOwner(RooAbsArg* owner) {
     // Store pointer to owner

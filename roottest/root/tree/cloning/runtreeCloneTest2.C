@@ -26,14 +26,15 @@ Use $ROOTSYS/bin/hadd to merge many histogram files
 */
 
 
-#include <cstring>
 #include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"
 #include "TTree.h"
 #include "TKey.h"
 #include "TSystem.h"
-#include "Riostream.h"
+
+#include <cstring>
+#include <iostream>
 
 TList *FileList;
 TFile *Target;
@@ -163,7 +164,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist )
       if ( obj ) {
          target->cd();
 
-         //!!if the object is a tree, it is stored in globChain...
+         // if the object is a tree, it is stored in globChain...
          if(obj->IsA()->InheritsFrom( "TTree" ))
             globChain->Merge(target->GetFile(),0,"keep fast");
          else

@@ -13,6 +13,10 @@
 #define ROOT_NetErrors
 
 
+#if !defined(ROOT_NetErrors_cxx) && !defined(G__DICTIONARY)
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead TSocket public interface."
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // NetErrors                                                            //

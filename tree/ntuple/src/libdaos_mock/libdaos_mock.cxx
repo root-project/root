@@ -1,5 +1,4 @@
 /// \file libdaos_mock.cxx
-/// \ingroup NTuple
 /// \author Javier Lopez-Gomez <j.lopez@cern.ch>
 /// \date 2021-01-20
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -270,6 +269,9 @@ int daos_oclass_id2name(daos_oclass_id_t oc_id, char *name)
       return 0;
    case OC_RP_XSF:
       strcpy(name, "RP_XSF"); // NOLINT
+      return 0;
+   case OC_UNKNOWN:
+      strcpy(name, "UNKNOWN"); // NOLINT
       return 0;
    }
    return -1;

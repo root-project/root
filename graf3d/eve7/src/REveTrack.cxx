@@ -222,24 +222,11 @@ REveTrack::~REveTrack()
 
 void REveTrack::ComputeBBox()
 {
-   if (fSize > 0 || ! fPathMarks.empty())
-   {
-      BBoxInit();
-      Int_t    n = fSize;
-      Float_t *p = & fPoints[0].fX;
-      for (Int_t i = 0; i < n; ++i, p += 3)
-      {
-         BBoxCheckPoint(p);
-      }
-      for (const auto &pm: fPathMarks)
-      {
-         BBoxCheckPoint(pm.fV.fX, pm.fV.fY, pm.fV.fZ);
-      }
-   }
-   else
-   {
-      BBoxZero();
-   }
+   BBoxInit();
+   for (Int_t i = 0; i < fSize; ++i)
+      BBoxCheckPoint(fPoints[i]);
+   for (const auto &pm : fPathMarks)
+      BBoxCheckPoint(pm.fV.fX, pm.fV.fY, pm.fV.fZ);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -9,22 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGrid                                                                //
-//                                                                      //
-// Abstract base class defining interface to common GRID services.      //
-//                                                                      //
-// To open a connection to a GRID use the static method Connect().      //
-// The argument of Connect() is of the form:                            //
-//    <grid>[://<host>][:<port>], e.g. alien://alice.cern.ch            //
-// Depending on the <grid> specified an appropriate plugin library      //
-// will be loaded which will provide the real interface.                //
-//                                                                      //
-// Related classes are TGridResult.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGrid.h"
 #include "TROOT.h"
 #include "TPluginManager.h"

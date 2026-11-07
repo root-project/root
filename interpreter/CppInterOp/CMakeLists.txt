@@ -12,6 +12,24 @@ set(CMAKE_CXX_EXTENSIONS NO)
 option(CPPINTEROP_USE_CLING "Use Cling as backend" OFF)
 option(CPPINTEROP_USE_REPL "Use clang-repl as backend" ON)
 option(CPPINTEROP_ENABLE_TESTING "Enable the CppInterOp testing infrastructure." ON)
+option(CPPINTEROP_BUILD_TABLEGEN_ONLY "Only build cppinterop-tblgen (for cross-compilation)" OFF)
+
+#=Set OFF to suppress install() rules and route clangCppInterOp through
+# add_llvm_library(... BUILDTREE_ONLY)
+option(CPPINTEROP_INSTALL "Generate install rules for CppInterOp" ON)
+
+# OFF to ship the shared library as a single unversioned file, matching
+# the Darwin layout: archives that cannot carry symlinks (Python wheels)
+# would otherwise materialize the SOVERSION namelink as a second full copy.
+option(CPPINTEROP_SHARED_LIBRARY_VERSIONING
+  "Attach the LLVM SOVERSION and namelink to shared clangCppInterOp" ON)
+
+set(CPPINTEROP_BAKED_INTERPRETER_ARGS "" CACHE STRING
+  "Space-separated arguments passed at interpreter creation (no quoting: arguments containing spaces are not supported)")
+if(EMSCRIPTEN)
+  set(CPPINTEROP_LIBRARY_WASM_FLAGS "-Oz -flto" CACHE STRING "Extra flags for build of CppInterOp library")
+  set(CPPINTEROP_EXTRA_WASM_FLAGS "-fwasm-exceptions" CACHE STRING "Extra flags for wasm (all targets)")
+endif()
 
 if (CPPINTEROP_USE_CLING AND CPPINTEROP_USE_REPL)
 message(FATAL_ERROR "We can only use Cling (${CPPINTEROP_USE_CLING}=On) or Repl (CPPINTEROP_USE_REPL=On), but not both of them.")
@@ -20,6 +38,26 @@ endif()
 # project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   project(CppInterOp)
+
+  # When only building cppinterop-tblgen for cross-compilation, skip
+  # all find_package calls and library/test subdirectories. Only needs
+  # LLVM_DIR pointing to a native LLVM build with libLLVMTableGen.
+  if(CPPINTEROP_BUILD_TABLEGEN_ONLY)
+    find_package(LLVM REQUIRED CONFIG)
+    include_directories(${LLVM_INCLUDE_DIRS})
+    include(AddLLVM)
+    include(HandleLLVMOptions)
+    include(TableGen)
+    add_subdirectory(utils/TableGen)
+    return()
+  endif()
+
+  if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(WARNING "No build type selected. Defaulted CMAKE_BUILD_TYPE=Release.\n"
+      "Valid options are: None, Debug, Release, RelWithDebInfo, MinSizeRel.")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+  endif()
 
   # LLVM/Clang/Cling default paths
   if (DEFINED LLVM_DIR)
@@ -67,15 +105,15 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
 include(GNUInstallDirs)
   ## Define supported version of clang and llvm
 
-  set(CLANG_MIN_SUPPORTED 18.0)
-  set(CLANG_MAX_SUPPORTED "20.1.x")
-  set(CLANG_VERSION_UPPER_BOUND 21.0.0)
-  set(LLD_MIN_SUPPORTED 18.0)
-  set(LLD_MAX_SUPPORTED "20.1.x")
-  set(LLD_VERSION_UPPER_BOUND 21.0.0)
-  set(LLVM_MIN_SUPPORTED 18.0)
-  set(LLVM_MAX_SUPPORTED "20.1.x")
-  set(LLVM_VERSION_UPPER_BOUND 21.0.0)
+  set(CLANG_MIN_SUPPORTED 21.0)
+  set(CLANG_MAX_SUPPORTED "23.1.x")
+  set(CLANG_VERSION_UPPER_BOUND 24.0.0)
+  set(LLD_MIN_SUPPORTED 21.0)
+  set(LLD_MAX_SUPPORTED "23.1.x")
+  set(LLD_VERSION_UPPER_BOUND 24.0.0)
+  set(LLVM_MIN_SUPPORTED 21.0)
+  set(LLVM_MAX_SUPPORTED "23.1.x")
+  set(LLVM_VERSION_UPPER_BOUND 24.0.0)
 
   ## Set Cmake packages search order
 
@@ -275,11 +313,32 @@ endif()
 
   set( CPPINTEROP_BUILT_STANDALONE 1 )
 
+  # LLVM_USE_SANITIZER is not exported via LLVMConfig.cmake. When building
+  # against an LLVM build tree (not an installed package), import the setting
+  # so that HandleLLVMOptions applies matching -fsanitize= flags.
+  if (NOT DEFINED LLVM_USE_SANITIZER
+      AND EXISTS "${LLVM_BINARY_DIR}/CMakeCache.txt")
+    load_cache("${LLVM_BINARY_DIR}" READ_WITH_PREFIX _LLVM_
+               LLVM_USE_SANITIZER)
+    if (_LLVM_LLVM_USE_SANITIZER)
+      set(LLVM_USE_SANITIZER "${_LLVM_LLVM_USE_SANITIZER}")
+      message(STATUS "Matching LLVM sanitizer: LLVM_USE_SANITIZER=${LLVM_USE_SANITIZER}")
+    endif ()
+  endif ()
+
   include(AddLLVM)
   include(HandleLLVMOptions)
+  include(TableGen)
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Generated .inc files from cppinterop-tblgen live under our own build
+# subtree. Use CMAKE_CURRENT_BINARY_DIR so consumers embedding CppInterOP
+# via add_subdirectory() (e.g. ROOT) don't write CppInterOp artifacts into
+# top-level build/include
+set(CPPINTEROP_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/include/CppInterOp)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # In rare cases we might want to have clang installed in a different place
 # than llvm and the header files should be found first (even though the
@@ -297,6 +356,55 @@ include_directories(SYSTEM ${CLANG_INCLUDE_DIRS})
 include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
+
+# Bundle the ORC runtime + executor inside CppInterOp's distribution
+# so the OOP-JIT path is self-contained: no extra package to install,
+# no resource-dir scan in the host's clang tree at runtime. Paths are
+# baked at build time (CPPINTEROP_RUNTIME_{BUILD,INSTALL}_DIR in
+# Compatibility.h) and probed via fs::exists.
+set(CPPINTEROP_RUNTIME_SUBDIR "cppinterop-rt")
+set(CPPINTEROP_RUNTIME_BUILDTREE_DIR
+    "${CMAKE_BINARY_DIR}/lib/${CPPINTEROP_RUNTIME_SUBDIR}")
+
+if(LLVM_VERSION_MAJOR GREATER 21)
+  find_package(LLVMOrcRuntime QUIET MODULE)
+endif()
+
+if(LLVMOrcRuntime_FOUND)
+  message(STATUS "CppInterOp OOP-JIT runtime:")
+  message(STATUS "  orc_rt:   ${LLVMOrcRuntime_LIBRARY}")
+  message(STATUS "  executor: ${LLVMOrcRuntime_EXECUTOR}")
+
+  file(MAKE_DIRECTORY "${CPPINTEROP_RUNTIME_BUILDTREE_DIR}")
+  configure_file("${LLVMOrcRuntime_LIBRARY}"
+                 "${CPPINTEROP_RUNTIME_BUILDTREE_DIR}/liborc_rt.a"
+                 COPYONLY)
+  configure_file("${LLVMOrcRuntime_EXECUTOR}"
+                 "${CPPINTEROP_RUNTIME_BUILDTREE_DIR}/llvm-jitlink-executor"
+                 COPYONLY)
+  if(CPPINTEROP_INSTALL)
+    install(FILES "${LLVMOrcRuntime_LIBRARY}"
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/${CPPINTEROP_RUNTIME_SUBDIR}"
+            RENAME liborc_rt.a)
+    install(PROGRAMS "${LLVMOrcRuntime_EXECUTOR}"
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/${CPPINTEROP_RUNTIME_SUBDIR}"
+            RENAME llvm-jitlink-executor)
+  endif()
+
+  # Bake build-tree and install-tree runtime locations into the library
+  # so it can locate the bundled parts at runtime without dladdr or any
+  # platform-specific self-DSO discovery.
+  add_definitions(
+    "-DCPPINTEROP_RUNTIME_BUILD_DIR=\"${CPPINTEROP_RUNTIME_BUILDTREE_DIR}\""
+    "-DCPPINTEROP_RUNTIME_INSTALL_DIR=\"${CMAKE_INSTALL_FULL_LIBDIR}/${CPPINTEROP_RUNTIME_SUBDIR}\"")
+elseif(LLVM_VERSION_MAJOR GREATER 21)
+  message(STATUS
+    "CppInterOp: OOP-JIT runtime (liborc_rt + llvm-jitlink-executor) "
+    "not found in ${LLVM_LIBRARY_DIR}. Out-of-process JIT support will "
+    "be unavailable. To enable it, build LLVM with compiler-rt and "
+    "ninja the llvm-jitlink-executor + orc_rt* targets, or install a "
+    "compiler-rt package that ships them.")
+endif()
 
 # If the llvm sources are present add them with higher priority.
 if (LLVM_BUILD_MAIN_SRC_DIR)
@@ -347,6 +455,9 @@ endif()
 if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   if (APPLE OR EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-common -Woverloaded-virtual -Wcast-qual -fno-strict-aliasing -Wno-long-long -Wall -W -Wno-unused-parameter -Wwrite-strings")
+    if (EMSCRIPTEN)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CPPINTEROP_EXTRA_WASM_FLAGS}")
+    endif ()
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-common -Woverloaded-virtual -Wcast-qual -fno-strict-aliasing -pedantic -Wno-long-long -Wall -W -Wno-unused-parameter -Wwrite-strings")
   endif ()
@@ -354,7 +465,9 @@ endif ()
 
 # Fixes "C++ exception handler used, but unwind semantics are not enabled" warning Windows
 if (MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /bigobj")
+  # Required for clang::driver::options::OPT_ see https://github.com/llvm/llvm-project/issues/86028
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Zc:preprocessor")
 endif ()
 
 if (APPLE)
@@ -392,6 +505,38 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/CppInterOp/CppInterOpConfigVersion.cmake
   @ONLY)
 
+if(CPPINTEROP_INSTALL)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/CppInterOp/
+    DESTINATION lib/cmake/CppInterOp
+    FILES_MATCHING
+    PATTERN "*.cmake"
+    )
+
+  install(DIRECTORY include/
+    DESTINATION include
+    COMPONENT cppinterop-headers
+    FILES_MATCHING
+    PATTERN "*.def"
+    PATTERN "*.h"
+    PATTERN "*.inc"
+    PATTERN ".svn" EXCLUDE
+    )
+
+  install(DIRECTORY tools/
+    DESTINATION include/CppInterOp/tools
+    COMPONENT cppinterop-headers
+    FILES_MATCHING
+    PATTERN "*.h"
+  )
+
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+    DESTINATION include
+    COMPONENT cppinterop-headers
+    FILES_MATCHING
+    PATTERN "CMakeFiles" EXCLUDE
+    PATTERN "*.inc"
+    )
+endif()
 add_definitions( -D_GNU_SOURCE )
 
 # Add deps if we build together with clang.
@@ -481,7 +626,21 @@ if (CPPINTEROP_INCLUDE_DOCS)
   add_subdirectory(docs)
 endif()
 
+if(NOT EMSCRIPTEN AND NOT CPPINTEROP_TABLEGEN_EXE)
+  add_subdirectory(utils/TableGen)
+endif()
 add_subdirectory(lib)
+
+if(CPPINTEROP_INSTALL)
+  # Installing the headers needs to depend on generating the tablegen'd
+  # public headers.
+  add_custom_target(cppinterop-headers DEPENDS CppInterOpTableGen)
+  if(NOT LLVM_ENABLE_IDE)
+    add_llvm_install_targets(install-cppinterop-headers
+                             DEPENDS cppinterop-headers
+                             COMPONENT cppinterop-headers)
+  endif()
+endif()
 if (CPPINTEROP_ENABLE_TESTING)
   add_subdirectory(unittests)
 endif(CPPINTEROP_ENABLE_TESTING)

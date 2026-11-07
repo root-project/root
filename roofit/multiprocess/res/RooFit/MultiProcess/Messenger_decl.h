@@ -14,25 +14,22 @@
 #define ROOT_ROOFIT_MultiProcess_Messenger_decl
 
 #include "RooFit/MultiProcess/ProcessManager.h"
-#include "RooFit_ZMQ/ZeroMQSvc.h"
-#include "RooFit_ZMQ/ZeroMQPoller.h"
+#include "RooFit/MultiProcess/Channel.h"
+#include "RooFit/MultiProcess/Poller.h"
 
 #include <iosfwd>
-#include <vector>
-#include <csignal> // sigprocmask, sigset_t, etc
 #include <string>
+#include <vector>
 
 namespace RooFit {
 namespace MultiProcess {
-
-void set_socket_immediate(ZmqLingeringSocketPtr<> &socket);
 
 // test messages
 enum class X2X : int { ping = -1, pong = -2, initial_value = 0 };
 
 class Messenger {
 public:
-   explicit Messenger(const ProcessManager &process_manager);
+   explicit Messenger(ProcessManager &process_manager);
    ~Messenger();
 
    void test_connections(const ProcessManager &process_manager);
@@ -51,8 +48,8 @@ public:
       fromQonW,
    };
 
-   std::pair<ZeroMQPoller, std::size_t> create_queue_poller();
-   std::pair<ZeroMQPoller, std::size_t> create_worker_poller();
+   std::pair<Poller, std::size_t> create_queue_poller();
+   std::pair<Poller, std::size_t> create_worker_poller();
 
    // -- WORKER - QUEUE COMMUNICATION --
 
@@ -101,52 +98,31 @@ public:
    void test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
    void test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);
 
-   sigset_t ppoll_sigmask;
-
-   void set_send_flag(zmq::send_flags flag);
-
 private:
    void debug_print(std::string s);
 
-   template <class T>
-   void bindAddr(T &socket, std::string &&addr)
-   {
-      bound_ipc_addresses_.emplace_back(addr);
-      socket->bind(bound_ipc_addresses_.back());
-   }
+   /// On master: pick the worker channel to receive the next message from.
+   /// Continues an in-progress multipart message from the same worker;
+   /// otherwise waits for any worker and picks one round-robin.
+   Channel &select_worker_channel_on_master();
+   void update_worker_channel_on_master(Channel &channel, bool more);
 
-   // push
-   std::vector<ZmqLingeringSocketPtr<>> qw_push_;
-   ZmqLingeringSocketPtr<> this_worker_qw_push_;
-   ZmqLingeringSocketPtr<> mq_push_;
-   // pollers for all push sockets
-   std::vector<ZeroMQPoller> qw_push_poller_;
-   ZeroMQPoller mq_push_poller_;
-   // pull
-   std::vector<ZmqLingeringSocketPtr<>> qw_pull_;
-   ZmqLingeringSocketPtr<> this_worker_qw_pull_;
-   ZmqLingeringSocketPtr<> mq_pull_;
-   // pollers for all pull sockets
-   std::vector<ZeroMQPoller> qw_pull_poller_;
-   ZeroMQPoller mq_pull_poller_;
+   // master-queue channel (on master and queue processes)
+   Channel mq_;
+   // queue-worker channels (all workers on the queue process, only the own
+   // one on worker processes)
+   std::vector<Channel> qw_;
+   Channel this_worker_qw_;
+   // master-worker channels, carrying both the state updates that were
+   // previously published over PUB-SUB and the task results (all workers on
+   // the master process, only the own one on worker processes)
+   std::vector<Channel> mw_;
+   Channel this_worker_mw_;
 
-   // publish/subscribe sockets for parameter updating from master to workers
-   ZmqLingeringSocketPtr<> mw_pub_;
-   ZmqLingeringSocketPtr<> mw_sub_;
-   ZeroMQPoller mw_sub_poller_;
-   // push/pull sockets for result retrieving from workers on master
-   ZmqLingeringSocketPtr<> wm_push_;
-   ZmqLingeringSocketPtr<> wm_pull_;
-   ZeroMQPoller wm_pull_poller_;
-
-   // destruction flags to distinguish between different process-type setups:
-   bool close_MQ_on_destruct_ = false;
-   bool close_this_QW_on_destruct_ = false;
-   bool close_QW_container_on_destruct_ = false;
-
-   zmq::send_flags send_flag_ = zmq::send_flags::none;
-
-   std::vector<std::string> bound_ipc_addresses_;
+   // on master: bookkeeping for receiving from any worker
+   Poller mw_poller_;
+   Channel *mw_current_source_ = nullptr;
+   std::size_t mw_next_poll_position_ = 0;
 };
 
 // Messages from master to queue

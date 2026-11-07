@@ -30,8 +30,6 @@
 //_____________________________batch only_____________________
 #ifndef __CLING__
 
-#include <iostream>
-#include "snprintf.h"
 #include "TFile.h"
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"
@@ -43,6 +41,9 @@
 #include "TDecompLU.h"
 #include "TDecompQRH.h"
 #include "TDecompSVD.h"
+
+#include <iostream>
+#include <cstdio>
 
 void stress_matrix                (Int_t verbose);
 void StatusPrint                  (Int_t id,const TString &title,Int_t status);

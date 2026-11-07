@@ -12,7 +12,6 @@
 #include "TBrowser.h"
 #include "TPoint.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TView.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
@@ -31,7 +30,6 @@ pointer to a TParticle. The geometry manager holds a list
 of all tracks that will be deleted on destruction of
 gGeoManager.
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -506,7 +504,6 @@ void TGeoTrack::PaintCollectTrack(Double_t time, Double_t *box)
 
 void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
 {
-   TPoint p;
    Double_t xndc[3];
    TView *view = gPad->GetView();
    if (!view)
@@ -516,29 +513,24 @@ void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
       return;
    if (xndc[1] < gPad->GetY1() || xndc[1] > gPad->GetY2())
       return;
-   p.fX = gPad->XtoPixel(xndc[0]);
-   p.fY = gPad->YtoPixel(xndc[1]);
-   TAttMarker::Modify();
-   gVirtualX->DrawPolyMarker(1, &p);
+
+   Double_t px = xndc[0];
+   Double_t py = xndc[1];
+
+   TAttMarker::ModifyOn(*gPad);
+   gPad->PaintPolyMarker(1, &px, &py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this track with its current attributes.
 
-void TGeoTrack::PaintTrack(Option_t *option)
+void TGeoTrack::PaintTrack(Option_t * /*option*/)
 {
    // Check whether there is some 3D view class for this TPad
    //   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
    //   if (view3D) view3D->PaintGeoTrack(this,option); // to be implemented
 
-   // Check if option is 'x3d'.      NOTE: This is a simple checking
-   //                                      but since there is no other
-   //                                      options yet, this works fine.
-   TString opt(option);
-   opt.ToLower();
    TObject::SetBit(kGeoPDrawn, kFALSE);
-   if (opt.Contains("x"))
-      return;
    Int_t np = fNpoints >> 2;
    Int_t imin = 0;
    Int_t imax = np - 1;

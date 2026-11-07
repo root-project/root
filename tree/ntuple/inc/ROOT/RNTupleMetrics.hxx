@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleMetrics.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-08-27
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -52,7 +51,7 @@ Derived classes decide on the counter type and implement printing of the value.
 class RNTuplePerfCounter {
 private:
    /// Symbol to split name, unit, description, and value when printing
-   static constexpr char kFieldSeperator = '|';
+   static constexpr char kFieldSeparator = '|';
 
    std::string fName;
    std::string fUnit;
@@ -283,27 +282,49 @@ using RNTupleAtomicTimer = RNTupleTimer<RNTupleAtomicCounter, RNTupleTickCounter
 \brief A collection of Counter objects with a name, a unit, and a description.
 
 The class owns the counters.
+
+If the environment variable `ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS` is set, metrics are automatically enabled
+on construction, and any counter added afterwards through MakeCounter() is enabled as well.
 */
 // clang-format on
 class RNTupleMetrics {
 private:
    /// Symbol to split metrics name from counter / sub metrics name
-   static constexpr char kNamespaceSeperator = '.';
+   static constexpr char kNamespaceSeparator = '.';
 
    std::vector<std::unique_ptr<RNTuplePerfCounter>> fCounters;
    std::vector<RNTupleMetrics *> fObservedMetrics;
    std::string fName;
+   std::string fNTupleName;
+   std::string fExportPath;
    bool fIsEnabled = false;
 
    bool Contains(const std::string &name) const;
 
+   /// Retrieves each counter of the observed metrics down to the class instances which own the counters and pairs them
+   /// with their fully qualified names
+   void CollectCounters(std::vector<std::pair<std::string, const RNTuplePerfCounter *>> &counters,
+                        const std::string &prefix = "") const;
+   void ExportToRootFile();
+
 public:
-   explicit RNTupleMetrics(const std::string &name) : fName(name) {}
+   explicit RNTupleMetrics(const std::string &name) : RNTupleMetrics(name, "") {}
+   RNTupleMetrics(const std::string &name, const std::string &ntupleName) : fName(name), fNTupleName(ntupleName)
+   {
+      const std::string exportPath = GetMetricsExportPath();
+      if (exportPath.empty())
+         return;
+
+      if (!fNTupleName.empty())
+         fExportPath = exportPath;
+
+      Enable();
+   }
    RNTupleMetrics(const RNTupleMetrics &other) = delete;
    RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
    RNTupleMetrics(RNTupleMetrics &&other) = default;
    RNTupleMetrics & operator=(RNTupleMetrics &&other) = default;
-   ~RNTupleMetrics() = default;
+   ~RNTupleMetrics();
 
    // TODO(jblomer): return a reference
    template <typename CounterPtrT, class... Args>
@@ -313,6 +334,8 @@ public:
       auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, std::forward<Args>(args)...);
       auto ptrCounter = counter.get();
       fCounters.emplace_back(std::move(counter));
+      if (fIsEnabled)
+         ptrCounter->Enable();
       return ptrCounter;
    }
 
@@ -323,6 +346,7 @@ public:
    const RNTuplePerfCounter *GetCounter(std::string_view name) const;
 
    void ObserveMetrics(RNTupleMetrics &observee);
+   static std::string GetMetricsExportPath();
 
    void Print(std::ostream &output, const std::string &prefix = "") const;
    void Enable();

@@ -17,7 +17,7 @@ sap.ui.define(['sap/ui/core/Component',
    return Controller.extend("rootui5.eve7.controller.Main", {
       onInit: function () {
          this.mgr = new EveManager();
-         this.initClientLog();
+        // this.initClientLog();
 
          let conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
          this.mgr.UseConnection(conn_handle);
@@ -181,6 +181,8 @@ sap.ui.define(['sap/ui/core/Component',
             vtype = "rootui5.eve7.view.Lego";
          else if (elem.fName === "GeoTable")
                vtype = "rootui5.eve7.view.GeoTable";
+         else if (elem.fName === "GeoOverlapTable")
+               vtype = "rootui5.eve7.view.GeoOverlapTable";
 
          let oOwnerComponent = Component.getOwnerComponentFor(this.getView());
          let view = oOwnerComponent.runAsOwner(function() {

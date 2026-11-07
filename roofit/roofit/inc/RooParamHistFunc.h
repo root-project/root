@@ -21,7 +21,10 @@
 #include "RooDataHist.h"
 #include <list>
 
-class RooParamHistFunc : public RooAbsReal {
+class R__DEPRECATED(6, 46,
+                    "Its functionality is too close to the HistFactory classes. Please use the HistFactory class "
+                    "ParamHistFunc instead, multiplying it with a RooHistFunc, as shown in the rf709_BarlowBeeston "
+                    "tutorial.") RooParamHistFunc : public RooAbsReal {
 public:
   RooParamHistFunc() {} ;
   RooParamHistFunc(const char *name, const char *title, RooDataHist &dh, const RooAbsArg &x,

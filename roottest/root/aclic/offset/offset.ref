@@ -1,4 +1,3 @@
-
 Processing runoffset.C...
 size TH1D,TArrayD,my=1000,24,1024 offset=1000
 size TH1D,TArrayD,my=1000,24,1024 offset=1000

@@ -1,25 +1,32 @@
+import shlex
 import sys
 
 import pytest
 
-from check_backend import *
-from check_cloned_actions import *
-from check_distribute_cppcode import * 
-from check_definepersample import *
-from check_fromspec import *
-from check_explicit_api import *
-from check_friend_trees_alignment import *
-from check_friend_trees import *
-from check_histo_write import *
-from check_distribute_headers_sharedlibs_files import *
-from check_inv_mass import *
-from check_live_visualize import *
-from check_missing_values import *
-from check_reducer_merge import *
-from check_rungraphs import *
-from check_variations import *
+# Avoid errors from linters like "unable to detect undefined names"
+from check_backend import *  # noqa: F403
+from check_cloned_actions import *  # noqa: F403
+from check_definepersample import *  # noqa: F403
+from check_distribute_cppcode import *  # noqa: F403
+from check_distribute_headers_sharedlibs_files import *  # noqa: F403
+from check_explicit_api import *  # noqa: F403
+from check_friend_trees import *  # noqa: F403
+from check_friend_trees_alignment import *  # noqa: F403
+from check_fromspec import *  # noqa: F403
+from check_histo_write import *  # noqa: F403
+from check_inv_mass import *  # noqa: F403
+from check_live_visualize import *  # noqa: F403
+from check_missing_values import *  # noqa: F403
+from check_reducer_merge import *  # noqa: F403
+from check_rungraphs import *  # noqa: F403
+from check_variations import *  # noqa: F403
 
 if __name__ == "__main__":
     # The call to sys.exit is needed otherwise CTest would just ignore the
     # results returned by pytest, even in case of errors.
-    sys.exit(pytest.main(args=[__file__]))
+    # We ignore ResourceWarning about unclosed socket because of https://issues.apache.org/jira/browse/SPARK-38659 which
+    # has been fixed by https://github.com/apache/spark/pull/53200 and https://github.com/apache/spark/pull/53203 which
+    # may not be available in all test runner configurations
+    sys.exit(
+        pytest.main(args=shlex.split(f'{__file__} -x -vvv -Werror -Wignore:"unclosed <socket.socket":ResourceWarning'))
+    )

@@ -35,8 +35,6 @@ public:
    // necessary only for legacy offsetting mode in LikelihoodWrapper; TODO: remove this if legacy mode is ever removed
    ROOT::Math::KahanSum<double> getSubsidiaryValue();
 
-   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
-
    std::string GetClassName() const override { return "RooSumL"; }
 
    const std::vector<std::unique_ptr<RooAbsL>> &GetComponents() const { return components_; };

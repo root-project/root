@@ -16,6 +16,7 @@
 #pragma link C++ class CustomAtomicNotLockFree+;
 
 #pragma link C++ class CustomStruct+;
+#pragma link C++ class CustomStruct::VectorWrapper<Long64_t>+;
 #pragma link C++ class DerivedA+;
 #pragma link C++ class DerivedA2+;
 #pragma link C++ class DerivedWithTypedef + ;
@@ -141,6 +142,9 @@
 #pragma link C++ options = version(3) class NewName < int> + ;
 #pragma link C++ options = version(3) class NewName < NewName < int>> + ;
 #pragma read sourceClass = "OldName<OldName<int>>" targetClass = "NewName<OldName<int>>" version = "[3]"
+#pragma link C++ options = version(4) class OldName<float>+;
+#pragma link C++ options = version(5) class NewName<float>+;
+#pragma read sourceClass = "OldName<float>" targetClass = "NewName<float>"
 
 #pragma link C++ struct SourceStruct + ;
 #pragma link C++ struct StructWithSourceStruct + ;
@@ -174,5 +178,12 @@
 #pragma link C++ class v2::ExampleMC+;
 #pragma read sourceClass = "v1::ExampleMC" source = "v1::Vector3D fSpin" version="[1-]" targetClass = \
    "v2::ExampleMC" target = "fHelicity" code = "{ fHelicity = onfile.fSpin.fZ; }"
+
+#pragma link C++ class MemberWithCustomStreamer+;
+
+#pragma link C++ class AlignmentDeterminedByTransientMember+;
+#pragma link C++ class AlignedAs+;
+#pragma link C++ class OverAligned+;
+#pragma link C++ class AlignmentEnvelope+;
 
 #endif

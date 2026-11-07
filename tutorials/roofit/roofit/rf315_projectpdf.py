@@ -41,21 +41,21 @@ gaussy = ROOT.RooGaussian("gaussy", "Gaussian in y", y, 0.0, 2.0)
 model = ROOT.RooProdPdf(
     "model",
     "gaussx(x|y)*gaussy(y)",
-    {gaussy},
-    Conditional=({gaussx}, {x}),
+    gaussy,
+    Conditional=(gaussx, x),
 )
 
 # Marginalize m(x,y) to m(x)
 # ----------------------------------------------------
 
 # modelx(x) = Int model(x,y) dy
-modelx = model.createProjection({y})
+modelx = model.createProjection(y)
 
 # Use marginalized pdf as regular 1D pdf
 # -----------------------------------------------
 
 # Sample 1000 events from modelx
-data = modelx.generateBinned({x}, 1000)
+data = modelx.generateBinned(x, 1000)
 
 # Fit modelx to toy data
 modelx.fitTo(data, Verbose=True, PrintLevel=-1)

@@ -17,17 +17,19 @@
 #include <RooAbsReal.h>
 #include <RooFit/EvalContext.h>
 
-#include <RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #include <memory>
-#include <stack>
 
 class ChangeOperModeRAII;
 class RooAbsArg;
 
 namespace RooBatchCompute {
 class AbsBufferManager;
+namespace CudaInterface {
+class CudaStream;
 }
+} // namespace RooBatchCompute
 
 namespace RooFit {
 
@@ -43,7 +45,13 @@ public:
    RooArgSet getParameters() const;
    void print(std::ostream &os);
 
+   void setNThreads(int nThreads);
+
    void setOffsetMode(RooFit::EvalContext::OffsetMode);
+
+   std::unique_ptr<ChangeOperModeRAII> setOperModes(RooAbsArg::OperMode opMode);
+
+   void unregisterNode(RooAbsArg const &arg);
 
 private:
    void processVariable(NodeInfo &nodeInfo);
@@ -66,7 +74,9 @@ private:
    RooFit::EvalContext _evalContextCUDA;
    std::vector<NodeInfo> _nodes;                             // the ordered computation graph
    std::unordered_map<TNamed const *, NodeInfo *> _nodesMap; // for quick lookup of nodes
-   std::stack<std::unique_ptr<ChangeOperModeRAII>> _changeOperModeRAIIs;
+   std::unique_ptr<ChangeOperModeRAII> _operModeChanges;
+   // the single CUDA stream on which all GPU work of this Evaluator is enqueued
+   RooBatchCompute::CudaInterface::CudaStream *_cudaStream = nullptr;
 };
 
 } // end namespace RooFit

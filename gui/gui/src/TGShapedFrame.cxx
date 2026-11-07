@@ -12,6 +12,7 @@
 #include "TGLayout.h"
 #include "TString.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TGShapedFrame.h"
 #include "TVirtualX.h"
 
@@ -29,7 +30,7 @@ A Shaped window
 
 TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
                              UInt_t h, UInt_t options) :
-      TGCompositeFrame(p, w, h, options), fBgnd(0), fImage(0)
+      TGCompositeFrame(p, w, h, options), fBgnd(nullptr), fImage(nullptr)
 {
    TString picName;
    // set a few attributes
@@ -50,8 +51,7 @@ TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
       Error("TGShapedFrame", "%s not found", picName.Data());
       return;
    }
-   fBgnd = fClient->GetPicturePool()->GetPicture(picName.Data(),
-           fImage->GetPixmap(), fImage->GetMask());
+   fBgnd = fClient->GetPicturePool()->GetPicture(picName.Data(), TASUtils::GetPixmap(fImage), TASUtils::GetMask(fImage));
    // shape the window with the picture mask
    gVirtualX->ShapeCombineMask(fId, 0, 0, fBgnd->GetMask());
    // and finally set the background picture

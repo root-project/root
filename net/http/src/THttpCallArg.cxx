@@ -17,7 +17,6 @@
 #include "THttpWSEngine.h"
 
 /** \class THttpCallArg
-\ingroup http
 
 Contains arguments for single HTTP call
 
@@ -444,6 +443,10 @@ Bool_t THttpCallArg::CompressWithGzip()
 
    // R__memcompress fills first 6 bytes with own header, therefore just overwrite them
    unsigned long ziplen = R__memcompress(bufcur - 6, objlen + 6, objbuf, objlen);
+   if (!ziplen) {
+      Set404();
+      return kFALSE;
+   }
 
    memcpy(bufcur - 6, dummy, 6);
 

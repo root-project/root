@@ -236,6 +236,7 @@ in order to enhance rays.
 \image html geom_random2.jpg
 */
 
+#include <atomic>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -286,11 +287,11 @@ in order to enhance rays.
 #include "TGeoRegion.h"
 #include "TGDMLMatrix.h"
 #include "TGeoOpticalSurface.h"
+#include "TGeoColorScheme.h"
 
 // statics and globals
 
 TGeoManager *gGeoManager = nullptr;
-
 
 std::mutex TGeoManager::fgMutex;
 Bool_t TGeoManager::fgLock = kFALSE;
@@ -304,6 +305,33 @@ UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kRootUnits;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = nullptr;
 static Bool_t gGeometryLocked = kFALSE;
+
+namespace {
+
+struct TGeoManagerThreadState {
+   const TGeoManager *fManager = nullptr;
+   TGeoNavigator *fNavigator = nullptr;
+   ULong64_t fNavigatorGeneration = 0;
+   Int_t fThreadId = -1;
+   ULong64_t fThreadIdGeneration = 0;
+};
+
+TGeoManagerThreadState &GetGeoManagerThreadState()
+{
+   TTHREAD_TLS(TGeoManagerThreadState) state;
+   return state;
+}
+
+// Thread-local navigator pointers and thread ordinals cannot be reset by the thread deleting a manager.
+// Advancing this generation on destructive/global state transitions makes every thread refresh on its next access.
+std::atomic<ULong64_t> gGeoManagerThreadStateGeneration{1};
+
+void InvalidateGeoManagerThreadState()
+{
+   gGeoManagerThreadStateGeneration.fetch_add(1, std::memory_order_release);
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -351,7 +379,7 @@ TGeoManager::TGeoManager()
       fSkinSurfaces = nullptr;
       fBorderSurfaces = nullptr;
       memset(fPdgId, 0, 1024 * sizeof(Int_t));
-      //   TObjArray            *fNavigators;       //! list of navigators
+      //   TObjArray            *fNavigators;       ///<! list of navigators
       fCurrentTrack = nullptr;
       fCurrentVolume = nullptr;
       fTopVolume = nullptr;
@@ -770,8 +798,8 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
    }
    volume->SetNumber(uid);
    if (!fHashVolumes) {
-      fHashVolumes = new THashList(256);
-      fHashGVolumes = new THashList(256);
+      fHashVolumes = new THashList(256, 3);
+      fHashGVolumes = new THashList(256, 3);
    }
    TObjArray *list = fVolumes;
    if (!volume->GetShape() || volume->IsRunTime() || volume->IsVolumeMulti()) {
@@ -807,8 +835,13 @@ TGeoNavigator *TGeoManager::AddNavigator()
    TGeoNavigator *nav = array->AddNavigator();
    if (fClosed)
       nav->GetCache()->BuildInfoBranch();
-   if (fMultiThread)
+   if (fMultiThread) {
+      auto &state = GetGeoManagerThreadState();
+      state.fManager = this;
+      state.fNavigator = nav;
+      state.fNavigatorGeneration = gGeoManagerThreadStateGeneration.load(std::memory_order_acquire);
       fgMutex.unlock();
+   }
    return nav;
 }
 
@@ -817,20 +850,27 @@ TGeoNavigator *TGeoManager::AddNavigator()
 
 TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 {
-   TTHREAD_TLS(TGeoNavigator *) tnav = nullptr;
    if (!fMultiThread)
       return fCurrentNavigator;
-   TGeoNavigator *nav = tnav; // TTHREAD_TLS_GET(TGeoNavigator*,tnav);
-   if (nav)
-      return nav;
+   auto &state = GetGeoManagerThreadState();
+   const auto generation = gGeoManagerThreadStateGeneration.load(std::memory_order_acquire);
+   if (state.fNavigator && state.fManager == this && state.fNavigatorGeneration == generation)
+      return state.fNavigator;
+
+   std::lock_guard<std::mutex> lock(fgMutex);
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
-   if (it == fNavigators.end())
+   if (it == fNavigators.end()) {
+      state.fManager = this;
+      state.fNavigator = nullptr;
+      state.fNavigatorGeneration = generation;
       return nullptr;
+   }
    TGeoNavigatorArray *array = it->second;
-   nav = array->GetCurrentNavigator();
-   tnav = nav; // TTHREAD_TLS_SET(TGeoNavigator*,tnav,nav);
-   return nav;
+   state.fManager = this;
+   state.fNavigator = array->GetCurrentNavigator();
+   state.fNavigatorGeneration = generation;
+   return state.fNavigator;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -838,6 +878,9 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 
 TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 {
+   std::unique_lock<std::mutex> lock(fgMutex, std::defer_lock);
+   if (fMultiThread)
+      lock.lock();
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end())
@@ -851,6 +894,9 @@ TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 
 Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
 {
+   std::unique_lock<std::mutex> lock(fgMutex, std::defer_lock);
+   if (fMultiThread)
+      lock.lock();
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) {
@@ -865,8 +911,14 @@ Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
       std::cout << "  thread id: " << threadId << std::endl;
       return kFALSE;
    }
-   if (!fMultiThread)
+   if (fMultiThread) {
+      auto &state = GetGeoManagerThreadState();
+      state.fManager = this;
+      state.fNavigator = nav;
+      state.fNavigatorGeneration = gGeoManagerThreadStateGeneration.load(std::memory_order_acquire);
+   } else {
       fCurrentNavigator = nav;
+   }
    return kTRUE;
 }
 
@@ -883,6 +935,7 @@ void TGeoManager::SetNavigatorsLock(Bool_t flag)
 
 void TGeoManager::ClearNavigators()
 {
+   InvalidateGeoManagerThreadState();
    if (fMultiThread)
       fgMutex.lock();
    TGeoNavigatorArray *arr = nullptr;
@@ -907,6 +960,7 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
       TGeoNavigatorArray *arr = (*it).second;
       if (arr) {
          if ((TGeoNavigator *)arr->Remove((TObject *)nav)) {
+            InvalidateGeoManagerThreadState();
             delete nav;
             if (!arr->GetEntries())
                fNavigators.erase(it);
@@ -922,7 +976,9 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set maximum number of threads for navigation.
+/// Enable multi-threaded navigation for at most `nthreads` worker threads.
+/// The geometry must be closed and navigation must not be active when this method is called.
+/// This enables ROOT thread safety and prepares the manager and geometry objects for concurrent navigation.
 
 void TGeoManager::SetMaxThreads(Int_t nthreads)
 {
@@ -944,6 +1000,7 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
       ClearThreadsMap();
       ClearThreadData();
    }
+   InvalidateGeoManagerThreadState();
    fMaxThreads = nthreads + 1;
    if (fMaxThreads > 0) {
       fMultiThread = kTRUE;
@@ -986,6 +1043,7 @@ void TGeoManager::CreateThreadData() const
 
 void TGeoManager::ClearThreadsMap()
 {
+   InvalidateGeoManagerThreadState();
    if (gGeoManager && !gGeoManager->IsMultiThread())
       return;
    fgMutex.lock();
@@ -1001,23 +1059,27 @@ void TGeoManager::ClearThreadsMap()
 
 Int_t TGeoManager::ThreadId()
 {
-   TTHREAD_TLS(Int_t) tid = -1;
-   Int_t ttid = tid; // TTHREAD_TLS_GET(Int_t,tid);
-   if (ttid > -1)
-      return ttid;
-   if (gGeoManager && !gGeoManager->IsMultiThread())
+   auto &state = GetGeoManagerThreadState();
+   const auto generation = gGeoManagerThreadStateGeneration.load(std::memory_order_acquire);
+   if (state.fThreadId > -1 && state.fThreadIdGeneration == generation)
+      return state.fThreadId;
+   if (gGeoManager && !gGeoManager->IsMultiThread()) {
+      state.fThreadId = 0;
+      state.fThreadIdGeneration = generation;
       return 0;
+   }
    std::thread::id threadId = std::this_thread::get_id();
+   std::lock_guard<std::mutex> lock(fgMutex);
    TGeoManager::ThreadsMapIt_t it = fgThreadId->find(threadId);
-   if (it != fgThreadId->end())
-      return it->second;
-   // Map needs to be updated.
-   fgMutex.lock();
+   if (it != fgThreadId->end()) {
+      state.fThreadId = it->second;
+      state.fThreadIdGeneration = generation;
+      return state.fThreadId;
+   }
    (*fgThreadId)[threadId] = fgNumThreads;
-   tid = fgNumThreads; // TTHREAD_TLS_SET(Int_t,tid,fgNumThreads);
-   ttid = fgNumThreads++;
-   fgMutex.unlock();
-   return ttid;
+   state.fThreadId = fgNumThreads++;
+   state.fThreadIdGeneration = generation;
+   return state.fThreadId;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1198,6 +1260,26 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
               "medium ID.\n %i occurrences for assembly replacing volume %s",
               ierr, vorig->GetName());
    return nref;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Rebuild the voxel structures that are flagged as needing rebuild.
+
+void TGeoManager::RebuildVoxels()
+{
+   Int_t nvol = fVolumes->GetEntriesFast();
+   TGeoVolume *vol;
+   TGeoVoxelFinder *voxels;
+   for (Int_t i = 0; i < nvol; i++) {
+      vol = (TGeoVolume *)fVolumes->At(i);
+      if (!vol)
+         continue;
+      voxels = vol->GetVoxels();
+      if (voxels && voxels->NeedRebuild()) {
+         voxels->Voxelize();
+         vol->FindOverlaps(); // after voxelization, check overlaps again
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1538,8 +1620,8 @@ void TGeoManager::CloseGeometry(Option_t *option)
       if (!fHashVolumes) {
          Int_t nvol = fVolumes->GetEntriesFast();
          Int_t ngvol = fGVolumes->GetEntriesFast();
-         fHashVolumes = new THashList(nvol + 1);
-         fHashGVolumes = new THashList(ngvol + 1);
+         fHashVolumes = new THashList(nvol + 1, 3);
+         fHashGVolumes = new THashList(ngvol + 1, 3);
          Int_t i;
          for (i = 0; i < ngvol; i++)
             fHashGVolumes->AddLast(fGVolumes->At(i));
@@ -2258,42 +2340,30 @@ Int_t TGeoManager::GetSafeLevel() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set default volume colors according to A of material
+///
+/// If called with no argument, it uses the new default "natural" scheme
+/// (including name-based material overrides) and falls back to Z-binned colors.
 
-void TGeoManager::DefaultColors()
+void TGeoManager::DefaultColors(const TGeoColorScheme *cs /*=nullptr*/)
 {
-   const Int_t nmax = 110;
-   Int_t col[nmax];
-   for (Int_t i = 0; i < nmax; i++)
-      col[i] = kGray;
+   TGeoColorScheme defaultCS(EGeoColorSet::kNatural);
+   const TGeoColorScheme *scheme = cs ? cs : &defaultCS;
 
-   // here we should create a new TColor with the same rgb as in the default
-   // ROOT colors used below
-   col[3] = kYellow - 10;
-   col[4] = col[5] = kGreen - 10;
-   col[6] = col[7] = kBlue - 7;
-   col[8] = col[9] = kMagenta - 3;
-   col[10] = col[11] = kRed - 10;
-   col[12] = kGray + 1;
-   col[13] = kBlue - 10;
-   col[14] = kOrange + 7;
-   col[16] = kYellow + 1;
-   col[20] = kYellow - 10;
-   col[24] = col[25] = col[26] = kBlue - 8;
-   col[29] = kOrange + 9;
-   col[79] = kOrange - 2;
-
-   TGeoVolume *vol;
+   TGeoVolume *vol = nullptr;
    TIter next(fVolumes);
+
    while ((vol = (TGeoVolume *)next())) {
-      TGeoMedium *med = vol->GetMedium();
-      if (!med)
-         continue;
-      TGeoMaterial *mat = med->GetMaterial();
-      Int_t matZ = (Int_t)mat->GetZ();
-      vol->SetLineColor(col[matZ]);
-      if (mat->GetDensity() < 0.1)
-         vol->SetTransparency(60);
+      // Ask scheme for a color (>=0 means "use it")
+      const Int_t c = scheme->Color(vol);
+      if (c >= 0)
+         vol->SetLineColor(c);
+
+      // Ask scheme for transparency ([0..100] means "use it")
+      const Int_t t = scheme->Transparency(vol);
+      if (t >= 0)
+         vol->SetTransparency(t);
    }
+   ModifiedPad();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2708,7 +2778,6 @@ void TGeoManager::SaveAttributes(const char *filename)
    }
    out << "   // draw top volume with new settings" << std::endl;
    out << "   top->Draw();" << std::endl;
-   out << "   gPad->x3d();" << std::endl;
    out << "}" << std::endl;
    out.close();
 }
@@ -2987,8 +3056,8 @@ TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
    if (!fHashVolumes) {
       Int_t nvol = fVolumes->GetEntriesFast();
       Int_t ngvol = fGVolumes->GetEntriesFast();
-      fHashVolumes = new THashList(nvol + 1);
-      fHashGVolumes = new THashList(ngvol + 1);
+      fHashVolumes = new THashList(nvol + 1, 3);
+      fHashGVolumes = new THashList(ngvol + 1, 3);
       Int_t i;
       for (i = 0; i < ngvol; i++)
          fHashGVolumes->AddLast(fGVolumes->At(i));
@@ -3631,6 +3700,7 @@ void TGeoManager::SetNsegments(Int_t nseg)
       fNsegments = nseg;
    if (fPainter)
       fPainter->SetNsegments(nseg);
+   InvalidateMeshCaches();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3639,6 +3709,19 @@ void TGeoManager::SetNsegments(Int_t nseg)
 Int_t TGeoManager::GetNsegments() const
 {
    return fNsegments;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate mesh caches built by composite shapes
+
+void TGeoManager::InvalidateMeshCaches()
+{
+   TIter next_shape(fShapes);
+   TGeoShape *shape;
+   while ((shape = (TGeoShape *)next_shape())) {
+      if (shape->IsComposite())
+         ((TGeoCompositeShape *)shape)->InvalidateMeshCaches();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3905,6 +3988,18 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t *option)
       return;
    }
    fTopNode->CheckOverlaps(ovlp, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check all geometry for illegal overlaps within a limit OVLP.
+
+void TGeoManager::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
+{
+   if (!fTopNode) {
+      Error("CheckOverlaps", "Top node not set");
+      return;
+   }
+   fTopNode->CheckOverlapsBySampling(ovlp, npoints);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -141,12 +141,15 @@ private:
    /**
       Evaluation of the  function (required by interface)
     */
-   double DoEval (const double * x) const override {
+   double DoEval(const double *x) const override
+   {
       this->UpdateNCalls();
       if (BaseFCN::Data().HaveCoordErrors() || BaseFCN::Data().HaveAsymErrors())
-         return FitUtil::Evaluate<T>::EvalChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+         return FitUtil::Evaluate<T>::EvalChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints,
+                                                        fExecutionPolicy);
       else
-         return FitUtil::Evaluate<T>::EvalChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
+         return FitUtil::Evaluate<T>::EvalChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints,
+                                               fExecutionPolicy);
    }
 
    // for derivatives

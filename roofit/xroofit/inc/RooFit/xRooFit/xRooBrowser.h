@@ -42,8 +42,8 @@ public:
    void HandleMenu(Int_t id);
 
 private:
-   std::shared_ptr<xRooNode> fNode;    //!
-   std::shared_ptr<xRooNode> fTopNode; //!
+   std::shared_ptr<xRooNode> fNode;    ///<!
+   std::shared_ptr<xRooNode> fTopNode; ///<!
 
 public:
    ClassDefOverride(xRooBrowser, 0)

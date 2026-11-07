@@ -14,7 +14,9 @@
 
 #include "TGLScene.h"
 #include "TVirtualViewer3D.h"
-#include "CsgOps.h"
+namespace RootCsg {
+class TBaseMesh;
+}
 #include <vector>
 #include <utility>
 
@@ -33,9 +35,9 @@ protected:
    TVirtualPad*       fPad;
 
    // For building via VV3D
-   Bool_t             fInternalPIDs;          //! using internal physical IDs
-   UInt_t             fNextInternalPID;       //! next internal physical ID (from 1 - 0 reserved)
-   UInt_t             fLastPID;               //! last physical ID that was processed in AddObject()
+   Bool_t             fInternalPIDs;          ///<! using internal physical IDs
+   UInt_t             fNextInternalPID;       ///<! next internal physical ID (from 1 - 0 reserved)
+   UInt_t             fLastPID;               ///<! last physical ID that was processed in AddObject()
    Int_t              fAcceptedPhysicals;
 
    Int_t              ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeRaw) const;
@@ -46,14 +48,14 @@ protected:
    void               ComposePolymarker(const TList *padPrimitives);
    // Composite shape specific
    typedef std::pair<UInt_t, RootCsg::TBaseMesh*> CSPart_t;
-   mutable TGLFaceSet     *fComposite; //! Paritally created composite
+   mutable TGLFaceSet     *fComposite; ///<! Paritally created composite
    UInt_t                  fCSLevel;
    std::vector<CSPart_t>   fCSTokens;
    RootCsg::TBaseMesh*     BuildComposite();
 
    TGLLogicalShape* AttemptDirectRenderer(TObject* id);
 
-   Bool_t         fSmartRefresh;   //! cache logicals during scene rebuilds
+   Bool_t         fSmartRefresh;   ///<! cache logicals during scene rebuilds
 
 public:
    TGLScenePad(TVirtualPad* pad);

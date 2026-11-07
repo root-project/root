@@ -46,9 +46,10 @@ extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, I
     - [Setting drawing options](\ref MG01a)
     - [Titles setting](\ref MG01b)
     - [The option \"3D\"](\ref MG01c)
-    - [Legend drawing](\ref MG01d)
-    - [Automatic coloring](\ref MG01e)
-    - [Reverse axis](\ref MG01f)
+    - [Options \"PADS\" and \"PADSn\"](\ref MG01d)
+    - [Legend drawing](\ref MG01e)
+    - [Automatic coloring](\ref MG01f)
+    - [Reverse axis](\ref MG01g)
 - [MultiGraphs' fitting](\ref MG02)
     - [Fit box position](\ref MG02a)
 - [Axis' limits setting](\ref MG03)
@@ -155,6 +156,53 @@ Begin_Macro(source)
 End_Macro
 
 \anchor MG01d
+#### Options "PADS" and "PADSn"
+
+Like for THStack, options `PADS` and `PADSn` to split drawing into individual pads for each graph are also available.
+
+| Option     | Description                                                     |
+|------------|-----------------------------------------------------------------|
+| "PADS"     | The current pad/canvas is subdivided into a number of pads equal to the number of graphs in the multigraph and each graph is paint into a separate pad.|
+| "PADSn"    | Like PADS but the current pad/canvas is subdivided into `n` columns, automatically calculating the number of rows.|
+
+Begin_Macro(source)
+{
+auto c0 = new TCanvas("c1","multigraph L3",200,10,700,500);
+
+auto mg = new TMultiGraph();
+
+auto gr1 = new TGraph(); gr1->SetLineColor(kBlue);
+auto gr2 = new TGraph(); gr2->SetLineColor(kRed);
+auto gr3 = new TGraph(); gr3->SetLineColor(kGreen);
+auto gr4 = new TGraph(); gr4->SetLineColor(kOrange);
+
+Double_t dx = 6.28/1000;
+Double_t x  = -3.14;
+
+for (int i=0; i<=1000; i++) {
+    x = x+dx;
+    gr1->SetPoint(i,x,2.*TMath::Sin(x));
+    gr2->SetPoint(i,x,TMath::Cos(x));
+    gr3->SetPoint(i,x,TMath::Cos(x*x));
+    gr4->SetPoint(i,x,TMath::Cos(x*x*x));
+    }
+
+    mg->Add(gr4); gr4->SetTitle("Cos(x*x*x)"); gr4->SetLineWidth(3);
+    mg->Add(gr3); gr3->SetTitle("Cos(x*x)")  ; gr3->SetLineWidth(3);
+    mg->Add(gr2); gr2->SetTitle("Cos(x)")    ; gr2->SetLineWidth(3);
+    mg->Add(gr1); gr1->SetTitle("2*Sin(x)")  ; gr1->SetLineWidth(3);
+
+    mg->SetTitle("Multi-graph Title; X-axis Title; Y-axis Title");
+
+    mg->Draw("a fb l pads3");
+
+    mg->GetHistogram()->GetXaxis()->SetRangeUser(0.,2.5);
+    gPad->Modified();
+    gPad->Update();
+}
+End_Macro
+
+\anchor MG01e
 #### Legend drawing
 
 The method TPad::BuildLegend is able to extract the graphs inside a
@@ -216,7 +264,7 @@ Begin_Macro(source)
 }
 End_Macro
 
-\anchor MG01e
+\anchor MG01f
 #### Automatic coloring
 
 Automatic coloring according to the current palette is available as shown in the
@@ -226,7 +274,7 @@ Begin_Macro(source)
 ../../../tutorials/visualisation/graphs/gr105_multigraphpalettecolor.C
 End_Macro
 
-\anchor MG01f
+\anchor MG01g
 #### Reverse axis
 
 \since **ROOT version 6.19/02**
@@ -419,32 +467,6 @@ void TMultiGraph::Add(TGraph *graph, Option_t *chopt)
    if (!fGraphs) fGraphs = new TList();
    graph->SetBit(kMustCleanup);
    fGraphs->Add(graph,chopt);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add all the graphs in "multigraph" to the list of graphs.
-///
-///   - If "chopt" is defined all the graphs in "multigraph" will be added with
-///     the "chopt" option.
-///   - If "chopt" is undefined each graph will be added with the option it had
-///     in "multigraph".
-
-void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
-{
-   TList *graphlist = multigraph->GetListOfGraphs();
-   if (!graphlist) return;
-
-   if (!fGraphs) fGraphs = new TList();
-
-   auto lnk = graphlist->FirstLink();
-
-   while (lnk) {
-      auto obj = lnk->GetObject();
-      if (!strlen(chopt)) fGraphs->Add(obj,lnk->GetOption());
-      else                fGraphs->Add(obj,chopt);
-      lnk = lnk->Next();
-   }
 }
 
 
@@ -1125,42 +1147,48 @@ TAxis *TMultiGraph::GetYaxis()
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint all the graphs of this multigraph.
 
-void TMultiGraph::Paint(Option_t *choptin)
+void TMultiGraph::Paint(Option_t *opt)
+{
+   BuildAndPaint(opt, kTRUE);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill automatic colors and then paint multigraph
+
+void TMultiGraph::BuildAndPaint(Option_t *mgropt, Bool_t paint)
 {
    const TPickerStackGuard pushGuard(this);
 
    if (!fGraphs) return;
    if (fGraphs->GetSize() == 0) return;
 
-   char option[128];
-   strlcpy(option,choptin,128);
-   Int_t nch = choptin ? strlen(choptin) : 0;
-   for (Int_t i=0;i<nch;i++) option[i] = toupper(option[i]);
+   TString chopt = mgropt;
+   chopt.ToUpper();
+   Bool_t pfc = chopt.Contains("PFC"); // Automatic Fill Color
+   Bool_t plc = chopt.Contains("PLC"); // Automatic Line Color
+   Bool_t pmc = chopt.Contains("PMC"); // Automatic Marker Color
 
-   // Automatic color
-   char *l1 = strstr(option,"PFC"); // Automatic Fill Color
-   char *l2 = strstr(option,"PLC"); // Automatic Line Color
-   char *l3 = strstr(option,"PMC"); // Automatic Marker Color
-   if (l1 || l2 || l3) {
-      TString opt1 = option; opt1.ToLower();
-      if (l1) memcpy(l1,"   ",3);
-      if (l2) memcpy(l2,"   ",3);
-      if (l3) memcpy(l3,"   ",3);
-      auto lnk = fGraphs->FirstLink();
+   if (pfc || plc || pmc) {
       Int_t ngraphs = fGraphs->GetSize();
-      Int_t ic;
-      gPad->IncrementPaletteColor(ngraphs, opt1);
-      for (Int_t i=0;i<ngraphs;i++) {
-         ic = gPad->NextPaletteColor();
-         auto gAti = (TGraph*)(fGraphs->At(i));
-         if (l1) gAti->SetFillColor(ic);
-         if (l2) gAti->SetLineColor(ic);
-         if (l3) gAti->SetMarkerColor(ic);
-         lnk = lnk->Next();
+      gPad->IncrementPaletteColor(ngraphs, chopt);
+      for (Int_t i = 0; i < ngraphs; i++) {
+         Int_t ic = gPad->NextPaletteColor();
+         auto gAti = (TGraph *)(fGraphs->At(i));
+         if (pfc)
+            gAti->SetFillColor(ic);
+         if (plc)
+            gAti->SetLineColor(ic);
+         if (pmc)
+            gAti->SetMarkerColor(ic);
       }
+      chopt.ReplaceAll("PFC", "");
+      chopt.ReplaceAll("PLC", "");
+      chopt.ReplaceAll("PMC", "");
    }
 
-   TString chopt = option;
+   if (!paint)
+      return;
 
    auto l = strstr(chopt.Data(), "3D");
    if (l) {
@@ -1171,8 +1199,13 @@ void TMultiGraph::Paint(Option_t *choptin)
 
    l = strstr(chopt.Data(),"PADS");
    if (l) {
-      chopt.ReplaceAll("PADS","");
-      PaintPads(chopt.Data());
+      Int_t fnx = 0;
+      if (sscanf(&l[4], "%d", &fnx) > 0) {
+         chopt.ReplaceAll(TString::Format("PADS%d", fnx), "");
+      } else {
+         chopt.ReplaceAll("PADS", "");
+      }
+      PaintPads(chopt.Data(), fnx);
       return;
    }
 
@@ -1372,11 +1405,11 @@ void TMultiGraph::Paint(Option_t *choptin)
       gfit->PaintStats(fit);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Divides the active pad and draws all Graphs in the Multigraph separately.
+/// nColumn parameter larger than 0 enforces number of columns for pad division
 
-void TMultiGraph::PaintPads(Option_t *option)
+void TMultiGraph::PaintPads(Option_t *option, Int_t nColumn)
 {
    if (!gPad) return;
 
@@ -1392,11 +1425,20 @@ void TMultiGraph::PaintPads(Option_t *option)
    }
    if (existingPads < neededPads) {
       curPad->Clear();
-      Int_t nx = (Int_t)TMath::Sqrt((Double_t)neededPads);
-      if (nx*nx < neededPads) nx++;
-      Int_t ny = nx;
-      if (((nx*ny)-nx) >= neededPads) ny--;
-      curPad->Divide(nx,ny);
+      if (nColumn <= 0) {
+         Int_t nx = (Int_t)TMath::Sqrt((Double_t)neededPads);
+         if (nx * nx < neededPads)
+            nx++;
+         Int_t ny = nx;
+         if (((nx * ny) - nx) >= neededPads)
+            ny--;
+         curPad->Divide(nx, ny);
+      } else {
+         Int_t ny = (Int_t)((Double_t)neededPads / nColumn);
+         if (nColumn * ny < neededPads)
+            ny++;
+         curPad->Divide(nColumn, ny);
+      }
    }
    Int_t i = 0;
 

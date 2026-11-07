@@ -27,19 +27,15 @@ in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
 based on a C version from the 0.9 beta release of the GNU scientific library.
 **/
 
-#include "Riostream.h"
-
-#include "TMath.h"
 #include "RooMCIntegrator.h"
 #include "RooArgSet.h"
-#include "RooNumber.h"
 #include "RooNumIntFactory.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"
 #include "RooMsgService.h"
 
 #include <cmath>
-
+#include <ostream>
 
 using std::endl;
 

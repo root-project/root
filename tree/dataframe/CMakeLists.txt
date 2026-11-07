@@ -26,12 +26,17 @@ if (imt)
   list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
 endif(imt)
 
+if (root7)
+  list(APPEND RDATAFRAME_EXTRA_DEPS ROOTHist)
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
+  NO_GLOB_HEADERS # Don't install RArrowDS and similar if they are off
   HEADERS
     ROOT/RCsvDS.hxx
     ROOT/RVecDS.hxx
@@ -53,6 +58,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/InterfaceUtils.hxx
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
+    ROOT/RDF/RActionCustomLoader.hxx
     ROOT/RDF/RActionSnapshot.hxx
     ROOT/RDF/RActionImpl.hxx
     ROOT/RDF/RColumnRegister.hxx
@@ -93,10 +99,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RVariationsDescription.hxx
     ROOT/RDF/RVariedAction.hxx
     ROOT/RDF/SnapshotHelpers.hxx
+    ROOT/RDF/CustomLoaderHelpers.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
     ROOT/RDF/RDFDescription.hxx
     ROOT/RNTupleDS.hxx
+    ROOT/RNTupleProcessorDS.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
@@ -110,6 +118,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFActionHelpers.cxx
     src/RDFColumnReaderUtils.cxx
     src/RDFColumnRegister.cxx
+    src/RDFCustomLoaderHelpers.cxx
     src/RDFColumnReaderUtils.cxx
     src/RDFDisplay.cxx
     src/RDFGraphUtils.cxx
@@ -139,6 +148,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RTrivialDS.cxx
     src/RDFDescription.cxx
     src/RNTupleDS.cxx
+    src/RNTupleProcessorDS.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
     ${RDATAFRAME_EXTRA_INCLUDES}
@@ -168,6 +178,8 @@ endif()
 if(MSVC)
   target_compile_definitions(ROOTDataFrame PRIVATE _USE_MATH_DEFINES)
 endif()
+
+target_include_directories(ROOTDataFrame PRIVATE ../../builtins/exprtk) # hard-coded builtin for lexing
 
 target_link_libraries(ROOTDataFrame PRIVATE nlohmann_json::nlohmann_json)
 

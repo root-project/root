@@ -15,9 +15,11 @@
 #include "TLeaf.h"
 #include "TBrowser.h"
 #include "TBuffer.h"
+#define ROOT_TreeUtils_cxx
 #include "TreeUtils.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 
 /** \class TNtupleD

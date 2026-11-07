@@ -9,6 +9,9 @@
 #include "TRandom.h"
 #include "TError.h"
 #include "TCanvas.h"
+
+#include <iostream>
+
 // double Pdf(double x) {
 // }
 

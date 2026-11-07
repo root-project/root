@@ -259,7 +259,7 @@ AddReal32QuantField(RNTupleModel &model, const std::string &fieldName, std::size
 {
    auto fld = std::make_unique<RField<float>>(fieldName);
    fld->SetColumnRepresentatives({{ENTupleColumnType::kReal32Quant}});
-   fld->SetQuantized(min, max, nBits);
+   fld->SetQuantized(nBits, {min, max});
    model.AddField(std::move(fld));
 }
 
@@ -1004,7 +1004,7 @@ TEST(Packing, Real32QuantFloatCornerCases)
       {
          auto model = RNTupleModel::Create();
          auto field = std::make_unique<RField<float>>("f");
-         field->SetQuantized(-pi, pi, 32);
+         field->SetQuantized(32, {-pi, pi});
          model->AddField(std::move(field));
          auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
          auto pf = writer->GetModel().GetDefaultEntry().GetPtr<float>("f");
@@ -1031,7 +1031,7 @@ TEST(Packing, Real32QuantFloatCornerCases)
       {
          auto model = RNTupleModel::Create();
          auto field = std::make_unique<RField<double>>("f");
-         field->SetQuantized(-pi, pi, 32);
+         field->SetQuantized(32, {-pi, pi});
          model->AddField(std::move(field));
          auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
          auto pf = writer->GetModel().GetDefaultEntry().GetPtr<double>("f");

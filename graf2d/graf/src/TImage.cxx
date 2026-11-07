@@ -98,6 +98,12 @@ TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filenam
       return kXml;
    else if (sFilename.EndsWith(".anim.gif", TString::kIgnoreCase))
       return kAnimGif;
+   else if (sFilename.EndsWith(".html", TString::kIgnoreCase))
+      return kHtml;
+   else if (sFilename.EndsWith(".svg", TString::kIgnoreCase))
+      return kSvg;
+   else if (sFilename.EndsWith(".pdf", TString::kIgnoreCase))
+      return kPdf;
 
    return kUnknown;
 }
@@ -184,6 +190,17 @@ TImage *TImage::Open(char **data)
       img->SetName("XPM_image");
    }
    return img;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text on specified pad, check pad clipping rules
+
+void TImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *, Int_t, Int_t)
+{
+   // call simple DrawText to ensure minimal backward compatibility
+
+   DrawText(text, x, y);
 }
 
 

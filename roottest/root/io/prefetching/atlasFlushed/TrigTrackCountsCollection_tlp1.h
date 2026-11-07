@@ -9,7 +9,7 @@
 #define TrigTrackCountsCollection_tlp1_h
 class TrigTrackCountsCollection_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigTrackCountsCollection_p1.h"
 #include "TrigTrackCounts_p1.h"

@@ -24,8 +24,6 @@ the number of degrees of freedom and the probability of the chi-squared
 is store in the summary dataset.
 **/
 
-#include "Riostream.h"
-
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
@@ -91,8 +89,11 @@ RooDataSet *RooChi2MCSModule::finalizeRun()
 ////////////////////////////////////////////////////////////////////////////////
 /// Bin dataset and calculate chi2 of p.d.f w.r.t binned dataset
 
-bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
+bool RooChi2MCSModule::processAfterFit(bool fitOk)
 {
+  if(!fitOk)
+     return true;
+
   RooAbsData* data = genSample() ;
   std::unique_ptr<RooDataHist> binnedDataOwned;
   RooDataHist* binnedData = dynamic_cast<RooDataHist*>(data) ;

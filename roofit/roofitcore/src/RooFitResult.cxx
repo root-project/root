@@ -27,6 +27,7 @@
 /// No references to the fitted PDF and dataset are stored
 ///
 
+#include <cmath>
 #include <iostream>
 #include <iomanip>
 
@@ -61,12 +62,7 @@ using std::ostream, std::string, std::pair, std::vector, std::setw;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title
 
-RooFitResult::RooFitResult(const char *name, const char *title) : TNamed(name, title)
-{
-   if (name)
-      appendToDir(this, true);
-}
-
+RooFitResult::RooFitResult(const char *name, const char *title) : TNamed(name, title) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -99,10 +95,8 @@ RooFitResult::RooFitResult(const RooFitResult &other)
      _Lt = std::make_unique<TMatrix>(*other._Lt);
   if (other._VM) _VM = new TMatrixDSym(*other._VM) ;
   if (other._CM) _CM = new TMatrixDSym(*other._CM) ;
-  if (other._GC) _GC = new TVectorD(*other._GC) ;
-
-  if (GetName())
-    appendToDir(this, true);
+  if (other._GC)
+     _GC = new TVectorD(*other._GC);
 }
 
 
@@ -425,6 +419,7 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
 
 double RooFitResult::globalCorr(const char* parname)
 {
+  fillGlobalCorr() ;
   if (_globalCorr==nullptr) {
     fillLegacyCorrMatrix() ;
   }
@@ -449,6 +444,7 @@ double RooFitResult::globalCorr(const char* parname)
 
 const RooArgList* RooFitResult::globalCorr()
 {
+  fillGlobalCorr() ;
   if (_globalCorr==nullptr) {
     fillLegacyCorrMatrix() ;
   }
@@ -518,6 +514,11 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
       }
 
       os << std::endl ;
+    }
+
+    fillGlobalCorr();
+    if (_globalCorr == nullptr) {
+       fillLegacyCorrMatrix();
     }
 
     // Has any parameter asymmetric errors?
@@ -610,6 +611,52 @@ void RooFitResult::fillCorrMatrix(const std::vector<double>& globalCC, const TMa
 
 
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the global correlation coefficients from the correlation matrix if
+/// they are not available yet. This is the case when the covariance matrix
+/// was provided externally via setCovarianceMatrix(), for example for weighted
+/// fits with the SumW2Error or AsymptoticError corrections. The computation
+/// is deferred to the point where the coefficients are actually requested,
+/// because it requires inverting the correlation matrix, and because
+/// externally provided matrices are often placeholders that are singular.
+///
+/// The coefficients are computed as rho_k^2 = 1 - 1/[V_kk * (V^-1)_kk] = 1 -
+/// 1/(C^-1)_kk, which reproduces the values reported by Minuit for a regular
+/// fit. If the correlation matrix is singular, the coefficients are set to zero
+/// and a warning is emitted.
+
+void RooFitResult::fillGlobalCorr() const
+{
+   if (_GC || !_CM) {
+      return;
+   }
+
+   const Int_t n = _CM->GetNcols();
+   _GC = new TVectorD(n);
+   // Make sure the legacy holders get refilled with the new coefficients
+   _globalCorr.reset();
+
+   if (n == 0) {
+      return;
+   }
+
+   TMatrixDSym invC(*_CM);
+   double det = 0.0;
+   invC.Invert(&det);
+   if (det == 0.0) {
+      coutW(InputArguments) << "RooFitResult::globalCorr(" << GetName()
+                            << ") covariance matrix is singular, global correlation coefficients not available"
+                            << std::endl;
+      return;
+   }
+
+   for (Int_t i = 0; i < n; i++) {
+      const double rho2 = 1.0 - 1.0 / invC(i, i);
+      (*_GC)[i] = rho2 > 0.0 ? std::sqrt(rho2) : 0.0;
+   }
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -790,6 +837,8 @@ bool RooFitResult::isIdentical(const RooFitResult& other, double tol, double tol
   // Only examine correlations for cases with >1 floating parameter
   if (_finalPars->size()>1) {
 
+    fillGlobalCorr() ;
+    other.fillGlobalCorr() ;
     fillLegacyCorrMatrix() ;
     other.fillLegacyCorrMatrix() ;
 
@@ -882,6 +931,11 @@ void RooFitResult::setCovarianceMatrix(TMatrixDSym& V)
   if (_CM) {
     delete _CM ;
   }
+  if (_GC) {
+     delete _GC;
+     _GC = nullptr;
+  }
+  _globalCorr.reset();
 
   // Clone input covariance matrix ;
   _VM = static_cast<TMatrixDSym*>(V.Clone()) ;
@@ -898,6 +952,9 @@ void RooFitResult::setCovarianceMatrix(TMatrixDSym& V)
   for (Int_t i=0 ; i<_CM->GetNrows() ; i++) {
     (*_CM)(i,i) = 1.0 ;
   }
+
+  // The global correlation coefficients are derived from the correlation
+  // matrix on demand, see fillGlobalCorr().
 
   _covQual = -1 ;
 }

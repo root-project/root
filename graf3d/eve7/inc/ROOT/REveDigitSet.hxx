@@ -13,8 +13,6 @@
 #define ROOT_REveDigitSet
 
 #include "TNamed.h"
-#include "TAtt3D.h"
-#include "TAttBBox.h"
 
 #include "ROOT/REveUtil.hxx"
 #include "ROOT/REveElement.hxx"
@@ -28,11 +26,7 @@ class TRefArray;
 namespace ROOT {
 namespace Experimental {
 
-class REveDigitSet : public REveElement,
-                     public TAtt3D,
-                     public TAttBBox,
-                     public REveSecondarySelectable
-{
+class REveDigitSet : public REveElement, public REveSecondarySelectable {
    friend class REveDigitSetEditor;
    friend class REveDigitSetGL;
 
@@ -66,8 +60,8 @@ protected:
    Bool_t            fOwnIds{false};  //  Flag specifying if id-objects are owned by the TEveDigitSet.
    Bool_t            fDetIdsAsSecondaryIndices;         //  Flag specifying if id-objects are owned by the REveDigitSet.
    REveChunkManager  fPlex;           //  Container of digit data.
-   DigitBase_t*      fLastDigit;      //! The last / current digit added to collection.
-   Int_t             fLastIdx;        //! The last / current idx added to collection.
+   DigitBase_t*      fLastDigit;      ///<! The last / current digit added to collection.
+   Int_t             fLastIdx;        ///<! The last / current idx added to collection.
 
    Color_t           fColor;          //  Color used for frame (or all digis with single-color).
    REveFrameBox*     fFrame;          //  Pointer to frame structure.
@@ -79,8 +73,8 @@ protected:
    Bool_t            fHistoButtons;   //  Show histogram buttons in object editor.
 
    Bool_t            fEmitSignals;    //  Emit signals on secondary-select.
-   Callback_foo      fCallbackFoo;    //! Additional function to call on secondary-select.
-   TooltipCB_foo     fTooltipCBFoo;   //! Function providing highlight tooltips when always-sec-select is active.
+   Callback_foo      fCallbackFoo;    ///<! Additional function to call on secondary-select.
+   TooltipCB_foo     fTooltipCBFoo;   ///<! Function providing highlight tooltips when always-sec-select is active.
 
    DigitBase_t* NewDigit();
    void         ReleaseIds();
@@ -180,7 +174,6 @@ public:
    int     GetShapeIdxFromAtomIdx(int) const;
 
    void    NewShapePicked(int shapeId, Int_t selectionId, bool multi);
-
 
    bool    RequiresExtraSelectionData() const override { return GetAlwaysSecSelect(); };
    void    FillExtraSelectionData(nlohmann::json& j, const std::set<int>& secondary_idcs) const override;

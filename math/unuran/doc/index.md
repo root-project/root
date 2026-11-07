@@ -3,20 +3,20 @@
 \brief Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers.
 
 
-UNU.RAN, (Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers)
+UNU.RAN (Universal Non-Uniform Random number generator for generating non-uniform pseudo-random numbers)
 is an ANSI C library licensed under GPL.<br>
 It contains universal (also called automatic or black-box) algorithms that can generate random numbers from
 large classes of continuous or discrete distributions, and also from practically all standard distributions.
-An extensive online documentation are available at the (UNU.RAN Web Site)[http://statistik.wu-wien.ac.at/unuran/]
+Extensive online documentation is available at the [UNU.RAN Web Site](http://statistik.wu-wien.ac.at/unuran/).
 
-New classes have been introduced to use the UNU.RAN C library from ROOT and C++ from ROOT and using C++ objects.
-To use UNU.RAN one needs always an instance of the class **TUnuran**.
+New classes have been introduced to use the UNU.RAN C library from ROOT and C++ objects.
+To use UNU.RAN, one always needs an instance of the class **TUnuran**.
 It can then be used in two distinct ways:
-- using the UNU.RAN native string API for pre-defined distributions (see<a href="http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#StringAPI"> UNU.RAN documentation</a> for the string API):
+- Using the UNU.RAN native string API for pre-defined distributions (see the <a href="http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#StringAPI">UNU.RAN documentation</a> for the string API):
 
 ~~~{.cpp}
           TUnuran unr;
-          //initialize unuran to generate normal random numbers using a "arou" method
+          // initialize unuran to generate normal random numbers using an "arou" method
           unr.Init("normal()","method=arou");
           //......
           // sample distributions N times (generate N random numbers)
@@ -26,9 +26,9 @@ It can then be used in two distinct ways:
 ~~~
 
 
-- Using a distribution object. We have then the following cases depending on the dimension and the distribution object.
+- Using a distribution object. The following cases depend on the dimension and the distribution object.
 
-- For 1D distribution the class **TUnuranContDist** must be used.
+- For 1D distributions, the class **TUnuranContDist** must be used.
     - A **TUnuranContDist** object can be created from a function
     providing the pdf (probability density function) and optionally one providing the derivative of the pdf.
     - If the derivative is not provided and the generation method requires it, then it is estimated numerically.
@@ -50,8 +50,8 @@ Some of this information is required depending on the chosen UNURAN generation m
           double x = unr.Sample();
 ~~~~
 
-- For multi-dimensional distribution the class **TUnuranMultiContDist** must be used.
-In this case only the multi-dimensional pdf is required
+- For multi-dimensional distributions, the class **TUnuranMultiContDist** must be used.
+In this case, only the multi-dimensional pdf is required.
 
 ~~~~{.cpp}
       //Multi-Dim case from a TF1 (or TF2 or TF3) object describing a multi-dimensional function
@@ -64,7 +64,7 @@ In this case only the multi-dimensional pdf is required
       unr.SampleMulti(x);
 ~~~~
 
-- For discrete distribution the class **TUnuranDiscrDist** must be used.
+- For discrete distributions, the class **TUnuranDiscrDist** must be used.
    The distribution can be initialized from a TF1 or from a vector of probabilities.
 
 ~~~~{.cpp}
@@ -78,10 +78,10 @@ In this case only the multi-dimensional pdf is required
          int k = unr.SampleDiscr();
 ~~~~
 
-- For empirical distribution the class **TUnuranEmpDist** must be used.
-  In this case one can generate random numbers from a set of data (un-binned)  in one or multi-dimension or
+- For empirical distributions, the class **TUnuranEmpDist** must be used.
+  In this case, one can generate random numbers from a set of data (un-binned) in one or more dimensions or
   from a set of binned data in one dimension (similar to TH1::GetRandom() ).
-  - For unbin data the parent distribution is estimated by UNU.RAN using a gaussian kernel smoothing algorithm.
+  - For unbinned data, the parent distribution is estimated by UNU.RAN using a Gaussian kernel smoothing algorithm.
    One can create the distribution class directly from a vector of data or from the buffer of TH1.
 
 ~~~~{.cpp}
@@ -94,12 +94,12 @@ In this case only the multi-dimensional pdf is required
          double x = unr.Sample();
 ~~~~
 
-- In the case of multi-dimension empirical distributions one needs to pass in addition to the iterators, the data dimension. It is assumed that the data are stored in the vector in this order : `(x0,y0,...),(x1,y1,....)`.
+- In the case of multi-dimensional empirical distributions, one needs to pass the data dimension in addition to the iterators. It is assumed that the data are stored in the vector in this order: `(x0,y0,...),(x1,y1,....)`.
 
-- For binned data (only one dimensional data are supported) one uses directly the histogram
+- For binned data (only one-dimensional data are supported), one uses the histogram directly.
 
 ~~~{.cpp}
-      // create an empirical distribution from an histogram
+      // create an empirical distribution from a histogram
       // if the histogram has a buffer one must use TUnuranEmpDist(h1,false)
       TH1 * h1 = ... // histogram pointer
       TUnuranEmpDist  binDist( h1);
@@ -115,5 +115,5 @@ In this case only the multi-dimensional pdf is required
 Functionality is also provided via the C++ classes for using a different random number generator by passing a
 TRandom pointer when constructing the TUnuran class (by default the ROOT gRandom is passed to UNURAN).
 
-The (UNU.RAN documentation)[http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#Top] provides a detailed
-description of all the available methods and the possible options which one can pass to UNU.RAN for the various distributions.
+The [UNU.RAN documentation](http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#Top) provides a detailed
+description of all the available methods and the possible options that one can pass to UNU.RAN for the various distributions.

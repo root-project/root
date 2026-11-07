@@ -5,12 +5,17 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
-/// \author  Timur Pocheptsov
+/// \author  Timur Pocheptsov, Sergey Linev
 
-void glbox()
+void glbox(bool gl = true)
 {
-   gStyle->SetCanvasPreferGL(kTRUE);
+   gStyle->SetCanvasPreferGL(gl);
    TCanvas *c = new TCanvas("glbox", "TH3 Drawing", 100, 10, 850, 400);
+
+   if (!c->UseGL() && !c->IsWeb())
+      ::Warning("glbox",
+                "To use glbox draw option, you need either OpenGL or Web rendering enabled");
+
    TPaveLabel *title = new TPaveLabel(0.04, 0.86, 0.96, 0.98, "\"glbox\" and \"glbox1\" options for TH3.");
    title->SetFillColor(32);
    title->Draw();

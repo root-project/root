@@ -18,7 +18,6 @@
 #include <ROOT/REveSecondarySelectable.hxx>
 
 #include <TAttMarker.h>
-#include <TAttBBox.h>
 
 #include <cassert>
 
@@ -32,12 +31,7 @@ namespace Experimental {
 // external TRef or a number of integer indices.
 ////////////////////////////////////////////////////////////////////////////////
 
-class REvePointSet : public REveElement,
-                     public REveProjectable,
-                     public TAttMarker,
-                     public TAttBBox,
-                     public REveSecondarySelectable
-{
+class REvePointSet : public REveElement, public REveProjectable, public TAttMarker, public REveSecondarySelectable {
    friend class REvePointSetArray;
 
 private:
@@ -104,7 +98,7 @@ protected:
    REvePointSet **fBins{nullptr};       //  Pointers to subjugated REvePointSet's.
    Int_t          fDefPointSetCapacity; //  Default capacity of subjugated REvePointSet's.
    Int_t          fNBins;               //  Number of subjugated REvePointSet's.
-   Int_t          fLastBin;             //! Index of the last filled REvePointSet.
+   Int_t          fLastBin;             ///<! Index of the last filled REvePointSet.
    Double_t       fMin, fCurMin;        //  Overall and current minimum value of the separating quantity.
    Double_t       fMax, fCurMax;        //  Overall and current maximum value of the separating quantity.
    Double_t       fBinWidth;            //  Separating quantity bin-width.

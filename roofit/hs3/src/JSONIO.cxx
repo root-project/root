@@ -18,18 +18,17 @@
 
 #include <TClass.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 // Include raw strings with initial export and import keys in JSON
 #include "RooFitHS3_wsexportkeys.cxx"
 #include "RooFitHS3_wsfactoryexpressions.cxx"
 
-namespace RooFit {
-namespace JSONIO {
+namespace RooFit::JSONIO {
 
-void setupKeys()
+void setupExportKeys()
 {
    static bool isAlreadySetup = false;
    if (isAlreadySetup) {
@@ -38,16 +37,23 @@ void setupKeys()
 
    isAlreadySetup = true;
 
-   {
-      std::stringstream exportkeys;
-      exportkeys << RooFitHS3_wsexportkeys;
-      loadExportKeys(exportkeys);
+   std::stringstream exportkeys;
+   exportkeys << RooFitHS3_wsexportkeys;
+   loadExportKeys(exportkeys);
+}
+
+void setupFactoryExpressions()
+{
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup) {
+      return;
    }
-   {
-      std::stringstream factoryexpressions;
-      factoryexpressions << RooFitHS3_wsfactoryexpressions;
-      loadFactoryExpressions(factoryexpressions);
-   }
+
+   isAlreadySetup = true;
+
+   std::stringstream factoryexpressions;
+   factoryexpressions << RooFitHS3_wsfactoryexpressions;
+   loadFactoryExpressions(factoryexpressions);
 }
 
 ImportMap &importers()
@@ -56,22 +62,59 @@ ImportMap &importers()
    return _importers;
 }
 
-ExportMap &exporters()
+namespace {
+
+auto &exportersToAdd()
+{
+   static std::map<const std::string, std::vector<std::unique_ptr<const Exporter>>> toAdd;
+   return toAdd;
+}
+
+ExportMap &exportersImpl()
 {
    static ExportMap _exporters;
    return _exporters;
 }
 
+} // namespace
+
+ExportMap &exporters()
+{
+   // If there are exporters to be added, do this now.
+   for (auto &item : exportersToAdd()) {
+      TClass *klass = TClass::GetClass(item.first.c_str());
+      auto &exporters = exportersImpl()[klass]; // registered exporters so far
+      auto &toAdd = item.second;                // exporters to add
+
+      // Find the nullptr separator
+      auto nullIt = std::find(toAdd.begin(), toAdd.end(), nullptr);
+
+      if (nullIt == toAdd.end()) {
+         throw std::runtime_error("toAdd does not contain nullptr separator");
+      }
+
+      // Move elements after nullptr to the back
+      exporters.insert(exporters.end(), std::make_move_iterator(nullIt + 1), std::make_move_iterator(toAdd.end()));
+
+      // Move elements before nullptr to the front
+      exporters.insert(exporters.begin(), std::make_move_iterator(toAdd.begin()), std::make_move_iterator(nullIt));
+
+      toAdd.clear();
+   }
+   exportersToAdd().clear();
+   return exportersImpl();
+}
+
 ImportExpressionMap &importExpressions()
 {
-   setupKeys();
+   setupFactoryExpressions();
    static ImportExpressionMap _factoryExpressions;
    return _factoryExpressions;
 }
 
 ExportKeysMap &exportKeys()
 {
-   setupKeys();
+   setupExportKeys();
    static ExportKeysMap _exportKeys;
    return _exportKeys;
 }
@@ -90,10 +133,26 @@ bool registerExporter(const TClass *key, std::unique_ptr<const Exporter> f, bool
    return true;
 }
 
-int removeImporters(const std::string &needle)
+bool registerExporter(const std::string &key, std::unique_ptr<const Exporter> f, bool topPriority)
+{
+   auto &vec = exportersToAdd()[key];
+   // The vector starts out with just a nullptr separator. Elements before it
+   // will be added to the top of the exporter queue, and the elements after
+   // get appended to the end.
+   if (vec.empty()) {
+      vec.emplace_back(nullptr);
+   }
+   vec.insert(topPriority ? vec.begin() : vec.end(), std::move(f));
+   return true;
+}
+
+namespace {
+
+template <class Map>
+int removeByTypeName(Map &map, const std::string &needle)
 {
    int n = 0;
-   for (auto &element : importers()) {
+   for (auto &element : map) {
       for (size_t i = element.second.size(); i > 0; --i) {
          auto *imp = element.second[i - 1].get();
          std::string name(typeid(*imp).name());
@@ -104,43 +163,39 @@ int removeImporters(const std::string &needle)
       }
    }
    return n;
+}
+
+template <class Map, class KeyPrinter>
+void printByTypeName(Map &map, KeyPrinter printKey)
+{
+   for (const auto &x : map) {
+      for (const auto &ePtr : x.second) {
+         // Passing *e directory to typeid results in clang warnings.
+         auto const &e = *ePtr;
+         std::cout << printKey(x.first) << "\t" << typeid(e).name() << std::endl;
+      }
+   }
+}
+
+} // namespace
+
+int removeImporters(const std::string &needle)
+{
+   return removeByTypeName(importers(), needle);
 }
 
 int removeExporters(const std::string &needle)
 {
-   int n = 0;
-   for (auto &element : exporters()) {
-      for (size_t i = element.second.size(); i > 0; --i) {
-         auto *imp = element.second[i - 1].get();
-         std::string name(typeid(*imp).name());
-         if (name.find(needle) != std::string::npos) {
-            element.second.erase(element.second.begin() + i - 1);
-            ++n;
-         }
-      }
-   }
-   return n;
+   return removeByTypeName(exporters(), needle);
 }
 
 void printImporters()
 {
-   for (const auto &x : importers()) {
-      for (const auto &ePtr : x.second) {
-         // Passing *e directory to typeid results in clang warnings.
-         auto const &e = *ePtr;
-         std::cout << x.first << "\t" << typeid(e).name() << std::endl;
-      }
-   }
+   printByTypeName(importers(), [](auto const &key) { return key; });
 }
 void printExporters()
 {
-   for (const auto &x : exporters()) {
-      for (const auto &ePtr : x.second) {
-         // Passing *e directory to typeid results in clang warnings.
-         auto const &e = *ePtr;
-         std::cout << x.first->GetName() << "\t" << typeid(e).name() << std::endl;
-      }
-   }
+   printByTypeName(exporters(), [](auto const &key) { return key->GetName(); });
 }
 
 void loadFactoryExpressions(const std::string &fname)
@@ -269,5 +324,4 @@ void printExportKeys()
    }
 }
 
-} // namespace JSONIO
-} // namespace RooFit
+} // namespace RooFit::JSONIO

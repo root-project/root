@@ -34,24 +34,19 @@ public:
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                  LikelihoodGradientMode likelihoodGradientMode);
 
-   void initMinimizer(ROOT::Math::Minimizer &) override;
+   void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) override;
 
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
    bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    bool returnsInMinuit2ParameterSpace() const { return _gradient->usesMinuitInternalValues(); }
 
-   inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
-   {
-      applyToLikelihood([&](auto &l) { l.constOptimizeTestStatistic(opcode, doAlsoTrackingOpt); });
-   }
-
    double operator()(const double *x) const;
 
    /// IMultiGradFunction overrides necessary for Minuit
    void Gradient(const double *x, double *grad) const;
    void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                               double *previous_gstep) const;
+                               double *previous_gstep, double fValAtX) const;
 
    inline std::string getFunctionName() const override { return _likelihood->GetName(); }
 

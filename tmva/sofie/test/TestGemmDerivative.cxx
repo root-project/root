@@ -1,8 +1,11 @@
 #include <TInterpreter.h>
 
+#include "TMVA/SOFIE_common.hxx"
+
 #include "gtest/gtest.h"
 
 #include <stdexcept>
+#include <string>
 
 class GemmTest : public testing::TestWithParam<std::tuple<int, int, int>> {
 public:
@@ -71,8 +74,25 @@ TEST_P(GemmTest, GemmTestDerivative)
 {
    static bool declared = false;
    if (declared == false) {
+      // Test the *emitted* helper code: ask SOFIE for the standalone Gemm_Call
+      // source (and its Clad pullback) exactly as it is dumped into generated
+      // inference headers, then differentiate that with Clad. This exercises the
+      // helper and the pullback that ship inside generated models, without
+      // relying on TMVA/SOFIE_common.hxx or Math/CladDerivator.h at inference
+      // time.
+      using namespace TMVA::Experimental::SOFIE;
+      HelperFunctionsCode code = GenerateHelperFunctionsCode({"Gemm_Call"}, "TMVA_SOFIE_GemmTest");
+      std::string src = code.includes + "namespace TMVA_SOFIE_GemmTest {\n" + code.definitions + "}\n" +
+                        code.cladDefinitions;
+
+      if (!gInterpreter->Declare(src.c_str())) {
+         throw std::runtime_error("TestGemmDerivative: failed to declare emitted SOFIE helper code");
+      }
+
       gInterpreter->Declare(R"cpp(
-            #include <Math/CladDerivator.h>
+            // Clad differentiation machinery only (no SOFIE custom derivatives):
+            // the pullback used below comes from the emitted code declared above.
+            #include <plugins/include/clad/Differentiator/Differentiator.h>
 
             float gemm_function(float *variables, int m, int n, int k) {
                 // variable is assumed to pack Amk and Bkn,
@@ -89,7 +109,7 @@ TEST_P(GemmTest, GemmTestDerivative)
 
                 float output[n_out];
 
-                TMVA::Experimental::SOFIE::Gemm_Call(output, false, false, m, n, k, alpha, matA, matB, beta, matC);
+                TMVA_SOFIE_GemmTest::Gemm_Call(output, false, false, m, n, k, alpha, matA, matB, beta, matC);
 
                 float ret = 0;
                 for (int i = 0; i < m*n; ++i) {

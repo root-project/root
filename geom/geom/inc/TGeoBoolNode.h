@@ -14,7 +14,8 @@
 
 #include "TGeoShape.h"
 
-#include <mutex>
+#include <algorithm>
+#include <atomic>
 #include <vector>
 
 // forward declarations
@@ -23,34 +24,47 @@ class TGeoMatrix;
 class TGeoHMatrix;
 
 class TGeoBoolNode : public TObject {
-public:
-   enum EGeoBoolType { kGeoUnion, kGeoIntersection, kGeoSubtraction };
-   struct ThreadData_t {
-      Int_t fSelected; // ! selected branch
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this node into the per-thread vector
 
-      ThreadData_t();
-      ~ThreadData_t();
+public:
+   enum EGeoBoolType {
+      kGeoUnion,
+      kGeoIntersection,
+      kGeoSubtraction
    };
-   ThreadData_t &GetThreadData() const;
-   void ClearThreadData() const;
-   void CreateThreadData(Int_t nthreads);
+   struct ThreadData_t {
+      Int_t fSelected{0}; //! selected branch
+   };
+
+   /// Per-thread scratch state, owned by the calling thread and indexed by this node.
+   /// Each thread owns its whole vector, so no two threads ever write the same cache line.
+   /// The vector retains its high-water size until the owning thread exits.
+   ThreadData_t &GetThreadData() const
+   {
+      thread_local std::vector<ThreadData_t> tdata;
+      if (tdata.size() <= fIndex)
+         tdata.resize(std::max<size_t>(fgInstanceCount.load(std::memory_order_relaxed), fIndex + 1));
+      return tdata[fIndex];
+   }
+   void ClearThreadData() const {}
+   /// No-op: this node allocates its scratch state lazily for every calling thread.
+   void CreateThreadData(Int_t) {}
 
 private:
    TGeoBoolNode(const TGeoBoolNode &) = delete;
    TGeoBoolNode &operator=(const TGeoBoolNode &) = delete;
 
 protected:
-   TGeoShape *fLeft{nullptr};      // shape on the left branch
-   TGeoShape *fRight{nullptr};     // shape on the right branch
-   TGeoMatrix *fLeftMat{nullptr};  // transformation that applies to the left branch
-   TGeoMatrix *fRightMat{nullptr}; // transformation that applies to the right branch
-   Int_t fNpoints{0};              //! number of points on the mesh
-   Double_t *fPoints{nullptr};     //! array of mesh points
+   TGeoShape *fLeft{nullptr};          // shape on the left branch
+   TGeoShape *fRight{nullptr};         // shape on the right branch
+   TGeoMatrix *fLeftMat{nullptr};      // transformation that applies to the left branch
+   TGeoMatrix *fRightMat{nullptr};     // transformation that applies to the right branch
+   mutable Int_t fNpoints{0};          ///<! number of points on the mesh
+   mutable Double_t *fPoints{nullptr}; ///<! array of mesh points
 
-   mutable std::vector<ThreadData_t *> fThreadData; //! Navigation data per thread
-   mutable Int_t fThreadSize{0};                    //! Size for the navigation data array
-   mutable std::mutex fMutex;                       //! Mutex for thread data access
-                                                    // methods
+   mutable Bool_t fMeshValid{kFALSE}; ///<! Flag for mesh cache validity
+   // methods
    Bool_t MakeBranch(const char *expr, Bool_t left);
    void AssignPoints(Int_t npoints, Double_t *points);
 
@@ -78,6 +92,7 @@ public:
    TGeoShape *GetLeftShape() const { return fLeft; }
    TGeoShape *GetRightShape() const { return fRight; }
    TGeoShape::EInside Inside(const Double_t *point) const;
+   void InvalidateMeshCaches();
    virtual TGeoBoolNode *MakeClone() const = 0;
    void Paint(Option_t *option) override;
    void RegisterMatrices();

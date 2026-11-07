@@ -50,8 +50,4 @@ void RooAbsDataStore::printMultiline(std::ostream& os, Int_t /*content*/, bool v
     os << indent << "  Observables: " << std::endl ;
     _vars.printStream(os,kName|kValue|kExtras|kTitle,kVerbose,indent+"  ") ;
   }
-
-  if(verbose && !_cachedVars.empty()) {
-    os << indent << "  Caches " << _cachedVars << std::endl ;
-  }
 }

@@ -2,7 +2,9 @@
 #define hist_test
 
 #include <ROOT/RAxes.hxx>
+#include <ROOT/RAxisVariant.hxx>
 #include <ROOT/RBinIndex.hxx>
+#include <ROOT/RBinIndexMultiDimRange.hxx>
 #include <ROOT/RBinIndexRange.hxx>
 #include <ROOT/RBinWithError.hxx>
 #include <ROOT/RCategoricalAxis.hxx>
@@ -12,12 +14,18 @@
 #include <ROOT/RHistEngine.hxx>
 #include <ROOT/RHistFillContext.hxx>
 #include <ROOT/RHistStats.hxx>
+#include <ROOT/RProfile.hxx>
+#include <ROOT/RProfileConcurrentFiller.hxx>
+#include <ROOT/RProfileFillContext.hxx>
 #include <ROOT/RRegularAxis.hxx>
+#include <ROOT/RSliceBinIndexMapper.hxx>
+#include <ROOT/RSliceSpec.hxx>
 #include <ROOT/RVariableBinAxis.hxx>
 #include <ROOT/RWeight.hxx>
 
 using ROOT::Experimental::RAxisVariant;
 using ROOT::Experimental::RBinIndex;
+using ROOT::Experimental::RBinIndexMultiDimRange;
 using ROOT::Experimental::RBinIndexRange;
 using ROOT::Experimental::RBinWithError;
 using ROOT::Experimental::RCategoricalAxis;
@@ -26,10 +34,15 @@ using ROOT::Experimental::RHistAutoAxisFiller;
 using ROOT::Experimental::RHistConcurrentFiller;
 using ROOT::Experimental::RHistEngine;
 using ROOT::Experimental::RHistStats;
+using ROOT::Experimental::RProfile;
+using ROOT::Experimental::RProfileConcurrentFiller;
+using ROOT::Experimental::RProfileFillContext;
 using ROOT::Experimental::RRegularAxis;
+using ROOT::Experimental::RSliceSpec;
 using ROOT::Experimental::RVariableBinAxis;
 using ROOT::Experimental::RWeight;
 using ROOT::Experimental::Internal::RAxes;
+using ROOT::Experimental::Internal::RSliceBinIndexMapper;
 
 #include <gtest/gtest.h>
 
@@ -38,10 +51,33 @@ using ROOT::Experimental::Internal::RAxes;
 #include <thread>
 #include <vector>
 
+class CopyArgument final {
+   static int gCopies;
+
+   double fArgument;
+
+public:
+   CopyArgument(double argument) : fArgument(argument) {}
+   CopyArgument(const CopyArgument &) { gCopies++; }
+   CopyArgument(CopyArgument &&) = default;
+   CopyArgument &operator=(const CopyArgument &)
+   {
+      gCopies++;
+      return *this;
+   }
+   CopyArgument &operator=(CopyArgument &&) = default;
+
+   operator double() const { return fArgument; }
+
+   static bool HasBeenCopied() { return gCopies > 0; }
+};
+
+int CopyArgument::gCopies = 0;
+
 template <typename Work>
 void StressInParallel(std::size_t nThreads, Work &&w)
 {
-   std::atomic<bool> flag;
+   std::atomic<bool> flag = false;
 
    std::vector<std::thread> threads;
    for (std::size_t i = 0; i < nThreads; i++) {

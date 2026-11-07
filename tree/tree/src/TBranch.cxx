@@ -47,7 +47,6 @@
 #include "TVirtualPad.h"
 #include "TVirtualPerfStats.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
 #include "TBranchIMTHelper.h"
 
@@ -1184,7 +1183,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
    if (fDirectory && fBaskets.GetEntriesFast()) {
       TBasket *basket = (TBasket*)fBaskets.UncheckedAt(ibasket);
 
-      if (basket) {
+      if (basket && !basket->IsZombie()) {
          if (basket->GetNevBuf()
              && fBasketSeek[ibasket]==0) {
             // If the basket already contains entry we need to close it out.
@@ -3136,6 +3135,14 @@ void TBranch::Streamer(TBuffer& b)
       }
       fBasketEntry = new Long64_t[fMaxBaskets];
       b >> n;
+      if (n > fMaxBaskets) {
+         Error("Streamer",
+               "Inconsistent number of baskets. This basket cannot be read. Read %d for the actual number of baskets "
+               "while we read %d as the value of fMaxBaskets.",
+               n, fMaxBaskets);
+         MakeZombie();
+         return;
+      }
       for (i=0;i<n;i++) {b >> ijunk; fBasketEntry[i] = ijunk;}
       fBasketBytes = new Int_t[fMaxBaskets];
       if (v > 4) {

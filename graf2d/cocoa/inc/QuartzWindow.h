@@ -19,6 +19,9 @@
 #include "X11Events.h"
 #include "GuiTypes.h"
 
+class TAttMarker;
+class TAttLine;
+
 namespace ROOT {
 namespace MacOSX {
 namespace X11 {
@@ -42,7 +45,7 @@ class Command;
 //                                                                    //
 ////////////////////////////////////////////////////////////////////////
 @interface XorDrawingView: NSView
-- (void) setXorOperations : (const std::vector<ROOT::MacOSX::X11::Command *> &) primitives;
+- (void) addXorCommand : (ROOT::MacOSX::X11::Command *) cmd;
 @end
 
 // XorDrawingWindow is a special window: a transparent
@@ -68,11 +71,12 @@ class Command;
 @private
    QuartzWindow *fMainWindow;
    BOOL fHasFocus;
-   
+
    QuartzView *fContentView;
    BOOL fDelayedTransient;
    QuartzImage *fShapeCombineMask;
    BOOL fIsDeleted;
+   TVirtualX::EDrawMode fDrawMode; // current draw mode
 }
 
 - (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle
@@ -127,11 +131,17 @@ class Command;
 - (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
 // Trick for crosshair drawing in TCanvas ("pseudo-XOR")
-- (void) addXorWindow;
-- (void) adjustXorWindowGeometry;
+- (XorDrawingWindow *) addXorWindow;
+- (XorDrawingWindow *) findXorWindow;
 - (void) adjustXorWindowGeometry : (XorDrawingWindow *) win;
 - (void) removeXorWindow;
-- (XorDrawingWindow *) findXorWindow;
+- (void) addXorLine : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
+- (void) addXorBox : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
+- (void) addXorPolyLine : (QuartzView *) view : (Int_t) n : (TPoint *) pnts : (const TAttLine &) att;
+- (void) addXorMarker : (QuartzView *) view : (Int_t) n : (TPoint *) pnts : (const TAttMarker &) att;
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (TVirtualX::EDrawMode) getDrawMode;
+
 
 //X11Window protocol.
 
@@ -203,6 +213,13 @@ class Command;
    unsigned long fBackgroundPixel;
    BOOL fOverrideRedirect;
 
+   TAttLine   fAttLine;   ///< current line attributes
+   TAttFill   fAttFill;   ///< current fill attributes
+   TAttMarker fAttMarker; ///< current marker attribute
+   TAttText   fAttText;   ///< current text attribute
+
+   BOOL fDirectDraw;
+
    BOOL fHasFocus;
    QuartzView *fParentView;
 
@@ -237,6 +254,18 @@ class Command;
 - (BOOL) fIsPixmap;
 - (BOOL) fIsOpenGLWidget;
 - (CGFloat) fScaleFactor;
+
+//Graphical attributes
+@property (nonatomic, readonly) TAttLine *attLine;
+@property (nonatomic, readonly) TAttFill *attFill;
+@property (nonatomic, readonly) TAttMarker *attMarker;
+@property (nonatomic, readonly) TAttText *attText;
+
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (TVirtualX::EDrawMode) getDrawMode;
+
+- (void) setDirectDraw : (BOOL) mode;
+- (BOOL) isDirectDraw;
 
 @property (nonatomic, assign) CGContextRef fContext;
 

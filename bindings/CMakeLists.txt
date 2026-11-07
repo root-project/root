@@ -6,7 +6,6 @@
 
 if(pyroot)
   add_subdirectory(pyroot)
-  add_subdirectory(jupyroot)
 
   if(dataframe)
     message(STATUS "Distributed RDataFrame enabled")
@@ -19,8 +18,4 @@ endif()
 
 if(tpython)
   add_subdirectory(tpython)
-endif()
-
-if(r)
-  add_subdirectory(r)
 endif()

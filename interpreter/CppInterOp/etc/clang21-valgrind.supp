@@ -1,0 +1,65 @@
+# Valgrind suppressions for clang-21 builds.
+#
+# Tracks llvm/llvm-project#194147 ("clang-21+ reads uninitialised
+# bytes in many AST/Sema paths"). The same regression class as
+# clang-22; the per-major file lets each binary's specific report
+# set drift without entries from one major silencing the other's
+# coverage.
+#
+# `flavor: system` consumers (CppInterOp's llvm-21 vg row) get this
+# file applied automatically by Build_and_Test_CppInterOp's loader,
+# which loads `etc/clang${CLANG_VERSION}-valgrind.supp` whenever it
+# exists. apt-llvm.org's clang-21 binary is what trips the reports
+# below.
+#
+# What's *actually* in here is what fired on a real local valgrind
+# run (validated via `bin/repro --save-temps` + targeted
+# `--gtest_filter` re-runs against the saved container, watching the
+# `used_suppression` summary). Earlier iterations carried ~17 more
+# blocks targeting symbols I'd extracted from "Uninitialised value
+# was created by" allocation-origin frames; valgrind's matcher only
+# considers the read-site top frame, so every one of those blocks
+# was dead. Removed.
+#
+# Drop this whole file once #194147 lands upstream and apt-llvm.org's
+# clang-21 packages refresh.
+
+# clang::FunctionProtoType::FunctionProtoType(...) is the read-site
+# top frame for the bulk of #194147 reports on this binary
+# (54k+ errors over 51 contexts in our wider test sample).
+#
+# Three patterns considered, only one fires:
+#   *FunctionProtoType::FunctionProtoType*  -- demangled, didn't match
+#   _ZN5clang17FunctionProtoTypeC*          -- mangled, didn't match
+#   *FunctionProtoType*                     -- single substring, MATCHES
+#
+# The single-substring form over-matches by design: every method on
+# the FunctionProtoType class (getCallConv, getReturnType, etc.)
+# would also be silenced if it ever surfaces a real bug. Tolerated
+# because (a) the constructor is the only top frame seen today, (b)
+# the more specific patterns demonstrably don't match valgrind's
+# matcher despite reading correctly to a human, (c) dropping the
+# whole file when #194147 lands restores precision. Documented so
+# the next maintainer doesn't waste time on the same investigation.
+{
+   llvm/llvm-project#194147: FunctionProtoType (any method, see comment)
+   Memcheck:Cond
+   fun:*FunctionProtoType*
+   ...
+}
+
+# Two more #194147 patterns that fire on lower-frequency code paths
+# (~14 errors each on the sampled tests). Wildcards on two distinct
+# identifiers, which matches valgrind's matcher reliably.
+{
+   llvm/llvm-project#194147: CodeGenFunction::EmitCall
+   Memcheck:Cond
+   fun:*CodeGenFunction*EmitCall*
+   ...
+}
+{
+   llvm/llvm-project#194147: EHScopeStack::requiresLandingPad
+   Memcheck:Cond
+   fun:*EHScopeStack*requiresLandingPad*
+   ...
+}

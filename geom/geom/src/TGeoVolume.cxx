@@ -380,16 +380,20 @@ volumes (or volume assemblies) as content.
 #include <fstream>
 #include <iomanip>
 
-#include "TString.h"
-#include "TBuffer.h"
-#include "TBrowser.h"
-#include "TStyle.h"
-#include "TH2F.h"
-#include "TROOT.h"
-#include "TEnv.h"
-#include "TMap.h"
-#include "TFile.h"
-#include "TKey.h"
+#include <TString.h>
+#include <TBuffer.h>
+#include <TBrowser.h>
+#include <TStyle.h>
+#include <TH2F.h>
+#include <TROOT.h>
+#include <TEnv.h>
+#include <TMap.h>
+#include <TFile.h>
+#include <TKey.h>
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#endif
+#include <TStopwatch.h>
 
 #include "TGeoManager.h"
 #include "TGeoNode.h"
@@ -402,7 +406,6 @@ volumes (or volume assemblies) as content.
 #include "TGeoCompositeShape.h"
 #include "TGeoVoxelFinder.h"
 #include "TGeoExtension.h"
-
 
 TGeoMedium *TGeoVolume::fgDummyMedium = nullptr;
 
@@ -599,33 +602,147 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overlap checking tool. Check for illegal overlaps within a limit OVLP.
-/// Use option="s[number]" to force overlap checking by sampling volume with
-/// [number] points.
-///
-/// Ex:
-/// ~~~ {.cpp}
-///     myVol->CheckOverlaps(0.01, "s10000000"); // shoot 10000000 points
-///     myVol->CheckOverlaps(0.01, "s"); // shoot the default value of 1e6 points
-/// ~~~
 
-void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
+void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
+{
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("s")) {
+      Info("CheckOverlaps", "Option 's' deprecated. Use CheckOverlapsBySampling() instead.");
+      return;
+   }
+
+   TStopwatch timer;
+   timer.Start();
+   auto geom = fGeoManager;
+   geom->ClearOverlaps();
+   geom->SetCheckingOverlaps(kTRUE);
+
+   Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", GetName(), ovlp);
+
+   auto checker = geom->GetGeomChecker();
+
+   // -------- Stage 1: enumerate candidates (main thread)
+   std::vector<TGeoOverlapCandidate> candidates;
+   candidates.reserve(2048);
+
+   Int_t ncand = checker->EnumerateOverlapCandidates(this, ovlp, option, candidates);
+   TGeoIterator next((TGeoVolume *)this);
+   TGeoNode *node = nullptr;
+   while ((node = next())) {
+      if (!node->GetVolume()->IsSelected()) {
+         node->GetVolume()->SelectVolume(kFALSE);
+         ncand += checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
+      }
+   }
+   timer.Stop();
+   Info("CheckOverlaps", "--- found %d candidates in %g [sec]", ncand, timer.RealTime());
+
+   Info("CheckOverlaps", "--- filling points to be checked...");
+   timer.Start();
+   checker->BuildMeshPointsCache(candidates);
+   timer.Stop();
+   Info("CheckOverlaps", "--- points filled in: %g [sec]", timer.RealTime());
+   SelectVolume(kTRUE);
+
+   // -------- Stage 2: compute (parallel)
+   std::vector<TGeoOverlapResult> results;
+   results.reserve(256);
+
+#ifdef R__USE_IMT
+   // parallelized version
+   const size_t chunkSize = 1024; // tune: 256..4096
+   auto makeChunks = [&](size_t n) {
+      std::vector<std::pair<size_t, size_t>> chunks;
+      chunks.reserve((n + chunkSize - 1) / chunkSize);
+      for (size_t b = 0; b < n; b += chunkSize)
+         chunks.emplace_back(b, std::min(n, b + chunkSize));
+      return chunks;
+   };
+
+   auto chunks = makeChunks(candidates.size());
+   std::mutex resultsMutex;
+
+   // Policy: if ROOT IMT is enabled, follow the number of threads defined via:
+   //         ROOT::EnableImplicitMT()
+   ROOT::TThreadExecutor pool(ROOT::GetThreadPoolSize());
+   auto nthreads = pool.GetPoolSize();
+   if (!ROOT::IsImplicitMTEnabled())
+      Info("CheckOverlaps", "--- checking candidates with %u threads (use ROOT::EnableImplicitMT(N) to change)...",
+           nthreads);
+   else
+      Info("CheckOverlaps", "--- checking candidates with %u threads...", nthreads);
+
+   // Make sure TGeoManager MT mode follows, otherwise TGeo is thread unsafe
+   if (nthreads > 1)
+      geom->SetMaxThreads(nthreads);
+
+   timer.Start();
+   pool.Foreach(
+      [&](const std::pair<size_t, size_t> &range) {
+         // Make sure this manager has a navigator for the current worker.
+         if (!geom->GetCurrentNavigator())
+            geom->AddNavigator();
+
+         std::vector<TGeoOverlapResult> local;
+         local.reserve(32);
+
+         for (size_t i = range.first; i < range.second; ++i) {
+            TGeoOverlapResult r;
+            if (checker->ComputeOverlap(candidates[i], r))
+               local.emplace_back(std::move(r));
+         }
+
+         if (!local.empty()) {
+            std::lock_guard<std::mutex> lock(resultsMutex);
+            results.insert(results.end(), std::make_move_iterator(local.begin()), std::make_move_iterator(local.end()));
+         }
+      },
+      chunks);
+#else
+   // serial version
+   Info("CheckOverlaps", "--- checking candidates with on a single thread (IMT not configured)...");
+   timer.Start();
+   for (size_t i = 0; i < candidates.size(); ++i) {
+      TGeoOverlapResult r;
+      if (checker->ComputeOverlap(candidates[i], r))
+         results.emplace_back(std::move(r));
+   }
+#endif
+
+   // -------- Stage 3: materialize overlaps (main thread)
+   for (const auto &r : results)
+      checker->MaterializeOverlap(r);
+
+   geom->SetCheckingOverlaps(kFALSE);
+   geom->SortOverlaps();
+
+   // Rename overlaps as before
+   TObjArray *overlaps = geom->GetListOfOverlaps();
+   const Int_t novlps = overlaps->GetEntriesFast();
+   for (Int_t i = 0; i < novlps; i++)
+      ((TNamed *)overlaps->At(i))->SetName(TString::Format("ov%05d", i));
+
+   timer.Stop();
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]", novlps, timer.RealTime());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Overlap by sampling legacy checking tool. Check for illegal overlaps within a limit OVLP.
+
+void TGeoVolume::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
 {
    if (!GetNdaughters() || fFinder)
       return;
-   Bool_t sampling = kFALSE;
-   TString opt(option);
-   opt.ToLower();
-   if (opt.Contains("s"))
-      sampling = kTRUE;
    auto checker = fGeoManager->GetGeomChecker();
-   if (!sampling)
-      fGeoManager->SetNsegments(80);
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->ClearOverlaps();
-      //      Info("CheckOverlaps", "=== Checking overlaps for volume %s ===\n", GetName());
+      Info("CheckOverlaps", "[LEGACY] Checking overlaps by sampling %d points for volume %s", npoints, GetName());
+      Info("CheckOverlaps", "=== NOTE: Many overlaps may be missed. Extrusions NOT checked with sampling option ! ===");
    }
-   checker->CheckOverlaps(this, ovlp, option);
-   //   if (sampling) return;
+
+   checker->CheckOverlapsBySampling(this, ovlp, npoints);
+
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->SortOverlaps();
       TObjArray *overlaps = fGeoManager->GetListOfOverlaps();
@@ -640,8 +757,7 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
             name = TString::Format("ov%06d", i);
          obj->SetName(name);
       }
-      if (novlps)
-         Info("CheckOverlaps", "Number of illegal overlaps/extrusions for volume %s: %d\n", GetName(), novlps);
+      Info("CheckOverlaps", "Number of illegal overlaps/extrusions sampled for volume %s: %d\n", GetName(), novlps);
    }
 }
 
@@ -1431,12 +1547,10 @@ void TGeoVolume::Raytrace(Bool_t flag)
       gGeoManager = fGeoManager;
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    Bool_t drawn = (painter->GetDrawnVolume() == this) ? kTRUE : kFALSE;
-   if (!drawn) {
+   if (!drawn)
       painter->DrawVolume(this, "");
-      TGeoAtt::SetVisRaytrace(flag);
-      painter->ModifiedPad();
-      return;
-   }
+   if (!flag)
+      painter->Raytrace("cleanup");
    TGeoAtt::SetVisRaytrace(flag);
    painter->ModifiedPad();
 }
@@ -1479,7 +1593,7 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
 
 void TGeoVolume::SetUserExtension(TGeoExtension *ext)
 {
-   TGeoExtension* tmp = fUserExtension;
+   TGeoExtension *tmp = fUserExtension;
    fUserExtension = nullptr;
    if (ext)
       fUserExtension = ext->Grab();
@@ -1497,7 +1611,7 @@ void TGeoVolume::SetUserExtension(TGeoExtension *ext)
 
 void TGeoVolume::SetFWExtension(TGeoExtension *ext)
 {
-   TGeoExtension* tmp = fFWExtension;
+   TGeoExtension *tmp = fFWExtension;
    fFWExtension = nullptr;
    if (ext)
       fFWExtension = ext->Grab();
@@ -2537,7 +2651,6 @@ Double_t TGeoVolume::WeightA() const
    return weight;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy constructor
 
@@ -2858,92 +2971,11 @@ void TGeoVolumeMulti::SetVisibility(Bool_t vis)
    }
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TGeoVolumeAssembly::ThreadData_t::ThreadData_t() : fCurrent(-1), fNext(-1) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoVolumeAssembly::ThreadData_t::~ThreadData_t() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TGeoVolumeAssembly::ThreadData_t &TGeoVolumeAssembly::GetThreadData() const
-{
-   Int_t tid = TGeoManager::ThreadId();
-   return *fThreadData[tid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoVolumeAssembly::ClearThreadData() const
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   TGeoVolume::ClearThreadData();
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
-   }
-   fThreadData.clear();
-   fThreadSize = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   // Create assembly thread data here
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-      }
-   }
-   TGeoVolume::CreateThreadData(nthreads);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Int_t TGeoVolumeAssembly::GetCurrentNodeIndex() const
-{
-   return fThreadData[TGeoManager::ThreadId()]->fCurrent;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Int_t TGeoVolumeAssembly::GetNextNodeIndex() const
-{
-   return fThreadData[TGeoManager::ThreadId()]->fNext;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoVolumeAssembly::SetCurrentNodeIndex(Int_t index)
-{
-   fThreadData[TGeoManager::ThreadId()]->fCurrent = index;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoVolumeAssembly::SetNextNodeIndex(Int_t index)
-{
-   fThreadData[TGeoManager::ThreadId()]->fNext = index;
-}
-
+std::atomic<UInt_t> TGeoVolumeAssembly::fgInstanceCount{0};
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-TGeoVolumeAssembly::TGeoVolumeAssembly() : TGeoVolume()
-{
-   fThreadSize = 0;
-   CreateThreadData(1);
-}
+TGeoVolumeAssembly::TGeoVolumeAssembly() : TGeoVolume() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Just the name has to be provided. Assemblies does not have their own
@@ -2956,8 +2988,6 @@ TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name) : TGeoVolume()
    fShape = new TGeoShapeAssembly(this);
    if (fGeoManager)
       fNumber = fGeoManager->AddVolume(this);
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

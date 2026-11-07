@@ -1,7 +1,0 @@
-<lcgdict>
-
-  <class pattern="pyzables::*" />
-  <function pattern="pyzables::*" />
-  <variable pattern="pyzables::*" />
-
-</lcgdict>

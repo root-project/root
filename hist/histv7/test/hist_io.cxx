@@ -10,6 +10,8 @@ static void ExpectThrowOnWriteObject(const T &obj)
 {
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.optionalDiag(kWarning, "TKey::TKey", "no public constructor", /*matchFullMessage=*/false);
+   diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "data member \"fSnapshotInProgress\" will not be saved",
+                         /*matchFullMessage=*/false);
 
    TMemFile f("mem.root", "RECREATE");
    EXPECT_THROW(f.WriteObject(&obj, "o"), std::runtime_error);
@@ -40,6 +42,13 @@ TEST(RCategoricalAxis, Streamer)
    std::vector<std::string> categories = {"a"};
 
    const RCategoricalAxis axis(categories);
+   ExpectThrowOnWriteObject(axis);
+}
+
+TEST(RAxisVariant, Streamer)
+{
+   static constexpr std::size_t Bins = 20;
+   const RAxisVariant axis(RRegularAxis(Bins, {0, Bins}));
    ExpectThrowOnWriteObject(axis);
 }
 
@@ -136,4 +145,11 @@ TEST(RHist, Streamer)
 
    const RHist<RBinWithError> histE({axis});
    ExpectThrowOnWriteObject(histE);
+}
+
+TEST(RProfile, Streamer)
+{
+   static constexpr std::size_t Bins = 20;
+   const RProfile profile(Bins, {0, Bins});
+   ExpectThrowOnWriteObject(profile);
 }

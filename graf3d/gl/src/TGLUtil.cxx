@@ -1463,8 +1463,8 @@ public:
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-      gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) glBegin);
-      gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) glEnd);
+      gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) impl_glBegin);
+      gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) impl_glEnd);
       gluTessCallback(fTess, (GLenum)GLU_VERTEX, vertex_func);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
@@ -1494,7 +1494,7 @@ GLUtesselator* TGLUtil::GetDrawTesselator3fv()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-   static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex3fv);
+   static TGLTesselatorWrap singleton((tessfuncptr_t) impl_glVertex3fv);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
@@ -1515,7 +1515,7 @@ GLUtesselator* TGLUtil::GetDrawTesselator4fv()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-   static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex4fv);
+   static TGLTesselatorWrap singleton((tessfuncptr_t) impl_glVertex4fv);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
@@ -1536,7 +1536,7 @@ GLUtesselator* TGLUtil::GetDrawTesselator3dv()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-   static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex3dv);
+   static TGLTesselatorWrap singleton((tessfuncptr_t) impl_glVertex3dv);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
@@ -1557,7 +1557,7 @@ GLUtesselator* TGLUtil::GetDrawTesselator4dv()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
-   static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex4dv);
+   static TGLTesselatorWrap singleton((tessfuncptr_t) impl_glVertex4dv);
 
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
@@ -2666,6 +2666,20 @@ void TGLUtil::DrawNumber(const TString    & num,
    }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Swap rows in pixel buffer returned by glReadPixels function
+/// To be able create ASImage from it
+
+void TGLUtil::SwapPixelBuffer(UChar_t *buf, UInt_t width, UInt_t height)
+{
+   std::vector<UChar_t> xx(4 * width);
+   for (UInt_t i = 0; i < height / 2; ++i) {
+      memcpy(xx.data(), buf + 4 * width * i, 4 * width);
+      memcpy(buf + 4 * width * i, buf + 4 * width * (height - i - 1), 4 * width);
+      memcpy(buf + 4 * width * (height - i - 1), xx.data(), 4 * width);
+   }
+}
 
 /**************************************************************************/
 /**************************************************************************/

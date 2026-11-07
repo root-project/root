@@ -81,7 +81,7 @@ public:
    Embedded_objects::EmbeddedClasses::Embedded3 m_emb5;
    Embedded_objects::EmbeddedTypedef::Embedded3 m_emb6;
    typedef std::vector<int> vecint;
-   vecint::iterator m_iter; //!
+   vecint::iterator m_iter; ///<!
 
    Embedded_objects();
    virtual ~Embedded_objects();

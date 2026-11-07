@@ -1,5 +1,4 @@
 /// \file v7/src/RFile.cxx
-/// \ingroup Base ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-03-19
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -8,12 +7,14 @@
 #include "ROOT/RFile.hxx"
 
 #include <ROOT/StringUtils.hxx>
+#include <ROOT/RLogger.hxx>
 #include <ROOT/RError.hxx>
 
 #include <Byteswap.h>
 #include <TError.h>
 #include <TFile.h>
 #include <TIterator.h>
+#include <TNamed.h>
 #include <TKey.h>
 #include <TList.h>
 #include <TROOT.h>
@@ -21,14 +22,14 @@
 #include <algorithm>
 #include <cstring>
 
-ROOT::RLogChannel &ROOT::Experimental::Internal::RFileLog()
+ROOT::RLogChannel &ROOT::Internal::RFileLog()
 {
    static ROOT::RLogChannel sLog("ROOT.File");
    return sLog;
 }
 
-using ROOT::Experimental::RFile;
-using ROOT::Experimental::Internal::RFileLog;
+using ROOT::RFile;
+using ROOT::Internal::RFileLog;
 
 namespace {
 enum class ENameCycleError {
@@ -190,7 +191,7 @@ static std::string ReconstructFullKeyPath(const TKey &key)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::DecomposePath(std::string_view path)
+std::pair<std::string_view, std::string_view> ROOT::Detail::DecomposePath(std::string_view path)
 {
    auto lastSlashIdx = path.rfind('/');
    if (lastSlashIdx == std::string_view::npos)
@@ -201,30 +202,33 @@ std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::Decomp
    return {dirName, pathName};
 }
 
-std::unique_ptr<RFile> RFile::Open(std::string_view path)
+std::unique_ptr<RFile> RFile::Open(std::string_view path, const ROpenOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
+   const char *mode = opts.fEnableBrowsability ? "READ" : "READ_WITHOUT_GLOBALREGISTRATION";
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), mode));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
 }
 
-std::unique_ptr<RFile> RFile::Update(std::string_view path)
+std::unique_ptr<RFile> RFile::Update(std::string_view path, const RUpdateOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION"));
+   const char *mode = opts.fEnableBrowsability ? "UPDATE" : "UPDATE_WITHOUT_GLOBALREGISTRATION";
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), mode));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
 }
 
-std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
+std::unique_ptr<RFile> RFile::Recreate(std::string_view path, const RRecreateOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION"));
+   const char *mode = opts.fEnableBrowsability ? "RECREATE" : "RECREATE_WITHOUT_GLOBALREGISTRATION";
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), mode, "", opts.fCompressionSettings));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -304,9 +308,18 @@ void *RFile::GetUntyped(std::string_view path,
    void *obj = key ? key->ReadObjectAny(cls) : nullptr;
 
    if (obj) {
-      // Disavow any ownership on `obj`
-      if (auto autoAddFunc = cls->GetDirectoryAutoAdd(); autoAddFunc) {
-         autoAddFunc(obj, nullptr);
+      // Disavow any ownership on `obj` unless the object is a TTree, in which case we need to link it to our internal
+      // file for it to be usable.
+      if (auto autoAddFunc = cls->GetDirectoryAutoAdd()) {
+         if (cls->InheritsFrom("TTree")) {
+            autoAddFunc(obj, fFile.get());
+            // NOTE(gparolini): this is a hacky but effective way of preventing the Tree from being deleted by
+            // the internal TFile once we close it. We need to avoid that because this TTree will be returned inside
+            // a unique_ptr and would end up being double-freed if we allowed ROOT to do its own memory management.
+            ROOT::Internal::MarkTObjectAsNotOnHeap(*static_cast<TObject *>(obj));
+         } else {
+            autoAddFunc(obj, nullptr);
+         }
       }
    } else if (key) {
       R__LOG_INFO(RFileLog()) << "Tried to get object '" << path << "' of type " << cls->GetName()
@@ -316,7 +329,14 @@ void *RFile::GetUntyped(std::string_view path,
    return obj;
 }
 
-void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, const void *obj, std::uint32_t flags)
+void RFile::Put(const TNamed &namedObj, std::string_view dirPath)
+{
+   std::string completePath = (dirPath.empty() ? "" : std::string(dirPath) + '/') + namedObj.GetName();
+   Put(completePath, namedObj, namedObj.GetTitle());
+}
+
+void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, const void *obj, std::uint32_t flags,
+                       std::string_view title)
 {
    const TClass *cls = TClass::GetClass(type);
    if (!cls)
@@ -367,8 +387,8 @@ void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, cons
       }
    }
 
-   const bool allowOverwrite = (flags & kPutAllowOverwrite) != 0;
-   const bool backupCycle = (flags & kPutOverwriteKeepCycle) != 0;
+   const bool allowOverwrite = (flags & kPutFlag_AllowOverwrite) != 0;
+   const bool backupCycle = (flags & kPutFlag_OverwriteKeepCycle) != 0;
    const Option_t *writeOpts = "";
    if (!allowOverwrite) {
       const TKey *existing = dir->GetKey(tokens[tokens.size() - 1].c_str());
@@ -380,21 +400,24 @@ void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, cons
       writeOpts = "WriteDelete";
    }
 
-   int success = dir->WriteObjectAny(obj, cls, tokens[tokens.size() - 1].c_str(), writeOpts);
+   const char *objName = tokens[tokens.size() - 1].c_str();
+   assert(dynamic_cast<TDirectoryFile *>(dir));
+   int success =
+      static_cast<TDirectoryFile *>(dir)->WriteObjectAny(obj, cls, {objName, std::string(title).c_str()}, writeOpts);
 
    if (!success) {
       throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));
    }
 }
 
-ROOT::Experimental::RFileKeyIterable::RIterator::RIterStackElem::RIterStackElem(TIterator *it, const std::string &path)
+ROOT::RFileKeyIterable::RIterator::RIterStackElem::RIterStackElem(TIterator *it, const std::string &path)
    : fIter(it), fDirPath(path)
 {
 }
 
-ROOT::Experimental::RFileKeyIterable::RIterator::RIterStackElem::~RIterStackElem() = default;
+ROOT::RFileKeyIterable::RIterator::RIterStackElem::~RIterStackElem() = default;
 
-ROOT::Experimental::RFileKeyIterable::RIterator::RIterator(TIterator *iter, Pattern_t pattern, std::uint32_t flags)
+ROOT::RFileKeyIterable::RIterator::RIterator(TIterator *iter, Pattern_t pattern, std::uint32_t flags)
    : fPattern(pattern), fFlags(flags)
 {
    if (iter) {
@@ -413,17 +436,17 @@ ROOT::Experimental::RFileKeyIterable::RIterator::RIterator(TIterator *iter, Patt
    }
 }
 
-ROOT::Experimental::RFileKeyIterable::RIterator ROOT::Experimental::RFileKeyIterable::begin() const
+ROOT::RFileKeyIterable::RIterator ROOT::RFileKeyIterable::begin() const
 {
    return {fFile->GetListOfKeys()->MakeIterator(), fPattern, fFlags};
 }
 
-ROOT::Experimental::RFileKeyIterable::RIterator ROOT::Experimental::RFileKeyIterable::end() const
+ROOT::RFileKeyIterable::RIterator ROOT::RFileKeyIterable::end() const
 {
    return {nullptr, fPattern, fFlags};
 }
 
-void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
+void ROOT::RFileKeyIterable::RIterator::Advance()
 {
    fCurKey = nullptr;
 
@@ -465,6 +488,10 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
       assert(!fIterStack.empty());
       const std::size_t nesting = fIterStack.size() - 1;
 
+      // Skip key if it's the root dir itself
+      if (isDir && fullPath == fPattern)
+         continue;
+
       // Skip key if it's not a child of root dir
       if (!ROOT::StartsWith(fullPath, fPattern))
          continue;
@@ -482,7 +509,7 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
    }
 }
 
-ROOT::Experimental::RKeyInfo ROOT::Experimental::RFileKeyIterable::RIterator::operator*()
+ROOT::RKeyInfo ROOT::RFileKeyIterable::RIterator::operator*()
 {
    if (fIterStack.empty())
       throw ROOT::RException(R__FAIL("tried to dereference an invalid iterator"));
@@ -531,23 +558,41 @@ void RFile::Close()
    fFile.reset();
 }
 
-std::optional<ROOT::Experimental::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
+ROOT::RKeyInfo::RKeyInfo(const TKey &key)
+   : fPath(ReconstructFullKeyPath(key)),
+     fTitle(key.GetTitle()),
+     fClassName(key.GetClassName()),
+     fCycle(key.GetCycle()),
+     fLenObj(key.GetObjlen()),
+     fNBytesObj(key.GetNbytes() - key.GetKeylen()),
+     fNBytesKey(key.GetKeylen()),
+     fSeekKey(key.GetSeekKey()),
+     fSeekParentDir(key.GetSeekPdir())
+{
+}
+
+std::optional<ROOT::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
 {
    const TKey *key = GetTKey(path);
    if (!key)
       return {};
 
-   RKeyInfo keyInfo;
-   keyInfo.fPath = ReconstructFullKeyPath(*key);
-   keyInfo.fClassName = key->GetClassName();
-   keyInfo.fCycle = key->GetCycle();
-   keyInfo.fTitle = key->GetTitle();
-
+   RKeyInfo keyInfo(*key);
    return keyInfo;
 }
 
-void *ROOT::Experimental::Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key)
+void *ROOT::Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key)
 {
-   void *obj = file.GetUntyped(key.GetPath(), key.GetClassName().c_str());
+   const auto nameCycle = std::string(key.GetPath()) + ";" + std::to_string(key.GetCycle());
+   void *obj = file.GetUntyped(nameCycle, key.GetClassName().c_str());
    return obj;
 }
+
+TFile *ROOT::Internal::GetRFileTFile(RFile &file)
+{
+   return file.fFile.get();
+}
+
+RFile::RRecreateOptions::RRecreateOptions() = default;
+RFile::ROpenOptions::ROpenOptions() = default;
+RFile::RUpdateOptions::RUpdateOptions() = default;

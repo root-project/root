@@ -42,9 +42,6 @@ endfunction()
 
 set_property(GLOBAL PROPERTY COPY_STANDALONE_LISTING "")
 
-# Needed for CMake 3.4 and lower:
-include(CMakeParseArguments)
-
 function(COPY_STANDALONE)
 
     # CMake keyword arguments

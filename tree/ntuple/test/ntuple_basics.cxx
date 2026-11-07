@@ -217,6 +217,26 @@ TEST(RNTuple, WriteReadSubdir)
    EXPECT_FLOAT_EQ(137.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 }
 
+TEST(RNTuple, AppendReadOnly)
+{
+   FileRaii fileGuard("test_ntuple_append_readonly.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("a");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
+   }
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
+   try {
+      RNTupleWriter::Append(std::move(model), "A", *file);
+      FAIL() << "appending to a read-only TFile should throw.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("is not writable"));
+   }
+}
+
 TEST(RNTuple, FileAnchor)
 {
    FileRaii fileGuard("test_ntuple_file_anchor.root");
@@ -426,7 +446,9 @@ TEST(RNTuple, PageSize)
       }
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath(), opts);
    const auto &col0_pages = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0);
    // 1000 column elements / 50 elements per page
    EXPECT_EQ(20, col0_pages.GetPageInfos().size());
@@ -782,6 +804,8 @@ TEST(REntry, Basics)
    model->Freeze();
 
    auto e = model->CreateEntry();
+   EXPECT_TRUE(e->HasField("pt"));
+   EXPECT_FALSE(e->HasField("PT"));
    EXPECT_EQ(e->GetModelId(), model->GetModelId());
    EXPECT_EQ(e->GetSchemaId(), model->GetSchemaId());
    for (const auto &v : *e) {
@@ -794,6 +818,12 @@ TEST(REntry, Basics)
 
    EXPECT_EQ("float", e->GetTypeName("pt"));
    EXPECT_EQ("float", e->GetTypeName(model->GetToken("pt")));
+
+   float rawPt;
+   double wrongType;
+   e->BindRawPtr("pt", &rawPt);
+   EXPECT_EQ(&rawPt, e->GetPtr<float>("pt").get());
+   EXPECT_THROW(e->BindRawPtr("pt", &wrongType), ROOT::RException);
 
    auto ptrPt = std::make_shared<float>();
    e->BindValue("pt", ptrPt);

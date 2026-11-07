@@ -2,6 +2,7 @@
 /*
  * Copyright (c) 2006-2011 High Performance Computing Center Stuttgart,
  *                         University of Stuttgart.  All rights reserved.
+ * Original was part of a test-suite or Open MPI, and license was BSD
  * Author: Rainer Keller, HLRS
  * Modified: Fons Rademakers, CERN
  * Modified: Philippe Canal, FNAL
@@ -71,7 +72,7 @@
 #    define R__HAS_PTHREAD
 #  endif
 #endif
-#if defined(R__LINUX) || defined(R__AIX)
+#if defined(R__LINUX)
 #  define R__HAS___THREAD
 #endif
 #if defined(R__SOLARIS) && !defined(R__HAS_PTHREAD)

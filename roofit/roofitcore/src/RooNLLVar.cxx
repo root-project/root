@@ -98,10 +98,6 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf &pdf, RooAbs
         ++biter ;
       }
     }
-
-    _skipZeroWeights = false;
-  } else {
-    _skipZeroWeights = true;
   }
 }
 

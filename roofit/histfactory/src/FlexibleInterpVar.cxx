@@ -16,12 +16,12 @@
  */
 
 #include <RooMsgService.h>
-#include <RooTrace.h>
 
 #include <RooFit/Detail/MathFuncs.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 
-#include <Riostream.h>
+#include "HistFactoryInterpolationCodeUtils.h"
+
 #include <TMath.h>
 
 
@@ -34,7 +34,6 @@ using namespace HistFactory;
 
 FlexibleInterpVar::FlexibleInterpVar()
 {
-  TRACE_CREATE;
 }
 
 
@@ -80,7 +79,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
      R__ASSERT(_low.size() == _interpCode.size());
   }
 
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +88,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   RooAbsReal(name, title),
   _paramList("paramList","List of coefficients",this)
 {
-  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +98,6 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
   _nominal(other._nominal), _low(other._low), _high(other._high), _interpCode(other._interpCode), _interpBoundary(other._interpBoundary)
 
 {
-  TRACE_CREATE;
 }
 
 
@@ -110,7 +106,6 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 
 FlexibleInterpVar::~FlexibleInterpVar()
 {
-  TRACE_DESTROY;
 }
 
 void FlexibleInterpVar::setInterpCode(RooAbsReal &param, int code)
@@ -133,23 +128,10 @@ void FlexibleInterpVar::setAllInterpCodes(int code)
 
 void FlexibleInterpVar::setInterpCodeForParam(int iParam, int code)
 {
-   RooAbsArg const &param = _paramList[iParam];
-   if (code < 0 || code > 5) {
-      coutE(InputArguments) << "FlexibleInterpVar::setInterpCode ERROR: " << param.GetName()
-                            << " with unknown interpolation code " << code << ", keeping current code "
-                            << _interpCode[iParam] << std::endl;
-      return;
+   if (Detail::setInterpolationCode(*this, "FlexibleInterpVar", _paramList[iParam], _interpCode, iParam, code,
+                                    /*maxCode=*/5)) {
+      setValueDirty();
    }
-   if (code == 3) {
-      // In the past, code 3 was equivalent to code 2, which confused users.
-      // Now, we just say that code 3 doesn't exist and default to code 2 in
-      // that case for backwards compatible behavior.
-      coutE(InputArguments) << "FlexibleInterpVar::setInterpCode ERROR: " << param.GetName()
-                            << " with unknown interpolation code " << code << ", defaulting to code 2" << std::endl;
-      code = 2;
-   }
-   _interpCode.at(iParam) = code;
-   setValueDirty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

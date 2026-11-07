@@ -19,14 +19,18 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 **/
 
 #include "RooBatchCompute.h"
+#include "RooNaNPacker.h"
 #include "Batches.h"
 #include "CudaInterface.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstring>
 #include <functional>
 #include <map>
 #include <queue>
+#include <unordered_map>
 #include <vector>
 
 namespace RooBatchCompute {
@@ -81,6 +85,146 @@ int getGridSize(std::size_t n)
    return std::min(int(std::ceil(double(n) / blockSize)), maxGridSize);
 }
 
+/// Scratch memory attached to a CUDA stream, used for staging small
+/// per-kernel-launch data like the Batches descriptor and reduction results.
+///
+/// The slots form a ring: acquire() returns the next slot, waiting for the
+/// completion of the work that was previously enqueued from that slot if it
+/// is still in flight (which is rare, given the depth of the ring). Each slot
+/// pairs a pinned host buffer with a device buffer of the same capacity, so
+/// staging copies are truly asynchronous and no cudaMalloc()/cudaFree() calls
+/// happen in the evaluation hot loop.
+///
+/// Like the rest of the RooBatchCompute library, this class is not
+/// thread-safe: RooFit evaluates on a single thread per process.
+class StreamScratch {
+public:
+   struct Slot {
+      char *host = nullptr; // pinned host memory
+      char *device = nullptr;
+      std::size_t capacity = 0;
+      cudaEvent_t event = nullptr; // recorded after the last enqueued use
+      bool inFlight = false;
+   };
+
+   StreamScratch() = default;
+   StreamScratch(StreamScratch const &) = delete;
+   StreamScratch &operator=(StreamScratch const &) = delete;
+
+   Slot &acquire(std::size_t n)
+   {
+      Slot &slot = _slots[_next];
+      _next = (_next + 1) % _slots.size();
+      if (slot.inFlight) {
+         ERRCHECK(cudaEventSynchronize(slot.event));
+         slot.inFlight = false;
+      }
+      if (slot.capacity < n) {
+         // Reset the slot state before reallocating, so that a throwing
+         // allocation can't leave dangling pointers with a stale capacity
+         // behind (which would lead to a double free later).
+         if (slot.host) {
+            ERRCHECK(cudaFreeHost(slot.host));
+            slot.host = nullptr;
+         }
+         if (slot.device) {
+            ERRCHECK(cudaFree(slot.device));
+            slot.device = nullptr;
+         }
+         slot.capacity = 0;
+         const std::size_t newCapacity = std::max<std::size_t>(n, 1024);
+         ERRCHECK(cudaMallocHost(reinterpret_cast<void **>(&slot.host), newCapacity));
+         ERRCHECK(cudaMalloc(reinterpret_cast<void **>(&slot.device), newCapacity));
+         slot.capacity = newCapacity;
+      }
+      if (slot.event == nullptr) {
+         ERRCHECK(cudaEventCreateWithFlags(&slot.event, cudaEventDisableTiming));
+      }
+      return slot;
+   }
+
+   /// Mark the last enqueued use of the slot on the stream. The slot will not
+   /// be handed out again before that work has completed.
+   void release(Slot &slot, cudaStream_t stream)
+   {
+      ERRCHECK(cudaEventRecord(slot.event, stream));
+      slot.inFlight = true;
+   }
+
+   /// A persistent slot for a deferred device-to-host readback: an
+   /// asynchronous copy delivers device results (e.g. evaluation error
+   /// counters) into the pinned host buffer, and flushDeferred() forwards
+   /// them to the destination in the caller's memory once the stream was
+   /// synchronized. Slots stay valid from acquireDeferred() until the flush.
+   struct DeferredSlot {
+      char *host = nullptr; // pinned host memory
+      std::size_t capacity = 0;
+      double *dst = nullptr;
+      std::size_t nPending = 0;
+   };
+
+   DeferredSlot &acquireDeferred(std::size_t n)
+   {
+      if (_deferredCursor == _deferredSlots.size()) {
+         _deferredSlots.emplace_back();
+      }
+      DeferredSlot &slot = _deferredSlots[_deferredCursor++];
+      if (slot.capacity < n) {
+         // The slot is idle here: its previous use ended with the flush after
+         // a stream synchronization. Reset the state before reallocating for
+         // exception safety, like in acquire().
+         if (slot.host) {
+            ERRCHECK(cudaFreeHost(slot.host));
+            slot.host = nullptr;
+         }
+         slot.capacity = 0;
+         ERRCHECK(cudaMallocHost(reinterpret_cast<void **>(&slot.host), n));
+         slot.capacity = n;
+      }
+      return slot;
+   }
+
+   /// Copy the completed readbacks to their destinations. Must only be
+   /// called after the stream was synchronized.
+   void flushDeferred()
+   {
+      for (std::size_t i = 0; i < _deferredCursor; ++i) {
+         DeferredSlot &slot = _deferredSlots[i];
+         if (slot.dst) {
+            std::memcpy(slot.dst, slot.host, slot.nPending * sizeof(double));
+            slot.dst = nullptr;
+            slot.nPending = 0;
+         }
+      }
+      _deferredCursor = 0;
+   }
+
+   ~StreamScratch()
+   {
+      // Don't use ERRCHECK here: throwing from a destructor would terminate.
+      for (Slot &slot : _slots) {
+         if (slot.inFlight)
+            cudaEventSynchronize(slot.event);
+         if (slot.event)
+            cudaEventDestroy(slot.event);
+         if (slot.host)
+            cudaFreeHost(slot.host);
+         if (slot.device)
+            cudaFree(slot.device);
+      }
+      for (DeferredSlot &slot : _deferredSlots) {
+         if (slot.host)
+            cudaFreeHost(slot.host);
+      }
+   }
+
+private:
+   std::array<Slot, 64> _slots;
+   std::size_t _next = 0;
+   std::vector<DeferredSlot> _deferredSlots;
+   std::size_t _deferredCursor = 0;
+};
+
 } // namespace
 
 std::vector<void (*)(Batches &)> getFunctions();
@@ -115,14 +259,18 @@ public:
       const std::size_t memSize = sizeof(Batches) + vars.size() * sizeof(Batch) + vars.size() * sizeof(double) +
                                   extraArgs.size() * sizeof(double);
 
-      std::vector<char> hostMem(memSize);
-      auto batches = reinterpret_cast<Batches *>(hostMem.data());
+      cudaStream_t stream = *cfg.cudaStream();
+      StreamScratch &streamScratch = scratch(cfg.cudaStream());
+      StreamScratch::Slot &slot = streamScratch.acquire(memSize);
+
+      // The staging area has the same layout in the pinned host buffer and in
+      // the device buffer, so it can be uploaded with a single copy.
+      auto batches = reinterpret_cast<Batches *>(slot.host);
       auto arrays = reinterpret_cast<Batch *>(batches + 1);
       auto scalarBuffer = reinterpret_cast<double *>(arrays + vars.size());
       auto extraArgsHost = reinterpret_cast<double *>(scalarBuffer + vars.size());
 
-      DeviceArray<char> deviceMem(memSize);
-      auto batchesDevice = reinterpret_cast<Batches *>(deviceMem.data());
+      auto batchesDevice = reinterpret_cast<Batches *>(slot.device);
       auto arraysDevice = reinterpret_cast<Batch *>(batchesDevice + 1);
       auto scalarBufferDevice = reinterpret_cast<double *>(arraysDevice + vars.size());
       auto extraArgsDevice = reinterpret_cast<double *>(scalarBufferDevice + vars.size());
@@ -136,17 +284,27 @@ public:
          batches->extra = extraArgsDevice;
       }
 
-      copyHostToDevice(hostMem.data(), deviceMem.data(), hostMem.size(), cfg.cudaStream());
+      copyHostToDevice(slot.host, slot.device, memSize, cfg.cudaStream());
 
       const int gridSize = getGridSize(nEvents);
-      _computeFunctions[computer]<<<gridSize, blockSize, 0, *cfg.cudaStream()>>>(*batchesDevice);
+      _computeFunctions[computer]<<<gridSize, blockSize, 0, stream>>>(*batchesDevice);
 
-      // The compute might have modified the mutable extra args, so we need to
-      // copy them back. This can be optimized if necessary in the future by
-      // flagging if the extra args were actually changed.
-      if (!extraArgs.empty()) {
-         copyDeviceToHost(extraArgsDevice, extraArgs.data(), extraArgs.size(), cfg.cudaStream());
+      // Only the NormalizedPdf computer mutates its extra args: it uses them
+      // as output parameters for the evaluation error counts. Instead of
+      // synchronizing the stream to read the counters back immediately, the
+      // readback is deferred to avoid stalling the pipeline: an asynchronous
+      // copy delivers them into a persistent pinned buffer, and the next
+      // synchronizeCudaStream() call forwards them to the caller's span. The
+      // caller's memory therefore has to stay valid until then.
+      if (computer == NormalizedPdf && !extraArgs.empty()) {
+         const std::size_t nBytes = extraArgs.size() * sizeof(double);
+         StreamScratch::DeferredSlot &deferredSlot = streamScratch.acquireDeferred(nBytes);
+         ERRCHECK(cudaMemcpyAsync(deferredSlot.host, extraArgsDevice, nBytes, cudaMemcpyDeviceToHost, stream));
+         deferredSlot.dst = extraArgs.data();
+         deferredSlot.nPending = extraArgs.size();
       }
+
+      streamScratch.release(slot, stream);
    }
    /// Return the sum of an input array
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
@@ -155,26 +313,28 @@ public:
 
    std::unique_ptr<AbsBufferManager> createBufferManager() const override;
 
-   CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const override
-   {
-      return new CudaInterface::CudaEvent{forTiming};
-   }
    CudaInterface::CudaStream *newCudaStream() const override { return new CudaInterface::CudaStream{}; }
-   void deleteCudaEvent(CudaInterface::CudaEvent *event) const override { delete event; }
-   void deleteCudaStream(CudaInterface::CudaStream *stream) const override { delete stream; }
-
-   void cudaEventRecord(CudaInterface::CudaEvent *event, CudaInterface::CudaStream *stream) const override
+   void deleteCudaStream(CudaInterface::CudaStream *stream) const override
    {
-      CudaInterface::cudaEventRecord(*event, *stream);
+      _scratchMap.erase(stream);
+      delete stream;
    }
-   void cudaStreamWaitForEvent(CudaInterface::CudaStream *stream, CudaInterface::CudaEvent *event) const override
+   void synchronizeCudaStream(CudaInterface::CudaStream *stream) const override
    {
-      stream->waitForEvent(*event);
+      ERRCHECK(::cudaStreamSynchronize(*stream));
+      // Deliver deferred readbacks (e.g. the evaluation error counters from
+      // compute()) that have completed with the synchronization.
+      auto found = _scratchMap.find(stream);
+      if (found != _scratchMap.end()) {
+         found->second.flushDeferred();
+      }
    }
-   bool cudaStreamIsActive(CudaInterface::CudaStream *stream) const override { return stream->isActive(); }
 
 private:
+   StreamScratch &scratch(CudaInterface::CudaStream *stream) { return _scratchMap[stream]; }
+
    const std::vector<void (*)(Batches &)> _computeFunctions;
+   mutable std::unordered_map<CudaInterface::CudaStream *, StreamScratch> _scratchMap;
 
 }; // End class RooBatchComputeClass
 
@@ -239,9 +399,15 @@ __global__ void kahanSum(const double *__restrict__ input, const double *__restr
    kahanSumReduction(shared, n, result, carry_index);
 }
 
+/// Computes the negative log likelihood sum with the same semantics as the
+/// CPU implementation of RooBatchComputeInterface::reduceNLL(): zero-weight
+/// events are skipped, and evaluation problems are counted and accumulated
+/// into a "badness" value that the host can pack into a NaN for the error
+/// recovery in the minimizer. The `stats` output has the layout
+/// [badness, nNonPositive, nNaN, nInfinite] and must be zero-initialized.
 __global__ void nllSumKernel(const double *__restrict__ probas, const double *__restrict__ weights,
                              const double *__restrict__ offsetProbas, size_t nProbas, double scalarProba,
-                             size_t nWeights, double *__restrict__ result)
+                             size_t nWeights, double *__restrict__ result, double *__restrict__ stats)
 {
    int thIdx = threadIdx.x;
    int gthIdx = thIdx + blockIdx.x * blockSize;
@@ -253,16 +419,51 @@ __global__ void nllSumKernel(const double *__restrict__ probas, const double *__
 
    double sum = 0.0;
    double carry = 0.0;
+   double badness = 0.0;
+   unsigned int nNonPositive = 0;
+   unsigned int nNaN = 0;
+   unsigned int nInfinite = 0;
 
    for (int i = gthIdx; i < nWeights; i += nThreadsTotal) {
-      // Note: it does not make sense to use the nll option and provide at the
-      // same time external carries.
-      double val = -std::log(nProbas == 1 ? scalarProba : probas[i]);
+      const double weight = weights[i];
+      // Zero-weight events don't contribute to the likelihood. Skipping them
+      // also avoids 0 * inf = NaN for zero probabilities.
+      if (weight == 0.0) {
+         continue;
+      }
+      const double proba = nProbas == 1 ? scalarProba : probas[i];
+      double term;
+      if (proba <= 0.0) {
+         ++nNonPositive;
+         badness += -proba;
+         term = std::log(proba);
+      } else if (std::isnan(proba)) {
+         ++nNaN;
+         badness += RooNaNPacker::unpackNaN(proba);
+         term = proba;
+      } else {
+         if (std::isinf(proba)) {
+            ++nInfinite;
+         }
+         term = std::log(proba);
+      }
       if (offsetProbas)
-         val += std::log(offsetProbas[i]);
-      val = weights[i] * val;
-      kahanSumUpdate(sum, carry, val, 0.0);
+         term -= std::log(offsetProbas[i]);
+      term *= -weight;
+      kahanSumUpdate(sum, carry, term, 0.0);
    }
+
+   // Accumulate the evaluation error statistics over the whole grid. These
+   // atomics are on the rare path: they are only executed by threads that
+   // actually encountered problematic values.
+   if (badness != 0.0)
+      atomicAdd(&stats[0], badness);
+   if (nNonPositive != 0)
+      atomicAdd(&stats[1], double(nNonPositive));
+   if (nNaN != 0)
+      atomicAdd(&stats[2], double(nNaN));
+   if (nInfinite != 0)
+      atomicAdd(&stats[3], double(nInfinite));
 
    shared[thIdx] = sum;
    shared[carry_index] = carry;
@@ -279,13 +480,19 @@ double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, Input
       return 0.0;
    const int gridSize = getGridSize(n);
    cudaStream_t stream = *cfg.cudaStream();
-   CudaInterface::DeviceArray<double> devOut(2 * gridSize);
+   StreamScratch &streamScratch = scratch(cfg.cudaStream());
+   StreamScratch::Slot &slot = streamScratch.acquire(2 * gridSize * sizeof(double));
+   auto devOut = reinterpret_cast<double *>(slot.device);
+   auto hostOut = reinterpret_cast<double *>(slot.host);
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
-   kahanSum<<<gridSize, blockSize, shMemSize, stream>>>(input, nullptr, n, devOut.data(), 0);
-   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut.data(), devOut.data() + gridSize, gridSize, devOut.data(), 0);
-   double tmp = 0.0;
-   CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1, cfg.cudaStream());
-   return tmp;
+   kahanSum<<<gridSize, blockSize, shMemSize, stream>>>(input, nullptr, n, devOut, 0);
+   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut, devOut + gridSize, gridSize, devOut, 0);
+   CudaInterface::copyDeviceToHost(devOut, hostOut, 1, cfg.cudaStream());
+   // Release right after the last enqueued use of the slot, so that the slot
+   // is protected by its event even if the synchronization below throws.
+   streamScratch.release(slot, stream);
+   ERRCHECK(cudaStreamSynchronize(stream));
+   return hostOut[0];
 }
 
 ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
@@ -296,31 +503,57 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
       return out;
    }
    const int gridSize = getGridSize(weights.size());
-   CudaInterface::DeviceArray<double> devOut(2 * gridSize);
    cudaStream_t stream = *cfg.cudaStream();
+   // Layout of the scratch buffer: [sum, carry, badness, nNonPositive, nNaN,
+   // nInfinite, partial sums (gridSize), partial carries (gridSize)].
+   StreamScratch &streamScratch = scratch(cfg.cudaStream());
+   StreamScratch::Slot &slot = streamScratch.acquire((6 + 2 * gridSize) * sizeof(double));
+   auto devOut = reinterpret_cast<double *>(slot.device);
+   auto hostOut = reinterpret_cast<double *>(slot.host);
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
 
 #ifndef NDEBUG
    for (auto span : {probas, weights, offsetProbas}) {
+      // Scalar spans can point to host memory (e.g. the scalar buffer of an
+      // observable-independent pdf), so only spans with more than one element
+      // are required to be on the device.
       cudaPointerAttributes attr;
-      assert(span.size() == 0 || span.data() == nullptr ||
+      assert(span.size() <= 1 || span.data() == nullptr ||
              (cudaPointerGetAttributes(&attr, span.data()) == cudaSuccess && attr.type == cudaMemoryTypeDevice));
    }
 #endif
 
+   // Zero-initialize the evaluation error statistics for the atomic updates.
+   ERRCHECK(cudaMemsetAsync(devOut + 2, 0, 4 * sizeof(double), stream));
+
    nllSumKernel<<<gridSize, blockSize, shMemSize, stream>>>(
       probas.data(), weights.data(), offsetProbas.empty() ? nullptr : offsetProbas.data(), probas.size(),
-      probas.size() == 1 ? probas[0] : 0.0, weights.size(), devOut.data());
+      probas.size() == 1 ? probas[0] : 0.0, weights.size(), devOut + 6, devOut + 2);
 
-   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut.data(), devOut.data() + gridSize, gridSize, devOut.data(), 0);
+   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut + 6, devOut + 6 + gridSize, gridSize, devOut, 0);
 
-   double tmpSum = 0.0;
-   double tmpCarry = 0.0;
-   CudaInterface::copyDeviceToHost(devOut.data(), &tmpSum, 1, cfg.cudaStream());
-   CudaInterface::copyDeviceToHost(devOut.data() + 1, &tmpCarry, 1, cfg.cudaStream());
+   // The sum, its Kahan carry, and the evaluation error statistics are
+   // adjacent in the output buffer, so they can be read back in a single copy.
+   CudaInterface::copyDeviceToHost(devOut, hostOut, 6, cfg.cudaStream());
+   // Release right after the last enqueued use of the slot, so that the slot
+   // is protected by its event even if the synchronization below throws.
+   streamScratch.release(slot, stream);
+   ERRCHECK(cudaStreamSynchronize(stream));
 
-   out.nllSum = tmpSum;
-   out.nllSumCarry = tmpCarry;
+   out.nllSum = hostOut[0];
+   out.nllSumCarry = hostOut[1];
+   out.nNonPositiveValues = hostOut[3];
+   out.nNaNValues = hostOut[4];
+   out.nInfiniteValues = hostOut[5];
+
+   if (hostOut[2] != 0.0) {
+      // Some events had evaluation errors: return the accumulated "badness"
+      // of the errors packed into a NaN, like the CPU implementation, so the
+      // minimizer can use it to recover.
+      out.nllSum = RooNaNPacker::packFloatIntoNaN(hostOut[2]);
+      out.nllSumCarry = 0.0;
+   }
+
    return out;
 }
 
@@ -423,6 +656,11 @@ public:
       if (_lastAccess == LastAccessType::GPU_WRITE) {
          CudaInterface::copyDeviceToHost(_gpuBuffer.deviceReadPtr(), const_cast<double *>(_arr.data()), size(),
                                          _cudaStream);
+         // The copy is asynchronous, and the caller reads the host memory
+         // right away, so the stream needs to be synchronized here.
+         if (_cudaStream) {
+            ERRCHECK(cudaStreamSynchronize(*_cudaStream));
+         }
       }
 
       _lastAccess = LastAccessType::CPU_READ;

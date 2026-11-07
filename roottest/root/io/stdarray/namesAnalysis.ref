@@ -1,4 +1,3 @@
-
 Processing /Users/danilopiparo/RootDevel/Root6/head/roottest/root/io/stdarray/namesAnalysis.C...
 Class "C<array<bool,4>,array<int,5>>" is not an STL array
 array<int,3>:

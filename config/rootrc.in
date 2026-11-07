@@ -174,20 +174,6 @@ Hist.Stats.KurtosisX:        Kurtosis x
 Hist.Stats.KurtosisY:        Kurtosis y
 Hist.Stats.KurtosisZ:        Kurtosis z
 
-# THtml specific settings (for more see doc of THtml class).
-Root.Html.SourceDir:    .
-Root.Html.Root:         http://root.cern.ch/root/html
-Root.Html.ViewCVS:      http://root.cern.ch/viewcvs/trunk/%f?view=log
-Root.Html.Search:       http://www.google.com/search?q=%s+site%3A%u+-site%3A%u%2Fsrc%2F+-site%3A%u%2Fexamples%2F
-#Root.Html.OutputDir:   htmldoc/
-#Root.Html.Homepage:
-#Root.Html.Header:
-#Root.Html.Footer:
-#Root.Html.Description: //____________________
-#Root.Html.Author:      // Author:
-#Root.Html.LastUpdate:  // @(#)
-#Root.Html.Copyright:   * Copyright
-
 # GUI specific settings.
 Gui.Backend:                native
 Gui.Factory:                native
@@ -230,8 +216,6 @@ Browser.AutoThumbnail:       yes
 # Set the ExpandDirectories option to "no" to prevent expanding
 # the parent directory tree (for example on nfs)
 Browser.ExpandDirectories    yes
-# Start URL for the TRootBrowser embedded HTML renderer
-Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
 # Type of tree viewer: TTreeViewer or RTreeViewer
 TreeViewer.Name:             @root_treeviewer_class@
@@ -241,7 +225,7 @@ GeomPainter.Name:            @root_geompainter_type@
 
 # THttpServer specific settings
 # location of JavaScript ROOT sources
-#HttpServ.JSRootPath:        @jsrootdir@
+@jsroot_config@
 # Default setting for enabling or disabling JSROOT.
 # This can be toggled in the notebook using the `%jsroot on/off` command.
 Jupyter.JSRoot:               @root_jupyter_jsroot@
@@ -254,8 +238,6 @@ WebGui.HttpPortMin:         8800
 WebGui.HttpPortMax:         9800
 # Exact IP iddress to bind bind http server (default - empty)
 WebGui.HttpBind:
-# Use only loopback address to bind http server (default - yes)
-WebGui.HttpLoopback:        yes
 # Require unique single-time token (key) for connecting with widget (default - yes)
 WebGui.OnetimeKey:          yes
 # Only single connection allowed to any web widget
@@ -263,15 +245,15 @@ WebGui.SingleConnMode:      yes
 # Use https protocol for the http server (default - no)
 WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem
-# default timeout (in seconds) for synchronous actions like producing images on clients
-WebGui.WaitForTmout:        100.0
 # name of executable for firefox and chrome
 WebGui.Chrome:             @chromeexe@
 WebGui.ChromeVersion:      @chromemajor@
 WebGui.Edge:               @edgeexe@
 WebGui.Firefox:            @firefoxexe@
 # location of OpenUi5 applications for ROOT like canvas, eve, fitpanel, ...
-#WebGui.RootUi5Path:        @openui5dir@
+#WebGui.RootUi5Path:       @openui5dir@
+# location of OpenUi5 framework
+@openui5_config@
 
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user
@@ -383,60 +365,7 @@ ACLiC.Linkdef:          _linkdef
 # Add extra options to rootcling invocation by ACLiC
 #ACLiC.ExtraRootclingFlags:      [-optA ... -optZ]
 
-# Connection is shutdown at timeout expiration. Timeout is in seconds.
-# Negotiation cannot be attempted at low level (i.e. inside
-# TAuthenticate::Authenticate()) because of synchronization
-# problems with the server.
-# At higher level, TAuthenticate::HasTimedOut() gives information
-# about timeout: 0 = no timeout; 1 = timeout, no methods left;
-# 2 = timeout, still methods to be tried .
-# Caller should decide about an additional attempt.
-# Timeout disabled (< 0) by default. Can be changed on-the-fly
-# with the static method TAuthenticate::SetTimeOut(to_value)
-#
-# Auth.Timeout:        -1
-
-# Password dialog box.
-# Set to 0 if you do not want a dialog box to be popped-up
-# when a password is requested.
-# Default is 1.
-#
-#  Auth.UsePasswdDialogBox: 0
-
-# Default login name (if not defined is taken from $(HOME)).
-#UsrPwd.Login:           qwerty
-
-# To be prompted for login information.
-#UsrPwd.LoginPrompt:     yes
-
-# To reuse established security context.
-UsrPwd.ReUse:         yes
-
-# Duration validity of the security context.
-# Format:  <hours>:<minutes>  (default 24:00)
-#UsrPwd.Valid:     24:00
-
-# To control password encryption for UsrPwd authentication.
-UsrPwd.Crypt:         yes
-
-# Type of key to be used for RSA encryption:
-# 0 = local; 1 = SSL (default if openssl available).
-RSA.KeyType:  1
-
-# In case of 'RSA.KeyType: 1' this specifies the number of bits to
-# be used for the Blowfish key used to encrypt the exchanged information
-# Default 256, minimum 128, maximum 15912.
-#SSL.BFBits:   256
-
-# Server authentication in TServerSocket.
-#
-# General: file with server access rules
-#SrvAuth.DaemonRc: /etc/root/system.daemonrc
-#
-# UsrPwd: check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts.
-#SrvAuth.CheckHostsEquivalence: 1
-
-# Force file opening via TNetFile (TNetXNGFile) if a hostname is specified
+# Force file opening via TNetXNGFile if a hostname is specified
 # in the Url.
 # By default, for local files TFile::Open() invokes directly TFile
 #TFile.ForceRemote:  yes
@@ -466,21 +395,15 @@ TFile.CrossProtocolRedirects:  yes
 # correct value but instead used verbatim the value stored in the file.
 # TFile.v630forwardCompatibility: no
 
-# List of S3 servers known to support multi-range HTTP GET requests.
-# This is the value sent back by the S3 server in the 'Server:' header
-# of the HTTP response.
-# Please note that Amazon S3 servers do not support this feature.
-# Add one line per server type with syntax:
-# +TS3WebFile.Root.MultiRangeServer: Mucura
-TS3WebFile.Root.MultiRangeServer:  Huawei OBS
-
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like file:/path/file.root or /alien/path/file.root.
 # In case the file namespace descriptor ends with - the namespace
 # is not a part of the filename.
 # Extend in private .rootrc with a +Url.Special line.
 Url.Special:         file: hpss: dcache:
-+Url.Special:        /alien/-
+# Note that AliEn support is removed from ROOT. The following line remains to
+# demonstrate the use of Url.Special
+# +Url.Special:        /alien/-
 
 # XNet.Debug            - log verbosity level (default 0)
 #                         (0 = nothing,
@@ -545,9 +468,6 @@ NetXNG.QueryReadVParams: $(ROOT_XRD_QUERY_READV_PARAMS)
 # with all the goodies (session caching, flexible authentication, support
 # for different dialects like S3, and others)
 
-# Use the old TWebFile instead of the new libDavix based version
-Davix.UseOldClient: @useoldwebfile@
-
 # Verbosity level of the external Davix library
 # Davix.Debug: 0
 
@@ -593,6 +513,9 @@ Davix.UseOldClient: @useoldwebfile@
 # S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION, S3_TOKEN
 # The gEnv vars have higher priority over the these envvars.
 
+# If set to yes, use the curl TFile and RRawFile backend even if davix is available
+Curl.ReplaceDavix: no
+
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
 # Color 5 is yellow.
@@ -615,3 +538,11 @@ Rint.Canvas.HighLightColor:      5
 #                          1 All Branches (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_PREFILL
 # TTreeCache.Prefill: 1
+
+# Advanced Debug Settings
+# Setting  Root.TClass.GetClass.AutoParsing to false
+# will disable any auto-parsing execution of `TClass::GetClass`.  This will
+# result in not being able to find TClass-es when the name requires not-already
+# loaded interpreted information (eg. a typedef to be resolved).
+#
+# Root.TClass.GetClass.AutoParsing: true

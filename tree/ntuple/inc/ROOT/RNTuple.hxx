@@ -1,5 +1,4 @@
 /// \file ROOT/RNTuple.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2023-09-19
 
@@ -44,6 +43,7 @@ RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std
 \brief Representation of an RNTuple data set in a ROOT file
 
 \note This is the documentation for the RNTuple anchor class. For a generic introduction to RNTuple, see \ref NTuple "the RNTuple Introduction". For reading RNTuples, see RNTupleReader. For writing RNTuples, see RNTupleWriter.
+For exploring the contents of an RNTuple, use ROOT::RDataFrame. See \ref rosetta-stone for examples how to draw and scan the contents.
 
 The class points to the header and footer keys, which in turn have the references to the pages (via page lists).
 Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
@@ -75,10 +75,23 @@ class RNTuple final {
                           std::uint64_t lenFooter, std::uint64_t maxKeySize);
 
 public:
+   // NOTE: when this is changed also update ntuple_minifile.cxx!
    static constexpr std::uint16_t kVersionEpoch = 1;
-   static constexpr std::uint16_t kVersionMajor = 0;
-   static constexpr std::uint16_t kVersionMinor = 1;
+   static constexpr std::uint16_t kVersionMajor = 1;
+   static constexpr std::uint16_t kVersionMinor = 0;
    static constexpr std::uint16_t kVersionPatch = 1;
+
+   /// Returns the RNTuple version in the following form:
+   ///   Epoch: 2 most significant bytes
+   ///   Major: next 2 bytes
+   ///   Minor: next 2 bytes
+   ///   Patch: 2 least significant bytes
+   /// This integer can be compared with that of another RNTuple to determine which one has the highest overall version.
+   static constexpr std::uint64_t GetCurrentVersion()
+   {
+      return (static_cast<std::uint64_t>(kVersionEpoch) << 48) | (static_cast<std::uint64_t>(kVersionMajor) << 32) |
+             (static_cast<std::uint64_t>(kVersionMinor) << 16) | (static_cast<std::uint64_t>(kVersionPatch));
+   }
 
 private:
    /// Version of the RNTuple binary format that the writer supports (see specification).

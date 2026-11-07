@@ -19,7 +19,8 @@ to Reference Guides for all %ROOT versions.
 
 - A rich set of %ROOT [tutorials and code examples](https://root.cern/doc/master/group__Tutorials.html) are offered to developers to exercise specific functionality.
 - [ROOT Primer](https://root.cern/primer/).
-- [ROOT Introductory Course](https://github.com/root-project/training/tree/master/BasicCourse).
+- [ROOT Introductory Course](https://github.com/root-project/student-course/tree/25.07)
+- [ROOT Advanced Course](https://github.com/root-project/ROOTAdvancedCourse/tree/26.04)
 
 
 ### Provide your feedback

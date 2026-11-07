@@ -206,13 +206,11 @@ sap.ui.define([
          this.methodDialog.destroy();
 
          if (painter && method && args) {
-
-            if (painter.executeMenuCommand(method, args)) return;
+            if (painter.executeMenuCommand(method, args))
+               return;
             let exec = method.fExec;
-            if (args) exec = exec.substr(0,exec.length-1) + args + ')';
+            exec = exec.substr(0,exec.length-1) + args + ')';
             // invoked only when user press Ok button
-            console.log(`execute method for object ${menu_obj_id} exec ${exec}`);
-
             let canvp = this.getCanvasPainter(),
                 p = menu_obj_id.indexOf('#');
 
@@ -296,10 +294,11 @@ sap.ui.define([
                break;
             case canname + '.png':
             case canname + '.jpeg':
+            case canname + '.html':
             case canname + '.svg':
             case canname + '.webp':
             case canname + '.pdf':
-                  p.saveCanvasAsFile(name);
+               p.saveCanvasAsFile(name);
                break;
             case canname + '.root':
             case canname + '.C':
@@ -307,8 +306,10 @@ sap.ui.define([
                break;
             case 'Save as ...': {
                let filters = ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'PDF files (*.pdf)', 'WEBP files (*.webp)', 'ROOT files (*.root)' ];
-               if (!p?.v7canvas)
+               if (!p?.v7canvas) {
+                  filters.push('HTML files (*.html)');
                   filters.push('C++ (*.cxx *.cpp *.c)');
+               }
 
                FileDialogController.SaveAs({
                   websocket: p.getWebsocket(),
@@ -318,10 +319,10 @@ sap.ui.define([
                   filters,
                   // working_path: '/Home',
                   onOk: fname => {
-                     if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg') || fname.endsWith('.pdf') || fname.endsWith('.webp'))
-                         p.saveCanvasAsFile(fname);
+                     if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.html') || fname.endsWith('.svg') || fname.endsWith('.pdf') || fname.endsWith('.webp'))
+                        p.saveCanvasAsFile(fname);
                      else
-                         p.sendSaveCommand(fname);
+                        p.sendSaveCommand(fname);
                   },
                   onCancel: () => {},
                   onFailure: () => {}

@@ -48,6 +48,7 @@ protected:
    Int_t            fSize;   // free-type face size
    Int_t            fFile;   // free-type file name
    EMode            fMode;   // free-type FTGL class id
+   UInt_t           fTextAlign = 0; // set text align
 
    mutable Int_t    fTrashCount;
 public:
@@ -74,6 +75,8 @@ public:
    Float_t GetDepth()    const { return fDepth; }
    void    SetDepth(Float_t d) { fDepth = d;    }
 
+   void  SetTextAlign(UInt_t align) { fTextAlign = align; }
+
    // FTGL wrapper functions
    Float_t GetAscent() const;
    Float_t GetDescent() const;
@@ -87,6 +90,7 @@ public:
    void  BBox(const wchar_t* txt,
               Float_t& llx, Float_t& lly, Float_t& llz,
               Float_t& urx, Float_t& ury, Float_t& urz) const;
+   Float_t Advance(const char* txt) const;
 
    void  Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const;
    void  Render(const wchar_t* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const;

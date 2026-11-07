@@ -1,5 +1,15 @@
+# BUILD_BYPRODUCTS, the sub-build's binary dir (ExternalProject's
+# default, passed as -B explicitly on the emscripten path), and
+# IMPORTED_LOCATION (resolved via ExternalProject_Get_Property
+# binary_dir) all need to agree on where googletest builds.
+# ExternalProject's binary_dir defaults to
+# ${CMAKE_CURRENT_BINARY_DIR}/<name>-prefix/src/<name>-build, so
+# tracking CMAKE_CURRENT_BINARY_DIR keeps the three in sync whether
+# this module is consumed standalone or via add_subdirectory (e.g.
+# under root-project/root, where CMAKE_BINARY_DIR is root-build but
+# this directory is root-build/interpreter/CppInterOp/unittests).
 set(_gtest_byproduct_binary_dir
-  ${CMAKE_BINARY_DIR}/downloads/googletest-prefix/src/googletest-build)
+  ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build)
 set(_gtest_byproducts
   ${_gtest_byproduct_binary_dir}/lib/libgtest.a
   ${_gtest_byproduct_binary_dir}/lib/libgtest_main.a
@@ -19,7 +29,22 @@ elseif(APPLE)
 endif()
 
 include(ExternalProject)
+# Forward parent CMAKE_CXX_FLAGS to the gtest sub-build so sanitizer
+# and -stdlib=libc++ additions don't get dropped (else gtest builds
+# against system defaults and ABI-clashes with the parent at link).
+# gtest is third-party and not warning-clean under LLVM's -Werror
+# regime (gcc's ASan instrumentation trips -Wmaybe-uninitialized in
+# gtest-death-test.cc at -O3), so a trailing -w silences warnings.
+set(GOOGLETEST_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+if(MSVC)
+  set(GOOGLETEST_CMAKE_CXX_FLAGS "${GOOGLETEST_CMAKE_CXX_FLAGS} /w")
+else()
+  set(GOOGLETEST_CMAKE_CXX_FLAGS "${GOOGLETEST_CMAKE_CXX_FLAGS} -w")
+endif()
 if (EMSCRIPTEN)
+  # FIXME: -sSUPPORT_LONGJMP=wasm in the default option causes a warning in the Emscripten build of Googletest
+  # and as we treat warnings as errors in the ci, it causes the ci to fail.
+  string(REPLACE "-sSUPPORT_LONGJMP=wasm" "" GOOGLETEST_CMAKE_CXX_FLAGS "${GOOGLETEST_CMAKE_CXX_FLAGS}")
   set(config_cmd emcmake${EMCC_SUFFIX} cmake)
   if(CMAKE_GENERATOR STREQUAL "Ninja")
     set(build_cmd emmake${EMCC_SUFFIX} ninja)
@@ -27,32 +52,41 @@ if (EMSCRIPTEN)
     set(build_cmd emmake${EMCC_SUFFIX} make)
   endif()
 else()
-  set(config_cmd ${CMAKE_COMMAND})
-  set(build_cmd ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}/unittests/googletest-prefix/src/googletest-build/ --config $<CONFIG>)
+  set(build_cmd ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build/ --config $<CONFIG>)
+endif()
+
+set(_gtest_cmake_args
+  -DCMAKE_BUILD_TYPE=$<CONFIG>
+  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+  -DCMAKE_CXX_FLAGS=${GOOGLETEST_CMAKE_CXX_FLAGS}
+  # HandleLLVMOptions puts -stdlib=libc++ / -fsanitize=*
+  # in CMAKE_*_LINKER_FLAGS for LLVM_USE_SANITIZER.
+  -DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}
+  -DCMAKE_MODULE_LINKER_FLAGS=${CMAKE_MODULE_LINKER_FLAGS}
+  -DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}
+  -DCMAKE_AR=${CMAKE_AR}
+  -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+  ${EXTRA_GTEST_OPTS})
+
+if(EMSCRIPTEN)
+  set(_gtest_configure
+    CONFIGURE_COMMAND ${config_cmd} -G ${CMAKE_GENERATOR}
+      -S ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest/
+      -B ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build/
+      ${_gtest_cmake_args})
+else()
+  set(_gtest_configure CMAKE_ARGS ${_gtest_cmake_args})
 endif()
 
 ExternalProject_Add(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_SHALLOW 1
-  GIT_TAG v1.17.0
+  GIT_SHALLOW FALSE
+  GIT_TAG v1.18.0
   UPDATE_COMMAND ""
-  # # Force separate output paths for debug and release builds to allow easy
-  # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
-  # CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-  #            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-  #            -Dgtest_force_shared_crt=ON
-  CONFIGURE_COMMAND ${config_cmd} -G ${CMAKE_GENERATOR}
-  		-S ${CMAKE_BINARY_DIR}/unittests/googletest-prefix/src/googletest/
-		-B ${CMAKE_BINARY_DIR}/unittests/googletest-prefix/src/googletest-build/
-                -DCMAKE_BUILD_TYPE=$<CONFIG>
-                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-                -DCMAKE_AR=${CMAKE_AR}
-                -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                ${EXTRA_GTEST_OPTS}
+  ${_gtest_configure}
   BUILD_COMMAND ${build_cmd}
   # Disable install step
   INSTALL_COMMAND ""
@@ -61,6 +95,7 @@ ExternalProject_Add(
   LOG_DOWNLOAD ON
   LOG_CONFIGURE ON
   LOG_BUILD ON
+  LOG_OUTPUT_ON_FAILURE ON
   TIMEOUT 600
   )
 

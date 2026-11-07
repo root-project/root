@@ -21,6 +21,7 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#define ROOT_CsgOps_cxx
 #include "CsgOps.h"
 
 #include "TGeoBoolNode.h"
@@ -148,6 +149,12 @@ void REveGeoPolyShape::BuildFromShape(TGeoShape *shape, Int_t n_seg)
    }
 
    REveGeoManagerHolder gmgr(REveGeoShape::GetGeoManager(), n_seg);
+
+   if (!shape->MakeBuffer3D())
+   {
+      std::cout << "Shape " << shape->GetName()  << " has empty TBuffer3D\n";
+      return;
+   }
 
    std::unique_ptr<TBuffer3D> b3d(shape->MakeBuffer3D());
 

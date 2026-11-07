@@ -11,7 +11,7 @@ if (NOT builtin_clang)
 endif()
 
 #--Set the LLVM version required for ROOT-----------------------------------------------------------
-set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 20)
+set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 22)
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
@@ -21,8 +21,28 @@ set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
 set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
 set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+
+# When ROOT provides zlib as a builtin, disable it in the bundled LLVM so it
+# cannot discover and link the *system* copy (mixing two versions in one
+# process). We cannot point LLVM at the zlib builtin instead: it probes it with
+# a configure-time compile check, but the builtin library is only produced
+# later at build time, so the check would always fail. For symmetry and to
+# preserve historic behavior, also disable ZSTD if we use the ROOT builtin,
+# even though LLVM doesn't do the configure-time compile check there. If no
+# builtins are used, we remove unnecessary degrees of freedom from the build by
+# setting the zlib/zstd flags to FORCE_ON, because zlib and zstd are hard
+# requirements of ROOT that are available anyway.
+if(builtin_zlib)
+  set(LLVM_ENABLE_ZLIB OFF CACHE STRING "Disabled because ROOT uses builtin zlib" FORCE)
+else()
+  set(LLVM_ENABLE_ZLIB FORCE_ON CACHE STRING "Always enabled because it's already a dependency of ROOT" FORCE)
+endif()
+if(builtin_zstd)
+  set(LLVM_ENABLE_ZSTD OFF CACHE STRING "Disabled because ROOT uses builtin zstd" FORCE)
+else()
+  set(LLVM_ENABLE_ZSTD FORCE_ON CACHE STRING "Always enabled because it's already a dependency of ROOT" FORCE)
+endif()
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
-set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
 set(CLANG_INCLUDE_TESTS OFF CACHE BOOL "")
@@ -59,8 +79,6 @@ if(NOT experimental_adaptivecpp)
   set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
 endif()
 
-# will be set again in case NOT builtin_llvm
-set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
 endif()
@@ -72,27 +90,8 @@ set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
-if(ROOT_ARCHITECTURE MATCHES arm64)
-  set(ROOT_CLING_TARGET "AArch64")
-elseif(ROOT_ARCHITECTURE MATCHES arm)
-  set(ROOT_CLING_TARGET "ARM")
-elseif(ROOT_ARCHITECTURE MATCHES ppc64)
-  set(ROOT_CLING_TARGET "PowerPC")
-elseif(ROOT_ARCHITECTURE MATCHES s390)
-  set(ROOT_CLING_TARGET "SystemZ")
-elseif(ROOT_ARCHITECTURE MATCHES riscv64)
-  set(ROOT_CLING_TARGET "RISCV")
-elseif(ROOT_ARCHITECTURE MATCHES loong64)
-  set(ROOT_CLING_TARGET "LoongArch")
-elseif(ROOT_ARCHITECTURE MATCHES freebsd OR ROOT_ARCHITECTURE MATCHES linux OR ROOT_ARCHITECTURE MATCHES macosx)
-  set(ROOT_CLING_TARGET "X86")
-elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
-  set(ROOT_CLING_TARGET "X86")
-else()
-  set(ROOT_CLING_TARGET "all")
-endif()
-
-if(cuda AND NOT "${ROOT_CLING_TARGET}" STREQUAL "all")
+set(ROOT_CLING_TARGET "Native")
+if(cuda)
   string(APPEND ROOT_CLING_TARGET ";NVPTX")
 endif()
 
@@ -252,6 +251,8 @@ if(builtin_llvm)
   set(CMAKE_CXX_STANDARD ${_cxx_standard})
   set(CMAKE_BUILD_TYPE ${_build_type})
 
+  # Needed to make Cling plugins (clad) find LLVM.
+  set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
   set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
     ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include
     CACHE STRING "LLVM include directories."
@@ -275,7 +276,7 @@ if(builtin_llvm)
     set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
   endif()
 else()
-  find_package(LLVM REQUIRED CONFIG)
+  find_package(LLVM ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.1 REQUIRED CONFIG)
   message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} in ${LLVM_CMAKE_DIR}")
 
   separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
@@ -319,13 +320,6 @@ else()
   include(TableGen)
   include(HandleLLVMOptions)
   include(VersionFromVCS)
-
-  set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.1(|\\.[0-9]+)")
-    message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
-  else()
-    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.1.x")
-  endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
     set(LLVM_INCLUDE_TESTS ON)
@@ -391,13 +385,15 @@ else()
   set(LLVM_VERSION_MAJOR ${ROOT_LLVM_VERSION_REQUIRED_MAJOR} PARENT_SCOPE)
 
   # We are in the case of NOT builtin_llvm
+  set(CLANG_BUILT_STANDALONE TRUE)
   if (builtin_clang)
     # remove clang-cpp from CLANG_LINKS_TO_CREATE to avoid clashes with
     # install-clang-cpp target defined by LLVM's cmake module
     set(CLANG_LINKS_TO_CREATE clang++ clang-cl)
 
-    # Disable linking against shared LLVM
-    set(LLVM_LINK_LLVM_DYLIB OFF)
+    # Clang defaults this to LLVM_LINK_LLVM_DYLIB, which LLVMConfig.cmake may set to
+    # ON; ROOT links no Clang tool against libclang-cpp.
+    set(CLANG_LINK_CLANG_DYLIB OFF CACHE BOOL "Link Clang tools against libclang-cpp")
 
     # Always build LLVM with C++17. It is not necessary to compile with the same
     # C++ standard as the rest of ROOT and sometimes it doesn't even work.
@@ -405,12 +401,11 @@ else()
     set(CMAKE_CXX_STANDARD 17)
 
     add_subdirectory(llvm-project/clang EXCLUDE_FROM_ALL)
-
+    
     set(CMAKE_CXX_STANDARD ${_cxx_standard})
   endif(builtin_clang)
 
-  set( CLANG_BUILT_STANDALONE 1 )
-  set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
+  set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}") # Used by cling
 endif(builtin_llvm)
 
 if (builtin_clang)
@@ -423,13 +418,18 @@ if (builtin_clang)
     ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/clang/include
     ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
-  set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
+  if(builtin_llvm)
+    set(CLANG_CMAKE_DIR "${LLVM_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
+  else()
+    set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
+  endif()
 else()
   find_package(Clang REQUIRED CONFIG)
   message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
 
-  # Forward CLANG_INSTALL_PREFIX so it can be used by core/clingutils/CMakeLists.txt
+  # Forward CLANG_INSTALL_PREFIX and CLANG_INCLUDE_DIRS for use by core/clingutils/CMakeLists.txt
   set(CLANG_INSTALL_PREFIX ${CLANG_INSTALL_PREFIX} PARENT_SCOPE)
+  set(CLANG_INCLUDE_DIRS ${CLANG_INCLUDE_DIRS} PARENT_SCOPE)
 endif()
 
 # Reset the compiler flags after compiling LLVM and Clang
@@ -474,6 +474,9 @@ if (builtin_cling)
   endif(LLVM_ENABLE_PIC AND NOT MSVC)
   # Avoid cling being installed under ROOTSYS/include.
   set(CLING_ROOT_BUILD ON)
+  # ROOT only consumes the cling libraries (see CLING_LIBRARIES); skip the
+  # cling driver, libcling and the Jupyter kernel.
+  set(CLING_MINIMAL ON CACHE BOOL "" FORCE)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 
@@ -550,20 +553,59 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
 
-##################### LIBINTEROP ###########################
+##################### CPPINTEROP ###########################
 
-#---Set InterOp to build on Cling, this can be toggled to use Clang-REPL-------------------------------------------------------
+# Set InterOp to build with Cling, can be toggled to use Clang-REPL
 set(CPPINTEROP_USE_CLING ON CACHE BOOL "" FORCE)
 set(CPPINTEROP_USE_REPL OFF CACHE BOOL "" FORCE)
 
-#---Disable testing on InterOp if ROOT's testing is OFF (InterOp tests are enabled by default) -------------------------------------------------------
+# Suppress CppInterOps install rules: ROOT ships CppInterOps public headers
+# under $ROOTSYS/etc/cppinterop and does not install any build artifacts.
+# This option adds clangCppInterOp with BUILDTREE_ONLY (add_llvm_library)
+set(CPPINTEROP_INSTALL OFF CACHE BOOL "" FORCE)
+
+# Disable testing on InterOp if ROOT's testing is OFF (enabled by default)
 if(testing)
-  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "Enable gtest in CppInterOp")
+  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "Enable gtest in CppInterOp" FORCE)
 else()
-  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "Enable gtest in CppInterOp")
+  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "Enable gtest in CppInterOp" FORCE)
 endif()
+
 
 add_subdirectory(CppInterOp)
 if(TARGET CppInterOpUnitTests)
   set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
 endif()
+
+# Stage CppInterOp's public headers + tblgen-generated .inc files into
+# ${CMAKE_BINARY_DIR}/etc/cppinterop/CppInterOp/. Based on how
+# core/clingutils ships Cling runtime headers into etc/cling/
+set(cppinterop_etcdir ${CMAKE_BINARY_DIR}/etc/cppinterop/CppInterOp)
+set(cppinterop_gen_dir ${CMAKE_BINARY_DIR}/interpreter/CppInterOp/include/CppInterOp)
+set(cppinterop_src_files
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/CppInterOp.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/CppInterOpTypes.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/Dispatch.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include/CppInterOp/Box.h
+  ${cppinterop_gen_dir}/BuildInfo.inc
+  ${cppinterop_gen_dir}/CppInterOpAPI.inc
+  ${cppinterop_gen_dir}/CppInterOpDecl.inc
+)
+set(cppinterop_staged_files)
+foreach(src ${cppinterop_src_files})
+  get_filename_component(name ${src} NAME)
+  list(APPEND cppinterop_staged_files ${cppinterop_etcdir}/${name})
+endforeach()
+
+add_custom_command(
+  OUTPUT ${cppinterop_staged_files}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${cppinterop_etcdir}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${cppinterop_src_files} ${cppinterop_etcdir}/
+  DEPENDS ${cppinterop_src_files} CppInterOpTableGen
+  COMMENT "Staging CppInterOp headers into etc/cppinterop/CppInterOp/")
+add_custom_target(CppInterOpEtc DEPENDS ${cppinterop_staged_files})
+add_dependencies(clangCppInterOp CppInterOpEtc)
+
+install(FILES ${cppinterop_staged_files}
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cppinterop/CppInterOp)

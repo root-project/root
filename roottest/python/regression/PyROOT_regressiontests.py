@@ -3,7 +3,15 @@
 # Created: 01/02/07
 # Last: 04/26/16
 
-"""Regression tests, lacking a better place, for PyROOT package."""
+"""Regression tests, lacking a better place, for PyROOT package.
+
+NOTE: several of the original test cases in this file were removed because
+they are covered upstream in the cppyy test suite
+(bindings/pyroot/cppyy/cppyy/test/): see test_advancedcpp.py,
+test_templates.py, test_datatypes.py, test_fragile.py, test_streams.py,
+test_regression.py and test_crossinheritance.py. What remains are
+ROOT-specific tests and tests without upstream equivalents.
+"""
 
 import platform
 import sys, os, unittest
@@ -25,7 +33,7 @@ import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = False
 from ROOT import gROOT, gInterpreter
 from ROOT import TClass, TObject, TFile
-from ROOT import TH1I, TVector3, TGraph, TMatrixD
+from ROOT import TVector3, TGraph, TMatrixD
 import cppyy
 
 cleaned_preload = os.environ.get('LD_PRELOAD', None)
@@ -37,20 +45,12 @@ __all__ = [
    'Regression02PyException',
    'Regression03OldCrashers',
    'Regression04Threading',
-   'Regression05LoKiNamespace',
-   'Regression06Int64Conversion',
-   'Regression07MatchConstWithProperReturn',
-   'Regression08CheckEnumExactMatch',
    'Regression09TVector3Pythonize',
    'Regression10CoralAttributeListIterators',
    'Regression11GlobalsLookup',
    'Regression12WriteTGraph',
-   'Regression13BaseClassUsing',
    'Regression14TPyException',
-   'Regression15ConsRef',
-   'Regression16NestedNamespace',
    'Regression17MatrixD',
-   'Regression18FailingDowncast',
 ]
 
 
@@ -69,19 +69,15 @@ class Regression01TwiceImportStar( MyTestCase ):
 class Regression02PyException(MyTestCase):
    def test1RaiseAndTrapPyException(self):
       """Test thrown TPyException object processing"""
-      # See https://github.com/root-project/root/issues/7541 and
-      # https://bugs.llvm.org/show_bug.cgi?id=49692 :
-      # llvm JIT fails to catch exceptions on M1, so we disable their testing
-      if platform.processor() != "arm" or platform.mac_ver()[0] == '':
-         gROOT.LoadMacro("ScottCppyy.C+")
+      gROOT.LoadMacro("ScottCppyy.C+")
 
-         # test of not overloaded global function
-         with self.assertRaisesRegex(SyntaxError, "test error message"):
-            ROOT.ThrowPyException()
+      # test of not overloaded global function
+      with self.assertRaisesRegex(SyntaxError, "test error message"):
+         ROOT.ThrowPyException()
 
-         # test of overloaded function
-         with self.assertRaisesRegex(SyntaxError, "overloaded int test error message"):
-            ROOT.MyThrowingClass.ThrowPyException(1)
+      # test of overloaded function
+      with self.assertRaisesRegex(SyntaxError, "overloaded int test error message"):
+         ROOT.MyThrowingClass.ThrowPyException(1)
 
 
 ### Several tests that used to cause crashes =================================
@@ -121,13 +117,6 @@ class Regression03OldCrashers( MyTestCase ):
       """Direct access on the meta class"""
 
       self.assertRaises( AttributeError, getattr, TObject.__class__, "nosuch" )
-
-   def test6InspectionOfTH1I( self ):
-      """Inspect TH1I"""
-
-    # access to data member fArray used to fail w/o error set; ROOT-7336
-      import inspect
-      inspect.getmembers(TH1I)
 
 
 ### Test the condition under which to (not) start the GUI thread =============
@@ -218,109 +207,6 @@ class Regression04Threading( MyTestCase ):
          os.environ['LD_PRELOAD'] = cleaned_preload
 
 
-### Test the proper resolution of a template with namespaced parameter =======
-class Regression05LoKiNamespace( MyTestCase ):
-   def test1TemplateWithNamespaceParameter( self ):
-      """Test name resolution of template with namespace parameter"""
-
-      rcp = 'const LHCb::Particle*'
-
-      gROOT.LoadMacro( 'LoKiNamespace.C+' )
-      LoKi = ROOT.LoKi
-
-      self.assertEqual( LoKi.Constant( rcp ).__name__, 'Constant<%s>' % rcp )
-      self.assertEqual(
-         LoKi.BooleanConstant( rcp ).__name__, 'BooleanConstant<%s>' % rcp )
-
-   def test2TemplateWithNamespaceReturnValue(self):
-      """Test the return value of a templated function in a namespace"""
-      # ROOT-10256
-      ROOT.gInterpreter.Declare("""
-      namespace bar {
-         template<typename T>
-         T foo(T a) { return a; }
-      }
-      """)
-      self.assertEqual(ROOT.bar.foo(1), 1)
-
-   def test3TemplatedMethodWithReferenceParameter(self):
-      """Test templated method with reference parameter"""
-      # ROOT-10292
-      ROOT.gInterpreter.Declare("""
-      struct TriggerResults {};
-      struct Tag {};
-
-      template <typename T> struct HandleT {};
-
-      struct Event {
-         template <typename T> int getByLabel(const Tag&, HandleT<T>&) { return 0; }
-      };
-      """)
-
-      ev = ROOT.Event()
-      tag = ROOT.Tag()
-      result = ROOT.HandleT(ROOT.TriggerResults)()
-
-      self.assertEqual(ev.getByLabel(tag, result), 0)
-
-
-### Test conversion of int64 objects to ULong64_t and ULong_t ================
-class Regression06Int64Conversion( MyTestCase ):
-   limit1  = 4294967295
-   limit1L = pylong(4294967295)
-
-   def test1IntToULongTestCase( self ):
-      """Test conversion of Int(64) limit values to unsigned long"""
-
-      gROOT.LoadMacro( 'ULongLong.C+' )
-      ULongFunc = ROOT.ULongFunc
-
-      self.assertEqual( self.limit1,  ULongFunc( self.limit1 ) )
-      self.assertEqual( self.limit1L, ULongFunc( self.limit1 ) )
-      self.assertEqual( self.limit1L, ULongFunc( self.limit1L ) )
-      self.assertEqual( maxvalue + 2, ULongFunc( maxvalue + 2 ) )
-
-   def test2IntToULongLongTestCase( self ):
-      """Test conversion of Int(64) limit values to unsigned long long"""
-      ULong64Func = ROOT.ULong64Func
-
-      self.assertEqual( self.limit1,  ULong64Func( self.limit1 ) )
-      self.assertEqual( self.limit1L, ULong64Func( self.limit1 ) )
-      self.assertEqual( self.limit1L, ULong64Func( self.limit1L ) )
-      self.assertEqual( maxvalue + 2, ULong64Func( maxvalue + 2 ) )
-
-
-### Proper match-up of return type and overloaded function ===================
-class Regression07MatchConstWithProperReturn( MyTestCase ):
-   def test1OverloadOrderWithProperReturn( self ):
-      """Test return type against proper overload w/ const and covariance"""
-
-      gROOT.LoadMacro( "Scott2.C+" )
-      MyOverloadOneWay = ROOT.MyOverloadOneWay
-      MyOverloadTheOtherWay = ROOT.MyOverloadTheOtherWay
-
-      self.assertEqual( MyOverloadOneWay().gime(), 1 )
-      self.assertEqual( MyOverloadTheOtherWay().gime(), "aap" )
-
-
-### enum type conversions (used to fail exact match in CINT) =================
-class Regression08CheckEnumExactMatch( MyTestCase ):
-   def test1CheckEnumCalls( self ):
-      """Be able to pass enums as function arguments"""
-
-      gROOT.LoadMacro( "Till.C+" )
-
-      a = ROOT.Monkey()
-      self.assertEqual( ROOT.fish, a.testEnum1( ROOT.fish ) )
-      self.assertEqual( ROOT.cow,  a.testEnum2( ROOT.cow ) )
-      self.assertEqual( ROOT.bird, a.testEnum3( ROOT.bird ) )
-      self.assertEqual( ROOT.marsupilami, a.testEnum4( ROOT.marsupilami ) )
-      # Cppyy's Long is deprecated in favour of ctypes.c_long
-      # https://bitbucket.org/wlav/cppyy/issues/101
-      import ctypes
-      self.assertEqual( ROOT.marsupilami, a.testEnum4( ctypes.c_long(ROOT.marsupilami).value ) )
-
-
 ### test pythonization and operators of TVector3 ===========================================
 class Regression09TVector3Pythonize( MyTestCase ):
    def test1TVector3( self ):
@@ -366,15 +252,8 @@ class Regression10CoralAttributeListIterators( MyTestCase ):
       self.assertNotEqual( b, a.begin() )
 
 
-### importing cout should not result in printed errors =======================
+### entities in the ROOT:: namespace =========================================
 class Regression11GlobalsLookup( MyTestCase ):
-   def test1GetCout( self ):
-      """Test that ROOT.cout does not cause error messages"""
-
-      import ROOT
-      # Look for cout in std
-      c = ROOT.std.cout
-
    def test2GlobalFromROOTNamespace( self ):
       """Entities in 'ROOT::' need no explicit 'ROOT.'"""
 
@@ -401,37 +280,14 @@ class Regression14TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
 
-      # In exp PyROOT, TPyException is called PyException and it belongs
-      # to the CPyCppyy namespace.
+      # In cppjit-based PyROOT, TPyException is called PyException and it
+      # belongs to the cppjit::cpyrt namespace.
       # Also, it is not included in the PCH, so we need to include the
       # header first
-      ROOT.gInterpreter.Declare("#include \"CPyCppyy/PyException.h\"")
-      e = ROOT.CPyCppyy.PyException()
+      ROOT.gInterpreter.Declare("#include \"cpyrt/PyException.h\"")
+      e = ROOT.cppjit.cpyrt.PyException()
       self.assertTrue( e )
       self.assertEqual( e.what(), "python exception" )
-
-
-### const-ref passing differs between CINT and Cling =========================
-class Regression15ConsRef( MyTestCase ):
-   def test1PassByConstRef( self ):
-      """Test passing arguments by const reference"""
-
-      tnames = [ "bool", "short", "int", "long" ]
-      for i in range(len(tnames)):
-         gInterpreter.LoadText(
-            "bool PyROOT_Regression_TakesRef%d(const %s& arg) { return arg; }" % (i, tnames[i]) )
-         self.assertTrue( not eval( "ROOT.PyROOT_Regression_TakesRef%d(0)" % (i,) ) )
-         self.assertTrue( eval( "ROOT.PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
-      self.assertEqual( len(tnames)-1, i )
-
-
-### nested namespace had a bug in the lookup loop ============================
-class Regression16NestedNamespace( MyTestCase ):
-   def test1NestedNamespace( self ):
-      """Test nested namespace lookup"""
-
-      gROOT.ProcessLine('#include "NestedNamespace.h"')
-      self.assertTrue( ROOT.ABCDEFG.ABCD.Nested )
 
 
 ### matrix access has to go through non-const lookup =========================
@@ -448,28 +304,6 @@ class Regression17MatrixD( MyTestCase ):
 
       m[1, 2] = 4.
       self.assertEqual( m[1][2], 4. )
-
-
-### classes weren't always classes making GetActualClass fail ================
-class Regression18FailingDowncast( MyTestCase ):
-   def test1DowncastOfInterpretedClass( self ):
-      """Auto-downcast of interpreted class"""
-
-      code = """namespace RG18 {
-class Base {
-public:
-  virtual ~Base(){}
-};
-
-class Derived : public Base {
-  virtual ~Derived() {}
-};
-
-Base* g() { return new Derived(); }
-}"""
-      gInterpreter.LoadText( code )
-
-      self.assertEqual( type(ROOT.RG18.g()), ROOT.RG18.Derived )
 
 
 ### Tests for TGL classes ================
@@ -512,23 +346,6 @@ class Regression20gEnv(MyTestCase):
       gEnv.SetValue(optname, newval)
       self.assertEqual(gEnv.GetValue(optname, defval), newval)
 
-### Reuse of Python proxies in attribute lookups ================
-class Regression21ReuseProxies(MyTestCase):
-   def test1ReuseProxies(self):
-      """Test that Python proxies are reused in attribute lookups"""
-      # ROOT-8843
-      import ROOT
-      ROOT.gInterpreter.LoadText("struct A { A* otherA=nullptr;};")
-      a1 = ROOT.A()
-      a2 = ROOT.A()
-      a1.otherA = a2
-      a3 = a1.otherA
-      self.assertEqual(a3, a2)
-      val = 4
-      a3.b = val
-      self.assertEqual(a2.b, val)
-      self.assertEqual(a1.otherA.b, val)
-
 ### Tests related to cleanup of proxied objects ================
 class Regression22ObjectCleanup(MyTestCase):
    def test1GetListOfGraphs(self):
@@ -569,160 +386,12 @@ class Regression23TFractionFitter(MyTestCase):
 
 
 class Regression24CppPythonInheritance(MyTestCase):
-   def test01DeletedCopyConstructor(self):
-      """Test that deleted base class copy constructor is not used"""
-      # ROOT-10872
-      cppyy.gbl.gInterpreter.Declare('''
-      struct NoCopy1 {
-         NoCopy1() = default;
-         NoCopy1(const NoCopy1&) = delete;
-         virtual ~NoCopy1() = default;
-      };
-
-      struct MyClass1 : NoCopy1 {};
-      ''')
-
-      class MyDerived1(cppyy.gbl.MyClass1):
-         pass
-
-   def test02MoveConstructor(self):
-      """Test that move constructor is not mistaken for copy constructor"""
-      # ROOT-10872
-      cppyy.gbl.gInterpreter.Declare('''
-      struct NoCopy2 {
-         NoCopy2() = default;
-         NoCopy2(const NoCopy2&) = delete;
-         NoCopy2(NoCopy2&&) = default;
-         virtual ~NoCopy2() = default;
-      };
-
-      struct MyClass2 : NoCopy2 {};
-      ''')
-
-      class MyDerived2(cppyy.gbl.MyClass2):
-         pass
-
-   def test03ProtectedMethod(self):
-       """Test that protected method is injected in derived class without crash"""
-       # ROOT-10872
-       ROOT.gInterpreter.Declare("""
-       class CppAlg {
-       public:
-           virtual ~CppAlg() {}
-       protected:
-           int protectedMethod() { return 1; }
-       };
-       """)
-
-       class Alg(ROOT.CppAlg): pass
-
-       a = Alg()
-       self.assertEqual(a.protectedMethod(), 1)
-
-   def test04DerivedObjectDeletion(self):
-       """Test that derived object is deleted without a crash"""
-       # ROOT-11010
-       ROOT.gInterpreter.Declare("""
-       #include <string>
-
-       class CppAlg2 {
-       public:
-           CppAlg2(std::string name) : m_name(name) {}
-           virtual ~CppAlg2() {}
-       private:
-           std::string m_name;
-       };
-       """)
-
-       class Alg2(ROOT.CppAlg2):
-           def __init__(self, name):
-               super(Alg2, self).__init__(name)
-
-       a = Alg2('MyAlg')
-       del a   # should not crash
-
-   def test05BaseAndDerivedConstruction(self):
-       """Test that creation of base class object does not interfere with creation of derived"""
-       # ROOT-10789
-       ROOT.gInterpreter.Declare("""
-       #include <string>
-
-       class CppAlg3 {
-       public:
-           CppAlg3(std::string name) : m_name(name) {}
-           virtual ~CppAlg3() {}
-           std::string m_name;
-       };
-       """)
-
-       b = ROOT.CppAlg3("MyAlgBase")
-
-       class Alg3(ROOT.CppAlg3):
-           def __init__(self, name):
-               super(Alg3, self).__init__(name)
-
-       test = 'MyAlgDerived'
-       d = Alg3(test)
-       self.assertEqual(test, d.m_name)
-
-       class Alg3_2(ROOT.CppAlg3):
-           pass
-
-       d2 = Alg3_2(test)
-       self.assertEqual(test, d2.m_name)
-
-   def test06MultiInheritance(self):
-       """Test for a Python derived class in presence of multiple inheritance in C++"""
-       # 6376
-       cppyy.gbl.gInterpreter.Declare("""
-       #include <array>
-       #include <iostream>
-
-       struct Interface1 {
-         virtual int do_1()   = 0;
-         virtual ~Interface1() = default;
-       };
-
-       struct Interface2 {
-         virtual int do_2()   = 0;
-         virtual ~Interface2() = default;
-       };
-
-       struct Base : virtual public Interface1, virtual public Interface2 {};
-
-       struct Derived : Base, virtual public Interface2 {
-         int do_1() override { return 1; }
-         int do_2() override { return 2; }
-       };
-
-       int my_func( Interface2* i ) { return i->do_2(); }
-       """)
-
-       class PyDerived(cppyy.gbl.Derived): pass
-
-       i = PyDerived()
-       self.assertEqual(i.do_1(), 1)
-       self.assertEqual(i.do_2(), 2)
-
-       # Check there is no corruption in the invocation of i->do_2() inside my_func
-       self.assertEqual(cppyy.gbl.my_func(i), 2)
-
-   def test07ConstructorDefaultArgs(self):
-       """Invocation of constructor with default arguments"""
-       # 6467
-       class MyTChain(ROOT.TChain):
-          def __init__(self, name):
-              # Invoke TChain(const char *name, const char *title="") constructor
-              super(MyTChain, self).__init__(name)
-
-       a = MyTChain("myname")
-
-       # Try also without redefining __init__
-       class MyTChain2(ROOT.TChain): pass
-
-       b = MyTChain2("myname")
-
-       self.assertEqual(a.GetName(), b.GetName())
+   # NOTE: the former tests 01-07, 09 and 10 of this class were removed: they
+   # are covered upstream in the cppyy test suite by test_crossinheritance.py
+   # (test24_non_copyable, test14_protected_access, test13_virtual_dtors_and_del,
+   # test35_deletion, test02_constructor, test19/test20 multiple inheritance,
+   # test22_multiple_inheritance_with_defaults, test30_access_and_overload,
+   # test17_deep_hierarchy, test28_cross_deep).
 
    def test08ConstructorAllDefaultPars(self):
        """Invocation of a constructor that has default values for all its parameters"""
@@ -733,67 +402,6 @@ class Regression24CppPythonInheritance(MyTestCase):
 
        window = pMainFrame(ROOT.gClient.GetRoot(), 200, 200)
 
-   def test09MultipleProtectedAndPrivateOverloads(self):
-       """Presence of multiple protected overloads of a method and both private and protected"""
-       # 6345
-
-       cppyy.gbl.gInterpreter.Declare('''
-       class MyClass6345 {
-       public:
-          virtual ~MyClass6345() {}
-       protected:
-          int foo(int)      { return 1; }
-          int foo(int, int) { return 2; }
-
-          int bar()    { return 3; }
-       private:
-          int bar(int) { return 4; }
-       };
-       ''')
-
-       class MyPyClass6345(cppyy.gbl.MyClass6345):
-          pass
-
-       a = MyPyClass6345()
-       self.assertEqual(a.foo(0), 1)
-       self.assertEqual(a.foo(0,0), 2)
-       self.assertEqual(a.bar(), 3)
-       self.assertRaises(TypeError, a.bar, 0)
-
-   def test10DeepHierarchyVirtualCall(self):
-       """Virtual call resolution in deep hierarchy (C++->Py->Py)"""
-       # 6470
-
-       cppyy.gbl.gInterpreter.Declare('''
-       class CppBase6470 {
-       public:
-          virtual ~CppBase6470() {}
-          virtual int fun1() const { return 1; }
-          virtual int fun2() const { return fun1(); }
-       };
-       ''')
-
-       CppBase = cppyy.gbl.CppBase6470
-
-       class PyA(CppBase):
-          def fun1(self): return 11
-
-       class PyB(PyA):
-          def fun1(self): return 111
-
-       class PyC(PyA):
-          pass
-
-       base = CppBase()
-       a = PyA()
-       b = PyB()
-       c = PyC()
-
-       self.assertEqual(base.fun2(), 1)
-       self.assertEqual(a.fun2(), 11)
-       self.assertEqual(b.fun2(), 111)
-       self.assertEqual(c.fun2(), 11) # PyA's fun1 should be invoked
-
    def test11MultiInheritancePyCpp(self):
        """Multiple inheritance from Python and Cpp classes"""
 
@@ -803,7 +411,7 @@ class Regression24CppPythonInheritance(MyTestCase):
        class PurePy2:
           def bar(self): return 2
 
-       cppyy.gbl.gInterpreter.Declare('''
+       cppyy.cppdef('''
        class MyCppClass11 {
        public:
           int foo() { return 3; }
@@ -914,6 +522,157 @@ class Regression27ImplicitSmartPtrOverload(MyTestCase):
         c = ROOT.regression27.Derived(123)
         self.assertEqual(ROOT.regression27.foo(ROOT.std.move(c)), 2)  # we expect the second overload
 
+class Regression28EnumResolution(MyTestCase):
+   def test01EnumResolution(self):
+      """Test that enums are correctly resolved when using an alias within a class/struct"""
+      # 9246
+      
+      cppyy.cppdef('''
+         enum Enum { a,b,c };
+         ''')
+
+      ea = cppyy.gbl.Enum.a
+      eb = cppyy.gbl.Enum.b
+      self.assertEqual(ea, 0)
+      self.assertEqual(eb, 1)
+
+      cppyy.cppdef('''
+              struct Track { using Type = Enum; };
+              ''')
+      trackea = cppyy.gbl.Track.Type.a
+      trackeb = cppyy.gbl.Track.Type.b
+
+      self.assertEqual(trackea, 0)
+      self.assertEqual(trackeb, 1)
+
+class Regression29TemplateFunctionOverloadSFINAE(MyTestCase):
+   def test01TemplateFunctionsOverloadWithSFINAE(self):
+      """Test template functions overload with SFINAE """
+      # 15085
+      
+      cppyy.cppdef('''
+#include <type_traits> 
+#include <string> 
+template <unsigned int  N>
+class A
+{
+public:
+//
+template <unsigned int K,
+typename std::enable_if<(K<N),int>::type = 0 >
+std::string fun_1 () { return "ququ" ;} 
+//
+template <unsigned int K,
+typename std::enable_if<(N<=K),int>::type = 0 >
+int         fun_1 () { return K ;} 
+};
+// the same with functions
+template <unsigned int K,unsigned int N, 
+typename std::enable_if<(K<N),int>::type = 0 >
+inline std::string fun_2 ( A<N>& ) { return "ququ" ;} 
+//
+template <unsigned int K,unsigned int N,
+typename std::enable_if<(N<=K),int>::type = 0 >
+inline int         fun_2 ( A<N>& ) { return K ;} 
+         ''')
+
+
+      output = ['ququ', 'ququ', 'ququ', 'ququ', 4, 5, 6, 7, 8]
+      N = 4 
+      a = cppyy.gbl.A [ N ]()
+
+      for k in range ( 2 * N + 1 ) : 
+         self.assertEqual(a.fun_1[k](), output[k])
+
+      for k in range( 2 * N + 1  ) :
+         func = cppyy.gbl.fun_2[k,N]
+         self.assertEqual(func(a), output[k])
+
+class Regression30TemplatedBinaryOperatorImplementations(MyTestCase):
+   def test01TemplatedBinaryOperatorImplementations(self):
+      """Test templated binary operator implementations like operator+"""
+      # 15378
+
+      cppyy.cppdef("""
+
+template<class T>
+struct Foo {
+    Foo(T v) : val{v} {}
+    T val;
+};
+
+template <class T>
+Foo<T> operator+(Foo<T> const &a, Foo<T> const &b)
+{
+   return Foo<T>{a.val + b.val};
+}
+
+      """)
+
+      klass = cppyy.gbl.Foo["int"]
+
+      a = klass(4)
+      b = klass(7)
+
+      c = a + b
+      self.assertEqual(c.val, 11)
+
+class Regression31AccessingProtectedDataMember(MyTestCase):
+   def test01AccessingProtectedDataMember(self):
+      """Test accessibility of protected data members"""
+      # 16852
+
+      cppyy.cppdef("""
+class MyBaseClass {
+public:
+   virtual ~MyBaseClass() = default;
+protected:
+   int protectedFunc() { return 5; }
+   int _protectedData = 4;
+};
+""")
+
+      class MyDerivedClass(cppyy.gbl.MyBaseClass):
+         pass
+
+      my_obj = MyDerivedClass()
+
+      self.assertEqual(my_obj.protectedFunc(), 5)
+      self.assertEqual(my_obj._protectedData, 4)  
+
+
+class Regression32StdFunctionForTemplates(MyTestCase):
+   def test01StdFunctionForTemplates(self):
+      """Test cppyy.gbl.std.function(...) for template types like std::vector<int>, ROOT::RVec<int>"""
+      # 19358
+
+      cppyy.gbl.std.function("bool(int)")
+      cppyy.gbl.std.function("bool()")
+      cppyy.gbl.std.function("bool(std::vector<int>)")
+      cppyy.gbl.std.function("bool(ROOT::RVec<int>)")
+
+class Regression33NameSpaceDroppedBinding(MyTestCase):
+   def test01NameSpaceDroppedBinding(self):
+      """Test that the namespace is not dropped in std::function cppyy binding"""
+      # 10680
+
+      cppyy.cppdef("""
+#include <functional>
+
+namespace foo {
+class Foo {
+  public:
+    Foo() : bar(0) {};
+    int bar;
+};
+}
+
+void apply(std::function<void(foo::Foo*)> f) {
+    foo::Foo x;
+    f(&x);
+}
+   """)
+      cppyy.gbl.apply(lambda x: print(x.bar))
 
 ## actual test run
 if __name__ == '__main__':

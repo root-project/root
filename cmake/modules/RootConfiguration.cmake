@@ -79,16 +79,30 @@ if(IS_ABSOLUTE ${CMAKE_INSTALL_FONTDIR})
 else()
   set(ttffontdir ${prefix}/${CMAKE_INSTALL_FONTDIR})
 endif()
-if(IS_ABSOLUTE ${CMAKE_INSTALL_JSROOTDIR})
-  set(jsrootdir ${CMAKE_INSTALL_JSROOTDIR})
+
+if(NOT "${JSROOT_CUSTOM_LOCATION}" STREQUAL "")
+  set(jsroot_config "HttpServ.JSRootPath:         ${JSROOT_CUSTOM_LOCATION}")
+elseif(IS_ABSOLUTE ${CMAKE_INSTALL_JSROOTDIR})
+  set(jsroot_config "#HttpServ.JSRootPath:         ${CMAKE_INSTALL_JSROOTDIR}")
 else()
-  set(jsrootdir ${prefix}/${CMAKE_INSTALL_JSROOTDIR})
+  set(jsroot_config "#HttpServ.JSRootPath:         ${prefix}/${CMAKE_INSTALL_JSROOTDIR}")
 endif()
+
 if(IS_ABSOLUTE ${CMAKE_INSTALL_OPENUI5DIR})
   set(openui5dir ${CMAKE_INSTALL_OPENUI5DIR})
 else()
   set(openui5dir ${prefix}/${CMAKE_INSTALL_OPENUI5DIR})
 endif()
+
+if(NOT "${OPENUI5_CUSTOM_LOCATION}" STREQUAL "")
+  set(openui5_config "WebGui.openui5src:         ${OPENUI5_CUSTOM_LOCATION}")
+elseif(IS_ABSOLUTE ${CMAKE_INSTALL_OPENUI5DIR})
+  set(openui5_config "#WebGui.openui5src:         ${CMAKE_INSTALL_OPENUI5DIR}/distribution")
+else()
+  set(openui5_config "#WebGui.openui5src:         ${prefix}/${CMAKE_INSTALL_OPENUI5DIR}/distribution")
+endif()
+
+
 if(IS_ABSOLUTE ${CMAKE_INSTALL_MACRODIR})
   set(macrodir ${CMAKE_INSTALL_MACRODIR})
 else()
@@ -161,13 +175,21 @@ set(davixlib ${DAVIX_LIBRARY})
 set(davixincdir ${DAVIX_INCLUDE_DIR})
 if(davix)
   set(hasdavix define)
-  set(useoldwebfile no)
 else()
   set(hasdavix undef)
-  set(useoldwebfile yes)
 endif()
 
-set(buildnetxng ${value${netxng}})
+set(buildnetxng ${value${xrootd}})
+
+set(buildcurl ${value${curl}})
+set(curllibdir ${CURL_LIBRARY_DIR})
+set(curllib ${CURL_LIBRARY})
+set(curlincdir ${CURL_INCLUDE_DIR})
+if(curl)
+  set(hascurl define)
+else()
+  set(hascurl undef)
+endif()
 
 set(builddcap ${value${dcap}})
 set(dcaplibdir ${DCAP_LIBRARY_DIR})
@@ -178,11 +200,6 @@ set(buildftgl ${value${builtin_ftgl}})
 set(ftgllibdir ${FTGL_LIBRARY_DIR})
 set(ftgllibs ${FTGL_LIBRARIES})
 set(ftglincdir ${FTGL_INCLUDE_DIR})
-
-set(buildglew ${value${builtin_glew}})
-set(glewlibdir ${GLEW_LIBRARY_DIR})
-set(glewlibs ${GLEW_LIBRARIES})
-set(glewincdir ${GLEW_INCLUDE_DIR})
 
 set(buildarrow ${value${arrow}})
 set(arrowlibdir ${ARROW_LIBRARY_DIR})
@@ -252,7 +269,6 @@ set(gsllibdir)
 set(gslincdir ${GSL_INCLUDE_DIR})
 set(gslflags)
 
-set(shadowpw ${value${shadowpw}})
 set(buildmathmore ${value${mathmore}})
 set(buildroofit ${value${roofit}})
 set(buildunuran ${value${unuran}})
@@ -365,20 +381,20 @@ if(cocoa)
 else()
   set(hascocoa undef)
 endif()
-if(vc)
-  set(hasvc define)
-else()
-  set(hasvc undef)
-endif()
 if(vdt)
   set(hasvdt define)
 else()
   set(hasvdt undef)
 endif()
-if(veccore)
-  set(hasveccore define)
+if(ROOT_HAVE_EXPERIMENTAL_SIMD)
+  set(hasstdexperimentalsimd define)
 else()
-  set(hasveccore undef)
+  set(hasstdexperimentalsimd undef)
+endif()
+if(ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI)
+  set(experimentalsimdpinavxabi define)
+else()
+  set(experimentalsimdpinavxabi undef)
 endif()
 if(dataframe)
   set(hasdataframe define)
@@ -396,18 +412,10 @@ else()
   set(hasroot7 undef)
 endif()
 
-set(uselz4 undef)
-set(usezlib undef)
-set(uselzma undef)
-set(usezstd undef)
-set(use${compression_default} define)
-
-# cloudflare zlib is available only on x86 and aarch64 platforms with Linux
-# for other platforms we have available builtin zlib 1.2.8
-if(builtin_zlib AND ZLIB_CF)
-  set(usecloudflarezlib define)
+if(ZLIB_NG)
+  set(usezlibng define)
 else()
-  set(usecloudflarezlib undef)
+  set(usezlibng undef)
 endif()
 if(runtime_cxxmodules)
   set(usecxxmodules define)
@@ -439,31 +447,20 @@ if(qt6web)
 else()
   set(hasqt6webengine undef)
 endif()
-if (tmva-cpu)
-  set(hastmvacpu define)
-else()
-  set(hastmvacpu undef)
-endif()
-if (tmva-gpu)
-  set(hastmvagpu define)
-else()
-  set(hastmvagpu undef)
-endif()
-if (tmva-cudnn)
-   set(hastmvacudnn define)
-else()
-   set(hastmvacudnn undef)
-endif()
-if (tmva-pymva)
-  set(haspymva define)
-else()
-  set(haspymva undef)
-endif()
-if (tmva-rmva)
-  set(hasrmva define)
-else()
-  set(hasrmva undef)
-endif()
+set(hastmvacpu undef)
+set(hastmvagpu undef)
+set(hastmvacudnn undef)
+if(tmva)
+  if (tmva-cpu)
+    set(hastmvacpu define)
+  endif()
+  if (tmva-gpu)
+    set(hastmvagpu define)
+  endif()
+  if (tmva-cudnn)
+     set(hastmvacudnn define)
+  endif()
+endif(tmva)
 if (uring)
   set(hasuring define)
 else()
@@ -497,7 +494,8 @@ endif()
 # The hardware interference size must be stable across all TUs in a ROOT build, so we need to save it in RConfigure.hxx
 # Since it can vary for different compilers or tune settings, we cannot base the ABI on a value that might change,
 # even be different between compiler and interpreter, or when ROOT is compiled on a different machine.
-if(CMAKE_VERSION VERSION_GREATER 3.24) # For older CMake, we simply fall back to 64
+# For older CMake and when cross compiling, we simply fall back to 64
+if(CMAKE_VERSION VERSION_GREATER 3.24 AND NOT CMAKE_CROSSCOMPILING)
 set(test_interference_size "
 #include <new>
 #include <iostream>
@@ -558,6 +556,19 @@ endif()
 string(REGEX MATCH "__cplusplus[=| ]([0-9]+)" __cplusplus "${__cplusplus_PPout}")
 set(__cplusplus ${CMAKE_MATCH_1}L)
 
+# To mark the build tree. Important for automatic resolution of relative paths,
+# for example to the include directory. Use custom target to ensure re-creation
+# when someone deletes the marker.
+set(build_tree_marker "${localruntimedir}/root-build-tree-marker")
+add_custom_command(
+  OUTPUT "${build_tree_marker}"
+  COMMAND ${CMAKE_COMMAND} -E touch "${build_tree_marker}"
+  COMMENT "Ensuring that \"${build_tree_marker}\" exists"
+)
+add_custom_target(ensure_build_tree_marker ALL
+  DEPENDS "${build_tree_marker}"
+)
+
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
@@ -565,14 +576,10 @@ install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INST
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/system.rootrc @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
 
 # file used in TROOT.cxx, not need in include/ dir and not need to install
 configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in ginclude/RConfigOptions.h NEWLINE_STYLE UNIX)
 
-configure_file(${CMAKE_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/mimes.unix.in ${CMAKE_BINARY_DIR}/etc/root.mimes NEWLINE_STYLE UNIX)
 # We need to have class.rules during configuration time to avoid silent error during generation of dictionary:
 # Error in <TClass::ReadRules()>: Cannot find rules
@@ -711,19 +718,17 @@ else()
   # Needed by ACLIC, while in ROOT we are using everywhere C++ standard via CMake features that are requested to build target
   set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
   if(asan)
-    # Replace the semicolon with space so that the produced compiler invokation still makes sense
-    string (REPLACE ";" " " ASAN_EXTRA_CXX_FLAGS_STR "${ASAN_EXTRA_CXX_FLAGS}")
-    set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS_STR}")
+    set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS}")
   endif()
   if(ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES)
     # Only set the compiledata parameter if the CMake variable is 'true'
     set(local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES ${ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES})
   endif()
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
+  execute_process(COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
-        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}"
+        "${libdir}" "-lCore" "-lRint" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}"
         "${local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES}")
 endif()
 
@@ -800,8 +805,6 @@ install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigOptions.h
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
-              ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
-              ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
 endfunction()

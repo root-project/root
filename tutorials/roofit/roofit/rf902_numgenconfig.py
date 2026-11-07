@@ -28,7 +28,7 @@ model = ROOT.RooChebychev("model", "model", x, [0.0, 0.5, -0.1])
 ROOT.RooAbsPdf.defaultGeneratorConfig().method1D(False, False).setLabel("RooAcceptReject")
 
 # Generate 10Kevt using ROOT.RooAcceptReject
-data_ar = model.generate({x}, 10000, Verbose=True)
+data_ar = model.generate(x, 10000, Verbose=True)
 data_ar.Print()
 
 # Adjusting default config for a specific pdf
@@ -53,5 +53,5 @@ model.specialGeneratorConfig().getConfigSection("RooFoamGenerator").setRealValue
 
 # Generate 10Kevt using ROOT.RooFoamGenerator (FOAM verbosity increased
 # with above chatLevel adjustment for illustration purposes)
-data_foam = model.generate({x}, 10000, Verbose=True)
+data_foam = model.generate(x, 10000, Verbose=True)
 data_foam.Print()

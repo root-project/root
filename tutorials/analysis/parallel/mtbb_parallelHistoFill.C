@@ -14,7 +14,7 @@ const UInt_t poolSize = 4U;
 
 Int_t mtbb_parallelHistoFill()
 {
-   TH1::AddDirectory(false);
+   TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
    ROOT::TThreadExecutor pool(poolSize);
    auto fillRandomHisto = [](int seed = 0) {
       TRandom3 rndm(seed);

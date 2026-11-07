@@ -42,7 +42,7 @@ public:
 class Batches {
 public:
    Batch *args = nullptr;
-   double *extra;
+   double *extra = nullptr;
    std::size_t nEvents = 0;
    std::size_t nBatches = 0;
    std::size_t nExtra = 0;

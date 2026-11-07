@@ -33,33 +33,35 @@ in the constant status etc is forwarded to MINUIT prior to
 execution of the MINUIT call. Afterwards the RooFit objects
 are resynchronized with the output state of MINUIT: changes
 parameter values, errors are propagated.
-Various methods are available to control verbosity, profiling,
-automatic PDF optimization.
+Various methods are available to control verbosity or profiling.
 **/
 
 #include "RooMinimizer.h"
 
 #include "RooAbsMinimizerFcn.h"
-#include "RooArgSet.h"
-#include "RooArgList.h"
 #include "RooAbsReal.h"
-#include "RooDataSet.h"
-#include "RooRealVar.h"
-#include "RooSentinel.h"
-#include "RooMsgService.h"
+#include "RooArgList.h"
+#include "RooArgSet.h"
 #include "RooCategory.h"
-#include "RooMultiPdf.h"
-#include "RooPlot.h"
-#include "RooHelpers.h"
-#include "RooMinimizerFcn.h"
-#include "RooFitResult.h"
+#include "RooDataSet.h"
+#include "RooEvaluatorWrapper.h"
 #include "RooFit/TestStatistics/RooAbsL.h"
 #include "RooFit/TestStatistics/RooRealL.h"
+#include "RooFitResult.h"
+#include "RooHelpers.h"
+#include "RooMinimizerFcn.h"
+#include "RooMsgService.h"
+#include "RooMultiPdf.h"
+#include "RooPlot.h"
+#include "RooRealVar.h"
+#include "RooSentinel.h"
 #ifdef ROOFIT_MULTIPROCESS
 #include "TestStatistics/MinuitFcnGrad.h"
 #include "RooFit/MultiProcess/Config.h"
 #include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
+
+#include "RooFitImplHelpers.h"
 
 #include <Fit/BasicFCN.h>
 #include <Math/Minimizer.h>
@@ -120,6 +122,22 @@ void reorderCombinations(std::vector<std::vector<int>> &combos, const std::vecto
    }
 }
 
+// The RooEvaluatorWrapper uses its own logic to decide what needs to be
+// re-evaluated. We can therefore disable the regular dirty state propagation
+// temporarily during minimization. However, some RooAbsArgs shared with other
+// regular RooFit computation graphs outside the minimized likelihood, so we
+// have to make sure that the operation mode is reset after the minimization.
+//
+// This should be called before running any routine via the _minimizer data
+// member. The RAII object should only be destructed after the routine is done.
+std::unique_ptr<ChangeOperModeRAII> setOperModesDirty(RooAbsReal &function)
+{
+   if (auto *wrapper = dynamic_cast<RooFit::Experimental::RooEvaluatorWrapper *>(&function)) {
+      return wrapper->setOperModes(RooAbsArg::ADirty);
+   }
+   return {};
+}
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +153,7 @@ void reorderCombinations(std::vector<std::vector<int>> &combos, const std::vecto
 /// value of the input function.
 
 /// Constructor that accepts all configuration in struct with RooAbsReal likelihood
-RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
+RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _function{function}, _cfg(cfg)
 {
    initMinimizerFirstPart();
    auto nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(&function);
@@ -163,8 +181,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
             RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
 #else
          throw std::logic_error(
-            "Parallel minimization requested, but ROOT was not compiled with multiprocessing enabled, "
-            "please recompile with -Droofit_multiprocess=ON for parallel evaluation");
+            "Parallel minimization requested, but multiprocessing is not supported on this platform");
 #endif
       } else { // modular test statistic non parallel
          coutW(InputArguments)
@@ -187,7 +204,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
       _fcn = std::make_unique<RooMinimizerFcn>(&function, this);
    }
    initMinimizerFcnDependentPart(function.defaultErrorLevel());
-};
+}
 
 /// Initialize the part of the minimizer that is independent of the function to be minimized
 void RooMinimizer::initMinimizerFirstPart()
@@ -337,9 +354,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 #ifdef ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
 #else
-      throw std::logic_error("ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
-                             "please recompile with -Droofit_multiprocess=ON for logging with the "
-                             "ProcessTimer.");
+      throw std::logic_error("ProcessTimer requested, but multiprocessing is not supported on this platform.");
 #endif
    }
    _fcn->Synchronize(_config.ParamsSettings());
@@ -539,13 +554,11 @@ int RooMinimizer::getPrintLevel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If flag is true, perform constant term optimization on
-/// function being minimized.
+/// \deprecated Has no effect anymore. Functionality was removed in ROOT 6.42,
+/// and this function is kept as an empty shell that does nothing (for API
+/// compatibility between different ROOT versions).
 
-void RooMinimizer::optimizeConst(int flag)
-{
-   _fcn->setOptimizeConst(flag);
-}
+void RooMinimizer::optimizeConst(int /*flag*/) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save and return a RooFitResult snapshot of current minimizer status.
@@ -689,6 +702,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    n[4] = n5;
    n[5] = n6;
 
+   auto operModeRAII = setOperModesDirty(_function);
    for (int ic = 0; ic < 6; ic++) {
       if (n[ic] > 0) {
 
@@ -903,6 +917,8 @@ bool RooMinimizer::fitFCN()
    // fit a user provided FCN function
    // create fit parameter settings
 
+   auto operModeRAII = setOperModesDirty(_function);
+
    // Check number of parameters
    unsigned int npar = getNPar();
    if (npar == 0) {
@@ -1042,6 +1058,8 @@ bool RooMinimizer::calculateHessErrors()
    // compute the Hesse errors according to configuration
    // set in the parameters and append value in fit result
 
+   auto operModeRAII = setOperModesDirty(_function);
+
    // update  minimizer (recreate if not done or if name has changed
    if (!updateMinimizerOptions()) {
       coutE(Minimization) << "RooMinimizer::calculateHessErrors() Error re-initializing the minimizer" << std::endl;
@@ -1075,6 +1093,8 @@ bool RooMinimizer::calculateMinosErrors()
    // normally Minos errors are computed just after the minimization
    // (in DoMinimization) aftewr minimizing if the
    //  FitConfig::MinosErrors() flag is set
+
+   auto operModeRAII = setOperModesDirty(_function);
 
    // update  minimizer (but cannot re-create in this case). Must use an existing one
    if (!updateMinimizerOptions(false)) {
@@ -1128,7 +1148,7 @@ bool RooMinimizer::calculateMinosErrors()
 void RooMinimizer::initMinimizer()
 {
    _minimizer = std::unique_ptr<ROOT::Math::Minimizer>(_config.CreateMinimizer());
-   _fcn->initMinimizer(*_minimizer);
+   _fcn->initMinimizer(*_minimizer, this);
    _minimizer->SetVariables(_config.ParamsSettings().begin(), _config.ParamsSettings().end());
 
    if (_cfg.setInitialCovariance) {

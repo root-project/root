@@ -83,7 +83,7 @@ public:
    std::TEST_SET<std::string>         fString;
    std::TEST_SET<std::string*, PtrCmp<std::string> >        fPtrString;
 #if defined(R__NO_NESTED_CONST_STRING)
-   std::TEST_SET<const std::string*, PtrCmp<const std::string> >  fPtrConstString; //!  this version of ROOT does not support nested const string
+   std::TEST_SET<const std::string*, PtrCmp<const std::string> >  fPtrConstString; ///<!  this version of ROOT does not support nested const string
 #else
    std::TEST_SET<const std::string*, PtrCmp<const std::string> >  fPtrConstString;
 #endif
@@ -103,10 +103,10 @@ public:
 
 
 #if defined(R__NO_NESTED_CONTAINER)
-   std::TEST_SET<std::TEST_SET<Helper > > fNested;  //! this version of ROOT does not support nested container
-   std::TEST_SET<std::TEST_SET<Helper > >*fNestedPtr;//! this version of ROOT does not support nested container
-   std::TEST_SET<std::vector<Helper > >   fNestedV; //!
-   std::TEST_SET<std::deque<Helper > >    fNestedD; //!
+   std::TEST_SET<std::TEST_SET<Helper > > fNested;  ///<! this version of ROOT does not support nested container
+   std::TEST_SET<std::TEST_SET<Helper > >*fNestedPtr;///<! this version of ROOT does not support nested container
+   std::TEST_SET<std::vector<Helper > >   fNestedV; ///<!
+   std::TEST_SET<std::deque<Helper > >    fNestedD; ///<!
 #else
    std::TEST_SET<std::TEST_SET<Helper > > fNested;  //
    std::TEST_SET<std::TEST_SET<Helper > >*fNestedPtr;  //

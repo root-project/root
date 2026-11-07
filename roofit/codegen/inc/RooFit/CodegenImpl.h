@@ -25,8 +25,8 @@ class RooAddPdf;
 class RooAddition;
 class RooBernstein;
 class RooBifurGauss;
-class RooCategory;
 class RooCBShape;
+class RooCategory;
 class RooChebychev;
 class RooConstVar;
 class RooConstraintSum;
@@ -35,6 +35,10 @@ class RooEfficiency;
 class RooExponential;
 class RooExtendPdf;
 class RooFormulaVar;
+class RooFunctor1DBinding;
+class RooFunctor1DPdfBinding;
+class RooFunctorBinding;
+class RooFunctorPdfBinding;
 class RooGamma;
 class RooGaussian;
 class RooGenericPdf;
@@ -42,7 +46,9 @@ class RooHistFunc;
 class RooHistPdf;
 class RooLandau;
 class RooLognormal;
+class RooMultiPdf;
 class RooMultiVarGaussian;
+class RooONNXFunc;
 class RooParamHistFunc;
 class RooPoisson;
 class RooPolyVar;
@@ -54,8 +60,8 @@ class RooRealSumFunc;
 class RooRealSumPdf;
 class RooRealVar;
 class RooRecursiveFraction;
+class RooSimultaneous;
 class RooUniform;
-class RooMultiPdf;
 class RooWrapperPdf;
 
 namespace RooStats {
@@ -96,6 +102,10 @@ void codegenImpl(RooEfficiency &arg, CodegenContext &ctx);
 void codegenImpl(RooExponential &arg, CodegenContext &ctx);
 void codegenImpl(RooExtendPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooFormulaVar &arg, CodegenContext &ctx);
+void codegenImpl(RooFunctor1DBinding &arg, CodegenContext &ctx);
+void codegenImpl(RooFunctor1DPdfBinding &arg, CodegenContext &ctx);
+void codegenImpl(RooFunctorBinding &arg, CodegenContext &ctx);
+void codegenImpl(RooFunctorPdfBinding &arg, CodegenContext &ctx);
 void codegenImpl(RooGamma &arg, CodegenContext &ctx);
 void codegenImpl(RooGaussian &arg, CodegenContext &ctx);
 void codegenImpl(RooGenericPdf &arg, CodegenContext &ctx);
@@ -103,12 +113,26 @@ void codegenImpl(RooHistFunc &arg, CodegenContext &ctx);
 void codegenImpl(RooHistPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooLandau &arg, CodegenContext &ctx);
 void codegenImpl(RooLognormal &arg, CodegenContext &ctx);
+void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooMultiVarGaussian &arg, CodegenContext &ctx);
+void codegenImpl(RooONNXFunc &arg, CodegenContext &ctx);
+// Support for the deprecated RooParamHistFunc, to be removed in ROOT 6.46
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 void codegenImpl(RooPoisson &arg, CodegenContext &ctx);
 void codegenImpl(RooPolyVar &arg, CodegenContext &ctx);
 void codegenImpl(RooPolynomial &arg, CodegenContext &ctx);
-void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooProduct &arg, CodegenContext &ctx);
 void codegenImpl(RooRatio &arg, CodegenContext &ctx);
 void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx);
@@ -116,6 +140,7 @@ void codegenImpl(RooRealSumFunc &arg, CodegenContext &ctx);
 void codegenImpl(RooRealSumPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooRealVar &arg, CodegenContext &ctx);
 void codegenImpl(RooRecursiveFraction &arg, CodegenContext &ctx);
+void codegenImpl(RooSimultaneous &arg, CodegenContext &ctx);
 void codegenImpl(RooStats::HistFactory::FlexibleInterpVar &arg, CodegenContext &ctx);
 void codegenImpl(RooUniform &arg, CodegenContext &ctx);
 void codegenImpl(RooWrapperPdf &arg, CodegenContext &ctx);

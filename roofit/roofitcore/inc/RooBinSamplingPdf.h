@@ -24,6 +24,7 @@
 #include "Math/Integrator.h"
 
 #include <memory>
+#include <string>
 
 class RooBinSamplingPdf : public RooAbsPdf {
 public:
@@ -122,6 +123,7 @@ private:
   // Call operator for our internal integrator.
   double operator()(double x) const;
   double integrate(const RooArgSet* normSet, double low, double high) const;
+  void initializeAnalyticalIntegral(const RooArgSet* normSet) const;
 
 
   RooTemplateProxy<RooAbsPdf> _pdf;
@@ -130,6 +132,8 @@ private:
 
   mutable std::unique_ptr<ROOT::Math::IntegratorOneDim> _integrator{nullptr}; ///<! Integrator used to sample bins.
   mutable std::vector<double> _binBoundaries; ///<! Workspace to store data for bin sampling
+  mutable Int_t _analyticalIntegralCode{-1}; ///<! Analytical integral code of the wrapped pdf over the observable (-1: not yet determined, 0: none).
+  mutable std::string _analyticalIntegralRangeName; ///<! Name of the range used for the per-bin analytical integration.
 
   ClassDefOverride(RooBinSamplingPdf,1)
 };

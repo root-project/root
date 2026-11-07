@@ -208,10 +208,10 @@ int TMapFileTestWrite(int maxiterations = 1000000)
 
    TString cmd;
 #if defined(__ACLIC__)
-   cmd.Form("rootn.exe -e \".L TMapFileTest.C\" -e \"reader(%d);\" -b -l -q",
+   cmd.Form("rootn.exe -e \".L TMapFileTest.C\" -e \"reader(%d);\" -b -q",
             maxiterations);
 #elif defined(__CLING__)
-   cmd.Form("rootn.exe -e \".L TMapFileTest.C\" -e \"reader(%d);\" -b -l -q",
+   cmd.Form("rootn.exe -e \".L TMapFileTest.C\" -e \"reader(%d);\" -b -q",
             maxiterations);
 #else
    cmd.Form("%s read %d", gExecLocation.Data(), maxiterations);
@@ -238,10 +238,10 @@ int TMapFileTest(int maxiterations = 1000000)
 
    TString cmd;
 #if defined(__ACLIC__)
-   cmd.Form("rootn.exe -e \".L TMapFileTest.C+\" -e \"writer(%d);\" -b -l -q",
+   cmd.Form("rootn.exe -e \".L TMapFileTest.C+\" -e \"writer(%d);\" -b -q",
             maxiterations);
 #elif defined(__CLING__)
-   cmd.Form("rootn.exe -e \".L TMapFileTest.C\" -e \"writer(%d);\" -b -l -q",
+   cmd.Form("rootn.exe -e \".L TMapFileTest.C\" -e \"writer(%d);\" -b -q",
             maxiterations);
 #else
    cmd.Form("%s write %d", gExecLocation.Data(), maxiterations);

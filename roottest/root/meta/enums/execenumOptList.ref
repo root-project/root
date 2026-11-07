@@ -1,0 +1,13 @@
+Processing execenumOptList.C...
+List of values in enum TAttImage::EImageQuality
+    name kImgDefault   value -1
+    name kImgPoor   value 0
+    name kImgFast   value 1
+    name kImgGood   value 2
+    name kImgBest   value 3
+List of options for TAttImage::fImageQuality member
+    name Default label kImgDefault value -1
+    name Poor label kImgPoor value 0
+    name Fast label kImgFast value 1
+    name Good label kImgGood value 2
+    name Best label kImgBest value 3

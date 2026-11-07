@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleTypes.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 
@@ -22,6 +21,8 @@
 #include <ostream>
 #include <type_traits>
 #include <variant>
+
+class TDirectory; // For RNTupleInputSpec
 
 namespace ROOT {
 
@@ -113,9 +114,6 @@ enum class ENTupleStructure : std::uint16_t {
    kVariant,
    kStreamer,
    kUnknown,
-
-   // for backwards compatibility
-   kLeaf R__DEPRECATED(6, 42, "use instead ROOT::ENTupleStructure::kPlain") = kPlain
 };
 
 inline std::ostream &operator<<(std::ostream &os, ENTupleStructure structure)
@@ -206,10 +204,60 @@ public:
    std::uint64_t GetLocation() const { return fLocation; }
 };
 
+/// RNTupleLocator payload for the kTypeMulti locator (type 0x03). Used by storage
+/// backends that pack multiple pages into shared objects (e.g., S3 Mode A). The two
+/// 32-bit fields are written to disk as separate integers, so the on-disk layout is
+/// directly interpretable without any bit unpacking.
+class RNTupleLocatorMulti {
+private:
+   std::uint32_t fObjectId = 0;
+   std::uint32_t fOffset = 0;
+
+public:
+   RNTupleLocatorMulti() = default;
+   RNTupleLocatorMulti(std::uint32_t objectId, std::uint32_t offset) : fObjectId(objectId), fOffset(offset) {}
+
+   bool operator==(const RNTupleLocatorMulti &other) const
+   {
+      return fObjectId == other.fObjectId && fOffset == other.fOffset;
+   }
+
+   std::uint32_t GetObjectId() const { return fObjectId; }
+   std::uint32_t GetOffset() const { return fOffset; }
+};
+
+// Workaround missing return type overloading
+class RNTupleLocator;
+namespace Internal {
+template <typename T>
+struct RNTupleLocatorHelper;
+
+template <>
+struct RNTupleLocatorHelper<std::uint64_t> {
+   static std::uint64_t Get(const RNTupleLocator &loc);
+};
+
+template <>
+struct RNTupleLocatorHelper<RNTupleLocatorObject64> {
+   static RNTupleLocatorObject64 Get(const RNTupleLocator &loc);
+};
+
+template <>
+struct RNTupleLocatorHelper<RNTupleLocatorMulti> {
+   static RNTupleLocatorMulti Get(const RNTupleLocator &loc);
+};
+} // namespace Internal
+
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
-/// for a local file `fPosition` might be a 64bit file offset. Referenced objects on storage can be compressed
+/// for a local file `fPosition` is a 64bit file offset. Referenced objects on storage can be compressed
 /// and therefore we need to store their actual size.
+/// Note that we use a representation optimized for memory consumption that slightly differs from the on-disk
+/// representation.
 class RNTupleLocator {
+   friend struct Internal::RNTupleLocatorHelper<std::uint64_t>;
+   friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorObject64>;
+   friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorMulti>;
+
 public:
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
    /// `doc/BinaryFormatSpecification.md` for details
@@ -217,7 +265,9 @@ public:
       // The kTypeFile locator may translate to an on-disk standard locator (type 0x00) or a large locator (type 0x01),
       // if the size of the referenced data block is >2GB
       kTypeFile = 0x00,
-      kTypeDAOS = 0x02,
+      // The following locators are experimental and are not defined in the binary format specification.
+      kTypeObject64 = 0x02,
+      kTypeMulti = 0x03,
 
       kLastSerializableType = 0x7f,
       kTypePageZero = kLastSerializableType + 1,
@@ -225,46 +275,95 @@ public:
    };
 
 private:
-   std::uint64_t fNBytesOnStorage = 0;
-   /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
-   /// `fPosition.index()` > 0
-   std::variant<std::uint64_t, RNTupleLocatorObject64> fPosition{};
-   /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
-   /// if the payload structure is identical.
-   ELocatorType fType = kTypeFile;
-   /// Reserved for use by concrete storage backends
-   std::uint8_t fReserved = 0;
+   /// The 4 most significant bits of fFlagsAndNBytes carry the locator type (3 bits)
+   /// plus one bit for a reserved bit of an extended locator.
+   static constexpr std::uint64_t kMaskFlags = 0x0FULL << 60;
+   static constexpr std::uint64_t kMaskType = 0x07ULL << 61;
+   static constexpr std::uint64_t kMaskReservedBit = 1ull << 60;
+
+   /// To save memory, we use the most significant bits to store the locator type (file, Object64, zero page,
+   /// unkown, kTestLocatorType) as well as one "reserved bit" that can be used in future locators.
+   /// Consequently, we can only store sizes up to 60 bits (1 EB), which in practice won't be an issue.
+   std::uint64_t fFlagsAndNBytes = 0;
+   /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`;
+   /// Object store locators use RNTupleLocatorObject64 but can still use the same 64 bit int for information storage.
+   std::uint64_t fPosition = 0;
 
 public:
    RNTupleLocator() = default;
 
    bool operator==(const RNTupleLocator &other) const
    {
-      return fPosition == other.fPosition && fNBytesOnStorage == other.fNBytesOnStorage && fType == other.fType;
+      return fPosition == other.fPosition && fFlagsAndNBytes == other.fFlagsAndNBytes;
    }
 
-   std::uint64_t GetNBytesOnStorage() const { return fNBytesOnStorage; }
-   ELocatorType GetType() const { return fType; }
-   std::uint8_t GetReserved() const { return fReserved; }
+   std::uint64_t GetNBytesOnStorage() const { return fFlagsAndNBytes & ~kMaskFlags; }
+   /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
+   /// if the payload structure is identical.
+   ELocatorType GetType() const;
+   /// We currently only support one of the 8 available reserved bits (none are used so far).
+   std::uint8_t GetReserved() const { return (fFlagsAndNBytes & kMaskReservedBit) > 0; }
 
-   void SetNBytesOnStorage(std::uint64_t nBytesOnStorage) { fNBytesOnStorage = nBytesOnStorage; }
-   void SetType(ELocatorType type) { fType = type; }
-   void SetReserved(std::uint8_t reserved) { fReserved = reserved; }
+   void SetNBytesOnStorage(std::uint64_t nBytesOnStorage);
+   void SetType(ELocatorType type);
+   void SetReserved(std::uint8_t reserved);
+
+   /// Note that for GetPosition() / SetPosition(), the locator type must correspond
+   /// (kTypeFile, kTypeObject64, ...).
 
    template <typename T>
    T GetPosition() const
    {
-      return std::get<T>(fPosition);
+      return Internal::RNTupleLocatorHelper<T>::Get(*this);
    }
 
-   template <typename T>
-   void SetPosition(T position)
-   {
-      fPosition = position;
-   }
+   void SetPosition(std::uint64_t position);
+   void SetPosition(RNTupleLocatorObject64 position);
+   void SetPosition(RNTupleLocatorMulti position);
 };
 
 namespace Internal {
+class RPageSource; // For RNTupleInputSpec
+}
+
+// clang-format off
+   /**
+   \class ROOT::Experimental::RNTupleInputSpec
+   \ingroup NTuple
+   \brief Specification of the name and location of an RNTuple, used for creating a new RNTupleProcessor.
+
+   An RNTupleInputSpec can be created by providing either a string with a path to the ROOT file or a pointer to the
+   TDirectory (or any of its subclasses) that contains the RNTuple.
+
+   Note that the RNTupleInputSpec is *write-only*, to prevent usability issues with Python.
+   */
+// clang-format on
+class RNTupleInputSpec {
+   friend class RNTupleProcessor;
+   friend class RNTupleSingleProcessor;
+
+public:
+   using Storage_t = std::variant<std::string, TDirectory *>;
+
+private:
+   std::string fNTupleName;
+   Storage_t fStorage;
+
+public:
+   RNTupleInputSpec(std::string_view n, TDirectory *s) : fNTupleName(n), fStorage(s) {}
+   RNTupleInputSpec(std::string_view n, const std::string &s) : fNTupleName(n), fStorage(s) {}
+
+   const std::string &GetNTupleName() const { return fNTupleName; }
+   const Storage_t &GetStorage() const { return fStorage; }
+};
+
+namespace Internal {
+
+struct RNTupleLink {
+   RNTupleLocator fLocator;
+   /// Uncompressed length of the anchor, including the checksum.
+   std::uint32_t fLength = 0;
+};
 
 /// The in-memory representation of a 32bit or 64bit on-disk index column. Wraps the integer in a
 /// named type so that templates can distinguish between integer data columns and index columns.

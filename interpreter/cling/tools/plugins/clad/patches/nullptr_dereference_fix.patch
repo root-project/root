@@ -1,0 +1,86 @@
+From f5cd601b747fe79de03884f08d1e8f339da8a524 Mon Sep 17 00:00:00 2001
+From: SahilPatidar <sahilpatidar60@gmail.com>
+Date: Sun, 5 Jul 2026 11:09:41 +0530
+Subject: [PATCH] Fix nullptr dereference introduced by #1819 (#1864)
+
+* Fix nullptr dereference introduced by #1819
+
+* fix clang-tidy warning
+
+* Add condition check around m_Multiplexer usage instead of assigning an empty Multiplexer, because Cling assumes m_Multiplexer == nullptr
+
+* Refactor
+
+* Add the check in shouldSkipFunctionBody
+---
+ tools/ClangPlugin.cpp | 9 +++++++--
+ tools/ClangPlugin.h   | 5 +++--
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/tools/ClangPlugin.cpp b/tools/ClangPlugin.cpp
+index 77680dd9..a6a8142a 100644
+--- a/tools/ClangPlugin.cpp
++++ b/tools/ClangPlugin.cpp
+@@ -182,6 +182,7 @@ void InitTimers();
+       auto& MultiplexC = cast<MultiplexConsumer>(m_CI.getASTConsumer());
+       auto& RobbedCs = ACCESS(MultiplexC, Consumers);
+       assert(RobbedCs.back().get() == this && "Clad is not the last consumer");
++
+       const auto& Macros = m_CI.getPreprocessorOpts().Macros;
+       const bool IsCling = llvm::any_of(
+           Macros, [](const auto& Macro) { return Macro.first == "__CLING__"; });
+@@ -477,6 +478,8 @@ void InitTimers();
+     }
+ 
+     void CladPlugin::SendToMultiplexer() {
++      if (!m_Multiplexer)
++        return;
+       for (unsigned i = m_MultiplexerProcessedDelayedCallsIdx;
+            i < m_DelayedCalls.size(); ++i) {
+         auto DelayedCall = m_DelayedCalls[i];
+@@ -653,7 +656,8 @@ void InitTimers();
+         FinalizeTranslationUnit();
+         SendToMultiplexer();
+       }
+-      m_Multiplexer->HandleTranslationUnit(C);
++      if (m_Multiplexer)
++        m_Multiplexer->HandleTranslationUnit(C);
+     }
+ 
+     void CladPlugin::PrintStats() {
+@@ -712,7 +716,8 @@ void InitTimers();
+         llvm::errs() << "\n";
+       }
+ 
+-      m_Multiplexer->PrintStats();
++      if (m_Multiplexer)
++        m_Multiplexer->PrintStats();
+     }
+ 
+   } // end namespace plugin
+diff --git a/tools/ClangPlugin.h b/tools/ClangPlugin.h
+index ffaaeaf8..53b4bf69 100644
+--- a/tools/ClangPlugin.h
++++ b/tools/ClangPlugin.h
+@@ -229,7 +229,7 @@ struct DifferentiationOptions {
+     void PrintStats() override;
+ 
+     bool shouldSkipFunctionBody(clang::Decl* D) override {
+-      return m_Multiplexer->shouldSkipFunctionBody(D);
++      return m_Multiplexer ? m_Multiplexer->shouldSkipFunctionBody(D) : true;
+     }
+ 
+     // SemaConsumer
+@@ -243,7 +243,8 @@ struct DifferentiationOptions {
+     void ForgetSema() override {
+       // ForgetSema is called in the destructor of Sema which is much later
+       // than where we can process anything. We can't delay this call.
+-      m_Multiplexer->ForgetSema();
++      if (m_Multiplexer)
++        m_Multiplexer->ForgetSema();
+     }
+ 
+     // FIXME: We should hide ProcessDiffRequest when we implement proper
+-- 
+2.54.0
+

@@ -2,15 +2,7 @@
 # FIXME: it will be nice to move roottest-treeformula-event to CMake and add it as dependency
 # To fix runtime_cxxmodules, we need to use already build artefacts.
 
-if(MSVC)
-   if(CMAKE_GENERATOR MATCHES Ninja)
-      set(test_bin_dir "${ROOTSYS}/test")
-   else()
-      set(test_bin_dir "${ROOTSYS}/test/$<CONFIG>")
-   endif()
-else()
-   set(test_bin_dir "${CMAKE_BINARY_DIR}/test")
-endif()
+set(test_bin_dir "${CMAKE_BINARY_DIR}/test")
 
 ROOTTEST_ADD_TEST(hsimple-create
                   MACRO ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C
@@ -48,25 +40,17 @@ ROOTTEST_ADD_TEST(runtreeCloneTest2
                   OUTCNVCMD grep -v Adding
                   OUTREF references/treeCloneTest2.ref)
 
-if(${compression_default} STREQUAL "lz4")
+if(ZLIB_NG)
   if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
-    set(_ref references/exectrimLZ4.ref)
+    set(_ref references/exectrimZLIB_ng.ref)
   else()
-    set(_ref references/exectrimLZ4_i686.ref)
+    set(_ref references/exectrimZLIB_ng_i686.ref)
   endif()
-elseif(${compression_default} STREQUAL "zlib")
-  if(ZLIB_CF)
-    if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
-      set(_ref references/exectrimZLIB_builtinzlib.ref)
-    else()
-	set(_ref references/exectrimZLIB_builtinzlib_i686.ref)
-    endif()
+else()
+  if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
+    set(_ref references/exectrimZLIB.ref)
   else()
-    if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
-      set(_ref references/exectrimZLIB.ref)
-    else()
-      set(_ref references/exectrimZLIB_i686${ref_suffix})
-    endif()
+    set(_ref references/exectrimZLIB_i686${ref_suffix})
   endif()
 endif()
 

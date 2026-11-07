@@ -9,7 +9,7 @@
 #define TrigMissingET_p2_h
 class TrigMissingET_p2;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class TrigMissingET_p2 {

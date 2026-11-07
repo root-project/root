@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TStreamerInfo
-    \ingroup IO
+    \ingroup io_files
 
 Describes a persistent version of a class.
 
@@ -56,7 +56,6 @@ element type.
 #include "TProcessID.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "snprintf.h"
 
 #include "TStreamer.h"
 #include "TContainerConverters.h"
@@ -74,9 +73,13 @@ element type.
 #include "TVirtualMutex.h"
 
 #include "TStreamerInfoActions.h"
+#include "ROOT/BitUtils.hxx"
 
+#include <cstdio>
 #include <memory>
+#include <algorithm>
 #include <array>
+#include <new>
 
 std::atomic<Int_t> TStreamerInfo::fgCount{0};
 
@@ -154,6 +157,7 @@ TStreamerInfo::TStreamerInfo()
    fNfulldata= 0;
    fNslots   = 0;
    fSize     = 0;
+   fAlignment= 0;
    fClassVersion = 0;
    fOnFileClassVersion = 0;
    fOldVersion = Class()->GetClassVersion();
@@ -188,6 +192,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fNfulldata= 0;
    fNslots   = 0;
    fSize     = 0;
+   fAlignment= 0;
    fClassVersion = fClass->GetClassVersion();
    fOnFileClassVersion = 0;
    fOldVersion = Class()->GetClassVersion();
@@ -240,6 +245,28 @@ TStreamerInfo::~TStreamerInfo()
 /// Makes sure kBuildRunning reset once Build finishes.
 
 namespace {
+   using ROOT::Internal::AlignUp;
+
+   /// Layout of the cookie header that NewArray writes before the data and
+   /// DeleteArray reads back.  Both functions must use exactly this struct to
+   /// stay in sync;
+   /// The header holds two Long_t cookie values (size and nElements).
+   /// Round the header size up to the next multiple of 'align' so that
+   /// dataBegin (= p + headerSize) is itself aligned to 'align'.
+   struct ArrayCookieLayout {
+      std::size_t align;       ///< Alignment of the class (and of the whole block).
+      std::size_t cookieSize;  ///< Raw size of the two Long_t cookie fields.
+      std::size_t headerSize;  ///< Padded header size (cookieSize rounded up to align).
+
+      explicit ArrayCookieLayout(const TClass *cl)
+         : align(std::max(cl->GetClassAlignment(), alignof(Long_t))),
+           cookieSize(sizeof(Long_t) * 2),
+           headerSize(AlignUp(cookieSize, align))
+      {
+         assert(ROOT::Internal::IsValidAlignment(align));
+      }
+   };
+
    struct TPreventRecursiveBuildGuard {
       TPreventRecursiveBuildGuard(TStreamerInfo* info): fInfo(info) {
          fInfo->SetBit(TStreamerInfo::kBuildRunning);
@@ -503,6 +530,11 @@ void TStreamerInfo::Build(Bool_t isTransient)
          }
          if (element) {
             fElements->Add(element);
+            // We are building the TStreamerInfo for the in-memory representation
+            // of a loaded class, so we don't need to cross check the element's
+            // alignment (fAlignment will eventually be set to the one provided
+            // to the dictionary).
+            fAlignment = std::max(fAlignment, element->GetAlignment());
          }
       } // end of base class loop
    }
@@ -800,6 +832,11 @@ void TStreamerInfo::Build(Bool_t isTransient)
       }
 
       fElements->Add(element);
+      // We are building the TStreamerInfo for the in-memory representation
+      // of a loaded class, so we don't need to cross check the element's
+      // alignment (fAlignment will eventually be set to the one provided
+      // to the dictionary).
+      fAlignment = std::max(fAlignment, element->GetAlignment());
    } // end of member loop
 
    // Now add artificial TStreamerElement (i.e. rules that creates new members or set transient members).
@@ -1912,8 +1949,6 @@ void TStreamerInfo::BuildOld()
    Int_t offset = 0;
    TMemberStreamer* streamer = 0;
 
-   constexpr size_t kSizeOfPtr = sizeof(void*);
-
    int nBaze = 0;
 
    if ((fElements->GetEntriesFast() == 1) && !strcmp(fElements->At(0)->GetName(), "This")) {
@@ -2026,6 +2061,7 @@ void TStreamerInfo::BuildOld()
 
             // Calculate the offset using the 'real' base class name (as opposed to the
             // '@@emulated' in the case of the emulation of an abstract base class.
+            // baseOffset already take alignment in consideration.
             Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
 
             // Deal with potential schema evolution (renaming) of the base class.
@@ -2090,14 +2126,24 @@ void TStreamerInfo::BuildOld()
                fNVirtualInfoLoc += infobase->fNVirtualInfoLoc;
             }
 
-
-            {
-               if (baseOffset < 0) {
-                  element->SetNewType(TVirtualStreamerInfo::kNoType);
+            if (baseOffset < 0) {
+               element->SetNewType(TVirtualStreamerInfo::kNoType);
+            } else {
+               auto align = baseclass->GetClassAlignment();
+               if (!ROOT::Internal::IsValidAlignment(align)) {
+                  // Print error only if this is meant to be the 'current'
+                  // class layout description.
+                  if (fClass->GetClassVersion() == fClassVersion) {
+                     Error("TStreamerInfo::BuildOld", "Cannot determine alignment for base class %s for element %s",
+                           baseclass->GetName(), GetName());
+                  }
+                  align = alignof(std::max_align_t);
                }
+               fAlignment = std::max(fAlignment, align);
             }
             element->SetOffset(baseOffset);
-            offset += baseclass->Size();
+            // We might be treating the base classes out of memory order.
+            offset = std::max(offset, baseOffset + baseclass->Size());
 
             continue;
          } else {
@@ -2182,8 +2228,22 @@ void TStreamerInfo::BuildOld()
                element->SetNewType(TVirtualStreamerInfo::kNoType);
                continue;
             }
+
+            auto align = element->GetAlignment();
+            if (!ROOT::Internal::IsValidAlignment(align)) {
+               // Print error only if this is meant to be the 'current'
+               // class layout description.
+               if (fClass->GetClassVersion() == fClassVersion) {
+                  Error("TStreamerInfo::BuildOld", "Cannot determine alignment for base class %s for element %s",
+                        element->GetClassPointer()->GetName(), GetName());
+               }
+               align = alignof(std::max_align_t);
+            }
+            fAlignment = std::max(fAlignment, align);
+
             element->SetOffset(baseOffset);
-            offset += asize;
+            // We might be treating the base classes out of memory order.
+            offset = std::max(offset, baseOffset + asize);
             element->Init(this);
             continue;
          } // if element is of type TStreamerBase or not.
@@ -2195,6 +2255,7 @@ void TStreamerInfo::BuildOld()
          fVirtualInfoLoc = new ULong_t[1]; // To allow for a single delete statement.
          fVirtualInfoLoc[0] = offset;
          offset += sizeof(TStreamerInfo*);
+         fAlignment          = std::max(fAlignment, alignof(TStreamerInfo *));
       }
 
       TDataMember* dm = 0;
@@ -2310,6 +2371,20 @@ void TStreamerInfo::BuildOld()
             }
          }
       } // Class corresponding to StreamerInfo is emulated or not.
+
+      {
+         auto align = element->GetAlignment();
+         if (!ROOT::Internal::IsValidAlignment(align)) {
+            // Print error only if this is meant to be the 'current'
+            // class layout description.
+            if (fClass->GetClassVersion() == fClassVersion) {
+               Error("TStreamerInfo::BuildOld", "Cannot determine alignment for type %s for element %s",
+                     element->GetTypeName(), GetName());
+            }
+            align = alignof(std::max_align_t);
+         }
+         fAlignment = std::max(fAlignment, align);
+      }
 
       // Now let's deal with Schema evolution
       Int_t newType = -1;
@@ -2640,12 +2715,15 @@ void TStreamerInfo::BuildOld()
             // Regular case
             asize = element->GetSize();
          }
-         // align the non-basic data types (required on alpha and IRIX!!)
-         if ((offset % kSizeOfPtr) != 0) {
-            offset = offset - (offset % kSizeOfPtr) + kSizeOfPtr;
-         }
+         // Use the precise alignment of the element type, falling back to
+         // max_align_t for types whose alignment is not known.
+         // (e.g. forward declared classes, or classes with incomplete types info, etc..)
+         const std::size_t align = element->GetAlignment();
+         assert(ROOT::Internal::IsValidAlignment(align));
+         offset = (Int_t)AlignUp((std::size_t)offset, align);
          element->SetOffset(offset);
          offset += asize;
+         fAlignment = std::max(fAlignment, align);
       }
 
       if (!wasCompiled && rules) {
@@ -2744,6 +2822,7 @@ void TStreamerInfo::BuildOld()
    // If we get here, this means that there no data member after the last base class
    // (or no base class at all).
    if (shouldHaveInfoLoc && fNVirtualInfoLoc==0) {
+      offset = (Int_t)AlignUp((size_t)offset, alignof(TStreamerInfo *));
       fNVirtualInfoLoc = 1;
       fVirtualInfoLoc = new ULong_t[1]; // To allow for a single delete statement.
       fVirtualInfoLoc[0] = offset;
@@ -3314,9 +3393,17 @@ void TStreamerInfo::ComputeSize()
    if (this == fClass->GetCurrentStreamerInfo()) {
       if (fClass->GetState() >= TClass::kInterpreted || fClass->fIsSyntheticPair) {
          fSize = fClass->GetClassSize();
+         fAlignment = fClass->GetClassAlignment();
          return;
       }
    }
+
+   // Note for TStreamerInfo that do not represent the current in memory
+   // layout of the class (whether that layout is the compiled, interpreted
+   // or emulated), the size calculated below is fantasy since the last element
+   // of this StreamerInfo may or may not be the last one in the in-memory layout.
+   // However this is per se a non issue as this size will not be used for
+   // anything.
 
    TStreamerElement *element = (TStreamerElement*)fElements->Last();
    //faster and more precise to use last element offset +size
@@ -3326,12 +3413,23 @@ void TStreamerInfo::ComputeSize()
       fSize = fVirtualInfoLoc[0] + sizeof(TStreamerInfo*);
    }
 
-   // On some platform and in some case of layout non-basic data types needs
-   // to be aligned.  So let's be on the safe side and align on the size of
-   // the pointers.  (Question: is that the right thing on x32 ABI ?)
-   constexpr size_t kSizeOfPtr = sizeof(void*);
-   if ((fSize % kSizeOfPtr) != 0 && !fClass->IsSyntheticPair()) {
-      fSize = fSize - (fSize % kSizeOfPtr) + kSizeOfPtr;
+   if (fClass->GetCollectionProxy()) {
+      fAlignment = fClass->GetClassAlignment();
+   }
+
+   if (!fAlignment && fElements->IsEmpty()) {
+      // Empty class alignment is 1.
+      fAlignment = 1;
+   }
+
+   // If we have no information use the default alignment.
+   if (!fAlignment) {
+      Error("ComputeSize", "No information on the alignment of class %s, using default alignment of %d bytes",
+            GetName(), (Int_t)alignof(std::max_align_t));
+      fAlignment = alignof(std::max_align_t);
+   }
+   if ((fSize % fAlignment) != 0) {
+      fSize = (Int_t)AlignUp((size_t)fSize, fAlignment);
    }
 }
 
@@ -4145,10 +4243,18 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       if (ltype < lt) ltype = lt;
       if (ldata < ld) ldata = ld;
 
-      //must include Riostream.h in case of an STL container
+      //must include streaming classes in case of an STL container
       if (!incRiostream && element->InheritsFrom(TStreamerSTL::Class())) {
          incRiostream = kTRUE;
-         TMakeProject::AddInclude( fp, "Riostream.h", kFALSE, inclist);
+#ifdef __APPLE__
+         // Workaround for https://github.com/llvm/llvm-project/issues/138683
+         // Include <chrono> before <fstream> to ensure _FilesystemClock is defined
+         // Can be removed once the upstream issue is fixed.
+         TMakeProject::AddInclude( fp, "chrono", kTRUE, inclist);
+#endif
+         TMakeProject::AddInclude( fp, "fstream", kTRUE, inclist);
+         TMakeProject::AddInclude( fp, "iostream", kTRUE, inclist);
+         TMakeProject::AddInclude( fp, "iomanip", kTRUE, inclist);
       }
 
       //get include file name if any
@@ -4991,8 +5097,13 @@ void* TStreamerInfo::New(void *obj)
    TIter next(fElements);
 
    if (!p) {
-      // Allocate and initialize the memory block.
-      p = new char[fSize];
+      // Allocate and initialize the memory block. Ensure the returned
+      // storage is aligned to the class alignment requirement.
+      auto align = fClass->GetClassAlignment();
+      // Use aligned new (C++17). This will return memory aligned to
+      // 'align' and can be freed with the matching delete[].
+      assert(ROOT::Internal::IsValidAlignment(align)); // align must be a power of 2
+      p = static_cast<char *>(::operator new[](fSize, std::align_val_t(align)));
       memset(p, 0, fSize);
    }
 
@@ -5145,23 +5256,30 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
 
    char* p = (char*) ary;
 
+   // Determine the alignment requirement for the class.
+   const ArrayCookieLayout layout(fClass);
+
    if (!p) {
-      Long_t len = nElements * size + sizeof(Long_t)*2;
-      p = new char[len];
+
+      Long_t len = nElements * size + layout.headerSize;
+
+      // Allocate and initialize the memory block.  Request alignment so
+      // that the raw block starts on an 'align'-boundary; combined with
+      // the rounded-up header this guarantees dataBegin is also aligned.
+      p = static_cast<char *>(::operator new[](len, std::align_val_t(layout.align)));
       memset(p, 0, len);
    }
 
-   // Store the array cookie
-   Long_t* r = (Long_t*) p;
+   Long_t* r = (Long_t*)(p + layout.headerSize - layout.cookieSize);
    r[0] = size;
    r[1] = nElements;
-   char* dataBegin = (char*) &r[2];
+   char *dataBegin = p + layout.headerSize;
 
    // Do a placement new for each element.
-   p = dataBegin;
+   char *q = dataBegin;
    for (Long_t cnt = 0; cnt < nElements; ++cnt) {
-      New(p);
-      p += size;
+      New(q);
+      q += size;
    } // for nElements
 
    return dataBegin;
@@ -5306,7 +5424,14 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
    } // iter over elements
 
    if (!dtorOnly) {
-      delete[] p;
+      // Note: We rely on fClass->GetClassAlignment() being the same than we had
+      // on construction time.
+      // However it technically can change but there is no much we can sensibly do to detect it. eg. "allocate object,
+      // unload library, reload library, destruct object" (but in this case the 'unload' library is meant to/should also
+      // destruct the object (unload transaction) but this is not always possible) or "allocate emulated object, load
+      // library, destruct object".
+      assert(ROOT::Internal::IsValidAlignment(fClass->GetClassAlignment()));
+      ::operator delete[](p, std::align_val_t(fClass->GetClassAlignment()));
    }
 }
 
@@ -5350,10 +5475,15 @@ void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
 
    //???FIX ME: What about varying length arrays?
 
-   Long_t* r = (Long_t*) ary;
-   Long_t arrayLen = r[-1];
-   Long_t size = r[-2];
-   char* memBegin = (char*) &r[-2];
+   // Recover the cookie layout: the two Long_t values sit in the header
+   // block immediately before dataBegin, with the same alignment-based
+   // headerSize that NewArray used.
+   const ArrayCookieLayout layout(fClass);
+
+   Long_t *r        = (Long_t *)((char *)ary - layout.cookieSize);
+   Long_t  arrayLen = r[1];
+   Long_t  size     = r[0];
+   char   *memBegin = (char *)ary - layout.headerSize;
 
    char* p = ((char*) ary) + ((arrayLen - 1) * size);
    for (Long_t cnt = 0; cnt < arrayLen; ++cnt, p -= size) {
@@ -5362,7 +5492,7 @@ void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
    } // for arrayItemSize
 
    if (!dtorOnly) {
-      delete[] memBegin;
+      ::operator delete[](memBegin, std::align_val_t(layout.align));
    }
 }
 
@@ -5910,7 +6040,8 @@ TStreamerInfo::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &inf
 //
 // Utility functions
 //
-static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std::string &dmFull, Int_t offset, bool silent)
+static TStreamerElement *
+R__CreateEmulatedElement(const char *dmName, const std::string &dmFull, Int_t offset, bool silent, bool needAlign)
 {
    // Create a TStreamerElement for the type 'dmFull' and whose data member name is 'dmName'.
 
@@ -5918,12 +6049,22 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
    TString dmType( TClassEdit::ShortType(dmFull.c_str(),1) );
    Bool_t dmIsPtr = (s1 != dmType);
    const char *dmTitle = "Emulation";
+   // Over align the basic data types.
+   size_t align = alignof(std::max_align_t);
+   if (needAlign && offset % align != 0)
+      offset = (Int_t)AlignUp((size_t)offset, align);
 
    TDataType *dt = gROOT->GetType(dmType);
    if (dt && dt->GetType() > 0 ) {  // found a basic type
       Int_t dsize,dtype;
       dtype = dt->GetType();
       dsize = dt->Size();
+      // Use the precise alignment for the basic type if available.
+      if (needAlign && dt->GetAlignOf()) {
+         align = dt->GetAlignOf();
+         if (offset % align != 0)
+            offset = (Int_t)AlignUp((size_t)offset, align);
+      }
       if (dmIsPtr && dtype != kCharStar) {
          if (!silent)
             Error("Pair Emulation Building","%s is not yet supported in pair emulation",
@@ -5969,6 +6110,10 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
          }
       }
       // a class
+      assert(ROOT::Internal::IsValidAlignment(clm->GetClassAlignment()));
+      align = std::max(align, clm->GetClassAlignment());
+      if (needAlign && ((offset % align) != 0))
+         offset = (Int_t)AlignUp((size_t)offset, align);
       if (clm->IsTObject()) {
          return new TStreamerObject(dmName,dmTitle,offset,dmFull.c_str());
       } else if(clm == TString::Class() && !dmIsPtr) {
@@ -6012,24 +6157,22 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
    i->SetName(pname.c_str());
    i->SetClass(nullptr);
    i->GetElements()->Delete();
-   TStreamerElement *fel = R__CreateEmulatedElement("first", firstname, 0, silent);
+   TStreamerElement *fel = R__CreateEmulatedElement("first", firstname, 0, silent, /*needAlign=*/false);
    Int_t size = 0;
    if (fel) {
-      i->GetElements()->Add( fel );
-
-      size = fel->GetSize();
-      Int_t sp = sizeof(void *);
-      //align the non-basic data types (required on alpha and IRIX!!)
-      if (size%sp != 0) size = size - size%sp + sp;
+      i->GetElements()->Add(fel);
+      i->fAlignment = std::max(i->fAlignment, fel->GetAlignment());
    } else {
       delete i;
       return 0;
    }
    if (hint_pair_offset)
       size = hint_pair_offset;
-   TStreamerElement *second = R__CreateEmulatedElement("second", secondname, size, silent);
+   TStreamerElement *second =
+      R__CreateEmulatedElement("second", secondname, size, silent, /*needAlign=*/!hint_pair_offset);
    if (second) {
-      i->GetElements()->Add( second );
+      i->GetElements()->Add(second);
+      i->fAlignment = std::max(i->fAlignment, second->GetAlignment());
    } else {
       delete i;
       return 0;

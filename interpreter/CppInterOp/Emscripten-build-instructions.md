@@ -5,7 +5,7 @@ It should be noted that the wasm build of CppInterOp is still experimental and s
 ## CppInterOp Wasm Build Instructions
 
 This document first starts with the instructions on how to build a wasm build of CppInterOp. Before we start it should be noted that  
-unlike the non wasm version of CppInterOp we currently only support the Clang-REPL backend using llvm>19.  
+unlike the non wasm version of CppInterOp we currently only support the Clang-REPL backend using llvm>20.  
 We will first make folder to build our wasm build of CppInterOp. This can be done by executing the following command
 
 ```bash
@@ -19,16 +19,16 @@ cd ./CppInterOp-wasm
 ```
 
 To create a wasm build of CppInterOp we make use of the emsdk toolchain. This can be installed by executing (we only currently  
-support version 3.1.73)
+support version 4.0.9)
 ```bash
 git clone https://github.com/emscripten-core/emsdk.git
-./emsdk/emsdk install  3.1.73
+./emsdk/emsdk install  4.0.9
 ```
 
 and to activate the emsdk environment on Linux and osx execute (we are defining SYSROOT_PATH for use later)
 
 ```bash
-./emsdk/emsdk activate 3.1.73
+./emsdk/emsdk activate 4.0.9
 source ./emsdk/emsdk_env.sh
 export SYSROOT_PATH=$PWD/emsdk/upstream/emscripten/cache/sysroot
 ```
@@ -36,17 +36,17 @@ export SYSROOT_PATH=$PWD/emsdk/upstream/emscripten/cache/sysroot
 and on Windows execute in Powershell
 
 ```powershell
-.\emsdk\emsdk activate 3.1.73
+.\emsdk\emsdk activate 4.0.9
 .\emsdk\emsdk_env.ps1
 $env:PWD_DIR= $PWD.Path
 $env:SYSROOT_PATH="$env:EMSDK/upstream/emscripten/cache/sysroot"
 ```
 
-Now clone the 20.x release of the LLVM project repository and CppInterOp (the building of the emscripten version of llvm can be
+Now clone the 22.x release of the LLVM project repository and CppInterOp (the building of the emscripten version of llvm can be
 avoided by executing micromamba install llvm -c <https://repo.mamba.pm/emscripten-forge> and setting the LLVM_BUILD_DIR/$env:LLVM_BUILD_DIR appropriately)
 
 ```bash
-git clone --depth=1 --branch release/20.x https://github.com/llvm/llvm-project.git
+git clone --depth=1 --branch release/22.x https://github.com/llvm/llvm-project.git
 git clone --depth=1 https://github.com/compiler-research/CppInterOp.git
 ```
 
@@ -55,16 +55,16 @@ executing
 
 ```bash
 cd ./llvm-project/
-git apply -v ../CppInterOp/patches/llvm/emscripten-clang20-*.patch
+git apply -v ../CppInterOp/patches/llvm/emscripten-clang22-*.patch
 ```
 
 On Windows execute the following
 
 ```powershell
 cd .\llvm-project\
-cp -r ..\patches\llvm\emscripten-clang20*
-git apply -v emscripten-clang20-2-shift-temporary-files-to-tmp-dir.patch
-git apply -v emscripten-clang20-3-enable_exception_handling.patch
+cp -r ..\patches\llvm\emscripten-clang22*
+git apply -v emscripten-clang22-1-enable_exception_handling.patch
+git apply -v emscripten-clang22-2-webassembly_target_machine_reordering.patch
 ```
 
 We are now in a position to build an emscripten build of llvm by executing the following on Linux
@@ -74,7 +74,8 @@ mkdir native_build
 cd native_build
 cmake -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=host -DCMAKE_BUILD_TYPE=Release ../llvm/
 cmake --build . --target llvm-tblgen clang-tblgen --parallel $(nproc --all)
-export NATIVE_DIR=$PWD/bin/
+export NATIVE_LLVM_BUILD_DIR=$PWD
+export NATIVE_LLVM_BIN_DIR=$PWD/bin/
 cd ..
 mkdir build
 cd build
@@ -96,14 +97,12 @@ emcmake cmake -DCMAKE_BUILD_TYPE=Release \
                         -DLLVM_BUILD_TOOLS=OFF                          \
                         -DLLVM_ENABLE_LIBPFM=OFF                        \
                         -DCLANG_BUILD_TOOLS=OFF                         \
-                        -DLLVM_NATIVE_TOOL_DIR=$NATIVE_DIR              \
+                        -DLLVM_NATIVE_TOOL_DIR=$NATIVE_LLVM_BIN_DIR              \
                         -DCMAKE_C_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" \
                         -DCMAKE_CXX_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" \
                         -DLLVM_ENABLE_LTO=Full \
                         ../llvm
-emmake make libclang -j $(nproc --all)
-emmake make clangInterpreter clangStaticAnalyzerCore -j $(nproc --all)
-emmake make lldWasm -j $(nproc --all)
+EMCC_CFLAGS="-sSUPPORT_LONGJMP=wasm -fwasm-exceptions" emmake make libclang clangInterpreter clangStaticAnalyzerCore -j $(nproc --all)
 ```
 
 or executing
@@ -114,7 +113,8 @@ cd native_build
 cmake -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=host -DCMAKE_BUILD_TYPE=Release -G Ninja ../llvm/
 cmake --build . --target llvm-tblgen clang-tblgen --parallel $(nproc --all)
 $env:PWD_DIR= $PWD.Path
-$env:NATIVE_DIR="$env:PWD_DIR/bin/"
+$env:NATIVE_LLVM_BUILD_DIR="$env:PWD_DIR"
+$env:NATIVE_LLVM_BIN_DIR="$env:PWD_DIR/bin/"
 cd ..
 mkdir build
 cd build
@@ -136,13 +136,15 @@ emcmake cmake -DCMAKE_BUILD_TYPE=Release `
                         -DLLVM_BUILD_TOOLS=OFF                          `
                         -DLLVM_ENABLE_LIBPFM=OFF                        `
                         -DCLANG_BUILD_TOOLS=OFF                         `
-                        -DLLVM_NATIVE_TOOL_DIR="$env:NATIVE_DIR"        `
+                        -DLLVM_NATIVE_TOOL_DIR="$env:NATIVE_LLVM_BIN_DIR"        `
                         -G Ninja `
                         -DCMAKE_C_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" `
                         -DCMAKE_CXX_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" `
                         -DLLVM_ENABLE_LTO=Full `
                         ..\llvm
-emmake ninja libclang clangInterpreter clangStaticAnalyzerCore lldWasm
+$env:EMCC_CFLAGS="-sSUPPORT_LONGJMP=wasm -fwasm-exceptions"
+emmake ninja libclang clangInterpreter clangStaticAnalyzerCore
+$env:EMCC_CFLAGS=""
 ```
 
 on Windows. Once this finishes building we need to take note of where we built our llvm build. This can be done by executing the following on Linux and osx
@@ -163,7 +165,7 @@ by executing (assumes you have micromamba installed and that your shell is initi
 
 ```bash
 cd ../../CppInterOp/
-micromamba create -f environment-wasm.yml --platform=emscripten-wasm32
+micromamba create -f environment-wasm.yml --platform=emscripten-wasm32 -c https://prefix.dev/emscripten-forge-4x -c https://prefix.dev/conda-forge
 micromamba activate CppInterOp-wasm
 ```
 
@@ -178,12 +180,47 @@ export CMAKE_SYSTEM_PREFIX_PATH=$PREFIX
 and
 
 ```powershell
-$env:PREFIX="%CONDA_PREFIX%/envs/CppInterOp-wasm"
+$env:PREFIX="$env:MAMBA_ROOT_PREFIX/envs/CppInterOp-wasm"
 $env:CMAKE_PREFIX_PATH=$env:PREFIX
 $env:CMAKE_SYSTEM_PREFIX_PATH=$env:PREFIX
 ```
 
-on Windows. Now to build and test your Emscripten build of CppInterOp using node on Linux and osx execute the following
+on Windows. efore building the Emscripten version of CppInterOp, we need
+to build ``cppinterop-tblgen`` natively. This tool generates ``.inc`` files
+from ``.td`` definitions and must run on the host (not under Emscripten).
+We use the native LLVM build from the earlier step since it has the required
+``libLLVMTableGen`` library.
+
+On Linux and osx:
+
+```bash
+mkdir -p native_cppinterop_build && cd native_cppinterop_build
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DLLVM_DIR=$NATIVE_LLVM_BUILD_DIR/lib/cmake/llvm \
+      -DCMAKE_CXX_STANDARD=17 \
+      -DCPPINTEROP_BUILD_TABLEGEN_ONLY=ON \
+       ../
+cmake --build . --target cppinterop-tblgen -j $(nproc --all)
+export CPPINTEROP_TBLGEN_EXE=$(find $PWD -name cppinterop-tblgen -type f | head -1)
+cd ..
+```
+
+On Windows:
+
+```powershell
+mkdir native_cppinterop_build
+cd native_cppinterop_build
+cmake -DCMAKE_BUILD_TYPE=Release `
+      -DLLVM_DIR="$env:NATIVE_LLVM_BUILD_DIR\lib\cmake\llvm" `
+      -DCMAKE_CXX_STANDARD=17 `
+      -DCPPINTEROP_BUILD_TABLEGEN_ONLY=ON `
+..\
+cmake --build . --target cppinterop-tblgen -j $(nproc --all)
+$env:CPPINTEROP_TBLGEN_EXE = (Get-ChildItem -Recurse -Filter "cppinterop-tblgen.exe" | Select-Object -First 1).FullName
+cd ..
+```
+
+Now to build and test your Emscripten build of CppInterOp using node on Linux and osx execute the following
 (BUILD_SHARED_LIBS=ON is only needed if building xeus-cpp, as CppInterOp can be built as an Emscripten static library)
 
 ```bash
@@ -197,6 +234,7 @@ emcmake cmake -DCMAKE_BUILD_TYPE=Release    \
                 -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON            \
                 -DCMAKE_INSTALL_PREFIX=$PREFIX         \
                 -DSYSROOT_PATH=$SYSROOT_PATH                                   \
+                -DCPPINTEROP_TABLEGEN_EXE=$CPPINTEROP_TBLGEN_EXE \
                 ../
 emmake make -j $(nproc --all) check-cppinterop
 ```
@@ -215,6 +253,7 @@ emcmake cmake -DCMAKE_BUILD_TYPE=Release    `
                 -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON            `
                 -DLLVM_ENABLE_WERROR=On                      `
                 -DSYSROOT_PATH="$env:SYSROOT_PATH"                     `
+                -DCPPINTEROP_TABLEGEN_EXE="$env:CPPINTEROP_TBLGEN_EXE" `
                 ..\
     emmake make -j $(nproc --all) check-cppinterop
 ```
@@ -315,8 +354,6 @@ Expand-Archive -Path "$PWD\chrome-win.zip" -DestinationPath "$PWD" -Force -Verbo
 Invoke-WebRequest -Uri "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=en-US" -OutFile "firefox-setup.exe" -Verbose
 & "C:\Program Files\7-Zip\7z.exe" x "firefox-setup.exe"
 $env:PATH="$PWD\core;$PWD\chrome-win;$env:PATH"
-echo "PATH=$env:PATH"
-echo "PATH=$env:PATH" >> $env:GITHUB_ENV
 echo "Running CppInterOpTests in Firefox"
 emrun.bat --browser="firefox.exe" --kill_exit --timeout 60 --browser-args="--headless"  CppInterOpTests.html
 echo "Running DynamicLibraryManagerTests in Firefox"
@@ -337,13 +374,13 @@ emmake make -j $(nproc --all) install
 ## Xeus-cpp-lite Wasm Build Instructions
 
 A project which makes use of the wasm build of CppInterOp is xeus-cpp. xeus-cpp is a C++ Jupyter kernel. Assuming you are in  
-the CppInterOp build folder, you can build the wasm version of xeus-cpp by executing (replace LLVM_VERSION with the version
+the CppInterOp build folder, you can build the wasm version of xeus-cpp on Linux/MacOS by executing (replace LLVM_VERSION with the version
 of llvm you are building against)
 
 ```bash
 cd ../..
 git clone --depth=1 https://github.com/compiler-research/xeus-cpp.git
-export LLVM_VERSION=20
+export LLVM_VERSION=22
 cd ./xeus-cpp
 mkdir build
 cd build
@@ -356,20 +393,56 @@ emcmake cmake \
           -DXEUS_CPP_RESOURCE_DIR="$LLVM_BUILD_DIR/lib/clang/$LLVM_VERSION" \
           -DSYSROOT_PATH=$SYSROOT_PATH                                   \
           ..
- emmake make -j $(nproc --all) install
+emmake make -j $(nproc --all) install
 ```
 
-To build and test Jupyter Lite with this kernel locally you can execute the following
+and on Windows by executing
+
+```powershell
+cd ..\..
+git clone --depth=1 https://github.com/compiler-research/xeus-cpp.git
+$env:LLVM_VERSION=22
+cd .\xeus-cpp
+mkdir build
+cd build
+emcmake cmake `
+          -DCMAKE_BUILD_TYPE=Release                                     `
+          -DCMAKE_PREFIX_PATH="$env:PREFIX"                                    `
+          -DCMAKE_INSTALL_PREFIX="$env:PREFIX"                                 `
+          -DXEUS_CPP_EMSCRIPTEN_WASM_BUILD=ON                            `
+          -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON                         `
+          -DXEUS_CPP_RESOURCE_DIR="$env:LLVM_BUILD_DIR/lib/clang/$env:LLVM_VERSION" `
+          -DSYSROOT_PATH="$env:SYSROOT_PATH"                                   `
+          ..
+emmake make -j $(nproc --all) install
+```
+
+To build and test Jupyter Lite with this kernel locally on Linux/MacOS you can execute the following
 
 ```bash
 cd ../..
-micromamba create -n xeus-lite-host jupyterlite-core=0.6 jupyterlite-xeus jupyter_server jupyterlab notebook python-libarchive-c -c conda-forge
+micromamba create -n xeus-lite-host jupyterlite-core jupyterlite-xeus jupyter_server jupyterlab notebook python-libarchive-c -c conda-forge
 micromamba activate xeus-lite-host
 jupyter lite serve --XeusAddon.prefix=$PREFIX \
                    --contents xeus-cpp/notebooks/xeus-cpp-lite-demo.ipynb \
-                   --contents xeus-cpp/notebooks/smallpt.ipynb \
+                   --contents xeus-cpp/notebooks/tinyraytracer.ipynb \
                    --contents xeus-cpp/notebooks/images/marie.png \
                    --contents xeus-cpp/notebooks/audio/audio.wav \
                    --XeusAddon.mounts="$PREFIX/share/xeus-cpp/tagfiles:/share/xeus-cpp/tagfiles" \
                    --XeusAddon.mounts="$PREFIX/etc/xeus-cpp/tags.d:/etc/xeus-cpp/tags.d"
+```
+
+and on Windows execute
+
+```powershell
+cd ..\..
+micromamba create -n xeus-lite-host jupyterlite-core jupyterlite-xeus jupyter_server jupyterlab notebook python-libarchive-c -c conda-forge
+micromamba activate xeus-lite-host
+jupyter lite serve --XeusAddon.prefix="$env:PREFIX" `
+                   --contents xeus-cpp/notebooks/xeus-cpp-lite-demo.ipynb `
+                   --contents xeus-cpp/notebooks/tinyraytracer.ipynb `
+                   --contents xeus-cpp/notebooks/images/marie.png `
+                   --contents xeus-cpp/notebooks/audio/audio.wav `
+                   --XeusAddon.mounts="$env:PREFIX/share/xeus-cpp/tagfiles:/share/xeus-cpp/tagfiles" `
+                   --XeusAddon.mounts="$env:PREFIX/etc/xeus-cpp/tags.d:/etc/xeus-cpp/tags.d"
 ```

@@ -39,18 +39,12 @@ parallelized calculation of test statistics.
 
 #include "RooAbsOptTestStatistic.h"
 
-#include "Riostream.h"
-#include "TClass.h"
-#include <cstring>
-
 #include "RooAbsData.h"
 #include "RooAbsDataStore.h"
 #include "RooAbsPdf.h"
-#include "RooAddPdf.h"
 #include "RooArgSet.h"
 #include "RooBinSamplingPdf.h"
 #include "RooBinning.h"
-#include "RooCategory.h"
 #include "RooDataHist.h"
 #include "RooDataSet.h"
 #include "RooErrorHandler.h"
@@ -59,12 +53,13 @@ parallelized calculation of test statistics.
 #include "RooMsgService.h"
 #include "RooProdPdf.h"
 #include "RooProduct.h"
-#include "RooRealSumPdf.h"
 #include "RooRealVar.h"
-#include "RooTrace.h"
 #include "RooVectorDataStore.h"
 
 #include "ROOT/StringUtils.hxx"
+
+#include <cstring>
+#include <ostream>
 
 using std::ostream;
 
@@ -114,7 +109,6 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic &oth
    : RooAbsTestStatistic(other, name),
      _sealed(other._sealed),
      _sealNotice(other._sealNotice),
-     _skipZeroWeights(other._skipZeroWeights),
      _integrateBinsPrecision(other._integrateBinsPrecision)
 {
    // Don't do a thing in master mode
@@ -226,7 +220,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
     _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
-    //     std::cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << std::endl ;
   } else {
     _dataClone = static_cast<RooAbsData*>(indata.Clone()) ;
   }
@@ -411,78 +404,6 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Driver function to propagate constant term optimizations in test statistic.
-/// If code Activate is sent, constant term optimization will be executed.
-/// If code Deactivate is sent, any existing constant term optimizations will
-/// be abandoned. If codes ConfigChange or ValueChange are sent, any existing
-/// constant term optimizations will be redone.
-
-void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
-{
-  //   std::cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << std::endl ;
-  //   _funcClone->Print("t") ;
-
-  RooAbsTestStatistic::constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
-  if (operMode()!=Slave) return ;
-
-  if (_dataClone->hasFilledCache() && _dataClone->store()->cacheOwner()!=this) {
-    if (opcode==Activate) {
-      cxcoutW(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-             << ") dataset cache is owned by another object, no constant term optimization can be applied" << std::endl ;
-    }
-    return ;
-  }
-
-  if (!allowFunctionCache()) {
-    if (opcode==Activate) {
-      cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-             << ") function caching prohibited by test statistic, no constant term optimization is applied" << std::endl ;
-    }
-    return ;
-  }
-
-  if (_dataClone->hasFilledCache() && opcode==Activate) {
-    opcode=ValueChange ;
-  }
-
-  switch(opcode) {
-  case Activate:
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-           << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
-           << " on observables and constant parameters and precalculating their values" << std::endl ;
-    optimizeConstantTerms(true,doAlsoTrackingOpt) ;
-    break ;
-
-  case DeActivate:
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-           << ") deactivating optimization of constant terms in test statistic" << std::endl ;
-    optimizeConstantTerms(false) ;
-    break ;
-
-  case ConfigChange:
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-           << ") one ore more parameter were changed from constant to floating or vice versa, "
-           << "re-evaluating constant term optimization" << std::endl ;
-    optimizeConstantTerms(false) ;
-    optimizeConstantTerms(true,doAlsoTrackingOpt) ;
-    break ;
-
-  case ValueChange:
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-           << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << std::endl ;
-    // Request a forcible cache update of all cached nodes
-    _dataClone->store()->forceCacheUpdate() ;
-
-    break ;
-  }
-
-//   std::cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump AFTER const-opt" << std::endl ;
-//   _funcClone->Print("t") ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// This method changes the value caching logic for all nodes that depends on any of the observables
 /// as defined by the given dataset. When evaluating a test statistic constructed from the RooAbsReal
 /// with a dataset the observables are guaranteed to change with every call, thus there is no point
@@ -493,8 +414,6 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool
 
 void RooAbsOptTestStatistic::optimizeCaching()
 {
-//   std::cout << "RooAbsOptTestStatistic::optimizeCaching(" << GetName() << "," << this << ")" << std::endl ;
-
   // Trigger create of all object caches now in nodes that have deferred object creation
   // so that cache contents can be processed immediately
   _funcClone->getVal(_normSet) ;
@@ -504,133 +423,6 @@ void RooAbsOptTestStatistic::optimizeCaching()
 
   // Disable propagation of dirty state flags for observables
   _dataClone->setDirtyProp(false) ;
-
-  // Disable reading of observables that are not used
-  _dataClone->optimizeReadingWithCaching(*_funcClone, RooArgSet(),requiredExtraObservables()) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Driver function to activate global constant term optimization.
-/// If activated, constant terms are found and cached with the dataset.
-/// The operation mode of cached nodes is set to AClean meaning that
-/// their getVal() call will never result in an evaluate call.
-/// Finally the branches in the dataset that correspond to observables
-/// that are exclusively used in constant terms are disabled as
-/// they serve no more purpose
-
-void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrackingOpt)
-{
-  if(activate) {
-
-    if (_optimized) {
-      return ;
-    }
-
-    // Trigger create of all object caches now in nodes that have deferred object creation
-    // so that cache contents can be processed immediately
-    _funcClone->getVal(_normSet) ;
-
-
-    //  WVE - Patch to allow customization of optimization level per component pdf
-    if (_funcClone->getAttribute("NoOptimizeLevel1")) {
-      coutI(Minimization) << " Optimization customization: Level-1 constant-term optimization prohibited by attribute NoOptimizeLevel1 set on top-level pdf  "
-                          << _funcClone->ClassName() << "::" << _funcClone->GetName() << std::endl ;
-      return ;
-    }
-    if (_funcClone->getAttribute("NoOptimizeLevel2")) {
-      coutI(Minimization) << " Optimization customization: Level-2 constant-term optimization prohibited by attribute NoOptimizeLevel2 set on top-level pdf  "
-                          << _funcClone->ClassName() << "::" << _funcClone->GetName() << std::endl ;
-      applyTrackingOpt=false ;
-    }
-
-    // Apply tracking optimization here. Default strategy is to track components
-    // of RooAddPdfs and RooRealSumPdfs. If these components are a RooProdPdf
-    // or a RooProduct respectively, track the components of these products instead
-    // of the product term
-    RooArgSet trackNodes ;
-
-
-    // Add safety check here - applyTrackingOpt will only be applied if present
-    // dataset is constructed in terms of a RooVectorDataStore
-    if (applyTrackingOpt) {
-      if (!dynamic_cast<RooVectorDataStore*>(_dataClone->store())) {
-        coutW(Optimization) << "RooAbsOptTestStatistic::optimizeConstantTerms(" << GetName()
-                     << ") WARNING Cache-and-track optimization (Optimize level 2) is only available for datasets"
-                     << " implement in terms of RooVectorDataStore - ignoring this option for current dataset" << std::endl ;
-        applyTrackingOpt = false ;
-      }
-    }
-
-    if (applyTrackingOpt) {
-      RooArgSet branches ;
-      _funcClone->branchNodeServerList(&branches) ;
-      for (auto arg : branches) {
-        arg->setCacheAndTrackHints(trackNodes);
-      }
-      // Do not set CacheAndTrack on constant expressions
-      trackNodes.remove(*std::unique_ptr<RooAbsCollection>{trackNodes.selectByAttrib("Constant",true)});
-
-      // Set CacheAndTrack flag on all remaining nodes
-      trackNodes.setAttribAll("CacheAndTrack",true) ;
-    }
-
-    // Find all nodes that depend exclusively on constant parameters
-    _cachedNodes.removeAll() ;
-
-    _funcClone->findConstantNodes(*_dataClone->get(),_cachedNodes) ;
-
-    // Cache constant nodes with dataset - also cache entries corresponding to zero-weights in data when using BinnedLikelihood
-    _dataClone->cacheArgs(this,_cachedNodes,_normSet, _skipZeroWeights);
-
-    // Put all cached nodes in AClean value caching mode so that their evaluate() is never called
-    for (auto cacheArg : _cachedNodes) {
-      cacheArg->setOperMode(RooAbsArg::AClean) ;
-    }
-
-    std::unique_ptr<RooAbsCollection> constNodes{_cachedNodes.selectByAttrib("ConstantExpressionCached",true)};
-    RooArgSet actualTrackNodes(_cachedNodes) ;
-    actualTrackNodes.remove(*constNodes) ;
-    if (!constNodes->empty()) {
-      if (constNodes->size()<20) {
-        coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << std::endl ;
-      } else {
-        coutI(Minimization) << " A total of " << constNodes->size() << " expressions have been identified as constant and will be precalculated and cached." << std::endl ;
-      }
-    }
-    if (!actualTrackNodes.empty()) {
-      if (actualTrackNodes.size()<20) {
-        coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << std::endl ;
-      } else {
-        coutI(Minimization) << " A total of " << constNodes->size() << " expressions will be evaluated in cache-and-track-mode." << std::endl ;
-      }
-    }
-
-    // Disable reading of observables that are no longer used
-    _dataClone->optimizeReadingWithCaching(*_funcClone, _cachedNodes,requiredExtraObservables()) ;
-
-    _optimized = true ;
-
-  } else {
-
-    // Delete the cache
-    _dataClone->resetCache() ;
-
-    // Reactivate all tree branches
-    _dataClone->setArgStatus(*_dataClone->get(),true) ;
-
-    // Reset all nodes to ADirty
-    optimizeCaching() ;
-
-    // Disable propagation of dirty state flags for observables
-    _dataClone->setDirtyProp(false) ;
-
-    _cachedNodes.removeAll() ;
-
-
-    _optimized = false ;
-  }
 }
 
 
@@ -644,12 +436,8 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
 {
 
   if (operMode()==SimMaster) {
-    //cout << "ROATS::setDataSlave() ERROR this is SimMaster _funcClone = " << _funcClone << std::endl ;
     return false ;
   }
-
-  //cout << "ROATS::setDataSlave() new dataset size = " << indata.numEntries() << std::endl ;
-  //indata.Print("v") ;
 
 
   // If the current dataset is owned, transfer the ownership to unique pointer
@@ -686,11 +474,6 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
   _dataClone->attachBuffers(*_funcObsSet) ;
   _dataClone->setDirtyProp(false) ;
   _data = _dataClone ;
-
-  // ReCache constant nodes with dataset
-  if (!_cachedNodes.empty()) {
-    _dataClone->cacheArgs(this,_cachedNodes,_normSet, _skipZeroWeights);
-  }
 
   // Adjust internal event count
   setEventCount(indata.numEntries()) ;
@@ -764,12 +547,6 @@ void RooAbsOptTestStatistic::setUpBinSampling() {
 /// instances that don't share the same cloned input data object.
 const char* RooAbsOptTestStatistic::cacheUniqueSuffix() const {
    return Form("_%lx", _dataClone->uniqueId().value()) ;
-}
-
-
-void RooAbsOptTestStatistic::runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
-{
-   _dataClone->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, _skipZeroWeights);
 }
 
 /// \endcond

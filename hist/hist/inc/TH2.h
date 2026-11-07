@@ -87,7 +87,7 @@ public:
            void     FillN(Int_t, const Double_t *, const Double_t *, Int_t) override {} //MayNotUse
            void     FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride=1) override;
    using TH1::FillRandom;
-           void     FillRandom(TF1 *f1, Int_t ntimes=5000, TRandom *rng = nullptr) override;
+           void     FillRandom(TF1 *function, Int_t ntimes=5000, TRandom *rng = nullptr) override;
            void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom *rng = nullptr) override;
    virtual void     FitSlicesX(TF1 *f1 = nullptr, Int_t firstybin=0, Int_t lastybin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = nullptr);
    virtual void     FitSlicesY(TF1 *f1 = nullptr, Int_t firstxbin=0, Int_t lastxbin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = nullptr);
@@ -115,7 +115,7 @@ public:
            TH2     *RebinX(Int_t ngroup=2, const char *newname="") override; // *MENU*
    virtual TH2     *RebinY(Int_t ngroup=2, const char *newname=""); // *MENU*
            TH2     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins = nullptr) override;  // re-implementation of the TH1 function using RebinX
-   virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname=""); // *MENU*
+   virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="", const Double_t *xbins=nullptr, const Double_t *ybins=nullptr); // *MENU*
           TProfile *ProfileX(const char *name="_pfx", Int_t firstybin=1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
           TProfile *ProfileY(const char *name="_pfy", Int_t firstxbin=1, Int_t lastxbin=-1, Option_t *option="") const;   // *MENU*
            TH1D    *ProjectionX(const char *name="_px", Int_t firstybin=0, Int_t lastybin=-1, Option_t *option="") const; // *MENU*

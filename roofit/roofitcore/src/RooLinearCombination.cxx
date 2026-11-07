@@ -133,8 +133,8 @@ std::list<double> *RooLinearCombination::binBoundaries(RooAbsRealLValue &obs,
                                                       double xhi) const {
   // Forward the plot sampling hint from the p.d.f. that defines the observable
   // obs
-  for(auto const& func : _actualVars) {
-    auto binb = static_cast<RooAbsReal*>(func)->binBoundaries(obs, xlo, xhi);
+  for(auto *func : static_range_cast<RooAbsReal*>(_actualVars)) {
+    auto binb = func->binBoundaries(obs, xlo, xhi);
     if (binb) {
       return binb;
     }
@@ -147,8 +147,8 @@ std::list<double> *RooLinearCombination::plotSamplingHint(RooAbsRealLValue &obs,
                                                          double xhi) const {
   // Forward the plot sampling hint from the p.d.f. that defines the observable
   // obs
-  for(auto const& func : _actualVars) {
-    auto hint = static_cast<RooAbsReal*>(func)->plotSamplingHint(obs, xlo, xhi);
+  for(auto *func : static_range_cast<RooAbsReal*>(_actualVars)) {
+    auto hint = func->plotSamplingHint(obs, xlo, xhi);
     if (hint) {
       return hint;
     }

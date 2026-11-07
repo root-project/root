@@ -8,7 +8,7 @@
 
 #include <memory>
 
-class RooCrystalBall final : public RooAbsPdf {
+class RooCrystalBall : public RooAbsPdf {
 public:
    RooCrystalBall() {};
 

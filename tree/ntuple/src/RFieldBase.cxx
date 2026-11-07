@@ -1,8 +1,8 @@
 /// \file RFieldBase.cxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
+#include <ROOT/BitUtils.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
@@ -85,6 +85,10 @@ void ROOT::Internal::CallConnectPageSourceOnField(RFieldBase &field, ROOT::Inter
 {
    field.ConnectPageSource(source);
 }
+void ROOT::Internal::CallSetArtificialOnField(RFieldBase &field)
+{
+   field.SetArtificial();
+}
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
@@ -92,6 +96,13 @@ ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::str
                                     ROOT::DescriptorId_t fieldId)
 {
    return RFieldBase::Create(fieldName, typeName, options, desc, fieldId);
+}
+
+//------------------------------------------------------------------------------
+
+void ROOT::RFieldBase::RDeleter::DeleteAligned(void *objPtr) const
+{
+   operator delete(objPtr, std::align_val_t(fAlignment));
 }
 
 //------------------------------------------------------------------------------
@@ -168,7 +179,7 @@ void ROOT::RFieldBase::RBulkValues::ReleaseValues()
       }
    }
 
-   operator delete(fValues);
+   operator delete(fValues, std::align_val_t(fField->GetAlignment()));
 }
 
 void ROOT::RFieldBase::RBulkValues::Reset(RNTupleLocalIndex firstIndex, std::size_t size)
@@ -178,7 +189,7 @@ void ROOT::RFieldBase::RBulkValues::Reset(RNTupleLocalIndex firstIndex, std::siz
          throw RException(R__FAIL("invalid attempt to bulk read beyond the adopted buffer"));
       }
       ReleaseValues();
-      fValues = operator new(size * fValueSize);
+      fValues = operator new(size * fValueSize, std::align_val_t(fField->GetAlignment()));
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
@@ -431,7 +442,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       } else if (resolvedType.substr(0, 24) == "std::unordered_multiset<") {
          std::string itemTypeName = resolvedType.substr(24, resolvedType.length() - 25);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
          result = std::make_unique<RSetField>(fieldName, RSetField::ESetType::kUnorderedMultiSet, std::move(itemField));
       } else if (resolvedType.substr(0, 9) == "std::map<") {
          auto innerTypes = TokenizeTypeList(resolvedType.substr(9, resolvedType.length() - 10));
@@ -486,13 +496,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       }
 
       if (!result) {
-         auto e = TEnum::GetEnum(resolvedType.c_str());
-         if (e != nullptr) {
-            result = std::make_unique<REnumField>(fieldName, typeName);
-         }
-      }
-
-      if (!result) {
          auto cl = TClass::GetClass(typeName.c_str());
 
          if (cl && cl->GetState() > TClass::kForwardDeclared) {
@@ -505,47 +508,65 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             // rather than from TClass. This might be desirable in the future, but for now in this
             // situation we rely on field emulation instead.
             else if (cl->GetState() >= TClass::kInterpreted) {
-               if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
-                   ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
+               if (!ROOT::Internal::GetRNTupleSoARecord(cl).empty()) {
+                  result = std::make_unique<RSoAField>(fieldName, typeName);
+               } else if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
+                          ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
                   result = std::make_unique<RStreamerField>(fieldName, typeName);
                } else {
                   result = std::make_unique<RClassField>(fieldName, typeName);
                }
             }
          }
+      }
 
-         // If we get here then we failed to meet all the conditions to create a "properly typed" field.
-         // Resort to field emulation if the user asked us to.
-         if (!result && options.GetEmulateUnknownTypes()) {
-            assert(desc);
-            const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
-            if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
-               std::vector<std::unique_ptr<RFieldBase>> memberFields;
-               memberFields.reserve(fieldDesc.GetLinkIds().size());
-               for (auto id : fieldDesc.GetLinkIds()) {
-                  const auto &memberDesc = desc->GetFieldDescriptor(id);
-                  auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
-                  memberFields.emplace_back(std::move(field));
-               }
-               R__ASSERT(typeName == fieldDesc.GetTypeName());
-               auto recordField =
-                  Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
-               recordField->fTypeAlias = fieldDesc.GetTypeAlias();
-               return recordField;
-            } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
-               if (fieldDesc.GetLinkIds().size() != 1)
-                  throw ROOT::RException(R__FAIL("invalid structure for collection field " + fieldName));
+      if (!result) {
+         auto e = TEnum::GetEnum(resolvedType.c_str());
+         if (e != nullptr) {
+            result = std::make_unique<REnumField>(fieldName, typeName);
+         }
+      }
 
-               auto itemFieldId = fieldDesc.GetLinkIds()[0];
-               const auto &itemFieldDesc = desc->GetFieldDescriptor(itemFieldId);
-               auto itemField =
-                  Create(itemFieldDesc.GetFieldName(), itemFieldDesc.GetTypeName(), options, desc, itemFieldId)
-                     .Unwrap();
-               auto vecField =
-                  ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc.GetTypeName());
-               vecField->fTypeAlias = fieldDesc.GetTypeAlias();
-               return vecField;
+      // If we get here then we failed to meet all the conditions to create a "properly typed" field.
+      // Resort to field emulation if the user asked us to.
+      if (!result && options.GetEmulateUnknownTypes()) {
+         assert(desc);
+         const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
+         if (fieldDesc.GetStructure() == ENTupleStructure::kStreamer) {
+            auto streamerField = std::unique_ptr<RFieldBase>(new RStreamerField(fieldName, typeName));
+            streamerField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return streamerField;
+         } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
+            std::vector<std::unique_ptr<RFieldBase>> memberFields;
+            memberFields.reserve(fieldDesc.GetLinkIds().size());
+            for (auto id : fieldDesc.GetLinkIds()) {
+               const auto &memberDesc = desc->GetFieldDescriptor(id);
+               auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
+               memberFields.emplace_back(std::move(field));
             }
+            R__ASSERT(typeName == fieldDesc.GetTypeName());
+            auto recordField = Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc);
+            recordField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return recordField;
+         } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
+            if (fieldDesc.GetLinkIds().size() != 1)
+               throw ROOT::RException(R__FAIL("invalid structure for collection field " + fieldName));
+
+            auto itemFieldId = fieldDesc.GetLinkIds()[0];
+            const auto &itemFieldDesc = desc->GetFieldDescriptor(itemFieldId);
+            auto itemField =
+               Create(itemFieldDesc.GetFieldName(), itemFieldDesc.GetTypeName(), options, desc, itemFieldId).Unwrap();
+            auto vecField = ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc);
+            vecField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return vecField;
+         } else if (ROOT::Internal::IsCustomEnumFieldDesc(*desc, fieldDesc)) {
+            R__ASSERT(!fieldDesc.GetLinkIds().empty());
+            auto underlyingIntFieldId = fieldDesc.GetLinkIds()[0];
+            const auto &underlyingIntFieldDesc = desc->GetFieldDescriptor(underlyingIntFieldId);
+            auto enumField = ROOT::Internal::CreateEmulatedEnumField(fieldName, fieldDesc.GetTypeName(),
+                                                                     underlyingIntFieldDesc.GetTypeName());
+            enumField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return enumField;
          }
       }
    } catch (const RException &e) {
@@ -631,7 +652,15 @@ std::size_t ROOT::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
 
 void *ROOT::RFieldBase::CreateObjectRawPtr() const
 {
-   void *where = operator new(GetValueSize());
+   const auto align = GetAlignment();
+   void *where;
+   if (align <= sizeof(std::max_align_t)) {
+      // We use the normal operator new for regularly aligned types to not complicate the user code that
+      // deletes objects returned by CreateObject()
+      where = operator new(GetValueSize());
+   } else {
+      where = operator new(GetValueSize(), std::align_val_t(GetAlignment()));
+   }
    R__ASSERT(where != nullptr);
    ConstructValue(where);
    return where;
@@ -648,26 +677,32 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RFieldBase::SplitValue(const RValue 
    return std::vector<RValue>();
 }
 
-void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child)
+void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child, std::string_view expectedChildName)
 {
-   // Note that during a model update, new fields will be attached to the zero field. The zero field, however,
-   // does not change its inital state because only its sub fields get connected by RPageSink::UpdateSchema.
-   if (fState != EState::kUnconnected)
-      throw RException(R__FAIL("invalid attempt to attach subfield to already connected field"));
+   // Note that technically the zero field would not need to have the extensible trait: because only its sub fields
+   // get connected by RPageSink::UpdateSchema, it does not change its initial state.
+   if (!(fTraits & kTraitExtensible) && (fState != EState::kUnconnected))
+      throw RException(R__FAIL("invalid attempt to attach subfield to already connected, non-extensible field"));
+
+   if (!expectedChildName.empty() && child->GetFieldName() != expectedChildName) {
+      throw RException(R__FAIL(std::string("invalid subfield name: ") + child->GetFieldName() +
+                               "   expected: " + std::string(expectedChildName)));
+   }
+
    child->fParent = this;
    fSubfields.emplace_back(std::move(child));
 }
 
 ROOT::NTupleSize_t ROOT::RFieldBase::EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const
 {
-   std::size_t result = globalIndex;
+   ROOT::NTupleSize_t result = globalIndex;
    for (auto f = this; f != nullptr; f = f->GetParent()) {
       auto parent = f->GetParent();
       if (parent && (parent->GetStructure() == ROOT::ENTupleStructure::kCollection ||
                      parent->GetStructure() == ROOT::ENTupleStructure::kVariant)) {
          return 0U;
       }
-      result *= std::max(f->GetNRepetitions(), std::size_t{1U});
+      result *= std::max<ROOT::NTupleSize_t>(f->GetNRepetitions(), ROOT::NTupleSize_t{1U});
    }
    return result;
 }
@@ -751,7 +786,7 @@ ROOT::RFieldBase::RBulkValues ROOT::RFieldBase::CreateBulk()
 
 ROOT::RFieldBase::RValue ROOT::RFieldBase::BindValue(std::shared_ptr<void> objPtr)
 {
-   return RValue(this, objPtr);
+   return RValue(this, std::move(objPtr));
 }
 
 std::size_t ROOT::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
@@ -827,10 +862,7 @@ void ROOT::RFieldBase::SetColumnRepresentatives(const RColumnRepresentations::Se
       if (itRepresentative == std::end(validTypes))
          throw RException(R__FAIL("invalid column representative"));
 
-      // don't add a duplicate representation
-      if (std::find_if(fColumnRepresentatives.begin(), fColumnRepresentatives.end(),
-                       [&r](const auto &rep) { return r == rep.get(); }) == fColumnRepresentatives.end())
-         fColumnRepresentatives.emplace_back(*itRepresentative);
+      fColumnRepresentatives.emplace_back(*itRepresentative);
    }
 }
 
@@ -871,7 +903,7 @@ ROOT::RFieldBase::EnsureCompatibleColumnTypes(const ROOT::RNTupleDescriptor &des
                             "(representation index: " + std::to_string(representationIndex) + ")"));
 }
 
-size_t ROOT::RFieldBase::AddReadCallback(ReadCallback_t func)
+size_t ROOT::RFieldBase::AddReadCallback(const ReadCallback_t &func)
 {
    fReadCallbacks.push_back(func);
    fIsSimple = false;
@@ -886,7 +918,9 @@ void ROOT::RFieldBase::RemoveReadCallback(size_t idx)
 
 void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &options)
 {
-   if ((options.GetCompression() == 0) && HasDefaultColumnRepresentative()) {
+   // Sampled upfront: the block below sets representatives, which would clear the "default" state.
+   const bool hadDefaultRepresentative = HasDefaultColumnRepresentative();
+   if ((options.GetCompression() == 0) && hadDefaultRepresentative) {
       ColumnRepresentation_t rep = GetColumnRepresentations().GetSerializationDefault();
       for (auto &colType : rep) {
          switch (colType) {
@@ -906,8 +940,36 @@ void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &op
       SetColumnRepresentatives({rep});
    }
 
-   if (fTypeAlias == "Double32_t")
-      SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
+   // Only adjust Double32_t when the user did not pin a representation: an explicit representative must
+   // survive (see RNTupleMerger::ExtendDestinationModel), otherwise merging would silently reinterpret the
+   // raw copies of the source pages under a different encoding.
+   if ((fTypeAlias == "Double32_t") && hadDefaultRepresentative) {
+      if (options.GetCompression() != 0)
+         SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
+      else
+         SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}});
+   }
+
+   // An explicit representation pinned on a Double32_t field must contain a reduced-precision encoding:
+   // a 64-bit-only selection would store full doubles while the field promises Double32_t precision.
+   // A multi-column selection that also includes a reduced-precision representative stays legal.
+   if ((fTypeAlias == "Double32_t") && !hadDefaultRepresentative) {
+      bool hasSubDoubleRep = false;
+      for (const auto &rep : GetColumnRepresentatives()) {
+         for (const auto colType : rep) {
+            if ((colType != ROOT::ENTupleColumnType::kReal64) && (colType != ROOT::ENTupleColumnType::kSplitReal64)) {
+               hasSubDoubleRep = true;
+               break;
+            }
+         }
+         if (hasSubDoubleRep)
+            break;
+      }
+      if (!hasSubDoubleRep) {
+         throw RException(R__FAIL("explicit column representations of Double32_t field `" + GetFieldName() +
+                                  "` must include a reduced-precision representation"));
+      }
+   }
 }
 
 void ROOT::RFieldBase::ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry)
@@ -958,10 +1020,10 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
       // we would need to handle it in each and every ReconcileOnDiskField()
       // Note that we have to do this before calling BeforeConnectPageSource(), which already may compare the field
       // to its on-disk description.
-      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+      auto descGuard = pageSource.GetSharedDescriptorGuard();
       if (!dynamic_cast<RAtomicField *>(this) &&
-          Internal::IsStdAtomicFieldDesc(desc.GetFieldDescriptor(GetOnDiskId()))) {
-         SetOnDiskId(desc.GetFieldDescriptor(GetOnDiskId()).GetLinkIds()[0]);
+          Internal::IsStdAtomicFieldDesc(descGuard->GetFieldDescriptor(GetOnDiskId()))) {
+         SetOnDiskId(descGuard->GetFieldDescriptor(GetOnDiskId()).GetLinkIds()[0]);
       }
    }
 
@@ -987,8 +1049,8 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    }
 
    if (!fIsArtificial) {
-      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
-      ReconcileOnDiskField(desc);
+      auto descGuard = pageSource.GetSharedDescriptorGuard();
+      ReconcileOnDiskField(descGuard.GetConstRef());
    }
 
    for (auto &f : fSubfields) {
@@ -1001,7 +1063,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    // Do not generate columns nor set fColumnRepresentatives for artificial fields.
    if (!fIsArtificial) {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetConstRef();
       GenerateColumns(desc);
       if (fColumnRepresentatives.empty()) {
          // If we didn't get columns from the descriptor, ensure that we actually expect a field without columns
@@ -1060,6 +1122,14 @@ ROOT::RFieldBase::EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::
       errMsg << " repetition count " << GetNRepetitions() << " vs. " << fieldDesc.GetNRepetitions() << ";";
    }
    return R__FAIL(errMsg.str() + "\n" + Internal::GetTypeTraceReport(*this, desc));
+}
+
+ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingOnDiskCollection(const RNTupleDescriptor &desc) const
+{
+   std::uint32_t ignoreBits = kDiffTypeName;
+   if (desc.GetFieldDescriptor(GetOnDiskId()).IsSoACollection())
+      ignoreBits |= kDiffTypeVersion;
+   return EnsureMatchingOnDiskField(desc, ignoreBits);
 }
 
 ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingTypePrefix(const RNTupleDescriptor &desc,

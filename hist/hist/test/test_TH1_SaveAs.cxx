@@ -162,6 +162,9 @@ struct TestSaveAs {
          if (line != "{" && line != "}" && (line.rfind("//", 0) == 0 || line.length() < 6)) {
             continue;
          }
+         // Ignore setting/unsetting of the associated directory, so the test works also with ROOT 7:
+         if (line.find("SetDirectory") != std::string::npos)
+            continue;
          idx++;
          if (idx > NC) {
             infile.close();

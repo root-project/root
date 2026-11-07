@@ -24,7 +24,7 @@ namespace Internal {
 
 /**
  * \class RRawFileWin RRawFileWin.hxx
- * \ingroup IO
+ * \ingroup io_files
  *
  * The RRawFileWin class uses portable C I/O calls to read from a drive. The standard C I/O buffering is turned off
  * for the buffering of RRawFile base class.

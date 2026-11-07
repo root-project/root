@@ -18,7 +18,6 @@
 
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
-#include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
 
 class RooRealSumPdf : public RooAbsPdf {
@@ -65,8 +64,6 @@ public:
   static void setFloorGlobal(bool flag) { _doFloorGlobal = flag ; }
   static bool getFloorGlobal() { return _doFloorGlobal ; }
 
-  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
-  void setCacheAndTrackHints(RooArgSet&) override ;
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
@@ -133,7 +130,6 @@ private:
 
   static void printMetaArgs(RooArgList const& funcList, RooArgList const& coefList, std::ostream& os);
 
-  static void setCacheAndTrackHints(RooArgList const& funcList, RooArgSet& trackNodes);
 
   inline void setExtended(bool extended) { _extended = extended; }
 

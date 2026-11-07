@@ -57,6 +57,15 @@ TEST(RTTreeDS, BranchWithNestedSameName)
    expect_vec_eq(branchNames, expectedBranchNames);
 }
 
+TEST(RTTreeDS, GetDatasetTopLevelFieldNames)
+{
+   InputTreeRAII dataset{};
+
+   ROOT::RDataFrame df{dataset.fTreeName, dataset.fFileName};
+   auto branchNames = df.GetDatasetTopLevelFieldNames();
+   expect_vec_eq(branchNames, std::vector<std::string>{"toplevel"});
+}
+
 #ifdef R__USE_IMT
 struct Dataset20164RAIII {
    const char *fTreeName{"tree_20164"};

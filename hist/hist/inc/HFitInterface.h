@@ -146,6 +146,12 @@ namespace ROOT {
        */
       void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1);
 
+      /**
+          compute initial parameter for a polynomial function given the fit data
+          Set the parameters to an unweighted least-squares line through the data.
+          Only the first-degree case is seeded; a higher degree is left untouched.
+       */
+      void InitPolynom(const ROOT::Fit::BinData &data, TF1 *f1);
 
       /**
           compute initial parameter for gaussian function given the fit data
@@ -169,7 +175,7 @@ namespace ROOT {
       /**
          compute the chi2 value for an histogram given a function  (see TH1::Chisquare for the documentation)
       */
-      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange, EChisquareType type);
+      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange, EChisquareType type, bool useIntegral = false);
 
       /**
          compute the chi2 value for a graph given a function (see TGraph::Chisquare)

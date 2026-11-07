@@ -44,11 +44,13 @@ TApplication (see TRint).
 #include "TClassEdit.h"
 #include "TMethod.h"
 #include "TDataMember.h"
-#include "TApplicationCommandLineOptionsHelp.h"
+#include "optparse.hxx"
 #include "TPRegexp.h"
+#include <ROOT/StringUtils.hxx>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include "../res/TApplicationCmdlineHelp.h"
 
 TApplication *gApplication = nullptr;
 Bool_t TApplication::fgGraphNeeded = kFALSE;
@@ -248,37 +250,42 @@ void TApplication::InitializeGraphics(Bool_t only_web)
    if (fgGraphInit || !fgGraphNeeded)
       return;
 
+   Bool_t use_x11 = kFALSE;
+
    if (!only_web) {
       // Load the graphics related libraries
       LoadGraphicsLibs();
 
-      // Try to load TrueType font renderer. Only try to load if not in batch
-      // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
-      // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                          TROOT::GetTTFFontDir());
-      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
-      // Check for use of DFSG - fonts
-      if (!ttfont)
-         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+      use_x11 = gGuiFactory->UseVirtualX();
 
-   #if !defined(R__WIN32)
-      if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
-          ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
-         if (gClassTable->GetDict("TGX11TTF")) {
-            // in principle we should not have linked anything against libGX11TTF
-            // but with ACLiC this can happen, initialize TGX11TTF by hand
-            // (normally this is done by the static library initializer)
-            ProcessLine("TGX11TTF::Activate();");
-         } else {
-            TPluginHandler *h;
-            if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
-               if (h->LoadPlugin() == -1)
-                  Info("InitializeGraphics", "no TTF support");
+      if (use_x11) {
+         // Try to load TrueType font renderer. Only try to load if not in batch
+         // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
+         // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
+         const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+                                             TROOT::GetTTFFontDir());
+         char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+         // Check for use of DFSG - fonts
+         if (!ttfont)
+            ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+
+      #if !defined(R__WIN32)
+         if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
+            ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+            if (gClassTable->GetDict("TGX11TTF")) {
+               // in principle we should not have linked anything against libGX11TTF
+               // but with ACLiC this can happen, initialize TGX11TTF by hand
+               // (normally this is done by the static library initializer)
+               ProcessLine("TGX11TTF::Activate();");
+            } else {
+               if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf"))
+                  if (h->LoadPlugin() == -1)
+                     Info("InitializeGraphics", "no TTF support");
+            }
          }
+      #endif
+         delete [] ttfont;
       }
-   #endif
-      delete [] ttfont;
    }
 
    if (!only_web || !fAppImp) {
@@ -301,14 +308,12 @@ void TApplication::InitializeGraphics(Bool_t only_web)
    Init();
 
    // Set default screen factor (if not disabled in rc file)
-   if (!only_web && gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
+   if (use_x11 && gVirtualX && gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
       Int_t  x, y;
       UInt_t w, h;
-      if (gVirtualX) {
-         gVirtualX->GetGeometry(-1, x, y, w, h);
-         if (h > 0)
+      gVirtualX->GetGeometry(-1, x, y, w, h);
+      if (h > 0)
             gStyle->SetScreenFactor(0.001 * h);
-      }
    }
 }
 
@@ -346,8 +351,6 @@ char *TApplication::Argv(Int_t index) const
 
 void TApplication::GetOptions(Int_t *argc, char **argv)
 {
-   static char null[1] = { "" };
-
    fNoLog = kFALSE;
    fQuit  = kFALSE;
    fFiles = nullptr;
@@ -355,205 +358,251 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    if (!argc)
       return;
 
-   int i, j;
+   // Due to --web accepting 0 or 1 arguments we can't process it with RCmdLineOpts, so do a preprocessing for it.
+   for (int i = 1; i < *argc; ++i) {
+      if (strcmp(argv[i], "--web") != 0)
+         continue;
+
+      Warning("TApplication", "Flag `--web` without arguments is deprecated, use `--web=on` instead.");
+      if (argv[i][5] == '=') {
+         gROOT->SetWebDisplay(argv[i] + 6);
+      } else {
+         gROOT->SetWebDisplay("");
+      }
+
+      // Remove this flag from argc/argv, otherwise TRint's ctor will complain.
+      for (int j = i + 1; j < *argc; ++j) {
+         argv[j - 1] = argv[j];
+      }
+      *argc -= 1;
+      break;
+   }
+
+   ROOT::RCmdLineOpts::RSettings settings;
+   settings.fIgnoreUnknownFlags = true;
+   ROOT::RCmdLineOpts opts{settings};
+   opts.AddFlag({"-b", "--batch"});
+   opts.AddFlag({"-x", "--exit-on-exceptions"});
+   opts.AddFlag({"-e", "--execute"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "",
+                ROOT::RCmdLineOpts::kFlagAllowMultiple);
+   opts.AddFlag({"-n", "--no-logon-logoff"});
+   opts.AddFlag({"-t", "--enable-threading"});
+   opts.AddFlag({"-q", "--quit-after-processing"});
+   opts.AddFlag({"-l", "--no-banner"});
+   opts.AddFlag({"-a"});
+   opts.AddFlag({"-splash"}); // this option is ignored.
+   opts.AddFlag({"-config", "--config"});
+   opts.AddFlag({"-h", "-?", "--help"});
+   // This is a hack to disallow `--web on` and similar, which cannot be disambiguated easily with the arg-less `--web`.
+   // This way we force --web to be called with the equal sign like `--web=on` and no space in between (like it was
+   // before using the optparse lib).
+   // Downside: this makes `--web==on` legal, but that's not really a big deal.
+   opts.AddFlag({"--web="}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "", ROOT::RCmdLineOpts::kFlagPrefixArg);
+   opts.AddFlag({"--version"});
+
+   opts.Parse(argv + 1, *argc - 1);
+   for (const auto &err : opts.GetErrors()) {
+      fprintf(stderr, "%s\n", err.c_str());
+   }
+   if (!opts.GetErrors().empty())
+      Terminate(0);
+
+   if (opts.GetSwitch("help")) {
+      fprintf(stderr, kCommandLineOptionsHelp);
+      Terminate(0);
+   }
+   if (opts.GetSwitch("version")) {
+      fprintf(stderr, "ROOT Version: %s\n", gROOT->GetVersion());
+      fprintf(stderr, "Built for %s on %s\n",
+              gSystem->GetBuildArch(),
+              gROOT->GetGitDate());
+      fprintf(stderr, "From %s@%s\n",
+             gROOT->GetGitBranch(),
+             gROOT->GetGitCommit());
+      Terminate(0);
+   }
+   if (opts.GetSwitch("config")) {
+      fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
+      Terminate(0);
+   }
+   if (opts.GetSwitch("a")) {
+      fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.\n");
+      Terminate(0);
+   }
+   if (opts.GetSwitch("b")) {
+      MakeBatch();
+   }
+   if (opts.GetSwitch("n")) {
+      fNoLog = kTRUE;
+   }
+   if (opts.GetSwitch("t")) {
+      ROOT::EnableImplicitMT();
+      // EnableImplicitMT() only enables thread safety if IMT was configured;
+      // enable thread safety even with IMT off:
+      ROOT::EnableThreadSafety();
+   }
+   if (opts.GetSwitch("q")) {
+      fQuit = kTRUE;
+   }
+   if (opts.GetSwitch("l")) {
+      // used by front-end program to not display splash screen
+      fNoLogo = kTRUE;
+   }
+   if (opts.GetSwitch("x")) {
+      fExitOnException = kExit;
+   }
+   if (opts.GetSwitch("splash")) {
+      Warning("TApplication", "Flag `-splash` is deprecated and ignored.");
+   }
+
+   if (auto web = opts.GetFlagValue("web="); !web.empty()) {
+      gROOT->SetWebDisplay(std::string(web).c_str());
+   }
+
+   std::vector<std::pair<std::size_t, TObject *>> filesToAdd;
+   // NOTE: "-e" expressions and positional arguments (actual files) must be added in exact order of appearance, so
+   // we cannot process them separately right away. We instead add them to the `filesToAdd` vector and sort them
+   // by appearance order before adding them to fFiles.
+   for (const auto &flag : opts.GetFlags()) {
+      if (flag.fName == "e" || flag.fName == "execute") {
+         auto *expr = new TObjString(std::string(flag.fValue).c_str());
+         expr->SetBit(kExpression);
+         filesToAdd.emplace_back(flag.fIndex, expr);
+      }
+   }
+
+   const auto positionalArgsWithIndices = opts.GetArgsWithIndices();
+   const auto lastArgBeforeDashDash = opts.GetFirstPostDashDashArg().value_or(positionalArgsWithIndices.size());
+
    TString pwd;
 
-   for (i = 1; i < *argc; i++) {
-      if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
-          !strncmp(argv[i], "--help", 6)) {
-         fprintf(stderr, kCommandLineOptionsHelp);
-         Terminate(0);
-      } else if (!strncmp(argv[i], "--version", 9)) {
-         fprintf(stderr, "ROOT Version: %s\n", gROOT->GetVersion());
-         fprintf(stderr, "Built for %s on %s\n",
-                 gSystem->GetBuildArch(),
-                 gROOT->GetGitDate());
+   // Process all positional arguments before `--`
+   for (std::size_t i = 0; i < lastArgBeforeDashDash; ++i) {
+      const auto [argIdx, arg] = positionalArgsWithIndices[i];
+      Long64_t size;
+      Long_t id, flags, modtime;
 
-         fprintf(stderr, "From %s@%s\n",
-                gROOT->GetGitBranch(),
-                gROOT->GetGitCommit());
+      auto [argPreParens, argPostParens] = ROOT::SplitAt(arg, '(');
+      TString expandedDir(argPreParens);
+      if (gSystem->ExpandPathName(expandedDir)) {
+         // ROOT-9959: we do not continue if we could not expand the path
+         continue;
+      }
+      TUrl udir(expandedDir, kTRUE);
+      // remove options and anchor to check the path
+      TString sfx = udir.GetFileAndOptions();
+      TString fln = udir.GetFile();
+      sfx.Replace(sfx.Index(fln), fln.Length(), "");
+      // 'path' is the full URL without suffixes (options and/or anchor)
+      TString path = udir.GetFile();
+      if (strcmp(udir.GetProtocol(), "file")) {
+         path = udir.GetUrl();
+         path.Replace(path.Index(sfx), sfx.Length(), "");
+      }
 
-         Terminate(0);
-      } else if (!strcmp(argv[i], "-config")) {
-         fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
-         Terminate(0);
-      } else if (!strcmp(argv[i], "-a")) {
-         fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.\n");
-         Terminate(0);
-      } else if (!strcmp(argv[i], "-b")) {
-         MakeBatch();
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-n")) {
-         fNoLog = kTRUE;
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-t")) {
-         ROOT::EnableImplicitMT();
-         // EnableImplicitMT() only enables thread safety if IMT was configured;
-         // enable thread safety even with IMT off:
-         ROOT::EnableThreadSafety();
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-q")) {
-         fQuit = kTRUE;
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-l")) {
-         // used by front-end program to not display splash screen
-         fNoLogo = kTRUE;
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-x")) {
-         fExitOnException = kExit;
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-splash")) {
-         // used when started by front-end program to signal that
-         // splash screen can be popped down (TRint::PrintLogo())
-         argv[i] = null;
-      } else if (strncmp(argv[i], "--web", 5) == 0) {
-         // the web mode is requested
-         const char *opt = argv[i] + 5;
-         argv[i] = null;
-         gROOT->SetWebDisplay((*opt == '=') ? opt + 1 : "");
-      } else if (!strcmp(argv[i], "-e")) {
-         argv[i] = null;
-         ++i;
-
-         if ( i < *argc ) {
-            if (!fFiles) fFiles = new TObjArray;
-            TObjString *expr = new TObjString(argv[i]);
-            expr->SetBit(kExpression);
-            fFiles->Add(expr);
-            argv[i] = null;
-         } else {
-            Warning("GetOptions", "-e must be followed by an expression.");
-         }
-      } else if (!strcmp(argv[i], "--")) {
-         TObjString* macro = nullptr;
-         bool warnShown = false;
-
-         if (fFiles) {
-            for (auto f: *fFiles) {
-               TObjString *file = dynamic_cast<TObjString *>(f);
-               if (!file) {
-                  if (!dynamic_cast<TNamed*>(f)) {
-                     Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
-                     if (f)
-                        f->Dump();
-                  } // else we did not find the file.
-                  continue;
-               }
-
-               if (file->TestBit(kExpression))
-                  continue;
-               if (file->String().EndsWith(".root"))
-                  continue;
-               if (file->String().Contains('('))
-                  continue;
-
-               if (macro && !warnShown && (warnShown = true))
-                  Warning("GetOptions", "-- is used with several macros. "
-                                        "The arguments will be passed to the last one.");
-
-               macro = file;
+      if (argPostParens.empty() && !gSystem->GetPathInfo(path.Data(), &id, &size, &flags, &modtime)) {
+         if ((flags & 2)) {
+            // if directory set it in fWorkDir
+            if (pwd == "") {
+               pwd = gSystem->WorkingDirectory();
+               fWorkDir = expandedDir;
+               gSystem->ChangeDirectory(expandedDir);
+            } else if (!strcmp(gROOT->GetName(), "Rint")) {
+               Warning("GetOptions", "only one directory argument can be specified (%s)", expandedDir.Data());
             }
-         }
-
-         if (macro) {
-            argv[i] = null;
-            ++i;
-            TString& str = macro->String();
-
-            str += '(';
-            for (; i < *argc; i++) {
-               str += argv[i];
-               str += ',';
-               argv[i] = null;
-            }
-            str.EndsWith(",") ? str[str.Length() - 1] = ')' : str += ')';
+         } else if (size > 0) {
+            // if file add to list of files to be processed
+            filesToAdd.emplace_back(argIdx, new TObjString(path.Data()));
          } else {
-            Warning("GetOptions", "no macro to pass arguments to was provided. "
-                                  "Everything after the -- will be ignored.");
-            for (; i < *argc; i++)
-               argv[i] = null;
+            Warning("GetOptions", "file %s has size 0, skipping", expandedDir.Data());
          }
-      } else if (argv[i][0] != '-' && argv[i][0] != '+') {
-         Long64_t size;
-         Long_t id, flags, modtime;
-         char *arg = strchr(argv[i], '(');
-         if (arg) *arg = '\0';
-         TString expandedDir(argv[i]);
-         if (gSystem->ExpandPathName(expandedDir)) {
-            // ROOT-9959: we do not continue if we could not expand the path
-            continue;
-         }
-         TUrl udir(expandedDir, kTRUE);
-         // remove options and anchor to check the path
-         TString sfx = udir.GetFileAndOptions();
-         TString fln = udir.GetFile();
-         sfx.Replace(sfx.Index(fln), fln.Length(), "");
-         TString path = udir.GetFile();
-         if (strcmp(udir.GetProtocol(), "file")) {
-            path = udir.GetUrl();
-            path.Replace(path.Index(sfx), sfx.Length(), "");
-         }
-         // 'path' is the full URL without suffices (options and/or anchor)
-         if (arg) *arg = '(';
-         if (!arg && !gSystem->GetPathInfo(path.Data(), &id, &size, &flags, &modtime)) {
-            if ((flags & 2)) {
-               // if directory set it in fWorkDir
-               if (pwd == "") {
-                  pwd = gSystem->WorkingDirectory();
-                  fWorkDir = expandedDir;
-                  gSystem->ChangeDirectory(expandedDir);
-                  argv[i] = null;
-               } else if (!strcmp(gROOT->GetName(), "Rint")) {
-                  Warning("GetOptions", "only one directory argument can be specified (%s)", expandedDir.Data());
-               }
-            } else if (size > 0) {
+      } else {
+         if (TString(udir.GetFile()).EndsWith(".root")) {
+            if (!strcmp(udir.GetProtocol(), "file")) {
+               // file ending on .root but does not exist, likely a typo
+               // warn user if plain root...
+               if (!strcmp(gROOT->GetName(), "Rint"))
+                  Warning("GetOptions", "file %s not found", expandedDir.Data());
+            } else {
+               // remote file, give it the benefit of the doubt and add it to list of files
+               filesToAdd.emplace_back(argIdx, new TObjString(arg.c_str()));
+            }
+         } else {
+            TString mode,fargs,io;
+            TString fname = gSystem->SplitAclicMode(expandedDir,mode,fargs,io);
+            char *mac;
+            if ((mac = gSystem->Which(TROOT::GetMacroPath(), fname,
+                                      kReadPermission))) {
                // if file add to list of files to be processed
-               if (!fFiles) fFiles = new TObjArray;
-               fFiles->Add(new TObjString(path.Data()));
-               argv[i] = null;
+               filesToAdd.emplace_back(argIdx, new TObjString(arg.c_str()));
+               delete [] mac;
             } else {
-               Warning("GetOptions", "file %s has size 0, skipping", expandedDir.Data());
-            }
-         } else {
-            if (TString(udir.GetFile()).EndsWith(".root")) {
-               if (!strcmp(udir.GetProtocol(), "file")) {
-                  // file ending on .root but does not exist, likely a typo
-                  // warn user if plain root...
-                  if (!strcmp(gROOT->GetName(), "Rint"))
-                     Warning("GetOptions", "file %s not found", expandedDir.Data());
-               } else {
-                  // remote file, give it the benefit of the doubt and add it to list of files
-                  if (!fFiles) fFiles = new TObjArray;
-                  fFiles->Add(new TObjString(argv[i]));
-                  argv[i] = null;
-               }
-            } else {
-               TString mode,fargs,io;
-               TString fname = gSystem->SplitAclicMode(expandedDir,mode,fargs,io);
-               char *mac;
-               if (!fFiles) fFiles = new TObjArray;
-               if ((mac = gSystem->Which(TROOT::GetMacroPath(), fname,
-                                         kReadPermission))) {
-                  // if file add to list of files to be processed
-                  fFiles->Add(new TObjString(argv[i]));
-                  argv[i] = null;
-                  delete [] mac;
-               } else {
-                  // if file add an invalid entry to list of files to be processed
-                  fFiles->Add(new TNamed("NOT FOUND!", argv[i]));
-                  // only warn if we're plain root,
-                  // other progs might have their own params
-                  if (!strcmp(gROOT->GetName(), "Rint")) {
-                     Error("GetOptions", "macro %s not found", fname.Data());
-                     // Return 2 as the Python interpreter does in case the macro
-                     // is not found.
-                     Terminate(2);
-                  }
+               // if file add an invalid entry to list of files to be processed
+               filesToAdd.emplace_back(argIdx, new TNamed("NOT FOUND!", arg.c_str()));
+               // only warn if we're plain root,
+               // other progs might have their own params
+               if (!strcmp(gROOT->GetName(), "Rint")) {
+                  Error("GetOptions", "macro %s not found", fname.Data());
+                  // Return 2 as the Python interpreter does in case the macro
+                  // is not found.
+                  Terminate(2);
                }
             }
          }
       }
-      // ignore unknown options
+   }
+
+   if (!filesToAdd.empty()) {
+      std::sort(filesToAdd.begin(), filesToAdd.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
+      assert(!fFiles);
+      fFiles = new TObjArray;
+      for (const auto &[_idx, file] : filesToAdd) {
+         fFiles->Add(file);
+      }
+   }
+
+   // Process positional arguments after `--` as arguments for the macro.
+   // This is only valid if we passed at least one macro and will be considered arguments for the last one passed.
+   if (lastArgBeforeDashDash != positionalArgsWithIndices.size()) {
+      TObjString* macro = nullptr;
+      bool warnShown = false;
+      if (fFiles) {
+         for (auto f: *fFiles) {
+            TObjString *file = dynamic_cast<TObjString *>(f);
+            if (!file) {
+               if (!dynamic_cast<TNamed*>(f)) {
+                  Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
+                  if (f)
+                     f->Dump();
+               } // else we did not find the file.
+               continue;
+            }
+
+            if (file->TestBit(kExpression))
+               continue;
+            if (file->String().EndsWith(".root"))
+               continue;
+            if (file->String().Contains('('))
+               continue;
+
+            if (macro && !warnShown) {
+               warnShown = true;
+               Warning("GetOptions", "-- is used with several macros. "
+                                     "The arguments will be passed to the last one.");
+            }
+
+            macro = file;
+         }
+      }
+
+      if (macro) {
+         TString& str = macro->String();
+         const auto &positionalArgs = opts.GetArgs();
+         str += '(' + ROOT::Join(",", positionalArgs.begin() + lastArgBeforeDashDash, positionalArgs.end()) + ')';
+      } else {
+         Warning("GetOptions", "no macro to pass arguments to was provided. "
+                               "Everything after the -- will be ignored.");
+      }
    }
 
    // go back to startup directory
@@ -561,14 +610,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       gSystem->ChangeDirectory(pwd);
 
    // remove handled arguments from argument array
-   j = 0;
-   for (i = 0; i < *argc; i++) {
-      if (strcmp(argv[i], "")) {
-         argv[j] = argv[i];
-         j++;
-      }
+   int j = 1;
+   for (std::size_t idx : opts.GetUnprocessedArgsIndices()) {
+      argv[j++] = argv[idx + 1];
    }
-
+   // Last argv must be null (see https://en.cppreference.com/cpp/language/main_function)
+   argv[j] = nullptr;
    *argc = j;
 }
 
@@ -624,7 +671,8 @@ TApplication::EExitOnException TApplication::ExitOnException(TApplication::EExit
 /// The function generates and executes a command that loads the Doxygen URL in
 /// a browser. It works for Mac, Windows and Linux. In the case of Linux, the
 /// function also checks if the DISPLAY is set. If it isn't, a warning message
-/// and the URL will be displayed on the terminal.
+/// and the URL will be displayed on the terminal. In all OS, if the system command
+/// fails, the URL will be also displayed on the terminal.
 ///
 /// \param[in] url web page to be displayed in a browser
 
@@ -636,26 +684,28 @@ void TApplication::OpenInBrowser(const TString &url)
    TString cMac("open ");
    // We generate the full command and execute it.
    cMac.Append(url);
-   gSystem->Exec(cMac);
+   auto res = gSystem->Exec(cMac);
 #elif defined(R__WIN32)
    // Command for opening a browser on Windows.
    TString cWindows("start \"\" ");
    cWindows.Append(url);
-   gSystem->Exec(cWindows);
+   auto res = gSystem->Exec(cWindows);
 #else
-   // Command for opening a browser in Linux.
-   TString cLinux("xdg-open ");
-   // For Linux we check if the DISPLAY is set.
-   if (gSystem->Getenv("DISPLAY")) {
-      // If the DISPLAY is set it will open the browser.
-      cLinux.Append(url);
-      gSystem->Exec(cLinux);
-   } else {
-      // Else the user will have a warning and the URL in the terminal.
-      Warning("OpenInBrowser", "The $DISPLAY is not set! Please open (e.g. Ctrl-click) %s\n", url.Data());
+   // For Linux we check first if the DISPLAY is set.
+   if (!gSystem->Getenv("DISPLAY")) {
+      // The user will have a warning and the URL in the terminal.
+      Warning("OpenInBrowser", "The $DISPLAY is not set! Please manually open (e.g. Ctrl-click) %s\n", url.Data());
       return;
    }
+   // Command for opening a browser in Linux. Since the DISPLAY is set, it will open the browser.
+   TString cLinux("xdg-open ");
+   cLinux.Append(url);
+   auto res = gSystem->Exec(cLinux);
 #endif
+   if (res != EXIT_SUCCESS) {
+      Warning("OpenInBrowser", "Could not automatically open web browser (e.g. due to missing X11)! Please manually open (e.g. Ctrl-click) %s\n", url.Data());
+      return;
+   }
    Info("OpenInBrowser", "A new tab should have opened in your browser.");
 }
 
@@ -1371,6 +1421,23 @@ void TApplication::LoadGraphicsLibs()
       if (h->LoadPlugin() == -1)
          return;
 
+   TString guiFactory = gEnv->GetValue("Gui.Factory", "native");
+   guiFactory.ToLower();
+   if (guiFactory == "native")
+      guiFactory = "root";
+
+   if (auto h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory)) {
+      if (h->LoadPlugin() == -1) {
+         gROOT->SetBatch(kTRUE);
+         return;
+      }
+      gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
+
+      if (!gGuiFactory || !gGuiFactory->UseVirtualX())
+         return;
+   }
+
+
    TString name;
    TString title1 = "ROOT interface to ";
    TString nativex, title;
@@ -1405,19 +1472,6 @@ void TApplication::LoadGraphicsLibs()
       }
       gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
       fgGraphInit = kTRUE;
-   }
-
-   TString guiFactory = gEnv->GetValue("Gui.Factory", "native");
-   guiFactory.ToLower();
-   if (guiFactory == "native")
-      guiFactory = "root";
-
-   if (auto h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory)) {
-      if (h->LoadPlugin() == -1) {
-         gROOT->SetBatch(kTRUE);
-         return;
-      }
-      gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
    }
 }
 

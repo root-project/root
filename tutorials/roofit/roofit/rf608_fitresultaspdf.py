@@ -32,7 +32,7 @@ frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "model", [g1, g2], [frac])
 
 # Generate 1000 events
-data = model.generate({x}, 1000)
+data = model.generate(x, 1000)
 
 # Fit model to data
 # ----------------------------------
@@ -42,13 +42,13 @@ r = model.fitTo(data, Save=True, PrintLevel=-1)
 # Create MV Gaussian pdf of fitted parameters
 # ------------------------------------------------------------------------------------
 
-parabPdf = r.createHessePdf({frac, mean, sigma_g2})
+parabPdf = r.createHessePdf([frac, mean, sigma_g2])
 
 # Some exercises with the parameter pdf
 # -----------------------------------------------------------------------------
 
 # Generate 100K points in the parameter space, from the MVGaussian pdf
-d = parabPdf.generate({mean, sigma_g2, frac}, 100000)
+d = parabPdf.generate([mean, sigma_g2, frac], 100000)
 
 # Sample a 3-D histogram of the pdf to be visualized as an error
 # ellipsoid using the GLISO draw option
@@ -58,9 +58,9 @@ hh_3d.SetFillColor("kBlue")
 # Project 3D parameter pdf down to 3 permutations of two-dimensional pdfs
 # The integrations corresponding to these projections are performed analytically
 # by the MV Gaussian pdf
-pdf_sigmag2_frac = parabPdf.createProjection({mean})
-pdf_mean_frac = parabPdf.createProjection({sigma_g2})
-pdf_mean_sigmag2 = parabPdf.createProjection({frac})
+pdf_sigmag2_frac = parabPdf.createProjection(mean)
+pdf_mean_frac = parabPdf.createProjection(sigma_g2)
+pdf_mean_sigmag2 = parabPdf.createProjection(frac)
 
 # Make 2D plots of the 3 two-dimensional pdf projections
 hh_sigmag2_frac = pdf_sigmag2_frac.createHistogram("sigma_g2,frac", 50, 50)

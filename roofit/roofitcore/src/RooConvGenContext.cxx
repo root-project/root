@@ -32,12 +32,11 @@ subsequently explicitly smeared with the resolution model distribution.
 #include "RooAbsAnaConvPdf.h"
 #include "RooNumConvPdf.h"
 #include "RooFFTConvPdf.h"
-#include "RooProdPdf.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"
 #include "RooTruthModel.h"
-#include "Riostream.h"
 
+#include <ostream>
 
 using std::ostream;
 
@@ -75,7 +74,8 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   if (!convV) {
     throw std::runtime_error("RooConvGenContext only works with convolution variables of type RooRealVar.");
   }
-  convV->removeRange();
+  convV->removeMin();
+  convV->removeMax();
 
   // Create generator for physics X truth model
   _pdfVars = std::unique_ptr<RooArgSet>{pdfClone->getObservables(&vars)};
@@ -94,7 +94,8 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   if (!convV) {
     throw std::runtime_error("RooConvGenContext only works with convolution variables of type RooRealVar.");
   }
-  convV->removeRange();
+  convV->removeMin();
+  convV->removeMax();
 
   // Create generator for resolution model as PDF
   _modelVars = std::unique_ptr<RooArgSet>{modelClone->getObservables(&vars)};
@@ -193,7 +194,8 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
   RooArgSet(model._pdf1.arg()).snapshot(*_pdfCloneSet, true);
   RooAbsPdf* pdfClone = static_cast<RooAbsPdf*>(_pdfCloneSet->find(model._pdf1.arg().GetName())) ;
   RooRealVar* cvPdf = static_cast<RooRealVar*>(_pdfCloneSet->find(model._x.arg().GetName())) ;
-  cvPdf->removeRange() ;
+  cvPdf->removeMin() ;
+  cvPdf->removeMax() ;
   RooArgSet tmp1;
   pdfClone->getObservables(&vars, tmp1) ;
   _pdfVarsOwned = std::make_unique<RooArgSet>();
@@ -206,7 +208,8 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
   RooArgSet(model._pdf2.arg()).snapshot(*_modelCloneSet, true);
   RooAbsPdf* modelClone = static_cast<RooAbsPdf*>(_modelCloneSet->find(model._pdf2.arg().GetName())) ;
   RooRealVar* cvModel = static_cast<RooRealVar*>(_modelCloneSet->find(model._x.arg().GetName())) ;
-  cvModel->removeRange() ;
+  cvModel->removeMin() ;
+  cvModel->removeMax() ;
   RooArgSet tmp2;
   modelClone->getObservables(&vars, tmp2) ;
   _modelVarsOwned = std::make_unique<RooArgSet>();

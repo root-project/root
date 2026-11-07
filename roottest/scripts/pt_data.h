@@ -73,7 +73,7 @@ public:
    PTVal memalloc;
    PTVal cputime;
 
-   PTVal* pval[4]; //!
+   PTVal* pval[4]; ///<!
 
    ClassDef(PTData,1)
 }; 

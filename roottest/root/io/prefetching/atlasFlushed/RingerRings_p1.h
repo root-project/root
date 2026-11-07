@@ -9,7 +9,7 @@
 #define RingerRings_p1_h
 class RingerRings_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class RingerRings_p1 {

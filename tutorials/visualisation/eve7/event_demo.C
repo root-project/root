@@ -4,6 +4,7 @@
 ///
 /// \macro_code
 ///
+/// \author Alja Mrak-Tadel
 
 #include <vector>
 #include <string>
@@ -167,7 +168,7 @@ void makeGeometryScene()
    b1->SetNSegments(40);
 
    // an example of axis guides
-   eveMng->GetDefaultViewer()->SetAxesType(REX::REveViewer::EAxesType::kAxesOrigin);
+   eveMng->GetDefaultViewer()->SetAxesType(REX::REveViewer::EAxesType::kAxesEdge);
 }
 
 void createProjectionStuff()
@@ -323,6 +324,7 @@ void event_demo()
    gRandom->SetSeed(0); // make random seed
 
    eveMng = REX::REveManager::Create();
+   eveMng->AllowMultipleRemoteConnections(false, false);
 
    auto eventMng = new EventManager();
    eventMng->SetName("EventManager");

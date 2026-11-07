@@ -75,6 +75,7 @@ public:
    Double_t RadiusHypeSq(Double_t z, Bool_t inner) const;
    Double_t ZHypeSq(Double_t r, Bool_t inner) const;
    void InspectShape() const override;
+   Bool_t IsConvex() const final { return kFALSE; }
    Bool_t IsCylType() const override { return kTRUE; }
    TBuffer3D *MakeBuffer3D() const override;
    // virtual void          Paint(Option_t *option);

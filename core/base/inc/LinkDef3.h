@@ -163,7 +163,6 @@
 #pragma link C++ class TFileInfo+;
 #pragma link C++ class TFileInfoMeta+;
 #pragma link C++ class TFileCollection+;
-#pragma link C++ class TVirtualAuth;
 #pragma link C++ class TVirtualMutex;
 #pragma link C++ class ROOT::TVirtualRWMutex;
 #pragma link C++ class TLockGuard;
@@ -186,8 +185,7 @@
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.
 #pragma extra_include "string";
-// insure using namespace std and declaration of std::pair
-#pragma extra_include "Rpair.h";
+// ensure using namespace std and declaration of std::pair
 #include <utility>
 
 #pragma link C++ class std::pair<char*,int>+;
@@ -264,10 +262,18 @@
 
 #pragma extra_include "Rtypes.h";
 #pragma link C++ class TParameter<Bool_t>+;
+#pragma link C++ class TParameter<Char_t>+;
+#pragma link C++ class TParameter<signed char>+;
+#pragma link C++ class TParameter<UChar_t>+;
+#pragma link C++ class TParameter<Short_t>+;
+#pragma link C++ class TParameter<UShort_t>+;
 #pragma link C++ class TParameter<Float_t>+;
 #pragma link C++ class TParameter<Double_t>+;
 #pragma link C++ class TParameter<Int_t>+;
+#pragma link C++ class TParameter<UInt_t>+;
 #pragma link C++ class TParameter<Long_t>+;
+#pragma link C++ class TParameter<ULong_t>+;
 #pragma link C++ class TParameter<Long64_t>+;
+#pragma link C++ class TParameter<ULong64_t>+;
 
 #endif

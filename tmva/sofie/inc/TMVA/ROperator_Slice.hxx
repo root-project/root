@@ -25,11 +25,15 @@ private:
    bool fIsStartUndef = false;
    bool fIsEndUndef = false;
    bool fIsStepUndef = false;
+   bool fIdentitySlice = false;
+   bool fIsAlias = false;     // identity slice whose output shares the memory of the input
    std::string fNData;        // input data tensor name
    std::string fNOutput;      // output data name
    std::vector<std::string> fNames;       // tensor names for meta(axis) information
-   std::vector<Dim> fShapeInput;     // input shape data
-   std::vector<Dim> fShapeOutput;   // output shape data
+   std::vector<Dim> fShapeInput;     // input shape
+   std::vector<Dim> fShapeOutput;   // output shape
+   std::vector<Dim> fOutputShapeData;   // output shape data in case output is a shape param tensor
+
    // saved Start/End.Steps are corrected from initial ONNX for negative/default values
    // and are available for each axis
    std::vector<Dim> fStart;         // starting values of slices for all axes
@@ -235,6 +239,8 @@ public:
                if (iend < 0) {
                   std::string send = std::string("(") + fShapeInput[fAxes[i]].param + "-" + std::to_string(-iend) +")";
                   fEnd[fAxes[i]] = Dim{send,size_t(-1)};
+               } else if (iend == std::numeric_limits<IType>::max()){
+                  fEnd[fAxes[i]] = fShapeInput[fAxes[i]];
                } else {
                  fEnd[fAxes[i]] = Dim{size_t(iend)};
                }
@@ -284,14 +290,14 @@ public:
          size_t outputSize = ConvertShapeToLength(ConvertShapeToInt(fShapeOutput));
          std::vector<int64_t> outputData(outputSize);
          std::vector<size_t> inputStride = UTILITY::ComputeStrideFromShape(ConvertShapeToInt(fShapeInput));
-         std::cout << "slice " << ConvertDimShapeToString(fShapeInput) << " output size " << outputSize << "  " << ConvertDimShapeToString(fShapeOutput) << std::endl;
-         std::cout << " start - end -steps \n";
-         for (size_t ii = 0; ii< fStart.size(); ii++)
-            std::cout << fStart[ii] << "  " << fEnd[ii] << "  " << fSteps[ii] << std::endl;
+         if (model.Verbose()) {
+            std::cout << "Do slice for initialized input ..(start, end, step)\n";
+            for (size_t ii = 0; ii< fStart.size(); ii++)
+               std::cout << fStart [ii] << "  " << fEnd[ii] << "  " << fSteps[ii] << std::endl;
+         }
           // perform slice using a recursive function- need to use two lambda functions for this
          auto sliceRecursive = [&](size_t iaxis, size_t & outIdx, size_t & inOffset) {
             auto slice_impl = [&](size_t iax, size_t & outputIdx, size_t & inputOffset, auto & sliceRecImpl) {
-               std::cout << "SLice_impl " << fStart.size() << "  " << fEnd.size() << " " << fSteps.size() << "  " << iax << std::endl;
                if (fStart[iax].isParam || fEnd[iax].isParam || fSteps[iax].isParam)
                   throw std::runtime_error("TMVA Slice Op : cannot have parametric values when input is constant");
                // compute indices
@@ -299,22 +305,16 @@ public:
                for (IType i = (IType) fStart[iax].dim; (IType(fSteps[iax].dim) > 0) ? i < IType(fEnd[iax].dim) : i > IType(fEnd[iax].dim); i += IType(fSteps[iax].dim) )
                   indices.push_back(i);
                if (iax == dim-1) { // last axis
-                  std::cout << "SLice_impl last axis: " << indices.size() << " : ";
                   for (size_t i = 0; i < indices.size(); i++) {
-                     std::cout << outputIdx << " , " << indices[i] << " " << inputOffset << " ; ";
                      outputData[outputIdx] = inputData[inputOffset + indices[i]];
                      outputIdx++;
                   }
-                  std::cout << std::endl;
                   return;
                } else {
-                  std::cout << "SLice_impl else : " << indices.size() << " : ";
                   for (size_t i = 0; i < indices.size(); i++) {
-                     std::cout << inputStride[iax] << " , " << indices[i] << " " << inputOffset << "  ";
                      size_t offset = inputOffset + inputStride[iax]*indices[i];
                      sliceRecImpl(iax+1, outputIdx, offset,sliceRecImpl);
                   }
-                  std::cout << std::endl;
                }
             };
             slice_impl(iaxis, outIdx, inOffset,slice_impl);
@@ -325,32 +325,100 @@ public:
 
          model.AddConstantTensor<int64_t>(fNOutput, ConvertShapeToInt(fShapeOutput), outputData.data());
          if (model.Verbose()) {
-            std::cout << "Slice: output is a constant tensor " << ConvertShapeToString(fShapeOutput) << " : "
+            std::cout << "Slice: output is a constant tensor " << ConvertDimShapeToString(fShapeOutput) << " : "
                      << ConvertValuesToString(outputData) << std::endl;
          }
       }
+      else if (model.IsShapeTensor(fNData) && !fStart[0].isParam && !fEnd[0].isParam) {
+         // case of input is a shape tensor. In this case rank=1 always, axis =0 and Slice is trivial
+         auto inputData = model.GetShapeTensorValues(fNData);
+         fOutputShapeData = std::vector<Dim>(inputData.begin() + fStart[0].dim, inputData.begin() + fEnd[0].dim);
+         // try to convert to integer values if possible
+         auto outputData = ConvertShapeToInt(fOutputShapeData);
+         fShapeOutput = { Dim{fOutputShapeData.size()}};
+         if (outputData.empty()) {
+            // is a param shape tensor
+            model.AddShapeTensor(fNOutput, fOutputShapeData);
+            fIsOutputParamShape = true;
+            if (model.Verbose()) {
+               std::cout << "Slice: output is a shape tensor -> " << fNOutput << "  " << ConvertDimShapeToString(fShapeOutput) << " with values "
+                        << ConvertDimShapeToString(fOutputShapeData) << " (shape)" << std::endl;
+            }
+         } else {
+            fIsOutputConstant = true;
+            std::vector<int64_t> data(outputData.size());
+            std::copy(outputData.begin(), outputData.end(), data.begin());
+            model.AddConstantTensor<int64_t>(fNOutput, {data.size()}, data.data());
+            if (model.Verbose()) {
+               std::cout << "Slice: output is a constant tensor -> " << fNOutput << "  " << ConvertDimShapeToString(fShapeOutput) << " with values "
+                        << ConvertDimShapeToString(fOutputShapeData) << " constant " << std::endl;
+            }
+         }
+      }
       else {
+         // check if Slice is just an Identity operator in case start = 0, end = input_shape and step=1
+         size_t ndim = fShapeInput.size();
+         fIdentitySlice = fShapeOutput.size() == ndim;
+         // check also if input data is not input to the model. In that case we copy the data since we cannot just copy from the input pointer
+         fIdentitySlice &= (!model.IsReadyInputTensor(fNData) && !model.IsDimInputTensor(fNData));
+         for (size_t idim = 0; idim < ndim; idim++) {
+            if (!fIdentitySlice) break;
+            fIdentitySlice &= (fStart[idim].GetVal() == "0");
+            fIdentitySlice &= (fSteps[idim].GetVal() == "1");
+            fIdentitySlice &= (fEnd[idim].GetVal() == fShapeInput[idim].GetVal());
+         }
+
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+         // an identity slice does not change the data, so the output can share the memory of the input
+         if (fIdentitySlice)
+            fIsAlias = model.AddAliasTensor(fNOutput, fNData);
+
          if (model.Verbose()) {
-            std::cout << "Slice ---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput) << std::endl;
+            std::cout << "Slice " << fNData << "  " << ConvertDimShapeToString(fShapeInput)
+                      << "---> " << fNOutput << " " <<  ConvertDimShapeToString(fShapeOutput);
+            if (fIsAlias)
+               std::cout << " (using alias tensor since slice is an identity) ";
+            std::cout << std::endl;
+
          }
       }
    }
 
-   std::string Generate(std::string OpName) override {
-      if (fIsOutputConstant) return "";  //no op for constant tensors
+   std::string Generate(std::string opName) override {
 
-      OpName = "op_" + OpName;
       if (fShapeInput.empty() || fShapeOutput.empty()){
          throw std::runtime_error("TMVA SOFIE Slice Op called to Generate without being initialized first");
       }
 
       std::stringstream out;
-      //std::string opName = "Slice";
 
-      out << SP << "///------- Slice operator\n" << std::endl;
-      // loop on the dimensions depending no the orders
+      out << "///------- Slice operator " << opName << "---> " << fNOutput << " "
+          << ConvertDimShapeToString(fShapeOutput) << "\n" << std::endl;
+      if (fIsOutputConstant) return out.str();  //no op for constant tensors
+      if (fIsOutputParamShape) {
+         out << "/// Slice output is a shape tensor with values : " << ConvertDimShapeToString(fShapeOutput) << "\n";
+         // need to generate code assigning values to shape tensors
+         for (int i = 0; i < static_cast<int>(fShapeOutput[0].dim); i++) {
+                  out << SP << "tensor_" << fNOutput << "[" << i << "] = " << fOutputShapeData[i] << ";\n";
+         }
+         return out.str();
+      }
+
       size_t ndim = fShapeInput.size();
+
+      if (fIdentitySlice) {
+         if (fIsAlias) {
+            out << "/// Slice is just an identity: the output points to the memory of the input\n";
+            out << SP << "auto * tensor_" << fNOutput << " = tensor_" << fNData << ";\n";
+         } else {
+            out << "/// Slice is just an identity (copy) \n";
+            out << SP << "std::copy(tensor_" << fNData << ", tensor_" << fNData << " + "
+                << ConvertDimShapeToLength(fShapeInput) << ", tensor_" << fNOutput << ");\n";
+         }
+         return out.str();
+      }
+
+      // loop on the dimensions depending no the orders
       auto strides = UTILITY::ComputeStrideFromShape(fShapeInput);
 
 

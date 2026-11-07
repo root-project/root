@@ -4,6 +4,9 @@
 
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
+#ifdef HISTFACTORY_XML
+#include <RooStats/HistFactory/ConfigParser.h>
+#endif
 #include <RooFit/ModelConfig.h>
 
 #include <RooFitHS3/JSONIO.h>
@@ -24,10 +27,12 @@
 #include <TROOT.h>
 #include <TFile.h>
 #include <TCanvas.h>
+#include <TSystem.h>
 #include <gtest/gtest.h>
 
 #include "../../roofitcore/test/gtest_wrapper.h"
 
+#include <regex>
 #include <set>
 
 namespace {
@@ -89,10 +94,6 @@ TEST(HistFactory, Read_ROOT6_16_Model)
 
    std::string filename = "./ref_6.16_example_UsingC_channel1_meas_model.root";
    std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
-   if (!file || !file->IsOpen()) {
-      filename = TROOT::GetRootSys() + "/roofit/histfactory/test/" + filename;
-      file.reset(TFile::Open(filename.c_str()));
-   }
 
    ASSERT_TRUE(file && file->IsOpen());
    RooWorkspace *ws;
@@ -118,10 +119,6 @@ TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 
    std::string filename = "./ref_6.16_example_UsingC_combined_meas_model.root";
    std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
-   if (!file || !file->IsOpen()) {
-      filename = TROOT::GetRootSys() + "/roofit/histfactory/test/" + filename;
-      file.reset(TFile::Open(filename.c_str()));
-   }
 
    ASSERT_TRUE(file && file->IsOpen());
    RooWorkspace *ws;
@@ -143,7 +140,12 @@ TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 
 /// What kind of model is set up. Use this to instantiate
 /// a test suite.
-enum class MakeModelMode { OverallSyst, HistoSyst, StatSyst, ShapeSyst };
+enum class MakeModelMode {
+   OverallSyst,
+   HistoSyst,
+   StatSyst,
+   ShapeSyst
+};
 
 using HFTestParam = std::tuple<MakeModelMode, bool, RooFit::EvalBackend>;
 
@@ -442,7 +444,7 @@ TEST_P(HFFixtureEval, Evaluation)
    const double systEps = 1e-6;
 
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
-   const bool useBatchMode = std::get<2>(GetParam()) != RooFit::EvalBackend::Legacy();
+   const bool useBatchMode = std::get<2>(GetParam()) != RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy);
 
    RooHelpers::HijackMessageStream evalMessages(RooFit::INFO, RooFit::FastEvaluations);
 
@@ -593,82 +595,67 @@ TEST_P(HFFixtureFit, Fit)
    auto mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
-   // This tests both correct pre-caching of constant terms and (if false) that all doEval() are correct.
-   for (bool constTermOptimization : {true, false}) {
+   std::unique_ptr<RooArgSet> pars(simPdf->getParameters(*data));
+   // Kick parameters:
+   for (auto par : *pars) {
+      auto real = dynamic_cast<RooAbsRealLValue *>(par);
+      if (real && !real->isConstant())
+         real->setVal(real->getVal() * 0.95);
+   }
+   if (makeModelMode == MakeModelMode::StatSyst) {
+      auto poi = dynamic_cast<RooRealVar *>(pars->find("SigXsecOverSM"));
+      ASSERT_NE(poi, nullptr);
+      poi->setVal(2.);
+      poi->setConstant();
+   }
 
-      // constTermOptimization makes only sense in the legacy backend
-      if (constTermOptimization && evalBackend != RooFit::EvalBackend::Legacy()) {
-         continue;
+   using namespace RooFit;
+   std::unique_ptr<RooFitResult> fitResult{simPdf->fitTo(
+      *data, evalBackend, GlobalObservables(*mc->GetGlobalObservables()), Save(), PrintLevel(verbose ? 1 : -1))};
+   ASSERT_NE(fitResult, nullptr);
+   if (verbose)
+      fitResult->Print("v");
+   EXPECT_EQ(fitResult->status(), 0);
+
+   auto checkParam = [&](const std::string &param, double target, double absPrecision = 1.e-2) {
+      auto par = dynamic_cast<RooRealVar *>(fitResult->floatParsFinal().find(param.c_str()));
+      if (!par) {
+         // Parameter was constant in this fit
+         par = dynamic_cast<RooRealVar *>(fitResult->constPars().find(param.c_str()));
+         ASSERT_NE(par, nullptr) << param;
+         EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
+      } else {
+         EXPECT_NEAR(par->getVal(), target, par->getError())
+            << "Parameter " << param << " close to target " << target << " within uncertainty";
+         EXPECT_NEAR(par->getVal(), target, absPrecision) << "Parameter " << param << " close to target " << target;
       }
-      SCOPED_TRACE(constTermOptimization ? "const term optimisation" : "No const term optimisation");
+   };
 
-      // Stop if one of the previous runs had a failure to keep the terminal clean.
-      if (HasFailure())
-         break;
-
-      std::unique_ptr<RooArgSet> pars(simPdf->getParameters(*data));
-      // Kick parameters:
-      for (auto par : *pars) {
-         auto real = dynamic_cast<RooAbsRealLValue *>(par);
-         if (real && !real->isConstant())
-            real->setVal(real->getVal() * 0.95);
-      }
-      if (makeModelMode == MakeModelMode::StatSyst) {
-         auto poi = dynamic_cast<RooRealVar *>(pars->find("SigXsecOverSM"));
-         ASSERT_NE(poi, nullptr);
-         poi->setVal(2.);
-         poi->setConstant();
-      }
-
-      using namespace RooFit;
-      std::unique_ptr<RooFitResult> fitResult{simPdf->fitTo(*data, evalBackend, Optimize(constTermOptimization),
-                                                            GlobalObservables(*mc->GetGlobalObservables()), Save(),
-                                                            PrintLevel(verbose ? 1 : -1))};
-      ASSERT_NE(fitResult, nullptr);
-      if (verbose)
-         fitResult->Print("v");
-      EXPECT_EQ(fitResult->status(), 0);
-
-      auto checkParam = [&](const std::string &param, double target, double absPrecision = 1.e-2) {
-         auto par = dynamic_cast<RooRealVar *>(fitResult->floatParsFinal().find(param.c_str()));
-         if (!par) {
-            // Parameter was constant in this fit
-            par = dynamic_cast<RooRealVar *>(fitResult->constPars().find(param.c_str()));
-            ASSERT_NE(par, nullptr) << param;
-            EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
-         } else {
-            EXPECT_NEAR(par->getVal(), target, par->getError())
-               << "Parameter " << param << " close to target " << target << " within uncertainty";
-            EXPECT_NEAR(par->getVal(), target, absPrecision) << "Parameter " << param << " close to target " << target;
-         }
-      };
-
-      if (makeModelMode == MakeModelMode::OverallSyst) {
-         // Model is set up such that background scale factors should be close to 1, and signal == 2
-         checkParam("SigXsecOverSM", 2.);
-         checkParam("alpha_syst2", 0.);
-         checkParam("alpha_syst3", 0.);
-         checkParam("alpha_syst4", 0.);
-         checkParam("gamma_stat_channel1_bin_0", 1.);
-         checkParam("gamma_stat_channel1_bin_1", 1.);
-      } else if (makeModelMode == MakeModelMode::HistoSyst) {
-         // Model is set up with a -1 sigma pull on the signal shape parameter.
-         checkParam("SigXsecOverSM", 2., 1.1E-1); // Higher tolerance: Expect a pull due to shape syst.
-         checkParam("gamma_stat_channel1_bin_0", 1.);
-         checkParam("gamma_stat_channel1_bin_1", 1.);
-         checkParam("alpha_SignalShape", -0.9, 5.E-2); // Pull slightly lower than 1 because of constraint term
-      } else if (makeModelMode == MakeModelMode::StatSyst) {
-         // Model is set up with a -1 sigma pull on the signal shape parameter.
-         checkParam("SigXsecOverSM", 2., 1.1E-1);       // Higher tolerance: Expect a pull due to shape syst.
-         checkParam("gamma_stat_channel1_bin_0", 1.09); // This should be pulled
-         checkParam("gamma_stat_channel1_bin_1", 1.);
-      } else if (makeModelMode == MakeModelMode::ShapeSyst) {
-         // This should be pulled down
-         checkParam("gamma_background1Shape_bin_0", 0.8866, 0.03);
-         // This should be pulled up, but not so much because the free signal
-         // strength will fit the excess in this bin.
-         checkParam("gamma_background2Shape_bin_1", 1.0250, 0.03);
-      }
+   if (makeModelMode == MakeModelMode::OverallSyst) {
+      // Model is set up such that background scale factors should be close to 1, and signal == 2
+      checkParam("SigXsecOverSM", 2.);
+      checkParam("alpha_syst2", 0.);
+      checkParam("alpha_syst3", 0.);
+      checkParam("alpha_syst4", 0.);
+      checkParam("gamma_stat_channel1_bin_0", 1.);
+      checkParam("gamma_stat_channel1_bin_1", 1.);
+   } else if (makeModelMode == MakeModelMode::HistoSyst) {
+      // Model is set up with a -1 sigma pull on the signal shape parameter.
+      checkParam("SigXsecOverSM", 2., 1.1E-1); // Higher tolerance: Expect a pull due to shape syst.
+      checkParam("gamma_stat_channel1_bin_0", 1.);
+      checkParam("gamma_stat_channel1_bin_1", 1.);
+      checkParam("alpha_SignalShape", -0.9, 5.E-2); // Pull slightly lower than 1 because of constraint term
+   } else if (makeModelMode == MakeModelMode::StatSyst) {
+      // Model is set up with a -1 sigma pull on the signal shape parameter.
+      checkParam("SigXsecOverSM", 2., 1.1E-1);       // Higher tolerance: Expect a pull due to shape syst.
+      checkParam("gamma_stat_channel1_bin_0", 1.09); // This should be pulled
+      checkParam("gamma_stat_channel1_bin_1", 1.);
+   } else if (makeModelMode == MakeModelMode::ShapeSyst) {
+      // This should be pulled down
+      checkParam("gamma_background1Shape_bin_0", 0.8866, 0.03);
+      // This should be pulled up, but not so much because the free signal
+      // strength will fit the excess in this bin.
+      checkParam("gamma_background2Shape_bin_1", 1.0250, 0.03);
    }
 
    if (false) {
@@ -695,7 +682,7 @@ INSTANTIATE_TEST_SUITE_P(
    HistFactory, HFFixture,
    testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst, MakeModelMode::StatSyst,
                                     MakeModelMode::ShapeSyst),
-                    testing::Values(false, true),                    // non-uniform bins or not
+                    testing::Values(false, true),                 // non-uniform bins or not
                     testing::Values(RooFit::EvalBackend::Cpu())), // dummy because no NLL is created
    [](testing::TestParamInfo<HFFixture::ParamType> const &paramInfo) { return getName(paramInfo.param, true); });
 
@@ -712,3 +699,223 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                                           testing::Values(false, true), // non-uniform bins or not
                                           testing::Values(ROOFIT_EVAL_BACKENDS_WITH_CODEGEN)),
                          getNameFromInfo);
+
+// Regression test for the HS3 importer's handling of "shapefactor" modifiers.
+// HistFactory's ShapeFactor is exported with type "shapesys" (the only
+// modifier type the writer ever emits for a ParamHistFunc), but valid HS3 JSON
+// may also use the dedicated "shapefactor" type for an unconstrained
+// ParamHistFunc - and the importer must accept it. This test starts from a
+// HistFactory model built with MakeModelAndMeasurementFast, rewrites the
+// modifier type to "shapefactor" in the JSON, and checks that the importer
+// recognises it. Without the fix in JSONFactories_HistFactory.cxx the import
+// throws "modifier ... of unknown type 'shapefactor'".
+TEST(HistFactory, HS3ImportShapeFactorModifier)
+{
+   using namespace RooStats::HistFactory;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string inputFile = "TestHS3ShapeFactor.root";
+   {
+      TFile f(inputFile.c_str(), "RECREATE");
+      auto *data = new TH1D("data", "data", 2, 1, 2);
+      auto *signal = new TH1D("signal", "signal", 2, 1, 2);
+      auto *bkg = new TH1D("background", "background", 2, 1, 2);
+      data->SetBinContent(1, 220);
+      data->SetBinContent(2, 230);
+      signal->SetBinContent(1, 10);
+      signal->SetBinContent(2, 20);
+      bkg->SetBinContent(1, 200);
+      bkg->SetBinContent(2, 200);
+      for (auto *h : {data, signal, bkg})
+         f.WriteTObject(h);
+   }
+
+   Measurement meas("meas", "meas");
+   meas.SetOutputFilePrefix("HS3ShapeFactor");
+   meas.SetPOI("SigXsecOverSM");
+   meas.AddConstantParam("Lumi");
+   meas.SetLumi(1.0);
+   meas.SetLumiRelErr(0.10);
+
+   Channel chan("channel1");
+   chan.SetData("data", inputFile);
+
+   Sample sig("signal", "signal", inputFile);
+   sig.AddNormFactor("SigXsecOverSM", 1, 0, 3);
+   chan.AddSample(sig);
+
+   // ShapeFactor on the background: an unconstrained, bin-by-bin scaling.
+   // Make the gammas constant so that the workspace is well-defined for
+   // re-export (free shapefactor gammas have no constraints attached).
+   Sample bkg("background", "background", inputFile);
+   ShapeFactor sf;
+   sf.SetName("bkgShape");
+   sf.SetConstant(true);
+   bkg.AddShapeFactor(sf);
+   chan.AddSample(bkg);
+
+   meas.AddChannel(chan);
+   meas.CollectHistograms();
+
+   std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
+   ASSERT_NE(ws, nullptr);
+
+   const std::string js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+
+   // Rewrite the modifier type for "bkgShape" from "shapesys" to "shapefactor".
+   // The HistFactory exporter always writes "shapesys", but the importer should
+   // accept the more accurate "shapefactor" type as well.
+   const std::regex pattern{"\"name\":\"bkgShape\",\"parameters\":\\[([^\\]]*)\\],\"type\":\"shapesys\""};
+   const std::string jsShapeFactor =
+      std::regex_replace(js, pattern, "\"name\":\"bkgShape\",\"parameters\":[$1],\"type\":\"shapefactor\"");
+   ASSERT_NE(js, jsShapeFactor) << "Failed to substitute shapesys -> shapefactor in JSON";
+
+   RooWorkspace wsFromJson{"new"};
+   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(jsShapeFactor))
+      << "Importer rejected the 'shapefactor' modifier type";
+
+   // The imported workspace should expose the same ParamHistFunc gammas.
+   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_0"), nullptr);
+   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_1"), nullptr);
+
+   // Re-exporting should give back the original JSON, since the writer emits
+   // type "shapesys" in both cases.
+   const std::string js2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
+   EXPECT_EQ(js, js2) << "JSON -> WS -> JSON roundtrip changed the JSON";
+}
+
+// Issue #20697: Sample::AddShapeFactor() now allows to set the initial value
+// and the range of the ShapeFactor gammas (just like AddNormFactor() does for
+// the NormFactors). This is important e.g. for ABCD estimates, where the
+// hard-coded default range can cause convergence problems.
+//
+// These settings need to survive being persisted, so this test checks that the
+// value and range make it through:
+//   1. a ROOT file round trip (Measurement::writeToFile),
+//   2. an XML file round trip (Measurement::PrintXML / ConfigParser), and
+//   3. into the actual gamma parameters of the generated workspace.
+TEST(HistFactory, ShapeFactorValueAndRange)
+{
+   using namespace RooStats::HistFactory;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // Deliberately use non-default values and a range that differs from the
+   // hard-coded default of [0, 1000].
+   const double sfVal = 2.0;
+   const double sfLow = 0.1;
+   const double sfHigh = 12.0;
+
+   const std::string inputFileName = "TestShapeFactorRange_input.root";
+   {
+      TFile f(inputFileName.c_str(), "RECREATE");
+      auto *data = new TH1D("data", "data", 2, 1, 2);
+      auto *signal = new TH1D("signal", "signal", 2, 1, 2);
+      auto *bkg = new TH1D("background", "background", 2, 1, 2);
+      data->SetBinContent(1, 220);
+      data->SetBinContent(2, 230);
+      signal->SetBinContent(1, 10);
+      signal->SetBinContent(2, 20);
+      bkg->SetBinContent(1, 200);
+      bkg->SetBinContent(2, 200);
+      for (auto *h : {data, signal, bkg})
+         f.WriteTObject(h);
+   }
+
+   auto makeMeasurement = [&]() {
+      Measurement meas("meas", "meas");
+      meas.SetOutputFilePrefix("TestShapeFactorRange");
+      meas.SetPOI("SigXsecOverSM");
+      meas.AddConstantParam("Lumi");
+      meas.SetLumi(1.0);
+      meas.SetLumiRelErr(0.10);
+
+      Channel chan("channel1");
+      chan.SetData("data", inputFileName);
+
+      Sample sig("signal", "signal", inputFileName);
+      sig.AddNormFactor("SigXsecOverSM", 1, 0, 3);
+      chan.AddSample(sig);
+
+      // The new overload under test: ShapeFactor with custom value and range.
+      Sample bkg("background", "background", inputFileName);
+      bkg.AddShapeFactor("bkgShape", sfVal, sfLow, sfHigh);
+      chan.AddSample(bkg);
+
+      meas.AddChannel(chan);
+      meas.CollectHistograms();
+      return meas;
+   };
+
+   // Fetch the (single) ShapeFactor stored in a measurement.
+   auto getShapeFactor = [](Measurement &meas) -> ShapeFactor & {
+      Channel &chan = meas.GetChannel("channel1");
+      for (Sample &sample : chan.GetSamples()) {
+         if (!sample.GetShapeFactorList().empty())
+            return sample.GetShapeFactorList().front();
+      }
+      throw std::runtime_error("ShapeFactor not found in measurement");
+   };
+
+   auto checkShapeFactor = [&](Measurement &meas, const char *context) {
+      ShapeFactor &sf = getShapeFactor(meas);
+      EXPECT_DOUBLE_EQ(sf.GetVal(), sfVal) << context;
+      EXPECT_DOUBLE_EQ(sf.GetLow(), sfLow) << context;
+      EXPECT_DOUBLE_EQ(sf.GetHigh(), sfHigh) << context;
+   };
+
+   // 0. Sanity check on the in-memory measurement.
+   {
+      Measurement meas = makeMeasurement();
+      checkShapeFactor(meas, "in-memory measurement");
+   }
+
+   // 1. ROOT file round trip.
+   {
+      Measurement meas = makeMeasurement();
+      const std::string rootFileName = "TestShapeFactorRange_meas.root";
+      {
+         TFile outFile(rootFileName.c_str(), "RECREATE");
+         meas.writeToFile(&outFile);
+      }
+      TFile inFile(rootFileName.c_str(), "READ");
+      std::unique_ptr<Measurement> measFromFile{inFile.Get<Measurement>("meas")};
+      ASSERT_NE(measFromFile, nullptr);
+      checkShapeFactor(*measFromFile, "ROOT file round trip");
+   }
+
+   // 2. XML file round trip.
+   //    The ConfigParser is only built with the xml build option, so this part
+   //    of the test is skipped when ROOT is built without XML support.
+#ifdef HISTFACTORY_XML
+   {
+      Measurement meas = makeMeasurement();
+      const std::string xmlDir = "TestShapeFactorRangeXML";
+      meas.PrintXML(xmlDir);
+
+      // The generated XML files refer to the DTD by relative path, so it has to
+      // be available next to them for the validating parser to find it.
+      gSystem->CopyFile(TString::Format("%s/HistFactorySchema.dtd", TROOT::GetEtcDir().Data()),
+                        TString::Format("%s/HistFactorySchema.dtd", xmlDir.c_str()), true);
+
+      ConfigParser parser;
+      std::vector<Measurement> measFromXML = parser.GetMeasurementsFromXML(xmlDir + "/meas.xml");
+      ASSERT_EQ(measFromXML.size(), 1u);
+      checkShapeFactor(measFromXML.front(), "XML file round trip");
+   }
+#endif
+
+   // 3. End to end: the gamma parameters of the workspace pick up the requested
+   //    value and range.
+   {
+      Measurement meas = makeMeasurement();
+      std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
+      ASSERT_NE(ws, nullptr);
+      for (const char *name : {"gamma_bkgShape_bin_0", "gamma_bkgShape_bin_1"}) {
+         auto *gamma = ws->var(name);
+         ASSERT_NE(gamma, nullptr) << name;
+         EXPECT_DOUBLE_EQ(gamma->getVal(), sfVal) << name;
+         EXPECT_DOUBLE_EQ(gamma->getMin(), sfLow) << name;
+         EXPECT_DOUBLE_EQ(gamma->getMax(), sfHigh) << name;
+      }
+   }
+}

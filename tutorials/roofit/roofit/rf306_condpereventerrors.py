@@ -34,20 +34,20 @@ decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, type="DoubleSided")
 
 # Use landau pdf to get somewhat realistic distribution with long tail
 pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25)
-expDataDterr = pdfDtErr.generate({dterr}, 10000)
+expDataDterr = pdfDtErr.generate(dterr, 10000)
 
 # Sample data from conditional decay_gm(dt|dterr)
 # ---------------------------------------------------------------------------------------------
 
 # Specify external dataset with dterr values to use decay_dm as
 # conditional pdf
-data = decay_gm.generate({dt}, ProtoData=expDataDterr)
+data = decay_gm.generate(dt, ProtoData=expDataDterr)
 
 # Fit conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------
 
 # Specify dterr as conditional observable
-decay_gm.fitTo(data, ConditionalObservables={dterr}, PrintLevel=-1)
+decay_gm.fitTo(data, ConditionalObservables=[dterr], PrintLevel=-1)
 
 # Plot conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------
@@ -58,6 +58,8 @@ hh_decay.SetLineColor("kBlue")
 
 # Plot decay_gm(dt|dterr) at various values of dterr
 frame = dt.frame(Title="Slices of decay(dt|dterr) at various dterr")
+# Sample dterr in 100 bins to select the slice values below with setBin()
+dterr.setBins(100)
 for ibin in range(0, 100, 20):
     dterr.setBin(ibin)
     decay_gm.plotOn(frame, Normalization=5.0)

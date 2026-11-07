@@ -555,3 +555,30 @@ namespace BUG6578 {
          std::cerr << "   " << iCtorExpected.first << '\n';
    }
 }
+
+TEST(TClingMethodInfo, InstantiateTemplateWithDefaultsROOT23195)
+{
+   gInterpreter->Declare(R"CODE(
+#include <initializer_list>
+#include <string>
+
+namespace ROOT23195 {
+template <typename TYPE>
+class Property {
+public:
+   template <typename T = TYPE>
+   Property &operator=(std::initializer_list<typename T::value_type>)
+   {
+      return *this;
+   }
+};
+} // namespace ROOT23195
+)CODE");
+
+   // This method-template default argument needs a valid source location while Cling
+   // substitutes typename T::value_type. An invalid one used to assert in
+   // Sema::CheckTypenameType.
+   TClass *cl = TClass::GetClass("ROOT23195::Property<std::string>");
+   ASSERT_NE(cl, nullptr);
+   EXPECT_NE(cl->GetListOfMethods(), nullptr);
+}

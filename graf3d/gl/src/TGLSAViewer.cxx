@@ -9,8 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <memory>
-
 #include "TRootHelpDialog.h"
 #include "TPluginManager.h"
 #include "TApplication.h"
@@ -24,7 +22,6 @@
 #include "TGMenu.h"
 #include "TGSplitter.h"
 #include "TGButton.h"
-#include "snprintf.h"
 
 #include "TVirtualPad.h"
 #include "TGedEditor.h"
@@ -51,6 +48,8 @@
 #include "TGLSAFrame.h"
 #include "TGLEventHandler.h"
 
+#include <cstdio>
+#include <memory>
 
 const char * TGLSAViewer::fgHelpText1 = "\
 DIRECT SCENE INTERACTIONS\n\n\

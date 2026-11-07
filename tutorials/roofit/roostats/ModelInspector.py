@@ -40,9 +40,9 @@
 # \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 import sys
-import ROOT
-
 from enum import Enum
+
+import ROOT
 
 
 class ETestCommandIdentifiers(Enum):
@@ -482,13 +482,13 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
         numCats = 1
         # if (strcmp(fMC.GetPdf().ClassName(), "RooSimultaneous") == 0) : non-pythonic syntax
         if self.fMC.GetPdf().ClassName() == "RooSimultaneous":  # simple, pythonic syntax
-            print(f"Is a simultaneous PDF")
+            print("Is a simultaneous PDF")
             simPdf = self.fMC.GetPdf()
             channelCat = simPdf.indexCat()
             print(f" with {channelCat.numTypes()} categories")
             numCats = channelCat.numTypes()
         else:
-            print(f"Is not a simultaneous PDF")
+            print("Is not a simultaneous PDF")
 
         self.fFitRes = ROOT.nullptr
         self.SetCleanup(ROOT.kDeepCleanup)
@@ -520,25 +520,21 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
 
         self.fHframe2 = ROOT.TGHorizontalFrame(self, 0, 0, 0)
 
-        dp_DoFit = ROOT.TPyDispatcher(self.DoFit)
         self.fFitButton = ROOT.TGTextButton(self.fHframe2, "&Fit")
         self.fFitButton.SetFont("Helvetica")
-        self.fFitButton.Connect("Clicked()", "TPyDispatcher", dp_DoFit, "Dispatch()")
+        self.fFitButton.Connect("Clicked()", self.DoFit)
 
-        dp_DoExit = ROOT.TPyDispatcher(self.DoExit)
         self.fExitButton = ROOT.TGTextButton(self.fHframe2, "&Exit")
         self.fExitButton.SetFont("Helvetica")
-        # self.fExitButton.Connect( "Clicked()", "TPyDispatcher", dp_DoExit , "Dispatch()")
+        # self.fExitButton.Connect("Clicked()", self.DoExit)
         # doesn't work properly. Break segmentation violation. Full crash.
         self.fExitButton.SetCommand('TPython::Exec( "raise SystemExit" )')
 
-        # dp_CloseWindow = TPyDispatcher( self.CloseWindow)
-        # self.Connect("CloseWindow()", "TPyDispatcher", dp_CloseWindow, "Dispatch()")
+        # self.Connect("CloseWindow()", self.CloseWindow)
         self.DontCallClose()
 
-        dp_HandleButtons = ROOT.TPyDispatcher(self.HandleButtons)
-        self.fCheck1.Connect("Clicked()", "TPyDispatcher", dp_HandleButtons, "Dispatch()")
-        self.fCheck2.Connect("Clicked()", "TPyDispatcher", dp_HandleButtons, "Dispatch()")
+        self.fCheck1.Connect("Clicked()", self.HandleButtons)
+        self.fCheck2.Connect("Clicked()", self.HandleButtons)
 
         self.fHframe2.Resize(100, 25)
 
@@ -571,9 +567,14 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
         # And that's it!
         # Obviously, the parent of other subframes is now fVFrame instead of "self"...
 
+        # The C++ containers below (TList, std::map) store only raw pointers,
+        # so keep the Python proxies of the per-parameter widgets referenced:
+        # otherwise Python garbage-collects them and deletes the C++ widgets
+        self.fWidgets = []
+
         # while (param := it.Next()): #unnecessary
         for param in parameters:
-            print(f"Adding Slider for ", param.GetName())
+            print("Adding Slider for ", param.GetName())
             hframek = ROOT.TGHorizontalFrame(self.fVFrame, 0, 0, 0)
 
             hlabel = ROOT.TGLabel(
@@ -593,9 +594,6 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
                 False,
             )
 
-            dp_DoSlider = ROOT.TPyDispatcher(self.DoSlider)
-            hsliderk.Connect("PointerPositionChanged()", "TPyDispatcher", dp_DoSlider, "Dispatch()")
-            hsliderk.Connect("PositionChanged()", "TPyDispatcher", dp_DoSlider, "Dispatch()")
             hsliderk.SetRange(param.getMin(), param.getMax())
 
             hframek.Resize(200, 25)
@@ -605,11 +603,18 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
             hsliderk.SetPosition(param.getVal() - param.getError(), param.getVal() + param.getError())
             hsliderk.SetPointerPosition(param.getVal())
 
+            # Connect only after initializing the slider: setting the position
+            # emits the signals, and DoSlider must not run on the
+            # half-constructed GUI
+            hsliderk.Connect("PointerPositionChanged()", self.DoSlider)
+            hsliderk.Connect("PositionChanged()", self.DoSlider)
+
             hframek.AddFrame(hlabel, self.fBly)  #
             hframek.AddFrame(hsliderk, self.fBly)  #
             self.fVFrame.AddFrame(hframek, self.fBly)
             self.fSliderMap[hsliderk] = param.GetName()
             self.fLabelMap[hsliderk] = hlabel
+            self.fWidgets += [hframek, hlabel, hsliderk]
 
         # Set main frame name, map sub windows (buttons), initialize layout
         # algorithm via Resize() and map main frame
@@ -635,12 +640,12 @@ def ModelInspector(infile="", workspaceName="combined", modelConfigName="ModelCo
         # if file does not exists generate with histfactory
         if not fileExist:
             # Normally this would be run on the command line
-            print(f"will run standard hist2workspace example")
+            print("will run standard hist2workspace example")
             ROOT.gROOT.ProcessLine(".! prepareHistFactory .")
             ROOT.gROOT.ProcessLine(".! hist2workspace config/example.xml")
-            print(f"\n\n---------------------")
-            print(f"Done creating example input")
-            print(f"---------------------\n\n")
+            print("\n\n---------------------")
+            print("Done creating example input")
+            print("---------------------\n\n")
 
     else:
         filename = infile
@@ -648,12 +653,10 @@ def ModelInspector(infile="", workspaceName="combined", modelConfigName="ModelCo
     # Bad behaviour of variable, workspace, modelconfig. They get unset after its first call(being whatever)
     # if we declare pointer to the file, workspace, modelconfig, so everything seems to work-out fine.
     Declare = ROOT.gInterpreter.Declare
-    Declare(
-        """using namespace std;
+    Declare("""using namespace std;
               using namespace RooFit;
               using namespace RooStats;
-              """
-    )
+              """)
     ##################################################
     # Try to open the file:
     # Not to use: file = TFile.Open(filename, "READ" )

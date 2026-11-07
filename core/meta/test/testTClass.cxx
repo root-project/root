@@ -1,13 +1,84 @@
 #include "TClass.h"
 #include "THashTable.h"
 #include "TInterpreter.h"
+#include "TROOT.h"
+#include "TStreamerInfo.h"
+#include "TVirtualMutex.h"
 #include "Math/GenVector/LorentzVector.h"
 #include "Math/GenVector/PtEtaPhiM4D.h"
 #include "Math/GenVector/PtEtaPhiE4D.h"
 
 #include "gtest/gtest.h"
 
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <deque>
+#include <mutex>
+#include <thread>
+
+TEST(TClass, CachedLayoutDoesNotTakeInterpreterLock)
+{
+   ROOT::EnableThreadSafety();
+   ASSERT_TRUE(gInterpreter->Declare("struct TClassAlignmentLockTest { alignas(128) char value; };"));
+
+   auto checkWithoutInterpreterLock = [](TClass *cl, Int_t expectedSize, size_t expectedAlignment) {
+      ASSERT_EQ(cl->Size(), expectedSize);
+      ASSERT_EQ(cl->GetClassAlignment(), expectedAlignment);
+
+      std::atomic<bool> lockHeld{false};
+      std::atomic<bool> releaseLock{false};
+      std::thread lockThread([&] {
+         gInterpreterMutex->Lock();
+         lockHeld.store(true, std::memory_order_release);
+         while (!releaseLock.load(std::memory_order_acquire))
+            std::this_thread::yield();
+         gInterpreterMutex->UnLock();
+      });
+      while (!lockHeld.load(std::memory_order_acquire))
+         std::this_thread::yield();
+
+      std::mutex completionMutex;
+      std::condition_variable completionCondition;
+      bool completed = false;
+      Int_t size = 0;
+      size_t alignment = 0;
+      std::thread queryThread([&] {
+         size = cl->Size();
+         alignment = cl->GetClassAlignment();
+         {
+            std::lock_guard<std::mutex> lock(completionMutex);
+            completed = true;
+         }
+         completionCondition.notify_one();
+      });
+
+      std::unique_lock<std::mutex> lock(completionMutex);
+      const bool returnedWithoutInterpreterLock =
+         completionCondition.wait_for(lock, std::chrono::seconds(1), [&] { return completed; });
+      lock.unlock();
+      releaseLock.store(true, std::memory_order_release);
+      lockThread.join();
+      queryThread.join();
+
+      EXPECT_TRUE(returnedWithoutInterpreterLock);
+      EXPECT_EQ(size, expectedSize);
+      EXPECT_EQ(alignment, expectedAlignment);
+   };
+
+   auto interpreted = TClass::GetClass("TClassAlignmentLockTest");
+   ASSERT_NE(interpreted, nullptr);
+   checkWithoutInterpreterLock(interpreted, 128, 128u);
+
+   TClass emulated("TClassEmulatedLayoutLockTest", 1, TClass::kEmulated, true);
+   ASSERT_NE(nullptr, emulated.GetStreamerInfo());
+   ASSERT_EQ(emulated.GetState(), TClass::kEmulated);
+   auto emulatedSize = emulated.Size();
+   auto emulatedAlignment = emulated.GetClassAlignment();
+   ASSERT_GE(emulatedSize, 0);
+   ASSERT_GT(emulatedAlignment, 0u);
+   checkWithoutInterpreterLock(&emulated, emulatedSize, emulatedAlignment);
+}
 
 TEST(TClass, DictCheck)
 {

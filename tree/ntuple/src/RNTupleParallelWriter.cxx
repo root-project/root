@@ -1,5 +1,4 @@
 /// \file RNTupleParallelWriter.cxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-02-01
 
@@ -61,6 +60,12 @@ private:
    RPageSink *fInnerSink;
    std::mutex *fMutex;
 
+   void InitImpl(ROOT::RNTupleModel &) final {}
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final
+   {
+      throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
+   }
+
 public:
    explicit RPageSynchronizingSink(RPageSink &inner, std::mutex &mutex)
       : RPageSink(inner.GetNTupleName(), inner.GetWriteOptions()), fInnerSink(&inner), fMutex(&mutex)
@@ -77,7 +82,6 @@ public:
    NTupleSize_t GetNEntries() const final { return fInnerSink->GetNEntries(); }
 
    ColumnHandle_t AddColumn(DescriptorId_t, RColumn &) final { return {}; }
-   void InitImpl(ROOT::RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
       throw ROOT::RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
@@ -107,19 +111,25 @@ public:
    {
       throw ROOT::RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
-   void CommitDatasetImpl() final
-   {
-      throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
-   }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
+
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cloning a RPageSynchronizingSink is not implemented yet"));
+   }
+
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final
+   {
+      throw ROOT::RException(R__FAIL("committing attribute sets is not implemented yet for parallel writing"));
+   }
 };
 
 } // namespace
 
 ROOT::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr<ROOT::RNTupleModel> model,
                                                    std::unique_ptr<RPageSink> sink)
-   : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter")
+   : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter", fSink->GetNTupleName())
 {
    if (fModel->GetRegisteredSubfieldNames().size() > 0) {
       throw RException(R__FAIL("cannot create an RNTupleParallelWriter from a model with registered subfields"));
@@ -134,7 +144,7 @@ ROOT::RNTupleParallelWriter::~RNTupleParallelWriter()
    try {
       CommitDataset();
    } catch (const RException &err) {
-      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure committing ntuple: " << err.what();
    }
 }
 
@@ -181,6 +191,11 @@ ROOT::RNTupleParallelWriter::Append(std::unique_ptr<ROOT::RNTupleModel> model, s
    if (!file->IsBinary()) {
       throw RException(R__FAIL("RNTupleParallelWriter only supports writing to a ROOT file. Cannot write into " +
                                std::string(file->GetName())));
+   }
+   if (!file->IsWritable()) {
+      throw RException(R__FAIL("The file '" + std::string(file->GetName()) +
+                               "' given to RNTupleParallelWriter is not writable. Open it with 'UPDATE' or 'RECREATE' "
+                               "if you want to write into it."));
    }
    if (!options.GetUseBufferedWrite()) {
       throw RException(R__FAIL("parallel writing requires buffering"));

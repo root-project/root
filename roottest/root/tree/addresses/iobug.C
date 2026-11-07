@@ -8,7 +8,7 @@ class Graph : public TNamed, public TAttLine, public TAttFill, public TAttMarker
 
 protected:
 
-   Int_t              fMaxSize;   //!Current dimension of arrays fX and fY
+   Int_t              fMaxSize;   ///<!Current dimension of arrays fX and fY
    Int_t              fNpoints;   //Number of points <= fMaxSize
    Double_t          *fX;         //[fNpoints] array of X points
    Double_t          *fY;         //[fNpoints] array of Y points

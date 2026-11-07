@@ -44,14 +44,28 @@ using namespace llvm;
 using namespace llvm::jitlink;
 using namespace llvm::orc;
 
-static LLVM_ATTRIBUTE_USED void linkComponents() {
-  errs() << "Linking in runtime functions\n"
-         << (void*)&llvm_orc_registerJITLoaderPerfStart << '\n'
-         << (void*)&llvm_orc_registerJITLoaderPerfEnd << '\n'
-         << (void*)&llvm_orc_registerJITLoaderPerfImpl << '\n';
-}
-
 namespace {
+  static SymbolMap GetListOfPerfSymbols(const LLJIT& Jit) {
+    // ORC's perf support plugin looks up these runtime entry points through the
+    // process symbol table. In ROOT, the symbols will remain hidden inside
+    // libCling.so. Explicitly inject them into the JITDylib.
+    static const std::pair<const char*, const void*> NamePtrList[] = {
+        {"llvm_orc_registerJITLoaderPerfStart",
+         (void*)&llvm_orc_registerJITLoaderPerfStart},
+        {"llvm_orc_registerJITLoaderPerfEnd",
+         (void*)&llvm_orc_registerJITLoaderPerfEnd},
+        {"llvm_orc_registerJITLoaderPerfImpl",
+         (void*)&llvm_orc_registerJITLoaderPerfImpl},
+    };
+
+    SymbolMap PerfSymbols;
+    for (const auto& NamePtr : NamePtrList) {
+      PerfSymbols[Jit.mangleAndIntern(NamePtr.first)] = {
+          orc::ExecutorAddr::fromPtr(NamePtr.second), JITSymbolFlags::Exported};
+    }
+    return PerfSymbols;
+  }
+
   // This could potentially be upstreamed, similar to enableDebuggerSupport()
   Error enablePerfSupport(LLJIT& J) {
     auto* ObjLinkingLayer =
@@ -65,6 +79,9 @@ namespace {
       return make_error<StringError>("Cannot enable LLJIT perf support: "
                                      "Process symbols are not available",
                                      inconvertibleErrorCode());
+
+    // Manually define the symbols
+    cantFail(ProcessSymsJD->define(absoluteSymbols(GetListOfPerfSymbols(J))));
 
     auto& ES = J.getExecutionSession();
     const auto& TT = J.getTargetTriple();
@@ -550,6 +567,10 @@ IncrementalJIT::IncrementalJIT(
   LLJITBuilder Builder;
   Builder.setDataLayout(m_TM->createDataLayout());
   Builder.setExecutorProcessControl(std::move(EPC));
+  // Our builtin LLVM uses LLVM_ENABLE_THREADS=OFF, but when concurrent
+  // compilation is available we need to disable it. Otherwise LLJIT clones
+  // modules on emit, invalidating Transaction::m_CompiledModule.
+  Builder.setSupportConcurrentCompilation(false);
 
   if (m_JITLink) {
     Builder.setPrePlatformSetup([](llvm::orc::LLJIT& J) {
@@ -564,8 +585,7 @@ IncrementalJIT::IncrementalJIT(
   }
 
   // Create ObjectLinkingLayer with our own MemoryManager.
-  Builder.setObjectLinkingLayerCreator([&](ExecutionSession& ES,
-                                           const Triple& TT)
+  Builder.setObjectLinkingLayerCreator([&](ExecutionSession& ES)
                                            -> std::unique_ptr<ObjectLayer> {
     if (m_JITLink) {
       // For JITLink, we only need a custom memory manager to avoid freeing the
@@ -579,7 +599,7 @@ IncrementalJIT::IncrementalJIT(
     }
 
     auto MMapper = std::make_unique<ClingMMapper>();
-    auto GetMemMgr = [MMapper = std::move(MMapper)]() {
+    auto GetMemMgr = [MMapper = std::move(MMapper)](const llvm::MemoryBuffer &) {
       return std::make_unique<ClingMemoryManager>(*MMapper);
     };
     auto Layer =
@@ -594,6 +614,8 @@ IncrementalJIT::IncrementalJIT(
     if (cling::utils::ConvertEnvValueToBool(std::getenv("CLING_PROFILE")))
       Layer->registerJITEventListener(*cling::createPerfJITEventListener());
 #endif
+
+    auto TT = ES.getTargetTriple();
 
     // The following is based on LLJIT::createObjectLinkingLayer.
     if (TT.isOSBinFormatCOFF()) {
@@ -819,7 +841,7 @@ void* IncrementalJIT::getSymbolAddress(StringRef Name, bool IncludeHostSymbols){
   if (!IncludeHostSymbols)
     G.lock();
 
-  std::pair<llvm::StringMapIterator<std::nullopt_t>, bool> insertInfo;
+  std::pair<llvm::StringSet<>::iterator, bool> insertInfo;
   if (!IncludeHostSymbols)
     insertInfo = m_ForbidDlSymbols.insert(Name);
 

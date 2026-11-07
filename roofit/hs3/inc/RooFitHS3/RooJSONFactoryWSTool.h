@@ -23,6 +23,7 @@
 #include <map>
 #include <stdexcept>
 #include <set>
+#include <unordered_map>
 
 namespace RooFit {
 namespace JSONIO {
@@ -34,12 +35,20 @@ class Domains;
 namespace RooStats {
 class ModelConfig;
 }
+class RooRealVar;
 
 class RooJSONFactoryWSTool {
 public:
    static constexpr bool useListsInsteadOfDicts = true;
-   static bool allowExportInvalidNames;
-   static bool allowSanitizeNames;
+
+   struct Config {
+      bool allowExportInvalidNames = true;
+      bool allowSanitizeNames = true;
+      bool importNoDomainParametersAsRooConstVars = true;
+   };
+
+   static Config &config();
+
    static RooWorkspace sanitizeWS(const RooWorkspace &ws);
    static RooWorkspace cleanWS(const RooWorkspace &ws, bool onlyModelConfig = false);
 
@@ -62,7 +71,6 @@ public:
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
 
    static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
-   static void fillSeqSanitizedName(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
 
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
@@ -137,18 +145,12 @@ public:
    readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgSet const &vars);
 
    bool importJSON(std::string const &filename);
-   bool importYML(std::string const &filename);
    bool importJSON(std::istream &os);
-   bool importYML(std::istream &os);
    bool exportJSON(std::string const &fileName);
-   bool exportYML(std::string const &fileName);
    bool exportJSON(std::ostream &os);
-   bool exportYML(std::ostream &os);
 
    std::string exportJSONtoString();
-   std::string exportYMLtoString();
    bool importJSONfromString(const std::string &s);
-   bool importYMLfromString(const std::string &s);
    void importJSONElement(const std::string &name, const std::string &jsonString);
    void importVariableElement(const RooFit::Detail::JSONNode &n);
 
@@ -181,6 +183,8 @@ public:
       return node.get("misc", "ROOT_internal", keys...);
    }
 
+   static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
+
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
@@ -201,6 +205,9 @@ public:
    bool hasAttribute(const std::string &obj, const std::string &attrib);
    std::string getStringAttribute(const std::string &obj, const std::string &attrib);
    void setStringAttribute(const std::string &obj, const std::string &attrib, const std::string &value);
+
+   /// The "hs3_version" of the document that is currently being imported, or an empty string outside of an import.
+   std::string const &hs3VersionInput() const { return _hs3VersionInput; }
 
 private:
    template <class T>
@@ -247,11 +254,19 @@ private:
    const RooFit::Detail::JSONNode *_attributesNode = nullptr;
    RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
    RooFit::Detail::JSONNode *_varsNode = nullptr;
+   std::string _hs3VersionInput;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
+
+   // Name-keyed indices over the top-level "functions" and "distributions"
+   // sequences of the input JSON. Built once at the start of importAllNodes()
+   // so that requestImpl() lookups become O(1) instead of an O(N) scan over
+   // every sibling node.
+   std::unordered_map<std::string, RooFit::Detail::JSONNode const *> _functionsByName;
+   std::unordered_map<std::string, RooFit::Detail::JSONNode const *> _distributionsByName;
 };
 #endif

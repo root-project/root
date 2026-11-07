@@ -15,7 +15,7 @@ class ClassAIns
 public:
    struct Transient {
       Transient() : fCached(false) {}
-      bool fCached; //!
+      bool fCached; ///<!
    };
 
    ClassAIns(): m_a( 12 ), m_b( 32.23 ), m_unit(-1) {}
@@ -23,7 +23,7 @@ private:
    int    m_a;
    double m_b;
    int    m_unit;
-   ClassAIns::Transient m_cache; //!
+   ClassAIns::Transient m_cache; ///<!
 public:
    void SetUnit(int unit) { m_unit = unit; }
 };
@@ -48,7 +48,7 @@ private:
    ClassAIns  m_d;
    int        m_e;
    int        m_unit;
-   bool       m_md_set; //! To insure proper I/O transfer of m_unit into m_d
+   bool       m_md_set; ///<! To insure proper I/O transfer of m_unit into m_d
 public:
    void SetMdUnit(int unit) {
       m_d.SetUnit(unit);
@@ -184,9 +184,9 @@ private:
    //std::vector<LHCb::LHCbID>       m_lhcbIDs;              ///< Container of (sorted) LHCbIDs
    //std::vector<LHCb::State*>       m_states;               ///< Container with pointers to all the states
    //std::vector<LHCb::Measurement*> m_measurements;         ///< Container of Measurements
-   Gaudi::TrackProjectionMatrix      m_projections;      //! ///< the projection matrix
-   Node                              m_nothing;          //! ///< Just for testing
-   std::vector<LHCb::Node*>          m_nodes;            //! ///< Container of Nodes
+   Gaudi::TrackProjectionMatrix      m_projections;      ///<! ///< the projection matrix
+   Node                              m_nothing;          ///<! ///< Just for testing
+   std::vector<LHCb::Node*>          m_nodes;            ///<! ///< Container of Nodes
    //ExtraInfo                       m_extraInfo;            ///< Additional pattern recognition information. Do not access directly, use *Info() methods instead.
    //SmartRefVector<LHCb::Track>     m_ancestors;            ///< Ancestor tracks that created this one
 

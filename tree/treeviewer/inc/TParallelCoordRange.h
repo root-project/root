@@ -37,9 +37,6 @@ private:
    TParallelCoordSelect* fSelect; ///< Selection owning the range.
 
    void              PaintSlider(Double_t value,bool fill=false);
-   TPoint*           GetBindingLinePoints(Int_t pos,Int_t mindragged);
-   TPoint*           GetSliderPoints(Double_t value);
-   TPoint*           GetSliderPoints(Int_t pos);
 
 public:
    TParallelCoordRange();

@@ -13,6 +13,7 @@
 #include "TH1.h"
 #include "TVirtualPad.h"
 
+#include <ostream>
 
 /** \class TF12
     \ingroup Functions
@@ -29,6 +30,11 @@ Begin_Macro(source)
     f12->Draw();
 }
 End_Macro
+
+Side note: TF12 derives from TF1 but it does not store the number of parameters:
+so `GetNpar()` will be 0. Instead, it contains a private member pointing to the
+original TF2. Hence, one should not modify the (zero) parameters of the TF12
+but rather modify the original TF2 the TF12 is pointing to.
 
 */
 
@@ -47,7 +53,7 @@ TF12::TF12()
 /// TF12 normal constructor.
 ///
 /// Create a TF12 (special TF1) from a projection of a TF2
-/// for a fix value of Y if option="X" or X if option="Y"
+/// for a fix value `xy` of Y if option="X" or X if option="Y"
 /// This value may be changed at any time via TF12::SetXY(xy)
 
 TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option, EAddToList addToGlobList)
@@ -61,7 +67,6 @@ TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option, EAddToList 
       Error("TF12","Pointer to TF2 is null");
       return;
    }
-   SetXY(xy);
    if (opt.Contains("y")) {
       fXmin = f2->GetYmin();
       fXmax = f2->GetYmax();
@@ -71,6 +76,7 @@ TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option, EAddToList 
       fXmax = f2->GetXmax();
       fCase = 0;
    }
+   SetXY(xy); // has to be called after fCase is set, since it also sets the title
 }
 
 
@@ -107,7 +113,7 @@ void TF12::Copy(TObject &obj) const
 /// Draw a copy of this function with its current attributes.
 ///
 /// This function MUST be used instead of Draw when you want to draw
-/// the same function with different parameters settings in the same canvas.
+/// the same function with different TF12 options (settings) in the same canvas.
 ///
 /// Possible option values are:
 ///
@@ -119,6 +125,17 @@ void TF12::Copy(TObject &obj) const
 ///
 /// Note that the default value is "F". Therefore to draw on top
 /// of an existing picture, specify option "SL"
+///
+/// Beware: this function does not clone the underlying TF2 instance,
+/// it just clones the TF12 objects but the all point to the same
+/// TF2. As a result, this function is only useful if you change
+/// the TF12 options (settings).
+/// If you want to draw projections of the same function with
+/// different TF2 parameters, you can do so by previously cloning
+/// the TF2 object for each variation.
+/// A clone-less alternative is to create a snapshot of the TF12 by
+/// creating a `new TGraph(tf12)` after each variation and then
+/// adding it to a TMultiGraph.
 
 TF1 *TF12::DrawCopy(Option_t *option) const
 {
@@ -212,6 +229,8 @@ void TF12::SetXY(Double_t xy)
 {
    fXY = xy;
    if (!fF2) return;
+   // option == "X" --> fCase = 0, project on X axis, X varies, Y constant 
+   // option == "Y" --> fCase = 1, project on Y axis, Y varies, X constant 
    if (fCase == 0) SetTitle(TString::Format("%s (y=%g)",fF2->GetTitle(),xy));
    else            SetTitle(TString::Format("%s (x=%g)",fF2->GetTitle(),xy));
    if (fHistogram) fHistogram->SetTitle(GetTitle());

@@ -13,6 +13,7 @@
 #include "TParallelMergingFile.h"
 #include "TServerSocket.h"
 #include "TFileMerger.h"
+#include "TROOT.h"
 
 enum EStatusKind {
    // These values are dictated by TParallelMergingFile::UploadAndReset().
@@ -94,6 +95,8 @@ static void Server(std::unique_ptr<TServerSocket> ss, const std::string &outFile
 
 TEST(TParallelMergingFile, UploadAndResetNonTObject)
 {
+   ROOT::EnableThreadSafety();
+   
    TString sockPath = "parallelMergeTest";
    FILE *dummy = gSystem->TempFileName(sockPath);
    if (!dummy) {
@@ -125,7 +128,6 @@ TEST(TParallelMergingFile, UploadAndResetNonTObject)
 
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.optionalDiag(kWarning, "TParallelMergingFile::ResetObjects", "can not be ResetAfterMerge", false);
-   diags.requiredDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental");
 
    constexpr auto kNEntries = 10000;
    constexpr auto kNUploads = 4;

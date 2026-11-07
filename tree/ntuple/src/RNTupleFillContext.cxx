@@ -1,5 +1,4 @@
 /// \file RNTupleFillContext.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-22
 
@@ -45,7 +44,7 @@ ROOT::RNTupleFillContext::~RNTupleFillContext()
    try {
       FlushCluster();
    } catch (const RException &err) {
-      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure flushing cluster: " << err.GetError().GetReport();
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure flushing cluster: " << err.what();
    }
 
    if (!fStagedClusters.empty()) {

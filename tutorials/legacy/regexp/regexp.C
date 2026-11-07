@@ -27,13 +27,12 @@
 ///
 /// \author Eddy Offermann
 
-#include "Riostream.h"
 #include "TString.h"
 #include "TPRegexp.h"
 #include "TClonesArray.h"
 #include "TObjString.h"
 
-
+#include <iostream>
 
 void regexp()
 {

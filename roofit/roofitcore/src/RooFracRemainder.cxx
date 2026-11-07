@@ -27,9 +27,6 @@ a constrained split
 **/
 
 
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooFracRemainder.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
@@ -37,9 +34,9 @@ a constrained split
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
+#include <ostream>
+
 using std::endl;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with given set of input fractions. All arguments in sumSet must be of type RooAbsReal.

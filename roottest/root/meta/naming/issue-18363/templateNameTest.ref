@@ -1,4 +1,3 @@
-
 Processing templateNameTest.C...
 Collection name='TObjArray', class='TObjArray', size=16
  OBJ: TProtoClass	PFRecHitSoALayout<128>	

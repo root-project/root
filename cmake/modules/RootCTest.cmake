@@ -51,17 +51,33 @@ foreach(d ${test_list})
   endif()
 endforeach()
 
-# When ninja is in use, tests that compile an executable might try to rebuild the entire build tree.
-# If multiple of these are invoked in parallel, ninja will suffer from race conditions.
+# Building a test executable must bring lib/modules.idx and all module
+# artifacts (PCMs) up to date. Otherwise, a targeted build that changes a
+# dictionary (e.g. `cmake --build . --target testFoo`) leaves the test running
+# against a stale global module index and stale dependent PCMs, which
+# manifests as modules that fail to load or as spurious segfaults. The
+# modules_idx target depends on every ROOT module, so making the test
+# executables depend on it ensures any dictionary change is first propagated
+# through the dependent PCMs and the index is regenerated.
+if(runtime_cxxmodules AND TARGET modules_idx)
+  get_property(modules_idx_gtests GLOBAL PROPERTY ROOT_MODULES_IDX_GTESTS)
+  foreach(modules_idx_gtest ${modules_idx_gtests})
+    add_dependencies(${modules_idx_gtest} modules_idx)
+  endforeach()
+endif()
+
+# When ninja or the Microsoft generator are in use, tests that compile an executable might try
+# to rebuild the entire build tree. If multiple of these are invoked in parallel, ninja will
+# suffer from race conditions.
 # To solve this, do the following:
 # - Add a test that updates the build tree (equivalent to "ninja all"). This one will run in complete isolation.
 # - Make all tests that require a ninja build depend on the above test.
 # - Use a RESOURCE_LOCK on all tests that invoke ninja, so no two tests will invoke ninja in parallel
-if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-  add_test(NAME ninja-build-all
-      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR})
-  set_tests_properties(ninja-build-all PROPERTIES
-      RESOURCE_LOCK NINJA_BUILD
-      FIXTURES_SETUP NINJA_BUILD_ALL
+if(GeneratorNeedsBuildSerialization)
+  add_test(NAME cmake-build-all
+      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config})
+  set_tests_properties(cmake-build-all PROPERTIES
+      RESOURCE_LOCK CMAKE_BUILD
+      FIXTURES_SETUP CMAKE_BUILD_ALL
       RUN_SERIAL True)
 endif()

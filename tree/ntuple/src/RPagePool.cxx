@@ -1,5 +1,4 @@
 /// \file RPagePool.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 
@@ -12,6 +11,7 @@
  *************************************************************************/
 
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumn.hxx>
 
 #include <TError.h>
@@ -19,6 +19,13 @@
 #include <algorithm>
 #include <cstdlib>
 #include <utility>
+
+ROOT::Internal::RPagePool::RPagePool(RPageSource &pageSource) : fPageSource(pageSource), fMetrics("RPagePool")
+{
+   using ROOT::Experimental::Detail::RNTupleAtomicCounter;
+   fCounters = std::make_unique<RCounters>(
+      RCounters{*fMetrics.MakeCounter<RNTupleAtomicCounter *>("nPage", "", "number of currently cached pages")});
+}
 
 ROOT::Internal::RPagePool::REntry &
 ROOT::Internal::RPagePool::AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter)
@@ -43,6 +50,7 @@ ROOT::Internal::RPagePool::AddPage(RPage page, const RKey &key, std::int64_t ini
 
    fLookupByBuffer[page.GetBuffer()] = entryIndex;
 
+   fCounters->fNPage.Inc();
    return fEntries.emplace_back(REntry{std::move(page), key, initialRefCounter});
 }
 
@@ -54,10 +62,18 @@ ROOT::Internal::RPageRef ROOT::Internal::RPagePool::RegisterPage(RPage page, RKe
 
 void ROOT::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
+   auto p = std::make_pair(std::move(page), key);
+   PreloadPageV(std::span<std::pair<RPage, RKey>>(&p, 1));
+}
+
+void ROOT::Internal::RPagePool::PreloadPageV(std::span<std::pair<RPage, RKey>> pages)
+{
    std::lock_guard<std::mutex> lockGuard(fLock);
-   const auto &entry = AddPage(std::move(page), key, 0);
-   if (entry.fRefCounter == 0)
-      fUnusedPages[entry.fPage.GetClusterInfo().GetId()].emplace(entry.fPage.GetBuffer());
+   for (auto &p : pages) {
+      const auto &entry = AddPage(std::move(p.first), p.second, 0);
+      if (entry.fRefCounter == 0)
+         AddToUnusedPages(entry.fPage);
+   }
 }
 
 void ROOT::Internal::RPagePool::ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr)
@@ -82,6 +98,7 @@ void ROOT::Internal::RPagePool::ErasePage(std::size_t entryIdx, decltype(fLookup
       fEntries[entryIdx] = std::move(fEntries[N - 1]);
    }
 
+   fCounters->fNPage.Dec();
    fEntries.resize(N - 1);
 }
 
@@ -96,8 +113,17 @@ void ROOT::Internal::RPagePool::ReleasePage(const RPage &page)
 
    assert(fEntries[idx].fRefCounter >= 1);
    if (--fEntries[idx].fRefCounter == 0) {
-      ErasePage(idx, itrLookup);
+      if (fPageSource.GetPinnedClusters().count(page.GetClusterInfo().GetId()) > 0) {
+         AddToUnusedPages(page);
+      } else {
+         ErasePage(idx, itrLookup);
+      }
    }
+}
+
+void ROOT::Internal::RPagePool::AddToUnusedPages(const RPage &page)
+{
+   fUnusedPages[page.GetClusterInfo().GetId()].emplace(page.GetBuffer());
 }
 
 void ROOT::Internal::RPagePool::RemoveFromUnusedPages(const RPage &page)

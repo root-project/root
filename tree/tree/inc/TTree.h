@@ -68,6 +68,7 @@ class TPrincipal;
 class TFriendElement;
 class TCut;
 class TVirtualIndex;
+class TBranchElement;
 class TBranchRef;
 class TBasket;
 class TStreamerInfo;
@@ -84,6 +85,11 @@ TBranch *CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
                           Int_t bufsize = 32000, Int_t splitlevel = 99);
 TBranch *CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize = 32000,
                        Int_t splitlevel = 99);
+
+// For the Python bindings, which see the char* that TBranch::GetAddress() and
+// TBranchElement::GetObject() return as a string.
+Longptr_t GetBranchAddress(TBranch *branch);
+Longptr_t GetBranchElementObject(TBranchElement *branch);
 }
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
@@ -127,7 +133,7 @@ protected:
    /// Object to be notified when loading a Tree.
    /// TTree::LoadTree() and TChain::LoadTree() will call fNotify->Notify().
    /// Usually points to a TNotifyLink if this is a TChain.
-   TObject       *fNotify;                //!
+   TObject       *fNotify;                ///<!
    TDirectory    *fDirectory;             ///<! Pointer to directory holding this tree
    TObjArray      fBranches;              ///<  List of Branches
    TObjArray      fLeaves;                ///<  Direct pointers to individual branch leaves
@@ -185,6 +191,9 @@ private:
    Int_t
    SetBranchAddressImp(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype, bool isptr);
 
+   // Helper method to factorize the processing logic for GetMinium, GetMaximum
+   double ComputeExtremum(const char *columname, double errVal, bool (*cmp)(double, double));
+
 protected:
    friend TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
                                                                EDataType datatype, void *addobj, Int_t bufsize,
@@ -200,8 +209,7 @@ protected:
    virtual Int_t    CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, bool ptr);
    virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, bool isptrptr, Int_t bufsize, Int_t splitlevel);
    friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
-   Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
-   virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
+   Int_t SetBranchAddressImp(TBranch *branch, void *addr, TBranch **ptr);
 
    Long64_t         GetCacheAutoSize(bool withDefault = false);
    char             GetNewlineValue(std::istream &inputStream);
@@ -217,6 +225,12 @@ protected:
    // if it is not in one particular friend but in another
    virtual Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
                                   bool isptr, bool suppressMissingBranchError);
+
+   // Group of methods to help better separating logic used in GetLeaf
+   TBranch *FindBranchFromSelf(const char *branchName);
+   TBranch *FindBranchFromFriends(const char *branchName);
+   TLeaf *SearchLeafInListOfLeaves(const char *branchName, const char *leafName);
+   TLeaf *SearchLeafInListOfFriends(const char *branchName, const char *leafName);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
@@ -252,7 +266,15 @@ protected:
       kGetFriendAlias       = BIT(7),
       kGetLeaf              = BIT(8),
       kLoadTree             = BIT(9),
+// clang++ <v20 (-Wshadow) complains about shadowing TError.h global variable kPrint. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kPrint                = BIT(10),
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
       kRemoveFriend         = BIT(11),
       kSetBranchStatus      = BIT(12),
       kResetBranchAddresses = BIT(13)
@@ -748,6 +770,17 @@ public:
 
    ClassDefOverride(TTree, 20) // Tree descriptor (the main ROOT I/O class)
 };
+
+namespace ROOT::Internal::TreeUtils {
+/// For the Python bindings: call the TTree::Branch() overload that takes the
+/// address of a pointer, with that address worked out by cppyy from a T**.
+template <class T>
+TBranch *BranchPtrToPtr(TTree &tree, const char *name, const char *className, T **obj, Int_t bufsize = 32000,
+                        Int_t splitlevel = 99)
+{
+   return tree.Branch(name, className, reinterpret_cast<void **>(obj), bufsize, splitlevel);
+}
+} // namespace ROOT::Internal::TreeUtils
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

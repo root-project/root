@@ -61,7 +61,7 @@ namespace cling {
                 .append(std::to_string(m_CuArgs->smVersion)),
             "--cuda-device-only"};
 
-    addHeaderSearchPathFlags(argv, CI.getHeaderSearchOptsPtr());
+    addHeaderSearchPathFlags(argv, CI.getHeaderSearchOpts());
 
     if (m_CuArgs->verbose)
       argv.push_back("-v");
@@ -196,9 +196,9 @@ namespace cling {
 
   void IncrementalCUDADeviceCompiler::addHeaderSearchPathFlags(
       std::vector<std::string>& argv,
-      const std::shared_ptr<clang::HeaderSearchOptions> &headerSearchOptions) {
+      const clang::HeaderSearchOptions& headerSearchOptions) {
     for (clang::HeaderSearchOptions::Entry e :
-         headerSearchOptions->UserEntries) {
+         headerSearchOptions.UserEntries) {
       if (e.Group == clang::frontend::IncludeDirGroup::Quoted) {
         argv.push_back("-iquote");
         argv.push_back(e.Path);

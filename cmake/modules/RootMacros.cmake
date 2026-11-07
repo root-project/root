@@ -34,6 +34,21 @@ else()
   set(runtimedir ${CMAKE_INSTALL_PYTHONDIR})
 endif()
 
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+  set(GeneratorNeedsResourecLock False)
+  set(GeneratorNeedsBuildSerialization False)
+  if(winrtdebug)
+    set(build_config "--config Debug")
+  else()
+    set(build_config "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+  endif()
+endif()
+
+if(CMAKE_GENERATOR MATCHES Ninja)
+  set(GeneratorNeedsResourecLock True)
+  set(GeneratorNeedsBuildSerialization True)
+endif()
+
 set(ROOT_LIBRARY_PROPERTIES_NO_VERSION ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
     SUFFIX ${libsuffix}
     PREFIX ${libprefix} )
@@ -183,13 +198,20 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     LIST(APPEND definitions "$<FILTER:$<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
   ENDIF()
 
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
+  elseif(TARGET ROOT::genreflex)
+    set(ROOT_genreflex_CMD $<TARGET_FILE:ROOT::genreflex>)
+  else()
+    set(ROOT_genreflex_CMD ${ROOT_BINDIR}/genreflex)
+  endif()
   add_custom_command(
-    OUTPUT ${gensrcdict} ${rootmapname}
     COMMAND ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
-         --gccxmlpath=${GCCXML_home}/bin ${ARG_OPTIONS}
+         ${ARG_OPTIONS}
          "-I$<JOIN:$<REMOVE_DUPLICATES:$<FILTER:${include_dirs},EXCLUDE,^$>>,;-I>"
          "$<$<BOOL:$<JOIN:${definitions},>>:-D$<JOIN:${definitions},;-D>>"
+    OUTPUT ${gensrcdict} ${rootmapname}
     DEPENDS ${headerfiles} ${selectionfile} ${ARG_DEPENDS}
 
     COMMAND_EXPAND_LISTS
@@ -336,7 +358,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
 
     # this instruct rootcling do not store such paths in dictionary
-    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
+    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
     set(headerfiles)
     set(_list_of_header_dependencies)
@@ -598,68 +620,116 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
   endif()
 
-  #---Get the library and module dependencies-----------------
-  if(ARG_DEPENDENCIES)
-    foreach(dep ${ARG_DEPENDENCIES})
-      if(NOT TARGET G__${dep})
-        # This is a library that doesn't come with dictionary/pcm
-        continue()
-      endif()
-
-      set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
-      if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
-        set(dependent_pcm ${dep}.pcm)
-        if(TARGET ${dep})
-          get_target_property(_dep_pcm_filename ${dep} ROOT_PCM_FILENAME)
-          if(_dep_pcm_filename)
-            list(APPEND pcm_dependencies ${_dep_pcm_filename})
-          endif()
-        endif()
-      endif()
-      set(newargs ${newargs} -m  ${dependent_pcm})
-    endforeach()
+  # With single-configuration Ninja, all build edges are in one graph, so ROOT's
+  # dictionaries can depend on rootcling and the upstream pcms at file level.
+  # Target-level dependencies would make all sources of this and of downstream
+  # libraries wait for those links, serializing the build (issue #6432).
+  set(file_level_dependencies FALSE)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT AND CMAKE_GENERATOR STREQUAL "Ninja" AND NOT CMAKE_ROOTTEST_DICT)
+    set(file_level_dependencies TRUE)
   endif()
+
+  #---Get the library and module dependencies-----------------
+  # Every dictionary implicitly depends on Core's pcm, except the one for Core itself.
+  # Only when building ROOT itself: downstream projects have no plain 'Core' target
+  # (only ROOT::Core), and a bare 'Core' in DEPENDS would be treated as a file.
+  if(ARG_MODULE AND NOT ARG_MODULE STREQUAL "Core")
+    if(TARGET ROOT::Core)
+      list(INSERT ARG_DEPENDENCIES 0 ROOT::Core)
+    elseif(TARGET Core)
+      list(INSERT ARG_DEPENDENCIES 0 Core)
+    endif()
+    list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
+  endif()
+  foreach(dep ${ARG_DEPENDENCIES})
+    # Whether <dep> provides a dictionary/pcm is decided at generation time
+    # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
+    # dependency below are independent of configuration order and expand to
+    # nothing for a dictionary-less library.
+    set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
+    set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
+    if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
+      set(dependent_pcm ${dep}.pcm)
+      list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:G__${dep},ROOT_PCM_FILENAME>>")
+    endif()
+    set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
+  endforeach()
 
   if(cpp_module_file)
     set(newargs -cxxmodule ${newargs})
   endif()
 
   #---what rootcling command to use--------------------------
+  # For file-level dependencies, reference rootcling by path and depend on the
+  # stamp written when it is linked: any target reference would imply a
+  # target-level dependency.
   if(ARG_STAGE1)
-    set(command $<TARGET_FILE:rootcling_stage1>)
-    set(ROOTCLINGDEP rconfigure)
+    if(file_level_dependencies)
+      get_target_property(rootcling_dir rootcling_stage1 RUNTIME_OUTPUT_DIRECTORY)
+      set(rootcling_exe ${rootcling_dir}/rootcling_stage1${CMAKE_EXECUTABLE_SUFFIX})
+      set(ROOTCLINGDEP ${ROOTCLING_STAGE1_STAMP} rconfigure)
+    else()
+      set(rootcling_exe $<TARGET_FILE:rootcling_stage1>)
+      set(ROOTCLINGDEP rconfigure)
+    endif()
+    if(APPLE)
+      set(command ${CMAKE_COMMAND} -E env SDKROOT=${CMAKE_OSX_SYSROOT} ${rootcling_exe})
+    else()
+      set(command ${rootcling_exe})
+    endif()
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       if(MSVC AND CMAKE_ROOTTEST_DICT)
         set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe -rootbuild)
       else()
-        set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
         # Modules need RConfigure.h copied into include/.
-        set(ROOTCLINGDEP rootcling rconfigure)
+        if(file_level_dependencies)
+          set(rootcling_exe ${CMAKE_BINARY_DIR}/bin/rootcling${CMAKE_EXECUTABLE_SUFFIX})
+          set(ROOTCLINGDEP ${ROOTCLING_STAMP} rconfigure)
+        else()
+          set(rootcling_exe $<TARGET_FILE:rootcling>)
+          set(ROOTCLINGDEP rootcling rconfigure)
+        endif()
+        if(APPLE)
+          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" SDKROOT=${CMAKE_OSX_SYSROOT} ${rootcling_exe} -rootbuild)
+        else()
+          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${rootcling_exe} -rootbuild)
+        endif()
       endif()
     elseif(TARGET ROOT::rootcling)
-      set(command $<TARGET_FILE:ROOT::rootcling>)
+      if(APPLE)
+        set(command ${CMAKE_COMMAND} -E env SDKROOT=${CMAKE_OSX_SYSROOT} $<TARGET_FILE:ROOT::rootcling>)
+      else()
+        set(command $<TARGET_FILE:ROOT::rootcling>)
+      endif()
     else()
-      set(command rootcling)
+      if(APPLE)
+        set(command ${CMAKE_COMMAND} -E env SDKROOT=${CMAKE_OSX_SYSROOT} rootcling)
+      else()
+        set(command rootcling)
+      endif()
     endif()
   endif()
 
   #---build the path exclusion switches----------------------
   set(excludepathsargs "")
-  foreach(excludepath ${excludepaths})
+  foreach(excludepath ${excludepaths} ${ROOT_DICTIONARY_EXCLUDE_PATHS})
     set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
   endforeach()
 
   #---build the implicit dependencies arguments
-  # NOTE: only the Makefile generator respects this!
-  foreach(_dep ${_linkdef} ${_list_of_header_dependencies})
-    list(APPEND _implicitdeps CXX ${_dep})
-  endforeach()
+  # NOTE: DEPFILE is used instead of IMPLICIT_DEPENDS because IMPLICIT_DEPENDS
+  # only works with Unix Makefiles and has issues with cross-directory dependencies.
+  # DEPFILE works with all generators (Ninja, Unix Makefiles, etc.)
+  set(depfile_path ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.depfile)
+
+  if(ARG_MODULE AND NOT file_level_dependencies)
+    # rootcling only needs the upstream pcms, this ensures they exist first.
+    set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
+  endif()
 
   if(ARG_MODULE)
-    set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
-
     # get target properties added after call to ROOT_GENERATE_DICTIONARY()
     if(TARGET ${ARG_MODULE})
       # NOTE that module_sysincs is already part of ${module_sysincs}. But -isystem "wins",
@@ -684,14 +754,78 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
      endforeach()
   endif()
 
+  # rootcling does not promote compiler default include directories to -I,
+  # assuming that cling adds them by itself. Cling, however, only adds the C++
+  # standard library directories, its own builtin headers and the sysroot
+  # directories added by the clang driver. Directories injected by compiler
+  # wrappers or environment variables like CPATH are unknown to cling at
+  # runtime, so only report the former as compiler defaults.
+  if(CMAKE_SYSROOT)
+    set(sysroot "${CMAKE_SYSROOT}")
+  elseif(APPLE AND _CMAKE_OSX_SYSROOT_PATH)
+    # The SDK path that CMake resolves from CMAKE_OSX_SYSROOT (possibly empty
+    # or a bare SDK name) and passes to the compiler as -isysroot.
+    set(sysroot "${_CMAKE_OSX_SYSROOT_PATH}")
+  elseif(APPLE AND IS_DIRECTORY "${CMAKE_OSX_SYSROOT}")
+    set(sysroot "${CMAKE_OSX_SYSROOT}")
+  else()
+    set(sysroot "")
+  endif()
+  # Normalize like the implicit include directories (no trailing slash).
+  if(sysroot)
+    get_filename_component(sysroot "${sysroot}" ABSOLUTE)
+    string(REGEX REPLACE "/+$" "" sysroot "${sysroot}")
+  endif()
+  # What the clang driver adds, see AddClangSystemIncludeArgs() in
+  # clang/lib/Driver/ToolChains/{Linux,Darwin}.cpp. The multiarch directory
+  # <sysroot>/usr/include/<triple> is matched below. C library directories that
+  # the builtin clang is configured with (C_INCLUDE_DIRS, colon-separated) are
+  # reported in addition: a C library directory must never be promoted to -I.
+  set(sysrootIncDirs "${sysroot}/usr/local/include" "${sysroot}/include" "${sysroot}/usr/include")
+  set(clingCIncDirs)
+  if(C_INCLUDE_DIRS AND NOT WIN32)
+    string(REPLACE ":" ";" clingCIncDirs "${C_INCLUDE_DIRS}")
+    list(TRANSFORM clingCIncDirs REPLACE "/+$" "")
+  endif()
   set(compIncPaths)
   foreach(implinc IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
-    list(APPEND compIncPaths "-compilerI${implinc}")
+    get_filename_component(implincParent "${implinc}" DIRECTORY)
+    get_filename_component(implincName "${implinc}" NAME)
+    if(implinc MATCHES "/c\\+\\+(/|$)" OR implinc MATCHES "/lib(64)?/(gcc|clang)/"
+       OR implinc IN_LIST sysrootIncDirs OR implinc IN_LIST clingCIncDirs
+       OR (implincParent STREQUAL "${sysroot}/usr/include" AND implincName MATCHES "^[^-]+-[^-]+-[^-]+"))
+      list(APPEND compIncPaths "-compilerI${implinc}")
+    endif()
   endforeach()
 
-  if(cpp_module_file AND TARGET ${ARG_MODULE})
-    set_target_properties(${ARG_MODULE} PROPERTIES
-      ROOT_PCM_FILENAME "${cpp_module_file}")
+  # Keep the byproducts (rdict pcm, rootmap, C++ module) newer than the
+  # generated .cxx.  The Makefile generator models secondary outputs of a
+  # multi-output custom command as a separate rule ending in
+  # 'cmake -E touch_nocreate', but that rule is not always re-evaluated after
+  # the recipe has run (make's depend/build phase split, issue #20907).  The
+  # byproduct then stays older than the .cxx until the next build, which fires
+  # the deferred touch and spuriously rebuilds everything that depends on the
+  # byproduct.  Doing the touch in the recipe itself makes the output ordering
+  # unconditional.
+  set(dictionary_byproducts ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  if(dictionary_byproducts)
+    set(touch_byproducts_command COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${dictionary_byproducts})
+  endif()
+
+  # The Makefile generators of CMake < 4.0 merge the entries of a custom
+  # command's DEPFILE into CMakeFiles/<target>.dir/compiler_depend.internal
+  # instead of replacing them (CMake issue 26399). A header, LinkDef or pcm
+  # that rootcling read once but that has since disappeared, e.g. because the
+  # build tree is reused across a checkout, then stays recorded as a missing
+  # prerequisite, and make regenerates the dictionary on every build. Dropping
+  # the cached list after rootcling has run makes the next dependency scan
+  # start from the fresh depfile only, as CMake itself does for library
+  # targets whenever it regenerates.
+  set(drop_cached_depends_command)
+  if(CMAKE_GENERATOR MATCHES "Makefiles" AND CMAKE_VERSION VERSION_LESS 4.0)
+    get_filename_component(dictionary_target ${dictionary} NAME)
+    set(drop_cached_depends_command COMMAND ${CMAKE_COMMAND} -E rm -f
+        ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${dictionary_target}.dir/compiler_depend.internal)
   endif()
 
   #---call rootcling------------------------------------------
@@ -708,7 +842,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                        # make the dictionary generation command depend on the C++ standard, ensuring that the
                        # dictionaries will be rebuilt if the C++ standard is changed in an incremental build.
                        -DR__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
-    IMPLICIT_DEPENDS ${_implicitdeps}
+                       -MF ${depfile_path}
+    ${touch_byproducts_command}
+    ${drop_cached_depends_command}
+    DEPFILE ${depfile_path}
     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCLINGDEP}
             ${pcm_dependencies}
             ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
@@ -723,7 +860,18 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # the generated source at the same scope level as its owning target, something that
   # would not happen if we used target_sources() directly with the dictionary source.
   if(TARGET "${ARG_MODULE}" AND NOT "${ARG_MODULE}" STREQUAL "${dictionary}")
-    add_library(${dictionary} OBJECT ${dictionary}.cxx)
+    # Generated files might be headers, so the sources of the module and its
+    # dependents would wait for the dictionary. With CMP0154 (CMake 3.28), they
+    # are private in targets with file sets, and an empty one is enough.
+    if(file_level_dependencies AND POLICY CMP0154)
+      cmake_policy(PUSH)
+      cmake_policy(SET CMP0154 NEW)
+      add_library(${dictionary} OBJECT ${dictionary}.cxx)
+      target_sources(${dictionary} PRIVATE FILE_SET HEADERS)
+      cmake_policy(POP)
+    else()
+      add_library(${dictionary} OBJECT ${dictionary}.cxx)
+    endif()
     set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     target_link_libraries(${ARG_MODULE} PRIVATE ${dictionary})
 
@@ -749,6 +897,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   else()
     get_filename_component(dictionary_name ${dictionary} NAME)
     add_custom_target(${dictionary_name} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  endif()
+
+  # The C++ module that downstream dictionaries load with '-m'. Set on the
+  # dictionary target, as the module target might only be created later.
+  if(cpp_module_file)
+    get_filename_component(dictionary_target ${dictionary} NAME)
+    set_target_properties(${dictionary_target} PROPERTIES ROOT_PCM_FILENAME "${cpp_module_file}")
   endif()
 
   if(PROJECT_NAME STREQUAL "ROOT")
@@ -824,7 +979,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         DllImport.h ESTLType.h Varargs.h
                         ThreadLocalStorage.h
                         TBranchProxyTemplate.h
-                        snprintf.h strlcpy.h)
+                        strlcpy.h)
 
    # Deprecated header files.
   set (excluded_headers "${excluded_headers}")
@@ -1189,60 +1344,69 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>])
-# Glob for headers in the folder where this target is defined, and install them in
-# <buildDir>/include
+#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>] [HEADERS <header1> ...])
+# Declare the install command for headers and copy them into <binary_dir>/include.
+# This function supports two modes to build the list of headers:
+# - [New] If headers are passed explicitly using HEADERS ..., install only these
+# - [Old] Otherwise, glob in the specified folders or where this target is defined
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_HEADERS)
-  CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" "" "FILTER" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" "" "FILTER;HEADERS" ${ARGN})
   if (${ARG_OPTIONS})
     message(FATAL_ERROR "ROOT_INSTALL_HEADERS no longer supports the OPTIONS argument. Rewrite using the FILTER argument.")
   endif()
-  ROOT_FIND_DIRS_WITH_HEADERS(dirs ${ARG_UNPARSED_ARGUMENTS})
-  set (filter "LinkDef")
-  set (options REGEX "LinkDef" EXCLUDE)
-  foreach (f ${ARG_FILTER})
-    set (filter "${filter}|${f}")
-    set (options ${options} REGEX "${f}" EXCLUDE)
-  endforeach()
-  set (filter "(${filter})")
-  set(include_files "")
-  foreach(d ${dirs})
-    install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-                           COMPONENT headers
-                           ${options})
-    string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
-    ROOT_GLOB_FILES(globbed_files
-      RECURSE
-      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      FILTER ${filter}
-      ${d}/*.h ${d}/*.hxx ${d}/*.icc )
-    list(APPEND include_files ${globbed_files})
-  endforeach()
 
-  string(REPLACE ${CMAKE_SOURCE_DIR} "" target_name ${CMAKE_CURRENT_SOURCE_DIR})
-  string(REPLACE / _ target_name "copy_header_${target_name}")
-  string(REGEX REPLACE "_$" "" target_name ${target_name})
+  unset(include_files)
+
+  if(ARG_HEADERS)
+    # Headers have been listed explicitly, find them one by one
+    foreach(regex ${ARG_FILTER} "LinkDef")
+      list(FILTER ARG_HEADERS EXCLUDE REGEX "${regex}")
+    endforeach()
+    foreach(header ${ARG_HEADERS})
+      file(GLOB globbed_header ${header} */${header})
+      if(globbed_header STREQUAL "")
+	     message(SEND_ERROR "No header corresponding to ${header} found in ${CMAKE_CURRENT_SOURCE_DIR}")
+      endif()
+      list(APPEND include_files ${globbed_header})
+    endforeach()
+  else()
+    # Glob across all include directories
+    ROOT_FIND_DIRS_WITH_HEADERS(dirs ${ARG_UNPARSED_ARGUMENTS})
+    set (filter "LinkDef")
+    foreach (f ${ARG_FILTER})
+      set (filter "${filter}|${f}")
+    endforeach()
+    set (filter "(${filter})")
+    foreach(d ${dirs})
+      string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
+      ROOT_GLOB_FILES(globbed_files
+        RECURSE
+        FILTER ${filter}
+        ${d}/*.h ${d}/*.hxx ${d}/*.icc )
+      list(APPEND include_files ${globbed_files})
+    endforeach()
+  endif()
 
   # Register the files to be copied for each target directory (e.g. include/ include/ROOT include/v7/inc/ ...)
   list(REMOVE_DUPLICATES include_files)
   list(TRANSFORM include_files REPLACE "(.*)/[^/]*" "\\1/" OUTPUT_VARIABLE subdirs)
   list(REMOVE_DUPLICATES subdirs)
   foreach(subdir ${subdirs})
+    string(REGEX REPLACE ".*/inc/" "" destination_subdir ${subdir})
+
     set(input_files ${include_files})
     list(FILTER input_files INCLUDE REGEX "^${subdir}[^/]*$")
+
+    install(FILES ${input_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${destination_subdir} COMPONENT headers)
+
     set(output_files ${input_files})
+    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination_subdir}")
 
-    string(REGEX REPLACE ".*/*inc/" "" destination ${subdir})
-
-    list(TRANSFORM input_files  PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
-    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination}")
-
-    set(destination destination_${destination})
-
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_COPY_LISTS ${destination})
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_INPUT_${destination} ${input_files})
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_OUTPUT_${destination} ${output_files})
+    set(destination_target_name destination_${destination_subdir})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_COPY_LISTS ${destination_target_name})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_INPUT_${destination_target_name} ${input_files})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_OUTPUT_${destination_target_name} ${output_files})
   endforeach()
 endfunction()
 
@@ -1283,6 +1447,7 @@ endmacro()
 #---------------------------------------------------------------------------------------------------
 #---ROOT_STANDARD_LIBRARY_PACKAGE(libname
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
+#                                 [NO_GLOB_HEADERS]            : don't glob for headers, only install listed ones
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
 #                                 HEADERS header1 header2      : relative header path as #included; pass -I to find them. If not specified, globbing for *.h is used
 #                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generated
@@ -1293,7 +1458,7 @@ endmacro()
 #                                                                and then use those for linking.
 #                                 LIBRARIES lib1 lib2          : private arguments for target_link_library()
 #                                 DEPENDENCIES lib1 lib2       : PUBLIC arguments for target_link_library() such as Core, MathCore
-#                                 BUILTINS builtin1 builtin2   : builtins like AFTERIMAGE
+#                                 BUILTINS builtin1 builtin2   : builtins like xxhash
 #                                 LINKDEF LinkDef.h            : linkdef file, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
@@ -1301,7 +1466,7 @@ endmacro()
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
+  set(options NO_INSTALL_HEADERS NO_GLOB_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs LINKDEF)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -1338,10 +1503,20 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(NO_CXXMODULE_FLAG "NO_CXXMODULE")
   endif()
 
+  set(dummy_source)
   if(ARG_NO_SOURCES)
     # Workaround bug in CMake by adding a dummy source file if all sources are generated, since
     # in that case the initial call to add_library() may not list any sources and CMake complains.
-    add_custom_command(OUTPUT dummy.cxx COMMAND ${CMAKE_COMMAND} -E touch dummy.cxx)
+    #
+    # The file is written here at configure time rather than by a custom command on purpose: all
+    # the packages of one directory share it, and listing one custom command output in several
+    # independent targets that build in parallel is not supported. With MSBuild the touch ran
+    # again on every build, so the 15 STL dictionaries of core/clingutils kept recompiling and
+    # relinking, while Ninja and Make happened to get away with it.
+    set(dummy_source ${CMAKE_CURRENT_BINARY_DIR}/dummy.cxx)
+    if(NOT EXISTS ${dummy_source})
+      file(WRITE ${dummy_source} "")
+    endif()
   endif()
 
   if(runtime_cxxmodules)
@@ -1357,16 +1532,14 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   endif()
 
   if (ARG_OBJECT_LIBRARY)
-    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES}
-                        $<$<BOOL:${ARG_NO_SOURCES}>:dummy.cxx>)
+    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES} ${dummy_source})
     ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:${libname}Objs>
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
                         BUILTINS ${ARG_BUILTINS}
                        )
   else(ARG_OBJECT_LIBRARY)
-    ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES}
-                        $<$<BOOL:${ARG_NO_SOURCES}>:dummy.cxx>
+    ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES} ${dummy_source}
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
                         BUILTINS ${ARG_BUILTINS}
@@ -1399,7 +1572,11 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # Install headers if we have any headers and if the user didn't explicitly
   # disabled this.
   if (NOT ARG_NO_INSTALL_HEADERS OR ARG_NO_HEADERS)
-    ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
+    if(ARG_NO_GLOB_HEADERS)
+      ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS} HEADERS ${ARG_HEADERS})
+    else()
+      ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
+    endif()
   endif()
 endfunction()
 
@@ -1444,9 +1621,9 @@ function(ROOT_EXECUTABLE executable)
       endif()
     endforeach()
   endif()
-  if(TARGET ROOT::ROOTStaticSanitizerConfig)
+  if(TARGET ROOTStaticSanitizerConfig)
     set_property(TARGET ${executable}
-      APPEND PROPERTY LINK_LIBRARIES ROOT::ROOTStaticSanitizerConfig)
+      APPEND PROPERTY LINK_LIBRARIES ROOTStaticSanitizerConfig)
   endif()
   #----Installation details------------------------------------------------------
   if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
@@ -1491,6 +1668,96 @@ function(REFLEX_BUILD_DICTIONARY dictionary headerfiles selectionfile )
   set(mergedRootMap ${CMAKE_INSTALL_PREFIX}/${lib}/${CMAKE_PROJECT_NAME}Dict.rootmap)
   set(srcRootMap ${CMAKE_CURRENT_BINARY_DIR}/${rootmapname})
   install(CODE "EXECUTE_PROCESS(COMMAND ${merge_rootmap_cmd} --do-merge --input-file ${srcRootMap} --merged-file ${mergedRootMap})")
+endfunction()
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_PYTHON_PACKAGE(pkgname
+#                       SOURCES source1.py source2.py
+#                       [SUBDIR subdirectory]
+#                      )
+#
+# Define a CMake target that copies Python sources to the build directory,
+# compiles them to byte code, and installs both sources and bytecode into the
+# configured Python install directory. You can optionally pass a subdirectory
+# name if you don't want to install the package directly in the Python prefix.
+# This is useful if the Python package is a subpackage of another one.
+#---------------------------------------------------------------------------------------------------
+function(ROOT_PYTHON_PACKAGE pkgname)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "SUBDIR" "SOURCES" ${ARGN})
+
+  if(ARG_SUBDIR)
+    set(pkg_path_build "${localruntimedir}/${ARG_SUBDIR}")
+    set(pkg_path_install "${CMAKE_INSTALL_PYTHONDIR}/${ARG_SUBDIR}")
+  else()
+    set(pkg_path_build "${localruntimedir}")
+    set(pkg_path_install "${CMAKE_INSTALL_PYTHONDIR}")
+  endif()
+
+  # Ensure output directory exists
+  file(MAKE_DIRECTORY ${pkg_path_build})
+
+  set(copy_commands)
+  set(py_sources_in_source_dir)
+  set(py_sources_in_build_tree)
+  set(bytecode_dirs)
+
+  foreach(py_source ${ARG_SOURCES})
+    set(src ${CMAKE_CURRENT_SOURCE_DIR}/${py_source})
+    set(tgt ${pkg_path_build}/${py_source})
+
+    # Not copy_if_different: always refreshing the copies keeps the next build a no-op.
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${src} ${tgt})
+
+    list(APPEND py_sources_in_source_dir ${src})
+    list(APPEND py_sources_in_build_tree ${tgt})
+
+    get_filename_component(pydir ${tgt} DIRECTORY)
+
+    # According to PEP 3147 (https://peps.python.org/pep-3147/), the byte code
+    # cache files are always in the __pycache__ directory.
+    list(APPEND bytecode_dirs ${pydir}/__pycache__)
+  endforeach()
+
+  list(REMOVE_DUPLICATES bytecode_dirs)
+
+  add_custom_command(
+    OUTPUT ${py_sources_in_build_tree}
+    ${copy_commands}
+    DEPENDS ${py_sources_in_source_dir}
+    COMMENT "Copying ${pkgname} Python sources"
+  )
+
+  # Compile .py files
+
+  # Stamp file so CMake knows it doesn't need to re-compile. We can't set the
+  # actual bytecode files as the OUTPUT of the custom command, because their
+  # names are CPython implementation dependent and therefore not reliable.
+  set(bytecode_stamp ${pkg_path_build}/${pkgname}-pybytecode.stamp)
+
+  # It's 10x faster to compile all in one go than in single invocations
+  add_custom_command(
+    OUTPUT ${bytecode_stamp}
+    COMMAND ${Python3_EXECUTABLE} -m py_compile ${py_sources_in_build_tree}
+    COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${py_sources_in_build_tree}
+    COMMAND ${CMAKE_COMMAND} -E touch ${bytecode_stamp}
+    DEPENDS ${py_sources_in_build_tree}
+    COMMENT "Compiling ${pkgname} Python sources"
+  )
+
+  add_custom_target(${pkgname}Python ALL DEPENDS ${bytecode_stamp})
+
+  # So that `make clean` / `ninja clean` picks up the bytecode
+  set_property(TARGET ${pkgname}Python APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${bytecode_dirs})
+
+  # Install Python sources and bytecode
+  install(DIRECTORY ${pkg_path_build}/${pkgname}
+          DESTINATION ${pkg_path_install}
+          COMPONENT libraries
+          FILES_MATCHING
+            PATTERN "*.py"
+            PATTERN "*.pyc"
+  )
+
 endfunction()
 
 # Need to set this outside of the function so that ${CMAKE_CURRENT_LIST_DIR}
@@ -1646,6 +1913,7 @@ function(ROOT_ADD_TEST test)
     list(FILTER theCommand INCLUDE REGEX "^-DCMD=.*python[0-9.]*[\\^]")
     if((theCommand AND
         NOT (_command MATCHES XMLParsing/parseXMLs.py OR
+             _command MATCHES roottest/root/rint/driveRedirect.py OR
              _command MATCHES roottest/root/rint/driveTabCom.py))
        OR (_command MATCHES roottest/python/cmdLineUtils AND
            NOT _command MATCHES MakeNameCyclesRootmvInput))
@@ -1812,6 +2080,7 @@ endfunction()
 #                        [TIMEOUT seconds]
 #                        [COPY_TO_BUILDDIR file1 file2] Copy listed files when ctest invokes the test.
 #                        [LIBRARIES lib1 lib2...] -- Libraries to link against
+#                        [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #                        [LABELS label1 label2...] -- Labels to annotate the test
 #                        [INCLUDE_DIRS label1 label2...] -- Extra target include directories
 #                        [REPEATS number] -- Repeats testsuite `number` times, stopping at the first failure.
@@ -1823,7 +2092,7 @@ function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
     "TIMEOUT;REPEATS;FAILREGEX"
-    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS;ENVIRONMENT" ${ARGN})
+    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;INCLUDE_DIRS;ENVIRONMENT" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
@@ -1832,6 +2101,11 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
+  if(runtime_cxxmodules)
+    # Register the test so that the modules_idx dependency can be attached at
+    # the end of the top-level CMakeLists, where the modules_idx target exists.
+    set_property(GLOBAL APPEND PROPERTY ROOT_MODULES_IDX_GTESTS ${test_suite})
+  endif()
   target_link_libraries(${test_suite} PRIVATE GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main)
   if(TARGET ROOT::TestSupport)
     target_link_libraries(${test_suite} PRIVATE ROOT::TestSupport)
@@ -1848,6 +2122,7 @@ function(ROOT_ADD_GTEST test_suite)
     set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
+    ROOT_SET_OUTPUT_DIRECTORIES(${test_suite})
   endif()
 
   if(ARG_WILLFAIL)
@@ -1856,6 +2131,18 @@ function(ROOT_ADD_GTEST test_suite)
 
   if(ARG_REPEATS)
     set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
+  endif()
+
+  if (ARG_FIXTURES_SETUP)
+    set(fixtures_setup ${ARG_FIXTURES_SETUP})
+  endif()
+
+  if (ARG_FIXTURES_CLEANUP)
+    set(fixtures_cleanup ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set(fixtures_required ${ARG_FIXTURES_REQUIRED})
   endif()
 
   ROOT_PATH_TO_STRING(name_with_path ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
@@ -1868,6 +2155,9 @@ function(ROOT_ADD_GTEST test_suite)
     ${willfail}
     TIMEOUT "${ARG_TIMEOUT}"
     LABELS "${ARG_LABELS}"
+    FIXTURES_SETUP ${fixtures_setup}
+    FIXTURES_CLEANUP ${fixtures_cleanup}
+    FIXTURES_REQUIRED ${fixtures_required}
     FAILREGEX "${ARG_FAILREGEX}"
     ENVIRONMENT "${ARG_ENVIRONMENT}"
   )
@@ -1887,18 +2177,14 @@ endfunction()
 # ROOT_ADD_PYUNITTESTS( <name> )
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTESTS name)
-  if(MSVC)
-    set(ROOT_ENV
-        PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
-  else()
-    set(ROOT_ENV
-        PATH=${ROOTSYS}/bin:$ENV{PATH}
-        PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
-  endif()
+
+  set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+  cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
+
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
                 COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
-                ENVIRONMENT ${ROOT_ENV})
+                ENVIRONMENT PYTHONPATH=${pythonpaths_native})
 endfunction()
 
 #----------------------------------------------------------------------------
@@ -1909,20 +2195,27 @@ endfunction()
 #                     [ENVIRONMENT var1=val1 var2=val2 ...]
 #                     [PYTHON_DEPS dep_x dep_y ...] # Communicate that this test requires python packages. A fixture checking for these will be run before the test.)
 #                     [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
+#                     [PRECMD cmd [arg1...]] [POSTCMD cmd [arg1...]]
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;GENERIC" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
-  if(MSVC)
-    set(ROOT_ENV
-        PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
-  else()
-    set(ROOT_ENV
-        PATH=${ROOTSYS}/bin:$ENV{PATH}
-        PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
-  endif()
+  CMAKE_PARSE_ARGUMENTS(ARG
+      "WILLFAIL;GENERIC"
+      ""
+      "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PRECMD;POSTCMD"
+      ${ARGN}
+  )
+
+  set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+  cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
+
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   get_filename_component(file_name ${file} NAME)
   get_filename_component(file_dir ${file} DIRECTORY)
+
+  # Execute a custom command before executing the test.
+  if(ARG_PRECMD)
+    set(precmd PRECMD ${ARG_PRECMD})
+  endif()
 
   if(ARG_COPY_TO_BUILDDIR)
     foreach(copy_file ${ARG_COPY_TO_BUILDDIR})
@@ -1930,6 +2223,11 @@ function(ROOT_ADD_PYUNITTEST name file)
       set(copy_files ${copy_files} ${abs_path})
     endforeach()
     set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
+  endif()
+
+  # Execute a custom command after executing the test.
+  if(ARG_POSTCMD)
+    set(postcmd POSTCMD ${ARG_POSTCMD})
   endif()
 
   if(ARG_WILLFAIL)
@@ -1951,12 +2249,17 @@ function(ROOT_ADD_PYUNITTEST name file)
   endif()
 
   set(test_name pyunittests${clean_name_with_path})
+  # Don't write Python bytecode or pytest caches into the source directory,
+  # also for GENERIC tests, which don't run Python with -B.
   ROOT_ADD_TEST(${test_name}
               ${test_cmd}
-              ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
+              ENVIRONMENT PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS=-pno:cacheprovider
+                          PYTHONPATH=${pythonpaths_native} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
               ${will_fail}
+              ${precmd}
+              ${postcmd}
               PYTHON_DEPS ${ARG_PYTHON_DEPS})
 
   if (ARG_FIXTURES_SETUP)
@@ -2135,10 +2438,19 @@ endfunction()
 #
 # Arguments:
 #   target       - The CMake target (e.g., a shared library or executable)
-#   install_dir  - The install subdirectory relative to CMAKE_INSTALL_PREFIX
+#   install_dir  - The install subdirectory relative to CMAKE_INSTALL_PREFIX,
+#                  or an absolute directory.
 #----------------------------------------------------------------------------
 function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
-  cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_LIBDIR BASE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${install_dir}" OUTPUT_VARIABLE to_libdir)
+
+  # Check if install_dir is absolute
+  if(IS_ABSOLUTE "${install_dir}")
+    set(base_dir "${install_dir}")
+  else()
+    set(base_dir "${CMAKE_INSTALL_PREFIX}/${install_dir}")
+  endif()
+
+  cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_LIBDIR BASE_DIRECTORY "${base_dir}" OUTPUT_VARIABLE to_libdir)
 
   # New path
   if(APPLE)
@@ -2206,7 +2518,7 @@ if(CMAKE_GENERATOR MATCHES Makefiles)
   set(always-make --always-make)
 endif()
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  set(always-make -v:m)
+  set(always-make -v:m -clp:Summary -p:BuildProjectReferences=false)
 endif()
 #-------------------------------------------------------------------------------
 #
@@ -2391,13 +2703,14 @@ endfunction(ROOTTEST_ADD_AUTOMACROS)
 # order to manage dependencies.
 #
 #-------------------------------------------------------------------------------
-macro(ROOTTEST_COMPILE_MACRO filename)
+function(ROOTTEST_COMPILE_MACRO filename)
   CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED"  ${ARGN})
 
   # Add defines to root_compile_macro, in order to have out-of-source builds
   # when using the scripts/build.C macro.
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
 
+  unset(RootMacroDirDefines)
   foreach(d ${DirDefs})
     if(d MATCHES "_WIN32" OR d MATCHES "_XKEYCHECK_H" OR d MATCHES "NOMINMAX")
       continue()
@@ -2412,7 +2725,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
       ${ROOT_root_CMD}
       -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
       ${RootMacroDirDefines}
-      -q -l -b
+      -q -b
   )
 
   get_filename_component(realfp ${filename} ABSOLUTE)
@@ -2431,6 +2744,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   ROOTTEST_TARGETNAME_FROM_FILE(COMPILE_MACRO_TEST ${filename})
 
   set(COMPILE_MACRO_TEST ${COMPILE_MACRO_TEST}-build)
+  set(COMPILE_MACRO_TEST ${COMPILE_MACRO_TEST} PARENT_SCOPE)
 
   add_test(NAME ${COMPILE_MACRO_TEST} COMMAND ${compile_macro_command})
   if(NOT MSVC OR win_broken_tests)
@@ -2451,7 +2765,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
   endif()
 
-endmacro(ROOTTEST_COMPILE_MACRO)
+endfunction(ROOTTEST_COMPILE_MACRO)
 
 #-------------------------------------------------------------------------------
 #
@@ -2518,6 +2832,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   set_target_properties(${targetname_libgen} PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  ROOT_SET_OUTPUT_DIRECTORIES(${targetname_libgen})
 
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
@@ -2539,9 +2854,11 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-    set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
-    set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+  if(GeneratorNeedsBuildSerialization)
+    if(GeneratorNeedsResourecLock)
+      set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+    endif()
+    set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
   endif()
 
   if (ARG_FIXTURES_SETUP)
@@ -2557,16 +2874,6 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   if (ARG_FIXTURES_REQUIRED)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
-  endif()
-
-  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-    add_custom_command(TARGET ${targetname_libgen} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${dictname}_rdict.pcm
-                                       ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}_rdict.pcm
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}.dll
-                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.dll
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}.lib
-                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.lib)
   endif()
 
 endmacro(ROOTTEST_GENERATE_DICTIONARY)
@@ -2598,8 +2905,6 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
     set(CMAKE_ROOTTEST_NOROOTMAP OFF)
   endif()
 
-  set(ROOT_genreflex_cmd ${ROOT_BINDIR}/genreflex)
-
   ROOTTEST_TARGETNAME_FROM_FILE(targetname ${dictionary})
 
   set(targetname_libgen ${targetname}-libgen)
@@ -2620,6 +2925,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
   set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
   set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  ROOT_SET_OUTPUT_DIRECTORIES(${targetname_libgen})
 
   if(ARG_LIBNAME)
     set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
@@ -2656,15 +2962,18 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-    set_property(TEST ${GENERATE_REFLEX_TEST} APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
-    set_property(TEST ${GENERATE_REFLEX_TEST} APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+  if(GeneratorNeedsBuildSerialization)
+    if(GeneratorNeedsResourecLock)
+      set_property(TEST ${GENERATE_REFLEX_TEST} APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+    endif()
+    set_property(TEST ${GENERATE_REFLEX_TEST} APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
   endif()
 
   if (ARG_FIXTURES_SETUP)
-    set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
-      FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
+    set(more_fixtures ${ARG_FIXTURES_SETUP})
   endif()
+  set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
+    FIXTURES_SETUP ${GENERATE_REFLEX_TEST}-fixture ${more_fixtures})
 
   if (ARG_FIXTURES_CLEANUP)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
@@ -2674,18 +2983,6 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   if (ARG_FIXTURES_REQUIRED)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
-  endif()
-
-  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-    if(ARG_LIBNAME)
-      add_custom_command(TARGET ${targetname_libgen} POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${ARG_LIBNAME}.dll
-                                          ${CMAKE_CURRENT_BINARY_DIR}/${ARG_LIBNAME}.dll)
-    else()
-      add_custom_command(TARGET ${targetname_libgen} POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${dictionary}_dictrflx.dll
-                                          ${CMAKE_CURRENT_BINARY_DIR}/lib${dictionary}_dictrflx.dll)
-    endif()
   endif()
 
 endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
@@ -2729,19 +3026,13 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
           set(libraries ${libraries} ${library})
         endif()
       endforeach()
-      target_link_libraries(${executable} ${libraries})
+      target_link_libraries(${executable} PUBLIC ${libraries})
     else()
-      target_link_libraries(${executable} ${ARG_LIBRARIES})
+      target_link_libraries(${executable} PUBLIC ${ARG_LIBRARIES})
     endif()
   endif()
-  if(MSVC AND DEFINED ROOT_SOURCE_DIR)
-    if(TARGET ROOTStaticSanitizerConfig)
-      target_link_libraries(${executable} ROOTStaticSanitizerConfig)
-    endif()
-  else()
-    if(TARGET ROOT::ROOTStaticSanitizerConfig)
-      target_link_libraries(${executable} ROOT::ROOTStaticSanitizerConfig)
-    endif()
+  if(TARGET ROOTStaticSanitizerConfig)
+    target_link_libraries(${executable} PRIVATE ROOTStaticSanitizerConfig)
   endif()
 
   if(ARG_COMPILE_FLAGS)
@@ -2780,9 +3071,11 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
       RESOURCE_LOCK ${ARG_RESOURCE_LOCK})
   endif()
 
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-    set_property(TEST ${GENERATE_EXECUTABLE_TEST} APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
-    set_property(TEST ${GENERATE_EXECUTABLE_TEST} APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+  if(GeneratorNeedsBuildSerialization)
+    if(GeneratorNeedsResourecLock)
+      set_property(TEST ${GENERATE_EXECUTABLE_TEST} APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+    endif()
+    set_property(TEST ${GENERATE_EXECUTABLE_TEST} APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
   endif()
 
   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
@@ -2792,36 +3085,6 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   endif()
 
 endmacro()
-
-#-------------------------------------------------------------------------------
-#
-# function ROOTTEST_ADD_OLDTEST()
-#
-# This function defines a single tests in the current directory that calls the legacy
-# make system to run the defined tests.
-#
-#-------------------------------------------------------------------------------
-
-find_program(ROOT_GMAKE_PROGRAM gmake)
-if (${ROOT_GMAKE_PROGRAM} MATCHES NOTFOUND)
-  set(ROOT_GMAKE_PROGRAM make)
-endif()
-
-function(ROOTTEST_ADD_OLDTEST)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LABELS;TIMEOUT" ${ARGN})
-
-  ROOTTEST_ADD_TEST( make
-                     COMMAND ${ROOT_GMAKE_PROGRAM} cleantest ${ROOTTEST_PARALLEL_MAKE}
-                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                     DEPENDS roottest-root-io-event
-                     FIXTURES_REQUIRED UtilsLibraryBuild
-                     LABELS ${ARG_LABELS} TIMEOUT ${ARG_TIMEOUT})
-  if(MSVC)
-    ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
-    set(fulltestname "${testprefix}-make")
-    set_property(TEST ${fulltestname} PROPERTY DISABLED true)
-  endif()
-endfunction()
 
 #-------------------------------------------------------------------------------
 # macro ROOTTEST_SETUP_MACROTEST()
@@ -2846,9 +3109,9 @@ macro(ROOTTEST_SETUP_MACROTEST)
                -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                ${ARG_ROOTEXE_OPTS}
-               -q -l -b)
+               -q -b)
 
-  set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
+  set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -b)
 
   # Compile macro, then add to CTest.
   if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+" OR ARG_MACRO MATCHES "[.]cpp\\+" OR ARG_MACRO MATCHES "[.]cc\\+")
@@ -3103,15 +3366,6 @@ function(ROOTTEST_ADD_TEST testname)
     set(precmd PRECMD ${ARG_PRECMD})
   endif()
 
-  # Copy files into the build directory first.
-  if(ARG_COPY_TO_BUILDDIR)
-    foreach(copyfile ${ARG_COPY_TO_BUILDDIR})
-      get_filename_component(absfilep ${copyfile} ABSOLUTE)
-      set(copy_files ${copy_files} ${absfilep})
-    endforeach()
-    set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
-  endif()
-
   # Execute a custom command after executing the test.
   if(ARG_POSTCMD)
     set(postcmd POSTCMD ${ARG_POSTCMD})
@@ -3137,12 +3391,22 @@ function(ROOTTEST_ADD_TEST testname)
   if(ARG_DEPENDS)
     foreach(dep ${ARG_DEPENDS})
       if(${dep} MATCHES "[.]C" OR ${dep} MATCHES "[.]cxx" OR ${dep} MATCHES "[.]h")
-        ROOTTEST_COMPILE_MACRO(${dep})
+        ROOTTEST_COMPILE_MACRO(${dep} FIXTURES_SETUP compile-macro-${dep}-fixture)
         list(APPEND deplist ${COMPILE_MACRO_TEST})
       elseif(NOT ${dep} MATCHES "^roottest-")
         list(APPEND deplist ${testprefix}-${dep})
       else()
         list(APPEND deplist ${dep})
+      endif()
+    endforeach()
+    # Now extract all fixtures from the dependencies, so the fixture-providing
+    # tests get started even if using --rerun-failed, or -R <testName> or similar
+    foreach(dep ${deplist})
+      if(TEST ${dep})
+        get_test_property(${dep} FIXTURES_SETUP test_fixtures)
+        if(NOT test_fixtures STREQUAL "NOTFOUND")
+          list(APPEND fixtures_from_depends_argument ${test_fixtures})
+        endif()
       endif()
     endforeach()
   endif(ARG_DEPENDS)
@@ -3159,27 +3423,37 @@ function(ROOTTEST_ADD_TEST testname)
     set(run_serial RUN_SERIAL ${ARG_RUN_SERIAL})
   endif()
 
-  if(MSVC)
-    set(environment ENVIRONMENT
-                    ${ROOTTEST_ENV_EXTRA}
-                    ${ARG_ENVIRONMENT}
-                    PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
-  else()
-    string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
-    string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
+  set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+  cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
 
-
-    set(environment ENVIRONMENT
-                    ${ROOTTEST_ENV_EXTRA}
-                    ${ARG_ENVIRONMENT}
-                    PATH=${_path}:$ENV{PATH}
-                    PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH})
-  endif()
+  # Python (also when embedded in root.exe) and pytest must not write caches
+  # next to the test sources in the source directory.
+  set(environment ENVIRONMENT
+                  PYTHONDONTWRITEBYTECODE=1
+                  PYTEST_ADDOPTS=-pno:cacheprovider
+                  ${ROOTTEST_ENV_EXTRA}
+                  ${ARG_ENVIRONMENT}
+                  PYTHONPATH=${pythonpaths_native})
 
   if(ARG_WORKING_DIR)
     get_filename_component(test_working_dir ${ARG_WORKING_DIR} ABSOLUTE)
   else()
     get_filename_component(test_working_dir ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
+  endif()
+
+  # Copy files into the working directory now, at configure time, rather than
+  # letting the test driver copy them when the test runs. Several tests in one
+  # directory often copy the same file, and `ctest -j` can run them at the same
+  # time; `cmake -E copy` unlinks and recreates the destination, so concurrent
+  # copies race and fail with "No such file or directory". configure_file()
+  # also registers the source as a configure dependency, so editing it
+  # triggers a reconfigure on the next build.
+  if(ARG_COPY_TO_BUILDDIR)
+    foreach(copyfile ${ARG_COPY_TO_BUILDDIR})
+      get_filename_component(absfilep ${copyfile} ABSOLUTE)
+      get_filename_component(copyname ${absfilep} NAME)
+      configure_file(${absfilep} ${test_working_dir}/${copyname} COPYONLY)
+    endforeach()
   endif()
 
   get_filename_component(logfile "${CMAKE_CURRENT_BINARY_DIR}/${testname}.log" ABSOLUTE)
@@ -3221,6 +3495,7 @@ function(ROOTTEST_ADD_TEST testname)
   if (ARG_FIXTURES_REQUIRED)
     set(fixtures_required ${ARG_FIXTURES_REQUIRED})
   endif()
+  list(APPEND fixtures_required ${fixtures_from_depends_argument})
 
   if (ARG_RESOURCE_LOCK)
     set(resource_lock ${ARG_RESOURCE_LOCK})
@@ -3254,7 +3529,6 @@ function(ROOTTEST_ADD_TEST testname)
                         ${run_serial}
                         ${failregex}
                         ${passregex}
-                        ${copy_to_builddir}
                         PYTHON_DEPS ${pythondeps}
                         DEPENDS ${deplist}
                         FIXTURES_SETUP ${fixtures_setup}
@@ -3343,14 +3617,8 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
   target_link_libraries(${binary} PRIVATE GTest::gtest GTest::gtest_main ${libraries})
   set_property(TARGET ${binary} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
-  if(MSVC AND DEFINED ROOT_SOURCE_DIR)
-    if(TARGET ROOTStaticSanitizerConfig)
-      target_link_libraries(${binary} ROOTStaticSanitizerConfig)
-    endif()
-  else()
-    if(TARGET ROOT::ROOTStaticSanitizerConfig)
-      target_link_libraries(${binary} PRIVATE ROOT::ROOTStaticSanitizerConfig)
-    endif()
+  if(TARGET ROOTStaticSanitizerConfig)
+    target_link_libraries(${binary} PRIVATE ROOTStaticSanitizerConfig)
   endif()
 
   # Mark the test as known to fail.
@@ -3412,20 +3680,13 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     endforeach()
   endif(ARG_DEPENDS)
 
-  if(MSVC)
-    set(environment ENVIRONMENT
-                    PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
-  else()
-    string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
-    string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
+  set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+  cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
 
-
-    set(environment ENVIRONMENT
-                    ${ROOTTEST_ENV_EXTRA}
-                    ${ARG_ENVIRONMENT}
-                    PATH=${_path}:$ENV{PATH}
-                    PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH})
-  endif()
+  set(environment ENVIRONMENT
+                  ${ROOTTEST_ENV_EXTRA}
+                  ${ARG_ENVIRONMENT}
+                  PYTHONPATH=${pythonpaths_native})
 
   ROOT_ADD_TEST(${fulltestname} COMMAND ${binary}
     ${environment}
@@ -3473,25 +3734,37 @@ function(find_python_module module)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
+# function ROOT_SET_OUTPUT_DIRECTORIES( <name> )
+#
+# this function simply sets the output directories from the standard outupt directory
+# (CMAKE_CURRENT_BINARY_DIR/$<CONFIG>) to its parent directory (CMAKE_CURRENT_BINARY_DIR) on Windows
+#
+#---------------------------------------------------------------------------------------------------
+function(ROOT_SET_OUTPUT_DIRECTORIES library)
+   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
+      foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+        string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+        set_target_properties(${library} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR})
+        set_target_properties(${library} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR})
+        set_target_properties(${library} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR})
+      endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
+   endif()
+endfunction()
+
+#---------------------------------------------------------------------------------------------------
 # function ROOTTEST_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
 #                                   [NOINSTALL] LIBRARIES library1 library2 ...
 #                                   DEPENDENCIES dep1 dep2
 #                                   BUILTINS dep1 dep2)
 #
-# this function simply calls the ROOT function ROOT_LINKER_LIBRARY, and add a POST_BUILD custom
-# command to copy the .dll and .lib from the standard config directory (Debug/Release) to its
-# parent directory (CMAKE_CURRENT_BINARY_DIR) on Windows
+# this function simply calls the ROOT function ROOT_LINKER_LIBRARY, and sets the output directories
+# from the standard output directory (CMAKE_CURRENT_BINARY_DIR/$<CONFIG>) to its parent directory
+# (CMAKE_CURRENT_BINARY_DIR) on Windows
 #
 #---------------------------------------------------------------------------------------------------
 function(ROOTTEST_LINKER_LIBRARY library)
    ROOT_LINKER_LIBRARY(${ARGV})
-   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-      add_custom_command(TARGET ${library} POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${library}.dll
-                                          ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.dll
-         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${library}.lib
-                                           ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.lib)
-   endif()
+   ROOT_SET_OUTPUT_DIRECTORIES(${library})
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -3516,3 +3789,33 @@ function (ROOT_GET_CLANG_LIBRARIES clang_libraries)
   endforeach(extra_lib)
   SET(${clang_libraries} "${found_libraries}" PARENT_SCOPE)
 endfunction(ROOT_GET_CLANG_LIBRARIES)
+
+#---------------------------------------------------------------------------------------------------
+# ROOT_BUILTIN_PATCH_COMMAND(<var> PATCHES <file>... [GIT_APPLY_ARGS <arg>...])
+#
+# Sets <var> to the PATCH_COMMAND for ExternalProject_Add that applies the given patches, in this
+# order, to the sources of a builtin with git apply.
+#
+# The patch step always starts again from the pristine sources (see
+# cmake/scripts/apply_builtin_patches.cmake), so that it doesn't matter why ExternalProject re-runs
+# it: after a new download, or because the patch command changed. The command contains a hash of
+# the patches, so that also changing the content of a patch re-runs the patch step.
+#---------------------------------------------------------------------------------------------------
+function(ROOT_BUILTIN_PATCH_COMMAND var)
+  cmake_parse_arguments(ARG "" "" "PATCHES;GIT_APPLY_ARGS" ${ARGN})
+  set(script ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../scripts/apply_builtin_patches.cmake)
+
+  set(hashes)
+  foreach(file IN LISTS ARG_PATCHES ITEMS ${script})
+    file(SHA256 ${file} hash)
+    list(APPEND hashes ${hash})
+  endforeach()
+  string(SHA256 hash "${hashes}")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${ARG_PATCHES} ${script})
+
+  # ExternalProject doesn't replace <STAMP_DIR> in the commands, but <LOG_DIR> is
+  # the same directory, unless LOG_DIR is set.
+  set(${var} PATCH_COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=<SOURCE_DIR> -DSTAMP_DIR=<LOG_DIR>
+                           -DPATCHES_HASH=${hash} -P ${script} -- ${ARG_GIT_APPLY_ARGS} ${ARG_PATCHES}
+      PARENT_SCOPE)
+endfunction()

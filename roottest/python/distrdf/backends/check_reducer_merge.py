@@ -3,7 +3,6 @@ import os
 import numpy
 import pytest
 import ROOT
-from DistRDF.Backends import Dask
 
 
 class TestReducerMerge:
@@ -27,7 +26,7 @@ class TestReducerMerge:
 
         """
         return rdf.Define("x", "rdfentry_").Define("y", "rdfentry_*rdfentry_")
-    
+
     def define_two_err_columns(self, rdf):
         """
         Helper method that defines and returns 4 error columns:
@@ -42,9 +41,9 @@ class TestReducerMerge:
         "z = rdfentry_ * rdfentry_ * rdfentry_".
 
         """
-        return rdf.Define("x", "rdfentry_")\
-                  .Define("y", "rdfentry_*rdfentry_")\
-                  .Define("z", "rdfentry_*rdfentry_*rdfentry_")
+        return (
+            rdf.Define("x", "rdfentry_").Define("y", "rdfentry_*rdfentry_").Define("z", "rdfentry_*rdfentry_*rdfentry_")
+        )
 
     def define_four_columns(self, rdf, colnames):
         """Helper method to define four columns."""
@@ -106,8 +105,8 @@ class TestReducerMerge:
     def test_histond_merge(self, payload):
         """Check the working of HistoND merge operation in the reducer."""
         nbins = (10, 10, 10, 10)
-        xmin = (0., 0., 0., 0.)
-        xmax = (100., 100., 100., 100.)
+        xmin = (0.0, 0.0, 0.0, 0.0)
+        xmax = (100.0, 100.0, 100.0, 100.0)
         modelTHND = ("name", "title", 4, nbins, xmin, xmax)
         colnames = ("x0", "x1", "x2", "x3")
 
@@ -370,13 +369,7 @@ class TestReducerMerge:
         # A simple dataframe with ten sequential numbers from 0 to 9
         connection, _ = payload
         df = ROOT.RDataFrame(10, executor=connection)
-        df = (
-            df
-            .Define("a", "rdfentry_")
-            .Define("b", "rdfentry_")
-            .Define("c", "rdfentry_")
-            .Define("d", "rdfentry_")
-        )
+        df = df.Define("a", "rdfentry_").Define("b", "rdfentry_").Define("c", "rdfentry_").Define("d", "rdfentry_")
         expectedcolumns = ["a", "b"]
         df.Snapshot("snapTree_columnlist", "distrdf_dask_snapfile_columnlist.root", expectedcolumns)
 
@@ -407,6 +400,19 @@ class TestReducerMerge:
         snapdf = snap_lazy.GetValue()
         self.check_snapshot_df(snapdf, "snapFile_lazy")
 
+    def test_distributed_snapshot_disallow_update(self, payload):
+        """Test that `Snapshot` cannot be called with option 'UPDATE'"""
+        # A simple dataframe with ten sequential numbers from 0 to 9
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
+        df = df.Define("x", "rdfentry_")
+
+        opts = ROOT.RDF.RSnapshotOptions()
+        opts.fMode = "UPDATE"
+        err_msg = "Opening a file in UPDATE mode is not supported in distributed Snapshot."
+        with pytest.raises(ValueError, match=err_msg):
+            df.Snapshot("snapTree", "snapFileDisallowUpdate.root", ["x"], opts)
+
     def test_redefine_one_column(self, payload):
         """Test that values of one column can be properly redefined."""
         # A simple dataframe with ten sequential numbers from 0 to 9
@@ -422,6 +428,27 @@ class TestReducerMerge:
 
         assert sum_before.GetValue() == 10.0
         assert sum_after.GetValue() == 20.0
+
+    def test_report(self, payload):
+        """Test the report action (outputting cut flow reports)."""
+
+        import textwrap
+
+        connection, _ = payload
+        df = ROOT.RDataFrame(100, executor=connection)
+        def1 = df.Define("x", "rdfentry_")
+
+        filtered1 = def1.Filter("x>25.", "Cut1")
+        filtered2 = filtered1.Filter("x>50.", "Cut2")
+
+        report = filtered2.Report()
+
+        expected = textwrap.dedent("""\
+            Cut1                : pass=74         all=100        -- eff=74.00 % cumulative eff=74.00 %
+            Cut2                : pass=49         all=74         -- eff=66.22 % cumulative eff=49.00 %
+        """)
+
+        assert report.AsString() == expected
 
     @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
     def test_distributed_stddev(self, payload, datasource):
@@ -452,10 +479,10 @@ class TestReducerMerge:
 
         df = (
             df.Define("vec_v", "std::vector<double>({v, v+1, v+2})")
-              .Define("w", "1./(v+1)")
-              .Define("vec_w", "std::vector<double>({w, w+1, w+2})")
-              .Define("one", "1")
-              .Define("ones", "std::vector<double>({1., 1., 1.})")
+            .Define("w", "1./(v+1)")
+            .Define("vec_w", "std::vector<double>({w, w+1, w+2})")
+            .Define("one", "1")
+            .Define("ones", "std::vector<double>({1., 1., 1.})")
         )
 
         s0 = df.Stats("v")
@@ -492,10 +519,10 @@ class TestReducerMerge:
         connection, backend = payload
         if backend == "dask":
             RDataFrame = ROOT.RDF.Distributed.Dask.RDataFrame
-            df = RDataFrame(10, daskclient=connection)
+            df = RDataFrame(10, executor=connection)
         elif backend == "spark":
             RDataFrame = ROOT.RDF.Distributed.Spark.RDataFrame
-            df = RDataFrame(10, sparkcontext=connection)
+            df = RDataFrame(10, executor=connection)
         df = df.Define("x", "1")
         df_alias = df.Alias("myalias", "x")
 
@@ -504,6 +531,7 @@ class TestReducerMerge:
 
         assert sum_original.GetValue() == 10.0
         assert sum_alias.GetValue() == 10.0
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])

@@ -48,14 +48,61 @@
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooChi2Var.h"
 #include "RooNLLVar.h"
-#include "RooXYChi2Var.h"
+
+#ifdef ROOFIT_MULTIPROCESS
+#include "RooFit/MultiProcess/Config.h"
 #endif
+#endif
+
+#include <sstream>
 
 using RooFit::Detail::RooNLLVarNew;
 
 namespace {
 
 constexpr int extendedFitDefault = 2;
+
+/// Nested RooSimultaneous are only supported in "switch mode", i.e., if their
+/// index category is not an observable. Throw an error otherwise.
+void checkNestedSimultaneous(RooAbsArg const &top, RooArgSet const &observables)
+{
+   RooArgList branches;
+   top.branchNodeServerList(&branches);
+   for (RooAbsArg *outer : branches) {
+      if (!dynamic_cast<RooSimultaneous const *>(outer)) {
+         continue;
+      }
+      RooArgList outerBranches;
+      outer->branchNodeServerList(&outerBranches);
+      for (RooAbsArg *arg : outerBranches) {
+         auto *nested = dynamic_cast<RooSimultaneous const *>(arg);
+         if (arg == outer || !nested || !nested->indexCatIsObservable(observables)) {
+            continue;
+         }
+         std::stringstream errMsg;
+         errMsg << "RooSimultaneous \"" << outer->GetName() << "\" contains the RooSimultaneous \"" << nested->GetName()
+                << "\", whose index category \"" << nested->indexCat().GetName()
+                << "\" is in the dataset. Nested RooSimultaneous are only supported if their index category is a "
+                   "parameter (switch mode). To combine channels, use one RooSimultaneous over a RooCategory with one "
+                   "state per channel.";
+         oocoutE(&top, InputArguments) << errMsg.str() << std::endl;
+         throw std::runtime_error(errMsg.str());
+      }
+   }
+}
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+/// Print a deprecation warning when the legacy evaluation backend is selected for a fit.
+void printLegacyEvalBackendWarning(RooAbsReal const &topLevelArg)
+{
+   oocoutW(&topLevelArg, InputArguments)
+      << "The legacy evaluation backend is deprecated and will be removed in ROOT 6.44.\n"
+         "Please use the default \"cpu\" evaluation backend instead, i.e., don't pass RooFit::EvalBackend(\"legacy\")\n"
+         "or RooFit::BatchMode(\"off\") anymore. If the default backend does not work for your use case, please\n"
+         "report it by opening an issue on the ROOT GitHub repository."
+      << std::endl;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Use the asymptotically correct approach to estimate errors in the presence of weights.
@@ -229,7 +276,6 @@ int calcSumW2CorrectedCovariance(RooAbsReal const &pdf, RooMinimizer &minimizer,
 /// that also should be taken as the default values for RooAbsPdf::fitTo.
 struct MinimizerConfig {
    double recoverFromNaN = 10.;
-   int optConst = 2;
    int verbose = 0;
    int doSave = 0;
    int doTimer = 0;
@@ -248,11 +294,44 @@ struct MinimizerConfig {
    int parallelize = 0;
    bool enableParallelGradient = false;
    bool enableParallelDescent = false;
+   int parallelDescentNumSplits = 0;
+   int parallelDescentSplitStrategy = 0;
    bool timingAnalysis = false;
    const RooArgSet *minosSet = nullptr;
    std::string minType;
    std::string minAlg = "minuit";
 };
+
+/// Validates the NumCPU() argument for the non-legacy evaluation backends and
+/// returns the effective number of worker threads for the RooFit::Evaluator.
+int effectiveNumWorkers(RooAbsArg const &arg, RooFit::EvalBackend::Value evalBackend, int numCpu)
+{
+   using Value = RooFit::EvalBackend::Value;
+
+   if (numCpu <= 1) {
+      return 1;
+   }
+   if (evalBackend == Value::Cuda) {
+      oocoutW(&arg, Fitting) << "The NumCPU() option is ignored by the CUDA evaluation backend." << std::endl;
+      return 1;
+   }
+   if (evalBackend == Value::CodegenNoGrad) {
+      oocoutW(&arg, Fitting) << "The NumCPU() option has no effect with EvalBackend(\"codegen_no_grad\"), "
+                                "because the test statistic is evaluated with single-threaded generated code."
+                             << std::endl;
+      return 1;
+   }
+   if (evalBackend == Value::Codegen) {
+      oocxcoutI(&arg, Fitting) << "NumCPU(" << numCpu << ") enables multi-threaded evaluation of large batches "
+                               << "for test statistic values. The generated gradient code is not affected."
+                               << std::endl;
+      return numCpu;
+   }
+   oocxcoutI(&arg, Fitting) << "NumCPU(" << numCpu << ") enables multi-threaded evaluation of large batches in "
+                            << "the RooBatchCompute library. The interleaving strategy argument of NumCPU() is "
+                            << "ignored." << std::endl;
+   return numCpu;
+}
 
 bool interpretExtendedCmdArg(RooAbsPdf const &pdf, int extendedCmdArg)
 {
@@ -320,52 +399,151 @@ void resetFitrangeAttributes(RooAbsArg &pdf, RooAbsData const &data, std::string
    pdf.setStringAttribute("fitrange", fitrangeValue.substr(0, fitrangeValue.size() - 1).c_str());
 }
 
-std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, bool isSimPdfExtended,
-                                                 std::string const &rangeName, RooFit::OffsetMode offset)
+/// Iterate the simultaneous pdf's categories and build one test-statistic term
+/// per channel via `makeTerm`. Channels excluded by the (optional) category
+/// range are skipped. The per-channel term's special variables are prefixed
+/// with `_<catName>_`. The terms are summed into a RooAddition named
+/// `combinedName`.
+template <typename TermFactory>
+std::unique_ptr<RooAddition> createSimultaneousStat(RooSimultaneous const &simPdf, std::string const &rangeName,
+                                                    std::string const &combinedName, TermFactory &&makeTerm)
 {
    RooAbsCategoryLValue const &simCat = simPdf.indexCat();
 
-   // Prepare the NLL terms for each component
-   RooArgList nllTerms;
+   RooArgList terms;
    for (auto const &catState : simCat) {
       std::string const &catName = catState.first;
       RooAbsCategory::value_type catIndex = catState.second;
 
-      // If the channel is not in the selected range of the category variable, we
-      // won't create an for NLL this channel.
+      // Skip channels excluded by a category range (only RooCategory supports
+      // ranges on categorical values).
       if (!rangeName.empty()) {
-         // Only the RooCategory supports ranges, not the other
-         // RooAbsCategoryLValue-derived classes.
          auto simCatAsRooCategory = dynamic_cast<RooCategory const *>(&simCat);
          if (simCatAsRooCategory && !simCatAsRooCategory->isStateInRange(rangeName.c_str(), catIndex)) {
             continue;
          }
       }
 
-      if (RooAbsPdf *pdf = simPdf.getPdf(catName.c_str())) {
-         auto name = std::string("nll_") + pdf->GetName();
-         std::unique_ptr<RooArgSet> observables{
-            std::unique_ptr<RooArgSet>(pdf->getVariables())->selectByAttrib("__obs__", true)};
-         // In a simultaneous fit, it is allowed that only a subset of the pdfs
-         // are extended. Therefore, we have to make sure that we don't request
-         // extended NLL objects for channels that can't be extended.
-         const bool isPdfExtended = isSimPdfExtended && pdf->extendMode() != RooAbsPdf::CanNotBeExtended;
-         auto nll =
-            std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, *observables, isPdfExtended, offset);
-         // Rename the special variables
-         nll->setPrefix(std::string("_") + catName + "_");
-         nllTerms.addOwned(std::move(nll));
+      RooAbsPdf *channelPdf = simPdf.getPdf(catName.c_str());
+      if (!channelPdf) {
+         continue;
       }
+      std::unique_ptr<RooArgSet> observables{
+         std::unique_ptr<RooArgSet>(channelPdf->getVariables())->selectByAttrib("__obs__", true)};
+      std::unique_ptr<RooNLLVarNew> term = makeTerm(*channelPdf, *observables);
+      term->setPrefix(std::string("_") + catName + "_");
+      terms.addOwned(std::move(term));
    }
 
-   for (auto *nll : static_range_cast<RooNLLVarNew *>(nllTerms)) {
-      nll->setSimCount(nllTerms.size());
-   }
+   auto combined = std::make_unique<RooAddition>(combinedName.c_str(), combinedName.c_str(), terms);
+   combined->addOwnedComponents(std::move(terms));
+   return combined;
+}
 
-   // Time to sum the NLLs
-   auto nll = std::make_unique<RooAddition>("mynll", "mynll", nllTerms);
-   nll->addOwnedComponents(std::move(nllTerms));
+std::unique_ptr<RooAbsArg> createSimultaneousChi2(RooSimultaneous const &simPdf, std::string const &rangeName,
+                                                  bool isSimPdfExtended, RooDataHist::ErrorType etype)
+{
+   auto chi2 =
+      createSimultaneousStat(simPdf, rangeName, "simChi2", [&](RooAbsPdf &channelPdf, RooArgSet const &observables) {
+         RooNLLVarNew::Config cfg;
+         cfg.statistic = RooNLLVarNew::Statistic::Chi2;
+         cfg.extended = isSimPdfExtended && channelPdf.extendMode() != RooAbsPdf::CanNotBeExtended;
+         cfg.chi2ErrorType = etype;
+         auto name = std::string("chi2_") + channelPdf.GetName();
+         return std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), channelPdf, observables, cfg);
+      });
+   // Flag the top node so RooEvaluatorWrapper knows not to skip zero-weight bins
+   chi2->setAttribute("Chi2EvaluationActive");
+   return chi2;
+}
+
+std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, bool isSimPdfExtended,
+                                                 std::string const &rangeName, RooFit::OffsetMode offset)
+{
+   auto nll =
+      createSimultaneousStat(simPdf, rangeName, "mynll", [&](RooAbsPdf &channelPdf, RooArgSet const &observables) {
+         RooNLLVarNew::Config cfg;
+         // Only request extended NLLs for channels that can be extended.
+         cfg.extended = isSimPdfExtended && channelPdf.extendMode() != RooAbsPdf::CanNotBeExtended;
+         cfg.offsetMode = offset;
+         auto name = std::string("nll_") + channelPdf.GetName();
+         return std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), channelPdf, observables, cfg);
+      });
+
+   const int simCount = nll->list().size();
+   for (auto *child : static_range_cast<RooNLLVarNew *>(nll->list())) {
+      child->setSimCount(simCount);
+   }
    return nll;
+}
+
+/// Apply the `IntegrateBins` precision to either a single pdf or in-place to
+/// the component pdfs of a RooSimultaneous. Newly-allocated wrapper pdfs are
+/// appended to `ownedOut`. The returned reference points either at one of
+/// those wrappers or at the input pdf itself.
+RooAbsPdf &applyIntegrateBinsWrapping(RooAbsPdf &pdf, RooAbsData const &data, double precision, RooArgList &ownedOut)
+{
+   if (auto *simPdf = dynamic_cast<RooSimultaneous *>(&pdf)) {
+      simPdf->wrapPdfsInBinSamplingPdfs(data, precision);
+      return pdf;
+   }
+   if (std::unique_ptr<RooAbsPdf> wrapped = RooBinSamplingPdf::create(pdf, data, precision)) {
+      RooAbsPdf &ref = *wrapped;
+      ownedOut.addOwned(std::move(wrapped));
+      return ref;
+   }
+   return pdf;
+}
+
+/// RAII helper for the `setNormRange` + SplitRange/RangeName attribute setting
+/// that must be done around `compileForNormSet` so that the compiled pdf sees
+/// the restricted normalization range. All mutations are reverted on
+/// destruction.
+class NormRangeScope {
+public:
+   NormRangeScope(RooAbsPdf &pdf, const char *rangeName, bool splitRange) : _pdf{&pdf}
+   {
+      if (pdf.normRange()) {
+         _oldNormRange = pdf.normRange();
+      }
+      pdf.setNormRange(rangeName);
+      pdf.setAttribute("SplitRange", splitRange);
+      pdf.setStringAttribute("RangeName", rangeName);
+   }
+   NormRangeScope(NormRangeScope const &) = delete;
+   NormRangeScope &operator=(NormRangeScope const &) = delete;
+   ~NormRangeScope()
+   {
+      _pdf->setAttribute("SplitRange", false);
+      _pdf->setStringAttribute("RangeName", nullptr);
+      _pdf->setNormRange(_oldNormRange.empty() ? nullptr : _oldNormRange.c_str());
+   }
+
+private:
+   RooAbsPdf *_pdf;
+   std::string _oldNormRange;
+};
+
+/// Shared `compileForNormSet` sequence used by both the NLL and chi2 CPU
+/// backends. Sets up the reduced normalization range via `NormRangeScope`,
+/// then runs the graph compilation. When `likelihoodMode` is true the
+/// CompileContext is flagged accordingly (enabling binned-likelihood
+/// optimisations in the compiled pdf). The returned compiled pdf has
+/// `fixAddCoefRange` already applied when `addCoefRangeName` is non-empty.
+std::unique_ptr<RooAbsPdf> compilePdfForFit(RooAbsPdf &pdf, RooArgSet const &normSet, const char *rangeName,
+                                            bool splitRange, const char *addCoefRangeName, bool likelihoodMode)
+{
+   NormRangeScope scope{pdf, rangeName, splitRange};
+
+   RooFit::Detail::CompileContext ctx{normSet};
+   ctx.setLikelihoodMode(likelihoodMode);
+   std::unique_ptr<RooAbsArg> head = pdf.compileForNormSet(normSet, ctx);
+   std::unique_ptr<RooAbsPdf> pdfClone{&dynamic_cast<RooAbsPdf &>(*head.release())};
+
+   if (addCoefRangeName && *addCoefRangeName) {
+      pdfClone->fixAddCoefRange(addCoefRangeName, false);
+   }
+   return pdfClone;
 }
 
 std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::unique_ptr<RooAbsReal> &&constraints,
@@ -387,24 +565,22 @@ std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::
                             << "\n";
    pdf.fixAddCoefNormalization(observables, false);
 
-   // Deal with the IntegrateBins argument
    RooArgList binSamplingPdfs;
-   std::unique_ptr<RooAbsPdf> wrappedPdf = RooBinSamplingPdf::create(pdf, data, integrateOverBinsPrecision);
-   RooAbsPdf &finalPdf = wrappedPdf ? *wrappedPdf : pdf;
-   if (wrappedPdf) {
-      binSamplingPdfs.addOwned(std::move(wrappedPdf));
-   }
-   // Done dealing with the IntegrateBins option
+   RooAbsPdf &finalPdf = applyIntegrateBinsWrapping(pdf, data, integrateOverBinsPrecision, binSamplingPdfs);
 
    RooArgList nllTerms;
-
-   auto simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf);
-   if (simPdf) {
-      simPdf->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
+   auto *simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf);
+   // A RooSimultaneous whose index category is not among the data columns is
+   // a "switch" pdf selecting the component given by the current index state
+   // (analogous to RooMultiPdf): there are no channels to split the NLL into,
+   // so it is treated like an ordinary pdf.
+   if (simPdf && simPdf->indexCatIsObservable(*data.get())) {
       nllTerms.addOwned(createSimultaneousNLL(*simPdf, isExtended, rangeName, offset));
    } else {
-      nllTerms.addOwned(
-         std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, isExtended, offset));
+      RooNLLVarNew::Config cfg;
+      cfg.extended = isExtended;
+      cfg.offsetMode = offset;
+      nllTerms.addOwned(std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, cfg));
    }
    if (constraints) {
       nllTerms.addOwned(std::move(constraints));
@@ -429,7 +605,6 @@ void defineMinimizationOptions(RooCmdConfig &pc)
    MinimizerConfig minimizerDefaults;
 
    pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions", 0, minimizerDefaults.recoverFromNaN);
-   pc.defineInt("optConst", "Optimize", 0, minimizerDefaults.optConst);
    pc.defineInt("verbose", "Verbose", 0, minimizerDefaults.verbose);
    pc.defineInt("doSave", "Save", 0, minimizerDefaults.doSave);
    pc.defineInt("doTimer", "Timer", 0, minimizerDefaults.doTimer);
@@ -448,6 +623,9 @@ void defineMinimizationOptions(RooCmdConfig &pc)
    pc.defineInt("parallelize", "Parallelize", 0, minimizerDefaults.parallelize); // Three parallelize arguments
    pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, minimizerDefaults.enableParallelGradient);
    pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, minimizerDefaults.enableParallelDescent);
+   pc.defineInt("parallelDescentNumSplits", "ParallelDescentOptions", 1, minimizerDefaults.parallelDescentNumSplits);
+   pc.defineInt("parallelDescentSplitStrategy", "ParallelDescentOptions", 2,
+                minimizerDefaults.parallelDescentSplitStrategy);
    pc.defineInt("timingAnalysis", "TimingAnalysis", 0, minimizerDefaults.timingAnalysis);
    pc.defineString("mintype", "Minimizer", 0, minimizerDefaults.minType.c_str());
    pc.defineString("minalg", "Minimizer", 1, minimizerDefaults.minAlg.c_str());
@@ -469,7 +647,6 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
 {
    MinimizerConfig cfg;
    cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
-   cfg.optConst = pc.getInt("optConst");
    cfg.verbose = pc.getInt("verbose");
    cfg.doSave = pc.getInt("doSave");
    cfg.doTimer = pc.getInt("doTimer");
@@ -491,15 +668,21 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
    cfg.parallelize = pc.getInt("parallelize");
    cfg.enableParallelGradient = pc.getInt("enableParallelGradient");
    cfg.enableParallelDescent = pc.getInt("enableParallelDescent");
+   cfg.parallelDescentNumSplits = pc.getInt("parallelDescentNumSplits");
+   cfg.parallelDescentSplitStrategy = pc.getInt("parallelDescentSplitStrategy");
    cfg.timingAnalysis = pc.getInt("timingAnalysis");
 
    // Determine if the dataset has weights
    bool weightedData = data.isNonPoissonWeighted();
 
+   // The weighted-data uncertainty correction options only apply to likelihood
+   // fits. Skip the NLL-only paths when minimizing a chi-squared test statistic.
+   const bool isChi2 = nll.getAttribute("Chi2EvaluationActive");
+
    std::string msgPrefix = std::string{"RooAbsPdf::fitTo("} + pdf.GetName() + "): ";
 
    // Warn user that a method to determine parameter uncertainties should be provided if weighted data is offered
-   if (weightedData && cfg.doSumW2 == -1 && cfg.doAsymptotic == -1) {
+   if (!isChi2 && weightedData && cfg.doSumW2 == -1 && cfg.doAsymptotic == -1) {
       oocoutW(&pdf, InputArguments) << msgPrefix <<
          R"(WARNING: a likelihood fit is requested of what appears to be weighted data.
        While the estimated values of the parameters will always be calculated taking the weights into account,
@@ -531,6 +714,23 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
       return nullptr;
    }
 
+   // Apply the experimental likelihood-splitting settings from
+   // ParallelDescentOptions(). A numSplits value of zero keeps the automatic
+   // task-splitting defaults of RooFit::MultiProcess.
+   if (cfg.parallelDescentNumSplits > 0) {
+#ifdef ROOFIT_MULTIPROCESS
+      if (cfg.parallelDescentSplitStrategy == 0) {
+         RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = cfg.parallelDescentNumSplits;
+      } else {
+         RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks = cfg.parallelDescentNumSplits;
+      }
+#else
+      oocoutW(&pdf, InputArguments) << "Likelihood-splitting settings passed via ParallelDescentOptions() are "
+                                       "ignored, because ROOT was built without RooFit::MultiProcess support"
+                                    << std::endl;
+#endif
+   }
+
    // Instantiate RooMinimizer
    RooMinimizer::Config minimizerConfig;
    minimizerConfig.enableParallelGradient = cfg.enableParallelGradient;
@@ -548,8 +748,6 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
       m.setMaxFunctionCalls(cfg.maxCalls);
    if (cfg.printLevel != 1)
       m.setPrintLevel(cfg.printLevel);
-   if (cfg.optConst)
-      m.optimizeConst(cfg.optConst); // Activate constant term optimization
    if (cfg.verbose)
       m.setVerbose(true); // Activate verbose options
    if (cfg.doTimer)
@@ -564,7 +762,7 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
 
    int corrCovQual = -1;
 
-   if (m.getNPar() > 0) {
+   if (!isChi2 && m.getNPar() > 0) {
       if (cfg.doAsymptotic == 1)
          corrCovQual = calcAsymptoticCorrectedCovariance(pdf, m, data); // Asymptotically correct
       if (cfg.doSumW2 == 1)
@@ -584,13 +782,13 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
          ret->setCovQual(corrCovQual);
    }
 
-   if (cfg.optConst)
-      m.optimizeConst(0);
    return ret;
 }
 
 std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const RooLinkedList &cmdList)
 {
+   checkNestedSimultaneous(pdf, *data.get());
+
    auto timingScope = std::make_unique<ROOT::Math::Util::TimingScope>(
       [&pdf](std::string const &msg) { oocoutI(&pdf, Fitting) << msg << std::endl; }, "Creation of NLL object took");
 
@@ -610,8 +808,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    pc.defineInt("numcpu", "NumCPU", 0, 1);
    pc.defineInt("interleave", "NumCPU", 1, 0);
    pc.defineInt("verbose", "Verbose", 0, 0);
-   pc.defineInt("optConst", "Optimize", 0, 0);
-   pc.defineInt("cloneData", "CloneData", 0, 2);
+   pc.defineInt("cloneData", "CloneData", 0, 0);
    pc.defineSet("projDepSet", "ProjectedObservables", 0, nullptr);
    pc.defineSet("cPars", "Constrain", 0, nullptr);
    pc.defineSet("glObs", "GlobalObservables", 0, nullptr);
@@ -661,7 +858,8 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
          .ConstrainedParameters(cParsSet)
          .ExternalConstraints(extConsSet)
          .GlobalObservables(glObsSet)
-         .GlobalObservablesTag(rangeName.c_str());
+         .GlobalObservablesTag(rangeName.c_str())
+         .EvalBackend(RooFit::EvalBackend(static_cast<RooFit::EvalBackend::Value>(pc.getInt("EvalBackend"))));
 
       return std::make_unique<RooFit::TestStatistics::RooRealL>("likelihood", "", builder.build());
    }
@@ -672,14 +870,8 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    const bool ext = interpretExtendedCmdArg(pdf, pc.getInt("ext"));
 
    int splitRange = pc.getInt("splitRange");
-   int optConst = pc.getInt("optConst");
    int cloneData = pc.getInt("cloneData");
    auto offset = static_cast<RooFit::OffsetMode>(pc.getInt("doOffset"));
-
-   // If no explicit cloneData command is specified, cloneData is set to true if optimization is activated
-   if (cloneData == 2) {
-      cloneData = optConst;
-   }
 
    if (pc.hasProcessed("Range")) {
       double rangeLo = pc.getDouble("rangeLo");
@@ -688,8 +880,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       // Create range with name 'fit' with above limits on all observables
       RooArgSet obs;
       pdf.getObservables(data.get(), obs);
-      for (auto arg : obs) {
-         RooRealVar *rrv = dynamic_cast<RooRealVar *>(arg);
+      for (auto *rrv : dynamic_range_cast<RooRealVar *>(obs)) {
          if (rrv)
             rrv->setRange("fit", rangeLo, rangeHi);
       }
@@ -734,18 +925,11 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    // Construct BatchModeNLL if requested
    if (evalBackend != RooFit::EvalBackend::Value::Legacy) {
 
-      // Set the normalization range. We need to do it now, because it will be
-      // considered in `compileForNormSet`.
-      std::string oldNormRange;
-      if (pdf.normRange()) {
-         oldNormRange = pdf.normRange();
-      }
-      pdf.setNormRange(rangeName);
-
       RooArgSet normSet;
       pdf.getObservables(data.get(), normSet);
 
-      if (dynamic_cast<RooSimultaneous const *>(&pdf)) {
+      auto *simPdfForProjDeps = dynamic_cast<RooSimultaneous const *>(&pdf);
+      if (simPdfForProjDeps && simPdfForProjDeps->indexCatIsObservable(normSet)) {
          for (auto i : projDeps) {
             auto res = normSet.find(i->GetName());
             if (res != nullptr) {
@@ -756,26 +940,13 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
          normSet.remove(projDeps);
       }
 
-      pdf.setAttribute("SplitRange", splitRange);
-      pdf.setStringAttribute("RangeName", rangeName);
-
-      RooFit::Detail::CompileContext ctx{normSet};
-      ctx.setLikelihoodMode(true);
-      std::unique_ptr<RooAbsArg> head = pdf.compileForNormSet(normSet, ctx);
-      std::unique_ptr<RooAbsPdf> pdfClone = std::unique_ptr<RooAbsPdf>{&dynamic_cast<RooAbsPdf &>(*head.release())};
-
-      // reset attributes
-      pdf.setAttribute("SplitRange", false);
-      pdf.setStringAttribute("RangeName", nullptr);
-
-      // Reset the normalization range
-      pdf.setNormRange(oldNormRange.c_str());
+      std::unique_ptr<RooAbsPdf> pdfClone =
+         compilePdfForFit(pdf, normSet, rangeName, splitRange, addCoefRangeName, /*likelihoodMode=*/true);
 
       if (addCoefRangeName) {
          oocxcoutI(&pdf, Fitting) << "RooAbsPdf::fitTo(" << pdf.GetName()
                                   << ") fixing interpretation of coefficients of any component to range "
                                   << addCoefRangeName << "\n";
-         pdfClone->fixAddCoefRange(addCoefRangeName, false);
       }
 
       std::unique_ptr<RooAbsReal> compiledConstr;
@@ -806,9 +977,11 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
          nll = std::move(correctedNLL);
       }
 
+      const int nWorkers = effectiveNumWorkers(pdf, evalBackend, pc.getInt("numcpu"));
+
       auto nllWrapper = std::make_unique<RooFit::Experimental::RooEvaluatorWrapper>(
          *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
-         takeGlobalObservablesFromData);
+         takeGlobalObservablesFromData, nWorkers);
 
       // We destroy the timing scrope for createNLL prematurely, because we
       // separately measure the time for jitting and gradient creation
@@ -831,6 +1004,8 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    std::unique_ptr<RooAbsReal> nll;
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   printLegacyEvalBackendWarning(pdf);
+
    bool verbose = pc.getInt("verbose");
 
    int numcpu = pc.getInt("numcpu");
@@ -890,10 +1065,6 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       nll->addOwnedComponents(std::move(orignll), std::move(constraintTerm));
    }
 
-   if (optConst) {
-      nll->constOptimizeTestStatistic(RooAbsArg::Activate, optConst > 1);
-   }
-
    if (offset == RooFit::OffsetMode::Initial) {
       nll->enableOffsetting(true);
    }
@@ -921,101 +1092,171 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    return nll;
 }
 
-std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooAbsData &data, const RooLinkedList &cmdList)
+std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, const RooLinkedList &cmdList)
 {
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   const bool isDataHist = dynamic_cast<RooDataHist const *>(&data);
+   checkNestedSimultaneous(real, *data.get());
 
    RooCmdConfig pc("createChi2(" + std::string(real.GetName()) + ")");
 
+   pc.defineInt("EvalBackend", "EvalBackend", 0, static_cast<int>(RooFit::EvalBackend::defaultValue()));
    pc.defineInt("numcpu", "NumCPU", 0, 1);
    pc.defineInt("verbose", "Verbose", 0, 0);
+   pc.defineString("rangeName", "RangeWithName", 0, "", true);
+   pc.defineDouble("rangeLo", "Range", 0, -999.);
+   pc.defineDouble("rangeHi", "Range", 1, -999.);
+   pc.defineMutex("Range", "RangeWithName");
+   pc.defineInt("etype", "DataError", 0, (Int_t)RooDataHist::Auto);
+   pc.defineInt("extended", "Extended", 0, extendedFitDefault);
+   pc.defineInt("splitRange", "SplitRange", 0, 0);
+   pc.defineDouble("integrate_bins", "IntegrateBins", 0, -1);
+   pc.defineString("addCoefRange", "SumCoefRange", 0, "");
+   pc.allowUndefined();
+
+   pc.process(cmdList);
+   if (!pc.ok(true)) {
+      return nullptr;
+   }
+
+   // Clear possible range attributes from previous fits.
+   real.removeStringAttribute("fitrange");
+
+   std::string baseName = "chi2_" + std::string(real.GetName()) + "_" + data.GetName();
+
+   auto evalBackend = static_cast<RooFit::EvalBackend::Value>(pc.getInt("EvalBackend"));
+
+   RooDataHist::ErrorType etype = static_cast<RooDataHist::ErrorType>(pc.getInt("etype"));
+   // Resolve Auto to a concrete mode so it's consistent across backends.
+   if (etype == RooDataHist::Auto) {
+      etype = data.isNonPoissonWeighted() ? RooDataHist::SumW2 : RooDataHist::Expected;
+   }
+
+   auto *pdf = dynamic_cast<RooAbsPdf *>(&real);
+   const char *rangeName = pc.getString("rangeName", nullptr, true);
+
+   // Translate Range(lo, hi) into a "fit" named range on all observables.
+   if (pc.hasProcessed("Range")) {
+      const double rangeLo = pc.getDouble("rangeLo");
+      const double rangeHi = pc.getDouble("rangeHi");
+      RooArgSet obs;
+      real.getObservables(data.get(), obs);
+      for (auto *rrv : dynamic_range_cast<RooRealVar *>(obs)) {
+         if (rrv) {
+            rrv->setRange("fit", rangeLo, rangeHi);
+         }
+      }
+      rangeName = "fit";
+   }
+
+   if (evalBackend != RooFit::EvalBackend::Value::Legacy) {
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
+
+      const int splitRange = pc.getInt("splitRange");
+      resetFitrangeAttributes(real, data, baseName, rangeName, splitRange);
+
+      std::unique_ptr<RooFit::Experimental::RooEvaluatorWrapper> wrapper;
+
+      const int nWorkers = effectiveNumWorkers(real, evalBackend, pc.getInt("numcpu"));
+
+      // Function mode: the input is a non-pdf RooAbsReal. We can short-circuit
+      // the pdf-compilation pipeline since there's no real pdf to normalize.
+      if (!pdf) {
+         RooArgSet observables;
+         real.getObservables(data.get(), observables);
+         RooNLLVarNew::Config cfg;
+         cfg.statistic = RooNLLVarNew::Statistic::Chi2;
+         cfg.chi2ErrorType = etype;
+         auto chi2 = std::make_unique<RooNLLVarNew>(baseName.c_str(), baseName.c_str(), real, observables, cfg);
+         wrapper = std::make_unique<RooFit::Experimental::RooEvaluatorWrapper>(
+            *chi2, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "",
+            /*simPdf=*/nullptr,
+            /*takeGlobalObservablesFromData=*/true, nWorkers);
+         wrapper->addOwnedComponents(std::move(chi2));
+      } else {
+         const bool extended = interpretExtendedCmdArg(*pdf, pc.getInt("extended"));
+
+         RooArgSet normSet;
+         pdf->getObservables(data.get(), normSet);
+
+         oocxcoutI(pdf, Fitting) << "createChi2(" << pdf->GetName()
+                                 << ") fixing normalization set for coefficient determination to observables in data\n";
+         pdf->fixAddCoefNormalization(normSet, false);
+
+         std::unique_ptr<RooAbsPdf> pdfClone =
+            compilePdfForFit(*pdf, normSet, rangeName, splitRange, pc.getString("addCoefRange", nullptr, true),
+                             /*likelihoodMode=*/false);
+
+         RooArgList binSamplingPdfs;
+         RooAbsPdf &finalPdf =
+            applyIntegrateBinsWrapping(*pdfClone, data, pc.getDouble("integrate_bins"), binSamplingPdfs);
+
+         std::unique_ptr<RooAbsReal> chi2;
+         auto *simPdfClone = dynamic_cast<RooSimultaneous *>(&finalPdf);
+         // Like in createNLLNew(): a "switch"-mode RooSimultaneous (index
+         // category not among the data columns) is treated as an ordinary pdf.
+         if (simPdfClone && simPdfClone->indexCatIsObservable(*data.get())) {
+            chi2 = std::unique_ptr<RooAbsReal>{dynamic_cast<RooAbsReal *>(
+               createSimultaneousChi2(*simPdfClone, rangeName ? rangeName : "", extended, etype).release())};
+         } else {
+            RooArgSet observables;
+            finalPdf.getObservables(data.get(), observables);
+            RooNLLVarNew::Config cfg;
+            cfg.statistic = RooNLLVarNew::Statistic::Chi2;
+            cfg.extended = extended;
+            cfg.chi2ErrorType = etype;
+            chi2 = std::make_unique<RooNLLVarNew>(baseName.c_str(), baseName.c_str(), finalPdf, observables, cfg);
+         }
+
+         wrapper = std::make_unique<RooFit::Experimental::RooEvaluatorWrapper>(
+            *chi2, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
+            /*takeGlobalObservablesFromData=*/true, nWorkers);
+         wrapper->addOwnedComponents(std::move(binSamplingPdfs));
+         wrapper->addOwnedComponents(std::move(chi2));
+         wrapper->addOwnedComponents(std::move(pdfClone));
+      }
+
+      if (evalBackend == RooFit::EvalBackend::Value::Codegen) {
+         wrapper->generateGradient();
+      }
+      if (evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
+         wrapper->setUseGeneratedFunctionCode(true);
+      }
+
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+      return wrapper;
+   }
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   printLegacyEvalBackendWarning(real);
 
    RooAbsTestStatistic::Configuration cfg;
 
-   if (isDataHist) {
-      // Construct Chi2
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-      std::string baseName = "chi2_" + std::string(real.GetName()) + "_" + data.GetName();
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
 
-      // Clear possible range attributes from previous fits.
-      real.removeStringAttribute("fitrange");
-
-      pc.defineInt("etype", "DataError", 0, (Int_t)RooDataHist::Auto);
-      pc.defineInt("extended", "Extended", 0, extendedFitDefault);
-      pc.defineInt("split_range", "SplitRange", 0, 0);
-      pc.defineDouble("integrate_bins", "IntegrateBins", 0, -1);
-      pc.defineString("addCoefRange", "SumCoefRange", 0, "");
-      pc.allowUndefined();
-
-      pc.process(cmdList);
-      if (!pc.ok(true)) {
-         return nullptr;
-      }
-
-      bool extended = false;
-      if (auto pdf = dynamic_cast<RooAbsPdf const *>(&real)) {
-         extended = interpretExtendedCmdArg(*pdf, pc.getInt("extended"));
-      }
-
-      RooDataHist::ErrorType etype = static_cast<RooDataHist::ErrorType>(pc.getInt("etype"));
-
-      const char *rangeName = pc.getString("rangeName", nullptr, true);
-      const char *addCoefRangeName = pc.getString("addCoefRange", nullptr, true);
-
-      cfg.rangeName = rangeName ? rangeName : "";
-      cfg.nCPU = pc.getInt("numcpu");
-      cfg.interleave = RooFit::Interleave;
-      cfg.verbose = static_cast<bool>(pc.getInt("verbose"));
-      cfg.cloneInputData = false;
-      cfg.integrateOverBinsPrecision = pc.getDouble("integrate_bins");
-      cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
-      cfg.splitCutRange = static_cast<bool>(pc.getInt("split_range"));
-      auto chi2 = std::make_unique<RooChi2Var>(baseName.c_str(), baseName.c_str(), real,
-                                               static_cast<RooDataHist &>(data), extended, etype, cfg);
-
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
-
-      return chi2;
-   } else {
-      pc.defineInt("integrate", "Integrate", 0, 0);
-      pc.defineObject("yvar", "YVar", 0, nullptr);
-      pc.defineString("rangeName", "RangeWithName", 0, "", true);
-      pc.defineInt("interleave", "NumCPU", 1, 0);
-
-      // Process and check varargs
-      pc.process(cmdList);
-      if (!pc.ok(true)) {
-         return nullptr;
-      }
-
-      // Decode command line arguments
-      bool integrate = pc.getInt("integrate");
-      RooRealVar *yvar = static_cast<RooRealVar *>(pc.getObject("yvar"));
-      const char *rangeName = pc.getString("rangeName", nullptr, true);
-      Int_t numcpu = pc.getInt("numcpu");
-      Int_t numcpu_strategy = pc.getInt("interleave");
-      // strategy 3 works only for RooSimultaneous.
-      if (numcpu_strategy == 3 && !real.InheritsFrom("RooSimultaneous")) {
-         oocoutW(&real, Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneous, "
-                                         "falling back to default strategy = 0"
-                                      << std::endl;
-         numcpu_strategy = 0;
-      }
-      RooFit::MPSplit interl = (RooFit::MPSplit)numcpu_strategy;
-      bool verbose = pc.getInt("verbose");
-
-      cfg.rangeName = rangeName ? rangeName : "";
-      cfg.nCPU = numcpu;
-      cfg.interleave = interl;
-      cfg.verbose = verbose;
-      cfg.verbose = false;
-
-      std::string name = "chi2_" + std::string(real.GetName()) + "_" + data.GetName();
-
-      return std::make_unique<RooXYChi2Var>(name.c_str(), name.c_str(), real, static_cast<RooDataSet &>(data), yvar,
-                                            integrate, cfg);
+   bool extended = false;
+   if (pdf) {
+      extended = interpretExtendedCmdArg(*pdf, pc.getInt("extended"));
    }
+
+   const char *addCoefRangeName = pc.getString("addCoefRange", nullptr, true);
+   int splitRange = pc.getInt("splitRange");
+
+   // Set the fitrange attribute of th PDF, add observables ranges for plotting
+   resetFitrangeAttributes(real, data, baseName, rangeName, splitRange);
+
+   cfg.rangeName = rangeName ? rangeName : "";
+   cfg.nCPU = pc.getInt("numcpu");
+   cfg.interleave = RooFit::Interleave;
+   cfg.verbose = static_cast<bool>(pc.getInt("verbose"));
+   cfg.cloneInputData = false;
+   cfg.integrateOverBinsPrecision = pc.getDouble("integrate_bins");
+   cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
+   cfg.splitCutRange = static_cast<bool>(splitRange);
+   auto chi2 = std::make_unique<RooChi2Var>(baseName.c_str(), baseName.c_str(), real, static_cast<RooDataHist &>(data),
+                                            extended, etype, cfg);
+
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+
+   return chi2;
 #else
    throw std::runtime_error("createChi2() is not supported without the legacy evaluation backend");
    return nullptr;
@@ -1030,18 +1271,32 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
 
    RooLinkedList fitCmdList(cmdList);
    std::string nllCmdListString;
+
+   // Check on the raw command list whether parallel minimization is requested,
+   // because in that case ModularL(true) is implied below. The check needs to
+   // happen before filtering the command list: with a modular likelihood,
+   // offsetting is configured on the minimizer instead of the likelihood, so
+   // the OffsetLikelihood argument must not be forwarded to createNLL(), where
+   // it is mutually exclusive with ModularL.
+   auto cmdEnabled = [&cmdList](const char *cmdName) {
+      auto *arg = static_cast<RooCmdArg *>(cmdList.FindObject(cmdName));
+      return arg && arg->getInt(0) != 0;
+   };
+   const bool parallelRequested =
+      cmdEnabled("Parallelize") || cmdEnabled("ParallelGradientOptions") || cmdEnabled("ParallelDescentOptions");
+
    if (!chi2) {
       nllCmdListString = "ProjectedObservables,Extended,Range,"
                          "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
                          "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,"
                          "EvalBackend,IntegrateBins,ModularL";
 
-      if (!cmdList.FindObject("ModularL") || static_cast<RooCmdArg *>(cmdList.FindObject("ModularL"))->getInt(0) == 0) {
+      if (!parallelRequested && !cmdEnabled("ModularL")) {
          nllCmdListString += ",OffsetLikelihood";
       }
    } else {
-      auto createChi2DataHistCmdArgs = "Range,RangeWithName,NumCPU,Optimize,IntegrateBins,ProjectedObservables,"
-                                       "AddCoefRange,SplitRange,DataError,Extended";
+      auto createChi2DataHistCmdArgs = "Range,RangeWithName,NumCPU,IntegrateBins,ProjectedObservables,"
+                                       "AddCoefRange,SplitRange,DataError,Extended,EvalBackend";
       auto createChi2DataSetCmdArgs = "YVar,Integrate,RangeWithName,NumCPU,Verbose";
       nllCmdListString += isDataHist ? createChi2DataHistCmdArgs : createChi2DataSetCmdArgs;
    }
@@ -1097,7 +1352,7 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
    }
 
    RooCmdArg modularL_option;
-   if (pc.getInt("parallelize") != 0 || pc.getInt("enableParallelGradient") || pc.getInt("enableParallelDescent")) {
+   if (parallelRequested) {
       // Set to new style likelihood if parallelization is requested
       modularL_option = RooFit::ModularL(true);
       nllCmdList.Add(&modularL_option);
@@ -1105,10 +1360,17 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
 
    std::unique_ptr<RooAbsReal> nll;
    if (chi2) {
-      nll = std::unique_ptr<RooAbsReal>{isDataHist ? real.createChi2(static_cast<RooDataHist &>(data), nllCmdList)
-                                                   : real.createChi2(static_cast<RooDataSet &>(data), nllCmdList)};
+      if (isDataHist) {
+         nll = std::unique_ptr<RooAbsReal>{real.createChi2(static_cast<RooDataHist &>(data), nllCmdList)};
+      }
    } else {
       nll = std::unique_ptr<RooAbsReal>{dynamic_cast<RooAbsPdf &>(real).createNLL(data, nllCmdList)};
+   }
+
+   if (!nll) {
+      oocoutE(&real, InputArguments) << "RooFit::FitHelpers::fitTo(" << real.GetName()
+                                     << ") could not create the test statistic, no fit performed" << std::endl;
+      return nullptr;
    }
 
    return RooFit::FitHelpers::minimize(real, *nll, data, pc);

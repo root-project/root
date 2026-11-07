@@ -19,13 +19,13 @@ private:
    int fAttrLargest;
    int fAttrSorted;
 
-   size_t fK;
+   Dim fK;
    std::string fNK;
    std::string fNX;
    std::string fNVal;
    std::string fNInd;
-   std::vector<size_t> fShapeX;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeY;
    std::string fType;
 
 public:
@@ -42,24 +42,6 @@ public:
             fOutputTensorNames = { fNVal, fNInd };
         }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-         ETensorType ret = input[0];
-         return {ret, ret};
-      }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      if (input.size() != 2) {
-         throw std::runtime_error("TMVA SOFIE TopK Op Shape Inference needs exactly 2 input tensors");
-      }
-
-      auto shape = input[0]; // Shape format: [ m x n x o x p ... ]
-
-      // set the dimension at the specified axis to k  (fAttrAxis is checked before that is in the correct range
-      shape[fAttrAxis] = fK; // Modified shape: [ m x n x k x p ... ]
-      return {shape, shape};
-   }
-
-
    void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false) {
          // input must be a graph input, or already initialized intermediate tensor
@@ -70,25 +52,52 @@ public:
          throw std::runtime_error("TMVA SOFIE TopK Op Input Tensor i.e. K is not found in model");
       }
 
-      fShapeX = model.GetTensorShape(fNX);
-      auto fShapeK = model.GetTensorShape(fNK);
-      auto kptr = static_cast<int64_t *>(model.GetInitializedTensorData(fNK).get());
-      fK = *kptr;
-      model.SetNotWritableInitializedTensor(fNK);
+      fShapeX = model.GetDimTensorShape(fNX);
+      // K can either be an initialized tensor or a shape tensor, in which case its value is
+      // known only symbolically (e.g. it depends on one of the input dimensions)
+      Dim kdim;
+      if (model.IsShapeTensor(fNK)) {
+         auto &kvalues = model.GetShapeTensorValues(fNK);
+         if (kvalues.size() != 1)
+            throw std::runtime_error("TMVA SOFIE TopK Op input tensor K = " + fNK + " must be a single value");
+         kdim = kvalues[0];
+      } else if (model.IsInitializedTensor(fNK)) {
+         auto kptr = static_cast<int64_t *>(model.GetInitializedTensorData(fNK).get());
+         kdim = Dim{static_cast<size_t>(*kptr)};
+         model.SetNotWritableInitializedTensor(fNK);
+      } else {
+         throw std::runtime_error("TMVA SOFIE TopK Op input tensor K = " + fNK +
+                                  " must be known at initialization time");
+      }
       fAttrAxis = fAttrAxis < 0 ? fShapeX.size() + fAttrAxis : fAttrAxis;
       if(static_cast<size_t>(fAttrAxis) >=  fShapeX.size()){
          throw
-            std::runtime_error("TMVA::SOFIE ONNX TopK op axis = "+ std::to_string(fAttrAxis) +" value exeeds size of tensor " +fNX+" of size "+fShapeX.size()+" .");
+            std::runtime_error("TMVA::SOFIE ONNX TopK op axis = "+ std::to_string(fAttrAxis) +" value exeeds size of tensor " +fNX+" of size "+ std::to_string(fShapeX.size()) +" .");
       }
       // fK cannot be larger that axis dimension
-      fK = std::min(fK, fShapeX[fAttrAxis]);
+      if (kdim.isParam || fShapeX[fAttrAxis].isParam)
+         fK = Dim{std::string("std::min(size_t(" + kdim.GetVal() + "), size_t(" + fShapeX[fAttrAxis].GetVal() + "))"),
+                  static_cast<size_t>(-1)};
+      else
+         fK = Dim{std::min(kdim.dim, fShapeX[fAttrAxis].dim)};
 
-      fShapeY = ShapeInference({fShapeX, fShapeK})[0];
+      // output shape is equal to input shape apart for value in fAttrAxis
+      fShapeY = fShapeX;
+      fShapeY[fAttrAxis] = Dim{fK};
+
       model.AddIntermediateTensor(fNVal, model.GetTensorType(fNX), fShapeY);
 
       // output indices should be an int64 tensor
       model.AddIntermediateTensor(fNInd, ETensorType::INT64, fShapeY);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
+      model.AddNeededStdLib("algorithm");
+      model.AddNeededStdLib("cstdint");
+      model.AddNeededStdLib("cstring");
+
+      if (model.Verbose()) {
+         std::cout << "TopK " << fNX << "  " << ConvertDimShapeToString(fShapeX)
+                      << "---> " << fNVal << " " <<  ConvertDimShapeToString(fShapeY) << std::endl;
+      }
    }
 
    std::string Generate(std::string OpName) override {
@@ -101,19 +110,53 @@ public:
       size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
       out << "\n" << SP << "//------ TopK\n";
 
-      size_t length=ConvertShapeToLength(fShapeX);
+      auto length=ConvertDimShapeToLength(fShapeX);
       auto strideX = UTILITY::ComputeStrideFromShape(fShapeX);
       auto strideY = UTILITY::ComputeStrideFromShape(fShapeY);
       // we perform loop on dimension before sorted axis and after sorted axis
-      size_t n_before = (axis>0) ? length/strideX[axis-1] : 1;
-      size_t n_after = strideX[axis];
-      size_t n_elements = fShapeX[axis]; // number of elements to be sorted
+      std::vector<Dim> shape_before(fShapeX.begin(), fShapeX.begin() + axis);   // input shape before axis
+      std::string n_before = (axis>0) ? ConvertDimShapeToLength(shape_before) : "1";
+      std::string n_after = strideX[axis].GetVal();
+      std::string n_elements = fShapeX[axis].GetVal(); // number of elements to be sorted
 
       // }
       out << SP << "{\n"; // to define a separate scope for the operator code
-      out << SP << "std::vector<std::pair<float,int64_t>> elements(" << n_elements << ");\n";
+
+      // Ties are broken by the element index, so no two entries ever compare equivalent:
+      // the ordering is total and the selected set is therefore unique. That is what makes
+      // the (unstable) std::nth_element below safe - it cannot pick a different set from a
+      // full sort.
+      //
+      // For float that ordering can be expressed as a single unsigned integer. Flipping the
+      // sign bit on positives and every bit on negatives maps a (non-NaN) float onto a
+      // uint32 whose unsigned order matches the float order; putting the element index in
+      // the low 32 bits then reproduces "ties by smaller index" exactly. A comparison
+      // becomes one 64-bit instruction instead of a two-field comparator call, and an
+      // element is 8 bytes instead of 16, which halves what nth_element has to move.
+      // Wider types cannot pack a value and an index into 64 bits, so they keep the pairs.
+      bool packed = (fType == "float");
+      // the index has to fit in the low 32 bits
+      if (packed && !fShapeX[fAttrAxis].isParam && fShapeX[fAttrAxis].dim > 0xFFFFFFFFULL)
+         packed = false;
+
+      std::string pairType = "std::pair<" + fType + ",int64_t>";
+      if (packed) {
+         out << SP << "std::vector<uint64_t> elements(" << n_elements << ");\n";
+         if (fShapeX[fAttrAxis].isParam) {
+            out << SP << "if (static_cast<unsigned long long>(" << n_elements << ") > 0xFFFFFFFFULL)\n";
+            out << SP << SP << "throw std::runtime_error(\"TMVA SOFIE TopK - reduced axis is longer "
+                << "than the 2^32 limit of the packed index\");\n";
+         }
+      } else {
+         out << SP << "std::vector<" << pairType << "> elements(" << n_elements << ");\n";
+         // taking the pairs by const reference avoids copying them on every comparison
+         out << SP << "auto " << OpName << "_cmp = [](const " << pairType << " &a, const " << pairType << " &b) {\n";
+         out << SP << SP << "return (a.first != b.first) ? (a.first " << (fAttrLargest ? ">" : "<")
+             << " b.first) : a.second < b.second;\n";
+         out << SP << "};\n";
+      }
       // loop on elements before
-      if (n_before > 1) {
+      if (n_before != "1") {
          out << SP << "for (size_t i = 0; i < " << n_before << "; i++) {\n";
          out << SP << SP << "size_t xoffset = i*" << strideX[axis-1] << ";\n";
          out << SP << SP << "size_t yoffset = i*" << strideY[axis-1] << ";\n";
@@ -122,35 +165,57 @@ public:
          out << SP << "size_t xoffset = 0;\n";
          out << SP << "size_t yoffset = 0;\n";
       }
-      if (n_after > 1)
+      if (n_after !=  "1")
          out << SP << "for (size_t j = 0; j < " << n_after << "; j++) {\n";
       else
          out << SP << "const size_t j = 0;\n";
 
-      // copy elements to be sorted in vector of pair
+      // copy the elements to be sorted into the working buffer
       out << SP << SP << "for (size_t l = 0; l < " << n_elements << "; l++) {\n";
-      out << SP << SP << SP << "elements[l] = std::make_pair(tensor_" << fNX << "[xoffset + " << strideX[axis] << "*l + j], l);\n";
+      if (packed) {
+         out << SP << SP << SP << "uint32_t b_ = 0;\n";
+         out << SP << SP << SP << "std::memcpy(&b_, &tensor_" << fNX << "[xoffset + " << strideX[axis]
+             << "*l + j], sizeof(b_));\n";
+         out << SP << SP << SP << "b_ ^= (b_ & 0x80000000u) ? 0xFFFFFFFFu : 0x80000000u;\n";
+         if (fAttrLargest)
+            out << SP << SP << SP << "b_ = ~b_;\n"; // reverse the value order, keep index ascending
+         out << SP << SP << SP << "elements[l] = (static_cast<uint64_t>(b_) << 32) | static_cast<uint32_t>(l);\n";
+      } else {
+         out << SP << SP << SP << "elements[l] = std::make_pair(tensor_" << fNX << "[xoffset + " << strideX[axis]
+             << "*l + j], l);\n";
+      }
       out << SP << SP << "}\n";
 
-      if (fAttrSorted) {
-         if (fAttrLargest) {
-            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end()," <<
-               "[](std::pair<float,int64_t>a,std::pair<float,int64_t>b){return (a.first!=b.first) ? (a.first>b.first) : a.second < b.second;});\n";
-
-         } else
-            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end()," <<
-            "[](std::pair<float,int64_t>a,std::pair<float,int64_t>b){return (a.first!=b.first) ? (a.first<b.first) : a.second < b.second;});\n";
-      } else
-         // in this case we don;t need to return sorted elements, so we keep same order as before
-         out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end());\n";
+      // Move the K selected elements to the front in linear time, then order just those.
+      // std::partial_sort would be O(n log K) with heap operations over the whole range.
+      std::string cmp = packed ? "" : (", " + OpName + "_cmp");
+      out << SP << SP << "std::nth_element(elements.begin(), elements.begin() + (" << fK << "), elements.end()" << cmp
+          << ");\n";
+      // The ONNX spec leaves the order unspecified when sorted=0, but we sort anyway: it is
+      // only O(K log K) and it keeps the generated code reproducible across standard libraries.
+      out << SP << SP << "std::sort(elements.begin(), elements.begin() + (" << fK << ")" << cmp << ");\n";
 
       // copy the selected elements in the output
       out << SP << SP << "for (size_t l = 0; l < " << fK << "; l++) {\n";
-      out << SP << SP << SP << "tensor_" << fNVal   << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].first;\n";
-      out << SP << SP << SP << "tensor_" << fNInd << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].second;\n";
+      if (packed) {
+         out << SP << SP << SP << "uint32_t b_ = static_cast<uint32_t>(elements[l] >> 32);\n";
+         if (fAttrLargest)
+            out << SP << SP << SP << "b_ = ~b_;\n";
+         out << SP << SP << SP << "b_ ^= (b_ & 0x80000000u) ? 0x80000000u : 0xFFFFFFFFu;\n";
+         out << SP << SP << SP << fType << " v_;\n";
+         out << SP << SP << SP << "std::memcpy(&v_, &b_, sizeof(v_));\n";
+         out << SP << SP << SP << "tensor_" << fNVal << "[yoffset + " << strideY[axis] << "*l + j] = v_;\n";
+         out << SP << SP << SP << "tensor_" << fNInd << "[yoffset + " << strideY[axis]
+             << "*l + j] = static_cast<int64_t>(static_cast<uint32_t>(elements[l]));\n";
+      } else {
+         out << SP << SP << SP << "tensor_" << fNVal << "[yoffset + " << strideY[axis]
+             << "*l + j] = elements[l].first;\n";
+         out << SP << SP << SP << "tensor_" << fNInd << "[yoffset + " << strideY[axis]
+             << "*l + j] = elements[l].second;\n";
+      }
       out << SP << SP << "}\n";
-      if (n_after > 1) out << SP << SP << "}\n";
-      if (n_before> 1) out << SP << "}\n";
+      if (n_after != "1") out << SP << SP << "}\n";
+      if (n_before != "1") out << SP << "}\n";
       out << SP << "}\n"; // end operator scope
       return out.str();
    }

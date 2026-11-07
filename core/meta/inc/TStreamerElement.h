@@ -34,38 +34,20 @@ protected:
    Int_t            fArrayLength;     //cumulative size of all array dims
    Int_t            fArrayDim;        //number of array dimensions
    Int_t            fMaxIndex[5];     //Maximum array index for array dimension "dim"
-   Int_t            fOffset;          //!element offset in class
-   Int_t            fTObjectOffset;   //!base offset for TObject if the element inherits from it
-   Int_t            fNewType;         //!new element type when reading
+   Int_t            fOffset;          ///<!element offset in class
+   Int_t            fTObjectOffset;   ///<!base offset for TObject if the element inherits from it
+   Int_t            fNewType;         ///<!new element type when reading
    TString          fTypeName;        //Data type name of data member
-   TClass          *fClassObject;     //!pointer to class of object
-   TClass          *fNewClass;        //!new element class when reading
-   TMemberStreamer *fStreamer;        //!pointer to element Streamer
-   Double_t         fXmin;            //!Minimum of data member if a range is specified  [xmin,xmax,nbits]
-   Double_t         fXmax;            //!Maximum of data member if a range is specified  [xmin,xmax,nbits]
-   Double_t         fFactor;          //!Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
+   TClass          *fClassObject;     ///<!pointer to class of object
+   TClass          *fNewClass;        ///<!new element class when reading
+   TMemberStreamer *fStreamer;        ///<!pointer to element Streamer
+   Double_t         fXmin;            ///<!Minimum of data member if a range is specified  [xmin,xmax,nbits]
+   Double_t         fXmax;            ///<!Maximum of data member if a range is specified  [xmin,xmax,nbits]
+   Double_t         fFactor;          ///<!Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
 
    friend class TStreamerSTL;
 
 public:
-
-   enum ESTLtype {
-      kSTL                  = ROOT::kSTLany,
-      kSTLstring            = ROOT::kSTLstring,
-      kSTLvector            = ROOT::kSTLvector,
-      kSTLlist              = ROOT::kSTLlist,
-      kSTLforwardlist       = ROOT::kSTLforwardlist,
-      kSTLdeque             = ROOT::kSTLdeque,
-      kSTLmap               = ROOT::kSTLmap,
-      kSTLmultimap          = ROOT::kSTLmultimap,
-      kSTLset               = ROOT::kSTLset,
-      kSTLmultiset          = ROOT::kSTLmultiset,
-      kSTLunorderedset      = ROOT::kSTLunorderedset,
-      kSTLunorderedmultiset = ROOT::kSTLunorderedmultiset,
-      kSTLunorderedmap      = ROOT::kSTLunorderedmap,
-      kSTLunorderedmultimap = ROOT::kSTLunorderedmultimap,
-      kSTLbitset            = ROOT::kSTLbitset
-   };
    // TStreamerElement status bits
    enum EStatusBits {
       kHasRange     = BIT(6),
@@ -101,6 +83,7 @@ public:
    Int_t            GetArrayLength() const {return fArrayLength;}
    virtual TClass  *GetClassPointer() const;
            TClass  *GetClass()        const {return GetClassPointer();}
+   virtual std::size_t GetAlignment() const;
    virtual Int_t    GetExecID() const;
    virtual const char *GetFullName() const;
    virtual const char *GetInclude() const {return "";}
@@ -150,13 +133,13 @@ private:
 
 protected:
    Int_t             fBaseVersion;    //version number of the base class (used during memberwise streaming)
-   UInt_t           &fBaseCheckSum;   //!checksum of the base class (used during memberwise streaming)
-   TClass           *fBaseClass;      //!pointer to base class
-   TClass           *fNewBaseClass;   //!pointer to new base class if renamed
-   ClassStreamerFunc_t     fStreamerFunc;     //!Pointer to a wrapper around a custom streamer member function.
-   ClassConvStreamerFunc_t fConvStreamerFunc; //!Pointer to a wrapper around a custom convertion streamer member function.
-   TVirtualStreamerInfo *fStreamerInfo; //!Pointer to the current StreamerInfo for the baset class.
-   TString               fErrorMsg;     //!Error message in case of checksum/version mismatch.
+   UInt_t           &fBaseCheckSum;   ///<!checksum of the base class (used during memberwise streaming)
+   TClass           *fBaseClass;      ///<!pointer to base class
+   TClass           *fNewBaseClass;   ///<!pointer to new base class if renamed
+   ClassStreamerFunc_t     fStreamerFunc;     ///<!Pointer to a wrapper around a custom streamer member function.
+   ClassConvStreamerFunc_t fConvStreamerFunc; ///<!Pointer to a wrapper around a custom convertion streamer member function.
+   TVirtualStreamerInfo *fStreamerInfo; ///<!Pointer to the current StreamerInfo for the baset class.
+   TString               fErrorMsg;     ///<!Error message in case of checksum/version mismatch.
 
    void InitStreaming(Bool_t isTransient);
 
@@ -172,6 +155,7 @@ public:
    const char      *GetInclude() const override;
    TClass          *GetNewBaseClass() { return fNewBaseClass; }
    ULongptr_t       GetMethod() const override {return 0;}
+   std::size_t      GetAlignment() const override;
    Int_t            GetSize() const override;
    TVirtualStreamerInfo *GetBaseStreamerInfo() const { return fStreamerInfo; }
    void             Init(TVirtualStreamerInfo *obj = nullptr) override;
@@ -200,7 +184,7 @@ protected:
    Int_t               fCountVersion;   //version number of the class with the counter
    TString             fCountName;      //name of data member holding the array count
    TString             fCountClass;     //name of the class with the counter
-   TStreamerBasicType *fCounter;        //!pointer to basic type counter
+   TStreamerBasicType *fCounter;        ///<!pointer to basic type counter
 
 public:
 
@@ -213,6 +197,7 @@ public:
    const char    *GetCountName()    const {return fCountName.Data();}
    Int_t          GetCountVersion() const {return fCountVersion;}
    ULongptr_t     GetMethod() const override;
+   std::size_t    GetAlignment() const override { return alignof(void *); }
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
    Bool_t         HasCounter() const override { return fCounter != nullptr; }
@@ -237,7 +222,7 @@ protected:
    Int_t               fCountVersion;   //version number of the class with the counter
    TString             fCountName;      //name of data member holding the array count
    TString             fCountClass;     //name of the class with the counter
-   TStreamerBasicType *fCounter;        //!pointer to basic type counter
+   TStreamerBasicType *fCounter;        ///<!pointer to basic type counter
 
 public:
 
@@ -249,6 +234,7 @@ public:
    Int_t          GetCountVersion() const {return fCountVersion;}
    const char    *GetInclude() const override;
    ULongptr_t     GetMethod() const override;
+   std::size_t    GetAlignment() const override;
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
    Bool_t         IsaPointer() const override {return kTRUE; }
@@ -268,7 +254,7 @@ private:
    TStreamerBasicType&operator=(const TStreamerBasicType&) = delete;
 
 protected:
-   Int_t             fCounter;     //!value of data member when referenced by an array
+   Int_t             fCounter;     ///<!value of data member when referenced by an array
 
 public:
 
@@ -297,6 +283,7 @@ public:
    TStreamerObject(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObject();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override;
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
 
@@ -316,6 +303,7 @@ public:
    TStreamerObjectAny(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectAny();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override;
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
 
@@ -335,6 +323,7 @@ public:
    TStreamerObjectPointer(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectPointer();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override { return alignof(void *); }
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
    Bool_t         IsaPointer() const override {return kTRUE;}
@@ -356,6 +345,7 @@ public:
    TStreamerObjectAnyPointer(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectAnyPointer();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override { return alignof(void *); }
    Int_t          GetSize() const override;
    void           Init(TVirtualStreamerInfo *obj = nullptr) override;
    Bool_t         IsaPointer() const override { return kTRUE; }
@@ -377,6 +367,7 @@ public:
    TStreamerString(const char *name, const char *title, Int_t offset);
    virtual       ~TStreamerString();
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override { return alignof(TString); }
    Int_t          GetSize() const override;
 
    ClassDefOverride(TStreamerString,2)  //Streamer element of type TString
@@ -408,6 +399,7 @@ public:
    Int_t          GetSTLtype() const {return fSTLtype;}
    Int_t          GetCtype()   const {return fCtype;}
    const char    *GetInclude() const override;
+   std::size_t    GetAlignment() const override;
    Int_t          GetSize() const override;
    void           ls(Option_t *option="") const override;
    void           SetSTLtype(Int_t t) {fSTLtype = t;}
@@ -448,8 +440,8 @@ private:
    TStreamerArtificial&operator=(const TStreamerArtificial&) = delete;
 
 protected:
-   ROOT::TSchemaRule::ReadFuncPtr_t     fReadFunc;    //!
-   ROOT::TSchemaRule::ReadRawFuncPtr_t  fReadRawFunc; //!
+   ROOT::TSchemaRule::ReadFuncPtr_t     fReadFunc;    ///<!
+   ROOT::TSchemaRule::ReadRawFuncPtr_t  fReadRawFunc; ///<!
 
 public:
 

@@ -380,8 +380,8 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_kalman() {
    // need to write explicitly the dimensions
 
 
-   typedef ROOT::Math::SMatrix<double, NDIM1, NDIM1>  MnMatrixNN;
-   typedef ROOT::Math::SMatrix<double, NDIM2, NDIM2>  MnMatrixMM;
+   // typedef ROOT::Math::SMatrix<double, NDIM1, NDIM1>  MnMatrixNN;
+   // typedef ROOT::Math::SMatrix<double, NDIM2, NDIM2>  MnMatrixMM;
    typedef ROOT::Math::SMatrix<double, NDIM1, NDIM2>  MnMatrixNM;
    typedef ROOT::Math::SMatrix<double, NDIM2 , NDIM1> MnMatrixMN;
    typedef ROOT::Math::SMatrix<double, NDIM1 >        MnSymMatrixNN;
@@ -525,16 +525,16 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_sym_kalman() {
    // need to write explicitly the dimensions
 
 
-   typedef ROOT::Math::SMatrix<double, NDIM1, NDIM1>  MnMatrixNN;
-   typedef ROOT::Math::SMatrix<double, NDIM2, NDIM2>  MnMatrixMM;
+   // typedef ROOT::Math::SMatrix<double, NDIM1, NDIM1>  MnMatrixNN;
+   // typedef ROOT::Math::SMatrix<double, NDIM2, NDIM2>  MnMatrixMM;
    typedef ROOT::Math::SMatrix<double, NDIM1, NDIM2>  MnMatrixNM;
    typedef ROOT::Math::SMatrix<double, NDIM2 , NDIM1> MnMatrixMN;
    typedef ROOT::Math::SMatrix<double, NDIM1, NDIM1, ROOT::Math::MatRepSym<double, NDIM1> >   MnSymMatrixNN;
    typedef ROOT::Math::SMatrix<double, NDIM2, NDIM2, ROOT::Math::MatRepSym<double, NDIM2> >   MnSymMatrixMM;
    typedef ROOT::Math::SVector<double, NDIM1>         MnVectorN;
    typedef ROOT::Math::SVector<double, NDIM2>         MnVectorM;
-   typedef ROOT::Math::SVector<double, NDIM1*(NDIM1+1)/2>   MnVectorN2;
-   typedef ROOT::Math::SVector<double, NDIM2*(NDIM2+1)/2>   MnVectorM2;
+   // typedef ROOT::Math::SVector<double, NDIM1*(NDIM1+1)/2>   MnVectorN2;
+   // typedef ROOT::Math::SVector<double, NDIM2*(NDIM2+1)/2>   MnVectorM2;
 
 
 

@@ -38,7 +38,6 @@ for elem in a:
 '''
 
 from . import pythonization
-
 from ._generic import _add_getitem_checked
 
 

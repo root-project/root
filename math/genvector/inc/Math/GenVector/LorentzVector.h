@@ -707,6 +707,10 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
        LorentzVector<CoordSystem>& SetPx ( Scalar a )  { fCoordinates.SetPx (a); return *this; }
        LorentzVector<CoordSystem>& SetPy ( Scalar a )  { fCoordinates.SetPy (a); return *this; }
        LorentzVector<CoordSystem>& SetPz ( Scalar a )  { fCoordinates.SetPz (a); return *this; }
+       LorentzVector<CoordSystem> &SetT(Scalar a) { return SetE(a); }
+       LorentzVector<CoordSystem> &SetX(Scalar a) { return SetPx(a); }
+       LorentzVector<CoordSystem> &SetY(Scalar a) { return SetPy(a); }
+       LorentzVector<CoordSystem> &SetZ(Scalar a) { return SetPz(a); }
 
     private:
 

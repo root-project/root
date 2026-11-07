@@ -31,8 +31,6 @@ supercategory will propagate to its input categories.
 
 #include "RooSuperCategory.h"
 
-#include "Riostream.h"
-#include "RooStreamParser.h"
 #include "RooArgSet.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooMsgService.h"
@@ -40,6 +38,7 @@ supercategory will propagate to its input categories.
 #include "TString.h"
 #include "TClass.h"
 
+#include <ostream>
 using std::endl, std::ostream;
 
 
@@ -93,8 +92,7 @@ bool RooSuperCategory::setIndex(Int_t index, bool printError)
   }
 
   bool error = false;
-  for (auto arg : _multiCat->_catSet) {
-    auto cat = static_cast<RooAbsCategoryLValue*>(arg);
+  for (auto* cat : static_range_cast<RooAbsCategoryLValue*>(_multiCat->_catSet)) {
     if (cat->empty()) {
       if (printError) {
          coutE(InputArguments) << __func__ << ": Found a category with zero states. Cannot set state for '"

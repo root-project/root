@@ -14,6 +14,13 @@
 
 #include <numeric>
 
+// RooParamHistFunc is deprecated, but still tested until its removal in ROOT 6.46
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 TEST(RooParamHistFunc, Integration)
 {
    // This tests the analytical integration of RooParamHistFunc,

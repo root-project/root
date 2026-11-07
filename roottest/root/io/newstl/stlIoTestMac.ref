@@ -1,4 +1,3 @@
-
 Processing srun.C("roottest/root/io/newstl/")...
 Running test rvec
 ROOT does not support variable size array of stl containers

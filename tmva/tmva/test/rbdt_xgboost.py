@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 
 import numpy as np
@@ -6,6 +8,18 @@ import ROOT
 import xgboost
 
 np.random.seed(1234)
+
+
+def load_rbdt(xgb):
+    """Serialize the model to XGBoost's native JSON format and build an RBDT from
+    it via the C++ TMVA::Experimental::RBDT::LoadXGBoost."""
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp_json:
+        json_path = tmp_json.name
+    try:
+        xgb.get_booster().save_model(json_path)
+        return ROOT.TMVA.Experimental.RBDT.LoadXGBoost(json_path)
+    finally:
+        os.remove(json_path)
 
 
 def create_dataset(num_events, num_features, num_outputs, dtype=np.float32):
@@ -19,22 +33,21 @@ def create_dataset(num_events, num_features, num_outputs, dtype=np.float32):
     return x, y
 
 
-def _test_XGBBinary(label):
+def _test_XGBBinary():
     """
     Compare response of XGB classifier and TMVA tree inference system.
     """
     x, y = create_dataset(1000, 10, 2)
     xgb = xgboost.XGBClassifier(n_estimators=100, max_depth=3)
     xgb.fit(x, y)
-    ROOT.TMVA.Experimental.SaveXGBoost(xgb, "myModel", "testXGBBinary{}.root".format(label), num_inputs=10)
-    bdt = ROOT.TMVA.Experimental.RBDT("myModel", "testXGBBinary{}.root".format(label))
+    bdt = load_rbdt(xgb)
 
     y_xgb = xgb.predict_proba(x)[:, 1].squeeze()
     y_bdt = bdt.Compute(x).squeeze()
     np.testing.assert_array_almost_equal(y_xgb, y_bdt)
 
 
-def _test_XGBRegression(label):
+def _test_XGBRegression():
     """
     Compare response of XGB regressor and TMVA tree inference system.
     """
@@ -44,29 +57,27 @@ def _test_XGBRegression(label):
     # Other than in the XGBBinary test, we're passing the training features via
     # a pandas DataFrame this time. In that case, XGBoost will define custom
     # feature names according to the column names in the dataframe, and we can
-    # test the case where the feature names in the .txt dump are not the
-    # default "f0", "f1", "f2", etc.
+    # test the case where the feature names are not the default "f0", "f1",
+    # "f2", etc.
     df_x = pandas.DataFrame({f"myfeature_{i}": x[:, i] for i in range(n_features)})
     assert len(x) == len(df_x)
     xgb = xgboost.XGBRegressor(n_estimators=1, max_depth=3)
     xgb.fit(df_x, y)
-    ROOT.TMVA.Experimental.SaveXGBoost(xgb, "myModel", "testXGBRegression{}.root".format(label), num_inputs=10)
-    bdt = ROOT.TMVA.Experimental.RBDT("myModel", "testXGBRegression{}.root".format(label))
+    bdt = load_rbdt(xgb)
 
     y_xgb = xgb.predict(x).squeeze()
     y_bdt = bdt.Compute(x).squeeze()
     np.testing.assert_array_almost_equal(y_xgb, y_bdt)
 
 
-def _test_XGBMulticlass(label):
+def _test_XGBMulticlass():
     """
     Compare response of XGB multiclass and TMVA tree inference system.
     """
     x, y = create_dataset(1000, 10, 3)
     xgb = xgboost.XGBClassifier(n_estimators=100, max_depth=3)
     xgb.fit(x, y)
-    ROOT.TMVA.Experimental.SaveXGBoost(xgb, "myModel", "testXGBMulticlass{}.root".format(label), num_inputs=10)
-    bdt = ROOT.TMVA.Experimental.RBDT("myModel", "testXGBMulticlass{}.root".format(label))
+    bdt = load_rbdt(xgb)
 
     y_xgb = xgb.predict_proba(x)
     y_bdt = bdt.Compute(x)
@@ -82,7 +93,7 @@ class RBDT(unittest.TestCase):
         """
         Test model trained with binary XGBClassifier.
         """
-        _test_XGBBinary("default")
+        _test_XGBBinary()
 
     def test_XGBMulticlass_default(self):
         """
@@ -90,13 +101,13 @@ class RBDT(unittest.TestCase):
         """
         if xgboost.__version__ >= "3.1.0":
             self.skipTest("We don't support multiclassification with xgboost>=3.1.0 yet")
-        _test_XGBMulticlass("default")
+        _test_XGBMulticlass()
 
     def test_XGBRegression_default(self):
         """
         Test model trained with XGBRegressor.
         """
-        _test_XGBRegression("default")
+        _test_XGBRegression()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 #include <map>
 #include "MyTemplateTestClass.h"
-#include "RConfig.h"
+#include "ROOT/RConfig.hxx"
 
 void mapTest()
 {

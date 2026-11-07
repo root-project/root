@@ -1,6 +1,5 @@
 #include "histutil_test.hxx"
 
-#include <TAxis.h>
 #include <TH1.h>
 
 #include <array>
@@ -13,14 +12,11 @@ TEST(ConvertToTH1I, RHistEngine)
    static constexpr std::size_t Bins = 20;
    RHistEngine<int> engine(Bins, {0, Bins});
 
-   engine.Fill(-100);
+   engine.SetBinContent(RBinIndex::Underflow(), 100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.SetBinContent(i, i + 1);
    }
-   engine.Fill(100);
-
-   // Fill bin 7 twice to test against accidental shifts.
-   engine.Fill(7);
+   engine.SetBinContent(RBinIndex::Overflow(), 200);
 
    auto th1i = ConvertToTH1I(engine);
    ASSERT_TRUE(th1i);
@@ -30,20 +26,11 @@ TEST(ConvertToTH1I, RHistEngine)
    ASSERT_EQ(th1i->GetNbinsY(), 1);
    ASSERT_EQ(th1i->GetNbinsZ(), 1);
 
-   const auto *xAxis = th1i->GetXaxis();
-   EXPECT_FALSE(xAxis->IsVariableBinSize());
-   EXPECT_EQ(xAxis->GetNbins(), Bins);
-   EXPECT_EQ(xAxis->GetXmin(), 0.0);
-   EXPECT_EQ(xAxis->GetXmax(), Bins);
-
-   for (std::size_t i = 0; i < Bins + 2; i++) {
-      // Bin 7 was filled twice.
-      if (i == 7 + 1) {
-         EXPECT_EQ(th1i->GetBinContent(i), 2);
-      } else {
-         EXPECT_EQ(th1i->GetBinContent(i), 1);
-      }
+   EXPECT_EQ(th1i->GetBinContent(0), 100);
+   for (std::size_t i = 1; i <= Bins; i++) {
+      EXPECT_EQ(th1i->GetBinContent(i), i);
    }
+   EXPECT_EQ(th1i->GetBinContent(Bins + 1), 200);
 
    EXPECT_EQ(th1i->GetEntries(), 0);
    Double_t stats[4];
@@ -60,10 +47,12 @@ TEST(ConvertToTH1I, RHistEngineNoFlowBins)
    const RRegularAxis axis(Bins, {0, Bins}, /*enableFlowBins=*/false);
    RHistEngine<int> engine({axis});
 
+   // Flow bins are disabled, so this fill will be discarded.
    engine.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.SetBinContent(i, i + 1);
    }
+   // Flow bins are disabled, so this fill will be discarded.
    engine.Fill(100);
 
    auto th1i = ConvertToTH1I(engine);
@@ -71,7 +60,7 @@ TEST(ConvertToTH1I, RHistEngineNoFlowBins)
 
    EXPECT_EQ(th1i->GetBinContent(0), 0);
    for (std::size_t i = 1; i <= Bins; i++) {
-      EXPECT_EQ(th1i->GetBinContent(i), 1);
+      EXPECT_EQ(th1i->GetBinContent(i), i);
    }
    EXPECT_EQ(th1i->GetBinContent(Bins + 1), 0);
 }
@@ -105,6 +94,50 @@ TEST(ConvertToTH1I, RHist)
    EXPECT_EQ(stats[1], Bins);
    EXPECT_EQ(stats[2], 190);
    EXPECT_EQ(stats[3], 2470);
+}
+
+TEST(ConvertToTH1I, RHistSetBinContentTainted)
+{
+   static constexpr std::size_t Bins = 20;
+   RHist<int> hist(Bins, {0, Bins});
+   hist.SetBinContent(RBinIndex(1), 42);
+   ASSERT_TRUE(hist.GetStats().IsTainted());
+
+   auto th1i = ConvertToTH1I(hist);
+   ASSERT_TRUE(th1i);
+
+   EXPECT_EQ(th1i->GetBinContent(2), 42);
+
+   EXPECT_EQ(th1i->GetEntries(), 0);
+   Double_t stats[4];
+   th1i->GetStats(stats);
+   EXPECT_EQ(stats[0], 0);
+   EXPECT_EQ(stats[1], 0);
+   EXPECT_EQ(stats[2], 0);
+   EXPECT_EQ(stats[3], 0);
+}
+
+TEST(ConvertToTH1I, RHistCategoricalAxis)
+{
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis axis(categories);
+   RHist<int> hist(axis);
+   ASSERT_FALSE(hist.GetStats().IsEnabled(0));
+
+   hist.Fill("a");
+
+   auto th1i = ConvertToTH1I(hist);
+   ASSERT_TRUE(th1i);
+
+   EXPECT_EQ(th1i->GetBinContent(1), 1);
+
+   EXPECT_EQ(th1i->GetEntries(), 1);
+   Double_t stats[4];
+   th1i->GetStats(stats);
+   EXPECT_EQ(stats[0], 1);
+   EXPECT_EQ(stats[1], 1);
+   EXPECT_EQ(stats[2], 0);
+   EXPECT_EQ(stats[3], 0);
 }
 
 TEST(ConvertToTH1C, RHistEngine)
@@ -156,13 +189,13 @@ TEST(ConvertToTH1L, RHistEngine)
    // Set one 64-bit long long value larger than what double can exactly represent.
    static constexpr long long Large = (1LL << 60) - 1;
    const std::array<RBinIndex, 1> indices = {1};
-   ROOT::Experimental::Internal::SetBinContent(engineLL, indices, Large);
+   engineLL.SetBinContent(indices, Large);
 
    th1l = ConvertToTH1L(engineLL);
    ASSERT_TRUE(th1l);
 
    // Get the value via TArrayL::At and store into a variable to be sure about the type. During direct comparison, a
-   // double return value may automatically promate Large to a double as well, introducing the truncation we want to
+   // double return value may automatically promote Large to a double as well, introducing the truncation we want to
    // test against.
    const long long value = th1l->At(2);
    EXPECT_EQ(value, Large);

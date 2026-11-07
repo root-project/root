@@ -9,10 +9,12 @@
 #ifndef ROOT_RIoUring
 #define ROOT_RIoUring
 
+#include <cerrno>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include <liburing.h>
 #include <liburing/io_uring.h>
@@ -78,6 +80,33 @@ public:
    /// Access the raw io_uring instance.
    struct io_uring *GetRawRing() {
       return &fRing;
+   }
+
+   /// Probes whether io_uring is actually usable at runtime. The presence of liburing at build
+   /// time does not imply kernel support: the running kernel may have been compiled without
+   /// CONFIG_IO_URING (e.g. older EL9 kernels) or the io_uring_setup system call may be blocked
+   /// by a seccomp profile. On failure, if errMsg is set, it contains a diagnostic string.
+   /// The kernel is probed only once per process; afterwards the cached result is returned.
+   static bool IsAvailable(std::string *errMsg = nullptr)
+   {
+      static const auto probeResult = [] {
+         // A queue depth of 1 keeps the probe cheap and does not exhaust the memlock limit.
+         struct io_uring ring;
+         int ret = io_uring_queue_init(1 /* queue depth */, &ring, 0 /* no flags */);
+         if (ret == 0) {
+            io_uring_queue_exit(&ring);
+            return std::pair<bool, std::string>(true, "");
+         }
+         std::string msg = std::strerror(-ret);
+         if (ret == -ENOSYS)
+            msg += ": the running kernel does not support io_uring (CONFIG_IO_URING is not set)";
+         else if (ret == -EPERM)
+            msg += ": the io_uring_setup system call is blocked, e.g. by a seccomp profile";
+         return std::pair<bool, std::string>(false, msg);
+      }();
+      if (errMsg)
+         *errMsg = probeResult.second;
+      return probeResult.first;
    }
 
    /// Basic read event composed of IO data and a target file descriptor.

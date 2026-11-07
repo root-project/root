@@ -1,3 +1,3 @@
 #!/bin/sh
 
-cat $1 | root -b -l -q $2
+cat $1 | root -b -q $2

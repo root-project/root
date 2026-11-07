@@ -136,6 +136,9 @@ void TKDTreeBinning::SetNBins(UInt_t bins) {
          fDataBins = new TKDTreeID(fDataSize, fDim, fDataSize / (fNBins - remainingData)); // TKDTree input is data size, data dimension and the content size of bins ("bucket" size)
          SetTreeData();
          fDataBins->Build();
+         // Need to keep the number of bins consistent with the number of
+         // terminal nodes in the kd-tree.
+         fNBins = fDataBins->GetNNodes() + 1;
          SetBinsEdges();
          SetBinsContent();
       } else {
@@ -238,12 +241,13 @@ void TKDTreeBinning::SetTreeData() {
 }
 
 void TKDTreeBinning::SetBinsContent() {
-   // Sets the bins' content
+   // Sets the bins' content from the actual number of points in each terminal
+   // node of the kd-tree. All terminal nodes hold fBucketSize points except
+   // possibly the last one, so query the tree directly instead of guessing.
    fBinsContent.resize(fNBins);
+   UInt_t nTreeNodes = fDataBins->GetNNodes();
    for (UInt_t i = 0; i < fNBins; ++i)
-      fBinsContent[i] = fDataBins->GetBucketSize();
-   if ( fDataSize % fNBins != 0 )
-      fBinsContent[fNBins - 1] = fDataSize % (fNBins-1);
+      fBinsContent[i] = fDataBins->GetNPointsNode(i + nTreeNodes);
 }
 
 void TKDTreeBinning::SetBinsEdges() {

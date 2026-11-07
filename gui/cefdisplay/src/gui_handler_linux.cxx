@@ -1,6 +1,5 @@
 // Author: Sergey Linev <S.Linev@gsi.de>
 // Date: 2017-06-29
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
@@ -48,16 +47,10 @@ int x11_errhandler( Display *dpy, XErrorEvent *err )
   return 0;
 }
 
-bool GuiHandler::PlatformInit()
+void GuiHandler::PlatformInit()
 {
    // install custom X11 error handler to avoid application exit in case of X11 failure
    XSetErrorHandler( x11_errhandler );
-
-   #if CEF_VERSION_MAJOR > 130
-   return true; // use CEF view framework
-   #else
-   return false; // do not use CEF view framework
-   #endif
 }
 
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
@@ -116,9 +109,8 @@ bool GuiHandler::PlatformResize(CefRefPtr<CefBrowser> browser, int width, int he
 
 #else
 
-bool GuiHandler::PlatformInit()
+void GuiHandler::PlatformInit()
 {
-   return true; // use view framework
 }
 
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser>, const CefString &)

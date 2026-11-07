@@ -18,7 +18,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SPlot
     Hist
     Tree
     TreePlayer
-    Graf3d
     Graf
     MathCore
 )

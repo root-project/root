@@ -56,6 +56,7 @@ using namespace RooStats;
 
 void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
 {
+   RooRealVar::enableSilentClipping();
 
    // to time the macro
    TStopwatch t;

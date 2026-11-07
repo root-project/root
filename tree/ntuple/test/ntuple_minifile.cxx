@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include <Byteswap.h>
 #include <TKey.h>
 #include <TTree.h>
 #include <TUUID.h>
@@ -16,8 +17,8 @@ namespace {
 // NOTE: these should be in sync with the version in RNTuple.hxx and are duplicated here
 // as a double check that we increment the version correctly.
 constexpr auto kVersionEpoch = 1;
-constexpr auto kVersionMajor = 0;
-constexpr auto kVersionMinor = 1;
+constexpr auto kVersionMajor = 1;
+constexpr auto kVersionMinor = 0;
 constexpr auto kVersionPatch = 1;
 
 bool IsEqual(const ROOT::RNTuple &a, const ROOT::RNTuple &b)
@@ -110,7 +111,8 @@ TEST(MiniFile, Proper)
    FileRaii fileGuard("test_ntuple_minifile_proper.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                           /*isAttributesRNTuple=*/false);
 
    char header = 'h';
    char footer = 'f';
@@ -146,7 +148,8 @@ TEST(MiniFile, Directory)
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto directory = file->mkdir("foo");
 
-   auto writer = RNTupleFileWriter::Append("MyNTuple", *directory, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *directory, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                           /*isAttributesRNTuple=*/false);
 
    char header = 'h';
    char footer = 'f';
@@ -176,7 +179,8 @@ TEST(MiniFile, Directory)
    file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
    file->mkdir("foo/bar");
    directory = file->GetDirectory("foo/bar");
-   writer = RNTupleFileWriter::Append("MyNTuple2", *directory, RNTupleWriteOptions::kDefaultMaxKeySize);
+   writer = RNTupleFileWriter::Append("MyNTuple2", *directory, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                      /*isAttributesRNTuple=*/false);
    offHeader = writer->WriteNTupleHeader(&header, 1, 1);
    offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
    writer->Commit();
@@ -317,7 +321,8 @@ TEST(MiniFile, ProperKeys)
    FileRaii fileGuard("test_ntuple_minifile_proper_keys.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                           /*isAttributesRNTuple=*/false);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -437,7 +442,8 @@ TEST(MiniFile, LongString)
       "store in a TFile header. For longer strings, a length of 255 is special and means that the first length byte is "
       "followed by an integer length.";
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", LongString));
-   auto writer = RNTupleFileWriter::Append("ntuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Append("ntuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                           /*isAttributesRNTuple=*/false);
 
    char header = 'h';
    char footer = 'f';
@@ -650,8 +656,10 @@ TEST(MiniFile, Multi)
    FileRaii fileGuard("test_ntuple_minifile_multi.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer1 = RNTupleFileWriter::Append("FirstNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
-   auto writer2 = RNTupleFileWriter::Append("SecondNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer1 = RNTupleFileWriter::Append("FirstNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                            /*isAttributesRNTuple=*/false);
+   auto writer2 = RNTupleFileWriter::Append("SecondNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                            /*isAttributesRNTuple=*/false);
 
    char header1 = 'h';
    char footer1 = 'f';
@@ -772,7 +780,8 @@ TEST(MiniFile, StreamerInfo)
 
    {
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardProper.GetPath().c_str(), "RECREATE"));
-      auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+      auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                                    /*isAttributesRNTuple=*/false);
       writerProper->UpdateStreamerInfos(streamerInfos);
       writerProper->Commit();
    }
@@ -820,6 +829,7 @@ TEST(MiniFile, UUID)
    TUUID uuid;
    uuid.SetUUID("00000000-0000-0000-0000-000000000000");
    EXPECT_NE(uuid, f->GetUUID());
+   EXPECT_EQ('4', f->GetUUID().AsString()[14]);
 }
 
 TEST(MiniFile, FreeSlots)
@@ -921,5 +931,51 @@ TEST(MiniFile, FreeSlots)
          }
       }
       EXPECT_TRUE(found);
+   }
+}
+
+TEST(MiniFile, InvalidAnchor)
+{
+   FileRaii fileGuard("test_ntuple_minifile_invalid_anchor.root");
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+   writer->Commit();
+
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   ASSERT_TRUE(tfile && !tfile->IsZombie());
+   Long64_t seekKey = 0;
+   int objLen = 0;
+   int nbytes = 0;
+   auto keys = tfile->WalkTKeys();
+   for (const auto &k : keys) {
+      if (k.fKeyName == "ntpl") {
+         seekKey = k.fSeekKey;
+         objLen = k.fObjLen;
+         ASSERT_GT(k.fLen, k.fKeyLen);
+         nbytes = k.fLen - k.fKeyLen;
+         break;
+      }
+   }
+   ASSERT_GT(seekKey, 0);
+   ASSERT_GE(objLen, nbytes);
+
+   // We corrupt the RNTuple anchor key such that the size on disk becomes _larger_ than the length of the object.
+   auto fp = fopen(fileGuard.GetPath().c_str(), "r+b");
+   ASSERT_TRUE(fp != nullptr);
+   ASSERT_EQ(0, fseek(fp, seekKey, SEEK_SET));
+   std::int32_t oversizedLen = objLen - nbytes + 1;
+#ifdef R__BYTESWAP
+   std::int32_t onDiskVal = RByteSwap<4>::bswap(oversizedLen);
+   ASSERT_EQ(1u, fwrite(&onDiskVal, sizeof(std::int32_t), 1, fp));
+#else
+   ASSERT_EQ(1u, fwrite(&oversizedLen, sizeof(std::int32_t), 1, fp));
+#endif
+   fclose(fp);
+
+   try {
+      RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      FAIL() << "invalid anchor key should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("Invalid size and length combination of anchor"));
    }
 }

@@ -1,5 +1,6 @@
 // @(#)root/test:$Id$
 // Author: Rene Brun   05/11/98
+// clang-format off
 
 /////////////////////////////////////////////////////////////////
 //
@@ -55,7 +56,7 @@
 // Test 13 : Test merging files of a chain......................... OK
 // Test 14 : Check correct rebuilt of Event.root in test 13........ OK
 // Test 15 : Divert Tree branches to separate files................ OK
-// Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
+// Test 16 : Cling test (3 nested loops) with LHCb trigger......... OK
 // Test 17 : Test mkdir............................................ OK
 // ******************************************************************
 //*  Linux pcbrun.cern.ch 2.4.20 #1 Thu Jan 9 12:21:02 MET 2003
@@ -70,7 +71,6 @@
 //_____________________________batch only_____________________
 #ifndef __CLING__
 
-#include <cstdlib>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TH1.h>
@@ -96,8 +96,11 @@
 #include <TApplication.h>
 #include <TClassTable.h>
 #include <Compression.h>
-#include <snprintf.h>
 #include "Event.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 
 void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );
 void stress1();
@@ -123,9 +126,6 @@ void cleanup();
 
 int main(int argc, char **argv)
 {
-   std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();
-   TROOT::AddExtraInterpreterArgs({inclRootSys});
-
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
@@ -272,7 +272,7 @@ void Bprint(Int_t id, const char *title)
 ///One function "f1form" will be computed by the TFormula class
 ///The second function "f1int" will be
 ///   - compiled when running in batch mode
-///   - interpreted by CINT when running in interactive mode
+///   - interpreted by Cling when running in interactive mode
 
 void stress1()
 {
@@ -323,7 +323,7 @@ void stress1()
    Double_t rint = TMath::Abs(f1form->Integral(-8,6) - 1923.74578);
 
    //Some slight differences are authorized to take into account
-   //different math libraries used by the compiler, CINT and TFormula
+   //different math libraries used by the compiler, Cling and TFormula
    Bool_t OK = kTRUE;
    if (hdiff > 0.1 || pdifftot > 2.e-3 || rint > 10) OK = kFALSE;
    if (OK) printf("OK\n");
@@ -332,8 +332,11 @@ void stress1()
       printf("%-8s hdiff=%g, pdifftot=%g, rint=%g\n"," ",hdiff,pdifftot,rint);
    }
    if (gPrintSubBench) { printf("Test  1 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
+
+
+   auto comprSettings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
    //Save all objects in a Root file (will be checked by stress2)
-   TFile local("stress.root","recreate");
+   TFile local("stress.root","recreate", "", comprSettings);
    f1form->Write();
    f1->Write();
    h1form->Write();
@@ -360,19 +363,15 @@ void stress2()
    //Long64_t lastgood = 9789;  // changes for new TFormula
    //Long64_t lastgood = 9797;  // changes for TH1 v8 ROOT-9173 on 32-bits
    //Long64_t lastgood = 10034;  // changes in TFormula (v12)
-#ifdef R__HAS_DEFAULT_LZ4
-      Long64_t lastgood = 10733;
-      if (last < lastgood - 200 || last > lastgood + 200 || comp < 1.5 || comp > 2.1)
-         OK = kFALSE;
-#else
-#ifdef R__HAS_CLOUDFLARE_ZLIB
-      Long64_t lastgood = 9813;
+   //Long64_t lastgood = 9813; // ROOT's cloudflare built-in zlib
+   //Long64_t lastgood = 9939;  // First value for zlib-ng
+#ifdef R__HAS_ZLIB_NG
+      Long64_t lastgood = 9939;
 #else
       Long64_t lastgood = 10100;  // changes in TFormula (v13)
 #endif
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 2.0 || comp > 2.4)
          OK = kFALSE;
-#endif
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
@@ -402,32 +401,16 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-#ifdef R__HAS_CLOUDFLARE_ZLIB
-   constexpr Long64_t lastgood = 52264;
-#else
    constexpr Long64_t lastgood = 52090;
-#endif
    constexpr Long64_t tolerance = 300;
-#ifdef R__HAS_DEFAULT_LZ4
-      constexpr Long64_t difflastgoodlz4 = 5500;
-      if (last < lastgood - tolerance || last > lastgood + difflastgoodlz4 + tolerance || comp < 1.5 || comp > 2.1)
-         OK = kFALSE;
-#else
       if (last < lastgood - tolerance || last > lastgood + tolerance || comp < 1.8 || comp > 2.4)
          OK = kFALSE;
-#endif
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-#ifdef R__HAS_DEFAULT_LZ4
-      printf("%-8s LZ4 file size= %lld (expected %lld +/- %lld)\n"
-             "%-8s Comp Fact=  %3.2f (expected 1.8 +/- 0.3)\n",
-             " ", last, lastgood + difflastgoodlz4, tolerance, " ", comp);
-#else
        printf("%-8s File size= %lld (expected %lld +/- %lld)\n"
              "%-8s Comp Fact=  %3.2f (expected 2.1 +/- 0.3)\n",
              " ", last, lastgood, tolerance, " ", comp);
-#endif
    }
    if (gPrintSubBench) { printf("Test  3 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
@@ -577,9 +560,11 @@ void stress6()
          snprintf(hname,20,"h%d_%dN",i,j);
          snprintf(htitle,80,"hist for counter:%d in plane:%d North",j,i);
          hn[j] = new TH1S(hname,htitle,100,0,100);
+         hn[j]->SetDirectory(cdplane);
          snprintf(hname,20,"h%d_%dS",i,j);
          snprintf(htitle,80,"hist for counter:%d in plane:%d South",j,i);
          hs[j] = new TH1S(hname,htitle,100,0,100);
+         hs[j]->SetDirectory(cdplane);
       }
       // fill counter histograms randomly
       for (k=0;k<10000;k++) {
@@ -671,6 +656,7 @@ void stress7()
    cutg->SetPoint(7,-1.27161,1.01523);
    cutg->SetPoint(8,-1.75713,2.46193);
    TH2F *hpxpy = new TH2F("hpxpy","px vx py with cutg",40,-4,4,40,-4,4);
+   hpxpy->SetDirectory(&f);
    ntuple->Draw("px:py>>hpxpy","cutg","goff");
    Int_t npxpy = (Int_t)hpxpy->GetEntries();
    Int_t npxpyGood = 27918;
@@ -727,6 +713,7 @@ void stress7()
    char cutname[20];
    TEventList *el[10];
    TEventList *elistall = new TEventList("elistall","Sum of all cuts");
+   elistall->SetDirectory(gDirectory);
    for (i=0;i<10;i++) {
       snprintf(elistname,20,">>elist%d",i);
       snprintf(cutname,20,"i 10 == %d",i); cutname[1] ='%';
@@ -1018,40 +1005,40 @@ void stress9tree(TTree *tree, Int_t realTestNum)
    //We make clones of the generated histograms
    //We set new names and reset the clones.
    //We want to have identical histogram limits
-   TH1F *bNtrack = (TH1F*)hNtrack->Clone(); bNtrack->SetName("bNtrack"); bNtrack->Reset();
-   TH1F *bNseg   = (TH1F*)hNseg->Clone();   bNseg->SetName("bNseg");     bNseg->Reset();
-   TH1F *bTemp   = (TH1F*)hTemp->Clone();   bTemp->SetName("bTemp");     bTemp->Reset();
-   TH1F *bHmean  = (TH1F*)hHmean->Clone();  bHmean->SetName("bHmean");   bHmean->Reset();
-   TH1F *bPx     = (TH1F*)hPx->Clone();     bPx->SetName("bPx");         bPx->Reset();
-   TH1F *bPy     = (TH1F*)hPy->Clone();     bPy->SetName("bPy");         bPy->Reset();
-   TH1F *bPz     = (TH1F*)hPz->Clone();     bPz->SetName("bPz");         bPz->Reset();
-   TH1F *bRandom = (TH1F*)hRandom->Clone(); bRandom->SetName("bRandom"); bRandom->Reset();
-   TH1F *bMass2  = (TH1F*)hMass2->Clone();  bMass2->SetName("bMass2");   bMass2->Reset();
-   TH1F *bBx     = (TH1F*)hBx->Clone();     bBx->SetName("bBx");         bBx->Reset();
-   TH1F *bBy     = (TH1F*)hBy->Clone();     bBy->SetName("bBy");         bBy->Reset();
-   TH1F *bXfirst = (TH1F*)hXfirst->Clone(); bXfirst->SetName("bXfirst"); bXfirst->Reset();
-   TH1F *bYfirst = (TH1F*)hYfirst->Clone(); bYfirst->SetName("bYfirst"); bYfirst->Reset();
-   TH1F *bZfirst = (TH1F*)hZfirst->Clone(); bZfirst->SetName("bZfirst"); bZfirst->Reset();
-   TH1F *bXlast  = (TH1F*)hXlast->Clone();  bXlast->SetName("bXlast");   bXlast->Reset();
-   TH1F *bYlast  = (TH1F*)hYlast->Clone();  bYlast->SetName("bYlast");   bYlast->Reset();
-   TH1F *bZlast  = (TH1F*)hZlast->Clone();  bZlast->SetName("bZlast");   bZlast->Reset();
-   TH1F *bCharge = (TH1F*)hCharge->Clone(); bCharge->SetName("bCharge"); bCharge->Reset();
-   TH1F *bNpoint = (TH1F*)hNpoint->Clone(); bNpoint->SetName("bNpoint"); bNpoint->Reset();
-   TH1F *bValid  = (TH1F*)hValid->Clone();  bValid->SetName("bValid");   bValid->Reset();
+   TH1F *bNtrack = (TH1F*)hNtrack->Clone("bNtrack");  bNtrack->SetDirectory(hfile); bNtrack->Reset();
+   TH1F *bNseg   = (TH1F*)hNseg->Clone("bNseg");      bNseg->SetDirectory(hfile);     bNseg->Reset();
+   TH1F *bTemp   = (TH1F*)hTemp->Clone("bTemp");      bTemp->SetDirectory(hfile);     bTemp->Reset();
+   TH1F *bHmean  = (TH1F*)hHmean->Clone("bHmean");    bHmean->SetDirectory(hfile);   bHmean->Reset();
+   TH1F *bPx     = (TH1F*)hPx->Clone("bPx");          bPx->SetDirectory(hfile);         bPx->Reset();
+   TH1F *bPy     = (TH1F*)hPy->Clone("bPy");          bPy->SetDirectory(hfile);         bPy->Reset();
+   TH1F *bPz     = (TH1F*)hPz->Clone("bPz");          bPz->SetDirectory(hfile);         bPz->Reset();
+   TH1F *bRandom = (TH1F*)hRandom->Clone("bRandom");  bRandom->SetDirectory(hfile); bRandom->Reset();
+   TH1F *bMass2  = (TH1F*)hMass2->Clone("bMass2");    bMass2->SetDirectory(hfile);   bMass2->Reset();
+   TH1F *bBx     = (TH1F*)hBx->Clone("bBx");          bBx->SetDirectory(hfile);         bBx->Reset();
+   TH1F *bBy     = (TH1F*)hBy->Clone("bBy");          bBy->SetDirectory(hfile);         bBy->Reset();
+   TH1F *bXfirst = (TH1F*)hXfirst->Clone("bXfirst");  bXfirst->SetDirectory(hfile); bXfirst->Reset();
+   TH1F *bYfirst = (TH1F*)hYfirst->Clone("bYfirst");  bYfirst->SetDirectory(hfile); bYfirst->Reset();
+   TH1F *bZfirst = (TH1F*)hZfirst->Clone("bZfirst");  bZfirst->SetDirectory(hfile); bZfirst->Reset();
+   TH1F *bXlast  = (TH1F*)hXlast->Clone("bXlast");    bXlast->SetDirectory(hfile);   bXlast->Reset();
+   TH1F *bYlast  = (TH1F*)hYlast->Clone("bYlast");    bYlast->SetDirectory(hfile);   bYlast->Reset();
+   TH1F *bZlast  = (TH1F*)hZlast->Clone("bZlast");    bZlast->SetDirectory(hfile);   bZlast->Reset();
+   TH1F *bCharge = (TH1F*)hCharge->Clone("bCharge");  bCharge->SetDirectory(hfile); bCharge->Reset();
+   TH1F *bNpoint = (TH1F*)hNpoint->Clone("bNpoint");  bNpoint->SetDirectory(hfile); bNpoint->Reset();
+   TH1F *bValid  = (TH1F*)hValid->Clone("bValid");    bValid->SetDirectory(hfile);   bValid->Reset();
 
-   TH1F *bFullMatrix    =(TH1F*)hFullMatrix->Clone();    bFullMatrix->SetName("bFullMatrix");       bFullMatrix->Reset();
-   TH1F *bColMatrix    = (TH1F*)hColMatrix->Clone();     bColMatrix->SetName("bColMatrix");         bColMatrix->Reset();
-   TH1F *bRowMatrix    = (TH1F*)hRowMatrix->Clone();     bRowMatrix->SetName("bRowMatrix");         bRowMatrix->Reset();
-   TH1F *bCellMatrix   = (TH1F*)hCellMatrix->Clone();    bCellMatrix->SetName("bCellMatrix");       bCellMatrix->Reset();
-   TH1F *bFullOper     = (TH1F*)hFullOper->Clone();      bFullOper->SetName("bFullOper");           bFullOper->Reset();
-   TH1F *bCellOper     = (TH1F*)hCellOper->Clone();      bCellOper->SetName("bCellOper");           bCellOper->Reset();
-   TH1F *bColOper      = (TH1F*)hColOper->Clone();       bColOper->SetName("bColOper");             bColOper->Reset();
-   TH1F *bRowOper      = (TH1F*)hRowOper->Clone();       bRowOper->SetName("bRowOper");             bRowOper->Reset();
-   TH1F *bMatchRowOper = (TH1F*)hMatchRowOper->Clone();  bMatchRowOper->SetName("bMatchRowOper");   bMatchRowOper->Reset();
-   TH1F *bMatchColOper = (TH1F*)hMatchColOper->Clone();  bMatchColOper->SetName("bMatchColOper");   bMatchColOper->Reset();
-   TH1F *bRowMatOper   = (TH1F*)hRowMatOper->Clone();    bRowMatOper->SetName("bRowMatOper");       bRowMatOper->Reset();
-   TH1F *bMatchDiffOper= (TH1F*)hMatchDiffOper->Clone(); bMatchDiffOper->SetName("bMatchDiffOper"); bMatchDiffOper->Reset();
-   TH1F *bFullOper2    = (TH1F*)hFullOper2->Clone();     bFullOper2->SetName("bFullOper2");         bFullOper2->Reset();
+   TH1F *bFullMatrix    =(TH1F*)hFullMatrix->Clone("bFullMatrix");   bFullMatrix->SetDirectory(hfile);       bFullMatrix->Reset();
+   TH1F *bColMatrix    = (TH1F*)hColMatrix->Clone("bColMatrix");     bColMatrix->SetDirectory(hfile);         bColMatrix->Reset();
+   TH1F *bRowMatrix    = (TH1F*)hRowMatrix->Clone("bRowMatrix");     bRowMatrix->SetDirectory(hfile);         bRowMatrix->Reset();
+   TH1F *bCellMatrix   = (TH1F*)hCellMatrix->Clone("bCellMatrix");   bCellMatrix->SetDirectory(hfile);       bCellMatrix->Reset();
+   TH1F *bFullOper     = (TH1F*)hFullOper->Clone("bFullOper");       bFullOper->SetDirectory(hfile);           bFullOper->Reset();
+   TH1F *bCellOper     = (TH1F*)hCellOper->Clone("bCellOper");       bCellOper->SetDirectory(hfile);           bCellOper->Reset();
+   TH1F *bColOper      = (TH1F*)hColOper->Clone("bColOper");         bColOper->SetDirectory(hfile);             bColOper->Reset();
+   TH1F *bRowOper      = (TH1F*)hRowOper->Clone("bRowOper");         bRowOper->SetDirectory(hfile);             bRowOper->Reset();
+   TH1F *bMatchRowOper = (TH1F*)hMatchRowOper->Clone("bMatchRowOper");  bMatchRowOper->SetDirectory(hfile);   bMatchRowOper->Reset();
+   TH1F *bMatchColOper = (TH1F*)hMatchColOper->Clone("bMatchColOper");  bMatchColOper->SetDirectory(hfile);   bMatchColOper->Reset();
+   TH1F *bRowMatOper   = (TH1F*)hRowMatOper->Clone("bRowMatOper");      bRowMatOper->SetDirectory(hfile);       bRowMatOper->Reset();
+   TH1F *bMatchDiffOper= (TH1F*)hMatchDiffOper->Clone("bMatchDiffOper");bMatchDiffOper->SetDirectory(hfile); bMatchDiffOper->Reset();
+   TH1F *bFullOper2    = (TH1F*)hFullOper2->Clone("bFullOper2");        bFullOper2->SetDirectory(hfile);         bFullOper2->Reset();
 
    // Loop with user code on all events and fill the b histograms
    // The code below should produce identical results to the tree->Draw above
@@ -1339,9 +1326,16 @@ void stress12(Int_t testid)
       if (strcmp(key->GetClassName(),"TH1F")) continue; //may be a TList of TStreamerInfo
       h9  = (TH1F*)f9.Get(key->GetName());
       h11 = (TH1F*)f11.Get(key->GetName());
-      if (h9 == 0 || h11 == 0) continue;
+      if (h9 == 0 || h11 == 0) {
+         std::cerr << "Missing " << key->GetName();
+         if (!h9) std::cerr << " in stress_test9.root";
+         if (!h11) std::cerr << " in stress_test11.root";
+         std::cerr << "\n";
+         continue;
+      }
       comp = HistCompare(h9,h11);
       if (comp == 0) ngood++;
+      else std::cerr << key->GetName() << " not equal\n";
    }
    ntotin += f9.GetBytesRead();
    ntotin += f11.GetBytesRead();
@@ -1493,7 +1487,7 @@ void stress16()
 // A canvas with subpads containing the results is sent to Postscript.
 // We check graphics results by counting the number of lines in the ps file.
 
-   Bprint(16,"CINT test (3 nested loops) with LHCb trigger");
+   Bprint(16,"Cling test (3 nested loops) with LHCb trigger");
 
    const int nbuf    = 153;    // buffer size
    const int nlev    = 4;      // number of trigger levels
@@ -1584,7 +1578,7 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 2121;
+   const Int_t nlinesGood = 1834;
    Bool_t counting = kFALSE;
    while (fgets(line,255,fp)) {
       if (counting) nlines++;
@@ -1592,10 +1586,10 @@ void stress16()
    }
    fclose(fp);
    delete c;
-   Bool_t OK = kTRUE;
-   if (nlines < nlinesGood-100 || nlines > nlinesGood+100) OK = kFALSE;
-   if (OK) printf("OK\n");
-   else    {
+   Bool_t OK = (nlines >= nlinesGood-100 && nlines <= nlinesGood+100);
+   if (OK) {
+      printf("OK\n");
+   } else {
       printf("FAILED\n");
       printf("%-8s nlines in stress_lhcb.ps file = %d\n"," ",nlines);
    }

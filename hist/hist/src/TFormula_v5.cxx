@@ -9,8 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cmath>
-
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBuffer.h"
@@ -25,7 +23,9 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
+#include <cmath>
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -2764,7 +2764,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
          case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
          case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
          case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
-         case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
+         case ksqrt : tab[pos-1] = TMath::Sqrt(tab[pos-1]); continue;
 
          case kstrstr : strpos -= 2; pos-=2; pos++;
                         if (strstr(stringStack[strpos],stringStack[strpos+1])) tab[pos-1]=1;

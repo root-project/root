@@ -64,6 +64,7 @@ protected:
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
+   bool ShouldNotReadCollection(Int_t lengthInBytes, Int_t nElements=1) const;
 
 public:
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
@@ -267,6 +268,16 @@ public:
 
 
 //---------------------- TBufferFile inlines ---------------------------------------
+
+//______________________________________________________________________________
+inline bool TBufferFile::ShouldNotReadCollection(Int_t lengthInBytes, Int_t nElements) const
+{
+   // Three cases here in which we should not read the collection:
+   // 1. The collection has zero or a negative number of elements or
+   // 2. The length in bytes of the collection is zero or negative
+   // 3. The remaining part of the buffer is too short to read the collection
+   return nElements <= 0 || lengthInBytes <= 0 || (size_t)lengthInBytes > (size_t)(fBufMax - fBufCur);
+}
 
 //______________________________________________________________________________
 inline void TBufferFile::WriteBool(Bool_t b)

@@ -33,15 +33,14 @@
 
 // A tokenizer that converts raw HTML into a linked list of HTML elements.
 
+#include "TGHtml.h"
+#include "TGHtmlTokens.h"
+#include "strlcpy.h"
+
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
 #include <cctype>
-
-#include "TGHtml.h"
-#include "TGHtmlTokens.h"
-#include "strlcpy.h"
-#include "snprintf.h"
 
 //----------------------------------------------------------------------
 
@@ -935,11 +934,6 @@ makeMarkupEntry:
 #endif
             case Html_NOSCRIPT:
                break;
-               // coverity[unreachable]
-               if (!fHasScript) break;
-#ifdef pIsInMeachnism
-               pIsInNoScript = 1;
-#endif
             case Html_SCRIPT:
 #ifdef pIsInMeachnism
                pIsInScript = 1;

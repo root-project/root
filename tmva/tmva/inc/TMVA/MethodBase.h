@@ -65,18 +65,6 @@ class TDirectory;
 class TSpline;
 class TH1F;
 class TH1D;
-class TMultiGraph;
-
-/*! \class TMVA::IPythonInteractive
-\ingroup TMVA
-
-This class is needed by JsMVA, and it's a helper class for tracking errors during
-the training in Jupyter notebook. It’s only initialized in Jupyter notebook context.
-In initialization we specify some title, and a TGraph will be created for every title.
-We can add new data points easily to all TGraphs. These graphs are added to a
-TMultiGraph, and during an interactive training we get this TMultiGraph object
-and plot it with JsROOT.
-*/
 
 namespace TMVA {
 
@@ -86,27 +74,7 @@ namespace TMVA {
    class MethodCuts;
    class MethodBoost;
    class DataSetInfo;
-   namespace Experimental {
-   class Classification;
-   }
    class TrainingHistory;
-
-   class IPythonInteractive {
-   public:
-       IPythonInteractive();
-       ~IPythonInteractive();
-       void Init(std::vector<TString>& graphTitles);
-       void ClearGraphs();
-       void AddPoint(Double_t x, Double_t y1, Double_t y2);
-       void AddPoint(std::vector<Double_t>& dat);
-       inline TMultiGraph* Get() {return fMultiGraph;}
-       inline bool NotInitialized(){ return fNumGraphs==0;};
-   private:
-       TMultiGraph* fMultiGraph;
-       std::vector<TGraph*> fGraphs;
-       Int_t fNumGraphs;
-       Int_t fIndex;
-   };
 
    class MethodBase : virtual public IMethod, public Configurable {
 
@@ -115,7 +83,6 @@ namespace TMVA {
       friend class RootFinder;
       friend class MethodBoost;
       friend class MethodCrossValidation;
-      friend class Experimental::Classification;
 
    public:
 
@@ -208,6 +175,9 @@ namespace TMVA {
       virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
       // same as above but using a provided data set (used by MethodCategory)
       virtual std::vector<Double_t> GetDataMvaValues(DataSet *data = nullptr, Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
+
+      virtual std::vector<Float_t> GetAllRegressionValues();
+      virtual std::vector<Float_t> GetAllMulticlassValues();
 
    public:
       // regression response
@@ -442,45 +412,8 @@ namespace TMVA {
       void                  DisableWriting(Bool_t setter){ fModelPersistence = setter?kFALSE:kTRUE; }//DEPRECATED
 
     protected:
-      mutable const Event *fTmpEvent; //! temporary event when testing on a different DataSet than the own one
-      DataSet *fTmpData =  nullptr; //! temporary dataset used when evaluating on a different data (used by MethodCategory::GetMvaValues)
-       // helper variables for JsMVA
-       IPythonInteractive *fInteractive = nullptr;
-       bool fExitFromTraining = false;
-       UInt_t fIPyMaxIter = 0, fIPyCurrentIter = 0;
-
-    public:
-
-      // initializing IPythonInteractive class (for JsMVA only)
-      inline void InitIPythonInteractive(){
-        if (fInteractive) delete fInteractive;
-        fInteractive = new IPythonInteractive();
-      }
-
-      // get training errors (for JsMVA only)
-      inline TMultiGraph* GetInteractiveTrainingError(){return fInteractive->Get();}
-
-      // stop's the training process (for JsMVA only)
-      inline void ExitFromTraining(){
-        fExitFromTraining = true;
-      }
-
-      // check's if the training ended (for JsMVA only)
-      inline bool TrainingEnded(){
-        if (fExitFromTraining && fInteractive){
-          delete fInteractive;
-          fInteractive = nullptr;
-        }
-        return fExitFromTraining;
-      }
-
-      // get fIPyMaxIter
-      inline UInt_t GetMaxIter(){ return fIPyMaxIter; }
-
-      // get fIPyCurrentIter
-      inline UInt_t GetCurrentIter(){ return fIPyCurrentIter; }
-
-   protected:
+      mutable const Event *fTmpEvent; ///<! temporary event when testing on a different DataSet than the own one
+      DataSet *fTmpData =  nullptr; ///<! temporary dataset used when evaluating on a different data (used by MethodCategory::GetMvaValues)
 
       // ---------- protected accessors -------------------------------------------
 
@@ -604,7 +537,7 @@ namespace TMVA {
 
 
       // data sets
-      DataSetInfo&     fDataSetInfo;         //! the data set information (sometimes needed)
+      DataSetInfo&     fDataSetInfo;         ///<! the data set information (sometimes needed)
 
       Double_t         fSignalReferenceCut;  // minimum requirement on the MVA output to declare an event signal-like
       Double_t         fSignalReferenceCutOrientation;  // minimum requirement on the MVA output to declare an event signal-like

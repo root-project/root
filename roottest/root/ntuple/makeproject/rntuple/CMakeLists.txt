@@ -51,10 +51,24 @@ ROOTTEST_GENERATE_EXECUTABLE(
 target_include_directories(read_rntuple PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_directories(read_rntuple PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/librntuplestltest)
 
+if(MSVC)
+  set(_env ENVIRONMENT PATH=${CMAKE_CURRENT_BINARY_DIR}/librntuplestltest)
+endif()
+
 # Need to also explicitly set the LD_LIBRARY_PATH (at least on MacOS), so that
 # the generated library with the custom class can be loaded by the read test.
 ROOTTEST_ADD_TEST(read_rntuple
                   EXEC ./read_rntuple
                   FIXTURES_REQUIRED read_rntuple_executable
-                  # PATH is used on Windows to find libraries for loading
-                  ENVIRONMENT ${ld_library_path}=${CMAKE_CURRENT_BINARY_DIR}/librntuplestltest)
+                  ${_env})
+
+# Use RPATH instead of LD_LIBRARY_PATH so we don't have to change environment
+# variables in the build environment.
+if(NOT MSVC)
+  if(APPLE)
+    set(new_rpath "@loader_path/librntuplestltest")
+  else()
+    set(new_rpath "$ORIGIN/librntuplestltest")
+  endif()
+  set_property(TARGET read_rntuple APPEND PROPERTY BUILD_RPATH "${new_rpath}")
+endif()

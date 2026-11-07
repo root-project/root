@@ -44,7 +44,6 @@ See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 
 #include "RooDataHist.h"
 
-#include "Riostream.h"
 #include "RooMsgService.h"
 #include "RooDataHistSliceIter.h"
 #include "RooAbsLValue.h"
@@ -59,9 +58,8 @@ See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 #include "RooLinkedListIter.h"
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
-#include "RooTrace.h"
 #include "RooFormulaVar.h"
-#include "RooFormula.h"
+#include "RooFormulaUtils.h"
 #include "RooUniformBinning.h"
 
 #include "RooFitImplHelpers.h"
@@ -73,8 +71,10 @@ See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 #include "TH1.h"
 #include "TTree.h"
 #include "TBuffer.h"
-#include "TMath.h"
 #include "Math/Util.h"
+
+#include <string>
+#include <ostream>
 
 using std::string, std::ostream;
 
@@ -85,7 +85,6 @@ using std::string, std::ostream;
 
 RooDataHist::RooDataHist()
 {
-  TRACE_CREATE;
 }
 
 
@@ -124,8 +123,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgSe
 
   registerWeightArraysToDataStore();
 
-  appendToDir(this,true) ;
-  TRACE_CREATE;
 }
 
 
@@ -177,7 +174,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importTH1Set(vars, indexCat, histMap, wgt, false) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE;
 }
 
 
@@ -201,7 +197,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importDHistSet(vars, indexCat, dhistMap, wgt) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE;
 }
 
 
@@ -231,7 +226,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   importTH1(vars,*hist,wgt, false) ;
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE;
 }
 
 
@@ -328,6 +322,17 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
       std::map<std::string,TH1*> hmap ;
       auto hiter = impSliceHistos.begin() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",", /*skipEmpty=*/true)) {
+
+        if (!indexCat->hasLabel(token)) {
+           std::stringstream errorMsgStream;
+           errorMsgStream << "RooDataHist::RooDataHist(\"" << GetName() << "\") "
+                          << "you are providing import data for the category state \"" << token
+                          << "\", but the index category \"" << indexCat->GetName() << "\" has no such state!";
+           const std::string errorMsg = errorMsgStream.str();
+           coutE(InputArguments) << errorMsg << std::endl;
+           throw std::invalid_argument(errorMsg);
+        }
+
         if(auto dHist = dynamic_cast<RooDataHist*>(*hiter)) {
            dmap[token] = dHist;
         }
@@ -354,13 +359,10 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   } else {
 
     // Initialize empty
-    initialize() ;
-    appendToDir(this,true) ;
-
+    initialize();
   }
 
   registerWeightArraysToDataStore();
-  TRACE_CREATE;
 
 }
 
@@ -377,8 +379,7 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
   adjustBinning(vars, histo, offset) ;
 
   // Initialize internal data structure
-  initialize() ;
-  appendToDir(this,true) ;
+  initialize();
 
   // Define x,y,z as 1st, 2nd and 3rd observable
   RooRealVar* xvar = static_cast<RooRealVar*>(_vars.find(vars.at(0)->GetName())) ;
@@ -533,9 +534,8 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
 
   // Initialize internal data structure
   if (!init) {
-    initialize() ;
-    appendToDir(this,true) ;
-    init = true ;
+     initialize();
+     init = true;
   }
 
   // Define x,y,z as 1st, 2nd and 3rd observable
@@ -644,7 +644,6 @@ void RooDataHist::importDHistSet(const RooArgList & /*vars*/, RooCategory &index
    }
 
    initialize();
-   appendToDir(this, true);
 
    for (const auto &diter : dmap) {
       std::string const &label = diter.first;
@@ -655,7 +654,7 @@ void RooDataHist::importDHistSet(const RooArgList & /*vars*/, RooCategory &index
       // Transfer contents
       for (Int_t i = 0; i < dhist->numEntries(); i++) {
          _vars.assign(*dhist->get(i));
-         add(_vars, dhist->weight() * initWgt, pow(dhist->weightError(SumW2), 2));
+         add(_vars, dhist->weight(i) * initWgt, pow(dhist->weightError(SumW2), 2));
       }
    }
 }
@@ -793,6 +792,17 @@ void RooDataHist::initialize(const char* binningName, bool fillTree)
       }
     }
 
+    // If the variable has no binning explicitly set (the default for a
+    // freshly-constructed RooRealVar, which reports zero bins), materialize the
+    // historical default binning. _vars holds this dataset's own clones (see
+    // RooAbsData::initializeVars, which addClone's the input variables), so this
+    // does not affect the user's original variable.
+    if (RooRealVar* rrv = dynamic_cast<RooRealVar*>(_vars[i])) {
+      if (rrv->getBins() == 0) {
+        rrv->setBinning(RooUniformBinning(rrv->getMin(), rrv->getMax(), RooAbsRealLValue::DefaultNBins));
+      }
+    }
+
     auto lvarg = dynamic_cast<RooAbsLValue*>(_vars[i]);
     assert(lvarg);
     _lvvars.push_back(lvarg);
@@ -904,8 +914,6 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   }
 
   registerWeightArraysToDataStore();
-
- appendToDir(this,true) ;
 }
 
 
@@ -952,7 +960,7 @@ std::unique_ptr<RooAbsData> RooDataHist::reduceEng(const RooArgSet& varSubset, c
 
     if (!cloneVar || cloneVar->getVal()) {
       weightError(lo,hi,SumW2) ;
-      rdh->add(*row,weight(),lo*lo) ;
+      rdh->add(*row,weight(i),lo*lo) ;
     }
   }
 
@@ -973,7 +981,6 @@ RooDataHist::~RooDataHist()
    delete[] _binv;
 
    removeFromDir(this) ;
-  TRACE_DESTROY;
 }
 
 
@@ -1022,14 +1029,16 @@ std::string RooDataHist::calculateTreeIndexForCodeSquash(RooFit::Experimental::C
          return "";
       }
 
-      code += " + " + binning->translateBinNumber(ctx, *theVar, idxMult);
+      if (i > 0)
+         code += " + ";
+      code += binning->translateBinNumber(ctx, *theVar, idxMult);
 
       // Use RooAbsLValue here because it also generalized to categories, which
       // is useful in the future. dynamic_cast because it's a cross-cast.
       idxMult *= dynamic_cast<RooAbsLValue const *>(internalVar)->numBins();
    }
 
-   return "(" + code + ")";
+   return _vars.size() == 1 ? code : "(" + code + ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1480,7 +1489,14 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
     double xval = realX.getVal() ;
     double yval = realY.getVal() ;
 
-    RooAbsBinning const& binningY = realY.getBinning();
+    // Use the internal binning of the y variable, not the binning of the
+    // variable passed in `bin`. The latter may be a different object than the
+    // one owned by this RooDataHist (e.g. the histogram observable clone of a
+    // RooHistPdf), with an unrelated default binning. The bin indexing below
+    // relies on `_idxMult` and `centralIdx`, which are both expressed in terms
+    // of the internal binning, so the y binning must match it too. This mirrors
+    // what calcTreeIndex() and interpolateDim() do for the other dimensions.
+    RooAbsBinning const& binningY = static_cast<RooRealVar const&>(*_vars[varInfo.realVarIdx2]).getBinning();
 
     int ybinC = binningY.binNumber(yval) ;
     int ybinLo = ybinC-intOrder/2 - ((yval<binningY.binCenter(ybinC))?1:0) ;
@@ -1567,7 +1583,7 @@ void RooDataHist::weightError(double& lo, double& hi, ErrorType etype) const
     throw std::invalid_argument("RooDataHist::weightError(" + std::string(GetName()) + ") error type Expected not allowed here");
     break ;
 
-  case Poisson:
+  case Poisson: {
     if (_errLo && _errLo[_curIndex] >= 0.0) {
       // Weight is preset or precalculated
       lo = _errLo[_curIndex];
@@ -1581,12 +1597,14 @@ void RooDataHist::weightError(double& lo, double& hi, ErrorType etype) const
     // Calculate poisson errors
     double ym;
     double yp;
-    RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
-    _errLo[_curIndex] = weight()-ym;
-    _errHi[_curIndex] = yp-weight();
+    const double w = weight(_curIndex);
+    RooHistError::instance().getPoissonInterval(Int_t(w+0.5),ym,yp,1) ;
+    _errLo[_curIndex] = w-ym;
+    _errHi[_curIndex] = yp-w;
     lo = _errLo[_curIndex];
     hi = _errHi[_curIndex];
     return ;
+  }
 
   case SumW2:
     lo = std::sqrt(weightSquared(_curIndex));
@@ -2116,18 +2134,18 @@ double RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) const
     return sumEntries();
   } else {
 
-    // Setup RooFormulaVar for cutSpec if it is present
-    std::unique_ptr<RooFormula> select;
-    if (cutSpec) {
-      select = std::make_unique<RooFormula>("select",cutSpec,*get());
-    }
+     // Setup a formula evaluator for cutSpec if it is present
+     std::unique_ptr<RooFormulaEvaluator> select;
+     if (cutSpec) {
+        select = RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get());
+     }
 
     // Otherwise sum the weights in the event
     ROOT::Math::KahanSum<> kahanSum;
     for (Int_t i=0; i < _arrSize; i++) {
       get(i) ;
-      if ((select && select->eval() == 0.) || (cutRange && !_vars.allInRange(cutRange)))
-          continue;
+      if ((select && RooFormulaUtils::evalFormula(*select, _vars) == 0.) || (cutRange && !_vars.allInRange(cutRange)))
+         continue;
 
       kahanSum += weight(i);
     }
@@ -2343,7 +2361,7 @@ void RooDataHist::printContents(std::ostream& os) const
 
         double lo, hi;
         weightError(lo, hi, RooAbsData::SumW2);
-        os << ", weight=" << weight() << " +/- [" << lo << "," << hi << "]"
+        os << ", weight=" << weight(i) << " +/- [" << lo << "," << hi << "]"
            << std::endl;
     }
 }

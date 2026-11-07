@@ -870,8 +870,8 @@ R"CODE(#include <TSelector.h>
       ofs <<
 R"CODE(class )CODE" << cppClassName << R"CODE( : public TSelector {
 public :
-   TTreeReader     fReader;  //!the tree reader
-   TTree          *fChain = 0;   //!pointer to the analyzed TTree or TChain
+   TTreeReader     fReader;  ///<!the tree reader
+   TTree          *fChain = 0;   ///<!pointer to the analyzed TTree or TChain
 
    // Readers to access the data (delete the ones you do not need).
 )CODE";

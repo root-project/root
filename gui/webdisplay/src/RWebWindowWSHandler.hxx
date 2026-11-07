@@ -1,6 +1,5 @@
 // Author: Sergey Linev <s.linev@gsi.de>
 // Date: 2018-08-20
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -10,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RWebWindowWSHandler
-#define ROOT7_RWebWindowWSHandler
+#ifndef ROOT_RWebWindowWSHandler
+#define ROOT_RWebWindowWSHandler
 
 #include "THttpWSHandler.h"
 #include "TEnv.h"

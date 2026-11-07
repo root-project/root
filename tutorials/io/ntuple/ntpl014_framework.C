@@ -24,9 +24,6 @@
 /// \date September 2024
 /// \author The ROOT Team
 
-// NOTE: The RRawPtrWriteEntry is experimental at this point.
-// Functionality and interface are still subject to changes.
-
 #include <ROOT/RRawPtrWriteEntry.hxx>
 #include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTupleFillContext.hxx>
@@ -48,9 +45,6 @@
 #include <thread>
 #include <utility> // for std::pair
 #include <vector>
-
-// Import classes from Experimental namespace for the time being
-using ROOT::Experimental::Detail::RRawPtrWriteEntry;
 
 using ModelTokensPair = std::pair<std::unique_ptr<ROOT::RNTupleModel>, std::vector<ROOT::RFieldToken>>;
 
@@ -95,7 +89,7 @@ class ParallelOutputter final : public Outputter {
 
    struct SlotData {
       std::shared_ptr<ROOT::RNTupleFillContext> fillContext;
-      std::unique_ptr<RRawPtrWriteEntry> entry;
+      std::unique_ptr<ROOT::Detail::RRawPtrWriteEntry> entry;
    };
    std::vector<SlotData> fSlots;
 
@@ -161,7 +155,7 @@ class SerializingOutputter final : public Outputter {
    std::vector<ROOT::RFieldToken> fTokens;
 
    struct SlotData {
-      std::unique_ptr<RRawPtrWriteEntry> entry;
+      std::unique_ptr<ROOT::Detail::RRawPtrWriteEntry> entry;
    };
    std::vector<SlotData> fSlots;
 

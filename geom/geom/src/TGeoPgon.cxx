@@ -66,60 +66,40 @@ polygons, between `phi1` and `phi1+dphi.`
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
+std::atomic<UInt_t> TGeoPgon::fgInstanceCount{0};
+
+struct TGeoPgon::OwnedThreadData_t {
+   std::unique_ptr<Int_t[]> fIntBuffer;
+   std::unique_ptr<Double_t[]> fDblBuffer;
+
+   explicit OwnedThreadData_t(std::size_t size) : fIntBuffer(new Int_t[size]), fDblBuffer(new Double_t[size]) {}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// (Re)build the per-thread scratch buffers for this shape into the given slot.
+/// Cold path: runs once per (thread, shape, generation).
 
-TGeoPgon::ThreadData_t::ThreadData_t() : fIntBuffer(nullptr), fDblBuffer(nullptr) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoPgon::ThreadData_t::~ThreadData_t()
+void TGeoPgon::InitThreadSlot(ThreadData_t &td) const
 {
-   delete[] fIntBuffer;
-   delete[] fDblBuffer;
+   auto data = std::make_unique<OwnedThreadData_t>(fNedges + 10);
+   Int_t *intBuffer = data->fIntBuffer.get();
+   Double_t *dblBuffer = data->fDblBuffer.get();
+
+   std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+   fOwnedData.push_back(std::move(data));
+   td.fIntBuffer = intBuffer;
+   td.fDblBuffer = dblBuffer;
+   td.fInitGen = fGeneration.load(std::memory_order_acquire);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-TGeoPgon::ThreadData_t &TGeoPgon::GetThreadData() const
-{
-   Int_t tid = TGeoManager::ThreadId();
-   return *fThreadData[tid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
+/// Release the large scratch buffers. Navigation using this shape must not be active.
 
 void TGeoPgon::ClearThreadData() const
 {
-   std::lock_guard<std::mutex> guard(fMutex);
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
-   }
-   fThreadData.clear();
-   fThreadSize = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create thread data for n threads max.
-
-void TGeoPgon::CreateThreadData(Int_t nthreads)
-{
-   if (fThreadSize)
-      ClearThreadData();
-   std::lock_guard<std::mutex> guard(fMutex);
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-         fThreadData[tid]->fIntBuffer = new Int_t[fNedges + 10];
-         fThreadData[tid]->fDblBuffer = new Double_t[fNedges + 10];
-      }
-   }
+   std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+   fOwnedData.clear();
+   fGeneration.fetch_add(1, std::memory_order_release);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +109,6 @@ TGeoPgon::TGeoPgon()
 {
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = 0;
-   fThreadSize = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,8 +118,6 @@ TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz) : TGeoPc
 {
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,8 +128,6 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
 {
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,8 +146,6 @@ TGeoPgon::TGeoPgon(Double_t *param) : TGeoPcon("")
    SetShapeBit(TGeoShape::kGeoPgon);
    SetDimensions(param);
    ComputeBBox();
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -303,14 +276,10 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
       s1 = TMath::Sin(phi1);
       c2 = TMath::Cos(phi2);
       s2 = TMath::Sin(phi2);
-      if (TGeoShape::IsCloseToPhi(1E-5, point, c1, s1, c2, s2)) {
-         TGeoShape::NormalPhi(point, dir, norm, c1, s1, c2, s2);
-         return;
-      }
    } // Phi done
 
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
-   if (ipl == (fNz - 1) || ipl < 0) {
+   if (point[2] >= fZ[fNz - 1] || ipl < 0) {
       // point outside Z range
       norm[2] = TMath::Sign(1., dir[2]);
       return;
@@ -326,31 +295,27 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
       phi += 360.;
    Double_t ddp = phi - fPhi1;
    Int_t ipsec = Int_t(ddp / divphi);
+   // A point on or just outside a phi cut belongs to the nearest end sector.
+   if (ipsec >= fNedges)
+      ipsec = (ddp - fDphi < 360. - ddp) ? fNedges - 1 : 0;
    Double_t ph0 = (fPhi1 + divphi * (ipsec + 0.5)) * TMath::DegToRad();
    // compute projected distance
    Double_t r, rsum, rpgon, ta, calf;
    r = TMath::Abs(point[0] * TMath::Cos(ph0) + point[1] * TMath::Sin(ph0));
-   if (dz < 1E-5) {
-      if (iplclose == 0 || iplclose == (fNz - 1)) {
-         norm[2] = TMath::Sign(1., dir[2]);
-         return;
-      }
-      if (iplclose == ipl && TGeoShape::IsSameWithinTolerance(fZ[ipl], fZ[ipl - 1])) {
-         if (r < TMath::Max(fRmin[ipl], fRmin[ipl - 1]) || r > TMath::Min(fRmax[ipl], fRmax[ipl - 1])) {
-            norm[2] = TMath::Sign(1., dir[2]);
-            return;
-         }
-      } else {
-         if (TGeoShape::IsSameWithinTolerance(fZ[iplclose], fZ[iplclose + 1])) {
-            if (r < TMath::Max(fRmin[iplclose], fRmin[iplclose + 1]) ||
-                r > TMath::Min(fRmax[iplclose], fRmax[iplclose + 1])) {
-               norm[2] = TMath::Sign(1., dir[2]);
-               return;
-            }
-         }
-      }
+   Double_t safz = TGeoShape::Big();
+   if (iplclose == 0 || iplclose == (fNz - 1)) {
+      safz = dz;
+   } else if (iplclose == ipl && TGeoShape::IsSameWithinTolerance(fZ[ipl], fZ[ipl - 1])) {
+      if (r < TMath::Max(fRmin[ipl], fRmin[ipl - 1]) || r > TMath::Min(fRmax[ipl], fRmax[ipl - 1]))
+         safz = dz;
+   } else if (TGeoShape::IsSameWithinTolerance(fZ[iplclose], fZ[iplclose + 1])) {
+      if (r < TMath::Max(fRmin[iplclose], fRmin[iplclose + 1]) || r > TMath::Min(fRmax[iplclose], fRmax[iplclose + 1]))
+         safz = dz;
    } //-> Z done
 
+   // At a repeated z plane, use a section with nonzero height for the radial faces.
+   while (ipl < fNz - 2 && fZ[ipl] == fZ[ipl + 1])
+      ++ipl;
    dz = fZ[ipl + 1] - fZ[ipl];
    rmin1 = fRmin[ipl];
    rmin2 = fRmin[ipl + 1];
@@ -360,7 +325,7 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
       ta = (rmin2 - rmin1) / dz;
       calf = 1. / TMath::Sqrt(1 + ta * ta);
       rpgon = rmin1 + (point[2] - fZ[ipl]) * ta;
-      safe = TMath::Abs(r - rpgon);
+      safe = TMath::Abs(r - rpgon) * calf;
       norm[0] = calf * TMath::Cos(ph0);
       norm[1] = calf * TMath::Sin(ph0);
       norm[2] = -calf * ta;
@@ -368,10 +333,22 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    ta = (fRmax[ipl + 1] - fRmax[ipl]) / dz;
    calf = 1. / TMath::Sqrt(1 + ta * ta);
    rpgon = fRmax[ipl] + (point[2] - fZ[ipl]) * ta;
-   if (safe > TMath::Abs(rpgon - r)) {
+   Double_t safr = TMath::Abs(rpgon - r) * calf;
+   if (safe > safr) {
+      safe = safr;
       norm[0] = calf * TMath::Cos(ph0);
       norm[1] = calf * TMath::Sin(ph0);
       norm[2] = -calf * ta;
+   }
+   // Compare face distances instead of letting a fixed tolerance select a nearby face.
+   if (safz < safe) {
+      safe = safz;
+      norm[0] = norm[1] = 0.;
+      norm[2] = 1.;
+   }
+   if (is_seg && TGeoShape::IsCloseToPhi(safe, point, c1, s1, c2, s2)) {
+      TGeoShape::NormalPhi(point, dir, norm, c1, s1, c2, s2);
+      return;
    }
    if (norm[0] * dir[0] + norm[1] * dir[1] + norm[2] * dir[2] < 0) {
       norm[0] = -norm[0];
@@ -466,8 +443,6 @@ TGeoPgon::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
       ipl++;
    }
    Double_t stepmax = step;
-   if (!fThreadSize)
-      ((TGeoPgon *)this)->CreateThreadData(1);
    ThreadData_t &td = GetThreadData();
    Double_t *sph = td.fDblBuffer;
    Int_t *iph = td.fIntBuffer;
@@ -956,7 +931,7 @@ Bool_t TGeoPgon::SliceCrossingIn(const Double_t *point, const Double_t *dir, Int
          }
          ipl += incseg;
       } // end loop Z
-   }    // end loop phi
+   } // end loop phi
    snext = TGeoShape::Big();
    return kFALSE;
 }
@@ -1253,8 +1228,6 @@ TGeoPgon::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact
          }
       }
    }
-   if (!fThreadSize)
-      ((TGeoPgon *)this)->CreateThreadData(1);
    ThreadData_t &td = GetThreadData();
    Double_t *sph = td.fDblBuffer;
    Int_t *iph = td.fIntBuffer;

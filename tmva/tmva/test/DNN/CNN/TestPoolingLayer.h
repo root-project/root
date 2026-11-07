@@ -39,8 +39,6 @@
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
-using namespace TMVA::Experimental;
-
 
 inline bool isInteger(double x)
 {

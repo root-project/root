@@ -213,14 +213,23 @@ namespace cling {
       return AR_Success;
 
     const Transaction* unloadPoint = (*TI).second;
+    // Erase the entry before reverting: as of now the file is no longer
+    // registered as loaded, whatever the outcome of the reversion.
+    m_FEToTransaction.erase(TI);
     if (interpreterHasTransaction(m_Interpreter, unloadPoint)) {
       // Revert all the transactions that came after `unloadPoint'.
       while (m_Interpreter.getLastTransaction() != unloadPoint) {
-        if (const auto ThisFE = m_TransactionToFE[m_Interpreter.getLastTransaction()]) {
-          auto I = m_FEToTransaction.find(ThisFE);
-          if (I != m_FEToTransaction.end())
-            m_FEToTransaction.erase(I);
-        }
+        const Transaction* T = m_Interpreter.getLastTransaction();
+        // Any file whose unload point is `T' can no longer be reverted: drop
+        // its registration. This must not be left behind: `T' is deallocated
+        // during the reversion and its address may be reused by a future
+        // transaction, which would alias the stale entry.
+        llvm::SmallVector<const clang::FileEntry*, 2> revertedFiles;
+        for (const auto &Entry : m_FEToTransaction)
+          if (Entry.second == T)
+            revertedFiles.push_back(Entry.first);
+        for (const clang::FileEntry* RFE : revertedFiles)
+          m_FEToTransaction.erase(RFE);
         m_Interpreter.unload(/*numberOfTransactions=*/1);
       }
 
@@ -231,7 +240,6 @@ namespace cling {
       m_MetaProcessor.getOuts() << "!!!ERROR: Transaction for file: " << file
                                 << " has already been unloaded\n";
     }
-    m_FEToTransaction.erase(TI);
     return AR_Success;
   }
 
@@ -495,9 +503,7 @@ namespace cling {
       return;
     }
 
-    if (*FE && !m_FEToTransaction[*FE]) {
+    if (*FE && !m_FEToTransaction[*FE])
       m_FEToTransaction[*FE] = unloadPoint;
-      m_TransactionToFE[unloadPoint] = *FE;
-    }
   }
 } // end namespace cling

@@ -1,5 +1,4 @@
 /// \file RPageSinkBuf.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Max Orok <maxwellorok@gmail.com>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
@@ -28,7 +27,6 @@ using ROOT::Experimental::Detail::RNTupleMetrics;
 using ROOT::Experimental::Detail::RNTuplePlainCounter;
 using ROOT::Experimental::Detail::RNTuplePlainTimer;
 using ROOT::Experimental::Detail::RNTupleTickCounter;
-using ROOT::Internal::MakeUninitArray;
 
 void ROOT::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
@@ -109,7 +107,16 @@ void ROOT::Internal::RPageSinkBuf::UpdateSchema(const ROOT::Internal::RNTupleMod
    auto cloneAddField = [&](const ROOT::RFieldBase *field) {
       auto cloned = field->Clone(field->GetFieldName());
       auto p = &(*cloned);
-      fInnerModel->AddField(std::move(cloned));
+
+      auto parent = field->GetParent();
+      assert(parent);
+      if (typeid(*parent) != typeid(RFieldZero)) {
+         auto &innerParent = fInnerModel->GetMutableField(parent->GetQualifiedFieldName());
+         assert(dynamic_cast<RRecordField *>(&innerParent));
+         AddItemToRecord(static_cast<RRecordField &>(innerParent), std::move(cloned));
+      } else {
+         fInnerModel->AddField(std::move(cloned));
+      }
       return p;
    };
    auto cloneAddProjectedField = [&](ROOT::RFieldBase *field) {
@@ -253,7 +260,7 @@ void ROOT::Internal::RPageSinkBuf::CommitSealedPageV(
 // We implement both StageCluster() and CommitCluster() because we can call CommitCluster() on the inner sink more
 // efficiently in a single critical section. For parallel writing, it also guarantees that we produce a fully sequential
 // file.
-void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(std::function<void(void)> FlushClusterFn)
+void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(const std::function<void(void)> &FlushClusterFn)
 {
    WaitForAllTasks();
    assert(fBufferedUncompressed == 0 && "all buffered pages should have been processed");
@@ -310,14 +317,25 @@ void ROOT::Internal::RPageSinkBuf::CommitClusterGroup()
    fInnerSink->CommitClusterGroup();
 }
 
-void ROOT::Internal::RPageSinkBuf::CommitDatasetImpl()
+ROOT::Internal::RNTupleLink ROOT::Internal::RPageSinkBuf::CommitDatasetImpl()
 {
    RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
    RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
-   fInnerSink->CommitDataset();
+   return fInnerSink->CommitDataset();
 }
 
 ROOT::Internal::RPage ROOT::Internal::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    return fInnerSink->ReservePage(columnHandle, nElements);
+}
+
+std::unique_ptr<ROOT::Internal::RPageSink>
+ROOT::Internal::RPageSinkBuf::CloneAsHidden(std::string_view name, const RNTupleWriteOptions &opts) const
+{
+   return fInnerSink->CloneAsHidden(name, opts);
+}
+
+void ROOT::Internal::RPageSinkBuf::CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo)
+{
+   fInnerSink->CommitAttributeSet(attrSetName, attrAnchorInfo);
 }

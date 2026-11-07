@@ -102,6 +102,7 @@ in a list view. Used to have resizable column headers.
 #include "TGSplitter.h"
 #include "TGDNDManager.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TObjectSpy.h"
 #include "TVirtualX.h"
 
@@ -133,6 +134,7 @@ TGLayoutHints *TGCompositeFrame::fgDefaultHints = nullptr;
 
 static const char *gSaveMacroTypes[] = {
    "ROOT macros", "*.C",
+   "BMP",         "*.bmp",
    "GIF",         "*.gif",
    "PNG",         "*.png",
    "JPEG",        "*.jpg",
@@ -1555,8 +1557,6 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
 
 Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
 {
-   static TString dir(".");
-
    const TString fname = gSystem->UnixPathName(fileName);
    if (fname.EndsWith(".C")) {
       TGMainFrame *main = (TGMainFrame*)GetMainFrame();
@@ -1573,16 +1573,17 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
          gtype = TImage::kTiff;
       } else if (fname.EndsWith(".xpm")) {
          gtype = TImage::kXpm;
+      } else if (fname.EndsWith(".bmp")) {
+         gtype = TImage::kBmp;
       }
       if (gtype != TImage::kUnknown) {
          Int_t saver = gErrorIgnoreLevel;
          gErrorIgnoreLevel = kFatal;
-         TImage *img = TImage::Create();
          RaiseWindow();
-         img->FromWindow(GetId());
-         img->WriteImage(fname, gtype);
+         auto img = TASUtils::FromWindow(GetId());
+         if (img)
+            img->WriteImage(fname, gtype);
          gErrorIgnoreLevel = saver;
-         delete img;
       } else {
          Error("SaveFrameAsCodeOrImage", "File cannot be saved with this extension");
          return kFALSE;
@@ -1833,7 +1834,7 @@ void TGMainFrame::SetIconPixmap(char **xpm_array)
    TImage *img = TImage::Create();
    if (!img) return;
    img->SetImageBuffer(xpm_array, TImage::kXpm);
-   Pixmap_t pic = img->GetPixmap();
+   Pixmap_t pic = TASUtils::GetPixmap(img);
    if (pic) {
       gVirtualX->SetIconPixmap(fId, pic);
    } else {
@@ -2892,7 +2893,11 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       if (strstr(inc->GetString(), "TRootEmbeddedCanvas"))
          out << "#include \"TCanvas.h\"\n";
    }
-   out << "\n#include \"Riostream.h\"\n\n";
+   // Workaround for https://github.com/llvm/llvm-project/issues/138683
+   // Include <chrono> before <fstream> to ensure _FilesystemClock is defined
+   // Can be removed once the upstream issue is fixed.
+   out << "\n#ifdef __APPLE__\n#include <chrono>\n#endif\n\n";
+   out << "\n#include <fstream>\n#include <iostream>\n#include <iomanip>\n\n";
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
@@ -3341,7 +3346,11 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       if (strstr(inc->GetString(), "TRootEmbeddedCanvas"))
          out << "#include \"TCanvas.h\"\n";
    }
-   out << "\n#include \"Riostream.h\"\n\n";
+   // Workaround for https://github.com/llvm/llvm-project/issues/138683
+   // Include <chrono> before <fstream> to ensure _FilesystemClock is defined
+   // Can be removed once the upstream issue is fixed.
+   out << "\n#ifdef __APPLE__\n#include <chrono>\n#endif\n\n";
+   out << "\n#include <fstream>\n#include <iostream>\n#include <iomanip>\n\n";
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();

@@ -19,13 +19,16 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooListProxy.h"
-#include "RooTrace.h"
+#include "RooAbsBinning.h"
 
 #include <memory>
 #include <list>
+#include <map>
+#include <string>
 
 class RooArgSet ;
-class RooFormula ;
+class RooFormulaEvaluator;
+class RooAbsRealLValue;
 
 class RooFormulaVar : public RooAbsReal {
 public:
@@ -68,8 +71,13 @@ public:
 
   double defaultErrorLevel() const override ;
 
-  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
-  std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  void setBinning(const RooAbsRealLValue &obs, const RooAbsBinning &binning, bool checkFlatness = true);
+  const RooAbsBinning *getBinning(const RooAbsRealLValue &obs) const;
+  bool removeBinning(const RooAbsRealLValue &obs);
+
+  bool isBinnedDistribution(const RooArgSet &obs) const override;
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
 
   // Function evaluation
   double evaluate() const override ;
@@ -81,20 +89,21 @@ public:
   compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const override;
 
   protected:
-  // Post-processing of server redirection
-  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
-
   bool isValidReal(double /*value*/, bool /*printError*/) const override {return true;}
 
   private:
-  RooFormula& getFormula() const;
+     RooFormulaEvaluator &evaluator() const;
 
-  RooListProxy _actualVars ;     ///< Actual parameters used by formula engine
-  mutable RooFormula *_formula = nullptr; ///<! Formula engine
-  mutable RooArgSet* _nset{nullptr}; ///<! Normalization set to be passed along to contents
-  TString _formExpr ;            ///< Formula expression string
+     RooListProxy _actualVars;                                ///< Actual parameters used by formula engine
+     mutable std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! Formula evaluation engine
+     mutable RooArgSet *_nset{nullptr};                       ///<! Normalization set to be passed along to contents
+     TString _formExpr;                                       ///< Formula expression string
 
-  ClassDefOverride(RooFormulaVar,1) // Real-valued function of other RooAbsArgs calculated by a TFormula expression
+     std::map<int, std::unique_ptr<RooAbsBinning>>
+        _binnings; ///< User-defined binnings, keyed by the observable's index
+                   ///< in _actualVars, for a piecewise-flat distribution
+
+     ClassDefOverride(RooFormulaVar, 2) // Real-valued function of other RooAbsArgs calculated by a TFormula expression
 };
 
 #endif

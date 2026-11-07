@@ -105,6 +105,68 @@ class ROOTModule(unittest.TestCase):
         if root_module_has("RooFit.Evaluator"):
             from ROOT.RooFit import Evaluator
 
+    def test_deprecated_features(self):
+        """
+        Verify that deprecated features are removed in the release where we
+        announced that they will be removed.
+
+        This serves as a reminder to us to delete the deprecated code after
+        increasing the version number.
+
+        Once a deprecated feature was deleted, we can remove the corresponding
+        check in this test.
+        """
+        import ROOT
+
+        version = tuple(int(n) for n in ROOT.__version__.split("."))
+
+        if version >= (6, 43, 0):
+            # Verify that SetHeuristicMemoryPolicy is not available
+            with self.assertRaises(AttributeError):
+                ROOT.SetHeuristicMemoryPolicy(True)
+                ROOT.SetHeuristicMemoryPolicy(False)
+
+        if version >= (6, 43, 0) and hasattr(ROOT, "RooArgSet"):
+            # Verify that the implicit conversion from Python set to RooArgSet
+            # is gone
+            # Currently the test will pass i.e. the Pythonization raises TypeError, but not for the correct reason.
+            # It will print errors coming from trying all overloads of the RooDataSet constructor, while we would expect
+            # the TypeError coming from the _rooargset.py pythonization.
+            # TODO: investigate cause and fix.
+            x = ROOT.RooRealVar("x", "x", 1.0)
+            y = ROOT.RooRealVar("y", "y", -1.0)
+            with self.assertRaises(TypeError):
+                ROOT.RooDataSet("data", "data", {x, y})
+
+    def test_lazy_gdirectory(self):
+        """Check that gDirectory is always lazy evaluated to the current
+        directory.
+
+        Reproducer for GitHub issue
+        https://github.com/root-project/root/issues/21693
+        """
+        import ROOT
+
+        # Should be gROOT initially
+        self.assertEqual(ROOT.gDirectory, ROOT.gROOT)
+
+        gDirectory_1 = ROOT.gDirectory
+
+        f = ROOT.TFile("Hybrid.root", "RECREATE")
+        f.cd()
+
+        gDirectory_2 = ROOT.gDirectory
+
+        # Now, both gDirectory_1 and _2 should resolve to the current TFile
+        # directory, no matter when the adapters were created.
+        self.assertEqual(gDirectory_1, gDirectory_2)
+        self.assertNotEqual(gDirectory_1, ROOT.gROOT)
+
+        # If we reset the global directory to nullptr now, it should be considered
+        with ROOT.TDirectory.TContext(ROOT.nullptr):
+            self.assertEqual(gDirectory_1, ROOT.nullptr)
+            self.assertEqual(gDirectory_2, ROOT.nullptr)
+
 
 if __name__ == "__main__":
     unittest.main()

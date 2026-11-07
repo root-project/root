@@ -1,6 +1,3 @@
-// Require TBB without captured exceptions
-#define TBB_USE_CAPTURED_EXCEPTION 0
-
 #include "ROOT/RTaskArena.hxx"
 #include "ROpaqueTaskArena.hxx"
 #include "TError.h"
@@ -13,13 +10,11 @@
 #include <thread>
 #include <cmath>
 #include "tbb/task_arena.h"
-#define TBB_PREVIEW_GLOBAL_CONTROL 1 // required for TBB versions preceding 2019_U4
 #include "tbb/global_control.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class ROOT::Internal::RTaskArenaWrapper
-/// \ingroup Parallelism
 /// \brief Wrapper over tbb::task_arena
 ///
 /// This class is a wrapper over tbb::task_arena, in order to keep

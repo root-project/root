@@ -1,6 +1,5 @@
 // Authors: Bertrand Bellenot <bertrand.bellenot@cern.ch> Sergey Linev <S.Linev@gsi.de>
 // Date: 2019-02-28
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
@@ -277,7 +276,7 @@ Following `.rootrc` parameters can be configured for the browser:
    * WebGui.Browser.LastCycle: show only last key cycle (default off)
    * WebGui.Browser.Expand: expand browsable area (default off)
 
-\note See major settings in RWebWindowWindowsManager::CreateServer and RWebWindowsManager::ShowWindow
+\note See major settings in RWebWindowsManager::CreateServer and RWebWindowsManager::ShowWindow
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////////

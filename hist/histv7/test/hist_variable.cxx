@@ -29,6 +29,23 @@ TEST(RVariableBinAxis, Constructor)
    EXPECT_THROW(RVariableBinAxis({0, 0}), std::invalid_argument);
    EXPECT_THROW(RVariableBinAxis({0, 1, 0}), std::invalid_argument);
    EXPECT_THROW(RVariableBinAxis({0, 1, 1}), std::invalid_argument);
+
+   // Construction works with infinite bin edges (which make most sense with disabling builtin flow bins).
+   static constexpr double NegativeInfinity = -std::numeric_limits<double>::infinity();
+   static constexpr double PositiveInfinity = std::numeric_limits<double>::infinity();
+   axis = RVariableBinAxis({NegativeInfinity, 0}, /*enableFlowBins=*/false);
+   axis = RVariableBinAxis({NegativeInfinity, PositiveInfinity}, /*enableFlowBins=*/false);
+   axis = RVariableBinAxis({0, PositiveInfinity}, /*enableFlowBins=*/false);
+
+   EXPECT_THROW(RVariableBinAxis({NegativeInfinity, NegativeInfinity}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({0, NegativeInfinity}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({PositiveInfinity, NegativeInfinity}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({PositiveInfinity, 0}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({PositiveInfinity, PositiveInfinity}), std::invalid_argument);
+
+   static constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+   EXPECT_THROW(RVariableBinAxis({NaN, 0}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({0, NaN}), std::invalid_argument);
 }
 
 TEST(RVariableBinAxis, Equality)
@@ -87,16 +104,16 @@ TEST(RVariableBinAxis, ComputeLinearizedIndex)
    static constexpr double UnderflowSmall = -0.1;
    for (double underflow : {NegativeInfinity, UnderflowLarge, UnderflowSmall}) {
       auto linIndex = axis.ComputeLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_FALSE(linIndex.fValid);
    }
 
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.ComputeLinearizedIndex(i + 0.5);
-      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_EQ(linIndex.fIndex, i + 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(i + 0.5);
       EXPECT_EQ(linIndex.fIndex, i);
@@ -106,7 +123,7 @@ TEST(RVariableBinAxis, ComputeLinearizedIndex)
    // Exactly on the bin edges
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.ComputeLinearizedIndex(i);
-      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_EQ(linIndex.fIndex, i + 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(i);
       EXPECT_EQ(linIndex.fIndex, i);
@@ -138,6 +155,40 @@ TEST(RVariableBinAxis, ComputeLinearizedIndex)
    }
 }
 
+TEST(RVariableBinAxis, ComputeLinearizedIndexInfinity)
+{
+   static constexpr double NegativeInfinity = -std::numeric_limits<double>::infinity();
+   static constexpr double PositiveInfinity = std::numeric_limits<double>::infinity();
+   const RVariableBinAxis axis({NegativeInfinity, 0, 1, PositiveInfinity}, /*enableFlowBins=*/false);
+
+   auto linIndex = axis.ComputeLinearizedIndex(NegativeInfinity);
+   EXPECT_EQ(linIndex.fIndex, 0);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(-100);
+   EXPECT_EQ(linIndex.fIndex, 0);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(0);
+   EXPECT_EQ(linIndex.fIndex, 1);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(0.5);
+   EXPECT_EQ(linIndex.fIndex, 1);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(1);
+   EXPECT_EQ(linIndex.fIndex, 2);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(100);
+   EXPECT_EQ(linIndex.fIndex, 2);
+   EXPECT_TRUE(linIndex.fValid);
+   // The upper bin edges are exclusive, so positive infinity falls into the builtin overflow bin, which is disabled
+   linIndex = axis.ComputeLinearizedIndex(PositiveInfinity);
+   EXPECT_FALSE(linIndex.fValid);
+
+   // NaN will be silently discard because the builtin overflow bin is disabled
+   static constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+   linIndex = axis.ComputeLinearizedIndex(NaN);
+   EXPECT_FALSE(linIndex.fValid);
+}
+
 TEST(RVariableBinAxis, GetLinearizedIndex)
 {
    static constexpr std::size_t Bins = 20;
@@ -153,16 +204,16 @@ TEST(RVariableBinAxis, GetLinearizedIndex)
    {
       const auto underflow = RBinIndex::Underflow();
       auto linIndex = axis.GetLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.GetLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_FALSE(linIndex.fValid);
    }
 
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.GetLinearizedIndex(i);
-      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_EQ(linIndex.fIndex, i + 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.GetLinearizedIndex(i);
       EXPECT_EQ(linIndex.fIndex, i);
@@ -215,6 +266,7 @@ TEST(RVariableBinAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(normal.GetBegin(), index0);
       EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
    }
 
@@ -222,6 +274,7 @@ TEST(RVariableBinAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange(index0, indexBins);
       EXPECT_EQ(normal.GetBegin(), index0);
       EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
    }
 
@@ -230,6 +283,7 @@ TEST(RVariableBinAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange(index1, index5);
       EXPECT_EQ(normal.GetBegin(), index1);
       EXPECT_EQ(normal.GetEnd(), index5);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), 4);
    }
 
@@ -237,6 +291,7 @@ TEST(RVariableBinAxis, GetNormalRange)
       const auto empty = axis.GetNormalRange(index1, index1);
       EXPECT_EQ(empty.GetBegin(), index1);
       EXPECT_EQ(empty.GetEnd(), index1);
+      EXPECT_FALSE(empty.IsInvalid());
       EXPECT_EQ(empty.begin(), empty.end());
       EXPECT_EQ(std::distance(empty.begin(), empty.end()), 0);
    }
@@ -264,6 +319,7 @@ TEST(RVariableBinAxis, GetFullRange)
       const auto full = axis.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex::Underflow());
       EXPECT_EQ(full.GetEnd(), RBinIndex());
+      EXPECT_FALSE(full.IsInvalid());
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins + 2);
    }
 
@@ -272,6 +328,73 @@ TEST(RVariableBinAxis, GetFullRange)
       const auto full = axisNoFlowBins.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex(0));
       EXPECT_EQ(full.GetEnd(), RBinIndex(Bins));
+      EXPECT_FALSE(full.IsInvalid());
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins);
    }
+}
+
+static void Test_RVariableBinAxis_Slice(bool enableFlowBins)
+{
+   static constexpr std::size_t Bins = 20;
+   std::vector<double> bins;
+   for (std::size_t i = 0; i < Bins; i++) {
+      bins.push_back(i);
+   }
+   bins.push_back(Bins);
+   const RVariableBinAxis origAxis(bins, enableFlowBins);
+   ASSERT_EQ(origAxis.HasFlowBins(), enableFlowBins);
+
+   // Three different ways of "slicing" which will keep the entire axis.
+   for (auto sliceSpec : {RSliceSpec{}, RSliceSpec(origAxis.GetFullRange()), RSliceSpec(origAxis.GetNormalRange())}) {
+      const auto axis = origAxis.Slice(sliceSpec);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins);
+      EXPECT_EQ(axis.GetBinEdges(), bins);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   {
+      const RSliceSpec slice(origAxis.GetNormalRange(1, Bins - 1));
+      const auto axis = origAxis.Slice(slice);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins - 2);
+      EXPECT_EQ(axis.GetBinEdges().front(), 1);
+      EXPECT_EQ(axis.GetBinEdges().back(), Bins - 1);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   {
+      const RSliceSpec rebin(RSliceSpec::ROperationRebin(2));
+      const auto axis = origAxis.Slice(rebin);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins / 2);
+      EXPECT_EQ(axis.GetBinEdges().front(), 0);
+      EXPECT_EQ(axis.GetBinEdges().back(), Bins);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   // Rebin grouping must divide the number of normal bins.
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationRebin(3)), std::runtime_error);
+
+   // Sum operation makes dimension disappear.
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationSum{}), std::runtime_error);
+
+   {
+      const RSliceSpec sliceRebin(origAxis.GetNormalRange(1, 5), RSliceSpec::ROperationRebin(2));
+      const auto axis = origAxis.Slice(sliceRebin);
+      EXPECT_EQ(axis.GetNNormalBins(), 2);
+      const auto &binEdges = axis.GetBinEdges();
+      ASSERT_EQ(binEdges.size(), 3);
+      EXPECT_EQ(binEdges[0], 1);
+      EXPECT_EQ(binEdges[1], 3);
+      EXPECT_EQ(binEdges[2], 5);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+}
+
+TEST(RVariableBinAxis, Slice)
+{
+   Test_RVariableBinAxis_Slice(true);
+}
+
+TEST(RVariableBinAxis, SliceNoFlowBins)
+{
+   Test_RVariableBinAxis_Slice(false);
 }

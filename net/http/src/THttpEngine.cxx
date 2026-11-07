@@ -12,7 +12,6 @@
 #include "THttpEngine.h"
 
 /** \class THttpEngine
-\ingroup http
 
 Abstract class for implementing http protocol for THttpServer
 */

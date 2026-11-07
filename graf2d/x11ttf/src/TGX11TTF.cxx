@@ -21,13 +21,14 @@ shared library containing this class is loaded the global gVirtualX
 is redirected to point to this class.
 */
 
-#include <cstdlib>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
 #include "TGX11TTF.h"
-#include "TEnv.h"
+
+#ifdef R__HAS_XFT
+#include "THashTable.h"
+#include "TRefCnt.h"
+#include <X11/Xft/Xft.h>
+#endif
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -36,15 +37,19 @@ is redirected to point to this class.
 #include <X11/keysym.h>
 #include <X11/xpm.h>
 
+
+#include <cstdlib>
+
+#include "TEnv.h"
+#include "TTFhandle.h"
+#include "TMathBase.h"
+
+
 struct RXColor:XColor{};
 struct RVisual:Visual{};
 struct RXImage:XImage{};
 
 #ifdef R__HAS_XFT
-
-#include "THashTable.h"
-#include "TRefCnt.h"
-#include <X11/Xft/Xft.h>
 
 /////////////////////////  xft font data //////////////////////////////////////
 class TXftFontData : public TNamed, public TRefCnt {
@@ -127,6 +132,9 @@ public:
       delete data;
    }
 };
+
+Bool_t TGX11TTF::gXftInit = kFALSE;
+
 #endif  // R__HAS_XFT
 
 /** \class TTFX11Init
@@ -148,17 +156,13 @@ static TTFX11Init gTTFX11Init;
 ////////////////////////////////////////////////////////////////////////////////
 /// Create copy of TGX11 but now use TrueType fonts.
 
-TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
+TGX11TTF::TGX11TTF(TGX11 &&org) : TGX11(std::move(org))
 {
    SetName("X11TTF");
    SetTitle("ROOT interface to X11 with TrueType fonts");
 
-   if (!TTF::fgInit) TTF::Init();
-
-   fHasTTFonts = kTRUE;
+   fHasTTFonts = TTFhandle::Init();
    fHasXft = kFALSE;
-   fAlign.x = 0;
-   fAlign.y = 0;
 
 #ifdef R__HAS_XFT
    fXftFontHash = nullptr;
@@ -170,9 +174,8 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 
 void TGX11TTF::Activate()
 {
-   if (gVirtualX && dynamic_cast<TGX11*>(gVirtualX)) {
-      TGX11 *oldg = (TGX11 *) gVirtualX;
-      gVirtualX = new TGX11TTF(*oldg);
+   if (auto oldg = dynamic_cast<TGX11*>(gVirtualX)) {
+      gVirtualX = new TGX11TTF(std::move(*oldg));
       delete oldg;
    }
 }
@@ -195,218 +198,222 @@ Bool_t TGX11TTF::Init(void *display)
 #endif
    Bool_t r = TGX11::Init(display);
 
-   if (fDepth > 8) {
-      TTF::SetSmoothing(kTRUE);
-   } else {
-      TTF::SetSmoothing(kFALSE);
-   }
-
    return r;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Compute alignment variables. The alignment is done on the horizontal string
-/// then the rotation is applied on the alignment variables.
-/// SetRotation and LayoutGlyphs should have been called before.
 
-void TGX11TTF::Align(void)
+template<typename CharType>
+void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                              const CharType *text, ETextMode mode)
 {
-   EAlign align = (EAlign) fTextAlign;
-
-   // vertical alignment
-   if (align == kTLeft || align == kTCenter || align == kTRight) {
-      fAlign.y = TTF::fgAscent;
-   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
-      fAlign.y = TTF::fgAscent/2;
-   } else {
-      fAlign.y = 0;
+   if (!fHasTTFonts) {
+      TGX11::DrawTextW(wctxt, x, y, angle, mgn, text, mode);
+      return;
    }
 
-   // horizontal alignment
-   if (align == kTRight || align == kMRight || align == kBRight) {
-      fAlign.x = TTF::fgWidth;
-   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
-      fAlign.x = TTF::fgWidth/2;
-   } else {
-      fAlign.x = 0;
-   }
+   if (!wctxt)
+      return;
 
-   FT_Vector_Transform(&fAlign, TTF::fgRotMatrix);
-   fAlign.x = fAlign.x >> 6;
-   fAlign.y = fAlign.y >> 6;
+   Window_t cws = GetWindow(wctxt);
+   UInt_t width, height;
+   Int_t xy;
+   GetWindowSize(cws, xy, xy, width, height);
+
+   auto &att = GetTextAttW(wctxt);
+
+   TTFhandle ttf;
+   ttf.SetSmoothing(fDepth > 8);
+   ttf.SetTextFont(att.GetTextFont());
+   ttf.SetTextSize(att.GetTextSize());
+   ttf.SetRotationMatrix(angle);
+   ttf.PrepareString(text);
+   ttf.LayoutGlyphs();
+   if (ttf.ApplyAlignRotate(x, y, att.GetTextAlign(), width, height))
+      DrawTTFglyphsW(wctxt, x, y, ttf, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
-/// foreground color.
+/// Draw TTF glyphs on the specified window context
 
-void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
-                         RXImage *xim, Int_t bx, Int_t by)
+void TGX11TTF::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode)
 {
-   UChar_t d = 0, *s = source->buffer;
+   Int_t w    = ttf.GetGlyphsWidth();
+   Int_t h    = ttf.GetGlyphsHeight();
 
-   if (TTF::fgSmoothing) {
+   Window_t cws = GetWindow(wctxt);
 
-      static RXColor col[5];
-      RXColor  *bcol = nullptr;
-      XColor  *bc;
-      Int_t    x, y;
+   UInt_t depth = fDepth;
+   XImage *xim = XCreateImage((Display*)fDisplay, fVisual,
+                               depth, ZPixmap, 0, nullptr, w, h,
+                               depth <= 8 ? 8 : (depth <= 16 ? 16 : 32), 0);
+   //bitmap_pad should be 8, 16 or 32 https://www.x.org/releases/X11R7.5/doc/man/man3/XPutPixel.3.html
+   if (!xim)
+      return;
 
-      // background kClear, i.e. transparent, we take as background color
-      // the average of the rgb values of all pixels covered by this character
-      if (back == (ULong_t) -1 && (UInt_t)source->width) {
-         ULong_t r, g, b;
-         Int_t   dots, dotcnt;
-         const Int_t maxdots = 50000;
+   // use malloc since Xlib will use free() in XDestroyImage
+   xim->data = (char *) malloc(xim->bytes_per_line * h);
+   memset(xim->data, 0, xim->bytes_per_line * h);
 
-         dots = Int_t(source->width * source->rows);
-         dots = dots > maxdots ? maxdots : dots;
-         bcol = new RXColor[dots];
-         if (!bcol) return;
-         bc = bcol;
-         dotcnt = 0;
-         for (y = 0; y < (int) source->rows; y++) {
-            for (x = 0; x < (int) source->width; x++, bc++) {
-///               bc->pixel = XGetPixel(xim, bx + x, by - c->TTF::fgAscent + y);
-               bc->pixel = XGetPixel(xim, bx + x, by + y);
-               bc->flags = DoRed | DoGreen | DoBlue;
-               if (++dotcnt >= maxdots) break;
-            }
-         }
-         QueryColors(fColormap, bcol, dots);
-         r = g = b = 0;
-         bc = bcol;
-         dotcnt = 0;
-         for (y = 0; y < (int) source->rows; y++) {
-            for (x = 0; x < (int) source->width; x++, bc++) {
-               r += bc->red;
-               g += bc->green;
-               b += bc->blue;
-               if (++dotcnt >= maxdots) break;
-            }
-         }
-         if (dots != 0) {
-            r /= dots;
-            g /= dots;
-            b /= dots;
-         }
-         bc = &col[0];
-         if (bc->red == r && bc->green == g && bc->blue == b)
-            bc->pixel = back;
-         else {
-            bc->pixel = ~back;
-            bc->red   = (UShort_t) r;
-            bc->green = (UShort_t) g;
-            bc->blue  = (UShort_t) b;
+   XGCValues values;
+   auto gc = (GC *) GetGCW(wctxt, 3);
+   if (!gc) {
+      Error("DrawTTFglyphsW", "error getting Graphics Context");
+      return;
+   }
+   XGetGCValues((Display*)fDisplay, *gc, GCForeground | GCBackground, &values);
+
+   // get the background
+   if (mode == kClear) {
+      // if mode == kClear we need to get an image of the background
+      XImage *bim = GetBackground(wctxt, x1, y1, w, h);
+      if (!bim) {
+         Error("DrawTTFglyphsW", "error getting background image");
+         return;
+      }
+
+      // and copy it into the text image
+      Int_t xo = x1 < 0 ? -x1 : 0;
+      Int_t yo = y1 < 0 ? -y1 : 0;
+
+      for (int yp = 0; yp < (int) bim->height; yp++) {
+         for (int xp = 0; xp < (int) bim->width; xp++) {
+            ULong_t pixel = XGetPixel(bim, xp, yp);
+            XPutPixel(xim, xo + xp, yo + yp, pixel);
          }
       }
-      delete [] bcol;
+      XDestroyImage(bim);
+   } else {
+      // if mode == kOpaque its simple, we just draw the background
+      XAddPixel(xim, values.background);
+   }
 
-      // if fore or background have changed from previous character
-      // recalculate the 3 smoothing colors (interpolation between fore-
-      // and background colors)
-      if (fore != col[4].pixel || back != col[0].pixel) {
-         col[4].pixel = fore;
-         col[4].flags = DoRed|DoGreen|DoBlue;
-         if (back != (ULong_t) -1) {
-            col[3].pixel = back;
-            col[3].flags = DoRed | DoGreen | DoBlue;
-            QueryColors(fColormap, &col[3], 2);
-            col[0] = col[3];
+   // paint the glyphs in the XImage
+   for (UInt_t nglyph = 0; nglyph < ttf.GetNumGlyphs(); nglyph++) {
+      Int_t bx = 0, by = 0;
+      UChar_t *buffer = nullptr;
+      UInt_t width = 0, rows = 0, pitch = 0;
+      if (!ttf.GetGlyphData(nglyph, bx, by, buffer, width, rows, pitch))
+         continue;
+
+      if (ttf.GetSmoothing()) {
+         RXColor col[5];
+
+         // background kClear, i.e. transparent, we take as background color
+         // the average of the rgb values of all pixels covered by this character
+         if (mode == kClear) {
+            const UInt_t ndots = TMath::Min((UInt_t) 50000, width * rows);
+
+            std::vector<RXColor> bcol(ndots);
+            if (!bcol.size()) {
+               Error("DrawTTFglyphsW", "Allocation failure with bcol vector");
+               return;
+            }
+            for (unsigned y = 0, dotcnt = 0; y < rows; y++) {
+               for (unsigned x = 0; (x < width) && (dotcnt < bcol.size()); x++) {
+                  bcol[dotcnt].pixel = XGetPixel(xim, bx + x, by + y);
+                  bcol[dotcnt].flags = DoRed | DoGreen | DoBlue;
+                  dotcnt++;
+               }
+            }
+            QueryColors(fColormap, bcol.data(), bcol.size());
+            ULong_t r = 0, g = 0, b = 0;
+            for (auto &entry : bcol) {
+               r += entry.red;
+               g += entry.green;
+               b += entry.blue;
+            }
+            col[0].red = (UShort_t) (r / bcol.size());
+            col[0].green = (UShort_t) (g / bcol.size());
+            col[0].blue = (UShort_t) (b / bcol.size());
          } else {
-            QueryColors(fColormap, &col[4], 1);
+            // just request rgb value for background color
+            col[0].pixel = values.background;
+            col[0].flags = DoRed | DoGreen | DoBlue;
+            QueryColors(fColormap, &col[0], 1);
          }
 
-         // interpolate between fore and background colors
-         for (x = 3; x > 0; x--) {
+         // request rgb value for foreground color
+         col[4].pixel = values.foreground;
+         col[4].flags = DoRed | DoGreen | DoBlue;
+         QueryColors(fColormap, &col[4], 1);
+
+         // recalculate the 3 smoothing colors
+         // (interpolation between fore- and background colors)
+         for (int x = 3; x > 0; x--) {
             col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
             col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
             col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
             if (!AllocColor(fColormap, &col[x])) {
-               Warning("DrawImage", "cannot allocate smoothing color");
+               Warning("DrawTTFglyphsW", "cannot allocate smoothing color");
                col[x].pixel = col[x+1].pixel;
             }
          }
-      }
 
-      // put smoothed character, character pixmap values are an index
-      // into the 5 colors used for aliasing (4 = foreground, 0 = background)
-      for (y = 0; y < (int) source->rows; y++) {
-         for (x = 0; x < (int) source->width; x++) {
-            d = *s++ & 0xff;
-            d = ((d + 10) * 5) / 256;
-            if (d > 4) d = 4;
-            if (d && x < (int) source->width) {
-               ULong_t p = col[d].pixel;
-               XPutPixel(xim, bx + x, by + y, p);
+         UChar_t *s = buffer;
+         // put smoothed character, character pixmap values are an index
+         // into the 5 colors used for aliasing (4 = foreground, 0 = background)
+         for (unsigned y = 0; y < rows; y++) {
+            for (unsigned x = 0; x < width; x++) {
+               UChar_t d = TMath::Min((UChar_t) 4, (UChar_t)((((*s++ & 0xff) + 10) * 5) / 256));
+               if (d > 0)
+                  XPutPixel(xim, bx + x, by + y, col[d].pixel);
             }
          }
-      }
-   } else {
-      // no smoothing, just put character using foreground color
-      UChar_t* row=s;
-      for (int y = 0; y < (int) source->rows; y++) {
-         int n = 0;
-         s = row;
-         for (int x = 0; x < (int) source->width; x++) {
-            if (n == 0) d = *s++;
-            if (TESTBIT(d,7-n))
-               XPutPixel(xim, bx + x, by + y, fore);
-            if (++n == (int) kBitsPerByte) n = 0;
+      } else {
+         // no smoothing, just put character using foreground color
+         UChar_t *row = buffer;
+         for (unsigned y = 0; y < rows; y++) {
+            unsigned n = 0;
+            UChar_t d = 0;
+            UChar_t *s = row;
+            for (unsigned x = 0; x < width; x++) {
+               if (n == 0) d = *s++;
+               if (TESTBIT(d,7-n))
+                  XPutPixel(xim, bx + x, by + y, values.foreground);
+               if (++n == kBitsPerByte) n = 0;
+            }
+            row += pitch;
          }
-         row += source->pitch;
       }
    }
+
+   // put the Ximage on the screen
+   gc = (GC *) GetGCW(wctxt, 6);
+   if (gc)
+      XPutImage((Display*)fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
+   XDestroyImage(xim);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text using TrueType fonts. If TrueType fonts are not available the
-/// text is drawn with TGX11::DrawText.
+/// text is drawn with TGX11::DrawTextW.
 
-void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                        const char *text, ETextMode mode)
+void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                         const char *text, ETextMode mode)
 {
-   if (!fHasTTFonts) {
-      TGX11::DrawText(x, y, angle, mgn, text, mode);
-   } else {
-      if (!TTF::fgInit) TTF::Init();
-      TTF::SetRotationMatrix(angle);
-      TTF::PrepareString(text);
-      TTF::LayoutGlyphs();
-      Align();
-      RenderString(x, y, mode);
-   }
+   DrawTextHelper(wctxt, x, y, angle, mgn, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text using TrueType fonts. If TrueType fonts are not available the
-/// text is drawn with TGX11::DrawText.
+/// text is drawn with TGX11::DrawTextW.
 
-void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                        const wchar_t *text, ETextMode mode)
+void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                         const wchar_t *text, ETextMode mode)
 {
-   if (!fHasTTFonts) {
-      TGX11::DrawText(x, y, angle, mgn, text, mode);
-   } else {
-      if (!TTF::fgInit) TTF::Init();
-      TTF::SetRotationMatrix(angle);
-      TTF::PrepareString(text);
-      TTF::LayoutGlyphs();
-      Align();
-      RenderString(x, y, mode);
-   }
+   DrawTextHelper(wctxt, x, y, angle, mgn, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the background of the current window in an XImage.
 
-RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
+RXImage *TGX11TTF::GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   Window_t cws = GetCurrentWindow();
+   Window_t cws = GetWindow(wctxt);
    UInt_t width;
    UInt_t height;
    Int_t xy;
-   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
+   GetWindowSize(cws, xy, xy, width, height);
 
    if (x < 0) {
       w += x;
@@ -420,170 +427,9 @@ RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (x+w > width)  w = width - x;
    if (y+h > height) h = height - y;
 
-   return (RXImage*)XGetImage((Display*)fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
+   return (RXImage *)XGetImage((Display*)fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Test if there is really something to render.
-
-Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
-{
-   Window_t cws = GetCurrentWindow();
-   UInt_t width;
-   UInt_t height;
-   Int_t xy;
-   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
-
-   // If w or h is 0, very likely the string is only blank characters
-   if ((int)w == 0 || (int)h == 0)  return kFALSE;
-
-   // If string falls outside window, there is probably no need to draw it.
-   if (x + (int)w <= 0 || x >= (int)width)  return kFALSE;
-   if (y + (int)h <= 0 || y >= (int)height) return kFALSE;
-
-   // If w or h are much larger than the window size, there is probably no need
-   // to draw it. Moreover a to large text size may produce a Seg Fault in
-   // malloc in RenderString.
-   if (w > 10*width)  return kFALSE;
-   if (h > 10*height) return kFALSE;
-
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Perform the string rendering in the pad.
-/// LayoutGlyphs should have been called before.
-
-void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
-{
-   TTF::TTGlyph* glyph = TTF::fgGlyphs;
-
-   // compute the size and position of the XImage that will contain the text
-   Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
-   Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
-   Int_t w    = TTF::GetBox().xMax + Xoff;
-   Int_t h    = TTF::GetBox().yMax + Yoff;
-   Int_t x1   = x-Xoff-fAlign.x;
-   Int_t y1   = y+Yoff+fAlign.y-h;
-
-   if (!IsVisible(x1, y1, w, h)) return;
-
-   // create the XImage that will contain the text
-   UInt_t depth = fDepth;
-   XImage *xim = XCreateImage((Display*)fDisplay, fVisual,
-                               depth, ZPixmap, 0, nullptr, w, h,
-                               depth <= 8 ? 8 : (depth <= 16 ? 16 : 32), 0);
-   //bitmap_pad should be 8, 16 or 32 https://www.x.org/releases/X11R7.5/doc/man/man3/XPutPixel.3.html
-   if (!xim) return;
-
-   // use malloc since Xlib will use free() in XDestroyImage
-   xim->data = (char *) malloc(xim->bytes_per_line * h);
-   memset(xim->data, 0, xim->bytes_per_line * h);
-
-   ULong_t   bg;
-   XGCValues values;
-   GC *gc = (GC*)GetGC(3);
-   if (!gc) {
-      Error("DrawText", "error getting Graphics Context");
-      return;
-   }
-   XGetGCValues((Display*)fDisplay, *gc, GCForeground | GCBackground, &values);
-
-   // get the background
-   if (mode == kClear) {
-      // if mode == kClear we need to get an image of the background
-      XImage *bim = GetBackground(x1, y1, w, h);
-      if (!bim) {
-         Error("DrawText", "error getting background image");
-         return;
-      }
-
-      // and copy it into the text image
-      Int_t xo = 0, yo = 0;
-      if (x1 < 0) xo = -x1;
-      if (y1 < 0) yo = -y1;
-
-      for (int yp = 0; yp < (int) bim->height; yp++) {
-         for (int xp = 0; xp < (int) bim->width; xp++) {
-            ULong_t pixel = XGetPixel(bim, xp, yp);
-            XPutPixel(xim, xo+xp, yo+yp, pixel);
-         }
-      }
-      XDestroyImage(bim);
-      bg = (ULong_t) -1;
-   } else {
-      // if mode == kOpaque its simple, we just draw the background
-      XAddPixel(xim, values.background);
-      bg = values.background;
-   }
-
-   // paint the glyphs in the XImage
-   glyph = TTF::fgGlyphs;
-   for (int n = 0; n < TTF::fgNumGlyphs; n++, glyph++) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage,
-                             TTF::fgSmoothing ? ft_render_mode_normal
-                                              : ft_render_mode_mono,
-                             nullptr, 1 )) continue;
-      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
-      FT_Bitmap*     source = &bitmap->bitmap;
-      Int_t          bx, by;
-
-      bx = bitmap->left+Xoff;
-      by = h - bitmap->top-Yoff;
-      DrawImage(source, values.foreground, bg, (RXImage*)xim, bx, by);
-   }
-
-   // put the Ximage on the screen
-   Window_t cws = GetCurrentWindow();
-   gc = (GC*)GetGC(6);
-   if (gc) XPutImage((Display*)fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
-   XDestroyImage(xim);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set specified font.
-
-void TGX11TTF::SetTextFont(Font_t fontnumber)
-{
-   fTextFont = fontnumber;
-   if (!fHasTTFonts) {
-      TGX11::SetTextFont(fontnumber);
-   } else {
-      TTF::SetTextFont(fontnumber);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set text font to specified name.
-/// mode       : loading flag
-/// mode=0     : search if the font exist (kCheck)
-/// mode=1     : search the font and load it if it exists (kLoad)
-/// font       : font name
-///
-/// Set text font to specified name. This function returns 0 if
-/// the specified font is found, 1 if not.
-
-Int_t TGX11TTF::SetTextFont(char *fontname, ETextSetMode mode)
-{
-   if (!fHasTTFonts) {
-      return TGX11::SetTextFont(fontname, mode);
-   } else {
-      return TTF::SetTextFont(fontname);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set current text size.
-
-void TGX11TTF::SetTextSize(Float_t textsize)
-{
-   fTextSize = textsize;
-   if (!fHasTTFonts) {
-      TGX11::SetTextSize(textsize);
-   } else {
-      TTF::SetTextSize(textsize);
-   }
-}
 
 #ifdef R__HAS_XFT
 
@@ -602,6 +448,11 @@ FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
    // already loaded
    if (data) {
       return (FontStruct_t)data->fXftFont;
+   }
+
+   if (!gXftInit) {
+      XftInit(nullptr);
+      gXftInit = kTRUE;
    }
 
    XftFont *xftfont = XftFontOpenXlfd((Display*)fDisplay, fScreenNumber, font_name);

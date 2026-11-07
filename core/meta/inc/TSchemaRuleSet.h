@@ -66,9 +66,9 @@ namespace Detail {
 
    private:
       TObjArray* fPersistentRules; //  Array of the rules that will be embeded in the file
-      TObjArray* fRemainingRules;  //! Array of non-persistent rules - just for cleanup purposes - owns the elements
-      TObjArray* fAllRules;        //! Array of all rules
-      TClassRef  fClass;           //! Target class pointer (for consistency checking)
+      TObjArray* fRemainingRules;  ///<! Array of non-persistent rules - just for cleanup purposes - owns the elements
+      TObjArray* fAllRules;        ///<! Array of all rules
+      TClassRef  fClass;           ///<! Target class pointer (for consistency checking)
       TString    fClassName;       //  Target class name
       Int_t      fVersion;         //  Target class version
       UInt_t     fCheckSum;        //  Target class checksum

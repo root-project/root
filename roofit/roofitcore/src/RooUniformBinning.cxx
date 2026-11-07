@@ -30,8 +30,7 @@ e.g. the binning of class RooBinning.
 #include <RooFit/CodegenContext.h>
 #include <RooMsgService.h>
 
-#include <Riostream.h>
-
+#include <ostream>
 
 using std::endl;
 
@@ -69,7 +68,7 @@ void RooUniformBinning::setRange(double xlo, double xhi)
 
   _xlo = xlo ;
   _xhi = xhi ;
-  _binw = (xhi-xlo)/_nbins ;
+  _binw = _nbins>0 ? (xhi-xlo)/_nbins : 0.0 ;
 
   // Delete any out-of-date boundary arrays at this point
   _array.clear();

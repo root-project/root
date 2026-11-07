@@ -1,4 +1,3 @@
-
 Processing execWriter.cxx+...
 Info in <fileWriter>: Opened the output file
 Info in <fileWriter>: Created a TTree called "CollectionTree"

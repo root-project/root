@@ -6,8 +6,9 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: clang -shared %fPIC -DCLING_EXPORT=%dllexport -DBUILD_SHARED %s -o%T/libSymbols%shlibext
-// RUN: %cling --nologo -L%T -lSymbols  %s | FileCheck %s
+// RUN: rm -rf %t.dir && mkdir -p %t.dir
+// RUN: clang -shared %fPIC -DCLING_EXPORT=%dllexport -DBUILD_SHARED %s -o%t.dir/libSymbols%shlibext
+// RUN: %cling --nologo -L%t.dir -lSymbols  %s | FileCheck %s
 
 // Check that weak symbols do not get re-emitted (ROOT-6124)
 extern "C" int printf(const char*,...);

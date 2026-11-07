@@ -68,8 +68,7 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
 
 /// Internal function to synchronize TMinimizer with current
 /// information in RooAbsReal function parameters
-bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                                      bool optConst)
+bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
    // Synchronize MINUIT with function state
 
@@ -144,24 +143,12 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       par.isConstant() ? parameters.back().Fix() : parameters.back().Release();
    }
 
-   if (optConst) {
-      bool constStateChange = false;
-      bool constValChange = false;
-      for (std::size_t i = 0; i < oldParameters.size(); ++i) {
-         auto const &newParam = parameters[i];
-         auto const &oldParam = oldParameters[i];
-         constStateChange &= (newParam.IsFixed() != oldParam.IsFixed());
-         constValChange &= (newParam.IsFixed() && (newParam.Value() != oldParam.Value()));
-      }
-      optimizeConstantTerms(constStateChange, constValChange);
-   }
-
    return false;
 }
 
 bool RooAbsMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
-   return synchronizeParameterSettings(parameters, _optConst);
+   return synchronizeParameterSettings(parameters);
 }
 
 /// Transfer MINUIT fit results back into RooFit objects.
@@ -302,55 +289,6 @@ double RooAbsMinimizerFcn::applyEvalErrorHandling(double fvalue) const
 void RooAbsMinimizerFcn::finishDoEval() const
 {
    _evalCounter++;
-}
-
-void RooAbsMinimizerFcn::setOptimizeConst(int flag)
-{
-   auto ctx = _context->makeEvalErrorContext();
-
-   if (_optConst && !flag) {
-      if (_context->getPrintLevel() > -1) {
-         oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: deactivating const optimization"
-                                         << std::endl;
-      }
-      setOptimizeConstOnFunction(RooAbsArg::DeActivate, true);
-      _optConst = flag;
-   } else if (!_optConst && flag) {
-      if (_context->getPrintLevel() > -1) {
-         oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: activating const optimization"
-                                         << std::endl;
-      }
-      setOptimizeConstOnFunction(RooAbsArg::Activate, flag > 1);
-      _optConst = flag;
-   } else if (_optConst && flag) {
-      if (_context->getPrintLevel() > -1) {
-         oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: const optimization already active"
-                                         << std::endl;
-      }
-   } else {
-      if (_context->getPrintLevel() > -1) {
-         oocoutI(_context, Minimization) << "RooAbsMinimizerFcn::setOptimizeConst: const optimization wasn't active"
-                                         << std::endl;
-      }
-   }
-}
-
-void RooAbsMinimizerFcn::optimizeConstantTerms(bool constStatChange, bool constValChange)
-{
-   auto ctx = _context->makeEvalErrorContext();
-
-   if (constStatChange) {
-
-      oocoutI(_context, Minimization)
-         << "RooAbsMinimizerFcn::optimizeConstantTerms: set of constant parameters changed, rerunning const optimizer"
-         << std::endl;
-      setOptimizeConstOnFunction(RooAbsArg::ConfigChange, true);
-   } else if (constValChange) {
-      oocoutI(_context, Minimization)
-         << "RooAbsMinimizerFcn::optimizeConstantTerms: constant parameter values changed, rerunning const optimizer"
-         << std::endl;
-      setOptimizeConstOnFunction(RooAbsArg::ValueChange, true);
-   }
 }
 
 RooArgList RooAbsMinimizerFcn::floatParams() const

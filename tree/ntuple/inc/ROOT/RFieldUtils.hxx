@@ -1,11 +1,12 @@
 /// \file RFieldUtils.hxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
 #ifndef ROOT_RFieldUtils
 #define ROOT_RFieldUtils
 
+#include <cassert>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <typeinfo>
@@ -61,7 +62,11 @@ enum class ERNTupleSerializationMode {
    kUnset
 };
 
-ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
+ERNTupleSerializationMode GetRNTupleSerializationMode(const TClass *cl);
+
+/// Checks if the "rntuple.SoARecord" class attribute is set in the dictionary.
+/// If so, returns its content, which is the underlying record type name.
+std::string GetRNTupleSoARecord(const TClass *cl);
 
 /// Used in RFieldBase::Create() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>".
@@ -79,6 +84,30 @@ bool IsMatchingFieldType(std::string_view actualTypeName, std::string_view expec
 /// on-disk hierarchy, matching the fields on-disk ID with the information of the descriptor.
 /// Useful information when the in-memory field cannot be matched to the the on-disk information.
 std::string GetTypeTraceReport(const RFieldBase &field, const RNTupleDescriptor &desc);
+
+/// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
+/// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
+inline std::tuple<unsigned char **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
+{
+   unsigned char **beginPtr = reinterpret_cast<unsigned char **>(rvecPtr);
+   // int32_t fSize is the second data member (after 1 void*)
+   std::int32_t *size = reinterpret_cast<std::int32_t *>(beginPtr + 1);
+   assert(*size >= 0);
+   // int32_t fCapacity is the third data member (1 int32_t after fSize)
+   std::int32_t *capacity = size + 1;
+   assert(*capacity >= -1);
+   return {beginPtr, size, capacity};
+}
+
+inline std::tuple<const unsigned char *const *, const std::int32_t *, const std::int32_t *>
+GetRVecDataMembers(const void *rvecPtr)
+{
+   return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
+}
+
+std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::size_t alignOfRVecT);
+std::size_t EvalRVecAlignment(std::size_t alignOfSubfield);
+void DestroyRVecWithChecks(std::size_t alignOfT, unsigned char **beginPtr, std::int32_t *capacityPtr);
 
 } // namespace Internal
 } // namespace ROOT

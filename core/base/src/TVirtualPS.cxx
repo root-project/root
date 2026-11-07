@@ -62,9 +62,55 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
 
 TVirtualPS::~TVirtualPS()
 {
-   if (fBuffer) delete [] fBuffer;
+   delete [] fBuffer;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Clear content of internal buffer
+
+void TVirtualPS::ClearBuffer()
+{
+   for (Int_t i = 0; i < fSizBuffer; ++i)
+      fBuffer[i] = ' ';
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Open output stream
+
+Bool_t TVirtualPS::OpenStream(const char *fname, Bool_t binary)
+{
+   CloseStream();
+
+   auto flags = std::ofstream::out;
+#ifdef R__WIN32
+   if (binary)
+      flags = flags | std::ofstream::binary;
+#else
+   (void) binary;
+#endif
+
+   fStream = new std::ofstream(fname, flags);
+   if (!fStream || !fStream->good()) {
+      delete fStream;
+      fStream = nullptr;
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Close existing stream
+
+void TVirtualPS::CloseStream()
+{
+   if (fStream) {
+      fStream->close();
+      delete fStream;
+      fStream = nullptr;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Output the string str in the output buffer
@@ -214,4 +260,18 @@ void TVirtualPS::PrintRaw(Int_t len, const char *str)
       fLenBuffer += len;
    }
    fPrinted = kTRUE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print N segments
+/// \param [in] n    number of segments
+/// \param [in] xw   array of X coordinates, size 2*n
+/// \param [in] yw   array of Y coordinates, size 2*n
+
+void TVirtualPS::DrawSegments(Int_t n, Double_t *xw, Double_t *yw)
+{
+   for(Int_t i = 0; i < 2*n; i += 2)
+      if ((xw[i] != xw[i+1]) || (yw[i] != yw[i+1]))
+         DrawPS(2, &xw[i], &yw[i]);
 }

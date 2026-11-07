@@ -377,26 +377,56 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(1u, locator.GetPosition<std::uint64_t>());
    EXPECT_EQ(RNTupleLocator::kTypeFile, locator.GetType());
 
-   locator.SetType(RNTupleLocator::kTypeDAOS);
+   locator.SetType(RNTupleLocator::kTypeObject64);
    locator.SetPosition(RNTupleLocatorObject64{1337U});
    locator.SetNBytesOnStorage(420420U);
-   locator.SetReserved(0x5a);
+   locator.SetReserved(0);
    EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
-   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeObject64);
    EXPECT_EQ(locator.GetNBytesOnStorage(), 420420U);
-   EXPECT_EQ(locator.GetReserved(), 0x5a);
+   EXPECT_EQ(locator.GetReserved(), 0);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
    locator.SetNBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
+   locator.SetReserved(1);
    EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
-   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeObject64);
    EXPECT_EQ(locator.GetNBytesOnStorage(), static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
-   EXPECT_EQ(locator.GetReserved(), 0x5a);
+   EXPECT_EQ(locator.GetReserved(), 1);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
+
+   // Multi locator round-trip with 32-bit nBytesOnStorage
+   locator = RNTupleLocator{};
+   locator.SetType(RNTupleLocator::kTypeMulti);
+   locator.SetPosition(RNTupleLocatorMulti{7, 1024});
+   locator.SetNBytesOnStorage(1024U);
+   locator.SetReserved(0);
+   EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
+   locator = RNTupleLocator{};
+   EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeMulti);
+   EXPECT_EQ(locator.GetNBytesOnStorage(), 1024U);
+   EXPECT_EQ(locator.GetReserved(), 0);
+   auto multi = locator.GetPosition<RNTupleLocatorMulti>();
+   EXPECT_EQ(7U, multi.GetObjectId());
+   EXPECT_EQ(1024U, multi.GetOffset());
+
+   // Multi locator round-trip with 64-bit nBytesOnStorage and reserved bit
+   locator.SetNBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
+   locator.SetReserved(1);
+   EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
+   locator = RNTupleLocator{};
+   EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeMulti);
+   EXPECT_EQ(locator.GetNBytesOnStorage(), static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
+   EXPECT_EQ(locator.GetReserved(), 1);
+   multi = locator.GetPosition<RNTupleLocatorMulti>();
+   EXPECT_EQ(7U, multi.GetObjectId());
+   EXPECT_EQ(1024U, multi.GetOffset());
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
 #ifndef R__BYTESWAP
@@ -407,6 +437,64 @@ TEST(RNTuple, SerializeLocator)
 #endif
    RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap();
    EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeUnknown);
+}
+
+TEST(RNTuple, RNTupleLocatorMultiFields)
+{
+   // Default-constructed: both fields zero
+   RNTupleLocatorMulti zero;
+   EXPECT_EQ(0U, zero.GetObjectId());
+   EXPECT_EQ(0U, zero.GetOffset());
+
+   // Non-trivial values
+   RNTupleLocatorMulti m(0x12345, 0xABCDE);
+   EXPECT_EQ(0x12345U, m.GetObjectId());
+   EXPECT_EQ(0xABCDEU, m.GetOffset());
+
+   // Max 32-bit values: both fields use the full uint32 range
+   RNTupleLocatorMulti maxVals(0xFFFFFFFFU, 0xFFFFFFFFU);
+   EXPECT_EQ(0xFFFFFFFFU, maxVals.GetObjectId());
+   EXPECT_EQ(0xFFFFFFFFU, maxVals.GetOffset());
+
+   // Object id only: no leak into offset
+   RNTupleLocatorMulti idOnly(0xFFFFFFFFU, 0U);
+   EXPECT_EQ(0xFFFFFFFFU, idOnly.GetObjectId());
+   EXPECT_EQ(0U, idOnly.GetOffset());
+
+   // Offset only: no leak into object id
+   RNTupleLocatorMulti offsetOnly(0U, 0xFFFFFFFFU);
+   EXPECT_EQ(0U, offsetOnly.GetObjectId());
+   EXPECT_EQ(0xFFFFFFFFU, offsetOnly.GetOffset());
+
+   // Equality semantics
+   EXPECT_EQ(RNTupleLocatorMulti(1, 2), RNTupleLocatorMulti(1, 2));
+   EXPECT_FALSE(RNTupleLocatorMulti(1, 2) == RNTupleLocatorMulti(1, 3));
+   EXPECT_FALSE(RNTupleLocatorMulti(1, 2) == RNTupleLocatorMulti(2, 2));
+}
+
+TEST(RNTuple, RNTupleLocatorMultiTypeEnforcement)
+{
+   RNTupleLocator locator;
+
+   // SetPosition(Multi) requires kTypeMulti.
+   locator.SetType(RNTupleLocator::kTypeObject64);
+   EXPECT_THROW(locator.SetPosition(RNTupleLocatorMulti(1, 2)), ROOT::RException);
+   locator.SetType(RNTupleLocator::kTypeFile);
+   EXPECT_THROW(locator.SetPosition(RNTupleLocatorMulti(1, 2)), ROOT::RException);
+
+   // Correct usage round-trip.
+   locator = RNTupleLocator{};
+   locator.SetType(RNTupleLocator::kTypeMulti);
+   locator.SetPosition(RNTupleLocatorMulti(1, 2));
+   auto m = locator.GetPosition<RNTupleLocatorMulti>();
+   EXPECT_EQ(1U, m.GetObjectId());
+   EXPECT_EQ(2U, m.GetOffset());
+
+   // GetPosition<Multi>() rejects non-Multi types.
+   locator = RNTupleLocator{};
+   locator.SetType(RNTupleLocator::kTypeObject64);
+   locator.SetPosition(RNTupleLocatorObject64{1});
+   EXPECT_THROW(locator.GetPosition<RNTupleLocatorMulti>(), ROOT::RException);
 }
 
 TEST(RNTuple, SerializeEnvelopeLink)
@@ -538,7 +626,7 @@ TEST(RNTuple, SerializeEmptyHeader)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc).Unwrap();
@@ -558,32 +646,32 @@ TEST(RNTuple, SerializeHeader)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(42)
                        .FieldName("pt")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(24)
                        .FieldName("ptAlias")
                        .Structure(ROOT::ENTupleStructure::kPlain)
                        .ProjectionSourceId(42)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(137)
                        .FieldName("jet")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(13)
                        .FieldName("eta")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 42);
    builder.AddFieldLink(0, 24);
@@ -597,7 +685,7 @@ TEST(RNTuple, SerializeHeader)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .Index(0)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(100)
@@ -606,7 +694,7 @@ TEST(RNTuple, SerializeHeader)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .Index(0)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(17)
@@ -615,7 +703,7 @@ TEST(RNTuple, SerializeHeader)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kIndex32)
                         .Index(0)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(40)
@@ -624,7 +712,7 @@ TEST(RNTuple, SerializeHeader)
                         .BitsOnStorage(8)
                         .Type(ROOT::ENTupleColumnType::kByte)
                         .Index(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    auto desc = builder.MoveDescriptor();
@@ -657,13 +745,13 @@ TEST(RNTuple, SerializeFooter)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(42)
                        .FieldName("tag")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 42);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -673,7 +761,7 @@ TEST(RNTuple, SerializeFooter)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kIndex32)
                         .Index(0)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    ROOT::RClusterDescriptor::RColumnRange columnRange;
@@ -709,8 +797,9 @@ TEST(RNTuple, SerializeFooter)
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc).Unwrap();
 
    std::vector<ROOT::DescriptorId_t> physClusterIDs;
-   for (const auto &c : desc.GetClusterIterable()) {
-      physClusterIDs.emplace_back(context.MapClusterId(c.GetId()));
+   for (const auto &cg : desc.GetClusterGroupIterable()) {
+      for (const auto cid : cg.GetClusterIds())
+         physClusterIDs.emplace_back(context.MapClusterId(cid));
    }
    EXPECT_EQ(desc.GetNClusters(), physClusterIDs.size());
    context.MapClusterGroupId(256);
@@ -781,14 +870,14 @@ TEST(RNTuple, SerializeFooterXHeader)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(42)
                        .FieldName("field")
                        .TypeName("int32_t")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 42);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -798,7 +887,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kInt32)
                         .Index(0)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor()).Unwrap();
@@ -811,21 +900,21 @@ TEST(RNTuple, SerializeFooterXHeader)
                        .FieldId(43)
                        .FieldName("struct")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(44)
                        .FieldName("f")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(45)
                        .FieldName("i64")
                        .TypeName("int64_t")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 43);
    builder.AddFieldLink(43, 44);
@@ -838,7 +927,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .Index(0)
                         .FirstElementIndex(4200)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(19)
@@ -848,7 +937,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                         .Type(ROOT::ENTupleColumnType::kInt64)
                         .Index(0)
                         .FirstElementIndex(10000)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    builder.AddField(RFieldDescriptorBuilder()
@@ -856,7 +945,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                        .FieldName("projected")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 46);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -866,7 +955,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .Index(0)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddExtraTypeInfo(RExtraTypeInfoDescriptorBuilder()
                                .ContentId(EExtraTypeInfoIds::kStreamerInfo)
@@ -954,14 +1043,14 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(7)
                        .FieldName("str")
                        .TypeName("std::string")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 7);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -971,7 +1060,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kIndex32)
                         .Index(0)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(1)
@@ -980,7 +1069,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .BitsOnStorage(8)
                         .Type(ROOT::ENTupleColumnType::kChar)
                         .Index(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(2)
@@ -990,7 +1079,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .Type(ROOT::ENTupleColumnType::kIndex64)
                         .Index(0)
                         .RepresentationIndex(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(3)
@@ -1000,7 +1089,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .Type(ROOT::ENTupleColumnType::kChar)
                         .Index(1)
                         .RepresentationIndex(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    RClusterDescriptorBuilder clusterBuilder;
@@ -1105,8 +1194,6 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    EXPECT_EQ(expect0_1, columnRange0_1);
    EXPECT_EQ(expect0_2, columnRange0_2);
    EXPECT_EQ(expect0_3, columnRange0_3);
-   EXPECT_EQ(0, desc.FindClusterId(columnIds[0], 0));
-   EXPECT_EQ(0, desc.FindClusterId(columnIds[2], 0));
 
    auto &clusterDesc1 = desc.GetClusterDescriptor(1);
    EXPECT_TRUE(clusterDesc1.ContainsColumn(columnIds[0]));
@@ -1127,10 +1214,6 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    EXPECT_EQ(expect1_1, columnRange1_1);
    EXPECT_EQ(expect1_2, columnRange1_2);
    EXPECT_EQ(expect1_3, columnRange1_3);
-   EXPECT_EQ(1, desc.FindClusterId(columnIds[0], 1));
-   EXPECT_EQ(1, desc.FindClusterId(columnIds[1], 0));
-   EXPECT_EQ(1, desc.FindClusterId(columnIds[2], 1));
-   EXPECT_EQ(1, desc.FindClusterId(columnIds[3], 0));
 }
 
 TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
@@ -1148,14 +1231,14 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(5)
                        .FieldName("pt")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
    builder.AddField(RFieldDescriptorBuilder()
@@ -1163,7 +1246,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                        .FieldName("ptAlias")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 7);
    builder.AddFieldProjection(5, 7).ThrowOnError();
@@ -1173,7 +1256,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .FieldId(5)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(1)
@@ -1182,7 +1265,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .BitsOnStorage(16)
                         .Type(ROOT::ENTupleColumnType::kReal16)
                         .RepresentationIndex(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(2)
@@ -1190,7 +1273,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .FieldId(7)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(3)
@@ -1199,7 +1282,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .BitsOnStorage(16)
                         .Type(ROOT::ENTupleColumnType::kReal16)
                         .RepresentationIndex(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    RClusterDescriptorBuilder clusterBuilder;
@@ -1265,11 +1348,6 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
 
    EXPECT_EQ(columnIds[0], desc.FindLogicalColumnId(aliasDesc.GetId(), 0, 0));
    EXPECT_EQ(columnIds[1], desc.FindLogicalColumnId(aliasDesc.GetId(), 0, 1));
-
-   EXPECT_EQ(0, desc.FindClusterId(0, 0));
-   EXPECT_EQ(0, desc.FindClusterId(1, 0));
-   EXPECT_EQ(1, desc.FindClusterId(0, 1));
-   EXPECT_EQ(1, desc.FindClusterId(1, 1));
 }
 
 TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
@@ -1287,7 +1365,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor()).Unwrap();
@@ -1306,7 +1384,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                        .FieldName("pt")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -1316,7 +1394,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .FirstElementIndex(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(1)
@@ -1327,7 +1405,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                         .RepresentationIndex(1)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
 
@@ -1412,21 +1490,22 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
 
-   // Construct an RNTuple with a single float field "pt". The field has a single representation for the
+   // Construct an RNTuple with a float field "pt" and a projection to it. The field has a single representation for the
    // first cluster and then gets extended by another representation that is active in the second cluster.
+   // The projected field gets its only column in the extended header.
 
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(5)
                        .FieldName("pt")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -1435,8 +1514,36 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
                         .BitsOnStorage(16)
                         .FieldId(5)
                         .Type(ROOT::ENTupleColumnType::kReal16)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(1)
+                        .PhysicalColumnId(1)
+                        .BitsOnStorage(32)
+                        .FieldId(5)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
+                        .RepresentationIndex(1)
+                        .MoveDescriptor()
+                        .Unwrap());
+   // add a projected field to "pt"
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(10)
+                       .ProjectionSourceId(5)
+                       .FieldName("pt_proj")
+                       .TypeName("float")
+                       .Structure(ROOT::ENTupleStructure::kPlain)
+                       .MoveDescriptor()
+                       .Unwrap());
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(2)
+                        .PhysicalColumnId(0)
+                        .FieldId(10)
+                        .BitsOnStorage(16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
+                        .RepresentationIndex(0)
+                        .MoveDescriptor()
+                        .Unwrap());
+   builder.AddFieldLink(0, 10);
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor()).Unwrap();
    auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
@@ -1451,20 +1558,37 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    pageInfo.SetNElements(1);
    pageRange.GetPageInfos().emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(0, 0, 505, pageRange);
+   clusterBuilder.MarkSuppressedColumnRange(1);
    clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
    builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
 
    builder.BeginHeaderExtension();
+
+   // Add a new column representation
    builder.AddColumn(RColumnDescriptorBuilder()
-                        .LogicalColumnId(1)
+                        .LogicalColumnId(3)
                         .PhysicalColumnId(1)
-                        .FieldId(5)
+                        .FieldId(10)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .RepresentationIndex(1)
+                        .MoveDescriptor()
+                        .Unwrap());
+
+   // We are about to add a new physical column, so we need to shift the already-existing alias column.
+   // Note that in a real scenario we would also be adding a new alias column for it, but here this is omitted for
+   // brevity.
+   builder.ShiftAliasColumns(1);
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(2)
+                        .PhysicalColumnId(2)
+                        .FieldId(5)
+                        .BitsOnStorage(32)
+                        .Type(ROOT::ENTupleColumnType::kSplitReal32)
+                        .RepresentationIndex(2)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
@@ -1503,7 +1627,21 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    EXPECT_EQ(2u, desc.GetNClusters());
    const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("pt"));
    const auto &columnIds = fieldDesc.GetLogicalColumnIds();
-   EXPECT_EQ(2u, columnIds.size());
+   EXPECT_EQ(3u, columnIds.size());
+   const auto &fieldProjDesc = desc.GetFieldDescriptor(desc.FindFieldId("pt_proj"));
+   const auto &columnProjIds = fieldProjDesc.GetLogicalColumnIds();
+   ASSERT_EQ(2u, columnProjIds.size());
+
+   const auto &colProjDesc0 = desc.GetColumnDescriptor(columnProjIds[0]);
+   const auto &colProjDesc1 = desc.GetColumnDescriptor(columnProjIds[1]);
+   EXPECT_TRUE(colProjDesc0.IsAliasColumn());
+   EXPECT_TRUE(colProjDesc1.IsAliasColumn());
+   EXPECT_EQ(colProjDesc0.GetBitsOnStorage(), 16);
+   EXPECT_EQ(colProjDesc0.GetType(), ROOT::ENTupleColumnType::kReal16);
+   EXPECT_EQ(colProjDesc0.GetRepresentationIndex(), 0);
+   EXPECT_EQ(colProjDesc1.GetBitsOnStorage(), 32);
+   EXPECT_EQ(colProjDesc1.GetType(), ROOT::ENTupleColumnType::kReal32);
+   EXPECT_EQ(colProjDesc1.GetRepresentationIndex(), 1);
 
    auto &clusterDesc0 = desc.GetClusterDescriptor(0);
    EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
@@ -1541,7 +1679,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                           .FieldId(0)
                           .FieldName("")
                           .Structure(ROOT::ENTupleStructure::kRecord)
-                          .MakeDescriptor()
+                          .MoveDescriptor()
                           .Unwrap());
 
       // Create a field with a suppressed column
@@ -1550,7 +1688,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                           .FieldName("suppressed")
                           .TypeName("int")
                           .Structure(ROOT::ENTupleStructure::kPlain)
-                          .MakeDescriptor()
+                          .MoveDescriptor()
                           .Unwrap());
       builder.AddFieldLink(0, 1);
 
@@ -1561,7 +1699,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                            .BitsOnStorage(32)
                            .Type(ROOT::ENTupleColumnType::kInt32)
                            .FirstElementIndex(0)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
 
       builder.AddColumn(RColumnDescriptorBuilder()
@@ -1572,7 +1710,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                            .BitsOnStorage(16)
                            .Type(ROOT::ENTupleColumnType::kInt16)
                            .FirstElementIndex(0)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
 
       auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor()).Unwrap();
@@ -1602,7 +1740,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                           .FieldName("deferred")
                           .TypeName("float")
                           .Structure(ROOT::ENTupleStructure::kPlain)
-                          .MakeDescriptor()
+                          .MoveDescriptor()
                           .Unwrap());
       builder.AddFieldLink(0, 2);
       builder.AddColumn(RColumnDescriptorBuilder()
@@ -1612,7 +1750,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                            .BitsOnStorage(32)
                            .Type(ROOT::ENTupleColumnType::kReal32)
                            .FirstElementIndex(1)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
       context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
 
@@ -1649,6 +1787,10 @@ TEST(RNTuple, DeserializeDescriptorModes)
    {
       // Deserialize page list in various modes
       RNTupleDescriptorBuilder builder;
+      // Normally SetVersion() would be called in LoadStructure(). Since it's required for cloning the descriptor
+      // but we don't really care otherwise, we just set it as the current version (which is what the writer's
+      // descriptor builder does in this test).
+      builder.SetVersionForWriting();
       RNTupleSerializer::DeserializeHeader(bufHeader.get(), sizeHeader, builder);
       RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
 
@@ -1813,7 +1955,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
 
    builder.BeginHeaderExtension();
@@ -1823,7 +1965,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
                        .FieldName("pt")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -1833,7 +1975,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .FirstElementIndex(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(1)
@@ -1844,7 +1986,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
                         .RepresentationIndex(1)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor()).Unwrap();
@@ -1944,7 +2086,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
 
    builder.AddField(RFieldDescriptorBuilder()
@@ -1952,7 +2094,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
                        .FieldName("pt")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -1962,7 +2104,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .FirstElementIndex(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(1)
@@ -1973,7 +2115,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
                         .RepresentationIndex(1)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor()).Unwrap();
@@ -2065,7 +2207,7 @@ TEST(RNTuple, SerializeAttrSets)
    RNTupleLocator locator;
    locator.SetType(ROOT::RNTupleLocator::kTypeFile);
    locator.SetPosition(128ul);
-   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder builder;
+   ROOT::Internal::RNTupleAttrSetDescriptorBuilder builder;
    builder.SchemaVersion(1, 0).AnchorLength(1024).AnchorLocator(locator).Name("AttrSetName");
    auto attrSetDesc = builder.MoveDescriptor().Unwrap();
 
@@ -2075,7 +2217,7 @@ TEST(RNTuple, SerializeAttrSets)
    res = RNTupleSerializer::SerializeAttributeSet(attrSetDesc, buf.get());
    ASSERT_TRUE(bool(buf));
 
-   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder deserializedDescBld;
+   ROOT::Internal::RNTupleAttrSetDescriptorBuilder deserializedDescBld;
    RNTupleSerializer::DeserializeAttributeSet(buf.get(), res.Unwrap(), deserializedDescBld);
 
    ASSERT_EQ(attrSetDesc, deserializedDescBld.MoveDescriptor().Unwrap());
@@ -2091,7 +2233,7 @@ TEST(RNTuple, SerializeDescriptorWithAttrSets)
                        .FieldId(0)
                        .FieldName("")
                        .Structure(ROOT::ENTupleStructure::kRecord)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
 
    builder.AddField(RFieldDescriptorBuilder()
@@ -2099,7 +2241,7 @@ TEST(RNTuple, SerializeDescriptorWithAttrSets)
                        .FieldName("pt")
                        .TypeName("float")
                        .Structure(ROOT::ENTupleStructure::kPlain)
-                       .MakeDescriptor()
+                       .MoveDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -2109,7 +2251,7 @@ TEST(RNTuple, SerializeDescriptorWithAttrSets)
                         .BitsOnStorage(32)
                         .Type(ROOT::ENTupleColumnType::kReal32)
                         .FirstElementIndex(1)
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(1)
@@ -2120,14 +2262,14 @@ TEST(RNTuple, SerializeDescriptorWithAttrSets)
                         .RepresentationIndex(1)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()
-                        .MakeDescriptor()
+                        .MoveDescriptor()
                         .Unwrap());
 
    RNTupleLocator locator;
    locator.SetType(ROOT::RNTupleLocator::kTypeFile);
    locator.SetPosition(128ul);
 
-   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder attrBuilder;
+   ROOT::Internal::RNTupleAttrSetDescriptorBuilder attrBuilder;
    attrBuilder.SchemaVersion(1, 0).AnchorLength(1024).AnchorLocator(locator).Name("AttrSetName");
 
    // First cluster

@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleParallelWriter.hxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-02-01
 
@@ -75,6 +74,8 @@ private:
    RNTupleParallelWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<ROOT::Internal::RPageSink> sink);
    RNTupleParallelWriter(const RNTupleParallelWriter &) = delete;
    RNTupleParallelWriter &operator=(const RNTupleParallelWriter &) = delete;
+   RNTupleParallelWriter(RNTupleParallelWriter &&) = delete;
+   RNTupleParallelWriter &operator=(RNTupleParallelWriter &&) = delete;
 
 public:
    /// Recreate a new file and return a writer to write an RNTuple.

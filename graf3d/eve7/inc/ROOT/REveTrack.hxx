@@ -63,7 +63,7 @@ protected:
    Int_t fStatus;          // Status-word, user-defined.
    Bool_t fLockPoints;     // Lock points that are currently in - do nothing in MakeTrack().
    vPathMark_t fPathMarks; // REveVector of known points along the track
-   Int_t fLastPMIdx;       //! Last path-mark index tried in track-propagation.
+   Int_t fLastPMIdx;       ///<! Last path-mark index tried in track-propagation.
 
    REveTrackPropagator *fPropagator{nullptr}; // Pointer to shared render-style
 

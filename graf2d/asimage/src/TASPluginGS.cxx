@@ -33,9 +33,8 @@ Allows to read PS/EPS/PDF files via GhostScript
 #ifndef WIN32
 #   include <afterbase.h>
 #else
-#   include <win32/config.h>
-#   include <win32/afterbase.h>
 #   define X_DISPLAY_MISSING 1
+#   include <afterbase.h>
 #endif
 #   include <import.h>
 
@@ -47,14 +46,14 @@ Allows to read PS/EPS/PDF files via GhostScript
 TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 {
 #ifndef WIN32
-   fInterpreter = gSystem->Which(gSystem->Getenv("PATH"), "gs", kExecutePermission);
+   fGsExe = "gs";
+   gSystem->FindFile(gSystem->Getenv("PATH"), fGsExe, kExecutePermission);
 #else
-   fInterpreter = gSystem->Which(gSystem->Getenv("PATH"), "gswin32c.exe", kExecutePermission);
-   if (fInterpreter) {
-      // which returned path may include blanks, like "Program Files" which popen does not like
-      delete [] fInterpreter;
-      fInterpreter = StrDup("gswin32c.exe");
-   }
+   fGsExe = "gswin32c.exe";
+   // FindFile returned path may include blanks, like "Program Files" which popen does not like
+   // Therefore if executable found in defined paths, just use it name as is
+   if (gSystem->FindFile(gSystem->Getenv("PATH"), fGsExe, kExecutePermission))
+      fGsExe = "gswin32c.exe";
 #endif
 }
 
@@ -64,9 +63,6 @@ TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 TASPluginGS::~TASPluginGS()
 {
    ROOT::CallRecursiveRemoveIfNeeded(*this);
-
-   delete [] fInterpreter;
-   fInterpreter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +70,7 @@ TASPluginGS::~TASPluginGS()
 
 ASImage *TASPluginGS::File2ASImage(const char *filename)
 {
-   if (!fInterpreter) {
+   if (fGsExe.IsNull()) {
       Warning("File2ASImage", "GhostScript is not available");
       return nullptr;
    }
@@ -84,16 +80,19 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
       return nullptr;
    }
 
-   TString ext = (strrchr(filename, '.') + 1);
-   ext.Strip();
-   ext.ToLower();
+   const char *ppos = strrchr(filename, '.');
 
-   UInt_t width = 0;
-   UInt_t height = 0;
-   Bool_t eps = kFALSE;
+   TString ext;
+   if (ppos) {
+      ext = ppos + 1;
+      ext.Strip();
+      ext.ToLower();
+   }
 
-   if (ext == "eps") {
-      eps = kTRUE;
+   UInt_t width = 0, height = 0;
+   Bool_t eps = ext == "eps";
+
+   if (eps) {
       FILE *fd = fopen(filename, "r");
       if (!fd) {
          Warning("File2ASImage", "input file %s is not readable", filename);
@@ -103,7 +102,8 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
       do {
          char buf[128];
          TString line = fgets(buf, 128, fd);
-         if (line.IsNull() || !line.BeginsWith("%")) break;
+         if (line.IsNull() || !line.BeginsWith("%"))
+            break;
 
          if (line.BeginsWith("%%BoundingBox:")) {
             int lx, ly, ux, uy;
@@ -119,20 +119,18 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
    }
 
    // command line to execute
-   TString cmd = fInterpreter;
-   if (eps) {
+   TString cmd = fGsExe;
+   if (eps)
       cmd += TString::Format(" -g%dx%d", width, height);
-   }
    cmd += " -dSAFER -dBATCH -dNOPAUSE -dQUIET -sDEVICE=png16m -dGraphicsAlphaBits=4 -sOutputFile=- ";
    cmd += filename;
    FILE *in = gSystem->OpenPipe(cmd.Data(), popen_flags);
 
-   if (!in) {
+   if (!in)
       return nullptr;
-   }
 
    const UInt_t kBuffLength = 32768;
-   static char buf[kBuffLength];
+   char buf[kBuffLength];
    TString raw;
 
    do {

@@ -89,7 +89,7 @@ Description:
 Options:
 
     MACRO               ROOT macro file. If set, the resulting test will then
-                        execute root.exe -q -l -b macro_file. It only accepts
+                        execute root.exe -q -b macro_file. It only accepts
                         macros that have a .C/.C+/.cxx/.cxx+/.py file extension.
                         If macro_file does not follow this requirement it is
                         simply redirected to root.exe (i.e. no special treatment

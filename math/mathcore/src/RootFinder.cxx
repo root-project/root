@@ -14,6 +14,7 @@
 #include "Math/RootFinder.h"
 #include "Math/IRootFinderMethod.h"
 #include "Math/BrentRootFinder.h"
+#include "Math/ModABRootFinder.h"
 
 #include "RConfigure.h"
 
@@ -54,6 +55,12 @@ bool RootFinder::SetMethod(RootFinder::EType type)
    if ( type == RootFinder::kBRENT )
    {
       fSolver = new BrentRootFinder();
+      return true;
+   }
+
+   if (type == RootFinder::kMODAB) 
+   {
+      fSolver = new ModABRootFinder();
       return true;
    }
 

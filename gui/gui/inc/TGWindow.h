@@ -15,10 +15,10 @@
 
 #include "TGObject.h"
 #include "TGClient.h"
+#include <memory>
 
 class TGClient;
 class TGIdleHandler;
-
 
 class TGWindow : public TGObject {
 

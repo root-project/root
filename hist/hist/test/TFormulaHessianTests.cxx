@@ -43,20 +43,19 @@ TEST(TFormulaHessianPar, ResultUpsize)
    TFormula f("f", "std::sin([1]) - std::cos([0])");
    double p[] = {60, 30};
    f.SetParameters(p);
-   TFormula::CladStorage result;
+   // Two elements passed the old check, but a 2x2 Hessian needs four.
+   TFormula::CladStorage result(2);
    double x[] = {2, 1};
 
-   ASSERT_TRUE(result.empty());
-   ROOT_EXPECT_WARNING(f.HessianPar(x, result),
-   "TFormula::HessianPar",
-   "The size of hessian result is 0 but 4 is required. Resizing."
-   );
+   ASSERT_TRUE(2 == result.size());
+   ROOT_EXPECT_WARNING(f.HessianPar(x, result), "TFormula::HessianPar",
+                       "The size of hessian result is 2 but 4 is required. Resizing.");
+   ASSERT_TRUE(4 == result.size());
 
    ASSERT_FLOAT_EQ(std::cos(p[0]), result[0]);
    ASSERT_FLOAT_EQ(0, result[1]);
    ASSERT_FLOAT_EQ(0, result[2]);
-   ASSERT_FLOAT_EQ(- std::sin(p[1]), result[3]);
-   ASSERT_TRUE(4 == result.size());
+   ASSERT_FLOAT_EQ(-std::sin(p[1]), result[3]);
 }
 
 TEST(TFormulaHessianPar, ResultDownsize)

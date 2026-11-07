@@ -10,14 +10,95 @@
 #include "RConfigure.h"
 #include "RZip.h"
 #include "Bits.h"
-#include "ZipLZMA.h"
-#include "ZipLZ4.h"
-#include "ZipZSTD.h"
+
+// TEMPORARY DUPLICATION OF ZipLZ4.h until header is removed from public interface and can be made fully private
+// Author: Brian Bockelman March 2015
+
+/*************************************************************************
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_ZipLZ4
+#define ROOT_ZipLZ4
+
+// NOTE: the ROOT compression libraries aren't consistently written in C++; hence the
+// #ifdef's to avoid problems with C code.
+#ifdef __cplusplus
+extern "C" {
+#endif
+void R__zipLZ4(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep);
+void R__unzipLZ4(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+// TEMPORARY DUPLICATION OF ZipLZMA.h until header is removed from public interface and can be made fully private
+// @(#)root/lzma:$Id$
+// Author: David Dagenhart   May 2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_ZipLZMA
+#define ROOT_ZipLZMA
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void R__zipLZMA(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep);
+
+void R__unzipLZMA(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+// TEMPORARY DUPLICATION OF ZipZSTD.h until header is removed from public interface and can be made fully private
+// Original Author: Brian Bockelman
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_ZipZSTD
+#define ROOT_ZipZSTD
+
+// NOTE: the ROOT compression libraries aren't consistently written in C++; hence the
+// #ifdef's to avoid problems with C code.
+#ifdef __cplusplus
+extern "C" {
+#endif
+void R__zipZSTD(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep);
+void R__unzipZSTD(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
 
 #include "zlib.h"
 
 #include <cstdio>
 #include <cassert>
+#include <memory>
 
 // The size of the ROOT block framing headers for compression:
 // - 3 bytes to identify the compression algorithm and version.
@@ -28,9 +109,9 @@
 /**
  * Forward decl's
  */
-static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgrt, int *irep);
-static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgrt, int *irep);
-static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+static void R__zipOld(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgrt, int *irep);
+static void R__zipZLIB(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgrt, int *irep);
+static void R__unzipZLIB(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
 
 /* ===========================================================================
    R__ZipMode is used to select the compression algorithm when R__zip is called
@@ -48,13 +129,7 @@ static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigne
   is done.  LZ4 typically has the worst compression ratios, but much faster decompression
   speeds - sometimes by an order of magnitude.
 */
-#ifdef R__HAS_DEFAULT_ZSTD
-ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kZSTD;
-#elif defined(R__HAS_DEFAULT_LZ4)
-ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kLZ4;
-#else
 ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kZLIB;
-#endif
 
 /* ===========================================================================
    Function to set the ZipMode
@@ -76,7 +151,8 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
 /*                      1 = zlib */
 /*                      2 = lzma */
 /*                      3 = old */
-void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
+void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep,
+                             ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
 {
   *irep = 0;
 
@@ -117,10 +193,9 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   // The very old algorithm for backward compatibility
   // 0 for selecting with R__ZipMode in a backward compatible way
   // 3 for selecting in other cases
-static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+static void R__zipOld(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
     int method   = Z_DEFLATED;
-    bits_internal_state state;
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
     if (cxlevel > 9) cxlevel = 9;
@@ -137,48 +212,55 @@ static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *
        return;
     }
 
+    auto state = std::make_unique<bits_internal_state>();
+    if (!state) {
+       R__error("fail to allocate bits_internal_state struct");
+       return;
+    }
+
 #ifdef DYN_ALLOC
-    state.R__window = 0;
-    state.R__prev = 0;
+    state->R__window = 0;
+    state->R__prev = 0;
 #endif
 
-    state.in_buf    = src;
-    state.in_size   = (unsigned) (*srcsize);
-    state.in_offset = 0;
+    state->in_buf    = src;
+    state->in_size   = (unsigned) (*srcsize);
+    state->in_offset = 0;
 
-    state.out_buf     = tgt;
-    state.out_size    = (unsigned) (*tgtsize);
-    state.out_offset  = HDRSIZE;
-    state.R__window_size = 0L;
+    state->out_buf     = tgt;
+    state->out_size    = (unsigned) (*tgtsize);
+    state->out_offset  = HDRSIZE;
+    state->R__window_size = 0L;
 
-    if (0 != R__bi_init(&state) ) return;       /* initialize bit routines */
-    state.t_state = R__get_thread_tree_state();
-    if (0 != R__ct_init(state.t_state,&att, &method)) return; /* initialize tree routines */
-    if (0 != R__lm_init(&state, gCompressionLevel, &flags)) return; /* initialize compression */
-    R__Deflate(&state,&state.error_flag);                  /* compress data */
-    if (state.error_flag != 0) return;
+    if (0 != R__bi_init(state.get())) return;       /* initialize bit routines */
+    state->t_state = R__get_thread_tree_state();
+    if (0 != R__ct_init(state->t_state,&att, &method)) return; /* initialize tree routines */
+    if (0 != R__lm_init(state.get(), gCompressionLevel, &flags)) return; /* initialize compression */
+    R__Deflate(state.get(), &(state->error_flag));                  /* compress data */
+    if (state->error_flag != 0) return;
 
     tgt[0] = 'C';               /* Signature 'C'-Chernyaev, 'S'-Smirnov */
     tgt[1] = 'S';
     tgt[2] = (char) method;
 
-    state.out_size  = state.out_offset - HDRSIZE;         /* compressed size */
-    tgt[3] = (char)(state.out_size & 0xff);
-    tgt[4] = (char)((state.out_size >> 8) & 0xff);
-    tgt[5] = (char)((state.out_size >> 16) & 0xff);
+    state->out_size  = state->out_offset - HDRSIZE;         /* compressed size */
+    tgt[3] = (char)(state->out_size & 0xff);
+    tgt[4] = (char)((state->out_size >> 8) & 0xff);
+    tgt[5] = (char)((state->out_size >> 16) & 0xff);
 
-    tgt[6] = (char)(state.in_size & 0xff);         /* decompressed size */
-    tgt[7] = (char)((state.in_size >> 8) & 0xff);
-    tgt[8] = (char)((state.in_size >> 16) & 0xff);
+    tgt[6] = (char)(state->in_size & 0xff);         /* decompressed size */
+    tgt[7] = (char)((state->in_size >> 8) & 0xff);
+    tgt[8] = (char)((state->in_size >> 16) & 0xff);
 
-    *irep     = state.out_offset;
-    return;
+    *irep     = state->out_offset;
+
+    R__lm_free(state.get());
 }
 
 /**
  * Compress buffer contents using the venerable zlib algorithm.
  */
-static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+static void R__zipZLIB(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
   int err;
   int method   = Z_DEFLATED;
@@ -246,32 +328,32 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
  * Below are the routines for unzipping (inflating) buffers.
  */
 
-static int is_valid_header_zlib(unsigned char *src)
+static int is_valid_header_zlib(const unsigned char *src)
 {
    return src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED;
 }
 
-static int is_valid_header_old(unsigned char *src)
+static int is_valid_header_old(const unsigned char *src)
 {
    return src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED;
 }
 
-static int is_valid_header_lzma(unsigned char *src)
+static int is_valid_header_lzma(const unsigned char *src)
 {
    return src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
 }
 
-static int is_valid_header_lz4(unsigned char *src)
+static int is_valid_header_lz4(const unsigned char *src)
 {
    return src[0] == 'L' && src[1] == '4';
 }
 
-static int is_valid_header_zstd(unsigned char *src)
+static int is_valid_header_zstd(const unsigned char *src)
 {
    return src[0] == 'Z' && src[1] == 'S' && src[2] == '\1';
 }
 
-static int is_valid_header(unsigned char *src)
+static int is_valid_header(const unsigned char *src)
 {
    return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
           is_valid_header_lz4(src) || is_valid_header_zstd(src);
@@ -296,7 +378,7 @@ ROOT::RCompressionSetting::EAlgorithm::EValues R__getCompressionAlgorithm(const 
    return ROOT::RCompressionSetting::EAlgorithm::kUndefined;
 }
 
-int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
+int R__unzip_header(int *srcsize, const uch *src, int *tgtsize)
 {
   // Reads header envelope, and determines target size.
   // Returns 0 in case of success.
@@ -336,10 +418,11 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
  ***********************************************************************/
 // N.B. (Brian) - I have kept the original note out of complete awe of the
 // age of the original code...
-void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
+void R__unzip(int *srcsize, const uch *src, int *tgtsize, uch *tgt, int *irep)
 {
    long isize;
-   uch *ibufptr, *obufptr;
+   const uch *ibufptr;
+   uch *obufptr;
    long ibufcnt, obufcnt;
 
    *irep = 0L;
@@ -407,7 +490,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
    *irep = isize;
 }
 
-void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipZLIB(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
      z_stream stream; /* decompression stream */
      int err = 0;

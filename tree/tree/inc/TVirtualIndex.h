@@ -30,7 +30,7 @@ class TTreeFormula;
 class TVirtualIndex : public TNamed {
 
 protected:
-   TTree         *fTree;          //! pointer to Tree
+   TTree         *fTree;          ///<! pointer to Tree
 
 public:
    TVirtualIndex();

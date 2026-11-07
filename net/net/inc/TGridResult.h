@@ -12,22 +12,22 @@
 #ifndef ROOT_TGridResult
 #define ROOT_TGridResult
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGridResult                                                          //
-//                                                                      //
-// Abstract base class defining interface to a GRID result.             //
-// Objects of this class are created by TGrid methods.                  //
-//                                                                      //
-// Related classes are TGrid.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TList.h"
 
 class TEntryList;
 
 
+//////////////////////////////////////////////////////////////////////////
+///                                                                     
+/// \note This class is deprecated. It is kept for backward compatibility
+/// but it should not be used in new code.                               
+///                                                                     
+/// Abstract base class defining interface to a GRID result.            
+/// Objects of this class are created by TGrid methods.                 
+///                                                                     
+/// Related classes are TGrid.                                          
+///                                                                     
+//////////////////////////////////////////////////////////////////////////
 class TGridResult : public TList {
 
 public:

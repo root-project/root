@@ -1,5 +1,4 @@
 /// \file RFieldUtils.cxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
@@ -17,6 +16,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <cstdlib>
 #include <limits>
 #include <string>
 #include <string_view>
@@ -393,7 +393,7 @@ void NormalizeTemplateArguments(std::string &templatedTypeName, int maxTemplateA
 // Given a type name normalized by ROOT Meta, return the type name normalized according to the RNTuple rules.
 std::string GetRenormalizedMetaTypeName(const std::string &metaNormalizedName)
 {
-   const auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
+   auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
    // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
    // (also in template parameters)
    if (canonicalTypePrefix == "Double32_t")
@@ -573,7 +573,7 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
    TClassEdit::TSplitType splitname(origName.c_str(), modType);
    std::string shortType;
    splitname.ShortType(shortType, modType);
-   const auto canonicalTypePrefix = GetCanonicalTypePrefix(shortType);
+   auto canonicalTypePrefix = GetCanonicalTypePrefix(shortType);
 
    if (canonicalTypePrefix.find('<') == std::string::npos) {
       // If there are no templates, the function is done.
@@ -698,7 +698,7 @@ unsigned long long ROOT::Internal::ParseUIntTypeToken(const std::string &uintTok
    throw RException(R__FAIL("invalid integer type token: " + uintToken));
 }
 
-ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializationMode(TClass *cl)
+ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializationMode(const TClass *cl)
 {
    auto am = cl->GetAttributeMap();
    if (!am || !am->HasKey("rntuple.streamerMode"))
@@ -715,6 +715,15 @@ ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializatio
                                                   << am->GetPropertyAsString("rntuple.streamerMode");
       return ERNTupleSerializationMode::kUnset;
    }
+}
+
+std::string ROOT::Internal::GetRNTupleSoARecord(const TClass *cl)
+{
+   auto am = cl->GetAttributeMap();
+   if (am && am->HasKey("rntuple.SoARecord")) {
+      return am->GetPropertyAsString("rntuple.SoARecord");
+   }
+   return "";
 }
 
 std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templateType, std::size_t maxArgs)
@@ -824,4 +833,66 @@ std::string ROOT::Internal::GetTypeTraceReport(const RFieldBase &field, const RN
    }
 
    return report;
+}
+
+std::size_t ROOT::Internal::EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::size_t alignOfRVecT)
+{
+   // the size of an RVec<T> is the size of its 4 data-members + optional padding:
+   //
+   // data members:
+   // - void *fBegin
+   // - int32_t fSize
+   // - int32_t fCapacity
+   // - the char[] inline storage, which is aligned like T
+   //
+   // padding might be present:
+   // - between fCapacity and the char[] buffer aligned like T
+   // - after the char[] buffer
+
+   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
+
+   // mimic the logic of RVecInlineStorageSize, but at runtime
+   const auto inlineStorageSz = [&] {
+      constexpr unsigned cacheLineSize = R__HARDWARE_INTERFERENCE_SIZE;
+      const unsigned elementsPerCacheLine = (cacheLineSize - dataMemberSz) / sizeOfT;
+      constexpr unsigned maxInlineByteSize = 1024;
+      const unsigned nElements =
+         elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeOfT * 8 > maxInlineByteSize ? 0 : 8);
+      return nElements * sizeOfT;
+   }();
+
+   // compute padding between first 3 datamembers and inline buffer
+   // (there should be no padding between the first 3 data members)
+   auto paddingMiddle = dataMemberSz % alignOfT;
+   if (paddingMiddle != 0)
+      paddingMiddle = alignOfT - paddingMiddle;
+
+   // padding at the end of the object
+   auto paddingEnd = (dataMemberSz + paddingMiddle + inlineStorageSz) % alignOfRVecT;
+   if (paddingEnd != 0)
+      paddingEnd = alignOfRVecT - paddingEnd;
+
+   return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
+}
+
+std::size_t ROOT::Internal::EvalRVecAlignment(std::size_t alignOfSubfield)
+{
+   // the alignment of an RVec<T> is the largest among the alignments of its data members
+   // (including the inline buffer which has the same alignment as the RVec::value_type)
+   return std::max({alignof(void *), alignof(std::int32_t), alignOfSubfield});
+}
+
+void ROOT::Internal::DestroyRVecWithChecks(std::size_t alignOfT, unsigned char **beginPtr, std::int32_t *capacityPtr)
+{
+   // figure out if we are in the small state, i.e. begin == &inlineBuffer
+   // there might be padding between fCapacity and the inline buffer, so we compute it here
+   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
+   auto paddingMiddle = dataMemberSz % alignOfT;
+   if (paddingMiddle != 0)
+      paddingMiddle = alignOfT - paddingMiddle;
+   const bool isSmall = (*beginPtr == (reinterpret_cast<unsigned char *>(beginPtr) + dataMemberSz + paddingMiddle));
+
+   const bool owns = (*capacityPtr != -1);
+   if (!isSmall && owns)
+      ::operator delete(*beginPtr);
 }

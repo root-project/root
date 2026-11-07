@@ -10,6 +10,11 @@
 
 /** \class RooParamHistFunc
  *  \ingroup Roofit
+ *
+ * \deprecated RooParamHistFunc will be removed in ROOT 6.46, because its functionality is too close to the
+ * HistFactory classes. Please use the HistFactory class ParamHistFunc instead, multiplying it with a RooHistFunc,
+ * as shown in the rf709_BarlowBeeston tutorial.
+ *
  * A histogram function that assigns scale parameters to every bin. Instead of the bare bin contents,
  * it therefore yields:
  * \f[
@@ -19,8 +24,6 @@
  * The \f$ \gamma_i \f$ can therefore be used to parametrise statistical uncertainties of the histogram
  * template. In conjunction with a constraint term, this can be used to implement the Barlow-Beeston method.
  * The constraint can be implemented using RooHistConstraint.
- *
- * See also the tutorial rf709_BarlowBeeston.C
  */
 
 #include <RooParamHistFunc.h>
@@ -44,11 +47,11 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
    // Now populate p with parameters
    RooArgSet allVars;
    for (Int_t i = 0; i < _dh.numEntries(); i++) {
-      _dh.get(i);
+      const double wi = _dh.weight(i);
       const char *vname = Form("%s_gamma_bin_%i", GetName(), i);
       RooRealVar *var = new RooRealVar(vname, vname, 0, 1000);
-      var->setVal(_relParam ? 1 : _dh.weight());
-      var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
+      var->setVal(_relParam ? 1 : wi);
+      var->setError(_relParam ? 1 / sqrt(wi) : sqrt(wi));
       var->setConstant(true);
       allVars.add(*var);
       _p.add(*var);
@@ -94,8 +97,7 @@ void RooParamHistFunc::setActual(Int_t ibin, double newVal)
 
 double RooParamHistFunc::getNominal(Int_t ibin) const
 {
-  _dh.get(ibin) ;
-  return _dh.weight() ;
+  return _dh.weight(ibin) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

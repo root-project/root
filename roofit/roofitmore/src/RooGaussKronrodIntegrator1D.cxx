@@ -47,8 +47,6 @@ reached
 #include <RooNumber.h>
 #include <RooRealVar.h>
 
-#include <Riostream.h>
-
 #include <TMath.h>
 
 #include <gsl/gsl_integration.h>
@@ -56,6 +54,7 @@ reached
 #include <cassert>
 #include <cfloat>
 #include <cmath>
+#include <ostream>
 
 using std::endl;
 

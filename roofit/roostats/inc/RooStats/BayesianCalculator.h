@@ -151,8 +151,6 @@ namespace RooStats {
 
       void ComputeIntervalFromCdf(double c1, double c2) const;
 
-      void ComputeIntervalUsingRooFit(double c1, double c2) const;
-
       void ComputeShortestInterval() const;
 
    private:

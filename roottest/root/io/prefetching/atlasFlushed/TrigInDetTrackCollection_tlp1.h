@@ -9,7 +9,7 @@
 #define TrigInDetTrackCollection_tlp1_h
 class TrigInDetTrackCollection_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigInDetTrackCollection_p1.h"
 #include "TrigInDetTrack_p1.h"

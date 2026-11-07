@@ -276,17 +276,27 @@ public:
 class TSystem : public TNamed {
 
 public:
-   enum EAclicMode { kDefault, kDebug, kOpt };
+   enum EAclicMode {
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kDefault,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kDebug, kOpt };
    enum EAclicProperties {
       kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created sub-directories
    };
 
 protected:
-   TFdSet          *fReadmask{nullptr};         //!Files that should be checked for read events
-   TFdSet          *fWritemask{nullptr};        //!Files that should be checked for write events
-   TFdSet          *fReadready{nullptr};        //!Files with reads waiting
-   TFdSet          *fWriteready{nullptr};       //!Files with writes waiting
-   TFdSet          *fSignals{nullptr};          //!Signals that were trapped
+   TFdSet          *fReadmask{nullptr};         ///<!Files that should be checked for read events
+   TFdSet          *fWritemask{nullptr};        ///<!Files that should be checked for write events
+   TFdSet          *fReadready{nullptr};        ///<!Files with reads waiting
+   TFdSet          *fWriteready{nullptr};       ///<!Files with writes waiting
+   TFdSet          *fSignals{nullptr};          ///<!Signals that were trapped
    Int_t            fNfd{0};                    //Number of fd's in masks
    Int_t            fMaxrfd{-1};                //Largest fd in read mask
    Int_t            fMaxwfd{-1};                //Largest fd in write mask
@@ -359,7 +369,7 @@ public:
    void                    SetErrorStr(const char *errstr);
    const char             *GetErrorStr() const { return GetLastErrorString(); }
    virtual const char     *GetError();
-   virtual Int_t           GetCryptoRandom(void *buf, Int_t len);
+   static Int_t            GetCryptoRandom(void *buf, Int_t len);
    void                    RemoveOnExit(TObject *obj);
    virtual const char     *HostName();
    virtual void            NotifyApplicationCreated();

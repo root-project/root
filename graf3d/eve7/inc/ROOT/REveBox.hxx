@@ -41,7 +41,7 @@ public:
 
    const Float_t* GetVertex(Int_t i) const { return fVertices[i]; }
 
-   // For TAttBBox:
+   // From REveElement:
    void ComputeBBox() override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
@@ -78,7 +78,7 @@ public:
    void BuildRenderData() override;
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
-   // For TAttBBox:
+   // From REveElement:
    void ComputeBBox() override;
 
    Bool_t GetDebugCornerPoints();

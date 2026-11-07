@@ -28,6 +28,7 @@ a RooPlot.
 #include "RooHist.h"
 
 #include "RooAbsRealLValue.h"
+#include "RooUniformBinning.h"
 #include "RooHistError.h"
 #include "RooCurve.h"
 #include "RooMsgService.h"
@@ -35,10 +36,9 @@ a RooPlot.
 #include "RooConstVar.h"
 
 #include "TH1.h"
-#include "Riostream.h"
+
 #include <iomanip>
-
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an empty histogram that can be filled with the addBin()
@@ -302,13 +302,22 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac, do
   RooProduct scaledFunc{"scaled_func", "scaled_func", {f, RooFit::RooConst(scaleFactor)}};
   std::unique_ptr<RooAbsFunc> funcPtr{scaledFunc.bindVars(x, normVars, true)};
 
-  // calculate the points to add to our curve
-  int xbins = x.numBins();
+  // calculate the points to add to our curve. A variable with no binning
+  // explicitly set reports zero bins; in that case fall back to the historical
+  // default bin count for plotting, using a local binning so that the user's
+  // variable is not mutated.
+  const RooAbsBinning *xbinning = &x.getBinning();
+  std::unique_ptr<RooUniformBinning> defaultBinning;
+  if (x.numBins() == 0) {
+    defaultBinning = std::make_unique<RooUniformBinning>(x.getMin(), x.getMax(), RooAbsRealLValue::DefaultNBins);
+    xbinning = defaultBinning.get();
+  }
+  int xbins = xbinning->numBins();
   RooArgSet nset;
   if(normVars) nset.add(*normVars);
   for(int i=0; i<xbins; ++i){
-    double xval = x.getBinning().binCenter(i);
-    double xwidth = x.getBinning().binWidth(i);
+    double xval = xbinning->binCenter(i);
+    double xwidth = xbinning->binWidth(i);
     Axis_t xval_ax = xval;
     double yval = (*funcPtr)(&xval);
     double yerr = std::sqrt(yval);
@@ -632,10 +641,9 @@ bool RooHist::hasIdenticalBinning(const RooHist& other) const
 bool RooHist::isIdentical(const RooHist& other, double tol, bool verbose) const
 {
   // Make temporary TH1s output of RooHists to perform Kolmogorov test
-  TH1::AddDirectory(false) ;
+  TDirectory::TContext ctx{nullptr}; // No self-registration to directories
   TH1F h_self("h_self","h_self",GetN(),0,1) ;
-  TH1F h_other("h_other","h_other",GetN(),0,1) ;
-  TH1::AddDirectory(true) ;
+  TH1F h_other("h_other", "h_other", GetN(), 0, 1);
 
   for (Int_t i=0 ; i<GetN() ; i++) {
     h_self.SetBinContent(i+1,GetY()[i]) ;

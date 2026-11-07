@@ -9,19 +9,5 @@ if(TARGET Gui AND TARGET TreeViewer)
    add_subdirectory(tmvagui)
 endif()
 
-# Build pyMVA. Allows users to call python mva's from c++ ROOT/TMVA.
-if(tmva-pymva)
-   add_subdirectory(pymva)
-endif()
-
-# Build RMVA. Allows users to call R mva's from c++ ROOT/TMVA.
-if(r OR tmva-rmva)
-   add_subdirectory(rmva)
-endif()
-
 add_subdirectory(sofie)
-#parser depends on protobuf 
-#found if flag tmva-sofie is on
-if (tmva-sofie)
-   add_subdirectory(sofie_parsers)
-endif()
+add_subdirectory(sofie_parsers)

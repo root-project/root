@@ -193,7 +193,7 @@ made transient by hiding them from rootcint or genreflex now *must* be
 *explicitly* marked as transient.  For rootcint or rootcling use:
 
 ``` {.cpp}
-   sometype datamember; //! The exclamation mark signals the transientness
+   sometype datamember; ///<! The exclamation mark signals the transientness
 ```
 
 and for genreflex

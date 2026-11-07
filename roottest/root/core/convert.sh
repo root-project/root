@@ -13,4 +13,5 @@ grep -v 'dot -' \
 | grep -v ' Times-Roman' \
 | grep -v 'ldap_initialize() failed:' \
 | grep -v 'ldap_sasl_bind_s() failed:' \
-| grep -v '_Index.html'
+| grep -v '_Index.html' \
+| grep -v 'DISPLAY not set'

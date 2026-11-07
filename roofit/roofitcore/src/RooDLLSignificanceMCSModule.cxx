@@ -30,8 +30,6 @@ on underlying normal sampling distributions and a MC study is a good way
 to test that assumption.
 **/
 
-#include "Riostream.h"
-
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "TString.h"
@@ -39,7 +37,7 @@ to test that assumption.
 #include "RooDLLSignificanceMCSModule.h"
 #include "RooMsgService.h"
 
-
+#include <ostream>
 
 using std::endl;
 
@@ -145,8 +143,11 @@ RooDataSet* RooDLLSignificanceMCSModule::finalizeRun()
 /// null hypothesis value and rerun fit Save difference in likelihood
 /// and associated Gaussian significance in auxiliary dataset
 
-bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
+bool RooDLLSignificanceMCSModule::processAfterFit(bool fitOk)
 {
+  if(!fitOk)
+     return true;
+
   RooRealVar* par = static_cast<RooRealVar*>(fitParams()->find(_parName.c_str())) ;
   par->setVal(_nullValue) ;
   par->setConstant(true) ;

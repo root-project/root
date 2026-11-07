@@ -28,8 +28,6 @@
 #include "TBits.h"
 #include "TInetAddress.h"
 #include "MessageTypes.h"
-#include "TVirtualAuth.h"
-#include "TSecContext.h"
 #include "TTimeStamp.h"
 #include "TVirtualMutex.h"
 #include "TSocket.h"
@@ -52,12 +50,10 @@ protected:
    Int_t         fCompress;       // Compression level and algorithm
    TInetAddress  fLocalAddress;   // local internet address and port #
    Int_t         fRemoteProtocol; // protocol of remote daemon
-   TSecContext  *fSecContext;     // after a successful Authenticate call
-                                  // points to related security context
    TString       fService;        // name of service (matches remote port #)
    EServiceType  fServType;       // remote service type
    Int_t         fSocket;         // socket descriptor
-   TString       fUrl;            // needs this for special authentication options
+   TString       fUrl;            // address of the remote service
    TBits         fBitsInfo;       // bits array to mark TStreamerInfo classes already sent
    TList        *fUUIDs;          // list of TProcessIDs already sent through the socket
 
@@ -68,7 +64,7 @@ protected:
    static ULong64_t fgBytesSent;  // total bytes sent by all socket objects
 
    TUDPSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
-                  fLocalAddress(), fRemoteProtocol(), fSecContext(nullptr), fService(),
+                  fLocalAddress(), fRemoteProtocol(), fService(),
                   fServType(kSOCKD), fSocket(-1), fUrl(),
                   fBitsInfo(), fUUIDs(nullptr), fLastUsageMtx(nullptr), fLastUsage() { }
 
@@ -111,7 +107,6 @@ public:
    Int_t                 GetErrorCode() const;
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
-   TSecContext          *GetSecContext() const { return fSecContext; }
 
    TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
    const char           *GetUrl() const { return fUrl; }
@@ -136,7 +131,6 @@ public:
    void                  SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
-   void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
    void                  SetService(const char *service) { fService = service; }
    void                  SetServType(Int_t st) { fServType = (EServiceType)st; }
    void                  SetUrl(const char *url) { fUrl = url; }

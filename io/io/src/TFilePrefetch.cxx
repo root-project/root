@@ -33,7 +33,7 @@ inline int xtod(char c) { return (c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F'
 
 /**
 \class TFilePrefetch
-\ingroup IO
+\ingroup io_files
 
 The prefetching mechanism uses two classes (TFilePrefetch and
 TFPBlock) to prefetch in advance a block of tree entries. There is

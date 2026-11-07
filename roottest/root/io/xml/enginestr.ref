@@ -1,0 +1,21 @@
+Processing runenginestr.C...
+  node: main
+    node: child1
+      content: Content of child1 string node
+    node: child2
+      attr: attr1 value: strvalue1
+      attr: attr2 value: strvalue2
+    node: child3
+      node: subchild1
+        content: subchild1 string content
+      node: subchild2
+        content: subchild2 string content
+      node: subchild3
+        content: subchild3 string content
+    node: child4
+      node: subchild4
+        content: subchild4 content
+      node: subchild5
+        content: subchild5 content
+      node: subchild6
+        content: subchild6 content

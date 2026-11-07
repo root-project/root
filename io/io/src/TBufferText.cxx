@@ -11,7 +11,7 @@
 
 /**
 \class TBufferText
-\ingroup IO
+\ingroup io_other
 
 Base class for text-based streamers like TBufferJSON or TBufferXML
 Special actions list will use methods, introduced in this class.
@@ -30,7 +30,8 @@ actions list for both are the same.
 #include "TInterpreter.h"
 #include "TExMap.h"
 #include "TError.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 #include <cmath>
 
@@ -140,7 +141,7 @@ Int_t TBufferText::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    TVirtualStreamerInfo *info = sequence.fStreamerInfo;
    IncrementLevel(info);
 
-   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
+   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig.get();
    if (gDebug) {
 
       // Get the address of the first item for the PrintDebug.

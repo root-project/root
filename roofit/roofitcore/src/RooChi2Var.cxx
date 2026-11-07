@@ -16,42 +16,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-/** \class RooChi2Var
-    \ingroup Roofitcore
-    \brief Simple \f$ \chi^2 \f$ calculation from a binned dataset and a PDF.
- *
- * It calculates:
- *
- \f{align*}{
-   \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2 \\
-   N_\mathrm{PDF,bin} &=
-     \begin{cases}
-         \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}\\
-         \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{extended PDF}
-     \end{cases} \\
-   \Delta_\mathrm{bin} &=
-     \begin{cases}
-         \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}\\
-         \mathtt{data{\rightarrow}weightError()} &\text{otherwise} \\
-     \end{cases}
- \f}
- * If the dataset doesn't have user-defined errors, errors are assumed to be \f$ \sqrt{N} \f$.
- * In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
- * expected number of events that the PDF predicts.
- *
- * \note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
- * zero error. This leads to messages like:
- * ```
- * [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
- * ```
- *
- * \note In this case, one can use the expected errors of the PDF instead of the data errors:
- * ```{.cpp}
- * RooChi2Var chi2(..., ..., RooFit::DataError(RooAbsData::Expected), ...);
- * ```
- */
-
 #include "RooChi2Var.h"
 
 #include "FitHelpers.h"
@@ -59,12 +23,12 @@
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
-
-#include "Riostream.h"
-#include "TClass.h"
-
 #include "RooRealVar.h"
 #include "RooAbsDataStore.h"
+
+#include <ROOT/StringUtils.hxx>
+
+#include <ostream>
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataHist &data, bool extended,
                        RooDataHist::ErrorType etype, RooAbsTestStatistic::Configuration const &cfg)
@@ -99,6 +63,12 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
   double result(0);
   double carry(0);
 
+  // Also consider the composite case of multiple ranges
+  std::vector<std::string> rangeTokens;
+  if (!_rangeName.empty()) {
+    rangeTokens = ROOT::Split(_rangeName, ",");
+  }
+
   // Determine normalization factor depending on type of input function
   double normFactor(1) ;
   switch (_funcMode) {
@@ -112,11 +82,32 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
   for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 
     // get the data values for this event
-    hdata->get(i);
+    RooArgSet const *row = hdata->get(i);
 
-    const double nData = hdata->weight() ;
+    // Skip bins that are outside of the selected range
+    bool doSelect(true) ;
+    if (!_rangeName.empty()) {
+      doSelect = false;
+      // A row is selected if it is inside at least one complete named range.
+      for (const auto &rangeName : rangeTokens) {
+        bool inThisRange = true;
+        for (const auto arg : *row) {
+          if (!arg->inRange(rangeName.c_str())) {
+            inThisRange = false;
+            break;
+          }
+        }
+        if (inThisRange) {
+          doSelect = true;
+          break;
+        }
+      }
+    }
+    if (!doSelect) continue ;
 
-    const double nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume() ;
+    const double nData = hdata->weight(i) ;
+
+    const double nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume(i) ;
 
     const double eExt = nPdf-nData ;
 

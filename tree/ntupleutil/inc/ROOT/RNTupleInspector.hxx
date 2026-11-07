@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleInspector.hxx
-/// \ingroup NTuple ROOT7
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2023-01-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -49,6 +48,11 @@ enum class ENTupleInspectorHist {
    kNElems,
    kCompressedSize,
    kUncompressedSize
+};
+
+enum class ESchemaProfileFormat {
+   /// https://www.speedscope.app/file-format-schema.json
+   kSpeedscopeJSON
 };
 
 // clang-format off
@@ -101,7 +105,9 @@ public:
          : fColumnDescriptor(colDesc),
            fCompressedPageSizes(compressedPageSizes),
            fElementSize(elemSize),
-           fNElements(nElems){};
+           fNElements(nElems)
+      {
+      }
       ~RColumnInspector() = default;
 
       const ROOT::RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
@@ -132,7 +138,9 @@ public:
 
    public:
       RFieldTreeInspector(const ROOT::RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
-         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize){};
+         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize)
+      {
+      }
       ~RFieldTreeInspector() = default;
 
       const ROOT::RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
@@ -422,6 +430,10 @@ public:
                                                     std::string histName = "", std::string histTitle = "",
                                                     size_t nBins = 64);
 
+   std::unique_ptr<THStack> GetPagesPerClusterDistribution(std::initializer_list<ROOT::ENTupleColumnType> colTypes = {},
+                                                           std::string_view histName = "",
+                                                           std::string_view histTitle = "", size_t nBins = 32);
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get storage information for a given (sub)field by ID.
    ///
@@ -494,6 +506,20 @@ public:
    {
       PrintFieldTreeAsDot(GetDescriptor().GetFieldZero(), output);
    }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Print a string that represents the tree of the (sub)fields and columns of an RNTuple in a format which a
+   /// performance profile visualizer can render
+   void PrintSchemaProfile(std::ostream &output = std::cout,
+                           ESchemaProfileFormat format = ESchemaProfileFormat::kSpeedscopeJSON) const;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Print a string that represents the on-disk storage of the cluster groups, clusters, column ranges, pages,
+   /// header, footer and page lists on an RNTuple in a format which a performance profile visualizer can render
+   ///
+   /// \warning ntuple must have a file-based backend
+   void PrintDiskProfile(std::ostream &output = std::cout,
+                         ESchemaProfileFormat format = ESchemaProfileFormat::kSpeedscopeJSON) const;
 };
 } // namespace Experimental
 } // namespace ROOT

@@ -175,6 +175,15 @@ namespace NS1 {
   }
 }
 
+namespace NS4 {
+  namespace Inner {
+    template <typename T> class TemplateClass {};
+    using UsingAlias = TemplateClass<double>;
+    typedef UsingAlias ConcreteTypedef;
+  }
+}
+typedef NS4::Inner::ConcreteTypedef GlobalAlias;
+
 .rawInput 0
 
 const cling::LookupHelper& lookup = gCling->getLookupHelper();
@@ -188,6 +197,18 @@ transConfig.m_toSkip.insert(Lookup::Named(Sema, "Double32_t"));
 using namespace std;
 transConfig.m_toSkip.insert(Lookup::Named(Sema, "string"));
 transConfig.m_toSkip.insert(Lookup::Named(Sema, "string", Lookup::Namespace(Sema, "std")));
+
+// Register basic_string<char> to std::string replacement (mirrors TNormalizedCtxImpl)
+clang::QualType stdString = lookup.findType("std::string", diags);
+if (!stdString.isNull()) {
+   if (const clang::TypedefType* TT =
+         llvm::dyn_cast_or_null<clang::TypedefType>(stdString.getTypePtr()))
+      transConfig.m_toSkip.insert(TT->getDecl());  // already done above, but harmless
+
+   clang::QualType canon = stdString->getCanonicalTypeInternal();
+   transConfig.m_toReplace.insert(
+      std::make_pair(canon.getTypePtr(), stdString.getTypePtr()));
+}
 
 const clang::Type* t = 0;
 clang::QualType QT;
@@ -210,16 +231,37 @@ Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str()
 // The above result is not quite want we want, so the client must using
 // the following:
 // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
-// This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
-// strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
+// In LLVM22 (and before), SuppressUnwrittenScope suppresses anonymous namespaces. Inline namespace suppression is separately
+// controlled by SuppressInlineNamespace, which we probably don't want to be suppressed.
 clang::PrintingPolicy Policy(Ctx.getPrintingPolicy());
+Policy.SuppressUnwrittenScope = true; // Strip anonymous namespace names
 Policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-Policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
+Policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
 Policy.SplitTemplateClosers = true; // Print a<b<c> >' rather than 'a<b<c>>'.
 std::string name;
 Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsStringInternal(name,Policy);
 name.c_str()
 // CHECK: ({{[^)]+}}) "InsideAnonymous"
+
+// Test the behavior for a class inside an inline namespace.
+lookup.findScope("NS1::NS2::NS3::InsideInline", diags, &t);
+QT = clang::QualType(t, 0);
+
+// SuppressUnwrittenScope=true should not strip inline namespace qualifiers.
+clang::PrintingPolicy PolicyWithInline(Policy);
+PolicyWithInline.SuppressInlineNamespace = false;
+std::string nameWithInline;
+QT.getAsStringInternal(nameWithInline, PolicyWithInline);
+nameWithInline.c_str()
+// CHECK: ({{[^)]+}}) "NS1::NS2::NS3::InlinedNamespace::InsideInline"
+
+// With SuppressInlineNamespace=true, inline namespace qualifiers should be stripped.
+clang::PrintingPolicy PolicyNoInline(Policy);
+PolicyNoInline.SuppressInlineNamespace = true;
+std::string nameNoInline;
+QT.getAsStringInternal(nameNoInline, PolicyNoInline);
+nameNoInline.c_str()
+// CHECK: ({{[^)]+}}) "NS1::NS2::NS3::InsideInline"
 
 // Test desugaring pointers types:
 QT = lookup.findType("Int_t*", diags);
@@ -471,7 +513,7 @@ decl = lookup.findScope("cmap<volatile int,volatile int>", diags,&t);
 QT = clang::QualType(t, 0);
 std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
 if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(decl)) {
-  QT = clang::QualType(rdecl->getTypeForDecl(), 0);
+  QT = Ctx.getCanonicalTagType(rdecl);
   std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
   clang::RecordDecl::field_iterator field_iter = rdecl->field_begin();
   // For some reason we can not call field_end:
@@ -491,3 +533,8 @@ if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(d
 // CHECK: cmap<volatile int, volatile int, std::less<volatile int>, std::allocator<std::pair<const volatile int, volatile int> > >
 // CHECK: volatile int
 // CHECK: const volatile int
+
+QT = lookup.findType("const GlobalAlias&", diags);
+std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
+// CHECK: NS4::Inner::TemplateClass<double> &
+

@@ -180,10 +180,10 @@ protected:
    //auxiliary internal variables, working place
    Double_t  fZ,fZeq,fGbezx,fGbezy,fDxspline,fDyspline,fZPresetValue;
    Int_t     fXt,fYt,fXs,fYs,fXe,fYe,fLine;
-   Short_t  *fEnvelope;                 //!
-   Short_t  *fEnvelopeContour;          //!
-   TColor   *fNewColor;                 //!
-   Int_t     fMaximumXScreenResolution; //!buffers' size
+   Short_t  *fEnvelope;                 ///<!
+   Short_t  *fEnvelopeContour;          ///<!
+   TColor   *fNewColor;                 ///<!
+   Int_t     fMaximumXScreenResolution; ///<!buffers' size
    Int_t     fNewColorIndex;
    Int_t     fBzX[4];
    Int_t     fBzY[4];

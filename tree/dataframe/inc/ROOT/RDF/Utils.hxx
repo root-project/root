@@ -65,6 +65,11 @@ struct RInferredType {
 namespace Internal {
 namespace RDF {
 
+/// Warn once about experimental filling of RHist.
+void WarnHist();
+/// Warn once about experimental filling of RProfile.
+void WarnProfile();
+
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
@@ -245,21 +250,6 @@ decltype(auto) GetNthElement(Ts &&...args)
    auto tuple = std::forward_as_tuple(args...);
    return std::get<N>(tuple);
 }
-
-#if __cplusplus >= 201703L
-template <class... Ts>
-using Disjunction = std::disjunction<Ts...>;
-#else
-template <class...>
-struct Disjunction : std::false_type {
-};
-template <class B1>
-struct Disjunction<B1> : B1 {
-};
-template <class B1, class... Bn>
-struct Disjunction<B1, Bn...> : std::conditional_t<bool(B1::value), B1, Disjunction<Bn...>> {
-};
-#endif
 
 bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec);
 

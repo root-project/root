@@ -20,15 +20,11 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
         # Parameters:
         # k: key of the kwarg
         # v: value of the kwarg
-
-        # We have to use ROOT here and not cppy.gbl, because the RooFit namespace is pythonized itself.
         import ROOT
-        import cppyy
-        import cppyy.types
 
         func = getattr(ROOT.RooFit, k)
 
-        if isinstance(func, cppyy.types.Function):
+        if isinstance(func, ROOT._cppyy.types.Function):
             # Pythonization for functions that don't pass any RooCmdArgs like ShiftToZero() and MoveToBack(). For Eg,
             # Default bindings: pdf.plotOn(frame, ROOT.RooFit.MoveToBack())
             # With pythonizations: pdf.plotOn(frame, MoveToBack=True)
@@ -47,7 +43,7 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
                 return func(*v)
             elif isinstance(v, (dict,)):
                 return func(**v)
-        except:
+        except Exception:
             pass
 
         return func(v)
@@ -55,6 +51,37 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
     if kwargs:
         args = args + tuple((getter(k, v) for k, v in kwargs.items()))
     return args, {}
+
+
+def _pack_cmd_args(*args, **kwargs):
+    # Pack command arguments passed into a RooLinkedList.
+
+    import ROOT
+
+    # If the second argument is already a RooLinkedList, do nothing
+    if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], ROOT.RooLinkedList):
+        return args[0]
+
+    # Transform keyword arguments to RooCmdArgs
+    args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
+
+    # All keyword arguments should be transformed now
+    assert len(kwargs) == 0
+
+    # Put RooCmdArgs in a RooLinkedList
+    cmd_list = ROOT.RooLinkedList()
+    for cmd in args:
+        if not isinstance(cmd, ROOT.RooCmdArg):
+            raise TypeError("This function only takes RooFit command arguments.")
+        cmd_list.Add(cmd)
+
+    # The RooLinkedList passed to functions like fitTo() is expected to be
+    # non-owning. To make sure that the RooCmdArgs live long enough, we attach
+    # them as an attribute of the output list, such that the Python reference
+    # counter doesn't hit zero.
+    cmd_list._owning_pylist = args
+
+    return cmd_list
 
 
 def _dict_to_flat_map(arg_dict, allowed_val_dict):
@@ -85,12 +112,12 @@ def _dict_to_flat_map(arg_dict, allowed_val_dict):
         # otherwise try to get class from the ROOT namespace
         return getattr(ROOT, cpp_type_name)
 
-    def prettyprint_str_list(l):
-        if len(l) == 1:
-            return l[0]
-        if len(l) == 2:
-            return l[0] + " or " + l[1]
-        return ", ".join(l[:-1]) + ", or " + l[-1]
+    def prettyprint_str_list(l_in):
+        if len(l_in) == 1:
+            return l_in[0]
+        if len(l_in) == 2:
+            return l_in[0] + " or " + l_in[1]
+        return ", ".join(l_in[:-1]) + ", or " + l_in[-1]
 
     def get_template_args(import_dict):
 
@@ -104,7 +131,7 @@ def _dict_to_flat_map(arg_dict, allowed_val_dict):
             if all_of_class(import_dict, get_python_class(key_typename), True):
                 key_type = key_typename
 
-                if type(allowed_val_dict[key_typename]) == str:
+                if isinstance(allowed_val_dict[key_typename], str):
                     allowed_val_dict[key_typename] = [allowed_val_dict[key_typename]]
 
                 for val_typename in allowed_val_dict[key_typename]:
@@ -152,7 +179,7 @@ def _decaytype_string_to_enum(caller, kwargs):
         if isinstance(val, str):
             try:
                 kwargs[type_key] = getattr(caller.__class__, val)
-            except AttributeError as error:
+            except AttributeError:
                 raise ValueError(
                     "Unsupported decay type passed to "
                     + caller.__class__.__name__

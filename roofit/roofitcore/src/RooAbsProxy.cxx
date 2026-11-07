@@ -14,9 +14,10 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "Riostream.h"
 #include "RooAbsProxy.h"
 #include "RooArgSet.h"
+
+#include <ostream>
 
 /**
 \file RooAbsProxy.cxx

@@ -20,10 +20,6 @@
 \ingroup Roofitcore
 **/
 
-
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooMoment.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
@@ -37,8 +33,9 @@
 #include "RooConstVar.h"
 #include "RooRealIntegral.h"
 #include "RooNumIntConfig.h"
-#include <string>
 
+#include <cmath>
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -32,11 +32,11 @@ TConfidenceLevel.
 #include "RooDataHist.h"
 #include "RooDataSet.h"
 #include "RooGlobalFunc.h" // for RooFit::Extended()
+#include "RooMsgService.h"
 #include "RooRealVar.h"
 #include "RooAbsData.h"
 
 #include "RooStats/HybridResult.h"
-#include "RooStats/HybridPlot.h"
 
 #include <TMath.h>
 
@@ -115,7 +115,7 @@ double HybridResult::NullPValue() const
    if (fComputationsNulDoneFlag==false) {
       int nToys = fTestStat_b.size();
       if (nToys==0) {
-         std::cout << "Error: no toy data present. Returning -1.\n";
+         coutE(Eval) << "Error: no toy data present. Returning -1.\n";
          return -1;
       }
 
@@ -128,7 +128,7 @@ double HybridResult::NullPValue() const
      if ( fTestStat_b[iToy] <= fTestStat_data ) ++larger_than_measured;
       }
 
-      if (larger_than_measured==0) std::cout << "Warning: CLb = 0 ... maybe more toys are needed!\n";
+      if (larger_than_measured==0) coutW(Eval) << "Warning: CLb = 0 ... maybe more toys are needed!\n";
 
       fComputationsNulDoneFlag = true;
       fNullPValue = 1-larger_than_measured/nToys;
@@ -145,7 +145,7 @@ double HybridResult::AlternatePValue() const
    if (fComputationsAltDoneFlag==false) {
       int nToys = fTestStat_b.size();
       if (nToys==0) {
-         std::cout << "Error: no toy data present. Returning -1.\n";
+         coutE(Eval) << "Error: no toy data present. Returning -1.\n";
          return -1;
       }
 
@@ -158,7 +158,7 @@ double HybridResult::AlternatePValue() const
      if ( fTestStat_sb[iToy] <= fTestStat_data ) ++larger_than_measured;
       }
 
-      if (larger_than_measured==0) std::cout << "Warning: CLsb = 0 ... maybe more toys are needed!\n";
+      if (larger_than_measured==0) coutW(Eval) << "Warning: CLsb = 0 ... maybe more toys are needed!\n";
 
       fComputationsAltDoneFlag = true;
       fAlternatePValue = larger_than_measured/nToys;
@@ -238,38 +238,6 @@ void HybridResult::Add(HybridResult* other)
    fComputationsNulDoneFlag = false;
 
    return;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// prepare a plot showing a result and return a pointer to a HybridPlot object
-/// the needed arguments are: an object name, a title and the number of bins in the plot
-
-HybridPlot* HybridResult::GetPlot(const char* name,const char* title, int n_bins)
-{
-   // default plot name
-   TString plot_name;
-   if ( TString(name)=="" ) {
-      plot_name += GetName();
-      plot_name += "_plot";
-   } else plot_name = name;
-
-   // default plot title
-   TString plot_title;
-   if ( TString(title)=="" ) {
-      plot_title += GetTitle();
-      plot_title += "_plot (";
-      plot_title += fTestStat_b.size();
-      plot_title += " toys)";
-   } else plot_title = title;
-
-   HybridPlot* plot = new HybridPlot( plot_name.Data(),
-                                      plot_title.Data(),
-                                      fTestStat_sb,
-                                      fTestStat_b,
-                                      fTestStat_data,
-                                      n_bins,
-                                      true );
-   return plot;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

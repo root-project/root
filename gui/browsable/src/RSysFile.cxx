@@ -7,11 +7,8 @@
  *************************************************************************/
 
 /// \file
-/// \ingroup rbrowser
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2019-10-15
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 
 #include <ROOT/Browsable/RSysFile.hxx>
@@ -26,8 +23,8 @@
 #include "TROOT.h"
 #include "TList.h"
 #include "TBase64.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <sstream>
 #include <fstream>
 #include <algorithm>

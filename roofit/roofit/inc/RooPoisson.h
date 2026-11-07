@@ -14,7 +14,6 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include "RooTrace.h"
 
 class RooPoisson : public RooAbsPdf {
 public:

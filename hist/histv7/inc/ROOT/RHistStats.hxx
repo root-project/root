@@ -8,9 +8,11 @@
 #include "RHistUtils.hxx"
 #include "RWeight.hxx"
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -20,6 +22,10 @@ class TBuffer;
 
 namespace ROOT {
 namespace Experimental {
+
+// forward declaration for friend declaration
+template <typename T>
+class RHist;
 
 /**
 Histogram statistics of unbinned values.
@@ -37,9 +43,13 @@ stats.Fill(1.5);
 Feedback is welcome!
 */
 class RHistStats final {
+   template <typename T>
+   friend class RHist;
+
 public:
    /// Statistics for one dimension.
    struct RDimensionStats final {
+      bool fEnabled = true;
       double fSumWX = 0.0;
       double fSumWX2 = 0.0;
       double fSumWX3 = 0.0;
@@ -47,6 +57,7 @@ public:
 
       void Add(double x)
       {
+         assert(fEnabled);
          fSumWX += x;
          fSumWX2 += x * x;
          fSumWX3 += x * x * x;
@@ -55,6 +66,7 @@ public:
 
       void Add(double x, double w)
       {
+         assert(fEnabled);
          fSumWX += w * x;
          fSumWX2 += w * x * x;
          fSumWX3 += w * x * x * x;
@@ -63,6 +75,7 @@ public:
 
       void Add(const RDimensionStats &other)
       {
+         assert(fEnabled);
          fSumWX += other.fSumWX;
          fSumWX2 += other.fSumWX2;
          fSumWX3 += other.fSumWX3;
@@ -74,6 +87,7 @@ public:
       /// \param[in] other another statistics object that must not be modified during the operation
       void AddAtomic(const RDimensionStats &other)
       {
+         assert(fEnabled);
          Internal::AtomicAdd(&fSumWX, other.fSumWX);
          Internal::AtomicAdd(&fSumWX2, other.fSumWX2);
          Internal::AtomicAdd(&fSumWX3, other.fSumWX3);
@@ -90,6 +104,7 @@ public:
 
       void Scale(double factor)
       {
+         assert(fEnabled);
          fSumWX *= factor;
          fSumWX2 *= factor;
          fSumWX3 *= factor;
@@ -106,6 +121,16 @@ private:
    double fSumW2 = 0.0;
    /// The sums per dimension
    std::vector<RDimensionStats> fDimensionStats;
+   /// Whether this object is tainted, in which case read access will throw. This is used if a user modifies bin
+   /// contents explicitly or slices histograms without preserving all entries, for example.
+   bool fTainted = false;
+
+   void ThrowIfTainted() const
+   {
+      if (fTainted) {
+         throw std::logic_error("statistics are tainted, for example after setting bin contents or slicing");
+      }
+   }
 
 public:
    /// Construct a statistics object.
@@ -119,60 +144,63 @@ public:
       fDimensionStats.resize(nDimensions);
    }
 
+   /// \name Accessors
+   /// \{
+
    std::size_t GetNDimensions() const { return fDimensionStats.size(); }
 
-   std::uint64_t GetNEntries() const { return fNEntries; }
-   double GetSumW() const { return fSumW; }
-   double GetSumW2() const { return fSumW2; }
-
-   const RDimensionStats &GetDimensionStats(std::size_t dim = 0) const { return fDimensionStats.at(dim); }
-
-   /// Add all entries from another statistics object.
-   ///
-   /// Throws an exception if the number of dimensions are not identical.
-   ///
-   /// \param[in] other another statistics object
-   void Add(const RHistStats &other)
+   std::uint64_t GetNEntries() const
    {
-      if (fDimensionStats.size() != other.fDimensionStats.size()) {
-         throw std::invalid_argument("number of dimensions not identical in Add");
-      }
-      fNEntries += other.fNEntries;
-      fSumW += other.fSumW;
-      fSumW2 += other.fSumW2;
-      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         fDimensionStats[i].Add(other.fDimensionStats[i]);
-      }
+      ThrowIfTainted();
+      return fNEntries;
+   }
+   double GetSumW() const
+   {
+      ThrowIfTainted();
+      return fSumW;
+   }
+   double GetSumW2() const
+   {
+      ThrowIfTainted();
+      return fSumW2;
    }
 
-   /// Add all entries from another statistics object using atomic instructions.
+   /// Get the statistics object for one dimension.
    ///
-   /// Throws an exception if the number of dimensions are not identical.
+   /// Throws an exception if the dimension is disabled.
    ///
-   /// \param[in] other another statistics object that must not be modified during the operation
-   void AddAtomic(const RHistStats &other)
+   /// \param[in] dim the dimension index, starting at 0
+   /// \return the statistics object
+   const RDimensionStats &GetDimensionStats(std::size_t dim = 0) const
    {
-      if (fDimensionStats.size() != other.fDimensionStats.size()) {
-         throw std::invalid_argument("number of dimensions not identical in Add");
+      ThrowIfTainted();
+
+      const RDimensionStats &stats = fDimensionStats.at(dim);
+      if (!stats.fEnabled) {
+         throw std::invalid_argument("dimension is disabled");
       }
-      Internal::AtomicAdd(&fNEntries, other.fNEntries);
-      Internal::AtomicAdd(&fSumW, other.fSumW);
-      Internal::AtomicAdd(&fSumW2, other.fSumW2);
-      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
-      }
+      return stats;
    }
 
-   /// Clear this statistics object.
-   void Clear()
-   {
-      fNEntries = 0;
-      fSumW = 0;
-      fSumW2 = 0;
-      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         fDimensionStats[i].Clear();
-      }
-   }
+   /// Disable one dimension of this statistics object.
+   ///
+   /// All future calls to Fill will ignore the corresponding argument. Once disabled, a dimension cannot be reenabled.
+   ///
+   /// \param[in] dim the dimension index, starting at 0
+   void DisableDimension(std::size_t dim) { fDimensionStats.at(dim).fEnabled = false; }
+
+   bool IsEnabled(std::size_t dim) const { return fDimensionStats.at(dim).fEnabled; }
+
+   /// Taint this statistics object.
+   ///
+   /// It can still be filled, but any read access will throw until Clear() is called.
+   void Taint() { fTainted = true; }
+
+   bool IsTainted() const { return fTainted; }
+
+   /// \}
+   /// \name Computations
+   /// \{
 
    /// Compute the number of effective entries.
    ///
@@ -183,8 +211,9 @@ public:
    /// \return the number of effective entries
    double ComputeNEffectiveEntries() const
    {
+      ThrowIfTainted();
       if (fSumW2 == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       return fSumW * fSumW / fSumW2;
    }
@@ -200,9 +229,9 @@ public:
    double ComputeMean(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       return stats.fSumWX / fSumW;
    }
@@ -226,9 +255,9 @@ public:
    double ComputeVariance(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double mean = ComputeMean(dim);
       return stats.fSumWX2 / fSumW - mean * mean;
@@ -270,14 +299,14 @@ public:
    double ComputeSkewness(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double mean = ComputeMean(dim);
       double var = ComputeVariance(dim);
       if (var == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double EWX3 = stats.fSumWX3 / fSumW;
       double EWX2 = stats.fSumWX2 / fSumW;
@@ -307,14 +336,14 @@ public:
    double ComputeKurtosis(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double mean = ComputeMean(dim);
       double var = ComputeVariance(dim);
       if (var == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double EWX4 = stats.fSumWX4 / fSumW;
       double EWX3 = stats.fSumWX3 / fSumW;
@@ -322,11 +351,35 @@ public:
       return (EWX4 - 4 * EWX3 * mean + 6 * EWX2 * mean * mean - 3 * mean * mean * mean * mean) / (var * var) - 3;
    }
 
+   /// \}
+
 private:
+   template <std::size_t I, std::size_t N, typename... A>
+   void CheckArguments(const std::tuple<A...> &args) const
+   {
+      using ArgumentType = std::tuple_element_t<I, std::tuple<A...>>;
+      if (fDimensionStats[I].fEnabled) {
+         if constexpr (!std::is_convertible_v<ArgumentType, double>) {
+            throw std::invalid_argument("invalid type of argument in RHistStats");
+         }
+      }
+      if constexpr (I + 1 < N) {
+         CheckArguments<I + 1, N>(args);
+      }
+   }
+
    template <std::size_t I, typename... A>
    void FillImpl(const std::tuple<A...> &args)
    {
-      fDimensionStats[I].Add(std::get<I>(args));
+      using ArgumentType = std::tuple_element_t<I, std::tuple<A...>>;
+      if (fDimensionStats[I].fEnabled) {
+         if constexpr (std::is_convertible_v<ArgumentType, double>) {
+            fDimensionStats[I].Add(std::get<I>(args));
+         } else {
+            // Should be checked in CheckArguments above!
+            assert(0); // GCOVR_EXCL_LINE
+         }
+      }
       if constexpr (I + 1 < sizeof...(A)) {
          FillImpl<I + 1>(args);
       }
@@ -335,13 +388,26 @@ private:
    template <std::size_t I, std::size_t N, typename... A>
    void FillImpl(const std::tuple<A...> &args, double w)
    {
-      fDimensionStats[I].Add(std::get<I>(args), w);
+      using ArgumentType = std::tuple_element_t<I, std::tuple<A...>>;
+      if (fDimensionStats[I].fEnabled) {
+         if constexpr (std::is_convertible_v<ArgumentType, double>) {
+            fDimensionStats[I].Add(std::get<I>(args), w);
+         } else {
+            // Avoid compiler warning about unused parameter...
+            (void)w;
+            // Should be checked in CheckArguments above!
+            assert(0); // GCOVR_EXCL_LINE
+         }
+      }
       if constexpr (I + 1 < N) {
          FillImpl<I + 1, N>(args, w);
       }
    }
 
 public:
+   /// \name Filling
+   /// \{
+
    /// Fill an entry into this statistics object.
    ///
    /// \code
@@ -362,6 +428,9 @@ public:
       if (sizeof...(A) != fDimensionStats.size()) {
          throw std::invalid_argument("invalid number of arguments to Fill");
       }
+      // For exception safety, first check all arguments before modifying the object.
+      CheckArguments<0, sizeof...(A)>(args);
+
       fNEntries++;
       fSumW++;
       fSumW2++;
@@ -387,6 +456,9 @@ public:
       if (sizeof...(A) != fDimensionStats.size()) {
          throw std::invalid_argument("invalid number of arguments to Fill");
       }
+      // For exception safety, first check all arguments before modifying the object.
+      CheckArguments<0, sizeof...(A)>(args);
+
       fNEntries++;
       double w = weight.fValue;
       fSumW += w;
@@ -415,20 +487,102 @@ public:
    template <typename... A>
    void Fill(const A &...args)
    {
-      auto t = std::forward_as_tuple(args...);
-      if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
-         static constexpr std::size_t N = sizeof...(A) - 1;
-         if (N != fDimensionStats.size()) {
-            throw std::invalid_argument("invalid number of arguments to Fill");
+      static_assert(sizeof...(A) >= 1, "need at least one argument to Fill");
+      if constexpr (sizeof...(A) >= 1) {
+         auto t = std::forward_as_tuple(args...);
+         if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
+            static constexpr std::size_t N = sizeof...(A) - 1;
+            if (N != fDimensionStats.size()) {
+               throw std::invalid_argument("invalid number of arguments to Fill");
+            }
+            // For exception safety, first check all arguments before modifying the object.
+            CheckArguments<0, N>(t);
+
+            fNEntries++;
+            double w = std::get<N>(t).fValue;
+            fSumW += w;
+            fSumW2 += w * w;
+            FillImpl<0, N>(t, w);
+         } else {
+            Fill(t);
          }
-         fNEntries++;
-         double w = std::get<N>(t).fValue;
-         fSumW += w;
-         fSumW2 += w * w;
-         FillImpl<0, N>(t, w);
-      } else {
-         Fill(t);
       }
+   }
+
+   /// \}
+   /// \name Operations
+   /// \{
+
+   /// Add all entries from another statistics object.
+   ///
+   /// Throws an exception if the number of dimensions are not identical.
+   ///
+   /// \param[in] other another statistics object
+   void Add(const RHistStats &other)
+   {
+      // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
+      // object.
+      if (fDimensionStats.size() != other.fDimensionStats.size()) {
+         throw std::invalid_argument("number of dimensions not identical in Add");
+      }
+      // For exception safety, first check all dimensions before modifying the object.
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
+            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with Add");
+         }
+      }
+
+      fNEntries += other.fNEntries;
+      fSumW += other.fSumW;
+      fSumW2 += other.fSumW2;
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled) {
+            fDimensionStats[i].Add(other.fDimensionStats[i]);
+         }
+      }
+      fTainted |= other.fTainted;
+   }
+
+   /// Add all entries from another statistics object using atomic instructions.
+   ///
+   /// Throws an exception if the number of dimensions are not identical.
+   ///
+   /// \param[in] other another statistics object that must not be modified during the operation
+   void AddAtomic(const RHistStats &other)
+   {
+      // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
+      // object.
+      if (fDimensionStats.size() != other.fDimensionStats.size()) {
+         throw std::invalid_argument("number of dimensions not identical in AddAtomic");
+      }
+      // For exception safety, first check all dimensions before modifying the object.
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
+            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with AddAtomic");
+         }
+      }
+
+      Internal::AtomicAdd(&fNEntries, other.fNEntries);
+      Internal::AtomicAdd(&fSumW, other.fSumW);
+      Internal::AtomicAdd(&fSumW2, other.fSumW2);
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled) {
+            fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
+         }
+      }
+      fTainted |= other.fTainted;
+   }
+
+   /// Clear this statistics object.
+   void Clear()
+   {
+      fNEntries = 0;
+      fSumW = 0;
+      fSumW2 = 0;
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         fDimensionStats[i].Clear();
+      }
+      fTainted = false;
    }
 
    /// Scale the histogram statistics.
@@ -436,12 +590,18 @@ public:
    /// \param[in] factor the scale factor
    void Scale(double factor)
    {
+      // NB: this method does *not* call ThrowIfTainted() to allow scaling RHist which may contain a tainted statistics
+      // object.
       fSumW *= factor;
       fSumW2 *= factor * factor;
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         fDimensionStats[i].Scale(factor);
+         if (fDimensionStats[i].fEnabled) {
+            fDimensionStats[i].Scale(factor);
+         }
       }
    }
+
+   /// \}
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHistStats"); }

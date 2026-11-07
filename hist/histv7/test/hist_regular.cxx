@@ -21,6 +21,29 @@ TEST(RRegularAxis, Constructor)
 
    EXPECT_THROW(RRegularAxis(0, {0, Bins}), std::invalid_argument);
    EXPECT_THROW(RRegularAxis(Bins, {1, 1}), std::invalid_argument);
+
+   static constexpr double NegativeInfinity = -std::numeric_limits<double>::infinity();
+   static constexpr double PositiveInfinity = std::numeric_limits<double>::infinity();
+   static constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+   EXPECT_THROW(RRegularAxis(Bins, {NegativeInfinity, 0}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {NegativeInfinity, PositiveInfinity}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {0, PositiveInfinity}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {NaN, 0}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {0, NaN}), std::invalid_argument);
+}
+
+TEST(RRegularAxis, ComputeLowHighEdge)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+
+   for (std::size_t i = 0; i < Bins; i++) {
+      EXPECT_EQ(axis.ComputeLowEdge(i), i);
+      EXPECT_EQ(axis.ComputeHighEdge(i), i + 1);
+   }
+
+   EXPECT_THROW(axis.ComputeLowEdge(Bins), std::invalid_argument);
+   EXPECT_THROW(axis.ComputeHighEdge(Bins), std::invalid_argument);
 }
 
 TEST(RRegularAxis, Equality)
@@ -62,17 +85,17 @@ TEST(RRegularAxis, ComputeLinearizedIndex)
    static constexpr double UnderflowSmall = -0.1;
    for (double underflow : {NegativeInfinity, UnderflowLarge, UnderflowSmall}) {
       auto linIndex = axis.ComputeLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_FALSE(linIndex.fValid);
    }
 
    // Exactly the lower end of the axis interval
    {
       auto linIndex = axis.ComputeLinearizedIndex(0);
-      EXPECT_EQ(linIndex.fIndex, 0);
+      EXPECT_EQ(linIndex.fIndex, 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(0);
       EXPECT_EQ(linIndex.fIndex, 0);
@@ -81,7 +104,7 @@ TEST(RRegularAxis, ComputeLinearizedIndex)
 
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.ComputeLinearizedIndex(i + 0.5);
-      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_EQ(linIndex.fIndex, i + 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(i + 0.5);
       EXPECT_EQ(linIndex.fIndex, i);
@@ -119,7 +142,7 @@ TEST(RRegularAxis, ComputeLinearizedIndexMin)
    const RRegularAxis axis(Bins, {-1, std::numeric_limits<double>::min()});
 
    auto linIndex = axis.ComputeLinearizedIndex(0);
-   EXPECT_EQ(linIndex.fIndex, Bins - 1);
+   EXPECT_EQ(linIndex.fIndex, Bins); // the last normal bin
    EXPECT_TRUE(linIndex.fValid);
 }
 
@@ -132,16 +155,16 @@ TEST(RRegularAxis, GetLinearizedIndex)
    {
       const auto underflow = RBinIndex::Underflow();
       auto linIndex = axis.GetLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.GetLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_FALSE(linIndex.fValid);
    }
 
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.GetLinearizedIndex(i);
-      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_EQ(linIndex.fIndex, i + 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.GetLinearizedIndex(i);
       EXPECT_EQ(linIndex.fIndex, i);
@@ -188,6 +211,7 @@ TEST(RRegularAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(normal.GetBegin(), index0);
       EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
    }
 
@@ -195,6 +219,7 @@ TEST(RRegularAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange(index0, indexBins);
       EXPECT_EQ(normal.GetBegin(), index0);
       EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
    }
 
@@ -203,6 +228,7 @@ TEST(RRegularAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange(index1, index5);
       EXPECT_EQ(normal.GetBegin(), index1);
       EXPECT_EQ(normal.GetEnd(), index5);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), 4);
    }
 
@@ -210,6 +236,7 @@ TEST(RRegularAxis, GetNormalRange)
       const auto empty = axis.GetNormalRange(index1, index1);
       EXPECT_EQ(empty.GetBegin(), index1);
       EXPECT_EQ(empty.GetEnd(), index1);
+      EXPECT_FALSE(empty.IsInvalid());
       EXPECT_EQ(empty.begin(), empty.end());
       EXPECT_EQ(std::distance(empty.begin(), empty.end()), 0);
    }
@@ -232,6 +259,7 @@ TEST(RRegularAxis, GetFullRange)
       const auto full = axis.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex::Underflow());
       EXPECT_EQ(full.GetEnd(), RBinIndex());
+      EXPECT_FALSE(full.IsInvalid());
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins + 2);
    }
 
@@ -240,6 +268,66 @@ TEST(RRegularAxis, GetFullRange)
       const auto full = axisNoFlowBins.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex(0));
       EXPECT_EQ(full.GetEnd(), RBinIndex(Bins));
+      EXPECT_FALSE(full.IsInvalid());
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins);
    }
+}
+
+static void Test_RegularAxis_Slice(bool enableFlowBins)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis origAxis(Bins, {0, Bins}, enableFlowBins);
+   ASSERT_EQ(origAxis.HasFlowBins(), enableFlowBins);
+
+   // Three different ways of "slicing" which will keep the entire axis.
+   for (auto sliceSpec : {RSliceSpec{}, RSliceSpec(origAxis.GetFullRange()), RSliceSpec(origAxis.GetNormalRange())}) {
+      const auto axis = origAxis.Slice(sliceSpec);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins);
+      EXPECT_EQ(axis.GetLow(), 0);
+      EXPECT_EQ(axis.GetHigh(), Bins);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   {
+      const RSliceSpec slice(origAxis.GetNormalRange(1, Bins - 1));
+      const auto axis = origAxis.Slice(slice);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins - 2);
+      EXPECT_EQ(axis.GetLow(), 1);
+      EXPECT_EQ(axis.GetHigh(), Bins - 1);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   {
+      const RSliceSpec rebin(RSliceSpec::ROperationRebin(2));
+      const auto axis = origAxis.Slice(rebin);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins / 2);
+      EXPECT_EQ(axis.GetLow(), 0);
+      EXPECT_EQ(axis.GetHigh(), Bins);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   // Rebin grouping must divide the number of normal bins.
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationRebin(3)), std::runtime_error);
+
+   // Sum operation makes dimension disappear.
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationSum{}), std::runtime_error);
+
+   {
+      const RSliceSpec sliceRebin(origAxis.GetNormalRange(1, 5), RSliceSpec::ROperationRebin(2));
+      const auto axis = origAxis.Slice(sliceRebin);
+      EXPECT_EQ(axis.GetNNormalBins(), 2);
+      EXPECT_EQ(axis.GetLow(), 1);
+      EXPECT_EQ(axis.GetHigh(), 5);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+}
+
+TEST(RRegularAxis, Slice)
+{
+   Test_RegularAxis_Slice(true);
+}
+
+TEST(RRegularAxis, SliceNoFlowBins)
+{
+   Test_RegularAxis_Slice(false);
 }

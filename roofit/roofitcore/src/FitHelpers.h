@@ -18,6 +18,7 @@
 #include <memory>
 
 class RooAbsData;
+class RooDataHist;
 class RooAbsPdf;
 class RooAbsReal;
 class RooCmdConfig;
@@ -32,7 +33,7 @@ void defineMinimizationOptions(RooCmdConfig &pc);
 std::unique_ptr<RooFitResult> minimize(RooAbsReal &model, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc);
 
 std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const RooLinkedList &cmdList);
-std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooAbsData &data, const RooLinkedList &cmdList);
+std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, const RooLinkedList &cmdList);
 
 std::unique_ptr<RooFitResult> fitTo(RooAbsReal &pdf, RooAbsData &data, const RooLinkedList &cmdList, bool chi2);
 

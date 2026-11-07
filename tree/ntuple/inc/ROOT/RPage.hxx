@@ -1,5 +1,4 @@
 /// \file ROOT/RPage.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -59,8 +58,8 @@ public:
 
    public:
       RClusterInfo() = default;
-      RClusterInfo(ROOT::NTupleSize_t id, ROOT::NTupleSize_t indexOffset) : fId(id), fIndexOffset(indexOffset) {}
-      ROOT::NTupleSize_t GetId() const { return fId; }
+      RClusterInfo(ROOT::DescriptorId_t id, ROOT::NTupleSize_t indexOffset) : fId(id), fIndexOffset(indexOffset) {}
+      ROOT::DescriptorId_t GetId() const { return fId; }
       ROOT::NTupleSize_t GetIndexOffset() const { return fIndexOffset; }
    };
 
@@ -82,7 +81,7 @@ public:
    {}
    RPage(const RPage &) = delete;
    RPage &operator=(const RPage &) = delete;
-   RPage(RPage &&other)
+   RPage(RPage &&other) noexcept
    {
       fBuffer = other.fBuffer;
       fPageAllocator = other.fPageAllocator;
@@ -93,7 +92,7 @@ public:
       fClusterInfo = other.fClusterInfo;
       other.fPageAllocator = nullptr;
    }
-   RPage &operator=(RPage &&other)
+   RPage &operator=(RPage &&other) noexcept
    {
       if (this != &other) {
          std::swap(fBuffer, other.fBuffer);

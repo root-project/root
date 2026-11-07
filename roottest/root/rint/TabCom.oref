@@ -8,13 +8,19 @@ MyCla	::fgM
 MyCla	::fgPrivateM	
 TH1F *h = 0;
 h->GetXaxis()->SetTi		
+x.	
+x->	
 struct Simple {};
 Simple s;
 s.	
+s->	
 const Simple cs{};
 cs.	
 Simple* ps = nullptr;
 ps->	
+ps.	
+std::unique_ptr<Simple> us;
+us->	
 const Simple* pcs = nullptr;
 pcs->	
 Simple* const cps = nullptr;
@@ -75,6 +81,10 @@ SetTitleColor
 SetTitleFont
 SetTitleOffset
 SetTitleSize
+
+Simple
+operator=
+~Simple
 
 Simple
 operator=

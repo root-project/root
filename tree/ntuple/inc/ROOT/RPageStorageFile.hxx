@@ -1,5 +1,4 @@
 /// \file ROOT/RPageStorageFile.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-11-21
 
@@ -25,6 +24,7 @@
 #include <array>
 #include <cstdio>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -34,11 +34,13 @@ class TDirectory;
 namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 class RNTupleLocator;
+class RFile;
 
 namespace Internal {
-class RClusterPool;
 class RRawFile;
 class RPageAllocatorHeap;
+
+const ROOT::RNTuple *GetAnchorFromFile(const RPageSourceFile &source);
 
 // clang-format off
 /**
@@ -70,6 +72,7 @@ private:
    ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fInfosOfClassFields;
 
    RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
+   RPageSinkFile(std::unique_ptr<ROOT::Internal::RNTupleFileWriter> writer, const ROOT::RNTupleWriteOptions &options);
 
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
    /// key. It is not strictly necessary to write and read the sealed page.
@@ -84,19 +87,20 @@ private:
 protected:
    using RPagePersistentSink::InitImpl;
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override;
    RNTupleLocator
-   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
+   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) override;
    std::vector<RNTupleLocator>
    CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
    std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;
-   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
+   RNTupleLink CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleWriteOptions &options);
    RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory, const ROOT::RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, ROOT::RFile &file, std::string_view ntupleDir,
+                 const ROOT::RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile &) = delete;
    RPageSinkFile &operator=(const RPageSinkFile &) = delete;
    RPageSinkFile(RPageSinkFile &&) = default;
@@ -104,6 +108,9 @@ public:
    ~RPageSinkFile() override;
 
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
+
+   std::unique_ptr<RPageSink>
+   CloneAsHidden(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const override;
 }; // class RPageSinkFile
 
 // clang-format off
@@ -115,22 +122,9 @@ public:
 // clang-format on
 class RPageSourceFile : public RPageSource {
    friend class ROOT::RNTuple;
+   friend const ROOT::RNTuple *ROOT::Internal::GetAnchorFromFile(const RPageSourceFile &);
 
 private:
-   /// Holds the uncompressed header and footer
-   struct RStructureBuffer {
-      std::unique_ptr<unsigned char[]> fBuffer; ///< single buffer for both header and footer
-      void *fPtrHeader = nullptr;               ///< either nullptr or points into fBuffer
-      void *fPtrFooter = nullptr;               ///< either nullptr or points into fBuffer
-
-      /// Called at the end of Attach(), i.e. when the header and footer are processed
-      void Reset()
-      {
-         RStructureBuffer empty;
-         std::swap(empty, *this);
-      }
-   };
-
    /// Either provided by CreateFromAnchor, or read from the ROOT file given the ntuple name
    std::optional<RNTuple> fAnchor;
    /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
@@ -141,10 +135,21 @@ private:
    ROOT::Internal::RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
    RNTupleDescriptorBuilder fDescriptorBuilder;
-   /// The cluster pool asynchronously preloads the next few clusters
-   std::unique_ptr<ROOT::Internal::RClusterPool> fClusterPool;
-   /// Populated by LoadStructureImpl(), reset at the end of Attach()
-   RStructureBuffer fStructureBuffer;
+   /// Tracks the last read offset for seek distance calculation
+   std::uint64_t fLastOffset = 0;
+   /// Protects the raw file, the reader, and fLastOffset
+   std::mutex fReaderLock;
+
+   /// File-specific I/O performance counters
+   struct RFileCounters {
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzSkip;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fSzFile;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fRandomness;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fSparseness;
+   };
+   std::unique_ptr<RFileCounters> fFileCounters;
+   /// Total file size, set once in AttachImpl()
+   std::int64_t fFileSize = 0;
 
    RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &options);
 
@@ -155,14 +160,17 @@ private:
    std::unique_ptr<ROOT::Internal::RCluster>
    PrepareSingleCluster(const ROOT::Internal::RCluster::RKey &clusterKey, std::vector<RRawFile::RIOVec> &readRequests);
 
+   // Helper to calculate the distance between fLastOffset and offset and to update the skip counter accordingly
+   void UpdateSkipCounter(std::uint64_t offset);
+
 protected:
    void LoadStructureImpl() final;
-   ROOT::RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) final;
+   ROOT::RNTupleDescriptor AttachImpl() final;
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
-   RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
+   void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) final;
+   void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleReadOptions &options);
@@ -179,13 +187,11 @@ public:
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
 
-   void
-   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
+   std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
+                                                        const ROOT::RNTupleReadOptions &options = {}) final;
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
-
-   void LoadStreamerInfo() final;
 }; // class RPageSourceFile
 
 } // namespace Internal

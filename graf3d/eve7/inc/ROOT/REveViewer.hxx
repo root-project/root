@@ -13,6 +13,7 @@
 #define ROOT7_REveViewer
 
 #include <ROOT/REveElement.hxx>
+#include <ROOT/REveCamera.hxx> 
 
 namespace ROOT {
 namespace Experimental {
@@ -27,23 +28,21 @@ class REveScene;
 class REveViewer : public REveElement
 {
 public:
-   enum ECameraType
-   {
-      // Perspective
-      kCameraPerspXOZ,  // XOZ floor
-      kCameraPerspYOZ,  // YOZ floor
-      kCameraPerspXOY,  // XOY floor
-      // Orthographic
-      kCameraOrthoXOY,  // Looking down  Z axis,  X horz, Y vert
-      kCameraOrthoXOZ,  // Looking along Y axis,  X horz, Z vert
-      kCameraOrthoZOY,  // Looking along X axis,  Z horz, Y vert
-      kCameraOrthoZOX,  // Looking along Y axis,  Z horz, X vert
-      // nOrthographic
-      kCameraOrthoXnOY, // Looking along Z axis, -X horz, Y vert
-      kCameraOrthoXnOZ, // Looking down  Y axis, -X horz, Z vert
-      kCameraOrthoZnOY, // Looking down  X axis, -Z horz, Y vert
-      kCameraOrthoZnOX  // Looking down  Y axis, -Z horz, X vert
-   };
+   // set alias instead
+   using ECameraType = REveCamera::ECameraType;
+   
+   // backward compatibility
+   static constexpr ECameraType kCameraPerspXOZ   = REveCamera::kCameraPerspXOZ;
+   static constexpr ECameraType kCameraPerspYOZ   = REveCamera::kCameraPerspYOZ;
+   static constexpr ECameraType kCameraPerspXOY   = REveCamera::kCameraPerspXOY;
+   static constexpr ECameraType kCameraOrthoXOY   = REveCamera::kCameraOrthoXOY;
+   static constexpr ECameraType kCameraOrthoXOZ   = REveCamera::kCameraOrthoXOZ;
+   static constexpr ECameraType kCameraOrthoZOY   = REveCamera::kCameraOrthoZOY;
+   static constexpr ECameraType kCameraOrthoZOX   = REveCamera::kCameraOrthoZOX;
+   static constexpr ECameraType kCameraOrthoXnOY  = REveCamera::kCameraOrthoXnOY;
+   static constexpr ECameraType kCameraOrthoXnOZ  = REveCamera::kCameraOrthoXnOZ;
+   static constexpr ECameraType kCameraOrthoZnOY  = REveCamera::kCameraOrthoZnOY;
+   static constexpr ECameraType kCameraOrthoZnOX  = REveCamera::kCameraOrthoZnOX;
 
    enum EAxesType {
       kAxesNone,
@@ -51,35 +50,77 @@ public:
       kAxesEdge
    };
 
-   // For the moment REveCamera is internal class
-   class REveCamera
-   {
-      ECameraType fType;
-      std::string fName;
-      REveVector fV2;
-      REveVector fV1;
-
-      public:
-       REveCamera() { Setup(kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0));}
-       ~REveCamera() {}
-
-       void Setup(ECameraType type, const std::string& name, REveVector v1, REveVector v2);
-
-       ECameraType GetType() const { return fType; }
-
-       int WriteCoreJson(nlohmann::json &j, Int_t /*rnr_offset*/);
+   /// Point the camera looks at and orbits around after a camera reset.
+   enum ECameraCenter {
+      kCameraCenterOrigin, ///< world origin, (0, 0, 0)
+      kCameraCenterBBox    ///< center of the scene bounding box
    };
+
+   /// Tone curve applied to the rendered buffer. Values match the shader.
+   // clang-format off
+   enum EToneMapMode {
+      kToneReinhard = 0,
+      kToneExposure = 1,
+      kToneLinear   = 2,  ///< no curve; exact colours, but anything over 1 clips
+      kToneKnee     = 3   ///< identity below the knee, smooth roll-off above
+   };
+   // clang-format on
 
 private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
 
-   REveCamera fCamera;
+   REveCamera* fCamera{0};
+
    EAxesType fAxesType{kAxesNone};
+
+   ECameraCenter fCameraCenter{kCameraCenterOrigin};
+
+   /// Let the client extrapolate streamed motion between updates. Off holds
+   /// each object where the last update put it, which shows the raw update rate.
+   Bool_t fExtrapolateMotion{kTRUE};
+
+   /// Which axis points up: 0/1/2 for x/y/z, -1 (default) for none. When set,
+   /// the box axis draws the floor panel along it instead of the far face.
+   Int_t fAxesUpAxis{-1};
+
+   // clang-format off
+   Bool_t  fHasAxesBBox{kFALSE};  ///< see SetAxesBBox()
+   Float_t fAxesBBox[6]{};        ///< xmin, ymin, zmin, xmax, ymax, zmax
+
+   Float_t fRenderMaxHz{0.f};     ///< see SetRenderMaxHz(); 0 is uncapped
    bool      fBlackBackground{false};
+
+   /// Distance attenuation of the 3D axis labels; see SetAxesAtten().
+   Float_t   fAxesAtten{1.f};
+
+   /// 3D axis label size, as a fraction of viewport height. Baked into the
+   /// glyph geometry, so a change costs a rebuild on the client.
+   Float_t   fAxesFontSize{0.015f};
+
+   /// Tooltip text size, same units as fAxesFontSize.
+   Float_t   fTooltipFontSize{0.012f};
+
+   /// Opacity of the plate behind the tooltip and kept annotations, in [0, 1].
+   /// Unlike the font size this does reach annotations already placed.
+   Float_t   fTooltipAlpha{0.85f};
+
+   /// Multiplier on the client's light intensities; see SetLightScale().
+   Float_t   fLightScale{0.85};
+   Int_t     fToneMapMode{kToneKnee};
+   Float_t   fToneMapKnee{0.95};
+   /// Bumped by AutoTuneLights(); the client re-measures when it changes.
+   Int_t     fAutoTuneSerial{0};
+   // clang-format on
 
    bool fMandatory{true};
    std::string fPostStreamFlag;
+
+   std::vector<REveCamera*> fCameraList;
+
+   ROOT::Experimental::REveCamera* CreateCamera(ECameraType type);
+
+   bool fSyncCamera{true};
 
 public:
    REveViewer(const std::string &n="REveViewer", const std::string &t="");
@@ -90,11 +131,66 @@ public:
    virtual void AddScene(REveScene* scene);
    // XXX Missing RemoveScene() ????
 
-   void SetCameraType(ECameraType t);
-   ECameraType GetCameraType() const { return fCamera.GetType(); }
+   // Camera setters
+   void SetCamera(ROOT::Experimental::REveCamera *cam);
+   REveCamera* GetCamera() const { return fCamera;}
+   void SetCameraByElementId(ElementId_t cameraId); // set camera via ElementID
+   void SetCameraType(REveCamera::ECameraType type);
 
+   void SyncCamera(bool s) {fSyncCamera = s;}
+   bool GetSyncCamera() const {return fSyncCamera;}
+
+   // The getters return the value last sent to the clients, not what a client
+   // is showing.
+   EAxesType GetAxesType() const { return fAxesType; }
    void SetAxesType(int);
+
+   ECameraCenter GetCameraCenter() const { return fCameraCenter; }
+   void SetCameraCenter(ECameraCenter c);
+
+   // clang-format off
+   Bool_t GetExtrapolateMotion() const { return fExtrapolateMotion; }
+   void   SetExtrapolateMotion(bool);
+
+   Int_t GetAxesUpAxis() const { return fAxesUpAxis; }
+   void  SetAxesUpAxis(int);
+
+   void SetAxesBBox(Float_t xmin, Float_t ymin, Float_t zmin,
+                    Float_t xmax, Float_t ymax, Float_t zmax);
+   void ClearAxesBBox();
+   Bool_t HasAxesBBox() const { return fHasAxesBBox; }
+
+   /// Cap on how often the animation loop redraws this viewer, in frames per
+   /// second, clamped to [0, 240]. Zero means uncapped.
+   Float_t GetRenderMaxHz() const { return fRenderMaxHz; }
+   void    SetRenderMaxHz(Float_t);
+   // clang-format on
+
+   bool GetBlackBackground() const { return fBlackBackground; }
    void SetBlackBackground(bool);
+
+   Float_t GetAxesAtten() const { return fAxesAtten; }
+   void SetAxesAtten(Float_t a);
+
+   Float_t GetAxesFontSize() const { return fAxesFontSize; }
+   void SetAxesFontSize(Float_t s);
+
+   Float_t GetTooltipFontSize() const { return fTooltipFontSize; }
+   void SetTooltipFontSize(Float_t s);
+
+   Float_t GetTooltipAlpha() const { return fTooltipAlpha; }
+   void SetTooltipAlpha(Float_t a);
+
+   Float_t GetLightScale() const { return fLightScale; }
+   void SetLightScale(Float_t s);
+
+   Int_t GetToneMapMode() const { return fToneMapMode; }
+   void SetToneMapMode(Int_t m);
+
+   Float_t GetToneMapKnee() const { return fToneMapKnee; }
+   void SetToneMapKnee(Float_t k);
+
+   void AutoTuneLights();
 
    void DisconnectClient();
    void ConnectClient();
@@ -124,8 +220,6 @@ protected:
 
    Float_t       fBrightness;
    Bool_t        fUseLightColorSet;
-
-   void HandleTooltip();
 
 public:
    REveViewerList(const std::string &n="REveViewerList", const std::string &t="");

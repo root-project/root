@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include <chrono>
+#include <limits>
 
 #include "TBasket.h"
 #include "TBuffer.h"
@@ -31,6 +32,7 @@
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                               // the fEntryOffset are used to stored displacement.
 
+constexpr auto gMaxInt_t = std::numeric_limits<Int_t>::max();
 
 /** \class TBasket
 \ingroup tree
@@ -575,6 +577,31 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          memcpy(rawCompressedBuffer, fBufferRef->Buffer(), len);
       }
    }
+   // Sanitize nbytes and lengths
+   if (fKeylen < 0) {
+      Error("ReadBasketBuffers", "The value of fKeylen is incorrect (%d) ; trying to recover by setting it to zero", fKeylen);
+      MakeZombie();
+      fKeylen = 0;
+      return 1;
+   }
+   if (fObjlen < 0) {
+      Error("ReadBasketBuffers", "The value of fObjlen is incorrect (%d) ; trying to recover by setting it to zero", fObjlen);
+      MakeZombie();
+      fObjlen = 0;
+      return 1;
+   }
+   if (fNbytes < 0) {
+      Error("ReadBasketBuffers", "The value of fNbytes is incorrect (%d) ; trying to recover by setting it to zero", fNbytes);
+      MakeZombie();
+      fNbytes = 0;
+      return 1;
+   }
+   if (fKeylen > (gMaxInt_t - fObjlen)) {
+      Error("ReadBasketBuffers", "fObjlen (%d) + fKeylen (%d) > max int (%d): cannot continue to read the key buffer.",
+            fObjlen, fKeylen, gMaxInt_t);
+      MakeZombie();
+      return 1;
+   }
 
    // Initialize buffer to hold the uncompressed data
    // Note that in previous versions we didn't allocate buffers until we verified
@@ -601,11 +628,16 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       memcpy(rawUncompressedBuffer, rawCompressedBuffer, fKeylen);
       char *rawUncompressedObjectBuffer = rawUncompressedBuffer+fKeylen;
       UChar_t *rawCompressedObjectBuffer = (UChar_t*)rawCompressedBuffer+fKeylen;
-      Int_t nin, nbuf;
+
+      // TODO(jblomer): factor out and combine with UnzipObject() in TKey
+      Int_t nin = 0, nbuf = 0;
       Int_t nout = 0, noutot = 0, nintot = 0;
 
+      Int_t nbytesRemain = fNbytes - fKeylen;
+      Int_t objlenRemain = fObjlen;
+
       // Unzip all the compressed objects in the compressed object buffer.
-      while (true) {
+      while (nbytesRemain >= ROOT::Internal::kZipHeaderSize) {
          // Check the header for errors.
          if (R__unlikely(R__unzip_header(&nin, rawCompressedObjectBuffer, &nbuf) != 0)) {
             Error("ReadBasketBuffers", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
@@ -616,6 +648,9 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             memcpy(rawUncompressedBuffer+fKeylen, rawCompressedObjectBuffer+fKeylen, fObjlen);
             goto AfterBuffer;
          }
+         if (R__unlikely((nin > nbytesRemain) || (nbuf > objlenRemain))) {
+            break;
+         }
 
          R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
          if (!nout) break;
@@ -624,6 +659,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          if (noutot >= fObjlen) break;
          rawCompressedObjectBuffer += nin;
          rawUncompressedObjectBuffer += nout;
+         nbytesRemain -= nin;
+         objlenRemain -= nout;
       }
 
       // Make sure the uncompressed numbers are consistent with header.
@@ -995,17 +1032,62 @@ void TBasket::Streamer(TBuffer &b)
          flag -= 80;
       }
       if (!mustGenerateOffsets && flag && (flag % 10 != 2)) {
+         // NOTE: fNevBuf is the number of entries stored in the basket, while fNevBufSize is the capacity of the
+         // fEntryOffset and fDisplacement arrays.
+         if (fNevBuf > fNevBufSize) {
+            Error("Streamer",
+                  "Inconsistent length for the entry offset buffer (%d events for a buffer size of %d). The basket is "
+                  "corrupted and not usable.",
+                  fNevBuf, fNevBufSize);
+            MakeZombie();
+            return;
+         }
          ResetEntryOffset();
-         fEntryOffset = new Int_t[fNevBufSize];
-         if (fNevBuf) b.ReadArray(fEntryOffset);
+         if (fNevBuf) {
+            // Alas, ReadArray will read the number of elements to store into fEntryOffset from the file, but it
+            // has no way of knowing whether we're passing a large-enough array.
+            // Therefore we prevent the problem altogether by ignoring fNevBufSize and peeking into the buffer to
+            // know the number of elements to allocate beforehand.
+            // This way we are sure that fEntryOffset will be of the correct size even if the file contains corrupted
+            // data.
+            Int_t entryOffsetSize;
+            auto buf = b.GetCurrent();
+            frombuf(buf, &entryOffsetSize);
+            if (entryOffsetSize != fNevBuf) {
+               Error("Streamer",
+                     "Inconsistent length for the entry offset buffer (expected %d elements, read %d). The basket is "
+                     "corrupted and not usable.",
+                     fNevBuf, entryOffsetSize);
+               MakeZombie();
+               return;
+            }
+            // We need to allocate an extra element due to the offset/size conversion happening during writing
+            // (see WriteBuffer)
+            fEntryOffset = new Int_t[fNevBuf + 1];
+            [[maybe_unused]] auto nElemsRead = b.ReadArray(fEntryOffset);
+            assert(nElemsRead == entryOffsetSize);
+            fNevBufSize = fNevBuf;
+         } else {
+            fEntryOffset = new Int_t[fNevBufSize];
+         }
          if (20<flag && flag<40) {
             for(int i=0; i<fNevBuf; i++){
                fEntryOffset[i] &= ~kDisplacementMask;
             }
          }
          if (flag>40) {
-            fDisplacement = new Int_t[fNevBufSize];
-            b.ReadArray(fDisplacement);
+            // ReadArray will allocate this for us.
+            fDisplacement = nullptr;
+            auto nElemsRead = b.ReadArray(fDisplacement);
+            if (nElemsRead != fNevBuf) {
+               Error("Streamer",
+                     "Inconsistent length for the displacement buffer (expected %d elements, read %d). The basket is "
+                     "corrupted and not usable.",
+                     fNevBufSize, nElemsRead);
+               MakeZombie();
+               return;
+            }
+            fNevBufSize = fNevBuf;
          }
       } else if (mustGenerateOffsets) {
          // We currently believe that in all cases when offsets can be generated, then the
@@ -1215,8 +1297,10 @@ Int_t TBasket::WriteBuffer()
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fBranch->GetCompressionAlgorithm());
    if (cxAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kInherit)
       cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(file->GetCompressionAlgorithm());
-   if (cxlevel > 0) {
-      Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
+   if (cxlevel > 0 && fObjlen > 0) {
+      const auto blocks = ROOT::Internal::GetZipBlocks(fObjlen);
+      const Int_t nbuffers = blocks.fNBlocks;
+      const Int_t blockSize = blocks.fBlockSize;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
       InitializeCompressedBuffer(buflen, file);
       if (!fCompressedBufferRef) {
@@ -1230,8 +1314,10 @@ Int_t TBasket::WriteBuffer()
       noutot = 0;
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
-         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-         else bufmax = kMAXZIPBUF;
+         if (i == nbuffers - 1)
+            bufmax = fObjlen - nzip;
+         else
+            bufmax = blockSize;
          // Compress the buffer.  Note that we allow multiple TBasket compressions to occur at once
          // for a given TFile: that's because the compression buffer when we use IMT is no longer
          // shared amongst several threads.
@@ -1266,8 +1352,8 @@ Int_t TBasket::WriteBuffer()
          }
          bufcur += nout;
          noutot += nout;
-         objbuf += kMAXZIPBUF;
-         nzip   += kMAXZIPBUF;
+         objbuf += blockSize;
+         nzip += blockSize;
       }
       nout = noutot;
       Create(noutot,file);

@@ -16,7 +16,7 @@
 
 /**
 \class TFPBlock
-\ingroup IO
+\ingroup io_other
 */
 
 class TFPBlock : public TObject{

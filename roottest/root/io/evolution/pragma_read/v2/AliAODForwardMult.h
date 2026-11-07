@@ -261,7 +261,7 @@ protected:
   Bool_t   fIsMC;       // Whether this is from MC 
   /** Histogram of @f$d^2N_{ch}/(d\eta d\phi)@f$ for this event */
   TH2D     fHist;       // Histogram of d^2N_{ch}/(deta dphi) for this event
-  AliAODForwardHeader* fHeader; //! Cached header 
+  AliAODForwardHeader* fHeader; ///<! Cached header 
 
   ClassDefOverride(AliAODForwardMult,6); // AOD forward multiplicity 
 };

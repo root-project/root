@@ -11,7 +11,7 @@
 
 /**
 \class TKey
-\ingroup IO
+\ingroup io_files
 
  Book space in a file, create I/O buffers, to fill them, (un)compress them.
 
@@ -49,6 +49,7 @@
 
 #include <atomic>
 #include <iostream>
+#include <limits>
 
 #include "TROOT.h"
 #include "TClass.h"
@@ -79,6 +80,18 @@ const UChar_t kPidOffsetShift = 48;
 const static TString gTDirectoryString("TDirectory");
 std::atomic<UInt_t> keyAbsNumber{0};
 
+namespace {
+bool CheckKeyObjLenOverflow(const char *methodName, Int_t keyLen, Int_t objLen)
+{
+   constexpr auto maxInt_t = std::numeric_limits<Int_t>::max();
+   if (keyLen > (maxInt_t - objLen)) {
+      Error(methodName, "fObjlen (%d) + fKeylen (%d) > max int (%d): cannot continue to read the key buffer.", objLen,
+            keyLen, maxInt_t);
+      return true;
+   }
+   return false;
+}
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TKey default constructor.
@@ -249,7 +262,9 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
    if (cxlevel > 0 && fObjlen > 256) {
-      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
+      const auto blocks = ROOT::Internal::GetZipBlocks(fObjlen);
+      const Int_t nbuffers = blocks.fNBlocks;
+      const Int_t blockSize = blocks.fBlockSize;
       Int_t buflen = std::max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
@@ -257,8 +272,10 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
       noutot = 0;
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
-         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-         else               bufmax = kMAXZIPBUF;
+         if (i == nbuffers - 1)
+            bufmax = fObjlen - nzip;
+         else
+            bufmax = blockSize;
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             delete[] fBuffer;
@@ -271,8 +288,8 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
          }
          bufcur += nout;
          noutot += nout;
-         objbuf += kMAXZIPBUF;
-         nzip   += kMAXZIPBUF;
+         objbuf += blockSize;
+         nzip += blockSize;
       }
       Create(noutot);
       fBufferRef->SetBufferOffset(0);
@@ -344,7 +361,9 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
    if (cxlevel > 0 && fObjlen > 256) {
-      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
+      const auto blocks = ROOT::Internal::GetZipBlocks(fObjlen);
+      const Int_t nbuffers = blocks.fNBlocks;
+      const Int_t blockSize = blocks.fBlockSize;
       Int_t buflen = std::max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
@@ -352,8 +371,10 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       noutot = 0;
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
-         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-         else               bufmax = kMAXZIPBUF;
+         if (i == nbuffers - 1)
+            bufmax = fObjlen - nzip;
+         else
+            bufmax = blockSize;
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             delete[] fBuffer;
@@ -366,8 +387,8 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
          }
          bufcur += nout;
          noutot += nout;
-         objbuf += kMAXZIPBUF;
-         nzip   += kMAXZIPBUF;
+         objbuf += blockSize;
+         nzip += blockSize;
       }
       Create(noutot);
       fBufferRef->SetBufferOffset(0);
@@ -380,6 +401,37 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       fBufferRef->SetBufferOffset(0);
       Streamer(*fBufferRef);         //write key itself again
    }
+}
+
+/// Core of uncompressing the key payload. Returns number of bytes uncompressed.
+/// We expect that the compressedBuffer contains the entire key (key header + payload).
+/// The target buffer must have space for at least fObjLen bytes.
+/// Lastly, the object length must be larger than the key payload, i.e. we already know that
+/// we have a compressed payload.
+Int_t TKey::UnzipBuffer(char *targetBuffer, const char *compressedBuffer) const
+{
+   auto objbuf = reinterpret_cast<unsigned char *>(targetBuffer) + fKeylen;
+   auto bufcur = reinterpret_cast<const unsigned char *>(&compressedBuffer[fKeylen]);
+   Int_t nin, nout = 0, nbuf;
+   Int_t noutot = 0;
+   Int_t nbytesRemain = fNbytes - fKeylen;
+   Int_t objlenRemain = fObjlen;
+   while (nbytesRemain >= ROOT::Internal::kZipHeaderSize) {
+      Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+      if ((hc != 0) || (nin > nbytesRemain) || (nbuf > objlenRemain))
+         return 0;
+      R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+      if (!nout)
+         return 0;
+      noutot += nout;
+      if (noutot >= fObjlen)
+         break;
+      bufcur += nin;
+      objbuf += nout;
+      nbytesRemain -= nin;
+      objlenRemain -= nout;
+   }
+   return nout;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -825,20 +877,7 @@ TObject *TKey::ReadObj()
       bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = bufferRef.Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
-      Int_t nin, nout = 0, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
+      Int_t nout = UnzipBuffer(bufferRef.Buffer(), compressedBuffer.get());
       compressedBuffer.reset(nullptr);
       if (nout) {
          tobj->Streamer(bufferRef); //does not work with example 2 above
@@ -950,20 +989,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = bufferRef.Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&bufferRead[fKeylen];
-      Int_t nin, nout = 0, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
+      Int_t nout = UnzipBuffer(bufferRef.Buffer(), bufferRead);
       if (nout) {
          tobj->Streamer(bufferRef); //does not work with example 2 above
       } else {
@@ -1096,20 +1122,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = bufferRef.Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
-      Int_t nin, nout = 0, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
+      Int_t nout = UnzipBuffer(bufferRef.Buffer(), compressedBuffer.get());
       if (nout) {
          cl->Streamer((void*)pobj, bufferRef, clOnfile);    //read object
       } else {
@@ -1184,21 +1197,9 @@ Int_t TKey::Read(TObject *obj)
 
    bufferRef.SetBufferOffset(fKeylen);
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = bufferRef.Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
-      Int_t nin, nout = 0, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
-      if (nout) obj->Streamer(bufferRef);
+      Int_t nout = UnzipBuffer(bufferRef.Buffer(), compressedBuffer.get());
+      if (nout)
+         obj->Streamer(bufferRef);
    } else {
       obj->Streamer(bufferRef);
    }
@@ -1234,12 +1235,44 @@ void TKey::ReadBuffer(char *&buffer)
 void TKey::ReadKeyBuffer(char *&buffer)
 {
    frombuf(buffer, &fNbytes);
+   if (fNbytes < 0) {
+      Error("ReadKeyBuffer", "The value of fNbytes is negative (%d): cannot continue to read the key buffer.", fNbytes);
+      MakeZombie();
+      fNbytes = 0;
+      return;
+   }
    Version_t version;
    frombuf(buffer,&version);
    fVersion = (Int_t)version;
    frombuf(buffer, &fObjlen);
+   if (fObjlen < 0) {
+      Error("ReadKeyBuffer", "The value of fObjlen is negative (%d): cannot continue to read the key buffer.", fObjlen);
+      MakeZombie();
+      fObjlen = 0;
+      return;
+   }
    fDatime.ReadBuffer(buffer);
    frombuf(buffer, &fKeylen);
+   if (fKeylen < 0) {
+      Error("ReadKeyBuffer", "The value of fKeylen is negative (%d): cannot continue to read the key buffer.", fKeylen);
+      MakeZombie();
+      fKeylen = 0;
+      return;
+   }
+
+   if (fNbytes < fKeylen) {
+      Error("ReadKeyBuffer", "fNbytes (%d) < fKeylen (%d): cannot continue to read the key buffer.", fNbytes, fKeylen);
+      MakeZombie();
+      return;
+   }
+
+   if(CheckKeyObjLenOverflow("ReadKeyBuffer", fKeylen, fObjlen)){
+      fKeylen = 0;
+      fObjlen = 0;
+      MakeZombie();
+      return;
+   }
+
    frombuf(buffer, &fCycle);
    if (fVersion > 1000) {
       frombuf(buffer, &fSeekKey);
@@ -1269,6 +1302,132 @@ void TKey::ReadKeyBuffer(char *&buffer)
 
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Decode input buffer.
+/// \return true if decoding was successful.
+
+bool TKey::ReadKeyBuffer(char *&buffer, std::size_t bufsize)
+{
+   // NOTE: this is not a lambda because we want [[nodiscard]].
+   struct {
+      TKey *fOuter;
+      std::size_t fRemainingBufSize;
+      [[nodiscard]] bool operator()(std::size_t additionalBytesNeeded) {
+         if (R__unlikely(additionalBytesNeeded > fRemainingBufSize)) {
+            fOuter->Error("ReadKeyBuffer", "The given buffer is too small to fit this TKey.");
+            fOuter->MakeZombie();
+            return false;
+         }
+         fRemainingBufSize -= additionalBytesNeeded;
+         return true;
+      }
+   } ConsumeBufCapacity{this, bufsize};
+
+   // Min size of the buffer for reading the common key header data
+   constexpr std::size_t kMinBufSize =
+      sizeof(fNbytes) + sizeof(Version_t) + sizeof(fObjlen) + sizeof(fKeylen) + sizeof(fCycle);
+   if (!ConsumeBufCapacity(kMinBufSize))
+      return false;
+
+   frombuf(buffer, &fNbytes);
+   if (fNbytes < 0) {
+      Error("ReadKeyBuffer", "The value of fNbytes is negative (%d): cannot continue to read the key buffer.", fNbytes);
+      MakeZombie();
+      fNbytes = 0;
+      return false;
+   }
+   Version_t version;
+   frombuf(buffer,&version);
+   fVersion = (Int_t)version;
+   frombuf(buffer, &fObjlen);
+   if (fObjlen < 0) {
+      Error("ReadKeyBuffer", "The value of fObjlen is negative (%d): cannot continue to read the key buffer.", fObjlen);
+      MakeZombie();
+      fObjlen = 0;
+      return false;
+   }
+   fDatime.ReadBuffer(buffer);
+   frombuf(buffer, &fKeylen);
+   if (fKeylen < 0) {
+      Error("ReadKeyBuffer", "The value of fKeylen is negative (%d): cannot continue to read the key buffer.", fKeylen);
+      MakeZombie();
+      fKeylen = 0;
+      return false;
+   }
+
+   if (fNbytes < fKeylen) {
+      Error("ReadKeyBuffer", "fNbytes (%d) < fKeylen (%d): cannot continue to read the key buffer.", fNbytes, fKeylen);
+      MakeZombie();
+      return false;
+   }
+
+   constexpr auto maxInt_t = std::numeric_limits<Int_t>::max();
+   if (fKeylen > (maxInt_t - fObjlen)) {
+      Error("ReadKeyBuffer", "fObjlen (%d) + fKeylen (%d) > max int (%d): cannot continue to read the key buffer.", fObjlen, fKeylen, maxInt_t);
+      MakeZombie();
+      return false;
+   }
+
+   frombuf(buffer, &fCycle);
+   // The initial bufsize check guarantees that we could read up to here.
+   // From now on we need to be careful.
+
+   if (fVersion > 1000) {
+      if (!ConsumeBufCapacity(sizeof(fSeekKey) + sizeof(Long64_t)))
+         return false;
+
+      frombuf(buffer, &fSeekKey);
+
+      // We currently store in the 16 highest bit of fSeekPdir the value of
+      // fPidOffset.  This offset is used when a key (or basket) is transferred from one
+      // file to the other.  In this case the TRef and TObject might have stored a
+      // pid index (to retrieve TProcessIDs) which refered to their order on the original
+      // file, the fPidOffset is to be added to those values to correctly find the
+      // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+      // and need to be zero for new key/basket.
+      Long64_t pdir;
+      frombuf(buffer, &pdir);
+      fPidOffset = pdir >> kPidOffsetShift;
+      fSeekPdir = pdir & kPidOffsetMask;
+   } else {
+      if (!ConsumeBufCapacity(2 * sizeof(UInt_t)))
+         return false;
+
+      UInt_t seekkey,seekdir;
+      frombuf(buffer, &seekkey);
+      fSeekKey = (Long64_t)seekkey;
+      frombuf(buffer, &seekdir);
+      fSeekPdir = (Long64_t)seekdir;
+   }
+
+   auto nRead = fClassName.ReadBuffer(buffer, ConsumeBufCapacity.fRemainingBufSize);
+   if (!nRead) {
+      MakeZombie();
+      return false;
+   }
+   ConsumeBufCapacity.fRemainingBufSize -= nRead;
+
+   //the following test required for forward and backward compatibility
+   if (fClassName == "TDirectory") {
+      fClassName = "TDirectoryFile";
+      SetBit(kIsDirectoryFile);
+   }
+
+   nRead = fName.ReadBuffer(buffer, ConsumeBufCapacity.fRemainingBufSize);
+   if (!nRead) {
+      MakeZombie();
+      return false;
+   }
+   ConsumeBufCapacity.fRemainingBufSize -= nRead;
+
+   nRead = fTitle.ReadBuffer(buffer, ConsumeBufCapacity.fRemainingBufSize);
+   if (!nRead) {
+      MakeZombie();
+      return false;
+   }
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1410,6 +1569,10 @@ void TKey::Streamer(TBuffer &b)
          Error("Streamer","The value of fNbytes is incorrect (%d) ; trying to recover by setting it to zero",fNbytes);
          MakeZombie();
          fNbytes = 0;
+      }
+      if (CheckKeyObjLenOverflow("Streamer", fKeylen, fObjlen)) {
+         MakeZombie();
+         return;
       }
 
    } else {

@@ -1,0 +1,150 @@
+/// \file ROOT/RField/RFieldSoA.hxx
+/// \author Jakob Blomer <jblomer@cern.ch>
+/// \date 2026-03-03
+
+/*************************************************************************
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_RField_SoA
+#define ROOT_RField_SoA
+
+#ifndef ROOT_RField
+#error "Please include RField.hxx!"
+#endif
+
+#include <ROOT/RFieldBase.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <string_view>
+#include <typeinfo>
+#include <vector>
+
+class TClass;
+
+namespace ROOT {
+
+/// The SoA field provides I/O for an in-memory SoA layout linked to an on-disk collection of the underlying record.
+/// As a concrete example, for an underlying record type
+/// \code{.cpp}
+/// struct PointRecord {
+///    float px, py;
+/// };
+/// \endcode
+/// a corresponding SoA layout will look like
+/// \code{.cpp}
+/// struct PointSoA {
+///    ROOT::RVec<float> px;
+///    ROOT::RVec<float> py;
+/// };
+/// \endcode
+///
+/// The SoA type has to be marked in the dictionary with the rntupleSoARecord attribute.
+///
+/// Since the on-disk representation is a collection of record type, the class version and checksum of the SoA type
+/// itself is ignored.
+class RSoAField : public RRuleField {
+   class RSoADeleter : public RDeleter {
+   private:
+      TClass *fSoAClass;
+
+   public:
+      explicit RSoADeleter(TClass *cl);
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   // A rule of the SoA type itself or one of its nested SoA types or base classes, togther with the offset
+   // of the nested object in the SoA type.
+   struct RRule {
+      const TSchemaRule *fRule = nullptr;
+      std::size_t fOffset = 0;
+   };
+
+   /// Direct access to the member fields of the underlying record. In case of a nested SoA type, this vector
+   /// contains the contents of the inner fRecordMemberFields, too. Effectively, this record will contain all the
+   /// fields of the underlying record type that correspond to terminal RVec members in a nested SoA type.
+   /// Pointers in this vector point into the field hierarchy owned by fSubfields[0].
+   std::vector<RFieldBase *> fRecordMemberFields;
+   /// The offset of the RVec members in the SoA type in the same order as fRecordMemberFields.
+   std::vector<std::size_t> fSoAMemberOffsets;
+   ///< A deleter returned by each record member's GetDeleter()
+   std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
+   ROOT::Internal::RColumnIndex fNWritten;
+
+   /// Contains the I/O customization rules for fClass and all nested SoA classes and base classes,
+   /// and the relative offset at which the rule needs to be applied.
+   std::vector<RRule> fRules;
+
+   /// For reading and writing, the RVecs of the SoA class do not have a dedicated field. The in-memory RVecs of the
+   /// SoA object are used directly with the subfields of the underlying record type. For splitting a SoA class object
+   /// (SplitValue()), however, we need actual RRVecFields so that we can recursively split the in-memory SoA value.
+   /// The split fields are created only when SplitField() is called.
+   /// In general, the number of split fields is different from the number of record member fields because there is
+   /// one split field for every _direct_ member of the SoA class. Because nested SoA structs can have transient
+   /// members, we can also not reuse fSoAMemberOffsets but we need to store the data member offsets.
+   mutable std::unique_ptr<std::vector<std::unique_ptr<ROOT::RFieldBase>>> fSplitFields;
+   mutable std::unique_ptr<std::vector<std::size_t>> fSplitOffsets;
+   mutable std::unique_ptr<std::mutex> fLockSplitFields; ///< protects the fSplitFields member.
+
+   RSoAField(std::string_view fieldName, const RSoAField &source); ///< Used by CloneImpl
+   RSoAField(std::string_view fieldName, TClass *clSoA);
+
+   /// Called during construction, picks up the (nested) member fields of the underlying record type(s) and its
+   /// base classes. Also fills fRules.
+   void CollectRecordMemberFields();
+   /// For a nested SoA struct (either as a member of as a base class), use their fRecordMemberFields in this class,
+   /// i.e. "unroll" the vectors in the nested SoA struct into the SoA base class.
+   void GraftNestedMemberFields(const RSoAField &nestedSoA, std::size_t offsetInParent,
+                                const std::function<RFieldBase *(const std::string &)> &fnRecordFieldFinder);
+
+   void ReconstructSplitFields() const;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumns() final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
+
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RSoADeleter>(fClass); }
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+
+   void CommitClusterImpl() final { fNWritten = 0; }
+
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+public:
+   RSoAField(std::string_view fieldName, std::string_view className);
+   RSoAField(RSoAField &&other) = default;
+   RSoAField &operator=(RSoAField &&other) = default;
+   ~RSoAField() override = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+   std::uint32_t GetTypeVersion() const final;
+   std::uint32_t GetTypeChecksum() const final;
+   /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type
+   /// of any user object. If the class is not polymorphic, return nullptr.
+   /// TODO(jblomer): use information in unique pointer field
+   const std::type_info *GetPolymorphicTypeInfo() const;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+
+   TClass *GetSoAClass() const { return fClass; }
+};
+
+} // namespace ROOT
+
+#endif // ROOT_RField_SoA

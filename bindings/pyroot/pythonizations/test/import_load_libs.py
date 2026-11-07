@@ -57,9 +57,9 @@ class ImportLoadLibs(unittest.TestCase):
         "libkeyutils",
         "libcom_err",
         "libresolv",
-        # cppyy and Python libraries
-        "libcppyy.*",
-        "libCPyCppyy.*",
+        # cppjit and Python libraries
+        "libcppjit.*",
+        "libcpyrt.*",
         "libROOTPythonizations.*",
         "libpython.*",
         "libutil.*",
@@ -77,9 +77,15 @@ class ImportLoadLibs(unittest.TestCase):
         "ld.*",
         "libffi",
         "libgcc_s",
+        "libatomic",
+        "libc\\+\\+",  # C++ runtime of libc++ builds
+        "libc\\+\\+abi",
         # AddressSanitizer runtime and ROOT configuration
         "libclang_rt.asan-.*",
+        "libasan",
         "libROOTSanitizerConfig",
+        "libjitterentropy",  # by libssl on openSUSE
+        "libsandbox",  # Gentoo portage test environment
     ]
 
     # Verbose mode of the test

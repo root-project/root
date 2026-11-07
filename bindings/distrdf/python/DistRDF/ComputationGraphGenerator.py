@@ -12,22 +12,20 @@
 from __future__ import annotations
 
 import logging
-
 from copy import deepcopy
 from functools import singledispatch
-from typing import Any, Dict, List, Tuple, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 import ROOT
 
-from DistRDF._graph_cache import ExecutionIdentifier, _ACTIONS_REGISTER
-from DistRDF.Backends import Utils
-
-from DistRDF.Operation import Action, AsNumpy, InstantAction, Operation, Snapshot, VariationsFor
-from DistRDF.PythonMergeables import SnapshotResult
+from ._graph_cache import _ACTIONS_REGISTER, ExecutionIdentifier
+from .Backends import Utils
+from .Operation import Action, AsNumpy, InstantAction, Operation, Snapshot, VariationsFor
+from .PythonMergeables import SnapshotResult
 
 # Type hints only
 if TYPE_CHECKING:
-    from DistRDF.Node import Node
+    from .Node import Node
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
 /*
 * Project: xRooFit
 * Author:
-*   Will Buttinger, RAL 2025
+*   Will Buttinger, RAL 2026
 *
-* Copyright (c) 2025, CERN
+* Copyright (c) 2026, CERN
 *
 * Redistribution and use in source and binary forms,
 * with or without modification, are permitted according to the terms
@@ -12,5 +12,5 @@
 
 #pragma once
 
-#define GIT_COMMIT_HASH "409fbd5c"
-#define GIT_COMMIT_DATE "2025-10-03 9:53:09 +0000"
+#define GIT_COMMIT_HASH "v0.0.4-29-g67d433e"
+#define GIT_COMMIT_DATE "2026-10-23 11:19:53 +0100"

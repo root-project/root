@@ -20,20 +20,22 @@ class TPoints;
 class TSVG : public TVirtualPS {
 
 protected:
-   Float_t      fXsize;           ///< Page size along X
-   Float_t      fYsize;           ///< Page size along Y
-   Int_t        fType;            ///< Workstation type used to know if the SVG is open
-   Bool_t       fCompact;         ///< True when the SVG header is printed
-   Bool_t       fBoundingBox;     ///< True when the SVG header is printed
-   Bool_t       fRange;           ///< True when a range has been defined
-   Double_t     fYsizeSVG;        ///< Page's Y size in SVG units
+   Float_t      fXsize = 0.;           ///< Page size along X
+   Float_t      fYsize = 0.;           ///< Page size along Y
+   Int_t        fType = 0;             ///< Workstation type used to know if the SVG is open
+   Bool_t       fCompact = kFALSE;     ///< True when the SVG header is printed
+   Bool_t       fBoundingBox = kFALSE; ///< True when the SVG header is printed
+   Bool_t       fRange = kFALSE;       ///< True when a range has been defined
+   Double_t     fYsizeSVG = 0.;        ///< Page's Y size in SVG units
 
    static Int_t fgLineJoin;       ///< Appearance of joining lines
    static Int_t fgLineCap;        ///< Appearance of line caps
 
    void PrintPath(Bool_t convert, Int_t n, Double_t *xs, Double_t *ys, Bool_t close_path = kTRUE);
-   template<class T>
-   void PrintPolyMarker(Int_t n, T *x, T* y);
+   void PrintLineStyleOnEndOfPath();
+   void PrintLineJointAttributes();
+   template<typename T>
+   void PrintPolyMarkerShape(Int_t n, T *x, T* y);
 
 public:
    TSVG();
@@ -44,6 +46,9 @@ public:
    void  CellArrayFill(Int_t r, Int_t g, Int_t b) override;
    void  CellArrayPng(char *buffer, int size) override;
    void  CellArrayEnd() override;
+
+   void  DrawImage(TImage *img, Int_t x, Int_t y , Int_t flags = 0) override;
+
    void  Close(Option_t *opt="") override;
    Double_t CMtoSVG(Double_t u) { return 0.5 + 72*u/2.54; }
    void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
@@ -55,6 +60,7 @@ public:
    void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
    void  DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
    void  DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
+   void  DrawSegments(Int_t n, Double_t *xw, Double_t *yw) override;
    Bool_t IsCompact() const { return fCompact; }
    void  Initialize();
    void  MovePS(Double_t x, Double_t y);
@@ -77,6 +83,7 @@ public:
    void  SetTextColor(Color_t cindex=1) override;
    void  Text(Double_t x, Double_t y, const char *string)  override;
    void  Text(Double_t, Double_t, const wchar_t *) override {}
+   void  TextUrl(Double_t x, Double_t y, const char *string, const char *url) override;
    void  TextNDC(Double_t u, Double_t v, const char *string);
    void  TextNDC(Double_t, Double_t, const wchar_t *) {}
    void  WriteReal(Float_t r, Bool_t space=kTRUE) override;

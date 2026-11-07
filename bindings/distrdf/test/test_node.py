@@ -1,8 +1,8 @@
 import unittest
 
-from DistRDF import Node, Proxy
-from DistRDF.Backends import Base
-from DistRDF.HeadNode import get_headnode
+from ROOT._distrdf import Node, Proxy
+from ROOT._distrdf.Backends import Base
+from ROOT._distrdf.HeadNode import get_headnode
 
 
 def create_dummy_headnode(*args):
@@ -43,7 +43,7 @@ class OperationReadTest(unittest.TestCase):
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.NodeProxy(hn)
-        func = node.Define  # noqa: avoid PEP8 F841
+        func = node.Define  # noqa: F841
         self.assertEqual(node._new_op_name, "Define")
 
     def test_args_read(self):

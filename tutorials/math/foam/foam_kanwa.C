@@ -11,13 +11,14 @@
 ///
 /// \author Stascek Jadach
 
-#include "Riostream.h"
 #include "TFoam.h"
 #include "TCanvas.h"
 #include "TH2.h"
 #include "TMath.h"
 #include "TFoamIntegrand.h"
 #include "TRandom3.h"
+
+#include <iostream>
 
 //_____________________________________________________________________________
 Double_t sqr(Double_t x){

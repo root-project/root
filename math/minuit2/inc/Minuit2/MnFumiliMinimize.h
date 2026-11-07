@@ -44,11 +44,11 @@ public:
    {
    }
 
-   MnFumiliMinimize(const MnFumiliMinimize &migr)
-      : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer),
-        fFCN(migr.Fcnbase())
-   {
-   }
+   /// Copy constructor, copy shares the reference to the same FCNBase in MnApplication
+   MnFumiliMinimize(const MnFumiliMinimize &) = default;
+
+   // Copy assignment deleted, since MnApplication has unassignable reference to FCNBase
+   MnFumiliMinimize &operator=(const MnFumiliMinimize &) = delete;
 
    FumiliMinimizer &Minimizer() override { return fMinimizer; }
    const FumiliMinimizer &Minimizer() const override { return fMinimizer; }
@@ -61,10 +61,6 @@ public:
 private:
    FumiliMinimizer fMinimizer;
    const FumiliFCNBase &fFCN;
-
-private:
-   // forbidden assignment of migrad (const FumiliFCNBase& = )
-   MnFumiliMinimize &operator=(const MnFumiliMinimize &) { return *this; }
 };
 
 } // namespace Minuit2

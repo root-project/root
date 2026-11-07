@@ -96,7 +96,7 @@ TEST(RooDataHist, UnWeightedEntries)
    EXPECT_EQ(static_cast<RooRealVar *>(coordsAtZero.find(x))->getVal(),
              static_cast<RooRealVar *>(coordsAtPoint9.find(x))->getVal());
 
-   const double weight = dataHist.weight();
+   const double weight = dataHist.weight(dataHist.getIndex(coordinates));
    EXPECT_EQ(weight, targetBinContent);
 
    EXPECT_NEAR(dataHist.weightError(RooAbsData::Poisson), sqrt(targetBinContent),
@@ -124,7 +124,7 @@ TEST(RooDataHist, UnWeightedEntries)
 
    RooArgSet coordsAt10;
    dataHist.get(10)->snapshot(coordsAt10);
-   const double weightBin10 = dataHist.weight();
+   const double weightBin10 = dataHist.weight(10);
 
    EXPECT_NEAR(static_cast<RooRealVar *>(coordsAt10.find(x))->getVal(), 0.5, 1.E-1);
    EXPECT_EQ(weight, weightBin10);
@@ -149,7 +149,7 @@ TEST(RooDataHist, WeightedEntries)
 
    x.setVal(0.);
    dataHist.get(coordinates);
-   const double weight = dataHist.weight();
+   const double weight = dataHist.weight(dataHist.getIndex(coordinates));
    ASSERT_EQ(weight, targetBinContent);
 
    const double targetError = sqrt(10 * 4.);
@@ -178,7 +178,7 @@ TEST(RooDataHist, WeightedEntries)
 
    RooArgSet coordsAt10;
    dataHist.get(10)->snapshot(coordsAt10);
-   const double weightBin10 = dataHist.weight();
+   const double weightBin10 = dataHist.weight(10);
 
    EXPECT_NEAR(static_cast<RooRealVar *>(coordsAt10.find(x))->getVal(), 0.5, 1.E-1);
    EXPECT_EQ(weight, weightBin10);
@@ -217,8 +217,7 @@ TEST_P(RooDataHistIO, ReadLegacy)
    EXPECT_EQ(dataHist.sumEntries(), 20 * targetBinContent);
 
    static_cast<RooRealVar *>(legacyVals.find("x"))->setVal(0.);
-   dataHist.get(legacyVals); // trigger side effect for weight below.
-   const double weight = dataHist.weight();
+   const double weight = dataHist.weight(dataHist.getIndex(legacyVals));
    ASSERT_EQ(weight, targetBinContent);
 
    const double targetError = sqrt(10 * 4.);
@@ -247,7 +246,7 @@ TEST_P(RooDataHistIO, ReadLegacy)
 
    RooArgSet coordsAt10;
    dataHist.get(10)->snapshot(coordsAt10);
-   const double weightBin10 = dataHist.weight();
+   const double weightBin10 = dataHist.weight(10);
 
    EXPECT_NEAR(static_cast<RooRealVar *>(coordsAt10.find("x"))->getVal(), 0.5, 1.E-1);
    EXPECT_EQ(weight, weightBin10);
@@ -267,6 +266,8 @@ void fillHist(TH2D *histo, double content)
 
 TEST(RooDataHist, BatchDataAccess)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "x", 0, -10, 10);
    RooRealVar y("y", "y", 1, 0, 20);
 
@@ -317,8 +318,12 @@ void fillHist(TH1D *histo, double content)
 
 TEST(RooDataHist, BatchDataAccessWithCategories)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "x", 0, -10, 10);
    RooCategory cat("cat", "category");
+   cat.defineType("catX");
+   cat.defineType("catY");
 
    auto histoX = std::make_unique<TH1D>("xHist", "xHist", 20, -10., 10.);
    auto histoY = std::make_unique<TH1D>("yHist", "yHist", 20, -10., 10.);
@@ -360,9 +365,14 @@ TEST(RooDataHist, BatchDataAccessWithCategories)
 
 TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "x", 0, -10, 10);
-   RooCategory cat("cat", "category");
    x.setRange(-8., 5);
+
+   RooCategory cat("cat", "category");
+   cat.defineType("catX");
+   cat.defineType("catY");
 
    auto histoX = std::make_unique<TH1D>("xHist", "xHist", 20, -10., 10.);
    auto histoY = std::make_unique<TH1D>("yHist", "yHist", 20, -10., 10.);
@@ -448,6 +458,8 @@ TEST(RooDataHist, AnalyticalIntegration)
    //  - bin1 [0.0, 1.0]: 3 counts (bin volume x counts = 3)
    //  - bin2 [1.0, 3.0]: 1 count  (bin volume x counts = 2)
    //  - bin3 [3.0, 3.5]: 8 counts (bin volume x counts = 4)
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooRealVar x("x", "x", 0, 3.5);
    x.setRange("R1", 1.0, 3.0);  // subrange that respects the bin edges
@@ -791,11 +803,11 @@ TEST(RooDataHist, SplitDataHistWithSumW2)
 
    data1.get(0);
    data2.get(0);
-   EXPECT_DOUBLE_EQ(data2.weightSquared(), data1.weightSquared());
+   EXPECT_DOUBLE_EQ(data2.weightSquared(), data1.weightSquared(0));
    EXPECT_DOUBLE_EQ(data2.weightError(), data1.weightError());
 
    data1.get(1);
    data2.get(1);
-   EXPECT_DOUBLE_EQ(data2.weightSquared(), data1.weightSquared());
+   EXPECT_DOUBLE_EQ(data2.weightSquared(), data1.weightSquared(1));
    EXPECT_DOUBLE_EQ(data2.weightError(), data1.weightError());
 }

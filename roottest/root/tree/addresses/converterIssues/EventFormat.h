@@ -60,10 +60,8 @@ namespace edm {
       const_iterator end() const;
 
    private:
-      /// Object associating string keys with the descriptions
-      KeyedData_t m_keyedData; //!
-      /// Object associating  hash keys with the descriptions
-      HashedData_t m_hashedData; //!
+      KeyedData_t m_keyedData;   ///<! Object associating string keys with the descriptions
+      HashedData_t m_hashedData; ///<! Object associating hash keys with the descriptions
 
    }; // class EventFormat
 

@@ -163,7 +163,7 @@ namespace {
 
     void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
                           const Diagnostic &Info) override {
-      if (Info.getID() == diag::warn_falloff_nonvoid_function) {
+      if (Info.getID() == diag::warn_falloff_nonvoid) {
         DiagLevel = DiagnosticsEngine::Error;
       }
       if (Ignoring()) {
@@ -293,7 +293,8 @@ namespace cling {
     std::unique_ptr<cling::DeclCollector> consumer;
     consumer.reset(m_Consumer = new cling::DeclCollector());
     m_CI.reset(CIFactory::createCI("\n", interp->getOptions(), llvmdir,
-                                   std::move(consumer), moduleExtensions));
+                                   std::make_optional(std::move(consumer)),
+                                   moduleExtensions));
 
     if (!m_CI) {
       cling::errs() << "Compiler instance could not be created.\n";
@@ -315,15 +316,12 @@ namespace cling {
 
     DiagnosticsEngine& Diag = m_CI->getDiagnostics();
     if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
-      auto CG
-        = std::unique_ptr<clang::CodeGenerator>(CreateLLVMCodeGen(Diag,
-                                                               makeModuleName(),
-                                                  &m_CI->getVirtualFileSystem(),
-                                                    m_CI->getHeaderSearchOpts(),
-                                                    m_CI->getPreprocessorOpts(),
-                                                         m_CI->getCodeGenOpts(),
-                                               *m_Interpreter->getLLVMContext())
-                                                );
+      auto CG = m_Interpreter->withLLVMContextDo([&](llvm::LLVMContext* Ctx) {
+        return std::unique_ptr<clang::CodeGenerator>(CreateLLVMCodeGen(
+            Diag, makeModuleName(), &m_CI->getVirtualFileSystem(),
+            m_CI->getHeaderSearchOpts(), m_CI->getPreprocessorOpts(),
+            m_CI->getCodeGenOpts(), *Ctx));
+      });
       m_CodeGen = CG.get();
       assert(m_CodeGen);
       if (!Consumers.empty()) {
@@ -557,9 +555,9 @@ namespace cling {
   }
 
   llvm::Module* IncrementalParser::StartModule() {
-    return getCodeGenerator()->StartModule(makeModuleName(),
-                                           *m_Interpreter->getLLVMContext(),
-                                           getCI()->getCodeGenOpts());
+    return m_Interpreter->withLLVMContextDo([&](llvm::LLVMContext* Ctx) {
+      return getCodeGenerator()->StartModule(makeModuleName(), *Ctx);
+    });
   }
 
   void IncrementalParser::commitTransaction(ParseResultTransaction& PRT,
@@ -683,6 +681,8 @@ namespace cling {
           // Interpreter::unload
           //   IncrementalParser::deregisterTransaction
           //     TransactionPool::releaseTransaction
+          PRT.setPointer(nullptr);
+          PRT.setInt(kFailed);
           m_Interpreter->unload(*T);
           return;
         }
@@ -859,9 +859,6 @@ namespace cling {
 
     Sema& S = getCI()->getSema();
 
-    const CompilationOptions& CO
-       = m_Consumer->getTransaction()->getCompilationOpts();
-
     // Recover resources if we crash before exiting this method.
     llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(&S);
 
@@ -900,13 +897,12 @@ namespace cling {
         SM.getFileManager().getVirtualFileRef(source_name.str(), InputSize,
                                               0 /* mod time*/);
     SM.overrideFileContents(FE, std::move(MB));
+
+    // Ensure HeaderFileInfo exists before lookup to prevent assertion
+    HeaderSearch& HS = PP.getHeaderSearchInfo();
+    HS.getFileInfo(FE);
+
     FID = SM.createFileID(FE, NewLoc, SrcMgr::C_User);
-    if (CO.CodeCompletionOffset != -1) {
-      // The completion point is set one a 1-based line/column numbering.
-      // It relies on the implementation to account for the wrapper extra line.
-      PP.SetCodeCompletionPoint(FE, 1/* start point 1-based line*/,
-                                CO.CodeCompletionOffset+1/* 1-based column*/);
-    }
 
     // NewLoc only used for diags.
     PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
@@ -953,8 +949,10 @@ namespace cling {
     FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
 
     llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(&S);
-    Sema::GlobalEagerInstantiationScope GlobalInstantiations(S, /*Enabled=*/true);
-    Sema::LocalEagerInstantiationScope LocalInstantiations(S);
+    Sema::GlobalEagerInstantiationScope GlobalInstantiations(
+        S, /*Enabled=*/true, /*AtEndOfTU=*/true);
+    Sema::LocalEagerInstantiationScope LocalInstantiations(S,
+                                                           /*AtEndOfTU=*/true);
 
     // Skip previous eof due to last incremental input.
     if (m_Parser->getCurToken().is(tok::annot_repl_input_end)) {
@@ -981,23 +979,6 @@ namespace cling {
       // Diags.getClient()->clear();
       return llvm::make_error<llvm::StringError>("Parsing failed.",
                                                  std::error_code());
-    }
-
-    if (CO.CodeCompletionOffset != -1) {
-#ifndef NDEBUG
-      Preprocessor& PP = m_CI->getPreprocessor();
-      SourceManager& SM = getCI()->getSourceManager();
-      assert((int)SM.getFileOffset(PP.getCodeCompletionLoc())
-             == CO.CodeCompletionOffset
-             && "Completion point wrongly set!");
-      assert(PP.isCodeCompletionReached()
-             && "Code completion set but not reached!");
-#endif
-
-      // Let's ignore this transaction:
-      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
-
-      return llvm::Error::success();
     }
 
     // Process any TopLevelDecls generated by #pragma weak.

@@ -22,12 +22,13 @@
 #include <memory> // std::unique_ptr
 #include <sstream> // std::stringstream
 #include <iostream>
+#include <algorithm>
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TUUID.h"
-#include "TMVA/RTensor.hxx"
 #include "Math/Util.h"
 
 namespace TMVA {
@@ -37,10 +38,7 @@ namespace Experimental {
 
 
 /// TMVA::RSofieReader class for reading external Machine Learning models
-/// in ONNX files, Keras .h5 files or PyTorch .pt files
-/// and performing the inference using SOFIE
-/// It is reccomended to use ONNX if possible since there is a larger support for
-/// model operators.
+/// in ONNX files and performing the inference using SOFIE.
 
 class RSofieReader  {
 
@@ -58,33 +56,11 @@ public:
    void Load(const std::string &path, std::vector<std::vector<size_t>> inputShapes = {}, int verbose = 0)
    {
 
-      enum EModelType {kONNX, kKeras, kPt, kROOT, kNotDef}; // type of model
-      EModelType type = kNotDef;
-
-      auto pos1 = path.rfind("/");
       auto pos2 = path.find(".onnx");
-      if (pos2 != std::string::npos) {
-         type = kONNX;
-      } else {
-         pos2 = path.find(".h5");
-         if (pos2 != std::string::npos) {
-             type = kKeras;
-         } else {
-            pos2 = path.find(".pt");
-            if (pos2 != std::string::npos) {
-               type = kPt;
-            }
-            else {
-               pos2 = path.find(".root");
-               if (pos2 != std::string::npos) {
-                  type = kROOT;
-               }
-            }
-         }
+      if (pos2 == std::string::npos) {
+         throw std::runtime_error("Input file is not an ONNX file");
       }
-      if (type == kNotDef) {
-         throw std::runtime_error("Input file is not an ONNX or Keras or PyTorch file");
-      }
+      auto pos1 = path.rfind("/");
       if (pos1 == std::string::npos)
          pos1 = 0;
       else
@@ -93,76 +69,24 @@ public:
       std::string fileType = path.substr(pos2+1, path.length()-pos2-1);
       if (verbose) std::cout << "Parsing SOFIE model " << modelName << " of type " << fileType << std::endl;
 
+      // append a suffix to headerfile
+      std::string modelHeader = modelName + "_fromRSofieR.hxx";
+      std::string modelWeights = modelName + "_fromRSofieR.dat";
+
       // create code for parsing model and generate C++ code for inference
       // make it in a separate scope to avoid polluting global interpreter space
       std::string parserCode;
-      if (type == kONNX) {
-         // check first if we can load the SOFIE parser library
-         if (gSystem->Load("libROOTTMVASofieParser") < 0) {
-            throw std::runtime_error("RSofieReader: cannot use SOFIE with ONNX since libROOTTMVASofieParser is missing");
-         }
-         gInterpreter->Declare("#include \"TMVA/RModelParser_ONNX.hxx\"");
-         parserCode += "{\nTMVA::Experimental::SOFIE::RModelParser_ONNX parser ; \n";
-         if (verbose == 2)
-            parserCode += "TMVA::Experimental::SOFIE::RModel model = parser.Parse(\"" + path + "\",true); \n";
-         else
-            parserCode += "TMVA::Experimental::SOFIE::RModel model = parser.Parse(\"" + path + "\"); \n";
-      }
-      else if (type == kKeras) {
-         // use Keras direct parser
-         if (gSystem->Load("libROOTTMVASofiePyParsers") < 0) {
-            throw std::runtime_error("RSofieReader: cannot use SOFIE with Keras since libROOTTMVASofiePyParsers is missing");
-         }
-         // assume batch size is first entry in first input !
-         std::string batch_size = "-1";
-         if (!inputShapes.empty() && ! inputShapes[0].empty())
-            batch_size = std::to_string(inputShapes[0][0]);
-         parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyKeras::Parse(\"" + path +
-                       "\"," + batch_size + "); \n";
-      }
-      else if (type == kPt) {
-         // use PyTorch direct parser
-         if (gSystem->Load("libROOTTMVASofiePyParsers") < 0) {
-            throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since libROOTTMVASofiePyParsers is missing");
-         }
-         if (inputShapes.size() == 0) {
-            throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since the input tensor shape is missing and is needed by the PyTorch parser");
-         }
-         std::string inputShapesStr = "{";
-         for (unsigned int i = 0; i < inputShapes.size(); i++) {
-            inputShapesStr += "{ ";
-            for (unsigned int j = 0; j < inputShapes[i].size(); j++) {
-               inputShapesStr += ROOT::Math::Util::ToString(inputShapes[i][j]);
-               if (j < inputShapes[i].size()-1) inputShapesStr += ", ";
-            }
-            inputShapesStr += "}";
-            if (i < inputShapes.size()-1) inputShapesStr += ", ";
-         }
-         inputShapesStr += "}";
-         parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyTorch::Parse(\"" + path + "\", "
-                    + inputShapesStr + "); \n";
-      }
-      else if (type == kROOT) {
-         // use  parser from ROOT
-         parserCode += "{\nauto fileRead = TFile::Open(\"" + path + "\",\"READ\");\n";
-         parserCode += "TMVA::Experimental::SOFIE::RModel * modelPtr;\n";
-         parserCode += "auto keyList = fileRead->GetListOfKeys(); TString name;\n";
-         parserCode += "for (const auto&& k : *keyList)  { \n";
-         parserCode += "   TString cname =  ((TKey*)k)->GetClassName();  if (cname==\"TMVA::Experimental::SOFIE::RModel\") name = k->GetName(); }\n";
-         parserCode += "fileRead->GetObject(name,modelPtr); fileRead->Close(); delete fileRead;\n";
-         parserCode += "TMVA::Experimental::SOFIE::RModel & model = *modelPtr;\n";
-      }
 
-       // add custom operators if needed
-      if (fCustomOperators.size() > 0) {
-
-         for (auto & op : fCustomOperators) {
-            parserCode += "{ auto p = new TMVA::Experimental::SOFIE::ROperator_Custom<float>(\""
-                      + op.fOpName + "\"," + op.fInputNames + "," + op.fOutputNames + "," + op.fOutputShapes + ",\"" + op.fFileName + "\");\n";
-            parserCode += "std::unique_ptr<TMVA::Experimental::SOFIE::ROperator> op(p);\n";
-            parserCode += "model.AddOperator(std::move(op));\n}\n";
-         }
+      // check first if we can load the SOFIE parser library
+      if (gSystem->Load("libROOTTMVASofieParser") < 0) {
+         throw std::runtime_error("RSofieReader: cannot use SOFIE with ONNX since libROOTTMVASofieParser is missing");
       }
+      gInterpreter->Declare("#include \"TMVA/RModelParser_ONNX.hxx\"");
+      parserCode += "{\nTMVA::Experimental::SOFIE::RModelParser_ONNX parser ; \n";
+      if (verbose == 2)
+         parserCode += "TMVA::Experimental::SOFIE::RModel model = parser.Parse(\"" + path + "\",true); \n";
+      else
+         parserCode += "TMVA::Experimental::SOFIE::RModel model = parser.Parse(\"" + path + "\"); \n";
 
       int batchSize = 1;
       if (inputShapes.size() > 0 && inputShapes[0].size() > 0) {
@@ -172,57 +96,42 @@ public:
       if (verbose) std::cout << "generating the code with batch size = " << batchSize << " ...\n";
 
       parserCode += "model.Generate(TMVA::Experimental::SOFIE::Options::kDefault,"
-                   + ROOT::Math::Util::ToString(batchSize) + ", 0, " + std::to_string(verbose) + "); \n";
+                 + ROOT::Math::Util::ToString(batchSize) + ", " + std::to_string(verbose) + ");\n";
 
+      parserCode += "model.OutputGenerated(\"" + modelHeader + "\");\n";
       if (verbose) {
          parserCode += "model.PrintRequiredInputTensors();\n";
          parserCode += "model.PrintIntermediateTensors();\n";
          parserCode += "model.PrintOutputTensors();\n";
+         if (verbose > 1)
+            parserCode += "model.PrintGenerated(); \n";
       }
-
-      // add custom operators if needed
-#if 0
-      if (fCustomOperators.size() > 0) {
-         if (verbose) {
-            parserCode += "model.PrintRequiredInputTensors();\n";
-            parserCode += "model.PrintIntermediateTensors();\n";
-            parserCode += "model.PrintOutputTensors();\n";
-         }
-         for (auto & op : fCustomOperators) {
-            parserCode += "{ auto p = new TMVA::Experimental::SOFIE::ROperator_Custom<float>(\""
-                      + op.fOpName + "\"," + op.fInputNames + "," + op.fOutputNames + "," + op.fOutputShapes + ",\"" + op.fFileName + "\");\n";
-            parserCode += "std::unique_ptr<TMVA::Experimental::SOFIE::ROperator> op(p);\n";
-            parserCode += "model.AddOperator(std::move(op));\n}\n";
-         }
-         parserCode += "model.Generate(TMVA::Experimental::SOFIE::Options::kDefault,"
-                   + ROOT::Math::Util::ToString(batchSize) + "); \n";
-      }
-#endif
-      if (verbose > 1)
-         parserCode += "model.PrintGenerated(); \n";
-      parserCode += "model.OutputGenerated();\n";
-
-      parserCode += "int nInputs = model.GetInputTensorNames().size();\n";
 
       // need information on number of inputs (assume output is 1)
+      parserCode += "int nInputs = model.GetInputTensorNames().size();\n";
 
-      //end of parsing code, close the scope and return 1 to indicate a success
+      //end of parsing C++ code
       parserCode += "return nInputs;\n}\n";
+      // executing parsing and generating code
+      int iret = -1;
+      if (verbose) {
+         std::cout << "...ParserCode being executed...:\n";
+         std::cout << parserCode << std::endl;
+      }
+      iret = gROOT->ProcessLine(parserCode.c_str());
+      fNInputs = iret;
 
-      if (verbose) std::cout << "//ParserCode being executed:\n" << parserCode << std::endl;
-
-      auto iret = gROOT->ProcessLine(parserCode.c_str());
-      if (iret <= 0) {
+      if (iret < 0) {
          std::string msg = "RSofieReader: error processing the parser code: \n" + parserCode;
          throw std::runtime_error(msg);
+      } else if (verbose) {
+         std::cout << "Model Header file is generated!" << std::endl;
       }
-      fNInputs = iret;
       if (fNInputs > 3) {
          throw std::runtime_error("RSofieReader does not yet support model with > 3 inputs");
       }
 
       // compile now the generated code and create Session class
-      std::string modelHeader = modelName + ".hxx";
       if (verbose) std::cout << "compile generated code from file " <<modelHeader << std::endl;
       if (gSystem->AccessPathName(modelHeader.c_str())) {
          std::string msg = "RSofieReader: input header file " + modelHeader + " is not existing";
@@ -240,9 +149,14 @@ public:
          []( char const& c ) -> bool { return !std::isalnum(c); } ), uidName.end());
 
       std::string sessionName = "session_" + uidName;
-      declCode += sessionClassName + " " + sessionName + ";";
+      declCode += sessionClassName + " " + sessionName + "(\"" + modelWeights + "\");";
 
       if (verbose) std::cout << "//global session declaration\n" << declCode << std::endl;
+
+      // need to load the ROOTTMVASOFIE library for some symbols used in generated code
+      iret = gSystem->Load("libROOTTMVASofie");
+      if (iret < 0)
+         throw std::runtime_error("Error loading libROOTTMVASofie library");
 
       bool ret = gInterpreter->Declare(declCode.c_str());
       if (!ret) {
@@ -280,13 +194,6 @@ public:
       //fFuncPtr = reinterpret_cast<std::vector<float> (*)(void *, const float *)>(fptr);
       fInitialized = true;
    }
-
-   // Add custom operator
-    void AddCustomOperator(const std::string &opName, const std::string &inputNames, const std::string & outputNames,
-      const std::string & outputShapes, const std::string & fileName) {
-         if (fInitialized)  std::cout << "WARNING: Model is already loaded and initialised. It must be done after adding the custom operators" << std::endl;
-         fCustomOperators.push_back( {fileName, opName,inputNames, outputNames,outputShapes});
-      }
 
    // implementations for different outputs
    std::vector<float> DoCompute(const std::vector<float> & x1) {
@@ -340,30 +247,6 @@ public:
       // Evaluate TMVA model (need to add support for multiple outputs)
       return DoCompute(x);
    }
-   /// Compute model prediction on input RTensor
-   /// The shape of the input tensor should be {nevents, nfeatures}
-   /// and the return shape will be {nevents, noutputs}
-   /// support for now only a single input
-   RTensor<float> Compute(RTensor<float> &x)
-   {
-      if(!fInitialized) {
-         return RTensor<float>({0});
-      }
-      const auto nrows = x.GetShape()[0];
-      const auto rowsize = x.GetStrides()[0];
-      auto fptr = reinterpret_cast<std::vector<float> (*)(void *, const float *)>(fFuncPtr);
-      auto result = fptr(fSessionPtr, x.GetData());
-
-      RTensor<float> y({nrows, result.size()}, MemoryLayout::ColumnMajor);
-      std::copy(result.begin(),result.end(), y.GetData());
-      //const bool layout = x.GetMemoryLayout() == MemoryLayout::ColumnMajor ? false : true;
-      // assume column major layout
-      for (size_t i = 1; i < nrows; i++) {
-         result = fptr(fSessionPtr, x.GetData() + i*rowsize);
-         std::copy(result.begin(),result.end(), y.GetData() + i*result.size());
-      }
-      return y;
-   }
 
 private:
 
@@ -371,17 +254,6 @@ private:
    int fNInputs = 0;
    void * fSessionPtr = nullptr;
    void * fFuncPtr = nullptr;
-
-   // data to insert custom operators
-   struct CustomOperatorData {
-      std::string fFileName; // code implementing the custom operator
-      std::string fOpName; // operator name
-      std::string fInputNames;  // input tensor names (convert as string as {"n1", "n2"})
-      std::string fOutputNames;  // output tensor names converted as trind
-      std::string fOutputShapes; // output shapes
-   };
-   std::vector<CustomOperatorData> fCustomOperators;
-
 };
 
 } // namespace Experimental

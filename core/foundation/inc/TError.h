@@ -65,6 +65,15 @@ ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t
 
 void MinimalErrorHandler(int level, Bool_t abort, const char *location, const char *msg);
 
+using WarningHandlerFunc_t = bool (*)(const char *location, const char *msg);
+
+/// For the Python bindings: install an error handler that passes warnings to
+/// `handler`, unless it declines them by returning false, and everything else
+/// to DefaultErrorHandler(). While ROOT runs multithreaded (gGlobalMutex is
+/// set) warnings skip the handler: it takes the GIL, which a thread waiting
+/// for ROOT's lock may hold while the reporting thread holds that lock.
+void SetWarningHandler(WarningHandlerFunc_t handler);
+
 } // namespace Internal
 } // namespace ROOT
 
@@ -103,7 +112,12 @@ extern void SysError(const char *location, const char *msgfmt, ...)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
-extern void Fatal(const char *location, const char *msgfmt, ...)
+#ifdef __clang_analyzer__
+// The __attribute__((analyzer_noreturn)) is still very new and possibly not available
+[[noreturn]] void Fatal(const char *location, const char *msgfmt, ...)
+#else
+void Fatal(const char *location, const char *msgfmt, ...)
+#endif
 #if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif

@@ -98,6 +98,8 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <mutex>
+#include <set>
 #include <sstream>
 #include <sys/types.h>
 
@@ -1151,7 +1153,7 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
     const RooArgSet* obs = hist->get(i) ;
     double binVal = theClone->getVal(normSet?normSet:obs)*scaleFactor ;
     if (correctForBinSize) {
-      binVal*= hist->binVolume() ;
+      binVal*= hist->binVolume(i) ;
     }
     hist->set(i, binVal, 0.);
   }
@@ -2203,6 +2205,12 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     }
   }
 
+  // The asymmetry category itself defines the two sides of the asymmetry, so it
+  // must not be treated as a variable to be averaged over the projection data.
+  if (RooAbsArg *asymCatInProjData = projDataVars.find(asymCat.GetName())) {
+    projDataVars.remove(*asymCatInProjData) ;
+  }
+
   // Must depend on asymCat
   if (!dependsOn(asymCat)) {
     coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
@@ -2247,10 +2255,10 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
   // Take out data-projected dependents from projectedVars
-  RooArgSet* projDataNeededVars = nullptr ;
+  std::unique_ptr<RooArgSet> projDataNeededVars;
   if (o.projData) {
-    projDataNeededVars = projectedVars.selectCommon(projDataVars);
-    projectedVars.remove(projDataVars,true,true) ;
+     projDataNeededVars.reset(projectedVars.selectCommon(projDataVars));
+     projectedVars.remove(projDataVars, true, true);
   }
 
   // Take out plotted asymmetry from projection
@@ -2273,19 +2281,16 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   }
 
 
-  // Customize two copies of projection with fixed negative and positive asymmetry
+  // Build two copies of the function with the asymmetry category fixed to its
+  // negative and positive state. By default these are copies with the category
+  // pinned via a RooCustomizer, but subclasses (RooSimultaneous) can provide a
+  // more suitable construction.
   std::unique_ptr<RooAbsCategoryLValue> asymPos{static_cast<RooAbsCategoryLValue*>(asymCat.Clone("asym_pos"))};
   std::unique_ptr<RooAbsCategoryLValue> asymNeg{static_cast<RooAbsCategoryLValue*>(asymCat.Clone("asym_neg"))};
   asymPos->setIndex(1) ;
   asymNeg->setIndex(-1) ;
-  RooCustomizer custPos{*this,"pos"};
-  RooCustomizer custNeg{*this,"neg"};
-  //custPos->setOwning(true) ;
-  //custNeg->setOwning(true) ;
-  custPos.replaceArg(asymCat,*asymPos) ;
-  custNeg.replaceArg(asymCat,*asymNeg) ;
-  std::unique_ptr<RooAbsReal> funcPos{static_cast<RooAbsReal*>(custPos.build())};
-  std::unique_ptr<RooAbsReal> funcNeg{static_cast<RooAbsReal*>(custNeg.build())};
+  std::unique_ptr<RooAbsReal> funcPos = createAsymmetryComponent(asymCat, *asymPos);
+  std::unique_ptr<RooAbsReal> funcNeg = createAsymmetryComponent(asymCat, *asymNeg);
 
   // Create projection integral
   RooArgSet *posProjCompList;
@@ -2293,8 +2298,12 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   // Add projDataVars to normalized dependents of projection
   // This is needed only for asymmetries (why?)
-  RooArgSet depPos(*plotVar,*asymPos) ;
-  RooArgSet depNeg(*plotVar,*asymNeg) ;
+  RooArgSet depPos(*plotVar) ;
+  RooArgSet depNeg(*plotVar) ;
+  // Keep the fixed asymmetry category in the normalization set only if the
+  // component function actually depends on it (i.e. it was pinned in place).
+  if (funcPos->dependsOn(*asymPos)) depPos.add(*asymPos) ;
+  if (funcNeg->dependsOn(*asymNeg)) depNeg.add(*asymNeg) ;
   depPos.add(projDataVars) ;
   depNeg.add(projDataVars) ;
 
@@ -2410,6 +2419,21 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   delete plotVar ;
 
   return frame;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Build the component function of an asymmetry plot (see plotAsymOn()) that
+/// corresponds to a fixed state of the asymmetry category. The default
+/// implementation returns a copy of this function with the asymmetry category
+/// pinned to the requested state via a RooCustomizer.
+
+std::unique_ptr<RooAbsReal>
+RooAbsReal::createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, const RooAbsCategoryLValue &asymCatState) const
+{
+   RooCustomizer cust{*this, asymCatState.GetName()};
+   cust.replaceArg(asymCat, asymCatState);
+   return std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(cust.build())};
 }
 
 
@@ -3096,18 +3120,6 @@ void RooAbsReal::fillTreeBranch(TTree& t)
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// (De)Activate associated tree branch
-
-void RooAbsReal::setTreeBranchStatus(TTree& t, bool active)
-{
-  TBranch* branch = t.GetBranch(cleanBranchName()) ;
-  if (branch) {
-    t.SetBranchStatus(cleanBranchName(),active?true:false) ;
-  }
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooRealVar fundamental object with our properties. The new
@@ -3116,7 +3128,8 @@ void RooAbsReal::setTreeBranchStatus(TTree& t, bool active)
 RooFit::OwningPtr<RooAbsArg> RooAbsReal::createFundamental(const char* newname) const
 {
   auto fund = std::make_unique<RooRealVar>(newname?newname:GetName(),GetTitle(),_value,getUnit());
-  fund->removeRange();
+  fund->removeMin();
+  fund->removeMax();
   fund->setPlotLabel(getPlotLabel());
   fund->setAttribute("fundamentalCopy");
   return RooFit::makeOwningPtr<RooAbsArg>(std::move(fund));
@@ -3943,15 +3956,27 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// \fn RooAbsReal::chi2FitTo(RooDataHist& data, CmdArgs_t const&... cmdArgs)
+///
+/// Calls RooAbsReal::createChi2 and returns the fit result.
 /// Perform a \f$ \chi^2 \f$ fit to given histogram. By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE in succession
 ///
-/// The following named arguments are supported
+/// The following named arguments are supported:
 ///
 /// <table>
-/// <tr><th> <th> Options to control construction of chi2
+/// <tr><th> Type of CmdArg    <th>    Effect on \f$ \chi^2 \f$
+///  <tr><td> `DataError()`  <td>  Choose between:
+///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
+///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights squared,
+///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
+///  - RooAbsData::Poisson: Asymmetric errors from the central 68 % interval around a Poisson distribution with mean \f$ n_\text{observed} \f$.
+///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
+///    (e.g., the difference between the mean and the 16 % quantile).
+///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
+///    (e.g., the difference between the 84 % quantile and the mean).
+///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
 /// <tr><td> `Extended(bool flag)` <td> **Only applicable when fitting a RooAbsPdf**. Scale the normalized pdf by the number of events predicted by the model instead of scaling by the total data weight.
 ///                                     This imposes a constraint on the predicted number of events analogous to the extended term in a likelihood fit.
 ///                                     - If you don't pass this command, an extended fit will be done by default if the pdf makes a prediction on the number of events
@@ -3966,8 +3991,17 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.
 /// <tr><td> `NumCPU(int num)`                 <td> Parallelize NLL calculation on num CPUs
-/// <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization (on by default)
 /// <tr><td> `IntegrateBins()`                 <td> Integrate PDF within each bin. This sets the desired precision.
+/// <tr><td> `Verbose()`    <td> Verbose output of GOF framework
+/// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
+/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
+/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Define projected observables.
+///                                Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
 ///
 /// <tr><th> <th> Options to control flow of fit procedure
 /// <tr><td> `InitialHesse(bool flag)`      <td> Flag controls if HESSE before MIGRAD as well, off by default
@@ -3989,179 +4023,58 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// </table>
 ///
 
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-                const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-                const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+std::unique_ptr<RooFitResult> RooAbsReal::chi2FitToImpl(RooDataHist &data, const RooLinkedList &cmdList)
 {
-  CREATE_CMD_LIST;
-  return chi2FitTo(data,l) ;
+   return RooFit::FitHelpers::fitTo(*this, data, cmdList, true);
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Calls RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList) and returns fit result.
+/// \fn RooAbsReal::createChi2(RooDataHist& data, CmdArgs_t const&... cmdArgs)
 ///
-/// List of possible commands in the `cmdList`:
-///
-///  <table>
-///  <tr><th> Type of CmdArg    <th>    Effect on \f$ \chi^2 \f$
-///  <tr><td>
-///  <tr><td> `DataError()`  <td>  Choose between:
-///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
-///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights,
-///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
-///  - RooAbsData::Poisson: Asymmetric errors from the central 68 % interval around a Poisson distribution with mean \f$ n_\text{observed} \f$.
-///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
-///    (e.g., the difference between the mean and the 16 % quantile).
-///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
-///    (e.g., the difference between the 84 % quantile and the mean).
-///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
-///  <tr><td>
-///  `Extended()` <td>  Use expected number of events of an extended p.d.f as normalization
-///  <tr><td>
-///  NumCPU()     <td> Activate parallel processing feature
-///  <tr><td>
-///  Range()      <td> Calculate \f$ \chi^2 \f$ only in selected region
-///  <tr><td>
-///  Verbose()    <td> Verbose output of GOF framework
-///  <tr><td>
-///  IntegrateBins()  <td> Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
-/// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
-/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
-/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
-/// ```
-/// myVariable.setRange("range_pi0", 135, 210);
-/// myVariable.setRange("range_gamma", 50, 210);
-/// ```
-/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Define projected observables.
-///                                Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
-///
-/// </table>
-
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const RooLinkedList &cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, data, cmdList, true));
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Create a \f$ \chi^2 \f$ variable from a histogram and this function.
 ///
-/// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
+/// See also RooAbsReal::chi2FitTo for the list of possible command arguments to this function.
 ///
-/// The list of supported command arguments is given in the documentation for
-///     RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
+/// It calculates:
+///
+///  \f{align*}{
+///    \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2
+///    N_\mathrm{PDF,bin} &=
+///      \begin{cases}
+///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}
+///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{extended PDF}
+///      \end{cases}
+///    \Delta_\mathrm{bin} &=
+///      \begin{cases}
+///          \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}
+///          \mathtt{data{\rightarrow}weightError()} &\text{otherwise}
+///      \end{cases}
+///  \f}
+///
+/// If the dataset doesn't have user-defined errors, errors are assumed to be \f$ \sqrt{N} \f$.
+/// In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
+/// expected number of events that the PDF predicts.
+///
+/// \note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
+/// zero error. This leads to messages like:
+/// ```
+/// [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
+/// ```
+///
+/// \note In this case, one can use the expected errors of the PDF instead of the data errors:
+/// ```{.cpp}
+/// RooChi2Var chi2(..., ..., RooFit::DataError(RooAbsData::Expected), ...);
+/// ```
 ///
 /// \param data Histogram with data
+/// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
 /// \return \f$ \chi^2 \f$ variable
 
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const RooCmdArg &arg1, const RooCmdArg &arg2,
-                                                     const RooCmdArg &arg3, const RooCmdArg &arg4,
-                                                     const RooCmdArg &arg5, const RooCmdArg &arg6,
-                                                     const RooCmdArg &arg7, const RooCmdArg &arg8)
+std::unique_ptr<RooAbsReal> RooAbsReal::createChi2Impl(RooDataHist& data, const RooLinkedList& cmdList)
 {
-   CREATE_CMD_LIST;
-   return createChi2(data, l);
+   return RooFit::FitHelpers::createChi2(*this, data, cmdList);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// \see RooAbsReal::createChi2(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
-/// \param data hist data
-/// \param cmdList List with RooCmdArg() from the table
-
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::createChi2(*this, data, cmdList));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Perform a 2-D \f$ \chi^2 \f$ fit using a series of x and y values stored in the dataset `xydata`.
-/// The y values can either be the event weights, or can be another column designated
-/// by the YVar() argument. The y value must have errors defined for the \f$ \chi^2 \f$ to
-/// be well defined.
-///
-/// <table>
-/// <tr><th><th> Options to control construction of the chi-square
-/// <tr><td> `YVar(RooRealVar& yvar)`          <td>  Designate given column in dataset as Y value
-/// <tr><td> `Integrate(bool flag)`          <td>  Integrate function over range specified by X errors
-///                                    rather than take value at bin center.
-///
-/// <tr><th><th> Options to control flow of fit procedure
-/// <tr><td> `InitialHesse(bool flag)`      <td>  Flag controls if HESSE before MIGRAD as well, off by default
-/// <tr><td> `Hesse(bool flag)`             <td>  Flag controls if HESSE is run after MIGRAD, on by default
-/// <tr><td> `Minos(bool flag)`             <td>  Flag controls if MINOS is run after HESSE, on by default
-/// <tr><td> `Minos(const RooArgSet& set)`    <td>  Only run MINOS on given subset of arguments
-/// <tr><td> `Save(bool flag)`              <td>  Flag controls if RooFitResult object is produced and returned, off by default
-/// <tr><td> `Strategy(Int_t flag)`           <td>  Set Minuit strategy (0 through 2, default is 1)
-///
-/// <tr><th><th> Options to control informational output
-/// <tr><td> `Verbose(bool flag)`           <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
-/// <tr><td> `Timer(bool flag)`             <td>  Time CPU and wall clock consumption of fit steps, off by default
-/// <tr><td> `PrintLevel(Int_t level)`        <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational
-///                                   messages are suppressed as well
-/// <tr><td> `Warnings(bool flag)`          <td>  Enable or disable MINUIT warnings (enabled by default)
-/// <tr><td> `PrintEvalErrors(Int_t numErr)`  <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
-///                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
-///                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
-/// </table>
-
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-                  const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-                  const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
-{
-  CREATE_CMD_LIST;
-  return chi2FitTo(xydata,l) ;
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// \copydoc RooAbsReal::chi2FitTo(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
-
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const RooLinkedList &cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, xydata, cmdList, true));
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create a \f$ \chi^2 \f$ from a series of x and y values stored in a dataset.
-/// The y values can either be the event weights (default), or can be another column designated
-/// by the YVar() argument. The y value must have errors defined for the \f$ \chi^2 \f$ to
-/// be well defined.
-///
-/// The following named arguments are supported
-///
-/// | | Options to control construction of the \f$ \chi^2 \f$
-/// |-|-----------------------------------------
-/// | `YVar(RooRealVar& yvar)`  | Designate given column in dataset as Y value
-/// | `Integrate(bool flag)`  | Integrate function over range specified by X errors rather than take value at bin center.
-///
-
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-                 const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-                 const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
-{
-  CREATE_CMD_LIST;
-  return createChi2(data,l) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// See RooAbsReal::createChi2(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
-
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const RooLinkedList &cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::createChi2(*this, data, cmdList));
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current evaluation error logging mode.
@@ -4228,6 +4141,8 @@ void RooAbsReal::doEval(RooFit::EvalContext & ctx) const
     auto serverValues = ctx.at(server);
     if(serverValues.empty()) continue;
 
+    if(!server->isValueServer(*this)) continue;
+
     // maybe we are still missing inhibit dirty here
     auto oldOperMode = server->operMode();
     // See note at the bottom of this function to learn why we can only set
@@ -4261,12 +4176,18 @@ void RooAbsReal::doEval(RooFit::EvalContext & ctx) const
     std::vector<ServerData>& _servers;
   } restoreState{ourServers};
 
-
   // Advising to implement the batch interface makes only sense if the batch was not a scalar.
-  // Otherwise, there would be no speedup benefit.
+  // Otherwise, there would be no speedup benefit. Warn only once per class, because doEval() is
+  // called for every evaluation of the computation graph, e.g. in every minimizer iteration.
   if(output.size() > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
-    coutI(FastEvaluations) << "The class " << ClassName() << " does not implement the faster batch evaluation interface."
-        << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
+     static std::set<std::string> warnedClasses;
+     static std::mutex warnedClassesMutex;
+     std::scoped_lock guard{warnedClassesMutex};
+     if (warnedClasses.insert(ClassName()).second) {
+        coutI(FastEvaluations) << "The class " << ClassName()
+                               << " does not implement the faster batch evaluation interface."
+                               << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
+     }
   }
 
 

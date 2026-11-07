@@ -16,7 +16,7 @@ ROOTTEST_ADD_TEST(templateSingleton
                   FIXTURES_REQUIRED cling-template-Singleton-fixture
                   LABELS roottest regression cling)
 
-if(NOT ROOT_runtime_cxxmodules_FOUND)
+if(NOT runtime_cxxmodules)
   ROOTTEST_GENERATE_DICTIONARY(slaveDict        slave.h        LINKDEF slaveLinkDef.h)
 endif()
 ROOTTEST_GENERATE_DICTIONARY(masterDict       master.h       NO_CXXMODULE LINKDEF masterLinkDef.h)

@@ -15,11 +15,24 @@ ROOT_ADD_GTEST(CoreBaseTests
   TROOTTests.cxx
   LIBRARIES RIO Core)
 
+# For TROOTTests.cxx:
+if(ROOT_NEED_STDCXXFS)
+    target_link_libraries(CoreBaseTests PRIVATE stdc++fs)
+endif()
+target_compile_options(CoreBaseTests PRIVATE -DEXPECTED_SHARED_LIBRARY_DIR="${localruntimedir}")
+target_compile_options(CoreBaseTests PRIVATE -DEXPECTED_INCLUDE_DIR="${CMAKE_BINARY_DIR}/include")
+
+ROOT_ADD_GTEST(CoreEnvTests TEnvTests.cxx LIBRARIES Core)
+
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
 
 ROOT_ADD_GTEST(CoreSystemTests TSystemTests.cxx LIBRARIES Core)
+
+ROOT_ADD_GTEST(CoreCryptoRandomTest CryptoRandomTest.cxx LIBRARIES Core)
 
 ROOT_ADD_GTEST(CoreColorTests TColorTests.cxx LIBRARIES Core)
 
 configure_file(Foo.C Foo.C COPYONLY)
 ROOT_ADD_GTEST(IncludePathTest IncludePathTest.cxx LIBRARIES Core)
+
+ROOT_ADD_GTEST(UUIDTest UUIDTest.cxx LIBRARIES Core)

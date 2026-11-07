@@ -22,7 +22,7 @@ def makeFakeDataXY():
 
     x = ROOT.RooRealVar("x", "x", -10, 10)
     y = ROOT.RooRealVar("y", "y", -10, 10)
-    coord = {x, y}
+    coord = [x, y]
 
     d = ROOT.RooDataSet("d", "d", coord)
 
@@ -60,17 +60,17 @@ expDataXY = makeFakeDataXY()
 # ---------------------------------------------------------------------------------------------
 
 # Make subset of experimental data with only y values
-expDataY = expDataXY.reduce({y})
+expDataY = expDataXY.reduce(y)
 
 # Generate 10000 events in x obtained from _conditional_ model(x|y) with y
 # values taken from experimental data
-data = model.generate({x}, ProtoData=expDataY)
+data = model.generate(x, ProtoData=expDataY)
 data.Print()
 
 # Fit conditional p.d.f model(x|y) to data
 # ---------------------------------------------------------------------------------------------
 
-model.fitTo(expDataXY, ConditionalObservables={y}, PrintLevel=-1)
+model.fitTo(expDataXY, ConditionalObservables=[y], PrintLevel=-1)
 
 # Project conditional p.d.f on x and y dimensions
 # ---------------------------------------------------------------------------------------------

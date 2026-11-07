@@ -22,7 +22,6 @@
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
-#include "RooTrace.h"
 
 #include <vector>
 #include <list>
@@ -33,7 +32,7 @@ class AddCacheElem;
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf() : _projCacheMgr(this,10) { TRACE_CREATE; }
+  RooAddPdf() : _projCacheMgr(this,10) {}
   RooAddPdf(const char *name, const char *title=nullptr);
   RooAddPdf(const char *name, const char *title,
             RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
@@ -42,7 +41,7 @@ public:
 
   RooAddPdf(const RooAddPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooAddPdf(*this,newname) ; }
-  ~RooAddPdf() override { TRACE_DESTROY; }
+  ~RooAddPdf() override {}
 
   bool checkObservables(const RooArgSet* nset) const override;
 
@@ -90,8 +89,6 @@ public:
 
   void printMetaArgs(std::ostream& os) const override;
 
-  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; };
-  void setCacheAndTrackHints(RooArgSet&) override;
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
@@ -105,7 +102,7 @@ public:
   mutable std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 
 
-  mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations
+  mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
   AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr) const ;
   void updateCoefficients(AddCacheElem& cache, const RooArgSet* nset, bool syncCoefValues=true) const ;
 
@@ -145,8 +142,6 @@ private:
 
   void finalizeConstruction();
   void materializeRefCoefNormFromAttribute() const;
-  inline void setRecursiveFraction(bool recursiveFraction) { _recursive = recursiveFraction; }
-  inline void setAllExtendable(bool allExtendable) { _allExtendable = allExtendable; }
 
   ClassDefOverride(RooAddPdf,5) // PDF representing a sum of PDFs
 };

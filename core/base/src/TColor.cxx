@@ -19,10 +19,10 @@
 #include "TMathBase.h"
 #include "TApplication.h"
 #include "TColorGradient.h"
-#include "snprintf.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -1046,11 +1046,24 @@ is set to blue with an opacity of 35% (i.e. a transparency of 65%).
    histo->SetFillColorAlpha(kBlue, 0.35);
 ~~~
 
-The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
-in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
-it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
+\anchor col_trans_available
 
-Alternatively, you can call at the top of your script `gSytle->SetCanvasPreferGL();`.
+#### Note:
+
+Transparency is supported by the following graphics backends:
+
+- OpenGL
+- Cocoa/Quartz (macOS)
+- SVG
+- PDF
+- TeX
+- PNG, GIF, and JPEG
+- TWebCanvas
+- Future `TCanvasImp` implementations, such as `qt6canvas`
+
+Transparency is **not** supported by the X11 and PostScript backends.
+
+Alternatively, you can call at the top of your script `gStyle->SetCanvasPreferGL();`.
 Or if you prefer to activate GL for a single canvas `c`, then use `c->SetSupportGL(true);`.
 
 The following macro gives an example of transparency usage:
@@ -1536,9 +1549,9 @@ Int_t TColor::GetNumberOfColors()
 /// Static method returning kTRUE if some new colors have been defined after
 /// initialisation or since the last call to this method. This allows to avoid
 /// the colors and palette streaming in TCanvas::Streamer if not needed.
-/// If method called once with set_always_on = 1, all next canvases will be
-//  saved with color palette - disregard if new colors created or not.
-/// To reset such mode, just call methoid once with set_always_on = -1
+/// If the method is called once with set_always_on = 1, all next canvases will be
+//  saved with the color palette - disregard if new colors created or not.
+/// To reset such mode, just call the method once with set_always_on = -1
 
 Bool_t TColor::DefinedColors(Int_t set_always_on)
 {
@@ -2634,6 +2647,7 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 /// \param alpha the global opacity for all colors within this palette
 /// \return a positive value on success and -1 on error.
 /// \author Fernando Hueso-González
+
 Int_t TColor::CreateColorTableFromFile(TString fileName, Float_t alpha)
 {
    std::ifstream f(fileName.Data());
@@ -3693,6 +3707,7 @@ void TColor::InvertPalette()
 ///      ~~~
 ///
 /// In case no corresponding color is found, a `std::invalid_argument` exception is thrown.
+
 TColorNumber::TColorNumber(std::string const &color)
 {
    using Map = std::unordered_map<std::string, Int_t>;

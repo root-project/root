@@ -287,7 +287,7 @@ TEST(RCsvDS, WindowsLinebreaks)
 
 TEST(RCsvDS, Remote)
 {
-#ifdef R__HAS_DAVIX
+#if defined(R__HAS_DAVIX) || defined(R__HAS_CURL)
    auto tdf = ROOT::RDF::FromCSV(url0, false);
    EXPECT_EQ(1U, *tdf.Count());
 #else

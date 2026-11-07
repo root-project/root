@@ -32,15 +32,16 @@ TEST(RHistAutoAxisFiller, Fill)
 
    // Get the histogram, which first flushes the buffer
    auto &hist = filler.GetHist();
-   auto &axis = std::get<RRegularAxis>(hist.GetAxes()[0]);
-   EXPECT_EQ(axis.GetNNormalBins(), Bins);
-   EXPECT_TRUE(axis.HasFlowBins());
-   EXPECT_LT(axis.GetLow(), 0);
-   EXPECT_GT(axis.GetHigh(), Bins - 1);
+   auto axis = hist.GetAxes()[0].GetRegularAxis();
+   ASSERT_TRUE(axis != nullptr);
+   EXPECT_EQ(axis->GetNNormalBins(), Bins);
+   EXPECT_TRUE(axis->HasFlowBins());
+   EXPECT_LT(axis->GetLow(), 0);
+   EXPECT_GT(axis->GetHigh(), Bins - 1);
 
    EXPECT_EQ(hist.GetNEntries(), Bins + 1);
    EXPECT_EQ(hist.GetBinContent(RBinIndex::Underflow()), 0);
-   for (auto index : axis.GetNormalRange()) {
+   for (auto index : axis->GetNormalRange()) {
       EXPECT_EQ(hist.GetBinContent(index), 1);
    }
    // The NaN entry
@@ -50,7 +51,7 @@ TEST(RHistAutoAxisFiller, Fill)
    for (std::size_t i = 0; i < Bins; i++) {
       filler.Fill(i);
    }
-   for (auto index : axis.GetNormalRange()) {
+   for (auto index : axis->GetNormalRange()) {
       EXPECT_EQ(hist.GetBinContent(index), 2);
    }
 }

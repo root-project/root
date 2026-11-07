@@ -1,4 +1,3 @@
-
 Processing execUnloading.C...
 Unloading of globals: VarDecl and EnumConstDecl.
 Check validity before unloading, expected: true.

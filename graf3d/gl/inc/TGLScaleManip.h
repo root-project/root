@@ -28,7 +28,7 @@
 class TGLScaleManip : public TGLManip
 {
 private:
-   TGLVector3 fStartScale; //! initial scaling factors
+   TGLVector3 fStartScale; ///<! initial scaling factors
 
    void LimitScale(Double_t & factor) const;
 

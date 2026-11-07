@@ -47,7 +47,15 @@ public:
       enum EStatusFlags {
          kIsObject    = BIT(0),    // member is object
          kIsTransient = BIT(1),    // data member is transient
+// clang++ <v20 (-Wshadow) complains about shadowing TDictionary.h global enum EProperty. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
          kIsPointer   = BIT(2),    // data member is a pointer
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
          kBitMask     = 0x000000ff
       };
 
@@ -82,7 +90,7 @@ private:
    Long_t   fProperty;       // Class properties, see EProperties
    Long_t   fClassProperty;  // Class C++ properties, see EClassProperties
    Long_t   fOffsetStreamer; // Offset to streamer function
-   bool     fOwner = true;   //! True if owns its content, false if it got a reference to the TClass content.
+   bool     fOwner = true;   ///<! True if owns its content, false if it got a reference to the TClass content.
 
    TProtoClass(const TProtoClass &) = delete;
    TProtoClass &operator=(const TProtoClass &) = delete;

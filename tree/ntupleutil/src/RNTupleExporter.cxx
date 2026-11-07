@@ -1,5 +1,4 @@
 /// \file RNTupleExporter.cxx
-/// \ingroup NTuple ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2024-12-10
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -97,14 +96,12 @@ RAddColumnsResult AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const
 int CountPages(const ROOT::RNTupleDescriptor &desc, std::span<const RColumnExportInfo> columns)
 {
    int nPages = 0;
-   auto clusterId = desc.FindClusterId(0, 0);
-   while (clusterId != kInvalidDescriptorId) {
-      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+   R__ASSERT(desc.GetNClusters() == desc.GetNActiveClusters());
+   for (const auto &clusterDesc : desc.GetActiveClusterIterable()) {
       for (const auto &colInfo : columns) {
          const auto &pages = clusterDesc.GetPageRange(colInfo.fColDesc->GetPhysicalId());
          nPages += pages.GetPageInfos().size();
       }
-      clusterId = desc.FindNextClusterId(clusterId);
    }
    return nPages;
 }
@@ -121,13 +118,15 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
 
    // make sure the source is attached
    source.Attach();
+   source.LoadAllPageLists();
 
    auto desc = source.GetSharedDescriptorGuard();
    ROOT::Internal::RClusterPool clusterPool{source};
 
    // Collect column info
    std::vector<RColumnExportInfo> columnInfos;
-   const RAddColumnsResult addColRes = AddColumnsFromField(columnInfos, desc.GetRef(), desc->GetFieldZero(), options);
+   const RAddColumnsResult addColRes =
+      AddColumnsFromField(columnInfos, desc.GetConstRef(), desc->GetFieldZero(), options);
 
    // Collect ColumnSet for the cluster pool query
    ROOT::Internal::RCluster::ColumnSet_t columnSet;
@@ -136,24 +135,24 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
       columnSet.emplace(colInfo.fColDesc->GetPhysicalId());
    }
 
-   const auto nPages = CountPages(desc.GetRef(), columnInfos);
+   const auto nPages = CountPages(desc.GetConstRef(), columnInfos);
 
    const bool showProgress = (options.fFlags & RPagesOptions::kShowProgressBar) != 0;
    res.fExportedFileNames.reserve(nPages);
 
    // Iterate over the clusters in order and dump pages
-   auto clusterId = nPages > 0 ? desc->FindClusterId(0, 0) : ROOT::kInvalidDescriptorId;
+   R__ASSERT(desc->GetNClusters() == desc->GetNActiveClusters());
    int pagesExported = 0;
    int prevIntPercent = 0;
    std::vector<char> unzipBuf; // Only used when pages get decompressed
-   while (clusterId != ROOT::kInvalidDescriptorId) {
-      const auto &clusterDesc = desc->GetClusterDescriptor(clusterId);
+   for (const auto &clusterDesc : desc->GetActiveClusterIterable()) {
+      const auto clusterId = clusterDesc.GetId();
       const ROOT::Internal::RCluster *cluster = clusterPool.GetCluster(clusterId, columnSet);
       for (const auto &colInfo : columnInfos) {
          auto columnId = colInfo.fColDesc->GetPhysicalId();
          const auto &pages = clusterDesc.GetPageRange(columnId);
          const auto &colRange = clusterDesc.GetColumnRange(columnId);
-         auto colElement = ROOT::Internal::RColumnElementBase::Generate<void>(colInfo.fColDesc->GetType());
+         auto colElement = ROOT::Internal::RColumnElementBase::Generate(*colInfo.fColDesc);
          colElement->SetBitsOnStorage(colInfo.fColDesc->GetBitsOnStorage());
 
          std::uint64_t pageIdx = 0;
@@ -212,7 +211,6 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
             }
          }
       }
-      clusterId = desc->FindNextClusterId(clusterId);
    }
 
    assert(res.fExportedFileNames.size() == static_cast<size_t>(pagesExported));

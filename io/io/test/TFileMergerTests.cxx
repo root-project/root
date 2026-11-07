@@ -18,6 +18,8 @@
 
 #include "gtest/gtest.h"
 
+#include <ROOT/TestSupport.hxx>
+
 static void CreateATuple(TMemFile &file, const char *name, double value)
 {
    auto mytree = new TTree(name, "A tree");
@@ -91,6 +93,8 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    auto hist2 = new TH1F("hist2", "hist2", 1 , 0 , 2);
    auto hist3 = new TH1F("hist3", "hist3", 1 , 0 , 2);
    auto hist4 = new TH1F("hist4", "hist4", 1 , 0 , 2);
+   for (auto hist : {hist1, hist2, hist3, hist4})
+      hist->SetDirectory(&a);
    hist1->Fill(1);
    hist2->Fill(1);   hist2->Fill(2);
    hist3->Fill(1);   hist3->Fill(1);   hist3->Fill(1);
@@ -112,6 +116,44 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    output = std::unique_ptr<TFile>(TFile::Open("SingleOnlyListed.root"));
    ASSERT_TRUE(output.get() && output->GetListOfKeys());
    EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
+}
+
+TEST(TFileMerger, OnlyListedNoSuffixLeak)
+{
+   // Regression test for https://github.com/root-project/root/issues/22414:
+   // keys whose names are a prefix or suffix of a listed key must not appear in the output.
+   TMemFile src("OnlyListedNoSuffixLeakSrc.root", "CREATE");
+
+   // "short" is a suffix of "long_short"; "long" is a prefix — both must be excluded.
+   auto hLongShort = new TH1F("long_short", "long_short", 1, 0, 2);
+   auto hShort = new TH1F("short", "short", 1, 0, 2);
+   auto hLong = new TH1F("long", "long", 1, 0, 2);
+   auto hUnrelated = new TH1F("unrelated", "unrelated", 1, 0, 2);
+   for (auto h : {hLongShort, hShort, hLong, hUnrelated})
+      h->SetDirectory(&src);
+   src.Write();
+
+   TFileMerger merger;
+   auto output = std::unique_ptr<TFile>(new TFile("OnlyListedNoSuffixLeak.root", "RECREATE"));
+   ASSERT_TRUE(merger.OutputFile(std::move(output)));
+
+   merger.AddObjectNames("long_short"); // only this one should appear in output
+   merger.AddFile(&src, false);
+
+   const Int_t mode = TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kOnlyListed;
+   ASSERT_TRUE(merger.PartialMerge(mode));
+
+   output = std::unique_ptr<TFile>(TFile::Open("OnlyListedNoSuffixLeak.root"));
+   ASSERT_TRUE(output.get() && output->GetListOfKeys());
+
+   // Exactly one key: "long_short". Suffix, prefix, and unrelated keys must be absent.
+   EXPECT_EQ(output->GetListOfKeys()->GetSize(), 1);
+   EXPECT_NE(output->Get("long_short"), nullptr);
+   EXPECT_EQ(output->Get("short"), nullptr);
+   EXPECT_EQ(output->Get("long"), nullptr);
+   EXPECT_EQ(output->Get("unrelated"), nullptr);
+   output->Close();
+   gSystem->Unlink("OnlyListedNoSuffixLeak.root");
 }
 
 // https://github.com/root-project/root/issues/14558 aka https://its.cern.ch/jira/browse/ROOT-4716
@@ -392,5 +434,145 @@ TEST(TFileMerger, MergeSelectiveTutorial)
       EXPECT_NE(file.Get("hpx"), nullptr);
       EXPECT_NE(file.Get("hpxpy"), nullptr);
       EXPECT_NE(file.Get<TNtuple>("ntuple"), nullptr);
+   }
+}
+
+TEST(TFileMerger, TypeMismatchErrorTObjectWithNonTObject)
+{
+   struct PathRAII {
+      std::string fPath;
+      PathRAII(const char *path) : fPath(path) {}
+      ~PathRAII() { std::remove(fPath.c_str()); }
+   };
+
+   PathRAII input1("ErrorIfTypeMismatch_input1.root");
+   const auto objname{"myobj"};
+   PathRAII input2("ErrorIfTypeMismatch_input2.root");
+   PathRAII outputfile("ErrorIfTypeMismatch_output.root");
+
+   // Create two files with objects of different types, one must be a TObject-derived type and other a
+   // non-TObject-derived type
+   {
+      auto f = std::make_unique<TFile>(input1.fPath.c_str(), "RECREATE");
+      auto t = std::make_unique<TTree>(objname, objname);
+      f->Write();
+   }
+
+   {
+      auto f = std::make_unique<TFile>(input2.fPath.c_str(), "RECREATE");
+      std::vector<int> v{1, 2, 3};
+      f->WriteObject(&v, objname);
+   }
+
+   // Ensure that TFileMerger detects the type mismatch and errors out.
+   {
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.requiredDiag(kError, "TFileMerger::MergeRecursive", "expected 'TTree' but found 'vector<int>'",
+                            /*matchFullMessage*/ false);
+      diagRAII.requiredDiag(kError, "TFileMerger::Merge", "error during merge of your ROOT files");
+
+      TFileMerger fm;
+      fm.OutputFile(outputfile.fPath.c_str());
+      fm.AddFile(input1.fPath.c_str(), /*cpProgress*/ false);
+      fm.AddFile(input2.fPath.c_str(), /*cpProgress*/ false);
+      fm.PartialMerge();
+   }
+}
+
+// Regression test for https://github.com/root-project/root/issues/23666
+TEST(TFileMerger, NestedDirMaxOpenedFiles)
+{
+   struct CleanupRAII {
+      std::vector<std::string> fFiles;
+      ~CleanupRAII()
+      {
+         for (const auto &file : fFiles) {
+            gSystem->Unlink(file.c_str());
+         }
+      }
+   } cleanup;
+
+   const std::string file1 = "test_nested_merge_in1.root";
+   const std::string file2 = "test_nested_merge_in2.root";
+   const std::string file3 = "test_nested_merge_in3.root";
+   const std::string fileOut = "test_nested_merge_out.root";
+
+   cleanup.fFiles.push_back(file1);
+   cleanup.fFiles.push_back(file2);
+   cleanup.fFiles.push_back(file3);
+   cleanup.fFiles.push_back(fileOut);
+
+   const std::vector<std::pair<std::string, int>> inputs = {{file1, 5}, {file2, 7}, {file3, 11}};
+
+   // Create 3 input files with objects inside a nested directory (depth >= 2)
+   for (const auto &input : inputs) {
+      auto f = std::make_unique<TFile>(input.first.c_str(), "RECREATE");
+      ASSERT_FALSE(f->IsZombie());
+      auto topDir = f->mkdir("nested");
+      ASSERT_NE(topDir, nullptr);
+      auto subDir = topDir->mkdir("dir");
+      ASSERT_NE(subDir, nullptr);
+      subDir->cd();
+
+      auto tree = std::make_unique<TTree>("tree", "Test Tree");
+      tree->SetDirectory(subDir);
+
+      int val = 0;
+      tree->Branch("val", &val, "val/I");
+      for (int i = 0; i < input.second; ++i) {
+         val = i;
+         tree->Fill();
+      }
+
+      auto hist = std::make_unique<TH1F>("hist", "Test Hist", 10, 0, 10);
+      hist->SetDirectory(subDir);
+
+      for (int i = 0; i < input.second; ++i) {
+         hist->Fill(i % 10);
+      }
+
+      f->Write();
+   }
+
+   // Merge the input files into the output file. The original issue was triggered by the use of the `-n` parameter in
+   // `hadd`, which opens at most `N` files at once, set to the same number of input files (3). The merger used to only
+   // merge data from the first two files leaving out data from the third.
+   {
+      TFileMerger merger{false};
+      EXPECT_TRUE(merger.OutputFile(fileOut.c_str()));
+      merger.SetMaxOpenedFiles(3);
+      merger.AddFile(file1.c_str(), /*cpProgress*/ false);
+      merger.AddFile(file2.c_str(), /*cpProgress*/ false);
+      merger.AddFile(file3.c_str(), /*cpProgress*/ false);
+      EXPECT_TRUE(merger.Merge());
+   }
+
+   // Verify correct values for merged objects in the output file
+   {
+      auto fOut = std::make_unique<TFile>(fileOut.c_str(), "READ");
+      ASSERT_FALSE(fOut->IsZombie());
+
+      auto topDir = fOut->Get<TDirectory>("nested");
+      ASSERT_NE(topDir, nullptr);
+      auto subDir = topDir->Get<TDirectory>("dir");
+      ASSERT_NE(subDir, nullptr);
+
+      auto tree = subDir->Get<TTree>("tree");
+      ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), 5 + 7 + 11);
+      int val = 0;
+      tree->SetBranchAddress("val", &val);
+      int entryCursor{};
+      for (const auto &input : inputs) {
+         for (int i = 0; i < input.second; ++i) {
+            tree->GetEntry(entryCursor);
+            EXPECT_EQ(val, i);
+            entryCursor++;
+         }
+      }
+
+      auto hist = subDir->Get<TH1F>("hist");
+      ASSERT_NE(hist, nullptr);
+      EXPECT_EQ(hist->GetEntries(), 5 + 7 + 11);
    }
 }

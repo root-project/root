@@ -9,7 +9,7 @@
 #define CosmicMuonCollection_tlp1_h
 class CosmicMuonCollection_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "CosmicMuonCollection_p1.h"
 #include "CosmicMuon_p1.h"

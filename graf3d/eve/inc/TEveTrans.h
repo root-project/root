@@ -31,10 +31,10 @@ class TEveTrans : public TObject
 protected:
    Double32_t            fM[16];
 
-   mutable Float_t       fA1;   //!
-   mutable Float_t       fA2;   //!
-   mutable Float_t       fA3;   //!
-   mutable Bool_t        fAsOK; //!
+   mutable Float_t       fA1;   ///<!
+   mutable Float_t       fA2;   ///<!
+   mutable Float_t       fA3;   ///<!
+   mutable Bool_t        fAsOK; ///<!
 
    // TEveUtil
    Bool_t                fUseTrans;       // use transformation matrix

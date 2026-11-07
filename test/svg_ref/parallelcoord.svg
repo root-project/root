@@ -26757,8 +26757,8 @@ parallelcoord.svg
 <path d="M99,385v -1.8" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="82" y="385" width="33" height="0.611" fill="none" stroke="black"/>
 <path d="M82,386h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="99" cy="386" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="99" cy="386" r="3"/>
 </g>
 <text xml:space="preserve" x="95" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">px
 </text>
@@ -26968,8 +26968,8 @@ parallelcoord.svg
 <path d="M191,385v -1.6" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="175" y="385" width="33" height="0.613" fill="none" stroke="black"/>
 <path d="M175,386h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="191" cy="386" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="191" cy="386" r="3"/>
 </g>
 <text xml:space="preserve" x="187" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">py
 </text>
@@ -27179,8 +27179,8 @@ parallelcoord.svg
 <path d="M284,384v -10" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="267" y="384" width="33" height="1.0" fill="none" stroke="black"/>
 <path d="M267,385h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="284" cy="385" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="284" cy="385" r="3"/>
 </g>
 <text xml:space="preserve" x="280" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">pz
 </text>
@@ -27390,8 +27390,8 @@ parallelcoord.svg
 <path d="M377,385v -0.114" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="360" y="385" width="33" height="0.224" fill="none" stroke="black"/>
 <path d="M360,385h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="377" cy="385" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="377" cy="385" r="3"/>
 </g>
 <text xml:space="preserve" x="365" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">random
 </text>
@@ -27601,8 +27601,8 @@ parallelcoord.svg
 <path d="M469,385v -118" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="452" y="385" width="33" height="0.433" fill="none" stroke="black"/>
 <path d="M452,386h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="469" cy="386" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="469" cy="386" r="3"/>
 </g>
 <text xml:space="preserve" x="456" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">px*py*pz
 </text>
@@ -27612,47 +27612,9 @@ parallelcoord.svg
 <text xml:space="preserve" x="59" y="253" fill="black" font-size="9.5" font-family="Helvetica" font-weight="bold">px:py:pz:random:px*py*pz
 </text>
 <path d="M34,451v -184" fill="none" stroke="black"/>
-<path d="M47,431h -13" fill="none" stroke="black"/>
-<path d="M41,426h -6.7" fill="none" stroke="black"/>
-<path d="M41,422h -6.7" fill="none" stroke="black"/>
-<path d="M41,417h -6.7" fill="none" stroke="black"/>
-<path d="M41,413h -6.7" fill="none" stroke="black"/>
-<path d="M47,408h -13" fill="none" stroke="black"/>
-<path d="M41,404h -6.7" fill="none" stroke="black"/>
-<path d="M41,399h -6.7" fill="none" stroke="black"/>
-<path d="M41,395h -6.7" fill="none" stroke="black"/>
-<path d="M41,390h -6.7" fill="none" stroke="black"/>
-<path d="M47,386h -13" fill="none" stroke="black"/>
-<path d="M41,381h -6.7" fill="none" stroke="black"/>
-<path d="M41,377h -6.7" fill="none" stroke="black"/>
-<path d="M41,372h -6.7" fill="none" stroke="black"/>
-<path d="M41,368h -6.7" fill="none" stroke="black"/>
-<path d="M47,363h -13" fill="none" stroke="black"/>
-<path d="M41,359h -6.7" fill="none" stroke="black"/>
-<path d="M41,354h -6.7" fill="none" stroke="black"/>
-<path d="M41,349h -6.7" fill="none" stroke="black"/>
-<path d="M41,345h -6.7" fill="none" stroke="black"/>
-<path d="M47,340h -13" fill="none" stroke="black"/>
-<path d="M41,336h -6.7" fill="none" stroke="black"/>
-<path d="M41,331h -6.7" fill="none" stroke="black"/>
-<path d="M41,327h -6.7" fill="none" stroke="black"/>
-<path d="M41,322h -6.7" fill="none" stroke="black"/>
-<path d="M47,318h -13" fill="none" stroke="black"/>
-<path d="M41,313h -6.7" fill="none" stroke="black"/>
-<path d="M41,309h -6.7" fill="none" stroke="black"/>
-<path d="M41,304h -6.7" fill="none" stroke="black"/>
-<path d="M41,300h -6.7" fill="none" stroke="black"/>
-<path d="M47,295h -13" fill="none" stroke="black"/>
-<path d="M41,291h -6.7" fill="none" stroke="black"/>
-<path d="M41,286h -6.7" fill="none" stroke="black"/>
-<path d="M41,282h -6.7" fill="none" stroke="black"/>
-<path d="M41,277h -6.7" fill="none" stroke="black"/>
-<path d="M47,272h -13" fill="none" stroke="black"/>
-<path d="M41,436h -6.7" fill="none" stroke="black"/>
-<path d="M41,440h -6.7" fill="none" stroke="black"/>
-<path d="M41,445h -6.7" fill="none" stroke="black"/>
-<path d="M41,449h -6.7" fill="none" stroke="black"/>
-<path d="M41,268h -6.7" fill="none" stroke="black"/>
+<path d="M47,431h -13M41,426h -6.7M41,422h -6.7M41,417h -6.7M41,413h -6.7M47,408h -13M41,404h -6.7M41,399h -6.7M41,395h -6.7M41,390h -6.7M47,386h -13M41,381h -6.7M41,377h -6.7M41,372h -6.7M41,368h -6.7M47,363h -13M41,359h -6.7M41,354h -6.7M41,349h
+ -6.7M41,345h -6.7M47,340h -13M41,336h -6.7M41,331h -6.7M41,327h -6.7M41,322h -6.7M47,318h -13M41,313h -6.7M41,309h -6.7M41,304h -6.7M41,300h -6.7M47,295h -13M41,291h -6.7M41,286h -6.7M41,282h -6.7M41,277h -6.7M47,272h -13M41,436h -6.7M41,440h
+ -6.7M41,445h -6.7M41,449h -6.7M41,268h -6.7" fill="none" stroke="black"/>
 <text xml:space="preserve" x="17" y="435" fill="black" font-size="8.9" font-family="Helvetica" font-weight="bold">100
 </text>
 <text xml:space="preserve" x="12" y="435" fill="black" font-size="8.9" font-family="Times">&#8722;

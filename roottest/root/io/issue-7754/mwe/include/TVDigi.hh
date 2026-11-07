@@ -31,7 +31,7 @@ class TVDigi : public TVHit {
 
     protected:
 
-        TVHit*      fMCHit; //!  Transient data member for MCTruth Association
+        TVHit*      fMCHit; ///<!  Transient data member for MCTruth Association
 
         ClassDefOverride(TVDigi,1);
 };

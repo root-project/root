@@ -21,6 +21,7 @@
 #include "TSchemaHelper.h"
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 // Forward declarations
 class TVirtualIsAProxy;
@@ -66,25 +67,24 @@ namespace ROOT {
       ClassConvStreamerFunc_t     fConvStreamerFunc;
       TVirtualCollectionProxy    *fCollectionProxy;
       Int_t                       fSizeof;
+      std::size_t                 fAlignment;
       Int_t                       fPragmaBits;
+      std::string                 fRNTupleSoARecord;
       Detail::TCollectionProxyInfo *fCollectionProxyInfo;
       Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRules;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRawRules;
       std::vector<ROOT::TClassAlt*>               fAlternate;
+      std::unordered_map<std::string, TMemberStreamer *> fAdoptedMemberStreamers;
 
    public:
-      TGenericClassInfo(const char *fullClassname,
-                       const char *declFileName, Int_t declFileLine,
-                       const std::type_info &info, const Internal::TInitBehavior *action,
-                       DictFuncPtr_t dictionary,
-                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
+      TGenericClassInfo(const char *fullClassname, const char *declFileName, Int_t declFileLine,
+                        const std::type_info &info, const Internal::TInitBehavior *action, DictFuncPtr_t dictionary,
+                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_ = 0);
 
-      TGenericClassInfo(const char *fullClassname, Int_t version,
-                       const char *declFileName, Int_t declFileLine,
-                       const std::type_info &info, const Internal::TInitBehavior *action,
-                       DictFuncPtr_t dictionary,
-                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
+      TGenericClassInfo(const char *fullClassname, Int_t version, const char *declFileName, Int_t declFileLine,
+                        const std::type_info &info, const Internal::TInitBehavior *action, DictFuncPtr_t dictionary,
+                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_ = 0);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                         const char *declFileName, Int_t declFileLine,
@@ -118,6 +118,7 @@ namespace ROOT {
       TClass                           *IsA(const void *obj);
 
       void                              AdoptAlternate(ROOT::TClassAlt *alt);
+      bool                              AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
       Short_t                           AdoptStreamer(TClassStreamer*);
       Short_t                           AdoptCollectionProxy(TVirtualCollectionProxy*);
       void                              AdoptCollectionProxyInfo(Detail::TCollectionProxyInfo*);
@@ -139,6 +140,7 @@ namespace ROOT {
       void                              SetStreamerFunc(ClassStreamerFunc_t);
       void                              SetConvStreamerFunc(ClassConvStreamerFunc_t);
       Short_t                           SetVersion(Short_t version);
+      void                              SetRNTupleSoARecord(const std::string &recordName);
 
       //   protected:
    private:

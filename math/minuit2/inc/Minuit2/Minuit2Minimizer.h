@@ -82,6 +82,15 @@ public:
    /// set the function implementing Hessian computation
    void SetHessianFunction(std::function<bool(std::span<const double>, double *)> hfunc) override;
 
+   /// Set a predicate advertising which mixed second derivatives of the
+   /// minimized function are identically zero, so that MnHesse can skip the
+   /// corresponding finite-difference evaluations. The predicate must
+   /// fulfill the contract documented for
+   /// FCNBase::SecondDerivativeAlwaysVanishes(); in particular, the indices
+   /// refer to the full (external) parameter space. Like SetHessianFunction,
+   /// this must be called after SetFunction.
+   void SetSecondDerivativeAlwaysVanishesFunc(std::function<bool(unsigned int, unsigned int)> func);
+
    /// set free variable
    bool SetVariable(unsigned int ivar, const std::string &name, double val, double step) override;
 

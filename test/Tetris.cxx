@@ -21,8 +21,9 @@
 #include <TRootCanvas.h>
 #include <TApplication.h>
 #include <TList.h>
-#include <snprintf.h>
 #include "Tetris.h"
+
+#include <cstdio>
 
 static Tetris *gTetris;                    // game manager
 
@@ -68,7 +69,7 @@ void TetrisBox::SetY(Int_t y)
    // Set Y measured in boxes units
 
    // height in pixels of pad
-   Float_t height = (Float_t)fPad->YtoPixel(fPad->GetY1());
+   Float_t height = (Float_t)fPad->GetPadHeight();
 
    Coord_t y1 = ((Float_t)y)*gBoxPixelSize/height;
    Coord_t y2 = ((Float_t)y+1)*gBoxPixelSize/height;

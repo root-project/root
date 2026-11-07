@@ -1,6 +1,6 @@
 #include "TMVA/RModelParser_ONNX.hxx"
 #include "TMVA/ROperator_Comparision.hxx"
-#include "onnx_proto3.pb.h"
+#include "onnx.hxx"
 
 namespace TMVA {
 namespace Experimental {
@@ -55,30 +55,14 @@ std::unique_ptr<ROperator> ParseComparision(RModelParser_ONNX &parser, const onn
    return op;
 };
 
-// Parse Equal
-ParserFuncSignature ParseEq = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseComparision<EComparisionOperator::Eq>(parser, nodeproto);
-};
-
-// Parse Less
-ParserFuncSignature ParseLess = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseComparision<EComparisionOperator::Less>(parser, nodeproto);
-};
-
-// Parse Mul
-ParserFuncSignature ParseLessEq = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseComparision<EComparisionOperator::LessEq>(parser, nodeproto);
-};
-
-// Parse Div
-ParserFuncSignature ParseGreater = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseComparision<EComparisionOperator::Greater>(parser, nodeproto);
-};
-
-// Parse Pow
-ParserFuncSignature ParseGreaterEq = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseComparision<EComparisionOperator::GreaterEq>(parser, nodeproto);
-};
+void RegisterComparisionParsers(RModelParser_ONNX &parser)
+{
+   parser.RegisterOperator("Equal", ParseComparision<EComparisionOperator::Eq>);
+   parser.RegisterOperator("Less", ParseComparision<EComparisionOperator::Less>);
+   parser.RegisterOperator("LessOrEqual", ParseComparision<EComparisionOperator::LessEq>);
+   parser.RegisterOperator("Greater", ParseComparision<EComparisionOperator::Greater>);
+   parser.RegisterOperator("GreaterOrEqual", ParseComparision<EComparisionOperator::GreaterEq>);
+}
 
 } // namespace SOFIE
 } // namespace Experimental

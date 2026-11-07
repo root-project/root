@@ -41,11 +41,15 @@ public:
       _fcn.Gradient(params.data(), grad.data());
       return grad;
    }
+   // Unhide the 4-argument overload from FCNBase, which forwards to Gradient().
+   // Otherwise GCC's -Woverloaded-virtual (enabled with -Werror on some CI
+   // targets) complains because we only override the 5-argument overload here.
+   using FCNBase::GradientWithPrevResult;
    std::vector<double> GradientWithPrevResult(std::vector<double> const &v, double *previous_grad, double *previous_g2,
-                                              double *previous_gstep) const override
+                                              double *previous_gstep, double fValAtV) const override
    {
       std::vector<double> output(v.size());
-      _fcn.GradientWithPrevResult(v.data(), output.data(), previous_grad, previous_g2, previous_gstep);
+      _fcn.GradientWithPrevResult(v.data(), output.data(), previous_grad, previous_g2, previous_gstep, fValAtV);
       return output;
    }
    ROOT::Minuit2::GradientParameterSpace gradParameterSpace() const override
@@ -53,6 +57,9 @@ public:
       return _fcn.returnsInMinuit2ParameterSpace() ? ROOT::Minuit2::GradientParameterSpace::Internal
                                                    : ROOT::Minuit2::GradientParameterSpace::External;
    }
+
+   // TODO: Implement this
+   bool SecondDerivativeAlwaysVanishes(unsigned int /*i*/, unsigned int /*j*/) const override { return false; }
 
 private:
    MinuitFcnGrad const &_fcn;
@@ -90,7 +97,7 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
                              LikelihoodGradientMode likelihoodGradientMode)
    : RooAbsMinimizerFcn(*absL->getParameters(), context), _minuitInternalX(getNDim(), 0), _minuitExternalX(getNDim(), 0)
 {
-   synchronizeParameterSettings(parameters, true);
+   synchronizeParameterSettings(parameters);
 
    _calculationIsClean = std::make_unique<WrapperCalculationCleanFlags>();
 
@@ -256,18 +263,18 @@ void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 }
 
 void MinuitFcnGrad::GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                                           double *previous_gstep) const
+                                           double *previous_gstep, double fValAtX) const
 {
    _calculatingGradient = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
    syncOffsets();
-   _gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep);
+   _gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep, fValAtX);
    _calculatingGradient = false;
 }
 
 bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
-   bool returnee = synchronizeParameterSettings(parameters, _optConst);
+   bool returnee = synchronizeParameterSettings(parameters);
    applyToLikelihood([&](auto &l) { l.synchronizeParameterSettings(parameters); });
    _gradient->synchronizeParameterSettings(parameters);
 
@@ -276,7 +283,7 @@ bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &param
    return returnee;
 }
 
-void MinuitFcnGrad::initMinimizer(ROOT::Math::Minimizer &minim)
+void MinuitFcnGrad::initMinimizer(ROOT::Math::Minimizer &minim, RooMinimizer * /*context*/)
 {
    auto &minuit = dynamic_cast<ROOT::Minuit2::Minuit2Minimizer &>(minim);
    minuit.SetFCN(getNDim(), std::make_unique<MinuitGradFunctor>(*this, minim.ErrorDef()));

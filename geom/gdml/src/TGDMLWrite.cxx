@@ -699,32 +699,40 @@ void TGDMLWrite::ExtractVolumes(TGeoNode *node)
          fGdmlE->AddChild(fDefineNode, childN); // adding node to <define> node
          // Deal with reflection
          XMLNodePointer_t scaleN = nullptr;
-         Double_t lx, ly, lz;
-         Double_t xangle = 0;
-         Double_t zangle = 0;
-         lx = geoNode->GetMatrix()->GetRotationMatrix()[0];
-         ly = geoNode->GetMatrix()->GetRotationMatrix()[4];
-         lz = geoNode->GetMatrix()->GetRotationMatrix()[8];
-         if (geoNode->GetMatrix()->IsReflection() && TMath::Abs(lx) == 1 && TMath::Abs(ly) == 1 &&
-             TMath::Abs(lz) == 1) {
+         Double_t rot3x3[9];
+         for (Int_t i = 0; i < 9; ++i) {
+            rot3x3[i] = geoNode->GetMatrix()->GetRotationMatrix()[i];
+         }
+         Double_t lx = rot3x3[0];
+         Double_t ly = rot3x3[4];
+         Double_t lz = rot3x3[8];
+         if (geoNode->GetMatrix()->IsReflection()) {
+            // A physvol is read back as translation * rotation * scale, so the reflection
+            // is carried by <scale> and <rotation> gets the matrix with the scale taken
+            // out again, which is a proper rotation. A matrix that is already diagonal
+            // keeps its own signs and leaves an identity rotation; every other reflection
+            // is written as a mirror on z plus a rotation.
+            if (TMath::Abs(lx) != 1 || TMath::Abs(ly) != 1 || TMath::Abs(lz) != 1) {
+               lx = 1.;
+               ly = 1.;
+               lz = -1.;
+            }
             scaleN = fGdmlE->NewChild(nullptr, nullptr, "scale", nullptr);
             fGdmlE->NewAttr(scaleN, nullptr, "name", (nodename + "scl").Data());
             fGdmlE->NewAttr(scaleN, nullptr, "x", TString::Format(fltPrecision.Data(), lx));
             fGdmlE->NewAttr(scaleN, nullptr, "y", TString::Format(fltPrecision.Data(), ly));
             fGdmlE->NewAttr(scaleN, nullptr, "z", TString::Format(fltPrecision.Data(), lz));
-            // experimentally found out, that rotation should be updated like this
-            if (lx == -1) {
-               zangle = 180;
-            }
-            if (lz == -1) {
-               xangle = 180;
+            // take the scale out column by column; the entries are +-1, so multiplying
+            // by them again is the same as dividing
+            for (Int_t i = 0; i < 3; ++i) {
+               rot3x3[3 * i] *= lx;
+               rot3x3[3 * i + 1] *= ly;
+               rot3x3[3 * i + 2] *= lz;
             }
          }
 
          // rotation
-         TGDMLWrite::Xyz lxyz = GetXYZangles(geoNode->GetMatrix()->GetRotationMatrix());
-         lxyz.x -= xangle;
-         lxyz.z -= zangle;
+         TGDMLWrite::Xyz lxyz = GetXYZangles(rot3x3);
          if ((lxyz.x != 0.0) || (lxyz.y != 0.0) || (lxyz.z != 0.0)) {
             rotname = nodename + "rot";
             childN = CreateRotationN(rotname.Data(), lxyz);
@@ -2797,32 +2805,40 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume *volume)
          fGdmlE->AddChild(fDefineNode, childN); // adding node to <define> node
          // Deal with reflection
          XMLNodePointer_t scaleN = nullptr;
-         Double_t lx, ly, lz;
-         Double_t xangle = 0;
-         Double_t zangle = 0;
-         lx = geoNode->GetMatrix()->GetRotationMatrix()[0];
-         ly = geoNode->GetMatrix()->GetRotationMatrix()[4];
-         lz = geoNode->GetMatrix()->GetRotationMatrix()[8];
-         if (geoNode->GetMatrix()->IsReflection() && TMath::Abs(lx) == 1 && TMath::Abs(ly) == 1 &&
-             TMath::Abs(lz) == 1) {
+         Double_t rot3x3[9];
+         for (Int_t i = 0; i < 9; ++i) {
+            rot3x3[i] = geoNode->GetMatrix()->GetRotationMatrix()[i];
+         }
+         Double_t lx = rot3x3[0];
+         Double_t ly = rot3x3[4];
+         Double_t lz = rot3x3[8];
+         if (geoNode->GetMatrix()->IsReflection()) {
+            // A physvol is read back as translation * rotation * scale, so the reflection
+            // is carried by <scale> and <rotation> gets the matrix with the scale taken
+            // out again, which is a proper rotation. A matrix that is already diagonal
+            // keeps its own signs and leaves an identity rotation; every other reflection
+            // is written as a mirror on z plus a rotation.
+            if (TMath::Abs(lx) != 1 || TMath::Abs(ly) != 1 || TMath::Abs(lz) != 1) {
+               lx = 1.;
+               ly = 1.;
+               lz = -1.;
+            }
             scaleN = fGdmlE->NewChild(nullptr, nullptr, "scale", nullptr);
             fGdmlE->NewAttr(scaleN, nullptr, "name", (nodename + "scl").Data());
             fGdmlE->NewAttr(scaleN, nullptr, "x", TString::Format(fltPrecision.Data(), lx));
             fGdmlE->NewAttr(scaleN, nullptr, "y", TString::Format(fltPrecision.Data(), ly));
             fGdmlE->NewAttr(scaleN, nullptr, "z", TString::Format(fltPrecision.Data(), lz));
-            // experimentally found out, that rotation should be updated like this
-            if (lx == -1) {
-               zangle = 180;
-            }
-            if (lz == -1) {
-               xangle = 180;
+            // take the scale out column by column; the entries are +-1, so multiplying
+            // by them again is the same as dividing
+            for (Int_t i = 0; i < 3; ++i) {
+               rot3x3[3 * i] *= lx;
+               rot3x3[3 * i + 1] *= ly;
+               rot3x3[3 * i + 2] *= lz;
             }
          }
 
          // rotation
-         TGDMLWrite::Xyz lxyz = GetXYZangles(geoNode->GetMatrix()->GetRotationMatrix());
-         lxyz.x -= xangle;
-         lxyz.z -= zangle;
+         TGDMLWrite::Xyz lxyz = GetXYZangles(rot3x3);
          if ((lxyz.x != 0.0) || (lxyz.y != 0.0) || (lxyz.z != 0.0)) {
             rotname = nodename + "rot";
             childN = CreateRotationN(rotname.Data(), lxyz);

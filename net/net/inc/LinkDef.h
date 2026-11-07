@@ -17,21 +17,12 @@
 #pragma link C++ global gGrid;
 #pragma link C++ global gGridJobStatusList;
 
-#pragma link C++ global kSrvAuth;
-#pragma link C++ global kSrvNoAuth;
-
 #pragma link C++ class TServerSocket;
 #pragma link C++ class TSocket;
 #pragma link C++ class TPServerSocket;
 #pragma link C++ class TPSocket;
 #pragma link C++ class TMessage;
 #pragma link C++ class TMonitor;
-#pragma link C++ class TNetFile;
-#pragma link C++ class TNetFileStager;
-#pragma link C++ class TNetSystem;
-#pragma link C++ class TWebFile;
-#pragma link C++ class TWebSystem;
-#pragma link C++ class TFTP;
 #pragma link C++ class TSQLServer;
 #pragma link C++ class TSQLResult;
 #pragma link C++ class TSQLRow;
@@ -46,18 +37,10 @@
 #pragma link C++ class TGridJobStatus+;
 #pragma link C++ class TGridJobStatusList+;
 #pragma link C++ class TGridCollection+;
-#pragma link C++ class TSecContext;
-#pragma link C++ class TSecContextCleanup;
 #pragma link C++ class TFileStager;
 #pragma link C++ class TApplicationRemote;
 #pragma link C++ class TApplicationServer;
 #pragma link C++ class TUDPSocket;
 #pragma link C++ class TParallelMergingFile+;
-
-#ifdef R__SSL
-#pragma link C++ class TS3HTTPRequest+;
-#pragma link C++ class TS3WebFile+;
-#pragma link C++ class TSSLSocket;
-#endif
 
 #endif

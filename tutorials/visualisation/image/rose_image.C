@@ -86,6 +86,7 @@ void rose_image()
    TImagePalette *pal = (TImagePalette *)&img5->GetPalette();
    TArrayD *arr = img6->GetArray(50, 40, pal);
    img6->SetImage(arr->GetArray(), 50, 40, pal);
+   delete arr; // one must delete array
    img6->Draw();
 
    // HSV adjustment (convert red to yellow)

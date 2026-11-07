@@ -1,13 +1,27 @@
 #include <TChain.h>
+#include <TDirectory.h>
+#include <TEntryList.h>
 #include <TFile.h>
+#include <TROOT.h>
 #include <TSystem.h>
 #include <TTree.h>
-#include <TEntryList.h>
-#include <TDirectory.h>
 
+#include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
 class TTreeCache;
+
+// ROOT-10778
+TEST(TChain, CopyTreeWithFriends)
+{
+   TChain ch1("chain1");
+   TChain ch2("chain2");
+   ch1.AddFriend(&ch2);
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TChain::CopyTree",
+                      "TChain::CopyTree is not supported if the TChain instance has friends.");
+   ch1.CopyTree("");
+}
 
 // https://its.cern.ch/jira/browse/ROOT-7973
 TEST(TChain, WrongCacheReadTwoTrees)
@@ -207,7 +221,7 @@ TEST_P(SetBranchStatusInteraction, TestTChain)
    const auto [nFiles, callGetEntries, deactivateAllBranches, activateSingleBranch] = GetParam();
 
    const auto treename = "ntuple";
-   const auto filename = "$ROOTSYS/tutorials/hsimple.root";
+   const auto filename = gROOT->GetTutorialDir() + "/hsimple.root";
 
    TChain chain(treename);
    for (auto i = 0; i < nFiles; ++i) {
@@ -243,7 +257,7 @@ TEST_P(SetBranchStatusInteraction, TestTTree)
    const auto [_, callGetEntries, deactivateAllBranches, activateSingleBranch] = GetParam();
 
    const auto treename = "ntuple";
-   const auto filename = "$ROOTSYS/tutorials/hsimple.root";
+   const auto filename = gROOT->GetTutorialDir() + "/hsimple.root";
 
    auto tfile = std::make_unique<TFile>(filename);
    auto *ttree = tfile->Get<TTree>(treename);

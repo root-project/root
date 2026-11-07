@@ -126,8 +126,8 @@ double RooMultiBinomial::evaluate() const
   // Calculate efficiency for combination of accept/reject categories
   // put equal to zero if combination of only zeros AND chosen to be invisible
 
-  for (int i=0; i<effFuncListSize; ++i) {
-    _effVal=_effVal*effValue[i];
+  for (double ev : effValue) {
+    _effVal=_effVal*ev;
     if (notVisible && _ignoreNonVisible){
       _effVal=0;
     }

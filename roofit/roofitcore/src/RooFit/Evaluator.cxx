@@ -42,10 +42,12 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include "BatchModeDataHelpers.h"
 #include "RooFitImplHelpers.h"
 
-#include <chrono>
+#include <atomic>
 #include <iomanip>
+#include <mutex>
 #include <numeric>
-#include <thread>
+#include <set>
+#include <unordered_set>
 
 namespace RooFit {
 
@@ -90,6 +92,28 @@ void logArchitectureInfo(bool useGPU)
    }
 }
 
+/// Advise the user to implement CUDA support for a class that had to be
+/// evaluated on the CPU even though the CUDA backend was requested. Just like
+/// for the analogous message about the missing batch evaluation interface in
+/// RooAbsReal::doEval(), the message is only printed once per class, because
+/// the computation graph is evaluated many times, e.g. in every minimizer
+/// iteration.
+void logMissingCudaSupport(RooAbsArg const &arg)
+{
+   if (!RooMsgService::instance().isActive(&arg, RooFit::FastEvaluations, RooFit::INFO)) {
+      return;
+   }
+   static std::set<std::string> warnedClasses;
+   static std::mutex warnedClassesMutex;
+   std::scoped_lock guard{warnedClassesMutex};
+   if (warnedClasses.insert(arg.ClassName()).second) {
+      oocoutI(&arg, FastEvaluations) << "The class " << arg.ClassName()
+                                     << " could not be evaluated on the GPU because it doesn't support it."
+                                     << " Consider requesting or implementing it to benefit from a speed up."
+                                     << std::endl;
+   }
+}
+
 } // namespace
 
 /// A struct used by the Evaluator to store information on the RooAbsArgs in
@@ -103,8 +127,6 @@ struct NodeInfo {
 
    std::shared_ptr<RooBatchCompute::AbsBuffer> buffer;
    std::size_t iNode = 0;
-   int remClients = 0;
-   int remServers = 0;
    bool copyAfterEvaluation = false;
    bool fromArrayInput = false;
    bool isVariable = false;
@@ -119,26 +141,6 @@ struct NodeInfo {
    double scalarBuffer = 0.0;
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
-
-   RooBatchCompute::CudaInterface::CudaEvent *event = nullptr;
-   RooBatchCompute::CudaInterface::CudaStream *stream = nullptr;
-
-   /// Check the servers of a node that has been computed and release its
-   /// resources if they are no longer needed.
-   void decrementRemainingClients()
-   {
-      if (--remClients == 0 && !fromArrayInput) {
-         buffer.reset();
-      }
-   }
-
-   ~NodeInfo()
-   {
-      if (event)
-         RooBatchCompute::dispatchCUDA->deleteCudaEvent(event);
-      if (stream)
-         RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
-   }
 };
 
 /// Construct a new Evaluator. The constructor analyzes and saves metadata about the graph,
@@ -188,7 +190,7 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
       if (dynamic_cast<RooRealVar const *>(arg)) {
          nodeInfo.isVariable = true;
       } else {
-         arg->setDataToken(iNode);
+         arg->setDataToken(iNode, this);
       }
       if (dynamic_cast<RooAbsCategory const *>(arg)) {
          nodeInfo.isCategory = true;
@@ -221,12 +223,14 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    syncDataTokens();
 
    if (_useGPU) {
-      // create events and streams for every node
+      // Create the single CUDA stream on which all GPU computations and data
+      // transfers of this Evaluator are enqueued. The graph is evaluated in
+      // topological order, so ordering the operations by the stream is enough
+      // to guarantee correct results.
+      _cudaStream = RooBatchCompute::dispatchCUDA->newCudaStream();
+      RooBatchCompute::Config cfg;
+      cfg.setCudaStream(_cudaStream);
       for (auto &info : _nodes) {
-         info.event = RooBatchCompute::dispatchCUDA->newCudaEvent(false);
-         info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
-         RooBatchCompute::Config cfg;
-         cfg.setCudaStream(info.stream);
          _evalContextCUDA.setConfig(info.absArg, cfg);
       }
    }
@@ -266,6 +270,16 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
       return;
 
    _needToUpdateOutputSizes = true;
+
+   // Invalidate the caches that reducer nodes key on the input data, like the
+   // cached sum of event weights in RooNLLVarNew. The counter is global so
+   // that generation values can never alias between different Evaluators.
+   {
+      static std::atomic<std::size_t> nextInputGeneration{1};
+      const std::size_t gen = ++nextInputGeneration;
+      _evalContextCPU._inputGeneration = gen;
+      _evalContextCUDA._inputGeneration = gen;
+   }
 
    NodeInfo &info = *found->second;
 
@@ -325,17 +339,6 @@ void Evaluator::updateOutputSizes()
    for (auto &info : _nodes) {
       info.outputSize = outputSizeMap.at(info.absArg);
       info.isDirty = true;
-
-      // In principle we don't need dirty flag propagation because the driver
-      // takes care of deciding which node needs to be re-evaluated. However,
-      // disabling it also for scalar mode results in very long fitting times
-      // for specific models (test 14 in stressRooFit), which still needs to be
-      // understood. TODO.
-      if (!info.isScalar()) {
-         setOperMode(info.absArg, RooAbsArg::ADirty);
-      } else {
-         setOperMode(info.absArg, info.originalOperMode);
-      }
    }
 
    if (_useGPU) {
@@ -348,9 +351,25 @@ void Evaluator::updateOutputSizes()
 Evaluator::~Evaluator()
 {
    for (auto &info : _nodes) {
-      if (!info.isVariable) {
+      // Nodes that were deleted before the Evaluator were unregistered
+      if (!info.isVariable && info.absArg) {
          info.absArg->resetDataToken();
       }
+   }
+   if (_cudaStream) {
+      RooBatchCompute::dispatchCUDA->deleteCudaStream(_cudaStream);
+   }
+}
+
+/// Called from RooAbsArg::~RooAbsArg() when a node of the computation graph is
+/// deleted while this Evaluator is still alive. The Evaluator can't be used
+/// anymore after that, but its destructor must not touch the deleted node.
+/// For internal use only.
+void Evaluator::unregisterNode(RooAbsArg const &arg)
+{
+   auto found = _nodesMap.find(arg.namePtr());
+   if (found != _nodesMap.end() && found->second->absArg == &arg) {
+      found->second->absArg = nullptr;
    }
 }
 
@@ -367,16 +386,14 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
          _evalContextCUDA.set(node, {buffer, nOut});
       }
    } else {
+      // Advising to implement the CUDA evaluation makes only sense if the batch was not a scalar.
+      // Otherwise, there would be no speedup benefit.
       if (!info.hasLogged && _useGPU) {
-         RooAbsArg const &arg = *info.absArg;
-         oocoutI(&arg, FastEvaluations) << "The argument " << arg.ClassName() << "::" << arg.GetName()
-                                        << " could not be evaluated on the GPU because the class doesn't support it. "
-                                           "Consider requesting or implementing it to benefit from a speed up."
-                                        << std::endl;
+         logMissingCudaSupport(*info.absArg);
          info.hasLogged = true;
       }
       if (!info.buffer) {
-         info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream)
+         info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, _cudaStream)
                                                 : _bufferManager->makeCpuBuffer(nOut);
       }
       buffer = info.buffer->hostWritePtr();
@@ -400,10 +417,10 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    _evalContextCPU.resetVectorBuffers();
    _evalContextCPU.enableVectorBuffers(false);
    if (info.copyAfterEvaluation) {
+      // The deviceReadPtr() call triggers the copy of the result to the GPU.
+      // The copy is ordered by the CUDA stream, so GPU clients enqueued later
+      // will see the result without any further synchronization.
       _evalContextCUDA.set(node, {info.buffer->deviceReadPtr(), nOut});
-      if (info.event) {
-         RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
-      }
    }
 }
 
@@ -456,6 +473,11 @@ std::span<const double> Evaluator::run()
 
    ++_nEvaluations;
 
+   // Discard leftover deferred actions in case a previous evaluation was
+   // aborted by an exception.
+   _evalContextCPU._deferredActions.clear();
+   _evalContextCUDA._deferredActions.clear();
+
    if (_useGPU) {
       return getValHeterogeneous();
    }
@@ -476,6 +498,11 @@ std::span<const double> Evaluator::run()
       }
    }
 
+   for (auto &action : _evalContextCPU._deferredActions) {
+      action();
+   }
+   _evalContextCPU._deferredActions.clear();
+
    // return the final output
    return _evalContextCPU.at(&_topNode);
 }
@@ -483,92 +510,93 @@ std::span<const double> Evaluator::run()
 /// Returns the value of the top node in the computation graph
 std::span<const double> Evaluator::getValHeterogeneous()
 {
-   for (auto &info : _nodes) {
-      info.remClients = info.clientInfos.size();
-      info.remServers = info.serverInfos.size();
-      if (info.buffer && !info.fromArrayInput) {
-         info.buffer.reset();
-      }
-   }
-
-   // find initial GPU nodes and assign them to GPU
-   for (auto &info : _nodes) {
-      if (info.remServers == 0 && info.computeInGPU) {
-         assignToGPU(info);
-      }
-   }
-
-   NodeInfo const &topNodeInfo = _nodes.back();
-   while (topNodeInfo.remServers != -2) {
-      // find finished GPU nodes
+   // Iterate over the nodes in topological order. Like in the CPU-only path
+   // in run(), only dirty nodes are recomputed: a node is dirty if one of its
+   // value servers was recomputed in this evaluation, or if a variable
+   // changed its value since the last evaluation. Clean nodes keep the output
+   // buffers from their last evaluation, which is why the buffers persist
+   // across evaluations in this mode instead of being released as soon as
+   // the clients of a node are computed. During a minimization, most
+   // likelihood evaluations change only one or two parameters (e.g. for the
+   // numeric gradient and the Hessian), so skipping the clean nodes saves
+   // most of the GPU work and the kernel launches. The price is the device
+   // memory for the intermediate results of the whole computation graph,
+   // which is small compared to the input data for the usual graphs where
+   // most nodes are scalars.
+   //
+   // Nodes that are computed on the GPU only enqueue their computation on the
+   // single CUDA stream and return immediately, so independent CPU nodes that
+   // come later in the ordering naturally overlap with the GPU computations.
+   // Ordering by the stream guarantees that GPU nodes see the results of
+   // their GPU servers, and host-side reads of GPU results synchronize on the
+   // stream in the buffer implementation. Since no buffer is recycled within
+   // an evaluation, the results of clean nodes can't be overwritten by
+   // enqueued work either.
+   try {
       for (auto &info : _nodes) {
-         if (info.remServers == -1 && !RooBatchCompute::dispatchCUDA->cudaStreamIsActive(info.stream)) {
-            info.remServers = -2;
-            // Decrement number of remaining servers for clients and start GPU computations
-            for (auto *infoClient : info.clientInfos) {
-               --infoClient->remServers;
-               if (infoClient->computeInGPU && infoClient->remServers == 0) {
-                  assignToGPU(*infoClient);
-               }
+         if (info.fromArrayInput) {
+            continue;
+         }
+         if (info.isVariable) {
+            processVariable(info);
+         } else if (info.isCategory) {
+            processCategory(info);
+         } else if (info.isDirty) {
+            setClientsDirty(info);
+            if (info.computeInGPU) {
+               assignToGPU(info);
+            } else {
+               computeCPUNode(info.absArg, info);
             }
-            for (auto *serverInfo : info.serverInfos) {
-               serverInfo->decrementRemainingClients();
-            }
+            info.isDirty = false;
          }
       }
-
-      // find next CPU node
-      auto it = _nodes.begin();
-      for (; it != _nodes.end(); it++) {
-         if (it->remServers == 0 && !it->computeInGPU)
-            break;
+   } catch (...) {
+      // The evaluation was aborted, but readbacks that compute() calls
+      // deferred may still be armed. Deliver them now, while the destination
+      // memory in the nodes of the computation graph is guaranteed to be
+      // alive, so that no armed readback survives into a later evaluation.
+      // The node that threw stays dirty and gets recomputed in the next
+      // evaluation, together with its clients that were already flagged.
+      try {
+         RooBatchCompute::dispatchCUDA->synchronizeCudaStream(_cudaStream);
+      } catch (...) {
+         // The stream is in an unrecoverable error state. The deferred
+         // readbacks are dropped together with the scratch memory when the
+         // stream gets deleted.
       }
+      _evalContextCUDA._deferredActions.clear();
+      _evalContextCPU._deferredActions.clear();
+      throw;
+   }
 
-      // if no CPU node available sleep for a while to save CPU usage
-      if (it == _nodes.end()) {
-         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-         continue;
-      }
+   // Ensure that all enqueued GPU work has completed when run() returns. For
+   // the usual likelihood evaluations this is mostly a no-op, because the
+   // final reduction has synchronized the stream already. It also delivers
+   // the deferred readbacks like the evaluation error counters.
+   RooBatchCompute::dispatchCUDA->synchronizeCudaStream(_cudaStream);
 
-      // compute next CPU node
-      NodeInfo &info = *it;
-      RooAbsArg const *node = info.absArg;
-      info.remServers = -2; // so that it doesn't get picked again
-
-      if (!info.fromArrayInput) {
-         computeCPUNode(node, info);
+   // Run the deferred actions now that all results have arrived on the host,
+   // e.g. the logging of evaluation errors that were counted on the GPU.
+   // Nodes evaluated on the CPU register their actions in the CPU context,
+   // so both contexts are drained.
+   for (auto *ctx : {&_evalContextCUDA, &_evalContextCPU}) {
+      for (auto &action : ctx->_deferredActions) {
+         action();
       }
-
-      // Assign the clients that are computed on the GPU
-      for (auto *infoClient : info.clientInfos) {
-         if (--infoClient->remServers == 0 && infoClient->computeInGPU) {
-            assignToGPU(*infoClient);
-         }
-      }
-      for (auto *serverInfo : info.serverInfos) {
-         serverInfo->decrementRemainingClients();
-      }
+      ctx->_deferredActions.clear();
    }
 
    // return the final value
    return _evalContextCUDA.at(&_topNode);
 }
 
-/// Assign a node to be computed in the GPU. Scan it's clients and also assign them
-/// in case they only depend on GPU nodes.
+/// Enqueue the computation of a node on the GPU.
 void Evaluator::assignToGPU(NodeInfo &info)
 {
    using namespace Detail;
 
-   info.remServers = -1;
-
    auto node = static_cast<RooAbsReal const *>(info.absArg);
-
-   // wait for every server to finish
-   for (auto *infoServer : info.serverInfos) {
-      if (infoServer->event)
-         RooBatchCompute::dispatchCUDA->cudaStreamWaitForEvent(info.stream, infoServer->event);
-   }
 
    const std::size_t nOut = info.outputSize;
 
@@ -577,15 +605,18 @@ void Evaluator::assignToGPU(NodeInfo &info)
       buffer = &info.scalarBuffer;
       _evalContextCPU.set(node, {buffer, nOut});
    } else {
-      info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream)
-                                             : _bufferManager->makeGpuBuffer(nOut);
+      if (!info.buffer) {
+         info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, _cudaStream)
+                                                : _bufferManager->makeGpuBuffer(nOut);
+      }
       buffer = info.buffer->deviceWritePtr();
    }
    assignSpan(_evalContextCUDA._currentOutput, {buffer, nOut});
    _evalContextCUDA.set(node, {buffer, nOut});
    node->doEval(_evalContextCUDA);
-   RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
    if (info.copyAfterEvaluation) {
+      // The hostReadPtr() call triggers the copy of the result to the host,
+      // which waits for the enqueued computation via the CUDA stream.
       _evalContextCPU.set(node, {info.buffer->hostReadPtr(), nOut});
    }
 }
@@ -623,13 +654,75 @@ void Evaluator::markGPUNodes()
    }
 }
 
+/// \brief Sets the number of threads to use for the evaluation of a single node.
+///
+/// With a value greater than one, the computation functions and reductions of
+/// the CPU backend process large batches multi-threaded, using up to the
+/// given number of threads. Nodes evaluated on the CPU with fewer events than
+/// an internal threshold are still evaluated single-threaded, so requesting
+/// multiple threads never introduces scheduling overhead for small fits.
+void Evaluator::setNThreads(int nThreads)
+{
+   for (auto &info : _nodes) {
+      if (info.isVariable) {
+         continue;
+      }
+      RooBatchCompute::Config cfg = _evalContextCPU.config(info.absArg);
+      cfg.setNThreads(nThreads);
+      _evalContextCPU.setConfig(info.absArg, cfg);
+   }
+}
+
 /// Temporarily change the operation mode of a RooAbsArg until the
 /// Evaluator gets deleted.
 void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 {
-   if (opMode != arg->operMode()) {
-      _changeOperModeRAIIs.emplace(std::make_unique<ChangeOperModeRAII>(arg, opMode));
+   if (!_operModeChanges)
+      _operModeChanges = std::make_unique<ChangeOperModeRAII>();
+   _operModeChanges->change(arg, opMode);
+}
+
+// Change the operation modes of all RooAbsArgs in the computation graph.
+// The changes are reset when the returned RAII object goes out of scope.
+//
+// We also walk transitively through value clients of the nodes to cover any
+// node that RooAbsReal::doEval (the fallback scalar implementation) might
+// inadvertently propagate the ADirty mode to via its recursive restore: that
+// helper sets servers temporarily to AClean and then calls
+// setOperMode(oldOperMode) to restore, which recurses to value clients when
+// oldOperMode is ADirty. If we did not protect those clients here, any node
+// outside the computation graph that shares a fundamental (e.g. a parameter
+// like a RooRealVar) would be left permanently in ADirty after the first
+// minimization, dramatically slowing down later scalar evaluations (for
+// example on pdfs held by the legacy test statistics' internal cache).
+std::unique_ptr<ChangeOperModeRAII> Evaluator::setOperModes(RooAbsArg::OperMode opMode)
+{
+   auto out = std::make_unique<ChangeOperModeRAII>();
+   std::unordered_set<RooAbsArg *> visited;
+
+   std::vector<RooAbsArg *> queue;
+   queue.reserve(_nodes.size());
+   for (auto &info : _nodes) {
+      queue.push_back(info.absArg);
    }
+
+   while (!queue.empty()) {
+      RooAbsArg *node = queue.back();
+      queue.pop_back();
+      if (!visited.insert(node).second)
+         continue;
+
+      out->change(node, opMode);
+
+      // Only follow value-client links: that is exactly the propagation path
+      // used by RooAbsArg::setOperMode with mode==ADirty.
+      if (opMode == RooAbsArg::ADirty) {
+         for (auto *client : node->valueClients()) {
+            queue.push_back(client);
+         }
+      }
+   }
+   return out;
 }
 
 void Evaluator::print(std::ostream &os)

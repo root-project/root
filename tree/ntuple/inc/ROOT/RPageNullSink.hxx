@@ -1,5 +1,4 @@
 /// \file ROOT/RPageNullSink.hxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-01-31
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -37,6 +36,14 @@ class RPageNullSink : public ROOT::Internal::RPageSink {
    ROOT::DescriptorId_t fNColumns = 0;
    std::uint64_t fNBytesCurrentCluster = 0;
 
+protected:
+   void InitImpl(ROOT::RNTupleModel &model) final
+   {
+      auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(model);
+      ConnectFields(fieldZero.GetMutableSubfields(), 0);
+   }
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final { return {}; }
+
 public:
    RPageNullSink(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options) : RPageSink(ntupleName, options)
    {
@@ -66,11 +73,6 @@ public:
             connectField(descendant);
          }
       }
-   }
-   void InitImpl(ROOT::RNTupleModel &model) final
-   {
-      auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(model);
-      ConnectFields(fieldZero.GetMutableSubfields(), 0);
    }
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final
    {
@@ -105,7 +107,12 @@ public:
    }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final {}
+
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cannot clone null sink"));
+   }
 };
 
 } // namespace Internal

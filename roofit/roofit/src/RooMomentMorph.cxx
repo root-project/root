@@ -13,10 +13,7 @@
 
 **/
 
-#include "Riostream.h"
-
 #include "RooMomentMorph.h"
-#include "RooAbsCategory.h"
 #include "RooRealConstant.h"
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
@@ -28,14 +25,12 @@
 #include "RooChangeTracker.h"
 
 #include "TMath.h"
-#include "TH1.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
 
 RooMomentMorph::RooMomentMorph()
-  : _cacheMgr(this,10,true,true)
+  : _cacheMgr(this, 10, true, true)
 {
 }
 

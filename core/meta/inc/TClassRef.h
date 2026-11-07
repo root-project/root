@@ -30,7 +30,7 @@ class TClassRef {
 
 private:
    std::string                 fClassName; //Name of referenced class
-   std::atomic<TClass *const*> fClassPtr;  //! Ptr to the permanent TClass ptr/reference
+   std::atomic<TClass *const*> fClassPtr;  ///<! Ptr to the permanent TClass ptr/reference
 
    friend class TClass;
 

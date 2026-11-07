@@ -1,4 +1,3 @@
-
 Processing runstaticfunc.C...
 test
 Error: cannot call member function without object staticfunc.C:--:

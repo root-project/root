@@ -1,5 +1,4 @@
 /// \file RNTuple.cxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2023-09-19
 

@@ -471,7 +471,7 @@ struct IsCollectionProxy<CollectionProxy<std::pair<short int, short int>>> : std
 TEST(RNTupleEvolution, Collections)
 {
    FileRaii fileGuard("test_ntuple_evolution_collections.root");
-   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
 
    TClass::GetClass("CollectionProxy<int>")->CopyCollectionProxy(SimpleCollectionProxy<CollectionProxy<int>>());
    TClass::GetClass("CollectionProxy<short int>")

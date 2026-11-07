@@ -318,20 +318,49 @@ struct ClassIsAggregate {
     int x;
     double y;
 };
+
+struct ClassIsTriviallyRelocatable {
+    int x;
+    double y;
+};
+
+// not trivially copyable because of the virtual function, but still trivially
+// relocatable in the C++26 sense
+struct ClassIsTriviallyRelocatablePolymorphic {
+    virtual ~ClassIsTriviallyRelocatablePolymorphic() = default;
+    int x;
+};
+
+// a non-trivial copy constructor is enough to lose trivial relocatability, even
+// though the destructor stays trivial
+struct ClassIsNotTriviallyRelocatable {
+    int x;
+    ClassIsNotTriviallyRelocatable(const ClassIsNotTriviallyRelocatable &other) : x(other.x) {}
+};
                           )cpp");
 
+   // clang-format off
    const std::vector<std::pair<std::string, Long_t>> classNPPairs{
-      {"ClassHasImplicitCtor", kClassHasImplicitCtor}, {"ClassHasExplicitCtor", kClassHasExplicitCtor},
-      {"ClassHasExplicitDtor", kClassHasExplicitDtor}, {"ClassHasImplicitDtor", kClassHasImplicitDtor},
-      {"ClassHasDefaultCtor", kClassHasDefaultCtor},   {"ClassHasDefaultCtor", kClassIsValid},
-      {"ClassIsAbstract", kClassIsAbstract},           {"ClassHasVirtual", kClassHasVirtual},
-      {"ClassHasAssignOpr", kClassHasAssignOpr},       {"ClassIsAggregate", kClassIsAggregate}};
+      {"ClassHasImplicitCtor", kClassHasImplicitCtor},           {"ClassHasExplicitCtor", kClassHasExplicitCtor},
+      {"ClassHasExplicitDtor", kClassHasExplicitDtor},           {"ClassHasImplicitDtor", kClassHasImplicitDtor},
+      {"ClassHasDefaultCtor", kClassHasDefaultCtor},             {"ClassHasDefaultCtor", kClassIsValid},
+      {"ClassIsAbstract", kClassIsAbstract},                     {"ClassHasVirtual", kClassHasVirtual},
+      {"ClassHasAssignOpr", kClassHasAssignOpr},                 {"ClassIsAggregate", kClassIsAggregate},
+      {"ClassIsTriviallyRelocatable", kClassIsTriviallyRelocatable},
+      {"ClassIsTriviallyRelocatablePolymorphic", kClassIsTriviallyRelocatable}};
+   // clang-format on
 
    for (auto &[clName, clPropRef] : classNPPairs) {
       auto cl = TClass::GetClass(clName.c_str());
       const auto prop = gInterpreter->ClassInfo_ClassProperty(cl->GetClassInfo());
       EXPECT_TRUE(prop & clPropRef) << "Error checking property for class " << clName;
    }
+
+   // A trivial destructor is not enough: the copy constructor matters too.
+   auto notTrivial = TClass::GetClass("ClassIsNotTriviallyRelocatable");
+   const auto notTrivialProp = gInterpreter->ClassInfo_ClassProperty(notTrivial->GetClassInfo());
+   EXPECT_FALSE(notTrivialProp & kClassIsTriviallyRelocatable);
+   EXPECT_FALSE(notTrivialProp & kClassHasDtor);
 }
 
 // #12108
@@ -435,3 +464,49 @@ TEST_F(TClingTests, UndeclaredIdentifierCrash)
    diagRAII.requiredDiag(kError, "cling", expectedError, false);
    gInterpreter->ProcessLine("for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault");
 }
+
+// https://github.com/root-project/root/issues/16601
+// Declaring a global whose static initializer needs symbols from a library that
+// is not loaded yet (here libMatrix, via TVectorT) must still autoload that
+// library: TInterpreter::Declare suspends *class* autoloading while parsing, but
+// this must not prevent the JIT from materializing symbols that the emitted
+// static-initializer code genuinely requires to run.
+TEST_F(TClingTests, DeclareAutoloadsSymbolsForStaticInit)
+{
+   ASSERT_FALSE(gInterpreter->IsLoaded("libMatrix"));
+   EXPECT_TRUE(gInterpreter->Declare("#include <TVectorT.h>\n"
+                                     "const auto gROOT16601vec = TVectorT<float>(3);"));
+   // The variable must exist and be usable, i.e. its constructor ran.
+   EXPECT_EQ(3L, gInterpreter->ProcessLine("gROOT16601vec.GetNrows();"));
+}
+
+// A failed static initializer rolls the transaction back: Declare reports it and later initializers still run.
+TEST_F(TClingTests, DeclareReportsFailedStaticInit)
+{
+   EXPECT_FALSE(gInterpreter->Declare("extern \"C\" int TClingTests_unresolved();"
+                                      "int TClingTests_v = TClingTests_unresolved();"));
+   EXPECT_EQ(nullptr, gInterpreter->GetDataMember(nullptr, "TClingTests_v"));
+   EXPECT_TRUE(gInterpreter->Declare("int TClingTests_src() { return 7; }"
+                                     "int TClingTests_w = TClingTests_src();"));
+   EXPECT_EQ(7L, gInterpreter->ProcessLine("TClingTests_w;"));
+   EXPECT_TRUE(gInterpreter->Declare("int TClingTests_v = 2;"));
+   EXPECT_EQ(2L, gInterpreter->ProcessLine("TClingTests_v;"));
+}
+
+// https://github.com/root-project/root/issues/15818
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+TEST_F(TClingTests, VeryLongExpression)
+{
+   std::string expression = R"(
+namespace R_rdf {
+auto func0(const int var0){return var0 )";
+   for (unsigned short  i = 0; i < 4096; ++i)
+      expression += "+ var0 ";
+   expression += R"( > 0
+;}
+using func0_ret_t = typename ROOT::TypeTraits::CallableTraits<decltype(func0)>::ret_type;
+})";
+   auto res = gInterpreter->Declare(expression.c_str());
+   EXPECT_TRUE(res);
+}
+#endif

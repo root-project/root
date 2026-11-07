@@ -107,7 +107,7 @@ namespace cling {
 
     llvm::DenseMap<const clang::Decl*, bool> m_Visited; // fwd decl success
     std::stack<llvm::raw_ostream*> m_StreamStack;
-    std::set<llvm::StringRef> m_BuiltinNames;
+    std::set<std::string> m_BuiltinNames;
     IgnoreFilesFunc_t m_IgnoreFile; // Call back to ignore some top level files.
 
     void printTypedefOrAliasDecl(clang::TypedefNameDecl* D);
@@ -157,7 +157,7 @@ namespace cling {
     // Not coming from the RecursiveASTVisitor
     void Visit(clang::QualType QT);
     void Visit(const clang::Type* T);
-    void VisitNestedNameSpecifier(const clang::NestedNameSpecifier* NNS);
+    void VisitNestedNameSpecifier(const clang::NestedNameSpecifier NNS);
     void VisitTemplateArgument(const clang::TemplateArgument& TA);
     void VisitTemplateName(const clang::TemplateName& TN);
 

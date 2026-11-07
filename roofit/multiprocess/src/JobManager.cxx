@@ -51,8 +51,6 @@ JobManager *JobManager::instance()
    if (!JobManager::is_instantiated()) {
       instance_.reset(new JobManager(Config::getDefaultNWorkers())); // can't use make_unique, because ctor is private
       instance_->messenger().test_connections(instance_->process_manager());
-      // set send to non blocking on all processes after checking the connections are working:
-      instance_->messenger().set_send_flag(zmq::send_flags::dontwait);
    }
    return instance_.get();
 }
@@ -100,10 +98,14 @@ JobManager::~JobManager()
    // There used to be an assert statement that checked whether the job_objects
    // map was empty at destruction time, but that neglected the second possibility
    // and led to assertion failures, which left the Messenger and ProcessManager
-   // objects intact, leading to the forked processes and their ZeroMQ resources
-   // to remain after exiting the main/master/parent process.
-   messenger_ptr_.reset();
+   // objects intact, leading to the forked processes and their communication
+   // resources to remain after exiting the main/master/parent process.
+   // Note the destruction order: the ProcessManager first terminates the child
+   // processes (SIGTERM) while all communication channels are still open, so
+   // that no process sees a closed connection during a normal shutdown; only
+   // then the Messenger closes the channels.
    process_manager_ptr_.reset();
+   messenger_ptr_.reset();
    queue_ptr_.reset();
 }
 
@@ -129,7 +131,12 @@ std::size_t JobManager::add_job_object(Job *job_object)
 // static function
 Job *JobManager::get_job_object(std::size_t job_object_id)
 {
-   return job_objects_[job_object_id];
+   auto found = job_objects_.find(job_object_id);
+   if (found == job_objects_.end()) {
+      throw std::runtime_error("JobManager::get_job_object: unknown job ID " + std::to_string(job_object_id) +
+                               ", the interprocess message stream may be corrupted");
+   }
+   return found->second;
 }
 
 // static function
@@ -167,35 +174,20 @@ void JobManager::retrieve(std::size_t requesting_job_id)
       bool job_fully_retrieved = false;
       while (not job_fully_retrieved) {
          try {
-            auto task_result_message = messenger().receive_from_worker_on_master<zmq::message_t>();
-            auto job_object_id = *reinterpret_cast<std::size_t *>(
-               task_result_message.data()); // job_id must always be the first element of the result message!
+            auto task_result_message = messenger().receive_from_worker_on_master<Message>();
+            if (task_result_message.size() < sizeof(std::size_t)) {
+               throw std::runtime_error("JobManager::retrieve: received a task result message that is too short to "
+                                        "contain a job ID, the interprocess message stream may be corrupted");
+            }
+            auto job_object_id = *task_result_message.data<std::size_t>(); // job_id must always be the first element of
+                                                                           // the result message!
             bool this_job_fully_retrieved =
                JobManager::get_job_object(job_object_id)->receive_task_result_on_master(task_result_message);
             if (requesting_job_id == job_object_id) {
                job_fully_retrieved = this_job_fully_retrieved;
             }
-         } catch (ZMQ::ppoll_error_t &e) {
-            zmq_ppoll_error_response response;
-            try {
-               response = handle_zmq_ppoll_error(e);
-            } catch (std::logic_error &) {
-               printf("JobManager::retrieve got unhandleable ZMQ::ppoll_error_t\n");
-               throw;
-            }
-            if (response == zmq_ppoll_error_response::abort) {
-               throw std::logic_error("in JobManager::retrieve: master received a SIGTERM, aborting");
-            } else if (response == zmq_ppoll_error_response::unknown_eintr) {
-               printf("EINTR in JobManager::retrieve, continuing\n");
-               continue;
-            } else if (response == zmq_ppoll_error_response::retry) {
-               printf("EAGAIN from ppoll in JobManager::retrieve, continuing\n");
-               continue;
-            }
-         } catch (zmq::error_t &e) {
-            printf("unhandled zmq::error_t (not a ppoll_error_t) in JobManager::retrieve with errno %d: %s\n", e.num(),
-                   e.what());
-            throw;
+         } catch (ppoll_error_t &) {
+            throw std::logic_error("in JobManager::retrieve: master received a SIGTERM, aborting");
          }
       }
    }
@@ -215,13 +207,29 @@ void JobManager::activate()
 {
    activated_ = true;
 
+   // Note on error handling: the queue and worker processes are forked from
+   // the master, so the stack below this function belongs to the master-side
+   // caller. An exception escaping the event loops (e.g. from a closed
+   // connection when another process died unexpectedly) must therefore never
+   // propagate out of this function on a child process: it would unwind into
+   // code that was never meant to run on this process. Report it and exit.
    if (process_manager().is_queue()) {
-      queue()->loop();
+      try {
+         queue()->loop();
+      } catch (const std::exception &e) {
+         fprintf(stderr, "queue process (PID %d) exits after exception: %s\n", getpid(), e.what());
+         std::_Exit(1);
+      }
       std::_Exit(0);
    }
 
    if (!is_worker_loop_running() && process_manager().is_worker()) {
-      RooFit::MultiProcess::worker_loop();
+      try {
+         RooFit::MultiProcess::worker_loop();
+      } catch (const std::exception &e) {
+         fprintf(stderr, "worker process (PID %d) exits after exception: %s\n", getpid(), e.what());
+         std::_Exit(1);
+      }
       std::_Exit(0);
    }
 }

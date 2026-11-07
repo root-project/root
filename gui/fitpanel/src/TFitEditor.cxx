@@ -1256,7 +1256,8 @@ void TFitEditor::CloseWindow()
 
 void TFitEditor::Terminate()
 {
-   TQObject::Disconnect("TCanvas", "Closed()");
+   if (HasConnection("DoNoSelection()"))
+      TQObject::Disconnect("TCanvas", "Closed()");
    delete fgFitDialog;
    fgFitDialog = 0;
 }
@@ -2861,7 +2862,7 @@ void TFitEditor::DrawSelection(bool restore)
    px2 = gPad->XtoAbsPixel(xright);
    py2 = gPad->YtoAbsPixel(ymax);
 
-   if (gPad->GetCanvas()) gPad->GetCanvas()->FeedbackMode(kTRUE);
+   gPad->FeedbackMode(kTRUE);
    gPad->SetLineWidth(1);
    gPad->SetLineColor(2);
 #ifndef R__HAS_COCOA

@@ -1,10 +1,12 @@
-import os, threading, tempfile
+import os
+import tempfile
+import threading
 from functools import partial
+
 import pytest
-
-from DistRDF import LiveVisualize
-
 import ROOT
+from ROOT._distrdf import LiveVisualize
+
 
 # Callback functions
 def set_marker(graph):
@@ -60,7 +62,7 @@ class TestLiveVisualizationCallback:
         graph.Draw("APL")
 
         # Assert that callback functions have been applied correctly
-        assert check_data_points_increase(temp_file_path, num_entries) == True
+        assert check_data_points_increase(temp_file_path, num_entries)
 
         # Remove the created temp file
         temp_file.close()

@@ -58,7 +58,13 @@ protected:
    RStagedCluster StageCluster(NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final { return {}; }
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final {}
+
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cannot clone sink"));
+   }
 
 public:
    RPageSinkMock(const RColumnElementBase &elt) : RPageSink("test", ROOT::RNTupleWriteOptions()), fElement(elt)
@@ -77,22 +83,26 @@ public:
  * An RPageSource that can be constructed given the raw content of its pages and unpacks them on demand
  */
 class RPageSourceMock : public RPageSource {
-protected:
    const RColumnElementBase &fElement;
    const std::vector<RPageStorage::RSealedPage> &fPages;
+   ROOT::Internal::RPagePool fMyPagePool;
 
+protected:
    void LoadStructureImpl() final {}
-   RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode) final
-   {
-      return RNTupleDescriptor();
-   }
+   RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
-   void LoadStreamerInfo() final {}
+   void LoadPageListImpl(const ROOT::RNTupleLocator &, unsigned char *) final {}
+   void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
+
+   std::unique_ptr<ROOT::Internal::RPageSource>
+   OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &, const ROOT::RNTupleReadOptions &) final
+   {
+      throw ROOT::RException(R__FAIL("method not implemented"));
+   }
 
 public:
    RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)
-      : RPageSource("test", ROOT::RNTupleReadOptions()), fElement(elt), fPages(pages)
+      : RPageSource("test", ROOT::RNTupleReadOptions()), fElement(elt), fPages(pages), fMyPagePool(*this)
    {
    }
 
@@ -100,10 +110,9 @@ public:
    {
       auto page = RPageSource::UnsealPage(fPages[i], fElement).Unwrap();
       ROOT::Internal::RPagePool::RKey key{columnHandle.fPhysicalId, std::type_index(typeid(void))};
-      return fPagePool.RegisterPage(std::move(page), key);
+      return fMyPagePool.RegisterPage(std::move(page), key);
    }
    RPageRef LoadPage(ColumnHandle_t, ROOT::RNTupleLocalIndex) final { return RPageRef(); }
-   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::RNTupleLocalIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
 };
 } // anonymous namespace
@@ -210,29 +219,5 @@ TEST(RColumnElementEndian, DeltaSplit)
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
                        "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",
                        32));
-#endif
-}
-
-TEST(RColumnElementEndian, Real32Trunc)
-{
-#ifndef R__BYTESWAP
-   GTEST_SKIP() << "Skipping test on big endian node";
-#else
-   RColumnElement<float, ENTupleColumnType::kReal32Trunc> element;
-   element.SetBitsOnStorage(12);
-
-   RPageSinkMock sink1(element);
-   unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-   RPage page1(buf1, nullptr, sizeof(float), 4);
-   page1.GrowUnchecked(4);
-   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
-
-   EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(), "\x00\x00\x04\x80\x00\x0c", 6));
-
-   RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
-   EXPECT_EQ(
-      0, memcmp(page2Ref.Get().GetBuffer(), "\x00\x00\x00\x00\x04\x00\x00\x00\x08\x00\x00\x00\x0c\x00\x00\x00", 16));
 #endif
 }

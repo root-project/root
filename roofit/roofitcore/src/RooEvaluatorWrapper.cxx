@@ -30,16 +30,102 @@ Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 #include <RooSimultaneous.h>
 
 #include "RooFit/BatchModeDataHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #include <TInterpreter.h>
 
 #include <fstream>
 
+namespace {
+
+// Throws an exception if any value in `span` is outside of the (default,
+// unnamed) range of `var`. The `obsName` is used only for the error message,
+// because it might differ from `var.GetName()` (e.g. the per-channel prefix
+// that RooSimultaneous adds is stripped for readability).
+void checkObservableSpanInRange(RooRealVar const &var, std::string const &obsName, std::string const &datasetName,
+                                std::span<const double> span)
+{
+   for (double val : span) {
+      if (!var.inRange(val, nullptr)) {
+         const double lo = var.getMin();
+         const double hi = var.getMax();
+         std::stringstream errMsg;
+         errMsg << "RooAbsPdf::fitTo/createNLL: cannot evaluate the likelihood because dataset \"" << datasetName
+                << "\" has an entry for observable \"" << obsName << "\" with value " << val
+                << ", which is outside of its range [" << lo << ", " << hi << "]. The probability density is "
+                << "normalized over exactly that range, so events outside of it would silently bias the fit. If "
+                << "you want to fit only a subset of the data, define a named range and use it in the fit, for example:\n"
+                << "    " << obsName << ".setRange(\"fitRange\", " << lo << ", " << hi << ");\n"
+                << "    pdf.fitTo(data, RooFit::Range(\"fitRange\"));\n"
+                << "This way, only the events inside \"fitRange\" enter the likelihood, consistent with how the "
+                << "pdf is normalized.";
+         oocoutE(nullptr, InputArguments) << errMsg.str() << std::endl;
+         throw std::runtime_error(errMsg.str());
+      }
+   }
+}
+
+// Validates that no dataset entry lies outside of the range of the
+// corresponding observable, for every real-valued observable of `pdf`. This
+// check is skipped when a range name was explicitly given to the fit,
+// because in that case out-of-range events are intentionally and
+// consistently dropped by RooFit::BatchModeDataHelpers::getDataSpans().
+void validateObservableRanges(RooAbsPdf const *pdf, RooAbsData const &data,
+                              std::map<RooFit::Detail::DataKey, std::span<const double>> const &dataSpans)
+{
+   if (!pdf)
+      return;
+
+   if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(pdf)) {
+      // The per-channel pdfs coming out of RooSimultaneous::compileForNormSet()
+      // have their observables cloned and renamed with a "_<channel>_" prefix
+      // (and tagged with the "__obs__" attribute), so that the shared data map
+      // can hold independent columns for each channel. We look those up the
+      // same way, and strip the prefix again for a readable error message.
+      for (auto const &nameIdx : simPdf->indexCat()) {
+         RooAbsPdf *channelPdf = simPdf->getPdf(nameIdx.first);
+         if (!channelPdf)
+            continue;
+         const std::string prefix = "_" + nameIdx.first + "_";
+         std::unique_ptr<RooArgSet> vars{channelPdf->getVariables()};
+         std::unique_ptr<RooArgSet> obs{vars->selectByAttrib("__obs__", true)};
+         for (RooAbsArg *arg : *obs) {
+            auto *realVar = dynamic_cast<RooRealVar *>(arg);
+            if (!realVar)
+               continue;
+            auto it = dataSpans.find(RooFit::Detail::DataKey(realVar));
+            if (it == dataSpans.end())
+               continue;
+            std::string obsName = realVar->GetName();
+            if (obsName.rfind(prefix, 0) == 0) {
+               obsName = obsName.substr(prefix.size());
+            }
+            checkObservableSpanInRange(*realVar, obsName, data.GetName(), it->second);
+         }
+      }
+      return;
+   }
+
+   RooArgSet obs;
+   pdf->getObservables(data.get(), obs);
+   for (RooAbsArg *arg : obs) {
+      auto *realVar = dynamic_cast<RooRealVar *>(arg);
+      if (!realVar)
+         continue;
+      auto it = dataSpans.find(RooFit::Detail::DataKey(realVar));
+      if (it == dataSpans.end())
+         continue;
+      checkObservableSpanInRange(*realVar, realVar->GetName(), data.GetName(), it->second);
+   }
+}
+
+} // namespace
+
 namespace RooFit::Experimental {
 
 RooEvaluatorWrapper::RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, bool useGPU,
                                          std::string const &rangeName, RooAbsPdf const *pdf,
-                                         bool takeGlobalObservablesFromData)
+                                         bool takeGlobalObservablesFromData, int nWorkers)
    : RooAbsReal{"RooEvaluatorWrapper", "RooEvaluatorWrapper"},
      _evaluator{std::make_unique<RooFit::Evaluator>(topNode, useGPU)},
      _topNode("topNode", "top node", this, topNode, false, false),
@@ -49,6 +135,9 @@ RooEvaluatorWrapper::RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, 
      _pdf{pdf},
      _takeGlobalObservablesFromData{takeGlobalObservablesFromData}
 {
+   if (nWorkers > 1 && !useGPU) {
+      _evaluator->setNThreads(nWorkers);
+   }
    if (data) {
       setData(*data, false);
    }
@@ -118,56 +207,32 @@ bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet 
    return false;
 }
 
-bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
-{
-   // To make things easiear for RooFit, we only support resetting with
-   // datasets that have the same structure, e.g. the same columns and global
-   // observables. This is anyway the usecase: resetting same-structured data
-   // when iterating over toys.
-   constexpr auto errMsg = "Error in RooAbsReal::setData(): only resetting with same-structured data is supported.";
-
-   _data = &data;
-   bool isInitializing = _paramSet.empty();
-   const std::size_t oldSize = _dataSpans.size();
-
-   std::stack<std::vector<double>>{}.swap(_vectorBuffers);
-   bool skipZeroWeights = !_pdf || !_pdf->getAttribute("BinnedLikelihoodActive");
-   _dataSpans =
-      RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, dynamic_cast<RooSimultaneous const *>(_pdf),
-                                                 skipZeroWeights, _takeGlobalObservablesFromData, _vectorBuffers);
-   if (!isInitializing && _dataSpans.size() != oldSize) {
-      coutE(DataHandling) << errMsg << std::endl;
-      throw std::runtime_error(errMsg);
-   }
-   for (auto const &item : _dataSpans) {
-      const char *name = item.first->GetName();
-      _evaluator->setInput(name, item.second, false);
-      if (_paramSet.find(name)) {
-         coutE(DataHandling) << errMsg << std::endl;
-         throw std::runtime_error(errMsg);
-      }
-   }
-   return true;
-}
-
 /// @brief  A wrapper class to store a C++ function of type 'double (*)(double*, double*)'.
 /// The parameters can be accessed as params[<relative position of param in paramSet>] in the function body.
 /// The observables can be accessed as obs[i + j], where i represents the observable position and j
 /// represents the data entry.
 class RooFuncWrapper {
 public:
-   RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf, RooArgSet const &paramSet);
+   RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf, RooArgSet const &paramSet,
+                  std::string const &rangeName, bool skipZeroWeights);
 
    bool hasGradient() const { return _hasGradient; }
+   bool hasHessian() const { return _hasHessian; }
    void gradient(double *out) const
    {
       updateGradientVarBuffer();
       std::fill(out, out + _params.size(), 0.0);
-
-      _grad(_gradientVarBuffer.data(), _observables.data(), _xlArr.data(), out);
+      _grad(_varBuffer.data(), _observables.data(), _xlArr.data(), out);
+   }
+   void hessian(double *out) const
+   {
+      updateGradientVarBuffer();
+      std::fill(out, out + _params.size() * _params.size(), 0.0);
+      _hessian(_varBuffer.data(), _observables.data(), _xlArr.data(), out);
    }
 
    void createGradient();
+   void createHessian();
 
    void writeDebugMacro(std::string const &) const;
 
@@ -176,34 +241,31 @@ public:
    double evaluate() const
    {
       updateGradientVarBuffer();
-      return _func(_gradientVarBuffer.data(), _observables.data(), _xlArr.data());
+      return _func(_varBuffer.data(), _observables.data(), _xlArr.data());
    }
+
+   void
+   loadData(RooAbsData const &data, RooSimultaneous const *simPdf, std::string const &rangeName, bool skipZeroWeights);
 
 private:
    void updateGradientVarBuffer() const;
-
-   std::map<RooFit::Detail::DataKey, std::span<const double>>
-   loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *data, RooSimultaneous const *simPdf);
 
    void buildFuncAndGradFunctors();
 
    using Func = double (*)(double *, double const *, double const *);
    using Grad = void (*)(double *, double const *, double const *, double *);
-
-   struct ObsInfo {
-      ObsInfo(std::size_t i, std::size_t n) : idx{i}, size{n} {}
-      std::size_t idx = 0;
-      std::size_t size = 0;
-   };
+   using Hessian = void (*)(double *, double const *, double const *, double *);
 
    RooArgList _params;
    std::string _funcName;
    Func _func;
    Grad _grad;
+   Hessian _hessian;
    bool _hasGradient = false;
-   mutable std::vector<double> _gradientVarBuffer;
+   bool _hasHessian = false;
+   mutable std::vector<double> _varBuffer;
    std::vector<double> _observables;
-   std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
+   std::unordered_map<RooFit::Detail::DataKey, std::size_t> _obsInfos;
    std::vector<double> _xlArr;
    std::vector<std::string> _collectedFunctions;
 };
@@ -221,21 +283,58 @@ void replaceAll(std::string &str, const std::string &from, const std::string &to
    }
 }
 
+auto getDependsOnData(RooAbsReal &obj, RooArgSet const &dataObs)
+{
+   RooArgSet serverSet;
+   RooHelpers::getSortedComputationGraph(obj, serverSet);
+
+   std::unordered_set<RooFit::Detail::DataKey> dependsOnData;
+   for (RooAbsArg *arg : dataObs) {
+      dependsOnData.insert(arg);
+   }
+
+   for (RooAbsArg *arg : serverSet) {
+      if (arg->getAttribute("__obs__")) {
+         dependsOnData.insert(arg);
+      }
+      for (RooAbsArg *server : arg->servers()) {
+         if (server->isValueServer(*arg)) {
+            if (dependsOnData.find(server) != dependsOnData.end() && !arg->isReducerNode()) {
+               dependsOnData.insert(arg);
+               break;
+            }
+         }
+      }
+   }
+
+   return dependsOnData;
+}
+
 } // namespace
 
 RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf,
-                               RooArgSet const &paramSet)
+                               RooArgSet const &paramSet, std::string const &rangeName, bool skipZeroWeights)
 {
-   // Load the parameters and observables.
-   auto spans = loadParamsAndData(paramSet, data, simPdf);
+   // Load the observables from the dataset
+   if (data) {
+      loadData(*data, simPdf, rangeName, skipZeroWeights);
+   }
+
+   // Define the parameters
+   for (auto *param : paramSet) {
+      if (_obsInfos.find(param) == _obsInfos.end()) {
+         _params.add(*param);
+      }
+   }
+   _varBuffer.resize(_params.size());
+
+   // Figure out which part of the computation graph depends on data
+   std::unordered_set<RooFit::Detail::DataKey> dependsOnData;
+   if (data) {
+      dependsOnData = getDependsOnData(obj, *data->get());
+   }
 
    // Set up the code generation context
-   std::map<RooFit::Detail::DataKey, std::size_t> nodeOutputSizes =
-      RooFit::BatchModeDataHelpers::determineOutputSizes(obj, [&spans](RooFit::Detail::DataKey key) -> int {
-         auto found = spans.find(key);
-         return found != spans.end() ? found->second.size() : -1;
-      });
-
    RooFit::Experimental::CodegenContext ctx;
 
    // First update the result variable of params in the compute graph to in[<position>].
@@ -247,21 +346,14 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
 
    for (auto const &item : _obsInfos) {
       const char *obsName = item.first->GetName();
-      // If the observable is scalar, set name to the start idx. else, store
-      // the start idx and later set the the name to obs[start_idx + curr_idx],
-      // here curr_idx is defined by a loop producing parent node.
-      if (item.second.size == 1) {
-         ctx.addResult(obsName, "obs[" + std::to_string(item.second.idx) + "]");
-      } else {
-         ctx.addResult(obsName, "obs");
-         ctx.addVecObs(obsName, item.second.idx);
-      }
+      ctx.addResult(obsName, "obs");
+      ctx.addVecObs(obsName, item.second);
    }
 
    // Declare the function and create its derivative.
    auto print = [](std::string const &msg) { oocoutI(nullptr, Fitting) << msg << std::endl; };
    ROOT::Math::Util::TimingScope timingScope(print, "Function JIT time:");
-   _funcName = ctx.buildFunction(obj, nodeOutputSizes);
+   _funcName = ctx.buildFunction(obj, dependsOnData);
 
    // Make sure the codegen implementations are known to the interpreter
    gInterpreter->Declare("#include <RooFit/CodegenImpl.h>\n");
@@ -270,7 +362,7 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
       std::stringstream errorMsg;
       std::string debugFileName = "_codegen_" + _funcName + ".cxx";
       errorMsg << "Function " << _funcName << " could not be compiled. See above for details. Full code dumped to file "
-               << debugFileName << "for debugging";
+               << debugFileName << " for debugging";
       {
          std::ofstream outFile;
          outFile.open(debugFileName.c_str());
@@ -286,36 +378,35 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
    _collectedFunctions = ctx.collectedFunctions();
 }
 
-std::map<RooFit::Detail::DataKey, std::span<const double>>
-RooFuncWrapper::loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *data, RooSimultaneous const *simPdf)
+void RooFuncWrapper::loadData(RooAbsData const &data, RooSimultaneous const *simPdf, std::string const &rangeName,
+                              bool skipZeroWeights)
 {
    // Extract observables
    std::stack<std::vector<double>> vectorBuffers; // for data loading
-   std::map<RooFit::Detail::DataKey, std::span<const double>> spans;
+   auto spans =
+      RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, simPdf, skipZeroWeights, false, vectorBuffers);
 
-   if (data) {
-      spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", simPdf, true, false, vectorBuffers);
-   }
-
+   _observables.clear();
+   // The first elements contain the sizes of the packed observable arrays
+   std::size_t total = 0;
+   _observables.reserve(2 * spans.size());
    std::size_t idx = 0;
    for (auto const &item : spans) {
+      _obsInfos.emplace(item.first, idx);
+      _observables.push_back(total + 2 * spans.size());
+      _observables.push_back(item.second.size());
+      total += item.second.size();
+      idx += 1;
+   }
+   idx = 0;
+   for (auto const &item : spans) {
       std::size_t n = item.second.size();
-      _obsInfos.emplace(item.first, ObsInfo{idx, n});
       _observables.reserve(_observables.size() + n);
       for (std::size_t i = 0; i < n; ++i) {
          _observables.push_back(item.second[i]);
       }
       idx += n;
    }
-
-   for (auto *param : paramSet) {
-      if (spans.find(param) == spans.end()) {
-         _params.add(*param);
-      }
-   }
-   _gradientVarBuffer.resize(_params.size());
-
-   return spans;
 }
 
 void RooFuncWrapper::createGradient()
@@ -366,9 +457,59 @@ void RooFuncWrapper::createGradient()
 #endif
 }
 
+void RooFuncWrapper::createHessian()
+{
+#ifdef ROOFIT_CLAD
+   std::string hessianName = _funcName + "_hessian_0";
+   std::string requestName = _funcName + "_hessian_req";
+
+   // Calculate Hessian
+   gInterpreter->Declare("#include <Math/CladDerivator.h>\n");
+   // disable clang-format for making the following code unreadable.
+   // clang-format off
+   std::stringstream requestFuncStrm;
+   std::string paramsStr =
+      _params.size() == 1 ? "\"params[0]\"" : ("\"params[0:" + std::to_string(_params.size() - 1) + "]\"");
+   requestFuncStrm << "#pragma clad ON\n"
+                      "void " << requestName << "() {\n"
+                      "  clad::hessian(" << _funcName << ", " << paramsStr << ");\n"
+                      "}\n"
+                      "#pragma clad OFF";
+   // clang-format on
+   auto print = [](std::string const &msg) { oocoutI(nullptr, Fitting) << msg << std::endl; };
+
+   bool cladSuccess = false;
+   {
+      ROOT::Math::Util::TimingScope timingScope(print, "Hessian generation time:");
+      cladSuccess = !gInterpreter->Declare(requestFuncStrm.str().c_str());
+   }
+   if (cladSuccess) {
+      std::stringstream errorMsg;
+      errorMsg << "Function could not be differentiated. See above for details.";
+      oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str().c_str());
+   }
+
+   // Clad provides different overloads for the Hessian, and we need to
+   // resolve to the one that we want. Without the static_cast, getting the
+   // function pointer would be ambiguous.
+   std::stringstream ss;
+   ROOT::Math::Util::TimingScope timingScope(print, "Hessian IR to machine code time:");
+   ss << "static_cast<void (*)(double *, double const *, double const *, double *)>(" << hessianName << ");";
+   _hessian = reinterpret_cast<Hessian>(gInterpreter->ProcessLine(ss.str().c_str()));
+   _hasHessian = true;
+#else
+   _hasHessian = false;
+   std::stringstream errorMsg;
+   errorMsg << "Function could not be differentiated since ROOT was built without Clad support.";
+   oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
+   throw std::runtime_error(errorMsg.str().c_str());
+#endif
+}
+
 void RooFuncWrapper::updateGradientVarBuffer() const
 {
-   std::transform(_params.begin(), _params.end(), _gradientVarBuffer.begin(), [](RooAbsArg *obj) {
+   std::transform(_params.begin(), _params.end(), _varBuffer.begin(), [](RooAbsArg *obj) {
       return obj->isCategory() ? static_cast<RooAbsCategory *>(obj)->getCurrentIndex()
                                : static_cast<RooAbsReal *>(obj)->getVal();
    });
@@ -396,10 +537,14 @@ void RooFuncWrapper::writeDebugMacro(std::string const &filename) const
    }
 
    std::ofstream outFile;
+   std::string paramsStr =
+      _params.size() == 1 ? "\"params[0]\"" : ("\"params[0:" + std::to_string(_params.size() - 1) + "]\"");
    outFile.open(filename + ".C");
    outFile << R"(//auto-generated test macro
 #include <RooFit/Detail/MathFuncs.h>
 #include <Math/CladDerivator.h>
+
+//#define DO_HESSIAN
 
 )" << allCode.str()
            << R"(
@@ -407,6 +552,10 @@ void RooFuncWrapper::writeDebugMacro(std::string const &filename) const
 void gradient_request() {
   clad::gradient()"
            << _funcName << R"(, "params");
+#ifdef DO_HESSIAN
+   clad::hessian()"
+           << _funcName << ", " << paramsStr << R"();
+#endif
 }
 #pragma clad OFF
 )";
@@ -434,7 +583,7 @@ void gradient_request() {
    };
 
    outFile << "// clang-format off\n" << std::endl;
-   writeVector("parametersVec", _gradientVarBuffer);
+   writeVector("parametersVec", _varBuffer);
    outFile << std::endl;
    writeVector("observablesVec", _observables);
    outFile << std::endl;
@@ -447,7 +596,9 @@ void gradient_request() {
 void )" << filename
            << R"(()
 {
-   std::vector<double> gradientVec(parametersVec.size());
+   const std::size_t n = parametersVec.size();
+
+   std::vector<double> gradientVec(n);
 
    auto func = [&](std::span<double> params) {
       return )"
@@ -476,6 +627,100 @@ void )" << filename
       std::cout << "  numr : " << numDiff(i) << std::endl;
       std::cout << "  clad : " << gradientVec[i] << std::endl;
    }
+
+#ifdef DO_HESSIAN
+   std::cout << "\n";
+
+   auto hess = [&](std::span<double> params, std::span<double> out) {
+      return )"
+           << _funcName << R"(_hessian_0(params.data(), observablesVec.data(), auxConstantsVec.data(), out.data());
+   };
+
+   std::vector<double> hessianVec(n * n);
+   hess(parametersVec, hessianVec);
+
+   // ---------- Numerical Hessian ----------
+   // Uses central differences:
+   // diag: (f(x+ei)-2f(x)+f(x-ei))/eps^2
+   // offdiag: (f(++ ) - f(+-) - f(-+) + f(--)) / (4 eps^2)
+   auto numHess = [&](std::size_t i, std::size_t j) {
+      const double eps = 1e-5; // often needs to be a bit larger than grad eps
+      std::vector<double> p(parametersVec.begin(), parametersVec.end());
+
+      if (i == j) {
+         const double f0 = func(p);
+
+         p[i] = parametersVec[i] + eps;
+         const double fUp = func(p);
+
+         p[i] = parametersVec[i] - eps;
+         const double fDown = func(p);
+
+         return (fUp - 2.0 * f0 + fDown) / (eps * eps);
+      } else {
+         // f(x_i + eps, x_j + eps)
+         p[i] = parametersVec[i] + eps;
+         p[j] = parametersVec[j] + eps;
+         const double fPP = func(p);
+
+         // f(x_i + eps, x_j - eps)
+         p[i] = parametersVec[i] + eps;
+         p[j] = parametersVec[j] - eps;
+         const double fPM = func(p);
+
+         // f(x_i - eps, x_j + eps)
+         p[i] = parametersVec[i] - eps;
+         p[j] = parametersVec[j] + eps;
+         const double fMP = func(p);
+
+         // f(x_i - eps, x_j - eps)
+         p[i] = parametersVec[i] - eps;
+         p[j] = parametersVec[j] - eps;
+         const double fMM = func(p);
+
+         return (fPP - fPM - fMP + fMM) / (4.0 * eps * eps);
+      }
+   };
+
+   // Compute full numerical Hessian
+   std::vector<double> numHessianVec(n * n);
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         numHessianVec[i + n * j] = numHess(i, j); // keep same layout as your print
+      }
+   }
+
+   // ---------- Compare & print ----------
+   std::cout << "Hessian comparison (clad vs numeric vs diff):\n\n";
+
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         const std::size_t idx = i + n * j; // same indexing you used
+         const double cladH = hessianVec[idx];
+         const double numH = numHessianVec[idx];
+         const double diff = cladH - numH;
+
+         std::cout << "[" << i << "," << j << "] "
+                   << "clad=" << cladH << "  num=" << numH << "  diff=" << diff << "\n";
+      }
+   }
+
+   std::cout << "\nRaw Clad Hessian matrix:\n";
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         std::cout << hessianVec[i + n * j] << "   ";
+      }
+      std::cout << "\n";
+   }
+
+   std::cout << "\nRaw Numerical Hessian matrix:\n";
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         std::cout << numHessianVec[i + n * j] << "   ";
+      }
+      std::cout << "\n";
+   }
+#endif
 }
 )";
 }
@@ -494,21 +739,71 @@ double RooEvaluatorWrapper::evaluate() const
    return _evaluator->run()[0];
 }
 
+bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
+{
+   // To make things easier for RooFit, we only support resetting with
+   // datasets that have the same structure, e.g. the same columns and global
+   // observables. This is anyway the usecase: resetting same-structured data
+   // when iterating over toys.
+   constexpr auto errMsg = "Error in RooAbsReal::setData(): only resetting with same-structured data is supported.";
+
+   _data = &data;
+   bool isInitializing = _paramSet.empty();
+   const std::size_t oldSize = _dataSpans.size();
+
+   std::stack<std::vector<double>>{}.swap(_vectorBuffers);
+   const bool isChi2 = _topNode->getAttribute("Chi2EvaluationActive");
+   bool skipZeroWeights = !isChi2 && (!_pdf || !_pdf->getAttribute("BinnedLikelihoodActive"));
+   auto simPdf = dynamic_cast<RooSimultaneous const *>(_pdf);
+   _dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, simPdf, skipZeroWeights,
+                                                           _takeGlobalObservablesFromData, _vectorBuffers);
+   if (_rangeName.empty()) {
+      validateObservableRanges(_pdf, *_data, _dataSpans);
+   }
+   if (!isInitializing && _dataSpans.size() != oldSize) {
+      coutE(DataHandling) << errMsg << std::endl;
+      throw std::runtime_error(errMsg);
+   }
+   for (auto const &item : _dataSpans) {
+      const char *name = item.first->GetName();
+      _evaluator->setInput(name, item.second, false);
+      if (_paramSet.find(name)) {
+         coutE(DataHandling) << errMsg << std::endl;
+         throw std::runtime_error(errMsg);
+      }
+   }
+   if (_funcWrapper) {
+      _funcWrapper->loadData(*_data, simPdf, _rangeName, skipZeroWeights);
+   }
+   return true;
+}
+
 void RooEvaluatorWrapper::createFuncWrapper()
 {
    // Get the parameters.
    RooArgSet paramSet;
    this->getParameters(_data ? _data->get() : nullptr, paramSet, /*sripDisconnectedParams=*/false);
 
-   _funcWrapper =
-      std::make_unique<RooFuncWrapper>(*_topNode, _data, dynamic_cast<RooSimultaneous const *>(_pdf), paramSet);
+   const bool isChi2 = _topNode->getAttribute("Chi2EvaluationActive");
+   const bool skipZeroWeights = !isChi2 && (!_pdf || !_pdf->getAttribute("BinnedLikelihoodActive"));
+   _funcWrapper = std::make_unique<RooFuncWrapper>(*_topNode, _data, dynamic_cast<RooSimultaneous const *>(_pdf),
+                                                   paramSet, _rangeName, skipZeroWeights);
 }
 
 void RooEvaluatorWrapper::generateGradient()
 {
    if (!_funcWrapper)
       createFuncWrapper();
-   _funcWrapper->createGradient();
+   if (!_funcWrapper->hasGradient())
+      _funcWrapper->createGradient();
+}
+
+void RooEvaluatorWrapper::generateHessian()
+{
+   if (!_funcWrapper)
+      createFuncWrapper();
+   if (!_funcWrapper->hasHessian())
+      _funcWrapper->createHessian();
 }
 
 void RooEvaluatorWrapper::setUseGeneratedFunctionCode(bool flag)
@@ -523,17 +818,30 @@ void RooEvaluatorWrapper::gradient(double *out) const
    _funcWrapper->gradient(out);
 }
 
+void RooEvaluatorWrapper::hessian(double *out) const
+{
+   _funcWrapper->hessian(out);
+}
+
 bool RooEvaluatorWrapper::hasGradient() const
 {
-   if (!_funcWrapper)
-      return false;
-   return _funcWrapper->hasGradient();
+   return _funcWrapper && _funcWrapper->hasGradient();
+}
+
+bool RooEvaluatorWrapper::hasHessian() const
+{
+   return _funcWrapper && _funcWrapper->hasHessian();
 }
 
 void RooEvaluatorWrapper::writeDebugMacro(std::string const &filename) const
 {
    if (_funcWrapper)
       return _funcWrapper->writeDebugMacro(filename);
+}
+
+std::unique_ptr<ChangeOperModeRAII> RooEvaluatorWrapper::setOperModes(RooAbsArg::OperMode opMode)
+{
+   return _evaluator->setOperModes(opMode);
 }
 
 } // namespace RooFit::Experimental

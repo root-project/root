@@ -10,13 +10,16 @@
 
 /** \class RooHistConstraint
  * \ingroup Roofit
+ *
+ * \deprecated RooHistConstraint will be removed in ROOT 6.46, because its functionality is too close to the
+ * HistFactory classes. Please constrain the parameters of the HistFactory class ParamHistFunc with one RooPoisson
+ * per bin instead, as shown in the rf709_BarlowBeeston tutorial.
+ *
  * The RooHistConstraint implements constraint terms for a binned PDF with statistical uncertainties.
  * Following the Barlow-Beeston method, it adds Poisson constraints for each bin that
  * constrain the statistical uncertainty of the template histogram.
  *
  * It can therefore be used to estimate the Monte Carlo uncertainty of a fit.
- *
- * Check also the tutorial rf709_BarlowBeeston.C
  *
  */
 
@@ -27,6 +30,15 @@
 
 #include <Math/PdfFuncMathCore.h>
 
+// RooHistConstraint is deprecated together with RooParamHistFunc, which it is
+// built on, so its implementation necessarily refers to the deprecated class.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new RooHistConstraint.
@@ -60,11 +72,11 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
 
     // Now populate nominal with parameters
     for (int i=0 ; i<phf->_dh.numEntries() ; i++) {
-      phf->_dh.get(i) ;
-      if (phf->_dh.weight()<threshold && phf->_dh.weight() != 0.) {
+      const double wi = phf->_dh.weight(i) ;
+      if (wi<threshold && wi != 0.) {
         const char* vname = Form("%s_nominal_bin_%i",GetName(),i) ;
         auto var = std::make_unique<RooRealVar>(vname,vname,0,1.E30);
-        var->setVal(phf->_dh.weight()) ;
+        var->setVal(wi) ;
         var->setConstant(true);
 
         auto gamma = static_cast<RooRealVar*>(phf->_p.at(i));
@@ -219,3 +231,9 @@ double RooHistConstraint::getLogVal(const RooArgSet* /*set*/) const
 
    return sum ;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif

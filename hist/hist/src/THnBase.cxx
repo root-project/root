@@ -71,7 +71,7 @@ THnBase::THnBase(const char* name, const char* title, const std::vector<TAxis>& 
   size_t i{};
   for (auto& a: axes)
     fAxes.AddAtAndExpand(a.Clone(), i++);
-  // Assuming SetTitle is done by TNamed.
+  SetTitleImpl(title, false);
   fAxes.SetOwner();
 }
 
@@ -1201,6 +1201,29 @@ void THnBase::SetBinEdges(Int_t idim, const Double_t* bins)
    axis->Set(axis->GetNbins(), bins);
 }
 
+
+void THnBase::SetTitleImpl(const char *title, bool overrideAxesTitle) {
+   TString titleStr = title;
+   titleStr.ReplaceAll("#;",2,"#semicolon",10);
+
+   Ssiz_t from = 0;
+   titleStr.Tokenize(fTitle, from, ";");
+   fTitle.ReplaceAll("#semicolon", 10, ";", 1);
+
+   TString axisTitle;
+   Int_t dim = 0;
+   while(titleStr.Tokenize(axisTitle, from, ";")) {
+      if (dim == fNdimensions) {
+         ::Error("THnBase::SetTitle", "Trying to assign a title to axis %d for a %d-dimensional histogram.", dim + 1, fNdimensions);
+         break;
+      }
+      if (overrideAxesTitle || (strlen(GetAxis(dim)->GetTitle()) == 0 && !overrideAxesTitle)) {
+         GetAxis(dim)->SetTitle(axisTitle);
+      }
+      dim++;
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Change (i.e. set) the title.
 ///
@@ -1213,32 +1236,7 @@ void THnBase::SetBinEdges(Int_t idim, const Double_t* bins)
 
 void THnBase::SetTitle(const char *title)
 {
-   fTitle = title;
-   fTitle.ReplaceAll("#;",2,"#semicolon",10);
-
-   Int_t endHistTitle = fTitle.First(';');
-   if (endHistTitle >= 0) {
-      // title contains a ';' so parse the axis titles
-      Int_t posTitle = endHistTitle + 1;
-      Int_t lenTitle = fTitle.Length();
-      Int_t dim = 0;
-      while (posTitle > 0 && posTitle < lenTitle && dim < fNdimensions){
-         Int_t endTitle = fTitle.Index(";", posTitle);
-         TString axisTitle = fTitle(posTitle, endTitle - posTitle);
-         axisTitle.ReplaceAll("#semicolon", 10, ";", 1);
-         GetAxis(dim)->SetTitle(axisTitle);
-         dim++;
-         if (endTitle > 0)
-            posTitle = endTitle + 1;
-         else
-            posTitle = -1;
-      }
-      // Remove axis titles from histogram title
-      fTitle.Remove(endHistTitle, lenTitle - endHistTitle);
-   }
-
-   fTitle.ReplaceAll("#semicolon", 10, ";", 1);
-
+   SetTitleImpl(title, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

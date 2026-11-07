@@ -37,24 +37,27 @@ namespace {
  * Used to track LoadClusters calls triggered by ClusterPool::GetCluster
  */
 class RPageSourceMock : public RPageSource {
+   std::uint32_t fSzPageList = 0;
+   std::unique_ptr<unsigned char[]> fBufPageList;
+
 protected:
    void LoadStructureImpl() final {}
-   RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode) final { return RNTupleDescriptor(); }
-   std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
-   void LoadStreamerInfo() final {}
-
-public:
-   /// Records the cluster IDs requests by LoadClusters() calls
-   std::vector<ROOT::DescriptorId_t> fReqsClusterIds;
-   std::vector<RCluster::ColumnSet_t> fReqsColumns;
-
-   RPageSourceMock() : RPageSource("test", RNTupleReadOptions())
+   RNTupleDescriptor AttachImpl() final
    {
       ROOT::Internal::RNTupleDescriptorBuilder descBuilder;
       // Should set the version from the anchor; here it is fine to use the same version as for writing.
       descBuilder.SetVersionForWriting();
       descBuilder.SetNTuple("ntpl", "");
+      descBuilder.AddField(ROOT::Internal::RFieldDescriptorBuilder()
+                              .FieldId(0)
+                              .FieldName("")
+                              .Structure(ROOT::ENTupleStructure::kRecord)
+                              .MoveDescriptor()
+                              .Unwrap());
+
+      auto ctx = RNTupleSerializer::SerializeHeader(nullptr, descBuilder.GetDescriptor()).Unwrap();
+
+      std::vector<ROOT::DescriptorId_t> physClusterIDs;
       for (unsigned i = 0; i <= 5; ++i) {
          descBuilder.AddCluster(ROOT::Internal::RClusterDescriptorBuilder()
                                    .ClusterId(i)
@@ -62,15 +65,45 @@ public:
                                    .NEntries(1)
                                    .MoveDescriptor()
                                    .Unwrap());
+         physClusterIDs.emplace_back(ctx.MapClusterId(i));
       }
+
+      fSzPageList =
+         RNTupleSerializer::SerializePageList(nullptr, descBuilder.GetDescriptor(), physClusterIDs, ctx).Unwrap();
+      fBufPageList = MakeUninitArray<unsigned char>(fSzPageList);
+      RNTupleSerializer::SerializePageList(fBufPageList.get(), descBuilder.GetDescriptor(), physClusterIDs, ctx);
+      RNTupleLocator locator;
+      locator.SetNBytesOnStorage(fSzPageList);
+
       ROOT::Internal::RClusterGroupDescriptorBuilder cgBuilder;
+      cgBuilder.PageListLocator(locator).PageListLength(fSzPageList);
       cgBuilder.ClusterGroupId(0).MinEntry(0).EntrySpan(6).NClusters(6);
       cgBuilder.AddSortedClusters({0, 1, 2, 3, 4, 5});
       descBuilder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
-      auto descriptorGuard = GetExclDescriptorGuard();
-      descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
+
+      // We need to return a descriptor without clusters
+      auto desc = descBuilder.MoveDescriptor();
+      desc.DropClusterGroupDetails(0);
+      return desc;
    }
-   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::RNTupleLocalIndex, RSealedPage &) final {}
+   std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
+   void LoadPageListImpl(const ROOT::RNTupleLocator &, unsigned char *buf) final
+   {
+      memcpy(buf, fBufPageList.get(), fSzPageList);
+   }
+   void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
+   std::unique_ptr<ROOT::Internal::RPageSource>
+   OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &, const ROOT::RNTupleReadOptions &) final
+   {
+      throw ROOT::RException(R__FAIL("method not implemented"));
+   }
+
+public:
+   /// Records the cluster IDs requests by LoadClusters() calls
+   std::vector<ROOT::DescriptorId_t> fReqsClusterIds;
+   std::vector<RCluster::ColumnSet_t> fReqsColumns;
+
+   RPageSourceMock() : RPageSource("test", RNTupleReadOptions()) {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final
    {
       std::vector<std::unique_ptr<RCluster>> result;
@@ -198,6 +231,7 @@ TEST(Cluster, AdoptClusters)
 TEST(ClusterPool, GetClusterBasics)
 {
    RPageSourceMock p1;
+   p1.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
    c1.WaitForInFlightClusters();
@@ -208,6 +242,7 @@ TEST(ClusterPool, GetClusterBasics)
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[1]);
 
    RPageSourceMock p2;
+   p2.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    {
       RClusterPool c2(p2, 2);
       c2.GetCluster(0, {0});
@@ -224,6 +259,7 @@ TEST(ClusterPool, GetClusterBasics)
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[3]);
 
    RPageSourceMock p3;
+   p3.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    {
       RClusterPool c3(p3, 2);
       c3.GetCluster(0, {0});
@@ -237,6 +273,7 @@ TEST(ClusterPool, GetClusterBasics)
    EXPECT_EQ(3U, p3.fReqsClusterIds[3]);
 
    RPageSourceMock p4;
+   p4.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    {
       RClusterPool c4(p4, 3);
       c4.GetCluster(2, {0});
@@ -252,6 +289,7 @@ TEST(ClusterPool, GetClusterBasics)
 TEST(ClusterPool, SetEntryRange)
 {
    RPageSourceMock p1;
+   p1.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    p1.SetEntryRange({0, 6});
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
@@ -261,6 +299,7 @@ TEST(ClusterPool, SetEntryRange)
    EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
 
    RPageSourceMock p2;
+   p2.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    p2.SetEntryRange({3, 1});
    RClusterPool c2(p2, 1);
    c2.GetCluster(3, {0});
@@ -269,6 +308,7 @@ TEST(ClusterPool, SetEntryRange)
    EXPECT_EQ(3U, p2.fReqsClusterIds[0]);
 
    RPageSourceMock p3;
+   p3.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    p3.SetEntryRange({0, 1});
    RClusterPool c3(p3, 1);
    c3.GetCluster(3, {0});
@@ -277,6 +317,7 @@ TEST(ClusterPool, SetEntryRange)
    EXPECT_EQ(3U, p3.fReqsClusterIds[0]);
 
    RPageSourceMock p4;
+   p4.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    p4.SetEntryRange({0, 3});
    RClusterPool c4(p4, 2);
    c4.GetCluster(0, {0});
@@ -290,6 +331,7 @@ TEST(ClusterPool, SetEntryRange)
 TEST(ClusterPool, GetClusterIncrementally)
 {
    RPageSourceMock p1;
+   p1.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
    c1.WaitForInFlightClusters();
@@ -302,6 +344,39 @@ TEST(ClusterPool, GetClusterIncrementally)
    ASSERT_EQ(4U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[2]);
    EXPECT_EQ(RCluster::ColumnSet_t({1}), p1.fReqsColumns[2]);
+}
+
+TEST(ClusterPool, PinCluster)
+{
+   RPageSourceMock p1;
+   p1.Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
+   RClusterPool c1(p1, 1);
+   p1.PinCluster(3);
+   c1.GetCluster(3, {0});
+   c1.WaitForInFlightClusters();
+   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
+   EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
+
+   p1.PinCluster(0);
+   c1.GetCluster(0, {0});
+   c1.WaitForInFlightClusters();
+   ASSERT_EQ(4U, p1.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
+   EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
+   EXPECT_EQ(0U, p1.fReqsClusterIds[2]);
+   EXPECT_EQ(1U, p1.fReqsClusterIds[3]);
+
+   p1.UnpinCluster(0);
+   p1.PinCluster(1);
+   c1.GetCluster(1, {0});
+   c1.WaitForInFlightClusters();
+   ASSERT_EQ(5U, p1.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
+   EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
+   EXPECT_EQ(0U, p1.fReqsClusterIds[2]);
+   EXPECT_EQ(1U, p1.fReqsClusterIds[3]);
+   EXPECT_EQ(2U, p1.fReqsClusterIds[4]);
 }
 
 TEST(PageStorageFile, LoadClusters)

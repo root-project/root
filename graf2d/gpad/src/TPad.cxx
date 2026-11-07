@@ -14,9 +14,11 @@
 #include <iostream>
 #include <locale>
 #include <memory>
+#include <cmath>
 
 #include "TROOT.h"
 #include "TBuffer.h"
+#include "TBoxInteractive.h"
 #include "TError.h"
 #include "TMath.h"
 #include "TSystem.h"
@@ -29,7 +31,6 @@
 #include "TBaseClass.h"
 #include "TClassTable.h"
 #include "TVirtualPS.h"
-#include "TVirtualX.h"
 #include "TVirtualViewer3D.h"
 #include "TView.h"
 #include "TPoint.h"
@@ -46,10 +47,12 @@
 #include "TMethod.h"
 #include "TDataType.h"
 #include "TFrame.h"
+#include "TWbox.h"
 #include "TExec.h"
 #include "TDatime.h"
 #include "TColor.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
 #include "TImage.h"
@@ -59,9 +62,10 @@
 #include "TAtt3D.h"
 #include "TVirtualPadPainter.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
 #include "TVirtualMutex.h"
+
+#include <cstdio>
 
 static Int_t gReadLevel = 0;
 
@@ -123,6 +127,70 @@ see classes
 A Pad supports linear and log scales coordinate systems.
 The transformation coefficients are explained in TPad::ResizePad.
 */
+
+class TPadDrawOperation {
+
+   public:
+      enum EKind { drawLine, drawFill, drawMarker };
+
+      template<typename T>
+      TPadDrawOperation(Int_t n, T *x, T *y, EKind kind, Int_t arg = 1, Bool_t ndc = kFALSE)
+      {
+         fX.assign(x, x + n);
+         fY.assign(y, y + n);
+         fKind = kind;
+         fArg = arg; // operation arg like line width
+         fNDC = ndc;
+      }
+      virtual ~TPadDrawOperation() = default;
+
+      void Draw(TPad &pad, TVirtualPadPainter *pp, Bool_t withXor)
+      {
+         auto doFill = [pp, withXor](Int_t n, Double_t *xx, Double_t *yy) {
+            Color_t col = kBlack;
+            if (!withXor)
+               col = TColor::GetColor(0, 0, 0, 0.25);
+            pp->SetAttFill({col, 1001});
+            pp->DrawFillArea(n, xx, yy);
+         };
+
+         if (fKind == drawFill)
+            doFill(fX.size(), fX.data(), fY.data());
+         else if (fKind == drawLine) {
+            pp->SetAttLine({kBlack, 1, (Width_t)fArg});
+            if (fNDC)
+               pp->DrawPolyLineNDC(fX.size(), fX.data(), fY.data());
+            else
+               pp->DrawPolyLine(fX.size(), fX.data(), fY.data());
+         } else {
+            Double_t dx = (pad.GetX2() - pad.GetX1()) / pad.GetPadWidth() * 5;
+            Double_t dy = (pad.GetY2() - pad.GetY1()) / pad.GetPadHeight() * 5;
+
+            for (std::size_t i = 0; i < fX.size(); ++i) {
+               Double_t mx = fX[i], my = fY[i];
+               if (!fArg) {
+                  // fill diamond
+                  Double_t xc[5] = { mx, mx + dx, mx, mx - dx, mx };
+                  Double_t yc[5] = { my - dy, my, my + dy, my, my - dy };
+                  doFill(5, xc, yc);
+               } else {
+                  // rectangle
+                  pp->SetAttLine({kBlack, 1, (Width_t)fArg});
+                  Double_t xl[5] = { mx - dx, mx + dx, mx + dx, mx - dx, mx - dx };
+                  Double_t yl[5] = { my - dy, my - dy, my + dy, my + dy, my - dy };
+                  pp->DrawPolyLine(5, xl, yl);
+               }
+            }
+         }
+      }
+
+   protected:
+      std::vector<Double_t> fX, fY;
+      EKind fKind = drawLine;
+      Int_t fArg = 1;
+      Bool_t fNDC = kFALSE;
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pad default constructor.
@@ -403,7 +471,7 @@ TPad::~TPad()
 /// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
 ///
 /// ~~~{.cpp}
-/// auto c1 = new TCanvas("c1","Canvas with subpoads", 600, 600);
+/// auto c1 = new TCanvas("c1","Canvas with subpads", 600, 600);
 /// c1->Divide(2,2);
 ///
 /// for (Int_t n = 1; n <= 4; ++n) {
@@ -505,14 +573,12 @@ void TPad::AddExec(const char *name, const char *command)
 
 void TPad::AutoExec()
 {
+   TIter next(fExecs);
+   while (auto exec = static_cast<TExec *>(next()))
+      exec->Exec();
+
    if (GetCrosshair())
       DrawCrosshair();
-
-   if (!fExecs)
-      return;
-   TIter next(fExecs);
-   while (auto exec = (TExec*)next())
-      exec->Exec();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -741,8 +807,10 @@ void TPad::Clear(Option_t *option)
       getchar();
    }
 
-   if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
-   if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
+   auto pp = GetPainter();
+   // If pad painter uses PS, TPad::Clear() start new page
+   if (pp && pp->GetPS())
+      pp->NewPage();
 
    PaintBorder(GetFillColor(), kTRUE);
    fCrosshairPos = 0;
@@ -1140,10 +1208,12 @@ void TPad::CopyPixmap()
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
 
-   if (fPixmapID != -1 && GetPainter())
-      GetPainter()->CopyDrawable(fPixmapID, px, py);
+   if (fPixmapID != -1)
+      if (auto pp = GetPainter())
+         pp->CopyDrawable(fPixmapID, px, py);
 
-   if (this == gPad) HighLight(gPad->GetHighLightColor());
+   // if pixmap copied, stored XOR operations are no longer valid
+   fDrawOperXor.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1151,14 +1221,18 @@ void TPad::CopyPixmap()
 
 void TPad::CopyPixmaps()
 {
-   if (!fPrimitives) fPrimitives = new TList;
-   TIter    next(GetListOfPrimitives());
+   if (!fPrimitives)
+      fPrimitives = new TList;
+   TIter next(GetListOfPrimitives());
    while (auto obj = next()) {
-      if (obj->InheritsFrom(TPad::Class())) {
-         ((TPad*)obj)->CopyPixmap();
-         ((TPad*)obj)->CopyPixmaps();
+      if (auto pad = dynamic_cast<TPad*>(obj)) {
+         pad->CopyPixmap();
+         pad->CopyPixmaps();
       }
    }
+
+   if (this == gPad)
+      HighLight(GetHighLightColor());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1744,44 +1818,50 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 
 void TPad::DrawCrosshair()
 {
-   if (!gPad || (gPad->GetEvent() == kMouseEnter)) return;
+   if (!gPad || (gPad->GetEvent() == kMouseEnter))
+      return;
 
-   TPad *cpad = (TPad*)gPad;
-   TCanvas *canvas = cpad->GetCanvas();
-   canvas->FeedbackMode(kTRUE);
+   auto cpad = static_cast<TPad *>(gPad);
+   auto canvas = cpad->GetCanvas();
 
-   //erase old position and draw a line at current position
-   Int_t pxmin,pxmax,pymin,pymax,px,py;
-#ifndef R__HAS_COCOA
-   Int_t pxold = fCrosshairPos%10000;
-   Int_t pyold = fCrosshairPos/10000;
-#endif // R__HAS_COCOA
-   px    = cpad->GetEventX();
-   py    = cpad->GetEventY()+1;
-   if (canvas->GetCrosshair() > 1) {  //crosshair only in the current pad
-      pxmin = cpad->XtoAbsPixel(fX1);
-      pxmax = cpad->XtoAbsPixel(fX2);
-      pymin = cpad->YtoAbsPixel(fY1);
-      pymax = cpad->YtoAbsPixel(fY2);
-   } else { //default; crosshair spans the full canvas
-      pxmin = 0;
-      pxmax = canvas->GetWw();
-      pymin = 0;
-      pymax = cpad->GetWh();
-   }
-#ifndef R__HAS_COCOA
-   // Not needed, no XOR with Cocoa.
-   if(pxold) gVirtualX->DrawLine(pxold,pymin,pxold,pymax);
-   if(pyold) gVirtualX->DrawLine(pxmin,pyold,pxmax,pyold);
-#endif // R__HAS_COCOA
-   if (cpad->GetEvent() == kButton1Down ||
-       cpad->GetEvent() == kButton1Up   ||
-       cpad->GetEvent() == kMouseLeave) {
+   if (cpad->GetEvent() == kButton1Down || cpad->GetEvent() == kButton1Up || cpad->GetEvent() == kMouseLeave) {
+      if (fCrosshairPos)
+         UpdateAsync();
       fCrosshairPos = 0;
       return;
    }
-   gVirtualX->DrawLine(px,pymin,px,pymax);
-   gVirtualX->DrawLine(pxmin,py,pxmax,py);
+
+   //erase old position and draw a line at current position
+   Double_t umin, umax, vmin, vmax;
+   Int_t px    = cpad->GetEventX();
+   Int_t py    = cpad->GetEventY() + 1;
+   if (canvas->GetCrosshair() > 1) {
+      //crosshair only in the current pad
+      umin = GetAbsXlowNDC();
+      umax = GetAbsXlowNDC() + GetAbsWNDC();
+      vmin = GetAbsYlowNDC();
+      vmax = GetAbsYlowNDC() + GetAbsHNDC();
+   } else {
+      //default; crosshair spans the full canvas
+      umin = 0;
+      umax = 1;
+      vmin = 0;
+      vmax = 1;
+   }
+
+   TAttLine att(kBlack, 1, 1);
+   att.ModifyOn(*this);
+
+   Double_t uu[2], vv[2];
+   uu[0] = umin; uu[1] = umax;
+   vv[0] = vv[1] = 1. - 1. * py / canvas->GetWh();
+   canvas->PaintPolyLineNDC(2, uu, vv, "icrosshair1");
+   uu[0] = uu[1] = 1. * px / canvas->GetWw();
+   vv[0] = vmin; vv[1] = vmax;
+   canvas->PaintPolyLineNDC(2, uu, vv, "icrosshair2");
+
+   UpdateAsync();
+   // just indication that crosshair was drawn before
    fCrosshairPos = px + 10000*py;
 }
 
@@ -1918,42 +1998,25 @@ void TPad::DrawColorTable()
 ///
 /// \image html gpad_pad4.png
 ///
-/// Note that this function duplicates on purpose the functionality
-/// already implemented in TBox::ExecuteEvent.
-/// If somebody modifies this function, may be similar changes should also
-/// be applied to TBox::ExecuteEvent.
+/// Note that this function reuses internal TBoxInteractive class
+/// designed for TBox movement avoiding code duplication
 
 void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   const Int_t kMaxDiff = 5;
-   const Int_t kMinSize = 20;
-   static Int_t pxorg, pyorg;
-   static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
-   static Int_t px1p, px2p, py1p, py2p, pxlp, pylp, pxtp, pytp;
-   static Bool_t pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE;
-   Int_t  wx, wy;
-   Bool_t opaque  = OpaqueMoving();
-   Bool_t ropaque = OpaqueResizing();
-   Bool_t fixedr  = HasFixedAspectRatio();
-
-   if (!IsEditable() && event != kMouseEnter) return;
-   TVirtualPad  *parent = GetMother();
-   if (!parent->IsEditable()) return;
+   if (!IsEditable() && event != kMouseEnter)
+      return;
+   TVirtualPad  &parent = *GetMother();
+   if (!parent.IsEditable())
+      return;
 
    HideToolTip(event);
 
    if (fXlowNDC < 0 && event != kButton1Down) return;
    if (fYlowNDC < 0 && event != kButton1Down) return;
 
-   // keep old mouse position
-   if (event == kButton1Down) {
-      pxorg = px;
-      pyorg = py;
-   }
-
    Int_t newcode = gROOT->GetEditorMode();
    if (newcode)
-      pA = pB = pC = pD = pTop = pL = pR = pBot = pINSIDE = kFALSE;
+      parent.FreeInteractive(this); // delete any interactive object
    switch (newcode) {
       case kPad:
          TCreatePrimitives::Pad(event,px,py,0);
@@ -1996,8 +2059,32 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          return;
       default:
          break;
-      }
-      if (newcode) return;
+   }
+   if (newcode)
+      return;
+
+   auto inter = parent.GetInteractive<TBoxInteractive>(this);
+
+   auto setNewValues = [&inter, &parent, this]() {
+      // Get parent corners pixels coordinates
+      Int_t parentpx1 = parent.XtoAbsPixel(parent.GetX1());
+      Int_t parentpx2 = parent.XtoAbsPixel(parent.GetX2());
+      Int_t parentpy1 = parent.YtoAbsPixel(parent.GetY1());
+      Int_t parentpy2 = parent.YtoAbsPixel(parent.GetY2());
+
+      // Get pad new corners pixels coordinates
+      Int_t apx1 = TMath::Max(inter->px1, parentpx1);
+      Int_t apx2 = TMath::Min(inter->px2, parentpx2);
+      Int_t apy1 = TMath::Min(inter->py1, parentpy1);
+      Int_t apy2 = TMath::Max(inter->py2, parentpy2);
+
+      // Compute new pad positions in the NDC space of parent
+      fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
+      fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
+      fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
+      fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
+   };
+
 
    switch (event) {
 
@@ -2008,455 +2095,76 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
-
       fXUpNDC = fXlowNDC + fWNDC;
       fYUpNDC = fYlowNDC + fHNDC;
-
-      GetPainter()->SetLineColor(-1);
-      TAttLine::Modify();  //Change line attributes only if necessary
-      if (GetFillColor())
-         GetPainter()->SetLineColor(GetFillColor());
-      else
-         GetPainter()->SetLineColor(1);
-      GetPainter()->SetLineWidth(2);
-
+      inter = parent.MakeInteractive<TBoxInteractive>(this, kFALSE, fXlowNDC, fYlowNDC, fWNDC, fHNDC);
       // No break !!!
 
-   case kMouseMotion:
+   case kMouseMotion: {
+      TBoxInteractive dummy(kFALSE);
+      if (!inter) inter = &dummy;
+      // use pad itself to calculate its pixel coordinates
+      inter->CalcPixelCoord(*this, GetX1(), GetY1(), GetX2(), GetY2());
 
-      px1 = XtoAbsPixel(fX1);
-      py1 = YtoAbsPixel(fY1);
-      px2 = XtoAbsPixel(fX2);
-      py2 = YtoAbsPixel(fY2);
-
-      if (px1 < px2) {
-         pxl = px1;
-         pxt = px2;
+      if (TestBit(kCannotMove) || !inter->SelectCorner(px, py)) {
+         // refuse interactive changes
+         parent.FreeInteractive(this);
       } else {
-         pxl = px2;
-         pxt = px1;
+         inter->SetCursor(parent, event == kButton1Down);
+         fResizing = inter->IsResizing() && (event != kMouseMotion);
       }
-      if (py1 < py2) {
-         pyl = py1;
-         pyt = py2;
-      } else {
-         pyl = py2;
-         pyt = py1;
-      }
-
-      px1p = parent->XtoAbsPixel(parent->GetX1()) + parent->GetBorderSize();
-      py1p = parent->YtoAbsPixel(parent->GetY1()) - parent->GetBorderSize();
-      px2p = parent->XtoAbsPixel(parent->GetX2()) - parent->GetBorderSize();
-      py2p = parent->YtoAbsPixel(parent->GetY2()) + parent->GetBorderSize();
-
-      if (px1p < px2p) {
-         pxlp = px1p;
-         pxtp = px2p;
-      } else {
-         pxlp = px2p;
-         pxtp = px1p;
-      }
-      if (py1p < py2p) {
-         pylp = py1p;
-         pytp = py2p;
-      } else {
-         pylp = py2p;
-         pytp = py1p;
-      }
-
-      pA = pB = pC = pD = pTop = pL = pR = pBot = pINSIDE = kFALSE;
-
-                                                         // case pA
-      if (TMath::Abs(px - pxl) <= kMaxDiff && TMath::Abs(py - pyl) <= kMaxDiff) {
-         pxold = pxl; pyold = pyl; pA = kTRUE;
-         SetCursor(kTopLeft);
-      }
-                                                         // case pB
-      if (TMath::Abs(px - pxt) <= kMaxDiff && TMath::Abs(py - pyl) <= kMaxDiff) {
-         pxold = pxt; pyold = pyl; pB = kTRUE;
-         SetCursor(kTopRight);
-      }
-                                                         // case pC
-      if (TMath::Abs(px - pxt) <= kMaxDiff && TMath::Abs(py - pyt) <= kMaxDiff) {
-         pxold = pxt; pyold = pyt; pC = kTRUE;
-         SetCursor(kBottomRight);
-      }
-                                                         // case pD
-      if (TMath::Abs(px - pxl) <= kMaxDiff && TMath::Abs(py - pyt) <= kMaxDiff) {
-         pxold = pxl; pyold = pyt; pD = kTRUE;
-         SetCursor(kBottomLeft);
-      }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          TMath::Abs(py - pyl) < kMaxDiff) {             // top edge
-         pxold = pxl; pyold = pyl; pTop = kTRUE;
-         SetCursor(kTopSide);
-      }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          TMath::Abs(py - pyt) < kMaxDiff) {             // bottom edge
-         pxold = pxt; pyold = pyt; pBot = kTRUE;
-         SetCursor(kBottomSide);
-      }
-
-      if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-          TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
-         pxold = pxl; pyold = pyl; pL = kTRUE;
-         SetCursor(kLeftSide);
-      }
-
-      if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-         TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
-         pxold = pxt; pyold = pyt; pR = kTRUE;
-         SetCursor(kRightSide);
-      }
-
-      if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          (py > pyl+kMaxDiff && py < pyt-kMaxDiff)) {    // inside box
-         pxold = px; pyold = py; pINSIDE = kTRUE;
-         if (event == kButton1Down)
-            SetCursor(kMove);
-         else
-            SetCursor(kCross);
-      }
-
-      fResizing = kFALSE;
-      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
-         fResizing = kTRUE;
-
-      if (!pA && !pB && !pC && !pD && !pTop && !pL && !pR && !pBot && !pINSIDE)
-         SetCursor(kCross);
 
       break;
+   }
 
    case kArrowKeyRelease:
-   case kButton1Motion:
+   case kButton1Motion: {
+      if (!inter)
+         return;
 
-      if (TestBit(kCannotMove)) break;
-      wx = wy = 0;
+      Double_t ratio = HasFixedAspectRatio() ? fAspectRatio : 0.;
 
-      if (pA) {
-         if (!ropaque) gVirtualX->DrawBox(pxold, pyt, pxt, pyold, TVirtualX::kHollow);
-         if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
-         if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
-         if (px < pxlp) { px = pxlp; wx = px; }
-         if (py < pylp) { py = pylp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxt-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyt - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < pylp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
+      if (!inter->ProcessMouseMove(parent, px, py, kTRUE, kTRUE, ratio))
+         return;
 
-            wx = wy = 0;
-         }
-         if (!ropaque) gVirtualX->DrawBox(px, pyt, pxt, py, TVirtualX::kHollow);
-      }
-      if (pB) {
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, pxold, pyold, TVirtualX::kHollow);
-         if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
-         if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
-         if (px > pxtp) { px = pxtp; wx = px; }
-         if (py < pylp) { py = pylp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxl-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyt - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < pylp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
+      // paint if necessary
+      inter->ApplyChanges(parent);
 
-            wx = wy = 0;
-         }
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, px ,  py,    TVirtualX::kHollow);
-      }
-      if (pC) {
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyl, pxold, pyold, TVirtualX::kHollow);
-         if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
-         if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
-         if (px > pxtp) { px = pxtp; wx = px; }
-         if (py > pytp) { py = pytp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxl-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyl + TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 > pytp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
-         }
-         if (!ropaque) gVirtualX->DrawBox(pxl, pyl, px, py, TVirtualX::kHollow);
-      }
-      if (pD) {
-         if (!ropaque) gVirtualX->DrawBox(pxold, pyold, pxt, pyl, TVirtualX::kHollow);
-         if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
-         if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
-         if (px < pxlp) { px = pxlp; wx = px; }
-         if (py > pytp) { py = pytp; wy = py; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(pxt-px))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = pyl + TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 > pytp) {
-               px = pxold;
-               py = pyold;
-            } else
-               py = npy2;
-
-            wx = wy = 0;
-         }
-         if (!ropaque) gVirtualX->DrawBox(px, py, pxt, pyl, TVirtualX::kHollow);
-      }
-      if (pTop) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-         py2 += py - pyold;
-         if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
-         if (py2 < py2p) { py2 = py2p; wy = py2; }
-         if (fixedr) {
-            Double_t dx = Double_t(TMath::Abs(py2-py1))/parent->VtoPixel(0) *
-                          fAspectRatio;
-            Int_t npx2 = px1 + parent->UtoPixel(dx);
-            if (npx2 > px2p)
-               py2 -= py - pyold;
-            else
-               px2 = npx2;
-         }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-      }
-      if (pBot) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-         py1 += py - pyold;
-         if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
-         if (py1 > py1p) { py1 = py1p; wy = py1; }
-         if (fixedr) {
-            Double_t dx = Double_t(TMath::Abs(py2-py1))/parent->VtoPixel(0) *
-                          fAspectRatio;
-            Int_t npx2 = px1 + parent->UtoPixel(dx);
-            if (npx2 > px2p)
-               py1 -= py - pyold;
-            else
-               px2 = npx2;
-         }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-      }
-      if (pL) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-         px1 += px - pxold;
-         if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
-         if (px1 < px1p) { px1 = px1p; wx = px1; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(px2-px1))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = py1 - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < py2p)
-               px1 -= px - pxold;
-            else
-               py2 = npy2;
-         }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-      }
-      if (pR) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-         px2 += px - pxold;
-         if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
-         if (px2 > px2p) { px2 = px2p; wx = px2; }
-         if (fixedr) {
-            Double_t dy = Double_t(TMath::Abs(px2-px1))/parent->UtoPixel(1.) /
-                          fAspectRatio;
-            Int_t npy2 = py1 - TMath::Abs(parent->VtoAbsPixel(dy) -
-                                          parent->VtoAbsPixel(0));
-            if (npy2 < py2p)
-               px2 -= px - pxold;
-            else
-               py2 = npy2;
-         }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-      }
-      if (pINSIDE) {
-         if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the old box
-         Int_t dx = px - pxold;
-         Int_t dy = py - pyold;
-         px1 += dx; py1 += dy; px2 += dx; py2 += dy;
-         if (px1 < px1p) { dx = px1p - px1; px1 += dx; px2 += dx; wx = px+dx; }
-         if (px2 > px2p) { dx = px2 - px2p; px1 -= dx; px2 -= dx; wx = px-dx; }
-         if (py1 > py1p) { dy = py1 - py1p; py1 -= dy; py2 -= dy; wy = py-dy; }
-         if (py2 < py2p) { dy = py2p - py2; py1 += dy; py2 += dy; wy = py+dy; }
-         if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the new box
-      }
-
-      if (wx || wy) {
-         if (wx) px = wx;
-         if (wy) py = wy;
-         gVirtualX->Warp(px, py);
-      }
-
-      pxold = px;
-      pyold = py;
-
-      Double_t x1, y1, x2, y2;
-      x1 = x2 = y1 = y2 = 0;
-
-      if ((!fResizing && opaque) || (fResizing && ropaque)) {
-         if (pA) {
-            x1 = AbsPixeltoX(pxold);
-            y1 = AbsPixeltoY(pyt);
-            x2 = AbsPixeltoX(pxt);
-            y2 = AbsPixeltoY(pyold);
-         }
-         if (pB) {
-            x1 = AbsPixeltoX(pxl);
-            y1 = AbsPixeltoY(pyt);
-            x2 = AbsPixeltoX(pxold);
-            y2 = AbsPixeltoY(pyold);
-         }
-         if (pC) {
-            x1 = AbsPixeltoX(pxl);
-            y1 = AbsPixeltoY(pyold);
-            x2 = AbsPixeltoX(pxold);
-            y2 = AbsPixeltoY(pyl);
-         }
-         if (pD) {
-            x1 = AbsPixeltoX(pxold);
-            y1 = AbsPixeltoY(pyold);
-            x2 = AbsPixeltoX(pxt);
-            y2 = AbsPixeltoY(pyl);
-         }
-         if (pTop || pBot || pL || pR || pINSIDE) {
-            x1 = AbsPixeltoX(px1);
-            y1 = AbsPixeltoY(py1);
-            x2 = AbsPixeltoX(px2);
-            y2 = AbsPixeltoY(py2);
-         }
-
-         if (px != pxorg || py != pyorg) {
-
-            // Get parent corners pixels coordinates
-            Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
-            Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
-            Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
-            Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
-
-            // Get pad new corners pixels coordinates
-            Int_t apx1 = XtoAbsPixel(x1); if (apx1 < parentpx1) {apx1 = parentpx1; }
-            Int_t apx2 = XtoAbsPixel(x2); if (apx2 > parentpx2) {apx2 = parentpx2; }
-            Int_t apy1 = YtoAbsPixel(y1); if (apy1 > parentpy1) {apy1 = parentpy1; }
-            Int_t apy2 = YtoAbsPixel(y2); if (apy2 < parentpy2) {apy2 = parentpy2; }
-
-            // Compute new pad positions in the NDC space of parent
-            fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
-            fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
-            fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
-            fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
-         }
-
-         // Reset pad parameters and recompute conversion coefficients
+      if (inter->IsOpaque(parent)) {
+         setNewValues();
          ResizePad();
-
-         if (pINSIDE) gPad->ShowGuidelines(this, event);
-         if (pTop) gPad->ShowGuidelines(this, event, 't', true);
-         if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
-         if (pL) gPad->ShowGuidelines(this, event, 'l', true);
-         if (pR) gPad->ShowGuidelines(this, event, 'r', true);
-         if (pA) gPad->ShowGuidelines(this, event, '1', true);
-         if (pB) gPad->ShowGuidelines(this, event, '2', true);
-         if (pC) gPad->ShowGuidelines(this, event, '3', true);
-         if (pD) gPad->ShowGuidelines(this, event, '4', true);
-
+         parent.ShowGuidelines(this, event, inter->GetGuideChar(), true);
          Modified(kTRUE);
       }
 
       break;
+   }
 
    case kButton1Up:
+      if (inter && inter->IsOpaque(parent))
+         parent.ShowGuidelines(this, event);
 
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         break;
-      }
-
-      if (opaque||ropaque) {
-         ShowGuidelines(this, event);
-      } else {
-         x1 = x2 = y1 = y2 = 0;
-
-         if (pA) {
-            x1 = AbsPixeltoX(pxold);
-            y1 = AbsPixeltoY(pyt);
-            x2 = AbsPixeltoX(pxt);
-            y2 = AbsPixeltoY(pyold);
-         }
-         if (pB) {
-            x1 = AbsPixeltoX(pxl);
-            y1 = AbsPixeltoY(pyt);
-            x2 = AbsPixeltoX(pxold);
-            y2 = AbsPixeltoY(pyold);
-         }
-         if (pC) {
-            x1 = AbsPixeltoX(pxl);
-            y1 = AbsPixeltoY(pyold);
-            x2 = AbsPixeltoX(pxold);
-            y2 = AbsPixeltoY(pyl);
-         }
-         if (pD) {
-            x1 = AbsPixeltoX(pxold);
-            y1 = AbsPixeltoY(pyold);
-            x2 = AbsPixeltoX(pxt);
-            y2 = AbsPixeltoY(pyl);
-         }
-         if (pTop || pBot || pL || pR || pINSIDE) {
-            x1 = AbsPixeltoX(px1);
-            y1 = AbsPixeltoY(py1);
-            x2 = AbsPixeltoX(px2);
-            y2 = AbsPixeltoY(py2);
-         }
-
-         if (pA || pB || pC || pD || pTop || pL || pR || pBot)
+         if (inter && inter->IsOpaque(parent)) {
+            fXlowNDC = inter->oldX1;
+            fYlowNDC = inter->oldY1;
+            fWNDC = inter->oldX2;
+            fHNDC = inter->oldY2;
+            ResizePad();
             Modified(kTRUE);
 
-         gVirtualX->SetLineColor(-1);
-         gVirtualX->SetLineWidth(-1);
-
-         if (px != pxorg || py != pyorg) {
-
-            // Get parent corners pixels coordinates
-            Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
-            Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
-            Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
-            Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
-
-            // Get pad new corners pixels coordinates
-            Int_t apx1 = XtoAbsPixel(x1); if (apx1 < parentpx1) {apx1 = parentpx1; }
-            Int_t apx2 = XtoAbsPixel(x2); if (apx2 > parentpx2) {apx2 = parentpx2; }
-            Int_t apy1 = YtoAbsPixel(y1); if (apy1 > parentpy1) {apy1 = parentpy1; }
-            Int_t apy2 = YtoAbsPixel(y2); if (apy2 < parentpy2) {apy2 = parentpy2; }
-
-            // Compute new pad positions in the NDC space of parent
-            fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
-            fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
-            fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
-            fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
          }
-
-         // Reset pad parameters and recompute conversion coefficients
+      } else if (inter && !inter->IsOpaque(parent) && (inter->newX1 != inter->newX2)) {
+         setNewValues();
          ResizePad();
-
-
-         // emit signal
-         RangeChanged();
+         Modified(kTRUE);
       }
+
+      RangeChanged();
+
+      fResizing = kFALSE;
+      parent.FreeInteractive(this);
 
       break;
 
@@ -2466,7 +2174,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       while (true) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1, 1, px, py);
+         event = GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
@@ -2484,6 +2192,52 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+class TAxisInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   Int_t axisNumber = 1;
+   Double_t ratio1 = 1, ratio2 = 1;
+   Double_t px1old = 0, py1old = 0, px2old = 0, py2old = 0;
+
+   void PaintZoomBox(TPad &pad)
+   {
+      Double_t zbx1 = pad.GetUxmin();
+      Double_t zbx2 = pad.GetUxmax();
+      Double_t zby1 = pad.GetUymin();
+      Double_t zby2 = pad.GetUymax();
+      if (axisNumber == 1) {
+         zbx1 = px1old;
+         zbx2 = px2old;
+      } else {
+         zby1 = py1old;
+         zby2 = py2old;
+      }
+
+      if (pad.OpaqueMoving()) {
+         TAttLine{kBlack, 1, 1}.ModifyOn(pad);
+         Double_t xx[4], yy[4];
+
+         if (axisNumber == 1) {
+            xx[0] = xx[1] = zbx1;
+            xx[2] = xx[3] = zbx2;
+            yy[0] = yy[2] = zby1;
+            yy[1] = yy[3] = zby2;
+         } else {
+            xx[0] = xx[2] = zbx1;
+            xx[1] = xx[3] = zbx2;
+            yy[0] = yy[1] = zby1;
+            yy[2] = yy[3] = zby2;
+         }
+         pad.PaintPolyLine(2, xx, yy, "iaxiszoom1");
+         pad.PaintPolyLine(2, xx+2, yy+2, "iaxiszoom2");
+      } else {
+         pad.PaintBox(zbx1, zby1, zbx2, zby2, "iaxiszoom");
+      }
+      pad.UpdateAsync();
+   }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event for a TAxis object
 /// (called by TAxis::ExecuteEvent.)
@@ -2500,20 +2254,11 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 {
-   if (!IsEditable()) return;
-   if (!axis) return;
+   if (!IsEditable() || !axis)
+      return;
    SetCursor(kHand);
 
    TView *view = GetView();
-   static Int_t axisNumber;
-   static Double_t ratio1, ratio2;
-   static Int_t px1old, py1old, px2old, py2old;
-   Int_t nbd, inc, bin1, bin2, first, last;
-   Double_t temp, xmin,xmax;
-   Bool_t opaque  = gPad->OpaqueMoving();
-   bool resetAxisRange = false;
-   static std::unique_ptr<TBox> zoombox;
-   Double_t zbx1=0,zbx2=0,zby1=0,zby2=0;
 
    // The CONT4 option, used to paint TH2, is a special case; it uses a 3D
    // drawing technique to paint a 2D plot.
@@ -2525,187 +2270,110 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
       kCont4 = kTRUE;
    }
 
+   auto inter = dynamic_cast<TAxisInteractive *>(Interactive(axis));
+
    switch (event) {
 
    case kButton1Down:
-      axisNumber = 1;
-      if (!strcmp(axis->GetName(),"xaxis")) {
-         axisNumber = 1;
-         if (!IsVertical()) axisNumber = 2;
-      }
-      if (!strcmp(axis->GetName(),"yaxis")) {
-         axisNumber = 2;
-         if (!IsVertical()) axisNumber = 1;
-      }
-      if (!strcmp(axis->GetName(),"zaxis")) {
-         axisNumber = 3;
-      }
+      inter = new TAxisInteractive();
+      Interactive(axis, inter);
+
+      inter->axisNumber = 1;
+      if (!strcmp(axis->GetName(), "xaxis"))
+         inter->axisNumber = IsVertical() ? 1 : 2;
+      else if (!strcmp(axis->GetName(), "yaxis"))
+         inter->axisNumber = IsVertical() ? 2 : 1;
+      else if (!strcmp(axis->GetName(), "zaxis"))
+         inter->axisNumber = 3;
       if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio1);
+         view->GetDistancetoAxis(inter->axisNumber, px, py, inter->ratio1);
+      } else if (inter->axisNumber == 1) {
+         inter->ratio1 = (AbsPixeltoX(px) - GetUxmin()) / (GetUxmax() - GetUxmin());
+         inter->px1old = GetUxmin() + inter->ratio1 * (GetUxmax() - GetUxmin());
+         inter->py1old = GetUymin();
+         inter->px2old = inter->px1old;
+         inter->py2old = GetUymax();
       } else {
-         if (axisNumber == 1) {
-            ratio1 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
-            px1old = XtoAbsPixel(GetUxmin()+ratio1*(GetUxmax() - GetUxmin()));
-            py1old = YtoAbsPixel(GetUymin());
-            px2old = px1old;
-            py2old = YtoAbsPixel(GetUymax());
-         } else if (axisNumber == 2) {
-            ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py1old = YtoAbsPixel(GetUymin()+ratio1*(GetUymax() - GetUymin()));
-            px1old = XtoAbsPixel(GetUxmin());
-            px2old = XtoAbsPixel(GetUxmax());
-            py2old = py1old;
-         } else {
-            ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py1old = YtoAbsPixel(GetUymin()+ratio1*(GetUymax() - GetUymin()));
-            px1old = XtoAbsPixel(GetUxmax());
-            px2old = XtoAbsPixel(GetX2());
-            py2old = py1old;
-         }
-         if (!opaque) {
-            gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-         } else {
-            if (axisNumber == 1) {
-               zbx1 = AbsPixeltoX(px1old);
-               zbx2 = AbsPixeltoX(px2old);
-               zby1 = GetUymin();
-               zby2 = GetUymax();
-            } else if (axisNumber == 2) {
-               zbx1 = GetUxmin();
-               zbx2 = GetUxmax();
-               zby1 = AbsPixeltoY(py1old);
-               zby2 = AbsPixeltoY(py2old);
-            }
-            if (GetLogx()) {
-               zbx1 = TMath::Power(10,zbx1);
-               zbx2 = TMath::Power(10,zbx2);
-            }
-            if (GetLogy()) {
-               zby1 = TMath::Power(10,zby1);
-               zby2 = TMath::Power(10,zby2);
-            }
-            zoombox = std::make_unique<TBox>(zbx1, zby1, zbx2, zby2);
-            Int_t ci = TColor::GetColor("#7d7dff");
-            TColor *zoomcolor = gROOT->GetColor(ci);
-            if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
-            else                                        zoomcolor->SetAlpha(0.5);
-            zoombox->SetFillColor(ci);
-            zoombox->Draw();
-            gPad->Modified();
-            gPad->Update();
-         }
+         inter->ratio1 = (AbsPixeltoY(py) - GetUymin()) / (GetUymax() - GetUymin());
+         inter->px1old = GetUxmin();
+         inter->py1old = GetUymin() + inter->ratio1 * (GetUymax() - GetUymin());
+         inter->px2old = GetUxmax();
+         inter->py2old = inter->py1old;
       }
-      if (!opaque) gVirtualX->SetLineColor(-1);
       // No break !!!
 
    case kButton1Motion:
+      if (!inter)
+         break;
       if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
+         view->GetDistancetoAxis(inter->axisNumber, px, py, inter->ratio2);
+      } else if (inter->axisNumber == 1) {
+         inter->ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
+         inter->px2old = GetUxmin() + inter->ratio2 * (GetUxmax() - GetUxmin());
       } else {
-         if (!opaque) gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-         if (axisNumber == 1) {
-            ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
-            px2old = XtoAbsPixel(GetUxmin()+ratio2*(GetUxmax() - GetUxmin()));
-         } else {
-            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py2old = YtoAbsPixel(GetUymin()+ratio2*(GetUymax() - GetUymin()));
-         }
-         if (!opaque) {
-            gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-         } else {
-            if (axisNumber == 1) {
-               zbx1 = AbsPixeltoX(px1old);
-               zbx2 = AbsPixeltoX(px2old);
-               zby1 = GetUymin();
-               zby2 = GetUymax();
-            } else if (axisNumber == 2) {
-               zbx1 = GetUxmin();
-               zbx2 = GetUxmax();
-               zby1 = AbsPixeltoY(py1old);
-               zby2 = AbsPixeltoY(py2old);
-            }
-            if (GetLogx()) {
-               zbx1 = TMath::Power(10,zbx1);
-               zbx2 = TMath::Power(10,zbx2);
-            }
-            if (GetLogy()) {
-               zby1 = TMath::Power(10,zby1);
-               zby2 = TMath::Power(10,zby2);
-            }
-            if (zoombox) {
-               zoombox->SetX1(zbx1);
-               zoombox->SetY1(zby1);
-               zoombox->SetX2(zbx2);
-               zoombox->SetY2(zby2);
-            }
-            gPad->Modified();
-            gPad->Update();
-         }
+         inter->ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+         inter->py2old = GetUymin() + inter->ratio2 * (GetUymax() - GetUymin());
       }
-   break;
+      inter->PaintZoomBox(*this);
+      break;
 
-   case kWheelUp:
-      nbd  = (axis->GetLast()-axis->GetFirst());
-      inc  = TMath::Max(nbd/100,1);
-      bin1 = axis->GetFirst()+inc;
-      bin2 = axis->GetLast()-inc;
-      bin1 = TMath::Max(bin1, 1);
-      bin2 = TMath::Min(bin2, axis->GetNbins());
-      if (bin2>bin1) {
-         axis->SetRange(bin1,bin2);
-         gPad->Modified();
-         gPad->Update();
+   case kWheelUp: {
+      Int_t nbd  = (axis->GetLast()-axis->GetFirst());
+      Int_t inc  = TMath::Max(nbd/100,1);
+      Int_t bin1 = TMath::Max(1, axis->GetFirst() + inc);
+      Int_t bin2 = TMath::Min(axis->GetNbins(), axis->GetLast() - inc);
+      if (bin2 > bin1) {
+         axis->SetRange(bin1, bin2);
+         Modified();
+         UpdateAsync();
       }
-   break;
+      break;
+   }
 
-   case kWheelDown:
-      nbd  = (axis->GetLast()-axis->GetFirst());
-      inc  = TMath::Max(nbd/100,1);
-      bin1 = axis->GetFirst()-inc;
-      bin2 = axis->GetLast()+inc;
-      bin1 = TMath::Max(bin1, 1);
-      bin2 = TMath::Min(bin2, axis->GetNbins());
-      resetAxisRange = (bin1 == 1 && axis->GetFirst() == 1 && bin2 == axis->GetNbins() && axis->GetLast() == axis->GetNbins());
-      if (bin2>bin1) {
+   case kWheelDown: {
+      Int_t nbd  = (axis->GetLast()-axis->GetFirst());
+      Int_t inc  = TMath::Max(nbd/100,1);
+      Int_t bin1 = TMath::Max(1, axis->GetFirst()-inc);
+      Int_t bin2 = TMath::Min(axis->GetNbins(), axis->GetLast()+inc);
+      Bool_t resetAxisRange = (bin1 == 1 && axis->GetFirst() == 1 && bin2 == axis->GetNbins() && axis->GetLast() == axis->GetNbins());
+      if (bin2 > bin1)
          axis->SetRange(bin1,bin2);
+      if (resetAxisRange)
+         axis->ResetBit(TAxis::kAxisRange);
+      if (bin2 > bin1) {
+         Modified();
+         UpdateAsync();
       }
-      if (resetAxisRange) axis->ResetBit(TAxis::kAxisRange);
-      if (bin2>bin1) {
-         gPad->Modified();
-         gPad->Update();
-      }
-   break;
+      break;
+   }
 
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         if (opaque && zoombox)
-            zoombox.reset();
          break;
       }
 
-      if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
-         if (ratio1 > ratio2) {
-            temp   = ratio1;
-            ratio1 = ratio2;
-            ratio2 = temp;
-         }
-         if (ratio2 - ratio1 > 0.05) {
-            TH1 *hobj = (TH1*)axis->GetParent();
-            if (axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
+      if (view && inter) {
+         view->GetDistancetoAxis(inter->axisNumber, px, py, inter->ratio2);
+         if (inter->ratio1 > inter->ratio2)
+            std::swap(inter->ratio1, inter->ratio2);
+         if (inter->ratio2 - inter->ratio1 > 0.05) {
+            auto hobj = static_cast<TH1 *>(axis->GetParent());
+            if (inter->axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
                Float_t zmin = hobj->GetMinimum();
                Float_t zmax = hobj->GetMaximum();
-               if(GetLogz()){
-                  if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
-                                                               (Double_t)0.001*zmax);
+               if (GetLogz()) {
+                  if (zmin <= 0 && zmax > 0)
+                     zmin = TMath::Min((Double_t)1, (Double_t)0.001 * zmax);
                   zmin = TMath::Log10(zmin);
                   zmax = TMath::Log10(zmax);
                }
-               Float_t newmin = zmin + (zmax-zmin)*ratio1;
-               Float_t newmax = zmin + (zmax-zmin)*ratio2;
-               if (newmin < zmin) newmin = hobj->GetBinContent(hobj->GetMinimumBin());
-               if (newmax > zmax) newmax = hobj->GetBinContent(hobj->GetMaximumBin());
+               Float_t newmin = zmin + (zmax - zmin) * inter->ratio1;
+               Float_t newmax = zmin + (zmax - zmin) * inter->ratio2;
+               if (newmin < zmin)
+                  newmin = hobj->GetBinContent(hobj->GetMinimumBin());
+               if (newmax > zmax)
+                  newmax = hobj->GetBinContent(hobj->GetMaximumBin());
                if (GetLogz()){
                   newmin = TMath::Exp(2.302585092994*newmin);
                   newmax = TMath::Exp(2.302585092994*newmax);
@@ -2714,47 +2382,42 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                hobj->SetMaximum(newmax);
                hobj->SetBit(TH1::kIsZoomed);
             } else {
-               first = axis->GetFirst();
-               last  = axis->GetLast();
-               bin1 = first + Int_t((last-first+1)*ratio1);
-               bin2 = first + Int_t((last-first+1)*ratio2);
-               bin1 = TMath::Max(bin1, 1);
-               bin2 = TMath::Min(bin2, axis->GetNbins());
+               Int_t first = axis->GetFirst();
+               Int_t last  = axis->GetLast();
+               Int_t bin1 = TMath::Max(1, first + Int_t((last-first+1) * inter->ratio1));
+               Int_t bin2 = TMath::Min(axis->GetNbins(), first + Int_t((last-first+1) * inter->ratio2));
                axis->SetRange(bin1, bin2);
             }
             delete view;
             SetView(nullptr);
-            Modified(kTRUE);
+            Modified();
          }
-      } else {
-         if (axisNumber == 1) {
-            ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
-            xmin = GetUxmin() +ratio1*(GetUxmax() - GetUxmin());
-            xmax = GetUxmin() +ratio2*(GetUxmax() - GetUxmin());
+      } else if (inter) {
+         Double_t xmin, xmax;
+         if (inter->axisNumber == 1) {
+            inter->ratio2 = (AbsPixeltoX(px) - GetUxmin()) / (GetUxmax() - GetUxmin());
+            xmin = GetUxmin() + inter->ratio1 * (GetUxmax() - GetUxmin());
+            xmax = GetUxmin() + inter->ratio2 * (GetUxmax() - GetUxmin());
             if (GetLogx() && !kCont4) {
                xmin = PadtoX(xmin);
                xmax = PadtoX(xmax);
             }
-         } else if (axisNumber == 2) {
-            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            xmin = GetUymin() +ratio1*(GetUymax() - GetUymin());
-            xmax = GetUymin() +ratio2*(GetUymax() - GetUymin());
+         } else if (inter->axisNumber == 2) {
+            inter->ratio2 = (AbsPixeltoY(py) - GetUymin()) / (GetUymax() - GetUymin());
+            xmin = GetUymin() + inter->ratio1 * (GetUymax() - GetUymin());
+            xmax = GetUymin() + inter->ratio2 * (GetUymax() - GetUymin());
             if (GetLogy() && !kCont4) {
                xmin = PadtoY(xmin);
                xmax = PadtoY(xmax);
             }
          } else {
-            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            xmin = ratio1;
-            xmax = ratio2;
+            inter->ratio2 = (AbsPixeltoY(py) - GetUymin()) / (GetUymax() - GetUymin());
+            xmin = inter->ratio1;
+            xmax = inter->ratio2;
          }
          if (xmin > xmax) {
-            temp   = xmin;
-            xmin   = xmax;
-            xmax   = temp;
-            temp   = ratio1;
-            ratio1 = ratio2;
-            ratio2 = temp;
+            std::swap(xmin, xmax);
+            std::swap(inter->ratio1, inter->ratio2);
          }
 
          // xmin and xmax need to be adjusted in case of CONT4.
@@ -2763,21 +2426,22 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             Double_t up  = axis->GetBinUpEdge(axis->GetLast());
             Double_t xmi = GetUxmin();
             Double_t xma = GetUxmax();
-            xmin = ((xmin-xmi)/(xma-xmi))*(up-low)+low;
-            xmax = ((xmax-xmi)/(xma-xmi))*(up-low)+low;
+            xmin = ((xmin - xmi) / (xma - xmi)) * (up - low) + low;
+            xmax = ((xmax - xmi) / (xma - xmi)) * (up - low) + low;
          }
 
-         if (!strcmp(axis->GetName(),"xaxis")) axisNumber = 1;
-         if (!strcmp(axis->GetName(),"yaxis")) axisNumber = 2;
-         if (ratio2 - ratio1 > 0.05) {
+         if (!strcmp(axis->GetName(),"xaxis"))
+            inter->axisNumber = 1;
+         if (!strcmp(axis->GetName(),"yaxis"))
+            inter->axisNumber = 2;
+         if (inter->ratio2 - inter->ratio1 > 0.05) {
             //update object owning this axis
-            TH1 *hobj1 = (TH1*)axis->GetParent();
-            bin1 = axis->FindFixBin(xmin);
-            bin2 = axis->FindFixBin(xmax);
-            bin1 = TMath::Max(bin1, 1);
-            bin2 = TMath::Min(bin2, axis->GetNbins());
-            if (axisNumber == 1) axis->SetRange(bin1,bin2);
-            if (axisNumber == 2 && hobj1) {
+            TH1 *hobj1 = static_cast<TH1 *>(axis->GetParent());
+            Int_t bin1 = TMath::Max(1, axis->FindFixBin(xmin));
+            Int_t bin2 = TMath::Min(axis->GetNbins(), axis->FindFixBin(xmax));
+            if (inter->axisNumber == 1)
+               axis->SetRange(bin1,bin2);
+            if (inter->axisNumber == 2 && hobj1) {
                if (hobj1->GetDimension() == 1) {
                   if (hobj1->GetNormFactor() != 0) {
                      Double_t norm = hobj1->GetSumOfWeights()/hobj1->GetNormFactor();
@@ -2793,48 +2457,50 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             }
             //update all histograms in the pad
             TIter next(GetListOfPrimitives());
-            TObject *obj;
-            while ((obj= next())) {
-               if (!obj->InheritsFrom(TH1::Class())) continue;
-               TH1 *hobj = (TH1*)obj;
-               if (hobj == hobj1) continue;
-               bin1 = hobj->GetXaxis()->FindFixBin(xmin);
-               bin2 = hobj->GetXaxis()->FindFixBin(xmax);
-               if (axisNumber == 1) {
-                  hobj->GetXaxis()->SetRange(bin1,bin2);
-               } else if (axisNumber == 2) {
-                  if (hobj->GetDimension() == 1) {
-                     Double_t xxmin = xmin;
-                     Double_t xxmax = xmax;
-                     if (hobj->GetNormFactor() != 0) {
-                        Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
-                        xxmin *= norm;
-                        xxmax *= norm;
+            while (auto obj = next()) {
+               if (auto hobj = dynamic_cast<TH1 *> (obj)) {
+                  if (hobj == hobj1)
+                     continue;
+                  bin1 = hobj->GetXaxis()->FindFixBin(xmin);
+                  bin2 = hobj->GetXaxis()->FindFixBin(xmax);
+                  if (inter->axisNumber == 1) {
+                     hobj->GetXaxis()->SetRange(bin1,bin2);
+                  } else if (inter->axisNumber == 2) {
+                     if (hobj->GetDimension() == 1) {
+                        Double_t xxmin = xmin;
+                        Double_t xxmax = xmax;
+                        if (hobj->GetNormFactor() != 0) {
+                           Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
+                           xxmin *= norm;
+                           xxmax *= norm;
+                        }
+                        hobj->SetMinimum(xxmin);
+                        hobj->SetMaximum(xxmax);
+                        hobj->SetBit(TH1::kIsZoomed);
+                     } else {
+                        bin1 = hobj->GetYaxis()->FindFixBin(xmin);
+                        bin2 = hobj->GetYaxis()->FindFixBin(xmax);
+                        hobj->GetYaxis()->SetRange(bin1,bin2);
                      }
-                     hobj->SetMinimum(xxmin);
-                     hobj->SetMaximum(xxmax);
-                     hobj->SetBit(TH1::kIsZoomed);
-                  } else {
-                     bin1 = hobj->GetYaxis()->FindFixBin(xmin);
-                     bin2 = hobj->GetYaxis()->FindFixBin(xmax);
-                     hobj->GetYaxis()->SetRange(bin1,bin2);
                   }
                }
             }
-            Modified(kTRUE);
+            Modified();
          }
       }
-      if (!opaque) {
-         gVirtualX->SetLineColor(-1);
-      } else {
-         if (zoombox) {
-            zoombox.reset();
-            gPad->Modified();
-            gPad->Update();
-         }
-      }
+      Interactive(); // remove interactive object
       break;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Switch feedback mode for the canvas
+/// Only for internal use when implementing special painters
+
+void TPad::FeedbackMode(Bool_t set)
+{
+   if (fCanvas)
+      fCanvas->FeedbackMode(set);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2926,6 +2592,14 @@ TVirtualPad *TPad::GetVirtCanvas() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get doublebuffer mode - 1 by default.
+
+Int_t TPad::GetDoubleBuffer() const
+{
+   return fCanvas ? fCanvas->GetDoubleBuffer() : 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get highlight color.
 
 Color_t TPad::GetHighLightColor() const
@@ -2969,7 +2643,7 @@ TVirtualPad *TPad::GetPadSave() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Wh.
+/// Get canvas height
 
 UInt_t TPad::GetWh() const
 {
@@ -2977,11 +2651,45 @@ UInt_t TPad::GetWh() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Ww.
+/// Get canvas width
 
 UInt_t TPad::GetWw() const
 {
    return  fCanvas ? fCanvas->GetWw() : 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get pad width
+
+UInt_t TPad::GetPadWidth() const
+{
+   // Very often pad width was calculated as XtoPixel(GetX2());
+   // But if coordinate system broken such transformation fail.
+   // Therefore use canvas width multiplied by absolute NDC width value
+   // Keep fallback solution only when canvas width cannot be defined
+
+   auto cw = GetWw();
+   if (!cw)
+      return XtoPixel(GetX2());
+
+   return static_cast<UInt_t>(std::lround(cw * GetAbsWNDC()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get pad height
+
+UInt_t TPad::GetPadHeight() const
+{
+   // Very often pad height was calculated as YtoPixel(GetY1())
+   // But if coordinate system broken such transformation fail.
+   // Therefore use canvas height multiplied by absolute NDC height value
+   // Keep fallback solution only when canvas height cannot be defined
+
+   auto ch = GetWh();
+   if (!ch)
+      return YtoPixel(GetY1());
+
+   return static_cast<UInt_t>(std::lround(GetWh() * GetAbsHNDC()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2993,6 +2701,29 @@ void TPad::HideToolTip(Int_t event)
 {
    if (event != kMouseEnter && event != kMouseMotion && fTip)
       gPad->CloseToolTip(fTip);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if pad or any subpads need to be repaint
+/// Returns flag with following mask:
+///  1 - some pad is modified
+///  2 - some pad is transparent (also trigger repaint in modified)
+///  4 - some pad has interactive XOR draw operations
+
+Int_t TPad::IsAnyNeedRepaint() const
+{
+   Int_t mask = IsModified() ? 1 : 0;
+   if (IsTransparent())
+      mask |= 2;
+   if (fDrawOper.size())
+      mask |= 4;
+
+   TIter next(GetListOfPrimitives());
+   while (auto obj = next())
+      if (auto p = dynamic_cast<TPad *>(obj))
+         mask |= p->IsAnyNeedRepaint();
+
+   return mask;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3199,9 +2930,12 @@ void TPad::GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t
 
 void TPad::HighLight(Color_t color, Bool_t set)
 {
-   if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS)) return;
+   if (auto pp = GetPainter())
+      if(!pp->IsNative())
+         return;
 
-   if (color <= 0) return;
+   if (color <= 0)
+      return;
 
    AbsCoordinates(kTRUE);
 
@@ -3220,10 +2954,8 @@ void TPad::HighLight(Color_t color, Bool_t set)
       // momentarily such that when DrawClone is called, it is
       // not the right value (for DrawClone). Should be FIXED.
       gROOT->SetSelectedPad(this);
-      if (GetBorderMode()>0) {
-         if (set) PaintBorder(-color, kFALSE);
-         else     PaintBorder(-GetFillColor(), kFALSE);
-      }
+      if (GetBorderMode() > 0)
+         PaintBorder(set ? -color : -GetFillColor(), kFALSE);
    }
 
    AbsCoordinates(kFALSE);
@@ -3244,17 +2976,42 @@ void TPad::ls(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Internal method to create, provide or delete TInteractive instance
+/// It is allowed the only instance of TInteractive object per pad
+/// It can be assigned for the object when @param init is provided
+/// Otherwise returns existing instance for the @param obj
+/// If none of parameters are specified - existing instance will be deleted
+
+TVirtualPad::TInteractive *TPad::Interactive(TObject *obj, TInteractive *init)
+{
+   if (obj && init) {
+      init->SetObject(obj);
+      fInteractive.reset(init);
+   } else if (!obj)
+      fInteractive.reset(nullptr);
+
+   if (!fInteractive || (fInteractive->GetObject() != obj))
+      return nullptr;
+
+   return fInteractive.get();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Increment (i==1) or set (i>1) the number of autocolor in the pad.
 
-Int_t TPad::IncrementPaletteColor(Int_t i, TString opt)
+Int_t TPad::IncrementPaletteColor(Int_t i, const TString &opt)
 {
-   if (opt.Index("pfc")>=0 || opt.Index("plc")>=0 || opt.Index("pmc")>=0) {
-       if (i==1) fNumPaletteColor++;
-       else      fNumPaletteColor = i;
-       return    fNumPaletteColor;
-   } else {
-      return 0;
+   TString opt1 = opt;
+   opt1.ToLower();
+
+   if (opt1.Contains("pfc") || opt1.Contains("plc") || opt1.Contains("pmc")) {
+      if (i == 1) fNumPaletteColor++;
+      else      fNumPaletteColor = i;
+      return    fNumPaletteColor;
    }
+
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3411,7 +3168,8 @@ Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t
    return kFALSE;
 }
 
-#define NotFree(i, j) fCollideGrid[TMath::Max(TMath::Min(i+j*fCGnx,fCGnx*fCGny),0)] = kFALSE;
+// Set the specific cell element in the grid to false, clamp to (fCGnx*fCGny) - 1 to avoid going out of bounds
+#define NotFree(i, j) fCollideGrid[TMath::Max(TMath::Min(i + j * fCGnx, (fCGnx * fCGny) - 1), 0)] = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark as "not free" the cells along a line.
@@ -3726,7 +3484,7 @@ Double_t TPad::YtoPad(Double_t y) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint all primitives in pad.
 
-void TPad::Paint(Option_t * /*option*/)
+void TPad::Paint(Option_t * /* option */)
 {
    if (!fPrimitives)
       fPrimitives = new TList;
@@ -3740,7 +3498,14 @@ void TPad::Paint(Option_t * /*option*/)
       return;
    }
 
-   if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
+   TVirtualPadPainter *oldpp = nullptr;
+   Bool_t replace_pp = kFALSE;
+
+   if (fCanvas) {
+      // check if special PS painter should be assigned to TCanvas
+      replace_pp = fCanvas->EnsurePSPainter(kTRUE, oldpp);
+      TColor::SetGrayscale(fCanvas->IsGrayscale());
+   }
 
    Bool_t began3DScene = kFALSE;
    fPadPaint = 1;
@@ -3748,6 +3513,7 @@ void TPad::Paint(Option_t * /*option*/)
    {
       TContext ctxt(this, kTRUE);
 
+      fDrawOperXor.clear();
       PaintBorder(GetFillColor(), kTRUE);
       PaintDate();
 
@@ -3770,10 +3536,20 @@ void TPad::Paint(Option_t * /*option*/)
          obj->Paint(lnk->GetOption());
          lnk = lnk->Next();
       }
+
+      if (fCanvas && (fCanvas->fHilightPadBorder == this)) {
+         auto col = GetHighLightColor();
+         if (col > 0) PaintBorder(-col, kTRUE);
+      }
+
+      PaintOperations(); // paint operations only for the pad
    }
 
    fPadPaint = 0;
    Modified(kFALSE);
+
+   if (replace_pp && fCanvas)
+      fCanvas->EnsurePSPainter(kFALSE, oldpp);
 
    // Close the 3D scene if we opened it. This must be done after modified
    // flag is cleared, as some viewers will invoke another paint by marking pad modified again
@@ -3786,101 +3562,68 @@ void TPad::Paint(Option_t * /*option*/)
 /// Paint the pad border.
 /// Draw first  a box as a normal filled box
 
-void TPad::PaintBorder(Color_t color, Bool_t tops)
+void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
 {
+   auto pp = GetPainter();
+   if (!pp)
+      return;
+
+   pp->OnPad(this);
+
    if (color >= 0) {
-      TAttLine::Modify();  //Change line attributes only if necessary
-      TAttFill::Modify();  //Change fill area attributes only if necessary
 
-      //With Cocoa we have a transparency. But we also have
-      //pixmaps, and if you just paint a new content over the old one
-      //with alpha < 1., you'll be able to see the old content.
-      if (!gROOT->IsBatch() && gVirtualX->InheritsFrom("TGCocoa") && GetPainter())
-         GetPainter()->ClearDrawable();
+      Bool_t do_paint_box = kTRUE;
 
-      PaintBox(fX1,fY1,fX2,fY2);
-   }
-   if (color < 0) color = -color;
+      Style_t style = GetFillStyle();
+      if (!IsBatch() && (pp->IsCocoa() || (pp->IsNative() && (style > 3000) && (style < 3026))))
+         pp->ClearDrawable();
+
+      // special only for transparent pads in plain X11;
+      // Cocoa, GL, Web and PS implement transparency different
+      if ((style >= 4000) && (style <= 4100) && pp->IsNative() && !pp->IsCocoa() && !pp->GetPS() && !(fCanvas && fCanvas->UseGL()) && !IsWeb() && !IsBatch()) {
+         if (this == fMother) {
+            style = 1001;
+         } else {
+            // copy all pixmaps
+            do_paint_box = kFALSE;
+            Int_t px, py;
+            XYtoAbsPixel(GetX1(), GetY2(), px, py);
+            if (fMother)
+               fMother->CopyBackgroundPixmaps(this, px, py);
+            pp->SetAttFill({color, 1001}); // use fill color producing opacity
+            pp->SetOpacity(style - 4000);
+         }
+      } else if ((style >= 4000) && (style <= 4100) && pp->IsCocoa() && (this == fMother))
+         style = 1001;
+      else if ((color == 10) && (style > 3000) && (style < 3100))
+         color = 1;
+
+      if (do_paint_box) {
+         pp->SetAttFill({color, style});
+         pp->SetAttLine(*this);
+         PaintBox(fX1, fY1, fX2, fY2);
+      }
+   } else
+      color = -color;
+
+   if (IsTransparent() || (fBorderMode == 0))
+      return;
+
    // then paint 3d frame (depending on bordermode)
-   if (IsTransparent()) return;
    // Paint a 3D frame around the pad.
 
-   if (fBorderMode == 0) return;
-   Int_t bordersize = fBorderSize;
-   if (bordersize <= 0) bordersize = 2;
+   TWbox box;
+   box.SetFillColor(color);
+   box.SetFillStyle(GetFillStyle());
+   TAttLine::Copy(box);
 
-   const Double_t realBsX = bordersize / (GetAbsWNDC() * GetWw()) * (fX2 - fX1);
-   const Double_t realBsY = bordersize / (GetAbsHNDC() * GetWh()) * (fY2 - fY1);
-
-   Short_t px1,py1,px2,py2;
-   Double_t xl, xt, yl, yt;
-
-   // GetColorDark() and GetColorBright() use GetFillColor()
-   Color_t oldcolor = GetFillColor();
-   SetFillColor(color);
-   TAttFill::Modify();
-   Color_t light = 0, dark = 0;
-   if (color != 0) {
-      light = TColor::GetColorBright(color);
-      dark  = TColor::GetColorDark(color);
-   }
-
-   // Compute real left bottom & top right of the box in pixels
-   px1 = XtoPixel(fX1);   py1 = YtoPixel(fY1);
-   px2 = XtoPixel(fX2);   py2 = YtoPixel(fY2);
-   if (px1 < px2) {xl = fX1; xt = fX2; }
-   else           {xl = fX2; xt = fX1;}
-   if (py1 > py2) {yl = fY1; yt = fY2;}
-   else           {yl = fY2; yt = fY1;}
-
-   Double_t frameXs[7] = {}, frameYs[7] = {};
-
-   if (!IsBatch() && GetPainter()) {
-      // Draw top&left part of the box
-      frameXs[0] = xl;           frameYs[0] = yl;
-      frameXs[1] = xl + realBsX; frameYs[1] = yl + realBsY;
-      frameXs[2] = frameXs[1];   frameYs[2] = yt - realBsY;
-      frameXs[3] = xt - realBsX; frameYs[3] = frameYs[2];
-      frameXs[4] = xt;           frameYs[4] = yt;
-      frameXs[5] = xl;           frameYs[5] = yt;
-      frameXs[6] = xl;           frameYs[6] = yl;
-
-      if (fBorderMode == -1) GetPainter()->SetFillColor(dark);
-      else                   GetPainter()->SetFillColor(light);
-      GetPainter()->DrawFillArea(7, frameXs, frameYs);
-
-      // Draw bottom&right part of the box
-      frameXs[0] = xl;              frameYs[0] = yl;
-      frameXs[1] = xl + realBsX;    frameYs[1] = yl + realBsY;
-      frameXs[2] = xt - realBsX;    frameYs[2] = frameYs[1];
-      frameXs[3] = frameXs[2];      frameYs[3] = yt - realBsY;
-      frameXs[4] = xt;              frameYs[4] = yt;
-      frameXs[5] = xt;              frameYs[5] = yl;
-      frameXs[6] = xl;              frameYs[6] = yl;
-
-      if (fBorderMode == -1) GetPainter()->SetFillColor(light);
-      else                   GetPainter()->SetFillColor(dark);
-      GetPainter()->DrawFillArea(7, frameXs, frameYs);
-
-      // If this pad is a button, highlight it
-      if (InheritsFrom(TButton::Class()) && fBorderMode == -1) {
-         if (TestBit(kFraming)) {  // bit set in TButton::SetFraming
-            if (GetFillColor() != 2) GetPainter()->SetLineColor(2);
-            else                     GetPainter()->SetLineColor(4);
-            GetPainter()->DrawBox(xl + realBsX, yl + realBsY, xt - realBsX, yt - realBsY, TVirtualPadPainter::kHollow);
-         }
-      }
-      GetPainter()->SetFillColor(-1);
-      SetFillColor(oldcolor);
-   }
-
-   if (!tops) return;
-
-   PaintBorderPS(xl, yl, xt, yt, fBorderMode, bordersize, dark, light);
+   box.PaintBorderOn(this, fX1, fY1, fX2, fY2,
+                     fBorderSize, fBorderMode,
+                     InheritsFrom(TButton::Class()) && fBorderMode == -1 && TestBit(kFraming));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint a frame border with Postscript.
+/// Paint a frame border with Postscript - no longer used
 
 void TPad::PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light)
 {
@@ -3972,24 +3715,30 @@ void TPad::PaintModified()
       return;
    }
 
-   if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
-
    TVirtualPS *saveps = gVirtualPS;
-   if (gVirtualPS) {
-      if (gVirtualPS->TestBit(kPrintingPS))
-         gVirtualPS = nullptr;
+   if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS))
+      gVirtualPS = nullptr;
+
+   TVirtualPadPainter *oldpp = nullptr;
+   Bool_t replace_pp = kFALSE;
+
+   if (fCanvas) {
+      // check if special PS painter should be assigned to TCanvas
+      replace_pp = fCanvas->EnsurePSPainter(kTRUE, oldpp);
+      TColor::SetGrayscale(fCanvas->IsGrayscale());
    }
 
    Bool_t began3DScene = kFALSE;
    fPadPaint = 1;
    {
       TContext ctxt(this, kTRUE);
-      if (IsModified() || IsTransparent()) {
-         if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
-            if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
-         }
+
+      auto pp = GetPainter();
+      Bool_t useXor = pp && pp->IsNative() && !pp->IsCocoa();
+      Bool_t needRepaint = IsModified() || IsTransparent() || (!useXor && fDrawOper.size());
+
+      if (needRepaint)
          PaintBorder(GetFillColor(), kTRUE);
-      }
 
       PaintDate();
 
@@ -4000,7 +3749,7 @@ void TPad::PaintModified()
          TObject *obj = lnk->GetObject();
          if (obj->InheritsFrom(TPad::Class())) {
             ((TPad*)obj)->PaintModified();
-         } else if (IsModified() || IsTransparent()) {
+         } else if (needRepaint) {
 
             // Create a pad 3D viewer if none exists and we encounter a
             // 3D shape
@@ -4018,6 +3767,10 @@ void TPad::PaintModified()
          }
          lnk = lnk->Next();
       }
+
+      // when XOR is not available - paint operations at the ned
+      if (!useXor && needRepaint)
+         PaintOperations();
    }
 
    fPadPaint = 0;
@@ -4025,11 +3778,58 @@ void TPad::PaintModified()
 
    // This must be done after modified flag is cleared, as some
    // viewers will invoke another paint by marking pad modified again
-   if (began3DScene) {
-      if (fViewer3D) fViewer3D->EndScene();
-   }
+   if (began3DScene && fViewer3D)
+      fViewer3D->EndScene();
+
+   if (replace_pp && fCanvas)
+      fCanvas->EnsurePSPainter(kFALSE, oldpp);
 
    gVirtualPS = saveps;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Perform buffered paint operations
+/// Used for interactivity functionality immediately after normal painting is performed
+/// Only when withXor is specified global window context used to perform
+/// inversion of window, otherwise only draw operations for the current pad are done
+
+void TPad::PaintOperations(Bool_t withXor)
+{
+   auto pp = GetPainter();
+   if (!pp)
+      return;
+
+   // IMPORTANT - only when XOR used change gPad only for coordinates calculation
+   // selected device should never be changed - therefore not use cd()
+   auto savepad = gPad;
+   if (withXor)
+      gPad = this;
+
+   pp->OnPad(this);
+
+   if (withXor)
+      for (auto &oper : fDrawOperXor)
+         oper.second->Draw(*this, pp, withXor);
+
+   fDrawOperXor.clear();
+
+   for (auto &oper : fDrawOper)
+      oper.second->Draw(*this, pp, withXor);
+
+   if (withXor)
+      std::swap(fDrawOperXor, fDrawOper);
+   else
+      fDrawOper.clear();
+
+   if (withXor) {
+      gPad = savepad;
+
+      TIter next(GetListOfPrimitives());
+      while (auto obj = next()) {
+         if (auto pad = dynamic_cast<TPad *>(obj))
+            pad->PaintOperations(withXor);
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4037,93 +3837,52 @@ void TPad::PaintModified()
 ///
 ///  - if option[0] = 's' the box is forced to be paint with style=0
 ///  - if option[0] = 'l' the box contour is drawn
+///  - if option[0] = 'i' the interactive xor box will be painted
 
 void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
-   if (!gPad->IsBatch() && GetPainter()) {
-      Int_t style0 = GetPainter()->GetFillStyle();
-      Int_t style  = style0;
-      if (option[0] == 's') {
-         GetPainter()->SetFillStyle(0);
-         style = 0;
-      }
-      if (style) {
-         if (style > 3000 && style < 4000) {
-            if (style < 3026) {
-               // draw stipples with fFillColor foreground
-               GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-            }
+   auto pp = GetPainter();
+   if (!pp)
+      return;
 
-            if (style >= 3100 && style < 4000) {
-               Double_t xb[4], yb[4];
-               xb[0] = x1; xb[1] = x1; xb[2] = x2; xb[3] = x2;
-               yb[0] = y1; yb[1] = y2; yb[2] = y2; yb[3] = y1;
-               PaintFillAreaHatches(4, xb, yb, style);
-               return;
-            }
-            //special case for TAttFillCanvas
-            if (GetPainter()->GetFillColor() == 10) {
-               GetPainter()->SetFillColor(1);
-               GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-               GetPainter()->SetFillColor(10);
-            }
-         } else if (style >= 4000 && style <= 4100) {
-            // For style >=4000 we make the window transparent.
-            // From 4000 to 4100 the window is 100% transparent to 100% opaque
-
-            //ignore this style option when this is the canvas itself
-            if (this == fMother) {
-               //It's clear, that virtual X checks a style (4000) and will render a hollow rect!
-               const Style_t oldFillStyle = GetPainter()->GetFillStyle();
-               if (gVirtualX->InheritsFrom("TGCocoa"))
-                  GetPainter()->SetFillStyle(1000);
-               GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-               if (gVirtualX->InheritsFrom("TGCocoa"))
-                  GetPainter()->SetFillStyle(oldFillStyle);
-            } else {
-               //draw background by blitting all bottom pads
-               int px, py;
-               XYtoAbsPixel(fX1, fY2, px, py);
-
-               if (fMother) {
-                  fMother->CopyBackgroundPixmap(px, py);
-                  CopyBackgroundPixmaps(fMother, this, px, py);
-               }
-
-               GetPainter()->SetOpacity(style - 4000);
-            }
-         } else if (style >= 1000 && style <= 1999) {
-            GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-         } else {
-            GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
-         }
-         if (option[0] == 'l') GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
-      } else {
-         GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
-         if (option[0] == 's') GetPainter()->SetFillStyle(style0);
-      }
+   if (option && *option == 'i') {
+      Double_t x[5] = {x1, x2, x2, x1, x1};
+      Double_t y[5] = {y1, y1, y2, y2, y1};
+      auto drawKind = option[1] == 'l' ? TPadDrawOperation::drawLine : TPadDrawOperation::drawFill;
+      fDrawOper[option] = std::make_unique<TPadDrawOperation>(5, x, y, drawKind, pp->GetLineWidth());
+      return;
    }
 
-   if (gVirtualPS) {
-      Int_t style0 = gVirtualPS->GetFillStyle();
-      if (option[0] == 's') {
-         gVirtualPS->SetFillStyle(0);
-      } else {
-         if (style0 >= 3100 && style0 < 4000) {
-            Double_t xb[4], yb[4];
-            xb[0] = x1; xb[1] = x1; xb[2] = x2; xb[3] = x2;
-            yb[0] = y1; yb[1] = y2; yb[2] = y2; yb[3] = y1;
-            PaintFillAreaHatches(4, xb, yb, style0);
-            return;
-         }
-      }
-      gVirtualPS->DrawBox(x1, y1, x2, y2);
-      if (option[0] == 'l') {
-         gVirtualPS->SetFillStyle(0);
-         gVirtualPS->DrawBox(x1, y1, x2, y2);
-      }
-      if (option[0] == 's' || option[0] == 'l') gVirtualPS->SetFillStyle(style0);
-   }
+   pp->OnPad(this);
+
+   Style_t style = pp->GetAttFill().GetFillStyle();
+   Bool_t draw_border = kFALSE, draw_fill = kFALSE, skip_fill = kFALSE;
+   if (option && *option == 's')
+      skip_fill = draw_border = kTRUE;
+   else if (option && *option == 'l')
+      draw_border = kTRUE;
+
+   if (style >= 3100 && style < 4000) {
+      Double_t xb[4] = {x1, x1, x2, x2};
+      Double_t yb[4] = {y1, y2, y2, y1};
+      PaintFillAreaHatches(4, xb, yb, style);
+   } else if (style >= 0 && style < 1000) {
+      draw_border = kTRUE;
+   } else if (style >= 1000 && style < 2000) {
+      draw_fill = kTRUE;
+   } else if (style > 3000 && style < 3100) {
+      draw_fill = style < 3026;
+   } else if (style >= 4000 && style <= 4100) {
+      // transparency styles, supported now by all painters
+      draw_fill = style > 4000;
+   } else if (style > 0)
+      draw_border = kTRUE;
+
+   if (draw_fill && !skip_fill)
+      pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
+
+   if (draw_border)
+      pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
 
    Modified();
 }
@@ -4132,74 +3891,80 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 /// Copy pixmaps of pads laying below pad "stop" into pad "stop". This
 /// gives the effect of pad "stop" being transparent.
 
-void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
+void TPad::CopyBackgroundPixmaps(TPad *stop, Int_t x, Int_t y)
 {
-   if (!start) return;
-   TObject *obj;
-   if (!fPrimitives) fPrimitives = new TList;
-   TIter next(start->GetListOfPrimitives());
-   while ((obj = next())) {
-      if (obj->InheritsFrom(TPad::Class())) {
-         if (obj == stop) break;
-         ((TPad*)obj)->CopyBackgroundPixmap(x, y);
-         ((TPad*)obj)->CopyBackgroundPixmaps((TPad*)obj, stop, x, y);
-      }
+   Int_t px, py;
+   XYtoAbsPixel(GetX1(), GetY2(), px, py);
+   /// Copy pixmap of this pad as background of the current pad.
+   if (auto pp = GetPainter())
+      pp->CopyDrawable(GetPixmapID(), px - x, py - y);
+
+   TIter next(GetListOfPrimitives());
+   while (auto obj = next()) {
+      if (obj == stop)
+         break;
+      if (auto pad = dynamic_cast<TPad *>(obj))
+         pad->CopyBackgroundPixmaps(stop, x, y);
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy pixmap of this pad as background of the current pad.
-
-void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
-{
-   int px, py;
-   XYtoAbsPixel(fX1, fY2, px, py);
-   if (GetPainter()) GetPainter()->CopyDrawable(GetPixmapID(), px-x, py-y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TPad::PaintFillArea(Int_t, Float_t *, Float_t *, Option_t *)
 {
-   Warning("TPad::PaintFillArea", "Float_t signature is obsolete. Use Double_t signature.");
+   Warning("PaintFillArea", "Float_t signature is obsolete. Use Double_t signature.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint fill area in CurrentPad World coordinates.
+///
+///  If option[0] == 'C' no clipping
+///  If option[0] == 'i' paint during ExecuteEvent (interactive)
 
-void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
+void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *option)
 {
-   if (nn <3) return;
-   Int_t n=0;
-   Double_t xmin,xmax,ymin,ymax;
+   if (nn < 3)
+      return;
+   Double_t xmin, xmax, ymin, ymax;
+   Bool_t mustClip = kTRUE;
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
    } else {
       xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+      if (option && (*option == 'C')) mustClip = kFALSE;
    }
 
-   Int_t nc = 2*nn+1;
-   std::vector<Double_t> x(nc, 0.);
-   std::vector<Double_t> y(nc, 0.);
+   std::vector<Double_t> xclip, yclip;
 
-   n = ClipPolygon(nn, xx, yy, nc, &x.front(), &y.front(),xmin,ymin,xmax,ymax);
-   if (!n)
+   if (mustClip) {
+      Int_t nc = 2*nn+1;
+      xclip.resize(nc, 0.);
+      yclip.resize(nc, 0.);
+      Int_t n = ClipPolygon(nn, xx, yy, nc, xclip.data(), yclip.data(), xmin, ymin, xmax, ymax);
+      if (!n)
+         return;
+      nn = n;
+      xx = xclip.data();
+      yy = yclip.data();
+   }
+
+   if (option && *option == 'i') {
+      fDrawOper[option] = std::make_unique<TPadDrawOperation>(nn, xx, yy, TPadDrawOperation::drawFill);
       return;
+   }
+
+   auto pp = GetPainter();
+   if (!pp)
+      return;
+
+   pp->OnPad(this);
 
    // Paint the fill area with hatches
-   Int_t fillstyle = GetPainter()?GetPainter()->GetFillStyle():1;
-   if (gPad->IsBatch() && GetPainter() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
-   if (fillstyle >= 3100 && fillstyle < 4000) {
-      PaintFillAreaHatches(nn, &x.front(), &y.front(), fillstyle);
-      return;
-   }
-
-   if (!gPad->IsBatch() && GetPainter())
-      // invoke the graphics subsystem
-      GetPainter()->DrawFillArea(n, &x.front(), &y.front());
-
-   if (gVirtualPS)
-      gVirtualPS->DrawPS(-n, &x.front(), &y.front());
+   Int_t fillstyle = pp->GetFillStyle();
+   if (fillstyle >= 3100 && fillstyle < 4000)
+      PaintFillAreaHatches(nn, xx, yy, fillstyle);
+   else
+      pp->DrawFillArea(nn, xx, yy);
 
    Modified();
 }
@@ -4260,42 +4025,23 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t iAng2 = (fasi - 100 * idSPA) / 10;
    Int_t iAng1 = fasi % 10;
    Double_t dy = 0.003 * idSPA * gStyle->GetHatchesSpacing();
-   Short_t lws = 0, lws2 = 0, lw = gStyle->GetHatchesLineWidth();
-   Int_t   lss = 0, lss2 = 0, lcs = 0, lcs2 = 0;
+   Short_t lw = gStyle->GetHatchesLineWidth();
+   auto pp = GetPainter();
+   if (!pp)
+      return;
 
    // Save the current line attributes and change to draw hatches
-   if (!gPad->IsBatch() && GetPainter()) {
-      lws = GetPainter()->GetLineWidth();
-      lss = GetPainter()->GetLineStyle();
-      lcs = GetPainter()->GetLineColor();
-      GetPainter()->SetLineStyle(1);
-      GetPainter()->SetLineWidth(lw);
-      GetPainter()->SetLineColor(GetPainter()->GetFillColor());
-   }
-   if (gVirtualPS) {
-      lws2 = gVirtualPS->GetLineWidth();
-      lss2 = gVirtualPS->GetLineStyle();
-      lcs2 = gVirtualPS->GetLineColor();
-      gVirtualPS->SetLineStyle(1);
-      gVirtualPS->SetLineWidth(lw);
-      gVirtualPS->SetLineColor(gVirtualPS->GetFillColor());
-   }
+   TAttLine saveatt = pp->GetAttLine();
+
+   pp->SetAttLine({ pp->GetAttFill().GetFillColor(), 1, lw });
 
    // Draw the hatches
-   if (ang1[iAng1] != 5.) PaintHatches(dy, ang1[iAng1], nn, xx, yy);
-   if (ang2[iAng2] != 5.) PaintHatches(dy, ang2[iAng2], nn, xx, yy);
+   if (ang1[iAng1] != 5.)
+      PaintHatches(dy, ang1[iAng1], nn, xx, yy);
+   if (ang2[iAng2] != 5.)
+      PaintHatches(dy, ang2[iAng2], nn, xx, yy);
 
-   // Restore the line attributes
-   if (!gPad->IsBatch() && GetPainter()) {
-      GetPainter()->SetLineStyle(lss);
-      GetPainter()->SetLineWidth(lws);
-      GetPainter()->SetLineColor(lcs);
-   }
-   if (gVirtualPS) {
-      gVirtualPS->SetLineStyle(lss2);
-      gVirtualPS->SetLineWidth(lws2);
-      gVirtualPS->SetLineColor(lcs2);
-   }
+   pp->SetAttLine(saveatt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4306,13 +4052,16 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
 void TPad::PaintHatches(Double_t dy, Double_t angle,
                         Int_t nn, Double_t *xx, Double_t *yy)
 {
-   Int_t i, i1, i2, nbi, m, inv;
+   Int_t i, i1, i2, nbi;
    Double_t ratiox, ratioy, ymin, ymax, yrot, ycur;
    const Double_t angr  = TMath::Pi()*(180.-angle)/180.;
    const Double_t epsil = 0.0001;
-   const Int_t maxnbi = 100;
-   Double_t xli[maxnbi], xlh[2], ylh[2], xt1, xt2, yt1, yt2;
-   Double_t ll, x, y, x1, x2, y1, y2, a, b, xi, xip, xin, yi, yip;
+
+   std::vector<Double_t> xli;
+   std::vector<Double_t> yli;
+
+   Double_t xt1, xt2, yt1, yt2;
+   Double_t x, y, x1, x2, y1, y2, a, b, xi, xip, xin, yi, yip;
 
    Double_t rwxmin = gPad->GetX1();
    Double_t rwxmax = gPad->GetX2();
@@ -4354,14 +4103,20 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    while (dy * yindx >= ymin) {
       ycur = dy * yindx--;
       nbi = 0;
+
+      xli.clear();
+      yli.clear();
+
       for (i=2; i<=nn+1; i++) {
          i2 = i;
          i1 = i-1;
          if (i == nn+1) i2=1;
+
          x1  = wndc*ratiox*(xx[i1-1]-rwxmin);
          y1  = hndc*ratioy*(yy[i1-1]-rwymin);
          x2  = wndc*ratiox*(xx[i2-1]-rwxmin);
          y2  = hndc*ratioy*(yy[i2-1]-rwymin);
+
          xt1 = cosa*x1-sina*y1;
          yt1 = sina*x1+cosa*y1;
          xt2 = cosa*x2-sina*y2;
@@ -4378,8 +4133,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
             }
             if ((yi <= ycur) && (ycur < yip)) {
                nbi++;
-               if (nbi >= maxnbi) return;
-               xli[nbi-1] = xt1;
+               xli.push_back(xt1);
             }
             continue;
          }
@@ -4388,11 +4142,9 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          if (yt1 == yt2) {
             if (yt1 == ycur) {
                nbi++;
-               if (nbi >= maxnbi) return;
-               xli[nbi-1] = xt1;
+               xli.push_back(xt1);
                nbi++;
-               if (nbi >= maxnbi) return;
-               xli[nbi-1] = xt2;
+               xli.push_back(xt2);
             }
             continue;
          }
@@ -4400,6 +4152,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          // Other line segment
          a = (yt1-yt2)/(xt1-xt2);
          b = (yt2*xt1-xt2*yt1)/(xt1-xt2);
+
          if (xt1 < xt2) {
             xi  = xt1;
             xip = xt2;
@@ -4407,50 +4160,35 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
             xi  = xt2;
             xip = xt1;
          }
+
          xin = (ycur-b)/a;
-         if  ((xi <= xin) && (xin < xip) &&
-              (TMath::Min(yt1,yt2) <= ycur) &&
-              (ycur < TMath::Max(yt1,yt2))) {
+
+         if ((xi <= xin) && (xin < xip) &&
+             (TMath::Min(yt1,yt2) <= ycur) &&
+             (ycur < TMath::Max(yt1,yt2))) {
             nbi++;
-            if (nbi >= maxnbi) return;
-            xli[nbi-1] = xin;
+            xli.push_back(xin);
          }
       }
 
       // Sorting of the x coordinates intersections
-      inv = 0;
-      m   = nbi-1;
-L30:
-      for (i=1; i<=m; i++) {
-         if (xli[i] < xli[i-1]) {
-            inv++;
-            ll       = xli[i-1];
-            xli[i-1] = xli[i];
-            xli[i]   = ll;
-         }
-      }
-      m--;
-      if (inv == 0) goto L50;
-      inv = 0;
-      goto L30;
+      std::sort(xli.begin(), xli.end());
 
       // Draw the hatches
-L50:
-      if (nbi%2 != 0) continue;
+      if ((nbi%2 != 0) || (nbi == 0))
+         continue;
 
-      for (i=1; i<=nbi; i=i+2) {
-         // Rotate back the hatches
-         xlh[0] = cosb*xli[i-1]-sinb*ycur;
-         ylh[0] = sinb*xli[i-1]+cosb*ycur;
-         xlh[1] = cosb*xli[i]  -sinb*ycur;
-         ylh[1] = sinb*xli[i]  +cosb*ycur;
-         // Convert hatches' positions from true NDC to WC
-         xlh[0] = (xlh[0]/wndc)*(rwxmax-rwxmin)+rwxmin;
-         ylh[0] = (ylh[0]/hndc)*(rwymax-rwymin)+rwymin;
-         xlh[1] = (xlh[1]/wndc)*(rwxmax-rwxmin)+rwxmin;
-         ylh[1] = (ylh[1]/hndc)*(rwymax-rwymin)+rwymin;
-         gPad->PaintLine(xlh[0], ylh[0], xlh[1], ylh[1]);
+      for (i=0; i<nbi; ++i) {
+         // Rotate back the hatches - first calculate y coordinate
+         Double_t ytmp = sinb*xli[i] + cosb*ycur;
+         xli[i] = cosb*xli[i] - sinb*ycur;
+         // Convert hatches' positions from true NDC to WC to handle clipping
+         xli[i] = (xli[i]/wndc)*(rwxmax-rwxmin)+rwxmin;
+         ytmp   = (ytmp/hndc)*(rwymax-rwymin)+rwymin;
+         yli.push_back(ytmp);
       }
+
+      gPad->PaintSegments(nbi/2, xli.data(), yli.data());
    }
 }
 
@@ -4468,11 +4206,10 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       if (Clip(x,y,fX1,fY1,fX2,fY2) == 2) return;
    }
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawLine(x[0], y[0], x[1], y[1]);
-
-   if (gVirtualPS)
-      gVirtualPS->DrawPS(2, x, y);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawLine(x[0], y[0], x[1], y[1]);
+   }
 
    Modified();
 }
@@ -4482,16 +4219,9 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TPad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
 {
-   static Double_t xw[2], yw[2];
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawLineNDC(u1, v1, u2, v2);
-
-   if (gVirtualPS) {
-      xw[0] = fX1 + u1*(fX2 - fX1);
-      xw[1] = fX1 + u2*(fX2 - fX1);
-      yw[0] = fY1 + v1*(fY2 - fY1);
-      yw[1] = fY1 + v2*(fY2 - fY1);
-      gVirtualPS->DrawPS(2, xw, yw);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawLineNDC(u1, v1, u2, v2);
    }
 
    Modified();
@@ -4558,74 +4288,30 @@ void TPad::PaintMarker3D(Double_t x, Double_t y, Double_t z)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint polyline in CurrentPad World coordinates.
-
-void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
-{
-   if (n < 2) return;
-
-   Double_t xmin,xmax,ymin,ymax;
-   if (TestBit(TGraph::kClipFrame)) {
-      xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
-   } else {
-      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
-   }
-   Int_t i, i1=-1,np=1;
-   for (i=0; i<n-1; i++) {
-      Double_t x1=x[i];
-      Double_t y1=y[i];
-      Double_t x2=x[i+1];
-      Double_t y2=y[i+1];
-      Int_t iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
-      if (iclip == 2) {
-         i1 = -1;
-         continue;
-      }
-      np++;
-      if (i1 < 0) i1 = i;
-      if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
-      if (gVirtualPS) {
-         gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
-      }
-      if (iclip) {
-         x[i] = x1;
-         y[i] = y1;
-         x[i+1] = x2;
-         y[i+1] = y2;
-      }
-      i1 = -1;
-      np = 1;
-   }
-
-   Modified();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paint polyline in CurrentPad World coordinates.
 ///
 ///  If option[0] == 'C' no clipping
+///  If option[0] == 'i' paint during ExecuteEvent (interactive)
 
-void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
-   if (n < 2) return;
+   auto pp = GetPainter();
+   if ((n < 2) || !pp)
+      return;
 
-   Double_t xmin,xmax,ymin,ymax;
-   Bool_t mustClip = kTRUE;
+   Double_t xmin, xmax, ymin, ymax;
+   Bool_t mustClip = kTRUE, interactive = option && *option == 'i';
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
    } else {
       xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
-      if (option && (option[0] == 'C')) mustClip = kFALSE;
+      if (option && (*option == 'C')) mustClip = kFALSE;
    }
-
-   Int_t i, i1=-1, np=1, iclip=0;
-
-   for (i=0; i < n-1; i++) {
-      Double_t x1=x[i];
-      Double_t y1=y[i];
-      Double_t x2=x[i+1];
-      Double_t y2=y[i+1];
+   Int_t i1 = -1, np = 1, iclip = 0;
+   for (Int_t i = 0; i < n - 1; i++) {
+      Double_t x1 = x[i];
+      Double_t y1 = y[i];
+      Double_t x2 = x[i+1];
+      Double_t y2 = y[i+1];
       if (mustClip) {
          iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
          if (iclip == 2) {
@@ -4634,12 +4320,15 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
          }
       }
       np++;
-      if (i1 < 0) i1 = i;
-      if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
-      if (gVirtualPS) {
-         gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
+      if (i1 < 0)
+         i1 = i;
+      if (iclip == 0 && i < n-2)
+         continue;
+      if (interactive)
+         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], TPadDrawOperation::drawLine, pp->GetLineWidth());
+      else {
+         pp->OnPad(this);
+         pp->DrawPolyLine(np, &x[i1], &y[i1]);
       }
       if (iclip) {
          x[i] = x1;
@@ -4651,27 +4340,87 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       np = 1;
    }
 
-   Modified();
+   if (!interactive)
+      Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint polyline in CurrentPad World coordinates.
+///
+///  If option[0] == 'C' no clipping
+///  If option[0] == 'i' paint during ExecuteEvent (interactive)
+
+void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+{
+   auto pp = GetPainter();
+   if ((n < 2) || !pp)
+      return;
+
+   Double_t xmin, xmax, ymin, ymax;
+   Bool_t mustClip = kTRUE, interactive = option && *option == 'i';
+   if (TestBit(TGraph::kClipFrame)) {
+      xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
+   } else {
+      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+      if (option && (*option == 'C')) mustClip = kFALSE;
+   }
+
+   Int_t i1 = -1, np = 1, iclip = 0;
+
+   for (Int_t i = 0; i < n-1; i++) {
+      Double_t x1 = x[i];
+      Double_t y1 = y[i];
+      Double_t x2 = x[i+1];
+      Double_t y2 = y[i+1];
+      if (mustClip) {
+         iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
+         if (iclip == 2) {
+            i1 = -1;
+            continue;
+         }
+      }
+      np++;
+      if (i1 < 0)
+         i1 = i;
+      if (iclip == 0 && i < n-2)
+         continue;
+      if (interactive)
+         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], TPadDrawOperation::drawLine, pp->GetLineWidth());
+      else {
+         pp->OnPad(this);
+         pp->DrawPolyLine(np, &x[i1], &y[i1]);
+      }
+      if (iclip) {
+         x[i] = x1;
+         y[i] = y1;
+         x[i+1] = x2;
+         y[i+1] = y2;
+      }
+      i1 = -1;
+      np = 1;
+   }
+
+   if (!interactive)
+      Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint polyline in CurrentPad NDC coordinates.
 
-void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
+void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   if (n <=0) return;
+   auto pp = GetPainter();
+   if ((n < 2) || !pp)
+      return;
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawPolyLineNDC(n, x, y);
-
-   if (gVirtualPS) {
-      std::vector<Double_t> xw(n), yw(n);
-      for (Int_t i=0; i<n; i++) {
-         xw[i] = fX1 + x[i]*(fX2 - fX1);
-         yw[i] = fY1 + y[i]*(fY2 - fY1);
-      }
-      gVirtualPS->DrawPS(n, xw.data(), yw.data());
+   if (option && *option == 'i') {
+      fDrawOper[option] = std::make_unique<TPadDrawOperation>(n, x, y, TPadDrawOperation::drawLine, pp->GetLineWidth(), kTRUE);
+      return;
    }
+
+   pp->OnPad(this);
+   pp->DrawPolyLineNDC(n, x, y);
+
    Modified();
 }
 
@@ -4691,8 +4440,10 @@ void TPad::PaintPolyLine3D(Int_t n, Double_t *p)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint polymarker in CurrentPad World coordinates.
+///
+///  If option[0] == 'i' paint during ExecuteEvent (interactive)
 
-void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
+void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *option)
 {
    Int_t n = TMath::Abs(nn);
    Double_t xmin,xmax,ymin,ymax;
@@ -4708,11 +4459,13 @@ void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
          if (i1 < 0) i1 = i;
          if (i < n-1) continue;
       }
-      if (np == 0) continue;
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
-      if (gVirtualPS) {
-         gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
+      if (np == 0)
+         continue;
+      if (option && *option == 'i')
+         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], TPadDrawOperation::drawMarker, option[1] == 'f' ? 0 : 1);
+      else if (auto pp = GetPainter()) {
+         pp->OnPad(this);
+         pp->DrawPolyMarker(np, &x[i1], &y[i1]);
       }
       i1 = -1;
       np = 0;
@@ -4722,8 +4475,10 @@ void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint polymarker in CurrentPad World coordinates.
+///
+///  If option[0] == 'i' paint during ExecuteEvent (interactive)
 
-void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
+void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *option)
 {
    Int_t n = TMath::Abs(nn);
    Double_t xmin,xmax,ymin,ymax;
@@ -4739,11 +4494,14 @@ void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
          if (i1 < 0) i1 = i;
          if (i < n-1) continue;
       }
-      if (np == 0) continue;
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
-      if (gVirtualPS) {
-         gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
+      if (np == 0)
+         continue;
+
+      if (option && *option == 'i')
+         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], TPadDrawOperation::drawMarker, option[1] == 'f' ? 0 : 1);
+      else if (auto pp = GetPainter()) {
+         pp->OnPad(this);
+         pp->DrawPolyMarker(np, &x[i1], &y[i1]);
       }
       i1 = -1;
       np = 0;
@@ -4752,16 +4510,73 @@ void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint N individual segments
+/// Provided arrays should have 2*n elements
+/// IMPORTANT! Provided arrays can be modified after function call!
+
+void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+{
+   if (n < 1)
+      return;
+
+   Double_t xmin,xmax,ymin,ymax;
+   Bool_t mustClip = kTRUE, isAny = kFALSE;
+   if (TestBit(TGraph::kClipFrame)) {
+      xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
+   } else {
+      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+      if (option && *option == 'C') mustClip = kFALSE;
+   }
+
+   if (!mustClip)
+      isAny = kTRUE;
+   else {
+      for (Int_t i = 0; i < 2*n; i+=2) {
+         Int_t iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
+         if (iclip == 2)
+            x[i] = y[i] = x[i+1] = y[i+1] = 0;
+         else
+            isAny = kTRUE;
+      }
+   }
+
+   if (isAny)
+      if (auto pp = GetPainter()) {
+         pp->OnPad(this);
+         pp->DrawSegments(n, x, y);
+      }
+
+   Modified();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint N individual segments in NDC coordinates
+/// Provided arrays should have 2*n elements
+/// IMPORTANT! Provided arrays can be modified after function call!
+
+void TPad::PaintSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
+{
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawSegmentsNDC(n, u, v);
+   }
+
+   Modified();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint text in CurrentPad World coordinates.
 
 void TPad::PaintText(Double_t x, Double_t y, const char *text)
 {
    Modified();
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
-
-   if (gVirtualPS) gVirtualPS->Text(x, y, text);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawText(x, y, text, TVirtualPadPainter::kClear);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4771,10 +4586,23 @@ void TPad::PaintText(Double_t x, Double_t y, const wchar_t *text)
 {
    Modified();
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawText(x, y, text, TVirtualPadPainter::kClear);
+   }
+}
 
-   if (gVirtualPS) gVirtualPS->Text(x, y, text);
+////////////////////////////////////////////////////////////////////////////////
+/// Paint text with URL in CurrentPad World coordinates.
+
+void TPad::PaintTextUrl(Double_t x, Double_t y, const char *text, const char *url)
+{
+   Modified();
+
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawTextUrl(x, y, text, url);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4784,13 +4612,9 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
    Modified();
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
-
-   if (gVirtualPS) {
-      Double_t x = fX1 + u*(fX2 - fX1);
-      Double_t y = fY1 + v*(fY2 - fY1);
-      gVirtualPS->Text(x, y, text);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
    }
 }
 
@@ -4801,13 +4625,9 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    Modified();
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
-
-   if (gVirtualPS) {
-      Double_t x = fX1 + u*(fX2 - fX1);
-      Double_t y = fY1 + v*(fY2 - fY1);
-      gVirtualPS->Text(x, y, text);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
    }
 }
 
@@ -4971,26 +4791,6 @@ void TPad::Print(const char *filename) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Auxiliary function. Returns kTRUE if list contains an object inherited
-/// from TImage
-
-static Bool_t ContainsTImage(TList *li)
-{
-   TIter next(li);
-
-   while (auto obj = next()) {
-      if (obj->InheritsFrom(TImage::Class())) {
-         return kTRUE;
-      } else if (obj->InheritsFrom(TPad::Class())) {
-         if (ContainsTImage(((TPad*)obj)->GetListOfPrimitives())) {
-            return kTRUE;
-         }
-      }
-   }
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Save Canvas contents in a file in one of various formats.
 ///
 /// \anchor TPadPrint
@@ -5149,7 +4949,8 @@ static Bool_t ContainsTImage(TList *li)
 
 void TPad::Print(const char *filename, Option_t *option)
 {
-   if (!GetCanvas())
+   auto canv = GetCanvas();
+   if (!canv)
       return;
 
    TString psname, fs1 = filename;
@@ -5173,9 +4974,7 @@ void TPad::Print(const char *filename, Option_t *option)
 
    TString opt = !option ? opt_default : option;
    Bool_t image = kFALSE;
-
-   Bool_t title = kFALSE;
-   if (strstr(opt,"Title:")) title = kTRUE;
+   Bool_t title = opt.Contains("Title:");
 
    if (!fs1.Length())  {
       psname = GetName();
@@ -5194,104 +4993,106 @@ void TPad::Print(const char *filename, Option_t *option)
 
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
-   if (!title && strstr(opt, "gif+")) {
+   if (!title && opt.Contains("gif+")) {
       gtype = TImage::kAnimGif;
       image = kTRUE;
-   } else if (!title && strstr(opt, "gif")) {
+   } else if (!title && opt.Contains("gif")) {
       gtype = TImage::kGif;
       image = kTRUE;
-   } else if (!title && strstr(opt, "png")) {
+   } else if (!title && opt.Contains("png")) {
       gtype = TImage::kPng;
       image = kTRUE;
-   } else if (!title && strstr(opt, "jpg")) {
+   } else if (!title && opt.Contains("jpg")) {
       gtype = TImage::kJpeg;
       image = kTRUE;
-   } else if (!title && strstr(opt, "tiff")) {
+   } else if (!title && opt.Contains("tiff")) {
       gtype = TImage::kTiff;
       image = kTRUE;
-   } else if (!title && strstr(opt, "xpm")) {
+   } else if (!title && opt.Contains("xpm")) {
       gtype = TImage::kXpm;
       image = kTRUE;
-   } else if (!title && strstr(opt, "bmp")) {
+   } else if (!title && opt.Contains("bmp")) {
       gtype = TImage::kBmp;
       image = kTRUE;
+   } else if (!title && opt.Contains("svg")) {
+      gtype = TImage::kSvg;
+   } else if (!title && opt.Contains("pdf")) {
+      gtype = TImage::kPdf;
+   } else if (!title && opt.Contains("html")) {
+      gtype = TImage::kHtml;
    }
 
-   if (GetCanvas()->IsWeb() && GetPainter() &&
-       (strstr(opt,"svg") || strstr(opt,"pdf") || (gtype == TImage::kJpeg) || (gtype == TImage::kPng))) {
-      GetPainter()->SaveImage(this, psname.Data(), gtype);
-      return;
-   }
+   auto pp = GetPainter();
+   Bool_t isweb = canv->IsWeb();
+   Bool_t isbatch = gROOT->IsBatch() || canv->IsBatch();
 
-   if (!GetCanvas()->IsBatch() && GetPainter())
-      GetPainter()->SelectDrawable(GetCanvasID());
-
-
-   if (!gROOT->IsBatch() && image) {
-      if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
-         Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
-         Color_t hc = gPad->GetCanvas()->GetHighLightColor();
-         gPad->GetCanvas()->SetHighLightColor(-1);
-         gPad->Modified();
-         gPad->Update();
-         if (GetPainter()){
-            GetPainter()->SelectDrawable(wid);
-            GetPainter()->SaveImage(this, psname.Data(), gtype);
-         }
-         if (!gSystem->AccessPathName(psname.Data())) {
-            Info("Print", "GIF file %s has been created", psname.Data());
-         }
-         gPad->GetCanvas()->SetHighLightColor(hc);
+   // for a moment special handling of web canvas - check if can save directly
+   if (isweb && pp)
+      if (pp->SaveAsImage(this, psname.Data(), gtype) != TVirtualPadPainter::kSaveNotImplemented)
          return;
-      }
-      if (gtype != TImage::kUnknown) {
-         Color_t hc = gPad->GetCanvas()->GetHighLightColor();
-         gPad->GetCanvas()->SetHighLightColor(-1);
-         gPad->Modified();
-         gPad->Update();
-         gVirtualX->Update(1);
-         gSystem->Sleep(30); // synchronize
-         if (GetPainter()) GetPainter()->SaveImage(this, psname, gtype);
-         if (!gSystem->AccessPathName(psname)) {
-            Info("Print", "file %s has been created", psname.Data());
-         }
-         gPad->GetCanvas()->SetHighLightColor(hc);
-      } else {
-         Warning("Print", "Unsupported image format %s", psname.Data());
-      }
+
+   // to create HTML file web-based canvas functionality is invoked
+   if (gtype == TImage::kHtml) {
+      auto cmd = TString::Format("TWebCanvas::ProduceImage((TPad *) 0x%zx, \"%s\");", (size_t) this, psname.Data());
+      Long_t res = gROOT->ProcessLine(cmd);
+      if (!res)
+         Error("Print", "Fail create HTML file %s", psname.Data());
       return;
+   }
+
+   if (((!isbatch && image) || isweb) && pp) {
+      Color_t hc = canv->GetHighLightColor();
+
+      if (!isweb) {
+         canv->SetHighLightColor(-1);
+         Modified();
+      }
+      canv->Update();
+
+      auto res = pp->SaveAsImage(this, psname.Data(), gtype);
+
+      if (!isweb)
+         canv->SetHighLightColor(hc);
+
+      if (res == TVirtualPadPainter::kSaveNotImplemented)
+         Warning("Print", "Unsupported image format %s, fallback to TImageDump", psname.Data());
+      else if ((res == TVirtualPadPainter::kSaveOk) && !gSystem->AccessPathName(psname.Data()))
+         Info("Print", "file %s has been created", psname.Data());
+
+      if (res != TVirtualPadPainter::kSaveNotImplemented)
+         return;
    }
 
    //==============Save pad/canvas as a C++ script==============================
-   if (!title && strstr(opt,"cxx")) {
+   if (!title && opt.Contains("cxx")) {
       GetCanvas()->SaveSource(psname, "");
       return;
    }
 
    //==============Save pad/canvas as a root file===============================
-   if (!title && strstr(opt,"root")) {
+   if (!title && opt.Contains("root")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a XML file================================
-   if (!title && strstr(opt,"xml")) {
+   if (!title && opt.Contains("xml")) {
       // Plugin XML driver
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a JSON file================================
-   if (!title && strstr(opt,"json")) {
+   if (!title && opt.Contains("json")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a SVG file================================
-   if (!title && strstr(opt,"svg")) {
+   if (gtype == TImage::kSvg) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
-      Bool_t noScreen = kFALSE;
+      Bool_t noScreen = kFALSE, wasModified = IsModified();
       if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
          noScreen = kTRUE;
          GetCanvas()->SetBatch(kTRUE);
@@ -5315,9 +5116,12 @@ void TPad::Print(const char *filename, Option_t *option)
          gVirtualPS->SetBit(kPrintingPS);
          gVirtualPS->NewPage();
       }
+
       Paint();
       if (noScreen)
          GetCanvas()->SetBatch(kFALSE);
+      if (wasModified && !IsBatch())
+         Modified(kTRUE);
 
       if (!gSystem->AccessPathName(psname))
          Info("Print", "SVG file %s has been created", psname.Data());
@@ -5329,10 +5133,10 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    //==============Save pad/canvas as a TeX file================================
-   if (!title && (strstr(opt,"tex") || strstr(opt,"Standalone"))) {
+   if (!title && (opt.Contains("tex") || opt.Contains("Standalone"))) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
-      Bool_t noScreen = kFALSE;
+      Bool_t noScreen = kFALSE, wasModified = IsModified();
       if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
          noScreen = kTRUE;
          GetCanvas()->SetBatch(kTRUE);
@@ -5361,7 +5165,10 @@ void TPad::Print(const char *filename, Option_t *option)
          gVirtualPS->NewPage();
       }
       Paint();
-      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
+      if (noScreen)
+         GetCanvas()->SetBatch(kFALSE);
+      if (wasModified && !IsBatch())
+         Modified(kTRUE);
 
       if (!gSystem->AccessPathName(psname)) {
          if (standalone) {
@@ -5396,7 +5203,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (copen  || copenb)  mustClose = kFALSE;
    if (cclose || ccloseb) mustClose = kTRUE;
 
-   Bool_t noScreen = kFALSE;
+   Bool_t noScreen = kFALSE, wasModified = IsModified();
    if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
       noScreen = kTRUE;
       GetCanvas()->SetBatch(kTRUE);
@@ -5417,7 +5224,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (!gVirtualPS || mustOpen) {
 
       const char *pluginName = "ps"; // Plugin Postscript driver
-      if (strstr(opt,"pdf") || title || strstr(opt,"EmbedFonts"))
+      if (opt.Contains("pdf") || title || opt.Contains("EmbedFonts"))
          pluginName = "pdf";
       else if (image)
          pluginName = "image"; // Plugin TImageDump driver
@@ -5442,7 +5249,7 @@ void TPad::Print(const char *filename, Option_t *option)
       if (gVirtualPS)
          gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
-         if (!strstr(opt,"pdf") || image) {
+         if (!opt.Contains("pdf") || image) {
             if (gVirtualPS) gVirtualPS->NewPage();
          }
          Paint();
@@ -5470,9 +5277,9 @@ void TPad::Print(const char *filename, Option_t *option)
       }
       const Ssiz_t titlePos = opt.Index("Title:");
       if (titlePos != kNPOS) {
-         gVirtualPS->SetTitle(opt.Data()+titlePos+6);
-         opt.Replace(titlePos,opt.Length(),"pdf");
-      } else {
+         gVirtualPS->SetTitle(opt.Data() + titlePos + 6);
+         opt.Replace(titlePos, opt.Length(), "pdf");
+      } else if (!ccloseb) {
          gVirtualPS->SetTitle("PDF");
       }
       if (mustClose) {
@@ -5487,9 +5294,12 @@ void TPad::Print(const char *filename, Option_t *option)
       }
    }
 
-   if (strstr(opt,"Preview"))
+   if (wasModified && !IsBatch())
+      Modified(kTRUE);
+
+   if (opt.Contains("Preview"))
       gSystem->Exec(TString::Format("epstool --quiet -t6p %s %s", psname.Data(), psname.Data()).Data());
-   if (strstr(opt,"EmbedFonts")) {
+   if (opt.Contains("EmbedFonts")) {
       gSystem->Exec(TString::Format("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
                           psname.Data()).Data());
       gSystem->Rename("pdf_temp.pdf", psname.Data());
@@ -5837,7 +5647,7 @@ void TPad::ResizePad(Option_t *option)
    Double_t pyrange = -fAbsHNDC*wh;
 
    // Linear X axis
-   Double_t rounding = 0.; // was used before to adjust somehow wrong int trunctation by coordiantes transformation
+   Double_t rounding = 0.; // was used before to adjust somehow wrong int truncation by coordinates transformation
    Double_t xrange  = fX2 - fX1;
    fXtoAbsPixelk = rounding + pxlow - pxrange*fX1/xrange;      //origin at left
    fXtoPixelk = rounding +  -pxrange*fX1/xrange;
@@ -5866,51 +5676,51 @@ void TPad::ResizePad(Option_t *option)
    // Coefficients to convert from canvas pixels to pad world coordinates
 
    // Resize all sub-pads
-   TObject *obj;
-   if (!fPrimitives) fPrimitives = new TList;
-   TIter    next(GetListOfPrimitives());
-   while ((obj = next())) {
+   if (!fPrimitives)
+      fPrimitives = new TList;
+   TIter next(GetListOfPrimitives());
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TPad::Class()))
-         ((TPad*)obj)->ResizePad(option);
+         ((TPad *)obj)->ResizePad(option);
    }
 
    // Reset all current sizes
    if (gPad->IsBatch())
       fPixmapID = 0;
-   else {
-      if (GetPainter()){
-        GetPainter()->SetLineWidth(-1);
-        GetPainter()->SetTextSize(-1);
-      }
-      // create or re-create off-screen pixmap
-      if (fPixmapID) {
-         int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
-         int h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1));
-         //protection in case of wrong pad parameters.
-         //without this protection, the OpenPixmap or ResizePixmap crashes with
-         //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
-         //resulting in a frozen xterm
-         if (   !(TMath::Finite(fX1)) || !(TMath::Finite(fX2))
-             || !(TMath::Finite(fY1)) || !(TMath::Finite(fY2))
-             || (TMath::IsNaN(fX1))  || (TMath::IsNaN(fX2))
-             || (TMath::IsNaN(fY1))  || (TMath::IsNaN(fY2)))
-            Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
-         if (w <= 0 || w > 10000) {
-            Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
-            w = 10;
-         }
-         if (h <= 0 || h > 10000) {
-            Warning("ResizePad", "%s height changed from %d to %d\n",GetName(),h,10);
-            h = 10;
-         }
-         if (fPixmapID == -1) {      // this case is handled via the ctor
-            if (GetPainter()) fPixmapID = GetPainter()->CreateDrawable(w, h);
-         } else {
-            if (gVirtualX) {
-               if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
-                  Resized();
-                  Modified(kTRUE);
-               }
+   else if (auto pp = GetPainter()) {
+      if (pp->IsNative()) {
+         // TODO: check if this is necessary
+         auto attl = pp->GetAttLine();
+         attl.SetLineColor(-1);
+         pp->SetAttLine(attl);
+         auto attt = pp->GetAttText();
+         attt.SetTextSize(-1);
+         pp->OnPad(this);
+         pp->SetAttText(attt);
+         // create or re-create off-screen pixmap
+         if (fPixmapID) {
+            int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
+            int h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1));
+            //protection in case of wrong pad parameters.
+            //without this protection, the OpenPixmap or ResizePixmap crashes with
+            //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
+            //resulting in a frozen xterm
+            if (!TMath::Finite(fX1) || !TMath::Finite(fX2) || !TMath::Finite(fY1) || !TMath::Finite(fY2) ||
+                TMath::IsNaN(fX1) || TMath::IsNaN(fX2) || TMath::IsNaN(fY1) || TMath::IsNaN(fY2))
+               Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
+            if (w <= 0 || w > 10000) {
+               Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
+               w = 10;
+            }
+            if (h <= 0 || h > 10000) {
+               Warning("ResizePad", "%s height changed from %d to %d\n",GetName(),h,10);
+               h = 10;
+            }
+            if (fPixmapID == -1)       // this case is handled via the ctor
+               fPixmapID = pp->CreateDrawable(w, h);
+            else if (pp->ResizeDrawable(fPixmapID, w, h)) {
+               Resized();
+               Modified(kTRUE);
             }
          }
       }
@@ -5983,17 +5793,11 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"xml");
    else if (psname.EndsWith(".json"))
       ((TPad*)this)->Print(psname,"json");
+   else if (psname.EndsWith(".html"))
+      ((TPad*)this)->Print(psname,"html");
    else if (psname.EndsWith(".eps"))
       ((TPad*)this)->Print(psname,"eps");
-   else if (psname.EndsWith(".pdf"))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf["))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf]"))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf("))
-      ((TPad*)this)->Print(psname,"pdf");
-   else if (psname.EndsWith(".pdf)"))
+   else if (psname.EndsWith(".pdf") || psname.EndsWith(".pdf[") || psname.EndsWith(".pdf]") || psname.EndsWith(".pdf("))
       ((TPad*)this)->Print(psname,"pdf");
    else if (psname.EndsWith(".svg"))
       ((TPad*)this)->Print(psname,"svg");
@@ -6003,9 +5807,7 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"xpm");
    else if (psname.EndsWith(".png"))
       ((TPad*)this)->Print(psname,"png");
-   else if (psname.EndsWith(".jpg"))
-      ((TPad*)this)->Print(psname,"jpg");
-   else if (psname.EndsWith(".jpeg"))
+   else if (psname.EndsWith(".jpg") || psname.EndsWith(".jpeg"))
       ((TPad*)this)->Print(psname,"jpg");
    else if (psname.EndsWith(".bmp"))
       ((TPad*)this)->Print(psname,"bmp");
@@ -6323,63 +6125,64 @@ void TPad::SetView(TView *view)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript fill area attributes.
+///
+/// DEPRECATED!!! No longer used by ROOT, kept only for backward compatibility
 
 void TPad::SetAttFillPS(Color_t color, Style_t style)
 {
-   if (gVirtualPS) {
-      gVirtualPS->SetFillColor(color);
-      gVirtualPS->SetFillStyle(style);
-   }
+   if (auto pp = GetPainter())
+      if (pp->GetPS())
+         pp->SetAttFill({color, style});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript line attributes.
+///
+/// DEPRECATED!!! No longer used by ROOT, kept only for backward compatibility
 
 void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 {
-   if (gVirtualPS) {
-      gVirtualPS->SetLineColor(color);
-      gVirtualPS->SetLineStyle(style);
-      gVirtualPS->SetLineWidth(lwidth);
-   }
+   if (auto pp = GetPainter())
+      if (pp->GetPS())
+         pp->SetAttLine({color, style, lwidth});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript marker attributes.
+///
+/// DEPRECATED!!! No longer used by ROOT, kept only for backward compatibility
 
 void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 {
-   if (gVirtualPS) {
-      gVirtualPS->SetMarkerColor(color);
-      gVirtualPS->SetMarkerStyle(style);
-      gVirtualPS->SetMarkerSize(msize);
-   }
+   if (auto pp = GetPainter())
+      if (pp->GetPS())
+         pp->SetAttMarker({color, style, msize});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript text attributes.
+///
+/// DEPRECATED!!! No longer used by ROOT, kept only for backward compatibility
 
 void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize)
 {
-   if (gVirtualPS) {
-      gVirtualPS->SetTextAlign(align);
-      gVirtualPS->SetTextAngle(angle);
-      gVirtualPS->SetTextColor(color);
-      gVirtualPS->SetTextFont(font);
-      if (font%10 > 2) {
-         Float_t wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
-         Float_t hh = (Float_t)gPad->YtoPixel(gPad->GetY1());
-         Float_t dy;
-         if (wh < hh)  {
-            dy = AbsPixeltoX(Int_t(tsize)) - AbsPixeltoX(0);
-            tsize = dy/(fX2-fX1);
-         } else {
-            dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
-            tsize = dy/(fY2-fY1);
+   if (auto pp = GetPainter())
+      if (pp->GetPS()) {
+         if (font % 10 > 2) {
+            Float_t wh = (Float_t) XtoPixel(GetX2());
+            Float_t hh = (Float_t) YtoPixel(GetY1());
+            Float_t dy;
+            if (wh < hh)  {
+               dy = AbsPixeltoX(Int_t(tsize)) - AbsPixeltoX(0);
+               tsize = dy/(GetX2()-GetX1());
+            } else {
+               dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
+               tsize = dy/(GetY2()-GetY1());
+            }
          }
+         pp->OnPad(this);
+         pp->SetAttText({align, angle, color, font, tsize});
       }
-      gVirtualPS->SetTextSize(tsize);
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7651,6 +7454,27 @@ Int_t TPad::YtoAbsPixel(Double_t y) const
 {
    return TMath::Nint(pixel_boundary(fYtoAbsPixelk + y*fYtoPixel));
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a vertical distance [y1,y2] to pixel
+
+Int_t TPad::HtoAbsPixel(Double_t y1, Double_t y2) const
+{
+   double h1 = fYtoAbsPixelk + y1 * fYtoPixel;
+   double h2 = fYtoAbsPixelk + y2 * fYtoPixel;
+   return TMath::Nint(pixel_boundary(std::abs(h1 - h2)));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a horizontal distance [x1,x2] to pixel
+
+Int_t TPad::WtoAbsPixel(Double_t x1, Double_t x2) const
+{
+   double w1 = fXtoAbsPixelk + x1 * fXtoPixel;
+   double w2 = fXtoAbsPixelk + x2 * fXtoPixel;
+   return TMath::Nint(pixel_boundary(std::abs(w1 - w2)));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert Y coordinate to pixel

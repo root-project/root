@@ -30,15 +30,10 @@ observable propagates a valueDirty flag when an event is loaded even
 though usually only one observable actually changes.
 **/
 
-
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooChangeTracker.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgSet.h"
-#include "RooMsgService.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,11 +108,8 @@ bool RooChangeTracker::hasChanged(bool clearState)
 
     if (clearState) {
       // Clear dirty flag by calling getVal()
-      //cout << "RooChangeTracker(" << GetName() << ") clearing isValueDirty" << std::endl ;
       clearValueDirty() ;
     }
-
-    //cout << "RooChangeTracker(" << GetName() << ") isValueDirty = true, returning true" << std::endl ;
 
     return true ;
   }
@@ -131,7 +123,6 @@ bool RooChangeTracker::hasChanged(bool clearState)
     for (unsigned int i=0; i < _realSet.size(); ++i) {
       auto real = static_cast<const RooAbsReal*>(_realSet.at(i));
       if (real->getVal() != _realRef[i]) {
-        // std::cout << "RooChangeTracker(" << this << "," << GetName() << ") value of " << real->GetName() << " has changed from " << _realRef[i] << " to " << real->getVal() << " clearState = " << (clearState?"T":"F") << std::endl ;
         valuesChanged = true ;
         _realRef[i] = real->getVal() ;
       }
@@ -140,7 +131,6 @@ bool RooChangeTracker::hasChanged(bool clearState)
     for (unsigned int i=0; i < _catSet.size(); ++i) {
       auto cat = static_cast<const RooAbsCategory*>(_catSet.at(i));
       if (cat->getCurrentIndex() != _catRef[i]) {
-        // std::cout << "RooChangeTracker(" << this << "," << GetName() << ") value of " << cat->GetName() << " has changed from " << _catRef[i-1] << " to " << cat->getIndex() << std::endl ;
         valuesChanged = true ;
         _catRef[i] = cat->getCurrentIndex() ;
       }
@@ -153,8 +143,6 @@ bool RooChangeTracker::hasChanged(bool clearState)
       valuesChanged=true ;
       _init = true ;
     }
-
-    // std::cout << "RooChangeTracker(" << GetName() << ") returning " << (valuesChanged?"T":"F") << std::endl ;
 
     return valuesChanged ;
 

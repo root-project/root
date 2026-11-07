@@ -14,9 +14,9 @@ To start the http server, at any time, create an instance of the [THttpServer](h
 auto serv = new THttpServer("http:8080");
 ```
 
-This will start a [civetweb](https://github.com/civetweb/civetweb)-based http server on the port 8080. Then one should be able to open the address `http://localhost:8080` in any modern browser (Firefox, Chrome, Opera, Safari, IE11) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
+This will start a [civetweb](https://github.com/civetweb/civetweb)-based http server on the port 8080. Then one should be able to open the address `http://localhost:8080` in any modern browser (Firefox, Chrome, Opera, Safari, Edge) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
-There is a [server snapshot](https://root.cern/js/latest/httpserver.C/?layout=simple&item=Canvases/c1) of running macro [tutorials/http/httpserver.C](https://github.com/root-project/root/blob/master/tutorials/http/httpserver.C) from ROOT tutorials.
+There is a [server snapshot](https://root.cern/js/latest/httpserver.C/?layout=simple&item=Canvases/c1) of running macro [tutorials/http/httpserver.C](https://root.cern/doc/master/httpserver_8C.html) from ROOT tutorials.
 
 One could specify several options when creating http server. They could be add as additional URL parameters to the constructor arguments like:
 
@@ -55,7 +55,7 @@ One also can provide extra arguments for THttpServer itself:
 | Name           |    Description    |
 | :------------- | :---------------- |
 | readonly, ro   | use server in read-only mode (default) |
-| readwrite, rw  | use server in read-write mode |
+| readwrite, rw  | caution! server allowed to execute methods of registered objects |
 | global         | let scan global directories for canvases and files (default) |
 | noglobal       | disable scan of global directories |
 | basic_sniffer  | use basic `TRootSniffer` without support of hist, gpad, graph, tree classes |
@@ -117,6 +117,9 @@ serv->RegisterCommand("/DoSomething", "SomeFunction()");
 Element with name `DoSomething` will appear in the web browser and can be clicked.
 It will result in `gROOT->ProcessLineSync("SomeFunction()")` call.
 
+**CAUTION: Registering commands via RegisterCommand() grants remote users the ability to trigger server-side logic. If not strictly restricted, this can lead to Remote Code Execution (RCE). Never register commands that accept unvalidated user input, and ensure the server is protected by authentication or limited to trusted local interfaces.**
+
+
 One could configure argument(s) for the command.
 For that one should use `%arg1`, `%arg2` and so on identifiers. Like:
 
@@ -144,7 +147,7 @@ string to the icon name to let browser show command as extra button. In last cas
 serv->Hide("/DoSomething");
 ```
 
-One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-project/root/blob/master/tutorials/http/httpcontrol.C) macro.
+One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://root.cern/doc/master/httpcontrol_8C.html) macro.
 
 
 ## Customize user interface
@@ -447,7 +450,6 @@ For the ROOT classes which are implementing Draw method (like [TH1](https://root
 ```
 
 For all such requests following parameters could be specified:
-
    - **h** - image height
    - **w** - image width
    - **opt** - draw options
@@ -467,13 +469,17 @@ Or one could disable read-only mode with the call:
 serv->SetReadOnly(kFALSE);
 ```
 
-Or one could allow access to the folder, object or specific object methods with:
+**CAUTION: Disabling read-only mode exposes extensive ROOT functionality via HTTP. To prevent unauthorized remote access or potential system exploitation, it is strongly recommended to run the server only within an isolated network or behind a secure firewall without external exposure.**
+
+As alternative one could allow access only to the folder, object or specific object methods with:
 
 ```cpp
 serv->Restrict("/Histograms", "allow=admin"); // allow full access for user with 'admin' account
 serv->Restrict("/Histograms/hist1", "allow=all"); // allow full access for all users
 serv->Restrict("/Histograms/hist1", "allow_method=Rebin"); // allow only Rebin method
 ```
+
+Using of [THttpServer::Restrict()](https://root.cern/doc/master/classTRootSniffer.html#a8af1f11cbfb9c895f968ec0594794120) method is preferable compared to simple disable of readonly mode.
 
 'exe.json' accepts following parameters:
 
@@ -488,7 +494,7 @@ Example of retrieving object title:
 [shell] wget 'http://localhost:8080/Objects/subfolder/obj/exe.json?method=GetTitle' -O title.json
 ```
 
-Example of TTree::Draw method execution:
+Example of `TTree::Draw()` method execution:
 
 ```bash
 [shell] wget 'http://localhost:8080/Files/job1.root/ntuple/exe.json?method=Draw&prototype="Option_t*"&opt="px:py>>h1"&_ret_object_=h1' -O exe.json
@@ -543,6 +549,13 @@ One could specify them in the URL string:
 
 ```bash
 [shell] wget http://localhost:8080/ResetCounter/cmd.json?arg1=7&arg2=12 -O result.txt
+```
+
+**CAUTION: Registering commands via RegisterCommand() grants remote users the ability to trigger server-side logic. If not strictly restricted, this can lead to Remote Code Execution (RCE). Never register commands that accept unvalidated user input, and ensure the server is protected by authentication or limited to trusted local interfaces.**
+
+Access to registered commands can be restricted like:
+```cpp
+serv->Restrict("/Folder/Start", "allow=admin");
 ```
 
 
@@ -677,8 +690,7 @@ serv->Register(handler);
 ```
 
 After that web socket connection can be established with the address `ws://host_name:8080/name1/root.websocket`
-Example client code can be found in `$ROOTSYS/tutorials/http/ws.htm` file. Custom HTML page for
-websocket handler is specified with `TUserHandler::GetDefaultPageContent()` method returning `"file:ws.htm"`.
+Example client code can be found in [$ROOTSYS/tutorials/http/ws.C](https://root.cern/doc/master/ws_8C.html) file. Custom HTML page for websocket handler is specified with `TUserHandler::GetDefaultPageContent()` method returning `"file:ws.htm"`.
 
 
 ## Processing of custom http requests

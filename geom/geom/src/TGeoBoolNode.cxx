@@ -43,76 +43,7 @@ implementations for Boolean nodes are:
   - TGeoIntersection - representing the Boolean intersection of two positioned shapes
 */
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TGeoBoolNode::ThreadData_t::ThreadData_t() : fSelected(0) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoBoolNode::ThreadData_t::~ThreadData_t() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TGeoBoolNode::ThreadData_t &TGeoBoolNode::GetThreadData() const
-{
-   Int_t tid = TGeoManager::ThreadId();
-   /*
-      std::lock_guard<std::mutex> guard(fMutex);
-      if (tid >= fThreadSize) {
-         Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse
-      TGeoManager::SetMaxThreads properly !!!", tid, fThreadSize);
-      }
-      if (tid >= fThreadSize)
-      {
-         fThreadData.resize(tid + 1);
-         fThreadSize = tid + 1;
-      }
-      if (fThreadData[tid] == 0)
-      {
-      if (fThreadData[tid] == 0)
-         fThreadData[tid] = new ThreadData_t;
-      }
-   */
-   return *fThreadData[tid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoBoolNode::ClearThreadData() const
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
-   }
-   fThreadData.clear();
-   fThreadSize = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create thread data for n threads max.
-
-void TGeoBoolNode::CreateThreadData(Int_t nthreads)
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-      }
-   }
-   // Propagate to components
-   if (fLeft)
-      fLeft->CreateThreadData(nthreads);
-   if (fRight)
-      fRight->CreateThreadData(nthreads);
-}
-
+std::atomic<UInt_t> TGeoBoolNode::fgInstanceCount{0};
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the selected branch.
 
@@ -132,8 +63,6 @@ TGeoBoolNode::TGeoBoolNode()
    fRightMat = nullptr;
    fNpoints = 0;
    fPoints = nullptr;
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,8 +76,6 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
    fRightMat = nullptr;
    fNpoints = 0;
    fPoints = nullptr;
-   fThreadSize = 0;
-   CreateThreadData(1);
    if (!MakeBranch(expr1, kTRUE)) {
       return;
    }
@@ -167,8 +94,6 @@ TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, 
    fLeftMat = lmat;
    fNpoints = 0;
    fPoints = nullptr;
-   fThreadSize = 0;
-   CreateThreadData(1);
    if (!fLeftMat)
       fLeftMat = gGeoIdentity;
    else
@@ -196,7 +121,6 @@ TGeoBoolNode::~TGeoBoolNode()
 {
    if (fPoints)
       delete[] fPoints;
-   ClearThreadData();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,6 +138,7 @@ void TGeoBoolNode::AssignPoints(Int_t npoints, Double_t *points)
       fPoints = new Double_t[3 * fNpoints];
       memcpy(fPoints, points, 3 * fNpoints * sizeof(Double_t));
    }
+   fMeshValid = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,18 +147,22 @@ void TGeoBoolNode::AssignPoints(Int_t npoints, Double_t *points)
 Int_t TGeoBoolNode::GetNpoints()
 {
    Int_t itot = 0;
-   if (fNpoints)
+   if (fNpoints && fMeshValid)
       return fNpoints;
    // Local points for the left shape
    Int_t nleft = fLeft->GetNmeshVertices();
    Int_t nright = fRight->GetNmeshVertices();
-   if (nleft + nright == 0) return 0;
+   if (nleft + nright == 0)
+      return 0;
 
+   // This is an expensive check to make sure the generated points are on the surface of the shape
    Double_t *points1 = (nleft > 0) ? new Double_t[3 * nleft] : nullptr;
-   if (nleft > 0) fLeft->SetPoints(points1);
+   if (nleft > 0)
+      fLeft->SetPoints(points1);
    // Local points for the right shape
    Double_t *points2 = (nright > 0) ? new Double_t[3 * nright] : nullptr;
-   if (nright > 0) fRight->SetPoints(points2);
+   if (nright > 0)
+      fRight->SetPoints(points2);
    Double_t *points = new Double_t[3 * (nleft + nright)];
    for (Int_t i = 0; i < nleft; i++) {
       fLeftMat->LocalToMaster(&points1[3 * i], &points[3 * itot]);
@@ -252,6 +181,18 @@ Int_t TGeoBoolNode::GetNpoints()
    delete[] points2;
    delete[] points;
    return fNpoints;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate mesh caching recursively
+
+void TGeoBoolNode::InvalidateMeshCaches()
+{
+   fMeshValid = kFALSE;
+   if (fLeft->IsComposite())
+      ((TGeoCompositeShape *)fLeft)->InvalidateMeshCaches();
+   if (fRight->IsComposite())
+      ((TGeoCompositeShape *)fRight)->InvalidateMeshCaches();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -468,7 +409,6 @@ void TGeoBoolNode::Sizeof3D() const
    fLeft->Sizeof3D();
    fRight->Sizeof3D();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.
@@ -867,7 +807,6 @@ void TGeoUnion::Sizeof3D() const
    TGeoBoolNode::Sizeof3D();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.
 
@@ -1178,7 +1117,6 @@ void TGeoSubtraction::Sizeof3D() const
 {
    TGeoBoolNode::Sizeof3D();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.

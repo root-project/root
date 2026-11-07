@@ -89,7 +89,7 @@ cHDD.setError(0.1)
 
 # wrapper pdf to normalise morphing function to a morphing pdf
 model = ROOT.RooWrapperPdf("wrap_pdf", "wrap_pdf", morphfunc)
-fitres = model.fitTo(pseudo_dh, SumW2Error=True, Optimize=False, Save=True, PrintLevel=-1)
+fitres = model.fitTo(pseudo_dh, SumW2Error=True, Save=True, PrintLevel=-1)
 # run the fit
 # Get the correlation matrix
 hcorr = fitres.correlationHist()

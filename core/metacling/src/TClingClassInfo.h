@@ -96,7 +96,7 @@ public:
    explicit TClingClassInfo(cling::Interpreter *, Bool_t all = kTRUE);
    explicit TClingClassInfo(cling::Interpreter *, const char *classname, bool intantiateTemplate = kTRUE);
    explicit TClingClassInfo(cling::Interpreter *interp, const clang::Type &tag);
-   explicit TClingClassInfo(cling::Interpreter *interp, const clang::Decl *D);
+   explicit TClingClassInfo(cling::Interpreter *interp, const clang::Decl *D, const clang::Type *T = nullptr);
    TClingClassInfo &operator=(const TClingClassInfo &rhs)
    {
       // Copy all but the mutex
@@ -181,6 +181,7 @@ public:
    long                 Property() const;
    int                  RootFlag() const;
    int                  Size() const;
+   size_t               GetAlignOf() const;
    Longptr_t            Tagnum() const;
    const char          *FileName();
    void                 FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;

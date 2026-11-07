@@ -9,12 +9,31 @@
 # @author Jakob Blomer CERN
 ############################################################################
 
+# RNTuple optionally writes to S3-compatible object storage via libcurl (RCurlHttp).
+if(curl)
+  set(ROOTNTuple_OPTIONAL_DEPENDENCIES RCurlHttp)
+  list(APPEND ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageS3.hxx)
+  list(APPEND ROOTNTuple_EXTRA_SOURCES src/RPageStorageS3.cxx)
+endif()
+
+# Enable RNTuple support for Intel DAOS
+if(daos OR daos_mock)
+  list(APPEND ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
+  list(APPEND ROOTNTuple_EXTRA_SOURCES src/RDaos.cxx src/RPageStorageDaos.cxx)
+
+  if(daos_mock)
+    list(APPEND ROOTNTuple_EXTRA_SOURCES src/libdaos_mock/libdaos_mock.cxx)
+  endif()
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
+NO_GLOB_HEADERS # Ensure that the optional headers above only get installed when enabled
 HEADERS
   ROOT/RCluster.hxx
   ROOT/RClusterPool.hxx
   ROOT/RColumn.hxx
   ROOT/RColumnElementBase.hxx
+  ROOT/RCreateFieldOptions.hxx
   ROOT/REntry.hxx
   ROOT/RField.hxx
   ROOT/RFieldBase.hxx
@@ -23,6 +42,9 @@ HEADERS
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx
+  ROOT/RNTupleAttrReading.hxx
+  ROOT/RNTupleAttrUtils.hxx
+  ROOT/RNTupleAttrWriting.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleFillContext.hxx
   ROOT/RNTupleFillStatus.hxx
@@ -33,12 +55,12 @@ HEADERS
   ROOT/RNTupleModel.hxx
   ROOT/RNTupleParallelWriter.hxx
   ROOT/RNTupleProcessor.hxx
+  ROOT/RNTupleProcessorEntry.hxx
   ROOT/RNTupleRange.hxx
   ROOT/RNTupleReadOptions.hxx
   ROOT/RNTupleReader.hxx
   ROOT/RNTupleSerialize.hxx
   ROOT/RNTupleTypes.hxx
-  ROOT/RNTupleUtil.hxx
   ROOT/RNTupleUtils.hxx
   ROOT/RNTupleView.hxx
   ROOT/RNTupleWriteOptions.hxx
@@ -53,6 +75,7 @@ HEADERS
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
   ROOT/RRawPtrWriteEntry.hxx
+  ${ROOTNTuple_EXTRA_HEADERS}
 SOURCES
   src/RCluster.cxx
   src/RClusterPool.cxx
@@ -66,6 +89,8 @@ SOURCES
   src/RFieldVisitor.cxx
   src/RMiniFile.cxx
   src/RNTuple.cxx
+  src/RNTupleAttrReading.cxx
+  src/RNTupleAttrWriting.cxx
   src/RNTupleDescriptor.cxx
   src/RNTupleDescriptorFmt.cxx
   src/RNTupleFillContext.cxx
@@ -75,8 +100,10 @@ SOURCES
   src/RNTupleModel.cxx
   src/RNTupleParallelWriter.cxx
   src/RNTupleProcessor.cxx
+  src/RNTupleProcessorEntry.cxx
   src/RNTupleReader.cxx
   src/RNTupleSerialize.cxx
+  src/RNTupleTypes.cxx
   src/RNTupleUtils.cxx
   src/RNTupleWriteOptions.cxx
   src/RNTupleWriter.cxx
@@ -87,31 +114,45 @@ SOURCES
   src/RPageSinkBuf.cxx
   src/RPageStorage.cxx
   src/RPageStorageFile.cxx
+  ${ROOTNTuple_EXTRA_SOURCES}
 LINKDEF
   LinkDef.h
 DEPENDENCIES
   Imt
   RIO
   ROOTVecOps
+  ${ROOTNTuple_OPTIONAL_DEPENDENCIES}
 )
+
+# Non-standalone headers must be left out of the dictionary, so a dedicated install command is required.
+ROOT_INSTALL_HEADERS(HEADERS
+  ROOT/RField/RFieldFundamental.hxx
+  ROOT/RField/RFieldProxiedCollection.hxx
+  ROOT/RField/RFieldRecord.hxx
+  ROOT/RField/RFieldSequenceContainer.hxx
+  ROOT/RField/RFieldSoA.hxx
+  ROOT/RField/RFieldSTLMisc.hxx)
 
 target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
 
 # Enable RNTuple support for Intel DAOS
 if(daos OR daos_mock)
-  set(ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
-  target_sources(ROOTNTuple PRIVATE src/RDaos.cxx src/RPageStorageDaos.cxx)
   target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_DAOS)
 
   target_include_directories(ROOTNTuple PRIVATE ${UUID_INCLUDE_DIR})
   target_link_libraries(ROOTNTuple PRIVATE ${UUID_LIBRARY})
   if(daos_mock)
     target_include_directories(ROOTNTuple PRIVATE inc/ROOT/libdaos_mock/)
-    target_sources(ROOTNTuple PRIVATE src/libdaos_mock/libdaos_mock.cxx)
   else()
     target_include_directories(ROOTNTuple PRIVATE ${DAOS_INCLUDE_DIRS})
     target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES})
   endif()
+endif()
+
+# Enable RNTuple support for S3-compatible object storage
+if(curl)
+  target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_S3)
+  target_link_libraries(ROOTNTuple PRIVATE nlohmann_json::nlohmann_json)
 endif()
 
 if(MSVC)

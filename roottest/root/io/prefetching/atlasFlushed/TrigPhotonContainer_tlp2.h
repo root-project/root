@@ -9,7 +9,7 @@
 #define TrigPhotonContainer_tlp2_h
 class TrigPhotonContainer_tlp2;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigPhotonContainer_p2.h"
 #include "TrigPhoton_p2.h"

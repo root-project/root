@@ -13,11 +13,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
   HEADERS
     TGX11.h
   SOURCES
-    src/gifdecode.c
-    src/gifencode.c
-    src/gifquantize.c
+    ../gifencode/gifdecode.cxx
+    ../gifencode/gifencode.cxx
     src/GX11Gui.cxx
-    src/Rotated.cxx
     src/TGX11.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
@@ -25,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
     ${X11_LIBRARIES}
     ${X11_Xpm_LIB}
     ${CMAKE_THREAD_LIBS_INIT}
+    xvertext
   DEPENDENCIES
     Core
     MathCore
@@ -34,7 +33,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
 )
 
 target_include_directories(GX11 PRIVATE ${X11_INCLUDE_DIR})
-
-if(AIX)
-  target_include_directories(GX11 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-endif()
+target_include_directories(GX11 PRIVATE ../gifencode)

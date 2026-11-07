@@ -28,7 +28,7 @@
 class TGlobal : public TDictionary {
 
 private:
-   DataMemberInfo_t  *fInfo;      //!pointer to CINT data member info
+   DataMemberInfo_t  *fInfo;      ///<!pointer to CINT data member info
 
 public:
    TGlobal(DataMemberInfo_t *info = nullptr);

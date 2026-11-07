@@ -197,7 +197,23 @@ public:
          return aa == bb;
       };
    };
-   auto begin() const -> xRooNodeIterator { return xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::begin()); }
+   auto begin() const -> xRooNodeIterator
+   {
+      // this update is to resolve need for calling browse() before iterating, e.g.
+      //      for(auto a : xRooNode(b).browse()) ...
+      // can now become the more natural:
+      //      for(auto a : xRooNode(b)) ...
+      // but would still need e.g. xRooNode(s).browse().size() rather than xRooNode(s).size() which would give 0 for
+      // unpopulated case
+      static bool browseLock =
+         false; // need for blocking recursive calls to browse (since browse method uses the iterators)
+      if (!browseLock && get() && empty()) {
+         browseLock = true;
+         const_cast<xRooNode &>(*this).browse();
+         browseLock = false;
+      }
+      return xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::begin());
+   }
    auto end() const -> xRooNodeIterator { return xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::end()); }
 
    // needed in pyROOT to avoid it creating iterators that follow the 'get' to death
@@ -312,6 +328,9 @@ public:
    xRooNode datasets()
       const; // datasets corresponding to this pdf (parent nodes that do observable selections automatically applied)
 
+   xRooNode parents() const; // the clients of this node
+   xRooNode args() const;    // all the nodes underneath this node
+
    xRooNode Replace(const xRooNode &node); // use to replace a node in the tree at the location of this node
    xRooNode Remove(const xRooNode &child);
    xRooNode
@@ -326,6 +345,7 @@ public:
 
    xRooNode reduced(const std::string &range = "", bool invert = false)
       const; // return a node representing reduced version of this node, will use the SetRange to reduce if blank
+   xRooNode reduced(const std::function<bool(const xRooNode &)> selector) const;
 
    // following versions are for the menu in the GUI
    /** @private */
@@ -503,25 +523,25 @@ public:
    };
    static InteractiveObject *gIntObj;
 
-   mutable std::shared_ptr<TObject> fComp; //!
+   mutable std::shared_ptr<TObject> fComp; ///<!
    int fTimes = 1;      // when the same comp appears multiple times in a parent node, this is increased to reflect that
    int fBinNumber = -1; // used by 'bin' nodes (a node that refers to a specific bin of a parent)
-   std::shared_ptr<xRooNode> fParent; //!
+   std::shared_ptr<xRooNode> fParent; ///<!
    std::string fFolder;               // folder to put this node in when 'organising' the parent
 
    void SetRange(const char *range, double low = std::numeric_limits<double>::quiet_NaN(),
                  double high = std::numeric_limits<double>::quiet_NaN()); // *MENU*
    const char *GetRange() const;
-   mutable std::string fRange; //! only here so can have char* GetRange return so can return nullptr for no range set
-                               //! (required for RooCategory)
+   mutable std::string fRange; ///<! only here so can have char* GetRange return so can return nullptr for no range set
+                               ///<! (required for RooCategory)
 
    mutable std::shared_ptr<TAxis>
-      fXAxis; //! appears that if was fXaxis then dialog box for SetXaxis will take as current value
+      fXAxis; ///<! appears that if was fXaxis then dialog box for SetXaxis will take as current value
 
    mutable bool fInterrupted = false;
 
    bool fAcquirer = false; // if true, when acquiring will go into objects memory rather than pass onto parent
-   std::shared_ptr<xRooNode> fProvider; //! like a parent but only for use by getObject
+   std::shared_ptr<xRooNode> fProvider; ///<! like a parent but only for use by getObject
 
    std::shared_ptr<xRooNode> parentPdf() const; // find first parent that is a pdf
 
@@ -537,10 +557,11 @@ public:
    ClassDefOverride(xRooNode, 0)
 };
 
-namespace cling {
-std::string printValue(const xRooNode *val);
-}
-
 END_XROOFIT_NAMESPACE
+
+
+namespace cling {
+std::string printValue(const XROOFIT_NAMESPACE_NAME::xRooNode *val);
+}
 
 #endif // include guard

@@ -15,9 +15,9 @@
 
 #include "QuartzFillArea.h"
 #include "TColorGradient.h"
+#include "TAttFill.h"
 #include "QuartzLine.h"
 #include "CocoaUtils.h"
-#include "TVirtualX.h"
 #include "RStipples.h"
 #include "TError.h"
 #include "TROOT.h"
@@ -347,12 +347,12 @@ void DrawPattern(void *data, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
+bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex, Color_t attrFillColor)
 {
    assert(ctx != nullptr && "SetFillPattern, ctx parameter is null");
    assert(patternIndex != nullptr && "SetFillPattern, patternIndex parameter is null");
 
-   const TColor *fillColor = gROOT->GetColor(gVirtualX->GetFillColor());
+   const TColor *fillColor = gROOT->GetColor(attrFillColor);
    if (!fillColor)
       fillColor = gROOT->GetColor(kWhite);
 
@@ -388,33 +388,36 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
 }
 
 //______________________________________________________________________________
-bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex)
+bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex, const TAttFill &attfill)
 {
    assert(ctx != nullptr && "SetFillAreaParameters, ctx parameter is null");
 
-   const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
+   Style_t attFillStyle = attfill.GetFillStyle();
+   Color_t attFillColor = attfill.GetFillColor();
+
+   const unsigned fillStyle = attFillStyle / 1000;
 
    //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
    if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {
-      if (!SetLineColor(ctx, gVirtualX->GetFillColor())) {
-         ::Error("SetFillAreaParameters", "Line color for index %d was not found", int(gVirtualX->GetLineColor()));
+      if (!SetLineColor(ctx, attFillColor)) {
+         ::Error("SetFillAreaParameters", "Line color for index %d was not found", int(attFillColor));
          return false;
       }
    } else if (fillStyle == 1) {
       //Solid fill.
-      if (!SetFillColor(ctx, gVirtualX->GetFillColor())) {
-         ::Error("SetFillAreaParameters", "Fill color for index %d was not found", int(gVirtualX->GetFillColor()));
+      if (!SetFillColor(ctx, attFillColor)) {
+         ::Error("SetFillAreaParameters", "Fill color for index %d was not found", int(attFillColor));
          return false;
       }
    } else {
       assert(patternIndex != nullptr && "SetFillAreaParameters, pattern index in null");
 
-      *patternIndex = gVirtualX->GetFillStyle() % 1000;
+      *patternIndex = attFillStyle % 1000;
       //ROOT has 26 fixed patterns.
       if (*patternIndex > 25)
          *patternIndex = 2;
 
-      if (!SetFillPattern(ctx, patternIndex)) {
+      if (!SetFillPattern(ctx, patternIndex, attFillColor)) {
          ::Error("SetFillAreaParameters", "SetFillPattern failed");
          return false;
       }
@@ -440,7 +443,7 @@ void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool holl
 }
 
 //______________________________________________________________________________
-void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
+void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow, const TAttFill &attfill)
 {
    // Draw a filled area through all points.
    // n         : number of points
@@ -457,7 +460,7 @@ void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
 
    CGContextClosePath(ctx);
 
-   const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
+   const unsigned fillStyle = attfill.GetFillStyle() / 1000;
 
    //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
    if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {

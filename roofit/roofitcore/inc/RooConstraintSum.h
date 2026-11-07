@@ -33,7 +33,7 @@ public:
   RooConstraintSum(const RooConstraintSum& other, const char* name = nullptr);
   TObject* clone(const char* newname=nullptr) const override { return new RooConstraintSum(*this, newname); }
 
-  const RooArgList& list() { return _set1 ; }
+  const RooArgList& list() const { return _set1 ; }
 
   bool setData(RooAbsData const& data, bool cloneData=true);
   /// \copydoc setData(RooAbsData const&, bool)

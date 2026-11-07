@@ -29,15 +29,10 @@ with a probability proportional to its associated coefficient.
 
 #include "RooAddGenContext.h"
 
-#include "Riostream.h"
-#include "TClass.h"
-
 #include "RooDataSet.h"
 #include "RooRandom.h"
 
 #include <sstream>
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +53,6 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   _pdfSet = std::make_unique<RooArgSet>();
   RooArgSet(model).snapshot(*_pdfSet, true);
   _pdf = static_cast<RooAddPdf*>(_pdfSet->find(model.GetName())) ;
-  _pdf->setOperMode(RooAbsArg::ADirty,true) ;
 
   // Fix normalization set of this RooAddPdf
   if (prototype)

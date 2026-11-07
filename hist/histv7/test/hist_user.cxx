@@ -11,6 +11,12 @@ struct UserWeight {
 struct User {
    double fValue = 0;
 
+   User &operator=(double value)
+   {
+      fValue = value;
+      return *this;
+   }
+
    User &operator++()
    {
       fValue++;
@@ -48,13 +54,15 @@ struct User {
       return *this;
    }
 
-   void AtomicInc() { ROOT::Experimental::Internal::AtomicInc(&fValue); }
+   void AtomicIncRelease() { ROOT::Experimental::Internal::AtomicIncRelease(&fValue); }
 
-   void AtomicAdd(double w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w); }
+   void AtomicAddRelease(double w) { ROOT::Experimental::Internal::AtomicAddRelease(&fValue, w); }
 
-   void AtomicAdd(const UserWeight &w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w.fWeight); }
+   void AtomicAddRelease(const UserWeight &w) { ROOT::Experimental::Internal::AtomicAddRelease(&fValue, w.fWeight); }
 
    void AtomicAdd(const User &rhs) { ROOT::Experimental::Internal::AtomicAdd(&fValue, rhs.fValue); }
+
+   void AtomicLoad(User *ret) const { ROOT::Experimental::Internal::AtomicLoad(&fValue, &ret->fValue); }
 };
 
 static_assert(std::is_nothrow_move_constructible_v<RHistEngine<User>>);
@@ -186,7 +194,7 @@ TEST(RHistEngineUser, FillUserWeightInvalidNumberOfArguments)
 
 TEST(RHistEngineUser, FillAtomic)
 {
-   // Unweighted filling with atomic instructions uses AtomicInc
+   // Unweighted filling with atomic instructions uses AtomicIncRelease
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
@@ -201,7 +209,7 @@ TEST(RHistEngineUser, FillAtomic)
 
 TEST(RHistEngineUser, FillAtomicWeight)
 {
-   // Weighted filling with atomic instructions uses AtomicAdd(double)
+   // Weighted filling with atomic instructions uses AtomicAddRelease(double)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
@@ -216,7 +224,7 @@ TEST(RHistEngineUser, FillAtomicWeight)
 
 TEST(RHistEngineUser, FillAtomicUserWeight)
 {
-   // Weighted filling with user-defined weight and atomic instructions uses AtomicAdd(const UserWeight &)
+   // Weighted filling with user-defined weight and atomic instructions uses AtomicAddRelease(const UserWeight &)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
@@ -251,4 +259,33 @@ TEST(RHistEngineUser, Scale)
 
    EXPECT_EQ(engine.GetBinContent(8).fValue, Factor * 0.8);
    EXPECT_EQ(engine.GetBinContent(9).fValue, Factor * 0.9);
+}
+
+TEST(RHistEngineUser, SetBinContent)
+{
+   // Setting uses operator=
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engine({axis});
+
+   const RBinIndex index(7);
+   engine.SetBinContent(index, 42);
+   EXPECT_EQ(engine.GetBinContent(index).fValue, 42);
+
+   const std::array<RBinIndex, 1> indices = {index};
+   engine.SetBinContent(indices, 43);
+   EXPECT_EQ(engine.GetBinContent(indices).fValue, 43);
+}
+
+TEST(RHistEngineUser, SnapshotAtomic)
+{
+   // Snapshotting uses AtomicLoad.
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engineA({axis});
+
+   engineA.Fill(8.5);
+
+   RHistEngine<User> engineB = engineA.SnapshotAtomic();
+   EXPECT_EQ(engineB.GetBinContent(8).fValue, 1);
 }

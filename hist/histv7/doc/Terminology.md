@@ -25,7 +25,8 @@ A *normal bin* is inside an axis and its index starts from 0.
 The *invalid bin index* is another special value.
 
 A *bin index range* is a range from `begin` (inclusive) to `end` (exclusive).
-For its purpose, the underflow bin is ordered before all normal bins while the overflow bin is placed after.
+In this context, the adjective *full* means that the range includes flow bins.
+For this purpose, the underflow bin is ordered before all normal bins while the overflow bin is placed after.
 As the `end` is exclusive, the invalid bin index is ordered last to make it possible to include the overflow bin.
 
 *Filling* a histogram means to add an entry to a histogram.
@@ -39,7 +40,6 @@ Furthermore, for each dimension the histogram statistics include the sum of weig
 This allows to compute the arithmetic mean and the standard deviation of the values before binning.
 
 A *linearized index* starts from 0 up to the total number of bins, potentially including flow bins.
-For a single axis, it places the flow bins after the normal bins.
 The *global index* is a combination of the linearized indices from all axes.
 
 A *profile* is a histogram that computes the arithmetic mean and standard deviation per bin.
@@ -47,6 +47,7 @@ During filling, it accepts an additional `double` value and accumulates its sum 
 
 *Slicing* means to extract a subset of the normal bins in each dimension.
 Bin contents of excluded normal bins are added to the flow bins.
+During slicing, operations allow to *rebin* a dimension or *sum* the sliced bins.
 
 A *snapshot* is a consistent clone of the histogram during concurrent filling.
 

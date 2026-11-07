@@ -23,7 +23,7 @@ namespace Internal {
 
 /**
  * \class RRawFileUnix RRawFileUnix.hxx
- * \ingroup IO
+ * \ingroup io_files
  *
  * The RRawFileUnix class uses POSIX calls to read from a mounted file system. Thus the path name can refer,
  * for instance, to a named pipe instead of a regular file.
@@ -37,6 +37,7 @@ protected:
    size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final;
    void ReadVImpl(RIOVec *ioVec, unsigned int nReq) final;
    std::uint64_t GetSizeImpl() final;
+   void SetDiscourageReadAheadImpl(bool value) final;
 
 public:
    RRawFileUnix(std::string_view url, RRawFile::ROptions options);

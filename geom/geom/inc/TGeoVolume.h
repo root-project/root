@@ -21,6 +21,8 @@
 #include "TObjArray.h"
 #include "TGeoMedium.h"
 #include "TGeoShape.h"
+#include <algorithm>
+#include <atomic>
 #include <mutex>
 #include <vector>
 
@@ -45,19 +47,19 @@ protected:
    TObjArray *fNodes;                // array of nodes inside this volume
    TGeoShape *fShape;                // shape
    TGeoMedium *fMedium;              // tracking medium
-   static TGeoMedium *fgDummyMedium; //! dummy medium
+   static TGeoMedium *fgDummyMedium; ///<! dummy medium
    TGeoPatternFinder *fFinder;       // finder object for divisions
    TGeoVoxelFinder *fVoxels;         // finder object for bounding boxes
-   TGeoManager *fGeoManager;         //! pointer to TGeoManager owning this volume
+   TGeoManager *fGeoManager;         ///<! pointer to TGeoManager owning this volume
 
-   TObject *fField;               //! just a hook for now
-   TString fOption;               //! option - if any
+   TObject *fField;               ///<! just a hook for now
+   TString fOption;               ///<! option - if any
    Int_t fNumber;                 //  volume serial number in the list of volumes
    Int_t fNtotal;                 // total number of physical nodes
    Int_t fRefCount;               // reference counter
    Char_t fTransparency;          // transparency setting
-   TGeoExtension *fUserExtension; //! Transient user-defined extension to volumes
-   TGeoExtension *fFWExtension;   //! Transient framework-defined extension to volumes
+   TGeoExtension *fUserExtension; ///<! Transient user-defined extension to volumes
+   TGeoExtension *fFWExtension;   ///<! Transient framework-defined extension to volumes
 
 private:
    TGeoVolume(const TGeoVolume &) = delete;
@@ -98,7 +100,8 @@ public:
    virtual TGeoVolume *CloneVolume() const;
    void CloneNodesAndConnect(TGeoVolume *newmother) const;
    void CheckGeometry(Int_t nrays = 1, Double_t startx = 0, Double_t starty = 0, Double_t startz = 0) const;
-   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = "") const;         // *MENU*
+   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = "");               // *MENU*
+   void CheckOverlapsBySampling(Double_t ovlp = 0.1, Int_t npoints = 1000000);   // *MENU*
    void CheckShape(Int_t testNo, Int_t nsamples = 10000, Option_t *option = ""); // *MENU*
    Int_t CountNodes(Int_t nlevels = 1000, Int_t option = 0);
    Bool_t Contains(const Double_t *point) const { return fShape->Contains(point); }
@@ -205,7 +208,7 @@ public:
    void RemoveNode(TGeoNode *node);
    TGeoNode *ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape = nullptr, TGeoMatrix *newpos = nullptr,
                          TGeoMedium *newmed = nullptr);
-   void ResetTransparency(Char_t transparency = -1); // *MENU*
+   void ResetTransparency(Char_t transparency = -1);                             // *MENU*
    void SaveAs(const char *filename = "", Option_t *option = "") const override; // *MENU*
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void SelectVolume(Bool_t clear = kFALSE);
@@ -253,7 +256,7 @@ public:
    Double_t Weight(Double_t precision = 0.01, Option_t *option = "va"); // *MENU*
    Double_t WeightA() const;
 
-   ClassDefOverride(TGeoVolume, 7)              // geometry volume descriptor
+   ClassDefOverride(TGeoVolume, 7) // geometry volume descriptor
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -314,23 +317,33 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 
 class TGeoVolumeAssembly : public TGeoVolume {
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this assembly into the per-thread vector
+
 public:
    struct ThreadData_t {
-      Int_t fCurrent; //! index of current selected node
-      Int_t fNext;    //! index of next node to be entered
-
-      ThreadData_t();
-      ~ThreadData_t();
+      Int_t fCurrent{-1}; //! index of current selected node
+      Int_t fNext{-1};    //! index of next node to be entered
    };
 
-   ThreadData_t &GetThreadData() const;
-   void ClearThreadData() const override;
-   void CreateThreadData(Int_t nthreads) override;
+   /// Per-thread scratch state, owned by the calling thread and indexed by this assembly.
+   /// Each thread owns its whole vector, so no two threads ever write the same cache line.
+   /// The vector retains its high-water size until the owning thread exits.
+   ThreadData_t &GetThreadData() const
+   {
+      thread_local std::vector<ThreadData_t> tdata;
+      if (tdata.size() <= fIndex)
+         tdata.resize(std::max<size_t>(fgInstanceCount.load(std::memory_order_relaxed), fIndex + 1));
+      return tdata[fIndex];
+   }
+   // ClearThreadData()/CreateThreadData() are deliberately not overridden: the assembly's own
+   // per-thread state is allocated lazily, and TGeoVolume's implementation still has to run so
+   // the shape and the division finder get their generation bumped.
 
-protected:
-   mutable std::vector<ThreadData_t *> fThreadData; //! Thread specific data vector
-   mutable Int_t fThreadSize;                       //! Thread vector size
-   mutable std::mutex fMutex;                       //! Mutex for concurrent operations
+   Int_t GetCurrentNodeIndex() const override { return GetThreadData().fCurrent; }
+   Int_t GetNextNodeIndex() const override { return GetThreadData().fNext; }
+   void SetCurrentNodeIndex(Int_t index) { GetThreadData().fCurrent = index; }
+   void SetNextNodeIndex(Int_t index) { GetThreadData().fNext = index; }
 
 private:
    TGeoVolumeAssembly(const TGeoVolumeAssembly &) = delete;
@@ -348,13 +361,9 @@ public:
                       Option_t *option = "") override;
    TGeoVolume *Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option = "spacedout");
    void DrawOnly(Option_t *) override {}
-   Int_t GetCurrentNodeIndex() const override;
-   Int_t GetNextNodeIndex() const override;
    Bool_t IsAssembly() const override { return kTRUE; }
    Bool_t IsVisible() const override { return kFALSE; }
    static TGeoVolumeAssembly *MakeAssemblyFromVolume(TGeoVolume *vol);
-   void SetCurrentNodeIndex(Int_t index);
-   void SetNextNodeIndex(Int_t index);
 
    ClassDefOverride(TGeoVolumeAssembly, 2) // an assembly of volumes
 };
@@ -369,13 +378,14 @@ inline Int_t TGeoVolume::GetNdaughters() const
 inline Char_t TGeoVolume::GetTransparency() const
 {
    // If the transparency is (-1), the old default handling is applied
-   if ( fTransparency >= 0 ) return fTransparency;
+   if (fTransparency >= 0)
+      return fTransparency;
    return !fMedium ? 0 : fMedium->GetMaterial()->GetTransparency();
 }
 
 inline void TGeoVolume::SetTransparency(Char_t transparency)
 {
-   if (fMedium)  {
+   if (fMedium) {
       fMedium->GetMaterial()->SetTransparency(transparency);
    }
 }

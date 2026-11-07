@@ -9,6 +9,7 @@
 - [SQL](\ref tutorial_sql)
 - [XML](\ref tutorial_xml)
 - [Various I/O related topics](\ref miscl)
+- [New ROOT File interface](\ref rfile)
 
 \anchor file
 ## ROOT File
@@ -39,11 +40,22 @@ The following tutorials illustrate various useful ROOT I/O features.
 |------|--------|-----------------|
 | double32.C |  | Details of the Double32_t data type - what is its precision and how to use it. |
 | float16.C |  | Details of the Float16_t data type - what is its precision and how to use it. |
-| testTMPIFile.C |  |  Usage of TMPIFile to simulate event reconstruction and merging them in parallel.|
 |  | tcontext_context_manager.py |  Usage of the TContext class as a Python context manager. |
 | |  tfile_context_manager.py |  Usage of TFile class as a Python context manager.|
-@}
 
+\anchor rfile
+## New ROOT file interface
+The following tutorials illustrate how to use RFile, the new interface to ROOT files.
+RFile is a simpler alternative to TFile that makes operations and object ownership explicit.
+| **Tutorial** | **Description** |
+|------|-----------------|
+| rfile001_basics.C | Basic reading and writing from/to RFile (C++) |
+| rfile001_basics.py | Basic reading and writing from/to RFile (Python) |
+| rfile002_rntuple.C | Basic reading and writing of RNTuple from/to RFile (C++) |
+| rfile002_rntuple.py | Basic reading and writing of RNTuple from/to RFile (Python) |
+| rfile003_ttree.C | Basic reading of TTree from RFile (C++) |
+| rfile003_ttree.py | Basic reading of TTree from RFile (Python) |
+@}
 
 \defgroup tutorial_ntuple RNTuple tutorials
 \ingroup tutorial_io

@@ -58,7 +58,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ env.BASE_REF }}
         fetch-depth: 0
@@ -164,31 +164,11 @@ jobs:
     #Upload to GitHub as an artifact
     - name: Upload tar file for GH
       if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{env.TAR_NAME}}.gz
         path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
         if-no-files-found: error
-
-    - name: Install AWS CLI
-      run: |
-        python -m pip install --upgrade pip
-        pip install awscli==1.36.40
-        aws configure set default.s3.max_concurrent_requests 128
-
-    - name: Sync documentation to S3
-      working-directory: ${{ env.DOC_LOCATION }}
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_ENDPOINT_URL: https://s3.cern.ch/
-
-      run: |
-        pwd
-        ls -l
-        aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
-        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
-        aws s3 cp ${TAR_NAME}.gz s3://root/download/
 
     - name: Install Kerberos utilities
       run: dnf -y install krb5-workstation
@@ -211,20 +191,20 @@ jobs:
       # them by extension. Once that is fixed in XRootD, a single command can be used
       # instead.
       run: |
+        failure=0
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.map # Intermediate files to create dot graphs
+        rm -rf *.md5 # As above
+        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         rm -rf *.html
-        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         rm -rf *.svg
-        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
-        rm -rf *.map
-        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
-        rm -rf *.md5
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME} || failure=1
         cd ..
-        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
+        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download || failure=1
+        exit $failure

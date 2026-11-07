@@ -1,3 +1,6 @@
+#include "TEnv.h"
+#include "TKey.h"
+#include "TSystem.h"
 #include "ntuple_test.hxx"
 
 #include <cmath>
@@ -111,4 +114,144 @@ TEST(Metrics, RNTupleWriter)
    ASSERT_FALSE(page_counter == nullptr);
    // one page for the int field, one for the float field
    EXPECT_EQ(2, page_counter->GetValueAsInt());
+}
+
+TEST(Metrics, IOMetrics)
+{
+   FileRaii fileGuard("test_ntuple_io_metrics.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto int_field = model->MakeField<int>("ints");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      for (int i = 0; i < 1000; ++i) {
+         *int_field = i;
+         ntuple->Fill();
+      }
+      ntuple->CommitCluster();
+   }
+
+   {
+      auto ntupleReader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      EXPECT_FALSE(ntupleReader->GetMetrics().IsEnabled());
+      ntupleReader->EnableMetrics();
+      EXPECT_TRUE(ntupleReader->GetMetrics().IsEnabled());
+
+      const auto &metrics = ntupleReader->GetMetrics();
+      auto *randomness = metrics.GetCounter("RNTupleReader.RPageSourceFile.randomness");
+      auto *sparseness = metrics.GetCounter("RNTupleReader.RPageSourceFile.sparseness");
+      auto *szSkip = metrics.GetCounter("RNTupleReader.RPageSourceFile.szSkip");
+      auto *szFile = metrics.GetCounter("RNTupleReader.RPageSourceFile.szFile");
+      ASSERT_NE(randomness, nullptr);
+      ASSERT_NE(sparseness, nullptr);
+      ASSERT_NE(szSkip, nullptr);
+      ASSERT_NE(szFile, nullptr);
+
+      EXPECT_EQ(szSkip->GetValueAsInt(), 0);
+      EXPECT_GT(szFile->GetValueAsInt(), 0);
+
+      auto view = ntupleReader->GetView<int>("ints");
+      const auto pageListSkip = szSkip->GetValueAsInt();
+      EXPECT_GE(pageListSkip, 0);
+
+      for (auto i : *ntupleReader) {
+         (void)view(i);
+      }
+
+      EXPECT_GE(szSkip->GetValueAsInt(), pageListSkip);
+   }
+}
+
+namespace {
+
+void WriteDummyEntries(std::string_view fileName, std::string_view ntupleName)
+{
+   auto model = RNTupleModel::Create();
+   auto pt = model->MakeField<float>("float_field");
+
+   auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, fileName);
+
+   *pt = 1.0;
+   writer->Fill();
+   writer->CommitDataset();
+}
+
+void ReadMetrics(const std::string fileName, std::ostream &output)
+{
+   TFile file(fileName.c_str());
+
+   std::set<std::string> ntupleNames;
+   for (auto *keyObject : *file.GetListOfKeys()) {
+      auto *key = static_cast<TKey *>(keyObject);
+      if (std::string(key->GetClassName()) == "ROOT::RNTuple")
+         ntupleNames.insert(key->GetName());
+   }
+
+   for (const auto &ntupleName : ntupleNames) {
+      auto reader = ROOT::RNTupleReader::Open(ntupleName, fileName);
+      const auto &descriptor = reader->GetDescriptor();
+
+      output << ntupleName << "\n\n";
+      for (auto counterId : descriptor.GetFieldZero().GetLinkIds()) {
+         std::string fieldName = descriptor.GetFieldDescriptor(counterId).GetFieldName();
+         std::string type = descriptor.GetFieldDescriptor(counterId).GetTypeName();
+
+         output << std::string(8, ' ') << fieldName << " (" << type << ")\n";
+      }
+      output << "\n";
+   }
+}
+} // namespace
+
+TEST(Metrics, EnvironmentVariableExport)
+{
+   FileRaii fileGuard("test_environment_variable_export_export.root");
+
+   const std::string metricsFileName = "environment_variable_export_metrics.root";
+
+   gSystem->Setenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS", metricsFileName.c_str());
+
+   WriteDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_1");
+   WriteDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_1");
+   WriteDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_2");
+
+   gSystem->Unsetenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS");
+
+   std::stringstream printedMetricsStream;
+   ReadMetrics(metricsFileName, printedMetricsStream);
+
+   const std::string printedMetricsString = std::move(printedMetricsStream).str();
+   const std::string expected = R"(rntuple_name_1
+
+        RNTupleWriter_RPageSinkBuf_ParallelZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeWallZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeWallCriticalSection (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeCpuZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeCpuCriticalSection (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_nPageCommitted (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_szWritePayload (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_szZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeWallWrite (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeWallZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeCpuWrite (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeCpuZip (std::int64_t)
+
+rntuple_name_2
+
+        RNTupleWriter_RPageSinkBuf_ParallelZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeWallZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeWallCriticalSection (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeCpuZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeCpuCriticalSection (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_nPageCommitted (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_szWritePayload (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_szZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeWallWrite (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeWallZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeCpuWrite (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeCpuZip (std::int64_t)
+
+)";
+
+   EXPECT_EQ(printedMetricsString, expected);
 }

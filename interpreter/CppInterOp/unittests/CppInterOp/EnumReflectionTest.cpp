@@ -12,51 +12,7 @@ using namespace TestUtils;
 using namespace llvm;
 using namespace clang;
 
-TEST(ScopeReflectionTest, IsEnumScope) {
-  std::vector<Decl *> Decls, SubDecls;
-  std::string code = R"(
-    enum Switch {
-      OFF,
-      ON
-    };
-
-    Switch s = Switch::OFF;
-
-    int i = Switch::ON;
-  )";
-
-  GetAllTopLevelDecls(code, Decls);
-  GetAllSubDecls(Decls[0], SubDecls);
-  EXPECT_TRUE(Cpp::IsEnumScope(Decls[0]));
-  EXPECT_FALSE(Cpp::IsEnumScope(Decls[1]));
-  EXPECT_FALSE(Cpp::IsEnumScope(Decls[2]));
-  EXPECT_FALSE(Cpp::IsEnumScope(SubDecls[0]));
-  EXPECT_FALSE(Cpp::IsEnumScope(SubDecls[1]));
-}
-
-TEST(ScopeReflectionTest, IsEnumConstant) {
-  std::vector<Decl *> Decls, SubDecls;
-  std::string code = R"(
-    enum Switch {
-      OFF,
-      ON
-    };
-
-    Switch s = Switch::OFF;
-
-    int i = Switch::ON;
-  )";
-
-  GetAllTopLevelDecls(code, Decls);
-  GetAllSubDecls(Decls[0], SubDecls);
-  EXPECT_FALSE(Cpp::IsEnumConstant(Decls[0]));
-  EXPECT_FALSE(Cpp::IsEnumConstant(Decls[1]));
-  EXPECT_FALSE(Cpp::IsEnumConstant(Decls[2]));
-  EXPECT_TRUE(Cpp::IsEnumConstant(SubDecls[0]));
-  EXPECT_TRUE(Cpp::IsEnumConstant(SubDecls[1]));
-}
-
-TEST(EnumReflectionTest, IsEnumType) {
+TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_IsEnumType) {
   std::vector<Decl *> Decls;
   std::string code =  R"(
     enum class E {
@@ -84,7 +40,7 @@ TEST(EnumReflectionTest, IsEnumType) {
   EXPECT_TRUE(Cpp::IsEnumType(Cpp::GetVariableType(Decls[5])));
 }
 
-TEST(EnumReflectionTest, GetIntegerTypeFromEnumScope) {
+TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetIntegerTypeFromEnumScope) {
   std::vector<Decl *> Decls;
   std::string code = R"(
     enum Switch : bool {
@@ -134,7 +90,7 @@ TEST(EnumReflectionTest, GetIntegerTypeFromEnumScope) {
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetIntegerTypeFromEnumScope(Decls[5])),"NULL TYPE");
 }
 
-TEST(EnumReflectionTest, GetIntegerTypeFromEnumType) {
+TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetIntegerTypeFromEnumType) {
   std::vector<Decl *> Decls;
   std::string code = R"(
     enum Switch : bool {
@@ -194,7 +150,7 @@ TEST(EnumReflectionTest, GetIntegerTypeFromEnumType) {
   EXPECT_EQ(get_int_type_from_enum_var(Decls[11]), "NULL TYPE"); // When a non Enum Type variable is used
 }
 
-TEST(EnumReflectionTest, GetEnumConstants) {
+TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnumConstants) {
   std::vector<Decl *> Decls;
   std::string code = R"(
     enum ZeroEnum {
@@ -238,7 +194,7 @@ TEST(EnumReflectionTest, GetEnumConstants) {
   EXPECT_EQ(Cpp::GetEnumConstants(Decls[5]).size(), 0);
 }
 
-TEST(EnumReflectionTest, GetEnumConstantType) {
+TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnumConstantType) {
   std::vector<Decl *> Decls;
   std::string code = R"(
     enum Enum0 {
@@ -252,7 +208,7 @@ TEST(EnumReflectionTest, GetEnumConstantType) {
 
   GetAllTopLevelDecls(code, Decls);
 
-  auto get_enum_constant_type_as_str = [](Cpp::TCppScope_t enum_constant) {
+  auto get_enum_constant_type_as_str = [](Cpp::DeclRef enum_constant) {
     return Cpp::GetTypeAsString(Cpp::GetEnumConstantType(enum_constant));
   };
 
@@ -269,7 +225,7 @@ TEST(EnumReflectionTest, GetEnumConstantType) {
   EXPECT_EQ(get_enum_constant_type_as_str(nullptr), "NULL TYPE");
 }
 
-TEST(EnumReflectionTest, GetEnumConstantValue) {
+TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnumConstantValue) {
   std::vector<Decl *> Decls;
   std::string code = R"(
     enum Counter {
@@ -280,6 +236,10 @@ TEST(EnumReflectionTest, GetEnumConstantValue) {
       FiftyFour,
       MinusTen = -10,
       MinusNine
+    };
+    enum Huge : unsigned long long {
+      Big = ((unsigned long long)1) << 63,
+      Max = 0xFFFFFFFFFFFFFFFFULL
     };
     int a = 10;
   )";
@@ -294,10 +254,15 @@ TEST(EnumReflectionTest, GetEnumConstantValue) {
   EXPECT_EQ(Cpp::GetEnumConstantValue(EnumConstants[4]), 54);
   EXPECT_EQ(Cpp::GetEnumConstantValue(EnumConstants[5]), -10);
   EXPECT_EQ(Cpp::GetEnumConstantValue(EnumConstants[6]), -9);
-  EXPECT_EQ(Cpp::GetEnumConstantValue(Decls[1]), 0); // Checking value of non enum constant
+  EXPECT_EQ(Cpp::GetEnumConstantValue(Decls[2]), 0); // Checking value of non enum constant
+
+  auto HugeConstants = Cpp::GetEnumConstants(Decls[1]);
+  EXPECT_EQ(Cpp::GetEnumConstantValue(HugeConstants[0]),
+            (int64_t)((uint64_t)1 << 63));
+  EXPECT_EQ(Cpp::GetEnumConstantValue(HugeConstants[1]), (int64_t)-1);
 }
 
-TEST(EnumReflectionTest, GetEnums) {
+TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnums) {
   std::string code = R"(
     enum Color {
       Red,
@@ -338,16 +303,16 @@ TEST(EnumReflectionTest, GetEnums) {
     int myVariable;
     )";
 
-  Cpp::CreateInterpreter();
+  TestFixture::CreateInterpreter();
   Interp->declare(code);
   std::vector<std::string> enumNames1, enumNames2, enumNames3, enumNames4;
-  Cpp::TCppScope_t globalscope = Cpp::GetScope("", 0);
-  Cpp::TCppScope_t Animals_scope = Cpp::GetScope("Animals", 0);
-  Cpp::TCppScope_t myClass_scope = Cpp::GetScope("myClass", 0);
-  Cpp::TCppScope_t unsupported_scope = Cpp::GetScope("myVariable", 0);
+  Cpp::DeclRef globalscope = Cpp::GetScope("", nullptr);
+  Cpp::DeclRef Animals_scope = Cpp::GetScope("Animals", nullptr);
+  Cpp::DeclRef myClass_scope = Cpp::GetScope("myClass", nullptr);
+  Cpp::DeclRef unsupported_scope = Cpp::GetScope("myVariable", nullptr);
 
-  Cpp::GetEnums(globalscope,enumNames1);
-  Cpp::GetEnums(Animals_scope,enumNames2);
+  Cpp::GetEnums(globalscope, enumNames1);
+  Cpp::GetEnums(Animals_scope, enumNames2);
   Cpp::GetEnums(myClass_scope, enumNames3);
   Cpp::GetEnums(unsupported_scope, enumNames4);
 

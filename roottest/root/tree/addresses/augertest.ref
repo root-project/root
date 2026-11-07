@@ -1,4 +1,3 @@
-
 Processing runaugertest.C...
 Warning in <TClass::Init>: no dictionary for class RecEvent is available
 Warning in <TClass::Init>: no dictionary for class Detector is available

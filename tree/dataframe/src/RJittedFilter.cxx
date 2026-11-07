@@ -17,8 +17,10 @@
 
 using namespace ROOT::Detail::RDF;
 
-RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations)
-   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(lm), /*columnNames*/ {}, variations)
+RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations,
+                             std::shared_ptr<ROOT::Detail::RDF::RNodeBase> prevNode)
+   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(lm), /*columnNames*/ {}, variations),
+     fPrevNode(prevNode)
 {
    // Jitted nodes of the computation graph (e.g. RJittedAction, RJittedDefine) usually don't need to register
    // themselves with the RLoopManager: the _concrete_ nodes will be registered with the RLoopManager right before
@@ -142,4 +144,9 @@ std::shared_ptr<RNodeBase> RJittedFilter::GetVariedFilter(const std::string &var
 {
    assert(fConcreteFilter != nullptr);
    return fConcreteFilter->GetVariedFilter(variationName);
+}
+
+std::shared_ptr<ROOT::Detail::RDF::RNodeBase> RJittedFilter::MoveOutPrevNode()
+{
+   return std::move(fPrevNode);
 }

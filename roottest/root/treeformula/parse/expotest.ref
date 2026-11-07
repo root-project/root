@@ -1,4 +1,3 @@
-
 Processing runexpotest.C...
               testing : (var1e)+(var2e) Ndim= 1, Npar= 0, Noper= 3
  fExpr[0] = var1e  action = 150 action param = 0 

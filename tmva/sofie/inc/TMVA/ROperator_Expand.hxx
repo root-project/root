@@ -27,6 +27,7 @@ private:
 
    bool fInitialized = false;
    bool fInitializedShape = false;
+   bool fDimShapeValues = false;
    bool fInitBroadcast = false;
 
 public:
@@ -39,6 +40,8 @@ public:
 
 
    void Initialize(RModel& model) override {
+      // the generated code may use the UnidirectionalBroadcast inference helper
+      model.AddNeededHelperFunction("UnidirectionalBroadcast");
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
         throw std::runtime_error("TMVA SOFIE Expand Op Input Tensor " + fNX + " is not found in model");
@@ -63,7 +66,7 @@ public:
       } else if (model.IsShapeTensor(fNShape)) {
          // case input shape is a shape tensor
          fShapeDim = model.GetShapeTensorValues(fNShape);
-         fInitializedShape = true;
+         fDimShapeValues = true;
       } else {
          // assume shape of input shape is known (size is 1)
          auto shapeOfInputShape = model.GetTensorShape(fNShape);
@@ -74,7 +77,7 @@ public:
          }
       }
       // Y is the common shape of fShapeX and shape
-      auto ret  = TMVA::Experimental::SOFIE::UTILITY::MultidirectionalBroadcastShape(fShapeX, fShapeDim);
+      auto ret  = UTILITY::MultidirectionalBroadcastShape(fShapeX, fShapeDim);
       fShapeY = ret.second;
       fInitialized = model.IsInitializedTensor(fNX) && fInitializedShape;
       std::vector<size_t> shapeX;
@@ -94,7 +97,7 @@ public:
          auto data = model.GetInitializedTensorData(fNX);
          if (fInitBroadcast) {
             std::shared_ptr<void> broadcastedData(
-               UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), shapeX, shapeY),
+               UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), shapeX, shapeY),
                std::default_delete<T[]>());
             // Update the data and the shape of X
             model.UpdateInitializedTensor(fNX, model.GetTensorType(fNX), shapeY, broadcastedData);
@@ -112,16 +115,12 @@ public:
          }
       } else {
          // // case input is not initialized
-         // if (shapeX.empty() && shapeDim.empty()) {
-
-         // }
-         // if (fInitializedShape)
-            model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+         model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       }
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       if (model.Verbose()) {
-         std::cout << "Expand - input " << fNX << " shape " << ConvertShapeToString(fShapeX) << " --> " << fNY << " shape "
-                  << ConvertShapeToString(fShapeY) << (fIsOutputConstant ? ConvertValuesToString(model.GetTensorData<T>(fNY)) + " (constant)" : "") << std::endl;
+         std::cout << "Expand - input " << fNX << " shape " << ConvertDimShapeToString(fShapeX) << " --> " << fNY << " shape "
+                  << ConvertDimShapeToString(fShapeY) << (fIsOutputConstant ? ConvertValuesToString(model.GetTensorData<T>(fNY)) + " (constant)" : "") << std::endl;
       }
    }
 
@@ -143,19 +142,29 @@ public:
          throw std::runtime_error("TMVA SOFIE Expand Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//------ Expand " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
+      out << SP << "\n//------ Expand " << opName << " --> " << ConvertDimShapeToString(fShapeY) << "\n";
       // need to declare shape parameters for non initialized shapes
-      if (!fInitializedShape) {
+      if (!fInitializedShape && !fDimShapeValues) {
          for (size_t i = 0; i < fShapeDim.size(); i++) {
             out << SP << "size_t " << fShapeDim[i] << " = " << "tensor_" << fNShape << "[" << i << "];\n";
          }
       }
       // No need to broadcast A if it's an initialized tensor or shapes are the same
-      if (!fInitialized && fShapeX != fShapeY) {
-         out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
-                   << ", std::span<"<<fType<<">(tensor_"<<fNY<<", "<<ConvertDimShapeToLength(fShapeY)<<"));\n";
+      auto lengthX = ConvertDimShapeToLength(fShapeX);
+      auto lengthY = ConvertDimShapeToLength(fShapeY);
+      if (lengthX != lengthY) {
+         out << SP << "if ( (" << lengthX << ") < (" << lengthY << ") ) {\n";
+         out << SP << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
+         out << SP << SP << "UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertDimShapeToString(fShapeX) << ", " << ConvertDimShapeToString(fShapeY)
+                   << ", tensor_"<<fNY<<");\n";
+         out << SP << "} else {\n";
+         out << SP << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + (" << lengthX << "), tensor_" << fNY << ");\n";
+         out << SP << "}\n";
+      } else {
+         // case of equal length even if shapes are dims
+         out << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + (" << lengthX << "), tensor_" << fNY << ");\n";
       }
+
       return out.str();
    }
 

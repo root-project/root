@@ -24,7 +24,7 @@ namespace Internal {
 
 /**
  * \class RRawFile RRawFile.hxx
- * \ingroup IO
+ * \ingroup io_files
  *
  * The RRawFile provides read-only access to local and remote files. Data can be read either byte-wise or line-wise.
  * The RRawFile base class provides line-wise access and buffering for byte-wise access. Derived classes provide the
@@ -140,6 +140,9 @@ protected:
    /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
    virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
+   // Default implementation: no-op
+   virtual void SetDiscourageReadAheadImpl(bool /* value */) {}
+
    /// Open the file if not already open. Otherwise noop.
    void EnsureOpen();
 
@@ -178,8 +181,9 @@ public:
    /// Returns the limits regarding the ioVec input to ReadV for this specific file; may open the file as a side-effect.
    virtual RIOVecLimits GetReadVLimits() { return RIOVecLimits(); }
 
-   /// Turn off buffered reads; all scalar read requests go directly to the implementation. Buffering can be turned
-   /// back on.
+   /// Turn on/off buffered reads; if off, all scalar read requests go directly to the implementation. Buffering also
+   /// turns on and off OS read-ahead where supported: if buffering is switched, SetDiscourageReadAheadImpl() will be
+   /// called accordingly.
    void SetBuffering(bool value);
    bool IsBuffering() const { return fIsBuffering; }
 

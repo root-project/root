@@ -32,16 +32,10 @@ Partial integrals, which factorise and can be calculated, are calculated
 analytically. Remaining non-factorising observables are integrated numerically.
 **/
 
-
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooGenProdProj.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
-#include "RooErrorHandler.h"
 #include "RooProduct.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for a normalization projection of the product of p.d.f.s _prodSet

@@ -1,5 +1,4 @@
 /// \file ROOT/StringUtils.hxx
-/// \ingroup Base StdExt
 /// \author Jonas Rembser <jonas.rembser@cern.ch>
 /// \date 2021-08-09
 
@@ -39,6 +38,14 @@ std::vector<std::string> Split(std::string_view str, std::string_view delims, bo
       out.emplace_back(str.substr(beg, str.size() - beg));
 
    return out;
+}
+
+std::pair<std::string_view, std::string_view> SplitAt(std::string_view str, char splitter)
+{
+   auto pos = str.find(splitter);
+   if (pos == std::string_view::npos)
+      return {str, ""};
+   return {str.substr(0, pos), str.substr(pos + 1)};
 }
 
 /**

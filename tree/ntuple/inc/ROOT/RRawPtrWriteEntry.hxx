@@ -1,5 +1,4 @@
 /// \file ROOT/RRawPtrWriteEntry.hxx
-/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2025-03-19
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -30,12 +29,11 @@ class RNTupleModel;
 
 class RNTupleFillContext;
 
-namespace Experimental {
 namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RRawPtrWriteEntry
+\class ROOT::Detail::RRawPtrWriteEntry
 \ingroup NTuple
 \brief A container of const raw pointers, corresponding to a row in the data set
 
@@ -120,7 +118,6 @@ public:
 };
 
 } // namespace Detail
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

@@ -207,7 +207,6 @@ protected:
   void setCachedValue(double value, bool notifyClients = true) final;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;
-  void setTreeBranchStatus(TTree& t, bool active) override ;
   void fillTreeBranch(TTree& t) override ;
 
   RooCatType* retrieveLegacyState(value_type index) const;
@@ -222,7 +221,7 @@ protected:
   static const decltype(_stateNames)::value_type& invalidCategory();
 
 private:
-  TreeReadBuffer *_treeReadBuffer = nullptr; //! A buffer for reading values from trees
+  TreeReadBuffer *_treeReadBuffer = nullptr; ///<! A buffer for reading values from trees
 
   ClassDefOverride(RooAbsCategory, 4) // Abstract discrete variable
 };

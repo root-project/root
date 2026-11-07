@@ -65,8 +65,6 @@ public:
    virtual void  SetY2(Double_t y2) {fY2=y2;}
    virtual void  SetToolTipText(const char *text, Long_t delayms = 1000);
    Rectangle_t   GetBBox() override;
-   TPoint        GetBBoxCenter() override;
-   void          SetBBoxCenter(const TPoint &p) override;
    void          SetBBoxCenterX(const Int_t x) override;
    void          SetBBoxCenterY(const Int_t y) override;
    void          SetBBoxX1(const Int_t x) override;

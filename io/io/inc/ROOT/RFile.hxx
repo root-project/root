@@ -1,13 +1,14 @@
 /// \file ROOT/RFile.hxx
-/// \ingroup Base ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-03-19
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. Feedback
 /// is welcome!
 
 #ifndef ROOT7_RFile
 #define ROOT7_RFile
 
+#include <Compression.h>
+#include <Rtypes.h>
 #include <ROOT/RError.hxx>
 
 #include <deque>
@@ -16,14 +17,15 @@
 #include <memory>
 #include <string_view>
 #include <typeinfo>
+#include <type_traits>
 #include <variant>
 
 class TFile;
 class TIterator;
 class TKey;
+class TTree;
 
 namespace ROOT {
-namespace Experimental {
 
 class RKeyInfo;
 class RFile;
@@ -35,6 +37,8 @@ ROOT::RLogChannel &RFileLog();
 /// Returns an **owning** pointer to the object referenced by `key`. The caller must delete this pointer.
 /// This method is meant to only be used by the pythonization.
 [[nodiscard]] void *RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key);
+
+TFile *GetRFileTFile(RFile &rfile);
 
 } // namespace Internal
 
@@ -55,8 +59,8 @@ std::pair<std::string_view, std::string_view> DecomposePath(std::string_view pat
 class RFileKeyIterable;
 
 /**
-\class ROOT::Experimental::RKeyInfo
-\ingroup RFile
+\class ROOT::RKeyInfo
+\ingroup io_files
 \brief Information about an RFile object's Key.
 
 Every object inside a ROOT file has an associated "Key" which contains metadata on the object, such as its name, type
@@ -65,8 +69,8 @@ Querying this information can be done via RFile::ListKeys(). Reading an object's
 doesn't deserialize the full object, so it's a relatively lightweight operation.
 */
 class RKeyInfo final {
-   friend class ROOT::Experimental::RFile;
-   friend class ROOT::Experimental::RFileKeyIterable;
+   friend class ROOT::RFile;
+   friend class ROOT::RFileKeyIterable;
 
 public:
    enum class ECategory : std::uint16_t {
@@ -81,8 +85,17 @@ private:
    std::string fClassName;
    std::uint16_t fCycle = 0;
    ECategory fCategory = ECategory::kInvalid;
+   std::uint64_t fLenObj = 0;
+   std::uint64_t fNBytesObj = 0;
+   std::uint64_t fNBytesKey = 0;
+   std::uint64_t fSeekKey = 0;
+   std::uint64_t fSeekParentDir = 0;
+
+   explicit RKeyInfo(const TKey &key);
 
 public:
+   RKeyInfo() = default;
+
    /// Returns the absolute path of this key, i.e. the directory part plus the object name.
    const std::string &GetPath() const { return fPath; }
    /// Returns the base name of this key, i.e. the name of the object without the directory part.
@@ -91,6 +104,19 @@ public:
    const std::string &GetClassName() const { return fClassName; }
    std::uint16_t GetCycle() const { return fCycle; }
    ECategory GetCategory() const { return fCategory; }
+   /// Returns the in-memory size of the uncompressed object.
+
+   std::uint64_t GetLenObj() const { return fLenObj; }
+   /// Returns the on-disk size of the (potentially compressed) object, excluding its key.
+   std::uint64_t GetNBytesObj() const { return fNBytesObj; }
+
+   /// Returns the on-disk size of this object's key.
+   std::uint64_t GetNBytesKey() const { return fNBytesKey; }
+   /// Returns the on-disk offset of this object's key.
+   std::uint64_t GetSeekKey() const { return fSeekKey; }
+
+   /// Returns the on-disk offset of this object's parent directory key.
+   std::uint64_t GetSeekParentDir() const { return fSeekParentDir; }
 };
 
 /// The iterable returned by RFile::ListKeys()
@@ -160,9 +186,12 @@ public:
 };
 
 /**
-\class ROOT::Experimental::RFile
-\ingroup RFile
+\class ROOT::RFile
+\ingroup io_files
 \brief An interface to read from, or write to, a ROOT file, as well as performing other common operations.
+
+Please refer to the documentation of TFile for the details related to how data and executable code can be stored
+in ROOT files.
 
 ## When and why should you use RFile
 
@@ -224,13 +253,14 @@ auto myObj = file->Get<TH1D>("h");
 */
 class RFile final {
    friend void *Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key);
+   friend TFile *Internal::GetRFileTFile(RFile &rfile);
 
    /// Flags used in PutInternal()
-   enum PutFlags {
+   enum EPutFlags {
       /// When encountering an object at the specified path, overwrite it with the new one instead of erroring out.
-      kPutAllowOverwrite = 0x1,
+      kPutFlag_AllowOverwrite = BIT(0),
       /// When overwriting an object, preserve the existing one and create a new cycle, rather than removing it.
-      kPutOverwriteKeepCycle = 0x2,
+      kPutFlag_OverwriteKeepCycle = BIT(1),
    };
 
    std::unique_ptr<TFile> fFile;
@@ -244,13 +274,13 @@ class RFile final {
                                   std::variant<const char *, std::reference_wrapper<const std::type_info>> type) const;
 
    /// Writes `obj` to file, without taking its ownership.
-   void PutUntyped(std::string_view path, const std::type_info &type, const void *obj, std::uint32_t flags);
+   void PutUntyped(std::string_view path, const std::type_info &type, const void *obj, std::uint32_t flags,
+                   std::string_view title);
 
-   /// \see Put
    template <typename T>
-   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags)
+   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags, std::string_view title)
    {
-      PutUntyped(path, typeid(T), &obj, flags);
+      PutUntyped(path, typeid(T), &obj, flags, title);
    }
 
    /// Given `path`, returns the TKey corresponding to the object at that path (assuming the path is fully split, i.e.
@@ -260,9 +290,39 @@ class RFile final {
 
 public:
    enum EListKeyFlags {
-      kListObjects = 1 << 0,
-      kListDirs = 1 << 1,
-      kListRecursive = 1 << 2,
+      kListObjects = BIT(0),
+      kListDirs = BIT(1),
+      kListRecursive = BIT(2),
+   };
+   enum EOverwriteFlags {
+      kOverwrite_NoNewCycle = BIT(0)
+   };
+
+   struct RRecreateOptions {
+      /// See core/zip/inc/Compression.h for the meaning of the `compression` argument.
+      /// Default compression is 505 (ZSTD level 10).
+      int fCompressionSettings = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
+      /// If true the RFile will show up in the TBrowser window. This causes the file to also be added
+      /// to the list of global files. Set to false to prevent this global registration.
+      bool fEnableBrowsability = true;
+
+      RRecreateOptions();
+   };
+
+   struct ROpenOptions {
+      /// If true the RFile will show up in the TBrowser window. This causes the file to also be added
+      /// to the list of global files. Set to false to prevent this global registration.
+      bool fEnableBrowsability = true;
+
+      ROpenOptions();
+   };
+
+   struct RUpdateOptions {
+      /// If true the RFile will show up in the TBrowser window. This causes the file to also be added
+      /// to the list of global files. Set to false to prevent this global registration.
+      bool fEnableBrowsability = true;
+
+      RUpdateOptions();
    };
 
    // This is arbitrary, but it's useful to avoid pathological cases
@@ -272,17 +332,17 @@ public:
 
    /// Opens the file for reading. `path` may be a regular file path or a remote URL.
    /// \throw ROOT::RException if the file at `path` could not be opened.
-   static std::unique_ptr<RFile> Open(std::string_view path);
+   static std::unique_ptr<RFile> Open(std::string_view path, const ROpenOptions &opts = ROpenOptions());
 
    /// Opens the file for reading/writing, overwriting it if it already exists.
    /// \throw ROOT::RException if a file could not be created at `path` (e.g. if the specified
    /// directory tree does not exist).
-   static std::unique_ptr<RFile> Recreate(std::string_view path);
+   static std::unique_ptr<RFile> Recreate(std::string_view path, const RRecreateOptions &opts = RRecreateOptions());
 
    /// Opens the file for updating, creating a new one if it doesn't exist.
    /// \throw ROOT::RException if the file at `path` could neither be read nor created
    /// (e.g. if the specified directory tree does not exist).
-   static std::unique_ptr<RFile> Update(std::string_view path);
+   static std::unique_ptr<RFile> Update(std::string_view path, const RUpdateOptions &opts = RUpdateOptions());
 
    ///// Instance methods /////
 
@@ -292,7 +352,7 @@ public:
    /// Retrieves an object from the file.
    /// `path` should be a string such that `IsValidPath(path) == true`, otherwise an exception will be thrown.
    /// See \ref ValidateAndNormalizePath() for info about valid path names.
-   /// If the object is not there returns a null pointer.
+   /// \return A copy of the object at `path`, or `nullptr` if there is no object of type `T` at the specified path.
    template <typename T>
    std::unique_ptr<T> Get(std::string_view path) const
    {
@@ -300,37 +360,59 @@ public:
       return std::unique_ptr<T>(static_cast<T *>(obj));
    }
 
-   /// Puts an object into the file.
+   /// Puts object `obj` into the file and gives it a title.
    /// The application retains ownership of the object.
+   /// The object will be effectively copied into the file, so any further modifications won't be seen by the object
+   /// inside the file.
+   /// Note that the object is not necessarily written to storage until the RFile is closed or `Flush()` is called.
+   ///
    /// `path` should be a string such that `IsValidPath(path) == true`, otherwise an exception will be thrown.
    /// See \ref ValidateAndNormalizePath() for info about valid path names.
    ///
-   /// Throws a RException if `path` already identifies a valid object or directory.
-   /// Throws a RException if the file was opened in read-only mode.
+   /// \throws ROOT::RException if `path` already identifies a valid object or directory.
+   /// \throws ROOT::RException if the file was opened in read-only mode.
    template <typename T>
-   void Put(std::string_view path, const T &obj)
+   void Put(std::string_view path, const T &obj, std::string_view title = "")
    {
-      PutInternal(path, obj, /* flags = */ 0);
+      static_assert(!std::is_base_of_v<TTree, T>, "Writing TTree with RFile is unsupported.");
+      PutInternal(path, obj, /* flags = */ 0, title);
    }
 
+   /// Puts object `namedObj` in the file under the path `dirPath/namedObj.GetName()`, giving it a title equal to
+   /// `namedObj.GetTitle()`.
+   /// If `dirPath` is empty (default), the object is put at the top level of the file.
+   void Put(const class TNamed &namedObj, std::string_view dirPath = "");
+
    /// Puts an object into the file, overwriting any previously-existing object at that path.
-   /// The application retains ownership of the object.
+   /// See Put for more details.
    ///
-   /// If an object already exists at that path, it is kept as a backup cycle unless `backupPrevious` is false.
-   /// Note that even if `backupPrevious` is false, any existing cycle except the latest will be preserved.
+   /// `overwriteFlags` must contain values from the `EOverwriteFlags` enum.
+   /// If an object already exists at that path AND it has type `T`, it is kept as a backup cycle
+   /// unless `overwriteFlags` contains `kOverwrite_NoNewCycle`.
+   /// If the existing object's type differs from `T`, an exception is thrown.
+   /// Note that even if no new cycle is created, only the *latest* cycle will be deleted.
    ///
-   /// Throws a RException if `path` is already the path of a directory.
-   /// Throws a RException if the file was opened in read-only mode.
+   /// \throws ROOT::RException if `path` is already the path of a directory.
+   /// \throws ROOT::RException if the file was opened in read-only mode.
    template <typename T>
-   void Overwrite(std::string_view path, const T &obj, bool backupPrevious = true)
+   void Overwrite(std::string_view path, const T &obj, std::uint32_t overwriteFlags = 0)
    {
-      std::uint32_t flags = kPutAllowOverwrite;
-      flags |= backupPrevious * kPutOverwriteKeepCycle;
-      PutInternal(path, obj, flags);
+      static_assert(!std::is_base_of_v<TTree, T>, "Writing TTree with RFile is unsupported.");
+      Overwrite(path, obj, "", overwriteFlags);
+   }
+
+   /// Like Overwrite(std::string_view, const T&, bool) but allows giving a title to the object.
+   template <typename T>
+   void Overwrite(std::string_view path, const T &obj, std::string_view title, std::uint32_t overwriteFlags = 0)
+   {
+      std::uint32_t flags = kPutFlag_AllowOverwrite;
+      const bool createNewCycle = !(overwriteFlags & kOverwrite_NoNewCycle);
+      flags |= createNewCycle * kPutFlag_OverwriteKeepCycle;
+      PutInternal(path, obj, flags, title);
    }
 
    /// Writes all objects and the file structure to disk.
-   /// Returns the number of bytes written.
+   /// \return the number of bytes written.
    size_t Flush();
 
    /// Flushes the RFile if needed and closes it, disallowing any further reading or writing.
@@ -338,8 +420,11 @@ public:
 
    /// Returns an iterable over all keys of objects and/or directories written into this RFile starting at path
    /// `basePath` (defaulting to include the content of all subdirectories).
+   /// The iterable yields values of type ROOT::Experimental::RKeyInfo.
+   ///
    /// By default, keys referring to directories are not returned: only those referring to leaf objects are.
    /// If `basePath` is the path of a leaf object, only `basePath` itself will be returned.
+   /// If `basePath` is the path of a directory, it won't appear in the listing.
    /// `flags` is a bitmask specifying the listing mode.
    /// If `(flags & kListObjects) != 0`, the listing will include keys of non-directory objects (default);
    /// If `(flags & kListDirs) != 0`, the listing will include keys of directory objects;
@@ -349,17 +434,17 @@ public:
    /// Example usage:
    /// ~~~{.cpp}
    /// for (RKeyInfo key : file->ListKeys()) {
-   ///     /* iterate over all objects in the RFile */
+   ///     // iterate over all objects in the RFile
    ///     cout << key.GetPath() << ";" << key.GetCycle() << " of type " << key.GetClassName() << "\n";
    /// }
    /// for (RKeyInfo key : file->ListKeys("", kListDirs|kListObjects|kListRecursive)) {
-   ///     /* iterate over all objects and directories in the RFile */
+   ///     // iterate over all objects and directories in the RFile
    /// }
    /// for (RKeyInfo key : file->ListKeys("a/b", kListObjects)) {
-   ///     /* iterate over all objects that are immediate children of directory "a/b" */
+   ///     // iterate over all objects that are immediate children of directory "a/b"
    /// }
    /// for (RKeyInfo key : file->ListKeys("foo", kListDirs|kListRecursive)) {
-   ///     /* iterate over all directories under directory "foo", recursively */
+   ///     // iterate over all directories under directory "foo", recursively
    /// }
    /// ~~~
    RFileKeyIterable ListKeys(std::string_view basePath = "", std::uint32_t flags = kListObjects | kListRecursive) const
@@ -374,7 +459,6 @@ public:
    void Print(std::ostream &out = std::cout) const;
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

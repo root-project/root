@@ -29,15 +29,86 @@ TEST(RNTupleCompat, Epoch)
    }
 }
 
-TEST(RNTupleCompat, FeatureFlag)
+TEST(RNTupleCompat, FeatureFlagSupported)
 {
-   FileRaii fileGuard("test_ntuple_compat_feature_flag.root");
+   // Write all known feature flags in the header and verify we can read the RNTuple correctly.
+   FileRaii fileGuard("test_ntuple_compat_feature_flag_supported.root");
 
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetVersionForWriting();
    descBuilder.SetNTuple("ntpl", "");
-   descBuilder.SetFeature(RNTupleDescriptor::kFeatureFlagTest);
-   descBuilder.AddField(RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());
+   for (unsigned int flag = 0; flag < RNTupleDescriptor::kFeatureFlag_COUNT; ++flag)
+      descBuilder.SetFeature(flag);
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
+   ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
+
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+   RNTupleSerializer serializer;
+
+   auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor()).Unwrap();
+   auto buffer = std::make_unique<unsigned char[]>(ctx.GetHeaderSize());
+   ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor()).Unwrap();
+   writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
+
+   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx).Unwrap();
+   buffer = std::make_unique<unsigned char[]>(szFooter);
+   serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
+   writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
+
+   writer->Commit();
+   // Call destructor to flush data to disk
+   writer = nullptr;
+
+   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
+   EXPECT_NO_THROW(pageSource->Attach());
+}
+
+TEST(RNTupleCompat, FeatureFlagSupportedFooter)
+{
+   // Write all known feature flags in the footer and verify we can read the RNTuple correctly.
+   FileRaii fileGuard("test_ntuple_compat_feature_flag_supported_footer.root");
+
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
+   descBuilder.SetNTuple("ntpl", "");
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
+   ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
+
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+   RNTupleSerializer serializer;
+
+   auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor()).Unwrap();
+   auto buffer = std::make_unique<unsigned char[]>(ctx.GetHeaderSize());
+   ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor()).Unwrap();
+   writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
+
+   for (unsigned int flag = 0; flag < RNTupleDescriptor::kFeatureFlag_COUNT; ++flag)
+      descBuilder.SetFeature(flag);
+
+   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx).Unwrap();
+   buffer = std::make_unique<unsigned char[]>(szFooter);
+   serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
+   writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
+
+   writer->Commit();
+   // Call destructor to flush data to disk
+   writer = nullptr;
+
+   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
+   EXPECT_NO_THROW(pageSource->Attach());
+}
+
+TEST(RNTupleCompat, FeatureFlagUnsupported)
+{
+   FileRaii fileGuard("test_ntuple_compat_feature_flag_unsupported.root");
+
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
+   descBuilder.SetNTuple("ntpl", "");
+   descBuilder.SetFeature(RNTupleDescriptor::kFeatureFlag_Test);
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
    ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
 
    RNTupleWriteOptions options;
@@ -64,6 +135,89 @@ TEST(RNTupleCompat, FeatureFlag)
       FAIL() << "opening an RNTuple that uses an unsupported feature should fail";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unsupported format feature: 137"));
+   }
+}
+
+TEST(RNTupleCompat, FeatureFlagUnsupportedInFooter)
+{
+   FileRaii fileGuard("test_ntuple_compat_feature_flag_unsupported_footer.root");
+
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
+   descBuilder.SetNTuple("ntpl", "");
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
+   ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
+
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+   RNTupleSerializer serializer;
+
+   auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor()).Unwrap();
+   auto buffer = std::make_unique<unsigned char[]>(ctx.GetHeaderSize());
+   ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor()).Unwrap();
+   writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
+
+   // Write the feature flags in the footer
+   descBuilder.SetFeature(RNTupleDescriptor::kFeatureFlag_Test);
+
+   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx).Unwrap();
+   buffer = std::make_unique<unsigned char[]>(szFooter);
+   serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
+   writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
+
+   writer->Commit();
+   // Call destructor to flush data to disk
+   writer = nullptr;
+
+   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
+   try {
+      pageSource->Attach();
+      FAIL() << "opening an RNTuple that uses an unsupported feature should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unsupported format feature: 137"));
+   }
+}
+
+TEST(RNTupleCompat, FeatureFlagMixSupportedUnsupported)
+{
+   FileRaii fileGuard("test_ntuple_compat_feature_flag_mix_supported.root");
+
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
+   descBuilder.SetNTuple("ntpl", "");
+   for (unsigned int flag = 0; flag < RNTupleDescriptor::kFeatureFlag_COUNT; ++flag)
+      descBuilder.SetFeature(flag);
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
+   ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
+
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+   RNTupleSerializer serializer;
+
+   auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor()).Unwrap();
+   auto buffer = std::make_unique<unsigned char[]>(ctx.GetHeaderSize());
+   ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor()).Unwrap();
+   writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
+
+   // This is unsupported!
+   descBuilder.SetFeature(RNTupleDescriptor::kFeatureFlag_COUNT);
+
+   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx).Unwrap();
+   buffer = std::make_unique<unsigned char[]>(szFooter);
+   serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
+   writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
+
+   writer->Commit();
+   // Call destructor to flush data to disk
+   writer = nullptr;
+
+   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
+   try {
+      pageSource->Attach();
+      FAIL() << "opening an RNTuple that uses an unsupported feature should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unsupported format feature: " +
+                                                 std::to_string(RNTupleDescriptor::kFeatureFlag_COUNT)));
    }
 }
 
@@ -298,8 +452,8 @@ class RFutureField : public RFieldBase {
 public:
    RFutureField(std::string_view name) : RFieldBase(name, "Future", ROOT::Internal::kTestFutureFieldStructure, false) {}
 
-   std::size_t GetValueSize() const final { return 0; }
-   std::size_t GetAlignment() const final { return 0; }
+   std::size_t GetValueSize() const final { return 1; }
+   std::size_t GetAlignment() const final { return 1; }
 };
 
 TEST(RNTupleCompat, FutureFieldStructuralRole)
@@ -383,21 +537,15 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
 }
 
 class RPageSinkTestLocator : public RPageSinkFile {
-   ROOT::RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t)
+   // CommitPage() seals the page in the base class and routes it here; we return a page locator with an
+   // unknown type (without writing any data, since the test never reads the page back).
+   ROOT::RNTupleLocator CommitSealedPageImpl(ROOT::DescriptorId_t /* physicalColumnId */,
+                                             const RPageStorage::RSealedPage & /* sealedPage */) override
    {
-      auto payload = ROOT::RNTupleLocatorObject64{0x420};
       RNTupleLocator result;
-      result.SetPosition(payload);
       result.SetType(ROOT::Internal::kTestLocatorType);
-      result.SetNBytesOnStorage(sealedPage.GetDataSize());
+      // Don't set position and nbytes, we won't read it back anyway
       return result;
-   }
-
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override
-   {
-      auto element = columnHandle.fColumn->GetElement();
-      RPageStorage::RSealedPage sealedPage = SealPage(page, *element);
-      return WriteSealedPage(sealedPage, element->GetPackedSize(page.GetNElements()));
    }
 
 public:

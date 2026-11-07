@@ -376,7 +376,9 @@ const TLeaf::Counts_t *TLeaf::GetLeafCountValues(Long64_t start, Long64_t len)
           (start+len) <= (Long64_t)(fLeafCountValues->fStartEntry + fLeafCountValues->fValues.size()))
       {
          auto &values(fLeafCountValues->fValues);
-         values.erase(values.begin(), values.begin() + start-fLeafCountValues->fStartEntry);
+         // Compute the scalar offset first: forming `values.begin() + start` directly applies the
+         // absolute entry number and would seek the iterator past end() whenever fStartEntry > 0.
+         values.erase(values.begin(), values.begin() + (start - fLeafCountValues->fStartEntry));
          return &values;
       }
    } else {

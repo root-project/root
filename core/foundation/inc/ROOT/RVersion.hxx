@@ -3,9 +3,12 @@
 
 /* Update on release: */
 #define ROOT_VERSION_MAJOR 6
-#define ROOT_VERSION_MINOR 39
-#define ROOT_VERSION_PATCH 1  // When changing the version number here, never add leading zeroes!
-#define ROOT_RELEASE_DATE "Nov 5 2025"
+#define ROOT_VERSION_MINOR 43
+#define ROOT_VERSION_PATCH 1 // When changing the version number here, never add leading zeroes!
+#define ROOT_RELEASE_DATE "Oct 29 2026"
+
+/* not updated anymore */
+#define ROOT_RELEASE_TIME "00:00:00"
 
 /* Don't change the lines below. */
 
@@ -45,4 +48,4 @@
    "." R__VERS_QUOTE_MINOR(ROOT_VERSION_MINOR) \
    "." R__VERS_QUOTE_PATCH(ROOT_VERSION_PATCH)
 
-#endif // ROOT_RVERSION_H
+#endif // ROOT_RVERSION_HXX

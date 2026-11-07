@@ -36,9 +36,6 @@ protected:
    SelectionSet_t fSelectedSet;    // Selected indices.
    SelectionSet_t fHighlightedSet; // Highlighted indices.
 
-   // XXXX
-   // void ProcessGLSelectionInternal(TGLSelectRecord& rec, SelectionSet_t& sset);
-
 public:
    REveSecondarySelectable() = default;
    virtual ~REveSecondarySelectable() {}
@@ -48,9 +45,6 @@ public:
 
    SelectionSet_t &RefSelectedSet()    { return fSelectedSet; }
    SelectionSet_t &RefHighlightedSet() { return fHighlightedSet; }
-
-   // XXXX
-   // void   ProcessGLSelection(TGLSelectRecord& rec);
 };
 
 } // namespace Experimental

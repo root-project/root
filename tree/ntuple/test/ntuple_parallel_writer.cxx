@@ -262,7 +262,9 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
       c->CommitStagedClusters();
    }
 
-   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
    EXPECT_EQ(3u, reader->GetView<float>("px").GetFieldRange().size());
 
    const auto &desc = reader->GetDescriptor();
@@ -373,6 +375,26 @@ TEST(RNTupleParallelWriter, ForbidNonRootTFiles)
    EXPECT_THROW(RNTupleParallelWriter::Append(std::move(model), "ntpl", *file), ROOT::RException);
 }
 
+TEST(RNTupleParallelWriter, AppendReadOnly)
+{
+   FileRaii fileGuard("test_ntuple_parallel_append_readonly.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("a");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
+   }
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
+   try {
+      RNTupleParallelWriter::Append(std::move(model), "A", *file);
+      FAIL() << "appending to a read-only TFile should throw.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("is not writable"));
+   }
+}
+
 TEST(RNTupleFillContext, FlushColumns)
 {
    FileRaii fileGuard("test_ntuple_context_flush.root");
@@ -397,7 +419,9 @@ TEST(RNTupleFillContext, FlushColumns)
    }
 
    // If FlushColumns() worked, there will be two pages with one element each.
-   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath(), opts);
    const auto &descriptor = reader->GetDescriptor();
 
    auto fieldId = descriptor.FindFieldId("pt");

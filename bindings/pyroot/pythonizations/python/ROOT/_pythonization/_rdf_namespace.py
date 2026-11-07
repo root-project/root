@@ -26,9 +26,9 @@ def _create_distributed_module(parent, experimental: bool = False):
     Returns:
         types.ModuleType: The ROOT.RDF.Distributed submodule.
     """
-    import DistRDF
+    import ROOT._distrdf
 
-    return DistRDF.create_distributed_module(parent, experimental)
+    return ROOT._distrdf.create_distributed_module(parent, experimental)
 
 
 def _rungraphs(distrdf_rungraphs, rdf_rungraphs):
@@ -40,7 +40,7 @@ def _rungraphs(distrdf_rungraphs, rdf_rungraphs):
     def rungraphs(handles):
         # Caveat: we should not call `hasattr` on the result pointer, since
         # this will implicitly trigger the connected computation graph
-        if len(handles) > 0 and "DistRDF" in str(type(handles[0])):
+        if len(handles) > 0 and "_distrdf" in str(type(handles[0])):
             return distrdf_rungraphs(handles)
         else:
             return rdf_rungraphs(handles)
@@ -57,7 +57,7 @@ def _variationsfor(distrdf_variationsfor, rdf_variationsfor):
     def variationsfor(resptr):
         # Caveat: we should not call `hasattr` on the result pointer, since
         # this will implicitly trigger the connected computation graph
-        if "DistRDF" in str(type(resptr)):
+        if "_distrdf" in str(type(resptr)):
             return distrdf_variationsfor(resptr)
         else:
             # Help local VariationsFor with the type of the value held by the result pointer

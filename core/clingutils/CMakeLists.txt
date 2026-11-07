@@ -25,6 +25,19 @@ ROOT_OBJECT_LIBRARY(ClingUtils
   src/TClingUtils.cxx
 )
 
+set(RELATIVE_RES_HEADERS RStl.h TClingUtils.h)
+list(TRANSFORM RELATIVE_RES_HEADERS PREPEND res/)
+
+target_sources(ClingUtils
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS res/ inc/
+  FILES
+    ${RELATIVE_RES_HEADERS}
+    inc/root_std_complex.h
+)
+
 if(NOT MSVC)
   target_compile_options(ClingUtils PRIVATE -Wno-error)
 endif()
@@ -36,7 +49,7 @@ target_include_directories(ClingUtils PRIVATE
    ${CMAKE_SOURCE_DIR}/core/foundation/res
    ${CMAKE_SOURCE_DIR}/core/foundation/inc
    ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/builtins/clib/inc
    ${CMAKE_SOURCE_DIR}/core/meta/inc
    ${CMAKE_BINARY_DIR}/ginclude)
 
@@ -81,7 +94,11 @@ endforeach()
 
 set(CLANG_RESOURCE_DIR_STEM)
 if (builtin_clang)
-  set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/${CMAKE_CFG_INTDIR}/lib${LLVM_LIBDIR_SUFFIX}/clang)
+  if (builtin_llvm)
+    set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/${CMAKE_CFG_INTDIR}/lib${LLVM_LIBDIR_SUFFIX}/clang)
+  else()
+    set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/clang)
+  endif()
   set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION_MAJOR})
 else ()
   set(CLANG_RESOURCE_DIR_STEM ${CLANG_INSTALL_PREFIX}/lib${LLVM_LIBDIR_SUFFIX}/clang)
@@ -116,31 +133,44 @@ set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 set(custom_modulemaps)
 if (runtime_cxxmodules)
   set(custom_modulemaps boost.modulemap tinyxml2.modulemap cuda.modulemap module.modulemap.build)
-  if(vc)
-    set(custom_modulemaps ${custom_modulemaps} vc.modulemap)
-  endif()
 
   # We need to override the default modulemap because instead of producing a
   # single std.pcm, produces hundreds of pcms. This changed with MacOSX14.4.sdk
-  # To support macOS 13 with LLVM 18, we need to patch the modulemap from
-  # MacOSX14.2.sdk
   if (APPLE)
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0.0.15000309)
-      set(custom_modulemaps ${custom_modulemaps} std_darwin.MacOSX14.2.sdk.modulemap)
-    else()
       set(GENERATED_MODULEMAP ${CMAKE_CURRENT_BINARY_DIR}/std_darwin.modulemap)
+
+      # The generated modulemap must match the libc++ that cling uses at
+      # runtime, which is the one of the compiler (cling queries the compiler
+      # for its C++ include directory). This is not necessarily the libc++ of
+      # the SDK: the compiler can ship its own, for example in Homebrew LLVM,
+      # Nix or conda-forge. Hence, look for the libc++ include directory in the
+      # implicit include directories of the compiler. If it is not found, the
+      # script falls back to the libc++ of the SDK.
+      set(libcxx_include_dir)
+      foreach(dir IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
+        if(EXISTS "${dir}/__config" AND EXISTS "${dir}/module.modulemap")
+          set(libcxx_include_dir "${dir}")
+          break()
+        endif()
+      endforeach()
+
+      # Regenerate the modulemap when the libc++ modulemap changes, e.g. after
+      # an update of the toolchain in place.
+      set(std_modulemap_deps ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py)
+      if(libcxx_include_dir)
+        list(APPEND std_modulemap_deps ${libcxx_include_dir}/module.modulemap)
+      endif()
 
       add_custom_command(
         OUTPUT ${GENERATED_MODULEMAP}
-        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py ${GENERATED_MODULEMAP}
-        DEPENDS ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py
-        COMMENT "Generating wrapped std modulemap for macOS SDK"
+        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py ${CMAKE_OSX_SYSROOT} ${GENERATED_MODULEMAP} ${libcxx_include_dir}
+        DEPENDS ${std_modulemap_deps}
+        COMMENT "Generating wrapped std modulemap for libc++"
       )
       add_custom_target(generate_std_modulemap DEPENDS ${GENERATED_MODULEMAP})
       list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${GENERATED_MODULEMAP} ${CMAKE_BINARY_DIR}/etc/cling/std_darwin.modulemap)
       list(APPEND files_to_copy ${GENERATED_MODULEMAP})
       install(FILES ${CMAKE_BINARY_DIR}/etc/cling/std_darwin.modulemap DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling)
-    endif()
   endif()
 
   if (NOT libcxx)

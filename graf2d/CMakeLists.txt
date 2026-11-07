@@ -11,16 +11,16 @@ endif()
 add_subdirectory(gpad)
 add_subdirectory(graf)
 add_subdirectory(postscript)
-add_subdirectory(mathtext)
 if(WIN32)
   add_subdirectory(win32gdk)
 elseif(x11)
   add_subdirectory(x11)         # special CMakeLists.txt
   add_subdirectory(x11ttf)      # special CMakeLists.txt
 endif()
-if(asimage)
-  add_subdirectory(asimage)     # special CMakeLists.txt
-endif()
+
+add_subdirectory(asimage)     # special CMakeLists.txt
+
+add_subdirectory(padpainter)
 if(gviz)
   add_subdirectory(gviz)
 endif()

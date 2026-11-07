@@ -187,6 +187,9 @@ Int_t REveStraightLineSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 void REveStraightLineSet::BuildRenderData()
 {
    int nVertices =  fLinePlex.Size() * 2 + fMarkerPlex.Size();
+   if (nVertices == 0)
+      return;
+
    fRenderData = std::make_unique<REveRenderData>("makeStraightLineSet", 3 * nVertices, 0, nVertices);
 
    // printf("REveStraightLineSet::BuildRenderData id = %d \n", GetElementId());
@@ -224,16 +227,10 @@ TClass* REveStraightLineSet::ProjectedClass(const REveProjection*) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute bounding-box.
-/// Virtual from TAttBBox.
+/// Fill the bounding box (virtual from REveElement).
 
 void REveStraightLineSet::ComputeBBox()
 {
-   if (fLinePlex.Size() == 0 && fMarkerPlex.Size() == 0) {
-      BBoxZero();
-      return;
-   }
-
    BBoxInit();
 
    REveChunkManager::iterator li(fLinePlex);
@@ -280,7 +277,7 @@ void REveStraightLineSetProjected::SetProjection(REveProjectionManager* mng,
 
 void REveStraightLineSetProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 
    REveChunkManager::iterator li(fLinePlex);
    while (li.next())
@@ -307,7 +304,8 @@ void REveStraightLineSetProjected::UpdateProjection()
    REveProjection&      proj = * fManager->GetProjection();
    REveStraightLineSet& orig = * dynamic_cast<REveStraightLineSet*>(fProjectable);
 
-   REveTrans *trans = orig.PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *trans = fManager->GetModelTrans(&orig, mt);
 
    BBoxClear();
 

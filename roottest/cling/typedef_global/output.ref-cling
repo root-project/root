@@ -1,2 +1,1 @@
-
 mycl.C           N/A typedef ConstLink<Toy> MyClass<Toy>::value_type

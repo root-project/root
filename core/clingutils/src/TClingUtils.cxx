@@ -45,6 +45,7 @@
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/AST/QualTypeNames.h"
 #include "clang/Lex/PreprocessorOptions.h"
 
 #include "clang/Sema/Lookup.h"
@@ -110,16 +111,14 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Add default parameter to the scope if needed.
 
-static clang::NestedNameSpecifier *AddDefaultParametersNNS(const clang::ASTContext& Ctx,
-                                                           clang::NestedNameSpecifier* scope,
+static clang::NestedNameSpecifier AddDefaultParametersNNS(const clang::ASTContext& Ctx,
+                                                           clang::NestedNameSpecifier scope,
                                                            const cling::Interpreter &interpreter,
                                                            const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) {
-   if (!scope) return nullptr;
-
-   const clang::Type* scope_type = scope->getAsType();
-   if (scope_type) {
+   if (scope.getKind() == clang::NestedNameSpecifier::Kind::Type) {
+      const clang::Type* scope_type = scope.getAsType();
       // this is not a namespace, so we might need to desugar
-      clang::NestedNameSpecifier* outer_scope = scope->getPrefix();
+      clang::NestedNameSpecifier outer_scope = scope.getAsType()->getPrefix();
       if (outer_scope) {
          outer_scope = AddDefaultParametersNNS(Ctx, outer_scope, interpreter, normCtxt);
       }
@@ -128,9 +127,7 @@ static clang::NestedNameSpecifier *AddDefaultParametersNNS(const clang::ASTConte
          ROOT::TMetaUtils::AddDefaultParameters(clang::QualType(scope_type,0), interpreter, normCtxt );
       // NOTE: Should check whether the type has changed or not.
       if (addDefault.getTypePtr() != scope_type)
-         return clang::NestedNameSpecifier::Create(Ctx,outer_scope,
-                                                   false /* template keyword wanted */,
-                                                   addDefault.getTypePtr());
+         return clang::NestedNameSpecifier(addDefault.getTypePtr());
    }
    return scope;
 }
@@ -152,33 +149,6 @@ static bool CheckDefinition(const clang::CXXRecordDecl *cl, const clang::CXXReco
       return false;
    }
    return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if 'scope' or any of its template parameter was substituted when
-/// instantiating the class template instance and replace it with the
-/// partially sugared types we have from 'instance'.
-
-static clang::NestedNameSpecifier *ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
-                                                         clang::NestedNameSpecifier *scope,
-                                                         const clang::Type *instance)
-{
-   if (!scope) return nullptr;
-
-   const clang::Type* scope_type = scope->getAsType();
-   if (scope_type) {
-      clang::NestedNameSpecifier* outer_scope = scope->getPrefix();
-      if (outer_scope) {
-         outer_scope = ReSubstTemplateArgNNS(Ctxt, outer_scope, instance);
-      }
-      clang::QualType substScope =
-         ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType(scope_type,0), instance);
-      // NOTE: Should check whether the type has changed or not.
-      scope = clang::NestedNameSpecifier::Create(Ctxt,outer_scope,
-                                                 false /* template keyword wanted */,
-                                                 substScope.getTypePtr());
-   }
-   return scope;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -332,7 +302,7 @@ std::string AnnotatedRecordDecl::BuildDemangledTypeInfo(const clang::RecordDecl 
    {
       llvm::raw_string_ostream sstr(mangledName);
       if (const clang::TypeDecl* TD = llvm::dyn_cast<clang::TypeDecl>(rDecl)) {
-         mangleCtx->mangleCXXRTTI(clang::QualType(TD->getTypeForDecl(), 0), sstr);
+         mangleCtx->mangleCXXRTTI(rDecl->getASTContext().getTypeDeclType(TD), sstr);
       }
    }
    if (!mangledName.empty()) {
@@ -386,6 +356,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestedVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -395,10 +366,11 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestedVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
-   TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
+   TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getCanonicalTagType(decl), interpreter,normCtxt);
    fDemangledTypeInfo = BuildDemangledTypeInfo(decl, fNormalizedName);
 }
 
@@ -417,6 +389,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -427,7 +400,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // For comparison purposes.
@@ -456,6 +430,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -466,7 +441,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // For comparison purposes.
@@ -490,6 +466,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -500,7 +477,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
@@ -516,7 +494,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
       fNormalizedName = fRequestedName;
    } else {
-      TMetaUtils::GetNormalizedName( fNormalizedName, decl->getASTContext().getTypeDeclType(decl),interpreter,normCtxt);
+      TMetaUtils::GetNormalizedName( fNormalizedName, decl->getASTContext().getCanonicalTagType(decl),interpreter,normCtxt);
    }
    fDemangledTypeInfo = BuildDemangledTypeInfo(decl, fNormalizedName);
 }
@@ -657,10 +635,13 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          // white space.
          clang::PrintingPolicy policy(fInterpreter->getCI()->getASTContext().getPrintingPolicy());
          policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-         policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
-         // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
-         // This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
-         // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
+         policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
+         // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an
+         // anonymous namespace. In LLVM22 (and before), SuppressUnwrittenScope suppresses anonymous namespaces. Inline
+         // namespace suppression is separately controlled by SuppressInlineNamespace, which we probably don't want to
+         // be suppressed.
+         policy.SuppressUnwrittenScope = true; // Strip anonymous namespace names
+
          // getAsStringInternal() appends.
          result.clear();
          dest.getAsStringInternal(result, policy);
@@ -697,6 +678,27 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 //         if (alt != result) fprintf(stderr,"norm: %s vs result=%s\n",alt.c_str(),result.c_str());
 
          return true;
+      }
+
+      // LLVM22: ElaboratedType comparison (dest != t) changed due to
+      // https://github.com/llvm/llvm-project/pull/147835
+      // There is no elaborated type and the codepath above is not taken
+      // for previous elaborated types where we need the enum/class/struct
+      // keywords to be stripped.
+
+      // TODO: Remove this comment once we upstream this.
+      // For types like "enum CustomEnum", SuppressTagKeyword no longer
+      // helps (unless we patch clang) because the keyword is printed
+      // unconditionally in the non-canonical elaborated path.
+      // We are using a patched clang, but we still need to handle this
+      // separately for windows.
+      if (!dest.isNull()) {
+         for (std::string_view kw : {"class ", "struct ", "enum "}) {
+            if (tname.compare(0, kw.size(), kw) == 0) {
+               result = tname.substr(kw.size());
+               return true;
+            }
+         }
       }
    }
    return false;
@@ -820,7 +822,7 @@ ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp
 
 bool ROOT::TMetaUtils::RequireCompleteType(const cling::Interpreter &interp, const clang::CXXRecordDecl *cl)
 {
-   clang::QualType qType(cl->getTypeForDecl(),0);
+   clang::QualType qType = cl->getASTContext().getCanonicalTagType(cl);
    return RequireCompleteType(interp,cl->getLocation(),qType);
 }
 
@@ -1433,6 +1435,7 @@ void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::Nam
    llvm::raw_string_ostream stream(qual_name);
    clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+   policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
    policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
 
    cl.getNameForDiagnostic(stream,policy,true);
@@ -1456,8 +1459,7 @@ std::string ROOT::TMetaUtils::GetQualifiedName(const clang::NamedDecl &cl){
 
 void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::RecordDecl &recordDecl)
 {
-   const clang::Type* declType ( recordDecl.getTypeForDecl() );
-   clang::QualType qualType(declType,0);
+   clang::QualType qualType = recordDecl.getASTContext().getCanonicalTagType(&recordDecl);
    ROOT::TMetaUtils::GetQualifiedName(qual_name,
                                       qualType,
                                       recordDecl);
@@ -1606,12 +1608,6 @@ bool ROOT::TMetaUtils::hasOpaqueTypedef(clang::QualType instanceType, const ROOT
        || llvm::isa<clang::ReferenceType>(instanceType.getTypePtr()))
    {
       instanceType = instanceType->getPointeeType();
-   }
-
-   const clang::ElaboratedType* etype
-      = llvm::dyn_cast<clang::ElaboratedType>(instanceType.getTypePtr());
-   if (etype) {
-      instanceType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }
 
    // There is no typedef to worried about, except for the opaque ones.
@@ -1979,7 +1975,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       rootflag = rootflag | TClassTable__kHasCustomStreamerMember;
    }
-   finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol << ") );" << "\n";
+   finalString << "isa_proxy, " << rootflag << "," << "\n"
+               << "                  sizeof(" << csymbol << "), alignof(" << csymbol << ") );" << "\n";
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << "\n";
       if (args.size()==0 && NeedDestructor(decl, interp))
@@ -2041,6 +2038,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs since
       // they imply copies and therefore do not compile.
       auto classNameForIO = TClassEdit::GetNameForIO(classname);
+
+      finalString << "      static_assert(alignof(" << csymbol << "::value_type) <= 4096,\n";
+      finalString << "          \"Class with alignment strictly greater than 4096 are currently not supported in "
+                     "CollectionProxy. \"\n";
+      finalString << "          \"Please report this case to the developers\");\n";
       finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
 
       needCollectionProxy = true;
@@ -2061,6 +2063,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "\n" << "      instance.AdoptAlternate(::ROOT::AddClassAlternate(\""
                   << classname << "\",\"" << cl.GetDemangledTypeInfo() << "\"));\n";
 
+   }
+
+   //---------------------------------------------------------------------------
+   // Register underlying SoA record for RNTuple SoA layouts
+   /////////////////////////////////////////////////////////////////////////////
+
+   if (!cl.RequestedRNTupleSoARecord().empty()) {
+      finalString << "      instance.SetRNTupleSoARecord(\"" << cl.RequestedRNTupleSoARecord() << "\");" << "\n";
    }
 
    //---------------------------------------------------------------------------
@@ -3059,15 +3069,15 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    // Treat the Scope.
    bool prefix_changed = false;
-   clang::NestedNameSpecifier *prefix = nullptr;
+   clang::NestedNameSpecifier prefix = std::nullopt;
    clang::Qualifiers prefix_qualifiers = instanceType.getLocalQualifiers();
-   const clang::ElaboratedType* etype
-      = llvm::dyn_cast<clang::ElaboratedType>(instanceType.getTypePtr());
-   if (etype) {
+   clang::NestedNameSpecifier desugaredPrefix = instanceType->getPrefix();
+   if (desugaredPrefix) {
       // We have to also handle the prefix.
-      prefix = AddDefaultParametersNNS(Ctx, etype->getQualifier(), interpreter, normCtxt);
-      prefix_changed = prefix != etype->getQualifier();
-      instanceType = clang::QualType(etype->getNamedType().getTypePtr(),0);
+      prefix = AddDefaultParametersNNS(Ctx, desugaredPrefix, interpreter, normCtxt);
+      prefix_changed = prefix != desugaredPrefix;
+      // LLVM22: In the old API this was:
+      // instanceType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }
 
    // In case of template specializations iterate over the arguments and
@@ -3079,7 +3089,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    const clang::ClassTemplateSpecializationDecl* TSTdecl
       = llvm::dyn_cast_or_null<const clang::ClassTemplateSpecializationDecl>(instanceType.getTypePtr()->getAsCXXRecordDecl());
 
-   // Don't add the default paramater onto std classes.
+   // Don't add the default parameter onto std classes.
    // We really need this for __shared_ptr which add a enum constant value which
    // is spelled in its 'numeral' form and thus the resulting type name is
    // incorrect.  We also can used this for any of the STL collections where we
@@ -3124,7 +3134,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
                   if (declCtxt && !templateName.getAsQualifiedTemplateName()){
                      clang::NamespaceDecl* ns = clang::dyn_cast<clang::NamespaceDecl>(declCtxt);
-                     clang::NestedNameSpecifier* nns;
+                     clang::NestedNameSpecifier nns;
                      if (ns) {
                         nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx, ns);
                      } else if (clang::TagDecl* TD = llvm::dyn_cast<clang::TagDecl>(declCtxt)) {
@@ -3188,6 +3198,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                bool HasDefaultArgs;
                clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(
                                                                                               Template,
+                                                                                              /*TemplateKWLoc=*/clang::SourceLocation(),
                                                                                               TemplateLoc,
                                                                                               RAngleLoc,
                                                                                               TTP,
@@ -3217,15 +3228,19 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
       // If we added default parameter, allocate new type in the AST.
       if (mightHaveChanged) {
-         instanceType = Ctx.getTemplateSpecializationType(TST->getTemplateName(),
+         instanceType = Ctx.getTemplateSpecializationType(TST->getKeyword(),
+                                                          TST->getTemplateName(),
                                                           desArgs,
+                                                          /*CanonicalArgs=*/{},
                                                           TST->getCanonicalTypeInternal());
       }
    }
 
    if (!prefix_changed && !mightHaveChanged) return originalType;
    if (prefix) {
-      instanceType = Ctx.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, instanceType);
+      // LLVM22: In the old API this was:
+      // instanceType = Ctx.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, instanceType);
+      instanceType = cling::utils::TypeName::QualifyTypeUnderPrefix(Ctx, instanceType, prefix);
       instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
    }
    return instanceType;
@@ -3707,21 +3722,19 @@ clang::ClassTemplateDecl* ROOT::TMetaUtils::QualType2ClassTemplateDecl(const cla
 /// We may need therefore to step into the "Decl dimension" to then get back
 /// to the "type dimension".
 
-clang::TemplateName ROOT::TMetaUtils::ExtractTemplateNameFromQualType(const clang::QualType& qt)
+void ROOT::TMetaUtils::ExtractTemplateNameFromQualType(const clang::QualType& qt, clang::TemplateName& theTemplateName, clang::ElaboratedTypeKeyword& theKeyword)
 {
    using namespace clang;
-   TemplateName theTemplateName;
 
    const Type* theType = qt.getTypePtr();
 
    if (const TemplateSpecializationType* tst = llvm::dyn_cast_or_null<const TemplateSpecializationType>(theType)) {
       theTemplateName = tst->getTemplateName();
+      theKeyword = tst->getKeyword();
    } // We step into the decl dimension
    else if (ClassTemplateDecl* ctd = QualType2ClassTemplateDecl(qt)) {
       theTemplateName = TemplateName(ctd);
    }
-
-   return theTemplateName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3760,13 +3773,6 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
 
    // Take the template out of the parameter
 
-   const clang::ElaboratedType* etype
-      = llvm::dyn_cast<clang::ElaboratedType>(tParQualType.getTypePtr());
-   while (etype) {
-      tParQualType = clang::QualType(etype->getNamedType().getTypePtr(),0);
-      etype = llvm::dyn_cast<clang::ElaboratedType>(tParQualType.getTypePtr());
-   }
-
    const TemplateSpecializationType* tst =
             llvm::dyn_cast<TemplateSpecializationType>(tParQualType.getTypePtr());
 
@@ -3797,6 +3803,7 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
       llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       bool HasDefaultArgs;
       TemplateArgumentLoc defTArgLoc = S.SubstDefaultTemplateArgumentIfAvailable(Template,
+                                                                                 /*TemplateKWLoc=*/clang::SourceLocation(),
                                                                                  TemplateLoc,
                                                                                  LAngleLoc,
                                                                                  ttpdPtr,
@@ -3983,16 +3990,16 @@ static void KeepNParams(clang::QualType& normalizedType,
 
    // Treat the Scope (factorise the code out to reuse it in AddDefaultParameters)
    bool prefix_changed = false;
-   clang::NestedNameSpecifier* prefix = nullptr;
+   clang::NestedNameSpecifier prefix = std::nullopt;
    clang::Qualifiers prefix_qualifiers = normalizedType.getLocalQualifiers();
-   const clang::ElaboratedType* etype
-      = llvm::dyn_cast<clang::ElaboratedType>(normalizedType.getTypePtr());
-   if (etype) {
+   NestedNameSpecifier desugaredPrefix = normalizedType->getPrefix();
+   if (desugaredPrefix) {
       // We have to also handle the prefix.
       // TODO: we ought to be running KeepNParams
-      prefix = AddDefaultParametersNNS(astCtxt, etype->getQualifier(), interp, normCtxt);
-      prefix_changed = prefix != etype->getQualifier();
-      normalizedType = clang::QualType(etype->getNamedType().getTypePtr(),0);
+      prefix = AddDefaultParametersNNS(astCtxt, desugaredPrefix, interp, normCtxt);
+      prefix_changed = prefix != desugaredPrefix;
+      // LLVM22: In the old API this was:
+      // normalizedType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }
 
    // The canonical decl does not necessarily have the template default arguments.
@@ -4018,7 +4025,9 @@ static void KeepNParams(clang::QualType& normalizedType,
    const TemplateArgumentList& tArgs = ctsd->getTemplateArgs();
 
    // We extract the template name from the type
-   TemplateName theTemplateName = ExtractTemplateNameFromQualType(normalizedType);
+   TemplateName theTemplateName;
+   ElaboratedTypeKeyword theKeyword = ElaboratedTypeKeyword::None;
+   ExtractTemplateNameFromQualType(normalizedType, theTemplateName, theKeyword);
    if (theTemplateName.isNull()) {
       normalizedType=originalNormalizedType;
       return;
@@ -4047,6 +4056,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    const int nNormArgs = normArgs.size();
 
    bool mightHaveChanged = false;
+   int latestNonDefaultArg = -1;
 
    // becomes true when a parameter has a value equal to its default
    for (int formal = 0, inst = 0; formal != nArgs; ++formal, ++inst) {
@@ -4085,10 +4095,12 @@ static void KeepNParams(clang::QualType& normalizedType,
                argsToKeep.push_back(normTArg);
             }
             // Done.
+            latestNonDefaultArg = -1;
             break;
          }
          mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
          argsToKeep.push_back(normTArg);
+         latestNonDefaultArg = formal;
          continue;
       } else {
          if (!isStdDropDefault) {
@@ -4110,15 +4122,20 @@ static void KeepNParams(clang::QualType& normalizedType,
       } else if (argKind == clang::TemplateArgument::Integral){
          equal = areEqualValues(tArg, *tParPtr);
       }
+
+      argsToKeep.push_back(normTArg);
       if (!equal) {
+         latestNonDefaultArg = formal;
          mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
-         argsToKeep.push_back(normTArg);
       } else {
          mightHaveChanged = true;
       }
 
 
    } // of loop over parameters and arguments
+
+   if (latestNonDefaultArg >= 0)
+      argsToKeep.resize(latestNonDefaultArg + 1);
 
    if (!prefix_changed && !mightHaveChanged) {
       normalizedType = originalNormalizedType;
@@ -4128,8 +4145,10 @@ static void KeepNParams(clang::QualType& normalizedType,
    // now, let's remanipulate our Qualtype
    if (mightHaveChanged) {
       Qualifiers qualifiers = normalizedType.getLocalQualifiers();
-      normalizedType = astCtxt.getTemplateSpecializationType(theTemplateName,
+      normalizedType = astCtxt.getTemplateSpecializationType(theKeyword,
+                                                             theTemplateName,
                                                              argsToKeep,
+                                                             /*CanonicalArgs=*/{},
                                                              normalizedType.getTypePtr()->getCanonicalTypeInternal());
       normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);
    }
@@ -4137,10 +4156,11 @@ static void KeepNParams(clang::QualType& normalizedType,
    // Here we have (prefix_changed==true || mightHaveChanged), in both case
    // we need to reconstruct the type.
    if (prefix) {
-      normalizedType = astCtxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, normalizedType);
+      // LLVM22: In the old API this was:
+      // normalizedType = astCtxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, normalizedType);
+      normalizedType = cling::utils::TypeName::QualifyTypeUnderPrefix(astCtxt, normalizedType, prefix);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4187,12 +4207,14 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
 
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
    clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
-   policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-   policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
+   policy.SuppressTagKeyword = true;     // Never get the class or struct keyword
+   policy.SuppressTagKeywordInAnonNames = true; // Skip printing tags for anonymous entities
    policy.AnonymousTagLocations = false; // Do not extract file name + line number for anonymous types.
-   // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
-   // This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
-   // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
+   // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an
+   // anonymous namespace. In LLVM22 (and before), SuppressUnwrittenScope suppresses anonymous namespaces. Inline
+   // namespace suppression is separately controlled by SuppressInlineNamespace, which we probably don't want to be
+   // suppressed.
+   policy.SuppressUnwrittenScope = true; // Strip anonymous namespace names
 
    std::string normalizedNameStep1;
 
@@ -4725,17 +4747,6 @@ static bool hasSomeTypedefSomewhere(const clang::Type* T) {
     bool VisitTypeOfType(const TypeOfType* TOT) {
       return TOT->getUnmodifiedType().getTypePtr();
     }
-    bool VisitElaboratedType(const ElaboratedType* ET) {
-      NestedNameSpecifier* NNS = ET->getQualifier();
-      while (NNS) {
-        if (NNS->getKind() == NestedNameSpecifier::TypeSpec) {
-          if (Visit(NNS->getAsType()))
-            return true;
-        }
-        NNS = NNS->getPrefix();
-      }
-      return Visit(ET->getNamedType().getTypePtr());
-    }
   };
 
   SearchTypedef ST;
@@ -4759,23 +4770,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
    using namespace clang;
    const clang::ASTContext &Ctxt = instance->getAsCXXRecordDecl()->getASTContext();
 
-   // Treat scope (clang::ElaboratedType) if any.
-   const clang::ElaboratedType* etype
-      = llvm::dyn_cast<clang::ElaboratedType>(input.getTypePtr());
-   if (etype) {
-      // We have to also handle the prefix.
-
-      clang::Qualifiers scope_qualifiers = input.getLocalQualifiers();
-      assert(instance->getAsCXXRecordDecl() != nullptr && "ReSubstTemplateArg only makes sense with a type representing a class.");
-
-      clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
-      clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
-
-      if (scope)
-         subTy = Ctxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, scope, subTy);
-      subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
-      return subTy;
-   }
+   // LLVM22: No elaborated type anymore
 
    QualType QT = input;
 
@@ -4837,8 +4832,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          QT = Ctxt.getDependentSizedArrayType (newQT,
                                               arr->getSizeExpr(),
                                               arr->getSizeModifier(),
-                                              arr->getIndexTypeCVRQualifiers(),
-                                              arr->getBracketsRange());
+                                              arr->getIndexTypeCVRQualifiers());
 
       } else if (const auto arr = dyn_cast<IncompleteArrayType>(QT.getTypePtr())) {
          QualType newQT = ReSubstTemplateArg(arr->getElementType(),instance);
@@ -4855,20 +4849,12 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          QT = Ctxt.getVariableArrayType (newQT,
                                         arr->getSizeExpr(),
                                         arr->getSizeModifier(),
-                                        arr->getIndexTypeCVRQualifiers(),
-                                        arr->getBracketsRange());
+                                        arr->getIndexTypeCVRQualifiers());
       }
 
       // Add back the qualifiers.
       QT = Ctxt.getQualifiedType(QT, quals);
       return QT;
-   }
-
-   // If the instance is also an elaborated type, we need to skip
-   etype = llvm::dyn_cast<clang::ElaboratedType>(instance);
-   if (etype) {
-      instance = etype->getNamedType().getTypePtr();
-      if (!instance) return input;
    }
 
    const clang::TemplateSpecializationType* TST
@@ -4980,7 +4966,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
          clang::QualType SubTy = TA.getAsType();
          // Check if the type needs more desugaring and recurse.
-         if (llvm::isa<clang::ElaboratedType>(SubTy)
+         if (SubTy->getPrefix() // LLVM22: was isa<ElaboratedType>
              || llvm::isa<clang::SubstTemplateTypeParmType>(SubTy)
              || llvm::isa<clang::TemplateSpecializationType>(SubTy)) {
             clang::QualType newSubTy = ReSubstTemplateArg(SubTy,instance);
@@ -4995,8 +4981,10 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       // If desugaring happened allocate new type in the AST.
       if (mightHaveChanged) {
          clang::Qualifiers qualifiers = input.getLocalQualifiers();
-         input = astCtxt.getTemplateSpecializationType(inputTST->getTemplateName(),
+         input = astCtxt.getTemplateSpecializationType(inputTST->getKeyword(),
+                                                       inputTST->getTemplateName(),
                                                        desArgs,
+                                                       /*CanonicalArgs=*/{},
                                                        inputTST->getCanonicalTypeInternal());
          input = astCtxt.getQualifiedType(input, qualifiers);
       }
@@ -5219,9 +5207,16 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
 
    if (!envInclPath)
       return;
+
+#ifdef _WIN32
+   constexpr char kPathSep = ';';
+#else
+   constexpr char kPathSep = ':';
+#endif
+
    std::istringstream envInclPathsStream(envInclPath);
    std::string inclPath;
-   while (std::getline(envInclPathsStream, inclPath, ':')) {
+   while (std::getline(envInclPathsStream, inclPath, kPathSep)) {
       // Can't use TSystem in here; re-implement TSystem::ExpandPathName().
       replaceEnvVars("ROOT_INCLUDE_PATH", inclPath);
       if (!inclPath.empty()) {

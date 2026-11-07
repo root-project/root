@@ -64,7 +64,6 @@
 #pragma link C++ class RooAddGenContext+ ;
 #pragma link C++ class RooAddition+ ;
 #pragma link C++ class RooAddModel+ ;
-#pragma link C++ class RooAICRegistry+ ;
 #pragma link C++ class RooArgList+ ;
 #pragma link C++ class RooArgProxy+ ;
 #pragma link C++ class RooArgSet+ ;
@@ -93,6 +92,15 @@
 #pragma link C++ class RooDirItem+ ;
 #pragma link C++ class RooDLLSignificanceMCSModule+ ;
 #pragma link C++ class RooAbsAnaConvPdf+ ;
+// Schema evolution: up to version 3, the original resolution model was stored
+// in a RooRealProxy (evolved to RooTemplateProxy<RooAbsReal>) and was a server
+// of the pdf. As of version 4 it is an owned, non-server RooResolutionModel*.
+// Recover the model pointer from the old proxy here; the stale server link is
+// cleaned up afterwards in RooAbsAnaConvPdf::ioStreamerPass2().
+#pragma read sourceClass="RooAbsAnaConvPdf" targetClass="RooAbsAnaConvPdf" version="[-3]" \
+  include="RooResolutionModel.h" \
+  source="RooTemplateProxy<RooAbsReal> _model" target="_model,_ownModel" \
+  code="{ _model = static_cast<RooResolutionModel*>(onfile._model.absArg()); _ownModel = false; }"
 #pragma link C++ class RooAddPdf+ ;
 #pragma link C++ class RooEfficiency+ ;
 #pragma link C++ class RooEffProd+ ;
@@ -228,7 +236,6 @@
          }\
          }";
 #pragma link C++ class RooTObjWrap+ ;
-#pragma link C++ class RooTrace+ ;
 #pragma link C++ class RooUniformBinning+ ;
 #pragma link C++ class RooSimultaneous+ ;
 #pragma link C++ class RooRealSumPdf+ ;

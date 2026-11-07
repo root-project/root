@@ -51,8 +51,8 @@ protected:
    TGeoElement *fElement;         // pointer to element composing the material
    TList fProperties;             // user-defined properties
    TList fConstProperties;        // user-defined constant properties
-   TGeoExtension *fUserExtension; //! Transient user-defined extension to materials
-   TGeoExtension *fFWExtension;   //! Transient framework-defined extension to materials
+   TGeoExtension *fUserExtension; ///<! Transient user-defined extension to materials
+   TGeoExtension *fFWExtension;   ///<! Transient framework-defined extension to materials
 
    // methods
    TGeoMaterial(const TGeoMaterial &);

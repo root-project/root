@@ -33,7 +33,8 @@ the network structure.
 #include "TVirtualPad.h"
 #include "TRegexp.h"
 #include "TMath.h"
-#include "snprintf.h"
+
+#include <cstdio>
 #include <iostream>
 #include <cstdlib>
 
@@ -197,6 +198,7 @@ void TMLPAnalyzer::GatherInformations()
          index[i] = val.Atoi();
       }
       TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
+      tmp.SetDirectory(gDirectory);
       data->Draw(Form("%s>>tmpb",formula.Data()),"","goff");
       rms[i]  = tmp.GetRMS();
    }
@@ -349,6 +351,8 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    // build event lists for signal and background
    TEventList* signal_list = new TEventList("__tmpSig_MLPA");
    TEventList* bg_list     = new TEventList("__tmpBkg_MLPA");
+   signal_list->SetDirectory(gDirectory);
+   bg_list->SetDirectory(gDirectory);
    data->Draw(">>__tmpSig_MLPA",signal,"goff");
    data->Draw(">>__tmpBkg_MLPA",bg,"goff");
 

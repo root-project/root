@@ -1,5 +1,4 @@
 /// \file ROOT/RNTupleJoinTable.hxx
-/// \ingroup NTuple
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2024-04-02
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -150,7 +149,7 @@ private:
    public:
       //////////////////////////////////////////////////////////////////////////
       /// \brief Get the entry indexes for this entry mapping.
-      const std::vector<ROOT::NTupleSize_t> *GetEntryIndexes(std::vector<void *> valuePtrs) const;
+      const std::vector<ROOT::NTupleSize_t> *GetEntryIndexes(const std::vector<JoinValue_t> &joinValues) const;
 
       //////////////////////////////////////////////////////////////////////////
       /// \brief Create a new entry mapping.
@@ -208,48 +207,14 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get an entry index (if it exists) for the given join field value(s), from any partition.
    ///
-   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
+   /// \param[in] joinValues The join field values to look up.
    ///
    /// \note If one or more corresponding entries exist for the given value(s), the first entry index found in the join
-   /// table is returned. To get *all* the entry indexes, use GetEntryIndexes.
+   /// table is returned.
    ///
-   /// \return An entry number that corresponds to `valuePtrs`. When there are no corresponding entries,
+   /// \return An entry number that corresponds to `joinValues`. When there are no corresponding entries,
    /// `kInvalidNTupleIndex` is returned.
-   ROOT::NTupleSize_t GetEntryIndex(const std::vector<void *> &valuePtrs) const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get all entry indexes for the given join field value(s) within a partition.
-   ///
-   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
-   /// \param[in] partitionKey The partition key to use for the lookup. If not provided, it will use the default
-   /// partition key.
-   ///
-   /// \return The entry numbers that correspond to `valuePtrs`. When there are no corresponding entries, an empty
-   /// vector is returned.
-   std::vector<ROOT::NTupleSize_t>
-   GetEntryIndexes(const std::vector<void *> &valuePtrs, PartitionKey_t partitionKey = kDefaultPartitionKey) const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get all entry indexes for the given join field value(s) for a specific set of partitions.
-   ///
-   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
-   /// \param[in] partitionKeys The partition keys to use for the lookup.
-   ///
-   /// \return The entry numbers that correspond to `valuePtrs`, grouped by partition. When there are no corresponding
-   /// entries, an empty map is returned.
-   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
-   GetPartitionedEntryIndexes(const std::vector<void *> &valuePtrs,
-                              const std::vector<PartitionKey_t> &partitionKeys) const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get all entry indexes for the given join field value(s) for all partitions.
-   ///
-   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
-   ///
-   /// \return The entry numbers that correspond to `valuePtrs`, grouped by partition. When there are no corresponding
-   /// entries, an empty map is returned.
-   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
-   GetPartitionedEntryIndexes(const std::vector<void *> &valuePtrs) const;
+   ROOT::NTupleSize_t GetEntryIndex(const std::vector<JoinValue_t> &joinValues) const;
 };
 } // namespace Internal
 } // namespace Experimental

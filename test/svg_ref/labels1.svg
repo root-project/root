@@ -11,34 +11,10 @@ labels1.svg
 <path d="M57,254l 1.000, -1.000h 452v -222l 1.000, -1.000v 224h -454z" fill="#a9a9a9"/>
 <rect x="57" y="30" width="454" height="224" fill="none" stroke="black"/>
 <path d="M57,254h 454" fill="none" stroke="black"/>
-<path d="M57,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M80,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M103,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M125,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M148,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M171,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M193,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M216,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M239,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M261,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M284,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M307,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M329,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M352,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M375,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M397,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M420,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M443,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M465,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M488,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M57,30v 224M80,30v 224M103,30v 224M125,30v 224M148,30v 224M171,30v 224M193,30v 224M216,30v 224M239,30v 224M261,30v 224M284,30v 224M307,30v 224M329,30v 224M352,30v 224M375,30v 224M397,30v 224M420,30v 224M443,30v 224M465,30v 224M488,30v
+ 224M511,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M57,254v -224" fill="none" stroke="black"/>
-<path d="M511,254h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,215h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,176h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,137h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,98h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,59h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,254h -454M511,215h -454M511,176h -454M511,137h -454M511,98h -454M511,59h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M57,254v -8.6h 23v -13h 23v -11h 23v -21h 23v -22h 23v -28h 23v -38h 23v -12h 23v -25h 23v -17h 23v -19h 23v 32h 23v 18h 23v 37h 23v 22h 23v 41h 23v 24h 23v 0.391h 23v 18h 23v 10h 23v 11z" fill="#7c99d1"/>
 <path d="M57,245h 23v -13h 23v -11h 23v -21h 23v -22h 23v -28h 23v -38h 23v -12h 23v -25h 23v -17h 23v -19h 23v 32h 23v 18h 23v 37h 23v 22h 23v 41h 23v 24h 23v 0.391h 23v 18h 23v 10h 23" fill="none" stroke="black"/>
 <path d="M57,254h 454" fill="none" stroke="black"/>
@@ -122,57 +98,11 @@ labels1.svg
 <text xml:space="preserve" x="499" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Valery
 </text>
 </g>
-<path d="M57,247v 7.2" fill="none" stroke="black"/>
-<path d="M80,247v 7.2" fill="none" stroke="black"/>
-<path d="M103,247v 7.2" fill="none" stroke="black"/>
-<path d="M125,247v 7.2" fill="none" stroke="black"/>
-<path d="M148,247v 7.2" fill="none" stroke="black"/>
-<path d="M171,247v 7.2" fill="none" stroke="black"/>
-<path d="M193,247v 7.2" fill="none" stroke="black"/>
-<path d="M216,247v 7.2" fill="none" stroke="black"/>
-<path d="M239,247v 7.2" fill="none" stroke="black"/>
-<path d="M261,247v 7.2" fill="none" stroke="black"/>
-<path d="M284,247v 7.2" fill="none" stroke="black"/>
-<path d="M307,247v 7.2" fill="none" stroke="black"/>
-<path d="M329,247v 7.2" fill="none" stroke="black"/>
-<path d="M352,247v 7.2" fill="none" stroke="black"/>
-<path d="M375,247v 7.2" fill="none" stroke="black"/>
-<path d="M397,247v 7.2" fill="none" stroke="black"/>
-<path d="M420,247v 7.2" fill="none" stroke="black"/>
-<path d="M443,247v 7.2" fill="none" stroke="black"/>
-<path d="M465,247v 7.2" fill="none" stroke="black"/>
-<path d="M488,247v 7.2" fill="none" stroke="black"/>
-<path d="M511,247v 7.2" fill="none" stroke="black"/>
+<path d="M57,247v 7.2M80,247v 7.2M103,247v 7.2M125,247v 7.2M148,247v 7.2M171,247v 7.2M193,247v 7.2M216,247v 7.2M239,247v 7.2M261,247v 7.2M284,247v 7.2M307,247v 7.2M329,247v 7.2M352,247v 7.2M375,247v 7.2M397,247v 7.2M420,247v 7.2M443,247v 7.2M465,247v
+ 7.2M488,247v 7.2M511,247v 7.2" fill="none" stroke="black"/>
 <path d="M57,254v -224" fill="none" stroke="black"/>
-<path d="M70,254h -13" fill="none" stroke="black"/>
-<path d="M64,246h -6.4" fill="none" stroke="black"/>
-<path d="M64,238h -6.4" fill="none" stroke="black"/>
-<path d="M64,230h -6.4" fill="none" stroke="black"/>
-<path d="M64,223h -6.4" fill="none" stroke="black"/>
-<path d="M70,215h -13" fill="none" stroke="black"/>
-<path d="M64,207h -6.4" fill="none" stroke="black"/>
-<path d="M64,199h -6.4" fill="none" stroke="black"/>
-<path d="M64,191h -6.4" fill="none" stroke="black"/>
-<path d="M64,184h -6.4" fill="none" stroke="black"/>
-<path d="M70,176h -13" fill="none" stroke="black"/>
-<path d="M64,168h -6.4" fill="none" stroke="black"/>
-<path d="M64,160h -6.4" fill="none" stroke="black"/>
-<path d="M64,152h -6.4" fill="none" stroke="black"/>
-<path d="M64,144h -6.4" fill="none" stroke="black"/>
-<path d="M70,137h -13" fill="none" stroke="black"/>
-<path d="M64,129h -6.4" fill="none" stroke="black"/>
-<path d="M64,121h -6.4" fill="none" stroke="black"/>
-<path d="M64,113h -6.4" fill="none" stroke="black"/>
-<path d="M64,105h -6.4" fill="none" stroke="black"/>
-<path d="M70,98h -13" fill="none" stroke="black"/>
-<path d="M64,90h -6.4" fill="none" stroke="black"/>
-<path d="M64,82h -6.4" fill="none" stroke="black"/>
-<path d="M64,74h -6.4" fill="none" stroke="black"/>
-<path d="M64,66h -6.4" fill="none" stroke="black"/>
-<path d="M70,59h -13" fill="none" stroke="black"/>
-<path d="M64,51h -6.4" fill="none" stroke="black"/>
-<path d="M64,43h -6.4" fill="none" stroke="black"/>
-<path d="M64,35h -6.4" fill="none" stroke="black"/>
+<path d="M70,254h -13M64,246h -6.4M64,238h -6.4M64,230h -6.4M64,223h -6.4M70,215h -13M64,207h -6.4M64,199h -6.4M64,191h -6.4M64,184h -6.4M70,176h -13M64,168h -6.4M64,160h -6.4M64,152h -6.4M64,144h -6.4M70,137h -13M64,129h -6.4M64,121h -6.4M64,113h
+ -6.4M64,105h -6.4M70,98h -13M64,90h -6.4M64,82h -6.4M64,74h -6.4M64,66h -6.4M70,59h -13M64,51h -6.4M64,43h -6.4M64,35h -6.4" fill="none" stroke="black"/>
 <text xml:space="preserve" x="48" y="259" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="35" y="220" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">100

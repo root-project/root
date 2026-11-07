@@ -2,21 +2,23 @@
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
-#include "Strlen.h"
 #include "TAttMarker.h"
+
+#include <iostream>
+#include <cmath>
 #include "TVirtualPad.h"
-#include "TStyle.h"
-#include "TVirtualX.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
+#include "TStyle.h"
 #include "TColor.h"
+#include "TPoint.h"
 
 
 /** \class TAttMarker
@@ -107,7 +109,7 @@ accessed via a global name (third column).
        28                    open cross           kOpenCross
        29                    full star            kFullStar
        30                    open star            kOpenStar
-       31                    *
+       31                    *                    kStar2
        32                    open triangle down   kOpenTriangleDown
        33                    full diamond         kFullDiamond
        34                    full cross           kFullCross
@@ -131,8 +133,7 @@ accessed via a global name (third column).
 Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Marker types",0,0,500,200);
-   TMarker marker;
-   marker.DisplayMarkerTypes();
+   TMarker::DisplayMarkerTypes();
 }
 End_Macro
 
@@ -158,8 +159,7 @@ starting from 50:
 Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Marker line widths",0,0,600,266);
-   TMarker marker;
-   marker.DisplayMarkerLineWidths();
+   TMarker::DisplayMarkerLineWidths();
 }
 End_Macro
 
@@ -209,10 +209,15 @@ style used is 1. That's the most common one to draw scatter plots.
 
 TAttMarker::TAttMarker()
 {
-   if (!gStyle) {fMarkerColor=1; fMarkerStyle=1; fMarkerSize=1; return;}
-   fMarkerColor = gStyle->GetMarkerColor();
-   fMarkerStyle = gStyle->GetMarkerStyle();
-   fMarkerSize  = gStyle->GetMarkerSize();
+   if (!gStyle) {
+      fMarkerColor = 1;
+      fMarkerStyle = kDot;
+      fMarkerSize = 1;
+   } else {
+      fMarkerColor = gStyle->GetMarkerColor();
+      fMarkerStyle = gStyle->GetMarkerStyle();
+      fMarkerSize  = gStyle->GetMarkerSize();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,49 +258,31 @@ void TAttMarker::Copy(TAttMarker &attmarker) const
 
 Style_t TAttMarker::GetMarkerStyleBase(Style_t style)
 {
-   if (style <= 49)
+   if (style <= kFourSquaresPlus)
       return style;
 
    switch ((style - 50) % 18) {
-   case 0:
-      return 2;
-   case 1:
-      return 3;
-   case 2:
-      return 5;
-   case 3:
-      return 24;
-   case 4:
-      return 25;
-   case 5:
-      return 26;
-   case 6:
-      return 27;
-   case 7:
-      return 28;
-   case 8:
-      return 30;
-   case 9:
-      return 32;
-   case 10:
-      return 35;
-   case 11:
-      return 36;
-   case 12:
-      return 37;
-   case 13:
-      return 38;
-   case 14:
-      return 40;
-   case 15:
-      return 42;
-   case 16:
-      return 44;
-   case 17:
-      return 46;
-   default:
-      return style;
+   case 0: return kPlus;
+   case 1: return kStar;
+   case 2: return kMultiply;
+   case 3: return kOpenCircle;
+   case 4: return kOpenSquare;
+   case 5: return kOpenTriangleUp;
+   case 6: return kOpenDiamond;
+   case 7: return kOpenCross;
+   case 8: return kOpenStar;
+   case 9: return kOpenTriangleDown;
+   case 10: return kOpenDiamondCross;
+   case 11: return kOpenSquareDiagonal;
+   case 12: return kOpenThreeTriangles;
+   case 13: return kOctagonCross;
+   case 14: return kOpenFourTrianglesX;
+   case 15: return kOpenDoubleDiamond;
+   case 16: return kOpenFourTrianglesPlus;
+   case 17: return kOpenCrossX;
    }
+
+   return kDot;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,14 +293,15 @@ Width_t TAttMarker::GetMarkerLineWidth(Style_t style)
 {
    if (style >= 50)
       return ((style - 50) / 18) + 2;
-   else if (style == 2 || style == 3 || style == 4 || style == 5
-       || style == 24 || style == 25 || style == 26 || style == 27
-       || style == 28 || style == 30 || style == 31 || style == 32
-       || style == 35 || style == 36 || style == 37 || style == 38
-       || style == 40 || style == 42 || style == 44 || style == 46)
+   if (style == kPlus || style == kStar || style == kCircle || style == kMultiply || style == kFullDotSmall ||
+       style == kOpenCircle || style == kOpenSquare || style == kOpenTriangleUp || style == kOpenDiamond ||
+       style == kOpenCross || style == kOpenStar || style == kStar2 || style == kOpenTriangleDown ||
+       style == kOpenDiamondCross || style == kOpenSquareDiagonal || style == kOpenThreeTriangles ||
+       style == kOctagonCross || style == kOpenFourTrianglesX || style == kOpenDoubleDiamond ||
+       style == kOpenFourTrianglesPlus || style == kOpenCrossX)
       return 1;
-   else
-      return 0;
+
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,15 +309,20 @@ Width_t TAttMarker::GetMarkerLineWidth(Style_t style)
 
 void TAttMarker::Modify()
 {
-   if (!gPad) return;
-   if (!gPad->IsBatch()) {
-      gVirtualX->SetMarkerColor(fMarkerColor);
-      gVirtualX->SetMarkerSize (fMarkerSize);
-      gVirtualX->SetMarkerStyle(fMarkerStyle);
-   }
-
-   gPad->SetAttMarkerPS(fMarkerColor,fMarkerStyle,fMarkerSize);
+   if (gPad)
+      ModifyOn(*gPad);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change current marker attributes if necessary on specified pad.
+
+void TAttMarker::ModifyOn(TVirtualPad &pad)
+{
+   auto pp = pad.GetPainter();
+   if (pp)
+      pp->SetAttMarker(*this);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this marker attributes to the default values.
@@ -337,7 +330,7 @@ void TAttMarker::Modify()
 void TAttMarker::ResetAttMarker(Option_t *)
 {
    fMarkerColor  = 1;
-   fMarkerStyle  = 1;
+   fMarkerStyle  = kDot;
    fMarkerSize   = 1;
 }
 
@@ -359,21 +352,463 @@ void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t
 
 void TAttMarker::SetMarkerAttributes()
 {
-   TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
+   TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor, fMarkerStyle, fMarkerSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a transparent marker color.
 /// \param mcolor defines the marker color
 /// \param malpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
-/// \note malpha is ignored (treated as 1) if the TCanvas has no GL support activated.
+/// \note malpha is used only on the [supported platforms](\ref col_trans_available).
 
 void TAttMarker::SetMarkerColorAlpha(Color_t mcolor, Float_t malpha)
 {
    fMarkerColor = TColor::GetColorTransparent(mcolor, malpha);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the marker color.
+
+void TAttMarker::SetMarkerColor(Color_t mcolor)
+{
+   fMarkerColor = mcolor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the marker color.
+
 void TAttMarker::SetMarkerColor(TColorNumber lcolor)
 {
    SetMarkerColor(lcolor.number());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the marker style.
+
+void TAttMarker::SetMarkerStyle(Style_t mstyle)
+{
+   fMarkerStyle = mstyle;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the marker size.
+/// Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled.
+/// They are meant to be very fast to draw and are always drawn with the same number of pixels;
+/// therefore this method does not apply on them.
+
+void TAttMarker::SetMarkerSize(Size_t msize)
+{
+   fMarkerSize  = msize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return marker shape.
+/// Depending from configured marker style different marker shapes are returned
+/// \param sz return pixel size of the marker shape is returned (diamter for circle shapes)
+/// \param shape will contains vector of shape points
+/// \param scale defines scaling factor for size and shape coordinates
+/// \param flags let configure following options:
+///   kPreferTriangles - return kShapeTriangles instead of kShapeFilledArea, used when graphics engine not able to fill complex area
+///   kDotAsLines - convert small and medium dot into lines/fillrec which are directly drawn by pixel devices
+///   kDotAsCircle - automatically convert small and medium dots into circles
+///   kUsePSWidthScale - use gStyle->GetLineScalePS() for marker size calculations
+
+TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoint> &shape, Float_t scale, UInt_t flags) const
+{
+   Int_t markerStyle = GetMarkerStyleBase(GetMarkerStyle());
+   Int_t markerLineWidth = GetMarkerLineWidth(GetMarkerStyle());
+
+   Float_t wscale = (flags & kUsePSWidthScale) ? gStyle->GetLineScalePS() / 4. : 1.;
+
+   Float_t markerSizeReduced = scale * (GetMarkerSize() - std::floor(markerLineWidth/2.)/4. * wscale);
+   const auto im = std::round(4*markerSizeReduced);
+   const auto im2 = std::round(2*markerSizeReduced);
+
+   auto addTriangle = [&shape](Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t x3 = 0, Int_t y3 = 0) {
+      shape.emplace_back(x1, y1);
+      shape.emplace_back(x2, y2);
+      shape.emplace_back(x3, y3);
+   };
+
+   auto addSquare = [&shape](Int_t x1, Int_t y1, Int_t x2, Int_t y2) {
+      shape.emplace_back(x1, y1);
+      shape.emplace_back(x1, y2);
+      shape.emplace_back(x2, y2);
+
+      shape.emplace_back(x1, y1);
+      shape.emplace_back(x2, y2);
+      shape.emplace_back(x2, y1);
+   };
+
+   sz = 2 * im;
+   shape.clear();
+
+   switch (markerStyle) {
+      case kDot:
+         sz = 1;
+         return kShapeDot;
+      case kPlus:
+         shape.resize(4);
+         shape[0].fX = -im;  shape[0].fY =   0;
+         shape[1].fX =  im;  shape[1].fY =   0;
+         shape[2].fX =   0;  shape[2].fY = -im;
+         shape[3].fX =   0;  shape[3].fY =  im;
+         return kShapeSegments;
+      case kStar:
+      case kStar2: {
+         const auto imx = std::round(0.707*4*markerSizeReduced);
+         shape.resize(8);
+         shape[0].fX = -im;  shape[0].fY = 0;
+         shape[1].fX =  im;  shape[1].fY = 0;
+         shape[2].fX = 0  ;  shape[2].fY = -im;
+         shape[3].fX = 0  ;  shape[3].fY = im;
+         shape[4].fX = -imx;  shape[4].fY = -imx;
+         shape[5].fX =  imx;  shape[5].fY = imx;
+         shape[6].fX = -imx;  shape[6].fY = imx;
+         shape[7].fX =  imx;  shape[7].fY = -imx;
+         return kShapeSegments;
+      }
+      case kCircle:
+      case kOpenCircle:
+         sz = im * 2;
+         return kShapeCircle;
+      case kMultiply: {
+         const auto imx = std::round(0.707*4*markerSizeReduced);
+         shape.reserve(4);
+         shape.emplace_back(-imx, -imx);
+         shape.emplace_back( imx,  imx);
+         shape.emplace_back(-imx,  imx);
+         shape.emplace_back( imx, -imx);
+         return kShapeSegments;
+      }
+      case kFullDotSmall:
+         if (flags & kDotAsLines) {
+            shape.resize(4);
+            shape[0].fX = -1;  shape[0].fY = 0;
+            shape[1].fX =  1;  shape[1].fY = 0;
+            shape[2].fX =  0;  shape[2].fY = -1;
+            shape[3].fX =  0;  shape[3].fY = 1;
+            return kShapeSegments;
+         } else if (flags & kDotAsCircle) {
+            sz = 4;
+            return kShapeFilledCircle;
+         } else {
+            sz = 2;
+            return kShapeDot;
+         }
+      case kFullDotMedium:
+         if (flags & kDotAsLines) {
+            shape.resize(5);
+            shape[0].fX = -1;  shape[0].fY = -1;
+            shape[1].fX =  1;  shape[1].fY = -1;
+            shape[2].fX =  1;  shape[2].fY =  1;
+            shape[3].fX = -1;  shape[3].fY =  1;
+            shape[4].fX = -1;  shape[4].fY = -1;
+            return kShapeFilledArea;
+         } else if (flags & kDotAsCircle) {
+            sz = 6;
+            return kShapeFilledCircle;
+         } else {
+            sz = 3;
+            return kShapeDot;
+         }
+      case kFullDotLarge:
+      case kFullCircle:
+         sz = im * 2;
+         return kShapeFilledCircle;
+      case kFullSquare:
+         shape.resize(5);
+         shape[0].fX = -im;  shape[0].fY = -im;
+         shape[1].fX =  im;  shape[1].fY = -im;
+         shape[2].fX =  im;  shape[2].fY = im;
+         shape[3].fX = -im;  shape[3].fY = im;
+         shape[4].fX = -im;  shape[4].fY = -im;
+         return kShapeFilledArea;
+      case kFullTriangleUp:
+      case kOpenTriangleUp:
+         shape.resize(4);
+         shape[0].fX = -im;  shape[0].fY = im;
+         shape[1].fX =  im;  shape[1].fY = im;
+         shape[2].fX =   0;  shape[2].fY = -im;
+         shape[3].fX = -im;  shape[3].fY = im;
+         return markerStyle == kFullTriangleUp ? kShapeFilledArea : kShapePolyLine;
+      case kFullTriangleDown:
+      case kOpenTriangleDown:
+         shape.resize(4);
+         shape[0].fX =   0;  shape[0].fY = im;
+         shape[1].fX =  im;  shape[1].fY = -im;
+         shape[2].fX = -im;  shape[2].fY = -im;
+         shape[3].fX =   0;  shape[3].fY = im;
+         return markerStyle == kFullTriangleDown ? kShapeFilledArea : kShapePolyLine;
+      case kOpenSquare:
+         shape.resize(5);
+         shape[0].fX = -im;  shape[0].fY = -im;
+         shape[1].fX =  im;  shape[1].fY = -im;
+         shape[2].fX =  im;  shape[2].fY = im;
+         shape[3].fX = -im;  shape[3].fY = im;
+         shape[4].fX = -im;  shape[4].fY = -im;
+         return kShapePolyLine;
+      case kOpenDiamond:
+      case kFullDiamond: {
+         shape.resize(5);
+         const auto imx = std::round(2.66*markerSizeReduced);
+         shape[0].fX =-imx;  shape[0].fY = 0;
+         shape[1].fX =   0;  shape[1].fY = -im;
+         shape[2].fX = imx;  shape[2].fY = 0;
+         shape[3].fX =   0;  shape[3].fY = im;
+         shape[4].fX =-imx;  shape[4].fY = 0;
+         return markerStyle == kFullDiamond ? kShapeFilledArea : kShapePolyLine;
+      }
+      case kFullCross:
+         if (flags & kPreferTriangles) {
+            const auto imx = std::round(1.33*markerSizeReduced);
+            shape.reserve(3 * 6);
+            addSquare( -im, -imx,  -imx, imx);
+            addSquare(-imx,  -im,   imx,  im);
+            addSquare( imx, -imx,    im, imx);
+            return kShapeTriangles;
+         }
+      case kOpenCross: {
+         shape.resize(13);
+         const auto imx = std::round(1.33*markerSizeReduced);
+         shape[0].fX = -im;  shape[0].fY =-imx;
+         shape[1].fX =-imx;  shape[1].fY =-imx;
+         shape[2].fX =-imx;  shape[2].fY = -im;
+         shape[3].fX = imx;  shape[3].fY = -im;
+         shape[4].fX = imx;  shape[4].fY =-imx;
+         shape[5].fX =  im;  shape[5].fY =-imx;
+         shape[6].fX =  im;  shape[6].fY = imx;
+         shape[7].fX = imx;  shape[7].fY = imx;
+         shape[8].fX = imx;  shape[8].fY = im;
+         shape[9].fX =-imx;  shape[9].fY = im;
+         shape[10].fX=-imx;  shape[10].fY= imx;
+         shape[11].fX= -im;  shape[11].fY= imx;
+         shape[12].fX= -im;  shape[12].fY=-imx;
+         return markerStyle == kFullCross ? kShapeFilledArea : kShapePolyLine;
+      }
+      case kFullStar:
+         if (flags & kPreferTriangles) {
+            const auto im1 = std::round(0.66*markerSizeReduced);
+            const auto im3 = std::round(2.66*markerSizeReduced);
+            const auto im4 = std::round(1.33*markerSizeReduced);
+            shape.reserve(8 * 3);
+
+            addTriangle( -im,  im4,  -im2, -im1,  -im4,  im4);
+            addTriangle(-im2, -im1,  -im3,  -im,     0, -im2);
+            addTriangle(   0, -im2,   im3,  -im,   im2, -im1);
+            addTriangle( im2, -im1,    im,  im4,   im4,  im4);
+            addTriangle( im4,  im4,     0,   im,  -im4,  im4);
+            addTriangle(-im4,  im4,  -im2, -im1,     0, -im2);
+            addTriangle(-im4,  im4,     0, -im2,   im2, -im1);
+            addTriangle(-im4,  im4,   im2, -im1,   im4,  im4);
+            return kShapeTriangles;
+         }
+      case kOpenStar: {
+         const auto im1 = std::round(0.66*markerSizeReduced);
+         const auto im3 = std::round(2.66*markerSizeReduced);
+         const auto im4 = std::round(1.33*markerSizeReduced);
+         shape.resize(11);
+         shape[0].fX = -im;  shape[0].fY = im4;
+         shape[1].fX =-im2;  shape[1].fY =-im1;
+         shape[2].fX =-im3;  shape[2].fY = -im;
+         shape[3].fX =   0;  shape[3].fY =-im2;
+         shape[4].fX = im3;  shape[4].fY = -im;
+         shape[5].fX = im2;  shape[5].fY =-im1;
+         shape[6].fX =  im;  shape[6].fY = im4;
+         shape[7].fX = im4;  shape[7].fY = im4;
+         shape[8].fX =   0;  shape[8].fY = im;
+         shape[9].fX =-im4;  shape[9].fY = im4;
+         shape[10].fX= -im;  shape[10].fY= im4;
+         return markerStyle == kFullStar ? kShapeFilledArea : kShapePolyLine;
+      }
+      case kOpenDiamondCross:
+         shape.resize(12);
+         shape[0].fX =-im;  shape[0].fY = 0;
+         shape[1].fX =  0;  shape[1].fY = -im;
+         shape[2].fX =  0;  shape[2].fY = -im;
+         shape[3].fX = im;  shape[3].fY = 0;
+         shape[4].fX = im;  shape[4].fY = 0;
+         shape[5].fX =  0;  shape[5].fY = im;
+         shape[6].fX =  0;  shape[6].fY = im;
+         shape[7].fX =-im;  shape[7].fY = 0;
+         shape[8].fX =-im;  shape[8].fY = 0;
+         shape[9].fX = im;  shape[9].fY = 0;
+         shape[10].fX =  0; shape[10].fY = im;
+         shape[11].fX =  0; shape[11].fY =-im;
+         return kShapeSegments;
+      case kOpenSquareDiagonal:
+         shape.resize(12);
+         shape[0].fX = -im;  shape[0].fY = -im;
+         shape[1].fX =  im;  shape[1].fY = -im;
+         shape[2].fX =  im;  shape[2].fY = -im;
+         shape[3].fX =  im;  shape[3].fY = im;
+         shape[4].fX =  im;  shape[4].fY = im;
+         shape[5].fX = -im;  shape[5].fY = im;
+         shape[6].fX = -im;  shape[6].fY = im;
+         shape[7].fX = -im;  shape[7].fY = -im;
+         shape[8].fX = -im;  shape[8].fY = -im;
+         shape[9].fX =  im;  shape[9].fY = im;
+         shape[10].fX = -im;  shape[10].fY = im;
+         shape[11].fX =  im;  shape[11].fY = -im;
+         return kShapeSegments;
+      case kOpenThreeTriangles:
+         shape.resize(10);
+         shape[0].fX =   0;  shape[0].fY =   0;
+         shape[1].fX =-im2;  shape[1].fY =  im;
+         shape[2].fX = im2;  shape[2].fY =  im;
+         shape[3].fX =   0;  shape[3].fY =   0;
+         shape[4].fX =-im2;  shape[4].fY = -im;
+         shape[5].fX = -im;  shape[5].fY =   0;
+         shape[6].fX =   0;  shape[6].fY =   0;
+         shape[7].fX =  im;  shape[7].fY =   0;
+         shape[8].fX = im2;  shape[8].fY =  -im;
+         shape[9].fX =   0;  shape[9].fY =   0;
+         return kShapePolyLine;
+      case kOctagonCross:
+         shape.resize(15);
+         shape[0].fX = -im;  shape[0].fY = 0;
+         shape[1].fX = -im;  shape[1].fY =-im2;
+         shape[2].fX =-im2;  shape[2].fY = -im;
+         shape[3].fX = im2;  shape[3].fY = -im;
+         shape[4].fX =  im;  shape[4].fY =-im2;
+         shape[5].fX =  im;  shape[5].fY = im2;
+         shape[6].fX = im2;  shape[6].fY = im;
+         shape[7].fX =-im2;  shape[7].fY = im;
+         shape[8].fX = -im;  shape[8].fY = im2;
+         shape[9].fX = -im;  shape[9].fY = 0;
+         shape[10].fX = im;  shape[10].fY = 0;
+         shape[11].fX =  0;  shape[11].fY = 0;
+         shape[12].fX =  0;  shape[12].fY = -im;
+         shape[13].fX =  0;  shape[13].fY = im;
+         shape[14].fX =  0;  shape[14].fY = 0;
+         return kShapePolyLine;
+      case kFullThreeTriangles:
+         shape.reserve(3 * 3);
+         addTriangle( -im,   0,  -im2, im);
+         addTriangle( im2,  im,    im,  0);
+         addTriangle( im2, -im,  -im2, -im);
+         return kShapeTriangles;
+      case kOpenFourTrianglesX:
+         shape.resize(13);
+         shape[0].fX =     0;  shape[0].fY =    0;
+         shape[1].fX =   im2;  shape[1].fY =   im;
+         shape[2].fX =    im;  shape[2].fY =  im2;
+         shape[3].fX =     0;  shape[3].fY =    0;
+         shape[4].fX =    im;  shape[4].fY = -im2;
+         shape[5].fX =   im2;  shape[5].fY =  -im;
+         shape[6].fX =     0;  shape[6].fY =    0;
+         shape[7].fX =  -im2;  shape[7].fY =  -im;
+         shape[8].fX =   -im;  shape[8].fY = -im2;
+         shape[9].fX =     0;  shape[9].fY =    0;
+         shape[10].fX =   -im;  shape[10].fY =  im2;
+         shape[11].fX =  -im2;  shape[11].fY =   im;
+         shape[12].fX =     0;  shape[12].fY =  0;
+         return kShapePolyLine;
+      case kFullFourTrianglesX:
+         shape.reserve(4 * 3);
+         addTriangle( -im,  im2,  -im2,   im);
+         addTriangle( im2,   im,    im,  im2);
+         addTriangle(  im, -im2,   im2,  -im);
+         addTriangle(-im2,  -im,  -im,  -im2);
+         return kShapeTriangles;
+      case kFullDoubleDiamond:
+         if (flags & kPreferTriangles) {
+            const auto im4 = std::round(markerSizeReduced);
+            shape.reserve(8 * 3);
+            addTriangle(   0,   im,   -im4,  im4);
+            addTriangle(-im4,  im4,    -im,    0);
+            addTriangle( -im,    0,   -im4, -im4);
+            addTriangle(-im4, -im4,      0,  -im);
+            addTriangle(   0,  -im,    im4, -im4);
+            addTriangle( im4, -im4,     im,    0);
+            addTriangle(  im,    0,    im4,  im4);
+            addTriangle( im4,  im4,      0,   im);
+            return kShapeTriangles;
+         }
+      case kOpenDoubleDiamond: {
+         const auto im4 = std::round(markerSizeReduced);
+         shape.resize(9);
+         shape[0].fX=     0;   shape[0].fY= im;
+         shape[1].fX=  -im4;   shape[1].fY= im4;
+         shape[2].fX  = -im;   shape[2].fY = 0;
+         shape[3].fX = -im4;   shape[3].fY = -im4;
+         shape[4].fX =    0;   shape[4].fY = -im;
+         shape[5].fX =  im4;   shape[5].fY = -im4;
+         shape[6].fX =   im;   shape[6].fY = 0;
+         shape[7].fX=   im4;   shape[7].fY= im4;
+         shape[8].fX=     0;   shape[8].fY= im;
+         return markerStyle == kFullDoubleDiamond ? kShapeFilledArea : kShapePolyLine;
+      }
+      case kOpenFourTrianglesPlus:
+         shape.resize(11);
+         shape[0].fX =    0;  shape[0].fY =    0;
+         shape[1].fX =  im2;  shape[1].fY =   im;
+         shape[2].fX = -im2;  shape[2].fY =   im;
+         shape[3].fX =  im2;  shape[3].fY =  -im;
+         shape[4].fX = -im2;  shape[4].fY =  -im;
+         shape[5].fX =    0;  shape[5].fY =    0;
+         shape[6].fX =   im;  shape[6].fY =  im2;
+         shape[7].fX =   im;  shape[7].fY = -im2;
+         shape[8].fX =  -im;  shape[8].fY =  im2;
+         shape[9].fX =  -im;  shape[9].fY = -im2;
+         shape[10].fX =    0; shape[10].fY =   0;
+         return kShapePolyLine;
+      case kFullFourTrianglesPlus:
+         shape.reserve(4 * 3);
+         addTriangle(-im2,   im,   im2,   im);
+         addTriangle(  im,  im2,    im, -im2);
+         addTriangle( im2,  -im,  -im2,  -im);
+         addTriangle( -im, -im2,   -im,  im2);
+         return kShapeTriangles;
+      case kFullCrossX:
+         if (flags & kPreferTriangles) {
+            shape.reserve(6 * 3);
+            addTriangle(-im2,   0,  -im,  im2,   -im2,  im);
+            addTriangle(-im2,   0, -im2,   im,      0, im2);
+            addTriangle(-im2, -im,  -im, -im2,    im2,  im);
+            addTriangle(-im2, -im,  im2,   im,     im, im2);
+            addTriangle( im2, -im,    0, -im2,    im2,   0);
+            addTriangle( im2, -im,  im2,    0,     im,-im2);
+            return kShapeTriangles;
+         }
+      case kOpenCrossX:
+         shape.resize(13);
+         shape[0].fX =    0;  shape[0].fY =  im2;
+         shape[1].fX = -im2;  shape[1].fY =   im;
+         shape[2].fX =  -im;  shape[2].fY =  im2;
+         shape[3].fX = -im2;  shape[3].fY =    0;
+         shape[4].fX =  -im;  shape[4].fY = -im2;
+         shape[5].fX = -im2;  shape[5].fY =  -im;
+         shape[6].fX =    0;  shape[6].fY = -im2;
+         shape[7].fX =  im2;  shape[7].fY =  -im;
+         shape[8].fX =   im;  shape[8].fY = -im2;
+         shape[9].fX =  im2;  shape[9].fY =    0;
+         shape[10].fX =  im;  shape[10].fY = im2;
+         shape[11].fX = im2;  shape[11].fY =  im;
+         shape[12].fX =   0;  shape[12].fY = im2;
+         return markerStyle == kFullCrossX ? kShapeFilledArea : kShapePolyLine;
+      case kFourSquaresX:
+         shape.reserve(8 * 3);
+         addTriangle(  -im2,   0,   -im,  im2,   -im2,   im);
+         addTriangle(  -im2,   0,  -im2,   im,      0,  im2);
+         addTriangle(   im2,   0,     0,  im2,    im2,   im);
+         addTriangle(   im2,   0,   im2,   im,     im,  im2);
+         addTriangle(  -im2, -im,   -im, -im2,   -im2,    0);
+         addTriangle(  -im2, -im,  -im2,    0,      0, -im2);
+         addTriangle(   im2, -im,     0, -im2,    im2,    0);
+         addTriangle(   im2, -im,   im2,    0,     im, -im2);
+         return kShapeTriangles;
+      case kFourSquaresPlus: {
+         const auto imx = std::round(1.33*markerSizeReduced);
+         shape.reserve(4 * 2 * 3);
+         addSquare(-imx,  imx, imx,   im);
+         addSquare( imx, -imx,  im,  imx);
+         addSquare( -im, -imx,-imx,  imx);
+         addSquare(-imx,  -im, imx, -imx);
+         return kShapeTriangles;
+      }
+   }
+
+   sz = 1;
+   return kShapeDot;
 }

@@ -5,6 +5,7 @@
 /// with REveDataCollection and REveDataProxyBuilders.
 /// \macro_code
 ///
+/// \author Alja Mrak-Tadel
 
 #include "ROOT/REveDataTable.hxx"
 #include "ROOT/REveDataSimpleProxyBuilderTemplate.hxx"
@@ -393,7 +394,7 @@ private:
       boxset->SetAlwaysSecSelect(true);
       boxset->SetDetIdsAsSecondaryIndices(true);
       boxset->SetSelectionMaster(((REveDataCollection *)collection)->GetItemList());
-      boxset->Reset(REveBoxSet::kBT_FreeBox, true, collection->GetNItems());
+      boxset->Reset(REveBoxSet::kBT_Vertices, true, collection->GetNItems());
       TRandom r(0);
 
 #define RND_BOX(x) (Float_t) r.Uniform(-(x), (x))
@@ -412,7 +413,7 @@ private:
                               x - a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d), x - a + RND_BOX(d),
                               y + a + RND_BOX(d), z + a + RND_BOX(d), x + a + RND_BOX(d), y + a + RND_BOX(d),
                               z + a + RND_BOX(d), x + a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d)};
-         boxset->AddBox(verts);
+         boxset->AddVertices(verts);
 
          boxset->DigitValue(item->GetVisible() ? 1 : 0);
          if (item->GetVisible())
@@ -468,9 +469,8 @@ private:
       if (!fHist) {
          Bool_t status = TH1::AddDirectoryStatus();
 
-         TH1::AddDirectory(kFALSE); // Keeps histogram from going into memory
+         TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
          fHist = new TH2F("caloHist", "caloHist", fw3dlego::xbins_n - 1, fw3dlego::xbins, 72, -M_PI, M_PI);
-         TH1::AddDirectory(status);
          fSliceIndex = fCaloData->AddHistogram(fHist);
 
          fCaloData->RefSliceInfo(fSliceIndex)

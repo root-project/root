@@ -36,6 +36,8 @@
 #include "TMath.h"
 
 #include "TGLPlot3D.h"
+#define ROOT_CsgOps_cxx
+#include "CsgOps.h"
 
 
 /** \class TGLScenePad

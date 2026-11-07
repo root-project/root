@@ -51,7 +51,7 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 # ------------------------------------------------------------------------------
 
 # Generate a data sample of 1000 events in x from model
-data = model.generate({x}, 1000)
+data = model.generate(x, 1000)
 
 # Plot data and complete PDF overlaid
 xframe = x.frame(Title="Component plotting of pdf=(sig1+sig2)+(bkg1+bkg2)")
@@ -65,18 +65,15 @@ xframe2 = xframe.Clone("xframe2")
 # --------------------------------------------------------------------
 
 # Plot single background component specified by object reference
-ras_bkg = {bkg}
-model.plotOn(xframe, Components=ras_bkg, LineColor="r")
+model.plotOn(xframe, Components=[bkg], LineColor="r")
 
 # Plot single background component specified by object reference
-ras_bkg2 = {bkg2}
-model.plotOn(xframe, Components=ras_bkg2, LineStyle="--", LineColor="r")
+model.plotOn(xframe, Components=[bkg2], LineStyle="--", LineColor="r")
 
 # Plot multiple background components specified by object reference
 # Note that specified components may occur at any level in object tree
 # (e.g bkg is component of 'model' and 'sig2' is component 'sig')
-ras_bkg_sig2 = {bkg, sig2}
-model.plotOn(xframe, Components=ras_bkg_sig2, LineStyle=":")
+model.plotOn(xframe, Components=[bkg, sig2], LineStyle=":")
 
 # Make component by name/regexp
 # ------------------------------------------------------------

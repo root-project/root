@@ -26,8 +26,12 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "TVirtualHistPainter.h"
-#include "snprintf.h"
 
+#include <cstdio>
+
+#include "Rebin2DHelpers.h"
+
+#include <vector>
 
 /** \addtogroup Histograms
 @{
@@ -76,7 +80,6 @@ TH2::TH2()
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for fix bin size 2-D histograms.
 /// Creates the main histogram structure.
@@ -92,6 +95,7 @@ TH2::TH2()
 /// \param[in] nbinsy number of bins along the Y axis
 /// \param[in] ylow low edge of the Y axis first bin
 /// \param[in] yup upper edge of the Y axis last bin (not included in last bin)
+/// \note if xup <= xlow or yup <= ylow, automatic bins are calculated when buffer size is reached
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -262,19 +266,20 @@ Int_t TH2::BufferEmpty(Int_t action)
 
    const bool xbinAuto = fXaxis.GetXmax() <= fXaxis.GetXmin();
    const bool ybinAuto = fYaxis.GetXmax() <= fYaxis.GetXmin();
-   if (CanExtendAllAxes() || xbinAuto || ybinAuto) {
+   const bool extend = CanExtendAllAxes();
+   if (extend || xbinAuto || ybinAuto) {
       //find min, max of entries in buffer
-      Double_t xmin = xbinAuto ? fBuffer[2] : fXaxis.GetXmin();
-      Double_t xmax = xbinAuto ? xmin : fXaxis.GetXmax();
-      Double_t ymin = ybinAuto ? fBuffer[3] :  fYaxis.GetXmin();
-      Double_t ymax = ybinAuto ? ymin : fYaxis.GetXmax();
+      Double_t xmin = xbinAuto || extend ? fBuffer[2] : fXaxis.GetXmin();
+      Double_t xmax = xbinAuto || extend ? xmin : fXaxis.GetXmax();
+      Double_t ymin = ybinAuto || extend ? fBuffer[3] :  fYaxis.GetXmin();
+      Double_t ymax = ybinAuto || extend ? ymin : fYaxis.GetXmax();
       for (Int_t i=1;i<nbentries;i++) {
-         if (CanExtendAllAxes() || xbinAuto) {
+         if (extend || xbinAuto) {
             Double_t x = fBuffer[3*i+2];
             if (x < xmin) xmin = x;
             if (x > xmax) xmax = x;
          }
-         if (CanExtendAllAxes() || ybinAuto) {
+         if (extend || ybinAuto) {
             Double_t y = fBuffer[3*i+3];
             if (y < ymin) ymin = y;
             if (y > ymax) ymax = y;
@@ -664,9 +669,9 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill histogram following distribution in function fname.
+/// Fill histogram following distribution in function `function`.
 ///
-///  @param fname  : Function name used for filling the histogram
+///  @param function Function name used for filling the histogram
 ///  @param ntimes : number of times the histogram is filled
 ///  @param rng    : (optional) Random number generator used to sample
 ///
@@ -681,12 +686,12 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 ///
 ///  One can also call TF2::GetRandom2 to get a random variate from a function.
 
-void TH2::FillRandom(TF1 *fobj, Int_t ntimes, TRandom * rng)
+void TH2::FillRandom(TF1 *function, Int_t ntimes, TRandom * rng)
 {
    Int_t bin, binx, biny, ibin, loop;
    Double_t r1, x, y;
-   TF2 * f1 = dynamic_cast<TF2*>(fobj);
-   if (!f1) { Error("FillRandom", "Function: %s is not a TF2, is a %s",fobj->GetName(),fobj->IsA()->GetName()); return; }
+   TF2 * f1 = dynamic_cast<TF2*>(function);
+   if (!f1) { Error("FillRandom", "Function: %s is not a TF2, is a %s",function->GetName(),function->IsA()->GetName()); return; }
 
 
    TAxis & xAxis = fXaxis;
@@ -861,6 +866,7 @@ void TH2::DoFitSlices(bool onX,
       } else {
          hlist[ipar] = new TH1D(name,title, nOutBins, &bins->fArray[firstOutBin-1]);
       }
+      hlist[ipar]->SetDirectory(gDirectory);
       hlist[ipar]->GetXaxis()->SetTitle(outerAxis.GetTitle());
       if (arr)
          (*arr)[ipar] = hlist[ipar];
@@ -873,6 +879,7 @@ void TH2::DoFitSlices(bool onX,
    } else {
       hchi2 = new TH1D(name,"chisquare", nOutBins, &bins->fArray[firstOutBin-1]);
    }
+   hchi2->SetDirectory(gDirectory);
    hchi2->GetXaxis()->SetTitle(outerAxis.GetTitle());
    if (arr)
       (*arr)[npar] = hchi2;
@@ -1624,26 +1631,27 @@ TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Override TH1::Rebin as TH2::RebinX
-/// Rebinning in variable binning as for TH1 is not allowed
-/// If a non-null pointer is given an error is flagged
+/// Override TH1::Rebin, rebinning only the X axis with the same conventions
+/// as the TH1 function (`ngroup` is the number of variable size bins when
+/// `xbins` is given).
 /// see RebinX and Rebin2D
 
-TH2 * TH2::Rebin( Int_t ngroup, const char*newname, const Double_t *xbins)
+TH2 *TH2::Rebin(Int_t ngroup, const char *newname, const Double_t *xbins)
 {
-   if (xbins != nullptr) {
-      Error("Rebin","Rebinning a 2-d histogram into variable bins is not supported (it is possible only for 1-d histograms). Return a nullptr");
-      return nullptr;
-   }
+   if (xbins != nullptr)
+      return Rebin2D(ngroup, 1, newname, xbins, nullptr);
    Info("Rebin","Rebinning only the x-axis. Use Rebin2D for rebinning both axes");
    return RebinX(ngroup, newname);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together.
 ///
-///   if newname is not blank a new temporary histogram hnew is created.
+/// #### case 1  `xbins`=0 || `ybins`=0
+///
+///   if `newname` is not blank a new temporary histogram hnew is created.
 ///   else the current histogram is modified (default)
-///   The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this
+///   The parameters `nxgroup`/`nygroup` indicate how many bins along the xaxis/yaxis of this
 ///   have to me merged into one bin of hnew
 ///   If the original histogram has errors stored (via Sumw2), the resulting
 ///   histograms has new errors correctly calculated.
@@ -1657,69 +1665,87 @@ TH2 * TH2::Rebin( Int_t ngroup, const char*newname, const Double_t *xbins)
 ///                                          // merging 5 bins of h1 along the yaxis in one bin
 /// ~~~
 ///
-///   NOTE : If nxgroup/nygroup is not an exact divider of the number of bins,
+///   \note If `nxgroup`/`nygroup` is not an exact divider of the number of bins,
 ///          along the xaxis/yaxis the top limit(s) of the rebinned histogram
 ///          is changed to the upper edge of the xbin=newxbins*nxgroup resp.
 ///          ybin=newybins*nygroup and the corresponding bins are added to
 ///          the overflow bin.
 ///          Statistics will be recomputed from the new bin contents.
+///
+/// #### case 2  `xbins`!=0 || `ybins`!=0
+///
+/// A new histogram is created and `newname` must be specified.
+/// For an axis with a non-null bin-edges array, `nxgroup` (`nygroup`) is the
+/// number of bins of the new x-axis (y-axis) and `xbins` (`ybins`) must hold
+/// the `nxgroup+1` (`nygroup+1`) edges of the new bins. An axis without an
+/// array is rebinned in constant groups as in case 1.
+/// The content of each old bin is added to the new bin containing its center;
+/// old bins outside the range of the new axes end up in the under-/overflow
+/// bins. Errors stored via Sumw2 are correctly recalculated.
+///
+/// \note The new bin edges should line up with old bin edges: the entries of
+/// an old bin that is split between two new bins are all transferred to the
+/// bin containing the old bin center, and a warning is emitted.
+///
+/// example: rebinning a TH2F with 100 x 100 bins into 24 x 24 variable bins
+/// ~~~ {.cpp}
+///     Double_t xbins[25] = {...}; // low-edges plus upper edge of last bin
+///     Double_t ybins[25] = {...};
+///     TH2 *hnew = h2->Rebin2D(24, 24, "hnew", xbins, ybins);
+/// ~~~
 
-TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
+TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname, const Double_t *xbins, const Double_t *ybins)
 {
-   Int_t nxbins  = fXaxis.GetNbins();
-   Int_t nybins  = fYaxis.GetNbins();
-   Int_t nx      = nxbins + 2; // normal bins + underflow and overflow
-   Int_t ny      = nybins + 2;
-   Double_t xmin  = fXaxis.GetXmin();
-   Double_t xmax  = fXaxis.GetXmax();
-   Double_t ymin  = fYaxis.GetXmin();
-   Double_t ymax  = fYaxis.GetXmax();
-
    if (GetDimension() != 2) {
       Error("Rebin2D", "Histogram must be TH2. This histogram has %d dimensions.", GetDimension());
       return nullptr;
    }
-   if ((nxgroup <= 0) || (nxgroup > nxbins)) {
-      Error("Rebin2D", "Illegal value of nxgroup=%d",nxgroup);
-      return nullptr;
+   // something to do?
+   if (nxgroup == 1 && nygroup == 1 && !xbins && !ybins) {
+      return (newname && strlen(newname) > 0) ? (TH2 *)Clone(newname) : this;
    }
-   if ((nygroup <= 0) || (nygroup > nybins)) {
-      Error("Rebin2D", "Illegal value of nygroup=%d",nygroup);
+   if ((!newname || strlen(newname) == 0) && (xbins || ybins)) {
+      Error("Rebin2D", "if xbins or ybins are specified, newname must be given");
       return nullptr;
    }
 
-   Int_t newxbins = nxbins / nxgroup;
-   Int_t newybins = nybins / nygroup;
-   Int_t newnx = newxbins + 2; // regular bins + overflow / underflow
-   Int_t newny = newybins + 2; // regular bins + overflow / underflow
+   const Int_t nxbins = fXaxis.GetNbins();
+   const Int_t nybins = fYaxis.GetNbins();
+
+   // validate the parameters and define the axes of the rebinned histogram
+   // and the mapping of old to new bins
+   ROOT::Internal::RebinnedAxisInfo infoX, infoY;
+   if (!ROOT::Internal::SetupRebinnedAxis(fXaxis, nxgroup, xbins, 'x', *this, "Rebin2D", infoX) ||
+       !ROOT::Internal::SetupRebinnedAxis(fYaxis, nygroup, ybins, 'y', *this, "Rebin2D", infoY)) {
+      return nullptr;
+   }
+   const Int_t newxbins = infoX.nNewBins;
+   const Int_t newybins = infoY.nNewBins;
 
    // Save old bin contents into a new array
-   Double_t *oldBins = new Double_t[fNcells];
-   for (Int_t i = 0; i < fNcells; ++i) oldBins[i] = RetrieveBinContent(i);
+   std::vector<Double_t> oldBins(fNcells);
+   for (Int_t i = 0; i < fNcells; ++i)
+      oldBins[i] = RetrieveBinContent(i);
 
-   Double_t* oldErrors = nullptr;
-   if (fSumw2.fN) {
-      oldErrors = new Double_t[fNcells];
-      for (Int_t i = 0; i < fNcells; ++i) oldErrors[i] = GetBinErrorSqUnchecked(i);
+   std::vector<Double_t> oldErrors;
+   if (fSumw2.fN != 0) {
+      oldErrors.resize(fNcells);
+      for (Int_t i = 0; i < fNcells; ++i)
+         oldErrors[i] = GetBinErrorSqUnchecked(i);
    }
 
-   // create a clone of the old histogram if newname is specified
-   TH2* hnew = this;
-   if (newname && strlen(newname)) {
-      hnew = (TH2*)Clone();
-      hnew->SetName(newname);
-   }
+   // rebinning will not redistribute under-/overflow content into the range
+   // of new axes that extend beyond the old ones
+   ROOT::Internal::WarnAboutUnusedFlowContent(fXaxis, infoX, xbins, 'X', oldBins.data(), 1, nybins + 2, nxbins + 2,
+                                              *this, "Rebin2D");
+   ROOT::Internal::WarnAboutUnusedFlowContent(fYaxis, infoY, ybins, 'Y', oldBins.data(), nxbins + 2, nxbins + 2, 1,
+                                              *this, "Rebin2D");
 
-   bool resetStat = false;
-
-   // change axis specs and rebuild bin contents array
-   if(newxbins * nxgroup != nxbins) {
-      xmax = fXaxis.GetBinUpEdge(newxbins * nxgroup);
-      resetStat = true; // stats must be reset because top bins will be moved to overflow bin
-   }
-   if(newybins * nygroup != nybins) {
-      ymax = fYaxis.GetBinUpEdge(newybins * nygroup);
-      resetStat = true; // stats must be reset because top bins will be moved to overflow bin
+   // create a clone of the old histogram if newname is specified (guaranteed
+   // when bin edges are passed)
+   TH2 *hnew = this;
+   if (newname && strlen(newname) > 0) {
+      hnew = (TH2 *)Clone(newname);
    }
 
    // save the TAttAxis members (reset by SetBins) for x axis
@@ -1747,68 +1773,25 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    Color_t  yTitleColor  = fYaxis.GetTitleColor();
    Style_t  yTitleFont   = fYaxis.GetTitleFont();
 
+   ROOT::Internal::SetRebinnedBins2D(*hnew, infoX.newAxis, infoY.newAxis); // changes also errors array (if any)
 
-   // copy merged bin contents (ignore under/overflows)
-   if (nxgroup != 1 || nygroup != 1) {
-      if(fXaxis.GetXbins()->GetSize() > 0 || fYaxis.GetXbins()->GetSize() > 0){
-         // variable bin sizes in x or y, don't treat both cases separately
-         Double_t *xbins = new Double_t[newxbins + 1];
-         for(Int_t i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1 + i * nxgroup);
-         Double_t *ybins = new Double_t[newybins + 1];
-         for(Int_t i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1 + i * nygroup);
-         hnew->SetBins(newxbins, xbins, newybins, ybins); // changes also errors array (if any)
-         delete [] xbins;
-         delete [] ybins;
-      } else {
-         hnew->SetBins(newxbins, xmin, xmax, newybins, ymin, ymax); //changes also errors array
-      }
-
-      // (0, 0): x - underflow; y - underflow
-      hnew->UpdateBinContent(0, oldBins[0]);
-      if (oldErrors) hnew->fSumw2[0] = 0;
-
-      // (x, 0): x - regular / overflow; y - underflow
-      for(Int_t binx = 1, oldbinx = 1; binx < newnx; ++binx, oldbinx += nxgroup){
-         Double_t binContent = 0.0, binErrorSq = 0.0;
-         for (Int_t i = 0; i < nxgroup && (oldbinx + i) < nx; ++i) {
-            Int_t bin = oldbinx + i;
-            binContent += oldBins[bin];
-            if(oldErrors) binErrorSq += oldErrors[bin];
-         }
-         Int_t newbin = binx;
-         hnew->UpdateBinContent(newbin, binContent);
-         if (oldErrors) hnew->fSumw2[newbin] = binErrorSq;
-      }
-
-      // (0, y): x - underflow; y - regular / overflow
-      for(Int_t biny = 1, oldbiny = 1; biny < newny; ++biny, oldbiny += nygroup){
-         Double_t binContent = 0.0, binErrorSq = 0.0;
-         for (Int_t j = 0; j < nygroup && (oldbiny + j) < ny; ++j) {
-            Int_t bin = (oldbiny + j) * nx;
-            binContent += oldBins[bin];
-            if(oldErrors) binErrorSq += oldErrors[bin];
-         }
-         Int_t newbin = biny * newnx;
-         hnew->UpdateBinContent(newbin, binContent);
-         if (oldErrors) hnew->fSumw2[newbin] = binErrorSq;
-      }
-
-      // (x, y): x - regular / overflow; y - regular / overflow
-      for (Int_t binx = 1, oldbinx = 1; binx < newnx; ++binx, oldbinx += nxgroup) {
-         for (Int_t biny = 1, oldbiny = 1; biny < newny; ++biny, oldbiny += nygroup) {
-            Double_t binContent = 0.0, binErrorSq = 0.0;
-            for (Int_t i = 0; i < nxgroup && (oldbinx + i) < nx; ++i) {
-               for (Int_t j = 0; j < nygroup && (oldbiny + j) < ny; ++j) {
-                  Int_t bin = oldbinx + i + (oldbiny + j) * nx;
-                  binContent += oldBins[bin];
-                  if (oldErrors) binErrorSq += oldErrors[bin];
-               }
-            }
-            Int_t newbin = binx + biny * newnx;
-            hnew->UpdateBinContent(newbin, binContent);
-            if (oldErrors) hnew->fSumw2[newbin] = binErrorSq;
-         }
-      }
+   // add the content of each old cell (including under- and overflows) to
+   // the new cell that contains its bin center
+   const Int_t newncells = (newxbins + 2) * (newybins + 2);
+   std::vector<Double_t> newBins(newncells, 0.);
+   std::vector<Double_t> newErrors;
+   if (oldErrors.empty()) {
+      ROOT::Internal::MergeRebinnedCells(nxbins, nybins, newxbins, infoX.binMap, infoY.binMap,
+                                         {{oldBins.data(), newBins.data()}});
+   } else {
+      newErrors.resize(newncells, 0.);
+      ROOT::Internal::MergeRebinnedCells(nxbins, nybins, newxbins, infoX.binMap, infoY.binMap,
+                                         {{oldBins.data(), newBins.data()}, {oldErrors.data(), newErrors.data()}});
+   }
+   for (Int_t i = 0; i < newncells; ++i) {
+      hnew->UpdateBinContent(i, newBins[i]);
+      if (!oldErrors.empty())
+         hnew->fSumw2[i] = newErrors[i];
    }
 
    // Restore x axis attributes
@@ -1836,13 +1819,13 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    fYaxis.SetTitleColor(yTitleColor);
    fYaxis.SetTitleFont(yTitleFont);
 
-   if (resetStat) hnew->ResetStats();
+   // when the group count does not divide the old bin count, the top bins
+   // moved to the overflow: recompute the statistics from the bin contents
+   if (infoX.truncated || infoY.truncated)
+      hnew->ResetStats();
 
-   delete [] oldBins;
-   if (oldErrors) delete [] oldErrors;
    return hnew;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2137,10 +2120,10 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    return DoProfile(false, name, firstxbin, lastxbin, option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal (protected) method for performing projection on the X or Y axis
-/// called by ProjectionX or ProjectionY
+/// called by ProjectionX or ProjectionY.
+/// The histograms created are added to gDirectory.
 
 TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const
 {
@@ -2254,6 +2237,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
          else
             h1 = new TH1D(pname,GetTitle(),lastOutBin-firstOutBin+1,&bins->fArray[firstOutBin-1]);
       }
+      h1->SetDirectory(gDirectory);
       if (opt.Contains("e") || GetSumw2N() ) h1->Sumw2();
    }
    if (pname != name)  delete [] pname;

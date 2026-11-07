@@ -2,7 +2,7 @@
 
 class t02 {
 public:
-   TObject * const * obj; //!
+   TObject * const * obj; ///<!
    t02() : obj(new TObject*(new TObject)) {
       // obj = new TObject*;
       //*obj = new TObject;

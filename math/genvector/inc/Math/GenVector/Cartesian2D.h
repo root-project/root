@@ -190,8 +190,8 @@ private:
    /**
       (Contiguous) data containing the coordinates values x and y
    */
-   T fX = 0;
-   T fY = 0;
+   T fX{0};
+   T fY{0};
 };
 
 

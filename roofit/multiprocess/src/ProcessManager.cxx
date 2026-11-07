@@ -18,8 +18,10 @@
 #include "RooFit/MultiProcess/Config.h"
 
 #include <thread>
-#include <cstring>    // for strsignal
-#include <sys/wait.h> // for wait
+#include <cstring>      // for strsignal
+#include <fcntl.h>      // for fcntl, O_NONBLOCK
+#include <sys/socket.h> // for socketpair
+#include <sys/wait.h>   // for wait
 #include <iostream>
 #include <unordered_set>
 
@@ -40,18 +42,10 @@ namespace MultiProcess {
 /// \param N_workers Number of worker processes to spawn.
 ProcessManager::ProcessManager(std::size_t N_workers) : N_workers_(N_workers)
 {
-   // Note: zmq context is automatically created in the ZeroMQSvc class and maintained as singleton,
-   // but we must close any possibly existing state before reusing it. This assumes that our Messenger
-   // is the only user of ZeroMQSvc and that there is only one Messenger at a time. Beware that
-   // this must be designed more carefully if either of these assumptions change! Note also that this
-   // call must be done before the ProcessManager forks new processes, otherwise the master process'
-   // context that will be cloned to all forked processes will be closed multiple times, which will
-   // hang, because the ZeroMQ context creates threads and these will not be cloned along with the
-   // fork. See the ZeroMQ documentation for more details on this. In principle, one could design this
-   // in a more finegrained way by keeping the context on the master process and only recreating it
-   // on child processes (while avoiding calling the destructor on the child processes!). This
-   // approach may offer more flexibility if this is needed in the future.
-   zmqSvc().close_context();
+   // The socketpairs used for interprocess communication must be created
+   // before forking, so that all processes inherit the file descriptors of
+   // the connected channels.
+   create_channel_fds();
    initialize_processes();
 }
 
@@ -62,19 +56,36 @@ ProcessManager::~ProcessManager()
    } else {
       wait_for_sigterm_then_exit();
    }
+   close_channel_fds();
 }
 
 // static member initialization
 volatile sig_atomic_t ProcessManager::sigterm_received_ = 0;
+int ProcessManager::sigterm_wake_read_fd_ = -1;
+int ProcessManager::sigterm_wake_write_fd_ = -1;
 
 // static function
 /// We need this to tell the children to die, because we can't talk
 /// to them anymore during JobManager destruction, because that kills
 /// the Messenger first. We do that with SIGTERMs. The sigterm_received()
 /// should be checked in message loops to stop them when it's true.
+/// The handler also writes to a self-pipe, so that a poll that is entered
+/// after the flag check but before signal delivery still wakes up.
 void ProcessManager::handle_sigterm(int /*signum*/)
 {
    sigterm_received_ = 1;
+   if (sigterm_wake_write_fd_ >= 0) {
+      char byte = 't';
+      // write is async-signal-safe; a full pipe just means a wake-up is already pending
+      ssize_t unused = write(sigterm_wake_write_fd_, &byte, 1);
+      (void)unused;
+   }
+}
+
+// static function
+int ProcessManager::sigterm_wake_fd()
+{
+   return sigterm_wake_read_fd_;
 }
 
 // static function
@@ -103,6 +114,120 @@ pid_t fork_and_handle_errors()
       }
    }
    return child_pid;
+}
+
+namespace {
+
+/// Set FD_CLOEXEC so that the descriptor is not leaked into programs that a
+/// process executes (e.g. with gSystem->Exec). Leaked duplicates of the
+/// channel descriptors would keep the connections open after the owning
+/// process dies, defeating the closed-connection detection in Channel.
+void set_close_on_exec(int fd)
+{
+   int flags = fcntl(fd, F_GETFD, 0);
+   if (flags == -1 || fcntl(fd, F_SETFD, flags | FD_CLOEXEC) == -1) {
+      throw std::runtime_error(std::string("ProcessManager: could not set FD_CLOEXEC: ") + strerror(errno));
+   }
+}
+
+void make_socketpair(std::array<int, 2> &fds)
+{
+   if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds.data()) != 0) {
+      throw std::runtime_error(std::string("ProcessManager: socketpair failed: ") + strerror(errno));
+   }
+   set_close_on_exec(fds[0]);
+   set_close_on_exec(fds[1]);
+}
+
+void close_fd_pair(std::array<int, 2> &fds, int keep = -1)
+{
+   for (int &fd : fds) {
+      if (fd >= 0 && fd != keep) {
+         close(fd);
+         fd = -1;
+      }
+   }
+}
+
+int claim_fd(int &fd)
+{
+   if (fd < 0) {
+      throw std::logic_error("ProcessManager: channel file descriptor already claimed or not owned by this process");
+   }
+   int result = fd;
+   fd = -1;
+   return result;
+}
+
+} // namespace
+
+/// Create the socketpairs that connect the processes. Must be called before
+/// forking; every process then keeps only the ends it needs (see
+/// close_unused_channel_fds).
+void ProcessManager::create_channel_fds()
+{
+   make_socketpair(mq_fds_);
+   qw_fds_.resize(N_workers_, {{-1, -1}});
+   mw_fds_.resize(N_workers_, {{-1, -1}});
+   for (std::size_t ix = 0; ix < N_workers_; ++ix) {
+      make_socketpair(qw_fds_[ix]);
+      make_socketpair(mw_fds_[ix]);
+   }
+}
+
+/// Close the channel ends that do not belong to the current process type.
+void ProcessManager::close_unused_channel_fds()
+{
+   for (std::size_t ix = 0; ix < N_workers_; ++ix) {
+      if (is_master_) {
+         close_fd_pair(qw_fds_[ix]);
+         close_fd_pair(mw_fds_[ix], mw_fds_[ix][0]);
+      } else if (is_queue_) {
+         close_fd_pair(qw_fds_[ix], qw_fds_[ix][0]);
+         close_fd_pair(mw_fds_[ix]);
+      } else { // worker
+         close_fd_pair(qw_fds_[ix], ix == worker_id_ ? qw_fds_[ix][1] : -1);
+         close_fd_pair(mw_fds_[ix], ix == worker_id_ ? mw_fds_[ix][1] : -1);
+      }
+   }
+   if (is_master_) {
+      close_fd_pair(mq_fds_, mq_fds_[0]);
+   } else if (is_queue_) {
+      close_fd_pair(mq_fds_, mq_fds_[1]);
+   } else {
+      close_fd_pair(mq_fds_);
+   }
+}
+
+/// Close all channel ends still owned by this ProcessManager (i.e. not
+/// claimed by a Messenger).
+void ProcessManager::close_channel_fds()
+{
+   close_fd_pair(mq_fds_);
+   for (auto &fds : qw_fds_) {
+      close_fd_pair(fds);
+   }
+   for (auto &fds : mw_fds_) {
+      close_fd_pair(fds);
+   }
+}
+
+/// Hand over the master-queue channel end for the current process type.
+int ProcessManager::claim_mq_fd()
+{
+   return claim_fd(is_master_ ? mq_fds_[0] : mq_fds_[1]);
+}
+
+/// Hand over the queue-worker channel end for the current process type.
+int ProcessManager::claim_qw_fd(std::size_t worker_ix)
+{
+   return claim_fd(is_queue_ ? qw_fds_[worker_ix][0] : qw_fds_[worker_ix][1]);
+}
+
+/// Hand over the master-worker channel end for the current process type.
+int ProcessManager::claim_mw_fd(std::size_t worker_ix)
+{
+   return claim_fd(is_master_ ? mw_fds_[worker_ix][0] : mw_fds_[worker_ix][1]);
 }
 
 /// \brief Fork processes and activate CPU pinning
@@ -143,8 +268,35 @@ void ProcessManager::initialize_processes(bool cpu_pinning)
       }
    }
 
+   close_unused_channel_fds();
+
    // set the sigterm handler on the child processes
    if (!is_master_) {
+      // Create the self-pipe that the handler writes to before installing the
+      // handler. The pipe wakes up any poll on the channels, also when the
+      // signal arrived just before the poll was entered (see Channel::wait).
+      if (sigterm_wake_read_fd_ < 0) {
+         int pipe_fds[2];
+         if (pipe(pipe_fds) != 0) {
+            std::perror("pipe failed");
+            std::exit(1);
+         }
+         for (int fd : pipe_fds) {
+            int flags = fcntl(fd, F_GETFL, 0);
+            if (flags == -1 || fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+               std::perror("fcntl failed");
+               std::exit(1);
+            }
+            int fd_flags = fcntl(fd, F_GETFD, 0);
+            if (fd_flags == -1 || fcntl(fd, F_SETFD, fd_flags | FD_CLOEXEC) == -1) {
+               std::perror("fcntl failed");
+               std::exit(1);
+            }
+         }
+         sigterm_wake_read_fd_ = pipe_fds[0];
+         sigterm_wake_write_fd_ = pipe_fds[1];
+      }
+
       struct sigaction sa;
       memset(&sa, '\0', sizeof(sa));
       sa.sa_handler = ProcessManager::handle_sigterm;

@@ -28,7 +28,7 @@ The interface allows convenient iteration over RBinIndex. If included, RBinIndex
 normal bins and RBinIndex::Overflow() is the last value.
 
 \code
-ROOT::Experimental::RRegularAxis axis(10, 0, 1);
+ROOT::Experimental::RRegularAxis axis(10, {5, 15});
 for (auto index : axis.GetNormalRange(2, 5)) {
    // Will iterate over [2, 3, 4]
 }
@@ -57,6 +57,12 @@ public:
    RBinIndex GetBegin() const { return fBegin; }
    RBinIndex GetEnd() const { return fEnd; }
    // fNNormalBins is not exposed because it might be confusing for partial ranges.
+
+   bool IsInvalid() const
+   {
+      // fEnd can legally be invalid for full ranges including the overflow bin.
+      return fBegin.IsInvalid();
+   }
 
    friend bool operator==(const RBinIndexRange &lhs, const RBinIndexRange &rhs)
    {

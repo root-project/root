@@ -44,12 +44,7 @@ as a TString, construct a TString from it, eg:
 */
 
 #include <ROOT/RConfig.hxx>
-#include <cstdlib>
-#include <cctype>
-#include <list>
-#include <algorithm>
 
-#include "Varargs.h"
 #include "strlcpy.h"
 #include "TString.h"
 #include "TBuffer.h"
@@ -61,6 +56,12 @@ as a TString, construct a TString from it, eg:
 #include "TObjString.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
+
+#include <cstdarg>
+#include <cstdlib>
+#include <cctype>
+#include <list>
+#include <algorithm>
 
 #if defined(R__WIN32)
 #define strtoull _strtoui64
@@ -1355,7 +1356,81 @@ void TString::ReadBuffer(char *&buffer)
 
    char *data = Init(nchars, nchars);
 
-   for (int i = 0; i < nchars; i++) frombuf(buffer, &data[i]);
+   memcpy(data, buffer, nchars);
+   buffer += nchars;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Safer version of ReadBuffer(char *&buffer), doing bound checks on the given buffer.
+/// This overload should be preferred over the other, which should be considered unsafe.
+/// \return The amount of bytes read from the buffer, or 0 in case of errors.
+
+std::size_t TString::ReadBuffer(char *&buffer, std::size_t bufsize)
+{
+   // NOTE: this is not a lambda because we want [[nodiscard]].
+   struct {
+      TString *fOuter;
+      std::size_t fRemainingBufSize;
+
+      [[nodiscard]] bool operator()(std::size_t additionalBytesNeeded)
+      {
+         if (R__unlikely(additionalBytesNeeded > fRemainingBufSize)) {
+            Error("TString::ReadBuffer", "given buffer is too small (%zu B remaining, need at least %zu more)",
+                  fRemainingBufSize, additionalBytesNeeded);
+            fOuter->UnLink();
+            fOuter->Zero();
+            return false;
+         }
+         fRemainingBufSize -= additionalBytesNeeded;
+         return true;
+      }
+   } ConsumeBufCapacity{this, bufsize};
+
+   if (!ConsumeBufCapacity(1)) {
+      return 0;
+   }
+
+   UnLink();
+   Zero();
+
+   UChar_t strLength;
+   Int_t   nchars;
+
+   // frombuf needs a non-const buffer, although it actually doesn't modify it.
+   char *buf = const_cast<char *>(buffer);
+   frombuf(buf, &strLength);
+   if (strLength == 255) {
+      if (!ConsumeBufCapacity(sizeof(nchars))) {
+         return 0;
+      }
+      frombuf(buf, &nchars);
+   } else {
+      nchars = strLength;
+   }
+
+   if (nchars < 0) {
+      Error("TString::ReadBuffer", "found case with nwh=%d and nchars=%d", strLength, nchars);
+      return 0;
+   }
+
+   if (!ConsumeBufCapacity(nchars)) {
+      return 0;
+   }
+
+   char *data;
+   try {
+      data = Init(nchars, nchars);
+   } catch (const std::bad_alloc &ex) {
+      Error("TString::ReadBuffer", "out of memory trying to allocate a string of %d bytes.", nchars);
+      return 0;
+   }
+
+   assert(data);
+   memcpy(data, buf, nchars);
+
+   std::size_t nbytesRead = bufsize - ConsumeBufCapacity.fRemainingBufSize;
+   buffer += nbytesRead;
+   return nbytesRead;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2315,33 +2390,34 @@ TObjArray *TString::Tokenize(const TString &delim) const
 
 void TString::FormImp(const char *fmt, va_list ap)
 {
-   Ssiz_t buflen = 20 + 20 * strlen(fmt);    // pick a number, any strictly positive number
-   buflen = Clobber(buflen); // Update buflen, as Clobber clamps length to MaxSize (if Fatal does not abort)
+   va_list ap_len;
+   va_copy(ap_len, ap);
 
-   va_list sap;
-   R__VA_COPY(sap, ap);
+   // First pass: determine required size (excluding '\0')
+   int n = vsnprintf(nullptr, 0, fmt, ap_len);
+   va_end(ap_len);
 
-   int n, vc = 0;
-again:
-   n = vsnprintf(GetPointer(), buflen, fmt, ap);
-   // old vsnprintf's return -1 if string is truncated new ones return
-   // total number of characters that would have been written
-   if (n == -1 || n >= buflen) {
-      if (n == -1)
-         buflen *= 2;
-      else
-         buflen = n+1;
-      buflen = Clobber(buflen);
-      va_end(ap);
-      R__VA_COPY(ap, sap);
-      vc = 1;
-      goto again;
+   if (n < 0) {
+      // Formatting error
+      Clear();
+      return;
    }
-   va_end(sap);
-   if (vc)
-      va_end(ap);
 
-   SetSize(strlen(Data()));
+   // Request enough space (including null terminator)
+   Ssiz_t needed = Clobber(n + 1);
+
+   // Safety: Clobber may clamp to MaxSize
+   if (needed <= 0 || needed <= n) {
+      Clear();
+      return;
+   }
+
+   va_list ap_out;
+   va_copy(ap_out, ap);
+   vsnprintf(GetPointer(), needed, fmt, ap_out);
+   va_end(ap_out);
+
+   SetSize(n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2359,11 +2435,11 @@ again:
 /// Note: this is not to be confused with ::Format and ::Form (in the global namespace)
 /// which returns a const char* and relies on a thread-local static character buffer.
 
-void TString::Form(const char *va_(fmt), ...)
+void TString::Form(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap, va_(fmt));
-   FormImp(va_(fmt), ap);
+   va_start(ap, fmt);
+   FormImp(fmt, ap);
    va_end(ap);
 }
 
@@ -2381,12 +2457,12 @@ void TString::Form(const char *va_(fmt), ...)
 /// Note: this is not to be confused with ::Format and ::Form (in the global namespace)
 /// which returns a const char* and relies on a thread-local static character buffer.
 
-TString TString::Format(const char *va_(fmt), ...)
+TString TString::Format(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap, va_(fmt));
+   va_start(ap, fmt);
    TString str;
-   str.FormImp(va_(fmt), ap);
+   str.FormImp(fmt, ap);
    va_end(ap);
    return str;
 }
@@ -2416,7 +2492,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    }
 
    va_list sap;
-   R__VA_COPY(sap, ap);
+   va_copy(sap, ap);
 
    int n = vsnprintf(slowBuffer, slowBufferSize, format, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
@@ -2429,7 +2505,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
          return nullptr; // int overflow!
       }
       va_end(ap);
-      R__VA_COPY(ap, sap);
+      va_copy(ap, sap);
       char *buf = SlowFormat(format, ap, n);
       va_end(sap);
       va_end(ap);
@@ -2465,14 +2541,14 @@ static char *Format(const char *format, va_list ap)
       buf = gFormbuf;
 
    va_list sap;
-   R__VA_COPY(sap, ap);
+   va_copy(sap, ap);
 
    int n = vsnprintf(buf, fld_size, format, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= fld_size) {
       va_end(ap);
-      R__VA_COPY(ap, sap);
+      va_copy(ap, sap);
       buf = SlowFormat(format, ap, n);
       va_end(sap);
       va_end(ap);
@@ -2492,11 +2568,11 @@ static char *Format(const char *format, va_list ap)
 /// be overwritten downstream. Use Form() results immediately or use
 /// TString::Format() instead.
 
-char *Form(const char *va_(fmt), ...)
+char *Form(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap,va_(fmt));
-   char *b = Format(va_(fmt), ap);
+   va_start(ap, fmt);
+   char *b = Format(fmt, ap);
    va_end(ap);
    return b;
 }
@@ -2506,14 +2582,14 @@ char *Form(const char *va_(fmt), ...)
 /// Appends a newline. If gPrintViaErrorHandler is true it will print via the
 /// currently active ROOT error handler.
 
-void Printf(const char *va_(fmt), ...)
+void Printf(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap,va_(fmt));
+   va_start(ap, fmt);
    if (gPrintViaErrorHandler)
-      ErrorHandler(kPrint, nullptr, va_(fmt), ap);
+      ErrorHandler(kPrint, nullptr, fmt, ap);
    else {
-      char *b = Format(va_(fmt), ap);
+      char *b = Format(fmt, ap);
       printf("%s\n", b);
       fflush(stdout);
    }

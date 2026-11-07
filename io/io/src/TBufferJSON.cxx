@@ -11,7 +11,7 @@
 
 /**
 \class TBufferJSON
-\ingroup IO
+\ingroup io_other
 
 Class for serializing object to and from JavaScript Object Notation (JSON) format.
 It creates such object representation, which can be directly
@@ -110,6 +110,7 @@ class Container {
 
 #include "Compression.h"
 
+#include "ESTLType.h"
 #include "TArrayI.h"
 #include "TError.h"
 #include "TBase64.h"
@@ -132,7 +133,8 @@ class Container {
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 #include "TEmulatedCollectionProxy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 #include <nlohmann/json.hpp>
 
@@ -311,12 +313,12 @@ public:
 
 class TJSONStackObj : public TObject {
    struct StlRead {
-      Int_t fIndx{0};                   //! index of object in STL container
-      Int_t fMap{0};                    //! special iterator over STL map::key members
-      Bool_t fFirst{kTRUE};             //! is first or second element is used in the pair
-      nlohmann::json::iterator fIter;   //! iterator for std::map stored as JSON object
-      const char *fTypeTag{nullptr};    //! type tag used for std::map stored as JSON object
-      nlohmann::json fValue;            //! temporary value reading std::map as JSON
+      Int_t fIndx{0};                   ///<! index of object in STL container
+      Int_t fMap{0};                    ///<! special iterator over STL map::key members
+      Bool_t fFirst{kTRUE};             ///<! is first or second element is used in the pair
+      nlohmann::json::iterator fIter;   ///<! iterator for std::map stored as JSON object
+      const char *fTypeTag{nullptr};    ///<! type tag used for std::map stored as JSON object
+      nlohmann::json fValue;            ///<! temporary value reading std::map as JSON
       nlohmann::json *GetStlNode(nlohmann::json *prnt)
       {
          if (fMap <= 0)
@@ -346,22 +348,22 @@ class TJSONStackObj : public TObject {
    };
 
 public:
-   TStreamerInfo *fInfo{nullptr};       //!
-   TStreamerElement *fElem{nullptr};    //! element in streamer info
-   Bool_t fIsStreamerInfo{kFALSE};      //!
-   Bool_t fIsElemOwner{kFALSE};         //!
-   Bool_t fIsPostProcessed{kFALSE};     //! indicate that value is written
-   Bool_t fIsObjStarted{kFALSE};        //! indicate that object writing started, should be closed in postprocess
-   Bool_t fAccObjects{kFALSE};          //! if true, accumulate whole objects in values
-   Bool_t fBase64{kFALSE};              //! enable base64 coding when writing array
-   std::vector<std::string> fValues;    //! raw values
-   int fMemberCnt{1};                   //! count number of object members, normally _typename is first member
-   int *fMemberPtr{nullptr};            //! pointer on members counter, can be inherit from parent stack objects
-   Int_t fLevel{0};                     //! indent level
-   std::unique_ptr<TArrayIndexProducer> fIndx; //! producer of ndim indexes
-   nlohmann::json *fNode{nullptr};      //! JSON node, used for reading
-   std::unique_ptr<StlRead> fStlRead;   //! custom structure for stl container reading
-   Version_t fClVersion{0};             //! keep actual class version, workaround for ReadVersion in custom streamer
+   TStreamerInfo *fInfo{nullptr};       ///<!
+   TStreamerElement *fElem{nullptr};    ///<! element in streamer info
+   Bool_t fIsStreamerInfo{kFALSE};      ///<!
+   Bool_t fIsElemOwner{kFALSE};         ///<!
+   Bool_t fIsPostProcessed{kFALSE};     ///<! indicate that value is written
+   Bool_t fIsObjStarted{kFALSE};        ///<! indicate that object writing started, should be closed in postprocess
+   Bool_t fAccObjects{kFALSE};          ///<! if true, accumulate whole objects in values
+   Bool_t fBase64{kFALSE};              ///<! enable base64 coding when writing array
+   std::vector<std::string> fValues;    ///<! raw values
+   int fMemberCnt{1};                   ///<! count number of object members, normally _typename is first member
+   int *fMemberPtr{nullptr};            ///<! pointer on members counter, can be inherit from parent stack objects
+   Int_t fLevel{0};                     ///<! indent level
+   std::unique_ptr<TArrayIndexProducer> fIndx; ///<! producer of ndim indexes
+   nlohmann::json *fNode{nullptr};      ///<! JSON node, used for reading
+   std::unique_ptr<StlRead> fStlRead;   ///<! custom structure for stl container reading
+   Version_t fClVersion{0};             ///<! keep actual class version, workaround for ReadVersion in custom streamer
 
    TJSONStackObj() = default;
 
@@ -563,7 +565,8 @@ TString TBufferJSON::zipJSON(const char *json)
 
    int nout = 0;
 
-   R__zipMultipleAlgorithm(ROOT::RCompressionSetting::ELevel::kDefaultZLIB, &srcsize, (char *)json, &tgtsize, (char *) buf.data(), &nout, ROOT::RCompressionSetting::EAlgorithm::kZLIB);
+   R__zipMultipleAlgorithm(ROOT::RCompressionSetting::ELevel::kDefaultZLIB, &srcsize, json, &tgtsize,
+                           (char *)buf.data(), &nout, ROOT::RCompressionSetting::EAlgorithm::kZLIB);
 
    return TBase64::Encode(buf.data(), nout);
 }
@@ -841,6 +844,10 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const TObject *obj, const 
 
       // R__memcompress fills first 6 bytes with own header, therefore just overwrite them
       unsigned long ziplen = R__memcompress(bufcur - 6, objlen + 6, (char *)objbuf, objlen);
+      if (!ziplen) {
+         free(buffer);
+         return 0;
+      }
 
       memcpy(bufcur - 6, dummy, 6);
 
@@ -1277,19 +1284,19 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
                elem_name = "fLineStyles";
          }
       break;
-   case TClassEdit::kVector: elem_name = "fVector"; break;
-   case TClassEdit::kList: elem_name = "fList"; break;
-   case TClassEdit::kForwardlist: elem_name = "fForwardlist"; break;
-   case TClassEdit::kDeque: elem_name = "fDeque"; break;
-   case TClassEdit::kMap: elem_name = "fMap"; break;
-   case TClassEdit::kMultiMap: elem_name = "fMultiMap"; break;
-   case TClassEdit::kSet: elem_name = "fSet"; break;
-   case TClassEdit::kMultiSet: elem_name = "fMultiSet"; break;
-   case TClassEdit::kUnorderedSet: elem_name = "fUnorderedSet"; break;
-   case TClassEdit::kUnorderedMultiSet: elem_name = "fUnorderedMultiSet"; break;
-   case TClassEdit::kUnorderedMap: elem_name = "fUnorderedMap"; break;
-   case TClassEdit::kUnorderedMultiMap: elem_name = "fUnorderedMultiMap"; break;
-   case TClassEdit::kBitSet: elem_name = "fBitSet"; break;
+   case ROOT::ESTLType::kSTLvector: elem_name = "fVector"; break;
+   case ROOT::ESTLType::kSTLlist: elem_name = "fList"; break;
+   case ROOT::ESTLType::kSTLforwardlist: elem_name = "fForwardlist"; break;
+   case ROOT::ESTLType::kSTLdeque: elem_name = "fDeque"; break;
+   case ROOT::ESTLType::kSTLmap: elem_name = "fMap"; break;
+   case ROOT::ESTLType::kSTLmultimap: elem_name = "fMultiMap"; break;
+   case ROOT::ESTLType::kSTLset: elem_name = "fSet"; break;
+   case ROOT::ESTLType::kSTLmultiset: elem_name = "fMultiSet"; break;
+   case ROOT::ESTLType::kSTLunorderedset: elem_name = "fUnorderedSet"; break;
+   case ROOT::ESTLType::kSTLunorderedmultiset: elem_name = "fUnorderedMultiSet"; break;
+   case ROOT::ESTLType::kSTLunorderedmap: elem_name = "fUnorderedMap"; break;
+   case ROOT::ESTLType::kSTLunorderedmultimap: elem_name = "fUnorderedMultiMap"; break;
+   case ROOT::ESTLType::kSTLbitset: elem_name = "fBitSet"; break;
    case json_TArray: elem_name = "fArray"; break;
    case json_TString:
    case json_stdstring: elem_name = "fString"; break;
@@ -1399,8 +1406,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    } else if ((special_kind <= 0) || (special_kind > json_TArray)) {
       // FIXME: later post processing should be active for all special classes, while they all keep output in the value
       JsonDisablePostprocessing();
-   } else if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
-              (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
+   } else if ((special_kind == ROOT::ESTLType::kSTLmap) || (special_kind == ROOT::ESTLType::kSTLmultimap) ||
+              (special_kind == ROOT::ESTLType::kSTLunorderedmap) ||
+              (special_kind == ROOT::ESTLType::kSTLunorderedmultimap)) {
 
       if ((fMapAsObject && (fStack.size()==1)) || (stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSON_object")))
          map_convert = 2; // mapped into normal object
@@ -1454,7 +1462,8 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
    } else {
 
-      bool base64 = ((special_kind == TClassEdit::kVector) && stack && stack->fElem && strstr(stack->fElem->GetTitle(), "JSON_base64"));
+      bool base64 = ((special_kind == ROOT::ESTLType::kSTLvector) && stack && stack->fElem &&
+                     strstr(stack->fElem->GetTitle(), "JSON_base64"));
 
       // for array, string and STL collections different handling -
       // they not recognized at the end as objects in JSON
@@ -1914,8 +1923,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    }
 
    Int_t map_convert = 0;
-   if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
-       (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
+   if ((special_kind == ROOT::ESTLType::kSTLmap) || (special_kind == ROOT::ESTLType::kSTLmultimap) ||
+       (special_kind == ROOT::ESTLType::kSTLunorderedmap) || (special_kind == ROOT::ESTLType::kSTLunorderedmultimap)) {
       map_convert = json->is_object() ? 2 : 1; // check if map was written as array or as object
 
       if (objClass && !objClass->HasDictionary()) {
@@ -3346,11 +3355,9 @@ void TBufferJSON::JsonWriteFastArray(const T *arr, Long64_t arrsize, const char 
       fValue.Append("[]");
       return;
    }
-   constexpr Int_t dataWidth = 1; // at least 1
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
-   if (arrsize > maxElements)
-   {
-      Fatal("JsonWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
+   const Int_t maxElements = std::numeric_limits<Int_t>::max();
+   if (arrsize > maxElements) {
+      Fatal("JsonWriteFastArray", "Array larger than 2^31 elements cannot be stored in JSON");
       return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 

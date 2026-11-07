@@ -72,7 +72,7 @@ void REveVSD::SetDirectory(TDirectory* dir)
 
 void REveVSD::CreateTrees()
 {
-   fDirectory->cd();
+   TDirectory::TContext ctx{fDirectory};
    fTreeK  = new TTree("Kinematics", "Simulated tracks.");
    fTreeH  = new TTree("Hits",       "Combined detector hits.");
    fTreeC  = new TTree("Clusters",   "Reconstructed clusters.");

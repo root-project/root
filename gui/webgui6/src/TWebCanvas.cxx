@@ -12,7 +12,6 @@
 
 #include "TWebSnapshot.h"
 #include "TWebPadPainter.h"
-#include "TWebPS.h"
 #include "TWebMenuItem.h"
 #include "ROOT/RWebWindowsManager.hxx"
 #include "THttpServer.h"
@@ -54,6 +53,7 @@
 #include "TView.h"
 #include "TExec.h"
 #include "TVirtualX.h"
+#include "TVirtualPS.h"
 #include "TMath.h"
 #include "TTimer.h"
 #include "TThread.h"
@@ -325,6 +325,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TGraphPolargram", true},
                             {"TPave", true},
                             {"TGaxis"},
+                            {"TEfficiency"},
                             {"TPave", true},
                             {"TButton", true},
                             {"TSlider", true},
@@ -510,7 +511,7 @@ bool TWebCanvas::IsCustomClass(const TClass *cl)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates representation of the object for painting in web browser
 
-void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps)
+void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPainting *masterps)
 {
    if (IsJSSupportedClass(obj, masterps != nullptr)) {
       master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kObject, obj);
@@ -537,12 +538,15 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 
    TVirtualPS *saveps = gVirtualPS;
 
-   TWebPS ps;
-   ps.GetPainting()->SetClassName(obj->ClassName());
-   ps.GetPainting()->SetObjectName(obj->GetName());
-   gVirtualPS = masterps ? masterps : &ps;
+   auto painting = masterps;
+   if (!masterps) {
+      painting = new TWebPainting;
+      painting->SetClassName(obj->ClassName());
+      painting->SetObjectName(obj->GetName());
+   }
+   gVirtualPS = nullptr;
    if (painter)
-      painter->SetPainting(ps.GetPainting());
+      painter->SetPainting(painting);
 
    // calling Paint function for the object
    obj->Paint(opt);
@@ -562,8 +566,12 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    fPadsStatus[pad]._has_specials = true;
 
    // if there are master PS, do not create separate entries
-   if (!masterps && !ps.IsEmptyPainting())
-      master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, ps.TakePainting(), kTRUE);
+   if (!masterps) {
+      if (!painting->IsEmpty())
+         master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, painting, kTRUE);
+      else
+         delete painting;
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -678,7 +686,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    TList *primitives = pad->GetListOfPrimitives();
 
-   TWebPS masterps;
+   auto masterps = std::make_unique<TWebPainting>();
    bool usemaster = primitives ? (primitives->GetSize() > fPrimitivesMerge) : false;
 
    TIter iter(primitives);
@@ -725,8 +733,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          }
       } else if (obj->InheritsFrom(TMultiGraph::Class())) {
          // workaround for TMultiGraph
+         auto mg = static_cast<TMultiGraph *>(obj);
+         // assign auto-colors if any
+         mg->BuildPrimitives(iter.GetOption());
          if (opt.Contains("A")) {
-            auto mg = static_cast<TMultiGraph *>(obj);
             TVirtualPad::TContext ctxt(kFALSE);
             mg->GetHistogram(); // force creation of histogram without any drawings
             has_histo = true;
@@ -826,10 +836,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       primitives->Add(polargram, polargram_drawopt);
 
    auto flush_master = [&]() {
-      if (!usemaster || masterps.IsEmptyPainting()) return;
+      if (!usemaster || masterps->IsEmpty()) return;
 
-      paddata.NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.TakePainting(), kTRUE);
-      masterps.CreatePainting(); // create for next operations
+      paddata.NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.release(), kTRUE);
+      masterps = std::make_unique<TWebPainting>(); // create for next operations
    };
 
    auto check_cutg_in_options = [&](const TString &opt) {
@@ -1149,7 +1159,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
-         CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
+         CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? masterps.get() : nullptr);
       }
    }
 
@@ -1787,8 +1797,7 @@ void TWebCanvas::ProcessExecs(TPad *pad, TExec *extra)
       return;
 
    auto saveps = gVirtualPS;
-   TWebPS ps;
-   gVirtualPS = &ps;
+   gVirtualPS = nullptr;
 
    auto savex = gVirtualX;
    TVirtualX x;
@@ -1915,7 +1924,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          int filelen = -1;
 
-         if (filename.Index(".svg") != kNPOS) {
+         if ((filename.Index(".svg") != kNPOS) || (filename.Index(".html") != kNPOS)) {
             // ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
             ofs << img;
             filelen = strlen(img);
@@ -2614,7 +2623,7 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   if (!suffix && (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "s.png")))
+   if (!suffix && (!gBatchImageMode || (fmt == "s.pdf") || (fmt == "json") || (fmt == "html") || (fmt == "s.png")))
       return ROOT::RWebDisplayHandle::ProduceImage(fname.Data(), json.Data(), width, height);
 
    if (append_batch) {

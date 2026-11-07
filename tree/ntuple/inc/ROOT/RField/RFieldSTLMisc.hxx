@@ -1,5 +1,4 @@
 /// \file ROOT/RField/STLMisc.hxx
-/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -32,13 +31,6 @@
 #include <variant>
 
 namespace ROOT {
-namespace Experimental {
-
-namespace Detail {
-class RFieldVisitor;
-} // namespace Detail
-
-} // namespace Experimental
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for C++ std::atomic
@@ -88,8 +80,6 @@ public:
 /// The generic field for a `std::bitset<N>`.
 /// GCC and Clang store the bits in an array of unsigned long, whereas MSVC uses either a single uint32_t for `N <= 32`
 /// or an array of uint64_t for `N > 32` (reference: https://github.com/microsoft/STL/blob/main/stl/inc/bitset).
-/// TODO(jblomer): reading and writing efficiency should be improved; currently it is one bit at a time
-/// with an array of bools on the page level.
 class RBitsetField : public RFieldBase {
 protected:
    std::size_t fN;
@@ -233,8 +223,10 @@ class ROptionalField : public RNullableField {
       std::size_t fEngagementPtrOffset = 0;
 
    public:
-      ROptionalDeleter(std::unique_ptr<RDeleter> itemDeleter, std::size_t engagementPtrOffset)
-         : fItemDeleter(std::move(itemDeleter)), fEngagementPtrOffset(engagementPtrOffset) {}
+      ROptionalDeleter(std::unique_ptr<RDeleter> itemDeleter, std::size_t engagementPtrOffset, std::size_t alignment)
+         : RDeleter(alignment), fItemDeleter(std::move(itemDeleter)), fEngagementPtrOffset(engagementPtrOffset)
+      {
+      }
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -264,8 +256,8 @@ public:
    ~ROptionalField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final;
-   size_t GetAlignment() const final;
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
 };
 
 template <typename ItemT>
@@ -284,7 +276,10 @@ class RUniquePtrField : public RNullableField {
       std::unique_ptr<RDeleter> fItemDeleter;
 
    public:
-      explicit RUniquePtrDeleter(std::unique_ptr<RDeleter> itemDeleter) : fItemDeleter(std::move(itemDeleter)) {}
+      explicit RUniquePtrDeleter(std::unique_ptr<RDeleter> itemDeleter)
+         : RDeleter(alignof(std::unique_ptr<char>)), fItemDeleter(std::move(itemDeleter))
+      {
+      }
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
@@ -313,8 +308,8 @@ public:
    ~RUniquePtrField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
-   size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
+   std::size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
+   std::size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
 };
 
 template <typename ItemT>
@@ -363,8 +358,8 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   size_t GetValueSize() const final { return sizeof(std::string); }
-   size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
+   std::size_t GetValueSize() const final { return sizeof(std::string); }
+   std::size_t GetAlignment() const final { return alignof(std::string); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -388,9 +383,12 @@ private:
       std::vector<std::unique_ptr<RDeleter>> fItemDeleters;
 
    public:
-      RVariantDeleter(std::size_t tagOffset, std::size_t variantOffset,
+      RVariantDeleter(std::size_t tagOffset, std::size_t variantOffset, std::size_t alignment,
                       std::vector<std::unique_ptr<RDeleter>> itemDeleters)
-         : fTagOffset(tagOffset), fVariantOffset(variantOffset), fItemDeleters(std::move(itemDeleters))
+         : RDeleter(alignment),
+           fTagOffset(tagOffset),
+           fVariantOffset(variantOffset),
+           fItemDeleters(std::move(itemDeleters))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;
@@ -436,8 +434,8 @@ public:
    RVariantField &operator=(RVariantField &&other) = default;
    ~RVariantField() override = default;
 
-   size_t GetValueSize() const final;
-   size_t GetAlignment() const final;
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
 };
 
 template <typename... ItemTs>

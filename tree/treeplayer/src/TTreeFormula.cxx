@@ -42,13 +42,13 @@
 #include "TMethod.h"
 #include "TFormLeafInfoReference.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 #include "TEntryList.h"
 
 #include <cctype>
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
+#include <limits>
 #include <typeinfo>
 #include <algorithm>
 #include <sstream>
@@ -4033,6 +4033,35 @@ template <> Long64_t fmod_local(Long64_t x, Long64_t y) { return fmod((LongDoubl
 template<typename T> inline void SetMethodParam(TMethodCall *method, T p) { method->SetParam(p); }
 template<> void SetMethodParam(TMethodCall *method, LongDouble_t p) { method->SetParam((Double_t)p); }
 
+// TTree::Scan prints each integer column through TTreeFormula, which evaluates it
+// in a `long double` accumulator (for both the "l" and "ll" formats). That holds
+// integers exactly only up to 2^digits (its mantissa size: 64 bits on x86, but
+// just 53 where `long double` is merely a 64-bit `double`, e.g. macOS ARM), so a
+// value beyond that range is printed rounded. This cannot be fixed without
+// changing the (frozen) floating-point arithmetic of TTreeFormula, so it is a
+// known limitation; flag it loudly instead. See
+// https://github.com/root-project/root/issues/7844.
+inline void CheckIntegerPrintPrecision(LongDouble_t evaluated, const char *expression)
+{
+   // Integers are represented exactly only while their magnitude stays below
+   // 2^digits. At or above that threshold not every integer is representable, so
+   // the printed value may be rounded -- and a rounded result can even land back
+   // on the threshold (e.g. 2^53 + 1 -> 2^53 in a 53-bit type), so the comparison
+   // is inclusive to avoid missing such cases.
+   const LongDouble_t threshold = std::ldexp(1.0L, std::numeric_limits<LongDouble_t>::digits); // 2^digits
+   // Deliberately a kError (not kWarning) emitted for every offending value with
+   // no deduplication: silently printing a wrong integer is the trap we want to
+   // make impossible to miss, so the diagnostic is intentionally as loud as
+   // possible even on a many-row Scan.
+   if (evaluated >= threshold || evaluated <= -threshold)
+      ::Error("TTreeFormula::PrintValue",
+              "the integer value of \"%s\" may be inexact: its magnitude reaches 2^%d, "
+              "the point beyond which the long double used to evaluate it can no longer "
+              "represent every integer exactly, so the printed value may be rounded. "
+              "This is a known limitation "
+              "(https://github.com/root-project/root/issues/7844).",
+              expression, std::numeric_limits<LongDouble_t>::digits);
+}
 }
 
 template<typename T> inline T TTreeFormula::GetConstant(Int_t k) { return fConst[k]; }
@@ -4259,7 +4288,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             case kfmod : pos--; tab[pos-1] = fmod_local(tab[pos-1],tab[pos]); continue;
             case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
             case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
-            case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
+            case ksqrt : tab[pos-1] = TMath::Sqrt(tab[pos-1]); continue;
 
             case kstrstr : pos2 -= 2; pos++;if (strstr(stringStack[pos2],stringStack[pos2+1])) tab[pos-1]=1;
                                             else tab[pos-1]=0;
@@ -5052,12 +5081,12 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
             Ssiz_t len = strlen(decform);
             Char_t outputSizeLevel = 1;
             char *expo = nullptr;
-            if (len>2) {
+            if (len > 1) {
                switch (decform[len-2]) {
                   case 'l':
                   case 'L': {
                      outputSizeLevel = 2;
-                     if (len>3 && tolower(decform[len-3])=='l') {
+                     if (len > 2 && tolower(decform[len - 3]) == 'l') {
                         outputSizeLevel = 3;
                      }
                      break;
@@ -5072,8 +5101,22 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                {
                   switch (outputSizeLevel) {
                      case 0:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Short_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Long_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 3:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Long64_t)((TTreeFormula*)this)->EvalInstance<LongDouble_t>(instance)); break;
+                     // Evaluate both the "long" ("l") and "long long" ("ll") formats
+                     // through `long double` so that, where it is wide enough (x86),
+                     // the full 64-bit value prints exactly; this keeps floating-point
+                     // arithmetic semantics unchanged.
+                     case 2: {
+                        LongDouble_t v = ((TTreeFormula *)this)->EvalInstance<LongDouble_t>(instance);
+                        CheckIntegerPrintPrecision(v, GetTitle());
+                        snprintf(value, kMAXLENGTH, Form("%%%s", decform), (Long_t)v);
+                        break;
+                     }
+                     case 3: {
+                        LongDouble_t v = ((TTreeFormula *)this)->EvalInstance<LongDouble_t>(instance);
+                        CheckIntegerPrintPrecision(v, GetTitle());
+                        snprintf(value, kMAXLENGTH, Form("%%%s", decform), (Long64_t)v);
+                        break;
+                     }
                      case 1:
                      default: snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Int_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
@@ -5086,8 +5129,21 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                {
                   switch (outputSizeLevel) {
                      case 0:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(UShort_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(ULong_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 3:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(ULong64_t)((TTreeFormula*)this)->EvalInstance<LongDouble_t>(instance)); break;
+                     // See the signed 'd'/'i' case above: both "l" and "ll" evaluate
+                     // through `long double` to print the full value exactly where it
+                     // is wide enough, without changing arithmetic semantics.
+                     case 2: {
+                        LongDouble_t v = ((TTreeFormula *)this)->EvalInstance<LongDouble_t>(instance);
+                        CheckIntegerPrintPrecision(v, GetTitle());
+                        snprintf(value, kMAXLENGTH, Form("%%%s", decform), (ULong_t)v);
+                        break;
+                     }
+                     case 3: {
+                        LongDouble_t v = ((TTreeFormula *)this)->EvalInstance<LongDouble_t>(instance);
+                        CheckIntegerPrintPrecision(v, GetTitle());
+                        snprintf(value, kMAXLENGTH, Form("%%%s", decform), (ULong64_t)v);
+                        break;
+                     }
                      case 1:
                      default: snprintf(value,kMAXLENGTH,Form("%%%s",decform),(UInt_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
@@ -5525,6 +5581,40 @@ void TTreeFormula::ResetDimensions() {
       //   if (fVarIndexes[i][k]) fManager->Add(fVarIndexes[i][k]);
       //}
 
+   }
+
+   // Handle the case of an Alt$(primary,alternate) expression that provides
+   // the only source of multiplicity, i.e. it's used not alongside another
+   // array that drives the iteration. Example: Scan("Alt$(x,-1)"), instead of
+   // Scan("y-Alt$(x,-1)"). In that case the number of instances must be
+   // dictated by the `primary` array, so we register it with the manager. We
+   // only get here when fMultiplicity == 0, i.e. nothing else in this formula
+   // drives an iteration.
+   if (fMultiplicity == 0) {
+      for (i = 0; i < fNoper; i++) {
+         Int_t action = GetAction(i);
+         if (action == kAlternate || action == kAlternateString) {
+            TTreeFormula *primary = static_cast<TTreeFormula *>(fAliases.UncheckedAt(i));
+            R__ASSERT(primary);
+            switch (primary->GetManager()->GetMultiplicity()) {
+            case 1: // primary is a variable length array: drive a variable length loop
+               fMultiplicity = 1;
+               fManager->Add(primary);
+               break;
+            case 2: // primary is a fixed length array: drive a fixed length loop
+               if (fMultiplicity != 1)
+                  fMultiplicity = 2;
+               fManager->Add(primary);
+               break;
+               // multiplicity 0 (scalar) or -1 (0-or-1 element): nothing to loop
+               // over, leave fMultiplicity at 0
+            }
+            // An Alt$(primary,alternate) expression occupies two consecutive
+            // operands: the `primary` action we just handled, immediately
+            // followed by the `alternate`, which we can skip.
+            ++i;
+         }
+      }
    }
 }
 

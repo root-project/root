@@ -3,61 +3,44 @@
 
 #include "RConfigure.h"
 
-#ifdef R__HAS_VECCORE
+#include "RtypesCore.h"
 
-#if defined(R__HAS_VC)
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#if (__cplusplus >= 202002L) // only for C++20
-#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#endif
-
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconditional-uninitialized"
-#pragma clang diagnostic ignored "-Wdeprecated-copy"
-#endif
-
-#include <Vc/Vc>
-#pragma GCC diagnostic pop
-#endif
-
-#include <VecCore/VecCore>
+#include <experimental/simd>
 
 namespace ROOT {
 
 namespace Internal {
-   using ScalarBackend = vecCore::backend::Scalar;
-#ifdef VECCORE_ENABLE_VC
-   using VectorBackend = vecCore::backend::VcVector;
+
+#if defined(R__EXPERIMENTAL_SIMD_PIN_AVX_ABI) && defined(__AVX512F__)
+// libstdc++'s <experimental/simd> _VecBltnBtmsk (AVX-512 mask) ABI fails to
+// compile with non-GCC front ends (Clang, Intel icpx) due to a static_assert
+// requiring `long long` and `long` to be the same type. When AVX-512 is
+// enabled in this TU we'd otherwise hit that path, so pin to the 256-bit AVX
+// ABI instead. The fallback is guarded by __AVX512F__ so that environments
+// without AVX-512 in scope (notably rootcling/cling, which parses headers
+// without -mavx*) still see the regular `native` ABI and pick the
+// always-supported scalar fallback.
+template <typename T>
+using SIMDTag = std::experimental::simd_abi::__avx;
 #else
-   using VectorBackend = vecCore::backend::Scalar;
+template <typename T>
+using SIMDTag = std::experimental::simd_abi::native<T>;
 #endif
-}
-   using Float_v  = typename Internal::VectorBackend::Float_v;
-   using Double_v = typename Internal::VectorBackend::Double_v;
-   using Int_v    = typename Internal::VectorBackend::Int_v;
-   using Int32_v  = typename Internal::VectorBackend::Int32_v;
-   using UInt_v   = typename Internal::VectorBackend::UInt_v;
-   using UInt32_v = typename Internal::VectorBackend::UInt32_v;
-}
 
-#else // R__HAS_VECCORE
+} // namespace Internal
 
-// We do not have explicit vectorisation support enabled. Fall back to regular ROOT types.
+// FIXME: Should we introduce Int32_t and UInt32_t in RtypesCore.h?
+using Float_v = std::experimental::simd<Float_t, Internal::SIMDTag<Float_t>>;
+using Double_v = std::experimental::simd<Double_t, Internal::SIMDTag<Double_t>>;
+using Int_v = std::experimental::simd<Int_t, Internal::SIMDTag<Int_t>>;
+using Int32_v = std::experimental::simd<Int_t, Internal::SIMDTag<Int_t>>;
+using UInt_v = std::experimental::simd<UInt_t, Internal::SIMDTag<UInt_t>>;
+using UInt32_v = std::experimental::simd<UInt_t, Internal::SIMDTag<UInt_t>>;
 
-#include "RtypesCore.h"
+} // namespace ROOT
 
-namespace ROOT {
-   using Float_v  = Float_t;
-   using Double_v = Double_t;
-   using Int_v    = Int_t;
-   using Int32_v  = Int_t; // FIXME: Should we introduce Int32_t in RtypesCore.h?
-   using UInt_v   = UInt_t;
-   using UInt32_v = UInt_t; // FIXME: Should we introduce UInt32_t in RtypesCore.h?
-}
 #endif
 
 #endif // ROOT_Math_VecTypes

@@ -50,6 +50,22 @@ void RooFit::Detail::CompileContext::compileServer(RooAbsArg &server, RooAbsArg 
    arg.redirectServers(_replacements);
 }
 
+/// Return a copy of `args` where each element is replaced by its compiled
+/// counterpart in this context, if there is one. Compiled objects that need to
+/// remember a normalization set must store the compiled args: the original
+/// args are not part of the compiled computation graph, so they are not
+/// affected by later transformations of that graph (for example the renaming
+/// of the channel observables in RooSimultaneous::compileForNormSet()).
+RooArgSet RooFit::Detail::CompileContext::mapToCompiled(RooArgSet const &args) const
+{
+   RooArgSet out;
+   for (RooAbsArg *arg : args) {
+      RooAbsArg *compiled = find(*arg);
+      out.add(compiled ? *compiled : *arg);
+   }
+   return out;
+}
+
 RooAbsArg *RooFit::Detail::CompileContext::compileImpl(RooAbsArg &arg, RooAbsArg &owner, RooArgSet const &normSet)
 {
    if (auto existingServerClone = this->find(arg)) {
@@ -74,6 +90,21 @@ RooAbsArg *RooFit::Detail::CompileContext::compileImpl(RooAbsArg &arg, RooAbsArg
 void RooFit::Detail::CompileContext::markAsCompiled(RooAbsArg &arg) const
 {
    arg.setAttribute("_COMPILED");
+}
+
+/// Mark `arg` and every branch node reachable through its server tree as
+/// already compiled. Use this after assembling or cloning a sub-graph
+/// yourself inside `compileForNormSet`: it prevents a follow-up
+/// `compileServers` call from re-cloning any of those internal nodes, while
+/// still letting the recursive descent reach the genuine leaves
+/// (fundamental observables and parameters) at the bottom of the tree.
+void RooFit::Detail::CompileContext::markSubtreeAsCompiled(RooAbsArg &arg) const
+{
+   RooArgSet branches;
+   arg.branchNodeServerList(&branches);
+   for (RooAbsArg *b : branches) {
+      markAsCompiled(*b);
+   }
 }
 
 bool RooFit::Detail::CompileContext::isMarkedAsCompiled(RooAbsArg const &arg) const

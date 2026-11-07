@@ -31,7 +31,7 @@ c.defineType("Minus", -1)
 
 # ROOT.RooDataSet is an unbinned dataset (a collection of points in
 # N-dimensional space)
-d = ROOT.RooDataSet("d", "d", {x, y, c})
+d = ROOT.RooDataSet("d", "d", [x, y, c])
 
 # Unlike ROOT.RooAbsArgs (ROOT.RooAbsPdf, ROOT.RooFormulaVar,....) datasets are not attached to
 # the variables they are constructed from. Instead they are attached to an internal
@@ -51,7 +51,7 @@ for i in range(1000):
     if i < 3:
         print(x, y, c)
         print(type(x))
-    d.add({x, y, c})
+    d.add([x, y, c])
 
 d.Print("v")
 print("")
@@ -74,11 +74,11 @@ print("")
 # The reduce() function returns a dataset which is a subset of the
 # original
 print("\n >> d1 has only columns x,c")
-d1 = d.reduce({x, c})
+d1 = d.reduce([x, c])
 d1.Print("v")
 
 print("\n >> d2 has only column y")
-d2 = d.reduce({y})
+d2 = d.reduce([y])
 d2.Print("v")
 
 print("\n >> d3 has only the points with y>5.17")
@@ -86,7 +86,7 @@ d3 = d.reduce("y>5.17")
 d3.Print("v")
 
 print("\n >> d4 has only columns x, for data points with y>5.17")
-d4 = d.reduce({x, c}, "y>5.17")
+d4 = d.reduce([x, c], "y>5.17")
 d4.Print("v")
 
 # The merge() function adds two data set column-wise
@@ -114,7 +114,7 @@ print(">> the category 'c' will be projected in the filling process")
 # state
 x.setBins(10)
 y.setBins(10)
-dh = ROOT.RooDataHist("dh", "binned version of d", {x, y}, d)
+dh = ROOT.RooDataHist("dh", "binned version of d", [x, y], d)
 dh.Print("v")
 
 yframe = y.frame(Bins=10, Title="Operations on binned datasets")
@@ -131,7 +131,7 @@ x.setVal(0.3)
 y.setVal(20.5)
 print(">> retrieving the properties of the bin enclosing coordinate (x,y) = (0.3,20.5) bin center:")
 # load bin center coordinates in internal buffer
-dh.get({x, y}).Print("v")
+dh.get([x, y]).Print("v")
 print(" weight = ", dh.weight())  # return weight of last loaded coordinates
 
 # Reduce the 2-dimensional binned dataset to a 1-dimensional binned dataset
@@ -140,7 +140,7 @@ print(" weight = ", dh.weight())  # return weight of last loaded coordinates
 # demonstrated on unbinned datasets can be applied to binned datasets as
 # well.
 print(">> Creating 1-dimensional projection on y of dh for bins with x>0")
-dh2 = dh.reduce({y}, "x>0")
+dh2 = dh.reduce(y, "x>0")
 dh2.Print("v")
 
 # Add dh2 to yframe and redraw
