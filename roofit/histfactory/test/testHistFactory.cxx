@@ -9,6 +9,7 @@
 #endif
 #include <RooFit/ModelConfig.h>
 
+#include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
@@ -18,6 +19,7 @@
 #include <RooArgSet.h>
 #include <RooSimultaneous.h>
 #include <RooRealSumPdf.h>
+#include <RooGaussian.h>
 #include <RooRealVar.h>
 #include <RooHelpers.h>
 #include <RooFitResult.h>
@@ -32,7 +34,11 @@
 
 #include "../../roofitcore/test/gtest_wrapper.h"
 
+#include <algorithm>
+#include <limits>
+#include <map>
 #include <regex>
+#include <sstream>
 #include <set>
 
 namespace {
@@ -136,6 +142,105 @@ TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 
    EXPECT_NEAR(pdf->getVal(), 0.17488817, 1.E-8);
    EXPECT_NEAR(pdf->getVal(*obs), 0.95652174, 1.E-8);
+}
+
+// The reference workspace round-trips through HS3 with its constraints collected into array distributions: the
+// re-export gives the same document, and the likelihood is the same.
+TEST(HistFactory, HS3ArrayDistRoundTrip_ROOT6_16_Combined_Model)
+{
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
+
+   std::string filename = "./ref_6.16_example_UsingC_combined_meas_model.root";
+   std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
+   ASSERT_TRUE(file && file->IsOpen());
+   RooWorkspace *ws;
+   file->GetObject("combined", ws);
+   ASSERT_NE(ws, nullptr);
+
+   const std::string js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(js);
+   auto const &distributions = tree->rootnode()["distributions"];
+   for (auto const &dist : distributions.children()) {
+      EXPECT_NE(dist["type"].val(), "gaussian_dist") << js;
+      EXPECT_NE(dist["type"].val(), "poisson_dist") << js;
+   }
+   const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "simPdf_gaussian_constraints");
+   ASSERT_NE(gauss, nullptr) << js;
+   EXPECT_EQ((*gauss)["components"].num_children(), 4u) << js; // Lumi, alpha_syst1, alpha_syst2, alpha_syst3
+   const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "simPdf_poisson_constraints");
+   ASSERT_NE(pois, nullptr) << js;
+   EXPECT_EQ((*pois)["components"].num_children(), 2u) << js;
+   // HistFactory builds the Gaussian constraints with the parameter as x and the global observable as mean; they
+   // are written the other way round, so that the observable is x. Also for the constant parameter Lumi.
+   std::map<std::string, std::string> gaussMeans;
+   for (auto const &component : (*gauss)["components"].children()) {
+      gaussMeans[component["x"].val()] = component["mean"].val();
+   }
+   EXPECT_EQ(gaussMeans, (std::map<std::string, std::string>{{"nominalLumi", "Lumi"},
+                                                             {"nom_alpha_syst1", "alpha_syst1"},
+                                                             {"nom_alpha_syst2", "alpha_syst2"},
+                                                             {"nom_alpha_syst3", "alpha_syst3"}}))
+      << js;
+
+   // The parameter sections of this workspace from ROOT 6.16 are not stable under a round trip independently of the
+   // arrays (its legacy bin-width variables come back as different objects), so the model sections are compared.
+   RooWorkspace wsFromJson("new");
+   RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(js);
+   const std::string js2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
+   auto section = [](std::string const &json, const char *key) {
+      auto t = RooFit::Detail::JSONTree::create(json);
+      std::stringstream ss;
+      t->rootnode()[key].writeJSON(ss);
+      return ss.str();
+   };
+   for (const char *key : {"distributions", "functions", "likelihoods", "analyses"}) {
+      EXPECT_EQ(section(js2, key), section(js, key)) << key;
+   }
+   // The re-imported Gaussians have the observable as x.
+   auto *reimported = dynamic_cast<RooGaussian *>(wsFromJson.pdf("nom_alpha_syst2_constraint"));
+   ASSERT_NE(reimported, nullptr);
+   EXPECT_STREQ(reimported->getX().GetName(), "nom_alpha_syst2");
+   EXPECT_STREQ(reimported->getMean().GetName(), "alpha_syst2");
+   auto *lumi = dynamic_cast<RooGaussian *>(wsFromJson.pdf("nominalLumi_constraint"));
+   ASSERT_NE(lumi, nullptr);
+   EXPECT_STREQ(lumi->getX().GetName(), "nominalLumi");
+   EXPECT_STREQ(lumi->getMean().GetName(), "Lumi");
+
+   // The same without arrays: the standalone gaussian_dist nodes have the observable as x too.
+   RooJSONFactoryWSTool::config().exportArrayDist = false;
+   const std::string plain = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().exportArrayDist = true;
+   auto plainTree = RooFit::Detail::JSONTree::create(plain);
+   const auto *standalone =
+      RooJSONFactoryWSTool::findNamedChild(plainTree->rootnode()["distributions"], "alpha_syst2Constraint");
+   ASSERT_NE(standalone, nullptr) << plain;
+   EXPECT_EQ((*standalone)["type"].val(), "gaussian_dist") << plain;
+   EXPECT_EQ((*standalone)["x"].val(), "nom_alpha_syst2") << plain;
+   EXPECT_EQ((*standalone)["mean"].val(), "alpha_syst2") << plain;
+   RooWorkspace wsPlain("plain");
+   RooJSONFactoryWSTool{wsPlain}.importJSONfromString(plain);
+   auto *plainGauss = dynamic_cast<RooGaussian *>(wsPlain.pdf("alpha_syst2Constraint"));
+   ASSERT_NE(plainGauss, nullptr);
+   EXPECT_STREQ(plainGauss->getX().GetName(), "nom_alpha_syst2");
+
+   // The likelihood is compared up to a constant: whether RooFit uses its binned likelihood for the channels (which
+   // differs from the event-wise one by a constant) is not part of the document.
+   auto nllDifference = [](RooWorkspace &w) {
+      auto *mc = dynamic_cast<RooStats::ModelConfig *>(w.obj("ModelConfig"));
+      if (!mc || !w.data("obsData")) {
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+      std::unique_ptr<RooAbsReal> nll{
+         mc->GetPdf()->createNLL(*w.data("obsData"), RooFit::GlobalObservables(*mc->GetGlobalObservables()))};
+      const double nominal = nll->getVal();
+      w.var("alpha_syst2")->setVal(0.5);
+      w.var("gamma_stat_channel1_bin_0")->setVal(1.1);
+      return nll->getVal() - nominal;
+   };
+   const double reference = nllDifference(*ws);
+   EXPECT_FALSE(std::isnan(reference));
+   EXPECT_NE(reference, 0.0);
+   EXPECT_NEAR(nllDifference(wsFromJson), reference, 1e-8 * std::max(1.0, std::abs(reference)));
 }
 
 /// What kind of model is set up. Use this to instantiate
@@ -700,15 +805,10 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                                           testing::Values(ROOFIT_EVAL_BACKENDS_WITH_CODEGEN)),
                          getNameFromInfo);
 
-// Regression test for the HS3 importer's handling of "shapefactor" modifiers.
-// HistFactory's ShapeFactor is exported with type "shapesys" (the only
-// modifier type the writer ever emits for a ParamHistFunc), but valid HS3 JSON
-// may also use the dedicated "shapefactor" type for an unconstrained
-// ParamHistFunc - and the importer must accept it. This test starts from a
-// HistFactory model built with MakeModelAndMeasurementFast, rewrites the
-// modifier type to "shapefactor" in the JSON, and checks that the importer
-// recognises it. Without the fix in JSONFactories_HistFactory.cxx the import
-// throws "modifier ... of unknown type 'shapefactor'".
+// HS3 round trip of a free HistFactory ShapeFactor. It is written as a
+// "shapefactor" modifier without "constraints", and must survive the
+// JSON -> workspace -> JSON round trip with free gammas. The deprecated
+// "shapesys" alias is read as well.
 TEST(HistFactory, HS3ImportShapeFactorModifier)
 {
    using namespace RooStats::HistFactory;
@@ -745,12 +845,9 @@ TEST(HistFactory, HS3ImportShapeFactorModifier)
    chan.AddSample(sig);
 
    // ShapeFactor on the background: an unconstrained, bin-by-bin scaling.
-   // Make the gammas constant so that the workspace is well-defined for
-   // re-export (free shapefactor gammas have no constraints attached).
    Sample bkg("background", "background", inputFile);
    ShapeFactor sf;
    sf.SetName("bkgShape");
-   sf.SetConstant(true);
    bkg.AddShapeFactor(sf);
    chan.AddSample(bkg);
 
@@ -762,26 +859,30 @@ TEST(HistFactory, HS3ImportShapeFactorModifier)
 
    const std::string js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
 
-   // Rewrite the modifier type for "bkgShape" from "shapesys" to "shapefactor".
-   // The HistFactory exporter always writes "shapesys", but the importer should
-   // accept the more accurate "shapefactor" type as well.
-   const std::regex pattern{"\"name\":\"bkgShape\",\"parameters\":\\[([^\\]]*)\\],\"type\":\"shapesys\""};
-   const std::string jsShapeFactor =
-      std::regex_replace(js, pattern, "\"name\":\"bkgShape\",\"parameters\":[$1],\"type\":\"shapefactor\"");
-   ASSERT_NE(js, jsShapeFactor) << "Failed to substitute shapesys -> shapefactor in JSON";
+   // The free ShapeFactor is written as "shapefactor", without constraints.
+   const std::regex pattern{"\"name\":\"bkgShape\",\"parameters\":\\[[^\\]]*\\],\"type\":\"shapefactor\""};
+   EXPECT_TRUE(std::regex_search(js, pattern)) << js;
+   EXPECT_EQ(js.find("shapesys"), std::string::npos) << js;
 
    RooWorkspace wsFromJson{"new"};
-   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(jsShapeFactor))
-      << "Importer rejected the 'shapefactor' modifier type";
+   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(js));
 
-   // The imported workspace should expose the same ParamHistFunc gammas.
-   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_0"), nullptr);
-   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_1"), nullptr);
+   // The imported workspace should expose the same free ParamHistFunc gammas.
+   ASSERT_NE(wsFromJson.var("gamma_bkgShape_bin_0"), nullptr);
+   ASSERT_NE(wsFromJson.var("gamma_bkgShape_bin_1"), nullptr);
+   EXPECT_FALSE(wsFromJson.var("gamma_bkgShape_bin_0")->isConstant());
 
-   // Re-exporting should give back the original JSON, since the writer emits
-   // type "shapesys" in both cases.
+   // Re-exporting should give back the original JSON.
    const std::string js2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
    EXPECT_EQ(js, js2) << "JSON -> WS -> JSON roundtrip changed the JSON";
+
+   // The deprecated "shapesys" alias gives the same model.
+   const std::string jsShapeSys =
+      std::regex_replace(js, std::regex{"\"type\":\"shapefactor\""}, "\"type\":\"shapesys\"");
+   ASSERT_NE(js, jsShapeSys);
+   RooWorkspace wsFromAlias{"alias"};
+   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromAlias}.importJSONfromString(jsShapeSys));
+   EXPECT_EQ(RooJSONFactoryWSTool{wsFromAlias}.exportJSONtoString(), js);
 }
 
 // Issue #20697: Sample::AddShapeFactor() now allows to set the initial value

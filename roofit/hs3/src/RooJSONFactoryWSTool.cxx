@@ -20,9 +20,11 @@
 #include <RooAbsCategory.h>
 #include <RooArgProxy.h>
 #include <RooAbsProxy.h>
+#include <RooAbsLValue.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
+#include <RooProdPdf.h>
 #include <RooSimultaneous.h>
 #include <RooFit/ModelConfig.h>
 #include <RooFitImplHelpers.h>
@@ -34,6 +36,10 @@
 #include <TROOT.h>
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
+#include <iterator>
+#include <set>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -106,7 +112,7 @@ tool.writedoc("hs3.tex")
 ~~~
 */
 
-constexpr auto hs3VersionTag = "0.2";
+constexpr auto hs3VersionTag = "0.3";
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
@@ -367,8 +373,9 @@ std::vector<std::vector<int>> generateBinIndices(const RooArgSet &vars)
    std::vector<std::vector<int>> combinations;
    std::vector<int> vars_numbins;
    vars_numbins.reserve(vars.size());
-   for (const auto *absv : static_range_cast<RooRealVar *>(vars)) {
-      vars_numbins.push_back(absv->getBins());
+   for (const RooAbsArg *arg : vars) {
+      // Continuous variables and categories (one bin per state)
+      vars_numbins.push_back(dynamic_cast<RooAbsLValue const &>(*arg).numBins());
    }
    std::vector<int> curr_comb(vars.size());
    ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
@@ -379,13 +386,6 @@ template <typename... Keys_t>
 JSONNode const *findRooFitInternal(JSONNode const &node, Keys_t const &...keys)
 {
    return node.find("misc", "ROOT_internal", keys...);
-}
-
-// True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
-bool isLiteralConstVar(RooAbsArg const &arg)
-{
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
-   return isRooConstVar && isNumber(arg.GetName());
 }
 
 // Export the string attributes and tags of `arg` into the ROOT-internal attributes node.
@@ -421,8 +421,8 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
    }
    if (!arg->attributes().empty()) {
       for (auto const &attr : arg->attributes()) {
-         // Skip some RooFit internals
-         if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object")
+         // Skip some RooFit internals. The array distribution tag is restored from the type on import.
+         if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object" || attr == arrayDistTag)
             continue;
          initializeNode();
          (*node)["tags"].set_seq().append_child() << attr;
@@ -435,7 +435,27 @@ void getObservables(RooWorkspace const &ws, const JSONNode &node, RooAbsCollecti
 {
    for (const auto &p : node["axes"].children()) {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (ws.var(name)) {
+      if (p.has_child("categories")) {
+         RooCategory *cat = ws.cat(name);
+         if (!cat) {
+            RooJSONFactoryWSTool::error("The categorical observable \"" + name +
+                                        "\" could not be found in the workspace! Categorical observables are "
+                                        "declared by a categorical axis in a domain.");
+         }
+         std::set<std::string> labels;
+         for (auto const &label : p["categories"].children()) {
+            labels.insert(label.val());
+         }
+         std::set<std::string> states;
+         for (auto const &state : *cat) {
+            states.insert(state.first);
+         }
+         if (labels != states) {
+            RooJSONFactoryWSTool::error("The categories of the axis \"" + name +
+                                        "\" differ from the states of the category \"" + name + "\"");
+         }
+         out.add(*cat);
+      } else if (ws.var(name)) {
          out.add(*ws.var(name));
       } else {
          RooJSONFactoryWSTool::error("The observable \"" + name + "\" could not be found in the workspace!");
@@ -470,6 +490,40 @@ void applyUnbinnedAxisRanges(const JSONNode &p, RooWorkspace &workspace, RooFit:
    }
 }
 
+// Give the categories among `vars` the states of the categories with the same name in the workspace: the same
+// label-to-index mapping and the same order. RooDataHist looks up the bin of a category by the order of the states of
+// the category it is given, so data and workspace category have to agree on it. The workspace categories come from
+// the domains; the labels must be the same, but the data may list them in a different order (HS3 identifies
+// categories by name). readBinnedData() then permutes the bin contents accordingly.
+void alignCategoriesWithWorkspace(RooArgSet &vars, RooWorkspace const &workspace, std::string const &dataName)
+{
+   for (RooAbsArg *arg : vars) {
+      auto *cat = dynamic_cast<RooCategory *>(arg);
+      if (!cat) {
+         continue;
+      }
+      RooCategory const *wsCat = workspace.cat(cat->GetName());
+      if (!wsCat) {
+         continue;
+      }
+      std::vector<std::string> labels;
+      for (int i = 0; i < cat->numTypes(); ++i) {
+         labels.push_back(cat->lookupName(i));
+      }
+      if (static_cast<int>(labels.size()) != wsCat->numTypes() ||
+          std::any_of(labels.begin(), labels.end(), [&](auto const &l) { return !wsCat->hasLabel(l); })) {
+         RooJSONFactoryWSTool::error("the categories of the axis '" + std::string(cat->GetName()) +
+                                     "' of the dataset '" + dataName + "' differ from those of the category '" +
+                                     cat->GetName() + "'");
+      }
+      cat->clear();
+      for (unsigned int i = 0; i < wsCat->size(); ++i) {
+         auto const &state = wsCat->getOrdinal(i);
+         cat->defineType(state.first, state.second);
+      }
+   }
+}
+
 // Create a RooAbsData (binned or unbinned) from the JSON node `p`.
 std::unique_ptr<RooAbsData>
 loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Domains const *domains)
@@ -481,7 +535,9 @@ loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Dom
    std::string const &type = p["type"].val();
    if (type == "binned") {
       // binned
-      return RooJSONFactoryWSTool::readBinnedData(p, name, RooJSONFactoryWSTool::readAxes(p));
+      RooArgSet axes = RooJSONFactoryWSTool::readAxes(p);
+      alignCategoriesWithWorkspace(axes, workspace, name);
+      return RooJSONFactoryWSTool::readBinnedData(p, name, axes);
    } else if (type == "unbinned") {
       // unbinned
       RooArgList varlist;
@@ -513,8 +569,17 @@ loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Dom
          }
          std::size_t j = 0;
          for (auto const &pointj : point.children()) {
-            auto *v = static_cast<RooRealVar *>(varlist.at(j));
-            v->setVal(pointj.val_double());
+            if (auto *cat = dynamic_cast<RooCategory *>(varlist.at(j))) {
+               // The entries of a categorical axis are the labels of the categories.
+               if (pointj.is_number() || !cat->hasLabel(pointj.val())) {
+                  RooJSONFactoryWSTool::error("entry " + std::to_string(i) + " of the dataset '" + name +
+                                              "' has the value '" + pointj.val() + "' on the categorical axis '" +
+                                              cat->GetName() + "', which is not one of its categories");
+               }
+               cat->setLabel(pointj.val());
+            } else {
+               static_cast<RooRealVar *>(varlist.at(j))->setVal(pointj.val_double());
+            }
             ++j;
          }
          if (weightVals.size() > 0) {
@@ -533,7 +598,7 @@ loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Dom
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, const JSONNode &likelihoodsNode,
                     const JSONNode &domainsNode, RooWorkspace &workspace,
-                    const std::vector<std::unique_ptr<RooAbsData>> &datasets)
+                    std::vector<std::unique_ptr<RooAbsData>> &datasets)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = RooJSONFactoryWSTool::name(analysisNode);
@@ -558,24 +623,99 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    if (!nllNode->has_child("data")) {
       throw std::runtime_error("likelihood node has no data attached!");
    }
-   std::vector<std::string> nllDistNames = valsToStringVec((*nllNode)["distributions"]);
+   std::vector<std::string> const listedDistNames = valsToStringVec((*nllNode)["distributions"]);
+   std::vector<std::string> const listedDataNames = valsToStringVec((*nllNode)["data"]);
+
+   // The constraint terms of the HistFactory distributions of the likelihood enter through those distributions.
+   // Listed in "aux_distributions", they are not added again; paired with a data set in "distributions", they are
+   // not channels, and the data set gives the observed values of their observables.
+   std::vector<std::unique_ptr<RooArgSet>> trees;
+   for (std::string const &name : listedDistNames) {
+      RooAbsPdf *listed = workspace.pdf(name);
+      trees.push_back(listed ? std::unique_ptr<RooArgSet>{listed->getComponents()} : nullptr);
+   }
+   auto isConstraintTermOfOthers = [&](RooAbsArg const &term, std::size_t self) {
+      auto isPartOf = [&term](RooArgSet const &tree) {
+         if (tree.find(term.GetName())) {
+            return true;
+         }
+         if (term.getAttribute(arrayDistTag)) {
+            if (auto const *array = dynamic_cast<RooProdPdf const *>(&term)) {
+               for (RooAbsArg const *component : array->pdfList()) {
+                  if (tree.find(component->GetName())) {
+                     return true;
+                  }
+               }
+            }
+         }
+         return false;
+      };
+      for (std::size_t i = 0; i < trees.size(); ++i) {
+         if (i != self && trees[i] && isPartOf(*trees[i])) {
+            return true;
+         }
+      }
+      return false;
+   };
+
    RooArgSet extConstraints;
    for (auto &nameNode : (*nllNode)["aux_distributions"].children()) {
       if (RooAbsArg *extConstraint = workspace.arg(nameNode.val())) {
-         extConstraints.add(*extConstraint);
+         if (!isConstraintTermOfOthers(*extConstraint, listedDistNames.size())) {
+            extConstraints.add(*extConstraint);
+         }
       }
    }
+
+   std::vector<std::string> nllDistNames;
+   std::vector<std::string> nllDataNames;
+   RooArgSet constraintObservables;
+   for (std::size_t i = 0; i < listedDistNames.size(); ++i) {
+      std::string const &distName = listedDistNames[i];
+      std::string const dataName = i < listedDataNames.size() ? listedDataNames[i] : "0";
+      RooAbsPdf *listed = workspace.pdf(distName);
+      if (!listed || !isConstraintTermOfOthers(*listed, i)) {
+         nllDistNames.push_back(distName);
+         nllDataNames.push_back(dataName);
+         continue;
+      }
+      for (auto &d : datasets) {
+         if (!d || d->GetName() != dataName) {
+            continue;
+         }
+         if (d->numEntries() != 1) {
+            throw std::runtime_error("the data set '" + dataName + "' paired with the constraint term '" + distName +
+                                     "' must have exactly one entry");
+         }
+         for (RooAbsArg const *obs : *d->get(0)) {
+            auto *var = workspace.var(obs->GetName());
+            auto const *value = dynamic_cast<RooAbsReal const *>(obs);
+            if (!var || !value) {
+               RooJSONFactoryWSTool::warning("RooFitHS3: cannot set the observed value of '" +
+                                             std::string(obs->GetName()) + "' from the data set '" + dataName +
+                                             "': it is not a variable of the workspace");
+               continue;
+            }
+            var->setVal(value->getVal());
+            var->setConstant(true);
+            constraintObservables.add(*var);
+         }
+         // The values live in the variables now; the data set is not imported.
+         d.reset();
+      }
+   }
+
    RooArgSet observables;
-   for (auto &nameNode : (*nllNode)["data"].children()) {
+   for (std::size_t i = 0; i < nllDataNames.size(); ++i) {
       bool found = false;
       for (const auto &d : datasets) {
-         if (d->GetName() == nameNode.val()) {
+         if (d && d->GetName() == nllDataNames[i]) {
             found = true;
             observables.add(*d->get(), true);
          }
       }
-      if (nameNode.val() != "0" && !found)
-         throw std::runtime_error("dataset '" + nameNode.val() + "' cannot be found!");
+      if (nllDataNames[i] != "0" && !found)
+         throw std::runtime_error("dataset '" + nllDataNames[i] + "' cannot be found!");
    }
 
    JSONNode const *pdfNameNode = mcAuxNode ? mcAuxNode->find("pdfName") : nullptr;
@@ -609,15 +749,35 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    if (!extConstraints.empty())
       mc->SetExternalConstraints(extConstraints);
 
-   auto readArgSet = [&](std::string const &name) {
-      RooArgSet out;
-      for (auto const &child : analysisNode[name].children()) {
-         out.add(*workspace.arg(child.val()));
+   // HS3 v0.2.9 used the singular keys "parameter_of_interest" (a list) and "domain" (a single name). They are still
+   // accepted, but the plural keys take precedence.
+   auto findAnalysisKey = [&](const char *key, const char *legacyKey) -> JSONNode const * {
+      if (auto node = analysisNode.find(key)) {
+         return node;
       }
-      return out;
+      if (auto node = analysisNode.find(legacyKey)) {
+         RooJSONFactoryWSTool::warning(std::string("RooFitHS3: the key \"") + legacyKey + "\" of analysis '" +
+                                       analysisName + "' is deprecated, please use \"" + key + "\" instead.");
+         return node;
+      }
+      return nullptr;
    };
+   JSONNode const *poiNode = findAnalysisKey("parameters_of_interest", "parameter_of_interest");
+   JSONNode const *domainsNodeOfAnalysis = findAnalysisKey("domains", "domain");
+   std::vector<std::string> analysisDomains;
+   if (domainsNodeOfAnalysis && domainsNodeOfAnalysis->is_seq()) {
+      analysisDomains = valsToStringVec(*domainsNodeOfAnalysis);
+   } else if (domainsNodeOfAnalysis) {
+      analysisDomains.push_back(domainsNodeOfAnalysis->val());
+   }
 
-   mc->SetParametersOfInterest(readArgSet("parameters_of_interest"));
+   RooArgSet pois;
+   if (poiNode) {
+      for (auto const &child : poiNode->children()) {
+         pois.add(*workspace.arg(child.val()));
+      }
+   }
+   mc->SetParametersOfInterest(pois);
    mc->SetObservables(observables);
    RooArgSet pars;
    pdf->getParameters(&observables, pars);
@@ -629,8 +789,8 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    pdf->getAllConstraints(observables, mainPars, /*stripDisconnected*/ true);
 
    RooArgSet domainPars;
-   for (auto &domain : analysisNode["domains"].children()) {
-      const auto &thisDomain = RooJSONFactoryWSTool::findNamedChild(domainsNode, domain.val());
+   for (std::string const &domain : analysisDomains) {
+      const auto &thisDomain = RooJSONFactoryWSTool::findNamedChild(domainsNode, domain);
       if (!thisDomain || !thisDomain->has_child("axes"))
          continue;
       for (auto &var : (*thisDomain)["axes"].children()) {
@@ -652,6 +812,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
       }
    }
 
+   globs.add(constraintObservables, /*silent=*/true);
    mc->SetGlobalObservables(globs);
    mc->SetNuisanceParameters(nps);
 
@@ -683,6 +844,39 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
       init->snapshot(initSet);
       initSet.setName(setName.c_str());
       mc->SetSnapshot(initSet);
+   }
+}
+
+// HistFactory modifiers pick the components that constrain their parameters out of an array distribution. By the
+// standard the whole array enters the likelihood, so the components of a partially used array that nothing uses are
+// reported.
+void warnAboutUnusedArrayComponents(RooWorkspace const &ws)
+{
+   for (RooAbsArg *arg : ws.allPdfs()) {
+      auto const *array = dynamic_cast<RooProdPdf const *>(arg);
+      if (!array || !array->getAttribute(arrayDistTag) || array->hasClients()) {
+         continue;
+      }
+      bool used = false;
+      std::string unused;
+      for (RooAbsArg const *component : array->pdfList()) {
+         bool usedElsewhere = false;
+         for (RooAbsArg const *client : component->clients()) {
+            if (client != array) {
+               usedElsewhere = true;
+            }
+         }
+         if (usedElsewhere) {
+            used = true;
+         } else {
+            unused += (unused.empty() ? "'" : ", '") + std::string(component->GetName()) + "'";
+         }
+      }
+      if (used && !unused.empty()) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the components " + unused + " of the array distribution '" +
+                                       array->GetName() +
+                                       "' are not used by any distribution and are not part of any likelihood");
+      }
    }
 }
 
@@ -825,8 +1019,10 @@ void checkHS3Version(std::string const &version)
    }
 }
 
-/// HS3 requires the names of all top-level objects to be unique within a document. Throw if a name is used twice, or
-/// only warn if not `strict`: RooFit wrote such documents before HS3 v0.3, e.g. for a range and a pdf of one name.
+/// HS3 requires the names of all top-level objects to be unique within a document. If `strict`, throw if a name is
+/// used twice within one section or by a distribution and a function. Other clashes, and all clashes if not
+/// `strict`, only warn: RooFit's own export still produces them, e.g. for a range and a pdf of one name, and it
+/// must be able to read its own output.
 void checkUniqueNames(JSONNode const &rootnode, bool strict)
 {
    std::map<std::string, std::string> sectionOfName;
@@ -850,7 +1046,11 @@ void checkUniqueNames(JSONNode const &rootnode, bool strict)
          // compatibility: analyses are not referenced by name, and likelihoods only from analyses, so there is no
          // ambiguity.
          auto isLegacyNamed = [](std::string const &s) { return s == "likelihoods" || s == "analyses"; };
-         if (!strict || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
+         // Within one section, and between distributions and functions (both can be referenced by name), a clash is
+         // ambiguous. Other clashes are produced by RooFit itself (a range, snapshot or data set named like a pdf).
+         auto isReferable = [](std::string const &s) { return s == "distributions" || s == "functions"; };
+         const bool ambiguous = firstSection == section || (isReferable(firstSection) && isReferable(section));
+         if (!strict || !ambiguous || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
             RooJSONFactoryWSTool::warning("RooFitHS3: the name '" + name + "' is used in \"" + firstSection +
                                           "\" and in \"" + section + "\", which is not allowed by the HS3 standard.");
             continue;
@@ -862,6 +1062,12 @@ void checkUniqueNames(JSONNode const &rootnode, bool strict)
 }
 
 } // namespace
+
+bool isLiteralConstVar(RooAbsArg const &arg)
+{
+   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
+   return isRooConstVar && isNumber(arg.GetName());
+}
 
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
@@ -1078,21 +1284,31 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
 }
 
 // Export a single object `func` (pdf, function, variable or category) to the output JSON, recording its name in
-// `exportedObjectNames` to avoid exporting it twice.
-void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames)
+// `_exportedObjectNames` to avoid exporting it twice.
+void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
 {
    std::string name = func.GetName();
 
    // if this element was already exported, skip
-   if (exportedObjectNames.find(name) != exportedObjectNames.end())
+   if (_exportedObjectNames.find(name) != _exportedObjectNames.end())
       return;
 
-   exportedObjectNames.insert(name);
+   _exportedObjectNames.insert(name);
+
+   // Exporters that group objects per top-level pdf (the HistFactory constraints) ask for the root of the recursion.
+   if (_exportDepth == 0) {
+      _exportRootName = name;
+   }
+   struct DepthGuard {
+      int &depth;
+      DepthGuard(int &d) : depth{d} { ++depth; }
+      ~DepthGuard() { --depth; }
+   } depthGuard{_exportDepth};
 
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       // RooSimultaneous is not used in the HS3 standard, we only export the
       // dependents and some ROOT internal information.
-      exportObjects(func.servers(), exportedObjectNames);
+      exportObjects(func.servers());
 
       std::vector<std::string> channelNames;
       for (auto const &item : simPdf->indexCat()) {
@@ -1114,6 +1330,22 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
       exportVariable(&func, *_varsNode, true, false);
+      return;
+   } else if (config().exportArrayDist && func.getAttribute(arrayDistTag)) {
+      // An array distribution (HS3 `array_dist`): its components are registered here, and the array is written at
+      // the end of the export, see exportAsArrayComponent().
+      auto const *prod = dynamic_cast<RooProdPdf const *>(&func);
+      if (!prod) {
+         error("'" + name + "' has the attribute '" + arrayDistTag +
+               "' of an array distribution, but it is not a RooProdPdf");
+      }
+      for (RooAbsPdf *pdf : static_range_cast<RooAbsPdf *>(prod->pdfList())) {
+         const std::string writtenIn = exportAsArrayComponent(*pdf, name);
+         if (writtenIn != name) {
+            error("cannot write '" + name + "' as an array distribution: its component '" + pdf->GetName() +
+                  "' is already written as '" + writtenIn + "'");
+         }
+      }
       return;
    }
 
@@ -1142,9 +1374,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
             continue;
          }
          if (exp->autoExportDependants()) {
-            exportObjects(func.servers(), exportedObjectNames);
+            exportObjects(func.servers());
          } else {
-            exportObjects(_serversToExport, exportedObjectNames);
+            exportObjects(_serversToExport);
          }
          for (auto &s : _serversToDelete) {
             delete s;
@@ -1216,8 +1448,135 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
          std::cerr << "unable to locate server of " << func.GetName() << std::endl;
          continue;
       }
-      this->exportObject(*s, exportedObjectNames);
+      this->exportObject(*s);
    }
+}
+
+std::string RooJSONFactoryWSTool::exportAsArrayComponent(RooAbsPdf const &pdf, std::string const &arrayName)
+{
+   const std::string pdfName = pdf.GetName();
+   if (auto it = _arrayOfComponent.find(pdfName); it != _arrayOfComponent.end()) {
+      return it->second;
+   }
+   // Already written on its own: it is referenced by its name.
+   if (_exportedObjectNames.find(pdfName) != _exportedObjectNames.end()) {
+      return pdfName;
+   }
+   if (_arrayComponents.find(arrayName) == _arrayComponents.end()) {
+      RooAbsArg const *existing = _workspace.arg(arrayName);
+      if (existing && !existing->getAttribute(arrayDistTag)) {
+         error("cannot write the array distribution '" + arrayName +
+               "': the workspace has another object of that name");
+      }
+      _exportedObjectNames.insert(arrayName);
+   }
+   _arrayComponents[arrayName].push_back(&pdf);
+   _arrayOfComponent[pdfName] = arrayName;
+   _exportedObjectNames.insert(pdfName);
+   return arrayName;
+}
+
+// Write the array distributions registered with exportAsArrayComponent(), in alphabetical order, each followed by the
+// servers of its components.
+void RooJSONFactoryWSTool::exportArrayDists()
+{
+   std::set<std::string> written;
+   for (;;) {
+      auto next = std::find_if(_arrayComponents.begin(), _arrayComponents.end(),
+                               [&](auto const &item) { return written.find(item.first) == written.end(); });
+      if (next == _arrayComponents.end()) {
+         break;
+      }
+      written.insert(next->first);
+      // Exporting the servers may add to the registry, so the components are copied.
+      const std::vector<RooAbsPdf const *> components = next->second;
+      writeArrayDist(appendNamedChild((*_rootnodeOutput)["distributions"], next->first), next->first, components,
+                     _constraintObservables);
+      for (RooAbsPdf const *pdf : components) {
+         exportObjects(pdf->servers());
+      }
+   }
+}
+
+void RooJSONFactoryWSTool::setConstraintObservable(RooAbsPdf const &pdf, std::string const &observable)
+{
+   _constraintObservables[pdf.GetName()] = observable;
+}
+
+std::string const *RooJSONFactoryWSTool::constraintObservable(std::string const &pdfName) const
+{
+   auto found = _constraintObservables.find(pdfName);
+   return found == _constraintObservables.end() ? nullptr : &found->second;
+}
+
+void RooJSONFactoryWSTool::recordConstraintTerms(std::string const &pdfName, std::vector<std::string> const &terms)
+{
+   auto &out = _constraintTermsOfPdf[pdfName];
+   for (auto const &term : terms) {
+      if (std::find(out.begin(), out.end(), term) == out.end()) {
+         out.push_back(term);
+      }
+   }
+}
+
+// Write the data set "<term>_data" with the observed values of the observables of the constraint term `term` (an
+// array distribution written in this export, or a single constraint pdf) and return true, or return false if the
+// observables of the term are not all global observables of the model.
+bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgSet const *globalObservables,
+                                                JSONNode &rootnode)
+{
+   std::vector<RooAbsPdf const *> components;
+   if (auto found = _arrayComponents.find(term); found != _arrayComponents.end()) {
+      components = found->second;
+   } else if (RooAbsPdf *pdf = _workspace.pdf(term)) {
+      components.push_back(pdf);
+   }
+   std::vector<std::string> observables;
+   for (RooAbsPdf const *pdf : components) {
+      auto info = arrayComponentInfo(*pdf, constraintObservable(pdf->GetName()));
+      if (!info || !globalObservables || !globalObservables->find(info->observable.c_str())) {
+         return false;
+      }
+      observables.push_back(info->observable);
+   }
+   if (observables.empty()) {
+      return false;
+   }
+   const std::string dataName = term + "_data";
+   if (!_writtenConstraintData.insert(dataName).second) {
+      return true;
+   }
+   if (_workspace.data(dataName)) {
+      error("cannot write the observed values of the constraint term '" + term + "' as the data set '" + dataName +
+            "': the workspace has a data set of that name");
+   }
+   JSONNode &node = appendNamedChild(rootnode["data"], dataName);
+   node["type"] << "unbinned";
+   auto &axes = node["axes"].set_seq();
+   auto &entry = node["entries"].set_seq().append_child().set_seq();
+   for (std::string const &name : observables) {
+      auto const *var = dynamic_cast<RooAbsReal const *>(_workspace.arg(name));
+      if (!var) {
+         error("the observable '" + name + "' of the constraint term '" + term + "' is not in the workspace");
+      }
+      auto &axis = axes.append_child().set_map();
+      axis["name"] << name;
+      // A range without a bound gets the largest representable value, so that other engines see a finite axis.
+      double min = -std::numeric_limits<double>::max();
+      double max = std::numeric_limits<double>::max();
+      if (auto const *rrv = dynamic_cast<RooRealVar const *>(var)) {
+         if (std::isfinite(rrv->getMin())) {
+            min = rrv->getMin();
+         }
+         if (std::isfinite(rrv->getMax())) {
+            max = rrv->getMax();
+         }
+      }
+      axis["min"] << min;
+      axis["max"] << max;
+      entry.append_child() << var->getVal();
+   }
+   return true;
 }
 
 /**
@@ -1354,6 +1713,11 @@ void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
    obsNode["name"] << name;
 
    writeAxisBinning(obsNode, var.getBinning());
+   // Binned axes always carry their range, also if it is redundant with the "edges" of an irregular binning.
+   if (!obsNode.has_child("min")) {
+      obsNode["min"] << var.getBinning().lowBound();
+      obsNode["max"] << var.getBinning().highBound();
+   }
 }
 
 /**
@@ -1591,7 +1955,28 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
    RooArgSet vars;
 
    for (JSONNode const &node : topNode["axes"].children()) {
-      if (node.has_child("edges")) {
+      if (node.has_child("categories")) {
+         // One state per category, in the order of the document, with the position as index. The bins of a
+         // RooDataHist then follow the order of "categories".
+         const std::string axisName = node["name"].val();
+         for (const char *key : {"min", "max", "nbins", "edges"}) {
+            if (node.has_child(key)) {
+               error("the axis '" + axisName + "' is categorical and must not have \"" + key + "\"");
+            }
+         }
+         auto cat = std::make_unique<RooCategory>(axisName.c_str(), axisName.c_str());
+         int index = 0;
+         for (JSONNode const &label : node["categories"].children()) {
+            if (label.val().empty() || cat->hasLabel(label.val())) {
+               error("the categories of the axis '" + axisName + "' must be unique non-empty strings");
+            }
+            cat->defineType(label.val(), index++);
+         }
+         if (index == 0) {
+            error("the categorical axis '" + axisName + "' has no categories");
+         }
+         vars.addOwned(std::move(cat));
+      } else if (node.has_child("edges")) {
          std::vector<double> edges = readEdges(node["edges"], "axis '" + node["name"].val() + "'");
          auto obs = std::make_unique<RooRealVar>(node["name"].val().c_str(), node["name"].val().c_str(), edges[0],
                                                  edges[edges.size() - 1]);
@@ -1611,6 +1996,82 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
 
    return vars;
 }
+
+namespace {
+
+// For binned data in `n` with categorical axes, the document lays out the bins in the order of its "categories" (last
+// axis fastest), while RooFit lays them out in the order of the states of the categories in `vars`. Returns, for each
+// bin in RooFit's order, the position of that bin in the document. Empty if the orders agree.
+std::vector<std::size_t> binOrderOfDocument(const JSONNode &n, RooArgSet const &vars)
+{
+   JSONNode const *axes = n.find("axes");
+   if (!axes || static_cast<std::size_t>(axes->num_children()) != vars.size()) {
+      return {};
+   }
+   std::vector<std::size_t> nBins;
+   // For each axis, the position in the document of the bin with a given position in RooFit's order.
+   std::vector<std::vector<std::size_t>> axisPositions;
+   bool reordered = false;
+   std::size_t iAxis = 0;
+   for (JSONNode const &axis : axes->children()) {
+      RooAbsArg const *var = vars[iAxis++];
+      auto const *cat = dynamic_cast<RooAbsCategory const *>(var);
+      const auto numBins = static_cast<std::size_t>(dynamic_cast<RooAbsLValue const &>(*var).numBins());
+      nBins.push_back(numBins);
+      std::vector<std::size_t> positions(numBins);
+      for (std::size_t i = 0; i < numBins; ++i) {
+         positions[i] = i;
+      }
+      if (cat && axis.has_child("categories")) {
+         std::vector<std::string> labels;
+         for (JSONNode const &label : axis["categories"].children()) {
+            labels.push_back(label.val());
+         }
+         for (std::size_t i = 0; i < numBins; ++i) {
+            auto found = std::find(labels.begin(), labels.end(), cat->getOrdinal(i).first);
+            positions[i] = std::distance(labels.begin(), found);
+            reordered |= positions[i] != i;
+         }
+      }
+      axisPositions.push_back(std::move(positions));
+   }
+   if (!reordered) {
+      return {};
+   }
+   std::size_t total = 1;
+   for (std::size_t nb : nBins) {
+      total *= nb;
+   }
+   std::vector<std::size_t> order(total);
+   for (std::size_t k = 0; k < total; ++k) {
+      // Decompose RooFit's bin index (last axis fastest) and recompose it with the document's positions.
+      std::size_t rest = k;
+      std::size_t docIndex = 0;
+      std::size_t stride = 1;
+      for (std::size_t j = nBins.size(); j-- > 0;) {
+         const std::size_t i = rest % nBins[j];
+         rest /= nBins[j];
+         docIndex += axisPositions[j][i] * stride;
+         stride *= nBins[j];
+      }
+      order[k] = docIndex;
+   }
+   return order;
+}
+
+std::vector<double> permute(std::vector<double> const &values, std::vector<std::size_t> const &order)
+{
+   if (order.empty() || values.size() != order.size()) {
+      return values;
+   }
+   std::vector<double> out(values.size());
+   for (std::size_t k = 0; k < order.size(); ++k) {
+      out[k] = values[order[k]];
+   }
+   return out;
+}
+
+} // namespace
 
 /**
  * @brief Read binned data from the JSONNode and create a RooDataHist object.
@@ -1652,17 +2113,20 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
                                   ", bins=" + std::to_string(bins.size()));
    }
    auto dh = std::make_unique<RooDataHist>(name, name, vars);
+   const std::vector<std::size_t> binOrder = binOrderOfDocument(n, vars);
    std::vector<double> contentVals;
    contentVals.reserve(contents.num_children());
    for (auto const &cont : contents.children()) {
       contentVals.push_back(cont.val_double());
    }
+   contentVals = permute(contentVals, binOrder);
    std::vector<double> errorVals;
    if (errors) {
       errorVals.reserve(errors->num_children());
       for (auto const &err : errors->children()) {
          errorVals.push_back(err.val_double());
       }
+      errorVals = permute(errorVals, binOrder);
    }
    // RooDataHist only starts to store squared weights when it sees a positive error, and then initializes them from
    // the weights so far. Trigger that before setting any weight, so that errors of zero stay zero.
@@ -1793,12 +2257,51 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
       nllNode["data"].append_child() << 0;
    }
 
-   if (mc.GetExternalConstraints()) {
-      auto &extConstrNode = nllNode["aux_distributions"];
-      extConstrNode.set_seq();
-      for (const auto &constr : *mc.GetExternalConstraints()) {
-         extConstrNode.append_child() << constr->GetName();
+   // The additional terms of the likelihood: the external constraints of the ModelConfig, and the constraint terms
+   // of the HistFactory channels of the model. The latter are listed in "aux_distributions" with the observed values
+   // of their observables as constant parameters, or (config().exportConstraintData) in "distributions", each paired
+   // with a data set that holds the observed values.
+   std::vector<std::string> auxTerms;
+   auto addAuxTerm = [&](std::string const &term) {
+      if (std::find(auxTerms.begin(), auxTerms.end(), term) == auxTerms.end()) {
+         auxTerms.push_back(term);
       }
+   };
+   if (mc.GetExternalConstraints()) {
+      for (const auto &constr : *mc.GetExternalConstraints()) {
+         addAuxTerm(constr->GetName());
+      }
+   }
+   std::vector<std::string> channels;
+   if (auto simPdf = dynamic_cast<RooSimultaneous const *>(pdf)) {
+      for (auto const &item : simPdf->indexCat()) {
+         channels.push_back(simPdf->getPdf(item.first)->GetName());
+      }
+   } else {
+      channels.push_back(pdf->GetName());
+   }
+   std::vector<std::string> constraintTerms;
+   for (std::string const &channel : channels) {
+      auto found = _constraintTermsOfPdf.find(channel);
+      if (found == _constraintTermsOfPdf.end()) {
+         continue;
+      }
+      for (std::string const &term : found->second) {
+         if (std::find(constraintTerms.begin(), constraintTerms.end(), term) == constraintTerms.end()) {
+            constraintTerms.push_back(term);
+         }
+      }
+   }
+   for (std::string const &term : constraintTerms) {
+      if (config().exportConstraintData && exportConstraintData(term, mc.GetGlobalObservables(), rootnode)) {
+         nllNode["distributions"].append_child() << term;
+         nllNode["data"].append_child() << term + "_data";
+      } else {
+         addAuxTerm(term);
+      }
+   }
+   if (!auxTerms.empty()) {
+      nllNode["aux_distributions"].fill_seq(auxTerms);
    }
 
    auto writeList = [&](const char *name, RooArgSet const *args) {
@@ -1861,8 +2364,13 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
    sortByName(allpdfs);
-   std::set<std::string> exportedObjectNames;
-   exportObjects(allpdfs, exportedObjectNames);
+   _exportedObjectNames.clear();
+   _arrayComponents.clear();
+   _arrayOfComponent.clear();
+   _constraintTermsOfPdf.clear();
+   _writtenConstraintData.clear();
+   _constraintObservables.clear();
+   exportObjects(allpdfs);
 
    // export all toplevel functions
    std::vector<RooAbsReal *> allfuncs;
@@ -1874,7 +2382,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
    sortByName(allfuncs);
-   exportObjects(allfuncs, exportedObjectNames);
+   exportObjects(allfuncs);
+
+   // The array distributions are written after the objects that use them, see exportAsArrayComponent().
+   exportArrayDists();
 
    // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {
@@ -1939,6 +2450,12 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    _domains->writeJSON(n["domains"]);
    _domains.reset();
    _rootnodeOutput = nullptr;
+   _exportedObjectNames.clear();
+   _arrayComponents.clear();
+   _arrayOfComponent.clear();
+   _constraintTermsOfPdf.clear();
+   _writtenConstraintData.clear();
+   _constraintObservables.clear();
 }
 
 /**
@@ -2208,6 +2725,8 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
          }
       }
    }
+
+   warnAboutUnusedArrayComponents(_workspace);
 
    _rootnodeInput = nullptr;
    _hs3VersionInput.clear();
