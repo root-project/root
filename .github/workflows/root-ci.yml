@@ -90,7 +90,7 @@ jobs:
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
+        (github.event_name == 'pull_request' && false && !(
           contains(github.event.pull_request.title, '[skip-ci]') ||
           contains(github.event.pull_request.title, '[skip ci]') ||
           contains(github.event.pull_request.labels.*.name, 'skip ci')
@@ -248,7 +248,7 @@ jobs:
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
+        (github.event_name == 'pull_request' && false && !(
           contains(github.event.pull_request.title, '[skip-ci]') ||
           contains(github.event.pull_request.title, '[skip ci]') ||
           contains(github.event.pull_request.labels.*.name, 'skip ci')
@@ -527,7 +527,7 @@ jobs:
           build-directory: /github/home/ROOT-CI/src/
 
       - name: Pull Request Build
-        if:   ${{ github.event_name == 'pull_request' }}
+        if:   ${{ github.event_name == 'pull_request' && false }} # TEMP DEBUG
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
@@ -561,14 +561,14 @@ jobs:
               "
 
       - name: Nightly build
-        if:   github.event_name == 'schedule'
+        if:   github.event_name == 'schedule' || github.event_name == 'pull_request' # TEMP DEBUG
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
                     --platform_config ${{ matrix.platform_config }}
                     --incremental    false
                     --binaries       true
-                    --base_ref       ${{ inputs.ref_name }}
+                    --base_ref       ${{ inputs.ref_name || github.base_ref }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
