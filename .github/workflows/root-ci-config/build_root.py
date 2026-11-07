@@ -42,6 +42,14 @@ WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
 COMPRESSIONLEVEL = 6 if not WINDOWS else 1
 
 
+def sizeof_fmt(num, suffix="B"):
+    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
+        if abs(num) < 1024.0:
+            return f"{num:3.1f} {unit}{suffix}"
+        num /= 1024.0
+    return f"{num:.1f} Yi{suffix}"
+
+
 def main():
     # openstack.enable_logging(debug=True)
 
@@ -349,6 +357,9 @@ def archive_and_upload(archive_name, prefix):
     with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=COMPRESSIONLEVEL) as targz:
         targz.add("src")
         targz.add("build")
+
+    archive_size = os.path.getsize(f"{WORKDIR}/{new_archive}")
+    print(f"Archive {new_archive} size: {archive_size} bytes ({sizeof_fmt(archive_size)})")
 
     try:
         import openstack
