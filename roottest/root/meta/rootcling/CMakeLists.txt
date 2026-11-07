@@ -30,6 +30,36 @@ ROOTTEST_ADD_TEST(includeInLinkdef
                   COPY_TO_BUILDDIR headerForLdef.h
                   FIXTURES_REQUIRED root-meta-roocling-includeInLinkdefDict-fixture)
 
+# Directory names must not make ordinary headers look like LinkDef files.
+ROOTTEST_GENERATE_DICTIONARY(includeDirectoryDict
+                             includeDirectory.h
+                             LINKDEF includeDirectoryLinkDef.h
+                             FIXTURES_SETUP root-meta-rootcling-includeDirectoryDict-fixture)
+
+ROOTTEST_ADD_TEST(includeDirectory
+                  MACRO assertIncludeDictionary.C
+                  MACROARG "\"includeDirectoryDict\",\"RootclingDirectory::Payload\""
+                  FIXTURES_REQUIRED root-meta-rootcling-includeDirectoryDict-fixture)
+
+ROOTTEST_GENERATE_DICTIONARY(includeDirectoryFromSelectionDict
+                             LINKDEF includeDirectoryFromSelectionLinkDef.h
+                             FIXTURES_SETUP root-meta-rootcling-includeDirectoryFromSelectionDict-fixture)
+
+ROOTTEST_ADD_TEST(includeDirectoryFromSelection
+                  MACRO assertIncludeDictionary.C
+                  MACROARG "\"includeDirectoryFromSelectionDict\",\"RootclingDirectory::DirectPayload\""
+                  FIXTURES_REQUIRED root-meta-rootcling-includeDirectoryFromSelectionDict-fixture)
+
+ROOTTEST_GENERATE_DICTIONARY(includeNestedDict
+                             includeNested.h
+                             LINKDEF NestedSelection/OuterLinkDef.h
+                             FIXTURES_SETUP root-meta-rootcling-includeNestedDict-fixture)
+
+ROOTTEST_ADD_TEST(includeNested
+                  MACRO assertIncludeDictionary.C
+                  MACROARG "\"includeNestedDict\",\"RootclingNested::Payload\""
+                  FIXTURES_REQUIRED root-meta-rootcling-includeNestedDict-fixture)
+
 # ROOT-8492
 ROOTTEST_ADD_TEST(selectUnion
                   COMMAND ${ROOT_rootcling_CMD} -f NestedClassOff.Dict.cc ${CMAKE_CURRENT_SOURCE_DIR}/NestedClassOff.h ${CMAKE_CURRENT_SOURCE_DIR}/NestedClassOff.LinkDef.h
