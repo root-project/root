@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <cstddef>
+#include <variant>
 
 class TTreeReader;
 template <typename T>
@@ -37,12 +38,15 @@ namespace RDF {
 
 class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
+   std::uint64_t fLastEntry{std::numeric_limits<std::uint64_t>::max()};
+   ROOT::RVec<void *> fCachedValues{};
 
-   void *GetImpl(Long64_t) override;
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
-   RTreeOpaqueColumnReader(TTreeReader &r, std::string_view colName);
+   RTreeOpaqueColumnReader(TTreeReader &r, std::string_view colName, std::size_t maxBulkSize);
 
    // Rule of five
 
@@ -56,11 +60,23 @@ public:
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderUntypedValue
 class R__CLING_PTRCHECK(off) RTreeUntypedValueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedValue> fTreeValue;
+   ROOT::RVec<std::byte> fCachedValues;
+   ROOT::RVec<void *> fCachedBranchAddresses;
+   ROOT::RVec<void *> fCachedBranchAddressesOfAddresses;
+   std::function<void(void *)> fObjDeleter;
+   ROOT::RVec<std::unique_ptr<void, std::function<void(void *)>>> fCachedBranchAddressesRAII;
+   ROOT::RVec<bool> fIsCachedValueValidAtIdx;
+   std::size_t fValueSize;
+   std::uint64_t fLastEntry;
+   void *fAddrOfTypeThatCannotBeReadInBulk;
+   std::string fColName;
 
-   void *GetImpl(Long64_t) override;
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
-   RTreeUntypedValueColumnReader(TTreeReader &r, std::string_view colName, std::string_view typeName);
+   RTreeUntypedValueColumnReader(TTreeReader &r, std::string_view colName, std::string_view typeName,
+                                 std::size_t maxBulkSize);
 
    // Rule of five
 
@@ -82,7 +98,7 @@ public:
    };
 
    RTreeUntypedArrayColumnReader(TTreeReader &r, std::string_view colName, std::string_view valueTypeName,
-                                 ECollectionType collType);
+                                 ECollectionType collType, std::size_t maxBulkSize);
 
    // Rule of five
 
@@ -96,26 +112,26 @@ private:
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedArray> fTreeArray;
    ECollectionType fCollectionType;
 
-   using Byte_t = std::byte;
-   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
-   RVec<Byte_t> fRVec{};
-
-   /// When the user explicitly requests std::vector<T>, we use this std::vector as a stable storage.
-   std::vector<Byte_t> fStdVector{};
-
-   Long64_t fLastEntry = -1;
+   std::uint64_t fLastEntry{std::numeric_limits<std::uint64_t>::max()};
 
    /// The size of the collection value type.
    std::size_t fValueSize{};
 
+   // We absolutely require stable addresses for all collections in the bulk, so we need to instantiate a bulk of
+   // collections at construction time (currrently fixed to size 1) and then always reuse those collections.
+   using CacheStorage_t = std::variant<std::vector<ROOT::RVec<std::byte>>, std::vector<std::vector<std::byte>>>;
+   CacheStorage_t fCachedValues{};
+   ROOT::RVec<std::size_t> fCachedValuesInvalidIndices{};
+
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void *GetImpl(Long64_t entry) override;
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
-   void *ReadStdArray(Long64_t entry);
-   void *ReadStdVector(Long64_t entry);
-   void *ReadRVec(Long64_t entry);
+   void LoadStdArray(std::size_t entryInBulk);
+   void LoadStdVector(std::size_t entryInBulk);
+   void LoadRVec(std::size_t entryInBulk);
 };
 
 class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
@@ -123,11 +139,15 @@ class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RCo
    std::unique_ptr<TTreeReaderValue<uint64_t>> fTreeValueMask;
    unsigned int fMaskIndex = 0;
 
-   void *GetImpl(Long64_t) override;
+   std::uint64_t fLastEntry{std::numeric_limits<std::uint64_t>::max()};
+   ROOT::RVec<void *> fCachedValues{};
+
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
    RMaskedColumnReader(TTreeReader &r, std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> valueReader,
-                       std::string_view maskName, unsigned int maskIndex);
+                       std::string_view maskName, unsigned int maskIndex, std::size_t maxBulkSize);
    ~RMaskedColumnReader() override;
    void SetColumnReader(std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> reader)
    {
