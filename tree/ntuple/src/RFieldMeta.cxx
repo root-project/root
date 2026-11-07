@@ -52,6 +52,7 @@
 #include <unordered_set>
 #include <utility>
 #include <variant>
+#include <type_traits>
 
 using ROOT::Internal::GetRenormalizedTypeName;
 
@@ -1666,7 +1667,14 @@ std::size_t ROOT::RStreamerField::AppendImpl(const void *from)
 
    const auto nbytes = buffer.Length();
    std::size_t szBufCounts = 0;
-   R__ASSERT(nbytes >= 0);
+   // Only check for negative values if Length() is signed; the generic lambda makes the discarded branch
+   // uninstantiated, avoiding -Wtype-limits for unsigned types.
+   R__ASSERT([](auto n) {
+      if constexpr (std::is_signed_v<decltype(n)>)
+         return n >= 0;
+      else
+         return true;
+   }(nbytes));
    if (static_cast<std::size_t>(nbytes) > kMaxSmallBuffer) {
       const std::uint64_t nCounts = buffer.GetByteCounts().size();
       szBufCounts = sizeof(std::uint64_t) * (2 * nCounts + 1);
