@@ -1085,6 +1085,47 @@ void TAxis::SetRange(Int_t first, Int_t last)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if the axis user range is symmetric around 0 (or around 1 for log scale).
+/// Applies to 1D histogram y-axis and 2D histogram z-axis.
+
+Bool_t TAxis::GetSymmetricRangeUser() const
+{
+   if (strstr(GetName(), "xaxis"))
+      return kFALSE;
+
+   TH1 *hobj = dynamic_cast<TH1 *>(GetParent());
+   if (!hobj)
+      return kFALSE;
+
+   Bool_t is1DY = (hobj->GetDimension() == 1 && strstr(GetName(), "yaxis"));
+   Bool_t is2DZ = (hobj->GetDimension() == 2 && strstr(GetName(), "zaxis"));
+   if (!is1DY && !is2DZ)
+      return kFALSE;
+
+   Double_t vmin = hobj->GetMinimum();
+   Double_t vmax = hobj->GetMaximum();
+   Double_t absMax = TMath::Max(TMath::Abs(vmin), TMath::Abs(vmax));
+   if (absMax <= 0.0)
+      return kFALSE;
+
+   Bool_t isLog = kFALSE;
+   if (gPad) {
+      if (is2DZ && gPad->GetLogz())
+         isLog = kTRUE;
+      else if (is1DY && gPad->GetLogy())
+         isLog = kTRUE;
+   }
+
+   if (isLog) {
+      if (vmin <= 0.0 || vmax <= 0.0)
+         return kFALSE;
+      return TMath::Abs(vmin * vmax - 1.0) < 1e-6;
+   }
+
+   return TMath::Abs(vmin + vmax) < 1e-6 * absMax;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///  Set the viewing range for the axis from `ufirst` to `ulast` (in user coordinates,
 ///  that is, the "natural" axis coordinates).
 ///  To set a range using the axis bin numbers, use TAxis::SetRange.
@@ -1113,6 +1154,53 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
    if (GetBinLowEdge(ilast) >= ulast ) ilast -= 1;
    SetRange(ifirst, ilast);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set symmetric range around 0 (or around 1 for log scale), or unzoom if sym is false.
+/// Only available for non-binned ranges (1D histogram y-axis and 2D histogram z-axis).
+
+void TAxis::SetSymmetricRangeUser(Bool_t sym)
+{
+   if (strstr(GetName(), "xaxis"))
+      return;
+
+   TH1 *hobj = dynamic_cast<TH1 *>(GetParent());
+   if (!hobj)
+      return;
+
+   Bool_t is1DY = (hobj->GetDimension() == 1 && strstr(GetName(), "yaxis"));
+   Bool_t is2DZ = (hobj->GetDimension() == 2 && strstr(GetName(), "zaxis"));
+   if (!is1DY && !is2DZ)
+      return;
+
+   if (sym) {
+      Double_t ulast = hobj->GetMaximum();
+      Double_t ufirst = hobj->GetMinimum();
+
+      Bool_t isLog = kFALSE;
+      if (gPad) {
+         if (is2DZ && gPad->GetLogz())
+            isLog = kTRUE;
+         else if (is1DY && gPad->GetLogy())
+            isLog = kTRUE;
+      }
+
+      if (isLog) {
+         if (ufirst <= 0.0)
+            ufirst = 1.0;
+         if (ulast <= 0.0)
+            ulast = 1.0;
+         ulast = TMath::Max(ulast, 1.0 / ufirst);
+         SetRangeUser(1.0 / ulast, ulast);
+      } else {
+         ulast = TMath::Max(TMath::Abs(ulast), TMath::Abs(ufirst));
+         SetRangeUser(-ulast, ulast);
+      }
+   } else {
+      UnZoom();
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Set ticks orientation.
