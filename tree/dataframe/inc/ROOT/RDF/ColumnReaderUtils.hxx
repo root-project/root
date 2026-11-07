@@ -42,7 +42,7 @@ using namespace ROOT::TypeTraits;
 namespace RDFDetail = ROOT::Detail::RDF;
 
 RDFDetail::RColumnReaderBase *GetColumnReader(unsigned int slot, RColumnReaderBase *defineOrVariationReader,
-                                              RLoopManager &lm, TTreeReader *treeReader, std::string_view colName,
+                                              RColumnRegister &colRegister, RLoopManager &lm, TTreeReader *treeReader, std::string_view colName,
                                               const std::type_info &ti);
 
 /// This type aggregates some of the arguments passed to GetColumnReaders.
@@ -70,7 +70,7 @@ GetColumnReaders(unsigned int slot, TTreeReader *treeReader, TypeList<ColTypes..
    int i = -1;
 
    std::array<RDFDetail::RColumnReaderBase *, sizeof...(ColTypes)> ret{
-      (++i, GetColumnReader(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)), lm,
+      (++i, GetColumnReader(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)), colRegister, lm,
                             treeReader, colNames[i], typeid(ColTypes)))...};
    return ret;
 }

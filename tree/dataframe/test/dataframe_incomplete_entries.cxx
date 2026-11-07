@@ -1299,6 +1299,52 @@ TEST_P(RDFIndexedFriendsOrder, GlobalJoinDifferentCardinality)
    expect_vec_eq(expectedX, valuesX);
 }
 
+void testAliasFilterAvailable(ROOT::RDF::RNode df, bool imt)
+{
+   auto aliased = df.Alias("yAlias", "y");
+   auto filtered = aliased.FilterAvailable("yAlias");
+
+   auto takeYAlias = filtered.Take<int>("yAlias");
+   auto count = filtered.Count();
+
+   auto yAlias = *takeYAlias;
+   EXPECT_EQ(*count, 2ull);
+
+   if (imt) {
+      std::sort(yAlias.begin(), yAlias.end());
+   }
+
+   std::vector<int> expected{11, 22};
+   expect_vec_eq(expected, yAlias);
+}
+
+TEST_P(RDFIndexNoMatchSimple, AliasFilterAvailable)
+{
+   const auto &[imt, ttree] = GetParam();
+
+   if (ttree) {
+      std::unique_ptr<TFile> mainfile{TFile::Open(fMainFile)};
+      std::unique_ptr<TTree> maintree{mainfile->Get<TTree>(fMainTreeName)};
+
+      std::unique_ptr<TFile> auxfile1{TFile::Open(fAuxFile1)};
+      std::unique_ptr<TTree> auxtree1{auxfile1->Get<TTree>(fAuxTreeName1)};
+      auxtree1->BuildIndex("idx");
+
+      maintree->AddFriend(auxtree1.get());
+      testAliasFilterAvailable(ROOT::RDataFrame{*maintree}, imt);
+   } else {
+      TChain mainChain{fMainTreeName};
+      mainChain.Add(fMainFile);
+
+      TChain auxChain1(fAuxTreeName1);
+      auxChain1.Add(fAuxFile1);
+      auxChain1.BuildIndex("idx");
+
+      mainChain.AddFriend(&auxChain1);
+      testAliasFilterAvailable(ROOT::RDataFrame{mainChain}, imt);
+   }
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFMissingBranches, ::testing::Values(false));
 INSTANTIATE_TEST_SUITE_P(Seq, RDFIndexNoMatchSimple,
