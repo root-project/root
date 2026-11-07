@@ -69,7 +69,12 @@ def _TDirectoryFile_Get(self, namecycle):
     if key:
         class_name = key.GetClassName()
         address = self.GetObjectChecked(namecycle, class_name)
-        return ROOT._cppyy.bind_object(address, class_name)
+        obj = ROOT._cppyy.bind_object(address, class_name)
+        # Objects that are not registered in the directory (e.g. TGraph or
+        # non-TObjects like ROOT::RNTuple) are owned by the caller
+        if address and not (isinstance(obj, ROOT.TObject) and self.GetList().FindObject(obj)):
+            ROOT.SetOwnership(obj, True)
+        return obj
     # no key? for better or worse, call normal Get()
     return self._Get(namecycle)
 
