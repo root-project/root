@@ -132,8 +132,15 @@ void ROOT::RNTupleWriter::CommitCluster()
 void ROOT::RNTupleWriter::CommitCluster(bool commitClusterGroup)
 {
    FlushCluster();
-   if (commitClusterGroup)
+   if (commitClusterGroup) {
       CommitClusterGroup();
+   } else if (fFillContext.fSink->GetWriteOptions().GetClusterGroupPageThreshold() > 0 &&
+              !fFlagHasWarnedAboutClusterGroupCommitConflict) {
+      R__LOG_WARNING(ROOT::Internal::NTupleLog())
+         << "CommitCluster(false) is used while automatically committing cluster groups is active "
+            "(cluster group page threshold > 0). A cluster group may still be committed.";
+      fFlagHasWarnedAboutClusterGroupCommitConflict = true;
+   }
 }
 
 void ROOT::RNTupleWriter::CommitClusterGroup()

@@ -111,6 +111,9 @@ private:
    std::vector<std::shared_ptr<RNTupleAttrSetWriter>> fAttributeSets;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
+   /// If CommitCluster(false) is used together with a non-zero cluster group commit page threshold
+   /// (i.e., with the option to automatically do cluster group commits), warn the caller once.
+   bool fFlagHasWarnedAboutClusterGroupCommitConflict = false;
 
    RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 

@@ -1846,6 +1846,7 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
          .NEntries(cluster.fNEntries);
       for (const auto &columnInfo : cluster.fColumnInfos) {
          const auto colId = columnInfo.fPageRange.GetPhysicalColumnId();
+         fNPagesInGroup += columnInfo.fPageRange.GetPageInfos().size();
          if (columnInfo.fIsSuppressed) {
             assert(columnInfo.fPageRange.GetPageInfos().empty());
             clusterBuilder.MarkSuppressedColumnRange(colId);
@@ -1871,6 +1872,9 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
 
       fDescriptorBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
       fPrevClusterNEntries += cluster.fNEntries;
+      if (fNPagesInGroup > fOptions->GetClusterGroupPageThreshold() && fOptions->GetClusterGroupPageThreshold() > 0) {
+         CommitClusterGroup();
+      }
    }
 }
 
@@ -1879,8 +1883,10 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    const auto nClusters = descriptor.GetNActiveClusters();
-   if (fPrevGroupNClusters == nClusters)
+   if (fPrevGroupNClusters == nClusters) {
+      assert(fNPagesInGroup == 0);
       return;
+   }
 
    std::vector<ROOT::DescriptorId_t> physClusterIDs;
    physClusterIDs.reserve(nClusters);
@@ -1913,6 +1919,7 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    fSerializationContext.MapClusterGroupId(clusterGroupId);
 
    fPrevGroupNClusters = nClusters;
+   fNPagesInGroup = 0;
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitAttributeSet(std::string_view attrSetName,
