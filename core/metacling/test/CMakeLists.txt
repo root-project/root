@@ -29,7 +29,6 @@ ROOT_ADD_GTEST(
   RIO
   GTest::gmock
 )
-
 ROOT_ADD_GTEST(TClingLoadUnloadFile TClingLoadUnloadFileTests.cxx LIBRARIES Core RIO)
 
 if(pyroot)
