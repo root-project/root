@@ -106,7 +106,7 @@ tool.writedoc("hs3.tex")
 ~~~
 */
 
-constexpr auto hs3VersionTag = "0.2";
+constexpr auto hs3VersionTag = "0.3";
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
@@ -609,15 +609,35 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    if (!extConstraints.empty())
       mc->SetExternalConstraints(extConstraints);
 
-   auto readArgSet = [&](std::string const &name) {
-      RooArgSet out;
-      for (auto const &child : analysisNode[name].children()) {
-         out.add(*workspace.arg(child.val()));
+   // HS3 v0.2.9 used the singular keys "parameter_of_interest" (a list) and "domain" (a single name). They are still
+   // accepted, but the plural keys take precedence.
+   auto findAnalysisKey = [&](const char *key, const char *legacyKey) -> JSONNode const * {
+      if (auto node = analysisNode.find(key)) {
+         return node;
       }
-      return out;
+      if (auto node = analysisNode.find(legacyKey)) {
+         RooJSONFactoryWSTool::warning(std::string("RooFitHS3: the key \"") + legacyKey + "\" of analysis '" +
+                                       analysisName + "' is deprecated, please use \"" + key + "\" instead.");
+         return node;
+      }
+      return nullptr;
    };
+   JSONNode const *poiNode = findAnalysisKey("parameters_of_interest", "parameter_of_interest");
+   JSONNode const *domainsNodeOfAnalysis = findAnalysisKey("domains", "domain");
+   std::vector<std::string> analysisDomains;
+   if (domainsNodeOfAnalysis && domainsNodeOfAnalysis->is_seq()) {
+      analysisDomains = valsToStringVec(*domainsNodeOfAnalysis);
+   } else if (domainsNodeOfAnalysis) {
+      analysisDomains.push_back(domainsNodeOfAnalysis->val());
+   }
 
-   mc->SetParametersOfInterest(readArgSet("parameters_of_interest"));
+   RooArgSet pois;
+   if (poiNode) {
+      for (auto const &child : poiNode->children()) {
+         pois.add(*workspace.arg(child.val()));
+      }
+   }
+   mc->SetParametersOfInterest(pois);
    mc->SetObservables(observables);
    RooArgSet pars;
    pdf->getParameters(&observables, pars);
@@ -629,8 +649,8 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    pdf->getAllConstraints(observables, mainPars, /*stripDisconnected*/ true);
 
    RooArgSet domainPars;
-   for (auto &domain : analysisNode["domains"].children()) {
-      const auto &thisDomain = RooJSONFactoryWSTool::findNamedChild(domainsNode, domain.val());
+   for (std::string const &domain : analysisDomains) {
+      const auto &thisDomain = RooJSONFactoryWSTool::findNamedChild(domainsNode, domain);
       if (!thisDomain || !thisDomain->has_child("axes"))
          continue;
       for (auto &var : (*thisDomain)["axes"].children()) {
@@ -825,8 +845,10 @@ void checkHS3Version(std::string const &version)
    }
 }
 
-/// HS3 requires the names of all top-level objects to be unique within a document. Throw if a name is used twice, or
-/// only warn if not `strict`: RooFit wrote such documents before HS3 v0.3, e.g. for a range and a pdf of one name.
+/// HS3 requires the names of all top-level objects to be unique within a document. If `strict`, throw if a name is
+/// used twice within one section or by a distribution and a function. Other clashes, and all clashes if not
+/// `strict`, only warn: RooFit's own export still produces them, e.g. for a range and a pdf of one name, and it
+/// must be able to read its own output.
 void checkUniqueNames(JSONNode const &rootnode, bool strict)
 {
    std::map<std::string, std::string> sectionOfName;
@@ -850,7 +872,11 @@ void checkUniqueNames(JSONNode const &rootnode, bool strict)
          // compatibility: analyses are not referenced by name, and likelihoods only from analyses, so there is no
          // ambiguity.
          auto isLegacyNamed = [](std::string const &s) { return s == "likelihoods" || s == "analyses"; };
-         if (!strict || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
+         // Within one section, and between distributions and functions (both can be referenced by name), a clash is
+         // ambiguous. Other clashes are produced by RooFit itself (a range, snapshot or data set named like a pdf).
+         auto isReferable = [](std::string const &s) { return s == "distributions" || s == "functions"; };
+         const bool ambiguous = firstSection == section || (isReferable(firstSection) && isReferable(section));
+         if (!strict || !ambiguous || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
             RooJSONFactoryWSTool::warning("RooFitHS3: the name '" + name + "' is used in \"" + firstSection +
                                           "\" and in \"" + section + "\", which is not allowed by the HS3 standard.");
             continue;
@@ -1354,6 +1380,11 @@ void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
    obsNode["name"] << name;
 
    writeAxisBinning(obsNode, var.getBinning());
+   // Binned axes always carry their range, also if it is redundant with the "edges" of an irregular binning.
+   if (!obsNode.has_child("min")) {
+      obsNode["min"] << var.getBinning().lowBound();
+      obsNode["max"] << var.getBinning().highBound();
+   }
 }
 
 /**

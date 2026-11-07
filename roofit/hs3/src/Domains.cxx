@@ -30,12 +30,12 @@ constexpr static auto defaultDomainName = "default_domain";
 
 namespace {
 
-void writeBound(RooFit::Detail::JSONNode &node, double value)
+// JSON can't represent infinity, so an infinite bound is expressed by omitting it. An absent bound is read as
+// infinite by readBound() in JSONIOUtils.
+void writeBound(RooFit::Detail::JSONNode &node, const char *key, double value)
 {
-   if (RooNumber::isInfinite(value)) {
-      node.set_null();
-   } else {
-      node << value;
+   if (!RooNumber::isInfinite(value)) {
+      node[key] << value;
    }
 }
 
@@ -259,9 +259,14 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
    for (auto const &item : _map) {
       auto const &elem = item.second;
       RooFit::Detail::JSONNode &varnode = RooJSONFactoryWSTool::appendNamedChild(variablesNode, item.first);
-      writeBound(varnode["min"], elem.hasMin ? elem.min : -RooNumber::infinity());
-      writeBound(varnode["max"], elem.hasMax ? elem.max : RooNumber::infinity());
-      writeBinning(varnode, elem);
+      const double min = elem.hasMin ? elem.min : -RooNumber::infinity();
+      const double max = elem.hasMax ? elem.max : RooNumber::infinity();
+      writeBound(varnode, "min", min);
+      writeBound(varnode, "max", max);
+      // A binning requires a bounded range.
+      if (!RooNumber::isInfinite(min) && !RooNumber::isInfinite(max)) {
+         writeBinning(varnode, elem);
+      }
    }
 }
 void Domains::ProductDomain::populate(RooWorkspace &ws) const
