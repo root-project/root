@@ -175,8 +175,12 @@ PRIVATE
   src/DNN/Architectures/Cpu.cxx
   src/DNN/Architectures/Cpu/CpuBuffer.cxx
   src/DNN/Architectures/Cpu/CpuMatrix.cxx
-PRIVATE
-  FILE_SET private_header_files TYPE HEADERS BASE_DIRS inc/ FILES
+PUBLIC
+  FILE_SET not4dict_header_files TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/LinkDef1.h
+    inc/LinkDef2.h
+    inc/LinkDef3.h
+    inc/LinkDef4.h
     inc/TMVA/NeuralNet.icc
     inc/TMVA/DNN/Adadelta.h
     inc/TMVA/DNN/Adagrad.h
@@ -209,7 +213,6 @@ PRIVATE
     inc/TMVA/DNN/Architectures/Cpu/CpuBuffer.h
     inc/TMVA/DNN/Architectures/Cpu/CpuMatrix.h
     inc/TMVA/DNN/Architectures/Cpu/CpuTensor.h
-PUBLIC
   FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
     inc/TMVA/BDTEventWrapper.h
     inc/TMVA/BinarySearchTree.h
@@ -376,11 +379,6 @@ PUBLIC
     inc/TMVA/Volume.h
   FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef.h
-  FILE_SET not4dict_header_files TYPE HEADERS BASE_DIRS inc/ FILES
-    inc/LinkDef1.h
-    inc/LinkDef2.h
-    inc/LinkDef3.h
-    inc/LinkDef4.h
 )
 if(tmva-gpu)
   target_sources(TMVA
