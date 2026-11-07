@@ -53,4 +53,10 @@ target_sources(
         src/static_execute.h
 )
 
+# workaround to include privately headers that are not public, from a "friend" target
+get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)
+if(RooFitCore_Friend_Dirs)
+  target_include_directories(RooFitHS3 PRIVATE ${RooFitCore_Friend_Dirs})
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -10,7 +10,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
 endif()
 
 add_library(VectorisedPDFTests STATIC VectorisedPDFTests.cxx)
-target_link_libraries(VectorisedPDFTests PUBLIC ROOT::Gpad ROOT::RooFitCore ROOT::RooFit GTest::gtest)
+target_link_libraries(VectorisedPDFTests PUBLIC ROOT::Gpad RooFitCore ROOT::RooFit GTest::gtest)
 
 if(mathmore)
   set(extra_sources testLegendre.cxx)
@@ -48,5 +48,5 @@ ROOT_ADD_GTEST(testVectorizedPDFs
 )
 
 ROOT_ADD_GTEST(testGaussBinned testGaussBinned.cxx
-              LIBRARIES ROOT::Gpad ROOT::RooFitCore ROOT::RooFit)
+              LIBRARIES ROOT::Gpad RooFitCore ROOT::RooFit)
 
