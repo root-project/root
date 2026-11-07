@@ -213,6 +213,13 @@ namespace TStreamerInfoActions {
       void AddToOffset(Int_t delta);
       void SetMissing();
 
+      /// Replace each action with `UseCacheVectorLoop` wrapping the original
+      /// action.  Used by TBranchElement when a sub-branch must read its data
+      /// into the parent's on-file staging area (e.g. a split branch supplying
+      /// the source of a schema-evolution rule whose source is a nested
+      /// struct member).
+      void WrapAllActionsWithUseCacheVectorLoop(TVirtualStreamerInfo *info);
+
       TActionSequence *CreateCopy();
       static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
       static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo &info, std::unique_ptr<TLoopConfiguration> loopConfig);
