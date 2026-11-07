@@ -3,58 +3,53 @@
 # @author Patrick Bos, Netherlands eScience Center
 ############################################################################
 
-ROOT_LINKER_LIBRARY(RooFitMultiProcess
-        src/worker.cxx
-        src/Channel.cxx
-        src/Messenger.cxx
-        src/ProcessManager.cxx
-        src/util.cxx
-        src/Queue.cxx
-        src/FIFOQueue.cxx
-        src/PriorityQueue.cxx
-        src/JobManager.cxx
-        src/Job.cxx
-        src/Config.cxx
-        src/ProcessTimer.cxx
-        src/HeatmapAnalyzer.cxx
-    LIBRARIES
-        Core
+add_library(RooFitMultiProcess SHARED)
+target_sources(RooFitMultiProcess
+PRIVATE
+  src/worker.cxx
+  src/Channel.cxx
+  src/Messenger.cxx
+  src/ProcessManager.cxx
+  src/util.cxx
+  src/Queue.cxx
+  src/FIFOQueue.cxx
+  src/PriorityQueue.cxx
+  src/JobManager.cxx
+  src/Job.cxx
+  src/Config.cxx
+  src/ProcessTimer.cxx
+  src/HeatmapAnalyzer.cxx
+PRIVATE
+  FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ FILES
+    src/FIFOQueue.h
+    src/PriorityQueue.h
+  FILE_SET friend_header_files TYPE HEADERS BASE_DIRS res/ FILES # they are private, but we allow calling them from .cxx files within other RF targets
+    res/RooFit/MultiProcess/Channel.h
+    res/RooFit/MultiProcess/JobManager.h
+    res/RooFit/MultiProcess/Job.h
+    res/RooFit/MultiProcess/Message.h
+    res/RooFit/MultiProcess/Messenger.h
+    res/RooFit/MultiProcess/Messenger_decl.h
+    res/RooFit/MultiProcess/Poller.h
+    res/RooFit/MultiProcess/ProcessManager.h
+    res/RooFit/MultiProcess/ProcessTimer.h
+    res/RooFit/MultiProcess/Queue.h
+    res/RooFit/MultiProcess/util.h
+    res/RooFit/MultiProcess/worker.h
+PUBLIC
+  FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/RooFit/MultiProcess/Config.h
+    inc/RooFit/MultiProcess/HeatmapAnalyzer.h
+    inc/RooFit/MultiProcess/types.h
 )
-
-target_link_libraries(RooFitMultiProcess PUBLIC Hist)
-set(RooFitMultiProcess_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
-target_include_directories(RooFitMultiProcess
-        PRIVATE ${RooFitMultiProcess_INCLUDE_DIR}
-        INTERFACE $<BUILD_INTERFACE:${RooFitMultiProcess_INCLUDE_DIR}>)
-
-target_link_libraries(RooFitMultiProcess PRIVATE nlohmann_json::nlohmann_json)
-
-target_sources(
-    RooFitMultiProcess
-    PRIVATE
-    FILE_SET private_header_files
-    TYPE HEADERS
-    BASE_DIRS inc/ res/ src/
-    FILES
-      inc/RooFit/MultiProcess/Config.h
-      inc/RooFit/MultiProcess/HeatmapAnalyzer.h
-      inc/RooFit/MultiProcess/types.h
-      res/RooFit/MultiProcess/Channel.h
-      res/RooFit/MultiProcess/JobManager.h
-      res/RooFit/MultiProcess/Job.h
-      res/RooFit/MultiProcess/Message.h
-      res/RooFit/MultiProcess/Messenger.h
-      res/RooFit/MultiProcess/Messenger_decl.h
-      res/RooFit/MultiProcess/Poller.h
-      res/RooFit/MultiProcess/ProcessManager.h
-      res/RooFit/MultiProcess/ProcessTimer.h
-      res/RooFit/MultiProcess/Queue.h
-      res/RooFit/MultiProcess/util.h
-      res/RooFit/MultiProcess/worker.h
-      src/FIFOQueue.h
-      src/PriorityQueue.h
+target_link_libraries(RooFitMultiProcess
+PRIVATE
+  Core
+  nlohmann_json::nlohmann_json
+PUBLIC
+  Hist
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
-ROOT_INSTALL_HEADERS()
+ROOT_INSTALL_TARGET(RooFitMultiProcess)
