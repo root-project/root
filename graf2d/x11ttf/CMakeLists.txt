@@ -9,9 +9,10 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(GX11TTF_HEADERS TGX11TTF.h)
 ROOT_STANDARD_LIBRARY_PACKAGE(GX11TTF
   HEADERS
-    TGX11TTF.h
+    ${GX11TTF_HEADERS}
   SOURCES
     src/TGX11TTF.cxx
   DICTIONARY_OPTIONS
@@ -26,6 +27,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11TTF
   DEPENDENCIES
     GX11
     Graf
+)
+
+set(RELATIVE_INC_HEADERS ${GX11TTF_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(GX11TTF
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 target_include_directories(GX11TTF PRIVATE ${X11_INCLUDE_DIR})

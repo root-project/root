@@ -26,3 +26,16 @@ ROOT_LINKER_LIBRARY(GQuartz
     Core
     MathCore
 )
+
+target_sources(GQuartz
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    inc/QuartzFillArea.h
+    inc/QuartzLine.h
+    inc/QuartzMarker.h
+    inc/QuartzText.h
+    inc/QuartzUtils.h
+)
