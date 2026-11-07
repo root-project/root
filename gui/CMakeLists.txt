@@ -16,6 +16,10 @@ if(qt6canv)
   add_subdirectory(qt6canvas)
 endif()
 
+if(gtk4canv)
+  add_subdirectory(gtk4canvas)
+endif()
+
 if(webgui)
    if(cefweb)
       add_subdirectory(cefdisplay)
