@@ -44,6 +44,7 @@ extern ParserFuncSignature ParseTanh;
 extern ParserFuncSignature ParseConv;
 extern ParserFuncSignature ParseConvTranspose;
 extern ParserFuncSignature ParseLeakyRelu;
+extern ParserFuncSignature ParseThresholdedRelu;
 extern ParserFuncSignature ParseGelu;
 extern ParserFuncSignature ParseSelu;
 extern ParserFuncSignature ParseSigmoid;
@@ -310,6 +311,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("GRU", ParseGRU);
    RegisterOperator("Identity", ParseIdentity);
    RegisterOperator("LeakyRelu", ParseLeakyRelu);
+   RegisterOperator("ThresholdedRelu", ParseThresholdedRelu);
    RegisterOperator("LSTM", ParseLSTM);
    RegisterOperator("AveragePool", ParsePool);
    RegisterOperator("GlobalAveragePool", ParsePool);

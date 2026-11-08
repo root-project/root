@@ -30,6 +30,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseGRU.cxx
     src/ParseIdentity.cxx
     src/ParseLeakyRelu.cxx
+    src/ParseThresholdedRelu.cxx
     src/ParseLSTM.cxx
     src/ParseBasicNary.cxx
     src/ParsePool.cxx

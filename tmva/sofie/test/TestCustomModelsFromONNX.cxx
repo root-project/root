@@ -193,6 +193,15 @@ TEST(ONNX, LinearWithLeakyRelu)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, ThresholdedRelu)
+{
+   SofieReference ref = readReference("ThresholdedRelu");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ThresholdedRelu", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 
 TEST(ONNX, LinearWithSigmoid)
 {
