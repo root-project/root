@@ -91,5 +91,6 @@ class TemplateInstantiationDiagnostics(unittest.TestCase):
             ROOT.diag_shift_big(1)
             self.assertEqual(ROOT.diag_shift_big["long"](1), 1 << 40)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
