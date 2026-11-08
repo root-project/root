@@ -1,15 +1,11 @@
 if(pyroot)
-  set(scott_file ScottCppyy.C) # Uses Cppyy header
-
 if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(regression
                     MACRO PyROOT_regressiontests.py OPTS -b
                     LABELS longtest
-                    COPY_TO_BUILDDIR ${scott_file} Scott3.C MuonTileID.C
+                    COPY_TO_BUILDDIR Scott3.C MuonTileID.C
                                      CoralAttributeList.C Marco.C
-                                     PRECMD ${ROOT_root_CMD} -b -q -e gSystem->Load\(\"libROOTTPython\"\)
-                                         -e .L\ ${scott_file}+
-                                         -e .L\ Scott3.C+
+                                     PRECMD ${ROOT_root_CMD} -b -q -e .L\ Scott3.C+
                                          -e .L\ MuonTileID.C+
                                          -e .L\ CoralAttributeList.C+)
 endif()
