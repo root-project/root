@@ -16,6 +16,12 @@ using namespace ROOT::Detail::RDF;
 
 RJittedDefine::~RJittedDefine() {}
 
+bool RJittedDefine::IsAvailable(unsigned int slot, Long64_t entry)
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->IsAvailable(slot, entry);
+}
+
 void RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);

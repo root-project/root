@@ -201,3 +201,13 @@ void *ROOT::Internal::RDF::RMaskedColumnReader::GetImpl(Long64_t event)
 
    return fValueReader->TryGet<void>(event);
 }
+
+bool ROOT::Internal::RDF::RMaskedColumnReader::IsAvailable(Long64_t entry)
+{
+   const std::bitset<64> mask{*fTreeValueMask->Get()};
+
+   if (!mask.test(fMaskIndex))
+      return false;
+
+   return fValueReader->IsAvailable(entry);
+}

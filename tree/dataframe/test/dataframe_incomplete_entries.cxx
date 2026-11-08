@@ -761,6 +761,79 @@ TEST_P(RDFIndexNoMatchSimple, SkipAux1KeepAux2)
    }
 }
 
+void testDefineFilterAvailable(ROOT::RDF::RNode df, bool imt)
+{
+   auto defined = df.Define("yDef", "y*2");
+
+   // Nested Define
+   auto nestedDefine = defined.Define("yNestedDef", "yDef + 1");
+   auto nestedFilteredDefine = nestedDefine.FilterAvailable("yNestedDef");
+   auto countNestedDefine = nestedFilteredDefine.Count();
+   auto takeYNestedDef = nestedFilteredDefine.Take<int>("yNestedDef");
+
+   // Just a Define
+   auto filteredDefine = defined.FilterAvailable("yDef");
+   auto countDefine = filteredDefine.Count();
+   auto takeYDef = filteredDefine.Take<int>("yDef");
+
+   // Define on a DefaultValueFor
+   auto defaulted = df.DefaultValueFor("y", -1);
+   auto definedFromDefault = defaulted.Define("yDefaultDef", "y * 2");
+   auto filteredDefault = definedFromDefault.FilterAvailable("yDefaultDef");
+   auto countDefault = filteredDefault.Count();
+   auto takeDefault = filteredDefault.Take<int>("yDefaultDef");
+
+   auto yNestedDef = *takeYNestedDef;
+   auto yDef = *takeYDef;
+   auto yDefault = *takeDefault;
+
+   EXPECT_EQ(*countNestedDefine, 2ull);
+   EXPECT_EQ(*countDefine, 2ull);
+   EXPECT_EQ(*countDefault, 5ull);
+
+   std::vector<int> expectedYDef{22, 44};
+   std::vector<int> expectedYNestedDef{23, 45};
+   std::vector<int> expectedDefault{22, 44, -2, -2, -2};
+
+   if (imt) {
+      std::sort(yDef.begin(), yDef.end());
+      std::sort(yNestedDef.begin(), yNestedDef.end());
+      std::sort(yDefault.begin(), yDefault.end());
+      std::sort(expectedDefault.begin(), expectedDefault.end());
+   }
+
+   expect_vec_eq(expectedYDef, yDef);
+   expect_vec_eq(expectedYNestedDef, yNestedDef);
+   expect_vec_eq(expectedDefault, yDefault);
+}
+
+TEST_P(RDFIndexNoMatchSimple, DefineFilterAvailable)
+{
+   const auto &[imt, ttree] = GetParam();
+
+   if (ttree) {
+      std::unique_ptr<TFile> mainfile{TFile::Open(fMainFile)};
+      std::unique_ptr<TTree> maintree{mainfile->Get<TTree>(fMainTreeName)};
+
+      std::unique_ptr<TFile> auxfile1{TFile::Open(fAuxFile1)};
+      std::unique_ptr<TTree> auxtree1{auxfile1->Get<TTree>(fAuxTreeName1)};
+      auxtree1->BuildIndex("idx");
+
+      maintree->AddFriend(auxtree1.get());
+      testDefineFilterAvailable(ROOT::RDataFrame{*maintree}, imt);
+   } else {
+      TChain mainChain{fMainTreeName};
+      mainChain.Add(fMainFile);
+
+      TChain auxChain1(fAuxTreeName1);
+      auxChain1.Add(fAuxFile1);
+      auxChain1.BuildIndex("idx");
+
+      mainChain.AddFriend(&auxChain1);
+      testDefineFilterAvailable(ROOT::RDataFrame{mainChain}, imt);
+   }
+}
+
 struct RDFMissingBranchesVec : public ::testing::TestWithParam<bool> {
    constexpr static std::array<const char *, 3> fFileNames{"dataframe_incomplete_entries_missing_branches_vec_1.root",
                                                            "dataframe_incomplete_entries_missing_branches_vec_2.root",

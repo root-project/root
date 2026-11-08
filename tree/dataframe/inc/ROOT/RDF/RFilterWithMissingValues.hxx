@@ -108,7 +108,7 @@ public:
             fLastResult[slot * cacheLineStepint] = false;
          } else {
             // evaluate this filter, cache the result
-            const bool valueIsMissing = fValues[slot]->template TryGet<void>(entry) == nullptr;
+            const bool valueIsMissing = !fValues[slot]->IsAvailable(entry);
             if (fDiscardEntryWithMissingValue) {
                valueIsMissing ? ++fRejected[slot * cacheLineStepULong64_t] : ++fAccepted[slot * cacheLineStepULong64_t];
                fLastResult[slot * cacheLineStepint] = !valueIsMissing;

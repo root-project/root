@@ -70,6 +70,15 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    /// The map key is the full variation name, e.g. "pt:up".
    std::unordered_map<std::string, std::unique_ptr<RDefineBase>> fVariedDefines;
 
+   bool IsAvailable(unsigned int slot, Long64_t entry) final
+   {
+      for (auto *reader : fValues[slot]) {
+         if (!reader->IsAvailable(entry))
+            return false;
+      }
+      return true;
+   }
+
    template <typename ColType>
    auto GetValueChecked(unsigned int slot, std::size_t readerIdx, Long64_t entry) -> ColType &
    {

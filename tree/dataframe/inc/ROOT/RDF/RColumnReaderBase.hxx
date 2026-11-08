@@ -41,6 +41,8 @@ public:
       return static_cast<T *>(GetImpl(entry));
    }
 
+   virtual bool IsAvailable(Long64_t entry) { return GetImpl(entry) != nullptr; }
+
 private:
    virtual void *GetImpl(Long64_t entry) = 0;
 };

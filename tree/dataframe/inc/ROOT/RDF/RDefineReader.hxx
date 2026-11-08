@@ -48,6 +48,8 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RCo
       return fValuePtr;
    }
 
+   bool IsAvailable(Long64_t entry) final { return fDefine.IsAvailable(fSlot, entry); }
+
 public:
    RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)
       : fDefine(define), fValuePtr(define.GetValuePtr(slot)), fSlot(slot)

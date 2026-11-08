@@ -56,6 +56,9 @@ public:
    RDefineBase &operator=(const RDefineBase &) = delete;
    RDefineBase &operator=(RDefineBase &&) = delete;
    virtual ~RDefineBase();
+
+   // Check whether value is available for given entry. Overridden in inheriting classes where necessary.
+   virtual bool IsAvailable(unsigned int /*slot*/, Long64_t /*entry*/) { return true; }
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
    virtual void *GetValuePtr(unsigned int slot) = 0;

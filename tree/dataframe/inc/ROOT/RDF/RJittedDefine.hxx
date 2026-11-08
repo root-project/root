@@ -55,6 +55,7 @@ public:
 
    void SetDefine(std::unique_ptr<RDefineBase> c) { fConcreteDefine = std::move(c); }
 
+   bool IsAvailable(unsigned int slot, Long64_t entry) final;
    void InitSlot(TTreeReader *r, unsigned int slot) final;
    void *GetValuePtr(unsigned int slot) final;
    const std::type_info &GetTypeId() const final;

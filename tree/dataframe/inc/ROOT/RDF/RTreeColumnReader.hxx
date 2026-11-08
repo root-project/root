@@ -133,6 +133,7 @@ public:
    {
       fValueReader = std::move(reader);
    }
+   bool IsAvailable(Long64_t entry) override;
 };
 
 } // namespace RDF
