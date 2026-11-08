@@ -25,10 +25,20 @@ Cranmer KS, Kernel Estimation in High-Energy Physics.
 For multi-dimensional datasets, the kernels are modeled by multidimensional Gaussians. The kernels are
 constructed such that they reflect the correlation coefficients between the observables
 in the input dataset.
+
+The input dataset can be weighted, and the weights can be negative, as it is
+the case for sWeights or for simulated samples with negative event weights.
+Each event then contributes a kernel scaled by its weight, so the events with
+negative weights subtract from the estimate. The local event density that sets
+the adaptive kernel widths is estimated from the magnitudes of the weights. The
+sum of weights must be positive.
 **/
 
 #include <iostream>
 #include <algorithm>
+#include <cmath>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include "TMath.h"
@@ -529,6 +539,17 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
     }
   }
 
+  // Negative event weights are supported (e.g. sWeights, or simulated samples
+  // with negative weights), but the weights must describe a non-empty
+  // distribution, otherwise no density can be estimated.
+  if (!(_nEventsW > 0.)) {
+     std::stringstream ss;
+     ss << "RooNDKeysPdf::loadDataSet(" << GetName() << ") : the sum of event weights is " << _nEventsW
+        << ", but it must be positive.";
+     coutE(InputArguments) << ss.str() << std::endl;
+     throw std::invalid_argument(ss.str());
+  }
+
   _n = std::pow(4./(_nEventsW*(_d+2.)), 1./(_d+4.)) ;
   // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
   _minWeight = (0.5 - std::erf(_nSigma/sqrt(2.))/2.) * _maxWeight;
@@ -552,7 +573,18 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
   // use raw sigmas (without rho) for sigmaAvgR
   TMatrixDSymEigen evCalculator(*_covMat);
   TVectorD sigmaRraw = evCalculator.GetEigenValues();
-  for (Int_t j=0; j<_nDim; j++) { sigmaRraw[j] = sqrt(sigmaRraw[j]); }
+  for (Int_t j = 0; j < _nDim; j++) {
+     // With negative event weights, the weighted covariance matrix is not
+     // guaranteed to be positive definite.
+     if (!(sigmaRraw[j] > 0.)) {
+        std::stringstream ss;
+        ss << "RooNDKeysPdf::loadDataSet(" << GetName() << ") : the weighted covariance matrix of the data has the "
+           << "eigenvalue " << sigmaRraw[j] << ", but it must be positive definite.";
+        coutE(InputArguments) << ss.str() << std::endl;
+        throw std::invalid_argument(ss.str());
+     }
+     sigmaRraw[j] = sqrt(sigmaRraw[j]);
+  }
 
   _sigmaAvgR=1.;
   for (Int_t j=0; j<_nDim; j++) { _sigmaAvgR *= sigmaRraw[j]; }
@@ -873,6 +905,14 @@ void RooNDKeysPdf::calculateBandWidth()
      double sqrt12 = sqrt(12.);
      double sqrtSigmaAvgR = sqrt(_sigmaAvgR);
 
+     // The local event density that sets the kernel widths is estimated from
+     // the magnitudes of the event weights. With negative weights, the signed
+     // estimate can be zero or negative, which would not define a width.
+     double sumAbsWeights = 0.;
+     for (Int_t i = 0; i < _nEvents; ++i) {
+        sumAbsWeights += std::abs(_wMap.at(i));
+     }
+
      vector<double> dummy(_nDim, 0.);
      _weights1.resize(_nEvents, dummy);
 
@@ -896,7 +936,7 @@ void RooNDKeysPdf::calculateBandWidth()
 
         for (Int_t i = 0; i < _nEvents; ++i) {
            vector<double> &x = _dataPts[i];
-           double f = std::pow(gauss(x, *weights_prev) / _nEventsW, -1. / (2. * _d));
+           double f = std::pow(gauss(x, *weights_prev, true) / sumAbsWeights, -1. / (2. * _d));
 
            vector<double> &weight = (*weights_new)[i];
            for (Int_t j = 0; j < _nDim; j++) {
@@ -913,7 +953,7 @@ void RooNDKeysPdf::calculateBandWidth()
 ////////////////////////////////////////////////////////////////////////////////
 /// loop over all closest point to x, as determined by loopRange()
 
-double RooNDKeysPdf::gauss(vector<double>& x, vector<vector<double> >& weights) const
+double RooNDKeysPdf::gauss(vector<double> &x, vector<vector<double>> &weights, bool absWeights) const
 {
   if(_nEvents==0) return 0.;
 
@@ -962,7 +1002,8 @@ double RooNDKeysPdf::gauss(vector<double>& x, vector<vector<double> >& weights) 
         g *= exp(-c * r * r);
         g *= 1. / (sqrt2pi * weight[j]);
      }
-     z += (g * _wMap.at(_idx[i]));
+     const double w = _wMap.at(_idx[i]);
+     z += g * (absWeights ? std::abs(w) : w);
   }
   return z;
 }
