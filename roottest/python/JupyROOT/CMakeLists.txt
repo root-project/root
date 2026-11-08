@@ -14,8 +14,7 @@ set(DOCTEST_LAUNCHER ${CMAKE_CURRENT_SOURCE_DIR}/doctest_launcher.py)
 set(NOTEBOOKS importROOT.ipynb
               simpleCppMagic.ipynb
               thread_local.ipynb
-              ROOT_kernel.ipynb
-              tpython.ipynb)
+              ROOT_kernel.ipynb)
 
 # Test all modules with doctest. All new tests will be automatically picked up
 file(GLOB pyfiles ${MODULES_LOCATION}/*.py)

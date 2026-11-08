@@ -24,3 +24,38 @@ if(NOT MSVC)
   ROOT_ADD_GTEST(testTPython testTPython.cxx LIBRARIES ROOTTPython ENVIRONMENT ${tpython_gtest_env})
   ROOT_ADD_PYUNITTEST(test_tpython test_tpython.py)
 endif()
+
+# Tests using TPython from ROOT macros and from the C++ Jupyter kernel
+set(ROOT_root_CMD $<TARGET_FILE:root.exe>)
+
+# A test for issue #9058
+ROOTTEST_ADD_TEST(execscript
+                  MACRO execscript.C
+                  COPY_TO_BUILDDIR execscript.py
+                  FAILREGEX "FAILURE")
+
+# On Windows, code JIT-compiled in the interpreter cannot resolve the
+# CppInternal::DispatchRaw::MakeFunctionCallable_interp dispatch slot: it
+# is a data symbol (a function-pointer variable), which the bindexplib
+# generated export tables do not cover. Exporting writable data across a
+# DLL boundary needs a considered fix (or an upstream CppInterOp change
+# to register the dispatch slots by value instead of by symbol lookup).
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_ADD_TEST(api
+                    MACRO runPyAPITestCppyy.C
+                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    OUTREF PyAPITest.ref)
+endif()
+
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_ADD_TEST(class
+                    MACRO runPyClassTest.C
+                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    OUTREF PyClassTest.ref)
+endif()
+
+ROOTTEST_ADD_TEST(notebook
+                  COPY_TO_BUILDDIR tpython.ipynb
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/roottest/python/JupyROOT/nbdiff.py tpython.ipynb
+                  RUN_SERIAL
+                  PYTHON_DEPS jupyter)
