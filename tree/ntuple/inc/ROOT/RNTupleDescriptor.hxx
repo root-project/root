@@ -1837,6 +1837,7 @@ public:
    /// * Fields have valid parents
    /// * Number of columns is constant across column representations
    RResult<void> EnsureValidDescriptor() const;
+   RNTupleDescriptor &GetDescriptor() { return fDescriptor; }
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    RStringPool &GetStringPool() { return *fDescriptor.fStringPool; }
    RNTupleDescriptor MoveDescriptor();
