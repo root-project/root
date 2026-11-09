@@ -199,7 +199,7 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
   ENDIF()
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-    set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
+    set(ROOT_genreflex_CMD ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:genreflex>)
   elseif(TARGET ROOT::genreflex)
     set(ROOT_genreflex_CMD $<TARGET_FILE:ROOT::genreflex>)
   else()
