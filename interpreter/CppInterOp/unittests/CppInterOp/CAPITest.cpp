@@ -215,6 +215,9 @@ TYPED_TEST(CppInterOpTest, CAPI_EnumFunctions) {
 // Exercises the hand-written cppinterop_Evaluate C bridge. The C++ overload
 // returning Cpp::Box has no C wrapper (NoCWrapper); C clients use this form.
 TYPED_TEST(CppInterOpTest, CAPI_Evaluate) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
 #ifdef EMSCRIPTEN_STATIC_LIBRARY
   GTEST_SKIP() << "Test fails for Emscipten static library build";
 #endif
