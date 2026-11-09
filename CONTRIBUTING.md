@@ -97,6 +97,10 @@ Please ping people :wave: should you not get timely feedback, for instance with 
 > For compatibility with our CI, you should create your PR with a **branch name different from `master`**.
 > The branch name should ideally reflect the work being done in the PR, but this is not a hard requirement.
 
+The ROOT project values the time you invested to contribute and welcomes PRs. However, be mindful about the number of PRs you submit. Submitting multiple PRs in a short time span may result in immediate closure of all of them. As a good rule of thumb: keep at most 2 PRs open, work through the review process with one of the maintainers, wait for one of your PRs to be closed before submitting another one.
+
+Also, please note that repeatedly pinging us about your PR will not speed up the review process, and in extreme cases might lead a reviewer to close your PR without further question. For urgent matters related to existing collaborations, please reach out via one of the official channels of the project.
+
 ## Tests
 
 As you contribute code, this code will likely fix an issue or add a feature.
