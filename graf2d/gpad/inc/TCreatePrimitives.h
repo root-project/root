@@ -33,11 +33,11 @@ private:
    static TPavesText *fgPavesText;
    static TDiamond *fgDiamond;
    static TPaveLabel *fgPaveLabel;
-   static TGraph *fgPolyLine;
    static TBox *fgPadBBox;
 
    static void ExecuteLine(TPad &pad, Int_t mode, Int_t event, Int_t px, Int_t py);
    static void ExecuteText(TPad &pad, Int_t mode, Int_t event, Int_t px, Int_t py);
+   static void ExecutePolyLine(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py);
 
 public:
 
@@ -47,7 +47,7 @@ public:
    static void R__DEPRECATED(7,00, "Will be removed from public API") Line(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void Pad(Int_t event, Int_t px, Int_t py, Int_t);
    static void Pave(Int_t event, Int_t px, Int_t py, Int_t mode);
-   static void PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode);
+   static void R__DEPRECATED(7,00, "Will be removed from public API") PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void R__DEPRECATED(7,00, "Will be removed from public API") Text(Int_t event, Int_t px, Int_t py, Int_t mode);
 
    static void ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, Int_t px, Int_t py);

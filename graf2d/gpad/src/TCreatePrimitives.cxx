@@ -35,7 +35,6 @@ TPaveText *TCreatePrimitives::fgPaveText = nullptr;
 TPavesText *TCreatePrimitives::fgPavesText = nullptr;
 TDiamond *TCreatePrimitives::fgDiamond = nullptr;
 TPaveLabel *TCreatePrimitives::fgPaveLabel = nullptr;
-TGraph *TCreatePrimitives::fgPolyLine = nullptr;
 TBox *TCreatePrimitives::fgPadBBox = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +62,8 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 }
 
 /////////////////////////////////////////////
-/// Internal class implementing tlatex editing
+/// Internal class implementing mouse click/move/relase editing
+/// Used for many classes like line, arrow, arc,
 class TLineEditInteractive : public TVirtualPad::TInteractive {
    public:
 
@@ -507,6 +507,112 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Interactive object for TGraph and TCutG editing
+class TPolyLineEditInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   TPolyLineEditInteractive(Int_t mode, const char *name, Double_t x0, Double_t y0, Int_t px0, Int_t py0)
+   {
+      fX0 = x0;
+      fY0 = y0;
+      fPX0 = px0;
+      fPY0 = py0;
+      if (mode == kPolyLine) {
+         fGraph = new TGraph(2);
+         fGraph->SetName(name);
+         fGraph->ResetBit(TGraph::kClipFrame);
+      } else {
+         fGraph = new TCutG(name, 2);
+      }
+      fGraph->SetPoint(0, x0, y0);
+      fGraph->SetPoint(1, x0, y0);
+      fNPoints = 1;
+   }
+
+   Double_t fX0 = 0, fY0 = 0;
+   Int_t fPX0 = 0, fPY0 = 0;
+   TGraph *fGraph = nullptr;
+   Int_t fNPoints = 0;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new TGraph or TCutG in the pad
+///
+///  - Click left button to indicate a new point.
+///  - Click left button at same place or double click to close the polyline.
+
+void TCreatePrimitives::ExecutePolyLine(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py)
+{
+   Double_t x = parent.PadtoX(parent.AbsPixeltoX(px));
+   Double_t y = parent.PadtoY(parent.AbsPixeltoY(py));
+
+   auto inter = parent.GetInteractive<TPolyLineEditInteractive>(&parent);
+
+   switch (event) {
+
+   case kButton1Down:
+      if (inter) {
+         inter->fGraph->SetPoint(inter->fNPoints, x, y);
+         // if new point close to original point - just stop editing
+         if ((inter->fNPoints > 1) && (TMath::Abs(px - inter->fPX0) + TMath::Abs(py - inter->fPY0) < 7)) {
+            inter->fGraph->SetPoint(inter->fNPoints, inter->fX0, inter->fY0);
+            parent.GetCanvas()->Selected(&parent, inter->fGraph, kButton1Down);
+            parent.FreeInteractive(&parent);
+            parent.Modified();
+            parent.Update();
+            gROOT->SetEditorMode();
+         } else {
+            // add new point
+            inter->fNPoints++;
+            inter->fGraph->Set(inter->fNPoints + 1);
+            inter->fGraph->SetPoint(inter->fNPoints, x, y);
+         }
+      } else {
+         TString name = mode == kPolyLine ? "graph" : "CUTG";
+         Int_t cnt = 0;
+         while (parent.FindObject(name.Data()) && (cnt++ < 1000))
+            name.Form("%s%d", mode == kPolyLine ? "gr_" : "cutg_", cnt);
+
+         inter = parent.MakeInteractive<TPolyLineEditInteractive>(&parent, mode, name.Data(), x, y, px, py);
+         parent.Add(inter->fGraph, "L");
+      }
+      break;
+
+   case kButton1Double:
+      if (inter) {
+         if (inter->fNPoints < (mode == kCutG ? 3 : 2)) {
+            // too few points - primitive is not complete
+            parent.Remove(inter->fGraph);
+            delete inter->fGraph;
+         } else if (mode == kCutG) {
+            // force same first and last point
+            inter->fGraph->SetPoint(inter->fNPoints, inter->fX0, inter->fY0);
+         } else {
+            // just remove last point which only was visisble during painting
+            inter->fGraph->Set(inter->fNPoints);
+         }
+         parent.GetCanvas()->Selected(&parent, inter->fGraph, kButton1Down);
+
+         parent.FreeInteractive(&parent);
+         parent.Modified();
+         parent.Update();
+         gROOT->SetEditorMode();
+      }
+      break;
+
+   case kMouseMotion:
+      if (inter) {
+         inter->fGraph->SetPoint(inter->fNPoints, x, y);
+         parent.Modified();
+         parent.Update();
+      }
+      break;
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new PolyLine in gPad.
 ///
@@ -515,86 +621,8 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 
 void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   static Int_t pxnew, pynew, pxold, pyold, dp;
-   Double_t xnew, ynew, xold, yold;
-   static Int_t npoints = 0;
-
-   switch (event) {
-
-   case kButton1Down:
-      pxnew = px;
-      pynew = py;
-      npoints++;
-      if (fgPolyLine) {
-         fgPolyLine->Set(fgPolyLine->GetN() +1);
-         fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-                                       gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
-         // stop collecting new points if new point is close to previous point
-         if (npoints > 1) {
-            xnew = gPad->PadtoX(gPad->AbsPixeltoX(pxnew));
-            ynew = gPad->PadtoY(gPad->AbsPixeltoY(pynew));
-            fgPolyLine->GetPoint(fgPolyLine->GetN()-3, xold, yold);
-            pxold = gPad->XtoAbsPixel(xold);
-            pyold = gPad->YtoAbsPixel(yold);
-            dp   = TMath::Abs(pxnew-pxold) +TMath::Abs(pynew-pyold);
-            if (dp < 7) {
-               if (mode == kPolyLine) {
-                  fgPolyLine->Set(npoints-1);
-               } else {
-                  fgPolyLine->GetPoint(0, xnew, ynew);
-                  fgPolyLine->SetPoint(npoints, xnew, ynew);
-               }
-               gPad->GetCanvas()->Selected(gPad, fgPolyLine, kButton1Down);
-               fgPolyLine = nullptr;
-               npoints    = 0;
-               gPad->Modified();
-               gPad->Update();
-               gROOT->SetEditorMode();
-            }
-         }
-      } else {
-         if (mode == kPolyLine) {
-            fgPolyLine = new TGraph(1);
-            fgPolyLine->ResetBit(TGraph::kClipFrame);
-         } else { // TCutG case
-            fgPolyLine = (TGraph*) new TCutG("CUTG",1);
-         }
-         fgPolyLine->SetPoint(0, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-         gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
-         fgPolyLine->Draw("L");
-      }
-      break;
-
-   case kButton1Double:
-      if (fgPolyLine) {
-         if (mode == kPolyLine) {
-            fgPolyLine->Set(npoints);
-         } else {
-            fgPolyLine->GetPoint(0, xnew, ynew);
-            fgPolyLine->SetPoint(npoints, xnew, ynew);
-         }
-         gPad->GetCanvas()->Selected(gPad, fgPolyLine, kButton1Down);
-         fgPolyLine = nullptr;
-         npoints = 0;
-         gPad->Modified();
-         gPad->Update();
-         gROOT->SetEditorMode();
-      }
-      fgPolyLine = nullptr;
-      break;
-
-   case kMouseMotion:
-      pxnew = px;
-      pynew = py;
-      if (fgPolyLine) {
-         fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-                                       gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
-         gPad->Modified();
-         gPad->Update();
-
-      }
-      break;
-   }
+   if (auto pad = dynamic_cast<TPad *>(gPad))
+      ExecutePolyLine(*pad, mode, event, px, py);
 }
 
 
@@ -751,7 +779,7 @@ void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, In
    case kArc:
    case kEllipse: ExecuteLine(pad, edit_mode, event, px, py); break;
    case kPolyLine:
-   case kCutG: PolyLine(event, px, py, edit_mode); break;
+   case kCutG: ExecutePolyLine(pad, edit_mode, event, px, py); break;
    case kButton:
    case kPave:
    case kPaveLabel:
