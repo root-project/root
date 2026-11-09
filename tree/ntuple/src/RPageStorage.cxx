@@ -1758,14 +1758,13 @@ void ROOT::Internal::RPagePersistentSink::CommitSealedPageV(std::span<RPageStora
       locatorIndexes.reserve(locatorIndexes.size() + rangeSize);
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         if (!fFeatures.fCanMergePages || !fOptions->GetEnableSamePageMerging()) {
+         // Pages without checksums cannot participate in same-page merging.
+         if (!fFeatures.fCanMergePages || !fOptions->GetEnableSamePageMerging() ||
+             !sealedPageIt->GetHasChecksum()) {
             mask.emplace_back(true);
             locatorIndexes.emplace_back(iLocator++);
             continue;
          }
-         // Same page merging requires page checksums - this is checked in the write options
-         R__ASSERT(sealedPageIt->GetHasChecksum());
-
          const auto chk = sealedPageIt->GetChecksum().Unwrap();
          auto itr = originalPages.find(chk);
          if (itr == originalPages.end()) {
