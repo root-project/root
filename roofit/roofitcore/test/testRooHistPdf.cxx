@@ -1,6 +1,7 @@
 // Tests for the RooHistPdf
 // Authors: Jonas Rembser, CERN 03/2023
 
+#include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooFitResult.h>
 #include <RooHelpers.h>
@@ -14,6 +15,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <memory>
 
 // Verify that RooFit correctly uses analytic integration when having a
@@ -237,4 +239,41 @@ TEST(RooHistPdf, EnsurePositiveValuesInFFTConvPdf)
    std::unique_ptr<RooFitResult> fit_result{model.fitTo(*data, Save(true), PrintLevel(-1))};
 
    EXPECT_EQ(fit_result->status(), 0) << "The fit should succeed with status 0";
+}
+
+// A binned likelihood of RooHistPdf templates in a RooSimultaneous crashed,
+// because the RooHistPdf didn't map the prefixed channel observable to its
+// histogram observable when asked for the bin boundaries.
+TEST(RooHistPdf, BinnedLikelihoodInSimultaneous)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   auto &x = static_cast<RooRealVar &>(*ws.factory("x[0, 10]"));
+   x.setBins(10);
+   auto &index = static_cast<RooCategory &>(*ws.factory("index[A]"));
+
+   RooDataHist dhSig{"dhSig", "dhSig", RooArgSet{x}};
+   RooDataHist dhBkg{"dhBkg", "dhBkg", RooArgSet{x}};
+   RooDataHist dataA{"dataA", "dataA", RooArgSet{x}};
+   for (int i = 0; i < x.numBins(); ++i) {
+      dhSig.set(i, i, -1);
+      dhBkg.set(i, 1, -1);
+      dataA.set(i, i + 1, -1);
+   }
+   ws.import(dhSig);
+   ws.import(dhBkg);
+   ws.factory("HistPdf::sig(x, dhSig)");
+   ws.factory("HistPdf::bkg(x, dhBkg)");
+   ws.factory("ASUM::modelA(mu_sig[1, 0, 10] * sig, mu_bkg[1, 0, 10] * bkg)");
+   RooAbsPdf &modelA = *ws.pdf("modelA");
+   modelA.setAttribute("BinnedLikelihood");
+   ws.factory("SIMUL::simPdf(index, A=modelA)");
+
+   RooDataHist data{"data", "data", RooArgList{x}, index, std::map<std::string, RooDataHist *>{{"A", &dataA}}};
+
+   std::unique_ptr<RooAbsReal> nllSim{ws.pdf("simPdf")->createNLL(data)};
+   std::unique_ptr<RooAbsReal> nllA{modelA.createNLL(dataA)};
+
+   EXPECT_DOUBLE_EQ(nllSim->getVal(), nllA->getVal());
 }
