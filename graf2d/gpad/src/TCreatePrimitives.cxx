@@ -30,7 +30,6 @@ to create new primitives in gPad from the TPad toolbar.
 #include "KeySymbols.h"
 #include "TCutG.h"
 
-TBox *TCreatePrimitives::fgPadBBox = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TCreatePrimitives default constructor.
@@ -86,12 +85,13 @@ class TTwoPointInteractive : public TVirtualPad::TInteractive {
       return res2;
    }
 
-   void SetPaveCoord(TPave *pave, Double_t x, Double_t y)
+   template<class T>
+   void SetCoord(T *obj, Double_t x, Double_t y)
    {
-      pave->SetX1(TMath::Min(x, fX0));
-      pave->SetX2(TMath::Max(x, fX0));
-      pave->SetY1(TMath::Min(y, fY0));
-      pave->SetY2(TMath::Max(y, fY0));
+      obj->SetX1(TMath::Min(x, fX0));
+      obj->SetX2(TMath::Max(x, fX0));
+      obj->SetY1(TMath::Min(y, fY0));
+      obj->SetY2(TMath::Max(y, fY0));
    }
 
    Int_t fMode = 0;
@@ -245,6 +245,36 @@ void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, I
    // when mouse released - finish interactive
    if (event == kButton1Up) {
       auto obj = inter->fObject;
+      if (mode == kPad) {
+         parent.Remove(obj);
+         Int_t  npads = 0;
+         TIter next(parent.GetListOfPrimitives());
+         while (auto pobj = next()) {
+            if (pobj->InheritsFrom(TPad::Class()))
+               npads++;
+         }
+         TBox *box = (TBox *) obj;
+
+         Double_t xlow = (parent.XtoPad(box->GetX1()) - parent.GetX1())/(parent.GetX2() - parent.GetX1());
+         Double_t ylow = (parent.YtoPad(box->GetY1()) - parent.GetY1())/(parent.GetY2() - parent.GetY1());
+         Double_t xup = (parent.XtoPad(box->GetX2()) - parent.GetX1())/(parent.GetX2() - parent.GetX1());
+         Double_t yup = (parent.YtoPad(box->GetY2()) - parent.GetY1())/(parent.GetY2() - parent.GetY1());
+
+         // TBox object no longer needed
+         delete obj;
+         obj = nullptr;
+
+         // to preserve gPad when new pad is created
+         TVirtualPad::TContext padtxt(true);
+
+         auto newpad = new TPad(TString::Format("%s_%d",parent.GetName(),npads+1).Data(),"newpad", xlow, ylow, xup, yup);
+         if (!newpad->IsZombie()) {
+            newpad->UseCurrentStyle();
+            parent.Add(newpad);
+            obj = newpad;
+         }
+      }
+
       if (obj)
          parent.GetCanvas()->Selected(&parent, obj, kButton1Down);
 
@@ -310,29 +340,35 @@ void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, I
       break;
    case kPave:
       if (auto pave = inter->Make<TPave>(parent, x, y, x, y))
-         inter->SetPaveCoord(pave, x, y);
+         inter->SetCoord<TPave>(pave, x, y);
       break;
    case kPaveLabel:
       if (auto pave = inter->Make<TPaveLabel>(parent, x, y, x, y, ">"))
-         inter->SetPaveCoord(pave, x, y);
+         inter->SetCoord<TPave>(pave, x, y);
       break;
    case kPaveText:
       if (auto pave = inter->Make<TPaveText>(parent, x, y, x, y)) {
          if (!had_object)
             pave->AddText(">");
-         inter->SetPaveCoord(pave, x, y);
+         inter->SetCoord<TPave>(pave, x, y);
       }
       break;
    case kPavesText:
       if (auto pave = inter->Make<TPavesText>(parent, x, y, x, y)) {
          if (!had_object)
             pave->AddText(">");
-         inter->SetPaveCoord(pave, x, y);
+         inter->SetCoord<TPave>(pave, x, y);
       }
       break;
    case kDiamond:
       if (auto diamond = inter->Make<TDiamond>(parent, x, y, x, y))
-         inter->SetPaveCoord(diamond, x, y);
+         inter->SetCoord<TPave>(diamond, x, y);
+      break;
+   case kPad:
+      if (auto box = inter->Make<TBox>(parent, x, y, x, y)) {
+         box->SetFillStyle(1); // to paint only border
+         inter->SetCoord<TBox>(box, x, y);
+      }
       break;
 
    default: break;
@@ -355,91 +391,14 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       ExecuteTwoPoint(*pad, mode, event, px, py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// @deprecated
 /// Create a new pad in gPad.
-///
-///  - Click left button to indicate one corner of the pad.
-///  - Click left button to indicate the opposite corner.
-///
-/// The new pad is inserted in the pad where the first point is selected.
 
 void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 {
-   static Int_t px1old, py1old, px2old, py2old;
-   static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
-   static TVirtualPad *padsav = nullptr;
-   Double_t xlow, ylow, xup, yup;
-
-   Int_t  n = 0;
-   TObject *obj;
-   TIter next(gPad->GetListOfPrimitives());
-
-   while ((obj = next())) {
-      if (obj->InheritsFrom(TPad::Class())) {
-         n++;
-      }
-   }
-
-   switch (event) {
-
-   case kButton1Down:
-      padsav = gPad;
-      gPad->cd();
-      px1 = gPad->XtoAbsPixel(gPad->GetX1());
-      py1 = gPad->YtoAbsPixel(gPad->GetY1());
-      px2 = gPad->XtoAbsPixel(gPad->GetX2());
-      py2 = gPad->YtoAbsPixel(gPad->GetY2());
-      px1old = px; py1old = py;
-      break;
-
-   case kButton1Motion:
-      px2old = px;
-      px2old = TMath::Max(px2old, px1);
-      px2old = TMath::Min(px2old, px2);
-      py2old = py;
-      py2old = TMath::Max(py2old, py2);
-      py2old = TMath::Min(py2old, py1);
-      pxl = TMath::Min(px1old, px2old);
-      pxt = TMath::Max(px1old, px2old);
-      pyl = TMath::Max(py1old, py2old);
-      pyt = TMath::Min(py1old, py2old);
-
-      if (fgPadBBox) {
-         fgPadBBox->SetX1(gPad->AbsPixeltoX(pxl));
-         fgPadBBox->SetY1(gPad->AbsPixeltoY(pyl));
-         fgPadBBox->SetX2(gPad->AbsPixeltoX(pxt));
-         fgPadBBox->SetY2(gPad->AbsPixeltoY(pyt));
-      } else {
-         fgPadBBox = new TBox(pxl, pyl, pxt, pyt);
-         fgPadBBox->Draw("l");
-      }
-      gPad->Modified(kTRUE);
-      gPad->Update();
-      break;
-
-   case kButton1Up:
-      fgPadBBox->Delete();
-      fgPadBBox = nullptr;
-      xlow = (Double_t(pxl) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
-      ylow = (Double_t(py1) - Double_t(pyl))/(Double_t(py1) - Double_t(py2));
-      xup  = (Double_t(pxt) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
-      yup  = (Double_t(py1) - Double_t(pyt))/(Double_t(py1) - Double_t(py2));
-
-      gROOT->SetEditorMode();
-      if (xup <= xlow || yup <= ylow) return;
-      auto newpad = new TPad(TString::Format("%s_%d",gPad->GetName(),n+1).Data(),"newpad",xlow, ylow, xup, yup);
-      if (newpad->IsZombie()) break;
-      newpad->SetFillColor(gStyle->GetPadColor());
-      newpad->Draw();
-      auto canvas = gPad->GetCanvas();
-      if (canvas) canvas->Selected((TPad*)gPad, newpad, kButton1Down);
-      if (padsav) {
-         padsav->cd();
-         padsav = nullptr;
-      }
-      break;
-   }
+   if (auto pad = dynamic_cast<TPad *>(gPad))
+      ExecuteTwoPoint(*pad, kPad, event, px, py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -451,7 +410,6 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    if (auto pad = dynamic_cast<TPad *>(gPad))
       ExecuteTwoPoint(*pad, mode, event, px, py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interactive object for TGraph and TCutG editing
@@ -645,7 +603,6 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
 void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, Int_t px, Int_t py)
 {
    switch (edit_mode) {
-   case kPad: Pad(event, px, py, 0); break;
    case kMarker:
    case kText: ExecuteText(pad, edit_mode, event, px, py); break;
    case kLine:
@@ -658,7 +615,8 @@ void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, In
    case kPaveLabel:
    case kPaveText:
    case kPavesText:
-   case kDiamond: ExecuteTwoPoint(pad, edit_mode, event, px, py); break;
+   case kDiamond:
+   case kPad: ExecuteTwoPoint(pad, edit_mode, event, px, py); break;
    case kPolyLine:
    case kCutG: ExecutePolyLine(pad, edit_mode, event, px, py); break;
    default: break;
