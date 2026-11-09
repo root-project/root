@@ -116,12 +116,19 @@ class TTextEditInteractive : public TVirtualPad::TInteractive {
       fLabel = lbl;
    }
 
+   TTextEditInteractive(TPaveText *txt)
+   {
+      fPaveText = txt;
+   }
+
    TObject *GetObject() const
    {
       if (fLatex)
          return fLatex;
       if (fLabel)
          return fLabel;
+      if (fPaveText)
+         return fPaveText;
       return nullptr;
    }
 
@@ -131,6 +138,8 @@ class TTextEditInteractive : public TVirtualPad::TInteractive {
          return fLatex->GetTitle();
       if (fLabel)
          return fLabel->GetLabel();
+      if (fPaveText)
+         return fPaveText->GetSize() > 0 ? fPaveText->GetLine(0)->GetTitle() : "";
       return "";
    }
 
@@ -140,6 +149,8 @@ class TTextEditInteractive : public TVirtualPad::TInteractive {
          fLatex->SetTitle(s);
       else if (fLabel)
          return fLabel->SetLabel(s);
+      else if (fPaveText && (fPaveText->GetSize() > 0))
+         fPaveText->GetLine(0)->SetTitle(s);
    }
 
    void FinishEditing()
@@ -186,6 +197,7 @@ class TTextEditInteractive : public TVirtualPad::TInteractive {
 
    TLatex *fLatex = nullptr;
    TPaveLabel *fLabel = nullptr;
+   TPaveText *fPaveText = nullptr;
 };
 
 
@@ -198,9 +210,11 @@ class TTextEditInteractive : public TVirtualPad::TInteractive {
 
 void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py)
 {
-   // special branch for text editing
-   if (mode == kPaveLabel) {
+   if (mode == kPaveLabel)
       parent.EventPave(); // TODO: check if this is really needed
+
+   // special branch for text editing
+   if ((mode == kPaveLabel) || (mode == kPaveText) || (mode == kPavesText)) {
       auto inter_edit = parent.GetInteractive<TTextEditInteractive>(&parent);
       if (inter_edit) {
          if ((event == kKeyPress) && inter_edit->ProcessKeyPress(parent, py))
@@ -236,7 +250,9 @@ void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, I
 
       parent.FreeInteractive(&parent);
 
-      if ((mode == kPaveLabel) && obj)
+      if (((mode == kPaveText) || (mode == kPavesText)) && obj)
+         parent.MakeInteractive<TTextEditInteractive>(&parent, (TPaveText *)obj);
+      else if ((mode == kPaveLabel) && obj)
          parent.MakeInteractive<TTextEditInteractive>(&parent, (TPaveLabel *)obj);
       else
          gROOT->SetEditorMode();
@@ -246,6 +262,8 @@ void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, I
    // ignore all other events
    if (event != kButton1Motion)
       return;
+
+   bool had_object = (inter->fObject != nullptr);
 
    switch (mode) {
    case kLine:
@@ -299,12 +317,18 @@ void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, I
          inter->SetPaveCoord(pave, x, y);
       break;
    case kPaveText:
-      if (auto pave = inter->Make<TPaveText>(parent, x, y, x, y))
+      if (auto pave = inter->Make<TPaveText>(parent, x, y, x, y)) {
+         if (!had_object)
+            pave->AddText(">");
          inter->SetPaveCoord(pave, x, y);
+      }
       break;
    case kPavesText:
-      if (auto pave = inter->Make<TPavesText>(parent, x, y, x, y))
+      if (auto pave = inter->Make<TPavesText>(parent, x, y, x, y)) {
+         if (!had_object)
+            pave->AddText(">");
          inter->SetPaveCoord(pave, x, y);
+      }
       break;
    case kDiamond:
       if (auto diamond = inter->Make<TDiamond>(parent, x, y, x, y))
