@@ -15,4 +15,6 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Run unit tests
-        run: python3 .github/workflows/root-ci-config/test_null_build_check.py --verbose
+        run: |
+          python3 .github/workflows/root-ci-config/test_null_build_check.py --verbose
+          python3 .github/workflows/root-ci-config/test_annotate_failures.py --verbose

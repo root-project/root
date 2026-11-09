@@ -8,11 +8,12 @@ import subprocess
 import sys
 import textwrap
 import time
+import re
 from functools import wraps
 from hashlib import sha1
 from http import HTTPStatus
 from shutil import which
-from typing import Callable, Dict
+from typing import Callable, Dict, List, Optional
 
 dry_run : bool = False
 
@@ -360,3 +361,123 @@ def remove_file_match_ext(directory: str, extension: str) -> str:
                 os.remove(file_path)
                 count += 1
     print_fancy(f"Deleted {count} gcda files")
+
+
+def escape_workflow_data(s: str) -> str:
+    """Escapes characters for GitHub Actions workflow command messages."""
+    return s.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def extract_ctest_annotations(last_failed_log_content: str, last_test_log_content: str, srcdir: str = "") -> List[Dict[str, Optional[str]]]:
+    """
+    Parses failed ctests/gtests from LastTestsFailed.log and LastTest.log.
+    Returns a list of dictionaries with keys: file, line, title, message.
+    """
+    annotations = []
+    failed_tests = set()
+
+    for line in last_failed_log_content.splitlines():
+        parts = line.strip().split(":", 1)
+        if len(parts) == 2 and parts[1].strip():
+            failed_tests.add(parts[1].strip())
+
+    if not failed_tests:
+        return annotations
+
+    patterns = [
+        # gtest Failure: /path/file.cxx:88: Failure
+        re.compile(r'([^\s:\n]+\.(?:cxx|cpp|cc|c|C|h|hpp|py)):(\d+):\s*Failure\b[^\n]*\n?([^\n]*)'),
+        # compiler / macro error: /path/file.C:42:15: error: ...
+        re.compile(r'([^\s:\n]+\.(?:cxx|cpp|cc|c|C|h|hpp|py)):(\d+):(?:\d+:)?\s*(?:fatal error|error):\s*([^\n]+)'),
+        # Python traceback: File "/path/file.py", line 15, in ...
+        re.compile(r'File "([^"\n]+\.py)", line (\d+)(?:, in [^\n]+)?\n(?:\s*[^\n]+\n)*\s*([A-Za-z0-9_.]*(?:Error|Exception):[^\n]+)'),
+        re.compile(r'File "([^"\n]+\.py)", line (\d+)(?:, in [^\n]+)?\n\s*([^\n]*)'),
+        # Generic assertion failure: file:line: assertion failed / failed
+        re.compile(r'([^\s:\n]+\.(?:cxx|cpp|cc|c|C|h|hpp|py)):(\d+):\s*([^\n]+)'),
+    ]
+
+    # Find test blocks in LastTest.log
+    test_blocks = re.findall(
+        r'Testing:\s*(\S+)\s*\n.*?-{30,}\n(.*?)\n-{30,}\s*\n.*?Test Failed',
+        last_test_log_content,
+        re.DOTALL
+    )
+
+    found_tests = set()
+    for test_name, output in test_blocks:
+        if test_name not in failed_tests:
+            continue
+        found_tests.add(test_name)
+
+        matched = False
+        for pattern in patterns:
+            match = pattern.search(output)
+            if match:
+                file_path, line, msg = match.group(1), match.group(2), match.group(3)
+                if srcdir and file_path.startswith(srcdir):
+                    file_path = os.path.relpath(file_path, srcdir)
+                elif "/src/" in file_path:
+                    file_path = file_path.split("/src/", 1)[1]
+
+                msg = msg.strip() or f"Test {test_name} failed"
+                annotations.append({
+                    "file": file_path,
+                    "line": line,
+                    "title": test_name,
+                    "message": msg,
+                })
+                matched = True
+                break
+
+        if not matched:
+            annotations.append({
+                "file": None,
+                "line": None,
+                "title": test_name,
+                "message": f"Test {test_name} failed. Check test log for details.",
+            })
+
+    for remaining_test in failed_tests - found_tests:
+        annotations.append({
+            "file": None,
+            "line": None,
+            "title": remaining_test,
+            "message": f"Test {remaining_test} failed. Check test log for details.",
+        })
+
+    return annotations
+
+
+def annotate_ctest_failures(workdir: str) -> None:
+    """
+    Emits GitHub Actions annotations for failed ctests/gtests so they appear
+    directly in the 'Files changed' tab of pull requests.
+    """
+    builddir = os.path.join(workdir, "build")
+    srcdir = os.path.join(workdir, "src")
+    last_failed_path = os.path.join(builddir, "Testing", "Temporary", "LastTestsFailed.log")
+    last_test_path = os.path.join(builddir, "Testing", "Temporary", "LastTest.log")
+
+    if not os.path.isfile(last_failed_path) or not os.path.isfile(last_test_path):
+        return
+
+    try:
+        with open(last_failed_path, "r", encoding="utf-8", errors="replace") as f:
+            last_failed_content = f.read()
+        with open(last_test_path, "r", encoding="utf-8", errors="replace") as f:
+            last_test_content = f.read()
+    except OSError:
+        return
+
+    annotations = extract_ctest_annotations(last_failed_content, last_test_content, srcdir)
+    if annotations:
+        print_fancy("\n::group::CTest Failure Annotations (GitHub Actions)", sgr=1)
+        for ann in annotations:
+            msg = escape_workflow_data(ann["message"])
+            title = escape_workflow_data(ann["title"])
+            if ann["file"] and ann["line"]:
+                print(f"::error file={ann['file']},line={ann['line']},title={title}::{msg}")
+            else:
+                print(f"::error title={title}::{msg}")
+        print("::endgroup::\n")
+
