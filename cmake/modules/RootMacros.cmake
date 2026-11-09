@@ -199,14 +199,14 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
   ENDIF()
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-    set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
+    set(ROOT_genreflex_CMD ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:genreflex>)
   elseif(TARGET ROOT::genreflex)
     set(ROOT_genreflex_CMD $<TARGET_FILE:ROOT::genreflex>)
   else()
     set(ROOT_genreflex_CMD ${ROOT_BINDIR}/genreflex)
   endif()
   add_custom_command(
-    COMMAND ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${ROOT_genreflex_CMD}
+    COMMAND ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
          ${ARG_OPTIONS}
          "-I$<JOIN:$<REMOVE_DUPLICATES:$<FILTER:${include_dirs},EXCLUDE,^$>>,;-I>"
