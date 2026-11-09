@@ -30,11 +30,12 @@
 
 #include "../../roofitcore/test/gtest_wrapper.h"
 
+#include <cmath>
 #include <set>
 
 namespace {
 
-std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool normalize, bool useBatchMode)
+std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool normalize)
 {
    RooArgSet normSet{obs};
 
@@ -47,10 +48,6 @@ std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool norm
       out.push_back(normalize ? real.getVal(normSet) : real.getVal());
    }
 
-   if (useBatchMode == false) {
-      return out;
-   }
-
    std::unique_ptr<RooAbsReal> clone;
    if (normalize) {
       clone = RooFit::Detail::compileForNormSet<RooAbsReal>(real, obs);
@@ -61,6 +58,10 @@ std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool norm
    RooFit::Evaluator evaluator(*clone);
    evaluator.setInput(obs.GetName(), binCenters, false);
    std::span<const double> results = evaluator.run();
+   // The scalar getVal() has to agree with the vectorized evaluation.
+   for (std::size_t i = 0; i < out.size(); ++i) {
+      EXPECT_NEAR(out[i], results[i], 1e-12 * std::abs(results[i])) << "bin " << i << ", normalize = " << normalize;
+   }
    out.assign(results.begin(), results.end());
    return out;
 }
@@ -438,7 +439,6 @@ TEST_P(HFFixtureEval, Evaluation)
    const double systEps = 1e-6;
 
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
-   const bool useBatchMode = std::get<2>(GetParam()) != RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy);
 
    RooHelpers::HijackMessageStream evalMessages(RooFit::INFO, RooFit::FastEvaluations);
 
@@ -454,8 +454,8 @@ TEST_P(HFFixtureEval, Evaluation)
    ASSERT_NE(mc, nullptr);
 
    // Test evaluating the model:
-   std::vector<double> normResults = getValues(*channelPdf, *obs, true, useBatchMode);
-   std::vector<double> unnormResults = getValues(*channelPdf, *obs, false, useBatchMode);
+   std::vector<double> normResults = getValues(*channelPdf, *obs, true);
+   std::vector<double> unnormResults = getValues(*channelPdf, *obs, false);
 
    for (int i = 0; i < obs->numBins(); ++i) {
       EXPECT_NEAR(unnormResults[i], _tgtNom[i] / obs->getBinWidth(i), defaultEps);
@@ -471,8 +471,8 @@ TEST_P(HFFixtureEval, Evaluation)
 
       // Test syst up:
       var->setVal(1.);
-      std::vector<double> normResultsSyst = getValues(*channelPdf, *obs, true, useBatchMode);
-      std::vector<double> unnormResultsSyst = getValues(*channelPdf, *obs, false, useBatchMode);
+      std::vector<double> normResultsSyst = getValues(*channelPdf, *obs, true);
+      std::vector<double> unnormResultsSyst = getValues(*channelPdf, *obs, false);
       for (int i = 0; i < obs->numBins(); ++i) {
          EXPECT_NEAR(unnormResultsSyst[i], _tgtSysUp[i] / obs->getBinWidth(i), systEps);
          EXPECT_NEAR(normResultsSyst[i], _tgtSysUp[i] / obs->getBinWidth(i) / (_tgtSysUp[0] + _tgtSysUp[1]), systEps);
@@ -480,8 +480,8 @@ TEST_P(HFFixtureEval, Evaluation)
 
       // Test syst down:
       var->setVal(-1.);
-      normResultsSyst = getValues(*channelPdf, *obs, true, useBatchMode);
-      unnormResultsSyst = getValues(*channelPdf, *obs, false, useBatchMode);
+      normResultsSyst = getValues(*channelPdf, *obs, true);
+      unnormResultsSyst = getValues(*channelPdf, *obs, false);
       for (int i = 0; i < obs->numBins(); ++i) {
          EXPECT_NEAR(unnormResultsSyst[i], _tgtSysDo[i] / obs->getBinWidth(i), systEps);
          EXPECT_NEAR(normResultsSyst[i], _tgtSysDo[i] / obs->getBinWidth(i) / (_tgtSysDo[0] + _tgtSysDo[1]), systEps);
