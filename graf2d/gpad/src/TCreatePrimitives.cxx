@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Id: TCreatePrimitives.cxx,v 1.0
+// @(#)root/gpad:$Id: TCreatePrimitives.cxx
 
 /*************************************************************************
  * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
@@ -14,36 +14,30 @@
 Creates new primitives.
 
 The functions in this static class are called by TPad::ExecuteEvent
-to create new primitives in gPad from the TPad toolbar.
+to create new primitives from the TCanvas toolbar.
 */
+
+#include "TCreatePrimitives.h"
 
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TGraph.h"
 #include "TMarker.h"
 #include "TGroupButton.h"
-#include "TVirtualPad.h"
-#include "TCreatePrimitives.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TMath.h"
 #include "KeySymbols.h"
 #include "TCutG.h"
+#include "TLatex.h"
+#include "TCurlyArc.h"
+#include "TArrow.h"
+#include "TArc.h"
+#include "TPavesText.h"
+#include "TPaveLabel.h"
+#include "TDiamond.h"
+#include "TGraph.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// TCreatePrimitives default constructor.
-
-TCreatePrimitives::TCreatePrimitives()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// TCreatePrimitives destructor.
-
-TCreatePrimitives::~TCreatePrimitives()
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @deprecated
@@ -57,7 +51,7 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 
 /////////////////////////////////////////////
 /// Internal class implementing mouse click/move/relase editing
-/// Used for many classes like line, arrow, arc,
+/// Used for many classes like line, arrow, arc, pad, paves, ...
 class TTwoPointInteractive : public TVirtualPad::TInteractive {
    public:
 
@@ -74,12 +68,15 @@ class TTwoPointInteractive : public TVirtualPad::TInteractive {
    T *Make(TPad &parent, Rest&&... rest)
    {
       if (fObject) {
+         // check that object of expected type
          auto res = dynamic_cast<T *>(fObject);
+         // if not match - just "forget" about it, pad will take care about correct cleanup
          if (!res)
             fObject = nullptr; // failure, interactive will be deleted
          return res;
       }
       auto res2 = new T(std::forward<Rest>(rest)...);
+      // add created object to pad list of primitives, delegating ownership to the pad
       parent.Add(res2);
       fObject = res2;
       return res2;
@@ -94,10 +91,10 @@ class TTwoPointInteractive : public TVirtualPad::TInteractive {
       obj->SetY2(TMath::Max(y, fY0));
    }
 
-   Int_t fMode = 0;
-   Double_t fX0 = 0, fY0 = 0;
-   Int_t fPX0 = 0, fPY0 = 0;
-   TObject *fObject = nullptr;
+   Int_t fMode = 0;               ///< edit mode when interactive action started
+   Double_t fX0 = 0, fY0 = 0;     ///< initial mouse pointer position in user coordiantes
+   Int_t fPX0 = 0, fPY0 = 0;      ///< initial mouse pointer position in pixel coordiantes
+   TObject *fObject = nullptr;    ///< object created by interactive action, owned by pad
 };
 
 
@@ -195,18 +192,19 @@ class TTextEditInteractive : public TVirtualPad::TInteractive {
       return false;
    }
 
-   TLatex *fLatex = nullptr;
-   TPaveLabel *fLabel = nullptr;
-   TPaveText *fPaveText = nullptr;
+   TLatex *fLatex = nullptr;       ///< editing text in TLatex
+   TPaveLabel *fLabel = nullptr;   ///< or in TPaveLabel
+   TPaveText *fPaveText = nullptr; ///< or in TPave(s)Text
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new line/arrow in the specified pad
+/// Create a new line/arrow/pave/subpad in the specified pad
 ///
-///  - Click left button to indicate arrow starting position.
-///  - Move mouse pointer when left button clicked to specify second position
-///  - Release left button to terminate the arrow.
+///  - Click left button to indicate object start position.
+///  - Move mouse pointer when left button pressed to specify second position
+///  - Release left button to stop position/size change
+///  - for TPaveText, TPavesText, TPaveLabel text editing started until Enter key is pressed
 
 void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py)
 {
@@ -253,8 +251,8 @@ void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, I
             if (pobj->InheritsFrom(TPad::Class()))
                npads++;
          }
-         TBox *box = (TBox *) obj;
 
+         auto box = (TBox *) obj;
          Double_t xlow = (parent.XtoPad(box->GetX1()) - parent.GetX1())/(parent.GetX2() - parent.GetX1());
          Double_t ylow = (parent.YtoPad(box->GetY1()) - parent.GetY1())/(parent.GetY2() - parent.GetY1());
          Double_t xup = (parent.XtoPad(box->GetX2()) - parent.GetX1())/(parent.GetX2() - parent.GetX1());
@@ -526,7 +524,6 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       ExecutePolyLine(*pad, mode, event, px, py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TLatex or TMarker at the cursor position in the provided pad
 ///
@@ -575,7 +572,7 @@ void TCreatePrimitives::ExecuteText(TPad &parent, Int_t mode, Int_t event, Int_t
          parent.StartEditing();
          gSystem->ProcessEvents();
          auto ltx = new TLatex(x,y,"<");
-         parent.GetCanvas()->Selected(gPad, ltx, kButton1Down);
+         parent.GetCanvas()->Selected(&parent, ltx, kButton1Down);
          parent.Add(ltx);
          parent.Modified(kTRUE);
          parent.Update();
@@ -619,6 +616,6 @@ void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, In
    case kPad: ExecuteTwoPoint(pad, edit_mode, event, px, py); break;
    case kPolyLine:
    case kCutG: ExecutePolyLine(pad, edit_mode, event, px, py); break;
-   default: break;
+   default: gROOT->SetEditorMode(); break; // any other values dismissed
    }
 }
