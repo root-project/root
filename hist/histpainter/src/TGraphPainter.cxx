@@ -4731,6 +4731,12 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
          theScatter->SetMarkerSize(ms);
       }
       theScatter->TAttMarker::Modify();
+      if (theGraph->GetHistogram()) {
+        Double_t hzmin = theGraph->GetHistogram()->GetMinimum();
+        Double_t hzmax = theGraph->GetHistogram()->GetMaximum();
+        if (theZ[i] < hzmin || theZ[i] > hzmax)
+          continue;
+      }
       if (logx) {
         if (theX[i]>0) x = log10(theX[i]);
         else
