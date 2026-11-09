@@ -27,6 +27,9 @@
 
 namespace ROOT::Internal {
 
+class RReadColumn;
+class RWriteColumn;
+
 // clang-format off
 /**
 \class ROOT::Internal::RColumn
@@ -35,7 +38,7 @@ namespace ROOT::Internal {
 */
 // clang-format on
 class RColumn {
-private:
+protected:
    ROOT::ENTupleColumnType fType;
    /// Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
    /// the offset column with index 0 and the character value column with index 1.
@@ -101,18 +104,20 @@ private:
    }
 
 public:
-   template <typename CppT>
-   static std::unique_ptr<RColumn>
-   Create(ROOT::ENTupleColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
-   {
-      auto column = std::unique_ptr<RColumn>(new RColumn(type, columnIdx, representationIdx));
-      column->fElement = ROOT::Internal::RColumnElementBase::Generate<CppT>(type);
-      return column;
-   }
+   enum class EColumnType {
+      kRead,
+      kWrite
+   };
 
    RColumn(const RColumn &) = delete;
    RColumn &operator=(const RColumn &) = delete;
-   ~RColumn();
+   virtual ~RColumn();
+
+   // Static cast to the derived classes, defined at the end of the header
+   RReadColumn *ForReading();
+   const RReadColumn *ForReading() const;
+   RWriteColumn *ForWriting();
+   const RWriteColumn *ForWriting() const;
 
    /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
    /// with backing storage for this column.  On read back, elements before `firstElementIndex` will cause the zero page
@@ -358,6 +363,58 @@ public:
    std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
    void SetValueRange(double min, double max) { fElement->SetValueRange(min, max); }
 }; // class RColumn
+
+class RReadColumn : public RColumn {
+private:
+   RReadColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
+      : RColumn(type, columnIndex, representationIndex)
+   {
+   }
+
+public:
+   template <typename CppT>
+   static std::unique_ptr<RReadColumn>
+   Create(ROOT::ENTupleColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
+   {
+      auto column = std::unique_ptr<RReadColumn>(new RReadColumn(type, columnIdx, representationIdx));
+      column->fElement = ROOT::Internal::RColumnElementBase::Generate<CppT>(type);
+      return column;
+   }
+};
+
+class RWriteColumn : public RColumn {
+   RWriteColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
+      : RColumn(type, columnIndex, representationIndex)
+   {
+   }
+
+public:
+   template <typename CppT>
+   static std::unique_ptr<RWriteColumn>
+   Create(ROOT::ENTupleColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
+   {
+      auto column = std::unique_ptr<RWriteColumn>(new RWriteColumn(type, columnIdx, representationIdx));
+      column->fElement = ROOT::Internal::RColumnElementBase::Generate<CppT>(type);
+      return column;
+   }
+};
+
+inline RReadColumn *RColumn::ForReading()
+{
+   return static_cast<RReadColumn *>(this);
+}
+inline const RReadColumn *RColumn::ForReading() const
+{
+   return static_cast<const RReadColumn *>(this);
+}
+inline RWriteColumn *RColumn::ForWriting()
+{
+   return static_cast<RWriteColumn *>(this);
+}
+inline const RWriteColumn *RColumn::ForWriting() const
+{
+   return static_cast<const RWriteColumn *>(this);
+}
 
 } // namespace ROOT::Internal
 
