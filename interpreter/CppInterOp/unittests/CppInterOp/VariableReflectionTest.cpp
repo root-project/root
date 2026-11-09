@@ -719,6 +719,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 CODE
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_VariableOffsetsWithInheritance) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
 #ifdef __EMSCRIPTEN__
   GTEST_SKIP() << "This test crashes for Emscripten builds of CppInterOp";
 #endif

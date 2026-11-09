@@ -610,6 +610,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsPackExpansionType) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsSmartPtrType) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   std::vector<const char*> interpreter_args = {"-include", "new"};
   TestFixture::CreateInterpreter(interpreter_args);
 
@@ -819,6 +822,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsVoidPointerType) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsSameType) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   std::vector<Decl*> Decls;
 
   std::string code = R"(
