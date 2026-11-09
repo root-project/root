@@ -251,7 +251,10 @@ void Validator::checkAnalyses()
          error(path + ".likelihood", "likelihood node not found!");
       }
       for (auto const &poi : analysis.parametersOfInterest) {
-         if (!_parameters.count(poi.name) && !sectionOf(poi.name) && !isExternal(poi.name)) {
+         if (char const *section = sectionOf(poi.name)) {
+            error(path, "the parameter of interest '" + poi.name + "' of analysis '" + analysis.name +
+                           "' is defined in \"" + section + "\", but it must be a parameter");
+         } else if (!_parameters.count(poi.name) && !isExternal(poi.name)) {
             error(path, "the object '" + poi.name + "' in \"parameters_of_interest\" of analysis '" + analysis.name +
                            "' does not exist");
          }

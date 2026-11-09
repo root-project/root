@@ -591,6 +591,15 @@ loadData(HS3::Data const &input, RooWorkspace &workspace, RooFit::JSONIO::Detail
    RooJSONFactoryWSTool::error("datasets of type \"point\" like '" + input.name + "' are not supported yet");
 }
 
+// A distribution of the document can be a function in RooFit, or it can be skipped.
+void requirePdf(RooAbsArg const *arg, std::string const &what)
+{
+   if (!dynamic_cast<RooAbsPdf const *>(arg)) {
+      RooJSONFactoryWSTool::error(what + " is " +
+                                  (arg ? std::string("a ") + arg->ClassName() + ", not a pdf" : "not imported"));
+   }
+}
+
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
                     const std::vector<std::unique_ptr<RooAbsData>> &datasets)
@@ -615,9 +624,14 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    }
    HS3::Likelihood const &likelihood = *foundLikelihood;
 
+   auto checkPdf = [&](RooAbsArg const *arg, std::string const &name, std::string const &what) {
+      requirePdf(arg, "the " + what + " '" + name + "' of analysis '" + analysisName + "'");
+   };
+
    std::vector<std::string> nllDistNames;
    nllDistNames.reserve(likelihood.terms.size());
    for (auto const &term : likelihood.terms) {
+      checkPdf(workspace.arg(term.distribution.name), term.distribution.name, "distribution");
       nllDistNames.push_back(term.distribution.name);
    }
    // The constraint terms of HistFactory distributions are listed as auxiliary distributions, but they are part of the
@@ -634,6 +648,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (!extConstraint) {
          continue;
       }
+      checkPdf(extConstraint, aux.name, "auxiliary distribution");
       // Only if the constraint really ended up in a distribution of the likelihood.
       if (channelConstraints.count(aux.name) &&
           std::any_of(nllDistNames.begin(), nllDistNames.end(), [&](std::string const &distName) {
@@ -692,8 +707,9 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       mc->SetExternalConstraints(extConstraints);
 
    if (analysis.prior) {
-      if (RooAbsPdf *prior = workspace.pdf(analysis.prior->name)) {
-         mc->SetPriorPdf(*prior);
+      if (RooAbsArg *prior = workspace.arg(analysis.prior->name)) {
+         checkPdf(prior, analysis.prior->name, "prior");
+         mc->SetPriorPdf(static_cast<RooAbsPdf &>(*prior));
       }
    }
 
@@ -703,6 +719,11 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (!arg) {
          RooJSONFactoryWSTool::error("the object '" + poi.name + "' in \"parameters_of_interest\" of analysis '" +
                                      analysisName + "' does not exist");
+      }
+      if (!dynamic_cast<RooRealVar *>(arg)) {
+         RooJSONFactoryWSTool::error("the parameter of interest '" + poi.name + "' of analysis '" + analysisName +
+                                     "' is a " + arg->ClassName() + ", not a variable" +
+                                     (dynamic_cast<RooConstVar *>(arg) ? ", because no domain lists it" : ""));
       }
       parametersOfInterest.add(*arg);
    }
@@ -782,7 +803,10 @@ void combinePdfs(HS3Document const &doc, RooWorkspace &ws)
 
       for (std::size_t iChannel = 0; iChannel < info.labels.size(); ++iChannel) {
          indexCat.defineType(info.labels[iChannel], info.indices[iChannel]);
-         pdfMap[info.labels[iChannel]] = ws.pdf(info.distributions[iChannel].name);
+         std::string const &name = info.distributions[iChannel].name;
+         requirePdf(ws.arg(name),
+                    "the distribution '" + name + "' of the combined distribution '" + combinedName + "'");
+         pdfMap[info.labels[iChannel]] = ws.pdf(name);
       }
 
       RooSimultaneous simPdf{combinedName.c_str(), combinedName.c_str(), pdfMap, indexCat};
