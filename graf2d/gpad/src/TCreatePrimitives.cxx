@@ -30,11 +30,6 @@ to create new primitives in gPad from the TPad toolbar.
 #include "KeySymbols.h"
 #include "TCutG.h"
 
-TPave *TCreatePrimitives::fgPave = nullptr;
-TPaveText *TCreatePrimitives::fgPaveText = nullptr;
-TPavesText *TCreatePrimitives::fgPavesText = nullptr;
-TDiamond *TCreatePrimitives::fgDiamond = nullptr;
-TPaveLabel *TCreatePrimitives::fgPaveLabel = nullptr;
 TBox *TCreatePrimitives::fgPadBBox = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,16 +53,16 @@ TCreatePrimitives::~TCreatePrimitives()
 void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
    if (auto pad = dynamic_cast<TPad *>(gPad))
-      ExecuteLine(*pad, mode, event, px, py);
+      ExecuteTwoPoint(*pad, mode, event, px, py);
 }
 
 /////////////////////////////////////////////
 /// Internal class implementing mouse click/move/relase editing
 /// Used for many classes like line, arrow, arc,
-class TLineEditInteractive : public TVirtualPad::TInteractive {
+class TTwoPointInteractive : public TVirtualPad::TInteractive {
    public:
 
-   TLineEditInteractive(Int_t mode, Double_t x0, Double_t y0, Int_t px0, Int_t py0)
+   TTwoPointInteractive(Int_t mode, Double_t x0, Double_t y0, Int_t px0, Int_t py0)
    {
       fMode = mode;
       fX0 = x0;
@@ -91,11 +86,106 @@ class TLineEditInteractive : public TVirtualPad::TInteractive {
       return res2;
    }
 
+   void SetPaveCoord(TPave *pave, Double_t x, Double_t y)
+   {
+      pave->SetX1(TMath::Min(x, fX0));
+      pave->SetX2(TMath::Max(x, fX0));
+      pave->SetY1(TMath::Min(y, fY0));
+      pave->SetY2(TMath::Max(y, fY0));
+   }
 
    Int_t fMode = 0;
    Double_t fX0 = 0, fY0 = 0;
    Int_t fPX0 = 0, fPY0 = 0;
    TObject *fObject = nullptr;
+};
+
+
+/////////////////////////////////////////////
+/// Internal class implementing text editing
+class TTextEditInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   TTextEditInteractive(TLatex *ltx)
+   {
+      fLatex = ltx;
+   }
+
+   TTextEditInteractive(TPaveLabel *lbl)
+   {
+      fLabel = lbl;
+   }
+
+   TObject *GetObject() const
+   {
+      if (fLatex)
+         return fLatex;
+      if (fLabel)
+         return fLabel;
+      return nullptr;
+   }
+
+   TString GetText() const
+   {
+      if (fLatex)
+         return fLatex->GetTitle();
+      if (fLabel)
+         return fLabel->GetLabel();
+      return "";
+   }
+
+   void SetText(const TString &s)
+   {
+      if (fLatex)
+         fLatex->SetTitle(s);
+      else if (fLabel)
+         return fLabel->SetLabel(s);
+   }
+
+   void FinishEditing()
+   {
+      auto s = GetText();
+      Int_t l = s.Length();
+      if (l > 1) {
+         s.Remove(l-1);
+         SetText(s);
+      }
+   }
+
+   bool ProcessKeyPress(TPad &parent, Int_t py)
+   {
+      if ((py == kKey_Return) || (py == kKey_Enter)) {
+         FinishEditing();
+         gSystem->ProcessEvents();
+         parent.Modified(kTRUE);
+         gROOT->SetEditorMode();
+         parent.Update();
+         parent.GetCanvas()->Selected(&parent, GetObject(), kButton1Down);
+         return true;
+      }
+
+      auto s = GetText();
+      Int_t l = s.Length();
+
+      if (py == kKey_Backspace) {
+         if (l > 1) {
+            s.Replace(l-2, 2, "<");
+            SetText(s);
+            parent.Modified(kTRUE);
+            parent.Update();
+         }
+      } else if (isprint(py)) {
+         s.Insert(l - 1, (char)py);
+         SetText(s);
+         parent.Modified(kTRUE);
+         parent.Update();
+      }
+
+      return false;
+   }
+
+   TLatex *fLatex = nullptr;
+   TPaveLabel *fLabel = nullptr;
 };
 
 
@@ -106,18 +196,29 @@ class TLineEditInteractive : public TVirtualPad::TInteractive {
 ///  - Move mouse pointer when left button clicked to specify second position
 ///  - Release left button to terminate the arrow.
 
-void TCreatePrimitives::ExecuteLine(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py)
+void TCreatePrimitives::ExecuteTwoPoint(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py)
 {
+   // special branch for text editing
+   if (mode == kPaveLabel) {
+      parent.EventPave(); // TODO: check if this is really needed
+      auto inter_edit = parent.GetInteractive<TTextEditInteractive>(&parent);
+      if (inter_edit) {
+         if ((event == kKeyPress) && inter_edit->ProcessKeyPress(parent, py))
+            parent.FreeInteractive(&parent);
+         return;
+      }
+   }
+
    Double_t x = parent.PadtoX(parent.AbsPixeltoX(px));
    Double_t y = parent.PadtoY(parent.AbsPixeltoY(py));
 
    // first mouse click
    if (event == kButton1Down) {
-      parent.MakeInteractive<TLineEditInteractive>(&parent, mode, x, y, px, py);
+      parent.MakeInteractive<TTwoPointInteractive>(&parent, mode, x, y, px, py);
       return;
    }
 
-   auto inter = parent.GetInteractive<TLineEditInteractive>(&parent);
+   auto inter = parent.GetInteractive<TTwoPointInteractive>(&parent);
    if (!inter)
       return;
 
@@ -129,10 +230,16 @@ void TCreatePrimitives::ExecuteLine(TPad &parent, Int_t mode, Int_t event, Int_t
 
    // when mouse released - finish interactive
    if (event == kButton1Up) {
-      if (inter->fObject)
-         parent.GetCanvas()->Selected(&parent, inter->fObject, kButton1Down);
+      auto obj = inter->fObject;
+      if (obj)
+         parent.GetCanvas()->Selected(&parent, obj, kButton1Down);
+
       parent.FreeInteractive(&parent);
-      gROOT->SetEditorMode();
+
+      if ((mode == kPaveLabel) && obj)
+         parent.MakeInteractive<TTextEditInteractive>(&parent, (TPaveLabel *)obj);
+      else
+         gROOT->SetEditorMode();
       return;
    }
 
@@ -183,6 +290,26 @@ void TCreatePrimitives::ExecuteLine(TPad &parent, Int_t mode, Int_t event, Int_t
          ellipse->SetY1(0.5*(y + inter->fY0));
       }
       break;
+   case kPave:
+      if (auto pave = inter->Make<TPave>(parent, x, y, x, y))
+         inter->SetPaveCoord(pave, x, y);
+      break;
+   case kPaveLabel:
+      if (auto pave = inter->Make<TPaveLabel>(parent, x, y, x, y, ">"))
+         inter->SetPaveCoord(pave, x, y);
+      break;
+   case kPaveText:
+      if (auto pave = inter->Make<TPaveText>(parent, x, y, x, y))
+         inter->SetPaveCoord(pave, x, y);
+      break;
+   case kPavesText:
+      if (auto pave = inter->Make<TPavesText>(parent, x, y, x, y))
+         inter->SetPaveCoord(pave, x, y);
+      break;
+   case kDiamond:
+      if (auto diamond = inter->Make<TDiamond>(parent, x, y, x, y))
+         inter->SetPaveCoord(diamond, x, y);
+      break;
 
    default: break;
    }
@@ -201,7 +328,7 @@ void TCreatePrimitives::ExecuteLine(TPad &parent, Int_t mode, Int_t event, Int_t
 void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
    if (auto pad = dynamic_cast<TPad *>(gPad))
-      ExecuteLine(*pad, mode, event, px, py);
+      ExecuteTwoPoint(*pad, mode, event, px, py);
 }
 
 
@@ -292,219 +419,13 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new pavetext in gPad.
-///
-///  - Click left button to indicate one corner of the pavelabel.
-///  - Release left button at the opposite corner.
+/// @deprecated
+/// Create a new pave-derived object in gPad.
 
 void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   static Double_t x0, y0;
-   Double_t xp0,xp1,yp0,yp1,xold,yold;
-
-   if (mode == kPaveLabel)
-      ((TPad *)gPad)->EventPave();
-
-   switch (event) {
-
-   case kKeyPress:
-      if (mode == kPaveLabel) {
-         if ((py == kKey_Return) || (py == kKey_Enter)) {
-            TString s(fgPaveLabel->GetTitle());
-            Int_t l = s.Length();
-            s.Remove(l-1);
-            fgPaveLabel->SetLabel(s.Data());
-            gSystem->ProcessEvents();
-            gPad->Modified(kTRUE);
-            gROOT->SetEditorMode();
-            gPad->Update();
-            fgPaveLabel = nullptr;
-         } else if (py == kKey_Backspace) {
-            TString s(fgPaveLabel->GetTitle());
-            Int_t l = s.Length();
-            if (l>1) {
-               s.Replace(l-2, 2, "<");
-               fgPaveLabel->SetLabel(s.Data());
-               gPad->Modified(kTRUE);
-               gPad->Update();
-            }
-         } else if (isprint(py)) {
-            TString s(fgPaveLabel->GetTitle());
-            Int_t l = s.Length();
-            s.Insert(l-1,(char)py);
-            fgPaveLabel->SetLabel(s.Data());
-            gPad->Modified(kTRUE);
-            gPad->Update();
-         }
-      }
-      break;
-
-   case kButton1Down:
-      x0 = gPad->AbsPixeltoX(px);
-      y0 = gPad->AbsPixeltoY(py);
-      break;
-
-   case kButton1Motion:
-      xold = gPad->AbsPixeltoX(px);
-      yold = gPad->AbsPixeltoY(py);
-
-      xp0 = gPad->PadtoX(x0);
-      xp1 = gPad->PadtoX(xold);
-      yp0 = gPad->PadtoY(y0);
-      yp1 = gPad->PadtoY(yold);
-
-      if (mode == kPave) {
-         if (fgPave) {
-            if (xold < x0) {
-               fgPave->SetX1(xold);
-               fgPave->SetX2(x0);
-            } else {
-               fgPave->SetX1(x0);
-               fgPave->SetX2(xold);
-            }
-            if (yold < y0) {
-               fgPave->SetY1(yold);
-               fgPave->SetY2(y0);
-            } else {
-               fgPave->SetY1(y0);
-               fgPave->SetY2(yold);
-            }
-         } else {
-            fgPave = new TPave(xp0,yp0,xp1,yp1);
-            fgPave->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-
-      if (mode == kPaveText ) {
-         if (fgPaveText){
-            if (xold < x0) {
-               fgPaveText->SetX1(xold);
-               fgPaveText->SetX2(x0);
-            } else {
-               fgPaveText->SetX1(x0);
-               fgPaveText->SetX2(xold);
-            }
-            if (yold < y0) {
-               fgPaveText->SetY1(yold);
-               fgPaveText->SetY2(y0);
-            } else {
-               fgPaveText->SetY1(y0);
-               fgPaveText->SetY2(yold);
-            }
-         } else {
-            fgPaveText = new TPaveText(xp0,yp0,xp1,yp1);
-            fgPaveText->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-
-      if (mode == kPavesText) {
-         if (fgPavesText){
-            if (xold < x0) {
-               fgPavesText->SetX1(xold);
-               fgPavesText->SetX2(x0);
-            } else {
-               fgPavesText->SetX1(x0);
-               fgPavesText->SetX2(xold);
-            }
-            if (yold < y0) {
-               fgPavesText->SetY1(yold);
-               fgPavesText->SetY2(y0);
-            } else {
-               fgPavesText->SetY1(y0);
-               fgPavesText->SetY2(yold);
-            }
-         } else {
-            fgPavesText = new TPavesText(xp0,yp0,xp1,yp1);
-            fgPavesText->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-
-      if (mode == kPaveLabel) {
-         if (fgPaveLabel){
-            if (xold < x0) {
-               fgPaveLabel->SetX1(xold);
-               fgPaveLabel->SetX2(x0);
-            } else {
-               fgPaveLabel->SetX1(x0);
-               fgPaveLabel->SetX2(xold);
-            }
-            if (yold < y0) {
-               fgPaveLabel->SetY1(yold);
-               fgPaveLabel->SetY2(y0);
-            } else {
-               fgPaveLabel->SetY1(y0);
-               fgPaveLabel->SetY2(yold);
-            }
-         } else {
-            fgPaveLabel = new TPaveLabel(xp0,yp0,xp1,yp1,">");
-            fgPaveLabel->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-
-      if (mode == kDiamond) {
-         if (fgDiamond){
-            if (xold < x0) {
-               fgDiamond->SetX1(xold);
-               fgDiamond->SetX2(x0);
-            } else {
-               fgDiamond->SetX1(x0);
-               fgDiamond->SetX2(xold);
-            }
-            if (yold < y0) {
-               fgDiamond->SetY1(yold);
-               fgDiamond->SetY2(y0);
-            } else {
-               fgDiamond->SetY1(y0);
-               fgDiamond->SetY2(yold);
-            }
-         } else {
-            fgDiamond = new TDiamond(x0,y0,xold,yold);
-            fgDiamond->Draw();
-         }
-         gPad->Modified(kTRUE);
-         gPad->Update();
-      }
-      break;
-
-   case kButton1Up:
-      gPad->GetCanvas()->Selected(gPad, fgPave, kButton1Down);
-      if (mode == kPave) {
-         gPad->GetCanvas()->Selected(gPad, fgPave, kButton1Down);
-         fgPave = nullptr;
-      }
-      if (mode == kPaveText ) {
-         gPad->GetCanvas()->Selected(gPad, fgPaveText, kButton1Down);
-         fgPaveText = nullptr;
-      }
-      if (mode == kPavesText) {
-         gPad->GetCanvas()->Selected(gPad, fgPavesText, kButton1Down);
-         fgPavesText = nullptr;
-      }
-      if (mode == kDiamond)   {
-         gPad->GetCanvas()->Selected(gPad, fgDiamond, kButton1Down);
-         fgDiamond = nullptr;
-      }
-      if (mode == kPaveLabel) {
-         gPad->GetCanvas()->Selected(gPad, fgPaveLabel, kButton1Down);
-         ((TPad *)gPad)->StartEditing();
-         gSystem->ProcessEvents();
-         if (mode == kPaveLabel) {
-            gPad->Modified(kTRUE);
-            gPad->Update();
-            break;
-         }
-      }
-      gROOT->SetEditorMode();
-      break;
-   }
+   if (auto pad = dynamic_cast<TPad *>(gPad))
+      ExecuteTwoPoint(*pad, mode, event, px, py);
 }
 
 
@@ -614,10 +535,8 @@ void TCreatePrimitives::ExecutePolyLine(TPad &parent, Int_t mode, Int_t event, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @deprecated
 /// Create a new PolyLine in gPad.
-///
-///  - Click left button to indicate a new point.
-///  - Click left button at same place or double click to close the polyline.
 
 void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -625,49 +544,6 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       ExecutePolyLine(*pad, mode, event, px, py);
 }
 
-
-/////////////////////////////////////////////
-/// Internal class implementing tlatex editing
-class TTextEditInteractive : public TVirtualPad::TInteractive {
-   public:
-
-   TTextEditInteractive(TLatex *ltx)
-   {
-      fLatex = ltx;
-   }
-
-   void FinishEditing()
-   {
-      TString s = fLatex->GetTitle();
-      Int_t l = s.Length();
-      if (l > 1) {
-         // keep dummy symbol to let select it afterwards
-         s.Remove(l-1);
-         fLatex->SetTitle(s.Data());
-      }
-   }
-
-   bool PressBackspace()
-   {
-      TString s(fLatex->GetTitle());
-      Int_t l = s.Length();
-      if (l < 2)
-         return false;
-      s.Replace(l-2, 2, "<");
-      fLatex->SetTitle(s.Data());
-      return true;
-   }
-
-   void AppendChar(char c)
-   {
-      TString s = fLatex->GetTitle();
-      Int_t l = s.Length();
-      s.Insert(l-1, c);
-      fLatex->SetTitle(s.Data());
-   }
-
-   TLatex *fLatex = nullptr;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TLatex or TMarker at the cursor position in the provided pad
@@ -678,39 +554,19 @@ class TTextEditInteractive : public TVirtualPad::TInteractive {
 
 void TCreatePrimitives::ExecuteText(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py)
 {
-   auto inter = (mode == kEditor) ? parent.GetInteractive<TTextEditInteractive>(&parent) : nullptr;
-   if (inter && !parent.FindObject(inter->fLatex)) {
+   auto inter = (mode == kText) ? parent.GetInteractive<TTextEditInteractive>(&parent) : nullptr;
+   if (inter && !parent.FindObject(inter->GetObject())) {
       parent.FreeInteractive(&parent);
       inter = nullptr;
    }
 
    switch (event) {
 
-   case kKeyPress: {
+   case kKeyPress:
       // only modify in editor mode
-      if (!inter)
-         break;
-
-      if ((py == kKey_Return) || (py == kKey_Enter)) {
-         inter->FinishEditing();
-         gSystem->ProcessEvents();
-         parent.Modified(kTRUE);
-         gROOT->SetEditorMode();
-         parent.Update();
-         parent.GetCanvas()->Selected(gPad, inter->fLatex, kButton1Down);
+      if (inter && inter->ProcessKeyPress(parent, py))
          parent.FreeInteractive(&parent);
-      } else if (py == kKey_Backspace) {
-         if (inter->PressBackspace()) {
-            parent.Modified(kTRUE);
-            parent.Update();
-         }
-      } else if (isprint(py)) {
-         inter->AppendChar((char)py);
-         parent.Modified(kTRUE);
-         parent.Update();
-      }
       break;
-   }
 
    case kButton1Down: {
       if (inter) {
@@ -720,7 +576,7 @@ void TCreatePrimitives::ExecuteText(TPad &parent, Int_t mode, Int_t event, Int_t
          parent.Modified(kTRUE);
          gROOT->SetEditorMode();
          parent.Update();
-         parent.GetCanvas()->Selected(gPad, inter->fLatex, kButton1Down);
+         parent.GetCanvas()->Selected(&parent, inter->fLatex, kButton1Down);
          parent.FreeInteractive(&parent);
          break;
       }
@@ -734,14 +590,13 @@ void TCreatePrimitives::ExecuteText(TPad &parent, Int_t mode, Int_t event, Int_t
          parent.Add(marker);
          gROOT->SetEditorMode();
       } else if (mode == kText) {
-         ((TPad *)&parent)->StartEditing();
+         parent.StartEditing();
          gSystem->ProcessEvents();
          auto ltx = new TLatex(x,y,"<");
          parent.GetCanvas()->Selected(gPad, ltx, kButton1Down);
          parent.Add(ltx);
          parent.Modified(kTRUE);
          parent.Update();
-         gROOT->SetEditorMode("Editor"); // switch to text editing
          parent.MakeInteractive<TTextEditInteractive>(&parent, ltx);
       }
       break;
@@ -749,9 +604,8 @@ void TCreatePrimitives::ExecuteText(TPad &parent, Int_t mode, Int_t event, Int_t
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// @deprectaed
+/// @deprecated
 /// Create a new TLatex or TMarker at the cursor position in gPad.
 
 void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
@@ -759,7 +613,6 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
    if (auto pad = dynamic_cast<TPad *>(gPad))
       ExecuteText(*pad, mode, event, px, py);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle edit mode in the TPad
@@ -770,22 +623,20 @@ void TCreatePrimitives::ExecuteEvent(TPad &pad, Int_t edit_mode, Int_t event, In
    switch (edit_mode) {
    case kPad: Pad(event, px, py, 0); break;
    case kMarker:
-   case kText:
-   case kEditor: ExecuteText(pad, edit_mode, event, px, py); break;
+   case kText: ExecuteText(pad, edit_mode, event, px, py); break;
    case kLine:
    case kArrow:
    case kCurlyLine:
    case kCurlyArc:
    case kArc:
-   case kEllipse: ExecuteLine(pad, edit_mode, event, px, py); break;
-   case kPolyLine:
-   case kCutG: ExecutePolyLine(pad, edit_mode, event, px, py); break;
-   case kButton:
+   case kEllipse:
    case kPave:
    case kPaveLabel:
    case kPaveText:
    case kPavesText:
-   case kDiamond: Pave(event, px, py, edit_mode); break;
+   case kDiamond: ExecuteTwoPoint(pad, edit_mode, event, px, py); break;
+   case kPolyLine:
+   case kCutG: ExecutePolyLine(pad, edit_mode, event, px, py); break;
    default: break;
    }
 }
