@@ -58,6 +58,7 @@
 #include "TImage.h"
 #include "TViewer3DPad.h"
 #include "TCreatePrimitives.h"
+#include "TArrow.h"
 #include "TLegend.h"
 #include "TAtt3D.h"
 #include "TVirtualPadPainter.h"
