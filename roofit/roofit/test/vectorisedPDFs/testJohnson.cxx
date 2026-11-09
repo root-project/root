@@ -92,9 +92,8 @@ COMPARE_FIXED_VALUES_UNNORM(TestJohnsonInMassAndMu, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestJohnsonInMassAndMu, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestJohnsonInMassAndMu, CompareFixedNormLog)
 
-// Is it clear that the fits can infer the value of lambda when generating in mu?
 FIT_TEST_SCALAR(TestJohnsonInMassAndMu, DISABLED_FitScalar)
-FIT_TEST_BATCH(TestJohnsonInMassAndMu, DISABLED_FitBatch)
+FIT_TEST_BATCH(TestJohnsonInMassAndMu, FitBatch)
 FIT_TEST_BATCH_VS_SCALAR(TestJohnsonInMassAndMu, CompareBatchScalar)
 
 class TestJohnsonWithFormulaParameters : public PDFTest {

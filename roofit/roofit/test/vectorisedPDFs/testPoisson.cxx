@@ -49,7 +49,7 @@ protected:
    }
 };
 
-FIT_TEST_BATCH(TestPoissonOddMean, DISABLED_RunBatch)
+FIT_TEST_BATCH(TestPoissonOddMean, RunBatch)
 FIT_TEST_BATCH_VS_SCALAR(TestPoissonOddMean, CompareBatchScalar)
 
 class TestPoissonOddMeanNoRounding : public PDFTest {
@@ -74,7 +74,6 @@ COMPARE_FIXED_VALUES_UNNORM(TestPoissonOddMeanNoRounding, CompareFixedValuesUnno
 COMPARE_FIXED_VALUES_NORM(TestPoissonOddMeanNoRounding, CompareFixedValuesNorm);
 COMPARE_FIXED_VALUES_NORM_LOG(TestPoissonOddMeanNoRounding, CompareFixedValuesNormLog);
 
-// Fit tests have a small bias. Unclear why.
 FIT_TEST_SCALAR(TestPoissonOddMeanNoRounding, DISABLED_RunScalar)
-FIT_TEST_BATCH(TestPoissonOddMeanNoRounding, DISABLED_RunBatch)
+FIT_TEST_BATCH(TestPoissonOddMeanNoRounding, RunBatch)
 FIT_TEST_BATCH_VS_SCALAR(TestPoissonOddMeanNoRounding, CompareBatchScalar)

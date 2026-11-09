@@ -222,7 +222,7 @@ COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGaussWeighted, CompareFixedNormLog)
 
 FIT_TEST_SCALAR(TestNonVecGaussWeighted,
                 DISABLED_RunScalar) // Would need SumW2 error matrix correction, but no done in macro
-FIT_TEST_BATCH(TestNonVecGaussWeighted, DISABLED_RunBatch) // As above
+FIT_TEST_BATCH(TestNonVecGaussWeighted, RunBatch)
 FIT_TEST_BATCH_VS_SCALAR(TestNonVecGaussWeighted, CompareBatchScalar)
 
 class TestNonVecGaussInMeanAndX : public PDFTest {

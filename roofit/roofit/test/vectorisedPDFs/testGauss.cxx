@@ -75,8 +75,7 @@ protected:
    }
 };
 
-FIT_TEST_BATCH(TestGaussWeighted,
-               DISABLED_RunBatch) // Would need SumW2 or asymptotic error correction, but that's not in test macro.
+FIT_TEST_BATCH(TestGaussWeighted, RunBatch)
 FIT_TEST_BATCH_VS_SCALAR(TestGaussWeighted, CompareBatchScalar)
 
 #endif // !defined(_MSC_VER)

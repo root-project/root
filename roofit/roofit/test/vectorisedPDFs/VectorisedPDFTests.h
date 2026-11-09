@@ -166,6 +166,14 @@ protected:
       checkParameters();                      \
    }
 
+/// Run a fit in batch mode and only check that it converges.
+#define FIT_TEST_BATCH_CONVERGES(TEST_CLASS, TEST_NAME) \
+   TEST_F(TEST_CLASS, TEST_NAME)                        \
+   {                                                    \
+      auto result = runBatchFit(_pdf.get());            \
+      ASSERT_NE(result, nullptr);                       \
+   }
+
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 
 /// Run a fit for batch and scalar code and compare results.
