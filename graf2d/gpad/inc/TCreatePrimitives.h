@@ -28,8 +28,6 @@ class TCreatePrimitives {
 
 private:
 
-   static TBox *fgPadBBox;
-
    static void ExecuteTwoPoint(TPad &pad, Int_t mode, Int_t event, Int_t px, Int_t py);
    static void ExecuteText(TPad &pad, Int_t mode, Int_t event, Int_t px, Int_t py);
    static void ExecutePolyLine(TPad &parent, Int_t mode, Int_t event, Int_t px, Int_t py);
@@ -40,7 +38,7 @@ public:
    virtual ~TCreatePrimitives();
    static void R__DEPRECATED(7,00, "Will be removed from public API") Ellipse(Int_t event, Int_t px, Int_t py,Int_t mode);
    static void R__DEPRECATED(7,00, "Will be removed from public API") Line(Int_t event, Int_t px, Int_t py, Int_t mode);
-   static void Pad(Int_t event, Int_t px, Int_t py, Int_t);
+   static void R__DEPRECATED(7,00, "Will be removed from public API") Pad(Int_t event, Int_t px, Int_t py, Int_t);
    static void R__DEPRECATED(7,00, "Will be removed from public API") Pave(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void R__DEPRECATED(7,00, "Will be removed from public API") PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode);
    static void R__DEPRECATED(7,00, "Will be removed from public API") Text(Int_t event, Int_t px, Int_t py, Int_t mode);
