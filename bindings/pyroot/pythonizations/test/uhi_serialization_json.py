@@ -87,6 +87,15 @@ class TestTH1Serialization:
 
         assert (axis["lower"], axis["upper"], axis["bins"]) == (0, 10, 10)
 
+    def test_variable_axis(self):
+        edges = [0.0, 1.0, 5.0, 10.0]
+        h = ROOT.TH1D("h1_variable", "h1_variable", 3, np.array(edges))
+
+        axis = h._to_uhi_()["axes"][0]
+
+        assert axis["type"] == "variable"
+        assert axis["edges"] == edges
+
     def test_uhi_protocol_object(self):
         values = np.arange(12.0)
 
