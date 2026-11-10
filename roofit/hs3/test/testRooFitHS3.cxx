@@ -7824,3 +7824,40 @@ TEST(RooFitHS3, HistFactoryConstraintSharedWithOtherPdf)
       expectExportThrowsWithError(wsTagged, error);
    }
 }
+
+// The variates of an array distribution are the observables of its components: a likelihood term that shares one of
+// them with an array is rejected like any other shared variate.
+TEST(RooFitHS3, ArrayDistVariatesInLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto document = [](std::string const &aux) {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "model", "type": "gaussian_dist", "x": "obs", "mean": "a", "sigma": 1.0},
+         {"name": "constraints", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_a", "mean": "a"}, {"x": "nom_b", "mean": "b"}]},
+         {"name": "other", "type": "gaussian_dist", "x": "nom_b", "mean": "b", "sigma": 2.0}
+      ],
+      "data": [{"name": "data", "type": "unbinned", "axes": [{"name": "obs", "min": -5.0, "max": 5.0}],
+                "entries": [[0.3]]}],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "obs", "min": -5.0, "max": 5.0}, {"name": "a", "min": -5.0, "max": 5.0},
+         {"name": "b", "min": -5.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "nom_a", "value": 0.0, "const": true}, {"name": "nom_b", "value": 0.0, "const": true}]}],
+      "likelihoods": [{"name": "lh", "distributions": ["model"], "data": ["data"], "aux_distributions": )" +
+             aux + R"(}],
+      "analyses": [{"name": "an", "likelihood": "lh", "domains": ["default_domain"]}]
+   })";
+   };
+   {
+      RooWorkspace ws;
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(document(R"(["constraints"])")));
+   }
+   expectImportThrowsWithError(document(R"(["constraints", "other"])"),
+                               "the variate 'nom_b' is shared by the terms 'constraints' and 'other' of the "
+                               "likelihood 'lh'");
+}

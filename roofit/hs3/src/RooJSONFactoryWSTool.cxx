@@ -675,7 +675,8 @@ std::vector<std::string> combinedComponents(JSONNode const &node, const char *fi
 
 // The variates of the distribution `name` of the document: the "x" of a fundamental distribution (a name or a list)
 // and the axes of a distribution with axes (e.g. histfactory_dist), through products, mixtures and combined
-// distributions. The constraint terms named by a histfactory_dist are terms of their own, see likelihoodTerms().
+// distributions, and the "x" of the components of an array distribution. The constraint terms named by a
+// histfactory_dist are terms of their own, see likelihoodTerms().
 void collectVariates(JSONNode const &rootnode, std::string const &name, std::set<std::string> &out,
                      std::set<std::string> &visited)
 {
@@ -709,6 +710,14 @@ void collectVariates(JSONNode const &rootnode, std::string const &name, std::set
       recurse(namesIn("summands"));
    } else if (type == "combined_dist") {
       recurse(combinedComponents(*node, "dist"));
+   } else if (type == "array_dist") {
+      if (JSONNode const *components = node->find("components")) {
+         for (JSONNode const &component : components->children()) {
+            if (JSONNode const *x = component.find("x")) {
+               addNames(*x, out);
+            }
+         }
+      }
    } else {
       if (JSONNode const *x = node->find("x")) {
          addNames(*x, out);
