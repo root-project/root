@@ -119,7 +119,7 @@ def _resolve_slice_indices(self, index, axis, flow=True):
     return start, stop
 
 
-def _apply_actions(hist, actions, index, unprocessed_index, original_hist):
+def _apply_actions(hist, actions, index, original_hist):
     """Apply rebinning or summing actions to the histogram, returns a new histogram"""
     if not actions or all(a is None for a in actions):
         return hist
@@ -131,8 +131,7 @@ def _apply_actions(hist, actions, index, unprocessed_index, original_hist):
             # h[::sum] is equivalent to h.Integral(0, nbins+1)
             # h[0:len:sum] is equivalent to h.Integral(1, nbins)
             start, stop = index[0].start, index[0].stop
-            include_oflow = True if unprocessed_index.stop is None else False
-            args = [start, stop - (1 if not include_oflow else 0)]
+            args = [start, stop - 1]
             hist = _sum(original_hist, sum_axes, args)
         else:
             hist = _sum(hist, sum_axes)
@@ -165,7 +164,7 @@ def _get_processed_slices(self, index):
     return processed_slices, actions
 
 
-def _slice_get(self, index, unprocessed_index):
+def _slice_get(self, index):
     """
     This method creates a new histogram containing only the data from the
     specified slice.
@@ -182,7 +181,7 @@ def _slice_get(self, index, unprocessed_index):
 
     target_hist = ROOT.Internal.Slice(self, args_vec)
 
-    return _apply_actions(target_hist, actions, index, unprocessed_index, self)
+    return _apply_actions(target_hist, actions, index, self)
 
 
 def _slice_set(self, index, unprocessed_index, value):
@@ -231,7 +230,7 @@ def _slice_set(self, index, unprocessed_index, value):
 
     ROOT.Internal.SetSliceContent(self, value, slice_edges)
 
-    _apply_actions(self, actions, index, unprocessed_index, self)
+    _apply_actions(self, actions, index, self)
 
 
 def _getitem(self, index):
@@ -239,7 +238,7 @@ def _getitem(self, index):
     if all(isinstance(i, int) for i in uhi_index):
         return self.GetBinContent(*uhi_index)
     if any(isinstance(i, slice) for i in uhi_index):
-        return _slice_get(self, uhi_index, index)
+        return _slice_get(self, uhi_index)
 
 
 def _setitem(self, index, value):

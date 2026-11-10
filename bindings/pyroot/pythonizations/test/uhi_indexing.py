@@ -296,6 +296,22 @@ class TestTH1Indexing:
             assert isinstance(sliced_hist, ROOT.TH2)
             assert np.array_equal(sliced_hist.values(), hist_setup[:: rebin(2), ::sum, 3 : 9 : rebin(3)].values())
 
+    def test_action_sum_index_forms_1d(self, hist_setup):
+        # A bare sum, a tuple or a dict index must give the same integral as a slice
+        if _special_setting(hist_setup):
+            pytest.skip("Slicing cannot be tested here")
+
+        if hist_setup.GetDimension() != 1:
+            pytest.skip("Only 1D histograms are integrated")
+
+        full_integral = hist_setup.Integral(_underflow(hist_setup, 0), _overflow(hist_setup, 0))
+        for action in (sum, builtins.sum):
+            assert hist_setup[action] == full_integral
+            assert hist_setup[(slice(None, None, action),)] == full_integral
+            assert hist_setup[{0: slice(None, None, action)}] == full_integral
+            assert hist_setup[{0: slice(0, len, action)}] == hist_setup.Integral()
+            assert hist_setup[(slice(5, 9, action),)] == hist_setup.Integral(6, 9)
+
     def test_slicing_with_dict_syntax(self, hist_setup):
         if _special_setting(hist_setup):
             pytest.skip("Setting cannot be tested here")
