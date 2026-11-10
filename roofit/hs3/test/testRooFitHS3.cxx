@@ -36,6 +36,7 @@
 #include <RooRealIntegral.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
+#include <RooMultiPdf.h>
 #include <RooSimultaneous.h>
 #include <RooSuperCategory.h>
 #include <RooSpline.h>
@@ -6251,6 +6252,69 @@ TEST(RooFitHS3, CategoryConditionalDist)
    })",
                                "the column 'bkg_function' of the category_conditional_dist 'bkg' is not declared by a "
                                "categorical axis of a domain");
+}
+
+// A RooMultiPdf (discrete profiling, e.g. in CMS Combine) is written as a category_conditional_dist: the key of the
+// pdf at position i is the label of the state with index i. Its penalty term has no HS3 representation yet and is
+// dropped with a warning. It is read back as a RooSimultaneous that evaluates to the same pdf.
+TEST(RooFitHS3, MultiPdfExport)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::narrow(x[0, 10], 5.0, 1.0)");
+   ws.factory("Exponential::falling(x, c[-0.5, -2, 0])");
+   RooCategory pdfIndex{"pdf_index", "pdf_index"};
+   RooMultiPdf multiPdf{"bkg", "bkg", pdfIndex, RooArgList{*ws.pdf("narrow"), *ws.pdf("falling")}};
+   ws.import(multiPdf, RooFit::Silence());
+   ws.factory("Gaussian::sig(x, 2.0, 0.5)");
+   ws.factory("SUM::model(frac[0.3, 0, 1] * sig, bkg)");
+   ws.cat("pdf_index")->setIndex(1);
+   ws.saveSnapshot("point", RooArgSet{*ws.cat("pdf_index")});
+
+   std::string exported;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                                                [&] { exported = RooJSONFactoryWSTool{ws}.exportJSONtoString(); });
+   EXPECT_NE(warnings.find("the RooMultiPdf 'bkg' is written as a category_conditional_dist without its penalty term"),
+             std::string::npos)
+      << warnings;
+
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &root = tree->rootnode();
+   auto const *bkgNode = RooJSONFactoryWSTool::findNamedChild(root["distributions"], "bkg");
+   ASSERT_NE(bkgNode, nullptr) << exported;
+   EXPECT_EQ((*bkgNode)["type"].val(), "category_conditional_dist");
+   ASSERT_EQ((*bkgNode)["categorical_parameter"].num_children(), 1u);
+   EXPECT_EQ((*bkgNode)["categorical_parameter"].child(0).val(), "pdf_index");
+   ASSERT_EQ((*bkgNode)["components"].num_children(), 2u) << exported;
+   EXPECT_EQ((*bkgNode)["components"].child(0)["key"].child(0).val(), "_pdf0");
+   EXPECT_EQ((*bkgNode)["components"].child(0)["dist"].val(), "narrow");
+   EXPECT_EQ((*bkgNode)["components"].child(1)["key"].child(0).val(), "_pdf1");
+   EXPECT_EQ((*bkgNode)["components"].child(1)["dist"].val(), "falling");
+   // The penalty constants of the RooMultiPdf are not written.
+   EXPECT_EQ(exported.find("constnarrow"), std::string::npos) << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   auto *bkg2 = dynamic_cast<RooSimultaneous *>(ws2.pdf("bkg"));
+   ASSERT_NE(bkg2, nullptr);
+   ASSERT_TRUE(ws2.loadSnapshot("point"));
+   EXPECT_STREQ(ws2.cat("pdf_index")->getCurrentLabel(), "_pdf1");
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &x2 = *ws2.var("x");
+   RooArgSet nset{x};
+   RooArgSet nset2{x2};
+   for (int index : {0, 1}) {
+      ws.cat("pdf_index")->setIndex(index);
+      ws2.cat("pdf_index")->setLabel(ws.cat("pdf_index")->getCurrentLabel());
+      for (double value : {2.0, 5.0, 8.0}) {
+         x.setVal(value);
+         x2.setVal(value);
+         EXPECT_NEAR(bkg2->getVal(nset2), ws.pdf("bkg")->getVal(nset), 1e-12) << "index " << index << ", x = " << value;
+         EXPECT_NEAR(ws2.pdf("model")->getVal(nset2), ws.pdf("model")->getVal(nset), 1e-12)
+            << "index " << index << ", x = " << value;
+      }
+   }
 }
 
 // The names of a RooSimultaneous and of a combined data set are part of the standard document now, not of

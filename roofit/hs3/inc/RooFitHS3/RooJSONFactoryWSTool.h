@@ -48,6 +48,7 @@ class ModelConfig;
 class RooRealVar;
 class RooAbsCategory;
 class RooCategory;
+class RooMultiPdf;
 class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
@@ -260,6 +261,7 @@ private:
 
    void exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames);
    void recordCategory(RooAbsCategory const &cat);
+   void exportMultiPdf(RooMultiPdf const &multiPdf, std::set<std::string> &exportedObjectNames);
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
 

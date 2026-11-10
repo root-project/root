@@ -25,6 +25,7 @@
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooCustomizer.h>
+#include <RooMultiPdf.h>
 #include <RooSimultaneous.h>
 #include <RooSuperCategory.h>
 #include <RooFit/ModelConfig.h>
@@ -2179,6 +2180,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       exportSimultaneous(*simPdf, exportedObjectNames);
       return;
+   } else if (auto multiPdf = dynamic_cast<RooMultiPdf const *>(&func)) {
+      exportMultiPdf(*multiPdf, exportedObjectNames);
+      return;
    } else if (dynamic_cast<RooAbsCategory const *>(&func)) {
       // Categories are not objects of the document: the index category of a RooSimultaneous is declared by the
       // categorical axes of the domain that its "columns" name.
@@ -2389,6 +2393,52 @@ void RooJSONFactoryWSTool::recordCategory(RooAbsCategory const &cat)
                                   "' is written to the domain twice, with different states");
    }
    _export->categories[axis.name] = std::move(axis);
+}
+
+/**
+ * @brief Export a RooMultiPdf as a "category_conditional_dist".
+ *
+ * A RooMultiPdf evaluates to the pdf at the list position equal to the index of its category. The key of the pdf at
+ * position i is therefore the label of the state with index i. The category is a categorical parameter, declared by a
+ * categorical axis of the default domain; its value is written to the parameter points.
+ *
+ * The penalty term that a RooMultiPdf adds to the likelihood (a correction for the number of free parameters of the
+ * selected pdf) has no HS3 representation yet, and is dropped with a warning. The category_conditional_dist is read
+ * back as a RooSimultaneous, so the class doesn't survive a round trip.
+ */
+void RooJSONFactoryWSTool::exportMultiPdf(RooMultiPdf const &multiPdf, std::set<std::string> &exportedObjectNames)
+{
+   std::string const name = multiPdf.GetName();
+   auto const *indexCat = dynamic_cast<RooCategory const *>(&multiPdf.indexCategory().arg());
+   if (!indexCat) {
+      error("cannot export the RooMultiPdf '" + name + "' as a category_conditional_dist: its index '" +
+            multiPdf.indexCategory().arg().GetName() + "' is not a RooCategory");
+   }
+
+   JSONNode &elem = appendNamedChild((*_export->root)["distributions"], name);
+   elem["type"] << "category_conditional_dist";
+   elem["categorical_parameter"].set_seq().append_child() << indexCat->GetName();
+   recordCategory(*indexCat);
+   auto &components = elem["components"].set_seq();
+   std::vector<RooAbsArg const *> pdfs;
+   for (int i = 0; i < multiPdf.getNumPdfs(); ++i) {
+      if (!indexCat->hasIndex(i)) {
+         error("cannot export the RooMultiPdf '" + name +
+               "' as a category_conditional_dist: it has a pdf at position " + std::to_string(i) +
+               ", but its category '" + indexCat->GetName() + "' has no state with that index");
+      }
+      RooAbsPdf const *pdf = multiPdf.getPdf(i);
+      JSONNode &component = components.append_child().set_map();
+      component["key"].set_seq().append_child() << indexCat->lookupName(i);
+      component["dist"] << pdf->GetName();
+      pdfs.push_back(pdf);
+   }
+   warning("RooFitHS3: the RooMultiPdf '" + name +
+           "' is written as a category_conditional_dist without its penalty term (the correction to the likelihood "
+           "for the number of free parameters of the selected pdf), which HS3 can't represent yet. It is read back as "
+           "a RooSimultaneous.");
+   recordGenericObject(_export->doc, true, name, elem);
+   exportObjects(pdfs, exportedObjectNames);
 }
 
 /**
