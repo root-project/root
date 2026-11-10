@@ -201,6 +201,17 @@ class TestTH1Indexing:
 
         assert np.array_equal(sliced_hist.values(flow=True), expected)
 
+    def test_slicing_keeps_sum_of_weights_squared(self, hist_setup):
+        if _special_setting(hist_setup) or isinstance(hist_setup, (ROOT.TH1C, ROOT.TH2C, ROOT.TH3C)):
+            pytest.skip("Slicing cannot be tested here")
+
+        hist_setup.Sumw2()
+        dim = hist_setup.GetDimension()
+        expected = _expected_slice(hist_setup.variances(flow=True), [(3, 6)] * dim)
+        sliced_hist = hist_setup[(slice(2, 5),) * dim]
+
+        assert np.array_equal(sliced_hist.variances(flow=True), expected)
+
     def test_slicing_with_data_coordinates(self, hist_setup):
         if _special_setting(hist_setup):
             pytest.skip("Setting cannot be tested here")

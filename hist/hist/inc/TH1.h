@@ -274,6 +274,13 @@ private:
       // Move the bin contents to the slice
       SliceArray(args, dataArray, newArr);
 
+      // The sum of squares of weights has the same layout as the bin contents
+      if (fSumw2.fN) {
+         std::vector<Double_t> newSumw2(newSize);
+         SliceArray(args, fSumw2.fArray, newSumw2.data());
+         fSumw2.Set(newSize, newSumw2.data());
+      }
+
       // Assign the new array
       delete[] dataArray;
       dataArray = newArr;
