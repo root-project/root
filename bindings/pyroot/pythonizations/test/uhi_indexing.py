@@ -437,5 +437,15 @@ class TestHistogramKind:
         assert h_profile.kind == "MEAN"
 
 
+class TestSlicingDerivedClasses:
+    def test_slicing_profile_after_its_base_class(self):
+        # TProfile derives from TH1D, slicing it must not use the instantiation of Slice for TH1D
+        h = ROOT.TH1D("h_base_slicing", "", 4, 0, 4)
+        profile = ROOT.TProfile("p_derived_slicing", "", 4, 0, 4)
+
+        assert h[1:3].GetNbinsX() == 2
+        assert isinstance(profile[1:3], ROOT.TProfile)
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main(args=[__file__]))
