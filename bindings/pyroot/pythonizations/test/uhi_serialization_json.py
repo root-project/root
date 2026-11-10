@@ -79,6 +79,14 @@ class TestTH1Serialization:
         # test that name is preserved
         assert h.GetName() == h_loaded.GetName() == h_loaded_cls.GetName()
 
+    def test_axis_does_not_depend_on_range(self):
+        h = ROOT.TH1D("h1_range", "h1_range", 10, 0, 10)
+        h.GetXaxis().SetRange(3, 5)
+
+        axis = h._to_uhi_()["axes"][0]
+
+        assert (axis["lower"], axis["upper"], axis["bins"]) == (0, 10, 10)
+
     def test_uhi_protocol_object(self):
         values = np.arange(12.0)
 
