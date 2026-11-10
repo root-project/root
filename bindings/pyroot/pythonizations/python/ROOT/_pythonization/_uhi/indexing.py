@@ -12,7 +12,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 
 from .plotting import _values_by_copy
-from .tags import _get_axis_len, _overflow, _rebin, _sum, _underflow
+from .tags import _get_axis, _get_axis_len, _overflow, _rebin, _sum, _underflow
 
 """
 Implementation of the indexing component of the UHI
@@ -190,6 +190,14 @@ def _slice_get(self, index):
     # Instantiate Slice for the class of the histogram, otherwise a profile can be passed to the
     # instantiation for its base class (e.g. Slice<TH1D> for a TProfile), which cannot copy it
     target_hist = ROOT.Internal.Slice[self.ClassName()](self, args_vec)
+
+    # The bins cut by the slice fall into the flow bins of the sliced histogram,
+    # so the summed axes only include the flow bins of open slices
+    for axis, ((start, stop), action) in enumerate(zip(processed_slices, actions)):
+        if action is _sum or action is sum:
+            first = 0 if start == _underflow(self, axis) else 1
+            last = _get_axis_len(target_hist, axis) + (1 if stop > _overflow(self, axis) else 0)
+            _get_axis(target_hist, axis).SetRange(first, last)
 
     return _apply_actions(target_hist, actions, index, self)
 

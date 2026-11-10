@@ -25,6 +25,16 @@ def _get_index_for_dimension(hist, index):
     return (index,) * hist.GetDimension()
 
 
+def _expected_slice(values, slices):
+    # Bins outside the slice of an axis fall into the underflow or overflow bin of that axis,
+    # `values` includes the flow bins and `slices` are (start, stop) ROOT bin numbers
+    for axis, (start, stop) in enumerate(slices):
+        underflow = values.take(range(start), axis).sum(axis, keepdims=True)
+        overflow = values.take(range(stop, values.shape[axis]), axis).sum(axis, keepdims=True)
+        values = np.concatenate([underflow, values.take(range(start, stop), axis), overflow], axis=axis)
+    return values
+
+
 def _get_slice_indices(slices):
     import numpy as np
 
@@ -180,6 +190,17 @@ class TestTH1Indexing:
         }
         self._test_slices_match(hist_setup, slice_ranges, processed_slices)
 
+    def test_slicing_keeps_flow_bins_of_each_axis(self, hist_setup):
+        # TH*C bin contents saturate, so their flow bins cannot hold the sum of the cut bins
+        if _special_setting(hist_setup) or isinstance(hist_setup, (ROOT.TH1C, ROOT.TH2C, ROOT.TH3C)):
+            pytest.skip("Slicing cannot be tested here")
+
+        dim = hist_setup.GetDimension()
+        expected = _expected_slice(hist_setup.values(flow=True), [(3, 6)] * dim)
+        sliced_hist = hist_setup[(slice(2, 5),) * dim]
+
+        assert np.array_equal(sliced_hist.values(flow=True), expected)
+
     def test_slicing_with_data_coordinates(self, hist_setup):
         if _special_setting(hist_setup):
             pytest.skip("Setting cannot be tested here")
@@ -258,6 +279,21 @@ class TestTH1Indexing:
         if dim > 1:
             # A single bin on the first axis and the full range with flow on the others
             assert hist_setup[(1,) + (slice(None, None, sum),) * (dim - 1)] == hist_setup.Integral(2, 2, *with_flow[2:])
+
+    def test_action_sum_projection_includes_selected_bins(self, hist_setup):
+        if _special_setting(hist_setup) or hist_setup.GetDimension() != 2:
+            pytest.skip("Projections are tested here for 2D histograms")
+
+        # Open slices include the flow bins of the summed axis, closed slices do not
+        assert np.array_equal(
+            hist_setup[::sum, :].values(flow=True), hist_setup.ProjectionY("_py_full").values(flow=True)
+        )
+        assert np.array_equal(
+            hist_setup[2:5:sum, :].values(flow=True), hist_setup.ProjectionY("_py_ranged", 3, 5).values(flow=True)
+        )
+        assert np.array_equal(
+            hist_setup[:, 2::sum].values(flow=True), hist_setup.ProjectionX("_px_open", 3, 11).values(flow=True)
+        )
 
     def test_action_sum_projections_are_independent(self, hist_setup):
         if _special_setting(hist_setup) or hist_setup.GetDimension() == 1:

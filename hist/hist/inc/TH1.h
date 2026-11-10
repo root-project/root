@@ -81,7 +81,7 @@ T Slice(const T &histo, std::vector<Int_t> &args)
    T slicedHisto = histo;
 
    using ValueType = std::remove_pointer_t<decltype(slicedHisto.fArray)>;
-   slicedHisto.template SliceHistoInPlace<ValueType>(args, slicedHisto.fArray, slicedHisto.fN);
+   slicedHisto.template SliceHistoInPlace<ValueType>(args, slicedHisto.fArray);
    return slicedHisto;
 }
 
@@ -188,11 +188,47 @@ private:
    TH1& operator=(const TH1&) = delete;
 
    /**
+    * \brief Adds the content of each bin of `src` to the corresponding bin of the slice in `dst`.
+    *
+    * Bins outside the slice on an axis fall into the underflow or overflow bin of that axis.
+    *
+    * \tparam ValueType The type of the arrays.
+    * \param args The low and upper edges of the slice for each dimension, within the bins of each axis.
+    * \param src An array with the bin layout of this histogram.
+    * \param dst A zero-initialized array with the bin layout of the slice.
+    */
+   template <typename ValueType>
+   void SliceArray(const std::vector<Int_t> &args, const ValueType *src, ValueType *dst) const
+   {
+      const auto ndim = args.size() / 2;
+      // Bin of the slice corresponding to the given bin of axis d
+      auto sliceBin = [&args](size_t d, Int_t bin) {
+         const auto start = args[2 * d], end = args[2 * d + 1];
+         return bin < start ? 0 : bin >= end ? end - start + 1 : bin - start + 1;
+      };
+      const Int_t nx = fXaxis.GetNbins() + 2;
+      const Int_t ny = ndim > 1 ? fYaxis.GetNbins() + 2 : 1;
+      const Int_t nz = ndim > 2 ? fZaxis.GetNbins() + 2 : 1;
+      const Int_t sliceNx = args[1] - args[0] + 2;
+      const Int_t sliceNy = ndim > 1 ? args[3] - args[2] + 2 : 1;
+      for (Int_t z = 0; z < nz; ++z) {
+         for (Int_t y = 0; y < ny; ++y) {
+            for (Int_t x = 0; x < nx; ++x) {
+               const Int_t sliceX = sliceBin(0, x);
+               const Int_t sliceY = ndim > 1 ? sliceBin(1, y) : 0;
+               const Int_t sliceZ = ndim > 2 ? sliceBin(2, z) : 0;
+               dst[sliceX + sliceNx * (sliceY + sliceNy * sliceZ)] += src[x + nx * (y + ny * z)];
+            }
+         }
+      }
+   }
+
+   /**
     * \brief Slices a histogram in place based on the specified bin ranges for each dimension.
     *
     * This function modifies the histogram by extracting a sub-region defined by the provided
     * bin ranges for each dimension. The resulting histogram will have updated bin counts,
-    * edges, and contents. Bin contents outside the range fall into the flow bins.
+    * edges, and contents. Bin contents outside the range of an axis fall into the flow bins of that axis.
     * The histogram's internal data array is freed and reallocated by this function.
     * This function is used by the python implementation of the Unified Histogram Interface (UHI)
     * for slicing.
@@ -200,10 +236,9 @@ private:
     * \tparam ValueType The type of the histogram's data.
     * \param args A vector of integers specifying the low and upper edges of the slice for each dimension.
     * \param dataArray A pointer to the histogram's data array.
-    * \param fN The size of dataArray.
     */
    template <typename ValueType>
-   void SliceHistoInPlace(std::vector<Int_t> &args, ValueType *&dataArray, Int_t &fN)
+   void SliceHistoInPlace(std::vector<Int_t> &args, ValueType *&dataArray)
    {
       constexpr Int_t kMaxDim = 3;
       Int_t ndim = args.size() / 2;
@@ -213,14 +248,13 @@ private:
       }
 
       // Compute new bin counts and edges
-      std::array<Int_t, kMaxDim> nBins{}, totalBins{};
+      std::array<Int_t, kMaxDim> nBins{};
       std::array<std::vector<Double_t>, kMaxDim> edges;
       for (decltype(ndim) d = 0; d < ndim; ++d) {
          const auto &axis = (d == 0 ? fXaxis : d == 1 ? fYaxis : fZaxis);
          auto start = std::max(1, args[d * 2]);
          auto end = std::min(axis.GetNbins() + 1, args[d * 2 + 1]);
          nBins[d] = end - start;
-         totalBins[d] = axis.GetNbins() + 2;
          args[2 * d] = start;
          args[2 * d + 1] = end;
          // Compute new edges
@@ -237,36 +271,8 @@ private:
       // Allocate the new array
       auto *newArr = new ValueType[newSize]();
 
-      auto rowIncr = 1 + (ndim > 1 ? (rowSz - 1) : 0);
-      ValueType under = 0, over = 0;
-      Bool_t firstUnder = false;
-      Int_t lastOverIdx = 0;
-
-      // Copy the valid slice bins
-      size_t dstIdx = 1 + (ndim > 1 ? rowSz : 0) + (ndim > 2 ? planeSz : 0);
-      for (auto z = (ndim > 2 ? args[4] : 0); z < (ndim > 2 ? args[5] : 1); ++z) {
-         for (auto y = (ndim > 1 ? args[2] : 0); y < (ndim > 1 ? args[3] : 1); ++y) {
-            size_t rowStart = z * totalBins[1] * totalBins[0] + y * totalBins[0] + args[0];
-            std::copy_n(dataArray + rowStart, nBins[0], newArr + dstIdx);
-            if (!firstUnder) {
-               under = std::accumulate(dataArray, dataArray + rowStart, ValueType{});
-               firstUnder = true;
-            } else {
-               under += std::accumulate(dataArray + rowStart - args[0], dataArray + rowStart, ValueType{});
-            }
-            lastOverIdx = rowStart - args[0] + totalBins[0];
-            over += std::accumulate(dataArray + rowStart + nBins[0], dataArray + lastOverIdx, ValueType{});
-            dstIdx += rowIncr;
-         }
-         if (ndim > 2) {
-            dstIdx += 2 * rowIncr;
-         }
-      }
-
-      // Copy the flow bins
-      over += std::accumulate(dataArray + lastOverIdx, dataArray + fN, ValueType{});
-      newArr[0] = under;
-      newArr[newSize - 1] = over;
+      // Move the bin contents to the slice
+      SliceArray(args, dataArray, newArr);
 
       // Assign the new array
       delete[] dataArray;
