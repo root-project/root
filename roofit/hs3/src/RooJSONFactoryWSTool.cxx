@@ -661,6 +661,12 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    if (!extConstraints.empty())
       mc->SetExternalConstraints(extConstraints);
 
+   if (analysis.prior) {
+      if (RooAbsPdf *prior = workspace.pdf(analysis.prior->name)) {
+         mc->SetPriorPdf(*prior);
+      }
+   }
+
    RooArgSet parametersOfInterest;
    for (auto const &poi : analysis.parametersOfInterest) {
       RooAbsArg *arg = workspace.arg(poi.name);
@@ -1868,6 +1874,10 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    // The snapshots are exported as parameter points. Reference the one of the ModelConfig as the initial values.
    if (_workspace.getSnapshot(mc.GetSnapshotName().c_str())) {
       analysis.init = HS3::ParameterPointRef{mc.GetSnapshotName()};
+   }
+   // The prior is a top-level pdf of the workspace or a component of one, so it is exported already.
+   if (RooAbsPdf const *prior = mc.GetPriorPdf()) {
+      analysis.prior = HS3::DistributionRef{prior->GetName()};
    }
    doc.analyses.push_back(std::move(analysis));
 
