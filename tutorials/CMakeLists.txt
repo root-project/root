@@ -260,6 +260,7 @@ if(NOT mathmore)
   set(mathmore_veto
       math/quasirandom.C
       math/exampleMultiRoot.C
+      math/exampleFunction.py
       math/pdf/pdf009_Bessel.C
       math/LegendreAssoc.C
       math/Legendre.C
