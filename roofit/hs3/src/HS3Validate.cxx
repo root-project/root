@@ -452,14 +452,7 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
       if (inserted.second) {
          return;
       }
-      Constraint const &first = inserted.first->second.first;
-      bool same = first.index() == constraint.index();
-      if (same && std::holds_alternative<ConstraintType>(first)) {
-         same = std::get<ConstraintType>(first) == std::get<ConstraintType>(constraint);
-      } else if (same && std::holds_alternative<ConstraintPdf>(first)) {
-         same = std::get<ConstraintPdf>(first).pdf.name == std::get<ConstraintPdf>(constraint).pdf.name;
-      }
-      if (!same) {
+      if (!(inserted.first->second.first == constraint)) {
          warning(where, "the parameter '" + parameter + "' has a different constraint than in " +
                            inserted.first->second.second +
                            ", but modifiers with the same parameter must share the constraint");

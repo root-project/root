@@ -304,6 +304,15 @@ struct ConstraintPdf {
 
 using Constraint = std::variant<Unconstrained, ConstraintType, ConstraintPdf>;
 
+inline bool operator==(Unconstrained, Unconstrained)
+{
+   return true;
+}
+inline bool operator==(ConstraintPdf const &l, ConstraintPdf const &r)
+{
+   return l.pdf.name == r.pdf.name;
+}
+
 struct NormFactor {
    std::string name;
    ParameterRef parameter;
@@ -568,6 +577,14 @@ void validateHistFactoryDist(HistFactoryDist const &dist, std::string const &nam
 
 /// Reads the leading "MAJOR.MINOR" and the optional ".PATCH" of an HS3 version string.
 bool parseVersion(std::string const &version, Version &out);
+
+/// Combines the modifiers of a sample that have the same type and name, which HistFactory models can have but
+/// documents can't: normsys by multiplying their variations, and histosys by adding up their differences to the
+/// nominal contents. The modifiers of a type must be sorted by name. Other duplicates are errors.
+void mergeDuplicateModifiers(HistFactoryDist &dist, std::string const &channel, Diagnostics &diagnostics);
+
+/// Makes the most common interpolation of the modifiers the "default_interpolation", which they then don't repeat.
+void factorOutDefaultInterpolation(HistFactoryDist &dist);
 
 } // namespace HS3
 } // namespace RooFit
