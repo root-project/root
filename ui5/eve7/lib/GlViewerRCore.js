@@ -1567,11 +1567,11 @@ sap.ui.define([
                                      "ROOT::Experimental::REveViewer");
       }
 
-      /** Age every GL buffer and texture before a scene rebuild. EveManager
-       * calls this, then clearAttributesAndTextures() after the rebuild, which
-       * drops whatever the rebuild did not touch. A GL resource is only a cache
-       * of its BufferAttribute or Texture, so no element has to track what it
-       * allocated. */
+      /** Age every GL buffer and texture of this viewer's context. EveManager
+       * calls this at an EndChanges message, before the scenes apply their
+       * changes, and clearAttributesAndTextures() after. A GL resource is only a
+       * cache of its BufferAttribute or Texture, so no element has to track what
+       * it allocated. */
       timeStampAttributesAndTextures() {
          try {
             this.renderer.ageResources();
@@ -1581,11 +1581,19 @@ sap.ui.define([
          }
       }
 
+      /** Keep the GL resources of everything in the viewer's scenes and drop the
+       * rest. RenderCore marks every buffer and texture reachable from the main
+       * and the overlay scene, including those of hidden and culled objects, and
+       * then drops what has gone two cycles without being marked or drawn. So an
+       * element removed from the scenes loses its GL resources at the next
+       * EndChanges of this viewer after the one that removed it. An element out
+       * of view, or hidden, keeps them, and so do the elements of a viewer that
+       * draws no frame between two EndChanges. */
       clearAttributesAndTextures() {
          try {
             // One cycle of grace, so a resource used by every second update is
             // not thrashed. Raise it if elements come and go on alternate events.
-            this.renderer.collectResources(2);
+            this.renderer.collectResources(2, [this.scene, this.overlay_scene]);
          }
          catch (e) {
             console.error("Exception caught in clearAttributesAndTextures.", e);
