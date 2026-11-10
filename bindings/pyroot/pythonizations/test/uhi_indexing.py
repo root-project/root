@@ -2,6 +2,8 @@
 Tests to verify that TH1 and derived histograms conform to the UHI Indexing interfaces (setting, accessing and slicing).
 """
 
+import builtins
+
 import numpy as np
 import pytest
 import ROOT
@@ -268,6 +270,31 @@ class TestTH1Indexing:
             assert isinstance(sliced_hist, ROOT.TH2)
             assert sliced_hist.GetNbinsX() == hist_setup.GetNbinsX() // 2
             assert sliced_hist.GetNbinsY() == 2
+
+    def test_action_builtin_sum(self, hist_setup):
+        # The UHI sum action is the builtin `sum`, it must behave like ROOT.uhi.sum
+        if _special_setting(hist_setup):
+            pytest.skip("Slicing cannot be tested here")
+
+        dim = hist_setup.GetDimension()
+
+        if dim == 1:
+            assert hist_setup[:: builtins.sum] == hist_setup[::sum]
+            assert hist_setup[0 : len : builtins.sum] == hist_setup[0:len:sum]
+
+        if dim == 2:
+            sum_y = hist_setup[builtins.sum, 0:1]
+            assert isinstance(sum_y, ROOT.TH1)
+            assert np.array_equal(sum_y.values(), hist_setup[::sum, 0:1].values())
+
+            sum_x = hist_setup[:, builtins.sum]
+            assert isinstance(sum_x, ROOT.TH1)
+            assert np.array_equal(sum_x.values(), hist_setup[:, ::sum].values())
+
+        if dim == 3:
+            sliced_hist = hist_setup[:: rebin(2), builtins.sum, 3 : 9 : rebin(3)]
+            assert isinstance(sliced_hist, ROOT.TH2)
+            assert np.array_equal(sliced_hist.values(), hist_setup[:: rebin(2), ::sum, 3 : 9 : rebin(3)].values())
 
     def test_slicing_with_dict_syntax(self, hist_setup):
         if _special_setting(hist_setup):
