@@ -103,7 +103,7 @@ def _sum(hist, axis, args=None):
         elif axis == (1,):
             return hist.ProjectionX()
         elif axis == (0, 1):
-            return hist.Integral()
+            return hist.Integral(*args)
         else:
             return _invalid_axis(axis, dim)
     if dim == 3:
@@ -117,6 +117,6 @@ def _sum(hist, axis, args=None):
             (1, 2): "x",
         }
         if axis == (0, 1, 2):
-            return hist.Integral()
+            return hist.Integral(*args)
         return hist.Project3D(project_map[axis]) if axis in project_map else _invalid_axis(axis, dim)
     raise NotImplementedError(f"Summing not implemented for {dim}D histograms")

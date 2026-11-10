@@ -245,6 +245,20 @@ class TestTH1Indexing:
             sum_xy = hist_setup[::sum, ::sum, :]
             assert isinstance(sum_xy, ROOT.TH1)
 
+    def test_action_sum_over_all_axes_includes_flow(self, hist_setup):
+        if _special_setting(hist_setup):
+            pytest.skip("Slicing cannot be tested here")
+
+        dim = hist_setup.GetDimension()
+        with_flow = [b for axis in range(dim) for b in (_underflow(hist_setup, axis), _overflow(hist_setup, axis))]
+        without_flow = [b for axis in range(dim) for b in (1, _overflow(hist_setup, axis) - 1)]
+        assert hist_setup[(slice(None, None, sum),) * dim] == hist_setup.Integral(*with_flow)
+        assert hist_setup[(slice(0, len, sum),) * dim] == hist_setup.Integral(*without_flow)
+
+        if dim > 1:
+            # A single bin on the first axis and the full range with flow on the others
+            assert hist_setup[(1,) + (slice(None, None, sum),) * (dim - 1)] == hist_setup.Integral(2, 2, *with_flow[2:])
+
     def test_slicing_with_action_rebin_and_sum(self, hist_setup):
         if _special_setting(hist_setup):
             pytest.skip("Slicing cannot be tested here")
