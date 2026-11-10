@@ -285,8 +285,8 @@ readFormulaAxisBinning(const JSONNode &axis, const std::string &axisName, const 
    const bool hasMax = axis.has_child("max");
    const bool hasNBins = axis.has_child("nbins");
 
-   if (hasEdges && (hasMin || hasMax || hasNBins)) {
-      RooJSONFactoryWSTool::error(context + " must use either \"edges\" or \"min\"/\"max\"/\"nbins\"");
+   if (hasEdges && hasNBins) {
+      RooJSONFactoryWSTool::error(context + " must use either \"edges\" or \"nbins\"");
    }
 
    if (hasEdges) {
@@ -312,6 +312,12 @@ readFormulaAxisBinning(const JSONNode &axis, const std::string &axisName, const 
       }
       if (edges.size() < 2) {
          RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain at least two values");
+      }
+      // The HS3 standard requires "min" and "max" also for irregular binnings, which older versions of RooFit didn't
+      // write.
+      if ((hasMin && (!axis["min"].is_number() || axis["min"].val_double() != edges.front())) ||
+          (hasMax && (!axis["max"].is_number() || axis["max"].val_double() != edges.back()))) {
+         RooJSONFactoryWSTool::error("\"min\" and \"max\" in " + context + " must agree with the \"edges\"");
       }
       return std::make_unique<RooBinning>(static_cast<int>(edges.size() - 1), edges.data());
    }

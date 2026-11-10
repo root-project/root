@@ -86,9 +86,9 @@ std::unique_ptr<RooFit::Detail::JSONTree> varJSONString(const JSONNode &treeRoot
 
 void writeAxisBinning(JSONNode &node, const RooAbsBinning &binning)
 {
+   node["min"] << binning.lowBound();
+   node["max"] << binning.highBound();
    if (binning.isUniform()) {
-      node["min"] << binning.lowBound();
-      node["max"] << binning.highBound();
       node["nbins"] << binning.numBins();
       return;
    }

@@ -339,6 +339,17 @@ void describe(Reader &ar, BinnedAxis &axis)
          axis.min = binning.edges.front();
          axis.max = binning.edges.back();
       }
+      // The standard requires "min" and "max" also for irregular binnings, which older versions of RooFit didn't write.
+      std::optional<double> min;
+      std::optional<double> max;
+      ar("min", min);
+      ar("max", max);
+      if ((min && *min != axis.min) || (max && *max != axis.max)) {
+         ar.cursor().error("\"min\" and \"max\" of axis '" + axis.name + "' must agree with the \"edges\"");
+      }
+      if (ar.has("nbins")) {
+         ar.cursor().error("axis '" + axis.name + "' must not have both \"edges\" and \"nbins\"");
+      }
       axis.binning = std::move(binning);
       return;
    }
