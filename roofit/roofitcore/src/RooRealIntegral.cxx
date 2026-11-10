@@ -747,7 +747,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
      _intList("!intList", this, other._intList),
      _anaList("!anaList", this, other._anaList),
      _jacList("!jacList", this, other._jacList),
-     _facList("!facList", this, other._facList),
+     _facList("!facList", "Variables independent of function", this, false, true),
      _function("!func", this, other._function),
      _iconfig(other._iconfig),
      _sumCat("!sumCat", this, other._sumCat),
@@ -755,6 +755,15 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
      _intOperMode(other._intOperMode),
      _rangeName(other._rangeName)
 {
+   // The factorized observables are clones owned by the original integral, so
+   // the copy needs its own clones to stay valid when the original is deleted.
+   for (RooAbsArg *arg : other._facList) {
+      removeServer(*arg, true);
+      std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg *>(arg->Clone())};
+      _facList.add(*argClone);
+      addOwnedComponents(std::move(argClone));
+   }
+
  if(other._funcNormSet) {
    _funcNormSet = std::make_unique<RooArgSet>();
    other._funcNormSet->snapshot(*_funcNormSet, false);
