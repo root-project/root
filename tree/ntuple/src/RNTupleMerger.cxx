@@ -1436,6 +1436,12 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
          ROOT::Internal::ROnDiskPage::Key key{columnId, pageIdx};
          auto onDiskPage = cluster->GetOnDiskPage(key);
 
+         if (!pageInfo.HasChecksum() && fDestination.GetWriteOptions().GetEnableSamePageMerging()) {
+            R__LOG_WARNING(NTupleMergeLog())
+               << "one or more pages were found without a checksum: disabling same-page merging.";
+            const_cast<ROOT::RNTupleWriteOptions &>(fDestination.GetWriteOptions()).SetEnableSamePageMerging(false);
+         }
+
          const auto checksumSize = pageInfo.HasChecksum() * RPageStorage::kNBytesPageChecksum;
          RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
          sealedPage.SetNElements(pageInfo.GetNElements());
