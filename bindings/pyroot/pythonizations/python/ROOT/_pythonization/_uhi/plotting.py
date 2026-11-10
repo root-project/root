@@ -191,8 +191,12 @@ def _variances(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     sum_of_weights_squared = _get_sum_of_weights_squared(self, flow=flow)
 
     if _kind(self) == Kind.MEAN:
+        # For profiles, the values are the means and the Sumw2 array holds the sum of w*y^2 of each bin.
+        # Return the variance of the mean: the unbiased variance of y divided by the sum of weights
         counts = self.counts(flow=flow)
-        variances = sum_of_weights_squared.copy()
+        bin_entries = _get_profile_bin_array(self, self.GetBinEntries, flow=flow)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            variances = (sum_of_weights_squared / bin_entries - sum_of_weights**2) * counts / (counts - 1) / bin_entries
         variances[counts <= 1] = np.nan
         return variances
 
