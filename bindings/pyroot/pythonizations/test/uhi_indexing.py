@@ -496,6 +496,22 @@ class TestInfiniteEdges:
         assert np.allclose(uhi_values, ref_values)
 
 
+class TestProfileSlicing:
+    def test_slicing_keeps_means_and_entries(self):
+        profile = ROOT.TProfile("p_slicing", "", 4, 0, 4)
+        for x, y in [(-1, 4), (0.5, 1), (0.5, 3), (1.5, 2), (2.5, 6), (3.5, 8)]:
+            profile.Fill(x, y)
+
+        sliced_profile = profile[1:3]
+
+        assert np.array_equal(sliced_profile.values(), [2, 6])
+        assert np.array_equal(sliced_profile.counts(), [1, 1])
+
+        # The cut bins fall into the flow bins
+        assert np.array_equal(sliced_profile.values(flow=True), [(4 + 1 + 3) / 3, 2, 6, 8])
+        assert np.array_equal(sliced_profile.counts(flow=True), [3, 1, 1, 1])
+
+
 class TestHistogramKind:
     def test_histogram_kind_no_weights(self):
         h = ROOT.TH1D("h", "h", 100, -10, 10)
