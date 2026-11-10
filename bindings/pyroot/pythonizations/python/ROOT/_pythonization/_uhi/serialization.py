@@ -79,20 +79,20 @@ def _storage_to_dict(hist: Any) -> dict[str, Any]:
     }
 
     if hist.kind == "MEAN":
-        storage_dict["variances"] = hist.variances()
+        storage_dict["variances"] = hist.variances(flow=True)
 
         if _hasWeights(hist):
             storage_dict["type"] = "weighted_mean"
             storage_dict["sum_of_weights"] = _get_sum_of_weights(hist)
-            storage_dict["sum_of_weights_squared"] = _get_sum_of_weights_squared(hist)
+            storage_dict["sum_of_weights_squared"] = _get_sum_of_weights_squared(hist, flow=True)
         else:
             storage_dict["type"] = "mean"
-            storage_dict["counts"] = hist.counts()
+            storage_dict["counts"] = hist.counts(flow=True)
 
     else:  # COUNT
         if _hasWeights(hist):
             storage_dict["type"] = "weighted"
-            storage_dict["variances"] = hist.variances()
+            storage_dict["variances"] = hist.variances(flow=True)
         else:
             if hist.ClassName().endswith("I"):
                 storage_dict["type"] = "int"
