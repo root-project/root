@@ -259,6 +259,19 @@ class TestTH1Indexing:
             # A single bin on the first axis and the full range with flow on the others
             assert hist_setup[(1,) + (slice(None, None, sum),) * (dim - 1)] == hist_setup.Integral(2, 2, *with_flow[2:])
 
+    def test_action_sum_projections_are_independent(self, hist_setup):
+        if _special_setting(hist_setup) or hist_setup.GetDimension() == 1:
+            pytest.skip("Projections cannot be tested here")
+
+        dim = hist_setup.GetDimension()
+        full_projection = hist_setup[(slice(None),) * (dim - 1) + (slice(None, None, sum),)]
+        full_values = full_projection.values(flow=True).copy()
+
+        ranged_projection = hist_setup[(slice(2, 5),) * (dim - 1) + (slice(None, None, sum),)]
+
+        assert ranged_projection.GetNbinsX() == 3
+        assert np.array_equal(full_projection.values(flow=True), full_values)
+
     def test_slicing_with_action_rebin_and_sum(self, hist_setup):
         if _special_setting(hist_setup):
             pytest.skip("Slicing cannot be tested here")
