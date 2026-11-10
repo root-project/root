@@ -238,10 +238,6 @@ def _counts(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     )
 
 
-def _get_sum_of_weights(self) -> np.typing.NDArray[Any]:  # noqa: F821
-    return self.values()
-
-
 def _get_sum_of_weights_squared(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
 
