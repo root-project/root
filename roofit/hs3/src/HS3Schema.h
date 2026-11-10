@@ -55,8 +55,7 @@ private:
    std::size_t _index = 0;
 };
 
-/// Reads the components of a struct. The functions take the same arguments as the ones of the Writer, such that a
-/// single function can describe both directions.
+/// Reads the components of a struct.
 class Reader {
 public:
    explicit Reader(Cursor const &cursor);
