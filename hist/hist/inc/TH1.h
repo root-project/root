@@ -60,6 +60,9 @@ class TCollection;
 class TVirtualFFT;
 class TVirtualHistPainter;
 class TRandom;
+class TProfile;
+class TProfile2D;
+class TProfile3D;
 
 namespace ROOT::Internal {
 /**
@@ -82,6 +85,19 @@ T Slice(const T &histo, std::vector<Int_t> &args)
 
    using ValueType = std::remove_pointer_t<decltype(slicedHisto.fArray)>;
    slicedHisto.template SliceHistoInPlace<ValueType>(args, slicedHisto.fArray);
+
+   // Profiles also hold the sum of weights and the sum of squares of weights of each bin
+   if constexpr (std::is_same_v<T, TProfile> || std::is_same_v<T, TProfile2D> || std::is_same_v<T, TProfile3D>) {
+      auto sliceProfileArray = [&](const TArrayD &original, TArrayD &sliced) {
+         std::vector<Double_t> values(slicedHisto.fNcells);
+         histo.SliceArray(args, original.fArray, values.data());
+         sliced.Set(slicedHisto.fNcells, values.data());
+      };
+      sliceProfileArray(histo.fBinEntries, slicedHisto.fBinEntries);
+      if (histo.fBinSumw2.fN)
+         sliceProfileArray(histo.fBinSumw2, slicedHisto.fBinSumw2);
+      slicedHisto.ResetStats();
+   }
    return slicedHisto;
 }
 
