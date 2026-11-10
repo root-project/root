@@ -24,6 +24,7 @@ builtin_openssl=OFF
 builtin_jsroot=ON
 builtin_mathjax=ON
 builtin_openui5=ON
+builtin_rendercore=ON
 builtin_pcre=OFF
 builtin_tbb=OFF
 builtin_unuran=OFF
