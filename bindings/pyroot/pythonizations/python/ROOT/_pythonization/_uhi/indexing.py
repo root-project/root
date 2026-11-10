@@ -136,7 +136,13 @@ def _apply_actions(hist, actions, index, original_hist):
                 args += [start, stop - 1]
             hist = _sum(original_hist, sum_axes, args)
         else:
-            hist = _sum(hist, sum_axes)
+            import ROOT
+
+            # Do not register the projection in gDirectory, where ROOT would reuse it for the next projection
+            with ROOT.TDirectory.TContext(ROOT.nullptr):
+                hist = _sum(hist, sum_axes)
+            # No directory owns the projection, so Python has to delete it
+            ROOT.SetOwnership(hist, True)
 
     if any(isinstance(a, _rebin) for a in actions):
         rebins = [a.ngroup if isinstance(a, _rebin) else 1 for a in actions if a is not _sum and a is not sum]
