@@ -507,3 +507,27 @@ TEST(RooRealIntegral, GaussianWithSigmaDependingOnX)
 
    EXPECT_EQ(val1, val2);
 }
+
+// The integral owns clones of the integration variables that the function
+// doesn't depend on. A copy needs its own clones, because the RooGenProdProj
+// keeps only copies of its partial integrals and deletes the originals.
+TEST(RooRealIntegral, CopyOwnsFactorizedObservables)
+{
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   RooRealVar y{"y", "y", 0.0, 5.0};
+   RooFormulaVar func{"func", "x[0]", {x}};
+
+   std::unique_ptr<RooAbsReal> integral{func.createIntegral({x, y})};
+   std::unique_ptr<RooAbsReal> copy{static_cast<RooAbsReal *>(integral->clone())};
+
+   RooAbsArg *originalY = integral->findServer("y");
+   RooAbsArg *copyY = copy->findServer("y");
+   ASSERT_NE(originalY, nullptr);
+   ASSERT_NE(copyY, nullptr);
+   EXPECT_NE(copyY, originalY);
+
+   const double ref = integral->getVal();
+   EXPECT_NEAR(ref, 2.0 * 5.0, 1e-8);
+   integral.reset();
+   EXPECT_DOUBLE_EQ(copy->getVal(), ref);
+}
