@@ -126,12 +126,14 @@ def _apply_actions(hist, actions, index, original_hist):
 
     if any(a is _sum or a is sum for a in actions):
         sum_axes = tuple(i for i, a in enumerate(actions) if a is _sum or a is sum)
-        if original_hist.GetDimension() == 1:
-            # For the integral of a 1D histogram, we need special handling for the flow bins
+        if len(sum_axes) == original_hist.GetDimension():
+            # For the integral over all axes, we need special handling for the flow bins
             # h[::sum] is equivalent to h.Integral(0, nbins+1)
             # h[0:len:sum] is equivalent to h.Integral(1, nbins)
-            start, stop = index[0].start, index[0].stop
-            args = [start, stop - 1]
+            args = []
+            for idx in index:
+                start, stop = (idx, idx + 1) if isinstance(idx, int) else (idx.start, idx.stop)
+                args += [start, stop - 1]
             hist = _sum(original_hist, sum_axes, args)
         else:
             hist = _sum(hist, sum_axes)
