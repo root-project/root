@@ -41,15 +41,15 @@ def _process_index_for_axis(self, index, axis, is_slice_stop=False):
         return _get_axis_len(self, axis) + 1 if index is len else index(self, axis)
 
     if isinstance(index, int):
-        # -1 index returns the last valid bin
-        if index == -1:
-            return _overflow(self, axis) - 1
+        # Negative indices count from the last valid bin
+        if index < 0:
+            index += _get_axis_len(self, axis)
 
         # Shift the indices by 1 to align with the UHI convention,
         # where 0 corresponds to the first bin, unlike ROOT where 0 represents underflow and 1 is the first bin.
         nbins = _get_axis_len(self, axis) + (1 if is_slice_stop else 0)
         index = index + 1
-        if abs(index) > nbins:
+        if index < 1 or index > nbins:
             raise IndexError(f"Histogram index {index - 1} out of range for axis {axis}. Valid range: (0,{nbins})")
         return index
 

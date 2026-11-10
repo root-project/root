@@ -50,6 +50,18 @@ class TestTH1Indexing:
                 *_get_index_for_dimension(hist_setup, index + 1)
             )
 
+    def test_access_with_negative_bin_number(self, hist_setup):
+        for index in [-1, -2, -10]:
+            assert hist_setup[_get_index_for_dimension(hist_setup, index)] == hist_setup.GetBinContent(
+                *_get_index_for_dimension(hist_setup, index + 11)
+            )
+
+        with pytest.raises(IndexError):
+            hist_setup[_get_index_for_dimension(hist_setup, -11)]
+
+        sliced_hist = hist_setup[_get_index_for_dimension(hist_setup, slice(2, -2))]
+        assert sliced_hist.GetNbinsX() == 6
+
     def test_access_with_data_coordinates(self, hist_setup):
         for value in [1, 4]:
             value_indices = _get_index_for_dimension(hist_setup, value)
