@@ -58,7 +58,7 @@ def _process_index_for_axis(self, index, axis, is_slice_stop=False):
 
 def _compute_uhi_index(self, index, axis, flow=True):
     """Convert tag functors to valid bin indices."""
-    if isinstance(index, _rebin) or index is _sum:
+    if isinstance(index, _rebin) or index is _sum or index is sum:
         index = slice(None, None, index)
 
     if callable(index) or isinstance(index, int):
@@ -138,7 +138,7 @@ def _apply_actions(hist, actions, index, unprocessed_index, original_hist):
             hist = _sum(hist, sum_axes)
 
     if any(isinstance(a, _rebin) for a in actions):
-        rebins = [a.ngroup if isinstance(a, _rebin) else 1 for a in actions if a is not _sum]
+        rebins = [a.ngroup if isinstance(a, _rebin) else 1 for a in actions if a is not _sum and a is not sum]
         hist = _rebin(rebins)(hist)
 
     if any(a is not None and not (isinstance(a, _rebin) or a is _sum or a is sum) for a in actions):
