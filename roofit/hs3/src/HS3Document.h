@@ -546,6 +546,9 @@ HS3Document parseDocument(Detail::JSONNode const &root, Diagnostics &diagnostics
 /// Reads a HistFactory distribution that doesn't come with a document.
 HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
 
+/// Reads the axes of binned data that doesn't come with a document.
+std::vector<BinnedAxis> parseBinnedAxes(Detail::JSONNode const &axes, Diagnostics &diagnostics);
+
 /// Reads the functions "interpolation" and "interpolation0d", which don't come with a document. Older versions of
 /// RooFit wrote integer "interpolationCodes" instead of "interpolations".
 InterpolatedFunction parseInterpolatedFunction(Detail::JSONNode const &node, Diagnostics &diagnostics);

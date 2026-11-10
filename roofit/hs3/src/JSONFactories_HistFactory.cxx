@@ -312,16 +312,9 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
 {
    RooWorkspace &ws = *tool.workspace();
 
-   std::size_t n = std::max(vals.size(), parnames.size());
-   if (n == 0) {
-      n = nBins;
-   }
-   if (!parnames.empty() && !vals.empty() && parnames.size() != vals.size()) {
-      RooJSONFactoryWSTool::error("the modifier '" + sysname + "' has " + std::to_string(vals.size()) +
-                                  " values, but " + std::to_string(parnames.size()) + " parameters");
-   }
+   // The validation made sure that there is a value, parameter and constraint for each bin, if they are given.
    RooArgList gammas;
-   for (std::size_t i = 0; i < n; ++i) {
+   for (std::size_t i = 0; i < nBins; ++i) {
       const std::string name = parnames.empty() ? defaultGammaName(sysname, i) : parnames[i].name;
       if (auto *existing = dynamic_cast<RooAbsReal *>(ws.obj(name))) {
          gammas.add(*existing);
@@ -352,10 +345,6 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
    };
 
    if (auto const *pdfs = std::get_if<HS3::GammaConstraintPdfs>(&constraint)) {
-      if (pdfs->pdfs.size() != n) {
-         RooJSONFactoryWSTool::error("modifier '" + sysname + "' has " + std::to_string(pdfs->pdfs.size()) +
-                                     " constraints, but " + std::to_string(n) + " parameters");
-      }
       for (auto const &pdfName : pdfs->pdfs) {
          if (!pdfName) {
             continue;

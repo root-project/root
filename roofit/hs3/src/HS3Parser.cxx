@@ -1345,6 +1345,13 @@ Function_t parseInterpolated(JSONNode const &node, Diagnostics &diagnostics, Int
 
 } // namespace
 
+std::vector<BinnedAxis> parseBinnedAxes(JSONNode const &axes, Diagnostics &diagnostics)
+{
+   std::vector<BinnedAxis> out;
+   readValue(Cursor{axes, diagnostics}, out);
+   return out;
+}
+
 InterpolatedFunction parseInterpolatedFunction(JSONNode const &node, Diagnostics &diagnostics)
 {
    return parseInterpolated<InterpolatedFunction>(

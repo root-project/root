@@ -720,6 +720,14 @@ loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges cons
    RooJSONFactoryWSTool::error("datasets of type \"point\" like '" + input.name + "' are not supported yet");
 }
 
+// The version of ROOT that writes the document, with dots only such that it can be read automatically.
+std::string rootVersion()
+{
+   std::string versionName = gROOT->GetVersion();
+   std::replace(versionName.begin(), versionName.end(), '/', '.');
+   return versionName;
+}
+
 // A distribution of the document can be a function in RooFit, or it can be skipped.
 void requirePdf(RooAbsArg const *arg, std::string const &what)
 {
@@ -1074,9 +1082,6 @@ void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll,
 
 JSONNode &RooJSONFactoryWSTool::appendNamedChild(JSONNode &node, std::string const &name)
 {
-   if (!useListsInsteadOfDicts) {
-      return node.set_map()[name].set_map();
-   }
    JSONNode &child = node.set_seq().append_child().set_map();
    child["name"] << name;
    return child;
@@ -1084,11 +1089,6 @@ JSONNode &RooJSONFactoryWSTool::appendNamedChild(JSONNode &node, std::string con
 
 JSONNode const *RooJSONFactoryWSTool::findNamedChild(JSONNode const &node, std::string const &name)
 {
-   if (!useListsInsteadOfDicts) {
-      if (!node.is_map())
-         return nullptr;
-      return node.find(name);
-   }
    if (!node.is_seq())
       return nullptr;
    for (JSONNode const &child : node.children()) {
@@ -1145,7 +1145,7 @@ bool RooJSONFactoryWSTool::testValidName(const std::string &name, bool forceErro
 
 std::string RooJSONFactoryWSTool::name(const JSONNode &n)
 {
-   return useListsInsteadOfDicts ? n["name"].val() : n.key();
+   return n["name"].val();
 }
 
 JSONNode &RooJSONFactoryWSTool::makeVariablesNode(JSONNode &rootNode)
@@ -1362,9 +1362,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
             // before failing. That's why we clear it and only reset the name.
             elem.clear();
             elem.set_map();
-            if (useListsInsteadOfDicts) {
-               elem["name"] << name;
-            }
+            elem["name"] << name;
             continue;
          }
          // Objects that are interpreted by the document are written here, the others were written by the exporter.
@@ -1849,28 +1847,10 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
  */
 RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
 {
-   RooArgSet vars;
-
-   for (JSONNode const &node : topNode["axes"].children()) {
-      if (node.has_child("edges")) {
-         std::vector<double> edges = readEdges(node["edges"], "axis '" + node["name"].val() + "'");
-         auto obs = std::make_unique<RooRealVar>(node["name"].val().c_str(), node["name"].val().c_str(), edges[0],
-                                                 edges[edges.size() - 1]);
-         RooBinning bins(obs->getMin(), obs->getMax());
-         for (auto b : edges) {
-            bins.addBoundary(b);
-         }
-         obs->setBinning(bins);
-         vars.addOwned(std::move(obs));
-      } else {
-         auto obs = std::make_unique<RooRealVar>(node["name"].val().c_str(), node["name"].val().c_str(),
-                                                 node["min"].val_double(), node["max"].val_double());
-         obs->setBins(node["nbins"].val_int());
-         vars.addOwned(std::move(obs));
-      }
-   }
-
-   return vars;
+   HS3::Diagnostics diagnostics;
+   std::vector<HS3::BinnedAxis> axes = HS3::parseBinnedAxes(topNode["axes"], diagnostics);
+   HS3::report(diagnostics);
+   return HS3::createObservables(axes);
 }
 
 /**
@@ -2100,11 +2080,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 
    HS3Document &doc = _export->doc;
    doc.metadata.hs3Version = hs3VersionTag;
-   // Add information about the ROOT version that was used to generate this file. We want to consistently use dots
-   // such that the version name can be easily digested automatically.
-   std::string versionName = gROOT->GetVersion();
-   std::replace(versionName.begin(), versionName.end(), '/', '.');
-   doc.metadata.packages.push_back({"ROOT", versionName});
+   doc.metadata.packages.push_back({"ROOT", rootVersion()});
    doc.parameterPoints.push_back({"default_values", {}});
 
    // export all toplevel pdfs
@@ -2253,13 +2229,7 @@ std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
    // add the mandatory hs3 version number
    metadata["hs3_version"] << hs3VersionTag;
 
-   // Add information about the ROOT version that was used to generate this file
-   auto &rootInfo = appendNamedChild(metadata["packages"], "ROOT");
-   std::string versionName = gROOT->GetVersion();
-   // We want to consistently use dots such that the version name can be easily
-   // digested automatically.
-   std::replace(versionName.begin(), versionName.end(), '/', '.');
-   rootInfo["version"] << versionName;
+   appendNamedChild(metadata["packages"], "ROOT")["version"] << rootVersion();
 
    return tree;
 }
@@ -2536,13 +2506,26 @@ void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std:
 
 void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
 {
-   std::unique_ptr<RooFit::Detail::JSONTree> tree = varJSONString(elementNode);
-
-   HS3::Diagnostics diagnostics;
-   HS3::ParseOptions options;
-   options.requireMetadata = false;
-   HS3Document doc = HS3::parseDocument(tree->rootnode(), diagnostics, options);
-   HS3::report(diagnostics);
+   // A variable is given by its "value", by its range "min" and "max", or by both. With only a value, it is constant.
+   JSONNode const *value = elementNode.find("value");
+   JSONNode const *min = elementNode.find("min");
+   JSONNode const *max = elementNode.find("max");
+   if (!value && !(min && max)) {
+      throw std::invalid_argument("Invalid Syntax: Please provide either 'value' or 'min' and 'max' or both");
+   }
+   HS3::DomainAxis axis;
+   axis.name = elementNode["name"].val();
+   HS3::ParameterValue parameter;
+   parameter.name = axis.name;
+   if (min && max) {
+      axis.min = min->val_double();
+      axis.max = max->val_double();
+   }
+   parameter.value = value ? value->val_double() : (*axis.max + *axis.min) / 2;
+   parameter.isConst = value && !(min && max);
+   HS3Document doc;
+   doc.domains.push_back({HS3::defaultDomainName, {std::move(axis)}});
+   doc.parameterPoints.push_back({"default_values", {parameter}});
 
    _import = std::make_unique<HS3::ToolImportState>(doc);
    struct ImportScope {
@@ -2550,7 +2533,6 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
       ~ImportScope() { tool._import.reset(); }
    } importScope{*this};
 
-   HS3::ParameterValue const &parameter = doc.parameterPoints.front().parameters.front();
    importVariable(parameter);
    if (RooRealVar *rrv = _workspace.var(parameter.name)) {
       configureVariable(_import->ranges, parameter, *rrv);

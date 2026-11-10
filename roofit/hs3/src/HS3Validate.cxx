@@ -486,6 +486,8 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
       }
    };
 
+   checkGammaConstraint(path + ".staterror", dist.statError.constraint);
+
    std::set<std::string> sampleNames;
    for (std::size_t iSample = 0; iSample < dist.samples.size(); ++iSample) {
       auto const &sample = dist.samples[iSample];

@@ -49,6 +49,7 @@ class RooRealVar;
 
 class RooJSONFactoryWSTool {
 public:
+   /// Named objects are always stored in lists, as the HS3 standard requires. Kept for backwards compatibility.
    static constexpr bool useListsInsteadOfDicts = true;
 
    struct Config {
