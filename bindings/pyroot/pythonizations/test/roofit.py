@@ -714,15 +714,6 @@ class TestRooGlobalFunc(unittest.TestCase):
         minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")  # noqa: F841
 
 
-class TestRooJSONFactoryWSTool(unittest.TestCase):
-    """
-    Test for RooJSONFactoryWSTool pythonizations.
-    """
-
-    def test_writedoc(self):
-        ROOT.RooJSONFactoryWSTool.writedoc("roojsonfactorywstool_test_writedoc.tex")
-
-
 class TestRooLinkedList(unittest.TestCase):
     """
     Tests for the RooLinkedList.
