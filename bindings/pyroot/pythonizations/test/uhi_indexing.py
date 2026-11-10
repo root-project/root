@@ -78,6 +78,13 @@ class TestTH1Indexing:
         assert h[location - 1] == 1
         assert h[location] == 2
 
+    def test_access_with_data_coordinates_does_not_extend_axis(self):
+        h = ROOT.TH1D("h_extendable", "", 10, 0, 10)
+        h.SetCanExtend(ROOT.TH1.kAllAxes)
+
+        assert h[loc(100)] == h[overflow]
+        assert h.GetXaxis().GetXmax() == 10
+
     def test_access_flow_bins(self, hist_setup):
         for flow_type, index in [(underflow, 0), (overflow, 11)]:
             flow_indices = (flow_type,) * hist_setup.GetDimension()

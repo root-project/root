@@ -57,7 +57,7 @@ class _loc:
         raise TypeError(f"Unsupported type for substraction: {type(other).__name__}. Expected an integer.")
 
     def __call__(self, hist: Any, axis: int) -> int:
-        return _get_axis(hist, axis).FindBin(self.value) + self.offset
+        return _get_axis(hist, axis).FindFixBin(self.value) + self.offset
 
 
 class _rebin:
