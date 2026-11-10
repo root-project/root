@@ -106,6 +106,36 @@ class HistEngine_Indexing(unittest.TestCase):
         self.assertEqual(engine[:, ROOT.uhi.sum].GetNDimensions(), 1)
         self.assertEqual(engine[:, sum].GetNDimensions(), 1)
 
+    def test_slicing_expand(self):
+        Bins = 20
+        axis = RRegularAxis(Bins, (0, Bins))
+        engine = RHistEngine["int"](axis, axis)
+
+        # Ellipsis
+        self.assertEqual(engine[...].GetNDimensions(), 2)
+
+        sliced = engine[3:11, ...]
+        self.assertEqual(sliced.GetNDimensions(), 2)
+        self.assertEqual(sliced.GetAxes()[0].GetNNormalBins(), 8)
+
+        sliced = engine[..., 3:11]
+        self.assertEqual(sliced.GetNDimensions(), 2)
+        self.assertEqual(sliced.GetAxes()[1].GetNNormalBins(), 8)
+
+        with self.assertRaises(IndexError):
+            engine[..., ...]
+
+        # Dictionary
+        self.assertEqual(engine[{}].GetNDimensions(), 2)
+        self.assertEqual(engine[{0: slice(None)}].GetNDimensions(), 2)
+        self.assertEqual(engine[{0: sum}].GetNDimensions(), 1)
+
+        with self.assertRaises(IndexError):
+            engine[{0.0: sum}]
+
+        with self.assertRaises(IndexError):
+            engine[{2: slice(None)}]
+
     def test_setting(self):
         Bins = 20
         axis = RRegularAxis(Bins, (0, Bins))

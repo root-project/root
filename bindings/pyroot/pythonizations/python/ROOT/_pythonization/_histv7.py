@@ -51,6 +51,36 @@ def _translate_indices(self, indices):
     return vec
 
 
+def _ensure_tuple(arg):
+    """Ensure that the passed Python argument is wrapped in a tuple."""
+    return (arg,) if not isinstance(arg, tuple) else arg
+
+
+def _expand_slices(slices, ndim):
+    """Expand user argument into a tuple of Python slices."""
+    if isinstance(slices, dict):
+        # A dictionary sets the slice operation for a subset of the axes
+        expanded = [slice(None)] * ndim
+        for axis, value in slices.items():
+            if not isinstance(axis, int):
+                raise IndexError("keys of dictionary must be integers")
+            if axis >= ndim:
+                raise IndexError(f"invalid axis key: {axis}")
+            expanded[axis] = value
+        return tuple(expanded)
+
+    slices = _ensure_tuple(slices)
+
+    if ... not in slices:
+        return slices
+
+    if slices.count(...) > 1:
+        raise IndexError("more than one ellipsis found")
+
+    pos = slices.index(...)
+    return slices[:pos] + (slice(None),) * (ndim - len(slices) + 1) + slices[pos + 1 :]
+
+
 def _is_operation(op):
     import ROOT
 
@@ -143,7 +173,7 @@ def _translate_slice(self, i, axis, s):
 
 def _translate_slices(self, slices):
     """Translate a tuple of Python slices into a std::vector<RSliceSpec>."""
-    # TODO: expand ellipsis and dictionaries
+    slices = _expand_slices(slices, self.GetNDimensions())
 
     if len(slices) != self.GetNDimensions():
         raise IndexError(f"invalid number of slices: expected {self.GetNDimensions()}, but got {len(slices)}")
@@ -158,19 +188,15 @@ def _translate_slices(self, slices):
     return vec
 
 
-def _ensure_tuple(index):
-    """Ensure that the passed Python index is wrapped in a tuple."""
-    return (index,) if not isinstance(index, tuple) else index
-
-
 def _getitem(self, index):
-    indices = _ensure_tuple(index)
-    if _is_tuple_of_indices(indices):
-        indices = _translate_indices(self, indices)
-        return self.GetBinContent(indices)
-    else:
-        slices = _translate_slices(self, indices)
-        return self.Slice(slices)
+    if not isinstance(index, dict):
+        indices = _ensure_tuple(index)
+        if _is_tuple_of_indices(indices):
+            indices = _translate_indices(self, indices)
+            return self.GetBinContent(indices)
+
+    slices = _translate_slices(self, index)
+    return self.Slice(slices)
 
 
 def _setitem(self, index, value):
