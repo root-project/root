@@ -199,8 +199,25 @@ def _variances(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     return sum_of_weights_squared
 
 
+def _get_profile_bin_array(self, getter, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
+    """
+    Return `getter(bin)` for each bin of a profile as a numpy array, `bin` being the global bin number.
+    """
+    from itertools import product
+
+    import numpy as np
+
+    offset = 0 if flow else 1
+    dimensions = [range(offset, _get_axis_len(self, axis, flow=flow) + offset) for axis in range(self.GetDimension())]
+    return np.array([getter(self.GetBin(*bin)) for bin in product(*dimensions)]).reshape(_shape(self, flow=flow))
+
+
 def _counts(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
+
+    if _kind(self) == Kind.MEAN:
+        # Number of entries, or effective number of entries for weighted profiles
+        return _get_profile_bin_array(self, self.GetBinEffectiveEntries, flow=flow)
 
     sum_of_weights = self.values(flow=flow)
 
