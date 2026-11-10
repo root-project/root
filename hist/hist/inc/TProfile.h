@@ -34,6 +34,8 @@ class TProfile : public TH1D {
 public:
    friend class TProfileHelper;
    friend class TH1Merger;
+   template <typename T>
+   friend T ROOT::Internal::Slice(const T &histo, std::vector<Int_t> &args);
 
 protected:
    TArrayD fBinEntries;   ///< number of entries per bin
