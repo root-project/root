@@ -6200,18 +6200,24 @@ void TClass::PostLoadCheck()
    }
    if (fCollectionProxy) {
       // Update the related pair's TClass if it has already been created.
-      size_t noffset = 0;
-      if (strncmp(GetName(), "map<", 4) == 0)
-         noffset = 3;
-      else if (strncmp(GetName(), "multimap<", 9) == 0)
-         noffset = 8;
-      else if (strncmp(GetName(), "unordered_map<", 14) == 0)
-         noffset = 13;
-      else if (strncmp(GetName(), "unordered_multimap<", 19) == 0)
-         noffset = 18;
-      if (noffset) {
-         std::string pairname("pair");
-         pairname.append(GetName() + noffset);
+      std::vector<std::string> inside;
+      int nested = 0;
+      const auto num = TClassEdit::GetSplit(GetName(), inside, nested);
+      std::string pairname;
+      if (num >= 4) {
+         switch (TClassEdit::STLKind(inside[0])) {
+         case ROOT::kSTLmap:
+         case ROOT::kSTLmultimap:
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLunorderedmultimap:
+            pairname = "pair<" + inside[1] + "," + inside[2];
+            pairname += (pairname.back() == '>') ? " >" : ">";
+            break;
+         default:
+            break;
+         }
+      }
+      if (!pairname.empty()) {
          auto pcl = TClass::GetClass(pairname.c_str(), false, false);
          if ( pcl && !pcl->IsLoaded() && !pcl->IsSyntheticPair() )
          {
