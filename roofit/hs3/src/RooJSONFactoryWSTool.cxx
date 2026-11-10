@@ -146,12 +146,15 @@ struct RooFit::HS3::ToolImportState {
    std::unordered_map<std::string, HS3::Distribution const *> distributions;
    HS3::ParameterPoint const *defaultValues = nullptr;
    std::unordered_map<std::string, HS3::ParameterValue const *> defaultValuesByName;
+   HS3::DomainRanges ranges{document.domains};
 };
 
 /// The document that the tool is exporting.
 struct RooFit::HS3::ToolExportState {
    HS3Document doc;
    JSONNode *root = nullptr;
+   /// The ranges and binnings of the exported variables, by domain and variable name.
+   std::map<std::string, std::map<std::string, HS3::DomainAxis>> domains;
    /// Set by the exporter of an object that is interpreted by the document.
    std::optional<HistFactoryDist> typedObject;
    std::vector<DistributionRef> channelConstraints;
@@ -164,390 +167,139 @@ void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist 
    tool._export->channelConstraints = std::move(channelConstraints);
 }
 
-namespace RooFit {
-namespace JSONIO {
-namespace Detail {
+namespace {
 
-class Domains {
-public:
-   void readVariable(RooRealVar const &);
-   void writeVariable(RooRealVar &) const;
-   // A parameter that only takes the value `value` (a RooConstVar), written as an axis with a single value.
-   void readFixedValue(const char *name, double value);
-   // The single value of the parameter `name` if a domain has one for it, otherwise nullptr.
-   double const *fixedValue(const char *name) const;
-
-   void read(std::vector<RooFit::HS3::Domain> const &);
-   /// Append the domains that are not in the list yet.
-   void write(std::vector<RooFit::HS3::Domain> &) const;
-
-   bool hasVariable(const char *name) const;
-
-   void populate(RooWorkspace &ws) const;
-
-   class ProductDomain {
-      friend class Domains;
-
-   public:
-      void readVariable(const RooRealVar &);
-      void readVariable(const char *name, RooAbsBinning const &binning);
-      void writeVariable(RooRealVar &) const;
-
-      void read(RooFit::HS3::Domain const &);
-      void write(RooFit::HS3::Domain &) const;
-
-      bool hasVariable(const char *name) const;
-      double const *fixedValue(const char *name) const;
-      void readFixedValue(const char *name, double value);
-
-      void populate(RooWorkspace &ws) const;
-      void populateFixedValues(RooWorkspace &ws) const;
-      void registerBinnings(const char *name, RooWorkspace &ws) const;
-
-   private:
-      struct ProductDomainElement {
-         // An axis with a single value: the parameter only takes this value (HS3 #131).
-         bool hasFixedValue = false;
-         double fixedValue = 0.0;
-         bool hasMin = false;
-         bool hasMax = false;
-         double min = 0.0;
-         double max = 0.0;
-         bool hasNBins = false;
-         int nBins = 0;
-         std::vector<double> edges;
-      };
-
-      static void applyBinning(RooRealVar &var, ProductDomainElement const &elem, const char *name = nullptr);
-      static void readBinning(ProductDomainElement &elem, RooAbsBinning const &binning);
-
-      std::map<std::string, ProductDomainElement> _map;
-   };
-
-   std::map<std::string, ProductDomain> _map;
-};
-
-constexpr static auto defaultDomainName = "default_domain";
-
-void Domains::populate(RooWorkspace &ws) const
+HS3::Binning toBinning(RooAbsBinning const &binning)
 {
-   // Parameters with a single value are RooConstVars, whichever domain gives the value.
-   for (const auto &domain : _map) {
-      domain.second.populateFixedValues(ws);
+   if (binning.isUniform()) {
+      return HS3::RegularBinning{binning.numBins()};
    }
-   auto default_domain = _map.find(defaultDomainName);
-   if (default_domain != _map.end()) {
-      default_domain->second.populate(ws);
-   } else {
-      // Without the RooFit-specific "default_domain", the variables are created with the range of the domain that
-      // mentions them.
-      for (const auto &domain : _map) {
-         domain.second.populate(ws);
+   HS3::EdgesBinning edges;
+   edges.edges.push_back(binning.binLow(0));
+   for (int i = 0; i < binning.numBins(); ++i) {
+      edges.edges.push_back(binning.binHigh(i));
+   }
+   return edges;
+}
+
+// The axis of a domain for a range and binning. Infinite bounds are omitted, and only a bounded range has a binning.
+HS3::DomainAxis toDomainAxis(std::string const &name, RooAbsBinning const &binning)
+{
+   HS3::DomainAxis axis;
+   axis.name = name;
+   if (!RooNumber::isInfinite(binning.lowBound())) {
+      axis.min = binning.lowBound();
+   }
+   if (!RooNumber::isInfinite(binning.highBound())) {
+      axis.max = binning.highBound();
+   }
+   if (axis.min && axis.max && binning.numBins() > 0) {
+      axis.binning = toBinning(binning);
+   }
+   return axis;
+}
+
+// Record the range and binning of a variable in the "default_domain", and its named ranges in the domains of their
+// names.
+void recordDomains(std::map<std::string, std::map<std::string, HS3::DomainAxis>> &domains, RooRealVar const &var)
+{
+   domains[HS3::defaultDomainName][var.GetName()] = toDomainAxis(var.GetName(), var.getBinning());
+   for (auto const &name : var.getBinningNames()) {
+      if (!name.empty()) {
+         domains[name][var.GetName()] = toDomainAxis(var.GetName(), var.getBinning(name.c_str()));
       }
    }
-   for (const auto &domain : _map) {
-      if (domain.first == defaultDomainName)
-         continue;
-      domain.second.registerBinnings(domain.first.c_str(), ws);
+}
+
+void appendDomain(std::vector<HS3::Domain> &domains, std::string const &name,
+                  std::map<std::string, HS3::DomainAxis> axes)
+{
+   HS3::Domain &domain = domains.emplace_back();
+   domain.name = name;
+   for (auto &item : axes) {
+      domain.axes.emplace_back(std::move(item.second));
    }
 }
 
-void Domains::readVariable(RooRealVar const &var)
+// Set the binning of a variable, or the binning of one of its named ranges.
+void applyBinning(RooRealVar &var, HS3::Binning const &binning, const char *name = nullptr)
 {
-   _map[defaultDomainName].readVariable(var.GetName(), var.getBinning());
-   for (const auto &bname : var.getBinningNames()) {
-      if (bname.empty())
-         continue;
-      auto &binning = var.getBinning(bname.c_str());
-      _map[bname].readVariable(var.GetName(), binning);
-   }
-}
-
-void Domains::writeVariable(RooRealVar &var) const
-{
-   auto default_domain = _map.find(defaultDomainName);
-   if (default_domain != _map.end()) {
-      default_domain->second.writeVariable(var);
-      return;
-   }
-   // Without the RooFit-specific "default_domain", use the first domain that mentions the variable.
-   for (const auto &domain : _map) {
-      if (domain.second.hasVariable(var.GetName())) {
-         domain.second.writeVariable(var);
+   if (auto const *edges = std::get_if<HS3::EdgesBinning>(&binning)) {
+      if (edges->edges.empty()) {
          return;
       }
+      RooBinning bins(edges->edges.front(), edges->edges.back());
+      for (double edge : edges->edges) {
+         bins.addBoundary(edge);
+      }
+      var.setBinning(bins, name);
+   } else if (int nbins = std::get<HS3::RegularBinning>(binning).nbins) {
+      var.setBins(nbins, name);
    }
 }
 
-void Domains::read(std::vector<RooFit::HS3::Domain> const &domains)
+void applyRange(RooRealVar &var, HS3::DomainAxis const &axis)
 {
-   // The "default_domain" is written by RooFit, but it is not required by the HS3 standard.
-   for (auto const &domain : domains) {
-      _map[domain.name].read(domain);
-   }
-   // A parameter with a single value has no other domain: every domain that lists it must give it the same value.
-   for (auto const &[domainName, domain] : _map) {
-      for (auto const &[varName, elem] : domain._map) {
-         if (!elem.hasFixedValue) {
-            continue;
-         }
-         for (auto const &[otherName, other] : _map) {
-            auto found = other._map.find(varName);
-            if (found == other._map.end()) {
-               continue;
-            }
-            if (!found->second.hasFixedValue) {
-               RooJSONFactoryWSTool::error("the parameter '" + varName + "' has the single value " +
-                                           std::to_string(elem.fixedValue) + " in the domain '" + domainName +
-                                           "', but a range in the domain '" + otherName + "'");
-            }
-            if (found->second.fixedValue != elem.fixedValue) {
-               RooJSONFactoryWSTool::error("the parameter '" + varName +
-                                           "' has different single values in the "
-                                           "domains '" +
-                                           domainName + "' and '" + otherName + "'");
-            }
-         }
-      }
-   }
-}
-
-void Domains::readFixedValue(const char *name, double value)
-{
-   _map[defaultDomainName].readFixedValue(name, value);
-}
-
-double const *Domains::fixedValue(const char *name) const
-{
-   for (auto const &domain : _map) {
-      if (double const *value = domain.second.fixedValue(name)) {
-         return value;
-      }
-   }
-   return nullptr;
-}
-
-void Domains::write(std::vector<RooFit::HS3::Domain> &domains) const
-{
-   for (auto const &domain : _map) {
-      // Avoid writing a domain that was already written
-      auto found = std::find_if(domains.begin(), domains.end(), [&](auto const &d) { return d.name == domain.first; });
-      if (found == domains.end()) {
-         domains.emplace_back();
-         domains.back().name = domain.first;
-         domain.second.write(domains.back());
-      }
-   }
-}
-
-bool Domains::hasVariable(const char *name) const
-{
-   for (auto const &domain : _map) {
-      if (domain.second.hasVariable(name)) {
-         return true;
-      }
-   }
-   return false;
-}
-
-void Domains::ProductDomain::readVariable(RooRealVar const &var)
-{
-   readVariable(var.GetName(), var.getBinning());
-}
-
-void Domains::ProductDomain::readBinning(ProductDomainElement &elem, RooAbsBinning const &binning)
-{
-   elem.hasNBins = false;
-   elem.nBins = 0;
-   elem.edges.clear();
-
-   const int nBins = binning.numBins();
-   if (nBins <= 0) {
-      return;
-   }
-
-   if (binning.isUniform()) {
-      elem.hasNBins = true;
-      elem.nBins = nBins;
-   } else {
-      elem.edges.push_back(binning.binLow(0));
-      for (int i = 0; i < nBins; ++i) {
-         elem.edges.push_back(binning.binHigh(i));
-      }
-   }
-}
-
-void Domains::ProductDomain::readVariable(const char *name, RooAbsBinning const &binning)
-{
-   auto &elem = _map[name];
-
-   elem.hasMin = true;
-   elem.min = binning.lowBound();
-   elem.hasMax = true;
-   elem.max = binning.highBound();
-   readBinning(elem, binning);
-}
-
-void Domains::ProductDomain::applyBinning(RooRealVar &var, ProductDomainElement const &elem, const char *name)
-{
-   if (!elem.edges.empty()) {
-      RooBinning binning(elem.edges.front(), elem.edges.back());
-      for (double edge : elem.edges) {
-         binning.addBoundary(edge);
-      }
-      var.setBinning(binning, name);
-   } else if (elem.hasNBins && elem.nBins != 0) {
-      var.setBins(elem.nBins, name);
-   }
-}
-
-void Domains::ProductDomain::writeVariable(RooRealVar &var) const
-{
-   auto found = _map.find(var.GetName());
-   if (found != _map.end() && !found->second.hasFixedValue) {
-      auto const &elem = found->second;
-      if (elem.hasMin) {
-         if (RooNumber::isInfinite(elem.min)) {
-            var.removeMin();
-         } else {
-            var.setMin(elem.min);
-         }
-      }
-      if (elem.hasMax) {
-         if (RooNumber::isInfinite(elem.max)) {
-            var.removeMax();
-         } else {
-            var.setMax(elem.max);
-         }
-      }
-      applyBinning(var, elem);
-   }
-}
-
-bool Domains::ProductDomain::hasVariable(const char *name) const
-{
-   return _map.find(name) != _map.end();
-}
-
-double const *Domains::ProductDomain::fixedValue(const char *name) const
-{
-   auto found = _map.find(name);
-   return found != _map.end() && found->second.hasFixedValue ? &found->second.fixedValue : nullptr;
-}
-
-void Domains::ProductDomain::readFixedValue(const char *name, double value)
-{
-   auto &elem = _map[name];
-   elem = ProductDomainElement{};
-   elem.hasFixedValue = true;
-   elem.fixedValue = value;
-}
-
-void Domains::ProductDomain::read(RooFit::HS3::Domain const &domain)
-{
-   for (auto const &axisVariant : domain.axes) {
-      auto const *axis = std::get_if<RooFit::HS3::DomainAxis>(&axisVariant);
-      if (!axis) {
-         continue;
-      }
-      if (axis->fixedValue) {
-         readFixedValue(axis->name.c_str(), *axis->fixedValue);
-         continue;
-      }
-      auto &elem = _map[axis->name];
-
-      if (axis->min) {
-         elem.min = *axis->min;
-         elem.hasMin = true;
-      }
-      if (axis->max) {
-         elem.max = *axis->max;
-         elem.hasMax = true;
-      }
-      if (!axis->binning) {
-         continue;
-      }
-      if (auto const *edges = std::get_if<RooFit::HS3::EdgesBinning>(&*axis->binning)) {
-         elem.hasNBins = false;
-         elem.edges = edges->edges;
+   if (axis.min) {
+      if (RooNumber::isInfinite(*axis.min)) {
+         var.removeMin();
       } else {
-         elem.nBins = std::get<RooFit::HS3::RegularBinning>(*axis->binning).nbins;
-         elem.hasNBins = elem.nBins != 0;
-         elem.edges.clear();
+         var.setMin(*axis.min);
       }
    }
+   if (axis.max) {
+      if (RooNumber::isInfinite(*axis.max)) {
+         var.removeMax();
+      } else {
+         var.setMax(*axis.max);
+      }
+   }
+   if (axis.binning) {
+      applyBinning(var, *axis.binning);
+   }
 }
-void Domains::ProductDomain::write(RooFit::HS3::Domain &domain) const
+
+// Create the variables of the domains that don't exist yet, and the domains other than the "default_domain" as named
+// ranges.
+void createVariables(RooWorkspace &ws, std::vector<HS3::Domain> const &domains, HS3::DomainRanges const &ranges)
 {
-   for (auto const &item : _map) {
-      auto const &elem = item.second;
-      RooFit::HS3::DomainAxis axis;
-      axis.name = item.first;
-      if (elem.hasFixedValue) {
-         axis.fixedValue = elem.fixedValue;
-         domain.axes.emplace_back(std::move(axis));
-         continue;
-      }
-      // An infinite bound is expressed by omitting it.
-      if (elem.hasMin && !RooNumber::isInfinite(elem.min)) {
-         axis.min = elem.min;
-      }
-      if (elem.hasMax && !RooNumber::isInfinite(elem.max)) {
-         axis.max = elem.max;
-      }
-      // A binning requires a bounded range.
-      if (axis.min && axis.max) {
-         if (!elem.edges.empty()) {
-            axis.binning = RooFit::HS3::EdgesBinning{elem.edges};
-         } else if (elem.hasNBins && elem.nBins != 0) {
-            axis.binning = RooFit::HS3::RegularBinning{elem.nBins};
+   auto forEachAxis = [&](auto &&fn) {
+      for (HS3::Domain const &domain : domains) {
+         for (auto const &axis : domain.axes) {
+            if (auto const *continuous = std::get_if<HS3::DomainAxis>(&axis)) {
+               fn(domain.name, *continuous);
+            }
          }
       }
-      domain.axes.emplace_back(std::move(axis));
-   }
-}
-void Domains::ProductDomain::populate(RooWorkspace &ws) const
-{
-   for (auto const &item : _map) {
-      const auto &name = item.first;
-      if (item.second.hasFixedValue) {
-         continue; // see populateFixedValues()
+   };
+   const double inf = RooNumber::infinity();
+   // Parameters with a single value are RooConstVars, whichever domain gives the value.
+   forEachAxis([&](std::string const &, HS3::DomainAxis const &axis) {
+      if (axis.fixedValue && !ws.arg(axis.name)) {
+         ws.import(RooConstVar{axis.name.c_str(), axis.name.c_str(), *axis.fixedValue}, RooFit::Silence());
       }
-      if (!ws.arg(name)) {
-         const auto &elem = item.second;
-         const double vMin = elem.hasMin ? elem.min : -RooNumber::infinity();
-         const double vMax = elem.hasMax ? elem.max : RooNumber::infinity();
-         RooRealVar var{name.c_str(), name.c_str(), vMin, vMax};
-         applyBinning(var, elem);
+   });
+   forEachAxis([&](std::string const &, HS3::DomainAxis const &axis) {
+      if (!axis.fixedValue && ranges.find(axis.name) == &axis && !ws.arg(axis.name)) {
+         RooRealVar var{axis.name.c_str(), axis.name.c_str(), axis.min.value_or(-inf), axis.max.value_or(inf)};
+         if (axis.binning) {
+            applyBinning(var, *axis.binning);
+         }
          ws.import(var, RooFit::Silence());
       }
-   }
-}
-void Domains::ProductDomain::populateFixedValues(RooWorkspace &ws) const
-{
-   for (auto const &[name, elem] : _map) {
-      if (elem.hasFixedValue && !ws.arg(name)) {
-         ws.import(RooConstVar{name.c_str(), name.c_str(), elem.fixedValue}, RooFit::Silence());
+   });
+   forEachAxis([&](std::string const &domain, HS3::DomainAxis const &axis) {
+      RooRealVar *var = ws.var(axis.name);
+      if (var && domain != HS3::defaultDomainName) {
+         var->setRange(domain.c_str(), axis.min.value_or(-inf), axis.max.value_or(inf));
+         if (axis.binning) {
+            applyBinning(*var, *axis.binning, domain.c_str());
+         }
       }
-   }
+   });
 }
 
-void Domains::ProductDomain::registerBinnings(const char *name, RooWorkspace &ws) const
-{
-   for (auto const &item : _map) {
-      auto *var = ws.var(item.first);
-      if (!var)
-         continue;
-      const double vMin = item.second.hasMin ? item.second.min : -RooNumber::infinity();
-      const double vMax = item.second.hasMax ? item.second.max : RooNumber::infinity();
-      var->setRange(name, vMin, vMax);
-      applyBinning(*var, item.second, name);
-   }
-}
-
-} // namespace Detail
-} // namespace JSONIO
-} // namespace RooFit
+} // namespace
 
 namespace {
 
@@ -611,14 +363,16 @@ bool isNumber(const std::string &str)
 }
 
 // Configure `v` (value, error, binning, constness) from the parameter `p`.
-void configureVariable(RooFit::JSONIO::Detail::Domains &domains, HS3::ParameterValue const &p, RooRealVar &v)
+void configureVariable(HS3::DomainRanges const &ranges, HS3::ParameterValue const &p, RooRealVar &v)
 {
    if (p.value) {
       if (auto const *value = std::get_if<double>(&*p.value)) {
          v.setVal(*value);
       }
    }
-   domains.writeVariable(v);
+   if (HS3::DomainAxis const *range = ranges.find(v.GetName())) {
+      applyRange(v, *range);
+   }
    if (p.nbins)
       v.setBins(*p.nbins);
    if (p.relError)
@@ -859,16 +613,7 @@ HS3::BinnedAxis RooFit::HS3::toBinnedAxis(RooRealVar const &var)
    axis.name = var.GetName();
    axis.min = binning.lowBound();
    axis.max = binning.highBound();
-   if (binning.isUniform()) {
-      axis.binning = HS3::RegularBinning{binning.numBins()};
-   } else {
-      HS3::EdgesBinning edges;
-      edges.edges.push_back(binning.binLow(0));
-      for (int i = 0; i < binning.numBins(); ++i) {
-         edges.edges.push_back(binning.binHigh(i));
-      }
-      axis.binning = std::move(edges);
-   }
+   axis.binning = toBinning(binning);
    return axis;
 }
 
@@ -877,15 +622,7 @@ namespace {
 std::unique_ptr<RooRealVar> createObservable(HS3::BinnedAxis const &axis)
 {
    auto obs = std::make_unique<RooRealVar>(axis.name.c_str(), axis.name.c_str(), axis.min, axis.max);
-   if (auto const *edges = std::get_if<HS3::EdgesBinning>(&axis.binning)) {
-      RooBinning bins(obs->getMin(), obs->getMax());
-      for (double edge : edges->edges) {
-         bins.addBoundary(edge);
-      }
-      obs->setBinning(bins);
-   } else {
-      obs->setBins(std::get<HS3::RegularBinning>(axis.binning).nbins);
-   }
+   applyBinning(*obs, axis.binning);
    return obs;
 }
 
@@ -904,14 +641,14 @@ RooArgSet createBinnedObservables(std::vector<std::variant<HS3::BinnedAxis, HS3:
 }
 
 // Make the range of an observable of unbinned data consistent with the "min" and "max" of the axis. Variables that
-// didn't get their range from a domain take it from the axis. If `domains` is null, all ranges are considered explicit.
+// didn't get their range from a domain take it from the axis. If `ranges` is null, all ranges are considered explicit.
 void applyUnbinnedAxisRange(HS3::ContinuousAxis const &axis, std::string const &dataName, RooRealVar &var,
-                            RooFit::JSONIO::Detail::Domains const *domains)
+                            HS3::DomainRanges const *ranges)
 {
    if (!axis.min || !axis.max) {
       return;
    }
-   if (domains && !domains->hasVariable(axis.name.c_str())) {
+   if (ranges && !ranges->contains(axis.name)) {
       var.setRange(*axis.min, *axis.max);
    } else if (var.getMin() != *axis.min || var.getMax() != *axis.max) {
       std::stringstream ss;
@@ -923,7 +660,7 @@ void applyUnbinnedAxisRange(HS3::ContinuousAxis const &axis, std::string const &
 }
 
 std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::UnbinnedData const &input,
-                                               RooWorkspace &workspace, RooFit::JSONIO::Detail::Domains const *domains)
+                                               RooWorkspace &workspace, HS3::DomainRanges const *ranges)
 {
    RooArgList varlist;
    for (auto const &axisVariant : input.axes) {
@@ -936,7 +673,7 @@ std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::Unb
          RooJSONFactoryWSTool::error("The observable \"" + axis->name + "\" could not be found in the workspace!");
       }
       varlist.add(*var);
-      applyUnbinnedAxisRange(*axis, name, *var, domains);
+      applyUnbinnedAxisRange(*axis, name, *var, ranges);
    }
    RooArgSet vars(varlist);
    auto data = std::make_unique<RooDataSet>(name, name, vars, RooFit::WeightVar());
@@ -952,7 +689,7 @@ std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::Unb
 
 // Create a RooAbsData (binned or unbinned) from its description.
 std::unique_ptr<RooAbsData>
-loadData(HS3::Data const &input, RooWorkspace &workspace, RooFit::JSONIO::Detail::Domains const *domains)
+loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges const *ranges)
 {
    RooJSONFactoryWSTool::testValidName(input.name, true);
 
@@ -970,7 +707,7 @@ loadData(HS3::Data const &input, RooWorkspace &workspace, RooFit::JSONIO::Detail
          RooJSONFactoryWSTool::warning("RooFitHS3: the \"entries_uncertainties\" of the dataset '" + input.name +
                                        "' are ignored, because RooDataSet can't store them.");
       }
-      return createUnbinnedData(input.name, *unbinned, workspace, domains);
+      return createUnbinnedData(input.name, *unbinned, workspace, ranges);
    }
    RooJSONFactoryWSTool::error("datasets of type \"point\" like '" + input.name + "' are not supported yet");
 }
@@ -1487,7 +1224,10 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoin
    // A named RooConstVar only takes its value: it is written as a domain axis with that single value, not in the
    // parameter points.
    if (cv) {
-      _domains->readFixedValue(cv->GetName(), cv->getVal());
+      HS3::DomainAxis axis;
+      axis.name = cv->GetName();
+      axis.fixedValue = cv->getVal();
+      _export->domains[HS3::defaultDomainName][axis.name] = std::move(axis);
       return;
    }
 
@@ -1495,7 +1235,7 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoin
    var.name = v->GetName();
    var.value = rrv->getVal();
    var.isConst = storeConstant && (rrv->isConstant() || rrv->getMin() >= rrv->getMax());
-   _domains->readVariable(*rrv);
+   recordDomains(_export->domains, *rrv);
    point.parameters.push_back(std::move(var));
 }
 
@@ -2025,7 +1765,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    auto exportBinned = [&](std::size_t n, double const *contents) {
       HS3::BinnedData binned;
       for (auto *var : static_range_cast<RooRealVar *>(variables)) {
-         _domains->readVariable(*var);
+         recordDomains(_export->domains, *var);
          binned.axes.emplace_back(HS3::toBinnedAxis(*var));
       }
       binned.contents.assign(contents, contents + n);
@@ -2065,7 +1805,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    // this really is an unbinned dataset
    HS3::UnbinnedData unbinned;
    for (auto *var : static_range_cast<RooRealVar *>(variables)) {
-      _domains->readVariable(*var);
+      recordDomains(_export->domains, *var);
       // HS3 forbids binning information on the axes of unbinned data.
       testValidName(var->GetName(), false);
       unbinned.axes.emplace_back(HS3::ContinuousAxis{var->GetName(), var->getMin(), var->getMax()});
@@ -2166,13 +1906,12 @@ void RooJSONFactoryWSTool::importVariable(HS3::ParameterValue const &p)
    // import a RooRealVar object
    RooJSONFactoryWSTool::testValidName(p.name, true);
 
-   checkFixedValue(p, "default_values");
    if (_workspace.arg(p.name))
       return;
    // A string selects the state of a category, which is done together with the other parameter points.
    if (p.value && std::holds_alternative<std::string>(*p.value))
       return;
-   if (!_domains->hasVariable(p.name.c_str())) {
+   if (!_import->ranges.contains(p.name)) {
       // ROOT versions before HS3 0.3 marked named RooConstVars with an attribute.
       auto const &attributes = _import->document.rooFit.attributes;
       auto found = attributes.find(p.name);
@@ -2185,26 +1924,14 @@ void RooJSONFactoryWSTool::importVariable(HS3::ParameterValue const &p)
       }
    }
    RooRealVar &var = wsEmplace<RooRealVar>(p.name, 1.);
-   configureVariable(*_domains, p, var);
+   configureVariable(_import->ranges, p, var);
    warnIfFreeWithoutDomain(var);
-}
-
-// A parameter with a single value in its domain only takes that value: a parameter point must not give it another.
-void RooJSONFactoryWSTool::checkFixedValue(HS3::ParameterValue const &p, std::string const &pointName)
-{
-   double const *fixed = _domains ? _domains->fixedValue(p.name.c_str()) : nullptr;
-   double const *value = p.value ? std::get_if<double>(&*p.value) : nullptr;
-   if (fixed && value && *value != *fixed) {
-      RooJSONFactoryWSTool::error("the parameter point '" + pointName + "' gives the parameter '" + p.name +
-                                  "' the value " + std::to_string(*value) + ", but its domain only has the value " +
-                                  std::to_string(*fixed));
-   }
 }
 
 // HS3 requires every parameter to be listed in a domain or constant ("const": true) in the parameter point.
 void RooJSONFactoryWSTool::warnIfFreeWithoutDomain(RooRealVar const &var)
 {
-   if (!var.isConstant() && _domains && !_domains->hasVariable(var.GetName())) {
+   if (!var.isConstant() && !_import->ranges.contains(var.GetName())) {
       warning(std::string("RooFitHS3: the parameter '") + var.GetName() +
               "' is not listed in any domain and is not constant: HS3 requires a domain, or \"const\": true. It "
               "is read as a free parameter without range.");
@@ -2326,13 +2053,11 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
          return;
       const std::string domainName = analysisName + suffix;
       analysis.domains.push_back({domainName});
-      RooFit::JSONIO::Detail::Domains::ProductDomain domain;
+      std::map<std::string, HS3::DomainAxis> axes;
       for (auto *var : static_range_cast<const RooRealVar *>(*args)) {
-         domain.readVariable(*var);
+         axes[var->GetName()] = toDomainAxis(var->GetName(), var->getBinning());
       }
-      doc.domains.emplace_back();
-      doc.domains.back().name = domainName;
-      domain.write(doc.domains.back());
+      appendDomain(doc.domains, domainName, std::move(axes));
    };
 
    writeProductDomain("_nuisance_parameters", mc.GetNuisanceParameters());
@@ -2357,17 +2082,12 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
 // Export all top-level pdfs, functions, datasets and ModelConfigs of the workspace into `n`.
 void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
-   _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
    _export = std::make_unique<HS3::ToolExportState>();
    _export->root = &n;
    // The state of the export must not survive it, not even if there is an exception.
    struct ExportScope {
       RooJSONFactoryWSTool &tool;
-      ~ExportScope()
-      {
-         tool._export.reset();
-         tool._domains.reset();
-      }
+      ~ExportScope() { tool._export.reset(); }
    } exportScope{*this};
 
    HS3Document &doc = _export->doc;
@@ -2463,7 +2183,13 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          this->exportVariables(snapshotSorted, doc.parameterPoints.back(), true);
       }
    }
-   _domains->write(doc.domains);
+   // The domains of the analyses take precedence.
+   for (auto &item : _export->domains) {
+      if (std::none_of(doc.domains.begin(), doc.domains.end(),
+                       [&](HS3::Domain const &domain) { return domain.name == item.first; })) {
+         appendDomain(doc.domains, item.first, std::move(item.second));
+      }
+   }
 
    // The document that RooFit writes has to pass the same checks as the ones that it reads. Until RooFit writes
    // documents that follow the current standard, problems are only reported.
@@ -2621,7 +2347,6 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
       ~ImportScope()
       {
          tool._import.reset();
-         tool._domains.reset();
          tool._hs3VersionInput.clear();
       }
    } importScope{*this};
@@ -2630,9 +2355,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
 
    _import = std::make_unique<HS3::ToolImportState>(doc);
 
-   _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
-   _domains->read(doc.domains);
-   _domains->populate(_workspace);
+   createVariables(_workspace, _import->document.domains, _import->ranges);
 
    if (_import->defaultValues) {
       for (auto const &p : _import->defaultValues->parameters) {
@@ -2669,17 +2392,16 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
                     point.name + "', because there is no category with that name.");
             continue;
          }
-         checkFixedValue(var, point.name);
          RooRealVar *rrv = _workspace.var(var.name);
          if (!rrv && !_workspace.arg(var.name)) {
             // The parameter is not used by any other component: create it. "const": false is the same as no
             // "const" at all.
             testValidName(var.name, true);
             rrv = &wsEmplace<RooRealVar>(var.name, 1.);
-            configureVariable(*_domains, var, *rrv);
+            configureVariable(_import->ranges, var, *rrv);
             warnIfFreeWithoutDomain(*rrv);
          } else if (rrv) {
-            configureVariable(*_domains, var, *rrv);
+            configureVariable(_import->ranges, var, *rrv);
          }
          if (rrv) {
             vars.add(*rrv);
@@ -2700,7 +2422,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    // don't get imported.
    std::vector<std::unique_ptr<RooAbsData>> datasets;
    for (auto const &data : doc.data) {
-      datasets.push_back(loadData(data, _workspace, _domains.get()));
+      datasets.push_back(loadData(data, _workspace, &_import->ranges));
    }
 
    // Now, read in analyses and likelihoods if there are any
@@ -2814,16 +2536,17 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
    HS3Document doc = HS3::parseDocument(tree->rootnode(), diagnostics, options);
    HS3::report(diagnostics);
 
-   _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
-   _domains->read(doc.domains);
+   _import = std::make_unique<HS3::ToolImportState>(doc);
+   struct ImportScope {
+      RooJSONFactoryWSTool &tool;
+      ~ImportScope() { tool._import.reset(); }
+   } importScope{*this};
 
    HS3::ParameterValue const &parameter = doc.parameterPoints.front().parameters.front();
    importVariable(parameter);
    if (RooRealVar *rrv = _workspace.var(parameter.name)) {
-      configureVariable(*_domains, parameter, *rrv);
+      configureVariable(_import->ranges, parameter, *rrv);
    }
-
-   _domains.reset();
 }
 
 /**

@@ -49,6 +49,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <cstdio>
 #include <map>
 #include <memory>
@@ -5023,6 +5024,26 @@ TEST(RooFitHS3, InvalidExportIsStillWritten)
    EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(root["distributions"], "gauss"), nullptr) << json;
 }
 
+// A named RooConstVar is exported as a fixed domain axis. JSON can't represent a value that is not finite, which is
+// reported on export, and such an axis is not read back as a parameter without range.
+TEST(RooFitHS3, NonFiniteRooConstVar)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws"};
+   RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+   RooConstVar cinf{"cinf", "cinf", std::numeric_limits<double>::infinity()};
+   RooFormulaVar formula{"formula", "x[0] + x[1]", {x, cinf}};
+   ws.import(formula, RooFit::Silence());
+
+   std::string json;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                                                [&] { json = RooJSONFactoryWSTool{ws}.exportJSONtoString(); });
+   EXPECT_NE(warnings.find("the single value of the parameter 'cinf' is not finite"), std::string::npos) << warnings;
+
+   expectImportThrowsWithError(json, "must be a number");
+}
+
 // A fixed domain axis (HS3 #131): the parameter only takes the given "value", and RooFit reads it as a RooConstVar.
 // It needs no entry in a parameter point. A parameter point must not give it another value, the axis has no range,
 // binning or categories, and all domains that list the parameter give it the same value.
@@ -5096,6 +5117,10 @@ TEST(RooFitHS3, FixedDomainAxis)
       document(R"({"name": "mZ", "value": 91.188})",
                R"(, {"name": "other", "type": "product_domain", "axes": [{"name": "mZ", "min": 80.0, "max": 100.0}]})"),
       "but a range in the domain 'other'");
+   expectImportThrowsWithError(
+      document(R"({"name": "mZ", "value": 91.188})",
+               R"(, {"name": "other", "type": "product_domain", "axes": [{"name": "mZ", "categories": ["a", "b"]}]})"),
+      "but categories in the domain 'other'");
 
    // A parameter without domain is a RooRealVar: constant with "const": true, otherwise free, with a warning.
    {

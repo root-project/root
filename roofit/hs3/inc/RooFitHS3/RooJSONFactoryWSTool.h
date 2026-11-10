@@ -28,11 +28,6 @@
 class RooJSONFactoryWSTool;
 
 namespace RooFit {
-namespace JSONIO {
-namespace Detail {
-class Domains;
-}
-} // namespace JSONIO
 namespace HS3 {
 struct Distribution;
 struct HistFactoryDist;
@@ -254,7 +249,6 @@ private:
    void importDistribution(RooFit::HS3::Distribution const &distribution);
 
    void importVariable(RooFit::HS3::ParameterValue const &p);
-   void checkFixedValue(RooFit::HS3::ParameterValue const &p, std::string const &pointName);
    void warnIfFreeWithoutDomain(RooRealVar const &var);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
@@ -278,7 +272,6 @@ private:
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
-   std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
    std::unique_ptr<RooFit::HS3::ToolImportState> _import;
    std::unique_ptr<RooFit::HS3::ToolExportState> _export;
    std::vector<RooAbsArg const *> _serversToExport;

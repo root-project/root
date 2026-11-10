@@ -13,6 +13,7 @@
 #include "HS3Document.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <map>
 #include <optional>
@@ -39,6 +40,7 @@ public:
    void run()
    {
       collectNames();
+      checkFixedAxes();
       checkLikelihoods();
       checkAnalyses();
       checkData();
@@ -122,6 +124,7 @@ private:
    std::optional<std::size_t> numBins(Axes const &axes, std::string const &path);
 
    void collectNames();
+   void checkFixedAxes();
    void checkLikelihoods();
    void checkAnalyses();
    void checkData();
@@ -217,6 +220,69 @@ void Validator::collectNames()
       if (char const *section = sectionOf(parameter)) {
          strictError("", "the name '" + parameter + "' is used in \"" + section +
                             "\" and for a parameter, which is not allowed by the HS3 standard.");
+      }
+   }
+}
+
+// A fixed axis says that the parameter only takes a single value. No other domain can give it a range or another
+// value, and no parameter point another value.
+void Validator::checkFixedAxes()
+{
+   struct FixedAxis {
+      double value = 0.0;
+      std::string const *domain = nullptr;
+   };
+   std::map<std::string, FixedAxis> fixedAxes;
+   auto forEachAxis = [&](auto &&fn) {
+      for (std::size_t i = 0; i < _doc.domains.size(); ++i) {
+         for (auto const &axis : _doc.domains[i].axes) {
+            // A categorical axis is passed as null.
+            fn(i, std::visit([](auto const &a) -> std::string const & { return a.name; }, axis),
+               std::get_if<DomainAxis>(&axis));
+         }
+      }
+   };
+   forEachAxis([&](std::size_t i, std::string const &, DomainAxis const *continuous) {
+      if (!continuous || !continuous->fixedValue) {
+         return;
+      }
+      DomainAxis const &axis = *continuous;
+      Domain const &domain = _doc.domains[i];
+      if (!std::isfinite(*axis.fixedValue)) {
+         error(at("domains", i, domain.name),
+               "the single value of the parameter '" + axis.name + "' is not finite, which JSON can't represent");
+      }
+      auto inserted = fixedAxes.insert({axis.name, FixedAxis{*axis.fixedValue, &domain.name}});
+      if (!inserted.second && inserted.first->second.value != *axis.fixedValue) {
+         error(at("domains", i, domain.name),
+               "the parameter '" + axis.name + "' has different single values in the domains '" +
+                  *inserted.first->second.domain + "' and '" + domain.name + "'");
+      }
+   });
+   if (fixedAxes.empty()) {
+      return;
+   }
+   forEachAxis([&](std::size_t i, std::string const &name, DomainAxis const *continuous) {
+      auto found = fixedAxes.find(name);
+      if (found != fixedAxes.end() && !(continuous && continuous->fixedValue)) {
+         Domain const &domain = _doc.domains[i];
+         error(at("domains", i, domain.name),
+               "the parameter '" + name + "' has the single value " + std::to_string(found->second.value) +
+                  " in the domain '" + *found->second.domain + "', but " + (continuous ? "a range" : "categories") +
+                  " in the domain '" + domain.name + "'");
+      }
+   });
+   for (std::size_t i = 0; i < _doc.parameterPoints.size(); ++i) {
+      ParameterPoint const &point = _doc.parameterPoints[i];
+      for (ParameterValue const &parameter : point.parameters) {
+         auto found = fixedAxes.find(parameter.name);
+         double const *value = parameter.value ? std::get_if<double>(&*parameter.value) : nullptr;
+         if (value && found != fixedAxes.end() && *value != found->second.value) {
+            error(at("parameter_points", i, point.name),
+                  "the parameter point '" + point.name + "' gives the parameter '" + parameter.name + "' the value " +
+                     std::to_string(*value) + ", but its domain only has the value " +
+                     std::to_string(found->second.value));
+         }
       }
    }
 }

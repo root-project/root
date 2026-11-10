@@ -19,6 +19,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
   HEADERS
     ${ROOFITHS3_HEADERS}
   SOURCES
+    src/HS3Document.cxx
     src/HS3Parser.cxx
     src/HS3Upgrade.cxx
     src/HS3Validate.cxx

@@ -17,6 +17,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
@@ -125,6 +126,24 @@ struct CategoricalAxis {
 struct Domain {
    std::string name;
    std::vector<std::variant<DomainAxis, CategoricalAxis>> axes;
+};
+
+/// The domain in which RooFit writes the ranges of all variables. It is a convention of RooFit, not of the standard.
+inline constexpr char const *defaultDomainName = "default_domain";
+
+/// Where RooFit takes the ranges of variables from: the "default_domain" if there is one, otherwise the first domain by
+/// name that has the variable. The domains must outlive this object.
+class DomainRanges {
+public:
+   explicit DomainRanges(std::vector<Domain> const &domains);
+   /// The axis that defines the range of a variable, or null.
+   DomainAxis const *find(std::string const &name) const;
+   /// Whether any domain has the variable.
+   bool contains(std::string const &name) const { return _names.count(name); }
+
+private:
+   std::map<std::string, DomainAxis const *> _ranges;
+   std::set<std::string> _names;
 };
 
 struct ParameterValue {
