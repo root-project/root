@@ -26,8 +26,8 @@ def _axis_to_dict(root_axis: ROOT.TAxis, uhi_axis: PlottableAxisBase) -> dict[st
     """
     return {
         "type": "regular",
-        "lower": root_axis.GetBinLowEdge(root_axis.GetFirst()),
-        "upper": root_axis.GetBinUpEdge(root_axis.GetLast()),
+        "lower": root_axis.GetXmin(),
+        "upper": root_axis.GetXmax(),
         "bins": root_axis.GetNbins(),
         "underflow": uhi_axis.traits.underflow,
         "overflow": uhi_axis.traits.overflow,
