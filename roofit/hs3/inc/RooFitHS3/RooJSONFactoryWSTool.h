@@ -40,7 +40,11 @@ struct ParameterPoint;
 struct ParameterValue;
 struct ToolExportState;
 struct ToolImportState;
-void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist);
+template <class Tag>
+struct Ref;
+using DistributionRef = Ref<struct DistributionTag>;
+void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
+                       std::vector<DistributionRef> channelConstraints);
 } // namespace HS3
 } // namespace RooFit
 namespace RooStats {
@@ -266,7 +270,8 @@ private:
    void exportSingleModelConfig(RooStats::ModelConfig const &mc, std::string const &analysisName,
                                 std::map<std::string, std::string> const *dataComponents);
 
-   friend void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, RooFit::HS3::HistFactoryDist dist);
+   friend void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, RooFit::HS3::HistFactoryDist dist,
+                                              std::vector<RooFit::HS3::DistributionRef> channelConstraints);
 
    // member variables
    std::string _hs3VersionInput;

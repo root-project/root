@@ -418,6 +418,9 @@ struct RooFitInternal {
    std::map<std::string, CombinedDataset> combinedDatasets;
    std::map<std::string, ModelConfigInfo> modelConfigs;
    std::vector<StepWidth> stepWidths;
+   /// The constraint terms of HistFactory distributions that no modifier names, by distribution. They are
+   /// also listed in the "aux_distributions" of the likelihoods, which is what other implementations use.
+   std::map<std::string, std::vector<DistributionRef>> channelConstraints;
 };
 
 struct Diagnostic {

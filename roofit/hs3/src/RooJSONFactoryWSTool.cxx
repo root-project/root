@@ -155,11 +155,14 @@ struct RooFit::HS3::ToolExportState {
    JSONNode *root = nullptr;
    /// Set by the exporter of an object that is interpreted by the document.
    std::optional<HistFactoryDist> typedObject;
+   std::vector<DistributionRef> channelConstraints;
 };
 
-void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist)
+void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
+                                    std::vector<DistributionRef> channelConstraints)
 {
    tool._export->typedObject = std::move(dist);
+   tool._export->channelConstraints = std::move(channelConstraints);
 }
 
 namespace {
@@ -608,11 +611,29 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    for (auto const &term : likelihood.terms) {
       nllDistNames.push_back(term.distribution.name);
    }
+   // The constraint terms of HistFactory distributions are listed as auxiliary distributions, but they are part of the
+   // distributions in RooFit.
+   std::set<std::string> channelConstraints;
+   for (auto const &item : doc.rooFit.channelConstraints) {
+      for (auto const &ref : item.second) {
+         channelConstraints.insert(ref.name);
+      }
+   }
    RooArgSet extConstraints;
    for (auto const &aux : likelihood.auxDistributions) {
-      if (RooAbsArg *extConstraint = workspace.arg(aux.name)) {
-         extConstraints.add(*extConstraint);
+      RooAbsArg *extConstraint = workspace.arg(aux.name);
+      if (!extConstraint) {
+         continue;
       }
+      // Only if the constraint really ended up in a distribution of the likelihood.
+      if (channelConstraints.count(aux.name) &&
+          std::any_of(nllDistNames.begin(), nllDistNames.end(), [&](std::string const &distName) {
+             RooAbsArg const *dist = workspace.arg(distName);
+             return dist && dist->dependsOn(*extConstraint);
+          })) {
+         continue;
+      }
+      extConstraints.add(*extConstraint);
    }
    RooArgSet observables;
    for (auto const &term : likelihood.terms) {
@@ -1187,6 +1208,10 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
             elem["name"] << name;
             _export->doc.distributions.push_back({name, std::move(*_export->typedObject)});
             _export->typedObject.reset();
+            if (!_export->channelConstraints.empty()) {
+               _export->doc.rooFit.channelConstraints[name] = std::move(_export->channelConstraints);
+            }
+            _export->channelConstraints.clear();
          } else {
             recordGenericObject(_export->doc, isPdf, name, elem);
          }
@@ -1326,7 +1351,15 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    if (it != importers.end()) {
       for (auto &imp : it->second) {
          try {
-            ok = imp->importArg(this, p);
+            // The built-in importer doesn't see the constraint terms that the document adds to the channel.
+            if (_import && HS3::isBuiltinHistFactoryImporter(*imp)) {
+               auto const &channelConstraints = _import->document.rooFit.channelConstraints;
+               auto found = channelConstraints.find(name);
+               HS3::importHistFactoryNode(*this, p, found != channelConstraints.end() ? &found->second : nullptr);
+               ok = true;
+            } else {
+               ok = imp->importArg(this, p);
+            }
          } catch (const std::exception &e) {
             std::stringstream ss;
             const auto *ptr = imp.get();
@@ -1397,7 +1430,10 @@ void RooJSONFactoryWSTool::importDistribution(HS3::Distribution const &distribut
       return;
    }
    ImportGuard importGuard{_importStack, name};
-   HS3::buildHistFactoryDist(*this, name, std::get<HS3::HistFactoryDist>(distribution.body));
+   auto const &channelConstraints = _import->document.rooFit.channelConstraints;
+   auto found = channelConstraints.find(name);
+   HS3::buildHistFactoryDist(*this, name, std::get<HS3::HistFactoryDist>(distribution.body),
+                             found != channelConstraints.end() ? &found->second : nullptr);
 }
 
 /**
@@ -1835,9 +1871,24 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
       likelihood.terms.push_back({{pdf->GetName()}, 0.0});
    }
 
+   auto addAux = [&](std::string const &name) {
+      auto &aux = likelihood.auxDistributions;
+      if (std::find_if(aux.begin(), aux.end(), [&](auto const &ref) { return ref.name == name; }) == aux.end()) {
+         aux.push_back({name});
+      }
+   };
+   // The constraint terms of HistFactory channels that no modifier names are part of the likelihood.
+   for (auto const &term : likelihood.terms) {
+      auto found = doc.rooFit.channelConstraints.find(term.distribution.name);
+      if (found != doc.rooFit.channelConstraints.end()) {
+         for (auto const &ref : found->second) {
+            addAux(ref.name);
+         }
+      }
+   }
    if (mc.GetExternalConstraints()) {
       for (const auto &constr : *mc.GetExternalConstraints()) {
-         likelihood.auxDistributions.push_back({constr->GetName()});
+         addAux(constr->GetName());
       }
    }
    doc.likelihoods.push_back(std::move(likelihood));

@@ -45,14 +45,22 @@ BinnedAxis toBinnedAxis(RooRealVar const &var);
 std::unique_ptr<RooDataHist> createDataHist(std::string const &name, RooArgSet const &vars,
                                             std::vector<double> const &contents, std::vector<double> const *errors);
 
-/// Create the RooFit objects of a HistFactory distribution in the workspace of the tool.
-void buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist);
+/// Create the RooFit objects of a HistFactory distribution in the workspace of the tool. The constraint terms that no
+/// modifier names are passed separately.
+void buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist,
+                          std::vector<DistributionRef> const *channelConstraints = nullptr);
 
-/// Called by the exporter of a HistFactory distribution, which is then written by the tool.
-void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist);
+/// Called by the exporter of a HistFactory distribution, which is then written by the tool. The constraint terms that
+/// no modifier names are passed separately.
+void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
+                       std::vector<DistributionRef> channelConstraints);
 
 /// Whether this is the importer that RooFit registers for HistFactory distributions, as opposed to the one of a user.
 bool isBuiltinHistFactoryImporter(JSONIO::Importer const &importer);
+
+/// What the built-in importer does with a HistFactory distribution, plus the constraint terms of the channel.
+void importHistFactoryNode(RooJSONFactoryWSTool &tool, Detail::JSONNode const &node,
+                           std::vector<DistributionRef> const *channelConstraints);
 
 } // namespace HS3
 } // namespace RooFit

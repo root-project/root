@@ -1135,6 +1135,7 @@ void readMisc(Cursor const &root, RooFitInternal &out)
    readMap(ar, "combined_distributions", out.combinedDistributions);
    readMap(ar, "combined_datasets", out.combinedDatasets);
    readMap(ar, "ModelConfigs", out.modelConfigs);
+   readMap(ar, "histfactory_constraints", out.channelConstraints);
 }
 
 void readMetadata(Cursor const &root, Metadata &out, ParseOptions const &options)

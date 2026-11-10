@@ -53,6 +53,12 @@ public:
             requireDistribution(ref.name, "misc.ROOT_internal.combined_distributions." + item.first, "distribution");
          }
       }
+      for (auto const &item : _doc.rooFit.channelConstraints) {
+         requireDistribution(item.first, "misc.ROOT_internal.histfactory_constraints", "distribution");
+         for (auto const &ref : item.second) {
+            requireDistribution(ref.name, "misc.ROOT_internal.histfactory_constraints." + item.first, "constraint");
+         }
+      }
    }
 
    void error(std::string const &path, std::string const &message)

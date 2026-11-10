@@ -374,6 +374,12 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
          }
       }
    }
+   if (!internal.channelConstraints.empty()) {
+      JSONNode &constraints = rootInternal()["histfactory_constraints"].set_map();
+      for (auto const &item : internal.channelConstraints) {
+         writeRefs(constraints[item.first], item.second);
+      }
+   }
    if (!internal.stepWidths.empty()) {
       JSONNode &stepWidths = root.get("misc", "minimization")["parameter_stepwidths"].set_seq();
       for (auto const &stepWidth : internal.stepWidths) {
