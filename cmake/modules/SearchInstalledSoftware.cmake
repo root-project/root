@@ -1166,13 +1166,23 @@ if(webgui)
     message(WARNING "Without builtin_openui5 option webgui components will not work offline")
     set(OPENUI5_CUSTOM_LOCATION "https://sdk.openui5.org/1.152.0/")
   endif()
-  # RenderCore, the engine of the REve client, is downloaded at build time and the
-  # client has no web fallback for it.
-  ROOT_CHECK_CONNECTION("webgui=OFF")
-  if(NO_CONNECTION)
-    message(SEND_ERROR "webgui needs RenderCore, which is downloaded at build time: check the connection or place its tarball in ROOT_DOWNLOAD_DIR")
+endif()
+
+#------------------------------------------------------------------------------------
+# REve, built with webgui and root7, runs its client on RenderCore, for which there is
+# no web location to fall back to, so the builtin is required whenever REve is built.
+if(webgui AND root7)
+  if(builtin_rendercore)
+    ROOT_CHECK_CONNECTION("root7=OFF")
+    if (NO_CONNECTION)
+      message(SEND_ERROR "builtin_rendercore=ON requires internet connection, check it, place the RenderCore tarball in ROOT_DOWNLOAD_DIR or disable root7")
+      list(APPEND HOTFIX_BUILD_FLAGS -Droot7=OFF)
+    endif()
+    add_subdirectory(builtins/rendercore)
+  else()
+    message(SEND_ERROR "REve needs RenderCore: enable builtin_rendercore or disable root7")
+    list(APPEND HOTFIX_BUILD_FLAGS -Droot7=OFF)
   endif()
-  add_subdirectory(builtins/rendercore)
 endif()
 
 #------------------------------------------------------------------------------------
