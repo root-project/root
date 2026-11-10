@@ -69,6 +69,12 @@ public:
       /// observables (functions depending on them get the suffix "_<key>"). This allows exporting workspaces whose
       /// components share an observable. Off by default: without it, such workspaces can't be exported.
       bool renameCombinedObservables = false;
+      /// HS3 requires the terms of a likelihood and the components of a combined distribution to have distinct
+      /// variates, e.g. "mass_SR" and "mass_CR" for the observables of two channels instead of one "mass". By
+      /// default, the export fails otherwise. If true, the document is written anyway, with a warning for every
+      /// shared variate. It is not valid HS3 and can't be read back before the variates are renamed, e.g. by hand in
+      /// the JSON.
+      bool allowExportSharedVariates = false;
    };
 
    static Config &config();
