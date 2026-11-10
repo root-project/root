@@ -111,7 +111,6 @@ jobs:
         shell: bash -leo pipefail {0} # Use login shell, so profile scripts get sourced
 
     env:
-      VIRTUAL_ENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform == 'mac-beta' && '27' || '' }} # Problems with gfortran falling back 18 (unsupported)
       HOME: /Users/sftnight
 
@@ -147,14 +146,15 @@ jobs:
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
+      - name: "Check Python environment"
+        run: echo "Python is now $(which python3) $(python3 --version)"
+
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: |
-          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
-          echo "Python is now $(which python3) $(python3 --version)"
           src/.github/workflows/root-ci-config/build_root.py  \
                     --buildtype       RelWithDebInfo          \
                     --incremental     false                   \
@@ -170,8 +170,6 @@ jobs:
       - name: Workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: |
-          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
-          echo "Python is now $(which python3) $(python3 --version)"
           src/.github/workflows/root-ci-config/build_root.py  \
                     --buildtype      ${{ inputs.buildtype }}  \
                     --platform       ${{ matrix.platform }}   \
@@ -190,8 +188,6 @@ jobs:
           # branch happens to be when the job starts (issue #14061).
           SHA:       ${{ github.event_name == 'push' && format('--sha {0}', github.sha) || '' }}
         run: |
-          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
-          echo "Python is now $(which python3) $(python3 --version)"
           src/.github/workflows/root-ci-config/build_root.py    \
                     --buildtype        RelWithDebInfo           \
                     --platform         ${{ matrix.platform }}   \
