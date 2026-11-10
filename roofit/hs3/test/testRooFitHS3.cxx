@@ -7640,3 +7640,187 @@ TEST(RooFitHS3, ConstraintInModelAndExternal)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported2));
    EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), exported2);
 }
+
+namespace {
+
+// A HistFactory channel and an ordinary product sharing the constraint of the HistFactory parameter `theta`. The
+// HistFactory parameter `eta` has a constraint of its own. The channels are named `hfName` and `otherName`, to
+// control the order in which the export visits them. The constraint enters the likelihood twice, through the
+// modifier and as factor of the product, so the document is not valid HS3 0.3: its variate `theta_obs` is shared by
+// two terms. As a document of version 0.2 it is read with a warning, like a RooFit model with the constraint in
+// both channels.
+std::string
+sharedConstraintJSON(std::string const &hfName, std::string const &otherName, std::string const &version = "0.3")
+{
+   std::string json = R"({
+  "metadata": {"hs3_version": "VERSION"},
+  "distributions": [
+    {"name": "HF", "type": "histfactory_dist",
+     "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+     "axes": [{"name": "x_hf", "min": 0.0, "max": 1.0, "nbins": 1}],
+     "samples": [{"name": "signal", "data": {"contents": [10.0]},
+                  "modifiers": [{"name": "mu", "type": "normfactor", "parameters": ["mu"]},
+                                {"name": "shared", "type": "normsys", "parameters": ["theta"],
+                                 "data": {"lo": 0.9, "hi": 1.1}, "constraints": ["shared_constraint"]},
+                                {"name": "own", "type": "normsys", "parameters": ["eta"],
+                                 "data": {"lo": 0.8, "hi": 1.2}, "constraints": ["own_constraint"]}]}]},
+    {"name": "shape", "type": "gaussian_dist", "x": "x_other", "mean": "theta", "sigma": 1.0},
+    {"name": "OTHER", "type": "product_dist", "factors": ["shape", "shared_constraint"]},
+    {"name": "shared_constraint", "type": "gaussian_dist", "x": "theta_obs", "mean": "theta", "sigma": 1.0},
+    {"name": "own_constraint", "type": "gaussian_dist", "x": "eta_obs", "mean": "eta", "sigma": 1.0}
+  ],
+  "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+    {"name": "x_hf", "min": 0.0, "max": 1.0, "nbins": 1}, {"name": "x_other", "min": -5.0, "max": 5.0},
+    {"name": "theta", "min": -5.0, "max": 5.0}, {"name": "eta", "min": -5.0, "max": 5.0},
+    {"name": "mu", "min": 0.0, "max": 5.0}]}],
+  "parameter_points": [{"name": "default_values", "parameters": [
+    {"name": "theta", "value": 0.0}, {"name": "theta_obs", "value": 0.0, "const": true},
+    {"name": "eta", "value": 0.0}, {"name": "eta_obs", "value": 0.0, "const": true}, {"name": "mu", "value": 1.0}]}],
+  "data": [
+    {"name": "data_hf", "type": "binned", "axes": [{"name": "x_hf", "min": 0.0, "max": 1.0, "nbins": 1}],
+     "contents": [10.0]},
+    {"name": "data_other", "type": "unbinned", "axes": [{"name": "x_other", "min": -5.0, "max": 5.0}],
+     "entries": [[0.2]]}
+  ],
+  "likelihoods": [{"name": "lh", "distributions": ["HF", "OTHER"], "data": ["data_hf", "data_other"]}],
+  "analyses": [{"name": "analysis", "likelihood": "lh", "domains": ["default_domain"],
+                "parameters_of_interest": ["mu"]}]
+})";
+   auto replace = [&](std::string const &from, std::string const &to) {
+      for (std::size_t pos = json.find(from); pos != std::string::npos; pos = json.find(from, pos + to.size())) {
+         json.replace(pos, from.size(), to);
+      }
+   };
+   replace("VERSION", version);
+   replace("\"HF\"", "\"" + hfName + "\"");
+   replace("\"OTHER\"", "\"" + otherName + "\"");
+   return json;
+}
+
+// The NLL of the model of sharedConstraintJSON() at a parameter point that moves both constrained parameters.
+double sharedConstraintNLL(RooWorkspace &ws, std::string const &hfName, std::string const &otherName)
+{
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("analysis"));
+   auto *simPdf = mc ? dynamic_cast<RooSimultaneous *>(mc->GetPdf()) : nullptr;
+   if (!simPdf) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   ws.var("mu")->setVal(1.2);
+   ws.var("theta")->setVal(0.4);
+   ws.var("eta")->setVal(-0.3);
+   RooRealVar &xHF = *ws.var("x_hf");
+   RooRealVar &xOther = *ws.var("x_other");
+   RooRealVar weight{"weight", "weight", 1.0};
+   auto &indexCat = dynamic_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(simPdf->indexCat()));
+   RooDataSet combined{"combined", "combined", {xHF, xOther, indexCat, weight}, RooFit::WeightVar(weight)};
+   xOther.setVal(0.0);
+   xHF.setVal(0.5);
+   indexCat.setLabel(hfName.c_str());
+   combined.add({xHF, xOther, indexCat}, 10.0);
+   xOther.setVal(0.2);
+   indexCat.setLabel(otherName.c_str());
+   combined.add({xHF, xOther, indexCat}, 1.0);
+   std::unique_ptr<RooAbsReal> nll{simPdf->createNLL(combined)};
+   return nll->getVal();
+}
+
+} // namespace
+
+// A constraint shared between a HistFactory channel and another pdf is written once, as a term of the likelihood,
+// whatever the order in which the export visits them, also when the constraints of the HistFactory channels are
+// collected into arrays.
+TEST(RooFitHS3, HistFactoryConstraintSharedWithOtherPdf)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // Not valid HS3 0.3.
+   expectImportThrowsWithError(sharedConstraintJSON("model_hf", "model_other"),
+                               "the variate 'theta_obs' is shared by the terms 'model_other' and 'shared_constraint'");
+
+   // The HistFactory channel is visited first, and last.
+   for (auto const &[hfName, otherName] : std::vector<std::pair<std::string, std::string>>{
+           {"model_hf", "model_other"}, {"z_model_hf", "a_model_other"}}) {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(sharedConstraintJSON(hfName, otherName, "0.2")));
+      });
+      EXPECT_NE(
+         warnings.find("the variate 'theta_obs' is shared by the terms '" + otherName + "' and 'shared_constraint'"),
+         std::string::npos)
+         << warnings;
+      const double nll = sharedConstraintNLL(ws, hfName, otherName);
+      ASSERT_FALSE(std::isnan(nll));
+      for (bool arrays : {true, false}) {
+         SCOPED_TRACE(hfName + (arrays ? ", arrays" : ", no arrays"));
+         RooJSONFactoryWSTool::config().exportArrayDist = arrays;
+         const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+         RooJSONFactoryWSTool::config().exportArrayDist = true;
+
+         auto tree = RooFit::Detail::JSONTree::create(exported);
+         auto const &distributions = tree->rootnode()["distributions"];
+         const auto *shared = RooJSONFactoryWSTool::findNamedChild(distributions, "shared_constraint");
+         ASSERT_NE(shared, nullptr) << exported;
+         EXPECT_EQ((*shared)["type"].val(), "gaussian_dist") << exported;
+         EXPECT_NE(exported.find(R"("constraints":["shared_constraint"])"), std::string::npos) << exported;
+         // The product only keeps the factor that is not a term of the likelihood.
+         const auto *other = RooJSONFactoryWSTool::findNamedChild(distributions, otherName);
+         ASSERT_NE(other, nullptr) << exported;
+         ASSERT_EQ((*other)["factors"].num_children(), 1u) << exported;
+         EXPECT_EQ((*other)["factors"].child(0).val(), "shape") << exported;
+         // The constraint that only the HistFactory channel uses is still collected.
+         const auto *own = RooJSONFactoryWSTool::findNamedChild(distributions, "own_constraint");
+         const auto *array =
+            RooJSONFactoryWSTool::findNamedChild(distributions, "analysis_simPdf_gaussian_constraints");
+         if (arrays) {
+            EXPECT_EQ(own, nullptr) << exported;
+            ASSERT_NE(array, nullptr) << exported;
+            ASSERT_EQ((*array)["components"].num_children(), 1u) << exported;
+            EXPECT_EQ((*array)["components"].child(0)["x"].val(), "eta_obs") << exported;
+            EXPECT_NE(exported.find(R"("constraints":["analysis_simPdf_gaussian_constraints"])"), std::string::npos)
+               << exported;
+         } else {
+            EXPECT_NE(own, nullptr) << exported;
+            EXPECT_EQ(array, nullptr) << exported;
+         }
+
+         // Valid HS3 0.3: read back without warnings, with the same NLL.
+         RooWorkspace ws2;
+         const std::string warnings2 = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+            ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+         });
+         EXPECT_EQ(warnings2.find("is shared by the terms"), std::string::npos) << warnings2;
+         const double nll2 = sharedConstraintNLL(ws2, hfName, otherName);
+         EXPECT_NEAR(nll2, nll, 1e-10 * std::abs(nll));
+         // The re-imported model has the constraint only in the HistFactory channel, so with arrays it is collected
+         // now. From there on, the document is stable.
+         RooJSONFactoryWSTool::config().exportArrayDist = arrays;
+         const std::string exported2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+         RooWorkspace ws3;
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported2)) << exported2;
+         const std::string exported3 = RooJSONFactoryWSTool{ws3}.exportJSONtoString();
+         RooJSONFactoryWSTool::config().exportArrayDist = true;
+         EXPECT_EQ(exported3, exported2);
+         EXPECT_EQ(exported2.find(R"("constraints":["shared_constraint"])") == std::string::npos, arrays) << exported2;
+         const double nll3 = sharedConstraintNLL(ws3, hfName, otherName);
+         EXPECT_NEAR(nll3, nll, 1e-10 * std::abs(nll));
+      }
+   }
+
+   // A component of a tagged array product that another product also uses cannot be written: the export fails
+   // instead of leaving a dangling reference, whichever of the two is visited first.
+   RooRealVar nomA{"nom_a", "nom_a", 0.0, -5.0, 5.0};
+   RooRealVar a{"a", "a", 0.0, -5.0, 5.0};
+   RooRealVar x{"x", "x", 1.0, 0.0, 10.0};
+   RooGaussian gaussA{"gauss_a", "gauss_a", nomA, a, RooFit::RooConst(1.0)};
+   RooGaussian shape{"shape", "shape", x, a, RooFit::RooConst(1.0)};
+   for (auto const &[arrayName, error] : std::vector<std::pair<std::string, std::string>>{
+           {"a_array", "is written as a component of the array"}, {"z_array", "is already written as 'gauss_a'"}}) {
+      RooProdPdf array{arrayName.c_str(), arrayName.c_str(), {gaussA}};
+      array.setAttribute("hs3_array_dist");
+      RooProdPdf other{"m_other", "m_other", {shape, gaussA}};
+      RooWorkspace wsTagged;
+      wsTagged.import(array, RooFit::Silence());
+      wsTagged.import(other, RooFit::RecycleConflictNodes(), RooFit::Silence());
+      expectExportThrowsWithError(wsTagged, error);
+   }
+}

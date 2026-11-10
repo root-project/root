@@ -2251,8 +2251,17 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
    std::set<std::string> &exportedObjectNames = _export->exportedObjectNames;
 
    // if this element was already exported, skip
-   if (exportedObjectNames.find(name) != exportedObjectNames.end())
+   if (exportedObjectNames.find(name) != exportedObjectNames.end()) {
+      // A component of an array distribution is not written under its own name, so an object that refers to it by
+      // that name would have a dangling reference.
+      auto const &arrayOfComponent = _export->arrayOfComponent;
+      if (auto found = arrayOfComponent.find(name); found != arrayOfComponent.end() && found->second != name) {
+         error("'" + name + "' is written as a component of the array distribution '" + found->second +
+               "', but another object refers to it by its own name. Set "
+               "RooJSONFactoryWSTool::config().exportArrayDist = false to write it on its own.");
+      }
       return;
+   }
 
    exportedObjectNames.insert(name);
 

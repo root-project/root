@@ -1379,13 +1379,47 @@ void configureStatError(ExportedChannel &channel)
    }
 }
 
+// Whether `pdf` has the form that the HistFactory exporter writes as a histfactory_dist with its constraint terms:
+// a product of exactly one RooRealSumPdf and other pdfs.
+bool isHistFactoryChannelProduct(RooAbsArg const &pdf)
+{
+   auto const *prod = dynamic_cast<RooProdPdf const *>(&pdf);
+   if (!prod) {
+      return false;
+   }
+   int nSums = 0;
+   for (RooAbsArg const *factor : prod->pdfList()) {
+      if (dynamic_cast<RooRealSumPdf const *>(factor)) {
+         ++nSums;
+      }
+   }
+   return nSums == 1;
+}
+
+// Whether the constraint `constraint` can be written as an array component: every object of the workspace that uses
+// it is a HistFactory channel, which refers to it through its modifiers, or an array distribution. Any other user,
+// e.g. an ordinary product, refers to the constraint by its own name, which an array component doesn't have. The
+// decision only depends on the workspace, not on the order in which the export visits the objects.
+bool usedOnlyByHistFactoryChannels(RooJSONFactoryWSTool &tool, RooAbsPdf const &constraint)
+{
+   for (RooAbsArg const *client : constraint.clients()) {
+      if (tool.workspace()->arg(client->GetName()) != client) {
+         continue; // not part of what is exported
+      }
+      if (!client->getAttribute(arrayDistTag) && !isHistFactoryChannelProduct(*client)) {
+         return false;
+      }
+   }
+   return true;
+}
+
 // Register the constraint `constraint` of a modifier parameter for the export and return the name under which it is
 // written. Constraints are collected into one array distribution per type and top-level pdf (or, if the constraint
-// already belongs to an array distribution, that one), unless the arrays are switched off or the constraint cannot be
-// a component. In those cases it is written on its own.
+// already belongs to an array distribution, that one), unless the arrays are switched off, the constraint cannot be
+// a component, or it is used by objects other than HistFactory channels. In those cases it is written on its own.
 std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constraint)
 {
-   if (RooJSONFactoryWSTool::config().exportArrayDist) {
+   if (RooJSONFactoryWSTool::config().exportArrayDist && usedOnlyByHistFactoryChannels(tool, constraint)) {
       if (auto info = arrayComponentInfo(constraint)) {
          std::string arrayName;
          for (RooAbsArg const *client : constraint.clients()) {
