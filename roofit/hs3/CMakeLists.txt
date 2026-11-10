@@ -19,7 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
   HEADERS
     ${ROOFITHS3_HEADERS}
   SOURCES
-    src/Domains.cxx
     src/HS3Parser.cxx
     src/HS3Upgrade.cxx
     src/HS3Validate.cxx
@@ -52,7 +51,6 @@ target_sources(
     FILES
         ${RELATIVE_INC_HEADERS}
         # LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
-        src/Domains.h
         src/HS3Builder.h
         src/HS3Document.h
         src/HS3Schema.h
