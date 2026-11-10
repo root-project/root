@@ -667,6 +667,96 @@ TEST(RNTupleEmulated, CollectionProxy)
    EXPECT_EQ(0u, vec->size());
 }
 
+TEST(RNTupleEmulated, MissingCollectionProxyIterator)
+{
+   ExecInFork([&] {
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+         #include <vector>
+
+         template <typename T>
+         struct StructWithoutIterators {
+            using ValueType = T;
+            std::vector<T> v;
+         };
+
+         template <typename CollectionT>
+         class NoIteratorCollectionProxy : public TVirtualCollectionProxy {
+         private:
+            CollectionT *fObject = nullptr;
+
+         public:
+            NoIteratorCollectionProxy()
+               : TVirtualCollectionProxy(TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(CollectionT)).c_str()))
+            {
+            }
+            NoIteratorCollectionProxy(const NoIteratorCollectionProxy<CollectionT> &) : NoIteratorCollectionProxy() {}
+
+            TVirtualCollectionProxy *Generate() const override
+            {
+               return new NoIteratorCollectionProxy<CollectionT>(*this);
+            }
+            Int_t GetCollectionType() const override { return ROOT::kSTLvector; }
+            ULong_t GetIncrement() const override { return sizeof(typename CollectionT::ValueType); }
+            UInt_t Sizeof() const override { return sizeof(CollectionT); }
+            bool HasPointers() const override { return false; }
+
+            TClass *GetValueClass() const override { return nullptr; }
+            EDataType GetType() const override { return EDataType::kChar_t; }
+
+            void PushProxy(void *objectstart) override { fObject = static_cast<CollectionT *>(objectstart); }
+            void PopProxy() override { fObject = nullptr; }
+            void *At(UInt_t idx) override { return &fObject->v[idx]; }
+            void Clear(const char * /*opt*/ = "") override { fObject->v.clear(); }
+            UInt_t Size() const override { return fObject->v.size(); }
+            void *Allocate(UInt_t n, bool /*forceDelete*/) override
+            {
+               fObject->v.resize(n);
+               return fObject;
+            }
+            void Commit(void *) override {}
+            void Insert(const void *data, void *container, size_t size) override
+            {
+               auto p = static_cast<const typename CollectionT::ValueType *>(data);
+               for (size_t i = 0; i < size; ++i) {
+                  static_cast<CollectionT *>(container)->v.push_back(p[i]);
+               }
+            }
+
+            TStreamerInfoActions::TActionSequence *
+            GetConversionReadMemberWiseActions(TClass * /*oldClass*/, Int_t /*version*/) override
+            {
+               return nullptr;
+            }
+            TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t /*version*/) override { return nullptr; }
+            TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() override { return nullptr; }
+
+            CreateIterators_t GetFunctionCreateIterators(bool /*read*/ = true) override { return nullptr; }
+            CopyIterator_t GetFunctionCopyIterator(bool /*read*/ = true) override { return nullptr; }
+            Next_t GetFunctionNext(bool /*read*/ = true) override { return nullptr; }
+            DeleteIterator_t GetFunctionDeleteIterator(bool /*read*/ = true) override { return nullptr; }
+            DeleteTwoIterators_t GetFunctionDeleteTwoIterators(bool /*read*/ = true) override { return nullptr; }
+         };
+
+         namespace ROOT {
+         template <>
+         struct IsCollectionProxy<StructWithoutIterators<char>> : std::true_type {
+         };
+         } // namespace ROOT
+
+         NoIteratorCollectionProxy<StructWithoutIterators<char>> proxy;
+         auto klass = TClass::GetClass("StructWithoutIterators<char>");
+         klass->CopyCollectionProxy(proxy);
+      )"));
+
+      try {
+         RFieldBase::Create("noIter", "StructWithoutIterators<char>").Unwrap();
+         FAIL() << "Creating a field with missing collection proxy iterators should throw";
+      } catch (const ROOT::RException &ex) {
+         ASSERT_THAT(ex.GetError().GetReport(), testing::HasSubstr("has no compiled iterator functions available"));
+      }
+   });
+}
+
 TEST(RNTupleEmulated, EmulatedFields_Enum)
 {
    FileRaii fileGuard("test_ntuple_emulated_fields_enum.root");
