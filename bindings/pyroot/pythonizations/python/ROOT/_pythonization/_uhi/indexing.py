@@ -187,7 +187,9 @@ def _slice_get(self, index):
     processed_slices, actions = _get_processed_slices(self, index)
     args_vec = ROOT.std.vector("Int_t")([item for pair in processed_slices for item in pair])
 
-    target_hist = ROOT.Internal.Slice(self, args_vec)
+    # Instantiate Slice for the class of the histogram, otherwise a profile can be passed to the
+    # instantiation for its base class (e.g. Slice<TH1D> for a TProfile), which cannot copy it
+    target_hist = ROOT.Internal.Slice[self.ClassName()](self, args_vec)
 
     return _apply_actions(target_hist, actions, index, self)
 
