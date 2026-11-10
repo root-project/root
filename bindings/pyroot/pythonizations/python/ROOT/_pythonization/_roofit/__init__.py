@@ -37,7 +37,6 @@ from ._rooglobalfunc import (
     ZVar,
     bindFunction,
 )
-from ._roojsonfactorywstool import RooJSONFactoryWSTool
 from ._roomcstudy import RooMCStudy
 from ._roomsgservice import RooMsgService
 from ._rooplot import RooPlot
@@ -67,7 +66,6 @@ python_classes = [
     RooDataSet,
     RooDecay,
     RooGenFitStudy,
-    RooJSONFactoryWSTool,
     RooMCStudy,
     RooMsgService,
     RooPlot,
