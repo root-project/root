@@ -97,6 +97,10 @@ void readValue(Cursor const &c, bool &out);
 void readValue(Cursor const &c, ParameterValue &out);
 void readValue(Cursor const &c, Data &out);
 void readValue(Cursor const &c, Interpolation &out);
+void readValue(Cursor const &c, NameOrNumber &out);
+
+/// Reads an integer interpolation code, as older versions of RooFit wrote them.
+std::optional<Interpolation> readInterpolationCode(Cursor const &c, InterpolationClass interpolationClass);
 
 template <class Tag>
 void readValue(Cursor const &c, Ref<Tag> &out)

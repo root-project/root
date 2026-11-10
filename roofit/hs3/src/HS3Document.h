@@ -407,6 +407,30 @@ struct Function {
    GenericObject body;
 };
 
+/// A name, or a number for a constant.
+using NameOrNumber = std::variant<std::string, double>;
+
+/// The function "interpolation" of RooFit, implemented by PiecewiseInterpolation: a nominal function plus the
+/// interpolated differences to the variations "high" and "low" for each parameter.
+struct InterpolatedFunction {
+   std::string nominal;
+   std::vector<NameOrNumber> parameters;
+   std::vector<NameOrNumber> high;
+   std::vector<NameOrNumber> low;
+   std::vector<Interpolation> interpolations; ///< One per parameter.
+   bool positiveDefinite = false;
+};
+
+/// The function "interpolation0d" of RooFit, implemented by FlexibleInterpVar: a nominal value plus the interpolated
+/// differences to the variations "high" and "low" for each parameter.
+struct InterpolatedNumber {
+   double nominal = 0.0;
+   std::vector<std::string> parameters;
+   std::vector<double> high;
+   std::vector<double> low;
+   std::vector<Interpolation> interpolations; ///< One per parameter.
+};
+
 // The following types are stored in the "misc" section, for which the HS3 standard doesn't prescribe a format.
 
 struct Attributes {
@@ -522,8 +546,10 @@ HS3Document parseDocument(Detail::JSONNode const &root, Diagnostics &diagnostics
 /// Reads a HistFactory distribution that doesn't come with a document.
 HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
 
-/// Reads an interpolation that doesn't come with a document.
-Interpolation parseInterpolation(Detail::JSONNode const &interpolation, Diagnostics &diagnostics);
+/// Reads the functions "interpolation" and "interpolation0d", which don't come with a document. Older versions of
+/// RooFit wrote integer "interpolationCodes" instead of "interpolations".
+InterpolatedFunction parseInterpolatedFunction(Detail::JSONNode const &node, Diagnostics &diagnostics);
+InterpolatedNumber parseInterpolatedNumber(Detail::JSONNode const &node, Diagnostics &diagnostics);
 
 /// Writes everything but the distributions and functions, which are written one by one while they are exported: the
 /// generic ones by the exporters, and the others with functions like writeHistFactoryDist().
@@ -531,6 +557,12 @@ void writeDocument(Detail::JSONNode &root, HS3Document const &doc);
 
 /// Writes a HistFactory distribution, without its name.
 void writeHistFactoryDist(Detail::JSONNode &node, HistFactoryDist const &dist);
+
+/// Writes the functions "interpolation" and "interpolation0d", with a single interpolation if they are all the same.
+void writeInterpolatedFunction(Detail::JSONNode &node, InterpolatedFunction const &function);
+void writeInterpolatedNumber(Detail::JSONNode &node, InterpolatedNumber const &function);
+
+void writeInterpolation(Detail::JSONNode &node, Interpolation const &interpolation);
 
 /// Writes a number, as an integer if it has no fractional part.
 void writeNumber(Detail::JSONNode &node, double value);

@@ -16,7 +16,6 @@
 
 #include "HS3Schema.h"
 
-#include <charconv>
 #include <functional>
 #include <set>
 #include <string>
@@ -127,34 +126,9 @@ void upgradeInterpolationCode(JSONNode &mod, InterpolationClass interpolationCla
       return;
    }
    JSONNode &node = mod["interpolation"];
-   Cursor nodeCursor{node, c, "interpolation"};
-   if (!isScalar(node)) {
-      nodeCursor.error("must be a structured interpolation or a legacy integer code");
-      return;
-   }
-   const std::string value = node.val();
-   int code = 0;
-   const auto result = std::from_chars(value.data(), value.data() + value.size(), code);
-   if (result.ec != std::errc{} || result.ptr != value.data() + value.size()) {
-      nodeCursor.error("has invalid legacy interpolation code '" + value + "'");
-      return;
-   }
-   auto interpolation = interpolationFromCode(code, interpolationClass);
-   if (!interpolation) {
-      nodeCursor.error(
-         std::string("has unsupported ") +
-         (interpolationClass == InterpolationClass::Piecewise ? "PiecewiseInterpolation" : "FlexibleInterpVar") +
-         " code " + value);
-      return;
-   }
-   node.set_null();
-   node.set_map();
-   node["type"] << toString(interpolation->type);
-   node["in"] << toString(interpolation->in);
-   if (interpolation->out) {
-      node["out"] << toString(*interpolation->out);
-   } else {
-      node["out"].set_null();
+   if (auto interpolation = readInterpolationCode(Cursor{node, c, "interpolation"}, interpolationClass)) {
+      node.set_null();
+      writeInterpolation(node, *interpolation);
    }
 }
 

@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cmath>
 #include <limits>
 #include <exception>
@@ -1236,11 +1237,125 @@ HistFactoryDist parseHistFactoryDist(JSONNode const &distribution, Diagnostics &
    return out;
 }
 
-Interpolation parseInterpolation(JSONNode const &interpolation, Diagnostics &diagnostics)
+void readValue(Cursor const &c, NameOrNumber &out)
 {
-   Interpolation out;
-   readValue(Cursor{interpolation, diagnostics}, out);
+   if (c.node().is_number()) {
+      out = c.node().val_double();
+   } else {
+      readValue(c, out.emplace<std::string>());
+   }
+}
+
+std::optional<Interpolation> readInterpolationCode(Cursor const &c, InterpolationClass interpolationClass)
+{
+   JSONNode const &node = c.node();
+   if (node.is_container() || node.is_null() || !node.has_val()) {
+      c.error("must be a structured interpolation or a legacy integer code");
+      return std::nullopt;
+   }
+   const std::string value = node.val();
+   int code = 0;
+   const auto result = std::from_chars(value.data(), value.data() + value.size(), code);
+   if (result.ec != std::errc{} || result.ptr != value.data() + value.size()) {
+      c.error("has invalid legacy interpolation code '" + value + "'");
+      return std::nullopt;
+   }
+   auto interpolation = interpolationFromCode(code, interpolationClass);
+   if (!interpolation) {
+      c.error(std::string("has unsupported ") +
+              (interpolationClass == InterpolationClass::Piecewise ? "PiecewiseInterpolation" : "FlexibleInterpVar") +
+              " code " + value);
+   }
+   return interpolation;
+}
+
+namespace {
+
+// The "interpolations" of the functions "interpolation" and "interpolation0d": one for all parameters, or one per
+// parameter. Older versions of RooFit wrote integer "interpolationCodes". Without both, the interpolation is linear.
+void readInterpolations(Reader &ar, std::size_t nParameters, InterpolationClass interpolationClass,
+                        std::vector<Interpolation> &out)
+{
+   out.assign(nParameters, additivePiecewiseLinear);
+   if (ar.has("interpolations")) {
+      Cursor c{ar.cursor().node()["interpolations"], ar.cursor(), "interpolations"};
+      const std::size_t errorsBefore = c.numErrors();
+      std::vector<Interpolation> interpolations;
+      readValue(c, interpolations);
+      const std::size_t size = interpolations.size();
+      if (c.numErrors() != errorsBefore) {
+         return;
+      }
+      if (nParameters == 0 ? size != 0 : size != 1 && size != nParameters) {
+         c.error("component 'interpolations' must contain either one descriptor or one descriptor per parameter (got " +
+                 std::to_string(size) + " for " + std::to_string(nParameters) + " parameters)");
+      } else if (size == 1) {
+         out.assign(nParameters, interpolations.front());
+      } else {
+         out = std::move(interpolations);
+      }
+      return;
+   }
+   if (!ar.has("interpolationCodes")) {
+      return;
+   }
+   Cursor c{ar.cursor().node()["interpolationCodes"], ar.cursor(), "interpolationCodes"};
+   if (!c.node().is_seq() || c.node().num_children() != nParameters) {
+      c.error("legacy component 'interpolationCodes' must contain one code per parameter (got " +
+              std::to_string(c.node().is_seq() ? c.node().num_children() : 0) + " for " + std::to_string(nParameters) +
+              " parameters)");
+      return;
+   }
+   std::size_t i = 0;
+   for (JSONNode const &child : c.node().children()) {
+      if (auto interpolation = readInterpolationCode(Cursor{child, c, i}, interpolationClass)) {
+         out[i] = *interpolation;
+      }
+      ++i;
+   }
+}
+
+// The functions "interpolation" and "interpolation0d" have the variations "high" and "low" for each of the "vars".
+template <class Function_t, class Fn>
+Function_t parseInterpolated(JSONNode const &node, Diagnostics &diagnostics, InterpolationClass interpolationClass,
+                             Fn &&readOthers)
+{
+   Function_t out;
+   Cursor cursor{node, diagnostics};
+   if (!node.is_map()) {
+      cursor.error("must be a struct");
+      return out;
+   }
+   const std::size_t errorsBefore = cursor.numErrors();
+   Reader ar{cursor};
+   ar.has("name");
+   ar.has("type");
+   ar("nom", out.nominal);
+   ar("vars", out.parameters);
+   ar("high", out.high);
+   ar("low", out.low);
+   readOthers(ar, out);
+   if (cursor.numErrors() == errorsBefore &&
+       (out.high.size() != out.parameters.size() || out.low.size() != out.parameters.size())) {
+      cursor.error("has non-matching lengths of 'vars', 'high' and 'low'");
+   }
+   readInterpolations(ar, out.parameters.size(), interpolationClass, out.interpolations);
    return out;
+}
+
+} // namespace
+
+InterpolatedFunction parseInterpolatedFunction(JSONNode const &node, Diagnostics &diagnostics)
+{
+   return parseInterpolated<InterpolatedFunction>(
+      node, diagnostics, InterpolationClass::Piecewise,
+      [](Reader &ar, InterpolatedFunction &out) { ar("positiveDefinite", out.positiveDefinite); });
+}
+
+InterpolatedNumber parseInterpolatedNumber(JSONNode const &node, Diagnostics &diagnostics)
+{
+   return parseInterpolated<InterpolatedNumber>(node, diagnostics, InterpolationClass::Flexible,
+                                                [](Reader &, InterpolatedNumber &) {});
 }
 
 } // namespace HS3

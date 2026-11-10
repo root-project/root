@@ -89,43 +89,6 @@ std::string interpolationString(const Interpolation &interpolation)
    return ss.str();
 }
 
-Interpolation readInterpolation(const JSONNode &node, const std::string &context)
-{
-   HS3::Diagnostics diagnostics;
-   const Interpolation interpolation = HS3::parseInterpolation(node, diagnostics);
-   if (!diagnostics.empty()) {
-      RooJSONFactoryWSTool::error(context + " " + diagnostics.front().message);
-   }
-   return interpolation;
-}
-
-void writeInterpolation(JSONNode &node, const Interpolation &interpolation)
-{
-   node.set_map();
-   node["type"] << toString(interpolation.type);
-   node["in"] << toString(interpolation.in);
-   if (interpolation.out) {
-      node["out"] << toString(*interpolation.out);
-   } else {
-      node["out"].set_null();
-   }
-}
-
-int readLegacyInterpolationCode(const JSONNode &node, const std::string &context)
-{
-   if (node.is_container() || node.is_null() || !node.has_val()) {
-      RooJSONFactoryWSTool::error(context + " must be a structured interpolation or a legacy integer code");
-   }
-
-   const std::string value = node.val();
-   int code = 0;
-   const auto result = std::from_chars(value.data(), value.data() + value.size(), code);
-   if (result.ec != std::errc{} || result.ptr != value.data() + value.size()) {
-      RooJSONFactoryWSTool::error(context + " has invalid legacy interpolation code '" + value + "'");
-   }
-   return code;
-}
-
 const char *interpolationClassName(InterpolationClass interpolationClass)
 {
    return interpolationClass == InterpolationClass::Piecewise ? "PiecewiseInterpolation" : "FlexibleInterpVar";
@@ -150,91 +113,36 @@ int codeFromInterpolation(const Interpolation &interpolation, InterpolationClass
                                interpolationClassName(interpolationClass));
 }
 
-void writeInterpolations(JSONNode &node, const std::vector<int> &codes, InterpolationClass interpolationClass,
-                         const std::string &context)
+// The interpolations of the parameters of a PiecewiseInterpolation or FlexibleInterpVar.
+std::vector<Interpolation>
+toInterpolations(std::vector<int> const &codes, InterpolationClass interpolationClass, std::string const &context)
 {
-   auto &interpolations = node.set_seq();
-   if (codes.empty()) {
-      return;
-   }
-
-   std::vector<Interpolation> descriptors;
-   descriptors.reserve(codes.size());
+   std::vector<Interpolation> out;
    for (std::size_t i = 0; i < codes.size(); ++i) {
-      descriptors.push_back(
+      out.push_back(
          interpolationFromCode(codes[i], interpolationClass, context + " at parameter index " + std::to_string(i)));
    }
-
-   bool allEqual = true;
-   for (std::size_t i = 1; i < descriptors.size(); ++i) {
-      if (descriptors[i] != descriptors.front()) {
-         allEqual = false;
-         break;
-      }
-   }
-
-   const std::size_t outputSize = allEqual ? 1 : descriptors.size();
-   for (std::size_t i = 0; i < outputSize; ++i) {
-      writeInterpolation(interpolations.append_child(), descriptors[i]);
-   }
+   return out;
 }
 
-std::vector<int> readInterpolations(const JSONNode &object, std::size_t nParameters,
-                                    InterpolationClass interpolationClass, const std::string &context)
+std::vector<int> toCodes(std::vector<Interpolation> const &interpolations, InterpolationClass interpolationClass,
+                         std::string const &context)
 {
-   if (const auto *interpolations = object.find("interpolations")) {
-      if (!interpolations->is_seq()) {
-         RooJSONFactoryWSTool::error(context + " component 'interpolations' must be an array");
-      }
-
-      const std::size_t size = interpolations->num_children();
-      const bool validSize = nParameters == 0 ? size == 0 : size == 1 || size == nParameters;
-      if (!validSize) {
-         RooJSONFactoryWSTool::error(context +
-                                     " component 'interpolations' must contain either one descriptor or one "
-                                     "descriptor per parameter (got " +
-                                     std::to_string(size) + " for " + std::to_string(nParameters) + " parameters)");
-      }
-
-      std::vector<int> codes;
-      codes.reserve(size);
-      std::size_t i = 0;
-      for (const auto &node : interpolations->children()) {
-         const std::string entryContext = context + " component 'interpolations' at index " + std::to_string(i);
-         codes.push_back(
-            codeFromInterpolation(readInterpolation(node, entryContext), interpolationClass, entryContext));
-         ++i;
-      }
-      if (size == 1) {
-         codes.resize(nParameters, codes.front());
-      }
-      return codes;
+   std::vector<int> out;
+   for (std::size_t i = 0; i < interpolations.size(); ++i) {
+      out.push_back(codeFromInterpolation(interpolations[i], interpolationClass,
+                                          context + " component 'interpolations' at index " + std::to_string(i)));
    }
+   return out;
+}
 
-   std::vector<int> codes(nParameters, 0);
-   if (const auto *legacyCodes = object.find("interpolationCodes")) {
-      if (!legacyCodes->is_seq()) {
-         RooJSONFactoryWSTool::error(context + " legacy component 'interpolationCodes' must be an array");
-      }
-      if (legacyCodes->num_children() != nParameters) {
-         RooJSONFactoryWSTool::error(context +
-                                     " legacy component 'interpolationCodes' must contain one code per "
-                                     "parameter (got " +
-                                     std::to_string(legacyCodes->num_children()) + " for " +
-                                     std::to_string(nParameters) + " parameters)");
-      }
-
-      std::size_t i = 0;
-      for (const auto &node : legacyCodes->children()) {
-         const std::string entryContext =
-            context + " legacy component 'interpolationCodes' at index " + std::to_string(i);
-         const Interpolation interpolation =
-            interpolationFromCode(readLegacyInterpolationCode(node, entryContext), interpolationClass, entryContext);
-         codes[i] = codeFromInterpolation(interpolation, interpolationClass, entryContext);
-         ++i;
-      }
+// Reports the problems with an object that doesn't come with a document.
+void report(std::string const &name, HS3::Diagnostics &diagnostics)
+{
+   for (auto &diagnostic : diagnostics) {
+      diagnostic.path = name + (diagnostic.path.empty() ? "" : "." + diagnostic.path);
    }
-   return codes;
+   HS3::report(diagnostics);
 }
 
 int interpolationCode(std::optional<Interpolation> const &interpolation,
@@ -759,19 +667,21 @@ public:
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       auto fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar *>(func);
+      const std::string context = "FlexibleInterpVar '" + std::string{fip->GetName()} + "'";
       const std::size_t nParameters = fip->variables().size();
       if (fip->low().size() != nParameters || fip->high().size() != nParameters ||
           fip->interpolationCodes().size() != nParameters) {
-         RooJSONFactoryWSTool::error("FlexibleInterpVar '" + std::string{fip->GetName()} +
-                                     "' has non-matching parameter, variation, and interpolation lengths");
+         RooJSONFactoryWSTool::error(context + " has non-matching parameter, variation, and interpolation lengths");
       }
-      elem["type"] << key();
-      writeInterpolations(elem["interpolations"], fip->interpolationCodes(), InterpolationClass::Flexible,
-                          "FlexibleInterpVar '" + std::string{fip->GetName()} + "'");
-      RooJSONFactoryWSTool::fillSeq(elem["vars"], fip->variables());
-      elem["nom"] << fip->nominal();
-      elem["high"].fill_seq(fip->high(), fip->variables().size());
-      elem["low"].fill_seq(fip->low(), fip->variables().size());
+      HS3::InterpolatedNumber out;
+      for (RooAbsArg const *var : fip->variables()) {
+         out.parameters.push_back(var->GetName());
+      }
+      out.nominal = fip->nominal();
+      out.high = fip->high();
+      out.low = fip->low();
+      out.interpolations = toInterpolations(fip->interpolationCodes(), InterpolationClass::Flexible, context);
+      HS3::writeInterpolatedNumber(elem, out);
       return true;
    }
 };
@@ -786,20 +696,22 @@ public:
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);
+      const std::string context = "PiecewiseInterpolation '" + std::string{pip->GetName()} + "'";
       const std::size_t nParameters = pip->paramList().size();
       if (pip->lowList().size() != nParameters || pip->highList().size() != nParameters ||
           pip->interpolationCodes().size() != nParameters) {
-         RooJSONFactoryWSTool::error("PiecewiseInterpolation '" + std::string{pip->GetName()} +
-                                     "' has non-matching parameter, variation, and interpolation lengths");
+         RooJSONFactoryWSTool::error(context + " has non-matching parameter, variation, and interpolation lengths");
       }
-      elem["type"] << key();
-      writeInterpolations(elem["interpolations"], pip->interpolationCodes(), InterpolationClass::Piecewise,
-                          "PiecewiseInterpolation '" + std::string{pip->GetName()} + "'");
-      elem["positiveDefinite"] << pip->positiveDefinite();
-      RooJSONFactoryWSTool::fillSeq(elem["vars"], pip->paramList());
-      elem["nom"] << pip->nominalHist()->GetName();
-      RooJSONFactoryWSTool::fillSeq(elem["high"], pip->highList(), pip->paramList().size());
-      RooJSONFactoryWSTool::fillSeq(elem["low"], pip->lowList(), pip->paramList().size());
+      HS3::InterpolatedFunction out;
+      out.nominal = pip->nominalHist()->GetName();
+      for (std::size_t i = 0; i < nParameters; ++i) {
+         out.parameters.push_back(HS3::toNameOrNumber(pip->paramList()[i]));
+         out.high.push_back(HS3::toNameOrNumber(pip->highList()[i]));
+         out.low.push_back(HS3::toNameOrNumber(pip->lowList()[i]));
+      }
+      out.interpolations = toInterpolations(pip->interpolationCodes(), InterpolationClass::Piecewise, context);
+      out.positiveDefinite = pip->positiveDefinite();
+      HS3::writeInterpolatedFunction(elem, out);
       return true;
    }
 };
@@ -809,22 +721,25 @@ public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
+      HS3::Diagnostics diagnostics;
+      const HS3::InterpolatedFunction in = HS3::parseInterpolatedFunction(p, diagnostics);
+      report(name, diagnostics);
 
-      RooArgList vars{tool->requestArgList<RooAbsReal>(p, "vars")};
-      RooArgList low{tool->requestArgList<RooAbsReal>(p, "low")};
-      RooArgList high{tool->requestArgList<RooAbsReal>(p, "high")};
-      if (vars.size() != low.size() || vars.size() != high.size()) {
-         RooJSONFactoryWSTool::error("PiecewiseInterpolation '" + name +
-                                     "' has non-matching lengths of 'vars', 'high' and 'low'");
-      }
-      const std::vector<int> codes =
-         readInterpolations(p, vars.size(), InterpolationClass::Piecewise, "PiecewiseInterpolation '" + name + "'");
-
-      auto &pip =
-         tool->wsEmplace<PiecewiseInterpolation>(name, *tool->requestArg<RooAbsReal>(p, "nom"), low, high, vars, codes);
-
-      pip.setPositiveDefinite(p["positiveDefinite"].val_bool());
-
+      auto request = [&](std::vector<HS3::NameOrNumber> const &refs) {
+         RooArgList out;
+         for (auto const &ref : refs) {
+            auto const *value = std::get_if<double>(&ref);
+            out.add(value ? RooFit::RooConst(*value) : *tool->request<RooAbsReal>(std::get<std::string>(ref), name));
+         }
+         return out;
+      };
+      RooArgList vars{request(in.parameters)};
+      RooArgList low{request(in.low)};
+      RooArgList high{request(in.high)};
+      auto &pip = tool->wsEmplace<PiecewiseInterpolation>(
+         name, *tool->request<RooAbsReal>(in.nominal, name), low, high, vars,
+         toCodes(in.interpolations, InterpolationClass::Piecewise, "PiecewiseInterpolation '" + name + "'"));
+      pip.setPositiveDefinite(in.positiveDefinite);
       return true;
    }
 };
@@ -834,35 +749,17 @@ public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("high")) {
-         RooJSONFactoryWSTool::error("no high variations of '" + name + "'");
+      HS3::Diagnostics diagnostics;
+      const HS3::InterpolatedNumber in = HS3::parseInterpolatedNumber(p, diagnostics);
+      report(name, diagnostics);
+
+      RooArgList vars;
+      for (std::string const &var : in.parameters) {
+         vars.add(*tool->request<RooRealVar>(var, name));
       }
-      if (!p.has_child("low")) {
-         RooJSONFactoryWSTool::error("no low variations of '" + name + "'");
-      }
-      if (!p.has_child("nom")) {
-         RooJSONFactoryWSTool::error("no nominal variation of '" + name + "'");
-      }
-
-      double nom(p["nom"].val_double());
-
-      RooArgList vars{tool->requestArgList<RooRealVar>(p, "vars")};
-
-      std::vector<double> high;
-      high << p["high"];
-
-      std::vector<double> low;
-      low << p["low"];
-
-      if (vars.size() != low.size() || vars.size() != high.size()) {
-         RooJSONFactoryWSTool::error("FlexibleInterpVar '" + name +
-                                     "' has non-matching lengths of 'vars', 'high' and 'low'!");
-      }
-      const std::vector<int> codes =
-         readInterpolations(p, vars.size(), InterpolationClass::Flexible, "FlexibleInterpVar '" + name + "'");
-
-      tool->wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(name, vars, nom, low, high, codes);
-
+      tool->wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(
+         name, vars, in.nominal, in.low, in.high,
+         toCodes(in.interpolations, InterpolationClass::Flexible, "FlexibleInterpVar '" + name + "'"));
       return true;
    }
 };

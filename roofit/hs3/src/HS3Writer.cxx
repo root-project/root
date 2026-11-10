@@ -18,6 +18,7 @@
 
 #include <RooFit/Detail/JSONInterface.h>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -131,18 +132,6 @@ void writeAxes(JSONNode &node, std::vector<Axis> const &axes)
    node.set_seq();
    for (auto const &axis : axes) {
       writeAxis(node.append_child(), axis);
-   }
-}
-
-void writeInterpolation(JSONNode &node, Interpolation const &interpolation)
-{
-   node.set_map();
-   node["type"] << toString(interpolation.type);
-   node["in"] << toString(interpolation.in);
-   if (interpolation.out) {
-      node["out"] << toString(*interpolation.out);
-   } else {
-      node["out"].set_null();
    }
 }
 
@@ -406,6 +395,71 @@ void writeContents(JSONNode &node, std::vector<double> const &values)
    for (double value : values) {
       writeNumber(node.append_child(), value);
    }
+}
+
+void writeInterpolation(JSONNode &node, Interpolation const &interpolation)
+{
+   node.set_map();
+   node["type"] << toString(interpolation.type);
+   node["in"] << toString(interpolation.in);
+   if (interpolation.out) {
+      node["out"] << toString(*interpolation.out);
+   } else {
+      node["out"].set_null();
+   }
+}
+
+namespace {
+
+void writeValue(JSONNode &node, NameOrNumber const &value)
+{
+   std::visit([&](auto const &v) { node << v; }, value);
+}
+
+template <class T>
+void writeValue(JSONNode &node, T const &value)
+{
+   node << value;
+}
+
+template <class T>
+void writeList(JSONNode &node, std::vector<T> const &values)
+{
+   node.set_seq();
+   for (auto const &value : values) {
+      writeValue(node.append_child(), value);
+   }
+}
+
+template <class Function_t>
+void writeInterpolated(JSONNode &node, Function_t const &function, char const *type)
+{
+   node["type"] << type;
+   auto const &interpolations = function.interpolations;
+   const bool allEqual = std::all_of(interpolations.begin(), interpolations.end(),
+                                     [&](Interpolation const &i) { return i == interpolations.front(); });
+   JSONNode &interpolationsNode = node["interpolations"].set_seq();
+   for (std::size_t i = 0; i < (allEqual ? std::min<std::size_t>(interpolations.size(), 1) : interpolations.size());
+        ++i) {
+      writeInterpolation(interpolationsNode.append_child(), interpolations[i]);
+   }
+   writeList(node["vars"], function.parameters);
+   node["nom"] << function.nominal;
+   writeList(node["high"], function.high);
+   writeList(node["low"], function.low);
+}
+
+} // namespace
+
+void writeInterpolatedFunction(JSONNode &node, InterpolatedFunction const &function)
+{
+   writeInterpolated(node, function, "interpolation");
+   node["positiveDefinite"] << function.positiveDefinite;
+}
+
+void writeInterpolatedNumber(JSONNode &node, InterpolatedNumber const &function)
+{
+   writeInterpolated(node, function, "interpolation0d");
 }
 
 void writeHistFactoryDist(JSONNode &node, HistFactoryDist const &dist)

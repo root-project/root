@@ -617,6 +617,14 @@ HS3::BinnedAxis RooFit::HS3::toBinnedAxis(RooRealVar const &var)
    return axis;
 }
 
+HS3::NameOrNumber RooFit::HS3::toNameOrNumber(RooAbsArg const &arg)
+{
+   if (isLiteralConstVar(arg)) {
+      return static_cast<RooConstVar const &>(arg).getVal();
+   }
+   return std::string{arg.GetName()};
+}
+
 namespace {
 
 std::unique_ptr<RooRealVar> createObservable(HS3::BinnedAxis const &axis)

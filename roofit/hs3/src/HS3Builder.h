@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+class RooAbsArg;
 class RooDataHist;
 class RooJSONFactoryWSTool;
 class RooRealVar;
@@ -40,6 +41,9 @@ RooArgSet createObservables(std::vector<BinnedAxis> const &axes);
 
 /// The axis of binned data for a variable.
 BinnedAxis toBinnedAxis(RooRealVar const &var);
+
+/// The name of an object, or the value of a literal constant.
+NameOrNumber toNameOrNumber(RooAbsArg const &arg);
 
 /// Create a RooDataHist with the contents and errors. If there are no errors, it doesn't store squared weights.
 std::unique_ptr<RooDataHist> createDataHist(std::string const &name, RooArgSet const &vars,
