@@ -168,6 +168,18 @@ class TestTH2Serialization:
 
         assert h.GetName() == h_loaded.GetName()
 
+    def test_weighted_storage_includes_flow(self):
+        h = ROOT.TH2D("h2_weighted", "h2_weighted", 3, 0, 3, 2, 0, 2)
+        h.Sumw2()
+        h.Fill(-1, 1, 2.0)
+        h.Fill(1, 1, 3.0)
+
+        storage = h._to_uhi_()["storage"]
+
+        assert storage["type"] == "weighted"
+        assert np.array_equal(storage["values"], h.values(flow=True))
+        assert np.array_equal(storage["variances"], h.variances(flow=True))
+
 
 class TestTH3Serialization:
     def test_roundtrip_3d(self):
