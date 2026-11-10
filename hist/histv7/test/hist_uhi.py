@@ -44,6 +44,68 @@ class HistEngine_Indexing(unittest.TestCase):
         with self.assertRaises(IndexError):
             engine[0]
 
+    def test_slicing(self):
+        Bins = 20
+        axis = RRegularAxis(Bins, (0, Bins))
+        engine = RHistEngine["int"](axis)
+
+        # Slice without operation
+        self.assertEqual(engine[:].GetTotalNBins(), 22)
+        self.assertEqual(engine[3:11].GetTotalNBins(), 10)
+        self.assertEqual(engine[:11].GetTotalNBins(), 13)
+        self.assertEqual(engine[3:].GetTotalNBins(), 19)
+        self.assertEqual(engine[0:len].GetTotalNBins(), 22)
+
+        # The implementation requires normal bins
+        with self.assertRaises(IndexError):
+            engine[ROOT.uhi.underflow :]
+
+        # This doesn't even make sense because the endpoint is exclusive...
+        with self.assertRaises(IndexError):
+            engine[: ROOT.uhi.overflow]
+
+        # Rebin operation
+        self.assertEqual(engine[:: ROOT.uhi.rebin(2)].GetTotalNBins(), 12)
+        self.assertEqual(engine[3 : 11 : ROOT.uhi.rebin(2)].GetTotalNBins(), 6)
+        # Syntactic sugar without an actual slice
+        self.assertEqual(engine[ROOT.uhi.rebin(2)].GetTotalNBins(), 12)
+
+        with self.assertRaises(IndexError):
+            engine[:, :]
+
+        # Test multidimensional slicing
+        engine = RHistEngine["int"](axis, axis)
+        self.assertEqual(engine[:, :].GetNDimensions(), 2)
+
+        with self.assertRaises(IndexError):
+            engine[:]
+
+        # Sum operation
+        self.assertEqual(engine[:, :: ROOT.uhi.sum].GetNDimensions(), 1)
+        self.assertEqual(engine[:, 3 : 11 : ROOT.uhi.sum].GetNDimensions(), 1)
+        self.assertEqual(engine[:, 0 : len : ROOT.uhi.sum].GetNDimensions(), 1)
+
+        # The implementation requires either none or both endpoints
+        with self.assertRaises(IndexError):
+            engine[:, 0::sum]
+
+        with self.assertRaises(IndexError):
+            engine[:, :2:sum]
+
+        # A single value v is like v:v+1:sum
+        self.assertEqual(engine[:, 2].GetNDimensions(), 1)
+
+        with self.assertRaises(IndexError):
+            engine[:, Bins]
+
+        with self.assertRaises(IndexError):
+            engine[:, ROOT.uhi.underflow]
+
+        # Syntactic sugar: builtin sum, and / or without an actual slice
+        self.assertEqual(engine[:, ::sum].GetNDimensions(), 1)
+        self.assertEqual(engine[:, ROOT.uhi.sum].GetNDimensions(), 1)
+        self.assertEqual(engine[:, sum].GetNDimensions(), 1)
+
     def test_setting(self):
         Bins = 20
         axis = RRegularAxis(Bins, (0, Bins))
@@ -91,6 +153,15 @@ class Hist_Indexing(unittest.TestCase):
 
         with self.assertRaises(IndexError):
             hist[0, 1]
+
+    def test_slicing(self):
+        Bins = 20
+        hist = RHist["int"](Bins, (0, Bins))
+
+        self.assertEqual(hist[:].GetTotalNBins(), 22)
+
+        with self.assertRaises(IndexError):
+            hist[:, :]
 
     def test_setting(self):
         Bins = 20
