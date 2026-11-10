@@ -68,6 +68,16 @@ class TestTH1Indexing:
             loc_indices = tuple(loc(idx) for idx in value_indices)
             assert hist_setup[loc_indices] == hist_setup.GetBinContent(hist_setup.FindBin(*value_indices))
 
+    def test_access_with_shifted_data_coordinates(self):
+        h = ROOT.TH1D("h_shifted_loc", "", 10, 0, 10)
+        h[...] = np.arange(10)
+
+        location = loc(2.5)
+        assert h[location + 1] == 3
+        assert h[location] == 2
+        assert h[location - 1] == 1
+        assert h[location] == 2
+
     def test_access_flow_bins(self, hist_setup):
         for flow_type, index in [(underflow, 0), (overflow, 11)]:
             flow_indices = (flow_type,) * hist_setup.GetDimension()

@@ -44,14 +44,16 @@ class _loc:
 
     def __add__(self, other: int) -> _loc:
         if isinstance(other, int):
-            self.offset += other
-            return self
+            shifted = _loc(self.value)
+            shifted.offset = self.offset + other
+            return shifted
         raise TypeError(f"Unsupported type for addition: {type(other).__name__}. Expected an integer.")
 
     def __sub__(self, other: int) -> _loc:
         if isinstance(other, int):
-            self.offset -= other
-            return self
+            shifted = _loc(self.value)
+            shifted.offset = self.offset - other
+            return shifted
         raise TypeError(f"Unsupported type for substraction: {type(other).__name__}. Expected an integer.")
 
     def __call__(self, hist: Any, axis: int) -> int:
