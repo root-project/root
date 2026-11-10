@@ -50,7 +50,16 @@ def _(operation: Union[Action, InstantAction], promise: Any, results: list) -> N
 
 @append_node_to_results.register
 def _(operation: Snapshot, promise: Any, results: list) -> None:
-    results.append(SnapshotResult(operation.args[0], [operation.args[1]], promise))
+    results.append(
+        SnapshotResult(
+            operation.args[0],
+            [operation.args[1]],
+            promise,
+            return_filenames=getattr(operation, "return_filenames", False),
+            merge=getattr(operation, "merge", False),
+            target_file=getattr(operation, "target_file", None),
+        )
+    )
 
 
 @singledispatch
@@ -103,9 +112,9 @@ def _(operation: Snapshot, range_id: int) -> Snapshot:
         # Snapshot(std::string_view treename, std::string_view filename, std::string_view columnNameRegexp = "")
         op_modified.args.append("")  # Append empty regex
 
-    if len(op_modified.args) == 4:
-        # An RSnapshotOptions instance was passed as fourth argument
-        # Make it lazy and keep the other options
+    if len(op_modified.args) == 3 and hasattr(op_modified.args[2], "fLazy"):
+        op_modified.args[2].fLazy = True
+    elif len(op_modified.args) == 4 and hasattr(op_modified.args[3], "fLazy"):
         op_modified.args[3].fLazy = True
     else:
         # We already appended an empty regex for the 2 mandatory arguments overload
