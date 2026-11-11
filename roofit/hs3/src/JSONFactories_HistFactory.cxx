@@ -278,6 +278,19 @@ void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint
               constraint);
 }
 
+// The constraint of the parameter of a normsys or histosys modifier, whose nominal value is zero. Before HS3 named the
+// constraint distributions in "constraints", RooFit created the global observable "nom_<parameter>", which the
+// constraint distribution of older documents may use without defining it.
+void addSysConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint, RooAbsReal &param,
+                      std::string const &modifier, std::string const &sample, RooArgSet &constraints)
+{
+   auto const *pdf = std::get_if<HS3::ConstraintPdf>(&constraint);
+   if (pdf && pdf->legacyName) {
+      createNominal(*tool.workspace(), param.GetName(), 0.0, -10, 10);
+   }
+   addConstraint(tool, constraint, param, 0.0, modifier, sample, constraints);
+}
+
 // The tau of a Poisson constraint of a gamma whose mean is the product gamma * tau, like in HistFactory, or
 // std::nullopt if the constraint has another form.
 std::optional<double> findPoissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
@@ -557,7 +570,7 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
                elems.overallHigh.push_back(high);
                elems.overallInterp.push_back(interp);
 
-               addConstraint(tool, mod.constraint, param, 0.0, mod.name, sampleName, ctx.constraints);
+               addSysConstraint(tool, mod.constraint, param, mod.name, sampleName, ctx.constraints);
             },
             [&](HS3::HistoSys const &mod) {
                RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
@@ -574,7 +587,7 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
                elems.histoInterp.push_back(interpolationCode(mod.interpolation, ctx.dist.defaultInterpolation,
                                                              InterpolationClass::Piecewise,
                                                              context("histosys", mod.name)));
-               addConstraint(tool, mod.constraint, param, 0.0, mod.name, sampleName, ctx.constraints);
+               addSysConstraint(tool, mod.constraint, param, mod.name, sampleName, ctx.constraints);
             },
             [&](HS3::ShapeSys const &mod) {
                const bool constrained = std::visit(

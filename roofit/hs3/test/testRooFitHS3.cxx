@@ -3668,6 +3668,24 @@ TEST(RooFitHS3, HistFactoryUnknownParamHistFunc)
    EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), reexported);
 }
 
+// A legacy "Gauss" constraint is centred at the nominal value of its parameter: 1 for a normfactor, and 0 for a
+// normsys or histosys.
+TEST(RooFitHS3, HistFactoryLegacyGaussConstraintNominal)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeHistFactoryJSON(
+      R"({"type": "normfactor", "name": "mu", "parameter": "mu", "constraint_type": "Gauss"},
+         {"type": "normsys", "name": "lumi", "constraint_type": "Gauss", "data": {"lo": 0.95, "hi": 1.05}})")));
+   auto *muConstraint = dynamic_cast<RooGaussian *>(ws.pdf("muConstraint"));
+   ASSERT_NE(muConstraint, nullptr);
+   EXPECT_DOUBLE_EQ(muConstraint->getMean().getVal(), 1.0);
+   auto *alphaConstraint = dynamic_cast<RooGaussian *>(ws.pdf("alpha_lumiConstraint"));
+   ASSERT_NE(alphaConstraint, nullptr);
+   EXPECT_DOUBLE_EQ(alphaConstraint->getMean().getVal(), 0.0);
+}
+
 // Only the gammas with a constraint distribution are configured from their relative uncertainty, like in HistFactory.
 // The other gammas are free: for example, they are not set constant if they have no uncertainty.
 TEST(RooFitHS3, HistFactoryUnconstrainedGammasStayFree)
@@ -3710,6 +3728,39 @@ TEST(RooFitHS3, HistFactoryUnconstrainedGammasStayFree)
    ASSERT_NE(constrained, nullptr);
    EXPECT_FALSE(constrained->isConstant());
    EXPECT_DOUBLE_EQ(constrained->getError(), 0.1);
+}
+
+// Before HS3 0.3, RooFit created the global observable "nom_<parameter>" of the constraint of a normsys or histosys, so
+// that the constraint distribution named in "constraint_name" could use it without defining it.
+TEST(RooFitHS3, HistFactoryLegacyNamedConstraintWithImplicitNominal)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 20.0]},
+                  "modifiers": [{"type": "normsys", "name": "syst", "parameter": "alpha_syst",
+                                 "constraint_name": "alpha_systConstraint", "data": {"lo": 0.9, "hi": 1.1}}]
+               }
+            ]
+         },
+         {"name": "alpha_systConstraint", "type": "gaussian_dist", "x": "alpha_syst", "mean": "nom_alpha_syst",
+          "sigma": 1.0}
+      ]
+   })"));
+   auto *nominal = dynamic_cast<RooRealVar *>(ws.obj("nom_alpha_syst"));
+   ASSERT_NE(nominal, nullptr);
+   EXPECT_TRUE(nominal->isConstant());
+   EXPECT_DOUBLE_EQ(nominal->getVal(), 0.0);
 }
 
 // The gammas of a shapefactor can be shared between channels. In each channel, only its own constraint terms constrain
@@ -3852,6 +3903,32 @@ TEST(RooFitHS3, HistFactoryFunctionGammaWithConstraint)
    EXPECT_EQ(dynamic_cast<RooRealVar *>(g0), nullptr);
    EXPECT_DOUBLE_EQ(static_cast<RooAbsReal *>(g0)->getVal(), 1.0);
    EXPECT_DOUBLE_EQ(ws.var("k0")->getMax(), 5.0);
+}
+
+// Older documents gave the function of a custom modifier in "parameter", without "name".
+TEST(RooFitHS3, HistFactoryLegacyCustomModifierParameter)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "functions": [{"name": "scale", "type": "product", "factors": ["k0", "k1"]}],
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]}, "modifiers": [
+               {"type": "custom", "parameter": "scale"}]}]
+         }
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "k0", "min": 0, "max": 5}, {"name": "k1", "min": 0, "max": 5}]}]
+   })"));
+   RooAbsReal *scale = ws.function("scale");
+   ASSERT_NE(scale, nullptr);
+   EXPECT_TRUE(ws.pdf("model_channel0")->dependsOn(*scale));
 }
 
 // The relative uncertainty that a Gaussian staterror constraint encodes is its sigma. It doesn't depend on the value of

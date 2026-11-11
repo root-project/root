@@ -300,6 +300,9 @@ struct Unconstrained {};
 /// The constraint term is a distribution of the document, named in "constraints".
 struct ConstraintPdf {
    DistributionRef pdf;
+   /// Named in "constraint_name" by an older document, whose constraint distributions of normsys and histosys
+   /// modifiers may use the global observable "nom_<parameter>" without defining it, because RooFit created it.
+   bool legacyName = false;
 };
 
 using Constraint = std::variant<Unconstrained, ConstraintType, ConstraintPdf>;
