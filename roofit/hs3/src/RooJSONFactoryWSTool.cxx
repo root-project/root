@@ -2699,10 +2699,12 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
             break;
          contents.push_back(data.weight());
       }
-      if (i == x.getBins())
+      // Binned data has exactly one entry per bin, in the order of the bins. Further entries, e.g. a second one in
+      // the last bin, make it unbinned data.
+      if (i == x.getBins() && data.numEntries() == x.getBins())
          isBinnedData = true;
       if (isBinnedData) {
-         return exportBinned(data.numEntries(), contents.data());
+         return exportBinned(contents.size(), contents.data());
       }
    }
 

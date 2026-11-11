@@ -6466,6 +6466,43 @@ TEST(RooFitHS3, HistogramAxesNamedAfterObservables)
    EXPECT_EQ(RooJSONFactoryWSTool{imported2}.exportJSONtoString(), json2);
 }
 
+// A weighted RooDataSet with one entry per bin, in the order of the bins, is written as binned data. With further
+// entries it is unbinned data: a second entry in the last bin was mistaken for binned data, and a value after the
+// last bin content was written (reported in the review).
+TEST(RooFitHS3, WeightedDataSetAsBinnedData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto exportOne = [](std::vector<std::pair<double, double>> const &entries) {
+      RooRealVar x{"x", "x", 0.0, 2.0};
+      x.setBins(2);
+      RooRealVar weight{"weight", "weight", 1.0};
+      RooDataSet data{"data", "data", {x, weight}, RooFit::WeightVar(weight)};
+      for (auto const &[value, w] : entries) {
+         x.setVal(value);
+         data.add(x, w);
+      }
+      RooWorkspace ws;
+      ws.import(data, RooFit::Silence());
+      return RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   };
+   auto dataNode = [](std::string const &json) {
+      auto tree = RooFit::Detail::JSONTree::create(json);
+      std::stringstream ss;
+      tree->rootnode()["data"].child(0).writeJSON(ss);
+      return ss.str();
+   };
+
+   const std::string binned = exportOne({{0.5, 1.0}, {1.5, 2.0}});
+   EXPECT_NE(dataNode(binned).find(R"("type":"binned")"), std::string::npos) << binned;
+   EXPECT_NE(dataNode(binned).find(R"("contents":[1,2])"), std::string::npos) << binned;
+
+   // Entries in the bins 0, 1, 1.
+   const std::string unbinned = exportOne({{0.5, 1.0}, {1.5, 1.0}, {1.7, 1.0}});
+   EXPECT_NE(dataNode(unbinned).find(R"("type":"unbinned")"), std::string::npos) << unbinned;
+   EXPECT_NE(dataNode(unbinned).find(R"("entries":[[0.5],[1.5],[1.7]])"), std::string::npos) << unbinned;
+}
+
 // HS3 requires the terms of a likelihood to have distinct variates, like the components of a combined distribution.
 // Two channels with a common observable can't be exported, unless explicitly allowed: then the document is written
 // with a warning, and it is rejected on import.
