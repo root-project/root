@@ -47,8 +47,6 @@ protected:
    std::uint32_t fIndex;
    /// Fields can have multiple column representations, distinguished by representation index
    std::uint16_t fRepresentationIndex;
-   /// Global index of the first element in this column; usually == 0, unless it is a deferred column
-   ROOT::NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<ROOT::Internal::RColumnElementBase> fElement;
 
@@ -90,7 +88,6 @@ public:
    std::uint32_t GetIndex() const { return fIndex; }
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
-   ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
 
    void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
    void SetValueRange(double min, double max) { fElement->SetValueRange(min, max); }
@@ -300,6 +297,9 @@ public:
    bool TryMapPage(RNTupleLocalIndex localIndex);
 
    void MergeTeams(RReadColumn &other);
+
+   // Used only for testing
+   const RPageSource *GetPageSource() const { return fPageSource; }
 };
 
 class RWriteColumn : public RColumn {
@@ -314,6 +314,8 @@ private:
    ROOT::NTupleSize_t fInitialNElements = 1;
    /// The number of elements written
    ROOT::NTupleSize_t fNElements = 0;
+   /// Global index of the first element in this column; usually == 0, unless it is a deferred column
+   ROOT::NTupleSize_t fFirstElementIndex = 0;
 
    /// Used when trying to append to a full write page. If possible, expand the page. Otherwise, flush and reset
    /// to the minimal size.
@@ -401,6 +403,7 @@ public:
    void Flush();
    void CommitSuppressed();
    std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
+   ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
 };
 
 inline RReadColumn *RColumn::ForReading()

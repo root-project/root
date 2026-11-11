@@ -62,10 +62,6 @@ void ROOT::Internal::RReadColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId
 {
    fPageSource = &pageSource;
    fOnDiskId = fPageSource->AddColumn(fieldId, *this).fPhysicalId;
-   {
-      auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
-      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fOnDiskId).GetFirstElementIndex();
-   }
 }
 
 ROOT::Internal::RReadColumn::~RReadColumn()
