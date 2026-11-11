@@ -91,3 +91,66 @@ TEST(TProfile3D, Chi2Test)
 
    runTest(reference, sameDistr, differentDistr);
 }
+
+TEST(TProfile2D, DivideStatistics)
+{
+   TProfile2D target("target", "", 4, 0, 4, 5, 0, 10);
+   TProfile2D denominator("denominator", "", 4, 0, 4, 5, 0, 10);
+   target.Fill(0.5, 1., 2.);
+   target.Fill(3.5, 9., 1.);
+   denominator.Fill(0.5, 1., 1.);
+
+   ASSERT_TRUE(target.Divide(&denominator));
+   EXPECT_DOUBLE_EQ(0.5, target.GetMean(1));
+   EXPECT_DOUBLE_EQ(1., target.GetMean(2));
+}
+
+TEST(TProfile2D, DivideTwoProfilesStatistics)
+{
+   TProfile2D numerator("numerator", "", 4, 0, 4, 5, 0, 10);
+   TProfile2D denominator("denominator", "", 4, 0, 4, 5, 0, 10);
+   TProfile2D target("target", "", 4, 0, 4, 5, 0, 10);
+   numerator.Fill(0.5, 1., 2.);
+   denominator.Fill(0.5, 1., 1.);
+   target.Fill(3.5, 9., 1.);
+
+   ASSERT_TRUE(target.Divide(&numerator, &denominator));
+   EXPECT_DOUBLE_EQ(0.5, target.GetMean(1));
+   EXPECT_DOUBLE_EQ(1., target.GetMean(2));
+}
+
+TEST(TProfile3D, DivideStatistics)
+{
+   TProfile3D target("target", "", 4, 0, 4, 5, 0, 10, 3, 0, 30);
+   TProfile3D denominator("denominator", "", 4, 0, 4, 5, 0, 10, 3, 0, 30);
+   target.Fill(0.5, 1., 25., 2.);
+   target.Fill(0.5, 1., 5., 2.);
+   target.Fill(3.5, 9., 5., 1.);
+   denominator.Fill(0.5, 1., 25., 1.);
+   denominator.Fill(0.5, 1., 5., 1.);
+
+   ASSERT_TRUE(target.Divide(&denominator));
+   EXPECT_DOUBLE_EQ(0.5, target.GetMean(1));
+   EXPECT_DOUBLE_EQ(1., target.GetMean(2));
+   EXPECT_DOUBLE_EQ(15., target.GetMean(3));
+   EXPECT_DOUBLE_EQ(10., target.GetStdDev(3));
+}
+
+TEST(TProfile3D, DivideTwoProfilesStatistics)
+{
+   for (bool prefill : {false, true}) {
+      SCOPED_TRACE(prefill);
+      TProfile3D numerator("numerator", "", 4, 0, 4, 5, 0, 10, 3, 0, 30);
+      TProfile3D denominator("denominator", "", 4, 0, 4, 5, 0, 10, 3, 0, 30);
+      TProfile3D target("target", "", 4, 0, 4, 5, 0, 10, 3, 0, 30);
+      numerator.Fill(0.5, 1., 25., 2.);
+      denominator.Fill(0.5, 1., 25., 1.);
+      if (prefill)
+         target.Fill(3.5, 9., 5., 1.);
+
+      ASSERT_TRUE(target.Divide(&numerator, &denominator));
+      EXPECT_DOUBLE_EQ(0.5, target.GetMean(1));
+      EXPECT_DOUBLE_EQ(1., target.GetMean(2));
+      EXPECT_DOUBLE_EQ(25., target.GetMean(3));
+   }
+}
