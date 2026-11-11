@@ -96,6 +96,11 @@ ROOT_ADD_GTEST(testRooTruthModel testRooTruthModel.cxx LIBRARIES RooFitCore RooF
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/rooAbsAnaConvPdf_classV3.root)
 
 if(NOT WIN32)
+  # workaround to include privately headers that are not public, from a "friend" target
+  get_target_property(RooFitMultiProcess_Friend_Dirs RooFitMultiProcess HEADER_DIRS_friend_header_files)
+  if(RooFitMultiProcess_Friend_Dirs)
+    list(APPEND RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR ${RooFitMultiProcess_Friend_Dirs})
+  endif()
   ROOT_ADD_GTEST(testTestStatisticsPlot TestStatistics/testPlot.cxx LIBRARIES RooFitMultiProcess RooFitCore RooFit)
   ROOT_ADD_GTEST(testLikelihoodGradientJob TestStatistics/testLikelihoodGradientJob.cxx LIBRARIES RooFitMultiProcess RooFitCore m ROOT::TestSupport)
   target_include_directories(testLikelihoodGradientJob PRIVATE ${RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR})
@@ -111,6 +116,11 @@ endif()
 ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit Gpad ${ROOFITMORE_LIBRARIES})
 if(mathmore)
     target_compile_definitions(stressRooFit PRIVATE ROOFITMORE)
+endif()
+# workaround to include privately headers that are not public, from a "friend" target
+get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)
+if(RooFitCore_Friend_Dirs)
+  target_include_directories(stressRooFit PRIVATE ${RooFitCore_Friend_Dirs})
 endif()
 
 configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)

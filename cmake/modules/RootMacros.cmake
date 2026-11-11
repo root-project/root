@@ -289,10 +289,78 @@ function(ROOT_REPLACE_BUILD_INTERFACE include_dir_var include_dir)
 endfunction(ROOT_REPLACE_BUILD_INTERFACE)
 
 #---------------------------------------------------------------------------------------------------
+#---ROOT_GENERATE_TARGET_DICTIONARY( target OPTIONS opt1 opt2 ...)
+#
+# Creates the dictionary of a predefined CMake target defined following FILE_SET naming conventions:
+# linkDef for Linkdef*.h, HEADERS for public headers, not4dict_header_files for public headers
+# that should be excluded from the rootclign call.
+# <target> is the CMake target on which header file sets and link libraries have been defined
+# The output dictionary will be another CMake target called G__<target>, ie with G__ prepended.;
+# the macro creates (among other files) the dictionary source as G__<target>.cxx
+#---------------------------------------------------------------------------------------------------
+function(ROOT_GENERATE_TARGET_DICTIONARY target options)
+  # Check if OPTIONS start with a dash.
+  if (options)
+    foreach(ARG_O ${options})
+      if (NOT ARG_O MATCHES "^-*")
+        message(FATAL_ERROR "Wrong rootcling option: ${options}")
+      endif()
+    endforeach()
+  endif(options)
+
+  get_target_property(type ${target} TYPE)
+  if(NOT ${type} STREQUAL "INTERFACE_LIBRARY")
+    get_target_property(SrcList ${target} SOURCES)
+    get_target_property(SrcDir ${target} SOURCE_DIR)
+    list(TRANSFORM SrcList PREPEND ${SrcDir}/)
+  endif()
+  get_target_property(HeaderList ${target} HEADER_SET)
+  get_target_property(NoDictList ${target} HEADER_SET_not4dict_header_files)
+  if(HeaderList AND NoDictList)
+    list(REMOVE_ITEM HeaderList ${NoDictList})
+  endif()
+  get_target_property(HeaderBaseDirs ${target} HEADER_DIRS)
+  get_target_property(LinkdefList ${target} HEADER_SET_linkDef)
+  # get_target_property(ModuleList ${target} CXX_MODULE_SET) needs CMake 3.28
+  if("HeaderList-NOTFOUND" IN_LIST HeaderList)
+    message(SEND_ERROR "ROOT_GENERATE_TARGET_DICTIONARY: Missing header file set in ${target}")
+  endif()
+  if("LinkdefList-NOTFOUND" IN_LIST LinkdefList)
+    set(LinkdefList)
+  endif()
+
+  # Transform absolute header paths to relative paths based on BASE_DIRS
+  set(RelativeHeaderList "")
+  foreach(header_file ${HeaderList})
+    set(resolved_path "")
+    foreach(base_dir ${HeaderBaseDirs})
+      file(RELATIVE_PATH rel_path "${base_dir}" "${header_file}")
+      # If the path doesn't start with "../", it means it's under this base directory
+      if(NOT "${rel_path}" MATCHES "^\\.\\./")
+        set(resolved_path "${rel_path}")
+        break()
+      endif()
+    endforeach()
+
+    if(resolved_path)
+      list(APPEND RelativeHeaderList "${resolved_path}")
+    else()
+      # Fallback to absolute if it couldn't be resolved relative to any base dir
+      list(APPEND RelativeHeaderList "${header_file}")
+    endif()
+  endforeach()
+
+  get_target_property(LinkedLibraries ${target} LINK_LIBRARIES)
+  ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${LinkedLibraries} OPTIONS ${options} USE_FILE_SETS)
+  # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
+endfunction(ROOT_GENERATE_TARGET_DICTIONARY)
+
+#---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_DICTIONARY( dictionary headerfiles NODEPHEADERS ghdr1 ghdr2 ...
 #                                                    MODULE module DEPENDENCIES dep1 dep2
+#                                                    EXTRA_DEPENDENCIES
 #                                                    BUILTINS dep1 dep2
-#                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ...)
+#                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ... NO_CXXMODULE MULTIDICT NOINSTALL)
 #
 # <dictionary> is the dictionary stem; the macro creates (among other files) the dictionary source as
 #   <dictionary>.cxx
@@ -302,7 +370,7 @@ endfunction(ROOT_REPLACE_BUILD_INTERFACE)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE;USE_FILE_SETS"
     "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
@@ -326,8 +394,24 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
     set(headerdirs)
 
-    get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
+    if(ARG_USE_FILE_SETS)
+       get_target_property(target_incdirs ${ARG_MODULE} INTERFACE_INCLUDE_DIRECTORIES)
+       if(NOT target_incdirs)
+          set(target_incdirs "")
+       endif()
+       get_target_property(target_fileset_dirs ${ARG_MODULE} HEADER_DIRS)
+       if(target_fileset_dirs)
+          list(APPEND target_incdirs ${target_fileset_dirs})
+       endif()
+    else()
+       get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
+       if(NOT target_incdirs)
+          set(target_incdirs "")
+       endif()
+    endif()
+
     if(target_incdirs)
+       list(REMOVE_DUPLICATES target_incdirs)
        foreach(dir ${target_incdirs})
           ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
           # check that dir not a empty dir like $<BUILD_INTERFACE:>
@@ -1342,6 +1426,36 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
   endif()
   set(${result_dirs} ${dirs} PARENT_SCOPE)
 endfunction()
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_INSTALL_TARGET(target)
+# Declare the install command for CMake target defined according to the following naming conventions
+# for FILE_SETS:
+# - linkDef for the LinkDef*.h file
+# - HEADERS for public headers
+# - not4dict_header_files for public headers purposely excluded from dictionaries
+#---------------------------------------------------------------------------------------------------
+function(ROOT_INSTALL_TARGET target)
+  install(TARGETS ${target}
+    EXPORT ${CMAKE_PROJECT_NAME}Exports
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+
+    # with this we no longer need the moveheader target etc
+    FILE_SET HEADERS
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+
+    FILE_SET not4dict_header_files
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+
+    FILE_SET linkDef
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+  )
+  export(TARGETS ${target} NAMESPACE ROOT::
+    APPEND FILE ${PROJECT_BINARY_DIR}/ROOTConfig-Targets.cmake
+  )
+endfunction(ROOT_INSTALL_TARGET)
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>] [HEADERS <header1> ...])
