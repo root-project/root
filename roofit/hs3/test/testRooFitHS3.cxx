@@ -251,29 +251,36 @@ std::size_t countOccurrences(std::string_view haystack, std::string_view needle)
    return result;
 }
 
+// A document with the histfactory_dist "model_channel0" on the axis "x" (2 bins in [0, 2]) and one sample "sig". The
+// sample data, further keys of the channel, further distributions and further top-level keys like "domains" are
+// inserted as they are given.
 std::string makeHistFactoryJSON(std::string const &modifiers, std::string const &defaultInterpolation = "",
-                                std::string const &version = "0.2")
+                                std::string const &version = "0.2", std::string const &sampleData = "",
+                                std::string const &channelKeys = "", std::string const &distributions = "",
+                                std::string const &topLevelKeys = "")
 {
    const std::string defaultNode =
       defaultInterpolation.empty() ? "" : "\"default_interpolation\":" + defaultInterpolation + ",";
    return R"({
       "metadata": {"hs3_version": ")" +
-          version + R"("},
+          version + R"("},)" + (topLevelKeys.empty() ? "" : topLevelKeys + ",") + R"(
       "distributions": [
          {
             "name": "model_channel0",
             "type": "histfactory_dist",
             "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],)" +
-          defaultNode + R"(
+          defaultNode + (channelKeys.empty() ? "" : channelKeys + ",") + R"(
             "samples": [
                {
                   "name": "sig",
-                  "data": {"contents": [10.0, 20.0]},
+                  "data": )" +
+          (sampleData.empty() ? R"({"contents": [10.0, 20.0]})" : sampleData) + R"(,
                   "modifiers": [)" +
           modifiers + R"(]
                }
             ]
-         }
+         })" +
+          (distributions.empty() ? "" : "," + distributions) + R"(
       ]
    })";
 }
@@ -2215,38 +2222,9 @@ TEST(RooFitHS3, HistFactoryStructuredInterpolationValidation)
 // produce a finite (zero) error for that bin.
 TEST(RooFitHS3, HistFactoryZeroYieldBin)
 {
-   const std::string jsonStr = R"({
-      "metadata": {"hs3_version": "0.1.90"},
-      "distributions": [
-         {
-            "name": "model_channel0",
-            "type": "histfactory_dist",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "samples": [
-               {
-                  "name": "sig",
-                  "data": {"contents": [10.0, 0.0]},
-                  "modifiers": [
-                     {"name": "mu", "type": "normfactor"},
-                     {"name": "mcstat", "type": "staterror"}
-                  ]
-               }
-            ]
-         }
-      ],
-      "data": [
-         {
-            "name": "obsData_channel0",
-            "type": "binned",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "contents": [10.0, 0.0]
-         }
-      ]
-   })";
+   const std::string jsonStr =
+      makeHistFactoryJSON(R"({"name": "mu", "type": "normfactor"}, {"name": "mcstat", "type": "staterror"})", "",
+                          "0.1.90", /*sampleData=*/R"({"contents": [10.0, 0.0]})");
 
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
@@ -2283,71 +2261,16 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
 {
    // The two "poly" modifiers deliberately use implicit code 4 and explicit
    // code 5, which are semantic aliases in FlexibleInterpVar.
-   const std::string jsonStr = R"({
-      "metadata": {"hs3_version": "0.1.90"},
-      "distributions": [
-         {
-            "name": "model_channel0",
-            "type": "histfactory_dist",
-            "axes": [
-               {"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "samples": [
-               {
-                  "name": "sig",
-                  "data": {"contents": [10.0, 20.0]},
-                  "modifiers": [
-                     {
-                        "name": "norm",
-                        "parameter": "alpha_norm",
-                        "type": "normsys",
-                        "interpolation": 1,
-                        "data": {"lo": 0.8, "hi": 1.2}
-                     },
-                     {
-                        "name": "norm",
-                        "parameter": "alpha_norm",
-                        "type": "normsys",
-                        "interpolation": 1,
-                        "data": {"lo": 0.9, "hi": 1.1}
-                     },
-                     {
-                        "name": "poly",
-                        "parameter": "alpha_poly",
-                        "type": "normsys",
-                        "data": {"lo": 0.8, "hi": 1.2}
-                     },
-                     {
-                        "name": "poly",
-                        "parameter": "alpha_poly",
-                        "type": "normsys",
-                        "interpolation": 5,
-                        "data": {"lo": 0.75, "hi": 1.25}
-                     },
-                     {
-                        "name": "shape_input_1",
-                        "parameter": "alpha_shape",
-                        "type": "histosys",
-                        "data": {
-                           "lo": {"contents": [8.0, 18.0]},
-                           "hi": {"contents": [12.0, 22.0]}
-                        }
-                     },
-                     {
-                        "name": "shape_input_2",
-                        "parameter": "alpha_shape",
-                        "type": "histosys",
-                        "data": {
-                           "lo": {"contents": [9.0, 16.0]},
-                           "hi": {"contents": [11.0, 24.0]}
-                        }
-                     }
-                  ]
-               }
-            ]
-         }
-      ]
-   })";
+   const std::string jsonStr = makeHistFactoryJSON(R"(
+   {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "interpolation": 1, "data": {"lo": 0.8, "hi": 1.2}},
+   {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "interpolation": 1, "data": {"lo": 0.9, "hi": 1.1}},
+   {"name": "poly", "parameter": "alpha_poly", "type": "normsys", "data": {"lo": 0.8, "hi": 1.2}},
+   {"name": "poly", "parameter": "alpha_poly", "type": "normsys", "interpolation": 5, "data": {"lo": 0.75, "hi": 1.25}},
+   {"name": "shape_input_1", "parameter": "alpha_shape", "type": "histosys",
+    "data": {"lo": {"contents": [8.0, 18.0]}, "hi": {"contents": [12.0, 22.0]}}},
+   {"name": "shape_input_2", "parameter": "alpha_shape", "type": "histosys",
+    "data": {"lo": {"contents": [9.0, 16.0]}, "hi": {"contents": [11.0, 24.0]}}})",
+                                                   "", "0.1.90");
 
    RooWorkspace ws1{"ws_duplicate_modifiers"};
    ASSERT_TRUE(RooJSONFactoryWSTool{ws1}.importJSONfromString(jsonStr));
@@ -2447,47 +2370,11 @@ struct IncompatibleModifierCase {
 
 std::string makeIncompatibleModifierWorkspace(const IncompatibleModifierCase &testCase)
 {
-   return R"({
-      "metadata": {"hs3_version": "0.1.90"},
-      "domains": [
-         {
-            "name": "default_domain",
-            "type": "product_domain",
-            "axes": [
-               {"name": "alpha_dup", "min": -5.0, "max": 5.0},
-               {"name": "dup", "min": -5.0, "max": 5.0}
-            ]
-         }
-      ],
-      "parameter_points": [
-         {
-            "name": "default_values",
-            "parameters": [
-               {"name": "alpha_dup", "value": 0.0},
-               {"name": "dup", "value": 0.0}
-            ]
-         }
-      ],
-      "distributions": [)" +
-          testCase.extraDistributions + R"(
-         {
-            "name": "model_channel0",
-            "type": "histfactory_dist",
-            "axes": [
-               {"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "samples": [
-               {
-                  "name": "sig",
-                  "data": {"contents": [10.0, 20.0]},
-                  "modifiers": [)" +
-          testCase.modifiers + R"(
-                  ]
-               }
-            ]
-         }
-      ]
-   })";
+   return makeHistFactoryJSON(testCase.modifiers, "", "0.1.90", "", "", testCase.extraDistributions, R"(
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "alpha_dup", "min": -5.0, "max": 5.0}, {"name": "dup", "min": -5.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "alpha_dup", "value": 0.0}, {"name": "dup", "value": 0.0}]}])");
 }
 
 class HistFactoryIncompatibleDuplicateModifiers : public testing::TestWithParam<IncompatibleModifierCase> {};
@@ -2516,7 +2403,7 @@ INSTANTIATE_TEST_SUITE_P(
                                             R"(
             {
                "name": "sharedConstraint", "type": "gaussian_dist", "x": "alpha_dup", "mean": "dup", "sigma": 1.0
-            },)",
+            })",
                                             "parameter metadata differs"},
                    IncompatibleModifierCase{"Interpolation",
                                             R"(
@@ -2579,69 +2466,13 @@ TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithNonDefaultInterpolationFails)
 
 TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
 {
-   const std::string jsonStr = R"({
-      "metadata": {"hs3_version": "0.1.90"},
-      "domains": [
-         {
-            "name": "default_domain",
-            "type": "product_domain",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2},
-               {"name": "nom_mu", "min": 1.0, "max": 1.0},
-               {"name": "sigma_mu", "min": 1.0, "max": 1.0}
-            ]
-         }
-      ],
-      "parameter_points": [
-         {
-            "name": "default_values",
-            "parameters": [
-               {"name": "nom_mu", "value": 1.0, "const": true},
-               {"name": "sigma_mu", "value": 1.0, "const": true}
-            ]
-         }
-      ],
-      "distributions": [
-         {
-            "name": "model_channel0",
-            "type": "histfactory_dist",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "samples": [
-               {
-                  "name": "sig",
-                  "data": {"contents": [10.0, 20.0]},
-                  "modifiers": [
-                     {
-                        "name": "mu",
-                        "parameter": "mu",
-                        "type": "normfactor",
-                        "constraint_name": "muConstraint"
-                     }
-                  ]
-               }
-            ]
-         },
-         {
-            "name": "muConstraint",
-            "type": "gaussian_dist",
-            "x": "mu",
-            "mean": "nom_mu",
-            "sigma": "sigma_mu"
-         }
-      ],
-      "data": [
-         {
-            "name": "obsData_channel0",
-            "type": "binned",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "contents": [10.0, 20.0]
-         }
-      ]
-   })";
+   const std::string jsonStr = makeHistFactoryJSON(
+      R"({"name": "mu", "parameter": "mu", "type": "normfactor", "constraint_name": "muConstraint"})", "", "0.1.90", "",
+      "", R"({"name": "muConstraint", "type": "gaussian_dist", "x": "mu", "mean": "nom_mu", "sigma": "sigma_mu"})",
+      R"("domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "nom_mu", "min": 1.0, "max": 1.0}, {"name": "sigma_mu", "min": 1.0, "max": 1.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "nom_mu", "value": 1.0, "const": true}, {"name": "sigma_mu", "value": 1.0, "const": true}]}])");
 
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
@@ -2657,51 +2488,8 @@ TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
 
 TEST(RooFitHS3, HistFactoryLegacyConstraintTypeInConstraintKey)
 {
-   const std::string jsonStr = R"({
-      "metadata": {"hs3_version": "0.1.90"},
-      "domains": [
-         {
-            "name": "default_domain",
-            "type": "product_domain",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ]
-         }
-      ],
-      "distributions": [
-         {
-            "name": "model_channel0",
-            "type": "histfactory_dist",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "samples": [
-               {
-                  "name": "sig",
-                  "data": {"contents": [10.0, 20.0]},
-                  "modifiers": [
-                     {
-                        "name": "lumi",
-                        "type": "normsys",
-                        "constraint": "Gauss",
-                        "data": {"lo": 0.95, "hi": 1.05}
-                     }
-                  ]
-               }
-            ]
-         }
-      ],
-      "data": [
-         {
-            "name": "obsData_channel0",
-            "type": "binned",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "contents": [10.0, 20.0]
-         }
-      ]
-   })";
+   const std::string jsonStr = makeHistFactoryJSON(
+      R"({"name": "lumi", "type": "normsys", "constraint": "Gauss", "data": {"lo": 0.95, "hi": 1.05}})", "", "0.1.90");
 
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
@@ -2728,38 +2516,9 @@ TEST(RooFitHS3, HistFactoryLegacyConstraintTypeInConstraintKey)
 // when collecting parameters to export, but pdfs still depend on them.
 TEST(RooFitHS3, SnapshotKeepsGlobalObservables)
 {
-   const std::string jsonStr = R"({
-      "metadata": {"hs3_version": "0.1.90"},
-      "distributions": [
-         {
-            "name": "model_channel0",
-            "type": "histfactory_dist",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "samples": [
-               {
-                  "name": "sig",
-                  "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
-                  "modifiers": [
-                     {"name": "mu", "type": "normfactor"},
-                     {"name": "mcstat", "type": "staterror"}
-                  ]
-               }
-            ]
-         }
-      ],
-      "data": [
-         {
-            "name": "obsData_channel0",
-            "type": "binned",
-            "axes": [
-               {"name": "obs_channel0", "min": 0.0, "max": 2.0, "nbins": 2}
-            ],
-            "contents": [10.0, 20.0]
-         }
-      ]
-   })";
+   const std::string jsonStr =
+      makeHistFactoryJSON(R"({"name": "mu", "type": "normfactor"}, {"name": "mcstat", "type": "staterror"})", "",
+                          "0.1.90", /*sampleData=*/R"({"contents": [10.0, 20.0], "errors": [1.0, 2.0]})");
 
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
@@ -3376,26 +3135,11 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraint)
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    auto makeJSON = [](std::string const &modifierConstraint, std::string const &channelConstraint) {
-      return R"({
-         "metadata": {"hs3_version": "0.2"},
-         "distributions": [
-            {
-               "name": "model_channel0",
-               "type": "histfactory_dist",
-               "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],)" +
-             (channelConstraint.empty() ? "" : R"("staterror": {"constraint_type": ")" + channelConstraint + R"("},)") +
-             R"(
-               "samples": [
-                  {
-                     "name": "sig",
-                     "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
-                     "modifiers": [{"name": "mcstat", "type": "staterror")" +
-             (modifierConstraint.empty() ? "" : R"(, "constraint": ")" + modifierConstraint + R"(")") + R"(}]
-                  }
-               ]
-            }
-         ]
-      })";
+      return makeHistFactoryJSON(
+         R"({"name": "mcstat", "type": "staterror")" +
+            (modifierConstraint.empty() ? "" : R"(, "constraint": ")" + modifierConstraint + R"(")") + "}",
+         "", "0.2", R"({"contents": [10.0, 20.0], "errors": [1.0, 2.0]})",
+         channelConstraint.empty() ? "" : R"("staterror": {"constraint_type": ")" + channelConstraint + R"("})");
    };
    auto hasGaussianStatConstraints = [](RooWorkspace &ws) {
       bool foundGauss = false;
@@ -3460,11 +3204,8 @@ TEST(RooFitHS3, HistFactoryMissingInterpolation)
       {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "data": {"lo": 0.8, "hi": 1.2}},
       {"name": "norm2", "parameter": "alpha_norm2", "type": "normsys", "data": {"lo": 0.9, "hi": 1.1}})";
 
-   std::string json = makeHistFactoryJSON(modifiers);
-   const std::string legacyVersion = R"("hs3_version": "0.2")";
-   std::string currentJson = json;
-   currentJson.replace(currentJson.find(legacyVersion), legacyVersion.size(), R"("hs3_version": "0.3")");
-   expectImportThrowsWithError(currentJson,
+   const std::string json = makeHistFactoryJSON(modifiers);
+   expectImportThrowsWithError(makeHistFactoryJSON(modifiers, "", "0.3"),
                                "interpolation for normsys modifier 'norm' in sample 'sig' of channel "
                                "'channel0' is not given, and the channel has no \"default_interpolation\"");
 
@@ -3739,37 +3480,24 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-   const std::string json = R"({
-      "metadata": {"hs3_version": "0.3"},
-      "distributions": [
-         {
-            "name": "model_channel0",
-            "type": "histfactory_dist",
-            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
-            "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
-            "samples": [
-               {
-                  "name": "sig",
-                  "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
-                  "modifiers": [
-                     {"type": "normfactor", "parameters": ["mu"]},
-                     {"type": "normsys", "parameters": ["alpha_a"], "constraints": ["alpha_a_constraint"],
-                      "data": {"lo": 0.9, "hi": 1.1}},
-                     {"type": "normsys", "parameters": ["alpha_b"], "constraints": [null],
-                      "data": {"lo": 0.8, "hi": 1.2}},
-                     {"type": "staterror", "parameters": ["gamma_0", "gamma_1"],
-                      "constraints": ["gamma_0_constraint", null]}
-                  ]
-               }
-            ]
-         },
+   auto makeJSON = [](std::string const &statConstraints) {
+      return makeHistFactoryJSON(
+         R"(
+         {"type": "normfactor", "parameters": ["mu"]},
+         {"type": "normsys", "parameters": ["alpha_a"], "constraints": ["alpha_a_constraint"],
+          "data": {"lo": 0.9, "hi": 1.1}},
+         {"type": "normsys", "parameters": ["alpha_b"], "constraints": [null], "data": {"lo": 0.8, "hi": 1.2}},
+         {"type": "staterror", "parameters": ["gamma_0", "gamma_1"])" +
+            statConstraints + "}",
+         R"({"type": "mult", "in": "poly6", "out": "exp"})", "0.3",
+         R"({"contents": [10.0, 20.0], "errors": [1.0, 2.0]})", "", R"(
          {"name": "alpha_a_constraint", "type": "gaussian_dist", "x": "alpha_a", "mean": 0.0, "sigma": 1.0},
-         {"name": "gamma_0_constraint", "type": "gaussian_dist", "x": "gamma_0", "mean": 1.0, "sigma": 0.1}
-      ],
-      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "gamma_0_constraint", "type": "gaussian_dist", "x": "gamma_0", "mean": 1.0, "sigma": 0.1})",
+         R"("domains": [{"name": "default_domain", "type": "product_domain", "axes": [
          {"name": "alpha_a", "min": -5, "max": 5}, {"name": "alpha_b", "min": -5, "max": 5},
-         {"name": "gamma_0", "min": 0, "max": 5}, {"name": "gamma_1", "min": 0, "max": 5}]}]
-   })";
+         {"name": "gamma_0", "min": 0, "max": 5}, {"name": "gamma_1", "min": 0, "max": 5}]}])");
+   };
+   const std::string json = makeJSON(R"(, "constraints": ["gamma_0_constraint", null])");
 
    RooWorkspace ws;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
@@ -3797,13 +3525,8 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
 
    // In HS3 >= 0.3, a staterror without any constraint information is unconstrained.
-   std::string unconstrained = json;
-   const std::string statConstraints = R"(,
-                      "constraints": ["gamma_0_constraint", null])";
-   ASSERT_NE(unconstrained.find(statConstraints), std::string::npos);
-   unconstrained.replace(unconstrained.find(statConstraints), statConstraints.size(), "");
    RooWorkspace ws3;
-   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(unconstrained));
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(makeJSON("")));
    auto *model3 = dynamic_cast<RooProdPdf *>(ws3.pdf("model_channel0"));
    ASSERT_NE(model3, nullptr);
    EXPECT_EQ(model3->pdfList().size(), 2u); // the sum and alpha_a_constraint
@@ -3908,23 +3631,10 @@ TEST(RooFitHS3, HistFactoryShapeFactor)
 
    auto makeJSON = [](std::string const &version, std::string const &modifiers,
                       std::string const &constraintDist = "") {
-      return R"({
-      "metadata": {"hs3_version": ")" +
-             version + R"("},
-      "distributions": [
-         {
-            "name": "model_channel0",
-            "type": "histfactory_dist",
-            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
-            "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]}, "modifiers": [)" +
-             modifiers + R"(]}]
-         })" +
-             constraintDist + R"(
-      ],
+      return makeHistFactoryJSON(modifiers, "", version, "", "", constraintDist, R"(
       "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
          {"name": "g_free_0", "min": 0, "max": 5}, {"name": "g_free_1", "min": 0, "max": 5},
-         {"name": "g_c_0", "min": 0, "max": 5}, {"name": "g_c_1", "min": 0, "max": 5}]}]
-   })";
+         {"name": "g_c_0", "min": 0, "max": 5}, {"name": "g_c_1", "min": 0, "max": 5}]}])");
    };
    auto countGammaConstraints = [](RooWorkspace &ws) {
       std::size_t n = 0;
@@ -3941,7 +3651,7 @@ TEST(RooFitHS3, HistFactoryShapeFactor)
       "parameters": ["g_c_0", "g_c_1"], "constraints": ["g_c_0_constraint", null]})";
    const std::string json =
       makeJSON("0.3", freeModifier + "," + constrainedModifier,
-               R"(, {"name": "g_c_0_constraint", "type": "gaussian_dist", "x": "g_c_0", "mean": 1.0, "sigma": 0.1})");
+               R"({"name": "g_c_0_constraint", "type": "gaussian_dist", "x": "g_c_0", "mean": 1.0, "sigma": 0.1})");
 
    RooWorkspace ws;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
@@ -4466,16 +4176,8 @@ TEST(RooFitHS3, HistFactoryLogNormalGammaConstraint)
       }
    }
 
-   expectImportThrowsWithError(R"({
-      "metadata": {"hs3_version": "0.2"},
-      "distributions": [{
-         "name": "model_channel0", "type": "histfactory_dist",
-         "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
-         "staterror": {"constraint_type": "LogNormal"},
-         "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]},
-                      "modifiers": [{"name": "mcstat", "type": "staterror"}]}]
-      }]
-   })",
+   expectImportThrowsWithError(makeHistFactoryJSON(R"({"name": "mcstat", "type": "staterror"})", "", "0.2", "",
+                                                   R"("staterror": {"constraint_type": "LogNormal"})"),
                                "unsupported constraint 'LogNormal'");
 }
 
