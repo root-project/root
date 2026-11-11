@@ -882,6 +882,53 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
        }
     }
 
+    template <class T>
+    class PxPyPzM4D;
+    template <class T>
+    class PtEtaPhiE4D;
+    template <class T>
+    class PtEtaPhiM4D;
+
+    namespace Impl {
+
+    /// Builds an arbitrary 4-vector type from Cartesian components with its (x, y, z, t) constructor. GenVector's
+    /// coordinate systems other than PxPyPzE4D take their own coordinates in that constructor, e.g.
+    /// PtEtaPhiE4D(pt, eta, phi, e), so they are set through SetPxPyPzE() instead.
+    template <class V>
+    struct FromXYZT {
+       template <class Scalar>
+       static V Make(Scalar x, Scalar y, Scalar z, Scalar t)
+       {
+          return V(x, y, z, t);
+       }
+    };
+
+    template <class C>
+    struct CoordinatesFromXYZT {
+       template <class Scalar>
+       static C Make(Scalar x, Scalar y, Scalar z, Scalar t)
+       {
+          C c;
+          c.SetPxPyPzE(x, y, z, t);
+          return c;
+       }
+    };
+
+    template <class T>
+    struct FromXYZT<PxPyPzM4D<T>> : CoordinatesFromXYZT<PxPyPzM4D<T>> {};
+    template <class T>
+    struct FromXYZT<PtEtaPhiE4D<T>> : CoordinatesFromXYZT<PtEtaPhiE4D<T>> {};
+    template <class T>
+    struct FromXYZT<PtEtaPhiM4D<T>> : CoordinatesFromXYZT<PtEtaPhiM4D<T>> {};
+
+    template <class V, class Scalar>
+    V MakeFromXYZT(Scalar x, Scalar y, Scalar z, Scalar t)
+    {
+       return FromXYZT<V>::Make(x, y, z, t);
+    }
+
+    } // namespace Impl
+
   } // end namespace Math
 
 } // end namespace ROOT
