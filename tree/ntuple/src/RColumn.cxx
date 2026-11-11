@@ -20,24 +20,14 @@
 #include <cassert>
 #include <utility>
 
-using ROOT::Internal::RPageSink;
-using ROOT::Internal::RPageSource;
-
-ROOT::Internal::RColumn::RColumn(ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
-   : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})
-{
-}
-
-ROOT::Internal::RColumn::~RColumn()
+ROOT::Internal::RWriteColumn::~RWriteColumn()
 {
    if (fPageSink)
       fPageSink->DropColumn(MakeHandle());
-   if (fPageSource)
-      fPageSource->DropColumn(MakeHandle());
 }
 
-void ROOT::Internal::RColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink,
-                                              ROOT::NTupleSize_t firstElementIndex)
+void ROOT::Internal::RWriteColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink,
+                                                   ROOT::NTupleSize_t firstElementIndex)
 {
    fInitialNElements = pageSink.GetWriteOptions().GetInitialUnzippedPageSize() / fElement->GetSize();
    if (fInitialNElements < 1) {
@@ -52,17 +42,7 @@ void ROOT::Internal::RColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPag
       throw RException(R__FAIL("page buffer memory budget too small"));
 }
 
-void ROOT::Internal::RColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)
-{
-   fPageSource = &pageSource;
-   fOnDiskId = fPageSource->AddColumn(fieldId, *this).fPhysicalId;
-   {
-      auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
-      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fOnDiskId).GetFirstElementIndex();
-   }
-}
-
-void ROOT::Internal::RColumn::Flush()
+void ROOT::Internal::RWriteColumn::Flush()
 {
    if (fWritePage.GetNElements() == 0)
       return;
@@ -73,12 +53,28 @@ void ROOT::Internal::RColumn::Flush()
    fWritePage.Reset(fNElements);
 }
 
-void ROOT::Internal::RColumn::CommitSuppressed()
+void ROOT::Internal::RWriteColumn::CommitSuppressed()
 {
    fPageSink->CommitSuppressedColumn(MakeHandle());
 }
 
-bool ROOT::Internal::RColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
+void ROOT::Internal::RReadColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)
+{
+   fPageSource = &pageSource;
+   fOnDiskId = fPageSource->AddColumn(fieldId, *this).fPhysicalId;
+   {
+      auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
+      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fOnDiskId).GetFirstElementIndex();
+   }
+}
+
+ROOT::Internal::RReadColumn::~RReadColumn()
+{
+   if (fPageSource)
+      fPageSource->DropColumn(MakeHandle());
+}
+
+bool ROOT::Internal::RReadColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
 {
    const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;
@@ -93,7 +89,7 @@ bool ROOT::Internal::RColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
    return fReadPageRef.Get().Contains(globalIndex);
 }
 
-bool ROOT::Internal::RColumn::TryMapPage(RNTupleLocalIndex localIndex)
+bool ROOT::Internal::RReadColumn::TryMapPage(RNTupleLocalIndex localIndex)
 {
    const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;
@@ -108,7 +104,7 @@ bool ROOT::Internal::RColumn::TryMapPage(RNTupleLocalIndex localIndex)
    return fReadPageRef.Get().Contains(localIndex);
 }
 
-void ROOT::Internal::RColumn::MergeTeams(RColumn &other)
+void ROOT::Internal::RReadColumn::MergeTeams(RReadColumn &other)
 {
    // We are working on very small vectors here, so quadratic complexity works
    for (auto *c : other.fTeam) {

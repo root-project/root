@@ -102,7 +102,7 @@ public:
    {
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
-      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, &collectionStart, &size);
       CheckSize(size);
       *static_cast<T *>(to) = size;
    }
@@ -112,7 +112,7 @@ public:
    {
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
-      fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
+      fPrincipalColumn->ForReading()->GetCollectionInfo(localIndex, &collectionStart, &size);
       CheckSize(size);
       *static_cast<T *>(to) = size;
    }

@@ -51,6 +51,7 @@ namespace Internal {
 
 class RPageAllocator;
 class RColumn;
+class RWriteColumn;
 struct RNTupleModelChangeset;
 
 enum class EPageStorageType {
@@ -210,7 +211,7 @@ It will flush (and shrink) large pages of other columns on the attempt to expand
 class RWritePageMemoryManager {
 private:
    struct RColumnInfo {
-      ROOT::Internal::RColumn *fColumn = nullptr;
+      ROOT::Internal::RWriteColumn *fColumn = nullptr;
       std::size_t fCurrentPageSize = 0;
       std::size_t fInitialPageSize = 0;
 
@@ -236,7 +237,7 @@ public:
    /// Try to register the new write page size for the given column. Flush large columns to make space, if necessary.
    /// If not enough space is available after all (sum of write pages would be larger than fMaxAllocatedBytes),
    /// return false.
-   bool TryUpdate(ROOT::Internal::RColumn &column, std::size_t newWritePageSize);
+   bool TryUpdate(ROOT::Internal::RWriteColumn &column, std::size_t newWritePageSize);
 };
 
 // clang-format off
