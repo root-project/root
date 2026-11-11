@@ -485,6 +485,9 @@ struct RooFitInternal {
    /// The constraint terms of HistFactory distributions that no modifier names, by distribution. They are
    /// also listed in the "aux_distributions" of the likelihoods, which is what other implementations use.
    std::map<std::string, std::vector<DistributionRef>> channelConstraints;
+   /// Axes that the components of a combined data set share, but that are no variate of any distribution, e.g. an
+   /// event number, by combined data set. They have no statistical meaning, and may be shared.
+   std::map<std::string, std::vector<std::string>> bookkeepingColumns;
 };
 
 struct Diagnostic {

@@ -818,8 +818,57 @@ std::vector<std::string> sharedVariates(PartVariates const &parts, std::string c
    return messages;
 }
 
-// All shared variates of the document: of the terms of each likelihood, and of the components of the combined
-// distributions and combined data sets that no likelihood lists (the others are checked through the likelihood).
+// The axes of the components of a combined data set, by component.
+PartVariates combinedDataAxes(JSONNode const &rootnode, JSONNode const &dataset)
+{
+   PartVariates parts;
+   for (std::string const &component : combinedComponents(dataset, "dataset")) {
+      std::set<std::string> axes;
+      if (JSONNode const *node = findInSection(rootnode, "data", component)) {
+         if (JSONNode const *axesNode = node->find("axes")) {
+            for (JSONNode const &axis : axesNode->children()) {
+               if (JSONNode const *axisName = axis.find("name")) {
+                  addNames(*axisName, axes);
+               }
+            }
+         }
+      }
+      parts.emplace_back(component, axes);
+   }
+   return parts;
+}
+
+// Bookkeeping columns (a RooFit extension, in misc.ROOT_internal.bookkeeping_columns as {"<combined data set>":
+// [<axis>, ...]}): axes that several components of a combined data set share, but that are no variate of any
+// distribution, e.g. an event number. They have no statistical meaning, and are exempt from the requirement of
+// distinct axes. A declared column that is a variate of a distribution is not a bookkeeping column.
+std::map<std::string, std::set<std::string>> bookkeepingColumnsOfDocument(JSONNode const &rootnode)
+{
+   std::map<std::string, std::set<std::string>> out;
+   JSONNode const *declared = findRooFitInternal(rootnode, "bookkeeping_columns");
+   if (!declared || !declared->is_map()) {
+      return out;
+   }
+   std::set<std::string> variates;
+   if (JSONNode const *distributions = rootnode.find("distributions")) {
+      for (JSONNode const &dist : distributions->children()) {
+         std::set<std::string> const v = variatesOf(rootnode, RooJSONFactoryWSTool::name(dist));
+         variates.insert(v.begin(), v.end());
+      }
+   }
+   for (JSONNode const &entry : declared->children()) {
+      for (JSONNode const &column : entry.children()) {
+         if (!variates.count(column.val())) {
+            out[entry.key()].insert(column.val());
+         }
+      }
+   }
+   return out;
+}
+
+// All shared variates of the document: of the terms of each likelihood, of the components of the combined
+// distributions that no likelihood lists (the others are checked through the likelihood), and the shared axes of the
+// components of all combined data sets, except for bookkeeping columns.
 std::vector<std::string> sharedVariatesOfDocument(JSONNode const &rootnode)
 {
    std::vector<std::string> messages;
@@ -856,30 +905,82 @@ std::vector<std::string> sharedVariatesOfDocument(JSONNode const &rootnode)
          append(sharedVariates(parts, "components", "the combined_dist '" + name + "'"));
       }
    }
+   // The axes of the components of every combined data set, also of those that a likelihood lists, except for the
+   // bookkeeping columns.
+   std::map<std::string, std::set<std::string>> const bookkeeping = bookkeepingColumnsOfDocument(rootnode);
    if (JSONNode const *data = rootnode.find("data")) {
       for (JSONNode const &dataset : data->children()) {
          std::string const name = RooJSONFactoryWSTool::name(dataset);
-         if (typeOf(dataset) != "combined" || inLikelihoods.count(name)) {
+         if (typeOf(dataset) != "combined") {
             continue;
          }
-         PartVariates parts;
-         for (std::string const &component : combinedComponents(dataset, "dataset")) {
-            std::set<std::string> axes;
-            if (JSONNode const *node = findInSection(rootnode, "data", component)) {
-               if (JSONNode const *axesNode = node->find("axes")) {
-                  for (JSONNode const &axis : axesNode->children()) {
-                     if (JSONNode const *axisName = axis.find("name")) {
-                        addNames(*axisName, axes);
-                     }
-                  }
+         PartVariates parts = combinedDataAxes(rootnode, dataset);
+         if (auto found = bookkeeping.find(name); found != bookkeeping.end()) {
+            for (auto &part : parts) {
+               for (std::string const &column : found->second) {
+                  part.second.erase(column);
                }
             }
-            parts.emplace_back(component, axes);
          }
          append(sharedVariates(parts, "components", "the combined data set '" + name + "'"));
       }
    }
    return messages;
+}
+
+// Declare the bookkeeping columns of the exported document `rootnode` (see bookkeepingColumnsOfDocument()): the axes
+// that several components of a combined data set share, and whose variable in the workspace `ws` is used by nothing
+// else, i.e. has no clients and is in no set of a ModelConfig. RooAbsData::split() keeps such a column (e.g. an event
+// number) in every sub-data set.
+void declareBookkeepingColumns(JSONNode &rootnode, RooWorkspace const &ws)
+{
+   JSONNode const *data = rootnode.find("data");
+   if (!data) {
+      return;
+   }
+   std::vector<RooArgSet const *> modelConfigSets;
+   for (TObject *obj : ws.allGenericObjects()) {
+      if (auto *mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
+         for (RooArgSet const *set : {mc->GetObservables(), mc->GetParametersOfInterest(), mc->GetNuisanceParameters(),
+                                      mc->GetGlobalObservables(), mc->GetConditionalObservables()}) {
+            if (set) {
+               modelConfigSets.push_back(set);
+            }
+         }
+      }
+   }
+   auto usedByNothing = [&](std::string const &name) {
+      RooAbsArg const *arg = ws.arg(name.c_str());
+      if (!arg || !arg->clients().empty()) {
+         return false;
+      }
+      return std::none_of(modelConfigSets.begin(), modelConfigSets.end(),
+                          [&](RooArgSet const *set) { return set->find(name.c_str()) != nullptr; });
+   };
+   std::map<std::string, std::set<std::string>> columns;
+   for (JSONNode const &dataset : data->children()) {
+      if (typeOf(dataset) != "combined") {
+         continue;
+      }
+      std::map<std::string, int> counts;
+      for (auto const &[component, axes] : combinedDataAxes(rootnode, dataset)) {
+         for (std::string const &axis : axes) {
+            ++counts[axis];
+         }
+      }
+      for (auto const &[axis, count] : counts) {
+         if (count > 1 && usedByNothing(axis)) {
+            columns[RooJSONFactoryWSTool::name(dataset)].insert(axis);
+         }
+      }
+   }
+   if (columns.empty()) {
+      return;
+   }
+   JSONNode &node = rootnode["misc"]["ROOT_internal"]["bookkeeping_columns"].set_map();
+   for (auto const &[dataset, names] : columns) {
+      node[dataset].fill_seq(names);
+   }
 }
 
 // Write each term of the likelihoods of the exported document `rootnode` once. A RooFit model often has a constraint
@@ -1309,7 +1410,8 @@ void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &data
 
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
-                    const std::vector<std::unique_ptr<RooAbsData>> &datasets)
+                    const std::vector<std::unique_ptr<RooAbsData>> &datasets,
+                    std::set<std::string> const &bookkeepingColumns)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = analysis.name;
@@ -1382,6 +1484,12 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       }
       if (!found)
          throw std::runtime_error("dataset '" + dataRef->name + "' cannot be found!");
+   }
+   // Bookkeeping columns of the data sets are no observables of the model.
+   for (std::string const &column : bookkeepingColumns) {
+      if (RooAbsArg *arg = observables.find(column.c_str())) {
+         observables.remove(*arg);
+      }
    }
 
    // A combined distribution paired with a combined data set must have a sub-data set for every component.
@@ -3117,6 +3225,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    // written if explicitly allowed, e.g. to rename the variates in the JSON by hand. This is checked on the written
    // document, which has the generic distributions.
    writeLikelihoodTermsOnce(n);
+   declareBookkeepingColumns(n, _workspace);
    if (std::vector<std::string> const shared = sharedVariatesOfDocument(n); !shared.empty()) {
       if (!config().allowExportSharedVariates) {
          std::string text;
@@ -3358,6 +3467,15 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
 
    // Distinct variates (see sharedVariates()). Documents of versions before 0.3, which RooFit wrote with shared
    // variates itself, are read with a warning.
+   std::set<std::string> bookkeepingColumns;
+   for (auto const &[dataset, columns] : bookkeepingColumnsOfDocument(n)) {
+      for (std::string const &column : columns) {
+         warning("RooFitHS3: the axis '" + column + "' of the components of the combined data set '" + dataset +
+                 "' is declared as a bookkeeping column without statistical meaning (misc.ROOT_internal."
+                 "bookkeeping_columns), so it may be shared by the components, although HS3 requires distinct axes.");
+         bookkeepingColumns.insert(column);
+      }
+   }
    for (std::string const &message : sharedVariatesOfDocument(n)) {
       if (!isHS3VersionBefore(_hs3VersionInput, 0, 3)) {
          error("invalid HS3: " + message +
@@ -3370,7 +3488,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    }
 
    for (auto const &analysis : doc.analyses) {
-      importAnalysis(doc, analysis, _workspace, datasets);
+      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns);
    }
 
    combineDatasets(doc, datasets);
