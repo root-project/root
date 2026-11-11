@@ -3274,7 +3274,8 @@ struct ChannelConstraint {
 // factors of the channels, and RooFit counts each once, also if several channels share it; in HS3, they are terms
 // of the likelihood.
 // - The channels that are written as histfactory_dist (`isHistFactoryChannel`) don't contain their constraints in
-//   the document; their modifiers refer to them.
+//   the document; their modifiers refer to them. Nested products of their constraint terms are expanded into the
+//   factors, which the HistFactory exporter writes as terms of their own.
 // - The constraints of a channel that is written as product_dist are taken out of the product by
 //   writeLikelihoodTermsOnce(). This is only done if no other object of the workspace uses the product, so the
 //   constraints of other products are not returned.
@@ -3324,9 +3325,19 @@ constraintsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet co
             continue;
          }
       }
+      std::function<void(RooAbsPdf const &)> add = [&](RooAbsPdf const &term) {
+         auto const *nested = dynamic_cast<RooProdPdf const *>(&term);
+         if (!histFactory || !nested) {
+            out.push_back({prod->GetName(), &term, histFactory});
+            return;
+         }
+         for (RooAbsArg const *factor : nested->pdfList()) {
+            add(static_cast<RooAbsPdf const &>(*factor));
+         }
+      };
       for (RooAbsArg const *factor : prod->pdfList()) {
          if (constraints->find(*factor)) {
-            out.push_back({prod->GetName(), static_cast<RooAbsPdf const *>(factor), histFactory});
+            add(static_cast<RooAbsPdf const &>(*factor));
          }
       }
    }

@@ -915,6 +915,19 @@ std::vector<std::string> splitTopLevelProduct(const std::string &expr)
    return parts;
 }
 
+// Expand the nested products of the constraint terms of a channel into their factors, which are the constraint terms
+// that the modifier parameters are looked up in, see findConstraint().
+void collectConstraintTerms(RooAbsPdf *pdf, std::vector<RooAbsPdf *> &terms)
+{
+   if (auto prod = dynamic_cast<RooProdPdf *>(pdf)) {
+      for (auto *factor : static_range_cast<RooAbsPdf *>(prod->pdfList())) {
+         collectConstraintTerms(factor, terms);
+      }
+   } else {
+      terms.push_back(pdf);
+   }
+}
+
 // A normsys that is written as the formula "1 +- a * b", where one of a and b is a constrained parameter.
 struct FormulaNormSys {
    RooAbsReal *param = nullptr;
@@ -1005,6 +1018,7 @@ struct ExportedChannel {
    HS3::HistFactoryDist dist;
    // The variables of the first histogram, named after the observables of the channel.
    std::unique_ptr<RooArgSet> observables;
+   std::size_t nBins = 0;
    /// The pdfs that the modifiers name as constraints, by name.
    std::map<std::string, RooAbsPdf const *> constraints;
    std::vector<RooAbsReal *> customModifiers;
@@ -1094,6 +1108,24 @@ bool isLegacyBinWidthFactor(RooAbsArg const &factor, RooRealSumPdf const &sumpdf
                       [&](double volume) { return volume > 0. && std::abs(value * volume - 1.) < 1e-6; });
 }
 
+/// Whether a ParamHistFunc has the structure of the one of a HistFactory ShapeSys or ShapeFactor: it is defined over
+/// the observables of the channel, with one parameter per bin of the channel. The import recreates such a function from
+/// a shapefactor modifier. Its name doesn't matter.
+bool isShapeModifierFunction(ParamHistFunc const &phf, ExportedChannel const &channel)
+{
+   if (!channel.observables || phf.paramList().size() != channel.nBins ||
+       static_cast<std::size_t>(phf.numBins()) != channel.nBins ||
+       phf.dataVars().size() != channel.observables->size()) {
+      return false;
+   }
+   for (RooAbsArg const *obs : phf.dataVars()) {
+      if (!channel.observables->find(obs->GetName())) {
+         return false;
+      }
+   }
+   return true;
+}
+
 ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
                             std::vector<RooAbsPdf *> const &channelConstraints)
 {
@@ -1161,6 +1193,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             histogramVariablesNamedAfterObservables(dataHist, histFunc.getHistObsList(), histFunc.variables());
          if (channel.observables == nullptr) {
             channel.observables = std::move(varsPtr);
+            channel.nBins = dataHist.numEntries();
          } else {
             // The bin contents of all samples are written in the order of the axes of the channel (the last axis
             // varies fastest), which is the order of the observables of the first histogram.
@@ -1331,6 +1364,20 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             }
             statError->constraint = std::move(pdfs);
          } else { // ShapeSys or ShapeFactor
+            // Other ParamHistFuncs can't be written as shapefactors: the import would recreate the function over the
+            // observables and bins of the channel. Over other variables, they are written as custom modifiers, which
+            // refer to the function by name. Over the observables of the channel with another binning, they can't be
+            // written at all, since the observables can only have one binning on import.
+            if (!isShapeModifierFunction(*phf, channel)) {
+               if (channel.observables && phf->dataVars().overlaps(*channel.observables)) {
+                  RooJSONFactoryWSTool::error("cannot write the ParamHistFunc '" + std::string(phf->GetName()) +
+                                              "': it has another binning of the observables of channel '" +
+                                              channel.name + "'");
+               }
+               custom.push_back({phf->GetName()});
+               channel.customModifiers.push_back(phf);
+               continue;
+            }
             HS3::ShapeSys &sys = shapeSys.emplace_back();
             sys.name = phf->GetName();
             erasePrefix(sys.name, channel.name + "_");
@@ -1658,7 +1705,8 @@ public:
                return false;
             }
          } else {
-            constraints.push_back(pdf);
+            // The constraint terms can also be grouped in nested products.
+            collectConstraintTerms(pdf, constraints);
          }
       }
       if (!sumpdf)
