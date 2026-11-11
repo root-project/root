@@ -79,6 +79,8 @@ public:
 
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
+   static TCanvas *EmbedQt6Canvas(class QWidget *parent, const char *name);
+
    ClassDefOverride(TQt6Canvas, 0) // Qt6 implementation for TCanvasImp
 };
 

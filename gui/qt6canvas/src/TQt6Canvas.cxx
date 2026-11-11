@@ -12,17 +12,21 @@
 
 #include "TQt6PadPainter.h"
 #include "TQt6Application.h"
+#include "TQt6GuiFactory.h"
 
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TError.h"
 
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <memory>
+
+#include <QVBoxLayout>
 
 #include "QCanvasWidget.h"
 
@@ -242,7 +246,6 @@ void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
    }
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns window geometry including borders and menus
 
@@ -323,4 +326,50 @@ TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
    // c->fCh = height;
 
    return imp;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Static method to create TCanvas instance with TQt6Canvas implementation and embed
+/// it into provided parent widget
+/// Can be used by user Qt-based GUIs to embed ROOT graphics
+
+TCanvas *TQt6Canvas::EmbedQt6Canvas(QWidget *parent, const char *name)
+{
+   if (!parent) {
+      ::Error("TQt6Canvas::EmbedQt6Canvas", "parent widget not specified");
+      return nullptr;
+   }
+
+   // force usage of qt6 gui factory
+   if (!dynamic_cast<TQt6GuiFactory *>(gGuiFactory)) {
+      delete gGuiFactory;
+      gGuiFactory = new TQt6GuiFactory();
+   }
+
+   TCanvas *c = new TCanvas(false);
+   c->SetName(name);
+   c->SetTitle("embed qt6 canvas");
+   c->SetBatch(kFALSE);
+
+   auto widget = new QCanvasWidget(parent);
+
+   if (parent->layout())
+      delete parent->layout();
+
+   QVBoxLayout* layout = new QVBoxLayout(parent);
+   layout->setContentsMargins(0, 0, 0, 0);
+   layout->addWidget(widget);
+
+
+   auto imp = new TQt6Canvas(c, name, 0, 0, widget->width(), widget->height());
+
+   imp->fCanvasWidget = widget;
+   imp->fPaintWidget = widget->GetPaintWidget();
+
+   if (imp->fPaintWidget)
+      imp->fPaintWidget->SetCanvas(c);
+
+   c->SetCanvasImp(imp);
+
+   return c;
 }
