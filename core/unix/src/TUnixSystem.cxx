@@ -4602,7 +4602,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", nullptr);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
-         rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
+         //rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
       }
       TString ldpath;
    #if defined(R__MACOSX)

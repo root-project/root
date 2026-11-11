@@ -2134,6 +2134,10 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
       if (!classesDefsList.empty()) {
          rootmapFile << "{ decls }\n";
          for (auto & classDef : classesDefsList) {
+            if (classDef.contains("template")) {
+
+               continue;
+            }
             rootmapFile << classDef << std::endl;
          }
          rootmapFile << "\n";
@@ -2352,6 +2356,9 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
             std::string fwdDeclarationTemplateSpec;
             retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(*rDecl, interpreter, fwdDeclarationTemplateSpec, normalizedName);
             fwdDeclaration += '\n' + fwdDeclarationTemplateSpec;
+            if (!rDecl->isInStdNamespace()) {
+               classesListForRootmap.push_back(rDecl->getQualifiedNameAsString());
+            }
          }
          if (retCode == 0)
             ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
