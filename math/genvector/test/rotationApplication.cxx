@@ -22,6 +22,7 @@
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/GenVector/Cartesian3D.h"
 #include "Math/GenVector/Polar3D.h"
+#include "Math/GenVector/Cylindrical3D.h"
 #include "Math/GenVector/CylindricalEta3D.h"
 #include "Math/GenVector/LorentzVector.h"
 #include "Math/GenVector/Rotation3D.h"
@@ -430,6 +431,23 @@ int doTestL (TestRotation const & testRotation, XYZVector const & testVector,
    return ret;
 }
 
+// A coordinate system passed directly to a rotation is a foreign vector whose constructor does not take (x, y, z)
+// (#19635).
+template <class R, class C>
+int doTestC(TestRotation const &testRotation, XYZVector const &testVector, double ticks)
+{
+   R r(rrr(testRotation));
+   DisplacementVector3D<C> v(testVector);
+   XYZVector answer = ans(testRotation, testVector);
+   correctedTicks<DisplacementVector3D<C>> ct;
+   C rc = r(v.Coordinates());
+   int ret = compare3D(XYZVector(rc.X(), rc.Y(), rc.Z()), answer, ct(ticks, v, answer));
+   if (ret != 0)
+      std::cout << "Wrong result of " << RotationTraits<R>::name() << " acting on " << CoordinateTraits<C>::name()
+                << " " << v << "\n";
+   return ret;
+}
+
 struct ForeignVector {
    typedef Cartesian3D<> CoordinateType;
    XYZVector v;
@@ -490,6 +508,9 @@ int doTestOfR (TestRotation const & testRotation, XYZVector const & testVector){
 #endif
    ret |= doTest <R, ForeignVector >
    (testRotation,testVector,ticks);
+   ret |= doTestC<R, Polar3D<double>>(testRotation, testVector, ticks);
+   ret |= doTestC<R, Cylindrical3D<double>>(testRotation, testVector, ticks);
+   ret |= doTestC<R, CylindricalEta3D<double>>(testRotation, testVector, ticks);
 #ifdef DEBUG
    std::cout << ">>>>> LorentzVector<PxPyPzE4D<double> >\n";
 #endif
@@ -597,6 +618,25 @@ int doTestLA (XYZVector const & testVector, double ticks) {
    return ret;
 }
 
+template <class R, class C>
+int doTestAC(XYZVector const &testVector, double ticks)
+{
+   int ret = 0;
+   DisplacementVector3D<C> v(testVector);
+   correctedTicks<DisplacementVector3D<C>> ct;
+   for (double angle = -4.0; angle < 4.0; angle += .15) {
+      XYZVector answers[] = {rxv(angle, testVector), ryv(angle, testVector), rzv(angle, testVector)};
+      C results[] = {RotationX(angle)(v.Coordinates()), RotationY(angle)(v.Coordinates()),
+                     RotationZ(angle)(v.Coordinates())};
+      for (int i = 0; i < 3; ++i)
+         ret |=
+            compare3D(XYZVector(results[i].X(), results[i].Y(), results[i].Z()), answers[i], ct(ticks, v, answers[i]));
+   }
+   if (ret != 0)
+      std::cout << "Wrong result of an axial rotation acting on " << CoordinateTraits<C>::name() << " " << v << "\n";
+   return ret;
+}
+
 template <class R>
 int doTestOfAxial (XYZVector const & testVector){
 #ifdef TRACE1
@@ -637,6 +677,9 @@ int doTestOfAxial (XYZVector const & testVector){
    std::cout << ">>>>> ForeignVector\n";
 #endif
    ret |= doTestA <R, ForeignVector > (testVector,ticks);
+   ret |= doTestAC<R, Polar3D<double>>(testVector, ticks);
+   ret |= doTestAC<R, Cylindrical3D<double>>(testVector, ticks);
+   ret |= doTestAC<R, CylindricalEta3D<double>>(testVector, ticks);
 #ifdef DEBUG
    std::cout << ">>>>> LorentzVector<PxPyPzE4D<double> >\n";
 #endif

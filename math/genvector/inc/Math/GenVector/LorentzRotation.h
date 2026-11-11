@@ -377,14 +377,15 @@ public:
   /**
      Lorentz transformation operation on an arbitrary 4-vector v.
      Preconditions:  v must implement methods x(), y(), z(), and t()
-     and the arbitrary vector type must have a constructor taking (x,y,z,t)
+     and the arbitrary vector type must have a constructor taking (x,y,z,t). GenVector coordinate systems whose
+     constructors take other coordinates use SetPxPyPzE() instead.
    */
   template <class Foreign4Vector>
   Foreign4Vector
   operator() (const Foreign4Vector & v) const {
     LorentzVector< PxPyPzE4D<double> > xyzt(v);
     LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
-    return Foreign4Vector ( r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T() );
+    return Impl::MakeFromXYZT<Foreign4Vector>(r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T());
   }
 
   /**
