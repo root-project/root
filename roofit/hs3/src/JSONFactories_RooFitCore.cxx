@@ -1110,7 +1110,10 @@ bool exportHist(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &ele
    const RooArg_t *hf = static_cast<const RooArg_t *>(func);
    elem["type"] << key;
    RooDataHist const &dh = hf->dataHist();
-   tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"].set_map());
+   // The axes are named after the observables of the function, which are not necessarily the variables of the
+   // histogram.
+   auto vars = histogramVariablesNamedAfterObservables(dh, hf->getHistObsList(), hf->variables());
+   tool->exportHisto(*vars, dh.numEntries(), dh.weightArray(), elem["data"].set_map());
    return true;
 }
 

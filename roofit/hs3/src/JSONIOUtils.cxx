@@ -4,6 +4,7 @@
 #include <RooAbsLValue.h>
 #include <RooArgList.h>
 #include <RooCategory.h>
+#include <RooDataHist.h>
 #include <RooSuperCategory.h>
 #include <RooWorkspace.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
@@ -119,6 +120,23 @@ std::size_t th1Position(std::size_t k, std::vector<std::size_t> const &nBins)
 }
 
 } // namespace
+
+std::unique_ptr<RooArgSet>
+histogramVariablesNamedAfterObservables(RooDataHist const &dh, RooArgSet const &histObs, RooArgSet const &funcObs)
+{
+   auto out = std::make_unique<RooArgSet>();
+   for (RooAbsArg *var : *dh.get()) {
+      std::string name = var->GetName();
+      for (std::size_t i = 0; i < histObs.size() && i < funcObs.size(); ++i) {
+         if (name == histObs[i]->GetName() && dynamic_cast<RooAbsLValue const *>(funcObs[i])) {
+            name = funcObs[i]->GetName();
+            break;
+         }
+      }
+      out->addOwned(std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg *>(var->clone(name.c_str()))});
+   }
+   return out;
+}
 
 std::vector<RooAbsReal *> paramHistFuncParamsInBinOrder(ParamHistFunc const &func)
 {
