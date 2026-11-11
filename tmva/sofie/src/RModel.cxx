@@ -686,7 +686,14 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
    // if the batch size is provided it can be used to specify the full shape
    // Add the full specified tensors in fReadyInputTensors collection
    auto originalInputTensorInfos = fInputTensorInfos; // need to copy because we may delete elements
-   for (auto &input : originalInputTensorInfos) {
+   // Visit the inputs in their model order, not in the platform-dependent
+   // iteration order of the unordered map: this loop registers the shape
+   // parameters, which defines the order of the Session constructor arguments.
+   for (auto const &inputName : fInputTensorNames) {
+      auto found = originalInputTensorInfos.find(inputName);
+      if (found == originalInputTensorInfos.end())
+         continue; // the shape of this input is already fully defined
+      auto &input = *found;
       if (verbose) std::cout << "looking at the tensor " << input.first << std::endl;
       // if a parameter (e.g. batch_size) is specified use for converting parametric shape in defined one
       if (!inputParams.empty()) {
@@ -1500,8 +1507,10 @@ void RModel::GenerateSessionCode()
    // initializing dynamic parameters
    if (!fDimShapeNames.empty()) {
       fGC += "\n\n";
-      std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
-      for (const auto &p : fDimShapeNames) {
+      // sort a copy: fDimShapeNames defines the constructor argument order
+      auto dimShapeNames = fDimShapeNames;
+      std::sort(dimShapeNames.begin(), dimShapeNames.end());
+      for (const auto &p : dimShapeNames) {
          fGC += "   " + memberNameForDimShape(p) + " = " + p + ";\n";
       }
    }
