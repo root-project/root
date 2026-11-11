@@ -55,7 +55,7 @@ public:
    }
    Int_t GetCollectionType() const override { return CollectionKind; }
    ULong_t GetIncrement() const override { return sizeof(typename CollectionT::ValueType); }
-   UInt_t Sizeof() const override { return sizeof(CollectionT); }
+   size_type Sizeof() const override { return sizeof(CollectionT); }
    bool HasPointers() const override { return false; }
 
    TClass *GetValueClass() const override
@@ -80,10 +80,10 @@ public:
    void PushProxy(void *objectstart) override { fObject = static_cast<CollectionT *>(objectstart); }
    void PopProxy() override { fObject = nullptr; }
 
-   void *At(UInt_t idx) override { return &fObject->v[idx]; }
+   void *At(size_type idx) override { return &fObject->v[idx]; }
    void Clear(const char * /*opt*/ = "") override { fObject->v.clear(); }
-   UInt_t Size() const override { return fObject->v.size(); }
-   void *Allocate(UInt_t n, bool /*forceDelete*/) override
+   size_type Size() const override { return fObject->v.size(); }
+   void *Allocate(size_type n, bool /*forceDelete*/) override
    {
       fObject->v.resize(n);
       return fObject;

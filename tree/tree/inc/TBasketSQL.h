@@ -45,9 +45,9 @@ public:
               TBranch *branch, TSQLResult **rs,
               TString *insert_query, std::vector<Int_t> *vc, TSQLRow **row);
    ~TBasketSQL() override;
-   void    PrepareBasket(Long64_t entry) override;
-   virtual Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
-   virtual Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
+   void    PrepareBasket(ULong64_t entry) override;
+   virtual Int_t   ReadBasketBuffers(ULong64_t pos, ULong64_t len, TFile *file);
+   virtual Int_t   ReadBasketBytes(ULong64_t pos, TFile *file);
 
    TSQLResult * GetResultSet() { return *fResultPtr;}
    void CreateBuffer(const char *name, TString title, std::vector<Int_t> * vc, TBranch *branch, TSQLResult ** rs);

@@ -30,6 +30,7 @@ class TJSONStackObj;
 class TBufferJSON final : public TBufferText {
 
 public:
+   using TBuffer::ReadClass;
 
    enum {
      // values 0..3 are exclusive, define text formating, JSON data are same
@@ -160,7 +161,7 @@ public:
    void ReadFastArray(ULong_t *l, Int_t n) final;
    void ReadFastArray(Long64_t *l, Int_t n) final;
    void ReadFastArray(ULong64_t *l, Int_t n) final;
-   void ReadFastArray(Float_t *f, Int_t n) final;
+   void ReadFastArray(Float_t *f, Long64_t n) final;
    void ReadFastArray(Double_t *d, Int_t n) final;
    void ReadFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr,
                       const TClass *onFileClass = nullptr) final;

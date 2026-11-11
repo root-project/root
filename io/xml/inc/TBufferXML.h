@@ -35,6 +35,8 @@ class TBufferXML final : public TBufferText, public TXMLSetup {
    friend class TKeyXML;
 
 public:
+   using TBuffer::ReadClass;
+
    TBufferXML(TBuffer::EMode mode);
    TBufferXML(TBuffer::EMode mode, TXMLFile *file);
    ~TBufferXML() override;
@@ -126,7 +128,7 @@ public:
    void ReadFastArray(ULong_t *l, Int_t n) final;
    void ReadFastArray(Long64_t *l, Int_t n) final;
    void ReadFastArray(ULong64_t *l, Int_t n) final;
-   void ReadFastArray(Float_t *f, Int_t n) final;
+   void ReadFastArray(Float_t *f, Long64_t n) final;
    void ReadFastArray(Double_t *d, Int_t n) final;
    void ReadFastArrayString(Char_t *c, Int_t n) final;
    void ReadFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr,
