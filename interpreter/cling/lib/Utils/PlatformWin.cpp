@@ -576,6 +576,23 @@ const void *CheckImp(void *addr, bool dllimp) {
   return (const void *)addr;
 }
 
+const void* windows::PreferUCRTSymbol(const void* Addr, const char* Name) {
+  // Not cached: msvcrt.dll may be loaded after the first lookup.
+  const HMODULE MSVCRT = ::GetModuleHandleA("msvcrt.dll");
+  if (!Addr || !MSVCRT)
+    return Addr;
+  HMODULE Owner = nullptr;
+  if (!::GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            reinterpret_cast<LPCSTR>(Addr), &Owner) ||
+      Owner != MSVCRT)
+    return Addr;
+  if (HMODULE UCRT = ::GetModuleHandleA("ucrtbase.dll"))
+    if (FARPROC P = ::GetProcAddress(UCRT, Name))
+      return reinterpret_cast<const void*>(P);
+  return Addr;
+}
+
 const void* DLSym(const std::string& Name, std::string* Err) {
  #ifdef _WIN64
   const DWORD Flags = LIST_MODULES_64BIT;

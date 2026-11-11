@@ -233,10 +233,19 @@ public:
       Addend = ((orig >> 29) & 0x3) | ((orig >> 3) & 0x1FFFFC);
       break;
     }
-    case COFF::IMAGE_REL_ARM64_PAGEOFFSET_12L:
     case COFF::IMAGE_REL_ARM64_PAGEOFFSET_12A: {
       uint32_t orig = read32le(Displacement);
       Addend = ((orig >> 10) & 0xFFF);
+      break;
+    }
+    case COFF::IMAGE_REL_ARM64_PAGEOFFSET_12L: {
+      // The LDR/STR immediate is scaled by the access size, so the embedded
+      // addend must be scaled back to bytes (mirrors write32AArch64Ldr).
+      uint32_t orig = read32le(Displacement);
+      uint32_t size = orig >> 30;
+      if ((orig & 0x04800000) == 0x04800000)
+        size += 4;
+      Addend = ((orig >> 10) & 0xFFF) << size;
       break;
     }
     case COFF::IMAGE_REL_ARM64_ADDR64: {

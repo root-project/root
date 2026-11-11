@@ -13,6 +13,7 @@
 #include "IncrementalExecutor.h"
 
 #include "cling/Utils/Output.h"
+#include "cling/Utils/Platform.h"
 #include "cling/Utils/Utils.h"
 
 #include <clang/Basic/TargetInfo.h>
@@ -27,7 +28,11 @@
 #include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
 #include <llvm/ExecutionEngine/Orc/TargetProcess/JITLoaderPerf.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
+#include <llvm/ADT/SmallPtrSet.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/GlobalVariable.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Target/TargetMachine.h>
@@ -260,7 +265,17 @@ namespace {
           RWDataSize);
     }
 
-    bool needsToReserveAllocationSpace() override { return true; }
+    bool needsToReserveAllocationSpace() override {
+#if defined(_WIN32) && (defined(_M_ARM64) || defined(__aarch64__))
+      // The contiguous reservation only matters for libgcc-style .eh_frame
+      // unwinding. On Windows ARM64, RuntimeDyld's size estimate for
+      // COFF/AArch64 objects does not account for all the stubs that are
+      // created later, so the reservation overflows; allocate per section.
+      return false;
+#else
+      return true;
+#endif
+    }
   };
 
   /// A JITLinkMemoryManager for Cling that never frees its allocations.
@@ -375,6 +390,10 @@ Error RTDynamicLibrarySearchGenerator::tryToGenerate(
     std::string Tmp((*Name).data() + StripGlobalPrefix,
                     (*Name).size() - StripGlobalPrefix);
     if (void* P = Dylib.getAddressOfSymbol(Tmp.c_str())) {
+#ifdef _WIN32
+      P = const_cast<void*>(
+          cling::utils::platform::PreferUCRTSymbol(P, Tmp.c_str()));
+#endif
       NewSymbols[Name] = {orc::ExecutorAddr::fromPtr(P),
                           JITSymbolFlags::Exported};
     }
@@ -752,6 +771,37 @@ void IncrementalJIT::addModule(Transaction& T) {
       Fn.setSection("");
     }
   }
+
+#if defined(_WIN32) && (defined(_M_ARM64) || defined(__aarch64__))
+  // On Windows ARM64 the JIT uses the small code model (COFF has no
+  // relocations for the large model's MOVZ/MOVK sequences), so references to
+  // external globals are emitted as ADRP+ADD/LDR pairs with a +-4GB range.
+  // Symbols living in DLLs (e.g. std::cout in msvcp140.dll) or in far-away JIT
+  // allocations are out of reach and RuntimeDyld silently truncates the page
+  // delta. Route such references through an __imp_ pointer instead: RuntimeDyld
+  // materializes it next to the code and fills it with a 64-bit relocation.
+  {
+    llvm::SmallPtrSet<const llvm::Function*, 4> Personalities;
+    for (auto &Fn : module->functions())
+      if (Fn.hasPersonalityFn())
+        if (auto *P = dyn_cast<llvm::Function>(
+                Fn.getPersonalityFn()->stripPointerCasts()))
+          Personalities.insert(P);
+    auto MakeImport = [](llvm::GlobalValue &GV) {
+      GV.setDLLStorageClass(llvm::GlobalValue::DLLImportStorageClass);
+      GV.setDSOLocal(false);
+    };
+    for (auto &GV : module->globals())
+      if (GV.isDeclaration() && !GV.isThreadLocal() &&
+          !GV.hasDLLImportStorageClass() && !GV.getName().starts_with("llvm."))
+        MakeImport(GV);
+    for (auto &Fn : module->functions())
+      if (Fn.isDeclaration() && !Fn.isIntrinsic() &&
+          !Fn.hasDLLImportStorageClass() && !Personalities.count(&Fn) &&
+          Fn.hasAddressTaken())
+        MakeImport(Fn);
+  }
+#endif
 
   ThreadSafeModule TSM(std::move(module), SingleThreadedContext);
 

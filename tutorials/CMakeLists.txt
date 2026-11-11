@@ -441,6 +441,15 @@ if(root7)
     list(APPEND root7_veto visualisation/rcanvas/df105.py)
     list(APPEND root7_veto visualisation/rcanvas/rbox.py)
   endif()
+  # rline.cxx saves the canvas as PNG through headless Chrome. On Windows, ROOT starts the browser
+  # with 'wmic process call create' (RWebDisplayHandle.cxx), and wmic is no longer installed by
+  # default on Windows 11 (24H2 and later).
+  if(WIN32)
+    find_program(WMIC_EXECUTABLE wmic)
+    if(NOT WMIC_EXECUTABLE)
+      list(APPEND root7_veto visualisation/rcanvas/rline.cxx)
+    endif()
+  endif()
   if(NOT xrootd)
     list(APPEND root7_veto hist/histv7/hist102_NanoAODDimuonAnalysis.C)
     list(APPEND root7_veto hist/histv7/hist103_NanoAODHiggsAnalysis.C)

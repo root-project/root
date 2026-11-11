@@ -18,6 +18,7 @@ ROOT_BUILTIN_PATCH_COMMAND(ROOT_CIVETWEB_PATCH_COMMAND
   PATCHES ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
           ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
           ${CMAKE_CURRENT_SOURCE_DIR}/1423.patch # https://github.com/civetweb/civetweb/pull/1423 for OpenSSL4 compatibility
+          ${CMAKE_CURRENT_SOURCE_DIR}/msvc-arm64.patch # MSVC ARM64 target architecture detection
   GIT_APPLY_ARGS ${GIT_PATCH_ARGS})
 
 include(ExternalProject)

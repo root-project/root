@@ -1,0 +1,12 @@
+diff --git a/cmake/DetermineTargetArchitecture.cmake b/cmake/DetermineTargetArchitecture.cmake
+--- a/cmake/DetermineTargetArchitecture.cmake
++++ b/cmake/DetermineTargetArchitecture.cmake
+@@ -23,6 +23,8 @@ function(determine_target_architecture FLAG)
+       set(ARCH "x86_64")
+     elseif("${MSVC_C_ARCHITECTURE_ID}" STREQUAL "ARM")
+       set(ARCH "arm")
++    elseif("${MSVC_C_ARCHITECTURE_ID}" STREQUAL "ARM64")
++      set(ARCH "aarch64")
+     else()
+       message(FATAL_ERROR "Failed to determine the MSVC target architecture: ${MSVC_C_ARCHITECTURE_ID}")
+     endif()

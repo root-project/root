@@ -49,7 +49,12 @@ endif()
 #ROOT_ADD_TEST(test-hsimple COMMAND hsimple)
 
 #---invalid pointer checks---------------------------------------------------------------------
-if((NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS) AND NOT experimental_adaptivecpp)
+# Disabled on Windows ARM64, as on macOS arm64: the null-pointer check reports the error by throwing
+# a C++ exception through JIT-compiled frames, and RuntimeDyld does not register unwind information
+# (.pdata) for JIT code on COFF/AArch64, so the exception cannot be caught.
+if((NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS)
+   AND NOT (MSVC AND MSVC_CXX_ARCHITECTURE_ID STREQUAL "ARM64" AND NOT win_broken_tests)
+   AND NOT experimental_adaptivecpp)
   ROOT_ADD_TEST(test-check-nullptr
     COMMAND ${root_exe} -b -q --ptrcheck -e "int*ptr=(int*)0" -e "*ptr"
     PASSREGEX "dereference null pointer")
@@ -170,7 +175,12 @@ if(opengl AND TARGET TreeViewer)
                 COMMAND stressGraphics -b --web=off -p=svg --svg=${CMAKE_CURRENT_SOURCE_DIR}/svg_ref/
                 FAILREGEX "FAILED|Error in"
                 LABELS longtest)
-  if(webgui AND CHROME_EXECUTABLE)
+  # On Windows, ROOT starts the browser with 'wmic process call create' (RWebDisplayHandle.cxx).
+  # wmic is no longer installed by default on Windows 11 (24H2 and later), so skip the test there.
+  if(WIN32)
+    find_program(WMIC_EXECUTABLE wmic)
+  endif()
+  if(webgui AND CHROME_EXECUTABLE AND (NOT WIN32 OR WMIC_EXECUTABLE))
     ROOT_ADD_TEST(test-stressgraphics-chrome
                   RUN_SERIAL
                   COMMAND stressGraphics -b -k -p=sgc --web=chrome
@@ -198,7 +208,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.5.18.00.root ${CMAKE_
 ROOT_EXECUTABLE(stressHistogram stressHistogram.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED|Error in" LABELS longtest)
 # The stresshistogram-interpreted test fails on Windows due to unresolved symbols with Visual Studio 2026
-if(MSVC AND MSVC_VERSION GREATER_EQUAL 1951 AND NOT "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32")
+# (not on ARM64, where the test passes)
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1951 AND NOT "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32"
+   AND NOT MSVC_CXX_ARCHITECTURE_ID STREQUAL "ARM64")
   set(_willfail WILLFAIL)
 endif()
 ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${root_exe} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.cxx

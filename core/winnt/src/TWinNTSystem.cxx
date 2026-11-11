@@ -58,6 +58,7 @@
 #include <sstream>
 #include <iostream>
 #include <list>
+#include <vector>
 #include <shlobj.h>
 #include <conio.h>
 #include <ctime>
@@ -4313,7 +4314,8 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
    if ( (opt.First('L')!=kNPOS) ) {
       libs.ReplaceAll("/","\\");
       // get the %LIB% environment path list
-      std::stringstream libenv(gSystem->Getenv("LIB"));
+      const char *libvar = gSystem->Getenv("LIB");
+      std::stringstream libenv(libvar ? libvar : "");
       while (getline(libenv, str, ';')) {
          libpaths.push_back(str);
       }
@@ -5582,6 +5584,14 @@ typedef LONG (WINAPI *PROCNTQSI) (UINT, PVOID, ULONG, PULONG);
 
 static DWORD GetCPUSpeed()
 {
+#if defined(_M_ARM64) || defined(_M_ARM)
+   // No 'rdtsc' on ARM: read the nominal clock speed (in MHz) reported by Windows.
+   DWORD mhz = 0, size = sizeof(mhz);
+   if (RegGetValueA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", "~MHz",
+                    RRF_RT_REG_DWORD, nullptr, &mhz, &size) != ERROR_SUCCESS)
+      return 0;
+   return mhz;
+#else
    LARGE_INTEGER ulFreq, ulTicks, ulValue, ulStartCounter;
 
    // Query for high-resolution counter frequency
@@ -5604,6 +5614,7 @@ static DWORD GetCPUSpeed()
       // No high-resolution counter present:
       return 0;
    }
+#endif
 }
 
 #define BUFSIZE 80
@@ -5834,6 +5845,18 @@ static const char *GetWindowsVersion()
 
 static int GetL2CacheSize()
 {
+#if defined(_M_ARM64) || defined(_M_ARM)
+   // No 'cpuid' on ARM: query the cache topology from Windows (size in KB, as for x86).
+   DWORD len = 0;
+   GetLogicalProcessorInformation(nullptr, &len);
+   std::vector<SYSTEM_LOGICAL_PROCESSOR_INFORMATION> info(len / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) + 1);
+   if (!GetLogicalProcessorInformation(info.data(), &len))
+      return 0;
+   for (DWORD i = 0; i < len / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i)
+      if (info[i].Relationship == RelationCache && info[i].Cache.Level == 2)
+         return (int)(info[i].Cache.Size / 1024);
+   return 0;
+#else
    unsigned nHighestFeatureEx;
    int nBuff[4];
 
@@ -5845,6 +5868,7 @@ static int GetL2CacheSize()
       return (((unsigned)nBuff[2])>>16);
    }
    else return 0;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

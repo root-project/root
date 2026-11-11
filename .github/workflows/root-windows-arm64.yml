@@ -1,0 +1,85 @@
+name: 'Windows ARM64'
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+  push:
+    branches:
+      - 'master'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows-arm64:
+    name: Windows 11 ARM64 Release
+    # GitHub-hosted native Windows on ARM64 runner
+    runs-on: windows-11-arm
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup MSVC developer environment (arm64)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: arm64
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: arm64
+
+      - name: Install FFTW3
+        # RooFFTConvPdf needs FFTW (testRooFitCore, testRooWorkspace). The runner image ships vcpkg.
+        shell: pwsh
+        run: |
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install fftw3:arm64-windows
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $fftw = "$env:VCPKG_INSTALLATION_ROOT\installed\arm64-windows"
+          "FFTW_ROOT=$fftw" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "$fftw\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      - name: Configure
+        shell: pwsh
+        run: |
+          # Same option set as the self-hosted 'windows10' CI configuration, minus the
+          # GSL-dependent parts: GSL is not preinstalled on GitHub-hosted runners and the
+          # builtin GSL uses autotools, which does not work with MSVC.
+          $opts = Get-Content .github/workflows/root-ci-config/buildconfig/windows10.txt |
+                  Where-Object { $_ -match '=' } |
+                  ForEach-Object { "-D$_" }
+          $opts = $opts -replace '^-Dpyroot3=ON$', '-Dpyroot=OFF'
+          $opts = $opts | Where-Object { $_ -ne '-Duse_gsl_cblas=ON' }
+          cmake -S . -B build -G Ninja `
+                -DCMAKE_BUILD_TYPE=Release `
+                -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl `
+                -Dtpython=OFF `
+                -Dbuiltin_gsl=OFF -Dmathmore=OFF -Duse_gsl_cblas=OFF -Dtmva-cpu=OFF `
+                -Dtesting=ON -Droottest=OFF `
+                @opts `
+                -Dfftw3=ON -DFFTW_ROOT="$env:FFTW_ROOT"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        working-directory: build
+        # Same flake policy as the upstream Windows CI (build_root.py: --repeat until-pass:5)
+        run: ctest --output-on-failure --parallel 4 --timeout 600 --repeat until-pass:5 --output-junit TestResults.xml
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: Test Results Windows ARM64
+          path: build/TestResults.xml

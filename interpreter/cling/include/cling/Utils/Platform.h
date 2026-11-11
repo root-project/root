@@ -86,6 +86,13 @@ namespace platform {
 
 inline namespace windows {
 
+  ///\brief If Addr (the resolution of Name) lives in the legacy msvcrt.dll,
+  /// return the ucrtbase.dll export of the same name instead. Interpreted code
+  /// is compiled against the UCRT headers, so binding it to msvcrt.dll (which
+  /// some system DLLs load) mixes incompatible CRTs, e.g. FILE layouts.
+  ///
+  const void* PreferUCRTSymbol(const void* Addr, const char* Name);
+
   ///\brief Get an error message from the last Windows API
   ///
   /// \param [in] Prefix - Prefix the message with this (ex. API call name)

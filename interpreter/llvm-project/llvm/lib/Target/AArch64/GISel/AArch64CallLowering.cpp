@@ -594,6 +594,16 @@ bool AArch64CallLowering::fallBackToDAGISel(const MachineFunction &MF) const {
       Attrs.hasStreamingCompatibleInterface())
     return true;
 
+  // On Windows, a function with an 'inreg sret' parameter (MSVC C++ instance
+  // methods returning a class by value) must return the sret pointer in X0.
+  // SelectionDAG implements this (see AArch64TargetLowering::LowerReturn), but
+  // GlobalISel does not, so callers compiled by MSVC would read a stale X0.
+  if (ST.isCallingConvWin64(F.getCallingConv(), F.isVarArg()) &&
+      llvm::any_of(F.args(), [](const Argument &A) {
+        return A.hasStructRetAttr() && A.hasInRegAttr();
+      }))
+    return true;
+
   return false;
 }
 
