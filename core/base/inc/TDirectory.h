@@ -202,7 +202,7 @@ public:
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *FindObjectAnyFile(const char * /*name*/) const {return nullptr;}
    virtual TObject    *Get(const char *namecycle);
-   /// See documentation of TDirectoryFile::Get(const char *namecycle)
+   /// Type-safe variant of Get(). \copydetails TDirectoryFile::Get(const char*)
    template <class T> inline T* Get(const char* namecycle)
    {
       return static_cast<T*>(GetObjectChecked(namecycle, TClass::GetClass<T>()));
