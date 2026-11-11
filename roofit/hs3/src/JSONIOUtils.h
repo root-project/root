@@ -1,6 +1,7 @@
 #ifndef JSONIOUtils_h
 #define JSONIOUtils_h
 
+#include <memory>
 #include <string_view>
 #include <vector>
 #include <RooFit/Detail/JSONInterface.h>
@@ -10,7 +11,9 @@ class RooAbsCategory;
 class RooAbsCollection;
 class RooAbsReal;
 class RooArgList;
+class RooArgSet;
 class RooCategory;
+class RooDataHist;
 class RooWorkspace;
 class ParamHistFunc;
 
@@ -24,6 +27,14 @@ void writeAxisBinning(RooFit::Detail::JSONNode &node, const RooAbsBinning &binni
 inline constexpr const char *fixedValueKey = "value";
 bool parseHS3Version(std::string const &version, int &major, int &minor);
 bool isHS3VersionBefore(std::string const &version, int major, int minor);
+
+// A RooHistFunc or RooHistPdf is evaluated with its own observables (`funcObs`), which are mapped by position onto
+// the variables of its histogram (`histObs`) and need not have the same names, e.g. after a RooCustomizer replaced
+// them. The variables of the histogram `dh`, in the order of the histogram, each named after the observable that is
+// mapped onto it, so that the axes are written with the names of the observables. A variable onto which no variable
+// or category is mapped keeps its name.
+std::unique_ptr<RooArgSet>
+histogramVariablesNamedAfterObservables(RooDataHist const &dh, RooArgSet const &histObs, RooArgSet const &funcObs);
 
 // ParamHistFunc orders its parameters like the bins of a TH1 (first variable fastest), while HS3 lays out per-bin
 // arrays with the last axis varying fastest, like RooDataHist. These helpers convert at the HS3 boundary.

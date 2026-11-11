@@ -6345,6 +6345,127 @@ TEST(RooFitHS3, RenameCombinedObservables)
    EXPECT_EQ(axes, (std::set<std::string>{"obs_SR_x", "obs_SR_y"})) << jsonXY;
 }
 
+// Histograms are written with axes named after the observables of the RooHistFunc or RooHistPdf, which are mapped
+// onto the variables of the histogram and need not have the same names. This matters when the observables are
+// renamed per key (reported in the review): the "histfactory_dist" of a channel and a "histogram_dist" have the
+// renamed observables as axes, like the data, and the renamed observables are not written as parameters.
+TEST(RooFitHS3, HistogramAxesNamedAfterObservables)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // A RooHistFunc with observables of other names than the variables of its histogram is written with the names of
+   // its observables.
+   {
+      RooRealVar u{"u", "u", 0.0, 2.0};
+      u.setBins(2);
+      RooRealVar v{"v", "v", 0.0, 2.0};
+      v.setBins(2);
+      std::unique_ptr<RooDataHist> dh = makeDataHist("dh_v", v, {1.0, 3.0});
+      RooHistFunc func{"func", "func", RooArgList{u}, RooArgList{v}, *dh};
+      RooWorkspace ws;
+      ws.import(func, RooFit::Silence());
+      const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      auto tree = RooFit::Detail::JSONTree::create(json);
+      auto const *node = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "func");
+      ASSERT_NE(node, nullptr) << json;
+      ASSERT_EQ((*node)["data"]["axes"].num_children(), 1u) << json;
+      EXPECT_EQ((*node)["data"]["axes"].child(0)["name"].val(), "u") << json;
+   }
+
+   struct FlagGuard {
+      bool old = RooJSONFactoryWSTool::config().renameCombinedObservables;
+      FlagGuard() { RooJSONFactoryWSTool::config().renameCombinedObservables = true; }
+      ~FlagGuard() { RooJSONFactoryWSTool::config().renameCombinedObservables = old; }
+   } flagGuard;
+
+   // A HistFactory channel (SR) and a RooHistPdf (CR) on the same observable.
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+   std::unique_ptr<RooDataHist> template_ = makeDataHist("template", x, {10.0, 20.0});
+   RooHistFunc shape{"shape", "shape", RooArgSet{x}, *template_};
+   RooBinWidthFunction width{"width", "width", shape, true};
+   RooProduct sample{"sample", "sample", {shape, width}};
+   RooRealVar mu{"mu", "mu", 1.0, 0.1, 3.0};
+   RooRealSumPdf model{"model_SR", "model_SR", {sample}, {mu}, true};
+   std::unique_ptr<RooDataHist> crHist = makeDataHist("crHist", x, {5.0, 1.0});
+   RooHistPdf cr{"cr", "cr", RooArgSet{x}, *crHist};
+   RooCategory channel{"channel", "channel", {{"SR", 0}, {"CR", 1}}};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"SR", &model}, {"CR", &cr}}, channel};
+   // Binned data in the usual HistFactory form, one weighted entry per bin.
+   RooRealVar weight{"weight", "weight", 1.0};
+   RooDataSet obsData{"obsData", "obsData", {x, channel, weight}, RooFit::WeightVar(weight)};
+   for (auto const &[label, value, w] :
+        std::vector<std::tuple<const char *, double, double>>{{"SR", 0.5, 1.0}, {"SR", 1.5, 2.0}, {"CR", 0.2, 1.0}}) {
+      channel.setLabel(label);
+      x.setVal(value);
+      obsData.add({x, channel}, w);
+   }
+
+   RooWorkspace ws;
+   ws.import(simPdf, RooFit::Silence());
+   ws.import(obsData, RooFit::Silence());
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+
+   auto axisNames = [](RooFit::Detail::JSONNode const &axes) {
+      std::vector<std::string> names;
+      for (auto const &axis : axes.children()) {
+         names.push_back(axis["name"].val());
+      }
+      return names;
+   };
+   std::map<std::string, std::vector<std::string>> distAxes;
+   for (auto const &dist : root["distributions"].children()) {
+      if (dist["type"].val() == "histfactory_dist") {
+         distAxes[dist["type"].val()] = axisNames(dist["axes"]);
+      } else if (dist["type"].val() == "histogram_dist") {
+         distAxes[dist["type"].val()] = axisNames(dist["data"]["axes"]);
+      }
+   }
+   EXPECT_EQ(distAxes, (std::map<std::string, std::vector<std::string>>{{"histfactory_dist", {"obs_SR"}},
+                                                                        {"histogram_dist", {"obs_CR"}}}))
+      << json;
+   for (const char *key : {"SR", "CR"}) {
+      auto const *part = RooJSONFactoryWSTool::findNamedChild(root["data"], std::string("obsData_") + key);
+      ASSERT_NE(part, nullptr) << json;
+      EXPECT_EQ(axisNames((*part)["axes"]), std::vector<std::string>{std::string("obs_") + key}) << json;
+   }
+   // The original observable is gone from the document.
+   for (auto const &domain : root["domains"].children()) {
+      EXPECT_EQ(axisNames(domain["axes"]), (std::vector<std::string>{"channel", "mu", "obs_CR", "obs_SR"})) << json;
+   }
+   for (auto const &point : root["parameter_points"].children()) {
+      for (auto const &param : point["parameters"].children()) {
+         EXPECT_NE(param["name"].val(), "x") << json;
+      }
+   }
+
+   // Read back, the likelihood changes the same way with the parameter, and the document is stable from the second
+   // export on (the HistFactory importer adds its attributes and step widths).
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   auto nllDifference = [](RooAbsPdf &pdf, RooAbsData &data, RooRealVar &param) {
+      std::unique_ptr<RooAbsReal> nll{pdf.createNLL(data)};
+      const double nominal = nll->getVal();
+      const double old = param.getVal();
+      param.setVal(1.5);
+      const double difference = nll->getVal() - nominal;
+      param.setVal(old);
+      return difference;
+   };
+   ASSERT_NE(imported.pdf("simPdf"), nullptr);
+   ASSERT_NE(imported.data("obsData"), nullptr);
+   ASSERT_NE(imported.var("mu"), nullptr);
+   const double expected = nllDifference(simPdf, obsData, mu);
+   EXPECT_NE(expected, 0.0);
+   EXPECT_NEAR(nllDifference(*imported.pdf("simPdf"), *imported.data("obsData"), *imported.var("mu")), expected, 1e-8);
+   const std::string json2 = RooJSONFactoryWSTool{imported}.exportJSONtoString();
+   RooWorkspace imported2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported2}.importJSONfromString(json2));
+   EXPECT_EQ(RooJSONFactoryWSTool{imported2}.exportJSONtoString(), json2);
+}
+
 // HS3 requires the terms of a likelihood to have distinct variates, like the components of a combined distribution.
 // Two channels with a common observable can't be exported, unless explicitly allowed: then the document is written
 // with a warning, and it is rejected on import.

@@ -94,6 +94,8 @@ public:
 
   void doEval(RooFit::EvalContext &) const override;
 
+  RooArgSet const &getHistObsList() const { return _histObsList; }
+
   RooArgSet const &variables() const { return _pdfObsList; }
 
 protected:
