@@ -47,61 +47,17 @@ protected:
    std::uint32_t fIndex;
    /// Fields can have multiple column representations, distinguished by representation index
    std::uint16_t fRepresentationIndex;
-   ROOT::Internal::RPageSink *fPageSink = nullptr;
-   ROOT::Internal::RPageSource *fPageSource = nullptr;
-   /// The page into which new elements are being written. The page will initially be small
-   /// (RNTupleWriteOptions::fInitialUnzippedPageSize, which corresponds to fInitialElements) and expand as needed and
-   /// as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
-   /// size is reached (RNTupleWriteOptions::fMaxUnzippedPageSize).
-   ROOT::Internal::RPage fWritePage;
-   /// The initial number of elements in a page
-   ROOT::NTupleSize_t fInitialNElements = 1;
-   /// The number of elements written
-   ROOT::NTupleSize_t fNElements = 0;
-   /// The currently mapped page for reading
-   ROOT::Internal::RPageRef fReadPageRef;
    /// Global index of the first element in this column; usually == 0, unless it is a deferred column
    ROOT::NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<ROOT::Internal::RColumnElementBase> fElement;
-   /// The column team is a set of columns that serve the same column index for different representation IDs.
-   /// Initially, the team has only one member, the very column it belongs to. Through MergeTeams(), two columns
-   /// can join forces. The team is used to react on suppressed columns: if the current team member has a suppressed
-   /// column for a MapPage() call, it get the page from the active column in the corresponding cluster.
-   std::vector<RColumn *> fTeam;
-   /// Points into fTeam to the column that successfully returned the last page.
-   std::size_t fLastGoodTeamIdx = 0;
 
-   RColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex);
+   RColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
+      : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex)
+   {
+   }
 
    ROOT::Internal::RPageStorage::ColumnHandle_t MakeHandle() { return {fOnDiskId, this}; }
-
-   /// Used when trying to append to a full write page. If possible, expand the page. Otherwise, flush and reset
-   /// to the minimal size.
-   void HandleWritePageIfFull()
-   {
-      auto newMaxElements = fWritePage.GetMaxElements() * 2;
-      if (newMaxElements * fElement->GetSize() > fPageSink->GetWriteOptions().GetMaxUnzippedPageSize()) {
-         newMaxElements = fPageSink->GetWriteOptions().GetMaxUnzippedPageSize() / fElement->GetSize();
-      }
-
-      if (newMaxElements == fWritePage.GetMaxElements()) {
-         // Maximum page size reached, flush and reset
-         Flush();
-      } else {
-         auto expandedPage = fPageSink->ReservePage(MakeHandle(), newMaxElements);
-         if (expandedPage.IsNull()) {
-            Flush();
-         } else {
-            memcpy(expandedPage.GetBuffer(), fWritePage.GetBuffer(), fWritePage.GetNBytes());
-            expandedPage.Reset(fNElements);
-            expandedPage.GrowUnchecked(fWritePage.GetNElements());
-            fWritePage = std::move(expandedPage);
-         }
-      }
-
-      assert(fWritePage.GetNElements() < fWritePage.GetMaxElements());
-   }
 
 public:
    enum class EColumnType {
@@ -111,7 +67,7 @@ public:
 
    RColumn(const RColumn &) = delete;
    RColumn &operator=(const RColumn &) = delete;
-   virtual ~RColumn();
+   virtual ~RColumn() = default;
 
    // Static cast to the derived classes, defined at the end of the header
    RReadColumn *ForReading();
@@ -119,46 +75,59 @@ public:
    RWriteColumn *ForWriting();
    const RWriteColumn *ForWriting() const;
 
-   /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
-   /// with backing storage for this column.  On read back, elements before `firstElementIndex` will cause the zero page
-   /// to be mapped.
-   void ConnectPageSink(ROOT::DescriptorId_t fieldId, ROOT::Internal::RPageSink &pageSink,
-                        ROOT::NTupleSize_t firstElementIndex = 0U);
+   ROOT::Internal::RColumnElementBase *GetElement() const { return fElement.get(); }
+   ROOT::ENTupleColumnType GetType() const { return fType; }
+   std::uint16_t GetBitsOnStorage() const
+   {
+      assert(fElement);
+      return static_cast<std::uint16_t>(fElement->GetBitsOnStorage());
+   }
+   std::optional<std::pair<double, double>> GetValueRange() const
+   {
+      assert(fElement);
+      return fElement->GetValueRange();
+   }
+   std::uint32_t GetIndex() const { return fIndex; }
+   std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
+   ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
+   ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
+
+   void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
+   void SetValueRange(double min, double max) { fElement->SetValueRange(min, max); }
+}; // class RColumn
+
+class RReadColumn : public RColumn {
+private:
+   ROOT::Internal::RPageSource *fPageSource = nullptr;
+   /// The currently mapped page for reading
+   ROOT::Internal::RPageRef fReadPageRef;
+   /// The column team is a set of columns that serve the same column index for different representation IDs.
+   /// Initially, the team has only one member, the very column it belongs to. Through MergeTeams(), two columns
+   /// can join forces. The team is used to react on suppressed columns: if the current team member has a suppressed
+   /// column for a MapPage() call, it get the page from the active column in the corresponding cluster.
+   std::vector<RReadColumn *> fTeam;
+   /// Points into fTeam to the column that successfully returned the last page.
+   std::size_t fLastGoodTeamIdx = 0;
+
+   RReadColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
+      : RColumn(type, columnIndex, representationIndex), fTeam({this})
+   {
+   }
+
+public:
+   template <typename CppT>
+   static std::unique_ptr<RReadColumn>
+   Create(ROOT::ENTupleColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
+   {
+      auto column = std::unique_ptr<RReadColumn>(new RReadColumn(type, columnIdx, representationIdx));
+      column->fElement = ROOT::Internal::RColumnElementBase::Generate<CppT>(type);
+      return column;
+   }
+
+   ~RReadColumn();
+
    /// Connect the column to a page source.
    void ConnectPageSource(ROOT::DescriptorId_t fieldId, ROOT::Internal::RPageSource &pageSource);
-
-   void Append(const void *from)
-   {
-      if (fWritePage.GetNElements() == fWritePage.GetMaxElements()) {
-         HandleWritePageIfFull();
-      }
-
-      void *dst = fWritePage.GrowUnchecked(1);
-
-      std::memcpy(dst, from, fElement->GetSize());
-      fNElements++;
-   }
-
-   void AppendV(const void *from, std::size_t count)
-   {
-      auto src = reinterpret_cast<const unsigned char *>(from);
-      while (count > 0) {
-         std::size_t nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
-         if (nElementsRemaining == 0) {
-            HandleWritePageIfFull();
-            nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
-         }
-
-         assert(nElementsRemaining > 0);
-         auto nBatch = std::min(count, nElementsRemaining);
-
-         void *dst = fWritePage.GrowUnchecked(nBatch);
-         std::memcpy(dst, src, nBatch * fElement->GetSize());
-         src += nBatch * fElement->GetSize();
-         count -= nBatch;
-         fNElements += nBatch;
-      }
-   }
 
    void Read(const ROOT::NTupleSize_t globalIndex, void *to)
    {
@@ -325,57 +294,54 @@ public:
       *tag = varSwitch->GetTag();
    }
 
-   void Flush();
-   void CommitSuppressed();
-
    void MapPage(ROOT::NTupleSize_t globalIndex) { R__ASSERT(TryMapPage(globalIndex)); }
    void MapPage(RNTupleLocalIndex localIndex) { R__ASSERT(TryMapPage(localIndex)); }
    bool TryMapPage(ROOT::NTupleSize_t globalIndex);
    bool TryMapPage(RNTupleLocalIndex localIndex);
 
-   void MergeTeams(RColumn &other);
-
-   ROOT::Internal::RColumnElementBase *GetElement() const { return fElement.get(); }
-   ROOT::ENTupleColumnType GetType() const { return fType; }
-   std::uint16_t GetBitsOnStorage() const
-   {
-      assert(fElement);
-      return static_cast<std::uint16_t>(fElement->GetBitsOnStorage());
-   }
-   std::optional<std::pair<double, double>> GetValueRange() const
-   {
-      assert(fElement);
-      return fElement->GetValueRange();
-   }
-   std::uint32_t GetIndex() const { return fIndex; }
-   std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
-   ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
-   ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
-
-   void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
-   std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
-   void SetValueRange(double min, double max) { fElement->SetValueRange(min, max); }
-}; // class RColumn
-
-class RReadColumn : public RColumn {
-private:
-   RReadColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
-      : RColumn(type, columnIndex, representationIndex)
-   {
-   }
-
-public:
-   template <typename CppT>
-   static std::unique_ptr<RReadColumn>
-   Create(ROOT::ENTupleColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
-   {
-      auto column = std::unique_ptr<RReadColumn>(new RReadColumn(type, columnIdx, representationIdx));
-      column->fElement = ROOT::Internal::RColumnElementBase::Generate<CppT>(type);
-      return column;
-   }
+   void MergeTeams(RReadColumn &other);
 };
 
 class RWriteColumn : public RColumn {
+private:
+   ROOT::Internal::RPageSink *fPageSink = nullptr;
+   /// The page into which new elements are being written. The page will initially be small
+   /// (RNTupleWriteOptions::fInitialUnzippedPageSize, which corresponds to fInitialElements) and expand as needed and
+   /// as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
+   /// size is reached (RNTupleWriteOptions::fMaxUnzippedPageSize).
+   ROOT::Internal::RPage fWritePage;
+   /// The initial number of elements in a page
+   ROOT::NTupleSize_t fInitialNElements = 1;
+   /// The number of elements written
+   ROOT::NTupleSize_t fNElements = 0;
+
+   /// Used when trying to append to a full write page. If possible, expand the page. Otherwise, flush and reset
+   /// to the minimal size.
+   void HandleWritePageIfFull()
+   {
+      auto newMaxElements = fWritePage.GetMaxElements() * 2;
+      if (newMaxElements * fElement->GetSize() > fPageSink->GetWriteOptions().GetMaxUnzippedPageSize()) {
+         newMaxElements = fPageSink->GetWriteOptions().GetMaxUnzippedPageSize() / fElement->GetSize();
+      }
+
+      if (newMaxElements == fWritePage.GetMaxElements()) {
+         // Maximum page size reached, flush and reset
+         Flush();
+      } else {
+         auto expandedPage = fPageSink->ReservePage(MakeHandle(), newMaxElements);
+         if (expandedPage.IsNull()) {
+            Flush();
+         } else {
+            memcpy(expandedPage.GetBuffer(), fWritePage.GetBuffer(), fWritePage.GetNBytes());
+            expandedPage.Reset(fNElements);
+            expandedPage.GrowUnchecked(fWritePage.GetNElements());
+            fWritePage = std::move(expandedPage);
+         }
+      }
+
+      assert(fWritePage.GetNElements() < fWritePage.GetMaxElements());
+   }
+
    RWriteColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
       : RColumn(type, columnIndex, representationIndex)
    {
@@ -390,6 +356,51 @@ public:
       column->fElement = ROOT::Internal::RColumnElementBase::Generate<CppT>(type);
       return column;
    }
+
+   ~RWriteColumn();
+
+   /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
+   /// with backing storage for this column.  On read back, elements before `firstElementIndex` will cause the zero page
+   /// to be mapped.
+   void ConnectPageSink(ROOT::DescriptorId_t fieldId, ROOT::Internal::RPageSink &pageSink,
+                        ROOT::NTupleSize_t firstElementIndex = 0U);
+
+   void Append(const void *from)
+   {
+      if (fWritePage.GetNElements() == fWritePage.GetMaxElements()) {
+         HandleWritePageIfFull();
+      }
+
+      void *dst = fWritePage.GrowUnchecked(1);
+
+      std::memcpy(dst, from, fElement->GetSize());
+      fNElements++;
+   }
+
+   void AppendV(const void *from, std::size_t count)
+   {
+      auto src = reinterpret_cast<const unsigned char *>(from);
+      while (count > 0) {
+         std::size_t nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
+         if (nElementsRemaining == 0) {
+            HandleWritePageIfFull();
+            nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
+         }
+
+         assert(nElementsRemaining > 0);
+         auto nBatch = std::min(count, nElementsRemaining);
+
+         void *dst = fWritePage.GrowUnchecked(nBatch);
+         std::memcpy(dst, src, nBatch * fElement->GetSize());
+         src += nBatch * fElement->GetSize();
+         count -= nBatch;
+         fNElements += nBatch;
+      }
+   }
+
+   void Flush();
+   void CommitSuppressed();
+   std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
 };
 
 inline RReadColumn *RColumn::ForReading()

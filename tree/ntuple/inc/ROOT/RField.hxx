@@ -372,11 +372,11 @@ class RCardinalityField : public RFieldBase {
 private:
    void GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size)
    {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+      fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, collectionStart, size);
    }
    void GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size)
    {
-      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
+      fPrincipalColumn->ForReading()->GetCollectionInfo(localIndex, collectionStart, size);
    }
 
 protected:
@@ -436,15 +436,15 @@ public:
    RSimpleField &operator=(RSimpleField &&other) = default;
    ~RSimpleField() override = default;
 
-   T *Map(ROOT::NTupleSize_t globalIndex) { return fPrincipalColumn->Map<T>(globalIndex); }
-   T *Map(RNTupleLocalIndex localIndex) { return fPrincipalColumn->Map<T>(localIndex); }
+   T *Map(ROOT::NTupleSize_t globalIndex) { return fPrincipalColumn->ForReading()->Map<T>(globalIndex); }
+   T *Map(RNTupleLocalIndex localIndex) { return fPrincipalColumn->ForReading()->Map<T>(localIndex); }
    T *MapV(ROOT::NTupleSize_t globalIndex, ROOT::NTupleSize_t &nItems)
    {
-      return fPrincipalColumn->MapV<T>(globalIndex, nItems);
+      return fPrincipalColumn->ForReading()->MapV<T>(globalIndex, nItems);
    }
    T *MapV(RNTupleLocalIndex localIndex, ROOT::NTupleSize_t &nItems)
    {
-      return fPrincipalColumn->MapV<T>(localIndex, nItems);
+      return fPrincipalColumn->ForReading()->MapV<T>(localIndex, nItems);
    }
 
    size_t GetValueSize() const final { return sizeof(T); }
@@ -482,7 +482,7 @@ protected:
    {
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
-      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, &collectionStart, &size);
       *static_cast<CardinalityType *>(to) = size;
    }
 
@@ -491,7 +491,7 @@ protected:
    {
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
-      fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
+      fPrincipalColumn->ForReading()->GetCollectionInfo(localIndex, &collectionStart, &size);
       *static_cast<CardinalityType *>(to) = size;
    }
 
@@ -499,7 +499,7 @@ protected:
    {
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t collectionSize;
-      fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
+      fPrincipalColumn->ForReading()->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
 
       auto typedValues = static_cast<CardinalityType *>(bulkSpec.fValues);
       typedValues[0] = collectionSize;
@@ -509,8 +509,8 @@ protected:
       std::size_t nEntries = 1;
       while (nRemainingEntries > 0) {
          ROOT::NTupleSize_t nItemsUntilPageEnd;
-         auto offsets =
-            fPrincipalColumn->MapV<ROOT::Internal::RColumnIndex>(bulkSpec.fFirstIndex + nEntries, nItemsUntilPageEnd);
+         auto offsets = fPrincipalColumn->ForReading()->MapV<ROOT::Internal::RColumnIndex>(
+            bulkSpec.fFirstIndex + nEntries, nItemsUntilPageEnd);
          std::size_t nBatch = std::min(nRemainingEntries, nItemsUntilPageEnd);
          for (std::size_t i = 0; i < nBatch; ++i) {
             typedValues[nEntries + i] = offsets[i] - lastOffset;

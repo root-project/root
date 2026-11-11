@@ -627,7 +627,7 @@ void ROOT::RFieldBase::ReadGlobalImpl(ROOT::NTupleSize_t /*index*/, void * /* to
 
 void ROOT::RFieldBase::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
-   ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(localIndex), to);
+   ReadGlobalImpl(fPrincipalColumn->ForReading()->GetGlobalIndex(localIndex), to);
 }
 
 std::size_t ROOT::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
@@ -733,7 +733,7 @@ void ROOT::RFieldBase::FlushColumns()
       const auto activeRepresentationIndex = fPrincipalColumn->GetRepresentationIndex();
       for (auto &column : fAvailableColumns) {
          if (column->GetRepresentationIndex() == activeRepresentationIndex) {
-            column->Flush();
+            column->ForWriting()->Flush();
          }
       }
    }
@@ -745,9 +745,9 @@ void ROOT::RFieldBase::CommitCluster()
       const auto activeRepresentationIndex = fPrincipalColumn->GetRepresentationIndex();
       for (auto &column : fAvailableColumns) {
          if (column->GetRepresentationIndex() == activeRepresentationIndex) {
-            column->Flush();
+            column->ForWriting()->Flush();
          } else {
-            column->CommitSuppressed();
+            column->ForWriting()->CommitSuppressed();
          }
       }
    }
@@ -775,7 +775,7 @@ std::size_t ROOT::RFieldBase::Append(const void *from)
    if (~fTraits & kTraitMappable)
       return AppendImpl(from);
 
-   fPrincipalColumn->Append(from);
+   fPrincipalColumn->ForWriting()->Append(from);
    return fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
@@ -793,7 +793,7 @@ std::size_t ROOT::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
 {
    if (fIsSimple) {
       /// For simple types, ignore the mask and memcopy the values into the destination
-      fPrincipalColumn->ReadV(bulkSpec.fFirstIndex, bulkSpec.fCount, bulkSpec.fValues);
+      fPrincipalColumn->ForReading()->ReadV(bulkSpec.fFirstIndex, bulkSpec.fCount, bulkSpec.fValues);
       std::fill(bulkSpec.fMaskAvail, bulkSpec.fMaskAvail + bulkSpec.fCount, true);
       return RBulkSpec::kAllSet;
    }
@@ -987,7 +987,7 @@ void ROOT::RFieldBase::ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT
       // larger column indexes are data columns of collections (string, streamer) and thus
       // they have no elements on late model extension
       auto firstElementIndex = (column->GetIndex() == 0) ? EntryToColumnElementIndex(firstEntry) : 0;
-      column->ConnectPageSink(fOnDiskId, pageSink, firstElementIndex);
+      column->ForWriting()->ConnectPageSink(fOnDiskId, pageSink, firstElementIndex);
    }
 
    if (HasExtraTypeInfo()) {
@@ -1083,7 +1083,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
       }
    }
    for (auto &column : fAvailableColumns)
-      column->ConnectPageSource(fOnDiskId, pageSource);
+      column->ForReading()->ConnectPageSource(fOnDiskId, pageSource);
 
    fState = EState::kConnectedToSource;
 }

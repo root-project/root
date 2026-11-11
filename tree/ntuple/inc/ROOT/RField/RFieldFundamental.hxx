@@ -404,7 +404,7 @@ protected:
          }
          fColumnRepresentatives.emplace_back(onDiskTypes);
          if (representationIndex > 0) {
-            fAvailableColumns[0]->MergeTeams(*fAvailableColumns[representationIndex]);
+            fAvailableColumns[0]->ForReading()->MergeTeams(*(fAvailableColumns[representationIndex]->ForReading()));
          }
 
          representationIndex++;

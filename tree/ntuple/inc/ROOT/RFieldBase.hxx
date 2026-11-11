@@ -412,8 +412,8 @@ protected:
          fColumnRepresentatives.emplace_back(onDiskTypes);
          if (representationIndex > 0) {
             for (std::size_t i = 0; i < sizeof...(ColumnCppTs); ++i) {
-               fAvailableColumns[i]->MergeTeams(
-                  *fAvailableColumns[representationIndex * sizeof...(ColumnCppTs) + i].get());
+               fAvailableColumns[i]->ForReading()->MergeTeams(
+                  *(fAvailableColumns[representationIndex * sizeof...(ColumnCppTs) + i]->ForReading()));
             }
          }
          representationIndex++;
@@ -472,11 +472,11 @@ protected:
    void Read(ROOT::NTupleSize_t globalIndex, void *to)
    {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(globalIndex, to);
+         return (void)fPrincipalColumn->ForReading()->Read(globalIndex, to);
 
       if (!fIsArtificial) {
          if (fTraits & kTraitMappable)
-            fPrincipalColumn->Read(globalIndex, to);
+            fPrincipalColumn->ForReading()->Read(globalIndex, to);
          else
             ReadGlobalImpl(globalIndex, to);
       }
@@ -490,11 +490,11 @@ protected:
    void Read(RNTupleLocalIndex localIndex, void *to)
    {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(localIndex, to);
+         return (void)fPrincipalColumn->ForReading()->Read(localIndex, to);
 
       if (!fIsArtificial) {
          if (fTraits & kTraitMappable)
-            fPrincipalColumn->Read(localIndex, to);
+            fPrincipalColumn->ForReading()->Read(localIndex, to);
          else
             ReadInClusterImpl(localIndex, to);
       }
