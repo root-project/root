@@ -547,7 +547,7 @@ ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
          auto constraintsInfo = createGammaConstraints(
             gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
          for (auto const &term : constraintsInfo.constraints) {
-            ws.import(*term, RooFit::RecycleConflictNodes());
+            ws.import(*term, RooFit::RecycleConflictNodes(), RooFit::Silence());
             constraints.add(*ws.pdf(term->GetName()));
          }
       } else {
