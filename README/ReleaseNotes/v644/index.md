@@ -23,7 +23,7 @@ The following people have contributed to this new version:
 * The PyMVA library and the associated `tmva-pymva` build option that were deprecated in ROOT 6.42 have been removed
 * The `RooParamHistFunc` and `RooHistConstraint` classes are deprecated and will be removed in ROOT 6.46. Their functionality is too close to the HistFactory classes, which has repeatedly caused confusion about which classes to use and how they differ. Please use the HistFactory class `ParamHistFunc` instead, multiplied with a `RooHistFunc` and constrained by one `RooPoisson` per bin, like the models built by HistFactory. The [rf709_BarlowBeeston](https://root.cern/doc/v644/rf709__BarlowBeeston_8C.html) tutorial was rewritten to show how this works. We are aware that these classes might have been used in RooWorkspaces that were written to disk. If you face problems because of that, please reach out to the RooFit developers by opening a [GitHub issue](https://github.com/root-project/root/issues) or posting on the [ROOT forum](https://root-forum.cern.ch/).
 * The **TMPIFile** class and the associated `mpi` build option (not to be confused with `minuit2_mpi`, which is unaffected) have been removed.
-
+* `TDirectory::Get()` and `TDirectoryFile::Get()` which return `TObject*` will warn if the underlying object is not a TObject. Use `TDirectory::Get<T>("<name>")` instead.
 
 ## Build system
 
