@@ -2231,7 +2231,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
    for (auto const &d : datasets) {
       if (d) {
-         _workspace.import(*d);
+         _workspace.import(*d, RooFit::Silence());
          for (auto const &obs : *d->get()) {
             if (auto *rrv = dynamic_cast<RooRealVar *>(obs)) {
                _workspace.var(rrv->GetName())->setBinning(rrv->getBinning());
@@ -2319,7 +2319,7 @@ void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std:
       this->importVariableElement(n);
    } else if (isData) {
       auto absData = loadData(n, _workspace, nullptr);
-      _workspace.import(*absData);
+      _workspace.import(*absData, RooFit::Silence());
    } else {
       this->importFunction(n, false);
    }

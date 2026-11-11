@@ -279,7 +279,7 @@ void Domains::ProductDomain::populate(RooWorkspace &ws) const
          const double vMax = elem.hasMax ? elem.max : RooNumber::infinity();
          RooRealVar var{name.c_str(), name.c_str(), vMin, vMax};
          applyBinning(var, elem);
-         ws.import(var);
+         ws.import(var, RooFit::Silence());
       }
    }
 }
