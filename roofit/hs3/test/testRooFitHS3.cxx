@@ -6253,6 +6253,116 @@ TEST(RooFitHS3, CombinedComponentsMustNotShareObservables)
    EXPECT_EQ(data->numEntries(), 2);
 }
 
+// A combined data set may have a column that no distribution models, e.g. an event number. RooAbsData::split() keeps
+// such a column in every sub-data set, so all components of the combined data set have it as axis, which HS3 doesn't
+// allow. If its variable is used by nothing else in the workspace, it is declared as a bookkeeping column in
+// misc.ROOT_internal.bookkeeping_columns, whether or not a likelihood lists the data set, and the document is read with
+// a warning. A column in a set of the ModelConfig is no bookkeeping column, and neither is a declared column that is a
+// variate of a distribution.
+TEST(RooFitHS3, CombinedDataColumnWithoutDistribution)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar xSR{"x_SR", "x_SR", 0.0, 10.0};
+   RooRealVar xCR{"x_CR", "x_CR", 0.0, 10.0};
+   RooRealVar eventNumber{"eventNumber", "eventNumber", 0.0, 1e6};
+   RooGaussian sr{"sr", "sr", xSR, 5.0, 1.0};
+   RooGaussian cr{"cr", "cr", xCR, 4.0, 2.0};
+   RooCategory channel{"channel", "channel", {{"SR", 0}, {"CR", 1}}};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"SR", &sr}, {"CR", &cr}}, channel};
+   RooDataSet obsData{"obsData", "obsData", {xSR, xCR, eventNumber, channel}};
+   int event = 0;
+   for (auto const &[label, value] :
+        std::vector<std::pair<const char *, double>>{{"SR", 5.5}, {"CR", 3.0}, {"CR", 6.0}}) {
+      channel.setLabel(label);
+      xSR.setVal(value);
+      xCR.setVal(value);
+      eventNumber.setVal(event++);
+      obsData.add({xSR, xCR, eventNumber, channel});
+   }
+
+   for (bool withLikelihood : {false, true}) {
+      RooWorkspace ws;
+      ws.import(simPdf, RooFit::Silence());
+      ws.import(obsData, RooFit::Silence());
+      if (withLikelihood) {
+         RooStats::ModelConfig mc{"ModelConfig", &ws};
+         mc.SetPdf("simPdf");
+         mc.SetObservables(RooArgSet{xSR, xCR, channel});
+         ws.import(mc);
+      }
+      std::string json;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_NO_THROW(json = RooJSONFactoryWSTool{ws}.exportJSONtoString()) << withLikelihood;
+      });
+      EXPECT_EQ(warnings.find("is shared by"), std::string::npos) << warnings;
+      EXPECT_EQ(json.find(R"("likelihoods")") != std::string::npos, withLikelihood) << json;
+      auto tree = RooFit::Detail::JSONTree::create(json);
+      for (const char *part : {"obsData_SR", "obsData_CR"}) {
+         auto const *node = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], part);
+         ASSERT_NE(node, nullptr) << json;
+         EXPECT_NE(RooJSONFactoryWSTool::findNamedChild((*node)["axes"], "eventNumber"), nullptr) << json;
+      }
+
+      EXPECT_NE(json.find(R"("bookkeeping_columns":{"obsData":["eventNumber"]})"), std::string::npos) << json;
+
+      RooWorkspace imported;
+      const std::string importWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json)) << withLikelihood;
+      });
+      EXPECT_NE(importWarnings.find("the axis 'eventNumber' of the components of the combined data set 'obsData' is "
+                                    "declared as a bookkeeping column"),
+                std::string::npos)
+         << importWarnings;
+      RooAbsData *data = imported.data("obsData");
+      ASSERT_NE(data, nullptr);
+      EXPECT_EQ(data->numEntries(), 3);
+      EXPECT_NE(data->get()->find("eventNumber"), nullptr);
+      // Stable.
+      std::string json2;
+      captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                      [&] { json2 = RooJSONFactoryWSTool{imported}.exportJSONtoString(); });
+      EXPECT_EQ(json2, json);
+
+      // Without the declaration, the document is not valid HS3.
+      std::string undeclared = json;
+      undeclared.replace(undeclared.find("bookkeeping_columns"), std::string("bookkeeping_columns").size(),
+                         "other_columns");
+      expectImportThrowsWithError(undeclared, "the variate 'eventNumber' is shared by the components");
+   }
+
+   // A column in the observables of the ModelConfig is no bookkeeping column.
+   {
+      RooWorkspace ws;
+      ws.import(simPdf, RooFit::Silence());
+      ws.import(obsData, RooFit::Silence());
+      RooStats::ModelConfig mc{"ModelConfig", &ws};
+      mc.SetPdf("simPdf");
+      mc.SetObservables(RooArgSet{xSR, xCR, eventNumber, channel});
+      ws.import(mc);
+      const std::string errors = captureMessages(RooFit::ERROR, RooFit::IO, [&] {
+         EXPECT_THROW(RooJSONFactoryWSTool{ws}.exportJSONtoString(), std::runtime_error);
+      });
+      EXPECT_NE(errors.find("the variate 'eventNumber' is shared by the components"), std::string::npos) << errors;
+   }
+
+   // A declared column that is a variate of a distribution is no bookkeeping column.
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [{"name": "g", "type": "gaussian_dist", "x": "mass", "mean": 1.0, "sigma": 1.0}],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "channel", "categories": ["SR", "CR"]}, {"name": "mass", "min": 0.0, "max": 10.0}]}],
+      "data": [
+         {"name": "obs_SR", "type": "unbinned", "axes": [{"name": "mass", "min": 0.0, "max": 10.0}], "entries": [[4.0]]},
+         {"name": "obs_CR", "type": "unbinned", "axes": [{"name": "mass", "min": 0.0, "max": 10.0}], "entries": [[5.0]]},
+         {"name": "obs", "type": "combined", "columns": ["channel"],
+          "components": [{"key": ["SR"], "dataset": "obs_SR"}, {"key": ["CR"], "dataset": "obs_CR"}]}
+      ],
+      "misc": {"ROOT_internal": {"bookkeeping_columns": {"obs": ["mass"]}}}
+   })";
+   expectImportThrowsWithError(json, "the variate 'mass' is shared by the components 'obs_SR' and 'obs_CR'");
+}
+
 // With RooJSONFactoryWSTool::config().renameCombinedObservables, the observables of combined data sets are renamed
 // per key on export ("obs_SR", or "obs_SR_x" with several observables), and the components of the matching
 // RooSimultaneous are written with them; nodes that depend on a renamed observable get one copy per component. This
