@@ -34,7 +34,9 @@ namespace Detail {
  * ranges for the gamma parameter and provides a reasonable starting point for
  * pre-fit errors.
  *
- * @param gammas    The gamma parameters to be configured.
+ * @param gammas    The gamma parameters to be configured. Only the ones that
+ *                  are RooRealVars are configured: the gammas can also be
+ *                  functions, e.g. in models imported from HS3.
  * @param relSigmas The relative sigma values to be used for configuring the
  *                  limits and errors.
  * @param minSigma  The minimum relative sigma threshold. If a relative sigma is
@@ -46,7 +48,11 @@ void configureConstrainedGammas(RooArgList const &gammas, std::span<const double
    assert(gammas.size() == relSigmas.size());
 
    for (std::size_t i = 0; i < gammas.size(); ++i) {
-      auto &gamma = *static_cast<RooRealVar *>(gammas.at(i));
+      auto *gammaVar = dynamic_cast<RooRealVar *>(gammas.at(i));
+      if (!gammaVar) {
+         continue;
+      }
+      auto &gamma = *gammaVar;
       double sigmaRel = relSigmas[i];
 
       // If the sigma is zero, the parameter might as well be constant
@@ -102,7 +108,8 @@ CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramSet,
 
    for (std::size_t i = 0; i < paramSet.size(); ++i) {
 
-      RooRealVar &gamma = static_cast<RooRealVar &>(paramSet[i]);
+      // The gammas can also be functions, which are constrained the same way.
+      auto &gamma = static_cast<RooAbsReal &>(paramSet[i]);
 
       oocxcoutI(nullptr, HistFactory)
          << "Creating constraint for: " << gamma.GetName() << ". Type of constraint: " << type << std::endl;

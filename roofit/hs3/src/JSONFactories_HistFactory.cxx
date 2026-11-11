@@ -278,7 +278,87 @@ void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint
               constraint);
 }
 
-// Create the ParamHistFunc of the gamma parameters, together with their constraints.
+// The tau of a Poisson constraint of a gamma whose mean is the product gamma * tau, like in HistFactory, or
+// std::nullopt if the constraint has another form.
+std::optional<double> findPoissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
+{
+   auto const *mean = dynamic_cast<RooProduct const *>(&constraint.getMean());
+   if (!mean) {
+      return std::nullopt;
+   }
+
+   for (RooAbsArg *arg : mean->servers()) {
+      if (arg == &gamma) {
+         continue;
+      }
+
+      if (auto const *tau = dynamic_cast<RooConstVar const *>(arg)) {
+         return tau->getVal();
+      }
+
+      // Imported workspaces can sometimes represent
+      // constants as constant RooRealVars.
+      if (auto const *real = dynamic_cast<RooAbsReal const *>(arg)) {
+         if (real->isConstant() || endsWith(std::string(real->GetName()), "_tau")) {
+            return real->getVal();
+         }
+      }
+   }
+
+   return std::nullopt;
+}
+
+// The relative uncertainty that the constraint distribution of a gamma encodes, if it has one of the forms of
+// HistFactory: the sigma of a Gaussian, or 1/sqrt(tau) for a Poisson distribution with mean gamma * tau. The nominal
+// value of a gamma is 1, so the sigma of a Gaussian is relative to it. It is not divided by the mean, which is the
+// gamma itself in the Gaussians that HistFactory creates.
+std::optional<double> gammaRelUncertainty(RooAbsPdf const &constraint, RooAbsArg const &gamma)
+{
+   if (auto gauss = dynamic_cast<RooGaussian const *>(&constraint)) {
+      return gauss->getSigma().getVal();
+   }
+   if (auto poisson = dynamic_cast<RooPoisson const *>(&constraint)) {
+      if (auto tau = findPoissonTau(*poisson, gamma)) {
+         return 1. / std::sqrt(*tau);
+      }
+   }
+   return std::nullopt;
+}
+
+// Configure the gammas that have a constraint distribution like HistFactory does from their relative uncertainties,
+// see configureConstrainedGammas(). The relative uncertainty of a gamma is the one in `relSigmas` if it is positive,
+// and otherwise the one that its constraint distribution encodes, see gammaRelUncertainty(). Without `relSigmas`, the
+// latter is only the initial error of the gamma. The unconstrained gammas are free, and left as they are. So are the
+// gammas that are functions defined elsewhere in the document, since only variables can be configured.
+void configureGammasWithConstraints(RooArgList const &gammas, std::vector<double> const &relSigmas,
+                                    std::vector<RooAbsPdf *> const &constraintPdfs, double minSigma)
+{
+   RooArgList constrainedGammas;
+   std::vector<double> constrainedSigmas;
+   for (std::size_t i = 0; i < gammas.size(); ++i) {
+      auto *gamma = dynamic_cast<RooRealVar *>(&gammas[i]);
+      if (!constraintPdfs[i] || !gamma) {
+         continue;
+      }
+      std::optional<double> relSigma = !relSigmas.empty() && relSigmas[i] > 0.
+                                          ? std::make_optional(relSigmas[i])
+                                          : gammaRelUncertainty(*constraintPdfs[i], *gamma);
+      // Without any known uncertainty, the gamma is left to its constraint distribution.
+      if (!relSigma) {
+         continue;
+      }
+      if (relSigmas.empty()) {
+         gamma->setError(*relSigma);
+      } else {
+         constrainedGammas.add(*gamma);
+         constrainedSigmas.push_back(*relSigma);
+      }
+   }
+   configureConstrainedGammas(constrainedGammas, constrainedSigmas, minSigma);
+}
+
+// Create the ParamHistFunc of the gamma parameters, together with their constraints. With a constraint type, RooFit
+// creates the constraints of the gammas from their relative uncertainties `vals`, like HistFactory.
 ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname, std::string const &sysname,
                          std::vector<HS3::ParameterRef> const &parnames, std::vector<double> const &vals,
                          HS3::GammaConstraint const &constraint, RooArgSet &constraints, RooArgSet const &observables,
@@ -319,17 +399,21 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
    };
 
    if (auto const *pdfs = std::get_if<HS3::GammaConstraintPdfs>(&constraint)) {
+      // The constraint distributions, with nullptr for the unconstrained gammas.
+      std::vector<RooAbsPdf *> constraintPdfs;
       for (auto const &pdfName : pdfs->pdfs) {
-         if (!pdfName) {
-            continue;
+         RooAbsPdf *pdf = nullptr;
+         if (pdfName) {
+            pdf = findNamedConstraint(tool, pdfName->name, sysname);
+            if (!pdf) {
+               RooJSONFactoryWSTool::error("unable to find definition of constraint '" + pdfName->name +
+                                           "' for modifier '" + sysname + "'");
+            }
+            constraints.add(*pdf);
          }
-         auto *pdf = findNamedConstraint(tool, pdfName->name, sysname);
-         if (!pdf) {
-            RooJSONFactoryWSTool::error("unable to find definition of constraint '" + pdfName->name +
-                                        "' for modifier '" + sysname + "'");
-         }
-         constraints.add(*pdf);
+         constraintPdfs.push_back(pdf);
       }
+      configureGammasWithConstraints(gammas, vals, constraintPdfs, minSigma);
    }
 
    if (vals.empty()) {
@@ -337,11 +421,15 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
    }
 
    std::visit(HS3::overloaded{
-                 [&](HS3::Unconstrained) { configureConstrainedGammas(gammas, vals, minSigma); },
-                 [&](HS3::GammaConstraintPdfs const &) { configureConstrainedGammas(gammas, vals, minSigma); },
+                 // Free gammas are left as they are, and the ones with named constraints are configured above.
+                 [](HS3::Unconstrained) {},
+                 [](HS3::GammaConstraintPdfs const &) {},
                  [&](HS3::ConstantGammas) {
-                    for (auto *gamma : static_range_cast<RooRealVar *>(gammas)) {
-                       gamma->setConstant(true);
+                    // Only the gammas that are variables can be set constant; the others can be functions.
+                    for (RooAbsArg *gamma : gammas) {
+                       if (auto *var = dynamic_cast<RooRealVar *>(gamma)) {
+                          var->setConstant(true);
+                       }
                     }
                  },
                  [&](HS3::ConstraintType type) {
@@ -360,48 +448,17 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
    return phf;
 }
 
-double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
-{
-   auto const *mean = dynamic_cast<RooProduct const *>(&constraint.getMean());
-   if (!mean) {
-      RooJSONFactoryWSTool::error("Poisson gamma constraint mean is not a RooProduct: " +
-                                  std::string(constraint.GetName()));
-   }
-
-   for (RooAbsArg *arg : mean->servers()) {
-      if (arg == &gamma) {
-         continue;
-      }
-
-      if (auto const *tau = dynamic_cast<RooConstVar const *>(arg)) {
-         return tau->getVal();
-      }
-
-      // Imported workspaces can sometimes represent
-      // constants as constant RooRealVars.
-      if (auto const *real = dynamic_cast<RooAbsReal const *>(arg)) {
-         if (real->isConstant() || endsWith(std::string(real->GetName()), "_tau")) {
-            return real->getVal();
-         }
-      }
-   }
-
-   RooJSONFactoryWSTool::error("Could not find tau component in Poisson gamma constraint mean: " +
-                               std::string(constraint.GetName()));
-   return std::numeric_limits<double>::quiet_NaN();
-}
-
-// Returns the relative uncertainty encoded by a gamma constraint pdf. Only RooPoisson (via its tau) and RooGaussian
-// (via sigma/mean) are supported; anything else raises an error.
+// The relative uncertainty that the constraint distribution of a gamma encodes, see gammaRelUncertainty(). Constraints
+// of another form raise an error.
 double constraintRelError(RooAbsPdf const &constraint, RooAbsArg const &gamma)
 {
-   if (auto constraintP = dynamic_cast<RooPoisson const *>(&constraint)) {
-      return 1. / std::sqrt(poissonTau(*constraintP, gamma));
+   if (auto relSigma = gammaRelUncertainty(constraint, gamma)) {
+      return *relSigma;
    }
-   if (auto constraintG = dynamic_cast<RooGaussian const *>(&constraint)) {
-      return constraintG->getSigma().getVal() / constraintG->getMean().getVal();
-   }
-   RooJSONFactoryWSTool::error("currently, only RooPoisson and RooGaussian are supported as constraint types");
+   RooJSONFactoryWSTool::error("unsupported constraint '" + std::string(constraint.GetName()) + "' of '" +
+                               gamma.GetName() +
+                               "': only RooGaussian and RooPoisson with mean gamma * tau are supported for the "
+                               "relative uncertainties of gammas");
    return std::numeric_limits<double>::quiet_NaN();
 }
 
