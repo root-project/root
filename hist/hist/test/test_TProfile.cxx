@@ -58,6 +58,49 @@ TEST(TProfile, Chi2TestWithWrongErrors)
    }
 }
 
+TEST(TProfile3D, BufferEmptyFindsAutomaticZLimits)
+{
+   TProfile3D profile("profile", "", 4, 0, 4, 5, 0, 10, 3, 0, 0);
+   for (double z : {101., 115., 139.})
+      profile.Fill(0.5, 1., z, 2.);
+   profile.BufferEmpty();
+
+   EXPECT_EQ(4, profile.GetNbinsX());
+   EXPECT_DOUBLE_EQ(0., profile.GetXaxis()->GetXmin());
+   EXPECT_DOUBLE_EQ(4., profile.GetXaxis()->GetXmax());
+   EXPECT_EQ(5, profile.GetNbinsY());
+   EXPECT_DOUBLE_EQ(0., profile.GetYaxis()->GetXmin());
+   EXPECT_DOUBLE_EQ(10., profile.GetYaxis()->GetXmax());
+
+   const auto *zaxis = profile.GetZaxis();
+   EXPECT_LT(zaxis->GetXmin(), zaxis->GetXmax());
+   for (double z : {101., 139.}) {
+      EXPECT_GE(zaxis->FindFixBin(z), 1);
+      EXPECT_LE(zaxis->FindFixBin(z), zaxis->GetNbins());
+   }
+   for (int zbin : {0, zaxis->GetNbins() + 1})
+      for (int xbin = 0; xbin <= profile.GetNbinsX() + 1; ++xbin)
+         for (int ybin = 0; ybin <= profile.GetNbinsY() + 1; ++ybin)
+            EXPECT_DOUBLE_EQ(0., profile.GetBinEntries(profile.GetBin(xbin, ybin, zbin)));
+   EXPECT_NEAR((101. + 115. + 139.) / 3., profile.GetMean(3), 1e-9);
+}
+
+TEST(TProfile3D, BufferEmptyPreservesFixedYAndZLimits)
+{
+   TProfile3D profile("profile", "", 4, 0, 0, 5, 0, 10, 3, 0, 30);
+   for (double x : {101., 115., 139.})
+      profile.Fill(x, 1., 5., 2.);
+   profile.BufferEmpty();
+
+   EXPECT_LT(profile.GetXaxis()->GetXmin(), profile.GetXaxis()->GetXmax());
+   EXPECT_EQ(5, profile.GetNbinsY());
+   EXPECT_DOUBLE_EQ(0., profile.GetYaxis()->GetXmin());
+   EXPECT_DOUBLE_EQ(10., profile.GetYaxis()->GetXmax());
+   EXPECT_EQ(3, profile.GetNbinsZ());
+   EXPECT_DOUBLE_EQ(0., profile.GetZaxis()->GetXmin());
+   EXPECT_DOUBLE_EQ(30., profile.GetZaxis()->GetXmax());
+}
+
 TEST(TProfile2D, Chi2Test)
 {
    TProfile2D reference("reference", "reference", 10, 0, 10, 10, 0, 10);
