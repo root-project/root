@@ -1,5 +1,4 @@
-ROOT_ADD_GTEST(testRooFitHS3 testRooFitHS3.cxx LIBRARIES RooFitCore RooFit RooFitHS3 RooStats HistFactory
-  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/../../histfactory/test/ref_6.16_example_UsingC_channel1_meas_model.root)
+ROOT_ADD_GTEST(testRooFitHS3 testRooFitHS3.cxx LIBRARIES RooFitCore RooFit RooFitHS3 RooStats HistFactory)
 
 ROOT_ADD_GTEST(testJSONInterface testJSONInterface.cxx LIBRARIES RooFitHS3 Matrix)
 

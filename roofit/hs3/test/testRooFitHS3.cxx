@@ -5060,6 +5060,48 @@ TEST(RooFitHS3, HistFactoryExportDoesNotDependOnNames)
    }
 }
 
+namespace {
+
+// A channel with the structure of HistFactory before ROOT 6.26, named as in its workspaces: the samples have a constant
+// RooRealVar "binWidth_<observables>_<i>" with the number of bins over the range as coefficient in the RooRealSumPdf.
+std::unique_ptr<RooWorkspace> makeLegacyHistFactoryWorkspace()
+{
+   RooRealVar obs{"obs_x_channel1", "obs_x_channel1", 1.0, 2.0};
+   obs.setBins(2);
+   RooRealVar mu{"SigXsecOverSM", "SigXsecOverSM", 1.0, 0.0, 3.0};
+   RooRealVar alpha{"alpha_syst", "alpha_syst", 0.0, -5.0, 5.0};
+   RooRealVar nomAlpha{"nom_alpha_syst", "nom_alpha_syst", 0.0, -10.0, 10.0};
+   nomAlpha.setConstant(true);
+   RooGaussian constraint{"alpha_systConstraint", "", alpha, nomAlpha, RooFit::RooConst(1.0)};
+   RooStats::HistFactory::FlexibleInterpVar epsilon{
+      "background_channel1_epsilon", "", RooArgList{alpha}, 1.0, {0.95}, {1.05}, {4}};
+   RooHistFunc sigHist{"signal_channel1_nominal", "", RooArgSet{obs},
+                       makeDataHist("signal_channel1nominalDHist", obs, {20.0, 10.0})};
+   RooHistFunc bkgHist{"background_channel1_nominal", "", RooArgSet{obs},
+                       makeDataHist("background_channel1nominalDHist", obs, {100.0, 100.0})};
+   RooProduct sig{"signal_channel1_overallSyst_x_Exp", "", RooArgList{sigHist, mu}};
+   RooProduct bkg{"background_channel1_overallSyst_x_Exp", "", RooArgList{bkgHist, epsilon}};
+   RooRealVar binWidth0{"binWidth_obs_x_channel1_0", "", 2.0};
+   RooRealVar binWidth1{"binWidth_obs_x_channel1_1", "", 2.0};
+   RooRealSumPdf sum{"channel1_model", "", RooArgList{sig, bkg}, RooArgList{binWidth0, binWidth1}, true};
+   RooProdPdf model{"model_channel1", "", RooArgList{constraint, sum}};
+
+   auto ws = std::make_unique<RooWorkspace>("channel1");
+   ws->import(model, RooFit::Silence());
+   ws->import(*makeDataHist("obsData", obs, {122.0, 112.0}), RooFit::Silence());
+   RooStats::ModelConfig mc{"ModelConfig", ws.get()};
+   mc.SetPdf(model.GetName());
+   mc.SetObservables(RooArgSet{obs});
+   mc.SetParametersOfInterest(RooArgSet{mu});
+   mc.SetNuisanceParameters(RooArgSet{alpha});
+   mc.SetGlobalObservables(RooArgSet{nomAlpha});
+   ws->import(mc);
+   ws->saveSnapshot("NominalParamValues", ws->allVars());
+   return ws;
+}
+
+} // namespace
+
 // Before ROOT 6.26, HistFactory multiplied every sample with a constant inverse bin width, a RooRealVar
 // "binWidth_<observables>_<i>" in the coefficients of the RooRealSumPdf. histfactory_dist implies it, so it is not
 // written. It is identified by its structure, not by its name; a factor that is identified only by its structure is
@@ -5068,11 +5110,7 @@ TEST(RooFitHS3, HistFactoryLegacyBinWidthFactor)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
-   std::unique_ptr<TFile> file(TFile::Open("./ref_6.16_example_UsingC_channel1_meas_model.root"));
-   ASSERT_TRUE(file && file->IsOpen());
-   RooWorkspace *ws = nullptr;
-   file->GetObject("channel1", ws);
-   ASSERT_NE(ws, nullptr);
+   std::unique_ptr<RooWorkspace> ws = makeLegacyHistFactoryWorkspace();
    auto *mc = static_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
