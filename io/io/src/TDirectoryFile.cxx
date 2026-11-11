@@ -1001,6 +1001,12 @@ TObject *TDirectoryFile::Get(const char *namecycle)
       for (auto key: TRangeDynCast<TKey>(*keyList)) {
          if (key && !strcmp(key->GetName(), namobj)
              && (cycle == 9999 || cycle == key->GetCycle())) {
+            if (TClass *cl = TClass::GetClass(key->GetClassName()); cl && !cl->IsTObject()) {
+               Warning("Get",
+                       "The object '%s' of type '%s' does not derive from TObject. Using Get() for such objects is "
+                       "deprecated, since the returned pointer is not a valid TObject*. Use Get<%s>(\"%s\").",
+                       namobj, key->GetClassName(), key->GetClassName(), namecycle);
+            }
             TDirectory::TContext ctxt(this);
             return key->ReadObj();
          }
