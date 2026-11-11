@@ -616,6 +616,7 @@ jobs:
 
       - name: Install
         id: install
+        if: ${{ !cancelled() && !(matrix.is_special && github.event_name == 'workflow_dispatch') }}
         run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}
 
       - name: Check headers
