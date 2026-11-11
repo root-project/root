@@ -3553,6 +3553,274 @@ TEST(RooFitHS3, HistFactoryShapeFactor)
    EXPECT_EQ(countGammaConstraints(ws5), 2u);
 }
 
+// The gammas of a shapefactor or staterror whose constraint distribution has a type that the HistFactory export
+// doesn't recognize are written as free parameters. Their constraint is kept as a constraint term of the channel.
+TEST(RooFitHS3, HistFactoryUnsupportedGammaConstraint)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &modifier) {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]}, "modifiers": [)" +
+             modifier + R"(]}]
+         },
+         {"name": "g0_constraint", "type": "gamma_dist", "x": "g0", "gamma": 100.0, "beta": 0.01, "mu": 0.0}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "g0", "min": 0, "max": 5}, {"name": "g1", "min": 0, "max": 5}]}]
+   })";
+   };
+
+   for (std::string const type : {"shapefactor", "staterror"}) {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+         makeJSON(R"({"type": ")" + type +
+                  R"(", "name": "sys", "parameters": ["g0", "g1"], "constraints": ["g0_constraint", null]})")))
+         << type;
+      const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      auto tree = RooFit::Detail::JSONTree::create(exported);
+      const auto *dist = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_channel0");
+      ASSERT_NE(dist, nullptr) << exported;
+      EXPECT_FALSE((*dist)["samples"].child(0)["modifiers"].child(0).has_child("constraints")) << exported;
+
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << type;
+      RooAbsPdf *constraint = ws2.pdf("g0_constraint");
+      ASSERT_NE(constraint, nullptr) << type;
+      EXPECT_TRUE(ws2.pdf("model_channel0")->dependsOn(*constraint)) << type;
+   }
+}
+
+// A ParamHistFunc of a sample is written as a shapefactor modifier if it has the structure of the ones of HistFactory's
+// ShapeSys and ShapeFactor, whatever its name: one parameter per bin of the channel, over its observables. The import
+// recreates the function like that. Over other variables, a ParamHistFunc is written as a custom modifier, which refers
+// to the function. Over the observables of the channel with another binning, it can't be written.
+TEST(RooFitHS3, HistFactoryUnknownParamHistFunc)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // A channel over "x" with two bins, whose sample is scaled by a ParamHistFunc with `nBins` bins over `var`.
+   auto makeWorkspace = [](std::string const &var, int nBins) {
+      RooRealVar x{"x", "x", 0.0, 2.0};
+      RooRealVar y{"y", "y", 0.0, 2.0};
+      RooRealVar &phfVar = var == "x" ? x : y;
+      phfVar.setBins(nBins);
+      RooArgList gammas;
+      for (int i = 0; i < nBins; ++i) {
+         const std::string name = "g" + std::to_string(i);
+         gammas.addOwned(std::make_unique<RooRealVar>(name.c_str(), name.c_str(), 1.0 + 0.1 * i, 0.0, 5.0));
+      }
+      ParamHistFunc phf{"myPHF", "myPHF", RooArgList{phfVar}, gammas};
+      x.setBins(2);
+      RooDataHist hist{"sig_hist", "sig_hist", x};
+      hist.set(0, 10.0, -1.0);
+      hist.set(1, 20.0, -1.0);
+      RooHistFunc nominal{"sig_nominal", "sig_nominal", x, hist};
+      RooProduct sig{"L_x_sig_channel0", "sig", RooArgList{nominal, phf}};
+      RooRealSumPdf model{"model_channel0", "model", RooArgList{sig}, RooArgList{RooFit::RooConst(1.0)}, true};
+      auto ws = std::make_unique<RooWorkspace>("ws");
+      ws->import(model, RooFit::Silence());
+      return ws;
+   };
+
+   // The name of the ParamHistFunc doesn't matter.
+   auto ws = makeWorkspace("x", 2);
+   const std::string exported = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"({"name":"myPHF","parameters":["g0","g1"],"type":"shapefactor"})"), std::string::npos)
+      << exported;
+
+   // With another binning of the observable of the channel, it can't be written.
+   auto wsOtherBinning = makeWorkspace("x", 3);
+   expectExportThrowsWithError(*wsOtherBinning, "cannot write the ParamHistFunc 'myPHF'");
+
+   // Over another variable, it is written as a custom modifier, and the model survives the round trip.
+   auto wsOther = makeWorkspace("y", 3);
+   wsOther->var("y")->setVal(1.5);
+   const std::string exportedOther = RooJSONFactoryWSTool{*wsOther}.exportJSONtoString();
+   EXPECT_EQ(exportedOther.find("shapefactor"), std::string::npos) << exportedOther;
+   EXPECT_NE(exportedOther.find(R"({"name":"myPHF","type":"custom"})"), std::string::npos) << exportedOther;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exportedOther));
+   EXPECT_NE(dynamic_cast<ParamHistFunc *>(ws2.function("myPHF")), nullptr);
+   RooAbsPdf *model1 = wsOther->pdf("model_channel0");
+   RooAbsPdf *model2 = ws2.pdf("model_channel0");
+   ASSERT_NE(model2, nullptr);
+   ASSERT_NE(ws2.var("y"), nullptr);
+   EXPECT_DOUBLE_EQ(ws2.var("y")->getVal(), 1.5);
+   RooArgSet observables1{*wsOther->var("x")};
+   RooArgSet observables2{*ws2.var("x")};
+   for (double x : {0.5, 1.5}) {
+      wsOther->var("x")->setVal(x);
+      ws2.var("x")->setVal(x);
+      EXPECT_DOUBLE_EQ(model2->getVal(observables2), model1->getVal(observables1)) << "x = " << x;
+   }
+   // The document is stable from the second export on (the import adds the binned likelihood attributes).
+   const std::string reexported = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   RooWorkspace ws3;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(reexported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), reexported);
+}
+
+// The gammas of a shapefactor can be shared between channels. In each channel, only its own constraint terms constrain
+// them, so that every channel is written as it is.
+TEST(RooFitHS3, HistFactoryShapeFactorSharedBetweenChannels)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto channel = [](std::string const &name, std::string const &constraints) {
+      return R"({
+            "name": "model_)" +
+             name + R"(",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x_)" +
+             name + R"(", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "bkg", "data": {"contents": [10.0, 20.0]}, "modifiers": [
+               {"type": "shapefactor", "name": "shape", "parameters": ["g0", "g1"])" +
+             constraints + R"(}]}]
+         })";
+   };
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [)" + channel("A", R"(, "constraints": ["g0_constraint", "g1_constraint"])") +
+                            "," + channel("B", "") + R"(,
+         {"name": "g0_constraint", "type": "gaussian_dist", "x": "g0", "mean": 1.0, "sigma": 0.1},
+         {"name": "g1_constraint", "type": "gaussian_dist", "x": "g1", "mean": 1.0, "sigma": 0.1}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "g0", "min": 0, "max": 5}, {"name": "g1", "min": 0, "max": 5}]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   EXPECT_NE(ws.function("A_shape_ShapeSys"), nullptr);
+   EXPECT_NE(ws.function("B_shape_shapeFactor"), nullptr);
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   const auto *distA = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_A");
+   const auto *distB = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_B");
+   ASSERT_NE(distA, nullptr) << exported;
+   ASSERT_NE(distB, nullptr) << exported;
+   EXPECT_TRUE((*distA)["samples"].child(0)["modifiers"].child(0).has_child("constraints")) << exported;
+   EXPECT_FALSE((*distB)["samples"].child(0)["modifiers"].child(0).has_child("constraints")) << exported;
+}
+
+// The constraint of a normfactor is found among the constraint terms of its channel like for the other modifiers: it
+// can be any of the recognized distributions that depend on the parameter, e.g. a Gaussian with the parameter as mean.
+TEST(RooFitHS3, HistFactoryNormFactorConstraintOfAnyForm)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]}, "modifiers": [
+               {"type": "normfactor", "parameters": ["mu"], "constraints": ["muConstraint"]}]}]
+         },
+         {"name": "muConstraint", "type": "gaussian_dist", "x": 1.0, "mean": "mu", "sigma": 0.1}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "mu", "min": 0, "max": 5}]}]
+   })"));
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"("constraints":["muConstraint"])"), std::string::npos) << exported;
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+}
+
+// The staterror gammas can be shared between channels. In each channel, only its own constraint terms constrain them.
+TEST(RooFitHS3, HistFactoryStatErrorSharedBetweenChannels)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto channel = [](std::string const &name, std::string const &constraints) {
+      return R"({
+            "name": "model_)" +
+             name + R"(",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x_)" +
+             name + R"(", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "bkg", "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]}, "modifiers": [
+               {"type": "staterror", "parameters": ["g0", "g1"])" +
+             constraints + R"(}]}]
+         })";
+   };
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [)" + channel("A", R"(, "constraints": ["g0_constraint", "g1_constraint"])") +
+                            "," + channel("B", "") + R"(,
+         {"name": "g0_constraint", "type": "gaussian_dist", "x": "g0", "mean": 1.0, "sigma": 0.1},
+         {"name": "g1_constraint", "type": "gaussian_dist", "x": "g1", "mean": 1.0, "sigma": 0.1}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "g0", "min": 0, "max": 5}, {"name": "g1", "min": 0, "max": 5}]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   const auto *distA = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_A");
+   const auto *distB = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_B");
+   ASSERT_NE(distA, nullptr) << exported;
+   ASSERT_NE(distB, nullptr) << exported;
+   EXPECT_TRUE((*distA)["samples"].child(0)["modifiers"].child(0).has_child("constraints")) << exported;
+   EXPECT_FALSE((*distB)["samples"].child(0)["modifiers"].child(0).has_child("constraints")) << exported;
+}
+
+// The constraint terms of a channel can be grouped in a nested RooProdPdf: the constraints are found in it.
+TEST(RooFitHS3, HistFactoryNestedConstraintTerms)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]}, "modifiers": [
+               {"type": "shapefactor", "name": "sf", "parameters": ["g0", "g1"],
+                "constraints": ["g0_constraint", "g1_constraint"]}]}]
+         },
+         {"name": "g0_constraint", "type": "gaussian_dist", "x": "g0", "mean": 1.0, "sigma": 0.1},
+         {"name": "g1_constraint", "type": "gaussian_dist", "x": "g1", "mean": 1.0, "sigma": 0.2}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "g0", "min": 0, "max": 5}, {"name": "g1", "min": 0, "max": 5}]}]
+   })"));
+   auto *model = dynamic_cast<RooProdPdf *>(ws.pdf("model_channel0"));
+   ASSERT_NE(model, nullptr);
+   RooAbsPdf *sum = nullptr;
+   for (RooAbsArg *pdf : model->pdfList()) {
+      if (auto *sumPdf = dynamic_cast<RooRealSumPdf *>(pdf)) {
+         sum = sumPdf;
+      }
+   }
+   ASSERT_NE(sum, nullptr);
+   RooProdPdf constraints{"constraints_channel1", "", RooArgList{*ws.pdf("g0_constraint"), *ws.pdf("g1_constraint")}};
+   RooProdPdf nestedModel{"model_channel1", "", RooArgList{*sum, constraints}};
+   RooWorkspace wsNested;
+   wsNested.import(nestedModel, RooFit::Silence());
+
+   const std::string exported = RooJSONFactoryWSTool{wsNested}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"("constraints":["g0_constraint","g1_constraint"])"), std::string::npos) << exported;
+}
+
 // A RooRealVar that is constant in all parameter points must stay a RooRealVar, and a RooConstVar must stay a
 // RooConstVar. The RooRealVar has a range in the domain and "const": true in the parameter points. The RooConstVar
 // has a domain axis with a single value (HS3 #131), which RooFit reads back as a RooConstVar, and is not in the
