@@ -33,6 +33,8 @@ protected:
    Bool_t PerformUpdate(Bool_t async) override;
    TVirtualPadPainter *CreatePadPainter() override;
 
+   Bool_t IsUseVirtualX() const override { return kFALSE; }
+
    void AssignStatusBits(UInt_t bits);
 
 

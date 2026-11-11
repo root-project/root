@@ -99,6 +99,8 @@ private:
    Atom_t   HandleDNDEnter(Atom_t * typelist) override;
    Bool_t   HandleDNDLeave() override;
 
+   Bool_t IsUseVirtualX() const override { return kTRUE; }
+
    TVirtualPadPainter *CreatePadPainter() override;
 
 public:
