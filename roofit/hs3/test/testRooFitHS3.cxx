@@ -3553,6 +3553,26 @@ TEST(RooFitHS3, HistFactoryShapeFactor)
    EXPECT_EQ(countGammaConstraints(ws5), 2u);
 }
 
+// A shapefactor without "parameters" has one parameter per value in "data.vals", with the default names. This is also
+// the case if the values are ignored because the modifier names no constraints.
+TEST(RooFitHS3, HistFactoryShapeFactorWithoutParameters)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+      makeHistFactoryJSON(R"({"type": "shapefactor", "name": "free", "data": {"vals": [0.1, 0.2]}})", "", "0.3")));
+   auto *phf = dynamic_cast<ParamHistFunc *>(ws.function("channel0_free_shapeFactor"));
+   ASSERT_NE(phf, nullptr);
+   EXPECT_EQ(phf->paramList().size(), 2u);
+   for (const char *name : {"gamma_free_bin_0", "gamma_free_bin_1"}) {
+      RooRealVar *gamma = ws.var(name);
+      ASSERT_NE(gamma, nullptr) << name;
+      EXPECT_NE(phf->paramList().find(*gamma), nullptr) << name;
+      EXPECT_FALSE(gamma->isConstant()) << name;
+   }
+}
+
 // The gammas of a shapefactor or staterror whose constraint distribution has a type that the HistFactory export
 // doesn't recognize are written as free parameters. Their constraint is kept as a constraint term of the channel.
 TEST(RooFitHS3, HistFactoryUnsupportedGammaConstraint)
@@ -3730,6 +3750,38 @@ TEST(RooFitHS3, HistFactoryUnconstrainedGammasStayFree)
    EXPECT_DOUBLE_EQ(constrained->getError(), 0.1);
 }
 
+// A channel-level "staterror" that only gives the "relThreshold" holds no constraint information: in HS3 >= 0.3, the
+// gammas of a staterror without "constraints" are free also then.
+TEST(RooFitHS3, HistFactoryStatErrorThresholdOnly)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "staterror": {"relThreshold": 0.01},
+            "samples": [
+               {
+                  "name": "sig",
+                  "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
+                  "modifiers": [{"type": "staterror", "parameters": ["stat_0", "stat_1"]}]
+               }
+            ]
+         }
+      ]
+   })"));
+   ASSERT_NE(ws.var("stat_0"), nullptr);
+   for (RooAbsArg *pdf : ws.allPdfs()) {
+      EXPECT_EQ(dynamic_cast<RooPoisson *>(pdf), nullptr) << pdf->GetName();
+      EXPECT_EQ(dynamic_cast<RooGaussian *>(pdf), nullptr) << pdf->GetName();
+   }
+}
+
 // Before HS3 0.3, RooFit created the global observable "nom_<parameter>" of the constraint of a normsys or histosys, so
 // that the constraint distribution named in "constraint_name" could use it without defining it.
 TEST(RooFitHS3, HistFactoryLegacyNamedConstraintWithImplicitNominal)
@@ -3871,6 +3923,31 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraintsWithoutSampleErrors)
    }
 }
 
+// A shapefactor without "name" is named after its channel, its sample and its position among the modifiers, also if
+// it names constraints.
+TEST(RooFitHS3, HistFactoryShapeFactorWithoutName)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]}, "modifiers": [
+               {"type": "shapefactor", "parameters": ["g0", "g1"], "constraints": ["g0_constraint", null]}]}]
+         },
+         {"name": "g0_constraint", "type": "gaussian_dist", "x": "g0", "mean": 1.0, "sigma": 0.1}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "g0", "min": 0, "max": 5}, {"name": "g1", "min": 0, "max": 5}]}]
+   })"));
+   EXPECT_NE(ws.function("channel0_channel0_sig_syst_0_ShapeSys"), nullptr);
+}
+
 // Before HS3 0.3, the gammas of a staterror could be functions defined elsewhere in the document. Unlike variables,
 // they are not configured from their relative uncertainty, also if they have a constraint distribution.
 TEST(RooFitHS3, HistFactoryFunctionGammaWithConstraint)
@@ -3929,6 +4006,50 @@ TEST(RooFitHS3, HistFactoryLegacyCustomModifierParameter)
    RooAbsReal *scale = ws.function("scale");
    ASSERT_NE(scale, nullptr);
    EXPECT_TRUE(ws.pdf("model_channel0")->dependsOn(*scale));
+}
+
+// The staterror modifiers of all samples of a channel share the gammas, so the constraints that they name must agree.
+TEST(RooFitHS3, HistFactoryStatErrorConstraintsMustAgree)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::FATAL);
+
+   auto makeJSON = [](std::string const &constraintsA, std::string const &constraintsB) {
+      auto sample = [](std::string const &name, std::string const &constraints) {
+         return R"({"name": ")" + name + R"(", "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]}, "modifiers": [
+               {"type": "staterror", "parameters": ["g0", "g1"], "constraints": )" +
+                constraints + "}]}";
+      };
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [)" +
+             sample("a", constraintsA) + ", " + sample("b", constraintsB) + R"(]
+         },
+         {"name": "g0_constraint", "type": "gaussian_dist", "x": "g0", "mean": 1.0, "sigma": 0.1},
+         {"name": "g1_constraint", "type": "gaussian_dist", "x": "g1", "mean": 1.0, "sigma": 0.1}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "g0", "min": 0, "max": 5}, {"name": "g1", "min": 0, "max": 5}]}]
+   })";
+   };
+
+   RooWorkspace ws;
+   EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+      makeJSON(R"(["g0_constraint", null])", R"(["g0_constraint", null])")));
+
+   RooWorkspace wsConflict;
+   std::string message;
+   try {
+      RooJSONFactoryWSTool{wsConflict}.importJSONfromString(
+         makeJSON(R"(["g0_constraint", null])", R"([null, "g1_constraint"])"));
+   } catch (std::exception const &e) {
+      message = e.what();
+   }
+   EXPECT_NE(message.find("different constraints"), std::string::npos) << message;
 }
 
 // The relative uncertainty that a Gaussian staterror constraint encodes is its sigma. It doesn't depend on the value of
@@ -4128,6 +4249,69 @@ TEST(RooFitHS3, HistFactoryNestedConstraintTerms)
 
    const std::string exported = RooJSONFactoryWSTool{wsNested}.exportJSONtoString();
    EXPECT_NE(exported.find(R"("constraints":["g0_constraint","g1_constraint"])"), std::string::npos) << exported;
+}
+
+// Unnamed shapefactors are named after their channel, sample and position, so that the ones of different samples
+// don't share their function.
+TEST(RooFitHS3, HistFactoryUnnamedShapeFactorsOfSamples)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {
+            "name": "model_channel0",
+            "type": "histfactory_dist",
+            "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [
+               {"name": "a", "data": {"contents": [10.0, 20.0]}, "modifiers": [
+                  {"type": "shapefactor", "parameters": ["a0", "a1"]}]},
+               {"name": "b", "data": {"contents": [10.0, 20.0]}, "modifiers": [
+                  {"type": "shapefactor", "parameters": ["b0", "b1"]}]}
+            ]
+         }
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "a0", "min": 0, "max": 5}, {"name": "a1", "min": 0, "max": 5},
+         {"name": "b0", "min": 0, "max": 5}, {"name": "b1", "min": 0, "max": 5}]}]
+   })"));
+   EXPECT_NE(ws.function("channel0_channel0_a_syst_0_shapeFactor"), nullptr);
+   EXPECT_NE(ws.function("channel0_channel0_b_syst_0_shapeFactor"), nullptr);
+   RooAbsPdf *model = ws.pdf("model_channel0");
+   for (const char *name : {"a0", "a1", "b0", "b1"}) {
+      ASSERT_NE(ws.var(name), nullptr) << name;
+      EXPECT_TRUE(model->dependsOn(*ws.var(name))) << name;
+   }
+}
+
+// The error messages about modifiers without the optional "name" refer to their position in the document, or to their
+// parameter.
+TEST(RooFitHS3, HistFactoryUnnamedModifierErrorMessages)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::FATAL);
+
+   auto importError = [](std::string const &modifier) {
+      RooWorkspace ws;
+      try {
+         RooJSONFactoryWSTool{ws}.importJSONfromString(makeHistFactoryJSON(modifier, "", "0.3"));
+      } catch (std::exception const &e) {
+         return std::string{e.what()};
+      }
+      return std::string{};
+   };
+   const std::string notAList =
+      importError(R"({"type": "shapefactor", "parameters": ["g0", "g1"], "constraints": "g0_constraint"})");
+   EXPECT_NE(notAList.find("samples[0](sig).modifiers[0](channel0_sig_syst_0).constraints: must be an array"),
+             std::string::npos)
+      << notAList;
+   const std::string poisson =
+      importError(R"({"type": "normsys", "parameters": ["alpha_a"], "constraint_type": "Poisson",
+      "interpolation": {"type": "mult", "in": "poly6", "out": "exp"}, "data": {"lo": 0.9, "hi": 1.1}})");
+   EXPECT_NE(poisson.find("legacy constraint value 'Poisson' for modifier 'alpha_a' is a known constraint type"),
+             std::string::npos)
+      << poisson;
 }
 
 // A RooRealVar that is constant in all parameter points must stay a RooRealVar, and a RooConstVar must stay a

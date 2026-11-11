@@ -263,8 +263,8 @@ void upgradeHistFactory(JSONNode &dist, Version const &version, IsDistribution c
    }
 
    // Before HS3 0.3, the gamma parameters of the staterror modifiers had Poisson constraints unless the document said
-   // otherwise, which RooFit also creates if the document has the channel-level settings of RooFit. Samples without
-   // "errors" had Poisson uncertainties.
+   // otherwise, and samples without "errors" had Poisson uncertainties. From HS3 0.3 on, RooFit only creates
+   // constraints if its channel-level settings give their type.
    const bool legacyStatError = version < namedConstraintVersion;
    if (legacyStatError && !dist.has_child("staterror")) {
       dist["staterror"].set_map();
@@ -272,10 +272,10 @@ void upgradeHistFactory(JSONNode &dist, Version const &version, IsDistribution c
    if (dist.has_child("staterror") && dist["staterror"].is_map()) {
       JSONNode &config = dist["staterror"];
       upgradeGammaConstraint(config);
-      if (!config.has_child("constraint") && !config.has_child("constraints")) {
-         config["constraint"] << "Poisson";
-      }
       if (legacyStatError) {
+         if (!config.has_child("constraint") && !config.has_child("constraints")) {
+            config["constraint"] << "Poisson";
+         }
          config["implied_poisson_errors"] << true;
       }
    }
