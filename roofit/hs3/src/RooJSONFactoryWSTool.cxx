@@ -1058,12 +1058,16 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bo
       return;
    }
 
+   // A named RooConstVar only takes its value: it is written as a domain axis with that single value, not in the
+   // parameter points.
+   if (cv) {
+      _domains->readFixedValue(cv->GetName(), cv->getVal());
+      return;
+   }
+
    JSONNode &var = appendNamedChild(node, v->GetName());
 
-   if (cv) {
-      var["value"] << cv->getVal();
-      var["const"] << true;
-   } else if (rrv) {
+   if (rrv) {
       var["value"] << rrv->getVal();
       if (storeConstant && (rrv->isConstant() || rrv->getMin() >= rrv->getMax())) {
          var["const"] << true;
@@ -1714,21 +1718,50 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
    std::string name(RooJSONFactoryWSTool::name(p));
    RooJSONFactoryWSTool::testValidName(name, true);
 
-   if (_workspace.arg(name))
-      return;
    if (!p.is_map()) {
       oocoutE(nullptr, InputArguments) << "RooJSONFactoryWSTool() node '" << name << "' is not a map, skipping."
                                        << std::endl;
       return;
    }
-   if (config().importNoDomainParametersAsRooConstVars && !_domains->hasVariable(name.c_str())) {
-      if (!p.has_child("value")) {
-         RooJSONFactoryWSTool::error("cannot instantiate RooConstVar '" + name + "' without \"value\"!");
-      }
-      wsEmplace<RooConstVar>(name, p["value"].val_double());
+   checkFixedValue(name, p, "default_values");
+   if (_workspace.arg(name))
       return;
+   if (!_domains->hasVariable(name.c_str())) {
+      // ROOT versions before HS3 0.3 marked named RooConstVars with an attribute.
+      JSONNode const *attrNode = _attributesNode ? _attributesNode->find(name) : nullptr;
+      if (attrNode && attrNode->has_child("is_const_var") && attrNode->find("is_const_var")->val_int() == 1) {
+         if (!p.has_child("value")) {
+            RooJSONFactoryWSTool::error("cannot instantiate RooConstVar '" + name + "' without \"value\"!");
+         }
+         wsEmplace<RooConstVar>(name, p["value"].val_double());
+         return;
+      }
    }
-   configureVariable(*_domains, p, wsEmplace<RooRealVar>(name, 1.));
+   RooRealVar &var = wsEmplace<RooRealVar>(name, 1.);
+   configureVariable(*_domains, p, var);
+   warnIfFreeWithoutDomain(var);
+}
+
+// A parameter with a single value in its domain only takes that value: a parameter point must not give it another.
+void RooJSONFactoryWSTool::checkFixedValue(std::string const &name, JSONNode const &p, std::string const &pointName)
+{
+   double const *fixed = _domains ? _domains->fixedValue(name.c_str()) : nullptr;
+   JSONNode const *valueNode = p.find("value");
+   if (fixed && valueNode && valueNode->is_number() && valueNode->val_double() != *fixed) {
+      RooJSONFactoryWSTool::error("the parameter point '" + pointName + "' gives the parameter '" + name +
+                                  "' the value " + valueNode->val() + ", but its domain only has the value " +
+                                  std::to_string(*fixed));
+   }
+}
+
+// HS3 requires every parameter to be listed in a domain or constant ("const": true) in the parameter point.
+void RooJSONFactoryWSTool::warnIfFreeWithoutDomain(RooRealVar const &var)
+{
+   if (!var.isConstant() && _domains && !_domains->hasVariable(var.GetName())) {
+      warning(std::string("RooFitHS3: the parameter '") + var.GetName() +
+              "' is not listed in any domain and is not constant: HS3 requires a domain, or \"const\": true. It "
+              "is read as a free parameter without range.");
+   }
 }
 
 // Import all dependants (variables, functions and distributions) of node `n` into the workspace.
@@ -2178,15 +2211,15 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
                        name + "', because there is no category with that name.");
                continue;
             }
+            checkFixedValue(varName, var, name);
             RooRealVar *rrv = _workspace.var(varName);
             if (!rrv && !_workspace.arg(varName)) {
-               // The parameter is not used by any other component: create it. It is constant if "const" is true or
-               // if no domain lists it, since there is no range to vary it in. "const": false is the same as no
+               // The parameter is not used by any other component: create it. "const": false is the same as no
                // "const" at all.
                testValidName(varName, true);
                rrv = &wsEmplace<RooRealVar>(varName, 1.);
                configureVariable(*_domains, var, *rrv);
-               rrv->setConstant(rrv->isConstant() || !_domains->hasVariable(varName.c_str()));
+               warnIfFreeWithoutDomain(*rrv);
             } else if (rrv) {
                configureVariable(*_domains, var, *rrv);
             }

@@ -44,7 +44,6 @@ public:
    struct Config {
       bool allowExportInvalidNames = true;
       bool allowSanitizeNames = true;
-      bool importNoDomainParametersAsRooConstVars = true;
       /// Identify constant factors of HistFactory samples that are used like the inverse bin width of HistFactory
       /// before ROOT 6.26 by their structure, and don't write them, since `histfactory_dist` implies them. Turn this
       /// off if a workspace has such factors that are not meant as bin widths: they are then written as normfactors.
@@ -239,6 +238,8 @@ private:
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
    void importVariable(const RooFit::Detail::JSONNode &p);
+   void checkFixedValue(std::string const &name, const RooFit::Detail::JSONNode &p, std::string const &pointName);
+   void warnIfFreeWithoutDomain(RooRealVar const &var);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
    void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n, bool storeConstant, bool storeBins);
