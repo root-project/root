@@ -301,6 +301,66 @@ TEST(TDirectoryFile, RecursiveMkdir)
    EXPECT_STREQ(dirA->GetTitle(), "a");
 }
 
+// Returning a non-TObject from TDirectory::Get should warn, so it can be deprecated later.
+TEST(TDirectoryFile, GetNonTObject)
+{
+   TMemFile f("getnontobject.root", "RECREATE");
+   const std::vector<int> expected{1, 2, 3};
+   f.WriteObject(&expected, "vec");
+   TNamed named{"named", "title"};
+   f.WriteObject(&named, named.GetName());
+   auto sub = f.mkdir("sub");
+   ASSERT_NE(sub, nullptr);
+   sub->WriteObject(&expected, "vec");
+
+   // Non-TObject via Get(): warns, but still returns a valid object
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "TMemFile::Get", "does not derive from TObject", /*matchFullMessage=*/false);
+      std::unique_ptr<std::vector<int>> vec{reinterpret_cast<std::vector<int> *>(f.Get("vec"))};
+      ASSERT_NE(vec, nullptr);
+      EXPECT_EQ(*vec, expected);
+   }
+
+   // Same for an object in a subdirectory, but call is routed through different interfaces
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "TDirectoryFile::Get", "does not derive from TObject", /*matchFullMessage=*/false);
+      std::unique_ptr<std::vector<int>> vec{reinterpret_cast<std::vector<int> *>(f.Get("sub/vec"))};
+      ASSERT_NE(vec, nullptr);
+      EXPECT_EQ(*vec, expected);
+   }
+
+   // Again, but via TDirectory::Get
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "TDirectoryFile::Get", "does not derive from TObject", /*matchFullMessage=*/false);
+      std::unique_ptr<std::vector<int>> vec{reinterpret_cast<std::vector<int> *>(f.GetDirectory("sub")->Get("vec"))};
+      ASSERT_NE(vec, nullptr);
+      EXPECT_EQ(*vec, expected);
+   }
+
+   // Read using the template or checked methods:
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+
+      std::unique_ptr<std::vector<int>> vec{f.Get<std::vector<int>>("vec")};
+      ASSERT_NE(vec, nullptr);
+      EXPECT_EQ(*vec, expected);
+
+      std::unique_ptr<std::vector<int>> vecChecked{
+         static_cast<std::vector<int> *>(f.GetObjectChecked("vec", "vector<int>"))};
+      ASSERT_NE(vecChecked, nullptr);
+      EXPECT_EQ(*vecChecked, expected);
+
+      std::unique_ptr<TObject> obj{f.Get("named")};
+      ASSERT_NE(obj, nullptr);
+      EXPECT_NE(dynamic_cast<TNamed *>(obj.get()), nullptr);
+      EXPECT_STREQ(obj->GetName(), "named");
+      EXPECT_STREQ(obj->GetTitle(), "title");
+   }
+}
+
 // https://its.cern.ch/jira/browse/ROOT-10581
 TEST(TFile, PersistTObjectStdArray)
 {
