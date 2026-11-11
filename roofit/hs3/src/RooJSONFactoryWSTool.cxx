@@ -351,17 +351,6 @@ bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneo
    return data.components.size() == pdf->indexCat().size();
 }
 
-// True if the entire string parses as a number (integer or floating-point).
-bool isNumber(const std::string &str)
-{
-   // Parse with the same mechanism as toDouble() and require that the whole string is consumed, so that isNumber(s) is
-   // true exactly when toDouble(s) can turn the entire string into a value. (std::from_chars for floating-point types
-   // is not portably available on all platforms ROOT supports, so we rely on the stream extraction instead.)
-   std::istringstream stream(str);
-   double value = 0.0;
-   return (stream >> value) && stream.eof();
-}
-
 // Configure `v` (value, error, binning, constness) from the parameter `p`.
 void configureVariable(HS3::DomainRanges const &ranges, HS3::ParameterValue const &p, RooRealVar &v)
 {
@@ -562,13 +551,6 @@ template <typename... Keys_t>
 JSONNode const *findRooFitInternal(JSONNode const &node, Keys_t const &...keys)
 {
    return node.find("misc", "ROOT_internal", keys...);
-}
-
-// True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
-bool isLiteralConstVar(RooAbsArg const &arg)
-{
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
-   return isRooConstVar && isNumber(arg.GetName());
 }
 
 // Export the string attributes and tags of `arg` into the ROOT-internal attributes.
@@ -1068,11 +1050,7 @@ void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll,
    for (RooAbsArg const *arg : coll) {
       if (n >= nMax)
          break;
-      if (isLiteralConstVar(*arg)) {
-         node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
-      } else {
-         node.append_child() << arg->GetName();
-      }
+      writeReference(node.append_child(), *arg);
       ++n;
    }
    if (node.num_children() != old_children + coll.size()) {
@@ -1440,11 +1418,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
          fillSeq(elem[k->second], *l);
       }
       if (auto r = dynamic_cast<RooArgProxy *>(p)) {
-         if (isLiteralConstVar(*r->absArg())) {
-            elem[k->second] << static_cast<RooConstVar *>(r->absArg())->getVal();
-         } else {
-            elem[k->second] << r->absArg()->GetName();
-         }
+         writeReference(elem[k->second], *r->absArg());
       }
    }
 

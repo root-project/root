@@ -1,12 +1,42 @@
 #include "JSONIOUtils.h"
 
 #include <RooAbsBinning.h>
+#include <RooConstVar.h>
 
 #include <cctype>
+#include <sstream>
 #include <string>
 #include <utility>
 
 using RooFit::Detail::JSONNode;
+
+// True if the entire string parses as a number (integer or floating-point).
+bool isNumber(const std::string &str)
+{
+   // Parse with the same mechanism as toDouble() and require that the whole string is consumed, so that isNumber(s) is
+   // true exactly when toDouble(s) can turn the entire string into a value. (std::from_chars for floating-point types
+   // is not portably available on all platforms ROOT supports, so we rely on the stream extraction instead.)
+   std::istringstream stream(str);
+   double value = 0.0;
+   return (stream >> value) && stream.eof();
+}
+
+// True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
+bool isLiteralConstVar(RooAbsArg const &arg)
+{
+   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
+   return isRooConstVar && isNumber(arg.GetName());
+}
+
+// Write a reference to `arg`: the value if it is a literal constant, and the name otherwise.
+void writeReference(JSONNode &node, RooAbsArg const &arg)
+{
+   if (isLiteralConstVar(arg)) {
+      node << static_cast<RooConstVar const &>(arg).getVal();
+   } else {
+      node << arg.GetName();
+   }
+}
 
 bool startsWith(std::string_view str, std::string_view prefix)
 {
