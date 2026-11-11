@@ -769,13 +769,7 @@ TEST(RooFitHS3, ParameterStepWidthsImportAfterDefaultSnapshot)
 
 TEST(RooFitHS3, RooAddPdf)
 {
-   int status = validate({"Gaussian::sig(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
-                          "ArgusBG::bkg(x, 5.291, argpar[-20.0, -100., -1.])",
-                          "SUM::model(nsig[200, 0., 10000] * sig, nbkg[800, 0., 10000] * bkg)"});
-   EXPECT_EQ(status, 0);
-
-   // With the next part of the test, we want to cover the closure of
-   // coefficient normalization reference observables.
+   // Closure of the coefficient normalization reference observables.
    RooWorkspace ws;
    ws.factory("Gaussian::sig_1(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])");
    ws.factory("Uniform::sig_2(x_2[0, 10])");
@@ -792,73 +786,68 @@ TEST(RooFitHS3, RooAddPdf)
    ws.factory("nbkg[800, 0., 10000]");
    RooAddPdf addPdf{"model_cond", "model_cond", {*ws.pdf("sig"), *ws.pdf("bkg")}, {*ws.var("nsig"), *ws.var("nbkg")}};
    addPdf.fixCoefNormalization({*ws.var("x"), *ws.var("x_2")});
-   status = validate(addPdf);
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(addPdf), 0);
 }
 
-TEST(RooFitHS3, RooArgusBG)
+// Round trip of pdfs and functions made with the workspace factory, see validate().
+TEST(RooFitHS3, FactoryExpressions)
 {
-   int status = validate({"ArgusBG::argusBG(x[0, 20], x0[10], c[-1], p[0.5])"});
-   EXPECT_EQ(status, 0);
-}
+   // To silence the numeric integration
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-TEST(RooFitHS3, RooBifurGauss)
-{
-   int status = validate({"BifurGauss::bifurGauss(x[0, 10], mean[5], sigmaL[1.0, 0.1, 10], sigmaR[2.0, 0.1, 10])"});
-   EXPECT_EQ(status, 0);
-}
-
-TEST(RooFitHS3, RooCBShape)
-{
-   int status = validate({"CBShape::cbShape(x[-10, 10], x0[0], sigma[2.0], alpha[1.4], n[1.2])"});
-   EXPECT_EQ(status, 0);
+   const std::vector<std::vector<std::string>> cases{
+      {"Gaussian::sig(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
+       "ArgusBG::bkg(x, 5.291, argpar[-20.0, -100., -1.])",
+       "SUM::model(nsig[200, 0., 10000] * sig, nbkg[800, 0., 10000] * bkg)"},
+      {"ArgusBG::argusBG(x[0, 20], x0[10], c[-1], p[0.5])"},
+      {"BifurGauss::bifurGauss(x[0, 10], mean[5], sigmaL[1.0, 0.1, 10], sigmaR[2.0, 0.1, 10])"},
+      {"CBShape::cbShape(x[-10, 10], x0[0], sigma[2.0], alpha[1.4], n[1.2])"},
+      {"Exponential::exponential_1(x[0, 10], c[-0.1])"},
+      // Different values for "lowestOrder"
+      {"LegacyExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"},
+      {"LegacyExpPoly::exppoly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"},
+      {"LegacyExpPoly::exppoly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"},
+      {"Gamma::gamma_dist(x[5.0, 10.0], gamma[1.0, 0.1, 10.0], beta[1.0, 0.1, 10.0], mu[5.0])"},
+      {"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"},
+      {"RooBernstein::bernstein(x[0, 10], { a[1], 3, b[5, 0, 20] })"},
+      // Only +, -, * and / are defined in the HS3 standard. The variables are given by name, by the index notation of
+      // TFormula and by ordinal notation, also with numbers in the names and extra whitespace.
+      {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf1('a * x + c', {x, a, c})"},
+      {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf2('x[1] * x[0] + x[2]', {x, a, c})"},
+      {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf3('@1 * @0 + @2', {x, a, c})"},
+      {"m_001_mu[1.0, 0.1, 10]", "x[0, 5]", "m_003_mu[5]",
+       "EXPR::genericPdf4('@0   *  2  *      @1 +   @2', {m_001_mu, x, m_003_mu})"},
+      {"Landau::landau(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"},
+      {"Lognormal::lognormal_1(x[1.0, 1.1, 10], mu_2[2.0, 1.1, 10], k_1[2.0, 1.1, 5.0])"},
+      // Different values for "lowestOrder"
+      {"Polynomial::poly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"},
+      {"Polynomial::poly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"},
+      {"Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"},
+      {"PowerSum::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"},
+      {"Uniform::uniform({x[0.0, 10.0], y[0.0, 5.0]})"},
+      // A workspace with only a function
+      {"x[-3, 3]", "RooFormulaVar::myfunc(\"sin(x) + 0.5*x*x\",x)"},
+   };
+   for (auto const &expressions : cases) {
+      SCOPED_TRACE(expressions.back());
+      EXPECT_EQ(validate(expressions), 0);
+   }
 }
 
 /// Test that the IO of pdfs that contain literal RooConstVars works.
 TEST(RooFitHS3, RooConstVar)
 {
    RooRealVar x{"x", "x", 100, 0, 1000};
-   int status = validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, RooFit::RooConst(100.)});
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, RooFit::RooConst(100.)}), 0);
 }
 
 TEST(RooFitHS3, RooExponential)
 {
-   int status = validate({"Exponential::exponential_1(x[0, 10], c[-0.1])"});
-   EXPECT_EQ(status, 0);
    RooWorkspace ws;
    ws.factory("x[0, 10]");
    ws.factory("c[-0.1]");
    RooExponential exponential2{"exponential_2", "exponential_2", *ws.var("x"), *ws.var("c"), true};
-   status = validate(exponential2);
-   EXPECT_EQ(status, 0);
-}
-
-TEST(RooFitHS3, RooLegacyExpPoly)
-{
-   // To silence the numeric integration
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   // Test different values for "lowestOrder"
-   int status = 0;
-   status = validate({"LegacyExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"});
-   EXPECT_EQ(status, 0);
-   status = validate({"LegacyExpPoly::exppoly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"});
-   EXPECT_EQ(status, 0);
-   status = validate({"LegacyExpPoly::exppoly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
-   EXPECT_EQ(status, 0);
-}
-
-TEST(RooFitHS3, RooGamma)
-{
-   int status = validate({"Gamma::gamma_dist(x[5.0, 10.0], gamma[1.0, 0.1, 10.0], beta[1.0, 0.1, 10.0], mu[5.0])"});
-   EXPECT_EQ(status, 0);
-}
-
-TEST(RooFitHS3, RooGaussian)
-{
-   int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(exponential2), 0);
 }
 
 TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
@@ -968,36 +957,6 @@ TEST(RooFitHS3, RooConstVarCollectionProxyExport)
    ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
    EXPECT_NE(dynamic_cast<RooConstVar *>(imported.obj("frac_const")), nullptr);
    EXPECT_EQ(imported.var("frac_const"), nullptr);
-}
-
-TEST(RooFitHS3, RooBernstein)
-{
-   int status = validate({"RooBernstein::bernstein(x[0, 10], { a[1], 3, b[5, 0, 20] })"});
-   EXPECT_EQ(status, 0);
-}
-
-TEST(RooFitHS3, RooGenericPdf)
-{
-   // To silence the numeric integration
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   // At this point, only basic arithmetic operations with +, -, * and / are
-   // defined in the HS3 standard.
-   int status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf1('a * x + c', {x, a, c})"});
-   EXPECT_EQ(status, 0);
-
-   // Test that it also works with index notation builtin to TFormula
-   status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf2('x[1] * x[0] + x[2]', {x, a, c})"});
-   EXPECT_EQ(status, 0);
-
-   // Test for ordinal notation
-   status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf3('@1 * @0 + @2', {x, a, c})"});
-   EXPECT_EQ(status, 0);
-
-   // Test for variable names with numbers and extra whitespaces in it
-   status = validate({"m_001_mu[1.0, 0.1, 10]", "x[0, 5]", "m_003_mu[5]",
-                      "EXPR::genericPdf4('@0   *  2  *      @1 +   @2', {m_001_mu, x, m_003_mu})"});
-   EXPECT_EQ(status, 0);
 }
 
 TEST(RooFitHS3, BinnedGenericPdfUniformRoundTrip)
@@ -1328,8 +1287,7 @@ TEST(RooFitHS3, RooHistPdf)
    dataHist.set(0, 23, -1);
    dataHist.set(1, 17, -1);
 
-   int status = validate(RooHistPdf{"histPdf", "histPdf", x, dataHist});
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(RooHistPdf{"histPdf", "histPdf", x, dataHist}), 0);
 }
 
 TEST(RooFitHS3, RooBinWidthFunctionUsesBinVolumeKeys)
@@ -1399,23 +1357,14 @@ TEST(RooFitHS3, StepDispatchesToRooHistFuncAndParamHistFunc)
    EXPECT_NE(dynamic_cast<ParamHistFunc *>(ws2.function("paramHistFunc")), nullptr);
 }
 
-TEST(RooFitHS3, RooLandau)
-{
-   int status = validate({"Landau::landau(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
-   EXPECT_EQ(status, 0);
-}
-
 TEST(RooFitHS3, RooLognormal)
 {
    RooWorkspace ws;
-   int status = validate({"Lognormal::lognormal_1(x[1.0, 1.1, 10], mu_2[2.0, 1.1, 10], k_1[2.0, 1.1, 5.0])"});
-   EXPECT_EQ(status, 0);
    ws.factory("x[1.0, 1.1, 10]");
    ws.factory("mu_2[0.7, 0.1, 2.3]");
    ws.factory("k_2[0.7, 0.1, 1.6]");
    RooLognormal lognormal2{"lognormal_2", "lognormal_2", *ws.var("x"), *ws.var("mu_2"), *ws.var("k_2"), true};
-   status = validate(lognormal2);
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(lognormal2), 0);
 }
 
 TEST(RooFitHS3, RooMultiVarGaussian)
@@ -1434,14 +1383,11 @@ TEST(RooFitHS3, RooMultiVarGaussian)
    cov(1, 0) = 0.2;
    cov(1, 1) = 1.0;
    RooMultiVarGaussian multiVarGauss{"multi_var_gauss", "", {x, y}, {mean, RooConst(5.0)}, cov};
-   int status = validate(multiVarGauss);
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(multiVarGauss), 0);
 }
 
 TEST(RooFitHS3, RooPoisson)
 {
-   int status = 0;
-
    for (auto noRounding : {false, true}) {
 
       std::string name = "poisson";
@@ -1450,22 +1396,12 @@ TEST(RooFitHS3, RooPoisson)
       RooRealVar x{"x", "x", 0, 10};
       RooRealVar mean{"mean", "mean", 5};
       RooPoisson poisson{name.c_str(), name.c_str(), x, mean, noRounding};
-      status = validate(poisson);
-      EXPECT_EQ(status, 0);
+      EXPECT_EQ(validate(poisson), 0);
    }
 }
 
 TEST(RooFitHS3, RooPolynomial)
 {
-   // Test different values for "lowestOrder"
-   int status = 0;
-   status = validate({"Polynomial::poly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"});
-   EXPECT_EQ(status, 0);
-   status = validate({"Polynomial::poly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"});
-   EXPECT_EQ(status, 0);
-   status = validate({"Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
-   EXPECT_EQ(status, 0);
-
    RooWorkspace ws;
    ws.factory("Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)");
    const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
@@ -1473,17 +1409,8 @@ TEST(RooFitHS3, RooPolynomial)
    EXPECT_EQ(json.find("\"coefficients\":[\"1.0\""), std::string::npos) << json;
 }
 
-TEST(RooFitHS3, RooPowerSum)
-{
-   int status = 0;
-   status = validate({"PowerSum::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"});
-   EXPECT_EQ(status, 0);
-}
-
 TEST(RooFitHS3, RooRealIntegral)
 {
-   int status = 0;
-
    RooRealVar v1("v1", "v1", 0.6, 0., 1.);
    RooRealVar v2("v2", "v2", 1.0, 0., 2.);
    RooGenericPdf formula{"formula", "2 * x[0] * x[1]", {v1, v2}};
@@ -1495,20 +1422,11 @@ TEST(RooFitHS3, RooRealIntegral)
    RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
 
    RooGaussian pdfContainingIntegralA("pdf_containing_integral_a", "pdf_containing_integral_a", x, integ, sigma);
-   status = validate(pdfContainingIntegralA);
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(pdfContainingIntegralA), 0);
 
    RooGaussian pdfContainingIntegralB("pdf_containing_integral_b", "pdf_containing_integral_b", x, integWithNormSet,
                                       sigma);
-   status = validate(pdfContainingIntegralB);
-   EXPECT_EQ(status, 0);
-}
-
-TEST(RooFitHS3, RooUniform)
-{
-   int status = 0;
-   status = validate({"Uniform::uniform({x[0.0, 10.0], y[0.0, 5.0]})"});
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(pdfContainingIntegralB), 0);
 }
 
 TEST(RooFitHS3, SimultaneousGaussians)
@@ -1527,8 +1445,7 @@ TEST(RooFitHS3, SimultaneousGaussians)
    simPdf.addPdf(model, "physics");
    simPdf.addPdf(model_ctl, "control");
 
-   int status = validate(simPdf);
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(simPdf), 0);
 }
 
 // https://github.com/root-project/root/issues/14637
@@ -1587,17 +1504,7 @@ TEST(RooFitHS3, WorkspaceOnlyDataset_RooDataHist)
 
    // Round-trip and strict checks (no numeric comparison needed here)
    // Use the dataset name for object tracking
-   const int status = validate(ws1, "dh");
-   EXPECT_EQ(status, 0);
-}
-
-// -----------------------------------------------------------------------------
-// Workspace with ONLY a function (no dataset, no pdfs).
-// -----------------------------------------------------------------------------
-TEST(RooFitHS3, WorkspaceOnlyFunction)
-{
-   int status = validate({std::string("x[-3, 3]"), std::string("RooFormulaVar::myfunc(\"sin(x) + 0.5*x*x\",x)")});
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(ws1, "dh"), 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -1633,8 +1540,7 @@ TEST(RooFitHS3, ModelConfigWithMultiVarGaussian)
    mc.SetObservables("x,y");
    ws1.import(mc);
 
-   int status = validate(ws1, "mc");
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(ws1, "mc"), 0);
 }
 
 TEST(RooFitHS3, RooSpline)
@@ -1656,8 +1562,7 @@ TEST(RooFitHS3, RooSpline)
    // Import the object into the workspace and validate JSON IO.
    ws.import(spline, RooFit::Silence());
 
-   const int status = validate(ws, "spline", /*exact=*/true);
-   EXPECT_EQ(status, 0);
+   EXPECT_EQ(validate(ws, "spline", /*exact=*/true), 0);
 }
 
 namespace {
