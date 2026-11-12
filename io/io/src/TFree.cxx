@@ -178,6 +178,44 @@ void TFree::ReadBuffer(char *&buffer)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Decode one free structure from input buffer.
+/// \return true if decoding was successful.
+
+bool TFree::ReadBuffer(char *&buffer, std::size_t bufsize)
+{
+   constexpr std::size_t kVerSize = sizeof(Version_t);
+   if (bufsize < kVerSize) {
+      Error("ReadBuffer", "The given buffer is too small to fit a TFree record.");
+      return false;
+   }
+   Version_t version;
+   frombuf(buffer, &version);
+   bufsize -= kVerSize;
+
+   if (version > 1000) {
+      constexpr std::size_t kNeed = 2 * sizeof(Long64_t);
+      if (bufsize < kNeed) {
+         Error("ReadBuffer", "The given buffer is too small to fit a TFree record.");
+         return false;
+      }
+      frombuf(buffer, &fFirst);
+      frombuf(buffer, &fLast);
+   } else {
+      constexpr std::size_t kNeed = 2 * sizeof(Int_t);
+      if (bufsize < kNeed) {
+         Error("ReadBuffer", "The given buffer is too small to fit a TFree record.");
+         return false;
+      }
+      Int_t first, last;
+      frombuf(buffer, &first);
+      fFirst = (Long64_t)first;
+      frombuf(buffer, &last);
+      fLast = (Long64_t)last;
+   }
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// return number of bytes occupied by this TFree on permanent storage
 
 Int_t TFree::Sizeof() const
