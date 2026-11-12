@@ -947,6 +947,9 @@ void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, i
          double totBinVolume = binVolume * v->getBinWidth(i);
          double fval = pdf.getVal(&obstmp)*totBinVolume;
 
+         // Bins without expected events are kept with zero weight, such that
+         // the dataset has one entry per bin, like the binned likelihood
+         // optimization requires.
          if (fval*expectedEvents <= 0)
          {
             if (fval*expectedEvents < 0) {
@@ -957,8 +960,9 @@ void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, i
             else {
                oocoutW(nullptr,InputArguments)
                    << "AsymptoticCalculator::" << __func__
-                   << "(): Bin " << i << " of " << v->GetName() << " has zero expected events - skip it" << std::endl;
+                   << "(): Bin " << i << " of " << v->GetName() << " has zero expected events" << std::endl;
             }
+            data.add(obs, 0.0);
          }
          // have a cut off for overflows ??
          else {
