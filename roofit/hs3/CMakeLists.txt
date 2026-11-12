@@ -19,10 +19,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
   HEADERS
     ${ROOFITHS3_HEADERS}
   SOURCES
-    src/Domains.cxx
+    src/HS3Document.cxx
+    src/HS3Parser.cxx
+    src/HS3Upgrade.cxx
+    src/HS3Validate.cxx
+    src/HS3Writer.cxx
     src/JSONInterface.cxx
-    src/JSONIO.cxx
-    src/RooJSONFactoryWSTool.cxx
+    src/JSONIO.cxx src/RooJSONFactoryWSTool.cxx
     src/JSONFactories_RooFitCore.cxx
     src/JSONFactories_HistFactory.cxx
     src/JSONIOUtils.cxx
@@ -49,8 +52,11 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
       FILES
           ${RELATIVE_INC_HEADERS}
           # LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
-          src/Domains.h
+          src/HS3Builder.h
+          src/HS3Document.h
+          src/HS3Schema.h
           src/JSONIOUtils.h
+          src/JSONReadRecorder.h
           src/static_execute.h
   )
 endif()
