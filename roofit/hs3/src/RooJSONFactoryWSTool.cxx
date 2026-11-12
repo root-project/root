@@ -1622,6 +1622,39 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    }
 }
 
+// HistFactory modifiers pick the components that constrain their parameters out of an array distribution. By the
+// standard the whole array enters the likelihood, so the components of a partially used array that nothing uses are
+// reported.
+void warnAboutUnusedArrayComponents(RooWorkspace const &ws)
+{
+   for (RooAbsArg *arg : ws.allPdfs()) {
+      auto const *array = dynamic_cast<RooProdPdf const *>(arg);
+      if (!array || !array->getAttribute(arrayDistTag) || array->hasClients()) {
+         continue;
+      }
+      bool used = false;
+      std::string unused;
+      for (RooAbsArg const *component : array->pdfList()) {
+         bool usedElsewhere = false;
+         for (RooAbsArg const *client : component->clients()) {
+            if (client != array) {
+               usedElsewhere = true;
+            }
+         }
+         if (usedElsewhere) {
+            used = true;
+         } else {
+            unused += (unused.empty() ? "'" : ", '") + std::string(component->GetName()) + "'";
+         }
+      }
+      if (used && !unused.empty()) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the components " + unused + " of the array distribution '" +
+                                       array->GetName() +
+                                       "' are not used by any distribution and are not part of any likelihood");
+      }
+   }
+}
+
 void combinePdfs(HS3Document const &doc, RooWorkspace &ws)
 {
    for (auto const &item : doc.rooFit.combinedDistributions) {
@@ -3581,6 +3614,8 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
          }
       }
    }
+
+   warnAboutUnusedArrayComponents(_workspace);
 
    if (_workspace.getSnapshot("default_values")) {
       _workspace.loadSnapshot("default_values");

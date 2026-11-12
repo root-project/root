@@ -244,6 +244,46 @@ RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &co
    return nullptr;
 }
 
+// The component of the array distribution `array` that constrains `param`: the one that depends on it.
+RooAbsPdf &arrayComponentFor(RooProdPdf const &array, RooAbsArg const &param, std::string const &context)
+{
+   std::vector<RooAbsPdf *> matches;
+   for (RooAbsPdf *pdf : static_range_cast<RooAbsPdf *>(array.pdfList())) {
+      if (pdf->dependsOn(param)) {
+         matches.push_back(pdf);
+      }
+   }
+   if (matches.size() == 1) {
+      return *matches.front();
+   }
+   const std::string what = "the array distribution '" + std::string(array.GetName()) +
+                            "' named as the constraint of '" + param.GetName() + "' (" + context + ") has ";
+   if (matches.empty()) {
+      RooJSONFactoryWSTool::error(what + "no component that depends on this parameter");
+   }
+   RooJSONFactoryWSTool::error(what + std::to_string(matches.size()) +
+                               " components that depend on this parameter, but a parameter can only be constrained "
+                               "by one component");
+}
+
+// Find the constraint distribution `constraintName` of the parameter `param`. If the name resolves to an array
+// distribution, the component that depends on the parameter is returned: that is the term that enters the likelihood
+// for this parameter, and the whole array enters once through the components of all of its parameters. Returns
+// nullptr if the name cannot be resolved.
+RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, std::string const &sample,
+                               RooAbsArg const &param, std::string const &context)
+{
+   RooAbsPdf *constraint = findNamedConstraint(tool, constraintName, sample);
+   if (!constraint || !constraint->getAttribute(arrayDistTag)) {
+      return constraint;
+   }
+   auto const *array = dynamic_cast<RooProdPdf const *>(constraint);
+   if (!array) {
+      return constraint;
+   }
+   return &arrayComponentFor(*array, param, context);
+}
+
 // The parameter of a modifier, which is created if the document doesn't define it. It's a variable, or a constant if
 // the document doesn't give it a domain.
 RooAbsReal &getOrCreateParameter(RooJSONFactoryWSTool &tool, std::string const &name, double val, double min,
@@ -271,7 +311,8 @@ void setErrorIfVariable(RooAbsReal &param, double error)
 // All constraints of parameters that control a whole sample are created here. Following the HS3 standard, the nominal
 // value is defined by the type of the modifier, and the standard deviation is one.
 void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint, RooAbsReal &param, double nominal,
-                   std::string const &modifier, std::string const &sample, RooArgSet &constraints)
+                   const char *modifierType, std::string const &modifier, std::string const &sample,
+                   RooArgSet &constraints)
 {
    RooWorkspace &ws = *tool.workspace();
    std::visit(HS3::overloaded{
@@ -290,7 +331,9 @@ void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint
                     constraints.add(pdf ? *pdf : tool.wsEmplace<RooGaussian>(name, param, nom, 1.));
                  },
                  [&](HS3::ConstraintPdf const &constraintPdf) {
-                    RooAbsPdf *pdf = findNamedConstraint(tool, constraintPdf.pdf.name, sample);
+                    RooAbsPdf *pdf = findNamedConstraint(tool, constraintPdf.pdf.name, sample, param,
+                                                         std::string("the ") + modifierType + " modifier '" + modifier +
+                                                            "' of sample '" + sample + "'");
                     if (!pdf) {
                        RooJSONFactoryWSTool::error("unable to find definition of of constraint '" +
                                                    constraintPdf.pdf.name + "' for modifier '" + modifier + "'");
@@ -308,7 +351,7 @@ void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint
 ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname, std::string const &sysname,
                          std::vector<HS3::ParameterRef> const &parnames, std::vector<double> const &vals,
                          HS3::GammaConstraint const &constraint, RooArgSet &constraints, RooArgSet const &observables,
-                         double gammaMax, double minSigma, std::size_t nBins)
+                         double gammaMax, double minSigma, std::size_t nBins, std::string const &context)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -350,11 +393,14 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
    };
 
    if (auto const *pdfs = std::get_if<HS3::GammaConstraintPdfs>(&constraint)) {
-      for (auto const &pdfName : pdfs->pdfs) {
+      // The constraints are resolved per gamma (in bin order, like "constraints"), which also picks the right
+      // component out of an array distribution.
+      for (std::size_t i = 0; i < pdfs->pdfs.size(); ++i) {
+         auto const &pdfName = pdfs->pdfs[i];
          if (!pdfName) {
             continue;
          }
-         auto *pdf = findNamedConstraint(tool, pdfName->name, sysname);
+         auto *pdf = findNamedConstraint(tool, pdfName->name, sysname, gammas[i], context);
          if (!pdf) {
             RooJSONFactoryWSTool::error("unable to find definition of constraint '" + pdfName->name +
                                         "' for modifier '" + sysname + "'");
@@ -508,7 +554,7 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
                setErrorIfVariable(param, 0.0);
                elems.normElems.add(param);
                // for norm factors, constraints are optional
-               addConstraint(tool, mod.constraint, param, 1.0, mod.name, sampleName, ctx.constraints);
+               addConstraint(tool, mod.constraint, param, 1.0, "normfactor", mod.name, sampleName, ctx.constraints);
             },
             [&](HS3::NormSys const &mod) {
                RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
@@ -531,7 +577,7 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
                elems.overallHigh.push_back(high);
                elems.overallInterp.push_back(interp);
 
-               addConstraint(tool, mod.constraint, param, 0.0, mod.name, sampleName, ctx.constraints);
+               addConstraint(tool, mod.constraint, param, 0.0, "normsys", mod.name, sampleName, ctx.constraints);
             },
             [&](HS3::HistoSys const &mod) {
                RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
@@ -548,7 +594,7 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
                elems.histoInterp.push_back(interpolationCode(mod.interpolation, ctx.dist.defaultInterpolation,
                                                              InterpolationClass::Piecewise,
                                                              context("histosys", mod.name)));
-               addConstraint(tool, mod.constraint, param, 0.0, mod.name, sampleName, ctx.constraints);
+               addConstraint(tool, mod.constraint, param, 0.0, "histosys", mod.name, sampleName, ctx.constraints);
             },
             [&](HS3::ShapeSys const &mod) {
                const bool constrained = std::visit(
@@ -563,9 +609,10 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
                // "<channel>_<name>_shapeFactor" for free parameters.
                const std::string funcName =
                   ctx.channelName + "_" + mod.name + (constrained ? "_ShapeSys" : "_shapeFactor");
-               elems.shapeElems.add(createPHF(tool, funcName, mod.name, mod.parameters, mod.vals, mod.constraint,
-                                              ctx.constraints, ctx.observables, defaultShapeSysGammaMax,
-                                              minShapeUncertainty, ctx.nBins));
+               elems.shapeElems.add(
+                  createPHF(tool, funcName, mod.name, mod.parameters, mod.vals, mod.constraint, ctx.constraints,
+                            ctx.observables, defaultShapeSysGammaMax, minShapeUncertainty, ctx.nBins,
+                            "the shapesys modifier '" + mod.name + "' of sample '" + sampleName + "'"));
             },
             [&](HS3::CustomModifier const &mod) {
                // The function can come later in the document.
@@ -1570,7 +1617,7 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
 
       mcStatObject = &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
                                 statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
-                                dist.statError.relThreshold, nBins);
+                                dist.statError.relThreshold, nBins, "the staterror modifier of channel '" + name + "'");
    }
 
    ChannelContext ctx{tool, dist, observables, name, channelName, nBins, mcStatObject, constraints};

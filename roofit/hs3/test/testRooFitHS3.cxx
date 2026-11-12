@@ -10,6 +10,7 @@
 #include <RooBinWidthFunction.h>
 #include <RooBinning.h>
 #include <RooCBShape.h>
+#include <RooAbsCategoryLValue.h>
 #include <RooCategory.h>
 #include <RooBinSamplingPdf.h>
 #include <RooConstVar.h>
@@ -52,6 +53,7 @@
 #include <cmath>
 #include <limits>
 #include <cstdio>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
@@ -398,6 +400,134 @@ void importDuplicateHistoSysModel(RooWorkspace &ws, int interpCode, std::vector<
    RooRealSumPdf model{"model_channel0", "model_channel0", RooArgList{sampleShapes}, RooArgList{sampleScale}, true};
 
    ws.import(model, RooFit::Silence());
+}
+
+// A two-channel HistFactory model with a normsys shared by the channels, a staterror in both channels, a shapefactor,
+// and binned data, with the constraints either written one per parameter or collected into one array distribution
+// per type (`arrays`), as RooFit writes them.
+std::string twoChannelHistFactoryJSON(bool arrays)
+{
+   const std::vector<std::string> gammas{"gamma_c1_0", "gamma_c1_1", "gamma_c2_0", "gamma_c2_1", "gs_0", "gs_1"};
+   std::string constraintDists;
+   std::string components;
+   std::string functions;
+   std::string values;
+   std::string domainAxes;
+   for (auto const &g : gammas) {
+      functions += R"({"name": ")" + g + R"(_poisMean", "type": "product", "factors": [")" + g + R"(", 100.0]},)";
+      values +=
+         R"({"name": "nom_)" + g + R"(", "value": 100.0, "const": true}, {"name": ")" + g + R"(", "value": 1.0},)";
+      domainAxes += R"({"name": ")" + g + R"(", "min": 0.0, "max": 5.0}, {"name": "nom_)" + g +
+                    R"(", "min": 0.0, "max": 1000.0},)";
+      constraintDists += R"({"name": ")" + g + R"(_constraint", "type": "poisson_dist", "x": "nom_)" + g +
+                         R"(", "mean": ")" + g + R"(_poisMean", "integer": false},)";
+      components += R"({"x": "nom_)" + g + R"(", "mean": ")" + g + R"(_poisMean"},)";
+   }
+   components.pop_back();
+   auto constraint = [&](std::string const &individual, std::string const &array) {
+      return "\"" + (arrays ? array : individual) + "\"";
+   };
+   auto gammaConstraints = [&](std::string const &prefix) {
+      return constraint(prefix + "_0_constraint", "pois_constraints") + ", " +
+             constraint(prefix + "_1_constraint", "pois_constraints");
+   };
+   const std::string distributions =
+      arrays
+         ? R"({"name": "gauss_constraints", "type": "array_dist", "component_type": "gaussian_dist",
+                   "components": [{"x": "alpha_a", "mean": 0.0, "sigma": 1.0}]},
+                  {"name": "pois_constraints", "type": "array_dist", "component_type": "poisson_dist",
+                   "default_parameters": {"integer": false}, "components": [)" +
+              components + "]}"
+         : R"({"name": "alpha_a_constraint", "type": "gaussian_dist", "x": "alpha_a", "mean": 0.0, "sigma": 1.0},)" +
+              constraintDists.substr(0, constraintDists.size() - 1);
+   return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "model_c1", "type": "histfactory_dist",
+          "axes": [{"name": "x_c1", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+          "samples": [
+            {"name": "sig", "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
+             "modifiers": [
+               {"type": "normfactor", "parameters": ["mu"]},
+               {"name": "a", "type": "normsys", "parameters": ["alpha_a"], "data": {"lo": 0.9, "hi": 1.1},
+                "constraints": [)" +
+          constraint("alpha_a_constraint", "gauss_constraints") + R"(]},
+               {"type": "staterror", "parameters": ["gamma_c1_0", "gamma_c1_1"], "constraints": [)" +
+          gammaConstraints("gamma_c1") + R"(]}]},
+            {"name": "bkg", "data": {"contents": [5.0, 5.0], "errors": [1.0, 1.0]},
+             "modifiers": [
+               {"name": "shape", "type": "shapefactor", "parameters": ["gs_0", "gs_1"], "constraints": [)" +
+          gammaConstraints("gs") + R"(]},
+               {"type": "staterror", "parameters": ["gamma_c1_0", "gamma_c1_1"], "constraints": [)" +
+          gammaConstraints("gamma_c1") + R"(]}]}]},
+         {"name": "model_c2", "type": "histfactory_dist",
+          "axes": [{"name": "x_c2", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+          "samples": [
+            {"name": "sig", "data": {"contents": [30.0, 10.0], "errors": [2.0, 1.0]},
+             "modifiers": [
+               {"type": "normfactor", "parameters": ["mu"]},
+               {"name": "a", "type": "normsys", "parameters": ["alpha_a"], "data": {"lo": 0.8, "hi": 1.2},
+                "constraints": [)" +
+          constraint("alpha_a_constraint", "gauss_constraints") + R"(]},
+               {"type": "staterror", "parameters": ["gamma_c2_0", "gamma_c2_1"], "constraints": [)" +
+          gammaConstraints("gamma_c2") + R"(]}]}]},
+         )" +
+          distributions + R"(
+      ],
+      "functions": [)" +
+          functions.substr(0, functions.size() - 1) + R"(],
+      "data": [
+         {"name": "obs_c1", "type": "binned", "axes": [{"name": "x_c1", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "contents": [12.0, 19.0]},
+         {"name": "obs_c2", "type": "binned", "axes": [{"name": "x_c2", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "contents": [28.0, 11.0]}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "mu", "min": 0.0, "max": 5.0}, {"name": "alpha_a", "min": -5.0, "max": 5.0}, )" +
+          domainAxes.substr(0, domainAxes.size() - 1) + R"(]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "mu", "value": 1.0}, {"name": "alpha_a", "value": 0.0}, )" +
+          values.substr(0, values.size() - 1) + R"(]}],
+      "likelihoods": [{"name": "lh", "distributions": ["model_c1", "model_c2"], "data": ["obs_c1", "obs_c2"]}],
+      "analyses": [{"name": "an", "likelihood": "lh", "domains": ["default_domain"],
+                    "parameters_of_interest": ["mu"]}]
+   })";
+}
+
+// The NLL of the two-channel model of twoChannelHistFactoryJSON() at a parameter point.
+double twoChannelNLL(RooWorkspace &ws, std::map<std::string, double> const &point)
+{
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("an"));
+   if (!mc) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   auto *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
+   if (!simPdf) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   for (auto const &[name, value] : point) {
+      ws.var(name)->setVal(value);
+   }
+   // The channels have their own observables, x_c1 and x_c2: one weighted entry per bin and channel.
+   auto &indexCat = dynamic_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(simPdf->indexCat()));
+   RooRealVar &x1 = *ws.var("x_c1");
+   RooRealVar &x2 = *ws.var("x_c2");
+   RooRealVar weight{"weight", "weight", 1.0};
+   RooDataSet combined{"combined", "combined", {x1, x2, indexCat, weight}, RooFit::WeightVar(weight)};
+   for (auto const &item : simPdf->indexCat()) {
+      const std::string channel = item.first.substr(6);
+      auto *hist = static_cast<RooDataHist *>(ws.data("obs_" + channel));
+      RooRealVar &x = channel == "c1" ? x1 : x2;
+      indexCat.setLabel(item.first.c_str());
+      for (int i = 0; i < hist->numEntries(); ++i) {
+         x.setVal(static_cast<RooAbsReal const *>(hist->get(i)->find(x.GetName()))->getVal());
+         combined.add({x1, x2, indexCat}, hist->weight());
+      }
+   }
+   std::unique_ptr<RooAbsReal> nll{simPdf->createNLL(combined)};
+   return nll->getVal();
 }
 
 } // namespace
@@ -3752,6 +3882,106 @@ TEST(RooFitHS3, ArrayDistLikelihood)
    RooWorkspace ws2;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+}
+
+// A HistFactory modifier whose constraint is an array distribution gets the component that depends on its
+// parameter. The model built from the array form equals the model built from one constraint per parameter, also
+// for the constraint shared by both channels.
+TEST(RooFitHS3, HistFactoryArrayDistConstraints)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace individual;
+   ASSERT_TRUE(RooJSONFactoryWSTool{individual}.importJSONfromString(twoChannelHistFactoryJSON(false)));
+   RooWorkspace arrays;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      ASSERT_TRUE(RooJSONFactoryWSTool{arrays}.importJSONfromString(twoChannelHistFactoryJSON(true)));
+   });
+   EXPECT_TRUE(warnings.empty()) << warnings;
+
+   // The channels hold the components, not the arrays.
+   auto constraintNames = [](RooWorkspace &ws, const char *channel) {
+      std::set<std::string> names;
+      auto *model = dynamic_cast<RooProdPdf *>(ws.pdf(channel));
+      if (model) {
+         for (RooAbsArg *pdf : model->pdfList()) {
+            if (!dynamic_cast<RooRealSumPdf *>(pdf)) {
+               names.insert(pdf->GetName());
+            }
+         }
+      }
+      return names;
+   };
+   EXPECT_EQ(constraintNames(arrays, "model_c1"),
+             (std::set<std::string>{"alpha_a_constraint", "nom_gamma_c1_0_constraint", "nom_gamma_c1_1_constraint",
+                                    "nom_gs_0_constraint", "nom_gs_1_constraint"}));
+   EXPECT_EQ(constraintNames(arrays, "model_c2"),
+             (std::set<std::string>{"alpha_a_constraint", "nom_gamma_c2_0_constraint", "nom_gamma_c2_1_constraint"}));
+   EXPECT_EQ(constraintNames(individual, "model_c1").size(), 5u);
+   EXPECT_EQ(constraintNames(individual, "model_c2").size(), 3u);
+   EXPECT_TRUE(arrays.pdf("pois_constraints")->getAttribute("hs3_array_dist"));
+   // The shared constraint is one object in both channels, so it is counted once.
+   auto countConstraints = [](RooWorkspace &ws) {
+      auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("an"));
+      RooArgSet params;
+      mc->GetPdf()->getParameters(mc->GetObservables(), params);
+      return mc->GetPdf()->getAllConstraints(*mc->GetObservables(), params, true)->size();
+   };
+   EXPECT_EQ(countConstraints(arrays), 7u);
+   EXPECT_EQ(countConstraints(individual), 7u);
+
+   const std::map<std::string, double> point{
+      {"mu", 1.3}, {"alpha_a", 0.7}, {"gamma_c1_0", 0.9}, {"gamma_c2_1", 1.1}, {"gs_0", 1.2}};
+   const double nllIndividual = twoChannelNLL(individual, point);
+   const double nllArrays = twoChannelNLL(arrays, point);
+   EXPECT_FALSE(std::isnan(nllIndividual));
+   EXPECT_NEAR(nllArrays, nllIndividual, 1e-10 * std::abs(nllIndividual));
+}
+
+// Errors and warnings when an array distribution does not fit the parameters that name it.
+TEST(RooFitHS3, HistFactoryArrayDistConstraintErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto document = [](std::string const &components) {
+      return R"({
+         "metadata": {"hs3_version": "0.3"},
+         "distributions": [
+            {"name": "model_channel0", "type": "histfactory_dist",
+             "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+             "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+             "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]},
+                          "modifiers": [{"name": "a", "type": "normsys", "parameters": ["alpha_a"],
+                                         "data": {"lo": 0.9, "hi": 1.1}, "constraints": ["arr"]}]}]},
+            {"name": "arr", "type": "array_dist", "component_type": "gaussian_dist",
+             "default_parameters": {"sigma": 1.0}, "components": [)" +
+             components + R"(]}
+         ],
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+            {"name": "alpha_a", "min": -5.0, "max": 5.0}, {"name": "b", "min": -5.0, "max": 5.0},
+            {"name": "nom_1", "min": -5.0, "max": 5.0}, {"name": "nom_2", "min": -5.0, "max": 5.0}]}]
+      })";
+   };
+
+   expectImportThrowsWithError(document(R"({"x": "nom_1", "mean": "b"})"),
+                               "the array distribution 'arr' named as the constraint of 'alpha_a' (the normsys "
+                               "modifier 'a' of sample 'sig') has no component that depends on this parameter");
+   expectImportThrowsWithError(document(R"({"x": "nom_1", "mean": "alpha_a"}, {"x": "nom_2", "mean": "alpha_a"})"),
+                               "has 2 components that depend on this parameter");
+
+   // A component that no parameter uses is reported: by the standard, the whole array enters the likelihood.
+   RooWorkspace ws;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+         document(R"({"x": "nom_1", "mean": "alpha_a"}, {"x": "nom_2", "mean": "b"})")));
+   });
+   EXPECT_NE(warnings.find("the components 'nom_2_constraint' of the array distribution 'arr' are not used"),
+             std::string::npos)
+      << warnings;
+   auto *model = dynamic_cast<RooProdPdf *>(ws.pdf("model_channel0"));
+   ASSERT_NE(model, nullptr);
+   EXPECT_NE(model->pdfList().find("nom_1_constraint"), nullptr);
+   EXPECT_EQ(model->pdfList().find("nom_2_constraint"), nullptr);
 }
 
 // The range of an irregular binning is given by its "edges": HS3 0.3 (#126) forbids "min" and "max" alongside them, in
