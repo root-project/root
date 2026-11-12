@@ -5158,3 +5158,90 @@ TEST(RooFitHS3, FixedDomainAxis)
    ASSERT_NE(dynamic_cast<RooConstVar *>(wsLegacy.obj("mZ")), nullptr);
    EXPECT_DOUBLE_EQ(static_cast<RooConstVar *>(wsLegacy.obj("mZ"))->getVal(), 91.188);
 }
+
+// Categorical axes in domains create RooCategory objects, with one state per category. Binned and unbinned data can
+// have categorical axes. Categories are identified by name: the data may list them in a different order than the
+// domain, and the bins of binned data follow the order of the data axis.
+TEST(RooFitHS3, CategoricalAxesInDomainsAndData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &data, std::string const &channelAxis = R"(["SR", "CR"])") {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "channel", "categories": )" +
+             channelAxis + R"(}, {"name": "x", "min": 0.0, "max": 2.0}]}],
+      "parameter_points": [{"name": "point", "parameters": [{"name": "channel", "value": "CR"}]}],
+      "data": [)" +
+             data + R"(]
+   })";
+   };
+   const std::string binned = R"({"name": "binned", "type": "binned",
+      "axes": [{"name": "channel", "categories": ["CR", "SR"]}, {"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+      "contents": [1.0, 2.0, 3.0, 4.0]})";
+   const std::string unbinned = R"({"name": "unbinned", "type": "unbinned",
+      "axes": [{"name": "channel", "categories": ["SR", "CR"]}, {"name": "x", "min": 0.0, "max": 2.0}],
+      "entries": [["SR", 0.5], ["CR", 1.5], ["CR", 0.25]]})";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(binned + "," + unbinned)));
+
+   // The domain defines the category, with the position in "categories" as index.
+   RooCategory *channel = ws.cat("channel");
+   ASSERT_NE(channel, nullptr);
+   EXPECT_EQ(channel->size(), 2u);
+   EXPECT_EQ(channel->lookupIndex("SR"), 0);
+   EXPECT_EQ(channel->lookupIndex("CR"), 1);
+
+   // A parameter point sets the category by its label.
+   const RooArgSet *point = ws.getSnapshot("point");
+   ASSERT_NE(point, nullptr);
+   auto *channelInPoint = dynamic_cast<RooCategory *>(point->find("channel"));
+   ASSERT_NE(channelInPoint, nullptr);
+   EXPECT_EQ(channelInPoint->getCurrentLabel(), std::string("CR"));
+
+   // Binned data: the bins follow the order of the data axis ("CR" first), and are found by label.
+   auto *binnedData = dynamic_cast<RooDataHist *>(ws.data("binned"));
+   ASSERT_NE(binnedData, nullptr);
+   RooRealVar &x = *ws.var("x");
+   x.setBins(2);
+   const std::map<std::pair<std::string, int>, double> expected{
+      {{"CR", 0}, 1.0}, {{"CR", 1}, 2.0}, {{"SR", 0}, 3.0}, {{"SR", 1}, 4.0}};
+   for (auto const &item : expected) {
+      channel->setLabel(item.first.first);
+      x.setBin(item.first.second);
+      EXPECT_DOUBLE_EQ(binnedData->weight(RooArgSet{*channel, x}, 0), item.second)
+         << item.first.first << ", bin " << item.first.second;
+   }
+
+   // Unbinned data: the entries of a categorical axis are the labels.
+   RooAbsData *unbinnedData = ws.data("unbinned");
+   ASSERT_NE(unbinnedData, nullptr);
+   ASSERT_EQ(unbinnedData->numEntries(), 3);
+   const std::vector<std::string> labels{"SR", "CR", "CR"};
+   for (int i = 0; i < 3; ++i) {
+      auto const &row = *unbinnedData->get(i);
+      EXPECT_EQ(static_cast<RooCategory const &>(row["channel"]).getCurrentLabel(), labels[i]) << "entry " << i;
+   }
+
+   // Invalid documents.
+   expectImportThrowsWithError(
+      makeJSON(R"({"name": "u", "type": "unbinned", "axes": [{"name": "channel", "categories": ["SR", "CR"]}],
+                   "entries": [["VR"]]})"),
+      "is not a category of the axis");
+   expectImportThrowsWithError(
+      makeJSON(R"({"name": "u", "type": "unbinned", "axes": [{"name": "channel", "categories": ["SR", "VR"]}],
+                   "entries": [["SR"]]})"),
+      "differ from the states of the category");
+   expectImportThrowsWithError(
+      makeJSON(R"({"name": "b", "type": "binned", "axes": [{"name": "channel", "categories": ["SR", "VR"]}],
+                   "contents": [1.0, 2.0]})"),
+      "differ from those of the category");
+   expectImportThrowsWithError(makeJSON("", R"(["SR", "SR"])"), "is listed twice");
+   expectImportThrowsWithError(makeJSON("", R"([])"), "non-empty list of strings");
+   expectImportThrowsWithError(
+      makeJSON(R"({"name": "b", "type": "binned", "axes": [{"name": "channel", "categories": ["SR", "CR"], "nbins": 2}],
+                   "contents": [1.0, 2.0]})"),
+      "is categorical and must not have \"nbins\"");
+}
