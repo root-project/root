@@ -6094,6 +6094,165 @@ TEST(RooFitHS3, CombinedDataPairing)
    }
 }
 
+// A "category_conditional_dist" (HS3 #147) selects a component by the value of categorical parameters. It is a
+// RooSimultaneous whose index category is a parameter: RooFit then evaluates the selected component. RooFit doesn't
+// distinguish it from a combined_dist by the object; a RooSimultaneous used by another pdf is written as a
+// category_conditional_dist, and the value of the parameter is written to the parameter points.
+TEST(RooFitHS3, CategoryConditionalDist)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x", "min": 0.0, "max": 10.0}, {"name": "frac", "min": 0.0, "max": 1.0},
+         {"name": "bkg_function", "categories": ["narrow", "wide"]}]}],
+      "parameter_points": [{"name": "point", "parameters": [{"name": "bkg_function", "value": "wide"},
+                                                            {"name": "frac", "value": 0.3}]}],
+      "distributions": [
+         {"name": "narrow", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 1.0},
+         {"name": "wide", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 3.0},
+         {"name": "bkg", "type": "category_conditional_dist", "categorical_parameter": ["bkg_function"],
+          "components": [{"key": ["narrow"], "dist": "narrow"}, {"key": ["wide"], "dist": "wide"}]},
+         {"name": "sig", "type": "gaussian_dist", "x": "x", "mean": 2.0, "sigma": 0.5},
+         {"name": "model", "type": "mixture_dist", "summands": ["sig", "bkg"], "coefficients": ["frac"]}]
+   })";
+   RooWorkspace ws;
+   const std::string importWarnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   });
+   EXPECT_EQ(importWarnings.find("category_conditional_dist"), std::string::npos) << importWarnings;
+   auto *bkg = dynamic_cast<RooSimultaneous *>(ws.pdf("bkg"));
+   ASSERT_NE(bkg, nullptr);
+   RooCategory *choice = ws.cat("bkg_function");
+   ASSERT_NE(choice, nullptr);
+   EXPECT_EQ(&bkg->indexCat(), choice);
+
+   // The value is the one of the selected component, conditional on the parameter (not in the normalization set).
+   RooRealVar &x = *ws.var("x");
+   RooArgSet nset{x};
+   ASSERT_TRUE(ws.loadSnapshot("point"));
+   EXPECT_STREQ(choice->getCurrentLabel(), "wide");
+   for (double value : {2.0, 5.0, 8.0}) {
+      x.setVal(value);
+      choice->setLabel("wide");
+      EXPECT_DOUBLE_EQ(bkg->getVal(nset), ws.pdf("wide")->getVal(nset)) << "x = " << value;
+      choice->setLabel("narrow");
+      EXPECT_DOUBLE_EQ(bkg->getVal(nset), ws.pdf("narrow")->getVal(nset)) << "x = " << value;
+   }
+
+   // Export: the same type, the parameter in the domain and in the parameter point, and a stable document.
+   ws.loadSnapshot("point");
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &root = tree->rootnode();
+   auto const *bkgNode = RooJSONFactoryWSTool::findNamedChild(root["distributions"], "bkg");
+   ASSERT_NE(bkgNode, nullptr) << exported;
+   EXPECT_EQ((*bkgNode)["type"].val(), "category_conditional_dist");
+   ASSERT_EQ((*bkgNode)["categorical_parameter"].num_children(), 1u);
+   EXPECT_EQ((*bkgNode)["categorical_parameter"].child(0).val(), "bkg_function");
+   EXPECT_FALSE(bkgNode->has_child("columns"));
+   auto const *point = RooJSONFactoryWSTool::findNamedChild(root["parameter_points"], "point");
+   ASSERT_NE(point, nullptr) << exported;
+   auto const *choiceInPoint = RooJSONFactoryWSTool::findNamedChild((*point)["parameters"], "bkg_function");
+   ASSERT_NE(choiceInPoint, nullptr) << exported;
+   EXPECT_EQ((*choiceInPoint)["value"].val(), "wide");
+   auto const *domain = RooJSONFactoryWSTool::findNamedChild(root["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr);
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "bkg_function"), nullptr) << exported;
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   ws2.loadSnapshot("point");
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // A RooSimultaneous built in RooFit is a combined_dist if no other pdf uses it, and a category_conditional_dist
+   // otherwise. As a combined_dist, alternatives over the same observable can't be written: its components must have
+   // distinct variates.
+   {
+      RooWorkspace wsRooFit;
+      wsRooFit.factory("Gaussian::narrow(x[0, 10], 5.0, 1.0)");
+      wsRooFit.factory("Gaussian::wide(x, 5.0, 3.0)");
+      wsRooFit.factory("SIMUL::bkg(bkg_function[narrow=0, wide=1], narrow=narrow, wide=wide)");
+      expectExportThrowsWithError(
+         wsRooFit, "the variate 'x' is shared by the components 'narrow' and 'wide' of the combined_dist "
+                   "'bkg'");
+      wsRooFit.factory("Gaussian::sig(x, 2.0, 0.5)");
+      wsRooFit.factory("SUM::model(frac[0.3, 0, 1] * sig, bkg)");
+      const std::string exportedRooFit = RooJSONFactoryWSTool{wsRooFit}.exportJSONtoString();
+      EXPECT_NE(exportedRooFit.find(R"("type":"category_conditional_dist")"), std::string::npos) << exportedRooFit;
+      EXPECT_EQ(exportedRooFit.find(R"("type":"combined_dist")"), std::string::npos) << exportedRooFit;
+   }
+
+   // A category_conditional_dist that no other distribution uses can't be told apart from a combined_dist: the
+   // import warns that it will be written back as one.
+   {
+      const std::string jsonTopLevel = R"({
+         "metadata": {"hs3_version": "0.3"},
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+            {"name": "x", "min": 0.0, "max": 10.0}, {"name": "bkg_function", "categories": ["narrow", "wide"]}]}],
+         "distributions": [
+            {"name": "narrow", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 1.0},
+            {"name": "wide", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 3.0},
+            {"name": "bkg", "type": "category_conditional_dist", "categorical_parameter": ["bkg_function"],
+             "components": [{"key": ["narrow"], "dist": "narrow"}, {"key": ["wide"], "dist": "wide"}]}]
+      })";
+      RooWorkspace wsTopLevel;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{wsTopLevel}.importJSONfromString(jsonTopLevel));
+      });
+      EXPECT_NE(warnings.find("the category_conditional_dist 'bkg' is not used by another distribution"),
+                std::string::npos)
+         << warnings;
+      EXPECT_NE(warnings.find("which fails if its components share variates"), std::string::npos) << warnings;
+      expectExportThrowsWithError(wsTopLevel, "the variate 'x' is shared by the components 'narrow' and 'wide'");
+   }
+
+   // In a likelihood, a category_conditional_dist has the variates of its alternatives: here, "x" is a variate of
+   // the term "model" only through them.
+   {
+      const std::string withLikelihood = R"({
+         "metadata": {"hs3_version": "0.3"},
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+            {"name": "x", "min": 0.0, "max": 10.0}, {"name": "y", "min": 0.0, "max": 10.0},
+            {"name": "bkg_function", "categories": ["narrow", "wide"]}]}],
+         "distributions": [
+            {"name": "narrow", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 1.0},
+            {"name": "wide", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 3.0},
+            {"name": "bkg", "type": "category_conditional_dist", "categorical_parameter": ["bkg_function"],
+             "components": [{"key": ["narrow"], "dist": "narrow"}, {"key": ["wide"], "dist": "wide"}]},
+            {"name": "sig", "type": "gaussian_dist", "x": "y", "mean": 2.0, "sigma": 0.5},
+            {"name": "model", "type": "product_dist", "factors": ["sig", "bkg"]},
+            {"name": "other", "type": "gaussian_dist", "x": "x", "mean": 4.0, "sigma": 1.0}],
+         "data": [{"name": "data", "type": "unbinned",
+                   "axes": [{"name": "x", "min": 0.0, "max": 10.0}, {"name": "y", "min": 0.0, "max": 10.0}],
+                   "entries": [[5.0, 2.0]]}],
+         "likelihoods": [{"name": "lh", "distributions": ["model"], "data": ["data"], "aux_distributions": AUX}],
+         "analyses": [{"name": "an", "likelihood": "lh", "domains": ["default_domain"]}]
+      })";
+      auto withAux = [&](std::string const &aux) {
+         std::string json = withLikelihood;
+         json.replace(json.find("AUX"), 3, aux);
+         return json;
+      };
+      RooWorkspace wsLikelihood;
+      EXPECT_TRUE(RooJSONFactoryWSTool{wsLikelihood}.importJSONfromString(withAux("[]")));
+      expectImportThrowsWithError(withAux(R"(["other"])"),
+                                  "the variate 'x' is shared by the terms 'model' and 'other' of the likelihood 'lh'");
+   }
+
+   // The parameter must be declared by a categorical axis of a domain.
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "x", "min": 0.0, "max": 10.0}]}],
+      "distributions": [
+         {"name": "narrow", "type": "gaussian_dist", "x": "x", "mean": 5.0, "sigma": 1.0},
+         {"name": "bkg", "type": "category_conditional_dist", "categorical_parameter": ["bkg_function"],
+          "components": [{"key": ["narrow"], "dist": "narrow"}]}]
+   })",
+                               "the column 'bkg_function' of the category_conditional_dist 'bkg' is not declared by a "
+                               "categorical axis of a domain");
+}
+
 // The names of a RooSimultaneous and of a combined data set are part of the standard document now, not of
 // misc.ROOT_internal: a document without "misc" imports with the same names, and the ModelConfig finds its pdf
 // through the likelihood.

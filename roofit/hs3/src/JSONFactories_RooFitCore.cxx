@@ -423,17 +423,23 @@ bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
 }
 
 // A "combined_dist" is a RooSimultaneous. Its index category is the single column, or a RooSuperCategory over the
-// columns in the order of the document; the columns are categories declared by categorical axes of the domains.
-bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+// columns in the order of the document; the columns are categories declared by categorical axes of the domains. A
+// "category_conditional_dist" is the same over its categorical parameters (RooFit evaluates a RooSimultaneous whose
+// index category is not an observable as the selected component). On export, the two are told apart by whether the
+// RooSimultaneous is used by another pdf, see RooJSONFactoryWSTool::exportSimultaneous().
+template <bool Conditional>
+bool importSimultaneous(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string const name(RooJSONFactoryWSTool::name(p));
-   std::string const context = "the combined_dist '" + name + "'";
+   const char *type = Conditional ? "category_conditional_dist" : "combined_dist";
+   std::string const context = "the " + std::string(type) + " '" + name + "'";
    // Whether a combined distribution is extended follows from its components; HS3 forbids declaring it.
-   if (p.has_child("extended")) {
+   if (!Conditional && p.has_child("extended")) {
       RooJSONFactoryWSTool::error(context + " must not have \"extended\": whether it is extended follows from its " +
                                   "components");
    }
-   std::vector<RooCategory *> columns = readSelectionColumns(*tool->workspace(), p, "columns", context);
+   std::vector<RooCategory *> columns =
+      readSelectionColumns(*tool->workspace(), p, Conditional ? "categorical_parameter" : "columns", context);
 
    auto const *componentsNode = p.find("components");
    if (!componentsNode || !componentsNode->is_seq() || componentsNode->num_children() == 0) {
@@ -1690,7 +1696,8 @@ STATIC_EXECUTE([]() {
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
    registerImporter<importAddModel>("mixture_model", false);
-   registerImporter<importCombinedDist>("combined_dist", false);
+   registerImporter<importSimultaneous<false>>("combined_dist", false);
+   registerImporter<importSimultaneous<true>>("category_conditional_dist", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);
    registerImporter<importBinSamplingPdf>("binsampling_dist", false);
    registerImporter<importBinSamplingPdf>("binsampling", false);
