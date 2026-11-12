@@ -49,6 +49,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <cstdio>
 #include <map>
 #include <memory>
@@ -4019,7 +4020,7 @@ TEST(RooFitHS3, HistFactoryLogNormalGammaConstraint)
       for (std::string key : {"constraint", "constraint_type"}) {
          expectImportThrowsWithError(makeHistFactoryJSON(R"({"name": "shape", "type": "shapesys", ")" + key +
                                                          R"(": ")" + type + R"(", "data": {"vals": [0.1, 0.2]}})"),
-                                     "unsupported constraint '" + type + "'");
+                                     "unsupported constraint 'LogNormal'");
       }
    }
 
@@ -4986,6 +4987,63 @@ TEST(RooFitHS3, HistFactoryLegacyBinWidthFactor)
    EXPECT_EQ(normfactorsOf(jsonWithFactors), renamedFactors.size()) << jsonWithFactors;
 }
 
+// If the exported document is not valid, this is reported, but everything that can be exported is still written. Here
+// the pdf of the ModelConfig has no exporter, so the likelihood refers to a distribution that doesn't exist.
+TEST(RooFitHS3, InvalidExportIsStillWritten)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws"};
+   ws.factory("Voigtian::voigt(x[0, -10, 10], mu[1, -5, 5], width[1, 0.1, 5], sigma[1, 0.1, 5])");
+   ws.factory("Gaussian::gauss(x, mu, sigma)");
+   RooDataSet data{"data", "data", *ws.var("x")};
+   data.add(*ws.var("x"));
+   ws.import(data);
+   ws.saveSnapshot("snap", *ws.var("mu"));
+   RooFit::ModelConfig mc{"mc", &ws};
+   mc.SetPdf("voigt");
+   mc.SetParametersOfInterest("mu");
+   mc.SetObservables("x");
+   ws.import(mc);
+
+   std::string json;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                                                [&] { json = RooJSONFactoryWSTool{ws}.exportJSONtoString(); });
+   EXPECT_NE(warnings.find("the exported document is not valid: the distribution 'voigt' does not exist"),
+             std::string::npos)
+      << warnings;
+
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+   EXPECT_EQ(root["metadata"]["hs3_version"].val(), "0.3") << json;
+   for (const char *section : {"domains", "parameter_points", "data", "likelihoods", "analyses"}) {
+      ASSERT_TRUE(root.has_child(section)) << section << ": " << json;
+      EXPECT_GT(root[section].num_children(), 0u) << section << ": " << json;
+   }
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(root["parameter_points"], "snap"), nullptr) << json;
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(root["distributions"], "gauss"), nullptr) << json;
+}
+
+// A named RooConstVar is exported as a fixed domain axis. JSON can't represent a value that is not finite, which is
+// reported on export, and such an axis is not read back as a parameter without range.
+TEST(RooFitHS3, NonFiniteRooConstVar)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws"};
+   RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+   RooConstVar cinf{"cinf", "cinf", std::numeric_limits<double>::infinity()};
+   RooFormulaVar formula{"formula", "x[0] + x[1]", {x, cinf}};
+   ws.import(formula, RooFit::Silence());
+
+   std::string json;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                                                [&] { json = RooJSONFactoryWSTool{ws}.exportJSONtoString(); });
+   EXPECT_NE(warnings.find("the single value of the parameter 'cinf' is not finite"), std::string::npos) << warnings;
+
+   expectImportThrowsWithError(json, "must be a number");
+}
+
 // A fixed domain axis (HS3 #131): the parameter only takes the given "value", and RooFit reads it as a RooConstVar.
 // It needs no entry in a parameter point. A parameter point must not give it another value, the axis has no range,
 // binning or categories, and all domains that list the parameter give it the same value.
@@ -5048,6 +5106,7 @@ TEST(RooFitHS3, FixedDomainAxis)
                                   "has \"value\" and");
    }
    expectImportThrowsWithError(document(R"({"name": "mZ", "value": "heavy"})"), "must be a number");
+   expectImportThrowsWithError(document(R"({"name": "mZ", "value": null})"), "must be a number");
 
    // All domains that list the parameter give it the same single value.
    expectImportThrowsWithError(
@@ -5058,6 +5117,10 @@ TEST(RooFitHS3, FixedDomainAxis)
       document(R"({"name": "mZ", "value": 91.188})",
                R"(, {"name": "other", "type": "product_domain", "axes": [{"name": "mZ", "min": 80.0, "max": 100.0}]})"),
       "but a range in the domain 'other'");
+   expectImportThrowsWithError(
+      document(R"({"name": "mZ", "value": 91.188})",
+               R"(, {"name": "other", "type": "product_domain", "axes": [{"name": "mZ", "categories": ["a", "b"]}]})"),
+      "but categories in the domain 'other'");
 
    // A parameter without domain is a RooRealVar: constant with "const": true, otherwise free, with a warning.
    {
