@@ -41,17 +41,17 @@ class RColumn {
 protected:
    /// The column id in the column descriptor, once connected to a sink or source
    ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
-   ROOT::ENTupleColumnType fType;
+   /// Used to pack and unpack pages on writing/reading
+   std::unique_ptr<ROOT::Internal::RColumnElementBase> fElement;
    /// Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
    /// the offset column with index 0 and the character value column with index 1.
    std::uint32_t fIndex;
    /// Fields can have multiple column representations, distinguished by representation index
    std::uint16_t fRepresentationIndex;
-   /// Used to pack and unpack pages on writing/reading
-   std::unique_ptr<ROOT::Internal::RColumnElementBase> fElement;
+   ROOT::ENTupleColumnType fType;
 
    RColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
-      : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex)
+      : fIndex(columnIndex), fRepresentationIndex(representationIndex), fType(type)
    {
    }
 
