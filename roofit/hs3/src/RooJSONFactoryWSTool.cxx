@@ -14,7 +14,6 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <RooConstVar.h>
-#include <RooNumber.h>
 #include <RooRealVar.h>
 #include <RooBinning.h>
 #include <RooRangeBinning.h>
@@ -26,7 +25,6 @@
 #include <RooDataHist.h>
 #include <RooSimultaneous.h>
 #include <RooFit/ModelConfig.h>
-#include <RooFitImplHelpers.h>
 #include <RooAbsCollection.h>
 
 #include "JSONIOUtils.h"
@@ -39,6 +37,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -183,16 +182,22 @@ HS3::Binning toBinning(RooAbsBinning const &binning)
    return edges;
 }
 
+constexpr double inf = std::numeric_limits<double>::infinity();
+constexpr int isInfinite(double x)
+{
+   return (x >= +inf) ? +1 : ((x <= -inf) ? -1 : 0);
+}
+
 // The axis of a domain for a range and binning. Infinite bounds are omitted, and only a bounded range has a binning.
 // A RooRangeBinning is a plain named range without bin structure, fully described by its bounds.
 HS3::DomainAxis toDomainAxis(std::string const &name, RooAbsBinning const &binning)
 {
    HS3::DomainAxis axis;
    axis.name = name;
-   if (!RooNumber::isInfinite(binning.lowBound())) {
+   if (!isInfinite(binning.lowBound())) {
       axis.min = binning.lowBound();
    }
-   if (!RooNumber::isInfinite(binning.highBound())) {
+   if (!isInfinite(binning.highBound())) {
       axis.max = binning.highBound();
    }
    const bool hasBins = binning.numBins() > 0 && !dynamic_cast<RooRangeBinning const *>(&binning);
@@ -244,14 +249,14 @@ void applyBinning(RooRealVar &var, HS3::Binning const &binning, const char *name
 void applyRange(RooRealVar &var, HS3::DomainAxis const &axis)
 {
    if (axis.min) {
-      if (RooNumber::isInfinite(*axis.min)) {
+      if (isInfinite(*axis.min)) {
          var.removeMin();
       } else {
          var.setMin(*axis.min);
       }
    }
    if (axis.max) {
-      if (RooNumber::isInfinite(*axis.max)) {
+      if (isInfinite(*axis.max)) {
          var.removeMax();
       } else {
          var.setMax(*axis.max);
@@ -275,7 +280,6 @@ void createVariables(RooWorkspace &ws, std::vector<HS3::Domain> const &domains, 
          }
       }
    };
-   const double inf = RooNumber::infinity();
    // Parameters with a single value are RooConstVars, whichever domain gives the value.
    forEachAxis([&](std::string const &, HS3::DomainAxis const &axis) {
       if (axis.fixedValue && !ws.arg(axis.name)) {
@@ -681,8 +685,7 @@ std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::Unb
 }
 
 // Create a RooAbsData (binned or unbinned) from its description.
-std::unique_ptr<RooAbsData>
-loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges const *ranges)
+std::unique_ptr<RooAbsData> loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges const *ranges)
 {
    RooJSONFactoryWSTool::testValidName(input.name, true);
 
@@ -1178,8 +1181,9 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
 {
    if (RooAbsReal *retval = _workspace.function(objname))
       return retval;
-   if (isNumber(objname))
-      return &RooFit::RooConst(toDouble(objname));
+   auto toNumOutput = toNumber(objname);
+   if (toNumOutput.valid)
+      return &RooFit::RooConst(toNumOutput.value);
    if (RooAbsPdf *pdf = requestImpl<RooAbsPdf>(objname))
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
@@ -1263,7 +1267,8 @@ std::string makeValidNameOrError(std::string const &in)
    if (!std::isalpha(in[0])) {
       RooJSONFactoryWSTool::error("refusing to change first character of string '" + in + "' to make a valid name!");
    }
-   std::string out = RooFit::Detail::makeValidVarName(in);
+   std::string out = in;
+   std::transform(out.begin(), out.end(), out.begin(), [](char c) { return std::isalnum(c) ? c : '_'; });
    if (out != in) {
       oocoutW(nullptr, ObjectHandling) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
    }
