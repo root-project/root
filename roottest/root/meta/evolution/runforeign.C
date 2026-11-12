@@ -73,7 +73,7 @@
 
    gROOT->GetClass("data")->GetStreamerInfos()->ls();
 
-   f3->Get("myobj");
+   f3->GetObjectChecked("myobj", "data");
 
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    int res = 0;
