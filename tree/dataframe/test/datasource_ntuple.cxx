@@ -915,3 +915,40 @@ TEST_F(RNTupleDSTest, GetTopLevelFieldNames)
                  std::vector<std::string>{"VecElectron", "VecElectron.pt", "electron", "electron.pt", "energy", "jets",
                                           "nElectron", "nnlo", "pt", "rvec", "tag"});
 }
+
+void ReadSingleEmptyRNTuple(const std::string &dataset_name, const std::string &file_name)
+{
+   FileRAII fileGuard(file_name);
+   {
+      ROOT::RDataFrame df{1};
+      // Filter away everything creating an output with zero entries
+      auto flt = df.Define("x", []() -> int { return 42; }).Filter([](int x) { return x > 42; }, {"x"});
+
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+
+      flt.Snapshot(dataset_name, file_name, {"x"}, opts);
+   }
+   {
+      ROOT::RDataFrame df{dataset_name, fileGuard.GetPath()};
+      EXPECT_EQ(df.Count().GetValue(), 0);
+   }
+}
+
+TEST(EmptyRNTupleTest, Seq)
+{
+   std::string dataset_name{"ReadSingleEmptyRNTuple"};
+   std::string file_name{"ReadSingleEmptyRNTuple.root"};
+   ReadSingleEmptyRNTuple(dataset_name, file_name);
+}
+
+#ifdef R__USE_IMT
+TEST(EmptyRNTupleTest, MT)
+{
+   IMTRAII _;
+
+   std::string dataset_name{"ReadSingleEmptyRNTupleMT"};
+   std::string file_name{"ReadSingleEmptyRNTupleMT.root"};
+   ReadSingleEmptyRNTuple(dataset_name, file_name);
+}
+#endif
