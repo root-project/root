@@ -95,19 +95,23 @@ public:
 
 class RReadColumn : public RColumn {
 private:
-   ROOT::Internal::RPageSource *fPageSource = nullptr;
-   /// The currently mapped page for reading
-   ROOT::Internal::RPageRef fReadPageRef;
    /// The column team is a set of columns that serve the same column index for different representation IDs.
    /// Initially, the team has only one member, the very column it belongs to. Through MergeTeams(), two columns
    /// can join forces. The team is used to react on suppressed columns: if the current team member has a suppressed
    /// column for a MapPage() call, it get the page from the active column in the corresponding cluster.
-   std::vector<RReadColumn *> fTeam;
-   /// Points into fTeam to the column that successfully returned the last page.
-   std::size_t fLastGoodTeamIdx = 0;
+   struct RTeam {
+      std::vector<RReadColumn *> fMembers;
+      std::size_t fLastGoodTeamIdx = 0;
+   };
+
+   ROOT::Internal::RPageSource *fPageSource = nullptr;
+   /// The currently mapped page for reading
+   ROOT::Internal::RPageRef fReadPageRef;
+   /// As an optimization, if unset the team contains consists of this column only.
+   std::unique_ptr<RTeam> fTeam;
 
    RReadColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
-      : RColumn(type, columnIndex, representationIndex), fTeam({this})
+      : RColumn(type, columnIndex, representationIndex)
    {
    }
 
