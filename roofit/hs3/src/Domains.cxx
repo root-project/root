@@ -15,6 +15,8 @@
 
 #include <RooAbsBinning.h>
 #include <RooBinning.h>
+#include <RooConstVar.h>
+#include <RooGlobalFunc.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooNumber.h>
 #include <RooRealVar.h>
@@ -43,6 +45,10 @@ void writeBound(RooFit::Detail::JSONNode &node, const char *key, double value)
 
 void Domains::populate(RooWorkspace &ws) const
 {
+   // Parameters with a single value are RooConstVars, whichever domain gives the value.
+   for (const auto &domain : _map) {
+      domain.second.populateFixedValues(ws);
+   }
    auto default_domain = _map.find(defaultDomainName);
    if (default_domain != _map.end()) {
       default_domain->second.populate(ws);
@@ -97,6 +103,46 @@ void Domains::readJSON(RooFit::Detail::JSONNode const &node)
       auto &name = domain["name"];
       _map[name.val()].readJSON(domain);
    }
+   // A parameter with a single value has no other domain: every domain that lists it must give it the same value.
+   for (auto const &[domainName, domain] : _map) {
+      for (auto const &[varName, elem] : domain._map) {
+         if (!elem.hasFixedValue) {
+            continue;
+         }
+         for (auto const &[otherName, other] : _map) {
+            auto found = other._map.find(varName);
+            if (found == other._map.end()) {
+               continue;
+            }
+            if (!found->second.hasFixedValue) {
+               RooJSONFactoryWSTool::error("the parameter '" + varName + "' has the single value " +
+                                           std::to_string(elem.fixedValue) + " in the domain '" + domainName +
+                                           "', but a range in the domain '" + otherName + "'");
+            }
+            if (found->second.fixedValue != elem.fixedValue) {
+               RooJSONFactoryWSTool::error("the parameter '" + varName +
+                                           "' has different single values in the "
+                                           "domains '" +
+                                           domainName + "' and '" + otherName + "'");
+            }
+         }
+      }
+   }
+}
+
+void Domains::readFixedValue(const char *name, double value)
+{
+   _map[defaultDomainName].readFixedValue(name, value);
+}
+
+double const *Domains::fixedValue(const char *name) const
+{
+   for (auto const &domain : _map) {
+      if (double const *value = domain.second.fixedValue(name)) {
+         return value;
+      }
+   }
+   return nullptr;
 }
 
 void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
@@ -184,7 +230,7 @@ void Domains::ProductDomain::writeBinning(RooFit::Detail::JSONNode &node, Produc
 void Domains::ProductDomain::writeVariable(RooRealVar &var) const
 {
    auto found = _map.find(var.GetName());
-   if (found != _map.end()) {
+   if (found != _map.end() && !found->second.hasFixedValue) {
       auto const &elem = found->second;
       if (elem.hasMin) {
          if (RooNumber::isInfinite(elem.min)) {
@@ -209,13 +255,48 @@ bool Domains::ProductDomain::hasVariable(const char *name) const
    return _map.find(name) != _map.end();
 }
 
+double const *Domains::ProductDomain::fixedValue(const char *name) const
+{
+   auto found = _map.find(name);
+   return found != _map.end() && found->second.hasFixedValue ? &found->second.fixedValue : nullptr;
+}
+
+void Domains::ProductDomain::readFixedValue(const char *name, double value)
+{
+   auto &elem = _map[name];
+   elem = ProductDomainElement{};
+   elem.hasFixedValue = true;
+   elem.fixedValue = value;
+}
+
 void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
 {
    if (!node.has_child("type") || node["type"].val() != "product_domain") {
       RooJSONFactoryWSTool::error("only domains of type \"product_domain\" are currently supported!");
    }
    for (auto const &varNode : node["axes"].children()) {
-      auto &elem = _map[RooJSONFactoryWSTool::name(varNode)];
+      const std::string varName = RooJSONFactoryWSTool::name(varNode);
+      auto &elem = _map[varName];
+
+      if (varNode.has_child(fixedValueKey)) {
+         // The domain of the parameter is the set with this single value: no range, binning or categories.
+         for (const char *key : {"min", "max", "nbins", "edges", "categories"}) {
+            if (varNode.has_child(key)) {
+               RooJSONFactoryWSTool::error("the axis '" + varName + "' of the domain '" +
+                                           RooJSONFactoryWSTool::name(node) + "' has \"" + fixedValueKey + "\" and \"" +
+                                           key + "\", which exclude each other");
+            }
+         }
+         auto const &valueNode = varNode[fixedValueKey];
+         if (!valueNode.is_number()) {
+            RooJSONFactoryWSTool::error("the \"" + std::string(fixedValueKey) + "\" of the axis '" + varName +
+                                        "' must be a number");
+         }
+         elem = ProductDomainElement{};
+         elem.hasFixedValue = true;
+         elem.fixedValue = valueNode.val_double();
+         continue;
+      }
 
       if (varNode.has_child("min")) {
          elem.min = readBound(varNode, "min", -RooNumber::infinity());
@@ -259,6 +340,10 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
    for (auto const &item : _map) {
       auto const &elem = item.second;
       RooFit::Detail::JSONNode &varnode = RooJSONFactoryWSTool::appendNamedChild(variablesNode, item.first);
+      if (elem.hasFixedValue) {
+         varnode[fixedValueKey] << elem.fixedValue;
+         continue;
+      }
       const double min = elem.hasMin ? elem.min : -RooNumber::infinity();
       const double max = elem.hasMax ? elem.max : RooNumber::infinity();
       writeBound(varnode, "min", min);
@@ -273,6 +358,9 @@ void Domains::ProductDomain::populate(RooWorkspace &ws) const
 {
    for (auto const &item : _map) {
       const auto &name = item.first;
+      if (item.second.hasFixedValue) {
+         continue; // see populateFixedValues()
+      }
       if (!ws.arg(name)) {
          const auto &elem = item.second;
          const double vMin = elem.hasMin ? elem.min : -RooNumber::infinity();
@@ -283,6 +371,15 @@ void Domains::ProductDomain::populate(RooWorkspace &ws) const
       }
    }
 }
+void Domains::ProductDomain::populateFixedValues(RooWorkspace &ws) const
+{
+   for (auto const &[name, elem] : _map) {
+      if (elem.hasFixedValue && !ws.arg(name)) {
+         ws.import(RooConstVar{name.c_str(), name.c_str(), elem.fixedValue}, RooFit::Silence());
+      }
+   }
+}
+
 void Domains::ProductDomain::registerBinnings(const char *name, RooWorkspace &ws) const
 {
    for (auto const &item : _map) {
