@@ -3,12 +3,11 @@
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
-#include "TString.h"
 #include "TSystem.h"
 
 #include "gmock/gmock.h"
 
-#include <cstdio>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -119,14 +118,16 @@ TEST_F(TClingTests, MakeInterpreterValue)
 
 TEST_F(TClingTests, ReloadInstantiatedGenericLambda)
 {
-   TString filename("TClingTestsGenericLambda");
-   FILE *file = gSystem->TempFileName(filename, nullptr, ".h");
-   ASSERT_NE(nullptr, file);
-   std::fputs("#ifndef TCLINGTESTS_GENERIC_LAMBDA_H\n"
+   const char *filename = "TClingTestsGenericLambda.h";
+   {
+      std::ofstream file{filename};
+      ASSERT_TRUE(file.is_open());
+      file << "#ifndef TCLINGTESTS_GENERIC_LAMBDA_H\n"
               "#define TCLINGTESTS_GENERIC_LAMBDA_H\n"
               "inline int TClingTests_genericLambda() { return [](auto x) { return x; }(42); }\n"
-              "#endif\n", file);
-   std::fclose(file);
+              "#endif\n";
+      ASSERT_TRUE(file.good());
+   }
 
    // Reloading unloads the lambda specialization both through its enclosing
    // function and as a top-level declaration recorded in the transaction.
