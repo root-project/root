@@ -189,6 +189,11 @@ void upgradeModifier(JSONNode &mod, std::size_t index, std::string const &sample
    if (!mod.has_child("name")) {
       mod["name"] << (!parameter.empty() ? parameter
                                          : state.channelName + "_" + sampleName + "_syst_" + std::to_string(index));
+      // Older documents gave the function of a custom modifier in "parameter". It is the name now, so it is not left
+      // for the parser to report as ignored.
+      if (type == "custom" && !parameter.empty()) {
+         mod.erase("parameter");
+      }
    }
    const std::string name = isScalar(mod["name"]) ? mod["name"].val() : "";
 
