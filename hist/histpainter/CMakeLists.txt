@@ -8,14 +8,21 @@
 # CMakeLists.txt file for building ROOT hist/histpainter package
 ############################################################################
 
+set(HISTPAINTER_HEADERS
+  Hoption.h
+  Hparam.h
+  TGraph2DPainter.h
+  TGraphPainter.h
+  THistPainter.h
+  TPaletteAxis.h
+)
+
+set(RELATIVE_INC_HEADERS ${HISTPAINTER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
   HEADERS
-    Hoption.h
-    Hparam.h
-    TGraph2DPainter.h
-    TGraphPainter.h
-    THistPainter.h
-    TPaletteAxis.h
+    ${HISTPAINTER_HEADERS}
   SOURCES
     src/TGraph2DPainter.cxx
     src/TGraphPainter.cxx
@@ -34,3 +41,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
 )
 # Suppress deprecation warnings across compilation units and during dictionary generation, remove with Hoption.h Hparam.h
 target_compile_definitions(HistPainter PRIVATE ROOT_Hoption_cxx ROOT_Hparam_cxx)
+
+target_sources(HistPainter
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/TPainter3dAlgorithms.h
+)
+

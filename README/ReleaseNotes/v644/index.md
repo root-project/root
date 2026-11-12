@@ -32,6 +32,10 @@ The following people have contributed to this new version:
 As announced in the 6.42 release notes, the minimum CMake version required for building ROOT 6.44 rose to 3.26. It is the version shipped with RHEL 8.10, which is the oldest Linux distribution supported by this release.
 After ROOT 6.44, the minimum may rise to 3.31 if an upgrade to LLVM 24 or later is performed, see the [minimum version of CMake required by LLVM](https://discourse.llvm.org/t/rfc-raising-minimum-required-cmake-version-to-3-31/91086), a warning will be emitted at configure time if your CMake version is older than this.
 
+### RenderCore
+
+RenderCore, the WebGL engine of the REve client, is fetched at build time as the tarball of its release, from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/) first and from its GitHub release second, instead of being bundled in `builtins/rendercore/`. A build without a network takes the tarball from `ROOT_DOWNLOAD_DIR`, as for every builtin. The build option `builtin_rendercore`, ON by default, controls the download. REve has no web location of RenderCore to fall back to, so the option can be OFF only when REve is not built, that is with `root7` or `webgui` OFF; otherwise the configuration stops with an error.
+
 ## Python Interface
 
 ## I/O

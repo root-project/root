@@ -72,11 +72,12 @@ std::vector<float> ConcatenateFeatures(const std::vector<float> & a, const std::
 }
 
 struct SOFIE_GNN {
-   // the sessions are created for the maximum number of nodes/edges
-   TMVA_SOFIE_encoder::Session encoder{"encoder.dat", num_max_edges, num_max_nodes};
-   TMVA_SOFIE_core::Session core{"core.dat", num_max_edges, num_max_nodes};
-   TMVA_SOFIE_decoder::Session decoder{"decoder.dat", num_max_edges, num_max_nodes};
-   TMVA_SOFIE_output_transform::Session output_transform{"output_transform.dat", num_max_edges, num_max_nodes};
+   // the sessions are created for the maximum number of nodes/edges, given in
+   // the same order as the shape parameters of the infer() functions
+   TMVA_SOFIE_encoder::Session encoder{"encoder.dat", num_max_nodes, num_max_edges};
+   TMVA_SOFIE_core::Session core{"core.dat", num_max_nodes, num_max_edges};
+   TMVA_SOFIE_decoder::Session decoder{"decoder.dat", num_max_nodes, num_max_edges};
+   TMVA_SOFIE_output_transform::Session output_transform{"output_transform.dat", num_max_nodes, num_max_edges};
 
    // each session returns the {node, edge, global} output tensors
    std::vector<std::vector<float>> Infer(const GNN_Data & d, int nsteps) {

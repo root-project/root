@@ -19,68 +19,72 @@ else ()
   endif()
 endif()
 
+set(ROOTEVE_HEADERS
+  ROOT/REveBox.hxx
+  ROOT/REveBoxSet.hxx
+  ROOT/REveCalo.hxx
+  ROOT/REveCaloData.hxx
+  ROOT/REveCamera.hxx
+  ROOT/REveChunkManager.hxx
+  ROOT/REveClient.hxx
+  ROOT/REveCompound.hxx
+  ROOT/REveDataCollection.hxx
+  ROOT/REveDataProxyBuilderBase.hxx
+  ROOT/REveDataSimpleProxyBuilder.hxx
+  ROOT/REveDataSimpleProxyBuilderTemplate.hxx
+  ROOT/REveDataTable.hxx
+  ROOT/REveDigitSet.hxx
+  ROOT/REveElement.hxx
+  ROOT/REveEllipsoid.hxx
+  ROOT/REveFrameBox.hxx
+  ROOT/REveGeoOverlaps.hxx
+  ROOT/REveGeoPolyShape.hxx
+  ROOT/REveGeoShape.hxx
+  ROOT/REveGeoShapeExtract.hxx
+  ROOT/REveGeoTopNode.hxx
+  ROOT/REveGluTess.hxx
+  ROOT/REveJetCone.hxx
+  ROOT/REveLine.hxx
+  ROOT/REveLogo.hxx
+  ROOT/REveManager.hxx
+  ROOT/REvePathMark.hxx
+  ROOT/REvePointSet.hxx
+  ROOT/REvePolygonSetProjected.hxx
+  ROOT/REveProjectionAxis.hxx
+  ROOT/REveProjectionBases.hxx
+  ROOT/REveProjectionManager.hxx
+  ROOT/REveProjections.hxx
+  ROOT/REveRGBAPalette.hxx
+  ROOT/REveRenderData.hxx
+  ROOT/REveSMorph.hxx
+  ROOT/REveScalableStraightLineSet.hxx
+  ROOT/REveScene.hxx
+  ROOT/REveSceneInfo.hxx
+  ROOT/REveSecondarySelectable.hxx
+  ROOT/REveSelection.hxx
+  ROOT/REveShape.hxx
+  ROOT/REveStraightLineSet.hxx
+  ROOT/REveSystem.hxx
+  ROOT/REveTableInfo.hxx
+  ROOT/REveTableProxyBuilder.hxx
+  ROOT/REveText.hxx
+  ROOT/REveTrack.hxx
+  ROOT/REveTrackProjected.hxx
+  ROOT/REveTrackPropagator.hxx
+  ROOT/REveTrans.hxx
+  ROOT/REveTreeTools.hxx
+  ROOT/REveTypes.hxx
+  ROOT/REveUtil.hxx
+  ROOT/REveVSD.hxx
+  ROOT/REveVSDStructs.hxx
+  ROOT/REveVector.hxx
+  ROOT/REveViewContext.hxx
+  ROOT/REveViewer.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
   HEADERS
-    ROOT/REveChunkManager.hxx
-    ROOT/REveClient.hxx
-    ROOT/REveCompound.hxx
-    ROOT/REveBox.hxx
-    ROOT/REveBoxSet.hxx
-    ROOT/REveCaloData.hxx
-    ROOT/REveCalo.hxx
-    ROOT/REveDataCollection.hxx
-    ROOT/REveDataProxyBuilderBase.hxx
-    ROOT/REveDataSimpleProxyBuilder.hxx
-    ROOT/REveDataSimpleProxyBuilderTemplate.hxx
-    ROOT/REveDataTable.hxx
-    ROOT/REveDigitSet.hxx
-    ROOT/REveElement.hxx
-    ROOT/REveFrameBox.hxx
-    ROOT/REveGeoPolyShape.hxx
-    ROOT/REveGeoShapeExtract.hxx
-    ROOT/REveGeoShape.hxx
-    ROOT/REveGeoOverlaps.hxx
-    ROOT/REveGeoTopNode.hxx
-    ROOT/REveGluTess.hxx
-    ROOT/REveJetCone.hxx
-    ROOT/REveEllipsoid.hxx
-    ROOT/REveLine.hxx
-    ROOT/REveLogo.hxx
-    ROOT/REveManager.hxx
-    ROOT/REvePathMark.hxx
-    ROOT/REvePointSet.hxx
-    ROOT/REvePolygonSetProjected.hxx
-    ROOT/REveProjectionAxis.hxx
-    ROOT/REveProjectionBases.hxx
-    ROOT/REveProjectionManager.hxx
-    ROOT/REveProjections.hxx
-    ROOT/REveRenderData.hxx
-    ROOT/REveRGBAPalette.hxx
-    ROOT/REveScalableStraightLineSet.hxx
-    ROOT/REveScene.hxx
-    ROOT/REveSceneInfo.hxx
-    ROOT/REveSecondarySelectable.hxx
-    ROOT/REveSelection.hxx
-    ROOT/REveShape.hxx
-    ROOT/REveSMorph.hxx
-    ROOT/REveStraightLineSet.hxx
-    ROOT/REveSystem.hxx
-    ROOT/REveTableInfo.hxx
-    ROOT/REveTableProxyBuilder.hxx
-    ROOT/REveText.hxx
-    ROOT/REveTrack.hxx
-    ROOT/REveTrackProjected.hxx
-    ROOT/REveTrackPropagator.hxx
-    ROOT/REveTrans.hxx
-    ROOT/REveTreeTools.hxx
-    ROOT/REveTypes.hxx
-    ROOT/REveUtil.hxx
-    ROOT/REveVector.hxx
-    ROOT/REveViewer.hxx
-    ROOT/REveCamera.hxx
-    ROOT/REveViewContext.hxx
-    ROOT/REveVSD.hxx
-    ROOT/REveVSDStructs.hxx
+    ${ROOTEVE_HEADERS}
   SOURCES
     src/REveChunkManager.cxx
     src/REveBox.cxx
@@ -152,6 +156,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ${EXTRA_GL_LIBS}
   ${EXTRA_DICT_OPTS}
 )
+
+set(RELATIVE_INC_HEADERS ${ROOTEVE_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTEve
+  PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/
+    FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+  )
 
 target_link_libraries(ROOTEve PUBLIC nlohmann_json::nlohmann_json)
 

@@ -33,11 +33,13 @@
 #include <RooWorkspace.h>
 #include <RooFitImplHelpers.h>
 
+#include <cctype>
 #include <charconv>
 #include <iterator>
 #include <map>
 #include <optional>
 #include <regex>
+#include <set>
 #include <tuple>
 
 #include "static_execute.h"
@@ -545,7 +547,7 @@ ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
          auto constraintsInfo = createGammaConstraints(
             gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
          for (auto const &term : constraintsInfo.constraints) {
-            ws.import(*term, RooFit::RecycleConflictNodes());
+            ws.import(*term, RooFit::RecycleConflictNodes(), RooFit::Silence());
             constraints.add(*ws.pdf(term->GetName()));
          }
       } else {
@@ -1127,13 +1129,21 @@ public:
          coefs.add(*tool->request<RooAbsReal>(fprefix + "_" + compName + "_scaleFactors", name));
       }
 
+      // A histfactory_dist is a product of Poisson distributions of the bin counts. RooFit's binned likelihood
+      // computes exactly that (it differs from the event-wise likelihood only by a constant), and binned generation
+      // generates bin counts, so both are enabled, as HistFactory does by default.
+      auto enableBinned = [](RooRealSumPdf &sum) {
+         sum.setAttribute("BinnedLikelihood");
+         sum.setAttribute("GenerateBinned");
+      };
       if (constraints.empty()) {
-         tool->wsEmplace<RooRealSumPdf>(name, funcs, coefs, true);
+         enableBinned(tool->wsEmplace<RooRealSumPdf>(name, funcs, coefs, true));
       } else {
          std::string sumName = name + "_model";
          erasePrefix(sumName, "model_");
          auto &sum = tool->wsEmplace<RooRealSumPdf>(sumName, funcs, coefs, true);
          sum.SetTitle(name.c_str());
+         enableBinned(sum);
          tool->wsEmplace<RooProdPdf>(name, constraints, RooFit::Conditional(sum, observables));
       }
       return true;
@@ -1339,6 +1349,32 @@ std::string stripOuterParens(const std::string &s)
    return s.substr(start, end - start);
 }
 
+/// Whether the `+` or `-` at position `i` of `expr` is a binary operator, i.e. not a sign and not part of the exponent
+/// of a number like `1e-5`.
+bool isBinaryOperator(const std::string &expr, std::size_t i)
+{
+   std::size_t j = i;
+   while (j > 0 && std::isspace(static_cast<unsigned char>(expr[j - 1]))) {
+      --j;
+   }
+   if (j == 0) {
+      return false;
+   }
+   const char prev = expr[j - 1];
+   if (prev == 'e' || prev == 'E') {
+      // An exponent if the "e" directly follows the digits of a number, which don't start a name.
+      std::size_t k = j - 1;
+      while (k > 0 && (std::isdigit(static_cast<unsigned char>(expr[k - 1])) || expr[k - 1] == '.')) {
+         --k;
+      }
+      const bool startsName = k > 0 && (std::isalpha(static_cast<unsigned char>(expr[k - 1])) || expr[k - 1] == '_');
+      if (k < j - 1 && !startsName && i == j) {
+         return false;
+      }
+   }
+   return std::isalnum(static_cast<unsigned char>(prev)) || prev == '_' || prev == '.' || prev == ')' || prev == ']';
+}
+
 std::vector<std::string> splitTopLevelProduct(const std::string &expr)
 {
    std::vector<std::string> parts;
@@ -1352,6 +1388,8 @@ std::vector<std::string> splitTopLevelProduct(const std::string &expr)
          ++depth;
       } else if (c == ')') {
          --depth;
+      } else if ((c == '+' || c == '-') && depth == 0 && isBinaryOperator(expr, i)) {
+         return {}; // A sum or difference at the top level is not a product, e.g. "1 + 0.2 * k"
       } else if (c == '*' && depth == 0) {
          foundTopLevelStar = true;
          std::string sub = expr.substr(start, i - start);
@@ -1488,7 +1526,69 @@ struct Channel {
    std::map<int, double> rel_errors;
    RooArgSet const *varSet = nullptr;
    long unsigned int nBins = 0;
+   // Constant inverse bin widths of HistFactory before ROOT 6.26, which histfactory_dist implies.
+   std::set<RooAbsArg const *> legacyBinWidthFactors;
 };
+
+/// The volume of the first bin and the average bin volume of every histogram of a channel. HistFactory before ROOT
+/// 6.26 took the inverse bin width as the number of bins over the range of each observable.
+std::vector<double> binVolumes(RooRealSumPdf const &sumpdf)
+{
+   RooArgSet nodes;
+   sumpdf.treeNodeServerList(&nodes);
+   std::vector<double> out;
+   for (RooAbsArg *node : nodes) {
+      auto *hf = dynamic_cast<RooHistFunc const *>(node);
+      if (!hf || hf->dataHist().numEntries() == 0) {
+         continue;
+      }
+      out.push_back(hf->dataHist().binVolume(0));
+      double average = 1.;
+      for (RooAbsArg *obs : *hf->dataHist().get()) {
+         if (auto *real = dynamic_cast<RooRealVar const *>(obs)) {
+            average *= (real->getMax() - real->getMin()) / real->numBins();
+         }
+      }
+      out.push_back(average);
+   }
+   return out;
+}
+
+/// Whether a constant factor of a sample is the inverse bin width that HistFactory before ROOT 6.26 multiplied the
+/// samples with (a constant `RooRealVar` `binWidth_<observables>_<i>` in the coefficients of the `RooRealSumPdf`).
+/// `histfactory_dist` implies this factor, so it is not written as a modifier. It is identified by its structure, not
+/// by its name: a constant that is not floating in any snapshot, used only by the sum or the products of the channel,
+/// with the inverse of the volume of the first bin, or of the average bin volume, of one of the histograms of the
+/// channel as value.
+bool isLegacyBinWidthFactor(RooAbsArg const &factor, RooRealSumPdf const &sumpdf, RooArgSet const &channelNodes,
+                            std::vector<double> const &volumes, RooWorkspace const *ws)
+{
+   if (!RooJSONFactoryWSTool::config().identifyLegacyBinWidthFactors) {
+      return false;
+   }
+   auto const *var = dynamic_cast<RooRealVar const *>(&factor);
+   if (!dynamic_cast<RooConstVar const *>(&factor) && !(var && var->isConstant())) {
+      return false;
+   }
+   if (var && ws) {
+      for (auto *snapshot : static_range_cast<RooArgSet const *>(ws->getSnapshots())) {
+         auto const *inSnapshot = dynamic_cast<RooRealVar const *>(snapshot->find(*var));
+         if (inSnapshot && !inSnapshot->isConstant()) {
+            return false;
+         }
+      }
+   }
+   for (RooAbsArg const *client : factor.clients()) {
+      const bool isChannelProduct = dynamic_cast<RooProduct const *>(client) && channelNodes.find(*client) == client;
+      if (client != &sumpdf && !isChannelProduct) {
+         return false;
+      }
+   }
+   // The value was stored with 7 significant digits.
+   const double value = static_cast<RooAbsReal const &>(factor).getVal();
+   return std::any_of(volumes.begin(), volumes.end(),
+                      [&](double volume) { return volume > 0. && std::abs(value * volume - 1.) < 1e-6; });
+}
 
 Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf)
 {
@@ -1499,6 +1599,10 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
    channel.name = pdfname;
    erasePrefix(channel.name, "model_");
    eraseSuffix(channel.name, "_model");
+
+   RooArgSet channelNodes;
+   sumpdf->treeNodeServerList(&channelNodes);
+   const std::vector<double> volumes = binVolumes(*sumpdf);
 
    for (size_t sampleidx = 0; sampleidx < sumpdf->funcList().size(); ++sampleidx) {
       PiecewiseInterpolation *pip = nullptr;
@@ -1523,14 +1627,21 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
       };
       auto processElements = [&](const auto &elements, auto &&self) -> void {
          for (RooAbsArg *e : elements) {
-            if (TString(e->GetName()).Contains("binWidth")) {
-               // The bin width modifiers are handled separately. We can't just
-               // check for the RooBinWidthFunction type here, because prior to
-               // ROOT 6.26, the multiplication with the inverse bin width was
-               // done in a different way (like a normfactor with a RooRealVar,
-               // but it was stored in the dataset).
-               // Fortunately, the name was similar, so we can match the modifier
-               // name.
+            if (auto *binWidth = dynamic_cast<RooBinWidthFunction *>(e); binWidth && binWidth->divideByBinWidth()) {
+               // The division by the bin width is implied by histfactory_dist.
+            } else if (isLegacyBinWidthFactor(*e, *sumpdf, channelNodes, volumes, ws)) {
+               // Before ROOT 6.26, HistFactory multiplied the samples with a constant inverse bin width instead.
+               channel.legacyBinWidthFactors.insert(e);
+               if (!TString(e->GetName()).Contains("binWidth")) {
+                  oocoutW(nullptr, ObjectHandling)
+                     << "RooFitHS3: the constant factor '" << e->GetName() << "' of sample '" << sample.name
+                     << "' in channel '" << channel.name
+                     << "' is used like the inverse bin width of HistFactory before ROOT 6.26 (its value is the "
+                        "inverse bin volume), so it is not written: histfactory_dist implies it. Set "
+                        "RooJSONFactoryWSTool::config().identifyLegacyBinWidthFactors = false to write such factors "
+                        "as normfactors."
+                     << std::endl;
+               }
             } else if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
                if (constVar->getVal() != 1.) {
                   sample.normfactors.emplace_back(*constVar);
@@ -2143,8 +2254,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    RooArgSet parameters;
    sumpdf->getParameters(channel.varSet, parameters);
    for (RooAbsArg *param : parameters) {
-      // This should exclude the global observables
-      if (!startsWith(std::string{param->GetName()}, "nom_")) {
+      // This should exclude the global observables. The legacy inverse bin widths are not written at all.
+      if (!startsWith(std::string{param->GetName()}, "nom_") && !channel.legacyBinWidthFactors.count(param)) {
          tool->queueExport(*param);
       }
    }
