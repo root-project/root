@@ -1429,7 +1429,7 @@ std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constr
             }
          }
          if (arrayName.empty()) {
-            // "poisson_dist" -> "<root>_poisson_constraints"
+            // "poisson_continuous_dist" -> "<root>_poisson_continuous_constraints"
             arrayName = tool.exportRootName() + "_" + removeSuffix(info->type, "_dist") + "_constraints";
          }
          return tool.exportAsArrayComponent(constraint, arrayName);

@@ -419,8 +419,8 @@ std::string twoChannelHistFactoryJSON(bool arrays)
          R"({"name": "nom_)" + g + R"(", "value": 100.0, "const": true}, {"name": ")" + g + R"(", "value": 1.0},)";
       domainAxes += R"({"name": ")" + g + R"(", "min": 0.0, "max": 5.0}, {"name": "nom_)" + g +
                     R"(", "min": 0.0, "max": 1000.0},)";
-      constraintDists += R"({"name": ")" + g + R"(_constraint", "type": "poisson_dist", "x": "nom_)" + g +
-                         R"(", "mean": ")" + g + R"(_poisMean", "integer": false},)";
+      constraintDists += R"({"name": ")" + g + R"(_constraint", "type": "poisson_continuous_dist", "x": "nom_)" + g +
+                         R"(", "mean": ")" + g + R"(_poisMean"},)";
       components += R"({"x": "nom_)" + g + R"(", "mean": ")" + g + R"(_poisMean"},)";
    }
    components.pop_back();
@@ -435,8 +435,8 @@ std::string twoChannelHistFactoryJSON(bool arrays)
       arrays
          ? R"({"name": "gauss_constraints", "type": "array_dist", "component_type": "gaussian_dist",
                    "components": [{"x": "alpha_a", "mean": 0.0, "sigma": 1.0}]},
-                  {"name": "pois_constraints", "type": "array_dist", "component_type": "poisson_dist",
-                   "default_parameters": {"integer": false}, "components": [)" +
+                  {"name": "pois_constraints", "type": "array_dist", "component_type": "poisson_continuous_dist",
+                   "components": [)" +
               components + "]}"
          : R"({"name": "alpha_a_constraint", "type": "gaussian_dist", "x": "alpha_a", "mean": 0.0, "sigma": 1.0},)" +
               constraintDists.substr(0, constraintDists.size() - 1);
@@ -1510,6 +1510,61 @@ TEST(RooFitHS3, RooPoisson)
       RooPoisson poisson{name.c_str(), name.c_str(), x, mean, noRounding};
       EXPECT_EQ(validate(poisson), 0);
    }
+}
+
+// HS3 0.3 splits the Poisson distribution into the discrete "poisson_dist" and the "poisson_continuous_dist" (HS3
+// #152), which are a RooPoisson without and with noRounding. Documents before HS3 0.3 used "poisson_dist" for both,
+// distinguished by ROOT's own key "integer", which must not be present from HS3 0.3 on.
+TEST(RooFitHS3, PoissonContinuous)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Poisson::discrete(n[3, 0, 10], lambda[2.5, 0, 10])");
+   ws.factory("Poisson::continuous(k[3.5, 0, 10], lambda)");
+   static_cast<RooPoisson *>(ws.pdf("continuous"))->setNoRounding(true);
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   for (auto [name, type] :
+        {std::make_pair("discrete", "poisson_dist"), std::make_pair("continuous", "poisson_continuous_dist")}) {
+      const auto *dist = RooJSONFactoryWSTool::findNamedChild(distributions, name);
+      ASSERT_NE(dist, nullptr) << exported;
+      EXPECT_EQ((*dist)["type"].val(), type) << exported;
+      EXPECT_FALSE(dist->has_child("integer")) << exported;
+   }
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_FALSE(static_cast<RooPoisson *>(ws2.pdf("discrete"))->getNoRounding());
+   EXPECT_TRUE(static_cast<RooPoisson *>(ws2.pdf("continuous"))->getNoRounding());
+   EXPECT_DOUBLE_EQ(ws2.pdf("continuous")->getVal(), ws.pdf("continuous")->getVal());
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   auto document = [](std::string const &version, std::string const &type, std::string const &integer) {
+      return R"({"metadata": {"hs3_version": ")" + version + R"("},
+         "distributions": [{"name": "pois", "type": ")" +
+             type + R"(", "x": "n", "mean": 2.5)" + integer + R"(}],
+         "domains": [{"name": "default_domain", "type": "product_domain",
+                      "axes": [{"name": "n", "min": 0.0, "max": 10.0}]}]})";
+   };
+
+   // Before HS3 0.3: "integer" false is the continuous form, true or no "integer" the discrete form.
+   for (auto [integer, noRounding] : {std::make_pair(R"(, "integer": false)", true),
+                                      std::make_pair(R"(, "integer": true)", false), std::make_pair("", false)}) {
+      RooWorkspace wsLegacy;
+      ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(document("0.2", "poisson_dist", integer)));
+      auto *pois = dynamic_cast<RooPoisson *>(wsLegacy.pdf("pois"));
+      ASSERT_NE(pois, nullptr) << integer;
+      EXPECT_EQ(pois->getNoRounding(), noRounding) << integer;
+   }
+
+   // From HS3 0.3 on, and for the continuous type, which was never written with it, "integer" is an error.
+   const std::string reason = "has the key \"integer\", which is not part of HS3";
+   expectImportThrowsWithError(document("0.3", "poisson_dist", R"(, "integer": false)"), reason);
+   expectImportThrowsWithError(document("0.3", "poisson_dist", R"(, "integer": true)"), reason);
+   expectImportThrowsWithError(document("0.2", "poisson_continuous_dist", R"(, "integer": false)"), reason);
 }
 
 TEST(RooFitHS3, RooPolynomial)
@@ -3527,9 +3582,11 @@ TEST(RooFitHS3, ArrayDistImport)
    const std::string json = R"({
       "metadata": {"hs3_version": "0.3"},
       "distributions": [
-         {"name": "pois", "type": "array_dist", "component_type": "poisson_dist",
+         {"name": "pois", "type": "array_dist", "component_type": "poisson_continuous_dist",
           "default_parameters": {"mean": "lambda_default"},
-          "components": [{"x": "n_1", "mean": "lambda_1"}, {"x": "n_2"}, {"x": "n_3", "mean": 7.5, "integer": true}]},
+          "components": [{"x": "n_1", "mean": "lambda_1"}, {"x": "n_2"}]},
+         {"name": "pois_discrete", "type": "array_dist", "component_type": "poisson_dist",
+          "components": [{"x": "n_3", "mean": 7.5}]},
          {"name": "gauss", "type": "array_dist", "component_type": "gaussian_dist",
           "default_parameters": {"sigma": 1.0},
           "components": [{"x": "nom_a", "mean": "a", "sigma": "sigma_a"}, {"x": "nom_b", "mean": "b"},
@@ -3575,11 +3632,13 @@ TEST(RooFitHS3, ArrayDistImport)
       // The array is the product of its components.
       EXPECT_DOUBLE_EQ(array->getVal(), product) << name;
    };
-   checkArray("pois", {"n_1_constraint", "n_2_constraint", "n_3_constraint"});
+   checkArray("pois", {"n_1_constraint", "n_2_constraint"});
+   checkArray("pois_discrete", {"n_3_constraint"});
    checkArray("gauss", {"nom_a_constraint", "nom_b_constraint", "nom_c_constraint"});
    checkArray("logn", {"y_1_constraint", "y_2_constraint"});
 
-   // Poisson: own parameter, default parameter, number. Without "integer", the continued form is used.
+   // Poisson: own parameter, default parameter, number. The component type decides between the continuous and the
+   // discrete form.
    auto *p1 = dynamic_cast<RooPoisson *>(ws.pdf("n_1_constraint"));
    auto *p2 = dynamic_cast<RooPoisson *>(ws.pdf("n_2_constraint"));
    auto *p3 = dynamic_cast<RooPoisson *>(ws.pdf("n_3_constraint"));
@@ -3684,9 +3743,9 @@ TEST(RooFitHS3, ArrayDistExport)
    const std::string json = R"({
       "metadata": {"hs3_version": "0.3"},
       "distributions": [
-         {"name": "pois", "type": "array_dist", "component_type": "poisson_dist",
+         {"name": "pois", "type": "array_dist", "component_type": "poisson_continuous_dist",
           "default_parameters": {"mean": "lambda_default"},
-          "components": [{"x": "n_1", "mean": "lambda_1"}, {"x": "n_2"}, {"x": "n_3", "mean": 7.5, "integer": true}]},
+          "components": [{"x": "n_1", "mean": "lambda_1"}, {"x": "n_2"}, {"x": "n_3", "mean": 7.5}]},
          {"name": "gauss", "type": "array_dist", "component_type": "gaussian_dist",
           "default_parameters": {"sigma": 1.0},
           "components": [{"x": "nom_a", "mean": "a"}, {"x": "nom_b", "mean": "b"}, {"x": "nom_c", "mean": 0.5}]}
@@ -3715,18 +3774,19 @@ TEST(RooFitHS3, ArrayDistExport)
    const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "pois");
    ASSERT_NE(pois, nullptr) << exported;
    EXPECT_EQ((*pois)["type"].val(), "array_dist");
-   EXPECT_EQ((*pois)["component_type"].val(), "poisson_dist");
-   // The Poisson components have different "integer" flags, so nothing is shared.
+   EXPECT_EQ((*pois)["component_type"].val(), "poisson_continuous_dist");
+   // The Poisson components have different means, so nothing is shared.
    EXPECT_FALSE(pois->has_child("default_parameters")) << exported;
    ASSERT_EQ((*pois)["components"].num_children(), 3u);
    EXPECT_EQ((*pois)["components"].child(0)["x"].val(), "n_1");
    EXPECT_EQ((*pois)["components"].child(0)["mean"].val(), "lambda_1");
-   EXPECT_FALSE((*pois)["components"].child(0)["integer"].val_bool());
    EXPECT_EQ((*pois)["components"].child(1)["x"].val(), "n_2");
    EXPECT_EQ((*pois)["components"].child(1)["mean"].val(), "lambda_default");
    EXPECT_EQ((*pois)["components"].child(2)["x"].val(), "n_3");
    EXPECT_DOUBLE_EQ((*pois)["components"].child(2)["mean"].val_double(), 7.5);
-   EXPECT_TRUE((*pois)["components"].child(2)["integer"].val_bool());
+   for (auto const &component : (*pois)["components"].children()) {
+      EXPECT_FALSE(component.has_child("integer")) << exported;
+   }
 
    const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "gauss");
    ASSERT_NE(gauss, nullptr) << exported;
@@ -4003,7 +4063,7 @@ TEST(RooFitHS3, HistFactoryArrayDistExport)
    auto const &distributions = tree->rootnode()["distributions"];
    for (auto const &dist : distributions.children()) {
       EXPECT_NE(dist["type"].val(), "gaussian_dist") << exported;
-      EXPECT_NE(dist["type"].val(), "poisson_dist") << exported;
+      EXPECT_NE(dist["type"].val(), "poisson_continuous_dist") << exported;
    }
    const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "an_simPdf_gaussian_constraints");
    ASSERT_NE(gauss, nullptr) << exported;
@@ -4011,10 +4071,10 @@ TEST(RooFitHS3, HistFactoryArrayDistExport)
    EXPECT_EQ((*gauss)["component_type"].val(), "gaussian_dist");
    ASSERT_EQ((*gauss)["components"].num_children(), 1u) << exported;
    EXPECT_EQ((*gauss)["components"].child(0)["x"].val(), "alpha_a");
-   const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "an_simPdf_poisson_constraints");
+   const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "an_simPdf_poisson_continuous_constraints");
    ASSERT_NE(pois, nullptr) << exported;
-   EXPECT_EQ((*pois)["component_type"].val(), "poisson_dist");
-   EXPECT_FALSE((*pois)["default_parameters"]["integer"].val_bool());
+   EXPECT_EQ((*pois)["component_type"].val(), "poisson_continuous_dist");
+   EXPECT_FALSE(pois->has_child("default_parameters")) << exported;
    // In the order of the channels, their samples and modifiers, and of the bins.
    const std::vector<std::string> gammas{"gs_0", "gs_1", "gamma_c1_0", "gamma_c1_1", "gamma_c2_0", "gamma_c2_1"};
    ASSERT_EQ((*pois)["components"].num_children(), gammas.size()) << exported;
@@ -4025,7 +4085,9 @@ TEST(RooFitHS3, HistFactoryArrayDistExport)
    }
    EXPECT_EQ(countOccurrences(exported, R"("constraints":["an_simPdf_gaussian_constraints"])"), 2u) << exported;
    EXPECT_EQ(
-      countOccurrences(exported, R"("constraints":["an_simPdf_poisson_constraints","an_simPdf_poisson_constraints"])"),
+      countOccurrences(
+         exported,
+         R"("constraints":["an_simPdf_poisson_continuous_constraints","an_simPdf_poisson_continuous_constraints"])"),
       4u)
       << exported;
 
@@ -4082,7 +4144,7 @@ TEST(RooFitHS3, TutorialRF515RoundTrip)
    auto const &distributions = tree->rootnode()["distributions"];
    const auto *poisson = RooJSONFactoryWSTool::findNamedChild(distributions, "gamma_bin_0_constraint");
    ASSERT_NE(poisson, nullptr) << exported;
-   EXPECT_EQ((*poisson)["type"].val(), "poisson_dist");
+   EXPECT_EQ((*poisson)["type"].val(), "poisson_continuous_dist");
    // The top-level pdf is the RooSimultaneous "main" of the analysis.
    const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "main_gaussian_constraints");
    ASSERT_NE(gauss, nullptr) << exported;
@@ -4151,7 +4213,8 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
    auto lh = likelihood(exported);
    EXPECT_EQ(lh["distributions"], Names{"an_simPdf"}) << exported;
    EXPECT_EQ(lh["data"], Names{"0"}) << exported;
-   EXPECT_EQ(lh["aux_distributions"], (Names{"an_simPdf_poisson_constraints", "an_simPdf_gaussian_constraints"}))
+   EXPECT_EQ(lh["aux_distributions"],
+             (Names{"an_simPdf_poisson_continuous_constraints", "an_simPdf_gaussian_constraints"}))
       << exported;
    {
       RooWorkspace ws2;
@@ -4174,13 +4237,13 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
    lh = likelihood(withData);
    // The Gaussian of alpha_a has the parameter as x and a number as mean, so it has no global observable to pair
    // with data and stays in "aux_distributions".
-   EXPECT_EQ(lh["distributions"], (Names{"an_simPdf", "an_simPdf_poisson_constraints"})) << withData;
-   EXPECT_EQ(lh["data"], (Names{"0", "an_simPdf_poisson_constraints_data"})) << withData;
+   EXPECT_EQ(lh["distributions"], (Names{"an_simPdf", "an_simPdf_poisson_continuous_constraints"})) << withData;
+   EXPECT_EQ(lh["data"], (Names{"0", "an_simPdf_poisson_continuous_constraints_data"})) << withData;
    EXPECT_EQ(lh["aux_distributions"], Names{"an_simPdf_gaussian_constraints"}) << withData;
    {
       auto tree = RooFit::Detail::JSONTree::create(withData);
-      const auto *data =
-         RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "an_simPdf_poisson_constraints_data");
+      const auto *data = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"],
+                                                              "an_simPdf_poisson_continuous_constraints_data");
       ASSERT_NE(data, nullptr) << withData;
       EXPECT_EQ((*data)["type"].val(), "unbinned");
       const std::vector<std::string> gammas{"gs_0", "gs_1", "gamma_c1_0", "gamma_c1_1", "gamma_c2_0", "gamma_c2_1"};
@@ -4206,7 +4269,7 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
       auto *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
       ASSERT_NE(simPdf, nullptr);
       EXPECT_EQ(simPdf->indexCat().size(), 2);
-      EXPECT_EQ(ws3.data("an_simPdf_poisson_constraints_data"), nullptr);
+      EXPECT_EQ(ws3.data("an_simPdf_poisson_continuous_constraints_data"), nullptr);
       EXPECT_DOUBLE_EQ(ws3.var("nom_gamma_c1_0")->getVal(), 120.0);
       EXPECT_TRUE(ws3.var("nom_gamma_c1_0")->isConstant());
       ASSERT_NE(mc->GetGlobalObservables(), nullptr);
@@ -5274,10 +5337,10 @@ TEST_P(HFFixture, HS3ClosureLoop)
       auto const &distributions = tree->rootnode()["distributions"];
       for (auto const &dist : distributions.children()) {
          EXPECT_NE(dist["type"].val(), "gaussian_dist") << dist["name"].val();
-         EXPECT_NE(dist["type"].val(), "poisson_dist") << dist["name"].val();
+         EXPECT_NE(dist["type"].val(), "poisson_continuous_dist") << dist["name"].val();
       }
       std::size_t nComponents = 0;
-      for (const char *name : {"simPdf_gaussian_constraints", "simPdf_poisson_constraints"}) {
+      for (const char *name : {"simPdf_gaussian_constraints", "simPdf_poisson_continuous_constraints"}) {
          if (auto const *array = RooJSONFactoryWSTool::findNamedChild(distributions, name)) {
             EXPECT_EQ((*array)["type"].val(), "array_dist") << name;
             nComponents += (*array)["components"].num_children();

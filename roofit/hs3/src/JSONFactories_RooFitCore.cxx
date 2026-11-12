@@ -452,15 +452,16 @@ bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
       RooJSONFactoryWSTool::error("array_dist '" + name + "': " + message);
    };
 
-   static const std::set<std::string> supportedComponentTypes{"poisson_dist", "gaussian_dist", "normal_dist",
-                                                              "lognormal_dist"};
+   static const std::set<std::string> supportedComponentTypes{"poisson_dist", "poisson_continuous_dist",
+                                                              "gaussian_dist", "normal_dist", "lognormal_dist"};
    if (!p.has_child("component_type")) {
       error("missing \"component_type\"");
    }
    const std::string componentType = p["component_type"].val();
    if (supportedComponentTypes.find(componentType) == supportedComponentTypes.end()) {
       error("the component_type '" + componentType +
-            "' is not supported, supported are poisson_dist, gaussian_dist and lognormal_dist");
+            "' is not supported, supported are poisson_dist, poisson_continuous_dist, gaussian_dist and "
+            "lognormal_dist");
    }
 
    const JSONNode *defaults = p.find("default_parameters");
@@ -519,11 +520,6 @@ bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
       for (JSONNode const &field : component.children()) {
          copyValue(node[field.key()], field);
       }
-      // RooFit's "integer" flag of poisson_dist (not part of HS3) defaults to the continued Poisson distribution,
-      // which is what HistFactory constraints are and which gives the usual value at integer x.
-      if (componentType == "poisson_dist" && !node.has_child("integer")) {
-         node["integer"] << false;
-      }
       tool->importFunction(node, true);
       RooAbsPdf *pdf = ws.pdf(pdfName);
       if (!pdf) {
@@ -559,8 +555,8 @@ bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
-// One field of a component of an array distribution: a name, a number or a flag.
-using ArrayFieldValue = std::variant<std::string, double, bool>;
+// One field of a component of an array distribution: a name or a number.
+using ArrayFieldValue = std::variant<std::string, double>;
 
 struct ArrayComponent {
    std::string type;
@@ -584,9 +580,9 @@ std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf, std::string
    ArrayComponent out;
    RooAbsReal const *x = nullptr;
    if (auto const *poisson = dynamic_cast<RooPoisson const *>(&pdf)) {
-      out.type = "poisson_dist";
+      out.type = poisson->getNoRounding() ? "poisson_continuous_dist" : "poisson_dist";
       x = &poisson->getX();
-      out.fields = {{"mean", nameOrNumber(poisson->getMean())}, {"integer", !poisson->getNoRounding()}};
+      out.fields = {{"mean", nameOrNumber(poisson->getMean())}};
    } else if (auto const *gauss = dynamic_cast<RooGaussian const *>(&pdf)) {
       out.type = "gaussian_dist";
       x = &gauss->getX();
@@ -788,12 +784,28 @@ bool importPolynomial(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// HS3 0.3 distinguishes the discrete "poisson_dist" from the "poisson_continuous_dist" (HS3 #152), which are a
+// RooPoisson without and with noRounding. Before, ROOT wrote both as "poisson_dist" with its own key "integer", where
+// false denotes the continuous form. That key is read for documents before HS3 0.3, without it the discrete form is
+// meant. From HS3 0.3 on, it must not be present.
+template <bool Continuous>
 bool importPoisson(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
+   bool noRounding = Continuous;
+   if (p.has_child("integer")) {
+      std::string const type = Continuous ? "poisson_continuous_dist" : "poisson_dist";
+      if (Continuous || !isHS3VersionBefore(tool->hs3VersionInput(), 0, 3)) {
+         RooJSONFactoryWSTool::error(
+            type + " '" + name +
+            "' has the key \"integer\", which is not part of HS3. The discrete Poisson distribution is "
+            "\"poisson_dist\" and the continuous one is \"poisson_continuous_dist\".");
+      }
+      noRounding = !p["integer"].val_bool();
+   }
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
    RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
-   tool->wsEmplace<RooPoisson>(name, *x, *mean, !p["integer"].val_bool());
+   tool->wsEmplace<RooPoisson>(name, *x, *mean, noRounding);
    return true;
 }
 
@@ -1570,10 +1582,9 @@ bool exportPolynomial(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
 bool exportPoisson(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
    auto *pdf = static_cast<const RooPoisson *>(func);
-   elem["type"] << key;
+   elem["type"] << (pdf->getNoRounding() ? "poisson_continuous_dist" : key);
    elem["x"] << pdf->getX().GetName();
    elem["mean"] << pdf->getMean().GetName();
-   elem["integer"] << !pdf->getNoRounding();
    return true;
 }
 
@@ -1926,7 +1937,8 @@ STATIC_EXECUTE([]() {
    registerImporter<importHist<RooHistPdf>>("histogram_dist", false);
    registerImporter<importLogNormal>("lognormal_dist", false);
    registerImporter<importMultiVarGaussian>("multivariate_normal_dist", false);
-   registerImporter<importPoisson>("poisson_dist", false);
+   registerImporter<importPoisson<false>>("poisson_dist", false);
+   registerImporter<importPoisson<true>>("poisson_continuous_dist", false);
    registerImporter<importDecay>("decay_dist", false);
    registerImporter<importTruthModel>("truth_model_function", false);
    registerImporter<importTruthModel>("delta_resolution_model", false);

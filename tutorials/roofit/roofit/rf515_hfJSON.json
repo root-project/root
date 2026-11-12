@@ -245,17 +245,15 @@
       },
       {
          "name": "gamma_bin_0_constraint",
-         "type": "poisson_dist",
+         "type": "poisson_continuous_dist",
          "x": 400,
-         "mean": "gamma_bin_0_expected",
-         "integer": false
+         "mean": "gamma_bin_0_expected"
       },
       {
          "name": "gamma_bin_1_constraint",
-         "type": "poisson_dist",
+         "type": "poisson_continuous_dist",
          "x": 100,
-         "mean": "gamma_bin_1_expected",
-         "integer": false
+         "mean": "gamma_bin_1_expected"
       }
    ],
    "functions": [
