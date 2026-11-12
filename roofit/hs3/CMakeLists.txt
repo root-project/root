@@ -9,6 +9,19 @@
 # @author Carsten Burgard, CERN
 ############################################################################
 
+# The RooFit-independent part is compiled as a separate object library, so we
+# don't accidentally include RooFit again without getting compiler errors.
+add_library(hs3cpp OBJECT
+  src/HS3Document.cxx
+  src/HS3Parser.cxx
+  src/HS3Upgrade.cxx
+  src/HS3Validate.cxx
+  src/HS3Writer.cxx
+  src/JSONInterface.cxx
+)
+set_target_properties(hs3cpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(hs3cpp PRIVATE nlohmann_json::nlohmann_json)
+
 set (ROOFITHS3_HEADERS
   RooFit/Detail/JSONInterface.h
   RooFitHS3/JSONIO.h
@@ -19,12 +32,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
   HEADERS
     ${ROOFITHS3_HEADERS}
   SOURCES
-    src/HS3Document.cxx
-    src/HS3Parser.cxx
-    src/HS3Upgrade.cxx
-    src/HS3Validate.cxx
-    src/HS3Writer.cxx
-    src/JSONInterface.cxx
     src/JSONIO.cxx
     src/RooJSONFactoryWSTool.cxx
     src/JSONFactories_RooFitCore.cxx
@@ -37,9 +44,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     RooFit
     RooFitCore
 )
-
-
-target_link_libraries(RooFitHS3 PRIVATE nlohmann_json::nlohmann_json)
+target_sources(RooFitHS3 PRIVATE $<TARGET_OBJECTS:hs3cpp>)
 
 set(RELATIVE_INC_HEADERS ${ROOFITHS3_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
