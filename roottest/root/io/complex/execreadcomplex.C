@@ -58,9 +58,9 @@ void readcomplex(const std::string base)
 
          // read them
          TString cFloatName(TString::Format("cFloat_%i", j));
-         std::complex<float> *cFloatPtr = (std::complex<float> *) ifile->Get(cFloatName);
+         std::complex<float> *cFloatPtr = ifile->Get<std::complex<float>>(cFloatName);
          TString cDoubleName(TString::Format("cDouble_%i", j));
-         std::complex<double> *cDoublePtr = (std::complex<double> *) ifile->Get(cDoubleName);
+         std::complex<double> *cDoublePtr = ifile->Get<std::complex<double>>(cDoubleName);
 
          if (!cFloatPtr) {
             cout << "ERROR Cannot get " << cFloatName << " from file " << ifilename << endl;

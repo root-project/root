@@ -292,7 +292,7 @@ void writeToFile(const T& obj, const char* objName, const char* filename){
 template<class T>
 void readAndCheckFromFile(const T& obj, const char* objName, const char* filename){
    auto file = TFile::Open(filename,"READ");
-   auto objFromFile =(T*)file->Get(objName);
+   auto objFromFile = file->Get<T>(objName);
    if (!objFromFile){
       std::cerr << "Error in reading object " << objName << " from file " << filename << "\n";
       delete file;
