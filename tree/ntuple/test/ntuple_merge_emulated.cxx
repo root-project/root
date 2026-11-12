@@ -262,9 +262,13 @@ TEST_P(RNTupleMergeEmulated, MergeLateEmulated)
 
 INSTANTIATE_TEST_SUITE_P(
    Seq, RNTupleMergeEmulated,
-   testing::Values(
-      RNTupleMergeEmulatedParams{"CustomMergeBasic", "CustomMergeBasic", "p->fA = %d"},
-      RNTupleMergeEmulatedParams{"CustomMergeVec", "std::vector<CustomMergeVec>", "p->emplace_back(%d)"},
-      RNTupleMergeEmulatedParams{"CustomMergeMap", "std::map<std::string, CustomMergeMap>",
-                                 "p->try_emplace(\"%d\", CustomMergeMap{%d})"},
-      RNTupleMergeEmulatedParams{"CustomMergeSet", "std::set<CustomMergeSet>", "p->emplace(%d)"}));
+   testing::Values(RNTupleMergeEmulatedParams{"CustomMergeBasic", "CustomMergeBasic", "p->fA = %d"},
+                   RNTupleMergeEmulatedParams{"CustomMergeVec", "std::vector<CustomMergeVec>", "p->emplace_back(%d)"},
+                   RNTupleMergeEmulatedParams{"CustomMergeMap", "std::map<std::string, CustomMergeMap>",
+                                              "p->try_emplace(\"%d\", CustomMergeMap{%d})"},
+                   RNTupleMergeEmulatedParams{"CustomMergeSet", "std::set<CustomMergeSet>", "p->emplace(%d)"},
+                   RNTupleMergeEmulatedParams{"CustomMergePair", "std::pair<CustomMergePair, CustomMergePair>",
+                                              "*p = std::make_pair<CustomMergePair>(%d, %d)"},
+                   RNTupleMergeEmulatedParams{"CustomMergeTuple",
+                                              "std::tuple<CustomMergeTuple, CustomMergeTuple, CustomMergeTuple>",
+                                              "*p = std::make_tuple<CustomMergeTuple>(%d, %d, %d)"}));

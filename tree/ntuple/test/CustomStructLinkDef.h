@@ -192,5 +192,9 @@
 #pragma link C++ class std::map<std::string, CustomMergeMap>+;
 #pragma link C++ class CustomMergeSet+;
 #pragma link C++ class std::set<CustomMergeSet>+;
+#pragma link C++ class CustomMergePair+;
+#pragma link C++ class std::pair<CustomMergePair, CustomMergePair>+;
+#pragma link C++ class CustomMergeTuple+;
+#pragma link C++ class std::tuple<CustomMergeTuple, CustomMergeTuple, CustomMergeTuple>+;
 
 #endif
