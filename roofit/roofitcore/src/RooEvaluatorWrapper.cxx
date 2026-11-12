@@ -23,8 +23,10 @@ Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 
 #include "RooEvaluatorWrapper.h"
 
+#include <Roo1DTable.h>
 #include <RooAbsData.h>
 #include <RooAbsPdf.h>
+#include <RooCategory.h>
 #include <RooMsgService.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
@@ -32,9 +34,13 @@ Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 #include "RooFit/BatchModeDataHelpers.h"
 #include "RooFitImplHelpers.h"
 
+#include <ROOT/StringUtils.hxx>
 #include <TInterpreter.h>
 
+#include <algorithm>
 #include <fstream>
+#include <functional>
+#include <limits>
 
 namespace {
 
@@ -116,6 +122,258 @@ void validateObservableRanges(RooAbsPdf const *pdf, RooAbsData const &data,
       if (it == dataSpans.end())
          continue;
       checkObservableSpanInRange(*realVar, realVar->GetName(), data.GetName(), it->second);
+   }
+}
+
+// Throws an exception if the data for a pdf that is evaluated with the binned
+// likelihood optimization doesn't consist of exactly one entry per bin of the
+// pdf, ordered like the bins of a RooDataHist (last observable varying
+// fastest). The optimization takes each entry as a bin, so any other layout
+// gives a wrong likelihood. Only bins that are not fully in the fit range can
+// be missing, and empty data is accepted, e.g. for a channel that is not in
+// the dataset. The `observables` are the ones of the pdf, named like the data
+// variables with a `prefix`, which is not empty for a RooSimultaneous channel.
+// `hasEntries` tells if there are entries before the range selection.
+void checkBinnedLikelihoodData(RooAbsPdf const &pdf, RooArgSet const &observables, RooAbsData const &data,
+                               std::string const &prefix, std::string const &channelName, std::string const &rangeName,
+                               std::map<RooFit::Detail::DataKey, std::span<const double>> const &dataSpans,
+                               std::function<bool()> const &hasEntries)
+{
+   auto fail = [&](std::string const &reason) {
+      std::stringstream errMsg;
+      errMsg << "RooAbsPdf::fitTo/createNLL: the dataset \"" << data.GetName() << "\" ";
+      if (!channelName.empty()) {
+         errMsg << "in channel \"" << channelName << "\" ";
+      }
+      errMsg << "can't be used with the binned likelihood optimization: " << reason
+             << ". The optimization requires exactly one entry in each bin of the pdf, in the order of the bins, "
+                "like in a RooDataHist with the binning of the pdf. To create the likelihood with this dataset, "
+                "disable the binned likelihood optimization by calling "
+                "setAttribute(\"BinnedLikelihood\", false) on the pdf that has this attribute. If you think that the "
+                "optimization should work with this dataset, please report it by opening an issue on the ROOT GitHub "
+                "repository.";
+      oocoutE(nullptr, InputArguments) << errMsg.str() << std::endl;
+      throw std::invalid_argument(errMsg.str());
+   };
+
+   const std::vector<std::string> subRanges = ROOT::Split(rangeName, ",", /*skipEmpty=*/true);
+
+   // A bin that is partially in the range is `Maybe` in the range, because
+   // the range selection of its entry depends on where it is in the bin.
+   enum RangeState : char {
+      Out,
+      Maybe,
+      In
+   };
+
+   struct Dim {
+      std::string name;
+      std::span<const double> values;
+      std::vector<double> boundaries;
+      std::vector<std::vector<RangeState>> inSubRange; // for each sub-range and bin
+      std::size_t stride = 1;                          // in the index of all bins
+      double tol = 0.;                                 // a few times the precision of the boundaries
+
+      std::size_t nBins() const { return boundaries.size() - 1; }
+      std::size_t bin(std::size_t iBin) const { return (iBin / stride) % nBins(); }
+      double binWidth(std::size_t i) const { return boundaries[i + 1] - boundaries[i]; }
+   };
+   std::vector<Dim> dims;
+
+   std::size_t nBins = 1;
+   for (auto *dataVar : dynamic_range_cast<RooAbsRealLValue *>(*data.get())) {
+      auto *obs =
+         dataVar ? dynamic_cast<RooRealVar *>(observables.find((prefix + dataVar->GetName()).c_str())) : nullptr;
+      if (!obs)
+         continue;
+      auto found = dataSpans.find(RooFit::Detail::DataKey(obs));
+      std::unique_ptr<std::list<double>> boundaries{pdf.binBoundaries(*obs, obs->getMin(), obs->getMax())};
+      if (!boundaries || boundaries->size() < 2) {
+         fail(std::string("the pdf provides no bin boundaries for the observable \"") + dataVar->GetName() + "\"");
+      }
+      dims.push_back({dataVar->GetName(),
+                      found != dataSpans.end() ? found->second : std::span<const double>{},
+                      {boundaries->begin(), boundaries->end()},
+                      {}});
+      Dim &dim = dims.back();
+      dim.tol = 8 * std::numeric_limits<double>::epsilon() *
+                std::max(std::abs(dim.boundaries.front()), std::abs(dim.boundaries.back()));
+      // The range selection is done with the ranges of the data variables
+      for (std::string const &subRange : subRanges) {
+         dim.inSubRange.emplace_back();
+         const double rangeLo = dataVar->getMin(subRange.c_str());
+         const double rangeHi = dataVar->getMax(subRange.c_str());
+         for (std::size_t i = 0; i < dim.nBins(); ++i) {
+            const double lo = dim.boundaries[i];
+            const double hi = dim.boundaries[i + 1];
+            const bool isOut = rangeHi < lo - dim.tol || rangeLo > hi + dim.tol;
+            dim.inSubRange.back().push_back(rangeLo <= lo && hi <= rangeHi ? In : (isOut ? Out : Maybe));
+         }
+      }
+      nBins *= dim.nBins();
+   }
+   if (dims.empty())
+      return;
+
+   // The last observable varies fastest
+   for (std::size_t i = dims.size() - 1; i > 0; --i) {
+      dims[i - 1].stride = dims[i].stride * dims[i].nBins();
+   }
+
+   const std::size_t nEntries = dims.front().values.size();
+
+   // The range selection is not applied to data with a single entry
+   const bool isRanged = !subRanges.empty() && !(nBins == 1 && nEntries == 1);
+
+   // No entries is only a mismatch if the range selection removed all of them
+   if (nEntries == 0 && (!isRanged || !hasEntries()))
+      return;
+
+   // Like the range selection of the data, a bin is in the range if it is in
+   // a sub-range in all observables
+   std::vector<RangeState> binStates(nBins, isRanged ? Out : In);
+   std::size_t nBinsInRange = 0;
+   std::size_t nBinsMaybeInRange = 0;
+   std::size_t endOfBinsInRange = 0;
+   for (std::size_t iBin = 0; iBin < nBins; ++iBin) {
+      RangeState &state = binStates[iBin];
+      for (std::size_t iSub = 0; isRanged && iSub < subRanges.size(); ++iSub) {
+         RangeState inSub = In;
+         for (Dim const &dim : dims) {
+            inSub = std::min(inSub, dim.inSubRange[iSub][dim.bin(iBin)]);
+         }
+         state = std::max(state, inSub);
+      }
+      nBinsMaybeInRange += state == Maybe;
+      if (state == In) {
+         ++nBinsInRange;
+         endOfBinsInRange = iBin + 1;
+      }
+   }
+   auto failNumEntries = [&]() {
+      const std::string inRange = isRanged ? " in the fit range" : "";
+      fail("it has " + std::to_string(nEntries) + " entries" + inRange + ", which doesn't match the " +
+           std::to_string(nBinsInRange) + " bins of the pdf" + inRange);
+   };
+   if (nEntries < nBinsInRange || nEntries > nBinsInRange + nBinsMaybeInRange) {
+      failNumEntries();
+   }
+
+   // The upper boundary belongs to the next bin, except for the last bin. A
+   // value just below the lower boundary is accepted, because the bin that
+   // the pdf finds for it depends on the rounding.
+   auto isInBin = [&](std::size_t iEntry, std::size_t iBin) {
+      return std::all_of(dims.begin(), dims.end(), [&](Dim const &dim) {
+         const double val = dim.values[iEntry];
+         const std::size_t i = dim.bin(iBin);
+         return val >= dim.boundaries[i] - dim.tol &&
+                (val < dim.boundaries[i + 1] || (i + 1 == dim.nBins() && val <= dim.boundaries[i + 1] + dim.tol));
+      });
+   };
+   // If the entry might as well be in a next bin
+   auto isAtUpperEdge = [&](std::size_t iEntry, std::size_t iBin) {
+      return std::any_of(dims.begin(), dims.end(), [&](Dim const &dim) {
+         return dim.values[iEntry] >= dim.boundaries[dim.bin(iBin) + 1] - dim.tol;
+      });
+   };
+
+   // Without RooBinWidthFunctions in the pdf, the likelihood multiplies the
+   // pdf values with the width of the bin at the position of the entry
+   const bool usesBinWidths = !pdf.getAttribute("BinnedLikelihoodActiveYields") && dims.size() == 1;
+
+   // The bins that the next entry can be in start at one of these positions.
+   // There is more than one if an entry at a bin boundary could be in a bin
+   // that might have been removed by the range selection, or in the next one.
+   std::vector<std::size_t> positions{0};
+   std::vector<std::size_t> nextPositions;
+
+   for (std::size_t iEntry = 0; iEntry < nEntries; ++iEntry) {
+      Dim const &dim0 = dims.front();
+      bool binWidthMismatch = false;
+      nextPositions.clear();
+      for (std::size_t iBin : positions) {
+         // An entry at a boundary is in one of the next bins up to this one
+         std::size_t iBinEnd = nBins;
+         for (; iBin < iBinEnd; ++iBin) {
+            const RangeState state = binStates[iBin];
+            if (state != Out && isInBin(iEntry, iBin)) {
+               if (usesBinWidths &&
+                   std::abs(dim0.binWidth(iBin) - dim0.binWidth(iEntry)) > 1e-6 * dim0.binWidth(iEntry)) {
+                  binWidthMismatch = true;
+               } else if (std::find(nextPositions.begin(), nextPositions.end(), iBin + 1) == nextPositions.end()) {
+                  nextPositions.push_back(iBin + 1);
+               }
+               if (state == In || !isAtUpperEdge(iEntry, iBin))
+                  break;
+               iBinEnd = std::min(iBinEnd, iBin + dim0.stride + 1);
+            } else if (state == In) {
+               // Bins in the range can't be skipped
+               break;
+            }
+         }
+      }
+      if (nextPositions.empty()) {
+         if (binWidthMismatch) {
+            fail("the fit range excludes bins, which is not supported for a pdf with bins of different widths that "
+                 "is not built with RooBinWidthFunctions");
+         }
+         std::stringstream reason;
+         reason << "entry " << iEntry << " (";
+         for (Dim const &dim : dims) {
+            reason << (&dim == &dims.front() ? "" : ", ") << dim.name << " = " << dim.values[iEntry];
+         }
+         reason << ") is not in the bin that is expected at its position";
+         fail(reason.str());
+      }
+      positions.swap(nextPositions);
+   }
+   // All remaining bins must have been removed by the range selection
+   if (std::none_of(positions.begin(), positions.end(), [&](std::size_t iBin) { return iBin >= endOfBinsInRange; })) {
+      failNumEntries();
+   }
+}
+
+// Runs checkBinnedLikelihoodData() for the pdf, or for the channels of a
+// RooSimultaneous, where the binned likelihood optimization is active.
+void validateBinnedLikelihoodData(RooAbsPdf const *pdf, RooAbsData const &data, std::string const &rangeName,
+                                  std::map<RooFit::Detail::DataKey, std::span<const double>> const &dataSpans)
+{
+   if (!pdf)
+      return;
+
+   auto const *simPdf = dynamic_cast<RooSimultaneous const *>(pdf);
+   if (simPdf && simPdf->indexCatIsObservable(*data.get())) {
+      RooAbsCategoryLValue const &simCat = simPdf->indexCat();
+      auto *simCatAsRooCategory = dynamic_cast<RooCategory const *>(&simCat);
+      const bool splitRange = simPdf->getAttribute("SplitRange");
+      // Only filled if needed, because it requires a loop over the data
+      std::unique_ptr<Roo1DTable> table;
+      for (auto const &nameIdx : simCat) {
+         std::string const &channelName = nameIdx.first;
+         RooAbsPdf *channelPdf = simPdf->getPdf(channelName);
+         if (!channelPdf || !channelPdf->getAttribute("BinnedLikelihoodActive"))
+            continue;
+         // Channels excluded by a category range are not in the likelihood
+         if (!rangeName.empty() && simCatAsRooCategory &&
+             !simCatAsRooCategory->isStateInRange(rangeName.c_str(), nameIdx.second))
+            continue;
+         auto hasEntries = [&]() {
+            if (!table) {
+               table.reset(data.table(simCat));
+            }
+            return table->get(channelName.c_str(), /*silent=*/true) != 0.;
+         };
+         // See validateObservableRanges() for the observables and their prefix
+         std::unique_ptr<RooArgSet> vars{channelPdf->getVariables()};
+         std::unique_ptr<RooArgSet> obs{vars->selectByAttrib("__obs__", true)};
+         checkBinnedLikelihoodData(*channelPdf, *obs, data, "_" + channelName + "_", channelName,
+                                   RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, channelName),
+                                   dataSpans, hasEntries);
+      }
+   } else if (pdf->getAttribute("BinnedLikelihoodActive")) {
+      RooArgSet obs;
+      pdf->getObservables(data.get(), obs);
+      checkBinnedLikelihoodData(*pdf, obs, data, "", "", rangeName, dataSpans, [&]() { return data.numEntries() > 0; });
    }
 }
 
@@ -760,6 +1018,7 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
    if (_rangeName.empty()) {
       validateObservableRanges(_pdf, *_data, _dataSpans);
    }
+   validateBinnedLikelihoodData(_pdf, *_data, _rangeName, _dataSpans);
    if (!isInitializing && _dataSpans.size() != oldSize) {
       coutE(DataHandling) << errMsg << std::endl;
       throw std::runtime_error(errMsg);
