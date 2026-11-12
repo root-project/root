@@ -3,10 +3,12 @@
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
+#include "TString.h"
 #include "TSystem.h"
 
 #include "gmock/gmock.h"
 
+#include <cstdio>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -113,6 +115,27 @@ TEST_F(TClingTests, MakeInterpreterValue)
    std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
    gInterpreter->Evaluate("my_func_to_print", *v);
    EXPECT_THAT(v->ToString(), testing::HasSubstr("void my_func_to_print"));
+}
+
+TEST_F(TClingTests, ReloadInstantiatedGenericLambda)
+{
+   TString filename("TClingTestsGenericLambda");
+   FILE *file = gSystem->TempFileName(filename, nullptr, ".h");
+   ASSERT_NE(nullptr, file);
+   std::fputs("#ifndef TCLINGTESTS_GENERIC_LAMBDA_H\n"
+              "#define TCLINGTESTS_GENERIC_LAMBDA_H\n"
+              "inline int TClingTests_genericLambda() { return [](auto x) { return x; }(42); }\n"
+              "#endif\n", file);
+   std::fclose(file);
+
+   // Reloading unloads the lambda specialization both through its enclosing
+   // function and as a top-level declaration recorded in the transaction.
+   for (int i = 0; i < 3; ++i) {
+      EXPECT_EQ(0, gInterpreter->LoadFile(filename));
+      EXPECT_EQ(42, gInterpreter->ProcessLine("TClingTests_genericLambda()"));
+   }
+   EXPECT_EQ(0, gInterpreter->UnloadFile(filename));
+   gSystem->Unlink(filename);
 }
 
 static std::string MakeLibNamePlatformIndependent(const std::string &libName)

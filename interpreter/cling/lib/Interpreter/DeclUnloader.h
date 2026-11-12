@@ -13,6 +13,7 @@
 #include "cling/Interpreter/Transaction.h"
 
 #include "clang/AST/DeclVisitor.h"
+#include "llvm/ADT/SmallPtrSet.h"
 
 
 namespace clang {
@@ -48,6 +49,8 @@ namespace cling {
     /// came from so that in the end they could be removed from clang's cache.
     ///
     FileIDs m_FilesToUncache;
+
+    llvm::SmallPtrSet<clang::FunctionDecl*, 32> m_UnloadedFunctions;
 
   public:
     DeclUnloader(clang::Sema* S, clang::CodeGenerator* CG, const Transaction* T)
