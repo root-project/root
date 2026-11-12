@@ -499,6 +499,9 @@ struct AlignmentEnvelope {
 };
 
 // ----------------------------
+// Types used in ntuple_merge_emulated.
+// We define N different types even though they all have the same shape to avoid
+// accidentally reusing dictionaries from another test.
 #define DefCustomMergeClass(Suffix)         \
    struct CustomMerge##Suffix {             \
       int fA = 1;                           \
@@ -514,6 +517,8 @@ DefCustomMergeClass(Set);
 inline bool operator<(const CustomMergeSet &a, const CustomMergeSet &b) {
    return a.fA < b.fA;
 }
+DefCustomMergeClass(Pair);
+DefCustomMergeClass(Tuple);
 // NOTE: if you add a new custom class remember to add it to the LinkDef (alongside the collection you're testing it
 // with)!
 
