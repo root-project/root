@@ -4017,7 +4017,8 @@ TEST(RooFitHS3, HistFactoryLegacyCustomModifierParameter)
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    RooWorkspace ws;
-   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
       "metadata": {"hs3_version": "0.2"},
       "functions": [{"name": "scale", "type": "product", "factors": ["k0", "k1"]}],
       "distributions": [
@@ -4032,6 +4033,9 @@ TEST(RooFitHS3, HistFactoryLegacyCustomModifierParameter)
       "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
          {"name": "k0", "min": 0, "max": 5}, {"name": "k1", "min": 0, "max": 5}]}]
    })"));
+   });
+   // The "parameter" is used, so it must not be reported as ignored.
+   EXPECT_EQ(warnings.find("\"parameter\""), std::string::npos) << warnings;
    RooAbsReal *scale = ws.function("scale");
    ASSERT_NE(scale, nullptr);
    EXPECT_TRUE(ws.pdf("model_channel0")->dependsOn(*scale));
