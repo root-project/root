@@ -72,13 +72,18 @@ ROOT::Internal::RReadColumn::~RReadColumn()
 
 bool ROOT::Internal::RReadColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
 {
-   const auto nTeam = fTeam.size();
+   if (!fTeam) {
+      fReadPageRef = fPageSource->LoadPage(MakeHandle(), globalIndex);
+      return fReadPageRef.Get().Contains(globalIndex);
+   }
+
+   const auto nTeam = fTeam->fMembers.size();
    std::size_t iTeam = 1;
    do {
-      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->MakeHandle(), globalIndex);
+      fReadPageRef = fPageSource->LoadPage(fTeam->fMembers.at(fTeam->fLastGoodTeamIdx)->MakeHandle(), globalIndex);
       if (!fReadPageRef.Get().IsNull())
          break;
-      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      fTeam->fLastGoodTeamIdx = (fTeam->fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
    } while (iTeam <= nTeam);
 
@@ -87,13 +92,18 @@ bool ROOT::Internal::RReadColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
 
 bool ROOT::Internal::RReadColumn::TryMapPage(RNTupleLocalIndex localIndex)
 {
-   const auto nTeam = fTeam.size();
+   if (!fTeam) {
+      fReadPageRef = fPageSource->LoadPage(MakeHandle(), localIndex);
+      return fReadPageRef.Get().Contains(localIndex);
+   }
+
+   const auto nTeam = fTeam->fMembers.size();
    std::size_t iTeam = 1;
    do {
-      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->MakeHandle(), localIndex);
+      fReadPageRef = fPageSource->LoadPage(fTeam->fMembers.at(fTeam->fLastGoodTeamIdx)->MakeHandle(), localIndex);
       if (!fReadPageRef.Get().IsNull())
          break;
-      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      fTeam->fLastGoodTeamIdx = (fTeam->fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
    } while (iTeam <= nTeam);
 
@@ -102,15 +112,24 @@ bool ROOT::Internal::RReadColumn::TryMapPage(RNTupleLocalIndex localIndex)
 
 void ROOT::Internal::RReadColumn::MergeTeams(RReadColumn &other)
 {
-   // We are working on very small vectors here, so quadratic complexity works
-   for (auto *c : other.fTeam) {
-      if (std::find(fTeam.begin(), fTeam.end(), c) == fTeam.end())
-         fTeam.emplace_back(c);
+   if (!fTeam) {
+      fTeam = std::make_unique<RTeam>();
+      fTeam->fMembers.emplace_back(this);
+   }
+   if (!other.fTeam) {
+      other.fTeam = std::make_unique<RTeam>();
+      other.fTeam->fMembers.emplace_back(&other);
    }
 
-   for (auto c : fTeam) {
+   // We are working on very small vectors here, so quadratic complexity works
+   for (auto *c : other.fTeam->fMembers) {
+      if (std::find(fTeam->fMembers.begin(), fTeam->fMembers.end(), c) == fTeam->fMembers.end())
+         fTeam->fMembers.emplace_back(c);
+   }
+
+   for (auto c : fTeam->fMembers) {
       if (c == this)
          continue;
-      c->fTeam = fTeam;
+      c->fTeam->fMembers = fTeam->fMembers;
    }
 }
