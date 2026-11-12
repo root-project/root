@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <set>
 #include <random>
 #include <string>
 #include <variant>
@@ -509,5 +510,11 @@ struct AlignmentEnvelope {
 DefCustomMergeClass(Basic);
 DefCustomMergeClass(Vec);
 DefCustomMergeClass(Map);
+DefCustomMergeClass(Set);
+inline bool operator<(const CustomMergeSet &a, const CustomMergeSet &b) {
+   return a.fA < b.fA;
+}
+// NOTE: if you add a new custom class remember to add it to the LinkDef (alongside the collection you're testing it
+// with)!
 
 #endif
