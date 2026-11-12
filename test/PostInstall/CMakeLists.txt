@@ -27,8 +27,18 @@ if(BUILD_TESTING)
   # Pass a list to the compiler invocation to avoid errors such as "invalid library name" when passing the quoted string
   # output from root-config
   string(REPLACE " " ";" ROOT_CONFIG_OUTPUT "${ROOT_CONFIG_OUTPUT_STR}")
+  # On MacOS, we might have to provide the SDK include paths if we work with a compiler from the SDK:
+  execute_process(COMMAND xcrun --show-sdk-path
+    OUTPUT_VARIABLE SDK_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE XCRUN_RESULT
+    ERROR_QUIET
+ )
+  if(XCRUN_RESULT EQUAL 0)
+    set(SDK_ARGUMENT -isysroot ${SDK_PATH})
+  endif()
   add_test(NAME read-hsimple-root-config-build
-    COMMAND ${CMAKE_CXX_COMPILER} -o readHSimple-root-config ${CMAKE_SOURCE_DIR}/readHSimple.cxx ${ROOT_CONFIG_OUTPUT}
+    COMMAND ${CMAKE_CXX_COMPILER} ${SDK_ARGUMENT} -o readHSimple-root-config ${CMAKE_SOURCE_DIR}/readHSimple.cxx ${ROOT_CONFIG_OUTPUT}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   add_test(NAME read-hsimple-root-config-run
     COMMAND readHSimple-root-config
