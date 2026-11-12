@@ -197,10 +197,30 @@ T *findClient(RooAbsArg *gamma)
    return nullptr;
 }
 
-RooAbsPdf *findConstraint(RooAbsArg *g)
+template <class T>
+T *findAmong(RooAbsArg *g, std::vector<RooAbsPdf *> const &pdfs)
+{
+   for (RooAbsPdf *pdf : pdfs) {
+      if (auto casted = dynamic_cast<T *>(pdf); casted && casted->dependsOn(*g)) {
+         return casted;
+      }
+   }
+   return nullptr;
+}
+
+// Find the constraint of the parameter `g`: preferably among the constraint terms `channelConstraints` of the channel
+// (the other factors of its product), otherwise among the clients of `g`. Looking at the channel first avoids taking
+// another pdf that depends on the parameter, e.g. in another channel, for its constraint.
+RooAbsPdf *findConstraint(RooAbsArg *g, std::vector<RooAbsPdf *> const &channelConstraints)
 {
    if (!g)
       return nullptr;
+   if (auto *constraint = findAmong<RooPoisson>(g, channelConstraints))
+      return constraint;
+   if (auto *constraint = findAmong<RooGaussian>(g, channelConstraints))
+      return constraint;
+   if (auto *constraint = findAmong<RooLognormal>(g, channelConstraints))
+      return constraint;
    if (auto *constraint = findClient<RooPoisson>(g))
       return constraint;
    if (auto *constraint = findClient<RooGaussian>(g))
@@ -898,7 +918,8 @@ struct FormulaNormSys {
    double variation = 0.0;
 };
 
-FormulaNormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula)
+FormulaNormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula,
+                                           std::vector<RooAbsPdf *> const &channelConstraints)
 {
    static const std::regex pattern(
       R"(^\s*1(?:\.0)?\s*([\+\-])\s*([a-zA-Z_][a-zA-Z0-9_]*|[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*\*\s*([a-zA-Z_][a-zA-Z0-9_]*|[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*$)");
@@ -916,8 +937,8 @@ FormulaNormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *
       RooRealVar *v2 = dynamic_cast<RooRealVar *>(p2);
       RooRealVar *v3 = dynamic_cast<RooRealVar *>(p3);
 
-      auto *constr2 = findConstraint(v2);
-      auto *constr3 = findConstraint(v3);
+      auto *constr2 = findConstraint(v2, channelConstraints);
+      auto *constr3 = findConstraint(v3, channelConstraints);
 
       if (constr2 && !p3) {
          sys.param = p2;
@@ -1053,7 +1074,8 @@ bool isLegacyBinWidthFactor(RooAbsArg const &factor, RooRealSumPdf const &sumpdf
                       [&](double volume) { return volume > 0. && std::abs(value * volume - 1.) < 1e-6; });
 }
 
-ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf)
+ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
+                            std::vector<RooAbsPdf *> const &channelConstraints)
 {
    ExportedChannel channel;
 
@@ -1161,7 +1183,8 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             } else if (auto par = dynamic_cast<RooRealVar *>(e)) {
                // The constraint is found among the clients of the parameter, whichever of x and mean of a Gaussian it
                // is.
-               normFactors.push_back({par->GetName(), {par->GetName()}, constraint(findConstraint(par))});
+               normFactors.push_back(
+                  {par->GetName(), {par->GetName()}, constraint(findConstraint(par, channelConstraints))});
             } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
                updateObservables(*hf);
             } else if (ParamHistFunc *phf = dynamic_cast<ParamHistFunc *>(e); phf && allRooRealVar(phf->paramList())) {
@@ -1178,7 +1201,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
                   // A parameter without constraint is unconstrained, see checkUnconstrainedModifiers().
                   addNormSys(*var, fip->high()[i], fip->low()[i],
                              interpolationFromCode(fip->interpolationCodes()[i], InterpolationClass::Flexible, context),
-                             findConstraint(var));
+                             findConstraint(var, channelConstraints));
                }
             } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
                // nothing to do here, already assigned
@@ -1208,7 +1231,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
                         continue;
                      }
                      // check if this is an attempt at explicitly encoding an overallSys
-                     FormulaNormSys sys = parseOverallModifierFormula(comp, formula);
+                     FormulaNormSys sys = parseOverallModifierFormula(comp, formula, channelConstraints);
                      if (sys.param) {
                         // Preserve the legacy export behaviour for recognized explicit formulae.
                         addNormSys(*sys.param, 1.0 + sys.variation, 1.0 - sys.variation,
@@ -1252,7 +1275,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             if (auto lo = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
                if (auto hi = dynamic_cast<RooHistFunc *>(pip->highList().at(i))) {
                   // A parameter without constraint is unconstrained, see checkUnconstrainedModifiers().
-                  const auto *pdf = findConstraint(var);
+                  const auto *pdf = findConstraint(var, channelConstraints);
                   checkModifierParameter(*var, pdf);
                   const std::string context = "histosys modifier '" + sysname + "' in sample '" + sample.name +
                                               "' of channel '" + channel.name + "'";
@@ -1278,7 +1301,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             for (RooAbsReal *g : paramHistFuncParamsInBinOrder(*phf)) {
                statError->parameters.push_back({g->GetName()});
                ++idx;
-               RooAbsPdf *pdf = findConstraint(g);
+               RooAbsPdf *pdf = findConstraint(g, channelConstraints);
                pdfs.pdfs.push_back(gammaConstraint(pdf));
                channel.totYield[idx] += sample.contents[idx - 1];
                channel.totYield2[idx] += (sample.contents[idx - 1] * sample.contents[idx - 1]);
@@ -1301,7 +1324,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             HS3::GammaConstraintPdfs pdfs;
             for (RooAbsReal *g : paramHistFuncParamsInBinOrder(*phf)) {
                sys.parameters.push_back({g->GetName()});
-               RooAbsPdf *pdf = findConstraint(g);
+               RooAbsPdf *pdf = findConstraint(g, channelConstraints);
                if (!pdf)
                   pdf = ws->pdf(constraintName(g->GetName()));
                pdfs.pdfs.push_back(gammaConstraint(pdf));
@@ -1503,7 +1526,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
    }
 
-   ExportedChannel channel = readChannel(tool, pdfname, sumpdf);
+   ExportedChannel channel = readChannel(tool, pdfname, sumpdf, constraints);
    HS3::HistFactoryDist &dist = channel.dist;
 
    // sanity checks
