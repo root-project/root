@@ -28,6 +28,7 @@
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFormulaVar.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
@@ -62,7 +63,9 @@
 #include <RooSuperCategory.h>
 #include "JSONIOUtils.h"
 
+#include <optional>
 #include <type_traits>
+#include <variant>
 
 #include "static_execute.h"
 
@@ -554,6 +557,55 @@ bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
    array.setAttribute(arrayDistTag);
    tool->wsImport(array);
    return true;
+}
+
+// One field of a component of an array distribution: a name, a number or a flag.
+using ArrayFieldValue = std::variant<std::string, double, bool>;
+
+struct ArrayComponent {
+   std::string type;
+   std::string x;
+   std::vector<std::pair<std::string, ArrayFieldValue>> fields;
+};
+
+ArrayFieldValue nameOrNumber(RooAbsReal const &arg)
+{
+   if (isLiteralConstVar(arg)) {
+      return static_cast<RooConstVar const &>(arg).getVal();
+   }
+   return std::string{arg.GetName()};
+}
+
+// The type, observable and fields of `pdf` as a component of an array distribution, with the fields of the standalone
+// exporters, or std::nullopt if `pdf` cannot be a component.
+std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf)
+{
+   ArrayComponent out;
+   RooAbsReal const *x = nullptr;
+   if (auto const *poisson = dynamic_cast<RooPoisson const *>(&pdf)) {
+      out.type = "poisson_dist";
+      x = &poisson->getX();
+      out.fields = {{"mean", nameOrNumber(poisson->getMean())}, {"integer", !poisson->getNoRounding()}};
+   } else if (auto const *gauss = dynamic_cast<RooGaussian const *>(&pdf)) {
+      out.type = "gaussian_dist";
+      x = &gauss->getX();
+      out.fields = {{"mean", nameOrNumber(gauss->getMean())}, {"sigma", nameOrNumber(gauss->getSigma())}};
+   } else if (auto const *lognormal = dynamic_cast<RooLognormal const *>(&pdf)) {
+      if (!lognormal->useStandardParametrization()) {
+         return std::nullopt;
+      }
+      out.type = "lognormal_dist";
+      x = &lognormal->getX();
+      out.fields = {{"mu", nameOrNumber(lognormal->getMedian())}, {"sigma", nameOrNumber(lognormal->getShapeK())}};
+   } else {
+      return std::nullopt;
+   }
+   // The observable of a component must be named: the observables are pairwise distinct and are paired with data.
+   if (isLiteralConstVar(*x)) {
+      return std::nullopt;
+   }
+   out.x = x->GetName();
+   return out;
 }
 
 bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
@@ -1897,3 +1949,78 @@ STATIC_EXECUTE([]() {
 });
 
 } // namespace
+
+std::optional<std::string> arrayComponentType(RooAbsPdf const &pdf)
+{
+   auto component = arrayComponentOf(pdf);
+   if (!component) {
+      return std::nullopt;
+   }
+   return component->type;
+}
+
+void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsPdf const *> const &components)
+{
+   auto error = [&name](std::string const &message) {
+      RooJSONFactoryWSTool::error("cannot write the array distribution '" + name + "': " + message);
+   };
+   if (components.empty()) {
+      error("it has no components");
+   }
+   std::vector<ArrayComponent> comps;
+   std::set<std::string> observables;
+   for (RooAbsPdf const *pdf : components) {
+      auto comp = arrayComponentOf(*pdf);
+      if (!comp) {
+         error("'" + std::string(pdf->GetName()) +
+               "' cannot be a component, only RooPoisson, RooGaussian and RooLognormal (standard parametrization) "
+               "over a named observable are supported");
+      }
+      if (!comps.empty() && comp->type != comps.front().type) {
+         error("the components '" + std::string(components.front()->GetName()) + "' (" + comps.front().type +
+               ") and '" + pdf->GetName() + "' (" + comp->type + ") have different types");
+      }
+      if (!observables.insert(comp->x).second) {
+         error("two components have the observable '" + comp->x + "'");
+      }
+      comps.push_back(std::move(*comp));
+   }
+
+   elem["type"] << "array_dist";
+   elem["component_type"] << comps.front().type;
+
+   auto write = [](JSONNode &node, ArrayFieldValue const &value) {
+      std::visit([&node](auto const &v) { node << v; }, value);
+   };
+
+   // A field with the same value in every component is written once in "default_parameters".
+   std::set<std::string> defaultKeys;
+   if (comps.size() > 1) {
+      for (std::size_t i = 0; i < comps.front().fields.size(); ++i) {
+         auto const &field = comps.front().fields[i];
+         if (std::all_of(comps.begin(), comps.end(),
+                         [&](ArrayComponent const &comp) { return comp.fields[i].second == field.second; })) {
+            defaultKeys.insert(field.first);
+         }
+      }
+   }
+   if (!defaultKeys.empty()) {
+      JSONNode &defaults = elem["default_parameters"].set_map();
+      for (auto const &field : comps.front().fields) {
+         if (defaultKeys.find(field.first) != defaultKeys.end()) {
+            write(defaults[field.first], field.second);
+         }
+      }
+   }
+
+   JSONNode &seq = elem["components"].set_seq();
+   for (ArrayComponent const &comp : comps) {
+      JSONNode &node = seq.append_child().set_map();
+      node["x"] << comp.x;
+      for (auto const &field : comp.fields) {
+         if (defaultKeys.find(field.first) == defaultKeys.end()) {
+            write(node[field.first], field.second);
+         }
+      }
+   }
+}

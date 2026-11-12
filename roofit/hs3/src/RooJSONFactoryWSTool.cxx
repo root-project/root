@@ -25,6 +25,7 @@
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooCustomizer.h>
+#include <RooProdPdf.h>
 #include <RooSimultaneous.h>
 #include <RooSuperCategory.h>
 #include <RooFit/ModelConfig.h>
@@ -162,6 +163,11 @@ struct RooFit::HS3::ToolExportState {
    std::map<std::string, std::map<std::string, HS3::DomainAxis>> domains;
    /// The categories that are declared by categorical axes of the "default_domain", by name.
    std::map<std::string, HS3::CategoricalAxis> categories;
+   /// Names of the objects written so far, to export each object once.
+   std::set<std::string> exportedObjectNames;
+   /// Array distributions to write at the end of the export: their components, and the array of each component.
+   std::map<std::string, std::vector<RooAbsPdf const *>> arrayComponents;
+   std::map<std::string, std::string> arrayOfComponent;
    /// Set by the exporter of an object that is interpreted by the document.
    std::optional<HistFactoryDist> typedObject;
    std::vector<DistributionRef> channelConstraints;
@@ -605,13 +611,6 @@ template <typename... Keys_t>
 JSONNode const *findRooFitInternal(JSONNode const &node, Keys_t const &...keys)
 {
    return node.find("misc", "ROOT_internal", keys...);
-}
-
-// True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
-bool isLiteralConstVar(RooAbsArg const &arg)
-{
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
-   return isRooConstVar && isNumber(arg.GetName());
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1092,8 +1091,8 @@ void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attribute
       out->dict[it.first] = it.second;
    }
    for (auto const &attr : arg->attributes()) {
-      // Skip some RooFit internals
-      if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object")
+      // Skip some RooFit internals. The array distribution tag is restored from the type on import.
+      if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object" || attr == arrayDistTag)
          continue;
       initialize();
       out->tags.push_back(attr);
@@ -1828,6 +1827,12 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
    return dh;
 }
 
+bool isLiteralConstVar(RooAbsArg const &arg)
+{
+   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
+   return isRooConstVar && isNumber(arg.GetName());
+}
+
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() = default;
@@ -2122,10 +2127,11 @@ void recordGenericObject(HS3Document &doc, bool isPdf, std::string const &name, 
 } // namespace
 
 // Export a single object `func` (pdf, function, variable or category) to the output JSON, recording its name in
-// `exportedObjectNames` to avoid exporting it twice.
-void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames)
+// the exported object names to avoid exporting it twice.
+void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
 {
    std::string name = func.GetName();
+   std::set<std::string> &exportedObjectNames = _export->exportedObjectNames;
 
    // if this element was already exported, skip
    if (exportedObjectNames.find(name) != exportedObjectNames.end())
@@ -2134,7 +2140,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
    exportedObjectNames.insert(name);
 
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
-      exportSimultaneous(*simPdf, exportedObjectNames);
+      exportSimultaneous(*simPdf);
       return;
    } else if (dynamic_cast<RooAbsCategory const *>(&func)) {
       // Categories are not objects of the document: the index category of a RooSimultaneous is declared by the
@@ -2142,6 +2148,22 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
       exportVariable(&func, _export->doc.parameterPoints.front(), true);
+      return;
+   } else if (config().exportArrayDist && func.getAttribute(arrayDistTag)) {
+      // An array distribution (HS3 `array_dist`): its components are registered here, and the array is written at
+      // the end of the export, see exportAsArrayComponent().
+      auto const *prod = dynamic_cast<RooProdPdf const *>(&func);
+      if (!prod) {
+         error("'" + name + "' has the attribute '" + arrayDistTag +
+               "' of an array distribution, but it is not a RooProdPdf");
+      }
+      for (RooAbsPdf *pdf : static_range_cast<RooAbsPdf *>(prod->pdfList())) {
+         const std::string writtenIn = exportAsArrayComponent(*pdf, name);
+         if (writtenIn != name) {
+            error("cannot write '" + name + "' as an array distribution: its component '" + pdf->GetName() +
+                  "' is already written as '" + writtenIn + "'");
+         }
+      }
       return;
    }
 
@@ -2184,9 +2206,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
             recordGenericObject(_export->doc, isPdf, name, elem);
          }
          if (exp->autoExportDependants()) {
-            exportObjects(func.servers(), exportedObjectNames);
+            exportObjects(func.servers());
          } else {
-            exportObjects(_serversToExport, exportedObjectNames);
+            exportObjects(_serversToExport);
          }
          for (auto &s : _serversToDelete) {
             delete s;
@@ -2259,8 +2281,62 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
          std::cerr << "unable to locate server of " << func.GetName() << std::endl;
          continue;
       }
-      this->exportObject(*s, exportedObjectNames);
+      this->exportObject(*s);
    }
+}
+
+std::string RooJSONFactoryWSTool::exportAsArrayComponent(RooAbsPdf const &pdf, std::string const &arrayName)
+{
+   const std::string pdfName = pdf.GetName();
+   auto &arrayOfComponent = _export->arrayOfComponent;
+   auto &arrayComponents = _export->arrayComponents;
+   auto &exportedObjectNames = _export->exportedObjectNames;
+   if (auto it = arrayOfComponent.find(pdfName); it != arrayOfComponent.end()) {
+      return it->second;
+   }
+   // Already written on its own: it is referenced by its name.
+   if (exportedObjectNames.find(pdfName) != exportedObjectNames.end()) {
+      return pdfName;
+   }
+   if (arrayComponents.find(arrayName) == arrayComponents.end()) {
+      RooAbsArg const *existing = _workspace.arg(arrayName);
+      if (existing && !existing->getAttribute(arrayDistTag)) {
+         error("cannot write the array distribution '" + arrayName +
+               "': the workspace has another object of that name");
+      }
+      exportedObjectNames.insert(arrayName);
+   }
+   arrayComponents[arrayName].push_back(&pdf);
+   arrayOfComponent[pdfName] = arrayName;
+   exportedObjectNames.insert(pdfName);
+   return arrayName;
+}
+
+// Write the array distributions registered with exportAsArrayComponent(), in alphabetical order, each followed by the
+// servers of its components. They are generic objects of the document.
+void RooJSONFactoryWSTool::exportArrayDists()
+{
+   std::set<std::string> written;
+   auto &arrayComponents = _export->arrayComponents;
+   for (;;) {
+      auto next = std::find_if(arrayComponents.begin(), arrayComponents.end(),
+                               [&](auto const &item) { return written.find(item.first) == written.end(); });
+      if (next == arrayComponents.end()) {
+         break;
+      }
+      const std::string arrayName = next->first;
+      written.insert(arrayName);
+      // Exporting the servers may add to the registry, so the components are copied.
+      const std::vector<RooAbsPdf const *> components = next->second;
+      JSONNode &elem = appendNamedChild((*_export->root)["distributions"], arrayName);
+      writeArrayDist(elem, arrayName, components);
+      recordGenericObject(_export->doc, true, arrayName, elem);
+      for (RooAbsPdf const *pdf : components) {
+         exportObjects(pdf->servers());
+      }
+   }
+   arrayComponents.clear();
+   _export->arrayOfComponent.clear();
 }
 
 /**
@@ -2271,7 +2347,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
  * categorical axes of the default domain. States without a pdf are not written: HS3 does not require a component
  * for every key.
  */
-void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames)
+void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf)
 {
    RooAbsCategory const &indexCat = simPdf.indexCat();
    std::vector<RooCategory const *> columns = selectionColumns(indexCat);
@@ -2318,7 +2394,7 @@ void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf, std
       }
    }
    servers.insert(servers.end(), replacements.begin(), replacements.end());
-   exportObjects(servers, exportedObjectNames);
+   exportObjects(servers);
 }
 
 // Declare a category as a categorical axis of the "default_domain". The states are written in their insertion order:
@@ -3114,8 +3190,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
    sortByName(allpdfs);
-   std::set<std::string> exportedObjectNames;
-   exportObjects(allpdfs, exportedObjectNames);
+   exportObjects(allpdfs);
 
    // export all toplevel functions
    std::vector<RooAbsReal *> allfuncs;
@@ -3127,7 +3202,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
    sortByName(allfuncs);
-   exportObjects(allfuncs, exportedObjectNames);
+   exportObjects(allfuncs);
+
+   // The array distributions are written after the objects that use them, see exportAsArrayComponent().
+   exportArrayDists();
 
    // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {
