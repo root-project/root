@@ -2,6 +2,7 @@
 // Authors: Stephan Hageboeck, CERN 10/2020
 //          Jonas Rembser, CERN 10/2022
 
+#include <RooBinWidthFunction.h>
 #include <RooBinning.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
@@ -19,6 +20,7 @@
 #include <RooPlot.h>
 #include <RooPolyVar.h>
 #include <RooProdPdf.h>
+#include <RooProduct.h>
 #include <RooRandom.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
@@ -775,6 +777,47 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
    // with the one of the RooSimultaneous.
    EXPECT_DOUBLE_EQ(realSumNllVal, simNllVal);
    EXPECT_DOUBLE_EQ(prodNllVal, simNllVal);
+}
+
+// The binned likelihood optimization takes each data entry as a bin, so the
+// likelihood creation must fail for data that is not binned like the pdf.
+// Covers GitHub issue #24106.
+TEST(CreateNLL, BinnedLikelihoodWithUnbinnedData)
+{
+   using namespace RooFit;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::FATAL);
+
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   x.setBins(2);
+
+   // Binned template with 10 and 20 expected events, scaled by mu
+   RooDataHist hist{"hist", "hist", x};
+   hist.set(0, 10.0, -1);
+   hist.set(1, 20.0, -1);
+   RooHistFunc shape{"shape", "shape", x, hist};
+   RooBinWidthFunction width{"width", "width", shape, true};
+   RooProduct sample{"sample", "sample", {shape, width}};
+   RooRealVar mu{"mu", "mu", 1.0, 0.1, 3.0};
+   RooRealSumPdf model{"model", "model", RooArgList{sample}, RooArgList{mu}, true};
+
+   // Unbinned data: three events, two of them in the second bin
+   RooDataSet data{"data", "data", x};
+   for (double value : {0.5, 1.5, 1.7}) {
+      x.setVal(value);
+      data.add(x);
+   }
+
+   model.setAttribute("BinnedLikelihood");
+   try {
+      std::unique_ptr<RooAbsReal> nll{model.createNLL(data)};
+      FAIL() << "createNLL() should have thrown";
+   } catch (std::invalid_argument const &e) {
+      // The error tells how to disable the optimization
+      EXPECT_NE(std::string(e.what()).find("setAttribute(\"BinnedLikelihood\", false)"), std::string::npos);
+   }
+
+   model.setAttribute("BinnedLikelihood", false);
+   EXPECT_NO_THROW(std::unique_ptr<RooAbsReal>{model.createNLL(data)});
 }
 
 // Make sure that the offset is correctly hidden for the likelihoods, even if
