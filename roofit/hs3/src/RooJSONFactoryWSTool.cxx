@@ -2021,13 +2021,14 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    auto writeProductDomain = [&](const char *suffix, RooArgSet const *args) {
       if (!args || args->empty())
          return;
-      const std::string domainName = analysisName + suffix;
-      analysis.domains.push_back({domainName});
-      std::map<std::string, HS3::DomainAxis> axes;
-      for (auto *var : static_range_cast<const RooRealVar *>(*args)) {
-         axes[var->GetName()] = toDomainAxis(var->GetName(), var->getBinning());
+      HS3::Domain &domain = doc.domains.emplace_back();
+      domain.name = analysisName + suffix;
+      analysis.domains.push_back({domain.name});
+      RooArgList sorted{*args};
+      sorted.sort();
+      for (auto *var : static_range_cast<const RooRealVar *>(sorted)) {
+         domain.axes.emplace_back(toDomainAxis(var->GetName(), var->getBinning()));
       }
-      appendDomain(doc.domains, domainName, std::move(axes));
    };
 
    writeProductDomain("_nuisance_parameters", mc.GetNuisanceParameters());
