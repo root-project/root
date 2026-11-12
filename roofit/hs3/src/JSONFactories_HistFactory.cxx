@@ -1061,6 +1061,19 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
       auto updateObservables = [&](RooDataHist const &dataHist) {
          if (channel.observables == nullptr) {
             channel.observables = dataHist.get();
+         } else {
+            // The bin contents of all samples are written in the order of the axes of the channel (the last axis
+            // varies fastest), which is the order of the observables of the first histogram.
+            RooArgSet const &vars = *dataHist.get();
+            bool sameOrder = vars.size() == channel.observables->size();
+            for (std::size_t i = 0; sameOrder && i < vars.size(); ++i) {
+               sameOrder = std::string(vars[i]->GetName()) == (*channel.observables)[i]->GetName();
+            }
+            if (!sameOrder) {
+               RooJSONFactoryWSTool::error("the histograms of channel '" + channel.name +
+                                           "' don't have their observables in the same order, so their bin "
+                                           "contents can't be written along the same axes");
+            }
          }
          if (sample.contents.empty()) {
             sample.contents = contents(dataHist);
