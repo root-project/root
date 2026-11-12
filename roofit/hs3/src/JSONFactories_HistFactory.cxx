@@ -1159,19 +1159,9 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
                   normFactors.push_back({constVar->GetName(), {constVar->GetName()}, HS3::Unconstrained{}});
                }
             } else if (auto par = dynamic_cast<RooRealVar *>(e)) {
-               // Every Gaussian of the parameter is a candidate for its constraint.
-               bool isConstrained = false;
-               for (RooAbsArg const *pdf : ws->allPdfs()) {
-                  if (auto gauss = dynamic_cast<RooGaussian const *>(pdf)) {
-                     if (std::string(par->GetName()) == gauss->getX().GetName()) {
-                        normFactors.push_back({par->GetName(), {par->GetName()}, constraint(gauss)});
-                        isConstrained = true;
-                     }
-                  }
-               }
-               if (!isConstrained) {
-                  normFactors.push_back({par->GetName(), {par->GetName()}, HS3::Unconstrained{}});
-               }
+               // The constraint is found among the clients of the parameter, whichever of x and mean of a Gaussian it
+               // is.
+               normFactors.push_back({par->GetName(), {par->GetName()}, constraint(findConstraint(par))});
             } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
                updateObservables(*hf);
             } else if (ParamHistFunc *phf = dynamic_cast<ParamHistFunc *>(e); phf && allRooRealVar(phf->paramList())) {
@@ -1373,7 +1363,7 @@ void configureStatError(ExportedChannel &channel)
 std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constraint)
 {
    if (RooJSONFactoryWSTool::config().exportArrayDist) {
-      if (auto type = arrayComponentType(constraint)) {
+      if (auto info = arrayComponentInfo(constraint)) {
          std::string arrayName;
          for (RooAbsArg const *client : constraint.clients()) {
             if (client->getAttribute(arrayDistTag)) {
@@ -1383,7 +1373,7 @@ std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constr
          }
          if (arrayName.empty()) {
             // "poisson_dist" -> "<root>_poisson_constraints"
-            arrayName = tool.exportRootName() + "_" + removeSuffix(*type, "_dist") + "_constraints";
+            arrayName = tool.exportRootName() + "_" + removeSuffix(info->type, "_dist") + "_constraints";
          }
          return tool.exportAsArrayComponent(constraint, arrayName);
       }
@@ -1393,42 +1383,60 @@ std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constr
 }
 
 // Export the constraints that the modifiers name, in the order in which the modifiers are written, and replace their
-// names by the names under which they are written: an array distribution that holds them, or their own name.
-void exportNamedConstraints(RooJSONFactoryWSTool &tool, ExportedChannel &channel)
+// names by the names under which they are written: an array distribution that holds them, or their own name. Returns
+// these terms, for the likelihoods of the models that contain this channel.
+std::vector<std::string> exportNamedConstraints(RooJSONFactoryWSTool &tool, ExportedChannel &channel)
 {
    std::map<std::string, std::string> writtenAs;
-   auto rename = [&](std::string &name) {
+   std::vector<std::string> terms;
+   RooWorkspace &ws = *tool.workspace();
+   auto rename = [&](std::string &name, std::string const &paramName) {
       auto found = writtenAs.find(name);
       if (found == writtenAs.end()) {
-         found = writtenAs.emplace(name, exportConstraint(tool, *channel.constraints.at(name))).first;
+         RooAbsPdf const &constraint = *channel.constraints.at(name);
+         // HistFactory builds the Gaussian constraints with the parameter as x and the global observable as mean.
+         // The observable is the side that does not depend on the parameter; recording it makes the Gaussian be
+         // written with the observable as x.
+         RooAbsArg const *param = ws.arg(paramName);
+         if (auto const *gauss = dynamic_cast<RooGaussian const *>(&constraint); gauss && param) {
+            RooAbsReal const &observable = gauss->getX().dependsOn(*param) ? gauss->getMean() : gauss->getX();
+            if (!isLiteralConstVar(observable)) {
+               tool.setConstraintObservable(constraint, observable.GetName());
+            }
+         }
+         found = writtenAs.emplace(name, exportConstraint(tool, constraint)).first;
+         if (std::find(terms.begin(), terms.end(), found->second) == terms.end()) {
+            terms.push_back(found->second);
+         }
       }
       name = found->second;
    };
-   auto renameConstraint = [&](HS3::Constraint &constraint) {
+   auto renameConstraint = [&](HS3::Constraint &constraint, HS3::ParameterRef const &param) {
       if (auto *pdf = std::get_if<HS3::ConstraintPdf>(&constraint)) {
-         rename(pdf->pdf.name);
+         rename(pdf->pdf.name, param.name);
       }
    };
-   auto renameGammas = [&](HS3::GammaConstraint &constraint) {
+   auto renameGammas = [&](HS3::GammaConstraint &constraint, std::vector<HS3::ParameterRef> const &params) {
       if (auto *pdfs = std::get_if<HS3::GammaConstraintPdfs>(&constraint)) {
-         for (auto &pdf : pdfs->pdfs) {
-            if (pdf) {
-               rename(pdf->name);
+         for (std::size_t i = 0; i < pdfs->pdfs.size(); ++i) {
+            if (auto &pdf = pdfs->pdfs[i]) {
+               rename(pdf->name, i < params.size() ? params[i].name : std::string{});
             }
          }
       }
    };
    for (HS3::Sample &sample : channel.dist.samples) {
       for (HS3::Modifier &modifier : sample.modifiers) {
-         std::visit(HS3::overloaded{[&](HS3::NormFactor &m) { renameConstraint(m.constraint); },
-                                    [&](HS3::NormSys &m) { renameConstraint(m.constraint); },
-                                    [&](HS3::HistoSys &m) { renameConstraint(m.constraint); },
-                                    [&](HS3::ShapeSys &m) { renameGammas(m.constraint); },
-                                    [&](HS3::StatError &m) { renameGammas(m.constraint); },
+         std::visit(HS3::overloaded{[&](HS3::NormFactor &m) { renameConstraint(m.constraint, m.parameter); },
+                                    [&](HS3::NormSys &m) { renameConstraint(m.constraint, m.parameter); },
+                                    [&](HS3::HistoSys &m) { renameConstraint(m.constraint, m.parameter); },
+                                    [&](HS3::ShapeSys &m) { renameGammas(m.constraint, m.parameters); },
+                                    [&](HS3::StatError &m) { renameGammas(m.constraint, m.parameters); },
                                     [](HS3::CustomModifier &) {}},
                     modifier);
       }
    }
+   return terms;
 }
 
 // The modifiers name only the constraint terms of the channel. A pdf of a parameter that is not, like an external
@@ -1518,7 +1526,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    }
 
    std::set<RooAbsPdf const *> namedConstraints = nameChannelConstraints(channel, constraints);
-   exportNamedConstraints(*tool, channel);
+   tool->recordConstraintTerms(pdfname, exportNamedConstraints(*tool, channel));
 
    for (RooAbsReal *modifier : channel.customModifiers) {
       tool->queueExport(*modifier);

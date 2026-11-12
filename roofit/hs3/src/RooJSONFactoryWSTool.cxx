@@ -40,6 +40,8 @@
 #include <TROOT.h>
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
 #include <iterator>
 #include <fstream>
 #include <iostream>
@@ -171,6 +173,11 @@ struct RooFit::HS3::ToolExportState {
    /// The name of the top-level object whose export is in progress, and the depth of the export recursion.
    std::string rootName;
    int depth = 0;
+   /// The constraint terms of the exported HistFactory channels, as written, and the data sets written for them.
+   std::map<std::string, std::vector<std::string>> constraintTermsOfPdf;
+   std::set<std::string> writtenConstraintData;
+   /// The observable of a constraint term, by the name of the term, see setConstraintObservable().
+   std::map<std::string, std::string> constraintObservables;
    /// Set by the exporter of an object that is interpreted by the document.
    std::optional<HistFactoryDist> typedObject;
    std::vector<DistributionRef> channelConstraints;
@@ -1412,8 +1419,7 @@ void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &data
 
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
-                    const std::vector<std::unique_ptr<RooAbsData>> &datasets,
-                    std::set<std::string> const &bookkeepingColumns)
+                    std::vector<std::unique_ptr<RooAbsData>> &datasets, std::set<std::string> const &bookkeepingColumns)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = analysis.name;
@@ -1439,11 +1445,81 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       requirePdf(arg, "the " + what + " '" + name + "' of analysis '" + analysisName + "'");
    };
 
-   std::vector<std::string> nllDistNames;
-   nllDistNames.reserve(likelihood.terms.size());
    for (auto const &term : likelihood.terms) {
       checkPdf(workspace.arg(term.distribution.name), term.distribution.name, "distribution");
-      nllDistNames.push_back(term.distribution.name);
+   }
+
+   // The constraint terms of the HistFactory distributions of the likelihood enter through those distributions.
+   // Listed in "aux_distributions", they are not added again; paired with a data set in "distributions", they are
+   // not channels, and the data set gives the observed values of their observables.
+   std::vector<std::unique_ptr<RooArgSet>> trees;
+   for (auto const &term : likelihood.terms) {
+      RooAbsPdf *listed = workspace.pdf(term.distribution.name);
+      trees.push_back(listed ? std::unique_ptr<RooArgSet>{listed->getComponents()} : nullptr);
+   }
+   auto isConstraintTermOfOthers = [&](RooAbsArg const &term, std::size_t self) {
+      auto isPartOf = [&term](RooArgSet const &tree) {
+         if (tree.find(term.GetName())) {
+            return true;
+         }
+         if (term.getAttribute(arrayDistTag)) {
+            if (auto const *array = dynamic_cast<RooProdPdf const *>(&term)) {
+               for (RooAbsArg const *component : array->pdfList()) {
+                  if (tree.find(component->GetName())) {
+                     return true;
+                  }
+               }
+            }
+         }
+         return false;
+      };
+      for (std::size_t i = 0; i < trees.size(); ++i) {
+         if (i != self && trees[i] && isPartOf(*trees[i])) {
+            return true;
+         }
+      }
+      return false;
+   };
+
+   std::vector<std::string> nllDistNames;
+   std::vector<HS3::LikelihoodTerm const *> nllTerms;
+   RooArgSet constraintObservables;
+   for (std::size_t i = 0; i < likelihood.terms.size(); ++i) {
+      auto const &term = likelihood.terms[i];
+      RooAbsPdf *listed = workspace.pdf(term.distribution.name);
+      if (!listed || !isConstraintTermOfOthers(*listed, i)) {
+         nllDistNames.push_back(term.distribution.name);
+         nllTerms.push_back(&term);
+         continue;
+      }
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
+      if (!dataRef) {
+         continue;
+      }
+      for (auto &d : datasets) {
+         if (!d || d->GetName() != dataRef->name) {
+            continue;
+         }
+         if (d->numEntries() != 1) {
+            throw std::runtime_error("the data set '" + dataRef->name + "' paired with the constraint term '" +
+                                     term.distribution.name + "' must have exactly one entry");
+         }
+         for (RooAbsArg const *obs : *d->get(0)) {
+            auto *var = workspace.var(obs->GetName());
+            auto const *value = dynamic_cast<RooAbsReal const *>(obs);
+            if (!var || !value) {
+               RooJSONFactoryWSTool::warning("RooFitHS3: cannot set the observed value of '" +
+                                             std::string(obs->GetName()) + "' from the data set '" + dataRef->name +
+                                             "': it is not a variable of the workspace");
+               continue;
+            }
+            var->setVal(value->getVal());
+            var->setConstant(true);
+            constraintObservables.add(*var);
+         }
+         // The values live in the variables now; the data set is not imported.
+         d.reset();
+      }
    }
    // The constraint terms of HistFactory distributions are listed as auxiliary distributions, but they are part of the
    // distributions in RooFit.
@@ -1468,10 +1544,14 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
           })) {
          continue;
       }
+      if (isConstraintTermOfOthers(*extConstraint, likelihood.terms.size())) {
+         continue;
+      }
       extConstraints.add(*extConstraint);
    }
    RooArgSet observables;
-   for (auto const &term : likelihood.terms) {
+   for (HS3::LikelihoodTerm const *termPtr : nllTerms) {
+      HS3::LikelihoodTerm const &term = *termPtr;
       auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
       if (!dataRef) {
          continue;
@@ -1597,6 +1677,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       }
    }
 
+   globs.add(constraintObservables, /*silent=*/true);
    mc->SetGlobalObservables(globs);
    mc->SetNuisanceParameters(nps);
 
@@ -2380,14 +2461,92 @@ void RooJSONFactoryWSTool::exportArrayDists()
       // Exporting the servers may add to the registry, so the components are copied.
       const std::vector<RooAbsPdf const *> components = next->second;
       JSONNode &elem = appendNamedChild((*_export->root)["distributions"], arrayName);
-      writeArrayDist(elem, arrayName, components);
+      writeArrayDist(elem, arrayName, components, _export->constraintObservables);
       recordGenericObject(_export->doc, true, arrayName, elem);
       for (RooAbsPdf const *pdf : components) {
          exportObjects(pdf->servers());
       }
    }
-   arrayComponents.clear();
-   _export->arrayOfComponent.clear();
+}
+
+void RooJSONFactoryWSTool::setConstraintObservable(RooAbsPdf const &pdf, std::string const &observable)
+{
+   _export->constraintObservables[pdf.GetName()] = observable;
+}
+
+std::string const *RooJSONFactoryWSTool::constraintObservable(std::string const &pdfName) const
+{
+   if (!_export) {
+      return nullptr;
+   }
+   auto found = _export->constraintObservables.find(pdfName);
+   return found == _export->constraintObservables.end() ? nullptr : &found->second;
+}
+
+void RooJSONFactoryWSTool::recordConstraintTerms(std::string const &pdfName, std::vector<std::string> const &terms)
+{
+   auto &out = _export->constraintTermsOfPdf[pdfName];
+   for (auto const &term : terms) {
+      if (std::find(out.begin(), out.end(), term) == out.end()) {
+         out.push_back(term);
+      }
+   }
+}
+
+// Write the data set "<term>_data" with the observed values of the observables of the constraint term `term` (an
+// array distribution written in this export, or a single constraint pdf) and return true, or return false if the
+// observables of the term are not all global observables of the model.
+bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgSet const *globalObservables)
+{
+   std::vector<RooAbsPdf const *> components;
+   if (auto found = _export->arrayComponents.find(term); found != _export->arrayComponents.end()) {
+      components = found->second;
+   } else if (RooAbsPdf *pdf = _workspace.pdf(term)) {
+      components.push_back(pdf);
+   }
+   std::vector<std::string> observables;
+   for (RooAbsPdf const *pdf : components) {
+      auto info = arrayComponentInfo(*pdf, constraintObservable(pdf->GetName()));
+      if (!info || !globalObservables || !globalObservables->find(info->observable.c_str())) {
+         return false;
+      }
+      observables.push_back(info->observable);
+   }
+   if (observables.empty()) {
+      return false;
+   }
+   const std::string dataName = term + "_data";
+   if (!_export->writtenConstraintData.insert(dataName).second) {
+      return true;
+   }
+   if (_workspace.data(dataName)) {
+      error("cannot write the observed values of the constraint term '" + term + "' as the data set '" + dataName +
+            "': the workspace has a data set of that name");
+   }
+   HS3::UnbinnedData data;
+   for (std::string const &name : observables) {
+      auto const *var = dynamic_cast<RooAbsReal const *>(_workspace.arg(name));
+      if (!var) {
+         error("the observable '" + name + "' of the constraint term '" + term + "' is not in the workspace");
+      }
+      HS3::ContinuousAxis axis;
+      axis.name = name;
+      // A range without a bound gets the largest representable value, so that other engines see a finite axis.
+      axis.min = -std::numeric_limits<double>::max();
+      axis.max = std::numeric_limits<double>::max();
+      if (auto const *rrv = dynamic_cast<RooRealVar const *>(var)) {
+         if (std::isfinite(rrv->getMin())) {
+            axis.min = rrv->getMin();
+         }
+         if (std::isfinite(rrv->getMax())) {
+            axis.max = rrv->getMax();
+         }
+      }
+      data.axes.emplace_back(std::move(axis));
+      data.entries.push_back(var->getVal());
+   }
+   _export->doc.data.push_back({dataName, std::move(data)});
+   return true;
 }
 
 /**
@@ -3145,29 +3304,51 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
          aux.push_back({name});
       }
    };
-   // The constraint terms of HistFactory channels that no modifier names are part of the likelihood. The channels
-   // can be the components of a combined distribution.
-   auto addChannelConstraints = [&](std::string const &channel) {
-      auto found = doc.rooFit.channelConstraints.find(channel);
-      if (found != doc.rooFit.channelConstraints.end()) {
-         for (auto const &ref : found->second) {
-            addAux(ref.name);
-         }
+   // The additional terms of the likelihood: the external constraints of the ModelConfig, and the constraint terms
+   // of the HistFactory channels of the model, which can be the components of a combined distribution. The latter
+   // are the constraints that the modifiers name, as written (e.g. array distributions), and those that no modifier
+   // names. They are listed in "aux_distributions" with the observed values of their observables as constant
+   // parameters, or (config().exportConstraintData) in "distributions", each paired with a data set that holds the
+   // observed values.
+   if (mc.GetExternalConstraints()) {
+      for (const auto &constr : *mc.GetExternalConstraints()) {
+         addAux(constr->GetName());
       }
-   };
+   }
+   std::vector<std::string> channels;
    for (auto const &term : likelihood.terms) {
-      addChannelConstraints(term.distribution.name);
+      channels.push_back(term.distribution.name);
       if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(_workspace.pdf(term.distribution.name))) {
          for (auto const &item : simPdf->indexCat()) {
             if (RooAbsPdf const *component = simPdf->getPdf(item.first)) {
-               addChannelConstraints(component->GetName());
+               channels.push_back(component->GetName());
             }
          }
       }
    }
-   if (mc.GetExternalConstraints()) {
-      for (const auto &constr : *mc.GetExternalConstraints()) {
-         addAux(constr->GetName());
+   std::vector<std::string> constraintTerms;
+   auto addConstraintTerm = [&](std::string const &term) {
+      if (std::find(constraintTerms.begin(), constraintTerms.end(), term) == constraintTerms.end()) {
+         constraintTerms.push_back(term);
+      }
+   };
+   for (std::string const &channel : channels) {
+      if (auto found = _export->constraintTermsOfPdf.find(channel); found != _export->constraintTermsOfPdf.end()) {
+         for (std::string const &term : found->second) {
+            addConstraintTerm(term);
+         }
+      }
+      if (auto found = doc.rooFit.channelConstraints.find(channel); found != doc.rooFit.channelConstraints.end()) {
+         for (auto const &ref : found->second) {
+            addConstraintTerm(ref.name);
+         }
+      }
+   }
+   for (std::string const &term : constraintTerms) {
+      if (config().exportConstraintData && exportConstraintData(term, mc.GetGlobalObservables())) {
+         likelihood.terms.push_back({{term}, HS3::DataRef{term + "_data"}});
+      } else {
+         addAux(term);
       }
    }
    doc.likelihoods.push_back(std::move(likelihood));
