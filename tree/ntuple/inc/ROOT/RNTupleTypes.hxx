@@ -63,7 +63,7 @@ When changed, remember to update
   - RNTupleSerializer::[Des|S]erializeColumnType
 */
 // clang-format on
-enum class ENTupleColumnType {
+enum class ENTupleColumnType : std::uint8_t {
    kUnknown = 0,
    // type for root columns of (nested) collections; offsets are relative to the current cluster
    kIndex64,
