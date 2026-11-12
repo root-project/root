@@ -190,5 +190,7 @@
 #pragma link C++ class CustomMergeVec+;
 #pragma link C++ class CustomMergeMap+;
 #pragma link C++ class std::map<std::string, CustomMergeMap>+;
+#pragma link C++ class CustomMergeSet+;
+#pragma link C++ class std::set<CustomMergeSet>+;
 
 #endif

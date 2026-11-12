@@ -262,7 +262,9 @@ TEST_P(RNTupleMergeEmulated, MergeLateEmulated)
 
 INSTANTIATE_TEST_SUITE_P(
    Seq, RNTupleMergeEmulated,
-   testing::Values(RNTupleMergeEmulatedParams{"CustomMergeBasic", "CustomMergeBasic", "p->fA = %d"},
-                   RNTupleMergeEmulatedParams{"CustomMergeVec", "std::vector<CustomMergeVec>", "p->emplace_back(%d)"},
-                   RNTupleMergeEmulatedParams{"CustomMergeMap", "std::map<std::string, CustomMergeMap>",
-                                              "p->try_emplace(\"%d\", CustomMergeMap{%d})"}));
+   testing::Values(
+      RNTupleMergeEmulatedParams{"CustomMergeBasic", "CustomMergeBasic", "p->fA = %d"},
+      RNTupleMergeEmulatedParams{"CustomMergeVec", "std::vector<CustomMergeVec>", "p->emplace_back(%d)"},
+      RNTupleMergeEmulatedParams{"CustomMergeMap", "std::map<std::string, CustomMergeMap>",
+                                 "p->try_emplace(\"%d\", CustomMergeMap{%d})"},
+      RNTupleMergeEmulatedParams{"CustomMergeSet", "std::set<CustomMergeSet>", "p->emplace(%d)"}));
