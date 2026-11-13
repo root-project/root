@@ -25,17 +25,7 @@
 
 using namespace ROOT::CmdLine;
 
-static const char *const kShortHelp = "usage: rootmkdir [-p|--parents] [-v|--verbose] FILE:path/to/dir [...]\n";
-static const char *const kLongHelp = R"(
-Add directories in ROOT files
-
-positional arguments:
-  FILE:path             File(s) and path(s) of directories to create
-
-options:
-  -h, --help            get this help
-  -p, --parents         create parent directories if needed, no error if directory already exists
-  -v, --verbose         be verbose (can be repeated for increased verbosity)
+static const char *const kDescription = R"(Add directories in ROOT files
 
 Note that calling rootmkdir without a directory path can be used to create files (similar to the `touch` command).
 You can also simultaneously create files and directories in it if you pass the -p flag.
@@ -55,15 +45,12 @@ examples:
 
 - rootmkdir -p non_existent.root:dir1
   Create a ROOT file named 'non_existent.root' and directory `dir1` in it
-)";
+
+positional arguments:
+  FILE:path             File(s) and path(s) of directories to create)";
 
 struct RootMkdirArgs {
-   enum class EPrintUsage {
-      kNo,
-      kShort,
-      kLong
-   };
-   EPrintUsage fPrintHelp = EPrintUsage::kNo;
+   std::string fHelp;
    bool fCreateParents = false;
    std::vector<std::string> fDstFileAndPaths;
 };
@@ -71,26 +58,34 @@ struct RootMkdirArgs {
 static RootMkdirArgs ParseArgs(const char **args, int nArgs)
 {
    using ROOT::RCmdLineOpts;
+   using FT = RCmdLineOpts::EFlagType;
 
    RootMkdirArgs outArgs;
 
    RCmdLineOpts opts;
-   opts.AddFlag({"-h", "--help"});
-   opts.AddFlag({"-p", "--parents"});
-   opts.AddFlag({"-v", "--verbose"}, RCmdLineOpts::EFlagType::kSwitch, "", RCmdLineOpts::kFlagAllowMultiple);
+   opts.AddFlag({"-h", "--help"}, FT::kSwitch, "get this help");
+   opts.AddFlag({"-p", "--parents"}, FT::kSwitch,
+                "create parent directories if needed, no error if directory already exists");
+   opts.AddFlag({"-v", "--verbose"}, RCmdLineOpts::EFlagType::kSwitch,
+                "be verbose (can be repeated for increased verbosity)", RCmdLineOpts::kFlagAllowMultiple);
 
    opts.Parse(args, nArgs);
+
+   RCmdLineOpts::RMakeHelpOptions helpOpts;
+   helpOpts.fPositionalArgs = "FILE:path/to/dir [...]";
+   helpOpts.fDescription = kDescription;
+   helpOpts.fWrapDescription = false;
 
    for (const auto &err : opts.GetErrors()) {
       std::cerr << err << "\n";
    }
    if (!opts.GetErrors().empty()) {
-      outArgs.fPrintHelp = RootMkdirArgs::EPrintUsage::kShort;
+      outArgs.fHelp = opts.MakeShortHelp(Detail::gLogName, helpOpts);
       return outArgs;
    }
 
    if (opts.GetSwitch("help")) {
-      outArgs.fPrintHelp = RootMkdirArgs::EPrintUsage::kLong;
+      outArgs.fHelp = opts.MakeLongHelp(Detail::gLogName, helpOpts);
       return outArgs;
    }
 
@@ -100,7 +95,7 @@ static RootMkdirArgs ParseArgs(const char **args, int nArgs)
 
    outArgs.fDstFileAndPaths = opts.GetArgs();
    if (outArgs.fDstFileAndPaths.size() < 1)
-      outArgs.fPrintHelp = RootMkdirArgs::EPrintUsage::kShort;
+      outArgs.fHelp = opts.MakeShortHelp(Detail::gLogName, helpOpts);
 
    return outArgs;
 }
@@ -186,12 +181,8 @@ int main(int argc, char **argv)
 
    // Parse arguments
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
-   if (args.fPrintHelp != RootMkdirArgs::EPrintUsage::kNo) {
-      std::cerr << kShortHelp;
-      if (args.fPrintHelp == RootMkdirArgs::EPrintUsage::kLong) {
-         std::cerr << kLongHelp;
-         return 0;
-      }
+   if (!args.fHelp.empty()) {
+      std::cerr << args.fHelp << "\n";
       return 1;
    }
 
