@@ -28,7 +28,7 @@
 class MyTimer {
 public:
    MyTimer(std::string &&name)
-      : m_name(name), m_startTime(clock()), m_endTime(0), m_steadyStart(std::chrono::steady_clock::now()), m_steadyEnd()
+      : m_name(name), m_startTime(clock()), m_endTime(0), m_steadyStart(std::chrono::steady_clock::now())
    {
    }
 

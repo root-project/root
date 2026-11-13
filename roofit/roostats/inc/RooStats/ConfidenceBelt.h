@@ -42,8 +42,9 @@ namespace RooStats {
       // should check to see if this is already in the map
       if(GetLookupIndex(cl,leftside) >=0 ){
          std::cout<< "SamplingSummaryLookup::Add, already in lookup table" << std::endl;
-      } else
-   fLookupTable[fLookupTable.size()]= tmp;
+      } else {
+         fLookupTable[fLookupTable.size()] = tmp;
+      }
     }
 
     Int_t GetLookupIndex(double cl, double leftside){

@@ -205,7 +205,9 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
           detOut_null= nullptr;
         }
       }
-   }else samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
+   } else {
+      samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
+   }
 
    // set parameters back
    bothParams->assign(*saveAll);
@@ -244,8 +246,9 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
          RooRandom::randomGenerator()->SetSeed(prevSeed);
       }
 
-   }else samp_alt = fTestStatSampler->GetSamplingDistribution(paramPointAlt);
-
+   } else {
+      samp_alt = fTestStatSampler->GetSamplingDistribution(paramPointAlt);
+   }
 
    // create result
    string resultname = "HypoTestCalculator_result";

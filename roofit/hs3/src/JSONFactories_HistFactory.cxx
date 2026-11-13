@@ -118,6 +118,7 @@ std::vector<Interpolation>
 toInterpolations(std::vector<int> const &codes, InterpolationClass interpolationClass, std::string const &context)
 {
    std::vector<Interpolation> out;
+   out.reserve(codes.size());
    for (std::size_t i = 0; i < codes.size(); ++i) {
       out.push_back(
          interpolationFromCode(codes[i], interpolationClass, context + " at parameter index " + std::to_string(i)));
@@ -129,6 +130,7 @@ std::vector<int> toCodes(std::vector<Interpolation> const &interpolations, Inter
                          std::string const &context)
 {
    std::vector<int> out;
+   out.reserve(interpolations.size());
    for (std::size_t i = 0; i < interpolations.size(); ++i) {
       out.push_back(codeFromInterpolation(interpolations[i], interpolationClass,
                                           context + " component 'interpolations' at index " + std::to_string(i)));
@@ -762,10 +764,11 @@ std::string stripOuterParens(const std::string &s)
       int depth = 0;
       bool balanced = true;
       for (size_t i = start; i < end - 1; ++i) {
-         if (s[i] == '(')
+         if (s[i] == '(') {
             ++depth;
-         else if (s[i] == ')')
+         } else if (s[i] == ')') {
             --depth;
+         }
          if (depth == 0 && i < end - 1) {
             balanced = false;
             break;
@@ -1131,7 +1134,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
                   expression.ReplaceAll(("@" + std::to_string(i)).c_str(), p->GetName());
                }
                auto components = splitTopLevelProduct(expression.Data());
-               if (components.size() == 0) {
+               if (components.empty()) {
                   // it's not a product, let's just treat it as an unknown element
                   custom.push_back({formula->GetName()});
                   channel.customModifiers.push_back(formula);
@@ -1425,10 +1428,11 @@ public:
       for (auto *pdf : static_range_cast<RooAbsPdf *>(prodpdf->pdfList())) {
          auto thispdf = dynamic_cast<RooRealSumPdf *>(pdf);
          if (thispdf) {
-            if (!sumpdf)
+            if (!sumpdf) {
                sumpdf = thispdf;
-            else
+            } else {
                return false;
+            }
          } else {
             constraints.push_back(pdf);
          }

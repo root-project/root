@@ -91,7 +91,8 @@ protected:
    TEST_F(TEST_CLASS, DISABLED_##TEST_NAME)                                                             \
    {                                                                                                    \
       resetParameters();                                                                                \
-      double relativeError, maximalRelativeError = 0.0;                                                 \
+      double relativeError;                                                                             \
+      double maximalRelativeError = 0.0;                                                                \
       compareFixedValues(relativeError, false, false, false);                                           \
       maximalRelativeError = std::max(maximalRelativeError, relativeError);                             \
                                                                                                         \
@@ -116,7 +117,8 @@ protected:
    TEST_F(TEST_CLASS, TEST_NAME)                                                                        \
    {                                                                                                    \
       resetParameters();                                                                                \
-      double relativeError, maximalRelativeError = 0.0;                                                 \
+      double relativeError;                                                                             \
+      double maximalRelativeError = 0.0;                                                                \
                                                                                                         \
       for (unsigned int i = 0; i < 5 && !HasFailure(); ++i) {                                           \
          std::stringstream str;                                                                         \
@@ -139,7 +141,8 @@ protected:
    TEST_F(TEST_CLASS, DISABLED_##TEST_NAME)                                                             \
    {                                                                                                    \
       resetParameters();                                                                                \
-      double relativeError, maximalRelativeError = 0.0;                                                 \
+      double relativeError;                                                                             \
+      double maximalRelativeError = 0.0;                                                                \
                                                                                                         \
       for (unsigned int i = 0; i < 5 && !HasFailure(); ++i) {                                           \
          std::stringstream str;                                                                         \

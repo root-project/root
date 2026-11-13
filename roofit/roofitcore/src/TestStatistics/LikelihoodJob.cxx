@@ -37,10 +37,10 @@ LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> likelihood,
    : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean), std::move(offset)),
      n_event_tasks_(MultiProcess::Config::LikelihoodJob::defaultNEventTasks),
      n_component_tasks_(MultiProcess::Config::LikelihoodJob::defaultNComponentTasks),
+     offsets_previous_(shared_offset_.offsets()),
      likelihood_serial_(likelihood_, calculation_is_clean_, shared_offset_)
 {
    init_vars();
-   offsets_previous_ = shared_offset_.offsets();
 }
 
 // This is a separate function (instead of just in ctor) for historical reasons.

@@ -208,16 +208,17 @@ std::unique_ptr<RooSimWSTool::ObjBuildConfig> RooSimWSTool::validateConfig(Build
   // Create empty object version of build config
   auto obc = std::make_unique<ObjBuildConfig>();
 
-  if (bc._masterCatName.length()>0) {
-    obc->_masterCat = _ws->cat(bc._masterCatName) ;
-    if (!obc->_masterCat) {
-      oocoutE(nullptr, ObjectHandling) << "RooSimWSTool::build() ERROR: associated workspace " << _ws->GetName()
-             << " does not contain a category named " << bc._masterCatName
-             << " that was designated as master index category in the build configuration" << std::endl ;
-      return nullptr;
-    }
+  if (!bc._masterCatName.empty()) {
+     obc->_masterCat = _ws->cat(bc._masterCatName);
+     if (!obc->_masterCat) {
+        oocoutE(nullptr, ObjectHandling) << "RooSimWSTool::build() ERROR: associated workspace " << _ws->GetName()
+                                         << " does not contain a category named " << bc._masterCatName
+                                         << " that was designated as master index category in the build configuration"
+                                         << std::endl;
+        return nullptr;
+     }
   } else {
-    obc->_masterCat = nullptr ;
+     obc->_masterCat = nullptr;
   }
 
   map<string,SplitRule>::iterator pdfiter ;
@@ -858,12 +859,13 @@ void RooSimWSTool::ObjBuildConfig::print()
 
     map<RooAbsArg*,pair<RooArgSet,string> >::iterator csi ;
     for (csi = ri->second._paramSplitMap.begin() ; csi != ri->second._paramSplitMap.end() ; ++csi ) {
-      if (csi->second.second.length()>0) {
-   std::cout << " parameter " << csi->first->GetName() << " is split with constraint in categories " << csi->second.first
-        << " with remainder in state " << csi->second.second << std::endl ;
-      } else {
-   std::cout << " parameter " << csi->first->GetName() << " is split with constraint in categories " << csi->second.first << std::endl ;
-      }
+       if (!csi->second.second.empty()) {
+          std::cout << " parameter " << csi->first->GetName() << " is split with constraint in categories "
+                    << csi->second.first << " with remainder in state " << csi->second.second << std::endl;
+       } else {
+          std::cout << " parameter " << csi->first->GetName() << " is split with constraint in categories "
+                    << csi->second.first << std::endl;
+       }
     }
   }
 
