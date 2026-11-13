@@ -339,7 +339,7 @@ void ROOT::RField<double>::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) c
 
 void ROOT::RField<double>::SetDouble32()
 {
-   fTypeAlias = "Double32_t";
+   SetTypeAlias("Double32_t");
 }
 
 //------------------------------------------------------------------------------
@@ -918,7 +918,7 @@ ROOT::RNullableField::RNullableField(std::string_view fieldName, const std::stri
                       false /* isSimple */)
 {
    if (!itemField->GetTypeAlias().empty())
-      fTypeAlias = typePrefix + "<" + itemField->GetTypeAlias() + ">";
+      SetTypeAlias(typePrefix + "<" + itemField->GetTypeAlias() + ">");
 
    Attach(std::move(itemField), "_0");
 }
@@ -1267,7 +1267,7 @@ ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::unique_ptr<RFi
       fTraits |= kTraitTriviallyDestructible;
 
    if (!itemField->GetTypeAlias().empty())
-      fTypeAlias = "std::atomic<" + itemField->GetTypeAlias() + ">";
+      SetTypeAlias("std::atomic<" + itemField->GetTypeAlias() + ">");
 
    Attach(std::move(itemField), "_0");
 }
