@@ -361,10 +361,32 @@ void describe(Reader &ar, BinnedAxis &axis)
    axis.binning = binning;
 }
 
+// A categorical axis (HS3 #108) has unique non-empty labels, and no range or binning.
 void describe(Reader &ar, CategoricalAxis &axis)
 {
    ar("name", axis.name);
-   ar("categories", axis.categories);
+   for (const char *key : {"min", "max", "nbins", "edges"}) {
+      if (ar.has(key)) {
+         ar.cursor().error("the axis '" + axis.name + "' is categorical and must not have \"" + key + "\"");
+      }
+   }
+   ar.has("categories");
+   JSONNode const &labels = ar.cursor().node()["categories"];
+   if (!labels.is_seq() || labels.num_children() == 0) {
+      ar.cursor().error("the axis '" + axis.name + "': \"categories\" must be a non-empty list of strings");
+      return;
+   }
+   for (JSONNode const &label : labels.children()) {
+      if (label.is_container() || label.is_null() || label.is_number() || label.val().empty()) {
+         ar.cursor().error("the axis '" + axis.name + "': the entries of \"categories\" must be non-empty strings");
+         return;
+      }
+      if (std::find(axis.categories.begin(), axis.categories.end(), label.val()) != axis.categories.end()) {
+         ar.cursor().error("the axis '" + axis.name + "': the category \"" + label.val() + "\" is listed twice");
+         return;
+      }
+      axis.categories.push_back(label.val());
+   }
 }
 
 namespace {
@@ -552,6 +574,60 @@ void describe(Reader &ar, BinnedData &data)
    }
 }
 
+// A combined data set. Only the structure is checked here: the columns and keys are checked against the domains by the
+// validation, and the sub-data sets when the data set is built.
+void readCombinedData(Reader &ar, std::string const &name, CombinedData &data)
+{
+   std::string const context = "the combined data set '" + name + "'";
+   Cursor const &c = ar.cursor();
+   if (ar.has("axes")) {
+      c.error(context + " must not have \"axes\": its columns are declared by the domains");
+      return;
+   }
+   auto nonEmptyList = [&](const char *key) -> JSONNode const * {
+      if (!ar.has(key) || !c.node()[key].is_seq() || c.node()[key].num_children() == 0) {
+         return nullptr;
+      }
+      return &c.node()[key];
+   };
+   JSONNode const *columns = nonEmptyList("columns");
+   for (std::size_t i = 0; columns && i < columns->num_children(); ++i) {
+      JSONNode const &column = columns->child(i);
+      if (column.is_container() || column.val().empty()) {
+         columns = nullptr;
+         break;
+      }
+      data.columns.push_back(column.val());
+   }
+   if (!columns) {
+      c.error("\"columns\" of " + context + " must be a non-empty list of names of categorical axes");
+      return;
+   }
+   JSONNode const *components = nonEmptyList("components");
+   if (!components) {
+      c.error("\"components\" of " + context + " must be a non-empty list");
+      return;
+   }
+   for (JSONNode const &component : components->children()) {
+      if (!component.is_map() || !component.has_child("key") || !component.has_child("dataset")) {
+         c.error("every component of " + context + " must have a \"key\" and a \"dataset\"");
+         return;
+      }
+      JSONNode const &key = component["key"];
+      CombinedDataComponent &out = data.components.emplace_back();
+      if (key.is_seq() && key.num_children() == data.columns.size()) {
+         for (JSONNode const &label : key.children()) {
+            out.key.push_back(label.is_container() ? std::string{} : label.val());
+         }
+      } else {
+         c.error("every component of " + context + " must have a \"key\" with " + std::to_string(data.columns.size()) +
+                 " labels, one per column");
+         return;
+      }
+      out.data.name = component["dataset"].val();
+   }
+}
+
 void readValue(Cursor const &c, Data &out)
 {
    if (!c.node().is_map()) {
@@ -573,6 +649,10 @@ void readValue(Cursor const &c, Data &out)
    } else if (type == "point") {
       PointData body;
       describe(ar, body);
+      out.body = std::move(body);
+   } else if (type == "combined") {
+      CombinedData body;
+      readCombinedData(ar, out.name, body);
       out.body = std::move(body);
    } else if (ar.has("type")) {
       c.error("unknown type of dataset '" + type + "'");
@@ -971,6 +1051,15 @@ void describe(Reader &ar, StatErrorConfig &config)
 
 void describe(Reader &ar, HistFactoryDist &dist)
 {
+   if (ar.has("axes") && ar.cursor().node()["axes"].is_seq()) {
+      for (JSONNode const &axis : ar.cursor().node()["axes"].children()) {
+         if (axis.is_map() && axis.has_child("categories")) {
+            ar.cursor().error("the axis '" + (axis.has_child("name") ? axis["name"].val() : std::string{}) +
+                              "' is categorical, but the axes of a HistFactory prediction are binned");
+            return;
+         }
+      }
+   }
    ar("axes", dist.axes);
    ar("default_interpolation", dist.defaultInterpolation);
    ar("samples", dist.samples);
@@ -1137,6 +1226,7 @@ void readMisc(Cursor const &root, RooFitInternal &out)
    readMap(ar, "combined_datasets", out.combinedDatasets);
    readMap(ar, "ModelConfigs", out.modelConfigs);
    readMap(ar, "histfactory_constraints", out.channelConstraints);
+   readMap(ar, "bookkeeping_columns", out.bookkeepingColumns);
 }
 
 void readMetadata(Cursor const &root, Metadata &out, ParseOptions const &options)

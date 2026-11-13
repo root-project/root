@@ -41,9 +41,11 @@ public:
    {
       collectNames();
       checkFixedAxes();
+      checkCategoricalAxes();
       checkLikelihoods();
       checkAnalyses();
       checkData();
+      checkCombinedData();
       for (std::size_t i = 0; i < _doc.distributions.size(); ++i) {
          auto const &dist = _doc.distributions[i];
          if (auto const *histFactory = std::get_if<HistFactoryDist>(&dist.body)) {
@@ -125,9 +127,11 @@ private:
 
    void collectNames();
    void checkFixedAxes();
+   void checkCategoricalAxes();
    void checkLikelihoods();
    void checkAnalyses();
    void checkData();
+   void checkCombinedData();
 
    HS3Document const &_doc;
    Diagnostics &_diagnostics;
@@ -282,6 +286,114 @@ void Validator::checkFixedAxes()
                   "the parameter point '" + point.name + "' gives the parameter '" + parameter.name + "' the value " +
                      std::to_string(*value) + ", but its domain only has the value " +
                      std::to_string(found->second.value));
+         }
+      }
+   }
+}
+
+// A categorical axis (HS3 #108) declares a category. All domains that list it must give it the same categories, and
+// none may list it as continuous.
+void Validator::checkCategoricalAxes()
+{
+   struct Declaration {
+      std::vector<std::string> const *categories = nullptr;
+      std::string const *domain = nullptr;
+   };
+   std::map<std::string, Declaration> categorical;
+   for (std::size_t i = 0; i < _doc.domains.size(); ++i) {
+      Domain const &domain = _doc.domains[i];
+      for (auto const &axis : domain.axes) {
+         auto const *cat = std::get_if<CategoricalAxis>(&axis);
+         if (!cat) {
+            continue;
+         }
+         auto inserted = categorical.insert({cat->name, Declaration{&cat->categories, &domain.name}});
+         if (!inserted.second && *inserted.first->second.categories != cat->categories) {
+            error(at("domains", i, domain.name), "the categorical axis '" + cat->name + "' is listed in the domains '" +
+                                                    *inserted.first->second.domain + "' and '" + domain.name +
+                                                    "' with different categories");
+         }
+      }
+   }
+   for (std::size_t i = 0; i < _doc.domains.size(); ++i) {
+      Domain const &domain = _doc.domains[i];
+      for (auto const &axis : domain.axes) {
+         auto const *continuous = std::get_if<DomainAxis>(&axis);
+         if (!continuous || continuous->fixedValue) {
+            continue; // fixed axes are checked by checkFixedAxes()
+         }
+         auto found = categorical.find(continuous->name);
+         if (found != categorical.end()) {
+            error(at("domains", i, domain.name),
+                  "the axis '" + continuous->name + "' is listed in a domain as categorical and as continuous");
+         }
+      }
+   }
+}
+
+// The columns of combined data sets are categorical axes of the domains, or categories that exist already, and the keys
+// consist of their categories. Every sub-data set is a data set of the document that belongs to one combined data set.
+void Validator::checkCombinedData()
+{
+   std::map<std::string, std::vector<std::string> const *> categorical;
+   for (Domain const &domain : _doc.domains) {
+      for (auto const &axis : domain.axes) {
+         if (auto const *cat = std::get_if<CategoricalAxis>(&axis)) {
+            categorical.emplace(cat->name, &cat->categories);
+         }
+      }
+   }
+   std::set<std::string> combinedNames;
+   for (auto const &data : _doc.data) {
+      if (std::holds_alternative<CombinedData>(data.body)) {
+         combinedNames.insert(data.name);
+      }
+   }
+   std::set<std::string> usedComponents;
+   for (std::size_t i = 0; i < _doc.data.size(); ++i) {
+      auto const *combined = std::get_if<CombinedData>(&_doc.data[i].body);
+      if (!combined) {
+         continue;
+      }
+      std::string const path = at("data", i, _doc.data[i].name);
+      std::string const context = "the combined data set '" + _doc.data[i].name + "'";
+      std::vector<std::vector<std::string> const *> columnCategories;
+      std::set<std::string> columns;
+      for (std::string const &column : combined->columns) {
+         auto found = categorical.find(column);
+         if (found == categorical.end() && !isExternal(column)) {
+            error(path,
+                  "the column '" + column + "' of " + context + " is not declared by a categorical axis of a domain");
+            return;
+         }
+         if (!columns.insert(column).second) {
+            error(path, "the column '" + column + "' of " + context + " is listed twice");
+            return;
+         }
+         columnCategories.push_back(found != categorical.end() ? found->second : nullptr);
+      }
+      std::set<std::vector<std::string>> keys;
+      for (CombinedDataComponent const &component : combined->components) {
+         for (std::size_t k = 0; k < component.key.size(); ++k) {
+            auto const *categories = columnCategories[k];
+            if (categories &&
+                std::find(categories->begin(), categories->end(), component.key[k]) == categories->end()) {
+               error(path, "the label '" + component.key[k] + "' in position " + std::to_string(k) + " of a key of " +
+                              context + " is not one of the categories of '" + combined->columns[k] + "'");
+            }
+         }
+         if (!keys.insert(component.key).second) {
+            std::string key = "[";
+            for (std::size_t k = 0; k < component.key.size(); ++k) {
+               key += (k == 0 ? "\"" : ", \"") + component.key[k] + "\"";
+            }
+            error(path, "the key " + key + "] is used by two components of " + context);
+         }
+         std::string const &name = component.data.name;
+         if (!isDefinedIn(name, "data") || combinedNames.count(name) || !usedComponents.insert(name).second) {
+            error(path, "the component '" + name + "' of " + context +
+                           " is not a data set of the document, or it is already a component of another combined "
+                           "data set");
          }
       }
    }
