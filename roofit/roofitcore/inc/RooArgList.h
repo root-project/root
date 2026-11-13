@@ -140,7 +140,7 @@ private:
   void processArg(RooAbsArg* arg) { add(*arg); }
   template<class Arg_t>
   void processArg(Arg_t && arg) {
-    assert_is_no_temporary(std::forward<Arg_t>(arg));
+    assert_is_no_temporary<Arg_t>();
     add(arg);
   }
   void processArg(const char* name) { _name = name; }

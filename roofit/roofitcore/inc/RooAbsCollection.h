@@ -405,7 +405,7 @@ protected:
   virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const = 0;
 
   template<class T>
-  static void assert_is_no_temporary(T &&) {
+  static void assert_is_no_temporary() {
     static_assert(!std::is_rvalue_reference<T&&>::value,
       "A reference to a temporary RooAbsArg will be passed to a RooAbsCollection constructor! "
       "This is not allowed, because the collection will not own the arguments. "
