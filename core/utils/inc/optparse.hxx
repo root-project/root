@@ -655,6 +655,15 @@ public:
    /// case this will contain all skipped unknown flags.
    const std::vector<std::size_t> &GetUnprocessedArgsIndices() const { return fUnprocessedArgsIndices; }
 
+   struct RMakeHelpOptions {
+      std::string_view fPositionalArgs;
+      std::string_view fDescription;
+      std::size_t *fMaxLineWidth = nullptr;
+      bool fWrapDescription = true;
+
+      RMakeHelpOptions() {}
+   };
+
    /// Generates a short usage string for the program. `programName` should, in most cases, be equal to `argv[0]`.
    /// The string does NOT contain the flags' description but only their name and whether they need an argument or not.
    /// For flags with multiple aliases, only the first short alias alphabetically will be shown, or the first
@@ -665,13 +674,13 @@ public:
    /// than that in case a line cannot be wrapped exactly due to e.g. too-long-named flags) and it will be overwritten
    /// with the actual length of the longest line in the output string. If the value of `maxLineWidth` is 0, the default
    /// line width will be used (but the variable will contain the actual line width when the function returns).
-   std::string MakeShortHelp(std::string_view programName, std::string_view positionalArgs = "",
-                             std::size_t *maxLineWidth = nullptr) const
+   std::string MakeShortHelp(std::string_view programName, const RMakeHelpOptions &options = {}) const
    {
       std::string res;
       std::string curLine = "usage: " + std::string(programName);
       const std::size_t wrapBeginIdx = curLine.size() + 1;
-      const std::size_t lineWidthToUse = !maxLineWidth || *maxLineWidth == 0 ? kDefaultHelpWidth : *maxLineWidth;
+      const std::size_t lineWidthToUse =
+         !options.fMaxLineWidth || *options.fMaxLineWidth == 0 ? kDefaultHelpWidth : *options.fMaxLineWidth;
       std::size_t wrapEndIdx = std::max<std::size_t>(wrapBeginIdx + 10, lineWidthToUse);
       auto expectedFlags = fExpectedFlags;
       std::sort(expectedFlags.begin(), expectedFlags.end(),
@@ -707,10 +716,11 @@ public:
          curLine += toAppend;
       }
       res += curLine;
-      if (!positionalArgs.empty())
-         res += ' ' + ROOT::WrapString(positionalArgs, wrapEndIdx, wrapBeginIdx, wrapEndIdx - curLine.size() - 1);
-      if (maxLineWidth)
-         *maxLineWidth = wrapEndIdx;
+      if (!options.fPositionalArgs.empty())
+         res +=
+            ' ' + ROOT::WrapString(options.fPositionalArgs, wrapEndIdx, wrapBeginIdx, wrapEndIdx - curLine.size() - 1);
+      if (options.fMaxLineWidth)
+         *options.fMaxLineWidth = wrapEndIdx;
 
       return res;
    }
@@ -719,18 +729,22 @@ public:
    /// The output string includes the output of MakeShortHelp followed by `description` and by the complete list of
    /// flags in alphabetic order, each paired with its description.
    /// See MakeShortHelp for the meaning of `maxLineWidth`.
-   std::string MakeLongHelp(std::string_view programName, std::string_view description,
-                            std::string_view positionalArgs = "", std::size_t *maxLineWidth = nullptr) const
+   std::string MakeLongHelp(std::string_view programName, const RMakeHelpOptions &options = {}) const
    {
-      std::size_t wrapEndIdx = maxLineWidth ? *maxLineWidth : 0;
-      std::string res = MakeShortHelp(programName, positionalArgs, &wrapEndIdx);
-      if (maxLineWidth)
-         *maxLineWidth = wrapEndIdx;
+      std::size_t wrapEndIdx = options.fMaxLineWidth ? *options.fMaxLineWidth : 0;
+      auto opts = options;
+      opts.fMaxLineWidth = &wrapEndIdx;
+      std::string res = MakeShortHelp(programName, opts);
+      if (options.fMaxLineWidth)
+         *options.fMaxLineWidth = wrapEndIdx;
 
-      if (!description.empty())
+      if (!options.fDescription.empty())
          res += "\n\n";
 
-      res += ROOT::WrapString(description, wrapEndIdx) + "\n\n";
+      if (options.fWrapDescription)
+         res += ROOT::WrapString(options.fDescription, wrapEndIdx) + "\n\n";
+      else
+         res += std::string(options.fDescription) + "\n\n";
 
       if (fExpectedFlags.empty())
          return res;

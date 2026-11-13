@@ -848,7 +848,9 @@ TEST(OptParse, Help)
                 ROOT::RCmdLineOpts::kFlagAllowMultiple);
    opts.AddFlag({"--with-arg"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
    opts.AddFlag({"-p"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "Has prefix flag", ROOT::RCmdLineOpts::kFlagPrefixArg);
-   EXPECT_EQ(opts.MakeShortHelp("test", "FILE1 FILE2 FILE3 FILE4 FILE5 AND_MORE_STUFF_AFTER_THIS"),
+   ROOT::RCmdLineOpts::RMakeHelpOptions helpOpts;
+   helpOpts.fPositionalArgs = "FILE1 FILE2 FILE3 FILE4 FILE5 AND_MORE_STUFF_AFTER_THIS";
+   EXPECT_EQ(opts.MakeShortHelp("test", helpOpts),
              R"(usage: test [-f(f..)] [-p<P>] [--with-arg WITH-ARG] FILE1 FILE2 FILE3 FILE4 FILE5
             AND_MORE_STUFF_AFTER_THIS)");
 
@@ -860,11 +862,11 @@ TEST(OptParse, Help)
              R"(usage: test [-f(f..)] [-p<P>]
             [--very-long-flag-with-very-long-description VERY-LONG-FLAG-WITH-VERY-LONG-DESCRIPTION]
             [--with-arg WITH-ARG])");
-   EXPECT_EQ(opts.MakeLongHelp(
-                "test",
-                "This program does something. You could try and guess what it does, but it's more useful to give you a "
-                "description of it, so here you go. This must be long enough to test the string wrapping.",
-                "ARG1 ARG2..."),
+   helpOpts.fDescription =
+      "This program does something. You could try and guess what it does, but it's more useful to give you a "
+      "description of it, so here you go. This must be long enough to test the string wrapping.";
+   helpOpts.fPositionalArgs = "ARG1 ARG2...";
+   EXPECT_EQ(opts.MakeLongHelp("test", helpOpts),
              R"(usage: test [-f(f..)] [-p<P>]
             [--very-long-flag-with-very-long-description VERY-LONG-FLAG-WITH-VERY-LONG-DESCRIPTION]
             [--with-arg WITH-ARG] ARG1 ARG2...
@@ -889,7 +891,7 @@ TEST(OptParse, HelpMultipleFlagsShort)
    opts.AddFlag({"-s", "--some-flag"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "Just some flag.");
    opts.AddFlag({"-o", "--other-flag"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "");
    opts.AddFlag({"--third-flag", "-t"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "A third flag.");
-   EXPECT_EQ(opts.MakeLongHelp("test", ""),
+   EXPECT_EQ(opts.MakeLongHelp("test"),
              R"(usage: test [-o] [-s] [--third-flag]
 
   -o, --other-flag 
