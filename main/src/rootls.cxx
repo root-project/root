@@ -55,32 +55,7 @@ static const char *const kAnsiGreen = "\x1B[32m";
 static const char *const kAnsiBlue = "\x1B[34m";
 static const char *const kAnsiBold = "\x1B[1m";
 
-static const char *Color(const char *col)
-{
-#if defined(R__WIN32)
-   return "";
-#else
-   const static bool isTerm = isatty(STDOUT_FILENO);
-   if (isTerm)
-      return col;
-   return "";
-#endif
-}
-
-static const char *const kLongHelp = R"(
-Display ROOT files contents in the terminal.
-
-positional arguments:
-  FILE                    Input file
-
-options:
-  -h, --help              show this help message and exit
-  -1, --oneColumn         Print content in one column
-  -c, --allCycles         Force display of all objects' cycles
-  -l, --longListing       Use a long listing format.
-  -t, --treeListing       Print tree recursively and use a long listing format.
-  -R, --rntupleListing    Print RNTuples recursively and use a long listing format.
-  -r, --recursiveListing  Traverse file recursively entering any TDirectory.
+static const char *const kDescription = R"(Display ROOT files contents in the terminal.
 
 Examples:
 - rootls example.root
@@ -108,8 +83,19 @@ Examples:
   Display contents of the ROOT file 'example.root', use a long listing format and print trees recursively.
 
 - rootls -r example.root
-  Display contents of the ROOT file 'example.root', traversing recursively any TDirectory.
-)";
+  Display contents of the ROOT file 'example.root', traversing recursively any TDirectory.)";
+
+static const char *Color(const char *col)
+{
+#if defined(R__WIN32)
+   return "";
+#else
+   const static bool isTerm = isatty(STDOUT_FILENO);
+   if (isTerm)
+      return col;
+   return "";
+#endif
+}
 
 static bool ClassInheritsFrom(const char *class_, const char *baseClass)
 {
@@ -129,15 +115,9 @@ struct RootLsArgs {
       kForceAllCycles = 0x20,
    };
 
-   enum class EPrintUsage {
-      kNo,
-      kShort,
-      kLong
-   };
-
    std::uint32_t fFlags = 0;
    std::vector<RootSource> fSources;
-   EPrintUsage fPrintUsageAndExit = EPrintUsage::kNo;
+   std::string fHelp;
 };
 
 struct V2i {
@@ -570,27 +550,34 @@ static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
 
 static RootLsArgs ParseArgs(const char **args, int nArgs)
 {
+   using FT = ROOT::RCmdLineOpts::EFlagType;
+
    RootLsArgs outArgs;
    ROOT::RCmdLineOpts opts;
-   opts.AddFlag({"-h", "--help"});
-   opts.AddFlag({"-1", "--oneColumn"});
-   opts.AddFlag({"-l", "--longListing"});
-   opts.AddFlag({"-t", "--treeListing"});
-   opts.AddFlag({"-R", "--rntupleListing"});
-   opts.AddFlag({"-r", "--recursiveListing"});
-   opts.AddFlag({"-c", "--allCycles"});
+   opts.AddFlag({"-h", "--help"}, FT::kSwitch, "show this help message and exit");
+   opts.AddFlag({"-1", "--oneColumn"}, FT::kSwitch, "Print content in one column");
+   opts.AddFlag({"-l", "--longListing"}, FT::kSwitch, "Use a long listing format");
+   opts.AddFlag({"-t", "--treeListing"}, FT::kSwitch, "Print tree recursively and use a long listing format");
+   opts.AddFlag({"-R", "--rntupleListing"}, FT::kSwitch, "Print RNTuples recursively and use a long listing format.");
+   opts.AddFlag({"-r", "--recursiveListing"}, FT::kSwitch, "Traverse file recursively entering any TDirectory");
+   opts.AddFlag({"-c", "--allCycles"}, FT::kSwitch, "Force display of all objects' cycles");
 
    opts.Parse(args, nArgs);
    for (const auto &err : opts.GetErrors())
       Err() << err << "\n";
 
+   ROOT::RCmdLineOpts::RMakeHelpOptions helpOpts;
+   helpOpts.fDescription = kDescription;
+   helpOpts.fWrapDescription = false;
+   helpOpts.fPositionalArgs = "FILE [FILE...]";
+
    if (opts.GetSwitch("help")) {
-      outArgs.fPrintUsageAndExit = RootLsArgs::EPrintUsage::kLong;
+      outArgs.fHelp = opts.MakeLongHelp(Detail::gLogName, helpOpts);
       return outArgs;
    }
 
    if (!opts.GetErrors().empty() || opts.GetArgs().empty()) {
-      outArgs.fPrintUsageAndExit = RootLsArgs::EPrintUsage::kShort;
+      outArgs.fHelp = opts.MakeShortHelp(Detail::gLogName, helpOpts);
       return outArgs;
    }
 
@@ -616,12 +603,8 @@ int main(int argc, char **argv)
    InitLog("rootls");
 
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
-   if (args.fPrintUsageAndExit != RootLsArgs::EPrintUsage::kNo) {
-      std::cerr << "usage: rootls [-1hltr] FILE [FILE ...]\n";
-      if (args.fPrintUsageAndExit == RootLsArgs::EPrintUsage::kLong) {
-         std::cerr << kLongHelp;
-         return 0;
-      }
+   if (!args.fHelp.empty()) {
+      std::cerr << args.fHelp << "\n";
       return 1;
    }
 
