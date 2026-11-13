@@ -132,7 +132,6 @@ void RooLegacyExpPoly::doEval(RooFit::EvalContext &ctx) const
    vars.reserve(_coefList.size() + 1);
    vars.push_back(ctx.at(_x));
 
-   std::vector<double> coefVals;
    for (RooAbsArg *coef : _coefList) {
       vars.push_back(ctx.at(coef));
    }

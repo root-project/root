@@ -52,7 +52,6 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   std::unique_ptr<RooFormulaVar> XF;
   if (centr) {
     std::string formula=Form("pow((@0-@1),%d)*@2",_order) ;
-    std::string m1name=Form("%s_moment1",GetName()) ;
     RooAbsReal* mom1 = func.mean(x) ;
     XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
@@ -98,7 +97,6 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   std::unique_ptr<RooFormulaVar> XF;
   if (centr) {
     std::string formula=Form("pow((@0-@1),%d)*@2",_order) ;
-    std::string m1name=Form("%s_moment1",GetName()) ;
     RooAbsReal* mom1 = func.mean(x,nset) ;
     XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;

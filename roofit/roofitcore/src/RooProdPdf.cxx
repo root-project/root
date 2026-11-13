@@ -715,9 +715,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       for (auto const& term : group) {
    Int_t termIdx = factorized.terms.IndexOf(term);
    RooArgSet *norm = static_cast<RooArgSet*>(factorized.norms.At(termIdx));
-   RooArgSet *imps = static_cast<RooArgSet*>(factorized.imps.At(termIdx));
    RooArgSet termNSet(*norm);
-   RooArgSet termImpSet(*imps);
 
    // If termNset matches index of ratioTerms, insert ratio here
    ostringstream str; termNSet.printValue(str);
@@ -735,15 +733,11 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
         Int_t termIdx = factorized.terms.IndexOf(term);
         RooArgSet *norm = factorized.termNormDeps(termIdx);
         RooArgSet *integ = factorized.termIntDeps(termIdx);
-        RooArgSet *xdeps = factorized.termCrossDeps(termIdx);
-        RooArgSet *imps = factorized.termImpDeps(termIdx);
 
-        // Take list of normalization, integrated dependents, and
-        // cross-imported integrated dependents from factorization algorithm
+        // Take list of normalization and integrated dependents from
+        // factorization algorithm
         RooArgSet termNSet{*norm};
         RooArgSet termISet{*integ};
-        RooArgSet termXSet{*xdeps};
-        RooArgSet termImpSet{*imps};
 
         // Add prefab term to partIntList.
         auto func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet);
@@ -766,13 +760,9 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
           Int_t termIdx = factorized.terms.IndexOf(term);
           RooArgSet *norm = factorized.termNormDeps(termIdx);
           RooArgSet *integ = factorized.termIntDeps(termIdx);
-          RooArgSet *xdeps = factorized.termCrossDeps(termIdx);
-          RooArgSet *imps = factorized.termImpDeps(termIdx);
 
           RooArgSet termNSet{*norm};
           RooArgSet termISet{*integ};
-          RooArgSet termXSet{*xdeps};
-          RooArgSet termImpSet{*imps};
 
           // Remove outer integration dependents from termISet
           termISet.remove(outerIntDeps, true, true);

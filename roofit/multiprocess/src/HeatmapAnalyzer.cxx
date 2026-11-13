@@ -37,7 +37,6 @@ namespace {
 void sortTaskNames(std::vector<std::string> &task_names)
 {
    char const *digits = "0123456789";
-   std::vector<int> digit_vec;
    std::vector<std::pair<int, std::string>> pair_vec;
    for (auto &&el : task_names) {
       std::size_t const n = el.find_first_of(digits);

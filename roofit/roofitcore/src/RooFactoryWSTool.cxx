@@ -998,7 +998,6 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   char* bufptr = buf.data();
 
   string func;
-  string prefix;
   vector<string> args ;
 
   // Process token into arguments

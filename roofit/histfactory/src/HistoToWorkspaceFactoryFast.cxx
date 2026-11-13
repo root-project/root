@@ -487,8 +487,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     // now make function that linearly interpolates expectation between variations
     // get low/high variations to interpolate between
-    std::vector<double> low;
-    std::vector<double> high;
     RooArgSet lowSet;
     RooArgSet highSet;
     for(unsigned int j=0; j<histoSysList.size(); ++j){
@@ -879,12 +877,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     std::vector<std::vector<RooAbsArg*>> allSampleHistFuncs;
     std::vector<RooProduct*> sampleScaleFactors;
 
-    std::vector<std::pair<string, string>> statNamePairs;
     std::vector<std::pair<const TH1 *, std::unique_ptr<TH1>>> statHistPairs; // <nominal, error>
     const std::string statFuncName = "mc_stat_" + channel_name;
-
-    string prefix;
-    string range;
 
     /////////////////////////////
     // shared parameters

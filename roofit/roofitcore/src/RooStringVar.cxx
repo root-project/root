@@ -58,7 +58,6 @@ RooStringVar::RooStringVar(const RooStringVar& other, const char* name) :
 /// Read object contents from given stream
 bool RooStringVar::readFromStream(std::istream& is, bool compact, bool)
 {
-  TString token;
   TString errorPrefix("RooStringVar::readFromStream(");
   errorPrefix.Append(GetName()) ;
   errorPrefix.Append(")") ;

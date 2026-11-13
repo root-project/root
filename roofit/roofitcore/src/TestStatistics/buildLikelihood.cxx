@@ -220,7 +220,6 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
    // should return true.
    bool process_empty_data_sets = RooAbsL::isExtendedHelper(&_pdf, _extended);
 
-   TString simCatName(simCat.GetName());
    // Note: important not to use cloned dataset here (possible when this code is run in Roo[...]L ctor), use the
    // original one (which is data_ in Roo[...]L ctors, but data here)
    std::vector<std::unique_ptr<RooAbsData>> dsetList{_data.split(*sim_pdf, process_empty_data_sets)};

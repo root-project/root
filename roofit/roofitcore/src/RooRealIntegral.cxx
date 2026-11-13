@@ -1016,7 +1016,6 @@ const RooArgSet& RooRealIntegral::parameters() const
   if (!_params) {
     _params = std::make_unique<RooArgSet>("params") ;
 
-    RooArgSet params ;
     for (const auto server : _serverList) {
       if (server->isValueServer(*this)) _params->add(*server) ;
     }

@@ -53,7 +53,6 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   std::unique_ptr<RooAbsReal> XF;
   if (centr) {
 
-     std::string m1name = std::string{GetName()} + "_moment1";
      _mean.putOwnedArg(std::unique_ptr<RooAbsMoment>{func.mean(x)});
 
      std::string pname = std::string{name} + "_product";
@@ -104,7 +103,6 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   std::unique_ptr<RooAbsReal> XF;
   if (centr) {
 
-     std::string m1name = std::string{GetName()} + "_moment1";
      _mean.putOwnedArg(std::unique_ptr<RooAbsMoment>{func.mean(x, nset)});
 
      std::string pname = std::string{name} + "_product";
