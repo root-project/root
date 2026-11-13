@@ -409,7 +409,7 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
 
    std::string renormalizedAlias;
    if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
-      fTypeAlias = renormalizedAlias;
+      SetTypeAlias(renormalizedAlias);
 
    int i = 0;
    const auto *bases = fClass->GetListOfBases();
@@ -926,7 +926,7 @@ ROOT::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
 
    std::string renormalizedAlias;
    if (ROOT::Internal::NeedsMetaNameAsAlias(fClass->GetName(), renormalizedAlias))
-      fTypeAlias = renormalizedAlias;
+      SetTypeAlias(renormalizedAlias);
 
    fTraits |= kTraitSoACollection | kTraitTypeChecksum;
    fLockSplitFields = std::make_unique<std::mutex>();
@@ -1259,7 +1259,7 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
    Internal::EnsureTypedChildField(*itemFields[1], *this);
    const std::string typeAlias = "std::pair<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
    if (typeAlias != GetTypeName())
-      fTypeAlias = typeAlias;
+      SetTypeAlias(typeAlias);
 
    AttachItemFields(std::move(itemFields));
 
@@ -1348,7 +1348,7 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 
    std::string renormalizedAlias;
    if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
-      fTypeAlias = renormalizedAlias;
+      SetTypeAlias(renormalizedAlias);
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
@@ -1544,7 +1544,7 @@ ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::un
 {
    Internal::EnsureTypedChildField(*itemField, *this);
    if (!itemField->GetTypeAlias().empty())
-      fTypeAlias = BuildMapTypeName(mapType, itemField.get(), true /* useTypeAliases */);
+      SetTypeAlias(BuildMapTypeName(mapType, itemField.get(), true /* useTypeAliases */));
 
    auto *itemClass = fProxy->GetValueClass();
    fItemSize = itemClass->GetClassSize();
@@ -1580,7 +1580,7 @@ ROOT::RSetField::RSetField(std::string_view fieldName, ESetType setType, std::un
      fSetType(setType)
 {
    if (!itemField->GetTypeAlias().empty())
-      fTypeAlias = BuildSetTypeName(setType, *itemField, true /* useTypeAlias */);
+      SetTypeAlias(BuildSetTypeName(setType, *itemField, true /* useTypeAlias */));
 
    fItemSize = itemField->GetValueSize();
 
@@ -1648,7 +1648,7 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
 
    std::string renormalizedAlias;
    if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
-      fTypeAlias = renormalizedAlias;
+      SetTypeAlias(renormalizedAlias);
 
    fTraits |= kTraitTypeChecksum;
    // For RClassField, we only check for explicit constructors and destructors and then recursively combine traits from
@@ -1909,7 +1909,7 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
    }
    const std::string typeAlias = "std::tuple<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
    if (typeAlias != GetTypeName())
-      fTypeAlias = typeAlias;
+      SetTypeAlias(typeAlias);
 
    AttachItemFields(std::move(itemFields));
 
@@ -2007,7 +2007,7 @@ ROOT::RVariantField::RVariantField(std::string_view fieldName, std::vector<std::
 
    const std::string typeAlias = "std::variant<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
    if (typeAlias != GetTypeName())
-      fTypeAlias = typeAlias;
+      SetTypeAlias(typeAlias);
 
    auto nFields = itemFields.size();
    if (nFields == 0 || nFields > kMaxVariants) {

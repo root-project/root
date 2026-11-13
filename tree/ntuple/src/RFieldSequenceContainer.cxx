@@ -79,8 +79,8 @@ ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFiel
    }
    fTraits |= itemField->GetTraits() & ~kTraitMappable;
    if (!itemField->GetTypeAlias().empty()) {
-      fTypeAlias = "std::array<" + itemField->GetTypeAlias() + "," +
-                   Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">";
+      SetTypeAlias("std::array<" + itemField->GetTypeAlias() + "," +
+                   Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">");
    }
    Attach(std::move(itemField), "_0");
 }
@@ -210,7 +210,7 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
    if (!itemField->GetTypeAlias().empty())
-      fTypeAlias = "ROOT::VecOps::RVec<" + itemField->GetTypeAlias() + ">";
+      SetTypeAlias("ROOT::VecOps::RVec<" + itemField->GetTypeAlias() + ">");
    Attach(std::move(itemField), "_0");
    fValueSize =
       Internal::EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
@@ -555,7 +555,7 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
    }
 
    if (!itemField->GetTypeAlias().empty())
-      fTypeAlias = "std::vector<" + itemField->GetTypeAlias() + ">";
+      SetTypeAlias("std::vector<" + itemField->GetTypeAlias() + ">");
 
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
@@ -969,7 +969,7 @@ ROOT::RArrayAsRVecField::RArrayAsRVecField(std::string_view fieldName, std::uniq
      fArrayLength(arrayLength)
 {
    if (!itemField->GetTypeAlias().empty())
-      fTypeAlias = "ROOT::VecOps::RVec<" + itemField->GetTypeAlias() + ">";
+      SetTypeAlias("ROOT::VecOps::RVec<" + itemField->GetTypeAlias() + ">");
    Attach(std::move(itemField), "_0");
    fValueSize =
       Internal::EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
@@ -1073,7 +1073,7 @@ ROOT::RArrayAsVectorField::RArrayAsVectorField(std::string_view fieldName, std::
      fArrayLength(arrayLength)
 {
    if (!itemField->GetTypeAlias().empty())
-      fTypeAlias = "std::vector<" + itemField->GetTypeAlias() + ">";
+      SetTypeAlias("std::vector<" + itemField->GetTypeAlias() + ">");
    Attach(std::move(itemField), "_0");
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*fSubfields[0]);

@@ -241,9 +241,7 @@ ROOT::RFieldBase::CreateObject<void>() const
 
 ROOT::RFieldBase::RFieldBase(std::string_view name, std::string_view type, ROOT::ENTupleStructure structure,
                              bool isSimple, std::size_t nRepetitions)
-   : fName(name),
-     fType(type),
-     fStructure(structure),
+   : fStructure(structure),
      fNRepetitions(nRepetitions),
      fIsSimple(isSimple),
      fParent(nullptr),
@@ -251,6 +249,11 @@ ROOT::RFieldBase::RFieldBase(std::string_view name, std::string_view type, ROOT:
      fTraits(isSimple ? kTraitMappable : 0)
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "Field");
+   fStringPool = std::make_unique<Internal::RStringPool>();
+   fFieldName = fStringPool->Intern(name);
+   fTypeName = fStringPool->Intern(type);
+   fTypeAlias = fStringPool->Intern("");
+   fDescription = fStringPool->Intern("");
 }
 
 std::string ROOT::RFieldBase::GetQualifiedFieldName() const
@@ -534,7 +537,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
          const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
          if (fieldDesc.GetStructure() == ENTupleStructure::kStreamer) {
             auto streamerField = std::unique_ptr<RFieldBase>(new RStreamerField(fieldName, typeName));
-            streamerField->fTypeAlias = fieldDesc.GetTypeAlias();
+            streamerField->SetTypeAlias(fieldDesc.GetTypeAlias());
             return streamerField;
          } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
             std::vector<std::unique_ptr<RFieldBase>> memberFields;
@@ -546,7 +549,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             }
             R__ASSERT(typeName == fieldDesc.GetTypeName());
             auto recordField = Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc);
-            recordField->fTypeAlias = fieldDesc.GetTypeAlias();
+            recordField->SetTypeAlias(fieldDesc.GetTypeAlias());
             return recordField;
          } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
             if (fieldDesc.GetLinkIds().size() != 1)
@@ -557,7 +560,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             auto itemField =
                Create(itemFieldDesc.GetFieldName(), itemFieldDesc.GetTypeName(), options, desc, itemFieldId).Unwrap();
             auto vecField = ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc);
-            vecField->fTypeAlias = fieldDesc.GetTypeAlias();
+            vecField->SetTypeAlias(fieldDesc.GetTypeAlias());
             return vecField;
          } else if (ROOT::Internal::IsCustomEnumFieldDesc(*desc, fieldDesc)) {
             R__ASSERT(!fieldDesc.GetLinkIds().empty());
@@ -565,7 +568,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             const auto &underlyingIntFieldDesc = desc->GetFieldDescriptor(underlyingIntFieldId);
             auto enumField = ROOT::Internal::CreateEmulatedEnumField(fieldName, fieldDesc.GetTypeName(),
                                                                      underlyingIntFieldDesc.GetTypeName());
-            enumField->fTypeAlias = fieldDesc.GetTypeAlias();
+            enumField->SetTypeAlias(fieldDesc.GetTypeAlias());
             return enumField;
          }
       }
@@ -590,7 +593,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
    if (result) {
       const auto normOrigType = ROOT::Internal::GetNormalizedUnresolvedTypeName(typeName);
       if (normOrigType != result->GetTypeName()) {
-         result->fTypeAlias = normOrigType;
+         result->SetTypeAlias(normOrigType);
       }
       return result;
    }
@@ -606,9 +609,9 @@ const ROOT::RFieldBase::RColumnRepresentations &ROOT::RFieldBase::GetColumnRepre
 std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldBase::Clone(std::string_view newName) const
 {
    auto clone = CloneImpl(newName);
-   clone->fTypeAlias = fTypeAlias;
+   clone->SetDescription(*fDescription);
+   clone->SetTypeAlias(*fTypeAlias);
    clone->fOnDiskId = fOnDiskId;
-   clone->fDescription = fDescription;
    // We can just copy the references because fColumnRepresentatives point into a static structure
    clone->fColumnRepresentatives = fColumnRepresentatives;
    return clone;
@@ -758,7 +761,14 @@ void ROOT::RFieldBase::SetDescription(std::string_view description)
 {
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("cannot set field description once field is connected"));
-   fDescription = std::string(description);
+   fDescription = fStringPool->Intern(description);
+}
+
+void ROOT::RFieldBase::SetTypeAlias(std::string_view typeAlias)
+{
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("cannot set type alias once field is connected"));
+   fTypeAlias = fStringPool->Intern(typeAlias);
 }
 
 void ROOT::RFieldBase::SetOnDiskId(ROOT::DescriptorId_t id)
@@ -943,7 +953,7 @@ void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &op
    // Only adjust Double32_t when the user did not pin a representation: an explicit representative must
    // survive (see RNTupleMerger::ExtendDestinationModel), otherwise merging would silently reinterpret the
    // raw copies of the source pages under a different encoding.
-   if ((fTypeAlias == "Double32_t") && hadDefaultRepresentative) {
+   if ((*fTypeAlias == "Double32_t") && hadDefaultRepresentative) {
       if (options.GetCompression() != 0)
          SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
       else
@@ -953,7 +963,7 @@ void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &op
    // An explicit representation pinned on a Double32_t field must contain a reduced-precision encoding:
    // a 64-bit-only selection would store full doubles while the field promises Double32_t precision.
    // A multi-column selection that also includes a reduced-precision representative stays legal.
-   if ((fTypeAlias == "Double32_t") && !hadDefaultRepresentative) {
+   if ((*fTypeAlias == "Double32_t") && !hadDefaultRepresentative) {
       bool hasSubDoubleRep = false;
       for (const auto &rep : GetColumnRepresentatives()) {
          for (const auto colType : rep) {
@@ -1011,7 +1021,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
 
    if (!fColumnRepresentatives.empty())
       throw RException(R__FAIL("fixed column representative only valid when connecting to a page sink"));
-   if (!fDescription.empty())
+   if (!fDescription->empty())
       throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
 
    if (!fIsArtificial) {

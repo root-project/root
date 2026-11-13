@@ -20,6 +20,7 @@
 #include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleRange.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 #include <atomic>
 #include <cassert>
@@ -227,10 +228,17 @@ public:
    class RBulkValues;
 
 private:
+   /// For free-standing fields, the string storage for name, type (alias), and description. The string pool is
+   /// used for the field itself and its subfields.
+   std::unique_ptr<Internal::RStringPool> fStringPool;
    /// The field name relative to its parent field
-   std::string fName;
+   const std::string *fFieldName = nullptr;
    /// The C++ type captured by this field
-   std::string fType;
+   const std::string *fTypeName = nullptr;
+   /// A typedef or using name that was used when creating the field
+   const std::string *fTypeAlias = nullptr;
+   /// Free text set by the user
+   const std::string *fDescription = nullptr;
    /// The role of this field in the data model structure
    ROOT::ENTupleStructure fStructure;
    /// For fixed sized arrays, the array length
@@ -246,8 +254,6 @@ private:
    /// corresponding RNTuple descriptor. This on-disk ID is set in RPageSink::Create() for writing and by
    /// RFieldDescriptor::CreateField() when recreating a field / model from the stored descriptor.
    ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
-   /// Free text set by the user
-   std::string fDescription;
    /// Changed by ConnectTo[Sink,Source], reset by Clone()
    EState fState = EState::kUnconnected;
 
@@ -327,8 +333,6 @@ protected:
    std::vector<std::unique_ptr<ROOT::Internal::RColumn>> fAvailableColumns;
    /// Properties of the type that allow for optimizations of collections of that type
    std::uint32_t fTraits = 0;
-   /// A typedef or using name that was used when creating the field
-   std::string fTypeAlias;
    /// List of functions to be called after reading a value
    std::vector<ReadCallback_t> fReadCallbacks;
    /// C++ type version cached from the descriptor after a call to ConnectPageSource()
@@ -523,6 +527,9 @@ protected:
    // on the data that's written, e.g. for polymorphic types in the streamer field.
    virtual ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const { return ROOT::RExtraTypeInfoDescriptor(); }
 
+   /// Can only be set on unconnected fields
+   void SetTypeAlias(std::string_view typeAlias);
+
    /// Add a new subfield to the list of nested fields. Throws an exception if childName is non-empty and the passed
    /// field has a different name.
    void Attach(std::unique_ptr<RFieldBase> child, std::string_view expectedChildName = "");
@@ -644,11 +651,11 @@ public:
    std::uint32_t GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
-   const std::string &GetFieldName() const { return fName; }
+   const std::string &GetFieldName() const { return *fFieldName; }
    /// Returns the field name and parent field names separated by dots (`grandparent.parent.child`)
    std::string GetQualifiedFieldName() const;
-   const std::string &GetTypeName() const { return fType; }
-   const std::string &GetTypeAlias() const { return fTypeAlias; }
+   const std::string &GetTypeName() const { return *fTypeName; }
+   const std::string &GetTypeAlias() const { return *fTypeAlias; }
    ROOT::ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    const RFieldBase *GetParent() const { return fParent; }
@@ -657,7 +664,7 @@ public:
    bool IsSimple() const { return fIsSimple; }
    bool IsArtificial() const { return fIsArtificial; }
    /// Get the field's description
-   const std::string &GetDescription() const { return fDescription; }
+   const std::string &GetDescription() const { return *fDescription; }
    void SetDescription(std::string_view description);
    EState GetState() const { return fState; }
 
