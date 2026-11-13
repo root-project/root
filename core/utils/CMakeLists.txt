@@ -1,2 +1,6 @@
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+)
+
