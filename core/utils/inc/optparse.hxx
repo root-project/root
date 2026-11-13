@@ -18,6 +18,8 @@
 #include <string_view>
 #include <vector>
 
+#include <ROOT/StringUtils.hxx>
+
 namespace ROOT {
 
 /// \brief Small utility to parse cmdline options.
@@ -97,6 +99,8 @@ namespace ROOT {
 /// "foo=bar"`). Note that this option only makes sense for flags with arguments.
 class RCmdLineOpts {
 public:
+   static constexpr std::size_t kDefaultHelpWidth = 100;
+
    enum class EFlagTreatment {
       /// Will result to kGrouped if you don't define any short flag longer than 1 character, otherwise kSimple.
       kDefault,
@@ -156,6 +160,8 @@ private:
       std::string fHelp;
       // If >= 0, this flag is an alias of the RExpectedFlag at index fAlias.
       int fAlias = -1;
+      // Keeps track of the original index of this flag in `fExpectedFlags`.
+      int fOrigIdx = 0;
       bool fShort = false;
       // A bitmask of EFlagOpt
       std::uint32_t fOpts = 0;
@@ -324,9 +330,10 @@ public:
          expected.fAlias = aliasIdx;
          expected.fShort = prefixLen == 1;
          expected.fOpts = flagOpts;
+         expected.fOrigIdx = static_cast<int>(nCurrentFlags + flagsToBeAdded.size());
          flagsToBeAdded.push_back(expected);
          if (aliasIdx < 0)
-            aliasIdx = nCurrentFlags + flagsToBeAdded.size() - 1;
+            aliasIdx = expected.fOrigIdx;
       }
 
       fExpectedFlags.insert(fExpectedFlags.end(), flagsToBeAdded.begin(), flagsToBeAdded.end());
@@ -647,6 +654,162 @@ public:
    /// This will typically be empty, unless the RCmdLineOpts was created with `fIgnoreUnknownFlags == true`, in which
    /// case this will contain all skipped unknown flags.
    const std::vector<std::size_t> &GetUnprocessedArgsIndices() const { return fUnprocessedArgsIndices; }
+
+   /// Generates a short usage string for the program. `programName` should, in most cases, be equal to `argv[0]`.
+   /// The string does NOT contain the flags' description but only their name and whether they need an argument or not.
+   /// For flags with multiple aliases, only the first short alias alphabetically will be shown, or the first
+   /// non-short one alphabetically if no short flag was defined.
+   /// If `positionalArgs` is given, it will be appended to the short help message (since this class doesn't
+   /// know the semantics of positional arguments it's up to the library user to provide this information). If
+   /// `maxLineWidth` is provided, it will be used as the tentative max width of the output (which may be larger
+   /// than that in case a line cannot be wrapped exactly due to e.g. too-long-named flags) and it will be overwritten
+   /// with the actual length of the longest line in the output string. If the value of `maxLineWidth` is 0, the default
+   /// line width will be used (but the variable will contain the actual line width when the function returns).
+   std::string MakeShortHelp(std::string_view programName, std::string_view positionalArgs = "",
+                             std::size_t *maxLineWidth = nullptr) const
+   {
+      std::string res;
+      std::string curLine = "usage: " + std::string(programName);
+      const std::size_t wrapBeginIdx = curLine.size() + 1;
+      const std::size_t lineWidthToUse = !maxLineWidth || *maxLineWidth == 0 ? kDefaultHelpWidth : *maxLineWidth;
+      std::size_t wrapEndIdx = std::max<std::size_t>(wrapBeginIdx + 10, lineWidthToUse);
+      auto expectedFlags = fExpectedFlags;
+      std::sort(expectedFlags.begin(), expectedFlags.end(),
+                [](const auto &a, const auto &b) { return a.fName < b.fName; });
+      for (int i = 0; i < (int)expectedFlags.size(); ++i) {
+         const auto &expected = expectedFlags[i];
+         // print only the first alias encountered for each flag
+         if (expected.fAlias >= 0)
+            continue;
+
+         std::string toAppend = " [" + expected.AsStr();
+         if (expected.fFlagType == EFlagType::kWithArg) {
+            auto arg = expected.fName;
+            std::transform(arg.begin(), arg.end(), arg.begin(), ::toupper);
+            if (expected.fOpts & kFlagPrefixArg)
+               toAppend += "<" + arg + ">";
+            else
+               toAppend += ' ' + arg;
+         } else if (expected.fShort && (expected.fOpts & kFlagAllowMultiple)) {
+            toAppend += "(" + expected.fName + "..)";
+         }
+         toAppend += ']';
+
+         if (curLine.size() + toAppend.size() > wrapEndIdx) {
+            res += curLine + '\n';
+            curLine.clear();
+            // NOTE: wrapBeginIdx - 1 because toAppend always starts with a space which we want to count
+            // as part of the wrapBegin.
+            curLine.resize(wrapBeginIdx - 1, ' ');
+            // If toAppend is already longer than the allowed line size, expand the line size to accomodate.
+            wrapEndIdx = std::max(toAppend.size() + wrapBeginIdx, wrapEndIdx);
+         }
+         curLine += toAppend;
+      }
+      res += curLine;
+      if (!positionalArgs.empty())
+         res += ' ' + ROOT::WrapString(positionalArgs, wrapEndIdx, wrapBeginIdx, wrapEndIdx - curLine.size() - 1);
+      if (maxLineWidth)
+         *maxLineWidth = wrapEndIdx;
+
+      return res;
+   }
+
+   /// Generates a long usage help for the program.
+   /// The output string includes the output of MakeShortHelp followed by `description` and by the complete list of
+   /// flags in alphabetic order, each paired with its description.
+   /// See MakeShortHelp for the meaning of `maxLineWidth`.
+   std::string MakeLongHelp(std::string_view programName, std::string_view description,
+                            std::string_view positionalArgs = "", std::size_t *maxLineWidth = nullptr) const
+   {
+      std::size_t wrapEndIdx = maxLineWidth ? *maxLineWidth : 0;
+      std::string res = MakeShortHelp(programName, positionalArgs, &wrapEndIdx);
+      if (maxLineWidth)
+         *maxLineWidth = wrapEndIdx;
+
+      if (!description.empty())
+         res += "\n\n";
+
+      res += ROOT::WrapString(description, wrapEndIdx) + "\n\n";
+
+      if (fExpectedFlags.empty())
+         return res;
+
+      // Stores the width of line relative to expectedFlags[i], including all its aliases.
+      // All aliases flags have their width added only to the "original" flag, so their index stores 0.
+      std::vector<int> colWidths;
+      colWidths.resize(fExpectedFlags.size());
+      for (auto i = 0u; i < fExpectedFlags.size(); ++i) {
+         const auto &expected = fExpectedFlags[i];
+         // For every flag, the non-alias one comes first
+         if (expected.fAlias < 0)
+            colWidths[i] = expected.AsStr().size();
+         else
+            colWidths[expected.fAlias] += expected.AsStr().size() + 2; // +2 for the ", "
+      }
+      // +3 for the 2 leading spaces and 1 trailing space (see below).
+      const auto firstColWidth = *std::max_element(colWidths.begin(), colWidths.end()) + 3;
+      const auto secondColWidth = std::max<int>(20, static_cast<int>(wrapEndIdx) - firstColWidth);
+
+      auto expectedFlags = fExpectedFlags;
+      // Outer sort by short vs non-short and inner sort alphabetically.
+      std::sort(expectedFlags.begin(), expectedFlags.end(), [](const auto &a, const auto &b) {
+         if (a.fShort != b.fShort)
+            return a.fShort;
+         return a.fName < b.fName;
+      });
+      // The sort screws up the `fAlias` indices inside the sorted vector, so we need to patch them up.
+      // We use a naive quadratic approach for that, which should be ok for this cold function (usually fExpectedFlags
+      // is very small anyway).
+      for (int sortedIdx = 0; sortedIdx < (int)expectedFlags.size(); ++sortedIdx) {
+         auto &sortedExpected = expectedFlags[sortedIdx];
+         if (sortedExpected.fAlias < 0 || sortedExpected.fOrigIdx < 0)
+            continue;
+
+         // Find the new position of the flag referred to by `sortedExpected`.
+         for (int sortedAliasIdx = 0; sortedAliasIdx < (int)expectedFlags.size(); ++sortedAliasIdx) {
+            auto &sortedAlias = expectedFlags[sortedAliasIdx];
+            if (sortedAlias.fOrigIdx == sortedExpected.fAlias) {
+               if (sortedAliasIdx > sortedIdx) {
+                  // Alias flags are always supposed to come after the one they refer to.
+                  // If the sort made this untrue, fix it by swapping the alias and the non-alias.
+                  sortedAlias.fAlias = sortedIdx;
+                  // Mark this OrigIdx as negative to signify we already treated this flag and we should skip it
+                  // in the outer `for`.
+                  sortedAlias.fOrigIdx = -1;
+                  sortedExpected.fAlias = -1;
+               } else {
+                  // If they're still ordered properly, just update the index.
+                  sortedExpected.fAlias = sortedAliasIdx;
+               }
+               break;
+            }
+         }
+      }
+
+      for (int i = 0; i < (int)expectedFlags.size(); ++i) {
+         const auto &expected = expectedFlags[i];
+         // print only the first alias encountered for each flag
+         if (expected.fAlias >= 0)
+            continue;
+
+         auto line = "  " + expected.AsStr();
+         for (std::size_t j = i + 1; j < expectedFlags.size(); ++j) {
+            const auto &alias = expectedFlags[j];
+            if (alias.fAlias == i)
+               line += ", " + alias.AsStr();
+         }
+         // fill the rest of the column with spaces
+         line.resize(firstColWidth, ' ');
+
+         // now do the second column
+         line += ROOT::WrapString(expected.fHelp, firstColWidth + secondColWidth, firstColWidth);
+
+         res += line + '\n';
+      }
+
+      return res;
+   }
 };
 
 } // namespace ROOT
