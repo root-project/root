@@ -27,6 +27,7 @@ echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
 echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
 echo "        ../../core/unix/                 \\" >> Doxyfile_INPUT
+echo "        ../../core/utils/                \\" >> Doxyfile_INPUT
 echo "        ../../core/winnt/                \\" >> Doxyfile_INPUT
 echo "        ../../core/imt/                  \\" >> Doxyfile_INPUT
 echo "        ../../core/zip/inc/Compression.h \\" >> Doxyfile_INPUT
