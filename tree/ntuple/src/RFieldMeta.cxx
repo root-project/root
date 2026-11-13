@@ -109,6 +109,24 @@ void EnsureValidUserClass(TClass *cl, const ROOT::RFieldBase &field, std::string
    }
 }
 
+/// Construct a class value without going through TClass::New() if the class
+/// cannot be instantiated. TClass::New() may JIT a constructor wrapper, and a
+/// failed compilation can leave the interpreter in an inconsistent state.
+void ConstructClassValue(TClass *cl, const ROOT::RFieldBase &field, void *where)
+{
+   const std::string typeName = field.GetTypeName();
+   if (cl->Property() & kIsAbstract) {
+      throw ROOT::RException(R__FAIL("cannot construct an object of type " + typeName + ": the class is abstract"));
+   }
+   if (!cl->HasDefaultConstructor(kTRUE)) {
+      throw ROOT::RException(
+         R__FAIL("cannot construct an object of type " + typeName + ": the class has no default constructor"));
+   }
+   if (!cl->New(where)) {
+      throw ROOT::RException(R__FAIL("cannot construct an object of type " + typeName));
+   }
+}
+
 TEnum *EnsureValidEnum(std::string_view enumName)
 {
    auto e = TEnum::GetEnum(std::string(enumName).c_str());
@@ -627,7 +645,7 @@ void ROOT::RClassField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 
 void ROOT::RClassField::ConstructValue(void *where) const
 {
-   fClass->New(where);
+   ConstructClassValue(fClass, *this, where);
 }
 
 ROOT::RClassField::RClassDeleter::RClassDeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fClass(cl) {}
@@ -1070,7 +1088,7 @@ void ROOT::RSoAField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 
 void ROOT::RSoAField::ConstructValue(void *where) const
 {
-   fClass->New(where);
+   ConstructClassValue(fClass, *this, where);
 }
 
 ROOT::RSoAField::RSoADeleter::RSoADeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fSoAClass(cl) {}
@@ -1714,7 +1732,7 @@ void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 
 void ROOT::RStreamerField::ConstructValue(void *where) const
 {
-   fClass->New(where);
+   ConstructClassValue(fClass, *this, where);
 }
 
 ROOT::RStreamerField::RStreamerFieldDeleter::RStreamerFieldDeleter(TClass *cl)
