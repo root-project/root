@@ -772,6 +772,47 @@ TEST(RNTupleMerger, MergeThroughTFileMergerWithMixedPageChecksums)
    }
 }
 
+TEST(RNTupleMerger, MergeThroughTFileMergerRecompressMixedChecksums)
+{
+   FileRaii inputNoChecksum("test_ntuple_merge_recompress_nock.root");
+   FileRaii inputWithChecksum("test_ntuple_merge_recompress_ck.root");
+
+   auto writeNtuple = [](const std::string &path, int offset, bool checksums, int compression) {
+      auto model = RNTupleModel::Create();
+      auto field = model->MakeField<int>("value");
+      RNTupleWriteOptions options;
+      options.SetEnablePageChecksums(checksums);
+      options.SetCompression(compression);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", path, options);
+      for (int i = 0; i < 130; ++i) {
+         *field = offset + i;
+         writer->Fill();
+         if (i % 31 == 0)
+            writer->CommitCluster();
+      }
+   };
+
+   writeNtuple(inputNoChecksum.GetPath(), 0, false, 0);
+   writeNtuple(inputWithChecksum.GetPath(), 1000, true, 505);
+
+   for (bool reverseOrder : {false, true}) {
+      FileRaii output("test_ntuple_merge_recompress_mixed_out.root");
+      TFileMerger merger;
+      merger.AddFile((reverseOrder ? inputWithChecksum.GetPath() : inputNoChecksum.GetPath()).c_str());
+      merger.AddFile((reverseOrder ? inputNoChecksum.GetPath() : inputWithChecksum.GetPath()).c_str());
+      merger.OutputFile(output.GetPath().c_str(), "RECREATE", 505);
+      ASSERT_TRUE(merger.PartialMerge());
+
+      auto reader = RNTupleReader::Open("ntuple", output.GetPath());
+      ASSERT_EQ(260u, reader->GetNEntries());
+      auto values = reader->GetView<int>("value");
+      for (int i = 0; i < 260; ++i) {
+         const int offset = (i < 130) == reverseOrder ? 1000 : 0;
+         EXPECT_EQ(offset + i % 130, values(i));
+      }
+   }
+}
+
 TEST(RNTupleMerger, MergeThroughTFileMergerIncremental)
 {
    // Write two test ntuples to be merged
