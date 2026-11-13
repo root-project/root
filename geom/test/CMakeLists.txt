@@ -45,3 +45,14 @@ if(imt)
     test_manager_lifetime.cxx
     LIBRARIES Geom GeomChecker Imt)
 endif()
+
+# A TGeoManager left to TROOT::EndOfProcessCleanups() must not touch libGeom's
+# destroyed static objects. Only macOS notices: there, locking a destroyed
+# std::mutex fails, while with libstdc++ its destructor is trivial.
+# Not linked against Geom: libGeom has to be loaded after the TApplication, as
+# in PyROOT.
+if(APPLE)
+  ROOT_EXECUTABLE(test_geomanager_at_exit test_geomanager_at_exit.cxx LIBRARIES Core)
+  add_dependencies(test_geomanager_at_exit Geom)
+  ROOT_ADD_TEST(test-geom-geomanager-at-exit COMMAND test_geomanager_at_exit)
+endif()
