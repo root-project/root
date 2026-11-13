@@ -464,11 +464,11 @@ bool RooClassFactory::makeClass(std::string const &baseName, std::string const &
    vector<string> alist;
    vector<bool> isCat;
 
-   for (auto const &token : ROOT::Split(realArgNames, ",", /*skipEmpyt=*/true)) {
+   for (auto const &token : ROOT::Split(realArgNames, ",", /*skipEmpty=*/true)) {
       alist.push_back(token);
       isCat.push_back(false);
    }
-   for (auto const &token : ROOT::Split(catArgNames, ",", /*skipEmpyt=*/true)) {
+   for (auto const &token : ROOT::Split(catArgNames, ",", /*skipEmpty=*/true)) {
       alist.push_back(token);
       isCat.push_back(true);
    }

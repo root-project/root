@@ -1,6 +1,7 @@
 ---
 Checks: -*,
   ,boost-use-to-string,
+  ,bugprone-argument-comment,
   ,bugprone-integer-division,
   ,bugprone-string-constructor,
   ,bugprone-use-after-move,

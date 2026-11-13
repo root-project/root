@@ -2315,7 +2315,8 @@ TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithDifferentBinningFails)
    y.setBins(3);
 
    RooWorkspace ws{"ws_incompatible_histosys_binning"};
-   importDuplicateHistoSysModel(ws, /*interpCode=*/4, /*low2=*/{7.0, 8.0, 9.0}, /*high2=*/{13.0, 14.0, 15.0}, &y);
+   importDuplicateHistoSysModel(ws, /*interpCode=*/4, /*low2Contents=*/{7.0, 8.0, 9.0},
+                                /*high2Contents=*/{13.0, 14.0, 15.0}, &y);
 
    expectExportThrowsWithError(ws, "histogram binning differs");
 }
@@ -2323,7 +2324,7 @@ TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithDifferentBinningFails)
 TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithNonDefaultInterpolationFails)
 {
    RooWorkspace ws{"ws_incompatible_histosys_interpolation"};
-   importDuplicateHistoSysModel(ws, /*interpCode=*/2, /*low2=*/{9.0, 16.0}, /*high2=*/{11.0, 24.0});
+   importDuplicateHistoSysModel(ws, /*interpCode=*/2, /*low2Contents=*/{9.0, 16.0}, /*high2Contents=*/{11.0, 24.0});
 
    expectExportThrowsWithError(ws, "this interpolation cannot currently be combined for duplicate histosys modifiers");
 }
