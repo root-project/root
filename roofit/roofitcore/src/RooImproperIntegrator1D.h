@@ -63,9 +63,9 @@ protected:
    RooAbsFunc *_origFunc = nullptr;                       ///< Original function binding
    std::unique_ptr<RooInvTransform> _function;            ///< Binding with inverse of function
    RooNumIntConfig _config;                               ///< Configuration object
-   mutable std::unique_ptr<RooRombergIntegrator> _integrator1; ///< Piece integrator 1
-   mutable std::unique_ptr<RooRombergIntegrator> _integrator2; ///< Piece integrator 2
-   mutable std::unique_ptr<RooRombergIntegrator> _integrator3; ///< Piece integrator 3
+   std::unique_ptr<RooRombergIntegrator> _integrator1;    ///< Piece integrator 1
+   std::unique_ptr<RooRombergIntegrator> _integrator2;    ///< Piece integrator 2
+   std::unique_ptr<RooRombergIntegrator> _integrator3;    ///< Piece integrator 3
 };
 
 #endif

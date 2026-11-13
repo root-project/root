@@ -129,7 +129,7 @@ protected:
     const_cast<RooNDKeysPdf*>(this)->calculateBandWidth();
   }
 
-  mutable TString _options;
+  TString _options;
   double _widthFactor;
   double _nSigma;
 

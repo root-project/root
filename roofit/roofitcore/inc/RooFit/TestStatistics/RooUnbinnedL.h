@@ -48,7 +48,7 @@ private:
    bool apply_weight_squared = false; ///< Apply weights squared?
    std::unique_ptr<RooChangeTracker> paramTracker_;
    Section lastSection_ = {0, 0}; // used for cache together with the parameter tracker
-   mutable ROOT::Math::KahanSum<double> cachedResult_{0.};
+   ROOT::Math::KahanSum<double> cachedResult_{0.};
    std::shared_ptr<RooFit::Evaluator> evaluator_;  ///<! For batched evaluation
    std::stack<std::vector<double>> _vectorBuffers; // used for preserving resources in batched evaluation
    std::vector<double> _unitWeights;               ///<! all-ones weights for unweighted data in batched evaluation

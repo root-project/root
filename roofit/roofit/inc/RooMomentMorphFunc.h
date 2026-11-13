@@ -94,9 +94,9 @@ protected:
    RooRealProxy m;
    RooSetProxy _varList;
    RooListProxy _pdfList;
-   mutable TVectorD *_mref = nullptr;
+   TVectorD *_mref = nullptr;
 
-   mutable TMatrixD *_M = nullptr;
+   TMatrixD *_M = nullptr;
 
    Setting _setting;
 

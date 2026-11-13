@@ -98,7 +98,7 @@ protected:
     int xyz = 0;
   };
   mutable NumBins _numBinsPerDim; ///<!
-  mutable RooDataHist _dataSet;
+  RooDataHist _dataSet;
 
   Int_t getCurrentBin() const;
   Int_t addParamSet( const RooArgList& params );

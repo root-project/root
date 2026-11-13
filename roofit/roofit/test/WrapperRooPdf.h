@@ -151,8 +151,8 @@ private:
 
    bool fNorm;
    mutable RooAbsPdf *fPdf;
-   mutable std::unique_ptr<RooArgSet> fX;
-   mutable std::unique_ptr<RooArgSet> fParams;
+   std::unique_ptr<RooArgSet> fX;
+   std::unique_ptr<RooArgSet> fParams;
    mutable std::vector<double> fParamValues;
 };
 

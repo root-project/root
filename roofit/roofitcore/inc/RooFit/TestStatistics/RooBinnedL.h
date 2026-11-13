@@ -38,11 +38,11 @@ public:
    std::string GetClassName() const override { return "RooBinnedL"; }
 
 private:
-   mutable bool _first = true;        ///<!
+   bool _first = true;                ///<!
    mutable std::vector<double> _binw; ///<!
    std::unique_ptr<RooChangeTracker> paramTracker_;
    Section lastSection_ = {0, 0}; // used for cache together with the parameter tracker
-   mutable ROOT::Math::KahanSum<double> cachedResult_{0.};
+   ROOT::Math::KahanSum<double> cachedResult_{0.};
 };
 
 } // namespace TestStatistics

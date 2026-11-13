@@ -623,22 +623,22 @@ protected:
    mutable bool _valueDirty = true; // Flag set if value needs recalculating because input values modified
    mutable bool _shapeDirty = true; // Flag set if value needs recalculating because input shapes modified
 
-   mutable OperMode _operMode = Auto; // Dirty state propagation mode
-   mutable bool _fast = false;        // Allow fast access mode in getVal() and proxies
+   OperMode _operMode = Auto; // Dirty state propagation mode
+   bool _fast = false;        // Allow fast access mode in getVal() and proxies
 
    // Owned components
    RooArgSet *_ownedComponents = nullptr; ///<! Set of owned component
 
-   mutable bool _prohibitServerRedirect = false; ///<! Prohibit server redirects -- Debugging tool
+   bool _prohibitServerRedirect = false; ///<! Prohibit server redirects -- Debugging tool
 
-   mutable RooExpensiveObjectCache *_eocache{nullptr}; ///<! Pointer to global cache manager for expensive components.
+   RooExpensiveObjectCache *_eocache{nullptr}; ///<! Pointer to global cache manager for expensive components.
 
    mutable const TNamed *_namePtr = nullptr; ///<! De-duplicated name pointer, equal for all objects with the same name.
    bool _isConstant = false; ///<! Cached isConstant status
 
    mutable bool _localNoInhibitDirty = false; ///<! Prevent 'AlwaysDirty' mode for this node
 
-   mutable RooWorkspace *_myws = nullptr; ///<! In which workspace do I live, if any
+   RooWorkspace *_myws = nullptr; ///<! In which workspace do I live, if any
 
    std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); ///<! Set by the RooFitDriver for this arg to
                                                                      ///<! retrieve its result in the run context

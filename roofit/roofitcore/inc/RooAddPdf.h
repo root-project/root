@@ -125,7 +125,7 @@ public:
 
   RooListProxy _pdfList ;   ///<  List of component PDFs
   RooListProxy _coefList ;  ///<  List of coefficients
-  mutable RooArgList* _snormList{nullptr};  ///<!  List of supplemental normalization factors
+  RooArgList *_snormList{nullptr}; ///<!  List of supplemental normalization factors
 
   bool _haveLastCoef = false;  ///<  Flag indicating if last PDFs coefficient was supplied in the constructor
   bool _allExtendable = false; ///<  Flag indicating if all PDF components are extendable
