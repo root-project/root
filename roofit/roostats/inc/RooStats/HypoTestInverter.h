@@ -95,11 +95,12 @@ public:
    /// \param[in] scanLog Run in logarithmic steps along x.
    bool RunFixedScan( int nBins, double xMin, double xMax, bool scanLog = false ) const;
 
-   bool RunOnePoint( double thisX, bool adaptive = false, double clTarget = -1 ) const;
+   bool RunOnePoint(double rVal, bool adaptive = false, double clTarget = -1) const;
 
    //bool RunAutoScan( double xMin, double xMax, double target, double epsilon=nullptr.005, unsigned int numAlgorithm=nullptr );
 
-   bool RunLimit(double &limit, double &limitErr, double absTol = 0, double relTol = 0, const double *hint=nullptr) const;
+   bool RunLimit(double &limit, double &limitErr, double absAccuracy = 0, double relAccuracy = 0,
+                 const double *hint = nullptr) const;
 
    void UseCLs( bool on = true) { fUseCLs = on; if (fResults) fResults->UseCLs(on);   }
 

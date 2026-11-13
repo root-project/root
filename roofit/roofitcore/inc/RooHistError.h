@@ -28,8 +28,8 @@ public:
   virtual ~RooHistError() {} ;
 
   bool getPoissonInterval(Int_t n, double &mu1, double &mu2, double nSigma= 1) const;
-  bool getBinomialIntervalAsym(Int_t n, Int_t m, double &a1, double &a2, double nSigma= 1) const;
-  bool getBinomialIntervalEff(Int_t n, Int_t m, double &a1, double &a2, double nSigma= 1) const;
+  bool getBinomialIntervalAsym(Int_t n, Int_t m, double &asym1, double &asym2, double nSigma = 1) const;
+  bool getBinomialIntervalEff(Int_t n, Int_t m, double &asym1, double &asym2, double nSigma = 1) const;
   bool getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, double pointEstimate, double stepSize,
            double &lo, double &hi, double nSigma) const;
 

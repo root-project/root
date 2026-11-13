@@ -400,7 +400,7 @@ void RooAbsArg::removeServer(RooAbsArg &server, bool force)
 /// same position of the server list, keeps the same value and shape server
 /// properties, and also updates the corresponding proxies.
 
-void RooAbsArg::replaceServer(RooAbsArg &oldServer, RooAbsArg &newServer, bool propValue, bool propShape)
+void RooAbsArg::replaceServer(RooAbsArg &oldServer, RooAbsArg &newServer, bool valueProp, bool shapeProp)
 {
    coutW(LinkStateMgmt) << "replaceServer()"
                         << " is unsafe, because the server list will be out of sync with the proxy objects!"
@@ -410,7 +410,7 @@ void RooAbsArg::replaceServer(RooAbsArg &oldServer, RooAbsArg &newServer, bool p
    Int_t count = _serverList.refCount(&oldServer);
    removeServer(oldServer, true);
 
-   addServer(newServer, propValue, propShape, count);
+   addServer(newServer, valueProp, shapeProp, count);
 }
 
 /// Change dirty flag propagation mask for specified server
@@ -512,9 +512,9 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection *list, const RooAbsArg *arg,
 /// function is responsible for deleting the returned argset.
 /// The complement of this function is getObservables()
 
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData *set, bool stripDisconnected) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData *data, bool stripDisconnected) const
 {
-   return getParameters(set ? set->get() : nullptr, stripDisconnected);
+   return getParameters(data ? data->get() : nullptr, stripDisconnected);
 }
 
 /// Return the parameters of this p.d.f when used in conjunction with dataset 'data'.
@@ -616,12 +616,12 @@ RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooAbsData &data) c
 /// function is responsible for deleting the returned argset.
 /// The complement of this function is getParameters().
 
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooAbsData *set) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooAbsData *data) const
 {
-   if (!set)
+   if (!data)
       return RooFit::OwningPtr<RooArgSet>{new RooArgSet};
 
-   return getObservables(set->get());
+   return getObservables(data->get());
 }
 
 /// Create a list of leaf nodes in the arg tree starting with
@@ -878,17 +878,17 @@ void RooAbsArg::setShapeDirty(const RooAbsArg *source)
 /// If an object, however, expects a PDF, and this is substituted with a function that isn't normalised, wrong results
 /// might be obtained or it might even crash the program. The types of the objects being substituted are not checked.
 ///
-/// \param[in] newSetOrig Set of new servers that should be used instead of the current servers.
+/// \param[in] newServerList Set of new servers that should be used instead of the current servers.
 /// \param[in] mustReplaceAll A warning is printed and error status is returned if not all servers could be
 /// substituted successfully.
-/// \param[in] nameChange If false, an object named "x" is only replaced with an object also named "x" in `newSetOrig`.
+/// \param[in] nameChange If false, an object named "x" is only replaced with an object also named "x" in `newServerList`.
 /// If the object in `newSet` is called differently, set `nameChange` to true and use setAttribute() on the x object:
 /// ```
 /// objectToReplaceX.setAttribute("ORIGNAME:x")
 /// ```
 /// Now, the renamed object will be selected based on the attribute "ORIGNAME:<name>".
 /// \param[in] isRecursionStep Internal switch used when called from recursiveRedirectServers().
-bool RooAbsArg::redirectServers(const RooAbsCollection &newSetOrig, bool mustReplaceAll, bool nameChange,
+bool RooAbsArg::redirectServers(const RooAbsCollection &newServerList, bool mustReplaceAll, bool nameChange,
                                 bool isRecursionStep)
 {
    // Trivial case, no servers
@@ -898,12 +898,12 @@ bool RooAbsArg::redirectServers(const RooAbsCollection &newSetOrig, bool mustRep
    // We don't need to do anything if there are no new servers or if the only
    // new server is this RooAbsArg itself. And by returning early, we avoid
    // potentially annoying side effects of the redirectServersHook.
-   if (newSetOrig.empty() || (newSetOrig.size() == 1 && newSetOrig[0] == this))
+   if (newServerList.empty() || (newServerList.size() == 1 && newServerList[0] == this))
       return false;
 
-   // Strip any non-matching removal nodes from newSetOrig
+   // Strip any non-matching removal nodes from newServerList
    std::unique_ptr<RooArgSet> newSetOwned;
-   RooAbsCollection const *newSet = &newSetOrig;
+   RooAbsCollection const *newSet = &newServerList;
 
    if (nameChange) {
       newSetOwned = std::make_unique<RooArgSet>();

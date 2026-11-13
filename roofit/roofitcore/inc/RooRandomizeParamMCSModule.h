@@ -32,7 +32,7 @@ public:
   void sampleGaussian(RooRealVar& param, double mean, double sigma) ;
 
   void sampleSumUniform(const RooArgSet& paramSet, double lo, double hi) ;
-  void sampleSumGauss(const RooArgSet& paramSet, double lo, double hi) ;
+  void sampleSumGauss(const RooArgSet &paramSet, double mean, double sigma);
 
   bool initializeInstance() override ;
 

@@ -49,7 +49,8 @@ public:
   bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
     return true ;
   }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override;
+  Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
+                                const char *rangeName = nullptr) const override;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override;
   bool selfNormalized() const override {
     // P.d.f is self normalized

@@ -200,7 +200,7 @@ public:
                        const FlagMap &flagValues, const RooArgList &flags,
                        const std::vector<std::vector<std::string>> &nonInterfering);
    RooArgSet createWeights(const ParamMap &inputs, const std::vector<RooArgList *> &vertices, RooArgList &couplings,
-                           const FlagMap &inputFlags, const RooArgList &flags,
+                           const FlagMap &flagValues, const RooArgList &flags,
                            const std::vector<std::vector<std::string>> &nonInterfering);
    RooArgSet createWeights(const ParamMap &inputs, const std::vector<RooArgList *> &vertices, RooArgList &couplings);
 

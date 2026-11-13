@@ -147,9 +147,9 @@ namespace RooStats {
 
       void ApproximatePosterior() const;
 
-      void ComputeIntervalFromApproxPosterior(double c1, double c2) const;
+      void ComputeIntervalFromApproxPosterior(double lowerCutOff, double upperCutOff) const;
 
-      void ComputeIntervalFromCdf(double c1, double c2) const;
+      void ComputeIntervalFromCdf(double lowerCutOff, double upperCutOff) const;
 
       void ComputeShortestInterval() const;
 

@@ -46,7 +46,7 @@ using PrioLowest = Prio<10>;
 /// @brief A class to maintain the context for squashing of RooFit models into code.
 class CodegenContext {
 public:
-   void addResult(RooAbsArg const *key, std::string const &value);
+   void addResult(RooAbsArg const *in, std::string const &value);
    void addResult(const char *key, std::string const &value);
 
    std::string const &getResult(RooAbsArg const &arg);
@@ -100,7 +100,7 @@ public:
 
    std::string getTmpVarName() const;
 
-   std::string buildArg(RooAbsCollection const &x, std::string const &arrayType = "double");
+   std::string buildArg(RooAbsCollection const &in, std::string const &arrayType = "double");
 
    std::string buildArg(std::span<const double> arr);
    std::string buildArg(std::span<const int> arr) { return buildArgSpanImpl(arr); }

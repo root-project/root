@@ -30,13 +30,14 @@ public:
   // Constructors etc.
 
   RooMappedCategory();
-  RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defCatName="NotMapped", Int_t defCatIdx=NoCatIdx);
+  RooMappedCategory(const char *name, const char *title, RooAbsCategory &inputCat, const char *defOut = "NotMapped",
+                    Int_t defOutIdx = NoCatIdx);
   RooMappedCategory(const RooMappedCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooMappedCategory(*this,newname); }
   ~RooMappedCategory() override;
 
   // Mapping function
-  bool map(const char* inKeyRegExp, const char* outKeyName, Int_t outKeyNum=NoCatIdx) ;
+  bool map(const char *inKeyRegExp, const char *outKeyName, Int_t outIdx = NoCatIdx);
 
   // Printing interface (human readable)
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;

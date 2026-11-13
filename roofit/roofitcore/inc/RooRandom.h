@@ -30,7 +30,7 @@ public:
   static void setRandomGenerator(TRandom* gen);
   static double uniform(TRandom *generator= randomGenerator());
   static void uniform(UInt_t dimension, double vector[], TRandom *generator= randomGenerator());
-  static UInt_t integer(UInt_t max, TRandom *generator= randomGenerator());
+  static UInt_t integer(UInt_t n, TRandom *generator = randomGenerator());
   static double gaussian(TRandom *generator= randomGenerator());
 
   static RooQuasiRandomGenerator *quasiGenerator();

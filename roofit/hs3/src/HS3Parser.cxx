@@ -421,30 +421,30 @@ void describe(Reader &ar, Domain &domain)
    ar.list("axes", domain.axes);
 }
 
-void readValue(Cursor const &c, ParameterValue &p)
+void readValue(Cursor const &c, ParameterValue &out)
 {
    if (!c.node().is_map()) {
       c.error("must be a struct");
       return;
    }
    Reader ar{c};
-   ar("name", p.name);
+   ar("name", out.name);
    if (ar.has("value")) {
       Cursor crsr{ar.cursor().node()["value"], ar.cursor(), "value"};
       if (crsr.node().is_number()) {
-         p.value = crsr.node().val_double();
+         out.value = crsr.node().val_double();
       } else {
          std::string label;
          readValue(crsr, label);
-         p.value = std::move(label);
+         out.value = std::move(label);
       }
    }
    std::optional<bool> isConst;
    ar("const", isConst);
-   p.isConst = isConst.value_or(false);
-   ar("err", p.error);
-   ar("relErr", p.relError);
-   ar("nbins", p.nbins);
+   out.isConst = isConst.value_or(false);
+   ar("err", out.error);
+   ar("relErr", out.relError);
+   ar("nbins", out.nbins);
 }
 
 void describe(Reader &ar, ParameterPoint &point)

@@ -67,20 +67,20 @@ public:
 
   double chiSquare(const RooHist& hist, int nFitParam) const ;
   Int_t findPoint(double value, double tolerance=1e-10) const ;
-  double average(double lo, double hi) const ;
+  double average(double xFirst, double xLast) const ;
   double interpolate(double x, double tolerance=1e-10) const ;
 
   bool isIdentical(const RooCurve& other, double tol=1e-6, bool verbose=true) const ;
 
   RooCurve* makeErrorBand(const std::vector<RooCurve*>& variations, double Z=1) const ;
-  RooCurve* makeErrorBand(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, const TMatrixD& V, double Z=1) const ;
+  RooCurve* makeErrorBand(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, const TMatrixD& C, double Z=1) const ;
 
   static std::list<double>* plotSamplingHintForBinBoundaries(std::span<const double> boundaries, double xlo, double xhi);
 
 protected:
 
   void calcBandInterval(const std::vector<RooCurve*>& variations,Int_t i,double Z,double& lo, double& hi, bool approxGauss) const ;
-  void calcBandInterval(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, Int_t i, const TMatrixD& V,
+  void calcBandInterval(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, Int_t i, const TMatrixD& C,
          double Z,double& lo, double& hi) const ;
 
   void initialize();

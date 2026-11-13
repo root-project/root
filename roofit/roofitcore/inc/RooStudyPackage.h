@@ -45,7 +45,7 @@ public:
 
   void exportData(TList* olist, Int_t seqno) ;
 
-  static void processFile(const char* infile, Int_t nexp) ;
+  static void processFile(const char* studyName, Int_t nexp) ;
 
 protected:
 

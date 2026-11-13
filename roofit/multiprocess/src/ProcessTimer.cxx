@@ -35,19 +35,19 @@ namespace MultiProcess {
  * Note that this class logs timings in milliseconds.
  */
 
-list<chrono::time_point<chrono::steady_clock>> ProcessTimer::get_durations(string to_return)
+list<chrono::time_point<chrono::steady_clock>> ProcessTimer::get_durations(string section_name)
 {
    ProcessTimer::duration_map_t::key_type sec_name;
    ProcessTimer::duration_map_t::mapped_type duration_list;
    for (auto const &durations_element : ProcessTimer::durations) {
       std::tie(sec_name, duration_list) = durations_element;
-      if (sec_name != to_return) {
+      if (sec_name != section_name) {
          continue;
       } else {
          return duration_list;
       }
    }
-   throw ::invalid_argument("section name " + to_return +
+   throw ::invalid_argument("section name " + section_name +
                             " not found in timer map, so it cannot"
                             " be retrieved");
 }

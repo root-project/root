@@ -3021,7 +3021,7 @@ std::vector<std::string> asStringV(std::string const &arg)
 class LMIFace : public RooFactoryWSTool::IFace {
 public:
    std::string
-   create(RooFactoryWSTool &, const char *typeName, const char *instName, std::vector<std::string> args) override;
+   create(RooFactoryWSTool &, const char *typeName, const char *instanceName, std::vector<std::string> args) override;
 };
 
 std::string LMIFace::create(RooFactoryWSTool &ft, const char * /*typeName*/, const char *instanceName,

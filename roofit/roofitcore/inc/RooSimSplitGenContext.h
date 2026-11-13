@@ -30,7 +30,7 @@ public:
   ~RooSimSplitGenContext() override;
   void setProtoDataOrder(Int_t* lut) override ;
 
-  void attach(const RooArgSet& params) override ;
+  void attach(const RooArgSet &args) override;
 
   void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 

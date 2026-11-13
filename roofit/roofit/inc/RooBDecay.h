@@ -44,7 +44,7 @@ public:
   }
 
   double coefficient(Int_t basisIndex) const override;
-  RooFit::OwningPtr<RooArgSet> coefVars(Int_t coefIdx) const override ;
+  RooFit::OwningPtr<RooArgSet> coefVars(Int_t basisIndex) const override;
 
   Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=nullptr) const override ;

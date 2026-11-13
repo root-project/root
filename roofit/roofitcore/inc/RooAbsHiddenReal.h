@@ -37,7 +37,7 @@ public:
   void writeToStream(std::ostream& os, bool compact) const override ;
 
   // Printing interface (human readable)
-  void printValue(std::ostream& stream) const override ;
+  void printValue(std::ostream &os) const override;
 
   inline bool isHidden() const {
     // If true, hiding mode is active

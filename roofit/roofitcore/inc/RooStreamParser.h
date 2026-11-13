@@ -22,7 +22,7 @@ class RooStreamParser {
 public:
   // Constructors, assignment etc.
   RooStreamParser(std::istream& is) ;
-  RooStreamParser(std::istream& is, const TString& errPrefix) ;
+  RooStreamParser(std::istream &is, const TString &errorPrefix);
   virtual ~RooStreamParser() = default;
 
   TString readToken() ;

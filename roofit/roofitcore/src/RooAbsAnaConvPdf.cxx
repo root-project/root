@@ -128,12 +128,12 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
 /// convoluted variable as this physics model ('convVar')
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title, const RooResolutionModel &model,
-                                   RooRealVar &cVar)
+                                   RooRealVar &convVar)
    : RooAbsPdf(name, title),
      _isCopy(false),
      _model{static_cast<RooResolutionModel *>(model.clone(model.GetName()))},
      _ownModel{true},
-     _convVar("!convVar", "Convolution variable", this, cVar, false, false),
+     _convVar("!convVar", "Convolution variable", this, convVar, false, false),
      _convSet("!convSet", "Set of resModel X basisFunc convolutions", this),
      _coefNormMgr(this, 10),
      _codeReg(10)

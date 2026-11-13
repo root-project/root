@@ -21,7 +21,7 @@ class RooTFnBinding : public RooAbsReal {
 public:
   RooTFnBinding() = default;
   RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
-  RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list, const RooArgList& plist);
+  RooTFnBinding(const char *name, const char *title, TF1 *func, const RooArgList &list, const RooArgList &paramList);
   RooTFnBinding(const RooTFnBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooTFnBinding(*this,newname); }
 

@@ -104,7 +104,7 @@ public:
   RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const override ;
   RooAbsArg& pdfObservable(RooAbsArg& histObservable) const override ;
   void fillCacheObject(PdfCacheElem& cache) const override ;
-  void fillCacheSlice(FFTCacheElem& cache, const RooArgSet& slicePosition) const ;
+  void fillCacheSlice(FFTCacheElem &aux, const RooArgSet &slicePosition) const;
 
   PdfCacheElem* createCache(const RooArgSet* nset) const override ;
   TString histNameSuffix() const override ;

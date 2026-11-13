@@ -126,8 +126,8 @@ public:
 
     friend class RooMsgService ;
 
-    bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, const RooAbsArg* obj) ;
-    bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, const TObject* obj) ;
+    bool match(RooFit::MsgLevel level, RooFit::MsgTopic top, const RooAbsArg *obj);
+    bool match(RooFit::MsgLevel level, RooFit::MsgTopic top, const TObject *obj);
 
     inline bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, std::nullptr_t obj)
     {
@@ -161,7 +161,7 @@ public:
   StreamConfig& getStream(Int_t id) { return _streams[id] ; }
 
   Int_t numStreams() const { return _streams.size() ; }
-  void setStreamStatus(Int_t id, bool active) ;
+  void setStreamStatus(Int_t id, bool flag);
   bool getStreamStatus(Int_t id) const ;
 
   void reset();
@@ -173,8 +173,9 @@ public:
   void showPid(bool flag) { _showPid = flag ; }
 
   // Back end -- Send message or check if particular logging configuration is active
-  std::ostream& log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) ;
-  std::ostream& log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) ;
+  std::ostream &
+  log(const RooAbsArg *self, RooFit::MsgLevel level, RooFit::MsgTopic topic, bool forceSkipPrefix = false);
+  std::ostream &log(const TObject *self, RooFit::MsgLevel level, RooFit::MsgTopic topic, bool forceSkipPrefix = false);
   // Overload to resolve the ambiguity when passing a `nullptr`. Without this,
   // one would have to explicitly cast the `nullptr` to TObject* or RooAbsArg*.
   inline std::ostream& log(std::nullptr_t, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) {

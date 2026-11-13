@@ -31,9 +31,9 @@ public:
   bool registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params) ;
   const TObject* retrieveObject(const char* name, TClass* tclass, const RooArgSet& params) ;
 
-  const TObject* getObj(Int_t uniqueID) ;
-  bool clearObj(Int_t uniqueID) ;
-  bool setObj(Int_t uniqueID, TObject* obj) ;
+  const TObject *getObj(Int_t uid);
+  bool clearObj(Int_t uid);
+  bool setObj(Int_t uid, TObject *obj);
   void clearAll() ;
 
   void importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, bool verbose=false) ;

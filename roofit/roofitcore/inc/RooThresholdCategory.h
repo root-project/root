@@ -27,7 +27,7 @@ public:
   // Constructors etc.
   RooThresholdCategory() {};
   RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar,
-      const char* defCatName="Default", Int_t defCatIdx=0);
+      const char* defOut="Default", Int_t defIdx=0);
   RooThresholdCategory(const RooThresholdCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooThresholdCategory(*this, newname); }
 
