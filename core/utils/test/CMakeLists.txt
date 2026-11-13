@@ -1,1 +1,1 @@
-ROOT_ADD_GTEST(optparse optparse_test.cxx)
+ROOT_ADD_GTEST(optparse optparse_test.cxx LIBRARIES Core)
