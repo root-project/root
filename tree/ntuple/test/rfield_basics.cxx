@@ -59,3 +59,28 @@ TEST(RField, ValidNaming)
       EXPECT_THAT(err.what(), testing::HasSubstr("name 'x.y' cannot contain character '.'"));
    }
 }
+
+TEST(RField, UntypedNullable)
+{
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> items1;
+   items1.emplace_back(std::make_unique<ROOT::RField<float>>("a"));
+   auto record1 = std::make_unique<ROOT::RRecordField>("_0", std::move(items1));
+
+   try {
+      ROOT::ROptionalField optional("o", std::move(record1));
+      FAIL() << "creating an ROptionalField of an untyped record should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot create std::optional of untyped field"));
+   }
+
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> items2;
+   items2.emplace_back(std::make_unique<ROOT::RField<float>>("b"));
+   auto record2 = std::make_unique<ROOT::RRecordField>("_0", std::move(items2));
+
+   try {
+      ROOT::RUniquePtrField uptr("u", std::move(record2));
+      FAIL() << "creating an RUniquePtrField of an untyped record should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot create std::unique_ptr of untyped field"));
+   }
+}
