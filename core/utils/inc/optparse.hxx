@@ -432,10 +432,14 @@ public:
 #else
          std::conditional_t<std::is_integral_v<T>, long long, long double> converted;
          std::size_t unconvertedPos;
-         if constexpr (std::is_integral_v<T>) {
-            converted = std::stoll(std::string(val), &unconvertedPos);
-         } else {
-            converted = std::stold(std::string(val), &unconvertedPos);
+         try {
+            if constexpr (std::is_integral_v<T>) {
+               converted = std::stoll(std::string(val), &unconvertedPos);
+            } else {
+               converted = std::stold(std::string(val), &unconvertedPos);
+            }
+         } catch (...) {
+            unconvertedPos = 0;
          }
 
          const bool isOor = converted > std::numeric_limits<T>::max();
