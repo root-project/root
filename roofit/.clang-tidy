@@ -1,6 +1,7 @@
 ---
 Checks: -*,
   ,boost-use-to-string,
+  ,bugprone-integer-division,
   ,bugprone-string-constructor,
   ,bugprone-use-after-move,
   ,cppcoreguidelines-prefer-member-initializer,

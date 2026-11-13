@@ -768,7 +768,7 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
       // bins are treated correctly.
       RooDataHist dataHist{"data_hist", "data_hist", x};
       for (int iBin = 2; iBin < numBins; ++iBin) {
-         dataHist.set(iBin, nEvents / numBins, -1);
+         dataHist.set(iBin, static_cast<double>(nEvents) / numBins, -1);
       }
 
       RooHistFunc histFunc{"hist_func", "hist_func", x, dataHist};

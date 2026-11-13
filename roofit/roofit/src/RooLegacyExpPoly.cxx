@@ -149,7 +149,7 @@ void RooLegacyExpPoly::adjustLimits()
    // Adjust the limits of all the coefficients to reflect the numeric boundaries
 
    const unsigned sz = _coefList.size();
-   double max = std::numeric_limits<double>::max_exponent / sz;
+   double max = static_cast<double>(std::numeric_limits<double>::max_exponent) / sz;
    const int lowestOrder = _lowestOrder;
    std::vector<double> coefs;
    coefs.reserve(sz);
