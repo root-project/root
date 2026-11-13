@@ -11,7 +11,7 @@ public:
    RooMultiReal() = default;
    RooMultiReal(const char *name, const char *title, RooCategory &indexCat, const RooArgList &models);
    RooMultiReal(const RooMultiReal &other, const char *name = nullptr);
-   virtual ~RooMultiReal() {}
+   ~RooMultiReal() override {}
 
    TObject *clone(const char *newname) const override { return new RooMultiReal(*this, newname); }
 

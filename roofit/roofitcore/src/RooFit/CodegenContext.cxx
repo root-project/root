@@ -138,7 +138,7 @@ void CodegenContext::addToCodeBody(std::string const &in, bool isScopeIndep /* =
    TString indented = in;
    indented = indented.Strip(TString::kBoth); // trim
 
-   std::string indent_str = "";
+   std::string indent_str;
    for (unsigned i = 0; i < _indent; ++i)
       indent_str += "  ";
    indented = indented.Prepend(indent_str);

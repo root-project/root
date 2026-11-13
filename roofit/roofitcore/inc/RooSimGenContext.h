@@ -53,12 +53,12 @@ protected:
   std::vector<std::unique_ptr<RooAbsGenContext>> _gcList; ///< List of component generator contexts
   std::vector<int>               _gcIndex ;  ///< Index value corresponding to component
   bool _haveIdxProto{false};                 ///< Flag set if generation of index is requested
-  TString _idxCatName{};                     ///< Name of index category
+  TString _idxCatName;                       ///< Name of index category
   Int_t _numPdf{0};                          ///< Number of generated PDFs
   std::vector<double> _fracThresh;           ///<[_numPdf] Fraction threshold array
   std::unique_ptr<RooDataSet> _protoData;    ///<! Prototype dataset
 
-  RooArgSet _allVarsPdf{};        ///< All pdf variables
+  RooArgSet _allVarsPdf; ///< All pdf variables
 
   ClassDefOverride(RooSimGenContext,0) // Context for efficiently generating a dataset from a RooSimultaneous PDF
 };

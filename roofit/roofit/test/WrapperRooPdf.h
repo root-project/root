@@ -133,10 +133,11 @@ private:
          var->setVal(*x++);
       }
 
-      if (fNorm)
+      if (fNorm) {
          return fPdf->getVal(fX.get());
-      else
+      } else {
          return fPdf->getVal(); // get unnormalized value
+      }
    }
 
    void DoSetParameters(const double *p) const

@@ -332,8 +332,10 @@ const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
   pname = pfx;
   bool first(true);
   for (auto const* arg : terms) {
-    if (first) { first=false;}
-    else pname.Append("_X_");
+    if (first) { first=false;
+    } else {
+       pname.Append("_X_");
+    }
     pname.Append(arg->GetName());
   }
   return pname.Data();

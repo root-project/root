@@ -1734,7 +1734,8 @@ void RooDataSet::printContents(std::ostream& os) const
 
         os << ", weight=" << weight();
 
-        double lo, hi;
+        double lo;
+        double hi;
         weightError(lo, hi);
         if (lo != 0.0 || hi != 0.0) {
             os << " ±[" << lo << "," << hi << "]";

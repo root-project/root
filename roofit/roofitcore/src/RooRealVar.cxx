@@ -276,7 +276,7 @@ void printOutOfRangeWarning(RooRealVar const &var, double value, const char *ran
 void RooRealVar::setVal(double value)
 {
   double clipValue ;
-  bool isInRange = inRange(value,0,&clipValue) ;
+  bool isInRange = inRange(value, nullptr, &clipValue);
 
   if(!isInRange && !isSilentClippingEnabled()) {
       if (std::abs(clipValue - value) > std::numeric_limits<double>::epsilon()) {

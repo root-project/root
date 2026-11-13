@@ -106,7 +106,8 @@ TEST(RooNaNPacker, CanPackStuffIntoNaNs)
 // Demonstrate value preserving behavior after arithmetic on packed NaNs.
 TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
 {
-   RooNaNPacker rnp, rnp2;
+   RooNaNPacker rnp;
+   RooNaNPacker rnp2;
    rnp.setPayload(1.337f);
    EXPECT_TRUE(rnp.isNaNWithPayload());
 
