@@ -1041,7 +1041,7 @@ void RooEvaluatorWrapper::createFuncWrapper()
 {
    // Get the parameters.
    RooArgSet paramSet;
-   this->getParameters(_data ? _data->get() : nullptr, paramSet, /*sripDisconnectedParams=*/false);
+   this->getParameters(_data ? _data->get() : nullptr, paramSet, /*stripDisconnected=*/false);
 
    const bool isChi2 = _topNode->getAttribute("Chi2EvaluationActive");
    const bool skipZeroWeights = !isChi2 && (!_pdf || !_pdf->getAttribute("BinnedLikelihoodActive"));
