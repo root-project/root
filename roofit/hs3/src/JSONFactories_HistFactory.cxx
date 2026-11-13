@@ -386,6 +386,22 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
    return phf;
 }
 
+// Whether `phf` implements the staterror of a channel, among the ParamHistFuncs `phfs` of a sample. HistFactory marks
+// it with an attribute. Workspaces from before the attribute existed have none: then it is recognized by the name that
+// HistFactory gave it.
+bool isStatError(ParamHistFunc const &phf, std::vector<ParamHistFunc *> const &phfs)
+{
+   if (phf.getAttribute(statErrorAttribute)) {
+      return true;
+   }
+   for (ParamHistFunc const *other : phfs) {
+      if (other->getAttribute(statErrorAttribute)) {
+         return false;
+      }
+   }
+   return startsWith(std::string(phf.GetName()), "mc_stat_");
+}
+
 double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
 {
    auto const *mean = dynamic_cast<RooProduct const *>(&constraint.getMean());
@@ -394,21 +410,22 @@ double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
                                   std::string(constraint.GetName()));
    }
 
+   // The mean is the product of the gamma and tau. Imported workspaces can also represent tau as a RooRealVar, which
+   // is not necessarily constant.
+   std::vector<RooAbsReal const *> others;
    for (RooAbsArg *arg : mean->servers()) {
-      if (arg == &gamma) {
-         continue;
-      }
-
-      if (auto const *tau = dynamic_cast<RooConstVar const *>(arg)) {
-         return tau->getVal();
-      }
-
-      // Imported workspaces can sometimes represent
-      // constants as constant RooRealVars.
-      if (auto const *real = dynamic_cast<RooAbsReal const *>(arg)) {
-         if (real->isConstant() || endsWith(std::string(real->GetName()), "_tau")) {
-            return real->getVal();
+      if (arg != &gamma) {
+         if (auto const *real = dynamic_cast<RooAbsReal const *>(arg)) {
+            others.push_back(real);
          }
+      }
+   }
+   if (others.size() == 1) {
+      return others.front()->getVal();
+   }
+   for (RooAbsReal const *real : others) {
+      if (dynamic_cast<RooConstVar const *>(real) || real->isConstant()) {
+         return real->getVal();
       }
    }
 
@@ -1208,7 +1225,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
       }
 
       for (ParamHistFunc *phf : phfs) {
-         if (startsWith(std::string(phf->GetName()), "mc_stat_")) { // MC stat uncertainty
+         if (isStatError(*phf, phfs)) { // MC stat uncertainty
             statError.emplace();
             statError->name = "staterror";
             HS3::GammaConstraintPdfs pdfs;
@@ -1240,8 +1257,6 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             for (const auto &g : phf->paramList()) {
                sys.parameters.push_back({g->GetName()});
                RooAbsPdf *pdf = findConstraint(g);
-               if (!pdf)
-                  pdf = ws->pdf(constraintName(g->GetName()));
                pdfs.pdfs.push_back(gammaConstraint(pdf));
             }
             sys.constraint = std::move(pdfs);
@@ -1396,8 +1411,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    RooArgSet parameters;
    sumpdf->getParameters(channel.observables, parameters);
    for (RooAbsArg *param : parameters) {
-      // This should exclude the global observables. The legacy inverse bin widths are not written at all.
-      if (!startsWith(std::string{param->GetName()}, "nom_") && !channel.legacyBinWidthFactors.count(param)) {
+      // The global observables are not among them, since they only enter the constraint terms. The legacy inverse bin
+      // widths are not written at all.
+      if (!channel.legacyBinWidthFactors.count(param)) {
          tool->queueExport(*param);
       }
    }
@@ -1546,6 +1562,7 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
       mcStatObject = &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
                                 statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
                                 dist.statError.relThreshold, nBins);
+      mcStatObject->setAttribute(statErrorAttribute);
    }
 
    ChannelContext ctx{tool, dist, observables, name, channelName, nBins, mcStatObject, constraints};

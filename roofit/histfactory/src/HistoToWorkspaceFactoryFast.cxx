@@ -1062,6 +1062,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
             ParamHistFunc statUncertFunc(statFuncName.c_str(), statFuncName.c_str(),
                 theObservables, statFactorParams );
+            statUncertFunc.setAttribute(statErrorAttribute);
 
             proto.import( statUncertFunc, RooFit::RecycleConflictNodes() );
 

@@ -43,6 +43,10 @@ constexpr double minShapeUncertainty = 0.0;
 
 } // namespace MagicConstants
 
+/// The attribute of the ParamHistFunc that implements the staterror of a channel, which tells it apart from the
+/// ParamHistFuncs of shapesys and shapefactor modifiers without relying on its name.
+constexpr const char *statErrorAttribute = "HistFactory_StatError";
+
 template <class Arg_t, class... Params_t>
 Arg_t &getOrCreate(RooWorkspace &ws, std::string const &name, Params_t &&...params)
 {
