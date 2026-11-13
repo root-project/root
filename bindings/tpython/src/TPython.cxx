@@ -137,6 +137,8 @@ Bool_t TPython::Initialize()
    if (!Py_IsInitialized()) {
       // Trigger the Python initialization indirectly via cpyrt
       cppjit::cpyrt::Scope_Check(nullptr);
+      if (!Py_IsInitialized())
+         return false;
 
       mainThreadState = PyEval_SaveThread();
    }
