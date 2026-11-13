@@ -15,6 +15,7 @@ Array of shorts (16 bits per element).
 */
 
 #include "TArrayS.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include "TBuffer.h"
 
 
@@ -149,6 +150,8 @@ void TArrayS::Streamer(TBuffer &b)
    if (b.IsReading()) {
       Int_t n;
       b >> n;
+      // Each element occupies at least one byte on file.
+      n = ROOT::Internal::CheckCollectionSize(b, n, "TArrayS::Streamer", "TArrayS", [] { return true; });
       Set(n);
       b.ReadFastArray(fArray,n);
    } else {
