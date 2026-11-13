@@ -213,10 +213,11 @@ inline double getLog(double prob, RooAbsReal const *caller)
 void replaceOrAdd(RooLinkedList &lst, TObject &obj)
 {
    TObject *old = lst.FindObject(obj.GetName());
-   if (old)
+   if (old) {
       lst.Replace(old, &obj);
-   else
+   } else {
       lst.Add(&obj);
+   }
 }
 
 } // namespace

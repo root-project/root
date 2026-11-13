@@ -64,7 +64,7 @@ std::vector<double> getValues(RooAbsReal const &real, RooAbsData const &data)
 class MyTimer {
 public:
    MyTimer(std::string &&name)
-      : m_name(name), m_startTime(clock()), m_endTime(0), m_steadyStart(std::chrono::steady_clock::now()), m_steadyEnd()
+      : m_name(name), m_startTime(clock()), m_endTime(0), m_steadyStart(std::chrono::steady_clock::now())
    {
    }
 
@@ -234,10 +234,11 @@ void PDFTest::compareFixedValues(double &maximalError, bool normalise, bool comp
    auto callBatchFunc = [this](const RooAbsPdf &pdf) { return getValues(pdf, *_dataUniform); };
 
    auto callScalarFunc = [compareLogs](const RooAbsPdf &pdf, const RooArgSet *theNormSet) {
-      if (compareLogs)
+      if (compareLogs) {
          return pdf.getLogVal(theNormSet);
-      else
+      } else {
          return pdf.getVal(theNormSet);
+      }
    };
 
    if (normalise) {

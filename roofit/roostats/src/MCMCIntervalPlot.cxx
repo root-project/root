@@ -150,8 +150,9 @@ void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
    if (ourTitle.CompareTo("") == 0) {
       if (title)
          fPosteriorHist->SetTitle(title);
-   } else
+   } else {
       fPosteriorHist->SetTitle(GetTitle());
+   }
 
    //fPosteriorHist->Draw(myOpt);
 

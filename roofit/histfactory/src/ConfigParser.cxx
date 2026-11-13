@@ -1559,13 +1559,13 @@ bool ConfigParser::CheckTrueFalse( std::string attrVal, std::string NodeTitle ) 
     cxcoutEHF << "Error: In " << NodeTitle
          << " Expected either 'True' or 'False' but found empty" << std::endl;
     throw hf_exc();
-  }
-  else if ( attrVal == "True"  || attrVal == "true"  )   return true;
-  else if ( attrVal == "False" || attrVal == "false" )   return false;
-  else {
-    cxcoutEHF << "Error: In " << NodeTitle
-         << " Expected either 'True' or 'False' but found: " << attrVal <<  std::endl;
-    throw hf_exc();
+  } else if (attrVal == "True" || attrVal == "true") {
+     return true;
+  } else if (attrVal == "False" || attrVal == "false") {
+     return false;
+  } else {
+     cxcoutEHF << "Error: In " << NodeTitle << " Expected either 'True' or 'False' but found: " << attrVal << std::endl;
+     throw hf_exc();
   }
 
   return false;

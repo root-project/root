@@ -197,10 +197,11 @@ public:
                                               << " in interval [ " <<  fXmin[i] << " , " << fXmax[i] << " ] " << std::endl;
       }
 
-      if (fIntegrator)
+      if (fIntegrator) {
          fIntegrator->Options().Print(ooccoutD(nullptr,NumericIntegration));
-      else
+      } else {
          fIntegratorOneDim->Options().Print(ooccoutD(nullptr,NumericIntegration));
+      }
 
       // store max POI value because it will be changed when evaluating the function
       fMaxPOI = fXmax[0];
@@ -1400,9 +1401,9 @@ void BayesianCalculator::ComputeShortestInterval( ) const {
                      << " differs more than 10% from desired CL value - must increase nbins " << n
                      << " to an higher value " << std::endl;
       }
-   }
-   else
+   } else {
       coutE(Eval) << "BayesianCalculator::ComputeShortestInterval " << n << " bins are not sufficient " << std::endl;
+   }
 
    fValidInterval = true;
 

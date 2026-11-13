@@ -429,9 +429,9 @@ double EvaluateNLL(RooStats::ModelConfig const &modelConfig, RooAbsData &data, c
                 if (ROOT::Math::MinimizerOptions::DefaultStrategy() == 0 ) {
                    oocoutW(nullptr,Minimization) << "    ----> trying with strategy = 1" << std::endl;
                    minim.setStrategy(1);
-                }
-                else
+                } else {
                    tries++; // skip this trial if strategy is already 1
+                }
              }
              if (tries == 3) {
                 oocoutW(nullptr,Minimization) << "    ----> trying with improve" << std::endl;
@@ -1261,10 +1261,11 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
    RooProdPdf observableProdPdf("observableProdPdf", "observableProdPdf", strippedPdfSet);
    const RooAbsPdf *observablePdf;
    if (prodPdf) {
-      if (strippedPdfSet.getSize() == 1)
+      if (strippedPdfSet.getSize() == 1) {
          observablePdf = dynamic_cast<const RooAbsPdf *>(strippedPdfSet.at(0));
-      else
+      } else {
          observablePdf = &observableProdPdf;
+      }
    } else {
       observablePdf = &pdf;
    }

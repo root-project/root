@@ -291,9 +291,9 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
          gobs->Draw("APL");
          gplot = gobs;
          gplot->GetHistogram()->SetTitle( GetTitle() );
+      } else {
+         gobs->Draw("PL");
       }
-      else gobs->Draw("PL");
-
    }
    TMultiGraph * gexp = nullptr;
    if (drawExp) {
@@ -304,10 +304,9 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
          gexp->Draw("A");
          if (gexp->GetHistogram()) gexp->GetHistogram()->SetTitle( GetTitle() );
          gplot = static_cast<TGraph*>(gexp->GetListOfGraphs()->First());
-      }
-      else
+      } else {
          gexp->Draw();
-
+      }
    }
 
    // draw also an horizontal  line at the desired conf level

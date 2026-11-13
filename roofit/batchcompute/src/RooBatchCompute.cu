@@ -485,8 +485,8 @@ double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, Input
    auto devOut = reinterpret_cast<double *>(slot.device);
    auto hostOut = reinterpret_cast<double *>(slot.host);
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
-   kahanSum<<<gridSize, blockSize, shMemSize, stream>>>(input, nullptr, n, devOut, 0);
-   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut, devOut + gridSize, gridSize, devOut, 0);
+   kahanSum<<<gridSize, blockSize, shMemSize, stream>>>(input, nullptr, n, devOut, false);
+   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut, devOut + gridSize, gridSize, devOut, false);
    CudaInterface::copyDeviceToHost(devOut, hostOut, 1, cfg.cudaStream());
    // Release right after the last enqueued use of the slot, so that the slot
    // is protected by its event even if the synchronization below throws.

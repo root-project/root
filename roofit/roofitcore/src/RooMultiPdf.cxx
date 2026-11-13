@@ -32,7 +32,8 @@ RooMultiPdf::RooMultiPdf(const char *name, const char *title, RooCategory &_x, c
    : RooAbsPdf(name, title), // call of constructor base class RooAbsPdf passing it name and title
      c("_pdfs", "The list of pdfs", this),
      corr("_corrs", "The list of correction factors", this),
-     x("_index", "the pdf index", this, _x)
+     x("_index", "the pdf index", this, _x),
+     _oldIndex(fIndex)
 
 // parameter corr : Holds correction factors - number of free parameters
 // in each PDF held in the RooMultiPdf object
@@ -50,17 +51,19 @@ RooMultiPdf::RooMultiPdf(const char *name, const char *title, RooCategory &_x, c
       corr.addOwned(std::make_unique<RooConstVar>(corrName.c_str(), "", nonConstVariables->size()));
       count++;
    }
-   _oldIndex = fIndex;
 }
 
 // Here new RooMultiPdf copy is created that references the same components as the original.
 // Copies c, corr, x
 RooMultiPdf::RooMultiPdf(const RooMultiPdf &other, const char *name)
-   : RooAbsPdf(other, name), c("_pdfs", this, other.c), corr("_corrs", this, other.corr), x("_index", this, other.x)
+   : RooAbsPdf(other, name),
+     c("_pdfs", this, other.c),
+     corr("_corrs", this, other.corr),
+     x("_index", this, other.x),
+     fIndex(other.fIndex),
+     _oldIndex(fIndex),
+     cFactor(other.cFactor) // correction to 2*NLL by default is -> 2*0.5 per param
 {
-   fIndex = other.fIndex;
-   _oldIndex = fIndex;
-   cFactor = other.cFactor; // correction to 2*NLL by default is -> 2*0.5 per param
 }
 
 // evaluate() and getLogVal() define how the value and log-value of the RooMultiPdf are computed at a given point.

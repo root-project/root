@@ -62,7 +62,6 @@ For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 #include "RooDataSet.h"
 
 #include "TError.h"
-#include "TMath.h"
 
 #include <algorithm>
 #include <cmath>

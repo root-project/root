@@ -22,6 +22,7 @@ namespace HS3 {
 DomainRanges::DomainRanges(std::vector<Domain> const &domains)
 {
    std::vector<Domain const *> sorted;
+   sorted.reserve(domains.size());
    for (Domain const &domain : domains) {
       sorted.push_back(&domain);
    }

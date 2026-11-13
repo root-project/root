@@ -824,11 +824,11 @@ bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
    // Optional fields (defaults follow RooSpline ctor defaults)
    std::string algo = p.has_child("interpolation") ? p["interpolation"].val() : "poly3";
    int order = 0;
-   if (algo == "poly3")
+   if (algo == "poly3") {
       order = 3;
-   else if (algo == "poly5")
+   } else if (algo == "poly5") {
       order = 5;
-   else {
+   } else {
       RooJSONFactoryWSTool::error("unsupported algo '" + algo + "' for RooSpline in '" + name +
                                   "': allowed are 'poly3' and 'poly5'");
    }
@@ -1514,7 +1514,8 @@ bool exportSpline(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem,
 
    const int np = sp.GetNp();
    for (int i = 0; i < np; ++i) {
-      double xk = 0.0, yk = 0.0;
+      double xk = 0.0;
+      double yk = 0.0;
       sp.GetKnot(i, xk, yk);
       x0.append_child() << xk;
       y0.append_child() << yk;

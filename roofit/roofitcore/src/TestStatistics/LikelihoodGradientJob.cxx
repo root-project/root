@@ -35,10 +35,10 @@ LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood
    : LikelihoodGradientWrapper(std::move(likelihood), std::move(calculation_is_clean), N_dim, minimizer,
                                std::move(offset)),
      grad_(N_dim),
-     N_tasks_(N_dim)
+     N_tasks_(N_dim),
+     offsets_previous_(shared_offset_.offsets())
 {
    minuit_internal_x_.reserve(N_dim);
-   offsets_previous_ = shared_offset_.offsets();
 }
 
 void LikelihoodGradientJob::synchronizeParameterSettingsImpl(

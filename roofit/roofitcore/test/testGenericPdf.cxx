@@ -100,7 +100,11 @@ TEST(GenericPdf, IdentidyPdfNormalization)
 // A pdf that is flat within five uniform bins on [0, 10], with one height per bin.
 #define MAKE_PIECEWISE_FLAT_VARS    \
    RooRealVar x("x", "x", 0., 10.); \
-   RooRealVar h0("h0", "", 1.0), h1("h1", "", 3.0), h2("h2", "", 2.0), h3("h3", "", 4.0), h4("h4", "", 1.5);
+   RooRealVar h0("h0", "", 1.0);    \
+   RooRealVar h1("h1", "", 3.0);    \
+   RooRealVar h2("h2", "", 2.0);    \
+   RooRealVar h3("h3", "", 4.0);    \
+   RooRealVar h4("h4", "", 1.5);
 
 const char *piecewiseFlatFormula = "(floor(x/2)==0)*h0+(floor(x/2)==1)*h1+(floor(x/2)==2)*h2"
                                    "+(floor(x/2)==3)*h3+(floor(x/2)==4)*h4";
@@ -196,7 +200,10 @@ TEST(GenericPdf, BinnedIntegrationUniformBinning)
 TEST(GenericPdf, BinnedIntegrationNonUniformBinning)
 {
    RooRealVar x("x", "x", 0., 10.);
-   RooRealVar b0("b0", "", 1.0), b1("b1", "", 3.0), b2("b2", "", 2.0), b3("b3", "", 4.0);
+   RooRealVar b0("b0", "", 1.0);
+   RooRealVar b1("b1", "", 3.0);
+   RooRealVar b2("b2", "", 2.0);
+   RooRealVar b3("b3", "", 4.0);
 
    // A step function that is flat within the non-uniform bins
    // [0,1), [1,3), [3,6), [6,10] (widths 1, 2, 3, 4).
@@ -273,7 +280,8 @@ TEST(GenericPdf, BinnedProductComposition)
 {
    RooRealVar x("x", "x", 0., 10.);
    RooRealVar y("y", "y", 0., 4.);
-   RooRealVar a("a", "", 1.0), b("b", "", 2.0);
+   RooRealVar a("a", "", 1.0);
+   RooRealVar b("b", "", 2.0);
 
    RooGenericPdf px("px", "", "a*(x<100)", RooArgList(x, a));
    RooGenericPdf py("py", "", "b*(y<100)", RooArgList(y, b));
@@ -331,7 +339,8 @@ TEST(GenericPdf, BinnedMultipleObservables)
    MAKE_PIECEWISE_FLAT_VARS
    // Second observable, flat in two bins on [0, 4].
    RooRealVar y("y", "y", 0., 4.);
-   RooRealVar g0("g0", "", 2.0), g1("g1", "", 5.0);
+   RooRealVar g0("g0", "", 2.0);
+   RooRealVar g1("g1", "", 5.0);
 
    TString formula = TString::Format("(%s) * ((floor(y/2)==0)*g0 + (floor(y/2)==1)*g1)", piecewiseFlatFormula);
    RooGenericPdf pdf("pdf", "", formula, RooArgList(x, y, h0, h1, h2, h3, h4, g0, g1));

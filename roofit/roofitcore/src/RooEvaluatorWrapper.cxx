@@ -789,7 +789,7 @@ void RooFuncWrapper::writeDebugMacro(std::string const &filename) const
       gInterpreter->Evaluate(name.c_str(), *v);
       std::string s = v->ToString();
       for (int i = 0; i < 2; ++i) {
-         s = s.erase(0, s.find("\n") + 1);
+         s = s.erase(0, s.find('\n') + 1);
       }
       allCode << s << std::endl;
    }

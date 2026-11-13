@@ -1687,14 +1687,16 @@ void RooAbsArg::printCompactTree(std::ostream &os, const char *indent, const cha
       os << indent << this;
       if (client) {
          os << "/";
-         if (isValueServer(*client))
+         if (isValueServer(*client)) {
             os << "V";
-         else
+         } else {
             os << "-";
-         if (isShapeServer(*client))
+         }
+         if (isShapeServer(*client)) {
             os << "S";
-         else
+         } else {
             os << "-";
+         }
       }
       os << " ";
 

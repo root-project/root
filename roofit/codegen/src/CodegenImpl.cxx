@@ -206,6 +206,7 @@ void codegenImpl(PiecewiseInterpolation &arg, CodegenContext &ctx)
    std::vector<double> valsNominal;
    std::vector<double> valsLow;
    std::vector<double> valsHigh;
+   valsNominal.reserve(nBins);
    for (int i = 0; i < nBins; ++i) {
       valsNominal.push_back(nomHist.weight(i));
    }
@@ -457,10 +458,11 @@ void functorCodegenImpl(RooArg_t &arg, RooArgList const &variables, CodegenConte
       std::string nStr = std::to_string(std::size(variables));
 
       std::string type;
-      if constexpr (std::is_same_v<RooArg_t, RooFunctor1DBinding> || std::is_same_v<RooArg_t, RooFunctor1DPdfBinding>)
+      if constexpr (std::is_same_v<RooArg_t, RooFunctor1DBinding> || std::is_same_v<RooArg_t, RooFunctor1DPdfBinding>) {
          type = "::ROOT::Math::IGradientFunctionOneDim";
-      else
+      } else {
          type = "::ROOT::Math::IGradientFunctionMultiDim";
+      }
 
       std::string funcAddrCasted = "reinterpret_cast<" + type + " const *>(" + funcAddrStr + ")";
 

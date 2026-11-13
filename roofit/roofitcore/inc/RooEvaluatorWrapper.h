@@ -40,7 +40,7 @@ public:
 
    RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const char *name = nullptr);
 
-   ~RooEvaluatorWrapper();
+   ~RooEvaluatorWrapper() override;
 
    TObject *clone(const char *newname) const override { return new RooEvaluatorWrapper(*this, newname); }
 
