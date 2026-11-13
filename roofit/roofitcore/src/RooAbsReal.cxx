@@ -674,11 +674,11 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, c
       std::string name = std::string{integral->GetName()} + "_CACHE_[" + cacheParams.contentsString() + "]";
       auto cachedIntegral = std::make_unique<RooCachedReal>(name.c_str(),name.c_str(),*integral,cacheParams);
       cachedIntegral->setInterpolationOrder(2) ;
-      cachedIntegral->addOwnedComponents(std::move(integral));
       cachedIntegral->setCacheSource(true) ;
       if (integral->operMode()==ADirty) {
    cachedIntegral->setOperMode(ADirty) ;
       }
+      cachedIntegral->addOwnedComponents(std::move(integral));
       //cachedIntegral->disableCache(true) ;
       return RooFit::makeOwningPtr<RooAbsReal>(std::move(cachedIntegral));
     }
