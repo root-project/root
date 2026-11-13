@@ -262,6 +262,10 @@ as "struct of array" (SoA) in memory. This is useful, e.g., for efficient consum
 
 * The RNTuple attributes, RNTuple's native metadata system, is moving out of experimental. Attributes can be written to an RNTuple via `RNTupleWriter::CreateAttributeSet`, read via `RNTupleReader::OpenAttributeSet` and they are automatically merged alongside their main RNTuple via `TFileMerger` and `hadd`.
 
+### HTTP I/O
+
+* The curl based plugin is now the default on all platforms. The Davix plugin can still be used if curl is not available or if the `Curl.ReplaceDavix` is set to `no` in the rootrc configuration.
+
 ## Core
 
 * `TClass::IsTriviallyRelocatable()` reports whether an object of a class can be moved to a new address with a raw memory copy, i.e. without running a move or copy constructor (trivial relocatability in the C++26 sense). It is backed by the new `kClassIsTriviallyRelocatable` class property, which `TInterpreter::ClassInfo_ClassProperty()` now fills in. A class the interpreter does not know about, in particular an emulated one, is conservatively reported as not relocatable.
