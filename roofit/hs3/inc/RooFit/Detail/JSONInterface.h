@@ -92,6 +92,8 @@ public:
    JSONNode &set_seq();
    JSONNode &set_null();
    void clear();
+   /// Remove a child of a map, if it exists.
+   void erase(std::string const &key);
 
    std::string key() const;
    std::string val() const;
@@ -188,6 +190,7 @@ public:
 
 private:
    friend class JSONTree;
+   friend class JSONReadRecorder;
 
    // Owns the values and the nodes of a tree. It is defined in the only source file that knows the JSON library.
    class Storage;

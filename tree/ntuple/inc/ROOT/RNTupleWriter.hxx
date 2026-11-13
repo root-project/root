@@ -111,6 +111,9 @@ private:
    std::vector<std::shared_ptr<RNTupleAttrSetWriter>> fAttributeSets;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
+   /// If CommitCluster(false) is used together with a non-zero cluster group commit page threshold
+   /// (i.e., with the option to automatically do cluster group commits), warn the caller once.
+   bool fFlagHasWarnedAboutClusterGroupCommitConflict = false;
 
    RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 
@@ -200,13 +203,10 @@ public:
    void FlushColumns() { fFillContext.FlushColumns(); }
    /// Flush so far filled entries to storage
    void FlushCluster() { fFillContext.FlushCluster(); }
-   /// Ensure that the data from the so far seen Fill calls has been written to storage
-   void CommitCluster(bool commitClusterGroup = false)
-   {
-      fFillContext.FlushCluster();
-      if (commitClusterGroup)
-         CommitClusterGroup();
-   }
+   /// Ensure that the data from the so far seen Fill calls has been written to storage.
+   void CommitCluster();
+   /// Same as CommitCluster() but explicitly create (or avoid creation of) a cluster group.
+   void CommitCluster(bool commitClusterGroup);
    /// Closes the underlying file (page sink) and expires the model. Automatically called on destruct.
    /// Once the dataset is committed, calls to Fill(), [Commit|Flush]Cluster(), FlushColumns(), CreateEntry(),
    /// and model updating fail.

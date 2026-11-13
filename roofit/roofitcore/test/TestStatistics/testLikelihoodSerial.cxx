@@ -16,9 +16,6 @@
 #include <RooWorkspace.h>
 #include <RooMinimizer.h>
 #include <RooFitResult.h>
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include "../../src/RooNLLVar.h"
-#endif
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
@@ -99,12 +96,11 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussian1D)
    EXPECT_EQ(nll0, nll1.Sum());
 }
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
 {
    unsigned int N = 4;
 
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
    likelihood = RFTS::buildLikelihood(pdf, data.get());
    // dummy offsets (normally they are shared with other objects):
    SharedOffset offset;
@@ -115,9 +111,8 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1.Sum());
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
-#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
 {
@@ -138,34 +133,25 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
    EXPECT_EQ(nll0, nll1.Sum());
 }
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
+TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedNLL)
 {
    pdf->setAttribute("BinnedLikelihood");
    data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"))};
 
-   // manually create NLL, ripping all relevant parts from RooAbsPdf::createNLL, except here we also set binnedL = true
-   RooArgSet projDeps;
-   RooAbsTestStatistic::Configuration nll_config;
-   nll_config.verbose = false;
-   nll_config.cloneInputData = false;
-   nll_config.binnedL = true;
-   int extended = 2;
-   RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, extended, nll_config);
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RFTS::buildLikelihood(pdf, data.get());
    // dummy offsets (normally they are shared with other objects):
    SharedOffset offset;
    auto nll_ts = RFTS::LikelihoodWrapper::create(RFTS::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
-   auto nll0 = nll_manual.getVal();
+   auto nll0 = nll->getVal();
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
    EXPECT_EQ(nll0, nll1.Sum());
 }
-#endif
 
 TEST_F(LikelihoodSerialTest, SimBinned)
 {
@@ -396,20 +382,14 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, BasicParameters)
    EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
    using namespace RooFit;
 
    // A variation to test some additional parameters (ConstrainedParameters and offsetting)
 
-   // The reference likelihood is using the legacy evaluation backend, because
-   // the multiprocess test statistics classes were designed to give values
-   // that are bit-by-bit identical with the old test statistics based on
-   // RooAbsTestStatistic.
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")),
-                                                    GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"),
-                                                    EvalBackend(EvalBackend::Value::Legacy))};
+                                                    GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"))};
 
    // --------
 
@@ -437,7 +417,8 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
       nll_ts_offset += offset_comp;
    }
 
-   EXPECT_EQ(nll0, nll1.Sum());
+   // nll0 is from the "cpu" backend, which can round differently than RooAbsL.
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
    EXPECT_FALSE(nll_ts_offset.Sum() == 0);
 
    // also check against RooRealL value
@@ -445,21 +426,18 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
 
    auto nll2 = nll_real.getVal();
 
-   EXPECT_EQ(nll0, nll2);
+   EXPECT_DOUBLE_EQ(nll0, nll2);
    EXPECT_EQ(nll1.Sum(), nll2);
 }
-#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
 {
    unsigned int N = 4;
 
-   auto backend = RooFit::EvalBackend::Cpu();
-
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, backend);
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
    auto nll0 = nll->getVal();
 
-   likelihood = RFTS::NLLFactory{*pdf, *data}.EvalBackend(backend).build();
+   likelihood = RFTS::NLLFactory{*pdf, *data}.build();
    // dummy offsets (normally they are shared with other objects):
    SharedOffset offset;
    auto nll_ts = RFTS::LikelihoodWrapper::create(RFTS::LikelihoodMode::serial, likelihood, clean_flags, offset);

@@ -145,7 +145,6 @@ void ROOT::RNTupleAttrSetWriter::CommitRange(ROOT::RNTupleAttrPendingRange pendi
 ROOT::Internal::RNTupleLink ROOT::RNTupleAttrSetWriter::Commit()
 {
    fFillContext.FlushCluster();
-   if (fFillContext.GetNEntries() > 0)
-      fFillContext.fSink->CommitClusterGroup();
+   fFillContext.fSink->CommitClusterGroup();
    return fFillContext.fSink->CommitDataset();
 }

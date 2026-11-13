@@ -1258,6 +1258,8 @@ ROOT::Internal::RNTupleSerializer::SerializeClusterSummary(const RClusterSummary
 {
    if (clusterSummary.fNEntries >= (static_cast<std::uint64_t>(1) << 56)) {
       return R__FAIL("number of entries in cluster exceeds maximum of 2^56");
+   } else if (clusterSummary.fNEntries == 0) {
+      return R__FAIL("invalid serialization of empty cluster");
    }
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -1317,6 +1319,10 @@ ROOT::Internal::RNTupleSerializer::DeserializeClusterSummary(const void *buffer,
 ROOT::RResult<std::uint32_t>
 ROOT::Internal::RNTupleSerializer::SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer)
 {
+   if (clusterGroup.fEntrySpan == 0 || clusterGroup.fNClusters == 0) {
+      return R__FAIL("invalid serialization of empty cluster group");
+   }
+
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);

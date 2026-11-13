@@ -20,19 +20,22 @@ if(NOT Qt6_FOUND)
   endif()
 endif()
 
-
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+set(QT6CANVAS_HEADERS
+  TQt6Application.h
+  TQt6Canvas.h
+  TQt6PadPainter.h
+  TQt6GedEditor.h
+  TQt6GuiFactory.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
   HEADERS
-    TQt6Application.h
-    TQt6Canvas.h
-    TQt6PadPainter.h
-    TQt6GedEditor.h
-    TQt6GuiFactory.h
+    ${QT6CANVAS_HEADERS}
   SOURCES
     src/QCanvasWidget.cpp
     src/QPaintWidget.cpp
@@ -51,4 +54,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
     Gpad
 )
 
-target_include_directories(ROOTQt6Canvas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(RELATIVE_INC_HEADERS ${QT6CANVAS_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTQt6Canvas
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/QCanvasWidget.h
+    src/QPaintWidget.h
+    src/QRootContextMenu.h
+    src/QRootMethodDialog.h
+)

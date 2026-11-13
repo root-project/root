@@ -8,15 +8,31 @@
 # CMakeLists.txt file for building ROOT math/vecops package
 ############################################################################
 
+set(VECOPS_HEADERS
+  ROOT/RVec.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
   HEADERS
-    ROOT/RVec.hxx
+    ${VECOPS_HEADERS}
   SOURCES
     src/RVec.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
+)
+
+set(RELATIVE_INC_HEADERS ${VECOPS_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTVecOps
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 if(builtin_vdt OR vdt)

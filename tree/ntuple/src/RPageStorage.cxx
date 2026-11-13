@@ -1841,11 +1841,12 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
 {
    for (const auto &cluster : clusters) {
       RClusterDescriptorBuilder clusterBuilder;
-      clusterBuilder.ClusterId(fDescriptorBuilder.GetDescriptor().GetNActiveClusters())
+      clusterBuilder.ClusterId(fPrevGroupNClusters + fDescriptorBuilder.GetDescriptor().GetNActiveClusters())
          .FirstEntryIndex(fPrevClusterNEntries)
          .NEntries(cluster.fNEntries);
       for (const auto &columnInfo : cluster.fColumnInfos) {
          const auto colId = columnInfo.fPageRange.GetPhysicalColumnId();
+         fNPagesInGroup += columnInfo.fPageRange.GetPageInfos().size();
          if (columnInfo.fIsSuppressed) {
             assert(columnInfo.fPageRange.GetPageInfos().empty());
             clusterBuilder.MarkSuppressedColumnRange(colId);
@@ -1871,6 +1872,9 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
 
       fDescriptorBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
       fPrevClusterNEntries += cluster.fNEntries;
+      if (fNPagesInGroup > fOptions->GetClusterGroupPageThreshold() && fOptions->GetClusterGroupPageThreshold() > 0) {
+         CommitClusterGroup();
+      }
    }
 }
 
@@ -1879,10 +1883,15 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    const auto nClusters = descriptor.GetNActiveClusters();
+   if (nClusters == 0) {
+      assert(fNPagesInGroup == 0);
+      return;
+   }
+
    std::vector<ROOT::DescriptorId_t> physClusterIDs;
    physClusterIDs.reserve(nClusters);
-   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
-      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
+   for (ROOT::NTupleSize_t i = 0; i < nClusters; ++i) {
+      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(fPrevGroupNClusters + i));
    }
 
    auto szPageList =
@@ -1894,26 +1903,24 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
    RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
-   if (fNextClusterInGroup == nClusters) {
-      cgBuilder.MinEntry(0).EntrySpan(0).NClusters(0);
-   } else {
-      const auto &firstClusterDesc = descriptor.GetClusterDescriptor(fNextClusterInGroup);
-      const auto &lastClusterDesc = descriptor.GetClusterDescriptor(nClusters - 1);
-      cgBuilder.MinEntry(firstClusterDesc.GetFirstEntryIndex())
-         .EntrySpan(lastClusterDesc.GetFirstEntryIndex() + lastClusterDesc.GetNEntries() -
-                    firstClusterDesc.GetFirstEntryIndex())
-         .NClusters(nClusters - fNextClusterInGroup);
-   }
+   const auto &firstClusterDesc = descriptor.GetClusterDescriptor(fPrevGroupNClusters);
+   const auto &lastClusterDesc = descriptor.GetClusterDescriptor(fPrevGroupNClusters + nClusters - 1);
+   cgBuilder.MinEntry(firstClusterDesc.GetFirstEntryIndex())
+      .EntrySpan(lastClusterDesc.GetFirstEntryIndex() + lastClusterDesc.GetNEntries() -
+                 firstClusterDesc.GetFirstEntryIndex())
+      .NClusters(nClusters);
    std::vector<ROOT::DescriptorId_t> clusterIds;
    clusterIds.reserve(nClusters);
-   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
-      clusterIds.emplace_back(i);
+   for (ROOT::NTupleSize_t i = 0; i < nClusters; ++i) {
+      clusterIds.emplace_back(fPrevGroupNClusters + i);
    }
    cgBuilder.AddSortedClusters(clusterIds);
    fDescriptorBuilder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
    fSerializationContext.MapClusterGroupId(clusterGroupId);
+   fDescriptorBuilder.GetDescriptor().DropClusterGroupDetails(clusterGroupId);
 
-   fNextClusterInGroup = nClusters;
+   fPrevGroupNClusters += nClusters;
+   fNPagesInGroup = 0;
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitAttributeSet(std::string_view attrSetName,

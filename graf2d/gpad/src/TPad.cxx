@@ -58,6 +58,7 @@
 #include "TImage.h"
 #include "TViewer3DPad.h"
 #include "TCreatePrimitives.h"
+#include "TArrow.h"
 #include "TLegend.h"
 #include "TAtt3D.h"
 #include "TVirtualPadPainter.h"
@@ -2011,58 +2012,14 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    HideToolTip(event);
 
-   if (fXlowNDC < 0 && event != kButton1Down) return;
-   if (fYlowNDC < 0 && event != kButton1Down) return;
+   if (((fXlowNDC < 0) || (fYlowNDC < 0)) && (event != kButton1Down))
+      return;
 
    Int_t newcode = gROOT->GetEditorMode();
-   if (newcode && (newcode != kEditor))
-      parent.FreeInteractive(this); // delete any interactive object
-   switch (newcode) {
-      case kPad:
-         TCreatePrimitives::Pad(event,px,py,0);
-         break;
-      case kMarker:
-      case kText:
-      case kEditor:
-         TCreatePrimitives::Text(event,px,py,newcode);
-         break;
-      case kLine:
-         TCreatePrimitives::Line(event,px,py,kLine);
-         break;
-      case kArrow:
-         TCreatePrimitives::Line(event,px,py,kArrow);
-         break;
-      case kCurlyLine:
-         TCreatePrimitives::Line(event,px,py,kCurlyLine);
-         break;
-      case kCurlyArc:
-         TCreatePrimitives::Line(event,px,py,kCurlyArc);
-         break;
-      case kPolyLine:
-         TCreatePrimitives::PolyLine(event,px,py,kPolyLine);
-         break;
-      case kCutG:
-         TCreatePrimitives::PolyLine(event,px,py,kCutG);
-         break;
-      case kArc:
-         TCreatePrimitives::Ellipse(event,px,py,kArc);
-         break;
-      case kEllipse:
-         TCreatePrimitives::Ellipse(event,px,py,kEllipse);
-         break;
-      case kButton:
-      case kPave:
-      case kPaveLabel:
-      case kPaveText:
-      case kPavesText:
-      case kDiamond:
-         TCreatePrimitives::Pave(event,px,py,newcode);
-         return;
-      default:
-         break;
-   }
-   if (newcode)
+   if (newcode) {
+      TCreatePrimitives::ExecuteEvent(*this, newcode, event, px, py);
       return;
+   }
 
    auto inter = parent.GetInteractive<TBoxInteractive>(this);
 

@@ -8,102 +8,106 @@
 # CMakeLists.txt file for building ROOT gui/gui package
 ############################################################################
 
+set(GUI_HEADERS
+  HelpText.h
+  TG3DLine.h
+  TGApplication.h
+  TGButton.h
+  TGButtonGroup.h
+  TGCanvas.h
+  TGClient.h
+  TGColorDialog.h
+  TGColorSelect.h
+  TGComboBox.h
+  TGCommandPlugin.h
+  TGDNDManager.h
+  TGDimension.h
+  TGDockableFrame.h
+  TGDoubleSlider.h
+  TGEventHandler.h
+  TGFSComboBox.h
+  TGFSContainer.h
+  TGFileBrowser.h
+  TGFileDialog.h
+  TGFont.h
+  TGFontDialog.h
+  TGFrame.h
+  TGGC.h
+  TGIcon.h
+  TGIdleHandler.h
+  TGImageMap.h
+  TGInputDialog.h
+  TGLabel.h
+  TGLayout.h
+  TGListBox.h
+  TGListTree.h
+  TGListView.h
+  TGMdi.h
+  TGMdiDecorFrame.h
+  TGMdiFrame.h
+  TGMdiMainFrame.h
+  TGMdiMenu.h
+  TGMenu.h
+  TGMimeTypes.h
+  TGMsgBox.h
+  TGNumberEntry.h
+  TGObject.h
+  TGPack.h
+  TGPasswdDialog.h
+  TGPicture.h
+  TGProgressBar.h
+  TGRedirectOutputGuard.h
+  TGResourcePool.h
+  TGScrollBar.h
+  TGShapedFrame.h
+  TGShutter.h
+  TGSimpleTable.h
+  TGSimpleTableInterface.h
+  TGSlider.h
+  TGSpeedo.h
+  TGSplitFrame.h
+  TGSplitter.h
+  TGStatusBar.h
+  TGString.h
+  TGTab.h
+  TGTable.h
+  TGTableCell.h
+  TGTableContainer.h
+  TGTableHeader.h
+  TGTableLayout.h
+  TGText.h
+  TGTextBuffer.h
+  TGTextEdit.h
+  TGTextEditDialogs.h
+  TGTextEditor.h
+  TGTextEntry.h
+  TGTextView.h
+  TGTextViewStream.h
+  TGToolBar.h
+  TGToolTip.h
+  TGTripleSlider.h
+  TGView.h
+  TGWidget.h
+  TGWindow.h
+  TGXYLayout.h
+  TGuiBuilder.h
+  TRootApplication.h
+  TRootBrowser.h
+  TRootBrowserLite.h
+  TRootCanvas.h
+  TRootContextMenu.h
+  TRootControlBar.h
+  TRootDialog.h
+  TRootEmbeddedCanvas.h
+  TRootGuiFactory.h
+  TRootHelpDialog.h
+  TVirtualDragManager.h
+  WidgetMessageTypes.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Gui
   HEADERS
-    HelpText.h
-    TG3DLine.h
-    TGApplication.h
-    TGButton.h
-    TGButtonGroup.h
-    TGCanvas.h
-    TGClient.h
-    TGColorDialog.h
-    TGColorSelect.h
-    TGComboBox.h
-    TGCommandPlugin.h
-    TGDNDManager.h
-    TGDimension.h
-    TGDockableFrame.h
-    TGDoubleSlider.h
-    TGEventHandler.h
-    TGFSComboBox.h
-    TGFSContainer.h
-    TGFileBrowser.h
-    TGFileDialog.h
-    TGFont.h
-    TGFontDialog.h
-    TGFrame.h
-    TGGC.h
-    TGIcon.h
-    TGIdleHandler.h
-    TGImageMap.h
-    TGInputDialog.h
-    TGLabel.h
-    TGLayout.h
-    TGListBox.h
-    TGListTree.h
-    TGListView.h
-    TGMdi.h
-    TGMdiDecorFrame.h
-    TGMdiFrame.h
-    TGMdiMainFrame.h
-    TGMdiMenu.h
-    TGMenu.h
-    TGMimeTypes.h
-    TGMsgBox.h
-    TGNumberEntry.h
-    TGObject.h
-    TGPack.h
-    TGPasswdDialog.h
-    TGPicture.h
-    TGProgressBar.h
-    TGRedirectOutputGuard.h
-    TGResourcePool.h
-    TGScrollBar.h
-    TGShapedFrame.h
-    TGShutter.h
-    TGSimpleTable.h
-    TGSimpleTableInterface.h
-    TGSlider.h
-    TGSpeedo.h
-    TGSplitFrame.h
-    TGSplitter.h
-    TGStatusBar.h
-    TGString.h
-    TGTab.h
-    TGTable.h
-    TGTableCell.h
-    TGTableContainer.h
-    TGTableHeader.h
-    TGTableLayout.h
-    TGText.h
-    TGTextBuffer.h
-    TGTextEdit.h
-    TGTextEditDialogs.h
-    TGTextEditor.h
-    TGTextEntry.h
-    TGTextView.h
-    TGTextViewStream.h
-    TGToolBar.h
-    TGToolTip.h
-    TGTripleSlider.h
-    TGView.h
-    TGWidget.h
-    TGWindow.h
-    TGXYLayout.h
-    TGuiBuilder.h
-    TRootApplication.h
-    TRootBrowser.h
-    TRootBrowserLite.h
-    TRootCanvas.h
-    TRootContextMenu.h
-    TRootControlBar.h
-    TRootDialog.h
-    TRootEmbeddedCanvas.h
-    TRootGuiFactory.h
-    TRootHelpDialog.h
-    TVirtualDragManager.h
-    WidgetMessageTypes.h
+    ${GUI_HEADERS}
   SOURCES
     src/HelpText.cxx
     src/TG3DLine.cxx
@@ -207,6 +211,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     ASImageUtils
     ROOTPadPainter
     ROOTNTupleBrowse
+)
+
+set(RELATIVE_INC_HEADERS ${GUI_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Gui
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 target_include_directories(Gui PRIVATE ${CMAKE_SOURCE_DIR}/gui/ged/inc)

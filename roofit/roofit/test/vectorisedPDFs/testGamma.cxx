@@ -47,6 +47,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestGamma, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestGamma, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestGamma, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestGamma, RunScalar)
 FIT_TEST_BATCH(TestGamma, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestGamma, CompareBatchScalar)

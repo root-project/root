@@ -804,6 +804,8 @@ TEST(RPageSink, MultipleClusterGroups)
       // This pattern should work: CommitCluster(false) followed by CommitCluster(true) and
       // be identical to a single call to CommitCluster(true)
       ntuple->CommitCluster(true);
+      // Calling this a second time should be a noop
+      ntuple->CommitCluster(true);
       *wrPt = 24.0;
       ntuple->Fill();
       ntuple->CommitCluster();
@@ -823,6 +825,35 @@ TEST(RPageSink, MultipleClusterGroups)
    EXPECT_EQ(24.0, *rdPt);
    ntuple->LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
+}
+
+TEST(RPageSink, MultipleClusterGroupsAutoCommit)
+{
+   FileRaii fileGuard("test_ntuple_multi_cluster_groups_auto_commit.ntuple");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto wrPt = model->MakeField<float>("pt");
+      ROOT::RNTupleWriteOptions opts;
+      opts.SetClusterGroupPageThreshold(2);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), opts);
+      writer->Fill();
+      writer->CommitCluster();
+      writer->Fill();
+      writer->CommitCluster();
+      writer->Fill();
+      writer->CommitCluster(); // auto commit cluster group
+      writer->Fill();
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.requiredDiag(kWarning, "ROOT.NTuple",
+                            "CommitCluster(false) is used while automatically committing cluster groups is active",
+                            false);
+      writer->CommitCluster(false);
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(2U, ntuple->GetDescriptor().GetNClusterGroups());
+   EXPECT_EQ(4U, ntuple->GetDescriptor().GetNClusters());
 }
 
 TEST(RPageNullSink, Basics)
@@ -1424,7 +1455,9 @@ TEST(RPageSource, ClusterGroupBudget)
    auto ptrCtr = model->MakeField<std::vector<int>>("ctr");
    ptrCtr->resize(1);
    {
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ROOT::RNTupleWriteOptions opts;
+      opts.SetClusterGroupPageThreshold(0);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), opts);
       for (int c = 0; c < 10; ++c) {
          for (int i = 0; i < 10; ++i) {
             (*ptrCtr)[0] = 10 * c + i;

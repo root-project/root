@@ -49,6 +49,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <cstdio>
 #include <map>
 #include <memory>
@@ -214,23 +215,6 @@ std::string defaultDomainAxesNode(std::string const &json)
    }
    return json.substr(axesBegin, axesEnd - axesBegin + 2);
 }
-
-class ScopedNoDomainConstVarImportFlag {
-public:
-   explicit ScopedNoDomainConstVarImportFlag(bool value)
-      : _oldValue{RooJSONFactoryWSTool::config().importNoDomainParametersAsRooConstVars}
-   {
-      RooJSONFactoryWSTool::config().importNoDomainParametersAsRooConstVars = value;
-   }
-
-   ~ScopedNoDomainConstVarImportFlag()
-   {
-      RooJSONFactoryWSTool::config().importNoDomainParametersAsRooConstVars = _oldValue;
-   }
-
-private:
-   bool _oldValue;
-};
 
 // Runs `action` and returns everything that was logged at the given message level and topic while it ran.
 template <class Action>
@@ -759,7 +743,6 @@ TEST(RooFitHS3, ParameterStepWidthsImportAfterDefaultSnapshot)
    })";
 
    RooWorkspace ws{"workspace"};
-   ScopedNoDomainConstVarImportFlag flagGuard{false};
    ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
 
    ASSERT_NE(ws.var("mu"), nullptr);
@@ -852,7 +835,6 @@ TEST(RooFitHS3, RooExponential)
 
 TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
 {
-   ScopedNoDomainConstVarImportFlag flagGuard{true};
 
    RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
    RooRealVar mean{"mean", "mean", 0.0};
@@ -881,7 +863,9 @@ TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
    EXPECT_EQ(json.find("is_const_var"), std::string::npos);
    EXPECT_EQ(json.find("\"sigma\":1.0"), std::string::npos);
    EXPECT_NE(json.find("\"sigma\":2.0"), std::string::npos);
-   EXPECT_EQ(domainAxes.find("\"name\":\"sigma_const\""), std::string::npos) << domainAxes;
+   // The named RooConstVar is a domain axis with a single value, and not in the parameter points.
+   EXPECT_NE(domainAxes.find(R"({"name":"sigma_const","value":1.0})"), std::string::npos) << domainAxes;
+   EXPECT_EQ(json.find(R"({"const":true,"name":"sigma_const")"), std::string::npos) << json;
 
    EXPECT_NE(json.find("\"sigma\":\"sigma_real\""), std::string::npos);
    EXPECT_NE(json.find("\"name\":\"sigma_real\""), std::string::npos);
@@ -908,7 +892,8 @@ TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
    const std::string roundTripDomainAxes = defaultDomainAxesNode(roundTripJson);
    EXPECT_NE(roundTripJson.find("\"sigma\":\"sigma_const\""), std::string::npos);
    EXPECT_EQ(roundTripJson.find("is_const_var"), std::string::npos);
-   EXPECT_EQ(roundTripDomainAxes.find("\"name\":\"sigma_const\""), std::string::npos) << roundTripDomainAxes;
+   EXPECT_NE(roundTripDomainAxes.find(R"({"name":"sigma_const","value":1.0})"), std::string::npos)
+      << roundTripDomainAxes;
 
    const std::string legacyJson = R"({
       "metadata":{"hs3_version":"0.2"},
@@ -920,17 +905,13 @@ TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
       "distributions":[{"name":"gauss","type":"gaussian_dist","x":"x","mean":"mean","sigma":"sigma_const"}]
    })";
    RooWorkspace legacyImport;
-   {
-      ScopedNoDomainConstVarImportFlag legacyFlagGuard{false};
-      ASSERT_TRUE(RooJSONFactoryWSTool{legacyImport}.importJSONfromString(legacyJson));
-   }
+   ASSERT_TRUE(RooJSONFactoryWSTool{legacyImport}.importJSONfromString(legacyJson));
    EXPECT_NE(dynamic_cast<RooRealVar *>(legacyImport.obj("sigma_const")), nullptr);
    EXPECT_EQ(dynamic_cast<RooConstVar *>(legacyImport.obj("sigma_const")), nullptr);
 }
 
 TEST(RooFitHS3, RooConstVarCollectionProxyExport)
 {
-   ScopedNoDomainConstVarImportFlag flagGuard{true};
 
    RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
    RooRealVar mean1{"mean1", "mean1", -1.0};
@@ -951,7 +932,7 @@ TEST(RooFitHS3, RooConstVarCollectionProxyExport)
    EXPECT_NE(json.find("\"coefficients\":[\"frac_const\"]"), std::string::npos);
    EXPECT_NE(json.find("\"name\":\"frac_const\""), std::string::npos);
    EXPECT_EQ(json.find("is_const_var"), std::string::npos);
-   EXPECT_EQ(domainAxes.find("\"name\":\"frac_const\""), std::string::npos) << domainAxes;
+   EXPECT_NE(domainAxes.find(R"({"name":"frac_const","value":0.25})"), std::string::npos) << domainAxes;
 
    RooWorkspace imported;
    ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
@@ -1799,7 +1780,6 @@ TEST(RooFitHS3, StandaloneInterpolationLegacyAndDefaults)
          "low":["low1","low2"], "high":["high1","high2"], "positiveDefinite":false
       })";
 
-   ScopedNoDomainConstVarImportFlag flagGuard{false};
    RooWorkspace imported;
    ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(makeStandaloneInterpolationJSON(functions)));
 
@@ -1833,7 +1813,6 @@ TEST(RooFitHS3, StandaloneInterpolationLegacyAndDefaults)
 
 TEST(RooFitHS3, StandaloneInterpolationRejectsMalformedLengths)
 {
-   ScopedNoDomainConstVarImportFlag flagGuard{false};
    const std::string descriptor = R"({"type":"add","in":"poly1","out":null})";
 
    expectImportThrowsWithError(
@@ -2653,7 +2632,8 @@ TEST(RooFitHS3, DefaultDomainIsOptional)
 }
 
 // Parameters that only appear in a parameter point are created on import, and
-// categorical parameters can be set with a string value.
+// categorical parameters can be set with a string value. A parameter without domain is constant only with
+// "const": true; otherwise it is free, with a warning (HS3 requires a domain or "const": true).
 TEST(RooFitHS3, ParametersOnlyInParameterPoints)
 {
    const std::string json = R"({
@@ -2679,22 +2659,29 @@ TEST(RooFitHS3, ParametersOnlyInParameterPoints)
    RooWorkspace ws;
    RooCategory channel{"channel", "channel", {{"SR", 0}, {"CR", 1}}};
    ws.import(channel);
-   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   });
+   for (const char *name : {"fixed", "fixedExplicitFalse"}) {
+      EXPECT_NE(warnings.find(std::string("the parameter '") + name + "' is not listed in any domain"),
+                std::string::npos)
+         << warnings;
+   }
 
    RooRealVar *fixed = ws.var("fixed");
    ASSERT_NE(fixed, nullptr);
    EXPECT_DOUBLE_EQ(fixed->getVal(), 2.5);
-   EXPECT_TRUE(fixed->isConstant());
+   EXPECT_FALSE(fixed->isConstant());
 
    RooRealVar *free = ws.var("free");
    ASSERT_NE(free, nullptr);
    EXPECT_DOUBLE_EQ(free->getVal(), 0.25);
    EXPECT_FALSE(free->isConstant());
 
-   // "const": false is the same as no "const": without a domain, the parameter stays constant.
+   // "const": false is the same as no "const".
    RooRealVar *fixedExplicitFalse = ws.var("fixedExplicitFalse");
    ASSERT_NE(fixedExplicitFalse, nullptr);
-   EXPECT_TRUE(fixedExplicitFalse->isConstant());
+   EXPECT_FALSE(fixedExplicitFalse->isConstant());
 
    // "const": true makes a parameter constant also if a domain lists it.
    RooRealVar *freeButConst = ws.var("freeButConst");
@@ -3134,7 +3121,6 @@ TEST(RooFitHS3, UnbinnedAxisRangesOnImport)
    {
       // "x" is not in any domain, so it gets the range of the axis and no entry is clipped.
       RooWorkspace ws;
-      ScopedNoDomainConstVarImportFlag noConstVars{false};
       ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"({"name": "other", "min": 0, "max": 1})")));
       EXPECT_DOUBLE_EQ(ws.var("x")->getMin(), -3.0);
       EXPECT_DOUBLE_EQ(ws.var("x")->getMax(), 8.0);
@@ -3568,12 +3554,11 @@ TEST(RooFitHS3, HistFactoryShapeFactor)
 }
 
 // A RooRealVar that is constant in all parameter points must stay a RooRealVar, and a RooConstVar must stay a
-// RooConstVar. In the parameter points both are written the same way (a value and "const": true). The only
-// difference is that the RooRealVar is listed in a domain and the RooConstVar is not: a parameter without domain is
-// constant (it has no range to vary in), and RooFit reads it back as a RooConstVar.
+// RooConstVar. The RooRealVar has a range in the domain and "const": true in the parameter points. The RooConstVar
+// has a domain axis with a single value (HS3 #131), which RooFit reads back as a RooConstVar, and is not in the
+// parameter points.
 TEST(RooFitHS3, ConstRooRealVarStaysDistinctFromRooConstVar)
 {
-   ScopedNoDomainConstVarImportFlag flagGuard{true};
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
@@ -3595,33 +3580,34 @@ TEST(RooFitHS3, ConstRooRealVarStaysDistinctFromRooConstVar)
    auto tree = RooFit::Detail::JSONTree::create(json);
    auto &root = tree->rootnode();
 
-   // In every parameter point, the two are written the same way.
+   // The RooRealVar is constant in every parameter point; the RooConstVar is in none.
    std::size_t nSigmaEntries = 0;
    for (auto const &point : root["parameter_points"].children()) {
       for (auto const &param : point["parameters"].children()) {
          const std::string name = param["name"].val();
-         if (name != "sigma_fixed" && name != "mean_const") {
+         EXPECT_NE(name, "mean_const") << json;
+         if (name != "sigma_fixed") {
             continue;
          }
          EXPECT_TRUE(param.has_child("const") && param["const"].val_bool())
             << name << " in " << point["name"].val() << ": " << json;
          EXPECT_FALSE(param.has_child("min") || param.has_child("max")) << name << ": " << json;
-         nSigmaEntries += name == "sigma_fixed";
+         ++nSigmaEntries;
       }
    }
    EXPECT_EQ(nSigmaEntries, 3u) << json; // default_values, snapshot_a, snapshot_b
 
-   // Only the domains tell them apart.
-   auto inAnyDomain = [&](std::string const &name) {
-      for (auto const &domain : root["domains"].children()) {
-         if (RooJSONFactoryWSTool::findNamedChild(domain["axes"], name)) {
-            return true;
-         }
-      }
-      return false;
-   };
-   EXPECT_TRUE(inAnyDomain("sigma_fixed")) << json;
-   EXPECT_FALSE(inAnyDomain("mean_const")) << json;
+   // In the domain, the RooRealVar has a range and the RooConstVar a single value.
+   auto const *domain = RooJSONFactoryWSTool::findNamedChild(root["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr) << json;
+   auto const *sigmaAxis = RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "sigma_fixed");
+   ASSERT_NE(sigmaAxis, nullptr) << json;
+   EXPECT_TRUE(sigmaAxis->has_child("min") && sigmaAxis->has_child("max")) << json;
+   EXPECT_FALSE(sigmaAxis->has_child("value")) << json;
+   auto const *meanAxis = RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "mean_const");
+   ASSERT_NE(meanAxis, nullptr) << json;
+   EXPECT_DOUBLE_EQ((*meanAxis)["value"].val_double(), 1.0) << json;
+   EXPECT_FALSE(meanAxis->has_child("min") || meanAxis->has_child("max")) << json;
 
    // On import, the types and the constness are restored, also from the snapshots.
    RooWorkspace imported;
@@ -4034,7 +4020,7 @@ TEST(RooFitHS3, HistFactoryLogNormalGammaConstraint)
       for (std::string key : {"constraint", "constraint_type"}) {
          expectImportThrowsWithError(makeHistFactoryJSON(R"({"name": "shape", "type": "shapesys", ")" + key +
                                                          R"(": ")" + type + R"(", "data": {"vals": [0.1, 0.2]}})"),
-                                     "unsupported constraint '" + type + "'");
+                                     "unsupported constraint 'LogNormal'");
       }
    }
 
@@ -4999,4 +4985,176 @@ TEST(RooFitHS3, HistFactoryLegacyBinWidthFactor)
       jsonWithFactors = RooJSONFactoryWSTool{wsRenamed}.exportJSONtoString();
    }
    EXPECT_EQ(normfactorsOf(jsonWithFactors), renamedFactors.size()) << jsonWithFactors;
+}
+
+// If the exported document is not valid, this is reported, but everything that can be exported is still written. Here
+// the pdf of the ModelConfig has no exporter, so the likelihood refers to a distribution that doesn't exist.
+TEST(RooFitHS3, InvalidExportIsStillWritten)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws"};
+   ws.factory("Voigtian::voigt(x[0, -10, 10], mu[1, -5, 5], width[1, 0.1, 5], sigma[1, 0.1, 5])");
+   ws.factory("Gaussian::gauss(x, mu, sigma)");
+   RooDataSet data{"data", "data", *ws.var("x")};
+   data.add(*ws.var("x"));
+   ws.import(data);
+   ws.saveSnapshot("snap", *ws.var("mu"));
+   RooFit::ModelConfig mc{"mc", &ws};
+   mc.SetPdf("voigt");
+   mc.SetParametersOfInterest("mu");
+   mc.SetObservables("x");
+   ws.import(mc);
+
+   std::string json;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                                                [&] { json = RooJSONFactoryWSTool{ws}.exportJSONtoString(); });
+   EXPECT_NE(warnings.find("the exported document is not valid: the distribution 'voigt' does not exist"),
+             std::string::npos)
+      << warnings;
+
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &root = tree->rootnode();
+   EXPECT_EQ(root["metadata"]["hs3_version"].val(), "0.3") << json;
+   for (const char *section : {"domains", "parameter_points", "data", "likelihoods", "analyses"}) {
+      ASSERT_TRUE(root.has_child(section)) << section << ": " << json;
+      EXPECT_GT(root[section].num_children(), 0u) << section << ": " << json;
+   }
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(root["parameter_points"], "snap"), nullptr) << json;
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(root["distributions"], "gauss"), nullptr) << json;
+}
+
+// A named RooConstVar is exported as a fixed domain axis. JSON can't represent a value that is not finite, which is
+// reported on export, and such an axis is not read back as a parameter without range.
+TEST(RooFitHS3, NonFiniteRooConstVar)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws{"ws"};
+   RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+   RooConstVar cinf{"cinf", "cinf", std::numeric_limits<double>::infinity()};
+   RooFormulaVar formula{"formula", "x[0] + x[1]", {x, cinf}};
+   ws.import(formula, RooFit::Silence());
+
+   std::string json;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling,
+                                                [&] { json = RooJSONFactoryWSTool{ws}.exportJSONtoString(); });
+   EXPECT_NE(warnings.find("the single value of the parameter 'cinf' is not finite"), std::string::npos) << warnings;
+
+   expectImportThrowsWithError(json, "must be a number");
+}
+
+// A fixed domain axis (HS3 #131): the parameter only takes the given "value", and RooFit reads it as a RooConstVar.
+// It needs no entry in a parameter point. A parameter point must not give it another value, the axis has no range,
+// binning or categories, and all domains that list the parameter give it the same value.
+TEST(RooFitHS3, FixedDomainAxis)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto document = [](std::string const &axis, std::string const &extraDomains = "", std::string const &point = "") {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [{"name": "model", "type": "gaussian_dist", "x": "x", "mean": "mZ", "sigma": "wZ"}],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x", "min": 80.0, "max": 100.0}, {"name": "wZ", "value": 2.4955}, )" +
+             axis + R"(]})" + extraDomains + R"(],
+      "parameter_points": [{"name": "default_values", "parameters": [{"name": "x", "value": 90.0})" +
+             point +
+             R"(]}]
+   })";
+   };
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(document(R"({"name": "mZ", "value": 91.188})")));
+   for (const char *name : {"mZ", "wZ"}) {
+      auto *constVar = dynamic_cast<RooConstVar *>(ws.obj(name));
+      ASSERT_NE(constVar, nullptr) << name;
+      EXPECT_EQ(ws.var(name), nullptr) << name;
+   }
+   EXPECT_DOUBLE_EQ(static_cast<RooConstVar *>(ws.obj("mZ"))->getVal(), 91.188);
+   EXPECT_DOUBLE_EQ(static_cast<RooConstVar *>(ws.obj("wZ"))->getVal(), 2.4955);
+   // Written back the same way: as fixed axes, not in the parameter points.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"({"name":"mZ","value":91.188})"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"({"name":"wZ","value":2.4955})"), std::string::npos) << exported;
+   {
+      auto tree = RooFit::Detail::JSONTree::create(exported);
+      if (auto const *points = tree->rootnode().find("parameter_points")) {
+         for (auto const &point : points->children()) {
+            for (const char *name : {"mZ", "wZ"}) {
+               EXPECT_EQ(RooJSONFactoryWSTool::findNamedChild(point["parameters"], name), nullptr) << exported;
+            }
+         }
+      }
+   }
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // The same value in a parameter point is fine, also with "const"; another value is an error.
+   {
+      RooWorkspace wsSame;
+      EXPECT_TRUE(RooJSONFactoryWSTool{wsSame}.importJSONfromString(
+         document(R"({"name": "mZ", "value": 91.188})", "", R"(, {"name": "mZ", "value": 91.188, "const": true})")));
+   }
+   expectImportThrowsWithError(document(R"({"name": "mZ", "value": 91.188})", "", R"(, {"name": "mZ", "value": 90.0})"),
+                               "the parameter point 'default_values' gives the parameter 'mZ' the value 90");
+
+   // The single value excludes a range, a binning and categories, and must be a number.
+   for (const char *key : {R"("min": 0.0)", R"("max": 100.0)", R"("nbins": 10)", R"("edges": [0.0, 1.0])"}) {
+      expectImportThrowsWithError(document(std::string(R"({"name": "mZ", "value": 91.188, )") + key + "}"),
+                                  "has \"value\" and");
+   }
+   expectImportThrowsWithError(document(R"({"name": "mZ", "value": "heavy"})"), "must be a number");
+   expectImportThrowsWithError(document(R"({"name": "mZ", "value": null})"), "must be a number");
+
+   // All domains that list the parameter give it the same single value.
+   expectImportThrowsWithError(
+      document(R"({"name": "mZ", "value": 91.188})",
+               R"(, {"name": "other", "type": "product_domain", "axes": [{"name": "mZ", "value": 90.0}]})"),
+      "the parameter 'mZ' has different single values in the domains");
+   expectImportThrowsWithError(
+      document(R"({"name": "mZ", "value": 91.188})",
+               R"(, {"name": "other", "type": "product_domain", "axes": [{"name": "mZ", "min": 80.0, "max": 100.0}]})"),
+      "but a range in the domain 'other'");
+   expectImportThrowsWithError(
+      document(R"({"name": "mZ", "value": 91.188})",
+               R"(, {"name": "other", "type": "product_domain", "axes": [{"name": "mZ", "categories": ["a", "b"]}]})"),
+      "but categories in the domain 'other'");
+
+   // A parameter without domain is a RooRealVar: constant with "const": true, otherwise free, with a warning.
+   {
+      RooWorkspace wsNoDomain;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{wsNoDomain}.importJSONfromString(document(
+            R"({"name": "unused", "value": 0.0})", "", R"(, {"name": "mZ", "value": 91.188, "const": true})")));
+      });
+      ASSERT_NE(wsNoDomain.var("mZ"), nullptr);
+      EXPECT_TRUE(wsNoDomain.var("mZ")->isConstant());
+      EXPECT_EQ(warnings.find("'mZ' is not listed in any domain"), std::string::npos) << warnings;
+   }
+   {
+      RooWorkspace wsFree;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{wsFree}.importJSONfromString(
+            document(R"({"name": "unused", "value": 0.0})", "", R"(, {"name": "mZ", "value": 91.188})")));
+      });
+      ASSERT_NE(wsFree.var("mZ"), nullptr);
+      EXPECT_FALSE(wsFree.var("mZ")->isConstant());
+      EXPECT_NE(warnings.find("the parameter 'mZ' is not listed in any domain and is not constant"), std::string::npos)
+         << warnings;
+   }
+
+   // Files of earlier ROOT versions marked named RooConstVars with the attribute "is_const_var".
+   RooWorkspace wsLegacy;
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "distributions": [{"name": "model", "type": "gaussian_dist", "x": "x", "mean": "mZ", "sigma": 2.5}],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "x", "min": 80.0, "max": 100.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "x", "value": 90.0}, {"name": "mZ", "value": 91.188, "const": true}]}],
+      "misc": {"ROOT_internal": {"attributes": {"mZ": {"is_const_var": 1}}}}
+   })"));
+   ASSERT_NE(dynamic_cast<RooConstVar *>(wsLegacy.obj("mZ")), nullptr);
+   EXPECT_DOUBLE_EQ(static_cast<RooConstVar *>(wsLegacy.obj("mZ"))->getVal(), 91.188);
 }

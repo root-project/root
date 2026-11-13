@@ -9,11 +9,15 @@
 # @author Jakob Blomer CERN
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTupleUtil
-HEADERS
+set(NTUPLEUTIL_HEADERS
   ROOT/RNTupleImporter.hxx
   ROOT/RNTupleExporter.hxx
   ROOT/RNTupleInspector.hxx
+)
+
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTupleUtil
+HEADERS
+  ${NTUPLEUTIL_HEADERS}
 SOURCES
   src/RNTupleImporter.cxx
   src/RNTupleExporter.cxx
@@ -24,6 +28,18 @@ DEPENDENCIES
   ROOTNTuple
   Tree
   Hist
+)
+
+set(RELATIVE_INC_HEADERS ${NTUPLEUTIL_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTNTupleUtil
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 if(MSVC)
