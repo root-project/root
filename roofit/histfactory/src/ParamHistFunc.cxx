@@ -324,10 +324,6 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
   else if( numVars == 2 ) {
 
-    // Create a vector of indices
-    // all starting at 0
-    std::vector< Int_t > Indices(numVars, 0);
-
     RooRealVar* varx = static_cast<RooRealVar*>(vars.at(0));
     RooRealVar* vary = static_cast<RooRealVar*>(vars.at(1));
 
@@ -356,10 +352,6 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
   }
 
   else if( numVars == 3 ) {
-
-    // Create a vector of indices
-    // all starting at 0
-    std::vector< Int_t > Indices(numVars, 0);
 
     RooRealVar* varx = static_cast<RooRealVar*>(vars.at(0));
     RooRealVar* vary = static_cast<RooRealVar*>(vars.at(1));

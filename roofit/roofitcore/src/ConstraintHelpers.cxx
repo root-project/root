@@ -118,9 +118,6 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
    // Collect internal and external constraint specifications
    RooArgSet allConstraints;
 
-   auto observableNames = RooHelpers::getColonSeparatedNameString(observables);
-   auto constraintSetCacheName = std::string("CACHE_CONSTR_OF_PDF_") + pdf.GetName() + "_FOR_OBS_" + observableNames;
-
    if (!cPars.empty()) {
       std::unique_ptr<RooArgSet> internalConstraints{
          pdf.getAllConstraints(observables, cPars, doStripDisconnected)};

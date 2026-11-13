@@ -3391,7 +3391,6 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
   if (serverValueString) {
     ee.setServerValues(serverValueString) ;
   } else {
-    std::string srvval ;
     std::ostringstream oss ;
     bool first(true) ;
     for (Int_t i=0 ; i<numProxies() ; i++) {

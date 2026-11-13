@@ -72,8 +72,6 @@ TEST(RooAddPdf, TestSPlot)
    RooAbsPdf &model_gen = *ws.pdf("model_gen");
    RooAbsPdf &model = *ws.pdf("model");
 
-   RooArgSet normSet{invMass};
-
    // make the toy data
    std::unique_ptr<RooDataSet> data{model_gen.generate({invMass, isolation}, RooFit::Name("mygendataset"))};
 

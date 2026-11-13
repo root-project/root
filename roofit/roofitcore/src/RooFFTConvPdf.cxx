@@ -388,7 +388,6 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
      RooLinearVar* shiftObs1 = new RooLinearVar(Form("%s_shifted_FFTBuffer1",convObs->GetName()),"shiftObs1",
                       *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift1)) ;
 
-    RooArgSet clonedBranches1 ;
     RooCustomizer cust(*clonePdf1,"fft") ;
     cust.replaceArg(*convObs,*shiftObs1) ;
 
@@ -405,7 +404,6 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
     RooLinearVar* shiftObs2 = new RooLinearVar(Form("%s_shifted_FFTBuffer2",convObs->GetName()),"shiftObs2",
                       *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift2)) ;
 
-    RooArgSet clonedBranches2 ;
     RooCustomizer cust(*clonePdf2,"fft") ;
     cust.replaceArg(*convObs,*shiftObs2) ;
 

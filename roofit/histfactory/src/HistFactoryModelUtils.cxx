@@ -35,13 +35,8 @@ namespace HistFactory{
     if(verbose) std::cout << "Getting the RooRealSumPdf for the channel: "
            << sim_channel->GetName() << std::endl;
 
-    std::string channelPdfName = sim_channel->GetName();
-    std::string ChannelName = channelPdfName.substr(6, channelPdfName.size() );
-
     // Now, get the RooRealSumPdf
     // ie the channel WITHOUT constraints
-    std::string realSumPdfName = ChannelName + "_model";
-
     RooAbsPdf* sum_pdf = nullptr;
     bool FoundSumPdf=false;
     std::unique_ptr<RooArgSet> components{sim_channel->getComponents()};
