@@ -57,6 +57,9 @@
 
 #include <TF1.h>
 
+#include <RooCategory.h>
+#include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
 #include "JSONIOUtils.h"
 
 #include <type_traits>
@@ -416,6 +419,51 @@ bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    tool->wsEmplace<RooAddition>(name, tool->requestArgList<RooAbsReal>(p, "summands"));
+   return true;
+}
+
+// A "combined_dist" is a RooSimultaneous. Its index category is the single column, or a RooSuperCategory over the
+// columns in the order of the document; the columns are categories declared by categorical axes of the domains.
+bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   std::string const name(RooJSONFactoryWSTool::name(p));
+   std::string const context = "the combined_dist '" + name + "'";
+   // Whether a combined distribution is extended follows from its components; HS3 forbids declaring it.
+   if (p.has_child("extended")) {
+      RooJSONFactoryWSTool::error(context + " must not have \"extended\": whether it is extended follows from its " +
+                                  "components");
+   }
+   std::vector<RooCategory *> columns = readSelectionColumns(*tool->workspace(), p, "columns", context);
+
+   auto const *componentsNode = p.find("components");
+   if (!componentsNode || !componentsNode->is_seq() || componentsNode->num_children() == 0) {
+      RooJSONFactoryWSTool::error("\"components\" of " + context + " must be a non-empty list");
+   }
+   std::map<std::string, RooAbsPdf *> pdfMap;
+   for (JSONNode const &component : componentsNode->children()) {
+      if (!component.is_map() || !component.has_child("dist")) {
+         RooJSONFactoryWSTool::error("every component of " + context + " must have a \"key\" and a \"dist\"");
+      }
+      std::vector<std::string> const key = readSelectionKey(component, columns, context);
+      std::string const label = selectionLabel(key);
+      if (pdfMap.find(label) != pdfMap.end()) {
+         RooJSONFactoryWSTool::error("the key " + selectionKeyToString(key) + " is used by two components of " +
+                                     context);
+      }
+      pdfMap[label] = tool->request<RooAbsPdf>(component["dist"].val(), name);
+   }
+
+   if (columns.size() == 1) {
+      tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, *columns.front()});
+      return true;
+   }
+   RooArgSet inputs;
+   for (RooCategory *column : columns) {
+      inputs.add(*column);
+   }
+   std::string const indexName = name + "_index";
+   RooSuperCategory indexCat{indexName.c_str(), indexName.c_str(), inputs};
+   tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, indexCat});
    return true;
 }
 
@@ -800,10 +848,16 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
          << ". Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
          << "Root version that supports custom ParamHistFunc binnings(>=6.38.00)." << std::endl;
       RooJSONFactoryWSTool::warning(ss.str());
-      tool->wsEmplace<ParamHistFunc>(name, varList, tool->requestArgList<RooAbsReal>(p, "parameters"));
+      checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), varList, "the ParamHistFunc '" + name + "'");
+      tool->wsEmplace<ParamHistFunc>(name, varList,
+                                     toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), varList));
       return true;
    }
-   tool->wsEmplace<ParamHistFunc>(name, readBinning(p, varList), tool->requestArgList<RooAbsReal>(p, "parameters"));
+   RooArgList binning = readBinning(p, varList);
+   checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), binning, "the ParamHistFunc '" + name + "'");
+   // The parameters are given in the order of HS3 (last axis fastest); ParamHistFunc expects TH1 order.
+   tool->wsEmplace<ParamHistFunc>(name, binning,
+                                  toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), binning));
    return true;
 }
 
@@ -1056,7 +1110,10 @@ bool exportHist(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &ele
    const RooArg_t *hf = static_cast<const RooArg_t *>(func);
    elem["type"] << key;
    RooDataHist const &dh = hf->dataHist();
-   tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"].set_map());
+   // The axes are named after the observables of the function, which are not necessarily the variables of the
+   // histogram.
+   auto vars = histogramVariablesNamedAfterObservables(dh, hf->getHistObsList(), hf->variables());
+   tool->exportHisto(*vars, dh.numEntries(), dh.weightArray(), elem["data"].set_map());
    return true;
 }
 
@@ -1483,7 +1540,11 @@ bool exportParamHistFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode
    auto *pdf = static_cast<const ParamHistFunc *>(func);
    elem["type"] << key;
    RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
-   RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
+   // One parameter per bin, in the order of HS3 (last axis fastest), not in ParamHistFunc's internal TH1 order.
+   auto &paramsNode = elem["parameters"].set_seq();
+   for (RooAbsReal *param : paramHistFuncParamsInBinOrder(*pdf)) {
+      paramsNode.append_child() << param->GetName();
+   }
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
@@ -1629,6 +1690,7 @@ STATIC_EXECUTE([]() {
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
    registerImporter<importAddModel>("mixture_model", false);
+   registerImporter<importCombinedDist>("combined_dist", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);
    registerImporter<importBinSamplingPdf>("binsampling_dist", false);
    registerImporter<importBinSamplingPdf>("binsampling", false);

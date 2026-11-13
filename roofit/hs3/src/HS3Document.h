@@ -188,9 +188,21 @@ struct BinnedData {
    std::optional<GaussianUncertainty> uncertainty;
 };
 
+/// The sub-data set of a combined data set for one key, which has one label per column.
+struct CombinedDataComponent {
+   std::vector<std::string> key;
+   DataRef data;
+};
+
+/// Data sets that are selected by a key (HS3 #119). The columns are categorical axes of the domains.
+struct CombinedData {
+   std::vector<std::string> columns;
+   std::vector<CombinedDataComponent> components;
+};
+
 struct Data {
    std::string name;
-   std::variant<PointData, UnbinnedData, BinnedData> body;
+   std::variant<PointData, UnbinnedData, BinnedData, CombinedData> body;
 };
 
 struct LikelihoodTerm {
@@ -473,6 +485,9 @@ struct RooFitInternal {
    /// The constraint terms of HistFactory distributions that no modifier names, by distribution. They are
    /// also listed in the "aux_distributions" of the likelihoods, which is what other implementations use.
    std::map<std::string, std::vector<DistributionRef>> channelConstraints;
+   /// Axes that the components of a combined data set share, but that are no variate of any distribution, e.g. an
+   /// event number, by combined data set. They have no statistical meaning, and may be shared.
+   std::map<std::string, std::vector<std::string>> bookkeepingColumns;
 };
 
 struct Diagnostic {
