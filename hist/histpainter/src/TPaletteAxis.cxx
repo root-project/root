@@ -706,3 +706,34 @@ void TPaletteAxis::UnZoom()
       fH->ResetBit(TH1::kIsZoomed);
    }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if user range is symmetric.
+
+Bool_t TPaletteAxis::GetSymmetricRangeUser() const
+{
+   if (!fH)
+      return kFALSE;
+   return fH->GetZaxis()->GetSymmetricRangeUser();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set user range on the palette axis (forwards to the histogram Z axis).
+
+void TPaletteAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
+{
+   if (!fH)
+      return;
+   fH->GetZaxis()->SetRangeUser(ufirst, ulast);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set symmetric range on the palette axis (forwards to the histogram Z axis).
+
+void TPaletteAxis::SetSymmetricRangeUser(Bool_t sym)
+{
+   if (!fH)
+      return;
+   fH->GetZaxis()->SetSymmetricRangeUser(sym);
+}
