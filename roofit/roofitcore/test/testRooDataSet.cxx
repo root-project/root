@@ -560,7 +560,8 @@ TEST(RooDataSet, ReduceMergeAppend)
    int nYCut = 0;    // entries with y > 5.17
    int nXBinCut = 0; // entries in x bins with positive bin center (10 bins in [-10, 10], so x >= 0)
    for (int i = 0; i < 1000; i++) {
-      x.setVal(i / 50 - 10);
+      const int xVal = i / 50 - 10; // integer division: 50 entries per value
+      x.setVal(xVal);
       y.setVal(std::sqrt(1.0 * i));
       c.setLabel((i % 2) ? "Plus" : "Minus");
       d.add({x, y, c});
