@@ -32,8 +32,7 @@ RooMultiPdf::RooMultiPdf(const char *name, const char *title, RooCategory &_x, c
    : RooAbsPdf(name, title), // call of constructor base class RooAbsPdf passing it name and title
      c("_pdfs", "The list of pdfs", this),
      corr("_corrs", "The list of correction factors", this),
-     x("_index", "the pdf index", this, _x),
-     _oldIndex(fIndex)
+     x("_index", "the pdf index", this, _x)
 
 // parameter corr : Holds correction factors - number of free parameters
 // in each PDF held in the RooMultiPdf object
@@ -60,8 +59,6 @@ RooMultiPdf::RooMultiPdf(const RooMultiPdf &other, const char *name)
      c("_pdfs", this, other.c),
      corr("_corrs", this, other.corr),
      x("_index", this, other.x),
-     fIndex(other.fIndex),
-     _oldIndex(fIndex),
      cFactor(other.cFactor) // correction to 2*NLL by default is -> 2*0.5 per param
 {
 }
@@ -71,14 +68,12 @@ RooMultiPdf::RooMultiPdf(const RooMultiPdf &other, const char *name)
 Double_t RooMultiPdf::evaluate() const
 {
    double val = getCurrentPdf()->getVal(c.nset());
-   _oldIndex = x;
    return val;
 }
 
 Double_t RooMultiPdf::getLogVal(const RooArgSet *nset) const
 {
    double logval = getCurrentPdf()->getLogVal(nset);
-   _oldIndex = x;
    return logval;
 }
 
