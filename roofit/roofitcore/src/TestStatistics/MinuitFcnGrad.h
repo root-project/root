@@ -79,7 +79,7 @@ private:
    std::unique_ptr<LikelihoodGradientWrapper> _gradient;
    mutable bool _calculatingGradient = false;
 
-   mutable std::shared_ptr<WrapperCalculationCleanFlags> _calculationIsClean;
+   std::shared_ptr<WrapperCalculationCleanFlags> _calculationIsClean;
 
    mutable std::vector<double> _minuitInternalX;
    mutable std::vector<double> _minuitExternalX;

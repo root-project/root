@@ -127,8 +127,8 @@ namespace RooStats {
 
       mutable double fNullPValue;             ///< p-value for the null hypothesis (small number means disfavoured)
       mutable double fAlternatePValue;        ///< p-value for the alternate hypothesis (small number means disfavoured)
-      mutable double fNullPValueError;        ///< error of p-value for the null hypothesis (small number means disfavoured)
-      mutable double fAlternatePValueError;   ///< error of p-value for the alternate hypothesis (small number means disfavoured)
+      double fNullPValueError;      ///< error of p-value for the null hypothesis (small number means disfavoured)
+      double fAlternatePValueError; ///< error of p-value for the alternate hypothesis (small number means disfavoured)
       double fTestStatisticData;              ///< result of the test statistic evaluated on data
       std::unique_ptr<const RooArgList> fAllTestStatisticsData; ///< for the case of multiple test statistics, holds all the results
       std::unique_ptr<SamplingDistribution> fNullDistr;

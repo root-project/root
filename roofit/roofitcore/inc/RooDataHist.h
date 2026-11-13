@@ -251,7 +251,7 @@ public:
   double*         _wgt  {nullptr}; ///<[_arrSize] Weight array
   mutable double* _errLo{nullptr}; ///<[_arrSize] Low-side error on weight array
   mutable double* _errHi{nullptr}; ///<[_arrSize] High-side error on weight array
-  mutable double* _sumw2{nullptr}; ///<[_arrSize] Sum of weights^2
+  double *_sumw2{nullptr};         ///<[_arrSize] Sum of weights^2
   double*         _binv {nullptr}; ///<[_arrSize] Bin volume array
 
   mutable ULong64_t _curIndex{std::numeric_limits<ULong64_t>::max()}; ///< Current index

@@ -84,7 +84,7 @@ protected:
 
   std::vector<double> _boundaries; ///< Boundaries
   mutable double* _array = nullptr;          ///<! Array of boundaries
-  mutable Int_t _blo = 0.0;                ///<! bin number for _xlo
+  Int_t _blo = 0.0;                          ///<! bin number for _xlo
 
   ClassDefOverride(RooBinning,3) // Generic binning specification
 };

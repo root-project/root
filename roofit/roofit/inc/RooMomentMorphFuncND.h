@@ -73,12 +73,12 @@ public:
       void addPdf(const RooAbsReal &func, std::vector<int> bins);
       void addBinning(const RooAbsBinning &binning) { _grid.push_back(binning.clone()); };
 
-      mutable std::vector<RooAbsBinning *> _grid;
+      std::vector<RooAbsBinning *> _grid;
       mutable RooArgList _pdfList;
-      mutable std::map<std::vector<int>, int> _pdfMap;
+      std::map<std::vector<int>, int> _pdfMap;
 
-      mutable std::vector<std::vector<double>> _nref;
-      mutable std::vector<int> _nnuis;
+      std::vector<std::vector<double>> _nref;
+      std::vector<int> _nnuis;
 
       ClassDef(RooMomentMorphFuncND::Grid2, 1);
    };
@@ -156,11 +156,11 @@ protected:
 
    RooListProxy _parList;
    RooSetProxy _obsList;
-   mutable Grid2 _referenceGrid;
+   Grid2 _referenceGrid;
    RooListProxy _pdfList;
 
-   mutable std::unique_ptr<TMatrixD> _M;
-   mutable std::unique_ptr<TMatrixD> _MSqr;
+   std::unique_ptr<TMatrixD> _M;
+   std::unique_ptr<TMatrixD> _MSqr;
    mutable std::vector<std::vector<double>> _squareVec;
    mutable std::vector<int> _squareIdx;
 

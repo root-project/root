@@ -130,7 +130,7 @@ namespace RooStats {
 
    private:
       bool fOneSided;                     ///< for one sided PL test statistic (upper limits)
-      mutable bool fOneSidedDiscovery;    ///< for one sided PL test statistic (for discovery)
+      bool fOneSidedDiscovery;            ///< for one sided PL test statistic (for discovery)
       bool fSigned = false;               ///< use signed (uncapped) PL test statistic
       bool fNominalAsimov;                ///< make Asimov at nominal parameter values
       mutable bool fIsInitialized;        ///<! flag to check if calculator is initialized

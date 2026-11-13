@@ -393,8 +393,8 @@ protected:
   inline TNamed* structureTag() { if (_structureTag==nullptr) makeStructureTag() ; return _structureTag ; }
   inline TNamed* typedStructureTag() { if (_typedStructureTag==nullptr) makeTypedStructureTag() ; return _typedStructureTag ; }
 
-  mutable TNamed* _structureTag{nullptr};      ///<! Structure tag
-  mutable TNamed* _typedStructureTag{nullptr}; ///<! Typed structure tag
+  TNamed *_structureTag{nullptr};      ///<! Structure tag
+  TNamed *_typedStructureTag{nullptr}; ///<! Typed structure tag
 
   inline void clearStructureTags() { _structureTag = nullptr ; _typedStructureTag = nullptr ; }
 

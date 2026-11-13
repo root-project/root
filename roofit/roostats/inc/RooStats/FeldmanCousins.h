@@ -109,7 +109,7 @@ namespace RooStats {
 
       mutable ToyMCSampler* fTestStatSampler; ///< the test statistic sampler
       mutable RooAbsData* fPointsToTest;      ///< points to perform the construction
-      mutable RooAbsData* fPOIToTest;         ///< value of POI points to perform the construction
+      RooAbsData *fPOIToTest;                 ///< value of POI points to perform the construction
       mutable ConfidenceBelt* fConfBelt;
       bool fAdaptiveSampling;               ///< controls use of adaptive sampling algorithm
       double fAdditionalNToysFactor;        ///< give user ability to ask for more toys

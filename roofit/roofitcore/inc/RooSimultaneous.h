@@ -107,7 +107,7 @@ protected:
   RooArgSet const& flattenedCatList() const;
   bool indexCatIsInNormSet(RooArgSet const *nset) const;
 
-  mutable RooSetProxy _plotCoefNormSet ;
+  RooSetProxy _plotCoefNormSet;
   const TNamed* _plotCoefNormRange = nullptr;
 
   class CacheElem : public RooAbsCacheElement {

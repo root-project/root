@@ -98,7 +98,7 @@ protected:
    RooRealProxy x;                           // Observable
    RooRealProxy alpha;                       // Interpolation parameter
    bool _cacheAlpha;                         // If true, both (x,alpha) are cached
-   mutable MorphCacheElem *_cache = nullptr; // Current morph cache element in use
+   MorphCacheElem *_cache = nullptr;         // Current morph cache element in use
 
    double evaluate() const override;
 
