@@ -131,14 +131,21 @@ Bool_t TPython::Initialize()
    const std::lock_guard<std::mutex> lock(initMutex);
 
    static Bool_t isInitialized = false;
+   static Bool_t pythonInitializationFailed = false;
    if (isInitialized)
       return true;
 
    if (!Py_IsInitialized()) {
+      // Retrying after failed initialization can abort in CPython.
+      if (pythonInitializationFailed)
+         return false;
+
       // Trigger the Python initialization indirectly via cpyrt
       cppjit::cpyrt::Scope_Check(nullptr);
-      if (!Py_IsInitialized())
+      if (!Py_IsInitialized()) {
+         pythonInitializationFailed = true;
          return false;
+      }
 
       mainThreadState = PyEval_SaveThread();
    }
