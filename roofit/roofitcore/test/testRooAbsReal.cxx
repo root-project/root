@@ -196,3 +196,22 @@ TEST(RooAbsReal, UtilityFunctionsToTailorPdfs)
       }
    }
 }
+
+// createIntegral() crashed for functions with a parameterized integral cache
+// because of a use-after-move.
+TEST(RooAbsReal, ParameterizedIntegralCache)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x("x", "x", 0, -10, 10);
+   RooRealVar mean("mean", "mean", 1, -5, 5);
+   RooRealVar sigma("sigma", "sigma", 2, 0.1, 10);
+   RooGaussian gauss("gauss", "gauss", x, mean, sigma);
+
+   std::unique_ptr<RooAbsReal> reference{gauss.createIntegral(x)};
+
+   gauss.setParameterizeIntegral(mean);
+   std::unique_ptr<RooAbsReal> cached{gauss.createIntegral(x)};
+
+   EXPECT_NEAR(cached->getVal(), reference->getVal(), 1e-6 * reference->getVal());
+}
