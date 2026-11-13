@@ -20,6 +20,7 @@ ROOT_ADD_GTEST(testRooFit
     testRooMomentMorphFuncND.cxx
     testRooParamHistFunc.cxx
     testRooPoisson.cxx
+    testRooSpline.cxx
     testRooStepFunc.cxx
   LIBRARIES
     Gpad
