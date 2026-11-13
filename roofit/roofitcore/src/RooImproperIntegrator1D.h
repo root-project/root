@@ -56,8 +56,8 @@ protected:
       OpenAbove
    };
    LimitsCase limitsCase() const;
-   LimitsCase _case;            ///< Configuration of limits
-   mutable double _xmin, _xmax; ///< Value of limits
+   LimitsCase _case = Invalid;              ///< Configuration of limits
+   mutable double _xmin = 0.0, _xmax = 0.0; ///< Value of limits
    bool _useIntegrandLimits;    ///< Use limits in function binding?
 
    RooAbsFunc *_origFunc = nullptr;                       ///< Original function binding

@@ -110,9 +110,9 @@ protected:
   struct Var {
     std::string name;
     std::string argName;
-    T val;
-    bool appendMode;
-    int num;
+    T val{};
+    bool appendMode = false;
+    int num = 0;
   };
 
   std::string _name;

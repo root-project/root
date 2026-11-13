@@ -109,7 +109,7 @@ public:
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 
   mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
-  Int_t _ipOrder ; // Interpolation order for cache histograms
+  Int_t _ipOrder = 0;                    // Interpolation order for cache histograms
 
   std::string cacheNameSuffix(const RooArgSet& nset) const ;
   virtual TString histNameSuffix() const { return TString("") ; }

@@ -41,7 +41,7 @@ protected:
 
    int fIndex = 0;  // unused, just for IO compatibility
    int nPdfs = 0;   // unused, just for IO compatibility
-   Int_t _oldIndex; // unused, just for IO compatibility
+   Int_t _oldIndex = 0; // unused, just for IO compatibility
 
    Double_t evaluate() const override;
    Double_t getLogVal(const RooArgSet *set = nullptr) const override;

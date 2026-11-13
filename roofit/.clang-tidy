@@ -7,6 +7,7 @@ Checks: -*,
   ,bugprone-unused-local-non-trivial-variable,
   ,bugprone-use-after-move,
   ,cppcoreguidelines-prefer-member-initializer,
+  ,cppcoreguidelines-pro-type-member-init,
   ,misc-definitions-in-headers,
   ,misc-string-compare,
   ,misc-uniqueptr-reset-release,
@@ -38,6 +39,10 @@ HeaderFilterRegex: ''
 CheckOptions:
   - key:             bugprone-unused-local-non-trivial-variable.IncludeTypes
     value:           '::std::.*mutex;::std::future;::std::basic_string;::std::basic_regex;::std::basic_istringstream;::std::basic_stringstream;::std::bitset;::std::filesystem::path;::std::vector;::std::map;::TString;::RooArgSet;::RooArgList'
+  - key:             cppcoreguidelines-pro-type-member-init.IgnoreArrays
+    value:           true
+  - key:             cppcoreguidelines-pro-type-member-init.UseAssignment
+    value:           true
   - key:             google-readability-braces-around-statements.ShortStatementLines
     value:           '1'
   - key:             google-readability-function-size.StatementThreshold

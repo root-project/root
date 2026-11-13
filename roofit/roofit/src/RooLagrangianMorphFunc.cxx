@@ -1314,7 +1314,7 @@ public:
 
    Matrix _matrix;
    Matrix _inverse;
-   double _condition;
+   double _condition = 0.0;
 
    CacheElem(){};
    void operModeHook(RooAbsArg::OperMode) override{};

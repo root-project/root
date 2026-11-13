@@ -209,7 +209,7 @@ void RooCmdArg::setSet(Int_t idx,const RooArgSet& set)
 
 std::string RooCmdArg::constructorCode() const
 {
-   std::array<bool, 13> needs;
+   std::array<bool, 13> needs{};
    needs[0] = true;                  // name
    needs[1] = true;                  // i1
    needs[2] = _i[1] != 0;            // i2

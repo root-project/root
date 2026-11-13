@@ -108,13 +108,13 @@ protected:
   RooCategoryProxy _rhoQ;
   RooRealProxy     _correctQ;
   RooRealProxy     _wQ; ///< dummy mischarge (must be set to zero!)
-  double         _genB0Frac;
-  double         _genRhoPlusFrac;
+  double _genB0Frac = 0.0;
+  double _genRhoPlusFrac = 0.0;
 
-  DecayType        _type;
-  Int_t            _basisExp;
-  Int_t            _basisSin;
-  Int_t            _basisCos;
+  DecayType _type = SingleSided;
+  Int_t _basisExp = 0;
+  Int_t _basisSin = 0;
+  Int_t _basisCos = 0;
 
   ClassDefOverride(RooNonCPEigenDecay,1) // PDF to model CP-violating decays to final states which are not CP eigenstates
 };

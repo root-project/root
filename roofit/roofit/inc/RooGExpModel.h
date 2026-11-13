@@ -95,8 +95,8 @@ private:
   RooRealProxy ssf ;
   RooRealProxy rsf ;
 
-  bool _flip ;
-  bool _nlo ;
+  bool _flip = false;
+  bool _nlo = false;
   bool _flatSFInt = false;
   bool _asympInt = false;  // added FMV,07/24/03
 

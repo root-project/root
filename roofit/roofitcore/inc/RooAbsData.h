@@ -295,7 +295,7 @@ protected:
 
   static StorageType defaultStorageType ;
 
-  StorageType storageType;
+  StorageType storageType = defaultStorageType;
 
   void initializeVars(RooArgSet const& vars);
 

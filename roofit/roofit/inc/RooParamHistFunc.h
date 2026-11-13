@@ -58,7 +58,7 @@ public:
   RooListProxy  _x ;
   RooListProxy _p ;
   RooDataHist _dh ;
-  bool _relParam ;
+  bool _relParam = false;
 
   double evaluate() const override ;
 

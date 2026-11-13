@@ -178,22 +178,22 @@ private:
 
    // performance counter: remember how many toys have been thrown
    mutable int fTotalToysRun;
-   int fMaxToys;  ///< maximum number of toys to run
+   int fMaxToys = 0; ///< maximum number of toys to run
 
    HypoTestCalculatorGeneric* fCalculator0;        ///< pointer to the calculator passed in the constructor
    std::unique_ptr<HypoTestCalculatorGeneric> fHC; ///<! pointer to the generic hypotest calculator used
    RooRealVar* fScannedVariable;                   ///< pointer to the constrained variable
    mutable HypoTestInverterResult* fResults;       ///< pointer to the result
 
-   bool fUseCLs;
-   bool fScanLog;
-   double fSize;
-   int fVerbose;
-   ECalculatorType fCalcType;
-   int fNBins;
-   double fXmin;
-   double fXmax;
-   double fNumErr;
+   bool fUseCLs = false;
+   bool fScanLog = false;
+   double fSize = 0.0;
+   int fVerbose = 0;
+   ECalculatorType fCalcType = kUndefined;
+   int fNBins = 0;
+   double fXmin = 0.0;
+   double fXmax = 0.0;
+   double fNumErr = 0.0;
 
 protected:
 

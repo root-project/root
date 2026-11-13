@@ -44,7 +44,7 @@ public:
 protected:
    RooRealProxy _x;
    RooListProxy _coefList;
-   int _lowestOrder;
+   int _lowestOrder = 0;
 
    // CUDA support
    void doEval(RooFit::EvalContext &) const override;

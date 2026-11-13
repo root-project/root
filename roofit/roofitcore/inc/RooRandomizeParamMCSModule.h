@@ -50,9 +50,9 @@ private:
      UniParam(RooRealVar* p, double lo, double hi) : _param(p), _lo(lo), _hi(hi) {}
      bool operator==(const UniParam& other) { return (_param==other._param) ; }
      bool operator<(const UniParam& other) { return (_lo<other._lo) ; }
-     RooRealVar* _param ;
-     double _lo ;
-     double _hi ;
+     RooRealVar *_param = nullptr;
+     double _lo = 0.0;
+     double _hi = 0.0;
   } ;
 
   struct UniParamSet {
@@ -61,8 +61,8 @@ private:
      bool operator==(const UniParamSet& other) { return (_lo==other._lo) ; }
      bool operator<(const UniParamSet& other) { return (_lo<other._lo) ; }
      RooArgSet _pset ;
-     double _lo ;
-     double _hi ;
+     double _lo = 0.0;
+     double _hi = 0.0;
   } ;
 
   struct GausParam {
@@ -70,9 +70,9 @@ private:
      GausParam(RooRealVar* p, double mean, double sigma) : _param(p), _mean(mean), _sigma(sigma) {}
      bool operator==(const GausParam& other) { return (_param==other._param) ; }
      bool operator<(const GausParam& other) { return (_mean<other._mean) ; }
-     RooRealVar* _param ;
-     double _mean ;
-     double _sigma ;
+     RooRealVar *_param = nullptr;
+     double _mean = 0.0;
+     double _sigma = 0.0;
   } ;
 
   struct GausParamSet {
@@ -81,8 +81,8 @@ private:
      bool operator==(const GausParamSet& other) { return (_mean==other._mean) ; }
      bool operator<(const GausParamSet& other) { return (_mean<other._mean) ; }
      RooArgSet _pset ;
-     double _mean ;
-     double _sigma ;
+     double _mean = 0.0;
+     double _sigma = 0.0;
   } ;
 
   std::list<UniParam>     _unifParams ; ///<!

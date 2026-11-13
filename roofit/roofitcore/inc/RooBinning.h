@@ -80,7 +80,7 @@ protected:
   double _xhi = 0.0;          ///< Upper bound
   bool _ownBoundLo = true;     ///< Does the lower bound coincide with a bin boundary
   bool _ownBoundHi = true;     ///< Does the upper bound coincide with a bin boundary
-  Int_t _nbins;           ///< Number of bins
+  Int_t _nbins = 0;            ///< Number of bins
 
   std::vector<double> _boundaries; ///< Boundaries
   mutable double* _array = nullptr;          ///<! Array of boundaries

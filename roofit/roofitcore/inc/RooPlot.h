@@ -234,7 +234,7 @@ protected:
 
   TH1* _hist = nullptr;      ///< Histogram that we uses as basis for drawing the content
   Items _items;  ///< A list of the items we contain.
-  double _padFactor;       ///< Scale our y-axis to _padFactor of our maximum contents.
+  double _padFactor = 0.0;              ///< Scale our y-axis to _padFactor of our maximum contents.
   RooAbsRealLValue *_plotVar = nullptr; ///< The variable we are plotting.
   RooArgSet *_plotVarSet = nullptr; ///< A list owning the cloned tree nodes of the plotVarClone
   RooArgSet *_normVars = nullptr; ///< Variables that PDF plots should be normalized over

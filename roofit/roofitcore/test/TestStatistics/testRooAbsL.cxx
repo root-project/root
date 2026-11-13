@@ -49,7 +49,7 @@ protected:
    RooWorkspace w;
    std::unique_ptr<RooAbsReal> nll;
    std::unique_ptr<RooArgSet> values;
-   RooAbsPdf *pdf;
+   RooAbsPdf *pdf = nullptr;
    std::unique_ptr<RooAbsData> data;
    std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood;
    std::shared_ptr<RooFit::TestStatistics::WrapperCalculationCleanFlags> clean_flags;
