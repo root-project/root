@@ -72,9 +72,11 @@ void writeAxis(JSONNode &node, BinnedAxis const &axis)
 {
    node.set_map();
    node["name"] << axis.name;
-   // Binned axes always carry their range, also if it is redundant with the "edges" of an irregular binning.
-   node["min"] << axis.min;
-   node["max"] << axis.max;
+   // The range of an irregular binning is given by its "edges": HS3 0.3 forbids "min" and "max" alongside them.
+   if (!std::holds_alternative<EdgesBinning>(axis.binning)) {
+      node["min"] << axis.min;
+      node["max"] << axis.max;
+   }
    writeBinning(node, axis.binning);
 }
 
@@ -106,10 +108,15 @@ void writeAxis(JSONNode &node, DomainAxis const &axis)
       node[fixedValueKey] << *axis.fixedValue;
       return;
    }
-   if (axis.min && !std::isinf(*axis.min)) {
+   // HS3 0.3 forbids "min" and "max" alongside "edges", which give the range. They are only written if they differ from
+   // the edges, which would otherwise be lost.
+   auto const *edges = axis.binning ? std::get_if<EdgesBinning>(&*axis.binning) : nullptr;
+   const bool rangeFromEdges = edges && !edges->edges.empty() && axis.min && axis.max &&
+                               *axis.min == edges->edges.front() && *axis.max == edges->edges.back();
+   if (!rangeFromEdges && axis.min && !std::isinf(*axis.min)) {
       node["min"] << *axis.min;
    }
-   if (axis.max && !std::isinf(*axis.max)) {
+   if (!rangeFromEdges && axis.max && !std::isinf(*axis.max)) {
       node["max"] << *axis.max;
    }
    if (axis.binning) {
@@ -265,6 +272,16 @@ void writeData(JSONNode &dataArray, Data const &data)
                        node["weights"].fill_seq(*d.weights);
                     }
                  },
+                 [&](CombinedData const &d) {
+                    node["type"] << "combined";
+                    writeStrings(node["columns"], d.columns);
+                    JSONNode &components = node["components"].set_seq();
+                    for (CombinedDataComponent const &component : d.components) {
+                       JSONNode &out = components.append_child().set_map();
+                       writeStrings(out["key"], component.key);
+                       out["dataset"] << component.data.name;
+                    }
+                 },
                  [&](PointData const &d) {
                     node["type"] << "point";
                     node["value"] << d.value;
@@ -367,6 +384,12 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
       JSONNode &constraints = rootInternal()["histfactory_constraints"].set_map();
       for (auto const &item : internal.channelConstraints) {
          writeRefs(constraints[item.first], item.second);
+      }
+   }
+   if (!internal.bookkeepingColumns.empty()) {
+      JSONNode &columns = rootInternal()["bookkeeping_columns"].set_map();
+      for (auto const &item : internal.bookkeepingColumns) {
+         writeStrings(columns[item.first], item.second);
       }
    }
    if (!internal.stepWidths.empty()) {

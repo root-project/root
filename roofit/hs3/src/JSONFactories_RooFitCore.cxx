@@ -28,6 +28,7 @@
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFormulaVar.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
@@ -57,9 +58,14 @@
 
 #include <TF1.h>
 
+#include <RooCategory.h>
+#include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
 #include "JSONIOUtils.h"
 
+#include <optional>
 #include <type_traits>
+#include <variant>
 
 #include "static_execute.h"
 
@@ -412,10 +418,248 @@ bool importProdPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// The name of the pdf that represents the component of an array distribution over the observable `observable`.
+std::string arrayComponentName(std::string const &observable)
+{
+   return observable + "_constraint";
+}
+
+// Copy the value of a JSON node, keeping numbers and booleans as such.
+void copyValue(JSONNode &target, JSONNode const &source)
+{
+   if (source.is_number()) {
+      target << source.val_double();
+      return;
+   }
+   const std::string value = source.val();
+   if (value == "true" || value == "false") {
+      target << (value == "true");
+   } else {
+      target << value;
+   }
+}
+
+// An HS3 `array_dist` is a product of one-dimensional distributions of one type (`component_type`), each over its own
+// observable `x`. RooFit has no dedicated class for it: every component is imported as an individual pdf of the
+// component type, named after its observable, and a RooProdPdf with the attribute `arrayDistTag` that carries the
+// name of the array holds them together, so that the array can be written back as `array_dist`. HistFactory modifiers
+// that name an array as the constraint of a parameter pick their component out of it (see
+// JSONFactories_HistFactory.cxx).
+bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   const std::string name = RooJSONFactoryWSTool::name(p);
+   auto error = [&name](std::string const &message) {
+      RooJSONFactoryWSTool::error("array_dist '" + name + "': " + message);
+   };
+
+   static const std::set<std::string> supportedComponentTypes{"poisson_dist", "poisson_continuous_dist",
+                                                              "gaussian_dist", "normal_dist", "lognormal_dist"};
+   if (!p.has_child("component_type")) {
+      error("missing \"component_type\"");
+   }
+   const std::string componentType = p["component_type"].val();
+   if (supportedComponentTypes.find(componentType) == supportedComponentTypes.end()) {
+      error("the component_type '" + componentType +
+            "' is not supported, supported are poisson_dist, poisson_continuous_dist, gaussian_dist and "
+            "lognormal_dist");
+   }
+
+   const JSONNode *defaults = p.find("default_parameters");
+   if (defaults) {
+      if (!defaults->is_map()) {
+         error("\"default_parameters\" must be a struct");
+      }
+      if (defaults->has_child("x")) {
+         error("\"x\" must be given per component, not in \"default_parameters\"");
+      }
+   }
+   const JSONNode *components = p.find("components");
+   if (!components || !components->is_seq() || components->num_children() == 0) {
+      error("\"components\" must be a non-empty list");
+   }
+
+   RooWorkspace &ws = *tool->workspace();
+
+   // The components are imported through the importer of the component type, from a node per component that
+   // combines its own fields with the defaults.
+   auto tree = RooFit::Detail::JSONTree::create();
+   JSONNode &nodes = tree->rootnode().set_seq();
+   std::vector<std::string> observables;
+   RooArgList pdfs;
+   for (JSONNode const &component : components->children()) {
+      const std::string context = "component " + std::to_string(observables.size());
+      if (!component.is_map()) {
+         error(context + " must be a struct");
+      }
+      const JSONNode *xNode = component.find("x");
+      if (!xNode) {
+         error(context + " has no \"x\"");
+      }
+      if (xNode->is_number() || !xNode->has_val()) {
+         error(context + ": \"x\" must be the name of the observable");
+      }
+      const std::string x = xNode->val();
+      if (std::find(observables.begin(), observables.end(), x) != observables.end()) {
+         error("the observable '" + x + "' is used by two components");
+      }
+      observables.push_back(x);
+
+      const std::string pdfName = arrayComponentName(x);
+      if (ws.arg(pdfName)) {
+         error("cannot create the component for '" + x + "' as '" + pdfName +
+               "', the workspace already has an object of that name");
+      }
+      JSONNode &node = nodes.append_child().set_map();
+      node["name"] << pdfName;
+      node["type"] << componentType;
+      if (defaults) {
+         for (JSONNode const &field : defaults->children()) {
+            copyValue(node[field.key()], field);
+         }
+      }
+      for (JSONNode const &field : component.children()) {
+         copyValue(node[field.key()], field);
+      }
+      tool->importFunction(node, true);
+      RooAbsPdf *pdf = ws.pdf(pdfName);
+      if (!pdf) {
+         error(context + " did not produce a distribution");
+      }
+      pdfs.add(*pdf);
+   }
+
+   // The parameters of a component must not depend on any observable of the array, otherwise the product would not
+   // be normalized.
+   for (std::size_t i = 0; i < observables.size(); ++i) {
+      RooAbsArg const *x = ws.arg(observables[i]);
+      if (!x) {
+         error("the observable '" + observables[i] + "' is not a parameter or function");
+      }
+      for (std::size_t k = 0; k < observables.size(); ++k) {
+         if (k != i && pdfs[i].dependsOn(*ws.arg(observables[k]))) {
+            error("component " + std::to_string(i) + " depends on the observable '" + observables[k] +
+                  "' of component " + std::to_string(k));
+         }
+      }
+      for (RooAbsArg const *server : pdfs[i].servers()) {
+         if (server != x && server->dependsOn(*x)) {
+            error("the parameters of component " + std::to_string(i) + " depend on its own observable '" +
+                  observables[i] + "'");
+         }
+      }
+   }
+
+   RooProdPdf array{name.c_str(), name.c_str(), pdfs};
+   array.setAttribute(arrayDistTag);
+   tool->wsImport(array);
+   return true;
+}
+
+// One field of a component of an array distribution: a name or a number.
+using ArrayFieldValue = std::variant<std::string, double>;
+
+struct ArrayComponent {
+   std::string type;
+   std::string x;
+   std::vector<std::pair<std::string, ArrayFieldValue>> fields;
+};
+
+ArrayFieldValue nameOrNumber(RooAbsReal const &arg)
+{
+   if (isLiteralConstVar(arg)) {
+      return static_cast<RooConstVar const &>(arg).getVal();
+   }
+   return std::string{arg.GetName()};
+}
+
+// The type, observable and fields of `pdf` as a component of an array distribution, with the fields of the standalone
+// exporters, or std::nullopt if `pdf` cannot be a component. A Gaussian whose mean is the recorded `observable` is
+// written with x and mean swapped.
+std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf, std::string const *observable = nullptr)
+{
+   ArrayComponent out;
+   RooAbsReal const *x = nullptr;
+   if (auto const *poisson = dynamic_cast<RooPoisson const *>(&pdf)) {
+      out.type = poisson->getNoRounding() ? "poisson_continuous_dist" : "poisson_dist";
+      x = &poisson->getX();
+      out.fields = {{"mean", nameOrNumber(poisson->getMean())}};
+   } else if (auto const *gauss = dynamic_cast<RooGaussian const *>(&pdf)) {
+      out.type = "gaussian_dist";
+      x = &gauss->getX();
+      RooAbsReal const *mean = &gauss->getMean();
+      // A Gaussian constraint built by HistFactory has the parameter as x and the global observable as mean. The
+      // Gaussian is symmetric in the two, so it is written with the observable as x where the observable is known.
+      if (observable && *observable == mean->GetName() && !isLiteralConstVar(*mean)) {
+         std::swap(x, mean);
+      }
+      out.fields = {{"mean", nameOrNumber(*mean)}, {"sigma", nameOrNumber(gauss->getSigma())}};
+   } else if (auto const *lognormal = dynamic_cast<RooLognormal const *>(&pdf)) {
+      if (!lognormal->useStandardParametrization()) {
+         return std::nullopt;
+      }
+      out.type = "lognormal_dist";
+      x = &lognormal->getX();
+      out.fields = {{"mu", nameOrNumber(lognormal->getMedian())}, {"sigma", nameOrNumber(lognormal->getShapeK())}};
+   } else {
+      return std::nullopt;
+   }
+   // The observable of a component must be named: the observables are pairwise distinct and are paired with data.
+   if (isLiteralConstVar(*x)) {
+      return std::nullopt;
+   }
+   out.x = x->GetName();
+   return out;
+}
+
 bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    tool->wsEmplace<RooAddition>(name, tool->requestArgList<RooAbsReal>(p, "summands"));
+   return true;
+}
+
+// A "combined_dist" is a RooSimultaneous. Its index category is the single column, or a RooSuperCategory over the
+// columns in the order of the document; the columns are categories declared by categorical axes of the domains.
+bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   std::string const name(RooJSONFactoryWSTool::name(p));
+   std::string const context = "the combined_dist '" + name + "'";
+   // Whether a combined distribution is extended follows from its components; HS3 forbids declaring it.
+   if (p.has_child("extended")) {
+      RooJSONFactoryWSTool::error(context + " must not have \"extended\": whether it is extended follows from its " +
+                                  "components");
+   }
+   std::vector<RooCategory *> columns = readSelectionColumns(*tool->workspace(), p, "columns", context);
+
+   auto const *componentsNode = p.find("components");
+   if (!componentsNode || !componentsNode->is_seq() || componentsNode->num_children() == 0) {
+      RooJSONFactoryWSTool::error("\"components\" of " + context + " must be a non-empty list");
+   }
+   std::map<std::string, RooAbsPdf *> pdfMap;
+   for (JSONNode const &component : componentsNode->children()) {
+      if (!component.is_map() || !component.has_child("dist")) {
+         RooJSONFactoryWSTool::error("every component of " + context + " must have a \"key\" and a \"dist\"");
+      }
+      std::vector<std::string> const key = readSelectionKey(component, columns, context);
+      std::string const label = selectionLabel(key);
+      if (pdfMap.find(label) != pdfMap.end()) {
+         RooJSONFactoryWSTool::error("the key " + selectionKeyToString(key) + " is used by two components of " +
+                                     context);
+      }
+      pdfMap[label] = tool->request<RooAbsPdf>(component["dist"].val(), name);
+   }
+
+   if (columns.size() == 1) {
+      tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, *columns.front()});
+      return true;
+   }
+   RooArgSet inputs;
+   for (RooCategory *column : columns) {
+      inputs.add(*column);
+   }
+   std::string const indexName = name + "_index";
+   RooSuperCategory indexCat{indexName.c_str(), indexName.c_str(), inputs};
+   tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, indexCat});
    return true;
 }
 
@@ -540,12 +784,28 @@ bool importPolynomial(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// HS3 0.3 distinguishes the discrete "poisson_dist" from the "poisson_continuous_dist" (HS3 #152), which are a
+// RooPoisson without and with noRounding. Before, ROOT wrote both as "poisson_dist" with its own key "integer", where
+// false denotes the continuous form. That key is read for documents before HS3 0.3, without it the discrete form is
+// meant. From HS3 0.3 on, it must not be present.
+template <bool Continuous>
 bool importPoisson(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
+   bool noRounding = Continuous;
+   if (p.has_child("integer")) {
+      std::string const type = Continuous ? "poisson_continuous_dist" : "poisson_dist";
+      if (Continuous || !isHS3VersionBefore(tool->hs3VersionInput(), 0, 3)) {
+         RooJSONFactoryWSTool::error(
+            type + " '" + name +
+            "' has the key \"integer\", which is not part of HS3. The discrete Poisson distribution is "
+            "\"poisson_dist\" and the continuous one is \"poisson_continuous_dist\".");
+      }
+      noRounding = !p["integer"].val_bool();
+   }
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
    RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
-   tool->wsEmplace<RooPoisson>(name, *x, *mean, !p["integer"].val_bool());
+   tool->wsEmplace<RooPoisson>(name, *x, *mean, noRounding);
    return true;
 }
 
@@ -800,10 +1060,16 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
          << ". Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
          << "Root version that supports custom ParamHistFunc binnings(>=6.38.00)." << std::endl;
       RooJSONFactoryWSTool::warning(ss.str());
-      tool->wsEmplace<ParamHistFunc>(name, varList, tool->requestArgList<RooAbsReal>(p, "parameters"));
+      checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), varList, "the ParamHistFunc '" + name + "'");
+      tool->wsEmplace<ParamHistFunc>(name, varList,
+                                     toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), varList));
       return true;
    }
-   tool->wsEmplace<ParamHistFunc>(name, readBinning(p, varList), tool->requestArgList<RooAbsReal>(p, "parameters"));
+   RooArgList binning = readBinning(p, varList);
+   checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), binning, "the ParamHistFunc '" + name + "'");
+   // The parameters are given in the order of HS3 (last axis fastest); ParamHistFunc expects TH1 order.
+   tool->wsEmplace<ParamHistFunc>(name, binning,
+                                  toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), binning));
    return true;
 }
 
@@ -1056,7 +1322,10 @@ bool exportHist(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &ele
    const RooArg_t *hf = static_cast<const RooArg_t *>(func);
    elem["type"] << key;
    RooDataHist const &dh = hf->dataHist();
-   tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"].set_map());
+   // The axes are named after the observables of the function, which are not necessarily the variables of the
+   // histogram.
+   auto vars = histogramVariablesNamedAfterObservables(dh, hf->getHistObsList(), hf->variables());
+   tool->exportHisto(*vars, dh.numEntries(), dh.weightArray(), elem["data"].set_map());
    return true;
 }
 
@@ -1313,10 +1582,9 @@ bool exportPolynomial(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
 bool exportPoisson(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
    auto *pdf = static_cast<const RooPoisson *>(func);
-   elem["type"] << key;
+   elem["type"] << (pdf->getNoRounding() ? "poisson_continuous_dist" : key);
    elem["x"] << pdf->getX().GetName();
    elem["mean"] << pdf->getMean().GetName();
-   elem["integer"] << !pdf->getNoRounding();
    return true;
 }
 
@@ -1356,6 +1624,25 @@ bool exportGaussModel(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
    elem["x"] << pdf->convVar().GetName();
    elem["mean"] << pdf->getMean().GetName();
    elem["sigma"] << pdf->getSigma().GetName();
+   return true;
+}
+
+// A Gaussian constraint whose recorded observable (see RooJSONFactoryWSTool::setConstraintObservable()) is its
+// mean is written with x and mean swapped, so that the observable is x. Other Gaussians use the generic export.
+bool exportGaussianConstraint(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+{
+   auto const *gauss = static_cast<RooGaussian const *>(func);
+   std::string const *observable = tool->constraintObservable(gauss->GetName());
+   if (!observable || *observable != gauss->getMean().GetName() || isLiteralConstVar(gauss->getMean())) {
+      return false;
+   }
+   auto write = [](JSONNode &node, ArrayFieldValue const &value) {
+      std::visit([&node](auto const &v) { node << v; }, value);
+   };
+   elem["type"] << key;
+   elem["x"] << gauss->getMean().GetName();
+   write(elem["mean"], nameOrNumber(gauss->getX()));
+   write(elem["sigma"], nameOrNumber(gauss->getSigma()));
    return true;
 }
 
@@ -1483,7 +1770,11 @@ bool exportParamHistFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode
    auto *pdf = static_cast<const ParamHistFunc *>(func);
    elem["type"] << key;
    RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
-   RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
+   // One parameter per bin, in the order of HS3 (last axis fastest), not in ParamHistFunc's internal TH1 order.
+   auto &paramsNode = elem["parameters"].set_seq();
+   for (RooAbsReal *param : paramHistFuncParamsInBinOrder(*pdf)) {
+      paramsNode.append_child() << param->GetName();
+   }
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
@@ -1626,9 +1917,11 @@ STATIC_EXECUTE([]() {
                                                                  "gauss_resolution_model", "gauss_model_function"));
    registerImporter<importProduct>("product", false);
    registerImporter<importProdPdf>("product_dist", false);
+   registerImporter<importArrayDist>("array_dist", false);
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
    registerImporter<importAddModel>("mixture_model", false);
+   registerImporter<importCombinedDist>("combined_dist", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);
    registerImporter<importBinSamplingPdf>("binsampling_dist", false);
    registerImporter<importBinSamplingPdf>("binsampling", false);
@@ -1644,7 +1937,8 @@ STATIC_EXECUTE([]() {
    registerImporter<importHist<RooHistPdf>>("histogram_dist", false);
    registerImporter<importLogNormal>("lognormal_dist", false);
    registerImporter<importMultiVarGaussian>("multivariate_normal_dist", false);
-   registerImporter<importPoisson>("poisson_dist", false);
+   registerImporter<importPoisson<false>>("poisson_dist", false);
+   registerImporter<importPoisson<true>>("poisson_continuous_dist", false);
    registerImporter<importDecay>("decay_dist", false);
    registerImporter<importTruthModel>("truth_model_function", false);
    registerImporter<importTruthModel>("delta_resolution_model", false);
@@ -1674,6 +1968,7 @@ STATIC_EXECUTE([]() {
    registerExporter<exportHist<RooHistFunc>>(RooHistFunc::Class(), "step", false);
    registerExporter<exportHist<RooHistPdf>>(RooHistPdf::Class(), "histogram_dist", false);
    registerExporter<exportLogNormal>(RooLognormal::Class(), "lognormal_dist", false);
+   registerExporter<exportGaussianConstraint>(RooGaussian::Class(), "gaussian_dist", true);
    registerExporter<exportMultiVarGaussian>(RooMultiVarGaussian::Class(), "multivariate_normal_dist", false);
    registerExporter<exportPoisson>(RooPoisson::Class(), "poisson_dist", false);
    registerExporter<exportDecay>(RooDecay::Class(), "decay_dist", false, /*autoExportDependants=*/false);
@@ -1693,3 +1988,80 @@ STATIC_EXECUTE([]() {
 });
 
 } // namespace
+
+std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable)
+{
+   auto component = arrayComponentOf(pdf, observable);
+   if (!component) {
+      return std::nullopt;
+   }
+   return ArrayComponentInfo{component->type, component->x};
+}
+
+void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsPdf const *> const &components,
+                    std::map<std::string, std::string> const &observableOf)
+{
+   auto error = [&name](std::string const &message) {
+      RooJSONFactoryWSTool::error("cannot write the array distribution '" + name + "': " + message);
+   };
+   if (components.empty()) {
+      error("it has no components");
+   }
+   std::vector<ArrayComponent> comps;
+   std::set<std::string> observables;
+   for (RooAbsPdf const *pdf : components) {
+      auto recorded = observableOf.find(pdf->GetName());
+      auto comp = arrayComponentOf(*pdf, recorded != observableOf.end() ? &recorded->second : nullptr);
+      if (!comp) {
+         error("'" + std::string(pdf->GetName()) +
+               "' cannot be a component, only RooPoisson, RooGaussian and RooLognormal (standard parametrization) "
+               "over a named observable are supported");
+      }
+      if (!comps.empty() && comp->type != comps.front().type) {
+         error("the components '" + std::string(components.front()->GetName()) + "' (" + comps.front().type +
+               ") and '" + pdf->GetName() + "' (" + comp->type + ") have different types");
+      }
+      if (!observables.insert(comp->x).second) {
+         error("two components have the observable '" + comp->x + "'");
+      }
+      comps.push_back(std::move(*comp));
+   }
+
+   elem["type"] << "array_dist";
+   elem["component_type"] << comps.front().type;
+
+   auto write = [](JSONNode &node, ArrayFieldValue const &value) {
+      std::visit([&node](auto const &v) { node << v; }, value);
+   };
+
+   // A field with the same value in every component is written once in "default_parameters".
+   std::set<std::string> defaultKeys;
+   if (comps.size() > 1) {
+      for (std::size_t i = 0; i < comps.front().fields.size(); ++i) {
+         auto const &field = comps.front().fields[i];
+         if (std::all_of(comps.begin(), comps.end(),
+                         [&](ArrayComponent const &comp) { return comp.fields[i].second == field.second; })) {
+            defaultKeys.insert(field.first);
+         }
+      }
+   }
+   if (!defaultKeys.empty()) {
+      JSONNode &defaults = elem["default_parameters"].set_map();
+      for (auto const &field : comps.front().fields) {
+         if (defaultKeys.find(field.first) != defaultKeys.end()) {
+            write(defaults[field.first], field.second);
+         }
+      }
+   }
+
+   JSONNode &seq = elem["components"].set_seq();
+   for (ArrayComponent const &comp : comps) {
+      JSONNode &node = seq.append_child().set_map();
+      node["x"] << comp.x;
+      for (auto const &field : comp.fields) {
+         if (defaultKeys.find(field.first) == defaultKeys.end()) {
+            write(node[field.first], field.second);
+         }
+      }
+   }
+}
