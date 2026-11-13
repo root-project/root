@@ -97,8 +97,9 @@ bool RooQuasiRandomGenerator::generate(UInt_t dimension, double vector[])
     if((c % 2) == 1) {
       ++r;
       c /= 2;
+    } else {
+       break;
     }
-    else break;
   }
   if(r >= NBits) {
     oocoutE(nullptr,Integration) << "RooQuasiRandomGenerator::generate: internal error!" << std::endl;

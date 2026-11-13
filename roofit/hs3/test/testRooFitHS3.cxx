@@ -191,7 +191,7 @@ std::string parameterStepWidthsNode(std::string const &json)
    if (begin == std::string::npos) {
       return "";
    }
-   const auto end = json.find("]", begin);
+   const auto end = json.find(']', begin);
    if (end == std::string::npos) {
       return "";
    }
@@ -709,9 +709,9 @@ TEST(RooFitHS3, FixedRangeParameterExportsConst)
    const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
    const auto fixedPos = json.find("\"const\":true,\"name\":\"fixed\"");
    ASSERT_NE(fixedPos, std::string::npos) << json;
-   const auto fixedBegin = json.rfind("{", fixedPos);
+   const auto fixedBegin = json.rfind('{', fixedPos);
    ASSERT_NE(fixedBegin, std::string::npos) << json;
-   const auto fixedEnd = json.find("}", fixedPos);
+   const auto fixedEnd = json.find('}', fixedPos);
    ASSERT_NE(fixedEnd, std::string::npos) << json;
    const std::string fixedNode = json.substr(fixedBegin, fixedEnd - fixedBegin);
 
@@ -1327,7 +1327,7 @@ TEST(RooFitHS3, StepDispatchesToRooHistFuncAndParamHistFunc)
    EXPECT_EQ(json.find("\"name\":\"histFunc\",\"type\":\"histogram\""), std::string::npos) << json;
    const auto paramHistFuncPos = json.find("\"name\":\"paramHistFunc\"");
    ASSERT_NE(paramHistFuncPos, std::string::npos) << json;
-   const auto paramHistFuncEnd = json.find("}", paramHistFuncPos);
+   const auto paramHistFuncEnd = json.find('}', paramHistFuncPos);
    ASSERT_NE(paramHistFuncEnd, std::string::npos) << json;
    const std::string paramHistFuncNode = json.substr(paramHistFuncPos, paramHistFuncEnd - paramHistFuncPos);
    EXPECT_NE(paramHistFuncNode.find("\"type\":\"step\""), std::string::npos) << paramHistFuncNode;

@@ -2124,10 +2124,11 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    std::vector<RooJSONFactoryWSTool::CombinedData> combData;
    for (auto &d : alldata) {
       auto data = this->exportCombinedData(*d);
-      if (!data.components.empty())
+      if (!data.components.empty()) {
          combData.push_back(data);
-      else
+      } else {
          singleData.push_back(d);
+      }
    }
    // next, take care datasets
    for (auto &d : alldata) {
@@ -2399,6 +2400,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    // that case, we will remove the components from the "datasets" vector so they
    // don't get imported.
    std::vector<std::unique_ptr<RooAbsData>> datasets;
+   datasets.reserve(doc.data.size());
    for (auto const &data : doc.data) {
       datasets.push_back(loadData(data, _workspace, &_import->ranges));
    }

@@ -156,9 +156,13 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    weights.push_back( weight );
 
    vector<double> impNLLs;
-   for( unsigned int i=0; i < fImportanceDensities.size(); i++ ) impNLLs.push_back( 0.0 );
+   impNLLs.reserve(fImportanceDensities.size());
+   for (unsigned int i = 0; i < fImportanceDensities.size(); i++)
+      impNLLs.push_back(0.0);
    vector<double> nullNLLs;
-   for( unsigned int i=0; i < fNullDensities.size(); i++ ) nullNLLs.push_back( 0.0 );
+   nullNLLs.reserve(fNullDensities.size());
+   for (unsigned int i = 0; i < fNullDensities.size(); i++)
+      nullNLLs.push_back(0.0);
 
    RooAbsData *d = GenerateToyData( weights, impNLLs, nullNLLs );
    weight = weights[0];
@@ -215,9 +219,13 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    }
 
    vector<double> impNLLs;
-   for( unsigned int i=0; i < fImportanceDensities.size(); i++ ) impNLLs.push_back( 0.0 );
+   impNLLs.reserve(fImportanceDensities.size());
+   for (unsigned int i = 0; i < fImportanceDensities.size(); i++)
+      impNLLs.push_back(0.0);
    vector<double> nullNLLs;
-   for( unsigned int i=0; i < fNullDensities.size(); i++ ) nullNLLs.push_back( 0.0 );
+   nullNLLs.reserve(fNullDensities.size());
+   for (unsigned int i = 0; i < fNullDensities.size(); i++)
+      nullNLLs.push_back(0.0);
 
    RooAbsData *d = GenerateToyData( weights, impNLLs, nullNLLs );
    return d;
@@ -371,7 +379,9 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    // for each null: find minNLLVal of null and all imp densities
    ooccoutD(nullptr,InputArguments) << "About to find the minimum NLLs." << std::endl;
    vector<double> minNLLVals;
-   for( unsigned int i=0; i < nullNLLVals.size(); i++ ) minNLLVals.push_back( nullNLLVals[i] );
+   minNLLVals.reserve(nullNLLVals.size());
+   for (unsigned int i = 0; i < nullNLLVals.size(); i++)
+      minNLLVals.push_back(nullNLLVals[i]);
 
    for( unsigned int i=0; i < fImportanceDensities.size(); i++ ) {
       //oocoutI(nullptr,InputArguments) << "Setting variables to impSnapshot["<<i<<"]"<< std::endl;

@@ -122,10 +122,11 @@ inline double efficiency(double effFuncVal, int catIndex, int sigCatIndex)
    // Truncate efficiency function in range 0.0-1.0
    effFuncVal = std::clamp(effFuncVal, 0.0, 1.0);
 
-   if (catIndex == sigCatIndex)
+   if (catIndex == sigCatIndex) {
       return effFuncVal; // Accept case
-   else
+   } else {
       return 1 - effFuncVal; // Reject case
+   }
 }
 
 /// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.

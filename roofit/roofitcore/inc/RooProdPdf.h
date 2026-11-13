@@ -112,8 +112,8 @@ public:
     RooArgList _ownedList ;
     std::vector<std::unique_ptr<RooArgSet>> _normList;
     bool _isRearranged ;
-    std::unique_ptr<RooAbsReal> _rearrangedNum{};
-    std::unique_ptr<RooAbsReal> _rearrangedDen{};
+    std::unique_ptr<RooAbsReal> _rearrangedNum;
+    std::unique_ptr<RooAbsReal> _rearrangedDen;
     // Cache management functions
     RooArgList containedArgs(Action) override ;
     void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;

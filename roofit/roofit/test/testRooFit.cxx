@@ -5,8 +5,6 @@
 #include <RooGaussian.h>
 
 #include "RooDataSet.h"
-#include "RooRealVar.h"
-#include "RooGaussian.h"
 #include "RooGlobalFunc.h"
 #include "RooFitResult.h"
 #include "RooProdPdf.h"
@@ -138,9 +136,9 @@ public:
          g[j] = std::make_unique<RooGaussian>(gname.c_str(), "gauss(x,mean,sigma)", *x[j], *m[j], *s[j]);
 
          std::string pname = "prod_" + ROOT::Math::Util::ToString(j);
-         if (j == 0)
+         if (j == 0) {
             pdf[0] = g[0].get();
-         else if (j == 1) {
+         } else if (j == 1) {
             ownedPdfs.emplace_back(std::make_unique<RooProdPdf>(pname.c_str(), pname.c_str(), RooArgSet(*g[1], *g[0])));
             pdf[1] = ownedPdfs.back().get();
          } else if (j > 1) {
@@ -202,7 +200,7 @@ int FitUsingRooFit(TTree &tree, RooAbsPdf &pdf, RooArgSet &xvars)
 #endif
 
       std::unique_ptr<RooFitResult> result{
-         pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(0), RooFit::PrintLevel(level), RooFit::Save(save))};
+         pdf.fitTo(data, RooFit::Minos(false), RooFit::Hesse(false), RooFit::PrintLevel(level), RooFit::Save(save))};
 
 #ifdef DEBUG
       assert(result != nullptr);

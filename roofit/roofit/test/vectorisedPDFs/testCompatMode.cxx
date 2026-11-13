@@ -62,13 +62,13 @@ public:
         sigma("sigma", "Width", this, _sigma)
    {
    }
-   virtual TObject *clone(const char *newname) const override { return new RooNonVecGaussian(*this, newname); }
+   TObject *clone(const char *newname) const override { return new RooNonVecGaussian(*this, newname); }
    RooNonVecGaussian(const RooNonVecGaussian &other, const char *name)
       : RooAbsPdf(other, name), x("x", this, other.x), mean("mean", this, other.mean), sigma("sigma", this, other.sigma)
    {
    }
 
-   virtual ~RooNonVecGaussian() = default;
+   ~RooNonVecGaussian() override = default;
 
    Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *) const override
    {
@@ -79,7 +79,7 @@ public:
       return 0;
    }
 
-   Double_t analyticalIntegral(Int_t code, const char *rangeName = 0) const override
+   Double_t analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override
    {
       assert(code == 1 || code == 2);
 
@@ -129,7 +129,7 @@ public:
       assert(code == 1 || code == 2);
       Double_t xgen;
       if (code == 1) {
-         while (1) {
+         while (true) {
             xgen = RooRandom::randomGenerator()->Gaus(mean, sigma);
             if (xgen < x.max() && xgen > x.min()) {
                x = xgen;
@@ -137,7 +137,7 @@ public:
             }
          }
       } else if (code == 2) {
-         while (1) {
+         while (true) {
             xgen = RooRandom::randomGenerator()->Gaus(x, sigma);
             if (xgen < mean.max() && xgen > mean.min()) {
                mean = xgen;

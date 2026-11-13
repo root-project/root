@@ -99,9 +99,10 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       void SetPdf(RooAbsPdf& pdf) override {
          ToyMCSampler::SetPdf(pdf);
 
-         if( fNullDensities.size() == 1 ) { fNullDensities[0] = &pdf; }
-         else if( fNullDensities.empty()) AddNullDensity( &pdf );
-         else{
+         if( fNullDensities.size() == 1 ) { fNullDensities[0] = &pdf;
+         } else if (fNullDensities.empty()) {
+            AddNullDensity(&pdf);
+         } else {
             oocoutE(nullptr,InputArguments) << "Cannot use SetPdf() when already multiple null densities are specified. Please use AddNullDensity()." << std::endl;
          }
       }

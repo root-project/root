@@ -415,9 +415,9 @@ TestStatistic * HypoTestInverter::GetTestStatistic( ) const
 {
    if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
       return fCalculator0->GetTestStatSampler()->GetTestStatistic();
-   }
-   else
+   } else {
       return nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -428,8 +428,9 @@ bool HypoTestInverter::SetTestStatistic(TestStatistic& stat)
    if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
       fCalculator0->GetTestStatSampler()->SetTestStatistic(&stat);
       return true;
+   } else {
+      return false;
    }
-   else return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1099,9 +1100,9 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
                                           << " assume is for POI = 0" << std::endl;
       fScannedVariable->setVal(0);
       paramPoint.assign(RooArgSet(*fScannedVariable));
-   }
-   else
+   } else {
       paramPoint.assign(*poibkg);
+   }
    // generate data at bkg parameter point
 
    ToyMCSampler * toymcSampler = dynamic_cast<ToyMCSampler *>(fCalculator0->GetTestStatSampler() );

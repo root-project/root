@@ -821,8 +821,9 @@ void RooNDKeysPdf::sortDataIndices(BoxInfo* bi)
         // if (_wMap.find(i)!=_wMap.end())
         itrVecR.push_back(itPair(i, dpRItr));
       }
-    } else
-      itrVecR.push_back(itPair(i, dpRItr));
+    } else {
+       itrVecR.push_back(itPair(i, dpRItr));
+    }
   }
 
   _sortTVIdcs.resize(_nDim);
@@ -1138,7 +1139,9 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
       _rangeBoxInfo[make_pair(rangeNameStr,code)] = bi ;
       boxInfoInit(bi,rangeName,code);
     }
-  } else bi= &_fullBoxInfo ;
+  } else {
+     bi = &_fullBoxInfo;
+  }
 
   // have boundaries changed?
   bool newBounds(false);

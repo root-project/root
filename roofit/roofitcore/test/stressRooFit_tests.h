@@ -69,7 +69,7 @@
 
 // Check if any of the codegen backend is used, to disable tests that are not
 // supported by it yet.
-bool useCodegenBackend()
+inline bool useCodegenBackend()
 {
    auto backend = RooFit::EvalBackend::defaultValue();
    return backend == RooFit::EvalBackend::Value::Codegen || backend == RooFit::EvalBackend::Value::CodegenNoGrad;

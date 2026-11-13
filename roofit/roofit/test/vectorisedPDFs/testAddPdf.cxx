@@ -129,7 +129,7 @@ FIT_TEST_BATCH_CONVERGES(TestGaussPlusGaussPlusExp, BatchConverges)
 
 class TestGaussPlusGaussPlusExp_MP : public TestGaussPlusGaussPlusExp {
 public:
-   TestGaussPlusGaussPlusExp_MP() : TestGaussPlusGaussPlusExp() { _multiProcess = 2; }
+   TestGaussPlusGaussPlusExp_MP() { _multiProcess = 2; }
 };
 
 COMPARE_FIXED_VALUES_UNNORM(TestGaussPlusGaussPlusExp_MP, CompareFixedValuesUnnorm)

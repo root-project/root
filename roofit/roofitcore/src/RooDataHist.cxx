@@ -2359,7 +2359,8 @@ void RooDataHist::printContents(std::ostream& os) const
             }
         }
 
-        double lo, hi;
+        double lo;
+        double hi;
         weightError(lo, hi, RooAbsData::SumW2);
         os << ", weight=" << weight(i) << " +/- [" << lo << "," << hi << "]"
            << std::endl;
