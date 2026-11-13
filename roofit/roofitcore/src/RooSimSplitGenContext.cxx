@@ -65,9 +65,17 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
       return ;
   }
 
-  // We must extended likelihood to determine the relative fractions of the components
+  // We must have all components extendable to determine the relative fractions of the components
   _idxCatName = idxCat.GetName() ;
-  if (!model.canBeExtended()) {
+  bool allCanExtend = true;
+  for (auto *proxy : static_range_cast<RooRealProxy *>(model._pdfProxyList)) {
+    auto &compPdf = static_cast<RooAbsPdf const &>(proxy->arg());
+    if (!compPdf.canBeExtended()) {
+      allCanExtend = false;
+      break;
+    }
+  }
+  if (!allCanExtend) {
     oocoutE(_pdf,Generation) << "RooSimSplitGenContext::RooSimSplitGenContext(" << GetName() << "): All components of the simultaneous PDF "
               << "must be extended PDFs. Otherwise, it is impossible to calculate the number of events to be generated per component." << std::endl ;
     _isValid = false ;
@@ -230,7 +238,16 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
 
     // Calculate number of events to generate for this state
     if (_gcList[icomp]) {
-      dataMap[proxy->GetName()] = _gcList[icomp]->generate(nGen[icomp],skipInit,extendedMode) ;
+      RooDataSet *compData = _gcList[icomp]->generate(nGen[icomp], skipInit, extendedMode);
+      if (!compData) {
+        coutE(Generation) << ClassName() << "::" << GetName() << ":generate: component generation failed for state "
+                          << proxy->GetName() << std::endl;
+        for (auto &item : dataMap) {
+          delete item.second;
+        }
+        return nullptr;
+      }
+      dataMap[proxy->GetName()] = compData;
     }
 
     icomp++ ;
