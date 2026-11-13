@@ -270,6 +270,7 @@ QCanvasWidget::~QCanvasWidget()
 {
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create new canvas.
 
@@ -456,6 +457,14 @@ void QCanvasWidget::QuitRoot()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set visibility of menu
+
+void QCanvasWidget::SetViewMenubar(bool on)
+{
+   fMenuBar->setVisible(on);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set visibility of tool bar
 
 void QCanvasWidget::SetViewToolbar(bool on)
@@ -533,6 +542,8 @@ void QCanvasWidget::ApplyCanvasStatusBits()
    if (!canv)
       return;
 
+   SetViewMenubar(canv->TestBit(TCanvas::kMenuBar));
+
    SetViewEventStatus(canv->TestBit(TCanvas::kShowEventStatus));
 
    // canv->TestBit(TCanvas::kShowEditor);
@@ -540,8 +551,4 @@ void QCanvasWidget::ApplyCanvasStatusBits()
    SetViewToolbar(canv->TestBit(TCanvas::kShowToolBar));
 
    SetViewToolTip(canv->TestBit(TCanvas::kShowToolTips));
-
-   fMenuBar->setVisible(canv->TestBit(TCanvas::kMenuBar));
-
-
 }

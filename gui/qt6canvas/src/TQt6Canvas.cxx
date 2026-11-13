@@ -71,12 +71,17 @@ TVirtualPadPainter *TQt6Canvas::CreatePadPainter()
    return new TQt6PadPainter(fPaintWidget);
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Close qt6 canvas - not implemented
 
 void TQt6Canvas::Close()
 {
+   if (!fCanvasWidget)
+      return;
+
+   fCanvasWidget->setAttribute(Qt::WA_DeleteOnClose);
+   fCanvasWidget->close();
+   fCanvasWidget = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -84,38 +89,8 @@ void TQt6Canvas::Close()
 
 void TQt6Canvas::Show()
 {
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Returns kTRUE if web canvas has graphical editor
-
-Bool_t TQt6Canvas::HasEditor() const
-{
-   return (fClientBits & TCanvas::kShowEditor) != 0;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Returns kTRUE if web canvas has menu bar
-
-Bool_t TQt6Canvas::HasMenuBar() const
-{
-   return (fClientBits & TCanvas::kMenuBar) != 0;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Returns kTRUE if web canvas has status bar
-
-Bool_t TQt6Canvas::HasStatusBar() const
-{
-   return (fClientBits & TCanvas::kShowEventStatus) != 0;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Returns kTRUE if tooltips are activated in web canvas
-
-Bool_t TQt6Canvas::HasToolTips() const
-{
-   return (fClientBits & TCanvas::kShowToolTips) != 0;
+   if (fCanvasWidget)
+      fCanvasWidget->showNormal();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -217,21 +192,6 @@ void TQt6Canvas::RaiseWindow()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Assign clients bits
-
-void TQt6Canvas::AssignStatusBits(UInt_t bits)
-{
-   fClientBits = bits;
-   Canvas()->SetBit(TCanvas::kShowEventStatus, bits & TCanvas::kShowEventStatus);
-   Canvas()->SetBit(TCanvas::kShowEditor, bits & TCanvas::kShowEditor);
-   Canvas()->SetBit(TCanvas::kShowToolTips, bits & TCanvas::kShowToolTips);
-   Canvas()->SetBit(TCanvas::kMenuBar, bits & TCanvas::kMenuBar);
-   Canvas()->SetBit(TCanvas::kShowToolBar, bits & TCanvas::kShowToolBar);
-   if (fCanvasWidget)
-      fCanvasWidget->ApplyCanvasStatusBits();
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
 /// Returns canvas geometry
 
 void TQt6Canvas::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
@@ -267,6 +227,42 @@ UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Set visisbility of menu bar
+
+void TQt6Canvas::ShowMenuBar(Bool_t on)
+{
+   if (fCanvasWidget)
+      fCanvasWidget->SetViewMenubar(on);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set visisbility of status bar
+
+void TQt6Canvas::ShowStatusBar(Bool_t on)
+{
+   if (fCanvasWidget)
+      fCanvasWidget->SetViewEventStatus(on);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set visisbility of tool bar
+
+void TQt6Canvas::ShowToolBar(Bool_t on)
+{
+   if (fCanvasWidget)
+      fCanvasWidget->SetViewToolbar(on);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set show flag for tooltips
+
+void TQt6Canvas::ShowToolTips(Bool_t on)
+{
+   if (fCanvasWidget)
+      fCanvasWidget->SetViewToolTip(on);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// if canvas or any subpad was modified,
 /// invoke Qt update() which will redraw area
 
@@ -278,10 +274,12 @@ Bool_t TQt6Canvas::PerformUpdate(Bool_t /* async */)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Increment canvas version and force sending data to client - do not wait for reply
+/// Invalide widget area in any case
 
 void TQt6Canvas::ForceUpdate()
 {
+   if (fPaintWidget)
+      fPaintWidget->update();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -308,6 +306,8 @@ TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    if (imp->fPaintWidget)
       imp->fPaintWidget->SetCanvas(c);
+
+   widget->ApplyCanvasStatusBits();
 
    // set all internal dimensions
    c->Resize();
@@ -350,6 +350,10 @@ TCanvas *TQt6Canvas::EmbedQt6Canvas(QWidget *parent, const char *name)
    c->SetName(name);
    c->SetTitle("embed qt6 canvas");
    c->SetBatch(kFALSE);
+   // all extra elements are disabled by default
+   c->SetBit(TCanvas::kMenuBar, kFALSE);
+   c->SetBit(TCanvas::kShowToolBar, kFALSE);
+   c->SetBit(TCanvas::kShowEventStatus, kFALSE);
 
    auto widget = new QCanvasWidget(parent);
 
@@ -368,6 +372,8 @@ TCanvas *TQt6Canvas::EmbedQt6Canvas(QWidget *parent, const char *name)
 
    if (imp->fPaintWidget)
       imp->fPaintWidget->SetCanvas(c);
+
+   widget->ApplyCanvasStatusBits();
 
    c->SetCanvasImp(imp);
 
