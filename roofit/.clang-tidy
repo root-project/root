@@ -2,6 +2,7 @@
 Checks: -*,
   ,boost-use-to-string,
   ,bugprone-string-constructor,
+  ,bugprone-use-after-move,
   ,cppcoreguidelines-prefer-member-initializer,
   ,misc-definitions-in-headers,
   ,misc-string-compare,
