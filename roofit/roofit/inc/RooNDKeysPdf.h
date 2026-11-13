@@ -119,7 +119,7 @@ protected:
   void sortDataIndices(BoxInfo *bi = nullptr);
   void calculateBandWidth();
   double gauss(std::vector<double> &x, std::vector<std::vector<double>> &weights) const;
-  void loopRange(std::vector<double> &x, std::vector<Int_t> &indices) const;
+  void loopRange(std::vector<double> &x, std::vector<Int_t> &ibMap) const;
   void boxInfoInit(BoxInfo *bi, const char *rangeName, Int_t code) const;
   RooDataSet *createDatasetFromHist(const RooArgList &varList, const TH1 &hist) const;
   void updateRho() const;

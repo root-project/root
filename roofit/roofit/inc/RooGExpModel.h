@@ -41,7 +41,7 @@ public:
 
   RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
-          RooAbsReal& srSF,
+          RooAbsReal& rsSF,
           bool nlo=false, Type type=Normal) ;
 
   RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,

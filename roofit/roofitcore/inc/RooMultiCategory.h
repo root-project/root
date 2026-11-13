@@ -29,7 +29,7 @@ class RooMultiCategory : public RooAbsCategory {
 public:
   // Constructors etc.
   inline RooMultiCategory() { setShapeDirty(); }
-  RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList);
+  RooMultiCategory(const char *name, const char *title, const RooArgSet &inputCategories);
   RooMultiCategory(const RooMultiCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooMultiCategory(*this,newname); }
 

@@ -65,7 +65,7 @@ protected:
   bool isValidString(const char*, bool /*printError=false*/) const { return true; }
 
   void syncCache(const RooArgSet* /*nset*/ = nullptr) override { }
-  void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDiry=true) override;
+  void copyCache(const RooAbsArg *source, bool valueOnly = false, bool setValDirty = true) override;
   void attachToTree(TTree& t, Int_t bufSize=32000) override;
   void attachToVStore(RooVectorDataStore&) override { }
   void fillTreeBranch(TTree& t) override;

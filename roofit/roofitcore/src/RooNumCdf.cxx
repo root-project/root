@@ -35,8 +35,8 @@ orders.
 /// using a numeric sampling algorithm. Use binning named 'bname' to control sampling
 /// granularity
 
-RooNumCdf::RooNumCdf(const char *name, const char *title, RooAbsPdf& _pdf, RooRealVar& _x, const char* bname) :
-   RooNumRunningInt(name,title,_pdf,_x,bname)
+ RooNumCdf::RooNumCdf(const char *name, const char *title, RooAbsPdf &_pdf, RooRealVar &_x, const char *binningName)
+    : RooNumRunningInt(name, title, _pdf, _x, binningName)
  {
  }
 

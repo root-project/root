@@ -78,26 +78,26 @@ namespace RooStats{
   /// Normally one would know tau directly, but here it is determined from
   /// the background uncertainty.  This is not strictly correct, but a useful
   /// approximation.
-     double BinomialExpZ(double sExp, double bExp, double fractionalBUncertainty);
+     double BinomialExpZ(double signalExp, double backgroundExp, double relativeBkgUncert);
 
   /// See BinomialWithTauExpP
-     double BinomialWithTauExpZ(double sExp, double bExp, double tau);
+     double BinomialWithTauExpZ(double signalExp, double backgroundExp, double tau);
 
   /// See BinomialObsP
-     double BinomialObsZ(double nObs, double bExp, double fractionalBUncertainty);
+     double BinomialObsZ(double nObs, double backgroundObs, double relativeBkgUncert);
 
   /// See BinomialWithTauObsP
-     double BinomialWithTauObsZ(double nObs, double bExp, double tau);
+     double BinomialWithTauObsZ(double nObs, double auxiliaryObs, double tau);
 
   /// See BinomialExpP
-     double BinomialExpP(double sExp, double bExp, double fractionalBUncertainty);
+     double BinomialExpP(double signalExp, double backgroundExp, double relativeBkgUncert);
 
   /// Expected P-value for s=nullptr in a ratio of Poisson means.
   /// Based on two expectations, a main measurement that might have signal
   /// and an auxiliary measurement for the background that is signal free.
   /// The expected background in the auxiliary measurement is a factor
   /// tau larger than in the main measurement.
-     double BinomialWithTauExpP(double sExp, double bExp, double tau);
+     double BinomialWithTauExpP(double signalExp, double backgroundExp, double tau);
 
   /// P-value for s=nullptr in a ratio of Poisson means.
   /// Here the background and its uncertainty are provided directly and
@@ -105,14 +105,14 @@ namespace RooStats{
   /// Normally one would know tau directly, but here it is determined from
   /// the background uncertainty.  This is not strictly correct, but a useful
   /// approximation.
-     double BinomialObsP(double nObs, double, double fractionalBUncertainty);
+     double BinomialObsP(double nObs, double, double relativeBkgUncert);
 
   /// P-value for s=nullptr in a ratio of Poisson means.
   /// Based on two observations, a main measurement that might have signal
   /// and an auxiliary measurement for the background that is signal free.
   /// The expected background in the auxiliary measurement is a factor
   /// tau larger than in the main measurement.
-     double BinomialWithTauObsP(double nObs, double bExp, double tau);
+     double BinomialWithTauObsP(double nObs, double auxiliaryObs, double tau);
 
 
    }

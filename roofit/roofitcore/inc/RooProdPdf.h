@@ -58,7 +58,8 @@ public:
   ~RooProdPdf() override ;
 
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
+                                const char *rangeName = nullptr) const override;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
   bool selfNormalized() const override { return _selfNorm ; }
 
@@ -126,7 +127,9 @@ private:
 
   double evaluate() const override ;
 
-  std::unique_ptr<RooAbsReal> makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
+  std::unique_ptr<RooAbsReal> makeCondPdfRatioCorr(RooAbsReal &pdf, const RooArgSet &termNset,
+                                                   const RooArgSet &termImpSet, const char *normRange,
+                                                   const char *refRange) const;
 
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;
 
@@ -172,7 +175,7 @@ private:
 
   CacheElem* getCacheElem(RooArgSet const* nset) const ;
   void rearrangeProduct(CacheElem&) const;
-  std::unique_ptr<RooAbsReal> specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
+  std::unique_ptr<RooAbsReal> specializeIntegral(RooAbsReal &input, const char *targetRangeName) const;
   std::unique_ptr<RooAbsReal> specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   double calculate(const RooProdPdf::CacheElem &cache, bool verbose = false) const;
 

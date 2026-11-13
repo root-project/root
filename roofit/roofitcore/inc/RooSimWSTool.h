@@ -75,7 +75,7 @@ protected:
 class RooSimWSTool::SplitRule : public TNamed {
 public:
    SplitRule(const char* pdfName="") : TNamed(pdfName,pdfName) {} ;
-   void splitParameter(const char* paramList, const char* categoryList) ;
+   void splitParameter(const char *paramNameList, const char *categoryNameList);
    void splitParameterConstrained(const char* paramNameList, const char* categoryNameList, const char* remainderStateName) ;
 
 protected:
@@ -114,7 +114,7 @@ class RooSimWSTool::BuildConfig
   std::map<std::string,std::string> _restr ;
   RooCmdArg _conflProtocol ;
 
-  void internalAddPdf(const char* pdfName, const char* miStateList, SplitRule& sr) ;
+  void internalAddPdf(const char* pdfName, const char* miStateNameList, SplitRule& sr) ;
 
  } ;
 

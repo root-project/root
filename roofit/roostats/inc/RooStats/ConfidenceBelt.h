@@ -167,7 +167,8 @@ namespace RooStats {
     void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, double cl=-1., double leftside=-1.);
 
     /// add without creating a region, more useful for clients
-    void AddAcceptanceRegion(RooArgSet& point, Int_t dataSetIndex, double lower, double upper, double cl=-1., double leftside=-1.);
+    void AddAcceptanceRegion(RooArgSet &point, Int_t dsIndex, double lower, double upper, double cl = -1.,
+                             double leftside = -1.);
 
     AcceptanceRegion* GetAcceptanceRegion(RooArgSet&, double cl=-1., double leftside=-1.);
     double GetAcceptanceRegionMin(RooArgSet&, double cl=-1., double leftside=-1.);

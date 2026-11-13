@@ -113,7 +113,7 @@ public:
   RooArgSet& operator=(const RooArgSet& other) { RooAbsCollection::operator=(other) ; return *this ;}
 
   using RooAbsCollection::operator[];
-  RooAbsArg& operator[](const TString& str) const;
+  RooAbsArg& operator[](const TString& name) const;
 
 
   /// Shortcut for readFromStream(std::istream&, bool, const char*, const char*, bool), setting
@@ -161,7 +161,7 @@ public:
   }
 
 protected:
-  bool checkForDup(const RooAbsArg& arg, bool silent) const ;
+  bool checkForDup(const RooAbsArg& var, bool silent) const ;
   bool canBeAdded(const RooAbsArg& arg, bool silent) const override {
     return !checkForDup(arg, silent);
   }

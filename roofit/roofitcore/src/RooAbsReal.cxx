@@ -347,10 +347,10 @@ double RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
 /// may be useful in determining a more efficient decomposition of the
 /// requested integral.
 
-Int_t RooAbsReal::getAnalyticalIntegralWN(RooArgSet& allDeps, RooArgSet& analDeps,
+Int_t RooAbsReal::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                  const RooArgSet* /*normSet*/, const char* rangeName) const
 {
-  return _forceNumInt ? 0 : getAnalyticalIntegral(allDeps,analDeps,rangeName) ;
+  return _forceNumInt ? 0 : getAnalyticalIntegral(allVars,analVars,rangeName) ;
 }
 
 

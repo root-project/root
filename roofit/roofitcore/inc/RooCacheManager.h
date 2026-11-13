@@ -74,7 +74,8 @@ public:
     return getObj(nset,iset,sterileIdx,RooNameReg::ptr(isetRangeName)) ;
   }
 
-  T* getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIndex=nullptr, const TNamed* isetRangeName=nullptr) ;
+  T *getObj(const RooArgSet *nset, const RooArgSet *iset, Int_t *sterileIdx = nullptr,
+            const TNamed *isetRangeName = nullptr);
   Int_t setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName=nullptr) ;
 
   void reset() ;

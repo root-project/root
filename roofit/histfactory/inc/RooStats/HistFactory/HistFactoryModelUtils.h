@@ -31,7 +31,7 @@ namespace HistFactory {
 
   ///\ingroup HistFactory
   int getStatUncertaintyConstraintTerm( RooArgList* constraints, RooRealVar* gamma_stat,
-               RooAbsReal*& pois_mean, RooRealVar*& tau );
+               RooAbsReal*& pois_nom, RooRealVar*& tau );
 
 }
 }

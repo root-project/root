@@ -31,7 +31,7 @@ public:
        RooRealVar& t, RooAbsCategory& tag,
        RooAbsReal& tau, RooAbsReal& dm,
        RooAbsReal& avgMistag, RooAbsReal& CPeigenval,
-       RooAbsReal& a, RooAbsReal& b,
+       RooAbsReal& a, RooAbsReal& argLambda,
        RooAbsReal& effRatio, RooAbsReal& delMistag,
        const RooResolutionModel& model, DecayType type=DoubleSided) ;
 
@@ -41,7 +41,7 @@ public:
   double coefficient(Int_t basisIndex) const override ;
 
   Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
-  double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=nullptr) const override ;
+  double coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char *rangeName = nullptr) const override;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;

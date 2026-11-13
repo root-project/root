@@ -109,9 +109,9 @@ public:
   inline bool isLValue() const override { return true; }
 
   // Test a value against our fit range
-  bool inRange(double value, const char* rangeName, double* clippedValue=nullptr) const;
+  bool inRange(double value, const char *rangeName, double *clippedValPtr = nullptr) const;
   void inRange(std::span<const double> values, std::string const& rangeName, std::vector<bool>& out) const;
-  bool isValidReal(double value, bool printError=false) const override ;
+  bool isValidReal(double value, bool verbose = false) const override;
 
   // Constant and Projected flags
   inline void setConstant(bool value= true) { setAttribute("Constant",value); setValueDirty() ; setShapeDirty() ; }

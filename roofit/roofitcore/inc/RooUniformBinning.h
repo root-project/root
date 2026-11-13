@@ -36,10 +36,10 @@ public:
   double lowBound() const override { return _xlo ; }
   double highBound() const override { return _xhi ; }
 
-  double binCenter(Int_t bin) const override ;
+  double binCenter(Int_t i) const override;
   double binWidth(Int_t bin) const override ;
-  double binLow(Int_t bin) const override ;
-  double binHigh(Int_t bin) const override ;
+  double binLow(Int_t i) const override;
+  double binHigh(Int_t i) const override;
 
   double averageBinWidth() const override { return _binw ; }
   double* array() const override ;

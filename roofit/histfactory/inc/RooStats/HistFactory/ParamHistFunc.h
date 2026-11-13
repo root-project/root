@@ -41,7 +41,7 @@ public:
   void setShape(TH1* shape);
 
   RooAbsReal& getParameter() const ;
-  RooAbsReal& getParameter( Int_t masterIdx ) const ;
+  RooAbsReal &getParameter(Int_t index) const;
 
   const RooArgSet* get(Int_t masterIdx) const { return _dataSet.get( masterIdx ) ; }
   const RooArgSet* get(const RooArgSet& coord) const { return _dataSet.get( coord ) ; }

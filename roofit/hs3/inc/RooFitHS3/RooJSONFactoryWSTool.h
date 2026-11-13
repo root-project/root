@@ -77,7 +77,7 @@ public:
 
    static std::string name(const RooFit::Detail::JSONNode &n);
    static bool isValidName(const std::string &str);
-   static bool testValidName(const std::string &str, bool forcError);
+   static bool testValidName(const std::string &name, bool forceError);
    static std::string sanitizeName(const std::string str);
    static void rebuildModelConfigInWorkspace(RooStats::ModelConfig *mc, RooWorkspace &ws);
 
@@ -159,14 +159,14 @@ public:
    readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgSet const &vars);
 
    bool importJSON(std::string const &filename);
-   bool importJSON(std::istream &os);
+   bool importJSON(std::istream &is);
    bool exportJSON(std::string const &fileName);
    bool exportJSON(std::ostream &os);
 
    std::string exportJSONtoString();
    bool importJSONfromString(const std::string &s);
    void importJSONElement(const std::string &name, const std::string &jsonString);
-   void importVariableElement(const RooFit::Detail::JSONNode &n);
+   void importVariableElement(const RooFit::Detail::JSONNode &elementNode);
 
    void importFunction(const RooFit::Detail::JSONNode &p, bool importAllDependants);
    void importFunction(const std::string &jsonString, bool importAllDependants);
@@ -259,7 +259,7 @@ private:
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
    void exportModelConfig(RooStats::ModelConfig const &mc,
-                          const std::vector<RooJSONFactoryWSTool::CombinedData> &combined,
+                          const std::vector<RooJSONFactoryWSTool::CombinedData> &combDataSets,
                           const std::vector<RooAbsData *> &single);
 
    void exportSingleModelConfig(RooStats::ModelConfig const &mc, std::string const &analysisName,

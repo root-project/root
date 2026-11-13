@@ -274,7 +274,7 @@ public:
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
-           double scaleFactor= 1, const RooArgSet *projectedVars= nullptr, bool scaling=true,
+           double scaleFactor= 1, const RooArgSet *projectedVars= nullptr, bool scaleForDensity=true,
            const RooArgSet* condObs=nullptr, bool setError=true) const;
 
   // Create 1,2, and 3D histograms from and fill it
@@ -287,8 +287,8 @@ public:
                        const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
 
   // Fill a RooDataHist
-  RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, double scaleFactor,
-             bool correctForBinVolume=false, bool showProgress=false) const ;
+  RooDataHist *fillDataHist(RooDataHist *hist, const RooArgSet *normSet, double scaleFactor,
+                            bool correctForBinSize = false, bool showProgress = false) const;
 
   // I/O streaming interface (machine readable)
   bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
@@ -393,7 +393,7 @@ public:
   }
 
   // PlotOn with command list
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& argList) const ;
 
 protected:
   friend class BatchInterfaceAccessor;
@@ -419,7 +419,8 @@ protected:
   TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=nullptr, const char* rangeName=nullptr, bool omitEmpty=false) const ;
 
   void plotOnCompSelect(RooArgSet* selNodes) const ;
-  RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, double Z, const RooArgSet* params, const RooLinkedList& argList, bool method1) const ;
+  RooPlot *plotOnWithErrorBand(RooPlot *frame, const RooFitResult &fr, double Z, const RooArgSet *params,
+                               const RooLinkedList &argList, bool linMethod) const;
 
   template<typename... Proxies>
   bool matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, const RooArgProxy& a, const Proxies&... proxies) const
@@ -434,7 +435,7 @@ protected:
     return result;
   }
 
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
+  bool matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
          const RooArgSet& set) const ;
 
   RooFit::OwningPtr<RooAbsReal> createIntObj(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const ;

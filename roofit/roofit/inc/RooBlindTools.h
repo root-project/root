@@ -100,11 +100,11 @@ public:
 
   double HideOffset( double Precision ) const;
 
-  double UnHideOffset( double PrecisionBlind ) const;
+  double UnHideOffset( double PrecisionPrime ) const;
 
   double HideUniform( double Precision ) const;
 
-  double UnHideUniform( double PrecisionBlind ) const;
+  double UnHideUniform( double PrecisionPrime ) const;
 
 
   const char *stSeed()const {return _stSeed;}

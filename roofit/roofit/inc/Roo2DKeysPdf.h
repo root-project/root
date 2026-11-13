@@ -85,7 +85,7 @@ protected:
 private:
   // these are used in calculating bandwidths for x and y
   double evaluateFull(double thisX, double thisY) const;
-  double g(double var1, double * _var1, double sigma1, double var2,
+  double g(double varMean1, double * _var1, double sigma1, double varMean2,
         double * _var2, double sigma2) const;
 
   //mirror corrections for the boundaries

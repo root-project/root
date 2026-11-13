@@ -96,12 +96,12 @@ public:
     return {_binv + first, len};
   }
 
-  double sum(bool correctForBinSize, bool inverseCorr=false) const ;
-  double sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bool correctForBinSize, bool inverseCorr=false) ;
+  double sum(bool correctForBinSize, bool inverseBinCor=false) const ;
+  double sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bool correctForBinSize, bool inverseBinCor=false) ;
   double sum(const RooArgSet& sumSet,
                const RooArgSet& sliceSet,
                bool correctForBinSize,
-               bool inverseCorr,
+               bool inverseBinCor,
                const std::map<const RooAbsArg*, std::pair<double, double> >& ranges,
                std::function<double(int)> getBinScale = [](int){ return 1.0; } );
 
@@ -117,7 +117,7 @@ public:
   double weightSquared(std::size_t i) const { return _sumw2 ? _sumw2[i] : _wgt[i]; }
   /// Return bin volume of i-th bin. \see getIndex()
   double binVolume(std::size_t i) const { return _binv[i]; }
-  double binVolume(const RooArgSet& bin) const;
+  double binVolume(const RooArgSet &coord) const;
 
   TIterator* sliceIterator(RooAbsArg& sliceArg, const RooArgSet& otherArgs) ;
 

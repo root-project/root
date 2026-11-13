@@ -167,7 +167,7 @@ public:
    void
    branchNodeServerList(RooAbsCollection *list, const RooAbsArg *arg = nullptr, bool recurseNonDerived = false) const;
    void treeNodeServerList(RooAbsCollection *list, const RooAbsArg *arg = nullptr, bool doBranch = true,
-                           bool doLeaf = true, bool valueOnly = false, bool recurseNonDerived = false) const;
+                           bool doLeaf = true, bool valueOnly = false, bool recurseFundamental = false) const;
 
    /// Is this object a fundamental type that can be added to a dataset?
    /// Fundamental-type subclasses override this method to return true.
@@ -218,17 +218,17 @@ public:
    RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet &set, bool valueOnly = true) const;
    RooFit::OwningPtr<RooArgSet> getObservables(const RooAbsData *data) const;
    RooFit::OwningPtr<RooArgSet> getObservables(const RooAbsData &data) const;
-   RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet *depList, bool valueOnly = true) const;
-   bool getObservables(const RooAbsCollection *depList, RooArgSet &outputSet, bool valueOnly = true) const;
+   RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet *dataList, bool valueOnly = true) const;
+   bool getObservables(const RooAbsCollection *dataList, RooArgSet &outputSet, bool valueOnly = true) const;
    bool observableOverlaps(const RooAbsData *dset, const RooAbsArg &testArg) const;
-   bool observableOverlaps(const RooArgSet *depList, const RooAbsArg &testArg) const;
+   bool observableOverlaps(const RooArgSet *nset, const RooAbsArg &testArg) const;
    virtual bool checkObservables(const RooArgSet *nset) const;
    bool recursiveCheckObservables(const RooArgSet *nset) const;
    RooFit::OwningPtr<RooArgSet> getComponents() const;
 
    void attachArgs(const RooAbsCollection &set);
-   void attachDataSet(const RooAbsData &set);
-   void attachDataStore(const RooAbsDataStore &set);
+   void attachDataSet(const RooAbsData &data);
+   void attachDataStore(const RooAbsDataStore &dstore);
 
    // I/O streaming interface (machine readable)
    virtual bool readFromStream(std::istream &is, bool compact, bool verbose = false) = 0;
@@ -324,7 +324,8 @@ public:
 
    // Cache mode optimization (tracks changes & do lazy evaluation vs evaluate always)
    virtual void optimizeCacheMode(const RooArgSet &observables);
-   virtual void optimizeCacheMode(const RooArgSet &observables, RooArgSet &optNodes, RooLinkedList &processedNodes);
+   virtual void
+   optimizeCacheMode(const RooArgSet &observables, RooArgSet &optimizedNodes, RooLinkedList &processedNodes);
 
    // Dirty state accessor
    inline bool isShapeDirty() const

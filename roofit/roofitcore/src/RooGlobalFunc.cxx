@@ -278,13 +278,14 @@ RooCmdArg MoveToBack()
 {
    return RooCmdArg("MoveToBack", 1, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
 }
-RooCmdArg VisualizeError(const RooFitResult &fitres, double Z, bool EVmethod)
+RooCmdArg VisualizeError(const RooFitResult &fitres, double Z, bool linearMethod)
 {
-   return RooCmdArg("VisualizeError", EVmethod, 0, Z, 0, nullptr, nullptr, &fitres, nullptr);
+   return RooCmdArg("VisualizeError", linearMethod, 0, Z, 0, nullptr, nullptr, &fitres, nullptr);
 }
-RooCmdArg VisualizeError(const RooFitResult &fitres, const RooArgSet &param, double Z, bool EVmethod)
+RooCmdArg VisualizeError(const RooFitResult &fitres, const RooArgSet &param, double Z, bool linearMethod)
 {
-   return RooCmdArg("VisualizeError", EVmethod, 0, Z, 0, nullptr, nullptr, &fitres, nullptr, nullptr, nullptr, &param);
+   return RooCmdArg("VisualizeError", linearMethod, 0, Z, 0, nullptr, nullptr, &fitres, nullptr, nullptr, nullptr,
+                    &param);
 }
 RooCmdArg VisualizeError(const RooDataSet &paramData, double Z)
 {
@@ -330,9 +331,9 @@ RooCmdArg MarkerStyle(Style_t style)
 {
    return RooCmdArg("MarkerStyle", style, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
 }
-RooCmdArg MarkerStyle(std::string const &color)
+RooCmdArg MarkerStyle(std::string const &style)
 {
-   return MarkerStyle(interpretString(color));
+   return MarkerStyle(interpretString(style));
 }
 RooCmdArg MarkerSize(Size_t size)
 {
@@ -701,9 +702,10 @@ RooCmdArg GlobalObservablesTag(const char *tagName)
 {
    return RooCmdArg("GlobalObservablesTag", 0, 0, 0, 0, tagName, nullptr, nullptr, nullptr);
 }
-RooCmdArg ExternalConstraints(const RooArgSet &cpdfs)
+RooCmdArg ExternalConstraints(const RooArgSet &constraintPdfs)
 {
-   return RooCmdArg("ExternalConstraints", 0, 0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, &cpdfs);
+   return RooCmdArg("ExternalConstraints", 0, 0, 0, 0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+                    &constraintPdfs);
 }
 RooCmdArg PrintEvalErrors(Int_t numErrors)
 {
@@ -1011,9 +1013,9 @@ RooCmdArg Color(TColorNumber color)
 }
 
 // RooWorkspace::import() arguments
-RooCmdArg RenameConflictNodes(const char *suffix, bool ro)
+RooCmdArg RenameConflictNodes(const char *suffix, bool renameOrigNodes)
 {
-   return RooCmdArg("RenameConflictNodes", ro, 0, 0, 0, suffix, nullptr, nullptr, nullptr);
+   return RooCmdArg("RenameConflictNodes", renameOrigNodes, 0, 0, 0, suffix, nullptr, nullptr, nullptr);
 }
 RooCmdArg RecycleConflictNodes(bool flag)
 {

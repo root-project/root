@@ -35,7 +35,7 @@ public:
   // Constructors, assignment etc
   RooAbsPdf() ;
   RooAbsPdf(const char *name, const char *title=nullptr) ;
-  RooAbsPdf(const char *name, const char *title, double minVal, double maxVal) ;
+  RooAbsPdf(const char *name, const char *title, double plotMin, double plotMax);
   // RooAbsPdf(const RooAbsPdf& other, const char* name=nullptr);
   ~RooAbsPdf() override;
 
@@ -307,7 +307,7 @@ protected:
 
   static Int_t _verboseEval ;
 
-  virtual bool syncNormalization(const RooArgSet* dset, bool adjustProxies=true) const ;
+  virtual bool syncNormalization(const RooArgSet *nset, bool adjustProxies = true) const;
 
   double _rawValue = 0;
   mutable RooAbsReal* _norm = nullptr; ///<! Normalization integral (owned by _normMgr)

@@ -59,7 +59,8 @@ public:
   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet *nset) const override;
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
+                                const char *rangeName = nullptr) const override;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   using RooAbsPdf::plotOn ;
@@ -98,7 +99,7 @@ public:
 
 protected:
 
-  void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override ;
+  void selectNormalization(const RooArgSet* normSet=nullptr, bool force=false) override ;
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
   std::unique_ptr<RooAbsReal>

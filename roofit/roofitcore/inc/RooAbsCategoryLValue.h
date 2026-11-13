@@ -48,7 +48,7 @@ public:
   bool setIndex(const std::pair<std::string,value_type>& nameIdxPair, bool printError = true) {
     return setIndex(nameIdxPair.second, printError);
   }
-  bool setOrdinal(unsigned int index);
+  bool setOrdinal(unsigned int n);
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Change category state by specifying a state name.

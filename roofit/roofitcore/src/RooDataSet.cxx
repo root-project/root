@@ -843,38 +843,38 @@ const RooArgSet* RooDataSet::get() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a data point, with its coordinates specified in the 'data' argset, to the data set.
-/// Any variables present in 'data' but not in the dataset will be silently ignored.
-/// \param[in] data Data point.
-/// \param[in] wgt Event weight. Defaults to 1. The current value of the weight variable is
+/// Add a data point, with its coordinates specified in the 'row' argset, to the data set.
+/// Any variables present in 'row' but not in the dataset will be silently ignored.
+/// \param[in] row Data point.
+/// \param[in] weight Event weight. Defaults to 1. The current value of the weight variable is
 /// ignored.
 /// \note To obtain weighted events, a variable must be designated `WeightVar` in the constructor.
-/// \param[in] wgtError Optional weight error.
+/// \param[in] weightError Optional weight error.
 /// \note This requires including the weight variable in the set of `StoreError` variables when constructing
 /// the dataset.
 
-void RooDataSet::add(const RooArgSet& data, double wgt, double wgtError)
+void RooDataSet::add(const RooArgSet &row, double weight, double weightError)
 {
   checkInit() ;
 
   const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
 
-  _varsNoWgt.assign(data);
+  _varsNoWgt.assign(row);
 
   if (_wgtVar) {
-    _wgtVar->setVal(wgt) ;
-    if (wgtError!=0.) {
-      _wgtVar->setError(wgtError) ;
+    _wgtVar->setVal(weight) ;
+    if (weightError!=0.) {
+      _wgtVar->setError(weightError) ;
     }
-  } else if ((wgt != 1. || wgtError != 0.) && _errorMsgCount < 5) {
+  } else if ((weight != 1. || weightError != 0.) && _errorMsgCount < 5) {
     ccoutE(DataHandling) << "An event weight/error was passed but no weight variable was defined"
         << " in the dataset '" << GetName() << "'. The weight will be ignored." << std::endl;
     ++_errorMsgCount;
   }
 
   if (_wgtVar && _doWeightErrorCheck
-      && wgtError != 0.
-      && std::abs(wgt*wgt - wgtError)/wgtError > 1.E-15 //Exception for standard wgt^2 errors, which need not be stored.
+      && weightError != 0.
+      && std::abs(weight*weight - weightError)/weightError > 1.E-15 //Exception for standard weight^2 errors, which need not be stored.
       && _errorMsgCount < 5 && !_wgtVar->getAttribute("StoreError")) {
     coutE(DataHandling) << "An event weight error was passed to the RooDataSet '" << GetName()
         << "', but the weight variable '" << _wgtVar->GetName()
@@ -895,9 +895,9 @@ void RooDataSet::add(const RooArgSet& data, double wgt, double wgtError)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a data point, with its coordinates specified in the 'data' argset, to the data set.
-/// Any variables present in 'data' but not in the dataset will be silently ignored.
-/// \param[in] indata Data point.
+/// Add a data point, with its coordinates specified in the 'row' argset, to the data set.
+/// Any variables present in 'row' but not in the dataset will be silently ignored.
+/// \param[in] row Data point.
 /// \param[in] inweight Event weight. The current value of the weight variable is ignored.
 /// \note To obtain weighted events, a variable must be designated `WeightVar` in the constructor.
 /// \param[in] weightErrorLo Asymmetric weight error.
@@ -905,13 +905,13 @@ void RooDataSet::add(const RooArgSet& data, double wgt, double wgtError)
 /// \note This requires including the weight variable in the set of `StoreAsymError` variables when constructing
 /// the dataset.
 
-void RooDataSet::add(const RooArgSet& indata, double inweight, double weightErrorLo, double weightErrorHi)
+void RooDataSet::add(const RooArgSet &row, double inweight, double weightErrorLo, double weightErrorHi)
 {
   checkInit() ;
 
   const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
 
-  _varsNoWgt.assign(indata);
+  _varsNoWgt.assign(row);
   if (_wgtVar) {
     _wgtVar->setVal(inweight) ;
     _wgtVar->setAsymError(weightErrorLo,weightErrorHi) ;
@@ -943,31 +943,31 @@ void RooDataSet::add(const RooArgSet& indata, double inweight, double weightErro
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a data point, with its coordinates specified in the 'data' argset, to the data set.
+/// Add a data point, with its coordinates specified in the 'row' argset, to the data set.
 /// \attention The order and type of the input variables are **assumed** to be the same as
 /// for the RooArgSet returned by RooDataSet::get(). Input values will just be written
 /// into the internal data columns by ordinal position.
-/// \param[in] data Data point.
-/// \param[in] wgt Event weight. Defaults to 1. The current value of the weight variable is
+/// \param[in] row Data point.
+/// \param[in] weight Event weight. Defaults to 1. The current value of the weight variable is
 /// ignored.
 /// \note To obtain weighted events, a variable must be designated `WeightVar` in the constructor.
-/// \param[in] wgtError Optional weight error.
+/// \param[in] weightError Optional weight error.
 /// \note This requires including the weight variable in the set of `StoreError` variables when constructing
 /// the dataset.
 
-void RooDataSet::addFast(const RooArgSet& data, double wgt, double wgtError)
+void RooDataSet::addFast(const RooArgSet& row, double weight, double weightError)
 {
   checkInit() ;
 
   const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
 
-  _varsNoWgt.assignFast(data,_dstore->dirtyProp());
+  _varsNoWgt.assignFast(row,_dstore->dirtyProp());
   if (_wgtVar) {
-    _wgtVar->setVal(wgt) ;
-    if (wgtError!=0.) {
-      _wgtVar->setError(wgtError) ;
+    _wgtVar->setVal(weight) ;
+    if (weightError!=0.) {
+      _wgtVar->setError(weightError) ;
     }
-  } else if (wgt != 1. && _errorMsgCount < 5) {
+  } else if (weight != 1. && _errorMsgCount < 5) {
     ccoutE(DataHandling) << "An event weight was given but no weight variable was defined"
         << " in the dataset '" << GetName() << "'. The weight will be ignored." << std::endl;
     ++_errorMsgCount;
@@ -976,7 +976,7 @@ void RooDataSet::addFast(const RooArgSet& data, double wgt, double wgtError)
   fill();
 
   if (_wgtVar && _doWeightErrorCheck
-      && wgtError != 0. && wgtError != wgt*wgt //Exception for standard weight error, which need not be stored
+      && weightError != 0. && weightError != weight*weight //Exception for standard weight error, which need not be stored
       && _errorMsgCount < 5 && !_wgtVar->getAttribute("StoreError")) {
     coutE(DataHandling) << "An event weight error was passed to the RooDataSet '" << GetName()
         << "', but the weight variable '" << _wgtVar->GetName()

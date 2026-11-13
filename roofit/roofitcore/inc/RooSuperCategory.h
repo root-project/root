@@ -28,7 +28,7 @@ class RooSuperCategory : public RooAbsCategoryLValue {
 public:
   // Constructors etc.
   RooSuperCategory();
-  RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCatList);
+  RooSuperCategory(const char *name, const char *title, const RooArgSet &inputCategories);
   RooSuperCategory(const RooSuperCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooSuperCategory(*this,newname); }
 

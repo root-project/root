@@ -32,8 +32,8 @@ public:
    ~RooConvIntegrandBinding() override;
 
    double operator()(const double xvector[]) const override;
-   double getMinLimit(UInt_t dimension) const override;
-   double getMaxLimit(UInt_t dimension) const override;
+   double getMinLimit(UInt_t index) const override;
+   double getMaxLimit(UInt_t index) const override;
    inline void setNormalizationSet(const RooArgSet *nset)
    {
       // Use the supplied nset as normalization set for calls to func and model

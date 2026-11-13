@@ -93,7 +93,7 @@ public:
   void SetMarkerSize(Size_t msize = 1) ;
   void SetMarkerStyle(Style_t mstyle = 1) ;
   void SetName(const char *name) override ;
-  void SetTitle(const char *name) override ;
+  void SetTitle(const char *title) override;
   void SetNameTitle(const char *name, const char* title) override ;
   void SetNdivisions(Int_t n = 510, Option_t* axis = "X") ;
   void SetOption(Option_t* option = " ") ;
@@ -170,11 +170,12 @@ public:
   virtual void SetMaximum(double maximum = -1111) ;
   virtual void SetMinimum(double minimum = -1111) ;
 
-  ///Shortcut for RooPlot::chiSquare(const char* pdfname, const char* histname, int nFitParam=nullptr)
+  /// Shortcut for RooPlot::chiSquare(const char* curvename, const char* histname, int nFitParam=nullptr)
   double chiSquare(int nFitParam=0) const { return chiSquare(nullptr,nullptr,nFitParam) ; }
-  double chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
+  double chiSquare(const char *curvename, const char *histname, int nFitParam = 0) const;
 
-  RooHist* residHist(const char* histname=nullptr, const char* pdfname=nullptr,bool normalize=false, bool useAverage=true) const ;
+  RooHist *residHist(const char *histname = nullptr, const char *curvename = nullptr, bool normalize = false,
+                     bool useAverage = true) const;
   ///Uses residHist() and sets normalize=true
   RooHist* pullHist(const char* histname=nullptr, const char* pdfname=nullptr, bool useAverage=true) const
     { return residHist(histname,pdfname,true,useAverage); }
@@ -215,7 +216,7 @@ protected:
     public:
 
     DrawOpt(const char* _rawOpt=nullptr) : invisible(false) { drawOptions[0] = 0 ; initialize(_rawOpt) ; }
-    void initialize(const char* _rawOpt) ;
+    void initialize(const char *inRawOpt);
     const char* rawOpt() const ;
 
     char drawOptions[128] ;

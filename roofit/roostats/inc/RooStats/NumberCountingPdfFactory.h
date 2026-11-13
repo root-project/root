@@ -25,14 +25,14 @@ namespace RooStats{
       /// need one for expected and one for observed
       virtual ~NumberCountingPdfFactory() = default;
 
-      void AddModel(double* sigExp, Int_t nchan, RooWorkspace* ws,
-                    const char* pdfName = "CombinedPdf", const char* masterSignalName = "masterSignal") ;
+      void AddModel(double* sigExp, Int_t nbins, RooWorkspace* ws,
+                    const char* pdfName = "CombinedPdf", const char* muName = "masterSignal") ;
 
-      void AddData(double* mainMeas, double* bkgMeas, double* db,
+      void AddData(double* mainMeas, double* back, double* back_syst,
                    Int_t nbins, RooWorkspace* ws, const char* dsName = "NumberCountingData");
-      void AddExpData(double* sigExp, double* bkgExp, double* db,
+      void AddExpData(double* sigExp, double* back, double* back_syst,
                       Int_t nbins, RooWorkspace* ws, const char* dsName = "ExpectedNumberCountingData");
-      void AddExpDataWithSideband(double* sigExp, double* bkgExp, double* tau,
+      void AddExpDataWithSideband(double* sigExp, double* backExp, double* tau,
                                   Int_t nbins, RooWorkspace* ws, const char* dsName = "NumberCountingData");
       void AddDataWithSideband(double* mainMeas, double* sideband, double* tau,
                                Int_t nbins, RooWorkspace* ws, const char* dsName = "ExpectedNumberCountingData");

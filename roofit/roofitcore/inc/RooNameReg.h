@@ -29,7 +29,7 @@ public:
   RooNameReg(const RooNameReg& other) = delete;
 
   static RooNameReg& instance() ;
-  const TNamed* constPtr(const char* stringPtr) ;
+  const TNamed *constPtr(const char *inStr);
   /// Return C++ string corresponding to given TNamed pointer.
   inline static const char* constStr(const TNamed* ptr) {
     return ptr ? ptr->GetName() : nullptr;
@@ -39,7 +39,7 @@ public:
   inline static const char* str(const TNamed* ptr) {
     return ptr ? ptr->GetName() : nullptr;
   }
-  static const TNamed* known(const char* stringPtr) ;
+  static const TNamed *known(const char *inStr);
   static const std::size_t& renameCounter() ;
 
   enum {

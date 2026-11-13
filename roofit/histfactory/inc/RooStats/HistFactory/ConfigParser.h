@@ -49,7 +49,7 @@ namespace RooStats{
 
      protected:
 
-       bool CheckTrueFalse( std::string val, std::string Name );
+       bool CheckTrueFalse( std::string val, std::string NodeTitle );
        bool IsAcceptableNode( TXMLNode* functionNode );
 
        /// To facilitate writing xml, when not

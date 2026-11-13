@@ -44,7 +44,7 @@ namespace RooStats {
       HypoTestResult *GetHypoTest() const override;
 
       /// Make Asimov data.
-      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = nullptr);
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & paramValues, RooArgSet & globObs, const RooArgSet * genPoiValues = nullptr);
 
 
       /// Make a nominal Asimov data set from a model.

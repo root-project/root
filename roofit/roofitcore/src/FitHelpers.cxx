@@ -625,7 +625,8 @@ void defineMinimizationOptions(RooCmdConfig &pc)
 /// \param[in] cfg Configuration struct with all the configuration options for
 ///            the RooMinimizer. These are a subset of the options that you can
 ///            also pass to RooAbsPdf::fitTo via the RooFit command arguments.
-std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc)
+std::unique_ptr<RooFitResult>
+minimize(RooAbsReal &model, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc)
 {
    MinimizerConfig cfg;
    cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
@@ -661,11 +662,11 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
    // fits. Skip the NLL-only paths when minimizing a chi-squared test statistic.
    const bool isChi2 = nll.getAttribute("Chi2EvaluationActive");
 
-   std::string msgPrefix = std::string{"RooAbsPdf::fitTo("} + pdf.GetName() + "): ";
+   std::string msgPrefix = std::string{"RooAbsPdf::fitTo("} + model.GetName() + "): ";
 
    // Warn user that a method to determine parameter uncertainties should be provided if weighted data is offered
    if (!isChi2 && weightedData && cfg.doSumW2 == -1 && cfg.doAsymptotic == -1) {
-      oocoutW(&pdf, InputArguments) << msgPrefix <<
+      oocoutW(&model, InputArguments) << msgPrefix <<
          R"(WARNING: a likelihood fit is requested of what appears to be weighted data.
        While the estimated values of the parameters will always be calculated taking the weights into account,
        there are multiple ways to estimate the errors of the parameters. You are advised to make an
@@ -680,18 +681,18 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
    }
 
    if (cfg.minos && (cfg.doSumW2 == 1 || cfg.doAsymptotic == 1)) {
-      oocoutE(&pdf, InputArguments)
+      oocoutE(&model, InputArguments)
          << msgPrefix
          << " sum-of-weights and asymptotic error correction do not work with MINOS errors. Not fitting.\n";
       return nullptr;
    }
    if (cfg.doAsymptotic == 1 && cfg.minos) {
-      oocoutW(&pdf, InputArguments) << msgPrefix << "WARNING: asymptotic correction does not apply to MINOS errors\n";
+      oocoutW(&model, InputArguments) << msgPrefix << "WARNING: asymptotic correction does not apply to MINOS errors\n";
    }
 
    // avoid setting both SumW2 and Asymptotic for uncertainty correction
    if (cfg.doSumW2 == 1 && cfg.doAsymptotic == 1) {
-      oocoutE(&pdf, InputArguments) << msgPrefix
+      oocoutE(&model, InputArguments) << msgPrefix
                                     << "ERROR: Cannot compute both asymptotically correct and SumW2 errors.\n";
       return nullptr;
    }
@@ -707,7 +708,7 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
          RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks = cfg.parallelDescentNumSplits;
       }
 #else
-      oocoutW(&pdf, InputArguments) << "Likelihood-splitting settings passed via ParallelDescentOptions() are "
+      oocoutW(&model, InputArguments) << "Likelihood-splitting settings passed via ParallelDescentOptions() are "
                                        "ignored, because ROOT was built without RooFit::MultiProcess support"
                                     << std::endl;
 #endif
@@ -746,9 +747,9 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
 
    if (!isChi2 && m.getNPar() > 0) {
       if (cfg.doAsymptotic == 1)
-         corrCovQual = calcAsymptoticCorrectedCovariance(pdf, m, data); // Asymptotically correct
+         corrCovQual = calcAsymptoticCorrectedCovariance(model, m, data); // Asymptotically correct
       if (cfg.doSumW2 == 1)
-         corrCovQual = calcSumW2CorrectedCovariance(pdf, m, nll);
+         corrCovQual = calcSumW2CorrectedCovariance(model, m, nll);
    }
 
    if (cfg.minos)
@@ -757,8 +758,8 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
    // Optionally return fit result
    std::unique_ptr<RooFitResult> ret;
    if (cfg.doSave) {
-      auto name = std::string("fitresult_") + pdf.GetName() + "_" + data.GetName();
-      auto title = std::string("Result of fit of p.d.f. ") + pdf.GetName() + " to dataset " + data.GetName();
+      auto name = std::string("fitresult_") + model.GetName() + "_" + data.GetName();
+      auto title = std::string("Result of fit of p.d.f. ") + model.GetName() + " to dataset " + data.GetName();
       ret = std::unique_ptr<RooFitResult>{m.save(name.c_str(), title.c_str())};
       if ((cfg.doSumW2 == 1 || cfg.doAsymptotic == 1) && m.getNPar() > 0)
          ret->setCovQual(corrCovQual);

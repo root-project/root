@@ -51,7 +51,7 @@ public:
 protected:
 
   void aggregateData(TList* olist) ;
-  void expandWildCardSpec(const char* spec, std::list<std::string>& result) ;
+  void expandWildCardSpec(const char *name, std::list<std::string> &result);
 
   RooStudyPackage* _pkg ;
 

@@ -35,7 +35,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight) const override;
       virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight, std::vector<double>& impNLLs, double& nullNLL) const;
       virtual RooAbsData* GenerateToyData(std::vector<double>& weights) const;
-      virtual RooAbsData* GenerateToyData(std::vector<double>& weights, std::vector<double>& nullNLLs, std::vector<double>& impNLLs) const;
+      virtual RooAbsData* GenerateToyData(std::vector<double>& weights, std::vector<double>& impNLLVals, std::vector<double>& nullNLLVals) const;
 
 
       /// specifies the pdf to sample from

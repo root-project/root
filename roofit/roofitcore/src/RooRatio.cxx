@@ -35,52 +35,52 @@ RooRatio::RooRatio()
 {
 }
 
-RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr, RooAbsReal &dr)
+RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &numerator, RooAbsReal &denominator)
    : RooAbsReal(name, title),
-     _numerator("numerator", "numerator", this, nr),
-     _denominator("denominator", "denominator", this, dr)
+     _numerator("numerator", "numerator", this, numerator),
+     _denominator("denominator", "denominator", this, denominator)
 {
 }
 
-RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr, double dr)
+RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &numerator, double denominator)
    : RooAbsReal(name, title),
-     _numerator("numerator", "numerator", this, nr),
+     _numerator("numerator", "numerator", this, numerator),
      _denominator("denominator", "denominator", this)
 {
-   auto drvar = new RooRealVar(Form("%s_dr", name), Form("%s_dr", name), dr);
+   auto drvar = new RooRealVar(Form("%s_dr", name), Form("%s_dr", name), denominator);
    _denominator.setArg(*drvar);
    addOwnedComponents(RooArgSet(*drvar));
 }
 
-RooRatio::RooRatio(const char *name, const char *title, double nr, RooAbsReal &dr)
+RooRatio::RooRatio(const char *name, const char *title, double numerator, RooAbsReal &denominator)
    : RooAbsReal(name, title),
      _numerator("numerator", "numerator", this),
-     _denominator("denominator", "denominator", this, dr)
+     _denominator("denominator", "denominator", this, denominator)
 {
-   auto nrvar = new RooRealVar(Form("%s_nr", name), Form("%s_nr", name), nr);
+   auto nrvar = new RooRealVar(Form("%s_nr", name), Form("%s_nr", name), numerator);
    _numerator.setArg(*nrvar);
    addOwnedComponents(RooArgSet(*nrvar));
 }
 
-RooRatio::RooRatio(const char *name, const char *title, double nr, double dr)
+RooRatio::RooRatio(const char *name, const char *title, double numerator, double denominator)
    : RooAbsReal(name, title),
      _numerator("numerator", "numerator", this),
      _denominator("denominator", "denominator", this)
 {
-   auto nrvar = new RooRealVar(Form("%s_nr", name), Form("%s_nr", name), nr);
-   auto drvar = new RooRealVar(Form("%s_dr", name), Form("%s_dr", name), dr);
+   auto nrvar = new RooRealVar(Form("%s_nr", name), Form("%s_nr", name), numerator);
+   auto drvar = new RooRealVar(Form("%s_dr", name), Form("%s_dr", name), denominator);
    _numerator.setArg(*nrvar);
    _denominator.setArg(*drvar);
    addOwnedComponents(RooArgSet(*nrvar, *drvar));
 }
 
-RooRatio::RooRatio(const char *name, const char *title, const RooArgList &nrlist, const RooArgList &drlist)
+RooRatio::RooRatio(const char *name, const char *title, const RooArgList &num, const RooArgList &denom)
    : RooAbsReal(name, title),
      _numerator("numerator", "numerator", this),
      _denominator("denominator", "denominator", this)
 {
-   auto nrprod = new RooProduct(Form("%s_nr", name), Form("%s_nr", name), nrlist);
-   auto drprod = new RooProduct(Form("%s_dr", name), Form("%s_dr", name), drlist);
+   auto nrprod = new RooProduct(Form("%s_nr", name), Form("%s_nr", name), num);
+   auto drprod = new RooProduct(Form("%s_dr", name), Form("%s_dr", name), denom);
    _numerator.setArg(*nrprod);
    _denominator.setArg(*drprod);
    addOwnedComponents(RooArgSet(*nrprod, *drprod));

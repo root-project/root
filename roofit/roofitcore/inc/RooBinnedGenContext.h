@@ -29,11 +29,11 @@ public:
                    const RooArgSet* auxProto=nullptr, bool _verbose= false);
   ~RooBinnedGenContext() override;
 
-  RooDataSet* generate(double nEvents=0.0, bool skipInit=false, bool extendedMode=false) override ;
+  RooDataSet *generate(double nEvt = 0.0, bool skipInit = false, bool extendedMode = false) override;
 
   void setProtoDataOrder(Int_t*) override  {}
 
-  void attach(const RooArgSet& params) override ;
+  void attach(const RooArgSet &args) override;
 
   void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 

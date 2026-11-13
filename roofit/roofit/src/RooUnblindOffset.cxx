@@ -37,9 +37,9 @@ of the unblind parameter
 /// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
-                const char *blindString, double scale, RooAbsReal& cpasym)
+                const char *blindString, double scale, RooAbsReal& blindValue)
   : RooAbsHiddenReal(name,title),
-  _value("value","Offset blinded value",this,cpasym),
+  _value("value","Offset blinded value",this,blindValue),
   _blindEngine(blindString,RooBlindTools::full,0.,scale)
 {
 }
@@ -48,10 +48,10 @@ RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 /// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
-               const char *blindString, double scale, RooAbsReal& cpasym,
+               const char *blindString, double scale, RooAbsReal& blindValue,
                RooAbsCategory& blindState)
   : RooAbsHiddenReal(name,title,blindState),
-    _value("value","Offset blinded value",this,cpasym),
+    _value("value","Offset blinded value",this,blindValue),
     _blindEngine(blindString,RooBlindTools::full,0.,scale)
 {
 }

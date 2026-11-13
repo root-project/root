@@ -141,7 +141,7 @@ public:
           const char *options= "ME") const {
     return plotOn(frame,par1.GetName(),par2.GetName(),options);
   }
-  RooPlot *plotOn(RooPlot *plot, const char *parName1, const char *parName2,
+  RooPlot *plotOn(RooPlot *frame, const char *parName1, const char *parName2,
         const char *options= "ME") const;
 
   /// Generate random perturbations of the final parameters using the covariance matrix.
