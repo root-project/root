@@ -46,7 +46,7 @@ protected:
    static void registerIntegrator(RooNumIntFactory &fact);
 
    enum DomainType { Closed, OpenLo, OpenHi, Open };
-   mutable DomainType _domainType;
+   mutable DomainType _domainType = Closed;
 
    friend double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data);
 
@@ -68,8 +68,8 @@ protected:
    Int_t _maxSeg;              // Maximum number of segments
    void *_workspace = nullptr; // GSL workspace
 
-   mutable double _xmin; ///<! Lower integration bound
-   mutable double _xmax; ///<! Upper integration bound
+   mutable double _xmin = 0.0; ///<! Lower integration bound
+   mutable double _xmax = 0.0; ///<! Upper integration bound
 };
 
 #endif

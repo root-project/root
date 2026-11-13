@@ -133,7 +133,7 @@ namespace RooStats {
       bool fOneSidedDiscovery;            ///< for one sided PL test statistic (for discovery)
       bool fSigned = false;               ///< use signed (uncapped) PL test statistic
       bool fNominalAsimov;                ///< make Asimov at nominal parameter values
-      mutable bool fIsInitialized;        ///<! flag to check if calculator is initialized
+      mutable bool fIsInitialized = false; ///<! flag to check if calculator is initialized
       mutable int fUseQTilde;             ///< flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
       mutable double fNLLObs;
       mutable double fNLLAsimov;

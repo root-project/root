@@ -83,7 +83,7 @@ protected:
 
   RooListProxy _funcList ;  ///<  List of component FUNCs
   RooListProxy _coefList ;  ///<  List of coefficients
-  bool _extended ;        ///< Allow use as extended p.d.f.
+  bool _extended = false;   ///< Allow use as extended p.d.f.
 
   bool _doFloor = false; ///< Introduce floor at zero in pdf
   mutable bool _haveWarned{false}; ///<!

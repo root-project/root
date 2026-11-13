@@ -35,7 +35,7 @@ protected:
 
   RooListProxy _gamma ;
   RooListProxy _nominal ;
-  bool _relParam ;
+  bool _relParam = false;
 
   double evaluate() const override ;
 

@@ -60,7 +60,7 @@ public:
 protected:
    mutable RooObjCacheManager _normIntMgr; ///<! The integration cache manager
 
-   bool _haveLastCoef;
+   bool _haveLastCoef = false;
 
    RooListProxy _funcList; ///<  List of component FUNCs
    RooListProxy _coefList; ///<  List of coefficients

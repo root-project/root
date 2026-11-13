@@ -128,8 +128,8 @@ void RooPolyVar::doEvalImpl(RooAbsArg const *caller, RooFit::EvalContext &ctx, R
    // Fill the coefficients for the skipped orders. By a conventions started in
    // RooPolynomial, if the zero-th order is skipped, it implies a coefficient
    // for the constant term of one.
-   std::array<double, RooBatchCompute::bufferSize> zeros;
-   std::array<double, RooBatchCompute::bufferSize> ones;
+   std::array<double, RooBatchCompute::bufferSize> zeros{};
+   std::array<double, RooBatchCompute::bufferSize> ones{};
    std::fill_n(zeros.data(), zeros.size(), 0.0);
    std::fill_n(ones.data(), ones.size(), 1.0);
    std::span<const double> zerosSpan{zeros.data(), 1};

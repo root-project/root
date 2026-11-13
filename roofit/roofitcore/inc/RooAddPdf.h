@@ -131,7 +131,7 @@ public:
   bool _allExtendable = false; ///<  Flag indicating if all PDF components are extendable
   bool _recursive = false;     ///<  Flag indicating is fractions are treated recursively
 
-  mutable Int_t _coefErrCount ; ///<! Coefficient error counter
+  mutable Int_t _coefErrCount = 0; ///<! Coefficient error counter
 
   bool redirectServersHook(const RooAbsCollection&, bool, bool, bool) override;
 

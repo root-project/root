@@ -517,8 +517,8 @@ private:
    RooArgList _params;
    std::string _funcName;
    Func _func;
-   Grad _grad;
-   Hessian _hessian;
+   Grad _grad = nullptr;
+   Hessian _hessian = nullptr;
    bool _hasGradient = false;
    bool _hasHessian = false;
    mutable std::vector<double> _varBuffer;

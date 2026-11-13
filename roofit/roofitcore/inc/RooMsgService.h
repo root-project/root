@@ -134,19 +134,19 @@ public:
        return match(level, facility, static_cast<TObject const *>(obj));
     }
 
-    bool active ;
-    bool universal ;
+    bool active = false ;
+    bool universal = false ;
 
-    RooFit::MsgLevel minLevel ;
-    Int_t    topic ;
+    RooFit::MsgLevel minLevel = RooFit::DEBUG ;
+    Int_t    topic = 0 ;
     std::string objectName ;
     std::string className ;
     std::string baseClassName ;
     std::string tagName ;
-    Color_t color ;
-    bool prefix ;
+    Color_t color = 0 ;
+    bool prefix = false ;
 
-    std::ostream* os ;
+    std::ostream* os = nullptr ;
 
   } ;
 
@@ -227,13 +227,13 @@ protected:
   std::unique_ptr<std::ofstream> _devnull ;
 
   std::map<std::string,std::unique_ptr<std::ostream>> _files ;
-  RooFit::MsgLevel _globMinLevel ;
-  RooFit::MsgLevel _lastMsgLevel ;
+  RooFit::MsgLevel _globMinLevel = RooFit::DEBUG;
+  RooFit::MsgLevel _lastMsgLevel = RooFit::DEBUG;
 
-  bool _silentMode ;
-  bool _showPid ;
+  bool _silentMode = false;
+  bool _showPid = false;
 
-  Int_t _errorCount ;
+  Int_t _errorCount = 0;
 
   // Private constructor -- singleton class
   RooMsgService() ;
@@ -241,7 +241,7 @@ protected:
 
   std::unique_ptr<RooWorkspace> _debugWorkspace;
 
-  Int_t _debugCode ;
+  Int_t _debugCode = 0;
 
   ClassDefOverride(RooMsgService,0) // RooFit Message Service Singleton class
 };

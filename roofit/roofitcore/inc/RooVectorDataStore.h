@@ -79,7 +79,7 @@ public:
     std::vector<ArrayInfo<double>> reals;
     std::vector<ArrayInfo<RooAbsCategory::value_type>> cats;
 
-    std::size_t size;
+    std::size_t size = 0;
   };
 
   /// \name Internal RooFit interface.

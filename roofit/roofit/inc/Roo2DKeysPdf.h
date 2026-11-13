@@ -92,31 +92,31 @@ private:
   double highBoundaryCorrection(double thisVar, double thisH, double high, double tVar) const;
   double lowBoundaryCorrection(double thisVar, double thisH, double low, double tVar) const;
 
-  double * _x;
-  double * _hx;
-  double * _y;
-  double * _hy;
-  double   _norm;
-  double   _xMean;    // the (x,y) mean and sigma are properties of the data, not of the PDF
-  double   _xSigma;
-  double   _yMean;
-  double   _ySigma;
-  double   _n;         //coefficient of the kernel estimation sum
-  double   _n16;       //pow(_nEvents, -1/6)
-  double   _sqrt2pi;
-  double   _2pi;       // = M_PI*2
-  double   _lox,_hix;
-  double   _loy,_hiy;
-  double   _xoffset;
-  double   _yoffset;
-  double   _widthScaleFactor; //allow manipulation of the bandwidth by a scale factor
+  double *_x = nullptr;
+  double *_hx = nullptr;
+  double *_y = nullptr;
+  double *_hy = nullptr;
+  double _norm = 0.0;
+  double _xMean = 0.0; // the (x,y) mean and sigma are properties of the data, not of the PDF
+  double _xSigma = 0.0;
+  double _yMean = 0.0;
+  double _ySigma = 0.0;
+  double _n = 0.0;   // coefficient of the kernel estimation sum
+  double _n16 = 0.0; // pow(_nEvents, -1/6)
+  double _sqrt2pi = 0.0;
+  double _2pi = 0.0; // = M_PI*2
+  double _lox = 0.0, _hix = 0.0;
+  double _loy = 0.0, _hiy = 0.0;
+  double _xoffset = 0.0;
+  double _yoffset = 0.0;
+  double _widthScaleFactor = 0.0; // allow manipulation of the bandwidth by a scale factor
 
-  Int_t      _nEvents;
-  Int_t      _BandWidthType;
-  Int_t      _MirrorAtBoundary;
-  Int_t      _debug;
-  Int_t      _verbosedebug;
-  Int_t      _vverbosedebug;
+  Int_t _nEvents = 0;
+  Int_t _BandWidthType = 0;
+  Int_t _MirrorAtBoundary = 0;
+  Int_t _debug = 0;
+  Int_t _verbosedebug = 0;
+  Int_t _vverbosedebug = 0;
 
   ClassDefOverride(Roo2DKeysPdf,0) // Two-dimensional kernel estimation p.d.f.
 };

@@ -417,7 +417,7 @@ public:
    void assignFromDevice(std::span<const double>) { throw std::bad_function_call(); }
 
 private:
-   double _val;
+   double _val = 0.0;
 };
 
 class CPUBufferContainer {

@@ -62,12 +62,12 @@ protected:
   RooRealProxy _f2;
   RooRealProxy _f3;
   RooRealProxy _dm;
-  Int_t _basisCosh;
-  Int_t _basisSinh;
-  Int_t _basisCos;
-  Int_t _basisSin;
-  Int_t _basisB;
-  DecayType _type;
+  Int_t _basisCosh = 0;
+  Int_t _basisSinh = 0;
+  Int_t _basisCos = 0;
+  Int_t _basisSin = 0;
+  Int_t _basisB = 0;
+  DecayType _type = SingleSided;
 
   ClassDefOverride(RooBDecay, 1) // P.d.f of general description of B decay time distribution
     };

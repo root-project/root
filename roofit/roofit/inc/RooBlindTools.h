@@ -123,22 +123,22 @@ private:
   // Data members
 
   TString _stSeed ;
-  double _DeltaZOffset;
-  double _DeltaZSignFlip;
-  double _DeltaZScale;
-  double _AsymOffset;
-  double _AsymSignFlip;
-  double _DeltaMScale;
-  double _DeltaMOffset;
-  double _MysteryPhase;
-  double _STagConstant;
-  double _PrecisionSignFlip;
-  double _PrecisionOffsetScale;
-  double _PrecisionOffset;
-  double _PrecisionUniform;
-  double _PrecisionCentralValue;
-  blindMode _mode;
-  bool   _s2bMode ;
+  double _DeltaZOffset = 0.0;
+  double _DeltaZSignFlip = 0.0;
+  double _DeltaZScale = 0.0;
+  double _AsymOffset = 0.0;
+  double _AsymSignFlip = 0.0;
+  double _DeltaMScale = 0.0;
+  double _DeltaMOffset = 0.0;
+  double _MysteryPhase = 0.0;
+  double _STagConstant = 0.0;
+  double _PrecisionSignFlip = 0.0;
+  double _PrecisionOffsetScale = 0.0;
+  double _PrecisionOffset = 0.0;
+  double _PrecisionUniform = 0.0;
+  double _PrecisionCentralValue = 0.0;
+  blindMode _mode = full;
+  bool _s2bMode = false;
 
   // setup data members from string seed
   void setup(const char *stSeed);

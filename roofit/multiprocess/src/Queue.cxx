@@ -64,7 +64,7 @@ void Queue::process_worker_message(std::size_t this_worker_id, W2Q message)
    switch (message) {
    case W2Q::dequeue: {
       // dequeue task
-      JobTask job_task;
+      JobTask job_task{};
       bool popped = pop(job_task);
       if (popped) {
          // Note: below two commands should be run atomically for thread safety (if that ever becomes an issue)

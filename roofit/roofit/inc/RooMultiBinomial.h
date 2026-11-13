@@ -40,7 +40,7 @@ class RooMultiBinomial : public RooAbsReal {
 
   RooListProxy _catList ; // Accept/reject categories
   RooListProxy _effFuncList ; // Efficiency functions per category
-  bool _ignoreNonVisible ; // Ignore combination of only rejects (since invisible)
+  bool _ignoreNonVisible = false; // Ignore combination of only rejects (since invisible)
 
   ClassDefOverride(RooMultiBinomial,1) // Simultaneous pdf of N Binomial distributions with associated efficiency functions
   };

@@ -37,8 +37,8 @@ namespace {
 // so it has no additive-linear or multiplicative-linear poly6 variant.
 struct InterpolationCodes {
    Interpolation descriptor;
-   int piecewise;
-   int flexible;
+   int piecewise = 0;
+   int flexible = 0;
 };
 
 constexpr int kUnrepresentable = -1;

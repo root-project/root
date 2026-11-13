@@ -59,12 +59,12 @@ protected:
   RooRealProxy _tau ;
   RooRealProxy _dm ;
   RooCategoryProxy _tag ;
-  double _genB0Frac ;
+  double _genB0Frac = 0.0;
 
-  DecayType _type ;
-  Int_t _basisExp ;
-  Int_t _basisSin ;
-  Int_t _basisCos ;
+  DecayType _type = SingleSided;
+  Int_t _basisExp = 0;
+  Int_t _basisSin = 0;
+  Int_t _basisCos = 0;
 
   ClassDefOverride(RooBCPEffDecay,1) // B Mixing decay PDF
 };
