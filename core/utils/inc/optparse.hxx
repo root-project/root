@@ -430,16 +430,19 @@ public:
             throw std::runtime_error(err.str());
          }
 #else
-         std::conditional_t<std::is_integral_v<T>, long long, long double> converted;
-         std::size_t unconvertedPos;
-         if constexpr (std::is_integral_v<T>) {
-            converted = std::stoll(std::string(val), &unconvertedPos);
-         } else {
-            converted = std::stold(std::string(val), &unconvertedPos);
+         std::conditional_t<std::is_integral_v<T>, long long, long double> converted = 0;
+         std::size_t unconvertedPos = 0;
+         try {
+            if constexpr (std::is_integral_v<T>) {
+               converted = std::stoll(std::string(val), &unconvertedPos);
+            } else {
+               converted = std::stold(std::string(val), &unconvertedPos);
+            }
+         } catch (...) {
+            unconvertedPos = 0;
          }
 
-         const bool isOor = converted > std::numeric_limits<T>::max();
-         if (unconvertedPos != val.size() || isOor) {
+         if (unconvertedPos != val.size() || converted > std::numeric_limits<T>::max()) {
             std::stringstream err;
             err << "Failed to parse flag `" << name << "` with value `" << val << "`";
             if constexpr (std::is_integral_v<T>)
