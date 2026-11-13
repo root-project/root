@@ -39,9 +39,9 @@ protected:
    RooListProxy corr;
    RooCategoryProxy x;
 
-   int fIndex; // sigh, there should be a better way than this
-   int nPdfs;  // not used, kept so we didn't have to change the class layout for IO
-   mutable Int_t _oldIndex;
+   int fIndex = 0;  // unused, just for IO compatibility
+   int nPdfs = 0;   // unused, just for IO compatibility
+   Int_t _oldIndex; // unused, just for IO compatibility
 
    Double_t evaluate() const override;
    Double_t getLogVal(const RooArgSet *set = nullptr) const override;
