@@ -293,7 +293,9 @@ in order to enhance rays.
 
 TGeoManager *gGeoManager = nullptr;
 
-std::mutex TGeoManager::fgMutex;
+// Never destroyed: geometries left to TROOT::EndOfProcessCleanups() are deleted
+// after libGeom's static objects, and the destructor locks this mutex.
+std::mutex &TGeoManager::fgMutex = *new std::mutex;
 Bool_t TGeoManager::fgLock = kFALSE;
 Bool_t TGeoManager::fgLockNavigators = kFALSE;
 Int_t TGeoManager::fgVerboseLevel = 1;

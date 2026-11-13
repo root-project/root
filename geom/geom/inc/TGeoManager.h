@@ -51,7 +51,7 @@ public:
    };
 
 protected:
-   static std::mutex fgMutex;           ///<! mutex for navigator booking in MT mode
+   static std::mutex &fgMutex;          ///<! mutex for navigator booking in MT mode
    static Bool_t fgLock;                ///<! Lock preventing a second geometry to be loaded
    static Int_t fgVerboseLevel;         ///<! Verbosity level for Info messages (no IO).
    static Int_t fgMaxLevel;             ///<! Maximum level in geometry
