@@ -381,7 +381,7 @@ TEST(OptParse, ParseFlagAsIntInvalid)
    opts.Parse(args, std::size(args));
 
    EXPECT_TRUE(opts.GetErrors().empty());
-   EXPECT_THROW(opts.GetFlagValueAs<int>("b"), std::invalid_argument);
+   EXPECT_THROW(opts.GetFlagValueAs<int>("b"), std::runtime_error);
    EXPECT_EQ(opts.GetFlagValue("b"), "42a");
 }
 
@@ -394,7 +394,7 @@ TEST(OptParse, ParseFlagAsIntInvalid2)
    opts.Parse(args, std::size(args));
 
    EXPECT_TRUE(opts.GetErrors().empty());
-   EXPECT_THROW(opts.GetFlagValueAs<int>("b"), std::invalid_argument);
+   EXPECT_THROW(opts.GetFlagValueAs<int>("b"), std::runtime_error);
 }
 
 TEST(OptParse, ParseFlagAsIntOutOfRange)
@@ -406,7 +406,7 @@ TEST(OptParse, ParseFlagAsIntOutOfRange)
    opts.Parse(args, std::size(args));
 
    EXPECT_TRUE(opts.GetErrors().empty());
-   EXPECT_THROW(opts.GetFlagValueAs<std::uint8_t>("b"), std::out_of_range);
+   EXPECT_THROW(opts.GetFlagValueAs<std::uint8_t>("b"), std::runtime_error);
 }
 
 TEST(OptParse, ParseFlagAsFloat)
@@ -432,7 +432,7 @@ TEST(OptParse, ParseFlagAsFloatInvalid)
    opts.Parse(args, std::size(args));
 
    EXPECT_TRUE(opts.GetErrors().empty());
-   EXPECT_THROW(opts.GetFlagValueAs<float>("b"), std::invalid_argument);
+   EXPECT_THROW(opts.GetFlagValueAs<float>("b"), std::runtime_error);
 }
 
 TEST(OptParse, ParseFlagAsNumericNotThere)
@@ -587,7 +587,7 @@ TEST(OptParse, MultipleFlagsAsIntError)
    opts.Parse(args, std::size(args));
 
    EXPECT_TRUE(opts.GetErrors().empty());
-   EXPECT_THROW(opts.GetFlagValuesAs<int>("a"), std::invalid_argument);
+   EXPECT_THROW(opts.GetFlagValuesAs<int>("a"), std::runtime_error);
 }
 
 TEST(OptParse, PrefixShort)
