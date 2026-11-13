@@ -345,6 +345,43 @@ void upgradeData(JSONNode &root, Version const &version)
    }
 }
 
+// HS3 0.3 forbids "min" and "max" alongside "edges" (HS3 #126), which documents before 0.3 had. Where they agree with
+// the edges, which the parser checks, they are only redundant, so they give a warning.
+void warnBoundsWithEdges(JSONNode const &axes, Cursor const &axesCursor)
+{
+   if (!axes.is_seq()) {
+      return;
+   }
+   std::size_t i = 0;
+   for (JSONNode const &axis : axes.children()) {
+      Cursor axisCursor{axis, axesCursor, i++};
+      if (axis.is_map() && axis.has_child("edges") && (axis.has_child("min") || axis.has_child("max"))) {
+         axisCursor.warning("\"min\" and \"max\" must not be given alongside \"edges\" from HS3 0.3 on, the edges "
+                            "give the range");
+      }
+   }
+}
+
+void warnBoundsWithEdges(JSONNode const &root, Version const &version, Cursor const &rootCursor)
+{
+   if (version < Version{0, 3, 0}) {
+      return;
+   }
+   for (const char *section : {"domains", "data", "distributions"}) {
+      if (!root.has_child(section) || !root[section].is_seq()) {
+         continue;
+      }
+      Cursor sectionCursor{root[section], rootCursor, section};
+      std::size_t i = 0;
+      for (JSONNode const &object : root[section].children()) {
+         Cursor objectCursor{object, sectionCursor, i++};
+         if (object.is_map() && object.has_child("axes")) {
+            warnBoundsWithEdges(object["axes"], Cursor{object["axes"], objectCursor, "axes"});
+         }
+      }
+   }
+}
+
 Version documentVersion(JSONNode const &root)
 {
    Version version;
@@ -364,6 +401,7 @@ void upgradeDocument(JSONNode &root, Diagnostics &diagnostics, ParseOptions cons
       return;
    }
    const Version version = documentVersion(root);
+   warnBoundsWithEdges(root, version, Cursor{root, diagnostics});
    upgradeData(root, version);
 
    if (!root.has_child("distributions") || !root["distributions"].is_seq() || !options.typedHistFactory) {

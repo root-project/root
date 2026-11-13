@@ -30,11 +30,13 @@ std::string removeSuffix(std::string_view str, std::string_view suffix)
    return out;
 }
 
+// Writes a regular binning with "min", "max" and "nbins", and an irregular one with its "edges" only, since HS3 0.3
+// forbids "min" and "max" alongside them.
 void writeAxisBinning(JSONNode &node, const RooAbsBinning &binning)
 {
-   node["min"] << binning.lowBound();
-   node["max"] << binning.highBound();
    if (binning.isUniform()) {
+      node["min"] << binning.lowBound();
+      node["max"] << binning.highBound();
       node["nbins"] << binning.numBins();
       return;
    }

@@ -3380,8 +3380,9 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
    EXPECT_EQ(model3->pdfList().size(), 2u); // the sum and alpha_a_constraint
 }
 
-// Binned axes with an irregular binning carry "min" and "max" in addition to the "edges".
-TEST(RooFitHS3, IrregularBinnedAxesHaveRange)
+// The range of an irregular binning is given by its "edges": HS3 0.3 (#126) forbids "min" and "max" alongside them, in
+// binned data and in domains. Documents before HS3 0.3 may have them; from HS3 0.3 on, they give a warning.
+TEST(RooFitHS3, IrregularBinnedAxesWithoutRange)
 {
    RooRealVar x{"x", "x", 0.0, 3.0};
    std::vector<double> edges{0.0, 1.0, 3.0};
@@ -3396,12 +3397,37 @@ TEST(RooFitHS3, IrregularBinnedAxesHaveRange)
    ASSERT_NE(dataNode, nullptr) << json;
    const auto &axis = (*dataNode)["axes"].child(0);
    EXPECT_TRUE(axis.has_child("edges")) << json;
-   EXPECT_DOUBLE_EQ(axis["min"].val_double(), 0.0) << json;
-   EXPECT_DOUBLE_EQ(axis["max"].val_double(), 3.0) << json;
+   EXPECT_FALSE(axis.has_child("min")) << json;
+   EXPECT_FALSE(axis.has_child("max")) << json;
+   const auto *domain = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr) << json;
+   const auto *domainAxis = RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "x");
+   ASSERT_NE(domainAxis, nullptr) << json;
+   EXPECT_TRUE(domainAxis->has_child("edges")) << json;
+   EXPECT_FALSE(domainAxis->has_child("min")) << json;
+   EXPECT_FALSE(domainAxis->has_child("max")) << json;
 
    RooWorkspace ws2;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_DOUBLE_EQ(ws2.var("x")->getMin(), 0.0);
+   EXPECT_DOUBLE_EQ(ws2.var("x")->getMax(), 3.0);
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+
+   auto document = [](std::string const &version) {
+      return R"({"metadata": {"hs3_version": ")" + version + R"("},
+         "data": [{"name": "binned", "type": "binned", "contents": [1.0, 2.0],
+                   "axes": [{"name": "x", "min": 0.0, "max": 3.0, "edges": [0.0, 1.0, 3.0]}]}]})";
+   };
+   for (std::string version : {"0.2", "0.3"}) {
+      RooWorkspace ws3;
+      bool imported = false;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         imported = RooJSONFactoryWSTool{ws3}.importJSONfromString(document(version));
+      });
+      EXPECT_TRUE(imported) << version;
+      const bool warned = warnings.find("must not be given alongside \"edges\" from HS3 0.3 on") != std::string::npos;
+      EXPECT_EQ(warned, version == "0.3") << version << ": " << warnings;
+   }
 }
 
 // Errors of zero in binned data stay zero, also before the first positive error.
