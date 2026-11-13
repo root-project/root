@@ -1377,8 +1377,8 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
 
 void RooAbsCollection::printLatex(std::ostream& ofs, Int_t ncol, const char* option, Int_t sigDigit, const RooLinkedList& siblingList, const RooCmdArg* formatCmd) const
 {
-  // Count number of rows to print
-  Int_t nrow = (Int_t) (size() / ncol + 0.99) ;
+  // Count number of rows to print, rounding up
+  Int_t nrow = (static_cast<Int_t>(size()) + ncol - 1) / ncol;
   Int_t i;
   Int_t j;
   Int_t k;
