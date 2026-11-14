@@ -544,6 +544,14 @@ def pythonize_rdataframe(klass):
     klass.Filter = _PyFilter
     klass.Define = _PyDefine
 
+    # Release the GIL around immediate actions that trigger the event loop,
+    # so that worker threads can execute Python callables without deadlocking
+    # when ROOT.EnableImplicitMT() is active.
+    for method_name in ("Snapshot", "Foreach", "ForeachSlot"):
+        method = getattr(klass, method_name, None)
+        if method is not None and hasattr(method, "__release_gil__"):
+            method.__release_gil__ = True
+
 
 def _make_name_rvec_pair(key, value):
     import ROOT

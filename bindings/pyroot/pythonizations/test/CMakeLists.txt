@@ -119,6 +119,10 @@ if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
     ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
     ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
+    # This test enables ROOT.EnableImplicitMT() with a Python callable: it would
+    # deadlock without the GIL release around the parallel event loop. Keep a
+    # bounded timeout so a regression is caught quickly instead of hanging.
+    set_tests_properties(pyunittests-bindings-pyroot-pythonizations-pyroot-rdf-define-pyz PROPERTIES TIMEOUT 60)
     # std::string_view in CPyCppyy
     ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
 endif()
