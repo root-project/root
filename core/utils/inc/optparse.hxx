@@ -1,6 +1,26 @@
-// \file optparse.hxx
-///
-/// Small utility to parse cmdline options.
+/// \file optparse.hxx
+/// \author Giacomo Parolini <giacomo.parolini@cern.ch>
+/// \date 2025-10-09
+#ifndef ROOT_OptParse
+#define ROOT_OptParse
+
+#include <algorithm>
+#include <cassert>
+#include <charconv>
+#include <cstring>
+#include <cstdint>
+#include <iostream>
+#include <limits>
+#include <optional>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace ROOT {
+
+/// \brief Small utility to parse cmdline options.
 ///
 /// Usage:
 /// ~~~{.cpp}
@@ -12,13 +32,15 @@
 ///    opts.AddFlag({"--recreate"});
 ///    opts.AddFlag({"-o"}, RCmdLineOpts::EFlagType::kWithArg);
 ///
-///    // NOTE: `args` should not contain the program name! It should usually be `argc + 1`.
-///    // For example `main(char **argv, int argc)` might call this function as:
-///    //    `ParseArgs(const_cast<const char**>(argv) + 1, argc - 1);`
+///    // NOTE: `args` should not contain the program name! It should usually be `argv + 1`.
+///    // For example `main(int argc, const char **argv)` might call this function as:
+///    //    `ParseArgs(argv + 1, argc - 1);`
 ///    opts.Parse(args, nArgs);
 ///
 ///    // Check for errors:
-///    for (const auto &err : opts.GetErrors()) { /* print errors ... */ }
+///    for (const auto &err : opts.GetErrors()) {
+///        // print errors ...
+///    }
 ///    if (!opts.GetErrors().empty()) return {};
 ///
 ///    // Convert the parsed options from string if necessary:
@@ -73,29 +95,6 @@
 /// interpret flags and arguments that are not separated by spaces. If prefix arg is used, the equal sign will *not*
 /// be considered as the key-value separator (`-Dfoo=bar` if `-D` is a prefix arg flag will be parsed as `"-D",
 /// "foo=bar"`). Note that this option only makes sense for flags with arguments.
-///
-/// \author Giacomo Parolini <giacomo.parolini@cern.ch>
-/// \date 2025-10-09
-
-#ifndef ROOT_OptParse
-#define ROOT_OptParse
-
-#include <algorithm>
-#include <cassert>
-#include <charconv>
-#include <cstring>
-#include <cstdint>
-#include <iostream>
-#include <limits>
-#include <optional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <vector>
-
-namespace ROOT {
-
 class RCmdLineOpts {
 public:
    enum class EFlagTreatment {
@@ -158,6 +157,7 @@ private:
       // If >= 0, this flag is an alias of the RExpectedFlag at index fAlias.
       int fAlias = -1;
       bool fShort = false;
+      // A bitmask of EFlagOpt
       std::uint32_t fOpts = 0;
 
       std::string AsStr() const { return std::string(fShort ? "-" : "--") + fName; }
@@ -188,6 +188,8 @@ private:
 public:
    explicit RCmdLineOpts(RSettings settings = {}) : fSettings(settings) {}
 
+   const RSettings &GetSettings() const { return fSettings; }
+
    /// Returns all parsing errors
    const std::vector<std::string> &GetErrors() const { return fErrors; }
 
@@ -195,7 +197,8 @@ public:
    const std::vector<std::string> &GetArgs() const { return fArgs; }
 
    /// Retrieves all positional arguments alongside their original position in the given args array.
-   std::vector<std::pair<std::size_t, std::string>> GetArgsWithIndices() const {
+   std::vector<std::pair<std::size_t, std::string>> GetArgsWithIndices() const
+   {
       assert(fArgs.size() == fArgIndices.size());
       std::vector<std::pair<std::size_t, std::string>> res;
       res.reserve(fArgs.size());
@@ -230,6 +233,16 @@ public:
    /// \param type What kind of flag is this: with arguments or not
    /// \param help Help string for the flag
    /// \param flagOpts Bitmask of EFlagOpt for additional options
+   /// \throw std::invalid_argument if `aliases` is empty.
+   /// \throw std::invalid_argument if `flagOpts` and `type` are inconsistent (e.g. a Switch is given the opt
+   /// `kFlagPrefixArg`).
+   /// \throw std::invalid_argument if any flag in `aliases` does not start with `-` or is empty after the prefix.
+   /// \throw std::invalid_argument if any of the values in `aliases` was already added previously.
+   /// \throw std::invalid_argument if the same value appears multiple times in `aliases`.
+   /// \throw std::invalid_argument if any of the values in `aliases` have a common prefix with another flag which is
+   /// marked as `kFlagPrefixArg`.
+   /// \throw std::invalid_argument if the flag treatment was explicitly specified as kGrouped but a short flag is given
+   /// in `aliases` which is longer than one character.
    void AddFlag(std::initializer_list<std::string_view> aliases, EFlagType type = EFlagType::kSwitch,
                 std::string_view help = "", std::uint32_t flagOpts = 0)
    {
@@ -321,7 +334,7 @@ public:
 
    /// If `name` refers to a previously-defined switch (i.e. a boolean flag), returns how many times
    /// the flag appeared (this will never be more than 1 unless the flag is allowed to appear multiple times).
-   /// \throws std::invalid_argument if the flag was undefined or defined as a flag with arguments
+   /// \throw std::invalid_argument if the flag was undefined or defined as a flag with arguments
    int GetSwitch(std::string_view name) const
    {
       const auto *exp = GetExpectedFlag(name);
@@ -342,7 +355,7 @@ public:
    }
 
    /// If `name` refers to a previously-defined non-switch flag, gets its value.
-   /// \throws std::invalid_argument if the flag was undefined or defined as a switch flag
+   /// Throws the same exceptions as GetFlagValues
    std::string_view GetFlagValue(std::string_view name) const
    {
       auto values = GetFlagValues(name);
@@ -351,7 +364,7 @@ public:
 
    /// If `name` refers to a previously-defined non-switch flag, gets its values.
    /// This will never return more than 1 value unless the flag is allowed to appear multiple times.
-   /// \throws std::invalid_argument if the flag was undefined or defined as a switch flag
+   /// \throw std::invalid_argument if the flag was undefined or defined as a switch flag
    std::vector<std::string_view> GetFlagValues(std::string_view name) const
    {
       const auto *exp = GetExpectedFlag(name);
@@ -372,11 +385,12 @@ public:
       return values;
    }
 
-   // Tries to retrieve the flag value as a type T.
-   // The only supported types are integral and floating point types.
-   // \return A value of type T if the flag is present and convertible
-   // \return nullopt if the flag is not there
-   // \throws std::invalid_argument if the flag is there but not convertible.
+   /// Tries to retrieve the flag value as a type T.
+   /// The only supported types are integral and floating point types.
+   /// \return A value of type T if the flag is present and convertible
+   /// \return nullopt if the flag is not there
+   /// \throw std::invalid_argument if the flag was undefined or defined as a switch flag.
+   /// \throw std::runtime_error if the flag is there but not convertible.
    template <typename T>
    std::optional<T> GetFlagValueAs(std::string_view name) const
    {
@@ -384,10 +398,11 @@ public:
       return values.empty() ? std::nullopt : std::make_optional(values[0]);
    }
 
-   // Tries to retrieve the flag values as a type T.
-   // The only supported types are integral and floating point types.
-   // \return An array of values of type T if the flag is present and all its values are convertible to T
-   // \throws std::invalid_argument if the flag has values but any of them are not convertible.
+   /// Tries to retrieve the flag values as a type T.
+   /// The only supported types are integral and floating point types.
+   /// \return An array of values of type T if the flag is present and all its values are convertible to T
+   /// \throw std::invalid_argument if the flag was undefined or defined as a switch flag.
+   /// \throw std::runtime_error if the flag has values but any of them is not convertible.
    template <typename T>
    std::vector<T> GetFlagValuesAs(std::string_view name) const
    {
@@ -412,18 +427,19 @@ public:
             else
                err << " as a floating point number.\n";
 
-            if (res.ec == std::errc::result_out_of_range)
-               throw std::out_of_range(err.str());
-            else
-               throw std::invalid_argument(err.str());
+            throw std::runtime_error(err.str());
          }
 #else
          std::conditional_t<std::is_integral_v<T>, long long, long double> converted;
          std::size_t unconvertedPos;
-         if constexpr (std::is_integral_v<T>) {
-            converted = std::stoll(std::string(val), &unconvertedPos);
-         } else {
-            converted = std::stold(std::string(val), &unconvertedPos);
+         try {
+            if constexpr (std::is_integral_v<T>) {
+               converted = std::stoll(std::string(val), &unconvertedPos);
+            } else {
+               converted = std::stold(std::string(val), &unconvertedPos);
+            }
+         } catch (...) {
+            unconvertedPos = 0;
          }
 
          const bool isOor = converted > std::numeric_limits<T>::max();
@@ -435,10 +451,7 @@ public:
             else
                err << " as a floating point number.\n";
 
-            if (isOor)
-               throw std::out_of_range(err.str());
-            else
-               throw std::invalid_argument(err.str());
+            throw std::runtime_error(err.str());
          }
 
          values.push_back(converted);
@@ -447,6 +460,7 @@ public:
       return values;
    }
 
+   /// Parses the given arguments, allowing for their retrieval via GetSwitch, GetFlagValue, etc.
    void Parse(const char *const *const args, std::size_t nArgs)
    {
       bool forcePositional = false;
