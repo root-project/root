@@ -670,6 +670,12 @@ namespace cling {
   }
 
   bool DeclUnloader::VisitFunctionDecl(FunctionDecl* FD, bool RemoveSpec) {
+    // A specialization can be reached both through its enclosing function and
+    // through the transaction's top-level declarations. Unload it only once:
+    // its declaration context may already have been dismantled on a later visit.
+    if (!m_UnloadedFunctions.insert(FD).second)
+      return true;
+
     // The Structors need to be handled differently.
     if (!isa<CXXConstructorDecl>(FD) && !isa<CXXDestructorDecl>(FD)) {
       // Cleanup the module if the transaction was committed and code was
