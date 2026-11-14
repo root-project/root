@@ -20,6 +20,7 @@
 #include <RooAbsCategory.h>
 #include <RooArgProxy.h>
 #include <RooAbsProxy.h>
+#include <RooAbsLValue.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
@@ -38,6 +39,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -288,6 +290,38 @@ void createVariables(RooWorkspace &ws, std::vector<HS3::Domain> const &domains, 
          ws.import(var, RooFit::Silence());
       }
    });
+   // A categorical axis is a RooCategory with one state per category, in the order of the document and with the
+   // position as index, so that the bins of a RooDataHist follow the order of "categories". An existing RooCategory of
+   // that name must have the same labels. That all domains agree on the categories is checked by the validation.
+   for (HS3::Domain const &domain : domains) {
+      for (auto const &axisVariant : domain.axes) {
+         auto const *axis = std::get_if<HS3::CategoricalAxis>(&axisVariant);
+         if (!axis) {
+            continue;
+         }
+         if (RooAbsArg *existing = ws.arg(axis->name)) {
+            auto *cat = dynamic_cast<RooCategory *>(existing);
+            if (!cat) {
+               RooJSONFactoryWSTool::error("the axis '" + axis->name + "' is categorical, but '" + axis->name +
+                                           "' already exists and is not a category");
+            }
+            std::set<std::string> existingLabels;
+            for (auto const &state : *cat) {
+               existingLabels.insert(state.first);
+            }
+            if (existingLabels != std::set<std::string>(axis->categories.begin(), axis->categories.end())) {
+               RooJSONFactoryWSTool::error("the categories of the axis '" + axis->name +
+                                           "' differ from the states of the existing category '" + axis->name + "'");
+            }
+            continue;
+         }
+         RooCategory cat{axis->name.c_str(), axis->name.c_str()};
+         for (std::size_t i = 0; i < axis->categories.size(); ++i) {
+            cat.defineType(axis->categories[i], static_cast<int>(i));
+         }
+         ws.import(cat, RooFit::Silence());
+      }
+   }
    forEachAxis([&](std::string const &domain, HS3::DomainAxis const &axis) {
       RooRealVar *var = ws.var(axis.name);
       if (var && domain != HS3::defaultDomainName) {
@@ -550,8 +584,9 @@ std::vector<std::vector<int>> generateBinIndices(const RooArgSet &vars)
    std::vector<std::vector<int>> combinations;
    std::vector<int> vars_numbins;
    vars_numbins.reserve(vars.size());
-   for (const auto *absv : static_range_cast<RooRealVar *>(vars)) {
-      vars_numbins.push_back(absv->getBins());
+   for (const RooAbsArg *arg : vars) {
+      // Continuous variables and categories (one bin per state)
+      vars_numbins.push_back(dynamic_cast<RooAbsLValue const &>(*arg).numBins());
    }
    std::vector<int> curr_comb(vars.size());
    ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
@@ -634,18 +669,98 @@ std::unique_ptr<RooRealVar> createObservable(HS3::BinnedAxis const &axis)
    return obs;
 }
 
-// Create the variables for the axes of binned data.
-RooArgSet createBinnedObservables(std::vector<std::variant<HS3::BinnedAxis, HS3::CategoricalAxis>> const &axes)
+// The labels of a category, as a set.
+std::set<std::string> labelsOf(RooCategory const &cat)
+{
+   std::set<std::string> labels;
+   for (auto const &state : cat) {
+      labels.insert(state.first);
+   }
+   return labels;
+}
+
+// Create the variables for the axes of binned data. A categorical axis is one bin per category. HS3 identifies
+// categories by name, so the data may list them in another order than the domain that declares the category.
+// RooDataHist looks up the bin of a category by the order of the states of the category it is given, so the category
+// of the data takes over the states and their order from the category of the workspace. `binOrder` is filled with the
+// position in the document of each bin in RooFit's order (last axis fastest), or left empty if the orders agree.
+RooArgSet createBinnedObservables(std::vector<std::variant<HS3::BinnedAxis, HS3::CategoricalAxis>> const &axes,
+                                  RooWorkspace const &workspace, std::string const &dataName,
+                                  std::vector<std::size_t> &binOrder)
 {
    RooArgSet vars;
+   std::vector<std::vector<std::size_t>> axisPositions;
+   bool reordered = false;
    for (auto const &axisVariant : axes) {
-      auto const *axis = std::get_if<HS3::BinnedAxis>(&axisVariant);
-      if (!axis) {
-         RooJSONFactoryWSTool::error("categorical axes of binned data are not supported yet");
+      if (auto const *axis = std::get_if<HS3::BinnedAxis>(&axisVariant)) {
+         auto obs = createObservable(*axis);
+         std::vector<std::size_t> positions(obs->numBins());
+         std::iota(positions.begin(), positions.end(), 0);
+         axisPositions.push_back(std::move(positions));
+         vars.addOwned(std::move(obs));
+         continue;
       }
-      vars.addOwned(createObservable(*axis));
+      auto const &axis = std::get<HS3::CategoricalAxis>(axisVariant);
+      auto cat = std::make_unique<RooCategory>(axis.name.c_str(), axis.name.c_str());
+      if (RooCategory const *wsCat = workspace.cat(axis.name)) {
+         if (labelsOf(*wsCat) != std::set<std::string>(axis.categories.begin(), axis.categories.end())) {
+            RooJSONFactoryWSTool::error("the categories of the axis '" + axis.name + "' of the dataset '" + dataName +
+                                        "' differ from those of the category '" + axis.name + "'");
+         }
+         for (unsigned int i = 0; i < wsCat->size(); ++i) {
+            auto const &state = wsCat->getOrdinal(i);
+            cat->defineType(state.first, state.second);
+         }
+      } else {
+         for (std::size_t i = 0; i < axis.categories.size(); ++i) {
+            cat->defineType(axis.categories[i], static_cast<int>(i));
+         }
+      }
+      std::vector<std::size_t> positions(axis.categories.size());
+      for (std::size_t i = 0; i < positions.size(); ++i) {
+         auto found = std::find(axis.categories.begin(), axis.categories.end(), cat->getOrdinal(i).first);
+         positions[i] = std::distance(axis.categories.begin(), found);
+         reordered |= positions[i] != i;
+      }
+      axisPositions.push_back(std::move(positions));
+      vars.addOwned(std::move(cat));
+   }
+   binOrder.clear();
+   if (!reordered) {
+      return vars;
+   }
+   std::size_t total = 1;
+   for (auto const &positions : axisPositions) {
+      total *= positions.size();
+   }
+   binOrder.resize(total);
+   for (std::size_t k = 0; k < total; ++k) {
+      // Decompose RooFit's bin index (last axis fastest) and recompose it with the positions in the document.
+      std::size_t rest = k;
+      std::size_t docIndex = 0;
+      std::size_t stride = 1;
+      for (std::size_t j = axisPositions.size(); j-- > 0;) {
+         const std::size_t nBins = axisPositions[j].size();
+         docIndex += axisPositions[j][rest % nBins] * stride;
+         rest /= nBins;
+         stride *= nBins;
+      }
+      binOrder[k] = docIndex;
    }
    return vars;
+}
+
+// The values in RooFit's bin order, from the order of the document (see createBinnedObservables()).
+std::vector<double> permute(std::vector<double> const &values, std::vector<std::size_t> const &order)
+{
+   if (order.empty() || values.size() != order.size()) {
+      return values;
+   }
+   std::vector<double> out(values.size());
+   for (std::size_t k = 0; k < order.size(); ++k) {
+      out[k] = values[order[k]];
+   }
+   return out;
 }
 
 // Make the range of an observable of unbinned data consistent with the "min" and "max" of the axis. Variables that
@@ -674,7 +789,20 @@ std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::Unb
    for (auto const &axisVariant : input.axes) {
       auto const *axis = std::get_if<HS3::ContinuousAxis>(&axisVariant);
       if (!axis) {
-         RooJSONFactoryWSTool::error("categorical axes of unbinned data are not supported yet");
+         // The category of a categorical axis is declared by a domain.
+         auto const &catAxis = std::get<HS3::CategoricalAxis>(axisVariant);
+         RooCategory *cat = workspace.cat(catAxis.name);
+         if (!cat) {
+            RooJSONFactoryWSTool::error("The categorical observable \"" + catAxis.name +
+                                        "\" could not be found in the workspace! Categorical observables are "
+                                        "declared by a categorical axis in a domain.");
+         }
+         if (labelsOf(*cat) != std::set<std::string>(catAxis.categories.begin(), catAxis.categories.end())) {
+            RooJSONFactoryWSTool::error("The categories of the axis \"" + catAxis.name +
+                                        "\" differ from the states of the category \"" + catAxis.name + "\"");
+         }
+         varlist.add(*cat);
+         continue;
       }
       RooRealVar *var = workspace.var(axis->name);
       if (!var) {
@@ -688,7 +816,13 @@ std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::Unb
    const std::size_t nAxes = input.axes.size();
    for (std::size_t i = 0; i < input.numEntries(); ++i) {
       for (std::size_t j = 0; j < nAxes; ++j) {
-         static_cast<RooRealVar *>(varlist.at(j))->setVal(input.entries[i * nAxes + j]);
+         const double value = input.entries[i * nAxes + j];
+         if (auto const *catAxis = std::get_if<HS3::CategoricalAxis>(&input.axes[j])) {
+            // The entry of a categorical axis is the position of the label in its "categories".
+            static_cast<RooCategory *>(varlist.at(j))->setLabel(catAxis->categories[static_cast<std::size_t>(value)]);
+         } else {
+            static_cast<RooRealVar *>(varlist.at(j))->setVal(value);
+         }
       }
       data->add(vars, input.weights ? (*input.weights)[i] : 1.);
    }
@@ -707,8 +841,14 @@ loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges cons
          RooJSONFactoryWSTool::warning("RooFitHS3: the correlations of the uncertainties of the dataset '" +
                                        input.name + "' are ignored, because RooDataHist can't store them.");
       }
-      return HS3::createDataHist(input.name, createBinnedObservables(binned->axes), binned->contents,
-                                 binned->uncertainty ? &binned->uncertainty->sigma : nullptr);
+      std::vector<std::size_t> binOrder;
+      RooArgSet vars = createBinnedObservables(binned->axes, workspace, input.name, binOrder);
+      std::vector<double> sigma;
+      if (binned->uncertainty) {
+         sigma = permute(binned->uncertainty->sigma, binOrder);
+      }
+      return HS3::createDataHist(input.name, vars, permute(binned->contents, binOrder),
+                                 binned->uncertainty ? &sigma : nullptr);
    }
    if (auto const *unbinned = std::get_if<HS3::UnbinnedData>(&input.body)) {
       if (unbinned->hasEntriesUncertainties) {
