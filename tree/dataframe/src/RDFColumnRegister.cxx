@@ -236,7 +236,6 @@ bool RColumnRegister::IsDefine(std::string_view name) const
 /// Expands `#%var` to `R_rdf_sizeof_var` (the #%var columns are implicitly-defined aliases).
 std::string_view RColumnRegister::ResolveAlias(std::string_view alias) const
 {
-
    // #var is an alias for R_rdf_sizeof_var
    if (alias.size() > 1 && alias[0] == '#') {
       std::string sizeof_colname{"R_rdf_sizeof_"};
@@ -259,22 +258,24 @@ RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, cons
                                                          const std::string &variationName,
                                                          const std::type_info &requestedType)
 {
+   auto resolvedColName = std::string(ResolveAlias(colName));
+
    // try variations first
    if (variationName != "nominal") {
-      auto *variationAndReaders = FindVariationAndReaders(colName, variationName);
+      auto *variationAndReaders = FindVariationAndReaders(resolvedColName, variationName);
       if (variationAndReaders != nullptr) {
          const auto &actualType = variationAndReaders->GetVariation().GetTypeId();
-         CheckReaderTypeMatches(actualType, requestedType, colName);
-         return &variationAndReaders->GetReader(slot, colName, variationName);
+         CheckReaderTypeMatches(actualType, requestedType, resolvedColName);
+         return &variationAndReaders->GetReader(slot, resolvedColName, variationName);
       }
    }
 
    // otherwise try defines
    auto it = std::find_if(fDefines->begin(), fDefines->end(),
-                          [&colName](const DefinesMap_t::value_type &kv) { return kv.first == colName; });
+                          [&resolvedColName](const DefinesMap_t::value_type &kv) { return kv.first == resolvedColName; });
    if (it != fDefines->end()) {
       const auto &actualType = it->second->GetDefine().GetTypeId();
-      CheckReaderTypeMatches(actualType, requestedType, colName);
+      CheckReaderTypeMatches(actualType, requestedType, resolvedColName);
       return &it->second->GetReader(slot, variationName);
    }
 
@@ -286,16 +287,18 @@ RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, cons
 RDFDetail::RColumnReaderBase *
 RColumnRegister::GetReaderUnchecked(unsigned int slot, const std::string &colName, const std::string &variationName)
 {
+   auto resolvedColName = std::string(ResolveAlias(colName));
+
    // try variations first
    if (variationName != "nominal") {
-      if (auto *variationAndReaders = FindVariationAndReaders(colName, variationName)) {
-         return &variationAndReaders->GetReader(slot, colName, variationName);
+      if (auto *variationAndReaders = FindVariationAndReaders(resolvedColName, variationName)) {
+         return &variationAndReaders->GetReader(slot, resolvedColName, variationName);
       }
    }
 
    // otherwise try defines
-   if (auto it =
-          std::find_if(fDefines->begin(), fDefines->end(), [&colName](const auto &kv) { return kv.first == colName; });
+   if (auto it = std::find_if(fDefines->begin(), fDefines->end(),
+                              [&resolvedColName](const auto &kv) { return kv.first == resolvedColName; });
        it != fDefines->end()) {
       return &it->second->GetReader(slot, variationName);
    }
