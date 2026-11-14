@@ -74,6 +74,23 @@ void TemplateProxy::AdoptTemplate(PyCallable* pc) {
 }
 
 //----------------------------------------------------------------------------
+static std::string IndentDiagnostics(const std::string& diags) {
+  // Indent the (multi-line) compiler diagnostics to nest them under the
+  // message they belong to
+  std::string res;
+  size_t start = 0;
+  while (start < diags.size()) {
+    size_t end = diags.find('\n', start);
+    if (end == std::string::npos)
+      end = diags.size();
+    res += "\n    ";
+    res.append(diags, start, end - start);
+    start = end + 1;
+  }
+  return res;
+}
+
+//----------------------------------------------------------------------------
 PyObject* TemplateProxy::Instantiate(const std::string& fname,
                                      cpyrt_PyArgs_t args, size_t nargsf,
                                      Utility::ArgPreference pref, int* pcnt) {
@@ -244,11 +261,26 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
   interop::TCppScope_t scope = ((CPPClass*)fTI->fPyClass)->fCppType;
   interop::TCppMethod_t cppmeth =
       interop::GetMethodTemplate(scope, fname, proto);
+  // Compiler diagnostics from instantiating the body of the match: they are not
+  // printed, so report them here, with the error if the instantiation failed,
+  // or as a warning if it succeeded
+  std::string diags = interop::GetLastOverloadMatchDiagnostics();
   if (!cppmeth && !protoPair.empty() && protoPair != proto) {
     // retry with 2-tuples typed as std::pair instead of std::initializer_list
     cppmeth = interop::GetMethodTemplate(scope, fname, protoPair);
-    if (cppmeth)
+    const std::string& diagsPair = interop::GetLastOverloadMatchDiagnostics();
+    if (cppmeth) {
       proto = protoPair;
+      diags = diagsPair;
+    } else
+      diags += diagsPair;
+  }
+  if (cppmeth && !diags.empty()) {
+    const std::string& msg = "Compiler warnings during instantiation of \"" +
+                             fname + "(" + proto + ")\"" +
+                             IndentDiagnostics(diags);
+    if (PyErr_WarnEx(PyExc_UserWarning, msg.c_str(), 1) < 0)
+      return nullptr; // warnings turned into errors
   }
   if (cppmeth) { // overload stops here
     // A successful instantiation needs to be cached to pre-empt future
@@ -392,8 +424,8 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     return pymeth;
   }
 
-  PyErr_Format(PyExc_TypeError, "Failed to instantiate \"%s(%s)\"",
-               fname.c_str(), proto.c_str());
+  PyErr_Format(PyExc_TypeError, "Failed to instantiate \"%s(%s)\"%s",
+               fname.c_str(), proto.c_str(), IndentDiagnostics(diags).c_str());
   return nullptr;
 }
 

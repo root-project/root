@@ -336,6 +336,8 @@ RPY_EXPORTED
 TCppMethod_t GetMethodTemplate(TCppScope_t scope, const std::string& name,
                                const std::string& proto);
 RPY_EXPORTED
+std::string GetLastOverloadMatchDiagnostics();
+RPY_EXPORTED
 void GetClassOperators(TCppScope_t klass, const std::string& opname,
                        std::vector<TCppMethod_t>& operators);
 RPY_EXPORTED

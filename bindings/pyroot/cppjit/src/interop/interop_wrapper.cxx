@@ -1906,6 +1906,12 @@ interop::TCppMethod_t interop::GetMethodTemplate(TCppScope_t scope,
   // if it fails, use Sema to propogate info about why it failed (DeductionInfo)
 }
 
+std::string interop::GetLastOverloadMatchDiagnostics() {
+  // diagnostics from instantiating the body of the match in the last
+  // GetMethodTemplate (overload resolution) on this thread
+  return Cpp::GetLastOverloadMatchDiagnostics();
+}
+
 static inline bool is_basic_string_of(const std::string& n, const char* charT) {
   // Match "std::basic_string<charT" whether or not the default template
   // arguments (char_traits, allocator) are spelled out; the character type

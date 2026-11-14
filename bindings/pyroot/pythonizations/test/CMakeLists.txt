@@ -140,3 +140,5 @@ ROOT_ADD_PYUNITTEST(package_metadata package_metadata.py)
 ROOT_ADD_PYUNITTEST(regression_23728 regression_23728.py)
 
 ROOT_ADD_PYUNITTEST(pyroot_array_numpy_views array_conversions.py PYTHON_DEPS numpy)
+
+ROOT_ADD_PYUNITTEST(pyroot_template_instantiation_diagnostics template_instantiation_diagnostics.py)
