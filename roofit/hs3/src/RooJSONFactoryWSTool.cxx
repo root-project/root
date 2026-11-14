@@ -1005,7 +1005,7 @@ void declareBookkeepingColumns(JSONNode &rootnode, RooWorkspace const &ws)
 // Write each term of the likelihoods of the exported document `rootnode` once. A RooFit model often has a constraint
 // both as a factor of the product of a channel and as a term of the likelihood (e.g. a constraint of a HistFactory
 // modifier, an external constraint of the ModelConfig, or any constraint of a channel, see
-// constraintFactorsOfChannels()); RooFit counts it once. In HS3 it would enter twice, so the factor is removed from
+// constraintsOfChannels()); RooFit counts it once. In HS3 it would enter twice, so the factor is removed from
 // the product. Only products that no other distribution uses are changed (being a component
 // of a combined distribution is not a use), and only factors that are terms of every likelihood that has the product
 // as a term.
@@ -3367,19 +3367,27 @@ void RooJSONFactoryWSTool::exportModelConfig(RooFit::ModelConfig const &mc,
 
 namespace {
 
-// The constraint terms of the pdf `pdf` of a ModelConfig with the observables `observables` that are written as
-// terms of the likelihood instead of as factors of products: the constraints that RooFit finds
-// (RooAbsPdf::getAllConstraints()) and that are factors of a channel, i.e. of `pdf` itself or of a component of the
-// RooSimultaneous `pdf`, if the channel is an ordinary product that no other object of the workspace uses. In RooFit,
-// constraints are factors of the channels, and RooFit counts each once, also if several channels share it; in HS3,
-// they are terms of the likelihood. writeLikelihoodTermsOnce() takes them out of the products. Constraints elsewhere,
-// e.g. in a nested product, stay where they are. HistFactory channels (`isHistFactoryChannel`) are skipped: their
-// constraints are no factors in the document. The channels are taken as they are written: a component of the
-// RooSimultaneous is replaced by the one in `renamed` (by label), if any (Config::renameCombinedObservables).
-std::vector<std::string>
-constraintFactorsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet const &observables,
-                            std::function<bool(std::string const &)> const &isHistFactoryChannel,
-                            std::map<std::string, RooAbsPdf const *> const *renamed)
+// A constraint term of a channel of the pdf of a ModelConfig, see constraintsOfChannels().
+struct ChannelConstraint {
+   std::string channel;
+   RooAbsPdf const *constraint = nullptr;
+   bool histFactory = false; ///< Whether the channel is written as a histfactory_dist.
+};
+
+// The constraint terms of the pdf `pdf` of a ModelConfig with the observables `observables`, which are written as
+// terms of the likelihood: the constraints that RooFit finds (RooAbsPdf::getAllConstraints()) and that are factors
+// of a channel, i.e. of `pdf` itself or of a component of the RooSimultaneous `pdf`. In RooFit, constraints are
+// factors of the channels, and RooFit counts each once, also if several channels share it; in HS3, they are terms
+// of the likelihood.
+// - The channels that are written as histfactory_dist (`isHistFactoryChannel`) don't contain their constraints in
+//   the document; their modifiers refer to them.
+// - The constraints of a channel that is written as product_dist are taken out of the product by
+//   writeLikelihoodTermsOnce(). This is only done if no other object of the workspace uses the product, so the
+//   constraints of other products are not returned.
+// Constraints elsewhere, e.g. in a nested product, stay where they are.
+std::vector<ChannelConstraint>
+constraintsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet const &observables,
+                      std::function<bool(std::string const &)> const &isHistFactoryChannel)
 {
    RooArgSet params;
    pdf.getParameters(&observables, params);
@@ -3387,43 +3395,39 @@ constraintFactorsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArg
    std::vector<RooAbsPdf const *> channels;
    if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(&pdf)) {
       for (auto const &item : simPdf->indexCat()) {
-         RooAbsPdf const *component = simPdf->getPdf(item.first);
-         if (renamed) {
-            if (auto found = renamed->find(item.first); found != renamed->end()) {
-               component = found->second;
-            }
-         }
-         if (component) {
+         if (RooAbsPdf const *component = simPdf->getPdf(item.first)) {
             channels.push_back(component);
          }
       }
    } else {
       channels.push_back(&pdf);
    }
-   std::vector<std::string> factors;
+   std::vector<ChannelConstraint> out;
    for (RooAbsPdf const *channel : channels) {
       auto const *prod = dynamic_cast<RooProdPdf const *>(channel);
-      if (!prod || isHistFactoryChannel(prod->GetName())) {
+      if (!prod) {
          continue;
       }
-      // Being a component of a RooSimultaneous, i.e. of a combined distribution, is not a use.
-      bool usedElsewhere = false;
-      for (RooAbsArg const *client : prod->clients()) {
-         if (ws.arg(client->GetName()) == client && !dynamic_cast<RooSimultaneous const *>(client)) {
-            usedElsewhere = true;
+      const bool histFactory = isHistFactoryChannel(prod->GetName());
+      if (!histFactory) {
+         // Being a component of a RooSimultaneous, i.e. of a combined distribution, is not a use.
+         bool usedElsewhere = false;
+         for (RooAbsArg const *client : prod->clients()) {
+            if (ws.arg(client->GetName()) == client && !dynamic_cast<RooSimultaneous const *>(client)) {
+               usedElsewhere = true;
+            }
+         }
+         if (usedElsewhere) {
+            continue;
          }
       }
-      if (usedElsewhere) {
-         continue;
-      }
       for (RooAbsArg const *factor : prod->pdfList()) {
-         if (constraints->find(*factor) &&
-             std::find(factors.begin(), factors.end(), factor->GetName()) == factors.end()) {
-            factors.push_back(factor->GetName());
+         if (constraints->find(*factor)) {
+            out.push_back({prod->GetName(), static_cast<RooAbsPdf const *>(factor), histFactory});
          }
       }
    }
-   return factors;
+   return out;
 }
 
 } // namespace
@@ -3455,9 +3459,8 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
       }
    };
    // The additional terms of the likelihood: the external constraints of the ModelConfig, and the constraint terms
-   // of the HistFactory channels of the model, which can be the components of a combined distribution. The latter
-   // are the constraints that the modifiers name, as written (e.g. array distributions), and those that no modifier
-   // names. They are listed in "aux_distributions" with the observed values of their observables as constant
+   // of the channels of the model, which can be the components of a combined distribution (constraintsOfChannels()).
+   // The latter are listed in "aux_distributions" with the observed values of their observables as constant
    // parameters, or (config().exportConstraintData) in "distributions", each paired with a data set that holds the
    // observed values.
    if (mc.GetExternalConstraints()) {
@@ -3482,15 +3485,87 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
          constraintTerms.push_back(term);
       }
    };
-   for (std::string const &channel : channels) {
+   // The constraint terms that the HistFactory exporter wrote for the channel `channel`, in the order of the document:
+   // the constraints that the modifiers name, as written (e.g. array distributions), and those that no modifier
+   // names.
+   auto writtenByHistFactory = [&](std::string const &channel) {
+      std::vector<std::string> out;
+      auto add = [&](std::string const &name) {
+         if (std::find(out.begin(), out.end(), name) == out.end()) {
+            out.push_back(name);
+         }
+      };
       if (auto found = _export->constraintTermsOfPdf.find(channel); found != _export->constraintTermsOfPdf.end()) {
          for (std::string const &term : found->second) {
-            addConstraintTerm(term);
+            add(term);
          }
       }
       if (auto found = doc.rooFit.channelConstraints.find(channel); found != doc.rooFit.channelConstraints.end()) {
          for (auto const &ref : found->second) {
-            addConstraintTerm(ref.name);
+            add(ref.name);
+         }
+      }
+      return out;
+   };
+   RooArgSet const *observables = mc.GetObservables();
+   if (!observables || observables->empty()) {
+      // Without observables (e.g. a ModelConfig without data), RooFit can't tell constraints from other pdfs: only the
+      // constraint terms of the HistFactory channels are listed.
+      for (std::string const &channel : channels) {
+         for (std::string const &term : writtenByHistFactory(channel)) {
+            addConstraintTerm(term);
+         }
+      }
+   } else {
+      auto isHistFactoryChannel = [&](std::string const &name) {
+         return _export->constraintTermsOfPdf.count(name) ||
+                std::any_of(doc.distributions.begin(), doc.distributions.end(), [&](HS3::Distribution const &dist) {
+                   return dist.name == name && std::holds_alternative<HS3::HistFactoryDist>(dist.body);
+                });
+      };
+      // The constraint terms of the channels as RooFit finds them, under the names under which they are written:
+      // the array distribution that holds a constraint of a HistFactory channel, or the name of the constraint.
+      std::map<std::string, std::vector<std::string>> termsOfChannel;
+      for (ChannelConstraint const &item :
+           constraintsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel)) {
+         std::string term = item.constraint->GetName();
+         if (item.histFactory) {
+            if (auto found = _export->arrayOfComponent.find(term); found != _export->arrayOfComponent.end()) {
+               term = found->second;
+            }
+         }
+         auto &terms = termsOfChannel[item.channel];
+         if (std::find(terms.begin(), terms.end(), term) == terms.end()) {
+            terms.push_back(term);
+         }
+      }
+      for (std::string const &channel : channels) {
+         std::vector<std::string> const &found = termsOfChannel[channel];
+         if (!isHistFactoryChannel(channel)) {
+            for (std::string const &term : found) {
+               addConstraintTerm(term);
+            }
+            continue;
+         }
+         // The constraint terms that the HistFactory exporter wrote must be the ones that RooFit finds, or a
+         // constraint would be missing from the likelihood, or would be in it without being written. They are listed
+         // in the order of the document, which doesn't depend on how the workspace was built.
+         std::vector<std::string> const written = writtenByHistFactory(channel);
+         std::set<std::string> const writtenSet{written.begin(), written.end()};
+         std::set<std::string> const foundSet{found.begin(), found.end()};
+         if (writtenSet != foundSet) {
+            auto join = [](std::set<std::string> const &names) {
+               std::string out;
+               for (std::string const &name : names) {
+                  out += (out.empty() ? "'" : ", '") + name + "'";
+               }
+               return out.empty() ? std::string{"none"} : out;
+            };
+            error("cannot export the constraint terms of the HistFactory channel '" + channel +
+                  "': the channel writes " + join(writtenSet) + ", but RooFit finds " + join(foundSet));
+         }
+         for (std::string const &term : written) {
+            addConstraintTerm(term);
          }
       }
    }
@@ -3499,20 +3574,6 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
          likelihood.terms.push_back({{term}, HS3::DataRef{term + "_data"}});
       } else {
          addAux(term);
-      }
-   }
-   // Without observables (e.g. a ModelConfig without data), RooFit can't tell constraints from other pdfs.
-   if (RooArgSet const *observables = mc.GetObservables(); observables && !observables->empty()) {
-      auto isHistFactoryChannel = [&](std::string const &name) {
-         return std::any_of(doc.distributions.begin(), doc.distributions.end(), [&](HS3::Distribution const &dist) {
-            return dist.name == name && std::holds_alternative<HS3::HistFactoryDist>(dist.body);
-         });
-      };
-      auto renamed = _renamedComponents.find(pdf->GetName());
-      for (std::string const &factor :
-           constraintFactorsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel,
-                                       renamed != _renamedComponents.end() ? &renamed->second : nullptr)) {
-         addAux(factor);
       }
    }
    doc.likelihoods.push_back(std::move(likelihood));
