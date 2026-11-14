@@ -17,6 +17,12 @@ TEST(RAxisVariant, RegularAxis)
       EXPECT_EQ(axis.GetNNormalBins(), Bins);
       EXPECT_EQ(axis.GetTotalNBins(), Bins + 2);
 
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex::Underflow()));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex(1)));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex::Overflow()));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex(Bins)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex()));
+
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
       const auto normal12 = axis.GetNormalRange(1, 2);
@@ -34,6 +40,12 @@ TEST(RAxisVariant, RegularAxis)
       const RAxisVariant axis{RRegularAxis(Bins, {0, Bins}, /*enableFlowBins=*/false)};
       EXPECT_EQ(axis.GetNNormalBins(), Bins);
       EXPECT_EQ(axis.GetTotalNBins(), Bins);
+
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex::Underflow()));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex(1)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex::Overflow()));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex(Bins)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex()));
 
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
@@ -68,6 +80,12 @@ TEST(RAxisVariant, VariableBinAxis)
       EXPECT_EQ(axis.GetNNormalBins(), Bins);
       EXPECT_EQ(axis.GetTotalNBins(), Bins + 2);
 
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex::Underflow()));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex(1)));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex::Overflow()));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex(Bins)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex()));
+
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
       const auto normal12 = axis.GetNormalRange(1, 2);
@@ -85,6 +103,12 @@ TEST(RAxisVariant, VariableBinAxis)
       const RAxisVariant axis{RVariableBinAxis(bins, /*enableFlowBins=*/false)};
       EXPECT_EQ(axis.GetNNormalBins(), Bins);
       EXPECT_EQ(axis.GetTotalNBins(), Bins);
+
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex::Underflow()));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex(1)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex::Overflow()));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex(Bins)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex()));
 
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
@@ -114,6 +138,12 @@ TEST(RAxisVariant, CategoricalAxis)
       EXPECT_EQ(axis.GetNNormalBins(), 3);
       EXPECT_EQ(axis.GetTotalNBins(), 4);
 
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex::Underflow()));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex(1)));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex::Overflow()));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex(3)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex()));
+
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), 3);
       const auto normal12 = axis.GetNormalRange(1, 2);
@@ -131,6 +161,12 @@ TEST(RAxisVariant, CategoricalAxis)
       const RAxisVariant axis{RCategoricalAxis(categories, /*enableOverflowBin=*/false)};
       EXPECT_EQ(axis.GetNNormalBins(), 3);
       EXPECT_EQ(axis.GetTotalNBins(), 3);
+
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex::Underflow()));
+      EXPECT_TRUE(axis.IsValidIndex(RBinIndex(1)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex::Overflow()));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex(3)));
+      EXPECT_FALSE(axis.IsValidIndex(RBinIndex()));
 
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), 3);

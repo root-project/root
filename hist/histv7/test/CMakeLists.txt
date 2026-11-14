@@ -21,5 +21,6 @@ if(NOT DEFINED histv7_standalone)
 
   if(pyroot)
     ROOT_ADD_PYUNITTEST(hist_py hist.py)
+    ROOT_ADD_PYUNITTEST(hist_uhi_py hist_uhi.py)
   endif()
 endif()
