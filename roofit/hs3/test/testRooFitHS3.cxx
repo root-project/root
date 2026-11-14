@@ -8415,3 +8415,71 @@ TEST(RooFitHS3, ArrayDistVariatesInLikelihood)
                                "the variate 'nom_b' is shared by the terms 'constraints' and 'other' of the "
                                "likelihood 'lh'");
 }
+
+// A constraint of a HistFactory modifier that is also an external constraint of the ModelConfig is referred to by
+// its own name, so it is not collected into an array: the export must not leave the likelihood with a reference to
+// a distribution that is not written.
+TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+  "metadata": {"hs3_version": "0.3"},
+  "distributions": [
+    {"name": "HF", "type": "histfactory_dist",
+     "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+     "axes": [{"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}],
+     "samples": [{"name": "signal", "data": {"contents": [10.0]},
+                  "modifiers": [{"name": "mu", "type": "normfactor", "parameters": ["mu"]},
+                                {"name": "syst", "type": "normsys", "parameters": ["theta"],
+                                 "data": {"lo": 0.9, "hi": 1.1}, "constraints": ["constraint"]}]}]},
+    {"name": "constraint", "type": "gaussian_dist", "x": "gobs", "mean": "theta", "sigma": 1.0}
+  ],
+  "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+    {"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}, {"name": "mu", "min": 0.0, "max": 5.0},
+    {"name": "theta", "min": -5.0, "max": 5.0}, {"name": "gobs", "min": -5.0, "max": 5.0}]}],
+  "parameter_points": [{"name": "default_values", "parameters": [
+    {"name": "mu", "value": 1.0}, {"name": "theta", "value": 0.0}, {"name": "gobs", "value": 0.0, "const": true}]}],
+  "data": [{"name": "data", "type": "binned", "contents": [10.0],
+            "axes": [{"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}]}],
+  "likelihoods": [{"name": "lh", "distributions": ["HF"], "data": ["data"]}],
+  "analyses": [{"name": "mc", "likelihood": "lh", "parameters_of_interest": ["mu"], "domains": ["default_domain"]}]
+})";
+
+   auto nllOf = [](RooWorkspace &w) {
+      auto *mc = dynamic_cast<RooFit::ModelConfig *>(w.obj("mc"));
+      if (!mc || !w.data("data")) {
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+      w.var("theta")->setVal(0.4);
+      RooArgSet external;
+      if (mc->GetExternalConstraints()) {
+         external.add(*mc->GetExternalConstraints());
+      }
+      std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external),
+                                                              RooFit::GlobalObservables(*mc->GetGlobalObservables()))};
+      return nll->getVal();
+   };
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("mc"));
+   ASSERT_NE(mc, nullptr);
+   const double nll = nllOf(ws);
+   ASSERT_FALSE(std::isnan(nll));
+   // Redundant: the constraint is part of the pdf already, and RooFit counts it once.
+   mc->SetExternalConstraints(RooArgSet{*ws.pdf("constraint")});
+   ASSERT_NEAR(nllOf(ws), nll, 1e-10 * std::abs(nll));
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   const auto *constraint = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "constraint");
+   ASSERT_NE(constraint, nullptr) << exported;
+   EXPECT_EQ((*constraint)["type"].val(), "gaussian_dist") << exported;
+   EXPECT_NE(exported.find(R"("constraints":["constraint"])"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("aux_distributions":["constraint"])"), std::string::npos) << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+   EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
+}

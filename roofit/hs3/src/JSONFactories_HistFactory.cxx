@@ -32,6 +32,7 @@
 #include <RooProduct.h>
 #include <RooWorkspace.h>
 #include <RooFitImplHelpers.h>
+#include <RooFit/ModelConfig.h>
 
 #include <algorithm>
 #include <cctype>
@@ -1417,10 +1418,17 @@ bool isHistFactoryChannelProduct(RooAbsArg const &pdf)
 
 // Whether the constraint `constraint` can be written as an array component: every object of the workspace that uses
 // it is a HistFactory channel, which refers to it through its modifiers, or an array distribution. Any other user,
-// e.g. an ordinary product, refers to the constraint by its own name, which an array component doesn't have. The
-// decision only depends on the workspace, not on the order in which the export visits the objects.
+// e.g. an ordinary product or a ModelConfig that has it as an external constraint, refers to the constraint by its
+// own name, which an array component doesn't have. The decision only depends on the workspace, not on the order in
+// which the export visits the objects.
 bool usedOnlyByHistFactoryChannels(RooJSONFactoryWSTool &tool, RooAbsPdf const &constraint)
 {
+   for (TObject const *obj : tool.workspace()->allGenericObjects()) {
+      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
+      if (mc && mc->GetExternalConstraints() && mc->GetExternalConstraints()->find(constraint.GetName())) {
+         return false;
+      }
+   }
    for (RooAbsArg const *client : constraint.clients()) {
       if (tool.workspace()->arg(client->GetName()) != client) {
          continue; // not part of what is exported
