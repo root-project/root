@@ -4761,12 +4761,16 @@ TEST(RooFitHS3, HistFactoryExportDoesNotDependOnNames)
       nCustom += mod.rfind("custom:", 0) == 0;
    }
    EXPECT_EQ(nCustom, 1u) << json;
-   std::size_t nPerBin = 0;
+   std::size_t nShapeFactor = 0;
+   std::size_t nStatError = 0;
    for (auto const &mod : modifiers) {
-      nPerBin += mod.rfind("shapefactor:", 0) == 0 || mod.rfind("staterror:", 0) == 0;
+      nShapeFactor += mod.rfind("shapefactor:", 0) == 0;
+      nStatError += mod.rfind("staterror:", 0) == 0;
    }
-   // SR: shapesys and staterror of the background; CR: the free shapefactor.
-   EXPECT_EQ(nPerBin, 3u) << json;
+   // SR: shapesys of the background, written as shapefactor, and its staterror, which is recognized by its attribute
+   // and not by its name; CR: the free shapefactor.
+   EXPECT_EQ(nShapeFactor, 2u) << json;
+   EXPECT_EQ(nStatError, 1u) << json;
 
    // The likelihood is the same after the round trip, at several parameter points.
    RooWorkspace wsBack{"wsBack"};
