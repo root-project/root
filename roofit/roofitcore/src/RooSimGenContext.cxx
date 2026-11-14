@@ -76,9 +76,17 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   // the relative fractions of the components
   _haveIdxProto = prototype ? true : false ;
   _idxCatName = idxCat.GetName() ;
-  if (!_haveIdxProto && !model.canBeExtended()) {
+  bool allCanExtend = true;
+  for (auto *proxy : static_range_cast<RooRealProxy *>(model._pdfProxyList)) {
+    auto &compPdf = static_cast<RooAbsPdf const &>(proxy->arg());
+    if (!compPdf.canBeExtended()) {
+      allCanExtend = false;
+      break;
+    }
+  }
+  if (!_haveIdxProto && !allCanExtend) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
-              << " or prototype data to calculate number of events per category" << std::endl ;
+              << " (with all components extendable) or prototype data to calculate number of events per category" << std::endl ;
     _isValid = false ;
     _numPdf = 0 ;
     return ;
