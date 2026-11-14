@@ -282,11 +282,11 @@ void ROOT::Internal::RPrintValueVisitor::VisitCardinalityField(const ROOT::RCard
    PrintIndent();
    PrintName(field);
    if (field.As32Bit()) {
-      fOutput << fValue.GetRef<std::uint32_t>();
+      fOutput << fValue.GetRef<ROOT::RNTupleCardinality<std::uint32_t>>().fValue;
       return;
    }
    if (field.As64Bit()) {
-      fOutput << fValue.GetRef<std::uint64_t>();
+      fOutput << fValue.GetRef<ROOT::RNTupleCardinality<std::uint64_t>>().fValue;
       return;
    }
    R__ASSERT(false && "unsupported cardinality size type");
