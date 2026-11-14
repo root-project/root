@@ -79,6 +79,48 @@ class TestTH1Serialization:
         # test that name is preserved
         assert h.GetName() == h_loaded.GetName() == h_loaded_cls.GetName()
 
+    def test_axis_does_not_depend_on_range(self):
+        h = ROOT.TH1D("h1_range", "h1_range", 10, 0, 10)
+        h.GetXaxis().SetRange(3, 5)
+
+        axis = h._to_uhi_()["axes"][0]
+
+        assert (axis["lower"], axis["upper"], axis["bins"]) == (0, 10, 10)
+
+    def test_variable_axis(self):
+        edges = [0.0, 1.0, 5.0, 10.0]
+        h = ROOT.TH1D("h1_variable", "h1_variable", 3, np.array(edges))
+
+        axis = h._to_uhi_()["axes"][0]
+
+        assert axis["type"] == "variable"
+        assert axis["edges"] == edges
+
+    def test_profile_storage(self):
+        profile = ROOT.TProfile("p_storage", "p_storage", 4, 0, 4)
+        for x, y in [(0.5, 1), (0.5, 3), (1.5, 2), (1.5, 2), (1.5, 5)]:
+            profile.Fill(x, y)
+
+        storage = profile._to_uhi_()["storage"]
+
+        # The variances of the storage are the unbiased variances of y
+        assert storage["type"] == "mean"
+        assert np.array_equal(storage["counts"], [0, 2, 3, 0, 0, 0])
+        assert np.allclose(storage["variances"], [0, 2, 3, 0, 0, 0])
+
+    def test_weighted_profile_storage(self):
+        profile = ROOT.TProfile("p_storage_weighted", "p_storage_weighted", 4, 0, 4)
+        profile.Sumw2()
+        for x, y, w in [(0.5, 1, 2), (0.5, 3, 1)]:
+            profile.Fill(x, y, w)
+
+        storage = profile._to_uhi_()["storage"]
+
+        assert storage["type"] == "weighted_mean"
+        assert np.array_equal(storage["sum_of_weights"], [0, 3, 0, 0, 0, 0])
+        assert np.array_equal(storage["sum_of_weights_squared"], [0, 5, 0, 0, 0, 0])
+        assert np.allclose(storage["variances"], [0, 2, 0, 0, 0, 0])
+
     def test_uhi_protocol_object(self):
         values = np.arange(12.0)
 
@@ -150,6 +192,18 @@ class TestTH2Serialization:
         )
 
         assert h.GetName() == h_loaded.GetName()
+
+    def test_weighted_storage_includes_flow(self):
+        h = ROOT.TH2D("h2_weighted", "h2_weighted", 3, 0, 3, 2, 0, 2)
+        h.Sumw2()
+        h.Fill(-1, 1, 2.0)
+        h.Fill(1, 1, 3.0)
+
+        storage = h._to_uhi_()["storage"]
+
+        assert storage["type"] == "weighted"
+        assert np.array_equal(storage["values"], h.values(flow=True))
+        assert np.array_equal(storage["variances"], h.variances(flow=True))
 
 
 class TestTH3Serialization:

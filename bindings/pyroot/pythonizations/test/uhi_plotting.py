@@ -48,5 +48,31 @@ class TestTH1Plotting:
             assert values_w.flags.writeable is True
 
 
+class TestProfilePlotting:
+    @staticmethod
+    def _make_profile(name, weighted=False):
+        profile = ROOT.TProfile(name, "", 4, 0, 4)
+        if weighted:
+            profile.Sumw2()
+        for x, y, w in [(0.5, 1, 2), (0.5, 3, 1), (1.5, 2, 1), (1.5, 2, 1), (1.5, 5, 1)]:
+            profile.Fill(x, y, w if weighted else 1)
+        return profile
+
+    def test_counts(self):
+        assert np.array_equal(self._make_profile("p_counts").counts(), [2, 3, 0, 0])
+
+        # Effective number of entries (sum of weights)^2 / (sum of weights^2)
+        weighted_counts = self._make_profile("p_counts_weighted", weighted=True).counts()
+        assert weighted_counts == pytest.approx([9 / 5, 3, 0, 0])
+
+    def test_variances(self):
+        # Variance of the mean of y in each bin, NaN for the bins with less than two entries
+        variances = self._make_profile("p_variances").variances()
+        assert np.allclose(variances, [1, 1, np.nan, np.nan], equal_nan=True)
+
+        weighted_variances = self._make_profile("p_variances_weighted", weighted=True).variances()
+        assert np.allclose(weighted_variances, [2 / 3, 1, np.nan, np.nan], equal_nan=True)
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main(args=[__file__]))
