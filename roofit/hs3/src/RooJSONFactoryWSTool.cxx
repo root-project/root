@@ -1570,6 +1570,15 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    RooArgSet mainPars{pars};
    pdf->getAllConstraints(observables, mainPars, /*stripDisconnected*/ true);
 
+   // Parameters that only the external constraints depend on are parameters of the likelihood as well, e.g. the
+   // global observable and the nuisance parameter of a constraint that is not part of the pdf. They are not part of
+   // the main measurement.
+   for (RooAbsArg const *extConstraint : extConstraints) {
+      RooArgSet extPars;
+      extConstraint->getParameters(&observables, extPars);
+      pars.add(extPars, /*silent=*/true);
+   }
+
    RooArgSet domainPars;
    for (auto const &domainRef : analysis.domains) {
       auto thisDomain = std::find_if(doc.domains.begin(), doc.domains.end(),

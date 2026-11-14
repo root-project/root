@@ -6712,3 +6712,40 @@ TEST(RooFitHS3, ConstraintInModelAndExternal)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported2));
    EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), exported2);
 }
+
+// The parameters that only an external constraint of the ModelConfig depends on keep their roles through a round
+// trip: its observable stays a global observable, and its parameter a nuisance parameter.
+TEST(RooFitHS3, ExternalConstraintKeepsRoles)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::physics(x[0, -5, 5], mu[0, -2, 2], 1.0)");
+   ws.factory("Gaussian::constraint(gobs[0, -5, 5], theta[0, -5, 5], 1.0)");
+   ws.var("gobs")->setConstant(true);
+   RooDataSet data{"data", "data", *ws.var("x")};
+   data.add(*ws.var("x"));
+   ws.import(data, RooFit::Silence());
+   RooFit::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf("physics");
+   mc.SetObservables("x");
+   mc.SetParametersOfInterest("mu");
+   mc.SetNuisanceParameters("theta");
+   mc.SetGlobalObservables("gobs");
+   mc.SetExternalConstraints(RooArgSet{*ws.pdf("constraint")});
+   ws.import(mc);
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+   ASSERT_NE(mc2, nullptr);
+   ASSERT_NE(mc2->GetGlobalObservables(), nullptr) << exported;
+   ASSERT_NE(mc2->GetNuisanceParameters(), nullptr) << exported;
+   EXPECT_EQ(mc2->GetGlobalObservables()->size(), 1u) << exported;
+   EXPECT_NE(mc2->GetGlobalObservables()->find("gobs"), nullptr) << exported;
+   EXPECT_EQ(mc2->GetNuisanceParameters()->size(), 1u) << exported;
+   EXPECT_NE(mc2->GetNuisanceParameters()->find("theta"), nullptr) << exported;
+   ASSERT_NE(mc2->GetExternalConstraints(), nullptr);
+   EXPECT_NE(mc2->GetExternalConstraints()->find("constraint"), nullptr);
+}
