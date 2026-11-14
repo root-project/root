@@ -61,7 +61,7 @@ struct CreateGammaConstraintsOutput {
    std::vector<RooRealVar *> globalObservables;
 };
 
-CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramList, std::span<const double> relSigmas,
+CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramSet, std::span<const double> relSigmas,
                                                     double minSigma, Constraint::Type type);
 
 } // namespace Detail

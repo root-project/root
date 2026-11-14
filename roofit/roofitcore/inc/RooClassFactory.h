@@ -41,7 +41,7 @@ public:
 
    static bool makeAndCompilePdf(std::string const &name, std::string const &expression, const RooArgList &vars,
                                  std::string const &intExpression = "");
-   static bool makeAndCompileFunction(std::string const &name, std::string const &expression, const RooArgList &args,
+   static bool makeAndCompileFunction(std::string const &name, std::string const &expression, const RooArgList &vars,
                                       std::string const &intExpression = "");
 
    static bool makePdf(std::string const &name, std::string const &realArgNames = "",

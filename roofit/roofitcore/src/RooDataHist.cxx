@@ -1702,14 +1702,14 @@ double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int
 /// Increment the bin content of the bin enclosing the given coordinates.
 ///
 /// \param[in] row Coordinates of the bin.
-/// \param[in] wgt Increment by this weight.
+/// \param[in] weight Increment by this weight.
 /// \param[in] sumw2 Optionally, track the sum of squared weights. If a value > 0 or
 /// a weight != 1. is passed for the first time, a vector for the squared weights will be allocated.
-void RooDataHist::add(const RooArgSet& row, double wgt, double sumw2)
+void RooDataHist::add(const RooArgSet& row, double weight, double sumw2)
 {
   checkInit() ;
 
-  if ((sumw2 > 0. || wgt != 1.) && !_sumw2) {
+  if ((sumw2 > 0. || weight != 1.) && !_sumw2) {
     // Receiving a weighted entry. SumW2 != sumw from now on.
     _sumw2 = new double[_arrSize];
     std::copy(_wgt, _wgt+_arrSize, _sumw2);
@@ -1719,8 +1719,8 @@ void RooDataHist::add(const RooArgSet& row, double wgt, double sumw2)
 
   const auto idx = calcTreeIndex(row, false);
 
-  _wgt[idx] += wgt ;
-  if (_sumw2) _sumw2[idx] += (sumw2 > 0 ? sumw2 : wgt*wgt);
+  _wgt[idx] += weight ;
+  if (_sumw2) _sumw2[idx] += (sumw2 > 0 ? sumw2 : weight*weight);
 
   _cache_sum_valid = false;
 }
@@ -1730,10 +1730,10 @@ void RooDataHist::add(const RooArgSet& row, double wgt, double sumw2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a bin content.
 /// \param[in] row Coordinates of the bin to be set.
-/// \param[in] wgt New bin content.
+/// \param[in] weight New bin content.
 /// \param[in] wgtErrLo Low error of the bin content.
 /// \param[in] wgtErrHi High error of the bin content.
-void RooDataHist::set(const RooArgSet& row, double wgt, double wgtErrLo, double wgtErrHi)
+void RooDataHist::set(const RooArgSet& row, double weight, double wgtErrLo, double wgtErrHi)
 {
   checkInit() ;
 
@@ -1741,7 +1741,7 @@ void RooDataHist::set(const RooArgSet& row, double wgt, double wgtErrLo, double 
 
   const auto idx = calcTreeIndex(row, false);
 
-  _wgt[idx] = wgt ;
+  _wgt[idx] = weight ;
   _errLo[idx] = wgtErrLo ;
   _errHi[idx] = wgtErrHi ;
 
@@ -1753,9 +1753,9 @@ void RooDataHist::set(const RooArgSet& row, double wgt, double wgtErrLo, double 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set bin content of bin that was last loaded with get(std::size_t).
 /// \param[in] binNumber Optional bin number to set. If empty, currently active bin is set.
-/// \param[in] wgt New bin content.
+/// \param[in] weight New bin content.
 /// \param[in] wgtErr Error of the new bin content. If the weight need not have an error, use 0. or a negative number.
-void RooDataHist::set(std::size_t binNumber, double wgt, double wgtErr) {
+void RooDataHist::set(std::size_t binNumber, double weight, double wgtErr) {
   checkInit() ;
 
   if (wgtErr > 0. && !_sumw2) {
@@ -1765,7 +1765,7 @@ void RooDataHist::set(std::size_t binNumber, double wgt, double wgtErr) {
     registerWeightArraysToDataStore();
   }
 
-  _wgt[binNumber] = wgt ;
+  _wgt[binNumber] = weight ;
   if (_errLo) _errLo[binNumber] = wgtErr;
   if (_errHi) _errHi[binNumber] = wgtErr;
   if (_sumw2) _sumw2[binNumber] = wgtErr*wgtErr;
@@ -1790,10 +1790,10 @@ void RooDataHist::set(double wgt, double wgtErr) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a bin content.
 /// \param[in] row Coordinates to compute the bin from.
-/// \param[in] wgt New bin content.
+/// \param[in] weight New bin content.
 /// \param[in] wgtErr Optional error of the bin content.
-void RooDataHist::set(const RooArgSet& row, double wgt, double wgtErr) {
-  set(calcTreeIndex(row, false), wgt, wgtErr);
+void RooDataHist::set(const RooArgSet& row, double weight, double wgtErr) {
+  set(calcTreeIndex(row, false), weight, wgtErr);
 }
 
 
@@ -1803,10 +1803,10 @@ void RooDataHist::set(const RooArgSet& row, double wgt, double wgtErr) {
 /// Optional cut string expression selects the data points to be added and can
 /// reference any variable contained in this data set
 
-void RooDataHist::add(const RooAbsData& dset, const char* cut, double wgt)
+void RooDataHist::add(const RooAbsData& dset, const char* cut, double weight)
 {
   RooFormulaVar cutVar("select",cut,*dset.get()) ;
-  add(dset,&cutVar,wgt) ;
+  add(dset,&cutVar,weight) ;
 }
 
 
@@ -1815,7 +1815,7 @@ void RooDataHist::add(const RooAbsData& dset, const char* cut, double wgt)
 /// Add all data points contained in 'dset' to this data set with given weight.
 /// Optional RooFormulaVar pointer selects the data points to be added.
 
-void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, double wgt)
+void RooDataHist::add(const RooAbsData &dset, const RooFormulaVar *cutVar, double weight)
 {
   checkInit() ;
 
@@ -1838,7 +1838,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, doubl
   for (i=0 ; i<dset.numEntries() ; i++) {
     const RooArgSet* row = dset.get(i) ;
     if (!cloneVar || cloneVar->getVal()) {
-       add(*row,wgt*dset.weight(), wgt*wgt*dset.weightSquared()) ;
+       add(*row, weight * dset.weight(), weight * weight * dset.weightSquared());
     }
   }
 

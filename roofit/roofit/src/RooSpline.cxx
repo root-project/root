@@ -54,8 +54,8 @@ frame->Draw();
 /// \param[in] order The order of the spline (3 or 5).
 /// \param[in] logx If true, the x values are logarithmically scaled before spline creation.
 /// \param[in] logy If true, the y values are logarithmically scaled before spline creation.
-RooSpline::RooSpline(const char *name, const char *title, RooAbsReal &x, const TGraph &gr, int order, bool logy,
-                     bool logx)
+RooSpline::RooSpline(const char *name, const char *title, RooAbsReal &x, const TGraph &gr, int order, bool logx,
+                     bool logy)
    : RooSpline(name, title, x, {gr.GetX(), gr.GetX() + gr.GetN()}, {gr.GetY(), gr.GetY() + gr.GetN()}, order, logx,
                logy)
 {

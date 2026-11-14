@@ -131,7 +131,7 @@ public:
   using RealSpans = std::map<RooFit::Detail::DataKey, std::span<const double>>;
   using CategorySpans = std::map<RooFit::Detail::DataKey, std::span<const RooAbsCategory::value_type>>;
 
-  RealSpans getBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
+  RealSpans getBatches(std::size_t begin = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
   CategorySpans getCategoryBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -165,14 +165,14 @@ public:
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooArgSet& catSet, const char* cuts="", const char* opts="") const ;
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
-  /// \see RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const
+  /// \see RooPlot* plotOn(RooPlot* frame, const RooLinkedList& argList) const
   virtual RooPlot* plotOn(RooPlot* frame,
            const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
            const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
            const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
            const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
 
-  virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
+  virtual RooPlot *plotOn(RooPlot *frame, const RooLinkedList &argList) const;
 
   // Split a dataset by a category
   std::vector<std::unique_ptr<RooAbsData>> split(const RooAbsCategory& splitCat, bool createEmptyDataSets=false) const;
@@ -182,7 +182,7 @@ public:
 
   // Fast splitting for SimMaster setData
   bool canSplitFast() const ;
-  RooAbsData* getSimData(const char* idxstate) ;
+  RooAbsData *getSimData(const char *name);
 
   /// Calls createHistogram(const char *name, const RooAbsRealLValue& xvar, const RooLinkedList& argList) const
   TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar,
@@ -295,7 +295,7 @@ protected:
 
   static StorageType defaultStorageType ;
 
-  StorageType storageType;
+  StorageType storageType = defaultStorageType;
 
   void initializeVars(RooArgSet const& vars);
 

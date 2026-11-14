@@ -67,10 +67,10 @@ public:
 
       virtual ~Grid2();
 
-      void addPdf(const RooAbsReal &func, int bin_x);
-      void addPdf(const RooAbsReal &func, int bin_x, int bin_y);
-      void addPdf(const RooAbsReal &func, int bin_x, int bin_y, int bin_z);
-      void addPdf(const RooAbsReal &func, std::vector<int> bins);
+      void addPdf(const RooAbsReal &pdf, int bin_x);
+      void addPdf(const RooAbsReal &pdf, int bin_x, int bin_y);
+      void addPdf(const RooAbsReal &pdf, int bin_x, int bin_y, int bin_z);
+      void addPdf(const RooAbsReal &pdf, std::vector<int> bins);
       void addBinning(const RooAbsBinning &binning) { _grid.push_back(binning.clone()); };
 
       std::vector<RooAbsBinning *> _grid;

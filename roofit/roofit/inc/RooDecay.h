@@ -49,8 +49,8 @@ protected:
 
   RooRealProxy _t ;
   RooRealProxy _tau ;
-  DecayType    _type ;
-  Int_t        _basisExp ;
+  DecayType _type = SingleSided;
+  Int_t _basisExp = 0;
 
   ClassDefOverride(RooDecay,1) // General decay function p.d.f
 };

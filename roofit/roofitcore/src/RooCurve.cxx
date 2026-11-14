@@ -73,7 +73,7 @@ struct Point {
 
 inline Point getPoint(TGraph const &gr, int i)
 {
-   Point p;
+   Point p{};
    gr.GetPoint(i, p.x, p.y);
    return p;
 }

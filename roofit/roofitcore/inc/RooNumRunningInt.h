@@ -28,7 +28,7 @@ public:
   protected:
   class RICacheElem: public FuncCacheElem {
   public:
-    RICacheElem(const RooNumRunningInt& ri, const RooArgSet* nset) ;
+    RICacheElem(const RooNumRunningInt& self, const RooArgSet* nset) ;
     RooArgList containedArgs(Action) override ;
     void calculate(bool cdfmode) ;
     void addRange(Int_t ixlo, Int_t ixhi, Int_t nbins) ;

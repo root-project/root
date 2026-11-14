@@ -72,12 +72,12 @@ private:
    bool is_master_ = false;
    bool is_queue_ = false;
    bool is_worker_ = false;
-   std::size_t worker_id_;
+   std::size_t worker_id_ = 0;
    std::size_t N_workers_;
 
    // master must wait for workers after completion, for which it needs their PIDs
    std::vector<pid_t> worker_pids_;
-   pid_t queue_pid_;
+   pid_t queue_pid_ = 0;
 
    bool initialized_ = false;
 

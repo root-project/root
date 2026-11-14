@@ -39,7 +39,7 @@ private:
    }
 
    RooArgSet _cloneSet;          ///< Internal clone of p.d.f.
-   RooAbsReal *_eff;             ///< Pointer to efficiency function
+   RooAbsReal *_eff = nullptr;   ///< Pointer to efficiency function
    std::unique_ptr<RooAbsGenContext> _generator; ///< Generator context for p.d.f
    RooArgSet _vars;              ///< Vars to generate
    double _maxEff;               ///< Maximum of efficiency in vars

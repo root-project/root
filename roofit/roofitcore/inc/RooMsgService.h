@@ -126,27 +126,27 @@ public:
 
     friend class RooMsgService ;
 
-    bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, const RooAbsArg* obj) ;
-    bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, const TObject* obj) ;
+    bool match(RooFit::MsgLevel level, RooFit::MsgTopic top, const RooAbsArg *obj);
+    bool match(RooFit::MsgLevel level, RooFit::MsgTopic top, const TObject *obj);
 
     inline bool match(RooFit::MsgLevel level, RooFit::MsgTopic facility, std::nullptr_t obj)
     {
        return match(level, facility, static_cast<TObject const *>(obj));
     }
 
-    bool active ;
-    bool universal ;
+    bool active = false ;
+    bool universal = false ;
 
-    RooFit::MsgLevel minLevel ;
-    Int_t    topic ;
+    RooFit::MsgLevel minLevel = RooFit::DEBUG ;
+    Int_t    topic = 0 ;
     std::string objectName ;
     std::string className ;
     std::string baseClassName ;
     std::string tagName ;
-    Color_t color ;
-    bool prefix ;
+    Color_t color = 0 ;
+    bool prefix = false ;
 
-    std::ostream* os ;
+    std::ostream* os = nullptr ;
 
   } ;
 
@@ -161,7 +161,7 @@ public:
   StreamConfig& getStream(Int_t id) { return _streams[id] ; }
 
   Int_t numStreams() const { return _streams.size() ; }
-  void setStreamStatus(Int_t id, bool active) ;
+  void setStreamStatus(Int_t id, bool flag);
   bool getStreamStatus(Int_t id) const ;
 
   void reset();
@@ -173,8 +173,9 @@ public:
   void showPid(bool flag) { _showPid = flag ; }
 
   // Back end -- Send message or check if particular logging configuration is active
-  std::ostream& log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) ;
-  std::ostream& log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) ;
+  std::ostream &
+  log(const RooAbsArg *self, RooFit::MsgLevel level, RooFit::MsgTopic topic, bool forceSkipPrefix = false);
+  std::ostream &log(const TObject *self, RooFit::MsgLevel level, RooFit::MsgTopic topic, bool forceSkipPrefix = false);
   // Overload to resolve the ambiguity when passing a `nullptr`. Without this,
   // one would have to explicitly cast the `nullptr` to TObject* or RooAbsArg*.
   inline std::ostream& log(std::nullptr_t, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) {
@@ -227,13 +228,13 @@ protected:
   std::unique_ptr<std::ofstream> _devnull ;
 
   std::map<std::string,std::unique_ptr<std::ostream>> _files ;
-  RooFit::MsgLevel _globMinLevel ;
-  RooFit::MsgLevel _lastMsgLevel ;
+  RooFit::MsgLevel _globMinLevel = RooFit::DEBUG;
+  RooFit::MsgLevel _lastMsgLevel = RooFit::DEBUG;
 
-  bool _silentMode ;
-  bool _showPid ;
+  bool _silentMode = false;
+  bool _showPid = false;
 
-  Int_t _errorCount ;
+  Int_t _errorCount = 0;
 
   // Private constructor -- singleton class
   RooMsgService() ;
@@ -241,7 +242,7 @@ protected:
 
   std::unique_ptr<RooWorkspace> _debugWorkspace;
 
-  Int_t _debugCode ;
+  Int_t _debugCode = 0;
 
   ClassDefOverride(RooMsgService,0) // RooFit Message Service Singleton class
 };

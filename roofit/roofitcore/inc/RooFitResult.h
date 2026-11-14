@@ -141,7 +141,7 @@ public:
           const char *options= "ME") const {
     return plotOn(frame,par1.GetName(),par2.GetName(),options);
   }
-  RooPlot *plotOn(RooPlot *plot, const char *parName1, const char *parName2,
+  RooPlot *plotOn(RooPlot *frame, const char *parName1, const char *parName2,
         const char *options= "ME") const;
 
   /// Generate random perturbations of the final parameters using the covariance matrix.
@@ -175,11 +175,11 @@ protected:
   double correlation(Int_t row, Int_t col) const;
   double covariance(Int_t row, Int_t col) const;
 
-  Int_t    _status ;          ///< MINUIT status code
-  Int_t    _covQual ;         ///< MINUIT quality code of covariance matrix
-  Int_t    _numBadNLL ;       ///< Number calls with bad (zero,negative) likelihood
-  double _minNLL ;          ///< NLL at minimum
-  double _edm ;             ///< Estimated distance to minimum
+  Int_t _status = 0;                   ///< MINUIT status code
+  Int_t _covQual = 0;                  ///< MINUIT quality code of covariance matrix
+  Int_t _numBadNLL = 0;                ///< Number calls with bad (zero,negative) likelihood
+  double _minNLL = 0.0;                ///< NLL at minimum
+  double _edm = 0.0;                   ///< Estimated distance to minimum
   RooArgList* _constPars = nullptr;    ///< List of constant parameters
   RooArgList* _initPars = nullptr;     ///< List of floating parameters with initial values
   RooArgList* _finalPars = nullptr;    ///< List of floating parameters with final values

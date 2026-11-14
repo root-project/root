@@ -60,7 +60,7 @@ public:
 
   // Retrieve a row
   using RooAbsDataStore::get ;
-  const RooArgSet* get(Int_t index) const override ;
+  const RooArgSet *get(Int_t idx) const override;
   using RooAbsDataStore::weight ;
   double weight() const override ;
   double weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;

@@ -132,7 +132,6 @@ void RooLegacyExpPoly::doEval(RooFit::EvalContext &ctx) const
    vars.reserve(_coefList.size() + 1);
    vars.push_back(ctx.at(_x));
 
-   std::vector<double> coefVals;
    for (RooAbsArg *coef : _coefList) {
       vars.push_back(ctx.at(coef));
    }
@@ -149,7 +148,7 @@ void RooLegacyExpPoly::adjustLimits()
    // Adjust the limits of all the coefficients to reflect the numeric boundaries
 
    const unsigned sz = _coefList.size();
-   double max = std::numeric_limits<double>::max_exponent / sz;
+   double max = static_cast<double>(std::numeric_limits<double>::max_exponent) / sz;
    const int lowestOrder = _lowestOrder;
    std::vector<double> coefs;
    coefs.reserve(sz);

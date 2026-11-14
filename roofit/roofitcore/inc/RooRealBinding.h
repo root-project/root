@@ -34,8 +34,8 @@ public:
   ~RooRealBinding() override;
 
   double operator()(const double xvector[]) const override;
-  double getMinLimit(UInt_t dimension) const override;
-  double getMaxLimit(UInt_t dimension) const override;
+  double getMinLimit(UInt_t index) const override;
+  double getMaxLimit(UInt_t index) const override;
 
   void saveXVec() const override ;
   void restoreXVec() const override ;

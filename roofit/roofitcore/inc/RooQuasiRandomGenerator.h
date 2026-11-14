@@ -37,7 +37,7 @@ protected:
   inline Int_t sub(Int_t x, Int_t y) const { return add(x,y); }
 private:
   Int_t *_nextq;
-  Int_t _sequenceCount;
+  Int_t _sequenceCount = 0;
 
   static bool _coefsCalculated;
   static Int_t _cj[NBits][MaxDimension];

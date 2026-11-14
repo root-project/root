@@ -104,17 +104,17 @@ public:
   RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const override ;
   RooAbsArg& pdfObservable(RooAbsArg& histObservable) const override ;
   void fillCacheObject(PdfCacheElem& cache) const override ;
-  void fillCacheSlice(FFTCacheElem& cache, const RooArgSet& slicePosition) const ;
+  void fillCacheSlice(FFTCacheElem &aux, const RooArgSet &slicePosition) const;
 
   PdfCacheElem* createCache(const RooArgSet* nset) const override ;
   TString histNameSuffix() const override ;
 
   // mutable std::map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; ///<! Auxiliary Cache information (do not persist)
-  double _bufFrac ; // Sampling buffer size as fraction of domain size
-  BufStrat _bufStrat ; // Strategy to fill the buffer
+  double _bufFrac = 0.0;       // Sampling buffer size as fraction of domain size
+  BufStrat _bufStrat = Extend; // Strategy to fill the buffer
 
-  double  _shift1 ;
-  double  _shift2 ;
+  double _shift1 = 0.0;
+  double _shift2 = 0.0;
 
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
                                        const RooArgSet* auxProto=nullptr, bool verbose= false) const override ;

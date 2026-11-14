@@ -42,8 +42,6 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
 {
    _allParams.add(paramList);
 
-   RooArgList initFloatParams;
-
    // Examine parameter list
    for (RooAbsArg *param : _allParams) {
 
@@ -84,7 +82,6 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       }
    }
 
-   std::vector<ROOT::Fit::ParameterSettings> oldParameters = parameters;
    parameters.clear();
 
    for (std::size_t index = 0; index < getNDim(); index++) {

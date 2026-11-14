@@ -297,7 +297,7 @@ void ProcessManager::initialize_processes(bool cpu_pinning)
          sigterm_wake_write_fd_ = pipe_fds[1];
       }
 
-      struct sigaction sa;
+      struct sigaction sa{};
       memset(&sa, '\0', sizeof(sa));
       sa.sa_handler = ProcessManager::handle_sigterm;
 

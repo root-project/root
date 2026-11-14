@@ -202,9 +202,6 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
       for (Int_t i = 0; i < nPdf; ++i) {
          for (Int_t j = 0; j < nVar; ++j) {
 
-            std::string meanName = Form("%s_mean_%d_%d", GetName(), i, j);
-            std::string sigmaName = Form("%s_sigma_%d_%d", GetName(), i, j);
-
             RooAbsMoment *mom = nVar == 1 ? (static_cast<RooAbsPdf *>(_pdfList.at(i)))->sigma(static_cast<RooRealVar &>(*varList.at(j)))
                                           : (static_cast<RooAbsPdf *>(_pdfList.at(i)))->sigma(static_cast<RooRealVar &>(*varList.at(j)), varList);
 

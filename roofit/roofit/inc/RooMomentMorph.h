@@ -91,7 +91,7 @@ protected:
 
   TMatrixD *_M = nullptr;
 
-  Setting _setting;
+  Setting _setting = Linear;
 
   bool _useHorizMorph = true;
 

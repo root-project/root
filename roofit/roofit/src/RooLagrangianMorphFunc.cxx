@@ -1253,7 +1253,6 @@ inline void buildSampleWeights(T1 &weights, const char *fname, const RooLagrangi
 
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      std::stringstream title;
       TString name_full(makeValidName(sample));
       if (fname) {
          name_full.Append("_");
@@ -1315,7 +1314,7 @@ public:
 
    Matrix _matrix;
    Matrix _inverse;
-   double _condition;
+   double _condition = 0.0;
 
    CacheElem(){};
    void operModeHook(RooAbsArg::OperMode) override{};
@@ -2619,7 +2618,6 @@ bool RooLagrangianMorphFunc::isParameterUsed(const char *paramname) const
 
 bool RooLagrangianMorphFunc::isCouplingUsed(const char *couplname)
 {
-   std::string cname(couplname);
    const RooArgList *args = this->getCouplingSet();
    RooAbsReal *coupling = dynamic_cast<RooAbsReal *>(args->find(couplname));
    if (!coupling)
@@ -3023,7 +3021,7 @@ std::vector<std::string> asStringV(std::string const &arg)
 class LMIFace : public RooFactoryWSTool::IFace {
 public:
    std::string
-   create(RooFactoryWSTool &, const char *typeName, const char *instName, std::vector<std::string> args) override;
+   create(RooFactoryWSTool &, const char *typeName, const char *instanceName, std::vector<std::string> args) override;
 };
 
 std::string LMIFace::create(RooFactoryWSTool &ft, const char * /*typeName*/, const char *instanceName,
@@ -3055,7 +3053,7 @@ std::string LMIFace::create(RooFactoryWSTool &ft, const char * /*typeName*/, con
       } else {
          std::vector<string> subargs = ft.splitFunctionArgs(args[i].c_str());
          if (subargs.size() == 1) {
-            string expr = ft.processExpression(subargs[0].c_str());
+            ft.processExpression(subargs[0].c_str());
             for (auto const &param : funcArgs) {
                if (args[i].find(param) != string::npos)
                   mappedInputs[param] = subargs[0];

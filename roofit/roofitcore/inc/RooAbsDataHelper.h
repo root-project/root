@@ -64,8 +64,8 @@ protected:
    std::size_t _numInvalid = 0;
 
    std::vector<std::vector<double>> _events; // One vector of values per data-processing slot
-   std::size_t _eventSize;                   // Number of variables in dataset
-   std::size_t _nValues;                     // Number of variables in dataframe
+   std::size_t _eventSize = 0;               // Number of variables in dataset
+   std::size_t _nValues = 0;                 // Number of variables in dataframe
 
    bool _isWeighted = false;
    bool _isDataHist = false;

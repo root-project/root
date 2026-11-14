@@ -89,10 +89,10 @@ public:
   TMatrixD getWeights(const int &k) const;
 
   struct BoxInfo {
-    bool filled;
-    bool netFluxZ;
-    double nEventsBW;
-    double nEventsBMSW;
+    bool filled = false;
+    bool netFluxZ = false;
+    double nEventsBW = 0.0;
+    double nEventsBMSW = 0.0;
     std::vector<double> xVarLo, xVarHi;
     std::vector<double> xVarLoM3s, xVarLoP3s, xVarHiM3s, xVarHiP3s;
     std::map<Int_t,bool> bpsIdcs;
@@ -119,7 +119,7 @@ protected:
   void sortDataIndices(BoxInfo *bi = nullptr);
   void calculateBandWidth();
   double gauss(std::vector<double> &x, std::vector<std::vector<double>> &weights) const;
-  void loopRange(std::vector<double> &x, std::vector<Int_t> &indices) const;
+  void loopRange(std::vector<double> &x, std::vector<Int_t> &ibMap) const;
   void boxInfoInit(BoxInfo *bi, const char *rangeName, Int_t code) const;
   RooDataSet *createDatasetFromHist(const RooArgList &varList, const TH1 &hist) const;
   void updateRho() const;
@@ -130,8 +130,8 @@ protected:
   }
 
   TString _options;
-  double _widthFactor;
-  double _nSigma;
+  double _widthFactor = 0.0;
+  double _nSigma = 0.0;
 
   bool _fixedShape{false};
   bool _mirror{false};
@@ -189,9 +189,9 @@ protected:
   TVectorD* _dx{nullptr};
   double _sigmaAvgR{0.};
 
-  bool _rotate;
-  bool _sortInput;
-  Int_t _nAdpt;
+  bool _rotate = false;
+  bool _sortInput = false;
+  Int_t _nAdpt = 0;
 
   RooChangeTracker *_tracker{nullptr}; //
 

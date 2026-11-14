@@ -93,10 +93,10 @@ void RooUnitTest::regResult(std::unique_ptr<RooFitResult> r, const char* refName
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooUnitTest::regValue(double d, const char* refName)
+void RooUnitTest::regValue(double value, const char *refName)
 {
   if (_refFile) {
-    _regValues.emplace_back(d,refName);
+     _regValues.emplace_back(value, refName);
   }
 }
 

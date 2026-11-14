@@ -192,7 +192,7 @@ struct RooONNXFunc::RuntimeCache {
 
    RooFit::Detail::AnyWithVoidPtr _session;
    RooFit::Detail::AnyWithVoidPtr _d_session;
-   Func _func;
+   Func _func = nullptr;
 };
 
 /**

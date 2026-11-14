@@ -269,7 +269,7 @@ class LevelTest : public testing::TestWithParam<int> {
    void SetUp() override { _level = GetParam(); }
 
 protected:
-   int _level;
+   int _level = 0;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;

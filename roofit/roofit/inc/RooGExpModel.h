@@ -41,7 +41,7 @@ public:
 
   RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
-          RooAbsReal& srSF,
+          RooAbsReal& rsSF,
           bool nlo=false, Type type=Normal) ;
 
   RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
@@ -95,8 +95,8 @@ private:
   RooRealProxy ssf ;
   RooRealProxy rsf ;
 
-  bool _flip ;
-  bool _nlo ;
+  bool _flip = false;
+  bool _nlo = false;
   bool _flatSFInt = false;
   bool _asympInt = false;  // added FMV,07/24/03
 

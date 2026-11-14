@@ -49,7 +49,8 @@ public:
   bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
     return true ;
   }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override;
+  Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
+                                const char *rangeName = nullptr) const override;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override;
   bool selfNormalized() const override {
     // P.d.f is self normalized
@@ -131,7 +132,7 @@ public:
   bool _allExtendable = false; ///<  Flag indicating if all PDF components are extendable
   bool _recursive = false;     ///<  Flag indicating is fractions are treated recursively
 
-  mutable Int_t _coefErrCount ; ///<! Coefficient error counter
+  mutable Int_t _coefErrCount = 0; ///<! Coefficient error counter
 
   bool redirectServersHook(const RooAbsCollection&, bool, bool, bool) override;
 

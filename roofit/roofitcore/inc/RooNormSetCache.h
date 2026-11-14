@@ -40,7 +40,7 @@ public:
 
   bool autoCache(const RooAbsArg* self, const RooArgSet* set1,
       const RooArgSet* set2 = nullptr, const TNamed* set2RangeName = nullptr,
-      bool autoRefill = true);
+      bool doRefill = true);
 
   void clear();
 

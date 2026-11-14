@@ -240,7 +240,7 @@ RooCmdArg DataError(std::string const&) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
 RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
-RooCmdArg TimingAnalysis(bool timingAnalysis) ;
+RooCmdArg TimingAnalysis(bool flag);
 RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
@@ -294,7 +294,7 @@ RooCmdArg ProjectedObservables(Args_t &&... argsOrArgSet) {
 RooCmdArg Verbose(bool flag=true) ;
 RooCmdArg Save(bool flag=true) ;
 RooCmdArg Timer(bool flag=true) ;
-RooCmdArg PrintLevel(Int_t code) ;
+RooCmdArg PrintLevel(Int_t level);
 RooCmdArg Warnings(bool flag=true) ;
 RooCmdArg Strategy(Int_t code) ;
 RooCmdArg InitialHesse(bool flag=true) ;

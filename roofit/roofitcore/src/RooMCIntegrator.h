@@ -63,9 +63,10 @@ protected:
 
    TStopwatch _timer; ///< Timer
 
-   double _jac, _wtd_int_sum, _sum_wgts, _chi_sum, _chisq, _result,
-      _sigma;                                           ///< Scratch variables preserved between calls to vegas1/2/2
-   UInt_t _it_start, _it_num, _samples, _calls_per_box; ///< Scratch variables preserved between calls to vegas1/2/2
+   double _jac = 0.0, _wtd_int_sum = 0.0, _sum_wgts = 0.0, _chi_sum = 0.0, _chisq = 0.0, _result = 0.0,
+          _sigma = 0.0; ///< Scratch variables preserved between calls to vegas1/2/2
+   UInt_t _it_start = 0, _it_num = 0, _samples = 0,
+          _calls_per_box = 0; ///< Scratch variables preserved between calls to vegas1/2/2
 };
 
 #endif

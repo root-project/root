@@ -185,7 +185,7 @@ private:
    bool _defShapeServer = false;
 
    bool
-   changePointer(const RooAbsCollection &newServerSet, bool nameChange = false, bool factoryInitMode = false) override;
+   changePointer(const RooAbsCollection &newServerList, bool nameChange = false, bool factoryInitMode = false) override;
 
    bool changePointer(std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements) override;
 

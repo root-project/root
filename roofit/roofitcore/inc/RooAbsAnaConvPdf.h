@@ -42,7 +42,7 @@ public:
   ~RooAbsAnaConvPdf() override;
 
   Int_t declareBasis(const char* expression, const RooArgList& params) ;
-  void printMultiline(std::ostream& stream, Int_t contents, bool verbose=false, TString indent= "") const override ;
+  void printMultiline(std::ostream &os, Int_t contents, bool verbose = false, TString indent = "") const override;
 
   // Coefficient normalization access
   inline double getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const {

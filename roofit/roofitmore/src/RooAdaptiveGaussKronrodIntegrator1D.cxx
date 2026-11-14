@@ -2072,7 +2072,7 @@ gsl_integration_qagil (gsl_function * f,
   int status;
 
   gsl_function f_transform;
-  struct il_params transform_params  ;
+  struct il_params transform_params{};
 
   transform_params.b = b ;
   transform_params.f = f ;
@@ -2121,7 +2121,7 @@ gsl_integration_qagiu (gsl_function * f,
   int status;
 
   gsl_function f_transform;
-  struct iu_params transform_params  ;
+  struct iu_params transform_params{};
 
   transform_params.a = a ;
   transform_params.f = f ;
@@ -2188,7 +2188,7 @@ qags (const gsl_function * f,
   int extrapolate = 0;
   int disallow_extrapolation = 0;
 
-  struct extrapolation_table table;
+  struct extrapolation_table table{};
 
   /* Initialize results */
 

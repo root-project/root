@@ -42,11 +42,11 @@ when any of the parameters of the input p.d.f. has changed.
 /// is applied to smooth the histogram-based c.d.f.
 
 RooNumRunningInt::RooNumRunningInt(const char *name, const char *title, RooAbsReal &_func, RooRealVar &_x,
-                                   const char *bname)
+                                   const char *binningName)
    : RooAbsCachedReal(name, title),
      func("func", "func", this, _func),
      x("x", "x", this, _x),
-     _binningName(bname ? bname : "cache")
+     _binningName(binningName ? binningName : "cache")
 {
    setInterpolationOrder(2) ;
 }

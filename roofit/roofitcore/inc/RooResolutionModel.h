@@ -74,9 +74,9 @@ protected:
 
   friend class RooAbsAnaConvPdf ;
 
-  Int_t _basisCode ;         ///< Identifier code for selected basis function
+  Int_t _basisCode = 0;               ///< Identifier code for selected basis function
   RooFormulaVar* _basis = nullptr;    ///< Basis function convolved with this resolution model
-  bool _ownBasis ;         ///< Flag indicating ownership of _basis
+  bool _ownBasis = false;             ///< Flag indicating ownership of _basis
 
   ClassDefOverride(RooResolutionModel, 2) // Abstract Resolution Model
 };

@@ -1598,15 +1598,15 @@ bool RooFit::HS3::isBuiltinHistFactoryImporter(RooFit::JSONIO::Importer const &i
 }
 
 // The upgrade rewrites the JSON, so it has to work on a copy.
-void RooFit::HS3::importHistFactoryNode(RooJSONFactoryWSTool &tool, JSONNode const &p,
+void RooFit::HS3::importHistFactoryNode(RooJSONFactoryWSTool &tool, JSONNode const &node,
                                         std::vector<DistributionRef> const *channelConstraints)
 {
-   std::string name = RooJSONFactoryWSTool::name(p);
-   if (!p.has_child("samples")) {
+   std::string name = RooJSONFactoryWSTool::name(node);
+   if (!node.has_child("samples")) {
       RooJSONFactoryWSTool::error("no samples in '" + name + "', skipping.");
    }
    std::stringstream ss;
-   p.writeJSON(ss);
+   node.writeJSON(ss);
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(ss.str());
 
    HS3::Version version;

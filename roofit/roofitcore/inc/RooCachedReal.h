@@ -64,7 +64,7 @@ protected:
 
   RooRealProxy func ;           ///< Proxy to function being cached
   RooSetProxy  _cacheObs ;      ///< Variables to be cached
-  bool _useCdfBoundaries ;    ///< Are c.d.f boundary conditions used by the RooHistFuncs?
+  bool _useCdfBoundaries = false; ///< Are c.d.f boundary conditions used by the RooHistFuncs?
   bool _cacheSource ;         ///< Keep an attached clone of the source in the cache for fast operation
 
 private:

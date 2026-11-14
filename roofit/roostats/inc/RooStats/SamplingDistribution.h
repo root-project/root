@@ -53,7 +53,7 @@ namespace RooStats {
 
     /// get the inverse of the Cumulative distribution function
     /// together with the inverse based on sampling variation
-    double InverseCDF(double pvalue, double sigmaVariaton, double& inverseVariation);
+    double InverseCDF(double pvalue, double sigmaVariation, double &inverseWithVariation);
 
     /// merge two sampling distributions
     void Add(const SamplingDistribution* other);

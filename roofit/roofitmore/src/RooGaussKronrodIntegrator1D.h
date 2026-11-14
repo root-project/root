@@ -57,8 +57,8 @@ protected:
    double _epsAbs; // Absolute precision
    double _epsRel; // Relative precision
 
-   mutable double _xmin; ///<! Lower integration bound
-   mutable double _xmax; ///<! Upper integration bound
+   mutable double _xmin = 0.0; ///<! Lower integration bound
+   mutable double _xmax = 0.0; ///<! Upper integration bound
 };
 
 #endif

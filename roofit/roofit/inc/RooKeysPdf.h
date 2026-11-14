@@ -86,8 +86,8 @@ private:
 
   // cached info on variable
   Char_t _varName[128];
-  double _lo, _hi, _binWidth;
-  double _rho;
+  double _lo = 0.0, _hi = 0.0, _binWidth = 0.0;
+  double _rho = 0.0;
 
   ClassDefOverride(RooKeysPdf,2) // One-dimensional non-parametric kernel estimation p.d.f.
 };

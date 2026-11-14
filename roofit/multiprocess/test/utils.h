@@ -93,7 +93,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
       std::stringstream os2;
       os << "Nsig" << ix;
       os2 << "#signal events comp " << ix;
-      RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events / 10, 0., 10 * N_events);
+      RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events / 10., 0., 10 * N_events);
       w.import(a);
       // gather in count_set
       count_set.add(*w.arg(os.str()));
@@ -104,7 +104,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
       std::stringstream os2;
       os << "Nbkg" << ix;
       os2 << "#background events comp " << ix;
-      RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events / 10, 0., 10 * N_events);
+      RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events / 10., 0., 10 * N_events);
       w.import(a);
       // gather in count_set
       count_set.add(*w.arg(os.str()));

@@ -122,7 +122,7 @@ struct NodeInfo {
    bool isScalar() const { return outputSize == 1; }
 
    RooAbsArg *absArg = nullptr;
-   RooAbsArg::OperMode originalOperMode;
+   RooAbsArg::OperMode originalOperMode = RooAbsArg::Auto;
 
    std::shared_ptr<RooBatchCompute::AbsBuffer> buffer;
    std::size_t iNode = 0;

@@ -106,7 +106,7 @@ protected:
   mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
 
-  Int_t _ipOrder ; ///< Interpolation order for cache histograms
+  Int_t _ipOrder = 0 ; ///< Interpolation order for cache histograms
 
   TString cacheNameSuffix(const RooArgSet& nset) const ;
 
@@ -115,7 +115,7 @@ protected:
 
 private:
 
-  bool _disableCache ; // Flag to run object in passthrough (= non-caching mode)
+  bool _disableCache = false ; // Flag to run object in passthrough (= non-caching mode)
 
   ClassDefOverride(RooAbsCachedReal,1) // Abstract base class for cached p.d.f.s
 };

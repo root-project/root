@@ -36,7 +36,7 @@ public:
    bool checkObservables(const RooArgSet *nset) const override;
 
    bool forceAnalyticalInt(const RooAbsArg &arg) const override { return arg.isFundamental(); }
-   Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
+   Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
                                  const char *rangeName = nullptr) const override;
    double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = nullptr) const override;
 
@@ -60,7 +60,7 @@ public:
 protected:
    mutable RooObjCacheManager _normIntMgr; ///<! The integration cache manager
 
-   bool _haveLastCoef;
+   bool _haveLastCoef = false;
 
    RooListProxy _funcList; ///<  List of component FUNCs
    RooListProxy _coefList; ///<  List of coefficients
