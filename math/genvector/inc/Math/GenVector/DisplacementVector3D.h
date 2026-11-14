@@ -713,6 +713,53 @@ namespace ROOT {
        }
     }
 
+    template <class T>
+    class Polar3D;
+    template <class T>
+    class Cylindrical3D;
+    template <class T>
+    class CylindricalEta3D;
+
+    namespace Impl {
+
+    /// Builds an arbitrary vector type from Cartesian components with its (x, y, z) constructor. GenVector's
+    /// non-Cartesian coordinate systems take their own coordinates in that constructor, e.g. Polar3D(r, theta, phi),
+    /// so they are set through SetXYZ() instead.
+    template <class V>
+    struct FromXYZ {
+       template <class Scalar>
+       static V Make(Scalar x, Scalar y, Scalar z)
+       {
+          return V(x, y, z);
+       }
+    };
+
+    template <class C>
+    struct CoordinatesFromXYZ {
+       template <class Scalar>
+       static C Make(Scalar x, Scalar y, Scalar z)
+       {
+          C c;
+          c.SetXYZ(x, y, z);
+          return c;
+       }
+    };
+
+    template <class T>
+    struct FromXYZ<Polar3D<T>> : CoordinatesFromXYZ<Polar3D<T>> {};
+    template <class T>
+    struct FromXYZ<Cylindrical3D<T>> : CoordinatesFromXYZ<Cylindrical3D<T>> {};
+    template <class T>
+    struct FromXYZ<CylindricalEta3D<T>> : CoordinatesFromXYZ<CylindricalEta3D<T>> {};
+
+    template <class V, class Scalar>
+    V MakeFromXYZ(Scalar x, Scalar y, Scalar z)
+    {
+       return FromXYZ<V>::Make(x, y, z);
+    }
+
+    } // namespace Impl
+
   }  // namespace Math
 
 }  // namespace ROOT

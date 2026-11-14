@@ -159,14 +159,15 @@ public:
    /**
       Rotation operation on an arbitrary vector v.
       Preconditions:  v must implement methods x(), y(), and z()
-      and the arbitrary vector type must have a constructor taking (x,y,z)
+      and the arbitrary vector type must have a constructor taking (x,y,z). GenVector coordinate systems whose
+      constructors take other coordinates use SetXYZ() instead.
    */
    template <class ForeignVector>
    ForeignVector
    operator() (const  ForeignVector & v) const {
       DisplacementVector3D< Cartesian3D<double> > xyz(v);
       DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
-      return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
+      return Impl::MakeFromXYZ<ForeignVector>(rxyz.X(), rxyz.Y(), rxyz.Z());
    }
 
    /**
