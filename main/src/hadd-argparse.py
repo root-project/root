@@ -18,8 +18,12 @@ def get_argparse():
         "multiplied by the traditional 1024 (1KiB), 1048576 (1MiB), 1073741824 "
         "(1GiB), etc. The prefix can be optionally followed by B whose casing "
         "is ignored, eg. 1k, 1K, 1Kb and 1KB are the same. ")
-    parser = argparse.ArgumentParser(add_help=False, prog='hadd',
-                                     description=DESCRIPTION, epilog=EPILOGUE)
+    try:
+        parser = argparse.ArgumentParser(
+            add_help=False, prog="hadd", description=DESCRIPTION, epilog=EPILOGUE, color=False
+        )
+    except TypeError:
+        parser = argparse.ArgumentParser(add_help=False, prog="hadd", description=DESCRIPTION, epilog=EPILOGUE)
     parser.add_argument("-a", help="Append to the output", action = 'store_true')
     parser.add_argument("-f", help=textwrap.fill(
         "Force overwriting of output file"), action = 'store_true')

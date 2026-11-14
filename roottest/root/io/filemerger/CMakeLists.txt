@@ -217,7 +217,7 @@ else()
    elseif(${LZ4_VERSION} VERSION_GREATER_EQUAL "1.7.5")
       ROOTTEST_ADD_TEST(simple-lz4-compr-level1
                         MACRO testSimpleFile.C
-                        MACROARG "\"hsimple401.root\",25000,401,519976,10"
+                        MACROARG "\"hsimple401.root\",25000,401,519976,200"
                         FIXTURES_REQUIRED root-io-filemerger-hsimple401-fixture)
    endif()
 endif()
