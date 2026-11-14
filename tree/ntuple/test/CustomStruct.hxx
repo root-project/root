@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <set>
 #include <random>
 #include <string>
 #include <variant>
@@ -496,5 +497,29 @@ struct AlignmentEnvelope {
    std::vector<OverAligned> fVec;
    std::array<OverAligned, 2> fArr;
 };
+
+// ----------------------------
+// Types used in ntuple_merge_emulated.
+// We define N different types even though they all have the same shape to avoid
+// accidentally reusing dictionaries from another test.
+#define DefCustomMergeClass(Suffix)         \
+   struct CustomMerge##Suffix {             \
+      int fA = 1;                           \
+      CustomMerge##Suffix() = default;      \
+      CustomMerge##Suffix(int a) : fA(a) {} \
+      ClassDefNV(CustomMerge##Suffix, 2);   \
+   }
+
+DefCustomMergeClass(Basic);
+DefCustomMergeClass(Vec);
+DefCustomMergeClass(Map);
+DefCustomMergeClass(Set);
+inline bool operator<(const CustomMergeSet &a, const CustomMergeSet &b) {
+   return a.fA < b.fA;
+}
+DefCustomMergeClass(Pair);
+DefCustomMergeClass(Tuple);
+// NOTE: if you add a new custom class remember to add it to the LinkDef (alongside the collection you're testing it
+// with)!
 
 #endif

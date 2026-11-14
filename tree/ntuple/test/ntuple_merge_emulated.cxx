@@ -1,5 +1,6 @@
 #include "ntuple_test.hxx"
 #include "ntuple_fork.hxx"
+#include <TSystem.h>
 
 static void DoMerge(std::initializer_list<std::reference_wrapper<const FileRaii>> inputPaths, const FileRaii &outPath,
                     ENTupleMergingMode mergeMode = {})
@@ -116,23 +117,23 @@ TEST(RNTupleMergeEmulated, MergeEmulatedSimple)
       fileGuard2.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-         struct Custom {
+         struct CustomMergeSimple {
             int fInt1 = 1;
             int fInt2 = 2;
-            ClassDefNV(Custom, 2);
+            ClassDefNV(CustomMergeSimple, 2);
          };
       )"));
 
       auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "Custom").Unwrap());
+      model->AddField(RFieldBase::Create("f", "CustomMergeSimple").Unwrap());
 
       auto writer = RNTupleWriter::Recreate(model->Clone(), "ntuple", fileGuard1.GetPath());
       auto writer2 = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
 
       void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
       void *ptr2 = writer2->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
-      DeclarePointer("Custom", "ptr", ptr);
-      DeclarePointer("Custom", "ptr2", ptr2);
+      DeclarePointer("CustomMergeSimple", "ptr", ptr);
+      DeclarePointer("CustomMergeSimple", "ptr2", ptr2);
 
       ProcessLine("ptr->fInt1 = 11;");
       ProcessLine("ptr->fInt2 = 22;");
@@ -174,7 +175,27 @@ TEST(RNTupleMergeEmulated, MergeEmulatedSimple)
    }
 }
 
-TEST(RNTupleMergeEmulated, MergeLateEmulated)
+struct RNTupleMergeEmulatedParams {
+   std::string fClassName;
+   std::string fContainerType;
+   std::string fAssignTemplate;
+
+   RNTupleMergeEmulatedParams(std::string_view className, std::string_view containerType,
+                              std::string_view assignTemplate)
+      : fClassName(className), fContainerType(containerType), fAssignTemplate(assignTemplate)
+   {
+   }
+};
+
+// Used by gtest
+std::ostream &operator<<(std::ostream &stream, const RNTupleMergeEmulatedParams &params)
+{
+   return stream << "className: " << params.fClassName << ", container: " << params.fContainerType << "\n";
+}
+
+struct RNTupleMergeEmulated : public ::testing::TestWithParam<RNTupleMergeEmulatedParams> {};
+
+TEST_P(RNTupleMergeEmulated, MergeLateEmulated)
 {
    // Union-merge two files, the first containing an empty ntuple and the second a simple class field with no dictionary
    FileRaii fileGuard1("test_ntuple_merge_late_emulated1.root");
@@ -184,16 +205,13 @@ TEST(RNTupleMergeEmulated, MergeLateEmulated)
 
    EXPECT_NO_STREAMER_OR_DICTIONARY();
 
+   const auto &param = RNTupleMergeEmulated::GetParam();
+
    ExecInFork([&] {
       fileGuard1.PreserveFile();
       fileGuard2.PreserveFile();
 
-      ASSERT_TRUE(gInterpreter->Declare(R"(
-         struct Custom {
-            int fInt1 = 1;
-            ClassDefNV(Custom, 2);
-         };
-      )"));
+      ASSERT_EQ(gSystem->Load("libCustomStruct"), 0);
 
       {
          auto writer = RNTupleWriter::Recreate(ROOT::RNTupleModel::Create(), "ntuple", fileGuard1.GetPath());
@@ -203,75 +221,54 @@ TEST(RNTupleMergeEmulated, MergeLateEmulated)
       }
 
       auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "Custom").Unwrap());
+      model->AddField(RFieldBase::Create("f", param.fContainerType).Unwrap());
       auto writer2 = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
 
       void *ptr2 = writer2->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
-      DeclarePointer("Custom", "ptr2", ptr2);
+      DeclarePointer(param.fContainerType, "p", ptr2);
 
-      ProcessLine("ptr2->fInt1 = 11;");
-      writer2->Fill();
+      for (int i = 0; i < 10; ++i) {
+         // Replace all instances of '%d' in the assign template string with `i`.
+         // We can't use TString::Format() since we have an unknown number of arguments.
+         // This is not a great way of doing it (rescanning the string every iteration), but it's good enough for this
+         // test.
+         auto line = param.fAssignTemplate;
+         const auto replacement = std::to_string(i);
+         const auto replLen = replacement.size();
+         auto idx = line.find("%d");
+         while (idx != std::string::npos) {
+            line = line.substr(0, idx) + replacement + line.substr(idx + 2);
+            if (idx + replLen >= line.size())
+               break;
+            idx = line.find("%d");
+         }
 
-      ProcessLine("ptr2->fInt1 = 22;");
-      writer2->Fill();
-
-      writer2.reset();
-
-      DoMerge({fileGuard1, fileGuard2}, fileGuardOut, ENTupleMergingMode::kUnion);
-   });
-
-   // Gather the input sources
-   DoMerge({fileGuard1, fileGuard2}, fileGuardOut2, ENTupleMergingMode::kUnion);
-   CompareOnDiskInfo(fileGuardOut, fileGuardOut2);
-}
-
-TEST(RNTupleMergeEmulated, MergeLateEmulatedVector)
-{
-   // Union-merge two files, the first containing an empty ntuple and the second a simple class field with no dictionary
-   FileRaii fileGuard1("test_ntuple_merge_late_emulated_vec1.root");
-   FileRaii fileGuard2("test_ntuple_merge_late_emulated_vec2.root");
-   FileRaii fileGuardOut("test_ntuple_merge_late_emulated_out.root");
-   FileRaii fileGuardOut2("test_ntuple_merge_late_emulated_out2.root");
-
-   EXPECT_NO_STREAMER_OR_DICTIONARY();
-
-   ExecInFork([&] {
-      fileGuard1.PreserveFile();
-      fileGuard2.PreserveFile();
-
-      ASSERT_TRUE(gInterpreter->Declare(R"(
-         struct Custom {
-            int fInt1 = 1;
-            ClassDefNV(Custom, 2);
-         };
-      )"));
-
-      {
-         auto writer = RNTupleWriter::Recreate(ROOT::RNTupleModel::Create(), "ntuple", fileGuard1.GetPath());
-         writer->Fill();
-         writer->Fill();
-         writer->Fill();
+         ProcessLine(line.c_str());
+         writer2->Fill();
       }
 
-      auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "std::vector<Custom>").Unwrap());
-      auto writer2 = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
-
-      void *ptr2 = writer2->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
-      DeclarePointer("std::vector<Custom>", "ptr2", ptr2);
-
-      ProcessLine("ptr2->push_back(Custom{11});");
-      writer2->Fill();
-
-      ProcessLine("ptr2->push_back(Custom{22});");
-      writer2->Fill();
-
       writer2.reset();
 
+      EXPECT_TRUE(TClass::GetClass("CustomMergeVec")->IsLoaded());
       DoMerge({fileGuard1, fileGuard2}, fileGuardOut, ENTupleMergingMode::kUnion);
    });
 
    // Gather the input sources
+   gInterpreter->SetClassAutoLoading(false);
    DoMerge({fileGuard1, fileGuard2}, fileGuardOut2, ENTupleMergingMode::kUnion);
+   EXPECT_FALSE(TClass::GetClass("CustomMergeVec")->IsLoaded());
    CompareOnDiskInfo(fileGuardOut, fileGuardOut2);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+   Seq, RNTupleMergeEmulated,
+   testing::Values(RNTupleMergeEmulatedParams{"CustomMergeBasic", "CustomMergeBasic", "p->fA = %d"},
+                   RNTupleMergeEmulatedParams{"CustomMergeVec", "std::vector<CustomMergeVec>", "p->emplace_back(%d)"},
+                   RNTupleMergeEmulatedParams{"CustomMergeMap", "std::map<std::string, CustomMergeMap>",
+                                              "p->try_emplace(\"%d\", CustomMergeMap{%d})"},
+                   RNTupleMergeEmulatedParams{"CustomMergeSet", "std::set<CustomMergeSet>", "p->emplace(%d)"},
+                   RNTupleMergeEmulatedParams{"CustomMergePair", "std::pair<CustomMergePair, CustomMergePair>",
+                                              "*p = std::make_pair<CustomMergePair>(%d, %d)"},
+                   RNTupleMergeEmulatedParams{"CustomMergeTuple",
+                                              "std::tuple<CustomMergeTuple, CustomMergeTuple, CustomMergeTuple>",
+                                              "*p = std::make_tuple<CustomMergeTuple>(%d, %d, %d)"}));
