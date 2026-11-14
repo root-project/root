@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include <memory>
 
 class TBranch;
 class TStreamerElement;
@@ -106,7 +107,21 @@ namespace Detail {
       Long64_t fRead;     // Last entry read
 
       void    *fWhere;    // memory location of the data
-      TVirtualCollectionProxy *fCollection; // Handle to the collection containing the data chunk.
+
+      // Detach the collection proxy from the data before deleting it: an emulated
+      // collection proxy clears the collection it is attached to on destruction,
+      // which, e.g. after a TChain switched files, may no longer exist.
+      struct CollectionDeleter {
+         void operator()(TVirtualCollectionProxy *collection) const
+         {
+            if (!collection)
+               return;
+            collection->PopProxy();
+            delete collection;
+         }
+      };
+      std::unique_ptr<TVirtualCollectionProxy, CollectionDeleter>
+         fCollection; //! Handle to the collection containing the data chunk.
 
       std::size_t fValueSize{}; // Size of the data type of the proxied branch.
 
@@ -114,6 +129,7 @@ namespace Detail {
       virtual void Print();
 
       TBranchProxy();
+      TBranchProxy(const TBranchProxy &other);
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char* top, const char* name = nullptr);
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
       TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = nullptr, const char* name = nullptr);
@@ -442,7 +458,7 @@ public:
          return nullptr;
       }
 
-      TVirtualCollectionProxy *GetCollection() { return fCollection; }
+      TVirtualCollectionProxy *GetCollection() { return fCollection.get(); }
 
       // protected:
       virtual  void *GetStart(UInt_t /*i*/=0) {
