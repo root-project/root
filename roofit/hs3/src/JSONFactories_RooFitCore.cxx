@@ -800,10 +800,16 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
          << ". Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
          << "Root version that supports custom ParamHistFunc binnings(>=6.38.00)." << std::endl;
       RooJSONFactoryWSTool::warning(ss.str());
-      tool->wsEmplace<ParamHistFunc>(name, varList, tool->requestArgList<RooAbsReal>(p, "parameters"));
+      checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), varList, "the ParamHistFunc '" + name + "'");
+      tool->wsEmplace<ParamHistFunc>(name, varList,
+                                     toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), varList));
       return true;
    }
-   tool->wsEmplace<ParamHistFunc>(name, readBinning(p, varList), tool->requestArgList<RooAbsReal>(p, "parameters"));
+   RooArgList binning = readBinning(p, varList);
+   checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), binning, "the ParamHistFunc '" + name + "'");
+   // The parameters are given in the order of HS3 (last axis fastest); ParamHistFunc expects TH1 order.
+   tool->wsEmplace<ParamHistFunc>(name, binning,
+                                  toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), binning));
    return true;
 }
 
@@ -1483,7 +1489,11 @@ bool exportParamHistFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode
    auto *pdf = static_cast<const ParamHistFunc *>(func);
    elem["type"] << key;
    RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
-   RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
+   // One parameter per bin, in the order of HS3 (last axis fastest), not in ParamHistFunc's internal TH1 order.
+   auto &paramsNode = elem["parameters"].set_seq();
+   for (RooAbsReal *param : paramHistFuncParamsInBinOrder(*pdf)) {
+      paramsNode.append_child() << param->GetName();
+   }
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {

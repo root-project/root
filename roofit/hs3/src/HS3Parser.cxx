@@ -361,10 +361,32 @@ void describe(Reader &ar, BinnedAxis &axis)
    axis.binning = binning;
 }
 
+// A categorical axis (HS3 #108) has unique non-empty labels, and no range or binning.
 void describe(Reader &ar, CategoricalAxis &axis)
 {
    ar("name", axis.name);
-   ar("categories", axis.categories);
+   for (const char *key : {"min", "max", "nbins", "edges"}) {
+      if (ar.has(key)) {
+         ar.cursor().error("the axis '" + axis.name + "' is categorical and must not have \"" + key + "\"");
+      }
+   }
+   ar.has("categories");
+   JSONNode const &labels = ar.cursor().node()["categories"];
+   if (!labels.is_seq() || labels.num_children() == 0) {
+      ar.cursor().error("the axis '" + axis.name + "': \"categories\" must be a non-empty list of strings");
+      return;
+   }
+   for (JSONNode const &label : labels.children()) {
+      if (label.is_container() || label.is_null() || label.is_number() || label.val().empty()) {
+         ar.cursor().error("the axis '" + axis.name + "': the entries of \"categories\" must be non-empty strings");
+         return;
+      }
+      if (std::find(axis.categories.begin(), axis.categories.end(), label.val()) != axis.categories.end()) {
+         ar.cursor().error("the axis '" + axis.name + "': the category \"" + label.val() + "\" is listed twice");
+         return;
+      }
+      axis.categories.push_back(label.val());
+   }
 }
 
 namespace {
@@ -971,6 +993,15 @@ void describe(Reader &ar, StatErrorConfig &config)
 
 void describe(Reader &ar, HistFactoryDist &dist)
 {
+   if (ar.has("axes") && ar.cursor().node()["axes"].is_seq()) {
+      for (JSONNode const &axis : ar.cursor().node()["axes"].children()) {
+         if (axis.is_map() && axis.has_child("categories")) {
+            ar.cursor().error("the axis '" + (axis.has_child("name") ? axis["name"].val() : std::string{}) +
+                              "' is categorical, but the axes of a HistFactory prediction are binned");
+            return;
+         }
+      }
+   }
    ar("axes", dist.axes);
    ar("default_interpolation", dist.defaultInterpolation);
    ar("samples", dist.samples);

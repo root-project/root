@@ -325,19 +325,24 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
       }
    }
 
+   // The gammas and `vals` are given in the order of HS3 (last axis fastest), which is also the order in which they
+   // are paired below. ParamHistFunc expects its parameters in TH1 order.
+   checkParamHistFuncOrderIsDefined(tool.hs3VersionInput(), observables, "the modifier '" + sysname + "'");
+   RooArgList gammasInTH1Order = toParamHistFuncOrder(gammas, observables);
+
    // Shape modifiers of the same name in a channel share the function, so they need the same parameters.
    if (RooAbsArg *existing = ws.arg(phfname.c_str())) {
       auto *existingPHF = dynamic_cast<ParamHistFunc *>(existing);
-      bool same = existingPHF && existingPHF->paramList().size() == gammas.size();
-      for (std::size_t i = 0; same && i < gammas.size(); ++i) {
-         same = &existingPHF->paramList()[i] == &gammas[i];
+      bool same = existingPHF && existingPHF->paramList().size() == gammasInTH1Order.size();
+      for (std::size_t i = 0; same && i < gammasInTH1Order.size(); ++i) {
+         same = &existingPHF->paramList()[i] == &gammasInTH1Order[i];
       }
       if (!same) {
          RooJSONFactoryWSTool::error("the modifier '" + sysname + "' has other parameters than another modifier " +
                                      "of this name in the channel");
       }
    }
-   auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
+   auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammasInTH1Order);
 
    auto addGammaConstraints = [&](Constraint::Type type) {
       for (auto const &term : createGammaConstraints(gammas, vals, minSigma, type).constraints) {
@@ -1064,6 +1069,19 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
       auto updateObservables = [&](RooDataHist const &dataHist) {
          if (channel.observables == nullptr) {
             channel.observables = dataHist.get();
+         } else {
+            // The bin contents of all samples are written in the order of the axes of the channel (the last axis
+            // varies fastest), which is the order of the observables of the first histogram.
+            RooArgSet const &vars = *dataHist.get();
+            bool sameOrder = vars.size() == channel.observables->size();
+            for (std::size_t i = 0; sameOrder && i < vars.size(); ++i) {
+               sameOrder = std::string(vars[i]->GetName()) == (*channel.observables)[i]->GetName();
+            }
+            if (!sameOrder) {
+               RooJSONFactoryWSTool::error("the histograms of channel '" + channel.name +
+                                           "' don't have their observables in the same order, so their bin "
+                                           "contents can't be written along the same axes");
+            }
          }
          if (sample.contents.empty()) {
             sample.contents = contents(dataHist);
@@ -1216,7 +1234,8 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             statError->name = "staterror";
             HS3::GammaConstraintPdfs pdfs;
             int idx = 0;
-            for (const auto &g : phf->paramList()) {
+            // In the order of the bins (last axis fastest), like the contents of the samples.
+            for (RooAbsReal *g : paramHistFuncParamsInBinOrder(*phf)) {
                statError->parameters.push_back({g->GetName()});
                ++idx;
                RooAbsPdf *pdf = findConstraint(g);
@@ -1240,7 +1259,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             // Both are written as "shapefactor": the constrained parameters name their constraint distribution in
             // "constraints", the others are free.
             HS3::GammaConstraintPdfs pdfs;
-            for (const auto &g : phf->paramList()) {
+            for (RooAbsReal *g : paramHistFuncParamsInBinOrder(*phf)) {
                sys.parameters.push_back({g->GetName()});
                RooAbsPdf *pdf = findConstraint(g);
                if (!pdf)
