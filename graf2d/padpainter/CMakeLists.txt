@@ -19,7 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTPadPainter
     -writeEmptyRootPCM
   DEPENDENCIES
     Gpad
-    ASImageUtils
 )
 
 

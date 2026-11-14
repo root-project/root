@@ -42,6 +42,7 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImageUtils
   NO_GLOB_HEADERS
   HEADERS
+    TASImageUtils.h
     TASUtils.h
   SOURCES
     TASUtils.cxx

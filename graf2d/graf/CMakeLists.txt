@@ -48,6 +48,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     TTF.h
     TTFhandle.h
     TText.h
+    TVirtualImageUtils.h
     TWbox.h
   SOURCES
     src/TArc.cxx
@@ -87,6 +88,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     src/TTF.cxx
     src/TTFhandle.cxx
     src/TText.cxx
+    src/TVirtualImageUtils.cxx
     src/TWbox.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
