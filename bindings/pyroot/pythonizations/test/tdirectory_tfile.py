@@ -210,6 +210,58 @@ class TFileOpenReadWrite(unittest.TestCase):
         finput.Close()
 
 
+class TFileGetOwnership(unittest.TestCase):
+    """
+    Test that the objects returned by Get are owned by Python unless they are
+    owned by the directory (#16178)
+    """
+
+    filename = "tfilegetownership.root"
+
+    @classmethod
+    def setUpClass(cls):
+        with TFile(cls.filename, "recreate") as f:
+            ROOT.TH1F("h", "h", 10, 0, 1).Write()
+            ROOT.TTree("t", "t").Write()
+            f.mkdir("dir")
+            ROOT.TGraph(10).Write("g")
+            ROOT.TObjString("s").Write("s")
+            f.WriteObject(ROOT.std.vector["double"](10), "v")
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.filename)
+
+    def test_owned_by_directory(self):
+        with TFile(self.filename) as f:
+            for name in ["h", "t", "dir"]:
+                obj = f.Get(name)
+                # Whether these objects are registered in the directory may
+                # depend on ROOT::Experimental::ObjectAutoRegistrationEnabled()
+                # in the future, so check the ownership against the actual
+                # registration
+                registered = bool(f.GetList().FindObject(name))
+                self.assertEqual(obj.__python_owns__, not registered, msg=name)
+                # The directory must keep the object alive after the Python
+                # object is gone
+                del obj
+                if registered:
+                    # Check before Get(), which could reload the object from disk.
+                    self.assertTrue(f.GetList().FindObject(name), msg=name)
+                    self.assertEqual(f.Get(name).GetName(), name)
+
+    def test_owned_by_python(self):
+        with TFile(self.filename) as f:
+            objs = {name: f.Get(name) for name in ["g", "s", "v"]}
+            for name, obj in objs.items():
+                self.assertTrue(obj.__python_owns__, msg=name)
+                self.assertFalse(f.GetList().FindObject(name), msg=name)
+        # The objects are still usable after the file is closed
+        self.assertEqual(objs["g"].GetN(), 10)
+        self.assertEqual(objs["s"].GetString(), "s")
+        self.assertEqual(objs["v"].size(), 10)
+
+
 class TFileConstructor(unittest.TestCase):
     """
     Test for the TFile constructor
