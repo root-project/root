@@ -25,6 +25,7 @@
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooCustomizer.h>
+#include <RooProdPdf.h>
 #include <RooSimultaneous.h>
 #include <RooSuperCategory.h>
 #include <RooFit/ModelConfig.h>
@@ -41,6 +42,7 @@
 #include <algorithm>
 #include <iterator>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <numeric>
 #include <set>
@@ -985,8 +987,9 @@ void declareBookkeepingColumns(JSONNode &rootnode, RooWorkspace const &ws)
 
 // Write each term of the likelihoods of the exported document `rootnode` once. A RooFit model often has a constraint
 // both as a factor of the product of a channel and as a term of the likelihood (e.g. a constraint of a HistFactory
-// modifier, or an external constraint of the ModelConfig); RooFit counts it once. In HS3 it would enter twice, so the
-// factor is removed from the product. Only products that no other distribution uses are changed (being a component
+// modifier, an external constraint of the ModelConfig, or any constraint of a channel, see
+// constraintFactorsOfChannels()); RooFit counts it once. In HS3 it would enter twice, so the factor is removed from
+// the product. Only products that no other distribution uses are changed (being a component
 // of a combined distribution is not a use), and only factors that are terms of every likelihood that has the product
 // as a term.
 void writeLikelihoodTermsOnce(JSONNode &rootnode)
@@ -3001,6 +3004,61 @@ void RooJSONFactoryWSTool::exportModelConfig(RooFit::ModelConfig const &mc,
    }
 }
 
+namespace {
+
+// The constraint terms of the pdf `pdf` of a ModelConfig with the observables `observables` that are written as
+// terms of the likelihood instead of as factors of products: the constraints that RooFit finds
+// (RooAbsPdf::getAllConstraints()) and that are factors of a channel, i.e. of `pdf` itself or of a component of the
+// RooSimultaneous `pdf`, if the channel is an ordinary product that no other object of the workspace uses. In RooFit,
+// constraints are factors of the channels, and RooFit counts each once, also if several channels share it; in HS3,
+// they are terms of the likelihood. writeLikelihoodTermsOnce() takes them out of the products. Constraints elsewhere,
+// e.g. in a nested product, stay where they are. HistFactory channels (`isHistFactoryChannel`) are skipped: their
+// constraints are no factors in the document.
+std::vector<std::string>
+constraintFactorsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet const &observables,
+                            std::function<bool(std::string const &)> const &isHistFactoryChannel)
+{
+   RooArgSet params;
+   pdf.getParameters(&observables, params);
+   std::unique_ptr<RooArgSet> constraints{pdf.getAllConstraints(observables, params, /*stripDisconnected=*/false)};
+   std::vector<RooAbsPdf const *> channels;
+   if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(&pdf)) {
+      for (auto const &item : simPdf->indexCat()) {
+         if (RooAbsPdf const *component = simPdf->getPdf(item.first)) {
+            channels.push_back(component);
+         }
+      }
+   } else {
+      channels.push_back(&pdf);
+   }
+   std::vector<std::string> factors;
+   for (RooAbsPdf const *channel : channels) {
+      auto const *prod = dynamic_cast<RooProdPdf const *>(channel);
+      if (!prod || isHistFactoryChannel(prod->GetName())) {
+         continue;
+      }
+      // Being a component of a RooSimultaneous, i.e. of a combined distribution, is not a use.
+      bool usedElsewhere = false;
+      for (RooAbsArg const *client : prod->clients()) {
+         if (ws.arg(client->GetName()) == client && !dynamic_cast<RooSimultaneous const *>(client)) {
+            usedElsewhere = true;
+         }
+      }
+      if (usedElsewhere) {
+         continue;
+      }
+      for (RooAbsArg const *factor : prod->pdfList()) {
+         if (constraints->find(*factor) &&
+             std::find(factors.begin(), factors.end(), factor->GetName()) == factors.end()) {
+            factors.push_back(factor->GetName());
+         }
+      }
+   }
+   return factors;
+}
+
+} // namespace
+
 void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc, std::string const &analysisName,
                                                    std::string const *dataName)
 {
@@ -3050,6 +3108,18 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    if (mc.GetExternalConstraints()) {
       for (const auto &constr : *mc.GetExternalConstraints()) {
          addAux(constr->GetName());
+      }
+   }
+   // Without observables (e.g. a ModelConfig without data), RooFit can't tell constraints from other pdfs.
+   if (RooArgSet const *observables = mc.GetObservables(); observables && !observables->empty()) {
+      auto isHistFactoryChannel = [&](std::string const &name) {
+         return std::any_of(doc.distributions.begin(), doc.distributions.end(), [&](HS3::Distribution const &dist) {
+            return dist.name == name && std::holds_alternative<HS3::HistFactoryDist>(dist.body);
+         });
+      };
+      for (std::string const &factor :
+           constraintFactorsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel)) {
+         addAux(factor);
       }
    }
    doc.likelihoods.push_back(std::move(likelihood));

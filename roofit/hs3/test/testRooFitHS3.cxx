@@ -6749,3 +6749,114 @@ TEST(RooFitHS3, ExternalConstraintKeepsRoles)
    ASSERT_NE(mc2->GetExternalConstraints(), nullptr);
    EXPECT_NE(mc2->GetExternalConstraints()->find("constraint"), nullptr);
 }
+
+// Constraints that RooFit finds in the channels of a model (RooAbsPdf::getAllConstraints()) are written as terms of
+// the likelihood, not as factors of the products, also if only one channel has them. A constraint shared by two
+// channels is one term of the likelihood in RooFit, and it is written once. A product that another pdf uses keeps its
+// constraints. The document reads back with the same NLL, with the constraints as external constraints of the
+// ModelConfig, and is stable.
+TEST(RooFitHS3, ConstraintFactorsOfChannelsAreLikelihoodTerms)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::a(xa[0, -5, 5], mu[0, -2, 2], 1.0)");
+   ws.factory("Gaussian::b(xb[0, -5, 5], expr::mu_theta('mu + theta', mu, theta[0, -5, 5]), 1.0)");
+   ws.factory("Gaussian::shared(gobs[0, -5, 5], theta, 1.0)");
+   ws.factory("Gaussian::own(gobs_eta[0, -5, 5], eta[0, -5, 5], 1.0)");
+   ws.factory("Gaussian::a_shape(xa, eta, 2.0)");
+   ws.var("gobs")->setConstant(true);
+   ws.var("gobs_eta")->setConstant(true);
+   ws.factory("PROD::channel_a(SUM::a_sum(f[0.5, 0, 1] * a, a_shape), shared, own)");
+   ws.factory("PROD::channel_b(b, shared)");
+   ws.factory("SIMUL::model(channel[A=0, B=1], A=channel_a, B=channel_b)");
+   RooArgSet observables{*ws.var("xa"), *ws.var("xb"), *ws.cat("channel")};
+   RooDataSet data{"data", "data", observables};
+   for (int index : {0, 1}) {
+      ws.cat("channel")->setIndex(index);
+      ws.var("xa")->setVal(0.3);
+      ws.var("xb")->setVal(-0.6);
+      data.add(observables);
+   }
+   ws.import(data, RooFit::Silence());
+   RooFit::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf("model");
+   mc.SetParametersOfInterest("mu");
+   mc.SetNuisanceParameters("theta,eta,f");
+   mc.SetObservables(observables);
+   mc.SetGlobalObservables("gobs,gobs_eta");
+   ws.import(mc);
+
+   auto nllOf = [](RooWorkspace &w) {
+      auto *modelConfig = dynamic_cast<RooFit::ModelConfig *>(w.obj("ModelConfig"));
+      if (!modelConfig || !w.data("data")) {
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+      w.var("theta")->setVal(0.4);
+      w.var("eta")->setVal(-0.3);
+      w.var("mu")->setVal(0.2);
+      RooArgSet external;
+      if (modelConfig->GetExternalConstraints()) {
+         external.add(*modelConfig->GetExternalConstraints());
+      }
+      std::unique_ptr<RooAbsReal> nll{
+         modelConfig->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external),
+                                          RooFit::GlobalObservables(*modelConfig->GetGlobalObservables()))};
+      return nll->getVal();
+   };
+   const double nll = nllOf(ws);
+   ASSERT_FALSE(std::isnan(nll));
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   for (auto const &[channel, factor] :
+        std::vector<std::pair<std::string, std::string>>{{"channel_a", "a_sum"}, {"channel_b", "b"}}) {
+      const auto *product = RooJSONFactoryWSTool::findNamedChild(distributions, channel);
+      ASSERT_NE(product, nullptr) << exported;
+      ASSERT_EQ((*product)["factors"].num_children(), 1u) << channel << ": " << exported;
+      EXPECT_EQ((*product)["factors"].child(0).val(), factor) << exported;
+   }
+   const auto *likelihood =
+      RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["likelihoods"], "ModelConfig_data_likelihood");
+   ASSERT_NE(likelihood, nullptr) << exported;
+   std::set<std::string> aux;
+   for (auto const &item : (*likelihood)["aux_distributions"].children()) {
+      EXPECT_TRUE(aux.insert(item.val()).second) << item.val() << " twice: " << exported;
+   }
+   EXPECT_EQ(aux, (std::set<std::string>{"shared", "own"})) << exported;
+
+   RooWorkspace ws2;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+   });
+   EXPECT_EQ(warnings.find("is shared by the"), std::string::npos) << warnings;
+   EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
+   const std::string exported2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   RooWorkspace ws3;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported2));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), exported2);
+
+   // A product that another pdf uses keeps its constraint.
+   RooWorkspace wsUsed;
+   wsUsed.factory("Gaussian::shape(x[0, -5, 5], theta[0, -5, 5], 1.0)");
+   wsUsed.factory("Gaussian::constraint(gobs[0, -5, 5], theta, 1.0)");
+   wsUsed.var("gobs")->setConstant(true);
+   wsUsed.factory("PROD::model(shape, constraint)");
+   wsUsed.factory("SUM::other(f[0.5, 0, 1] * model, Uniform::flat(x))");
+   RooDataSet dataUsed{"data", "data", *wsUsed.var("x")};
+   dataUsed.add(*wsUsed.var("x"));
+   wsUsed.import(dataUsed, RooFit::Silence());
+   RooFit::ModelConfig mcUsed{"ModelConfig", &wsUsed};
+   mcUsed.SetPdf("model");
+   mcUsed.SetParametersOfInterest("theta");
+   mcUsed.SetObservables("x");
+   mcUsed.SetGlobalObservables("gobs");
+   wsUsed.import(mcUsed);
+   const std::string exportedUsed = RooJSONFactoryWSTool{wsUsed}.exportJSONtoString();
+   auto treeUsed = RooFit::Detail::JSONTree::create(exportedUsed);
+   const auto *model = RooJSONFactoryWSTool::findNamedChild(treeUsed->rootnode()["distributions"], "model");
+   ASSERT_NE(model, nullptr) << exportedUsed;
+   EXPECT_EQ((*model)["factors"].num_children(), 2u) << exportedUsed;
+   EXPECT_EQ(exportedUsed.find("aux_distributions"), std::string::npos) << exportedUsed;
+}
