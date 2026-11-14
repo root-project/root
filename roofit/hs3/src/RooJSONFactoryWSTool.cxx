@@ -1547,13 +1547,36 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       return false;
    };
 
+   // RooFit writes the constraint terms of a model as terms of the likelihood, with config().exportConstraintData
+   // paired with a data set of one entry. If the document names the pdf of the ModelConfig, and it is a term of the
+   // likelihood, another term that is not part of it and is paired with such a data set is a constraint term: an
+   // external constraint of the ModelConfig.
+   std::string const modelPdfName = mcInfo && mcInfo->pdfName ? *mcInfo->pdfName : "";
+   std::unique_ptr<RooArgSet> modelTree;
+   if (RooAbsPdf const *modelPdf = workspace.pdf(modelPdfName);
+       modelPdf && std::any_of(likelihood.terms.begin(), likelihood.terms.end(),
+                               [&](auto const &term) { return term.distribution.name == modelPdfName; })) {
+      modelTree.reset(modelPdf->getComponents());
+   }
+   auto isConstraintTermOfModel = [&](RooAbsPdf const &listed, HS3::LikelihoodTerm const &term) {
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
+      if (!modelTree || !dataRef || modelTree->find(listed.GetName())) {
+         return false;
+      }
+      return std::any_of(datasets.begin(), datasets.end(),
+                         [&](auto const &d) { return d && d->GetName() == dataRef->name && d->numEntries() == 1; });
+   };
+
    std::vector<std::string> nllDistNames;
    std::vector<HS3::LikelihoodTerm const *> nllTerms;
    RooArgSet constraintObservables;
+   RooArgSet constraintsWithData;
    for (std::size_t i = 0; i < likelihood.terms.size(); ++i) {
       auto const &term = likelihood.terms[i];
       RooAbsPdf *listed = workspace.pdf(term.distribution.name);
-      if (!listed || !isConstraintTermOfOthers(*listed, i)) {
+      if (listed && !isConstraintTermOfOthers(*listed, i) && isConstraintTermOfModel(*listed, term)) {
+         constraintsWithData.add(*listed);
+      } else if (!listed || !isConstraintTermOfOthers(*listed, i)) {
          nllDistNames.push_back(term.distribution.name);
          nllTerms.push_back(&term);
          continue;
@@ -1685,6 +1708,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
 
    mc->SetPdf(*pdf);
 
+   extConstraints.add(constraintsWithData, /*silent=*/true);
    if (!extConstraints.empty())
       mc->SetExternalConstraints(extConstraints);
 
@@ -3460,14 +3484,8 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    };
    // The additional terms of the likelihood: the external constraints of the ModelConfig, and the constraint terms
    // of the channels of the model, which can be the components of a combined distribution (constraintsOfChannels()).
-   // The latter are listed in "aux_distributions" with the observed values of their observables as constant
-   // parameters, or (config().exportConstraintData) in "distributions", each paired with a data set that holds the
-   // observed values.
-   if (mc.GetExternalConstraints()) {
-      for (const auto &constr : *mc.GetExternalConstraints()) {
-         addAux(constr->GetName());
-      }
-   }
+   // They are listed in "aux_distributions" with the observed values of their observables as constant parameters, or
+   // (config().exportConstraintData) in "distributions", each paired with a data set that holds the observed values.
    std::vector<std::string> channels;
    for (auto const &term : likelihood.terms) {
       channels.push_back(term.distribution.name);
@@ -3485,6 +3503,11 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
          constraintTerms.push_back(term);
       }
    };
+   if (mc.GetExternalConstraints()) {
+      for (const auto &constr : *mc.GetExternalConstraints()) {
+         addConstraintTerm(constr->GetName());
+      }
+   }
    // The constraint terms that the HistFactory exporter wrote for the channel `channel`, in the order of the document:
    // the constraints that the modifiers name, as written (e.g. array distributions), and those that no modifier
    // names.

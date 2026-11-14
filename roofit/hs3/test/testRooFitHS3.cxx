@@ -8483,3 +8483,108 @@ TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
    EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
 }
+
+// With config().exportConstraintData, a constraint of an ordinary product is written as a term of the likelihood
+// paired with a data set of one entry, like the constraints of HistFactory channels. On import, it is an external
+// constraint of the ModelConfig, the data set sets the observed value of its global observable, and it is not
+// imported as a data set. The likelihood is the same with and without the option.
+TEST(RooFitHS3, ConstraintDataOfProductConstraints)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::shape(x[0, -5, 5], mu[0, -2, 2], 1.0)");
+   ws.factory("Gaussian::shift(x, theta[0, -5, 5], 2.0)");
+   ws.factory("SUM::phys(f[0.5, 0, 1] * shape, shift)");
+   ws.factory("Gaussian::constraint(gobs[0.3, -5, 5], theta, 1.0)");
+   ws.var("gobs")->setConstant(true);
+   ws.factory("PROD::model(phys, constraint)");
+   RooDataSet data{"data", "data", *ws.var("x")};
+   ws.var("x")->setVal(0.3);
+   data.add(*ws.var("x"));
+   ws.import(data, RooFit::Silence());
+   RooFit::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf("model");
+   mc.SetObservables("x");
+   mc.SetParametersOfInterest("mu");
+   mc.SetNuisanceParameters("theta,f");
+   mc.SetGlobalObservables("gobs");
+   ws.import(mc);
+
+   auto nllOf = [](RooWorkspace &w) {
+      auto *modelConfig = dynamic_cast<RooFit::ModelConfig *>(w.obj("ModelConfig"));
+      if (!modelConfig || !w.data("data") || !modelConfig->GetGlobalObservables()) {
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+      w.var("theta")->setVal(0.4);
+      w.var("mu")->setVal(0.2);
+      RooArgSet external;
+      if (modelConfig->GetExternalConstraints()) {
+         external.add(*modelConfig->GetExternalConstraints());
+      }
+      std::unique_ptr<RooAbsReal> nll{
+         modelConfig->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external),
+                                          RooFit::GlobalObservables(*modelConfig->GetGlobalObservables()))};
+      return nll->getVal();
+   };
+   const double nll = nllOf(ws);
+   ASSERT_FALSE(std::isnan(nll));
+
+   for (bool constraintData : {false, true}) {
+      SCOPED_TRACE(constraintData ? "with constraint data" : "without constraint data");
+      RooJSONFactoryWSTool::config().exportConstraintData = constraintData;
+      const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().exportConstraintData = false;
+
+      auto tree = RooFit::Detail::JSONTree::create(exported);
+      const auto *model = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model");
+      ASSERT_NE(model, nullptr) << exported;
+      ASSERT_EQ((*model)["factors"].num_children(), 1u) << exported;
+      if (constraintData) {
+         EXPECT_NE(exported.find(R"("distributions":["model","constraint"])"), std::string::npos) << exported;
+         EXPECT_NE(exported.find(R"("data":["data","constraint_data"])"), std::string::npos) << exported;
+         EXPECT_EQ(exported.find("aux_distributions"), std::string::npos) << exported;
+      } else {
+         EXPECT_NE(exported.find(R"("aux_distributions":["constraint"])"), std::string::npos) << exported;
+      }
+
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+      auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+      ASSERT_NE(mc2, nullptr);
+      EXPECT_STREQ(mc2->GetPdf()->GetName(), "model");
+      ASSERT_NE(mc2->GetExternalConstraints(), nullptr) << exported;
+      EXPECT_NE(mc2->GetExternalConstraints()->find("constraint"), nullptr) << exported;
+      ASSERT_NE(mc2->GetGlobalObservables(), nullptr) << exported;
+      EXPECT_NE(mc2->GetGlobalObservables()->find("gobs"), nullptr) << exported;
+      EXPECT_EQ(ws2.data("constraint_data"), nullptr);
+      EXPECT_DOUBLE_EQ(ws2.var("gobs")->getVal(), 0.3);
+      EXPECT_TRUE(ws2.var("gobs")->isConstant());
+      EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
+
+      // After the first round trip, the constraint is an external constraint of the ModelConfig, which is written in
+      // the same way. From there on, the document is stable.
+      RooJSONFactoryWSTool::config().exportConstraintData = constraintData;
+      const std::string exported2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+      RooWorkspace ws3;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported2)) << exported2;
+      const std::string exported3 = RooJSONFactoryWSTool{ws3}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().exportConstraintData = false;
+      EXPECT_EQ(exported3, exported2);
+      auto tree2 = RooFit::Detail::JSONTree::create(exported2);
+      auto const &likelihood = tree2->rootnode()["likelihoods"].child(0);
+      auto const &likelihood1 = tree->rootnode()["likelihoods"].child(0);
+      for (const char *key : {"distributions", "data", "aux_distributions"}) {
+         std::stringstream ss1;
+         std::stringstream ss2;
+         if (likelihood1.has_child(key)) {
+            likelihood1[key].writeJSON(ss1);
+         }
+         if (likelihood.has_child(key)) {
+            likelihood[key].writeJSON(ss2);
+         }
+         EXPECT_EQ(ss2.str(), ss1.str()) << key << ": " << exported2;
+      }
+      EXPECT_NEAR(nllOf(ws3), nll, 1e-10 * std::abs(nll));
+   }
+}
