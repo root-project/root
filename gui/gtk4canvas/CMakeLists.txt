@@ -8,20 +8,9 @@
 # CMakeLists.txt file for building ROOT gui/gtk4canvas package
 ############################################################################
 
-find_package(PkgConfig)
-
-pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-4.0)
-
 if(NOT GTKMM_FOUND)
-  if(fail-on-missing)
-    message(FATAL_ERROR "Could NOT find gtkmm-4.0 components")
-  else()
-    message(WARNING "GTKMM not found, disabling option 'gtk4canv'")
-    set(gtk4canv OFF CACHE BOOL "Disabled because GTKMM not found" FORCE)
-    return()
-  endif()
+  message(SEND_ERROR "Could NOT find gtkmm-4.0 components, install missing components or disbale option 'gtk4canv'")
 endif()
-
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGtk4Canvas
   HEADERS

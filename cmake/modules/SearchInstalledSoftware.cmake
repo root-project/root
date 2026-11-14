@@ -1096,7 +1096,36 @@ if (testing OR testsupport)
 endif()
 
 #------------------------------------------------------------------------------------
+if(qt6canv)
+  list(APPEND qtlibs Widgets)
+endif()
+if(webgui AND qt6web)
+  list(APPEND qtlibs WebEngineCore WebEngineWidgets)
+endif()
 
+if(qtlibs)
+  find_package(Qt6 COMPONENTS Core ${qtlibs} CONFIG)
+  if(NOT Qt6_FOUND)
+    message(SEND_ERROR "qt6canv and qt6web requires Qt6 with ${qtlibs}, either install Qt6 or disable feature(s)")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dqt6canv=OFF -Dqt6web=OFF)
+  endif()
+endif()
+
+#------------------------------------------------------------------------------------
+if(gtk4canv)
+  if(NOT PKG_CONFIG_FOUND)
+    find_package(PkgConfig)
+  endif()
+  if(PKG_CONFIG_FOUND)
+    pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-4.0)
+  endif()
+  if(NOT GTKMM_FOUND)
+    message(SEND_ERROR "Could NOT find gtkmm-4.0 components, either install it or disable gtk4canv option")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dgtk4canv=OFF)
+  endif()
+endif()
+
+#------------------------------------------------------------------------------------
 if(builtin_jsroot)
   ROOT_CHECK_CONNECTION("builtin_jsroot=OFF")
   if (NO_CONNECTION)
