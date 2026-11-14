@@ -19,8 +19,11 @@ struct RFieldBaseTest : public ROOT::RFieldBase {
          return result;
       };
 
-      if (fPrincipalColumn)
-         return fnColumnElementIndexToEntry(fPrincipalColumn->GetFirstElementIndex());
+      if (fPrincipalColumn) {
+         auto descGuard = fPrincipalColumn->ForReading()->GetPageSource()->GetSharedDescriptorGuard();
+         auto firstElementIdx = descGuard->GetColumnDescriptor(fPrincipalColumn->GetOnDiskId()).GetFirstElementIndex();
+         return fnColumnElementIndexToEntry(firstElementIdx);
+      }
       if (!fSubfields.empty())
          return static_cast<const RFieldBaseTest &>(*fSubfields[0]).GetFirstEntry();
       R__ASSERT(false);

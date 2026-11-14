@@ -978,7 +978,7 @@ std::size_t ROOT::RSoAField::AppendImpl(const void *from)
          auto [beginPtr, _, __] = ROOT::Internal::GetRVecDataMembers(rvecPtr);
          RFieldBase *memberField = fRecordMemberFields[i];
          if (memberField->IsSimple()) {
-            GetPrincipalColumnOf(*memberField)->AppendV(*beginPtr, N);
+            GetPrincipalColumnOf(*memberField)->ForWriting()->AppendV(*beginPtr, N);
             nbytes += N * GetPrincipalColumnOf(*memberField)->GetElement()->GetPackedSize();
          } else {
             for (std::size_t j = 0; j < N; ++j) {
@@ -989,7 +989,7 @@ std::size_t ROOT::RSoAField::AppendImpl(const void *from)
    }
 
    fNWritten += N;
-   fPrincipalColumn->Append(&fNWritten);
+   fPrincipalColumn->ForWriting()->Append(&fNWritten);
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
@@ -998,7 +998,7 @@ void ROOT::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
    // Read collection info for this entry
    ROOT::NTupleSize_t N;
    RNTupleLocalIndex collectionStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &N);
+   fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, &collectionStart, &N);
 
    const auto nSoAMembers = fSoAMemberOffsets.size();
    for (std::size_t i = 0; i < nSoAMembers; ++i) {
@@ -1011,7 +1011,7 @@ void ROOT::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
          continue;
 
       if (memberField->IsSimple()) {
-         GetPrincipalColumnOf(*memberField)->ReadV(collectionStart, N, begin);
+         GetPrincipalColumnOf(*memberField)->ForReading()->ReadV(collectionStart, N, begin);
       } else {
          if (memberField->IsArtificial()) {
             // Other artificial fields simply don't read at all. This does not work here because then
@@ -1408,7 +1408,7 @@ std::size_t ROOT::RProxiedCollectionField::AppendImpl(const void *from)
    }
 
    fNWritten += count;
-   fPrincipalColumn->Append(&fNWritten);
+   fPrincipalColumn->ForWriting()->Append(&fNWritten);
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
@@ -1416,7 +1416,7 @@ void ROOT::RProxiedCollectionField::ReadGlobalImpl(ROOT::NTupleSize_t globalInde
 {
    ROOT::NTupleSize_t nItems;
    RNTupleLocalIndex collectionStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+   fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), to);
    void *obj =
@@ -1664,9 +1664,9 @@ std::size_t ROOT::RStreamerField::AppendImpl(const void *from)
    fClass->Streamer(const_cast<void *>(from), buffer);
 
    auto nbytes = buffer.Length();
-   fAuxiliaryColumn->AppendV(buffer.Buffer(), buffer.Length());
+   fAuxiliaryColumn->ForWriting()->AppendV(buffer.Buffer(), buffer.Length());
    fIndex += nbytes;
-   fPrincipalColumn->Append(&fIndex);
+   fPrincipalColumn->ForWriting()->Append(&fIndex);
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
@@ -1674,10 +1674,10 @@ void ROOT::RStreamerField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *
 {
    RNTupleLocalIndex collectionStart;
    ROOT::NTupleSize_t nbytes;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
+   fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
 
    TBufferFile buffer(TBuffer::kRead, nbytes);
-   fAuxiliaryColumn->ReadV(collectionStart, nbytes, buffer.Buffer());
+   fAuxiliaryColumn->ForReading()->ReadV(collectionStart, nbytes, buffer.Buffer());
    fClass->Streamer(to, buffer);
 }
 
@@ -2048,7 +2048,7 @@ std::size_t ROOT::RVariantField::AppendImpl(const void *from)
       index = fNWritten[tag - 1]++;
    }
    ROOT::Internal::RColumnSwitch varSwitch(index, tag);
-   fPrincipalColumn->Append(&varSwitch);
+   fPrincipalColumn->ForWriting()->Append(&varSwitch);
    return nbytes + sizeof(ROOT::Internal::RColumnSwitch);
 }
 
@@ -2056,7 +2056,7 @@ void ROOT::RVariantField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *t
 {
    RNTupleLocalIndex variantIndex;
    std::uint32_t tag;
-   fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
+   fPrincipalColumn->ForReading()->GetSwitchInfo(globalIndex, &variantIndex, &tag);
    R__ASSERT(tag < 256);
 
    // If `tag` equals 0, the variant is in the invalid state, i.e, it does not hold any of the valid alternatives in

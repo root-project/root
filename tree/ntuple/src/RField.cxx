@@ -542,9 +542,9 @@ std::size_t ROOT::RField<std::string>::AppendImpl(const void *from)
 {
    auto typedValue = static_cast<const std::string *>(from);
    auto length = typedValue->length();
-   fAuxiliaryColumn->AppendV(typedValue->data(), length);
+   fAuxiliaryColumn->ForWriting()->AppendV(typedValue->data(), length);
    fIndex += length;
-   fPrincipalColumn->Append(&fIndex);
+   fPrincipalColumn->ForWriting()->Append(&fIndex);
    return length + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
@@ -553,12 +553,12 @@ void ROOT::RField<std::string>::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, v
    auto typedValue = static_cast<std::string *>(to);
    RNTupleLocalIndex collectionStart;
    ROOT::NTupleSize_t nChars;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nChars);
+   fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, &collectionStart, &nChars);
    if (nChars == 0) {
       typedValue->clear();
    } else {
       typedValue->resize(nChars);
-      fAuxiliaryColumn->ReadV(collectionStart, nChars, const_cast<char *>(typedValue->data()));
+      fAuxiliaryColumn->ForReading()->ReadV(collectionStart, nChars, const_cast<char *>(typedValue->data()));
    }
 }
 
@@ -832,7 +832,7 @@ static void BitsetAppendImpl(const void *from, size_t nBits, ROOT::Internal::RCo
          buffer[b] =
             (asWordArray[currentBit / kBitsPerWord] & (static_cast<Word_t>(1) << (currentBit % kBitsPerWord))) != 0;
       }
-      column.AppendV(buffer, nBatch);
+      column.ForWriting()->AppendV(buffer, nBatch);
       bitIdx += nBatch;
    }
 }
@@ -856,7 +856,7 @@ BitsetReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to, size_t nBits, ROO
    std::size_t bitIdx = 0;
    while (bitIdx < nBits) {
       const std::size_t nBatch = std::min(kChunkSize, nBits - bitIdx);
-      column.ReadV(globalIndex * nBits + bitIdx, nBatch, buffer);
+      column.ForReading()->ReadV(globalIndex * nBits + bitIdx, nBatch, buffer);
       for (std::size_t b = 0; b < nBatch; ++b) {
          const std::size_t currentBit = bitIdx + b;
          const Word_t mask = static_cast<Word_t>(1) << (currentBit % kBitsPerWord);
@@ -884,8 +884,9 @@ BitsetReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to, size_t nBi
    std::size_t bitIdx = 0;
    while (bitIdx < nBits) {
       const std::size_t nBatch = std::min(kChunkSize, nBits - bitIdx);
-      column.ReadV(ROOT::RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * nBits + bitIdx),
-                   nBatch, buffer);
+      column.ForReading()->ReadV(
+         ROOT::RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * nBits + bitIdx), nBatch,
+         buffer);
       for (std::size_t b = 0; b < nBatch; ++b) {
          const std::size_t currentBit = bitIdx + b;
          const Word_t mask = static_cast<Word_t>(1) << (currentBit % kBitsPerWord);
@@ -943,7 +944,7 @@ void ROOT::RNullableField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 
 std::size_t ROOT::RNullableField::AppendNull()
 {
-   fPrincipalColumn->Append(&fNWritten);
+   fPrincipalColumn->ForWriting()->Append(&fNWritten);
    return sizeof(ROOT::Internal::RColumnIndex);
 }
 
@@ -951,7 +952,7 @@ std::size_t ROOT::RNullableField::AppendValue(const void *from)
 {
    auto nbytesItem = CallAppendOn(*fSubfields[0], from);
    fNWritten++;
-   fPrincipalColumn->Append(&fNWritten);
+   fPrincipalColumn->ForWriting()->Append(&fNWritten);
    return sizeof(ROOT::Internal::RColumnIndex) + nbytesItem;
 }
 
@@ -975,7 +976,7 @@ ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t gl
 {
    RNTupleLocalIndex collectionStart;
    ROOT::NTupleSize_t collectionSize;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
+   fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
    return (collectionSize == 0) ? RNTupleLocalIndex() : collectionStart;
 }
 
@@ -983,7 +984,7 @@ ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::RNTupleLocalInd
 {
    RNTupleLocalIndex collectionStart;
    ROOT::NTupleSize_t collectionSize;
-   fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &collectionSize);
+   fPrincipalColumn->ForReading()->GetCollectionInfo(localIndex, &collectionStart, &collectionSize);
    return (collectionSize == 0) ? RNTupleLocalIndex() : collectionStart;
 }
 

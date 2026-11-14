@@ -1186,7 +1186,7 @@ bool ROOT::Internal::RWritePageMemoryManager::TryEvict(std::size_t targetAvailab
    return false;
 }
 
-bool ROOT::Internal::RWritePageMemoryManager::TryUpdate(RColumn &column, std::size_t newWritePageSize)
+bool ROOT::Internal::RWritePageMemoryManager::TryUpdate(RWriteColumn &column, std::size_t newWritePageSize)
 {
    const RColumnInfo key{&column, column.GetWritePageCapacity(), 0};
    auto itr = fColumnsSortedByPageSize.find(key);
@@ -1305,7 +1305,7 @@ ROOT::Internal::RPage ROOT::Internal::RPageSink::ReservePage(ColumnHandle_t colu
    R__ASSERT(nElements > 0);
    const auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    const auto nBytes = elementSize * nElements;
-   if (!fWritePageMemoryManager.TryUpdate(*columnHandle.fColumn, nBytes))
+   if (!fWritePageMemoryManager.TryUpdate(*(columnHandle.fColumn->ForWriting()), nBytes))
       return ROOT::Internal::RPage();
    return fPageAllocator->NewPage(elementSize, nElements);
 }
@@ -1364,10 +1364,10 @@ ROOT::Internal::RPagePersistentSink::AddColumn(ROOT::DescriptorId_t fieldId, RCo
       .Type(column.GetType())
       .Index(column.GetIndex())
       .RepresentationIndex(column.GetRepresentationIndex())
-      .FirstElementIndex(column.GetFirstElementIndex());
+      .FirstElementIndex(column.ForWriting()->GetFirstElementIndex());
    // For late model extension, we assume that the primary column representation is the active one for the
    // deferred range. All other representations are suppressed.
-   if (column.GetFirstElementIndex() > 0 && column.GetRepresentationIndex() > 0)
+   if (column.ForWriting()->GetFirstElementIndex() > 0 && column.GetRepresentationIndex() > 0)
       columnBuilder.SetSuppressedDeferred();
    fDescriptorBuilder.AddColumn(columnBuilder.MoveDescriptor().Unwrap());
    return ColumnHandle_t{columnId, &column};

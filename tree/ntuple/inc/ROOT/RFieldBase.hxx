@@ -347,25 +347,37 @@ protected:
    /// Helpers for generating columns. We use the fact that most fields have the same C++/memory types
    /// for all their column representations.
    /// Where possible, we call the helpers not from the header to reduce compilation time.
-   template <std::uint32_t ColumnIndexT, typename HeadT, typename... TailTs>
+   template <Internal::RColumn::EColumnType ColumnTypeT, std::uint32_t ColumnIndexT, typename HeadT, typename... TailTs>
    void GenerateColumnsImpl(const ColumnRepresentation_t &representation, std::uint16_t representationIndex)
    {
       assert(ColumnIndexT < representation.size());
-      auto &column = fAvailableColumns.emplace_back(
-         ROOT::Internal::RColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT, representationIndex));
+      Internal::RColumn *column = nullptr;
+      static_assert(ColumnTypeT == Internal::RColumn::EColumnType::kRead ||
+                    ColumnTypeT == Internal::RColumn::EColumnType::kWrite);
+      if constexpr (ColumnTypeT == Internal::RColumn::EColumnType::kRead) {
+         column = fAvailableColumns
+                     .emplace_back(Internal::RReadColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT,
+                                                                        representationIndex))
+                     .get();
+      } else {
+         column = fAvailableColumns
+                     .emplace_back(Internal::RWriteColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT,
+                                                                         representationIndex))
+                     .get();
+      }
 
       // Initially, the first two columns become the active column representation
       if (representationIndex == 0 && !fPrincipalColumn) {
-         fPrincipalColumn = column.get();
+         fPrincipalColumn = column;
       } else if (representationIndex == 0 && !fAuxiliaryColumn) {
-         fAuxiliaryColumn = column.get();
+         fAuxiliaryColumn = column;
       } else {
          // We currently have no fields with more than 2 columns in its column representation
          R__ASSERT(representationIndex > 0);
       }
 
       if constexpr (sizeof...(TailTs))
-         GenerateColumnsImpl<ColumnIndexT + 1, TailTs...>(representation, representationIndex);
+         GenerateColumnsImpl<ColumnTypeT, ColumnIndexT + 1, TailTs...>(representation, representationIndex);
    }
 
    /// For writing, use the currently set column representative
@@ -374,12 +386,14 @@ protected:
    {
       if (fColumnRepresentatives.empty()) {
          fAvailableColumns.reserve(sizeof...(ColumnCppTs));
-         GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentations().GetSerializationDefault(), 0);
+         GenerateColumnsImpl<Internal::RColumn::EColumnType::kWrite, 0, ColumnCppTs...>(
+            GetColumnRepresentations().GetSerializationDefault(), 0);
       } else {
          const auto N = fColumnRepresentatives.size();
          fAvailableColumns.reserve(N * sizeof...(ColumnCppTs));
          for (unsigned i = 0; i < N; ++i) {
-            GenerateColumnsImpl<0, ColumnCppTs...>(fColumnRepresentatives[i].get(), i);
+            GenerateColumnsImpl<Internal::RColumn::EColumnType::kWrite, 0, ColumnCppTs...>(
+               fColumnRepresentatives[i].get(), i);
          }
       }
    }
@@ -393,12 +407,13 @@ protected:
          const auto &onDiskTypes = EnsureCompatibleColumnTypes(desc, representationIndex);
          if (onDiskTypes.empty())
             break;
-         GenerateColumnsImpl<0, ColumnCppTs...>(onDiskTypes, representationIndex);
+         GenerateColumnsImpl<Internal::RColumn::EColumnType::kRead, 0, ColumnCppTs...>(onDiskTypes,
+                                                                                       representationIndex);
          fColumnRepresentatives.emplace_back(onDiskTypes);
          if (representationIndex > 0) {
             for (std::size_t i = 0; i < sizeof...(ColumnCppTs); ++i) {
-               fAvailableColumns[i]->MergeTeams(
-                  *fAvailableColumns[representationIndex * sizeof...(ColumnCppTs) + i].get());
+               fAvailableColumns[i]->ForReading()->MergeTeams(
+                  *(fAvailableColumns[representationIndex * sizeof...(ColumnCppTs) + i]->ForReading()));
             }
          }
          representationIndex++;
@@ -457,11 +472,11 @@ protected:
    void Read(ROOT::NTupleSize_t globalIndex, void *to)
    {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(globalIndex, to);
+         return (void)fPrincipalColumn->ForReading()->Read(globalIndex, to);
 
       if (!fIsArtificial) {
          if (fTraits & kTraitMappable)
-            fPrincipalColumn->Read(globalIndex, to);
+            fPrincipalColumn->ForReading()->Read(globalIndex, to);
          else
             ReadGlobalImpl(globalIndex, to);
       }
@@ -475,11 +490,11 @@ protected:
    void Read(RNTupleLocalIndex localIndex, void *to)
    {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(localIndex, to);
+         return (void)fPrincipalColumn->ForReading()->Read(localIndex, to);
 
       if (!fIsArtificial) {
          if (fTraits & kTraitMappable)
-            fPrincipalColumn->Read(localIndex, to);
+            fPrincipalColumn->ForReading()->Read(localIndex, to);
          else
             ReadInClusterImpl(localIndex, to);
       }

@@ -20,24 +20,14 @@
 #include <cassert>
 #include <utility>
 
-using ROOT::Internal::RPageSink;
-using ROOT::Internal::RPageSource;
-
-ROOT::Internal::RColumn::RColumn(ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
-   : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})
+ROOT::Internal::RWriteColumn::~RWriteColumn()
 {
+   if (fPageSink)
+      fPageSink->DropColumn(MakeHandle());
 }
 
-ROOT::Internal::RColumn::~RColumn()
-{
-   if (fHandleSink)
-      fPageSink->DropColumn(fHandleSink);
-   if (fHandleSource)
-      fPageSource->DropColumn(fHandleSource);
-}
-
-void ROOT::Internal::RColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink,
-                                              ROOT::NTupleSize_t firstElementIndex)
+void ROOT::Internal::RWriteColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink,
+                                                   ROOT::NTupleSize_t firstElementIndex)
 {
    fInitialNElements = pageSink.GetWriteOptions().GetInitialUnzippedPageSize() / fElement->GetSize();
    if (fInitialNElements < 1) {
@@ -46,81 +36,100 @@ void ROOT::Internal::RColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPag
 
    fPageSink = &pageSink;
    fFirstElementIndex = firstElementIndex;
-   fHandleSink = fPageSink->AddColumn(fieldId, *this);
-   fOnDiskId = fPageSink->GetColumnId(fHandleSink);
-   fWritePage = fPageSink->ReservePage(fHandleSink, fInitialNElements);
+   fOnDiskId = fPageSink->AddColumn(fieldId, *this).fPhysicalId;
+   fWritePage = fPageSink->ReservePage(MakeHandle(), fInitialNElements);
    if (fWritePage.IsNull())
       throw RException(R__FAIL("page buffer memory budget too small"));
 }
 
-void ROOT::Internal::RColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)
-{
-   fPageSource = &pageSource;
-   fHandleSource = fPageSource->AddColumn(fieldId, *this);
-   fOnDiskId = fPageSource->GetColumnId(fHandleSource);
-   {
-      auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
-      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fOnDiskId).GetFirstElementIndex();
-   }
-}
-
-void ROOT::Internal::RColumn::Flush()
+void ROOT::Internal::RWriteColumn::Flush()
 {
    if (fWritePage.GetNElements() == 0)
       return;
 
-   fPageSink->CommitPage(fHandleSink, fWritePage);
-   fWritePage = fPageSink->ReservePage(fHandleSink, fInitialNElements);
+   fPageSink->CommitPage(MakeHandle(), fWritePage);
+   fWritePage = fPageSink->ReservePage(MakeHandle(), fInitialNElements);
    R__ASSERT(!fWritePage.IsNull());
    fWritePage.Reset(fNElements);
 }
 
-void ROOT::Internal::RColumn::CommitSuppressed()
+void ROOT::Internal::RWriteColumn::CommitSuppressed()
 {
-   fPageSink->CommitSuppressedColumn(fHandleSink);
+   fPageSink->CommitSuppressedColumn(MakeHandle());
 }
 
-bool ROOT::Internal::RColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
+void ROOT::Internal::RReadColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)
 {
-   const auto nTeam = fTeam.size();
+   fPageSource = &pageSource;
+   fOnDiskId = fPageSource->AddColumn(fieldId, *this).fPhysicalId;
+}
+
+ROOT::Internal::RReadColumn::~RReadColumn()
+{
+   if (fPageSource)
+      fPageSource->DropColumn(MakeHandle());
+}
+
+bool ROOT::Internal::RReadColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
+{
+   if (!fTeam) {
+      fReadPageRef = fPageSource->LoadPage(MakeHandle(), globalIndex);
+      return fReadPageRef.Get().Contains(globalIndex);
+   }
+
+   const auto nTeam = fTeam->fMembers.size();
    std::size_t iTeam = 1;
    do {
-      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), globalIndex);
+      fReadPageRef = fPageSource->LoadPage(fTeam->fMembers.at(fTeam->fLastGoodTeamIdx)->MakeHandle(), globalIndex);
       if (!fReadPageRef.Get().IsNull())
          break;
-      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      fTeam->fLastGoodTeamIdx = (fTeam->fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
    } while (iTeam <= nTeam);
 
    return fReadPageRef.Get().Contains(globalIndex);
 }
 
-bool ROOT::Internal::RColumn::TryMapPage(RNTupleLocalIndex localIndex)
+bool ROOT::Internal::RReadColumn::TryMapPage(RNTupleLocalIndex localIndex)
 {
-   const auto nTeam = fTeam.size();
+   if (!fTeam) {
+      fReadPageRef = fPageSource->LoadPage(MakeHandle(), localIndex);
+      return fReadPageRef.Get().Contains(localIndex);
+   }
+
+   const auto nTeam = fTeam->fMembers.size();
    std::size_t iTeam = 1;
    do {
-      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->GetHandleSource(), localIndex);
+      fReadPageRef = fPageSource->LoadPage(fTeam->fMembers.at(fTeam->fLastGoodTeamIdx)->MakeHandle(), localIndex);
       if (!fReadPageRef.Get().IsNull())
          break;
-      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      fTeam->fLastGoodTeamIdx = (fTeam->fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
    } while (iTeam <= nTeam);
 
    return fReadPageRef.Get().Contains(localIndex);
 }
 
-void ROOT::Internal::RColumn::MergeTeams(RColumn &other)
+void ROOT::Internal::RReadColumn::MergeTeams(RReadColumn &other)
 {
-   // We are working on very small vectors here, so quadratic complexity works
-   for (auto *c : other.fTeam) {
-      if (std::find(fTeam.begin(), fTeam.end(), c) == fTeam.end())
-         fTeam.emplace_back(c);
+   if (!fTeam) {
+      fTeam = std::make_unique<RTeam>();
+      fTeam->fMembers.emplace_back(this);
+   }
+   if (!other.fTeam) {
+      other.fTeam = std::make_unique<RTeam>();
+      other.fTeam->fMembers.emplace_back(&other);
    }
 
-   for (auto c : fTeam) {
+   // We are working on very small vectors here, so quadratic complexity works
+   for (auto *c : other.fTeam->fMembers) {
+      if (std::find(fTeam->fMembers.begin(), fTeam->fMembers.end(), c) == fTeam->fMembers.end())
+         fTeam->fMembers.emplace_back(c);
+   }
+
+   for (auto c : fTeam->fMembers) {
       if (c == this)
          continue;
-      c->fTeam = fTeam;
+      c->fTeam->fMembers = fTeam->fMembers;
    }
 }
