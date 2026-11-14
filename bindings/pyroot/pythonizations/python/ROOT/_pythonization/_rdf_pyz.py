@@ -11,6 +11,8 @@ import inspect
 import re
 import typing
 
+from . import pythonization
+
 from .._numbadeclare import _NumbaDeclareDecorator
 
 
@@ -467,3 +469,21 @@ def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     jitter = FunctionJitter(rdf)
     func_call = jitter.jit_function(func, cols, extra_args)
     return rdf._OriginalDefine(col_name, "Numba::" + func_call)
+
+
+@pythonization("RResultPtr<", ns="ROOT::RDF", is_prefix=True)
+def _pythonize_rresultptr_release_gil(klass):
+    """Release the GIL around RResultPtr.GetValue/GetSharedPtr.
+
+    When ROOT.EnableImplicitMT() is active, the Python thread holds the GIL
+    while waiting in TThreadExecutor::ParallelFor. Worker threads that invoke
+    Python callables block in PyGILState_Ensure, deadlocking the application.
+    Releasing the GIL around the C++ call lets workers acquire it.
+
+    This pythonization is applied lazily by cppyy to every RResultPtr<T>
+    instantiation as soon as it is first used.
+    """
+    for method_name in ("GetValue", "GetSharedPtr"):
+        method = getattr(klass, method_name, None)
+        if method is not None and hasattr(method, "__release_gil__"):
+            method.__release_gil__ = True

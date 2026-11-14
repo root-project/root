@@ -334,6 +334,33 @@ class PyDefine(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, "needs type annotations"):
             rdf.Define("y", lambda x: 2 * x, ["x"])
 
+    def test_python_callable_implicit_mt_no_deadlock(self):
+        """
+        Test that a Python callable used with EnableImplicitMT does not deadlock.
+
+        Regression test for #24140: the main Python thread holds the GIL while
+        waiting in TThreadExecutor::ParallelFor, and worker threads block in
+        PyGILState_Ensure when calling the Python callback. Releasing the GIL
+        around the parallel loop lets workers acquire it.
+        """
+        ROOT.EnableImplicitMT(2)
+
+        try:
+            def square(x: float) -> float:
+                return x * x
+
+            df = (
+                ROOT.RDataFrame(100)
+                .Define("x", "(double) rdfentry_")
+                .Define("y", square, ["x"])
+            )
+            # GetValue triggers the event loop: without the GIL release this deadlocks.
+            result = df.Sum("y").GetValue()
+            # Sum of x^2 for x = 0..99 = 99*100*199/6 = 328350
+            self.assertAlmostEqual(result, 328350.0)
+        finally:
+            ROOT.DisableImplicitMT()
+
 
 if __name__ == "__main__":
     unittest.main()
