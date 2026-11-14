@@ -41,6 +41,7 @@ public:
    {
       collectNames();
       checkFixedAxes();
+      checkCategoricalAxes();
       checkLikelihoods();
       checkAnalyses();
       checkData();
@@ -125,6 +126,7 @@ private:
 
    void collectNames();
    void checkFixedAxes();
+   void checkCategoricalAxes();
    void checkLikelihoods();
    void checkAnalyses();
    void checkData();
@@ -282,6 +284,46 @@ void Validator::checkFixedAxes()
                   "the parameter point '" + point.name + "' gives the parameter '" + parameter.name + "' the value " +
                      std::to_string(*value) + ", but its domain only has the value " +
                      std::to_string(found->second.value));
+         }
+      }
+   }
+}
+
+// A categorical axis (HS3 #108) declares a category. All domains that list it must give it the same categories, and
+// none may list it as continuous.
+void Validator::checkCategoricalAxes()
+{
+   struct Declaration {
+      std::vector<std::string> const *categories = nullptr;
+      std::string const *domain = nullptr;
+   };
+   std::map<std::string, Declaration> categorical;
+   for (std::size_t i = 0; i < _doc.domains.size(); ++i) {
+      Domain const &domain = _doc.domains[i];
+      for (auto const &axis : domain.axes) {
+         auto const *cat = std::get_if<CategoricalAxis>(&axis);
+         if (!cat) {
+            continue;
+         }
+         auto inserted = categorical.insert({cat->name, Declaration{&cat->categories, &domain.name}});
+         if (!inserted.second && *inserted.first->second.categories != cat->categories) {
+            error(at("domains", i, domain.name), "the categorical axis '" + cat->name + "' is listed in the domains '" +
+                                                    *inserted.first->second.domain + "' and '" + domain.name +
+                                                    "' with different categories");
+         }
+      }
+   }
+   for (std::size_t i = 0; i < _doc.domains.size(); ++i) {
+      Domain const &domain = _doc.domains[i];
+      for (auto const &axis : domain.axes) {
+         auto const *continuous = std::get_if<DomainAxis>(&axis);
+         if (!continuous || continuous->fixedValue) {
+            continue; // fixed axes are checked by checkFixedAxes()
+         }
+         auto found = categorical.find(continuous->name);
+         if (found != categorical.end()) {
+            error(at("domains", i, domain.name),
+                  "the axis '" + continuous->name + "' is listed in a domain as categorical and as continuous");
          }
       }
    }
