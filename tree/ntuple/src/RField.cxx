@@ -910,9 +910,15 @@ void ROOT::RBitsetField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) con
 
 ROOT::RNullableField::RNullableField(std::string_view fieldName, const std::string &typePrefix,
                                      std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RFieldBase(fieldName, typePrefix + "<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kCollection,
-                      false /* isSimple */)
+   : ROOT::RFieldBase(fieldName,
+                      typePrefix + "<" + (itemField ? itemField->GetTypeName() : "") + ">",
+                      ROOT::ENTupleStructure::kCollection, false /* isSimple */)
 {
+   if (!itemField)
+      throw RException(R__FAIL("null item field passed to " + typePrefix));
+   if (itemField->GetTypeName().empty())
+      throw RException(R__FAIL("cannot create " + typePrefix + " of untyped field"));
+
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = typePrefix + "<" + itemField->GetTypeAlias() + ">";
 
