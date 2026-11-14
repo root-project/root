@@ -326,6 +326,9 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
 
   # Transform absolute header paths to relative paths based on BASE_DIRS
   set(RelativeHeaderList "")
+  set(_src_headers "")
+  set(_copied_headers "")
+  set(_copy_commands "")
   foreach(header_file ${HeaderList})
     set(resolved_path "")
     foreach(base_dir ${HeaderBaseDirs})
@@ -339,6 +342,12 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
 
     if(resolved_path)
       list(APPEND RelativeHeaderList "${resolved_path}")
+      if(runtime_cxxmodules)
+        set(_dst "${CMAKE_BINARY_DIR}/include/${resolved_path}")
+        list(APPEND _src_headers "${header_file}")
+        list(APPEND _copied_headers "${_dst}")
+        list(APPEND _copy_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different "${header_file}" "${_dst}")
+      endif()
     else()
       # Fallback to absolute if it couldn't be resolved relative to any base dir
       list(APPEND RelativeHeaderList "${header_file}")
@@ -348,6 +357,25 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
   get_target_property(LinkedLibraries ${target} LINK_LIBRARIES)
   ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${LinkedLibraries} OPTIONS ${options} USE_FILE_SETS)
   # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
+
+  if(_copied_headers)
+    # TODO: this is a workaround that copies include files to build directory (unideal).
+    # The proper way to solve this would be to generate two ROOT modulemaps, one for the buildtree with absolute paths and one for the install tree
+    # with relative ones. Alternatively, to modify ROOT to accept relative paths for headers not in the same folder as build/ROOT.modulemap
+    # Namely to modify core/dictgen/src/rootcling_impl.cxx and core/metacling/src/TCling.cxx to register a Clang llvm::vfs::RedirectingFileSystem (VFS overlay) that maps
+    # <build>/include/RooFit/xRooFit/... to <src>/roofit/xroofit/inc/RooFit/xRooFit/....
+    # Also, one could explore using ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR, rather than a monolithic ROOT.modulemap.
+ 
+    add_custom_command(
+      OUTPUT ${_copied_headers}
+      ${_copy_commands}
+      DEPENDS ${_src_headers}
+      COMMENT "Copying public headers for ${target} to build/include"
+      VERBATIM
+    )
+    add_custom_target(move_headers_${target} DEPENDS ${_copied_headers})
+    add_dependencies(G__${target} move_headers_${target})
+  endif()
 endfunction(ROOT_GENERATE_TARGET_DICTIONARY)
 
 #---------------------------------------------------------------------------------------------------
