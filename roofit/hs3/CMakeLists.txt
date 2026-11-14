@@ -9,56 +9,47 @@
 # @author Carsten Burgard, CERN
 ############################################################################
 
-set (ROOFITHS3_HEADERS
-  RooFit/Detail/JSONInterface.h
-  RooFitHS3/JSONIO.h
-  RooFitHS3/RooJSONFactoryWSTool.h
+add_library(RooFitHS3 SHARED)
+target_sources(RooFitHS3
+PRIVATE
+  src/HS3Document.cxx
+  src/HS3Parser.cxx
+  src/HS3Upgrade.cxx
+  src/HS3Validate.cxx
+  src/HS3Writer.cxx
+  src/JSONInterface.cxx
+  src/JSONIO.cxx
+  src/RooJSONFactoryWSTool.cxx
+  src/JSONFactories_RooFitCore.cxx
+  src/JSONFactories_HistFactory.cxx
+  src/JSONIOUtils.cxx
+PRIVATE
+  FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ FILES
+    src/HS3Builder.h
+    src/HS3Document.h
+    src/HS3Schema.h
+    src/JSONIOUtils.h
+    src/JSONReadRecorder.h
+    src/static_execute.h
+  FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/RooFit/Detail/JSONInterface.h
+    inc/RooFitHS3/JSONIO.h
+    inc/RooFitHS3/RooJSONFactoryWSTool.h
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/LinkDef.h
 )
 
-ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
-  HEADERS
-    ${ROOFITHS3_HEADERS}
-  SOURCES
-    src/HS3Document.cxx
-    src/HS3Parser.cxx
-    src/HS3Upgrade.cxx
-    src/HS3Validate.cxx
-    src/HS3Writer.cxx
-    src/JSONInterface.cxx
-    src/JSONIO.cxx
-    src/RooJSONFactoryWSTool.cxx
-    src/JSONFactories_RooFitCore.cxx
-    src/JSONFactories_HistFactory.cxx
-    src/JSONIOUtils.cxx
-  DICTIONARY_OPTIONS
-    "-writeEmptyRootPCM"
-  DEPENDENCIES
-    HistFactory
-    RooFit
-    RooFitCore
+target_link_libraries(RooFitHS3
+PRIVATE
+  nlohmann_json::nlohmann_json
+PUBLIC
+  HistFactory
+  RooFit
+  RooFitCore
 )
 
-
-target_link_libraries(RooFitHS3 PRIVATE nlohmann_json::nlohmann_json)
-
-set(RELATIVE_INC_HEADERS ${ROOFITHS3_HEADERS})
-list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-target_sources(
-    RooFitHS3
-    PRIVATE
-    FILE_SET private_header_files
-    TYPE HEADERS
-    BASE_DIRS inc/ src/
-    FILES
-        ${RELATIVE_INC_HEADERS}
-        # LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
-        src/HS3Builder.h
-        src/HS3Document.h
-        src/HS3Schema.h
-        src/JSONIOUtils.h
-        src/JSONReadRecorder.h
-        src/static_execute.h
-)
+ROOT_GENERATE_TARGET_DICTIONARY(RooFitHS3 "-writeEmptyRootPCM")
+ROOT_INSTALL_TARGET(RooFitHS3)
 
 # workaround to include privately headers that are not public, from a "friend" target
 get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)
