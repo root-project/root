@@ -9,7 +9,7 @@
 
    TFile *file = TFile::Open("inst.root");
    if (file == nullptr || file->IsZombie()) gSystem->Exit(1);
-   void *obj = file->Get("object");
+   void *obj = file->GetObjectUnchecked("object");
 
    // Delay parsing as long as possible by using ProcessLine
    if (obj) gROOT->ProcessLine(TString::Format("{Outer *o = (Outer*)0x%zx; o->Print();}", (size_t)obj));
@@ -22,7 +22,7 @@
    instHeaderTestDecl(false);
 
    printf("Name of real 'variable' seen as: '%s'\n",c->GetListOfRealData()->At(1)->GetName());
-   obj = file->Get("object");
+   obj = file->GetObjectUnchecked("object");
    if (obj) gROOT->ProcessLine(TString::Format("{Outer *o = (Outer*)0x%zx; o->Print();}", (size_t)obj));
 
    return 0;

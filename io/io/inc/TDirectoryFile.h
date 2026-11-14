@@ -78,11 +78,12 @@ public:
           TObject    *FindObjectAny(const char *name) const override;
           TObject    *FindObjectAnyFile(const char *name) const override;
           TObject    *Get(const char *namecycle) override;
-   /// See documentation of TDirectoryFile::Get(const char *namecycle)
-   template <class T> inline T* Get(const char* namecycle)
-   {
-      return TDirectory::Get<T>(namecycle);
-   }
+          /// Type-safe variant of Get(). \copydetails TDirectoryFile::Get(const char*)
+          template <class T>
+          inline T *Get(const char *namecycle)
+          {
+             return TDirectory::Get<T>(namecycle);
+          }
            TDirectory *GetDirectory(const char *apath, Bool_t printError = false, const char *funcname = "GetDirectory") override;
            void       *GetObjectChecked(const char *namecycle, const char* classname) override;
            void       *GetObjectChecked(const char *namecycle, const TClass* cl) override;

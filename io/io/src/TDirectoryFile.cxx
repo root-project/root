@@ -915,31 +915,31 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
 /// |   foo    | get object named foo in memory if object is not in memory, try with highest cycle from file |
 /// |   foo;1  | get cycle 1 of foo on file |
 ///
-/// The retrieved object should in principle derive from TObject.
-/// If not, the function TDirectoryFile::Get<T> should be called.
-/// However, this function will still work for a non-TObject, provided that
-/// the calling application cast the return type to the correct type (which
-/// is the actual type of the object).
+/// \note The requested object needs to derive from TObject. Otherwise, a warning will be issued as in
+/// this case the function returns the begin address of the object and if multiple inheritance is in use, the
+/// caller can only reinterpret_cast to the "left" base classes.
+/// In the future, the function will return a nullptr if the underlying type cannot be cast to TObject*.
+/// For these reasons, always prefer the type-safe variant TDirectory::Get<T>(), see next section.
 ///
 /// ### The Get<T> Method
 /// The method Get<T> offers better protection and avoids the need for any
 /// cast:
 /// ~~~{.cpp}
 /// auto objPtr = directory->Get<MyClass>("some object");
-/// if (objPtr) { ... the object exist and inherits from MyClass ... }
+/// if (objPtr) { ... the object exists can be cast to MyClass ... }
 /// ~~~
 ///
 /// ### Very important note about inheritance
 /// In case the class of this object derives from TObject but not
 /// as a first inheritance, one must use dynamic_cast<>().
 ///
-/// #### Example 1 - Normal case:
+/// #### Example 1 - Simple case:
 ///
 ///     class MyClass : public TObject, public AnotherClass
 ///
-/// then on return, one can adopt a C style cast:
+/// then on return, the object can be cast statically:
 ///
-///     auto objPtr = (MyClass*)directory->Get("some object of MyClass");
+///     auto objPtr = static_cast<MyClass*>(directory->Get("some object of MyClass"));
 ///
 /// #### Example 2 - Special case:
 ///
@@ -1001,6 +1001,12 @@ TObject *TDirectoryFile::Get(const char *namecycle)
       for (auto key: TRangeDynCast<TKey>(*keyList)) {
          if (key && !strcmp(key->GetName(), namobj)
              && (cycle == 9999 || cycle == key->GetCycle())) {
+            if (TClass *cl = TClass::GetClass(key->GetClassName()); cl && !cl->IsTObject()) {
+               Warning("Get",
+                       "The object '%s' of type '%s' does not derive from TObject. Using Get() for such objects is "
+                       "deprecated, since the returned pointer is not a valid TObject*. Use Get<%s>(\"%s\").",
+                       namobj, key->GetClassName(), key->GetClassName(), namecycle);
+            }
             TDirectory::TContext ctxt(this);
             return key->ReadObj();
          }
@@ -1023,7 +1029,7 @@ TObject *TDirectoryFile::Get(const char *namecycle)
 /// The calling application must cast the returned object to
 /// the final type, e.g.
 ///
-///   auto objPtr = (MyClass*)directory->GetObject("some object of MyClass");
+///   auto objPtr = reinterpret_cast<MyClass*>(directory->GetObject("some object of MyClass"));
 
 void *TDirectoryFile::GetObjectUnchecked(const char *namecycle)
 {
@@ -1031,13 +1037,12 @@ void *TDirectoryFile::GetObjectUnchecked(const char *namecycle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See documentation of TDirectoryFile::GetObjectCheck(const char *namecycle, const TClass *cl)
+/// See documentation of TDirectoryFile::GetObjectChecked(const char*,const TClass*).
 
 void *TDirectoryFile::GetObjectChecked(const char *namecycle, const char* classname)
 {
    return GetObjectChecked(namecycle,TClass::GetClass(classname));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to object identified by namecycle if and only if the actual
@@ -1052,7 +1057,7 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const char* classn
 /// The calling application must cast the returned pointer to
 /// the type described by the 2 arguments (i.e. cl):
 ///
-/// auto objPtr = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
+/// auto objPtr = reinterpret_cast<MyClass*>(directory->GetObjectChecked("some object of MyClass","MyClass"));
 ///
 /// Note: We recommend using the method TDirectoryFile::Get<T>:
 /// ~~~{.cpp}

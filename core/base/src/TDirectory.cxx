@@ -830,34 +830,34 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
 ///                if object is not in memory, try with highest cycle from file
 ///  - foo;1 : get cycle 1 of foo on file
 ///
-///  The retrieved object should in principle derive from TObject.
-///  If not, the function TDirectory::GetObject should be called.
-///  However, this function will still work for a non-TObject, providing that
-///  the calling application cast the return type to the correct type (which
-///  is the actual type of the object).
+/// \note The requested object needs to derive from TObject. Otherwise, a warning will be issued as in
+/// this case the function returns the begin address of the object and if multiple inheritance is in use, the
+/// caller can only reinterpret_cast to the "left" base classes.
+/// In the future, the function will return a nullptr if the underlying type cannot be cast to TObject*.
+/// For these reasons, always prefer the type-safe variant TDirectory::Get<T>(), see next section.
 ///
-///  NOTE:
+///  ### Type-safe variant of `Get`:
 ///
-///  The method GetObject offer better protection and avoid the need
+///  The template method Get<T>() offers better protection and avoids the need
 ///  for any cast:
 /// ~~~ {.cpp}
-///      MyClass *obj;
-///      directory->GetObject("some object",obj);
-///      if (obj) { ... the object exist and inherits from MyClass ... }
+///      MyClass* obj = directory->Get<MyClass>("some object");
+///      if (obj) { ... the object exists and can be cast to MyClass ... }
 /// ~~~
 ///
-///  VERY IMPORTANT NOTE:
-///
+/// ### Very important note about inheritance
 ///  In case the class of this object derives from TObject but not
 ///  as a first inheritance, one must use dynamic_cast<>().
-/// #### Example 1: Normal case:
+///
+/// #### Example 1: Simple case:
 /// ~~~ {.cpp}
 ///      class MyClass : public TObject, public AnotherClass
 /// ~~~
 ///   then on return, one can do:
 /// ~~~ {.cpp}
-///      MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
+///      MyClass *obj = static_cast<MyClass*>(directory->Get("some object of MyClass"));
 /// ~~~
+///
 /// #### Example 2: Special case:
 /// ~~~ {.cpp}
 ///      class MyClass : public AnotherClass, public TObject
