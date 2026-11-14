@@ -155,29 +155,54 @@ public:
    }
 };
 
-#pragma pack(push, 1)
-/// A name (type, identifier, ...) in the TFile binary format
-struct RTFString {
-   unsigned char fLName{0};
-   char fData[255];
-   RTFString() = default;
-   RTFString(const std::string &str)
+/// A name (type, identifier, ...) in the TFile binary format, serialized as by TBufferFile::WriteTString():
+/// strings with up to 254 characters are prefixed by a one byte length. Longer strings are prefixed by the byte 255
+/// followed by the length as a 32-bit big-endian integer.
+class RTFString {
+   std::string fSerialized;
+
+public:
+   static constexpr unsigned char kLongStringMarker = 255;
+
+   RTFString() : fSerialized(1, '\0') {}
+   RTFString(std::string_view str)
    {
-      // The length of strings with 255 characters and longer are encoded with a 32-bit integer following the first
-      // byte. This is currently not handled.
-      R__ASSERT(str.length() < 255);
-      fLName = static_cast<unsigned char>(str.length());
-      memcpy(fData, str.data(), fLName);
+      if (str.length() < kLongStringMarker) {
+         fSerialized.push_back(static_cast<char>(str.length()));
+      } else {
+         if (str.length() > static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()))
+            throw ROOT::RException(R__FAIL("string too long for the TFile format"));
+         RUInt32BE length{static_cast<std::uint32_t>(str.length())};
+         fSerialized.push_back(static_cast<char>(kLongStringMarker));
+         fSerialized.append(reinterpret_cast<const char *>(&length), sizeof(length));
+      }
+      fSerialized.append(str);
    }
-   std::size_t GetSize() const
-   {
-      // A length of 255 is special and means that the first byte is followed by a 32-bit integer with the actual
-      // length.
-      R__ASSERT(fLName != 255);
-      return 1 + fLName;
-   }
+   /// The size of the serialized string, including the length prefix
+   std::size_t GetSize() const { return fSerialized.size(); }
+   const char *GetData() const { return fSerialized.data(); }
 };
 
+/// Reads the TFile string at the given offset. Returns the string and its size on disk including the length prefix.
+std::pair<std::string, std::uint64_t> ReadTFString(ROOT::Internal::RMiniFileReader &reader, std::uint64_t offset)
+{
+   unsigned char shortLength = 0;
+   reader.ReadBuffer(&shortLength, 1, offset);
+   std::uint64_t prefixSize = 1;
+   std::uint64_t length = shortLength;
+   if (shortLength == RTFString::kLongStringMarker) {
+      RUInt32BE longLength;
+      reader.ReadBuffer(&longLength, sizeof(longLength), offset + prefixSize);
+      prefixSize += sizeof(longLength);
+      length = longLength;
+   }
+   std::string str(length, '\0');
+   if (length > 0)
+      reader.ReadBuffer(str.data(), length, offset + prefixSize);
+   return {std::move(str), prefixSize + length};
+}
+
+#pragma pack(push, 1)
 /// The timestamp format used in TFile; the default constructor initializes with the current time
 struct RTFDatetime {
    RUInt32BE fDatetime;
@@ -222,7 +247,11 @@ struct RTFKey {
       // For writing, we always produce "big" keys with 64-bit SeekKey and SeekPdir.
       fVersion = fVersion + kBigKeyVersion;
       fObjLen = szObjInMem;
-      fKeyLen = static_cast<RUInt16BE>(GetHeaderSize() + clName.GetSize() + objName.GetSize() + titleName.GetSize());
+      const auto keyLen = GetHeaderSize() + clName.GetSize() + objName.GetSize() + titleName.GetSize();
+      // TKey stores the key length as a signed 16-bit integer
+      if (keyLen > static_cast<std::size_t>(std::numeric_limits<std::int16_t>::max()))
+         throw ROOT::RException(R__FAIL("TFile key header too long: " + std::to_string(keyLen) + " bytes"));
+      fKeyLen = static_cast<std::uint16_t>(keyLen);
       fInfoLong.fSeekKey = seekKey;
       fInfoLong.fSeekPdir = seekPdir;
       // Depends on fKeyLen being set
@@ -697,17 +726,13 @@ std::uint64_t ROOT::Internal::RMiniFileReader::SearchInDirectory(std::uint64_t &
       auto offsetNextKey = offset + key.fKeyLen;
 
       offset += key.GetHeaderSize();
-      RTFString name;
-      ReadBuffer(&name, 1, offset);
-      ReadBuffer(&name, name.GetSize(), offset);
-      if (std::string_view(name.fData, name.fLName) != typeName) {
+      const auto [className, classNameSize] = ReadTFString(*this, offset);
+      if (className != typeName) {
          offset = offsetNextKey;
          continue;
       }
-      offset += name.GetSize();
-      ReadBuffer(&name, 1, offset);
-      ReadBuffer(&name, name.GetSize(), offset);
-      if (std::string_view(name.fData, name.fLName) == keyName) {
+      offset += classNameSize;
+      if (ReadTFString(*this, offset).first == keyName) {
          return key.GetSeekKey();
       }
       offset = offsetNextKey;
@@ -769,15 +794,12 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProper(st
    fNbytesKeyAndInfo = fileHeader.GetNbytesInfo();
 
    RTFKey key;
-   RTFString name;
    ReadBuffer(&key, sizeof(key), fileHeader.fBEGIN);
    // Skip over the entire key length, including the class name, object name, and title stored in it.
    std::uint64_t offset = fileHeader.fBEGIN + key.fKeyLen;
    // Skip over the name and title of the TNamed preceding the TFile (root TDirectory) entry.
-   ReadBuffer(&name, 1, offset);
-   offset += name.GetSize();
-   ReadBuffer(&name, 1, offset);
-   offset += name.GetSize();
+   offset += ReadTFString(*this, offset).second;
+   offset += ReadTFString(*this, offset).second;
 
    // split ntupleName by '/' character to open datasets in subdirectories.
    std::string ntuplePathTail(ntuplePath);
@@ -866,16 +888,13 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleBare(std:
 {
    RBareFileHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
-   RTFString name;
    auto offset = sizeof(fileHeader);
-   ReadBuffer(&name, 1, offset);
-   ReadBuffer(&name, name.GetSize(), offset);
-   std::string_view foundName(name.fData, name.fLName);
+   const auto [foundName, foundNameSize] = ReadTFString(*this, offset);
    if (foundName != ntupleName) {
-      return R__FAIL("expected RNTuple named '" + std::string(ntupleName) + "' but instead found '" +
-                     std::string(foundName) + "' in file '" + fRawFile->GetUrl() + "'");
+      return R__FAIL("expected RNTuple named '" + std::string(ntupleName) + "' but instead found '" + foundName +
+                     "' in file '" + fRawFile->GetUrl() + "'");
    }
-   offset += name.GetSize();
+   offset += foundNameSize;
 
    RTFNTuple ntuple;
    ReadBuffer(&ntuple, sizeof(ntuple), offset);
@@ -972,11 +991,11 @@ void ROOT::Internal::RNTupleFileWriter::PrepareBlobKey(std::int64_t offset, size
    unsigned char *writeBuffer = buffer;
    memcpy(writeBuffer, &keyHeader, keyHeader.GetHeaderSize());
    writeBuffer += keyHeader.GetHeaderSize();
-   memcpy(writeBuffer, &strClass, strClass.GetSize());
+   memcpy(writeBuffer, strClass.GetData(), strClass.GetSize());
    writeBuffer += strClass.GetSize();
-   memcpy(writeBuffer, &strObject, strObject.GetSize());
+   memcpy(writeBuffer, strObject.GetData(), strObject.GetSize());
    writeBuffer += strObject.GetSize();
-   memcpy(writeBuffer, &strTitle, strTitle.GetSize());
+   memcpy(writeBuffer, strTitle.GetData(), strTitle.GetSize());
    writeBuffer += strTitle.GetSize();
    R__ASSERT(writeBuffer == buffer + kBlobKeyLen);
 }
@@ -1142,9 +1161,9 @@ ROOT::Internal::RNTupleFileWriter::RImplSimple::WriteKey(const void *buffer, std
 
    RTFKey key(shared.fKeyOffset, directoryOffset, strClass, strObject, strTitle, len, nbytes);
    Write(&key, key.GetHeaderSize(), shared.fKeyOffset);
-   Write(&strClass, strClass.GetSize());
-   Write(&strObject, strObject.GetSize());
-   Write(&strTitle, strTitle.GetSize());
+   Write(strClass.GetData(), strClass.GetSize());
+   Write(strObject.GetData(), strObject.GetSize());
+   Write(strTitle.GetData(), strTitle.GetSize());
    auto offsetData = shared.fFilePos;
    // The next key starts after the data.
    shared.fKeyOffset = offsetData + nbytes;
@@ -1577,7 +1596,7 @@ void ROOT::Internal::RNTupleFileWriter::WriteBareFileSkeleton(int defaultCompres
    auto &fileSimple = std::get<RImplSimple>(fFile);
    fileSimple.Write(&bareHeader, sizeof(bareHeader), 0);
    RTFString ntupleName{fNTupleName};
-   fileSimple.Write(&ntupleName, ntupleName.GetSize());
+   fileSimple.Write(ntupleName.GetData(), ntupleName.GetSize());
 
    // Write zero-initialized ntuple to reserve the space; will be overwritten on commit
    RTFNTuple ntupleOnDisk;
@@ -1650,15 +1669,15 @@ void ROOT::Internal::RNTupleFileWriter::WriteTFileKeysList(std::uint64_t anchorS
                      strFileName, strEmpty, keyList.GetSize() + keyRNTuple.fKeyLen);
    fileSimple.Write(&keyKeyList, keyKeyList.GetHeaderSize(),
                     fileSimple.fShared->fControlBlock->fFileRecord.GetSeekKeys());
-   fileSimple.Write(&strEmpty, strEmpty.GetSize());
-   fileSimple.Write(&strFileName, strFileName.GetSize());
-   fileSimple.Write(&strEmpty, strEmpty.GetSize());
+   fileSimple.Write(strEmpty.GetData(), strEmpty.GetSize());
+   fileSimple.Write(strFileName.GetData(), strFileName.GetSize());
+   fileSimple.Write(strEmpty.GetData(), strEmpty.GetSize());
    fileSimple.Write(&keyList, keyList.GetSize());
    fileSimple.Write(&keyRNTuple, keyRNTuple.GetHeaderSize());
    // Write class name, object name, and title for this key.
-   fileSimple.Write(&strRNTupleClass, strRNTupleClass.GetSize());
-   fileSimple.Write(&strRNTupleName, strRNTupleName.GetSize());
-   fileSimple.Write(&strEmpty, strEmpty.GetSize());
+   fileSimple.Write(strRNTupleClass.GetData(), strRNTupleClass.GetSize());
+   fileSimple.Write(strRNTupleName.GetData(), strRNTupleName.GetSize());
+   fileSimple.Write(strEmpty.GetData(), strEmpty.GetSize());
    fileSimple.fShared->fControlBlock->fFileRecord.fNBytesKeys =
       fileShared.fFilePos - fileSimple.fShared->fControlBlock->fFileRecord.GetSeekKeys();
    fileShared.fKeyOffset = fileShared.fFilePos;
@@ -1736,12 +1755,12 @@ void ROOT::Internal::RNTupleFileWriter::WriteTFileSkeleton(int defaultCompressio
 
    fileSimple.Write(&keyRoot, keyRoot.GetHeaderSize(), RTFHeader::kBEGIN);
    // Write class name, object name, and title for the TFile key.
-   fileSimple.Write(&strTFile, strTFile.GetSize());
-   fileSimple.Write(&strFileName, strFileName.GetSize());
-   fileSimple.Write(&strEmpty, strEmpty.GetSize());
+   fileSimple.Write(strTFile.GetData(), strTFile.GetSize());
+   fileSimple.Write(strFileName.GetData(), strFileName.GetSize());
+   fileSimple.Write(strEmpty.GetData(), strEmpty.GetSize());
    // Write the name and title of the TNamed preceding the TFile entry.
-   fileSimple.Write(&strFileName, strFileName.GetSize());
-   fileSimple.Write(&strEmpty, strEmpty.GetSize());
+   fileSimple.Write(strFileName.GetData(), strFileName.GetSize());
+   fileSimple.Write(strEmpty.GetData(), strEmpty.GetSize());
    // Will be overwritten on commit
    fileSimple.fShared->fControlBlock->fSeekFileRecord = fileSimple.fShared->fFilePos;
    fileSimple.Write(&fileSimple.fShared->fControlBlock->fFileRecord,
