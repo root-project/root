@@ -782,8 +782,11 @@ sap.ui.define([
          {
             this.controls.setCamBaseMtx(new RC.Vector3(v1[0], v1[1], v1[2]), new RC.Vector3(v2[0], v2[1], v2[2]));
             // Fit the height, or the width if that is what limits the panel.
-            let ey = 1.02 * Math.max(extV.y, extV.x * this.get_height() / this.get_width());
-            let ex = ey / this.get_height() * this.get_width();
+            // Measure the canvas, not the view, which also holds the toolbar.
+            let cw = this.canvas.width, ch = this.canvas.height;
+            let asp = (cw > 0 && ch > 0) ? cw / ch : 1;
+            let ey = 1.02 * Math.max(extV.y, extV.x / asp);
+            let ex = ey * asp;
             this.camera._left   = -ex;
             this.camera._right  =  ex;
             this.camera._top    =  ey;
