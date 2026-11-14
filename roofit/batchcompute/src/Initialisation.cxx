@@ -46,6 +46,16 @@ bool &isInitialisedCpu()
 
 namespace RooBatchCompute {
 
+/// Default implementation for backends that do not support evaluating
+/// expression programs (currently the CUDA backend). RooFit only routes batch
+/// formula evaluation through backends that do.
+void RooBatchComputeInterface::computeExprProgram(Config const &, std::span<const ExprInstr>, unsigned int,
+                                                  std::span<double>, VarSpan)
+{
+   throw std::runtime_error("computeExprProgram() is not implemented by the '" + architectureName() +
+                            "' RooBatchCompute backend");
+}
+
 /// Inspect hardware capabilities, and load the optimal library for RooFit computations.
 int initCPU()
 {

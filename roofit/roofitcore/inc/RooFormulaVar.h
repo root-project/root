@@ -21,6 +21,7 @@
 #include "RooListProxy.h"
 #include "RooAbsBinning.h"
 
+#include <functional>
 #include <memory>
 #include <list>
 #include <map>
@@ -82,8 +83,17 @@ public:
   // Function evaluation
   double evaluate() const override ;
   void doEval(RooFit::EvalContext &ctx) const override;
+  bool canComputeBatchWithCuda() const override;
 
+  /// Name of the cling-JIT-compiled function that evaluates this formula,
+  /// which generated code from the codegen fallback path calls by name.
+  /// \note Returns an empty string when the formula is handled by the JIT-free
+  /// formula backend (the default for supported expressions, see
+  /// formulaUsesAstBackend()); codegen then inlines the expression via
+  /// emitFormulaCpp() instead.
   std::string getUniqueFuncName() const;
+  std::string emitFormulaCpp(std::function<std::string(unsigned int)> const &varName) const;
+  bool formulaUsesAstBackend() const;
 
   std::unique_ptr<RooAbsArg>
   compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const override;
