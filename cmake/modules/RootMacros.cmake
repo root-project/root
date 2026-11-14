@@ -364,7 +364,8 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
   # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
 
   if(_copied_headers)
-    # TODO: this is a workaround that copies include files to build directory (unideal).
+    # TODO: this is a workaround that copies include files to build directory (unideal). Note: it only copies the header files used for dict generation, ie those from public default file_set
+    # not the other public headers such as not4dict and linkDef. The there sets are only copied to the install tree when make install.
     # The proper way to solve this would be to generate two ROOT modulemaps, one for the buildtree with absolute paths and one for the install tree
     # with relative ones. Alternatively, to modify ROOT to accept relative paths for headers not in the same folder as build/ROOT.modulemap
     # Namely to modify core/dictgen/src/rootcling_impl.cxx and core/metacling/src/TCling.cxx to register a Clang llvm::vfs::RedirectingFileSystem (VFS overlay) that maps
