@@ -1412,9 +1412,63 @@ void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &data
 }
 
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
+// The observables of the analysis `analysis` if no data set of its likelihood gives them: the list that RooFit writes
+// in misc.ROOT_internal.ModelConfigs for a ModelConfig without data, or else the variables that HS3 makes
+// observables. By the standard, all parameters of the distributions of the likelihood are listed in a domain of the
+// analysis or are constant, so a variate of the distributions of the likelihood (`variates`, see collectVariates())
+// that is neither, is an observable. Requiring all three excludes the parameters, and the observed values of the
+// constraint terms, which are constant parameters.
+void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysis, HS3::ModelConfigInfo const *mcInfo,
+                            std::set<std::string> const &variates, RooWorkspace &workspace, RooArgSet &observables)
+{
+   if (mcInfo && mcInfo->observables) {
+      for (std::string const &name : *mcInfo->observables) {
+         if (RooAbsArg *arg = workspace.arg(name)) {
+            observables.add(*arg);
+         } else {
+            RooJSONFactoryWSTool::warning("RooFitHS3: the observable '" + name + "' of the analysis '" + analysis.name +
+                                          "' (misc.ROOT_internal.ModelConfigs) does not exist");
+         }
+      }
+      return;
+   }
+   std::set<std::string> inDomains;
+   for (auto const &domainRef : analysis.domains) {
+      for (HS3::Domain const &domain : doc.domains) {
+         if (domain.name != domainRef.name) {
+            continue;
+         }
+         for (auto const &axis : domain.axes) {
+            inDomains.insert(std::visit([](auto const &a) -> std::string const & { return a.name; }, axis));
+         }
+      }
+   }
+   for (auto const &poi : analysis.parametersOfInterest) {
+      inDomains.insert(poi.name);
+   }
+   std::string list;
+   for (std::string const &variate : variates) {
+      RooAbsArg *arg = workspace.arg(variate);
+      if (!dynamic_cast<RooAbsRealLValue *>(arg) && !dynamic_cast<RooAbsCategoryLValue *>(arg)) {
+         continue;
+      }
+      if (inDomains.count(variate) || arg->isConstant()) {
+         continue;
+      }
+      observables.add(*arg);
+      list += (list.empty() ? "'" : ", '") + variate + "'";
+   }
+   if (!list.empty()) {
+      oocoutI(nullptr, IO) << "RooFitHS3: no data set of the likelihood of the analysis '" << analysis.name
+                           << "' gives its observables; they are the variates of the likelihood that are neither in a "
+                              "domain of the analysis nor constant: "
+                           << list << std::endl;
+   }
+}
+
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
                     const std::vector<std::unique_ptr<RooAbsData>> &datasets,
-                    std::set<std::string> const &bookkeepingColumns)
+                    std::set<std::string> const &bookkeepingColumns, std::set<std::string> const &variates)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = analysis.name;
@@ -1493,6 +1547,9 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (RooAbsArg *arg = observables.find(column.c_str())) {
          observables.remove(*arg);
       }
+   }
+   if (observables.empty()) {
+      observablesWithoutData(doc, analysis, mcInfo, variates, workspace, observables);
    }
 
    // A combined distribution paired with a combined data set must have a sub-data set for every component.
@@ -3164,6 +3221,15 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    HS3::ModelConfigInfo &info = doc.rooFit.modelConfigs[analysisName];
    info.pdfName = pdf->GetName();
    info.mcName = mc.GetName();
+   // Without a data set, the document doesn't say what the observables are.
+   if (!dataName && mc.GetObservables() && !mc.GetObservables()->empty()) {
+      std::vector<std::string> names;
+      for (RooAbsArg const *arg : *mc.GetObservables()) {
+         names.push_back(arg->GetName());
+      }
+      std::sort(names.begin(), names.end());
+      info.observables = std::move(names);
+   }
 }
 
 // Export all top-level pdfs, functions, datasets and ModelConfigs of the workspace into `n`.
@@ -3568,7 +3634,24 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    }
 
    for (auto const &analysis : doc.analyses) {
-      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns);
+      // The variates of the distributions of the likelihood, see observablesWithoutData().
+      std::set<std::string> variates;
+      for (auto const &likelihood : doc.likelihoods) {
+         if (likelihood.name == analysis.likelihood.name) {
+            for (auto const &term : likelihood.terms) {
+               std::set<std::string> const v = variatesOf(n, term.distribution.name);
+               variates.insert(v.begin(), v.end());
+               // The columns of a combined distribution are observables as well.
+               JSONNode const *dist = findInSection(n, "distributions", term.distribution.name);
+               if (dist && typeOf(*dist) == "combined_dist") {
+                  if (JSONNode const *columns = dist->find("columns")) {
+                     addNames(*columns, variates);
+                  }
+               }
+            }
+         }
+      }
+      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns, variates);
    }
 
    combineDatasets(doc, datasets);

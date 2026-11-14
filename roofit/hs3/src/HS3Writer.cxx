@@ -378,6 +378,9 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
          if (item.second.combinedDataName) {
             node["combined_data_name"] << *item.second.combinedDataName;
          }
+         if (item.second.observables) {
+            node["observables"].fill_seq(*item.second.observables);
+         }
       }
    }
    if (!internal.channelConstraints.empty()) {

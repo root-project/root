@@ -6860,3 +6860,123 @@ TEST(RooFitHS3, ConstraintFactorsOfChannelsAreLikelihoodTerms)
    EXPECT_EQ((*model)["factors"].num_children(), 2u) << exportedUsed;
    EXPECT_EQ(exportedUsed.find("aux_distributions"), std::string::npos) << exportedUsed;
 }
+
+namespace {
+
+// The names of the observables of the ModelConfig `name` of `ws`, sorted.
+std::vector<std::string> observableNames(RooWorkspace &ws, const char *name)
+{
+   std::vector<std::string> names;
+   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj(name));
+   if (mc && mc->GetObservables()) {
+      for (RooAbsArg const *arg : *mc->GetObservables()) {
+         names.push_back(arg->GetName());
+      }
+   }
+   std::sort(names.begin(), names.end());
+   return names;
+}
+
+// Remove "observables" from misc.ROOT_internal.ModelConfigs of the document `json`.
+std::string withoutObservablesList(std::string const &json)
+{
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto &modelConfigs = tree->rootnode()["misc"]["ROOT_internal"]["ModelConfigs"];
+   for (auto &item : modelConfigs.children()) {
+      if (item.has_child("observables")) {
+         item.erase("observables");
+      }
+   }
+   std::stringstream ss;
+   tree->rootnode().writeJSON(ss);
+   return ss.str();
+}
+
+} // namespace
+
+// The observables of a ModelConfig without data set are not given by the data of its likelihood. RooFit writes them
+// in misc.ROOT_internal.ModelConfigs. Without that list, they are the variates of the likelihood that are neither in
+// a domain of the analysis nor constant, which HS3 makes observables, and the columns of a combined distribution.
+TEST(RooFitHS3, ObservablesWithoutData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::shape(x[0, -5, 5], mu[0, -2, 2], 1.0)");
+   ws.factory("Gaussian::shift(x, theta[0, -5, 5], 2.0)");
+   ws.factory("SUM::phys(f[0.5, 0, 1] * shape, shift)");
+   ws.factory("Gaussian::constraint(gobs[0, -5, 5], theta, 1.0)");
+   ws.var("gobs")->setConstant(true);
+   ws.factory("PROD::model(phys, constraint)");
+   RooFit::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf("model");
+   mc.SetObservables("x");
+   mc.SetParametersOfInterest("mu");
+   mc.SetNuisanceParameters("theta,f");
+   mc.SetGlobalObservables("gobs");
+   ws.import(mc);
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"("observables":["x"])"), std::string::npos) << exported;
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+   EXPECT_EQ(observableNames(ws2, "ModelConfig"), std::vector<std::string>{"x"});
+   // After the first round trip, the constraint is an external constraint, which changes the order of the document.
+   // From there on, it is stable.
+   const std::string exported2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   EXPECT_NE(exported2.find(R"("observables":["x"])"), std::string::npos) << exported2;
+   RooWorkspace ws2b;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2b}.importJSONfromString(exported2)) << exported2;
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2b}.exportJSONtoString(), exported2);
+
+   // Without the list: inferred, with a message.
+   const std::string withoutList = withoutObservablesList(exported);
+   ASSERT_EQ(withoutList.find(R"("observables")"), std::string::npos) << withoutList;
+   RooWorkspace ws3;
+   const std::string info = captureMessages(RooFit::INFO, RooFit::IO, [&] {
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(withoutList)) << withoutList;
+   });
+   EXPECT_EQ(observableNames(ws3, "ModelConfig"), std::vector<std::string>{"x"});
+   EXPECT_NE(info.find("neither in a domain of the analysis nor constant: 'x'"), std::string::npos) << info;
+
+   // A RooSimultaneous: the index category is an observable as well.
+   RooWorkspace wsSim;
+   wsSim.factory("Gaussian::a(xa[0, -5, 5], mu[0, -2, 2], 1.0)");
+   wsSim.factory("Gaussian::b(xb[0, -5, 5], mu, 1.0)");
+   wsSim.factory("SIMUL::sim(channel[A=0, B=1], A=a, B=b)");
+   RooFit::ModelConfig mcSim{"ModelConfig", &wsSim};
+   mcSim.SetPdf("sim");
+   mcSim.SetObservables("xa,xb,channel");
+   mcSim.SetParametersOfInterest("mu");
+   wsSim.import(mcSim);
+   const std::vector<std::string> simObservables{"channel", "xa", "xb"};
+   const std::string exportedSim = RooJSONFactoryWSTool{wsSim}.exportJSONtoString();
+   for (std::string const &json : {exportedSim, withoutObservablesList(exportedSim)}) {
+      RooWorkspace wsSim2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{wsSim2}.importJSONfromString(json)) << json;
+      EXPECT_EQ(observableNames(wsSim2, "ModelConfig"), simObservables) << json;
+   }
+
+   // A document written by hand, with one domain for all parameters of the analysis. Like RooFit, it has a number
+   // instead of a data set in the likelihood.
+   const std::string handWritten = R"({
+  "metadata": {"hs3_version": "0.3"},
+  "distributions": [
+    {"name": "shape", "type": "gaussian_dist", "x": "x", "mean": "mu", "sigma": 1.0},
+    {"name": "constraint", "type": "gaussian_dist", "x": "gobs", "mean": "theta", "sigma": 1.0},
+    {"name": "model", "type": "product_dist", "factors": ["shape"]}
+  ],
+  "domains": [
+    {"name": "parameters", "type": "product_domain",
+     "axes": [{"name": "mu", "min": -2.0, "max": 2.0}, {"name": "theta", "min": -5.0, "max": 5.0}]},
+    {"name": "default_domain", "type": "product_domain", "axes": [{"name": "x", "min": -5.0, "max": 5.0}]}
+  ],
+  "parameter_points": [{"name": "default_values", "parameters": [
+    {"name": "mu", "value": 0.0}, {"name": "theta", "value": 0.0}, {"name": "gobs", "value": 0.0, "const": true}]}],
+  "likelihoods": [{"name": "lh", "distributions": ["model"], "data": [0], "aux_distributions": ["constraint"]}],
+  "analyses": [{"name": "analysis", "likelihood": "lh", "parameters_of_interest": ["mu"], "domains": ["parameters"]}]
+})";
+   RooWorkspace ws4;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws4}.importJSONfromString(handWritten));
+   EXPECT_EQ(observableNames(ws4, "analysis"), std::vector<std::string>{"x"});
+}

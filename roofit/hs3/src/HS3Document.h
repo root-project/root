@@ -468,6 +468,8 @@ struct ModelConfigInfo {
    std::optional<std::string> mcName;
    std::optional<std::string> pdfName;
    std::optional<std::string> combinedDataName;
+   /// The observables of the ModelConfig, written if no data set of the likelihood gives them.
+   std::optional<std::vector<std::string>> observables;
 };
 
 struct StepWidth {

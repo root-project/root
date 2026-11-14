@@ -1157,6 +1157,7 @@ void describe(Reader &ar, ModelConfigInfo &info)
    ar("mcName", info.mcName);
    ar("pdfName", info.pdfName);
    ar("combined_data_name", info.combinedDataName);
+   ar("observables", info.observables);
 }
 
 namespace {
