@@ -787,6 +787,7 @@ void readConstraint(Reader &ar, Constraint &out)
    } else if (ar.has("constraint_name")) {
       ConstraintPdf pdf;
       ar("constraint_name", pdf.pdf);
+      pdf.legacyName = true;
       out = std::move(pdf);
    } else if (ar.has("constraint")) {
       if (auto type = readConstraintType(Cursor{ar.cursor().node()["constraint"], ar.cursor(), "constraint"})) {

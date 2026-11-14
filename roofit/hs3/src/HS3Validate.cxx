@@ -488,6 +488,27 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
 
    checkGammaConstraint(path + ".staterror", dist.statError.constraint);
 
+   // The staterror modifiers of all samples share the gamma parameters, so the ones that name constraints must name
+   // the same.
+   GammaConstraintPdfs const *statErrorConstraints = nullptr;
+   auto checkStatErrorConstraints = [&](std::string const &where, GammaConstraint const &constraint) {
+      auto const *pdfs = std::get_if<GammaConstraintPdfs>(&constraint);
+      if (!pdfs) {
+         return;
+      }
+      if (!statErrorConstraints) {
+         statErrorConstraints = pdfs;
+         return;
+      }
+      auto const &first = statErrorConstraints->pdfs;
+      const bool same = std::equal(first.begin(), first.end(), pdfs->pdfs.begin(), pdfs->pdfs.end(),
+                                   [](auto const &l, auto const &r) { return l && r ? l->name == r->name : !l && !r; });
+      if (!same) {
+         error(where,
+               "the staterror modifiers of the samples of channel '" + channelName + "' name different constraints");
+      }
+   };
+
    std::set<std::string> sampleNames;
    for (std::size_t iSample = 0; iSample < dist.samples.size(); ++iSample) {
       auto const &sample = dist.samples[iSample];
@@ -563,6 +584,7 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                              checkSize(modifierPath + ".parameters", m.parameters.size(), "\"parameters\"");
                           }
                           checkGammaConstraint(modifierPath, m.constraint);
+                          checkStatErrorConstraints(modifierPath, m.constraint);
                        },
                        [&](CustomModifier const &m) {
                           modifierPath += "(" + m.name + ")";

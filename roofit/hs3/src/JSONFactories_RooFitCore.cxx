@@ -17,7 +17,6 @@
 #include <RooBinning.h>
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
-#include <RooConstVar.h>
 #include <RooCrystalBall.h>
 #include <RooDataHist.h>
 #include <RooDecay.h>
@@ -882,7 +881,8 @@ private:
 
 namespace CrystalBall {
 
-constexpr const char *tailKeys[] = {"alpha_L", "n_L", "alpha_R", "n_R"};
+// The keys of the tails of the double-sided Crystal Ball.
+const std::initializer_list<const char *> tailKeys = {"alpha_L", "n_L", "alpha_R", "n_R"};
 
 bool hasAny(const JSONNode &p, std::initializer_list<const char *> keys)
 {
@@ -896,7 +896,7 @@ bool hasAny(const JSONNode &p, std::initializer_list<const char *> keys)
 
 bool hasDoubleSidedKeys(const JSONNode &p)
 {
-   return hasAny(p, {"alpha_L", "n_L", "alpha_R", "n_R", "sigma_L", "sigma_R"});
+   return hasAny(p, tailKeys) || hasAny(p, {"sigma_L", "sigma_R"});
 }
 
 // Create a RooCrystalBall with two tails. With `symmetricShorthand`, the tails may also be given as "alpha" and "n"
@@ -906,7 +906,7 @@ void importDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p, std::strin
    const std::string name(RooJSONFactoryWSTool::name(p));
    const std::string context = type + " '" + name + "'";
 
-   const bool asymmetricTails = hasAny(p, {"alpha_L", "n_L", "alpha_R", "n_R"});
+   const bool asymmetricTails = hasAny(p, tailKeys);
    const bool symmetricTails = hasAny(p, {"alpha", "n"});
    if (symmetricTails && !symmetricShorthand) {
       RooJSONFactoryWSTool::error(context + " must not have \"alpha\" or \"n\", the tails are given by \"alpha_L\", " +
@@ -984,18 +984,6 @@ bool importCrystalBallDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-// Write a reference to `arg`: the value if it is a literal constant, and the name otherwise.
-void writeReference(JSONNode &node, RooAbsArg const &arg)
-{
-   auto const *constVar = dynamic_cast<RooConstVar const *>(&arg);
-   std::istringstream stream(arg.GetName());
-   double value = 0.0;
-   if (constVar && (stream >> value) && stream.eof()) {
-      node << constVar->getVal();
-   } else {
-      node << arg.GetName();
-   }
-}
 
 // A RooCrystalBall with one tail is the single-sided "crystalball_dist" (read back as RooCBShape, which follows the
 // same convention for the sign of alpha). With two tails, it is a "crystalball_doublesided_dist", whose tails are
