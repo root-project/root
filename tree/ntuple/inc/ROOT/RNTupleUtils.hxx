@@ -50,7 +50,7 @@ std::unique_ptr<T[]> MakeUninitArray(std::size_t size)
 /// Check whether a given string is a valid name according to the RNTuple specification
 RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view where);
 
-/// Used for string interning of repeated type names, field names, etc. The call operator returns for every
+/// Used for string interning of repeated type names, field names, etc. The Intern() method returns for every
 /// given string the one immutable pointer to that string in the pool. After calling Freeze(), no new string
 /// must be added and the pool is safe to use from multiple threads.
 class RStringPool {
