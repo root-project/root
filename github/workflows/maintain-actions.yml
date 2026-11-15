@@ -1,0 +1,55 @@
+name: Maintain GitHub Actions
+
+on:
+  schedule:
+    - cron: "0 8 * * 1" # Runs every Monday at 08:00 UTC
+  workflow_dispatch: # Allows manual one-click execution in the GitHub UI
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  update-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Resolve and pin latest Action SHAs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/update_actions.py
+
+      - name: Validate YAML syntax
+        run: |
+          python3 -c '
+          import glob, yaml
+          for f in glob.glob(".github/workflows/*.y*ml"):
+              with open(f) as stream:
+                  yaml.safe_load(stream)
+          print("All workflow YAML files passed syntax validation.")
+          '
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "ci(actions): pin GitHub Actions to latest Node 24+ releases"
+          title: "ci(actions): update and SHA-pin GitHub Actions"
+          body: |
+            ### Automated CI/CD Maintenance
+            - Resolved the latest upstream releases for all GitHub Actions in `.github/workflows/`.
+            - Pinned actions to immutable commit SHAs for supply-chain security.
+            - Verified YAML syntax across all workflow files.
+          branch: ci/auto-update-actions
+          delete-branch: true
+          
