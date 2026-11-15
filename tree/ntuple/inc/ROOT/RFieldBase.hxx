@@ -228,9 +228,8 @@ public:
    class RBulkValues;
 
 private:
-   /// For free-standing fields, the string storage for name, type (alias), and description. The string pool is
-   /// used for the field itself and its subfields.
-   std::unique_ptr<Internal::RStringPool> fStringPool;
+   /// The string storage for name, type (alias), and description. The string pool is always shared with the subfields.
+   std::shared_ptr<Internal::RStringPool> fStringPool;
    /// The field name relative to its parent field
    const std::string *fFieldName = nullptr;
    /// The C++ type captured by this field
@@ -296,6 +295,8 @@ private:
          field->SetArtificial();
       }
    }
+
+   void SetStringPool(std::shared_ptr<Internal::RStringPool> pool);
 
 protected:
    struct RBulkSpec;

@@ -249,7 +249,7 @@ ROOT::RFieldBase::RFieldBase(std::string_view name, std::string_view type, ROOT:
      fTraits(isSimple ? kTraitMappable : 0)
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "Field");
-   fStringPool = std::make_unique<Internal::RStringPool>();
+   fStringPool = std::make_shared<Internal::RStringPool>();
    fFieldName = fStringPool->Intern(name);
    fTypeName = fStringPool->Intern(type);
    fTypeAlias = fStringPool->Intern("");
@@ -680,6 +680,15 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RFieldBase::SplitValue(const RValue 
    return std::vector<RValue>();
 }
 
+void ROOT::RFieldBase::SetStringPool(std::shared_ptr<Internal::RStringPool> pool)
+{
+   fFieldName = pool->Intern(*fFieldName);
+   fTypeName = pool->Intern(*fTypeName);
+   fTypeAlias = pool->Intern(*fTypeAlias);
+   fDescription = pool->Intern(*fDescription);
+   fStringPool = pool;
+}
+
 void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child, std::string_view expectedChildName)
 {
    // Note that technically the zero field would not need to have the extensible trait: because only its sub fields
@@ -690,6 +699,11 @@ void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child, std::stri
    if (!expectedChildName.empty() && child->GetFieldName() != expectedChildName) {
       throw RException(R__FAIL(std::string("invalid subfield name: ") + child->GetFieldName() +
                                "   expected: " + std::string(expectedChildName)));
+   }
+
+   child->SetStringPool(fStringPool);
+   for (auto &f : *child) {
+      f.SetStringPool(fStringPool);
    }
 
    child->fParent = this;
