@@ -9,8 +9,8 @@ jobs:
     if: ${{ github.repository == 'root-project/root' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
       - run: npm install 'octokit@^3'

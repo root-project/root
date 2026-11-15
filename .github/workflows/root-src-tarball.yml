@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the official ROOT repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: root
           ref: v${{ inputs.major }}-${{ inputs.minor }}-${{ inputs.patch }}

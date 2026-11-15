@@ -137,7 +137,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref_name }}
           path: "src/"
@@ -201,14 +201,14 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && !matrix.is_special && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Binaries ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/packages/root_v*
@@ -292,7 +292,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref_name }}
 
@@ -358,14 +358,14 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Test Results Windows ${{ matrix.target_arch }} ${{ matrix.config }}
           path: C:/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Binaries ${{ matrix.target_arch }} ${{ matrix.config }}
           path: C:/ROOT-CI/packages/root_v*
@@ -503,7 +503,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref_name }}
 
@@ -593,14 +593,14 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Test Results ${{ matrix.image }} ${{ matrix.property }}
           path: /github/home/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && !matrix.is_special && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Binaries ${{ matrix.image }} ${{ matrix.property }}
           path: /github/home/ROOT-CI/packages/root_v*
@@ -643,7 +643,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Upload
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: Event File
         path: ${{ github.event_path }}

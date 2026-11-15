@@ -36,7 +36,7 @@ jobs:
 
       - name: Checkout
         if: ${{ always() }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: master
 
@@ -56,7 +56,7 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Test Results - Visual Studio Preview
           path: C:/ROOT-CI/build/TestResults.xml

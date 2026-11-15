@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run unit tests
         run: python3 .github/workflows/root-ci-config/test_null_build_check.py --verbose
