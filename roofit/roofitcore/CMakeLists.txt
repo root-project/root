@@ -472,6 +472,7 @@ PUBLIC
 # The following definitions are PUBLIC so they can also be used in ROOT-internal tests
 if(NOT WIN32)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MULTIPROCESS)
+  target_link_libraries(RooFitCore PRIVATE RooFitMultiProcess)
 endif()
 
 if(clad)
