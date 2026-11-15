@@ -89,6 +89,15 @@ void ROOT::Internal::CallSetArtificialOnField(RFieldBase &field)
 {
    field.SetArtificial();
 }
+std::shared_ptr<ROOT::Internal::RStringPool>
+ROOT::Internal::CallSetSharedStringPoolOnField(const std::shared_ptr<Internal::RStringPool> &pool)
+{
+   return RFieldBase::SetSharedStringPool(pool);
+}
+std::shared_ptr<ROOT::Internal::RStringPool> ROOT::Internal::GetStringPoolOfField(const ROOT::RFieldBase &field)
+{
+   return field.fStringPool;
+}
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
@@ -239,6 +248,8 @@ ROOT::RFieldBase::CreateObject<void>() const
 
 //------------------------------------------------------------------------------
 
+thread_local std::shared_ptr<ROOT::Internal::RStringPool> ROOT::RFieldBase::fgSharedStringPool;
+
 ROOT::RFieldBase::RFieldBase(std::string_view name, std::string_view type, ROOT::ENTupleStructure structure,
                              bool isSimple, std::size_t nRepetitions)
    : fStructure(structure),
@@ -249,7 +260,7 @@ ROOT::RFieldBase::RFieldBase(std::string_view name, std::string_view type, ROOT:
      fTraits(isSimple ? kTraitMappable : 0)
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "Field");
-   fStringPool = std::make_shared<Internal::RStringPool>();
+   fStringPool = fgSharedStringPool ? fgSharedStringPool : std::make_shared<Internal::RStringPool>();
    fFieldName = fStringPool->Intern(name);
    fTypeName = fStringPool->Intern(type);
    fTypeAlias = fStringPool->Intern("");
@@ -680,13 +691,23 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RFieldBase::SplitValue(const RValue 
    return std::vector<RValue>();
 }
 
-void ROOT::RFieldBase::SetStringPool(std::shared_ptr<Internal::RStringPool> pool)
+void ROOT::RFieldBase::SetStringPool(const std::shared_ptr<Internal::RStringPool> &pool)
 {
    fFieldName = pool->Intern(*fFieldName);
    fTypeName = pool->Intern(*fTypeName);
    fTypeAlias = pool->Intern(*fTypeAlias);
    fDescription = pool->Intern(*fDescription);
    fStringPool = pool;
+}
+
+std::shared_ptr<ROOT::Internal::RStringPool>
+ROOT::RFieldBase::SetSharedStringPool(const std::shared_ptr<Internal::RStringPool> &pool)
+{
+   // Don't nest different shared string pools. Always use the outer-most one but allow for it to be reset to null.
+   if (fgSharedStringPool && pool) {
+      return fgSharedStringPool;
+   }
+   return std::exchange(fgSharedStringPool, pool);
 }
 
 void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child, std::string_view expectedChildName)
@@ -701,9 +722,11 @@ void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child, std::stri
                                "   expected: " + std::string(expectedChildName)));
    }
 
-   child->SetStringPool(fStringPool);
-   for (auto &f : *child) {
-      f.SetStringPool(fStringPool);
+   if (fStringPool != child->fStringPool) {
+      child->SetStringPool(fStringPool);
+      for (auto &f : *child) {
+         f.SetStringPool(fStringPool);
+      }
    }
 
    child->fParent = this;

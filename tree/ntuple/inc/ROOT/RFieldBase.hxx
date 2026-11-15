@@ -54,6 +54,7 @@ class RPageSink;
 class RPageSource;
 struct RFieldCallbackInjector;
 struct RFieldRepresentationModifier;
+struct RNTupleAttrEntry;
 
 // TODO(jblomer): find a better way to not have these methods in the RFieldBase public API
 void CallFlushColumnsOnField(RFieldBase &);
@@ -64,8 +65,26 @@ ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
                     const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 void CallSetArtificialOnField(RFieldBase &);
+std::shared_ptr<RStringPool> CallSetSharedStringPoolOnField(const std::shared_ptr<Internal::RStringPool> &);
+std::shared_ptr<RStringPool> GetStringPoolOfField(const ROOT::RFieldBase &);
 
-struct RNTupleAttrEntry;
+/// Set a common string pool for all field (hierarchies) created in a block
+class RFieldSharedStringPoolRaii {
+private:
+   std::shared_ptr<RStringPool> fOldPool;
+
+public:
+   explicit RFieldSharedStringPoolRaii(std::shared_ptr<Internal::RStringPool> pool)
+   {
+      fOldPool = CallSetSharedStringPoolOnField(pool);
+   }
+   RFieldSharedStringPoolRaii(const RFieldSharedStringPoolRaii &other) = delete;
+   RFieldSharedStringPoolRaii(RFieldSharedStringPoolRaii &&other) = delete;
+   RFieldSharedStringPoolRaii &operator=(const RFieldSharedStringPoolRaii &other) = delete;
+   RFieldSharedStringPoolRaii &operator=(RFieldSharedStringPoolRaii &&other) = delete;
+   ~RFieldSharedStringPoolRaii() { CallSetSharedStringPoolOnField(fOldPool); }
+};
+
 } // namespace Internal
 
 // clang-format off
@@ -98,6 +117,9 @@ class RFieldBase {
                                  const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                                  ROOT::DescriptorId_t fieldId);
    friend void Internal::CallSetArtificialOnField(RFieldBase &);
+   friend std::shared_ptr<Internal::RStringPool>
+   Internal::CallSetSharedStringPoolOnField(const std::shared_ptr<Internal::RStringPool> &);
+   friend std::shared_ptr<Internal::RStringPool> ROOT::Internal::GetStringPoolOfField(const ROOT::RFieldBase &);
 
    using ReadCallback_t = std::function<void(void *)>;
 
@@ -228,6 +250,9 @@ public:
    class RBulkValues;
 
 private:
+   /// Set by the SharedStringPoolRaii object to a pre-existing string pool used during all field constructions.
+   /// A string pool must not be shared among threads.
+   static thread_local std::shared_ptr<Internal::RStringPool> fgSharedStringPool;
    /// The string storage for name, type (alias), and description. The string pool is always shared with the subfields.
    std::shared_ptr<Internal::RStringPool> fStringPool;
    /// The field name relative to its parent field
@@ -255,6 +280,9 @@ private:
    ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
    /// Changed by ConnectTo[Sink,Source], reset by Clone()
    EState fState = EState::kUnconnected;
+
+   /// Used by the SharedStringPoolRaii
+   static std::shared_ptr<Internal::RStringPool> SetSharedStringPool(const std::shared_ptr<Internal::RStringPool> &);
 
    void InvokeReadCallbacks(void *target)
    {
@@ -296,7 +324,7 @@ private:
       }
    }
 
-   void SetStringPool(std::shared_ptr<Internal::RStringPool> pool);
+   void SetStringPool(const std::shared_ptr<Internal::RStringPool> &pool);
 
 protected:
    struct RBulkSpec;
