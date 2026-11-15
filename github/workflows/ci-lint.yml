@@ -1,19 +1,40 @@
-name: Workflow Lint & Security
+name: Workflow & Config Lint
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/**"
+      - ".github/**"
       - "scripts/**"
+  push:
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
-  lint-workflows:
+  validate-configs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
       - name: Run actionlint
         uses: rhysd/actionlint@v1.7.12
-        
+
+      - name: Validate Dependabot & Workflow YAML Objects
+        run: |
+          python3 -c '
+          import glob, yaml
+          with open(".github/dependabot.yml") as f:
+              db = yaml.safe_load(f)
+          assert isinstance(db, dict) and db.get("version") == 2, "Invalid dependabot.yml"
+          for wf in glob.glob(".github/workflows/*.y*ml"):
+              with open(wf) as f:
+                  assert isinstance(yaml.safe_load(f), dict), f"Invalid workflow: {wf}"
+          print("All GitHub configuration files are valid YAML objects.")
+          '
+          
