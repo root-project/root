@@ -360,7 +360,7 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
   endforeach()
 
   get_target_property(LinkedLibraries ${target} LINK_LIBRARIES)
-  ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${LinkedLibraries} OPTIONS ${options} USE_FILE_SETS)
+  ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${LinkedLibraries} EXTRA_DEPENDENCIES ${_copied_headers} OPTIONS ${options} USE_FILE_SETS)
   # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
 
   if(_copied_headers)
@@ -1465,6 +1465,7 @@ endfunction()
 # - not4dict_header_files for public headers purposely excluded from dictionaries
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_TARGET target)
+  set_target_properties(${target} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   install(TARGETS ${target}
     EXPORT ${CMAKE_PROJECT_NAME}Exports
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries

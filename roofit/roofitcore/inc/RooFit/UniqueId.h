@@ -14,6 +14,8 @@
 #define roofit_roofitcore_RooFit_UniqueId_h
 
 #include <atomic>
+#include <type_traits>
+#include <utility>
 
 namespace RooFit {
 

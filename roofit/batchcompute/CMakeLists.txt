@@ -198,7 +198,7 @@ if (cuda)
       ${shared_object_private_headers_cu}
       ${shared_object_private_headers}
       ${shared_object_friend_headers}
-      ${lib_private_header}
+      ${lib_private_headers}
   )
     
   if(RooBatchCompute_STANDALONE_CUDA)
