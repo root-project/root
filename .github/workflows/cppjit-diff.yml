@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out ROOT
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: root
       - name: Determine tag that cppjit in ROOT is based
@@ -19,7 +19,7 @@ jobs:
           echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
           rm $tag_file
       - name: Check out cppjit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: compiler-research/cppjit
           ref: ${{ steps.determine-tag.outputs.tag }}

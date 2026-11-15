@@ -57,10 +57,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the ROOT Website repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: root-project/web
-      - uses: cvmfs-contrib/github-action-cvmfs@v4
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
       - name: Create release page
         run: | 
             cd _releases

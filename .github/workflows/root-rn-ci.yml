@@ -28,12 +28,12 @@ jobs:
       WORKDIR: /home/runner/work/root
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.branch }}
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
 
       - name: Install Kerberos utilities
         run: sudo apt-get install -y krb5-user

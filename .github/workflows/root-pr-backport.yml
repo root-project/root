@@ -51,12 +51,12 @@ jobs:
           fi
 
       - name: Checkout the official ROOT repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: root_official
 
       - name: Checkout the bot ROOT repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: root-project-bot/root
           token: ${{ secrets.ROOT_BOT_GITHUB_TOKEN }}

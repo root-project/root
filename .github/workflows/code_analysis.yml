@@ -28,7 +28,7 @@ jobs:
       TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
       BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1024
         ref: ${{ github.event.pull_request.head.sha }}
@@ -84,7 +84,7 @@ jobs:
        BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
 
     steps:
-       - uses: actions/checkout@v6
+       - uses: actions/checkout@v7
          with:
             fetch-depth: 1
             ref: ${{ github.event.pull_request.head.sha }}
@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 2
 
