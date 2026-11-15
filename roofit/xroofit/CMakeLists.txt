@@ -41,6 +41,11 @@ PUBLIC
   FitPanel
 )
 
+get_target_property(RooBatchComputeGeneric_Friend_Dirs RooBatchCompute_GENERIC HEADER_DIRS_friend_header_files)
+if(RooBatchComputeGeneric_Friend_Dirs)
+  target_include_directories(RooFitXRooFit PRIVATE ${RooBatchComputeGeneric_Friend_Dirs})
+endif()
+
 ROOT_GENERATE_TARGET_DICTIONARY(RooFitXRooFit "-writeEmptyRootPCM")
 ROOT_INSTALL_TARGET(RooFitXRooFit)
 
