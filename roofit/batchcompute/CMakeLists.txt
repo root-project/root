@@ -105,7 +105,7 @@ target_sources(RooBatchCompute
 PRIVATE
   src/Initialisation.cxx
 PRIVATE
-  FILE_SET private_header_files TYPE HEADERS BASE_DIRS res/ FILES
+  FILE_SET friend_header_files TYPE HEADERS BASE_DIRS res/ FILES
     ${lib_private_headers}
 )
 target_link_libraries(RooBatchCompute PUBLIC

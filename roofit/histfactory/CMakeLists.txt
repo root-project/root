@@ -67,6 +67,16 @@ if (xml)
   target_link_libraries(HistFactory PRIVATE XMLParser)
 endif()
 
+# workaround to include privately headers that are not public, from a "friend" target
+get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)
+if(RooFitCore_Friend_Dirs)
+  target_include_directories(HistFactory PRIVATE ${RooFitCore_Friend_Dirs})
+endif()
+get_target_property(RooBatchComputeGeneric_Friend_Dirs RooBatchCompute_GENERIC HEADER_DIRS_friend_header_files)
+if(RooBatchComputeGeneric_Friend_Dirs)
+  target_include_directories(HistFactory PRIVATE ${RooBatchComputeGeneric_Friend_Dirs})
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
@@ -99,11 +109,5 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${prepareHistFactory_script}
                             GROUP_EXECUTE GROUP_READ
                             WORLD_EXECUTE WORLD_READ
                 DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-# workaround to include privately headers that are not public, from a "friend" target
-get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)
-if(RooFitCore_Friend_Dirs)
-  target_include_directories(HistFactory PRIVATE ${RooFitCore_Friend_Dirs})
-endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
