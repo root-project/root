@@ -9,29 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(NOT WIN32)
-  set(RooFitMPTestStatisticsSources
-    src/TestStatistics/LikelihoodGradientJob.cxx
-    src/TestStatistics/LikelihoodJob.cxx
-    src/TestStatistics/MinuitFcnGrad.cxx
-  )
-  set(RooFitMPTestStatisticsHeaders
-    src/TestStatistics/LikelihoodGradientJob.h
-    src/TestStatistics/LikelihoodSerial.h
-    src/TestStatistics/MinuitFcnGrad.h
-    src/TestStatistics/LikelihoodJob.h
-  )
-  list(APPEND EXTRA_LIBRARIES RooFitMultiProcess)
-  #FIXME: The ProcessTimer.h exposes json in its interface:
-  list(APPEND EXTRA_LIBRARIES nlohmann_json::nlohmann_json)
-  list(APPEND EXTRA_DEPENDENCIES Minuit2)
-endif()
-
-set (EXTRA_DICT_OPTS)
-if (runtime_cxxmodules AND WIN32)
-  set (EXTRA_DICT_OPTS NO_CXXMODULE)
-endif()
-
 add_library(RooFitCore SHARED)
 target_sources(RooFitCore
 PRIVATE
@@ -238,7 +215,6 @@ PRIVATE
   src/TestStatistics/RooUnbinnedL.cxx
   src/TestStatistics/buildLikelihood.cxx
   src/TestStatistics/SharedOffset.cxx
-  ${RooFitMPTestStatisticsSources}
 PRIVATE
   FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ FILES
     src/RooConvIntegrandBinding.h
@@ -255,7 +231,6 @@ PRIVATE
     src/ConstraintHelpers.h
     src/RooRombergIntegrator.h
     src/RooBinIntegrator.h
-    ${RooFitMPTestStatisticsHeaders}
     src/RooFit/BatchModeDataHelpers.h
     src/RooMinimizerFcn.h
     src/RooAbsNumGenerator.h
@@ -482,7 +457,6 @@ PRIVATE
   # Minuit2 is needed in the implementation of RooMinimizerFcn, to advertise
   # vanishing second derivatives to Minuit2Minimizer.
   Minuit2
-  ${EXTRA_LIBRARIES}
 PUBLIC
   Core
   Hist
@@ -493,14 +467,9 @@ PUBLIC
   MathCore
   Foam
   RooBatchCompute
-  ${EXTRA_DEPENDENCIES}
 )
 
 # The following definitions are PUBLIC so they can also be used in ROOT-internal tests
-if(roofit_legacy_eval_backend)
-  target_compile_definitions(RooFitCore PUBLIC ROOFIT_LEGACY_EVAL_BACKEND)
-endif()
-
 if(NOT WIN32)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MULTIPROCESS)
 endif()
@@ -529,14 +498,38 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(RooFitCore PUBLIC -fno-math-errno)
 endif()
 
-if (NOT WIN32)
+if(NOT WIN32)
+  target_sources(RooFitCore
+  PRIVATE
+    src/TestStatistics/LikelihoodGradientJob.cxx
+    src/TestStatistics/LikelihoodJob.cxx
+    src/TestStatistics/MinuitFcnGrad.cxx
+  PRIVATE
+    FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ FILES
+      src/TestStatistics/LikelihoodGradientJob.h
+      src/TestStatistics/LikelihoodSerial.h
+      src/TestStatistics/MinuitFcnGrad.h
+      src/TestStatistics/LikelihoodJob.h
+  )
+  target_link_libraries(RooFitCore PUBLIC
+  nlohmann_json::nlohmann_json #FIXME: The ProcessTimer.h should not expose json in its interface, this should become PRIVATE
+  )
+
   # workaround to include privately headers that are not public, from a "friend" target
   get_target_property(RooFitMultiProcess_Friend_Dirs RooFitMultiProcess HEADER_DIRS_friend_header_files)
   if(RooFitMultiProcess_Friend_Dirs)
     target_include_directories(RooFitCore PRIVATE ${RooFitMultiProcess_Friend_Dirs})
   endif()
 endif()
+get_target_property(RooBatchComputeGeneric_Friend_Dirs RooBatchCompute_GENERIC HEADER_DIRS_friend_header_files)
+if(RooBatchComputeGeneric_Friend_Dirs)
+  target_include_directories(RooFitCore PRIVATE ${RooBatchComputeGeneric_Friend_Dirs})
+endif()
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
 ROOT_GENERATE_TARGET_DICTIONARY(RooFitCore "-writeEmptyRootPCM" ${EXTRA_DICT_OPTS})
 ROOT_INSTALL_TARGET(RooFitCore)
 

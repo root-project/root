@@ -48,13 +48,17 @@ PUBLIC
   RooFitCore
 )
 
-ROOT_GENERATE_TARGET_DICTIONARY(RooFitHS3 "-writeEmptyRootPCM")
-ROOT_INSTALL_TARGET(RooFitHS3)
-
 # workaround to include privately headers that are not public, from a "friend" target
 get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)
 if(RooFitCore_Friend_Dirs)
   target_include_directories(RooFitHS3 PRIVATE ${RooFitCore_Friend_Dirs})
 endif()
+get_target_property(RooBatchComputeGeneric_Friend_Dirs RooBatchCompute_GENERIC HEADER_DIRS_friend_header_files)
+if(RooBatchComputeGeneric_Friend_Dirs)
+  target_include_directories(RooFitHS3 PRIVATE ${RooBatchComputeGeneric_Friend_Dirs})
+endif()
+
+ROOT_GENERATE_TARGET_DICTIONARY(RooFitHS3 "-writeEmptyRootPCM")
+ROOT_INSTALL_TARGET(RooFitHS3)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

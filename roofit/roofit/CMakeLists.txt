@@ -174,6 +174,10 @@ get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_
 if(RooFitCore_Friend_Dirs)
   target_include_directories(RooFit PRIVATE ${RooFitCore_Friend_Dirs})
 endif()
+get_target_property(RooBatchComputeGeneric_Friend_Dirs RooBatchCompute_GENERIC HEADER_DIRS_friend_header_files)
+if(RooBatchComputeGeneric_Friend_Dirs)
+  target_include_directories(RooFit PRIVATE ${RooBatchComputeGeneric_Friend_Dirs})
+endif()
 
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)

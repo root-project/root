@@ -121,10 +121,12 @@ set(shared_object_sources
   src/RooBatchCompute.cxx
   src/ComputeFunctions.cxx
 )
-set(shared_object_private_headers
+set(shared_object_friend_headers
   res/RooBatchComputeTypes.h
   res/RooHeterogeneousMath.h
   res/RooNaNPacker.h
+)
+set(shared_object_private_headers
   src/Batches.h
   src/RooVDTHeaders.h
 )
@@ -138,6 +140,8 @@ PRIVATE
   FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ res/ FILES
     ${shared_object_private_headers}
     ${lib_private_headers}
+  FILE_SET friend_header_files TYPE HEADERS BASE_DIRS res/ FILES
+    ${shared_object_friend_headers}
 )
 target_link_libraries(RooBatchCompute_GENERIC PRIVATE RooBatchCompute)
 target_compile_options(RooBatchCompute_GENERIC PRIVATE ${common-flags} -DRF_ARCH=GENERIC)
@@ -156,6 +160,7 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
     PRIVATE
       FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ res/ FILES
         ${shared_object_private_headers}
+        ${shared_object_friend_headers}
         ${lib_private_headers}
     )
     target_link_libraries(${_lib} PRIVATE RooBatchCompute)
@@ -192,6 +197,7 @@ if (cuda)
     FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ res/ FILES
       ${shared_object_private_headers_cu}
       ${shared_object_private_headers}
+      ${shared_object_friend_headers}
       ${lib_private_header}
   )
     
