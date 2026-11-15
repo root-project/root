@@ -1,130 +1,47 @@
-import argparse
-import json
-import os
-import pathlib
-import re
-import urllib.error
-import urllib.request
+name: Maintain GitHub Actions
 
-IGNORED_PREFIXES = ("./", "../")
-API_CACHE = {}
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
 
-def github_api_get(url):
-    if url in API_CACHE:
-        return API_CACHE[url]
+permissions:
+  contents: write
+  pull-requests: write
 
-    headers = {
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "Autonomous-Action-Updater",
-    }
-    token = os.environ.get("GITHUB_TOKEN")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=15) as response:
-        data = json.loads(response.read().decode("utf-8"))
-        API_CACHE[url] = data
-        return data
+jobs:
+  update-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
 
-def get_latest_release_and_sha(action_name):
-    """Fetches the latest release tag and resolves its underlying commit SHA."""
-    parts = action_name.split("/")
-    if len(parts) < 2:
-        return None, None
-    repo = f"{parts[0]}/{parts[1]}"
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
 
-    try:
-        release = github_api_get(f"https://github.com{repo}/releases/latest")
-        latest_tag = release.get("tag_name")
-        if not latest_tag:
-            return None, None
+      - name: Install PyYAML
+        run: pip install pyyaml
 
-        ref_data = github_api_get(f"https://github.com{repo}/git/ref/tags/{latest_tag}")
-        obj = ref_data["object"]
+      - name: Resolve and pin latest Action SHAs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/update_actions.py
 
-        if obj["type"] == "tag":
-            tag_obj = github_api_get(obj["url"])
-            obj = tag_obj["object"]
-
-        return latest_tag, obj["sha"]
-    except urllib.error.HTTPError as e:
-        print(f"  [Skip] {repo}: HTTP {e.code} (No public releases or rate-limited)")
-        return None, None
-    except Exception as e:
-        print(f"  [Warning] {repo}: {e}")
-        return None, None
-
-def validate_github_configs():
-    """Verifies that dependabot.yml and all workflow files are valid YAML objects."""
-    try:
-        import yaml
-    except ImportError:
-        print("  [Note] PyYAML not installed locally; skipping YAML syntax check.")
-        return
-
-    dependabot_path = pathlib.Path(".github/dependabot.yml")
-    if dependabot_path.exists():
-        data = yaml.safe_load(dependabot_path.read_text(encoding="utf-8"))
-        if not isinstance(data, dict) or data.get("version") != 2:
-            raise ValueError(".github/dependabot.yml must be a valid YAML object with 'version: 2'.")
-        print("  [OK] .github/dependabot.yml passed structure validation.")
-
-    for wf in sorted(pathlib.Path(".github/workflows").glob("*.y*ml")):
-        wf_data = yaml.safe_load(wf.read_text(encoding="utf-8"))
-        if not isinstance(wf_data, dict):
-            raise ValueError(f"{wf.name} is not a valid YAML mapping object.")
-    print("  [OK] All workflow YAML files passed validation.")
-
-def process_workflows(workflows_dir=".github/workflows", dry_run=False):
-    path = pathlib.Path(workflows_dir)
-    if not path.exists():
-        print(f"Directory not found: {workflows_dir}")
-        return 0
-
-    pattern = re.compile(
-        r"(uses:\s*['\"]?)([a-zA-Z0-9_.-]+/[a-zA-Z0-9_./-]+)@"
-        r"([0-9a-fA-F]{40}|[a-zA-Z0-9_.-]+)"
-        r"(['\"]?(?:\s*#\s*(?:tag=)?([a-zA-Z0-9_.-]+))?)"
-    )
-
-    files_modified = 0
-
-    for file_path in sorted(list(path.glob("*.yml")) + list(path.glob("*.yaml"))):
-        original_content = file_path.read_text(encoding="utf-8")
-
-        def replace_match(match):
-            prefix, action_name, current_ref, suffix, comment_tag = match.groups()
-
-            if action_name.startswith(IGNORED_PREFIXES):
-                return match.group(0)
-
-            latest_tag, latest_sha = get_latest_release_and_sha(action_name)
-            if not latest_tag or not latest_sha:
-                return match.group(0)
-
-            if current_ref.lower() == latest_sha.lower() and comment_tag == latest_tag:
-                return match.group(0)
-
-            print(f"  [{file_path.name}] {action_name}: {current_ref[:12]} -> {latest_sha[:12]} ({latest_tag})")
-            quote = suffix if suffix and suffix in ("'", '"') else ""
-            return f"{prefix}{action_name}@{latest_sha}{quote} # {latest_tag}"
-
-        updated_content = pattern.sub(replace_match, original_content)
-
-        if updated_content != original_content:
-            files_modified += 1
-            if not dry_run:
-                file_path.write_text(updated_content, encoding="utf-8")
-
-    validate_github_configs()
-    mode_label = "would be updated (dry-run)" if dry_run else "updated"
-    print(f"\nCompleted: {files_modified} workflow file(s) {mode_label}.")
-    return files_modified
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Dynamically pin GitHub Actions and validate configs.")
-    parser.add_argument("--dry-run", action="store_true", help="Preview changes without modifying files.")
-    args = parser.parse_args()
-    process_workflows(dry_run=args.dry_run)
-    
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "ci(actions): pin GitHub Actions to latest Node 24+ releases"
+          title: "ci(actions): update and SHA-pin GitHub Actions"
+          body: |
+            ### Automated CI/CD Maintenance
+            - Resolved latest upstream releases for all GitHub Actions.
+            - Pinned actions to immutable commit SHAs.
+            - Validated `.github/dependabot.yml` and workflow YAML objects.
+          branch: ci/auto-update-actions
+          delete-branch: true
+          
