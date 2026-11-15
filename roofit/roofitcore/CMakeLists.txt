@@ -349,6 +349,7 @@ PUBLIC
     inc/RooFit/TestStatistics/RooUnbinnedL.h
     inc/RooFit/TestStatistics/SharedOffset.h
     inc/RooFit/TestStatistics/buildLikelihood.h
+    inc/RooFit/UniqueId.h
     inc/RooFitLegacy/RooCatTypeLegacy.h
     inc/RooFitLegacy/RooCategorySharedProperties.h
     inc/RooFitLegacy/RooTreeData.h
@@ -448,8 +449,6 @@ PUBLIC
     inc/RooWorkspace.h
     inc/RooWorkspaceHandle.h
     inc/RooWrapperPdf.h
-  FILE_SET not4dict_header_files TYPE HEADERS BASE_DIRS inc/ FILES
-    inc/RooFit/UniqueId.h
   FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
     inc/LinkDef.h
 )
