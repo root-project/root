@@ -21,12 +21,16 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
+#include "llvm/ADT/SmallPtrSet.h"
+
 using namespace clang;
 
 namespace cling {
   bool TransactionUnloader::unloadDeclarations(Transaction* T,
                                                DeclUnloader& DeclU) {
     bool Successful = true;
+    // Functions unloaded so far, together with everything nested in them.
+    llvm::SmallPtrSet<const DeclContext*, 16> UnloadedFunctions;
 
     for (Transaction::const_reverse_iterator I = T->rdecls_begin(),
            E = T->rdecls_end(); I != E; ++I) {
@@ -58,6 +62,15 @@ namespace cling {
 
       for (DeclGroupRef::const_iterator
              Di = DGR.end() - 1, E = DGR.begin() - 1; Di != E; --Di) {
+        // Function-local declarations, e.g. instantiations of the call
+        // operator of a generic lambda, are passed to the consumer before
+        // their enclosing function. Since we unload in reverse order, they
+        // were already removed together with the enclosing function.
+        if (auto* FD = dyn_cast<FunctionDecl>(*Di)) {
+          UnloadedFunctions.insert(FD);
+          if (UnloadedFunctions.count(FD->getParentFunctionOrMethod()))
+            continue;
+        }
         // Get rid of the declaration. If the declaration has name we should
         // heal the lookup tables as well
         Successful = DeclU.UnloadDecl(*Di) && Successful;
