@@ -31,6 +31,7 @@ PRIVATE
     src/JSONIOUtils.h
     src/JSONReadRecorder.h
     src/static_execute.h
+PUBLIC
   FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
     inc/RooFit/Detail/JSONInterface.h
     inc/RooFitHS3/JSONIO.h
