@@ -128,7 +128,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    int verbose = fgPrintLevel();
    // try to guess default configuration
    // (this part should be only in constructor because the null snapshot might change during HypoTestInversion
-   const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
+   std::unique_ptr<const RooArgSet> nullSnapshot{GetNullModel()->GetSnapshot()};
    assert(nullSnapshot);
    RooRealVar * muNull  = dynamic_cast<RooRealVar*>(nullSnapshot->first() );
    assert(muNull);
@@ -185,7 +185,7 @@ bool AsymptoticCalculator::Initialize() const {
 
 
    // This will set the poi value to the null snapshot value in the ModelConfig
-   const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
+   std::unique_ptr<const RooArgSet> nullSnapshot{GetNullModel()->GetSnapshot()};
    if(nullSnapshot == nullptr || nullSnapshot->empty()) {
       oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::Initialize - Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << std::endl;
       return false;
@@ -230,7 +230,7 @@ bool AsymptoticCalculator::Initialize() const {
    allParams->snapshot(fBestFitParams);
 
    // compute Asimov data set for the background (alt poi ) value
-   const RooArgSet * altSnapshot = GetAlternateModel()->GetSnapshot();
+   std::unique_ptr<const RooArgSet> altSnapshot{GetAlternateModel()->GetSnapshot()};
    if(altSnapshot == nullptr || altSnapshot->empty()) {
       oocoutE(nullptr,InputArguments) << "Alt (Background)  model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << std::endl;
       return false;
@@ -263,7 +263,7 @@ bool AsymptoticCalculator::Initialize() const {
       if (verbose >= 0)
          oocoutI(nullptr,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << std::endl;
       std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet *>(poiAlt.snapshot())};
-      fAsimovData = MakeAsimovData(data, *GetNullModel(), poiAlt, fAsimovGlobObs, tmp.get());
+      fAsimovData.reset(MakeAsimovData(data, *GetNullModel(), poiAlt, fAsimovGlobObs, tmp.get()));
    }
 
    else {
@@ -271,7 +271,7 @@ bool AsymptoticCalculator::Initialize() const {
       if (verbose >= 0)
          oocoutI(nullptr,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << std::endl;
       nominalParams.assign(poiAlt); // set poi to alt value but keep nuisance at the nominal one
-      fAsimovData = MakeAsimovData( *GetNullModel(), nominalParams, fAsimovGlobObs);
+      fAsimovData.reset(MakeAsimovData( *GetNullModel(), nominalParams, fAsimovGlobObs));
    }
 
    if (!fAsimovData) {
@@ -524,7 +524,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    // make conditional fit on null snapshot of poi
 
-   const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
+   std::unique_ptr<const RooArgSet> nullSnapshot{GetNullModel()->GetSnapshot()};
    assert(nullSnapshot && !nullSnapshot->empty());
 
    // use as POI the nullSnapshot
@@ -729,7 +729,8 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    if (!fOneSidedDiscovery) { // qtilde is not a discovery test
       if (fUseQTilde == -1 && !fOneSidedDiscovery) {
          // alternate snapshot is value for which background is zero (for limits)
-         RooRealVar * muAlt = dynamic_cast<RooRealVar*>(GetAlternateModel()->GetSnapshot()->first() );
+         std::unique_ptr<const RooArgSet> altSnapshot{GetAlternateModel()->GetSnapshot()};
+         RooRealVar * muAlt = dynamic_cast<RooRealVar*>(altSnapshot->first() );
          // null snapshot is value for which background is zero (for discovery)
          //RooRealVar * muNull = dynamic_cast<RooRealVar*>(GetNullModel()->GetSnapshot()->first() );
          assert(muAlt != nullptr );
