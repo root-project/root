@@ -5430,6 +5430,30 @@ def make_Slice_Indivisible_Step():
     return _model(graph, opset=19, ir_version=9, producer_name='Slice_Indivisible_Step')
 
 
+def make_Slice_DynDim():
+    """Ops: Slice on a parametric dimension with constant start/end that can
+    exceed the run-time size of that dimension"""
+    nodes = [
+        helper.make_node('Slice', ['x', 'starts', 'ends', 'axes'], ['y']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'Slice',
+        inputs=[
+            _vi('x', FLOAT, ['N', 4]),
+        ],
+        outputs=[
+            _vi('y', FLOAT, ['M', 4]),
+        ],
+        initializer=[
+            _tensor('starts', INT64, [1], [1]),
+            _tensor('ends', INT64, [1], [10]),
+            _tensor('axes', INT64, [1], [0]),
+        ],
+    )
+    return _model(graph, opset=19, ir_version=9, producer_name='Slice_DynDim')
+
+
 def make_Softmax1d():
     """Ops: Softmax"""
     nodes = [
@@ -6565,6 +6589,7 @@ MODELS = {
     "Slice_Default_Steps": make_Slice_Default_Steps,
     "Slice_Neg": make_Slice_Neg,
     "Slice_Indivisible_Step": make_Slice_Indivisible_Step,
+    "Slice_DynDim": make_Slice_DynDim,
     "SliceIdentityAlias": make_SliceIdentityAlias,
     "Softmax1d": make_Softmax1d,
     "Softmax2d": make_Softmax2d,
@@ -7822,6 +7847,7 @@ TEST_INPUTS = {
     "Slice_Default_Steps": [rand_f32(3, (20, 10, 5))],
     "Slice_Neg": [rand_f32(4, (20, 10, 5))],
     "Slice_Indivisible_Step": [rand_f32(5, (4, 5))],
+    "Slice_DynDim": [rand_f32(6, (3, 4))],
     "Softmax1d": [f32([-1.0, 0.0, 1.0], (3,))],
     "Softmax2d": [f32([-1.0, 0.0, 1.0], (1, 3))],
     "Softmax3d": [

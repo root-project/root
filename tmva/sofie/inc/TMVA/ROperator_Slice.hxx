@@ -221,15 +221,19 @@ public:
 
             fSteps[fAxes[i]] = Dim{size_t(istep)};
          } else {
-            //std::cout << i << " Param dim for " << fAxes[i] << "  " <<  fShapeInput[fAxes[i]] << std::endl;
-            // correct only negative values
+            // emit symbolic expressions that clamp input dimensions at run time
+            const std::string &pdim = fShapeInput[fAxes[i]].param;
             if (!fStartDims[i].isParam) {
                IType istart = static_cast<IType>(fStartDims[i].dim);
                if (istart < 0) {
-                  std::string sstart = std::string("(") + fShapeInput[fAxes[i]].param + "-" + std::to_string(-istart) +")";
-                  fStart[fAxes[i]] = Dim{sstart,size_t(-1)};
+                  // N - k, saturated at 0
+                  std::string k = std::to_string(-istart);
+                  fStart[fAxes[i]] = Dim{"(" + pdim + ">" + k + "?" + pdim + "-" + k + ":0)", size_t(-1)};
+               } else if (istart == 0) {
+                  fStart[fAxes[i]] = Dim{size_t(0)};
                } else {
-                 fStart[fAxes[i]] = Dim{size_t(istart)};
+                  std::string v = std::to_string(istart);
+                  fStart[fAxes[i]] = Dim{"(" + pdim + "<" + v + "?" + pdim + ":" + v + ")", size_t(-1)};
                }
             } else {
                fStart[fAxes[i]] = fStartDims[i];
@@ -237,12 +241,14 @@ public:
             if (!fEndDims[i].isParam) {
                IType iend = static_cast<IType>(fEndDims[i].dim);
                if (iend < 0) {
-                  std::string send = std::string("(") + fShapeInput[fAxes[i]].param + "-" + std::to_string(-iend) +")";
-                  fEnd[fAxes[i]] = Dim{send,size_t(-1)};
+                  // N - k, saturated at 0
+                  std::string k = std::to_string(-iend);
+                  fEnd[fAxes[i]] = Dim{"(" + pdim + ">" + k + "?" + pdim + "-" + k + ":0)", size_t(-1)};
                } else if (iend == std::numeric_limits<IType>::max()){
                   fEnd[fAxes[i]] = fShapeInput[fAxes[i]];
                } else {
-                 fEnd[fAxes[i]] = Dim{size_t(iend)};
+                  std::string v = std::to_string(iend);
+                  fEnd[fAxes[i]] = Dim{"(" + pdim + "<" + v + "?" + pdim + ":" + v + ")", size_t(-1)};
                }
             } else {
                fEnd[fAxes[i]] = fEndDims[i];
@@ -267,13 +273,13 @@ public:
          } else {
             std::string s;
             if (fStart[i].GetVal() != "0")
-               s = "(" + fEnd[i].GetVal() + "-" + fStart[i].GetVal() + ")";
+               s = "(" + fEnd[i].GetVal() + ">" + fStart[i].GetVal() + "?" + fEnd[i].GetVal() + "-" +
+                   fStart[i].GetVal() + ":0)";
             else
                s = fEnd[i].GetVal();
             if (fSteps[i].GetVal() != "1") {
                // ceil division, so that the output holds all the elements visited by the slice loop
-               s.insert(0,"(");
-               s += "+" + fSteps[i].GetVal() + "-1)/" + fSteps[i].GetVal() + ")";
+               s = "((" + s + "+" + fSteps[i].GetVal() + "-1)/" + fSteps[i].GetVal() + ")";
             }
             fShapeOutput[i] = Dim{s,size_t(-1)};
             // add also the shape parameters to RModel to declare them when
