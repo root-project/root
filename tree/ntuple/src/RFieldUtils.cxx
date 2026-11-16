@@ -566,6 +566,15 @@ bool ROOT::Internal::NeedsMetaNameAsAlias(const std::string &metaNormalizedName,
    return result;
 }
 
+void ROOT::Internal::EnsureTypedChildField(const RFieldBase &child, const RFieldBase &parent)
+{
+   if (child.GetTypeName().empty()) {
+      throw ROOT::RException(R__FAIL("field " + child.GetFieldName() +
+                                     " is untyped and cannot be used as an inner field of field " +
+                                     parent.GetQualifiedFieldName() + " [" + parent.GetTypeName() + "]"));
+   }
+}
+
 std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &origName)
 {
    const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(

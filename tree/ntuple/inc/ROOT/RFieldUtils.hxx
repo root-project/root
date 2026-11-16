@@ -45,6 +45,9 @@ std::string GetRenormalizedTypeName(const std::type_info &ti);
 bool NeedsMetaNameAsAlias(const std::string &metaNormalizedName, std::string &renormalizedAlias,
                           bool isArgInTemplatedUserClass = false /* used in recursion */);
 
+/// Makes sure that the type name is not empty. Used to prevent untyped fields as C++ inner types.
+void EnsureTypedChildField(const RFieldBase &child, const RFieldBase &parent);
+
 /// Applies all RNTuple type normalization rules except typedef resolution.
 std::string GetNormalizedUnresolvedTypeName(const std::string &origName);
 
