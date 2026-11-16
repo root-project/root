@@ -934,7 +934,8 @@ std::vector<double> contents(RooDataHist const &dataHist)
 struct ExportedChannel {
    std::string name;
    HS3::HistFactoryDist dist;
-   RooArgSet const *observables = nullptr;
+   // The variables of the first histogram, named after the observables of the channel.
+   std::unique_ptr<RooArgSet> observables;
    /// The pdfs that the modifiers name as constraints, by name.
    std::map<std::string, RooAbsPdf const *> constraints;
    std::vector<RooAbsReal *> customModifiers;
@@ -975,7 +976,8 @@ std::vector<double> binVolumes(RooRealSumPdf const &sumpdf)
 /// Whether a constant factor of a sample is the inverse bin width that HistFactory before ROOT 6.26 multiplied the
 /// samples with (a constant `RooRealVar` `binWidth_<observables>_<i>` in the coefficients of the `RooRealSumPdf`).
 /// `histfactory_dist` implies this factor, so it is not written as a modifier. It is identified by its structure, not
-/// by its name: a constant that is not floating in any snapshot, used only by the sum or the products of the channel,
+/// by its name: a constant that is not floating in any snapshot, used only by the sum or the products of the channel
+/// (among the objects of the workspace),
 /// with the inverse of the volume of the first bin, or of the average bin volume, of one of the histograms of the
 /// channel as value.
 bool isLegacyBinWidthFactor(RooAbsArg const &factor, RooRealSumPdf const &sumpdf, RooArgSet const &channelNodes,
@@ -996,11 +998,26 @@ bool isLegacyBinWidthFactor(RooAbsArg const &factor, RooRealSumPdf const &sumpdf
          }
       }
    }
+   // A channel whose observables are renamed (RooJSONFactoryWSTool::Config::renameCombinedObservables) is a clone
+   // made by RooCustomizer, which marks the cloned nodes with "ORIGNAME:<original>". The factor doesn't depend on the
+   // observables, so it is not cloned: the original sum and products of the channel are still its clients.
+   auto isOriginalOfChannelNode = [&](RooAbsArg const &client) {
+      const std::string attribute = std::string{"ORIGNAME:"} + client.GetName();
+      return sumpdf.getAttribute(attribute.c_str()) ||
+             std::any_of(channelNodes.begin(), channelNodes.end(),
+                         [&](RooAbsArg const *node) { return node->getAttribute(attribute.c_str()); });
+   };
    for (RooAbsArg const *client : factor.clients()) {
       const bool isChannelProduct = dynamic_cast<RooProduct const *>(client) && channelNodes.find(*client) == client;
-      if (client != &sumpdf && !isChannelProduct) {
-         return false;
+      if (client == &sumpdf || isChannelProduct || isOriginalOfChannelNode(*client)) {
+         continue;
       }
+      // Objects outside the workspace are no part of the model, e.g. the computation graph of a likelihood that was
+      // created from the model before the export.
+      if (ws && ws->arg(client->GetName()) != client) {
+         continue;
+      }
+      return false;
    }
    // The value was stored with 7 significant digits.
    const double value = static_cast<RooAbsReal const &>(factor).getVal();
@@ -1066,13 +1083,18 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
          normSys.push_back({sysname, {param.GetName()}, hi, lo, constraint(pdf), interpolation});
       };
 
-      auto updateObservables = [&](RooDataHist const &dataHist) {
+      auto updateObservables = [&](RooHistFunc const &histFunc) {
+         RooDataHist const &dataHist = histFunc.dataHist();
+         // The axes are named after the observables of the RooHistFunc, which are not necessarily the variables of
+         // its histogram (e.g. after a RooCustomizer replaced them).
+         auto varsPtr =
+            histogramVariablesNamedAfterObservables(dataHist, histFunc.getHistObsList(), histFunc.variables());
          if (channel.observables == nullptr) {
-            channel.observables = dataHist.get();
+            channel.observables = std::move(varsPtr);
          } else {
             // The bin contents of all samples are written in the order of the axes of the channel (the last axis
             // varies fastest), which is the order of the observables of the first histogram.
-            RooArgSet const &vars = *dataHist.get();
+            RooArgSet const &vars = *varsPtr;
             bool sameOrder = vars.size() == channel.observables->size();
             for (std::size_t i = 0; sameOrder && i < vars.size(); ++i) {
                sameOrder = std::string(vars[i]->GetName()) == (*channel.observables)[i]->GetName();
@@ -1123,7 +1145,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
                   normFactors.push_back({par->GetName(), {par->GetName()}, HS3::Unconstrained{}});
                }
             } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
-               updateObservables(hf->dataHist());
+               updateObservables(*hf);
             } else if (ParamHistFunc *phf = dynamic_cast<ParamHistFunc *>(e); phf && allRooRealVar(phf->paramList())) {
                phfs.push_back(phf);
             } else if (auto fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e)) {
@@ -1200,7 +1222,7 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
       // see if we can get the observables
       if (pip) {
          if (auto nh = dynamic_cast<RooHistFunc const *>(pip->nominalHist())) {
-            updateObservables(nh->dataHist());
+            updateObservables(*nh);
          }
       }
 
@@ -1416,7 +1438,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
 
    // Export all model parameters
    RooArgSet parameters;
-   sumpdf->getParameters(channel.observables, parameters);
+   sumpdf->getParameters(channel.observables.get(), parameters);
    for (RooAbsArg *param : parameters) {
       // This should exclude the global observables. The legacy inverse bin widths are not written at all.
       if (!startsWith(std::string{param->GetName()}, "nom_") && !channel.legacyBinWidthFactors.count(param)) {
