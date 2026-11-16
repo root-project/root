@@ -208,7 +208,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     OpenGL::GLU
     FTGL::FTGL
     gl2ps::gl2ps
-    Freetype::Freetype
     ZLIB::ZLIB
     ${X11_LIBRARIES}
     ROOTGlad
