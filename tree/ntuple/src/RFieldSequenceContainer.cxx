@@ -73,6 +73,7 @@ ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFiel
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {
+   Internal::EnsureTypedChildField(*itemField, *this);
    fTraits |= itemField->GetTraits() & ~kTraitMappable;
    if (!itemField->GetTypeAlias().empty()) {
       fTypeAlias = "std::array<" + itemField->GetTypeAlias() + "," +
@@ -197,6 +198,7 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
 {
+   Internal::EnsureTypedChildField(*itemField, *this);
    if (itemField->GetAlignment() > sizeof(std::max_align_t)) {
       // RVec uses operator new without alignment info
       throw RException(R__FAIL("RVec does not support over-aligned types"));
@@ -560,6 +562,7 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
 ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
    : RVectorField(fieldName, std::move(itemField), nullptr)
 {
+   Internal::EnsureTypedChildField(*fSubfields[0], *this);
 }
 
 std::unique_ptr<ROOT::RVectorField>
