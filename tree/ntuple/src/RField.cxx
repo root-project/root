@@ -783,6 +783,9 @@ ROOT::RBitsetField::RBitsetField(std::string_view fieldName, std::size_t N)
                       false /* isSimple */, N),
      fN(N)
 {
+   if (N == 0) {
+      throw RException(R__FAIL("invalid zero-length bitset field " + GetQualifiedFieldName()));
+   }
    fTraits |= kTraitTriviallyDestructible;
 }
 
