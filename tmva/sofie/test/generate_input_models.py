@@ -5406,6 +5406,30 @@ def make_Slice_Neg():
     return _model(graph, opset=19, ir_version=9, producer_name='Slice_Neg')
 
 
+def make_Slice_Indivisible_Step():
+    """Ops: Slice (step does not divide the sliced range)"""
+    nodes = [
+        helper.make_node('Slice', ['x', 'starts', 'ends', 'axes', 'steps'], ['y']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'Slice',
+        inputs=[
+            _vi('x', FLOAT, [4, 5]),
+        ],
+        outputs=[
+            _vi('y', FLOAT, [4, 3]),
+        ],
+        initializer=[
+            _tensor('starts', INT64, [1], [0]),
+            _tensor('ends', INT64, [1], [5]),
+            _tensor('axes', INT64, [1], [1]),
+            _tensor('steps', INT64, [1], [2]),
+        ],
+    )
+    return _model(graph, opset=19, ir_version=9, producer_name='Slice_Indivisible_Step')
+
+
 def make_Softmax1d():
     """Ops: Softmax"""
     nodes = [
@@ -6540,6 +6564,7 @@ MODELS = {
     "Slice_Default_Axis": make_Slice_Default_Axis,
     "Slice_Default_Steps": make_Slice_Default_Steps,
     "Slice_Neg": make_Slice_Neg,
+    "Slice_Indivisible_Step": make_Slice_Indivisible_Step,
     "SliceIdentityAlias": make_SliceIdentityAlias,
     "Softmax1d": make_Softmax1d,
     "Softmax2d": make_Softmax2d,
@@ -7796,6 +7821,7 @@ TEST_INPUTS = {
     "Slice_Default_Axis": [rand_f32(2, (20, 10, 5))],
     "Slice_Default_Steps": [rand_f32(3, (20, 10, 5))],
     "Slice_Neg": [rand_f32(4, (20, 10, 5))],
+    "Slice_Indivisible_Step": [rand_f32(5, (4, 5))],
     "Softmax1d": [f32([-1.0, 0.0, 1.0], (3,))],
     "Softmax2d": [f32([-1.0, 0.0, 1.0], (1, 3))],
     "Softmax3d": [
