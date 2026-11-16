@@ -3845,8 +3845,9 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
       ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
       // We include the missing headers to fix the module for the user.
       std::vector<std::string> missingHeaders;
-      std::transform(missingHdrMod.begin(), missingHdrMod.end(), missingHeaders.begin(),
-                     [](const std::array<std::string, 2>& HdrMod) { return HdrMod[0];});
+      missingHeaders.reserve(missingHdrMod.size());
+      std::transform(missingHdrMod.begin(), missingHdrMod.end(), std::back_inserter(missingHeaders),
+                     [](const std::array<std::string, 2> &HdrMod) { return HdrMod[0]; });
       if (!IncludeHeaders(missingHeaders, interpreter)) {
          ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
                                  module->Name.c_str());
