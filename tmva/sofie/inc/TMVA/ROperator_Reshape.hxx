@@ -231,20 +231,23 @@ public:
       else if (fOpMode == Unsqueeze) {
          // unsqueeze
          assert(!fAttrAxes.empty());
-         auto output_shape = input_shape;
-         auto &axes = fAttrAxes;
+         // axes refer to positions in the output tensor and can be given in any order:
+         // normalize negative values, sort them and insert in increasing order
+         auto axes = fAttrAxes;
          // output rank
          int64_t r = input_shape.size() + axes.size();
          for (auto &a : axes) {
-            int64_t i = static_cast<int64_t>(a);
-            if (i < -r || i > r - 1)
+            if (a < -r || a > r - 1)
                throw std::runtime_error("TMVA Unsqueeze Op - axes input is not in correct range");
-            if (i >= 0)
-               output_shape.insert(output_shape.begin() + i, Dim{1});
-            else
-               // negative axes
-               output_shape.insert(output_shape.end() + i + 1, Dim{1});
+            if (a < 0)
+               a += r;
          }
+         std::sort(axes.begin(), axes.end());
+         if (std::adjacent_find(axes.begin(), axes.end()) != axes.end())
+            throw std::runtime_error("TMVA Unsqueeze Op - axes input contains duplicate values");
+         auto output_shape = input_shape;
+         for (auto a : axes)
+            output_shape.insert(output_shape.begin() + a, Dim{1});
          return output_shape;
       }
       throw std::runtime_error("TMVA Reshape Op : Invalid ReshapeOpMode");

@@ -2367,6 +2367,33 @@ TEST(ONNX, AliasChainSingle)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, UnsqueezeUnsortedAxes)
+{
+   SofieReference ref = readReference("UnsqueezeUnsortedAxes");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "UnsqueezeUnsortedAxes", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, UnsqueezeNegativeAxes)
+{
+   SofieReference ref = readReference("UnsqueezeNegativeAxes");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "UnsqueezeNegativeAxes", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, UnsqueezeAxesAttribute)
+{
+   SofieReference ref = readReference("UnsqueezeAxesAttribute");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "UnsqueezeAxesAttribute", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, AliasDynShape)
 {
    SofieReference ref = readReference("AliasDynShape");
