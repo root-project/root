@@ -357,31 +357,47 @@ public:
          return;
       }
 
-      const std::string leafType = sizeLeaf->GetTypeName();
+      SetSizeReader(*treeReader, *sizeLeaf, foundLeafName.c_str());
+   }
+
+   /// Read the size from the given size leaf. `sizeBranchName` is the full name of the size branch, used to
+   /// create the size reader; unlike the constructor above, this does not search the tree for the leaf by name.
+   template <class... ARGS>
+   TDynamicArrayReader(TTreeReader *treeReader, TLeaf *sizeLeaf, const char *sizeBranchName, ARGS &&...args)
+      : BASE(std::forward<ARGS>(args)...)
+   {
+      SetSizeReader(*treeReader, *sizeLeaf, sizeBranchName);
+   }
+
+private:
+   void SetSizeReader(TTreeReader &treeReader, TLeaf &sizeLeaf, const char *sizeBranchName)
+   {
+      const std::string leafType = sizeLeaf.GetTypeName();
       if (leafType == "Int_t") {
-         fSizeReader.reset(new TSizeReaderImpl<Int_t>(*treeReader, foundLeafName.c_str()));
+         fSizeReader.reset(new TSizeReaderImpl<Int_t>(treeReader, sizeBranchName));
       } else if (leafType == "UInt_t") {
-         fSizeReader.reset(new TSizeReaderImpl<UInt_t>(*treeReader, foundLeafName.c_str()));
+         fSizeReader.reset(new TSizeReaderImpl<UInt_t>(treeReader, sizeBranchName));
       } else if (leafType == "Short_t") {
-         fSizeReader.reset(new TSizeReaderImpl<Short_t>(*treeReader, foundLeafName.c_str()));
+         fSizeReader.reset(new TSizeReaderImpl<Short_t>(treeReader, sizeBranchName));
       } else if (leafType == "UShort_t") {
-         fSizeReader.reset(new TSizeReaderImpl<UShort_t>(*treeReader, foundLeafName.c_str()));
+         fSizeReader.reset(new TSizeReaderImpl<UShort_t>(treeReader, sizeBranchName));
       } else if (leafType == "Long_t") {
-         fSizeReader.reset(new TSizeReaderImpl<Long_t>(*treeReader, foundLeafName.c_str()));
+         fSizeReader.reset(new TSizeReaderImpl<Long_t>(treeReader, sizeBranchName));
       } else if (leafType == "ULong_t") {
-         fSizeReader.reset(new TSizeReaderImpl<ULong_t>(*treeReader, foundLeafName.c_str()));
+         fSizeReader.reset(new TSizeReaderImpl<ULong_t>(treeReader, sizeBranchName));
       } else if (leafType == "Long64_t") {
-         fSizeReader.reset(new TSizeReaderImpl<Long64_t>(*treeReader, foundLeafName.c_str()));
+         fSizeReader.reset(new TSizeReaderImpl<Long64_t>(treeReader, sizeBranchName));
       } else if (leafType == "ULong64_t") {
-         fSizeReader.reset(new TSizeReaderImpl<ULong64_t>(*treeReader, foundLeafName.c_str()));
+         fSizeReader.reset(new TSizeReaderImpl<ULong64_t>(treeReader, sizeBranchName));
       } else {
          Error("TDynamicArrayReader ",
                "Unsupported size type for leaf %s. Supported types are int, short int, long int, long long int and "
                "their unsigned counterparts.",
-               leafName);
+               sizeBranchName);
       }
    }
 
+public:
    size_t GetSize(ROOT::Detail::TBranchProxy * /*proxy*/) override { return fSizeReader->GetSize(); }
 };
 
@@ -389,6 +405,14 @@ class TArrayParameterSizeReader : public TDynamicArrayReader<TObjectArrayReader>
 public:
    TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName)
       : TDynamicArrayReader<TObjectArrayReader>(treeReader, branchName)
+   {
+   }
+
+   /// Use the counter branch directly: its short name ("fN") can match the counter of another
+   /// top-level branch when the top-level branch names have no trailing dot.
+   TArrayParameterSizeReader(TTreeReader *treeReader, TBranchElement *sizeBranch)
+      : TDynamicArrayReader<TObjectArrayReader>(treeReader, static_cast<TLeaf *>(sizeBranch->GetListOfLeaves()->At(0)),
+                                                sizeBranch->GetFullName().Data())
    {
    }
 };
@@ -922,8 +946,7 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch *branch, TLeaf *myLea
                fImpl = std::make_unique<TArrayFixedSizeReader>(element->GetArrayLength());
             }
          } else if (element->IsA() == TStreamerLoop::Class()) {
-            fImpl =
-               std::make_unique<TArrayParameterSizeReader>(fTreeReader, branchElement->GetBranchCount()->GetName());
+            fImpl = std::make_unique<TArrayParameterSizeReader>(fTreeReader, branchElement->GetBranchCount());
          } else if (element->IsA() == TStreamerBasicType::Class()) {
             if (branchElement->GetType() == TBranchElement::kSTLMemberNode) {
                fImpl = std::make_unique<TBasicTypeArrayReader>();
@@ -937,8 +960,7 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch *branch, TLeaf *myLea
                ((TObjectArrayReader *)fImpl.get())->SetBasicTypeSize(((TDataType *)fDict)->Size());
             }
          } else if (element->IsA() == TStreamerBasicPointer::Class()) {
-            fImpl =
-               std::make_unique<TArrayParameterSizeReader>(fTreeReader, branchElement->GetBranchCount()->GetName());
+            fImpl = std::make_unique<TArrayParameterSizeReader>(fTreeReader, branchElement->GetBranchCount());
             ((TArrayParameterSizeReader *)fImpl.get())->SetBasicTypeSize(((TDataType *)fDict)->Size());
          } else if (element->IsA() == TStreamerBase::Class()) {
             fImpl = std::make_unique<TClonesReader>();
