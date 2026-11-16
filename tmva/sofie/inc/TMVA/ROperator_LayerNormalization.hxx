@@ -219,13 +219,16 @@ public:
       }
       if (scaleIndex.empty()) scaleIndex = "0";
 
-      auto biasStrides = UTILITY::ComputeStrideFromShape(fShapeB);
+      // the bias is optional: fShapeB is empty when there is no bias input
       std::string biasIndex;
-      for (size_t i = 0; i < fSize; i++) {
-         if (fShapeB[i].dim != 1) {
-            if (!biasIndex.empty()) biasIndex += " + ";
-            biasIndex += "axis_" + std::to_string(i);
-            if ( biasStrides[i].dim != 1) biasIndex +=  " * " + biasStrides[i].GetVal();
+      if (!fNB.empty()) {
+         auto biasStrides = UTILITY::ComputeStrideFromShape(fShapeB);
+         for (size_t i = 0; i < fSize; i++) {
+            if (fShapeB[i].dim != 1) {
+               if (!biasIndex.empty()) biasIndex += " + ";
+               biasIndex += "axis_" + std::to_string(i);
+               if ( biasStrides[i].dim != 1) biasIndex +=  " * " + biasStrides[i].GetVal();
+            }
          }
       }
       if (biasIndex.empty()) biasIndex = "0";
