@@ -1,0 +1,4 @@
+<lcgdict>
+   <enum pattern="gh_24176::ns::*" />
+   <variable pattern="gh_24176::ns::*" />
+</lcgdict>
