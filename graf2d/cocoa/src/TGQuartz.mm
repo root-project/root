@@ -578,11 +578,17 @@ void TGQuartz::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle 
       const Int_t xo = x1 < 0 ? -x1 : 0;
       const Int_t yo = y1 < 0 ? -y1 : 0;
 
+      // while readColorBits returns RGBA coding swap values back before set pixel
+      unsigned char swap_pixel[3];
+
       for (int yp = 0; yp < int(bbox.fHeight) && yo + yp < h; ++yp) {
          const unsigned char *srcBase = arrayGuard.Get() + bbox.fWidth * yp * 4;
          for (int xp = 0; xp < int(bbox.fWidth) && xo + xp < w; ++xp) {
             const unsigned char * const pixel = srcBase + xp * 4;
-            [pixmap.Get() putPixel : pixel X : xo + xp Y : yo + yp];
+            swap_pixel[2] = pixel[0];
+            swap_pixel[1] = pixel[1];
+            swap_pixel[0] = pixel[2];
+            [pixmap.Get() putPixel : swap_pixel X : xo + xp Y : yo + yp];
          }
       }
    } else {
