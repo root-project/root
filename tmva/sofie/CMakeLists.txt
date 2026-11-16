@@ -55,6 +55,7 @@ set(TMVASOFIE_EXTRA_HEADERS
   TMVA/ROperator_PRelu.hxx
   TMVA/ROperator_Pad.hxx
   TMVA/ROperator_Pool.hxx
+  TMVA/ROperator_RMSNormalization.hxx
   TMVA/ROperator_RNN.hxx
   TMVA/ROperator_Random.hxx
   TMVA/ROperator_Range.hxx

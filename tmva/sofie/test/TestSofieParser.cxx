@@ -223,6 +223,49 @@ std::string GeneratePReluCode(const std::string &fileName, const TestTensor &x, 
    return code.str();
 }
 
+// Write a model holding a single RMSNormalization node (opset 23) and return the
+// code SOFIE generates for it. The scale is a graph input like X.
+std::string GenerateRMSNormalizationCode(const std::string &fileName, const TestTensor &x, const TestTensor &scale,
+                                         std::int64_t axis = -1)
+{
+   std::string axisAttr;
+   AppendBytesField(axisAttr, 1, "axis");                            // name
+   AppendVarintField(axisAttr, 3, static_cast<std::uint64_t>(axis)); // i
+   AppendVarintField(axisAttr, 20, 2);                               // type = INT
+
+   std::string node;
+   AppendBytesField(node, 1, x.name);             // input
+   AppendBytesField(node, 1, scale.name);         // input
+   AppendBytesField(node, 2, "y");                // output
+   AppendBytesField(node, 3, "rmsnorm_0");        // name
+   AppendBytesField(node, 4, "RMSNormalization"); // op_type
+   AppendBytesField(node, 5, axisAttr);           // attribute
+
+   std::string graph;
+   AppendBytesField(graph, 1, node);                           // node
+   AppendBytesField(graph, 2, "test_graph");                   // name
+   AppendBytesField(graph, 11, FloatValueInfo(x));             // input
+   AppendBytesField(graph, 11, FloatValueInfo(scale));         // input
+   AppendBytesField(graph, 12, FloatValueInfo({"y", x.dims})); // output
+
+   std::string opset;
+   AppendVarintField(opset, 2, 23); // version
+   std::string model;
+   AppendVarintField(model, 1, 11);   // ir_version
+   AppendBytesField(model, 7, graph); // graph
+   AppendBytesField(model, 8, opset); // opset_import
+
+   std::ofstream file(fileName, std::ios::binary);
+   file.write(model.data(), model.size());
+   file.close();
+
+   RModel rmodel = RModelParser_ONNX{}.Parse(fileName);
+   rmodel.Generate(Options::kNoWeightFile);
+   std::ostringstream code;
+   rmodel.PrintGenerated(code);
+   return code.str();
+}
+
 } // namespace
 
 // The "location" key of a tensor's external_data names the data file relative
@@ -365,4 +408,28 @@ TEST(SOFIEParser, PReluIndexesAPerChannelSlopeWithoutExpandingIt)
       GeneratePReluCode("prelu_channel.onnx", {"x", {"1", "3", "2", "2"}}, {"slope", {"3", "1", "1"}});
 
    EXPECT_NE(code.find("tensor_slope[(id / 4) % 3]"), std::string::npos);
+}
+
+// A scale that does not match the normalized shape of X is an error, not a
+// silent out-of-bounds read in the generated code.
+TEST(SOFIEParser, RMSNormalizationWithNonBroadcastableScaleThrows)
+{
+   EXPECT_THROW(GenerateRMSNormalizationCode("rmsnorm_bad_scale.onnx", {"x", {"2", "3", "4"}}, {"scale", {"3"}}),
+                std::runtime_error);
+}
+
+TEST(SOFIEParser, RMSNormalizationWithOutOfRangeAxisThrows)
+{
+   EXPECT_THROW(GenerateRMSNormalizationCode("rmsnorm_bad_axis.onnx", {"x", {"2", "3"}}, {"scale", {"3"}}, /*axis=*/2),
+                std::runtime_error);
+}
+
+// A scale broadcast along a normalized axis is indexed in place: for X [2,3,4]
+// normalized over the last two axes, a [1,4] scale is read with axis_2 only.
+TEST(SOFIEParser, RMSNormalizationIndexesABroadcastScaleWithoutExpandingIt)
+{
+   const std::string code = GenerateRMSNormalizationCode("rmsnorm_broadcast_scale.onnx", {"x", {"2", "3", "4"}},
+                                                         {"scale", {"1", "4"}}, /*axis=*/-2);
+
+   EXPECT_NE(code.find("tensor_scale[axis_2]"), std::string::npos);
 }

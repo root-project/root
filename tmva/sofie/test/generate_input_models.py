@@ -319,6 +319,44 @@ def make_PRelu_Scalar():
     return _prelu_model("prelu_scalar_test", [2, 3], [1], [0.25])
 
 
+def _rmsnorm_model(name, x_shape, scale_shape, scale_vals, **attrs):
+    """RMSNormalization (opset 23) on a float tensor X with the scale given as an initializer."""
+    nodes = [
+        helper.make_node("RMSNormalization", ["X", "Scale"], ["Y"], **attrs),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        name,
+        inputs=[
+            _vi("X", FLOAT, x_shape),
+        ],
+        outputs=[
+            _vi("Y", FLOAT, x_shape),
+        ],
+        initializer=[
+            _tensor("Scale", FLOAT, scale_shape, scale_vals),
+        ],
+    )
+    return _model(graph, opset=23, ir_version=11)
+
+
+def make_RMSNormalization():
+    """Ops: RMSNormalization (default attributes, normalized over the last axis)"""
+    return _rmsnorm_model("rmsnorm_test", [2, 3, 4], [4], [0.5, -1.0, 1.5, 2.0])
+
+
+def make_RMSNormalization_Axis():
+    """Ops: RMSNormalization (axis=2 on a 4d input, scale over the two normalized axes, custom epsilon)"""
+    return _rmsnorm_model(
+        "rmsnorm_axis_test", [2, 3, 4, 5], [4, 5], np.linspace(-1.0, 1.0, 20).tolist(), axis=2, epsilon=1e-2
+    )
+
+
+def make_RMSNormalization_BroadcastScale():
+    """Ops: RMSNormalization (axis=-2, scale broadcast along the first normalized axis)"""
+    return _rmsnorm_model("rmsnorm_broadcast_test", [2, 3, 4], [1, 4], [1.0, 0.5, -0.5, 2.0], axis=-2)
+
+
 def make_AveragePool1d_CeilMode_Overhang():
     """Ops: AveragePool"""
     nodes = [
@@ -6384,6 +6422,9 @@ MODELS = {
     "Pad": make_Pad,
     "Pow": make_Pow,
     "Pow_broadcast": make_Pow_broadcast,
+    "RMSNormalization": make_RMSNormalization,
+    "RMSNormalization_Axis": make_RMSNormalization_Axis,
+    "RMSNormalization_BroadcastScale": make_RMSNormalization_BroadcastScale,
     "RNNBatchwise": make_RNNBatchwise,
     "RNNBidirectional": make_RNNBidirectional,
     "RNNBidirectionalBatchwise": make_RNNBidirectionalBatchwise,
@@ -7519,6 +7560,9 @@ TEST_INPUTS = {
         f32([1.0, 2.0, 3.0, 3.0, 4.0, 5.0], (1, 2, 3)),
         f32([2.0, 3.0, 4.0, 2.0, 3.0, 4.0], (2, 3)),
     ],
+    "RMSNormalization": [f32(np.arange(-12, 12) / 4, (2, 3, 4))],
+    "RMSNormalization_Axis": [f32(np.sin(np.arange(120)), (2, 3, 4, 5))],
+    "RMSNormalization_BroadcastScale": [f32(np.arange(-12, 12) / 4, (2, 3, 4))],
     "RNNBatchwise": [f32(np.arange(1.0, 7.0), (3, 1, 2))],
     "RNNBidirectional": [
         f32(

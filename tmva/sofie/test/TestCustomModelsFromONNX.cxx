@@ -683,6 +683,33 @@ TEST(ONNX, PRelu_Scalar)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, RMSNormalization)
+{
+   SofieReference ref = readReference("RMSNormalization");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "RMSNormalization", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, RMSNormalization_Axis)
+{
+   SofieReference ref = readReference("RMSNormalization_Axis");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "RMSNormalization_Axis", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, RMSNormalization_BroadcastScale)
+{
+   SofieReference ref = readReference("RMSNormalization_BroadcastScale");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "RMSNormalization_BroadcastScale", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 // Elu on a tensor whose first dimension is only known at run time.
 TEST(ONNX, EluDynShape)
 {

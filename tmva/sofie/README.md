@@ -133,6 +133,7 @@ std::vector<std::string> supportedOperators = parser.GetRegisteredOperators();
 - [x] PRelu
 - [x] Pad
 - [x] Pow
+- [x] RMSNormalization
 - [x] RNN
 - [x] RandomNormal
 - [x] RandomNormalLike
