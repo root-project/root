@@ -106,6 +106,7 @@ TEST(TBranchElementBranchCount, UnprefixedBasicPointer)
    auto tree = file.Get<TTree>("t");
    ASSERT_NE(tree, nullptr);
    ExpectOwnCounter(*tree, "b", "b.fX");
+   ExpectReaderValues(*tree, "b.fX");
    ExpectDrawRows(*tree, "b.fX", 3);
 }
 
@@ -118,6 +119,14 @@ TEST(TBranchElementBranchCount, UnprefixedObjectArray)
    auto tree = file.Get<TTree>("t");
    ASSERT_NE(tree, nullptr);
    ExpectOwnCounter(*tree, "b", "b.fH");
+   {
+      TTreeReader reader(tree);
+      TTreeReaderArray<BCHit> hits(reader, "b.fH");
+      ASSERT_TRUE(reader.Next());
+      ASSERT_EQ(hits.GetSize(), 3u);
+      for (std::size_t i = 0; i < 3; ++i)
+         EXPECT_DOUBLE_EQ(hits[i].fE, i);
+   }
 }
 
 TEST(TBranchElementBranchCount, UnprefixedEmbeddedMember)
@@ -129,6 +138,7 @@ TEST(TBranchElementBranchCount, UnprefixedEmbeddedMember)
    auto tree = file.Get<TTree>("t");
    ASSERT_NE(tree, nullptr);
    ExpectOwnCounter(*tree, "b", "b.fV.fX");
+   ExpectReaderValues(*tree, "b.fV.fX");
    ExpectDrawRows(*tree, "b.fV.fX", 3);
 }
 
