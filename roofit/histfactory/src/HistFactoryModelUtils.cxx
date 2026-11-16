@@ -7,6 +7,7 @@
 #include <typeinfo>
 
 #include "RooStats/HistFactory/ParamHistFunc.h"
+#include "RooRealSumPdf.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
@@ -41,10 +42,10 @@ namespace HistFactory{
     bool FoundSumPdf=false;
     std::unique_ptr<RooArgSet> components{sim_channel->getComponents()};
     for (auto *sum_pdf_arg : *components) {
-        std::string NodeClassName = sum_pdf_arg->ClassName();
-        if( NodeClassName == std::string("RooRealSumPdf") ) {
+        // Also finds a RooHistFactoryPdf, which is a RooRealSumPdf of its samples
+        if (auto *sumPdf = dynamic_cast<RooRealSumPdf *>(sum_pdf_arg)) {
             FoundSumPdf=true;
-           sum_pdf = static_cast<RooAbsPdf*>(sum_pdf_arg);
+           sum_pdf = sumPdf;
         break;
       }
     }

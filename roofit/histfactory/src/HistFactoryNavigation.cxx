@@ -788,10 +788,10 @@ namespace RooStats {
    // the "unconstrained" pdf node for that channel
    std::unique_ptr<RooArgSet> comps{pdf->getComponents()};
     for (auto *arg : *comps) {
-      std::string ClassName = arg->ClassName();
-      if( ClassName == "RooRealSumPdf" ) {
-         fChannelSumNodeMap[ChannelName] = static_cast <RooRealSumPdf*>(arg);
-      break;
+      // Also finds a RooHistFactoryPdf, which is a RooRealSumPdf of its samples
+      if (auto *sumPdf = dynamic_cast<RooRealSumPdf *>(arg)) {
+         fChannelSumNodeMap[ChannelName] = sumPdf;
+         break;
       }
     }
   }

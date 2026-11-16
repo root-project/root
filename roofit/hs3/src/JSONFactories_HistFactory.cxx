@@ -17,6 +17,8 @@
 #include <RooStats/HistFactory/Detail/HistFactoryImpl.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
+#include <RooStats/HistFactory/RooHistFactoryPdf.h>
+#include <RooStats/HistFactory/RooHistFactorySample.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooConstVar.h>
 #include <RooRealVar.h>
@@ -393,13 +395,10 @@ void configureGammasWithConstraints(RooArgList const &gammas, std::vector<double
    configureConstrainedGammas(constrainedGammas, constrainedSigmas, minSigma);
 }
 
-// Create the ParamHistFunc of the gamma parameters, together with their constraints. With a constraint type, RooFit
-// creates the constraints of the gammas from their relative uncertainties `vals`, like HistFactory.
-ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname, std::string const &sysname,
-                         std::vector<HS3::ParameterRef> const &parnames, std::vector<double> const &vals,
-                         HS3::GammaConstraint const &constraint, RooArgSet &constraints, RooArgSet const &observables,
-                         double gammaMax, double minSigma, std::size_t nBins, std::string const &context,
-                         bool configureGammas = true)
+// The gamma parameters of a modifier that scales each bin, in the order of the bins (last axis fastest).
+RooArgList createGammas(RooJSONFactoryWSTool &tool, std::string const &sysname,
+                        std::vector<HS3::ParameterRef> const &parnames, RooArgSet const &observables, double gammaMax,
+                        std::size_t nBins)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -411,9 +410,28 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
       gammas.add(existing ? *existing : getOrCreate<RooRealVar>(ws, name, 1., defaultGammaMin, gammaMax));
    }
 
+   // Documents before HS3 0.3 didn't define the order of the parameters of multi-dimensional modifiers.
+   checkParamHistFuncOrderIsDefined(tool.hs3Version(), observables, "the modifier '" + sysname + "'");
+   return gammas;
+}
+
+void constrainGammas(RooJSONFactoryWSTool &tool, std::string const &sysname, RooArgList const &gammas,
+                     std::vector<double> const &vals, HS3::GammaConstraint const &constraint, RooArgSet &constraints,
+                     double minSigma, std::string const &context, bool configureGammas);
+
+// Create the ParamHistFunc of the gamma parameters, together with their constraints, see constrainGammas().
+ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname, std::string const &sysname,
+                         std::vector<HS3::ParameterRef> const &parnames, std::vector<double> const &vals,
+                         HS3::GammaConstraint const &constraint, RooArgSet &constraints, RooArgSet const &observables,
+                         double gammaMax, double minSigma, std::size_t nBins, std::string const &context,
+                         bool configureGammas = true)
+{
+   RooWorkspace &ws = *tool.workspace();
+
+   RooArgList gammas = createGammas(tool, sysname, parnames, observables, gammaMax, nBins);
+
    // The gammas and `vals` are given in the order of HS3 (last axis fastest), which is also the order in which they
    // are paired below. ParamHistFunc expects its parameters in TH1 order.
-   checkParamHistFuncOrderIsDefined(tool.hs3Version(), observables, "the modifier '" + sysname + "'");
    RooArgList gammasInTH1Order = toParamHistFuncOrder(gammas, observables);
 
    // Shape modifiers of the same name in a channel share the function, so they need the same parameters.
@@ -427,6 +445,17 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
    }
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammasInTH1Order);
 
+   constrainGammas(tool, sysname, gammas, vals, constraint, constraints, minSigma, context, configureGammas);
+
+   return phf;
+}
+
+// Create the constraints of the gamma parameters. With a constraint type, RooFit creates them from the relative
+// uncertainties `vals`, like HistFactory.
+void constrainGammas(RooJSONFactoryWSTool &tool, std::string const &sysname, RooArgList const &gammas,
+                     std::vector<double> const &vals, HS3::GammaConstraint const &constraint, RooArgSet &constraints,
+                     double minSigma, std::string const &context, bool configureGammas)
+{
    auto addGammaConstraints = [&](Constraint::Type type) {
       for (auto const &term : createGammaConstraints(gammas, vals, minSigma, type).constraints) {
          constraints.add(tool.wsImport(*term));
@@ -451,7 +480,7 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
    }
 
    if (vals.empty()) {
-      return phf;
+      return;
    }
 
    std::visit(HS3::overloaded{
@@ -478,8 +507,6 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
                  },
               },
               constraint);
-
-   return phf;
 }
 
 // The relative uncertainty that the constraint distribution of a gamma encodes, see gammaRelUncertainty(). Constraints
@@ -657,6 +684,134 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample)
    } else {
       ws.factory("RooConstVar::" + newName(prefixedName + "_scaleFactors") + "(1.)");
    }
+}
+
+// Collects the bin contents and modifiers of a sample for a RooHistFactorySample, creating the parameters and their
+// constraints like buildSample().
+RooHistFactorySample::Spec buildSampleSpec(ChannelContext const &ctx, HS3::Sample const &sample,
+                                           RooArgList const &statGammas, std::map<std::string, RooArgList> &shapeGammas)
+{
+   using BinFactorType = RooHistFactorySample::BinFactorType;
+
+   RooJSONFactoryWSTool &tool = ctx.tool;
+   std::string const &sampleName = sample.name;
+
+   RooHistFactorySample::Spec spec;
+   spec.sampleName = sampleName;
+   spec.contents = sample.contents;
+   if (sample.errors) {
+      spec.errors = *sample.errors;
+   }
+
+   // The validation made sure that the channel has a "default_interpolation" if a modifier doesn't give its own.
+   auto interpolationCode = [&](std::optional<Interpolation> const &interpolation,
+                                InterpolationClass interpolationClass, const char *type, std::string const &name) {
+      return codeFromInterpolation(interpolation ? *interpolation : ctx.dist.defaultInterpolation.value(),
+                                   interpolationClass,
+                                   std::string("interpolation for ") + type + " modifier '" + name + "' in sample '" +
+                                      sampleName + "' of channel '" + ctx.channelName + "'");
+   };
+
+   // Like in buildSample(), the parameters of the staterror come first.
+   for (HS3::Modifier const &modifier : sample.modifiers) {
+      if (auto const *statError = std::get_if<HS3::StatError>(&modifier)) {
+         spec.binFactors.push_back({statError->name, BinFactorType::StatError, statGammas});
+         break;
+      }
+   }
+
+   for (HS3::Modifier const &modifier : sample.modifiers) {
+      std::visit(
+         HS3::overloaded{
+            [&](HS3::StatError const &) {
+               // see above
+            },
+            [&](HS3::NormFactor const &mod) {
+               RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 1., -3, 5, mod.name);
+               // Like in buildSample(), an error that is already set is kept.
+               if (auto *var = dynamic_cast<RooRealVar *>(&param); var && !var->hasError()) {
+                  var->setError(0.0);
+               }
+               spec.normFactors.push_back({mod.name, &param});
+               // for norm factors, constraints are optional
+               addConstraint(tool, mod.constraint, param, 1.0, "normfactor", mod.name, sampleName, ctx.constraints);
+            },
+            [&](HS3::NormSys const &mod) {
+               RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
+               const int interp =
+                  interpolationCode(mod.interpolation, InterpolationClass::Flexible, "normsys", mod.name);
+               double low = mod.lo;
+               double high = mod.hi;
+               // The same cutoff of variations below zero as in buildSample().
+               if (interp == 4 && low <= 0)
+                  low = std::numeric_limits<double>::epsilon();
+               if (interp == 4 && high <= 0)
+                  high = std::numeric_limits<double>::epsilon();
+               spec.normSys.push_back({mod.name, &param, low, high, interp});
+               addSysConstraint(tool, mod.constraint, param, "normsys", mod.name, sampleName, ctx.constraints);
+            },
+            [&](HS3::HistoSys const &mod) {
+               RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
+               spec.histoSys.push_back(
+                  {mod.name, &param, mod.lo.contents, mod.hi.contents,
+                   interpolationCode(mod.interpolation, InterpolationClass::Piecewise, "histosys", mod.name)});
+               addSysConstraint(tool, mod.constraint, param, "histosys", mod.name, sampleName, ctx.constraints);
+            },
+            [&](HS3::ShapeSys const &mod) {
+               const bool constrained = std::visit(
+                  HS3::overloaded{[](HS3::Unconstrained) { return false; }, [](HS3::ConstantGammas) { return false; },
+                                  [&](HS3::ConstraintType) { return !mod.vals.empty(); },
+                                  [](HS3::GammaConstraintPdfs const &constraints) { return anyNamed(constraints); }},
+                  mod.constraint);
+               RooArgList gammas = createGammas(tool, mod.name, mod.parameters, ctx.observables,
+                                                defaultShapeSysGammaMax, sample.contents.size());
+               // Shape modifiers of the same name in a channel share their parameters.
+               auto found = shapeGammas.find(mod.name);
+               if (found == shapeGammas.end()) {
+                  shapeGammas.emplace(mod.name, gammas);
+               } else {
+                  bool same = found->second.size() == gammas.size();
+                  for (std::size_t i = 0; same && i < gammas.size(); ++i) {
+                     same = &found->second[i] == &gammas[i];
+                  }
+                  if (!same) {
+                     RooJSONFactoryWSTool::error("the modifier '" + mod.name + "' has other parameters than another " +
+                                                 "modifier of this name in the channel");
+                  }
+               }
+               constrainGammas(tool, mod.name, gammas, mod.vals, mod.constraint, ctx.constraints, minShapeUncertainty,
+                               "the shapesys modifier '" + mod.name + "' of sample '" + sampleName + "'",
+                               /*configureGammas=*/true);
+               spec.binFactors.push_back(
+                  {mod.name, constrained ? BinFactorType::ShapeSys : BinFactorType::ShapeFactor, gammas});
+            },
+            [&](HS3::CustomModifier const &mod) {
+               // The function can come later in the document.
+               RooAbsReal *obj = tool.request<RooAbsReal>(mod.name, ctx.channelName);
+               spec.normFactors.push_back({mod.name, obj});
+            },
+         },
+         modifier);
+   }
+
+   return spec;
+}
+
+// RooHistFactorySample doesn't support custom modifiers that depend on the observables. Channels with such modifiers
+// are imported with the structure before ROOT 6.44.
+bool hasObservableDependentModifiers(RooJSONFactoryWSTool &tool, HS3::HistFactoryDist const &dist,
+                                     RooArgSet const &observables, std::string const &channelName)
+{
+   for (auto const &sample : dist.samples) {
+      for (auto const &modifier : sample.modifiers) {
+         if (auto const *custom = std::get_if<HS3::CustomModifier>(&modifier)) {
+            if (tool.request<RooAbsReal>(custom->name, channelName)->dependsOn(observables)) {
+               return true;
+            }
+         }
+      }
+   }
+   return false;
 }
 
 // The constraint of the gamma parameters of the staterror modifiers. Without one, the gamma parameters are free.
@@ -1359,13 +1514,177 @@ bool isValidChannel(ExportedChannel const &channel, std::string const &pdfname)
    return !HS3::hasErrors(diagnostics);
 }
 
+// Reads a RooHistFactoryPdf, which has the modifiers of its samples explicitly.
+ExportedChannel readHistFactoryPdf(RooJSONFactoryWSTool *tool, const std::string &pdfname, RooHistFactoryPdf const &pdf,
+                                   std::vector<RooAbsPdf *> const &channelConstraints)
+{
+   using BinFactorType = RooHistFactorySample::BinFactorType;
+
+   ExportedChannel channel;
+   RooWorkspace *ws = tool->workspace();
+
+   channel.name = pdfname;
+   erasePrefix(channel.name, "model_");
+   eraseSuffix(channel.name, "_model");
+   channel.observables = std::make_unique<RooArgSet>(pdf.observables());
+
+   // Like in readChannel(), the modifiers name only the constraint terms of the channel.
+   auto constraintTerm = [&](RooAbsPdf const *pdf) -> std::optional<HS3::DistributionRef> {
+      if (std::find(channelConstraints.begin(), channelConstraints.end(), pdf) == channelConstraints.end()) {
+         return std::nullopt;
+      }
+      channel.constraints.emplace(pdf->GetName(), pdf);
+      return HS3::DistributionRef{pdf->GetName()};
+   };
+   auto constraint = [&](RooAbsPdf const *pdf) -> HS3::Constraint {
+      auto ref = constraintTerm(pdf);
+      return ref ? HS3::Constraint{HS3::ConstraintPdf{*ref}} : HS3::Unconstrained{};
+   };
+   // The constraints of the gammas, in the order of the bins. If none is named, the gammas are free.
+   auto gammaConstraints = [&](std::vector<RooAbsReal *> const &gammas, bool alsoByName) -> HS3::GammaConstraint {
+      HS3::GammaConstraintPdfs pdfs;
+      for (RooAbsReal *g : gammas) {
+         RooAbsPdf *constraintPdf = findConstraint(g, channelConstraints);
+         if (!constraintPdf && alsoByName) {
+            constraintPdf = ws->pdf(constraintName(g->GetName()));
+         }
+         pdfs.pdfs.push_back(constraintTerm(constraintPdf));
+      }
+      if (anyNamed(pdfs)) {
+         return pdfs;
+      }
+      return HS3::Unconstrained{};
+   };
+
+   for (std::size_t iSample = 0; iSample < pdf.numSamples(); ++iSample) {
+      RooHistFactorySample const &hfSample = pdf.sample(iSample);
+      RooHistFactorySample::Data const &data = hfSample.data();
+      auto param = [&](int index) { return &static_cast<RooAbsReal &>(hfSample.parameters()[index]); };
+      const std::size_t nBins = data.numBins();
+
+      HS3::Sample sample;
+      sample.name = data.sampleName;
+      sample.contents = data.contents;
+      if (!data.errors.empty()) {
+         sample.errors = data.errors;
+      }
+
+      // The modifiers by type, which are written in this order, like for the models before ROOT 6.44.
+      std::vector<HS3::NormFactor> normFactors;
+      std::vector<HS3::NormSys> normSys;
+      std::vector<HS3::HistoSys> histoSys;
+      std::vector<HS3::ShapeSys> shapeSys;
+      std::vector<HS3::CustomModifier> custom;
+      std::optional<HS3::StatError> statError;
+
+      for (std::size_t i = 0; i < data.normFactorParams.size(); ++i) {
+         RooAbsReal *par = param(data.normFactorParams[i]);
+         if (auto constVar = dynamic_cast<RooConstVar *>(par)) {
+            if (constVar->getVal() != 1.) {
+               normFactors.push_back({constVar->GetName(), {constVar->GetName()}, HS3::Unconstrained{}});
+            }
+         } else if (dynamic_cast<RooRealVar *>(par)) {
+            normFactors.push_back(
+               {par->GetName(), {par->GetName()}, constraint(findConstraint(par, channelConstraints))});
+         } else {
+            custom.push_back({par->GetName()});
+            channel.customModifiers.push_back(par);
+         }
+      }
+
+      for (std::size_t i = 0; i < data.normSysParams.size(); ++i) {
+         RooAbsReal *par = param(data.normSysParams[i]);
+         RooAbsPdf const *constraintPdf = findConstraint(par, channelConstraints);
+         checkModifierParameter(*par, constraintPdf);
+         const std::string context = "normsys modifier '" + data.normSysNames[i] + "' in sample '" + sample.name +
+                                     "' of channel '" + channel.name + "'";
+         normSys.push_back({data.normSysNames[i],
+                            {par->GetName()},
+                            data.normSysHi[i],
+                            data.normSysLo[i],
+                            constraint(constraintPdf),
+                            interpolationFromCode(data.normSysCodes[i], InterpolationClass::Flexible, context)});
+      }
+
+      for (std::size_t i = 0; i < data.histoSysParams.size(); ++i) {
+         RooAbsReal *par = param(data.histoSysParams[i]);
+         RooAbsPdf const *constraintPdf = findConstraint(par, channelConstraints);
+         checkModifierParameter(*par, constraintPdf);
+         const std::string context = "histosys modifier '" + data.histoSysNames[i] + "' in sample '" + sample.name +
+                                     "' of channel '" + channel.name + "'";
+         auto variation = [&](std::vector<double> const &all) {
+            return HS3::HistoSysVariation{{all.begin() + i * nBins, all.begin() + (i + 1) * nBins}, std::nullopt};
+         };
+         histoSys.push_back({data.histoSysNames[i],
+                             {par->GetName()},
+                             variation(data.histoSysHi),
+                             variation(data.histoSysLo),
+                             constraint(constraintPdf),
+                             interpolationFromCode(data.histoSysCodes[i], InterpolationClass::Piecewise, context)});
+      }
+
+      for (std::size_t i = 0; i < data.binFactorNames.size(); ++i) {
+         std::vector<RooAbsReal *> gammas;
+         for (std::size_t iBin = 0; iBin < nBins; ++iBin) {
+            gammas.push_back(param(data.binFactorParams[i * nBins + iBin]));
+         }
+         if (static_cast<BinFactorType>(data.binFactorTypes[i]) == BinFactorType::StatError) {
+            statError.emplace();
+            statError->name = data.binFactorNames[i];
+            for (std::size_t iBin = 0; iBin < nBins; ++iBin) {
+               RooAbsReal *g = gammas[iBin];
+               statError->parameters.push_back({g->GetName()});
+               // To reconstruct the statistical uncertainties if the sample doesn't have them.
+               channel.totYield[iBin] += sample.contents[iBin];
+               channel.totYield2[iBin] += sample.contents[iBin] * sample.contents[iBin];
+               if (RooAbsPdf *constraintPdf = findConstraint(g, channelConstraints)) {
+                  channel.relErrors[iBin] = constraintRelError(*constraintPdf, *g);
+               }
+            }
+            statError->constraint = gammaConstraints(gammas, false);
+         } else {
+            HS3::ShapeSys &sys = shapeSys.emplace_back();
+            sys.name = data.binFactorNames[i];
+            for (RooAbsReal *g : gammas) {
+               sys.parameters.push_back({g->GetName()});
+            }
+            // Both are written as "shapefactor": the constrained parameters name their constraint distribution in
+            // "constraints", the others are free.
+            sys.constraint = gammaConstraints(gammas, true);
+         }
+      }
+
+      sortByName(normFactors);
+      sortByName(normSys);
+      sortByName(histoSys);
+      sortByName(shapeSys);
+      auto append = [&](auto &modifiers) {
+         sample.modifiers.insert(sample.modifiers.end(), std::make_move_iterator(modifiers.begin()),
+                                 std::make_move_iterator(modifiers.end()));
+      };
+      append(normFactors);
+      append(normSys);
+      append(histoSys);
+      append(shapeSys);
+      append(custom);
+      if (statError) {
+         sample.modifiers.push_back(std::move(*statError));
+      }
+
+      channel.dist.samples.push_back(std::move(sample));
+   }
+
+   sortByName(channel.dist.samples);
+   return channel;
+}
+
 // The statistical uncertainties of the samples are reconstructed from the constraints of the gamma parameters, with
 // the (arbitrary) convention that all samples have the same relative uncertainty.
 void configureStatError(ExportedChannel &channel)
 {
    for (HS3::Sample &sample : channel.dist.samples) {
-      if (std::none_of(sample.modifiers.begin(), sample.modifiers.end(),
-                       [](auto const &m) { return std::holds_alternative<HS3::StatError>(m); })) {
+      if (sample.errors || std::none_of(sample.modifiers.begin(), sample.modifiers.end(),
+                                        [](auto const &m) { return std::holds_alternative<HS3::StatError>(m); })) {
          continue;
       }
       std::vector<double> errors(sample.contents.size());
@@ -1522,20 +1841,24 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       return false;
    }
 
-   for (RooAbsArg *sample : sumpdf->funcList()) {
-      if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
-         return false;
+   ExportedChannel channel;
+   if (auto *hfPdf = dynamic_cast<RooHistFactoryPdf const *>(sumpdf)) {
+      channel = readHistFactoryPdf(tool, pdfname, *hfPdf, constraints);
+   } else {
+      for (RooAbsArg *sample : sumpdf->funcList()) {
+         if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
+            return false;
+         }
       }
-   }
-
-   ExportedChannel channel = readChannel(tool, pdfname, sumpdf, constraints);
-   // Writing a formula as several modifiers must not be what makes the channel invalid, e.g. because a parameter that
-   // occurs twice in the formula becomes two normfactors of the same name. If it is, the formulas are written as
-   // custom modifiers instead.
-   if (channel.decomposedFormulas && !isValidChannel(channel, pdfname)) {
-      ExportedChannel plain = readChannel(tool, pdfname, sumpdf, constraints, /*decomposeFormulas=*/false);
-      if (isValidChannel(plain, pdfname)) {
-         channel = std::move(plain);
+      channel = readChannel(tool, pdfname, sumpdf, constraints);
+      // Writing a formula as several modifiers must not be what makes the channel invalid, e.g. because a parameter
+      // that occurs twice in the formula becomes two normfactors of the same name. If it is, the formulas are written
+      // as custom modifiers instead.
+      if (channel.decomposedFormulas && !isValidChannel(channel, pdfname)) {
+         ExportedChannel plain = readChannel(tool, pdfname, sumpdf, constraints, /*decomposeFormulas=*/false);
+         if (isValidChannel(plain, pdfname)) {
+            channel = std::move(plain);
+         }
       }
    }
    HS3::HistFactoryDist &dist = channel.dist;
@@ -1624,6 +1947,7 @@ const bool registered = []() {
    RooFit::JSONIO::registerImporter<HistFactoryImporter>("histfactory_dist", true);
    RooFit::JSONIO::registerExporter<HistFactoryStreamer>(RooProdPdf::Class(), true);
    RooFit::JSONIO::registerExporter<HistFactoryStreamer>(RooRealSumPdf::Class(), true);
+   RooFit::JSONIO::registerExporter<HistFactoryStreamer>(RooHistFactoryPdf::Class(), true);
    return true;
 }();
 
@@ -1632,6 +1956,12 @@ const bool registered = []() {
 void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist)
 {
    RooArgSet observables = createObservables(dist.axes);
+
+   std::string channelName = name;
+   erasePrefix(channelName, "model_");
+
+   const bool useHistFactoryPdf = RooJSONFactoryWSTool::config().useHistFactoryPdf &&
+                                  !hasObservableDependentModifiers(tool, dist, observables, channelName);
 
    // The yields and their variances by bin, summed over the samples with a staterror modifier.
    std::vector<double> sumW;
@@ -1659,10 +1989,8 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
       }
    }
 
-   std::string channelName = name;
-   erasePrefix(channelName, "model_");
-
    RooAbsArg *mcStatObject = nullptr;
+   RooArgList statGammas;
    RooArgSet constraints;
    if (!sumW.empty()) {
       // The relative uncertainties. The gammas of bins without a positive yield are set constant later.
@@ -1675,19 +2003,39 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
       // range, the constness and the step width of the gammas come from the document, and nothing is derived from
       // the errors of the samples. Older documents relied on RooFit configuring the gammas from them.
       const bool configureGammas = tool.hs3Version() < HS3::Version{0, 3};
-      mcStatObject = &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
-                                statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
-                                dist.statError.relThreshold, errs.size(),
-                                "the staterror modifier of channel '" + name + "'", configureGammas);
+      const std::string context = "the staterror modifier of channel '" + name + "'";
+      if (useHistFactoryPdf) {
+         statGammas.add(createGammas(tool, "stat_" + channelName, gammaParnames, observables, defaultStatErrorGammaMax,
+                                     errs.size()));
+         constrainGammas(tool, "stat_" + channelName, statGammas, errs, statErrorConstraint(dist), constraints,
+                         dist.statError.relThreshold, context, configureGammas);
+      } else {
+         mcStatObject = &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
+                                   statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
+                                   dist.statError.relThreshold, errs.size(), context, configureGammas);
+      }
    }
 
    ChannelContext ctx{tool, dist, observables, name, channelName, mcStatObject, constraints};
 
    RooArgList funcs;
    RooArgList coefs;
+   std::map<std::string, RooArgList> shapeGammas;
    for (HS3::Sample const &sample : dist.samples) {
+      const std::string shapesName = name + "_" + sample.name + "_shapes";
+      if (useHistFactoryPdf) {
+         if (tool.workspace()->arg(shapesName.c_str())) {
+            RooJSONFactoryWSTool::error("the object '" + shapesName + "' for sample '" + sample.name +
+                                        "' of channel '" + channelName + "' has the name of an existing object");
+         }
+         RooArgList obsList{observables};
+         funcs.add(tool.wsEmplace<RooHistFactorySample>(shapesName, obsList,
+                                                        buildSampleSpec(ctx, sample, statGammas, shapeGammas)));
+         funcs[funcs.size() - 1].SetTitle(sample.name.c_str());
+         continue;
+      }
       buildSample(ctx, sample);
-      funcs.add(*tool.request<RooAbsReal>(name + "_" + sample.name + "_shapes", name));
+      funcs.add(*tool.request<RooAbsReal>(shapesName, name));
       coefs.add(*tool.request<RooAbsReal>(name + "_" + sample.name + "_scaleFactors", name));
    }
 
@@ -1710,7 +2058,9 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
    }
 
    // With constraints, the channel is the product of the sum of the samples and the constraints.
-   auto &sum = tool.wsEmplace<RooRealSumPdf>(constraints.empty() ? name : channelName + "_model", funcs, coefs, true);
+   const std::string sumName = constraints.empty() ? name : channelName + "_model";
+   auto &sum = useHistFactoryPdf ? tool.wsEmplace<RooHistFactoryPdf>(sumName, funcs)
+                                 : tool.wsEmplace<RooRealSumPdf>(sumName, funcs, coefs, true);
    sum.SetTitle(name.c_str());
    // A histfactory_dist is a product of Poisson distributions of the bin counts. RooFit's binned likelihood
    // computes exactly that (it differs from the event-wise likelihood only by a constant), and binned generation
