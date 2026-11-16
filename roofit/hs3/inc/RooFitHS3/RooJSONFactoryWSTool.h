@@ -46,6 +46,9 @@ namespace RooStats {
 class ModelConfig;
 }
 class RooRealVar;
+class RooAbsCategory;
+class RooCategory;
+class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
 public:
@@ -59,6 +62,19 @@ public:
       /// before ROOT 6.26 by their structure, and don't write them, since `histfactory_dist` implies them. Turn this
       /// off if a workspace has such factors that are not meant as bin widths: they are then written as normfactors.
       bool identifyLegacyBinWidthFactors = true;
+      /// HS3 requires the components of a combined distribution to have distinct variates, e.g. "mass_SR" and
+      /// "mass_CR" instead of one "mass". If enabled, the observables of every combined data set are renamed on
+      /// export to "obs_<key>" (the labels of the key joined by "_"), or "obs_<key>_<observable>" if a component
+      /// has several observables; the components of the matching RooSimultaneous are written with the renamed
+      /// observables (functions depending on them get the suffix "_<key>"). This allows exporting workspaces whose
+      /// components share an observable. Off by default: without it, such workspaces can't be exported.
+      bool renameCombinedObservables = false;
+      /// HS3 requires the terms of a likelihood and the components of a combined distribution to have distinct
+      /// variates, e.g. "mass_SR" and "mass_CR" for the observables of two channels instead of one "mass". By
+      /// default, the export fails otherwise. If true, the document is written anyway, with a warning for every
+      /// shared variate. It is not valid HS3 and can't be read back before the variates are renamed, e.g. by hand in
+      /// the JSON.
+      bool allowExportSharedVariates = false;
    };
 
    static Config &config();
@@ -68,7 +84,7 @@ public:
 
    struct CombinedData {
       std::string name;
-      std::map<std::string, std::string> components;
+      std::vector<std::string> columns;
    };
 
    RooJSONFactoryWSTool(RooWorkspace &ws);
@@ -199,13 +215,12 @@ public:
    }
 
    static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
+   static void exportCategoricalAxis(RooFit::Detail::JSONNode &obsNode, RooCategory const &cat);
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
    static void exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
-
-   void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
    void queueExportTemporary(RooAbsArg *arg)
@@ -243,6 +258,8 @@ private:
       }
    }
 
+   void exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames);
+   void recordCategory(RooAbsCategory const &cat);
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
 
@@ -263,7 +280,7 @@ private:
                           const std::vector<RooAbsData *> &single);
 
    void exportSingleModelConfig(RooStats::ModelConfig const &mc, std::string const &analysisName,
-                                std::map<std::string, std::string> const *dataComponents);
+                                std::string const *dataName);
 
    friend void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, RooFit::HS3::HistFactoryDist dist,
                                               std::vector<RooFit::HS3::DistributionRef> channelConstraints);
@@ -277,6 +294,13 @@ private:
    std::unique_ptr<RooFit::HS3::ToolExportState> _export;
    std::vector<RooAbsArg const *> _serversToExport;
    std::vector<RooAbsArg const *> _serversToDelete;
+   // Renaming of the observables of combined data sets, see Config::renameCombinedObservables: for each data set and
+   // each selection label, the new name of each observable; for each RooSimultaneous and selection label, the
+   // component with renamed observables to export instead of the original one. The objects are owned here.
+   std::map<std::string, std::map<std::string, std::map<std::string, std::string>>> _combinedObservableRenames;
+   std::map<std::string, std::map<std::string, RooAbsPdf const *>> _renamedComponents;
+   std::vector<std::unique_ptr<RooAbsArg>> _renamedObjects;
+   void prepareCombinedObservableRenaming();
 
    // The objects that are currently being imported, innermost last, to detect circular dependencies.
    std::vector<std::string> _importStack;
