@@ -974,12 +974,15 @@ Bool_t TGTextEditor::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                                          prop.fBold ? "bold" : "medium",
                                          prop.fItalic ? 'i' : 'r',
                                          prop.fSize);
-                           if (!gVirtualX->ListFonts(fontname, 10, count)) {
+                           auto fontList = gVirtualX->ListFonts(fontname, 10, count);
+                           if (!fontList) {
                               fontname.Form("-*-%s-%s-%c-*-*-%d-*-*-*-*-*-*-*",
                                             prop.fName.Data(),
                                             prop.fBold ? "bold" : "medium",
                                             prop.fItalic ? 'o' : 'r',
                                             prop.fSize);
+                           } else {
+                              gVirtualX->FreeFontNames(fontList);
                            }
                            TGFont *font = fClient->GetFont(fontname);
                            if (font) {
