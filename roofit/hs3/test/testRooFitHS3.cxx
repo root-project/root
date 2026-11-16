@@ -8588,3 +8588,36 @@ TEST(RooFitHS3, ConstraintDataOfProductConstraints)
       EXPECT_NEAR(nllOf(ws3), nll, 1e-10 * std::abs(nll));
    }
 }
+
+// As ConstraintTermsOfRenamedChannels, with and without arrays: the likelihood lists the constraint terms of the
+// renamed HistFactory channel as they are written (the array that holds a constraint), so the document has no
+// reference to a distribution that is not written (reported in the review of #24013).
+TEST(RooFitHS3, ArrayConstraintTermsOfRenamedChannels)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   makeRenamedHistFactoryWorkspace(ws);
+   const double nll = renamedHistFactoryNLL(ws);
+   ASSERT_FALSE(std::isnan(nll));
+
+   for (bool arrays : {true, false}) {
+      SCOPED_TRACE(arrays ? "arrays" : "no arrays");
+      RooJSONFactoryWSTool::config().exportArrayDist = arrays;
+      const std::string plain = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().renameCombinedObservables = true;
+      const std::string renamed = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().renameCombinedObservables = false;
+      RooJSONFactoryWSTool::config().exportArrayDist = true;
+
+      ASSERT_NE(renamed.find("obs_A"), std::string::npos) << renamed;
+      EXPECT_EQ(auxDistributionsOf(renamed), auxDistributionsOf(plain)) << renamed;
+      EXPECT_EQ(auxDistributionsOf(renamed), arrays ? R"(["model_gaussian_constraints"])" : R"(["constraint"])")
+         << renamed;
+      for (std::string const &json : {plain, renamed}) {
+         RooWorkspace ws2;
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json)) << json;
+         EXPECT_NEAR(renamedHistFactoryNLL(ws2), nll, 1e-10 * std::abs(nll)) << json;
+      }
+   }
+}

@@ -3408,10 +3408,13 @@ struct ChannelConstraint {
 // - The constraints of a channel that is written as product_dist are taken out of the product by
 //   writeLikelihoodTermsOnce(). This is only done if no other object of the workspace uses the product, so the
 //   constraints of other products are not returned.
-// Constraints elsewhere, e.g. in a nested product, stay where they are.
+// Constraints elsewhere, e.g. in a nested product, stay where they are. The channels are taken as they are written:
+// a component of the RooSimultaneous is replaced by the one in `renamed` (by label), if any
+// (Config::renameCombinedObservables).
 std::vector<ChannelConstraint>
 constraintsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet const &observables,
-                      std::function<bool(std::string const &)> const &isHistFactoryChannel)
+                      std::function<bool(std::string const &)> const &isHistFactoryChannel,
+                      std::map<std::string, RooAbsPdf const *> const *renamed)
 {
    RooArgSet params;
    pdf.getParameters(&observables, params);
@@ -3419,7 +3422,13 @@ constraintsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet co
    std::vector<RooAbsPdf const *> channels;
    if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(&pdf)) {
       for (auto const &item : simPdf->indexCat()) {
-         if (RooAbsPdf const *component = simPdf->getPdf(item.first)) {
+         RooAbsPdf const *component = simPdf->getPdf(item.first);
+         if (renamed) {
+            if (auto found = renamed->find(item.first); found != renamed->end()) {
+               component = found->second;
+            }
+         }
+         if (component) {
             channels.push_back(component);
          }
       }
@@ -3486,12 +3495,21 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    // of the channels of the model, which can be the components of a combined distribution (constraintsOfChannels()).
    // They are listed in "aux_distributions" with the observed values of their observables as constant parameters, or
    // (config().exportConstraintData) in "distributions", each paired with a data set that holds the observed values.
+   // The channels as they are written: the components of a RooSimultaneous can be renamed clones
+   // (Config::renameCombinedObservables).
    std::vector<std::string> channels;
    for (auto const &term : likelihood.terms) {
       channels.push_back(term.distribution.name);
       if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(_workspace.pdf(term.distribution.name))) {
+         auto renamed = _renamedComponents.find(simPdf->GetName());
          for (auto const &item : simPdf->indexCat()) {
-            if (RooAbsPdf const *component = simPdf->getPdf(item.first)) {
+            RooAbsPdf const *component = simPdf->getPdf(item.first);
+            if (renamed != _renamedComponents.end()) {
+               if (auto found = renamed->second.find(item.first); found != renamed->second.end()) {
+                  component = found->second;
+               }
+            }
+            if (component) {
                channels.push_back(component->GetName());
             }
          }
@@ -3549,8 +3567,10 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
       // The constraint terms of the channels as RooFit finds them, under the names under which they are written:
       // the array distribution that holds a constraint of a HistFactory channel, or the name of the constraint.
       std::map<std::string, std::vector<std::string>> termsOfChannel;
+      auto renamedOfPdf = _renamedComponents.find(pdf->GetName());
       for (ChannelConstraint const &item :
-           constraintsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel)) {
+           constraintsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel,
+                                 renamedOfPdf != _renamedComponents.end() ? &renamedOfPdf->second : nullptr)) {
          std::string term = item.constraint->GetName();
          if (item.histFactory) {
             if (auto found = _export->arrayOfComponent.find(term); found != _export->arrayOfComponent.end()) {
