@@ -50,7 +50,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/builtins/)
 # Build iconv, was forked from https://github.com/winlibs/libiconv/blob/libiconv-1.14/MSVC9/libiconv.rc
 # vs https://github.com/root-project/root/commit/11e6c04d7ee196c794d19ae43ad4d1ad57786d3d#diff-9cbb57072c182c295932b31f4421982d0ac9d1ca2d545bd065509aba4ecfdfce
 # and only slightly modified by ROOT
-					
+
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
 					COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/builtins/win32gdk ${CMAKE_BINARY_DIR}/builtins/win32gdk
                     COMMAND echo "*** Building ${iconvliba}"
@@ -119,7 +119,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   LIBRARIES
-    Freetype::Freetype
     ${gdklib}
     ${gliblib}
     Glu32.lib

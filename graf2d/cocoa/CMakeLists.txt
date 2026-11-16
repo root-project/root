@@ -42,7 +42,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     GQuartz
     ${COCOA_FRAMEWORK}
     ${OPENGL_FRAMEWORK}
-    Freetype::Freetype
 )
 
 target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
