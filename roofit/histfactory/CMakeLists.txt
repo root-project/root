@@ -35,6 +35,8 @@ set(HISTFACTORY_HEADERS
   RooStats/HistFactory/ParamHistFunc.h
   RooStats/HistFactory/PiecewiseInterpolation.h
   RooStats/HistFactory/RooBarlowBeestonLL.h
+  RooStats/HistFactory/RooHistFactoryPdf.h
+  RooStats/HistFactory/RooHistFactorySample.h
 )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
@@ -53,6 +55,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/ParamHistFunc.cxx
     src/PiecewiseInterpolation.cxx
     src/RooBarlowBeestonLL.cxx
+    src/RooHistFactoryPdf.cxx
+    src/RooHistFactorySample.cxx
     ${HISTFACTORY_XML_SOURCES}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
