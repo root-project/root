@@ -360,7 +360,13 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
   endforeach()
 
   get_target_property(LinkedLibraries ${target} LINK_LIBRARIES)
-  ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${LinkedLibraries} EXTRA_DEPENDENCIES ${_copied_headers} OPTIONS ${options} USE_FILE_SETS)
+  set(_lib_deps)
+  foreach(_lib ${LinkedLibraries})
+    if(TARGET ${_lib})
+      list(APPEND _lib_deps ${_lib})
+    endif()
+  endforeach()
+  ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${_lib_deps} EXTRA_DEPENDENCIES ${_copied_headers} OPTIONS ${options} USE_FILE_SETS)
   # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
 
   if(_copied_headers)
@@ -1465,7 +1471,17 @@ endfunction()
 # - not4dict_header_files for public headers purposely excluded from dictionaries
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_TARGET target)
+
   set_target_properties(${target} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  get_target_property(_hdr_dirs ${target} HEADER_DIRS)
+  if(_hdr_dirs)
+    set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_hdr_dirs})
+  endif()
+  get_target_property(_not4dict_dirs ${target} HEADER_DIRS_not4dict_header_files)
+  if(_not4dict_dirs)
+    set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_not4dict_dirs})
+  endif()
+
   install(TARGETS ${target}
     EXPORT ${CMAKE_PROJECT_NAME}Exports
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
@@ -2062,6 +2078,26 @@ function(ROOT_ADD_TEST test)
        OR (_command MATCHES roottest/python/cmdLineUtils AND
            NOT _command MATCHES MakeNameCyclesRootmvInput))
       set(_command ${_command} -DCMD_ENV=${ld_preload}=${ASAN_EXTRA_LD_PRELOAD})
+    endif()
+  endif()
+
+  get_property(_buildtree_incdirs GLOBAL PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS)
+  if(_buildtree_incdirs)
+    list(REMOVE_DUPLICATES _buildtree_incdirs)
+    if(WIN32)
+      # RootTestDriver.cmake handles ';' escaping automatically; keep plain ';'
+      set(_buildtree_incpath "${_buildtree_incdirs}")
+      set(_path_sep ";")
+    else()
+      string(REPLACE ";" ":" _buildtree_incpath "${_buildtree_incdirs}")
+      set(_path_sep ":")
+    endif()
+
+    if(ARG_ENVIRONMENT MATCHES "(^|;)ROOT_INCLUDE_PATH=([^;]*)")
+      string(REGEX REPLACE "(^|;)ROOT_INCLUDE_PATH=([^;]*)"
+        "\\1ROOT_INCLUDE_PATH=\\2${_path_sep}${_buildtree_incpath}" ARG_ENVIRONMENT "${ARG_ENVIRONMENT}")
+    else()
+      list(APPEND ARG_ENVIRONMENT "ROOT_INCLUDE_PATH=${_buildtree_incpath}")
     endif()
   endif()
 
