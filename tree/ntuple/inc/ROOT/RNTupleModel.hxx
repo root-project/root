@@ -253,6 +253,7 @@ public:
    {
       EnsureNotFrozen();
       EnsureValidFieldName(name);
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(Internal::GetStringPoolOfField(*fFieldZero));
       auto field = std::make_unique<ROOT::RField<T>>(name);
       field->SetDescription(description);
       std::shared_ptr<T> ptr;
@@ -448,6 +449,7 @@ public:
    template <typename T>
    std::shared_ptr<T> MakeField(std::string_view name, std::string_view description = "")
    {
+      Internal::RFieldSharedStringPoolRaii strRaii(Internal::GetStringPoolOfField(*fOpenChangeset.fModel.fFieldZero));
       auto field = std::make_unique<ROOT::RField<T>>(name);
       field->SetDescription(description);
       AddField(std::move(field));

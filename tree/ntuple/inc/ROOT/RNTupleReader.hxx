@@ -16,11 +16,13 @@
 #include <ROOT/RConfig.hxx> // for R__unlikely
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RFieldBase.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RSpan.hxx>
@@ -85,6 +87,8 @@ private:
    std::unique_ptr<Internal::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<ROOT::RNTupleModel> fModel;
+   /// The shared string storage used for all views
+   std::shared_ptr<Internal::RStringPool> fStringPool;
    /// We use a dedicated on-demand reader for Show(). Printing data uses all the fields
    /// from the full model even if the analysis code uses only a subset of fields. The display reader
    /// is a clone of the original reader.
@@ -409,6 +413,7 @@ public:
    template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId)
    {
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(fStringPool);
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return ROOT::RNTupleView<T>(std::move(field), range);
@@ -420,6 +425,7 @@ public:
    template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(fStringPool);
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return ROOT::RNTupleView<T>(std::move(field), range, objPtr);
@@ -431,6 +437,7 @@ public:
    template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr)
    {
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(fStringPool);
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return ROOT::RNTupleView<T>(std::move(field), range, rawPtr);
@@ -442,6 +449,7 @@ public:
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
    ROOT::RNTupleView<void> GetView(ROOT::DescriptorId_t fieldId, void *rawPtr, std::string_view typeName)
    {
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(fStringPool);
       auto field = RNTupleView<void>::CreateField(fieldId, *fSource, typeName);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return RNTupleView<void>(std::move(field), range, rawPtr);
@@ -474,6 +482,7 @@ public:
    template <typename T>
    ROOT::RNTupleDirectAccessView<T> GetDirectAccessView(ROOT::DescriptorId_t fieldId)
    {
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(fStringPool);
       auto field = ROOT::RNTupleDirectAccessView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(field, *fSource);
       return ROOT::RNTupleDirectAccessView<T>(std::move(field), range);
@@ -502,6 +511,7 @@ public:
    /// \sa GetCollectionView(std::string_view)
    ROOT::RNTupleCollectionView GetCollectionView(ROOT::DescriptorId_t fieldId)
    {
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(fStringPool);
       return ROOT::RNTupleCollectionView::Create(fieldId, fSource.get());
    }
 

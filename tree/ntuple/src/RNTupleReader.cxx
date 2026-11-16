@@ -18,6 +18,7 @@
 #include <ROOT/RNTupleImtTaskScheduler.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
 #include <TROOT.h>
@@ -167,7 +168,10 @@ ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model,
 
 ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Internal::RPageSource> source,
                                    const ROOT::RNTupleReadOptions &options)
-   : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader", fSource->GetNTupleName())
+   : fSource(std::move(source)),
+     fModel(nullptr),
+     fStringPool(std::make_shared<Internal::RStringPool>()),
+     fMetrics("RNTupleReader", fSource->GetNTupleName())
 {
    InitPageSource(options.GetEnableMetrics());
 }
@@ -232,6 +236,7 @@ ROOT::RNTupleReader::Open(const ROOT::RNTupleDescriptor::RCreateModelOptions &cr
 const ROOT::RNTupleModel &ROOT::RNTupleReader::GetModel()
 {
    if (!fModel) {
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(fStringPool);
       fModel = fSource->GetSharedDescriptorGuard()->CreateModel(
          fCreateModelOptions.value_or(ROOT::RNTupleDescriptor::RCreateModelOptions{}));
       ConnectModel(*fModel, true /* allowFieldSubstitutions */);
@@ -296,11 +301,13 @@ void ROOT::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output
 ROOT::RNTupleReader *ROOT::RNTupleReader::GetDisplayReader()
 {
    if (!fDisplayReader) {
+      Internal::RFieldSharedStringPoolRaii stringPoolRaii(fStringPool);
       ROOT::RNTupleDescriptor::RCreateModelOptions opts;
       opts.SetEmulateUnknownTypes(true);
       auto fullModel = fSource->GetSharedDescriptorGuard()->CreateModel(opts);
       fDisplayReader = std::unique_ptr<RNTupleReader>(
          new RNTupleReader(std::move(fullModel), fSource->Clone(), ROOT::RNTupleReadOptions{}));
+      fDisplayReader->fStringPool = fStringPool;
    }
    return fDisplayReader.get();
 }
