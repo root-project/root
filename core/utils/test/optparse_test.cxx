@@ -899,3 +899,26 @@ TEST(OptParse, HelpMultipleFlagsShort)
   -t, --third-flag A third flag.
 )");
 }
+
+TEST(OptParse, HelpNoFlags)
+{
+   ROOT::RCmdLineOpts opts;
+   ROOT::RCmdLineOpts::RMakeHelpOptions helpOpts;
+   helpOpts.fPositionalArgs = "<FILE>";
+   EXPECT_EQ(opts.MakeShortHelp("test", helpOpts), "usage: test <FILE>");
+   helpOpts.fWrapDescription = false;
+   helpOpts.fDescription =
+      R"(A description that contains:
+
+  * newlines
+  * more newlines)";
+   EXPECT_EQ(opts.MakeLongHelp("test", helpOpts),
+             R"(usage: test <FILE>
+
+A description that contains:
+
+  * newlines
+  * more newlines
+
+)");
+}
