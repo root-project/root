@@ -448,7 +448,7 @@ else.
 
 ## Built-in packages
 
-**It is strongly recommended to rely on sytem packages, and not built-in ones.**
+**It is strongly recommended to rely on system packages, and not built-in ones.**
 All the built-in packages are now collected in the builtins directory.
 The version of the following packages has been updated:
 
