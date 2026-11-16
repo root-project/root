@@ -111,6 +111,19 @@ namespace {
       for (auto sub : *br->GetListOfBranches())
          RecursiveResetReadEntry(static_cast<TBranch *>(sub));
    }
+
+   /// Find the counter branch `countname` of a variable-size array data member. The counter is created as a
+   /// sub-branch of the same parent, so look there first: if the top-level branch name has no trailing dot, the
+   /// sub-branches of two objects of the same class have identical names and a tree-wide search returns the counter
+   /// of the first object.
+   TBranchElement *FindBranchCount(TTree *tree, TBranch *parent, const TString &countname)
+   {
+      if (parent) {
+         if (auto counter = dynamic_cast<TBranchElement *>(parent->GetListOfBranches()->FindObject(countname.Data())))
+            return counter;
+      }
+      return static_cast<TBranchElement *>(tree->GetBranch(countname));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -435,7 +448,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             countname = "";
          }
          countname += bp->GetCountName();
-         brOfCounter = static_cast<TBranchElement *>(fTree->GetBranch(countname));
+         brOfCounter = FindBranchCount(fTree, fParent, countname);
          countname.Form("%s[%s]",name.Data(),bp->GetCountName());
          SetTitle(countname);
 
@@ -451,7 +464,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             countname = "";
          }
          countname += bp->GetCountName();
-         brOfCounter = static_cast<TBranchElement *>(fTree->GetBranch(countname));
+         brOfCounter = FindBranchCount(fTree, fParent, countname);
          countname.Form("%s[%s]",name.Data(),bp->GetCountName());
          SetTitle(countname);
 
@@ -4247,7 +4260,7 @@ void TBranchElement::ReadLeavesMakeClass(TBuffer& b)
                counter.Remove(loc);
             }
             countname += counter;
-            SetBranchCount(static_cast<TBranchElement*>(fTree->GetBranch(countname)));
+            SetBranchCount(FindBranchCount(fTree, fParent, countname));
          }
          if (fBranchCount) {
             n = (Int_t)fBranchCount->GetValue(0,0);
