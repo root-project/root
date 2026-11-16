@@ -12,9 +12,12 @@
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
+#include <TBufferFile.h>
 #include <TFile.h>
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TKey.h>
+#include <TMemFile.h>
 #include <TRandom3.h>
 
 #include <gtest/gtest.h>
@@ -140,6 +143,48 @@ void setParameters(TRandom3 &rng, RooWorkspace &ws1, RooWorkspace &ws2)
    }
 }
 
+/// A workspace with one sample whose data is much larger than the rest of the workspace.
+std::unique_ptr<RooWorkspace> makeLargeSampleWorkspace(std::size_t nBins)
+{
+   RooRealVar x{"x", "x", 0, 1};
+   x.setBins(nBins);
+   RooRealVar mu{"mu", "mu", 1.0, 0, 5};
+   RooRealVar alpha{"alpha", "alpha", 0.3, -5, 5};
+   TRandom3 rng{5};
+   RooHistFactorySample::Spec spec;
+   spec.sampleName = "sample";
+   RooHistFactorySample::HistoSys histoSys{"syst", &alpha, {}, {}};
+   for (std::size_t i = 0; i < nBins; ++i) {
+      spec.contents.push_back(rng.Uniform(1, 2));
+      histoSys.lo.push_back(0.9 * spec.contents.back());
+      histoSys.hi.push_back(1.2 * spec.contents.back());
+   }
+   spec.histoSys.push_back(histoSys);
+   spec.normFactors.push_back({"mu", &mu});
+   RooHistFactorySample sample{"sample_shapes", "sample_shapes", RooArgList{x}, spec};
+   RooHistFactoryPdf pdf{"model", "model", RooArgList{sample}};
+   auto ws = std::make_unique<RooWorkspace>("w");
+   ws->import(pdf, RooFit::Silence());
+   return ws;
+}
+
+void expectSameSample(RooWorkspace &ws, RooWorkspace &wsRead)
+{
+   auto *sample = dynamic_cast<RooHistFactorySample *>(ws.function("sample_shapes"));
+   auto *sampleRead = dynamic_cast<RooHistFactorySample *>(wsRead.function("sample_shapes"));
+   ASSERT_NE(sampleRead, nullptr);
+   EXPECT_EQ(sampleRead->data().contents, sample->data().contents);
+   EXPECT_EQ(sampleRead->data().histoSysLo, sample->data().histoSysLo);
+   EXPECT_EQ(sampleRead->data().histoSysHi, sample->data().histoSysHi);
+   EXPECT_EQ(sampleRead->data().histoSysNames, sample->data().histoSysNames);
+   EXPECT_EQ(sampleRead->data().edges, sample->data().edges);
+   std::vector<double> values(sample->numBins());
+   std::vector<double> valuesRead(sample->numBins());
+   sample->binValues(values, false);
+   sampleRead->binValues(valuesRead, false);
+   EXPECT_EQ(valuesRead, values);
+}
+
 } // namespace
 
 class RooHistFactoryPdfTest : public testing::TestWithParam<int> {};
@@ -228,7 +273,8 @@ TEST_P(RooHistFactoryPdfTest, Codegen)
 }
 #endif
 
-/// The samples and their data survive the writing to a file, and the data is shared between clones.
+/// The samples and their data survive the writing to a file, with the data in the workspace object or in an RNTuple,
+/// and the data is shared between clones.
 TEST_P(RooHistFactoryPdfTest, PersistenceAndClones)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
@@ -239,30 +285,39 @@ TEST_P(RooHistFactoryPdfTest, PersistenceAndClones)
    {
       TFile file(fileName.c_str(), "RECREATE");
       file.WriteObject(ws.get(), "ws");
+      ws->Write("wsRNTuple");
    }
    std::unique_ptr<TFile> file{TFile::Open(fileName.c_str())};
-   std::unique_ptr<RooWorkspace> wsRead{file->Get<RooWorkspace>("ws")};
-   ASSERT_NE(wsRead, nullptr);
+   // Only RooWorkspace::Write() puts the data of the samples into an RNTuple.
+   TKey *key = file->GetKey("combined_histfactory_arrays");
+   ASSERT_NE(key, nullptr);
+   EXPECT_STREQ(key->GetClassName(), "ROOT::RNTuple");
+   EXPECT_EQ(file->GetKey("combined_histfactory_arrays_1"), nullptr);
 
    auto *pdf = dynamic_cast<RooHistFactoryPdf *>(ws->pdf("ch_model"));
-   auto *pdfRead = dynamic_cast<RooHistFactoryPdf *>(wsRead->pdf("ch_model"));
-   ASSERT_NE(pdfRead, nullptr);
-   ASSERT_EQ(pdfRead->numSamples(), pdf->numSamples());
+   for (const char *wsName : {"ws", "wsRNTuple"}) {
+      std::unique_ptr<RooWorkspace> wsRead{file->Get<RooWorkspace>(wsName)};
+      ASSERT_NE(wsRead, nullptr) << wsName;
+      auto *pdfRead = dynamic_cast<RooHistFactoryPdf *>(wsRead->pdf("ch_model"));
+      ASSERT_NE(pdfRead, nullptr);
+      ASSERT_EQ(pdfRead->numSamples(), pdf->numSamples());
 
-   TRandom3 rng{3};
-   setParameters(rng, *ws, *wsRead);
-   for (std::size_t i = 0; i < pdf->numSamples(); ++i) {
-      RooHistFactorySample const &sample = pdf->sample(i);
-      RooHistFactorySample const &sampleRead = pdfRead->sample(i);
-      EXPECT_EQ(sampleRead.sampleName(), sample.sampleName());
-      EXPECT_EQ(sampleRead.data().contents, sample.data().contents);
-      EXPECT_EQ(sampleRead.data().histoSysHi, sample.data().histoSysHi);
-      EXPECT_EQ(sampleRead.data().edges, sample.data().edges);
-      std::vector<double> values(sample.numBins());
-      std::vector<double> valuesRead(sample.numBins());
-      sample.binValues(values, false);
-      sampleRead.binValues(valuesRead, false);
-      EXPECT_EQ(valuesRead, values) << sample.sampleName();
+      TRandom3 rng{3};
+      setParameters(rng, *ws, *wsRead);
+      for (std::size_t i = 0; i < pdf->numSamples(); ++i) {
+         RooHistFactorySample const &sample = pdf->sample(i);
+         RooHistFactorySample const &sampleRead = pdfRead->sample(i);
+         EXPECT_EQ(sampleRead.sampleName(), sample.sampleName());
+         EXPECT_EQ(sampleRead.data().contents, sample.data().contents);
+         EXPECT_EQ(sampleRead.data().histoSysHi, sample.data().histoSysHi);
+         EXPECT_EQ(sampleRead.data().edges, sample.data().edges);
+         std::vector<double> values(sample.numBins());
+         std::vector<double> valuesRead(sample.numBins());
+         sample.binValues(values, false);
+         sampleRead.binValues(valuesRead, false);
+         EXPECT_EQ(valuesRead, values) << wsName << " " << sample.sampleName();
+      }
+      ws->loadSnapshot("NominalParamValues");
    }
 
    // A clone shares the data, until its interpolation codes are changed.
@@ -273,6 +328,80 @@ TEST_P(RooHistFactoryPdfTest, PersistenceAndClones)
    EXPECT_NE(&clone->data(), &signal.data());
    EXPECT_EQ(clone->data().histoSysCodes, (std::vector<int>{0, 4}));
    EXPECT_EQ(signal.data().histoSysCodes, (std::vector<int>{4, 4}));
+}
+
+/// With RooWorkspace::Write(), the sample data is not part of the workspace object in the file, so that the workspace
+/// is not limited by the size limit of objects in ROOT files. Every time the workspace is written, it takes a new
+/// RNTuple.
+TEST(RooHistFactoryPdf, DataInRNTuple)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   const std::size_t nBins = 100000;
+   auto ws = makeLargeSampleWorkspace(nBins);
+   const std::string fileName = "testRooHistFactoryPdf_rntuple.root";
+   {
+      TFile file(fileName.c_str(), "RECREATE");
+      ws->Write();
+      ws->Write("w2");
+   }
+   TFile file(fileName.c_str());
+   for (const char *name : {"w_histfactory_arrays", "w_histfactory_arrays_1"}) {
+      TKey *key = file.GetKey(name);
+      ASSERT_NE(key, nullptr) << name;
+      EXPECT_STREQ(key->GetClassName(), "ROOT::RNTuple");
+   }
+   EXPECT_LT(file.GetKey("w")->GetObjlen(), nBins * sizeof(double));
+   for (const char *name : {"w", "w2"}) {
+      std::unique_ptr<RooWorkspace> wsRead{file.Get<RooWorkspace>(name)};
+      ASSERT_NE(wsRead, nullptr) << name;
+      expectSameSample(*ws, *wsRead);
+   }
+
+   const std::string fileName2 = "testRooHistFactoryPdf_rntuple_2.root";
+   ASSERT_TRUE(ws->writeToFile(fileName2.c_str()));
+   TFile file2(fileName2.c_str());
+   ASSERT_NE(file2.GetKey("w_histfactory_arrays"), nullptr);
+   std::unique_ptr<RooWorkspace> wsRead{file2.Get<RooWorkspace>("w")};
+   ASSERT_NE(wsRead, nullptr);
+   expectSameSample(*ws, *wsRead);
+}
+
+/// Files in memory get the RNTuple too.
+TEST(RooHistFactoryPdf, DataInRNTupleInMemoryFile)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   auto ws = makeLargeSampleWorkspace(1000);
+   TMemFile file("testRooHistFactoryPdf_memfile.root", "RECREATE");
+   ws->Write();
+   ASSERT_NE(file.GetKey("w_histfactory_arrays"), nullptr);
+   std::unique_ptr<RooWorkspace> wsRead{file.Get<RooWorkspace>("w")};
+   ASSERT_NE(wsRead, nullptr);
+   expectSameSample(*ws, *wsRead);
+}
+
+/// Without RooWorkspace::Write(), the data is written with the sample.
+TEST(RooHistFactoryPdf, DataWithoutRNTuple)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   auto ws = makeLargeSampleWorkspace(1000);
+
+   TBufferFile buffer{TBuffer::kWrite};
+   buffer.WriteObject(ws.get());
+   buffer.SetReadMode();
+   buffer.SetBufferOffset(0);
+   std::unique_ptr<RooWorkspace> wsRead{static_cast<RooWorkspace *>(buffer.ReadObject(RooWorkspace::Class()))};
+   ASSERT_NE(wsRead, nullptr);
+   expectSameSample(*ws, *wsRead);
+
+   TMemFile file("testRooHistFactoryPdf_inline.root", "RECREATE");
+   file.WriteObject(ws.get(), "w");
+   file.WriteObject(ws->function("sample_shapes"), "sample");
+   for (TObject *key : *file.GetListOfKeys()) {
+      EXPECT_STRNE(static_cast<TKey *>(key)->GetClassName(), "ROOT::RNTuple");
+   }
+   std::unique_ptr<RooWorkspace> wsFromFile{file.Get<RooWorkspace>("w")};
+   ASSERT_NE(wsFromFile, nullptr);
+   expectSameSample(*ws, *wsFromFile);
 }
 
 /// Integrals over ranges that don't align with the bins take the fraction of the bins in the range.

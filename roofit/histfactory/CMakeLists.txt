@@ -65,6 +65,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
   DEPENDENCIES
     RooFit
     RooFitCore
+    ROOTNTuple
     Tree
     RIO
     Hist
