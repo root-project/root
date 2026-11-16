@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.1.0.1
+# RNTuple Binary Format Specification 1.1.0.2
 
 ## Versioning Notes
 
@@ -989,6 +989,7 @@ Implementations should also be able to parse the shorter alias `ROOT::Vec<T>`.
 Fixed-sized arrays are stored as two fields:
   - A repetitive field of type `std::array<T, N>` with no attached columns.
     The array size `N` is stored in the field metadata.
+    The array size must be greater than zero.
   - Child field of type `T` named `_0`, which must be a type with RNTuple I/O support.
 
 Note that T can itself be an array type, which implies support for multidimensional C-style arrays.
@@ -1022,6 +1023,7 @@ The child fields are named `_0`, `_1`, ...
 A bitset is stored as a repetitive plain field with an attached `Bit` column.
 The bitset size `N` is stored as repetition parameter in the field metadata.
 Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
+The repetition parameter `N` must be greater than zero.
 
 #### std::unique_ptr\<T\>, std::optional\<T\>
 

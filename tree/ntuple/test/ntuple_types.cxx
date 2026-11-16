@@ -139,6 +139,10 @@ TEST(RNTuple, ArrayField)
    EXPECT_THROW(RFieldBase::Create("test", "unsigned int [[2").Unwrap(), ROOT::RException);
    EXPECT_THROW(RFieldBase::Create("test", "unsigned[2] int[10").Unwrap(), ROOT::RException);
 
+   EXPECT_THROW(std::make_unique<ROOT::RArrayField>("f", std::make_unique<ROOT::RField<int>>("_0"), 0),
+                ROOT::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned int[0]").Unwrap(), ROOT::RException);
+
    unsigned char charArray[] = {0x00, 0x01, 0x02, 0x03};
 
    FileRaii fileGuard("test_ntuple_rfield_array.root");
@@ -1343,6 +1347,9 @@ TEST(RNTuple, StdAtomic)
 TEST(RNTuple, Bitset)
 {
    FileRaii fileGuard("test_ntuple_bitset.root");
+
+   EXPECT_THROW(std::make_unique<ROOT::RBitsetField>("f", 0), ROOT::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "std::bitset<0>").Unwrap(), ROOT::RException);
 
    auto model = RNTupleModel::Create();
 

@@ -74,6 +74,9 @@ ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFiel
      fArrayLength(arrayLength)
 {
    Internal::EnsureTypedChildField(*itemField, *this);
+   if (arrayLength == 0) {
+      throw RException(R__FAIL("invalid zero-length array field " + GetQualifiedFieldName()));
+   }
    fTraits |= itemField->GetTraits() & ~kTraitMappable;
    if (!itemField->GetTypeAlias().empty()) {
       fTypeAlias = "std::array<" + itemField->GetTypeAlias() + "," +
