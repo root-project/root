@@ -230,6 +230,11 @@ void ROperator_ConvTranspose<T>::Initialize(RModel &model)
                                " is not of 3,4 or 5 dimensions");
    }
    fShapeY = ShapeInference({fShapeX, fShapeW})[0];
+   if (fShapeX[1] != fShapeW[0] || fShapeW[0] % fAttrGroup != 0) {
+      throw std::runtime_error("TMVA SOFIE Conv Transpose Op: input channels " + std::to_string(fShapeX[1]) +
+                               " must match weight shape[0] " + std::to_string(fShapeW[0]) +
+                               " and be divisible by group " + std::to_string(fAttrGroup));
+   }
 
    model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
    if (fNB != "") {
@@ -403,7 +408,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
    out << SP << "char " << OpName << "_transB = 'T';\n";
    out << SP << "int " << OpName << "_m = " << iHeight * iWidth * iDepth << ";\n";
    out << SP << "int " << OpName << "_n = " << icstrideDil * fShapeW[1] << ";\n"; // output channels * filters
-   out << SP << "int " << OpName << "_k = " << fShapeW[0] << ";\n";               // input channels
+   out << SP << "int " << OpName << "_k = " << fShapeW[0] / fAttrGroup << ";\n";  // input channels per group
    out << SP << "float " << OpName << "_alpha = 1.0;\n";
    out << SP << "float " << OpName << "_beta = 0.0;\n";
 
@@ -473,25 +478,28 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       // Unroll (IM2COL) the input tensor- make loop on groups and repeat operations (IM2COL + GEMM for each
       // group)
       out << SP << SP << "for (size_t g = 0; g < " << fAttrGroup << "; g++) {\n";
-      out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << " + g * "
-          << fShapeX[1] * iHeight * iWidth / fAttrGroup << ";\n ";
-      out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * oHeight * oWidth << " + g * "
-          << fShapeY[1] * oHeight * oWidth / fAttrGroup << ";\n ";
+      // each group maps Cin/group input channels to Cout/group (= fShapeW[1]) output channels
+      out << SP << SP << SP << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << " + g * "
+          << fShapeX[1] * iHeight * iWidth / fAttrGroup << ";\n";
+      out << SP << SP << SP << "size_t out_offset = n * " << fShapeY[1] * oHeight * oWidth << " + g * "
+          << fShapeY[1] * oHeight * oWidth / fAttrGroup << ";\n";
+      // the kernel matrix has layout [Cin, Cout/group, K]: group g uses the rows of its Cin/group input channels
+      out << SP << SP << SP << "size_t offset_f = g * " << (fShapeW[0] / fAttrGroup) * icstrideDil * fShapeW[1]
+          << ";\n";
 
-      // do BLAS here (LM: probably need an offset for op_f the kernels)
       out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
           << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, "
           << "tensor_" << fNX << " + x_offset, &" << OpName
           << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      out << SP << SP << SP << "tensor_" << fConvK << ", &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fImcol
-          << " , &" << OpName << "_m);\n";
+      out << SP << SP << SP << "tensor_" << fConvK << " + offset_f, &" << OpName << "_n, &" << OpName
+          << "_beta, tensor_" << fImcol << " , &" << OpName << "_m);\n";
 
       if (fDim < 3) {
          out << SP << SP << "UTILITY::col2im<float>(tensor_" << fImcol
              << ","
              //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin, pad_w_end,
              //  stride_h, stride_w, dilation_h, dilation_w,
-             << fShapeY[1] << "," << oHeight << "," << oWidth << ",";
+             << fShapeW[1] << "," << oHeight << "," << oWidth << ",";
          if (fDim == 1)
             out << "1, " << fAttrKernelShape[0] << ",0,0," << fAttrPads[0] << "," << fAttrPads[1] << ",1,"
                 << fAttrStrides[0] << ",1," << fAttrDilations[0];

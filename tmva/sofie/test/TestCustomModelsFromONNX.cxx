@@ -1176,6 +1176,15 @@ TEST(ONNX, ConvTransposeBias2dBatched)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, ConvTransposeGroup2d)
+{
+   SofieReference ref = readReference("ConvTransposeGroup2d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTransposeGroup2d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, Sqrt)
 {
    SofieReference ref = readReference("Sqrt");

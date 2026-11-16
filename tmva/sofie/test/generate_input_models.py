@@ -853,6 +853,30 @@ def make_ConvTransposeBias2dBatched():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_ConvTransposeGroup2d():
+    """Ops: ConvTranspose with group=2 (regression test for per-group channel counts)"""
+    nodes = [
+        helper.make_node('ConvTranspose', ['X', 'W', 'B'], ['Y'], group=2),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvTransposeGroup2d',
+        inputs=[
+            _vi('X', FLOAT, [2, 4, 3, 3]),
+            _vi('W', FLOAT, [4, 3, 2, 2]),
+            _vi('B', FLOAT, [6]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [2, 6, 4, 4]),
+        ],
+        initializer=[
+            _random_tensor('W', [4, 3, 2, 2], 101),
+            _tensor('B', FLOAT, [6], [0.5, -0.5, 1.0, -1.0, 2.0, -2.0]),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
 def make_ConvWithAsymmetricPadding():
     """Ops: Conv"""
     nodes = [
@@ -6268,6 +6292,7 @@ MODELS = {
     "ConvTranspose2dOutputShape": make_ConvTranspose2dOutputShape,
     "ConvTransposeBias2d": make_ConvTransposeBias2d,
     "ConvTransposeBias2dBatched": make_ConvTransposeBias2dBatched,
+    "ConvTransposeGroup2d": make_ConvTransposeGroup2d,
     "ConvWithAsymmetricPadding": make_ConvWithAsymmetricPadding,
     "ConvSameUpperEvenKernel": make_ConvSameUpperEvenKernel,
     "ConvSameLowerEvenKernel": make_ConvSameLowerEvenKernel,
@@ -7084,6 +7109,7 @@ TEST_INPUTS = {
     "ConvTranspose2dOutputShape": [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     "ConvTransposeBias2d": [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     "ConvTransposeBias2dBatched": [f32(np.arange(0.0, 18.0), (2, 1, 3, 3))],
+    "ConvTransposeGroup2d": [rand_f32(34, (2, 4, 3, 3))],
     "ConvTransposeSharedInput": [rand_f32(33, (1, 2, 3, 3))],
     "ConvWithAsymmetricPadding": [f32(np.arange(0.0, 35.0), (1, 1, 7, 5))],
     "ConvSameUpperEvenKernel": [f32(np.arange(0.0, 16.0), (1, 1, 4, 4))],
@@ -8099,6 +8125,30 @@ def _convtranspose_outputshape_reference(model, feeds):
 
 
 # Models whose expected outputs the ReferenceEvaluator cannot compute.
+def _convtranspose_group_reference(model, feeds):
+    """Grouped ConvTranspose computed directly (stride 1, no padding, no dilation);"""
+    from onnx import numpy_helper
+
+    init = {t.name: numpy_helper.to_array(t) for t in model.graph.initializer}
+    node = model.graph.node[0]
+    group = [a.i for a in node.attribute if a.name == "group"][0]
+    x, w, b = feeds["X"], init["W"], init["B"]
+    n, cin, h, wd = x.shape
+    _, cout_g, kh, kw = w.shape
+    cin_g = cin // group
+    y = np.zeros((n, cout_g * group, h + kh - 1, wd + kw - 1), dtype=np.float64)
+    for g in range(group):
+        for ic in range(cin_g):
+            for oc in range(cout_g):
+                for i in range(h):
+                    for j in range(wd):
+                        y[:, g * cout_g + oc, i:i + kh, j:j + kw] += (
+                            x[:, g * cin_g + ic, i, j][:, None, None] * w[g * cin_g + ic, oc]
+                        )
+    y += b.reshape(1, -1, 1, 1)
+    return [y.astype(np.float32)]
+
+
 def _batchnorm_reference(model, feeds):
     """Inference-mode batch normalization, computed directly.
 
@@ -8151,6 +8201,7 @@ EXPECTED_OVERRIDES = {
     "MaxPool2d_AsymPad": _maxpool2d_reference,
     "MeanMultidirectionalBroadcast": _mean_reference,
     "ConvTranspose2dOutputShape": _convtranspose_outputshape_reference,
+    "ConvTransposeGroup2d": _convtranspose_group_reference,
     "IdentityWeightBatchNorm": _batchnorm_reference,
     "BatchNormEpsilon": _batchnorm_reference,
     "BatchNormReluEpsilon": _batchnorm_reference,
