@@ -6227,6 +6227,43 @@ def make_AliasDynShapeAcrossNewTensor():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def _unsqueeze_model(name, opset, axes_as_attr, axes):
+    """x of shape [3] is unsqueezed to [1, 3, 1] and added to a [3, 1, 1] tensor.
+    The broadcast makes the result [3, 3, 1] with out[i, j] = w[i] + x[j], so
+    that any other placement of the new axes gives a different result."""
+    if axes_as_attr:
+        unsqueeze = helper.make_node("Unsqueeze", ["x"], ["xu"], name="unsqueeze_0", axes=axes)
+        initializer = []
+    else:
+        unsqueeze = helper.make_node("Unsqueeze", ["x", "axes"], ["xu"], name="unsqueeze_0")
+        initializer = [_tensor("axes", INT64, [len(axes)], axes)]
+    initializer.append(_tensor("w", FLOAT, [3, 1, 1], [10.0, 20.0, 30.0]))
+    graph = helper.make_graph(
+        [unsqueeze, helper.make_node("Add", ["xu", "w"], ["out"], name="add_0")],
+        name,
+        inputs=[_vi("x", FLOAT, [3])],
+        outputs=[_vi("out", FLOAT, [3, 3, 1])],
+        initializer=initializer,
+    )
+    return _model(graph, opset=opset, ir_version=10, producer_name="onnx-example")
+
+
+def make_UnsqueezeUnsortedAxes():
+    """Ops: Unsqueeze, Add. The axes refer to positions in the output and are
+    not in increasing order."""
+    return _unsqueeze_model("unsqueeze_unsorted_axes", 13, False, [2, 0])
+
+
+def make_UnsqueezeNegativeAxes():
+    """Ops: Unsqueeze, Add. Negative axes count from the end of the output."""
+    return _unsqueeze_model("unsqueeze_negative_axes", 13, False, [-1, 0])
+
+
+def make_UnsqueezeAxesAttribute():
+    """Ops: Unsqueeze, Add. Axes given as an attribute (opset 11), unsorted."""
+    return _unsqueeze_model("unsqueeze_axes_attribute", 11, True, [2, 0])
+
+
 MODELS = {
     "Abs": make_Abs,
     "Acosh": make_Acosh,
@@ -6338,6 +6375,9 @@ MODELS = {
     "AliasAcrossNewTensor": make_AliasAcrossNewTensor,
     "AliasChain": make_AliasChain,
     "AliasChainSingle": make_AliasChainSingle,
+    "UnsqueezeUnsortedAxes": make_UnsqueezeUnsortedAxes,
+    "UnsqueezeNegativeAxes": make_UnsqueezeNegativeAxes,
+    "UnsqueezeAxesAttribute": make_UnsqueezeAxesAttribute,
     "AliasDynShape": make_AliasDynShape,
     "AliasDynShapeAcrossNewTensor": make_AliasDynShapeAcrossNewTensor,
     "AliasOwnerReadAfterAlias": make_AliasOwnerReadAfterAlias,
@@ -7179,6 +7219,9 @@ TEST_INPUTS = {
     "AliasAcrossNewTensor": [rand_f32(45, (2, 3)), rand_f32(46, (3, 2))],
     "AliasChain": [rand_f32(47, (1, 2, 3))],
     "AliasChainSingle": [rand_f32(47, (1, 2, 3))],
+    "UnsqueezeUnsortedAxes": [f32([1.0, 2.0, 3.0], (3,))],
+    "UnsqueezeNegativeAxes": [f32([1.0, 2.0, 3.0], (3,))],
+    "UnsqueezeAxesAttribute": [f32([1.0, 2.0, 3.0], (3,))],
     "AliasDynShape": [rand_f32(48, (2, 3))],
     "AliasDynShapeAcrossNewTensor": [rand_f32(51, (2, 3)), rand_f32(52, (2, 3))],
     "AliasOwnerReadAfterAlias": [rand_f32(49, (2, 3)), rand_f32(50, (2, 3))],
@@ -8127,6 +8170,20 @@ def _batchnorm_reference(model, feeds):
     return [y.astype(np.float32)]
 
 
+def _unsqueeze_reference(model, feeds):
+    """Unsqueeze with all the axes at once, as the ONNX specification says. The
+    ReferenceEvaluator applies them one after the other, which fails for axes
+    that are not in increasing order."""
+    node = next(n for n in model.graph.node if n.op_type == "Unsqueeze")
+    if len(node.input) > 1:
+        axes = next(numpy_helper.to_array(t) for t in model.graph.initializer if t.name == node.input[1])
+    else:
+        axes = next(a.ints for a in node.attribute if a.name == "axes")
+    w = next(numpy_helper.to_array(t) for t in model.graph.initializer if t.name == "w")
+    xu = np.expand_dims(feeds[node.input[0]], tuple(int(a) for a in axes))
+    return [xu + w]
+
+
 def _logsoftmax_reference(model, feeds):
     """LogSoftmax computed as (x - max) - log(sum(exp(x - max))).
 
@@ -8156,6 +8213,9 @@ EXPECTED_OVERRIDES = {
     "BatchNormReluEpsilon": _batchnorm_reference,
     "LogSoftmaxLargeRange": _logsoftmax_reference,
     "LogSoftmaxLargeRangeAxis0": _logsoftmax_reference,
+    "UnsqueezeUnsortedAxes": _unsqueeze_reference,
+    "UnsqueezeNegativeAxes": _unsqueeze_reference,
+    "UnsqueezeAxesAttribute": _unsqueeze_reference,
 }
 
 
