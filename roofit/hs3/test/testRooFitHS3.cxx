@@ -47,6 +47,8 @@
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
+#include <RooStats/HistFactory/RooHistFactoryPdf.h>
+#include <RooStats/HistFactory/RooHistFactorySample.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooTFnBinding.h>
@@ -89,6 +91,53 @@ std::string jsonString(RooFit::Detail::JSONTree &tree)
    std::ostringstream stream;
    tree.rootnode().writeJSON(stream);
    return stream.str();
+}
+
+// The sample "sig" of the channel of HistFactoryDoc.
+RooHistFactorySample *sigSample(RooWorkspace &ws)
+{
+   return object<RooHistFactorySample>(ws, "model_channel0_sig_shapes");
+}
+
+// The interpolation codes of the NormSys or HistoSys modifiers of a sample, by parameter name.
+std::map<std::string, int> interpolationCodes(RooHistFactorySample const &sample, bool normSys)
+{
+   auto const &data = sample.data();
+   auto const &params = normSys ? data.normSysParams : data.histoSysParams;
+   auto const &codes = normSys ? data.normSysCodes : data.histoSysCodes;
+   std::map<std::string, int> out;
+   for (std::size_t i = 0; i < params.size(); ++i) {
+      out[sample.parameters()[params[i]].GetName()] = codes[i];
+   }
+   return out;
+}
+
+// The type of the modifier of a sample that scales each bin with its own parameter, by name.
+std::optional<RooHistFactorySample::BinFactorType>
+binFactorType(RooHistFactorySample const &sample, std::string const &name)
+{
+   auto const &data = sample.data();
+   for (std::size_t i = 0; i < data.binFactorNames.size(); ++i) {
+      if (data.binFactorNames[i] == name) {
+         return static_cast<RooHistFactorySample::BinFactorType>(data.binFactorTypes[i]);
+      }
+   }
+   return std::nullopt;
+}
+
+// The parameters of the modifier of a sample that scales each bin with its own parameter, by name.
+RooArgList binFactorParams(RooHistFactorySample const &sample, std::string const &name)
+{
+   auto const &data = sample.data();
+   RooArgList params;
+   for (std::size_t i = 0; i < data.binFactorNames.size(); ++i) {
+      if (data.binFactorNames[i] == name) {
+         for (std::size_t iBin = 0; iBin < data.numBins(); ++iBin) {
+            params.add(sample.parameters()[data.binFactorParams[i * data.numBins() + iBin]]);
+         }
+      }
+   }
+   return params;
 }
 
 // Builds a single-bin-observable RooDataHist filled with the given bin contents. Returns an owning pointer so that it
@@ -1529,13 +1578,10 @@ TEST(RooFitHS3, HistFactoryInterpolationCodeMapping)
       EXPECT_FALSE(exported.has("distributions/model_channel0/samples/sig/modifiers/modifier/interpolation"));
 
       Imported roundTripped{exported};
-      if (isNormSys) {
-         auto *interpolation = object<RooStats::HistFactory::FlexibleInterpVar>(roundTripped, "sig_channel0_epsilon");
-         EXPECT_EQ(interpolation->interpolationCodes(), std::vector<int>{testCase.canonicalCode});
-      } else {
-         auto *interpolation = object<PiecewiseInterpolation>(roundTripped, "histoSys_model_channel0_sig");
-         EXPECT_EQ(interpolation->interpolationCodes(), std::vector<int>{testCase.canonicalCode});
-      }
+      // The codes of NormSys are the ones of FlexibleInterpVar, and the codes of HistoSys the ones of
+      // PiecewiseInterpolation.
+      const std::map<std::string, int> codes = interpolationCodes(*sigSample(roundTripped), isNormSys);
+      EXPECT_EQ(codes, (std::map<std::string, int>{{"alpha_modifier", testCase.canonicalCode}}));
    }
 }
 
@@ -1580,18 +1626,8 @@ TEST(RooFitHS3, HistFactoryInterpolationDefaultsAndOverrides)
          {"name": "shape_quadratic", "interpolation": {"type": "add", "in": "poly2", "out": "poly1"}}]}]})"));
 
    Imported roundTripped{exported};
-   auto *shapeInterpolation = object<PiecewiseInterpolation>(roundTripped, "histoSys_model_channel0_sig");
-   ASSERT_EQ(shapeInterpolation->paramList().size(), 2u);
-   for (std::size_t i = 0; i < shapeInterpolation->paramList().size(); ++i) {
-      const std::string parameter = shapeInterpolation->paramList().at(i)->GetName();
-      if (parameter == "alpha_shape_default") {
-         EXPECT_EQ(shapeInterpolation->interpolationCodes()[i], 4);
-      } else if (parameter == "alpha_shape_quadratic") {
-         EXPECT_EQ(shapeInterpolation->interpolationCodes()[i], 2);
-      } else {
-         FAIL() << "Unexpected histosys parameter " << parameter;
-      }
-   }
+   EXPECT_EQ(interpolationCodes(*sigSample(roundTripped), false),
+             (std::map<std::string, int>{{"alpha_shape_default", 4}, {"alpha_shape_quadratic", 2}}));
 
    const std::string implicitModifiers = R"(
       {"name":"norm","parameter":"alpha_norm","type":"normsys","data":{"lo":0.8,"hi":1.2}},
@@ -1647,8 +1683,7 @@ std::vector<double> structuredInterpolationYields(RooWorkspace &ws)
       ws.var("alpha_shape")->setVal(theta);
       for (int bin = 0; bin < 2; ++bin) {
          ws.var("x")->setBin(bin);
-         yields.push_back(ws.function("model_channel0_sig_shapes")->getVal(observables) *
-                          ws.function("model_channel0_sig_scaleFactors")->getVal());
+         yields.push_back(ws.function("model_channel0_sig_shapes")->getVal(observables));
       }
    }
    return yields;
@@ -1668,12 +1703,8 @@ INSTANTIATE_TEST_SUITE_P(HistFactoryStructuredInterpolation, RoundTrip,
 TEST(RooFitHS3, HistFactoryStructuredInterpolationRoundTrip)
 {
    Imported ws{structuredInterpolationJSON()};
-   auto *norm = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(ws.function("sig_channel0_epsilon"));
-   auto *shape = dynamic_cast<PiecewiseInterpolation *>(ws.function("histoSys_model_channel0_sig"));
-   ASSERT_NE(norm, nullptr);
-   ASSERT_NE(shape, nullptr);
-   EXPECT_EQ(norm->interpolationCodes()[0], 4);
-   EXPECT_EQ(shape->interpolationCodes()[0], 2);
+   EXPECT_EQ(interpolationCodes(*sigSample(ws), true).at("alpha_norm"), 4);
+   EXPECT_EQ(interpolationCodes(*sigSample(ws), false).at("alpha_shape"), 2);
 }
 
 TEST(RooFitHS3, HistFactoryStructuredInterpolationValidation)
@@ -1737,8 +1768,12 @@ TEST(RooFitHS3, HistFactoryZeroYieldBin)
    }
 }
 
+// The RooFit objects of the HistFactory models before ROOT 6.44 don't store the names of the modifiers. The
+// exporter names them after their parameters, and combines the modifiers that get the same name.
 TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
 {
+   ScopedConfig config{{useHistFactoryPdf(false)}};
+
    // The two "poly" modifiers deliberately use implicit code 4 and explicit
    // code 5, which are semantic aliases in FlexibleInterpVar.
    Imported ws1{HistFactoryDoc{"0.1.90", R"(
@@ -1827,9 +1862,55 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
    EXPECT_TRUE(sentinelErrors.empty()) << sentinelErrors;
 }
 
-// Duplicate modifiers that cannot be combined into one are rejected on export.
+// A RooHistFactoryPdf keeps the names of the modifiers. Modifiers with the same name and type are combined in the
+// export, and the others are kept as they are, even if they have the same parameter.
+TEST(RooFitHS3, HistFactoryDuplicateModifiersRoundTrip)
+{
+   Imported ws1{HistFactoryDoc{"0.1.90", R"(
+   {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "interpolation": 1, "data": {"lo": 0.8, "hi": 1.2}},
+   {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "interpolation": 1, "data": {"lo": 0.9, "hi": 1.1}},
+   {"name": "shape_input_1", "parameter": "alpha_shape", "type": "histosys",
+    "data": {"lo": {"contents": [8.0, 18.0]}, "hi": {"contents": [12.0, 22.0]}}},
+   {"name": "shape_input_2", "parameter": "alpha_shape", "type": "histosys",
+    "data": {"lo": {"contents": [9.0, 16.0]}, "hi": {"contents": [11.0, 24.0]}}})"}};
+
+   Doc exported{ws1};
+   EXPECT_THAT(exported.warnings(), HasSubstr("combined 2 duplicate modifiers named 'norm' of type 'normsys'"));
+   EXPECT_THAT(exported.warnings(), Not(HasSubstr("of type 'histosys'")));
+   EXPECT_EQ(exported.names("distributions/model_channel0/samples/sig/modifiers"),
+             (std::vector<std::string>{"norm", "shape_input_1", "shape_input_2"}));
+
+   Imported ws2{exported};
+   RooHistFactorySample *sample = sigSample(ws2);
+   ASSERT_EQ(sample->data().normSysNames.size(), 1u);
+   EXPECT_DOUBLE_EQ(sample->data().normSysLo[0], 0.8 * 0.9);
+   EXPECT_DOUBLE_EQ(sample->data().normSysHi[0], 1.2 * 1.1);
+   EXPECT_EQ(sample->data().histoSysNames, (std::vector<std::string>{"shape_input_1", "shape_input_2"}));
+
+   for (double norm : {-0.6, 0.8, 1.3}) {
+      for (double shape : {-0.4, 0.35, 1.2}) {
+         for (int bin = 0; bin < 2; ++bin) {
+            auto prediction = [&](RooWorkspace &ws) {
+               ws.var("x")->setBin(bin);
+               ws.var("alpha_norm")->setVal(norm);
+               ws.var("alpha_shape")->setVal(shape);
+               return ws.function("model_channel0_sig_shapes")->getVal();
+            };
+            const double before = prediction(ws1);
+            EXPECT_NEAR(prediction(ws2), before, std::abs(before) * 1e-13)
+               << "bin=" << bin << ", norm=" << norm << ", shape=" << shape;
+         }
+      }
+   }
+}
+
+// Duplicate modifiers that cannot be combined into one are rejected on export. The duplicates come from naming the
+// modifiers after their parameters, which the exporter does for the RooFit objects of the HistFactory models before
+// ROOT 6.44. A RooHistFactoryPdf keeps the names of the modifiers.
 TEST(RooFitHS3, HistFactoryIncompatibleDuplicateModifiers)
 {
+   ScopedConfig config{{useHistFactoryPdf(false)}};
+
    // Two normsys modifiers, "input_1" and "input_2", with the given further keys.
    auto normsys = [](std::string const &keys1, std::string const &keys2) {
       return R"({"name": "input_1", "type": "normsys", "data": {"lo": 0.8, "hi": 1.2}, )" + keys1 + R"(},
@@ -1907,12 +1988,13 @@ TEST(RooFitHS3, HistFactoryHistoSysOfTheSameNameInOlderDocuments)
                                "there is another histosys modifier named 'shape' in the sample");
 
    Imported ws{HistFactoryDoc{"0.2", modifiers}};
-   auto *interp = object<PiecewiseInterpolation>(ws, "histoSys_model_channel0_sig");
-   ASSERT_EQ(interp->paramList().size(), 2u);
-   EXPECT_EQ(interp->paramList().at(0), interp->paramList().at(1));
-   auto high = [&](int i, int bin) {
-      return static_cast<RooHistFunc *>(interp->highList().at(i))->dataHist().weight(bin);
-   };
+   RooHistFactorySample *sample = sigSample(ws);
+   RooHistFactorySample::Data const &data = sample->data();
+   EXPECT_EQ(data.histoSysNames, (std::vector<std::string>{"shape", "shape"}));
+   ASSERT_EQ(data.histoSysParams.size(), 2u);
+   EXPECT_EQ(data.histoSysParams[0], data.histoSysParams[1]);
+   // The variations are stored one after the other.
+   auto high = [&](int i, int bin) { return data.histoSysHi[i * data.numBins() + bin]; };
    EXPECT_DOUBLE_EQ(high(0, 1), 22.0);
    EXPECT_DOUBLE_EQ(high(1, 1), 24.0);
 
@@ -1920,15 +2002,14 @@ TEST(RooFitHS3, HistFactoryHistoSysOfTheSameNameInOlderDocuments)
    Doc exported{ws};
    EXPECT_EQ(exported.names("distributions/model_channel0/samples/sig/modifiers"), std::vector<std::string>{"shape"});
    Imported ws2{exported};
-   auto *interp2 = object<PiecewiseInterpolation>(ws2, "histoSys_model_channel0_sig");
-   ASSERT_EQ(interp2->paramList().size(), 1u);
-   // Both functions give the same for a shifted parameter. (expectRoundTrip() cannot make this comparison: the
-   // variations of the first modifier and of the combined one have the same names.)
+   RooHistFactorySample *sample2 = sigSample(ws2);
+   EXPECT_EQ(sample2->data().histoSysNames, std::vector<std::string>{"shape"});
+   // Both samples give the same for a shifted parameter.
    ws.var("alpha_shape")->setVal(0.7);
    ws2.var("alpha_shape")->setVal(0.7);
    ws.var("x")->setBin(1);
    ws2.var("x")->setBin(1);
-   EXPECT_NEAR(interp->getVal(), interp2->getVal(), 1e-9 * interp->getVal());
+   EXPECT_NEAR(sample->getVal(), sample2->getVal(), 1e-9 * sample->getVal());
 }
 
 TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
@@ -2547,7 +2628,8 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraint)
       // The constraints are exported as one array distribution that the staterror modifier references by name.
       Doc doc{ws};
       EXPECT_FALSE(doc.has("distributions/model_channel0/staterror"));
-      const std::string modifier = "distributions/model_channel0/samples/sig/modifiers/staterror";
+      // The name of the modifier in the document is kept.
+      const std::string modifier = "distributions/model_channel0/samples/sig/modifiers/mcstat";
       EXPECT_FALSE(doc.has(modifier + "/constraint"));
       const std::vector<std::string> constraints = doc.strings(modifier + "/constraints");
       ASSERT_EQ(constraints.size(), 2u);
@@ -2585,8 +2667,7 @@ TEST(RooFitHS3, HistFactoryMissingInterpolation)
 
    Imported ws{HistFactoryDoc{"0.2", modifiers}};
    EXPECT_EQ(countOccurrences(ws.warnings, "implicit default of older RooFit versions"), 1u) << ws.warnings;
-   auto *norm = object<RooStats::HistFactory::FlexibleInterpVar>(ws, "sig_channel0_epsilon");
-   EXPECT_EQ(norm->interpolationCodes()[0], 4);
+   EXPECT_EQ(interpolationCodes(*sigSample(ws), true).at("alpha_norm"), 4);
 
    // RooFit always writes a "default_interpolation" if a modifier relies on it.
    Doc exported{ws};
@@ -3235,16 +3316,17 @@ TEST(RooFitHS3, HistFactoryArrayDistExport)
 
    // Opt-out: one constraint distribution per parameter, no array_dist at all.
    const std::string modifiers = "distributions/model_c1/samples/sig/modifiers/";
+   // The staterror modifier, which has no name in the document, keeps the name that the import gave it.
+   const std::string staterror = modifiers + "c1_sig_syst_2";
    Doc plain{ws, {exportArrayDist(false)}};
    EXPECT_THAT(plain.json(), Not(HasSubstr("array_dist")));
    EXPECT_TRUE(matches(plain, modifiers + "a", R"({"constraints": ["alpha_a_constraint"]})"));
-   EXPECT_TRUE(matches(plain, modifiers + "staterror",
-                       R"({"constraints": ["gamma_c1_0_constraint", "gamma_c1_1_constraint"]})"));
+   EXPECT_TRUE(matches(plain, staterror, R"({"constraints": ["gamma_c1_0_constraint", "gamma_c1_1_constraint"]})"));
    // From the workspace with imported arrays, the components are written on their own as well.
    Imported ws2{exported};
    Doc plainFromArrays{ws2, {exportArrayDist(false)}};
    EXPECT_THAT(plainFromArrays.json(), Not(HasSubstr("array_dist")));
-   EXPECT_TRUE(matches(plainFromArrays, modifiers + "staterror",
+   EXPECT_TRUE(matches(plainFromArrays, staterror,
                        R"({"constraints": ["nom_gamma_c1_0_constraint", "nom_gamma_c1_1_constraint"]})"));
 }
 
@@ -3261,7 +3343,8 @@ TEST(RooFitHS3, TutorialRF515RoundTrip)
    // The top-level pdf is the RooSimultaneous "main" of the analysis.
    EXPECT_TRUE(matches(exported, "distributions/main_gaussian_constraints", R"({"type": "array_dist"})"));
    EXPECT_EQ(exported["distributions/main_gaussian_constraints/components"].num_children(), 3u);
-   EXPECT_TRUE(matches(exported, "distributions/model_channel1/samples/background1/modifiers/staterror",
+   // The name of the modifier in the document is kept.
+   EXPECT_TRUE(matches(exported, "distributions/model_channel1/samples/background1/modifiers/mcstat",
                        R"({"constraints": ["gamma_bin_0_constraint", "gamma_bin_1_constraint"]})"));
 
    EXPECT_EQ(reexport(exported), exported.json());
@@ -3475,9 +3558,10 @@ TEST(RooFitHS3, HistFactoryShapeFactor)
    const std::string json = makeJSON("0.3", freeModifier + "," + constrainedModifier, gammaConstraint("g_c_0"));
 
    Imported ws{json};
-   // The functions are named as in HistFactory: ShapeFactor for free, ShapeSys for constrained parameters.
-   EXPECT_NE(ws.function("channel0_free_shapeFactor"), nullptr);
-   EXPECT_NE(ws.function("channel0_constr_ShapeSys"), nullptr);
+   // As in HistFactory: ShapeFactor for free, ShapeSys for constrained parameters.
+   using BinFactorType = RooHistFactorySample::BinFactorType;
+   EXPECT_EQ(binFactorType(*sigSample(ws), "free"), BinFactorType::ShapeFactor);
+   EXPECT_EQ(binFactorType(*sigSample(ws), "constr"), BinFactorType::ShapeSys);
    EXPECT_EQ(countGammaConstraints(ws), 1u);
    ASSERT_NE(ws.var("g_free_0"), nullptr);
    EXPECT_FALSE(ws.var("g_free_0")->isConstant());
@@ -3501,13 +3585,13 @@ TEST(RooFitHS3, HistFactoryShapeFactor)
    Imported ws4{makeJSON("0.3", R"({"type": "shapefactor", "name": "free", "parameters": ["g_free_0", "g_free_1"],
                                     "data": {"vals": [0.1, 0.2]}})")};
    EXPECT_THAT(ws4.warnings, HasSubstr(R"(the "data.vals" of modifier 'free' of sample 'sig' are ignored)"));
-   EXPECT_NE(ws4.function("channel0_free_shapeFactor"), nullptr);
+   EXPECT_EQ(binFactorType(*sigSample(ws4), "free"), BinFactorType::ShapeFactor);
    EXPECT_EQ(countGammaConstraints(ws4), 0u);
 
    // Before HS3 0.3, a "shapesys" with "data.vals" is constrained as before, without deprecation warning.
    Imported ws5{makeJSON("0.2", R"({"type": "shapesys", "name": "constr", "data": {"vals": [0.1, 0.2]}})")};
    EXPECT_THAT(ws5.warnings, Not(HasSubstr("deprecated")));
-   EXPECT_NE(ws5.function("channel0_constr_ShapeSys"), nullptr);
+   EXPECT_EQ(binFactorType(*sigSample(ws5), "constr"), BinFactorType::ShapeSys);
    EXPECT_EQ(countGammaConstraints(ws5), 2u);
 }
 
@@ -3518,11 +3602,12 @@ TEST(RooFitHS3, HistFactoryShapeFactorWithoutParameters)
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    Imported ws{HistFactoryDoc{"0.3", R"({"type": "shapefactor", "name": "free", "data": {"vals": [0.1, 0.2]}})"}};
-   auto *phf = object<ParamHistFunc>(ws, "channel0_free_shapeFactor");
-   EXPECT_EQ(phf->paramList().size(), 2u);
+   EXPECT_EQ(binFactorType(*sigSample(ws), "free"), RooHistFactorySample::BinFactorType::ShapeFactor);
+   const RooArgList params = binFactorParams(*sigSample(ws), "free");
+   EXPECT_EQ(params.size(), 2u);
    for (const char *name : {"gamma_free_bin_0", "gamma_free_bin_1"}) {
       auto *gamma = object<RooRealVar>(ws, name);
-      EXPECT_NE(phf->paramList().find(*gamma), nullptr) << name;
+      EXPECT_NE(params.find(*gamma), nullptr) << name;
       EXPECT_FALSE(gamma->isConstant()) << name;
    }
 }
@@ -3711,8 +3796,10 @@ TEST(RooFitHS3, HistFactoryShapeFactorSharedBetweenChannels)
 {
    Imported ws{
       gammasSharedBetweenChannels(R"("type": "shapefactor", "name": "shape")", R"({"contents": [10.0, 20.0]})")};
-   EXPECT_NE(ws.function("A_shape_ShapeSys"), nullptr);
-   EXPECT_NE(ws.function("B_shape_shapeFactor"), nullptr);
+   EXPECT_EQ(binFactorType(*object<RooHistFactorySample>(ws, "model_A_bkg_shapes"), "shape"),
+             RooHistFactorySample::BinFactorType::ShapeSys);
+   EXPECT_EQ(binFactorType(*object<RooHistFactorySample>(ws, "model_B_bkg_shapes"), "shape"),
+             RooHistFactorySample::BinFactorType::ShapeFactor);
 
    Doc exported{ws};
    EXPECT_TRUE(exported.has("distributions/model_A/samples/0/modifiers/0/constraints"));
@@ -3765,7 +3852,7 @@ TEST(RooFitHS3, HistFactoryShapeFactorWithoutName)
                                          "constraints": ["g0_constraint", null]})"}
                   .distributions(gammaConstraint("g0"))
                   .sections(defaultDomain({axes({"g0", "g1"}, 0, 5)}))};
-   EXPECT_NE(ws.function("channel0_channel0_sig_syst_0_ShapeSys"), nullptr);
+   EXPECT_EQ(binFactorType(*sigSample(ws), "channel0_sig_syst_0"), RooHistFactorySample::BinFactorType::ShapeSys);
 }
 
 namespace {
@@ -3791,8 +3878,7 @@ TEST(RooFitHS3, HistFactoryFunctionGammaWithConstraint)
    Imported ws{
       functionGammaDoc(R"({"type": "staterror", "parameters": ["g0", "g1"], "constraints": ["g0_constraint", null]})")
          .distributions(gammaConstraint("g0"))};
-   auto *phf = object<ParamHistFunc>(ws, "mc_stat_channel0");
-   RooAbsArg *g0 = phf->paramList().find("g0");
+   RooAbsArg *g0 = sigSample(ws)->parameters().find("g0");
    ASSERT_NE(g0, nullptr);
    EXPECT_EQ(dynamic_cast<RooRealVar *>(g0), nullptr);
    EXPECT_DOUBLE_EQ(static_cast<RooAbsReal *>(g0)->getVal(), 1.0);
@@ -3858,8 +3944,7 @@ TEST(RooFitHS3, HistFactoryFunctionGammaWithLegacyConstraint)
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    Imported ws{functionGammaDoc(R"({"type": "staterror", "parameters": ["g0", "g1"], "constraint": "Poisson"})")};
-   auto *phf = object<ParamHistFunc>(ws, "mc_stat_channel0");
-   RooAbsArg *g0 = phf->paramList().find("g0");
+   RooAbsArg *g0 = sigSample(ws)->parameters().find("g0");
    ASSERT_NE(g0, nullptr);
    EXPECT_EQ(dynamic_cast<RooRealVar *>(g0), nullptr);
    for (const char *name : {"g0_constraint", "g1_constraint"}) {
@@ -3931,8 +4016,12 @@ TEST(RooFitHS3, HistFactoryUnnamedShapeFactorsOfSamples)
                  "model_channel0", {sample("a", contents, R"({"type": "shapefactor", "parameters": ["a0", "a1"]})"),
                                     sample("b", contents, R"({"type": "shapefactor", "parameters": ["b0", "b1"]})")})}),
               defaultDomain({axes({"a0", "a1", "b0", "b1"}, 0, 5)})})};
-   EXPECT_NE(ws.function("channel0_channel0_a_syst_0_shapeFactor"), nullptr);
-   EXPECT_NE(ws.function("channel0_channel0_b_syst_0_shapeFactor"), nullptr);
+   for (const char *sample : {"a", "b"}) {
+      auto *hfSample = object<RooHistFactorySample>(ws, std::string("model_channel0_") + sample + "_shapes");
+      EXPECT_EQ(binFactorType(*hfSample, std::string("channel0_") + sample + "_syst_0"),
+                RooHistFactorySample::BinFactorType::ShapeFactor)
+         << sample;
+   }
    RooAbsPdf *model = ws.pdf("model_channel0");
    for (const char *name : {"a0", "a1", "b0", "b1"}) {
       ASSERT_NE(ws.var(name), nullptr) << name;
@@ -4212,7 +4301,9 @@ TEST(RooFitHS3, FormulaNormSysConstraint)
 
    // The +1 and -1 sigma variations survive the round trip. In between, the formula is linear and the normsys that it
    // is written as interpolates exponentially. The import enables the binned likelihood, which the first export
-   // doesn't have.
+   // doesn't have. The formulas are decomposed for the RooFit objects of the HistFactory models before ROOT 6.44,
+   // which the round trip compares with the ones that are read back.
+   ScopedConfig config{{useHistFactoryPdf(false)}};
    expectRoundTrip(ws1, formulaChannel("ch_model", "alpha_sys", {-1.0, 0.0, 1.0}).stableFromSecondExport());
 }
 
@@ -4228,6 +4319,10 @@ TEST(RooFitHS3, HistFactoryImportEnablesBinnedLikelihood)
 // HistFactory exporter split it at the "*" into the factors "1 + 0.2" and "k", which changes the model.
 TEST(RooFitHS3, FormulaWithTopLevelSumIsNotSplit)
 {
+   // The formulas are decomposed for the RooFit objects of the HistFactory models before ROOT 6.44, which the test
+   // compares with the ones that are read back.
+   ScopedConfig config{{useHistFactoryPdf(false)}};
+
    for (std::string expression : {"1 + 0.2 * k", "1.5 - k * 0.2", "2e-1 * k + 1"}) {
       SCOPED_TRACE(expression);
       RooWorkspace ws;
@@ -4248,10 +4343,12 @@ TEST(RooFitHS3, FormulaWithTopLevelSumIsNotSplit)
 }
 
 // A formula among the factors of a sample is written as one modifier per factor, unless that makes the channel
-// invalid: then it stays one custom modifier.
+// invalid: then it stays one custom modifier. This is about the RooFit objects of the HistFactory models before ROOT
+// 6.44: a RooHistFactoryPdf keeps its custom modifiers as they are.
 TEST(RooFitHS3, FormulaIsNotSplitIfThatMakesTheChannelInvalid)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+   ScopedConfig config{{useHistFactoryPdf(false)}};
 
    const std::string b2 = R"({"name": "b2", "type": "generic_function", "expression": "b*b"})";
    const std::string bc = R"({"name": "bc", "type": "generic_function", "expression": "b*c"})";
@@ -4912,7 +5009,11 @@ TEST(RooFitHS3, HistFactoryExportDoesNotDependOnNames)
    meas.AddChannel(cr);
 
    meas.CollectHistograms();
-   std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
+   // The test modifies the RooFit objects of the HistFactory models before ROOT 6.44, which the exporter has to
+   // recognize by their structure.
+   HistoToWorkspaceFactoryFast::Configuration cfg;
+   cfg.useHistFactoryPdf = false;
+   std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas, cfg)};
    ASSERT_NE(ws, nullptr);
    auto *mc = static_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    RooAbsData *data = ws->data("obsData");
@@ -5632,14 +5733,14 @@ TEST(RooFitHS3, HistFactoryMultiDimensionalBinOrder)
    };
 
    Imported ws{makeJSON("0.3")};
-   auto *phf = object<ParamHistFunc>(ws, "mc_stat_channel0");
+   RooHistFactorySample *sample = sigSample(ws);
    for (int ix = 0; ix < 2; ++ix) {
       for (int iy = 0; iy < 3; ++iy) {
          // The constraint of each gamma has the relative uncertainty of its bin.
          auto *sigma = dynamic_cast<RooAbsReal *>(ws.arg((gammaName(ix, iy) + "_sigma").c_str()));
          ASSERT_NE(sigma, nullptr) << gammaName(ix, iy);
          EXPECT_NEAR(sigma->getVal(), relError(ix, iy), 1e-12) << gammaName(ix, iy);
-         // In its bin, the ParamHistFunc takes the value of that gamma.
+         // In its bin, the sample is scaled with that gamma.
          ws.var(gammaName(ix, iy))->setVal(1.0 + 0.001 * (1 + 3 * ix + iy));
       }
    }
@@ -5647,7 +5748,9 @@ TEST(RooFitHS3, HistFactoryMultiDimensionalBinOrder)
       for (int iy = 0; iy < 3; ++iy) {
          ws.var("x")->setBin(ix);
          ws.var("y")->setBin(iy);
-         EXPECT_DOUBLE_EQ(phf->getVal(), ws.var(gammaName(ix, iy))->getVal()) << "bin (" << ix << ", " << iy << ")";
+         // The value of the sample is a density, and the bins have unit volume.
+         EXPECT_DOUBLE_EQ(sample->getVal(), content(ix, iy) * ws.var(gammaName(ix, iy))->getVal())
+            << "bin (" << ix << ", " << iy << ")";
       }
    }
    for (int ix = 0; ix < 2; ++ix) {
@@ -5659,7 +5762,8 @@ TEST(RooFitHS3, HistFactoryMultiDimensionalBinOrder)
    // The export writes the gammas in the same order.
    Doc exported{ws};
    EXPECT_TRUE(matches(exported, "distributions/model_channel0", R"({"axes": [{"name": "x"}, {"name": "y"}]})"));
-   EXPECT_TRUE(matches(exported, "distributions/model_channel0/samples/sig/modifiers/staterror",
+   // The staterror modifier, which has no name in the document, keeps the name that the import gave it.
+   EXPECT_TRUE(matches(exported, "distributions/model_channel0/samples/sig/modifiers/channel0_sig_syst_0",
                        R"({"parameters": ["g_0_0", "g_0_1", "g_0_2", "g_1_0", "g_1_1", "g_1_2"]})"));
 
    // Documents before HS3 0.3 don't define the order; they are rejected.
@@ -7014,7 +7118,8 @@ TEST(RooFitHS3, HistFactoryConstraintSharedWithOtherPdf)
          Doc exported{ws, {exportArrayDist(arrays)}};
          const std::string modifiers = "distributions/" + hfName + "/samples/signal/modifiers/";
          EXPECT_TRUE(matches(exported, "distributions/shared_constraint", R"({"type": "gaussian_dist"})"));
-         EXPECT_TRUE(matches(exported, modifiers + "theta", R"({"constraints": ["shared_constraint"]})"));
+         // The modifiers keep their names in the document.
+         EXPECT_TRUE(matches(exported, modifiers + "shared", R"({"constraints": ["shared_constraint"]})"));
          // The product only keeps the factor that is not a term of the likelihood.
          EXPECT_TRUE(matches(exported, "distributions/" + otherName, R"({"factors": ["shape"]})"));
          // The constraint that only the HistFactory channel uses is still collected.
@@ -7023,7 +7128,7 @@ TEST(RooFitHS3, HistFactoryConstraintSharedWithOtherPdf)
          EXPECT_EQ(exported.has("distributions/" + array), arrays);
          if (arrays) {
             EXPECT_TRUE(matches(exported, "distributions/" + array, R"({"components": [{"x": "eta_obs"}]})"));
-            EXPECT_TRUE(matches(exported, modifiers + "eta", R"({"constraints": [")" + array + R"("]})"));
+            EXPECT_TRUE(matches(exported, modifiers + "own", R"({"constraints": [")" + array + R"("]})"));
          }
 
          // Valid HS3 0.3: read back without warnings.
@@ -7117,7 +7222,7 @@ TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
    Doc exported{ws};
    EXPECT_TRUE(matches(exported, "distributions/constraint", R"({"type": "gaussian_dist"})"));
    EXPECT_TRUE(
-      matches(exported, "distributions/HF/samples/signal/modifiers/theta", R"({"constraints": ["constraint"]})"));
+      matches(exported, "distributions/HF/samples/signal/modifiers/syst", R"({"constraints": ["constraint"]})"));
    EXPECT_TRUE(matches(exported, "likelihoods/0", R"({"aux_distributions": ["constraint"]})"));
 }
 
@@ -8280,7 +8385,8 @@ std::unique_ptr<RooWorkspace>
 makeMergeableHistFactoryWorkspace(std::string const &name,
                                   std::vector<std::pair<std::string, std::string>> const &channels,
                                   double lumiRelErr = 0.1,
-                                  std::function<void(RooStats::HistFactory::Measurement &)> const &configure = {})
+                                  std::function<void(RooStats::HistFactory::Measurement &)> const &configure = {},
+                                  bool useHistFactoryPdf = true)
 {
    using namespace RooStats::HistFactory;
    Measurement meas(name.c_str(), name.c_str());
@@ -8320,7 +8426,9 @@ makeMergeableHistFactoryWorkspace(std::string const &name,
       configure(meas);
    }
    RooHelpers::LocalChangeMsgLevel quiet(RooFit::WARNING, 0u, RooFit::ObjectHandling, false);
-   return std::unique_ptr<RooWorkspace>{RooStats::HistFactory::MakeModelAndMeasurementFast(meas)};
+   HistoToWorkspaceFactoryFast::Configuration cfg;
+   cfg.useHistFactoryPdf = useHistFactoryPdf;
+   return std::unique_ptr<RooWorkspace>{RooStats::HistFactory::MakeModelAndMeasurementFast(meas, cfg)};
 }
 
 // The serialized children of `node`.
@@ -8533,25 +8641,33 @@ std::set<std::string> namesOf(RooArgSet const *set)
 // Measurement::AddGammaSyst() and AddLogNormSyst() make the input of a normsys a function of the constrained parameter
 // (#24304). Its variation is written as a custom modifier: the FlexibleInterpVar if it has no other inputs (channel
 // "B"), else one with only this input. The FlexibleInterpVar of channel A is split, so its name stands for less after
-// the import, and only the likelihood is compared.
+// the import, and only the likelihood is compared. RooHistFactoryPdf and the structure before ROOT 6.44 are written the
+// same.
 TEST(RooFitHS3, HistFactoryGammaAndLogNormSyst)
 {
-   auto ws = makeMergeableHistFactoryWorkspace("syst", {{"A", "ownA"}, {"B", "ownB"}}, 0.1, [](auto &meas) {
-      meas.AddGammaSyst("shared", 0.1);
-      meas.AddLogNormSyst("ownB", 0.05);
-   });
-   Doc doc{*ws};
-   EXPECT_TRUE(matches(doc, "distributions/model_A/samples/background_A/modifiers",
-                       R"([{}, {"type": "normsys", "parameters": ["alpha_ownA"]},
-                           {"type": "custom", "name": "background_A_A_epsilon_alphaOfBeta_shared"}, {}])"));
-   EXPECT_TRUE(matches(doc, "distributions/model_B/samples/background_B/modifiers",
-                       R"([{}, {"type": "custom", "name": "background_B_B_epsilon"}, {}])"));
-   EXPECT_TRUE(matches(doc, "distributions/beta_sharedConstraint", R"({"type": "gamma_dist", "x": "beta_shared"})"));
-   Imported imported{doc};
-   EXPECT_TRUE(sameNumbers(likelihoodScan(*ws, "ModelConfig", "obsData"),
-                           likelihoodScan(imported, "ModelConfig", "obsData"), 0.));
-   const std::string json = toJSON(imported);
-   EXPECT_EQ(reexport(json), json);
+   for (bool useHistFactoryPdf : {true, false}) {
+      SCOPED_TRACE(useHistFactoryPdf ? "RooHistFactoryPdf" : "before ROOT 6.44");
+      auto ws = makeMergeableHistFactoryWorkspace(
+         "syst", {{"A", "ownA"}, {"B", "ownB"}}, 0.1,
+         [](auto &meas) {
+            meas.AddGammaSyst("shared", 0.1);
+            meas.AddLogNormSyst("ownB", 0.05);
+         },
+         useHistFactoryPdf);
+      Doc doc{*ws};
+      EXPECT_TRUE(matches(doc, "distributions/model_A/samples/background_A/modifiers",
+                          R"([{}, {"type": "normsys", "parameters": ["alpha_ownA"]},
+                              {"type": "custom", "name": "background_A_A_epsilon_alphaOfBeta_shared"}, {}])"));
+      EXPECT_TRUE(matches(doc, "distributions/model_B/samples/background_B/modifiers",
+                          R"([{}, {"type": "custom", "name": "background_B_B_epsilon"}, {}])"));
+      EXPECT_TRUE(
+         matches(doc, "distributions/beta_sharedConstraint", R"({"type": "gamma_dist", "x": "beta_shared"})"));
+      Imported imported{doc};
+      EXPECT_TRUE(sameNumbers(likelihoodScan(*ws, "ModelConfig", "obsData"),
+                              likelihoodScan(imported, "ModelConfig", "obsData"), 0.));
+      const std::string json = toJSON(imported);
+      EXPECT_EQ(reexport(json), json);
+   }
 }
 
 // Two documents written by RooFit, each with a HistFactory model whose constraint terms are collected in array

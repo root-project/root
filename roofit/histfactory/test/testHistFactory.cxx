@@ -4,6 +4,8 @@
 
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
+#include <RooStats/HistFactory/RooHistFactoryPdf.h>
+#include <RooStats/HistFactory/RooHistFactorySample.h>
 #ifdef HISTFACTORY_XML
 #include <RooStats/HistFactory/ConfigParser.h>
 #endif
@@ -365,7 +367,7 @@ TEST_P(HFFixture, ModelProperties)
    auto simPdf = dynamic_cast<RooSimultaneous *>(ws->pdf("simPdf"));
    ASSERT_NE(simPdf, nullptr);
 
-   auto channelPdf = dynamic_cast<RooRealSumPdf *>(ws->pdf("channel1_model"));
+   auto channelPdf = dynamic_cast<RooHistFactoryPdf *>(ws->pdf("channel1_model"));
    ASSERT_NE(channelPdf, nullptr);
 
    auto obs = dynamic_cast<RooRealVar *>(ws->var("obs_x_channel1"));
@@ -399,36 +401,43 @@ TEST_P(HFFixture, ModelProperties)
       }
    }
 
-   // Check that sub models depend on their systematic uncertainties.
-   for (auto &subModelName : std::initializer_list<std::string>{"signal_channel1_shapes", "background1_channel1_shapes",
-                                                                "background2_channel1_shapes"}) {
-      auto subModel = ws->function(subModelName);
-      ASSERT_NE(subModel, nullptr) << "Unable to retrieve sub model with name " << subModelName;
-      if (subModelName.find("signal") != std::string::npos) {
-         EXPECT_FALSE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_0")));
-         EXPECT_FALSE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_1")));
+   // Check that the samples depend on their systematic uncertainties.
+   auto sample = [&](std::string const &name) -> RooHistFactorySample & {
+      auto *out = dynamic_cast<RooHistFactorySample *>(ws->function((name + "_channel1_shapes").c_str()));
+      if (!out) {
+         throw std::runtime_error("Unable to retrieve sample " + name);
+      }
+      EXPECT_EQ(out, channelPdf->sample(name)) << name;
+      return *out;
+   };
+   EXPECT_EQ(channelPdf->numSamples(), 3u);
+   for (auto &sampleName : std::initializer_list<std::string>{"signal", "background1", "background2"}) {
+      RooHistFactorySample &subModel = sample(sampleName);
+      if (sampleName == "signal") {
+         EXPECT_FALSE(subModel.dependsOn(*ws->var("gamma_stat_channel1_bin_0")));
+         EXPECT_FALSE(subModel.dependsOn(*ws->var("gamma_stat_channel1_bin_1")));
       } else {
-         EXPECT_TRUE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_0")));
-         EXPECT_TRUE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_1")));
+         EXPECT_TRUE(subModel.dependsOn(*ws->var("gamma_stat_channel1_bin_0")));
+         EXPECT_TRUE(subModel.dependsOn(*ws->var("gamma_stat_channel1_bin_1")));
       }
    }
 
-   EXPECT_TRUE(ws->function("signal_channel1_scaleFactors")->dependsOn(*ws->var("SigXsecOverSM")));
-   EXPECT_FALSE(ws->function("background1_channel1_scaleFactors")->dependsOn(*ws->var("SigXsecOverSM")));
-   EXPECT_FALSE(ws->function("background2_channel1_scaleFactors")->dependsOn(*ws->var("SigXsecOverSM")));
+   EXPECT_TRUE(sample("signal").dependsOn(*ws->var("SigXsecOverSM")));
+   EXPECT_FALSE(sample("background1").dependsOn(*ws->var("SigXsecOverSM")));
+   EXPECT_FALSE(sample("background2").dependsOn(*ws->var("SigXsecOverSM")));
 
    if (makeModelMode == MakeModelMode::OverallSyst) {
-      EXPECT_FALSE(ws->function("signal_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst2")));
-      EXPECT_FALSE(ws->function("signal_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst3")));
-      EXPECT_FALSE(ws->function("signal_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst4")));
+      EXPECT_FALSE(sample("signal").dependsOn(*ws->var("alpha_syst2")));
+      EXPECT_FALSE(sample("signal").dependsOn(*ws->var("alpha_syst3")));
+      EXPECT_FALSE(sample("signal").dependsOn(*ws->var("alpha_syst4")));
 
-      EXPECT_TRUE(ws->function("background1_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst2")));
-      EXPECT_TRUE(ws->function("background1_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst3")));
-      EXPECT_FALSE(ws->function("background1_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst4")));
+      EXPECT_TRUE(sample("background1").dependsOn(*ws->var("alpha_syst2")));
+      EXPECT_TRUE(sample("background1").dependsOn(*ws->var("alpha_syst3")));
+      EXPECT_FALSE(sample("background1").dependsOn(*ws->var("alpha_syst4")));
 
-      EXPECT_FALSE(ws->function("background2_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst2")));
-      EXPECT_TRUE(ws->function("background2_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst3")));
-      EXPECT_TRUE(ws->function("background2_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst4")));
+      EXPECT_FALSE(sample("background2").dependsOn(*ws->var("alpha_syst2")));
+      EXPECT_TRUE(sample("background2").dependsOn(*ws->var("alpha_syst3")));
+      EXPECT_TRUE(sample("background2").dependsOn(*ws->var("alpha_syst4")));
    }
 
    EXPECT_EQ(*mc->GetParametersOfInterest()->begin(), ws->var("SigXsecOverSM"));

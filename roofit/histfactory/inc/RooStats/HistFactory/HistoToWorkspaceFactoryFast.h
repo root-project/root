@@ -53,6 +53,9 @@ public:
       bool createPerRegionWorkspaces = true;
       /// \brief Control whether errors on the data histograms are stored in the workspace (default `false`).
       bool storeDataError = false;
+      /// \brief Build each channel as a RooHistFactoryPdf of RooHistFactorySample objects (default `true`). If
+      /// `false`, the channels are built as before ROOT 6.44, with several RooFit objects for each histogram.
+      bool useHistFactoryPdf = true;
    };
 
       HistoToWorkspaceFactoryFast() {}
