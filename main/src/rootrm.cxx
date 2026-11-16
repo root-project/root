@@ -25,21 +25,7 @@
 
 using namespace ROOT::CmdLine;
 
-static const char *const kShortHelp = "usage: rootrm [-h] [-i|--interactive] [-r|--recursive] "
-                                      "[-v|--verbose] FILE[:path/to/obj] [...]\n";
-static const char *const kLongHelp = R"(
-Remove objects from ROOT files
-
-positional arguments:
-  FILE:path             File(s) and path of objects to remove
-
-options:
-  -f, --force           ignore nonexistent files and arguments, never prompt
-  -h, --help            show this help message and exit
-  -i, --interactive     prompt before deleting each object
-  -n, --dry-run         show what would be removed, but don't actually remove anything. Implies `-v`.
-  -r, --recursive       recurse inside directories
-  -v, --verbose         be verbose (can be repeated for increased verbosity)
+static const char *const kDescription = R"(Remove objects from ROOT files
 
 examples:
 - rootrm example.root:hist
@@ -53,15 +39,12 @@ examples:
 
 - rootrm -i example.root:hist
   Display a confirmation request before deleting: 'remove 'hist' from 'example.root' ? (y/n) :'
-)";
+
+positional arguments:
+  FILE:path             File(s) and path of objects to remove)";
 
 struct RootRmArgs {
-   enum class EPrintUsage {
-      kNo,
-      kShort,
-      kLong
-   };
-   EPrintUsage fPrintHelp = EPrintUsage::kNo;
+   std::string fHelp;
    bool fInteractive = false;
    bool fRecursive = false;
    bool fDryRun = false;
@@ -71,30 +54,38 @@ struct RootRmArgs {
 
 static RootRmArgs ParseArgs(const char **args, int nArgs)
 {
+   using FT = ROOT::RCmdLineOpts::EFlagType;
    using ROOT::RCmdLineOpts;
 
    RootRmArgs outArgs;
 
    RCmdLineOpts opts;
-   opts.AddFlag({"-f", "--force"});
-   opts.AddFlag({"-h", "--help"});
-   opts.AddFlag({"-i", "--interactive"});
-   opts.AddFlag({"-n", "--dry-run"});
-   opts.AddFlag({"-r", "--recursive"});
-   opts.AddFlag({"-v", "--verbose"}, RCmdLineOpts::EFlagType::kSwitch, "", RCmdLineOpts::kFlagAllowMultiple);
+   opts.AddFlag({"-f", "--force"}, FT::kSwitch, "ignore nonexistent files and arguments, never prompt");
+   opts.AddFlag({"-h", "--help"}, FT::kSwitch, "show this help message and exit");
+   opts.AddFlag({"-i", "--interactive"}, FT::kSwitch, "prompt before deleting each object");
+   opts.AddFlag({"-n", "--dry-run"}, FT::kSwitch,
+                "show what would be removed, but don't actually remove anything. Implies `-v`.");
+   opts.AddFlag({"-r", "--recursive"}, FT::kSwitch, "recurse inside directories");
+   opts.AddFlag({"-v", "--verbose"}, RCmdLineOpts::EFlagType::kSwitch,
+                "be verbose (can be repeated for increased verbosity)", RCmdLineOpts::kFlagAllowMultiple);
 
    opts.Parse(args, nArgs);
+
+   RCmdLineOpts::RMakeHelpOptions helpOpts;
+   helpOpts.fWrapDescription = false;
+   helpOpts.fDescription = kDescription;
+   helpOpts.fPositionalArgs = "FILE[:path/to/obj] [...]";
 
    for (const auto &err : opts.GetErrors()) {
       std::cerr << err << "\n";
    }
    if (!opts.GetErrors().empty()) {
-      outArgs.fPrintHelp = RootRmArgs::EPrintUsage::kShort;
+      outArgs.fHelp = opts.MakeShortHelp(Detail::gLogName, helpOpts);
       return outArgs;
    }
 
    if (opts.GetSwitch("help")) {
-      outArgs.fPrintHelp = RootRmArgs::EPrintUsage::kLong;
+      outArgs.fHelp = opts.MakeLongHelp(Detail::gLogName, helpOpts);
       return outArgs;
    }
 
@@ -109,11 +100,11 @@ static RootRmArgs ParseArgs(const char **args, int nArgs)
 
    outArgs.fSources = opts.GetArgs();
    if (outArgs.fSources.size() < 1)
-      outArgs.fPrintHelp = RootRmArgs::EPrintUsage::kShort;
+      outArgs.fHelp = opts.MakeShortHelp(Detail::gLogName, helpOpts);
 
    if (outArgs.fForce && outArgs.fInteractive) {
       Err() << "-i and -f flags are mutually exclusive.\n";
-      outArgs.fPrintHelp = RootRmArgs::EPrintUsage::kShort;
+      outArgs.fHelp = opts.MakeShortHelp(Detail::gLogName, helpOpts);
    }
 
    return outArgs;
@@ -184,12 +175,8 @@ int main(int argc, char **argv)
 
    // Parse arguments
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
-   if (args.fPrintHelp != RootRmArgs::EPrintUsage::kNo) {
-      std::cerr << kShortHelp;
-      if (args.fPrintHelp == RootRmArgs::EPrintUsage::kLong) {
-         std::cerr << kLongHelp;
-         return 0;
-      }
+   if (!args.fHelp.empty()) {
+      std::cerr << args.fHelp << "\n";
       return 1;
    }
 
