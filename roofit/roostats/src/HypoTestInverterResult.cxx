@@ -39,6 +39,7 @@ Some contributions to this class have been written by Matthias Wolf (error estim
 #include "RooStats/SamplingDistPlot.h"
 
 #include <algorithm>
+#include <memory>
 
 
 using namespace RooStats;
@@ -1318,7 +1319,7 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower, const 
    if (!r->GetNullDistribution() && !r->GetAltDistribution() ) {
       // we are in the asymptotic case
       // get the limits obtained at the different sigma values
-      SamplingDistribution * limitDist = GetLimitDistribution(lower);
+      std::unique_ptr<SamplingDistribution> limitDist{GetLimitDistribution(lower)};
       if (!limitDist) return 0;
       const std::vector<double> & values = limitDist->GetSamplingDistribution();
       if (values.size() <= 1) return 0;
@@ -1371,7 +1372,7 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower, const 
 
    }
    // here need to use the limit distribution
-   SamplingDistribution * limitDist = GetLimitDistribution(lower);
+   std::unique_ptr<SamplingDistribution> limitDist{GetLimitDistribution(lower)};
    if (!limitDist) return 0;
    const std::vector<double> & values = limitDist->GetSamplingDistribution();
    double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles

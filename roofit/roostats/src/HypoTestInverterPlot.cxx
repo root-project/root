@@ -315,6 +315,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       double x1 = gplot->GetXaxis()->GetXmin();
       double x2 = gplot->GetXaxis()->GetXmax();
       TLine * line = new TLine(x1, alpha, x2,alpha);
+      line->SetBit(kCanDelete);
       line->SetLineColor(kRed);
       line->Draw();
       // put axis labels
@@ -361,6 +362,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    double verticalSize = (gexp || draw2CL || drawCLb ) ? 0.3 : 0.15;
    double y1 = y0 + verticalSize;
    TLegend * l = new TLegend(0.6,y0,0.9,y1);
+   l->SetBit(kCanDelete);
    if (gobs) l->AddEntry(gobs,"","PEL");
    if (gclsb) l->AddEntry(gclsb,"","PEL");
    if (gcls) l->AddEntry(gcls,"","PEL");
