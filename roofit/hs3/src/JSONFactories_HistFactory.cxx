@@ -250,23 +250,6 @@ std::string constraintName(std::string const &paramName)
    return paramName + "Constraint";
 }
 
-RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, std::string const &sample)
-{
-   if (auto *constraint = tool.workspace()->pdf(constraintName)) {
-      return constraint;
-   }
-
-   try {
-      return tool.request<RooAbsPdf>(constraintName, sample);
-   } catch (RooJSONFactoryWSTool::DependencyMissingError const &err) {
-      if (err.child() != constraintName) {
-         throw;
-      }
-   }
-
-   return nullptr;
-}
-
 // The component of the array distribution `array` that constrains `param`: the one that depends on it.
 RooAbsPdf &arrayComponentFor(RooProdPdf const &array, RooAbsArg const &param, std::string const &context)
 {
@@ -293,10 +276,10 @@ RooAbsPdf &arrayComponentFor(RooProdPdf const &array, RooAbsArg const &param, st
 // distribution, the component that depends on the parameter is returned: that is the term that enters the likelihood
 // for this parameter, and the whole array enters once through the components of all of its parameters. Returns
 // nullptr if the name cannot be resolved.
-RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, std::string const &sample,
-                               RooAbsArg const &param, std::string const &context)
+RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, RooAbsArg const &param,
+                               std::string const &context)
 {
-   RooAbsPdf *constraint = findNamedConstraint(tool, constraintName, sample);
+   RooAbsPdf *constraint = tool.tryRequest<RooAbsPdf>(constraintName);
    if (!constraint || !constraint->getAttribute(arrayDistTag)) {
       return constraint;
    }
@@ -354,7 +337,7 @@ void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint
                     constraints.add(pdf ? *pdf : tool.wsEmplace<RooGaussian>(name, param, nom, 1.));
                  },
                  [&](HS3::ConstraintPdf const &constraintPdf) {
-                    RooAbsPdf *pdf = findNamedConstraint(tool, constraintPdf.pdf.name, sample, param,
+                    RooAbsPdf *pdf = findNamedConstraint(tool, constraintPdf.pdf.name, param,
                                                          std::string("the ") + modifierType + " modifier '" + modifier +
                                                             "' of sample '" + sample + "'");
                     if (!pdf) {
@@ -517,7 +500,7 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
          auto const &pdfName = pdfs->pdfs[i];
          RooAbsPdf *pdf = nullptr;
          if (pdfName) {
-            pdf = findNamedConstraint(tool, pdfName->name, sysname, gammas[i], context);
+            pdf = findNamedConstraint(tool, pdfName->name, gammas[i], context);
             if (!pdf) {
                RooJSONFactoryWSTool::error("unable to find definition of constraint '" + pdfName->name +
                                            "' for modifier '" + sysname + "'");
@@ -1911,7 +1894,7 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
 
    if (channelConstraints) {
       for (auto const &ref : *channelConstraints) {
-         RooAbsPdf *pdf = findNamedConstraint(tool, ref.name, name);
+         RooAbsPdf *pdf = tool.tryRequest<RooAbsPdf>(ref.name);
          if (!pdf) {
             RooJSONFactoryWSTool::error("unable to find the constraint '" + ref.name + "' of '" + name + "'");
          }

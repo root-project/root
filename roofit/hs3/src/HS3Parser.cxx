@@ -192,13 +192,9 @@ void readValue(Cursor const &c, int &out)
 
 void readValue(Cursor const &c, bool &out)
 {
-   if (c.node().is_container() || c.node().is_null()) {
-      c.error("must be a boolean");
-      return;
-   }
-   try {
-      out = c.node().val_bool();
-   } catch (std::exception const &) {
+   if (std::optional<bool> value = c.node().try_val_bool()) {
+      out = *value;
+   } else {
       c.error("must be a boolean");
    }
 }

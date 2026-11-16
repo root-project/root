@@ -2675,22 +2675,14 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    bool ok = false;
    if (it != importers.end()) {
       for (auto &imp : it->second) {
-         try {
-            // The built-in importer doesn't see the constraint terms that the document adds to the channel.
-            if (_import && HS3::isBuiltinHistFactoryImporter(*imp)) {
-               auto const &channelConstraints = _import->document.rooFit.channelConstraints;
-               auto found = channelConstraints.find(name);
-               HS3::importHistFactoryNode(*this, p, found != channelConstraints.end() ? &found->second : nullptr);
-               ok = true;
-            } else {
-               ok = imp->importArg(this, p);
-            }
-         } catch (const std::exception &e) {
-            std::stringstream ss;
-            const auto *ptr = imp.get();
-            ss << "RooJSONFactoryWSTool() failed. The importer " << typeid(*ptr).name()
-               << " emitted and error: " << e.what() << std::endl;
-            RooJSONFactoryWSTool::error(ss.str());
+         // The built-in importer doesn't see the constraint terms that the document adds to the channel.
+         if (_import && HS3::isBuiltinHistFactoryImporter(*imp)) {
+            auto const &channelConstraints = _import->document.rooFit.channelConstraints;
+            auto found = channelConstraints.find(name);
+            HS3::importHistFactoryNode(*this, p, found != channelConstraints.end() ? &found->second : nullptr);
+            ok = true;
+         } else {
+            ok = imp->importArg(this, p);
          }
          if (ok)
             break;

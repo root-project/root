@@ -3147,6 +3147,36 @@ TEST(RooFitHS3, MixtureDistExtendedFlag)
    EXPECT_NE(warnings.find("is declared as not extended"), std::string::npos) << warnings;
 }
 
+// Invalid documents are reported as std::runtime_error, also where the JSON library finds the error: invalid JSON, or a
+// value of the wrong type that an importer reads.
+TEST(RooFitHS3, ImportErrorsAreRuntimeErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto expectRuntimeError = [](std::string const &json, std::string const &reason) {
+      RooWorkspace ws;
+      try {
+         RooJSONFactoryWSTool{ws}.importJSONfromString(json);
+         ADD_FAILURE() << "no error for " << json;
+      } catch (std::runtime_error const &err) {
+         EXPECT_NE(std::string{err.what()}.find(reason), std::string::npos) << err.what();
+      }
+   };
+
+   expectRuntimeError(R"({"distributions": [ })", "parse error");
+   expectRuntimeError(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [{"name": "default_domain", "type": "product_domain",
+                   "axes": [{"name": "x", "min": -5, "max": 5}, {"name": "f", "min": 0, "max": 1}]}],
+      "distributions": [
+         {"name": "g1", "type": "gaussian_dist", "x": "x", "mean": -1.0, "sigma": 1.0},
+         {"name": "g2", "type": "gaussian_dist", "x": "x", "mean": 1.0, "sigma": 1.0},
+         {"name": "mix", "type": "mixture_dist", "summands": ["g1", "g2"], "coefficients": ["f"], "extended": "no"}
+      ]
+   })",
+                      R"(node "extended": expected a boolean)");
+}
+
 // The parameter of a normfactor is given by "parameter", the "name" is only a label.
 // The HS3 spelling of the log-normal constraint type is recognized.
 TEST(RooFitHS3, HistFactoryNormFactorParameterAndLogNormal)

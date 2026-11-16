@@ -17,6 +17,7 @@
 #include <map>
 #include <unordered_map>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -98,6 +99,8 @@ public:
    int val_int() const;
    double val_double() const;
    bool val_bool() const;
+   /// The value as a boolean, or std::nullopt if it is none. Like val_bool(), the integers 0 and 1 are accepted.
+   std::optional<bool> try_val_bool() const;
    template <class T>
    T val_t() const;
    bool has_key() const;
