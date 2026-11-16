@@ -1473,11 +1473,19 @@ endfunction()
 function(ROOT_INSTALL_TARGET target)
   get_target_property(type ${target} TYPE)
   if("${type}" STREQUAL "SHARED_LIBRARY" OR "${type}" STREQUAL "MODULE_LIBRARY")
+    set(_lib_suffix "${SOEXT}")
+    if(NOT _lib_suffix)
+      if(APPLE)
+        set(_lib_suffix ".so")
+      else()
+        set(_lib_suffix "${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      endif()
+    endif()
     set_target_properties(${target} PROPERTIES
       WINDOWS_EXPORT_ALL_SYMBOLS TRUE
       PREFIX lib
       IMPORT_PREFIX lib
-      SUFFIX ${SOEXT}
+      SUFFIX "${_lib_suffix}"
     )
   endif()
   get_target_property(_hdr_dirs ${target} HEADER_DIRS)
