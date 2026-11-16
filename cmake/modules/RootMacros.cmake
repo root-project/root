@@ -1471,8 +1471,13 @@ endfunction()
 # - not4dict_header_files for public headers purposely excluded from dictionaries
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_TARGET target)
-
-  set_target_properties(${target} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  get_target_property(type ${target} TYPE)
+  if("${type}" STREQUAL "SHARED_LIBRARY" OR "${type}" STREQUAL "MODULE_LIBRARY")
+    set_target_properties(${target} PROPERTIES
+      WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+      SUFFIX ${SOEXT}
+    )
+  endif()
   get_target_property(_hdr_dirs ${target} HEADER_DIRS)
   if(_hdr_dirs)
     set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_hdr_dirs})
