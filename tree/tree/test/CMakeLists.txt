@@ -45,3 +45,9 @@ ROOT_GENERATE_DICTIONARY(EvolutionStruct ${CMAKE_CURRENT_SOURCE_DIR}/EvolutionSt
                          OPTIONS -inlineInputHeader
                          DEPENDENCIES RIO)
 
+ROOT_ADD_GTEST(testTBranchElementBranchCount TBranchElementBranchCount.cxx LIBRARIES RIO Tree TreePlayer)
+ROOT_GENERATE_DICTIONARY(BranchCountStruct ${CMAKE_CURRENT_SOURCE_DIR}/BranchCountStruct.h
+                         MODULE testTBranchElementBranchCount
+                         LINKDEF BranchCountStructLinkDef.h
+                         OPTIONS -inlineInputHeader
+                         DEPENDENCIES RIO)
