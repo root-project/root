@@ -4074,7 +4074,7 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
             const auto clNameShortType = TClassEdit::ShortType(clName.c_str(), 1);
             cl = TClass::GetClass(clNameShortType.c_str());
          }
-         if (cl && !cl->HasDictionary()) {
+         if (cl) {
             cl->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
          }
       };
@@ -4123,9 +4123,7 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
          // The collection has different kind of elements the check would be required.
          TClass* t = nullptr;
          if ((t = GetCollectionProxy()->GetValueClass())) {
-            if (!t->HasDictionary()) {
-               t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
-            }
+            t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
          }
       } else {
          if (recurse) {
@@ -4181,9 +4179,7 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
          // The collection has different kind of elements the check would be required.
          TClass* t = nullptr;
          if ((t = GetCollectionProxy()->GetValueClass())) {
-            if (!t->HasDictionary()) {
-               t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
-            }
+            t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
          }
       } else {
          GetMissingDictionariesForMembers(result, visited, recurse);
