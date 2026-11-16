@@ -20,21 +20,21 @@ ParserFuncSignature ParseSwish = [](RModelParser_ONNX &parser, const onnx::NodeP
    std::unique_ptr<ROperator> op;
 
    // alpha attribute for Swish
-   float attr_alpha = 1;
+   float attr_alpha = 1.0;
 
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
       std::string attribute_name = nodeproto.attribute(i).name();
       if (attribute_name == "alpha")
          attr_alpha = nodeproto.attribute(i).f();
    }
-   // ROperator_Swish implements alpha = 1 (x * sigmoid(x)); reject other values
-   if (attr_alpha != 1.0) {
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Swish does not yet support alpha != 1");
-   }
 
    std::string output_name = nodeproto.output(0);
-
-   op.reset(new ROperator_Swish(input_name, output_name));
+   switch (input_type) {
+   case ETensorType::FLOAT: op.reset(new ROperator_Swish(attr_alpha, input_name, output_name)); break;
+   default:
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Swish does not yet support input type " +
+                               std::to_string(static_cast<int>(input_type)));
+   }
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);
