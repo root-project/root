@@ -892,6 +892,17 @@ interop::TCppScope_t interop::GetNamed(const std::string& name,
   if (TCppScope_t named = Cpp::GetNamed(name, parent_scope))
     return named;
 
+  // Rootmaps don't forward declare enums and variables. If TClass::GetClass
+  // looked one up before its header was parsed, clang cached that miss and
+  // won't ask TCling to autoparse it again (#24176).
+  if (parent_scope && Cpp::IsNamespace(parent_scope)) {
+    const std::string qualified_name =
+        Cpp::GetQualifiedCompleteName(parent_scope) + "::" + name;
+    if (gInterpreter->AutoParse(qualified_name.c_str()))
+      if (TCppScope_t named = Cpp::GetNamed(name, parent_scope))
+        return named;
+  }
+
   // "gROOT" is a macro expanding to ROOT::GetROOT(); ROOT master exposed it
   // to cppyy as a TGlobalMappedFunction, a mechanism this backend does not
   // consult. Resolve it to the underlying variable instead (making sure it
