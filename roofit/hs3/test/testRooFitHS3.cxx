@@ -7084,3 +7084,67 @@ TEST(RooFitHS3, ConstraintTermsOfRenamedChannels)
       EXPECT_NEAR(renamedHistFactoryNLL(ws2), nll, 1e-10 * std::abs(nll)) << json;
    }
 }
+
+// A channel with the constant inverse bin width of HistFactory before ROOT 6.26, as a component of a RooSimultaneous
+// whose observables are renamed. The renamed channel is a clone, but the constant is not cloned, so the original
+// channel still uses it: it is still identified as the inverse bin width, not written as a normfactor, and the
+// likelihood is the same after the round trip.
+TEST(RooFitHS3, LegacyBinWidthFactorOfRenamedChannel)
+{
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
+
+   std::unique_ptr<RooWorkspace> legacy = makeLegacyHistFactoryWorkspace();
+   RooWorkspace ws;
+   RooCategory channelCat{"channelCat", "channelCat", {{"channel1", 0}}};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"channel1", legacy->pdf("model_channel1")}}, channelCat};
+   ws.import(simPdf, RooFit::Silence());
+   RooRealVar &obs = *ws.var("obs_x_channel1");
+   RooCategory &index = *ws.cat("channelCat");
+   RooRealVar weight{"weight", "weight", 1.0};
+   RooDataSet data{"obsData", "obsData", {obs, index, weight}, RooFit::WeightVar(weight)};
+   index.setLabel("channel1");
+   for (auto const &[x, w] : std::vector<std::pair<double, double>>{{1.25, 122.0}, {1.75, 112.0}}) {
+      obs.setVal(x);
+      data.add({obs, index}, w);
+   }
+   ws.import(data, RooFit::Silence());
+   RooStats::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf("simPdf");
+   mc.SetObservables("obs_x_channel1,channelCat");
+   mc.SetParametersOfInterest("SigXsecOverSM");
+   mc.SetNuisanceParameters("alpha_syst");
+   mc.SetGlobalObservables("nom_alpha_syst");
+   ws.import(mc);
+
+   RooJSONFactoryWSTool::config().renameCombinedObservables = true;
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().renameCombinedObservables = false;
+   ASSERT_NE(json.find("obs_channel1"), std::string::npos) << json;
+   int nChannels = 0;
+   const auto modifiers = histFactoryModifiers(json, nChannels);
+   EXPECT_EQ(nChannels, 1) << json;
+   for (auto const &modifier : modifiers) {
+      EXPECT_EQ(modifier.find("binWidth"), std::string::npos) << modifier << ": " << json;
+   }
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json)) << json;
+   auto *mc2 = static_cast<RooStats::ModelConfig *>(ws2.obj("ModelConfig"));
+   ASSERT_NE(mc2, nullptr);
+   ASSERT_NE(ws2.data("obsData"), nullptr);
+   using RooFit::GlobalObservables;
+   std::unique_ptr<RooAbsReal> nll{
+      ws.pdf("simPdf")->createNLL(*ws.data("obsData"), GlobalObservables(*mc.GetGlobalObservables()))};
+   std::unique_ptr<RooAbsReal> nll2{
+      mc2->GetPdf()->createNLL(*ws2.data("obsData"), GlobalObservables(*mc2->GetGlobalObservables()))};
+   // Up to a constant.
+   const double ref = nll->getVal();
+   const double ref2 = nll2->getVal();
+   for (auto const &[mu, alpha] : std::vector<std::pair<double, double>>{{1.5, 0.3}, {0.7, -0.4}}) {
+      for (RooWorkspace *w : {&ws, &ws2}) {
+         w->var("SigXsecOverSM")->setVal(mu);
+         w->var("alpha_syst")->setVal(alpha);
+      }
+      EXPECT_NEAR(nll2->getVal() - ref2, nll->getVal() - ref, 1e-8) << mu << ", " << alpha;
+   }
+}

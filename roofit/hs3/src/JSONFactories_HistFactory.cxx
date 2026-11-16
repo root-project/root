@@ -997,9 +997,18 @@ bool isLegacyBinWidthFactor(RooAbsArg const &factor, RooRealSumPdf const &sumpdf
          }
       }
    }
+   // A channel whose observables are renamed (RooJSONFactoryWSTool::Config::renameCombinedObservables) is a clone
+   // made by RooCustomizer, which marks the cloned nodes with "ORIGNAME:<original>". The factor doesn't depend on the
+   // observables, so it is not cloned: the original sum and products of the channel are still its clients.
+   auto isOriginalOfChannelNode = [&](RooAbsArg const &client) {
+      const std::string attribute = std::string{"ORIGNAME:"} + client.GetName();
+      return sumpdf.getAttribute(attribute.c_str()) ||
+             std::any_of(channelNodes.begin(), channelNodes.end(),
+                         [&](RooAbsArg const *node) { return node->getAttribute(attribute.c_str()); });
+   };
    for (RooAbsArg const *client : factor.clients()) {
       const bool isChannelProduct = dynamic_cast<RooProduct const *>(client) && channelNodes.find(*client) == client;
-      if (client != &sumpdf && !isChannelProduct) {
+      if (client != &sumpdf && !isChannelProduct && !isOriginalOfChannelNode(*client)) {
          return false;
       }
    }
