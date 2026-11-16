@@ -1488,13 +1488,15 @@ function(ROOT_INSTALL_TARGET target)
       SUFFIX "${_lib_suffix}"
     )
   endif()
-  get_target_property(_hdr_dirs ${target} HEADER_DIRS)
-  if(_hdr_dirs)
-    set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_hdr_dirs})
-  endif()
-  get_target_property(_not4dict_dirs ${target} HEADER_DIRS_not4dict_header_files)
-  if(_not4dict_dirs)
-    set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_not4dict_dirs})
+  if(NOT runtime_cxxmodules) # remove this condition once we do not copy at all headers for modules, when using VFS
+    get_target_property(_hdr_dirs ${target} HEADER_DIRS)
+    if(_hdr_dirs)
+      set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_hdr_dirs})
+    endif()
+    get_target_property(_not4dict_dirs ${target} HEADER_DIRS_not4dict_header_files)
+    if(_not4dict_dirs)
+      set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_not4dict_dirs})
+    endif()
   endif()
 
   install(TARGETS ${target}
