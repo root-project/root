@@ -976,7 +976,8 @@ std::vector<double> binVolumes(RooRealSumPdf const &sumpdf)
 /// Whether a constant factor of a sample is the inverse bin width that HistFactory before ROOT 6.26 multiplied the
 /// samples with (a constant `RooRealVar` `binWidth_<observables>_<i>` in the coefficients of the `RooRealSumPdf`).
 /// `histfactory_dist` implies this factor, so it is not written as a modifier. It is identified by its structure, not
-/// by its name: a constant that is not floating in any snapshot, used only by the sum or the products of the channel,
+/// by its name: a constant that is not floating in any snapshot, used only by the sum or the products of the channel
+/// (among the objects of the workspace),
 /// with the inverse of the volume of the first bin, or of the average bin volume, of one of the histograms of the
 /// channel as value.
 bool isLegacyBinWidthFactor(RooAbsArg const &factor, RooRealSumPdf const &sumpdf, RooArgSet const &channelNodes,
@@ -1008,9 +1009,15 @@ bool isLegacyBinWidthFactor(RooAbsArg const &factor, RooRealSumPdf const &sumpdf
    };
    for (RooAbsArg const *client : factor.clients()) {
       const bool isChannelProduct = dynamic_cast<RooProduct const *>(client) && channelNodes.find(*client) == client;
-      if (client != &sumpdf && !isChannelProduct && !isOriginalOfChannelNode(*client)) {
-         return false;
+      if (client == &sumpdf || isChannelProduct || isOriginalOfChannelNode(*client)) {
+         continue;
       }
+      // Objects outside the workspace are no part of the model, e.g. the computation graph of a likelihood that was
+      // created from the model before the export.
+      if (ws && ws->arg(client->GetName()) != client) {
+         continue;
+      }
+      return false;
    }
    // The value was stored with 7 significant digits.
    const double value = static_cast<RooAbsReal const &>(factor).getVal();

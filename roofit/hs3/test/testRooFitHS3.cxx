@@ -7148,3 +7148,57 @@ TEST(RooFitHS3, LegacyBinWidthFactorOfRenamedChannel)
       EXPECT_NEAR(nll2->getVal() - ref2, nll->getVal() - ref, 1e-8) << mu << ", " << alpha;
    }
 }
+
+// The constant inverse bin width of HistFactory before ROOT 6.26 is identified by its structure, among other things by
+// being used only by its channel. Objects outside the workspace don't count: e.g. a likelihood created from the model
+// before the export (as for a fit) refers to the constant from its computation graph.
+TEST(RooFitHS3, LegacyBinWidthFactorWithLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
+
+   std::unique_ptr<RooWorkspace> legacy = makeLegacyHistFactoryWorkspace();
+   auto *mcLegacy = static_cast<RooStats::ModelConfig *>(legacy->obj("ModelConfig"));
+   ASSERT_NE(mcLegacy, nullptr);
+   // Without "binWidth" in their names, the factors are identified only by their structure.
+   std::unique_ptr<RooAbsPdf> model{static_cast<RooAbsPdf *>(mcLegacy->GetPdf()->cloneTree())};
+   RooArgSet nodes;
+   model->treeNodeServerList(&nodes);
+   std::vector<std::string> factors;
+   for (RooAbsArg *arg : nodes) {
+      if (std::string{arg->GetName()}.find("binWidth") != std::string::npos) {
+         factors.push_back("w_" + std::to_string(factors.size()));
+         arg->SetName(factors.back().c_str());
+      }
+   }
+   ASSERT_FALSE(factors.empty());
+   RooWorkspace ws;
+   ws.import(*model, RooFit::Silence());
+   ws.import(*legacy->data("obsData"), RooFit::Silence());
+   RooStats::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf(model->GetName());
+   mc.SetObservables(*mcLegacy->GetObservables());
+   mc.SetParametersOfInterest(*mcLegacy->GetParametersOfInterest());
+   mc.SetNuisanceParameters(*mcLegacy->GetNuisanceParameters());
+   mc.SetGlobalObservables(*mcLegacy->GetGlobalObservables());
+   ws.import(mc);
+
+   auto normfactors = [&](std::string const &json) {
+      int nChannels = 0;
+      const auto modifiers = histFactoryModifiers(json, nChannels);
+      EXPECT_EQ(nChannels, 1) << json;
+      std::size_t n = 0;
+      for (auto const &name : factors) {
+         n += modifiers.count("normfactor:" + name + ",");
+      }
+      return n;
+   };
+   const std::string before = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(normfactors(before), 0u) << before;
+
+   std::unique_ptr<RooAbsReal> nll{ws.pdf(model->GetName())->createNLL(*ws.data("obsData"))};
+   ASSERT_NE(nll, nullptr);
+   nll->getVal();
+   const std::string withLikelihood = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(normfactors(withLikelihood), 0u) << withLikelihood;
+   EXPECT_EQ(withLikelihood, before);
+}
