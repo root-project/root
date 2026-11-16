@@ -154,11 +154,20 @@ Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 * Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
 * The LZ4 compression levels now follow those of the `lz4` command line tool. Level 1 uses the fast compressor as before. Level 2 uses the faster high-compression mode introduced in LZ4 1.10.0, or the fast compressor with older LZ4 versions. Level 3 now uses the high-compression (HC) compressor, like levels 4 to 9. Previously, levels 1 to 3 all used the fast compressor and produced identical output. Files written with levels 2 and 3 can be read by older ROOT versions, since the on-disk format is unchanged.
 
-* An `RNTupleReader` will now by default not load all metadata on open. Metadata related to the on-disk location of data pages will instead be loaded during iteration. To restore the old behavior, set the metadata mode in the `RNTupleReadOptions` to `kEager`.
-
 ### RFile
 
-RFile, ROOT's modern interface to ROOT file, has moved out of the `ROOT::Experimental` namespace.
+RFile, ROOT's modern interface to ROOT file, has moved out of the `ROOT::Experimental` namespace. The interface is otherwise unchanged, but the following things were added:
+
+* A new overload of `RFile::Put` has been introduced that accepts a `TNamed` and an optional directory path. This simplifies the common case of writing TNamed-derived objects using their original name and title, meaning what before was `rfile->Put(obj.GetName(), obj, obj.GetTitle())` becomes just `rfile->Put(obj)`.
+* RFile's Python interface was extended to add support for the `__getitem__` and `__contains__` syntax. This means you can now get objects from RFile using `rfile['myObj']` (which will raise an error if the object's not there) and query for the presence of an object using `"myObj" in rfile`.
+* TTree is now explicitly prevented from being written through RFile
+* RFile is now browsable
+
+Documentation has also been added where missing, as well as some [tutorials](https://root.cern/doc/v642/group__tutorial__io.html#rfile) both for C++ and Python.
+
+### RNTuple
+* An `RNTupleReader` will now by default not load all metadata on open. Metadata related to the on-disk location of data pages will instead be loaded during iteration. To restore the old behavior, set the metadata mode in the `RNTupleReadOptions` to `kEager`.
+* The signature of [RRealField::SetQuantized](https://root.cern/doc/v642/classROOT_1_1RRealField.html#aa34c98af2cdcee3c30600ed3ce216905) was changed to avoid ambiguities;
 
 ### RNTupleProcessor
 
@@ -180,7 +189,16 @@ as "struct of array" (SoA) in memory. This is useful, e.g., for efficient consum
 
 ### RNTuple attributes
 
-* The RNTuple attributes, RNTuple's native metadata system, is moving out of experimental. Attributes can be written to an RNTuple via `RNTupleWriter::CreateAttributeSet`, read via `RNTupleReader::OpenAttributeSet` and they are automatically merged alongside their main RNTuple via `TFileMerger` and `hadd`.
+* The RNTuple attributes, RNTuple's native metadata system, is moving out of experimental. Attributes can be written to an RNTuple via `RNTupleWriter::CreateAttributeSet`, read via `RNTupleReader::OpenAttributeSet` and they are automatically merged alongside their main RNTuple via `TFileMerger` and `hadd`. A tutorial on how to use them is available [here](https://root.cern/doc/v642/ntpl019__attributes_8C.html).
+* Attributes may now be written in an RNTuple created via `RNTupleWriter::Recreate` and not only via `Append`.
+
+### RNTuple merging
+
+* Merging RNTuple via `hadd`, `TFileMerger` or directly through the internal `RNTupleMerger` class is now considered stable.
+
+### RNTupleInspector
+
+* Added GetPagesPerClusterDistribution method, that creates a THStack with the distribution of pages per cluster in a given RNTuple.
 
 ## Core
 
