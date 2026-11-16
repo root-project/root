@@ -138,7 +138,7 @@ namespace RooStats {
       mutable double fNLLObs;
       mutable double fNLLAsimov;
 
-      mutable RooAbsData * fAsimovData;   ///< asimov data set
+      mutable std::unique_ptr<RooAbsData> fAsimovData; ///< asimov data set
       mutable RooArgSet  fAsimovGlobObs;  ///< snapshot of Asimov global observables
       mutable RooArgSet  fBestFitPoi;     ///< snapshot of best fitted POI values
       mutable RooArgSet  fBestFitParams;  ///< snapshot of all best fitted Parameter values
