@@ -2485,6 +2485,32 @@ def make_LayerNormalization4d():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_LayerNormalizationAxis0():
+    """Ops: LayerNormalization with axis=0 and axis=-rank, with Mean and InvStdDev outputs"""
+    nodes = [
+        helper.make_node('LayerNormalization', ['X', 'Scale', 'B'], ['Y0', 'Mean', 'InvStdDev'], axis=0),
+        helper.make_node('LayerNormalization', ['Y0', 'Scale2'], ['Y'], axis=-2),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'LayerNormalizationAxis0',
+        inputs=[
+            _vi('X', FLOAT, [2, 3]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [2, 3]),
+            _vi('Mean', FLOAT, [1, 1]),
+            _vi('InvStdDev', FLOAT, [1, 1]),
+        ],
+        initializer=[
+            _tensor('Scale', FLOAT, [2, 3], [0.5, -0.25, 1.0, 2.0, 0.75, -1.5]),
+            _tensor('B', FLOAT, [2, 3], [0.125, -0.5, 0.25, 0.0, 1.0, -0.75]),
+            _tensor('Scale2', FLOAT, [3], [1.5, -0.5, 0.25]),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
 def make_Less():
     """Ops: Less"""
     nodes = [
@@ -6304,6 +6330,7 @@ MODELS = {
     "IdentityAlias": make_IdentityAlias,
     "LayerNormalization2d": make_LayerNormalization2d,
     "LayerNormalization4d": make_LayerNormalization4d,
+    "LayerNormalizationAxis0": make_LayerNormalizationAxis0,
     "Less": make_Less,
     "LessOrEqual": make_LessOrEqual,
     "LinearWithLeakyRelu": make_LinearWithLeakyRelu,
@@ -7189,6 +7216,7 @@ TEST_INPUTS = {
     "LSTMPeepholes": [f32(np.arange(1.0, 9.0), (1, 2, 4))],
     "LayerNormalization2d": [f32(np.arange(0.0, 12.0), (3, 4))],
     "LayerNormalization4d": [f32(np.arange(0.0, 120.0), (2, 3, 4, 5))],
+    "LayerNormalizationAxis0": [f32([0.5, -1.0, 2.0, 3.5, -0.25, 1.0], (2, 3))],
     "Less": [
         f32([1.0, 2.0, 3.0], (3,)),
         f32([4.0, 2.0, 6.0], (3,)),
