@@ -1495,6 +1495,18 @@ TEST(ONNX, Slice_Indivisible_Step)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, Slice_DynDim)
+{
+   // start = 1 and end = 10 on a parameterized dimension
+   SofieReference ref = readReference("Slice_DynDim");
+
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "Slice_DynDim", "\"Slice_DynDim_FromONNX.dat\", 3", 3,
+                                       ref.f32("input0"));
+
+   EXPECT_EQ(output.size(), ref.f32("output0").size());
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, RangeFloat)
 {
    SofieReference ref = readReference("RangeFloat");
