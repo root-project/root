@@ -19,7 +19,7 @@ namespace {
 constexpr auto kVersionEpoch = 1;
 constexpr auto kVersionMajor = 1;
 constexpr auto kVersionMinor = 0;
-constexpr auto kVersionPatch = 1;
+constexpr auto kVersionPatch = 2;
 
 bool IsEqual(const ROOT::RNTuple &a, const ROOT::RNTuple &b)
 {
