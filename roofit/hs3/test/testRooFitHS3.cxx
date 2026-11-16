@@ -6980,3 +6980,107 @@ TEST(RooFitHS3, ObservablesWithoutData)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws4}.importJSONfromString(handWritten));
    EXPECT_EQ(observableNames(ws4, "analysis"), std::vector<std::string>{"x"});
 }
+
+namespace {
+
+// A workspace with one HistFactory channel `HF` with a constrained normsys, the component `A` of the
+// RooSimultaneous `model`, with a data set and a ModelConfig.
+void makeRenamedHistFactoryWorkspace(RooWorkspace &ws)
+{
+   const std::string json = R"({
+  "metadata": {"hs3_version": "0.3"},
+  "distributions": [
+    {"name": "HF", "type": "histfactory_dist",
+     "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+     "axes": [{"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}],
+     "samples": [{"name": "signal", "data": {"contents": [10.0]},
+                  "modifiers": [{"name": "mu", "type": "normfactor", "parameters": ["mu"]},
+                                {"name": "syst", "type": "normsys", "parameters": ["theta"],
+                                 "data": {"lo": 0.9, "hi": 1.1}, "constraints": ["constraint"]}]}]},
+    {"name": "constraint", "type": "gaussian_dist", "x": "gobs", "mean": "theta", "sigma": 1.0}
+  ],
+  "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+    {"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}, {"name": "mu", "min": 0.0, "max": 5.0},
+    {"name": "theta", "min": -5.0, "max": 5.0}, {"name": "gobs", "min": -5.0, "max": 5.0}]}],
+  "parameter_points": [{"name": "default_values", "parameters": [
+    {"name": "mu", "value": 1.0}, {"name": "theta", "value": 0.0}, {"name": "gobs", "value": 0.0, "const": true}]}]
+})";
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   RooCategory channel{"channel", "channel", {{"A", 0}}};
+   RooSimultaneous model{"model", "model", {{"A", ws.pdf("HF")}}, channel};
+   ws.import(model, RooFit::Silence());
+   RooRealVar &x = *ws.var("x");
+   RooCategory &index = *ws.cat("channel");
+   RooRealVar weight{"weight", "weight", 1.0};
+   RooDataSet data{"data", "data", {x, index, weight}, RooFit::WeightVar(weight)};
+   x.setVal(0.5);
+   index.setLabel("A");
+   data.add({x, index}, 10.0);
+   ws.import(data, RooFit::Silence());
+   RooFit::ModelConfig mc{"mc", &ws};
+   mc.SetPdf("model");
+   mc.SetObservables("x,channel");
+   mc.SetParametersOfInterest("mu");
+   mc.SetNuisanceParameters("theta");
+   mc.SetGlobalObservables("gobs");
+   ws.import(mc);
+}
+
+double renamedHistFactoryNLL(RooWorkspace &ws)
+{
+   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("mc"));
+   if (!mc || !ws.data("data") || !mc->GetGlobalObservables()) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   ws.var("theta")->setVal(0.4);
+   ws.var("mu")->setVal(1.2);
+   RooArgSet external;
+   if (mc->GetExternalConstraints()) {
+      external.add(*mc->GetExternalConstraints());
+   }
+   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*ws.data("data"), RooFit::ExternalConstraints(external),
+                                                           RooFit::GlobalObservables(*mc->GetGlobalObservables()))};
+   return nll->getVal();
+}
+
+// The "aux_distributions" of the only likelihood of the document `json`, or "none".
+std::string auxDistributionsOf(std::string const &json)
+{
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   auto const &likelihood = tree->rootnode()["likelihoods"].child(0);
+   if (!likelihood.has_child("aux_distributions")) {
+      return "none";
+   }
+   std::stringstream ss;
+   likelihood["aux_distributions"].writeJSON(ss);
+   return ss.str();
+}
+
+} // namespace
+
+// The constraint terms of the likelihood are looked for in the channels as they are written: with
+// renameCombinedObservables, the components of the RooSimultaneous are written as renamed clones, and a HistFactory
+// channel is still recognised as one. The likelihood has the same constraint terms with and without renaming, and
+// the document reads back with the same NLL.
+TEST(RooFitHS3, ConstraintTermsOfRenamedChannels)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   makeRenamedHistFactoryWorkspace(ws);
+   const double nll = renamedHistFactoryNLL(ws);
+   ASSERT_FALSE(std::isnan(nll));
+
+   const std::string plain = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().renameCombinedObservables = true;
+   const std::string renamed = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().renameCombinedObservables = false;
+   ASSERT_NE(renamed.find("obs_A"), std::string::npos) << renamed;
+   EXPECT_EQ(auxDistributionsOf(renamed), auxDistributionsOf(plain)) << renamed;
+
+   for (std::string const &json : {plain, renamed}) {
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json)) << json;
+      EXPECT_NEAR(renamedHistFactoryNLL(ws2), nll, 1e-10 * std::abs(nll)) << json;
+   }
+}

@@ -3070,10 +3070,12 @@ namespace {
 // constraints are factors of the channels, and RooFit counts each once, also if several channels share it; in HS3,
 // they are terms of the likelihood. writeLikelihoodTermsOnce() takes them out of the products. Constraints elsewhere,
 // e.g. in a nested product, stay where they are. HistFactory channels (`isHistFactoryChannel`) are skipped: their
-// constraints are no factors in the document.
+// constraints are no factors in the document. The channels are taken as they are written: a component of the
+// RooSimultaneous is replaced by the one in `renamed` (by label), if any (Config::renameCombinedObservables).
 std::vector<std::string>
 constraintFactorsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet const &observables,
-                            std::function<bool(std::string const &)> const &isHistFactoryChannel)
+                            std::function<bool(std::string const &)> const &isHistFactoryChannel,
+                            std::map<std::string, RooAbsPdf const *> const *renamed)
 {
    RooArgSet params;
    pdf.getParameters(&observables, params);
@@ -3081,7 +3083,13 @@ constraintFactorsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArg
    std::vector<RooAbsPdf const *> channels;
    if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(&pdf)) {
       for (auto const &item : simPdf->indexCat()) {
-         if (RooAbsPdf const *component = simPdf->getPdf(item.first)) {
+         RooAbsPdf const *component = simPdf->getPdf(item.first);
+         if (renamed) {
+            if (auto found = renamed->find(item.first); found != renamed->end()) {
+               component = found->second;
+            }
+         }
+         if (component) {
             channels.push_back(component);
          }
       }
@@ -3174,8 +3182,10 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
             return dist.name == name && std::holds_alternative<HS3::HistFactoryDist>(dist.body);
          });
       };
+      auto renamed = _renamedComponents.find(pdf->GetName());
       for (std::string const &factor :
-           constraintFactorsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel)) {
+           constraintFactorsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel,
+                                       renamed != _renamedComponents.end() ? &renamed->second : nullptr)) {
          addAux(factor);
       }
    }
