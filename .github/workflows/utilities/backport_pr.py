@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import sys
+from datetime import datetime
 
 BOT_REPO_DIR_NAME = "root_bot"
 # This is needed for adding the remote branch to apply the patch deriving from the PR
@@ -173,8 +174,17 @@ class OfficialROOTRepoPR:
     def getBaseRefName(self):
         return self._parseJson('baseRefName')
 
-    def getNCommits(self):
-        return len(self._parseJson('commits'))
+    def getNCommitsOnBase(self, mergeCommit):
+        '''
+        Number of commits the PR added to its base branch: all of its commits if
+        it was rebase-merged, only one if it was squash-merged. Rebase merging
+        keeps the author dates, which tells the two apart.
+        '''
+        prDates = [int(datetime.fromisoformat(c['authoredDate']).timestamp()) for c in self._parseJson('commits')]
+        baseDates = execCommandBotRepo(['git', 'log', '--first-parent', '--reverse', f'-{len(prDates)}', '--format=%at', mergeCommit])
+        squashed = [int(d) for d in baseDates.split()] != prDates
+        printInfo(f'PR {self.pullNumber} was {"squash" if squashed else "rebase"}-merged')
+        return 1 if squashed else len(prDates)
 
     def getTitle(self):
         '''
@@ -246,7 +256,6 @@ def principal():
     labels = thePR.getLabels()
     prTitle = escapeQuotes(thePR.getTitle())
     mergeCommit = thePR.getMergeCommit()
-    nCommits = thePR.getNCommits()
     baseRefName = thePR.getBaseRefName()
     originalPRAuthor = thePR.getAuthor()
     
@@ -277,6 +286,7 @@ def principal():
     # We need to fetch the branch onto which the original PR was merged to have the
     # hashes at our disposal.
     execCommandBotRepo(['git', 'fetch', '--depth=8192', 'root_upstream', baseRefName])
+    nCommits = thePR.getNCommitsOnBase(mergeCommit)
 
     # Prepare the custom env for adding labels and assignees
     prEditEnv = os.environ | {'GH_TOKEN': os.environ['PR_TOKEN']}
