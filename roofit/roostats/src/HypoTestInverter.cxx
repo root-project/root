@@ -1094,7 +1094,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    if (!sbModel->GetParametersOfInterest()) return nullptr;
    paramPoint.add(*sbModel->GetParametersOfInterest());
 
-   const RooArgSet * poibkg = bModel->GetSnapshot();
+   std::unique_ptr<const RooArgSet> poibkg{bModel->GetSnapshot()};
    if (!poibkg) {
       oocoutW(nullptr,InputArguments) << "HypoTestInverter::RebuildDistribution - background snapshot not existing"
                                           << " assume is for POI = 0" << std::endl;
@@ -1205,7 +1205,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
 
 
       oocoutI(nullptr,Eval) << "\n\nsnapshot of s+b model \n";
-      sbModel->GetSnapshot()->Print("v");
+      std::unique_ptr<const RooArgSet>{sbModel->GetSnapshot()}->Print("v");
 
       // reset parameters to initial values to be sure in case they are not reset
       if (itoy> 0) {
