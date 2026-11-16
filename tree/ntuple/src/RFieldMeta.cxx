@@ -147,6 +147,9 @@ std::string GetTypeList(std::span<std::unique_ptr<ROOT::RFieldBase>> itemFields,
 
 std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFieldBase &innerField, bool useTypeAlias)
 {
+   if (innerField.GetTypeName().empty()) {
+      throw ROOT::RException(R__FAIL("invalid untyped inner field for outer set field"));
+   }
    std::string typePrefix;
    switch (setType) {
    case ROOT::RSetField::ESetType::kSet: typePrefix = "std::set<"; break;
@@ -163,6 +166,9 @@ std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFie
 
 std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFieldBase *innerField, bool useTypeAliases)
 {
+   if (innerField->GetTypeName().empty()) {
+      throw ROOT::RException(R__FAIL("invalid untyped inner field for outer map field"));
+   }
    if (const auto pairField = dynamic_cast<const ROOT::RPairField *>(innerField)) {
       std::string typePrefix;
       switch (mapType) {
@@ -1249,6 +1255,8 @@ void ROOT::REnumField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields)
    : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
+   Internal::EnsureTypedChildField(*itemFields[0], *this);
+   Internal::EnsureTypedChildField(*itemFields[1], *this);
    const std::string typeAlias = "std::pair<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
@@ -1534,6 +1542,7 @@ ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::un
                              EnsureValidClass(BuildMapTypeName(mapType, itemField.get(), false /* useTypeAliases */))),
      fMapType(mapType)
 {
+   Internal::EnsureTypedChildField(*itemField, *this);
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = BuildMapTypeName(mapType, itemField.get(), true /* useTypeAliases */);
 
@@ -1895,6 +1904,9 @@ void ROOT::RField<TObject>::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) 
 ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
+   for (const auto &f : itemFields) {
+      Internal::EnsureTypedChildField(*f, *this);
+   }
    const std::string typeAlias = "std::tuple<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
@@ -1987,6 +1999,9 @@ ROOT::RVariantField::RVariantField(std::string_view fieldName, std::vector<std::
    : ROOT::RFieldBase(fieldName, "std::variant<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">",
                       ROOT::ENTupleStructure::kVariant, false /* isSimple */)
 {
+   for (const auto &f : itemFields) {
+      Internal::EnsureTypedChildField(*f, *this);
+   }
    // The variant needs to initialize its own tag member
    fTraits |= kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
 

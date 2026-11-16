@@ -1004,6 +1004,7 @@ struct PolymorphicClass {
 ROOT::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
    : RNullableField(fieldName, "std::unique_ptr", std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
 {
+   Internal::EnsureTypedChildField(*fSubfields[0], *this);
    if (const auto *classField = dynamic_cast<const ROOT::RClassField *>(fSubfields[0].get())) {
       fPolymorphicTypeInfo = classField->GetPolymorphicTypeInfo();
    }
@@ -1124,6 +1125,7 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RUniquePtrField::SplitValue(const RV
 ROOT::ROptionalField::ROptionalField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
    : RNullableField(fieldName, "std::optional", std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
 {
+   Internal::EnsureTypedChildField(*fSubfields[0], *this);
    if (fSubfields[0]->GetTraits() & kTraitTriviallyDestructible)
       fTraits |= kTraitTriviallyDestructible;
 }
@@ -1254,6 +1256,7 @@ ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::unique_ptr<RFi
    : RFieldBase(fieldName, "std::atomic<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kPlain,
                 false /* isSimple */)
 {
+   Internal::EnsureTypedChildField(*itemField, *this);
    if (itemField->GetTraits() & kTraitTriviallyConstructible)
       fTraits |= kTraitTriviallyConstructible;
    if (itemField->GetTraits() & kTraitTriviallyDestructible)
