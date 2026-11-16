@@ -711,6 +711,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          if (obj3d.get_ctrl) {
             let ctrl = obj3d.get_ctrl(obj3d);
             ctrl.DrawForSelection(sec_idcs, res, extra);
+            // RenderCore outlines only objects with a parent. Meshes made for the selected
+            // parts, e.g. digits of a box set, are not in the scene tree: give them the
+            // parent of the element's object.
+            for (let g of res.geom)
+               if (g && !g._parent) g._parent = obj3d._parent;
          } else {
             res.geom.push(obj3d);
          }
