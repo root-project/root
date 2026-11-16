@@ -1475,6 +1475,8 @@ function(ROOT_INSTALL_TARGET target)
   if("${type}" STREQUAL "SHARED_LIBRARY" OR "${type}" STREQUAL "MODULE_LIBRARY")
     set_target_properties(${target} PROPERTIES
       WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+      PREFIX lib
+      IMPORT_PREFIX lib
       SUFFIX ${SOEXT}
     )
   endif()
