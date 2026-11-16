@@ -32,6 +32,8 @@ ToyMCSampler as its TestStatSampler.
 
 #include "RooRandom.h"
 
+#include <memory>
+
 
 
 using namespace RooStats;
@@ -58,10 +60,11 @@ HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
    fAltToysSeed(0)
 {
    if(!sampler){
+      std::unique_ptr<const RooArgSet> altSnapshot{altModel.GetSnapshot()};
       fDefaultTestStat
          = new RatioOfProfiledLikelihoodsTestStat(*nullModel.GetPdf(),
                                                   *altModel.GetPdf(),
-                                                  altModel.GetSnapshot());
+                                                  altSnapshot.get());
 
       auto toymcs = new ToyMCSampler(*fDefaultTestStat, 1000);
       const bool dataIsBinned = dynamic_cast<const RooDataHist*>(fData);
