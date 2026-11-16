@@ -1484,6 +1484,17 @@ TEST(ONNX, Slice_Neg)
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
+
+TEST(ONNX, Slice_Indivisible_Step)
+{
+   SofieReference ref = readReference("Slice_Indivisible_Step");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Slice_Indivisible_Step", ref.f32("input0"));
+
+   EXPECT_EQ(output.size(), ref.f32("output0").size());
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, RangeFloat)
 {
    SofieReference ref = readReference("RangeFloat");

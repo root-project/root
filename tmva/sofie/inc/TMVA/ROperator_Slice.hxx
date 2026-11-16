@@ -259,7 +259,10 @@ public:
             int64_t istart = static_cast<int64_t>(fStart[i].dim);
             int64_t iend = static_cast<int64_t>(fEnd[i].dim);
             int64_t istep= static_cast<int64_t>(fSteps[i].dim);
-            int64_t s = (iend-istart)/istep;
+            // number of loop iterations is ceil((end-start)/step)
+            int64_t s = (istep > 0) ? (iend - istart + istep - 1) / istep
+                                    : (iend - istart + istep + 1) / istep;
+            if (s < 0) s = 0;
             fShapeOutput[i] = Dim{static_cast<size_t>(s)};
          } else {
             std::string s;
@@ -268,8 +271,9 @@ public:
             else
                s = fEnd[i].GetVal();
             if (fSteps[i].GetVal() != "1") {
+               // ceil division, so that the output holds all the elements visited by the slice loop
                s.insert(0,"(");
-               s += ")/" + fSteps[i].GetVal() + ")";
+               s += "+" + fSteps[i].GetVal() + "-1)/" + fSteps[i].GetVal() + ")";
             }
             fShapeOutput[i] = Dim{s,size_t(-1)};
             // add also the shape parameters to RModel to declare them when
