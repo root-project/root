@@ -656,9 +656,15 @@ public:
    const std::vector<std::size_t> &GetUnprocessedArgsIndices() const { return fUnprocessedArgsIndices; }
 
    struct RMakeHelpOptions {
+      /// This string will be appended to the "usage" line, after the flags short description.
       std::string_view fPositionalArgs;
+      /// This string will be appended after the "usage" line and before the flags description, only in MakeLongHelp.
       std::string_view fDescription;
+      /// If non-null, this will be used to both hint at the desired width in columns of the output text (0 means
+      /// "use the default") and to retrieve the actual max line width used.
       std::size_t *fMaxLineWidth = nullptr;
+      /// If true, the string passed to `fDescription` will be wrapped to approximately `*fMaxLineWidth` (see
+      /// MakeShortHelp). Disable wrapping if your description already contains newlines which you want to preserve.
       bool fWrapDescription = true;
 
       RMakeHelpOptions() {}
@@ -668,12 +674,13 @@ public:
    /// The string does NOT contain the flags' description but only their name and whether they need an argument or not.
    /// For flags with multiple aliases, only the first short alias alphabetically will be shown, or the first
    /// non-short one alphabetically if no short flag was defined.
-   /// If `positionalArgs` is given, it will be appended to the short help message (since this class doesn't
+   /// If `options.fPositionalArgs` is given, it will be appended to the short help message (since this class doesn't
    /// know the semantics of positional arguments it's up to the library user to provide this information). If
-   /// `maxLineWidth` is provided, it will be used as the tentative max width of the output (which may be larger
-   /// than that in case a line cannot be wrapped exactly due to e.g. too-long-named flags) and it will be overwritten
-   /// with the actual length of the longest line in the output string. If the value of `maxLineWidth` is 0, the default
-   /// line width will be used (but the variable will contain the actual line width when the function returns).
+   /// `options.fMaxLineWidth` is provided, it will be used as the tentative max width of the output (which may be
+   /// larger than that in case a line cannot be wrapped exactly due to e.g. too-long-named flags) and it will be
+   /// overwritten with the actual length of the longest line in the output string. If the value of `maxLineWidth` is 0,
+   /// the default line width will be used (but the variable will contain the actual line width when the function
+   /// returns).
    std::string MakeShortHelp(std::string_view programName, const RMakeHelpOptions &options = {}) const
    {
       std::string res;
@@ -682,6 +689,7 @@ public:
       const std::size_t lineWidthToUse =
          !options.fMaxLineWidth || *options.fMaxLineWidth == 0 ? kDefaultHelpWidth : *options.fMaxLineWidth;
       std::size_t wrapEndIdx = std::max<std::size_t>(wrapBeginIdx + 10, lineWidthToUse);
+
       auto expectedFlags = fExpectedFlags;
       std::sort(expectedFlags.begin(), expectedFlags.end(),
                 [](const auto &a, const auto &b) { return a.fName < b.fName; });
@@ -808,6 +816,7 @@ public:
             continue;
 
          auto line = "  " + expected.AsStr();
+         // Collect all aliases together in the same line
          for (std::size_t j = i + 1; j < expectedFlags.size(); ++j) {
             const auto &alias = expectedFlags[j];
             if (alias.fAlias == i)
