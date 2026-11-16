@@ -683,27 +683,21 @@ void TGQuartz::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle 
          }
       } else {
          // no smoothing, just put character using foreground color
-         unsigned char rgba[4] = {};
-         rgba[3] = 255;
-         X11::PixelToRGB(fore, rgba);
-         unsigned char d = 0;
+         ColorStruct_t col;
+         // request foreground color
+         col.fPixel = fore;
+         TGCocoa::QueryColor(kNone, col);//calculate fRed/fGreen/fBlue triple from fPixel.
+         const UChar_t pixel[] = {UChar_t(double(col.fRed) / 0xffff * 255),
+                                  UChar_t(double(col.fGreen) / 0xffff * 255),
+                                  UChar_t(double(col.fBlue) / 0xffff * 255), 255};
 
-         const unsigned char *row = buffer;
+         const unsigned char *s = buffer;
          for (unsigned y = 0; y < rows; ++y) {
-            unsigned n = 0;
-            const unsigned char *s = row;
             for (unsigned x = 0; x < width; ++x) {
-               if (!n)
-                  d = *s++;
-
-               if (TESTBIT(d,7 - n))
-                  [pixmap.Get() putPixel : rgba X : bx + x Y : by + y];
-
-               if (++n == kBitsPerByte)
-                  n = 0;
+               unsigned char d = (((*s++ & 0xff) + 10) * 5) / 256;
+               if (d > 0)
+                  [pixmap.Get() putPixel : pixel X : bx + x Y : by + y];
             }
-
-            row += pitch;
          }
       }
    }
