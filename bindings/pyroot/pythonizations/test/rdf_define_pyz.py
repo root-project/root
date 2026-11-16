@@ -1,3 +1,4 @@
+import multiprocessing
 import unittest
 
 import numba  # noqa: F401
@@ -11,6 +12,34 @@ import ROOT
 DOUBLE = "double"
 ULONG64 = "ULong64_t"
 RVEC_ULONG64 = "ROOT::VecOps::RVec<ULong64_t>"
+
+
+def _run_python_callables_with_implicit_mt():
+    """
+    The body of PyDefine.test_python_callable_implicit_mt, which runs it in another process.
+    """
+    ROOT.EnableImplicitMT(4)
+
+    def is_even(x: float) -> bool:
+        return x % 2 == 0
+
+    def square(x: float) -> float:
+        return x * x
+
+    def book():
+        rdf = ROOT.RDataFrame(1000).Define("x", "(double) rdfentry_")
+        return rdf.Filter(is_even, ["x"]).Define("y", square, ["x"])
+
+    expected = sum(x * x for x in range(0, 1000, 2))
+
+    # triggered by a method of RResultPtr
+    assert book().Sum("y").GetValue() == expected
+    # triggered by an attribute access that is forwarded to the result
+    assert book().Histo1D("y").GetEntries() == 500
+    # triggered by RunGraphs, where other threads run the event loops
+    sums = [book().Sum("y"), book().Sum("y")]
+    ROOT.RDF.RunGraphs(sums)
+    assert [s.GetValue() for s in sums] == [expected, expected]
 
 
 class PyDefine(unittest.TestCase):
@@ -333,6 +362,19 @@ class PyDefine(unittest.TestCase):
         rdf = ROOT.RDataFrame(3).Define("x", "(double) rdfentry_")
         with self.assertRaisesRegex(TypeError, "needs type annotations"):
             rdf.Define("y", lambda x: 2 * x, ["x"])
+
+    def test_python_callable_implicit_mt(self):
+        """
+        Test that Python callables don't deadlock a multithreaded event loop
+        """
+        process = multiprocessing.get_context("spawn").Process(target=_run_python_callables_with_implicit_mt)
+        process.start()
+        process.join(timeout=300)
+        if process.is_alive():
+            process.kill()
+            process.join()
+            self.fail("The event loops with Python callables did not finish: deadlock?")
+        self.assertEqual(process.exitcode, 0)
 
 
 if __name__ == "__main__":
