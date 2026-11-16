@@ -272,6 +272,16 @@ void writeData(JSONNode &dataArray, Data const &data)
                        node["weights"].fill_seq(*d.weights);
                     }
                  },
+                 [&](CombinedData const &d) {
+                    node["type"] << "combined";
+                    writeStrings(node["columns"], d.columns);
+                    JSONNode &components = node["components"].set_seq();
+                    for (CombinedDataComponent const &component : d.components) {
+                       JSONNode &out = components.append_child().set_map();
+                       writeStrings(out["key"], component.key);
+                       out["dataset"] << component.data.name;
+                    }
+                 },
                  [&](PointData const &d) {
                     node["type"] << "point";
                     node["value"] << d.value;
@@ -368,12 +378,21 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
          if (item.second.combinedDataName) {
             node["combined_data_name"] << *item.second.combinedDataName;
          }
+         if (item.second.observables) {
+            node["observables"].fill_seq(*item.second.observables);
+         }
       }
    }
    if (!internal.channelConstraints.empty()) {
       JSONNode &constraints = rootInternal()["histfactory_constraints"].set_map();
       for (auto const &item : internal.channelConstraints) {
          writeRefs(constraints[item.first], item.second);
+      }
+   }
+   if (!internal.bookkeepingColumns.empty()) {
+      JSONNode &columns = rootInternal()["bookkeeping_columns"].set_map();
+      for (auto const &item : internal.bookkeepingColumns) {
+         writeStrings(columns[item.first], item.second);
       }
    }
    if (!internal.stepWidths.empty()) {
