@@ -59,6 +59,7 @@
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
+#include <RooStats/HistFactory/RooHistFactorySample.h>
 #include <RooUniform.h>
 #include <RooWrapperPdf.h>
 
@@ -592,6 +593,108 @@ void codegenImpl(RooGenericPdf &arg, CodegenContext &ctx)
    // declared function wrapped by the TFormula expects.
    auto inputVar = ctx.buildArg(arg.dependents(), /*arrayType=*/"double");
    ctx.addResult(&arg, funcName + "(" + inputVar + ")");
+}
+
+namespace {
+
+/// The array arguments of the kernels of a RooHistFactorySample.
+std::string intArrayArg(CodegenContext &ctx, std::vector<int> const &arr)
+{
+   return arr.empty() ? "nullptr" : ctx.buildArg(std::span<const int>{arr});
+}
+
+std::string doubleArrayArg(CodegenContext &ctx, std::vector<double> const &arr)
+{
+   return ctx.buildArg(std::span<const double>{arr});
+}
+
+/// The arguments of RooFit::Detail::MathFuncs::histFactoryBin() and histFactoryIntegral() after the bin.
+std::string histFactoryBinArgs(RooHistFactorySample const &arg, CodegenContext &ctx)
+{
+   auto const &data = arg.data();
+   return std::to_string(data.numBins()) + ", " + doubleArrayArg(ctx, data.contents) + ", " +
+          std::to_string(data.histoSysParams.size()) + ", " + intArrayArg(ctx, data.histoSysParams) + ", " +
+          intArrayArg(ctx, data.histoSysCodes) + ", " + doubleArrayArg(ctx, data.histoSysLo) + ", " +
+          doubleArrayArg(ctx, data.histoSysHi) + ", " + std::to_string(data.binFactorNames.size()) + ", " +
+          intArrayArg(ctx, data.binFactorParams);
+}
+
+/// The scale factor of a RooHistFactorySample, which only depends on the parameters and is therefore computed outside
+/// of the loop over the data.
+std::string histFactoryScale(RooHistFactorySample const &arg, std::string const &params, CodegenContext &ctx)
+{
+   auto const &data = arg.data();
+   std::string scaleName = ctx.getTmpVarName();
+   std::string call = "RooFit::Detail::MathFuncs::histFactoryScale(" + params + ", " +
+                      std::to_string(data.normSysParams.size()) + ", " + intArrayArg(ctx, data.normSysParams) + ", " +
+                      intArrayArg(ctx, data.normSysCodes) + ", " + doubleArrayArg(ctx, data.normSysLo) + ", " +
+                      doubleArrayArg(ctx, data.normSysHi) + ", " + std::to_string(data.normFactorParams.size()) + ", " +
+                      intArrayArg(ctx, data.normFactorParams) + ")";
+   ctx.addToCodeBody("double " + scaleName + " = " + call + ";\n", /*isScopeIndep=*/true);
+   return scaleName;
+}
+
+} // namespace
+
+void codegenImpl(RooHistFactorySample &arg, CodegenContext &ctx)
+{
+   auto const &data = arg.data();
+   std::string const &params = ctx.buildArg(arg.parameters());
+   const std::string scale = arg.parameters().empty() ? "1.0" : histFactoryScale(arg, params, ctx);
+
+   // The index of the bin with the current values of the observables. The last
+   // observable varies fastest.
+   std::string idx;
+   unsigned int stride = 1;
+   for (int iDim = static_cast<int>(data.edges.size()) - 1; iDim >= 0; --iDim) {
+      std::vector<double> const &edges = data.edges[iDim];
+      const unsigned int nBinsDim = edges.size() - 1;
+      RooAbsArg const &obs = arg.observables()[iDim];
+      // The bin numbers are computed with a coefficient of one and only then
+      // multiplied with the stride, because uniformBinNumber() would
+      // multiply with the coefficient before rounding down.
+      std::string term =
+         data.uniform[iDim]
+            ? ctx.buildCall(mathFunc("uniformBinNumber"), edges.front(), edges.back(), obs, nBinsDim, 1.0)
+            : ctx.buildCall(mathFunc("binNumber"), obs, 1.0, std::span<const double>{edges}, edges.size(), nBinsDim - 1,
+                            0);
+      if (stride > 1) {
+         term = std::to_string(stride) + " * " + term;
+      }
+      idx = idx.empty() ? term : term + " + " + idx;
+      stride *= nBinsDim;
+   }
+   std::string idxName = ctx.getTmpVarName();
+   ctx.addToCodeBody(&arg, "unsigned int " + idxName + " = " + idx + ";\n");
+
+   std::string value = mathFunc("histFactoryBin") + "(" + (arg.parameters().empty() ? "nullptr" : params) + ", " +
+                       idxName + ", " + histFactoryBinArgs(arg, ctx) + ")";
+   if (!arg.yieldsMode()) {
+      std::vector<double> invVolumes(data.numBins());
+      for (std::size_t i = 0; i < invVolumes.size(); ++i) {
+         invVolumes[i] = 1. / arg.binVolume(i);
+      }
+      value = "(" + value + " * (" + doubleArrayArg(ctx, invVolumes) + ")[" + idxName + "])";
+   }
+   ctx.addResult(&arg, value + " * " + scale);
+}
+
+std::string codegenIntegralImpl(RooHistFactorySample &arg, int code, const char *rangeName, CodegenContext &ctx)
+{
+   // Only integrals over all observables are supported, because otherwise
+   // the integral depends on the bins of the other observables.
+   if (code != (1 << arg.observables().size())) {
+      std::stringstream errorMsg;
+      errorMsg << "codegen: integrals of RooHistFactorySample \"" << arg.GetName()
+               << "\" over only some of its observables are not supported";
+      oocoutE(&arg, InputArguments) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+   std::string const &params = ctx.buildArg(arg.parameters());
+   const std::string scale = arg.parameters().empty() ? "1.0" : histFactoryScale(arg, params, ctx);
+   return "(" + mathFunc("histFactoryIntegral") + "(" + (arg.parameters().empty() ? "nullptr" : params) + ", " +
+          doubleArrayArg(ctx, arg.integralWeights(code, rangeName)) + ", " + histFactoryBinArgs(arg, ctx) + ") * " +
+          scale + ")";
 }
 
 void codegenImpl(RooHistFunc &arg, CodegenContext &ctx)
