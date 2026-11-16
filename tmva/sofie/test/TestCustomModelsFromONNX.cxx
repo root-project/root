@@ -2050,6 +2050,15 @@ TEST(ONNX, Swish)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, SwishWithAlpha)
+{
+   SofieReference ref = readReference("SwishWithAlpha");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "SwishWithAlpha", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, HardSigmoid)
 {
    SofieReference ref = readReference("HardSigmoid");

@@ -5596,6 +5596,24 @@ def make_Swish():
     return _model(graph, opset=24, ir_version=13)
 
 
+def make_SwishWithAlpha():
+    """Ops: Swish with non-default alpha."""
+    nodes = [
+        helper.make_node("Swish", ["input"], ["output"], alpha=1.5),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "SwishWithAlpha",
+        inputs=[
+            _vi("input", FLOAT, [6]),
+        ],
+        outputs=[
+            _vi("output", FLOAT, [6]),
+        ],
+    )
+    return _model(graph, opset=24, ir_version=13)
+
+
 def make_Tanh():
     """Ops: Tanh"""
     nodes = [
@@ -6438,6 +6456,7 @@ MODELS = {
     "Sub": make_Sub,
     "SumMultidirectionalBroadcast": make_SumMultidirectionalBroadcast,
     "Swish": make_Swish,
+    "SwishWithAlpha": make_SwishWithAlpha,
     "Tanh": make_Tanh,
     "TanhDynShape": make_TanhDynShape,
     "Tile5D": make_Tile5D,
@@ -7798,6 +7817,7 @@ TEST_INPUTS = {
         f32([-0.4146898090839386, -0.46591925621032715, 0.5617253184318542, 0.056169308722019196], (1, 4)),
     ],
     "Swish": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
+    "SwishWithAlpha": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     "Tanh": [
         f32(
             [
