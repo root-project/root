@@ -551,3 +551,86 @@ TEST(RNTuple, PropagateTypeAlias)
       EXPECT_EQ("std::atomic<Double32_t>", f->GetTypeAlias());
    }
 }
+
+namespace {
+
+template <typename FieldT>
+void CheckForInnerUntypedFieldSimple()
+{
+   try {
+      auto record = std::make_unique<ROOT::RRecordField>("_0", std::vector<std::unique_ptr<RFieldBase>>());
+      auto f = std::make_unique<FieldT>("f", std::move(record));
+      FAIL() << "untyped inner field should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("is untyped and cannot be used as an inner field"));
+   }
+}
+
+template <typename FieldT>
+void CheckForInnerUntypedFieldVector()
+{
+   try {
+      auto f = std::make_unique<FieldT>("f", std::vector<std::unique_ptr<ROOT::RFieldBase>>());
+      FAIL() << "empty inner type list should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("invalid empty type list"));
+   }
+
+   try {
+      auto record = std::make_unique<ROOT::RRecordField>("_1", std::vector<std::unique_ptr<RFieldBase>>());
+      std::vector<std::unique_ptr<ROOT::RFieldBase>> inner;
+      inner.emplace_back(std::make_unique<RField<int>>("_0"));
+      inner.emplace_back(std::move(record));
+      auto f = std::make_unique<FieldT>("f", std::move(inner));
+      FAIL() << "untyped inner field should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("is untyped and cannot be used as an inner field"));
+   }
+}
+
+} // anonymous namespace
+
+TEST(RNTuple, NoInnerUntypedFields)
+{
+   try {
+      auto record = std::make_unique<ROOT::RRecordField>("_0", std::vector<std::unique_ptr<RFieldBase>>());
+      auto f = std::make_unique<ROOT::RArrayField>("f", std::move(record), 1);
+      FAIL() << "untyped inner array field should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("is untyped and cannot be used as an inner field"));
+   }
+
+   try {
+      auto record = std::make_unique<ROOT::RRecordField>("_1", std::vector<std::unique_ptr<RFieldBase>>());
+      std::array<std::unique_ptr<ROOT::RFieldBase>, 2> inner{std::make_unique<RField<int>>("_0"), std::move(record)};
+      auto f = std::make_unique<ROOT::RPairField>("f", std::move(inner));
+      FAIL() << "untyped inner pair field should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("is untyped and cannot be used as an inner field"));
+   }
+
+   try {
+      auto record = std::make_unique<ROOT::RRecordField>("_0", std::vector<std::unique_ptr<RFieldBase>>());
+      auto f = std::make_unique<ROOT::RSetField>("f", ROOT::RSetField::ESetType::kSet, std::move(record));
+      FAIL() << "untyped inner set field should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("invalid untyped inner field for outer set field"));
+   }
+
+   try {
+      auto record = std::make_unique<ROOT::RRecordField>("_0", std::vector<std::unique_ptr<RFieldBase>>());
+      auto f = std::make_unique<ROOT::RMapField>("f", ROOT::RMapField::EMapType::kMap, std::move(record));
+      FAIL() << "untyped inner map field should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("invalid untyped inner field for outer map field"));
+   }
+
+   CheckForInnerUntypedFieldVector<ROOT::RTupleField>();
+   CheckForInnerUntypedFieldVector<ROOT::RVariantField>();
+
+   CheckForInnerUntypedFieldSimple<ROOT::RAtomicField>();
+   CheckForInnerUntypedFieldSimple<ROOT::ROptionalField>();
+   CheckForInnerUntypedFieldSimple<ROOT::RUniquePtrField>();
+   CheckForInnerUntypedFieldSimple<ROOT::RRVecField>();
+   CheckForInnerUntypedFieldSimple<ROOT::RVectorField>();
+}
