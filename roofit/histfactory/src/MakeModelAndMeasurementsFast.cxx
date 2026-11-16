@@ -183,7 +183,9 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
           + ch_name + "_" + rowTitle + "_model.root";
         cxcoutIHF << "Opening File to hold channel: " << ChannelFileName << std::endl;
         std::unique_ptr<TFile> chanFile{TFile::Open( ChannelFileName.c_str(), "RECREATE" )};
-        chanFile->WriteTObject(ws_single.get());
+        // RooWorkspace::Write() can store the histograms next to the workspace, see RooHistFactorySample.
+        chanFile->cd();
+        ws_single->Write();
         // Now, write the measurement to the file
         // Make a new measurement for only this channel
         RooStats::HistFactory::Measurement meas_chan( measurement );
@@ -223,7 +225,8 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
         cxcoutEHF << "Error: Failed to open file " << CombinedFileName << std::endl;
         throw hf_exc();
       }
-      combFile->WriteTObject(ws.get());
+      combFile->cd();
+      ws->Write();
       cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
       measurement.writeToFile( combFile.get() );
     }

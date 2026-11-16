@@ -74,6 +74,14 @@ navigates the internal structure of HistFactory models, e.g. to retrieve the
 `RooHistFunc` of a sample, has to be adapted. The modifiers of a sample are
 available via `RooHistFactorySample::data()`.
 
+When a workspace is written to a ROOT file with `RooWorkspace::Write()` or
+`RooWorkspace::writeToFile()`, the histogram data of all its samples goes to an
+RNTuple next to the workspace, named after the workspace with the suffix
+`_histfactory_arrays`. Like this, HistFactory workspaces are no longer limited
+by the 1 GB size limit of single objects in ROOT files. `hist2workspace` writes
+its workspaces like this. With `TDirectory::WriteObject()`, the histograms stay
+in the workspace object.
+
 The HS3 importer also creates `RooHistFactoryPdf` objects for the
 `histfactory_dist` distributions, and the exporter writes them with the names
 of their modifiers.

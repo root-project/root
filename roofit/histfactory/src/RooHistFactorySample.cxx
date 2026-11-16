@@ -31,6 +31,15 @@ the bin volume. In the binned likelihood, the sample is evaluated as the yield \
 
 In contrast to the HistFactory models before ROOT 6.44, which consist of several RooFit objects for each histogram,
 a sample is a single object. The histogram data is shared between the copies of a sample.
+
+When a RooWorkspace is written to a TFile with RooWorkspace::Write() or RooWorkspace::writeToFile(), the histogram
+data of all its samples is written to an RNTuple in the top directory of the file, named after the workspace with the
+suffix `_histfactory_arrays`, and the workspace refers to its entries. Like this, the workspace is not limited by the
+1 GB size limit of single objects in ROOT files. When the RNTuple name is taken, for example because the workspace is
+written again, a number is appended. The RNTuple stays in the file when the workspace is deleted from it. As for all
+RNTuples written to a TFile, the other objects in memory that are attached to the file are written too. In all other
+cases, for example with TDirectory::WriteObject() or when a sample is written without a workspace, the data is written
+together with the sample.
 **/
 
 #include <RooStats/HistFactory/RooHistFactorySample.h>
@@ -40,15 +49,28 @@ a sample is a single object. The histogram data is shared between the copies of 
 #include <RooCurve.h>
 #include <RooFit/Detail/MathFuncs.h>
 #include <RooFit/Detail/NormalizationHelpers.h>
+#include <RooFit/Detail/WorkspaceStreamingContext.h>
 #include <RooFit/EvalContext.h>
 #include <RooMsgService.h>
 #include <RooRealVar.h>
+#include <RooWorkspace.h>
+
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriter.hxx>
+#include <ROOT/RRawPtrWriteEntry.hxx>
 
 #include <TBuffer.h>
+#include <TBufferFile.h>
 #include <TClass.h>
+#include <TFile.h>
 
 #include <algorithm>
+#include <map>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace {
 
@@ -523,16 +545,174 @@ void RooHistFactorySample::printMetaArgs(std::ostream &os) const
    os << " ";
 }
 
+namespace {
+
+using Data = RooHistFactorySample::Data;
+using RooFit::Detail::WorkspaceStreamingContext;
+
+/// How the data of a sample is stored, written after the members of the sample.
+enum StorageType : Int_t {
+   inlineStorage = 0,
+   rntupleStorage = 1
+};
+
+std::unique_ptr<ROOT::RNTupleModel> makeModel()
+{
+   auto model = ROOT::RNTupleModel::CreateBare();
+   model->MakeField<Data>("data");
+   return model;
+}
+
+/// Writes the data of the samples in a workspace to one RNTuple.
+class DataWriter : public WorkspaceStreamingContext::Extension {
+public:
+   DataWriter(TFile &file, std::string const &workspaceName)
+   {
+      const std::string baseName = workspaceName + "_histfactory_arrays";
+      _name = baseName;
+      for (int i = 1; file.GetKey(_name.c_str()); ++i) {
+         _name = baseName + "_" + std::to_string(i);
+      }
+      ROOT::RNTupleWriteOptions options;
+      options.SetCompression(file.GetCompressionSettings());
+      _writer = ROOT::RNTupleWriter::Append(makeModel(), _name, file, options);
+      _entry = _writer->CreateRawPtrWriteEntry();
+   }
+
+   std::string const &name() const { return _name; }
+
+   /// Write the data, if it was not written already, and return its entry number.
+   std::uint64_t add(Data const &data)
+   {
+      auto found = _entries.find(&data);
+      if (found != _entries.end()) {
+         return found->second;
+      }
+      _entry->BindRawPtr("data", &data);
+      _writer->Fill(*_entry);
+      const std::uint64_t index = _entries.size();
+      _entries.emplace(&data, index);
+      return index;
+   }
+
+   void finalize() override
+   {
+      _writer->CommitDataset();
+      _writer.reset();
+   }
+
+private:
+   std::string _name;
+   std::unique_ptr<ROOT::RNTupleWriter> _writer;
+   std::unique_ptr<ROOT::Detail::RRawPtrWriteEntry> _entry;
+   std::unordered_map<Data const *, std::uint64_t> _entries;
+};
+
+/// Reads the data of the samples from the RNTuples of a file.
+class DataReader : public WorkspaceStreamingContext::Extension {
+public:
+   std::shared_ptr<const Data> get(TFile &file, std::string const &name, std::uint64_t index)
+   {
+      auto &source = _sources[name];
+      auto found = source.data.find(index);
+      if (found != source.data.end()) {
+         return found->second;
+      }
+      if (!source.reader) {
+         // The first cycle is the one that was written with the workspace. Later cycles can come from copying
+         // the file, e.g. with hadd, which writes the workspace and with it a new RNTuple before copying this one.
+         std::unique_ptr<ROOT::RNTuple> anchor{file.Get<ROOT::RNTuple>((name + ";1").c_str())};
+         if (!anchor) {
+            throw std::runtime_error("RooHistFactorySample: the RNTuple \"" + name +
+                                     "\" with the histogram data is missing in the file \"" + file.GetName() + "\"");
+         }
+         source.reader = ROOT::RNTupleReader::Open(makeModel(), *anchor);
+         source.entry = source.reader->GetModel().CreateBareEntry();
+      }
+      auto data = std::make_shared<Data>();
+      source.entry->BindRawPtr("data", data.get());
+      source.reader->LoadEntry(index, *source.entry);
+      source.data.emplace(index, data);
+      return data;
+   }
+
+private:
+   struct Source {
+      std::unique_ptr<ROOT::RNTupleReader> reader;
+      std::unique_ptr<ROOT::REntry> entry;
+      std::unordered_map<std::uint64_t, std::shared_ptr<const Data>> data; ///< To share data between samples again.
+   };
+   std::map<std::string, Source> _sources;
+};
+
+/// The file of the RNTuple for the data, if the buffer writes a workspace to a file with RooWorkspace::Write().
+TFile *fileForRNTuple(WorkspaceStreamingContext const *context, TBuffer &buffer)
+{
+   if (!context || !context->file() || buffer.GetParent() != context->file()) {
+      return nullptr;
+   }
+   // Not for TMessage or TBufferJSON, for example.
+   return buffer.IsA() == TBufferFile::Class() ? context->file() : nullptr;
+}
+
+template <class T, class Create>
+T &getExtension(WorkspaceStreamingContext &context, std::string const &name, Create &&create)
+{
+   if (auto *extension = context.extension(name)) {
+      return static_cast<T &>(*extension);
+   }
+   return static_cast<T &>(context.addExtension(name, create()));
+}
+
+} // namespace
+
 void RooHistFactorySample::Streamer(TBuffer &buffer)
 {
    static TClass *dataClass = TClass::GetClass<Data>();
    if (buffer.IsReading()) {
       buffer.ReadClassBuffer(RooHistFactorySample::Class(), this);
-      auto data = std::make_shared<Data>();
-      buffer.StreamObject(data.get(), dataClass);
-      _data = std::move(data);
+      Int_t storage = inlineStorage;
+      buffer >> storage;
+      if (storage == inlineStorage) {
+         auto data = std::make_shared<Data>();
+         buffer.StreamObject(data.get(), dataClass);
+         _data = std::move(data);
+         return;
+      }
+      if (storage != rntupleStorage) {
+         throw std::runtime_error("RooHistFactorySample::Streamer(): unknown storage of the histogram data");
+      }
+      std::string name;
+      ULong64_t index = 0;
+      buffer.ReadStdString(&name);
+      buffer >> index;
+      auto *file = dynamic_cast<TFile *>(buffer.GetParent());
+      if (!file) {
+         throw std::runtime_error("RooHistFactorySample::Streamer(): the histogram data is in the RNTuple \"" + name +
+                                  "\", but the sample is not read from a file");
+      }
+      if (auto *context = WorkspaceStreamingContext::current()) {
+         auto &reader = getExtension<DataReader>(*context, "RooHistFactorySample::DataReader",
+                                                 [] { return std::make_unique<DataReader>(); });
+         _data = reader.get(*file, name, index);
+      } else {
+         _data = DataReader{}.get(*file, name, index);
+      }
    } else {
       buffer.WriteClassBuffer(RooHistFactorySample::Class(), this);
-      buffer.StreamObject(const_cast<Data *>(_data.get()), dataClass);
+      auto *context = WorkspaceStreamingContext::current();
+      TFile *file = fileForRNTuple(context, buffer);
+      if (!file) {
+         buffer << static_cast<Int_t>(inlineStorage);
+         buffer.StreamObject(const_cast<Data *>(_data.get()), dataClass);
+         return;
+      }
+      auto &writer = getExtension<DataWriter>(*context, "RooHistFactorySample::DataWriter", [&] {
+         return std::make_unique<DataWriter>(*file, context->workspace().GetName());
+      });
+      const ULong64_t index = writer.add(*_data);
+      buffer << static_cast<Int_t>(rntupleStorage);
+      buffer.WriteStdString(&writer.name());
+      buffer << index;
    }
 }
