@@ -98,6 +98,25 @@ public:
 
 struct RDSRangeRAII;
 
+/// Lets RDataFrame release the Python GIL while a thread waits for an event loop to finish, in
+/// RLoopManager::Run() and RunGraphs(). Without it, the waiting thread keeps the GIL and the threads that run the
+/// event loop block forever when they have to call a Python function.
+/// The Python bindings call this with three functions of the Python C API: `isHeld` tells whether the calling
+/// thread holds the GIL, `release` releases it and `restore` takes it again (it gets what `release` returned).
+void SetEventLoopHooks(int (*isHeld)(), void *(*release)(), void (*restore)(void *));
+
+/// Calls `release` when created, if `isHeld` says so, and `restore` when destroyed.
+/// Does nothing if SetEventLoopHooks() was never called.
+class REventLoopHooksRAII {
+   void *fState = nullptr;
+
+public:
+   REventLoopHooksRAII();
+   ~REventLoopHooksRAII();
+   REventLoopHooksRAII(const REventLoopHooksRAII &) = delete;
+   REventLoopHooksRAII &operator=(const REventLoopHooksRAII &) = delete;
+};
+
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT

@@ -281,6 +281,48 @@ std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
    return inFile;
 }
 
+// These are three functions that release and take back the GIL (see SetEventLoopHooks());
+// they stay null in C++ programs.
+//
+// who owns what:
+// - these pointers are shared by the whole process and only the Python bindings write them, always with the same three
+//   functions of the Python C API, so every thread sees the same values
+// - whether a thread holds the GIL is not stored here, it's kept separately for each thread
+// - what gRelease returns is kept in REventLoopHooksRAII as a local variable of Run() and RunGraphs(), each call has
+//   its own so threads can't overwrite each other's
+//
+// gIsHeld only answers for the thread that calls it, and only one thread can hold the GIL at a time
+// so a thread only releases the GIL if it holds it, and takes it back itself when it is done;
+// a C++ thread that never held the GIL gets "no" to the check and does nothing
+//
+// limits: once a sub-interpreter is created gIsHeld says "yes" on every
+// thread, an event loop on a C++ thread then calls gRelease without the GIL and crashes
+// (see https://github.com/python/cpython/issues/59956)
+namespace {
+int (*gIsHeld)() = nullptr;
+void *(*gRelease)() = nullptr;
+void (*gRestore)(void *) = nullptr;
+} // namespace
+
+void ROOT::Internal::RDF::SetEventLoopHooks(int (*isHeld)(), void *(*release)(), void (*restore)(void *))
+{
+   gIsHeld = isHeld;
+   gRelease = release;
+   gRestore = restore;
+}
+
+ROOT::Internal::RDF::REventLoopHooksRAII::REventLoopHooksRAII()
+{
+   if (gIsHeld && gIsHeld())
+      fState = gRelease();
+}
+
+ROOT::Internal::RDF::REventLoopHooksRAII::~REventLoopHooksRAII()
+{
+   if (fState)
+      gRestore(fState);
+}
+
 namespace ROOT {
 namespace Detail {
 namespace RDF {
@@ -940,6 +982,9 @@ void RLoopManager::Run(bool jit)
    };
 
    NodesCleanerRAII runKeeper(*this);
+
+   // If called from Python, release the GIL until this function returns: other threads need it to run Python code
+   RDFInternal::REventLoopHooksRAII eventLoopHooks;
 
    TStopwatch s;
    s.Start();

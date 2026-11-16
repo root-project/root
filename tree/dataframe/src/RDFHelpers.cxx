@@ -150,6 +150,9 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
       }
    };
 
+   // If called from Python, release the GIL until this function returns: other threads need it to run Python code
+   ROOT::Internal::RDF::REventLoopHooksRAII eventLoopHooks;
+
    sw.Start();
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {

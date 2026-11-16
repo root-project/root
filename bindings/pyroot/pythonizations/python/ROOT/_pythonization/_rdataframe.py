@@ -544,6 +544,16 @@ def pythonize_rdataframe(klass):
     klass.Filter = _PyFilter
     klass.Define = _PyDefine
 
+    # Let RDataFrame release the GIL while a thread waits for an event loop to finish: the threads that run the
+    # event loop need the GIL to call Python functions.
+    import ctypes
+
+    import ROOT
+
+    ROOT.Internal.RDF.SetEventLoopHooks(
+        ctypes.pythonapi.PyGILState_Check, ctypes.pythonapi.PyEval_SaveThread, ctypes.pythonapi.PyEval_RestoreThread
+    )
+
 
 def _make_name_rvec_pair(key, value):
     import ROOT
