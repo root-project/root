@@ -441,6 +441,13 @@ std::string twoChannelHistFactoryJSON(bool arrays)
               components + "]}"
          : R"({"name": "alpha_a_constraint", "type": "gaussian_dist", "x": "alpha_a", "mean": 0.0, "sigma": 1.0},)" +
               constraintDists.substr(0, constraintDists.size() - 1);
+   // The likelihood lists the constraints that the modifiers name (HS3 0.3).
+   std::string aux = arrays ? R"("gauss_constraints", "pois_constraints")" : R"("alpha_a_constraint")";
+   if (!arrays) {
+      for (auto const &g : gammas) {
+         aux += ", \"" + g + "_constraint\"";
+      }
+   }
    return R"({
       "metadata": {"hs3_version": "0.3"},
       "distributions": [
@@ -491,7 +498,9 @@ std::string twoChannelHistFactoryJSON(bool arrays)
       "parameter_points": [{"name": "default_values", "parameters": [
          {"name": "mu", "value": 1.0}, {"name": "alpha_a", "value": 0.0}, )" +
           values.substr(0, values.size() - 1) + R"(]}],
-      "likelihoods": [{"name": "lh", "distributions": ["model_c1", "model_c2"], "data": ["obs_c1", "obs_c2"]}],
+      "likelihoods": [{"name": "lh", "distributions": ["model_c1", "model_c2"], "data": ["obs_c1", "obs_c2"],
+                       "aux_distributions": [)" +
+          aux + R"(]}],
       "analyses": [{"name": "an", "likelihood": "lh", "domains": ["default_domain"],
                     "parameters_of_interest": ["mu"]}]
    })";
@@ -9286,7 +9295,7 @@ TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
     {"name": "mu", "value": 1.0}, {"name": "theta", "value": 0.0}, {"name": "gobs", "value": 0.0, "const": true}]}],
   "data": [{"name": "data", "type": "binned", "contents": [10.0],
             "axes": [{"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}]}],
-  "likelihoods": [{"name": "lh", "distributions": ["HF"], "data": ["data"]}],
+  "likelihoods": [{"name": "lh", "distributions": ["HF"], "data": ["data"], "aux_distributions": ["constraint"]}],
   "analyses": [{"name": "mc", "likelihood": "lh", "parameters_of_interest": ["mu"], "domains": ["default_domain"]}]
 })";
 
@@ -9730,4 +9739,50 @@ TEST(RooFitHS3, DataAxesAgainstDomains)
       makeJSON("0.3", R"({"name": "x", "min": 0, "max": 10})",
                R"({"name": "obs", "type": "point", "value": 1.0, "axes": [{"name": "y", "min": 0, "max": 10}]})"),
       "is not the variate 'x' of the distribution 'g'");
+}
+
+// HS3 0.3: the "constraints" of a HistFactory modifier add no term; every likelihood with the channel must list each
+// named distribution exactly once.
+TEST(RooFitHS3, HistFactoryConstraintsListedOnce)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &version, std::string const &aux) {
+      return R"({
+         "metadata": {"hs3_version": ")" +
+             version + R"("},
+         "domains": [{"name": "d", "type": "product_domain", "axes": [{"name": "alpha_a", "min": -5, "max": 5},
+                                                                    {"name": "nom_a", "value": 0.0}]}],
+         "distributions": [
+            {
+               "name": "model_c", "type": "histfactory_dist",
+               "axes": [{"name": "obs_c", "min": 0.0, "max": 2.0, "nbins": 2}],
+               "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+               "samples": [{"name": "s", "data": {"contents": [10.0, 20.0]}, "modifiers": [
+                  {"type": "normsys", "parameters": ["alpha_a"], "constraints": ["c_a"], "data": {"lo": 0.9, "hi": 1.1}}
+               ]}]
+            },
+            {"name": "c_a", "type": "gaussian_dist", "x": "nom_a", "mean": "alpha_a", "sigma": 1.0}
+         ],
+         "data": [{"name": "obs", "type": "binned", "axes": [{"name": "obs_c", "min": 0.0, "max": 2.0, "nbins": 2}],
+                   "contents": [11, 19]}],
+         "likelihoods": [{"name": "lh", "distributions": ["model_c"], "data": ["obs"], "aux_distributions": [)" +
+             aux + R"(]}],
+         "analyses": [{"name": "ana", "likelihood": "lh", "domains": ["d"]}]
+      })";
+   };
+
+   {
+      RooWorkspace ws;
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("0.3", R"("c_a")")));
+   }
+   expectImportThrowsWithError(makeJSON("0.3", ""), "the constraint 'c_a' named by a modifier of a HistFactory "
+                                                    "channel contributes 0 times to the likelihood 'lh'");
+   expectImportThrowsWithError(makeJSON("0.3", R"("c_a", "c_a")"), "contributes 2 times");
+   {
+      // Older documents get the named constraints added, as before.
+      RooWorkspace ws;
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("0.2", "")));
+      EXPECT_NE(ws.pdf("c_a"), nullptr);
+   }
 }

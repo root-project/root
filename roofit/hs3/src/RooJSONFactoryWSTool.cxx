@@ -3440,6 +3440,12 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
               ". HS3 0.3 requires distinct variates; the document is read anyway, since it declares an older "
               "version.");
    }
+   if (!(doc.metadata.version < HS3::Version{0, 3})) {
+      for (std::string const &message : HS3::unlistedConstraints(doc)) {
+         error("invalid HS3: " + message +
+               ". The \"constraints\" of a modifier add no term to the likelihood, which has to list them.");
+      }
+   }
 
    for (auto const &analysis : doc.analyses) {
       importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns, inlineData);

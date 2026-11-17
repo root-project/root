@@ -657,6 +657,13 @@ void factorOutDefaultInterpolation(HistFactoryDist &dist);
 /// by the components of a combined data set, except for bookkeeping columns.
 std::vector<std::string> sharedVariates(HS3Document const &doc);
 
+/// In HS3 0.3 (HS3 PR #154, decision on HS3 #156), the "constraints" of a HistFactory modifier add no term to a
+/// likelihood: every likelihood that contains the channel must list each named distribution exactly once, in
+/// "distributions" or "aux_distributions", or as a factor of a product_dist or a component of a combined_dist reached
+/// from them. One message for each named distribution of each likelihood that doesn't. For older documents, RooFit
+/// adds the named constraints itself (see sharedVariates()).
+std::vector<std::string> unlistedConstraints(HS3Document const &doc);
+
 /// The variates of the "distributions" of a likelihood, which it pairs with data, with the columns of its combined
 /// distributions.
 std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likelihood);

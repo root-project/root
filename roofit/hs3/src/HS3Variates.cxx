@@ -23,6 +23,7 @@
 #include <RooFit/Detail/JSONInterface.h>
 
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <set>
@@ -374,6 +375,52 @@ std::map<std::string, std::set<std::string>> bookkeepingColumns(HS3Document cons
       }
    }
    return out;
+}
+
+std::vector<std::string> unlistedConstraints(HS3Document const &doc)
+{
+   Distributions distributions{doc};
+   std::vector<std::string> messages;
+   for (Likelihood const &likelihood : doc.likelihoods) {
+      std::map<std::string, int> contributions;
+      std::set<std::string> named;
+      std::function<void(std::string const &)> contribute = [&](std::string const &name) {
+         ++contributions[name];
+         if (auto const *histFactory = distributions.find<HistFactoryDist>(name)) {
+            for (std::string const &constraint : namedConstraints(*histFactory)) {
+               named.insert(constraint);
+            }
+         } else if (JSONNode const *generic = distributions.nodeOf(name, "histfactory_dist")) {
+            for (std::string const &constraint : namedConstraints(*generic)) {
+               named.insert(constraint);
+            }
+         } else if (JSONNode const *product = distributions.nodeOf(name, "product_dist")) {
+            for (std::string const &factor : namesIn(*product, "factors")) {
+               contribute(factor);
+            }
+         } else if (JSONNode const *combined = distributions.nodeOf(name, "combined_dist")) {
+            for (std::string const &component : namesIn(*combined, "components", "dist")) {
+               contribute(component);
+            }
+         }
+      };
+      for (LikelihoodTerm const &term : likelihood.terms) {
+         contribute(term.distribution.name);
+      }
+      for (DistributionRef const &aux : likelihood.auxDistributions) {
+         contribute(aux.name);
+      }
+      for (std::string const &constraint : named) {
+         const int n = contributions[constraint];
+         if (n != 1) {
+            messages.push_back("the constraint '" + constraint +
+                               "' named by a modifier of a HistFactory channel contributes " + std::to_string(n) +
+                               " times to the likelihood '" + likelihood.name +
+                               "', but it must contribute exactly once");
+         }
+      }
+   }
+   return messages;
 }
 
 std::vector<std::string> sharedVariates(HS3Document const &doc)
