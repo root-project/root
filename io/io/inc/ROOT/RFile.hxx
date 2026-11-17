@@ -54,7 +54,7 @@ namespace Detail {
 /// This function does not perform any copy: the returned string_views have the same lifetime as `path`.
 std::pair<std::string_view, std::string_view> DecomposePath(std::string_view path);
 
-}
+} // namespace Detail
 
 class RFileKeyIterable;
 
@@ -421,6 +421,9 @@ public:
    /// Flushes the RFile if needed and closes it, disallowing any further reading or writing.
    void Close();
 
+   /// Returns whether the file is still open or not.
+   bool IsOpen() const { return !!fFile; }
+
    /// Returns an iterable over all keys of objects and/or directories written into this RFile starting at path
    /// `basePath` (defaulting to include the content of all subdirectories).
    /// The iterable yields values of type ROOT::Experimental::RKeyInfo.
@@ -452,6 +455,9 @@ public:
    /// ~~~
    RFileKeyIterable ListKeys(std::string_view basePath = "", std::uint32_t flags = kListObjects | kListRecursive) const
    {
+      if (!fFile)
+         throw ROOT::RException(R__FAIL("File has been closed"));
+
       return RFileKeyIterable(fFile.get(), basePath, flags);
    }
 
