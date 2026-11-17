@@ -75,6 +75,13 @@ public:
       /// shared variate. It is not valid HS3 and can't be read back before the variates are renamed, e.g. by hand in
       /// the JSON.
       bool allowExportSharedVariates = false;
+      // Write array distributions (HS3 `array_dist`). If false, no `array_dist` is written: HistFactory constraints
+      // are named individually, and a RooProdPdf tagged as array distribution is written as `product_dist`.
+      bool exportArrayDist = true;
+      // How the constraint terms of HistFactory models enter the likelihood: listed in "aux_distributions", with
+      // the observed values as constant parameters (false), or listed in "distributions", each paired with a data set
+      // holding the observed values of its observables (true).
+      bool exportConstraintData = false;
    };
 
    static Config &config();
@@ -230,6 +237,14 @@ public:
    }
 
    std::string exportTransformed(const RooAbsReal *original, const std::string &suffix, const std::string &formula);
+   std::string exportAsArrayComponent(RooAbsPdf const &pdf, std::string const &arrayName);
+   /// The name of the top-level object whose export is in progress (the root of the current export recursion).
+   std::string const &exportRootName() const;
+   void recordConstraintTerms(std::string const &pdfName, std::vector<std::string> const &terms);
+   /// Record that `observable` is the observable of the constraint term `pdf` (the side that is not the constrained
+   /// parameter). A Gaussian whose mean it is gets written with x and mean swapped, so that the observable is x.
+   void setConstraintObservable(RooAbsPdf const &pdf, std::string const &observable);
+   std::string const *constraintObservable(std::string const &pdfName) const;
 
    void setAttribute(const std::string &obj, const std::string &attrib);
    bool hasAttribute(const std::string &obj, const std::string &attrib);
@@ -242,11 +257,11 @@ public:
 private:
    template <class T>
    T *requestImpl(const std::string &objname);
-   void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
+   void exportObject(RooAbsArg const &func);
 
    // To export multiple objects sorted alphabetically
    template <class T>
-   void exportObjects(T const &args, std::set<std::string> &exportedObjectNames)
+   void exportObjects(T const &args)
    {
       RooArgSet argSet;
       for (RooAbsArg const *arg : args) {
@@ -254,11 +269,13 @@ private:
       }
       argSet.sort();
       for (RooAbsArg *arg : argSet) {
-         exportObject(*arg, exportedObjectNames);
+         exportObject(*arg);
       }
    }
+   void exportArrayDists();
+   bool exportConstraintData(std::string const &term, RooArgSet const *globalObservables);
 
-   void exportSimultaneous(RooSimultaneous const &simPdf, std::set<std::string> &exportedObjectNames);
+   void exportSimultaneous(RooSimultaneous const &simPdf);
    void recordCategory(RooAbsCategory const &cat);
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
