@@ -316,6 +316,8 @@ public:
            Int_t       GetCompressionLevel() const;
            Int_t       GetCompressionSettings() const;
            Float_t     GetCompressionFactor();
+           Char_t      GetUnits() const { return fUnits; }
+           Long64_t    GetBEGIN() const { return fBEGIN; }
    virtual Long64_t    GetEND() const { return fEND; }
    virtual Int_t       GetErrno() const;
    virtual void        ResetErrno() const;

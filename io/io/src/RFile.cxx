@@ -589,6 +589,25 @@ std::optional<ROOT::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
    return keyInfo;
 }
 
+ROOT::RFileHeader ROOT::RFile::GetFileHeader() const
+{
+   if (!fFile)
+      throw ROOT::RException(R__FAIL("File has been closed"));
+
+   ROOT::RFileHeader header;
+   header.fVersion = fFile->GetVersion();
+   header.fBEGIN = fFile->GetBEGIN();
+   header.fEND = fFile->GetEND();
+   header.fSeekFree = fFile->GetSeekFree();
+   header.fNBytesFree = fFile->GetNbytesFree();
+   header.fUnits = fFile->GetUnits();
+   header.fCompression = fFile->GetCompressionSettings();
+   header.fSeekInfo = fFile->GetSeekInfo();
+   header.fNBytesInfo = fFile->GetNbytesInfo();
+
+   return header;
+}
+
 void *ROOT::Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key)
 {
    const auto nameCycle = std::string(key.GetPath()) + ";" + std::to_string(key.GetCycle());
