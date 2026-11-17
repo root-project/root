@@ -507,16 +507,38 @@ void TGtk4PadPainter::DrawTTFglyphs(Int_t px, Int_t py, TTFhandle &ttf, ETextMod
       if (!ttf.GetGlyphData(nglyph, bx, by, buffer, width, rows, pitch))
          continue;
 
-      // Cairo's A8 surfaces need their own row stride (padding), which
-       // usually differs from FreeType's bmp.pitch - copy row by row
-      auto stride = Cairo::ImageSurface::format_stride_for_width(Cairo::Surface::Format::A8, width);
+      // Cairo's A1/A8 surfaces need their own row stride (padding), which
+      // usually differs from FreeType's bmp.pitch
+      auto format = ttf.GetSmoothing() ? Cairo::Surface::Format::A8 : Cairo::Surface::Format::A1;
+      auto stride = Cairo::ImageSurface::format_stride_for_width(format, width);
       std::vector<unsigned char> data(stride * rows, 0);
 
-      for (unsigned int row = 0; row < rows; ++row)
-         std::memcpy(data.data() + row * stride, buffer + row * pitch, width);
+      if (ttf.GetSmoothing()) {
+         // here copy row by raw
+         for (unsigned int row = 0; row < rows; ++row)
+            std::memcpy(data.data() + row * stride, buffer + row * pitch, width);
+      } else {
+         auto reverse_bits = [](unsigned char b) {
+            b = ((b & 0xF0) >> 4) | ((b & 0x0F) << 4); // Swap nibbles (4-bit halves)
+            b = ((b & 0xCC) >> 2) | ((b & 0x33) << 2); // Swap bit pairs
+            b = ((b & 0xAA) >> 1) | ((b & 0x55) << 1); // Swap adjacent bits
+            return b;
+         };
+
+         const unsigned int row_bytes = (width + 7) / 8;
+
+         for (unsigned int row = 0; row < rows; ++row) {
+            const unsigned char* src = buffer + row * pitch;
+            unsigned char* dst = data.data() + row * stride;
+
+            // here copy row by raw and reverse bits
+            for (unsigned int col = 0; col < row_bytes; ++col)
+               dst[col] = reverse_bits(src[col]);
+         }
+      }
 
       auto surface =
-         Cairo::ImageSurface::create(data.data(), Cairo::Surface::Format::A8, width, rows, stride);
+         Cairo::ImageSurface::create(data.data(), format, width, rows, stride);
 
       ctx->mask(surface, px + bx, py + by);
    }
