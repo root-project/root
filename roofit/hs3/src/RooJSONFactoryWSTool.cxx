@@ -3378,7 +3378,17 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
          auto const &ref = std::get<HS3::DataRef>(term.data);
          for (auto const &data : doc.data) {
             auto const *point = std::get_if<HS3::PointData>(&data.body);
-            if (data.name != ref.name || !point || !point->axes.empty()) {
+            if (data.name != ref.name || !point) {
+               continue;
+            }
+            if (!point->axes.empty()) {
+               // The axis of point data is named like the variate of the paired distribution.
+               std::set<std::string> const v = HS3::variatesOf(doc, term.distribution.name);
+               if (v.size() == 1 && point->axes.front().name != *v.begin()) {
+                  error("the axis '" + point->axes.front().name + "' of the point data set '" + data.name +
+                        "' is not the variate '" + *v.begin() + "' of the distribution '" + term.distribution.name +
+                        "' it is paired with");
+               }
                continue;
             }
             std::string const variate = soleVariateOf(term.distribution.name, "the point data set '" + data.name + "'");

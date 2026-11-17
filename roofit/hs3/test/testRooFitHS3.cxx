@@ -9678,3 +9678,56 @@ TEST(RooFitHS3, DataWithoutAxes)
    // A distribution with two variates has no single variate to take the value.
    expectImportThrowsWithError(makeJSON("gxy", "1.5", ""), "can't be determined");
 }
+
+// HS3 0.3: fixed axes only in domains, point data named after the paired variate, and one normalization range for a
+// variate that has both an axis in the paired data set and one in the domains of the analysis.
+TEST(RooFitHS3, DataAxesAgainstDomains)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "data": [{"name": "d", "type": "unbinned", "axes": [{"name": "x", "value": 1.0}], "entries": [[1.0]]}]
+   })",
+                               "must not have a fixed \"value\"");
+
+   auto makeJSON = [](std::string const &version, std::string const &domainAxis, std::string const &data) {
+      return R"({
+         "metadata": {"hs3_version": ")" +
+             version + R"("},
+         "domains": [{"name": "ana_domain", "type": "product_domain", "axes": [)" +
+             domainAxis + R"(, {"name": "mu", "min": -5, "max": 5}]}],
+         "distributions": [{"name": "g", "type": "gaussian_dist", "x": "x", "mean": "mu", "sigma": 1.0}],
+         "data": [)" +
+             data + R"(],
+         "likelihoods": [{"name": "lh", "distributions": ["g"], "data": ["obs"]}],
+         "analyses": [{"name": "ana", "likelihood": "lh", "domains": ["ana_domain"], "parameters_of_interest": ["mu"]}]
+      })";
+   };
+   const std::string unbinned = R"({"name": "obs", "type": "unbinned", "axes": [{"name": "x", "min": 0, "max": 10}],
+                                    "entries": [[1.0], [2.0]]})";
+
+   {
+      RooWorkspace ws;
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+         makeJSON("0.3", R"({"name": "x", "min": 0, "max": 10})", unbinned)));
+   }
+   expectImportThrowsWithError(makeJSON("0.3", R"({"name": "x", "min": 0, "max": 5})", unbinned),
+                               "the axis 'x' of the data set 'obs' has the range");
+   expectImportThrowsWithError(makeJSON("0.3", R"({"name": "x", "min": 0})", unbinned),
+                               "the axis 'x' of the data set 'obs' has the range");
+   {
+      // Older documents are read with a warning.
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+            makeJSON("0.2", R"({"name": "x", "min": 0, "max": 5})", unbinned)));
+      });
+      EXPECT_NE(warnings.find("the axis 'x' of the data set 'obs' has the range"), std::string::npos) << warnings;
+   }
+
+   expectImportThrowsWithError(
+      makeJSON("0.3", R"({"name": "x", "min": 0, "max": 10})",
+               R"({"name": "obs", "type": "point", "value": 1.0, "axes": [{"name": "y", "min": 0, "max": 10}]})"),
+      "is not the variate 'x' of the distribution 'g'");
+}

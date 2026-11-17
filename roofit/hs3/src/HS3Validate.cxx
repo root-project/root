@@ -130,6 +130,7 @@ private:
    void checkCategoricalAxes();
    void checkLikelihoods();
    void checkAnalyses();
+   void checkNormalizationRanges(Analysis const &analysis, std::string const &path);
    void checkData();
    void checkCombinedData();
 
@@ -472,6 +473,93 @@ void Validator::checkAnalyses()
       }
       if (analysis.prior && !isDefinedIn(analysis.prior->name, "distributions") && !isExternal(analysis.prior->name)) {
          strictError(path + ".prior", "the distribution '" + analysis.prior->name + "' does not exist");
+      }
+      checkNormalizationRanges(analysis, path);
+   }
+}
+
+// A variate is normalized over the axis of the paired data set, or else over its axis in the domains of the analysis.
+// If both exist, they must give the same range, where an absent bound is equal only to an absent bound (HS3 0.3).
+void Validator::checkNormalizationRanges(Analysis const &analysis, std::string const &path)
+{
+   using Range = std::pair<std::optional<double>, std::optional<double>>;
+   auto bound = [](std::optional<double> value) { return value && !std::isinf(*value) ? value : std::nullopt; };
+   auto format = [](Range const &range) {
+      auto one = [](std::optional<double> value) { return value ? std::to_string(*value) : std::string("none"); };
+      return "[" + one(range.first) + ", " + one(range.second) + "]";
+   };
+
+   std::map<std::string, Range> domainRanges;
+   for (auto const &ref : analysis.domains) {
+      for (auto const &domain : _doc.domains) {
+         if (domain.name != ref.name) {
+            continue;
+         }
+         for (auto const &axisVariant : domain.axes) {
+            auto const *axis = std::get_if<DomainAxis>(&axisVariant);
+            if (!axis || axis->fixedValue) {
+               continue; // a fixed axis gives no range
+            }
+            std::optional<double> min = axis->min;
+            std::optional<double> max = axis->max;
+            auto const *edges = axis->binning ? std::get_if<EdgesBinning>(&*axis->binning) : nullptr;
+            if (edges && !edges->edges.empty()) {
+               min = min ? min : edges->edges.front();
+               max = max ? max : edges->edges.back();
+            }
+            domainRanges[axis->name] = {bound(min), bound(max)};
+         }
+      }
+   }
+   if (domainRanges.empty()) {
+      return;
+   }
+
+   auto check = [&](std::string const &dataName, std::string const &axisName, Range const &dataRange) {
+      auto found = domainRanges.find(axisName);
+      if (found != domainRanges.end() && found->second != dataRange) {
+         strictError(path, "the axis '" + axisName + "' of the data set '" + dataName + "' has the range " +
+                              format(dataRange) + ", but the domains of the analysis '" + analysis.name +
+                              "' give it the range " + format(found->second));
+      }
+   };
+   std::function<void(std::string const &)> checkData = [&](std::string const &dataName) {
+      for (auto const &data : _doc.data) {
+         if (data.name != dataName) {
+            continue;
+         }
+         auto checkAxes = [&](auto const &axes) {
+            for (auto const &axisVariant : axes) {
+               std::visit(
+                  overloaded{[&](ContinuousAxis const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); },
+                             [&](BinnedAxis const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); },
+                             [](CategoricalAxis const &) {}},
+                  axisVariant);
+            }
+         };
+         std::visit(overloaded{[&](PointData const &d) {
+                                  for (auto const &a : d.axes) {
+                                     check(data.name, a.name, {bound(a.min), bound(a.max)});
+                                  }
+                               },
+                               [&](UnbinnedData const &d) { checkAxes(d.axes); },
+                               [&](BinnedData const &d) { checkAxes(d.axes); },
+                               [&](CombinedData const &d) {
+                                  for (auto const &component : d.components) {
+                                     checkData(component.data.name);
+                                  }
+                               }},
+                    data.body);
+      }
+   };
+   for (auto const &likelihood : _doc.likelihoods) {
+      if (likelihood.name != analysis.likelihood.name) {
+         continue;
+      }
+      for (auto const &term : likelihood.terms) {
+         if (auto const *data = std::get_if<DataRef>(&term.data)) {
+            checkData(data->name);
+         }
       }
    }
 }
