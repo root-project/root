@@ -137,8 +137,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   _dataHist(other._dataHist),
   _intOrder(other._intOrder),
   _cdfBoundaries(other._cdfBoundaries),
-  _totVolume(other._totVolume),
-  _unitNorm(other._unitNorm)
+  _totVolume(other._totVolume)
 {
 
   _histObsList.addClone(other._histObsList) ;
