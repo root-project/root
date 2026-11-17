@@ -271,6 +271,11 @@ void translateImportedExpression(TString &expr)
 {
    replaceIdentifier(expr, "PI", "TMath::Pi()");
    replaceIdentifier(expr, "EULER", "TMath::E()");
+   // The boolean literals, and the exact comparisons, which are the ones of TFormula.
+   replaceIdentifier(expr, "TRUE", "1");
+   replaceIdentifier(expr, "FALSE", "0");
+   expr.ReplaceAll("!==", "!=");
+   expr.ReplaceAll("===", "==");
    expr = ifElseToTernary(expr.Data()).c_str();
 }
 

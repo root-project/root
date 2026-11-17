@@ -9531,3 +9531,26 @@ TEST(RooFitHS3, LandauLocationKey)
       EXPECT_EQ(warnings.find("renamed to \"mu\"") != std::string::npos, version == "0.3") << warnings;
    }
 }
+
+// The boolean literals TRUE and FALSE and the exact comparisons === and !== of the HS3 expression language are
+// translated on import.
+TEST(RooFitHS3, ExpressionBuiltins)
+{
+   const std::string json = R"json({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "d", "type": "product_domain", "axes": [{"name": "x", "min": -5, "max": 5}]}],
+      "functions": [
+         {"name": "f", "type": "generic", "expression": "ifelse(x === 1 && TRUE, 2, ifelse(x !== 2 || FALSE, 3, 4))"}
+      ]
+   })json";
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   RooAbsReal *f = ws.function("f");
+   ASSERT_NE(f, nullptr);
+   EXPECT_EQ(ws.arg("TRUE"), nullptr);
+   EXPECT_EQ(ws.arg("FALSE"), nullptr);
+   for (auto [x, expected] : {std::pair{1.0, 2.0}, std::pair{2.0, 4.0}, std::pair{3.0, 3.0}}) {
+      ws.var("x")->setVal(x);
+      EXPECT_DOUBLE_EQ(f->getVal(), expected) << "x=" << x;
+   }
+}
