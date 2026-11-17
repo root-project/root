@@ -226,7 +226,7 @@ struct Analysis {
 };
 
 /// A distribution or function that is not interpreted by the document, but by the importers that are registered for
-/// its type in RooFit::JSONIO::importers(), or by the factory expressions.
+/// its type in RooFit::JSONIO::importers().
 struct GenericObject {
    std::string type;
    Detail::JSONNode const *node = nullptr;
