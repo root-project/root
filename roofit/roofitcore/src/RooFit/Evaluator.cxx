@@ -261,7 +261,7 @@ void Evaluator::syncDataTokens()
 /// avoids exp() -> log() roundtrips, e.g. for Gaussian constraints, and the
 /// underflow of products with many factors. Nodes that output their
 /// logarithms can request the same from their servers, e.g. the factors of a
-/// product. Only implemented for nodes evaluated on the CPU.
+/// product.
 void Evaluator::setupLogEvaluation()
 {
    // Visit clients before their servers, because whether a client can use a
@@ -269,13 +269,16 @@ void Evaluator::setupLogEvaluation()
    for (auto iter = _nodes.rbegin(); iter != _nodes.rend(); ++iter) {
       NodeInfo &info = *iter;
       bool outputsLogarithm = false;
-      if (info.clientInfos.size() == 1 && !info.fromArrayInput && !info.computeInGPU &&
-          info.absArg->canOutputLogarithm()) {
+      if (info.clientInfos.size() == 1 && !info.fromArrayInput && info.absArg->canOutputLogarithm()) {
          NodeInfo const &client = *info.clientInfos[0];
-         outputsLogarithm = !client.computeInGPU && client.absArg->canUseLogarithmOf(
-                                                       *info.absArg, _evalContextCPU._outputsLogarithm[client.iNode]);
+         outputsLogarithm =
+            client.absArg->canUseLogarithmOf(*info.absArg, _evalContextCPU._outputsLogarithm[client.iNode]);
       }
+      // The output of a node can be read on both devices.
       _evalContextCPU._outputsLogarithm[info.iNode] = outputsLogarithm;
+      if (_useGPU) {
+         _evalContextCUDA._outputsLogarithm[info.iNode] = outputsLogarithm;
+      }
    }
 }
 
@@ -369,7 +372,7 @@ void Evaluator::updateOutputSizes()
       markGPUNodes();
    }
 
-   // Which nodes are inputs or evaluated on the GPU might have changed.
+   // Which nodes are array inputs might have changed.
    setupLogEvaluation();
 
    _needToUpdateOutputSizes = false;

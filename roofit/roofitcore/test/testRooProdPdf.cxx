@@ -13,19 +13,19 @@
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 #include <RooHelpers.h>
+#include <RooMinimizer.h>
 #include <RooRandom.h>
 
 #include <Math/PdfFuncMathCore.h>
 
 #include "gtest_wrapper.h"
 
-#include <algorithm>
+#include <array>
 #include <cmath>
-#include <functional>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <vector>
+#include <tuple>
 
 TEST(RooProdPdf, TestGetPartIntList)
 {
@@ -173,142 +173,208 @@ TEST(RooProdPdf, NonFactorizingProductLikelihood)
 
 namespace {
 
-/// Checks a likelihood value with the cpu and codegen backends, and, if Clad
-/// is available, the codegen gradient against numeric derivatives.
-void checkLikelihoodBackends(std::function<std::unique_ptr<RooAbsReal>(RooFit::EvalBackend)> const &createNLL,
-                             RooAbsData const &data, double ref, std::string const &label)
-{
-   // The underflow of the product must not cause evaluation errors anywhere.
-   const auto prevErrorLoggingMode = RooAbsReal::evalErrorLoggingMode();
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-   RooAbsReal::clearEvalErrorLog();
+/// A product of many factors, like an HS3 array distribution, with data for
+/// which the product underflows to zero for every event. Also at the minimum
+/// of the likelihood, which is within the parameter limits. Covers factors
+/// that can evaluate their logarithm directly ("Gaussian"), factors that can't
+/// ("Exponential"), a mix of both ("Mixed"), and the product as a constraint
+/// term ("Constraint"). Covers GitHub issue #24202.
+class ManyFactorsModel {
+public:
+   explicit ManyFactorsModel(std::string const &kind) : _kind{kind}
+   {
+      constexpr int nFactors = 100;
 
-   std::unique_ptr<RooAbsReal> nll = createNLL(RooFit::EvalBackend::Cpu());
-   EXPECT_NEAR(nll->getVal(), ref, 1e-10 * std::abs(ref)) << label << ", cpu backend";
-
-   std::unique_ptr<RooAbsReal> nllCodegen = createNLL(RooFit::EvalBackend::CodegenNoGrad());
-   EXPECT_NEAR(nllCodegen->getVal(), ref, 1e-10 * std::abs(ref)) << label << ", codegen backend";
-
-#ifdef ROOFIT_CLAD
-   std::unique_ptr<RooAbsReal> nllGrad = createNLL(RooFit::EvalBackend::Codegen());
-   // Like in the wrapped function, all variables that are not in the dataset
-   // are parameters, including the global observables.
-   RooArgSet params;
-   nllGrad->getParameters(data.get(), params);
-   std::vector<double> gradient(params.size());
-   nllGrad->gradient(gradient.data());
-   for (std::size_t i = 0; i < params.size(); ++i) {
-      auto &param = static_cast<RooRealVar &>(*params[i]);
-      const double val = param.getVal();
-      constexpr double eps = 1e-6;
-      param.setVal(val + eps);
-      const double up = nll->getVal();
-      param.setVal(val - eps);
-      const double down = nll->getVal();
-      param.setVal(val);
-      const double numDerivative = (up - down) / (2 * eps);
-      EXPECT_NEAR(gradient[i], numDerivative, 1e-5 * std::max(std::abs(numDerivative), 1.0))
-         << label << ", codegen gradient by " << param.GetName();
+      if (_kind == "Constraint") {
+         _ws.factory("Gaussian::model(x[0, -10, 10], theta[-1, -2, 2], 1.0)");
+         for (int i = 0; i < nFactors; ++i) {
+            const std::string idx = std::to_string(i);
+            const char *globVal = i % 2 == 0 ? "8" : "-7";
+            _ws.factory("Gaussian::f" + idx + "(g" + idx + "[" + globVal + ", -10, 10], theta, 1.0)");
+            _factors.add(*_ws.pdf("f" + idx));
+            _obs.add(*_ws.var("g" + idx));
+         }
+         _obs.setAttribAll("Constant", true);
+         RooRealVar &x = *_ws.var("x");
+         _data = std::make_unique<RooDataSet>("data", "data", x);
+         _data->add(x);
+      } else {
+         for (int i = 0; i < nFactors; ++i) {
+            const std::string idx = std::to_string(i);
+            if (isGaussian(i)) {
+               _ws.factory("Gaussian::f" + idx + "(x" + idx + "[0, -10, 10], theta[-1, -2, 2], 1.0)");
+            } else {
+               // The wide range makes the exponential pdf values small.
+               _ws.factory("Exponential::f" + idx + "(x" + idx + "[1, 0, 10000], c[-1e-4, -1e-2, -1e-5])");
+            }
+            _factors.add(*_ws.pdf("f" + idx));
+            _obs.add(*_ws.var("x" + idx));
+         }
+         _ws.factory("w[1.0]");
+         RooArgSet vars{_obs, *_ws.var("w")};
+         _data = std::make_unique<RooDataSet>("data", "data", vars, RooFit::WeightVar("w"));
+         // Values of the Gaussian and exponential observables, and weight.
+         using Event = std::array<double, 3>;
+         for (auto [gaussVal, expVal, weight] : {Event{-8., 100., 1.5}, Event{9., 6000., 1.}}) {
+            for (int i = 0; i < nFactors; ++i) {
+               static_cast<RooRealVar &>(*_obs[i]).setVal(isGaussian(i) ? gaussVal : expVal);
+            }
+            _data->add(_obs, weight);
+         }
+      }
+      _prod = std::make_unique<RooProdPdf>("prod", "prod", _factors);
    }
-#endif
 
-   EXPECT_EQ(RooAbsReal::numEvalErrors(), 0) << label;
-   RooAbsReal::clearEvalErrorLog();
-   RooAbsReal::setEvalErrorLoggingMode(prevErrorLoggingMode);
-}
+   std::unique_ptr<RooAbsReal> createNLL(RooFit::EvalBackend backend) const
+   {
+      using namespace RooFit;
+      if (_kind == "Constraint") {
+         return std::unique_ptr<RooAbsReal>{
+            _ws.pdf("model")->createNLL(*_data, backend, ExternalConstraints(*_prod), GlobalObservables(_obs))};
+      }
+      return std::unique_ptr<RooAbsReal>{_prod->createNLL(*_data, backend)};
+   }
+
+   /// The likelihood, computed from the logarithms of the factors.
+   double referenceNLL()
+   {
+      double nll = 0.0;
+      if (_kind == "Constraint") {
+         nll = createNLLWithoutConstraint()->getVal();
+         for (auto *factor : static_range_cast<RooAbsPdf *>(_factors)) {
+            nll -= factor->getLogVal(&_obs);
+         }
+         return nll;
+      }
+      for (int i = 0; i < _data->numEntries(); ++i) {
+         _obs.assign(*_data->get(i));
+         for (auto *factor : static_range_cast<RooAbsPdf *>(_factors)) {
+            nll -= _data->weight() * factor->getLogVal(&_obs);
+         }
+      }
+      return nll;
+   }
+
+   /// The tests are only meaningful if the product underflows.
+   void expectProductUnderflows()
+   {
+      if (_kind == "Constraint") {
+         EXPECT_EQ(_prod->getVal(_obs), 0.0) << "constraint";
+         return;
+      }
+      for (int i = 0; i < _data->numEntries(); ++i) {
+         _obs.assign(*_data->get(i));
+         EXPECT_EQ(_prod->getVal(_obs), 0.0) << "event " << i;
+      }
+   }
+
+   RooArgSet allVars() const { return _ws.allVars(); }
+
+private:
+   bool isGaussian(int i) const { return _kind == "Gaussian" || (_kind == "Mixed" && i % 2 == 0); }
+
+   std::unique_ptr<RooAbsReal> createNLLWithoutConstraint() const
+   {
+      return std::unique_ptr<RooAbsReal>{_ws.pdf("model")->createNLL(*_data, RooFit::EvalBackend::Cpu())};
+   }
+
+   std::string _kind;
+   RooWorkspace _ws;
+   RooArgList _factors;
+   RooArgSet _obs; // the observables of the product, global observables for "Constraint"
+   std::unique_ptr<RooDataSet> _data;
+   std::unique_ptr<RooProdPdf> _prod;
+};
+
+const auto manyFactorsKinds = testing::Values("Gaussian", "Exponential", "Mixed", "Constraint");
 
 } // namespace
 
-/// The joint probability of a product of many pdfs, like an HS3 array
-/// distribution, underflows, but the likelihood should still be finite. Covers
-/// factors that can evaluate their logarithm directly (Gaussian), factors that
-/// can't (Exponential), and a mix of both. Covers GitHub issue #24202.
-TEST(RooProdPdf, ManyFactorsLikelihood)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   constexpr int nFactors = 100;
-
-   for (std::string kind : {"Gaussian", "Exponential", "Mixed"}) {
-      RooWorkspace ws;
-      RooArgList factors;
-      RooArgSet obs;
-      for (int i = 0; i < nFactors; ++i) {
-         const std::string idx = std::to_string(i);
-         if (kind == "Gaussian" || (kind == "Mixed" && i % 2 == 0)) {
-            ws.factory("Gaussian::f" + idx + "(x" + idx + "[0, -10, 10], theta[0, -2, 2], 1.0)");
-         } else {
-            ws.factory("Exponential::f" + idx + "(x" + idx + "[1, 0, 10], c[-1, -2, -0.5])");
-         }
-         factors.add(*ws.pdf("f" + idx));
-         obs.add(*ws.var("x" + idx));
-      }
-      RooProdPdf prod{"prod", "prod", factors};
-
-      RooRealVar w{"w", "w", 1.0};
-      RooArgSet vars{obs};
-      vars.add(w);
-      RooDataSet data{"data", "data", vars, RooFit::WeightVar(w)};
-      for (double val : {8.0, 9.0}) {
-         for (auto *x : static_range_cast<RooRealVar *>(obs)) {
-            x->setVal(val);
-         }
-         data.add(obs, val);
-      }
-
-      double ref = 0.0;
-      for (int i = 0; i < data.numEntries(); ++i) {
-         obs.assign(*data.get(i));
-         for (auto *factor : static_range_cast<RooAbsPdf *>(factors)) {
-            ref -= data.weight() * factor->getLogVal(&obs);
-         }
-      }
-
-      auto createNLL = [&](RooFit::EvalBackend backend) {
-         return std::unique_ptr<RooAbsReal>{prod.createNLL(data, backend)};
-      };
-      checkLikelihoodBackends(createNLL, data, ref, kind);
+class ManyFactorsTest : public testing::TestWithParam<std::tuple<std::string, RooFit::EvalBackend>> {
+protected:
+   void SetUp() override
+   {
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
+      _prevErrorLoggingMode = RooAbsReal::evalErrorLoggingMode();
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
+      RooAbsReal::clearEvalErrorLog();
    }
+
+   void TearDown() override
+   {
+      RooAbsReal::clearEvalErrorLog();
+      RooAbsReal::setEvalErrorLoggingMode(_prevErrorLoggingMode);
+      _changeMsgLvl.reset();
+   }
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
+   RooAbsReal::ErrorLoggingMode _prevErrorLoggingMode = RooAbsReal::PrintErrors;
+};
+
+/// The likelihood of a product that underflows must still be finite, without
+/// evaluation errors.
+TEST_P(ManyFactorsTest, Likelihood)
+{
+   ManyFactorsModel model{std::get<0>(GetParam())};
+   model.expectProductUnderflows();
+   const double ref = model.referenceNLL();
+   RooAbsReal::clearEvalErrorLog();
+
+   std::unique_ptr<RooAbsReal> nll = model.createNLL(std::get<1>(GetParam()));
+   EXPECT_NEAR(nll->getVal(), ref, 1e-10 * std::abs(ref));
+   EXPECT_EQ(RooAbsReal::numEvalErrors(), 0);
 }
 
-/// Like ManyFactorsLikelihood, but with the product as a constraint term.
-TEST(RooProdPdf, ManyFactorsConstraint)
+INSTANTIATE_TEST_SUITE_P(RooProdPdf, ManyFactorsTest,
+                         testing::Combine(manyFactorsKinds,
+                                          testing::Values(ROOFIT_EVAL_BACKEND_CUDA RooFit::EvalBackend::Cpu(),
+                                                          RooFit::EvalBackend::CodegenNoGrad())),
+                         [](testing::TestParamInfo<ManyFactorsTest::ParamType> const &paramInfo) {
+                            return std::get<0>(paramInfo.param) + "_EvalBackend" + std::get<1>(paramInfo.param).name();
+                         });
+
+#ifdef ROOFIT_CLAD
+using ManyFactorsGradientTest = ManyFactorsTest;
+
+/// The gradient of the codegen backend must be correct where the product
+/// underflows: a fit that uses it must agree with a fit that uses numeric
+/// derivatives.
+TEST_P(ManyFactorsGradientTest, CodegenFit)
 {
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   ManyFactorsModel model{std::get<0>(GetParam())};
+   std::unique_ptr<RooAbsReal> nllRef = model.createNLL(RooFit::EvalBackend::Cpu());
+   std::unique_ptr<RooAbsReal> nll = model.createNLL(std::get<1>(GetParam()));
+   ASSERT_TRUE(nll->hasGradient());
 
-   constexpr int nFactors = 100;
+   RooArgSet vars = model.allVars();
+   RooArgSet initialValues;
+   vars.snapshot(initialValues);
 
-   RooWorkspace ws;
-   ws.factory("Gaussian::model(x[0, -10, 10], theta[0.5, -2, 2], 1.0)");
-   RooArgList constraints;
-   RooArgSet globs;
-   for (int i = 0; i < nFactors; ++i) {
-      const std::string idx = std::to_string(i);
-      ws.factory("Gaussian::c" + idx + "(g" + idx + "[8.5, -10, 10], theta, 1.0)");
-      constraints.add(*ws.pdf("c" + idx));
-      globs.add(*ws.var("g" + idx));
-   }
-   RooProdPdf constraint{"constraint", "constraint", constraints};
-
-   RooRealVar &x = *ws.var("x");
-   RooDataSet data{"data", "data", x};
-   data.add(x);
-
-   using namespace RooFit;
-   RooAbsPdf &model = *ws.pdf("model");
-   std::unique_ptr<RooAbsReal> nll{model.createNLL(data, EvalBackend::Cpu())};
-
-   double ref = nll->getVal();
-   for (auto *c : static_range_cast<RooAbsPdf *>(constraints)) {
-      ref -= c->getLogVal(&globs);
-   }
-
-   auto createNLL = [&](RooFit::EvalBackend backend) {
-      return std::unique_ptr<RooAbsReal>{
-         model.createNLL(data, backend, ExternalConstraints(constraint), GlobalObservables(globs))};
+   auto fit = [&](RooAbsReal &absReal) {
+      vars.assign(initialValues);
+      RooMinimizer minimizer{absReal};
+      minimizer.setPrintLevel(-1);
+      minimizer.setStrategy(0);
+      minimizer.minimize("Minuit2");
+      return std::unique_ptr<RooFitResult>{minimizer.save()};
    };
-   checkLikelihoodBackends(createNLL, data, ref, "constraint");
+   std::unique_ptr<RooFitResult> resultRef = fit(*nllRef);
+   std::unique_ptr<RooFitResult> result = fit(*nll);
+
+   EXPECT_EQ(resultRef->status(), 0);
+   EXPECT_EQ(result->status(), 0);
+   EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, 1e-4, 1e-3, /*verbose=*/true));
+   model.expectProductUnderflows();
+   EXPECT_EQ(RooAbsReal::numEvalErrors(), 0);
 }
+
+INSTANTIATE_TEST_SUITE_P(RooProdPdf, ManyFactorsGradientTest,
+                         testing::Combine(manyFactorsKinds, testing::Values(RooFit::EvalBackend::Codegen())),
+                         [](testing::TestParamInfo<ManyFactorsGradientTest::ParamType> const &paramInfo) {
+                            return std::get<0>(paramInfo.param);
+                         });
+#endif
 
 /// This test covers a potential problem with the custom normalization ranges
 /// of PDFs: the value of a RooProdPdf should not depend on the normalization

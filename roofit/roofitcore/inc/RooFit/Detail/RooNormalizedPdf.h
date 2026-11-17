@@ -108,11 +108,13 @@ private:
    RooRealProxy _normIntegral;
    RooArgSet _normSet;
 
-   /// Evaluation error counters, filled by the compute function. In CUDA
-   /// mode, they are read back from the GPU asynchronously and only arrive
-   /// after the evaluation of the computation graph, so they have to live in
-   /// a member and not on the stack of doEval(). Transient and not copied.
-   mutable std::array<double, 3> _evalErrorCounts{}; //<!
+   /// Extra args of the compute functions: three evaluation error counters,
+   /// filled by the compute function, and whether the pdf value is a
+   /// logarithm. In CUDA mode, the counters are read back from the GPU
+   /// asynchronously and only arrive after the evaluation of the computation
+   /// graph, so they have to live in a member and not on the stack of
+   /// doEval(). Transient and not copied.
+   mutable std::array<double, 4> _extraArgs{}; //<!
 
    ClassDefOverride(RooFit::Detail::RooNormalizedPdf, 0);
 };
