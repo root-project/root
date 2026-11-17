@@ -32,6 +32,9 @@ in ROOT7 TTFhandle will completely replace TTF class
 // smoothing is enabled by default while all recent devices support enough colors for antialiasing
 
 Bool_t TTFhandle::gSmoothingPrefer = kTRUE;
+Bool_t TTFhandle::gHintingPrefer = kFALSE;
+Bool_t TTFhandle::fKerningPrefer = kTRUE;
+
 
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
@@ -141,7 +144,7 @@ void TTFhandle::ComputeTrailingBlanksWidth(Int_t n)
       FT_Face face = fFont->face;
       char space = ' ';
       FT_UInt load_flags = FT_LOAD_DEFAULT;
-      if (!fHinting) load_flags |= FT_LOAD_NO_HINTING;
+      if (!GetHinting()) load_flags |= FT_LOAD_NO_HINTING;
       FT_Load_Char(face, space, load_flags);
 
       FT_GlyphSlot slot      = face->glyph;
@@ -207,7 +210,7 @@ void TTFhandle::LayoutGlyphs()
    fWidth  = 0;
 
    load_flags = FT_LOAD_DEFAULT;
-   if (!fHinting)
+   if (!GetHinting())
       load_flags |= FT_LOAD_NO_HINTING;
 
    xMin = yMin =  32000;
@@ -220,11 +223,11 @@ void TTFhandle::LayoutGlyphs()
    for (auto &glyph : fGlyphs) {
 
       // compute glyph origin
-      if (fKerning) {
+      if (GetKerning()) {
          if (prev_index) {
             FT_Vector  kern;
             FT_Get_Kerning(face, prev_index, glyph.fIndex,
-                           fHinting ? ft_kerning_default : ft_kerning_unfitted,
+                           GetHinting() ? ft_kerning_default : ft_kerning_unfitted,
                            &kern);
             fWidth += kern.x;
          }
@@ -733,6 +736,23 @@ Bool_t TTFhandle::Init()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set global flag to switch on/off kerning of TTF text drawing
+/// This flag is used when SetKerning() flag not set before
+
+void TTFhandle::SetKerningPrefer(Bool_t on)
+{
+   fKerningPrefer = on;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if kerning of text drawing is enabled by default
+
+Bool_t TTFhandle::GetKerningPrefer()
+{
+   return fKerningPrefer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set global flag to switch on/off smoothing of TTF text drawing
 /// This flag is used when SetSmoothing() flag not set before
 
@@ -742,11 +762,28 @@ void TTFhandle::SetSmoothingPrefer(Bool_t on)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true if smoothing of text drawing is enabled
+/// Returns true if smoothing of text drawing is enabled by default
 
 Bool_t TTFhandle::GetSmoothingPrefer()
 {
    return gSmoothingPrefer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set global flag to switch on/off hinting of TTF text drawing
+/// This flag is used when SetHiniting() flag not set before
+
+void TTFhandle::SetHintingPrefer(Bool_t on)
+{
+   gHintingPrefer = on;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if hinting of text drawing is enabled by default
+
+Bool_t TTFhandle::GetHintingPrefer()
+{
+   return gHintingPrefer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -756,7 +793,32 @@ Bool_t TTFhandle::GetSmoothingPrefer()
 
 Bool_t TTFhandle::GetSmoothing() const
 {
-   if (fSmoothing == kSmoothUndef)
+   if (fSmoothing.Undef())
       return GetSmoothingPrefer();
-   return fSmoothing == kSmoothOn;
+   return fSmoothing.Get();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if hinting for this instance is enabled
+/// If SetHinting() was not called before - use global value
+/// configured with @ref SetHinitingPrefer method
+
+Bool_t TTFhandle::GetHinting() const
+{
+   if (fHinting.Undef())
+      return GetHintingPrefer();
+   return fHinting.Get();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if kerning for this instance is enabled
+/// If SetKerning() was not called before - use global value
+/// configured with @ref SetKerningPrefer method
+
+Bool_t TTFhandle::GetKerning() const
+{
+   if (fKerning.Undef())
+      return GetKerningPrefer();
+   return fKerning.Get();
+}
+
