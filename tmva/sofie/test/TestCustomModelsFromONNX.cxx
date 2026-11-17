@@ -683,6 +683,42 @@ TEST(ONNX, PRelu_Scalar)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, Attention)
+{
+   SofieReference ref = readReference("Attention");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Attention", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Attention_Causal_GQA)
+{
+   SofieReference ref = readReference("Attention_Causal_GQA");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Attention_Causal_GQA", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Attention_3d_BoolMask)
+{
+   SofieReference ref = readReference("Attention_3d_BoolMask");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Attention_3d_BoolMask", ref.f32("input0"), ref.u8("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Attention_FloatMask_Softcap)
+{
+   SofieReference ref = readReference("Attention_FloatMask_Softcap");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Attention_FloatMask_Softcap", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 // Elu on a tensor whose first dimension is only known at run time.
 TEST(ONNX, EluDynShape)
 {

@@ -21,6 +21,7 @@ set(TMVASOFIE_HEADERS
 set(TMVASOFIE_EXTRA_HEADERS
   TMVA/ROperator.hxx
   TMVA/ROperator_ArgMax.hxx
+  TMVA/ROperator_Attention.hxx
   TMVA/ROperator_BasicBinary.hxx
   TMVA/ROperator_BasicNary.hxx
   TMVA/ROperator_BasicUnary.hxx

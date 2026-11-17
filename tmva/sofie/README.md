@@ -90,6 +90,7 @@ std::vector<std::string> supportedOperators = parser.GetRegisteredOperators();
 - [x] Abs
 - [x] Add
 - [x] ArgMax
+- [x] Attention
 - [x] AveragePool
 - [x] BatchNormalization
 - [x] Cast

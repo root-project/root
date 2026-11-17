@@ -319,6 +319,68 @@ def make_PRelu_Scalar():
     return _prelu_model("prelu_scalar_test", [2, 3], [1], [0.25])
 
 
+def _attention_model(name, q_shape, k, v, y_shape, mask=None, bool_mask_shape=None, **attrs):
+    """Attention (opset 23) with Q as graph input and K, V and the optional float mask as initializers.
+    A bool mask is a second graph input of shape bool_mask_shape (the parser cannot read bool initializers)."""
+    inputs = ["Q", "K", "V"] + (["Mask"] if mask is not None or bool_mask_shape is not None else [])
+    initializer = [
+        _tensor("K", FLOAT, list(k.shape), k.flatten().tolist()),
+        _tensor("V", FLOAT, list(v.shape), v.flatten().tolist()),
+    ]
+    if mask is not None:
+        initializer.append(_tensor("Mask", FLOAT, list(mask.shape), mask.flatten().tolist()))
+    graph_inputs = [_vi("Q", FLOAT, q_shape)]
+    if bool_mask_shape is not None:
+        graph_inputs.append(_vi("Mask", BOOL, bool_mask_shape))
+    graph = helper.make_graph(
+        [helper.make_node("Attention", inputs, ["Y"], **attrs)],
+        name,
+        inputs=graph_inputs,
+        outputs=[
+            _vi("Y", FLOAT, y_shape),
+        ],
+        initializer=initializer,
+    )
+    return _model(graph, opset=23, ir_version=11)
+
+
+def _attention_values(shape, phase):
+    return np.sin(np.arange(int(np.prod(shape))) * 0.7 + phase).astype(np.float32).reshape(shape)
+
+
+def make_Attention():
+    """Ops: Attention (4d multi-head cross attention, default scale)"""
+    k = _attention_values((1, 2, 5, 4), 1.0)
+    v = _attention_values((1, 2, 5, 4), 2.0)
+    return _attention_model("attention_test", [1, 2, 3, 4], k, v, [1, 2, 3, 4])
+
+
+def make_Attention_Causal_GQA():
+    """Ops: Attention (4d grouped-query attention, 4 query heads sharing 2 key/value heads, is_causal)"""
+    k = _attention_values((2, 2, 3, 4), 1.0)
+    v = _attention_values((2, 2, 3, 4), 2.0)
+    return _attention_model("attention_causal_gqa_test", [2, 4, 3, 4], k, v, [2, 4, 3, 4], is_causal=1)
+
+
+def make_Attention_3d_BoolMask():
+    """Ops: Attention (3d multi-query attention, value head size different from the query one, bool mask)"""
+    k = _attention_values((2, 4, 4), 1.0)
+    v = _attention_values((2, 4, 6), 2.0)
+    return _attention_model(
+        "attention_3d_bool_mask_test", [2, 3, 8], k, v, [2, 3, 12], bool_mask_shape=[3, 4], q_num_heads=2, kv_num_heads=1
+    )
+
+
+def make_Attention_FloatMask_Softcap():
+    """Ops: Attention (float mask shorter than the key sequence, custom scale, softcap)"""
+    k = _attention_values((1, 2, 4, 4), 1.0)
+    v = _attention_values((1, 2, 4, 4), 2.0)
+    mask = _attention_values((1, 2, 2, 3), 3.0)
+    return _attention_model(
+        "attention_float_mask_softcap_test", [1, 2, 2, 4], k, v, [1, 2, 2, 4], mask=mask, scale=0.8, softcap=2.0
+    )
+
+
 def make_AveragePool1d_CeilMode_Overhang():
     """Ops: AveragePool"""
     nodes = [
@@ -6281,6 +6343,10 @@ MODELS = {
     "Asinh": make_Asinh,
     "Atanh": make_Atanh,
     "AveragePool1d_CeilMode": make_AveragePool1d_CeilMode,
+    "Attention": make_Attention,
+    "Attention_3d_BoolMask": make_Attention_3d_BoolMask,
+    "Attention_Causal_GQA": make_Attention_Causal_GQA,
+    "Attention_FloatMask_Softcap": make_Attention_FloatMask_Softcap,
     "AveragePool1d_CeilMode_Overhang": make_AveragePool1d_CeilMode_Overhang,
     "AveragePool2d_CeilMode": make_AveragePool2d_CeilMode,
     "AveragePool2d_CeilMode_Pads": make_AveragePool2d_CeilMode_Pads,
@@ -6989,6 +7055,13 @@ TEST_INPUTS = {
             (1, 1, 3, 4),
         ),
     ],
+    "Attention": [f32(np.cos(np.arange(24) * 0.5), (1, 2, 3, 4))],
+    "Attention_3d_BoolMask": [
+        f32(np.cos(np.arange(48) * 0.5), (2, 3, 8)),
+        np.array([[1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 0]], dtype=np.bool_),
+    ],
+    "Attention_Causal_GQA": [f32(np.cos(np.arange(96) * 0.5), (2, 4, 3, 4))],
+    "Attention_FloatMask_Softcap": [f32(np.cos(np.arange(16) * 0.5), (1, 2, 2, 4))],
     "AveragePool1d_CeilMode": [f32(np.arange(1, 7), (1, 1, 6))],
     "AveragePool1d_CeilMode_Overhang": [f32(np.arange(1, 7), (1, 1, 6))],
     "AveragePool2d_CeilMode": [f32(np.arange(1, 26), (1, 1, 5, 5))],

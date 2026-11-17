@@ -223,6 +223,44 @@ std::string GeneratePReluCode(const std::string &fileName, const TestTensor &x, 
    return code.str();
 }
 
+// Write a model holding a single Attention node (opset 23) and return the code
+// SOFIE generates for it. nodeInputs are the node's inputs in ONNX order ("" for
+// an omitted optional input); every non-empty one is a float graph input.
+std::string GenerateAttentionCode(const std::string &fileName, const std::vector<std::string> &nodeInputs,
+                                  const std::vector<TestTensor> &graphInputs, const std::vector<std::string> &yDims)
+{
+   std::string node;
+   for (const auto &name : nodeInputs)
+      AppendBytesField(node, 1, name);       // input
+   AppendBytesField(node, 2, "y");           // output
+   AppendBytesField(node, 3, "attention_0"); // name
+   AppendBytesField(node, 4, "Attention");   // op_type
+
+   std::string graph;
+   AppendBytesField(graph, 1, node);         // node
+   AppendBytesField(graph, 2, "test_graph"); // name
+   for (const auto &t : graphInputs)
+      AppendBytesField(graph, 11, FloatValueInfo(t));         // input
+   AppendBytesField(graph, 12, FloatValueInfo({"y", yDims})); // output
+
+   std::string opset;
+   AppendVarintField(opset, 2, 23); // version
+   std::string model;
+   AppendVarintField(model, 1, 11);   // ir_version
+   AppendBytesField(model, 7, graph); // graph
+   AppendBytesField(model, 8, opset); // opset_import
+
+   std::ofstream file(fileName, std::ios::binary);
+   file.write(model.data(), model.size());
+   file.close();
+
+   RModel rmodel = RModelParser_ONNX{}.Parse(fileName);
+   rmodel.Generate(Options::kNoWeightFile);
+   std::ostringstream code;
+   rmodel.PrintGenerated(code);
+   return code.str();
+}
+
 } // namespace
 
 // The "location" key of a tensor's external_data names the data file relative
@@ -365,4 +403,27 @@ TEST(SOFIEParser, PReluIndexesAPerChannelSlopeWithoutExpandingIt)
       GeneratePReluCode("prelu_channel.onnx", {"x", {"1", "3", "2", "2"}}, {"slope", {"3", "1", "1"}});
 
    EXPECT_NE(code.find("tensor_slope[(id / 4) % 3]"), std::string::npos);
+}
+
+// Grouped-query attention needs the query heads to be a multiple of the key/value heads.
+TEST(SOFIEParser, AttentionWithIndivisibleHeadsThrows)
+{
+   EXPECT_THROW(
+      GenerateAttentionCode("attention_bad_heads.onnx", {"q", "k", "v"},
+                            {{"q", {"1", "3", "2", "4"}}, {"k", {"1", "2", "2", "4"}}, {"v", {"1", "2", "2", "4"}}},
+                            {"1", "3", "2", "4"}),
+      std::runtime_error);
+}
+
+// The key/value cache inputs are not supported yet: they must be rejected, not ignored.
+TEST(SOFIEParser, AttentionWithPastKeyIsRejected)
+{
+   EXPECT_THROW(GenerateAttentionCode("attention_past_key.onnx", {"q", "k", "v", "", "past_key", "past_value"},
+                                      {{"q", {"1", "2", "2", "4"}},
+                                       {"k", {"1", "2", "2", "4"}},
+                                       {"v", {"1", "2", "2", "4"}},
+                                       {"past_key", {"1", "2", "3", "4"}},
+                                       {"past_value", {"1", "2", "3", "4"}}},
+                                      {"1", "2", "2", "4"}),
+                std::runtime_error);
 }
