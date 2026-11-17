@@ -1,25 +1,21 @@
-#include <cstddef>
 #include <vector>
-
-#if defined(_MSC_VER)
-  #define NOINLINE __declspec(noinline)
-#else
-  #define NOINLINE __attribute__((noinline))
-#endif
-
-// Don't inline to prevent the optimizer from interfering with the test
-NOINLINE static std::size_t GetTypeErasedSize(const void *vec)
-{
-   return reinterpret_cast<const std::vector<char> *>(vec)->size();
-}
+#include <cstring>
+#include <cstdint>
 
 int main()
 {
-   std::vector<int> v(1);
-   const auto size = GetTypeErasedSize(reinterpret_cast<const void *>(&v));
-   if (size == sizeof(int)) {
+   std::vector<int> v{1};
+   // The standard layout should use three pointers, so let's check:
+   struct S {
+      std::uintptr_t start, finish, capacity;
+   } s;
+   static_assert(sizeof(s) == sizeof(v), "Can't test vector's in-memory layout. Sizes don't match.");
+
+   std::memcpy(&s, &v, sizeof(S));
+
+   if (s.finish - s.start == sizeof(int)) {
       return 0;
-   } else if (size == 1) {
+   } else if (s.finish == 1) {
       return 1; // New ABI
    } else {
       return 2; // Unexpected
