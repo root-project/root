@@ -177,13 +177,6 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   _histObsList.addClone(other._histObsList) ;
 }
 
-RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
-   if (_ownedDataHist) return _ownedDataHist.get();
-   _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));
-   _dataHist = _ownedDataHist.get();
-   return _dataHist;
-}
-
 void RooHistPdf::clampNegativeBins()
 {
    const std::size_t nBins = _dataHist->numEntries();
@@ -209,10 +202,16 @@ void RooHistPdf::clampNegativeBins()
                             "before constructing the RooHistPdf."
                          << std::endl;
 
-   RooDataHist *dh = cloneAndOwnDataHist();
-   const bool hasSumW2 = dh->sumW2Array() != nullptr;
+   // We'll mutate the content of the RooDataHist, so we have to create an
+   // internal clone to avoid impacting other places that use the RooDataHist
+   if (!_ownedDataHist) {
+      _ownedDataHist.reset(static_cast<RooDataHist *>(_dataHist->Clone()));
+      _dataHist = _ownedDataHist.get();
+   }
+
+   const bool hasSumW2 = _dataHist->sumW2Array() != nullptr;
    for (std::size_t i = 0; i < nBins; ++i) {
-      if (dh->weight(i) < 0.) {
+      if (_dataHist->weight(i) < 0.) {
          // Keep the original bin error: clamping the content is a
          // normalization-consistency measure, not a statement that the bin is
          // now known exactly. The error still quantifies the statistical
@@ -223,8 +222,8 @@ void RooHistPdf::clampNegativeBins()
          // for anyone retrieving the histogram via dataHist(), including any
          // future per-bin MC-stat treatment, where a zero error would wrongly
          // fix the bin at exactly zero.
-         const double wgtErr = hasSumW2 ? std::sqrt(std::max(dh->weightSquared(i), 0.)) : 0.;
-         dh->set(i, 0., wgtErr);
+         const double wgtErr = hasSumW2 ? std::sqrt(std::max(_dataHist->weightSquared(i), 0.)) : 0.;
+         _dataHist->set(i, 0., wgtErr);
       }
    }
 }
