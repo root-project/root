@@ -117,7 +117,6 @@ protected:
   Int_t _intOrder = 0;                         ///< Interpolation order
   bool _cdfBoundaries = false;                 ///< Use boundary conditions for CDFs.
   mutable double _totVolume = 0.0;             ///<! Total volume of space (product of ranges of observables)
-  bool _unitNorm = false;                      ///<! Assume contents is unit normalized (for use as pdf cache)
 
 private:
   inline void initializeOwnedDataHist(std::unique_ptr<RooDataHist> &&dataHist)
