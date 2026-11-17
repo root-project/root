@@ -140,6 +140,20 @@ struct ExtractDataFromTP<int64_t> {
       std::copy(src.begin(), src.end(), static_cast<int64_t *>(data));
    }
 };
+// BOOL and UINT8 (like the other narrow integer types) are stored one element
+// per entry of int32_data when they are not in raw_data
+template <>
+struct ExtractDataFromTP<uint8_t> {
+   static void Copy(onnx::TensorProto *tensor, void *data, int length, bool isBool)
+   {
+      if (tensor->int32_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read " + std::string(isBool ? "bool" : "uint8") +
+                                  " initialized tensor - actual size is " + std::to_string(tensor->int32_data_size()));
+      const auto &src = tensor->int32_data();
+      std::transform(src.begin(), src.end(), static_cast<uint8_t *>(data),
+                     [isBool](int32_t v) { return static_cast<uint8_t>(isBool ? (v != 0) : v); });
+   }
+};
 
 #ifndef R__BYTESWAP
 namespace {
@@ -219,11 +233,11 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
                break;
             }
             case ETensorType::BOOL: {
-               throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in BOOL not supported");
+               ExtractDataFromTP<uint8_t>::Copy(tensorproto, data.get(), tensor_size, /*isBool=*/true);
                break;
             }
             case ETensorType::UINT8: {
-               throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in UINT8 not supported");
+               ExtractDataFromTP<uint8_t>::Copy(tensorproto, data.get(), tensor_size, /*isBool=*/false);
                break;
             }
             default:

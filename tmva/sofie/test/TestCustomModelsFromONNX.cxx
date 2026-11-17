@@ -683,6 +683,24 @@ TEST(ONNX, PRelu_Scalar)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, WhereBoolInitializer)
+{
+   SofieReference ref = readReference("WhereBoolInitializer");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "WhereBoolInitializer", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, CastUint8Initializer)
+{
+   SofieReference ref = readReference("CastUint8Initializer");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "CastUint8Initializer", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 // Elu on a tensor whose first dimension is only known at run time.
 TEST(ONNX, EluDynShape)
 {

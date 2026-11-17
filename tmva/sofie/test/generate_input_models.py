@@ -5689,6 +5689,46 @@ def make_Where():
     return _model(graph, opset=21, ir_version=10, producer_name='onnx-example')
 
 
+def make_WhereBoolInitializer():
+    """Ops: Where (condition given as a bool initializer stored in int32_data, not raw_data)"""
+    graph = helper.make_graph(
+        [helper.make_node("Where", ["cond", "inputA", "inputB"], ["output"])],
+        "WhereBoolInitializerGraph",
+        inputs=[
+            _vi("inputA", FLOAT, [3, 2]),
+        ],
+        outputs=[
+            _vi("output", FLOAT, [3, 2]),
+        ],
+        initializer=[
+            _tensor("cond", BOOL, [3, 1], [True, False, True]),
+            _tensor("inputB", FLOAT, [3, 2], [-1.0, -2.0, -3.0, -4.0, -5.0, -6.0]),
+        ],
+    )
+    return _model(graph, opset=21, ir_version=10)
+
+
+def make_CastUint8Initializer():
+    """Ops: Cast, Add (uint8 initializer stored in int32_data, values above 127)"""
+    graph = helper.make_graph(
+        [
+            helper.make_node("Cast", ["bytes"], ["bytes_f"], to=FLOAT),
+            helper.make_node("Add", ["X", "bytes_f"], ["Y"]),
+        ],
+        "CastUint8InitializerGraph",
+        inputs=[
+            _vi("X", FLOAT, [2, 3]),
+        ],
+        outputs=[
+            _vi("Y", FLOAT, [2, 3]),
+        ],
+        initializer=[
+            _tensor("bytes", UINT8, [2, 3], [0, 1, 127, 128, 200, 255]),
+        ],
+    )
+    return _model(graph, opset=21, ir_version=10)
+
+
 def make_WhereMultidirectionalBroadcast():
     """Ops: Where. Regression test for issue #23523: cond, X, and Y have
     different shapes and ranks that only agree via full multidirectional
@@ -6484,7 +6524,9 @@ MODELS = {
     "TopK": make_TopK,
     "TopKLargestUnsorted": make_TopKLargestUnsorted,
     "TopKWithDynShapeK": make_TopKWithDynShapeK,
+    "CastUint8Initializer": make_CastUint8Initializer,
     "Where": make_Where,
+    "WhereBoolInitializer": make_WhereBoolInitializer,
     "WhereMultidirectionalBroadcast": make_WhereMultidirectionalBroadcast,
     "WhereBroadcastHighRankCond": make_WhereBroadcastHighRankCond,
     "WhereBroadcastEqualElementCount": make_WhereBroadcastEqualElementCount,
@@ -7709,6 +7751,8 @@ TEST_INPUTS = {
     "ReduceProd": [f32([5.0, 2.0, 3.0, 5.0, 5.0, 4.0], (1, 2, 3))],
     "ReshapeAlias": [rand_f32(42, (2, 3))],
     "ReshapeAliasGraphOutput": [rand_f32(43, (2, 3))],
+    "CastUint8Initializer": [f32([0.5, -1.0, 2.0, 0.25, -3.0, 1.5], (2, 3))],
+    "WhereBoolInitializer": [f32(np.arange(6), (3, 2))],
     "SeluAttributes": [f32([-2.0, -0.5, 0.5, 2.0], (1, 4))],
     "Shape": [f32([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (1, 2, 3))],
     "Slice": [rand_f32(1, (20, 10, 5))],
