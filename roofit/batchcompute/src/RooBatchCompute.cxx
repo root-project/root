@@ -34,6 +34,7 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 
 #include <algorithm>
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -209,7 +210,7 @@ public:
    void compute(Config const &, Computer computer, std::span<double> output, VarSpan vars, ArgSpan extraArgs) override;
    double reduceSum(Config const &, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weights,
-                             std::span<const double> offsetProbas) override;
+                             std::span<const double> offsetProbas, bool logProbas) override;
 
    std::unique_ptr<AbsBufferManager> createBufferManager() const override;
 
@@ -292,6 +293,23 @@ inline std::pair<double, double> getLog(double prob, ReduceNLLOutput &out)
    return {std::log(prob), 0.0};
 }
 
+/// Like getLog(), but for a probability that is already given as logarithm.
+inline std::pair<double, double> checkLog(double logProb, ReduceNLLOutput &out)
+{
+   if (std::isnan(logProb)) {
+      out.nNaNValues++;
+      return {logProb, RooNaNPacker::unpackNaN(logProb)};
+   }
+
+   if (logProb == -std::numeric_limits<double>::infinity()) {
+      out.nNonPositiveValues++;
+   } else if (std::isinf(logProb)) {
+      out.nInfiniteValues++;
+   }
+
+   return {logProb, 0.0};
+}
+
 } // namespace
 
 double RooBatchComputeClass::reduceSum(Config const &cfg, InputArr input, size_t n)
@@ -328,6 +346,9 @@ struct NLLPartialResult {
    ReduceNLLOutput counters;
 };
 
+/// With `LogProbas`, the probabilities are given as logarithms. It's a
+/// template parameter, so that no logarithms are evaluated speculatively.
+template <bool LogProbas>
 void reduceNLLRange(std::span<const double> probas, std::span<const double> weights,
                     std::span<const double> offsetProbas, std::size_t begin, std::size_t end, NLLPartialResult &result)
 {
@@ -336,7 +357,8 @@ void reduceNLLRange(std::span<const double> probas, std::span<const double> weig
       if (0. == weights[i])
          continue;
 
-      std::pair<double, double> logOut = getLog(probas.size() == 1 ? probas[0] : probas[i], result.counters);
+      const double proba = probas.size() == 1 ? probas[0] : probas[i];
+      std::pair<double, double> logOut = LogProbas ? checkLog(proba, result.counters) : getLog(proba, result.counters);
       double term = logOut.first;
       result.badness += logOut.second;
 
@@ -350,10 +372,22 @@ void reduceNLLRange(std::span<const double> probas, std::span<const double> weig
    }
 }
 
+void reduceNLLRange(std::span<const double> probas, std::span<const double> weights,
+                    std::span<const double> offsetProbas, bool logProbas, std::size_t begin, std::size_t end,
+                    NLLPartialResult &result)
+{
+   if (logProbas) {
+      reduceNLLRange<true>(probas, weights, offsetProbas, begin, end, result);
+   } else {
+      reduceNLLRange<false>(probas, weights, offsetProbas, begin, end, result);
+   }
+}
+
 } // namespace
 
 ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &cfg, std::span<const double> probas,
-                                                std::span<const double> weights, std::span<const double> offsetProbas)
+                                                std::span<const double> weights, std::span<const double> offsetProbas,
+                                                bool logProbas)
 {
    const std::size_t n = weights.size();
    NLLPartialResult result;
@@ -364,7 +398,8 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &cfg, std::span<con
       std::vector<NLLPartialResult> partials(nChunks);
       parallelForChunks(cfg.nThreads(), n, [&](std::size_t iChunk) {
          const std::size_t begin = chunkBegin(iChunk);
-         reduceNLLRange(probas, weights, offsetProbas, begin, begin + chunkSize(iChunk, n), partials[iChunk]);
+         reduceNLLRange(probas, weights, offsetProbas, logProbas, begin, begin + chunkSize(iChunk, n),
+                        partials[iChunk]);
       });
       // Combine the partial results in fixed chunk order, so that the result
       // doesn't depend on the number of threads.
@@ -376,11 +411,11 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &cfg, std::span<con
          result.counters.nNaNValues += partial.counters.nNaNValues;
       }
    } else {
-      reduceNLLRange(probas, weights, offsetProbas, 0, n, result);
+      reduceNLLRange(probas, weights, offsetProbas, logProbas, 0, n, result);
    }
 #else
    (void)cfg;
-   reduceNLLRange(probas, weights, offsetProbas, 0, n, result);
+   reduceNLLRange(probas, weights, offsetProbas, logProbas, 0, n, result);
 #endif
 
    ReduceNLLOutput out = result.counters;

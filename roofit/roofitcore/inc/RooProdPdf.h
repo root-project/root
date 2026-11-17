@@ -220,6 +220,8 @@ public:
    inline bool selfNormalized() const override { return true; }
 
    inline bool canComputeBatchWithCuda() const override { return true; }
+   inline bool canOutputLogarithm() const override { return !_isRearranged; }
+   inline bool canUseLogarithmOf(RooAbsArg const &, bool outputsLogarithm) const override { return outputsLogarithm; }
 
    void doEval(RooFit::EvalContext &ctx) const override;
 

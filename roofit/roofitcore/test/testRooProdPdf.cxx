@@ -159,6 +159,92 @@ TEST(RooProdPdf, NonFactorizingProductLikelihood)
    }
 }
 
+/// The joint probability of a product of many pdfs, like an HS3 array
+/// distribution, underflows, but the likelihood should still be finite. Covers
+/// factors that can evaluate their logarithm directly (Gaussian), factors that
+/// can't (Exponential), and a mix of both. Covers GitHub issue #24202.
+TEST(RooProdPdf, ManyFactorsLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   constexpr int nFactors = 300;
+
+   for (std::string kind : {"Gaussian", "Exponential", "Mixed"}) {
+      RooWorkspace ws;
+      RooArgList factors;
+      RooArgSet obs;
+      for (int i = 0; i < nFactors; ++i) {
+         const std::string idx = std::to_string(i);
+         if (kind == "Gaussian" || (kind == "Mixed" && i % 2 == 0)) {
+            ws.factory("Gaussian::f" + idx + "(x" + idx + "[0, -10, 10], theta[0, -2, 2], 1.0)");
+         } else {
+            ws.factory("Exponential::f" + idx + "(x" + idx + "[1, 0, 10], c[-1, -2, -0.5])");
+         }
+         factors.add(*ws.pdf("f" + idx));
+         obs.add(*ws.var("x" + idx));
+      }
+      RooProdPdf prod{"prod", "prod", factors};
+
+      RooRealVar w{"w", "w", 1.0};
+      RooArgSet vars{obs};
+      vars.add(w);
+      RooDataSet data{"data", "data", vars, RooFit::WeightVar(w)};
+      for (double val : {3.0, 4.0}) {
+         for (auto *x : static_range_cast<RooRealVar *>(obs)) {
+            x->setVal(val);
+         }
+         data.add(obs, val);
+      }
+
+      std::unique_ptr<RooAbsReal> nll{prod.createNLL(data, RooFit::EvalBackend::Cpu())};
+
+      double ref = 0.0;
+      for (int i = 0; i < data.numEntries(); ++i) {
+         obs.assign(*data.get(i));
+         for (auto *factor : static_range_cast<RooAbsPdf *>(factors)) {
+            ref -= data.weight() * factor->getLogVal(&obs);
+         }
+      }
+      EXPECT_NEAR(nll->getVal(), ref, 1e-10 * std::abs(ref)) << kind;
+   }
+}
+
+/// Like ManyFactorsLikelihood, but with the product as a constraint term.
+TEST(RooProdPdf, ManyFactorsConstraint)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   constexpr int nFactors = 300;
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::model(x[0, -10, 10], theta[0.5, -2, 2], 1.0)");
+   RooArgList constraints;
+   RooArgSet globs;
+   for (int i = 0; i < nFactors; ++i) {
+      const std::string idx = std::to_string(i);
+      ws.factory("Gaussian::c" + idx + "(g" + idx + "[3.5, -10, 10], theta, 1.0)");
+      constraints.add(*ws.pdf("c" + idx));
+      globs.add(*ws.var("g" + idx));
+   }
+   RooProdPdf constraint{"constraint", "constraint", constraints};
+
+   RooRealVar &x = *ws.var("x");
+   RooDataSet data{"data", "data", x};
+   data.add(x);
+
+   using namespace RooFit;
+   RooAbsPdf &model = *ws.pdf("model");
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(data, EvalBackend::Cpu())};
+   std::unique_ptr<RooAbsReal> nllConstr{
+      model.createNLL(data, EvalBackend::Cpu(), ExternalConstraints(constraint), GlobalObservables(globs))};
+
+   double ref = nll->getVal();
+   for (auto *c : static_range_cast<RooAbsPdf *>(constraints)) {
+      ref -= c->getLogVal(&globs);
+   }
+   EXPECT_NEAR(nllConstr->getVal(), ref, 1e-10 * std::abs(ref));
+}
+
 /// This test covers a potential problem with the custom normalization ranges
 /// of PDFs: the value of a RooProdPdf should not depend on the normalization
 /// ranges of its clients. TODO: this is still a problem! It needs to be fixed,

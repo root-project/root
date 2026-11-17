@@ -43,6 +43,7 @@ public:
   }
 
   void doEval(RooFit::EvalContext &) const override;
+  bool canUseLogarithmOf(RooAbsArg const &, bool) const override { return true; }
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 

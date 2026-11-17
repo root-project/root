@@ -373,6 +373,12 @@ void RooNLLVarNew::doEvalChi2(RooFit::EvalContext &ctx, std::span<const double> 
    finalizeResult(ctx, result, sumWeightKahanSum.Sum());
 }
 
+/// The unbinned likelihood can directly take the logarithms of the pdf values.
+bool RooNLLVarNew::canUseLogarithmOf(RooAbsArg const &server, bool /*outputsLogarithm*/) const
+{
+   return _statistic == Statistic::NLL && !_binnedL && &server == &*_func;
+}
+
 void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
 {
    std::span<const double> weights = ctx.at(_weightVar);
@@ -397,7 +403,8 @@ void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
    }
 
    auto nllOut = RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights,
-                                            _doBinOffset ? ctx.at(*_offsetPdf) : std::span<const double>{});
+                                            _doBinOffset ? ctx.at(*_offsetPdf) : std::span<const double>{},
+                                            ctx.outputsLogarithm(&*_func));
 
    if (nllOut.nInfiniteValues > 0) {
       oocoutW(&*_func, Eval) << "RooAbsPdf::getLogVal(" << _func->GetName()

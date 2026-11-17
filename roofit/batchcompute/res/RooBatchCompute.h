@@ -110,6 +110,7 @@ enum Computer {
    Polynomial,
    Power,
    ProdPdf,
+   LogProdPdf,
    Ratio,
    TruthModelExpBasis,
    TruthModelSinBasis,
@@ -191,8 +192,10 @@ public:
    virtual void compute(Config const &cfg, Computer, std::span<double> output, VarSpan, ArgSpan) = 0;
 
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
+   /// Reduce the probabilities to the negative log-likelihood. With
+   /// `logProbas`, the probabilities are given as logarithms.
    virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weights,
-                                     std::span<const double> offsetProbas) = 0;
+                                     std::span<const double> offsetProbas, bool logProbas) = 0;
 
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
@@ -247,10 +250,10 @@ inline double reduceSum(Config cfg, InputArr input, size_t n)
 }
 
 inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std::span<const double> weights,
-                                 std::span<const double> offsetProbas)
+                                 std::span<const double> offsetProbas, bool logProbas = false)
 {
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
-   return dispatch->reduceNLL(cfg, probas, weights, offsetProbas);
+   return dispatch->reduceNLL(cfg, probas, weights, offsetProbas, logProbas);
 }
 
 std::string getBatchComputeChoice();
