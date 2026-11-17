@@ -1562,6 +1562,19 @@ namespace {
 
     IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay =
         new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem());
+
+    // Push any -ivfsoverlay files onto Cling's OverlayFileSystem directly,
+    // and clear HeaderSearchOpts.VFSOverlayFiles so CI->createVirtualFileSystem()
+    // keeps `Overlay` as the outer OverlayFileSystem (required by line 840's static_cast).
+    for (const std::string &VFSFile : CI->getHeaderSearchOpts().VFSOverlayFiles) {
+      auto Buffer = llvm::MemoryBuffer::getFile(VFSFile);
+      if (Buffer) {
+        if (auto VFS = llvm::vfs::getVFSFromYAML(std::move(*Buffer), nullptr, VFSFile))
+          Overlay->pushOverlay(std::move(VFS));
+      }
+    }
+    CI->getHeaderSearchOpts().VFSOverlayFiles.clear();
+
     CI->createVirtualFileSystem(Overlay);
     CI->createFileManager();
     llvm::vfs::FileSystem &VFS = CI->getVirtualFileSystem();
