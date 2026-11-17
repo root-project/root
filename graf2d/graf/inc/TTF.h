@@ -14,6 +14,11 @@
 #ifndef ROOT_TTF
 #define ROOT_TTF
 
+#if !defined(ROOT_TTFsupport) && !defined(G__DICTIONARY)
+#warning "This header is deprecated and will be removed after ROOT 7. Use instead TTFhandle public interface."
+#endif
+
+
 #include "Rtypes.h"
 
 
