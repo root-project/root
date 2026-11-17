@@ -443,25 +443,31 @@ void TQt6PadPainter::DrawTTFglyphs(Int_t px, Int_t py, TTFhandle &ttf, [[maybe_u
       UInt_t width = 0, rows = 0, pitch = 0;
       if (!ttf.GetGlyphData(nglyph, bx, by, buffer, width, rows, pitch))
          continue;
+      QImage glyphImg(
+            buffer,
+            width,
+            rows,
+            pitch,
+            ttf.GetSmoothing() ? QImage::Format_Indexed8 : QImage::Format_Mono
+         );
 
-      QImage colorFill(width, rows, QImage::Format_ARGB32);
-      colorFill.fill(textColor);
+      if (ttf.GetSmoothing()) {
+         auto maxAlpha = textColor.alpha();
+         QList<QRgb> colorTable(256);
+         for (int i = 0; i < 256; ++i) {
+            // Scale the coverage (0..255) by the QColor's own alpha
+            int alpha = (i * maxAlpha) / 255;
+            colorTable[i] = qRgba(textColor.red(), textColor.green(), textColor.blue(), alpha);
+         }
+          glyphImg.setColorTable(colorTable);
+      } else {
+         glyphImg.setColorTable({
+            qRgba(0, 0, 0, 0),       // 0 bit: transparent
+            textColor.rgba()
+         });
+      }
 
-      QPainter maskPainter(&colorFill);
-
-      QImage maskImage(
-         buffer,
-         width,
-         rows,
-         pitch,
-         QImage::Format_Alpha8
-      );
-
-      maskPainter.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-      maskPainter.drawImage(0, 0, maskImage);
-      maskPainter.end();
-
-      painter->drawImage(QPoint(px + bx, py + by), colorFill);
+      painter->drawImage(QPoint(px + bx, py + by), glyphImg);
    }
 }
 
