@@ -11,6 +11,9 @@
 #include <RooRandom.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
+#include <RooWorkspace.h>
+
+#include <TMath.h>
 
 #include "gtest_wrapper.h"
 
@@ -298,6 +301,33 @@ TEST(RooNaNPacker, CudaEvalErrorParity)
    RooAbsReal::setEvalErrorLoggingMode(prevErrorLoggingMode);
 }
 #endif // ROOFIT_CUDA
+
+/// A negative normalization integral is packed into the NaN as badness, also
+/// if the pdf is evaluated in logarithmic scale.
+TEST(RooNaNPacker, NegativeNormIntegralBadness)
+{
+   const auto prevErrorLoggingMode = RooAbsReal::evalErrorLoggingMode();
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss(x[0, -10, 10], mean[0, -5, 5], sigma[1, -5, 5])");
+   RooRealVar &x = *ws.var("x");
+   RooDataSet data{"data", "data", x};
+   for (double val : {0.1, -0.3, 1.5}) {
+      x.setVal(val);
+      data.add(x);
+   }
+
+   std::unique_ptr<RooAbsReal> nll{ws.pdf("gauss")->createNLL(data, RooFit::EvalBackend::Cpu())};
+   ws.var("sigma")->setVal(-1.0);
+   const double val = nll->getVal();
+
+   // Each event contributes the negative integral sqrt(2 pi) * sigma.
+   EXPECT_TRUE(RooNaNPacker::isNaNWithPayload(val));
+   EXPECT_NEAR(RooNaNPacker::unpackNaN(val), 3 * std::sqrt(2 * TMath::Pi()), 1e-5);
+
+   RooAbsReal::setEvalErrorLoggingMode(prevErrorLoggingMode);
+}
 
 /// Make coefficients of RooAddPdf sum to more than 1. Fitter should recover from this.
 TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)

@@ -499,6 +499,11 @@ public:
    /// derived class that overrides doEval() without supporting this must also
    /// override this function to return false.
    virtual bool canOutputLogarithm() const { return false; }
+   /// Whether doEval() accepts the logarithm of the given value server instead
+   /// of its value. It then has to check `ctx.outputsLogarithm(&server)` to
+   /// know which of the two it gets. `outputsLogarithm` tells if this node
+   /// itself outputs its logarithm.
+   virtual bool canUseLogarithmOf(RooAbsArg const & /*server*/, bool /*outputsLogarithm*/) const { return false; }
    virtual bool canComputeBatchWithCuda() const { return false; }
    virtual bool isReducerNode() const { return false; }
 

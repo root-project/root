@@ -309,7 +309,8 @@ public:
    /// Return the sum of an input array
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
-                             std::span<const double> weights, std::span<const double> offsetProbas) override;
+                             std::span<const double> weights, std::span<const double> offsetProbas,
+                             bool logProbas) override;
 
    std::unique_ptr<AbsBufferManager> createBufferManager() const override;
 
@@ -405,9 +406,10 @@ __global__ void kahanSum(const double *__restrict__ input, const double *__restr
 /// into a "badness" value that the host can pack into a NaN for the error
 /// recovery in the minimizer. The `stats` output has the layout
 /// [badness, nNonPositive, nNaN, nInfinite] and must be zero-initialized.
+/// With `logProbas`, the probabilities are given as logarithms.
 __global__ void nllSumKernel(const double *__restrict__ probas, const double *__restrict__ weights,
                              const double *__restrict__ offsetProbas, size_t nProbas, double scalarProba,
-                             size_t nWeights, double *__restrict__ result, double *__restrict__ stats)
+                             bool logProbas, size_t nWeights, double *__restrict__ result, double *__restrict__ stats)
 {
    int thIdx = threadIdx.x;
    int gthIdx = thIdx + blockIdx.x * blockSize;
@@ -433,7 +435,17 @@ __global__ void nllSumKernel(const double *__restrict__ probas, const double *__
       }
       const double proba = nProbas == 1 ? scalarProba : probas[i];
       double term;
-      if (proba <= 0.0) {
+      if (logProbas) {
+         if (std::isnan(proba)) {
+            ++nNaN;
+            badness += RooNaNPacker::unpackNaN(proba);
+         } else if (proba == -INFINITY) {
+            ++nNonPositive;
+         } else if (std::isinf(proba)) {
+            ++nInfinite;
+         }
+         term = proba;
+      } else if (proba <= 0.0) {
          ++nNonPositive;
          badness += -proba;
          term = std::log(proba);
@@ -496,7 +508,8 @@ double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, Input
 }
 
 ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
-                                                std::span<const double> weights, std::span<const double> offsetProbas)
+                                                std::span<const double> weights, std::span<const double> offsetProbas,
+                                                bool logProbas)
 {
    ReduceNLLOutput out;
    if (probas.empty()) {
@@ -528,7 +541,7 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
 
    nllSumKernel<<<gridSize, blockSize, shMemSize, stream>>>(
       probas.data(), weights.data(), offsetProbas.empty() ? nullptr : offsetProbas.data(), probas.size(),
-      probas.size() == 1 ? probas[0] : 0.0, weights.size(), devOut + 6, devOut + 2);
+      probas.size() == 1 ? probas[0] : 0.0, logProbas, weights.size(), devOut + 6, devOut + 2);
 
    kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut + 6, devOut + 6 + gridSize, gridSize, devOut, 0);
 

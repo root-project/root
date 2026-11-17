@@ -33,8 +33,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooAbsReal.h>
 #include <RooRealVar.h>
 #include <RooBatchCompute.h>
-#include <RooConstraintSum.h>
-#include <RooFit/Detail/RooNormalizedPdf.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
 #include <RooSimultaneous.h>
@@ -223,50 +221,6 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
 
    syncDataTokens();
 
-   // This is an optimization for Gaussian constraint terms, of which there are
-   // many in big fits. To Avoid taking the the exponential and then the
-   // logarithm for the constraint term, we request that all normalized pdfs
-   // that have only the RooConstraintSum as a value client are evaluating
-   // their logarithms, which the RooConstrantSum::doEval() then assumes.
-   // Note that we don't need to consider the GPU evaluation path here, because
-   // scalar terms like the constraints are always evaluated on the CPU.
-   for (NodeInfo &info : _nodes) {
-      if (!dynamic_cast<RooConstraintSum const *>(info.absArg)) {
-         continue;
-      }
-      for (RooAbsArg *server : info.absArg->servers()) {
-         if (!server->canOutputLogarithm()) {
-            continue;
-         }
-         // If the pdf has clients other than the RooConstraintSum, we can't do
-         // the log optimization.
-         if (server->clients().size() != 1) {
-            continue;
-         }
-         auto &outputsLogarithm = _evalContextCPU._outputsLogarithm;
-         if (auto normPdf = dynamic_cast<RooFit::Detail::RooNormalizedPdf const *>(server)) {
-            // If this is a normalized pdf, we also request the log of the pdf
-            // value and normalization integral.
-            // Disable the optimization if the computation graph doesn't have
-            // the expected structure, for safety. The unnormalized pdf has two
-            // clients: the integral, and the RooNormalizedPdf.
-            bool const canOptimizePdf = normPdf->pdf().canOutputLogarithm() && normPdf->pdf().clients().size() == 2;
-            bool const canOptimizeNormIntegral =
-               normPdf->normIntegral().canOutputLogarithm() && normPdf->normIntegral().clients().size() == 1;
-            // If the servers can't be optimized, no gain in optimizing the
-            // normalized pdf.
-            if (!canOptimizePdf || !canOptimizeNormIntegral) {
-               continue;
-            }
-            // Only now set the flags, such that the log optimization for
-            // the normalized pdf and its servers is enabled atomically.
-            outputsLogarithm[normPdf->pdf().dataToken()] = true;
-            outputsLogarithm[normPdf->normIntegral().dataToken()] = true;
-         }
-         outputsLogarithm[server->dataToken()] = true;
-      }
-   }
-
    if (_useGPU) {
       // Create the single CUDA stream on which all GPU computations and data
       // transfers of this Evaluator are enqueued. The graph is evaluated in
@@ -279,6 +233,8 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
          _evalContextCUDA.setConfig(info.absArg, cfg);
       }
    }
+
+   setupLogEvaluation();
 }
 
 /// If there are servers with the same name that got de-duplicated in the
@@ -297,6 +253,29 @@ void Evaluator::syncDataTokens()
             ++iValueServer;
          }
       }
+   }
+}
+
+/// Request nodes to output their logarithms if their only value client takes
+/// the logarithm anyway, like the RooNLLVarNew and RooConstraintSum do. This
+/// avoids exp() -> log() roundtrips, e.g. for Gaussian constraints, and the
+/// underflow of products with many factors. Nodes that output their
+/// logarithms can request the same from their servers, e.g. the factors of a
+/// product. Only implemented for nodes evaluated on the CPU.
+void Evaluator::setupLogEvaluation()
+{
+   // Visit clients before their servers, because whether a client can use a
+   // logarithm can depend on its own output mode.
+   for (auto iter = _nodes.rbegin(); iter != _nodes.rend(); ++iter) {
+      NodeInfo &info = *iter;
+      bool outputsLogarithm = false;
+      if (info.clientInfos.size() == 1 && !info.fromArrayInput && !info.computeInGPU &&
+          info.absArg->canOutputLogarithm()) {
+         NodeInfo const &client = *info.clientInfos[0];
+         outputsLogarithm = !client.computeInGPU && client.absArg->canUseLogarithmOf(
+                                                       *info.absArg, _evalContextCPU._outputsLogarithm[client.iNode]);
+      }
+      _evalContextCPU._outputsLogarithm[info.iNode] = outputsLogarithm;
    }
 }
 
@@ -389,6 +368,9 @@ void Evaluator::updateOutputSizes()
    if (_useGPU) {
       markGPUNodes();
    }
+
+   // Which nodes are inputs or evaluated on the GPU might have changed.
+   setupLogEvaluation();
 
    _needToUpdateOutputSizes = false;
 }

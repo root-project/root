@@ -62,6 +62,7 @@ public:
    void doEval(RooFit::EvalContext &) const override;
    bool canComputeBatchWithCuda() const override { return _statistic == Statistic::NLL && !_binnedL; }
    bool isReducerNode() const override { return true; }
+   bool canUseLogarithmOf(RooAbsArg const &server, bool outputsLogarithm) const override;
 
    void setPrefix(std::string const &prefix);
 
