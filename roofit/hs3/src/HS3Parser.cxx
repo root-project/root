@@ -385,44 +385,16 @@ void describe(Reader &ar, CategoricalAxis &axis)
    }
 }
 
-namespace {
-
 // The kind of an axis is determined by its components.
-template <class ContinuousAxis_t>
-void readAxis(Cursor const &c, std::variant<ContinuousAxis_t, CategoricalAxis> &out)
+template <class Axis_t>
+void describe(Reader &ar, std::variant<Axis_t, CategoricalAxis> &out)
 {
-   if (!c.node().is_map()) {
-      c.error("must be a struct");
-      return;
-   }
-   Reader reader{c};
    // A fixed axis is not categorical. That it has no categories is checked when it is read.
-   if (reader.has("categories") && !(std::is_same_v<ContinuousAxis_t, DomainAxis> && reader.has("value"))) {
-      CategoricalAxis axis;
-      describe(reader, axis);
-      out = std::move(axis);
+   if (ar.has("categories") && !(std::is_same_v<Axis_t, DomainAxis> && ar.has("value"))) {
+      describe(ar, out.template emplace<CategoricalAxis>());
    } else {
-      ContinuousAxis_t axis;
-      describe(reader, axis);
-      out = std::move(axis);
+      describe(ar, out.template emplace<Axis_t>());
    }
-}
-
-} // namespace
-
-void readValue(Cursor const &c, std::variant<DomainAxis, CategoricalAxis> &out)
-{
-   readAxis(c, out);
-}
-
-void readValue(Cursor const &c, std::variant<ContinuousAxis, CategoricalAxis> &out)
-{
-   readAxis(c, out);
-}
-
-void readValue(Cursor const &c, std::variant<BinnedAxis, CategoricalAxis> &out)
-{
-   readAxis(c, out);
 }
 
 void describe(Reader &ar, Domain &domain)
@@ -437,13 +409,8 @@ void describe(Reader &ar, Domain &domain)
    ar.optional("axes", domain.axes);
 }
 
-void readValue(Cursor const &c, ParameterValue &out)
+void describe(Reader &ar, ParameterValue &out)
 {
-   if (!c.node().is_map()) {
-      c.error("must be a struct");
-      return;
-   }
-   Reader ar{c};
    ar("name", out.name);
    if (ar.has("value")) {
       Cursor crsr = ar.child("value");
@@ -620,34 +587,21 @@ void readCombinedData(Reader &ar, std::string const &name, CombinedData &data)
    }
 }
 
-void readValue(Cursor const &c, Data &out)
+void describe(Reader &ar, Data &out)
 {
-   if (!c.node().is_map()) {
-      c.error("must be a struct");
-      return;
-   }
-   Reader ar{c};
    ar("name", out.name);
    std::string type;
    ar("type", type);
    if (type == "binned") {
-      BinnedData body;
-      describe(ar, body);
-      out.body = std::move(body);
+      describe(ar, out.body.emplace<BinnedData>());
    } else if (type == "unbinned") {
-      UnbinnedData body;
-      describe(ar, body);
-      out.body = std::move(body);
+      describe(ar, out.body.emplace<UnbinnedData>());
    } else if (type == "point") {
-      PointData body;
-      describe(ar, body);
-      out.body = std::move(body);
+      describe(ar, out.body.emplace<PointData>());
    } else if (type == "combined") {
-      CombinedData body;
-      readCombinedData(ar, out.name, body);
-      out.body = std::move(body);
+      readCombinedData(ar, out.name, out.body.emplace<CombinedData>());
    } else if (ar.has("type")) {
-      c.error("unknown type of dataset '" + type + "'");
+      ar.cursor().error("unknown type of dataset '" + type + "'");
    }
 }
 
@@ -979,37 +933,28 @@ void describe(Reader &ar, CustomModifier &m)
    ar("name", m.name);
 }
 
-void readValue(Cursor const &c, Modifier &out)
+void describe(Reader &ar, Modifier &out)
 {
-   if (!c.node().is_map()) {
-      c.error("must be a struct");
-      return;
-   }
-   Reader ar{c};
    std::string type;
    ar("type", type);
-   auto read = [&](auto modifier) {
-      describe(ar, modifier);
-      out = std::move(modifier);
-   };
    if (type == "normfactor") {
-      read(NormFactor{});
+      describe(ar, out.emplace<NormFactor>());
    } else if (type == "normsys") {
-      read(NormSys{});
+      describe(ar, out.emplace<NormSys>());
    } else if (type == "histosys") {
-      read(HistoSys{});
+      describe(ar, out.emplace<HistoSys>());
    } else if (type == "shapesys" || type == "shapefactor") {
-      read(ShapeSys{});
+      describe(ar, out.emplace<ShapeSys>());
    } else if (type == "staterror") {
-      read(StatError{});
+      describe(ar, out.emplace<StatError>());
    } else if (type == "custom") {
-      read(CustomModifier{});
+      describe(ar, out.emplace<CustomModifier>());
    } else if (ar.has("type")) {
       std::string name;
       if (ar.has("name")) {
          ar("name", name);
       }
-      c.error("modifier '" + name + "' of unknown type '" + type + "'");
+      ar.cursor().error("modifier '" + name + "' of unknown type '" + type + "'");
    }
 }
 
@@ -1077,18 +1022,13 @@ void readDistribution(Cursor const &c, Distribution &out, ParseOptions const &op
 
 } // namespace
 
-void readValue(Cursor const &c, Function &out)
+void describe(Reader &ar, Function &out)
 {
-   if (!c.node().is_map()) {
-      c.error("must be a struct");
-      return;
-   }
-   Reader ar{c};
    ar("name", out.name);
    ar("type", out.body.type);
-   out.body.node = &c.node();
+   out.body.node = &ar.cursor().node();
    // The importers read the other components.
-   for (JSONNode const &child : c.node().children()) {
+   for (JSONNode const &child : out.body.node->children()) {
       ar.has(child.key().c_str());
    }
 }
@@ -1417,6 +1357,13 @@ Function_t parseInterpolated(JSONNode const &node, Diagnostics &diagnostics, Int
 }
 
 } // namespace
+
+Data parseData(JSONNode const &data, Diagnostics &diagnostics)
+{
+   Data out;
+   readValue(Cursor{data, diagnostics}, out);
+   return out;
+}
 
 std::vector<BinnedAxis> parseBinnedAxes(JSONNode const &axes, Diagnostics &diagnostics)
 {

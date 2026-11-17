@@ -31,7 +31,6 @@
 
 #include "JSONIOUtils.h"
 #include "HS3Builder.h"
-#include "HS3Schema.h"
 #include "JSONReadRecorder.h"
 
 #include <TROOT.h>
@@ -3936,8 +3935,7 @@ void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std:
       this->importVariableElement(n);
    } else if (isData) {
       HS3::Diagnostics diagnostics;
-      HS3::Data data;
-      readValue(HS3::Cursor{n, diagnostics}, data);
+      HS3::Data data = HS3::parseData(n, diagnostics);
       HS3::report(diagnostics);
       _workspace.import(*loadData(data, _workspace, nullptr), RooFit::Silence());
    } else {

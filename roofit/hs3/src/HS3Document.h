@@ -566,6 +566,9 @@ HS3Document parseDocument(Detail::JSONNode const &root, Diagnostics &diagnostics
 /// Reads a HistFactory distribution that doesn't come with a document.
 HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
 
+/// Reads a data set that doesn't come with a document.
+Data parseData(Detail::JSONNode const &data, Diagnostics &diagnostics);
+
 /// Reads the axes of binned data that doesn't come with a document.
 std::vector<BinnedAxis> parseBinnedAxes(Detail::JSONNode const &axes, Diagnostics &diagnostics);
 

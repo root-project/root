@@ -95,8 +95,6 @@ void readValue(Cursor const &c, std::string &out);
 void readValue(Cursor const &c, double &out);
 void readValue(Cursor const &c, int &out);
 void readValue(Cursor const &c, bool &out);
-void readValue(Cursor const &c, ParameterValue &out);
-void readValue(Cursor const &c, Data &out);
 void readValue(Cursor const &c, Interpolation &out);
 void readValue(Cursor const &c, NameOrNumber &out);
 
