@@ -73,6 +73,20 @@ namespace RooFit::Experimental {
 
 namespace {
 
+/// Code for the sum of the logarithms of the given servers of `in`. Each term
+/// is added in a separate statement, because the compiler and Clad recurse for
+/// every operator of an expression, which overflows the stack for sums with
+/// several thousand terms.
+std::string sumOfLogs(RooAbsArg const &in, RooAbsCollection const &args, CodegenContext &ctx)
+{
+   const std::string sum = ctx.getTmpVarName();
+   ctx.addToCodeBody(&in, "double " + sum + " = 0.0;\n");
+   for (RooAbsArg *arg : args) {
+      ctx.addToCodeBody(&in, sum + " += " + ctx.getLogResult(*arg) + ";\n");
+   }
+   return sum;
+}
+
 // Return a stringy-field version of the value, formatted to maximum precision.
 std::string doubleToString(double val)
 {
@@ -428,7 +442,7 @@ void codegenImpl(RooConstVar &arg, CodegenContext &ctx)
 
 void codegenImpl(RooConstraintSum &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, ctx.buildCall(mathFunc("constraintSum"), arg.list(), arg.list().size()));
+   ctx.addResult(&arg, "-" + sumOfLogs(arg, arg.list(), ctx));
 }
 
 // Generate RooFit codegen wrappers for RooFunctorBinding and similar objects,
@@ -692,7 +706,10 @@ void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
    // brackets of the loop is written at the end of the scopes lifetime.
    {
       auto scope = ctx.beginLoop(&arg);
-      std::string term = ctx.buildCall(mathFunc("nll"), arg.func(), arg.weightVar(), arg.binnedL(), 0);
+      // The unbinned likelihood takes the logarithm of the pdf directly, so
+      // that e.g. products of many factors don't underflow.
+      std::string term = arg.binnedL() ? ctx.buildCall(mathFunc("nll"), arg.func(), arg.weightVar(), 0)
+                                       : "-(" + ctx.getResult(arg.weightVar()) + ") * " + ctx.getLogResult(arg.func());
       ctx.addToCodeBody(&arg, resName + " += " + term + ";");
    }
    if (arg.expectedEvents()) {
@@ -705,6 +722,29 @@ void codegenImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx)
 {
    // For now just return function/normalization integral.
    ctx.addResult(&arg, ctx.getResult(arg.pdf()) + "/" + ctx.getResult(arg.normIntegral()));
+}
+
+std::string codegenLogImpl(RooAbsArg &arg, CodegenContext &ctx)
+{
+   return "std::log(" + ctx.getResult(arg) + ")";
+}
+
+std::string codegenLogImpl(RooFit::Detail::RooFixedProdPdf &arg, CodegenContext &ctx)
+{
+   if (arg.isRearranged()) {
+      return codegenLogImpl(static_cast<RooAbsArg &>(arg), ctx);
+   }
+   return sumOfLogs(arg, *arg.partList(), ctx);
+}
+
+std::string codegenLogImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx)
+{
+   return ctx.getLogResult(arg.pdf()) + " - " + ctx.getLogResult(arg.normIntegral());
+}
+
+std::string codegenLogImpl(RooGaussian &arg, CodegenContext &ctx)
+{
+   return ctx.buildCall(mathFunc("logGaussian"), arg.getX(), arg.getMean(), arg.getSigma());
 }
 
 // Support for the deprecated RooParamHistFunc, to be removed in ROOT 6.46
