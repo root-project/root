@@ -202,6 +202,15 @@ void TTFhandle::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text)
 
 void TTFhandle::LayoutGlyphs()
 {
+   // fix smoothing, kerning and hinting
+   // do not depend from this point from global values
+   if (fSmoothing.Undef())
+      SetSmoothing(GetSmoothingPrefer());
+   if (fHinting.Undef())
+      SetHinting(GetHintingPrefer());
+   if (fKerning.Undef())
+      SetKerning(GetKerningPrefer());
+
    FT_Vector origin;
    FT_UInt   load_flags;
    FT_UInt   prev_index = 0;
