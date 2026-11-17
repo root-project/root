@@ -644,6 +644,27 @@ __rooglobal__ void computeLognormalStandard(Batches &batches)
    }
 }
 
+/// Add the evaluation error counts of the normalization compute functions to
+/// the first three extra args.
+__roodevice__ inline void addEvalErrorCounts(Batches &batches, int nType0, int nType1, int nType2)
+{
+   // The counters live in memory that is shared between all threads in the
+   // CUDA case, so they need to be accumulated atomically there. On the CPU,
+   // every task works on its own copy of the extra args.
+#ifdef __CUDACC__
+   if (nType0 > 0)
+      atomicAdd(&batches.extra[0], double(nType0));
+   if (nType1 > 0)
+      atomicAdd(&batches.extra[1], double(nType1));
+   if (nType2 > 0)
+      atomicAdd(&batches.extra[2], double(nType2));
+#else
+   batches.extra[0] = batches.extra[0] + nType0;
+   batches.extra[1] = batches.extra[1] + nType1;
+   batches.extra[2] = batches.extra[2] + nType2;
+#endif
+}
+
 __rooglobal__ void computeNormalizedPdf(Batches &batches)
 {
    auto rawVal = batches.args[0];
@@ -674,23 +695,80 @@ __rooglobal__ void computeNormalizedPdf(Batches &batches)
       batches.output[i] = out;
    }
 
-   // The counters live in memory that is shared between all threads in the
-   // CUDA case, so they need to be accumulated atomically there. Note that
-   // the CPU branch below is only safe because the CPU implementation runs
-   // single-threaded: with implicit multi-threading, the workers would share
-   // this memory as well and would also need atomic accumulation.
-#ifdef __CUDACC__
-   if (nEvalErrorsType0 > 0)
-      atomicAdd(&batches.extra[0], double(nEvalErrorsType0));
-   if (nEvalErrorsType1 > 0)
-      atomicAdd(&batches.extra[1], double(nEvalErrorsType1));
-   if (nEvalErrorsType2 > 0)
-      atomicAdd(&batches.extra[2], double(nEvalErrorsType2));
-#else
-   batches.extra[0] = batches.extra[0] + nEvalErrorsType0;
-   batches.extra[1] = batches.extra[1] + nEvalErrorsType1;
-   batches.extra[2] = batches.extra[2] + nEvalErrorsType2;
-#endif
+   addEvalErrorCounts(batches, nEvalErrorsType0, nEvalErrorsType1, nEvalErrorsType2);
+}
+
+/// Logarithm of the normalized pdf for one event, with the same evaluation
+/// errors as computeNormalizedPdf().
+template <bool NumIsLog>
+__roodevice__ inline double logNormalizedPdf(double num, double den, double logDen, int *nEvalErrors)
+{
+   const bool numIsZero = NumIsLog ? num == -INFINITY : num == 0.;
+   const bool numIsNegative = !NumIsLog && num < 0.;
+   if (den < 0. || (den == 0. && !numIsZero)) {
+      nEvalErrors[0]++;
+      return RooNaNPacker::packFloatIntoNaN(-den + (numIsNegative ? -num : 0.));
+   }
+   if (numIsNegative) {
+      nEvalErrors[1]++;
+      return RooNaNPacker::packFloatIntoNaN(-num);
+   }
+   if (std::isnan(num)) {
+      nEvalErrors[2]++;
+      return num;
+   }
+   return numIsZero ? -INFINITY : (NumIsLog ? num : std::log(num)) - logDen;
+}
+
+/// The input modes are template parameters, so that no logarithms are
+/// evaluated speculatively.
+template <bool NumIsLog, bool ScalarDen>
+__roodevice__ inline void computeLogNormalizedPdfImpl(Batches &batches)
+{
+   auto rawVal = batches.args[0];
+   auto normVal = batches.args[1];
+   const double scalarLogDen = ScalarDen ? std::log(normVal[0]) : 0.;
+   int nEvalErrors[3] = {0, 0, 0};
+
+   // Loop without branches for the regular events, which the compiler can
+   // vectorize if no logarithms are taken. The other events, with evaluation
+   // errors or zero pdf values, are recomputed afterwards.
+   auto isRegular = [&](std::size_t i) {
+      return normVal[i] > 0. && (NumIsLog ? rawVal[i] > -INFINITY : rawVal[i] > 0.);
+   };
+   bool allRegular = true;
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      const double logNum = NumIsLog ? rawVal[i] : std::log(rawVal[i]);
+      batches.output[i] = logNum - (ScalarDen ? scalarLogDen : std::log(normVal[i]));
+      allRegular &= isRegular(i);
+   }
+   if (!allRegular) {
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+         if (!isRegular(i)) {
+            const double logDen = ScalarDen ? scalarLogDen : std::log(normVal[i]);
+            batches.output[i] = logNormalizedPdf<NumIsLog>(rawVal[i], normVal[i], logDen, nEvalErrors);
+         }
+      }
+   }
+
+   addEvalErrorCounts(batches, nEvalErrors[0], nEvalErrors[1], nEvalErrors[2]);
+}
+
+/// Like computeNormalizedPdf(), but outputs the logarithm. The pdf values are
+/// given as logarithms if `extra[3]` is nonzero.
+__rooglobal__ void computeLogNormalizedPdf(Batches &batches)
+{
+   const bool numIsLog = batches.extra[3] != 0.;
+   const bool scalarDen = !batches.args[1]._isVector;
+   if (numIsLog && scalarDen) {
+      computeLogNormalizedPdfImpl<true, true>(batches);
+   } else if (numIsLog) {
+      computeLogNormalizedPdfImpl<true, false>(batches);
+   } else if (scalarDen) {
+      computeLogNormalizedPdfImpl<false, true>(batches);
+   } else {
+      computeLogNormalizedPdfImpl<false, false>(batches);
+   }
 }
 
 /* TMath::ASinH(x) needs to be replaced with ln( x + sqrt(x^2+1))
@@ -1042,6 +1120,7 @@ std::vector<void (*)(Batches &)> getFunctions()
            computeLognormalStandard,
            computeNegativeLogarithms,
            computeNormalizedPdf,
+           computeLogNormalizedPdf,
            computeNovosibirsk,
            computePoisson,
            computePolynomial,
