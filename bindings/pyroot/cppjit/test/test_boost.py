@@ -197,12 +197,12 @@ class TestBOOSTERASURE:
 
             using LengthsInterface = boost::mpl::vector<
                 boost::type_erasure::copy_constructible<>,
-                has_member_f<std::vector<int>() const>>;
+                has_member_f<std::vector<int>()>>;
 
             using Lengths = boost::type_erasure::any<LengthsInterface>;
 
             struct Unerased {
-                std::vector<int> f() const { return std::vector<int>{}; }
+                std::vector<int> f() { return std::vector<int>{}; }
             };
 
             Lengths lengths() {
