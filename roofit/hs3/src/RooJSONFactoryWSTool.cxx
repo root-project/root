@@ -1781,7 +1781,12 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, HS3::Param
 std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, const std::string &suffix,
                                                     const std::string &formula)
 {
-   std::string newname = std::string(original->GetName()) + suffix;
+   // A literal constant is spelled as an identifier, which a parameter must not be mistaken for when reading.
+   if (!isLiteralConstVar(*original) && isLiteralIdentifier(original->GetName())) {
+      error("cannot write a function of '" + std::string(original->GetName()) +
+            "': names of the form 'const_<number>' are reserved for functions of literal constants");
+   }
+   std::string newname = transformedBaseName(*original) + suffix;
    // HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
    if (dynamic_cast<RooAbsPdf const *>(original)) {
       error("the parameter '" + std::string(original->GetName()) +
@@ -1795,7 +1800,7 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
    }
    RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_export->root)["functions"], newname);
    trafo_node["type"] << "generic";
-   trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();
+   trafo_node["expression"] << TString::Format(formula.c_str(), transformedArgument(*original).c_str()).Data();
    functions.push_back({newname, {"generic", nullptr}});
    this->setAttribute(newname, "roofit_skip"); // this function should not be imported back in
    return newname;

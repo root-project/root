@@ -61,6 +61,23 @@ bool startsWith(std::string_view str, std::string_view prefix);
 bool endsWith(std::string_view str, std::string_view suffix);
 std::string removeSuffix(std::string_view str, std::string_view suffix);
 
+// Some RooFit classes are parametrized differently than their HS3 distribution, e.g. RooLognormal by default. They
+// are written with a function of the parameter (RooJSONFactoryWSTool::exportTransformed()), which is named after the
+// parameter with a suffix that says what the function is. A literal constant has no name that could be part of an
+// identifier ("1.2", "-3", "1e-05"), so its value is spelled as one: "const_1p2", "const_m3", "const_1em05".
+//
+// What a transformed function is named after: the name of the parameter, or the identifier for the value of a
+// literal constant.
+std::string transformedBaseName(RooAbsReal const &param);
+// What a transformed function is a function of: the name of the parameter, or the value of a literal constant with
+// as many digits as it takes to read it back unchanged (in parentheses if it is negative).
+std::string transformedArgument(RooAbsReal const &param);
+// The inverse: what to create the RooFit object from, given the name of a transformed function with this suffix. This
+// is the name of the parameter, or the value of a literal constant as a string.
+std::string transformedOriginal(std::string_view name, std::string_view suffix);
+// Whether a name is the identifier for the value of a literal constant.
+bool isLiteralIdentifier(std::string_view name);
+
 // A RooHistFunc or RooHistPdf is evaluated with its own observables (`funcObs`), which are mapped by position onto
 // the variables of its histogram (`histObs`) and need not have the same names, e.g. after a RooCustomizer replaced
 // them. The variables of the histogram `dh`, in the order of the histogram, each named after the observable that is

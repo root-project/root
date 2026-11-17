@@ -9984,3 +9984,77 @@ TEST(RooFitHS3, ArrayDistOfLognormalsInRooFitParametrization)
    }
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
 }
+
+// A parameter of a RooFit class that is parametrized differently than its HS3 distribution is written as a function
+// that is named after the parameter. A literal constant has no name that could be part of an identifier, so its
+// value is spelled as one, with all digits that it takes to read it back unchanged.
+TEST(RooFitHS3, FunctionsOfLiteralConstantsHaveValidNames)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const double shape = 1.23456789012;
+   RooRealVar x{"x", "x", 1.0, 0.1, 10.0};
+   RooRealVar m0{"m0", "m0", 1.0, 0.1, 10.0};
+   RooLognormal lognormal{"lognormal", "lognormal", x, m0, RooFit::RooConst(shape)};
+   RooRealVar y{"y", "y", 1.0, 0.0, 10.0};
+   RooExponential exponential{"exponential", "exponential", y, RooFit::RooConst(-0.1)};
+
+   RooWorkspace ws;
+   ws.import(lognormal, RooFit::Silence());
+   ws.import(exponential, RooFit::Silence());
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &functions = tree->rootnode()["functions"];
+   ASSERT_EQ(functions.num_children(), 3u) << exported;
+   for (auto const &function : functions.children()) {
+      EXPECT_TRUE(RooJSONFactoryWSTool::isValidName(function["name"].val())) << function["name"].val();
+   }
+   const auto *logShape = RooJSONFactoryWSTool::findNamedChild(functions, "const_1p23456789012_lognormal_log");
+   ASSERT_NE(logShape, nullptr) << exported;
+   EXPECT_EQ((*logShape)["expression"].val(), "log(1.23456789012)");
+   const auto *inverted = RooJSONFactoryWSTool::findNamedChild(functions, "const_m0p1_exponential_inverted");
+   ASSERT_NE(inverted, nullptr) << exported;
+   EXPECT_EQ((*inverted)["expression"].val(), "-(-0.1)");
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(functions, "m0_lognormal_log"), nullptr) << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   auto *lognormal2 = dynamic_cast<RooLognormal *>(ws2.pdf("lognormal"));
+   ASSERT_NE(lognormal2, nullptr);
+   EXPECT_FALSE(lognormal2->useStandardParametrization());
+   EXPECT_STREQ(lognormal2->getMedian().GetName(), "m0");
+   EXPECT_EQ(lognormal2->getShapeK().getVal(), shape);
+   auto *exponential2 = dynamic_cast<RooExponential *>(ws2.pdf("exponential"));
+   ASSERT_NE(exponential2, nullptr);
+   EXPECT_FALSE(exponential2->negateCoefficient());
+   EXPECT_EQ(exponential2->coefficient().getVal(), -0.1);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // Older versions named the function after the number itself, which is still read.
+   RooWorkspace ws3;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(R"json({
+      "metadata": {"hs3_version": "0.2"},
+      "distributions": [{"name": "lognormal", "type": "lognormal_dist", "x": "x",
+                         "mu": "m0_lognormal_log", "sigma": "1.2_lognormal_log"}],
+      "functions": [{"name": "m0_lognormal_log", "type": "generic", "expression": "log(m0)"},
+                    {"name": "1.2_lognormal_log", "type": "generic", "expression": "log(1.2)"}],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "x", "min": 0.1, "max": 10.0}, {"name": "m0", "min": 0.1, "max": 10.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "x", "value": 1.0}, {"name": "m0", "value": 1.0}]}],
+      "misc": {"ROOT_internal": {"attributes": {"m0_lognormal_log": {"tags": ["roofit_skip"]},
+                                                "1.2_lognormal_log": {"tags": ["roofit_skip"]}}}}
+   })json"));
+   auto *lognormal3 = dynamic_cast<RooLognormal *>(ws3.pdf("lognormal"));
+   ASSERT_NE(lognormal3, nullptr);
+   EXPECT_FALSE(lognormal3->useStandardParametrization());
+   EXPECT_EQ(lognormal3->getShapeK().getVal(), 1.2);
+
+   // A parameter can't have a name that would be read as a literal constant.
+   RooRealVar reserved{"const_1p5", "const_1p5", 1.5, 1.01, 3.0};
+   RooLognormal clash{"clash", "clash", x, m0, reserved};
+   RooWorkspace ws4;
+   ws4.import(clash, RooFit::Silence());
+   expectExportThrowsWithError(ws4, "names of the form 'const_<number>' are reserved");
+}

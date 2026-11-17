@@ -368,7 +368,7 @@ std::string lognormalLogName(RooAbsReal const &param, RooJSONFactoryWSTool *tool
    if (tool) {
       return tool->exportTransformed(&param, lognormalLogSuffix, "log(%s)");
    }
-   return std::string(param.GetName()) + lognormalLogSuffix;
+   return transformedBaseName(param) + lognormalLogSuffix;
 }
 
 // The parameters to create a RooLognormal from, for the "mu" and "sigma" of a lognormal_dist.
@@ -383,7 +383,7 @@ LognormalParameters lognormalParameters(std::string const &mu, std::string const
    if (!endsWith(mu, lognormalLogSuffix)) {
       return {mu, sigma, true};
    }
-   return {removeSuffix(mu, lognormalLogSuffix), removeSuffix(sigma, lognormalLogSuffix), false};
+   return {transformedOriginal(mu, lognormalLogSuffix), transformedOriginal(sigma, lognormalLogSuffix), false};
 }
 
 // The name of the pdf that represents the component of an array distribution over the observable `observable`.
@@ -965,8 +965,8 @@ bool importExponential(RooJSONFactoryWSTool *tool, const JSONNode &p)
 
    const std::string constParamName = p["c"].val();
    const bool isInverted = endsWith(constParamName, "_exponential_inverted");
-   const std::string suffixToRemove = isInverted ? "_exponential_inverted" : "";
-   RooAbsReal *c = tool->request<RooAbsReal>(removeSuffix(constParamName, suffixToRemove), name);
+   RooAbsReal *c = tool->request<RooAbsReal>(
+      isInverted ? transformedOriginal(constParamName, "_exponential_inverted") : constParamName, name);
 
    tool->wsEmplace<RooExponential>(name, *x, *c, !isInverted);
 
