@@ -102,7 +102,6 @@ public:
    static bool isValidName(const std::string &str);
    static bool testValidName(const std::string &name, bool forceError);
    static std::string sanitizeName(const std::string str);
-   static void rebuildModelConfigInWorkspace(RooStats::ModelConfig *mc, RooWorkspace &ws);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
@@ -203,10 +202,6 @@ public:
    void importFunction(const RooFit::Detail::JSONNode &p, bool importAllDependants);
    void importFunction(const std::string &jsonString, bool importAllDependants);
 
-   static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
-
-   static RooFit::Detail::JSONNode &makeVariablesNode(RooFit::Detail::JSONNode &rootNode);
-
    // error handling helpers
    class DependencyMissingError : public std::runtime_error {
       std::string _parent, _child, _class;
@@ -223,12 +218,6 @@ public:
       const std::string &child() const { return _child; }
       const std::string &classname() const { return _class; }
    };
-
-   template <typename... Keys_t>
-   static RooFit::Detail::JSONNode &getRooFitInternal(RooFit::Detail::JSONNode &node, Keys_t const &...keys)
-   {
-      return node.get("misc", "ROOT_internal", keys...);
-   }
 
    static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
    static void exportCategoricalAxis(RooFit::Detail::JSONNode &obsNode, RooCategory const &cat);

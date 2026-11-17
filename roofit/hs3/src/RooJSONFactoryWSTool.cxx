@@ -47,6 +47,7 @@
 #include <set>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_map>
 
 /** \class RooJSONFactoryWSTool
 \ingroup roofit_dev_docs_hs3
@@ -2091,11 +2092,6 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
    return n["name"].val();
 }
 
-JSONNode &RooJSONFactoryWSTool::makeVariablesNode(JSONNode &rootNode)
-{
-   return appendNamedChild(rootNode["parameter_points"], "default_values")["parameters"];
-}
-
 template <>
 RooRealVar *RooJSONFactoryWSTool::requestImpl<RooRealVar>(const std::string &objname)
 {
@@ -3716,26 +3712,6 @@ std::string RooJSONFactoryWSTool::exportJSONtoString()
    std::stringstream ss;
    exportJSON(ss);
    return ss.str();
-}
-
-/**
- * @brief Create a new JSON tree with version information.
- *
- * @return std::unique_ptr<JSONTree> A unique pointer to the created JSON tree.
- */
-std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
-{
-   std::unique_ptr<JSONTree> tree = JSONTree::create();
-   JSONNode &n = tree->rootnode();
-   n.set_map();
-   auto &metadata = n["metadata"].set_map();
-
-   // add the mandatory hs3 version number
-   metadata["hs3_version"] << hs3VersionTag;
-
-   appendNamedChild(metadata["packages"], "ROOT")["version"] << rootVersion();
-
-   return tree;
 }
 
 /**
