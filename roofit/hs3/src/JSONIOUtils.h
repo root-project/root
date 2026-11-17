@@ -65,9 +65,6 @@ bool endsWith(std::string_view str, std::string_view suffix);
 std::string removeSuffix(std::string_view str, std::string_view suffix);
 void writeAxisBinning(RooFit::Detail::JSONNode &node, const RooAbsBinning &binning);
 
-// The key of a fixed domain axis (HS3 #131): the parameter only takes this value, and RooFit reads it as a
-// RooConstVar.
-inline constexpr const char *fixedValueKey = "value";
 bool parseHS3Version(std::string const &version, int &major, int &minor);
 bool isHS3VersionBefore(std::string const &version, int major, int minor);
 

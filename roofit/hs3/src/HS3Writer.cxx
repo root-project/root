@@ -14,7 +14,6 @@
 // tests in testHS3Document.cxx check.
 
 #include "HS3Document.h"
-#include "JSONIOUtils.h"
 
 #include <RooFit/Detail/JSONInterface.h>
 
@@ -105,7 +104,7 @@ void writeAxis(JSONNode &node, DomainAxis const &axis)
    node.set_map();
    node["name"] << axis.name;
    if (axis.fixedValue) {
-      node[fixedValueKey] << *axis.fixedValue;
+      node["value"] << *axis.fixedValue;
       return;
    }
    // HS3 0.3 forbids "min" and "max" alongside "edges", which give the range. They are only written if they differ from
