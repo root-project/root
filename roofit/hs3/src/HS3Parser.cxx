@@ -794,22 +794,26 @@ std::optional<ConstraintType> readConstraintType(Cursor const &c)
    return std::nullopt;
 }
 
+// The parameter of a modifier with a single parameter and its constraint are arrays with one entry.
+template <class T>
+void readSingleEntry(Reader &ar, const char *key, T &out)
+{
+   Cursor c = ar.child(key);
+   if (!c.node().is_seq() || c.node().num_children() != 1) {
+      c.error("must be an array with one entry");
+      return;
+   }
+   readValue(Cursor{c.node().child(0), c, std::size_t{0}}, out);
+}
+
 void readConstraint(Reader &ar, Constraint &out)
 {
    if (ar.has("constraints")) {
-      Cursor c = ar.child("constraints");
-      if (!c.node().is_seq() || c.node().num_children() != 1) {
-         c.error("must be an array with one entry");
-         return;
+      std::optional<DistributionRef> pdf;
+      readSingleEntry(ar, "constraints", pdf);
+      if (pdf) {
+         out = ConstraintPdf{std::move(*pdf)};
       }
-      JSONNode const &item = c.node().child(0);
-      if (item.is_null()) {
-         out = Unconstrained{};
-         return;
-      }
-      ConstraintPdf pdf;
-      readValue(Cursor{item, c, std::size_t{0}}, pdf.pdf);
-      out = std::move(pdf);
    } else if (ar.has("constraint_name")) {
       ConstraintPdf pdf;
       ar("constraint_name", pdf.pdf);
@@ -825,22 +829,7 @@ void readConstraint(Reader &ar, Constraint &out)
 void readGammaConstraint(Reader &ar, GammaConstraint &out)
 {
    if (ar.has("constraints")) {
-      GammaConstraintPdfs constraints;
-      Cursor c = ar.child("constraints");
-      if (!c.node().is_seq()) {
-         c.error("must be an array");
-         return;
-      }
-      std::size_t i = 0;
-      for (JSONNode const &item : c.node().children()) {
-         constraints.pdfs.emplace_back();
-         if (!item.is_null()) {
-            constraints.pdfs.back().emplace();
-            readValue(Cursor{item, c, i}, *constraints.pdfs.back());
-         }
-         ++i;
-      }
-      out = std::move(constraints);
+      ar("constraints", out.emplace<GammaConstraintPdfs>().pdfs);
    } else if (ar.has("constraint")) {
       Cursor c = ar.child("constraint");
       // "Const" is a RooFit extension.
@@ -857,16 +846,11 @@ void readGammaConstraint(Reader &ar, GammaConstraint &out)
 // The parameter of a modifier with a single parameter is given in "parameters", or in "parameter" in older documents.
 void readParameter(Reader &ar, ParameterRef &parameter)
 {
-   if (!ar.has("parameters")) {
+   if (ar.has("parameters")) {
+      readSingleEntry(ar, "parameters", parameter);
+   } else {
       ar("parameter", parameter);
-      return;
    }
-   Cursor c = ar.child("parameters");
-   if (!c.node().is_seq() || c.node().num_children() != 1) {
-      c.error("must be an array with one entry");
-      return;
-   }
-   readValue(Cursor{c.node().child(0), c, std::size_t{0}}, parameter);
 }
 
 // The modifiers. The standard doesn't require them to have a name, but RooFit uses it to name the objects it creates.

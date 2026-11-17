@@ -107,6 +107,15 @@ void readValue(Cursor const &c, Ref<Tag> &out)
    readValue(c, out.name);
 }
 
+/// A value that can be null, like the constraint of a parameter that is not constrained.
+template <class T>
+void readValue(Cursor const &c, std::optional<T> &out)
+{
+   if (!c.node().is_null()) {
+      readValue(c, out.emplace());
+   }
+}
+
 template <class T>
 void readValue(Cursor const &c, std::vector<T> &out)
 {
@@ -150,8 +159,8 @@ void Reader::operator()(const char *key, T &field)
 template <class T>
 void Reader::operator()(const char *key, std::optional<T> &field)
 {
-   if (has(key) && !_cursor.node()[key].is_null()) {
-      readValue(child(key), field.emplace());
+   if (has(key)) {
+      readValue(child(key), field);
    }
 }
 
