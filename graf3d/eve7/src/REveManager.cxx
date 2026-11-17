@@ -23,6 +23,7 @@
 #include <ROOT/REveSystem.hxx>
 #include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/REveGeoTopNode.hxx>
+#include <ROOT/REveText.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -226,6 +227,14 @@ REveManager::REveManager()
    fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(100);     // maximal number of connections
    fWebWindow->SetMaxQueueLength(1000); // number of allowed entries in the window queue
+
+   // The hover tooltip of GL viewers is drawn with this SDF font. Asserting it
+   // also serves the sdf-fonts/ location, which otherwise only happens when an
+   // REveText or viewer axes are created.
+   {
+      std::string fn = "LiberationSerif-Regular";
+      REveText::AssertSdfFont(fn, std::string(TROOT::GetDataDir().Data()) + "/fonts/" + fn + ".ttf");
+   }
 
    fMIRExecThread = std::thread{[this] { MIRExecThread(); }};
 
