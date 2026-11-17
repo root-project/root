@@ -38,6 +38,11 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
+  RooAbsReal const& getM() const { return m.arg(); }
+  RooAbsReal const& getM0() const { return m0.arg(); }
+  RooAbsReal const& getC() const { return c.arg(); }
+  RooAbsReal const& getP() const { return p.arg(); }
+
 protected:
   RooRealProxy m ;
   RooRealProxy m0 ;
