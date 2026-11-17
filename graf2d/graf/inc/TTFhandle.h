@@ -27,7 +27,7 @@ class TTFhandle {
       struct FontStruct;
 
       Bool_t         fKerning = kTRUE;           ///< use kerning (true by default)
-      Bool_t         fSmoothing = kTRUE;         ///< use anti-aliasing (true when >8 planes, false otherwise)
+      enum { kSmoothUndef, kSmoothOff, kSmoothOn } fSmoothing = kSmoothUndef;   ///< use anti-aliasing (true when >8 planes, false otherwise)
       Bool_t         fHinting = kFALSE;          ///< use hinting (false by default)
 
       FontStruct    *fFont = nullptr;            ///< selected font
@@ -46,6 +46,7 @@ class TTFhandle {
       /// Thread-local wrapper to the FreeType library
       struct FT_Library_Wrapper;
       static thread_local FT_Library_Wrapper fFT_Library;
+      static Bool_t  gSmoothingPrefer;
 
       void FillTTFGlypths(void *vect);
 
@@ -53,7 +54,7 @@ class TTFhandle {
       TTFhandle();
       virtual ~TTFhandle();
 
-      void           SetSmoothing(Bool_t state) { fSmoothing = state;  }
+      void           SetSmoothing(Bool_t state) { fSmoothing = state ? kSmoothOn : kSmoothOff;  }
       void           SetHinting(Bool_t state) { fHinting = state; }
       void           SetKerning(Bool_t state) { fKerning = state; }
       void           SetTextFont(Font_t fontnumber);
@@ -61,7 +62,7 @@ class TTFhandle {
       Bool_t         SetTextSize(Float_t textsize);
       void           SetRotationMatrix(Float_t angle);
 
-      Bool_t         GetSmoothing() const { return fSmoothing; }
+      Bool_t         GetSmoothing() const;
       Bool_t         GetHinting() const { return fHinting; }
       Bool_t         GetKerning() const { return fKerning; }
       void*          GetFontFace() const;
@@ -93,6 +94,8 @@ class TTFhandle {
       void           Version(Int_t &major, Int_t &minor, Int_t &patch);
 
       static Bool_t  Init();
+      static void    SetSmoothingPrefer(Bool_t on);
+      static Bool_t  GetSmoothingPrefer();
 
    ClassDef(TTFhandle, 0)  // Dynamic interface to TTF
 

@@ -29,6 +29,10 @@ in ROOT7 TTFhandle will completely replace TTF class
 #include "TMath.h"
 #include "TError.h"
 
+// smoothing is enabled by default while all recent devices support enough colors for antialiasing
+
+Bool_t TTFhandle::gSmoothingPrefer = kTRUE;
+
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
@@ -726,4 +730,33 @@ void TTFhandle::Version(Int_t &major, Int_t &minor, Int_t &patch)
 Bool_t TTFhandle::Init()
 {
    return fFT_Library.Get() != nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set global flag to switch on/off smoothing of TTF text drawing
+/// This flag is used when SetSmoothing() flag not set before
+
+void TTFhandle::SetSmoothingPrefer(Bool_t on)
+{
+   gSmoothingPrefer = on;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if smoothing of text drawing is enabled
+
+Bool_t TTFhandle::GetSmoothingPrefer()
+{
+   return gSmoothingPrefer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if smoothing for this instance is enabled
+/// If SetSmoothing() was not called before - use global value
+/// configured with @ref SetSmoothingPrefer method
+
+Bool_t TTFhandle::GetSmoothing() const
+{
+   if (fSmoothing == kSmoothUndef)
+      return GetSmoothingPrefer();
+   return fSmoothing == kSmoothOn;
 }
