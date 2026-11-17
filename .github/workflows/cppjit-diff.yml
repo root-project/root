@@ -21,7 +21,7 @@ jobs:
       - name: Check out cppjit
         uses: actions/checkout@v6
         with:
-          repository: compiler-research/cppjit
+          repository: root-project/cppjit
           ref: ${{ steps.determine-tag.outputs.tag }}
           path: cppjit
       - name: Drop files that are not added to ROOT
