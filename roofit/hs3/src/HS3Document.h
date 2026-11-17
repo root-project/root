@@ -661,6 +661,9 @@ std::vector<std::string> sharedVariates(HS3Document const &doc);
 /// distributions.
 std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likelihood);
 
+/// The variates of the distribution `distribution`, without the columns of a combined distribution.
+std::set<std::string> variatesOf(HS3Document const &doc, std::string const &distribution);
+
 /// The axes that several components of a combined data set have, by combined data set.
 std::map<std::string, std::set<std::string>> sharedAxes(HS3Document const &doc);
 

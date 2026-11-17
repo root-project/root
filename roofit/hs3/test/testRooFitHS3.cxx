@@ -9630,3 +9630,51 @@ TEST(RooFitHS3, PointData)
    ws3.import(two, RooFit::Silence());
    EXPECT_NE(RooJSONFactoryWSTool{ws3}.exportJSONtoString().find(R"("type":"unbinned")"), std::string::npos);
 }
+
+// A number given in-line in the "data" of a likelihood, or point data without axes, is the value of the single
+// variate of the paired distribution (HS3 0.3).
+TEST(RooFitHS3, DataWithoutAxes)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &distribution, std::string const &data, std::string const &dataSets) {
+      return R"({
+         "metadata": {"hs3_version": "0.3"},
+         "domains": [{"name": "d", "type": "product_domain", "axes": [{"name": "x", "min": -5, "max": 5},
+                                                                    {"name": "y", "min": -5, "max": 5},
+                                                                    {"name": "mu", "min": -5, "max": 5}]}],
+         "distributions": [
+            {"name": "gx", "type": "gaussian_dist", "x": "x", "mean": "mu", "sigma": 1.0},
+            {"name": "gy", "type": "gaussian_dist", "x": "y", "mean": "mu", "sigma": 1.0},
+            {"name": "gxy", "type": "product_dist", "factors": ["gx", "gy"]}
+         ],
+         "data": [)" +
+             dataSets + R"(],
+         "likelihoods": [{"name": "lh", "distributions": [")" +
+             distribution + R"("], "data": [)" + data + R"(]}],
+         "analyses": [{"name": "ana", "likelihood": "lh", "domains": ["d"], "parameters_of_interest": ["mu"]}]
+      })";
+   };
+
+   {
+      // A number in-line.
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("gx", "1.5", "")));
+      RooAbsData *data = ws.data("gx_data");
+      ASSERT_NE(data, nullptr);
+      ASSERT_EQ(data->numEntries(), 1);
+      EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(data->get(0)->find("x"))->getVal(), 1.5);
+   }
+   {
+      // Point data without axes.
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+         makeJSON("gy", R"("obs")", R"({"name": "obs", "type": "point", "value": -2.0})")));
+      RooAbsData *data = ws.data("obs");
+      ASSERT_NE(data, nullptr);
+      ASSERT_EQ(data->numEntries(), 1);
+      EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(data->get(0)->find("y"))->getVal(), -2.0);
+   }
+   // A distribution with two variates has no single variate to take the value.
+   expectImportThrowsWithError(makeJSON("gxy", "1.5", ""), "can't be determined");
+}

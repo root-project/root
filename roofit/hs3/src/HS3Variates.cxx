@@ -328,6 +328,14 @@ std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likel
    return variates;
 }
 
+std::set<std::string> variatesOf(HS3Document const &doc, std::string const &distribution)
+{
+   std::set<std::string> variates;
+   std::set<std::string> visited;
+   Distributions{doc}.addVariates(distribution, variates, visited);
+   return variates;
+}
+
 std::map<std::string, std::set<std::string>> sharedAxes(HS3Document const &doc)
 {
    std::map<std::string, std::set<std::string>> out;
