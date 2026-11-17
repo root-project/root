@@ -304,10 +304,11 @@ TEST(RooNaNPacker, CudaEvalErrorParity)
 
 /// A negative normalization integral is packed into the NaN as badness, also
 /// if the pdf is evaluated in logarithmic scale.
-TEST(RooNaNPacker, NegativeNormIntegralBadness)
+TEST_P(TestForDifferentBackends, NegativeNormIntegralBadness)
 {
    const auto prevErrorLoggingMode = RooAbsReal::evalErrorLoggingMode();
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore);
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
+   RooAbsReal::clearEvalErrorLog();
 
    RooWorkspace ws;
    ws.factory("Gaussian::gauss(x[0, -10, 10], mean[0, -5, 5], sigma[1, -5, 5])");
@@ -318,14 +319,17 @@ TEST(RooNaNPacker, NegativeNormIntegralBadness)
       data.add(x);
    }
 
-   std::unique_ptr<RooAbsReal> nll{ws.pdf("gauss")->createNLL(data, RooFit::EvalBackend::Cpu())};
+   std::unique_ptr<RooAbsReal> nll{ws.pdf("gauss")->createNLL(data, _evalBackend)};
    ws.var("sigma")->setVal(-1.0);
    const double val = nll->getVal();
 
    // Each event contributes the negative integral sqrt(2 pi) * sigma.
    EXPECT_TRUE(RooNaNPacker::isNaNWithPayload(val));
    EXPECT_NEAR(RooNaNPacker::unpackNaN(val), 3 * std::sqrt(2 * TMath::Pi()), 1e-5);
+   // Each event logs one error for the integral and one for the likelihood.
+   EXPECT_EQ(RooAbsReal::numEvalErrors(), 6);
 
+   RooAbsReal::clearEvalErrorLog();
    RooAbsReal::setEvalErrorLoggingMode(prevErrorLoggingMode);
 }
 

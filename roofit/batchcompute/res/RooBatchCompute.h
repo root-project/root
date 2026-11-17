@@ -105,6 +105,7 @@ enum Computer {
    LognormalStandard,
    NegativeLogarithms,
    NormalizedPdf,
+   LogNormalizedPdf,
    Novosibirsk,
    Poisson,
    Polynomial,
@@ -182,13 +183,13 @@ public:
    /// Compute the values for a batch of events.
    ///
    /// The extra args (the last parameter) are read-only inputs for all
-   /// computers except `NormalizedPdf`, which uses them as output parameters
-   /// for its evaluation error counters. In the CUDA implementation, these
-   /// outputs are read back from the device *asynchronously*: they only
-   /// arrive in the caller's span with the next synchronizeCudaStream() call
-   /// on the stream of the passed config. The memory backing the extra args
-   /// of a `NormalizedPdf` call must therefore stay valid until that
-   /// synchronization, so it must not live on the caller's stack.
+   /// computers except `NormalizedPdf` and `LogNormalizedPdf`, which use the
+   /// first three as output parameters for their evaluation error counters.
+   /// In the CUDA implementation, these outputs are read back from the device
+   /// *asynchronously*: they only arrive in the caller's span with the next
+   /// synchronizeCudaStream() call on the stream of the passed config. The
+   /// memory backing the extra args of such a call must therefore stay valid
+   /// until that synchronization, so it must not live on the caller's stack.
    virtual void compute(Config const &cfg, Computer, std::span<double> output, VarSpan, ArgSpan) = 0;
 
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
