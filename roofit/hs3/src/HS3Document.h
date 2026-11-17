@@ -207,15 +207,19 @@ struct Data {
    std::variant<PointData, UnbinnedData, BinnedData, CombinedData> body;
 };
 
+/// The data of a likelihood term: a data set, a number given in-line, or none (std::monostate) in a pure model.
 struct LikelihoodTerm {
    DistributionRef distribution;
-   std::variant<DataRef, double> data;
+   std::variant<DataRef, double, std::monostate> data;
 };
 
 struct Likelihood {
    std::string name;
    std::vector<LikelihoodTerm> terms;
    std::vector<DistributionRef> auxDistributions;
+   /// Whether "data" is null: the likelihood only groups the distributions of a model without data (e.g. for toy
+   /// generation), and it can't be evaluated before a data set is created.
+   bool pureModel = false;
 };
 
 struct Analysis {

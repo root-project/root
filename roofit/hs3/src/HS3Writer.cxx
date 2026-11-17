@@ -278,12 +278,20 @@ void writeLikelihood(JSONNode &likelihoods, Likelihood const &likelihood)
 {
    JSONNode &node = appendNamed(likelihoods, likelihood.name);
    JSONNode &distributions = node["distributions"].set_seq();
-   JSONNode &data = node["data"].set_seq();
-   for (auto const &term : likelihood.terms) {
-      distributions.append_child() << term.distribution.name;
-      std::visit(overloaded{[&](DataRef const &ref) { data.append_child() << ref.name; },
-                            [&](double value) { writeNumber(data.append_child(), value); }},
-                 term.data);
+   if (likelihood.pureModel) {
+      for (auto const &term : likelihood.terms) {
+         distributions.append_child() << term.distribution.name;
+      }
+      node["data"].set_null();
+   } else {
+      JSONNode &data = node["data"].set_seq();
+      for (auto const &term : likelihood.terms) {
+         distributions.append_child() << term.distribution.name;
+         std::visit(overloaded{[&](DataRef const &ref) { data.append_child() << ref.name; },
+                               [&](double value) { writeNumber(data.append_child(), value); },
+                               [&](std::monostate) { data.append_child().set_null(); }},
+                    term.data);
+      }
    }
    if (!likelihood.auxDistributions.empty()) {
       writeRefs(node["aux_distributions"], likelihood.auxDistributions);

@@ -622,6 +622,14 @@ void describe(Reader &ar, Likelihood &likelihood)
       return;
    }
    Cursor data = ar.child("data");
+   // A pure model, i.e. distributions without any data, which a ModelConfig can refer to.
+   if (data.node().is_null()) {
+      likelihood.pureModel = true;
+      for (auto &distribution : distributions) {
+         likelihood.terms.push_back({std::move(distribution), std::monostate{}});
+      }
+      return;
+   }
    if (!data.node().is_seq()) {
       data.error("must be an array");
       return;

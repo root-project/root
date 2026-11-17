@@ -2806,7 +2806,9 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    if (dataName) {
       likelihood.terms.push_back({{pdf->GetName()}, HS3::DataRef{*dataName}});
    } else {
-      likelihood.terms.push_back({{pdf->GetName()}, 0.0});
+      // Without data, the likelihood is a pure model, which is written with "data": null.
+      likelihood.terms.push_back({{pdf->GetName()}, std::monostate{}});
+      likelihood.pureModel = true;
    }
 
    // The additional terms of the likelihood: the external constraints of the ModelConfig, and the constraint terms
@@ -2918,7 +2920,10 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
       }
    }
    for (std::string const &term : constraintTerms) {
-      if (config().exportConstraintData && exportConstraintData(term, mc.GetGlobalObservables())) {
+      // A pure model has no data at all, so the observed values of its constraint terms are not written as data sets
+      // either: they are the constant parameters of auxiliary distributions.
+      if (!likelihood.pureModel && config().exportConstraintData &&
+          exportConstraintData(term, mc.GetGlobalObservables())) {
          likelihood.terms.push_back({{term}, HS3::DataRef{term + "_data"}});
       } else {
          likelihood.auxDistributions.push_back({term});
@@ -3333,21 +3338,10 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    std::map<std::string, std::string> pointDataVariates;
    std::map<std::pair<std::string, std::size_t>, std::string> inlineData;
    std::vector<HS3::Data> inlineDataSets;
-   // RooFit writes the number 0 for a ModelConfig without data, which is no observation. This is how it is read in
-   // documents before 0.3, and in the ones that RooFit wrote, which have the ROOT-internal information of the
-   // ModelConfig.
+   // Older versions of RooFit wrote "data": [0], with the number 0 as the only entry, for a ModelConfig without data.
+   // In this exact form, it is no observation in documents before 0.3 (HS3 PR #154). RooFit now writes "data": null.
    auto isNoDataPlaceholder = [&](HS3::Likelihood const &likelihood, double value) {
-      if (value != 0.) {
-         return false;
-      }
-      // Older versions of RooFit only wrote "data": [0], with the number 0 as the only entry. In a document before
-      // 0.3, a 0 in a longer array is a value.
-      if (doc.metadata.version < HS3::Version{0, 3}) {
-         return likelihood.terms.size() == 1;
-      }
-      return std::any_of(doc.analyses.begin(), doc.analyses.end(), [&](HS3::Analysis const &analysis) {
-         return analysis.likelihood.name == likelihood.name && doc.rooFit.modelConfigs.count(analysis.name);
-      });
+      return value == 0. && likelihood.terms.size() == 1 && doc.metadata.version < HS3::Version{0, 3};
    };
    for (auto const &likelihood : doc.likelihoods) {
       for (std::size_t i = 0; i < likelihood.terms.size(); ++i) {
@@ -3375,7 +3369,11 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
             inlineDataSets.push_back({name, std::move(point)});
             continue;
          }
-         auto const &ref = std::get<HS3::DataRef>(term.data);
+         auto const *refPtr = std::get_if<HS3::DataRef>(&term.data);
+         if (!refPtr) {
+            continue; // no data in a pure model
+         }
+         auto const &ref = *refPtr;
          for (auto const &data : doc.data) {
             auto const *point = std::get_if<HS3::PointData>(&data.body);
             if (data.name != ref.name || !point) {
