@@ -8112,6 +8112,14 @@ def _maxpool2d_reference(model, feeds):
     return [out]
 
 
+def _range_reference(model, feeds):
+    """The Range models feed start, limit and delta as 1-element tensors instead of
+    the scalars the ONNX spec asks for; onnx's reference Range converts them with
+    numpy, which refuses that since numpy 2.4. Range is just arange."""
+    start, limit, delta = (np.asarray(v).reshape(()) for v in feeds.values())
+    return [np.arange(start, limit, delta, dtype=start.dtype)]
+
+
 def _mean_reference(model, feeds):
     """Mean with multidirectional broadcasting; the ReferenceEvaluator fails
     to broadcast the inputs to a common shape."""
@@ -8198,6 +8206,8 @@ def _logsoftmax_reference(model, feeds):
 
 
 EXPECTED_OVERRIDES = {
+    "RangeFloat": _range_reference,
+    "RangeInt": _range_reference,
     "GRUBidirectional": _recurrent_reference,
     "LSTMBidirectional": _recurrent_reference,
     "RNNBidirectional": _recurrent_reference,
