@@ -105,6 +105,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     RIO
 )
 
+# suppress warnings about deprecated TTF.h
+target_compile_definitions(Graf PRIVATE ROOT_TTFsupport)
+
 set(RELATIVE_INC_HEADERS ${GRAF_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
 target_sources(Graf
