@@ -132,6 +132,11 @@ void codegenImpl(RooStats::HistFactory::FlexibleInterpVar &arg, CodegenContext &
 void codegenImpl(RooUniform &arg, CodegenContext &ctx);
 void codegenImpl(RooWrapperPdf &arg, CodegenContext &ctx);
 
+std::string codegenLogImpl(RooAbsArg &arg, CodegenContext &ctx);
+std::string codegenLogImpl(RooFit::Detail::RooFixedProdPdf &arg, CodegenContext &ctx);
+std::string codegenLogImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx);
+std::string codegenLogImpl(RooGaussian &arg, CodegenContext &ctx);
+
 std::string codegenIntegralImpl(RooAbsReal &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooBernstein &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooBifurGauss &arg, int code, const char *rangeName, CodegenContext &ctx);
