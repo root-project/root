@@ -223,6 +223,52 @@ std::string GeneratePReluCode(const std::string &fileName, const TestTensor &x, 
    return code.str();
 }
 
+// Write a model holding a single RotaryEmbedding node (opset 23) and return the
+// code SOFIE generates for it. The caches are graph inputs like X.
+std::string GenerateRotaryEmbeddingCode(const std::string &fileName, const TestTensor &x, const TestTensor &cos,
+                                        const TestTensor &sin, std::int64_t numHeads = 0)
+{
+   std::string node;
+   AppendBytesField(node, 1, x.name);            // input
+   AppendBytesField(node, 1, cos.name);          // input
+   AppendBytesField(node, 1, sin.name);          // input
+   AppendBytesField(node, 2, "y");               // output
+   AppendBytesField(node, 3, "rope_0");          // name
+   AppendBytesField(node, 4, "RotaryEmbedding"); // op_type
+   if (numHeads != 0) {
+      std::string attr;
+      AppendBytesField(attr, 1, "num_heads");                           // name
+      AppendVarintField(attr, 3, static_cast<std::uint64_t>(numHeads)); // i
+      AppendVarintField(attr, 20, 2);                                   // type = INT
+      AppendBytesField(node, 5, attr);                                  // attribute
+   }
+
+   std::string graph;
+   AppendBytesField(graph, 1, node);                           // node
+   AppendBytesField(graph, 2, "test_graph");                   // name
+   AppendBytesField(graph, 11, FloatValueInfo(x));             // input
+   AppendBytesField(graph, 11, FloatValueInfo(cos));           // input
+   AppendBytesField(graph, 11, FloatValueInfo(sin));           // input
+   AppendBytesField(graph, 12, FloatValueInfo({"y", x.dims})); // output
+
+   std::string opset;
+   AppendVarintField(opset, 2, 23); // version
+   std::string model;
+   AppendVarintField(model, 1, 11);   // ir_version
+   AppendBytesField(model, 7, graph); // graph
+   AppendBytesField(model, 8, opset); // opset_import
+
+   std::ofstream file(fileName, std::ios::binary);
+   file.write(model.data(), model.size());
+   file.close();
+
+   RModel rmodel = RModelParser_ONNX{}.Parse(fileName);
+   rmodel.Generate(Options::kNoWeightFile);
+   std::ostringstream code;
+   rmodel.PrintGenerated(code);
+   return code.str();
+}
+
 } // namespace
 
 // The "location" key of a tensor's external_data names the data file relative
@@ -365,4 +411,23 @@ TEST(SOFIEParser, PReluIndexesAPerChannelSlopeWithoutExpandingIt)
       GeneratePReluCode("prelu_channel.onnx", {"x", {"1", "3", "2", "2"}}, {"slope", {"3", "1", "1"}});
 
    EXPECT_NE(code.find("tensor_slope[(id / 4) % 3]"), std::string::npos);
+}
+
+// The caches must hold rotary_embedding_dim / 2 values per token: a mismatch is
+// an error, not an out-of-bounds read in the generated code.
+TEST(SOFIEParser, RotaryEmbeddingWithWrongCacheSizeThrows)
+{
+   EXPECT_THROW(GenerateRotaryEmbeddingCode("rope_bad_cache.onnx", {"x", {"1", "2", "3", "4"}},
+                                            {"cos", {"1", "3", "4"}}, {"sin", {"1", "3", "4"}}),
+                std::runtime_error);
+}
+
+// A 3d input [batch, seq, hidden] can only be split into heads with num_heads.
+TEST(SOFIEParser, RotaryEmbeddingWith3dInputRequiresNumHeads)
+{
+   EXPECT_THROW(GenerateRotaryEmbeddingCode("rope_3d_no_heads.onnx", {"x", {"1", "3", "8"}}, {"cos", {"1", "3", "2"}},
+                                            {"sin", {"1", "3", "2"}}),
+                std::runtime_error);
+   EXPECT_NO_THROW(GenerateRotaryEmbeddingCode("rope_3d_heads.onnx", {"x", {"1", "3", "8"}}, {"cos", {"1", "3", "2"}},
+                                               {"sin", {"1", "3", "2"}}, /*numHeads=*/2));
 }

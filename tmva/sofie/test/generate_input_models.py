@@ -319,6 +319,59 @@ def make_PRelu_Scalar():
     return _prelu_model("prelu_scalar_test", [2, 3], [1], [0.25])
 
 
+def _rope_caches(positions, rotary_dim):
+    """cos and sin caches of rotary embeddings: angle = position / 10000^(2 i / rotary_dim)."""
+    inv_freq = 1.0 / (10000.0 ** (np.arange(0, rotary_dim, 2) / rotary_dim))
+    angles = np.asarray(positions, np.float64)[..., None] * inv_freq
+    return np.cos(angles).astype(np.float32), np.sin(angles).astype(np.float32)
+
+
+def _rotary_embedding_model(name, x_shape, cos, sin, position_ids=None, **attrs):
+    """RotaryEmbedding (opset 23) on a float tensor X, with the caches (and position_ids) as initializers."""
+    inputs = ["X", "Cos", "Sin"] + (["PositionIds"] if position_ids is not None else [])
+    initializer = [
+        _tensor("Cos", FLOAT, list(cos.shape), cos.flatten().tolist()),
+        _tensor("Sin", FLOAT, list(sin.shape), sin.flatten().tolist()),
+    ]
+    if position_ids is not None:
+        initializer.append(_tensor("PositionIds", INT64, list(position_ids.shape), position_ids.flatten().tolist()))
+    graph = helper.make_graph(
+        [helper.make_node("RotaryEmbedding", inputs, ["Y"], **attrs)],
+        name,
+        inputs=[
+            _vi("X", FLOAT, x_shape),
+        ],
+        outputs=[
+            _vi("Y", FLOAT, x_shape),
+        ],
+        initializer=initializer,
+    )
+    return _model(graph, opset=23, ir_version=11)
+
+
+def make_RotaryEmbedding():
+    """Ops: RotaryEmbedding (4d input [batch, heads, seq, head_size], full rotation, rotate-half)"""
+    cos, sin = _rope_caches(np.tile(np.arange(3), (1, 1)), 4)  # [1, 3, 2]
+    return _rotary_embedding_model("rotary_embedding_test", [1, 2, 3, 4], cos, sin)
+
+
+def make_RotaryEmbedding_Interleaved_Partial():
+    """Ops: RotaryEmbedding (4d input, interleaved, rotary_embedding_dim smaller than the head size)"""
+    cos, sin = _rope_caches(np.array([[0, 1, 2], [5, 6, 7]]), 4)  # [2, 3, 2]
+    return _rotary_embedding_model(
+        "rotary_embedding_interleaved_test", [2, 2, 3, 6], cos, sin, interleaved=1, rotary_embedding_dim=4
+    )
+
+
+def make_RotaryEmbedding_3d_PositionIds():
+    """Ops: RotaryEmbedding (3d input [batch, seq, hidden] with num_heads, caches indexed by position_ids)"""
+    cos, sin = _rope_caches(np.arange(10), 4)  # [10, 2]
+    position_ids = np.array([[0, 1, 2], [7, 8, 9]], np.int64)
+    return _rotary_embedding_model(
+        "rotary_embedding_3d_test", [2, 3, 8], cos, sin, position_ids=position_ids, num_heads=2
+    )
+
+
 def make_AveragePool1d_CeilMode_Overhang():
     """Ops: AveragePool"""
     nodes = [
@@ -6452,6 +6505,9 @@ MODELS = {
     "ReduceProd": make_ReduceProd,
     "ReduceSum": make_ReduceSum,
     "ReduceSumSquare": make_ReduceSumSquare,
+    "RotaryEmbedding": make_RotaryEmbedding,
+    "RotaryEmbedding_3d_PositionIds": make_RotaryEmbedding_3d_PositionIds,
+    "RotaryEmbedding_Interleaved_Partial": make_RotaryEmbedding_Interleaved_Partial,
     "ScatterElements": make_ScatterElements,
     "ScatterND_1": make_ScatterND_1,
     "ScatterND_2": make_ScatterND_2,
@@ -7709,6 +7765,9 @@ TEST_INPUTS = {
     "ReduceProd": [f32([5.0, 2.0, 3.0, 5.0, 5.0, 4.0], (1, 2, 3))],
     "ReshapeAlias": [rand_f32(42, (2, 3))],
     "ReshapeAliasGraphOutput": [rand_f32(43, (2, 3))],
+    "RotaryEmbedding": [f32(np.arange(24) / 8 - 1.5, (1, 2, 3, 4))],
+    "RotaryEmbedding_3d_PositionIds": [f32(np.cos(np.arange(48)), (2, 3, 8))],
+    "RotaryEmbedding_Interleaved_Partial": [f32(np.sin(np.arange(72)), (2, 2, 3, 6))],
     "SeluAttributes": [f32([-2.0, -0.5, 0.5, 2.0], (1, 4))],
     "Shape": [f32([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (1, 2, 3))],
     "Slice": [rand_f32(1, (20, 10, 5))],

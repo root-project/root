@@ -61,6 +61,7 @@ set(TMVASOFIE_EXTRA_HEADERS
   TMVA/ROperator_Reduce.hxx
   TMVA/ROperator_Relu.hxx
   TMVA/ROperator_Reshape.hxx
+  TMVA/ROperator_RotaryEmbedding.hxx
   TMVA/ROperator_ScatterElements.hxx
   TMVA/ROperator_ScatterND.hxx
   TMVA/ROperator_Selu.hxx
