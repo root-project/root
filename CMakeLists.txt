@@ -492,60 +492,86 @@ if(MSVC)
   string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 endif()
 
+function(_root_emit_vfs_node rel_dir indent out_var)
+  set(_buf "${${out_var}}")
+  string(MAKE_C_IDENTIFIER "node_${rel_dir}" _node_id)
+
+  # 1. Emit all subdirectories of rel_dir
+  if(DEFINED _vfs_subdirs_${_node_id})
+    list(REMOVE_DUPLICATES _vfs_subdirs_${_node_id})
+    list(SORT _vfs_subdirs_${_node_id})
+    foreach(_sub IN LISTS _vfs_subdirs_${_node_id})
+      get_filename_component(_sub_name "${_sub}" NAME)
+      string(APPEND _buf
+        "${indent}- name: \"${_sub_name}\"\n"
+        "${indent}  type: directory\n"
+        "${indent}  contents:\n"
+      )
+      _root_emit_vfs_node("${_sub}" "${indent}    " _buf)
+    endforeach()
+  endif()
+
+  # 2. Emit all files directly inside rel_dir
+  if(DEFINED _vfs_files_${_node_id})
+    list(REMOVE_DUPLICATES _vfs_files_${_node_id})
+    list(SORT _vfs_files_${_node_id})
+    foreach(_fentry IN LISTS _vfs_files_${_node_id})
+      string(REPLACE "|" ";" _fparts "${_fentry}")
+      list(GET _fparts 0 _fname)
+      list(GET _fparts 1 _fsrc)
+      string(APPEND _buf
+        "${indent}- name: \"${_fname}\"\n"
+        "${indent}  type: file\n"
+        "${indent}  external-contents: \"${_fsrc}\"\n"
+      )
+    endforeach()
+  endif()
+
+  set(${out_var} "${_buf}" PARENT_SCOPE)
+endfunction()
+
 if(runtime_cxxmodules)
   get_property(_vfs_mappings GLOBAL PROPERTY ROOT_VFS_HEADER_MAPPINGS)
-  set(_vfs_yaml "version: 0\ncase-sensitive: false\nroots:\n")
-
   if(_vfs_mappings)
     list(REMOVE_DUPLICATES _vfs_mappings)
-    set(_all_dirs "")
 
-    # Pass 1: Group entries into per-directory variables
+    # Pass 1: Register every file and every intermediate ancestor directory
     foreach(_entry IN LISTS _vfs_mappings)
       string(REPLACE "|" ";" _parts "${_entry}")
       list(GET _parts 0 _rel_path)
       list(GET _parts 1 _src_path)
 
-      get_filename_component(_rel_dir "${_rel_path}" DIRECTORY)
-      get_filename_component(_file_name "${_rel_path}" NAME)
+      get_filename_component(_parent "${_rel_path}" DIRECTORY)
+      get_filename_component(_fname "${_rel_path}" NAME)
 
-      if(_rel_dir STREQUAL "")
-        set(_virtual_dir "${CMAKE_BINARY_DIR}/include")
-      else()
-        set(_virtual_dir "${CMAKE_BINARY_DIR}/include/${_rel_dir}")
-      endif()
+      string(MAKE_C_IDENTIFIER "node_${_parent}" _parent_id)
+      list(APPEND _vfs_files_${_parent_id} "${_fname}|${_src_path}")
 
-      # Create a safe CMake variable name from the directory path
-      string(MAKE_C_IDENTIFIER "${_virtual_dir}" _dir_var)
-      list(APPEND _all_dirs "${_virtual_dir}")
-      list(APPEND _vfs_files_${_dir_var} "${_file_name}|${_src_path}")
-    endforeach()
-
-    # Pass 2: Deduplicate directories and emit YAML per group
-    list(REMOVE_DUPLICATES _all_dirs)
-    foreach(_virtual_dir IN LISTS _all_dirs)
-      string(APPEND _vfs_yaml
-        "  - name: \"${_virtual_dir}\"\n"
-        "    type: directory\n"
-        "    contents:\n"
-      )
-
-      string(MAKE_C_IDENTIFIER "${_virtual_dir}" _dir_var)
-      foreach(_file_entry IN LISTS _vfs_files_${_dir_var})
-        string(REPLACE "|" ";" _fparts "${_file_entry}")
-        list(GET _fparts 0 _file_name)
-        list(GET _fparts 1 _src_path)
-
-        string(APPEND _vfs_yaml
-          "      - name: \"${_file_name}\"\n"
-          "        type: file\n"
-          "        external-contents: \"${_src_path}\"\n"
-        )
-      endforeach()
+      # Walk up all ancestor directories so intermediate folders (e.g. RooFit, RooStats) are linked
+      set(_cur "${_parent}")
+      while(NOT "${_cur}" STREQUAL "")
+        get_filename_component(_up "${_cur}" DIRECTORY)
+        string(MAKE_C_IDENTIFIER "node_${_up}" _up_id)
+        list(APPEND _vfs_subdirs_${_up_id} "${_cur}")
+        set(_cur "${_up}")
+      endwhile()
     endforeach()
   endif()
 
+  # Pass 2: Recursively emit the YAML tree rooted at ${CMAKE_BINARY_DIR}/include
+  set(_vfs_yaml
+    "version: 0\n"
+    "case-sensitive: false\n"
+    "roots:\n"
+    "  - name: \"${CMAKE_BINARY_DIR}/include\"\n"
+    "    type: directory\n"
+    "    contents:\n"
+  )
+  string(JOIN "" _vfs_yaml ${_vfs_yaml})
+  _root_emit_vfs_node("" "      " _vfs_yaml)
+
   file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/etc/buildtree_vfs.yaml" CONTENT "${_vfs_yaml}")
+
 
   # Dummy target that does nothing, we don't need a PCH for modules.
   # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow

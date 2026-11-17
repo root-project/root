@@ -3397,6 +3397,10 @@ static llvm::cl::opt<std::string>
 gOptDictionaryFileName(llvm::cl::Positional,
                       llvm::cl::desc("<output dictionary file>"),
                       llvm::cl::cat(gRootclingOptions));
+static llvm::cl::list<std::string> gOptVFSOverlays(
+   "ivfsoverlay",
+   llvm::cl::desc("Overlay the virtual filesystem described by YAML file over the real file system"),
+   llvm::cl::cat(gRootclingOptions));
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
@@ -3876,6 +3880,7 @@ int RootClingMain(int argc,
    // would interfere with LLVM's option parsing.
    gOptDictionaryFileName.setNumOccurrencesFlag(llvm::cl::Required);
    gOptDictionaryHeaderFiles.setNumOccurrencesFlag(llvm::cl::OneOrMore);
+   gOptVFSOverlays.setNumOccurrencesFlag(llvm::cl::ZeroOrMore);
 
    // Copied from cling driver.
    // FIXME: Uncomment once we fix ROOT's teardown order.
@@ -4078,6 +4083,11 @@ int RootClingMain(int argc,
    const char *includeDir = gDriverConfig->fTROOT__GetIncludeDir();
    if (includeDir) {
        clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(includeDir));
+   }
+
+   for (const auto &vfs : gOptVFSOverlays) {
+      clingArgs.push_back("-ivfsoverlay");
+      clingArgs.push_back(vfs);
    }
 
    std::vector<std::string> pcmArgs;

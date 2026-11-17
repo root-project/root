@@ -923,7 +923,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   set(_vfs_overlay_dep)
-  if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND runtime_cxxmodules)
+  if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND runtime_cxxmodules AND NOT ARG_STAGE1)
     set(_vfs_yaml "${CMAKE_BINARY_DIR}/etc/buildtree_vfs.yaml")
     list(APPEND newargs "-ivfsoverlay" "${_vfs_yaml}")
     set(_vfs_overlay_dep "${_vfs_yaml}")

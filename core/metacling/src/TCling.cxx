@@ -1506,6 +1506,15 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    // and rootcling because rootcling activates modules only if -cxxmodule
    // flag is passed.
    if (fCxxModulesEnabled && !fromRootCling) {
+      // If running from a build tree, attach the build-tree VFS overlay so
+      // relative header paths in ROOT.modulemap resolve to the source tree.
+      std::string BuildTreeVFS = std::string(TROOT::GetEtcDir().Data())
+                               + ROOT::FoundationUtils::GetPathSeparator()
+                               + "buildtree_vfs.yaml";
+      if (llvm::sys::fs::exists(BuildTreeVFS)) {
+         clingArgsStorage.push_back("-ivfsoverlay");
+         clingArgsStorage.push_back(BuildTreeVFS);
+      }
       // For now we prefer rootcling to enumerate explicitly its modulemaps.
       std::vector<std::string> ModuleMaps;
       std::string ModuleMapSuffix = ROOT::FoundationUtils::GetPathSeparator() + "ROOT.modulemap";
@@ -1541,7 +1550,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    // Activate C++ modules support. If we are running within rootcling, it's up
    // to rootcling to set this flag depending on whether it wants to produce
    // C++ modules.
-   TString vfsArg;
    if (fCxxModulesEnabled) {
       if (!fromRootCling) {
          // We only set this flag, rest is done by the CIFactory.
