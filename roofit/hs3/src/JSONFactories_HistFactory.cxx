@@ -404,7 +404,8 @@ void configureGammasWithConstraints(RooArgList const &gammas, std::vector<double
 ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname, std::string const &sysname,
                          std::vector<HS3::ParameterRef> const &parnames, std::vector<double> const &vals,
                          HS3::GammaConstraint const &constraint, RooArgSet &constraints, RooArgSet const &observables,
-                         double gammaMax, double minSigma, std::size_t nBins, std::string const &context)
+                         double gammaMax, double minSigma, std::size_t nBins, std::string const &context,
+                         bool configureGammas = true)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -453,7 +454,9 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
          }
          constraintPdfs.push_back(pdf);
       }
-      configureGammasWithConstraints(gammas, vals, constraintPdfs, minSigma);
+      // Without `configureGammas`, nothing is derived from `vals`: the gammas keep their range and constness, and
+      // only get the initial error that their constraint distribution encodes.
+      configureGammasWithConstraints(gammas, configureGammas ? vals : std::vector<double>{}, constraintPdfs, minSigma);
    }
 
    if (vals.empty()) {
@@ -1696,10 +1699,14 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
          errs[i] = sumW[i] > 0. ? std::sqrt(sumW2[i]) / sumW[i] : 0.;
       }
 
-      mcStatObject =
-         &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
-                    statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
-                    dist.statError.relThreshold, errs.size(), "the staterror modifier of channel '" + name + "'");
+      // In HS3 0.3 (HS3 PR #154, decision on HS3 #156), the named constraints of a staterror are authoritative: the
+      // range, the constness and the step width of the gammas come from the document, and nothing is derived from
+      // the errors of the samples. Older documents relied on RooFit configuring the gammas from them.
+      const bool configureGammas = tool.hs3Version() < HS3::Version{0, 3};
+      mcStatObject = &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
+                                statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
+                                dist.statError.relThreshold, errs.size(),
+                                "the staterror modifier of channel '" + name + "'", configureGammas);
    }
 
    ChannelContext ctx{tool, dist, observables, name, channelName, mcStatObject, constraints};

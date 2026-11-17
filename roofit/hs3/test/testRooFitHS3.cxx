@@ -9786,3 +9786,56 @@ TEST(RooFitHS3, HistFactoryConstraintsListedOnce)
       EXPECT_NE(ws.pdf("c_a"), nullptr);
    }
 }
+
+// HS3 0.3: the named constraints of a staterror are authoritative; nothing is derived from the errors of the samples.
+TEST(RooFitHS3, StatErrorFromDocument)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // A sample error of 10% would give gamma_0 the range [0, 1.5] if it were derived from the errors.
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "d", "type": "product_domain", "axes": [
+         {"name": "gamma_0", "min": 0.0, "max": 5.0}, {"name": "gamma_1", "min": 0.0, "max": 5.0},
+         {"name": "nom_gamma_0", "value": 1.0}]}],
+      "distributions": [
+         {
+            "name": "model_c", "type": "histfactory_dist",
+            "axes": [{"name": "obs_c", "min": 0.0, "max": 2.0, "nbins": 2}],
+            "samples": [{"name": "s", "data": {"contents": [10.0, 20.0], "errors": [1.0, 0.0]}, "modifiers": [
+               {"type": "staterror", "parameters": ["gamma_0", "gamma_1"], "constraints": ["c_0", null]}
+            ]}]
+         },
+         {"name": "c_0", "type": "gaussian_dist", "x": "nom_gamma_0", "mean": "gamma_0", "sigma": 0.1}
+      ],
+      "data": [{"name": "obs", "type": "binned", "axes": [{"name": "obs_c", "min": 0.0, "max": 2.0, "nbins": 2}],
+                "contents": [11, 19]}],
+      "likelihoods": [{"name": "lh", "distributions": ["model_c"], "data": ["obs"], "aux_distributions": ["c_0"]}],
+      "analyses": [{"name": "ana", "likelihood": "lh", "domains": ["d"]}]
+   })";
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   // The ranges come from the domain, and the bin without uncertainty is not fixed, since the document doesn't say so.
+   EXPECT_DOUBLE_EQ(ws.var("gamma_0")->getMax(), 5.0);
+   EXPECT_FALSE(ws.var("gamma_0")->isConstant());
+   EXPECT_FALSE(ws.var("gamma_1")->isConstant());
+
+   // Older documents get the constrained gammas configured from the errors, as before. The unconstrained gamma of the
+   // bin without uncertainty is left free in any version, see HistFactoryUnconstrainedGammasStayFree.
+   std::string legacy = json;
+   legacy.replace(legacy.find(R"("hs3_version": "0.3")"), std::string(R"("hs3_version": "0.3")").size(),
+                  R"("hs3_version": "0.2")");
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(legacy));
+   EXPECT_DOUBLE_EQ(ws2.var("gamma_0")->getMax(), 1.5);
+   EXPECT_FALSE(ws2.var("gamma_1")->isConstant());
+
+   // RooFit writes a fixed gamma as fixed, with a null constraint, so the configuration survives a round trip.
+   ws2.var("gamma_1")->setConstant(true);
+   const std::string exported = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   RooWorkspace ws3;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported));
+   EXPECT_TRUE(ws3.var("gamma_1")->isConstant()) << exported;
+   EXPECT_FALSE(ws3.var("gamma_0")->isConstant()) << exported;
+   EXPECT_DOUBLE_EQ(ws3.var("gamma_0")->getMax(), 1.5) << exported;
+}
