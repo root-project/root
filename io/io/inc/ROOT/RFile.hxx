@@ -185,6 +185,41 @@ public:
    RIterator end() const;
 };
 
+/// The data stored in the ROOT file header
+class RFileHeader final {
+   friend class ROOT::RFile;
+
+   std::int32_t fVersion = 0;
+   std::int64_t fBEGIN = 0;
+   std::int64_t fEND = 0;
+   std::int64_t fSeekFree = 0;
+   std::int32_t fNBytesFree = 0;
+   std::int8_t fUnits = 0;
+   std::int32_t fCompression = 0;
+   std::int64_t fSeekInfo = 0;
+   std::int32_t fNBytesInfo = 0;
+
+public:
+   /// Version of ROOT which wrote this file. When creating a file this is set to gROOT->GetVersionInt().
+   std::int32_t GetVersion() const { return fVersion; }
+   /// First used byte in the file (except header)
+   std::int64_t GetBEGIN() const { return fBEGIN; }
+   /// Last used byte in the file
+   std::int64_t GetEND() const { return fEND; }
+   /// Offset into the file of the Free List section
+   std::int64_t GetSeekFree() const { return fSeekFree; }
+   /// Size on disk of the (potentially compressed) Free List section
+   std::int32_t GetNBytesFree() const { return fNBytesFree; }
+   /// Offset into the file of the File Info section
+   std::int64_t GetSeekInfo() const { return fSeekInfo; }
+   /// Size on disk of the (potentially compressed) File Info section
+   std::int32_t GetNBytesInfo() const { return fNBytesInfo; }
+   /// How many bytes do the Seek fields take up on disk. This is 4 for regular files and 8 for "big" files.
+   std::int8_t GetUnits() const { return fUnits; }
+   /// Compression settings used by the file. See Compression.h for details.
+   std::int32_t GetCompression() const { return fCompression; }
+};
+
 /**
 \class ROOT::RFile
 \ingroup io_files
@@ -466,6 +501,9 @@ public:
 
    /// Prints the internal structure of this RFile to the given stream.
    void Print(std::ostream &out = std::cout) const;
+
+   /// Returns the data contained in the ROOT file's header.
+   RFileHeader GetFileHeader() const;
 };
 
 } // namespace ROOT
