@@ -799,7 +799,7 @@ bool importPoisson(RooJSONFactoryWSTool *tool, const JSONNode &p)
    bool noRounding = Continuous;
    if (p.has_child("integer")) {
       std::string const type = Continuous ? "poisson_continuous_dist" : "poisson_dist";
-      if (Continuous || !isHS3VersionBefore(tool->hs3VersionInput(), 0, 3)) {
+      if (Continuous || !(tool->hs3Version() < RooFit::HS3::Version{0, 3})) {
          RooJSONFactoryWSTool::error(
             type + " '" + name +
             "' has the key \"integer\", which is not part of HS3. The discrete Poisson distribution is "
@@ -1064,13 +1064,13 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
          << ". Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
          << "Root version that supports custom ParamHistFunc binnings(>=6.38.00)." << std::endl;
       RooJSONFactoryWSTool::warning(ss.str());
-      checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), varList, "the ParamHistFunc '" + name + "'");
+      checkParamHistFuncOrderIsDefined(tool->hs3Version(), varList, "the ParamHistFunc '" + name + "'");
       tool->wsEmplace<ParamHistFunc>(name, varList,
                                      toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), varList));
       return true;
    }
    RooArgList binning = readBinning(p, varList);
-   checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), binning, "the ParamHistFunc '" + name + "'");
+   checkParamHistFuncOrderIsDefined(tool->hs3Version(), binning, "the ParamHistFunc '" + name + "'");
    // The parameters are given in the order of HS3 (last axis fastest); ParamHistFunc expects TH1 order.
    tool->wsEmplace<ParamHistFunc>(name, binning,
                                   toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), binning));

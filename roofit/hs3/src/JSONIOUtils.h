@@ -9,6 +9,8 @@
 #include <vector>
 #include <RooFit/Detail/JSONInterface.h>
 
+#include "HS3Document.h"
+
 class RooAbsArg;
 class RooAbsBinning;
 class RooAbsCollection;
@@ -65,9 +67,6 @@ bool endsWith(std::string_view str, std::string_view suffix);
 std::string removeSuffix(std::string_view str, std::string_view suffix);
 void writeAxisBinning(RooFit::Detail::JSONNode &node, const RooAbsBinning &binning);
 
-bool parseHS3Version(std::string const &version, int &major, int &minor);
-bool isHS3VersionBefore(std::string const &version, int major, int minor);
-
 // A RooHistFunc or RooHistPdf is evaluated with its own observables (`funcObs`), which are mapped by position onto
 // the variables of its histogram (`histObs`) and need not have the same names, e.g. after a RooCustomizer replaced
 // them. The variables of the histogram `dh`, in the order of the histogram, each named after the observable that is
@@ -82,7 +81,7 @@ std::vector<RooAbsReal *> paramHistFuncParamsInBinOrder(ParamHistFunc const &fun
 RooArgList toParamHistFuncOrder(RooArgList const &paramsInBinOrder, RooAbsCollection const &vars);
 // Documents before HS3 0.3 wrote the parameters of multi-dimensional ParamHistFuncs in TH1 order. No such documents
 // are known; they are rejected instead of being guessed.
-void checkParamHistFuncOrderIsDefined(std::string const &hs3Version, RooAbsCollection const &vars,
+void checkParamHistFuncOrderIsDefined(RooFit::HS3::Version const &version, RooAbsCollection const &vars,
                                       std::string const &context);
 
 // Selection keys (HS3 "combined" data sets and "combined_dist"): a key is one label per column, and the columns are

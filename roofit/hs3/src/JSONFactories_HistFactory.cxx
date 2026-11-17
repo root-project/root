@@ -468,7 +468,7 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
 
    // The gammas and `vals` are given in the order of HS3 (last axis fastest), which is also the order in which they
    // are paired below. ParamHistFunc expects its parameters in TH1 order.
-   checkParamHistFuncOrderIsDefined(tool.hs3VersionInput(), observables, "the modifier '" + sysname + "'");
+   checkParamHistFuncOrderIsDefined(tool.hs3Version(), observables, "the modifier '" + sysname + "'");
    RooArgList gammasInTH1Order = toParamHistFuncOrder(gammas, observables);
 
    // Shape modifiers of the same name in a channel share the function, so they need the same parameters.
@@ -1938,11 +1938,8 @@ void RooFit::HS3::importHistFactoryNode(RooJSONFactoryWSTool &tool, JSONNode con
    node.writeJSON(ss);
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(ss.str());
 
-   HS3::Version version;
-   HS3::parseVersion(tool.hs3VersionInput(), version);
-
    HS3::Diagnostics diagnostics;
-   HS3::upgradeHistFactoryDist(tree->rootnode(), version, diagnostics);
+   HS3::upgradeHistFactoryDist(tree->rootnode(), tool.hs3Version(), diagnostics);
    HS3::HistFactoryDist dist = HS3::parseHistFactoryDist(tree->rootnode(), diagnostics);
    if (!HS3::hasErrors(diagnostics)) {
       HS3::validateHistFactoryDist(dist, name, diagnostics);

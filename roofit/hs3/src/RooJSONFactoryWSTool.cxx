@@ -2008,6 +2008,11 @@ RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() = default;
 
+HS3::Version RooJSONFactoryWSTool::hs3Version() const
+{
+   return _import ? _import->document.metadata.version : HS3::Version{};
+}
+
 void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll, size_t nMax)
 {
    const size_t old_children = node.num_children();
@@ -3792,7 +3797,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    std::optional<RooFit::ValidatedHS3Document> validated;
    if (!HS3::hasErrors(diagnostics)) {
       HS3::ValidateOptions validateOptions;
-      validateOptions.strict = !isHS3VersionBefore(parsed.metadata.hs3Version, 0, 3);
+      validateOptions.strict = !(parsed.metadata.version < HS3::Version{0, 3});
       validateOptions.isExternal = [this](std::string const &name) { return _workspace.obj(name) != nullptr; };
       validated = HS3::validate(std::move(parsed), diagnostics, validateOptions);
    }
@@ -3802,14 +3807,8 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    // The state of the import refers to the document, so it must not survive it, not even if there is an exception.
    struct ImportScope {
       RooJSONFactoryWSTool &tool;
-      ~ImportScope()
-      {
-         tool._import.reset();
-         tool._hs3VersionInput.clear();
-      }
+      ~ImportScope() { tool._import.reset(); }
    } importScope{*this};
-
-   _hs3VersionInput = doc.metadata.hs3Version;
 
    _import = std::make_unique<HS3::ToolImportState>(doc);
 
@@ -3901,7 +3900,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
       }
    }
    for (std::string const &message : sharedVariatesOfDocument(n)) {
-      if (!isHS3VersionBefore(_hs3VersionInput, 0, 3)) {
+      if (!(doc.metadata.version < HS3::Version{0, 3})) {
          error("invalid HS3: " + message +
                ". The terms of a likelihood and the components of a combined distribution or data set must have "
                "distinct variates.");

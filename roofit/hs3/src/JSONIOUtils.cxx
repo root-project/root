@@ -12,7 +12,6 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <algorithm>
-#include <cctype>
 #include <cstring>
 #include <set>
 #include <sstream>
@@ -83,41 +82,6 @@ void writeAxisBinning(JSONNode &node, const RooAbsBinning &binning)
    for (int i = 0; i < binning.numBins(); ++i) {
       edges.append_child() << binning.binHigh(i);
    }
-}
-
-// Parse the leading "MAJOR.MINOR" of an HS3 version string like "0.2", "0.2.9" or "0.3".
-bool parseHS3Version(std::string const &version, int &major, int &minor)
-{
-   std::size_t pos = 0;
-   auto readNumber = [&](int &out) {
-      const std::size_t begin = pos;
-      while (pos < version.size() && std::isdigit(static_cast<unsigned char>(version[pos]))) {
-         ++pos;
-      }
-      // Reject empty and absurdly long numbers, which std::stoi could not represent.
-      if (pos == begin || pos - begin > 9) {
-         return false;
-      }
-      out = std::stoi(version.substr(begin, pos - begin));
-      return true;
-   };
-   if (!readNumber(major) || pos >= version.size() || version[pos] != '.') {
-      return false;
-   }
-   ++pos;
-   return readNumber(minor);
-}
-
-// Whether an HS3 version predates `major.minor`. Versions that can't be parsed count as old. That includes the empty
-// version of objects that are imported without a document.
-bool isHS3VersionBefore(std::string const &version, int major, int minor)
-{
-   int versionMajor = 0;
-   int versionMinor = 0;
-   if (!parseHS3Version(version, versionMajor, versionMinor)) {
-      return true;
-   }
-   return std::make_pair(versionMajor, versionMinor) < std::make_pair(major, minor);
 }
 
 namespace {
@@ -195,10 +159,10 @@ RooArgList toParamHistFuncOrder(RooArgList const &paramsInBinOrder, RooAbsCollec
    return out;
 }
 
-void checkParamHistFuncOrderIsDefined(std::string const &hs3Version, RooAbsCollection const &vars,
+void checkParamHistFuncOrderIsDefined(RooFit::HS3::Version const &version, RooAbsCollection const &vars,
                                       std::string const &context)
 {
-   if (vars.size() >= 2 && isHS3VersionBefore(hs3Version, 0, 3)) {
+   if (vars.size() >= 2 && version < RooFit::HS3::Version{0, 3}) {
       RooJSONFactoryWSTool::error(context +
                                   " has a multi-dimensional binning. Documents before HS3 0.3 don't define the order "
                                   "of its per-bin parameters (RooFit wrote them in TH1 order, while the bin "

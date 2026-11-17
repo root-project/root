@@ -35,6 +35,7 @@ struct ParameterPoint;
 struct ParameterValue;
 struct ToolExportState;
 struct ToolImportState;
+struct Version;
 template <class Tag>
 struct Ref;
 using DistributionRef = Ref<struct DistributionTag>;
@@ -249,8 +250,9 @@ public:
    std::string getStringAttribute(const std::string &obj, const std::string &attrib);
    void setStringAttribute(const std::string &obj, const std::string &attrib, const std::string &value);
 
-   /// The "hs3_version" of the document that is currently being imported, or an empty string outside of an import.
-   std::string const &hs3VersionInput() const { return _hs3VersionInput; }
+   /// The HS3 version of the document that is currently being imported. Outside of an import it is 0.0.0, like a
+   /// version that can't be parsed.
+   RooFit::HS3::Version hs3Version() const;
 
 private:
    template <class T>
@@ -301,7 +303,6 @@ private:
                                               std::vector<RooFit::HS3::DistributionRef> channelConstraints);
 
    // member variables
-   std::string _hs3VersionInput;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
