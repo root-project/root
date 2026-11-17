@@ -100,3 +100,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     MathCore
     RIO
 )
+
+# suppress warnings about deprecated TTF.h
+target_compile_definitions(Graf PRIVATE ROOT_TTFsupport)
