@@ -29,6 +29,7 @@ The following people have contributed to this new version:
   We are aware that models trained with these methods may be stored in TMVA XML weight files and still be evaluated via `TMVA::Reader` in production workflows. If you need to keep running such models after ROOT 6.46, please reach out to the ROOT team by opening a [GitHub issue](https://github.com/root-project/root/issues) or posting on the [ROOT forum](https://root-forum.cern.ch/), so that a migration path to SOFIE can be provided.
 * The build options `tmva-cpu`, `tmva-gpu`, `tmva-cudnn` and `use_gsl_cblas` only affect the deprecated TMVA deep learning methods, so they are deprecated as well and will be removed in ROOT 6.46. The `tmva-cpu` option is now `OFF` by default, also with `-Dall=ON`, so `MethodDL` runs on a single thread without BLAS and `MethodDNN` cannot be trained, unless ROOT is configured with `-Dtmva-cpu=ON`. Evaluating existing weight files with `TMVA::Reader` works in both cases.
 * The `TMVA::Experimental::RSofieReader` class has been removed, as it was not general enough to accomodate for arbitrary model input tensor arguments and their shapes. The preferred alternative is to use the emitted C++ code directly.
+* The `RooHistFunc::cloneAndOwnDataHist()` and `RooHistPdf::cloneAndOwnDataHist()` were removed without deprecation period. They were only introduced in ROOT 6.28 and are redundant with the `RooHistFunc` and `RooHistPdf` constructors that take a `std::unique_ptr<RooDataHist>`, introduced also in 6.28.
 
 ## Build system
 

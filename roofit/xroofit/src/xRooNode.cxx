@@ -3847,22 +3847,24 @@ xRooNode xRooNode::Vary(const xRooNode &child)
          if (!v->hasError())
             v->setError(1);
 
-         std::shared_ptr<RooHistFunc> up(
-            static_cast<RooHistFunc *>(f->Clone(Form("%s_%s_up", f->GetName(), parName.Data()))));
-         std::shared_ptr<RooHistFunc> down(
-            static_cast<RooHistFunc *>(f->Clone(Form("%s_%s_down", f->GetName(), parName.Data()))));
-         // RooHistFunc doesn't clone it's data hist ... do it ourself (will be cloned again if imported into a ws)
-#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-         std::unique_ptr<RooDataHist> h1(
-            static_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", up->GetName()))));
-         std::unique_ptr<RooDataHist> h2(
-            static_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", down->GetName()))));
-         up->_dataHist = dynamic_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", up->GetName())));
-         down->_dataHist = dynamic_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", down->GetName())));
-#else
-         up->cloneAndOwnDataHist(TString::Format("hist_%s", up->GetName()));
-         down->cloneAndOwnDataHist(TString::Format("hist_%s", down->GetName()));
-#endif
+         auto upName = TString::Format("%s_%s_up", f->GetName(), parName.Data());
+         auto upHistName = TString::Format("hist_%s", upName.Data());
+         auto downName = TString::Format("%s_%s_down", f->GetName(), parName.Data());
+         auto downHistName = TString::Format("hist_%s", downName.Data());
+
+         // RooHistFunc doesn't clone it's data hist ... do it ourself
+         // (will be cloned again if imported into a ws)
+         auto up = std::make_shared<RooHistFunc>(upName, f->GetTitle(), f->variables(),
+                                                 std::make_unique<RooDataHist>(f->dataHist(), upHistName),
+                                                 f->getInterpolationOrder());
+         up->setCdfBoundaries(f->getCdfBoundaries());
+
+         auto down = std::make_shared<RooHistFunc>(downName, f->GetTitle(), f->variables(),
+
+                                                   std::make_unique<RooDataHist>(f->dataHist(), downHistName),
+                                                   f->getInterpolationOrder());
+         down->setCdfBoundaries(f->getCdfBoundaries());
+
          auto ups = std::dynamic_pointer_cast<RooHistFunc>(acquire(up, false, true));
          auto downs = std::dynamic_pointer_cast<RooHistFunc>(acquire(down, false, true));
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
