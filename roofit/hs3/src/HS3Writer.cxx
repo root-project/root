@@ -27,16 +27,6 @@ namespace RooFit {
 namespace HS3 {
 namespace {
 
-// Infinite bounds are written as null.
-void writeBound(JSONNode &node, double value)
-{
-   if (std::isinf(value)) {
-      node.set_null();
-   } else {
-      node << value;
-   }
-}
-
 template <class Tag>
 void writeRefs(JSONNode &node, std::vector<Ref<Tag>> const &refs)
 {
