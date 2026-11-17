@@ -21,7 +21,7 @@ jobs:
       - name: Check out CppInterOp
         uses: actions/checkout@v6
         with:
-          repository: compiler-research/CppInterOp
+          repository: root-project/CppInterOp
           ref: ${{ steps.determine-tag.outputs.tag }}
           path: CppInterOp
       - name: Drop directories that are not added to ROOT
