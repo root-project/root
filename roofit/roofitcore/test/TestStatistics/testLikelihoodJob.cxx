@@ -399,7 +399,7 @@ TEST_F(LikelihoodJobTest, SimUnbinnedNonExtended)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1.Sum());
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 class LikelihoodJobSimBinnedConstrainedTest : public LikelihoodJobTest {

@@ -2205,6 +2205,20 @@ void RooFixedProdPdf::doEval(RooFit::EvalContext &ctx) const
    }
    std::vector<std::span<const double>> factors;
    factors.reserve(partList()->size());
+   if (ctx.outputsLogarithm(this)) {
+      // The factors that provide their logarithms go first.
+      for (const RooAbsArg *arg : *partList()) {
+         if (ctx.outputsLogarithm(arg))
+            factors.push_back(ctx.at(arg));
+      }
+      std::array<double, 1> nLogFactors{static_cast<double>(factors.size())};
+      for (const RooAbsArg *arg : *partList()) {
+         if (!ctx.outputsLogarithm(arg))
+            factors.push_back(ctx.at(arg));
+      }
+      RooBatchCompute::compute(ctx.config(this), RooBatchCompute::LogProdPdf, ctx.output(), factors, nLogFactors);
+      return;
+   }
    for (const RooAbsArg *arg : *partList()) {
       auto span = ctx.at(arg);
       factors.push_back(span);
