@@ -10,6 +10,7 @@
 #include <RooBinWidthFunction.h>
 #include <RooBinning.h>
 #include <RooCBShape.h>
+#include <RooAbsCategoryLValue.h>
 #include <RooCategory.h>
 #include <RooBinSamplingPdf.h>
 #include <RooConstVar.h>
@@ -52,6 +53,7 @@
 #include <cmath>
 #include <limits>
 #include <cstdio>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
@@ -398,6 +400,134 @@ void importDuplicateHistoSysModel(RooWorkspace &ws, int interpCode, std::vector<
    RooRealSumPdf model{"model_channel0", "model_channel0", RooArgList{sampleShapes}, RooArgList{sampleScale}, true};
 
    ws.import(model, RooFit::Silence());
+}
+
+// A two-channel HistFactory model with a normsys shared by the channels, a staterror in both channels, a shapefactor,
+// and binned data, with the constraints either written one per parameter or collected into one array distribution
+// per type (`arrays`), as RooFit writes them.
+std::string twoChannelHistFactoryJSON(bool arrays)
+{
+   const std::vector<std::string> gammas{"gamma_c1_0", "gamma_c1_1", "gamma_c2_0", "gamma_c2_1", "gs_0", "gs_1"};
+   std::string constraintDists;
+   std::string components;
+   std::string functions;
+   std::string values;
+   std::string domainAxes;
+   for (auto const &g : gammas) {
+      functions += R"({"name": ")" + g + R"(_poisMean", "type": "product", "factors": [")" + g + R"(", 100.0]},)";
+      values +=
+         R"({"name": "nom_)" + g + R"(", "value": 100.0, "const": true}, {"name": ")" + g + R"(", "value": 1.0},)";
+      domainAxes += R"({"name": ")" + g + R"(", "min": 0.0, "max": 5.0}, {"name": "nom_)" + g +
+                    R"(", "min": 0.0, "max": 1000.0},)";
+      constraintDists += R"({"name": ")" + g + R"(_constraint", "type": "poisson_continuous_dist", "x": "nom_)" + g +
+                         R"(", "mean": ")" + g + R"(_poisMean"},)";
+      components += R"({"x": "nom_)" + g + R"(", "mean": ")" + g + R"(_poisMean"},)";
+   }
+   components.pop_back();
+   auto constraint = [&](std::string const &individual, std::string const &array) {
+      return "\"" + (arrays ? array : individual) + "\"";
+   };
+   auto gammaConstraints = [&](std::string const &prefix) {
+      return constraint(prefix + "_0_constraint", "pois_constraints") + ", " +
+             constraint(prefix + "_1_constraint", "pois_constraints");
+   };
+   const std::string distributions =
+      arrays
+         ? R"({"name": "gauss_constraints", "type": "array_dist", "component_type": "gaussian_dist",
+                   "components": [{"x": "alpha_a", "mean": 0.0, "sigma": 1.0}]},
+                  {"name": "pois_constraints", "type": "array_dist", "component_type": "poisson_continuous_dist",
+                   "components": [)" +
+              components + "]}"
+         : R"({"name": "alpha_a_constraint", "type": "gaussian_dist", "x": "alpha_a", "mean": 0.0, "sigma": 1.0},)" +
+              constraintDists.substr(0, constraintDists.size() - 1);
+   return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "model_c1", "type": "histfactory_dist",
+          "axes": [{"name": "x_c1", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+          "samples": [
+            {"name": "sig", "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
+             "modifiers": [
+               {"type": "normfactor", "parameters": ["mu"]},
+               {"name": "a", "type": "normsys", "parameters": ["alpha_a"], "data": {"lo": 0.9, "hi": 1.1},
+                "constraints": [)" +
+          constraint("alpha_a_constraint", "gauss_constraints") + R"(]},
+               {"type": "staterror", "parameters": ["gamma_c1_0", "gamma_c1_1"], "constraints": [)" +
+          gammaConstraints("gamma_c1") + R"(]}]},
+            {"name": "bkg", "data": {"contents": [5.0, 5.0], "errors": [1.0, 1.0]},
+             "modifiers": [
+               {"name": "shape", "type": "shapefactor", "parameters": ["gs_0", "gs_1"], "constraints": [)" +
+          gammaConstraints("gs") + R"(]},
+               {"type": "staterror", "parameters": ["gamma_c1_0", "gamma_c1_1"], "constraints": [)" +
+          gammaConstraints("gamma_c1") + R"(]}]}]},
+         {"name": "model_c2", "type": "histfactory_dist",
+          "axes": [{"name": "x_c2", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+          "samples": [
+            {"name": "sig", "data": {"contents": [30.0, 10.0], "errors": [2.0, 1.0]},
+             "modifiers": [
+               {"type": "normfactor", "parameters": ["mu"]},
+               {"name": "a", "type": "normsys", "parameters": ["alpha_a"], "data": {"lo": 0.8, "hi": 1.2},
+                "constraints": [)" +
+          constraint("alpha_a_constraint", "gauss_constraints") + R"(]},
+               {"type": "staterror", "parameters": ["gamma_c2_0", "gamma_c2_1"], "constraints": [)" +
+          gammaConstraints("gamma_c2") + R"(]}]}]},
+         )" +
+          distributions + R"(
+      ],
+      "functions": [)" +
+          functions.substr(0, functions.size() - 1) + R"(],
+      "data": [
+         {"name": "obs_c1", "type": "binned", "axes": [{"name": "x_c1", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "contents": [12.0, 19.0]},
+         {"name": "obs_c2", "type": "binned", "axes": [{"name": "x_c2", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "contents": [28.0, 11.0]}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "mu", "min": 0.0, "max": 5.0}, {"name": "alpha_a", "min": -5.0, "max": 5.0}, )" +
+          domainAxes.substr(0, domainAxes.size() - 1) + R"(]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "mu", "value": 1.0}, {"name": "alpha_a", "value": 0.0}, )" +
+          values.substr(0, values.size() - 1) + R"(]}],
+      "likelihoods": [{"name": "lh", "distributions": ["model_c1", "model_c2"], "data": ["obs_c1", "obs_c2"]}],
+      "analyses": [{"name": "an", "likelihood": "lh", "domains": ["default_domain"],
+                    "parameters_of_interest": ["mu"]}]
+   })";
+}
+
+// The NLL of the two-channel model of twoChannelHistFactoryJSON() at a parameter point.
+double twoChannelNLL(RooWorkspace &ws, std::map<std::string, double> const &point)
+{
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("an"));
+   if (!mc) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   auto *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
+   if (!simPdf) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   for (auto const &[name, value] : point) {
+      ws.var(name)->setVal(value);
+   }
+   // The channels have their own observables, x_c1 and x_c2: one weighted entry per bin and channel.
+   auto &indexCat = dynamic_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(simPdf->indexCat()));
+   RooRealVar &x1 = *ws.var("x_c1");
+   RooRealVar &x2 = *ws.var("x_c2");
+   RooRealVar weight{"weight", "weight", 1.0};
+   RooDataSet combined{"combined", "combined", {x1, x2, indexCat, weight}, RooFit::WeightVar(weight)};
+   for (auto const &item : simPdf->indexCat()) {
+      const std::string channel = item.first.substr(6);
+      auto *hist = static_cast<RooDataHist *>(ws.data("obs_" + channel));
+      RooRealVar &x = channel == "c1" ? x1 : x2;
+      indexCat.setLabel(item.first.c_str());
+      for (int i = 0; i < hist->numEntries(); ++i) {
+         x.setVal(static_cast<RooAbsReal const *>(hist->get(i)->find(x.GetName()))->getVal());
+         combined.add({x1, x2, indexCat}, hist->weight());
+      }
+   }
+   std::unique_ptr<RooAbsReal> nll{simPdf->createNLL(combined)};
+   return nll->getVal();
 }
 
 } // namespace
@@ -1382,6 +1512,61 @@ TEST(RooFitHS3, RooPoisson)
    }
 }
 
+// HS3 0.3 splits the Poisson distribution into the discrete "poisson_dist" and the "poisson_continuous_dist" (HS3
+// #152), which are a RooPoisson without and with noRounding. Documents before HS3 0.3 used "poisson_dist" for both,
+// distinguished by ROOT's own key "integer", which must not be present from HS3 0.3 on.
+TEST(RooFitHS3, PoissonContinuous)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Poisson::discrete(n[3, 0, 10], lambda[2.5, 0, 10])");
+   ws.factory("Poisson::continuous(k[3.5, 0, 10], lambda)");
+   static_cast<RooPoisson *>(ws.pdf("continuous"))->setNoRounding(true);
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   for (auto [name, type] :
+        {std::make_pair("discrete", "poisson_dist"), std::make_pair("continuous", "poisson_continuous_dist")}) {
+      const auto *dist = RooJSONFactoryWSTool::findNamedChild(distributions, name);
+      ASSERT_NE(dist, nullptr) << exported;
+      EXPECT_EQ((*dist)["type"].val(), type) << exported;
+      EXPECT_FALSE(dist->has_child("integer")) << exported;
+   }
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_FALSE(static_cast<RooPoisson *>(ws2.pdf("discrete"))->getNoRounding());
+   EXPECT_TRUE(static_cast<RooPoisson *>(ws2.pdf("continuous"))->getNoRounding());
+   EXPECT_DOUBLE_EQ(ws2.pdf("continuous")->getVal(), ws.pdf("continuous")->getVal());
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   auto document = [](std::string const &version, std::string const &type, std::string const &integer) {
+      return R"({"metadata": {"hs3_version": ")" + version + R"("},
+         "distributions": [{"name": "pois", "type": ")" +
+             type + R"(", "x": "n", "mean": 2.5)" + integer + R"(}],
+         "domains": [{"name": "default_domain", "type": "product_domain",
+                      "axes": [{"name": "n", "min": 0.0, "max": 10.0}]}]})";
+   };
+
+   // Before HS3 0.3: "integer" false is the continuous form, true or no "integer" the discrete form.
+   for (auto [integer, noRounding] : {std::make_pair(R"(, "integer": false)", true),
+                                      std::make_pair(R"(, "integer": true)", false), std::make_pair("", false)}) {
+      RooWorkspace wsLegacy;
+      ASSERT_TRUE(RooJSONFactoryWSTool{wsLegacy}.importJSONfromString(document("0.2", "poisson_dist", integer)));
+      auto *pois = dynamic_cast<RooPoisson *>(wsLegacy.pdf("pois"));
+      ASSERT_NE(pois, nullptr) << integer;
+      EXPECT_EQ(pois->getNoRounding(), noRounding) << integer;
+   }
+
+   // From HS3 0.3 on, and for the continuous type, which was never written with it, "integer" is an error.
+   const std::string reason = "has the key \"integer\", which is not part of HS3";
+   expectImportThrowsWithError(document("0.3", "poisson_dist", R"(, "integer": false)"), reason);
+   expectImportThrowsWithError(document("0.3", "poisson_dist", R"(, "integer": true)"), reason);
+   expectImportThrowsWithError(document("0.2", "poisson_continuous_dist", R"(, "integer": false)"), reason);
+}
+
 TEST(RooFitHS3, RooPolynomial)
 {
    RooWorkspace ws;
@@ -2348,7 +2533,8 @@ TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(jsonStr));
 
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-   EXPECT_NE(exported.find(R"("constraints":["muConstraint"])"), std::string::npos) << exported;
+   // The constraint is collected into the array distribution of its type and top-level pdf.
+   EXPECT_NE(exported.find(R"("constraints":["model_channel0_gaussian_constraints"])"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("\"constraint\":"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("constraint_name"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("constraint_type"), std::string::npos) << exported;
@@ -2371,7 +2557,7 @@ TEST(RooFitHS3, HistFactoryLegacyConstraintTypeInConstraintKey)
    EXPECT_DOUBLE_EQ(alpha->getError(), 1.0);
 
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-   EXPECT_NE(exported.find(R"("constraints":["alpha_lumiConstraint"])"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["model_channel0_gaussian_constraints"])"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("\"constraint\":"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("constraint_name"), std::string::npos) << exported;
    EXPECT_EQ(exported.find("constraint_type"), std::string::npos) << exported;
@@ -3012,7 +3198,7 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraint)
       ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("Gauss", "Poisson")));
       EXPECT_TRUE(hasGaussianStatConstraints(ws));
 
-      // The constraints are exported as distributions that the staterror modifier references by name.
+      // The constraints are exported as one array distribution that the staterror modifier references by name.
       const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
       auto tree = RooFit::Detail::JSONTree::create(json);
       const auto *channel = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_channel0");
@@ -3026,7 +3212,8 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraint)
          const auto *constraint =
             RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], constraintName.val());
          ASSERT_NE(constraint, nullptr) << json;
-         EXPECT_EQ((*constraint)["type"].val(), "gaussian_dist") << json;
+         EXPECT_EQ((*constraint)["type"].val(), "array_dist") << json;
+         EXPECT_EQ((*constraint)["component_type"].val(), "gaussian_dist") << json;
       }
 
       RooWorkspace ws2;
@@ -3367,10 +3554,12 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
    EXPECT_NE(constraintNames.find("gamma_0_constraint"), nullptr);
    EXPECT_NE(ws.var("mu"), nullptr);
 
-   // The export references the same constraints by name, and the result is stable under a round trip.
+   // The export collects the constraints into the array distribution of their type (both are Gaussians), the
+   // unconstrained parameter keeps its null, and the result is stable under a round trip.
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-   EXPECT_NE(exported.find(R"("constraints":["alpha_a_constraint"])"), std::string::npos) << exported;
-   EXPECT_NE(exported.find(R"("constraints":["gamma_0_constraint",null])"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["model_channel0_gaussian_constraints"])"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["model_channel0_gaussian_constraints",null])"), std::string::npos)
+      << exported;
    EXPECT_EQ(exported.find(R"("parameter":)"), std::string::npos) << exported;
    RooWorkspace ws2;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
@@ -3382,6 +3571,748 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
    auto *model3 = dynamic_cast<RooProdPdf *>(ws3.pdf("model_channel0"));
    ASSERT_NE(model3, nullptr);
    EXPECT_EQ(model3->pdfList().size(), 2u); // the sum and alpha_a_constraint
+}
+
+// An array_dist is imported as one distribution per component, named after its observable, held together by a
+// RooProdPdf with the attribute hs3_array_dist that carries the name of the array. The component types are built by
+// their own importers, with "default_parameters" filled in where a component omits a parameter.
+TEST(RooFitHS3, ArrayDistImport)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "pois", "type": "array_dist", "component_type": "poisson_continuous_dist",
+          "default_parameters": {"mean": "lambda_default"},
+          "components": [{"x": "n_1", "mean": "lambda_1"}, {"x": "n_2"}]},
+         {"name": "pois_discrete", "type": "array_dist", "component_type": "poisson_dist",
+          "components": [{"x": "n_3", "mean": 7.5}]},
+         {"name": "gauss", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_a", "mean": "a", "sigma": "sigma_a"}, {"x": "nom_b", "mean": "b"},
+                         {"x": "nom_c", "mean": 0.5, "sigma": 2.0}]},
+         {"name": "logn", "type": "array_dist", "component_type": "lognormal_dist",
+          "components": [{"x": "y_1", "mu": "mu_1", "sigma": 1.5}, {"x": "y_2", "mu": 2.0, "sigma": "sigma_y"}]}
+      ],
+      "functions": [
+         {"name": "lambda_1", "type": "product", "factors": [20.0, "np_1"]},
+         {"name": "lambda_default", "type": "product", "factors": [10.0, "np_2"]}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "n_1", "min": 0.0, "max": 100.0}, {"name": "n_2", "min": 0.0, "max": 100.0},
+         {"name": "n_3", "min": 0.0, "max": 100.0},
+         {"name": "np_1", "min": 0.0, "max": 5.0}, {"name": "np_2", "min": 0.0, "max": 5.0},
+         {"name": "nom_a", "min": -5.0, "max": 5.0}, {"name": "nom_b", "min": -5.0, "max": 5.0},
+         {"name": "nom_c", "min": -5.0, "max": 5.0}, {"name": "a", "min": -5.0, "max": 5.0},
+         {"name": "b", "min": -5.0, "max": 5.0}, {"name": "sigma_a", "min": 0.1, "max": 10.0},
+         {"name": "y_1", "min": 0.1, "max": 10.0}, {"name": "y_2", "min": 0.1, "max": 10.0},
+         {"name": "mu_1", "min": 0.1, "max": 10.0}, {"name": "sigma_y", "min": 1.0, "max": 10.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "n_1", "value": 20.0}, {"name": "n_2", "value": 10.0}, {"name": "n_3", "value": 8.0},
+         {"name": "np_1", "value": 1.1}, {"name": "np_2", "value": 0.9},
+         {"name": "nom_a", "value": 0.3}, {"name": "nom_b", "value": -0.2}, {"name": "nom_c", "value": 1.0},
+         {"name": "a", "value": 0.1}, {"name": "b", "value": 0.4}, {"name": "sigma_a", "value": 0.5},
+         {"name": "y_1", "value": 2.0}, {"name": "y_2", "value": 3.0}, {"name": "mu_1", "value": 1.5},
+         {"name": "sigma_y", "value": 1.2}]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+
+   auto checkArray = [&](const char *name, std::vector<std::string> const &components) {
+      auto *array = dynamic_cast<RooProdPdf *>(ws.pdf(name));
+      ASSERT_NE(array, nullptr) << name;
+      EXPECT_TRUE(array->getAttribute("hs3_array_dist")) << name;
+      ASSERT_EQ(array->pdfList().size(), components.size()) << name;
+      double product = 1.0;
+      for (std::size_t i = 0; i < components.size(); ++i) {
+         EXPECT_STREQ(array->pdfList()[i].GetName(), components[i].c_str()) << name;
+         product *= static_cast<RooAbsReal &>(array->pdfList()[i]).getVal();
+      }
+      // The array is the product of its components.
+      EXPECT_DOUBLE_EQ(array->getVal(), product) << name;
+   };
+   checkArray("pois", {"n_1_constraint", "n_2_constraint"});
+   checkArray("pois_discrete", {"n_3_constraint"});
+   checkArray("gauss", {"nom_a_constraint", "nom_b_constraint", "nom_c_constraint"});
+   checkArray("logn", {"y_1_constraint", "y_2_constraint"});
+
+   // Poisson: own parameter, default parameter, number. The component type decides between the continuous and the
+   // discrete form.
+   auto *p1 = dynamic_cast<RooPoisson *>(ws.pdf("n_1_constraint"));
+   auto *p2 = dynamic_cast<RooPoisson *>(ws.pdf("n_2_constraint"));
+   auto *p3 = dynamic_cast<RooPoisson *>(ws.pdf("n_3_constraint"));
+   ASSERT_NE(p1, nullptr);
+   ASSERT_NE(p2, nullptr);
+   ASSERT_NE(p3, nullptr);
+   EXPECT_STREQ(p1->getX().GetName(), "n_1");
+   EXPECT_STREQ(p1->getMean().GetName(), "lambda_1");
+   EXPECT_STREQ(p2->getMean().GetName(), "lambda_default");
+   EXPECT_DOUBLE_EQ(p3->getMean().getVal(), 7.5);
+   EXPECT_TRUE(p1->getNoRounding());
+   EXPECT_TRUE(p2->getNoRounding());
+   EXPECT_FALSE(p3->getNoRounding());
+   EXPECT_DOUBLE_EQ(p1->getVal(), TMath::Poisson(20.0, 22.0));
+   EXPECT_DOUBLE_EQ(p2->getVal(), TMath::Poisson(10.0, 9.0));
+
+   // Gaussian: parameters by name, default sigma, numbers.
+   auto *ga = dynamic_cast<RooGaussian *>(ws.pdf("nom_a_constraint"));
+   auto *gb = dynamic_cast<RooGaussian *>(ws.pdf("nom_b_constraint"));
+   auto *gc = dynamic_cast<RooGaussian *>(ws.pdf("nom_c_constraint"));
+   ASSERT_NE(ga, nullptr);
+   ASSERT_NE(gb, nullptr);
+   ASSERT_NE(gc, nullptr);
+   EXPECT_STREQ(ga->getX().GetName(), "nom_a");
+   EXPECT_STREQ(ga->getMean().GetName(), "a");
+   EXPECT_STREQ(ga->getSigma().GetName(), "sigma_a");
+   EXPECT_STREQ(gb->getMean().GetName(), "b");
+   EXPECT_DOUBLE_EQ(gb->getSigma().getVal(), 1.0);
+   EXPECT_DOUBLE_EQ(gc->getMean().getVal(), 0.5);
+   EXPECT_DOUBLE_EQ(gc->getSigma().getVal(), 2.0);
+   EXPECT_DOUBLE_EQ(ga->getVal(), std::exp(-0.5 * std::pow((0.3 - 0.1) / 0.5, 2)));
+   EXPECT_DOUBLE_EQ(gb->getVal(), std::exp(-0.5 * std::pow((-0.2 - 0.4) / 1.0, 2)));
+   EXPECT_DOUBLE_EQ(gc->getVal(), std::exp(-0.5 * std::pow((1.0 - 0.5) / 2.0, 2)));
+
+   // LogNormal in the standard parametrization.
+   auto *l1 = dynamic_cast<RooLognormal *>(ws.pdf("y_1_constraint"));
+   auto *l2 = dynamic_cast<RooLognormal *>(ws.pdf("y_2_constraint"));
+   ASSERT_NE(l1, nullptr);
+   ASSERT_NE(l2, nullptr);
+   EXPECT_TRUE(l1->useStandardParametrization());
+   EXPECT_STREQ(l1->getMedian().GetName(), "mu_1");
+   EXPECT_DOUBLE_EQ(l1->getShapeK().getVal(), 1.5);
+   EXPECT_DOUBLE_EQ(l2->getMedian().getVal(), 2.0);
+   EXPECT_STREQ(l2->getShapeK().GetName(), "sigma_y");
+   RooLognormal ref{"ref", "ref", *ws.var("y_1"), *ws.var("mu_1"), RooFit::RooConst(1.5), true};
+   EXPECT_DOUBLE_EQ(l1->getVal(), ref.getVal());
+}
+
+// Invalid array distributions are rejected with explicit errors.
+TEST(RooFitHS3, ArrayDistImportErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto document = [](std::string const &array, std::string const &functions = "") {
+      return R"({"metadata": {"hs3_version": "0.3"}, "distributions": [)" + array + R"(],
+         "functions": [)" +
+             functions + R"(],
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+            {"name": "n_1", "min": 0.0, "max": 100.0}, {"name": "n_2", "min": 0.0, "max": 100.0},
+            {"name": "mu_1", "min": 0.0, "max": 100.0}, {"name": "mu_2", "min": 0.0, "max": 100.0}]}]})";
+   };
+   auto array = [](std::string const &body) { return R"({"name": "arr", "type": "array_dist", )" + body + "}"; };
+
+   expectImportThrowsWithError(document(array(R"("components": [{"x": "n_1", "mean": "mu_1"}])")),
+                               "missing \"component_type\"");
+   expectImportThrowsWithError(
+      document(array(R"("component_type": "exponential_dist", "components": [{"x": "n_1", "c": 1.0}])")),
+      "the component_type 'exponential_dist' is not supported");
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist", "components": [])")),
+                               "\"components\" must be a non-empty list");
+   expectImportThrowsWithError(
+      document(array(R"("component_type": "poisson_dist", "default_parameters": {"x": "n_1", "mean": "mu_1"},
+                        "components": [{"x": "n_1"}])")),
+      "\"x\" must be given per component, not in \"default_parameters\"");
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist",
+      "components": [{"x": "n_1", "mean": "mu_1"}, {"x": "n_1", "mean": "mu_2"}])")),
+                               "the observable 'n_1' is used by two components");
+   expectImportThrowsWithError(
+      document(array(R"("component_type": "poisson_dist", "components": [{"x": 3.0, "mean": "mu_1"}])")),
+      "\"x\" must be the name of the observable");
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist", "components": [{"mean": "mu_1"}])")),
+                               "component 0 has no \"x\"");
+   // A parameter given neither in the component nor in the defaults: the error of the component type's importer.
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist", "components": [{"x": "n_1"}])")),
+                               "no \"mean\" given in \"n_1_constraint\"");
+   expectImportThrowsWithError(document(array(R"("component_type": "poisson_dist",
+      "components": [{"x": "n_1", "mean": "n_2"}, {"x": "n_2", "mean": "mu_2"}])")),
+                               "component 0 depends on the observable 'n_2' of component 1");
+   expectImportThrowsWithError(
+      document(array(R"("component_type": "poisson_dist", "components": [{"x": "n_1", "mean": "f"}])"),
+               R"({"name": "f", "type": "product", "factors": ["n_1", 2.0]})"),
+      "the parameters of component 0 depend on its own observable 'n_1'");
+}
+
+// A RooProdPdf with the attribute hs3_array_dist is written as array_dist: one component per factor with the fields
+// of the standalone distribution, values shared by all components in "default_parameters". The written document
+// has no standalone distribution for the components, and it is stable under a round trip.
+TEST(RooFitHS3, ArrayDistExport)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "pois", "type": "array_dist", "component_type": "poisson_continuous_dist",
+          "default_parameters": {"mean": "lambda_default"},
+          "components": [{"x": "n_1", "mean": "lambda_1"}, {"x": "n_2"}, {"x": "n_3", "mean": 7.5}]},
+         {"name": "gauss", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_a", "mean": "a"}, {"x": "nom_b", "mean": "b"}, {"x": "nom_c", "mean": 0.5}]}
+      ],
+      "functions": [
+         {"name": "lambda_1", "type": "product", "factors": [20.0, "np_1"]},
+         {"name": "lambda_default", "type": "product", "factors": [10.0, "np_2"]}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "n_1", "min": 0.0, "max": 100.0}, {"name": "n_2", "min": 0.0, "max": 100.0},
+         {"name": "n_3", "min": 0.0, "max": 100.0},
+         {"name": "np_1", "min": 0.0, "max": 5.0}, {"name": "np_2", "min": 0.0, "max": 5.0},
+         {"name": "nom_a", "min": -5.0, "max": 5.0}, {"name": "nom_b", "min": -5.0, "max": 5.0},
+         {"name": "nom_c", "min": -5.0, "max": 5.0}, {"name": "a", "min": -5.0, "max": 5.0},
+         {"name": "b", "min": -5.0, "max": 5.0}]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   // The components are not written on their own.
+   EXPECT_EQ(distributions.num_children(), 2u) << exported;
+   const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "pois");
+   ASSERT_NE(pois, nullptr) << exported;
+   EXPECT_EQ((*pois)["type"].val(), "array_dist");
+   EXPECT_EQ((*pois)["component_type"].val(), "poisson_continuous_dist");
+   // The Poisson components have different means, so nothing is shared.
+   EXPECT_FALSE(pois->has_child("default_parameters")) << exported;
+   ASSERT_EQ((*pois)["components"].num_children(), 3u);
+   EXPECT_EQ((*pois)["components"].child(0)["x"].val(), "n_1");
+   EXPECT_EQ((*pois)["components"].child(0)["mean"].val(), "lambda_1");
+   EXPECT_EQ((*pois)["components"].child(1)["x"].val(), "n_2");
+   EXPECT_EQ((*pois)["components"].child(1)["mean"].val(), "lambda_default");
+   EXPECT_EQ((*pois)["components"].child(2)["x"].val(), "n_3");
+   EXPECT_DOUBLE_EQ((*pois)["components"].child(2)["mean"].val_double(), 7.5);
+   for (auto const &component : (*pois)["components"].children()) {
+      EXPECT_FALSE(component.has_child("integer")) << exported;
+   }
+
+   const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "gauss");
+   ASSERT_NE(gauss, nullptr) << exported;
+   EXPECT_EQ((*gauss)["component_type"].val(), "gaussian_dist");
+   ASSERT_TRUE(gauss->has_child("default_parameters")) << exported;
+   EXPECT_DOUBLE_EQ((*gauss)["default_parameters"]["sigma"].val_double(), 1.0);
+   ASSERT_EQ((*gauss)["components"].num_children(), 3u);
+   for (auto const &component : (*gauss)["components"].children()) {
+      EXPECT_FALSE(component.has_child("sigma")) << exported;
+   }
+   EXPECT_EQ((*gauss)["components"].child(0)["mean"].val(), "a");
+   EXPECT_DOUBLE_EQ((*gauss)["components"].child(2)["mean"].val_double(), 0.5);
+
+   // The tag is not written as an attribute; it is restored from the type on import.
+   EXPECT_EQ(exported.find("hs3_array_dist"), std::string::npos) << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_TRUE(ws2.pdf("gauss")->getAttribute("hs3_array_dist"));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+}
+
+// An array distribution built in RooFit (a tagged RooProdPdf), the opt-out that writes it as product_dist, and the
+// products that cannot be written as array_dist.
+TEST(RooFitHS3, ArrayDistExportOfTaggedProduct)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar nomA{"nom_a", "nom_a", 0.0, -5.0, 5.0};
+   RooRealVar nomB{"nom_b", "nom_b", 0.0, -5.0, 5.0};
+   RooRealVar a{"a", "a", 0.0, -5.0, 5.0};
+   RooRealVar b{"b", "b", 0.0, -5.0, 5.0};
+   RooGaussian gaussA{"gauss_a", "gauss_a", nomA, a, RooFit::RooConst(1.0)};
+   RooGaussian gaussB{"gauss_b", "gauss_b", nomB, b, RooFit::RooConst(1.0)};
+   RooProdPdf array{"constraints", "constraints", {gaussA, gaussB}};
+   array.setAttribute("hs3_array_dist");
+
+   RooWorkspace ws;
+   ws.import(array, RooFit::Silence());
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   ASSERT_EQ(distributions.num_children(), 1u) << exported;
+   const auto *node = RooJSONFactoryWSTool::findNamedChild(distributions, "constraints");
+   ASSERT_NE(node, nullptr) << exported;
+   EXPECT_EQ((*node)["type"].val(), "array_dist");
+   EXPECT_EQ((*node)["component_type"].val(), "gaussian_dist");
+   EXPECT_DOUBLE_EQ((*node)["default_parameters"]["sigma"].val_double(), 1.0);
+   ASSERT_EQ((*node)["components"].num_children(), 2u);
+   EXPECT_EQ((*node)["components"].child(0)["x"].val(), "nom_a");
+   EXPECT_EQ((*node)["components"].child(0)["mean"].val(), "a");
+   EXPECT_EQ((*node)["components"].child(1)["x"].val(), "nom_b");
+
+   // Round trip: the components get the names of their observables, the product is tagged again.
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   auto *imported = dynamic_cast<RooProdPdf *>(ws2.pdf("constraints"));
+   ASSERT_NE(imported, nullptr);
+   EXPECT_TRUE(imported->getAttribute("hs3_array_dist"));
+   EXPECT_NE(dynamic_cast<RooGaussian *>(ws2.pdf("nom_a_constraint")), nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // Opt-out: no array_dist is written, the tagged product is an ordinary product_dist.
+   RooJSONFactoryWSTool::config().exportArrayDist = false;
+   const std::string plain = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().exportArrayDist = true;
+   auto plainTree = RooFit::Detail::JSONTree::create(plain);
+   auto const &plainDistributions = plainTree->rootnode()["distributions"];
+   EXPECT_EQ(plainDistributions.num_children(), 3u) << plain;
+   const auto *product = RooJSONFactoryWSTool::findNamedChild(plainDistributions, "constraints");
+   ASSERT_NE(product, nullptr) << plain;
+   EXPECT_EQ((*product)["type"].val(), "product_dist");
+   const auto *component = RooJSONFactoryWSTool::findNamedChild(plainDistributions, "gauss_a");
+   ASSERT_NE(component, nullptr) << plain;
+   EXPECT_EQ((*component)["type"].val(), "gaussian_dist");
+   EXPECT_EQ(plain.find("array_dist"), std::string::npos) << plain;
+
+   // Products that cannot be written as array_dist: a factor of another class, two factors over the same
+   // observable, and a tag on something that is not a product.
+   {
+      RooRealVar x{"x", "x", 1.0, 0.0, 10.0};
+      RooRealVar c{"c", "c", -1.0, -10.0, 0.0};
+      RooExponential expo{"expo", "expo", x, c};
+      RooProdPdf mixed{"mixed", "mixed", {gaussA, expo}};
+      mixed.setAttribute("hs3_array_dist");
+      RooWorkspace wsMixed;
+      wsMixed.import(mixed, RooFit::Silence());
+      expectExportThrowsWithError(wsMixed, "'expo' cannot be a component");
+   }
+   {
+      RooGaussian gaussA2{"gauss_a2", "gauss_a2", nomA, b, RooFit::RooConst(2.0)};
+      RooProdPdf sameX{"same_x", "same_x", {gaussA, gaussA2}};
+      sameX.setAttribute("hs3_array_dist");
+      RooWorkspace wsSameX;
+      wsSameX.import(sameX, RooFit::Silence());
+      expectExportThrowsWithError(wsSameX, "two components have the observable 'nom_a'");
+   }
+   {
+      RooGaussian tagged{"tagged", "tagged", nomA, a, RooFit::RooConst(1.0)};
+      tagged.setAttribute("hs3_array_dist");
+      RooWorkspace wsTagged;
+      wsTagged.import(tagged, RooFit::Silence());
+      expectExportThrowsWithError(wsTagged, "is not a RooProdPdf");
+   }
+}
+
+// An array distribution paired with an unbinned data set with one entry (the form of the HS3 appendix on auxiliary
+// measurements) gives a likelihood with one term per component.
+TEST(RooFitHS3, ArrayDistLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "gauss_constraints", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_alpha_1", "mean": "alpha_1"}, {"x": "nom_alpha_2", "mean": "alpha_2"},
+                         {"x": "nom_alpha_3", "mean": "alpha_3", "sigma": 2.0}]}
+      ],
+      "data": [{"name": "global_observables", "type": "unbinned", "entries": [[0.5, -0.5, 1.0]],
+                "axes": [{"name": "nom_alpha_1", "min": -5.0, "max": 5.0}, {"name": "nom_alpha_2", "min": -5.0, "max": 5.0},
+                         {"name": "nom_alpha_3", "min": -5.0, "max": 5.0}]}],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "nom_alpha_1", "min": -5.0, "max": 5.0}, {"name": "nom_alpha_2", "min": -5.0, "max": 5.0},
+         {"name": "nom_alpha_3", "min": -5.0, "max": 5.0}, {"name": "alpha_1", "min": -5.0, "max": 5.0},
+         {"name": "alpha_2", "min": -5.0, "max": 5.0}, {"name": "alpha_3", "min": -5.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "alpha_1", "value": 0.2}, {"name": "alpha_2", "value": 0.1}, {"name": "alpha_3", "value": -0.3}]}],
+      "likelihoods": [{"name": "likelihood", "distributions": ["gauss_constraints"], "data": ["global_observables"]}],
+      "analyses": [{"name": "analysis", "likelihood": "likelihood", "domains": ["default_domain"]}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("analysis"));
+   ASSERT_NE(mc, nullptr);
+   ASSERT_NE(mc->GetPdf(), nullptr);
+   EXPECT_STREQ(mc->GetPdf()->GetName(), "gauss_constraints");
+   auto *data = ws.data("global_observables");
+   ASSERT_NE(data, nullptr);
+   ASSERT_EQ(data->numEntries(), 1);
+
+   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*data)};
+   double expected = 0.0;
+   for (const char *name : {"nom_alpha_1_constraint", "nom_alpha_2_constraint", "nom_alpha_3_constraint"}) {
+      auto *component = ws.pdf(name);
+      ASSERT_NE(component, nullptr) << name;
+      RooArgSet observable;
+      component->getObservables(data->get(), observable);
+      expected -= std::log(component->getVal(observable));
+   }
+   EXPECT_NEAR(nll->getVal(), expected, 1e-10 * std::abs(expected));
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+}
+
+// A HistFactory modifier whose constraint is an array distribution gets the component that depends on its
+// parameter. The model built from the array form equals the model built from one constraint per parameter, also
+// for the constraint shared by both channels.
+TEST(RooFitHS3, HistFactoryArrayDistConstraints)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace individual;
+   ASSERT_TRUE(RooJSONFactoryWSTool{individual}.importJSONfromString(twoChannelHistFactoryJSON(false)));
+   RooWorkspace arrays;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      ASSERT_TRUE(RooJSONFactoryWSTool{arrays}.importJSONfromString(twoChannelHistFactoryJSON(true)));
+   });
+   EXPECT_TRUE(warnings.empty()) << warnings;
+
+   // The channels hold the components, not the arrays.
+   auto constraintNames = [](RooWorkspace &ws, const char *channel) {
+      std::set<std::string> names;
+      auto *model = dynamic_cast<RooProdPdf *>(ws.pdf(channel));
+      if (model) {
+         for (RooAbsArg *pdf : model->pdfList()) {
+            if (!dynamic_cast<RooRealSumPdf *>(pdf)) {
+               names.insert(pdf->GetName());
+            }
+         }
+      }
+      return names;
+   };
+   EXPECT_EQ(constraintNames(arrays, "model_c1"),
+             (std::set<std::string>{"alpha_a_constraint", "nom_gamma_c1_0_constraint", "nom_gamma_c1_1_constraint",
+                                    "nom_gs_0_constraint", "nom_gs_1_constraint"}));
+   EXPECT_EQ(constraintNames(arrays, "model_c2"),
+             (std::set<std::string>{"alpha_a_constraint", "nom_gamma_c2_0_constraint", "nom_gamma_c2_1_constraint"}));
+   EXPECT_EQ(constraintNames(individual, "model_c1").size(), 5u);
+   EXPECT_EQ(constraintNames(individual, "model_c2").size(), 3u);
+   EXPECT_TRUE(arrays.pdf("pois_constraints")->getAttribute("hs3_array_dist"));
+   // The shared constraint is one object in both channels, so it is counted once.
+   auto countConstraints = [](RooWorkspace &ws) {
+      auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("an"));
+      RooArgSet params;
+      mc->GetPdf()->getParameters(mc->GetObservables(), params);
+      return mc->GetPdf()->getAllConstraints(*mc->GetObservables(), params, true)->size();
+   };
+   EXPECT_EQ(countConstraints(arrays), 7u);
+   EXPECT_EQ(countConstraints(individual), 7u);
+
+   const std::map<std::string, double> point{
+      {"mu", 1.3}, {"alpha_a", 0.7}, {"gamma_c1_0", 0.9}, {"gamma_c2_1", 1.1}, {"gs_0", 1.2}};
+   const double nllIndividual = twoChannelNLL(individual, point);
+   const double nllArrays = twoChannelNLL(arrays, point);
+   EXPECT_FALSE(std::isnan(nllIndividual));
+   EXPECT_NEAR(nllArrays, nllIndividual, 1e-10 * std::abs(nllIndividual));
+}
+
+// Errors and warnings when an array distribution does not fit the parameters that name it.
+TEST(RooFitHS3, HistFactoryArrayDistConstraintErrors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto document = [](std::string const &components) {
+      return R"({
+         "metadata": {"hs3_version": "0.3"},
+         "distributions": [
+            {"name": "model_channel0", "type": "histfactory_dist",
+             "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+             "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+             "samples": [{"name": "sig", "data": {"contents": [10.0, 20.0]},
+                          "modifiers": [{"name": "a", "type": "normsys", "parameters": ["alpha_a"],
+                                         "data": {"lo": 0.9, "hi": 1.1}, "constraints": ["arr"]}]}]},
+            {"name": "arr", "type": "array_dist", "component_type": "gaussian_dist",
+             "default_parameters": {"sigma": 1.0}, "components": [)" +
+             components + R"(]}
+         ],
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+            {"name": "alpha_a", "min": -5.0, "max": 5.0}, {"name": "b", "min": -5.0, "max": 5.0},
+            {"name": "nom_1", "min": -5.0, "max": 5.0}, {"name": "nom_2", "min": -5.0, "max": 5.0}]}]
+      })";
+   };
+
+   expectImportThrowsWithError(document(R"({"x": "nom_1", "mean": "b"})"),
+                               "the array distribution 'arr' named as the constraint of 'alpha_a' (the normsys "
+                               "modifier 'a' of sample 'sig') has no component that depends on this parameter");
+   expectImportThrowsWithError(document(R"({"x": "nom_1", "mean": "alpha_a"}, {"x": "nom_2", "mean": "alpha_a"})"),
+                               "has 2 components that depend on this parameter");
+
+   // A component that no parameter uses is reported: by the standard, the whole array enters the likelihood.
+   RooWorkspace ws;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+         document(R"({"x": "nom_1", "mean": "alpha_a"}, {"x": "nom_2", "mean": "b"})")));
+   });
+   EXPECT_NE(warnings.find("the components 'nom_2_constraint' of the array distribution 'arr' are not used"),
+             std::string::npos)
+      << warnings;
+   auto *model = dynamic_cast<RooProdPdf *>(ws.pdf("model_channel0"));
+   ASSERT_NE(model, nullptr);
+   EXPECT_NE(model->pdfList().find("nom_1_constraint"), nullptr);
+   EXPECT_EQ(model->pdfList().find("nom_2_constraint"), nullptr);
+}
+
+// The HistFactory export collects the constraints of the modifiers into one array distribution per type and
+// top-level pdf, which the modifiers name for each constrained parameter. The shared constraint is one component, the
+// likelihood does not change under a round trip, and the second export equals the first.
+TEST(RooFitHS3, HistFactoryArrayDistExport)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(twoChannelHistFactoryJSON(false)));
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   for (auto const &dist : distributions.children()) {
+      EXPECT_NE(dist["type"].val(), "gaussian_dist") << exported;
+      EXPECT_NE(dist["type"].val(), "poisson_continuous_dist") << exported;
+   }
+   const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "an_simPdf_gaussian_constraints");
+   ASSERT_NE(gauss, nullptr) << exported;
+   EXPECT_EQ((*gauss)["type"].val(), "array_dist");
+   EXPECT_EQ((*gauss)["component_type"].val(), "gaussian_dist");
+   ASSERT_EQ((*gauss)["components"].num_children(), 1u) << exported;
+   EXPECT_EQ((*gauss)["components"].child(0)["x"].val(), "alpha_a");
+   const auto *pois = RooJSONFactoryWSTool::findNamedChild(distributions, "an_simPdf_poisson_continuous_constraints");
+   ASSERT_NE(pois, nullptr) << exported;
+   EXPECT_EQ((*pois)["component_type"].val(), "poisson_continuous_dist");
+   EXPECT_FALSE(pois->has_child("default_parameters")) << exported;
+   // In the order of the channels, their samples and modifiers, and of the bins.
+   const std::vector<std::string> gammas{"gs_0", "gs_1", "gamma_c1_0", "gamma_c1_1", "gamma_c2_0", "gamma_c2_1"};
+   ASSERT_EQ((*pois)["components"].num_children(), gammas.size()) << exported;
+   for (std::size_t i = 0; i < gammas.size(); ++i) {
+      EXPECT_EQ((*pois)["components"].child(i)["x"].val(), "nom_" + gammas[i]) << exported;
+      EXPECT_EQ((*pois)["components"].child(i)["mean"].val(), gammas[i] + "_poisMean") << exported;
+      EXPECT_FALSE((*pois)["components"].child(i).has_child("integer")) << exported;
+   }
+   EXPECT_EQ(countOccurrences(exported, R"("constraints":["an_simPdf_gaussian_constraints"])"), 2u) << exported;
+   EXPECT_EQ(
+      countOccurrences(
+         exported,
+         R"("constraints":["an_simPdf_poisson_continuous_constraints","an_simPdf_poisson_continuous_constraints"])"),
+      4u)
+      << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   const std::string exported2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   EXPECT_EQ(exported2, exported);
+   RooWorkspace ws3;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported2));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws3}.exportJSONtoString(), exported);
+
+   // The likelihood is unchanged by the round trip (evaluated last, since this moves the parameters).
+   const std::map<std::string, double> point{
+      {"mu", 1.3}, {"alpha_a", 0.7}, {"gamma_c1_0", 0.9}, {"gamma_c2_1", 1.1}, {"gs_0", 1.2}};
+   const double nll = twoChannelNLL(ws, point);
+   EXPECT_FALSE(std::isnan(nll));
+   EXPECT_NEAR(twoChannelNLL(ws2, point), nll, 1e-10 * std::abs(nll));
+
+   // Opt-out: one constraint distribution per parameter, no array_dist at all.
+   RooJSONFactoryWSTool::config().exportArrayDist = false;
+   const std::string plain = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   const std::string plainFromArrays = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().exportArrayDist = true;
+   EXPECT_EQ(plain.find("array_dist"), std::string::npos) << plain;
+   EXPECT_NE(plain.find(R"("constraints":["alpha_a_constraint"])"), std::string::npos) << plain;
+   EXPECT_NE(plain.find(R"("constraints":["gamma_c1_0_constraint","gamma_c1_1_constraint"])"), std::string::npos)
+      << plain;
+   RooWorkspace ws4;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws4}.importJSONfromString(plain));
+   EXPECT_NEAR(twoChannelNLL(ws4, point), nll, 1e-10 * std::abs(nll));
+   // From the workspace with imported arrays, the components are written on their own as well, and the arrays as
+   // product_dist.
+   EXPECT_EQ(plainFromArrays.find("array_dist"), std::string::npos) << plainFromArrays;
+   EXPECT_NE(plainFromArrays.find(R"("constraints":["nom_gamma_c1_0_constraint","nom_gamma_c1_1_constraint"])"),
+             std::string::npos)
+      << plainFromArrays;
+   RooWorkspace ws5;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws5}.importJSONfromString(plainFromArrays));
+   EXPECT_NEAR(twoChannelNLL(ws5, point), nll, 1e-10 * std::abs(nll));
+}
+
+// The tutorial JSON imports and exports stably. Its Poisson constraints have a number as observable, so they cannot
+// be components of an array distribution and are written on their own; the Gaussian constraints are collected.
+TEST(RooFitHS3, TutorialRF515RoundTrip)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string path = std::string(gROOT->GetTutorialDir().Data()) + "/roofit/roofit/rf515_hfJSON.json";
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSON(path));
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   const auto *poisson = RooJSONFactoryWSTool::findNamedChild(distributions, "gamma_bin_0_constraint");
+   ASSERT_NE(poisson, nullptr) << exported;
+   EXPECT_EQ((*poisson)["type"].val(), "poisson_continuous_dist");
+   // The top-level pdf is the RooSimultaneous "main" of the analysis.
+   const auto *gauss = RooJSONFactoryWSTool::findNamedChild(distributions, "main_gaussian_constraints");
+   ASSERT_NE(gauss, nullptr) << exported;
+   EXPECT_EQ((*gauss)["type"].val(), "array_dist");
+   EXPECT_EQ((*gauss)["components"].num_children(), 3u);
+   EXPECT_NE(exported.find(R"("constraints":["gamma_bin_0_constraint","gamma_bin_1_constraint"])"), std::string::npos)
+      << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // None of the constraints has a global observable to pair with data (the Poissons have a number as observable,
+   // the Gaussians have the parameter as x and a number as mean), so all of them stay in "aux_distributions".
+   RooJSONFactoryWSTool::config().exportConstraintData = true;
+   const std::string withData = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().exportConstraintData = false;
+   auto withDataTree = RooFit::Detail::JSONTree::create(withData);
+   ASSERT_EQ(withDataTree->rootnode()["likelihoods"].num_children(), 1u) << withData;
+   const auto *likelihood = &withDataTree->rootnode()["likelihoods"].child(0);
+   ASSERT_EQ((*likelihood)["aux_distributions"].num_children(), 3u) << withData;
+   EXPECT_EQ((*likelihood)["aux_distributions"].child(0).val(), "main_gaussian_constraints") << withData;
+   EXPECT_EQ((*likelihood)["aux_distributions"].child(1).val(), "gamma_bin_0_constraint") << withData;
+   EXPECT_EQ((*likelihood)["aux_distributions"].child(2).val(), "gamma_bin_1_constraint") << withData;
+   EXPECT_EQ((*likelihood)["distributions"].num_children(), 1u) << withData;
+   // No data set for a constraint term: only the observed data (a combined data set and its component).
+   for (auto const &dataset : withDataTree->rootnode()["data"].children()) {
+      EXPECT_EQ(dataset["name"].val().rfind("observed", 0), 0u) << withData;
+   }
+}
+
+// The constraint terms of the HistFactory channels are listed in the likelihood: in "aux_distributions" by default,
+// with the observed values of their observables as constant parameters, or (config().exportConstraintData) in
+// "distributions", each paired with a data set that holds the observed values. On import they enter the likelihood
+// once, through the channels, and the observed values are taken from the data sets.
+TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(twoChannelHistFactoryJSON(false)));
+   // An observed value that differs from the default, to see it transported.
+   ws.var("nom_gamma_c1_0")->setVal(120.0);
+   const std::map<std::string, double> point{
+      {"mu", 1.3}, {"alpha_a", 0.7}, {"gamma_c1_0", 0.9}, {"gamma_c2_1", 1.1}, {"gs_0", 1.2}};
+
+   auto likelihood = [](std::string const &json) {
+      auto tree = RooFit::Detail::JSONTree::create(json);
+      const auto *node = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["likelihoods"], "an_likelihood");
+      std::map<std::string, std::vector<std::string>> out;
+      if (node) {
+         for (const char *key : {"distributions", "data", "aux_distributions"}) {
+            if (node->has_child(key)) {
+               for (auto const &child : (*node)[key].children()) {
+                  out[key].push_back(child.val());
+               }
+            }
+         }
+      }
+      return out;
+   };
+   using Names = std::vector<std::string>;
+
+   // Default: "aux_distributions".
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto lh = likelihood(exported);
+   EXPECT_EQ(lh["distributions"], Names{"an_simPdf"}) << exported;
+   EXPECT_EQ(lh["data"], Names{"0"}) << exported;
+   EXPECT_EQ(lh["aux_distributions"],
+             (Names{"an_simPdf_poisson_continuous_constraints", "an_simPdf_gaussian_constraints"}))
+      << exported;
+   {
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+      auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws2.obj("an"));
+      ASSERT_NE(mc, nullptr);
+      // Not added again as external constraints: they are in the channels already.
+      EXPECT_TRUE(!mc->GetExternalConstraints() || mc->GetExternalConstraints()->empty());
+      EXPECT_DOUBLE_EQ(ws2.var("nom_gamma_c1_0")->getVal(), 120.0);
+      EXPECT_TRUE(ws2.var("nom_gamma_c1_0")->isConstant());
+      EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+      const double nll = twoChannelNLL(ws, point);
+      EXPECT_NEAR(twoChannelNLL(ws2, point), nll, 1e-10 * std::abs(nll));
+   }
+
+   // Data route: the terms are paired with data sets holding the observed values.
+   RooJSONFactoryWSTool::config().exportConstraintData = true;
+   const std::string withData = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().exportConstraintData = false;
+   lh = likelihood(withData);
+   // The Gaussian of alpha_a has the parameter as x and a number as mean, so it has no global observable to pair
+   // with data and stays in "aux_distributions".
+   EXPECT_EQ(lh["distributions"], (Names{"an_simPdf", "an_simPdf_poisson_continuous_constraints"})) << withData;
+   EXPECT_EQ(lh["data"], (Names{"0", "an_simPdf_poisson_continuous_constraints_data"})) << withData;
+   EXPECT_EQ(lh["aux_distributions"], Names{"an_simPdf_gaussian_constraints"}) << withData;
+   {
+      auto tree = RooFit::Detail::JSONTree::create(withData);
+      const auto *data = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"],
+                                                              "an_simPdf_poisson_continuous_constraints_data");
+      ASSERT_NE(data, nullptr) << withData;
+      EXPECT_EQ((*data)["type"].val(), "unbinned");
+      const std::vector<std::string> gammas{"gs_0", "gs_1", "gamma_c1_0", "gamma_c1_1", "gamma_c2_0", "gamma_c2_1"};
+      ASSERT_EQ((*data)["axes"].num_children(), gammas.size()) << withData;
+      ASSERT_EQ((*data)["entries"].num_children(), 1u) << withData;
+      ASSERT_EQ((*data)["entries"].child(0).num_children(), gammas.size()) << withData;
+      for (std::size_t i = 0; i < gammas.size(); ++i) {
+         auto const &axis = (*data)["axes"].child(i);
+         EXPECT_EQ(axis["name"].val(), "nom_" + gammas[i]) << withData;
+         EXPECT_DOUBLE_EQ(axis["min"].val_double(), 0.0);
+         EXPECT_DOUBLE_EQ(axis["max"].val_double(), 1000.0);
+         EXPECT_DOUBLE_EQ((*data)["entries"].child(0).child(i).val_double(), gammas[i] == "gamma_c1_0" ? 120.0 : 100.0);
+      }
+      EXPECT_EQ(RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "an_simPdf_gaussian_constraints_data"),
+                nullptr)
+         << withData;
+
+      RooWorkspace ws3;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(withData));
+      // The terms are not channels, and their data sets are not imported: the values live in the variables.
+      auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws3.obj("an"));
+      ASSERT_NE(mc, nullptr);
+      auto *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
+      ASSERT_NE(simPdf, nullptr);
+      EXPECT_EQ(simPdf->indexCat().size(), 2);
+      EXPECT_EQ(ws3.data("an_simPdf_poisson_continuous_constraints_data"), nullptr);
+      EXPECT_DOUBLE_EQ(ws3.var("nom_gamma_c1_0")->getVal(), 120.0);
+      EXPECT_TRUE(ws3.var("nom_gamma_c1_0")->isConstant());
+      ASSERT_NE(mc->GetGlobalObservables(), nullptr);
+      EXPECT_NE(mc->GetGlobalObservables()->find("nom_gamma_c1_0"), nullptr);
+      EXPECT_TRUE(!mc->GetExternalConstraints() || mc->GetExternalConstraints()->empty());
+      const double nll = twoChannelNLL(ws, point);
+      EXPECT_NEAR(twoChannelNLL(ws3, point), nll, 1e-10 * std::abs(nll));
+      RooJSONFactoryWSTool::config().exportConstraintData = true;
+      const std::string withData2 = RooJSONFactoryWSTool{ws3}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().exportConstraintData = false;
+      // The parameters were moved for the NLL, so compare the model and data sections.
+      for (const char *key : {"distributions", "functions", "data", "likelihoods"}) {
+         auto section = [key](std::string const &json) {
+            auto t = RooFit::Detail::JSONTree::create(json);
+            std::stringstream ss;
+            t->rootnode()[key].writeJSON(ss);
+            return ss.str();
+         };
+         EXPECT_EQ(section(withData2), section(withData)) << key;
+      }
+   }
+
+   // Without arrays, every constraint is paired with its own data set.
+   RooJSONFactoryWSTool::config().exportArrayDist = false;
+   RooJSONFactoryWSTool::config().exportConstraintData = true;
+   const std::string plainWithData = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   RooJSONFactoryWSTool::config().exportArrayDist = true;
+   RooJSONFactoryWSTool::config().exportConstraintData = false;
+   lh = likelihood(plainWithData);
+   EXPECT_EQ(lh["distributions"].size(), 7u) << plainWithData;
+   EXPECT_EQ(lh["data"].size(), 7u) << plainWithData;
+   EXPECT_EQ(lh["distributions"][1], "gs_0_constraint") << plainWithData;
+   EXPECT_EQ(lh["data"][1], "gs_0_constraint_data") << plainWithData;
+   EXPECT_EQ(lh["aux_distributions"], Names{"alpha_a_constraint"}) << plainWithData;
+   {
+      auto tree = RooFit::Detail::JSONTree::create(plainWithData);
+      EXPECT_EQ(tree->rootnode()["data"].num_children(), 8u) << plainWithData;
+      RooWorkspace ws4;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws4}.importJSONfromString(plainWithData));
+      const double nll = twoChannelNLL(ws, point);
+      EXPECT_NEAR(twoChannelNLL(ws4, point), nll, 1e-10 * std::abs(nll));
+   }
 }
 
 // The range of an irregular binning is given by its "edges": HS3 0.3 (#126) forbids "min" and "max" alongside them, in
@@ -3544,7 +4475,8 @@ TEST(RooFitHS3, HistFactoryShapeFactor)
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_EQ(countOccurrences(exported, R"("type":"shapefactor")"), 2u) << exported;
    EXPECT_EQ(exported.find("shapesys"), std::string::npos) << exported;
-   EXPECT_NE(exported.find(R"("constraints":["g_c_0_constraint",null])"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("constraints":["model_channel0_gaussian_constraints",null])"), std::string::npos)
+      << exported;
    RooWorkspace ws2;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
@@ -3833,11 +4765,16 @@ TEST(RooFitHS3, FormulaNormSysConstraint)
    RooWorkspace ws1;
    importFormulaNormSysChannel(ws1);
    const std::string json = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
-   EXPECT_NE(json.find(R"("constraints":["alpha_sysConstraint"])"), std::string::npos) << json;
+   EXPECT_NE(json.find(R"("constraints":["model_ch_gaussian_constraints"])"), std::string::npos) << json;
 
    RooWorkspace ws2;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
-   EXPECT_NE(ws2.pdf("alpha_sysConstraint"), nullptr);
+   // The constraint survives the round trip; its name depends on the grouping of the constraints.
+   bool constrained = false;
+   for (RooAbsArg *pdf : ws2.allPdfs()) {
+      constrained |= dynamic_cast<RooGaussian *>(pdf) && pdf->dependsOn(*ws2.var("alpha_sys"));
+   }
+   EXPECT_TRUE(constrained);
 }
 
 // A histfactory_dist is a product of Poisson distributions of the bin counts: the imported RooRealSumPdf uses RooFit's
@@ -4393,6 +5330,60 @@ TEST_P(HFFixture, HS3ClosureLoop)
    EXPECT_NE(js.find(R"("type":"combined")"), std::string::npos) << js;
    EXPECT_EQ(js.find("combined_datasets"), std::string::npos) << js;
    EXPECT_EQ(js.find("combined_distributions"), std::string::npos) << js;
+
+   // The constraints of the modifiers are written as array distributions, one per type (HS3 #109/#124), and none
+   // on its own.
+   {
+      auto tree = RooFit::Detail::JSONTree::create(js);
+      auto const &distributions = tree->rootnode()["distributions"];
+      for (auto const &dist : distributions.children()) {
+         EXPECT_NE(dist["type"].val(), "gaussian_dist") << dist["name"].val();
+         EXPECT_NE(dist["type"].val(), "poisson_continuous_dist") << dist["name"].val();
+      }
+      std::size_t nComponents = 0;
+      for (const char *name : {"simPdf_gaussian_constraints", "simPdf_poisson_continuous_constraints"}) {
+         if (auto const *array = RooJSONFactoryWSTool::findNamedChild(distributions, name)) {
+            EXPECT_EQ((*array)["type"].val(), "array_dist") << name;
+            nComponents += (*array)["components"].num_children();
+         }
+      }
+      EXPECT_GT(nComponents, 0u) << js;
+   }
+
+   // HistFactory builds its Gaussian constraints with the parameter as x and the global observable as mean. They are
+   // written the other way round, so that the observable is x, both in the array and on their own, and they are read
+   // back with this orientation.
+   RooArgSet const &globalObservables = *mc->GetGlobalObservables();
+   auto checkGaussians = [&](std::string const &json, const char *what) {
+      auto tree = RooFit::Detail::JSONTree::create(json);
+      for (auto const &dist : tree->rootnode()["distributions"].children()) {
+         std::vector<RooFit::Detail::JSONNode const *> gaussians;
+         if (dist["type"].val() == "gaussian_dist") {
+            gaussians.push_back(&dist);
+         } else if (dist["type"].val() == "array_dist" && dist["name"].val() == "simPdf_gaussian_constraints") {
+            for (auto const &component : dist["components"].children()) {
+               gaussians.push_back(&component);
+            }
+         }
+         for (auto const *gauss : gaussians) {
+            EXPECT_NE(globalObservables.find((*gauss)["x"].val().c_str()), nullptr) << what << ": " << json;
+            EXPECT_EQ(globalObservables.find((*gauss)["mean"].val().c_str()), nullptr) << what << ": " << json;
+         }
+      }
+   };
+   checkGaussians(js, "arrays");
+   {
+      RooJSONFactoryWSTool::config().exportArrayDist = false;
+      const std::string plain = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().exportArrayDist = true;
+      EXPECT_NE(plain.find(R"("type":"gaussian_dist")"), std::string::npos) << plain;
+      checkGaussians(plain, "standalone");
+   }
+   for (RooAbsArg *arg : wsFromJson.allPdfs()) {
+      if (auto *gauss = dynamic_cast<RooGaussian *>(arg)) {
+         EXPECT_NE(globalObservables.find(gauss->getX().GetName()), nullptr) << gauss->GetName();
+      }
+   }
 
    auto *newmc = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
    ASSERT_NE(newmc, nullptr);
@@ -7202,4 +8193,431 @@ TEST(RooFitHS3, LegacyBinWidthFactorWithLikelihood)
    const std::string withLikelihood = RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_EQ(normfactors(withLikelihood), 0u) << withLikelihood;
    EXPECT_EQ(withLikelihood, before);
+}
+
+namespace {
+
+// A HistFactory channel and an ordinary product sharing the constraint of the HistFactory parameter `theta`. The
+// HistFactory parameter `eta` has a constraint of its own. The channels are named `hfName` and `otherName`, to
+// control the order in which the export visits them. The constraint enters the likelihood twice, through the
+// modifier and as factor of the product, so the document is not valid HS3 0.3: its variate `theta_obs` is shared by
+// two terms. As a document of version 0.2 it is read with a warning, like a RooFit model with the constraint in
+// both channels.
+std::string
+sharedConstraintJSON(std::string const &hfName, std::string const &otherName, std::string const &version = "0.3")
+{
+   std::string json = R"({
+  "metadata": {"hs3_version": "VERSION"},
+  "distributions": [
+    {"name": "HF", "type": "histfactory_dist",
+     "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+     "axes": [{"name": "x_hf", "min": 0.0, "max": 1.0, "nbins": 1}],
+     "samples": [{"name": "signal", "data": {"contents": [10.0]},
+                  "modifiers": [{"name": "mu", "type": "normfactor", "parameters": ["mu"]},
+                                {"name": "shared", "type": "normsys", "parameters": ["theta"],
+                                 "data": {"lo": 0.9, "hi": 1.1}, "constraints": ["shared_constraint"]},
+                                {"name": "own", "type": "normsys", "parameters": ["eta"],
+                                 "data": {"lo": 0.8, "hi": 1.2}, "constraints": ["own_constraint"]}]}]},
+    {"name": "shape", "type": "gaussian_dist", "x": "x_other", "mean": "theta", "sigma": 1.0},
+    {"name": "OTHER", "type": "product_dist", "factors": ["shape", "shared_constraint"]},
+    {"name": "shared_constraint", "type": "gaussian_dist", "x": "theta_obs", "mean": "theta", "sigma": 1.0},
+    {"name": "own_constraint", "type": "gaussian_dist", "x": "eta_obs", "mean": "eta", "sigma": 1.0}
+  ],
+  "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+    {"name": "x_hf", "min": 0.0, "max": 1.0, "nbins": 1}, {"name": "x_other", "min": -5.0, "max": 5.0},
+    {"name": "theta", "min": -5.0, "max": 5.0}, {"name": "eta", "min": -5.0, "max": 5.0},
+    {"name": "mu", "min": 0.0, "max": 5.0}]}],
+  "parameter_points": [{"name": "default_values", "parameters": [
+    {"name": "theta", "value": 0.0}, {"name": "theta_obs", "value": 0.0, "const": true},
+    {"name": "eta", "value": 0.0}, {"name": "eta_obs", "value": 0.0, "const": true}, {"name": "mu", "value": 1.0}]}],
+  "data": [
+    {"name": "data_hf", "type": "binned", "axes": [{"name": "x_hf", "min": 0.0, "max": 1.0, "nbins": 1}],
+     "contents": [10.0]},
+    {"name": "data_other", "type": "unbinned", "axes": [{"name": "x_other", "min": -5.0, "max": 5.0}],
+     "entries": [[0.2]]}
+  ],
+  "likelihoods": [{"name": "lh", "distributions": ["HF", "OTHER"], "data": ["data_hf", "data_other"]}],
+  "analyses": [{"name": "analysis", "likelihood": "lh", "domains": ["default_domain"],
+                "parameters_of_interest": ["mu"]}]
+})";
+   auto replace = [&](std::string const &from, std::string const &to) {
+      for (std::size_t pos = json.find(from); pos != std::string::npos; pos = json.find(from, pos + to.size())) {
+         json.replace(pos, from.size(), to);
+      }
+   };
+   replace("VERSION", version);
+   replace("\"HF\"", "\"" + hfName + "\"");
+   replace("\"OTHER\"", "\"" + otherName + "\"");
+   return json;
+}
+
+// The NLL of the model of sharedConstraintJSON() at a parameter point that moves both constrained parameters.
+double sharedConstraintNLL(RooWorkspace &ws, std::string const &hfName, std::string const &otherName)
+{
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("analysis"));
+   auto *simPdf = mc ? dynamic_cast<RooSimultaneous *>(mc->GetPdf()) : nullptr;
+   if (!simPdf) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   ws.var("mu")->setVal(1.2);
+   ws.var("theta")->setVal(0.4);
+   ws.var("eta")->setVal(-0.3);
+   RooRealVar &xHF = *ws.var("x_hf");
+   RooRealVar &xOther = *ws.var("x_other");
+   RooRealVar weight{"weight", "weight", 1.0};
+   auto &indexCat = dynamic_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(simPdf->indexCat()));
+   RooDataSet combined{"combined", "combined", {xHF, xOther, indexCat, weight}, RooFit::WeightVar(weight)};
+   xOther.setVal(0.0);
+   xHF.setVal(0.5);
+   indexCat.setLabel(hfName.c_str());
+   combined.add({xHF, xOther, indexCat}, 10.0);
+   xOther.setVal(0.2);
+   indexCat.setLabel(otherName.c_str());
+   combined.add({xHF, xOther, indexCat}, 1.0);
+   std::unique_ptr<RooAbsReal> nll{simPdf->createNLL(combined)};
+   return nll->getVal();
+}
+
+} // namespace
+
+// A constraint shared between a HistFactory channel and another pdf is written once, as a term of the likelihood,
+// whatever the order in which the export visits them, also when the constraints of the HistFactory channels are
+// collected into arrays.
+TEST(RooFitHS3, HistFactoryConstraintSharedWithOtherPdf)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // Not valid HS3 0.3.
+   expectImportThrowsWithError(sharedConstraintJSON("model_hf", "model_other"),
+                               "the variate 'theta_obs' is shared by the terms 'model_other' and 'shared_constraint'");
+
+   // The HistFactory channel is visited first, and last.
+   for (auto const &[hfName, otherName] : std::vector<std::pair<std::string, std::string>>{
+           {"model_hf", "model_other"}, {"z_model_hf", "a_model_other"}}) {
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(sharedConstraintJSON(hfName, otherName, "0.2")));
+      });
+      EXPECT_NE(
+         warnings.find("the variate 'theta_obs' is shared by the terms '" + otherName + "' and 'shared_constraint'"),
+         std::string::npos)
+         << warnings;
+      const double nll = sharedConstraintNLL(ws, hfName, otherName);
+      ASSERT_FALSE(std::isnan(nll));
+      for (bool arrays : {true, false}) {
+         SCOPED_TRACE(hfName + (arrays ? ", arrays" : ", no arrays"));
+         RooJSONFactoryWSTool::config().exportArrayDist = arrays;
+         const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+         RooJSONFactoryWSTool::config().exportArrayDist = true;
+
+         auto tree = RooFit::Detail::JSONTree::create(exported);
+         auto const &distributions = tree->rootnode()["distributions"];
+         const auto *shared = RooJSONFactoryWSTool::findNamedChild(distributions, "shared_constraint");
+         ASSERT_NE(shared, nullptr) << exported;
+         EXPECT_EQ((*shared)["type"].val(), "gaussian_dist") << exported;
+         EXPECT_NE(exported.find(R"("constraints":["shared_constraint"])"), std::string::npos) << exported;
+         // The product only keeps the factor that is not a term of the likelihood.
+         const auto *other = RooJSONFactoryWSTool::findNamedChild(distributions, otherName);
+         ASSERT_NE(other, nullptr) << exported;
+         ASSERT_EQ((*other)["factors"].num_children(), 1u) << exported;
+         EXPECT_EQ((*other)["factors"].child(0).val(), "shape") << exported;
+         // The constraint that only the HistFactory channel uses is still collected.
+         const auto *own = RooJSONFactoryWSTool::findNamedChild(distributions, "own_constraint");
+         const auto *array =
+            RooJSONFactoryWSTool::findNamedChild(distributions, "analysis_simPdf_gaussian_constraints");
+         if (arrays) {
+            EXPECT_EQ(own, nullptr) << exported;
+            ASSERT_NE(array, nullptr) << exported;
+            ASSERT_EQ((*array)["components"].num_children(), 1u) << exported;
+            EXPECT_EQ((*array)["components"].child(0)["x"].val(), "eta_obs") << exported;
+            EXPECT_NE(exported.find(R"("constraints":["analysis_simPdf_gaussian_constraints"])"), std::string::npos)
+               << exported;
+         } else {
+            EXPECT_NE(own, nullptr) << exported;
+            EXPECT_EQ(array, nullptr) << exported;
+         }
+
+         // Valid HS3 0.3: read back without warnings, with the same NLL.
+         RooWorkspace ws2;
+         const std::string warnings2 = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+            ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+         });
+         EXPECT_EQ(warnings2.find("is shared by the terms"), std::string::npos) << warnings2;
+         const double nll2 = sharedConstraintNLL(ws2, hfName, otherName);
+         EXPECT_NEAR(nll2, nll, 1e-10 * std::abs(nll));
+         // The re-imported model has the constraint only in the HistFactory channel, so with arrays it is collected
+         // now. From there on, the document is stable.
+         RooJSONFactoryWSTool::config().exportArrayDist = arrays;
+         const std::string exported2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+         RooWorkspace ws3;
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported2)) << exported2;
+         const std::string exported3 = RooJSONFactoryWSTool{ws3}.exportJSONtoString();
+         RooJSONFactoryWSTool::config().exportArrayDist = true;
+         EXPECT_EQ(exported3, exported2);
+         EXPECT_EQ(exported2.find(R"("constraints":["shared_constraint"])") == std::string::npos, arrays) << exported2;
+         const double nll3 = sharedConstraintNLL(ws3, hfName, otherName);
+         EXPECT_NEAR(nll3, nll, 1e-10 * std::abs(nll));
+      }
+   }
+
+   // A component of a tagged array product that another product also uses cannot be written: the export fails
+   // instead of leaving a dangling reference, whichever of the two is visited first.
+   RooRealVar nomA{"nom_a", "nom_a", 0.0, -5.0, 5.0};
+   RooRealVar a{"a", "a", 0.0, -5.0, 5.0};
+   RooRealVar x{"x", "x", 1.0, 0.0, 10.0};
+   RooGaussian gaussA{"gauss_a", "gauss_a", nomA, a, RooFit::RooConst(1.0)};
+   RooGaussian shape{"shape", "shape", x, a, RooFit::RooConst(1.0)};
+   for (auto const &[arrayName, error] : std::vector<std::pair<std::string, std::string>>{
+           {"a_array", "is written as a component of the array"}, {"z_array", "is already written as 'gauss_a'"}}) {
+      RooProdPdf array{arrayName.c_str(), arrayName.c_str(), {gaussA}};
+      array.setAttribute("hs3_array_dist");
+      RooProdPdf other{"m_other", "m_other", {shape, gaussA}};
+      RooWorkspace wsTagged;
+      wsTagged.import(array, RooFit::Silence());
+      wsTagged.import(other, RooFit::RecycleConflictNodes(), RooFit::Silence());
+      expectExportThrowsWithError(wsTagged, error);
+   }
+}
+
+// The variates of an array distribution are the observables of its components: a likelihood term that shares one of
+// them with an array is rejected like any other shared variate.
+TEST(RooFitHS3, ArrayDistVariatesInLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto document = [](std::string const &aux) {
+      return R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "model", "type": "gaussian_dist", "x": "obs", "mean": "a", "sigma": 1.0},
+         {"name": "constraints", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_a", "mean": "a"}, {"x": "nom_b", "mean": "b"}]},
+         {"name": "other", "type": "gaussian_dist", "x": "nom_b", "mean": "b", "sigma": 2.0}
+      ],
+      "data": [{"name": "data", "type": "unbinned", "axes": [{"name": "obs", "min": -5.0, "max": 5.0}],
+                "entries": [[0.3]]}],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "obs", "min": -5.0, "max": 5.0}, {"name": "a", "min": -5.0, "max": 5.0},
+         {"name": "b", "min": -5.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "nom_a", "value": 0.0, "const": true}, {"name": "nom_b", "value": 0.0, "const": true}]}],
+      "likelihoods": [{"name": "lh", "distributions": ["model"], "data": ["data"], "aux_distributions": )" +
+             aux + R"(}],
+      "analyses": [{"name": "an", "likelihood": "lh", "domains": ["default_domain"]}]
+   })";
+   };
+   {
+      RooWorkspace ws;
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(document(R"(["constraints"])")));
+   }
+   expectImportThrowsWithError(document(R"(["constraints", "other"])"),
+                               "the variate 'nom_b' is shared by the terms 'constraints' and 'other' of the "
+                               "likelihood 'lh'");
+}
+
+// A constraint of a HistFactory modifier that is also an external constraint of the ModelConfig is referred to by
+// its own name, so it is not collected into an array: the export must not leave the likelihood with a reference to
+// a distribution that is not written.
+TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+  "metadata": {"hs3_version": "0.3"},
+  "distributions": [
+    {"name": "HF", "type": "histfactory_dist",
+     "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+     "axes": [{"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}],
+     "samples": [{"name": "signal", "data": {"contents": [10.0]},
+                  "modifiers": [{"name": "mu", "type": "normfactor", "parameters": ["mu"]},
+                                {"name": "syst", "type": "normsys", "parameters": ["theta"],
+                                 "data": {"lo": 0.9, "hi": 1.1}, "constraints": ["constraint"]}]}]},
+    {"name": "constraint", "type": "gaussian_dist", "x": "gobs", "mean": "theta", "sigma": 1.0}
+  ],
+  "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+    {"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}, {"name": "mu", "min": 0.0, "max": 5.0},
+    {"name": "theta", "min": -5.0, "max": 5.0}, {"name": "gobs", "min": -5.0, "max": 5.0}]}],
+  "parameter_points": [{"name": "default_values", "parameters": [
+    {"name": "mu", "value": 1.0}, {"name": "theta", "value": 0.0}, {"name": "gobs", "value": 0.0, "const": true}]}],
+  "data": [{"name": "data", "type": "binned", "contents": [10.0],
+            "axes": [{"name": "x", "min": 0.0, "max": 1.0, "nbins": 1}]}],
+  "likelihoods": [{"name": "lh", "distributions": ["HF"], "data": ["data"]}],
+  "analyses": [{"name": "mc", "likelihood": "lh", "parameters_of_interest": ["mu"], "domains": ["default_domain"]}]
+})";
+
+   auto nllOf = [](RooWorkspace &w) {
+      auto *mc = dynamic_cast<RooFit::ModelConfig *>(w.obj("mc"));
+      if (!mc || !w.data("data")) {
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+      w.var("theta")->setVal(0.4);
+      RooArgSet external;
+      if (mc->GetExternalConstraints()) {
+         external.add(*mc->GetExternalConstraints());
+      }
+      std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external),
+                                                              RooFit::GlobalObservables(*mc->GetGlobalObservables()))};
+      return nll->getVal();
+   };
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("mc"));
+   ASSERT_NE(mc, nullptr);
+   const double nll = nllOf(ws);
+   ASSERT_FALSE(std::isnan(nll));
+   // Redundant: the constraint is part of the pdf already, and RooFit counts it once.
+   mc->SetExternalConstraints(RooArgSet{*ws.pdf("constraint")});
+   ASSERT_NEAR(nllOf(ws), nll, 1e-10 * std::abs(nll));
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   const auto *constraint = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "constraint");
+   ASSERT_NE(constraint, nullptr) << exported;
+   EXPECT_EQ((*constraint)["type"].val(), "gaussian_dist") << exported;
+   EXPECT_NE(exported.find(R"("constraints":["constraint"])"), std::string::npos) << exported;
+   EXPECT_NE(exported.find(R"("aux_distributions":["constraint"])"), std::string::npos) << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+   EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
+}
+
+// With config().exportConstraintData, a constraint of an ordinary product is written as a term of the likelihood
+// paired with a data set of one entry, like the constraints of HistFactory channels. On import, it is an external
+// constraint of the ModelConfig, the data set sets the observed value of its global observable, and it is not
+// imported as a data set. The likelihood is the same with and without the option.
+TEST(RooFitHS3, ConstraintDataOfProductConstraints)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::shape(x[0, -5, 5], mu[0, -2, 2], 1.0)");
+   ws.factory("Gaussian::shift(x, theta[0, -5, 5], 2.0)");
+   ws.factory("SUM::phys(f[0.5, 0, 1] * shape, shift)");
+   ws.factory("Gaussian::constraint(gobs[0.3, -5, 5], theta, 1.0)");
+   ws.var("gobs")->setConstant(true);
+   ws.factory("PROD::model(phys, constraint)");
+   RooDataSet data{"data", "data", *ws.var("x")};
+   ws.var("x")->setVal(0.3);
+   data.add(*ws.var("x"));
+   ws.import(data, RooFit::Silence());
+   RooFit::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf("model");
+   mc.SetObservables("x");
+   mc.SetParametersOfInterest("mu");
+   mc.SetNuisanceParameters("theta,f");
+   mc.SetGlobalObservables("gobs");
+   ws.import(mc);
+
+   auto nllOf = [](RooWorkspace &w) {
+      auto *modelConfig = dynamic_cast<RooFit::ModelConfig *>(w.obj("ModelConfig"));
+      if (!modelConfig || !w.data("data") || !modelConfig->GetGlobalObservables()) {
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+      w.var("theta")->setVal(0.4);
+      w.var("mu")->setVal(0.2);
+      RooArgSet external;
+      if (modelConfig->GetExternalConstraints()) {
+         external.add(*modelConfig->GetExternalConstraints());
+      }
+      std::unique_ptr<RooAbsReal> nll{
+         modelConfig->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external),
+                                          RooFit::GlobalObservables(*modelConfig->GetGlobalObservables()))};
+      return nll->getVal();
+   };
+   const double nll = nllOf(ws);
+   ASSERT_FALSE(std::isnan(nll));
+
+   for (bool constraintData : {false, true}) {
+      SCOPED_TRACE(constraintData ? "with constraint data" : "without constraint data");
+      RooJSONFactoryWSTool::config().exportConstraintData = constraintData;
+      const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().exportConstraintData = false;
+
+      auto tree = RooFit::Detail::JSONTree::create(exported);
+      const auto *model = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model");
+      ASSERT_NE(model, nullptr) << exported;
+      ASSERT_EQ((*model)["factors"].num_children(), 1u) << exported;
+      if (constraintData) {
+         EXPECT_NE(exported.find(R"("distributions":["model","constraint"])"), std::string::npos) << exported;
+         EXPECT_NE(exported.find(R"("data":["data","constraint_data"])"), std::string::npos) << exported;
+         EXPECT_EQ(exported.find("aux_distributions"), std::string::npos) << exported;
+      } else {
+         EXPECT_NE(exported.find(R"("aux_distributions":["constraint"])"), std::string::npos) << exported;
+      }
+
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+      auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+      ASSERT_NE(mc2, nullptr);
+      EXPECT_STREQ(mc2->GetPdf()->GetName(), "model");
+      ASSERT_NE(mc2->GetExternalConstraints(), nullptr) << exported;
+      EXPECT_NE(mc2->GetExternalConstraints()->find("constraint"), nullptr) << exported;
+      ASSERT_NE(mc2->GetGlobalObservables(), nullptr) << exported;
+      EXPECT_NE(mc2->GetGlobalObservables()->find("gobs"), nullptr) << exported;
+      EXPECT_EQ(ws2.data("constraint_data"), nullptr);
+      EXPECT_DOUBLE_EQ(ws2.var("gobs")->getVal(), 0.3);
+      EXPECT_TRUE(ws2.var("gobs")->isConstant());
+      EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
+
+      // After the first round trip, the constraint is an external constraint of the ModelConfig, which is written in
+      // the same way. From there on, the document is stable.
+      RooJSONFactoryWSTool::config().exportConstraintData = constraintData;
+      const std::string exported2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+      RooWorkspace ws3;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(exported2)) << exported2;
+      const std::string exported3 = RooJSONFactoryWSTool{ws3}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().exportConstraintData = false;
+      EXPECT_EQ(exported3, exported2);
+      auto tree2 = RooFit::Detail::JSONTree::create(exported2);
+      auto const &likelihood = tree2->rootnode()["likelihoods"].child(0);
+      auto const &likelihood1 = tree->rootnode()["likelihoods"].child(0);
+      for (const char *key : {"distributions", "data", "aux_distributions"}) {
+         std::stringstream ss1;
+         std::stringstream ss2;
+         if (likelihood1.has_child(key)) {
+            likelihood1[key].writeJSON(ss1);
+         }
+         if (likelihood.has_child(key)) {
+            likelihood[key].writeJSON(ss2);
+         }
+         EXPECT_EQ(ss2.str(), ss1.str()) << key << ": " << exported2;
+      }
+      EXPECT_NEAR(nllOf(ws3), nll, 1e-10 * std::abs(nll));
+   }
+}
+
+// As ConstraintTermsOfRenamedChannels, with and without arrays: the likelihood lists the constraint terms of the
+// renamed HistFactory channel as they are written (the array that holds a constraint), so the document has no
+// reference to a distribution that is not written (reported in the review of #24013).
+TEST(RooFitHS3, ArrayConstraintTermsOfRenamedChannels)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   makeRenamedHistFactoryWorkspace(ws);
+   const double nll = renamedHistFactoryNLL(ws);
+   ASSERT_FALSE(std::isnan(nll));
+
+   for (bool arrays : {true, false}) {
+      SCOPED_TRACE(arrays ? "arrays" : "no arrays");
+      RooJSONFactoryWSTool::config().exportArrayDist = arrays;
+      const std::string plain = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().renameCombinedObservables = true;
+      const std::string renamed = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      RooJSONFactoryWSTool::config().renameCombinedObservables = false;
+      RooJSONFactoryWSTool::config().exportArrayDist = true;
+
+      ASSERT_NE(renamed.find("obs_A"), std::string::npos) << renamed;
+      EXPECT_EQ(auxDistributionsOf(renamed), auxDistributionsOf(plain)) << renamed;
+      EXPECT_EQ(auxDistributionsOf(renamed), arrays ? R"(["model_gaussian_constraints"])" : R"(["constraint"])")
+         << renamed;
+      for (std::string const &json : {plain, renamed}) {
+         RooWorkspace ws2;
+         ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json)) << json;
+         EXPECT_NEAR(renamedHistFactoryNLL(ws2), nll, 1e-10 * std::abs(nll)) << json;
+      }
+   }
 }
