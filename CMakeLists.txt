@@ -493,6 +493,60 @@ if(MSVC)
 endif()
 
 if(runtime_cxxmodules)
+  get_property(_vfs_mappings GLOBAL PROPERTY ROOT_VFS_HEADER_MAPPINGS)
+  set(_vfs_yaml "version: 0\ncase-sensitive: false\nroots:\n")
+
+  if(_vfs_mappings)
+    list(REMOVE_DUPLICATES _vfs_mappings)
+    set(_all_dirs "")
+
+    # Pass 1: Group entries into per-directory variables
+    foreach(_entry IN LISTS _vfs_mappings)
+      string(REPLACE "|" ";" _parts "${_entry}")
+      list(GET _parts 0 _rel_path)
+      list(GET _parts 1 _src_path)
+
+      get_filename_component(_rel_dir "${_rel_path}" DIRECTORY)
+      get_filename_component(_file_name "${_rel_path}" NAME)
+
+      if(_rel_dir STREQUAL "")
+        set(_virtual_dir "${CMAKE_BINARY_DIR}/include")
+      else()
+        set(_virtual_dir "${CMAKE_BINARY_DIR}/include/${_rel_dir}")
+      endif()
+
+      # Create a safe CMake variable name from the directory path
+      string(MAKE_C_IDENTIFIER "${_virtual_dir}" _dir_var)
+      list(APPEND _all_dirs "${_virtual_dir}")
+      list(APPEND _vfs_files_${_dir_var} "${_file_name}|${_src_path}")
+    endforeach()
+
+    # Pass 2: Deduplicate directories and emit YAML per group
+    list(REMOVE_DUPLICATES _all_dirs)
+    foreach(_virtual_dir IN LISTS _all_dirs)
+      string(APPEND _vfs_yaml
+        "  - name: \"${_virtual_dir}\"\n"
+        "    type: directory\n"
+        "    contents:\n"
+      )
+
+      string(MAKE_C_IDENTIFIER "${_virtual_dir}" _dir_var)
+      foreach(_file_entry IN LISTS _vfs_files_${_dir_var})
+        string(REPLACE "|" ";" _fparts "${_file_entry}")
+        list(GET _fparts 0 _file_name)
+        list(GET _fparts 1 _src_path)
+
+        string(APPEND _vfs_yaml
+          "      - name: \"${_file_name}\"\n"
+          "        type: file\n"
+          "        external-contents: \"${_src_path}\"\n"
+        )
+      endforeach()
+    endforeach()
+  endif()
+
+  file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/etc/buildtree_vfs.yaml" CONTENT "${_vfs_yaml}")
+
   # Dummy target that does nothing, we don't need a PCH for modules.
   # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow
   # to test hsimple.C after all C++ modules are updated.

@@ -331,9 +331,6 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
 
   # Transform absolute header paths to relative paths based on BASE_DIRS
   set(RelativeHeaderList "")
-  set(_src_headers "")
-  set(_copied_headers "")
-  set(_copy_commands "")
   foreach(header_file ${HeaderList})
     set(resolved_path "")
     foreach(base_dir ${HeaderBaseDirs})
@@ -348,10 +345,7 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
     if(resolved_path)
       list(APPEND RelativeHeaderList "${resolved_path}")
       if(runtime_cxxmodules)
-        set(_dst "${CMAKE_BINARY_DIR}/include/${resolved_path}")
-        list(APPEND _src_headers "${header_file}")
-        list(APPEND _copied_headers "${_dst}")
-        list(APPEND _copy_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different "${header_file}" "${_dst}")
+        set_property(GLOBAL APPEND PROPERTY ROOT_VFS_HEADER_MAPPINGS "${resolved_path}|${header_file}")
       endif()
     else()
       # Fallback to absolute if it couldn't be resolved relative to any base dir
@@ -369,25 +363,6 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target options)
   ROOT_GENERATE_DICTIONARY(G__${target} ${RelativeHeaderList} LINKDEF ${LinkdefList} MODULE ${target} DEPENDENCIES ${_lib_deps} EXTRA_DEPENDENCIES ${_copied_headers} OPTIONS ${options} USE_FILE_SETS)
   # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
 
-  if(_copied_headers)
-    # TODO: this is a workaround that copies include files to build directory (unideal). Note: it only copies the header files used for dict generation, ie those from public default file_set
-    # not the other public headers such as not4dict and linkDef. The there sets are only copied to the install tree when make install.
-    # The proper way to solve this would be to generate two ROOT modulemaps, one for the buildtree with absolute paths and one for the install tree
-    # with relative ones. Alternatively, to modify ROOT to accept relative paths for headers not in the same folder as build/ROOT.modulemap
-    # Namely to modify core/dictgen/src/rootcling_impl.cxx and core/metacling/src/TCling.cxx to register a Clang llvm::vfs::RedirectingFileSystem (VFS overlay) that maps
-    # <build>/include/RooFit/xRooFit/... to <src>/roofit/xroofit/inc/RooFit/xRooFit/....
-    # Also, one could explore using ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR, rather than a monolithic ROOT.modulemap.
- 
-    add_custom_command(
-      OUTPUT ${_copied_headers}
-      ${_copy_commands}
-      DEPENDS ${_src_headers}
-      COMMENT "Copying public headers for ${target} to build/include"
-      VERBATIM
-    )
-    add_custom_target(move_headers_${target} DEPENDS ${_copied_headers})
-    add_dependencies(G__${target} move_headers_${target})
-  endif()
 endfunction(ROOT_GENERATE_TARGET_DICTIONARY)
 
 #---------------------------------------------------------------------------------------------------
@@ -947,6 +922,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${dictionary_target}.dir/compiler_depend.internal)
   endif()
 
+  set(_vfs_overlay_dep)
+  if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND runtime_cxxmodules)
+    set(_vfs_yaml "${CMAKE_BINARY_DIR}/etc/buildtree_vfs.yaml")
+    list(APPEND newargs "-ivfsoverlay" "${_vfs_yaml}")
+    set(_vfs_overlay_dep "${_vfs_yaml}")
+  endif()
+
   #---call rootcling------------------------------------------
   add_custom_command(
     OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
@@ -970,6 +952,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
             ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
             ${runtime_cxxmodule_dependencies}
             ${cxx_std_stamp}
+            ${_vfs_overlay_dep}
     COMMAND_EXPAND_LISTS
   )
 
@@ -1488,16 +1471,16 @@ function(ROOT_INSTALL_TARGET target)
       SUFFIX "${_lib_suffix}"
     )
   endif()
-  if(NOT runtime_cxxmodules) # remove this condition once we do not copy at all headers for modules, when using VFS
-    get_target_property(_hdr_dirs ${target} HEADER_DIRS)
-    if(_hdr_dirs)
-      set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_hdr_dirs})
-    endif()
-    get_target_property(_not4dict_dirs ${target} HEADER_DIRS_not4dict_header_files)
-    if(_not4dict_dirs)
-      set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_not4dict_dirs})
-    endif()
+
+  get_target_property(_hdr_dirs ${target} HEADER_DIRS)
+  if(_hdr_dirs)
+    set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_hdr_dirs})
   endif()
+  get_target_property(_not4dict_dirs ${target} HEADER_DIRS_not4dict_header_files)
+  if(_not4dict_dirs)
+    set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_INCLUDE_DIRS ${_not4dict_dirs})
+  endif()
+
 
   install(TARGETS ${target}
     EXPORT ${CMAKE_PROJECT_NAME}Exports
