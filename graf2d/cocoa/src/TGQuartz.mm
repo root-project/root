@@ -459,8 +459,6 @@ void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
       return;
 
    TTFhandle ttf;
-
-   ttf.SetSmoothing(kTRUE);
    ttf.SetTextFont(att.GetTextFont());
    ttf.SetTextSize(att.GetTextSize());
    ttf.SetRotationMatrix(angle);
@@ -508,8 +506,6 @@ void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
       return;
 
    TTFhandle ttf;
-
-   ttf.SetSmoothing(kTRUE);
    ttf.SetTextFont(att.GetTextFont());
    ttf.SetTextSize(att.GetTextSize());
    ttf.SetRotationMatrix(angle);
