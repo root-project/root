@@ -797,6 +797,8 @@ TEST(RNTupleMerger, MergeThroughTFileMergerRecompressMixedChecksums)
 
    for (bool reverseOrder : {false, true}) {
       FileRaii output("test_ntuple_merge_recompress_mixed_out.root");
+      CheckDiagsRAII diagsRaii;
+      diagsRaii.requiredDiag(kWarning, "ROOT.NTuple.Merge", "disabling same-page merging", false);
       TFileMerger merger;
       merger.AddFile((reverseOrder ? inputWithChecksum.GetPath() : inputNoChecksum.GetPath()).c_str());
       merger.AddFile((reverseOrder ? inputNoChecksum.GetPath() : inputWithChecksum.GetPath()).c_str());
