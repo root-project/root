@@ -289,14 +289,15 @@ public:
       const int gridSize = getGridSize(nEvents);
       _computeFunctions[computer]<<<gridSize, blockSize, 0, stream>>>(*batchesDevice);
 
-      // Only the NormalizedPdf computer mutates its extra args: it uses them
-      // as output parameters for the evaluation error counts. Instead of
-      // synchronizing the stream to read the counters back immediately, the
-      // readback is deferred to avoid stalling the pipeline: an asynchronous
-      // copy delivers them into a persistent pinned buffer, and the next
-      // synchronizeCudaStream() call forwards them to the caller's span. The
-      // caller's memory therefore has to stay valid until then.
-      if (computer == NormalizedPdf && !extraArgs.empty()) {
+      // Only the NormalizedPdf and LogNormalizedPdf computers mutate their
+      // extra args: they use them as output parameters for the evaluation
+      // error counts. Instead of synchronizing the stream to read the counters
+      // back immediately, the readback is deferred to avoid stalling the
+      // pipeline: an asynchronous copy delivers them into a persistent pinned
+      // buffer, and the next synchronizeCudaStream() call forwards them to the
+      // caller's span. The caller's memory therefore has to stay valid until
+      // then.
+      if ((computer == NormalizedPdf || computer == LogNormalizedPdf) && !extraArgs.empty()) {
          const std::size_t nBytes = extraArgs.size() * sizeof(double);
          StreamScratch::DeferredSlot &deferredSlot = streamScratch.acquireDeferred(nBytes);
          ERRCHECK(cudaMemcpyAsync(deferredSlot.host, extraArgsDevice, nBytes, cudaMemcpyDeviceToHost, stream));
