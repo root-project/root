@@ -62,24 +62,12 @@ public:
    }
    virtual ~Exporter() {}
 };
-struct ExportKeys {
-   std::string type;
-   std::map<std::string, std::string> proxies;
-};
-struct ImportExpression {
-   TClass const *tclass = nullptr;
-   std::vector<std::string> arguments;
-};
 
 using ImportMap = std::map<const std::string, std::vector<std::unique_ptr<const Importer>>>;
 using ExportMap = std::map<TClass const *, std::vector<std::unique_ptr<const Exporter>>>;
-using ExportKeysMap = std::map<TClass const *, ExportKeys>;
-using ImportExpressionMap = std::map<const std::string, ImportExpression>;
 
 ImportMap &importers();
 ExportMap &exporters();
-ImportExpressionMap &importExpressions();
-ExportKeysMap &exportKeys();
 
 template <class T>
 static bool registerImporter(const std::string &key, bool topPriority = true)
@@ -104,15 +92,6 @@ int removeImporters(const std::string &needle);
 int removeExporters(const std::string &needle);
 void printImporters();
 void printExporters();
-
-void loadFactoryExpressions(std::istream &is);
-void loadFactoryExpressions(const std::string &fname);
-void clearFactoryExpressions();
-void printFactoryExpressions();
-void loadExportKeys(std::istream &is);
-void loadExportKeys(const std::string &fname);
-void clearExportKeys();
-void printExportKeys();
 
 } // namespace JSONIO
 

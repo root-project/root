@@ -18,8 +18,6 @@
 #include <RooRealVar.h>
 #include <RooBinning.h>
 #include <RooAbsCategory.h>
-#include <RooArgProxy.h>
-#include <RooAbsProxy.h>
 #include <RooAbsLValue.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
@@ -107,8 +105,6 @@ You can always get a list of all the available importers and exporters by callin
 ~~~ {.py}
 ROOT.RooFit.JSONIO.printImporters()
 ROOT.RooFit.JSONIO.printExporters()
-ROOT.RooFit.JSONIO.printFactoryExpressions()
-ROOT.RooFit.JSONIO.printExportKeys()
 ~~~
 
 Alternatively, you can generate a LaTeX version of the available importers and exporters by calling
@@ -568,39 +564,6 @@ void importParameterStepWidths(RooWorkspace &workspace, HS3Document const &doc)
       }
       var->setError(stepWidth.width);
    }
-}
-
-// RooWSFactoryTool expression handling
-std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode &p, RooJSONFactoryWSTool *tool)
-{
-   std::stringstream expression;
-   std::string classname(ex.tclass->GetName());
-   size_t colon = classname.find_last_of(':');
-   expression << (colon < classname.size() ? classname.substr(colon + 1) : classname);
-   bool first = true;
-   const auto &name = RooJSONFactoryWSTool::name(p);
-   for (auto k : ex.arguments) {
-      expression << (first ? "::" + name + "(" : ",");
-      first = false;
-      if (k == "true" || k == "false") {
-         expression << (k == "true" ? "1" : "0");
-      } else if (!p.has_child(k)) {
-         RooJSONFactoryWSTool::error("node '" + name + "' is missing key '" + k + "'");
-      } else if (p[k].is_seq()) {
-         bool firstInner = true;
-         expression << "{";
-         for (RooAbsArg *arg : tool->requestArgList<RooAbsReal>(p, k)) {
-            expression << (firstInner ? "" : ",") << arg->GetName();
-            firstInner = false;
-         }
-         expression << "}";
-      } else {
-         tool->requestArg<RooAbsReal>(p, p[k].key());
-         expression << p[k].val();
-      }
-   }
-   expression << ")";
-   return expression.str();
 }
 
 // Generate all combinations of bin indices for the RooRealVars in `vars`.
@@ -2411,7 +2374,6 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
    auto &collectionNode = (*_export->root)[isPdf ? "distributions" : "functions"];
 
    auto const &exporters = RooFit::JSONIO::exporters();
-   auto const &exportKeys = RooFit::JSONIO::exportKeys();
 
    TClass *cl = func.IsA();
 
@@ -2455,72 +2417,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
       }
    }
 
-   // generic export using the factory expressions
-   const auto &dict = exportKeys.find(cl);
-   if (dict == exportKeys.end()) {
-      std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!\n"
-                << "there are several possible reasons for this:\n"
-                << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added.\n"
-                << " 2. " << cl->GetName()
-                << " is a ROOT class that nobody ever bothered to write a serialization definition for.\n"
-                << " 3. something is wrong with your setup, e.g. you might have called "
-                   "RooFit::JSONIO::clearExportKeys() and/or never successfully read a file defining these "
-                   "keys with RooFit::JSONIO::loadExportKeys(filename)\n"
-                << "either way, please make sure that:\n"
-                << " 3: you are reading a file with export keys - call RooFit::JSONIO::printExportKeys() to "
-                   "see what is available\n"
-                << " 2 & 1: you might need to write a serialization definition yourself. check "
-                   "https://root.cern/doc/master/group__roofit__dev__docs__hs3.html to "
-                   "see how to do this!\n";
-      return;
-   }
-
-   elem["type"] << dict->second.type;
-   recordGenericObject(_export->doc, isPdf, name, elem);
-
-   size_t nprox = func.numProxies();
-
-   for (size_t i = 0; i < nprox; ++i) {
-      RooAbsProxy *p = func.getProxy(i);
-      if (!p)
-         continue;
-
-      // some proxies start with a "!". This is a magic symbol that we don't want to stream
-      std::string pname(p->name());
-      if (pname[0] == '!')
-         pname.erase(0, 1);
-
-      auto k = dict->second.proxies.find(pname);
-      if (k == dict->second.proxies.end()) {
-         std::cerr << "failed to find key matching proxy '" << pname << "' for type '" << dict->second.type
-                   << "', encountered in '" << func.GetName() << "', skipping" << std::endl;
-         return;
-      }
-
-      // empty string is interpreted as an instruction to ignore this value
-      if (k->second.empty())
-         continue;
-
-      if (auto l = dynamic_cast<RooAbsCollection *>(p)) {
-         fillSeq(elem[k->second], *l);
-      }
-      if (auto r = dynamic_cast<RooArgProxy *>(p)) {
-         if (isLiteralConstVar(*r->absArg())) {
-            elem[k->second] << static_cast<RooConstVar *>(r->absArg())->getVal();
-         } else {
-            elem[k->second] << r->absArg()->GetName();
-         }
-      }
-   }
-
-   // export all the servers of a given RooAbsArg
-   for (RooAbsArg *s : func.servers()) {
-      if (!s) {
-         std::cerr << "unable to locate server of " << func.GetName() << std::endl;
-         continue;
-      }
-      this->exportObject(*s);
-   }
+   std::cerr << "unable to export '" << name << "' of class '" << cl->GetName()
+             << "': no exporter is registered for this class, or none of them could handle the object. Check "
+                "https://root.cern/doc/master/group__roofit__dev__docs__hs3.html to see how to write one!\n";
 }
 
 std::string const &RooJSONFactoryWSTool::exportRootName() const
@@ -2758,7 +2657,6 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    }
 
    auto const &importers = RooFit::JSONIO::importers();
-   auto const &factoryExpressions = RooFit::JSONIO::importExpressions();
 
    // some preparations: what type of function are we dealing with here?
    RooJSONFactoryWSTool::testValidName(name, true);
@@ -2812,39 +2710,11 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
             break;
       }
    }
-   if (!ok) { // generic import using the factory expressions
-      auto expr = factoryExpressions.find(functype);
-      if (expr != factoryExpressions.end()) {
-         std::string expression = ::generate(expr->second, p, this);
-         if (!_workspace.factory(expression)) {
-            std::stringstream ss;
-            ss << "RooJSONFactoryWSTool() failed to create " << expr->second.tclass->GetName() << " '" << name
-               << "', skipping. expression was\n"
-               << expression << std::endl;
-            RooJSONFactoryWSTool::error(ss.str());
-         }
-      } else {
-         std::stringstream ss;
-         ss << "RooJSONFactoryWSTool() no handling for type '" << functype << "' implemented, skipping."
-            << "\n"
-            << "there are several possible reasons for this:\n"
-            << " 1. " << functype << " is a custom type that is not available in RooFit.\n"
-            << " 2. " << functype
-            << " is a ROOT class that nobody ever bothered to write a deserialization definition for.\n"
-            << " 3. something is wrong with your setup, e.g. you might have called "
-               "RooFit::JSONIO::clearFactoryExpressions() and/or never successfully read a file defining "
-               "these expressions with RooFit::JSONIO::loadFactoryExpressions(filename)\n"
-            << "either way, please make sure that:\n"
-            << " 3: you are reading a file with factory expressions - call "
-               "RooFit::JSONIO::printFactoryExpressions() "
-               "to see what is available\n"
-            << " 2 & 1: you might need to write a deserialization definition yourself. check "
-               "https://root.cern/doc/master/group__roofit__dev__docs__hs3.html to see "
-               "how to do this!"
-            << std::endl;
-         RooJSONFactoryWSTool::error(ss.str());
-         return;
-      }
+   if (!ok) {
+      RooJSONFactoryWSTool::error(
+         "RooJSONFactoryWSTool() no handling for type '" + functype +
+         "' implemented. Check https://root.cern/doc/master/group__roofit__dev__docs__hs3.html "
+         "to see how to write an importer for it!");
    }
    RooAbsReal *func = _workspace.function(name);
    if (!func) {

@@ -34,6 +34,8 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
+  RooArgList const &observables() const { return x; }
+
 protected:
 
   RooListProxy x ;

@@ -103,6 +103,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
   * `Rstrstream.h`: use instead `<sstream>`.
   * `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h`: use instead the public methods in the `RZip.h` interface.
   * `Hepevt.h` and `cfortran.h`: these will be moved to `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
+* The JSON I/O of RooFitHS3 through "export keys" and "factory expressions", which mapped the proxies and constructor arguments of a class to JSON keys, is removed, together with the functions `RooFit::JSONIO::loadExportKeys()`, `loadFactoryExpressions()`, `clearExportKeys()`, `clearFactoryExpressions()`, `printExportKeys()`, `printFactoryExpressions()`, `exportKeys()` and `importExpressions()`. The classes that were covered this way now have C++ importers and exporters, and the JSON that RooFit reads and writes is unchanged. To add JSON I/O for your own class, implement a `RooFit::JSONIO::Importer` and `RooFit::JSONIO::Exporter` instead, as explained in the [RooFitHS3 developer documentation](https://root.cern/doc/v644/group__roofit__dev__docs__hs3.html).
 * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
 * Deprecate `TTF` class, replaced by `TTFhandle` class
 

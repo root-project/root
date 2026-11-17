@@ -916,6 +916,9 @@ TEST(RooFitHS3, FactoryExpressions)
       {"ArgusBG::argusBG(x[0, 20], x0[10], c[-1], p[0.5])"},
       {"BifurGauss::bifurGauss(x[0, 10], mean[5], sigmaL[1.0, 0.1, 10], sigmaR[2.0, 0.1, 10])"},
       {"CBShape::cbShape(x[-10, 10], x0[0], sigma[2.0], alpha[1.4], n[1.2])"},
+      {"Chebychev::chebychev(x[-1, 1], {a_0[0.1], 0.2, a_2[-0.3, -1, 1]})"},
+      {"Gaussian::gauss(x[0, 10], mean[5], sigma[1.0, 0.1, 10])", "expr::eff('0.5 + 0.05 * x', x)",
+       "EffProd::effProd(gauss, eff)"},
       {"Exponential::exponential_1(x[0, 10], c[-0.1])"},
       // Different values for "lowestOrder"
       {"LegacyExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"},
@@ -938,6 +941,8 @@ TEST(RooFitHS3, FactoryExpressions)
       {"Polynomial::poly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"},
       {"Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"},
       {"PowerSum::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"},
+      {"Gaussian::gx(x[0, 10], mx[5], sx[1.0, 0.1, 10])", "Gaussian::gy(y[0, 10], my[4], sy[2.0, 0.1, 10])",
+       "PROD::prod(gx, gy)", "PROJ::projected(prod, y)"},
       {"Uniform::uniform({x[0.0, 10.0], y[0.0, 5.0]})"},
       // A workspace with only a function
       {"x[-3, 3]", "RooFormulaVar::myfunc(\"sin(x) + 0.5*x*x\",x)"},
