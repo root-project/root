@@ -2102,9 +2102,9 @@ function(ROOT_ADD_TEST test)
   if(_buildtree_incdirs)
     list(REMOVE_DUPLICATES _buildtree_incdirs)
     if(WIN32)
-      # RootTestDriver.cmake handles ';' escaping automatically; keep plain ';'
-      set(_buildtree_incpath "${_buildtree_incdirs}")
-      set(_path_sep ";")
+      # Encode ';' temporarily so it is not converted to '#' below
+      string(REPLACE ";" "@SEMICOLON@" _buildtree_incpath "${_buildtree_incdirs}")
+      set(_path_sep "@SEMICOLON@")
     else()
       string(REPLACE ";" ":" _buildtree_incpath "${_buildtree_incdirs}")
       set(_path_sep ":")
@@ -2120,6 +2120,9 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_ENVIRONMENT)
     string(REPLACE ";" "#" _env "${ARG_ENVIRONMENT}")
+    if(WIN32)
+      string(REPLACE "@SEMICOLON@" "\\;" _env "${_env}")
+    endif()
     set(_command ${_command} -DENV=${_env})
   endif()
 
