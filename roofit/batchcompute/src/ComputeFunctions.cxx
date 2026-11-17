@@ -31,6 +31,8 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 
 #include <RooHeterogeneousMath.h>
 
+#include <algorithm>
+#include <limits>
 #include <vector>
 
 #ifdef __CUDACC__
@@ -797,6 +799,82 @@ __rooglobal__ void computeProdPdf(Batches &batches)
    }
 }
 
+/// Logarithm of the product of the factors [begin, end) for event `i`. The
+/// binary exponent is kept separate, so that the product can't underflow.
+__roodevice__ inline double logOfProduct(Batches const &batches, std::size_t begin, std::size_t end, std::size_t i)
+{
+   constexpr double ln2 = 0.693147180559945309417232121458176568;
+   // The mantissa stays within [2^-256, 2^256] and the factors are brought
+   // into [2^-512, 2^512], so their product is always a normal double.
+   double mantissa = 1.0;
+   int exponent = 0;
+   for (std::size_t k = begin; k < end; ++k) {
+      double factor = batches.args[k][i];
+      int e = 0;
+      if (std::abs(factor) < 0x1p-512 || std::abs(factor) > 0x1p512) {
+         factor = std::frexp(factor, &e);
+         exponent += e;
+      }
+      mantissa *= factor;
+      if (std::abs(mantissa) < 0x1p-256 || std::abs(mantissa) > 0x1p256) {
+         mantissa = std::frexp(mantissa, &e);
+         exponent += e;
+      }
+   }
+   if (std::isnan(mantissa)) {
+      return mantissa; // with the payload of the NaN factor
+   }
+   // Pack a negative product into a NaN, like computeNormalizedPdf does.
+   return mantissa < 0. ? RooNaNPacker::packFloatIntoNaN(-std::ldexp(mantissa, exponent))
+                        : std::log(mantissa) + exponent * ln2;
+}
+
+/// Logarithm of a product. The first `extra[0]` factors are given as
+/// logarithms and are summed, the others are multiplied.
+__rooglobal__ void computeLogProdPdf(Batches &batches)
+{
+   const std::size_t nLogFactors = batches.extra[0];
+   const std::size_t nFactors = batches.nBatches;
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] = 0.0;
+   }
+   for (std::size_t k = 0; k < nLogFactors; ++k) {
+      for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+         batches.output[i] += batches.args[k][i];
+      }
+   }
+   if (nLogFactors == nFactors) {
+      return;
+   }
+#ifdef __CUDACC__
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      batches.output[i] += logOfProduct(batches, nLogFactors, nFactors, i);
+   }
+#else
+   // Multiply in a vectorizable loop, keeping track of the smallest partial
+   // product. If that is a normal number and the product didn't overflow,
+   // no precision was lost. Otherwise, the event is recomputed with
+   // logOfProduct().
+   double prod[bufferSize];
+   double minProd[bufferSize];
+   std::fill_n(prod, batches.nEvents, 1.0);
+   std::fill_n(minProd, batches.nEvents, 1.0);
+   for (std::size_t k = nLogFactors; k < nFactors; ++k) {
+      for (std::size_t i = 0; i < batches.nEvents; ++i) {
+         prod[i] *= batches.args[k][i];
+         minProd[i] = std::min(minProd[i], prod[i]);
+      }
+   }
+   for (std::size_t i = 0; i < batches.nEvents; ++i) {
+      if (minProd[i] >= std::numeric_limits<double>::min() && prod[i] <= std::numeric_limits<double>::max()) {
+         batches.output[i] += std::log(prod[i]);
+      } else {
+         batches.output[i] += logOfProduct(batches, nLogFactors, nFactors, i);
+      }
+   }
+#endif
+}
+
 __rooglobal__ void computeRatio(Batches &batches)
 {
    for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
@@ -969,6 +1047,7 @@ std::vector<void (*)(Batches &)> getFunctions()
            computePolynomial,
            computePower,
            computeProdPdf,
+           computeLogProdPdf,
            computeRatio,
            computeTruthModelExpBasis,
            computeTruthModelSinBasis,

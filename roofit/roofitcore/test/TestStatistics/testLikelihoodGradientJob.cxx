@@ -188,10 +188,14 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1D)
    double mu1 = mu->getVal();
    double muerr1 = mu->getError();
 
-   EXPECT_EQ(minNll0, minNll1);
-   EXPECT_EQ(mu0, mu1);
-   EXPECT_EQ(muerr0, muerr1);
-   EXPECT_EQ(edm0, edm1);
+   // The cpu backend and RooUnbinnedL are different implementations, so the
+   // minimizations don't follow the same path exactly.
+#define EXPECT_NEAR_REL(a, b, c) EXPECT_NEAR(a, b, std::abs((a) * (c)))
+   EXPECT_NEAR_REL(minNll0, minNll1, 1e-7);
+   EXPECT_NEAR_REL(mu0, mu1, 1e-7);
+   EXPECT_NEAR_REL(muerr0, muerr1, 1e-7);
+   EXPECT_NEAR_REL(edm0, edm1, 1e-4);
+#undef EXPECT_NEAR_REL
 }
 
 TEST(LikelihoodGradientJob, RepeatMigrad)

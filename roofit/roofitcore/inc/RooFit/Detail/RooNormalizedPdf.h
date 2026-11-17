@@ -79,7 +79,12 @@ public:
       return _pdf->createExpectedEventsFunc(&_normSet);
    }
 
-   bool canOutputLogarithm() const override { return true; }
+   // Only worth it if the pdf can output its logarithm, avoiding exp() and log().
+   bool canOutputLogarithm() const override { return _pdf->canOutputLogarithm(); }
+   bool canUseLogarithmOf(RooAbsArg const &server, bool outputsLogarithm) const override
+   {
+      return outputsLogarithm && &server == &*_pdf;
+   }
    bool canComputeBatchWithCuda() const override { return true; }
 
    RooAbsPdf const &pdf() const { return *_pdf; }
