@@ -1744,6 +1744,11 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
                                                     const std::string &formula)
 {
    std::string newname = std::string(original->GetName()) + suffix;
+   // HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
+   if (dynamic_cast<RooAbsPdf const *>(original)) {
+      error("the parameter '" + std::string(original->GetName()) +
+            "' would have to be written as an expression that refers to a pdf, which HS3 doesn't allow");
+   }
    // Another object that shares the parameter might have exported the helper already.
    auto &functions = _export->doc.functions;
    if (std::find_if(functions.begin(), functions.end(), [&](auto const &f) { return f.name == newname; }) !=

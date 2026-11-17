@@ -323,7 +323,13 @@ bool importFormulaArg(RooJSONFactoryWSTool *tool, const JSONNode &p)
    translateImportedExpression(formula);
    RooArgList dependents;
    for (const auto &d : extractArguments(formula.Data())) {
-      dependents.add(*tool->request<RooAbsReal>(d, name));
+      RooAbsReal *dependent = tool->request<RooAbsReal>(d, name);
+      // HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
+      if (dynamic_cast<RooAbsPdf *>(dependent) && !(tool->hs3Version() < HS3::Version{0, 3})) {
+         RooJSONFactoryWSTool::error("the expression of '" + name + "' refers to the distribution '" + d +
+                                     "', which is not allowed in HS3");
+      }
+      dependents.add(*dependent);
    }
    RooArg_t arg{name.c_str(), formula, dependents};
    importFormulaBinnings(arg, p);
@@ -1517,6 +1523,13 @@ bool ternariesToIfElse(std::string const &in, std::string &out)
 template <class RooArg_t>
 void exportFormulaArg(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &elem)
 {
+   // HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
+   for (std::size_t i = 0; i < pdf.nParameters(); ++i) {
+      if (auto const *dependent = dynamic_cast<RooAbsPdf const *>(pdf.getParameter(i))) {
+         RooJSONFactoryWSTool::error(std::string("the expression of '") + pdf.GetName() + "' refers to the pdf '" +
+                                     dependent->GetName() + "', which HS3 doesn't allow");
+      }
+   }
    TString expression(pdf.expression());
    cleanExpression(expression);
    // If the tokens follow the "x[#]" convention, the square braces enclosing each number
@@ -1657,6 +1670,15 @@ void exportMultiVarGaussian(RooJSONFactoryWSTool *, RooMultiVarGaussian const &p
 
 void exportTFnBinding(RooJSONFactoryWSTool *, RooTFnBinding const &pdf, JSONNode &elem)
 {
+   // HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
+   for (RooAbsCollection const *list : {&pdf.observables(), &pdf.parameters()}) {
+      for (RooAbsArg const *arg : *list) {
+         if (dynamic_cast<RooAbsPdf const *>(arg)) {
+            RooJSONFactoryWSTool::error(std::string("the expression of '") + pdf.GetName() + "' refers to the pdf '" +
+                                        arg->GetName() + "', which HS3 doesn't allow");
+         }
+      }
+   }
 
    TString formula(pdf.function().GetExpFormula());
    formula.ReplaceAll("x", pdf.observables()[0].GetName());

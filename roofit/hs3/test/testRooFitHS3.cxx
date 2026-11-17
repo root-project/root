@@ -9554,3 +9554,38 @@ TEST(RooFitHS3, ExpressionBuiltins)
       EXPECT_DOUBLE_EQ(f->getVal(), expected) << "x=" << x;
    }
 }
+
+// The names of the HS3 expression language are reserved, and expressions must not refer to distributions (HS3 0.3).
+TEST(RooFitHS3, ReservedNamesAndDistributionReferences)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "d", "type": "product_domain", "axes": [{"name": "x", "min": 0, "max": 1}]}],
+      "functions": [{"name": "exp", "type": "generic", "expression": "2*x"}]
+   })",
+                               "the function 'exp' has a name that the HS3 expression language reserves");
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "d", "type": "product_domain", "axes": [{"name": "x", "min": -5, "max": 5}]}],
+      "distributions": [{"name": "g", "type": "gaussian_dist", "x": "x", "mean": 0.0, "sigma": 1.0}],
+      "functions": [{"name": "f", "type": "generic", "expression": "2*g"}]
+   })",
+                               "refers to the distribution 'g'");
+
+   // The export refuses expressions that refer to a pdf.
+   RooWorkspace ws;
+   ws.factory("Gaussian::g(x[-5, 5], 0.0, 1.0)");
+   ws.factory("expr::f('2*g', g)");
+   expectExportThrowsWithError(ws, "refers to the pdf 'g'");
+
+   // Also for a TF1 with a pdf as parameter.
+   RooRealVar y{"y", "y", 0.5, -1.0, 1.0};
+   RooGaussian gy{"gy", "gy", y, RooFit::RooConst(0.0), RooFit::RooConst(1.0)};
+   TF1 tf1{"tf1", "[0]*x", -1.0, 1.0};
+   RooTFnBinding binding{"binding", "binding", &tf1, RooArgList{y}, RooArgList{gy}};
+   RooWorkspace ws2;
+   ws2.import(binding, RooFit::Silence());
+   expectExportThrowsWithError(ws2, "refers to the pdf 'gy'");
+}

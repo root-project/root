@@ -140,6 +140,15 @@ private:
    std::set<std::string> _parameters;
 };
 
+// The names that the HS3 expression language reserves for itself: its literals and functions (HS3 0.3, "Identifiers").
+static bool isReservedName(std::string const &name)
+{
+   static const std::set<std::string> reserved{"PI",   "EULER", "TRUE",  "FALSE", "ifelse", "exp",  "log",
+                                               "sqrt", "abs",   "floor", "ceil",  "pow",    "min",  "max",
+                                               "sin",  "cos",   "tan",   "asin",  "acos",   "atan", "erf"};
+   return reserved.count(name) > 0;
+}
+
 // HS3 requires the names of all objects to be unique within a document, including the parameters. RooFit writes such
 // documents, e.g. for a range and a pdf of one name, so only ambiguous clashes in current documents are errors.
 void Validator::collectNames()
@@ -219,6 +228,22 @@ void Validator::collectNames()
                        modifier);
          }
       }
+   }
+   // Objects that expressions can refer to must not carry the reserved names of the expression language.
+   auto checkNotReserved = [&](char const *what, std::string const &name) {
+      if (isReservedName(name)) {
+         strictError("", "the " + std::string(what) + " '" + name +
+                            "' has a name that the HS3 expression language reserves for itself");
+      }
+   };
+   for (auto const &dist : _doc.distributions) {
+      checkNotReserved("distribution", dist.name);
+   }
+   for (auto const &func : _doc.functions) {
+      checkNotReserved("function", func.name);
+   }
+   for (std::string const &parameter : _parameters) {
+      checkNotReserved("parameter", parameter);
    }
    for (std::string const &parameter : _parameters) {
       if (char const *section = sectionOf(parameter)) {
