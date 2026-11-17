@@ -1510,21 +1510,24 @@ void configureStatError(ExportedChannel &channel)
    }
 }
 
-// Whether `pdf` has the form that the HistFactory exporter writes as a histfactory_dist with its constraint terms:
-// a product of exactly one RooRealSumPdf and other pdfs.
-bool isHistFactoryChannelProduct(RooAbsArg const &pdf)
+// The RooRealSumPdf of a product of exactly one RooRealSumPdf and other pdfs, or null for anything else. Such a product
+// has the form that the HistFactory exporter writes as a histfactory_dist with its constraint terms.
+RooRealSumPdf const *channelSum(RooAbsArg const &pdf)
 {
    auto const *prod = dynamic_cast<RooProdPdf const *>(&pdf);
    if (!prod) {
-      return false;
+      return nullptr;
    }
-   int nSums = 0;
+   RooRealSumPdf const *sum = nullptr;
    for (RooAbsArg const *factor : prod->pdfList()) {
-      if (dynamic_cast<RooRealSumPdf const *>(factor)) {
-         ++nSums;
+      if (auto const *factorSum = dynamic_cast<RooRealSumPdf const *>(factor)) {
+         if (sum) {
+            return nullptr;
+         }
+         sum = factorSum;
       }
    }
-   return nSums == 1;
+   return sum;
 }
 
 // Whether the constraint `constraint` can be written as an array component: every object of the workspace that uses
@@ -1544,7 +1547,7 @@ bool usedOnlyByHistFactoryChannels(RooJSONFactoryWSTool &tool, RooAbsPdf const &
       if (tool.workspace()->arg(client->GetName()) != client) {
          continue; // not part of what is exported
       }
-      if (!client->getAttribute(arrayDistTag) && !isHistFactoryChannelProduct(*client)) {
+      if (!client->getAttribute(arrayDistTag) && !channelSum(*client)) {
          return false;
       }
    }
@@ -1702,58 +1705,29 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    return true;
 }
 
-class HistFactoryStreamer_ProdPdf : public RooFit::JSONIO::Exporter {
+// Writes a RooRealSumPdf, or the product of one with its constraint terms, as a histfactory_dist.
+class HistFactoryStreamer : public RooFit::JSONIO::Exporter {
 public:
    bool autoExportDependants() const override { return false; }
-   bool tryExport(RooJSONFactoryWSTool *tool, const RooProdPdf *prodpdf) const
+   std::string const &key() const override
    {
+      static const std::string keystring = "histfactory_dist";
+      return keystring;
+   }
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *p, JSONNode &) const override
+   {
+      auto const *sumpdf = dynamic_cast<RooRealSumPdf const *>(p);
       std::vector<RooAbsPdf *> constraints;
-      RooRealSumPdf *sumpdf = nullptr;
-      for (auto *pdf : static_range_cast<RooAbsPdf *>(prodpdf->pdfList())) {
-         auto thispdf = dynamic_cast<RooRealSumPdf *>(pdf);
-         if (thispdf) {
-            if (!sumpdf) {
-               sumpdf = thispdf;
-            } else {
-               return false;
+      if (auto const *prodpdf = dynamic_cast<RooProdPdf const *>(p)) {
+         sumpdf = channelSum(*prodpdf);
+         for (auto *pdf : static_range_cast<RooAbsPdf *>(prodpdf->pdfList())) {
+            if (pdf != sumpdf) {
+               // The constraint terms can also be grouped in nested products.
+               collectConstraintTerms(pdf, constraints);
             }
-         } else {
-            // The constraint terms can also be grouped in nested products.
-            collectConstraintTerms(pdf, constraints);
          }
       }
-      if (!sumpdf)
-         return false;
-
-      return tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, constraints);
-   }
-   std::string const &key() const override
-   {
-      static const std::string keystring = "histfactory_dist";
-      return keystring;
-   }
-   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *p, JSONNode &) const override
-   {
-      return tryExport(tool, static_cast<const RooProdPdf *>(p));
-   }
-};
-
-class HistFactoryStreamer_SumPdf : public RooFit::JSONIO::Exporter {
-public:
-   bool autoExportDependants() const override { return false; }
-   bool tryExport(RooJSONFactoryWSTool *tool, const RooRealSumPdf *sumpdf) const
-   {
-      std::vector<RooAbsPdf *> constraints;
-      return tryExportHistFactory(tool, sumpdf->GetName(), sumpdf, constraints);
-   }
-   std::string const &key() const override
-   {
-      static const std::string keystring = "histfactory_dist";
-      return keystring;
-   }
-   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *p, JSONNode &) const override
-   {
-      return tryExport(tool, static_cast<const RooRealSumPdf *>(p));
+      return tryExportHistFactory(tool, p->GetName(), sumpdf, constraints);
    }
 };
 
@@ -1765,8 +1739,8 @@ STATIC_EXECUTE([]() {
    registerImporter<FlexibleInterpVarFactory>("interpolation0d", true);
    registerExporter<FlexibleInterpVarStreamer>(RooStats::HistFactory::FlexibleInterpVar::Class(), true);
    registerExporter<PiecewiseInterpolationStreamer>(PiecewiseInterpolation::Class(), true);
-   registerExporter<HistFactoryStreamer_ProdPdf>(RooProdPdf::Class(), true);
-   registerExporter<HistFactoryStreamer_SumPdf>(RooRealSumPdf::Class(), true);
+   registerExporter<HistFactoryStreamer>(RooProdPdf::Class(), true);
+   registerExporter<HistFactoryStreamer>(RooRealSumPdf::Class(), true);
 });
 
 } // namespace
