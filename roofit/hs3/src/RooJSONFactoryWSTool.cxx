@@ -857,7 +857,20 @@ std::unique_ptr<RooAbsData> loadData(HS3::Data const &input, RooWorkspace &works
       }
       return createUnbinnedData(input.name, *unbinned, workspace, ranges);
    }
-   RooJSONFactoryWSTool::error("datasets of type \"point\" like '" + input.name + "' are not supported yet");
+   // Point data is the observation of a single variable. With its axis, it is the same as unbinned data with a single
+   // entry, and becomes a RooDataSet with one entry.
+   auto const &point = std::get<HS3::PointData>(input.body);
+   if (point.uncertainty) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: the \"uncertainty\" of the dataset '" + input.name +
+                                    "' is ignored: HS3 doesn't define how it enters a likelihood.");
+   }
+   if (point.axes.size() != 1) {
+      RooJSONFactoryWSTool::error("the point data set '" + input.name + "' needs exactly one axis, which names its variable");
+   }
+   HS3::UnbinnedData unbinned;
+   unbinned.axes.emplace_back(point.axes.front());
+   unbinned.entries.push_back(point.value);
+   return createUnbinnedData(input.name, unbinned, workspace, ranges);
 }
 
 // The version of ROOT that writes the document, with dots only such that it can be read automatically.
@@ -2065,6 +2078,14 @@ bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgS
       data.axes.emplace_back(std::move(axis));
       data.entries.push_back(var->getVal());
    }
+   // The observed value of a single observable is point data.
+   if (data.axes.size() == 1) {
+      HS3::PointData point;
+      point.value = data.entries.front();
+      point.axes.push_back(std::get<HS3::ContinuousAxis>(data.axes.front()));
+      _export->doc.data.push_back({dataName, std::move(point)});
+      return true;
+   }
    _export->doc.data.push_back({dataName, std::move(data)});
    return true;
 }
@@ -2483,6 +2504,21 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
          isBinnedData = true;
       if (isBinnedData) {
          return exportBinned(contents.size(), contents.data());
+      }
+   }
+
+   // A single unweighted entry of a single variable is point data.
+   if (variables.size() == 1 && data.numEntries() == 1) {
+      data.get(0);
+      auto const *var = dynamic_cast<RooRealVar const *>(variables[0]);
+      if (var && (!data.isWeighted() || data.weight() == 1.)) {
+         recordDomains(_export->domains, *var);
+         HS3::PointData point;
+         point.value = var->getVal();
+         point.axes.push_back(HS3::toContinuousAxis(*var));
+         output.body = std::move(point);
+         _export->doc.data.push_back(std::move(output));
+         return;
       }
    }
 

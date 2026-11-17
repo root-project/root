@@ -9589,3 +9589,44 @@ TEST(RooFitHS3, ReservedNamesAndDistributionReferences)
    ws2.import(binding, RooFit::Silence());
    expectExportThrowsWithError(ws2, "refers to the pdf 'gy'");
 }
+
+// Point data is read as a RooDataSet with one entry of one variable, and such a data set is written as point data.
+TEST(RooFitHS3, PointData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "domains": [{"name": "d", "type": "product_domain", "axes": [{"name": "y", "min": -10, "max": 10}]}],
+      "data": [{"name": "obs", "type": "point", "value": 1.5, "axes": [{"name": "y", "min": -10, "max": 10}]}]
+   })";
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   auto *data = dynamic_cast<RooDataSet *>(ws.data("obs"));
+   ASSERT_NE(data, nullptr);
+   ASSERT_EQ(data->numEntries(), 1);
+   ASSERT_EQ(data->get()->size(), 1u);
+   EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(data->get(0)->find("y"))->getVal(), 1.5);
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   const auto *dataNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "obs");
+   ASSERT_NE(dataNode, nullptr) << exported;
+   EXPECT_EQ((*dataNode)["type"].val(), "point") << exported;
+   EXPECT_DOUBLE_EQ((*dataNode)["value"].val_double(), 1.5) << exported;
+   ASSERT_EQ((*dataNode)["axes"].num_children(), 1u) << exported;
+   EXPECT_EQ((*dataNode)["axes"].child(0)["name"].val(), "y") << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // A data set with more than one entry stays unbinned data.
+   RooRealVar x{"x", "x", 0.0, 1.0};
+   RooDataSet two{"two", "two", RooArgSet{x}};
+   two.add(RooArgSet{x});
+   two.add(RooArgSet{x});
+   RooWorkspace ws3;
+   ws3.import(two, RooFit::Silence());
+   EXPECT_NE(RooJSONFactoryWSTool{ws3}.exportJSONtoString().find(R"("type":"unbinned")"), std::string::npos);
+}
