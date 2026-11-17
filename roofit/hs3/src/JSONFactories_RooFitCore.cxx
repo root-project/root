@@ -595,11 +595,40 @@ bool importAddPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
          RooJSONFactoryWSTool::error("mixture_dist '" + name + "' is declared as not extended, but it has " + counts +
                                      ", which defines an extended mixture of extended distributions");
       }
-      if (!extended && nCoefficients == nSummands) {
-         RooJSONFactoryWSTool::warning("RooFitHS3: mixture_dist '" + name + "' is declared as not extended, but " +
-                                       "RooFit can use it as extended because it has one coefficient per summand. " +
-                                       "Don't use the extended likelihood term when fitting it.");
+      if (!extended && nCoefficients == nSummands && nSummands > 0) {
+         // A RooAddPdf with one coefficient per summand can always be extended. The non-extended mixture is the one
+         // with the normalized coefficients c_i / sum(c), of which the last one follows from the others.
+         RooArgList summands = tool->requestArgList<RooAbsPdf>(p, "summands");
+         RooArgList coefficients = tool->requestArgList<RooAbsReal>(p, "coefficients");
+         std::string sum;
+         for (std::size_t i = 0; i < nCoefficients; ++i) {
+            sum += (i == 0 ? "x[" : "+x[") + std::to_string(i) + "]";
+         }
+         RooArgList fractions;
+         for (std::size_t i = 0; i + 1 < nCoefficients; ++i) {
+            fractions.add(tool->wsEmplace<RooFormulaVar>(name + "_fraction_" + std::to_string(i),
+                                                         ("x[" + std::to_string(i) + "]/(" + sum + ")").c_str(),
+                                                         coefficients));
+         }
+         tool->wsEmplace<RooAddPdf>(name, summands, fractions);
+         return true;
       }
+   } else {
+      const std::size_t nSummands = p.has_child("summands") ? p["summands"].num_children() : 0;
+      const std::size_t nCoefficients = p.has_child("coefficients") ? p["coefficients"].num_children() : 0;
+      // HS3 0.3 requires the flag. Where it decides about the Poisson term, a document without it is invalid.
+      if (nCoefficients == nSummands && nSummands > 0 && !(tool->hs3Version() < HS3::Version{0, 3})) {
+         RooJSONFactoryWSTool::error("mixture_dist '" + name +
+                                     "' has one coefficient per summand, but no \"extended\" flag, which HS3 "
+                                     "requires to decide whether the mixture is extended");
+      }
+   }
+   if (p.has_child("summands") && p["summands"].num_children() > 0 &&
+       (!p.has_child("coefficients") || p["coefficients"].num_children() == 0) &&
+       !(tool->hs3Version() < HS3::Version{0, 3})) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: mixture_dist '" + name +
+                                    "' has no coefficients, which HS3 0.3 doesn't define. It is read as the sum of "
+                                    "its extended summands.");
    }
    if (!tool->requestArgList<RooAbsReal>(p, "coefficients").empty()) {
       tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
@@ -1274,6 +1303,12 @@ void exportAddPdf(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &elem)
    RooJSONFactoryWSTool::fillSeq(elem["summands"], pdf.pdfList());
    RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf.coefList());
    elem["extended"] << (pdf.extendMode() != RooArg_t::CanNotBeExtended);
+   // A RooAddModel is written as a mixture_model, which is not part of HS3.
+   if (pdf.coefList().empty() && std::is_same_v<RooArg_t, RooAddPdf>) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: the RooAddPdf '" + std::string(pdf.GetName()) +
+                                    "' has no coefficients. It is written as a mixture_dist without coefficients, "
+                                    "which HS3 0.3 doesn't define, so other implementations might not read it.");
+   }
 }
 
 template <class RooArg_t>

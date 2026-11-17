@@ -3141,11 +3141,40 @@ TEST(RooFitHS3, MixtureDistExtendedFlag)
    }
    expectImportThrowsWithError(makeJSON(R"(["f"])", "true"), "is declared as extended, but it has 1 coefficients");
 
+   // An explicit "extended": false with one coefficient per summand is honoured: the mixture is not extendable, and its
+   // shape is the one with the normalized coefficients.
    RooWorkspace ws;
-   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
-      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"(["n1", "n2"])", "false")));
-   });
-   EXPECT_NE(warnings.find("is declared as not extended"), std::string::npos) << warnings;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"(["n1", "n2"])", "false")));
+   RooAbsPdf *mix = ws.pdf("mix");
+   ASSERT_NE(mix, nullptr);
+   EXPECT_EQ(mix->extendMode(), RooAbsPdf::CanNotBeExtended);
+   RooArgSet normSet{*ws.var("x")};
+   for (double xVal : {-2.0, 0.0, 1.5}) {
+      ws.var("x")->setVal(xVal);
+      const double expected = (30. * ws.pdf("g1")->getVal(normSet) + 70. * ws.pdf("g2")->getVal(normSet)) / 100.;
+      EXPECT_NEAR(mix->getVal(normSet), expected, 1e-12) << "x=" << xVal;
+   }
+
+   // HS3 0.3 requires the flag where it decides about the Poisson term, i.e. with one coefficient per summand.
+   auto withoutFlag = [&](std::string const &coefficients, std::string const &version) {
+      std::string json = makeJSON(coefficients, "false");
+      json.replace(json.find(R"(, "extended": false)"), std::string(R"(, "extended": false)").size(), "");
+      json.replace(json.find(R"("hs3_version": "0.2")"), std::string(R"("hs3_version": "0.2")").size(),
+                   R"("hs3_version": ")" + version + "\"");
+      return json;
+   };
+   expectImportThrowsWithError(withoutFlag(R"(["n1", "n2"])", "0.3"), "but no \"extended\" flag");
+   {
+      RooWorkspace ws2;
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(withoutFlag(R"(["f"])", "0.3")));
+      EXPECT_EQ(ws2.pdf("mix")->extendMode(), RooAbsPdf::CanNotBeExtended);
+   }
+   {
+      // Older documents are read as before.
+      RooWorkspace ws2;
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(withoutFlag(R"(["n1", "n2"])", "0.2")));
+      EXPECT_NE(ws2.pdf("mix")->extendMode(), RooAbsPdf::CanNotBeExtended);
+   }
 }
 
 // Invalid documents are reported as std::runtime_error, also where the JSON library finds the error: invalid JSON, or a
