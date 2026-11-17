@@ -276,6 +276,6 @@ if(NOT COMPILE_CHECK_LIBCPP_VECTOR_RESULT)
 endif()
 
 if(NOT RUN_CHECK_LIBCPP_VECTOR_RESULT EQUAL 0)
-  message(FATAL_ERROR "Size based std::vector layout is unsupported; "
-          "run result='${RUN_CHECK_LIBCPP_VECTOR_RESULT}' (1 = size based, 2 = unexpected).")
+  message(FATAL_ERROR "Size-based std::vector layout is unsupported; "
+          "run result='${RUN_CHECK_LIBCPP_VECTOR_RESULT}' (1 = size based; 2 = unknown layout, contact root-project).")
 endif()
