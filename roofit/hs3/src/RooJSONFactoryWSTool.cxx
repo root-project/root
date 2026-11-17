@@ -450,21 +450,6 @@ std::string genPrefix(const JSONNode &p, bool trailing_underscore)
    return prefix;
 }
 
-// helpers for serializing / deserializing binned datasets
-void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::vector<int> &curr_comb,
-                      const std::vector<int> &vars_numbins, size_t curridx)
-{
-   if (curridx == vars_numbins.size()) {
-      // we have filled a combination. Copy it.
-      combinations.emplace_back(curr_comb);
-   } else {
-      for (int i = 0; i < vars_numbins[curridx]; ++i) {
-         curr_comb[curridx] = i;
-         ::genIndicesHelper(combinations, curr_comb, vars_numbins, curridx + 1);
-      }
-   }
-}
-
 // Import string attributes ("dict") and boolean tags ("tags") onto `arg`.
 void importAttributes(RooAbsArg *arg, HS3::Attributes const &attributes)
 {
@@ -560,21 +545,6 @@ void importParameterStepWidths(RooWorkspace &workspace, HS3Document const &doc)
       }
       var->setError(stepWidth.width);
    }
-}
-
-// Generate all combinations of bin indices for the RooRealVars in `vars`.
-std::vector<std::vector<int>> generateBinIndices(const RooArgSet &vars)
-{
-   std::vector<std::vector<int>> combinations;
-   std::vector<int> vars_numbins;
-   vars_numbins.reserve(vars.size());
-   for (const RooAbsArg *arg : vars) {
-      // Continuous variables and categories (one bin per state)
-      vars_numbins.push_back(dynamic_cast<RooAbsLValue const &>(*arg).numBins());
-   }
-   std::vector<int> curr_comb(vars.size());
-   ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
-   return combinations;
 }
 
 template <typename... Keys_t>
@@ -1987,10 +1957,14 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
       RooJSONFactoryWSTool::error("inconsistent number of errors and contents in '" + name + "': errors=" +
                                   std::to_string(errors->size()) + ", contents=" + std::to_string(contents.size()));
    }
-   auto bins = generateBinIndices(vars);
-   if (contents.size() != bins.size()) {
+   // A continuous variable has the bins of its binning, and a category one bin per state.
+   std::size_t nBins = 1;
+   for (RooAbsArg const *var : vars) {
+      nBins *= std::max(0, dynamic_cast<RooAbsLValue const &>(*var).numBins());
+   }
+   if (contents.size() != nBins) {
       RooJSONFactoryWSTool::error("inconsistent bin numbers: contents=" + std::to_string(contents.size()) +
-                                  ", bins=" + std::to_string(bins.size()));
+                                  ", bins=" + std::to_string(nBins));
    }
    auto dh = std::make_unique<RooDataHist>(name, name, vars);
    // RooDataHist only starts to store squared weights when it sees a positive error, and then initializes them from
@@ -1998,7 +1972,7 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
    if (errors && !errors->empty()) {
       dh->set(0, 0., 1.);
    }
-   for (std::size_t ibin = 0; ibin < bins.size(); ++ibin) {
+   for (std::size_t ibin = 0; ibin < nBins; ++ibin) {
       dh->set(ibin, contents[ibin], errors ? (*errors)[ibin] : -1);
    }
    return dh;
