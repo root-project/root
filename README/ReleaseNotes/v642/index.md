@@ -104,6 +104,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
   * `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h`: use instead the public methods in the `RZip.h` interface.
   * `Hepevt.h` and `cfortran.h`: these will be moved to `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
 * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
+* Deprecate `TTF` class, replaced by `TTFhandle` class
 
 ## Build System
 
@@ -516,6 +517,8 @@ The version of the following packages has been updated:
  - ftgl: 2.4.0
  - giflib: 6.1.3
  - gl2ps: 1.4.2
+ - jsroot: 7.12.0
+ - mathjax: 3.2.0
  - libmathtext: 2016
  - libpng: 1.6.59
  - libjpeg-turbo: 3.2.0
@@ -555,10 +558,10 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[10970](https://github.com/root-project/root/issues/10970)] - [cling] DynamicLibraryManager finds non-exported symbols on macOS
 * [[11786](https://github.com/root-project/root/issues/11786)] - TTreePlayer::Scan can't handle left-justified text
 * [[12277](https://github.com/root-project/root/issues/12277)] - Duplicate symbols for the JIT
-* [[12387](https://github.com/root-project/root/issues/12387)] - [RF] Fitting parameter of interest with Gaussian in RooMCStudy in addition to its pull 
+* [[12387](https://github.com/root-project/root/issues/12387)] - [RF] Fitting parameter of interest with Gaussian in RooMCStudy in addition to its pull
 * [[12559](https://github.com/root-project/root/issues/12559)] - Problem to read `TF1`/`TFormula` stored with previous ROOT versions
 * [[12701](https://github.com/root-project/root/issues/12701)] - ROOT does not properly recognize if `io_uring` is supported
-* [[12738](https://github.com/root-project/root/issues/12738)] - Windows debug builds of root fail. 
+* [[12738](https://github.com/root-project/root/issues/12738)] - Windows debug builds of root fail.
 * [[12935](https://github.com/root-project/root/issues/12935)] - [RF] Global correlation coefficients after SumW2Error
 * [[13185](https://github.com/root-project/root/issues/13185)] - [RF]  RooFit - Pythonic interaction with the RooWorkspace
 * [[13287](https://github.com/root-project/root/issues/13287)] - [RF][HF] ShapeFactor with initial shape creates invalid HistFactory XML
@@ -679,7 +682,7 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[23459](https://github.com/root-project/root/issues/23459)] - PyROOT crashes when IPython formats an empty std::optional
 * [[23491](https://github.com/root-project/root/issues/23491)] - `TGraphErrors::Draw("3")` changes the error band when the axis range is changed
 * [[23493](https://github.com/root-project/root/issues/23493)] - [cling] Clang is conditionally invoked with the wrong driver mode depending on the executable's name
-* [[23500](https://github.com/root-project/root/issues/23500)] - [tmva][sofie] 
+* [[23500](https://github.com/root-project/root/issues/23500)] - [tmva][sofie]
 * [[23502](https://github.com/root-project/root/issues/23502)] - [tmva][sofie] BatchNormalization ignores the epsilon attribute (hardcoded 1e-5)
 * [[23512](https://github.com/root-project/root/issues/23512)] - [RF] Wrong expected events for extended fits in multiple disjoint ranges with the new evaluation backend
 * [[23523](https://github.com/root-project/root/issues/23523)] - [tmva][sofie] Where computes the wrong output shape when its inputs broadcast
