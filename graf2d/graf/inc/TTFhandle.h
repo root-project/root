@@ -26,10 +26,17 @@ class TTFhandle {
 
       struct GlyphStruct;
       struct FontStruct;
+      class Tristate {
+         enum { kUndef, kOff, kOn } fState = kUndef;
+      public:
+         void Set(Bool_t on) { fState = on ? kOn : kOff; }
+         Bool_t IsUndef() const { return fState == kUndef; }
+         Bool_t IsOn() const { return fState == kOn; }
+      };
 
-      Bool_t         fKerning = kTRUE;           ///< use kerning (true by default)
-      enum { kSmoothUndef, kSmoothOff, kSmoothOn } fSmoothing = kSmoothUndef;   ///< use anti-aliasing (true when >8 planes, false otherwise)
-      Bool_t         fHinting = kFALSE;          ///< use hinting (false by default)
+      Tristate       fKerning;                   ///< use kerning (true by default)
+      Tristate       fSmoothing;                 ///< use anti-aliasing (true when >8 planes, false otherwise)
+      Tristate       fHinting;                   ///< use hinting (false by default)
 
       FontStruct    *fFont = nullptr;            ///< selected font
       long           fRotationXX = 0, fRotationXY = 0; ///< rotation matrix members
@@ -48,6 +55,8 @@ class TTFhandle {
       struct FT_Library_Wrapper;
       static thread_local FT_Library_Wrapper fFT_Library;
       static std::atomic<Bool_t>  gSmoothingPrefer;
+      static std::atomic<Bool_t>  gHintingPrefer;
+      static std::atomic<Bool_t>  fKerningPrefer;
 
       void FillTTFGlypths(void *vect);
 
@@ -55,17 +64,17 @@ class TTFhandle {
       TTFhandle();
       virtual ~TTFhandle();
 
-      void           SetSmoothing(Bool_t state) { fSmoothing = state ? kSmoothOn : kSmoothOff;  }
-      void           SetHinting(Bool_t state) { fHinting = state; }
-      void           SetKerning(Bool_t state) { fKerning = state; }
+      void           SetSmoothing(Bool_t state) { fSmoothing.Set(state);  }
+      void           SetHinting(Bool_t state) { fHinting.Set(state); }
+      void           SetKerning(Bool_t state) { fKerning.Set(state); }
       void           SetTextFont(Font_t fontnumber);
       Int_t          SetTextFont(const char *fontname, Int_t italic = 0);
       Bool_t         SetTextSize(Float_t textsize);
       void           SetRotationMatrix(Float_t angle);
 
       Bool_t         GetSmoothing() const;
-      Bool_t         GetHinting() const { return fHinting; }
-      Bool_t         GetKerning() const { return fKerning; }
+      Bool_t         GetHinting() const;
+      Bool_t         GetKerning() const;
       void*          GetFontFace() const;
 
       void           PrepareString(const char *string);
@@ -95,8 +104,12 @@ class TTFhandle {
       void           Version(Int_t &major, Int_t &minor, Int_t &patch);
 
       static Bool_t  Init();
+      static void    SetKerningPrefer(Bool_t on);
+      static Bool_t  GetKerningPrefer();
       static void    SetSmoothingPrefer(Bool_t on);
       static Bool_t  GetSmoothingPrefer();
+      static void    SetHintingPrefer(Bool_t on);
+      static Bool_t  GetHintingPrefer();
 
    ClassDef(TTFhandle, 0)  // Dynamic interface to TTF
 
