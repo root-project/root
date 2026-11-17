@@ -691,13 +691,18 @@ void TGQuartz::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle 
                                   UChar_t(double(col.fGreen) / 0xffff * 255),
                                   UChar_t(double(col.fBlue) / 0xffff * 255), 255};
 
-         const unsigned char *s = buffer;
-         for (unsigned y = 0; y < rows; ++y) {
-            for (unsigned x = 0; x < width; ++x) {
-               unsigned char d = (((*s++ & 0xff) + 10) * 5) / 256;
-               if (d > 0)
+         UChar_t *row = buffer;
+         for (unsigned y = 0; y < rows; y++) {
+            unsigned n = 0;
+            UChar_t d = 0;
+            UChar_t *s = row;
+            for (unsigned x = 0; x < width; x++) {
+               if (n == 0) d = *s++;
+               if (TESTBIT(d,7-n))
                   [pixmap.Get() putPixel : pixel X : bx + x Y : by + y];
+               if (++n == kBitsPerByte) n = 0;
             }
+            row += pitch;
          }
       }
    }
