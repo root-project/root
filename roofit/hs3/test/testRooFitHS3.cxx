@@ -8296,8 +8296,10 @@ TEST(RooFitHS3, HistFactoryConstraintSharedWithOtherPdf)
                                "the variate 'theta_obs' is shared by the terms 'model_other' and 'shared_constraint'");
 
    // The HistFactory channel is visited first, and last.
-   for (auto const &[hfName, otherName] : std::vector<std::pair<std::string, std::string>>{
-           {"model_hf", "model_other"}, {"z_model_hf", "a_model_other"}}) {
+   for (auto const &names : std::vector<std::pair<std::string, std::string>>{{"model_hf", "model_other"},
+                                                                             {"z_model_hf", "a_model_other"}}) {
+      const auto &hfName = names.first;
+      const auto &otherName = names.second;
       RooWorkspace ws;
       const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
          ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(sharedConstraintJSON(hfName, otherName, "0.2")));
