@@ -542,7 +542,7 @@ void TGRootIDE::Build()
    fNbDoc   = 0;
    fCurrentDoc = 0;
    fPid = gSystem->GetPid(); //TProcessID::GetSessionProcessID();
-   
+
    SetCleanup(kDeepCleanup);
    fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 1);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
@@ -1303,11 +1303,14 @@ Bool_t TGRootIDE::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                                    prop.fName.Data(), prop.fBold ? "bold" : "medium",
                                    prop.fItalic ? 'i' : 'r',
                                    prop.fSize);
-                           if (!gVirtualX->ListFonts(fontname, 10, count)) {
+                           auto fontList = gVirtualX->ListFonts(fontname, 10, count);
+                           if (!fontList) {
                               sprintf(fontname,"-*-%s-%s-%c-*-*-%d-*-*-*-*-*-*-*",
                                       prop.fName.Data(), prop.fBold ? "bold" : "medium",
                                       prop.fItalic ? 'o' : 'r',
                                       prop.fSize);
+                           } else {
+                              gVirtualX->FreeFontNames(fontList);
                            }
                            TGFont *font = fClient->GetFont(fontname);
                            if (font) {

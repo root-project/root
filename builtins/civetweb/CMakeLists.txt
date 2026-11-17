@@ -11,20 +11,14 @@ set(ROOT_CIVETWEB_VERSION 1.16) # with some patches, so almost 1.17
 set(ROOT_CIVETWEB_PREFIX ${CMAKE_BINARY_DIR}/builtins/CIVETWEB-prefix)
 set(ROOT_CIVETWEB_LIBRARY ${ROOT_CIVETWEB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}civetweb${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-if (NOT DEFINED GIT_EXECUTABLE)
-  set(GIT_EXECUTABLE "git")
-endif()
 if(WIN32)
   set(GIT_PATCH_ARGS "--ignore-space-change")
 endif()
-# check if the patch has already been applied
-if(NOT EXISTS "${ROOT_CIVETWEB_PREFIX}/src/BUILTIN_CIVETWEB/._patched")
-  set(ROOT_CIVETWEB_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply ${GIT_PATCH_ARGS}
-         ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
-         ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
-         ${CMAKE_CURRENT_SOURCE_DIR}/1423.patch # https://github.com/civetweb/civetweb/pull/1423 for OpenSSL4 compatibility
-         ${CMAKE_CURRENT_SOURCE_DIR}/civetweb-marker.diff)
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(ROOT_CIVETWEB_PATCH_COMMAND
+  PATCHES ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
+          ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
+          ${CMAKE_CURRENT_SOURCE_DIR}/1423.patch # https://github.com/civetweb/civetweb/pull/1423 for OpenSSL4 compatibility
+  GIT_APPLY_ARGS ${GIT_PATCH_ARGS})
 
 include(ExternalProject)
 
@@ -94,15 +88,32 @@ else()
   set(ROOT_CIVETWEB_ASAN_CMD "-DCIVETWEB_ENABLE_ASAN=ON")
 endif()
 
+
+# use special separatore to avoid conflicts when provide complex variables
+
+string(REGEX REPLACE "[ ;]" "|" OPENSSL_LIBRARIES_ALT "${OPENSSL_LIBRARIES}")
+string(REGEX REPLACE "[ ;]" "|" ZLIB_LIBRARIES_ALT "${ZLIB_LIBRARIES}")
+string(REGEX REPLACE "[ ;]" "|" ZLIB_INCLUDE_DIRS_ALT "${ZLIB_INCLUDE_DIRS}")
+
+
 ExternalProject_Add(BUILTIN_CIVETWEB
   PREFIX ${ROOT_CIVETWEB_PREFIX}
-  # URL ${lcgpackages}/civetweb-${ROOT_CIVETWEB_VERSION}.tar.gz
-  # URL_HASH SHA256=${ROOT_CIVETWEB_HASH}
+
+  #  ------- tarball of 588860e3 commit, see Readme.md how to build it ------
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
+  URL ${lcgpackages}/civetweb-588860e3.tar.gz
+      https://jsroot.gsi.de/packages/civetweb-588860e3.tar.gz
+  URL_HASH SHA256=8d5d809f36e94b67257c5d61156a9b9eae7ab34de769dc82330c31841ac21771
+  # while we extract directly repository, we need to patch it
+  ${ROOT_CIVETWEB_PATCH_COMMAND}
+
   # TODO: once 1.17 released, bump SearchInstalledSoftware find_package to 1.17 plus remove patches
   # and potentially install civetweb in root-ci-images via homebrew and change builtin to OFF in ci-configs
-  GIT_REPOSITORY https://github.com/civetweb/civetweb.git
-  GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
-  ${ROOT_CIVETWEB_PATCH_COMMAND}
+
+  # ------- use next three lines when direct checkout from git repository required --------
+  # GIT_REPOSITORY https://github.com/civetweb/civetweb.git
+  # GIT_TAG 588860e30721bf5453b0440c390865a8e85dcae5 # v1.17.0 not yet released, v1.16.0 has missing CVE fixes
+  # ${ROOT_CIVETWEB_PATCH_COMMAND}
   UPDATE_COMMAND ""
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE FALSE
@@ -116,6 +127,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
   USES_TERMINAL_INSTALL true
   USES_TERMINAL_TEST true
   INSTALL_DIR ${ROOT_CIVETWEB_PREFIX}
+  LIST_SEPARATOR "|"
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
     -DCMAKE_INSTALL_LIBDIR:PATH=<INSTALL_DIR>/lib
@@ -130,7 +142,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     -DBUILD_TESTING=FALSE
     -DCIVETWEB_BUILD_TESTING=FALSE
     -DCIVETWEB_ENABLE_ASAN=OFF # If set to ON, you need to set below link_library interface to UBSAN libs
-    -DCIVETWEB_ENABLE_CXX=ON
+    -DCIVETWEB_ENABLE_CXX=OFF # C++ interface is not used in the ROOT
     # civetweb defines -DDEBUG for Debug builds, which activates its DEBUG_TRACE
     # macro (~130 call sites) and floods stderr with per-request output.
     # Note the same option also gates civetweb's assertions.
@@ -145,7 +157,7 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     -DOPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR}
     -DOPENSSL_CRYPTO_LIBRARY=${OPENSSL_CRYPTO_LIBRARY}
     -DOPENSSL_SSL_LIBRARY=${OPENSSL_SSL_LIBRARY}
-    -DOPENSSL_LIBRARIES=${OPENSSL_LIBRARIES}
+    -DOPENSSL_LIBRARIES=${OPENSSL_LIBRARIES_ALT}
     #-DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
     -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}
     #-DOPENSSL_FOUND=TRUE
@@ -154,8 +166,8 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     #-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
     #-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
     # -DCMAKE_INSTALL_RPATH:STRING=${rpath_origin}
-    -DZLIB_LIBRARY=${ZLIB_LIBRARIES}
-    -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
+    -DZLIB_LIBRARY=${ZLIB_LIBRARIES_ALT}
+    -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS_ALT}
     ${ZLIB_ROOT_OPTION}
   BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_CIVETWEB_BUILD_COMMAND_FLAGS}
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_CIVETWEB_BUILD_COMMAND_FLAGS} --target install

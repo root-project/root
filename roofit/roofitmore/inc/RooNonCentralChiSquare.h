@@ -40,11 +40,11 @@ protected:
    RooRealProxy x ;
    RooRealProxy k ;
    RooRealProxy lambda ;
-   double fErrorTol;
-   Int_t fMaxIters;
-   bool fForceSum;
-   mutable bool fHasIssuedConvWarning;
-   mutable bool fHasIssuedSumWarning;
+   double fErrorTol = 0.0;
+   Int_t fMaxIters = 0;
+   bool fForceSum = false;
+   mutable bool fHasIssuedConvWarning = false;
+   mutable bool fHasIssuedSumWarning = false;
    double evaluate() const override ;
 
 private:

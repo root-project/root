@@ -407,3 +407,21 @@ TEST(RField, StreamerClassMismatch)
                          false /* matchFullMessage */);
    reader->LoadEntry(0);
 }
+
+TEST(RField, StreamerLong64TemplateArg)
+{
+   FileRaii fileGuard("test_ntuple_rfield_streamer_long64_template_arg.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("s", "MEtoEDMStreamer<Long64_t>").Unwrap());
+      model->AddField(RFieldBase::Create("c", "MEtoEDMClass<Long64_t>").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &s = dynamic_cast<const ROOT::RStreamerField &>(reader->GetModel().GetConstField("s"));
+   EXPECT_STREQ("MEtoEDMStreamer<Long64_t>", s.GetClass()->GetName());
+   const auto &c = dynamic_cast<const ROOT::RClassField &>(reader->GetModel().GetConstField("c"));
+   EXPECT_STREQ("MEtoEDMClass<Long64_t>", c.GetClass()->GetName());
+}

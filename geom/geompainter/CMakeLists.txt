@@ -9,10 +9,14 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set (GEOMPAINTER_HEADERS
+  TGeoPainter.h
+  TGeoTrack.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(GeomPainter
   HEADERS
-    TGeoPainter.h
-    TGeoTrack.h
+    ${GEOMPAINTER_HEADERS}
   SOURCES
     src/TGeoPainter.cxx
     src/TGeoTrack.cxx
@@ -22,4 +26,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GeomPainter
     Gpad
     Graf3d
     Hist
+)
+
+set(RELATIVE_INC_HEADERS ${GEOMPAINTER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(GeomPainter
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

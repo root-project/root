@@ -69,7 +69,8 @@ protected:
 
   friend class RooRealIntegral;
 
-  bool changePointer(const RooAbsCollection& newServerSet, bool nameChange=false, bool factoryInitMode=false) override ;
+  bool
+  changePointer(const RooAbsCollection &newServerList, bool nameChange = false, bool factoryInitMode = false) override;
   bool changePointer(std::unordered_map<RooAbsArg*, RooAbsArg*> const& replacements) override;
 
   virtual void changeDataSet(const RooArgSet* newNormSet) ;

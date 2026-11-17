@@ -131,7 +131,7 @@ private:
   std::shared_ptr<RangeMap_t> _ranges{new RangeMap_t()}; ///<!
   RangeMap_t* _rangesPointerForIO{nullptr}; ///< Pointer to the same object as _ranges, but not shared for I/O.
 
-  void installLegacySharedProp(const RooCategorySharedProperties* sp);
+  void installLegacySharedProp(const RooCategorySharedProperties *props);
   void installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap);
   /// Helper for restoring shared ranges from old versions of this class read from files. Maps TUUID names to shared ranges.
   static std::map<RooSharedProperties::UUID, std::weak_ptr<RangeMap_t>> _uuidToSharedRangeIOHelper;

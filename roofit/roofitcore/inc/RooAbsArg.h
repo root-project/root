@@ -167,7 +167,7 @@ public:
    void
    branchNodeServerList(RooAbsCollection *list, const RooAbsArg *arg = nullptr, bool recurseNonDerived = false) const;
    void treeNodeServerList(RooAbsCollection *list, const RooAbsArg *arg = nullptr, bool doBranch = true,
-                           bool doLeaf = true, bool valueOnly = false, bool recurseNonDerived = false) const;
+                           bool doLeaf = true, bool valueOnly = false, bool recurseFundamental = false) const;
 
    /// Is this object a fundamental type that can be added to a dataset?
    /// Fundamental-type subclasses override this method to return true.
@@ -218,17 +218,17 @@ public:
    RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet &set, bool valueOnly = true) const;
    RooFit::OwningPtr<RooArgSet> getObservables(const RooAbsData *data) const;
    RooFit::OwningPtr<RooArgSet> getObservables(const RooAbsData &data) const;
-   RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet *depList, bool valueOnly = true) const;
-   bool getObservables(const RooAbsCollection *depList, RooArgSet &outputSet, bool valueOnly = true) const;
+   RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet *dataList, bool valueOnly = true) const;
+   bool getObservables(const RooAbsCollection *dataList, RooArgSet &outputSet, bool valueOnly = true) const;
    bool observableOverlaps(const RooAbsData *dset, const RooAbsArg &testArg) const;
-   bool observableOverlaps(const RooArgSet *depList, const RooAbsArg &testArg) const;
+   bool observableOverlaps(const RooArgSet *nset, const RooAbsArg &testArg) const;
    virtual bool checkObservables(const RooArgSet *nset) const;
    bool recursiveCheckObservables(const RooArgSet *nset) const;
    RooFit::OwningPtr<RooArgSet> getComponents() const;
 
    void attachArgs(const RooAbsCollection &set);
-   void attachDataSet(const RooAbsData &set);
-   void attachDataStore(const RooAbsDataStore &set);
+   void attachDataSet(const RooAbsData &data);
+   void attachDataStore(const RooAbsDataStore &dstore);
 
    // I/O streaming interface (machine readable)
    virtual bool readFromStream(std::istream &is, bool compact, bool verbose = false) = 0;
@@ -324,7 +324,8 @@ public:
 
    // Cache mode optimization (tracks changes & do lazy evaluation vs evaluate always)
    virtual void optimizeCacheMode(const RooArgSet &observables);
-   virtual void optimizeCacheMode(const RooArgSet &observables, RooArgSet &optNodes, RooLinkedList &processedNodes);
+   virtual void
+   optimizeCacheMode(const RooArgSet &observables, RooArgSet &optimizedNodes, RooLinkedList &processedNodes);
 
    // Dirty state accessor
    inline bool isShapeDirty() const
@@ -576,7 +577,6 @@ protected:
    friend class RooTreeDataStore;
    friend class RooVectorDataStore;
    friend class RooDataSet;
-   friend class RooRealMPFE;
    virtual void syncCache(const RooArgSet *nset = nullptr) = 0;
    virtual void copyCache(const RooAbsArg *source, bool valueOnly = false, bool setValDirty = true) = 0;
 
@@ -624,22 +624,22 @@ protected:
    mutable bool _valueDirty = true; // Flag set if value needs recalculating because input values modified
    mutable bool _shapeDirty = true; // Flag set if value needs recalculating because input shapes modified
 
-   mutable OperMode _operMode = Auto; // Dirty state propagation mode
-   mutable bool _fast = false;        // Allow fast access mode in getVal() and proxies
+   OperMode _operMode = Auto; // Dirty state propagation mode
+   bool _fast = false;        // Allow fast access mode in getVal() and proxies
 
    // Owned components
    RooArgSet *_ownedComponents = nullptr; ///<! Set of owned component
 
-   mutable bool _prohibitServerRedirect = false; ///<! Prohibit server redirects -- Debugging tool
+   bool _prohibitServerRedirect = false; ///<! Prohibit server redirects -- Debugging tool
 
-   mutable RooExpensiveObjectCache *_eocache{nullptr}; ///<! Pointer to global cache manager for expensive components.
+   RooExpensiveObjectCache *_eocache{nullptr}; ///<! Pointer to global cache manager for expensive components.
 
    mutable const TNamed *_namePtr = nullptr; ///<! De-duplicated name pointer, equal for all objects with the same name.
    bool _isConstant = false; ///<! Cached isConstant status
 
    mutable bool _localNoInhibitDirty = false; ///<! Prevent 'AlwaysDirty' mode for this node
 
-   mutable RooWorkspace *_myws = nullptr; ///<! In which workspace do I live, if any
+   RooWorkspace *_myws = nullptr; ///<! In which workspace do I live, if any
 
    std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); ///<! Set by the RooFitDriver for this arg to
                                                                      ///<! retrieve its result in the run context

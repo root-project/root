@@ -106,7 +106,11 @@ TEST(RNTuple, Limits_ManyClusterGroups)
       }
    }
 
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   ROOT::RNTupleReadOptions options;
+   // Prevent page list thrashing: since every entry/cluster is in its own cluster group, with prefetching we have
+   // 3 active cluster groups at all times.
+   ROOT::Internal::RNTupleReadOptionsManip::SetClusterGroupBudget(options, 3);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
 
@@ -241,6 +245,7 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
 
    RNTupleReadOptions options;
    options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
+   options.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
    auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
@@ -286,7 +291,9 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
       writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   RNTupleReadOptions options;
+   options.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");

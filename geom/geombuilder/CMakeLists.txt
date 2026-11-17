@@ -9,29 +9,33 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set (GEOMBUILDER_HEADERS
+  TGeoBBoxEditor.h
+  TGeoConeEditor.h
+  TGeoEltuEditor.h
+  TGeoGedFrame.h
+  TGeoHypeEditor.h
+  TGeoManagerEditor.h
+  TGeoMaterialEditor.h
+  TGeoMatrixEditor.h
+  TGeoMediumEditor.h
+  TGeoNodeEditor.h
+  TGeoParaEditor.h
+  TGeoPconEditor.h
+  TGeoPgonEditor.h
+  TGeoSphereEditor.h
+  TGeoTabManager.h
+  TGeoTorusEditor.h
+  TGeoTrapEditor.h
+  TGeoTrd1Editor.h
+  TGeoTrd2Editor.h
+  TGeoTubeEditor.h
+  TGeoVolumeEditor.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(GeomBuilder
   HEADERS
-    TGeoBBoxEditor.h
-    TGeoConeEditor.h
-    TGeoEltuEditor.h
-    TGeoGedFrame.h
-    TGeoHypeEditor.h
-    TGeoManagerEditor.h
-    TGeoMaterialEditor.h
-    TGeoMatrixEditor.h
-    TGeoMediumEditor.h
-    TGeoNodeEditor.h
-    TGeoParaEditor.h
-    TGeoPconEditor.h
-    TGeoPgonEditor.h
-    TGeoSphereEditor.h
-    TGeoTabManager.h
-    TGeoTorusEditor.h
-    TGeoTrapEditor.h
-    TGeoTrd1Editor.h
-    TGeoTrd2Editor.h
-    TGeoTubeEditor.h
-    TGeoVolumeEditor.h
+    ${GEOMBUILDER_HEADERS}
   SOURCES
     src/TGeoBBoxEditor.cxx
     src/TGeoConeEditor.cxx
@@ -61,4 +65,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GeomBuilder
     Graf
     Gui
     Ged
+)
+
+set(RELATIVE_INC_HEADERS ${GEOMBUILDER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(GeomBuilder
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

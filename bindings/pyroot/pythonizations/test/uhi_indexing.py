@@ -2,6 +2,8 @@
 Tests to verify that TH1 and derived histograms conform to the UHI Indexing interfaces (setting, accessing and slicing).
 """
 
+import builtins
+
 import numpy as np
 import pytest
 import ROOT
@@ -23,6 +25,16 @@ def _get_index_for_dimension(hist, index):
     return (index,) * hist.GetDimension()
 
 
+def _expected_slice(values, slices):
+    # Bins outside the slice of an axis fall into the underflow or overflow bin of that axis,
+    # `values` includes the flow bins and `slices` are (start, stop) ROOT bin numbers
+    for axis, (start, stop) in enumerate(slices):
+        underflow = values.take(range(start), axis).sum(axis, keepdims=True)
+        overflow = values.take(range(stop, values.shape[axis]), axis).sum(axis, keepdims=True)
+        values = np.concatenate([underflow, values.take(range(start, stop), axis), overflow], axis=axis)
+    return values
+
+
 def _get_slice_indices(slices):
     import numpy as np
 
@@ -38,11 +50,40 @@ class TestTH1Indexing:
                 *_get_index_for_dimension(hist_setup, index + 1)
             )
 
+    def test_access_with_negative_bin_number(self, hist_setup):
+        for index in [-1, -2, -10]:
+            assert hist_setup[_get_index_for_dimension(hist_setup, index)] == hist_setup.GetBinContent(
+                *_get_index_for_dimension(hist_setup, index + 11)
+            )
+
+        with pytest.raises(IndexError):
+            hist_setup[_get_index_for_dimension(hist_setup, -11)]
+
+        sliced_hist = hist_setup[_get_index_for_dimension(hist_setup, slice(2, -2))]
+        assert sliced_hist.GetNbinsX() == 6
+
     def test_access_with_data_coordinates(self, hist_setup):
         for value in [1, 4]:
             value_indices = _get_index_for_dimension(hist_setup, value)
             loc_indices = tuple(loc(idx) for idx in value_indices)
             assert hist_setup[loc_indices] == hist_setup.GetBinContent(hist_setup.FindBin(*value_indices))
+
+    def test_access_with_shifted_data_coordinates(self):
+        h = ROOT.TH1D("h_shifted_loc", "", 10, 0, 10)
+        h[...] = np.arange(10)
+
+        location = loc(2.5)
+        assert h[location + 1] == 3
+        assert h[location] == 2
+        assert h[location - 1] == 1
+        assert h[location] == 2
+
+    def test_access_with_data_coordinates_does_not_extend_axis(self):
+        h = ROOT.TH1D("h_extendable", "", 10, 0, 10)
+        h.SetCanExtend(ROOT.TH1.kAllAxes)
+
+        assert h[loc(100)] == h[overflow]
+        assert h.GetXaxis().GetXmax() == 10
 
     def test_access_flow_bins(self, hist_setup):
         for flow_type, index in [(underflow, 0), (overflow, 11)]:
@@ -178,6 +219,28 @@ class TestTH1Indexing:
         }
         self._test_slices_match(hist_setup, slice_ranges, processed_slices)
 
+    def test_slicing_keeps_flow_bins_of_each_axis(self, hist_setup):
+        # TH*C bin contents saturate, so their flow bins cannot hold the sum of the cut bins
+        if _special_setting(hist_setup) or isinstance(hist_setup, (ROOT.TH1C, ROOT.TH2C, ROOT.TH3C)):
+            pytest.skip("Slicing cannot be tested here")
+
+        dim = hist_setup.GetDimension()
+        expected = _expected_slice(hist_setup.values(flow=True), [(3, 6)] * dim)
+        sliced_hist = hist_setup[(slice(2, 5),) * dim]
+
+        assert np.array_equal(sliced_hist.values(flow=True), expected)
+
+    def test_slicing_keeps_sum_of_weights_squared(self, hist_setup):
+        if _special_setting(hist_setup) or isinstance(hist_setup, (ROOT.TH1C, ROOT.TH2C, ROOT.TH3C)):
+            pytest.skip("Slicing cannot be tested here")
+
+        hist_setup.Sumw2()
+        dim = hist_setup.GetDimension()
+        expected = _expected_slice(hist_setup.variances(flow=True), [(3, 6)] * dim)
+        sliced_hist = hist_setup[(slice(2, 5),) * dim]
+
+        assert np.array_equal(sliced_hist.variances(flow=True), expected)
+
     def test_slicing_with_data_coordinates(self, hist_setup):
         if _special_setting(hist_setup):
             pytest.skip("Setting cannot be tested here")
@@ -243,6 +306,48 @@ class TestTH1Indexing:
             sum_xy = hist_setup[::sum, ::sum, :]
             assert isinstance(sum_xy, ROOT.TH1)
 
+    def test_action_sum_over_all_axes_includes_flow(self, hist_setup):
+        if _special_setting(hist_setup):
+            pytest.skip("Slicing cannot be tested here")
+
+        dim = hist_setup.GetDimension()
+        with_flow = [b for axis in range(dim) for b in (_underflow(hist_setup, axis), _overflow(hist_setup, axis))]
+        without_flow = [b for axis in range(dim) for b in (1, _overflow(hist_setup, axis) - 1)]
+        assert hist_setup[(slice(None, None, sum),) * dim] == hist_setup.Integral(*with_flow)
+        assert hist_setup[(slice(0, len, sum),) * dim] == hist_setup.Integral(*without_flow)
+
+        if dim > 1:
+            # A single bin on the first axis and the full range with flow on the others
+            assert hist_setup[(1,) + (slice(None, None, sum),) * (dim - 1)] == hist_setup.Integral(2, 2, *with_flow[2:])
+
+    def test_action_sum_projection_includes_selected_bins(self, hist_setup):
+        if _special_setting(hist_setup) or hist_setup.GetDimension() != 2:
+            pytest.skip("Projections are tested here for 2D histograms")
+
+        # Open slices include the flow bins of the summed axis, closed slices do not
+        assert np.array_equal(
+            hist_setup[::sum, :].values(flow=True), hist_setup.ProjectionY("_py_full").values(flow=True)
+        )
+        assert np.array_equal(
+            hist_setup[2:5:sum, :].values(flow=True), hist_setup.ProjectionY("_py_ranged", 3, 5).values(flow=True)
+        )
+        assert np.array_equal(
+            hist_setup[:, 2::sum].values(flow=True), hist_setup.ProjectionX("_px_open", 3, 11).values(flow=True)
+        )
+
+    def test_action_sum_projections_are_independent(self, hist_setup):
+        if _special_setting(hist_setup) or hist_setup.GetDimension() == 1:
+            pytest.skip("Projections cannot be tested here")
+
+        dim = hist_setup.GetDimension()
+        full_projection = hist_setup[(slice(None),) * (dim - 1) + (slice(None, None, sum),)]
+        full_values = full_projection.values(flow=True).copy()
+
+        ranged_projection = hist_setup[(slice(2, 5),) * (dim - 1) + (slice(None, None, sum),)]
+
+        assert ranged_projection.GetNbinsX() == 3
+        assert np.array_equal(full_projection.values(flow=True), full_values)
+
     def test_slicing_with_action_rebin_and_sum(self, hist_setup):
         if _special_setting(hist_setup):
             pytest.skip("Slicing cannot be tested here")
@@ -268,6 +373,47 @@ class TestTH1Indexing:
             assert isinstance(sliced_hist, ROOT.TH2)
             assert sliced_hist.GetNbinsX() == hist_setup.GetNbinsX() // 2
             assert sliced_hist.GetNbinsY() == 2
+
+    def test_action_builtin_sum(self, hist_setup):
+        # The UHI sum action is the builtin `sum`, it must behave like ROOT.uhi.sum
+        if _special_setting(hist_setup):
+            pytest.skip("Slicing cannot be tested here")
+
+        dim = hist_setup.GetDimension()
+
+        if dim == 1:
+            assert hist_setup[:: builtins.sum] == hist_setup[::sum]
+            assert hist_setup[0 : len : builtins.sum] == hist_setup[0:len:sum]
+
+        if dim == 2:
+            sum_y = hist_setup[builtins.sum, 0:1]
+            assert isinstance(sum_y, ROOT.TH1)
+            assert np.array_equal(sum_y.values(), hist_setup[::sum, 0:1].values())
+
+            sum_x = hist_setup[:, builtins.sum]
+            assert isinstance(sum_x, ROOT.TH1)
+            assert np.array_equal(sum_x.values(), hist_setup[:, ::sum].values())
+
+        if dim == 3:
+            sliced_hist = hist_setup[:: rebin(2), builtins.sum, 3 : 9 : rebin(3)]
+            assert isinstance(sliced_hist, ROOT.TH2)
+            assert np.array_equal(sliced_hist.values(), hist_setup[:: rebin(2), ::sum, 3 : 9 : rebin(3)].values())
+
+    def test_action_sum_index_forms_1d(self, hist_setup):
+        # A bare sum, a tuple or a dict index must give the same integral as a slice
+        if _special_setting(hist_setup):
+            pytest.skip("Slicing cannot be tested here")
+
+        if hist_setup.GetDimension() != 1:
+            pytest.skip("Only 1D histograms are integrated")
+
+        full_integral = hist_setup.Integral(_underflow(hist_setup, 0), _overflow(hist_setup, 0))
+        for action in (sum, builtins.sum):
+            assert hist_setup[action] == full_integral
+            assert hist_setup[(slice(None, None, action),)] == full_integral
+            assert hist_setup[{0: slice(None, None, action)}] == full_integral
+            assert hist_setup[{0: slice(0, len, action)}] == hist_setup.Integral()
+            assert hist_setup[(slice(5, 9, action),)] == hist_setup.Integral(6, 9)
 
     def test_slicing_with_dict_syntax(self, hist_setup):
         if _special_setting(hist_setup):
@@ -350,6 +496,22 @@ class TestInfiniteEdges:
         assert np.allclose(uhi_values, ref_values)
 
 
+class TestProfileSlicing:
+    def test_slicing_keeps_means_and_entries(self):
+        profile = ROOT.TProfile("p_slicing", "", 4, 0, 4)
+        for x, y in [(-1, 4), (0.5, 1), (0.5, 3), (1.5, 2), (2.5, 6), (3.5, 8)]:
+            profile.Fill(x, y)
+
+        sliced_profile = profile[1:3]
+
+        assert np.array_equal(sliced_profile.values(), [2, 6])
+        assert np.array_equal(sliced_profile.counts(), [1, 1])
+
+        # The cut bins fall into the flow bins
+        assert np.array_equal(sliced_profile.values(flow=True), [(4 + 1 + 3) / 3, 2, 6, 8])
+        assert np.array_equal(sliced_profile.counts(flow=True), [3, 1, 1, 1])
+
+
 class TestHistogramKind:
     def test_histogram_kind_no_weights(self):
         h = ROOT.TH1D("h", "h", 100, -10, 10)
@@ -365,6 +527,16 @@ class TestHistogramKind:
         h_profile = ROOT.TProfile("h_profile", "h_profile", 100, -10, 10)
         h_profile.Fill(5, 3.0)
         assert h_profile.kind == "MEAN"
+
+
+class TestSlicingDerivedClasses:
+    def test_slicing_profile_after_its_base_class(self):
+        # TProfile derives from TH1D, slicing it must not use the instantiation of Slice for TH1D
+        h = ROOT.TH1D("h_base_slicing", "", 4, 0, 4)
+        profile = ROOT.TProfile("p_derived_slicing", "", 4, 0, 4)
+
+        assert h[1:3].GetNbinsX() == 2
+        assert isinstance(profile[1:3], ROOT.TProfile)
 
 
 if __name__ == "__main__":

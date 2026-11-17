@@ -8,9 +8,13 @@
 # CMakeLists.txt file for building ROOT math/splot package
 ############################################################################
 
+set(SPLOT_HEADERS
+  TSPlot.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(SPlot
   HEADERS
-    TSPlot.h
+    ${SPLOT_HEADERS}
   SOURCES
     src/TSPlot.cxx
   DEPENDENCIES
@@ -20,4 +24,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SPlot
     TreePlayer
     Graf
     MathCore
+)
+
+set(RELATIVE_INC_HEADERS ${SPLOT_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(SPlot
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

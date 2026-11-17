@@ -77,7 +77,11 @@ void R__zipLZ4(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *t
    if (cxlevel > 9) {
       cxlevel = 9;
    }
-   if (cxlevel >= 4) {
+   // Use the same compression levels as the lz4 command line tool: level 1 is the fast compressor, level 2 is the
+   // "medium" compressor added in LZ4 1.10.0 (or the fast compressor with older versions), and higher levels use
+   // the high-compression (HC) compressor with the given level.
+   const int minHCLevel = (LZ4_version >= 11000) ? 2 : 3;
+   if (cxlevel >= minHCLevel) {
       returnStatus = LZ4_compress_HC(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize, cxlevel);
    } else {
       returnStatus = LZ4_compress_default(src, &tgt[kHeaderSize], *srcsize, *tgtsize - kHeaderSize);

@@ -170,8 +170,8 @@ namespace RooStats {
       RooArgSet   fConditionalObs; ///< conditional observables
       RooArgSet   fGlobalObs;      ///< global observables
       mutable ProposalFunction* fPropFunc; ///< Proposal function for MCMC integration
-      RooAbsPdf * fPdf;      ///< pointer to common PDF (owned by the workspace)
-      RooAbsPdf * fPriorPdf; ///< pointer to prior  PDF (owned by the workspace)
+      RooAbsPdf *fPdf = nullptr;           ///< pointer to common PDF (owned by the workspace)
+      RooAbsPdf *fPriorPdf = nullptr;      ///< pointer to prior  PDF (owned by the workspace)
       RooAbsData * fData;    ///< pointer to the data (owned by the workspace)
       Int_t fNumIters = 0;   ///< number of iterations to run metropolis algorithm
       Int_t fNumBurnInSteps = 0; ///< number of iterations to discard as burn-in, starting from the first

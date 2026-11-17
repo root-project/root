@@ -81,7 +81,7 @@ void r(const char* filename) {
    TH1F meansUPtr3 ("meansUPtr3","meansUPtr3",64, -4, 4);
 
    std::unique_ptr<TFile> f (TFile::Open(filename));
-   auto a = (A*) f->Get("theAInstance");
+   auto a = f->Get<A>("theAInstance");
    printHistoInfo(a->GetHPtr(), "Read Row-wise");
    printHistoInfo(a->GetHBaseUPtr(), "Read Row-wise");
    printHistoInfo(a->GetHUPtr(), "Read Row-wise");

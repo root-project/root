@@ -371,6 +371,17 @@ void REveScene::SendChangesToSubscribers()
       }
       REX::gEve->SceneSubscriberWaitingResponse(client->fId);
    }
+   ClearOutput();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Drop the output of the last StreamElements() or
+/// StreamRepresentationChanges() once it has been sent, so that the next
+/// SendChangesToSubscribers() does not send it again. REveManager calls this
+/// after streaming a scene directly to one new connection.
+
+void REveScene::ClearOutput()
+{
    fOutputJson.clear();
    fOutputBinary.clear();
    fTotalBinarySize = 0;

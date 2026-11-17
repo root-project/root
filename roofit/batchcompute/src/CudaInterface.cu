@@ -66,26 +66,29 @@ CudaStream::CudaStream()
 
 void copyHostToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
 {
-   if (stream)
+   if (stream) {
       ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyHostToDevice, *stream));
-   else
+   } else {
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyHostToDevice));
+   }
 }
 
 void copyDeviceToHostImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
 {
-   if (stream)
+   if (stream) {
       ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyDeviceToHost, *stream));
-   else
+   } else {
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToHost));
+   }
 }
 
 void copyDeviceToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
 {
-   if (stream)
+   if (stream) {
       ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyDeviceToDevice, *stream));
-   else
+   } else {
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToDevice));
+   }
 }
 
 /// \endcond

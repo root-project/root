@@ -35,7 +35,7 @@ public:
   // Constructors, assignment etc
   RooAbsPdf() ;
   RooAbsPdf(const char *name, const char *title=nullptr) ;
-  RooAbsPdf(const char *name, const char *title, double minVal, double maxVal) ;
+  RooAbsPdf(const char *name, const char *title, double plotMin, double plotMax);
   // RooAbsPdf(const RooAbsPdf& other, const char* name=nullptr);
   ~RooAbsPdf() override;
 
@@ -307,9 +307,9 @@ protected:
 
   static Int_t _verboseEval ;
 
-  virtual bool syncNormalization(const RooArgSet* dset, bool adjustProxies=true) const ;
+  virtual bool syncNormalization(const RooArgSet *nset, bool adjustProxies = true) const;
 
-  mutable double _rawValue = 0;
+  double _rawValue = 0;
   mutable RooAbsReal* _norm = nullptr; ///<! Normalization integral (owned by _normMgr)
   mutable RooArgSet const* _normSet = nullptr; ///<! Normalization set with for above integral
 
@@ -326,8 +326,8 @@ protected:
                                    bool nameChange, bool isRecursiveStep) override;
 
   mutable Int_t _errorCount = 0; ///< Number of errors remaining to print
-  mutable Int_t _traceCount = 0; ///< Number of traces remaining to print
-  mutable Int_t _negCount = 0;   ///< Number of negative probabilities remaining to print
+  Int_t _traceCount = 0;         ///< Number of traces remaining to print
+  Int_t _negCount = 0;           ///< Number of negative probabilities remaining to print
 
   bool _selectComp = false; ///< Component selection flag for RooAbsPdf::plotCompOn
 
@@ -340,7 +340,6 @@ private:
   mutable RooFit::UniqueId<RooArgSet>::Value_t _normSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<! Unique ID of the currently-active normalization set
 
   friend class RooAbsReal;
-  friend class RooChi2Var;
 
   ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
 };

@@ -21,9 +21,6 @@ TEST(RooStepFunc, InPdfWrapper)
 
    RooArgSet normSet{x};
 
-   RooArgSet intSet{x};
-   RooArgSet numSet{};
-
    RooRealIntegral integ{"integ", "", stepPdf, x};
 
    // Make sure that the normalization integral for the pdf is analytical

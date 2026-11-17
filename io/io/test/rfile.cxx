@@ -906,3 +906,64 @@ TEST(RFile, Compression)
       EXPECT_EQ(file->GetCompressionSettings(), 0);
    }
 }
+
+TEST(RFile, PutTNamed)
+{
+   FileRaii fileGuard("test_rfile_put_tnamed.root");
+
+   {
+      TNamed named1("named1", "title 1"), named2("named2", "title 2");
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      file->Put(named1);
+      // Put named2 under a dir
+      file->Put(named2, "my");
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      auto named1 = file->Get<TNamed>("named1");
+      auto named2 = file->Get<TNamed>("my/named2");
+      EXPECT_STREQ(named1->GetTitle(), "title 1");
+      EXPECT_STREQ(named2->GetTitle(), "title 2");
+      auto key1 = file->GetKeyInfo("named1").value();
+      auto key2 = file->GetKeyInfo("my/named2").value();
+      EXPECT_EQ(key1.GetTitle(), "title 1");
+      EXPECT_EQ(key2.GetTitle(), "title 2");
+   }
+}
+
+TEST(RFile, PutTNamedInvalid)
+{
+   FileRaii fileGuard("test_rfile_put_tnamed_invalid.root");
+
+   {
+      TNamed named1("my/funny/name", "title 1");
+      TNamed named2("", "title 2");
+      TNamed named3("invalid.name", "title 3");
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      try {
+         file->Put(named1);
+         FAIL() << "putting objects with a slash in their name should fail.";
+      } catch (const ROOT::RException &ex) {
+         EXPECT_THAT(ex.what(), testing::HasSubstr("cannot have '/'"));
+      }
+      try {
+         file->Put(named2, "my/dir");
+         FAIL() << "putting objects with an empty name should fail.";
+      } catch (const ROOT::RException &ex) {
+         EXPECT_THAT(ex.what(), testing::HasSubstr("Invalid object path"));
+      }
+      try {
+         file->Put(named2);
+         FAIL() << "putting objects with an empty name should fail.";
+      } catch (const ROOT::RException &ex) {
+         EXPECT_THAT(ex.what(), testing::HasSubstr("Invalid object path"));
+      }
+      try {
+         file->Put(named3);
+         FAIL() << "putting objects with an invalid name should fail.";
+      } catch (const ROOT::RException &ex) {
+         EXPECT_THAT(ex.what(), testing::HasSubstr("Invalid object path"));
+      }
+   }
+}

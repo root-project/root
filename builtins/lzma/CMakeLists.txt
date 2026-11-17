@@ -39,7 +39,9 @@ endif()
 
 ExternalProject_Add(
     BUILTIN_LZMA
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL ${lcgpackages}/xz-${ROOT_LZMA_VERSION}.tar.gz
+        https://github.com/tukaani-project/xz/releases/download/v${ROOT_LZMA_VERSION}/xz-${ROOT_LZMA_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LZMA_HASH}
     PREFIX ${ROOT_LZMA_PREFIX}
     CMAKE_ARGS -G ${CMAKE_GENERATOR} 

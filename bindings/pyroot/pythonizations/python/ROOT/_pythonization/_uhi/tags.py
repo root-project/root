@@ -44,18 +44,20 @@ class _loc:
 
     def __add__(self, other: int) -> _loc:
         if isinstance(other, int):
-            self.offset += other
-            return self
+            shifted = _loc(self.value)
+            shifted.offset = self.offset + other
+            return shifted
         raise TypeError(f"Unsupported type for addition: {type(other).__name__}. Expected an integer.")
 
     def __sub__(self, other: int) -> _loc:
         if isinstance(other, int):
-            self.offset -= other
-            return self
+            shifted = _loc(self.value)
+            shifted.offset = self.offset - other
+            return shifted
         raise TypeError(f"Unsupported type for substraction: {type(other).__name__}. Expected an integer.")
 
     def __call__(self, hist: Any, axis: int) -> int:
-        return _get_axis(hist, axis).FindBin(self.value) + self.offset
+        return _get_axis(hist, axis).FindFixBin(self.value) + self.offset
 
 
 class _rebin:
@@ -103,7 +105,7 @@ def _sum(hist, axis, args=None):
         elif axis == (1,):
             return hist.ProjectionX()
         elif axis == (0, 1):
-            return hist.Integral()
+            return hist.Integral(*args)
         else:
             return _invalid_axis(axis, dim)
     if dim == 3:
@@ -117,6 +119,6 @@ def _sum(hist, axis, args=None):
             (1, 2): "x",
         }
         if axis == (0, 1, 2):
-            return hist.Integral()
+            return hist.Integral(*args)
         return hist.Project3D(project_map[axis]) if axis in project_map else _invalid_axis(axis, dim)
     raise NotImplementedError(f"Summing not implemented for {dim}D histograms")

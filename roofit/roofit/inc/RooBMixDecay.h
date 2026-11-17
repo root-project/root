@@ -39,7 +39,7 @@ public:
   double coefficient(Int_t basisIndex) const override ;
 
   Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
-  double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=nullptr) const override ;
+  double coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char *rangeName = nullptr) const override;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;
@@ -50,7 +50,7 @@ public:
 
 protected:
 
-  DecayType        _type ;
+  DecayType        _type = SingleSided ;
   RooRealProxy     _mistag ;
   RooRealProxy     _delMistag ;
   RooCategoryProxy _mixState ;
@@ -58,13 +58,13 @@ protected:
   RooRealProxy     _tau ;
   RooRealProxy     _dm ;
   RooRealProxy     _t ;
-  Int_t _basisExp ;
-  Int_t _basisCos ;
+  Int_t _basisExp = 0 ;
+  Int_t _basisCos = 0 ;
 
-  double _genMixFrac ;   ///<! do not persist
-  double _genFlavFrac ;  ///<!
-  double _genFlavFracMix ;   ///<!
-  double _genFlavFracUnmix ; ///<!
+  double _genMixFrac = 0.0 ;   ///<! do not persist
+  double _genFlavFrac = 0.0 ;  ///<!
+  double _genFlavFracMix = 0.0 ;   ///<!
+  double _genFlavFracUnmix = 0.0 ; ///<!
 
   ClassDefOverride(RooBMixDecay,1) // B Mixing decay PDF
 };

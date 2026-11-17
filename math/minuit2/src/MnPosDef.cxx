@@ -13,11 +13,65 @@
 #include "Minuit2/MnPrint.h"
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
+#include <limits>
+#include <vector>
 
 namespace ROOT {
 
 namespace Minuit2 {
+
+namespace {
+
+// Return true if the symmetric matrix p is certainly accepted by the eigenvalue test below, i.e. if its smallest
+// eigenvalue pmin satisfies pmin > epspdf * max(|pmax|, 1). This avoids the full O(n^3) eigen decomposition with
+// mneigen in the common case where the matrix is well inside the positive-definite region. A false return value
+// is not a verdict: the caller then falls back to the eigenvalue computation.
+//
+// The test is a Cholesky decomposition of p - shift * 1. Its success proves that all eigenvalues of p are larger
+// than shift. The Gershgorin bound gives max(|pmax|, 1) <= bound, so it suffices that shift >= epspdf * bound.
+// The shift also contains margins for the convergence tolerance of mneigen (relative precision 1e-6 on the
+// tridiagonal matrix, whose elements are bounded by the Gershgorin bound too) and for the rounding errors of the
+// Cholesky decomposition of a matrix with unit diagonal, so that a successful test always leads to the same
+// decision as the eigenvalues that mneigen would have computed.
+bool IsCertainlyPosDef(const MnAlgebraicSymMatrix &p, double epspdf)
+{
+   const unsigned int n = p.Nrow();
+
+   double bound = 1.;
+   for (unsigned int i = 0; i < n; i++) {
+      double rowSum = 0.;
+      for (unsigned int j = 0; j < n; j++)
+         rowSum += std::abs(p(i, j));
+      bound = std::max(bound, rowSum);
+   }
+   const double shift = (epspdf + 1.e-5 + (n + 1.) * n * std::numeric_limits<double>::epsilon()) * bound;
+
+   // Cholesky decomposition in the packed storage of the matrix: element (i, j) with j <= i is at i * (i + 1) / 2 + j.
+   std::vector<double> l(p.Data(), p.Data() + p.size());
+   for (unsigned int i = 0; i < n; i++) {
+      double *li = l.data() + i * (i + 1) / 2;
+      for (unsigned int j = 0; j <= i; j++) {
+         const double *lj = l.data() + j * (j + 1) / 2;
+         double sum = li[j];
+         if (i == j)
+            sum -= shift;
+         for (unsigned int k = 0; k < j; k++)
+            sum -= li[k] * lj[k];
+         if (i == j) {
+            if (!(sum > 0.))
+               return false;
+            li[i] = std::sqrt(sum);
+         } else {
+            li[j] = sum / lj[j];
+         }
+      }
+   }
+   return true;
+}
+
+} // namespace
 
 MinimumState MnPosDef::operator()(const MinimumState &st, const MnMachinePrecision &prec) const
 {
@@ -76,6 +130,9 @@ MinimumError MnPosDef::operator()(const MinimumError &e, const MnMachinePrecisio
    }
 
    // std::cout<<"MnPosDef p: "<<p<<std::endl;
+   if (IsCertainlyPosDef(p, epspdf))
+      return MinimumError(err, e.Dcovar());
+
    MnAlgebraicVector eval = eigenvalues(p);
    double pmin = eval(0);
    double pmax = eval(eval.size() - 1);

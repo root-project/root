@@ -46,6 +46,7 @@
 #include "TMath.h"
 #include "strlcpy.h"
 
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -220,9 +221,9 @@ extern "C" void  type_of_call hntvar3(const int&,const int&,DEFCHAR);
 #endif
 
 #ifndef WIN32
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,fortran_charlen_t, fortran_charlen_t);
+extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const std::int64_t&,DEFCHAR,const int&,fortran_charlen_t, fortran_charlen_t);
 #else
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&);
+extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const std::int64_t&,DEFCHAR,const int&);
 #endif
 
 extern "C" void  type_of_call hgnpar(const int&,const char *,const int);
@@ -590,8 +591,7 @@ Bool_t THbookFile::IsOpen() const
 
 void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
 {
-   Int_t *iadd = (Int_t*)add;
-   Int_t &aadd = *iadd;
+   std::int64_t aadd = reinterpret_cast<std::int64_t>(add);
 #ifndef WIN32
    hbnam(id,PASSCHAR(bname),aadd,PASSCHAR("$SET"),0,strlen(bname),4);
 #else
@@ -698,10 +698,11 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
    char *bigbuf = tree->MakeX(500000);
 
+   std::int64_t add = reinterpret_cast<std::int64_t>(&bigbuf[0]);
 #ifndef WIN32
-   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
+   hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0,1,6);
 #else
-   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0);
+   hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0);
 #endif
 
    UInt_t varNumber = 0;
@@ -755,7 +756,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
          varNumber = 0;
          strlcpy(oldblock,block,32);
          oldischar = ischar;
-         Long_t add= (Long_t)&bigbuf[bufpos];
+         add = reinterpret_cast<std::int64_t>(&bigbuf[bufpos]);
          Int_t lblock   = strlen(block);
 #ifndef WIN32
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);

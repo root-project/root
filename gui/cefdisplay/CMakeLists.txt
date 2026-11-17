@@ -62,6 +62,16 @@ set(CEF_MAIN src/cef_main.cxx)
 ROOT_LINKER_LIBRARY(${libname} ${CEF_sources} ${CEF_platform}
                     LIBRARIES ${CMAKE_DL_LIBS} ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} ${CEF_LIB_DEPENDENCY}
                     DEPENDENCIES RHTTP ASImage ROOTWebDisplay)
+target_sources(${libname}
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    inc/gui_handler.h
+    inc/RCefWebDisplayHandle.hxx
+    inc/simple_app.h
+)
 
 target_compile_definitions(${libname} PRIVATE NDEBUG)
 

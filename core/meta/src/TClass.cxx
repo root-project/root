@@ -5843,12 +5843,18 @@ void TClass::SetCurrentStreamerInfo(TVirtualStreamerInfo *info)
 
 size_t TClass::GetClassAlignment() const
 {
-   if (fAlignment != 0)
-      return fAlignment;
-   if ((fState < kEmulated && !fCollectionProxy) || Property() & (kIsNamespace | kIsEnum))
+   auto alignment = fAlignment.load(std::memory_order_relaxed);
+   if (alignment != 0)
+      return alignment;
+   if (fState < kEmulated && !fCollectionProxy)
       return 0;
    if (HasInterpreterInfo()) {
-      return gCling->ClassInfo_AlignOf(GetClassInfo());
+      if (Property() & (kIsNamespace | kIsEnum))
+         return 0;
+      alignment = gCling->ClassInfo_AlignOf(GetClassInfo());
+      if (alignment != 0)
+         fAlignment.store(alignment, std::memory_order_relaxed);
+      return alignment;
    }
    if (fCollectionProxy) {
       // If the collection proxy has a dictionary, it will have return earlier,
@@ -5868,9 +5874,15 @@ size_t TClass::GetClassAlignment() const
 
 Int_t TClass::Size() const
 {
-   if (fSizeof!=-1) return fSizeof;
+   auto size = fSizeof.load(std::memory_order_relaxed);
+   if (size != -1) return size;
    if (fCollectionProxy) return fCollectionProxy->Sizeof();
-   if (HasInterpreterInfo()) return gCling->ClassInfo_Size(GetClassInfo());
+   if (HasInterpreterInfo()) {
+      size = gCling->ClassInfo_Size(GetClassInfo());
+      if (size >= 0)
+         fSizeof.store(size, std::memory_order_relaxed);
+      return size;
+   }
    return GetStreamerInfo()->GetSize();
 }
 
@@ -6188,18 +6200,24 @@ void TClass::PostLoadCheck()
    }
    if (fCollectionProxy) {
       // Update the related pair's TClass if it has already been created.
-      size_t noffset = 0;
-      if (strncmp(GetName(), "map<", 4) == 0)
-         noffset = 3;
-      else if (strncmp(GetName(), "multimap<", 9) == 0)
-         noffset = 8;
-      else if (strncmp(GetName(), "unordered_map<", 14) == 0)
-         noffset = 13;
-      else if (strncmp(GetName(), "unordered_multimap<", 19) == 0)
-         noffset = 18;
-      if (noffset) {
-         std::string pairname("pair");
-         pairname.append(GetName() + noffset);
+      std::vector<std::string> inside;
+      int nested = 0;
+      const auto num = TClassEdit::GetSplit(GetName(), inside, nested);
+      std::string pairname;
+      if (num >= 4) {
+         switch (TClassEdit::STLKind(inside[0])) {
+         case ROOT::kSTLmap:
+         case ROOT::kSTLmultimap:
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLunorderedmultimap:
+            pairname = "pair<" + inside[1] + "," + inside[2];
+            pairname += (pairname.back() == '>') ? " >" : ">";
+            break;
+         default:
+            break;
+         }
+      }
+      if (!pairname.empty()) {
          auto pcl = TClass::GetClass(pairname.c_str(), false, false);
          if ( pcl && !pcl->IsLoaded() && !pcl->IsSyntheticPair() )
          {

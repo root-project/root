@@ -17,6 +17,8 @@
 #include <RooBinning.h>
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
+#include <RooConstVar.h>
+#include <RooCrystalBall.h>
 #include <RooDataHist.h>
 #include <RooDecay.h>
 #include <RooDerivative.h>
@@ -26,6 +28,7 @@
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFormulaVar.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
@@ -55,9 +58,14 @@
 
 #include <TF1.h>
 
+#include <RooCategory.h>
+#include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
 #include "JSONIOUtils.h"
 
+#include <optional>
 #include <type_traits>
+#include <variant>
 
 #include "static_execute.h"
 
@@ -66,7 +74,9 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <initializer_list>
 #include <set>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -161,10 +171,102 @@ void replaceIdentifier(TString &expr, std::string_view identifier, std::string_v
    expr = out.c_str();
 }
 
+bool isIdentifierChar(char c)
+{
+   return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
+}
+
+std::string trimmed(std::string const &str)
+{
+   const auto begin = str.find_first_not_of(" \t\n");
+   if (begin == std::string::npos) {
+      return "";
+   }
+   return str.substr(begin, str.find_last_not_of(" \t\n") - begin + 1);
+}
+
+// Index of the bracket that closes the one at `open`, or std::string::npos if it is not closed.
+std::size_t findClosingBracket(std::string const &str, std::size_t open)
+{
+   int depth = 0;
+   for (std::size_t i = open; i < str.size(); ++i) {
+      if (str[i] == '(' || str[i] == '[') {
+         ++depth;
+      } else if ((str[i] == ')' || str[i] == ']') && --depth == 0) {
+         return i;
+      }
+   }
+   return std::string::npos;
+}
+
+// Split `str` at the commas that are not enclosed in brackets.
+std::vector<std::string> splitTopLevelCommas(std::string const &str)
+{
+   std::vector<std::string> parts;
+   int depth = 0;
+   std::size_t start = 0;
+   for (std::size_t i = 0; i < str.size(); ++i) {
+      if (str[i] == '(' || str[i] == '[') {
+         ++depth;
+      } else if (str[i] == ')' || str[i] == ']') {
+         --depth;
+      } else if (str[i] == ',' && depth == 0) {
+         parts.push_back(str.substr(start, i - start));
+         start = i + 1;
+      }
+   }
+   parts.push_back(str.substr(start));
+   return parts;
+}
+
+// Remove parentheses that enclose the whole string, e.g. "((a+b))" becomes "a+b".
+std::string stripEnclosingParentheses(std::string str)
+{
+   str = trimmed(str);
+   while (str.size() >= 2 && str.front() == '(' && findClosingBracket(str, 0) == str.size() - 1) {
+      str = trimmed(str.substr(1, str.size() - 2));
+   }
+   return str;
+}
+
+// Rewrite the HS3 conditional "ifelse(c,a,b)" into the C-style ternary "((c)?(a):(b))" that TFormula understands.
+// Malformed calls are left unchanged, so that TFormula reports them.
+std::string ifElseToTernary(std::string const &expr)
+{
+   static const std::string keyword = "ifelse";
+   std::string out;
+   std::size_t pos = 0;
+   while (pos < expr.size()) {
+      const std::size_t found = expr.find(keyword, pos);
+      if (found == std::string::npos) {
+         break;
+      }
+      const std::size_t open = expr.find_first_not_of(" \t", found + keyword.size());
+      const bool isCall =
+         (found == 0 || !isIdentifierChar(expr[found - 1])) && open != std::string::npos && expr[open] == '(';
+      const std::size_t close = isCall ? findClosingBracket(expr, open) : std::string::npos;
+      const auto args = close != std::string::npos ? splitTopLevelCommas(expr.substr(open + 1, close - open - 1))
+                                                   : std::vector<std::string>{};
+      if (args.size() != 3) {
+         out += expr.substr(pos, found + keyword.size() - pos);
+         pos = found + keyword.size();
+         continue;
+      }
+      out += expr.substr(pos, found - pos);
+      out += "((" + ifElseToTernary(trimmed(args[0])) + ")?(" + ifElseToTernary(trimmed(args[1])) + "):(" +
+             ifElseToTernary(trimmed(args[2])) + "))";
+      pos = close + 1;
+   }
+   return out + expr.substr(pos);
+}
+
 void translateImportedExpression(TString &expr)
 {
    replaceIdentifier(expr, "PI", "TMath::Pi()");
    replaceIdentifier(expr, "EULER", "TMath::E()");
+   if (std::string(expr.Data()).find("ifelse") != std::string::npos) {
+      expr = ifElseToTernary(expr.Data()).c_str();
+   }
 }
 
 int readPositiveInteger(const JSONNode &node, const std::string &context)
@@ -189,8 +291,8 @@ readFormulaAxisBinning(const JSONNode &axis, const std::string &axisName, const 
    const bool hasMax = axis.has_child("max");
    const bool hasNBins = axis.has_child("nbins");
 
-   if (hasEdges && (hasMin || hasMax || hasNBins)) {
-      RooJSONFactoryWSTool::error(context + " must use either \"edges\" or \"min\"/\"max\"/\"nbins\"");
+   if (hasEdges && hasNBins) {
+      RooJSONFactoryWSTool::error(context + " must use either \"edges\" or \"nbins\"");
    }
 
    if (hasEdges) {
@@ -216,6 +318,12 @@ readFormulaAxisBinning(const JSONNode &axis, const std::string &axisName, const 
       }
       if (edges.size() < 2) {
          RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain at least two values");
+      }
+      // The HS3 standard requires "min" and "max" also for irregular binnings, which older versions of RooFit didn't
+      // write.
+      if ((hasMin && (!axis["min"].is_number() || axis["min"].val_double() != edges.front())) ||
+          (hasMax && (!axis["max"].is_number() || axis["max"].val_double() != edges.back()))) {
+         RooJSONFactoryWSTool::error("\"min\" and \"max\" in " + context + " must agree with the \"edges\"");
       }
       return std::make_unique<RooBinning>(static_cast<int>(edges.size() - 1), edges.data());
    }
@@ -310,6 +418,199 @@ bool importProdPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// The name of the pdf that represents the component of an array distribution over the observable `observable`.
+std::string arrayComponentName(std::string const &observable)
+{
+   return observable + "_constraint";
+}
+
+// Copy the value of a JSON node, keeping numbers and booleans as such.
+void copyValue(JSONNode &target, JSONNode const &source)
+{
+   if (source.is_number()) {
+      target << source.val_double();
+      return;
+   }
+   const std::string value = source.val();
+   if (value == "true" || value == "false") {
+      target << (value == "true");
+   } else {
+      target << value;
+   }
+}
+
+// An HS3 `array_dist` is a product of one-dimensional distributions of one type (`component_type`), each over its own
+// observable `x`. RooFit has no dedicated class for it: every component is imported as an individual pdf of the
+// component type, named after its observable, and a RooProdPdf with the attribute `arrayDistTag` that carries the
+// name of the array holds them together, so that the array can be written back as `array_dist`. HistFactory modifiers
+// that name an array as the constraint of a parameter pick their component out of it (see
+// JSONFactories_HistFactory.cxx).
+bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   const std::string name = RooJSONFactoryWSTool::name(p);
+   auto error = [&name](std::string const &message) {
+      RooJSONFactoryWSTool::error("array_dist '" + name + "': " + message);
+   };
+
+   static const std::set<std::string> supportedComponentTypes{"poisson_dist", "poisson_continuous_dist",
+                                                              "gaussian_dist", "normal_dist", "lognormal_dist"};
+   if (!p.has_child("component_type")) {
+      error("missing \"component_type\"");
+   }
+   const std::string componentType = p["component_type"].val();
+   if (supportedComponentTypes.find(componentType) == supportedComponentTypes.end()) {
+      error("the component_type '" + componentType +
+            "' is not supported, supported are poisson_dist, poisson_continuous_dist, gaussian_dist and "
+            "lognormal_dist");
+   }
+
+   const JSONNode *defaults = p.find("default_parameters");
+   if (defaults) {
+      if (!defaults->is_map()) {
+         error("\"default_parameters\" must be a struct");
+      }
+      if (defaults->has_child("x")) {
+         error("\"x\" must be given per component, not in \"default_parameters\"");
+      }
+   }
+   const JSONNode *components = p.find("components");
+   if (!components || !components->is_seq() || components->num_children() == 0) {
+      error("\"components\" must be a non-empty list");
+   }
+
+   RooWorkspace &ws = *tool->workspace();
+
+   // The components are imported through the importer of the component type, from a node per component that
+   // combines its own fields with the defaults.
+   auto tree = RooFit::Detail::JSONTree::create();
+   JSONNode &nodes = tree->rootnode().set_seq();
+   std::vector<std::string> observables;
+   RooArgList pdfs;
+   for (JSONNode const &component : components->children()) {
+      const std::string context = "component " + std::to_string(observables.size());
+      if (!component.is_map()) {
+         error(context + " must be a struct");
+      }
+      const JSONNode *xNode = component.find("x");
+      if (!xNode) {
+         error(context + " has no \"x\"");
+      }
+      if (xNode->is_number() || !xNode->has_val()) {
+         error(context + ": \"x\" must be the name of the observable");
+      }
+      const std::string x = xNode->val();
+      if (std::find(observables.begin(), observables.end(), x) != observables.end()) {
+         error("the observable '" + x + "' is used by two components");
+      }
+      observables.push_back(x);
+
+      const std::string pdfName = arrayComponentName(x);
+      if (ws.arg(pdfName)) {
+         error("cannot create the component for '" + x + "' as '" + pdfName +
+               "', the workspace already has an object of that name");
+      }
+      JSONNode &node = nodes.append_child().set_map();
+      node["name"] << pdfName;
+      node["type"] << componentType;
+      if (defaults) {
+         for (JSONNode const &field : defaults->children()) {
+            copyValue(node[field.key()], field);
+         }
+      }
+      for (JSONNode const &field : component.children()) {
+         copyValue(node[field.key()], field);
+      }
+      tool->importFunction(node, true);
+      RooAbsPdf *pdf = ws.pdf(pdfName);
+      if (!pdf) {
+         error(context + " did not produce a distribution");
+      }
+      pdfs.add(*pdf);
+   }
+
+   // The parameters of a component must not depend on any observable of the array, otherwise the product would not
+   // be normalized.
+   for (std::size_t i = 0; i < observables.size(); ++i) {
+      RooAbsArg const *x = ws.arg(observables[i]);
+      if (!x) {
+         error("the observable '" + observables[i] + "' is not a parameter or function");
+      }
+      for (std::size_t k = 0; k < observables.size(); ++k) {
+         if (k != i && pdfs[i].dependsOn(*ws.arg(observables[k]))) {
+            error("component " + std::to_string(i) + " depends on the observable '" + observables[k] +
+                  "' of component " + std::to_string(k));
+         }
+      }
+      for (RooAbsArg const *server : pdfs[i].servers()) {
+         if (server != x && server->dependsOn(*x)) {
+            error("the parameters of component " + std::to_string(i) + " depend on its own observable '" +
+                  observables[i] + "'");
+         }
+      }
+   }
+
+   RooProdPdf array{name.c_str(), name.c_str(), pdfs};
+   array.setAttribute(arrayDistTag);
+   tool->wsImport(array);
+   return true;
+}
+
+// One field of a component of an array distribution: a name or a number.
+using ArrayFieldValue = std::variant<std::string, double>;
+
+struct ArrayComponent {
+   std::string type;
+   std::string x;
+   std::vector<std::pair<std::string, ArrayFieldValue>> fields;
+};
+
+ArrayFieldValue nameOrNumber(RooAbsReal const &arg)
+{
+   if (isLiteralConstVar(arg)) {
+      return static_cast<RooConstVar const &>(arg).getVal();
+   }
+   return std::string{arg.GetName()};
+}
+
+// The type, observable and fields of `pdf` as a component of an array distribution, with the fields of the standalone
+// exporters, or std::nullopt if `pdf` cannot be a component. A Gaussian whose mean is the recorded `observable` is
+// written with x and mean swapped.
+std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf, std::string const *observable = nullptr)
+{
+   ArrayComponent out;
+   RooAbsReal const *x = nullptr;
+   if (auto const *poisson = dynamic_cast<RooPoisson const *>(&pdf)) {
+      out.type = poisson->getNoRounding() ? "poisson_continuous_dist" : "poisson_dist";
+      x = &poisson->getX();
+      out.fields = {{"mean", nameOrNumber(poisson->getMean())}};
+   } else if (auto const *gauss = dynamic_cast<RooGaussian const *>(&pdf)) {
+      out.type = "gaussian_dist";
+      x = &gauss->getX();
+      RooAbsReal const *mean = &gauss->getMean();
+      // A Gaussian constraint built by HistFactory has the parameter as x and the global observable as mean. The
+      // Gaussian is symmetric in the two, so it is written with the observable as x where the observable is known.
+      if (observable && *observable == mean->GetName() && !isLiteralConstVar(*mean)) {
+         std::swap(x, mean);
+      }
+      out.fields = {{"mean", nameOrNumber(*mean)}, {"sigma", nameOrNumber(gauss->getSigma())}};
+   } else if (auto const *lognormal = dynamic_cast<RooLognormal const *>(&pdf)) {
+      if (!lognormal->useStandardParametrization()) {
+         return std::nullopt;
+      }
+      out.type = "lognormal_dist";
+      x = &lognormal->getX();
+      out.fields = {{"mu", nameOrNumber(lognormal->getMedian())}, {"sigma", nameOrNumber(lognormal->getShapeK())}};
+   } else {
+      return std::nullopt;
+   }
+   // The observable of a component must be named: the observables are pairwise distinct and are paired with data.
+   if (isLiteralConstVar(*x)) {
+      return std::nullopt;
+   }
+   out.x = x->GetName();
+   return out;
+}
+
 bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
@@ -317,9 +618,76 @@ bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// A "combined_dist" is a RooSimultaneous. Its index category is the single column, or a RooSuperCategory over the
+// columns in the order of the document; the columns are categories declared by categorical axes of the domains.
+bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   std::string const name(RooJSONFactoryWSTool::name(p));
+   std::string const context = "the combined_dist '" + name + "'";
+   // Whether a combined distribution is extended follows from its components; HS3 forbids declaring it.
+   if (p.has_child("extended")) {
+      RooJSONFactoryWSTool::error(context + " must not have \"extended\": whether it is extended follows from its " +
+                                  "components");
+   }
+   std::vector<RooCategory *> columns = readSelectionColumns(*tool->workspace(), p, "columns", context);
+
+   auto const *componentsNode = p.find("components");
+   if (!componentsNode || !componentsNode->is_seq() || componentsNode->num_children() == 0) {
+      RooJSONFactoryWSTool::error("\"components\" of " + context + " must be a non-empty list");
+   }
+   std::map<std::string, RooAbsPdf *> pdfMap;
+   for (JSONNode const &component : componentsNode->children()) {
+      if (!component.is_map() || !component.has_child("dist")) {
+         RooJSONFactoryWSTool::error("every component of " + context + " must have a \"key\" and a \"dist\"");
+      }
+      std::vector<std::string> const key = readSelectionKey(component, columns, context);
+      std::string const label = selectionLabel(key);
+      if (pdfMap.find(label) != pdfMap.end()) {
+         RooJSONFactoryWSTool::error("the key " + selectionKeyToString(key) + " is used by two components of " +
+                                     context);
+      }
+      pdfMap[label] = tool->request<RooAbsPdf>(component["dist"].val(), name);
+   }
+
+   if (columns.size() == 1) {
+      tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, *columns.front()});
+      return true;
+   }
+   RooArgSet inputs;
+   for (RooCategory *column : columns) {
+      inputs.add(*column);
+   }
+   std::string const indexName = name + "_index";
+   RooSuperCategory indexCat{indexName.c_str(), indexName.c_str(), inputs};
+   tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, indexCat});
+   return true;
+}
+
 bool importAddPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
+   if (p.has_child("extended")) {
+      // Check the explicit "extended" flag against the number of coefficients, which determines the extended mode of
+      // the RooAddPdf.
+      const bool extended = p["extended"].val_bool();
+      const std::size_t nSummands = p.has_child("summands") ? p["summands"].num_children() : 0;
+      const std::size_t nCoefficients = p.has_child("coefficients") ? p["coefficients"].num_children() : 0;
+      const std::string counts =
+         std::to_string(nCoefficients) + " coefficients for " + std::to_string(nSummands) + " summands";
+      if (extended && nCoefficients > 0 && nCoefficients + 1 == nSummands) {
+         RooJSONFactoryWSTool::error("mixture_dist '" + name + "' is declared as extended, but it has " + counts +
+                                     ", which defines a non-extended mixture");
+      }
+      if (!extended && nCoefficients == 0 && nSummands > 0) {
+         RooJSONFactoryWSTool::error("mixture_dist '" + name + "' is declared as not extended, but it has " + counts +
+                                     ", which defines an extended mixture of extended distributions");
+      }
+      if (!extended && nCoefficients == nSummands) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: mixture_dist '" + name + "' is declared as not extended, but " +
+                                       "RooFit can use it as extended because it has one coefficient per summand. " +
+                                       "Don't use the extended likelihood term when fitting it.");
+      }
+   }
    if (!tool->requestArgList<RooAbsReal>(p, "coefficients").empty()) {
       tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
                                  tool->requestArgList<RooAbsReal>(p, "coefficients"));
@@ -416,12 +784,28 @@ bool importPolynomial(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// HS3 0.3 distinguishes the discrete "poisson_dist" from the "poisson_continuous_dist" (HS3 #152), which are a
+// RooPoisson without and with noRounding. Before, ROOT wrote both as "poisson_dist" with its own key "integer", where
+// false denotes the continuous form. That key is read for documents before HS3 0.3, without it the discrete form is
+// meant. From HS3 0.3 on, it must not be present.
+template <bool Continuous>
 bool importPoisson(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
+   bool noRounding = Continuous;
+   if (p.has_child("integer")) {
+      std::string const type = Continuous ? "poisson_continuous_dist" : "poisson_dist";
+      if (Continuous || !isHS3VersionBefore(tool->hs3VersionInput(), 0, 3)) {
+         RooJSONFactoryWSTool::error(
+            type + " '" + name +
+            "' has the key \"integer\", which is not part of HS3. The discrete Poisson distribution is "
+            "\"poisson_dist\" and the continuous one is \"poisson_continuous_dist\".");
+      }
+      noRounding = !p["integer"].val_bool();
+   }
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
    RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
-   tool->wsEmplace<RooPoisson>(name, *x, *mean, !p["integer"].val_bool());
+   tool->wsEmplace<RooPoisson>(name, *x, *mean, noRounding);
    return true;
 }
 
@@ -430,7 +814,8 @@ bool importDecay(RooJSONFactoryWSTool *tool, const JSONNode &p)
    std::string name(RooJSONFactoryWSTool::name(p));
    RooRealVar *t = tool->requestArg<RooRealVar>(p, "t");
    RooAbsReal *tau = tool->requestArg<RooAbsReal>(p, "tau");
-   RooResolutionModel *model = dynamic_cast<RooResolutionModel *>(tool->requestArg<RooAbsPdf>(p, "resolutionModel"));
+   // HS3 lists some resolution models as functions.
+   RooResolutionModel *model = dynamic_cast<RooResolutionModel *>(tool->requestArg<RooAbsReal>(p, "resolutionModel"));
    if (!model) {
       RooJSONFactoryWSTool::error("resolutionModel of '" + name + "' is not a RooResolutionModel");
    }
@@ -515,8 +900,9 @@ bool importFFTConvPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 bool importExtendPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
-   RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, "pdf");
-   RooAbsReal *norm = tool->requestArg<RooAbsReal>(p, "norm");
+   // HS3 calls the fields "dist" and "rate". RooFit used to write "pdf" and "norm", which are still accepted.
+   RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, p.has_child("pdf") && !p.has_child("dist") ? "pdf" : "dist");
+   RooAbsReal *norm = tool->requestArg<RooAbsReal>(p, p.has_child("norm") && !p.has_child("rate") ? "norm" : "rate");
    if (p.has_child("range")) {
       std::string rangeName = p["range"].val();
       tool->wsEmplace<RooExtendPdf>(name, *pdf, *norm, rangeName.c_str());
@@ -602,8 +988,22 @@ bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
 
    TMatrixDSym covmat;
 
+   // The matrix must be square, otherwise the entries would be written out of bounds.
+   auto checkSquare = [&](const char *key, std::size_t n) {
+      if (p[key].num_children() != n) {
+         RooJSONFactoryWSTool::error("\"" + std::string(key) + "\" in '" + name + "' must have " + std::to_string(n) +
+                                     " rows");
+      }
+      for (const auto &row : p[key].children()) {
+         if (!row.is_seq() || row.num_children() != n) {
+            RooJSONFactoryWSTool::error("\"" + std::string(key) + "\" in '" + name + "' must be a square matrix");
+         }
+      }
+   };
+
    if (has_cov) {
       int n = p["covariances"].num_children();
+      checkSquare("covariances", n);
       int i = 0;
       covmat.ResizeTo(n, n);
       for (const auto &row : p["covariances"].children()) {
@@ -617,6 +1017,7 @@ bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
    } else {
       std::vector<double> variances;
       variances << p["standard_deviations"];
+      checkSquare("correlations", variances.size());
       covmat.ResizeTo(variances.size(), variances.size());
       int i = 0;
       for (const auto &row : p["correlations"].children()) {
@@ -659,10 +1060,16 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
          << ". Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
          << "Root version that supports custom ParamHistFunc binnings(>=6.38.00)." << std::endl;
       RooJSONFactoryWSTool::warning(ss.str());
-      tool->wsEmplace<ParamHistFunc>(name, varList, tool->requestArgList<RooAbsReal>(p, "parameters"));
+      checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), varList, "the ParamHistFunc '" + name + "'");
+      tool->wsEmplace<ParamHistFunc>(name, varList,
+                                     toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), varList));
       return true;
    }
-   tool->wsEmplace<ParamHistFunc>(name, readBinning(p, varList), tool->requestArgList<RooAbsReal>(p, "parameters"));
+   RooArgList binning = readBinning(p, varList);
+   checkParamHistFuncOrderIsDefined(tool->hs3VersionInput(), binning, "the ParamHistFunc '" + name + "'");
+   // The parameters are given in the order of HS3 (last axis fastest); ParamHistFunc expects TH1 order.
+   tool->wsEmplace<ParamHistFunc>(name, binning,
+                                  toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), binning));
    return true;
 }
 
@@ -683,11 +1090,11 @@ bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
    // Optional fields (defaults follow RooSpline ctor defaults)
    std::string algo = p.has_child("interpolation") ? p["interpolation"].val() : "poly3";
    int order = 0;
-   if (algo == "poly3")
+   if (algo == "poly3") {
       order = 3;
-   else if (algo == "poly5")
+   } else if (algo == "poly5") {
       order = 5;
-   else {
+   } else {
       RooJSONFactoryWSTool::error("unsupported algo '" + algo + "' for RooSpline in '" + name +
                                   "': allowed are 'poly3' and 'poly5'");
    }
@@ -715,9 +1122,176 @@ bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// Importer that is registered with top priority for a deprecated type key. It warns once, and then lets the importers
+// or the factory expression that are registered for the deprecated key do the actual work.
+class DeprecatedKeyImporter : public RooFit::JSONIO::Importer {
+public:
+   DeprecatedKeyImporter(std::string key, std::string replacement)
+      : _key{std::move(key)}, _replacement{std::move(replacement)}
+   {
+   }
+   bool importArg(RooJSONFactoryWSTool *, const JSONNode &) const override
+   {
+      if (!_warned) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the type \"" + _key + "\" is deprecated, please use \"" +
+                                       _replacement + "\" instead.");
+         _warned = true;
+      }
+      return false;
+   }
+
+private:
+   const std::string _key;
+   const std::string _replacement;
+   mutable bool _warned = false;
+};
+
+namespace CrystalBall {
+
+constexpr const char *tailKeys[] = {"alpha_L", "n_L", "alpha_R", "n_R"};
+
+bool hasAny(const JSONNode &p, std::initializer_list<const char *> keys)
+{
+   for (const char *key : keys) {
+      if (p.has_child(key)) {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool hasDoubleSidedKeys(const JSONNode &p)
+{
+   return hasAny(p, {"alpha_L", "n_L", "alpha_R", "n_R", "sigma_L", "sigma_R"});
+}
+
+// Create a RooCrystalBall with two tails. With `symmetricShorthand`, the tails may also be given as "alpha" and "n"
+// for both sides, as in the "crystalball_dist" of HS3 versions before 0.3.
+void importDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p, std::string const &type, bool symmetricShorthand)
+{
+   const std::string name(RooJSONFactoryWSTool::name(p));
+   const std::string context = type + " '" + name + "'";
+
+   const bool asymmetricTails = hasAny(p, {"alpha_L", "n_L", "alpha_R", "n_R"});
+   const bool symmetricTails = hasAny(p, {"alpha", "n"});
+   if (symmetricTails && !symmetricShorthand) {
+      RooJSONFactoryWSTool::error(context + " must not have \"alpha\" or \"n\", the tails are given by \"alpha_L\", " +
+                                  "\"n_L\", \"alpha_R\" and \"n_R\"");
+   }
+   if (symmetricTails && asymmetricTails) {
+      RooJSONFactoryWSTool::error(context +
+                                  " must not combine \"alpha\"/\"n\" with \"alpha_L\"/\"n_L\"/\"alpha_R\"/\"n_R\"");
+   }
+   if (asymmetricTails || !symmetricTails) {
+      for (const char *key : tailKeys) {
+         if (!p.has_child(key)) {
+            RooJSONFactoryWSTool::error(context + " is missing \"" + key +
+                                        "\": \"alpha_L\", \"n_L\", \"alpha_R\" and \"n_R\" are all required");
+         }
+      }
+   } else if (!p.has_child("alpha") || !p.has_child("n")) {
+      RooJSONFactoryWSTool::error(context + " needs both \"alpha\" and \"n\"");
+   }
+
+   const bool asymmetricWidths = hasAny(p, {"sigma_L", "sigma_R"});
+   if (asymmetricWidths && p.has_child("sigma")) {
+      RooJSONFactoryWSTool::error(context + " must not combine \"sigma\" with \"sigma_L\"/\"sigma_R\"");
+   }
+   if (asymmetricWidths && !(p.has_child("sigma_L") && p.has_child("sigma_R"))) {
+      RooJSONFactoryWSTool::error(context + " needs both \"sigma_L\" and \"sigma_R\"");
+   }
+   if (!asymmetricWidths && !p.has_child("sigma")) {
+      RooJSONFactoryWSTool::error(context + " needs either \"sigma\" or both \"sigma_L\" and \"sigma_R\"");
+   }
+
+   RooAbsReal *m = tool->requestArg<RooAbsReal>(p, "m");
+   RooAbsReal *m0 = tool->requestArg<RooAbsReal>(p, "m0");
+   RooAbsReal *sigmaL = tool->requestArg<RooAbsReal>(p, asymmetricWidths ? "sigma_L" : "sigma");
+   RooAbsReal *sigmaR = tool->requestArg<RooAbsReal>(p, asymmetricWidths ? "sigma_R" : "sigma");
+   RooAbsReal *alphaL = tool->requestArg<RooAbsReal>(p, symmetricTails ? "alpha" : "alpha_L");
+   RooAbsReal *nL = tool->requestArg<RooAbsReal>(p, symmetricTails ? "n" : "n_L");
+   RooAbsReal *alphaR = tool->requestArg<RooAbsReal>(p, symmetricTails ? "alpha" : "alpha_R");
+   RooAbsReal *nR = tool->requestArg<RooAbsReal>(p, symmetricTails ? "n" : "n_R");
+   tool->wsEmplace<RooCrystalBall>(name, *m, *m0, *sigmaL, *sigmaR, *alphaL, *nL, *alphaR, *nR);
+}
+
+} // namespace CrystalBall
+
+// "crystalball_dist" is the single-sided Crystal Ball, which is left to the factory expression (RooCBShape). Before
+// HS3 0.3, it was also the double-sided Crystal Ball, recognizable by the "_L"/"_R" fields. Such documents are still
+// read, with a deprecation warning.
+class CrystalBallImporter : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      if (!CrystalBall::hasDoubleSidedKeys(p)) {
+         return false;
+      }
+      if (!_warned) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: \"crystalball_dist\" with the fields \"alpha_L\", \"n_L\", "
+                                       "\"alpha_R\", \"n_R\", \"sigma_L\" or \"sigma_R\" is deprecated, please use "
+                                       "\"crystalball_doublesided_dist\" for the double-sided Crystal Ball.");
+         _warned = true;
+      }
+      CrystalBall::importDoubleSided(tool, p, "crystalball_dist", /*symmetricShorthand=*/true);
+      return true;
+   }
+
+private:
+   mutable bool _warned = false;
+};
+
+bool importCrystalBallDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   CrystalBall::importDoubleSided(tool, p, "crystalball_doublesided_dist", /*symmetricShorthand=*/false);
+   return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+// Write a reference to `arg`: the value if it is a literal constant, and the name otherwise.
+void writeReference(JSONNode &node, RooAbsArg const &arg)
+{
+   auto const *constVar = dynamic_cast<RooConstVar const *>(&arg);
+   std::istringstream stream(arg.GetName());
+   double value = 0.0;
+   if (constVar && (stream >> value) && stream.eof()) {
+      node << constVar->getVal();
+   } else {
+      node << arg.GetName();
+   }
+}
+
+// A RooCrystalBall with one tail is the single-sided "crystalball_dist" (read back as RooCBShape, which follows the
+// same convention for the sign of alpha). With two tails, it is a "crystalball_doublesided_dist", whose tails are
+// always written as "alpha_L"/"n_L"/"alpha_R"/"n_R": there is no shorthand for symmetric tails.
+bool exportCrystalBall(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+{
+   auto const *pdf = static_cast<const RooCrystalBall *>(func);
+   writeReference(elem["m"], pdf->x());
+   writeReference(elem["m0"], pdf->x0());
+   if (!pdf->alphaR() || !pdf->nR()) {
+      elem["type"] << "crystalball_dist";
+      writeReference(elem["sigma"], pdf->sigmaL());
+      writeReference(elem["alpha"], pdf->alphaL());
+      writeReference(elem["n"], pdf->nL());
+      return true;
+   }
+   elem["type"] << key;
+   if (&pdf->sigmaL() == &pdf->sigmaR()) {
+      writeReference(elem["sigma"], pdf->sigmaL());
+   } else {
+      writeReference(elem["sigma_L"], pdf->sigmaL());
+      writeReference(elem["sigma_R"], pdf->sigmaR());
+   }
+   writeReference(elem["alpha_L"], pdf->alphaL());
+   writeReference(elem["n_L"], pdf->nL());
+   writeReference(elem["alpha_R"], *pdf->alphaR());
+   writeReference(elem["n_R"], *pdf->nR());
+   return true;
+}
+
 template <class RooArg_t>
 bool exportAddPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
@@ -748,7 +1322,10 @@ bool exportHist(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &ele
    const RooArg_t *hf = static_cast<const RooArg_t *>(func);
    elem["type"] << key;
    RooDataHist const &dh = hf->dataHist();
-   tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"].set_map());
+   // The axes are named after the observables of the function, which are not necessarily the variables of the
+   // histogram.
+   auto vars = histogramVariablesNamedAfterObservables(dh, hf->getHistObsList(), hf->variables());
+   tool->exportHisto(*vars, dh.numEntries(), dh.weightArray(), elem["data"].set_map());
    return true;
 }
 
@@ -815,6 +1392,123 @@ void cleanExpression(TString &expr)
    replaceIdentifier(expr, "TMath::E()", "EULER");
 }
 
+bool ternariesToIfElse(std::string const &in, std::string &out);
+
+// Rewrite one comma-free part of an expression, see ternariesToIfElse().
+bool ternaryPartToIfElse(std::string const &in, std::string &out)
+{
+   // Find the first '?' that is not enclosed in brackets. A ':' that is not part of "::" can only follow a '?'.
+   std::size_t question = std::string::npos;
+   int depth = 0;
+   for (std::size_t i = 0; i < in.size() && question == std::string::npos; ++i) {
+      const char c = in[i];
+      if (c == '(' || c == '[') {
+         ++depth;
+      } else if (c == ')' || c == ']') {
+         --depth;
+      } else if (c == ':' && i + 1 < in.size() && in[i + 1] == ':') {
+         ++i;
+      } else if (depth == 0 && c == ':') {
+         return false;
+      } else if (depth == 0 && c == '?') {
+         question = i;
+      } else if (depth == 0 && c == ',') {
+         return false;
+      }
+   }
+
+   if (question == std::string::npos) {
+      // No ternary on this level: copy the expression and rewrite the ternaries inside of brackets.
+      out.clear();
+      for (std::size_t i = 0; i < in.size(); ++i) {
+         if (in[i] == ')' || in[i] == ']') {
+            return false;
+         }
+         if (in[i] != '(' && in[i] != '[') {
+            out += in[i];
+            continue;
+         }
+         const std::size_t close = findClosingBracket(in, i);
+         if (close == std::string::npos) {
+            return false;
+         }
+         const std::string inner = in.substr(i + 1, close - i - 1);
+         std::string innerOut;
+         if (!ternariesToIfElse(inner, innerOut)) {
+            return false;
+         }
+         // Parentheses that only group a ternary are redundant around the ifelse() function call.
+         const std::string before = trimmed(in.substr(0, i));
+         const bool isGrouping = in[i] == '(' && (before.empty() || !isIdentifierChar(before.back()));
+         if (isGrouping && innerOut != trimmed(inner) && startsWith(innerOut, "ifelse(") &&
+             findClosingBracket(innerOut, std::string("ifelse").size()) == innerOut.size() - 1) {
+            out += innerOut;
+         } else {
+            out += in[i] + innerOut + in[close];
+         }
+         i = close;
+      }
+      return true;
+   }
+
+   // Find the ':' that belongs to this '?', taking nested ternaries into account.
+   std::size_t colon = std::string::npos;
+   int nested = 0;
+   depth = 0;
+   for (std::size_t i = question + 1; i < in.size() && colon == std::string::npos; ++i) {
+      const char c = in[i];
+      if (c == '(' || c == '[') {
+         ++depth;
+      } else if (c == ')' || c == ']') {
+         --depth;
+      } else if (c == ':' && i + 1 < in.size() && in[i + 1] == ':') {
+         ++i;
+      } else if (depth == 0 && c == '?') {
+         ++nested;
+      } else if (depth == 0 && c == ':') {
+         if (nested == 0) {
+            colon = i;
+         } else {
+            --nested;
+         }
+      }
+   }
+   if (colon == std::string::npos) {
+      return false;
+   }
+
+   std::string condition;
+   std::string ifTrue;
+   std::string ifFalse;
+   if (!ternaryPartToIfElse(stripEnclosingParentheses(in.substr(0, question)), condition) ||
+       !ternaryPartToIfElse(stripEnclosingParentheses(in.substr(question + 1, colon - question - 1)), ifTrue) ||
+       !ternaryPartToIfElse(stripEnclosingParentheses(in.substr(colon + 1)), ifFalse)) {
+      return false;
+   }
+   if (condition.empty() || ifTrue.empty() || ifFalse.empty()) {
+      return false;
+   }
+   out = "ifelse(" + condition + "," + ifTrue + "," + ifFalse + ")";
+   return true;
+}
+
+// Rewrite the C-style ternaries "c ? a : b" in a TFormula expression into the HS3 conditional "ifelse(c,a,b)". Returns
+// false if this is not safely possible, e.g. because of unbalanced brackets.
+bool ternariesToIfElse(std::string const &in, std::string &out)
+{
+   out.clear();
+   bool first = true;
+   for (std::string const &part : splitTopLevelCommas(in)) {
+      std::string partOut;
+      if (!ternaryPartToIfElse(part, partOut)) {
+         return false;
+      }
+      out += (first ? "" : ",") + partOut;
+      first = false;
+   }
+   return true;
+}
+
 template <class RooArg_t>
 bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
@@ -832,6 +1526,16 @@ bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
       const RooAbsArg *par = pdf->getParameter(idx);
       expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
       expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
+   }
+   if (expression.Contains("?")) {
+      std::string rewritten;
+      if (ternariesToIfElse(expression.Data(), rewritten)) {
+         expression = rewritten.c_str();
+      } else {
+         RooJSONFactoryWSTool::warning(std::string("RooFitHS3: could not translate the ternary operators in the "
+                                                   "expression of '") +
+                                       func->GetName() + "' to ifelse(), exporting the expression unchanged.");
+      }
    }
    elem["expression"] << expression.Data();
 
@@ -878,10 +1582,9 @@ bool exportPolynomial(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
 bool exportPoisson(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
    auto *pdf = static_cast<const RooPoisson *>(func);
-   elem["type"] << key;
+   elem["type"] << (pdf->getNoRounding() ? "poisson_continuous_dist" : key);
    elem["x"] << pdf->getX().GetName();
    elem["mean"] << pdf->getMean().GetName();
-   elem["integer"] << !pdf->getNoRounding();
    return true;
 }
 
@@ -921,6 +1624,25 @@ bool exportGaussModel(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
    elem["x"] << pdf->convVar().GetName();
    elem["mean"] << pdf->getMean().GetName();
    elem["sigma"] << pdf->getSigma().GetName();
+   return true;
+}
+
+// A Gaussian constraint whose recorded observable (see RooJSONFactoryWSTool::setConstraintObservable()) is its
+// mean is written with x and mean swapped, so that the observable is x. Other Gaussians use the generic export.
+bool exportGaussianConstraint(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+{
+   auto const *gauss = static_cast<RooGaussian const *>(func);
+   std::string const *observable = tool->constraintObservable(gauss->GetName());
+   if (!observable || *observable != gauss->getMean().GetName() || isLiteralConstVar(gauss->getMean())) {
+      return false;
+   }
+   auto write = [](JSONNode &node, ArrayFieldValue const &value) {
+      std::visit([&node](auto const &v) { node << v; }, value);
+   };
+   elem["type"] << key;
+   elem["x"] << gauss->getMean().GetName();
+   write(elem["mean"], nameOrNumber(gauss->getX()));
+   write(elem["sigma"], nameOrNumber(gauss->getSigma()));
    return true;
 }
 
@@ -1038,8 +1760,8 @@ bool exportExtendPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &el
    if (auto rangeName = pdf->getRangeName()) {
       elem["range"] << rangeName->GetName();
    }
-   elem["pdf"] << pdf->pdf().GetName();
-   elem["norm"] << pdf->getN().GetName();
+   elem["dist"] << pdf->pdf().GetName();
+   elem["rate"] << pdf->getN().GetName();
    return true;
 }
 
@@ -1048,7 +1770,11 @@ bool exportParamHistFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode
    auto *pdf = static_cast<const ParamHistFunc *>(func);
    elem["type"] << key;
    RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
-   RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
+   // One parameter per bin, in the order of HS3 (last axis fastest), not in ParamHistFunc's internal TH1 order.
+   auto &paramsNode = elem["parameters"].set_seq();
+   for (RooAbsReal *param : paramHistFuncParamsInBinOrder(*pdf)) {
+      paramsNode.append_child() << param->GetName();
+   }
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
@@ -1079,7 +1805,8 @@ bool exportSpline(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem,
 
    const int np = sp.GetNp();
    for (int i = 0; i < np; ++i) {
-      double xk = 0.0, yk = 0.0;
+      double xk = 0.0;
+      double yk = 0.0;
       sp.GetKnot(i, xk, yk);
       x0.append_child() << xk;
       y0.append_child() << yk;
@@ -1178,12 +1905,27 @@ void registerExporter(TClass const *cl, std::string key, bool topPriority = true
 STATIC_EXECUTE([]() {
    registerImporter<importWrapperPdf>("density_function_dist");
    registerImporter<importExtendPdf>("rate_extended_dist");
+   RooFit::JSONIO::registerImporter("crystalball_dist", std::make_unique<CrystalBallImporter>());
+   registerImporter<importCrystalBallDoubleSided>("crystalball_doublesided_dist");
+   RooFit::JSONIO::registerImporter("ARGUS_dist", std::make_unique<DeprecatedKeyImporter>("ARGUS_dist", "argus_dist"));
+   RooFit::JSONIO::registerImporter("binsampling",
+                                    std::make_unique<DeprecatedKeyImporter>("binsampling", "binsampling_dist"));
+   RooFit::JSONIO::registerImporter(
+      "mixture_resolution_model", std::make_unique<DeprecatedKeyImporter>("mixture_resolution_model", "mixture_model"));
+   RooFit::JSONIO::registerImporter("delta_resolution_model", std::make_unique<DeprecatedKeyImporter>(
+                                                                 "delta_resolution_model", "truth_model_function"));
+   RooFit::JSONIO::registerImporter("gauss_resolution_model", std::make_unique<DeprecatedKeyImporter>(
+                                                                 "gauss_resolution_model", "gauss_model_function"));
    registerImporter<importProduct>("product", false);
    registerImporter<importProdPdf>("product_dist", false);
+   registerImporter<importArrayDist>("array_dist", false);
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
+   registerImporter<importAddModel>("mixture_model", false);
+   registerImporter<importCombinedDist>("combined_dist", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);
    registerImporter<importBinSamplingPdf>("binsampling_dist", false);
+   registerImporter<importBinSamplingPdf>("binsampling", false);
    registerImporter<importBinWidthFunction<false>>("binvolume", false);
    registerImporter<importBinWidthFunction<true>>("inverse_binvolume", false);
    registerImporter<importPolynomial<RooLegacyExpPoly>>("legacy_exp_poly_dist", false);
@@ -1196,9 +1938,12 @@ STATIC_EXECUTE([]() {
    registerImporter<importHist<RooHistPdf>>("histogram_dist", false);
    registerImporter<importLogNormal>("lognormal_dist", false);
    registerImporter<importMultiVarGaussian>("multivariate_normal_dist", false);
-   registerImporter<importPoisson>("poisson_dist", false);
+   registerImporter<importPoisson<false>>("poisson_dist", false);
+   registerImporter<importPoisson<true>>("poisson_continuous_dist", false);
    registerImporter<importDecay>("decay_dist", false);
+   registerImporter<importTruthModel>("truth_model_function", false);
    registerImporter<importTruthModel>("delta_resolution_model", false);
+   registerImporter<importGaussModel>("gauss_model_function", false);
    registerImporter<importGaussModel>("gauss_resolution_model", false);
    registerImporter<importPolynomial<RooPolynomial>>("polynomial_dist", false);
    registerImporter<importPolynomial<RooPolyVar>>("polynomial", false);
@@ -1213,8 +1958,9 @@ STATIC_EXECUTE([]() {
 
    registerExporter<exportWrapperPdf>(RooWrapperPdf::Class(), "density_function_dist");
    registerExporter<exportAddPdf<RooAddPdf>>(RooAddPdf::Class(), "mixture_dist", false);
-   registerExporter<exportAddPdf<RooAddModel>>(RooAddModel::Class(), "mixture_resolution_model", false);
-   registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling", false);
+   registerExporter<exportAddPdf<RooAddModel>>(RooAddModel::Class(), "mixture_model", false);
+   registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling_dist", false);
+   registerExporter<exportCrystalBall>(RooCrystalBall::Class(), "crystalball_doublesided_dist", false);
    registerExporter<exportBinWidthFunction>(RooBinWidthFunction::Class(), "binvolume", false);
    registerExporter<exportPolynomial<RooLegacyExpPoly>>(RooLegacyExpPoly::Class(), "legacy_exp_poly_dist", false);
    registerExporter<exportExponential>(RooExponential::Class(), "exponential_dist", false);
@@ -1223,11 +1969,12 @@ STATIC_EXECUTE([]() {
    registerExporter<exportHist<RooHistFunc>>(RooHistFunc::Class(), "step", false);
    registerExporter<exportHist<RooHistPdf>>(RooHistPdf::Class(), "histogram_dist", false);
    registerExporter<exportLogNormal>(RooLognormal::Class(), "lognormal_dist", false);
+   registerExporter<exportGaussianConstraint>(RooGaussian::Class(), "gaussian_dist", true);
    registerExporter<exportMultiVarGaussian>(RooMultiVarGaussian::Class(), "multivariate_normal_dist", false);
    registerExporter<exportPoisson>(RooPoisson::Class(), "poisson_dist", false);
    registerExporter<exportDecay>(RooDecay::Class(), "decay_dist", false, /*autoExportDependants=*/false);
-   registerExporter<exportTruthModel>(RooTruthModel::Class(), "delta_resolution_model", false);
-   registerExporter<exportGaussModel>(RooGaussModel::Class(), "gauss_resolution_model", false);
+   registerExporter<exportTruthModel>(RooTruthModel::Class(), "truth_model_function", false);
+   registerExporter<exportGaussModel>(RooGaussModel::Class(), "gauss_model_function", false);
    registerExporter<exportPolynomial<RooPolynomial>>(RooPolynomial::Class(), "polynomial_dist", false);
    registerExporter<exportPolynomial<RooPolyVar>>(RooPolyVar::Class(), "polynomial", false);
    registerExporter<exportRealSum<RooRealSumFunc>>(RooRealSumFunc::Class(), "weighted_sum", false);
@@ -1242,3 +1989,80 @@ STATIC_EXECUTE([]() {
 });
 
 } // namespace
+
+std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable)
+{
+   auto component = arrayComponentOf(pdf, observable);
+   if (!component) {
+      return std::nullopt;
+   }
+   return ArrayComponentInfo{component->type, component->x};
+}
+
+void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsPdf const *> const &components,
+                    std::map<std::string, std::string> const &observableOf)
+{
+   auto error = [&name](std::string const &message) {
+      RooJSONFactoryWSTool::error("cannot write the array distribution '" + name + "': " + message);
+   };
+   if (components.empty()) {
+      error("it has no components");
+   }
+   std::vector<ArrayComponent> comps;
+   std::set<std::string> observables;
+   for (RooAbsPdf const *pdf : components) {
+      auto recorded = observableOf.find(pdf->GetName());
+      auto comp = arrayComponentOf(*pdf, recorded != observableOf.end() ? &recorded->second : nullptr);
+      if (!comp) {
+         error("'" + std::string(pdf->GetName()) +
+               "' cannot be a component, only RooPoisson, RooGaussian and RooLognormal (standard parametrization) "
+               "over a named observable are supported");
+      }
+      if (!comps.empty() && comp->type != comps.front().type) {
+         error("the components '" + std::string(components.front()->GetName()) + "' (" + comps.front().type +
+               ") and '" + pdf->GetName() + "' (" + comp->type + ") have different types");
+      }
+      if (!observables.insert(comp->x).second) {
+         error("two components have the observable '" + comp->x + "'");
+      }
+      comps.push_back(std::move(*comp));
+   }
+
+   elem["type"] << "array_dist";
+   elem["component_type"] << comps.front().type;
+
+   auto write = [](JSONNode &node, ArrayFieldValue const &value) {
+      std::visit([&node](auto const &v) { node << v; }, value);
+   };
+
+   // A field with the same value in every component is written once in "default_parameters".
+   std::set<std::string> defaultKeys;
+   if (comps.size() > 1) {
+      for (std::size_t i = 0; i < comps.front().fields.size(); ++i) {
+         auto const &field = comps.front().fields[i];
+         if (std::all_of(comps.begin(), comps.end(),
+                         [&](ArrayComponent const &comp) { return comp.fields[i].second == field.second; })) {
+            defaultKeys.insert(field.first);
+         }
+      }
+   }
+   if (!defaultKeys.empty()) {
+      JSONNode &defaults = elem["default_parameters"].set_map();
+      for (auto const &field : comps.front().fields) {
+         if (defaultKeys.find(field.first) != defaultKeys.end()) {
+            write(defaults[field.first], field.second);
+         }
+      }
+   }
+
+   JSONNode &seq = elem["components"].set_seq();
+   for (ArrayComponent const &comp : comps) {
+      JSONNode &node = seq.append_child().set_map();
+      node["x"] << comp.x;
+      for (auto const &field : comp.fields) {
+         if (defaultKeys.find(field.first) == defaultKeys.end()) {
+            write(node[field.first], field.second);
+         }
+      }
+   }
+}

@@ -291,10 +291,11 @@ void Measurement::PrintXML(std::string directory, std::string newOutputPrefix)
    // Set the POI
    xml << "    <POI>";
    for (unsigned int i = 0; i < fPOI.size(); ++i) {
-      if (i == 0)
+      if (i == 0) {
          xml << fPOI.at(i);
-      else
+      } else {
          xml << " " << fPOI.at(i);
+      }
    }
    xml << "</POI>  " << std::endl;
 
@@ -302,10 +303,11 @@ void Measurement::PrintXML(std::string directory, std::string newOutputPrefix)
    if (!fConstantParams.empty()) {
       xml << "    <ParamSetting Const=\"True\">";
       for (unsigned int i = 0; i < fConstantParams.size(); ++i) {
-         if (i == 0)
+         if (i == 0) {
             xml << fConstantParams.at(i);
-         else
+         } else {
             xml << " " << fConstantParams.at(i);
+         }
       }
       xml << "</ParamSetting>" << std::endl;
    }

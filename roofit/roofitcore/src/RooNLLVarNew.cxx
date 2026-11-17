@@ -248,7 +248,11 @@ void RooNLLVarNew::fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgS
       throw std::runtime_error("BinnedPdf optimization only works with a 1D pdf.");
    } else {
       auto *var = static_cast<RooRealVar *>(observables.first());
-      std::list<double> *boundaries = pdf.binBoundaries(*var, var->getMin(), var->getMax());
+      std::unique_ptr<std::list<double>> boundaries{pdf.binBoundaries(*var, var->getMin(), var->getMax())};
+      if (!boundaries) {
+         throw std::runtime_error(std::string("BinnedPdf optimization requires the pdf \"") + pdf.GetName() +
+                                  "\" to provide bin boundaries for \"" + var->GetName() + "\".");
+      }
       std::list<double>::iterator biter = boundaries->begin();
       _binw.resize(boundaries->size() - 1);
       double lastBound = (*biter);

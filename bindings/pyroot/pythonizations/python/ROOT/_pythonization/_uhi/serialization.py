@@ -24,10 +24,19 @@ def _axis_to_dict(root_axis: ROOT.TAxis, uhi_axis: PlottableAxisBase) -> dict[st
     """
     Return a dictionary representation of the given ROOT axis.
     """
+    if root_axis.IsVariableBinSize():
+        return {
+            "type": "variable",
+            "edges": [root_axis.GetBinLowEdge(i) for i in range(1, root_axis.GetNbins() + 2)],
+            "underflow": uhi_axis.traits.underflow,
+            "overflow": uhi_axis.traits.overflow,
+            "circular": uhi_axis.traits.circular,
+        }
+
     return {
         "type": "regular",
-        "lower": root_axis.GetBinLowEdge(root_axis.GetFirst()),
-        "upper": root_axis.GetBinUpEdge(root_axis.GetLast()),
+        "lower": root_axis.GetXmin(),
+        "upper": root_axis.GetXmax(),
         "bins": root_axis.GetNbins(),
         "underflow": uhi_axis.traits.underflow,
         "overflow": uhi_axis.traits.overflow,
@@ -53,12 +62,14 @@ def _axis_from_dict(axis_dict: dict[str, Any]) -> list[Any]:
 
 
 def _storage_to_dict(hist: Any) -> dict[str, Any]:
-    from .plotting import _get_sum_of_weights, _get_sum_of_weights_squared, _hasWeights
+    import numpy as np
+
+    from .plotting import _get_profile_bin_array, _hasWeights
 
     """
     Logic:
     - If histogram is a profile (TProfile*) --> Kind="MEAN":
-        - if histogram has Sumw2: type is weighted_mean_storage (if _hasWeights(hist))
+        - if profile has the sum of squares of weights (TProfile::Sumw2): type is weighted_mean_storage
         - else: storage type is mean_storage
     - Else (TH1*/TH2*/TH3*) --> Kind="COUNT":
         - if histogram has Sumw2: type is weighted_storage
@@ -70,20 +81,22 @@ def _storage_to_dict(hist: Any) -> dict[str, Any]:
     }
 
     if hist.kind == "MEAN":
-        storage_dict["variances"] = hist.variances()
+        # The storage holds the variance of y, while variances() returns the variance of the mean
+        sum_of_weights = _get_profile_bin_array(hist, hist.GetBinEntries, flow=True)
+        storage_dict["variances"] = np.nan_to_num(hist.variances(flow=True) * sum_of_weights)
 
-        if _hasWeights(hist):
+        if hist.GetBinSumw2().fN:
             storage_dict["type"] = "weighted_mean"
-            storage_dict["sum_of_weights"] = _get_sum_of_weights(hist)
-            storage_dict["sum_of_weights_squared"] = _get_sum_of_weights_squared(hist)
+            storage_dict["sum_of_weights"] = sum_of_weights
+            storage_dict["sum_of_weights_squared"] = _get_profile_bin_array(hist, hist.GetBinSumw2().At, flow=True)
         else:
             storage_dict["type"] = "mean"
-            storage_dict["counts"] = hist.counts()
+            storage_dict["counts"] = hist.counts(flow=True)
 
     else:  # COUNT
         if _hasWeights(hist):
             storage_dict["type"] = "weighted"
-            storage_dict["variances"] = hist.variances()
+            storage_dict["variances"] = hist.variances(flow=True)
         else:
             if hist.ClassName().endswith("I"):
                 storage_dict["type"] = "int"

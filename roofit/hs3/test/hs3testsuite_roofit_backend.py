@@ -52,11 +52,7 @@ class RooFitBackend:
 
         self._apply_parameter_point(workspace, check["reference_point"])
         with suppress_root_output():
-            nll = pdf.createNLL(
-                data,
-                self.ROOT.RooFit.NumCPU(1),
-                self.ROOT.RooFit.EvalBackend("legacy"),
-            )
+            nll = pdf.createNLL(data)
             reference = float(nll.getVal())
         values = []
         scan_parameter = check["scan_parameter"]

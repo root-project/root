@@ -58,7 +58,8 @@ public:
   ~RooProdPdf() override ;
 
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
+                                const char *rangeName = nullptr) const override;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
   bool selfNormalized() const override { return _selfNorm ; }
 
@@ -112,8 +113,8 @@ public:
     RooArgList _ownedList ;
     std::vector<std::unique_ptr<RooArgSet>> _normList;
     bool _isRearranged ;
-    std::unique_ptr<RooAbsReal> _rearrangedNum{};
-    std::unique_ptr<RooAbsReal> _rearrangedDen{};
+    std::unique_ptr<RooAbsReal> _rearrangedNum;
+    std::unique_ptr<RooAbsReal> _rearrangedDen;
     // Cache management functions
     RooArgList containedArgs(Action) override ;
     void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
@@ -126,7 +127,9 @@ private:
 
   double evaluate() const override ;
 
-  std::unique_ptr<RooAbsReal> makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
+  std::unique_ptr<RooAbsReal> makeCondPdfRatioCorr(RooAbsReal &pdf, const RooArgSet &termNset,
+                                                   const RooArgSet &termImpSet, const char *normRange,
+                                                   const char *refRange) const;
 
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;
 
@@ -172,7 +175,7 @@ private:
 
   CacheElem* getCacheElem(RooArgSet const* nset) const ;
   void rearrangeProduct(CacheElem&) const;
-  std::unique_ptr<RooAbsReal> specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
+  std::unique_ptr<RooAbsReal> specializeIntegral(RooAbsReal &input, const char *targetRangeName) const;
   std::unique_ptr<RooAbsReal> specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   double calculate(const RooProdPdf::CacheElem &cache, bool verbose = false) const;
 
@@ -208,7 +211,8 @@ namespace RooFit::Detail {
 /// normalization set.
 class RooFixedProdPdf : public RooAbsPdf {
 public:
-   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet);
+   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet,
+                   RooProdPdf const *cacheProdPdf = nullptr);
    RooFixedProdPdf(const RooFixedProdPdf &other, const char *name = nullptr);
 
    inline TObject *clone(const char *newname) const override { return new RooFixedProdPdf(*this, newname); }

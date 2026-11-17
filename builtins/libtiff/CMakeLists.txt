@@ -45,7 +45,9 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBTIFF
     PREFIX ${ROOT_LIBTIFF_PREFIX}
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
     URL ${lcgpackages}/tiff-${ROOT_LIBTIFF_VERSION}.tar.gz
+        https://download.osgeo.org/libtiff/tiff-${ROOT_LIBTIFF_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBTIFF_HASH}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5

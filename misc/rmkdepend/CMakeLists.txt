@@ -15,3 +15,15 @@ ROOT_EXECUTABLE(rmkdepend
   parse.c
   pr.c
 )
+
+target_sources(rmkdepend
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS ./
+  FILES
+    def.h
+    ifparser.h
+    imakemdep.h
+)
+

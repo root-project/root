@@ -10,13 +10,16 @@
 
 /** \class RooHistConstraint
  * \ingroup Roofit
+ *
+ * \deprecated RooHistConstraint will be removed in ROOT 6.46, because its functionality is too close to the
+ * HistFactory classes. Please constrain the parameters of the HistFactory class ParamHistFunc with one RooPoisson
+ * per bin instead, as shown in the rf709_BarlowBeeston tutorial.
+ *
  * The RooHistConstraint implements constraint terms for a binned PDF with statistical uncertainties.
  * Following the Barlow-Beeston method, it adds Poisson constraints for each bin that
  * constrain the statistical uncertainty of the template histogram.
  *
  * It can therefore be used to estimate the Monte Carlo uncertainty of a fit.
- *
- * Check also the tutorial rf709_BarlowBeeston.C
  *
  */
 
@@ -27,6 +30,15 @@
 
 #include <Math/PdfFuncMathCore.h>
 
+// RooHistConstraint is deprecated together with RooParamHistFunc, which it is
+// built on, so its implementation necessarily refers to the deprecated class.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new RooHistConstraint.
@@ -219,3 +231,9 @@ double RooHistConstraint::getLogVal(const RooArgSet* /*set*/) const
 
    return sum ;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif

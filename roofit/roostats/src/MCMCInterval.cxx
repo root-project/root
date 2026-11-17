@@ -589,8 +589,9 @@ void MCMCInterval::DetermineTailFractionInterval()
          // left tail size
          ll = x;
          leftTailSum += w;
-      } else
+      } else {
          break;
+      }
    }
 
    // find upper limit
@@ -604,8 +605,9 @@ void MCMCInterval::DetermineTailFractionInterval()
          // left tail size
          ul = x;
          rightTailSum += w;
-      } else
+      } else {
          break;
+      }
    }
 
    fTFLower = ll;
@@ -797,8 +799,9 @@ void MCMCInterval::DetermineBySparseHist()
          if (content > fHistCutoff) {
             fHistCutoff = content;
             break;
-         } else // content == fHistCutoff
+         } else { // content == fHistCutoff
             sum -= content;
+         }
          if (i == numBins - 1) {
             // still haven't set fHistCutoff correctly yet, and we have no bins
             // left, so set fHistCutoff to something higher than the tallest bin
@@ -868,8 +871,9 @@ void MCMCInterval::DetermineByDataHist()
          if (content > fHistCutoff) {
             fHistCutoff = content;
             break;
-         } else // content == fHistCutoff
+         } else { // content == fHistCutoff
             sum -= content;
+         }
          if (i == numBins - 1) {
             // still haven't set fHistCutoff correctly yet, and we have no bins
             // left, so set fHistCutoff to something higher than the tallest bin

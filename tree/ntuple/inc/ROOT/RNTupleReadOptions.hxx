@@ -25,6 +25,8 @@ class RNTupleReadOptionsManip final {
 public:
    static unsigned int GetClusterBunchSize(const RNTupleReadOptions &options);
    static void SetClusterBunchSize(RNTupleReadOptions &options, unsigned int val);
+   static unsigned int GetClusterGroupBudget(const RNTupleReadOptions &options);
+   static void SetClusterGroupBudget(RNTupleReadOptions &options, unsigned int val);
    static std::uint64_t GetMaxEnvelopeSize(const RNTupleReadOptions &options);
    static void SetMaxEnvelopeSize(RNTupleReadOptions &options, std::uint64_t val);
 };
@@ -114,6 +116,10 @@ private:
    /// The number of cluster to be prefetched in a single batch; this option is transitional and will be replaced
    /// by an option that allows to control the amount of memory that the prefetcher uses.
    unsigned int fClusterBunchSize = 1;
+   /// The threshold for the number of concurrently loaded cluster group details as of which the cluster details of the
+   /// least recently used cluster groups are evicted. The budget can be overspent due to pinned cluster groups.
+   /// Currently a private option that cannot be changed by the user.
+   unsigned int fClusterGroupBudget = 2;
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    EMetadataMode fMetadataMode = EMetadataMode::kDefault;
    bool fEnableMetrics = false;
@@ -145,6 +151,16 @@ inline unsigned int RNTupleReadOptionsManip::GetClusterBunchSize(const RNTupleRe
 inline void RNTupleReadOptionsManip::SetClusterBunchSize(RNTupleReadOptions &options, unsigned int val)
 {
    options.fClusterBunchSize = val;
+}
+
+inline unsigned int RNTupleReadOptionsManip::GetClusterGroupBudget(const RNTupleReadOptions &options)
+{
+   return options.fClusterGroupBudget;
+}
+
+inline void RNTupleReadOptionsManip::SetClusterGroupBudget(RNTupleReadOptions &options, unsigned int val)
+{
+   options.fClusterGroupBudget = val;
 }
 
 inline std::uint64_t RNTupleReadOptionsManip::GetMaxEnvelopeSize(const RNTupleReadOptions &options)

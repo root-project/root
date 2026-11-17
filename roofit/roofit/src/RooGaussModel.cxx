@@ -513,17 +513,17 @@ double RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::complex<double> RooGaussModel::evalCerfInt(double sign, double _x, double tau, double umin, double umax, double c) const
+std::complex<double> RooGaussModel::evalCerfInt(double sign, double wt, double tau, double umin, double umax, double c) const
 {
   std::complex<double> diff(2., 0.);
   if (!_asympInt) {
-    diff = evalCerf(_x,umin,c);
-    diff -= evalCerf(_x,umax,c);
+    diff = evalCerf(wt,umin,c);
+    diff -= evalCerf(wt,umax,c);
     diff += RooMath::erf(umin) - RooMath::erf(umax);
     diff *= sign;
   }
-  diff *= std::complex<double>(1., _x);
-  diff *= tau / (1.+_x*_x);
+  diff *= std::complex<double>(1., wt);
+  diff *= tau / (1.+wt*wt);
   return diff;
 }
 

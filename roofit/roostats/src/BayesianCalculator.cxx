@@ -197,10 +197,11 @@ public:
                                               << " in interval [ " <<  fXmin[i] << " , " << fXmax[i] << " ] " << std::endl;
       }
 
-      if (fIntegrator)
+      if (fIntegrator) {
          fIntegrator->Options().Print(ooccoutD(nullptr,NumericIntegration));
-      else
+      } else {
          fIntegratorOneDim->Options().Print(ooccoutD(nullptr,NumericIntegration));
+      }
 
       // store max POI value because it will be changed when evaluating the function
       fMaxPOI = fXmax[0];
@@ -342,11 +343,11 @@ private:
       return normcdf - fOffset;  // apply an offset (for finding the roots)
    }
 
-   mutable RooFunctor fFunctor;                   // functor binding nll
-   mutable std::shared_ptr<RooFunctor> fPriorFunc;  // functor binding the prior
+   RooFunctor fFunctor;                          // functor binding nll
+   std::shared_ptr<RooFunctor> fPriorFunc;       // functor binding the prior
    LikelihoodFunction fLikelihood;               // likelihood function
-   mutable std::unique_ptr<ROOT::Math::IntegratorMultiDim> fIntegrator; // multi-dim integrator (for >=2 dims)
-   mutable std::unique_ptr<ROOT::Math::Integrator> fIntegratorOneDim;   // 1D integrator (for POI-only case)
+   std::unique_ptr<ROOT::Math::IntegratorMultiDim> fIntegrator; // multi-dim integrator (for >=2 dims)
+   std::unique_ptr<ROOT::Math::Integrator> fIntegratorOneDim;   // 1D integrator (for POI-only case)
    mutable std::vector<double> fXmin;    // min value of parameters (poi+nuis) -
    mutable std::vector<double> fXmax;   // max value of parameters (poi+nuis) - max poi changes so it is mutable
    double fNorm = 1.0;                  // normalization value (computed in constructor)
@@ -462,8 +463,8 @@ private:
       return f / fNorm;
    }
 
-   mutable RooFunctor fFunctor;
-   mutable std::shared_ptr<RooFunctor> fPriorFunc;  // functor binding the prior
+   RooFunctor fFunctor;
+   std::shared_ptr<RooFunctor> fPriorFunc; // functor binding the prior
    LikelihoodFunction fLikelihood;
    RooRealVar * fPoi;
    std::unique_ptr<ROOT::Math::Integrator>  fIntegratorOneDim;
@@ -630,8 +631,8 @@ private:
       return val;
    }
 
-   mutable RooFunctor fFunctor;
-   mutable std::shared_ptr<RooFunctor> fPriorFunc;  // functor binding the prior
+   RooFunctor fFunctor;
+   std::shared_ptr<RooFunctor> fPriorFunc; // functor binding the prior
    LikelihoodFunction fLikelihood;
    mutable RooAbsPdf * fPdf;
    RooRealVar * fPoi;
@@ -1400,9 +1401,9 @@ void BayesianCalculator::ComputeShortestInterval( ) const {
                      << " differs more than 10% from desired CL value - must increase nbins " << n
                      << " to an higher value " << std::endl;
       }
-   }
-   else
+   } else {
       coutE(Eval) << "BayesianCalculator::ComputeShortestInterval " << n << " bins are not sufficient " << std::endl;
+   }
 
    fValidInterval = true;
 

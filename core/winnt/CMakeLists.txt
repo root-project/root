@@ -14,10 +14,21 @@ endif()
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TWinNTSystem.h)
 
-target_sources(Core PRIVATE
+target_sources(Core
+PRIVATE
   src/TWin32SplashThread.cxx
   src/TWinNTSystem.cxx
   src/Win32Splash.cxx
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    inc/TWin32SplashThread.h
+    inc/TWinNTSystem.h
+    inc/Win32Constants.h
+    inc/Windows4Root.h
+    inc/LinkDef.h
 )
 
 target_link_libraries(Core PRIVATE

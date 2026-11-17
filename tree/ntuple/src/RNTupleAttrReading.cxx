@@ -14,10 +14,9 @@
 #include <cstddef>
 #include <utility>
 
-using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+using namespace ROOT::Internal::RNTupleAttributes;
 
-ROOT::Experimental::RNTupleAttrSetReader::RNTupleAttrSetReader(std::unique_ptr<RNTupleReader> reader,
-                                                               std::uint16_t vSchemaMajor)
+ROOT::RNTupleAttrSetReader::RNTupleAttrSetReader(std::unique_ptr<RNTupleReader> reader, std::uint16_t vSchemaMajor)
    : fReader(std::move(reader))
 {
    // Changes in major version imply forward incompatibility
@@ -68,13 +67,12 @@ ROOT::Experimental::RNTupleAttrSetReader::RNTupleAttrSetReader(std::unique_ptr<R
    R__LOG_INFO(ROOT::Internal::NTupleLog()) << "Loaded " << fEntryRanges.size() << " attribute entries.";
 }
 
-const ROOT::RNTupleDescriptor &ROOT::Experimental::RNTupleAttrSetReader::GetDescriptor() const
+const ROOT::RNTupleDescriptor &ROOT::RNTupleAttrSetReader::GetDescriptor() const
 {
    return fReader->GetDescriptor();
 }
 
-ROOT::Experimental::RNTupleAttrRange
-ROOT::Experimental::RNTupleAttrSetReader::LoadEntry(ROOT::NTupleSize_t index, REntry &entry)
+ROOT::RNTupleAttrRange ROOT::RNTupleAttrSetReader::LoadEntry(ROOT::NTupleSize_t index, REntry &entry)
 {
    // TODO(gparolini): find a way to avoid this const_cast
    auto &metaModel = const_cast<ROOT::RNTupleModel &>(fReader->GetModel());
@@ -102,19 +100,19 @@ ROOT::Experimental::RNTupleAttrSetReader::LoadEntry(ROOT::NTupleSize_t index, RE
    return RNTupleAttrRange::FromStartLength(*pStart, *pLen);
 }
 
-ROOT::Experimental::RNTupleAttrRange ROOT::Experimental::RNTupleAttrSetReader::LoadEntry(ROOT::NTupleSize_t index)
+ROOT::RNTupleAttrRange ROOT::RNTupleAttrSetReader::LoadEntry(ROOT::NTupleSize_t index)
 {
    auto &entry = fUserModel->GetDefaultEntry();
    return LoadEntry(index, entry);
 }
 
-std::unique_ptr<ROOT::REntry> ROOT::Experimental::RNTupleAttrSetReader::CreateEntry()
+std::unique_ptr<ROOT::REntry> ROOT::RNTupleAttrSetReader::CreateEntry()
 {
    return fUserModel->CreateEntry();
 }
 
-ROOT::Experimental::RNTupleAttrEntryIterable
-ROOT::Experimental::RNTupleAttrSetReader::GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
+ROOT::RNTupleAttrEntryIterable
+ROOT::RNTupleAttrSetReader::GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
 {
    RNTupleAttrRange range;
    if (endEntry <= startEntry) {
@@ -130,8 +128,8 @@ ROOT::Experimental::RNTupleAttrSetReader::GetAttributesContainingRange(NTupleSiz
    return RNTupleAttrEntryIterable{*this, filter};
 }
 
-ROOT::Experimental::RNTupleAttrEntryIterable
-ROOT::Experimental::RNTupleAttrSetReader::GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
+ROOT::RNTupleAttrEntryIterable
+ROOT::RNTupleAttrSetReader::GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
 {
    RNTupleAttrRange range;
    if (endEntry <= startEntry) {
@@ -147,15 +145,14 @@ ROOT::Experimental::RNTupleAttrSetReader::GetAttributesInRange(NTupleSize_t star
    return RNTupleAttrEntryIterable{*this, filter};
 }
 
-ROOT::Experimental::RNTupleAttrEntryIterable
-ROOT::Experimental::RNTupleAttrSetReader::GetAttributes(NTupleSize_t entryIndex)
+ROOT::RNTupleAttrEntryIterable ROOT::RNTupleAttrSetReader::GetAttributes(NTupleSize_t entryIndex)
 {
    RNTupleAttrEntryIterable::RFilter filter{RNTupleAttrRange::FromStartEnd(entryIndex, entryIndex + 1),
                                             /*fIsContained=*/false};
    return RNTupleAttrEntryIterable{*this, filter};
 }
 
-ROOT::Experimental::RNTupleAttrEntryIterable ROOT::Experimental::RNTupleAttrSetReader::GetAttributes()
+ROOT::RNTupleAttrEntryIterable ROOT::RNTupleAttrSetReader::GetAttributes()
 {
    return RNTupleAttrEntryIterable{*this};
 }
@@ -163,7 +160,7 @@ ROOT::Experimental::RNTupleAttrEntryIterable ROOT::Experimental::RNTupleAttrSetR
 //
 //  RNTupleAttrEntryIterable
 //
-bool ROOT::Experimental::RNTupleAttrEntryIterable::RIterator::FullyContained(RNTupleAttrRange range) const
+bool ROOT::RNTupleAttrEntryIterable::RIterator::FullyContained(RNTupleAttrRange range) const
 {
    assert(fFilter);
    if (fFilter->fIsContained) {
@@ -173,8 +170,7 @@ bool ROOT::Experimental::RNTupleAttrEntryIterable::RIterator::FullyContained(RNT
    }
 }
 
-ROOT::Experimental::RNTupleAttrEntryIterable::RIterator::Iter_t
-ROOT::Experimental::RNTupleAttrEntryIterable::RIterator::SkipFiltered() const
+ROOT::RNTupleAttrEntryIterable::RIterator::Iter_t ROOT::RNTupleAttrEntryIterable::RIterator::SkipFiltered() const
 {
    // If we have no filter, every entry is valid.
    if (!fFilter)

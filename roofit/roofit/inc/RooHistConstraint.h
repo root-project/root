@@ -14,7 +14,10 @@
 #include <RooAbsPdf.h>
 #include <RooListProxy.h>
 
-class RooHistConstraint : public RooAbsPdf {
+class R__DEPRECATED(6, 46,
+                    "Its functionality is too close to the HistFactory classes. Please constrain the parameters of "
+                    "the HistFactory class ParamHistFunc with one RooPoisson per bin instead, as shown in the "
+                    "rf709_BarlowBeeston tutorial.") RooHistConstraint : public RooAbsPdf {
 public:
   RooHistConstraint() {} ;
   RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, int threshold=1000000);
@@ -32,7 +35,7 @@ protected:
 
   RooListProxy _gamma ;
   RooListProxy _nominal ;
-  bool _relParam ;
+  bool _relParam = false;
 
   double evaluate() const override ;
 

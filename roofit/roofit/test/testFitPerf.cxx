@@ -68,10 +68,11 @@ void printResult(int iret)
 {
    std::cout << "\n************************************************************\n";
    std::cout << "Test\t\t\t\t";
-   if (iret == 0)
+   if (iret == 0) {
       std::cout << "OK";
-   else
+   } else {
       std::cout << "FAILED";
+   }
    std::cout << "\n************************************************************\n";
 }
 
@@ -80,7 +81,7 @@ ROOT::Fit::UnBinData *FillUnBinData(TTree *tree, bool copyData = true, unsigned 
 {
 
    // fill the unbin data set from a TTree
-   ROOT::Fit::UnBinData *d = 0;
+   ROOT::Fit::UnBinData *d = nullptr;
    // for the large tree
    if (std::string(tree->GetName()) == "t2") {
       d = new ROOT::Fit::UnBinData();
@@ -146,11 +147,11 @@ ROOT::Fit::UnBinData *FillUnBinData(TTree *tree, bool copyData = true, unsigned 
 
       // use TTREE::Draw
       if (dim == 2) {
-         tree->Draw("x:y", 0, "goff"); // goff is used to turn off the graphics
+         tree->Draw("x:y", nullptr, "goff"); // goff is used to turn off the graphics
          double *x = tree->GetV1();
          double *y = tree->GetV2();
 
-         if (x == 0 || y == 0) {
+         if (x == nullptr || y == nullptr) {
             USE_BRANCH = true;
             return FillUnBinData(tree, true, dim);
          }
@@ -167,15 +168,16 @@ ROOT::Fit::UnBinData *FillUnBinData(TTree *tree, bool copyData = true, unsigned 
                vx[1] = y[i];
                d->Add(vx);
             }
-         } else // use data pointers directly
+         } else { // use data pointers directly
             d = new ROOT::Fit::UnBinData(n, x, y);
+         }
 
       } else if (dim == 1) {
 
-         tree->Draw("x", 0, "goff"); // goff is used to turn off the graphics
+         tree->Draw("x", nullptr, "goff"); // goff is used to turn off the graphics
          double *x = tree->GetV1();
 
-         if (x == 0) {
+         if (x == nullptr) {
             USE_BRANCH = true;
             return FillUnBinData(tree, true, dim);
          }
@@ -186,14 +188,15 @@ ROOT::Fit::UnBinData *FillUnBinData(TTree *tree, bool copyData = true, unsigned 
             for (int unsigned i = 0; i < n; ++i) {
                d->Add(x[i]);
             }
-         } else
+         } else {
             d = new ROOT::Fit::UnBinData(n, x);
+         }
       }
       return d;
    }
 
    // std::copy(x,x+n, d.begin() );
-   return 0;
+   return nullptr;
 }
 
 // print the data
@@ -270,10 +273,11 @@ int DoUnBinFit(T *tree, Func &func, bool debug = false, bool copyData = false)
    // FillUnBinData(d,tree);
 
    // std::cout << "data size type and size  is " << typeid(*d).name() <<  "   " << d->Size() << std::endl;
-   if (copyData)
-      std::cout << "\tcopy data in FitData\n";
-   else
-      std::cout << "\tre-use original data \n";
+    if (copyData) {
+       std::cout << "\tcopy data in FitData\n";
+    } else {
+       std::cout << "\tre-use original data \n";
+    }
 
    // printData(d);
 
@@ -425,7 +429,7 @@ int FitUsingTTreeFit(TTree *tree, TF1 *func, const std::string &vars = "x")
    std::cout << "\tFit using TTree::UnbinnedFit\n";
    std::cout << "\tMinimizer is " << MinType::name() << std::endl;
 
-   std::string sel = "";
+   std::string sel;
 
    int iret = 0;
    TVirtualFitter::SetDefaultFitter(MinType::name().c_str());
@@ -489,7 +493,9 @@ int FitUsingRooFit(TH1 *hist, TF1 *func)
       func->SetParameters(iniPar);
       std::string fname = func->GetName();
       if (fname == "gaussian") {
-         double val, pmin, pmax;
+         double val;
+         double pmin;
+         double pmax;
          val = func->GetParameter(1); // func->GetParLimits(1,-100,100);
          mean = std::make_unique<RooRealVar>("mean", "Mean of Gaussian", val);
          val = func->GetParameter(2);
@@ -556,7 +562,7 @@ int FitUsingRooFit(TTree *tree, TF1 *func)
 #endif
 
       std::unique_ptr<RooFitResult> result{
-         pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(1), RooFit::PrintLevel(level), RooFit::Save(save))};
+         pdf.fitTo(data, RooFit::Minos(false), RooFit::Hesse(true), RooFit::PrintLevel(level), RooFit::Save(save))};
 
 #ifdef DEBUG
       mean.Print();
@@ -637,8 +643,8 @@ int FitUsingRooFit2(TTree *tree)
       bool save = false;
 #endif
 
-      std::unique_ptr<RooFitResult> result{
-         pdf[N - 1]->fitTo(data, RooFit::Minos(0), RooFit::Hesse(1), RooFit::PrintLevel(level), RooFit::Save(save))};
+      std::unique_ptr<RooFitResult> result{pdf[N - 1]->fitTo(data, RooFit::Minos(false), RooFit::Hesse(true),
+                                                             RooFit::PrintLevel(level), RooFit::Save(save))};
 
       if (save && result == nullptr) {
          std::cout << "Fit failed " << std::endl;
@@ -855,7 +861,8 @@ int testTreeFit()
    std::cout << "************************************************************\n";
 
    TTree t1("t1", "a simple Tree with simple variables");
-   double x, y;
+   double x;
+   double y;
    Int_t ev;
    t1.Branch("x", &x, "x/D");
    t1.Branch("y", &y, "y/D");
@@ -1035,10 +1042,11 @@ int testFitPerf()
    iret |= testLargeTreeRooFit(250);
    iret |= testLargeTreeFit(500);
 
-   if (iret != 0)
+   if (iret != 0) {
       std::cerr << "testFitPerf :\t FAILED " << std::endl;
-   else
+   } else {
       std::cerr << "testFitPerf :\t OK " << std::endl;
+   }
    return iret;
 }
 

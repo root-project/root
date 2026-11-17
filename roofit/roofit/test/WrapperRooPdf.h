@@ -133,10 +133,11 @@ private:
          var->setVal(*x++);
       }
 
-      if (fNorm)
+      if (fNorm) {
          return fPdf->getVal(fX.get());
-      else
+      } else {
          return fPdf->getVal(); // get unnormalized value
+      }
    }
 
    void DoSetParameters(const double *p) const
@@ -150,8 +151,8 @@ private:
 
    bool fNorm;
    mutable RooAbsPdf *fPdf;
-   mutable std::unique_ptr<RooArgSet> fX;
-   mutable std::unique_ptr<RooArgSet> fParams;
+   std::unique_ptr<RooArgSet> fX;
+   std::unique_ptr<RooArgSet> fParams;
    mutable std::vector<double> fParamValues;
 };
 

@@ -68,7 +68,7 @@ RooBinWidthFunction::RooBinWidthFunction(const char *name, const char *title, co
    // because the width of the current bin depends on the values of the
    // observables:
    for (RooAbsArg * server : histFunc.servers()) {
-      addServer(*server, /*valueServer=*/true, /*shapeServer=*/false);
+      addServer(*server, /*valueProp=*/true, /*shapeProp=*/false);
    }
    // The reason why we can't simply use the histFunc as an "indirect proxy" is
    // the way HistFactory is implemented. The same RooBinWidthFunction is used

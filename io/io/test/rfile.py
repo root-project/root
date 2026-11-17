@@ -8,8 +8,11 @@ import ROOT
 def platform_supports_assertRaises():
     # TODO: re-enable it on Windows once the exception handling is fixed
     # TODO: remove mac 15 exception once we stop supporting it
-    return platform.system() != "Windows" and (platform.system() != "Darwin" or not platform.mac_ver()[0].startswith('15'))
-    
+    return platform.system() != "Windows" and (
+        platform.system() != "Darwin" or not platform.mac_ver()[0].startswith("15")
+    )
+
+
 class RFileTests(unittest.TestCase):
     def test_open_for_reading(self):
         """A RFile can read a ROOT file created by TFile"""
@@ -81,7 +84,6 @@ class RFileTests(unittest.TestCase):
         finally:
             os.remove(fileName)
 
-
     def test_listkeys(self):
         """A RFile can query the keys of its objects and directories"""
 
@@ -108,17 +110,25 @@ class RFileTests(unittest.TestCase):
                     ["foo/hist", "foo/bar/hist", "foo/bar/hist2", "foo/hist2"],
                 )
 
-                self.assertEqual([key.GetPath() for key in rfile.ListKeys("foo/bar")], ["foo/bar/hist", "foo/bar/hist2"])
+                self.assertEqual(
+                    [key.GetPath() for key in rfile.ListKeys("foo/bar")], ["foo/bar/hist", "foo/bar/hist2"]
+                )
 
                 self.assertEqual(
                     [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listObjects=False)], ["foo", "foo/bar"]
                 )
                 self.assertEqual(
-                    [key.GetPath() for key in rfile.ListKeys("", listDirs=True, listObjects=False, listRecursive=False)],
+                    [
+                        key.GetPath()
+                        for key in rfile.ListKeys("", listDirs=True, listObjects=False, listRecursive=False)
+                    ],
                     ["foo"],
                 )
                 self.assertEqual(
-                    [key.GetPath() for key in rfile.ListKeys("foo", listDirs=True, listObjects=False, listRecursive=False)],
+                    [
+                        key.GetPath()
+                        for key in rfile.ListKeys("foo", listDirs=True, listObjects=False, listRecursive=False)
+                    ],
                     ["foo/bar"],
                 )
                 self.assertEqual(
@@ -157,7 +167,7 @@ class RFileTests(unittest.TestCase):
 
         fileName = "test_rfile_gettree_py.root"
         try:
-            with ROOT.TFile.Open(fileName, "RECREATE") as file:
+            with ROOT.TFile.Open(fileName, "RECREATE") as _file:
                 tree = ROOT.TTree("tree", "tree")
                 x = array("i", [0])
                 tree.Branch("myColumn", x, "myColumn/I")
@@ -172,6 +182,32 @@ class RFileTests(unittest.TestCase):
                 self.assertEqual(tree.GetEntries(), 10)
                 xs = [entry.myColumn for entry in tree]
                 self.assertEqual(xs, [x for x in range(10)])
+        finally:
+            os.remove(fileName)
+
+    def test_putTNamed(self):
+        named1 = ROOT.TNamed("named1", "title 1")
+        named2 = ROOT.TNamed("named2", "title 2")
+
+        fileName = "test_rfile_tnamed_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as file:
+                file.Put(named1)
+                # Put named2 under a dir
+                file.Put(named2, "my")
+                # If first argument is a TNamed, second argument must be a string (or None)
+                with self.assertRaises(TypeError):
+                    file.Put(named2, [2, 3])
+
+            with ROOT.RFile.Open(fileName) as file:
+                named1 = file.Get("named1")
+                named2 = file.Get("my/named2")
+                self.assertEqual(named1.GetTitle(), "title 1")
+                self.assertEqual(named2.GetTitle(), "title 2")
+                key1 = file.GetKeyInfo("named1")
+                key2 = file.GetKeyInfo("my/named2")
+                self.assertEqual(key1.GetTitle(), "title 1")
+                self.assertEqual(key2.GetTitle(), "title 2")
         finally:
             os.remove(fileName)
 
@@ -210,8 +246,46 @@ class RFileTests(unittest.TestCase):
                 self.assertTrue(isinstance(hist, ROOT.TH1F))
 
         finally:
-            # os.remove(fileName)
-            pass
+            os.remove(fileName)
+
+    def test_getitem(self):
+        """Objects may be retrieved from RFile via the [] operator. KeyError is thrown if the object isn't there."""
+
+        fileName = "test_rfile_getitem_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist)
+                # There is no setitem support.
+                if platform_supports_assertRaises():
+                    with self.assertRaisesRegex(TypeError, "does not support item assignment"):
+                        rfile["hist2"] = hist
+
+            with ROOT.RFile.Open(fileName) as rfile:
+                hist = rfile["hist"]
+                self.assertNotEqual(hist, None)
+                if platform_supports_assertRaises():
+                    with self.assertRaises(KeyError):
+                        _hist2 = rfile["hist2"]
+
+        finally:
+            os.remove(fileName)
+
+    def test_contains(self):
+        """Can query presence of objects via `'key' in rfile`"""
+
+        fileName = "test_rfile_contains_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1D("hist", "", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                rfile.Put("hist", hist)
+                self.assertTrue("hist" in rfile)
+                self.assertFalse("hist2" in rfile)
+
+        finally:
+            os.remove(fileName)
 
 
 if __name__ == "__main__":

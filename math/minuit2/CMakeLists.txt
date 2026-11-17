@@ -12,97 +12,101 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   option(minuit2_omp "Enable support for OpenMP in Minuit2")
 endif(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
 
+set(MINUIT2_HEADERS
+  Minuit2/AnalyticalGradientCalculator.h
+  Minuit2/BFGSErrorUpdator.h
+  Minuit2/CombinedMinimizer.h
+  Minuit2/CombinedMinimumBuilder.h
+  Minuit2/ContoursError.h
+  Minuit2/DavidonErrorUpdator.h
+  Minuit2/ExternalInternalGradientCalculator.h
+  Minuit2/FCNAdapter.h
+  Minuit2/FCNBase.h
+  Minuit2/FCNGradientBase.h
+  Minuit2/FumiliBuilder.h
+  Minuit2/FumiliChi2FCN.h
+  Minuit2/FumiliErrorUpdator.h
+  Minuit2/FumiliFCNAdapter.h
+  Minuit2/FumiliFCNBase.h
+  Minuit2/FumiliGradientCalculator.h
+  Minuit2/FumiliMaximumLikelihoodFCN.h
+  Minuit2/FumiliMinimizer.h
+  Minuit2/FumiliStandardChi2FCN.h
+  Minuit2/FumiliStandardMaximumLikelihoodFCN.h
+  Minuit2/FunctionGradient.h
+  Minuit2/FunctionMinimum.h
+  Minuit2/GradientCalculator.h
+  Minuit2/HessianGradientCalculator.h
+  Minuit2/InitialGradientCalculator.h
+  Minuit2/MinimumBuilder.h
+  Minuit2/MinimumError.h
+  Minuit2/MinimumErrorUpdator.h
+  Minuit2/MinimumParameters.h
+  Minuit2/MinimumSeed.h
+  Minuit2/MinimumSeedGenerator.h
+  Minuit2/MinimumState.h
+  Minuit2/MinosError.h
+  Minuit2/Minuit2Minimizer.h
+  Minuit2/MinuitParameter.h
+  Minuit2/MnApplication.h
+  Minuit2/MnConfig.h
+  Minuit2/MnContours.h
+  Minuit2/MnCovarianceSqueeze.h
+  Minuit2/MnCross.h
+  Minuit2/MnEigen.h
+  Minuit2/MnFcn.h
+  Minuit2/MnFumiliMinimize.h
+  Minuit2/MnFunctionCross.h
+  Minuit2/MnGlobalCorrelationCoeff.h
+  Minuit2/MnHesse.h
+  Minuit2/MnLineSearch.h
+  Minuit2/MnMachinePrecision.h
+  Minuit2/MnMatrix.h
+  Minuit2/MnMatrixfwd.h
+  Minuit2/MnMigrad.h
+  Minuit2/MnMinimize.h
+  Minuit2/MnMinos.h
+  Minuit2/MnParabola.h
+  Minuit2/MnParabolaFactory.h
+  Minuit2/MnParameterScan.h
+  Minuit2/MnParameterTransformation.h
+  Minuit2/MnPlot.h
+  Minuit2/MnPoint.h
+  Minuit2/MnPosDef.h
+  Minuit2/MnPrint.h
+  Minuit2/MnScan.h
+  Minuit2/MnSeedGenerator.h
+  Minuit2/MnSimplex.h
+  Minuit2/MnStrategy.h
+  Minuit2/MnTraceObject.h
+  Minuit2/MnUserCovariance.h
+  Minuit2/MnUserFcn.h
+  Minuit2/MnUserParameterState.h
+  Minuit2/MnUserParameters.h
+  Minuit2/MnUserTransformation.h
+  Minuit2/ModularFunctionMinimizer.h
+  Minuit2/NegativeG2LineSearch.h
+  Minuit2/Numerical2PGradientCalculator.h
+  Minuit2/NumericalDerivator.h
+  Minuit2/ParametricFunction.h
+  Minuit2/ScanBuilder.h
+  Minuit2/ScanMinimizer.h
+  Minuit2/SimplexBuilder.h
+  Minuit2/SimplexMinimizer.h
+  Minuit2/SimplexParameters.h
+  Minuit2/SimplexSeedGenerator.h
+  Minuit2/VariableMetricBuilder.h
+  Minuit2/VariableMetricEDMEstimator.h
+  Minuit2/VariableMetricMinimizer.h
+  TMinuit2TraceObject.h
+)
+
 # This package can be built separately
 # or as part of ROOT.
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   ROOT_STANDARD_LIBRARY_PACKAGE(Minuit2
     HEADERS
-      Minuit2/AnalyticalGradientCalculator.h
-      Minuit2/BFGSErrorUpdator.h
-      Minuit2/CombinedMinimizer.h
-      Minuit2/CombinedMinimumBuilder.h
-      Minuit2/ContoursError.h
-      Minuit2/DavidonErrorUpdator.h
-      Minuit2/ExternalInternalGradientCalculator.h
-      Minuit2/FCNAdapter.h
-      Minuit2/FCNBase.h
-      Minuit2/FCNGradientBase.h
-      Minuit2/FumiliBuilder.h
-      Minuit2/FumiliChi2FCN.h
-      Minuit2/FumiliErrorUpdator.h
-      Minuit2/FumiliFCNAdapter.h
-      Minuit2/FumiliFCNBase.h
-      Minuit2/FumiliGradientCalculator.h
-      Minuit2/FumiliMaximumLikelihoodFCN.h
-      Minuit2/FumiliMinimizer.h
-      Minuit2/FumiliStandardChi2FCN.h
-      Minuit2/FumiliStandardMaximumLikelihoodFCN.h
-      Minuit2/FunctionGradient.h
-      Minuit2/FunctionMinimum.h
-      Minuit2/GradientCalculator.h
-      Minuit2/HessianGradientCalculator.h
-      Minuit2/InitialGradientCalculator.h
-      Minuit2/MinimumBuilder.h
-      Minuit2/MinimumError.h
-      Minuit2/MinimumErrorUpdator.h
-      Minuit2/MinimumParameters.h
-      Minuit2/MinimumSeed.h
-      Minuit2/MinimumSeedGenerator.h
-      Minuit2/MinimumState.h
-      Minuit2/MinosError.h
-      Minuit2/Minuit2Minimizer.h
-      Minuit2/MinuitParameter.h
-      Minuit2/MnApplication.h
-      Minuit2/MnConfig.h
-      Minuit2/MnContours.h
-      Minuit2/MnCovarianceSqueeze.h
-      Minuit2/MnCross.h
-      Minuit2/MnEigen.h
-      Minuit2/MnFcn.h
-      Minuit2/MnFumiliMinimize.h
-      Minuit2/MnFunctionCross.h
-      Minuit2/MnGlobalCorrelationCoeff.h
-      Minuit2/MnHesse.h
-      Minuit2/MnLineSearch.h
-      Minuit2/MnMachinePrecision.h
-      Minuit2/MnMatrix.h
-      Minuit2/MnMatrixfwd.h
-      Minuit2/MnMigrad.h
-      Minuit2/MnMinimize.h
-      Minuit2/MnMinos.h
-      Minuit2/MnParabola.h
-      Minuit2/MnParabolaFactory.h
-      Minuit2/MnParameterScan.h
-      Minuit2/MnParameterTransformation.h
-      Minuit2/MnPlot.h
-      Minuit2/MnPoint.h
-      Minuit2/MnPosDef.h
-      Minuit2/MnPrint.h
-      Minuit2/MnScan.h
-      Minuit2/MnSeedGenerator.h
-      Minuit2/MnSimplex.h
-      Minuit2/MnStrategy.h
-      Minuit2/MnTraceObject.h
-      Minuit2/MnUserCovariance.h
-      Minuit2/MnUserFcn.h
-      Minuit2/MnUserParameterState.h
-      Minuit2/MnUserParameters.h
-      Minuit2/MnUserTransformation.h
-      Minuit2/ModularFunctionMinimizer.h
-      Minuit2/NegativeG2LineSearch.h
-      Minuit2/Numerical2PGradientCalculator.h
-      Minuit2/NumericalDerivator.h
-      Minuit2/ParametricFunction.h
-      Minuit2/ScanBuilder.h
-      Minuit2/ScanMinimizer.h
-      Minuit2/SimplexBuilder.h
-      Minuit2/SimplexMinimizer.h
-      Minuit2/SimplexParameters.h
-      Minuit2/SimplexSeedGenerator.h
-      Minuit2/VariableMetricBuilder.h
-      Minuit2/VariableMetricEDMEstimator.h
-      Minuit2/VariableMetricMinimizer.h
-      TMinuit2TraceObject.h
+      ${MINUIT2_HEADERS}
     SOURCES
       src/AnalyticalGradientCalculator.cxx
       src/BFGSErrorUpdator.cxx
@@ -168,7 +172,20 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     DEPENDENCIES
       MathCore
       Hist
-)
+  )
+  set(RELATIVE_INC_HEADERS ${MINUIT2_HEADERS})
+  list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+  target_sources(Minuit2
+  PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/ src/
+    FILES
+      ${RELATIVE_INC_HEADERS}
+      inc/LinkDef.h
+      src/MPIProcess.h
+  )
+
 endif()
 
 if(minuit2_omp)

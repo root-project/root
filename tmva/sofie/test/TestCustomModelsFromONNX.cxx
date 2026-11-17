@@ -647,6 +647,42 @@ TEST(ONNX, ArgMax_NegAxis_SelectLast)
    expectEqual(output, correct_output);
 }
 
+TEST(ONNX, PRelu)
+{
+   SofieReference ref = readReference("PRelu");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "PRelu", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, PRelu_Broadcast)
+{
+   SofieReference ref = readReference("PRelu_Broadcast");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "PRelu_Broadcast", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, PRelu_Channel)
+{
+   SofieReference ref = readReference("PRelu_Channel");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "PRelu_Channel", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, PRelu_Scalar)
+{
+   SofieReference ref = readReference("PRelu_Scalar");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "PRelu_Scalar", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 // Elu on a tensor whose first dimension is only known at run time.
 TEST(ONNX, EluDynShape)
 {
@@ -2327,6 +2363,33 @@ TEST(ONNX, AliasChainSingle)
    SofieReference ref = readReference("AliasChainSingle");
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AliasChainSingle", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, UnsqueezeUnsortedAxes)
+{
+   SofieReference ref = readReference("UnsqueezeUnsortedAxes");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "UnsqueezeUnsortedAxes", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, UnsqueezeNegativeAxes)
+{
+   SofieReference ref = readReference("UnsqueezeNegativeAxes");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "UnsqueezeNegativeAxes", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, UnsqueezeAxesAttribute)
+{
+   SofieReference ref = readReference("UnsqueezeAxesAttribute");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "UnsqueezeAxesAttribute", ref.f32("input0"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }

@@ -8,25 +8,29 @@
 # CMakeLists.txt file for building ROOT gui/browsable
 ############################################################################
 
+set(BROWSABLE_HEADERS
+  ROOT/Browsable/RAnyObjectHolder.hxx
+  ROOT/Browsable/RElement.hxx
+  ROOT/Browsable/RGroup.hxx
+  ROOT/Browsable/RHolder.hxx
+  ROOT/Browsable/RItem.hxx
+  ROOT/Browsable/RLevelIter.hxx
+  ROOT/Browsable/RProvider.hxx
+  ROOT/Browsable/RShared.hxx
+  ROOT/Browsable/RSysFile.hxx
+  ROOT/Browsable/RSysFileItem.hxx
+  ROOT/Browsable/RUnique.hxx
+  ROOT/Browsable/RWrapper.hxx
+  ROOT/Browsable/TKeyItem.hxx
+  ROOT/Browsable/TObjectElement.hxx
+  ROOT/Browsable/TObjectHolder.hxx
+  ROOT/Browsable/TObjectItem.hxx
+  ROOT/Browsable/RNTupleItem.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
   HEADERS
-    ROOT/Browsable/RAnyObjectHolder.hxx
-    ROOT/Browsable/RElement.hxx
-    ROOT/Browsable/RGroup.hxx
-    ROOT/Browsable/RHolder.hxx
-    ROOT/Browsable/RItem.hxx
-    ROOT/Browsable/RLevelIter.hxx
-    ROOT/Browsable/RProvider.hxx
-    ROOT/Browsable/RShared.hxx
-    ROOT/Browsable/RSysFile.hxx
-    ROOT/Browsable/RSysFileItem.hxx
-    ROOT/Browsable/RUnique.hxx
-    ROOT/Browsable/RWrapper.hxx
-    ROOT/Browsable/TKeyItem.hxx
-    ROOT/Browsable/TObjectElement.hxx
-    ROOT/Browsable/TObjectHolder.hxx
-    ROOT/Browsable/TObjectItem.hxx
-    ROOT/Browsable/RNTupleItem.hxx
+    ${BROWSABLE_HEADERS}
   SOURCES
     src/RElement.cxx
     src/RGroup.cxx
@@ -39,6 +43,23 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
   DEPENDENCIES
     RIO
     Hist
+)
+
+set(RELATIVE_INC_HEADERS ${BROWSABLE_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTBrowsable
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/RFieldHolder.hxx
+    src/RFieldProvider.hxx
+    src/RVisualizationHolder.hxx
+    src/RVisualizationProvider.hxx
+    src/TLeafProvider.hxx
 )
 
 # provider for generic drawing of TObject on TCanvas

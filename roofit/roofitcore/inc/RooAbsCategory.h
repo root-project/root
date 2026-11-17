@@ -122,7 +122,7 @@ public:
   lookupType(const char* label, bool printError=false) const;
   const RooCatType*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use lookupName() / lookupIndex()")
-  lookupType(const RooCatType& type, bool printError=false) const;
+  lookupType(const RooCatType& other, bool printError=false) const;
   TIterator*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use begin(), end() or range-based for loops.")
   typeIterator() const;
@@ -203,7 +203,7 @@ protected:
 
   friend class RooVectorDataStore ;
   void syncCache(const RooArgSet* set=nullptr) override ;
-  void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValueDirty=true) override ;
+  void copyCache(const RooAbsArg *source, bool valueOnly = false, bool setValDirty = true) override;
   void setCachedValue(double value, bool notifyClients = true) final;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;

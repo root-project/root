@@ -9,12 +9,16 @@
 # @author Jakob Blomer CERN
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTupleBrowse
-HEADERS
+set(NTUPLEBROWSE_HEADERS
   ROOT/RNTupleBrowseUtils.hxx
   ROOT/RNTupleClassicBrowse.hxx
   ROOT/RNTupleDrawVisitor.hxx
   ROOT/RNTupleTreeMap.hxx
+)
+
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTupleBrowse
+HEADERS
+  ${NTUPLEBROWSE_HEADERS}
 SOURCES
   src/RNTupleBrowseUtils.cxx
   src/RNTupleClassicBrowse.cxx
@@ -30,6 +34,18 @@ DEPENDENCIES
   ROOTNTuple
   ROOTNTupleUtil
   ROOTTreeMap
+)
+
+set(RELATIVE_INC_HEADERS ${NTUPLEBROWSE_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTNTupleBrowse
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

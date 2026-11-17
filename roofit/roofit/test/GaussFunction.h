@@ -7,12 +7,11 @@ class GaussFunction : public ROOT::Math::IParamMultiGradFunction {
 public:
    enum { kNPar = 3 };
 
-   GaussFunction(double _amp = 1, double _mean = 0, double _sigma = 1)
+   GaussFunction(double _amp = 1, double _mean = 0, double _sigma = 1) : fLogAmp(std::log(_amp))
    {
       fParams[0] = _amp;
       fParams[1] = _mean;
       fParams[2] = _sigma;
-      fLogAmp = std::log(_amp);
    }
 
    unsigned int NDim() const override { return 1; }

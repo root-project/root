@@ -123,6 +123,12 @@ public:
       return FitUtil::Evaluate<T>::EvalPoissonBinPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, h, BaseFCN::IsAGradFCN(), fullHessian);
    }
 
+   /// flag to indicate if can compute Hessian (not when the model is integrated over the bins)
+   bool HasHessian() const override
+   {
+      return BaseFCN::HasHessian() && !(BaseFCN::Data().Opt().fIntegral && BaseFCN::Data().HasBinEdges());
+   }
+
    /// evaluate gradient
    void Gradient(const double *x, double *g) const override
    {

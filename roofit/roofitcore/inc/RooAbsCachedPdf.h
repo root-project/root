@@ -109,7 +109,7 @@ public:
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 
   mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
-  Int_t _ipOrder ; // Interpolation order for cache histograms
+  Int_t _ipOrder = 0;                    // Interpolation order for cache histograms
 
   std::string cacheNameSuffix(const RooArgSet& nset) const ;
   virtual TString histNameSuffix() const { return TString("") ; }
@@ -139,8 +139,8 @@ private:
   /// populates while the surrounding RooNormalizedPdf is being constructed.
   /// Without this, the two paths used different (or null) keys and the cache
   /// was rebuilt on the first Evaluator step of every fit.
-  mutable RooArgSet _compiledNormSet;       ///<! stable normalization set for the compiled clone
-  mutable bool _hasCompiledNormSet = false; ///<! whether _compiledNormSet has been populated
+  RooArgSet _compiledNormSet;       ///<! stable normalization set for the compiled clone
+  bool _hasCompiledNormSet = false; ///<! whether _compiledNormSet has been populated
 
   ClassDefOverride(RooAbsCachedPdf,2) // Abstract base class for cached p.d.f.s
 };

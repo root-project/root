@@ -57,8 +57,9 @@ public:
   bool defineInt(const char* name, const char* argName, int intNum, int defValue=0) ;
   bool defineDouble(const char* name, const char* argName, int doubleNum, double defValue=0.0) ;
   bool defineString(const char* name, const char* argName, int stringNum, const char* defValue="",bool appendMode=false) ;
-  bool defineObject(const char* name, const char* argName, int setNum, const TObject* obj=nullptr, bool isArray=false) ;
-  bool defineSet(const char* name, const char* argName, int setNum, const RooArgSet* set=nullptr) ;
+  bool defineObject(const char *name, const char *argName, int setNum, const TObject *defVal = nullptr,
+                    bool isArray = false);
+  bool defineSet(const char *name, const char *argName, int setNum, const RooArgSet *defVal = nullptr);
 
   bool process(const RooCmdArg& arg) ;
   template<class... Args_t>
@@ -67,11 +68,11 @@ public:
   template<typename It_t>
   bool process(It_t begin, It_t end);
 
-  int getInt(const char* name, int defaultValue=0) const;
-  double getDouble(const char* name, double defaultValue=0.0) const;
-  const char* getString(const char* name, const char* defaultValue="",bool convEmptyToNull=false) const;
-  TObject* getObject(const char* name, TObject* obj=nullptr) const;
-  RooArgSet* getSet(const char* name, RooArgSet* set=nullptr) const;
+  int getInt(const char *name, int defVal = 0) const;
+  double getDouble(const char *name, double defVal = 0.0) const;
+  const char *getString(const char *name, const char *defVal = "", bool convEmptyToNull = false) const;
+  TObject *getObject(const char *name, TObject *defVal = nullptr) const;
+  RooArgSet *getSet(const char *name, RooArgSet *defVal = nullptr) const;
   const RooLinkedList& getObjectList(const char* name) const;
 
   bool ok(bool verbose) const ;
@@ -91,7 +92,7 @@ public:
 
   template<class ...Args_t>
   static std::string decodeStringOnTheFly(
-          const char* callerID, const char* cmdArgName, int intIdx, const char* defVal, Args_t && ...args);
+          const char* callerID, const char* cmdArgName, int strIdx, const char* defVal, Args_t && ...args);
 
   template<class ...Args_t>
   static TObject* decodeObjOnTheFly(
@@ -110,9 +111,9 @@ protected:
   struct Var {
     std::string name;
     std::string argName;
-    T val;
-    bool appendMode;
-    int num;
+    T val{};
+    bool appendMode = false;
+    int num = 0;
   };
 
   std::string _name;

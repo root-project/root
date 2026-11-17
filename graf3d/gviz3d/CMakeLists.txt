@@ -13,13 +13,17 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set(GVIZ3D_HEADERS
+  TStructNode.h
+  TStructNodeEditor.h
+  TStructNodeProperty.h
+  TStructViewer.h
+  TStructViewerGUI.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Gviz3d
   HEADERS
-    TStructNode.h
-    TStructNodeEditor.h
-    TStructNodeProperty.h
-    TStructViewer.h
-    TStructViewerGUI.h
+    ${GVIZ3D_HEADERS}
   SOURCES
     src/TStructNode.cxx
     src/TStructNodeEditor.cxx
@@ -34,4 +38,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gviz3d
     Geom
     RGL
    ${EXTRA_DICT_OPTS}
+)
+
+set(RELATIVE_INC_HEADERS ${GVIZ3D_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Gviz3d
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+  ${RELATIVE_INC_HEADERS}
+  inc/LinkDef.h
 )

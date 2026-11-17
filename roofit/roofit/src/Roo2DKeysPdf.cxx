@@ -233,10 +233,14 @@ void Roo2DKeysPdf::setOptions(TString options)
   else                          _MirrorAtBoundary = 0;
   if( options.Contains("d") )   _debug            = 1;
   else                          _debug            = 0;
-  if( options.Contains("v") )   { _debug         = 1; _verbosedebug = 1; }
-  else                            _verbosedebug  = 0;
-  if( options.Contains("vv") )  { _vverbosedebug = 1; }
-  else                            _vverbosedebug = 0;
+  if( options.Contains("v") )   { _debug         = 1; _verbosedebug = 1;
+  } else {
+     _verbosedebug = 0;
+  }
+  if( options.Contains("vv") )  { _vverbosedebug = 1;
+  } else {
+     _vverbosedebug = 0;
+  }
 
   if( _debug )
   {

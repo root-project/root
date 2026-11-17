@@ -40,21 +40,19 @@ target_include_directories(RooFitXRooFit PRIVATE inc/RooFit)
 
 set(RELATIVE_INC_HEADERS ${XROOFIT_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
-  target_sources(
-      RooFitXRooFit
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS inc/ src/
-      FILES
-          ${RELATIVE_INC_HEADERS}
-          inc/LinkDef.h
-          inc/RooFit/xRooFit/Config.h # was not part of XROOFIT_HEADERS
-          src/PythonInterface.h
-          src/coutCapture.h
-          src/xRooFitVersion.h
-  )
-endif()
+target_sources(
+    RooFitXRooFit
+    PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/ src/
+    FILES
+        ${RELATIVE_INC_HEADERS}
+        inc/LinkDef.h
+        inc/RooFit/xRooFit/Config.h # was not part of XROOFIT_HEADERS
+        src/PythonInterface.h
+        src/coutCapture.h
+        src/xRooFitVersion.h
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

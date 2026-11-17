@@ -8,9 +8,13 @@
 # CMakeLists.txt file for building ROOT gui/recorder package
 ############################################################################
 
+set(RECORDER_HEADERS
+  TRecorder.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Recorder
   HEADERS
-    TRecorder.h
+    ${RECORDER_HEADERS}
   SOURCES
     src/TRecorder.cxx
   DEPENDENCIES
@@ -18,4 +22,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Recorder
     Tree
     Gui
     Thread
+)
+
+set(RELATIVE_INC_HEADERS ${RECORDER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Recorder
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

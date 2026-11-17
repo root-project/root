@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/foundation package
 ############################################################################
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
+set(FOUNDATION_HEADERS
   ESTLType.h
   TClassEdit.h
   TError.h
@@ -24,6 +24,8 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   ROOT/span.hxx
   ROOT/TypeTraits.hxx
 )
+
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${FOUNDATION_HEADERS})
 
 set(FOUNDATION_SOURCES
   src/FoundationUtils.cxx
@@ -59,6 +61,29 @@ target_include_directories(Foundation_Stage1
 set_target_properties(Foundation_Stage1 PROPERTIES
   COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}"
   VISIBILITY_INLINES_HIDDEN "ON"
+)
+
+
+set(RELATIVE_INC_HEADERS ${FOUNDATION_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(
+  Foundation_Stage1
+  PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+)
+target_sources(
+  Core
+  PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
 )
 
 ROOT_INSTALL_HEADERS(${FOUNDATION_HEADER_DIRS})

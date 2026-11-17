@@ -41,7 +41,7 @@ public:
   void setShape(TH1* shape);
 
   RooAbsReal& getParameter() const ;
-  RooAbsReal& getParameter( Int_t masterIdx ) const ;
+  RooAbsReal &getParameter(Int_t index) const;
 
   const RooArgSet* get(Int_t masterIdx) const { return _dataSet.get( masterIdx ) ; }
   const RooArgSet* get(const RooArgSet& coord) const { return _dataSet.get( coord ) ; }
@@ -98,7 +98,7 @@ protected:
     int xyz = 0;
   };
   mutable NumBins _numBinsPerDim; ///<!
-  mutable RooDataHist _dataSet;
+  RooDataHist _dataSet;
 
   Int_t getCurrentBin() const;
   Int_t addParamSet( const RooArgList& params );

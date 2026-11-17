@@ -9,19 +9,23 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(TREEVIEWER_HEADERS
+  HelpTextTV.h
+  TGTreeTable.h
+  TParallelCoordEditor.h
+  TParallelCoord.h
+  TParallelCoordRange.h
+  TParallelCoordVar.h
+  TSpiderEditor.h
+  TSpider.h
+  TTreeViewer.h
+  TTVLVContainer.h
+  TTVSession.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TreeViewer
   HEADERS
-    HelpTextTV.h
-    TGTreeTable.h
-    TParallelCoordEditor.h
-    TParallelCoord.h
-    TParallelCoordRange.h
-    TParallelCoordVar.h
-    TSpiderEditor.h
-    TSpider.h
-    TTreeViewer.h
-    TTVLVContainer.h
-    TTVSession.h
+    ${TREEVIEWER_HEADERS}
   SOURCES
     src/HelpTextTV.cxx
     src/TGTreeTable.cxx
@@ -46,3 +50,15 @@ if(ROOT_NEED_STDCXXFS)
 endif()
 # Suppress deprecation warnings across compilation units and during dictionary generation, remove with HelpTextTV.h
 target_compile_definitions(TreeViewer PRIVATE ROOT_HelpTextTV_cxx)
+
+set(RELATIVE_INC_HEADERS ${TREEVIEWER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(TreeViewer
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)

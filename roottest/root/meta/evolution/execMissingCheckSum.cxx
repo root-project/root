@@ -52,9 +52,11 @@ void DropStreamerInfo(const char *name) {
 void CheckFile(const char *filename, const char *objname, const char *objtype)
 {
    TFile *f = new TFile(filename);
-   if (!f->Get(objname)) printf("Error: could not read the object (1): %s %s in %s\n",objname,objtype,filename);
+   if (!f->GetObjectUnchecked(objname))
+      printf("Error: could not read the object (1): %s %s in %s\n", objname, objtype, filename);
    DropStreamerInfo(objtype);
-   if (!f->Get(objname)) printf("Error: could not read the object (2): %s %s in %s\n",objname,objtype,filename);
+   if (!f->GetObjectUnchecked(objname))
+      printf("Error: could not read the object (2): %s %s in %s\n", objname, objtype, filename);
 
    delete f;
 }

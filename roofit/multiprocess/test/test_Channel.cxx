@@ -153,7 +153,7 @@ TEST(TestMPChannel, BenignSignalsDoNotInterruptReceive)
 
    // parent: bombard itself with SIGALRM every 10 ms while blocking in receive
    close(fds[1]);
-   struct sigaction sa;
+   struct sigaction sa{};
    memset(&sa, '\0', sizeof(sa));
    sa.sa_handler = [](int) {};
    ASSERT_EQ(sigaction(SIGALRM, &sa, nullptr), 0);

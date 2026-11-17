@@ -206,6 +206,7 @@ void codegenImpl(PiecewiseInterpolation &arg, CodegenContext &ctx)
    std::vector<double> valsNominal;
    std::vector<double> valsLow;
    std::vector<double> valsHigh;
+   valsNominal.reserve(nBins);
    for (int i = 0; i < nBins; ++i) {
       valsNominal.push_back(nomHist.weight(i));
    }
@@ -457,10 +458,11 @@ void functorCodegenImpl(RooArg_t &arg, RooArgList const &variables, CodegenConte
       std::string nStr = std::to_string(std::size(variables));
 
       std::string type;
-      if constexpr (std::is_same_v<RooArg_t, RooFunctor1DBinding> || std::is_same_v<RooArg_t, RooFunctor1DPdfBinding>)
+      if constexpr (std::is_same_v<RooArg_t, RooFunctor1DBinding> || std::is_same_v<RooArg_t, RooFunctor1DPdfBinding>) {
          type = "::ROOT::Math::IGradientFunctionOneDim";
-      else
+      } else {
          type = "::ROOT::Math::IGradientFunctionMultiDim";
+      }
 
       std::string funcAddrCasted = "reinterpret_cast<" + type + " const *>(" + funcAddrStr + ")";
 
@@ -705,6 +707,14 @@ void codegenImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx)
    ctx.addResult(&arg, ctx.getResult(arg.pdf()) + "/" + ctx.getResult(arg.normIntegral()));
 }
 
+// Support for the deprecated RooParamHistFunc, to be removed in ROOT 6.46
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
 {
    std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(ctx, arg.xList());
@@ -720,6 +730,11 @@ void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
    }
    ctx.addResult(&arg, result.str());
 }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 void codegenImpl(RooPoisson &arg, CodegenContext &ctx)
 {

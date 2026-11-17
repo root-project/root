@@ -36,11 +36,7 @@ namespace ROOT {
 
 class RNTupleWriteOptions;
 class RFile;
-
-namespace Experimental {
 class RNTupleAttrSetWriterHandle;
-
-} // namespace Experimental
 
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
@@ -112,9 +108,12 @@ private:
    RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
    /// All the Attribute Sets created from this Writer.
-   std::vector<std::shared_ptr<Experimental::RNTupleAttrSetWriter>> fAttributeSets;
+   std::vector<std::shared_ptr<RNTupleAttrSetWriter>> fAttributeSets;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
+   /// If CommitCluster(false) is used together with a non-zero cluster group commit page threshold
+   /// (i.e., with the option to automatically do cluster group commits), warn the caller once.
+   bool fFlagHasWarnedAboutClusterGroupCommitConflict = false;
 
    RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 
@@ -124,7 +123,7 @@ private:
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
 
-   void CloseAttributeSetImpl(ROOT::Experimental::RNTupleAttrSetWriter &attrSet);
+   void CloseAttributeSetImpl(ROOT::RNTupleAttrSetWriter &attrSet);
 
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
    static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<ROOT::RNTupleModel> model,
@@ -204,13 +203,10 @@ public:
    void FlushColumns() { fFillContext.FlushColumns(); }
    /// Flush so far filled entries to storage
    void FlushCluster() { fFillContext.FlushCluster(); }
-   /// Ensure that the data from the so far seen Fill calls has been written to storage
-   void CommitCluster(bool commitClusterGroup = false)
-   {
-      fFillContext.FlushCluster();
-      if (commitClusterGroup)
-         CommitClusterGroup();
-   }
+   /// Ensure that the data from the so far seen Fill calls has been written to storage.
+   void CommitCluster();
+   /// Same as CommitCluster() but explicitly create (or avoid creation of) a cluster group.
+   void CommitCluster(bool commitClusterGroup);
    /// Closes the underlying file (page sink) and expires the model. Automatically called on destruct.
    /// Once the dataset is committed, calls to Fill(), [Commit|Flush]Cluster(), FlushColumns(), CreateEntry(),
    /// and model updating fail.
@@ -266,14 +262,13 @@ public:
    /// the main writer.
    /// \warning Currently this is only supported for writers created via RNTupleWriter::Append(). This limitation
    /// will be lifted in the future.
-   ROOT::Experimental::RNTupleAttrSetWriterHandle
-   CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name,
-                      const ROOT::RNTupleWriteOptions *options = nullptr);
+   ROOT::RNTupleAttrSetWriterHandle CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name,
+                                                       const ROOT::RNTupleWriteOptions *options = nullptr);
 
    /// Writes the given AttributeSet to the underlying storage and closes it. This method is only useful if you
    /// want to close the AttributeSet early: otherwise it will automatically closed when the RNTupleWriter gets
    /// destroyed.
-   void CloseAttributeSet(ROOT::Experimental::RNTupleAttrSetWriterHandle handle);
+   void CloseAttributeSet(ROOT::RNTupleAttrSetWriterHandle handle);
 }; // class RNTupleWriter
 
 } // namespace ROOT

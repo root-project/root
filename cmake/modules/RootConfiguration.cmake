@@ -79,16 +79,30 @@ if(IS_ABSOLUTE ${CMAKE_INSTALL_FONTDIR})
 else()
   set(ttffontdir ${prefix}/${CMAKE_INSTALL_FONTDIR})
 endif()
-if(IS_ABSOLUTE ${CMAKE_INSTALL_JSROOTDIR})
-  set(jsrootdir ${CMAKE_INSTALL_JSROOTDIR})
+
+if(NOT "${JSROOT_CUSTOM_LOCATION}" STREQUAL "")
+  set(jsroot_config "HttpServ.JSRootPath:         ${JSROOT_CUSTOM_LOCATION}")
+elseif(IS_ABSOLUTE ${CMAKE_INSTALL_JSROOTDIR})
+  set(jsroot_config "#HttpServ.JSRootPath:         ${CMAKE_INSTALL_JSROOTDIR}")
 else()
-  set(jsrootdir ${prefix}/${CMAKE_INSTALL_JSROOTDIR})
+  set(jsroot_config "#HttpServ.JSRootPath:         ${prefix}/${CMAKE_INSTALL_JSROOTDIR}")
 endif()
+
 if(IS_ABSOLUTE ${CMAKE_INSTALL_OPENUI5DIR})
   set(openui5dir ${CMAKE_INSTALL_OPENUI5DIR})
 else()
   set(openui5dir ${prefix}/${CMAKE_INSTALL_OPENUI5DIR})
 endif()
+
+if(NOT "${OPENUI5_CUSTOM_LOCATION}" STREQUAL "")
+  set(openui5_config "WebGui.openui5src:         ${OPENUI5_CUSTOM_LOCATION}")
+elseif(IS_ABSOLUTE ${CMAKE_INSTALL_OPENUI5DIR})
+  set(openui5_config "#WebGui.openui5src:         ${CMAKE_INSTALL_OPENUI5DIR}/distribution")
+else()
+  set(openui5_config "#WebGui.openui5src:         ${prefix}/${CMAKE_INSTALL_OPENUI5DIR}/distribution")
+endif()
+
+
 if(IS_ABSOLUTE ${CMAKE_INSTALL_MACRODIR})
   set(macrodir ${CMAKE_INSTALL_MACRODIR})
 else()
@@ -710,7 +724,7 @@ else()
     # Only set the compiledata parameter if the CMake variable is 'true'
     set(local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES ${ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES})
   endif()
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
+  execute_process(COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"

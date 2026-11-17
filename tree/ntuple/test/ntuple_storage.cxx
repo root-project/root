@@ -804,6 +804,8 @@ TEST(RPageSink, MultipleClusterGroups)
       // This pattern should work: CommitCluster(false) followed by CommitCluster(true) and
       // be identical to a single call to CommitCluster(true)
       ntuple->CommitCluster(true);
+      // Calling this a second time should be a noop
+      ntuple->CommitCluster(true);
       *wrPt = 24.0;
       ntuple->Fill();
       ntuple->CommitCluster();
@@ -823,6 +825,35 @@ TEST(RPageSink, MultipleClusterGroups)
    EXPECT_EQ(24.0, *rdPt);
    ntuple->LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
+}
+
+TEST(RPageSink, MultipleClusterGroupsAutoCommit)
+{
+   FileRaii fileGuard("test_ntuple_multi_cluster_groups_auto_commit.ntuple");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto wrPt = model->MakeField<float>("pt");
+      ROOT::RNTupleWriteOptions opts;
+      opts.SetClusterGroupPageThreshold(2);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), opts);
+      writer->Fill();
+      writer->CommitCluster();
+      writer->Fill();
+      writer->CommitCluster();
+      writer->Fill();
+      writer->CommitCluster(); // auto commit cluster group
+      writer->Fill();
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.requiredDiag(kWarning, "ROOT.NTuple",
+                            "CommitCluster(false) is used while automatically committing cluster groups is active",
+                            false);
+      writer->CommitCluster(false);
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(2U, ntuple->GetDescriptor().GetNClusterGroups());
+   EXPECT_EQ(4U, ntuple->GetDescriptor().GetNClusters());
 }
 
 TEST(RPageNullSink, Basics)
@@ -1321,11 +1352,12 @@ TEST(RPageSource, MetadataMode)
    FileRaii fileGuard("test_ntuple_page_source_metadata_mode.root");
 
    auto model = RNTupleModel::Create();
-   auto ptrCtr = model->MakeField<int>("ctr");
+   auto ptrCtr = model->MakeField<std::vector<int>>("ctr");
+   ptrCtr->resize(1);
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       for (int i = 0; i < 1000; ++i) {
-         *ptrCtr = i;
+         (*ptrCtr)[0] = i;
          writer->Fill();
          writer->CommitCluster(true /* commit cluster group */);
       }
@@ -1333,6 +1365,7 @@ TEST(RPageSource, MetadataMode)
 
    RNTupleReadOptions opts;
    opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   ROOT::Internal::RNTupleReadOptionsManip::SetClusterGroupBudget(opts, 100); // make sure page lists are not evicted
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
    EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusterGroups());
    EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusters());
@@ -1350,13 +1383,107 @@ TEST(RPageSource, MetadataMode)
    EXPECT_EQ(1000u, reader->GetDescriptor().GetNClusters());
    EXPECT_EQ(0u, reader->GetDescriptor().GetNActiveClusters());
 
-   ptrCtr = reader->GetModel().GetDefaultEntry().GetPtr<int>("ctr");
+   ptrCtr = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<int>>("ctr");
    reader->LoadEntry(500);
-   EXPECT_EQ(500, *ptrCtr);
+   EXPECT_EQ(500, (*ptrCtr)[0]);
    reader->LoadEntry(999);
-   EXPECT_EQ(999, *ptrCtr);
+   EXPECT_EQ(999, (*ptrCtr)[0]);
    reader->LoadEntry(0);
-   EXPECT_EQ(0, *ptrCtr);
+   EXPECT_EQ(0, (*ptrCtr)[0]);
    EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
    EXPECT_GT(1000, reader->GetDescriptor().GetNActiveClusters());
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that we don't do full binary search on the cluster groups for sequential iteration
+      auto viewInt = reader->GetView<int>("ctr._0");
+      for (unsigned int i = 0; i < 10; ++i) {
+         EXPECT_EQ(i, viewInt(i));
+      }
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(15, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that we don't do full binary search on the cluster groups for multi-stream iteration
+      auto viewInt = reader->GetView<int>("ctr._0");
+      auto stream1 = reader->CreateActiveEntryToken();
+      auto stream2 = reader->CreateActiveEntryToken();
+      for (unsigned int i = 0; i < 10; ++i) {
+         if (i >= 5) {
+            stream2.SetEntryNumber(i - 5);
+            EXPECT_EQ(i - 5, viewInt(i - 5));
+         }
+         stream1.SetEntryNumber(i);
+         EXPECT_EQ(i, viewInt(i));
+      }
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(15, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Check that random access on top-level fields does not trigger full binary search in cluster groups
+      auto viewCtr = reader->GetView<std::vector<int>>("ctr");
+      // We will initially look into the first cluster (group). Then hit the cluster groups exactly. We also
+      // prefetch up to two clusters per read.
+      viewCtr(500);
+      viewCtr(300);
+
+      EXPECT_LT(0, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GE(9, reader->GetDescriptor().GetNActiveClusters());
+   }
+
+   reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
+   {
+      // Cross-check: random access on collection columns actually do require full binary search in the cluster groups
+      // (but not worse)
+      auto viewInt = reader->GetView<int>("ctr._0");
+      viewInt(500);
+
+      EXPECT_LT(10, reader->GetDescriptor().GetNActiveClusters());
+      EXPECT_GT(20, reader->GetDescriptor().GetNActiveClusters());
+   }
+}
+
+TEST(RPageSource, ClusterGroupBudget)
+{
+   FileRaii fileGuard("test_ntuple_page_source_cluster_group_bedget.root");
+
+   auto model = RNTupleModel::Create();
+   auto ptrCtr = model->MakeField<std::vector<int>>("ctr");
+   ptrCtr->resize(1);
+   {
+      ROOT::RNTupleWriteOptions opts;
+      opts.SetClusterGroupPageThreshold(0);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), opts);
+      for (int c = 0; c < 10; ++c) {
+         for (int i = 0; i < 10; ++i) {
+            (*ptrCtr)[0] = 10 * c + i;
+            writer->Fill();
+            writer->CommitCluster((i == 9));
+         }
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(20u, reader->GetDescriptor().GetNActiveClusters());
+
+   auto token1 = reader->CreateActiveEntryToken();
+   token1.SetEntryNumber(5);
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(20u, reader->GetDescriptor().GetNActiveClusters());
+
+   auto token2 = reader->CreateActiveEntryToken();
+   token2.SetEntryNumber(50);
+   for (const auto idx : *reader) {
+      reader->LoadEntry(idx);
+   }
+   EXPECT_EQ(30u, reader->GetDescriptor().GetNActiveClusters());
 }

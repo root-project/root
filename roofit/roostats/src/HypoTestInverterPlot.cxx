@@ -291,9 +291,9 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
          gobs->Draw("APL");
          gplot = gobs;
          gplot->GetHistogram()->SetTitle( GetTitle() );
+      } else {
+         gobs->Draw("PL");
       }
-      else gobs->Draw("PL");
-
    }
    TMultiGraph * gexp = nullptr;
    if (drawExp) {
@@ -304,10 +304,9 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
          gexp->Draw("A");
          if (gexp->GetHistogram()) gexp->GetHistogram()->SetTitle( GetTitle() );
          gplot = static_cast<TGraph*>(gexp->GetListOfGraphs()->First());
-      }
-      else
+      } else {
          gexp->Draw();
-
+      }
    }
 
    // draw also an horizontal  line at the desired conf level
@@ -316,6 +315,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       double x1 = gplot->GetXaxis()->GetXmin();
       double x2 = gplot->GetXaxis()->GetXmax();
       TLine * line = new TLine(x1, alpha, x2,alpha);
+      line->SetBit(kCanDelete);
       line->SetLineColor(kRed);
       line->Draw();
       // put axis labels
@@ -362,6 +362,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    double verticalSize = (gexp || draw2CL || drawCLb ) ? 0.3 : 0.15;
    double y1 = y0 + verticalSize;
    TLegend * l = new TLegend(0.6,y0,0.9,y1);
+   l->SetBit(kCanDelete);
    if (gobs) l->AddEntry(gobs,"","PEL");
    if (gclsb) l->AddEntry(gclsb,"","PEL");
    if (gcls) l->AddEntry(gcls,"","PEL");

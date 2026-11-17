@@ -79,7 +79,7 @@ public:
     std::vector<ArrayInfo<double>> reals;
     std::vector<ArrayInfo<RooAbsCategory::value_type>> cats;
 
-    std::size_t size;
+    std::size_t size = 0;
   };
 
   /// \name Internal RooFit interface.
@@ -158,7 +158,8 @@ public:
   void attachBuffers(const RooArgSet& extObs) override;
   void resetBuffers() override;
 
-  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr, std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
+  void loadValues(const RooAbsDataStore *ads, const RooFormulaVar *select = nullptr, const char *rangeName = nullptr,
+                  std::size_t nStart = 0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
 
   void dump() override;
 

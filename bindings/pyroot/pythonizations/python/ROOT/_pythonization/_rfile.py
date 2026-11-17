@@ -24,6 +24,23 @@ with ROOT.RFile.Recreate("myfile2.root") as file:
     # file.Flush()
 \endcode
 
+Getting an object can also be done via the dictionary syntax:
+
+\code{.py}
+myHist = file['myHisto']
+\endcode
+
+The difference between the two methods is that Get will return `None` if the object is missing, while the square
+bracket operator will raise a `KeyError`.
+
+There are two main ways to test for the presence of objects in the file:
+
+\code{.py}
+histoIsThere = 'myHisto' in file
+# or
+histoIsThere = file.GetKeyInfo('myHisto') is None
+\endcode
+
 The Put method will raise an error if an object is already present at the given path; if you want to overwrite an
 existing object use the Overwrite method instead:
 
@@ -127,10 +144,24 @@ class _RFile_Put:
     def __init__(self, rfile):
         self._rfile = rfile
 
-    def __call__(self, name, obj, title = ""):
+    def __call__(self, path, obj = None, title = ""):
         """
         Non-templated Put()
         """
+        import ROOT
+
+        if isinstance(path, ROOT.TNamed):
+            # TNamed-specific overload: arguments are actually Put(namedObj, dirPath).
+            path, obj = obj, path
+            fullPath = ""
+            if isinstance(path, str):
+                fullPath = f"{path}/"
+            elif path is not None:
+                raise TypeError(f"Put(TNamed, dirPath) only accepts a string as the dirPath, not a {type(path)}")
+            fullPath += obj.GetName()
+            path = fullPath
+            title = obj.GetTitle()
+
         objType = type(obj)
         if isinstance(obj, str):
             # special case: automatically convert python str to std::string
@@ -139,7 +170,7 @@ class _RFile_Put:
             raise TypeError(f"type {objType} is not supported by ROOT I/O")
         else:
             className = objType.__cpp_name__
-        self._rfile.Put[className](name, obj, title)
+        self._rfile.Put[className](path, obj, title)
 
     def __getitem__(self, template_arg):
         """
@@ -158,7 +189,7 @@ class _RFile_Overwrite:
     def __init__(self, rfile):
         self._rfile = rfile
 
-    def __call__(self, path, obj = None, title = "", *, createNewCycle = True):
+    def __call__(self, path, obj=None, title="", *, createNewCycle=True):
         """
         Non-templated Overwrite()
         """
@@ -173,6 +204,7 @@ class _RFile_Overwrite:
             className = objType.__cpp_name__
 
         from ROOT import RFile
+
         flags = (0 if createNewCycle else 1) * RFile.kOverwrite_NoNewCycle
         self._rfile.Overwrite[className](path, obj, title, flags)
 
@@ -218,14 +250,14 @@ def _RFileInit(rfile):
     raise NotImplementedError("RFile can only be created via Recreate, Open or Update")
 
 
-def _GetKeyInfo(rfile, path):
+def _RFile_GetKeyInfo(rfile, path):
     key = rfile._OriginalGetKeyInfo(path)
     if key.has_value():
         return key.value()
     return None
 
 
-def _ListKeys(rfile, basePath="", **kwargs):
+def _RFile_ListKeys(rfile, basePath="", **kwargs):
     """
     Returns an iterable over all keys of objects and/or directories written into this RFile starting at path
     `basePath` (defaulting to include the content of all subdirectories).
@@ -259,13 +291,25 @@ def _ListKeys(rfile, basePath="", **kwargs):
     """
     from ROOT import RFile
 
-    listObjects = kwargs['listObjects'] if 'listObjects' in kwargs else True
-    listDirs = kwargs['listDirs'] if 'listDirs' in kwargs else False
-    listRecursive = kwargs['listRecursive'] if 'listRecursive' in kwargs else True
+    listObjects = kwargs["listObjects"] if "listObjects" in kwargs else True
+    listDirs = kwargs["listDirs"] if "listDirs" in kwargs else False
+    listRecursive = kwargs["listRecursive"] if "listRecursive" in kwargs else True
 
     flags = (listObjects * RFile.kListObjects) | (listDirs * RFile.kListDirs) | (listRecursive * RFile.kListRecursive)
     iter = rfile._OriginalListKeys(basePath, flags)
     return iter
+
+
+def _RFile_getitem(rfile, namecycle):
+    item = rfile.Get(namecycle)
+    if item is None:
+        raise KeyError(namecycle)
+    return item
+
+
+def _RFile_contains(rfile, namecycle):
+    keyInfo = _RFile_GetKeyInfo(rfile, namecycle)
+    return keyInfo is not None
 
 
 @pythonization("RFile", ns="ROOT")
@@ -283,6 +327,8 @@ def pythonize_rfile(klass):
     klass.__enter__ = lambda rfile: rfile
     klass.__exit__ = _RFileExit
     klass._OriginalGetKeyInfo = klass.GetKeyInfo
-    klass.GetKeyInfo = _GetKeyInfo
+    klass.GetKeyInfo = _RFile_GetKeyInfo
     klass._OriginalListKeys = klass.ListKeys
-    klass.ListKeys = _ListKeys
+    klass.ListKeys = _RFile_ListKeys
+    klass.__getitem__ = _RFile_getitem
+    klass.__contains__ = _RFile_contains

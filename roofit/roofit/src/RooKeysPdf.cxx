@@ -62,7 +62,6 @@ For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 #include "RooDataSet.h"
 
 #include "TError.h"
-#include "TMath.h"
 
 #include <algorithm>
 #include <cmath>
@@ -212,7 +211,7 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
     x2 += w * x * x;
     _sumWgt += double(1 + _mirrorLeft + _mirrorRight) * w;
 
-    Data p;
+    Data p{};
     p.x = x, p.w = w;
     tmp.push_back(p);
     if (_mirrorLeft) {

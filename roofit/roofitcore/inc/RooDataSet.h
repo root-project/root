@@ -62,8 +62,8 @@ public:
 
   /// Read data from a text file and create a dataset from it.
   /// The possible options are: (D)ebug, (Q)uiet.
-  static RooDataSet *read(const char *filename, const RooArgList &variables,
-           const char *opts= "", const char* commonPath="",
+  static RooDataSet *read(const char *fileList, const RooArgList &varList,
+           const char *verbOpt= "", const char* commonPath="",
            const char *indexCatName=nullptr) ;
   bool write(const char* filename) const;
   bool write(std::ostream & ofs) const;

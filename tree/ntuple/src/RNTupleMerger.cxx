@@ -557,7 +557,7 @@ static ROOT::RResult<RDescriptorsComparison> FillCommonAndExtraFields(const ROOT
    }
 
    if (forAttributeMerging) {
-      using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+      using namespace ROOT::Internal::RNTupleAttributes;
       const auto userDataFieldId = src.FindFieldId(kMetaFieldNames[kMetaFieldIndex_UserData]);
       if (userDataFieldId == ROOT::kInvalidDescriptorId) {
          return R__FAIL("attribute user data field not found. The RNTuple is corrupted and cannot be merged.");
@@ -1050,7 +1050,7 @@ public:
 
    ENTupleMergeActionResult OnFill(ROOT::REntry &entry, const RNTupleMergeActionContext &) final
    {
-      using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+      using namespace ROOT::Internal::RNTupleAttributes;
 
       // Cache pointer per source
       if (!fRangeStartPtr)
@@ -1435,6 +1435,12 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
 
          ROOT::Internal::ROnDiskPage::Key key{columnId, pageIdx};
          auto onDiskPage = cluster->GetOnDiskPage(key);
+
+         if (!pageInfo.HasChecksum() && fDestination.GetWriteOptions().GetEnableSamePageMerging()) {
+            R__LOG_WARNING(NTupleMergeLog())
+               << "one or more pages were found without a checksum: disabling same-page merging.";
+            const_cast<ROOT::RNTupleWriteOptions &>(fDestination.GetWriteOptions()).SetEnableSamePageMerging(false);
+         }
 
          const auto checksumSize = pageInfo.HasChecksum() * RPageStorage::kNBytesPageChecksum;
          RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
@@ -2026,9 +2032,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    // Commit the output
    for (auto &[attrSetName, attrSetData] : attrSetsData) {
       attrSetData.fStrategy.BeforeCommit();
-      if (attrSetData.fSink->GetNEntries() > 0) {
-         attrSetData.fSink->CommitClusterGroup();
-      }
+      attrSetData.fSink->CommitClusterGroup();
       auto anchorLink = attrSetData.fSink->CommitDataset();
       fDestination->CommitAttributeSet(attrSetName, anchorLink);
    }
@@ -2038,9 +2042,8 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    // Commit the output
    if (fDestination->GetNEntries() == 0)
       R__LOG_WARNING(NTupleMergeLog()) << "Output RNTuple '" << fDestination->GetNTupleName() << "' has no entries.";
-   else
-      fDestination->CommitClusterGroup();
 
+   fDestination->CommitClusterGroup();
    fDestination->CommitDataset();
 
    return RResult<void>::Success();

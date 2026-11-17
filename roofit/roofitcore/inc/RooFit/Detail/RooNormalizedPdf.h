@@ -55,12 +55,20 @@ public:
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
                                  const char *rangeName = nullptr) const override
    {
-      return _pdf->getAnalyticalIntegralWN(allVars, analVars, normSet ? normSet : &_normSet, rangeName);
+      return _pdf->getAnalyticalIntegralWN(allVars, analVars, hasNormSet(normSet) ? normSet : nullptr, rangeName);
    }
    /// Forward calculation of analytical integrals to input p.d.f
    double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = nullptr) const override
    {
-      return _pdf->analyticalIntegralWN(code, normSet ? normSet : &_normSet, rangeName);
+      if (hasNormSet(normSet)) {
+         return _pdf->analyticalIntegralWN(code, normSet, rangeName);
+      }
+      // Without normalization set (e.g. in a RooGenProdProj), integrate the
+      // normalized value as it is. This assumes that the normalization integral
+      // doesn't depend on the integrated observables. It is taken from this
+      // wrapper and not from the input pdf, whose cached normalization integral
+      // goes stale in the RooFit::Evaluator.
+      return _pdf->analyticalIntegralWN(code, nullptr, rangeName) / _normIntegral;
    }
 
    ExtendMode extendMode() const override { return static_cast<RooAbsPdf &>(*_pdf).extendMode(); }
@@ -87,6 +95,7 @@ protected:
    double getValV(const RooArgSet * normSet) const override;
 
 private:
+   static bool hasNormSet(const RooArgSet *normSet) { return normSet && !normSet->empty(); }
    void logEvalErrorCounts() const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;

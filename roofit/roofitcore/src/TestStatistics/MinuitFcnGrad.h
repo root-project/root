@@ -37,7 +37,7 @@ public:
    void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) override;
 
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
-   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
+   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters) override;
 
    bool returnsInMinuit2ParameterSpace() const { return _gradient->usesMinuitInternalValues(); }
 
@@ -79,7 +79,7 @@ private:
    std::unique_ptr<LikelihoodGradientWrapper> _gradient;
    mutable bool _calculatingGradient = false;
 
-   mutable std::shared_ptr<WrapperCalculationCleanFlags> _calculationIsClean;
+   std::shared_ptr<WrapperCalculationCleanFlags> _calculationIsClean;
 
    mutable std::vector<double> _minuitInternalX;
    mutable std::vector<double> _minuitExternalX;

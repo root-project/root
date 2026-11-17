@@ -60,12 +60,13 @@ Double_t RooGaussExpTails::evaluate() const
 {
    Double_t t = (_x - _x0) / _sigma;
 
-   if (t <= -_kL)
+   if (t <= -_kL) {
       return std::exp(0.5 * _kL * _kL + _kL * t);
-   else if (t > _kH)
+   } else if (t > _kH) {
       return std::exp(0.5 * _kH * _kH - _kH * t);
-   else
+   } else {
       return std::exp(-0.5 * t * t);
+   }
 }
 
 //_____________________________________________________________________________

@@ -218,9 +218,9 @@ public:
 
 
 private:
-   T fRho = 0;
-   T fZ = 0;
-   T fPhi = 0;
+   T fRho{0};
+   T fZ{0};
+   T fPhi{0};
 };
 
   } // end namespace Math

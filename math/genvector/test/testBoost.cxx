@@ -1,5 +1,11 @@
 #include "Math/BoostX.h"
 #include "Math/Boost.h"
+#include "Math/BoostY.h"
+#include "Math/BoostZ.h"
+#include "Math/LorentzRotation.h"
+#include "Math/PtEtaPhiE4D.h"
+#include "Math/PtEtaPhiM4D.h"
+#include "Math/PxPyPzM4D.h"
 #include "Math/VectorUtil.h"
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
@@ -13,6 +19,27 @@ bool AlmostEq(const XYZTVector &v1, const XYZTVector &v2)
    const double eps = 0.00000001;
    return std::abs(v2.X() - v1.X()) < eps && std::abs(v2.Y() - v1.Y()) < eps && std::abs(v2.Z() - v1.Z()) < eps &&
           std::abs(v2.T() - v1.T()) < eps;
+}
+
+// A coordinate system passed directly to a boost is a foreign 4-vector whose constructor does not take
+// (x, y, z, t) (#19635).
+template <class B, class C>
+int TestCoordinateSystem(const B &b, const char *name, const XYZTVector &v)
+{
+   C c = LorentzVector<C>(v).Coordinates();
+   C bc = b(c);
+   if (AlmostEq(XYZTVector(bc.Px(), bc.Py(), bc.Pz(), bc.E()), b(v)))
+      return 0;
+   std::cout << name << " acting on a coordinate system gives a wrong result" << std::endl;
+   return 1;
+}
+
+template <class B>
+int TestCoordinateSystems(const B &b, const char *name, const XYZTVector &v)
+{
+   return TestCoordinateSystem<B, PtEtaPhiE4D<double>>(b, name, v) +
+          TestCoordinateSystem<B, PtEtaPhiM4D<double>>(b, name, v) +
+          TestCoordinateSystem<B, PxPyPzM4D<double>>(b, name, v);
 }
 
 int main()
@@ -56,6 +83,12 @@ int main()
       std::cout.precision(pr);
       nFailedTests++;
    }
+
+   nFailedTests += TestCoordinateSystems(bx, "BoostX", v);
+   nFailedTests += TestCoordinateSystems(BoostY(0.6), "BoostY", v);
+   nFailedTests += TestCoordinateSystems(BoostZ(-0.7), "BoostZ", v);
+   nFailedTests += TestCoordinateSystems(b, "Boost", v);
+   nFailedTests += TestCoordinateSystems(LorentzRotation(b), "LorentzRotation", v);
 
    return nFailedTests;
 }

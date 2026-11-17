@@ -221,9 +221,9 @@ public :
 
 
 private:
-   T fX = 0; // x coordinate
-   T fY = 0; // y coordinate
-   T fZ = 0; // z coordinate
+   T fX{0}; // x coordinate
+   T fY{0}; // y coordinate
+   T fZ{0}; // z coordinate
 };
 
 

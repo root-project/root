@@ -28,7 +28,8 @@ class RooConstraintSum : public RooAbsReal {
 public:
 
   RooConstraintSum() {}
-  RooConstraintSum(const char *name, const char *title, const RooArgSet& constraintSet, const RooArgSet& paramSet, bool takeGlobalObservablesFromData=false) ;
+  RooConstraintSum(const char *name, const char *title, const RooArgSet &constraintSet, const RooArgSet &normSet,
+                   bool takeGlobalObservablesFromData = false);
 
   RooConstraintSum(const RooConstraintSum& other, const char* name = nullptr);
   TObject* clone(const char* newname=nullptr) const override { return new RooConstraintSum(*this, newname); }

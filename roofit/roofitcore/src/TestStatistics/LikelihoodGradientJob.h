@@ -85,7 +85,7 @@ private:
    /// to workers so their NumericalDerivator setup can skip the central-point evaluation.
    double fval_at_x_ = std::numeric_limits<double>::quiet_NaN();
 
-   mutable bool isCalculating_ = false;
+   bool isCalculating_ = false;
 
    SharedOffset::OffsetVec offsets_previous_;
 };

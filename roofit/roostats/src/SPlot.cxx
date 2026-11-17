@@ -188,9 +188,9 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
   if(cloneData) {
     fSData = static_cast<RooDataSet*>(data.Clone(newName));
     SetBit(kOwnData);
+  } else {
+     fSData = (RooDataSet *)&data;
   }
-  else
-    fSData = (RooDataSet*) &data;
 
   // Add check that yieldsList contains all RooRealVar / RooAbsRealLValue
   for (const auto arg : yieldsList) {
@@ -216,8 +216,9 @@ RooDataSet* SPlot::SetSData(RooDataSet* data)
   if(data)    {
     fSData = (RooDataSet*) data;
     return fSData;
-  }  else
-    return nullptr;
+  } else {
+     return nullptr;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,10 +268,11 @@ double SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
       totalYield += Row.getRealValue(varname.c_str() );
 
       return totalYield;
-    }
+  }
 
-  else
-    coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << std::endl;
+  else {
+     coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << std::endl;
+  }
 
   return -1;
 }
@@ -341,10 +343,11 @@ double SPlot::GetYieldFromSWeight(const char* sVariable) const
    }
 
       return totalYield;
-    }
+  }
 
-  else
-    coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << std::endl;
+  else {
+     coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << std::endl;
+  }
 
   return -1;
 }

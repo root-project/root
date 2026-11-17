@@ -51,10 +51,7 @@ COMPARE_FIXED_VALUES_UNNORM(TestRooPolynomial, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestRooPolynomial, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestRooPolynomial, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestRooPolynomial, RunScalar)
 FIT_TEST_BATCH(TestRooPolynomial, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestRooPolynomial, CompareBatchScalar)
-
 class RooNonVecGaussian : public RooAbsPdf {
 public:
    RooNonVecGaussian() {};
@@ -65,13 +62,13 @@ public:
         sigma("sigma", "Width", this, _sigma)
    {
    }
-   virtual TObject *clone(const char *newname) const override { return new RooNonVecGaussian(*this, newname); }
+   TObject *clone(const char *newname) const override { return new RooNonVecGaussian(*this, newname); }
    RooNonVecGaussian(const RooNonVecGaussian &other, const char *name)
       : RooAbsPdf(other, name), x("x", this, other.x), mean("mean", this, other.mean), sigma("sigma", this, other.sigma)
    {
    }
 
-   virtual ~RooNonVecGaussian() = default;
+   ~RooNonVecGaussian() override = default;
 
    Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *) const override
    {
@@ -82,7 +79,7 @@ public:
       return 0;
    }
 
-   Double_t analyticalIntegral(Int_t code, const char *rangeName = 0) const override
+   Double_t analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override
    {
       assert(code == 1 || code == 2);
 
@@ -132,7 +129,7 @@ public:
       assert(code == 1 || code == 2);
       Double_t xgen;
       if (code == 1) {
-         while (1) {
+         while (true) {
             xgen = RooRandom::randomGenerator()->Gaus(mean, sigma);
             if (xgen < x.max() && xgen > x.min()) {
                x = xgen;
@@ -140,7 +137,7 @@ public:
             }
          }
       } else if (code == 2) {
-         while (1) {
+         while (true) {
             xgen = RooRandom::randomGenerator()->Gaus(x, sigma);
             if (xgen < mean.max() && xgen > mean.min()) {
                mean = xgen;
@@ -191,10 +188,7 @@ COMPARE_FIXED_VALUES_UNNORM(TestNonVecGauss, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNonVecGauss, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGauss, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestNonVecGauss, RunScalar)
 FIT_TEST_BATCH(TestNonVecGauss, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestNonVecGauss, CompareBatchScalar)
-
 class TestNonVecGaussWeighted : public PDFTestWeightedData {
 protected:
    TestNonVecGaussWeighted() : PDFTestWeightedData("GaussNoBatchesWithWeights", 50000)
@@ -220,11 +214,7 @@ COMPARE_FIXED_VALUES_UNNORM(TestNonVecGaussWeighted, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNonVecGaussWeighted, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGaussWeighted, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestNonVecGaussWeighted,
-                DISABLED_RunScalar) // Would need SumW2 error matrix correction, but no done in macro
-FIT_TEST_BATCH(TestNonVecGaussWeighted, DISABLED_RunBatch) // As above
-FIT_TEST_BATCH_VS_SCALAR(TestNonVecGaussWeighted, CompareBatchScalar)
-
+FIT_TEST_BATCH(TestNonVecGaussWeighted, RunBatch)
 class TestNonVecGaussInMeanAndX : public PDFTest {
 protected:
    TestNonVecGaussInMeanAndX() : PDFTest("GaussNoBatches(x, mean)")
@@ -249,6 +239,4 @@ COMPARE_FIXED_VALUES_UNNORM(TestNonVecGaussInMeanAndX, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNonVecGaussInMeanAndX, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGaussInMeanAndX, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestNonVecGaussInMeanAndX, RunScalar)
 FIT_TEST_BATCH(TestNonVecGaussInMeanAndX, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestNonVecGaussInMeanAndX, CompareBatchScalar)

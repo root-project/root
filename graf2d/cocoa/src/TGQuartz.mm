@@ -578,11 +578,17 @@ void TGQuartz::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle 
       const Int_t xo = x1 < 0 ? -x1 : 0;
       const Int_t yo = y1 < 0 ? -y1 : 0;
 
+      // while readColorBits returns RGBA coding swap values back before set pixel
+      unsigned char swap_pixel[3];
+
       for (int yp = 0; yp < int(bbox.fHeight) && yo + yp < h; ++yp) {
          const unsigned char *srcBase = arrayGuard.Get() + bbox.fWidth * yp * 4;
          for (int xp = 0; xp < int(bbox.fWidth) && xo + xp < w; ++xp) {
             const unsigned char * const pixel = srcBase + xp * 4;
-            [pixmap.Get() putPixel : pixel X : xo + xp Y : yo + yp];
+            swap_pixel[2] = pixel[0];
+            swap_pixel[1] = pixel[1];
+            swap_pixel[0] = pixel[2];
+            [pixmap.Get() putPixel : swap_pixel X : xo + xp Y : yo + yp];
          }
       }
    } else {
@@ -677,27 +683,21 @@ void TGQuartz::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle 
          }
       } else {
          // no smoothing, just put character using foreground color
-         unsigned char rgba[4] = {};
-         rgba[3] = 255;
-         X11::PixelToRGB(fore, rgba);
-         unsigned char d = 0;
+         ColorStruct_t col;
+         // request foreground color
+         col.fPixel = fore;
+         TGCocoa::QueryColor(kNone, col);//calculate fRed/fGreen/fBlue triple from fPixel.
+         const UChar_t pixel[] = {UChar_t(double(col.fRed) / 0xffff * 255),
+                                  UChar_t(double(col.fGreen) / 0xffff * 255),
+                                  UChar_t(double(col.fBlue) / 0xffff * 255), 255};
 
-         const unsigned char *row = buffer;
+         const unsigned char *s = buffer;
          for (unsigned y = 0; y < rows; ++y) {
-            unsigned n = 0;
-            const unsigned char *s = row;
             for (unsigned x = 0; x < width; ++x) {
-               if (!n)
-                  d = *s++;
-
-               if (TESTBIT(d,7 - n))
-                  [pixmap.Get() putPixel : rgba X : bx + x Y : by + y];
-
-               if (++n == kBitsPerByte)
-                  n = 0;
+               unsigned char d = (((*s++ & 0xff) + 10) * 5) / 256;
+               if (d > 0)
+                  [pixmap.Get() putPixel : pixel X : bx + x Y : by + y];
             }
-
-            row += pitch;
          }
       }
    }

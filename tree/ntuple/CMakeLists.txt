@@ -26,9 +26,7 @@ if(daos OR daos_mock)
   endif()
 endif()
 
-ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
-NO_GLOB_HEADERS # Ensure that the optional headers above only get installed when enabled
-HEADERS
+set(ROOTNTuple_HEADERS
   ROOT/RCluster.hxx
   ROOT/RClusterPool.hxx
   ROOT/RColumn.hxx
@@ -75,6 +73,12 @@ HEADERS
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
   ROOT/RRawPtrWriteEntry.hxx
+)
+
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
+NO_GLOB_HEADERS # Ensure that the optional headers above only get installed when enabled
+HEADERS
+  ${ROOTNTuple_HEADERS}
   ${ROOTNTuple_EXTRA_HEADERS}
 SOURCES
   src/RCluster.cxx
@@ -122,16 +126,37 @@ DEPENDENCIES
   RIO
   ROOTVecOps
   ${ROOTNTuple_OPTIONAL_DEPENDENCIES}
+
 )
 
-# Non-standalone headers must be left out of the dictionary, so a dedicated install command is required.
-ROOT_INSTALL_HEADERS(HEADERS
+set(ROOTNTuple_NONSTANDALONE_HEADERS
   ROOT/RField/RFieldFundamental.hxx
   ROOT/RField/RFieldProxiedCollection.hxx
   ROOT/RField/RFieldRecord.hxx
   ROOT/RField/RFieldSequenceContainer.hxx
   ROOT/RField/RFieldSoA.hxx
-  ROOT/RField/RFieldSTLMisc.hxx)
+  ROOT/RField/RFieldSTLMisc.hxx
+)
+
+set(RELATIVE_INC_HEADERS ${ROOTNTuple_HEADERS} ${ROOTNTuple_EXTRA_HEADERS} ${ROOTNTuple_NONSTANDALONE_HEADERS})
+if(daos_mock)
+  list(APPEND RELATIVE_INC_HEADERS ROOT/libdaos_mock/daos.h ROOT/RDaos.hxx)
+endif()    
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTNTuple
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/RColumnElement.hxx
+)
+
+# Non-standalone headers must be left out of the dictionary, so a dedicated install command is required.
+ROOT_INSTALL_HEADERS(HEADERS
+  ${ROOTNTuple_NONSTANDALONE_HEADERS})
 
 target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
 

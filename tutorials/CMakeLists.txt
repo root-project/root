@@ -224,10 +224,6 @@ if(NOT unfold)
   list(APPEND xml_veto analysis/unfold/*.C)
 endif()
 
-if(NOT mpi)
-  set(mpi_veto io/testTMPIFile.C)
-endif()
-
 if(NOT xrootd)
   set(xrootd_veto analysis/dataframe/df101_h1Analysis.C
                   analysis/dataframe/df101_h1Analysis.py
@@ -260,6 +256,7 @@ if(NOT mathmore)
   set(mathmore_veto
       math/quasirandom.C
       math/exampleMultiRoot.C
+      math/exampleFunction.py
       math/pdf/pdf009_Bessel.C
       math/LegendreAssoc.C
       math/Legendre.C
@@ -499,15 +496,6 @@ if(MSVC)
   list(APPEND extra_veto legacy/hist040_TH2Poly_europe.C) # needs to download from the web
 endif()
 
-if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT win_broken_tests)
-  # These fits JIT-compile their formulas through cling on top of an already
-  # large Python + ROOT process and exhaust the 32-bit address space
-  # ("LLVM ERROR: out of memory", "Buffer allocation failed").
-  list(APPEND extra_veto
-       math/fit/fitConvolution.py
-       math/fit/fitNormSum.py)
-endif()
-
 if(MSVC AND NOT llvm13_broken_tests)
   list(APPEND extra_veto
        math/exampleFunction.py
@@ -577,15 +565,6 @@ list(LENGTH tutorials nTotal)
 list(REMOVE_ITEM tutorials ${tutorials_veto})
 list(LENGTH tutorials nAfterVeto)
 message(STATUS "${nAfterVeto}/${nTotal} C++ tutorials have been activated.")
-
-
-if(mpi)
-  set (temp_list ${tutorials})
-  list(FILTER tutorials INCLUDE REGEX "MPI")
-  set(mpi_tutorials ${tutorials})
-  set(tutorials ${temp_list})
-  list(REMOVE_ITEM tutorials ${mpi_tutorials})
-endif()
 
 #---Special return code------------------------------------------------
 set(returncode_1 math/fit/fit2a.C
@@ -750,26 +729,6 @@ foreach(t ${tutorials})
   endif()
 endforeach()
 
-#---Loop over all MPI tutorials and define the corresponding test---------
-foreach(t ${mpi_tutorials})
-  list(FIND returncode_1 ${t} index)
-  if(index EQUAL -1)
-    set(rc 0)
-  else()
-    set(rc 255)
-  endif()
-  string(REPLACE ".C" "" tname ${t})
-  string(REPLACE "/" "-" tname ${tname})
-
-  ROOT_ADD_TEST(tutorial-${tname}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
-                LABELS tutorial
-                DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${TUTORIAL_ENV}
-                TIMEOUT 1200) # 20m
-endforeach()
-
 #---Python tutorials-----------------------------------------------------
 if(pyroot)
 
@@ -903,6 +862,7 @@ if(pyroot)
       hist/hist007_TH1_liveupdate_uhi.py
       hist/hist010_TH1_two_scales_uhi.py
       hist/hist015_TH1_read_and_draw_uhi.py
+      machine_learning/ml_dataloader_Higgs_Classification.py
   )
 
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -950,6 +910,7 @@ if(pyroot)
       hist/hist007_TH1_liveupdate_uhi.py
       hist/hist010_TH1_two_scales_uhi.py
       hist/hist015_TH1_read_and_draw_uhi.py
+      machine_learning/ml_dataloader_Higgs_Classification.py
   )
 
   file(GLOB requires_mplhep RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}

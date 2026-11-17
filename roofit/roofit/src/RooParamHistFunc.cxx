@@ -10,6 +10,11 @@
 
 /** \class RooParamHistFunc
  *  \ingroup Roofit
+ *
+ * \deprecated RooParamHistFunc will be removed in ROOT 6.46, because its functionality is too close to the
+ * HistFactory classes. Please use the HistFactory class ParamHistFunc instead, multiplying it with a RooHistFunc,
+ * as shown in the rf709_BarlowBeeston tutorial.
+ *
  * A histogram function that assigns scale parameters to every bin. Instead of the bare bin contents,
  * it therefore yields:
  * \f[
@@ -19,8 +24,6 @@
  * The \f$ \gamma_i \f$ can therefore be used to parametrise statistical uncertainties of the histogram
  * template. In conjunction with a constraint term, this can be used to implement the Barlow-Beeston method.
  * The constraint can be implemented using RooHistConstraint.
- *
- * See also the tutorial rf709_BarlowBeeston.C
  */
 
 #include <RooParamHistFunc.h>

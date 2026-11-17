@@ -4,9 +4,17 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-target_sources(Core PRIVATE
+target_sources(Core
+PRIVATE
   src/Compression.cxx
   src/RZip.cxx
+PRIVATE 
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    inc/Compression.h
+    inc/RZip.h
 )
 
 target_link_libraries(Core PRIVATE ZLIB::ZLIB)

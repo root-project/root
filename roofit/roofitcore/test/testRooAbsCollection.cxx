@@ -6,6 +6,9 @@
 
 #include <gtest/gtest.h>
 
+#include <sstream>
+#include <string>
+
 /// ROOT-10845 IsOnHeap() always returned false.
 TEST(RooArgSet, IsOnHeap) {
   auto setp = new RooArgSet();
@@ -163,4 +166,24 @@ TEST(RooArgSet, TextFileIO)
    EXPECT_EQ(x.getVal(), xVal);
    EXPECT_EQ(x.getMin(), xMin);
    EXPECT_EQ(x.getMax(), xMax);
+}
+
+// printLatex() dropped the last elements if their number was not a multiple
+// of the number of columns.
+TEST(RooArgSet, PrintLatexIncompleteLastRow)
+{
+   RooRealVar par0{"par0", "par0", 0.};
+   RooRealVar par1{"par1", "par1", 1.};
+   RooRealVar par2{"par2", "par2", 2.};
+   RooRealVar par3{"par3", "par3", 3.};
+   RooRealVar par4{"par4", "par4", 4.};
+   RooArgSet set{par0, par1, par2, par3, par4};
+
+   std::stringstream ss;
+   set.printLatex(ss, 2);
+   const std::string latex = ss.str();
+
+   for (auto *arg : set) {
+      EXPECT_NE(latex.find(arg->GetName()), std::string::npos) << arg->GetName() << " is missing in:\n" << latex;
+   }
 }

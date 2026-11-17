@@ -476,9 +476,9 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
                         if (fColor) {
                            gr->SetFillColor(fColor);
                            gr->Draw("FL");
-                        }
-                        else
+                        } else {
                            gr->Draw("L");
+                        }
                      }
                   }
                }

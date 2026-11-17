@@ -28,7 +28,7 @@ template <typename T>
 struct TypedTreeReadBuffer final : public TreeReadBuffer {
    operator double() override { return _value; }
    operator int() override { return _value; }
-   T _value;
+   T _value{};
 };
 
 /// Create a TreeReadBuffer to hold the specified type, and attach to the branch passed as argument.

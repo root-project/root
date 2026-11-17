@@ -36,7 +36,7 @@ public:
   void setProtoDataOrder(Int_t* lut) override ;
   void printMultiline(std::ostream &os, Int_t content, bool verbose=false, TString indent="") const override ;
 
-  void attach(const RooArgSet& params) override ;
+  void attach(const RooArgSet& args) override ;
 
 protected:
 
@@ -49,14 +49,14 @@ protected:
   RooProdGenContext(const RooProdGenContext& other) ;
 
   RooArgSet _commonCats ;        ///< Common category dependents
-  RooArgSet* _ccdCloneSet ;
-  RooSuperCategory* _ccdSuper ;  ///< SuperCategory of Common category dependents
-  RooArgSet* _pdfCloneSet ;
-  RooAbsPdf* _pdfClone ;
-  RooRealIntegral* _pdfCcdInt ;
+  RooArgSet *_ccdCloneSet = nullptr;
+  RooSuperCategory *_ccdSuper = nullptr; ///< SuperCategory of Common category dependents
+  RooArgSet *_pdfCloneSet = nullptr;
+  RooAbsPdf *_pdfClone = nullptr;
+  RooRealIntegral *_pdfCcdInt = nullptr;
   RooArgSet _uniObs ;            ///< Observable to be generated with flat distribution
-  bool _ccdRefresh ;
-  double * _ccdTable ;
+  bool _ccdRefresh = false;
+  double *_ccdTable = nullptr;
   const RooProdPdf *_pdf ;       ///<  Original PDF
   std::list<std::unique_ptr<RooAbsGenContext>>  _gcList ; ///<  List of component generator contexts
   RooArgSet _ownedMultiProds ;   ///<  Owned auxiliary multi-term product PDFs

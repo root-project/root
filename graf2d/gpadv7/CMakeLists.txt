@@ -9,42 +9,46 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(GPADV7_HEADERS
+  ROOT/RCanvas.hxx
+  ROOT/RFrame.hxx
+  ROOT/RMenuItems.hxx
+  ROOT/RColor.hxx
+  ROOT/RDisplayItem.hxx
+  ROOT/RAttrMap.hxx
+  ROOT/RAttrBase.hxx
+  ROOT/RAttrAggregation.hxx
+  ROOT/RAttrAxis.hxx
+  ROOT/RAttrBorder.hxx
+  ROOT/RAttrLine.hxx
+  ROOT/RAttrFill.hxx
+  ROOT/RAttrFont.hxx
+  ROOT/RAttrMarker.hxx
+  ROOT/RAttrMargins.hxx
+  ROOT/RAttrText.hxx
+  ROOT/RAttrValue.hxx
+  ROOT/RAxisDrawable.hxx
+  ROOT/RPalette.hxx
+  ROOT/RPaletteDrawable.hxx
+  ROOT/RDrawable.hxx
+  ROOT/ROnFrameDrawable.hxx
+  ROOT/RDrawableRequest.hxx
+  ROOT/RStyle.hxx
+  ROOT/RPadDisplayItem.hxx
+  ROOT/RPadExtent.hxx
+  ROOT/RPadBase.hxx
+  ROOT/RPad.hxx
+  ROOT/RPadLength.hxx
+  ROOT/RPadPos.hxx
+  ROOT/RPave.hxx
+  ROOT/RVirtualCanvasPainter.hxx
+  ROOT/TObjectDisplayItem.hxx
+  ROOT/TObjectDrawable.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
   HEADERS
-    ROOT/RCanvas.hxx
-    ROOT/RFrame.hxx
-    ROOT/RMenuItems.hxx
-    ROOT/RColor.hxx
-    ROOT/RDisplayItem.hxx
-    ROOT/RAttrMap.hxx
-    ROOT/RAttrBase.hxx
-    ROOT/RAttrAggregation.hxx
-    ROOT/RAttrAxis.hxx
-    ROOT/RAttrBorder.hxx
-    ROOT/RAttrLine.hxx
-    ROOT/RAttrFill.hxx
-    ROOT/RAttrFont.hxx
-    ROOT/RAttrMarker.hxx
-    ROOT/RAttrMargins.hxx
-    ROOT/RAttrText.hxx
-    ROOT/RAttrValue.hxx
-    ROOT/RAxisDrawable.hxx
-    ROOT/RPalette.hxx
-    ROOT/RPaletteDrawable.hxx
-    ROOT/RDrawable.hxx
-    ROOT/ROnFrameDrawable.hxx
-    ROOT/RDrawableRequest.hxx
-    ROOT/RStyle.hxx
-    ROOT/RPadDisplayItem.hxx
-    ROOT/RPadExtent.hxx
-    ROOT/RPadBase.hxx
-    ROOT/RPad.hxx
-    ROOT/RPadLength.hxx
-    ROOT/RPadPos.hxx
-    ROOT/RPave.hxx
-    ROOT/RVirtualCanvasPainter.hxx
-    ROOT/TObjectDisplayItem.hxx
-    ROOT/TObjectDrawable.hxx
+    ${GPADV7_HEADERS}
   SOURCES
     src/RCanvas.cxx
     src/RFrame.cxx
@@ -70,6 +74,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
   DEPENDENCIES
     Core
     RIO
+)
+
+set(RELATIVE_INC_HEADERS ${GPADV7_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTGpadv7
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

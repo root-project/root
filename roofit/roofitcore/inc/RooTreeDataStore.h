@@ -50,7 +50,8 @@ public:
   RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const char* selExpr=nullptr, const char* wgtVarName=nullptr) ;
 
   // Constructor from DataStore
-  RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& tds, const char* selExpr=nullptr, const char* wgtVarName=nullptr) ;
+  RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet &vars, const RooAbsDataStore &ads,
+                   const char *selExpr = nullptr, const char *wgtVarName = nullptr);
 
   RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
                    const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
@@ -109,7 +110,7 @@ public:
   TTree const *tree() const { return _tree ; }
 
   void loadValues(const TTree *t, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr, Int_t nStart=0, Int_t nStop=2000000000)  ;
-  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,
+  void loadValues(const RooAbsDataStore *ads, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,
       std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
 
   void checkInit() const override;

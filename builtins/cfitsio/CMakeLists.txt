@@ -4,7 +4,8 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(CFITSIO_VERSION 4.6.3)
+set(ROOT_CFITSIO_VERSION 4.6.3)
+set(ROOT_CFITSIO_HASH "fad44fff274fdda5ffcc0c0fff3bc3c596362722b9292fc8944db91187813600")
 
 set(CFITSIO_PREFIX ${CMAKE_BINARY_DIR}/CFITSIO-prefix)
 set(CFITSIO_LIBRARIES ${CFITSIO_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -26,18 +27,18 @@ if(WIN32)
   set(patch_args --ignore-whitespace)
 endif()
 
-if(NOT EXISTS "${CFITSIO_PREFIX}/src/BUILTIN_CFITSIO/._patched")
-  set(CFITSIO_PATCH_COMMAND PATCH_COMMAND git init COMMAND git apply ${patch_args}
-                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
-                ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
-                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-marker.diff)
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(CFITSIO_PATCH_COMMAND
+                           PATCHES ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
+                                   ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
+                           GIT_APPLY_ARGS ${patch_args})
 
 ExternalProject_Add(
   BUILTIN_CFITSIO
   PREFIX ${CFITSIO_PREFIX}
-  URL ${lcgpackages}/cfitsio-${CFITSIO_VERSION}.tar.gz
-  URL_HASH SHA256=fad44fff274fdda5ffcc0c0fff3bc3c596362722b9292fc8944db91187813600
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
+  URL ${lcgpackages}/cfitsio-${ROOT_CFITSIO_VERSION}.tar.gz
+      https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-${ROOT_CFITSIO_VERSION}.tar.gz
+  URL_HASH SHA256=${ROOT_CFITSIO_HASH}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_POLICY_VERSION_MINIMUM=3.5
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}

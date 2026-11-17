@@ -278,6 +278,47 @@ def make_ArgMax_NegAxis_SelectLast():
     return _argmax_model("argmax_select_last_test", [2, 1], axis=-1, keepdims=1, select_last_index=1)
 
 
+def _prelu_model(name, x_shape, slope_shape, slope_vals):
+    """PRelu on a float tensor X with the slope given as an initializer."""
+    nodes = [
+        helper.make_node("PRelu", ["X", "Slope"], ["Y"]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        name,
+        inputs=[
+            _vi("X", FLOAT, x_shape),
+        ],
+        outputs=[
+            _vi("Y", FLOAT, x_shape),
+        ],
+        initializer=[
+            _tensor("Slope", FLOAT, slope_shape, slope_vals),
+        ],
+    )
+    return _model(graph, opset=16, ir_version=8)
+
+
+def make_PRelu():
+    """Ops: PRelu (slope with the same shape as X)"""
+    return _prelu_model("prelu_test", [3, 4, 5], [3, 4, 5], np.linspace(0.05, 0.6, 60).tolist())
+
+
+def make_PRelu_Broadcast():
+    """Ops: PRelu (slope broadcast along the last axis)"""
+    return _prelu_model("prelu_broadcast_test", [3, 4, 5], [5], [0.1, 0.2, 0.3, 0.4, 0.5])
+
+
+def make_PRelu_Channel():
+    """Ops: PRelu (per-channel slope, as exported by PyTorch nn.PReLU)"""
+    return _prelu_model("prelu_channel_test", [1, 3, 2, 2], [3, 1, 1], [0.1, 0.2, 0.3])
+
+
+def make_PRelu_Scalar():
+    """Ops: PRelu (single slope value)"""
+    return _prelu_model("prelu_scalar_test", [2, 3], [1], [0.25])
+
+
 def make_AveragePool1d_CeilMode_Overhang():
     """Ops: AveragePool"""
     nodes = [
@@ -6186,6 +6227,43 @@ def make_AliasDynShapeAcrossNewTensor():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def _unsqueeze_model(name, opset, axes_as_attr, axes):
+    """x of shape [3] is unsqueezed to [1, 3, 1] and added to a [3, 1, 1] tensor.
+    The broadcast makes the result [3, 3, 1] with out[i, j] = w[i] + x[j], so
+    that any other placement of the new axes gives a different result."""
+    if axes_as_attr:
+        unsqueeze = helper.make_node("Unsqueeze", ["x"], ["xu"], name="unsqueeze_0", axes=axes)
+        initializer = []
+    else:
+        unsqueeze = helper.make_node("Unsqueeze", ["x", "axes"], ["xu"], name="unsqueeze_0")
+        initializer = [_tensor("axes", INT64, [len(axes)], axes)]
+    initializer.append(_tensor("w", FLOAT, [3, 1, 1], [10.0, 20.0, 30.0]))
+    graph = helper.make_graph(
+        [unsqueeze, helper.make_node("Add", ["xu", "w"], ["out"], name="add_0")],
+        name,
+        inputs=[_vi("x", FLOAT, [3])],
+        outputs=[_vi("out", FLOAT, [3, 3, 1])],
+        initializer=initializer,
+    )
+    return _model(graph, opset=opset, ir_version=10, producer_name="onnx-example")
+
+
+def make_UnsqueezeUnsortedAxes():
+    """Ops: Unsqueeze, Add. The axes refer to positions in the output and are
+    not in increasing order."""
+    return _unsqueeze_model("unsqueeze_unsorted_axes", 13, False, [2, 0])
+
+
+def make_UnsqueezeNegativeAxes():
+    """Ops: Unsqueeze, Add. Negative axes count from the end of the output."""
+    return _unsqueeze_model("unsqueeze_negative_axes", 13, False, [-1, 0])
+
+
+def make_UnsqueezeAxesAttribute():
+    """Ops: Unsqueeze, Add. Axes given as an attribute (opset 11), unsorted."""
+    return _unsqueeze_model("unsqueeze_axes_attribute", 11, True, [2, 0])
+
+
 MODELS = {
     "Abs": make_Abs,
     "Acosh": make_Acosh,
@@ -6297,6 +6375,9 @@ MODELS = {
     "AliasAcrossNewTensor": make_AliasAcrossNewTensor,
     "AliasChain": make_AliasChain,
     "AliasChainSingle": make_AliasChainSingle,
+    "UnsqueezeUnsortedAxes": make_UnsqueezeUnsortedAxes,
+    "UnsqueezeNegativeAxes": make_UnsqueezeNegativeAxes,
+    "UnsqueezeAxesAttribute": make_UnsqueezeAxesAttribute,
     "AliasDynShape": make_AliasDynShape,
     "AliasDynShapeAcrossNewTensor": make_AliasDynShapeAcrossNewTensor,
     "AliasOwnerReadAfterAlias": make_AliasOwnerReadAfterAlias,
@@ -6336,6 +6417,10 @@ MODELS = {
     "NonZero_Constant": make_NonZero_Constant,
     "NonZeroTwice": make_NonZeroTwice,
     "NotIsNaN": make_NotIsNaN,
+    "PRelu": make_PRelu,
+    "PRelu_Broadcast": make_PRelu_Broadcast,
+    "PRelu_Channel": make_PRelu_Channel,
+    "PRelu_Scalar": make_PRelu_Scalar,
     "Pad": make_Pad,
     "Pow": make_Pow,
     "Pow_broadcast": make_Pow_broadcast,
@@ -7134,6 +7219,9 @@ TEST_INPUTS = {
     "AliasAcrossNewTensor": [rand_f32(45, (2, 3)), rand_f32(46, (3, 2))],
     "AliasChain": [rand_f32(47, (1, 2, 3))],
     "AliasChainSingle": [rand_f32(47, (1, 2, 3))],
+    "UnsqueezeUnsortedAxes": [f32([1.0, 2.0, 3.0], (3,))],
+    "UnsqueezeNegativeAxes": [f32([1.0, 2.0, 3.0], (3,))],
+    "UnsqueezeAxesAttribute": [f32([1.0, 2.0, 3.0], (3,))],
     "AliasDynShape": [rand_f32(48, (2, 3))],
     "AliasDynShapeAcrossNewTensor": [rand_f32(51, (2, 3)), rand_f32(52, (2, 3))],
     "AliasOwnerReadAfterAlias": [rand_f32(49, (2, 3)), rand_f32(50, (2, 3))],
@@ -7462,6 +7550,10 @@ TEST_INPUTS = {
             (12,),
         )
     ],
+    "PRelu": [f32(np.arange(-30, 30) / 10, (3, 4, 5))],
+    "PRelu_Broadcast": [f32(np.arange(-30, 30) / 10, (3, 4, 5))],
+    "PRelu_Channel": [f32([-2.0, 1.0, -0.5, 0.0, -1.0, 2.0, 0.0, -3.0, 3.0, -4.0, -1.5, 0.5], (1, 3, 2, 2))],
+    "PRelu_Scalar": [f32([-2.0, -1.0, 0.0, 0.5, 1.0, 3.0], (2, 3))],
     "Pow": [
         f32([1.0, 2.0, 3.0], (3,)),
         f32([4.0, 5.0, 6.0], (3,)),
@@ -8078,6 +8170,20 @@ def _batchnorm_reference(model, feeds):
     return [y.astype(np.float32)]
 
 
+def _unsqueeze_reference(model, feeds):
+    """Unsqueeze with all the axes at once, as the ONNX specification says. The
+    ReferenceEvaluator applies them one after the other, which fails for axes
+    that are not in increasing order."""
+    node = next(n for n in model.graph.node if n.op_type == "Unsqueeze")
+    if len(node.input) > 1:
+        axes = next(numpy_helper.to_array(t) for t in model.graph.initializer if t.name == node.input[1])
+    else:
+        axes = next(a.ints for a in node.attribute if a.name == "axes")
+    w = next(numpy_helper.to_array(t) for t in model.graph.initializer if t.name == "w")
+    xu = np.expand_dims(feeds[node.input[0]], tuple(int(a) for a in axes))
+    return [xu + w]
+
+
 def _logsoftmax_reference(model, feeds):
     """LogSoftmax computed as (x - max) - log(sum(exp(x - max))).
 
@@ -8107,6 +8213,9 @@ EXPECTED_OVERRIDES = {
     "BatchNormReluEpsilon": _batchnorm_reference,
     "LogSoftmaxLargeRange": _logsoftmax_reference,
     "LogSoftmaxLargeRangeAxis0": _logsoftmax_reference,
+    "UnsqueezeUnsortedAxes": _unsqueeze_reference,
+    "UnsqueezeNegativeAxes": _unsqueeze_reference,
+    "UnsqueezeAxesAttribute": _unsqueeze_reference,
 }
 
 

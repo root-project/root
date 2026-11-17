@@ -191,16 +191,37 @@ def _variances(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     sum_of_weights_squared = _get_sum_of_weights_squared(self, flow=flow)
 
     if _kind(self) == Kind.MEAN:
+        # For profiles, the values are the means and the Sumw2 array holds the sum of w*y^2 of each bin.
+        # Return the variance of the mean: the unbiased variance of y divided by the sum of weights
         counts = self.counts(flow=flow)
-        variances = sum_of_weights_squared.copy()
+        bin_entries = _get_profile_bin_array(self, self.GetBinEntries, flow=flow)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            variances = (sum_of_weights_squared / bin_entries - sum_of_weights**2) * counts / (counts - 1) / bin_entries
         variances[counts <= 1] = np.nan
         return variances
 
     return sum_of_weights_squared
 
 
+def _get_profile_bin_array(self, getter, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
+    """
+    Return `getter(bin)` for each bin of a profile as a numpy array, `bin` being the global bin number.
+    """
+    from itertools import product
+
+    import numpy as np
+
+    offset = 0 if flow else 1
+    dimensions = [range(offset, _get_axis_len(self, axis, flow=flow) + offset) for axis in range(self.GetDimension())]
+    return np.array([getter(self.GetBin(*bin)) for bin in product(*dimensions)]).reshape(_shape(self, flow=flow))
+
+
 def _counts(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
+
+    if _kind(self) == Kind.MEAN:
+        # Number of entries, or effective number of entries for weighted profiles
+        return _get_profile_bin_array(self, self.GetBinEffectiveEntries, flow=flow)
 
     sum_of_weights = self.values(flow=flow)
 
@@ -215,10 +236,6 @@ def _counts(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
         out=np.zeros_like(sum_of_weights, dtype=np.float64),
         where=sum_of_weights_squared != 0,
     )
-
-
-def _get_sum_of_weights(self) -> np.typing.NDArray[Any]:  # noqa: F821
-    return self.values()
 
 
 def _get_sum_of_weights_squared(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821

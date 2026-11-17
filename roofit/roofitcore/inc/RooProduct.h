@@ -85,7 +85,7 @@ protected:
 
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;
-  Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=nullptr) const;
+  Int_t getPartIntList(const RooArgSet *iset, const char *isetRange = nullptr) const;
 
   ClassDefOverride(RooProduct,3) // Product of RooAbsReal and/or RooAbsCategory terms
 };

@@ -59,8 +59,8 @@ protected:
 
   TObjArray _types ;             ///< Array of defined category states
   std::vector<double> _count ; ///< Array of counters for each state
-  double  _total ;             ///< Total number of entries
-  double  _nOverflow ;         ///< Number of overflow entries
+  double _total = 0.0;         ///< Total number of entries
+  double _nOverflow = 0.0;     ///< Number of overflow entries
 
   ClassDefOverride(Roo1DTable,1) // 1-dimensional table
 };

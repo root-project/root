@@ -21,6 +21,7 @@
 #include "RConfigure.h"
 
 #include <cstdio>
+#include <cstdlib>
 #ifdef _MSC_VER
 #include <process.h>
 #define execv _execv

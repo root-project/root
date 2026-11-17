@@ -82,7 +82,8 @@ std::unique_ptr<ROOT::RFieldBase>
 ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROOT::RCreateFieldOptions &options) const
 {
    if (GetStructure() == ROOT::ENTupleStructure::kStreamer) {
-      auto streamerField = std::make_unique<ROOT::RStreamerField>(GetFieldName(), GetTypeName());
+      const auto &typeName = GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias();
+      auto streamerField = std::make_unique<ROOT::RStreamerField>(GetFieldName(), typeName);
       if ((streamerField->GetTraits() & RFieldBase::kTraitEmulatedField) && !options.GetEmulateUnknownTypes()) {
          throw RException(
             R__FAIL("streamer field " + GetFieldName() + " has an emulated class but emulation is turned off"));
@@ -1053,6 +1054,8 @@ ROOT::RResult<ROOT::RClusterGroupDescriptor> ROOT::Internal::RClusterGroupDescri
 {
    if (fClusterGroup.fClusterGroupId == ROOT::kInvalidDescriptorId)
       return R__FAIL("unset cluster group ID");
+   if (fClusterGroup.fEntrySpan == 0 || fClusterGroup.fNClusters == 0)
+      return R__FAIL("invalid empty cluster group");
    RClusterGroupDescriptor result;
    std::swap(result, fClusterGroup);
    return result;
@@ -1167,8 +1170,8 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
    fDescriptor.fFeatureFlags.insert(flag);
 }
 
-ROOT::RResult<ROOT::Experimental::RNTupleAttrSetDescriptor>
-ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder::MoveDescriptor()
+ROOT::RResult<ROOT::RNTupleAttrSetDescriptor>
+ROOT::Internal::RNTupleAttrSetDescriptorBuilder::MoveDescriptor()
 {
    if (fDesc.fName.empty())
       return R__FAIL("attribute set name cannot be empty");
@@ -1466,7 +1469,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ReplaceExtraTypeInfo(RExtraTypeIn
 }
 
 ROOT::RResult<void>
-ROOT::Internal::RNTupleDescriptorBuilder::AddAttributeSet(Experimental::RNTupleAttrSetDescriptor &&attrSetDesc)
+ROOT::Internal::RNTupleDescriptorBuilder::AddAttributeSet(RNTupleAttrSetDescriptor &&attrSetDesc)
 {
    auto &attrSets = fDescriptor.fAttributeSets;
    if (std::find_if(attrSets.begin(), attrSets.end(), [&name = attrSetDesc.GetName()](const auto &desc) {
@@ -1557,19 +1560,19 @@ ROOT::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable ROOT::RNTupleDescripto
    return RExtraTypeInfoDescriptorIterable(*this);
 }
 
-ROOT::Experimental::RNTupleAttrSetDescriptorIterable ROOT::RNTupleDescriptor::GetAttrSetIterable() const
+ROOT::RNTupleDescriptor::RNTupleAttrSetDescriptorIterable ROOT::RNTupleDescriptor::GetAttrSetIterable() const
 {
-   return Experimental::RNTupleAttrSetDescriptorIterable(*this);
+   return RNTupleAttrSetDescriptorIterable(*this);
 }
 
-bool ROOT::Experimental::RNTupleAttrSetDescriptor::operator==(const RNTupleAttrSetDescriptor &other) const
+bool ROOT::RNTupleAttrSetDescriptor::operator==(const RNTupleAttrSetDescriptor &other) const
 {
    return fAnchorLength == other.fAnchorLength && fSchemaVersionMajor == other.fSchemaVersionMajor &&
           fSchemaVersionMinor == other.fSchemaVersionMinor && fAnchorLocator == other.fAnchorLocator &&
           fName == other.fName;
 };
 
-ROOT::Experimental::RNTupleAttrSetDescriptor ROOT::Experimental::RNTupleAttrSetDescriptor::Clone() const
+ROOT::RNTupleAttrSetDescriptor ROOT::RNTupleAttrSetDescriptor::Clone() const
 {
    RNTupleAttrSetDescriptor desc;
    desc.fAnchorLength = fAnchorLength;

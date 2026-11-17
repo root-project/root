@@ -140,8 +140,9 @@ MarkovChain* MetropolisHastings::ConstructChain()
          if (RooAbsReal::numEvalErrors() > 0) {
             RooAbsReal::clearEvalErrorLog();
             hadEvalError = true;
-         } else
+         } else {
             hadEvalError = false;
+         }
       } else if (fType == kRegular) {
          if (xL == 0.0) {
             hadEvalError = true;
@@ -194,9 +195,9 @@ MarkovChain* MetropolisHastings::ConstructChain()
          } else {
             a = xPrimeL - xL;
          }
-      }
-      else
+      } else {
          a = xPrimeL / xL;
+      }
       //a = xL / xPrimeL;
 
       if (!hadEvalError && !fPropFunc->IsSymmetric(xPrime, x)) {

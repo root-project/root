@@ -13,36 +13,40 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set(GED_HEADERS
+  HelpSMText.h
+  TArrowEditor.h
+  TAttFillEditor.h
+  TAttLineEditor.h
+  TAttMarkerEditor.h
+  TAttTextEditor.h
+  TAxisEditor.h
+  TCurlyArcEditor.h
+  TCurlyLineEditor.h
+  TF1Editor.h
+  TFrameEditor.h
+  TFunctionParametersDialog.h
+  TGedEditor.h
+  TGedFrame.h
+  TGedMarkerSelect.h
+  TGedPatternSelect.h
+  TGraphEditor.h
+  TH1Editor.h
+  TH2Editor.h
+  TLineEditor.h
+  TPadEditor.h
+  TPaveStatsEditor.h
+  TPieEditor.h
+  TPieSliceEditor.h
+  TStyleDialog.h
+  TStyleManager.h
+  TStylePreview.h
+  TTextEditor.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Ged
   HEADERS
-    HelpSMText.h
-    TArrowEditor.h
-    TAttFillEditor.h
-    TAttLineEditor.h
-    TAttMarkerEditor.h
-    TAttTextEditor.h
-    TAxisEditor.h
-    TCurlyArcEditor.h
-    TCurlyLineEditor.h
-    TF1Editor.h
-    TFrameEditor.h
-    TFunctionParametersDialog.h
-    TGedEditor.h
-    TGedFrame.h
-    TGedMarkerSelect.h
-    TGedPatternSelect.h
-    TGraphEditor.h
-    TH1Editor.h
-    TH2Editor.h
-    TLineEditor.h
-    TPadEditor.h
-    TPaveStatsEditor.h
-    TPieEditor.h
-    TPieSliceEditor.h
-    TStyleDialog.h
-    TStyleManager.h
-    TStylePreview.h
-    TTextEditor.h
+    ${GED_HEADERS}
   SOURCES
     src/HelpSMText.cxx
     src/TArrowEditor.cxx
@@ -80,4 +84,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Ged
     Tree
     TreePlayer
   ${EXTRA_DICT_OPTS}
+)
+
+set(RELATIVE_INC_HEADERS ${GED_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Ged
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

@@ -35,7 +35,7 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &model, RooAbsReal &nll, RooAb
 std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const RooLinkedList &cmdList);
 std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, const RooLinkedList &cmdList);
 
-std::unique_ptr<RooFitResult> fitTo(RooAbsReal &pdf, RooAbsData &data, const RooLinkedList &cmdList, bool chi2);
+std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const RooLinkedList &cmdList, bool chi2);
 
 } // namespace FitHelpers
 } // namespace RooFit

@@ -9,12 +9,16 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set(GEOMVIEWER_HEADERS
+  ROOT/RGeomData.hxx
+  ROOT/RGeomHierarchy.hxx
+  ROOT/RGeomViewer.hxx
+  ROOT/RGeoPainter.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGeomViewer
   HEADERS
-    ROOT/RGeomData.hxx
-    ROOT/RGeomHierarchy.hxx
-    ROOT/RGeomViewer.hxx
-    ROOT/RGeoPainter.hxx
+    ${GEOMVIEWER_HEADERS}
   SOURCES
     src/RGeomData.cxx
     src/RGeomHierarchy.cxx
@@ -29,4 +33,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGeomViewer
   LIBRARIES
     ROOTCsg
   ${EXTRA_DICT_OPTS}
+)
+
+set(RELATIVE_INC_HEADERS ${GEOMVIEWER_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(ROOTGeomViewer
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

@@ -13,8 +13,8 @@
 ## \authors Jonah Ascoli (CERN), Martin Foll (CERN, University of Oslo (UiO)), Silia Taider (CERN)
 
 import matplotlib.pyplot as plt
+import numpy as np
 import ROOT
-import sklearn.metrics as skl
 import torch
 from matplotlib import use
 from torch import nn
@@ -239,10 +239,36 @@ plt.ylabel("Validation loss")
 plt.savefig("loss_curve")
 print("Loss curve saved to loss_curve.png")
 
-fpr, tpr, thresholds = skl.roc_curve(test_true, test_preds)
+
+def roc_curve(y_true, y_score):
+    """Compute the receiver operating characteristic (ROC) curve.
+
+    Returns the false positive rate and the true positive rate obtained when
+    classifying as signal everything with a score above a threshold, for every
+    distinct score value used as threshold, starting with the (0, 0) point.
+
+    This is equivalent to sklearn.metrics.roc_curve(y_true, y_score, drop_intermediate=False),
+    which additionally returns the thresholds.
+    """
+    y_true = np.asarray(y_true, dtype=bool).ravel()
+    y_score = np.asarray(y_score, dtype=float).ravel()
+    # Sort by decreasing score, so that lowering the threshold means walking along the arrays
+    order = np.argsort(-y_score, kind="stable")
+    y_true = y_true[order]
+    y_score = y_score[order]
+    # Keep only the last entry of each run of equal scores: tied scores share a threshold
+    distinct = np.r_[np.where(np.diff(y_score))[0], y_true.size - 1]
+    true_positives = np.cumsum(y_true)[distinct]
+    false_positives = np.cumsum(~y_true)[distinct]
+    tpr = np.r_[0.0, true_positives / true_positives[-1]]
+    fpr = np.r_[0.0, false_positives / false_positives[-1]]
+    return fpr, tpr
+
+
+fpr, tpr = roc_curve(test_true, test_preds)
 fig = plt.figure()
 ax = plt.axes()
-ax.plot(fpr[:-1], tpr[:-1])
+ax.plot(fpr, tpr)
 plt.title("ROC curve")
 plt.xlabel("False positive rate")
 plt.ylabel("True positive rate")

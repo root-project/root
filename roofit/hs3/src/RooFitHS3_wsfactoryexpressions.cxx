@@ -1,6 +1,15 @@
 namespace {
 
 auto RooFitHS3_wsfactoryexpressions = R"({
+    "argus_dist": {
+        "class": "RooArgusBG",
+        "arguments": [
+            "mass",
+            "resonance",
+            "slope",
+            "power"
+        ]
+    },
     "ARGUS_dist": {
         "class": "RooArgusBG",
         "arguments": [
@@ -129,12 +138,6 @@ auto RooFitHS3_wsfactoryexpressions = R"({
         "class": "RooUniform",
         "arguments": [
             "x"
-        ]
-    },
-    "crystalball_doublesided_dist": {
-        "class": "RooCrystalBall",
-        "arguments": [
-            "m", "m0", "sigma_L", "sigma_R", "alpha_L", "n_L", "alpha_R", "n_R"
         ]
     }
 })";

@@ -17,7 +17,7 @@ import platform
 import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-if not os.path.exists('ScottCppyy.C'):
+if not os.path.exists('Scott3.C'):
     os.chdir(os.path.dirname(__file__))
 
 try:
@@ -65,11 +65,42 @@ class Regression01TwiceImportStar( MyTestCase ):
       x = TestTChain()        # TestTChain defined in Amir.py
 
 
-# TPyException thrown from C++ code ========================================
+# PyException thrown from C++ code ==========================================
 class Regression02PyException(MyTestCase):
    def test1RaiseAndTrapPyException(self):
-      """Test thrown TPyException object processing"""
-      gROOT.LoadMacro("ScottCppyy.C+")
+      """Test thrown PyException object processing"""
+      # JIT-compiled, so the Python symbols resolve to the running interpreter
+      gInterpreter.Declare(r"""
+      #include "cpyrt/PyException.h"
+      #include "DllImport.h"
+
+      extern "C" {
+         struct _object;
+         void PyErr_SetString(_object *, const char *);
+         R__EXTERN _object *PyExc_SyntaxError;
+      }
+
+      void ThrowPyException()
+      {
+         PyErr_SetString(PyExc_SyntaxError, "test error message");
+         throw cppjit::cpyrt::PyException();
+      }
+
+      class MyThrowingClass {
+      public:
+         static void ThrowPyException(int)
+         {
+            PyErr_SetString(PyExc_SyntaxError, "overloaded int test error message");
+            throw cppjit::cpyrt::PyException();
+         }
+
+         static void ThrowPyException(double)
+         {
+            PyErr_SetString(PyExc_SyntaxError, "overloaded double test error message");
+            throw cppjit::cpyrt::PyException();
+         }
+      };
+      """)
 
       # test of not overloaded global function
       with self.assertRaisesRegex(SyntaxError, "test error message"):

@@ -77,7 +77,7 @@ public:
 
        void AddConstraintTerms(RooWorkspace& proto, Measurement& measurement, std::string prefix, std::string interpName,
                std::vector<OverallSys>& systList,
-               std::vector<std::string>& likelihoodTermNames,
+               std::vector<std::string>& constraintTermNames,
                std::vector<std::string>& totSystTermNames);
 
       std::unique_ptr<RooProduct> CreateNormFactor(RooWorkspace& proto, std::string& channel,
@@ -95,7 +95,7 @@ public:
       std::unique_ptr<TH1> MakeScaledUncertaintyHist(const std::string& Name,
                  std::vector< std::pair<const TH1*, std::unique_ptr<TH1>> > const& HistVec ) const;
 
-      TH1* MakeAbsolUncertaintyHist( const std::string& Name, const TH1* Hist );
+      TH1* MakeAbsolUncertaintyHist( const std::string& Name, const TH1* Nominal );
 
       void ConfigureHistFactoryDataset(RooDataSet& obsData, TH1 const& nominal, RooWorkspace& proto,
                    std::vector<std::string> const& obsNameVec);

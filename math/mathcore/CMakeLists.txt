@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT math/mathcore package
 ############################################################################
 
-set(HEADERS
+set(MATHCORE_HEADERS
   Fit/BasicFCN.h
   Fit/BinData.h
   Fit/Chi2FCN.h
@@ -100,12 +100,15 @@ set(HEADERS
   TStatistic.h
 )
 
+set(RELATIVE_INC_HEADERS ${MATHCORE_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
 if(runtime_cxxmodules)
   # Adding Math/Math.h to the MathCore module makes the generation of GenVector
   # dictionary hand due to a bug in rootcling/clang. The redeclaration chain of
   # 'abs' shadow declaration (from stl math.h) is broken.
   # FIXME: Revise after a llvm upgrade or reproduce it outside rootcling.
-  list(REMOVE_ITEM HEADERS "Math/Math.h")
+  list(REMOVE_ITEM MATHCORE_HEADERS "Math/Math.h")
 endif()
 
 ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler false positive warning
@@ -118,7 +121,7 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
   HEADERS
-    ${HEADERS}
+    ${MATHCORE_HEADERS}
   SOURCES
     src/AdaptiveIntegratorMultiDim.cxx
     src/BasicMinimizer.cxx
@@ -189,6 +192,31 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     CDT::CDT
     ${MATHCORE_LIBRARIES}
 )
+
+target_sources(MathCore
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/Math/CladDerivator.h
+    inc/Math/DistFunc.h
+    inc/Math/KDTree.icc
+    inc/Math/MixMaxEngine.icc
+    inc/Math/PdfFunc.h
+    inc/Math/ProbFunc.h
+    inc/Math/QuantFunc.h
+    inc/Math/SpecFunc.h
+    inc/LinkDef.h
+    inc/LinkDef1.h
+    inc/LinkDef2.h
+    inc/LinkDef3.h
+    inc/LinkDef_Func.h
+    src/MixMaxEngineImpl.h
+    src/SpecFuncCephes.h
+)
+
 
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 

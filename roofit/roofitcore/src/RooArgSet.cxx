@@ -491,7 +491,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
 
       // Process abort statements
       if (!token.CompareTo("abort")) {
-        TString message = parser.readLine() ;
+        parser.readLine() ;
         coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): USER ABORT" << std::endl ;
         return true ;
       }

@@ -64,7 +64,7 @@ std::vector<double> getValues(RooAbsReal const &real, RooAbsData const &data)
 class MyTimer {
 public:
    MyTimer(std::string &&name)
-      : m_name(name), m_startTime(clock()), m_endTime(0), m_steadyStart(std::chrono::steady_clock::now()), m_steadyEnd()
+      : m_name(name), m_startTime(clock()), m_endTime(0), m_steadyStart(std::chrono::steady_clock::now())
    {
    }
 
@@ -234,10 +234,11 @@ void PDFTest::compareFixedValues(double &maximalError, bool normalise, bool comp
    auto callBatchFunc = [this](const RooAbsPdf &pdf) { return getValues(pdf, *_dataUniform); };
 
    auto callScalarFunc = [compareLogs](const RooAbsPdf &pdf, const RooArgSet *theNormSet) {
-      if (compareLogs)
+      if (compareLogs) {
          return pdf.getLogVal(theNormSet);
-      else
+      } else {
          return pdf.getVal(theNormSet);
+      }
    };
 
    if (normalise) {
@@ -420,35 +421,6 @@ void PDFTest::checkParameters()
    }
 }
 
-void PDFTest::runBatchVsScalar(bool clonePDF)
-{
-   RooAbsPdf *pdfScalar = _pdf.get();
-   RooAbsPdf *pdfBatch = _pdf.get();
-   std::unique_ptr<RooAbsPdf> cleanupScalar;
-   std::unique_ptr<RooAbsPdf> cleanupBatch;
-
-   if (clonePDF) {
-      pdfScalar = static_cast<RooAbsPdf *>(_pdf->cloneTree("PDFForScalar"));
-      pdfBatch = static_cast<RooAbsPdf *>(_pdf->cloneTree("PDFForScalar"));
-
-      cleanupScalar.reset(pdfScalar);
-      cleanupBatch.reset(pdfBatch);
-   }
-
-   resetParameters();
-   auto resultScalar = runScalarFit(pdfScalar);
-
-   resetParameters();
-   auto resultBatch = runBatchFit(pdfBatch);
-
-   resetParameters();
-
-   ASSERT_NE(resultScalar, nullptr);
-   ASSERT_NE(resultBatch, nullptr);
-
-   EXPECT_TRUE(resultScalar->isIdentical(*resultBatch, _toleranceParameter, _toleranceCorrelation));
-}
-
 std::unique_ptr<RooFitResult> PDFTest::runBatchFit(RooAbsPdf *pdf)
 {
    if (!_dataFit)
@@ -489,50 +461,6 @@ std::unique_ptr<RooFitResult> PDFTest::runBatchFit(RooAbsPdf *pdf)
    EXPECT_EQ(result->status(), 0) << "[Batch fit did not converge.]";
 
    makePlots(::testing::UnitTest::GetInstance()->current_test_info()->name() + std::string("_batch_postfit"));
-
-   return result;
-}
-
-std::unique_ptr<RooFitResult> PDFTest::runScalarFit(RooAbsPdf *pdf)
-{
-   if (!_dataFit)
-      makeFitData();
-
-   kickParameters();
-   makePlots(::testing::UnitTest::GetInstance()->current_test_info()->name() + std::string("_scalar_prefit"));
-
-   std::unique_ptr<RooArgSet> pars{pdf->getParameters(*_dataFit)};
-   pars->assign(_parameters);
-
-   for (unsigned int index = 0; index < pars->size(); ++index) {
-      auto pdfParameter = static_cast<RooAbsReal *>((*pars)[index]);
-      auto origParameter = static_cast<RooAbsReal *>(_origParameters.find(*pdfParameter));
-      if (!origParameter || origParameter->isConstant())
-         continue;
-
-      EXPECT_NE(pdfParameter->getVal(), origParameter->getVal())
-         << "Parameter #" << index << "=" << pdfParameter->GetName() << " is identical after kicking.";
-   }
-
-   if (HasFailure()) {
-      std::cout << "Pre-fit parameters:\n";
-      _parameters.Print("V");
-      std::cout << "Orig parameters:\n";
-      _origParameters.Print("V");
-   }
-
-   MyTimer singleTimer("Fitting scalar mode " + _name);
-   std::unique_ptr<RooFitResult> result{pdf->fitTo(*_dataFit, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy), RooFit::SumW2Error(false),
-                                                   RooFit::PrintLevel(_printLevel), RooFit::Save(),
-                                                   _multiProcess > 0 ? RooFit::NumCPU(_multiProcess) : RooCmdArg())};
-   std::cout << singleTimer;
-   EXPECT_NE(result, nullptr);
-   if (!result)
-      return nullptr;
-
-   EXPECT_EQ(result->status(), 0) << "[Scalar fit did not converge.]";
-
-   makePlots(::testing::UnitTest::GetInstance()->current_test_info()->name() + std::string("_scalar_postfit"));
 
    return result;
 }

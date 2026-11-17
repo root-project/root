@@ -86,7 +86,7 @@ public:
       union {
          void *_ptr;
          Func _funcptr;
-      } temp;
+      } temp{};
       temp._funcptr = ptr;
       return temp._ptr;
    }

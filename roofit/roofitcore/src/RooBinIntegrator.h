@@ -50,7 +50,7 @@ protected:
    mutable std::vector<double> _xmin;      ///<! Lower integration bound
    mutable std::vector<double> _xmax;      ///<! Upper integration bound
    std::vector<std::vector<double>> _binb; ///<! list of bin boundaries
-   mutable Int_t _numBins = 0;             ///<! Size of integration range
+   Int_t _numBins = 0;                     ///<! Size of integration range
 
    bool _useIntegrandLimits = false; ///< If true limits of function binding are used
 

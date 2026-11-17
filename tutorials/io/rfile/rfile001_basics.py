@@ -1,12 +1,12 @@
-# \file
-# \ingroup ROOT7 tutorial_io
-# Demonstrate the basic usage of RFile.
-#
-# \macro_code
-# \macro_output
-#
-# \date 2025-11-06
-# \author Giacomo Parolini <giacomo.parolini@cern.ch>
+## \file
+## \ingroup ROOT7 tutorial_io
+## Demonstrate the basic usage of RFile.
+##
+## \macro_code
+## \macro_output
+##
+## \date 2025-11-06
+## \author Giacomo Parolini <giacomo.parolini@cern.ch>
 
 import ROOT
 

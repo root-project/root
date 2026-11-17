@@ -19,7 +19,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
   HEADERS
     ${ROOFITHS3_HEADERS}
   SOURCES
-    src/Domains.cxx
+    src/HS3Document.cxx
+    src/HS3Parser.cxx
+    src/HS3Upgrade.cxx
+    src/HS3Validate.cxx
+    src/HS3Writer.cxx
     src/JSONInterface.cxx
     src/JSONIO.cxx
     src/RooJSONFactoryWSTool.cxx
@@ -39,20 +43,21 @@ target_link_libraries(RooFitHS3 PRIVATE nlohmann_json::nlohmann_json)
 
 set(RELATIVE_INC_HEADERS ${ROOFITHS3_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
-  target_sources(
-      RooFitHS3
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS inc/ src/
-      FILES
-          ${RELATIVE_INC_HEADERS}
-          # LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
-          src/Domains.h
-          src/JSONIOUtils.h
-          src/static_execute.h
-  )
-endif()
+target_sources(
+    RooFitHS3
+    PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/ src/
+    FILES
+        ${RELATIVE_INC_HEADERS}
+        # LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
+        src/HS3Builder.h
+        src/HS3Document.h
+        src/HS3Schema.h
+        src/JSONIOUtils.h
+        src/JSONReadRecorder.h
+        src/static_execute.h
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

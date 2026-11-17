@@ -313,9 +313,9 @@ std::unique_ptr<RooFitResult> RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
             if (fStrategy == 0 ) {
 	      msg.log(nullptr, RooFit::DEBUG, RooFit::Minimization) << "    ----> trying with strategy = 1\n";
 	      minim.setStrategy(1);
+            } else {
+               tries++; // skip this trial if strategy is already 1
             }
-            else
-	      tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
 	   msg.log(nullptr, RooFit::DEBUG, RooFit::Minimization) << "    ----> trying with improve\n";

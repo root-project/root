@@ -88,30 +88,50 @@ set(_clad_extra_settings
   LOG_OUTPUT_ON_FAILURE ON
 )
 
+set(ROOT_CLAD_VERSION 2.5)
+set(ROOT_CLAD_HASH "f548a0e4ea6985a87fc7b878f38791f34f96ef1dc06a41ff35d7058d75af1417")
+
+# Sometimes it can be useful to try out a specific git tag, branch, or commit:
+# set(CLAD_REPOSITORY https://github.com/vgvassilev/clad.git)
+# set(CLAD_GIT_TAG v${ROOT_CLAD_VERSION})
+
 # If the CLAD_SOURCE_DIR variable is defined in the CMake configuration, we're
-# skipping the download of the repository and use the passed directory.
+# skipping the download of the sources and use the passed directory.
 if (DEFINED CLAD_SOURCE_DIR)
   list(APPEND _clad_extra_settings SOURCE_DIR ${CLAD_SOURCE_DIR})
+elseif(CLAD_GIT_TAG)
+  list(APPEND _clad_extra_settings
+       GIT_REPOSITORY ${CLAD_REPOSITORY}
+       GIT_TAG ${CLAD_GIT_TAG}
+       UPDATE_COMMAND "")
+  set(_clad_restore_cmd COMMAND git checkout -q <SOURCE_DIR>)
 else()
-  list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/vgvassilev/clad.git)
-  list(APPEND _clad_extra_settings GIT_TAG v2.5)
+  # The CERN mirror of the GitHub release archive, then GitHub itself, as for
+  # the other builtins.
+  list(APPEND _clad_extra_settings
+       DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
+       URL ${lcgpackages}/clad-${ROOT_CLAD_VERSION}.tar.gz
+           https://github.com/vgvassilev/clad/archive/refs/tags/v${ROOT_CLAD_VERSION}.tar.gz
+       URL_HASH SHA256=${ROOT_CLAD_HASH})
+  set(_clad_restore_cmd COMMAND git init -q)
 endif()
 
 # list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
 #list(APPEND _clad_patches_list "nullptr_dereference_fix.patch" "windows_build_fix.patch")
 list(APPEND _clad_patches_list "lld_lookup_no_default_path.patch")
-if (_clad_patches_list)
+# An external clad source directory is used as is: it is expected to be
+# already patched if necessary.
+if (_clad_patches_list AND NOT DEFINED CLAD_SOURCE_DIR)
   set(_clad_patch_command
       ${CMAKE_COMMAND} -E copy_directory
       ${CMAKE_SOURCE_DIR}/interpreter/cling/tools/plugins/clad/patches <SOURCE_DIR>
-      && git checkout -q <SOURCE_DIR>
-      && git apply --ignore-space-change --ignore-whitespace ${_clad_patches_list}
+      ${_clad_restore_cmd}
+      COMMAND git apply --ignore-space-change --ignore-whitespace ${_clad_patches_list}
       )
-endif(_clad_patches_list)
+endif(_clad_patches_list AND NOT DEFINED CLAD_SOURCE_DIR)
 
 ExternalProject_Add(
   clad
-  UPDATE_COMMAND ""
   PATCH_COMMAND ${_clad_patch_command}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}

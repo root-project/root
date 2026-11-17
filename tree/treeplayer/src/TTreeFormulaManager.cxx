@@ -15,6 +15,8 @@
 #include "TError.h"
 #include "TLeafElement.h"
 
+#include <cmath>
+
 
    /** \class TTreeFormulaManager
    Used to coordinate one or more TTreeFormula objects.

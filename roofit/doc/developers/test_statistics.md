@@ -56,7 +56,7 @@ These option-methods are:
 - `NLLFactory::ExternalConstraints(const RooArgSet &externalconstraints)`: Initialized with a `RooArgSet` of external constraint pdfs, i.e. constraints not necessarily in the pdf itself. These are always added to the subsidiary likelihood.
 - `NLLFactory::GlobalObservables(const RooArgSet &globalObservables)`: Initialized with a `RooArgSet` of observables that have a constant value, independent of the dataset events. Pdf components dependent on these alone are added to the subsidiary likelihood. \note This overrides all other likelihood parameters (like those passed as `ConstrainedParameters`) if present.
 - `NLLFactory::GlobalObservablesTag(const char *globalObservablesTag)`: a string argument can be given, which should be set as attribute in any pdf component to indicate that it is a global observable. Can be used instead of or in addition to a `GlobalObservables` argument.
-- `NLLFactory::EvalBackend(RooFit::EvalBackend evalBackend)`: pass in the enum class that determines which back-end to use for RooFit pdf calculation, like the CPU vectorization enabled back-end, the legacy non-vectorized one or the GPU back-end. \note This is a different set of back-ends than those mentioned below under [Calculators](#calculators) which are independent of the `TestStatistics`/`MultiProcess` framework described in this document.
+- `NLLFactory::EvalBackend(RooFit::EvalBackend evalBackend)`: pass in the enum class that determines which back-end to use for RooFit pdf calculation, like the CPU vectorization enabled back-end or the GPU back-end. \note This is a different set of back-ends than those mentioned below under [Calculators](#calculators) which are independent of the `TestStatistics`/`MultiProcess` framework described in this document.
 
 Using these parameters, creating a likelihood of a simultaneous pdf (i.e. a `RooSimultaneous`) with constrained terms and global observables can be done with:
 
@@ -174,7 +174,7 @@ Splitting in a lower number of larger parts thus minimizes the total overhead ti
 However, increasing the number of parts may improve load balancing, which could lead to lower total runtimes.
 
 With this in mind, there are two ways of splitting the likelihood: we can split into (blocks of) events and can split `RooSumL` likelihoods into (groups of) components.
-When splitting over events, this class emulates the existing `NumCPU(>1)` functionality of the `RooAbsTestStatistic` tree, which was implemented based on `RooRealMPFE`.
+When splitting over events, this class emulates the `NumCPU(>1)` multiprocessing of the legacy `RooAbsTestStatistic` classes, which were implemented based on `RooRealMPFE` and removed in ROOT 6.44.
 
 By default, `LikelihoodJob` will split over components, making every component a single worker task.
 To reduce the number of (groups of) components, set `RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks` to a different desired number of tasks.

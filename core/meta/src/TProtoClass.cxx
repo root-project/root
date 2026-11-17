@@ -304,7 +304,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (cl->fSizeof != -1 && cl->fSizeof != fSizeof) {
       Error("FillTClass",
             "For %s the sizeof provided by GenerateInitInstance (%d) is different from the one provided by TProtoClass (%d)",
-            cl->GetName(), cl->fSizeof, fSizeof);
+            cl->GetName(), cl->fSizeof.load(std::memory_order_relaxed), fSizeof);
    } else
       cl->fSizeof = fSizeof;
    cl->fCheckSum = fCheckSum;

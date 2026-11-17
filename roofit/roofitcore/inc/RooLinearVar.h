@@ -60,7 +60,7 @@ protected:
 
   double evaluate() const override ;
 
-  mutable RooLinTransBinning _binning ;
+  RooLinTransBinning _binning;
   RooLinkedList _altBinning ;              ///<!
   RooTemplateProxy<RooAbsRealLValue> _var; ///< Input observable
   RooRealProxy _slope ;                    ///< Slope of transformation

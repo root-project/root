@@ -233,15 +233,14 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
  * \defgroup Fitting Arguments for fitting
  * @{
  */
-// RooChi2Var::ctor / RooNLLVar arguments
+// createChi2() / createNLL() arguments
 RooCmdArg Extended(bool flag=true) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg DataError(std::string const&) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
 RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
-RooCmdArg TimingAnalysis(bool timingAnalysis) ;
-
+RooCmdArg TimingAnalysis(bool flag);
 RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
@@ -250,22 +249,12 @@ RooCmdArg Optimize(Int_t flag = 2);
 
 class EvalBackend : public RooCmdArg {
 public:
-   enum class Value { Legacy, Cpu, Cuda, Codegen, CodegenNoGrad };
+   enum class Value { Cpu, Cuda, Codegen, CodegenNoGrad };
 
    EvalBackend(Value value);
 
    EvalBackend(std::string const &name);
 
-   static EvalBackend Legacy()
-// Deprecation macro skipped when building RooFit itself, so we don't get
-// warnings when unit testing deprecated features.
-#ifndef ROOFIT_BUILDS_ITSELF
-      R__DEPRECATED(6, 44,
-                    "The legacy evaluation backend will be removed in ROOT 6.44. "
-                    "Use the default \"cpu\" evaluation backend, i.e. simply don't pass any EvalBackend() "
-                    "command argument.")
-#endif
-         ;
    static EvalBackend Cpu();
    static EvalBackend Cuda();
    static EvalBackend Codegen();
@@ -305,7 +294,7 @@ RooCmdArg ProjectedObservables(Args_t &&... argsOrArgSet) {
 RooCmdArg Verbose(bool flag=true) ;
 RooCmdArg Save(bool flag=true) ;
 RooCmdArg Timer(bool flag=true) ;
-RooCmdArg PrintLevel(Int_t code) ;
+RooCmdArg PrintLevel(Int_t level);
 RooCmdArg Warnings(bool flag=true) ;
 RooCmdArg Strategy(Int_t code) ;
 RooCmdArg InitialHesse(bool flag=true) ;

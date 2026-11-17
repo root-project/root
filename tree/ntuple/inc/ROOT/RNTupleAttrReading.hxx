@@ -22,13 +22,11 @@ class REntry;
 class RNTupleDescriptor;
 class RNTupleModel;
 
-namespace Experimental {
-
 class RNTupleAttrEntryIterable;
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrRange
+\class ROOT::RNTupleAttrRange
 \ingroup NTuple
 \brief A range of main entries referred to by an attribute entry
 
@@ -83,7 +81,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrSetReader
+\class ROOT::RNTupleAttrSetReader
 \ingroup NTuple
 \brief Class used to read a RNTupleAttrSet in the context of a RNTupleReader
 
@@ -163,7 +161,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrEntryIterable
+\class ROOT::RNTupleAttrEntryIterable
 \ingroup NTuple
 \brief Iterable class used to loop over attribute entries.
 
@@ -237,7 +235,6 @@ public:
    RIterator end() { return RIterator{fReader->fEntryRanges.end(), fReader->fEntryRanges.end(), fFilter}; }
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

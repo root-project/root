@@ -102,9 +102,9 @@ double RooBukinPdf::evaluate() const
 
   if(std::abs(xi) > exp(-6.)){
     r5=xi/log(r4+xi);
+  } else {
+     r5 = 1;
   }
-  else
-    r5=1;
 
   x1 = Xp + (hp / 2) * (r1-1);
   x2 = Xp + (hp / 2) * (r1+1);

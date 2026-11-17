@@ -58,7 +58,7 @@ protected:
   RooAbsPdf* _pdf = nullptr;
   RooAbsData* _data = nullptr;
   mutable std::map< std::string, std::vector< BarlowCache > > _barlowCache;
-  mutable std::set< std::string > _statUncertParams;
+  std::set<std::string> _statUncertParams;
   mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
   double evaluate() const override ;
 

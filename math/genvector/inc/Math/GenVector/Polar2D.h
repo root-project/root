@@ -194,8 +194,8 @@ public:
 #endif
 
 private:
-   T fR = 1.;
-   T fPhi = 0.;
+   T fR{1.};
+   T fPhi{0.};
 };
 
 

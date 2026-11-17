@@ -49,14 +49,18 @@ ROOT_LINKER_LIBRARY(ROOTBrowserTreeWidget
      ROOTTreeViewer
 )
 
+set(BROWSERV7_HEADERS
+  ROOT/RBrowser.hxx
+  ROOT/RBrowserData.hxx
+  ROOT/RBrowserReply.hxx
+  ROOT/RBrowserRequest.hxx
+  ROOT/RFileDialog.hxx
+  ROOT/RWebBrowserImp.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
-    ROOT/RBrowser.hxx
-    ROOT/RBrowserData.hxx
-    ROOT/RBrowserReply.hxx
-    ROOT/RBrowserRequest.hxx
-    ROOT/RFileDialog.hxx
-    ROOT/RWebBrowserImp.hxx
+    ${BROWSERV7_HEADERS}
   SOURCES
     src/RBrowser.cxx
     src/RBrowserData.cxx
@@ -70,4 +74,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     RIO
 )
 
+set(RELATIVE_INC_HEADERS ${BROWSERV7_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(ROOTBrowsable
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
 

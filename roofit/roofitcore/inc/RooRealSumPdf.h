@@ -37,7 +37,8 @@ public:
   void doEval(RooFit::EvalContext &) const override;
 
   bool forceAnalyticalInt(const RooAbsArg& arg) const override { return arg.isFundamental() ; }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
+                                const char *rangeName = nullptr) const override;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   const RooArgList& funcList() const { return _funcList ; }
@@ -83,7 +84,7 @@ protected:
 
   RooListProxy _funcList ;  ///<  List of component FUNCs
   RooListProxy _coefList ;  ///<  List of coefficients
-  bool _extended ;        ///< Allow use as extended p.d.f.
+  bool _extended = false;   ///< Allow use as extended p.d.f.
 
   bool _doFloor = false; ///< Introduce floor at zero in pdf
   mutable bool _haveWarned{false}; ///<!
@@ -113,7 +114,7 @@ private:
 
   static Int_t getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
                                        RooArgList const& funcList, RooArgList const& coefList,
-                                       RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName);
+                                       RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName);
   static double analyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
                                      RooArgList const& funcList, RooArgList const& coefList,
                                      Int_t code, const RooArgSet* normSet, const char* rangeName,

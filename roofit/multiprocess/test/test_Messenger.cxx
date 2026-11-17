@@ -22,7 +22,7 @@ void handle_sigchld(int signum)
 
 TEST(TestMPMessenger, Connections)
 {
-   struct sigaction sa;
+   struct sigaction sa{};
    RooFit::MultiProcess::ProcessManager pm(4);
    if (pm.is_master()) {
       // on master, we have to handle SIGCHLD
@@ -50,7 +50,7 @@ TEST(TestMPMessenger, ConnectionsManualExit)
    // any destructors (which is what happens when you call _Exit() instead of regularly ending the program by reaching
    // the end of main()).
 
-   struct sigaction sa;
+   struct sigaction sa{};
 
    RooFit::MultiProcess::ProcessManager pm(4);
    if (pm.is_master()) {

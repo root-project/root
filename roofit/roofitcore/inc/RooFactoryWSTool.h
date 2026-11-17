@@ -78,7 +78,7 @@ public:
 
   // Composite object construction language parser
   RooAbsArg* process(const char* expr) ;
-  std::string processExpression(const char* expr) ;
+  std::string processExpression(const char *token);
   std::vector<std::string> splitFunctionArgs(const char* funcExpr) ;
 
 
@@ -145,7 +145,8 @@ public:
 
   class SpecialsIFace : public IFace {
   public:
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
+     std::string
+     create(RooFactoryWSTool &ft, const char *typeName, const char *instName, std::vector<std::string> args) override;
   } ;
 
   static void registerSpecial(const char* typeName, RooFactoryWSTool::IFace* iface) ;
@@ -164,13 +165,13 @@ protected:
   std::stack<std::string> _autoNamePrefix ;
   std::map<std::string,std::string> _typeAliases ;
 
-  static void checkIndex(UInt_t index) ;
+  static void checkIndex(UInt_t idx) ;
 
 
-  std::string processCompositeExpression(const char* arg) ;
+  std::string processCompositeExpression(const char* token) ;
   std::string processSingleExpression(const char* arg) ;
   std::string processListExpression(const char* arg) ;
-  std::string processAliasExpression(const char* arg) ;
+  std::string processAliasExpression(const char* token) ;
 
   std::string processCreateVar(std::string& func, std::vector<std::string>& args) ;
   std::string processCreateArg(std::string& func, std::vector<std::string>& args) ;

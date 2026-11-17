@@ -191,6 +191,51 @@ R"({
    EXPECT_EQ(fString1, os1.str());
 }
 
+TEST(RNTupleShow, Cardinality)
+{
+   FileRaii fileGuard("test_ntuple_show_cardinality.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldVec = model->MakeField<std::vector<float>>("vec");
+      model->AddProjectedField(RFieldBase::Create("card32", "ROOT::RNTupleCardinality<std::uint32_t>").Unwrap(),
+                               [](const std::string &) { return "vec"; });
+      model->AddProjectedField(RFieldBase::Create("card64", "ROOT::RNTupleCardinality<std::uint64_t>").Unwrap(),
+                               [](const std::string &) { return "vec"; });
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *fieldVec = {1.f, 2.f, 3.f};
+      writer->Fill();
+      fieldVec->clear();
+      writer->Fill();
+   }
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   std::ostringstream os;
+   reader->Show(0, os);
+   // clang-format off
+   std::string fString{
+R"({
+  "vec": [1, 2, 3],
+  "card32": 3,
+  "card64": 3
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(fString, os.str());
+
+   std::ostringstream os1;
+   reader->Show(1, os1);
+   // clang-format off
+   std::string fString1{
+R"({
+  "vec": [],
+  "card32": 0,
+  "card64": 0
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(fString1, os1.str());
+}
+
 TEST(RNTupleShow, Arrays)
 {
    std::string rootFileName{"test_ntuple_show_array.root"};

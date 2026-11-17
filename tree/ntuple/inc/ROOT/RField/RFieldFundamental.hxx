@@ -427,7 +427,7 @@ public:
 
    /// Set the on-disk representation of this field to a single-precision float truncated to `nBits`.
    /// The remaining (32 - `nBits`) bits will be truncated from the number's mantissa.
-   /// `nBits` must be $10 <= nBits <= 31$ (this means that at least 1 bit
+   /// `nBits` must be \f$10 <= nBits <= 31\f$ (this means that at least 1 bit
    /// of mantissa is always preserved). Note that this effectively rounds the number towards 0.
    /// For a double-precision field, this implies first a cast to single-precision, then the truncation.
    /// This is mutually exclusive with SetHalfPrecision() and SetQuantized() and supersedes them if called after them.
@@ -445,7 +445,7 @@ public:
    }
 
    /// Sets this field to use a quantized integer representation using `nBits` per value.
-   /// It must be $1 <= nBits <= 32$.
+   /// It must be \f$1 <= nBits <= 32\f$.
    /// `valueRange.first` and `valueRange.second` are respectively the min and max value allowed for this field.
    /// They must not be infinity, `NaN` or denormal floats, and valueRange.second must be greater or equal to
    /// valueRange.first.

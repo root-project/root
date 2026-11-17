@@ -142,9 +142,8 @@ std::unique_ptr<ChangeOperModeRAII> setOperModesDirty(RooAbsReal &function)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct MINUIT interface to given function. Function can be anything,
-/// but is typically a -log(likelihood) implemented by RooNLLVar or a chi^2
-/// (implemented by RooChi2Var). Other frequent use cases are a RooAddition
-/// of a RooNLLVar plus a penalty or constraint term. This class propagates
+/// but is typically a -log(likelihood) or a chi^2 as returned by
+/// RooAbsPdf::createNLL() or RooAbsReal::createChi2(). This class propagates
 /// all RooFit information (floating parameters, their values and errors)
 /// to MINUIT before each MINUIT call and propagates all MINUIT information
 /// back to the RooFit object at the end of each call (updated parameter
@@ -966,6 +965,7 @@ bool RooMinimizer::fitFCN()
    // set also new parameter values and errors in FitConfig
    // Prepare discrete indices
    std::vector<int> maxIndices;
+   maxIndices.reserve(pdfIndices.size());
    for (auto *cat : pdfIndices)
       maxIndices.push_back(cat->size());
 
@@ -1111,13 +1111,15 @@ bool RooMinimizer::calculateMinosErrors()
    int iter = 0;
    // rerun minos for the parameters run before a new Minimum has been found
    do {
-      if (iparNewMin > 0)
+      if (iparNewMin > 0) {
          coutI(Minimization) << "RooMinimizer::calculateMinosErrors() Run again Minos for some parameters because a "
                                 "new Minimum has been found"
                              << std::endl;
+      }
       iparNewMin = 0;
       for (int i = 0; i < iparMax; ++i) {
-         double elow, eup;
+         double elow;
+         double eup;
          unsigned int index = (!ipars.empty()) ? ipars[i] : i;
          bool ret = _minimizer->GetMinosError(index, elow, eup);
          // flags case when a new minimum has been found
@@ -1207,14 +1209,14 @@ RooMinimizer::FitResult::FitResult(const ROOT::Fit::FitConfig &fconfig)
    : fStatus(-99), // use this special convention to flag it when printing result
      fCovStatus(0),
      fParams(fconfig.NPar()),
-     fErrors(fconfig.NPar())
+     fErrors(fconfig.NPar()),
+     fMinimType(fconfig.MinimizerType())
 {
    // create a Fit result from a fit config (i.e. with initial parameter values
    // and errors equal to step values
    // The model function is NULL in this case
 
    // set minimizer type and algorithm
-   fMinimType = fconfig.MinimizerType();
    // append algorithm name for minimizer that support it
    if ((fMinimType.find("Fumili") == std::string::npos) && (fMinimType.find("GSLMultiFit") == std::string::npos)) {
       if (!fconfig.MinimizerAlgoType().empty())
@@ -1250,9 +1252,9 @@ void RooMinimizer::fillResult(bool isValid)
    if (npar == 0)
       return;
 
-   if (min.X())
+   if (min.X()) {
       _result->fParams = std::vector<double>(min.X(), min.X() + npar);
-   else {
+   } else {
       // case minimizer does not provide minimum values (it failed) take from configuration
       _result->fParams.resize(npar);
       for (unsigned int i = 0; i < npar; ++i) {

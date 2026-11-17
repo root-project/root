@@ -9,9 +9,13 @@
 # @author Sergey Linev, GSI
 ############################################################################
 
+set(RHTTPSNIFF_HEADERS
+  TRootSnifferFull.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RHTTPSniff
   HEADERS
-    TRootSnifferFull.h
+    ${RHTTPSNIFF_HEADERS}
   SOURCES
     src/TRootSnifferFull.cxx
   DEPENDENCIES
@@ -24,5 +28,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTPSniff
     Tree
     XMLIO
 )
+
+set(RELATIVE_INC_HEADERS ${RHTTPSNIFF_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(RHTTPSniff
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
+
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

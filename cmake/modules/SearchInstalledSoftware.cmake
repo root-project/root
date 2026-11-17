@@ -20,11 +20,20 @@
 #          - TRUE: No internet connection was found or the download failed.
 # Note: if the value of NO_CONNECTION is already FALSE, when calling the
 #       macro, the connection check will not run again.
+# Note: if ROOT_DOWNLOAD_DIR already contains archives, the check is skipped:
+#       the archives of the builtins are taken from there, so the build is
+#       expected to work without network access (see RootBuildOptions.cmake).
 #----------------------------------------------------------------------------
 macro(ROOT_CHECK_CONNECTION option)
   # Do something only if connection check is not already done
   if(NOT DEFINED NO_CONNECTION)
-    if(NOT check_connection)
+    file(GLOB _root_downloaded_archives
+         "${ROOT_DOWNLOAD_DIR}/*.tar.gz" "${ROOT_DOWNLOAD_DIR}/*.tgz"
+         "${ROOT_DOWNLOAD_DIR}/*.tar.bz2" "${ROOT_DOWNLOAD_DIR}/*.zip")
+    if(_root_downloaded_archives)
+      message(STATUS "ROOT_DOWNLOAD_DIR already contains archives, skipping the internet connectivity check")
+      set(NO_CONNECTION FALSE)
+    elseif(NOT check_connection)
       # If the connection check is disabled, just assume there is internet
       # connection
       set(NO_CONNECTION FALSE)
@@ -51,6 +60,7 @@ macro(ROOT_CHECK_CONNECTION option)
         set(NO_CONNECTION TRUE)
       endif()
     endif()
+    unset(_root_downloaded_archives)
   endif()
 endmacro()
 
@@ -1061,16 +1071,6 @@ if(tpython)
 
 endif()
 
-#---Check for MPI---------------------------------------------------------------------
-if (mpi)
-  message(STATUS "Looking for MPI")
-  find_package(MPI)
-  if(NOT MPI_FOUND)
-    message(SEND_ERROR "MPI not found. Ensure that the installation of MPI is in the CMAKE_PREFIX_PATH."
-      " Example: CMAKE_PREFIX_PATH=<MPI_install_path> (e.g. \"/usr/local/mpich\"). Or disable option 'mpi'")
-  endif()
-endif()
-
 #---Check for googletest---------------------------------------------------------------
 if (testing OR testsupport)
   if (builtin_gtest)
@@ -1093,17 +1093,55 @@ if (testing OR testsupport)
       message(SEND_ERROR "Missing installation of GTest subcomponent ${LIBNAME}")
     endif()
   endforeach()
-  # Starting from cmake 3.23, the GTest targets will have stable names.
-  # ROOT was updated to use those, but for older CMake versions, we have to declare the aliases:
-  foreach(LIBNAME gtest_main gmock_main gtest gmock)
-    if(NOT TARGET GTest::${LIBNAME} AND TARGET ${LIBNAME})
-      add_library(GTest::${LIBNAME} ALIAS ${LIBNAME})
-    endif()
-  endforeach()
 endif()
 
 #------------------------------------------------------------------------------------
-if(http)
+if(qt6canv)
+  list(APPEND qtlibs Widgets)
+endif()
+if(webgui AND qt6web)
+  list(APPEND qtlibs WebEngineCore WebEngineWidgets)
+endif()
+
+if(qtlibs)
+  find_package(Qt6 COMPONENTS Core ${qtlibs} CONFIG)
+  if(NOT Qt6_FOUND)
+    message(SEND_ERROR "qt6canv and qt6web requires Qt6 with ${qtlibs}, either install Qt6 or disable feature(s)")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dqt6canv=OFF -Dqt6web=OFF)
+  endif()
+endif()
+
+#------------------------------------------------------------------------------------
+if(gtk4canv)
+  if(NOT PKG_CONFIG_FOUND)
+    find_package(PkgConfig)
+  endif()
+  if(PKG_CONFIG_FOUND)
+    pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-4.0)
+  endif()
+  if(NOT GTKMM_FOUND)
+    message(SEND_ERROR "Could NOT find gtkmm-4.0 components, either install it or disable gtk4canv option")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dgtk4canv=OFF)
+  endif()
+endif()
+
+#------------------------------------------------------------------------------------
+if(builtin_jsroot)
+  ROOT_CHECK_CONNECTION("builtin_jsroot=OFF")
+  if (NO_CONNECTION)
+    message(SEND_ERROR "builtin_jsroot=ON requires internet connection, check it or disable feature")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_jsroot=OFF)
+  endif()
+  add_subdirectory(builtins/jsroot)
+  set(JSROOT_CUSTOM_LOCATION "")
+elseif(http OR webgui)
+  message(WARNING "Without builtin_jsroot option http and webgui components are not working offline")
+  set(JSROOT_CUSTOM_LOCATION "https://root.cern/js/7.12.0/")
+endif()
+
+
+#------------------------------------------------------------------------------------
+if(http AND builtin_jsroot)
   if(builtin_mathjax)
     ROOT_CHECK_CONNECTION("builtin_mathjax=OFF")
     if (NO_CONNECTION)
@@ -1118,28 +1156,35 @@ endif()
 
 #------------------------------------------------------------------------------------
 if(webgui)
-  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core.js")
-     # create symbolic link on existing openui5 installation
-     # should be used only for debug purposes to be able try different openui5 version
-     # cannot be used for installation purposes
-     message(STATUS "openui5 - use from $ENV{OPENUI5DIR}, only for debug purposes")
-     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/ui5)
-     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-        $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
-  else()
-    if(builtin_openui5)
-      ROOT_CHECK_CONNECTION("builtin_openui5=OFF")
-      if (NO_CONNECTION)
-         message(SEND_ERROR "builtin_openui5=ON requires internet connection, check it or disable feature")
-         list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_openui5=OFF)
-      endif()
-      add_subdirectory(builtins/openui5)
-    else()
-      message(SEND_ERROR "Without builtin_openui5 option most of webgui components will not work, either disable webgui or enable builtin_openui5")
-      list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_openui5=ON)
+  if(builtin_openui5)
+    ROOT_CHECK_CONNECTION("builtin_openui5=OFF")
+    if (NO_CONNECTION)
+      message(SEND_ERROR "builtin_openui5=ON requires internet connection, check it or disable feature")
+      list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_openui5=OFF)
     endif()
+    add_subdirectory(builtins/openui5)
+    set(OPENUI5_CUSTOM_LOCATION "")
+  else()
+    message(WARNING "Without builtin_openui5 option webgui components will not work offline")
+    set(OPENUI5_CUSTOM_LOCATION "https://sdk.openui5.org/1.152.0/")
   endif()
-  add_subdirectory(builtins/rendercore)
+endif()
+
+#------------------------------------------------------------------------------------
+# REve, built with webgui and root7, runs its client on RenderCore, for which there is
+# no web location to fall back to, so the builtin is required whenever REve is built.
+if(webgui AND root7)
+  if(builtin_rendercore)
+    ROOT_CHECK_CONNECTION("root7=OFF")
+    if (NO_CONNECTION)
+      message(SEND_ERROR "builtin_rendercore=ON requires internet connection, check it, place the RenderCore tarball in ROOT_DOWNLOAD_DIR or disable root7")
+      list(APPEND HOTFIX_BUILD_FLAGS -Droot7=OFF)
+    endif()
+    add_subdirectory(builtins/rendercore)
+  else()
+    message(SEND_ERROR "REve needs RenderCore: enable builtin_rendercore or disable root7")
+    list(APPEND HOTFIX_BUILD_FLAGS -Droot7=OFF)
+  endif()
 endif()
 
 #------------------------------------------------------------------------------------

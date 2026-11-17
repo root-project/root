@@ -37,7 +37,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooNameReg.h>
 #include <RooSimultaneous.h>
 
-#include <RooBatchCompute.h>
 
 #include "BatchModeDataHelpers.h"
 #include "RooFitImplHelpers.h"
@@ -123,7 +122,7 @@ struct NodeInfo {
    bool isScalar() const { return outputSize == 1; }
 
    RooAbsArg *absArg = nullptr;
-   RooAbsArg::OperMode originalOperMode;
+   RooAbsArg::OperMode originalOperMode = RooAbsArg::Auto;
 
    std::shared_ptr<RooBatchCompute::AbsBuffer> buffer;
    std::size_t iNode = 0;
@@ -693,8 +692,7 @@ void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 // oldOperMode is ADirty. If we did not protect those clients here, any node
 // outside the computation graph that shares a fundamental (e.g. a parameter
 // like a RooRealVar) would be left permanently in ADirty after the first
-// minimization, dramatically slowing down later scalar evaluations (for
-// example on pdfs held by the legacy test statistics' internal cache).
+// minimization, dramatically slowing down later scalar evaluations.
 std::unique_ptr<ChangeOperModeRAII> Evaluator::setOperModes(RooAbsArg::OperMode opMode)
 {
    auto out = std::make_unique<ChangeOperModeRAII>();

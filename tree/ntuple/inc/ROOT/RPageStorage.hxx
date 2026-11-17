@@ -454,8 +454,13 @@ private:
    /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
    ROOT::Internal::RNTupleSerializer::RContext fSerializationContext;
 
-   /// Remembers the starting cluster id for the next cluster group
-   std::uint64_t fNextClusterInGroup = 0;
+   /// Remembers the starting cluster id for the next group. Used also to check if there are new clusters to commit
+   /// for a cluster group (otherwise committing a cluster group is a noop)
+   ROOT::NTupleSize_t fPrevGroupNClusters = 0;
+   /// Keeps track of the number of pages so far committed in all the clusters of the current cluster group.
+   /// Used to automatically create a new cluster group once the user-defined threshold of pages per cluster is
+   /// surpassed.
+   ROOT::NTupleSize_t fNPagesInGroup = 0;
    /// Used to calculate the number of entries in the current cluster
    ROOT::NTupleSize_t fPrevClusterNEntries = 0;
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
@@ -808,6 +813,14 @@ private:
    /// Pinned clusters and their $2 * (cluster bunch size) - 1$ successors will not be evicted from the cluster pool.
    /// Pages of pinned clusters won't be evicted from the page pool.
    std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
+   /// Reference counted map of pinned cluster groups. This map is edited by PinCluster() and UnpinCluster()
+   /// and stores the number of pinned clusters in a certain cluster group. We use a map because we iterate the sorted
+   /// list of cluster group IDs in the element-wise FindClusterId().
+   std::map<ROOT::DescriptorId_t, std::size_t> fPinnedClusterGroups;
+   /// List of loaded cluster groups, ordered by last access. The size of the list is usually bounded by the
+   /// page list budget in the read options. Pinned cluster groups can cause overspending of the budget.
+   /// We except a small number of loaded cluster groups, thus we accept O(n) complexity to edit this list.
+   std::deque<ROOT::DescriptorId_t> fClusterGroupAccessSequence;
 
    /// Ensures that fDescriptor has cluster details loaded for the given cluster group ID. This method is expected
    /// to be called while holding the lock passed by descGuard. The returned descriptor guard is either the
@@ -1010,9 +1023,9 @@ public:
    void UnzipCluster(ROOT::Internal::RCluster *cluster);
 
    /// Instructs the cluster pool and page pool to consider the given cluster as active (should stay cached).
-   void PinCluster(ROOT::DescriptorId_t clusterId) { fPinnedClusters.insert(clusterId); }
+   void PinCluster(ROOT::DescriptorId_t clusterId);
    /// Allows the given cluster to be evicted from the cluster pool and page pool.
-   void UnpinCluster(ROOT::DescriptorId_t clusterId) { fPinnedClusters.erase(clusterId); }
+   void UnpinCluster(ROOT::DescriptorId_t clusterId);
    const std::unordered_set<ROOT::DescriptorId_t> &GetPinnedClusters() const { return fPinnedClusters; }
 
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.

@@ -50,17 +50,17 @@ RooMultiPdf::RooMultiPdf(const char *name, const char *title, RooCategory &_x, c
       corr.addOwned(std::make_unique<RooConstVar>(corrName.c_str(), "", nonConstVariables->size()));
       count++;
    }
-   _oldIndex = fIndex;
 }
 
 // Here new RooMultiPdf copy is created that references the same components as the original.
 // Copies c, corr, x
 RooMultiPdf::RooMultiPdf(const RooMultiPdf &other, const char *name)
-   : RooAbsPdf(other, name), c("_pdfs", this, other.c), corr("_corrs", this, other.corr), x("_index", this, other.x)
+   : RooAbsPdf(other, name),
+     c("_pdfs", this, other.c),
+     corr("_corrs", this, other.corr),
+     x("_index", this, other.x),
+     cFactor(other.cFactor) // correction to 2*NLL by default is -> 2*0.5 per param
 {
-   fIndex = other.fIndex;
-   _oldIndex = fIndex;
-   cFactor = other.cFactor; // correction to 2*NLL by default is -> 2*0.5 per param
 }
 
 // evaluate() and getLogVal() define how the value and log-value of the RooMultiPdf are computed at a given point.
@@ -68,14 +68,12 @@ RooMultiPdf::RooMultiPdf(const RooMultiPdf &other, const char *name)
 Double_t RooMultiPdf::evaluate() const
 {
    double val = getCurrentPdf()->getVal(c.nset());
-   _oldIndex = x;
    return val;
 }
 
 Double_t RooMultiPdf::getLogVal(const RooArgSet *nset) const
 {
    double logval = getCurrentPdf()->getLogVal(nset);
-   _oldIndex = x;
    return logval;
 }
 

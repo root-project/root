@@ -73,6 +73,7 @@ if(FTGL_FOUND)
 
   if(NOT TARGET FTGL::FTGL)
     add_library(FTGL::FTGL UNKNOWN IMPORTED)
+    target_link_libraries(FTGL::FTGL INTERFACE Freetype::Freetype)
     set_target_properties(FTGL::FTGL PROPERTIES
       IMPORTED_LOCATION "${FTGL_LIBRARY}"
       INTERFACE_INCLUDE_DIRECTORIES "${FTGL_INCLUDE_DIRS}")

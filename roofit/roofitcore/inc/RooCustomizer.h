@@ -38,7 +38,7 @@ class RooCustomizer {
 public:
 
   // Constructors, assignment etc
-  RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=nullptr) ;
+  RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeaves, RooArgSet* splitLeavesAll=nullptr) ;
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
 
   /// If flag is true, make customizer own all created components

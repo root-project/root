@@ -5,20 +5,14 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 # **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
-# 20 Apr 2023, https://github.com/unuran/unuran/releases/tag/unuran-1.11.0 but using preprocessed configure and make ROOTdist option within this repo and then uploading to LCG
+# 20 Apr 2023, https://github.com/unuran/unuran/releases/tag/unuran-1.11.0
 set(ROOT_UNURAN_VERSION 1.11.0)
-set(ROOT_UNURAN_URL "${lcgpackages}/unuran-${ROOT_UNURAN_VERSION}.tar.gz")
 set(ROOT_UNURAN_HASH "098793854c590b4c2c7e98bc48a45408875f48c5ad47650b5fabbd3e94dd8049")
 set(ROOT_UNURAN_PREFIX ${CMAKE_BINARY_DIR}/builtins/UNURAN-prefix)
 set(ROOT_UNURAN_LIBRARY ${ROOT_UNURAN_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}unuran${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(ROOT_UNURAN_PATCH_FILE_1 "${CMAKE_CURRENT_SOURCE_DIR}/0001-allow-compilation-from-CMake.patch")
-if (NOT DEFINED GIT_EXECUTABLE)
-  set(GIT_EXECUTABLE "git")
-endif()
-# check if the patch has already been applied
-if(NOT EXISTS "${ROOT_UNURAN_PREFIX}/src/BUILTIN_UNURAN/src/CMakeLists.txt")
-  set(UNURAN_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply --ignore-space-change --ignore-whitespace ${ROOT_UNURAN_PATCH_FILE_1})
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(ROOT_UNURAN_PATCH_COMMAND PATCHES ${ROOT_UNURAN_PATCH_FILE_1}
+                           GIT_APPLY_ARGS --ignore-space-change --ignore-whitespace)
 
 include(ExternalProject)
 
@@ -40,9 +34,11 @@ endif()
 ExternalProject_Add(
   BUILTIN_UNURAN
   PREFIX ${ROOT_UNURAN_PREFIX}
-  URL ${ROOT_UNURAN_URL}
+  DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
+  URL ${lcgpackages}/unuran-${ROOT_UNURAN_VERSION}.tar.gz
+      https://statmath.wu.ac.at/unuran/unuran-${ROOT_UNURAN_VERSION}.tar.gz
   URL_HASH SHA256=${ROOT_UNURAN_HASH}
-  ${UNURAN_PATCH_COMMAND}
+  ${ROOT_UNURAN_PATCH_COMMAND}
   SOURCE_SUBDIR src
   LOG_DOWNLOAD  TRUE
 # The following three are disabled to avoid CI failure in Ubuntu22 that has outdated CMake version

@@ -22,4 +22,6 @@ check_connection=ON
 cocoa=ON
 davix=OFF
 minuit2_omp=OFF
+test_distrdf_dask=OFF
+test_distrdf_pyspark=OFF
 x11=OFF

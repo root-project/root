@@ -44,7 +44,7 @@ namespace RooStats {
       HypoTestResult *GetHypoTest() const override;
 
       /// Make Asimov data.
-      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = nullptr);
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & paramValues, RooArgSet & globObs, const RooArgSet * genPoiValues = nullptr);
 
 
       /// Make a nominal Asimov data set from a model.
@@ -130,15 +130,15 @@ namespace RooStats {
 
    private:
       bool fOneSided;                     ///< for one sided PL test statistic (upper limits)
-      mutable bool fOneSidedDiscovery;    ///< for one sided PL test statistic (for discovery)
+      bool fOneSidedDiscovery;            ///< for one sided PL test statistic (for discovery)
       bool fSigned = false;               ///< use signed (uncapped) PL test statistic
       bool fNominalAsimov;                ///< make Asimov at nominal parameter values
-      mutable bool fIsInitialized;        ///<! flag to check if calculator is initialized
+      mutable bool fIsInitialized = false; ///<! flag to check if calculator is initialized
       mutable int fUseQTilde;             ///< flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
       mutable double fNLLObs;
       mutable double fNLLAsimov;
 
-      mutable RooAbsData * fAsimovData;   ///< asimov data set
+      mutable std::unique_ptr<RooAbsData> fAsimovData; ///< asimov data set
       mutable RooArgSet  fAsimovGlobObs;  ///< snapshot of Asimov global observables
       mutable RooArgSet  fBestFitPoi;     ///< snapshot of best fitted POI values
       mutable RooArgSet  fBestFitParams;  ///< snapshot of all best fitted Parameter values

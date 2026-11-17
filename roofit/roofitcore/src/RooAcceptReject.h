@@ -57,12 +57,12 @@ protected:
   void addEventToCache();
   const RooArgSet *nextAcceptedEvent();
 
-  double _maxFuncVal, _funcSum; ///< Maximum function value found, and sum of all samples made
-  UInt_t _realSampleDim;        ///< Number of real dimensions to be sampled
-  UInt_t _catSampleMult;        ///< Number of discrete dimensions to be sampled
-  UInt_t _minTrials;            ///< Minimum number of max.finding trials, total number of samples
-  UInt_t _totalEvents;          ///< Total number of function samples
-  UInt_t _eventsUsed;           ///< Accepted number of function samples
+  double _maxFuncVal = 0.0, _funcSum = 0.0; ///< Maximum function value found, and sum of all samples made
+  UInt_t _realSampleDim = 0;                ///< Number of real dimensions to be sampled
+  UInt_t _catSampleMult = 0;                ///< Number of discrete dimensions to be sampled
+  UInt_t _minTrials = 0;                    ///< Minimum number of max.finding trials, total number of samples
+  UInt_t _totalEvents = 0;                  ///< Total number of function samples
+  UInt_t _eventsUsed = 0;                   ///< Accepted number of function samples
 
   UInt_t _minTrialsArray[4];    ///< Minimum number of trials samples for 1,2,3 dimensional problems
 };

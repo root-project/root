@@ -8,35 +8,39 @@
 # CMakeLists.txt file for building ROOT net/net package
 ############################################################################
 
+set(NET_HEADERS
+  NetErrors.h
+  RRemoteProtocol.h
+  TApplicationRemote.h
+  TApplicationServer.h
+  TFileStager.h
+  TGrid.h
+  TGridCollection.h
+  TGridJDL.h
+  TGridJob.h
+  TGridJobStatus.h
+  TGridJobStatusList.h
+  TGridResult.h
+  TMessage.h
+  TMonitor.h
+  TParallelMergingFile.h
+  TPServerSocket.h
+  TPSocket.h
+  TServerSocket.h
+  TSocket.h
+  TSQLColumnInfo.h
+  TSQLMonitoring.h
+  TSQLResult.h
+  TSQLRow.h
+  TSQLServer.h
+  TSQLStatement.h
+  TSQLTableInfo.h
+  TUDPSocket.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Net
   HEADERS
-    NetErrors.h
-    RRemoteProtocol.h
-    TApplicationRemote.h
-    TApplicationServer.h
-    TFileStager.h
-    TGrid.h
-    TGridCollection.h
-    TGridJDL.h
-    TGridJob.h
-    TGridJobStatus.h
-    TGridJobStatusList.h
-    TGridResult.h
-    TMessage.h
-    TMonitor.h
-    TParallelMergingFile.h
-    TPServerSocket.h
-    TPSocket.h
-    TServerSocket.h
-    TSocket.h
-    TSQLColumnInfo.h
-    TSQLMonitoring.h
-    TSQLResult.h
-    TSQLRow.h
-    TSQLServer.h
-    TSQLStatement.h
-    TSQLTableInfo.h
-    TUDPSocket.h
+    ${NET_HEADERS}
   SOURCES
     src/NetErrors.cxx
     src/TApplicationRemote.cxx
@@ -72,5 +76,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
 )
 # Suppress deprecation warnings across compilation units and during dictionary generation, remove with NetErrors.h
 target_compile_definitions(Net PRIVATE ROOT_NetErrors_cxx)
+
+set(RELATIVE_INC_HEADERS ${NET_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Net
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+)
+
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

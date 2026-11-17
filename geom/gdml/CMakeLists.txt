@@ -8,10 +8,14 @@
 # CMakeLists.txt file for building ROOT geom/gdml package
 ############################################################################
 
+set(GDML_HEADERS TGDMLParse.h TGDMLWrite.h)
+
+set(RELATIVE_INC_HEADERS ${GDML_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Gdml
   HEADERS
-    TGDMLParse.h
-    TGDMLWrite.h
+    ${GDML_HEADERS}
   SOURCES
     src/TGDMLParse.cxx
     src/TGDMLWrite.cxx
@@ -20,4 +24,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gdml
     XMLIO
     Hist
     RIO
+)
+
+target_sources(Gdml
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )

@@ -28,15 +28,14 @@ if(WIN32)
   set(patch_args --ignore-whitespace)
 endif()
 
-# check if the patch has already been applied
-if(NOT EXISTS "${ROOT_LIBGIF_PREFIX}/src/BUILTIN_LIBGIF/CMakeLists.txt")
-  set(LIBGIF_PATCH_COMMAND PATCH_COMMAND git init COMMAND git apply ${patch_args} ${ROOT_LIBGIF_PATCH_FILE})
-endif()
+ROOT_BUILTIN_PATCH_COMMAND(LIBGIF_PATCH_COMMAND PATCHES ${ROOT_LIBGIF_PATCH_FILE} GIT_APPLY_ARGS ${patch_args})
 
 ExternalProject_Add(
     BUILTIN_LIBGIF
     PREFIX ${ROOT_LIBGIF_PREFIX}
-    URL https://root.cern/download/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
+    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
+    URL ${lcgpackages}/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
+        https://downloads.sourceforge.net/project/giflib/giflib-6.x/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBGIF_HASH}
     ${LIBGIF_PATCH_COMMAND}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}

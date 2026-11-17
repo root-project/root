@@ -81,8 +81,6 @@ namespace {
 
       // Next, go through each one and split based
       // on the '=' to separate the name from the val
-      // and fill the map
-      std::map<std::string, double> param_map;
 
       for( unsigned int i=0; i < string_list.size(); ++i) {
 
@@ -155,9 +153,8 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     TXMLAttr* curAttr = nullptr;
     while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
-      // Get the Name, Val of this node
+      // Get the Name of this node
       TString attrName    = curAttr->GetName();
-      std::string attrVal = curAttr->GetValue();
 
       if( attrName == TString( "" ) ) {
    cxcoutEHF << " Error: Attribute for 'Combination' with no name found" << std::endl;
@@ -1559,13 +1556,13 @@ bool ConfigParser::CheckTrueFalse( std::string attrVal, std::string NodeTitle ) 
     cxcoutEHF << "Error: In " << NodeTitle
          << " Expected either 'True' or 'False' but found empty" << std::endl;
     throw hf_exc();
-  }
-  else if ( attrVal == "True"  || attrVal == "true"  )   return true;
-  else if ( attrVal == "False" || attrVal == "false" )   return false;
-  else {
-    cxcoutEHF << "Error: In " << NodeTitle
-         << " Expected either 'True' or 'False' but found: " << attrVal <<  std::endl;
-    throw hf_exc();
+  } else if (attrVal == "True" || attrVal == "true") {
+     return true;
+  } else if (attrVal == "False" || attrVal == "false") {
+     return false;
+  } else {
+     cxcoutEHF << "Error: In " << NodeTitle << " Expected either 'True' or 'False' but found: " << attrVal << std::endl;
+     throw hf_exc();
   }
 
   return false;

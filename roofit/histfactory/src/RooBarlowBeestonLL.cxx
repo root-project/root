@@ -194,9 +194,6 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
 
       cache.binVolume = param_func->binVolume(bin_index);
 
-      // Delete this part, simply a comment
-      RooArgList obs_list( *(cache.bin_center) );
-
       // Get the gamma's constraint term
       RooAbsReal* pois_mean = nullptr;
       RooRealVar* tau = nullptr;
@@ -396,7 +393,6 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
   std::map< std::string, std::vector< BarlowCache > >::iterator iter_cache;
   for( iter_cache = _barlowCache.begin(); iter_cache != _barlowCache.end(); ++iter_cache ) {
 
-    std::string channel_name = (*iter_cache).first;
     std::vector< BarlowCache >& channel_cache = (*iter_cache).second;
 
     /* Slower way to find the channel vector:

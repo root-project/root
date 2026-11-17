@@ -218,9 +218,9 @@ public:
 #endif
 
 private:
-   T fR = 0;
-   T fTheta = 0;
-   T fPhi = 0;
+   T fR{0};
+   T fTheta{0};
+   T fPhi{0};
 };
 
 

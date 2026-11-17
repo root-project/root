@@ -186,9 +186,9 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
             if (strategy == 0 ) {
                oocoutW(nullptr,Minimization) << "    ----> trying with strategy = 1" << std::endl;
                minim.setStrategy(1);
-            }
-            else
+            } else {
                tries++; // skip this trial if strategy is already 1
+            }
          }
          if (tries == 3) {
             oocoutW(nullptr,Minimization) << "    ----> trying with improve" << std::endl;

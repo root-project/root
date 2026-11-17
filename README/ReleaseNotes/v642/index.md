@@ -52,9 +52,20 @@ The following people have contributed to this new version:
 * The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects were deprecated in ROOT 6.40 and are now removed.
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
 * The `builtin_zeromq` and `builtin_cppzmq` build options that were deprecated in ROOT 6.40 are now removed.
-* The `roofit_multiprocess` build option is deprecated and will be removed in ROOT 6.44. It has no effect anymore: RooFit's multi-process test statistics no longer depend on ZeroMQ and are now always built on non-Windows platforms, so there is no reason for an opt-in build option anymore (see the RooFit section below).
+* The following build options are now without effect and can be removed:
+  * `roofit_multiprocess`: RooFit's multi-process test statistics no longer depend on ZeroMQ and are now always built on non-Windows platforms, so there is no reason for an opt-in build option anymore (see the RooFit section below).
+  * `shadowpw`: The only package relying on shadowpw was removed in ROOT 6.40.
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are now removed following deprecation in ROOT 6.40.
-* The `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
+* The following classes have been removed after being deprecated in previous ROOT versions:
+  * `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
+  * `TWebFile`, `TNetFile*`, `TFTP`, `TGrid*`
+  * `TS3WebFile`, `TS3HTTPRequest`
+  * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
+  * The `TMVA::Experimental::RStandardScaler` has been removed. It computed means and standard deviations, which can be easily done without this class.
+  * The `TMVA::Experimental::Classification` and `TMVA::Experimental::ClassificationResult` classes are removed. They were the two-class front-end of the 2016–2017 `TMVA::Envelope` modernization campaign that never graduated out of the experimental namespace and saw no adoption. The parts of that effort that did find adoption remain available: `TMVA::Envelope`, `TMVA::CrossValidation`, `TMVA::VariableImportance`, `TMVA::HyperParameterOptimisation` and `TMVA::ROCCurve`, the latter providing the ROC curves that were previously obtained via `ClassificationResult`.
+  * The `TMVA::Experimental::RTensor` class was removed, since it was not much adopted by ROOTs own interfaces and is also getting redundant with `std::mdspan` in C++23.
+  * The **RooStats::DebuggingSampler** and **RooStats::DebuggingTestStat** classes are removed. They were mock implementations of the `TestStatSampler` and `TestStatistic` interfaces that returned uniform random numbers independent of the data, only meant for debugging the RooStats framework itself during its initial development.
+  * The `ROOT::Math::ParamFunctionBase`, `ROOT::Math::ParamFunctorHandler` and `ROOT::Math::ParamMemFunHandler` classes in `Math/ParamFunctor.h` are removed, together with the `ParamFunctor::GetImpl()` and `ParamFunctor::SetFunction()` methods that exposed them. They implemented the type erasure that `ParamFunctor` now gets from `std::function`, mirroring what was already done for `ROOT::Math::Functor`. Constructing and calling a `ParamFunctor` is unchanged, except that the constructor from an object and one of its member functions now takes a plain pointer to the object instead of anything dereferenceable, so smart pointers are no longer accepted there.
 * The bindings to the R programming language that are enabled with the `r=ON` or `tmva-rmva=ON` build options (`TRInterface`, RMVA, and friends) are removed, following deprecation in ROOT 6.40. Their maintenance is no longer justified, given the broader adoption of the scientific Python ecosystem. Users who still rely on R from C++ are encouraged to call R directly via https://cran.r-project.org/package=RInside, which is what the ROOT bindings were using internally.
 * Several enums that are redundant with `ROOT::ESTLType` are deprecated and will be removed in ROOT 6.44: `TClassEdit::ESTLType`, `TDictionary::ESTLType`, `TStreamerElement::ESTLType`. Please use `ROOT::ESTLType` instead.
 * The Makefile templates for external projects (`etc/Makefile.arch` and the files generated from `config/Makefile-comp.in` and `config/Makefile.in`) are removed. External projects should migrate to CMake (for example with `find_package(ROOT)`), or obtain compilation and linker flags from `root-config --cflags --libs`.
@@ -72,15 +83,10 @@ The same graph-network models (following the formalism of Battaglia et al., [arX
 The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce inference results identical to the removed implementation.
 * The ROOT IO capability for the `TMVA::Experimental::RBDT` class has been removed, along with the `TMVA.Experimental.SaveXGBoost` Python function. Experimental classes should not be persistified since their on-disk layout is not guaranteed to be stable. An `RBDT` is now built directly from an XGBoost model in its native JSON serialization with the new `TMVA::Experimental::RBDT::LoadXGBoost(jsonPath)`, which works both from C++ and Python. To convert a trained model, save it first with XGBoost's `Booster.save_model("model.json")` and then load it with `LoadXGBoost`.
 * The **JsMVA** feature for interactive TMVA training in Jupyter notebooks is now removed. It was not functional for years and was therefore already excluded from ROOT 6.38. This also removes the `TMVA::IPythonInteractive` class and the related interactive-training interfaces from the TMVA method and fitter classes, such as `MethodBase::ExitFromTraining()` or `FitterBase::SetIPythonInteractive()`.
-* The `TMVA::Experimental::RStandardScaler` has been removed. It computed means and standard deviations, which can be easily done without this class.
-* The `TMVA::Experimental::Classification` and `TMVA::Experimental::ClassificationResult` classes are removed. They were the two-class front-end of the 2016–2017 `TMVA::Envelope` modernization campaign that never graduated out of the experimental namespace and saw no adoption. The parts of that effort that did find adoption remain available: `TMVA::Envelope`, `TMVA::CrossValidation`, `TMVA::VariableImportance`, `TMVA::HyperParameterOptimisation` and `TMVA::ROCCurve`, the latter providing the ROC curves that were previously obtained via `ClassificationResult`.
-* The `TMVA::Experimental::RTensor` class was removed, since it was not much adopted by ROOTs own interfaces and is also getting redundant with `std::mdspan` in C++23.
-* The **RooStats::DebuggingSampler** and **RooStats::DebuggingTestStat** classes are removed. They were mock implementations of the `TestStatSampler` and `TestStatistic` interfaces that returned uniform random numbers independent of the data, only meant for debugging the RooStats framework itself during its initial development.
 * Flattening nested **RooSimultaneous** in the constructor is deprecated and will be removed in ROOT 6.44. It double counts extended components that don't depend on all index categories ([GitHub issue #23342](https://github.com/root-project/root/issues/23342)) and breaks nested RooSimultaneous whose index category is a parameter ("switch mode"). From ROOT 6.44, nested RooSimultaneous are only supported in switch mode. To combine channels, use one RooSimultaneous over a **RooCategory** with one state per channel. Workspaces read from files are not affected.
 * The `RooTrace` class is deprecated and will be removed in ROOT 6.44. It was a RooFit-specific memory tracer whose instrumentation hooks are compiled out by default, so it has been inert and untested for years. For memory debugging, please use general-purpose tools such as AddressSanitizer or Valgrind instead.
 * Support for the AIX operating system has been removed from the codebase. This support has not been tested since the late v5 releases and the LLVM JIT is not yet supporting AIX.
 * The target `RCsg` (a library mixture of CSGLib and [SOLID](https://github.com/dtecta/solid3)) is now deprecated and will be fully private after ROOT 6.44, meaning the header `CsgOps.h` with the class `RootCsg::TBaseMesh` will no longer be public. Use instead `TGeoTessellated` public interface. If that public interface doesn't provide what you need, contact the ROOT team to request its extension.
-* The `ROOT::Math::ParamFunctionBase`, `ROOT::Math::ParamFunctorHandler` and `ROOT::Math::ParamMemFunHandler` classes in `Math/ParamFunctor.h` are removed, together with the `ParamFunctor::GetImpl()` and `ParamFunctor::SetFunction()` methods that exposed them. They implemented the type erasure that `ParamFunctor` now gets from `std::function`, mirroring what was already done for `ROOT::Math::Functor`. Constructing and calling a `ParamFunctor` is unchanged, except that the constructor from an object and one of its member functions now takes a plain pointer to the object instead of anything dereferenceable, so smart pointers are no longer accepted there.
 * The header `compiledata.h` will be renamed in ROOT 6.44. It did not have header guards and is not meant to be used directly. It is solely used by ROOT internally to setup `ACLiC`, consider using `gSystem` instead to access its content.
 * Including `RConfig.h` and `RVersion.h` is now deprecated and will be removed after ROOT 6.44, use instead `ROOT/RConfig.hxx` and `ROOT/RVersion.hxx`.
 * The headers of the `bvh` library in `Geom` are no longer public in ROOT 6.42.
@@ -103,8 +109,8 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
   * `Rstrstream.h`: use instead `<sstream>`.
   * `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h`: use instead the public methods in the `RZip.h` interface.
   * `Hepevt.h` and `cfortran.h`: these will be moved to `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
-* Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
-* The legacy headers `v5/TF1Data.h`, `v5/TFormula.h` and `v5/TFormulaPrimitive.h` have been moved to `ROOT/v5/TF1Data.h`, `ROOT/v5/TFormula.h` and `ROOT/v5/TFormulaPrimitive.h`. Including them as before will now raise warnings and will be no longer supported in ROOT 7.
+  * The legacy headers `v5/TF1Data.h`, `v5/TFormula.h` and `v5/TFormulaPrimitive.h` have been moved to `ROOT/v5/TF1Data.h`, `ROOT/v5/TFormula.h` and `ROOT/v5/TFormulaPrimitive.h`.
+
 
 ## Build System
 
@@ -153,12 +159,23 @@ Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 ## I/O
 
 * Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
-
-* An `RNTupleReader` will now by default not load all metadata on open. Metadata related to the on-disk location of data pages will instead be loaded during iteration. To restore the old behavior, set the metadata mode in the `RNTupleReadOptions` to `kEager`.
+* The LZ4 compression levels now follow those of the `lz4` command line tool. Level 1 uses the fast compressor as before. Level 2 uses the faster high-compression mode introduced in LZ4 1.10.0, or the fast compressor with older LZ4 versions. Level 3 now uses the high-compression (HC) compressor, like levels 4 to 9. Previously, levels 1 to 3 all used the fast compressor and produced identical output. Files written with levels 2 and 3 can be read by older ROOT versions, since the on-disk format is unchanged.
+* The automatic registration of `TEventList`, `TEntryList` and its derived classes to the current TDirectory can now be disabled using [`ROOT::Experimental::DisableObjectAutoRegistration()`](https://root.cern/doc/v642/namespaceROOT_1_1Experimental.html#a74fae8f88965b8c79dfbd25bebbce3a4).
 
 ### RFile
 
-RFile, ROOT's modern interface to ROOT file, has moved out of the `ROOT::Experimental` namespace.
+RFile, ROOT's modern interface to ROOT file, has moved out of the `ROOT::Experimental` namespace. The interface is otherwise unchanged, but the following things were added:
+
+* A new overload of `RFile::Put` has been introduced that accepts a `TNamed` and an optional directory path. This simplifies the common case of writing TNamed-derived objects using their original name and title, meaning what before was `rfile->Put(obj.GetName(), obj, obj.GetTitle())` becomes just `rfile->Put(obj)`.
+* RFile's Python interface was extended to add support for the `__getitem__` and `__contains__` syntax. This means you can now get objects from RFile using `rfile['myObj']` (which will raise an error if the object's not there) and query for the presence of an object using `"myObj" in rfile`.
+* TTree is now explicitly prevented from being written through RFile
+* RFile is now browsable
+
+Documentation has also been added where missing, as well as some [tutorials](https://root.cern/doc/v642/group__tutorial__io.html#rfile) both for C++ and Python.
+
+### RNTuple
+* An `RNTupleReader` will now by default not load all metadata on open. Metadata related to the on-disk location of data pages will instead be loaded during iteration. To restore the old behavior, set the metadata mode in the `RNTupleReadOptions` to `kEager`.
+* The signature of [RRealField::SetQuantized](https://root.cern/doc/v642/classROOT_1_1RRealField.html#aa34c98af2cdcee3c30600ed3ce216905) was changed to avoid ambiguities;
 
 ### RNTupleProcessor
 
@@ -177,6 +194,23 @@ RDataFrames can be created from an existing RNTupleProcessor by calling `ROOT::E
 
 The RNTuple SoA I/O classes moved out of experimental. These classes and the related dictionary options provide a mechanism to read and write a collection of a class, i.e. an "array of struct" (AoS),
 as "struct of array" (SoA) in memory. This is useful, e.g., for efficient consumption of data structures by GPUs. This new feature comes with a technical documentation (`SoA.md`) and a tutorial (`ntpl020_SoA.C`).
+
+### RNTuple attributes
+
+* The RNTuple attributes, RNTuple's native metadata system, is moving out of experimental. Attributes can be written to an RNTuple via `RNTupleWriter::CreateAttributeSet`, read via `RNTupleReader::OpenAttributeSet` and they are automatically merged alongside their main RNTuple via `TFileMerger` and `hadd`. A tutorial on how to use them is available [here](https://root.cern/doc/v642/ntpl019__attributes_8C.html).
+* Attributes may now be written in an RNTuple created via `RNTupleWriter::Recreate` and not only via `Append`.
+
+### RNTuple merging
+
+* Merging RNTuple via `hadd`, `TFileMerger` or directly through the internal `RNTupleMerger` class is now considered stable.
+
+### RNTupleInspector
+
+* Added GetPagesPerClusterDistribution method, that creates a THStack with the distribution of pages per cluster in a given RNTuple.
+
+### HTTP I/O
+
+* The curl based plugin is now the default on all platforms. The Davix plugin can still be used if curl is not available or if the `Curl.ReplaceDavix` is set to `no` in the rootrc configuration.
 
 ## Core
 
@@ -373,6 +407,12 @@ Such file can be loaded locally in any web browser or send as attachment in emai
 
 ## Geometry
 
+The [TGeometry](https://root.cern/doc/master/classTGeometry.html) classes (Geant 3 shapes) have been moved out of Graf3D into their own library.
+To link to these classes, use the cmake target `TGeometry` (preferred), `root-config --libs`, or link with `-lTGeometry`.
+When ROOT is configured with `-Dgeom=Off`, these classes are now off as well.
+
+The header X3DBuffer.h is no longer part of the installed ROOT headers.
+
 ### Improved multithreaded `TGeo` navigation
 
 Multithreaded `TGeo` navigation is now faster and more scalable, with improved thread-local state management that avoids
@@ -381,12 +421,6 @@ multiple geometries.
 
 For ALICE material-budget lookup-table generation on 28 cores, these changes reduced the runtime from 139 s to 72 s
 and improved scaling from 12x to 23x.
-
-The [TGeometry](https://root.cern/doc/master/classTGeometry.html) classes (Geant 3 shapes) have been moved out of Graf3D into their own library.
-To link to these classes, use the cmake target `TGeometry` (preferred), `root-config --libs`, or link with `-lTGeometry`.
-When ROOT is configured with `-Dgeom=Off`, these classes are now off as well.
-
-The header X3DBuffer.h is no longer part of the installed ROOT headers.
 
 ## Documentation and Examples
 
@@ -416,7 +450,7 @@ else.
 
 ## Built-in packages
 
-**It is strongly recommended to rely on sytem packages, and not built-in ones.**
+**It is strongly recommended to rely on system packages, and not built-in ones.**
 All the built-in packages are now collected in the builtins directory.
 The version of the following packages has been updated:
 

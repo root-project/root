@@ -242,7 +242,7 @@ const RooArgSet *ModelConfig::GetSnapshot() const
 {
    if (!GetWS())
       return nullptr;
-   if (!fSnapshotName.length())
+   if (fSnapshotName.empty())
       return nullptr;
    // calling loadSnapshot will also copy the current parameter values in the workspaces
    // since we do not want to change the model parameters - we restore the previous ones

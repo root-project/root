@@ -19,6 +19,7 @@
 
 #include "gtest_wrapper.h"
 
+#include <cmath>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -108,15 +109,54 @@ TEST(RooProdPdf, TestDepsAreCond)
 
    EXPECT_TRUE(result4->isIdentical(*result2)) << "alternative model fit is inconsistent!";
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   resetParameters();
-   ResultPtr result1{pdf1.fitTo(*data, Save(), EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1))};
-   resetParameters();
-   ResultPtr result3{pdf2.fitTo(*data, Save(), EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1))};
+}
 
-   EXPECT_TRUE(result2->isIdentical(*result1)) << "legacy fit is inconsistent!";
-   EXPECT_TRUE(result4->isIdentical(*result1)) << "alternative model legacy fit is inconsistent!";
-#endif
+// The RooGenProdProj that normalizes factors with overlapping normalization
+// observables must integrate the unnormalized pdfs. Then, the cpu backend
+// agrees with the scalar evaluation to high precision, also if the
+// normalization of a factor depends on an observable. Covers the HS3 test
+// suite model rf305_condcorrprod.
+TEST(RooProdPdf, NonFactorizingProductLikelihood)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRandom::randomGenerator()->SetSeed(1337);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gaussy(y[-5, 5], 0.0, 3.0)");
+   ws.factory("Gaussian::gaussx(x[-5, 5], PolyVar::fy(y, {a0[-1.5, -5, 5], a1[-0.5, -1, 1]}), sigma[0.5, 0.1, 3])");
+   ws.factory("PROD::joint(gaussy, gaussx)");
+   // Here, gaussx is normalized over y only, so its normalization depends on x.
+   ws.factory("PROD::condOnX(gaussy, gaussx|x)");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+   RooRealVar &a0 = *ws.var("a0");
+
+   for (const char *name : {"joint", "condOnX"}) {
+      RooAbsPdf &model = *ws.pdf(name);
+      RooArgSet obs{x, y};
+
+      std::unique_ptr<RooDataSet> data{model.generate(obs, 1000)};
+      std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, RooFit::EvalBackend::Cpu())};
+
+      auto scalarNll = [&]() {
+         double out = 0.0;
+         for (int i = 0; i < data->numEntries(); ++i) {
+            RooArgSet const *row = data->get(i);
+            x.setVal(row->getRealValue("x"));
+            y.setVal(row->getRealValue("y"));
+            out -= std::log(model.getVal(obs));
+         }
+         return out;
+      };
+
+      for (double a0Val : {-1.5, 0.0, -1.5}) {
+         a0.setVal(a0Val);
+         const double ref = scalarNll();
+         EXPECT_NEAR(nll->getVal(), ref, 1e-10 * std::abs(ref)) << name << ", a0 = " << a0Val;
+      }
+   }
 }
 
 /// This test covers a potential problem with the custom normalization ranges
@@ -175,6 +215,74 @@ TEST(RooProdPdf, DISABLED_ChangeServerNormSetForProdPdfInAddPdf)
 
    EXPECT_FLOAT_EQ(val2, val1);
    EXPECT_FLOAT_EQ(val3, val1);
+}
+
+// A RooGenProdProj normalizes factors with overlapping normalization
+// observables together, integrating them with an empty normalization set. The
+// cpu backend must agree with the scalar evaluation also if these integrals
+// reach normalized pdfs inside composite factors, like a nested RooProdPdf or
+// a RooExtendPdf. A jointly normalized product nested in another one is
+// compared to the equivalent flat product instead.
+TEST(RooProdPdf, JointlyNormalizedCompositeFactors)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRandom::randomGenerator()->SetSeed(1337);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gaussy(y[-5, 5], 0.0, 3.0)");
+   ws.factory("Gaussian::gaussx(x[-5, 5], PolyVar::fy(y, {a0[-1.5, -5, 5], a1[-0.5, -1, 1]}), sigma[0.5, 0.1, 3])");
+   ws.factory("Gaussian::gaussz(z[-5, 5], 0.0, 1.0)");
+   ws.factory("PROD::nested(gaussy, PROD::inner(gaussx, gaussz))");
+   ws.factory("PROD::extended(gaussy, ExtendPdf::gaussxExt(gaussx, n[1000]))");
+   ws.factory("Gaussian::gaussw(w[-5, 5], PolyVar::fw(y, {0.0, b[0.3, -1, 1]}), 1.0)");
+   ws.factory("PROD::flat(gaussy, gaussx, gaussw)");
+   ws.factory("PROD::nestedFirst(PROD::innerFirst(gaussy, gaussx), gaussw)");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+   RooRealVar &z = *ws.var("z");
+   RooRealVar &w = *ws.var("w");
+   RooRealVar &a0 = *ws.var("a0");
+   RooRealVar &sigma = *ws.var("sigma");
+
+   auto check = [&](RooAbsPdf &model, RooArgSet const &obs) {
+      std::unique_ptr<RooDataSet> data{model.generate(obs, 1000)};
+      std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, RooFit::EvalBackend::Cpu(), RooFit::Extended(false))};
+
+      auto scalarNll = [&]() {
+         double out = 0.0;
+         for (int i = 0; i < data->numEntries(); ++i) {
+            RooArgSet const *row = data->get(i);
+            for (RooAbsArg *arg : obs) {
+               static_cast<RooRealVar *>(arg)->setVal(row->getRealValue(arg->GetName()));
+            }
+            out -= std::log(model.getVal(obs));
+         }
+         return out;
+      };
+
+      for (double a0Val : {-1.5, 0.0, -1.5}) {
+         a0.setVal(a0Val);
+         const double ref = scalarNll();
+         EXPECT_NEAR(nll->getVal(), ref, 1e-6 * std::abs(ref)) << model.GetName() << ", a0 = " << a0Val;
+      }
+   };
+
+   check(*ws.pdf("nested"), {x, y, z});
+   check(*ws.pdf("extended"), {x, y});
+
+   // The nested product only agrees with the flat product to about 1e-3. This
+   // tolerance still catches integrals of the inner product that are
+   // inconsistent with its value, which double the NLL.
+   std::unique_ptr<RooDataSet> data{ws.pdf("flat")->generate({x, y, w}, 1000)};
+   std::unique_ptr<RooAbsReal> nllFlat{ws.pdf("flat")->createNLL(*data, RooFit::EvalBackend::Cpu())};
+   std::unique_ptr<RooAbsReal> nllNested{ws.pdf("nestedFirst")->createNLL(*data, RooFit::EvalBackend::Cpu())};
+   for (double sigmaVal : {0.5, 1.0}) {
+      sigma.setVal(sigmaVal);
+      const double ref = nllFlat->getVal();
+      EXPECT_NEAR(nllNested->getVal(), ref, 1e-2 * std::abs(ref)) << "sigma = " << sigmaVal;
+   }
 }
 
 // Make sure that the pdf that provides the expected number of events in a

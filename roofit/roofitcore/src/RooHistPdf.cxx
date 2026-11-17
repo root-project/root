@@ -538,8 +538,16 @@ std::list<double>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, 
     return nullptr;
   }
 
-  // Check that observable is in dataset, if not no hint is generated
-  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
+  // Check that observable is in dataset, if not no hint is generated. The pdf
+  // observable can be named differently, e.g. when it was prefixed for a
+  // RooSimultaneous channel in the likelihood.
+  RooAbsArg *dhObs = _dataHist->get()->find(obs.GetName());
+  for (unsigned int i = 0; !dhObs && i < _pdfObsList.size(); ++i) {
+     if (std::string(obs.GetName()) == _pdfObsList[i]->GetName()) {
+        dhObs = _dataHist->get()->find(_histObsList[i]->GetName());
+     }
+  }
+  RooAbsLValue *lvarg = dynamic_cast<RooAbsLValue *>(dhObs);
   if (!lvarg) {
     return nullptr ;
   }

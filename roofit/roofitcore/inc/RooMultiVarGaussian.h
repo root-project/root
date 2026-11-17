@@ -56,9 +56,9 @@ public:
   class AnaIntData {
   public:
     TMatrixD    S22bar ;
-    double    S22det ;
+    double S22det = 0.0;
     std::vector<int> pmap ;
-    Int_t       nint ;
+    Int_t nint = 0;
   } ;
 
   class GenData {
@@ -100,8 +100,8 @@ protected:
   RooListProxy _mu ;
   TMatrixDSym _cov ;
   TMatrixDSym _covI ;
-  double    _det ;
-  double    _z ;
+  double _det = 0.0;
+  double _z = 0.0;
 
   void syncMuVec() const ;
   mutable TVectorD _muVec ; ///<! Do not persist

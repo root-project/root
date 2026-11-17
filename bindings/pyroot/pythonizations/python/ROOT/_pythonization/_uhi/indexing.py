@@ -12,7 +12,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 
 from .plotting import _values_by_copy
-from .tags import _get_axis_len, _overflow, _rebin, _sum, _underflow
+from .tags import _get_axis, _get_axis_len, _overflow, _rebin, _sum, _underflow
 
 """
 Implementation of the indexing component of the UHI
@@ -41,15 +41,15 @@ def _process_index_for_axis(self, index, axis, is_slice_stop=False):
         return _get_axis_len(self, axis) + 1 if index is len else index(self, axis)
 
     if isinstance(index, int):
-        # -1 index returns the last valid bin
-        if index == -1:
-            return _overflow(self, axis) - 1
+        # Negative indices count from the last valid bin
+        if index < 0:
+            index += _get_axis_len(self, axis)
 
         # Shift the indices by 1 to align with the UHI convention,
         # where 0 corresponds to the first bin, unlike ROOT where 0 represents underflow and 1 is the first bin.
         nbins = _get_axis_len(self, axis) + (1 if is_slice_stop else 0)
         index = index + 1
-        if abs(index) > nbins:
+        if index < 1 or index > nbins:
             raise IndexError(f"Histogram index {index - 1} out of range for axis {axis}. Valid range: (0,{nbins})")
         return index
 
@@ -58,7 +58,7 @@ def _process_index_for_axis(self, index, axis, is_slice_stop=False):
 
 def _compute_uhi_index(self, index, axis, flow=True):
     """Convert tag functors to valid bin indices."""
-    if isinstance(index, _rebin) or index is _sum:
+    if isinstance(index, _rebin) or index is _sum or index is sum:
         index = slice(None, None, index)
 
     if callable(index) or isinstance(index, int):
@@ -119,26 +119,33 @@ def _resolve_slice_indices(self, index, axis, flow=True):
     return start, stop
 
 
-def _apply_actions(hist, actions, index, unprocessed_index, original_hist):
+def _apply_actions(hist, actions, index, original_hist):
     """Apply rebinning or summing actions to the histogram, returns a new histogram"""
     if not actions or all(a is None for a in actions):
         return hist
 
     if any(a is _sum or a is sum for a in actions):
         sum_axes = tuple(i for i, a in enumerate(actions) if a is _sum or a is sum)
-        if original_hist.GetDimension() == 1:
-            # For the integral of a 1D histogram, we need special handling for the flow bins
+        if len(sum_axes) == original_hist.GetDimension():
+            # For the integral over all axes, we need special handling for the flow bins
             # h[::sum] is equivalent to h.Integral(0, nbins+1)
             # h[0:len:sum] is equivalent to h.Integral(1, nbins)
-            start, stop = index[0].start, index[0].stop
-            include_oflow = True if unprocessed_index.stop is None else False
-            args = [start, stop - (1 if not include_oflow else 0)]
+            args = []
+            for idx in index:
+                start, stop = (idx, idx + 1) if isinstance(idx, int) else (idx.start, idx.stop)
+                args += [start, stop - 1]
             hist = _sum(original_hist, sum_axes, args)
         else:
-            hist = _sum(hist, sum_axes)
+            import ROOT
+
+            # Do not register the projection in gDirectory, where ROOT would reuse it for the next projection
+            with ROOT.TDirectory.TContext(ROOT.nullptr):
+                hist = _sum(hist, sum_axes)
+            # No directory owns the projection, so Python has to delete it
+            ROOT.SetOwnership(hist, True)
 
     if any(isinstance(a, _rebin) for a in actions):
-        rebins = [a.ngroup if isinstance(a, _rebin) else 1 for a in actions if a is not _sum]
+        rebins = [a.ngroup if isinstance(a, _rebin) else 1 for a in actions if a is not _sum and a is not sum]
         hist = _rebin(rebins)(hist)
 
     if any(a is not None and not (isinstance(a, _rebin) or a is _sum or a is sum) for a in actions):
@@ -165,7 +172,7 @@ def _get_processed_slices(self, index):
     return processed_slices, actions
 
 
-def _slice_get(self, index, unprocessed_index):
+def _slice_get(self, index):
     """
     This method creates a new histogram containing only the data from the
     specified slice.
@@ -180,9 +187,19 @@ def _slice_get(self, index, unprocessed_index):
     processed_slices, actions = _get_processed_slices(self, index)
     args_vec = ROOT.std.vector("Int_t")([item for pair in processed_slices for item in pair])
 
-    target_hist = ROOT.Internal.Slice(self, args_vec)
+    # Instantiate Slice for the class of the histogram, otherwise a profile can be passed to the
+    # instantiation for its base class (e.g. Slice<TH1D> for a TProfile), which cannot copy it
+    target_hist = ROOT.Internal.Slice[self.ClassName()](self, args_vec)
 
-    return _apply_actions(target_hist, actions, index, unprocessed_index, self)
+    # The bins cut by the slice fall into the flow bins of the sliced histogram,
+    # so the summed axes only include the flow bins of open slices
+    for axis, ((start, stop), action) in enumerate(zip(processed_slices, actions)):
+        if action is _sum or action is sum:
+            first = 0 if start == _underflow(self, axis) else 1
+            last = _get_axis_len(target_hist, axis) + (1 if stop > _overflow(self, axis) else 0)
+            _get_axis(target_hist, axis).SetRange(first, last)
+
+    return _apply_actions(target_hist, actions, index, self)
 
 
 def _slice_set(self, index, unprocessed_index, value):
@@ -231,7 +248,7 @@ def _slice_set(self, index, unprocessed_index, value):
 
     ROOT.Internal.SetSliceContent(self, value, slice_edges)
 
-    _apply_actions(self, actions, index, unprocessed_index, self)
+    _apply_actions(self, actions, index, self)
 
 
 def _getitem(self, index):
@@ -239,7 +256,7 @@ def _getitem(self, index):
     if all(isinstance(i, int) for i in uhi_index):
         return self.GetBinContent(*uhi_index)
     if any(isinstance(i, slice) for i in uhi_index):
-        return _slice_get(self, uhi_index, index)
+        return _slice_get(self, uhi_index)
 
 
 def _setitem(self, index, value):

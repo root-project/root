@@ -40,7 +40,6 @@ The following tutorials illustrate various useful ROOT I/O features.
 |------|--------|-----------------|
 | double32.C |  | Details of the Double32_t data type - what is its precision and how to use it. |
 | float16.C |  | Details of the Float16_t data type - what is its precision and how to use it. |
-| testTMPIFile.C |  |  Usage of TMPIFile to simulate event reconstruction and merging them in parallel.|
 |  | tcontext_context_manager.py |  Usage of the TContext class as a Python context manager. |
 | |  tfile_context_manager.py |  Usage of TFile class as a Python context manager.|
 

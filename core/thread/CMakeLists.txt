@@ -26,23 +26,27 @@ else()
   )
 endif()
 
+set(THREAD_HEADERS
+  TAtomicCount.h
+  TCondition.h
+  TConditionImp.h
+  TMutex.h
+  TMutexImp.h
+  TRWLock.h
+  TSemaphore.h
+  TThreadFactory.h
+  TThread.h
+  TThreadImp.h
+  TThreadPool.h
+  ROOT/TRWSpinLock.hxx
+  ROOT/TSpinMutex.hxx
+  ROOT/TThreadedObject.hxx
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Thread
   HEADERS
     ${PLATFORM_HEADERS}
-    TAtomicCount.h
-    TCondition.h
-    TConditionImp.h
-    TMutex.h
-    TMutexImp.h
-    TRWLock.h
-    TSemaphore.h
-    TThreadFactory.h
-    TThread.h
-    TThreadImp.h
-    TThreadPool.h
-    ROOT/TRWSpinLock.hxx
-    ROOT/TSpinMutex.hxx
-    ROOT/TThreadedObject.hxx
+    ${THREAD_HEADERS}
   SOURCES
     src/TCondition.cxx
     src/TConditionImp.cxx
@@ -66,6 +70,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+)
+
+set(RELATIVE_INC_HEADERS ${PLATFORM_HEADERS} ${THREAD_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+target_sources(Thread
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
 )
 
 target_link_libraries(Thread PUBLIC ${CMAKE_THREAD_LIBS_INIT})

@@ -1059,7 +1059,9 @@ void ROOT::RDF::RNTupleDS::ScheduleTasksForFileWithGlobalOffset(
    source->LoadAllPageLists();
 
    const std::uint64_t globalFileOffset = globalFileOffsets[fileIdx];
-   const auto [globalBegin, globalEnd] = fGlobalEntryRange.value();
+   // captured structured bindings are a C++20 extension
+   const auto globalBegin = fGlobalEntryRange.value().first;
+   const auto globalEnd = fGlobalEntryRange.value().second;
 
    const auto clustersAndEntries =
       [&]() -> std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t> {

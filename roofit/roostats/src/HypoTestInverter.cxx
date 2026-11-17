@@ -415,9 +415,9 @@ TestStatistic * HypoTestInverter::GetTestStatistic( ) const
 {
    if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
       return fCalculator0->GetTestStatSampler()->GetTestStatistic();
-   }
-   else
+   } else {
       return nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -428,8 +428,9 @@ bool HypoTestInverter::SetTestStatistic(TestStatistic& stat)
    if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
       fCalculator0->GetTestStatSampler()->SetTestStatistic(&stat);
       return true;
+   } else {
+      return false;
    }
-   else return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1093,15 +1094,15 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    if (!sbModel->GetParametersOfInterest()) return nullptr;
    paramPoint.add(*sbModel->GetParametersOfInterest());
 
-   const RooArgSet * poibkg = bModel->GetSnapshot();
+   std::unique_ptr<const RooArgSet> poibkg{bModel->GetSnapshot()};
    if (!poibkg) {
       oocoutW(nullptr,InputArguments) << "HypoTestInverter::RebuildDistribution - background snapshot not existing"
                                           << " assume is for POI = 0" << std::endl;
       fScannedVariable->setVal(0);
       paramPoint.assign(RooArgSet(*fScannedVariable));
-   }
-   else
+   } else {
       paramPoint.assign(*poibkg);
+   }
    // generate data at bkg parameter point
 
    ToyMCSampler * toymcSampler = dynamic_cast<ToyMCSampler *>(fCalculator0->GetTestStatSampler() );
@@ -1204,7 +1205,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
 
 
       oocoutI(nullptr,Eval) << "\n\nsnapshot of s+b model \n";
-      sbModel->GetSnapshot()->Print("v");
+      std::unique_ptr<const RooArgSet>{sbModel->GetSnapshot()}->Print("v");
 
       // reset parameters to initial values to be sure in case they are not reset
       if (itoy> 0) {

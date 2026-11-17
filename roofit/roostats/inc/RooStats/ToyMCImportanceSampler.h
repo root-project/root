@@ -35,7 +35,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight) const override;
       virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight, std::vector<double>& impNLLs, double& nullNLL) const;
       virtual RooAbsData* GenerateToyData(std::vector<double>& weights) const;
-      virtual RooAbsData* GenerateToyData(std::vector<double>& weights, std::vector<double>& nullNLLs, std::vector<double>& impNLLs) const;
+      virtual RooAbsData* GenerateToyData(std::vector<double>& weights, std::vector<double>& impNLLVals, std::vector<double>& nullNLLVals) const;
 
 
       /// specifies the pdf to sample from
@@ -99,9 +99,10 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       void SetPdf(RooAbsPdf& pdf) override {
          ToyMCSampler::SetPdf(pdf);
 
-         if( fNullDensities.size() == 1 ) { fNullDensities[0] = &pdf; }
-         else if( fNullDensities.empty()) AddNullDensity( &pdf );
-         else{
+         if( fNullDensities.size() == 1 ) { fNullDensities[0] = &pdf;
+         } else if (fNullDensities.empty()) {
+            AddNullDensity(&pdf);
+         } else {
             oocoutE(nullptr,InputArguments) << "Cannot use SetPdf() when already multiple null densities are specified. Please use AddNullDensity()." << std::endl;
          }
       }

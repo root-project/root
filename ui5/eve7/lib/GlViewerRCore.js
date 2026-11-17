@@ -13,6 +13,43 @@ sap.ui.define([
    let REveCameraControls;
    let datGUI;
 
+   /** Return the URL of the server's top directory, the one that holds
+     * rootui5sys/, sdf-fonts/ and eve-images/. The server's importmap maps each
+     * of its locations relative to the page (THttpServer::ReplaceJSROOTLinks).
+     * JSROOT's own directory is not a substitute: without builtin_jsroot it is
+     * on root.cern, and loading REve files from there fails on CORS. */
+   function locateTopPath()
+   {
+      const loc = 'rootui5sys/';
+      for (const s of document.querySelectorAll('script[type="importmap"]')) {
+         try {
+            const p = JSON.parse(s.textContent)?.imports?.[loc];
+            if (p)
+               return new URL(p, document.baseURI).href.slice(0, -loc.length);
+         } catch (e) {
+            console.warn('GlViewerRCore: cannot parse importmap', e);
+         }
+      }
+      // A page without an importmap: JSROOT is served next to rootui5sys/.
+      const jsrp = EVE.JSR.source_dir;
+      return jsrp.substring(0, jsrp.length - 'jsrootsys/'.length);
+   }
+
+   /** Add the eveGlView flex rule to the document, once. It lives here, not in
+     * css/eve.css, so that applications that embed the GL view with their own
+     * copy of eve.css (e.g. FireworksWeb) get it too; without it the canvas
+     * div collapses to the canvas default height of 150 px. */
+   function ensureGlViewStyle()
+   {
+      const id = "eveGlViewStyle";
+      if (document.getElementById(id))
+         return;
+      let style = document.createElement("style");
+      style.id = id;
+      style.textContent = ".sapUiView.eveGlView:not(.sapMNavItemHidden) { display: flex; flex-direction: column; }";
+      document.head.appendChild(style);
+   }
+
    class GlViewerRCore extends GlViewer {
 
       constructor(viewer_class)
@@ -44,9 +81,7 @@ sap.ui.define([
          this.RQ_MarkerScale = (marker_scale) ? marker_scale[0] : 1;
          this.RQ_LineScale   = (line_scale) ? line_scale[0] : 1;
 
-         let jsrp = EVE.JSR.source_dir;
-         // take out 'jsrootsys' and replace it with 'rootui5sys/eve7/'
-         this.top_path = jsrp.substring(0, jsrp.length - 10);
+         this.top_path = locateTopPath();
          this.eve_path = this.top_path + 'rootui5sys/eve7/';
 
          // 0 - error, 1 - warning, 2 - info, 3 - debug; set with RQ_LogLevel.
@@ -178,9 +213,10 @@ sap.ui.define([
          // height as a flex item. height:100% would overhang the view's bottom
          // edge by the toolbar height, and GL would draw into the hidden strip.
          // min-height:0 lets the flex item shrink below its content.
-         // The flex layout comes from the eveGlView class (css/eve.css), not an
-         // inline style: when the view is a router page, an inline display
-         // would override the display:none that hides it after navigating back.
+         // The flex layout comes from the eveGlView class, not an inline style:
+         // when the view is a router page, an inline display would override the
+         // display:none that hides it after navigating back.
+         ensureGlViewStyle();
          this.get_view().addStyleClass("eveGlView");
          canvasParentDOM.style.flex = "1 1 0";
          canvasParentDOM.style.minHeight = "0";
@@ -746,8 +782,11 @@ sap.ui.define([
          {
             this.controls.setCamBaseMtx(new RC.Vector3(v1[0], v1[1], v1[2]), new RC.Vector3(v2[0], v2[1], v2[2]));
             // Fit the height, or the width if that is what limits the panel.
-            let ey = 1.02 * Math.max(extV.y, extV.x * this.get_height() / this.get_width());
-            let ex = ey / this.get_height() * this.get_width();
+            // Measure the canvas, not the view, which also holds the toolbar.
+            let cw = this.canvas.width, ch = this.canvas.height;
+            let asp = (cw > 0 && ch > 0) ? cw / ch : 1;
+            let ey = 1.02 * Math.max(extV.y, extV.x / asp);
+            let ex = ey * asp;
             this.camera._left   = -ex;
             this.camera._right  =  ex;
             this.camera._top    =  ey;
@@ -1531,11 +1570,11 @@ sap.ui.define([
                                      "ROOT::Experimental::REveViewer");
       }
 
-      /** Age every GL buffer and texture before a scene rebuild. EveManager
-       * calls this, then clearAttributesAndTextures() after the rebuild, which
-       * drops whatever the rebuild did not touch. A GL resource is only a cache
-       * of its BufferAttribute or Texture, so no element has to track what it
-       * allocated. */
+      /** Age every GL buffer and texture of this viewer's context. EveManager
+       * calls this at an EndChanges message, before the scenes apply their
+       * changes, and clearAttributesAndTextures() after. A GL resource is only a
+       * cache of its BufferAttribute or Texture, so no element has to track what
+       * it allocated. */
       timeStampAttributesAndTextures() {
          try {
             this.renderer.ageResources();
@@ -1545,11 +1584,19 @@ sap.ui.define([
          }
       }
 
+      /** Keep the GL resources of everything in the viewer's scenes and drop the
+       * rest. RenderCore marks every buffer and texture reachable from the main
+       * and the overlay scene, including those of hidden and culled objects, and
+       * then drops what has gone two cycles without being marked or drawn. So an
+       * element removed from the scenes loses its GL resources at the next
+       * EndChanges of this viewer after the one that removed it. An element out
+       * of view, or hidden, keeps them, and so do the elements of a viewer that
+       * draws no frame between two EndChanges. */
       clearAttributesAndTextures() {
          try {
             // One cycle of grace, so a resource used by every second update is
             // not thrashed. Raise it if elements come and go on alternate events.
-            this.renderer.collectResources(2);
+            this.renderer.collectResources(2, [this.scene, this.overlay_scene]);
          }
          catch (e) {
             console.error("Exception caught in clearAttributesAndTextures.", e);

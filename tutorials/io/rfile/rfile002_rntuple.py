@@ -1,12 +1,12 @@
-# \file
-# \ingroup ROOT7 tutorial_io
-# Demonstrate how to read/write an RNTuple with RFile
-#
-# \macro_code
-# \macro_output
-#
-# \date 2026-10-12
-# \author Giacomo Parolini <giacomo.parolini@cern.ch>
+## \file
+## \ingroup ROOT7 tutorial_io
+## Demonstrate how to read/write an RNTuple with RFile
+##
+## \macro_code
+## \macro_output
+##
+## \date 2026-10-12
+## \author Giacomo Parolini <giacomo.parolini@cern.ch>
 
 import ROOT
 

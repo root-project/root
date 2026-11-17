@@ -128,7 +128,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    int verbose = fgPrintLevel();
    // try to guess default configuration
    // (this part should be only in constructor because the null snapshot might change during HypoTestInversion
-   const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
+   std::unique_ptr<const RooArgSet> nullSnapshot{GetNullModel()->GetSnapshot()};
    assert(nullSnapshot);
    RooRealVar * muNull  = dynamic_cast<RooRealVar*>(nullSnapshot->first() );
    assert(muNull);
@@ -185,7 +185,7 @@ bool AsymptoticCalculator::Initialize() const {
 
 
    // This will set the poi value to the null snapshot value in the ModelConfig
-   const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
+   std::unique_ptr<const RooArgSet> nullSnapshot{GetNullModel()->GetSnapshot()};
    if(nullSnapshot == nullptr || nullSnapshot->empty()) {
       oocoutE(nullptr,InputArguments) << "AsymptoticCalculator::Initialize - Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << std::endl;
       return false;
@@ -230,7 +230,7 @@ bool AsymptoticCalculator::Initialize() const {
    allParams->snapshot(fBestFitParams);
 
    // compute Asimov data set for the background (alt poi ) value
-   const RooArgSet * altSnapshot = GetAlternateModel()->GetSnapshot();
+   std::unique_ptr<const RooArgSet> altSnapshot{GetAlternateModel()->GetSnapshot()};
    if(altSnapshot == nullptr || altSnapshot->empty()) {
       oocoutE(nullptr,InputArguments) << "Alt (Background)  model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << std::endl;
       return false;
@@ -263,7 +263,7 @@ bool AsymptoticCalculator::Initialize() const {
       if (verbose >= 0)
          oocoutI(nullptr,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << std::endl;
       std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet *>(poiAlt.snapshot())};
-      fAsimovData = MakeAsimovData(data, *GetNullModel(), poiAlt, fAsimovGlobObs, tmp.get());
+      fAsimovData.reset(MakeAsimovData(data, *GetNullModel(), poiAlt, fAsimovGlobObs, tmp.get()));
    }
 
    else {
@@ -271,7 +271,7 @@ bool AsymptoticCalculator::Initialize() const {
       if (verbose >= 0)
          oocoutI(nullptr,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << std::endl;
       nominalParams.assign(poiAlt); // set poi to alt value but keep nuisance at the nominal one
-      fAsimovData = MakeAsimovData( *GetNullModel(), nominalParams, fAsimovGlobObs);
+      fAsimovData.reset(MakeAsimovData( *GetNullModel(), nominalParams, fAsimovGlobObs));
    }
 
    if (!fAsimovData) {
@@ -429,9 +429,9 @@ double EvaluateNLL(RooStats::ModelConfig const &modelConfig, RooAbsData &data, c
                 if (ROOT::Math::MinimizerOptions::DefaultStrategy() == 0 ) {
                    oocoutW(nullptr,Minimization) << "    ----> trying with strategy = 1" << std::endl;
                    minim.setStrategy(1);
-                }
-                else
+                } else {
                    tries++; // skip this trial if strategy is already 1
+                }
              }
              if (tries == 3) {
                 oocoutW(nullptr,Minimization) << "    ----> trying with improve" << std::endl;
@@ -524,7 +524,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    // make conditional fit on null snapshot of poi
 
-   const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
+   std::unique_ptr<const RooArgSet> nullSnapshot{GetNullModel()->GetSnapshot()};
    assert(nullSnapshot && !nullSnapshot->empty());
 
    // use as POI the nullSnapshot
@@ -729,7 +729,8 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    if (!fOneSidedDiscovery) { // qtilde is not a discovery test
       if (fUseQTilde == -1 && !fOneSidedDiscovery) {
          // alternate snapshot is value for which background is zero (for limits)
-         RooRealVar * muAlt = dynamic_cast<RooRealVar*>(GetAlternateModel()->GetSnapshot()->first() );
+         std::unique_ptr<const RooArgSet> altSnapshot{GetAlternateModel()->GetSnapshot()};
+         RooRealVar * muAlt = dynamic_cast<RooRealVar*>(altSnapshot->first() );
          // null snapshot is value for which background is zero (for discovery)
          //RooRealVar * muNull = dynamic_cast<RooRealVar*>(GetNullModel()->GetSnapshot()->first() );
          assert(muAlt != nullptr );
@@ -947,6 +948,9 @@ void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, i
          double totBinVolume = binVolume * v->getBinWidth(i);
          double fval = pdf.getVal(&obstmp)*totBinVolume;
 
+         // Bins without expected events are kept with zero weight, such that
+         // the dataset has one entry per bin, like the binned likelihood
+         // optimization requires.
          if (fval*expectedEvents <= 0)
          {
             if (fval*expectedEvents < 0) {
@@ -957,8 +961,9 @@ void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, i
             else {
                oocoutW(nullptr,InputArguments)
                    << "AsymptoticCalculator::" << __func__
-                   << "(): Bin " << i << " of " << v->GetName() << " has zero expected events - skip it" << std::endl;
+                   << "(): Bin " << i << " of " << v->GetName() << " has zero expected events" << std::endl;
             }
+            data.add(obs, 0.0);
          }
          // have a cut off for overflows ??
          else {
@@ -1257,10 +1262,11 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
    RooProdPdf observableProdPdf("observableProdPdf", "observableProdPdf", strippedPdfSet);
    const RooAbsPdf *observablePdf;
    if (prodPdf) {
-      if (strippedPdfSet.getSize() == 1)
+      if (strippedPdfSet.getSize() == 1) {
          observablePdf = dynamic_cast<const RooAbsPdf *>(strippedPdfSet.at(0));
-      else
+      } else {
          observablePdf = &observableProdPdf;
+      }
    } else {
       observablePdf = &pdf;
    }

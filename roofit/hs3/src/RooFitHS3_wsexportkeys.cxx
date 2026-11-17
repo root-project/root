@@ -8,7 +8,7 @@ auto RooFitHS3_wsexportkeys = R"({
         }
     },
     "RooArgusBG": {
-        "type": "ARGUS_dist",
+        "type": "argus_dist",
         "proxies": {
             "m": "mass",
             "m0": "resonance",
@@ -49,19 +49,6 @@ auto RooFitHS3_wsexportkeys = R"({
             "coefList": "coefficients"
         }
     },    
-    "RooCrystalBall": {
-        "type": "crystalball_doublesided_dist",
-        "proxies": {
-            "alphaL": "alpha_L",
-            "alphaR": "alpha_R",
-            "nL": "n_L",
-            "nR": "n_R",
-            "x": "m",
-            "x0": "m0",
-            "sigmaL": "sigma_L",
-            "sigmaR": "sigma_R"
-        }
-    },
     "RooEffProd": {
         "type": "efficiency_product_pdf_dist",
         "proxies": {

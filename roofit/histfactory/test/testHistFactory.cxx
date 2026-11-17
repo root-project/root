@@ -9,9 +9,6 @@
 #endif
 #include <RooFit/ModelConfig.h>
 
-#include <RooFitHS3/JSONIO.h>
-#include <RooFitHS3/RooJSONFactoryWSTool.h>
-
 #include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooDataHist.h>
 #include <RooWorkspace.h>
@@ -26,21 +23,19 @@
 
 #include <TROOT.h>
 #include <TFile.h>
+#include <TH1D.h>
 #include <TCanvas.h>
 #include <TSystem.h>
 #include <gtest/gtest.h>
 
 #include "../../roofitcore/test/gtest_wrapper.h"
 
-#include <regex>
+#include <cmath>
 #include <set>
 
 namespace {
 
-// If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = false;
-
-std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool normalize, bool useBatchMode)
+std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool normalize)
 {
    RooArgSet normSet{obs};
 
@@ -53,10 +48,6 @@ std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool norm
       out.push_back(normalize ? real.getVal(normSet) : real.getVal());
    }
 
-   if (useBatchMode == false) {
-      return out;
-   }
-
    std::unique_ptr<RooAbsReal> clone;
    if (normalize) {
       clone = RooFit::Detail::compileForNormSet<RooAbsReal>(real, obs);
@@ -67,6 +58,10 @@ std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool norm
    RooFit::Evaluator evaluator(*clone);
    evaluator.setInput(obs.GetName(), binCenters, false);
    std::span<const double> results = evaluator.run();
+   // The scalar getVal() has to agree with the vectorized evaluation.
+   for (std::size_t i = 0; i < out.size(); ++i) {
+      EXPECT_NEAR(out[i], results[i], 1e-12 * std::abs(results[i])) << "bin " << i << ", normalize = " << normalize;
+   }
    out.assign(results.begin(), results.end());
    return out;
 }
@@ -444,7 +439,6 @@ TEST_P(HFFixtureEval, Evaluation)
    const double systEps = 1e-6;
 
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
-   const bool useBatchMode = std::get<2>(GetParam()) != RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy);
 
    RooHelpers::HijackMessageStream evalMessages(RooFit::INFO, RooFit::FastEvaluations);
 
@@ -460,8 +454,8 @@ TEST_P(HFFixtureEval, Evaluation)
    ASSERT_NE(mc, nullptr);
 
    // Test evaluating the model:
-   std::vector<double> normResults = getValues(*channelPdf, *obs, true, useBatchMode);
-   std::vector<double> unnormResults = getValues(*channelPdf, *obs, false, useBatchMode);
+   std::vector<double> normResults = getValues(*channelPdf, *obs, true);
+   std::vector<double> unnormResults = getValues(*channelPdf, *obs, false);
 
    for (int i = 0; i < obs->numBins(); ++i) {
       EXPECT_NEAR(unnormResults[i], _tgtNom[i] / obs->getBinWidth(i), defaultEps);
@@ -477,8 +471,8 @@ TEST_P(HFFixtureEval, Evaluation)
 
       // Test syst up:
       var->setVal(1.);
-      std::vector<double> normResultsSyst = getValues(*channelPdf, *obs, true, useBatchMode);
-      std::vector<double> unnormResultsSyst = getValues(*channelPdf, *obs, false, useBatchMode);
+      std::vector<double> normResultsSyst = getValues(*channelPdf, *obs, true);
+      std::vector<double> unnormResultsSyst = getValues(*channelPdf, *obs, false);
       for (int i = 0; i < obs->numBins(); ++i) {
          EXPECT_NEAR(unnormResultsSyst[i], _tgtSysUp[i] / obs->getBinWidth(i), systEps);
          EXPECT_NEAR(normResultsSyst[i], _tgtSysUp[i] / obs->getBinWidth(i) / (_tgtSysUp[0] + _tgtSysUp[1]), systEps);
@@ -486,8 +480,8 @@ TEST_P(HFFixtureEval, Evaluation)
 
       // Test syst down:
       var->setVal(-1.);
-      normResultsSyst = getValues(*channelPdf, *obs, true, useBatchMode);
-      unnormResultsSyst = getValues(*channelPdf, *obs, false, useBatchMode);
+      normResultsSyst = getValues(*channelPdf, *obs, true);
+      unnormResultsSyst = getValues(*channelPdf, *obs, false);
       for (int i = 0; i < obs->numBins(); ++i) {
          EXPECT_NEAR(unnormResultsSyst[i], _tgtSysDo[i] / obs->getBinWidth(i), systEps);
          EXPECT_NEAR(normResultsSyst[i], _tgtSysDo[i] / obs->getBinWidth(i) / (_tgtSysDo[0] + _tgtSysDo[1]), systEps);
@@ -495,83 +489,6 @@ TEST_P(HFFixtureEval, Evaluation)
    }
 
    EXPECT_TRUE(evalMessages.str().empty()) << "RooFit issued " << evalMessages.str().substr(0, 1000) << " [...]";
-}
-
-void setInitialFitParameters(RooWorkspace &ws, MakeModelMode makeModelMode)
-{
-   if (makeModelMode == MakeModelMode::OverallSyst) {
-      // The final parameters of alpha_syst2 and alpha_syst4 are very close to the
-      // pre-fit value zero. For the fit to converge reliably, the pre-fit values
-      // are set away from the minimum.
-      ws.var("alpha_syst2")->setVal(1.0);
-      ws.var("alpha_syst4")->setVal(-1.0);
-   }
-   if (makeModelMode == MakeModelMode::ShapeSyst) {
-      ws.var("gamma_background1Shape_bin_0")->setVal(0.7);
-      ws.var("gamma_background2Shape_bin_1")->setVal(1.3);
-   }
-}
-
-TEST_P(HFFixture, HS3ClosureLoop)
-{
-   const MakeModelMode makeModelMode = std::get<0>(GetParam());
-
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
-   EXPECT_TRUE(mc != nullptr);
-
-   RooAbsPdf *pdf = mc->GetPdf();
-   EXPECT_TRUE(pdf != nullptr);
-
-   std::string const &js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
-   if (writeJsonFiles) {
-      RooJSONFactoryWSTool{*ws}.exportJSON(_name + "_1.json");
-   }
-
-   RooWorkspace wsFromJson("new");
-   RooJSONFactoryWSTool newtool{wsFromJson};
-   newtool.importJSONfromString(js);
-
-   std::string const &js3 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
-
-   if (writeJsonFiles) {
-      RooJSONFactoryWSTool{wsFromJson}.exportJSON(_name + "_2.json");
-   }
-
-   // Chack that JSON > WS > JSON doesn't change the JSON
-   EXPECT_EQ(js, js3) << "The JSON -> WS -> JSON roundtrip did not result in the original JSON!";
-
-   auto *newmc = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
-   EXPECT_TRUE(newmc != nullptr);
-
-   RooAbsPdf *newpdf = newmc->GetPdf();
-   EXPECT_TRUE(newpdf != nullptr);
-
-   RooAbsData *data = ws->data("obsData");
-   EXPECT_TRUE(data != nullptr);
-
-   RooAbsData *newdata = wsFromJson.data("obsData");
-   EXPECT_TRUE(newdata != nullptr);
-
-   RooArgSet const &globs = *mc->GetGlobalObservables();
-   RooArgSet const &globsFromJson = *newmc->GetGlobalObservables();
-
-   setInitialFitParameters(*ws, makeModelMode);
-   setInitialFitParameters(wsFromJson, makeModelMode);
-
-   using namespace RooFit;
-   using Res = std::unique_ptr<RooFitResult>;
-
-   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
-                         PrintLevel(-1), Save())};
-
-   Res resultFromJson{newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
-                                    GlobalObservables(globsFromJson), PrintLevel(-1), Save())};
-
-   // Do also the reverse comparison to check that the set of constant parameters matches
-   EXPECT_TRUE(result->isIdentical(*resultFromJson));
-   EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }
 
 /// Fit the model to data, and check parameters.
@@ -699,90 +616,6 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                                           testing::Values(false, true), // non-uniform bins or not
                                           testing::Values(ROOFIT_EVAL_BACKENDS_WITH_CODEGEN)),
                          getNameFromInfo);
-
-// Regression test for the HS3 importer's handling of "shapefactor" modifiers.
-// HistFactory's ShapeFactor is exported with type "shapesys" (the only
-// modifier type the writer ever emits for a ParamHistFunc), but valid HS3 JSON
-// may also use the dedicated "shapefactor" type for an unconstrained
-// ParamHistFunc - and the importer must accept it. This test starts from a
-// HistFactory model built with MakeModelAndMeasurementFast, rewrites the
-// modifier type to "shapefactor" in the JSON, and checks that the importer
-// recognises it. Without the fix in JSONFactories_HistFactory.cxx the import
-// throws "modifier ... of unknown type 'shapefactor'".
-TEST(HistFactory, HS3ImportShapeFactorModifier)
-{
-   using namespace RooStats::HistFactory;
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   const std::string inputFile = "TestHS3ShapeFactor.root";
-   {
-      TFile f(inputFile.c_str(), "RECREATE");
-      auto *data = new TH1D("data", "data", 2, 1, 2);
-      auto *signal = new TH1D("signal", "signal", 2, 1, 2);
-      auto *bkg = new TH1D("background", "background", 2, 1, 2);
-      data->SetBinContent(1, 220);
-      data->SetBinContent(2, 230);
-      signal->SetBinContent(1, 10);
-      signal->SetBinContent(2, 20);
-      bkg->SetBinContent(1, 200);
-      bkg->SetBinContent(2, 200);
-      for (auto *h : {data, signal, bkg})
-         f.WriteTObject(h);
-   }
-
-   Measurement meas("meas", "meas");
-   meas.SetOutputFilePrefix("HS3ShapeFactor");
-   meas.SetPOI("SigXsecOverSM");
-   meas.AddConstantParam("Lumi");
-   meas.SetLumi(1.0);
-   meas.SetLumiRelErr(0.10);
-
-   Channel chan("channel1");
-   chan.SetData("data", inputFile);
-
-   Sample sig("signal", "signal", inputFile);
-   sig.AddNormFactor("SigXsecOverSM", 1, 0, 3);
-   chan.AddSample(sig);
-
-   // ShapeFactor on the background: an unconstrained, bin-by-bin scaling.
-   // Make the gammas constant so that the workspace is well-defined for
-   // re-export (free shapefactor gammas have no constraints attached).
-   Sample bkg("background", "background", inputFile);
-   ShapeFactor sf;
-   sf.SetName("bkgShape");
-   sf.SetConstant(true);
-   bkg.AddShapeFactor(sf);
-   chan.AddSample(bkg);
-
-   meas.AddChannel(chan);
-   meas.CollectHistograms();
-
-   std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
-   ASSERT_NE(ws, nullptr);
-
-   const std::string js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
-
-   // Rewrite the modifier type for "bkgShape" from "shapesys" to "shapefactor".
-   // The HistFactory exporter always writes "shapesys", but the importer should
-   // accept the more accurate "shapefactor" type as well.
-   const std::regex pattern{"\"name\":\"bkgShape\",\"parameters\":\\[([^\\]]*)\\],\"type\":\"shapesys\""};
-   const std::string jsShapeFactor =
-      std::regex_replace(js, pattern, "\"name\":\"bkgShape\",\"parameters\":[$1],\"type\":\"shapefactor\"");
-   ASSERT_NE(js, jsShapeFactor) << "Failed to substitute shapesys -> shapefactor in JSON";
-
-   RooWorkspace wsFromJson{"new"};
-   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(jsShapeFactor))
-      << "Importer rejected the 'shapefactor' modifier type";
-
-   // The imported workspace should expose the same ParamHistFunc gammas.
-   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_0"), nullptr);
-   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_1"), nullptr);
-
-   // Re-exporting should give back the original JSON, since the writer emits
-   // type "shapesys" in both cases.
-   const std::string js2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
-   EXPECT_EQ(js, js2) << "JSON -> WS -> JSON roundtrip changed the JSON";
-}
 
 // Issue #20697: Sample::AddShapeFactor() now allows to set the initial value
 // and the range of the ShapeFactor gammas (just like AddNormFactor() does for

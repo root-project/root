@@ -111,7 +111,6 @@ jobs:
         shell: bash -leo pipefail {0} # Use login shell, so profile scripts get sourced
 
     env:
-      VIRTUAL_ENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform == 'mac-beta' && '27' || '' }} # Problems with gfortran falling back 18 (unsupported)
       HOME: /Users/sftnight
 
@@ -147,14 +146,15 @@ jobs:
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
+      - name: "Check Python environment"
+        run: echo "Python is now $(which python3) $(python3 --version)"
+
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: |
-          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
-          echo "Python is now $(which python3) $(python3 --version)"
           src/.github/workflows/root-ci-config/build_root.py  \
                     --buildtype       RelWithDebInfo          \
                     --incremental     false                   \
@@ -170,8 +170,6 @@ jobs:
       - name: Workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: |
-          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
-          echo "Python is now $(which python3) $(python3 --version)"
           src/.github/workflows/root-ci-config/build_root.py  \
                     --buildtype      ${{ inputs.buildtype }}  \
                     --platform       ${{ matrix.platform }}   \
@@ -190,8 +188,6 @@ jobs:
           # branch happens to be when the job starts (issue #14061).
           SHA:       ${{ github.event_name == 'push' && format('--sha {0}', github.sha) || '' }}
         run: |
-          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
-          echo "Python is now $(which python3) $(python3 --version)"
           src/.github/workflows/root-ci-config/build_root.py    \
                     --buildtype        RelWithDebInfo           \
                     --platform         ${{ matrix.platform }}   \
@@ -256,6 +252,13 @@ jobs:
 
     permissions:
       contents: read
+
+    concurrency:
+      # We need only one build cache update to run after merges to master
+      # The group name expands to something like
+      # "ROOT CI-20964/merge-arch-config-21173435944", unless it's a build cache update, where it will be
+      # "ROOT CI-master     -arch-config-update_build_cache", so only one of these jobs will run
+      group: ${{ github.workflow }}-${{ github.ref_name }}-${{ matrix.target_arch }}-${{ matrix.config }}-${{ github.event_name == 'push' && 'update_build_cache' || github.run_id }}
 
     strategy:
       fail-fast: false
@@ -399,17 +402,13 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora43
           - image: fedora44
           - image: alma8
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
-          - image: ubuntu22
-            python_venv: "/py-venv-3.12/ROOT-CI"
-            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["imt=OFF", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2604
           - image: ubuntu2610
           - image: debian13
@@ -613,6 +612,7 @@ jobs:
 
       - name: Install
         id: install
+        if: ${{ !cancelled() && !(matrix.is_special && github.event_name == 'workflow_dispatch') }}
         run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}
 
       - name: Check headers

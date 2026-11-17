@@ -44,7 +44,8 @@ public:
     // Force RooRealIntegral to offer all observables for internal integration
     return true ;
   }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
+                                const char *rangeName = nullptr) const override;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   /// Model is self normalized when used as p.d.f
@@ -114,16 +115,16 @@ protected:
 
   RooListProxy _pdfList ;   ///<  List of component PDFs
   RooListProxy _coefList ;  ///<  List of coefficients
-  mutable RooArgList* _snormList{nullptr};  ///<!  List of supplemental normalization factors
+  RooArgList *_snormList{nullptr}; ///<!  List of supplemental normalization factors
 
   bool _haveLastCoef = false;    ///<  Flag indicating if last PDFs coefficient was supplied in the constructor
   bool _allExtendable = false;   ///<  Flag indicating if all PDF components are extendable
 
   mutable Int_t _coefErrCount ; ///<! Coefficient error counter
 
-  mutable RooArgSet _ownedComps ; ///<! Owned components
+  RooArgSet _ownedComps; ///<! Owned components
 
-private:
+  private:
 
   ClassDefOverride(RooAddModel,3) // Resolution model representing a sum of resolution models
 };

@@ -679,6 +679,99 @@ TEST(RNTupleMerger, MergeThroughTFileMerger)
    }
 }
 
+TEST(RNTupleMerger, MergeThroughTFileMergerWithoutPageChecksums)
+{
+   FileRaii fileGuard1("test_ntuple_merge_no_checksum_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_no_checksum_2.root");
+
+   auto writeNtuple = [](const std::string &path, int offset) {
+      auto model = RNTupleModel::Create();
+      auto field = model->MakeField<int>("value");
+
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      options.SetEnablePageChecksums(false);
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", path, options);
+
+      for (int i = 0; i < 10; ++i) {
+         *field = offset + i;
+         writer->Fill();
+      }
+   };
+
+   writeNtuple(fileGuard1.GetPath(), 0);
+   writeNtuple(fileGuard2.GetPath(), 100);
+
+   FileRaii fileGuardOut("test_ntuple_merge_no_checksum_out.root");
+   {
+      CheckDiagsRAII diagsRaii;
+      diagsRaii.requiredDiag(kWarning, "ROOT.NTuple.Merge", "disabling same-page merging", false);
+      TFileMerger merger;
+      merger.AddFile(fileGuard1.GetPath().c_str());
+      merger.AddFile(fileGuard2.GetPath().c_str());
+      merger.OutputFile(fileGuardOut.GetPath().c_str(), "RECREATE", 0);
+      ASSERT_TRUE(merger.PartialMerge());
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+   ASSERT_EQ(20u, reader->GetNEntries());
+
+   auto values = reader->GetView<int>("value");
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_EQ(i, values(i));
+      EXPECT_EQ(100 + i, values(10 + i));
+   }
+}
+
+TEST(RNTupleMerger, MergeThroughTFileMergerWithMixedPageChecksums)
+{
+   FileRaii fileGuard1("test_ntuple_merge_mixed_checksum_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_mixed_checksum_2.root");
+
+   auto writeNtuple = [](const std::string &path, int offset, bool enableChecksums) {
+      auto model = RNTupleModel::Create();
+      auto field = model->MakeField<int>("value");
+
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      options.SetEnablePageChecksums(enableChecksums);
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", path, options);
+
+      for (int i = 0; i < 10; ++i) {
+         *field = offset + i;
+         writer->Fill();
+      }
+   };
+
+   writeNtuple(fileGuard1.GetPath(), 0, false);
+   writeNtuple(fileGuard2.GetPath(), 100, true);
+
+   for (bool reverseOrder : {false, true}) {
+      FileRaii fileGuardOut("test_ntuple_merge_mixed_checksum_out.root");
+
+      {
+         CheckDiagsRAII diagsRaii;
+         diagsRaii.requiredDiag(kWarning, "ROOT.NTuple.Merge", "disabling same-page merging", false);
+         TFileMerger merger;
+         merger.AddFile((reverseOrder ? fileGuard2.GetPath() : fileGuard1.GetPath()).c_str());
+         merger.AddFile((reverseOrder ? fileGuard1.GetPath() : fileGuard2.GetPath()).c_str());
+         merger.OutputFile(fileGuardOut.GetPath().c_str(), "RECREATE", 0);
+         ASSERT_TRUE(merger.PartialMerge());
+      }
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      ASSERT_EQ(20u, reader->GetNEntries());
+
+      auto values = reader->GetView<int>("value");
+      for (int i = 0; i < 10; ++i) {
+         EXPECT_EQ(reverseOrder ? 100 + i : i, values(i));
+         EXPECT_EQ(reverseOrder ? i : 100 + i, values(10 + i));
+      }
+   }
+}
+
 TEST(RNTupleMerger, MergeThroughTFileMergerIncremental)
 {
    // Write two test ntuples to be merged

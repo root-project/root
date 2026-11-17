@@ -50,7 +50,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/builtins/)
 # Build iconv, was forked from https://github.com/winlibs/libiconv/blob/libiconv-1.14/MSVC9/libiconv.rc
 # vs https://github.com/root-project/root/commit/11e6c04d7ee196c794d19ae43ad4d1ad57786d3d#diff-9cbb57072c182c295932b31f4421982d0ac9d1ca2d545bd065509aba4ecfdfce
 # and only slightly modified by ROOT
-					
+
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
 					COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/builtins/win32gdk ${CMAKE_BINARY_DIR}/builtins/win32gdk
                     COMMAND echo "*** Building ${iconvliba}"
@@ -104,10 +104,14 @@ add_custom_command( OUTPUT ${gdklib} ${gdkdll}
 add_custom_target(GDKLIB DEPENDS ${gdklib})
 set_target_properties(GDKLIB PROPERTIES FOLDER Builtins)
 
+set(WIN32GDK_HEADERS
+  TGWin32.h
+  TGWin32GL.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   HEADERS
-    TGWin32.h
-    TGWin32GL.h
+    ${WIN32GDK_HEADERS}
   SOURCES
     ../gifencode/gifdecode.cxx
     ../gifencode/gifencode.cxx
@@ -119,7 +123,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   LIBRARIES
-    Freetype::Freetype
     ${gdklib}
     ${gliblib}
     Glu32.lib
@@ -127,6 +130,25 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   DEPENDENCIES
     Core
     Graf
+)
+
+set(RELATIVE_INC_HEADERS ${WIN32GDK_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Win32gdk
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ ../gifencode
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/TGWin32ProxyBase.h
+    inc/TGWin32ProxyDefs.h
+    inc/TGWin32VirtualGLProxy.h
+    inc/TGWin32VirtualXProxy.h
+    inc/xatom.h
+    inc/LinkDef.h
+    ../gifencode/gifencode.h
+    ../gifencode/gifdecode.h
 )
 
 target_include_directories(Win32gdk PRIVATE ../gifencode)

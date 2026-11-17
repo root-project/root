@@ -4,14 +4,8 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
-if("${CMAKE_VERSION}" VERSION_LESS "3.26.0")
-  message(WARNING
-    "Your CMake version is ${CMAKE_VERSION}. Starting with ROOT 6.44, the "
-    "minimum version of CMake required to build ROOT will become 3.26.0, and "
-    "using an older CMake will raise an error. After ROOT 6.44, the CMake version "
-    "may rise to 3.31.0 if an upgrade to LLVM 24 or later is performed.")
-elseif("${CMAKE_VERSION}" VERSION_LESS "3.31.0")
+cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
+if("${CMAKE_VERSION}" VERSION_LESS "3.31.0")
   message(STATUS
     "Your CMake version is ${CMAKE_VERSION}. After ROOT 6.44, the "
     "minimum version of CMake required to build ROOT may become 3.31.0 if "
@@ -53,6 +47,13 @@ set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
+set(policy_old CMP0126)
+foreach(policy ${policy_old})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} OLD)
   endif()
 endforeach()
 
@@ -339,6 +340,9 @@ add_custom_command(OUTPUT ${stamp_file}
 set(directories_to_copy test icons fonts macros tutorials)
 if(http)
   list(APPEND directories_to_copy js)
+  if(builtin_jsroot)
+    list(APPEND directories_deps BUILTIN_JSROOT)
+  endif()
 endif()
 if(webgui)
   list(APPEND directories_to_copy ui5)
@@ -356,7 +360,7 @@ foreach(dir_to_copy ${directories_to_copy})
   add_custom_command(OUTPUT ${artifacts_out}
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/${dir_to_copy} ${CMAKE_BINARY_DIR}/${dir_to_copy}
       COMMENT "Copy ${dir_to_copy}"
-      DEPENDS ${artifacts_in})
+      DEPENDS ${artifacts_in} ${directories_deps})
 endforeach()
 
 #---Copy etc/* files individually to the build area at build time---------------------------------
@@ -661,9 +665,6 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR} ${DIR_PERMISSIONS})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR} ${DIR_PERMISSIONS})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR} ${DIR_PERMISSIONS})
-  if(http)
-     install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR} ${DIR_PERMISSIONS})
-  endif()
   if(cefweb AND TARGET ROOTCefDisplay)
      install(DIRECTORY ${CMAKE_BINARY_DIR}/Frameworks/   DESTINATION ${CMAKE_INSTALL_FRAMEWORKSDIR} ${DIR_PERMISSIONS})
   endif()

@@ -340,16 +340,16 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    if (elow == 0) {
       lower = param.getMin();
       ccoutW(Minimization) << "Warning: lower value for " << param.GetName() << " is at limit " << lower << std::endl;
-   }
-   else
+   } else {
       lower = fMinimizer->X()[ivarX] + elow;  // elow is negative
+   }
 
    if (eup == 0) {
       ccoutW(Minimization) << "Warning: upper value for " << param.GetName() << " is at limit " << upper << std::endl;
       upper = param.getMax();
-   }
-   else
+   } else {
       upper = fMinimizer->X()[ivarX] + eup;
+   }
 
    // store limits in the map
    // minos return error limit = minValue +/- error

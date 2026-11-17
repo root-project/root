@@ -38,6 +38,7 @@
 /montecarlo/ @dpiparo @hageboeck
 /net/ @dpiparo @jblomer
 /roofit/ @guitargeek @hageboeck
+/roofit/hs3 @guitargeek @hageboeck @cburgard
 /rootx/ @dpiparo @guitargeek
 /sql/ @pcanal @linev
 /tmva/ @lmoneta

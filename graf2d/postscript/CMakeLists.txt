@@ -9,13 +9,17 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set(POSTSCRIPT_HEADERS
+  TImageDump.h
+  TPDF.h
+  TPostScript.h
+  TSVG.h
+  TTeXDump.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Postscript
   HEADERS
-    TImageDump.h
-    TPDF.h
-    TPostScript.h
-    TSVG.h
-    TTeXDump.h
+    ${POSTSCRIPT_HEADERS}
   SOURCES
     src/TImageDump.cxx
     src/TPDF.cxx
@@ -29,6 +33,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Postscript
     mathtext::mathtext
   DEPENDENCIES
     Graf
+)
+
+set(RELATIVE_INC_HEADERS ${POSTSCRIPT_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(Postscript
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    src/AdobeGlyphList.h
+    inc/LinkDef.h
 )
 
 check_cxx_compiler_flag(-Wbidi-chars=none GCC_HAS_BIDI_CHARS_FLAG)

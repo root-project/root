@@ -140,8 +140,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
 
 set(RELATIVE_INC_HEADERS ${ROOSTATS_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
-  target_sources(
+target_sources(
       RooStats
       PRIVATE
       FILE_SET private_header_files
@@ -150,7 +149,6 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
       FILES
           ${RELATIVE_INC_HEADERS}
           inc/LinkDef.h # seemingly this is not being used in ROOT_STANDARD_LIBRARY_PACKAGE call
-  )
-endif()
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

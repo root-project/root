@@ -8,12 +8,16 @@
 # CMakeLists.txt file for building ROOT gui/fitpanel package
 ############################################################################
 
+set(FITPANEL_HEADERS
+  TAdvancedGraphicsDialog.h
+  TFitEditor.h
+  TFitParametersDialog.h
+  TTreeInput.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(FitPanel
   HEADERS
-    TAdvancedGraphicsDialog.h
-    TFitEditor.h
-    TFitParametersDialog.h
-    TTreeInput.h
+    ${FITPANEL_HEADERS}
   SOURCES
     src/TAdvancedGraphicsDialog.cxx
     src/TFitEditor.cxx
@@ -29,6 +33,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(FitPanel
     MathCore
     Tree
     TreePlayer
+)
+
+set(RELATIVE_INC_HEADERS ${FITPANEL_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+target_sources(FitPanel
+PRIVATE
+  FILE_SET private_header_files
+  TYPE HEADERS
+  BASE_DIRS inc/ src/
+  FILES
+    ${RELATIVE_INC_HEADERS}
+    inc/LinkDef.h
+    src/CommonDefs.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

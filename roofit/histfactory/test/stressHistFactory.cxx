@@ -189,15 +189,17 @@ public:
          assert(pWS_XML->data("obsData"));
          if (!CompareData(*pWS_API->data("obsData"), *pWS_XML->data("obsData")))
             return false;
-      } else
+      } else {
          return false;
+      }
 
       if (pWS_API->data("asimovData")) {
          assert(pWS_XML->data("asimovData"));
          if (!CompareData(*pWS_API->data("asimovData"), *pWS_XML->data("asimovData")))
             return false;
-      } else
+      } else {
          return false;
+      }
 
       // compare sets of parameters
       if (pMC_API->GetParametersOfInterest()) {
@@ -206,8 +208,9 @@ public:
             Info("testCode", "comparing PoIs");
          if (!CompareParameters(*pMC_API->GetParametersOfInterest(), *pMC_XML->GetParametersOfInterest()))
             return false;
-      } else
+      } else {
          assert(!pMC_XML->GetParametersOfInterest());
+      }
 
       if (pMC_API->GetObservables()) {
          assert(pMC_XML->GetObservables());
@@ -215,8 +218,9 @@ public:
             Info("testCode", "comparing observables");
          if (!CompareParameters(*pMC_API->GetObservables(), *pMC_XML->GetObservables()))
             return false;
-      } else
+      } else {
          assert(!pMC_XML->GetObservables());
+      }
 
       if (pMC_API->GetGlobalObservables()) {
          assert(pMC_XML->GetGlobalObservables());
@@ -224,8 +228,9 @@ public:
             Info("testCode", "comparing global observables");
          if (!CompareParameters(*pMC_API->GetGlobalObservables(), *pMC_XML->GetGlobalObservables()))
             return false;
-      } else
+      } else {
          assert(!pMC_XML->GetGlobalObservables());
+      }
 
       if (pMC_API->GetConditionalObservables()) {
          assert(pMC_XML->GetConditionalObservables());
@@ -233,8 +238,9 @@ public:
             Info("testCode", "comparing conditional observables");
          if (!CompareParameters(*pMC_API->GetConditionalObservables(), *pMC_XML->GetConditionalObservables()))
             return false;
-      } else
+      } else {
          assert(!pMC_XML->GetConditionalObservables());
+      }
 
       if (pMC_API->GetNuisanceParameters()) {
          assert(pMC_XML->GetNuisanceParameters());
@@ -242,8 +248,9 @@ public:
             Info("testCode", "comparing nuisance parameters");
          if (!CompareParameters(*pMC_API->GetNuisanceParameters(), *pMC_XML->GetNuisanceParameters()))
             return false;
-      } else
+      } else {
          assert(!pMC_XML->GetNuisanceParameters());
+      }
 
       // compare pdfs
       assert(pMC_API->GetPdf() && pMC_XML->GetPdf());
