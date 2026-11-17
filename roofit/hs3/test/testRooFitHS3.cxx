@@ -28,6 +28,7 @@
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
+#include <RooLandau.h>
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
 #include <RooNumber.h>
@@ -9471,4 +9472,33 @@ TEST(RooFitHS3, UnboundedDataAxes)
    EXPECT_TRUE(RooNumber::isInfinite(y->getMin()));
    EXPECT_DOUBLE_EQ(y->getMax(), 5.0);
    EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(ws2.data("d")->get(0)->find("y"))->getVal(), -100.0);
+}
+
+// HS3 0.3 calls the location parameter of landau_dist "mu". Older documents with "mean" are still read.
+TEST(RooFitHS3, LandauLocationKey)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Landau::landau(x[0, 10], loc[5, 0, 10], sigma[1.0, 0.1, 10])");
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(json.find(R"("mu":"loc")"), std::string::npos) << json;
+   EXPECT_EQ(json.find(R"("mean":"loc")"), std::string::npos) << json;
+
+   auto legacy = [](std::string const &version) {
+      return R"({
+         "metadata": {"hs3_version": ")" +
+             version + R"("},
+         "domains": [{"name": "d", "type": "product_domain", "axes": [{"name": "x", "min": 0, "max": 10}]}],
+         "distributions": [{"name": "landau", "type": "landau_dist", "x": "x", "mean": 5.0, "sigma": 1.0}]
+      })";
+   };
+   for (std::string const version : {"0.2", "0.3"}) {
+      RooWorkspace ws2;
+      std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(legacy(version)));
+      });
+      EXPECT_NE(dynamic_cast<RooLandau *>(ws2.pdf("landau")), nullptr);
+      EXPECT_EQ(warnings.find("renamed to \"mu\"") != std::string::npos, version == "0.3") << warnings;
+   }
 }

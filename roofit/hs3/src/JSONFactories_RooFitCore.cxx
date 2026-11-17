@@ -815,6 +815,23 @@ bool importExtendPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// HS3 0.3 calls the location parameter of the Landau distribution "mu", since it is neither the mean nor the most
+// probable value. Documents before 0.3 used "mean", which is still read.
+bool importLandau(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   const std::string name(RooJSONFactoryWSTool::name(p));
+   const bool legacyKey = !p.has_child("mu") && p.has_child("mean");
+   if (legacyKey && !(tool->hs3Version() < HS3::Version{0, 3})) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: the landau_dist '" + name +
+                                    "' uses the key \"mean\", which HS3 0.3 renamed to \"mu\".");
+   }
+   RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
+   RooAbsReal *mu = tool->requestArg<RooAbsReal>(p, legacyKey ? "mean" : "mu");
+   RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
+   tool->wsEmplace<RooLandau>(name, *x, *mu, *sigma);
+   return true;
+}
+
 bool importLogNormal(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
@@ -1061,16 +1078,6 @@ bool importGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
    RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
    tool->wsEmplace<RooGaussian>(name, *x, *mean, *sigma);
-   return true;
-}
-
-bool importLandau(RooJSONFactoryWSTool *tool, const JSONNode &p)
-{
-   std::string name(RooJSONFactoryWSTool::name(p));
-   RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-   RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
-   RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
-   tool->wsEmplace<RooLandau>(name, *x, *mean, *sigma);
    return true;
 }
 
@@ -1760,7 +1767,7 @@ void exportGamma(RooJSONFactoryWSTool *, RooGamma const &pdf, JSONNode &elem)
 void exportLandau(RooJSONFactoryWSTool *, RooLandau const &pdf, JSONNode &elem)
 {
    writeReference(elem["x"], pdf.getX());
-   writeReference(elem["mean"], pdf.getMean());
+   writeReference(elem["mu"], pdf.getMean());
    writeReference(elem["sigma"], pdf.getSigma());
 }
 
