@@ -1045,6 +1045,8 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
 
    TGWin32VirtualXProxy::fMaxResponseTime = 1000;
    fHasTTFonts = TTFhandle::Init();
+   TTFhandle::SetSmoothingPrefer(fDepth > 8);
+
    return 0;
 }
 
@@ -1127,7 +1129,6 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
    GetWindowSize((Drawable_t) ctxt->drawing, xy, xy, width, height);
 
    TTFhandle ttf;
-   ttf.SetSmoothing(fDepth > 8);
    ttf.SetTextFont(ctxt->fAttText.GetTextFont());
    ttf.SetTextSize(ctxt->fAttText.GetTextSize());
    ttf.SetRotationMatrix(angle);
