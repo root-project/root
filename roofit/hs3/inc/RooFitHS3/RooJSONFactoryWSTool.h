@@ -48,7 +48,6 @@ class ModelConfig;
 }
 class RooRealVar;
 class RooAbsCategory;
-class RooCategory;
 class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
@@ -219,9 +218,6 @@ public:
       const std::string &child() const { return _child; }
       const std::string &classname() const { return _class; }
    };
-
-   static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
-   static void exportCategoricalAxis(RooFit::Detail::JSONNode &obsNode, RooCategory const &cat);
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);

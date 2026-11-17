@@ -581,6 +581,12 @@ void writeDocument(Detail::JSONNode &root, HS3Document const &doc);
 /// Writes a HistFactory distribution, without its name.
 void writeHistFactoryDist(Detail::JSONNode &node, HistFactoryDist const &dist);
 
+/// Writes the axes, contents and uncertainties of binned data, without its name and type.
+void writeBinnedData(Detail::JSONNode &node, BinnedData const &data);
+
+/// Writes an axis of binned data.
+void writeAxis(Detail::JSONNode &node, BinnedAxis const &axis);
+
 /// Writes the functions "interpolation" and "interpolation0d", with a single interpolation if they are all the same.
 void writeInterpolatedFunction(Detail::JSONNode &node, InterpolatedFunction const &function);
 void writeInterpolatedNumber(Detail::JSONNode &node, InterpolatedNumber const &function);

@@ -1,6 +1,5 @@
 #include "JSONIOUtils.h"
 
-#include <RooAbsBinning.h>
 #include <RooAbsLValue.h>
 #include <RooArgList.h>
 #include <RooCategory.h>
@@ -64,24 +63,6 @@ std::string removeSuffix(std::string_view str, std::string_view suffix)
    out += str;
    out = out.substr(0, out.length() - suffix.length());
    return out;
-}
-
-// Writes a regular binning with "min", "max" and "nbins", and an irregular one with its "edges" only, since HS3 0.3
-// forbids "min" and "max" alongside them.
-void writeAxisBinning(JSONNode &node, const RooAbsBinning &binning)
-{
-   if (binning.isUniform()) {
-      node["min"] << binning.lowBound();
-      node["max"] << binning.highBound();
-      node["nbins"] << binning.numBins();
-      return;
-   }
-
-   auto &edges = node["edges"].set_seq();
-   edges.append_child() << binning.binLow(0);
-   for (int i = 0; i < binning.numBins(); ++i) {
-      edges.append_child() << binning.binHigh(i);
-   }
 }
 
 namespace {

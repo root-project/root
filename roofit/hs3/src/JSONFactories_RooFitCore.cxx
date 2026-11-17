@@ -72,6 +72,7 @@
 #include <RooCategory.h>
 #include <RooSimultaneous.h>
 #include <RooSuperCategory.h>
+#include "HS3Builder.h"
 #include "JSONIOUtils.h"
 
 #include <optional>
@@ -1663,9 +1664,7 @@ bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
       if (!axes.is_seq()) {
          axes.set_seq();
       }
-      auto &axis = axes.append_child().set_map();
-      axis["name"] << observable->GetName();
-      writeAxisBinning(axis, *binning);
+      RooFit::HS3::writeAxis(axes.append_child(), RooFit::HS3::toBinnedAxis(observable->GetName(), *binning));
    }
    return true;
 }
@@ -1883,7 +1882,7 @@ bool exportParamHistFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
-      RooJSONFactoryWSTool::exportAxis(observablesNode.append_child().set_map(), *var);
+      RooFit::HS3::writeAxis(observablesNode.append_child(), RooFit::HS3::toBinnedAxis(*var));
    }
    return true;
 }

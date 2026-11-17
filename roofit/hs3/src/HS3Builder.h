@@ -22,6 +22,7 @@
 #include <vector>
 
 class RooAbsArg;
+class RooAbsBinning;
 class RooDataHist;
 class RooJSONFactoryWSTool;
 class RooRealVar;
@@ -39,8 +40,9 @@ void report(Diagnostics const &diagnostics);
 /// Create the variables for the axes of binned data.
 RooArgSet createObservables(std::vector<BinnedAxis> const &axes);
 
-/// The axis of binned data for a variable.
+/// The axis of binned data for a variable, or for a binning of a variable with the given name.
 BinnedAxis toBinnedAxis(RooRealVar const &var);
+BinnedAxis toBinnedAxis(std::string const &name, RooAbsBinning const &binning);
 
 /// The name of an object, or the value of a literal constant.
 NameOrNumber toNameOrNumber(RooAbsArg const &arg);

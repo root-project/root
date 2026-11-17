@@ -65,7 +65,6 @@ void writeReference(RooFit::Detail::JSONNode &node, RooAbsArg const &arg);
 bool startsWith(std::string_view str, std::string_view prefix);
 bool endsWith(std::string_view str, std::string_view suffix);
 std::string removeSuffix(std::string_view str, std::string_view suffix);
-void writeAxisBinning(RooFit::Detail::JSONNode &node, const RooAbsBinning &binning);
 
 // A RooHistFunc or RooHistPdf is evaluated with its own observables (`funcObs`), which are mapped by position onto
 // the variables of its histogram (`histObs`) and need not have the same names, e.g. after a RooCustomizer replaced

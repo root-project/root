@@ -67,18 +67,6 @@ void writeBinning(JSONNode &node, Binning const &binning)
    }
 }
 
-void writeAxis(JSONNode &node, BinnedAxis const &axis)
-{
-   node.set_map();
-   node["name"] << axis.name;
-   // The range of an irregular binning is given by its "edges": HS3 0.3 forbids "min" and "max" alongside them.
-   if (!std::holds_alternative<EdgesBinning>(axis.binning)) {
-      node["min"] << axis.min;
-      node["max"] << axis.max;
-   }
-   writeBinning(node, axis.binning);
-}
-
 void writeAxis(JSONNode &node, ContinuousAxis const &axis)
 {
    node.set_map();
@@ -243,13 +231,7 @@ void writeData(JSONNode &dataArray, Data const &data)
    std::visit(overloaded{
                  [&](BinnedData const &d) {
                     node["type"] << "binned";
-                    writeAxes(node["axes"], d.axes);
-                    writeContents(node["contents"], d.contents);
-                    if (d.uncertainty) {
-                       JSONNode &uncertainty = node["uncertainty"].set_map();
-                       uncertainty["type"] << "gaussian_uncertainty";
-                       uncertainty["sigma"].fill_seq(d.uncertainty->sigma);
-                    }
+                    writeBinnedData(node, d);
                  },
                  [&](UnbinnedData const &d) {
                     node["type"] << "unbinned";
@@ -475,6 +457,29 @@ void writeInterpolated(JSONNode &node, Function_t const &function, char const *t
 }
 
 } // namespace
+
+void writeAxis(JSONNode &node, BinnedAxis const &axis)
+{
+   node.set_map();
+   node["name"] << axis.name;
+   // The range of an irregular binning is given by its "edges": HS3 0.3 forbids "min" and "max" alongside them.
+   if (!std::holds_alternative<EdgesBinning>(axis.binning)) {
+      node["min"] << axis.min;
+      node["max"] << axis.max;
+   }
+   writeBinning(node, axis.binning);
+}
+
+void writeBinnedData(JSONNode &node, BinnedData const &data)
+{
+   writeAxes(node["axes"], data.axes);
+   writeContents(node["contents"], data.contents);
+   if (data.uncertainty) {
+      JSONNode &uncertainty = node["uncertainty"].set_map();
+      uncertainty["type"] << "gaussian_uncertainty";
+      uncertainty["sigma"].fill_seq(data.uncertainty->sigma);
+   }
+}
 
 void writeInterpolatedFunction(JSONNode &node, InterpolatedFunction const &function)
 {

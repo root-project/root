@@ -1054,13 +1054,12 @@ void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attribute
 HS3::BinnedAxis RooFit::HS3::toBinnedAxis(RooRealVar const &var)
 {
    RooJSONFactoryWSTool::testValidName(var.GetName(), false);
-   RooAbsBinning const &binning = var.getBinning();
-   HS3::BinnedAxis axis;
-   axis.name = var.GetName();
-   axis.min = binning.lowBound();
-   axis.max = binning.highBound();
-   axis.binning = toBinning(binning);
-   return axis;
+   return toBinnedAxis(var.GetName(), var.getBinning());
+}
+
+HS3::BinnedAxis RooFit::HS3::toBinnedAxis(std::string const &name, RooAbsBinning const &binning)
+{
+   return {name, binning.lowBound(), binning.highBound(), toBinning(binning)};
 }
 
 HS3::NameOrNumber RooFit::HS3::toNameOrNumber(RooAbsArg const &arg)
@@ -1072,6 +1071,34 @@ HS3::NameOrNumber RooFit::HS3::toNameOrNumber(RooAbsArg const &arg)
 }
 
 namespace {
+
+// A categorical axis has the labels in the order of the states of the category, which is the order of the bins of a
+// RooDataHist.
+HS3::CategoricalAxis toCategoricalAxis(RooAbsCategory const &cat)
+{
+   HS3::CategoricalAxis axis;
+   axis.name = cat.GetName();
+   for (unsigned int i = 0; i < cat.size(); ++i) {
+      axis.categories.push_back(cat.getOrdinal(i).first);
+   }
+   return axis;
+}
+
+// Binned data over variables that are RooRealVars or RooCategories.
+HS3::BinnedData toBinnedData(RooArgSet const &vars, std::size_t n, double const *contents)
+{
+   HS3::BinnedData data;
+   for (RooAbsArg const *var : vars) {
+      if (auto const *cat = dynamic_cast<RooCategory const *>(var)) {
+         RooJSONFactoryWSTool::testValidName(cat->GetName(), false);
+         data.axes.emplace_back(toCategoricalAxis(*cat));
+      } else {
+         data.axes.emplace_back(HS3::toBinnedAxis(static_cast<RooRealVar const &>(*var)));
+      }
+   }
+   data.contents.assign(contents, contents + n);
+   return data;
+}
 
 std::unique_ptr<RooRealVar> createObservable(HS3::BinnedAxis const &axis)
 {
@@ -2583,11 +2610,7 @@ void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf)
 // document is read back.
 void RooJSONFactoryWSTool::recordCategory(RooAbsCategory const &cat)
 {
-   HS3::CategoricalAxis axis;
-   axis.name = cat.GetName();
-   for (unsigned int i = 0; i < cat.size(); ++i) {
-      axis.categories.push_back(cat.getOrdinal(i).first);
-   }
+   HS3::CategoricalAxis axis = toCategoricalAxis(cat);
    auto found = _export->categories.find(axis.name);
    if (found != _export->categories.end() && found->second.categories != axis.categories) {
       RooJSONFactoryWSTool::error("the category '" + axis.name +
@@ -2715,84 +2738,18 @@ void RooJSONFactoryWSTool::importFunction(const std::string &jsonString, bool im
    this->importFunction((JSONTree::create(jsonString))->rootnode(), importAllDependants);
 }
 
-/**
- * @brief Export the name and binning of a RooRealVar to a JSONNode.
- *
- * @param obsNode The JSONNode to which the axis information will be exported.
- * @param var The RooRealVar representing the axis to be exported.
- * @return void
- */
-// A categorical axis: the labels in the order of the states of the category, which is the order of the bins of a
-// RooDataHist.
-void RooJSONFactoryWSTool::exportCategoricalAxis(JSONNode &obsNode, RooCategory const &cat)
-{
-   testValidName(cat.GetName(), false);
-   obsNode["name"] << cat.GetName();
-   auto &labels = obsNode["categories"].set_seq();
-   for (unsigned int i = 0; i < cat.size(); ++i) {
-      labels.append_child() << cat.getOrdinal(i).first;
-   }
-}
-
-void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
-{
-   std::string name = var.GetName();
-   RooJSONFactoryWSTool::testValidName(name, false);
-   obsNode["name"] << name;
-
-   writeAxisBinning(obsNode, var.getBinning());
-}
-
-/**
- * @brief Export histogram data to a JSONNode.
- *
- * This function exports histogram data, represented by the provided variables and contents, to a JSONNode.
- * The histogram's axes information and bin contents are added as key-value pairs to the JSONNode.
- *
- * @param vars The RooArgSet representing the variables associated with the histogram.
- * @param n The number of bins in the histogram.
- * @param contents A pointer to the array containing the bin contents of the histogram.
- * @param output The JSONNode to which the histogram data will be exported.
- * @return void
- */
+/// Write the axes and the `n` bin contents of a histogram over the variables `vars`, which are RooRealVars or
+/// RooCategories, in the order of the variables.
 void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, JSONNode &output)
 {
-   auto &observablesNode = output["axes"].set_seq();
-   // axes have to be ordered to get consistent bin indices
-   for (RooAbsArg const *var : vars) {
-      if (auto const *cat = dynamic_cast<RooCategory const *>(var)) {
-         exportCategoricalAxis(observablesNode.append_child().set_map(), *cat);
-      } else {
-         exportAxis(observablesNode.append_child().set_map(), static_cast<RooRealVar const &>(*var));
-      }
-   }
-
-   return exportArray(n, contents, output["contents"]);
+   HS3::writeBinnedData(output, toBinnedData(vars, n, contents));
 }
 
-/**
- * @brief Export an array of doubles to a JSONNode.
- *
- * This function exports an array of doubles, represented by the provided size and contents,
- * to a JSONNode. The array elements are added to the JSONNode as a sequence of values.
- *
- * @param n The size of the array.
- * @param contents A pointer to the array containing the double values.
- * @param output The JSONNode to which the array will be exported.
- * @return void
- */
+/// Write `n` numbers as an array, each as an integer if it has no fractional part. RooFit doesn't use this function
+/// itself, but exporters outside of ROOT do.
 void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, JSONNode &output)
 {
-   output.set_seq();
-   for (std::size_t i = 0; i < n; ++i) {
-      double w = contents[i];
-      // To make sure there are no unnecessary floating points in the JSON
-      if (int(w) == w) {
-         output.append_child() << int(w);
-      } else {
-         output.append_child() << w;
-      }
-   }
+   HS3::writeContents(output, std::vector<double>(contents, contents + n));
 }
 
 // Config::renameCombinedObservables: work out, before anything is exported, the new names of the observables of
@@ -2975,31 +2932,18 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       variables.remove(*weightVar);
    }
 
-   // Categories are categorical axes, declared by a categorical axis of the default domain.
-   auto categoricalAxis = [&](RooCategory const &cat) {
-      recordCategory(cat);
-      HS3::CategoricalAxis axis;
-      axis.name = cat.GetName();
-      testValidName(axis.name, false);
-      for (unsigned int i = 0; i < cat.size(); ++i) {
-         axis.categories.push_back(cat.getOrdinal(i).first);
+   // The ranges of the variables are written to the domains. Categories are declared by a categorical axis of the
+   // default domain.
+   for (RooAbsArg const *arg : variables) {
+      if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
+         recordCategory(*cat);
+      } else {
+         recordDomains(_export->domains, static_cast<RooRealVar const &>(*arg));
       }
-      return axis;
-   };
+   }
 
    auto exportBinned = [&](std::size_t n, double const *contents) {
-      HS3::BinnedData binned;
-      for (RooAbsArg const *arg : variables) {
-         if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
-            binned.axes.emplace_back(categoricalAxis(*cat));
-            continue;
-         }
-         auto const *var = static_cast<RooRealVar const *>(arg);
-         recordDomains(_export->domains, *var);
-         binned.axes.emplace_back(HS3::toBinnedAxis(*var));
-      }
-      binned.contents.assign(contents, contents + n);
-      output.body = std::move(binned);
+      output.body = toBinnedData(variables, n, contents);
       _export->doc.data.push_back(std::move(output));
    };
 
@@ -3039,15 +2983,14 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    // this really is an unbinned dataset
    HS3::UnbinnedData unbinned;
    for (RooAbsArg const *arg : variables) {
+      testValidName(arg->GetName(), false);
       if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
-         unbinned.axes.emplace_back(categoricalAxis(*cat));
-         continue;
+         unbinned.axes.emplace_back(toCategoricalAxis(*cat));
+      } else {
+         // HS3 forbids binning information on the axes of unbinned data.
+         auto const &var = static_cast<RooRealVar const &>(*arg);
+         unbinned.axes.emplace_back(HS3::ContinuousAxis{var.GetName(), var.getMin(), var.getMax()});
       }
-      auto const *var = static_cast<RooRealVar const *>(arg);
-      recordDomains(_export->domains, *var);
-      // HS3 forbids binning information on the axes of unbinned data.
-      testValidName(var->GetName(), false);
-      unbinned.axes.emplace_back(HS3::ContinuousAxis{var->GetName(), var->getMin(), var->getMax()});
    }
    std::vector<double> weightVals;
    bool hasNonUnityWeights = false;
