@@ -519,6 +519,8 @@ bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
 
    RooProdPdf array{name.c_str(), name.c_str(), pdfs};
    array.setAttribute(arrayDistTag);
+   // The product only exists to hold the components together.
+   array.setAttribute(helperObjectTag);
    tool->wsImport(array);
    return true;
 }

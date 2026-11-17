@@ -30,8 +30,25 @@ class ParamHistFunc;
 // observable.
 inline constexpr const char *arrayDistTag = "hs3_array_dist";
 
+// An object with this attribute is a helper: RooFit created it to represent something of an HS3 document that it has
+// no class for, e.g. the RooProdPdf that holds the components of an array distribution together, or the parts of a
+// composite structure that stands for one HS3 object. A helper is not a statement of the user about the model, so:
+//  - it is only written if another object that is written refers to it by name, or if the HS3 object that it stands
+//    for is written (see isSkippedHelper()), but not just because it is in the workspace;
+//  - a helper that is not written is ignored wherever the export looks at the users of an object, e.g. to decide
+//    whether the object is a top-level object or whether a constraint can be a component of an array.
+// The attribute is set by the importers and is not written to the document. Objects created by users don't have it
+// and are always written.
+inline constexpr const char *helperObjectTag = "hs3_helper";
+
 // True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
 bool isLiteralConstVar(RooAbsArg const &arg);
+
+// Whether `arg` is a helper (see helperObjectTag) that the export of the workspace `ws` does not write: nothing that
+// is written refers to it, i.e. it has no clients in the workspace other than helpers that are skipped themselves and
+// no ModelConfig names it, and the HS3 object that it stands for is not written either. Such an object is treated as
+// if it were not in the workspace.
+bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws);
 
 // The HS3 type and the observable of `pdf` as a component of an array distribution (RooPoisson, RooGaussian or
 // RooLognormal, over a named observable), or std::nullopt if `pdf` cannot be a component.

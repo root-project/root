@@ -76,7 +76,9 @@ public:
       /// the JSON.
       bool allowExportSharedVariates = false;
       // Write array distributions (HS3 `array_dist`). If false, no `array_dist` is written: HistFactory constraints
-      // are named individually, and a RooProdPdf tagged as array distribution is written as `product_dist`.
+      // are named individually, and a RooProdPdf tagged as array distribution is written as `product_dist`. The
+      // RooProdPdf that RooFit created itself when it read an `array_dist` is only written if another object uses
+      // it; otherwise its components are written on their own.
       bool exportArrayDist = true;
       // How the constraint terms of HistFactory models enter the likelihood: listed in "aux_distributions", with
       // the observed values as constant parameters (false), or listed in "distributions", each paired with a data set

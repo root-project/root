@@ -1449,7 +1449,7 @@ bool usedOnlyByHistFactoryChannels(RooJSONFactoryWSTool &tool, RooAbsPdf const &
       }
    }
    for (RooAbsArg const *client : constraint.clients()) {
-      if (tool.workspace()->arg(client->GetName()) != client) {
+      if (tool.workspace()->arg(client->GetName()) != client || isSkippedHelper(*client, *tool.workspace())) {
          continue; // not part of what is exported
       }
       if (!client->getAttribute(arrayDistTag) && !channelSum(*client)) {

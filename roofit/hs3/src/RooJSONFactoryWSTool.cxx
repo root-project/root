@@ -602,7 +602,8 @@ void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attribute
    }
    for (auto const &attr : arg->attributes()) {
       // Skip some RooFit internals. The array distribution tag is restored from the type on import.
-      if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object" || attr == arrayDistTag)
+      if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object" || attr == arrayDistTag ||
+          attr == helperObjectTag)
          continue;
       initialize();
       out->tags.push_back(attr);
@@ -1552,10 +1553,11 @@ void sortByName(T &coll)
 /// getVal(normSet), or the integral returned by createIntegral(). These live
 /// outside the workspace and are not evidence that the object is a sub-node of
 /// a bigger model (see https://github.com/root-project/root/issues/23221).
+// Whether no object of the workspace uses `arg`. Helpers that are not written don't count as users.
 bool isTopLevel(RooAbsArg const &arg, RooWorkspace const &ws)
 {
    for (RooAbsArg const *client : arg.clients()) {
-      if (ws.components().containsInstance(*client)) {
+      if (ws.components().containsInstance(*client) && !isSkippedHelper(*client, ws)) {
          return false;
       }
    }
@@ -1600,6 +1602,33 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
       dh->set(ibin, contents[ibin], errors ? (*errors)[ibin] : -1);
    }
    return dh;
+}
+
+bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws)
+{
+   if (!arg.getAttribute(helperObjectTag)) {
+      return false;
+   }
+   // The HS3 object that the helper stands for is written: an array distribution.
+   if (arg.getAttribute(arrayDistTag) && RooJSONFactoryWSTool::config().exportArrayDist) {
+      return false;
+   }
+   for (RooAbsArg const *client : arg.clients()) {
+      if (ws.components().containsInstance(*client) && !isSkippedHelper(*client, ws)) {
+         return false;
+      }
+   }
+   for (TObject const *obj : ws.allGenericObjects()) {
+      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
+      if (!mc) {
+         continue;
+      }
+      if (mc->GetPdf() == &arg || mc->GetPriorPdf() == &arg ||
+          (mc->GetExternalConstraints() && mc->GetExternalConstraints()->containsInstance(arg))) {
+         return false;
+      }
+   }
+   return true;
 }
 
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
@@ -3003,7 +3032,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    std::vector<RooAbsPdf *> allpdfs;
    for (auto &arg : _workspace.allPdfs()) {
       if (isTopLevel(*arg, _workspace)) {
-         if (auto *pdf = dynamic_cast<RooAbsPdf *>(arg)) {
+         auto *pdf = dynamic_cast<RooAbsPdf *>(arg);
+         if (pdf && !isSkippedHelper(*pdf, _workspace)) {
             allpdfs.push_back(pdf);
          }
       }
@@ -3015,7 +3045,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    std::vector<RooAbsReal *> allfuncs;
    for (auto &arg : _workspace.allFunctions()) {
       if (isTopLevel(*arg, _workspace)) {
-         if (auto *func = dynamic_cast<RooAbsReal *>(arg)) {
+         auto *func = dynamic_cast<RooAbsReal *>(arg);
+         if (func && !isSkippedHelper(*func, _workspace)) {
             allfuncs.push_back(func);
          }
       }

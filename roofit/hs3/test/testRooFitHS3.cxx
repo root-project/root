@@ -10058,3 +10058,145 @@ TEST(RooFitHS3, FunctionsOfLiteralConstantsHaveValidNames)
    ws4.import(clash, RooFit::Silence());
    expectExportThrowsWithError(ws4, "names of the form 'const_<number>' are reserved");
 }
+
+// RooFit has no class for an array distribution: the RooProdPdf that holds its components together is a helper, which
+// the importer marks with the attribute "hs3_helper". A helper is no statement of the user about the model. It is
+// only written if another object refers to it or if the HS3 object that it stands for is written, and a helper that
+// is not written doesn't influence how other objects are written.
+TEST(RooFitHS3, HelperObjects)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string document = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "constraints", "type": "array_dist", "component_type": "gaussian_dist",
+          "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "nom_a", "mean": "a"}, {"x": "nom_b", "mean": "b"}]}
+      ],
+      "domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "a", "min": -5.0, "max": 5.0}, {"name": "b", "min": -5.0, "max": 5.0},
+         {"name": "nom_a", "min": -5.0, "max": 5.0}, {"name": "nom_b", "min": -5.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "a", "value": 0.0}, {"name": "b", "value": 0.0},
+         {"name": "nom_a", "value": 0.0}, {"name": "nom_b", "value": 0.0}]}]
+   })";
+
+   using Types = std::map<std::string, std::string>;
+   auto exportTypes = [](RooWorkspace &ws, bool arrays, std::string *json = nullptr) {
+      RooJSONFactoryWSTool::config().exportArrayDist = arrays;
+      std::string exported;
+      try {
+         exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      } catch (...) {
+         RooJSONFactoryWSTool::config().exportArrayDist = true;
+         throw;
+      }
+      RooJSONFactoryWSTool::config().exportArrayDist = true;
+      if (json) {
+         *json = exported;
+      }
+      Types out;
+      auto tree = RooFit::Detail::JSONTree::create(exported);
+      if (tree->rootnode().has_child("distributions")) {
+         for (auto const &dist : tree->rootnode()["distributions"].children()) {
+            out[dist["name"].val()] = dist["type"].val();
+         }
+      }
+      return out;
+   };
+
+   // The helper is marked, and the mark is not written.
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(document));
+      ASSERT_NE(ws.pdf("constraints"), nullptr);
+      EXPECT_TRUE(ws.pdf("constraints")->getAttribute("hs3_helper"));
+      EXPECT_FALSE(ws.pdf("nom_a_constraint")->getAttribute("hs3_helper"));
+
+      // With arrays, the HS3 object that the helper stands for is written.
+      std::string withArrays;
+      EXPECT_EQ(exportTypes(ws, true, &withArrays), (Types{{"constraints", "array_dist"}})) << withArrays;
+      EXPECT_EQ(withArrays.find("hs3_helper"), std::string::npos) << withArrays;
+
+      // Without arrays, the helper is not written, but its components are: nothing of the model is lost.
+      std::string plain;
+      EXPECT_EQ(exportTypes(ws, false, &plain),
+                (Types{{"nom_a_constraint", "gaussian_dist"}, {"nom_b_constraint", "gaussian_dist"}}))
+         << plain;
+      EXPECT_EQ(plain.find("hs3_helper"), std::string::npos) << plain;
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(plain));
+      EXPECT_EQ(ws2.pdf("constraints"), nullptr);
+   }
+
+   // A helper that another object refers to by name is written.
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(document));
+      RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
+      RooRealVar m{"m", "m", 0.0, -10.0, 10.0};
+      RooGaussian model{"model", "model", x, m, RooFit::RooConst(2.0)};
+      RooProdPdf product{"user_product", "user_product", RooArgList{model, *ws.pdf("constraints")}};
+      ws.import(product, RooFit::RecycleConflictNodes(), RooFit::Silence());
+      const Types plain = exportTypes(ws, false);
+      EXPECT_EQ(plain.count("user_product"), 1u);
+      ASSERT_EQ(plain.count("constraints"), 1u);
+      EXPECT_EQ(plain.at("constraints"), "product_dist");
+      EXPECT_EQ(plain.count("nom_a_constraint"), 1u);
+      const Types withArrays = exportTypes(ws, true);
+      ASSERT_EQ(withArrays.count("constraints"), 1u);
+      EXPECT_EQ(withArrays.at("constraints"), "array_dist");
+   }
+
+   // So is a helper that a ModelConfig names.
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(document));
+      RooStats::ModelConfig mc{"ModelConfig", &ws};
+      mc.SetPdf(*ws.pdf("constraints"));
+      mc.SetObservables(ws.argSet("nom_a,nom_b"));
+      mc.SetParametersOfInterest(ws.argSet("a"));
+      ws.import(mc);
+      const Types plain = exportTypes(ws, false);
+      ASSERT_EQ(plain.count("constraints"), 1u);
+      EXPECT_EQ(plain.at("constraints"), "product_dist");
+   }
+
+   // A product that a user marked as array distribution is no helper, and is always written.
+   {
+      RooRealVar nomA{"nom_a", "nom_a", 0.0, -5.0, 5.0};
+      RooRealVar a{"a", "a", 0.0, -5.0, 5.0};
+      RooGaussian gaussA{"gauss_a", "gauss_a", nomA, a, RooFit::RooConst(1.0)};
+      RooProdPdf array{"constraints", "constraints", RooArgList{gaussA}};
+      array.setAttribute("hs3_array_dist");
+      RooWorkspace ws;
+      ws.import(array, RooFit::Silence());
+      EXPECT_EQ(exportTypes(ws, false), (Types{{"constraints", "product_dist"}, {"gauss_a", "gaussian_dist"}}));
+   }
+
+   // The constraints of HistFactory channels can be written individually and collected into arrays again: the helpers
+   // of the arrays leave no product behind that would refer to the constraints by name.
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(twoChannelHistFactoryJSON(true)));
+      const Types withArrays = exportTypes(ws, true);
+      std::string plain;
+      for (auto const &[name, type] : exportTypes(ws, false, &plain)) {
+         EXPECT_NE(type, "product_dist") << name;
+         EXPECT_NE(type, "array_dist") << name;
+      }
+      // The arrays that are created for the export are named after the model, so only the types are the same.
+      auto types = [](Types const &distributions) {
+         std::multiset<std::string> out;
+         for (auto const &item : distributions) {
+            out.insert(item.second);
+         }
+         return out;
+      };
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(plain));
+      EXPECT_EQ(types(exportTypes(ws2, true)), types(withArrays));
+      EXPECT_EQ(types(withArrays).count("array_dist"), 2u);
+   }
+}
