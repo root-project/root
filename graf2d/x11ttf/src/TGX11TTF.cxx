@@ -196,9 +196,12 @@ Bool_t TGX11TTF::Init(void *display)
       fXftFontHash = new TXftFontHash();
    }
 #endif
-   Bool_t r = TGX11::Init(display);
+   Bool_t res = TGX11::Init(display);
 
-   return r;
+   if (res)
+      TTFhandle::SetSmoothingPrefer(fDepth > 8);
+
+   return res;
 }
 
 
@@ -222,7 +225,6 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
    auto &att = GetTextAttW(wctxt);
 
    TTFhandle ttf;
-   ttf.SetSmoothing(fDepth > 8);
    ttf.SetTextFont(att.GetTextFont());
    ttf.SetTextSize(att.GetTextSize());
    ttf.SetRotationMatrix(angle);
