@@ -622,6 +622,20 @@ HS3::BinnedAxis RooFit::HS3::toBinnedAxis(std::string const &name, RooAbsBinning
    return {name, binning.lowBound(), binning.highBound(), toBinning(binning)};
 }
 
+HS3::ContinuousAxis RooFit::HS3::toContinuousAxis(RooRealVar const &var)
+{
+   RooJSONFactoryWSTool::testValidName(var.GetName(), false);
+   HS3::ContinuousAxis axis;
+   axis.name = var.GetName();
+   if (!RooNumber::isInfinite(var.getMin())) {
+      axis.min = var.getMin();
+   }
+   if (!RooNumber::isInfinite(var.getMax())) {
+      axis.max = var.getMax();
+   }
+   return axis;
+}
+
 HS3::NameOrNumber RooFit::HS3::toNameOrNumber(RooAbsArg const &arg)
 {
    if (isLiteralConstVar(arg)) {
@@ -756,16 +770,15 @@ std::vector<double> permute(std::vector<double> const &values, std::vector<std::
 void applyUnbinnedAxisRange(HS3::ContinuousAxis const &axis, std::string const &dataName, RooRealVar &var,
                             HS3::DomainRanges const *ranges)
 {
-   if (!axis.min || !axis.max) {
-      return;
-   }
+   // An absent bound means that the axis is unbounded on that side.
+   const double min = axis.min.value_or(-RooNumber::infinity());
+   const double max = axis.max.value_or(RooNumber::infinity());
    if (ranges && !ranges->contains(axis.name)) {
-      var.setRange(*axis.min, *axis.max);
-   } else if (var.getMin() != *axis.min || var.getMax() != *axis.max) {
+      var.setRange(min, max);
+   } else if (var.getMin() != min || var.getMax() != max) {
       std::stringstream ss;
-      ss << "RooFitHS3: the range [" << *axis.min << ", " << *axis.max << "] of the axis '" << axis.name
-         << "' of the dataset '" << dataName << "' differs from the range [" << var.getMin() << ", " << var.getMax()
-         << "] of the variable.";
+      ss << "RooFitHS3: the range [" << min << ", " << max << "] of the axis '" << axis.name << "' of the dataset '"
+         << dataName << "' differs from the range [" << var.getMin() << ", " << var.getMax() << "] of the variable.";
       RooJSONFactoryWSTool::warning(ss.str());
    }
 }
@@ -2038,18 +2051,11 @@ bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgS
       if (!var) {
          error("the observable '" + name + "' of the constraint term '" + term + "' is not in the workspace");
       }
+      // A range without a bound leaves the bound out, which means that the axis is unbounded there.
       HS3::ContinuousAxis axis;
       axis.name = name;
-      // A range without a bound gets the largest representable value, so that other engines see a finite axis.
-      axis.min = -std::numeric_limits<double>::max();
-      axis.max = std::numeric_limits<double>::max();
       if (auto const *rrv = dynamic_cast<RooRealVar const *>(var)) {
-         if (std::isfinite(rrv->getMin())) {
-            axis.min = rrv->getMin();
-         }
-         if (std::isfinite(rrv->getMax())) {
-            axis.max = rrv->getMax();
-         }
+         axis = HS3::toContinuousAxis(*rrv);
       }
       data.axes.emplace_back(std::move(axis));
       data.entries.push_back(var->getVal());
@@ -2484,7 +2490,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       } else {
          // HS3 forbids binning information on the axes of unbinned data.
          auto const &var = static_cast<RooRealVar const &>(*arg);
-         unbinned.axes.emplace_back(HS3::ContinuousAxis{var.GetName(), var.getMin(), var.getMax()});
+         unbinned.axes.emplace_back(HS3::toContinuousAxis(var));
       }
    }
    std::vector<double> weightVals;

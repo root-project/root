@@ -453,6 +453,10 @@ void Validator::checkAnalyses()
 
 std::size_t Validator::checkAxis(BinnedAxis const &axis, std::string const &path)
 {
+   // Unlike continuous axes, binned axes always have finite bounds.
+   if (std::isinf(axis.min) || std::isinf(axis.max)) {
+      error(path, "the binned axis '" + axis.name + "' needs finite bounds");
+   }
    if (auto const *regular = std::get_if<RegularBinning>(&axis.binning)) {
       if (regular->nbins <= 0) {
          error(path, "the axis '" + axis.name + "' needs a positive number of bins");

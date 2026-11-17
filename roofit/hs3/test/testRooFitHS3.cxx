@@ -9435,3 +9435,40 @@ TEST(RooFitHS3, ArrayConstraintTermsOfRenamedChannels)
       }
    }
 }
+
+// A continuous data axis that is unbounded on one side leaves that bound out (HS3 0.3: null is not defined for bounds),
+// and an absent bound is read as unbounded.
+TEST(RooFitHS3, UnboundedDataAxes)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 1.0, 0.0, RooNumber::infinity()};
+   RooDataSet ds{"ds", "ds", RooArgSet{x}};
+   for (double val : {1.0, 2.0, 30.0}) {
+      x.setVal(val);
+      ds.add(RooArgSet{x});
+   }
+   RooWorkspace ws;
+   ws.import(ds, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   const auto *dataNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "ds");
+   ASSERT_NE(dataNode, nullptr) << json;
+   const auto &axis = (*dataNode)["axes"].child(0);
+   EXPECT_DOUBLE_EQ(axis["min"].val_double(), 0.0) << json;
+   EXPECT_FALSE(axis.has_child("max")) << json;
+
+   const std::string doc = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "data": [{"name": "d", "type": "unbinned", "axes": [{"name": "y", "max": 5.0}], "entries": [[-100.0], [1.0]]}]
+   })";
+   RooWorkspace ws2;
+   ws2.factory("y[0]");
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(doc));
+   RooRealVar *y = ws2.var("y");
+   ASSERT_NE(y, nullptr);
+   EXPECT_TRUE(RooNumber::isInfinite(y->getMin()));
+   EXPECT_DOUBLE_EQ(y->getMax(), 5.0);
+   EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(ws2.data("d")->get(0)->find("y"))->getVal(), -100.0);
+}

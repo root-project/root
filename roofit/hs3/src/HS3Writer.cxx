@@ -62,15 +62,17 @@ void writeBinning(JSONNode &node, Binning const &binning)
    }
 }
 
+// An infinite or missing bound of a continuous data axis is omitted, which means that the range is unbounded. JSON null
+// is not defined for bounds.
 void writeAxis(JSONNode &node, ContinuousAxis const &axis)
 {
    node.set_map();
    node["name"] << axis.name;
-   if (axis.min) {
-      writeBound(node["min"], *axis.min);
+   if (axis.min && !std::isinf(*axis.min)) {
+      node["min"] << *axis.min;
    }
-   if (axis.max) {
-      writeBound(node["max"], *axis.max);
+   if (axis.max && !std::isinf(*axis.max)) {
+      node["max"] << *axis.max;
    }
 }
 
