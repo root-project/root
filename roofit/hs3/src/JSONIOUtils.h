@@ -12,6 +12,7 @@
 #include "HS3Document.h"
 
 class RooAbsArg;
+class RooAbsBinning;
 class RooAbsCategory;
 class RooAbsCollection;
 class RooAbsPdf;
@@ -20,6 +21,7 @@ class RooArgList;
 class RooArgSet;
 class RooCategory;
 class RooDataHist;
+class RooJSONFactoryWSTool;
 class RooWorkspace;
 class ParamHistFunc;
 
@@ -32,8 +34,7 @@ inline constexpr const char *arrayDistTag = "hs3_array_dist";
 bool isLiteralConstVar(RooAbsArg const &arg);
 
 // The HS3 type and the observable of `pdf` as a component of an array distribution (RooPoisson, RooGaussian or
-// RooLognormal in the standard parametrization, over a named observable), or std::nullopt if `pdf` cannot be a
-// component.
+// RooLognormal, over a named observable), or std::nullopt if `pdf` cannot be a component.
 // If `observable` names the mean of a RooGaussian, the Gaussian is written with x and mean swapped (see
 // RooJSONFactoryWSTool::setConstraintObservable()).
 struct ArrayComponentInfo {
@@ -43,8 +44,9 @@ struct ArrayComponentInfo {
 std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable = nullptr);
 
 // Write the array distribution `name` with the given components into `elem`. `observableOf` gives the observable
-// recorded for a component by name, if any.
-void writeArrayDist(RooFit::Detail::JSONNode &elem, std::string const &name,
+// recorded for a component by name, if any. The `tool` writes the functions that the components need besides, e.g.
+// for a RooLognormal that is not in the standard parametrization.
+void writeArrayDist(RooJSONFactoryWSTool &tool, RooFit::Detail::JSONNode &elem, std::string const &name,
                     std::vector<RooAbsPdf const *> const &components,
                     std::map<std::string, std::string> const &observableOf);
 

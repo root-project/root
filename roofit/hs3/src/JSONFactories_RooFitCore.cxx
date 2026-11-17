@@ -351,6 +351,41 @@ bool importProdPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// RooLognormal has two parametrizations. In the standard one, its parameters are the mean "mu" and the width "sigma" of
+// log(x), like in the lognormal_dist of HS3. In the other one, which is the default of RooFit, they are the median m0
+// of x and the shape parameter k, with mu = log(m0) and sigma = log(k). Such a distribution is written with "mu" and
+// "sigma" naming the functions log(m0) and log(k), which are named after m0 and k with the suffix below. The suffix
+// is also how the parametrization is recognized when reading: the distribution is then created from m0 and k
+// themselves instead of the functions. The two functions below are the only places that know this convention, for
+// distributions on their own and for the components of array distributions alike.
+constexpr const char *lognormalLogSuffix = "_lognormal_log";
+
+// What a RooLognormal that is not in the standard parametrization writes as "mu" (for its median) or "sigma" (for its
+// shape parameter): the name of the function log(`param`). The function is written as well if there is a `tool`;
+// without one, only the name is given.
+std::string lognormalLogName(RooAbsReal const &param, RooJSONFactoryWSTool *tool)
+{
+   if (tool) {
+      return tool->exportTransformed(&param, lognormalLogSuffix, "log(%s)");
+   }
+   return std::string(param.GetName()) + lognormalLogSuffix;
+}
+
+// The parameters to create a RooLognormal from, for the "mu" and "sigma" of a lognormal_dist.
+struct LognormalParameters {
+   std::string median;
+   std::string shape;
+   bool standardParametrization = true;
+};
+
+LognormalParameters lognormalParameters(std::string const &mu, std::string const &sigma)
+{
+   if (!endsWith(mu, lognormalLogSuffix)) {
+      return {mu, sigma, true};
+   }
+   return {removeSuffix(mu, lognormalLogSuffix), removeSuffix(sigma, lognormalLogSuffix), false};
+}
+
 // The name of the pdf that represents the component of an array distribution over the observable `observable`.
 std::string arrayComponentName(std::string const &observable)
 {
@@ -497,8 +532,10 @@ struct ArrayComponent {
 
 // The type, observable and fields of `pdf` as a component of an array distribution, with the fields of the standalone
 // exporters, or std::nullopt if `pdf` cannot be a component. A Gaussian whose mean is the recorded `observable` is
-// written with x and mean swapped.
-std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf, std::string const *observable = nullptr)
+// written with x and mean swapped. The functions that a field names are only written if there is a `tool` (see
+// lognormalLogName()); without one, this only describes the component.
+std::optional<ArrayComponent>
+arrayComponentOf(RooAbsPdf const &pdf, std::string const *observable = nullptr, RooJSONFactoryWSTool *tool = nullptr)
 {
    ArrayComponent out;
    RooAbsReal const *x = nullptr;
@@ -517,13 +554,15 @@ std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf, std::string
       }
       out.fields = {{"mean", HS3::toNameOrNumber(*mean)}, {"sigma", HS3::toNameOrNumber(gauss->getSigma())}};
    } else if (auto const *lognormal = dynamic_cast<RooLognormal const *>(&pdf)) {
-      if (!lognormal->useStandardParametrization()) {
-         return std::nullopt;
-      }
       out.type = "lognormal_dist";
       x = &lognormal->getX();
-      out.fields = {{"mu", HS3::toNameOrNumber(lognormal->getMedian())},
-                    {"sigma", HS3::toNameOrNumber(lognormal->getShapeK())}};
+      if (lognormal->useStandardParametrization()) {
+         out.fields = {{"mu", HS3::toNameOrNumber(lognormal->getMedian())},
+                       {"sigma", HS3::toNameOrNumber(lognormal->getShapeK())}};
+      } else {
+         out.fields = {{"mu", lognormalLogName(lognormal->getMedian(), tool)},
+                       {"sigma", lognormalLogName(lognormal->getShapeK(), tool)}};
+      }
    } else {
       return std::nullopt;
    }
@@ -879,14 +918,11 @@ bool importLogNormal(RooJSONFactoryWSTool *tool, const JSONNode &p)
 
    // Same mechanism to undo the parameter transformation as in the
    // importExponential() function (see comments in that function for more info).
-   const std::string muName = p["mu"].val();
-   const std::string sigmaName = p["sigma"].val();
-   const bool isTransformed = endsWith(muName, "_lognormal_log");
-   const std::string suffixToRemove = isTransformed ? "_lognormal_log" : "";
-   RooAbsReal *mu = tool->request<RooAbsReal>(removeSuffix(muName, suffixToRemove), name);
-   RooAbsReal *sigma = tool->request<RooAbsReal>(removeSuffix(sigmaName, suffixToRemove), name);
+   const LognormalParameters params = lognormalParameters(p["mu"].val(), p["sigma"].val());
+   RooAbsReal *median = tool->request<RooAbsReal>(params.median, name);
+   RooAbsReal *shape = tool->request<RooAbsReal>(params.shape, name);
 
-   tool->wsEmplace<RooLognormal>(name, *x, *mu, *sigma, !isTransformed);
+   tool->wsEmplace<RooLognormal>(name, *x, *median, *shape, params.standardParametrization);
 
    return true;
 }
@@ -1645,8 +1681,8 @@ void exportLogNormal(RooJSONFactoryWSTool *tool, RooLognormal const &pdf, JSONNo
       elem["mu"] << m0.GetName();
       elem["sigma"] << k.GetName();
    } else {
-      elem["mu"] << tool->exportTransformed(&m0, "_lognormal_log", "log(%s)");
-      elem["sigma"] << tool->exportTransformed(&k, "_lognormal_log", "log(%s)");
+      elem["mu"] << lognormalLogName(m0, tool);
+      elem["sigma"] << lognormalLogName(k, tool);
    }
 }
 
@@ -2032,7 +2068,8 @@ std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::
    return ArrayComponentInfo{component->type, component->x};
 }
 
-void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsPdf const *> const &components,
+void writeArrayDist(RooJSONFactoryWSTool &tool, JSONNode &elem, std::string const &name,
+                    std::vector<RooAbsPdf const *> const &components,
                     std::map<std::string, std::string> const &observableOf)
 {
    auto error = [&name](std::string const &message) {
@@ -2045,11 +2082,11 @@ void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsP
    std::set<std::string> observables;
    for (RooAbsPdf const *pdf : components) {
       auto recorded = observableOf.find(pdf->GetName());
-      auto comp = arrayComponentOf(*pdf, recorded != observableOf.end() ? &recorded->second : nullptr);
+      auto comp = arrayComponentOf(*pdf, recorded != observableOf.end() ? &recorded->second : nullptr, &tool);
       if (!comp) {
          error("'" + std::string(pdf->GetName()) +
-               "' cannot be a component, only RooPoisson, RooGaussian and RooLognormal (standard parametrization) "
-               "over a named observable are supported");
+               "' cannot be a component, only RooPoisson, RooGaussian and RooLognormal over a named observable "
+               "are supported");
       }
       if (!comps.empty() && comp->type != comps.front().type) {
          error("the components '" + std::string(components.front()->GetName()) + "' (" + comps.front().type +

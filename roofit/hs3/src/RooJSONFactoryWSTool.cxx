@@ -2028,7 +2028,7 @@ void RooJSONFactoryWSTool::exportArrayDists()
       // Exporting the servers may add to the registry, so the components are copied.
       const std::vector<RooAbsPdf const *> components = next->second;
       JSONNode &elem = appendNamedChild((*_export->root)["distributions"], arrayName);
-      writeArrayDist(elem, arrayName, components, _export->constraintObservables);
+      writeArrayDist(*this, elem, arrayName, components, _export->constraintObservables);
       recordGenericObject(_export->doc, true, arrayName, elem);
       for (RooAbsPdf const *pdf : components) {
          exportObjects(pdf->servers());

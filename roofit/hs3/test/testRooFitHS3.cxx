@@ -9921,3 +9921,66 @@ TEST(RooFitHS3, PureModelLikelihood)
    EXPECT_NE(ws4.data("gx_data"), nullptr);
    EXPECT_NE(ws4.data("gy_data"), nullptr);
 }
+
+// A RooLognormal is by default parametrized by its median and shape parameter, and written as a lognormal_dist of the
+// functions log(median) and log(shape). It can be a component of an array distribution like one in the standard
+// parametrization, and is read back in the parametrization of RooFit, by the same rule as a distribution on its own.
+TEST(RooFitHS3, ArrayDistOfLognormalsInRooFitParametrization)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar nomA{"nom_a", "nom_a", 1.0, 0.1, 10.0};
+   RooRealVar nomB{"nom_b", "nom_b", 1.0, 0.1, 10.0};
+   RooRealVar a{"a", "a", 1.0, 0.1, 10.0};
+   RooRealVar b{"b", "b", 1.0, 0.1, 10.0};
+   RooRealVar k{"k", "k", 1.2, 1.01, 3.0};
+   RooLognormal lognormalA{"lognormal_a", "lognormal_a", nomA, a, k};
+   RooLognormal lognormalB{"lognormal_b", "lognormal_b", nomB, b, k};
+   ASSERT_FALSE(lognormalA.useStandardParametrization());
+   RooProdPdf array{"constraints", "constraints", {lognormalA, lognormalB}};
+   array.setAttribute("hs3_array_dist");
+
+   RooWorkspace ws;
+   ws.import(array, RooFit::Silence());
+
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const &distributions = tree->rootnode()["distributions"];
+   ASSERT_EQ(distributions.num_children(), 1u) << exported;
+   const auto *node = RooJSONFactoryWSTool::findNamedChild(distributions, "constraints");
+   ASSERT_NE(node, nullptr) << exported;
+   EXPECT_EQ((*node)["type"].val(), "array_dist");
+   EXPECT_EQ((*node)["component_type"].val(), "lognormal_dist");
+   EXPECT_EQ((*node)["default_parameters"]["sigma"].val(), "k_lognormal_log") << exported;
+   ASSERT_EQ((*node)["components"].num_children(), 2u);
+   EXPECT_EQ((*node)["components"].child(0)["x"].val(), "nom_a");
+   EXPECT_EQ((*node)["components"].child(0)["mu"].val(), "a_lognormal_log");
+   EXPECT_EQ((*node)["components"].child(1)["mu"].val(), "b_lognormal_log");
+   // The functions are written once each, also the one that both components share.
+   auto const &functions = tree->rootnode()["functions"];
+   ASSERT_EQ(functions.num_children(), 3u) << exported;
+   const auto *logA = RooJSONFactoryWSTool::findNamedChild(functions, "a_lognormal_log");
+   ASSERT_NE(logA, nullptr) << exported;
+   EXPECT_EQ((*logA)["expression"].val(), "log(a)");
+   EXPECT_NE(RooJSONFactoryWSTool::findNamedChild(functions, "k_lognormal_log"), nullptr) << exported;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   auto *imported = dynamic_cast<RooLognormal *>(ws2.pdf("nom_a_constraint"));
+   ASSERT_NE(imported, nullptr);
+   EXPECT_FALSE(imported->useStandardParametrization());
+   EXPECT_STREQ(imported->getMedian().GetName(), "a");
+   EXPECT_STREQ(imported->getShapeK().GetName(), "k");
+   for (RooWorkspace *w : {&ws, &ws2}) {
+      w->var("a")->setVal(1.3);
+      w->var("nom_a")->setVal(0.8);
+   }
+   RooArgSet normSet{nomA};
+   RooArgSet normSet2{*ws2.var("nom_a")};
+   EXPECT_DOUBLE_EQ(imported->getVal(normSet2), ws.pdf("lognormal_a")->getVal(normSet));
+   for (RooWorkspace *w : {&ws, &ws2}) {
+      w->var("a")->setVal(1.0);
+      w->var("nom_a")->setVal(1.0);
+   }
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+}
