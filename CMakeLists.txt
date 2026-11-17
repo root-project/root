@@ -492,7 +492,87 @@ if(MSVC)
   string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 endif()
 
+function(_root_emit_vfs_node rel_dir indent out_var)
+  set(_buf "${${out_var}}")
+  string(MAKE_C_IDENTIFIER "node_${rel_dir}" _node_id)
+
+  # 1. Emit all subdirectories of rel_dir
+  if(DEFINED _vfs_subdirs_${_node_id})
+    list(REMOVE_DUPLICATES _vfs_subdirs_${_node_id})
+    list(SORT _vfs_subdirs_${_node_id})
+    foreach(_sub IN LISTS _vfs_subdirs_${_node_id})
+      get_filename_component(_sub_name "${_sub}" NAME)
+      string(APPEND _buf
+        "${indent}- name: \"${_sub_name}\"\n"
+        "${indent}  type: directory\n"
+        "${indent}  contents:\n"
+      )
+      _root_emit_vfs_node("${_sub}" "${indent}    " _buf)
+    endforeach()
+  endif()
+
+  # 2. Emit all files directly inside rel_dir
+  if(DEFINED _vfs_files_${_node_id})
+    list(REMOVE_DUPLICATES _vfs_files_${_node_id})
+    list(SORT _vfs_files_${_node_id})
+    foreach(_fentry IN LISTS _vfs_files_${_node_id})
+      string(REPLACE "|" ";" _fparts "${_fentry}")
+      list(GET _fparts 0 _fname)
+      list(GET _fparts 1 _fsrc)
+      string(APPEND _buf
+        "${indent}- name: \"${_fname}\"\n"
+        "${indent}  type: file\n"
+        "${indent}  external-contents: \"${_fsrc}\"\n"
+      )
+    endforeach()
+  endif()
+
+  set(${out_var} "${_buf}" PARENT_SCOPE)
+endfunction()
+
 if(runtime_cxxmodules)
+  get_property(_vfs_mappings GLOBAL PROPERTY ROOT_VFS_HEADER_MAPPINGS)
+  if(_vfs_mappings)
+    list(REMOVE_DUPLICATES _vfs_mappings)
+
+    # Pass 1: Register every file and every intermediate ancestor directory
+    foreach(_entry IN LISTS _vfs_mappings)
+      string(REPLACE "|" ";" _parts "${_entry}")
+      list(GET _parts 0 _rel_path)
+      list(GET _parts 1 _src_path)
+
+      get_filename_component(_parent "${_rel_path}" DIRECTORY)
+      get_filename_component(_fname "${_rel_path}" NAME)
+
+      string(MAKE_C_IDENTIFIER "node_${_parent}" _parent_id)
+      list(APPEND _vfs_files_${_parent_id} "${_fname}|${_src_path}")
+
+      # Walk up all ancestor directories so intermediate folders (e.g. RooFit, RooStats) are linked
+      set(_cur "${_parent}")
+      while(NOT "${_cur}" STREQUAL "")
+        get_filename_component(_up "${_cur}" DIRECTORY)
+        string(MAKE_C_IDENTIFIER "node_${_up}" _up_id)
+        list(APPEND _vfs_subdirs_${_up_id} "${_cur}")
+        set(_cur "${_up}")
+      endwhile()
+    endforeach()
+  endif()
+
+  # Pass 2: Recursively emit the YAML tree rooted at ${CMAKE_BINARY_DIR}/include
+  set(_vfs_yaml
+    "version: 0\n"
+    "case-sensitive: false\n"
+    "roots:\n"
+    "  - name: \"${CMAKE_BINARY_DIR}/include\"\n"
+    "    type: directory\n"
+    "    contents:\n"
+  )
+  string(JOIN "" _vfs_yaml ${_vfs_yaml})
+  _root_emit_vfs_node("" "      " _vfs_yaml)
+
+  file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/etc/buildtree_vfs.yaml" CONTENT "${_vfs_yaml}")
+
+
   # Dummy target that does nothing, we don't need a PCH for modules.
   # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow
   # to test hsimple.C after all C++ modules are updated.
@@ -512,15 +592,29 @@ else()
     )
   endif()
 
+  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
+  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
+  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
+
+  foreach(_dep ${__pch_dependencies})
+    string(REGEX REPLACE "^G__" "" _lib_target "${_dep}")
+    if(TARGET ${_lib_target})
+      get_target_property(_dep_header_sets ${_lib_target} HEADER_SETS)
+      if(_dep_header_sets) # With modern workflow of header file sets, we did not populate global indcirs property, do it here instead more cleanly (locally)
+        get_target_property(_dep_header_dirs ${_lib_target} HEADER_DIRS) # only from default file_set; not4dict, and private / friend file sets are excluded
+        if(_dep_header_dirs)
+          list(APPEND incdirs ${_dep_header_dirs})
+        endif()
+      endif()
+    endif()
+  endforeach()
+  list(REMOVE_DUPLICATES incdirs)
+
   foreach(d ${incdirs})
     if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
       set(__allIncludes ${__allIncludes} -I${d})
     endif()
   endforeach()
-
-  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
-  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
-  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
 
   add_custom_command(OUTPUT etc/allDict.cxx.pch
     BYPRODUCTS

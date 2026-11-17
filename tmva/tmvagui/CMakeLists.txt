@@ -14,88 +14,87 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
-set(TMVAGUI_HEADERS
-  TMVA/BDT.h
-  TMVA/BDTControlPlots.h
-  TMVA/BDT_Reg.h
-  TMVA/BoostControlPlots.h
-  TMVA/CorrGui.h
-  TMVA/CorrGuiMultiClass.h
-  TMVA/MovieMaker.h
-  TMVA/PlotFoams.h
-  TMVA/TMVAGui.h
-  TMVA/TMVAMultiClassGui.h
-  TMVA/TMVARegGui.h
-  TMVA/annconvergencetest.h
-  TMVA/compareanapp.h
-  TMVA/correlations.h
-  TMVA/correlationsMultiClass.h
-  TMVA/correlationscatters.h
-  TMVA/correlationscattersMultiClass.h
-  TMVA/deviations.h
-  TMVA/efficiencies.h
-  TMVA/efficienciesMulticlass.h
-  TMVA/likelihoodrefs.h
-  TMVA/mvaeffs.h
-  TMVA/mvas.h
-  TMVA/mvasMulticlass.h
-  TMVA/mvaweights.h
-  TMVA/network.h
-  TMVA/paracoor.h
-  TMVA/probas.h
-  TMVA/regression_averagedevs.h
-  TMVA/rulevis.h
-  TMVA/rulevisCorr.h
-  TMVA/rulevisHists.h
-  TMVA/tmvaglob.h
-  TMVA/training_history.h
-  TMVA/variables.h
-  TMVA/variablesMultiClass.h
+add_library(TMVAGui SHARED)
+target_sources(TMVAGui
+PRIVATE
+  src/BDTControlPlots.cxx
+  src/BoostControlPlots.cxx
+  src/CorrGui.cxx
+  src/CorrGuiMultiClass.cxx
+  src/MovieMaker.cxx
+  src/PlotFoams.cxx
+  src/TMVAGui.cxx
+  src/TMVAMultiClassGui.cxx
+  src/TMVARegGui.cxx
+  src/annconvergencetest.cxx
+  src/compareanapp.cxx
+  src/correlations.cxx
+  src/correlationsMultiClass.cxx
+  src/correlationscatters.cxx
+  src/correlationscattersMultiClass.cxx
+  src/deviations.cxx
+  src/efficiencies.cxx
+  src/efficienciesMulticlass.cxx
+  src/likelihoodrefs.cxx
+  src/mvas.cxx
+  src/mvasMulticlass.cxx
+  src/mvaweights.cxx
+  src/network.cxx
+  src/paracoor.cxx
+  src/regression_averagedevs.cxx
+  src/rulevis.cxx
+  src/rulevisCorr.cxx
+  src/rulevisHists.cxx
+  src/tmvaglob.cxx
+  src/training_history.cxx
+  src/variables.cxx
+  src/variablesMultiClass.cxx
+  src/BDT.cxx
+  src/BDT_Reg.cxx
+  src/probas.cxx
+  src/mvaeffs.cxx
+PUBLIC
+  FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/TMVA/BDT.h
+    inc/TMVA/BDTControlPlots.h
+    inc/TMVA/BDT_Reg.h
+    inc/TMVA/BoostControlPlots.h
+    inc/TMVA/CorrGui.h
+    inc/TMVA/CorrGuiMultiClass.h
+    inc/TMVA/MovieMaker.h
+    inc/TMVA/PlotFoams.h
+    inc/TMVA/TMVAGui.h
+    inc/TMVA/TMVAMultiClassGui.h
+    inc/TMVA/TMVARegGui.h
+    inc/TMVA/annconvergencetest.h
+    inc/TMVA/compareanapp.h
+    inc/TMVA/correlations.h
+    inc/TMVA/correlationsMultiClass.h
+    inc/TMVA/correlationscatters.h
+    inc/TMVA/correlationscattersMultiClass.h
+    inc/TMVA/deviations.h
+    inc/TMVA/efficiencies.h
+    inc/TMVA/efficienciesMulticlass.h
+    inc/TMVA/likelihoodrefs.h
+    inc/TMVA/mvaeffs.h
+    inc/TMVA/mvas.h
+    inc/TMVA/mvasMulticlass.h
+    inc/TMVA/mvaweights.h
+    inc/TMVA/network.h
+    inc/TMVA/paracoor.h
+    inc/TMVA/probas.h
+    inc/TMVA/regression_averagedevs.h
+    inc/TMVA/rulevis.h
+    inc/TMVA/rulevisCorr.h
+    inc/TMVA/rulevisHists.h
+    inc/TMVA/tmvaglob.h
+    inc/TMVA/training_history.h
+    inc/TMVA/variables.h
+    inc/TMVA/variablesMultiClass.h
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/LinkDef.h
 )
-
-ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
-  HEADERS
-    ${TMVAGUI_HEADERS}
-  SOURCES
-    src/BDTControlPlots.cxx
-    src/BoostControlPlots.cxx
-    src/CorrGui.cxx
-    src/CorrGuiMultiClass.cxx
-    src/MovieMaker.cxx
-    src/PlotFoams.cxx
-    src/TMVAGui.cxx
-    src/TMVAMultiClassGui.cxx
-    src/TMVARegGui.cxx
-    src/annconvergencetest.cxx
-    src/compareanapp.cxx
-    src/correlations.cxx
-    src/correlationsMultiClass.cxx
-    src/correlationscatters.cxx
-    src/correlationscattersMultiClass.cxx
-    src/deviations.cxx
-    src/efficiencies.cxx
-    src/efficienciesMulticlass.cxx
-    src/likelihoodrefs.cxx
-    src/mvas.cxx
-    src/mvasMulticlass.cxx
-    src/mvaweights.cxx
-    src/network.cxx
-    src/paracoor.cxx
-    src/regression_averagedevs.cxx
-    src/rulevis.cxx
-    src/rulevisCorr.cxx
-    src/rulevisHists.cxx
-    src/tmvaglob.cxx
-    src/training_history.cxx
-    src/variables.cxx
-    src/variablesMultiClass.cxx
-    src/BDT.cxx
-    src/BDT_Reg.cxx
-    src/probas.cxx
-    src/mvaeffs.cxx
-  DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
-  DEPENDENCIES
+target_link_libraries(TMVAGui PUBLIC
     RIO
     Hist
     Tree
@@ -106,17 +105,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
     Gui
     HistPainter
     Core
-   ${EXTRA_DICT_OPTS}
 )
-
-set(RELATIVE_INC_HEADERS ${TMVAGUI_HEADERS})
-list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-target_sources(TMVAGui
-PRIVATE
-  FILE_SET private_header_files
-  TYPE HEADERS
-  BASE_DIRS inc/
-  FILES
-    ${RELATIVE_INC_HEADERS}
-    inc/LinkDef.h
-)
+ROOT_GENERATE_TARGET_DICTIONARY(TMVAGui -writeEmptyRootPCM ${EXTRA_DICT_OPTS})
+ROOT_INSTALL_TARGET(TMVAGui)
