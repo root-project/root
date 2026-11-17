@@ -289,7 +289,7 @@ void RooNLLVarNew::doEvalBinnedL(RooFit::EvalContext &ctx, std::span<const doubl
          // Catch error condition: data present where zero events are predicted
          logEvalError(Form("Observed %f events in bin %lu with zero event yield", N, (unsigned long)i));
       } else {
-         result += RooFit::Detail::MathFuncs::nll(mu, N, true, _doBinOffset);
+         result += RooFit::Detail::MathFuncs::nll(mu, N, _doBinOffset);
          sumWeightKahanSum += N;
       }
    }

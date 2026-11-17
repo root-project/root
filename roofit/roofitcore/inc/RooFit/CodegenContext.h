@@ -57,6 +57,11 @@ public:
       return getResult(key.arg());
    }
 
+   /// Like getResult(), but for the logarithm of the value. Classes can
+   /// implement codegenLogImpl() to compute it directly, e.g. to avoid that
+   /// products of many factors underflow.
+   std::string const &getLogResult(RooAbsArg const &arg);
+
    void addToGlobalScope(std::string const &str);
    void addVecObs(const char *key, int idx);
    int observableIndexOf(const RooAbsArg &arg) const;
@@ -124,6 +129,7 @@ private:
    void endLoop(LoopScope const &scope);
 
    void addResult(TNamed const *key, std::string const &value);
+   std::string saveResult(RooAbsArg const *in, std::string const &value);
 
    template <class T, typename std::enable_if<std::is_floating_point<T>{}, bool>::type = true>
    std::string buildArg(T x)
@@ -172,6 +178,7 @@ private:
 
    /// @brief Map of node names to their result strings.
    std::unordered_map<const TNamed *, std::string> _nodeNames;
+   std::unordered_map<const TNamed *, std::string> _logNodeNames;
    /// @brief A map to keep track of the observable indices if they are non scalar.
    std::unordered_map<const TNamed *, int> _vecObsIndices;
    /// @brief Indicate whether a node depends on the dataset.

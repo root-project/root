@@ -233,6 +233,13 @@ std::string CodegenContext::getTmpVarName() const
 /// @param valueToSave The actual string value to save as a temporary.
 void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
+   addResult(in->namePtr(), saveResult(in, valueToSave));
+}
+
+/// @brief Save an expression that depends on the input node in a temporary if it is worth it.
+/// @return The name of the temporary, or the expression itself.
+std::string CodegenContext::saveResult(RooAbsArg const *in, std::string const &valueToSave)
+{
    // std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
    std::string savedName = getTmpVarName();
 
@@ -254,7 +261,7 @@ void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSa
       savedName = valueToSave;
    }
 
-   addResult(in->namePtr(), savedName);
+   return savedName;
 }
 
 /// @brief Function to save a RooListProxy as an array in the squashed code.
@@ -399,36 +406,52 @@ struct Caller_FUNC_NAME {
    gInterpreter->Declare(dispatcherCode.c_str());
 }
 
-void codegen(RooAbsArg &arg, CodegenContext &ctx)
+namespace {
+
+/// Get the overload of the function `funcName` for the class of the given
+/// argument, as resolved by the interpreter.
+template <class Func>
+Func getDispatchedFunc(std::string const &funcName, RooAbsArg const &arg)
 {
-   static bool codeDeclared = false;
-   if (!codeDeclared) {
-      declareDispatcherCode("codegenImpl");
-      codeDeclared = true;
+   // Cache the overload resolutions
+   static std::unordered_map<std::string, std::unordered_map<TClass *, Func>> dispatchMaps;
+
+   auto [entry, isNew] = dispatchMaps.try_emplace(funcName);
+   if (isNew) {
+      declareDispatcherCode(funcName);
    }
-
-   using Func = void (*)(RooAbsArg &, CodegenContext &);
-
-   Func func;
+   auto &dispatchMap = entry->second;
 
    TClass *tclass = arg.IsA();
-
-   // Cache the overload resolutions
-   static std::unordered_map<TClass *, Func> dispatchMap;
-
    auto found = dispatchMap.find(tclass);
-
    if (found != dispatchMap.end()) {
-      func = found->second;
-   } else {
-      // Can probably done with CppInterop in the future to avoid string manipulation.
-      std::stringstream cmd;
-      cmd << "&RooFit::Experimental::Caller_codegenImpl<" << tclass->GetName() << ">::call;";
-      func = reinterpret_cast<Func>(gInterpreter->ProcessLine(cmd.str().c_str()));
-      dispatchMap[tclass] = func;
+      return found->second;
    }
 
-   return func(arg, ctx);
+   // Can probably done with CppInterop in the future to avoid string manipulation.
+   std::stringstream cmd;
+   cmd << "&RooFit::Experimental::Caller_" << funcName << "<" << tclass->GetName() << ">::call;";
+   auto func = reinterpret_cast<Func>(gInterpreter->ProcessLine(cmd.str().c_str()));
+   dispatchMap[tclass] = func;
+   return func;
+}
+
+} // namespace
+
+void codegen(RooAbsArg &arg, CodegenContext &ctx)
+{
+   getDispatchedFunc<void (*)(RooAbsArg &, CodegenContext &)>("codegenImpl", arg)(arg, ctx);
+}
+
+std::string const &CodegenContext::getLogResult(RooAbsArg const &arg)
+{
+   auto found = _logNodeNames.find(arg.namePtr());
+   if (found != _logNodeNames.end())
+      return found->second;
+
+   using Func = std::string (*)(RooAbsArg &, CodegenContext &);
+   const std::string logValue = getDispatchedFunc<Func>("codegenLogImpl", arg)(const_cast<RooAbsArg &>(arg), *this);
+   return _logNodeNames[arg.namePtr()] = saveResult(&arg, logValue);
 }
 
 } // namespace Experimental
