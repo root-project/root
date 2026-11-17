@@ -971,3 +971,14 @@ TEST(RFile, PutTNamedInvalid)
       }
    }
 }
+
+TEST(RFile, GetHeader)
+{
+   FileRaii fileGuard("test_rfile_getheader.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+   const auto header = file->GetFileHeader();
+   EXPECT_EQ(header.GetBEGIN(), 100);
+   EXPECT_EQ(header.GetCompression(), RFile::RRecreateOptions().fCompressionSettings);
+   EXPECT_EQ(header.GetVersion(), gROOT->GetVersionInt());
+}
