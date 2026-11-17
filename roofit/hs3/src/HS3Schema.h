@@ -70,9 +70,9 @@ public:
    template <class T>
    void operator()(const char *key, std::optional<T> &field);
 
-   /// Read an array that can be omitted, which is equivalent to an empty one.
+   /// Read a component that can be omitted or null, which leaves the field as it is, e.g. empty for an array.
    template <class T>
-   void list(const char *key, std::vector<T> &field);
+   void optional(const char *key, T &field);
 
    /// Read the components of a struct that is nested in a component.
    template <class Fn>
@@ -82,6 +82,8 @@ public:
    bool has(const char *key);
 
    Cursor const &cursor() const { return _cursor; }
+   /// The position of a component.
+   Cursor child(const char *key) const { return {_cursor.node()[key], _cursor, key}; }
 
 private:
    Cursor const &_cursor;
@@ -144,34 +146,23 @@ void Reader::operator()(const char *key, T &field)
       _cursor.error(std::string("does not define the required component \"") + key + "\"");
       return;
    }
-   readValue(Cursor{_cursor.node()[key], _cursor, key}, field);
+   readValue(child(key), field);
 }
 
 template <class T>
 void Reader::operator()(const char *key, std::optional<T> &field)
 {
-   if (!has(key)) {
-      return;
+   if (has(key) && !_cursor.node()[key].is_null()) {
+      readValue(child(key), field.emplace());
    }
-   Detail::JSONNode const &node = _cursor.node()[key];
-   if (node.is_null()) {
-      return;
-   }
-   field.emplace();
-   readValue(Cursor{node, _cursor, key}, *field);
 }
 
 template <class T>
-void Reader::list(const char *key, std::vector<T> &field)
+void Reader::optional(const char *key, T &field)
 {
-   if (!has(key)) {
-      return;
+   if (has(key) && !_cursor.node()[key].is_null()) {
+      readValue(child(key), field);
    }
-   Detail::JSONNode const &node = _cursor.node()[key];
-   if (node.is_null()) {
-      return;
-   }
-   readValue(Cursor{node, _cursor, key}, field);
 }
 
 template <class Fn>
@@ -181,12 +172,12 @@ void Reader::nested(const char *key, Fn &&fn)
       _cursor.error(std::string("does not define the required component \"") + key + "\"");
       return;
    }
-   Cursor child{_cursor.node()[key], _cursor, key};
-   if (!child.node().is_map()) {
-      child.error("must be a struct");
+   Cursor c = child(key);
+   if (!c.node().is_map()) {
+      c.error("must be a struct");
       return;
    }
-   Reader reader{child};
+   Reader reader{c};
    fn(reader);
 }
 

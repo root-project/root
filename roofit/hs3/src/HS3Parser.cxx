@@ -239,7 +239,7 @@ void readBound(Reader &ar, const char *key, std::optional<double> &out, double v
    if (!ar.has(key)) {
       return;
    }
-   Cursor c{ar.cursor().node()[key], ar.cursor(), key};
+   Cursor c = ar.child(key);
    if (c.node().is_null()) {
       out = valueIfNull;
       return;
@@ -253,7 +253,7 @@ constexpr double infinity = std::numeric_limits<double>::infinity();
 // Read bin edges, which must be at least two strictly ascending numbers.
 void readEdges(Reader &ar, std::string const &axisName, std::vector<double> &edges)
 {
-   Cursor c{ar.cursor().node()["edges"], ar.cursor(), "edges"};
+   Cursor c = ar.child("edges");
    const std::string context = "\"edges\" of axis '" + axisName + "' must ";
    if (!c.node().is_seq()) {
       c.error(context + "be a list");
@@ -429,14 +429,12 @@ void describe(Reader &ar, Domain &domain)
 {
    ar("name", domain.name);
    std::string type;
-   if (ar.has("type")) {
-      ar("type", type);
-   }
+   ar.optional("type", type);
    if (type != "product_domain") {
       ar.cursor().error("only domains of type \"product_domain\" are currently supported!");
       return;
    }
-   ar.list("axes", domain.axes);
+   ar.optional("axes", domain.axes);
 }
 
 void readValue(Cursor const &c, ParameterValue &out)
@@ -448,7 +446,7 @@ void readValue(Cursor const &c, ParameterValue &out)
    Reader ar{c};
    ar("name", out.name);
    if (ar.has("value")) {
-      Cursor crsr{ar.cursor().node()["value"], ar.cursor(), "value"};
+      Cursor crsr = ar.child("value");
       if (crsr.node().is_number()) {
          out.value = crsr.node().val_double();
       } else {
@@ -457,9 +455,7 @@ void readValue(Cursor const &c, ParameterValue &out)
          out.value = std::move(label);
       }
    }
-   std::optional<bool> isConst;
-   ar("const", isConst);
-   out.isConst = isConst.value_or(false);
+   ar.optional("const", out.isConst);
    ar("err", out.error);
    ar("relErr", out.relError);
    ar("nbins", out.nbins);
@@ -468,19 +464,19 @@ void readValue(Cursor const &c, ParameterValue &out)
 void describe(Reader &ar, ParameterPoint &point)
 {
    ar("name", point.name);
-   ar.list("parameters", point.parameters);
+   ar.optional("parameters", point.parameters);
 }
 
 void describe(Reader &ar, PointData &data)
 {
    ar("value", data.value);
    ar("uncertainty", data.uncertainty);
-   ar.list("axes", data.axes);
+   ar.optional("axes", data.axes);
 }
 
 void describe(Reader &ar, UnbinnedData &data)
 {
-   ar.list("axes", data.axes);
+   ar.optional("axes", data.axes);
    ar("weights", data.weights);
    data.hasEntriesUncertainties = ar.has("entries_uncertainties");
 
@@ -488,7 +484,7 @@ void describe(Reader &ar, UnbinnedData &data)
       ar.cursor().error("does not define the required component \"entries\"");
       return;
    }
-   Cursor entries{ar.cursor().node()["entries"], ar.cursor(), "entries"};
+   Cursor entries = ar.child("entries");
    if (!entries.node().is_seq()) {
       entries.error("key 'entries' is not a list!");
       return;
@@ -543,7 +539,7 @@ void describe(Reader &ar, GaussianUncertainty &uncertainty)
    }
    ar("sigma", uncertainty.sigma);
    if (ar.has("correlation")) {
-      Cursor c{ar.cursor().node()["correlation"], ar.cursor(), "correlation"};
+      Cursor c = ar.child("correlation");
       // Besides a matrix, it can be the number 0 to indicate that there is no correlation.
       if (c.node().is_seq()) {
          readValue(c, uncertainty.correlation);
@@ -555,12 +551,12 @@ void describe(Reader &ar, GaussianUncertainty &uncertainty)
 
 void describe(Reader &ar, BinnedData &data)
 {
-   ar.list("axes", data.axes);
+   ar.optional("axes", data.axes);
    ar("contents", data.contents);
    ar("uncertainty", data.uncertainty);
    // RooFit extension: older versions read the errors like in the samples of a HistFactory distribution.
    if (ar.has("errors")) {
-      Cursor errors{ar.cursor().node()["errors"], ar.cursor(), "errors"};
+      Cursor errors = ar.child("errors");
       if (!errors.node().is_seq()) {
          errors.error("errors are not in list form");
       } else if (!data.uncertainty) {
@@ -658,7 +654,7 @@ void readValue(Cursor const &c, Data &out)
 void describe(Reader &ar, Likelihood &likelihood)
 {
    ar("name", likelihood.name);
-   ar.list("aux_distributions", likelihood.auxDistributions);
+   ar.optional("aux_distributions", likelihood.auxDistributions);
 
    std::vector<DistributionRef> distributions;
    ar("distributions", distributions);
@@ -666,7 +662,7 @@ void describe(Reader &ar, Likelihood &likelihood)
       ar.cursor().error("does not define the required component \"data\"");
       return;
    }
-   Cursor data{ar.cursor().node()["data"], ar.cursor(), "data"};
+   Cursor data = ar.child("data");
    if (!data.node().is_seq()) {
       data.error("must be an array");
       return;
@@ -707,13 +703,13 @@ void describe(Reader &ar, Analysis &analysis)
                           "' is deprecated, please use \"" + key + "\" instead.");
       return true;
    };
-   ar.list(isLegacy("parameters_of_interest", "parameter_of_interest") ? "parameter_of_interest"
-                                                                       : "parameters_of_interest",
-           analysis.parametersOfInterest);
+   ar.optional(isLegacy("parameters_of_interest", "parameter_of_interest") ? "parameter_of_interest"
+                                                                           : "parameters_of_interest",
+               analysis.parametersOfInterest);
    if (!isLegacy("domains", "domain")) {
-      ar.list("domains", analysis.domains);
+      ar.optional("domains", analysis.domains);
    } else if (ar.cursor().node()["domain"].is_seq()) {
-      ar.list("domain", analysis.domains);
+      ar.optional("domain", analysis.domains);
    } else {
       analysis.domains.emplace_back();
       ar("domain", analysis.domains.back());
@@ -847,7 +843,7 @@ std::optional<ConstraintType> readConstraintType(Cursor const &c)
 void readConstraint(Reader &ar, Constraint &out)
 {
    if (ar.has("constraints")) {
-      Cursor c{ar.cursor().node()["constraints"], ar.cursor(), "constraints"};
+      Cursor c = ar.child("constraints");
       if (!c.node().is_seq() || c.node().num_children() != 1) {
          c.error("must be an array with one entry");
          return;
@@ -866,7 +862,7 @@ void readConstraint(Reader &ar, Constraint &out)
       pdf.legacyName = true;
       out = std::move(pdf);
    } else if (ar.has("constraint")) {
-      if (auto type = readConstraintType(Cursor{ar.cursor().node()["constraint"], ar.cursor(), "constraint"})) {
+      if (auto type = readConstraintType(ar.child("constraint"))) {
          out = *type;
       }
    }
@@ -876,7 +872,7 @@ void readGammaConstraint(Reader &ar, GammaConstraint &out)
 {
    if (ar.has("constraints")) {
       GammaConstraintPdfs constraints;
-      Cursor c{ar.cursor().node()["constraints"], ar.cursor(), "constraints"};
+      Cursor c = ar.child("constraints");
       if (!c.node().is_seq()) {
          c.error("must be an array");
          return;
@@ -892,7 +888,7 @@ void readGammaConstraint(Reader &ar, GammaConstraint &out)
       }
       out = std::move(constraints);
    } else if (ar.has("constraint")) {
-      Cursor c{ar.cursor().node()["constraint"], ar.cursor(), "constraint"};
+      Cursor c = ar.child("constraint");
       // "Const" is a RooFit extension.
       if (!c.node().is_container() && !c.node().is_null() && c.node().val() == "Const") {
          out = ConstantGammas{};
@@ -904,14 +900,6 @@ void readGammaConstraint(Reader &ar, GammaConstraint &out)
 
 } // namespace
 
-// The standard doesn't require a name for modifiers, but RooFit uses it to name the objects it creates.
-void readModifierName(Reader &ar, std::string &name)
-{
-   std::optional<std::string> optionalName;
-   ar("name", optionalName);
-   name = optionalName.value_or("");
-}
-
 // The parameter of a modifier with a single parameter is given in "parameters", or in "parameter" in older documents.
 void readParameter(Reader &ar, ParameterRef &parameter)
 {
@@ -919,7 +907,7 @@ void readParameter(Reader &ar, ParameterRef &parameter)
       ar("parameter", parameter);
       return;
    }
-   Cursor c{ar.cursor().node()["parameters"], ar.cursor(), "parameters"};
+   Cursor c = ar.child("parameters");
    if (!c.node().is_seq() || c.node().num_children() != 1) {
       c.error("must be an array with one entry");
       return;
@@ -927,16 +915,17 @@ void readParameter(Reader &ar, ParameterRef &parameter)
    readValue(Cursor{c.node().child(0), c, std::size_t{0}}, parameter);
 }
 
+// The modifiers. The standard doesn't require them to have a name, but RooFit uses it to name the objects it creates.
 void describe(Reader &ar, NormFactor &m)
 {
-   readModifierName(ar, m.name);
+   ar.optional("name", m.name);
    readParameter(ar, m.parameter);
    readConstraint(ar, m.constraint);
 }
 
 void describe(Reader &ar, NormSys &m)
 {
-   readModifierName(ar, m.name);
+   ar.optional("name", m.name);
    readParameter(ar, m.parameter);
    ar.nested("data", [&](Reader &data) {
       data("hi", m.hi);
@@ -954,7 +943,7 @@ void describe(Reader &ar, HistoSysVariation &variation)
 
 void describe(Reader &ar, HistoSys &m)
 {
-   readModifierName(ar, m.name);
+   ar.optional("name", m.name);
    readParameter(ar, m.parameter);
    ar.nested("data", [&](Reader &data) {
       data("hi", m.hi);
@@ -966,22 +955,22 @@ void describe(Reader &ar, HistoSys &m)
 
 void describe(Reader &ar, ShapeSys &m)
 {
-   readModifierName(ar, m.name);
+   ar.optional("name", m.name);
    if (ar.has("parameter")) {
       // A single name stands for one parameter per bin, which are named after it.
       ar("parameter", m.name);
    }
-   ar.list("parameters", m.parameters);
+   ar.optional("parameters", m.parameters);
    if (ar.has("data")) {
-      ar.nested("data", [&](Reader &data) { data.list("vals", m.vals); });
+      ar.nested("data", [&](Reader &data) { data.optional("vals", m.vals); });
    }
    readGammaConstraint(ar, m.constraint);
 }
 
 void describe(Reader &ar, StatError &m)
 {
-   readModifierName(ar, m.name);
-   ar.list("parameters", m.parameters);
+   ar.optional("name", m.name);
+   ar.optional("parameters", m.parameters);
    readGammaConstraint(ar, m.constraint);
 }
 
@@ -1031,19 +1020,15 @@ void describe(Reader &ar, Sample &sample)
       data("contents", sample.contents);
       data("errors", sample.errors);
    });
-   ar.list("modifiers", sample.modifiers);
+   ar.optional("modifiers", sample.modifiers);
 }
 
 void describe(Reader &ar, StatErrorConfig &config)
 {
-   std::optional<double> relThreshold;
-   ar("relThreshold", relThreshold);
-   config.relThreshold = relThreshold.value_or(0.0);
+   ar.optional("relThreshold", config.relThreshold);
    readGammaConstraint(ar, config.constraint);
    // Written by upgradeDocument() for older documents.
-   std::optional<bool> impliedPoissonErrors;
-   ar("implied_poisson_errors", impliedPoissonErrors);
-   config.impliedPoissonErrors = impliedPoissonErrors.value_or(false);
+   ar.optional("implied_poisson_errors", config.impliedPoissonErrors);
 }
 
 void describe(Reader &ar, HistFactoryDist &dist)
@@ -1061,7 +1046,7 @@ void describe(Reader &ar, HistFactoryDist &dist)
    ar("default_interpolation", dist.defaultInterpolation);
    ar("samples", dist.samples);
    if (ar.has("staterror")) {
-      readValue(Cursor{ar.cursor().node()["staterror"], ar.cursor(), "staterror"}, dist.statError);
+      readValue(ar.child("staterror"), dist.statError);
    }
 }
 
@@ -1111,7 +1096,7 @@ void readValue(Cursor const &c, Function &out)
 void describe(Reader &ar, Attributes &attributes)
 {
    if (ar.has("dict")) {
-      Cursor dict{ar.cursor().node()["dict"], ar.cursor(), "dict"};
+      Cursor dict = ar.child("dict");
       if (!dict.node().is_map()) {
          dict.error("must be a struct");
          return;
@@ -1120,7 +1105,7 @@ void describe(Reader &ar, Attributes &attributes)
          readValue(Cursor{item, dict, item.key().c_str()}, attributes.dict[item.key()]);
       }
    }
-   ar.list("tags", attributes.tags);
+   ar.optional("tags", attributes.tags);
    if (ar.has("is_const_var")) {
       int isConstVar = 0;
       ar("is_const_var", isConstVar);
@@ -1165,7 +1150,7 @@ void readMap(Reader &ar, const char *key, Map_t &out)
    if (!ar.has(key)) {
       return;
    }
-   Cursor c{ar.cursor().node()[key], ar.cursor(), key};
+   Cursor c = ar.child(key);
    if (c.node().is_null()) {
       return;
    }
@@ -1266,9 +1251,9 @@ void readMetadata(Cursor const &root, Metadata &out, ParseOptions const &options
 
    Reader ar{metadataCursor};
    ar.has("hs3_version");
-   ar.list("packages", out.packages);
-   ar.list("authors", out.authors);
-   ar.list("publications", out.publications);
+   ar.optional("packages", out.packages);
+   ar.optional("authors", out.authors);
+   ar.optional("publications", out.publications);
    ar("description", out.description);
 }
 
@@ -1300,12 +1285,12 @@ HS3Document parseDocument(JSONNode const &root, Diagnostics &diagnostics, ParseO
          }
       }
    }
-   ar.list("functions", doc.functions);
-   ar.list("data", doc.data);
-   ar.list("likelihoods", doc.likelihoods);
-   ar.list("domains", doc.domains);
-   ar.list("parameter_points", doc.parameterPoints);
-   ar.list("analyses", doc.analyses);
+   ar.optional("functions", doc.functions);
+   ar.optional("data", doc.data);
+   ar.optional("likelihoods", doc.likelihoods);
+   ar.optional("domains", doc.domains);
+   ar.optional("parameter_points", doc.parameterPoints);
+   ar.optional("analyses", doc.analyses);
    readMisc(cursor, doc.rooFit);
    return doc;
 }
@@ -1366,7 +1351,7 @@ void readInterpolations(Reader &ar, std::size_t nParameters, InterpolationClass 
 {
    out.assign(nParameters, additivePiecewiseLinear);
    if (ar.has("interpolations")) {
-      Cursor c{ar.cursor().node()["interpolations"], ar.cursor(), "interpolations"};
+      Cursor c = ar.child("interpolations");
       const std::size_t errorsBefore = c.numErrors();
       std::vector<Interpolation> interpolations;
       readValue(c, interpolations);
@@ -1387,7 +1372,7 @@ void readInterpolations(Reader &ar, std::size_t nParameters, InterpolationClass 
    if (!ar.has("interpolationCodes")) {
       return;
    }
-   Cursor c{ar.cursor().node()["interpolationCodes"], ar.cursor(), "interpolationCodes"};
+   Cursor c = ar.child("interpolationCodes");
    if (!c.node().is_seq() || c.node().num_children() != nParameters) {
       c.error("legacy component 'interpolationCodes' must contain one code per parameter (got " +
               std::to_string(c.node().is_seq() ? c.node().num_children() : 0) + " for " + std::to_string(nParameters) +
