@@ -45,6 +45,9 @@ public:
   // Handle case of projecting an Extended pdf
   double expectedEvents(const RooArgSet* nset) const override { return static_cast<RooAbsPdf*>(intpdf.absArg())->expectedEvents(nset); }
   ExtendMode extendMode() const override { return static_cast<RooAbsPdf*>(intpdf.absArg())->extendMode(); }
+
+  RooAbsReal const &intPdf() const { return *intpdf; }
+  RooArgSet const &intObs() const { return intobs; }
   
 
 protected:
