@@ -99,56 +99,73 @@ endif()
 
 if(NOT RooBatchCompute_STANDALONE_CUDA)
 
-ROOT_LINKER_LIBRARY(RooBatchCompute
-    src/Initialisation.cxx
-  DEPENDENCIES
-    Core
-    MathCore
+add_library(RooBatchCompute SHARED)
+set(lib_private_headers res/RooBatchCompute.h)
+target_sources(RooBatchCompute
+PRIVATE
+  src/Initialisation.cxx
+PRIVATE
+  FILE_SET friend_header_files TYPE HEADERS BASE_DIRS res/ FILES
+    ${lib_private_headers}
 )
-
-target_include_directories(RooBatchCompute PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+target_link_libraries(RooBatchCompute PUBLIC
+  Core
+  MathCore
+)
+ROOT_INSTALL_TARGET(RooBatchCompute)
 
 ############################################################################################################################################
 # Instantiations of the shared objects which provide the actual computation functions.
 
-set(shared_object_sources src/RooBatchCompute.cxx src/ComputeFunctions.cxx)
+set(shared_object_sources
+  src/RooBatchCompute.cxx
+  src/ComputeFunctions.cxx
+)
+set(shared_object_friend_headers
+  res/RooBatchComputeTypes.h
+  res/RooHeterogeneousMath.h
+  res/RooNaNPacker.h
+)
+set(shared_object_private_headers
+  src/Batches.h
+  src/RooVDTHeaders.h
+)
 
 # Generic implementation for CPUs that don't support vector instruction sets.
-ROOT_LINKER_LIBRARY(RooBatchCompute_GENERIC ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
-target_compile_options(RooBatchCompute_GENERIC  PRIVATE ${common-flags} -DRF_ARCH=GENERIC)
-
-target_sources(
-    RooBatchCompute
-    PRIVATE
-    FILE_SET private_header_files
-    TYPE HEADERS
-    BASE_DIRS res/
-    FILES
-        res/RooBatchCompute.h
+add_library(RooBatchCompute_GENERIC SHARED)
+target_sources(RooBatchCompute_GENERIC
+PRIVATE
+  ${shared_object_sources}
+PRIVATE
+  FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ res/ FILES
+    ${shared_object_private_headers}
+    ${lib_private_headers}
+  FILE_SET friend_header_files TYPE HEADERS BASE_DIRS res/ FILES
+    ${shared_object_friend_headers}
 )
-target_sources(
-      RooBatchCompute_GENERIC
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS src/ res/
-      FILES
-          res/RooBatchComputeTypes.h
-          res/RooHeterogeneousMath.h
-          res/RooNaNPacker.h
-          src/Batches.h
-          src/RooVDTHeaders.h
-)
+target_link_libraries(RooBatchCompute_GENERIC PRIVATE RooBatchCompute)
+target_compile_options(RooBatchCompute_GENERIC PRIVATE ${common-flags} -DRF_ARCH=GENERIC)
+ROOT_INSTALL_TARGET(RooBatchCompute_GENERIC)
 
 # Windows platform and ICC compiler need special code and testing, thus the feature has not been implemented yet for these.
 if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_64 AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
   target_compile_options(RooBatchCompute PRIVATE -DR__RF_ARCHITECTURE_SPECIFIC_LIBS)
 
-  ROOT_LINKER_LIBRARY(RooBatchCompute_SSE4.1  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX     ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX2    ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX512  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
+  foreach(_lib IN ITEMS RooBatchCompute_SSE4.1 RooBatchCompute_AVX RooBatchCompute_AVX2 RooBatchCompute_AVX512)
+    add_library(${_lib} SHARED)
+    target_sources(${_lib}
+    PRIVATE
+      ${shared_object_sources}
+    PRIVATE
+      FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ res/ FILES
+        ${shared_object_private_headers}
+        ${shared_object_friend_headers}
+        ${lib_private_headers}
+    )
+    target_link_libraries(${_lib} PRIVATE RooBatchCompute)
+    ROOT_INSTALL_TARGET(${_lib})
+  endforeach()
 
   # Flags -fno-signaling-nans, -fno-trapping-math and -O3 are necessary to enable autovectorization (especially for GCC).
   set(common-flags $<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans>)
@@ -164,39 +181,44 @@ endif() # vector versions of library
 endif() # NOT RooBatchCompute_STANDALONE_CUDA
 
 if (cuda)
-  set(shared_object_sources_cu src/RooBatchCompute.cu src/ComputeFunctions.cu src/CudaInterface.cu)
-
+  set(shared_object_sources_cu
+    src/RooBatchCompute.cu
+    src/ComputeFunctions.cu
+    src/CudaInterface.cu
+  )
+  set(shared_object_private_headers_cu
+    src/CudaInterface.h
+  )
+  add_library(RooBatchCompute_CUDA SHARED)
+  target_sources(RooBatchCompute_CUDA
+  PRIVATE
+    ${shared_object_sources_cu}
+  PRIVATE
+    FILE_SET private_header_files TYPE HEADERS BASE_DIRS src/ res/ FILES
+      ${shared_object_private_headers_cu}
+      ${shared_object_private_headers}
+      ${shared_object_friend_headers}
+      ${lib_private_headers}
+  )
+    
   if(RooBatchCompute_STANDALONE_CUDA)
-    # No ROOT build tree around us, so ROOT_LINKER_LIBRARY() and the variables
-    # it relies on are not available. Create the library by hand, with the same
-    # name and layout, and link it against the installed libRooBatchCompute
+    # No ROOT build tree around us, so link it against the installed libRooBatchCompute
     # (which owns the RooBatchCompute::dispatchCUDA pointer that the static
     # initializer of this library overwrites when it is loaded).
-    add_library(RooBatchCompute_CUDA SHARED ${shared_object_sources_cu})
     # ROOT prefixes its libraries with "lib" on every platform, Windows
     # included, and that is the name gSystem->Load() is called with.
     set_target_properties(RooBatchCompute_CUDA PROPERTIES PREFIX lib IMPORT_PREFIX lib)
-    target_include_directories(RooBatchCompute_CUDA
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(RooBatchCompute_CUDA PUBLIC ROOT::RooBatchCompute)
     install(TARGETS RooBatchCompute_CUDA
             LIBRARY DESTINATION ${RooBatchCompute_CUDA_INSTALL_LIBDIR}
             ARCHIVE DESTINATION ${RooBatchCompute_CUDA_INSTALL_LIBDIR}
             RUNTIME DESTINATION ${RooBatchCompute_CUDA_INSTALL_BINDIR})
   else()
-    ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  ${shared_object_sources_cu} TYPE SHARED DEPENDENCIES RooBatchCompute)
+    target_link_libraries(RooBatchCompute_CUDA PRIVATE RooBatchCompute)
+    ROOT_INSTALL_TARGET(RooBatchCompute_CUDA)
   endif()
 
   target_compile_options(RooBatchCompute_CUDA  PRIVATE -lineinfo --expt-relaxed-constexpr)
-  target_sources(
-      RooBatchCompute_CUDA
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS src/
-      FILES
-          src/CudaInterface.h
-  )
 endif()
 
 if(vdt OR builtin_vdt)

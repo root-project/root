@@ -9,67 +9,80 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+add_library(HistFactory SHARED)
+target_sources(HistFactory
+PRIVATE
+  src/FlexibleInterpVar.cxx
+  src/HistFactoryImpl.cxx
+  src/HistFactoryModelUtils.cxx
+  src/HistFactoryNavigation.cxx
+  src/HistoToWorkspaceFactoryFast.cxx
+  src/LinInterpVar.cxx
+  src/MakeModelAndMeasurementsFast.cxx
+  src/Measurement.cxx
+  src/ParamHistFunc.cxx
+  src/PiecewiseInterpolation.cxx
+  src/RooBarlowBeestonLL.cxx
+PUBLIC
+  FILE_SET not4dict_header_files TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/HFMsgService.h # was not part of dict headers, but could well be moved to public below, or to fully private since only used by .cxx
+  FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/RooStats/HistFactory/Detail/HistFactoryImpl.h
+    inc/RooStats/HistFactory/FlexibleInterpVar.h
+    inc/RooStats/HistFactory/HistFactoryException.h
+    inc/RooStats/HistFactory/HistFactoryModelUtils.h
+    inc/RooStats/HistFactory/HistFactoryNavigation.h
+    inc/RooStats/HistFactory/HistoToWorkspaceFactoryFast.h
+    inc/RooStats/HistFactory/LinInterpVar.h
+    inc/RooStats/HistFactory/MakeModelAndMeasurementsFast.h
+    inc/RooStats/HistFactory/Measurement.h
+    inc/RooStats/HistFactory/ParamHistFunc.h
+    inc/RooStats/HistFactory/PiecewiseInterpolation.h
+    inc/RooStats/HistFactory/RooBarlowBeestonLL.h
+  FILE_SET linkDef TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/LinkDef.h
+)
+target_link_libraries(HistFactory
+PUBLIC
+  RooFit
+  RooFitCore
+  Tree
+  RIO
+  Hist
+  MathCore
+  Graf
+  Gpad
+  RooStats
+)
 # The ConfigParser can create HistFactory models from XML files. It uses TXML,
 # so we won't build it if the xml build option is OFF.
 if (xml)
-    set(HISTFACTORY_XML_HEADERS RooStats/HistFactory/ConfigParser.h)
-    set(HISTFACTORY_XML_SOURCES src/ConfigParser.cxx)
-    set(HISTFACTORY_XML_LIBRARIES XMLParser)
+  target_sources(HistFactory
+  PRIVATE
+    src/ConfigParser.cxx
+  PUBLIC
+  FILE_SET HEADERS TYPE HEADERS BASE_DIRS inc/ FILES
+    inc/RooStats/HistFactory/ConfigParser.h
+  )
+  target_link_libraries(HistFactory PRIVATE XMLParser)
+endif()
+
+# workaround to include privately headers that are not public, from a "friend" target
+get_target_property(RooFitCore_Friend_Dirs RooFitCore HEADER_DIRS_friend_header_files)
+if(RooFitCore_Friend_Dirs)
+  target_include_directories(HistFactory PRIVATE ${RooFitCore_Friend_Dirs})
+endif()
+get_target_property(RooBatchComputeGeneric_Friend_Dirs RooBatchCompute_GENERIC HEADER_DIRS_friend_header_files)
+if(RooBatchComputeGeneric_Friend_Dirs)
+  target_include_directories(HistFactory PRIVATE ${RooBatchComputeGeneric_Friend_Dirs})
 endif()
 
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
-
-set(HISTFACTORY_HEADERS
-  RooStats/HistFactory/Detail/HistFactoryImpl.h
-  RooStats/HistFactory/FlexibleInterpVar.h
-  RooStats/HistFactory/HistFactoryException.h
-  RooStats/HistFactory/HistFactoryModelUtils.h
-  RooStats/HistFactory/HistFactoryNavigation.h
-  RooStats/HistFactory/HistoToWorkspaceFactoryFast.h
-  RooStats/HistFactory/LinInterpVar.h
-  RooStats/HistFactory/MakeModelAndMeasurementsFast.h
-  RooStats/HistFactory/Measurement.h
-  RooStats/HistFactory/ParamHistFunc.h
-  RooStats/HistFactory/PiecewiseInterpolation.h
-  RooStats/HistFactory/RooBarlowBeestonLL.h
-)
-
-ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
-  HEADERS
-    ${HISTFACTORY_HEADERS}
-    ${HISTFACTORY_XML_HEADERS}
-  SOURCES
-    src/FlexibleInterpVar.cxx
-    src/HistFactoryImpl.cxx
-    src/HistFactoryModelUtils.cxx
-    src/HistFactoryNavigation.cxx
-    src/HistoToWorkspaceFactoryFast.cxx
-    src/LinInterpVar.cxx
-    src/MakeModelAndMeasurementsFast.cxx
-    src/Measurement.cxx
-    src/ParamHistFunc.cxx
-    src/PiecewiseInterpolation.cxx
-    src/RooBarlowBeestonLL.cxx
-    ${HISTFACTORY_XML_SOURCES}
-  DICTIONARY_OPTIONS
-    "-writeEmptyRootPCM"
-  LIBRARIES
-    ${HISTFACTORY_XML_LIBRARIES}
-  DEPENDENCIES
-    RooFit
-    RooFitCore
-    Tree
-    RIO
-    Hist
-    MathCore
-    Graf
-    Gpad
-    RooStats
-  ${EXTRA_DICT_OPTS}
-)
+ROOT_GENERATE_TARGET_DICTIONARY(HistFactory "-writeEmptyRootPCM" ${EXTRA_DICT_OPTS})
+ROOT_INSTALL_TARGET(HistFactory)
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
@@ -96,19 +109,5 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${prepareHistFactory_script}
                             GROUP_EXECUTE GROUP_READ
                             WORLD_EXECUTE WORLD_READ
                 DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-set(RELATIVE_INC_HEADERS ${HISTFACTORY_HEADERS} ${HISTFACTORY_XML_HEADERS})
-list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-target_sources(
-    HistFactory
-    PRIVATE
-    FILE_SET private_header_files
-    TYPE HEADERS
-    BASE_DIRS inc/
-    FILES
-        ${RELATIVE_INC_HEADERS}
-        inc/LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
-        inc/HFMsgService.h # not part of list above
-)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

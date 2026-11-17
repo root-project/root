@@ -43,7 +43,7 @@ endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core CMAKENOEXPORT)
 
 #---ReadSpeed-------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx LIBRARIES RIO Tree TreePlayer ReadSpeed CMAKENOEXPORT)
+ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx LIBRARIES ReadSpeed CMAKENOEXPORT)
 
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
 generateHeader(hadd
