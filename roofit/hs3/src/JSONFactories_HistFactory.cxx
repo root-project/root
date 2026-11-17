@@ -267,20 +267,16 @@ RooAbsPdf &arrayComponentFor(RooProdPdf const &array, RooAbsArg const &param, st
 
 // Find the constraint distribution `constraintName` of the parameter `param`. If the name resolves to an array
 // distribution, the component that depends on the parameter is returned: that is the term that enters the likelihood
-// for this parameter, and the whole array enters once through the components of all of its parameters. Returns
-// nullptr if the name cannot be resolved.
-RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, RooAbsArg const &param,
+// for this parameter, and the whole array enters once through the components of all of its parameters.
+RooAbsPdf &findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, RooAbsArg const &param,
                                std::string const &context)
 {
    RooAbsPdf *constraint = tool.tryRequest<RooAbsPdf>(constraintName);
-   if (!constraint || !constraint->getAttribute(arrayDistTag)) {
-      return constraint;
+   if (!constraint) {
+      RooJSONFactoryWSTool::error("unable to find the constraint '" + constraintName + "' of " + context);
    }
    auto const *array = dynamic_cast<RooProdPdf const *>(constraint);
-   if (!array) {
-      return constraint;
-   }
-   return &arrayComponentFor(*array, param, context);
+   return array && array->getAttribute(arrayDistTag) ? arrayComponentFor(*array, param, context) : *constraint;
 }
 
 // The parameter of a modifier, which is created if the document doesn't define it. It's a variable, or a constant if
@@ -330,17 +326,13 @@ void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint
                     constraints.add(pdf ? *pdf : tool.wsEmplace<RooGaussian>(name, param, nom, 1.));
                  },
                  [&](HS3::ConstraintPdf const &constraintPdf) {
-                    RooAbsPdf *pdf = findNamedConstraint(tool, constraintPdf.pdf.name, param,
+                    RooAbsPdf &pdf = findNamedConstraint(tool, constraintPdf.pdf.name, param,
                                                          std::string("the ") + modifierType + " modifier '" + modifier +
                                                             "' of sample '" + sample + "'");
-                    if (!pdf) {
-                       RooJSONFactoryWSTool::error("unable to find definition of of constraint '" +
-                                                   constraintPdf.pdf.name + "' for modifier '" + modifier + "'");
-                    }
-                    if (auto gauss = dynamic_cast<RooGaussian *>(pdf)) {
+                    if (auto gauss = dynamic_cast<RooGaussian *>(&pdf)) {
                        setErrorIfVariable(param, gauss->getSigma().getVal());
                     }
-                    constraints.add(*pdf);
+                    constraints.add(pdf);
                  },
               },
               constraint);
@@ -369,24 +361,13 @@ std::optional<double> findPoissonTau(RooPoisson const &constraint, RooAbsArg con
       return std::nullopt;
    }
 
+   // The tau is the constant factor. In imported workspaces, it can also be a variable that is named like it.
    for (RooAbsArg *arg : mean->servers()) {
-      if (arg == &gamma) {
-         continue;
-      }
-
-      if (auto const *tau = dynamic_cast<RooConstVar const *>(arg)) {
+      auto const *tau = dynamic_cast<RooAbsReal const *>(arg);
+      if (tau && arg != &gamma && (tau->isConstant() || endsWith(tau->GetName(), "_tau"))) {
          return tau->getVal();
       }
-
-      // Imported workspaces can sometimes represent
-      // constants as constant RooRealVars.
-      if (auto const *real = dynamic_cast<RooAbsReal const *>(arg)) {
-         if (real->isConstant() || endsWith(std::string(real->GetName()), "_tau")) {
-            return real->getVal();
-         }
-      }
    }
-
    return std::nullopt;
 }
 
@@ -491,13 +472,8 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
       std::vector<RooAbsPdf *> constraintPdfs;
       for (std::size_t i = 0; i < pdfs->pdfs.size(); ++i) {
          auto const &pdfName = pdfs->pdfs[i];
-         RooAbsPdf *pdf = nullptr;
-         if (pdfName) {
-            pdf = findNamedConstraint(tool, pdfName->name, gammas[i], context);
-            if (!pdf) {
-               RooJSONFactoryWSTool::error("unable to find definition of constraint '" + pdfName->name +
-                                           "' for modifier '" + sysname + "'");
-            }
+         RooAbsPdf *pdf = pdfName ? &findNamedConstraint(tool, pdfName->name, gammas[i], context) : nullptr;
+         if (pdf) {
             constraints.add(*pdf);
          }
          constraintPdfs.push_back(pdf);
