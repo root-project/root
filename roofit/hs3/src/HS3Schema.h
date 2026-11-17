@@ -81,6 +81,9 @@ public:
    /// Whether the struct has a component. Checking for a component counts as reading it.
    bool has(const char *key);
 
+   /// Don't report the components that were not read, because they are read later by someone else.
+   void ignoreUnread() { _reportUnread = false; }
+
    Cursor const &cursor() const { return _cursor; }
    /// The position of a component.
    Cursor child(const char *key) const { return {_cursor.node()[key], _cursor, key}; }
@@ -89,6 +92,7 @@ private:
    Cursor const &_cursor;
    std::vector<std::string> _seen;
    std::size_t _nErrorsBefore = 0;
+   bool _reportUnread = true;
 };
 
 void readValue(Cursor const &c, std::string &out);

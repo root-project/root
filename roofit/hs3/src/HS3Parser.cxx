@@ -149,7 +149,8 @@ Reader::~Reader()
 {
    JSONNode const &node = _cursor.node();
    // There is nothing to report if all components were read, and after an error it would only be noise.
-   if (!node.is_map() || node.num_children() == _seen.size() || _cursor.numErrors() != _nErrorsBefore) {
+   if (!_reportUnread || !node.is_map() || node.num_children() == _seen.size() ||
+       _cursor.numErrors() != _nErrorsBefore) {
       return;
    }
    for (JSONNode const &child : node.children()) {
@@ -998,9 +999,7 @@ void readDistribution(Cursor const &c, Distribution &out, ParseOptions const &op
    } else {
       out.body = GenericObject{type, &c.node()};
       // The importers read the other components.
-      for (JSONNode const &child : c.node().children()) {
-         ar.has(child.key().c_str());
-      }
+      ar.ignoreUnread();
    }
 }
 
@@ -1012,9 +1011,7 @@ void describe(Reader &ar, Function &out)
    ar("type", out.body.type);
    out.body.node = &ar.cursor().node();
    // The importers read the other components.
-   for (JSONNode const &child : out.body.node->children()) {
-      ar.has(child.key().c_str());
-   }
+   ar.ignoreUnread();
 }
 
 void describe(Reader &ar, Attributes &attributes)
