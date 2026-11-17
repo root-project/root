@@ -627,15 +627,19 @@ TEST(RFile, Closing)
       auto file = RFile::Recreate(fileGuard.GetPath());
       std::string s;
       file->Put("s", s);
+      EXPECT_TRUE(file->IsOpen());
       // Explicitly close the file
       file->Close();
+      EXPECT_FALSE(file->IsOpen());
       EXPECT_THROW(file->Put("ss", s), ROOT::RException);
    }
 
    {
       auto file = RFile::Open(fileGuard.GetPath());
       EXPECT_NE(file->Get<std::string>("s"), nullptr);
+      EXPECT_TRUE(file->IsOpen());
       file->Close();
+      EXPECT_FALSE(file->IsOpen());
       EXPECT_THROW(file->Get<std::string>("s"), ROOT::RException);
    }
 }

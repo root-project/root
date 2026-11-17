@@ -442,6 +442,7 @@ ROOT::RFileKeyIterable::RIterator::RIterator(TIterator *iter, Pattern_t pattern,
 
 ROOT::RFileKeyIterable::RIterator ROOT::RFileKeyIterable::begin() const
 {
+   R__ASSERT(fFile);
    return {fFile->GetListOfKeys()->MakeIterator(), fPattern, fFlags};
 }
 
@@ -553,6 +554,9 @@ void RFile::Print(std::ostream &out) const
 
 size_t RFile::Flush()
 {
+   if (!fFile)
+      throw ROOT::RException(R__FAIL("File has been closed"));
+
    return fFile->Write();
 }
 
