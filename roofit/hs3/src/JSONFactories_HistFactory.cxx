@@ -148,20 +148,6 @@ void report(std::string const &name, HS3::Diagnostics &diagnostics)
    HS3::report(diagnostics);
 }
 
-int interpolationCode(std::optional<Interpolation> const &interpolation,
-                      std::optional<Interpolation> const &defaultInterpolation, InterpolationClass interpolationClass,
-                      std::string const &context)
-{
-   if (interpolation) {
-      return codeFromInterpolation(*interpolation, interpolationClass, context);
-   }
-   // HS3 forbids implementation-specific default interpolations.
-   if (!defaultInterpolation) {
-      RooJSONFactoryWSTool::error(context + " is not given, and the channel has no \"default_interpolation\"");
-   }
-   return codeFromInterpolation(*defaultInterpolation, interpolationClass, context);
-}
-
 void erasePrefix(std::string &str, std::string_view prefix)
 {
    if (startsWith(str, prefix)) {
@@ -571,7 +557,6 @@ struct ChannelContext {
    RooArgSet const &observables;
    std::string fprefix;
    std::string channelName;
-   std::size_t nBins;
    RooAbsArg const *mcStatObject;
    RooArgSet &constraints;
 };
@@ -621,9 +606,13 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
       elems.shapeElems.add(*ctx.mcStatObject);
    }
 
-   auto context = [&](const char *type, std::string const &name) {
-      return std::string("interpolation for ") + type + " modifier '" + name + "' in sample '" + sampleName +
-             "' of channel '" + ctx.channelName + "'";
+   // The validation made sure that the channel has a "default_interpolation" if a modifier doesn't give its own.
+   auto interpolationCode = [&](std::optional<Interpolation> const &interpolation,
+                                InterpolationClass interpolationClass, const char *type, std::string const &name) {
+      return codeFromInterpolation(interpolation ? *interpolation : ctx.dist.defaultInterpolation.value(),
+                                   interpolationClass,
+                                   std::string("interpolation for ") + type + " modifier '" + name + "' in sample '" +
+                                      sampleName + "' of channel '" + ctx.channelName + "'");
    };
 
    for (HS3::Modifier const &modifier : sample.modifiers) {
@@ -646,22 +635,15 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
             [&](HS3::NormSys const &mod) {
                RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
                elems.overallNps.add(param);
-               const int interp = interpolationCode(mod.interpolation, ctx.dist.defaultInterpolation,
-                                                    InterpolationClass::Flexible, context("normsys", mod.name));
-               double low = mod.lo;
-               double high = mod.hi;
-
-               // the below contains a a hack to cut off variations that go below 0
-               // This is needed because FlexibleInterpVar code 4 interpolates in log-space. Hence, values <= 0 result
-               // in NaN, which propagates throughout the model and causes evaluations to fail. If you know a nicer way
-               // to solve this, please go ahead and fix the lines below.
-               if (interp == 4 && low <= 0)
-                  low = std::numeric_limits<double>::epsilon();
-               if (interp == 4 && high <= 0)
-                  high = std::numeric_limits<double>::epsilon();
-
-               elems.overallLow.push_back(low);
-               elems.overallHigh.push_back(high);
+               const int interp =
+                  interpolationCode(mod.interpolation, InterpolationClass::Flexible, "normsys", mod.name);
+               // FlexibleInterpVar code 4 interpolates in log-space, so variations <= 0 would give NaN, which
+               // propagates through the model and makes its evaluation fail. As a hack, they are cut off.
+               auto cutOff = [&](double variation) {
+                  return interp == 4 && variation <= 0 ? std::numeric_limits<double>::epsilon() : variation;
+               };
+               elems.overallLow.push_back(cutOff(mod.lo));
+               elems.overallHigh.push_back(cutOff(mod.hi));
                elems.overallInterp.push_back(interp);
 
                addSysConstraint(tool, mod.constraint, param, "normsys", mod.name, sampleName, ctx.constraints);
@@ -678,9 +660,8 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
                };
                addVariation(elems.histoLo, mod.lo, "Low_");
                addVariation(elems.histoHi, mod.hi, "High_");
-               elems.histoInterp.push_back(interpolationCode(mod.interpolation, ctx.dist.defaultInterpolation,
-                                                             InterpolationClass::Piecewise,
-                                                             context("histosys", mod.name)));
+               elems.histoInterp.push_back(
+                  interpolationCode(mod.interpolation, InterpolationClass::Piecewise, "histosys", mod.name));
                addSysConstraint(tool, mod.constraint, param, "histosys", mod.name, sampleName, ctx.constraints);
             },
             [&](HS3::ShapeSys const &mod) {
@@ -695,7 +676,7 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
                   ctx.channelName + "_" + mod.name + (constrained ? "_ShapeSys" : "_shapeFactor");
                elems.shapeElems.add(
                   createPHF(tool, funcName, mod.name, mod.parameters, mod.vals, mod.constraint, ctx.constraints,
-                            ctx.observables, defaultShapeSysGammaMax, minShapeUncertainty, ctx.nBins,
+                            ctx.observables, defaultShapeSysGammaMax, minShapeUncertainty, dh.numEntries(),
                             "the shapesys modifier '" + mod.name + "' of sample '" + sampleName + "'"));
             },
             [&](HS3::CustomModifier const &mod) {
@@ -1785,33 +1766,22 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
    std::string channelName = name;
    erasePrefix(channelName, "model_");
 
-   std::size_t nBins = 1;
-   for (auto const &axis : dist.axes) {
-      nBins *= std::visit(overloaded{[](RegularBinning const &b) { return static_cast<std::size_t>(b.nbins); },
-                                     [](EdgesBinning const &b) { return b.edges.size() - 1; }},
-                          axis.binning);
-   }
-
    RooAbsArg *mcStatObject = nullptr;
    RooArgSet constraints;
    if (!sumW.empty()) {
+      // The relative uncertainties. The gammas of bins without a positive yield are set constant later.
       std::vector<double> errs(sumW.size());
       for (std::size_t i = 0; i < sumW.size(); ++i) {
-         if (sumW[i] == 0.) {
-            errs[i] = 0.;
-            continue;
-         }
-         errs[i] = std::sqrt(sumW2[i]) / sumW[i];
-         // avoid negative sigma. This NP will be set constant anyway later
-         errs[i] = std::max(errs[i], 0.);
+         errs[i] = sumW[i] > 0. ? std::sqrt(sumW2[i]) / sumW[i] : 0.;
       }
 
-      mcStatObject = &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
-                                statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
-                                dist.statError.relThreshold, nBins, "the staterror modifier of channel '" + name + "'");
+      mcStatObject =
+         &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
+                    statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
+                    dist.statError.relThreshold, errs.size(), "the staterror modifier of channel '" + name + "'");
    }
 
-   ChannelContext ctx{tool, dist, observables, name, channelName, nBins, mcStatObject, constraints};
+   ChannelContext ctx{tool, dist, observables, name, channelName, mcStatObject, constraints};
 
    RooArgList funcs;
    RooArgList coefs;
@@ -1824,29 +1794,19 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
 
    if (channelConstraints) {
       for (auto const &ref : *channelConstraints) {
-         RooAbsPdf *pdf = tool.tryRequest<RooAbsPdf>(ref.name);
-         if (!pdf) {
-            RooJSONFactoryWSTool::error("unable to find the constraint '" + ref.name + "' of '" + name + "'");
-         }
-         constraints.add(*pdf);
+         constraints.add(*tool.request<RooAbsPdf>(ref.name, name));
       }
    }
 
+   // With constraints, the channel is the product of the sum of the samples and the constraints.
+   auto &sum = tool.wsEmplace<RooRealSumPdf>(constraints.empty() ? name : channelName + "_model", funcs, coefs, true);
+   sum.SetTitle(name.c_str());
    // A histfactory_dist is a product of Poisson distributions of the bin counts. RooFit's binned likelihood
    // computes exactly that (it differs from the event-wise likelihood only by a constant), and binned generation
    // generates bin counts, so both are enabled, as HistFactory does by default.
-   auto enableBinned = [](RooRealSumPdf &sum) {
-      sum.setAttribute("BinnedLikelihood");
-      sum.setAttribute("GenerateBinned");
-   };
-   if (constraints.empty()) {
-      enableBinned(tool.wsEmplace<RooRealSumPdf>(name, funcs, coefs, true));
-   } else {
-      std::string sumName = name + "_model";
-      erasePrefix(sumName, "model_");
-      auto &sum = tool.wsEmplace<RooRealSumPdf>(sumName, funcs, coefs, true);
-      sum.SetTitle(name.c_str());
-      enableBinned(sum);
+   sum.setAttribute("BinnedLikelihood");
+   sum.setAttribute("GenerateBinned");
+   if (!constraints.empty()) {
       tool.wsEmplace<RooProdPdf>(name, constraints, RooFit::Conditional(sum, observables));
    }
 }
