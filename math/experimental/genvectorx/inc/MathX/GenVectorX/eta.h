@@ -56,12 +56,13 @@ inline Scalar Eta_FromRhoZ(Scalar rho, Scalar z)
 
       Scalar z_scaled = z / rho;
 
-      if (math_fabs(z_scaled) < big_z_scaled) {
-         return math_log(z_scaled + math_sqrt(z_scaled * z_scaled + 1.0));
-      } else {
-         // apply correction using first order Taylor expansion of sqrt
-         return z > 0 ? math_log(2.0 * z_scaled + 0.5 / z_scaled) : -math_log(-2.0 * z_scaled);
-      }
+      // eta is odd in zs: use |zs| in the formula, which then has no cancellation, and apply the sign of zs.
+      // For large |zs|, use the first order Taylor expansion of sqrt.
+      const Scalar abs_z_scaled = math_fabs(z_scaled);
+      const Scalar abs_eta = abs_z_scaled < big_z_scaled
+                                ? math_log(abs_z_scaled + math_sqrt(abs_z_scaled * abs_z_scaled + 1.0))
+                                : math_log(2.0 * abs_z_scaled + 0.5 / abs_z_scaled);
+      return z_scaled < 0 ? -abs_eta : abs_eta;
    }
    // case vector has rho = 0
    else if (z == 0) {
