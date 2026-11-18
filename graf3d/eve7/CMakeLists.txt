@@ -82,6 +82,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveVSD.hxx
     ROOT/REveVSDStructs.hxx
   SOURCES
+    src/REveAssetDir.cxx
     src/REveChunkManager.cxx
     src/REveBox.cxx
     src/REveBoxSet.cxx

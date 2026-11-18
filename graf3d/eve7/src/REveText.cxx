@@ -115,36 +115,57 @@ void REveText::ComputeBBox()
    BBoxNotInWorld();
 }
 
+#include "REveAssetDir.hxx"
 
-#include "ROOT/REveManager.hxx"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TEnv.h"
 
 #include <set>
 
+using ROOT::Experimental::Internal::REveAssetDir;
+
 std::string REveText::sSdfFontDir;
+
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// The SDF font directories, served under "sdf-fonts/". The fallback is the
+/// directory of the fonts shipped with ROOT.
+
+REveAssetDir &SdfFontDirs()
+{
+   static REveAssetDir s_dirs("sdf-fonts/");
+   static bool s_have_fallback = false;
+   if (!s_have_fallback) {
+      s_have_fallback = true;
+      s_dirs.AddFallbackDir(REveAssetDir::GetAssetsDir() + "sdf-fonts/");
+   }
+   return s_dirs;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set location where SDF fonts and their metrics data are stored or are to be
 /// created via the AssertSdfFont() static function.
-/// If require_write_access is true (default), write permission in the directory
-//  dir is required.
-/// REveManager needs to be created before calling this function.
+/// The directory is created if it does not exist.
+/// If `require_write_access` is true (default), write permission in the
+/// directory is required, else read permission.
+/// The directory replaces the ones added with AddSdfFontDir(). The fonts shipped
+/// with ROOT are found after it.
+/// Can be called before REveManager::Create().
 /// Static function.
 
 bool REveText::SetSdfFontDir(const std::string &dir, bool require_write_access)
 {
    static const char* tpfx = "REveText::SetSdfFontDir";
 
-   if (gEve == nullptr) {
-      ::Error(tpfx, "REveManager needs to be initialized before font setup can begin.");
+   if (dir.empty()) {
+      ::Error(tpfx, "Empty directory given.");
       return false;
    }
 
-   std::string sanitized_dir(dir);
-   if (sanitized_dir.back() != '/')
-      sanitized_dir += '/';
+   std::string sanitized_dir = REveAssetDir::NormalizeDir(dir);
    if (gSystem->AccessPathName(sanitized_dir.data())) {
       if (gSystem->mkdir(sanitized_dir.data(), true)) {
          ::Error(tpfx, "Directory does not exist and mkdir failed for '%s", dir.data());
@@ -154,7 +175,9 @@ bool REveText::SetSdfFontDir(const std::string &dir, bool require_write_access)
    auto dir_perms = require_write_access ? kWritePermission : kReadPermission;
    if (gSystem->AccessPathName(sanitized_dir.data(), dir_perms) == false) {
       sSdfFontDir = sanitized_dir;
-      gEve->AddLocation("sdf-fonts/", sSdfFontDir.data());
+      auto &fonts = SdfFontDirs();
+      fonts.SetWriteDir(sSdfFontDir);
+      fonts.SetUserDir(sSdfFontDir);
       return true;
    } else {
       return false;
@@ -162,54 +185,65 @@ bool REveText::SetSdfFontDir(const std::string &dir, bool require_write_access)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set default SDF font directory based on write permissions in the ui5
-/// directory, WebGui.RootUi5Path or else $ROOTSYS/ui5, and in the current
-/// working directory.
+/// Add a directory fonts are read from, searched after the one of
+/// SetSdfFontDir() and before the fonts shipped with ROOT. Fonts are not
+/// generated into it. If no font directory is set, the default one is set first.
+/// Can be called before REveManager::Create().
+/// Static function.
+
+bool REveText::AddSdfFontDir(const std::string &dir)
+{
+   static const char *tpfx = "REveText::AddSdfFontDir";
+
+   std::string sanitized_dir = REveAssetDir::NormalizeDir(dir);
+   if (sanitized_dir.empty() || gSystem->AccessPathName(sanitized_dir.data(), kReadPermission)) {
+      ::Error(tpfx, "SDF font directory '%s' does not exist or is not readable.", dir.data());
+      return false;
+   }
+   if (sSdfFontDir.empty())
+      SetDefaultSdfFontDir();
+   SdfFontDirs().AddUserDir(sanitized_dir);
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the default SDF font directory: sdf-fonts/ in the ui5 directory if it is
+/// writable or can be created, else sdf-fonts/ in the current working directory.
+/// The latter is created only when a font is generated into it.
+/// The fonts shipped with ROOT, in eve7/assets/sdf-fonts/ of the ui5 directory,
+/// are found after it.
 /// Alternative fallback to /tmp or user's home directory is not attempted.
-/// Needs REveManager; called before it exists, it fails and can be retried.
 
 bool REveText::SetDefaultSdfFontDir()
 {
-   static const char* tpfx = "REveText::SetDefaultSdfFontDir";
+   static const char *tpfx = "REveText::SetDefaultSdfFontDir";
 
-   static bool s_font_init_failed = false;
-
-   if (s_font_init_failed) {
-      return false;
-   }
-
-   // Both directories are registered with the manager. Without one, fail but
-   // do not mark the setup as failed, so a call after Create() can succeed.
-   if (gEve == nullptr) {
-      static bool s_have_warned = false;
-      if (!s_have_warned) {
-         ::Error(tpfx, "REveManager needs to be initialized before font setup can begin.");
-         s_have_warned = true;
-      }
-      return false;
-   }
-
-   std::string dir( gEnv->GetValue("WebGui.RootUi5Path", gSystem->ExpandPathName("${ROOTSYS}/ui5")) );
-   dir += "/eve7/sdf-fonts/";
-   s_font_init_failed = true;
-   if (SetSdfFontDir(dir)) {
+   std::string dir = REveAssetDir::GetUi5Dir() + "/eve7/sdf-fonts/";
+   bool usable = gSystem->AccessPathName(dir.c_str()) ? gSystem->mkdir(dir.c_str(), true) == 0
+                                                      : !gSystem->AccessPathName(dir.c_str(), kWritePermission);
+   if (usable) {
       ::Info(tpfx, "Using SDF font dir %s", dir.c_str());
-   } else if (SetSdfFontDir("./sdf-fonts/")) {
-      ::Info(tpfx, "Using SDF font dir sdf_fonts/ in current directory");
    } else {
-      ::Error(tpfx, "Error setting up default SDF font dir. "
-                    "Please set it manually through REveText::SetSdfFontDir(<dir-name>)");
-      return false;
+      dir = "./sdf-fonts/";
+      ::Info(tpfx, "Using SDF font dir sdf-fonts/ in current directory");
    }
-   s_font_init_failed = false;
+
+   sSdfFontDir = dir;
+   auto &fonts = SdfFontDirs();
+   fonts.SetWriteDir(dir);
+   fonts.SetUserDir(dir);
 
    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if font exists, otherwise try to create it.
-/// If SDF font dir is not yet set, an attempt will be made to set it to
-/// one of the default locations, in $ROOTSYS or in the current working directory.
+/// The font is looked up in the directories of SetSdfFontDir() and
+/// AddSdfFontDir(), then in the fonts shipped with ROOT. If SDF font dir is not
+/// yet set, it is set to the default, see SetDefaultSdfFontDir().
+/// The font is present when the first directory that has its .png or its .js.gz
+/// has both, as the server serves each file from the first directory that has it.
+/// A missing font is generated into the directory of SetSdfFontDir().
 /// In batch mode a missing font is not generated, as that needs a display.
 /// Returns true if font files are present, false otherwise.
 /// Static function.
@@ -218,29 +252,45 @@ bool REveText::AssertSdfFont(const std::string &font_name, const std::string &tt
 {
    static const char* tpfx = "REveText::AssertSdfFont";
 
-   if (sSdfFontDir.empty() && ! SetDefaultSdfFontDir()) {
-      return false;
-   }
+   if (sSdfFontDir.empty())
+      SetDefaultSdfFontDir();
 
-   std::string base = sSdfFontDir + font_name.data();
-   std::string png = base + ".png";
-   std::string js  = base + ".js.gz";
+   auto &fonts = SdfFontDirs();
+   std::string png = font_name + ".png";
+   std::string js = font_name + ".js.gz";
 
-   if (gSystem->AccessPathName(png.data()) || gSystem->AccessPathName(js.data())) {
+   if (fonts.FindPair(png, js).empty()) {
+      // A lone file, or two files in different directories, would be served as a mismatched pair.
+      std::string at_png = fonts.Find(png), at_js = fonts.Find(js), split;
+      auto where = [](const std::string &f, const std::string &p) {
+         return f + (p.empty() ? " not found" : " found at '" + p + "'");
+      };
+      if (!at_png.empty() || !at_js.empty())
+         split = " Its two files must be in one directory: " + where(png, at_png) + ", " + where(js, at_js) + ".";
       if (gSystem->AccessPathName(ttf_font.data())) {
-         ::Warning(tpfx, "Source TTF font '%s' not found.", ttf_font.data());
+         ::Warning(tpfx, "Source TTF font '%s' not found.%s", ttf_font.data(), split.data());
          return false;
       }
       // Generating a font needs a GL context, and TGLWidget throws without a display.
       if (gROOT->IsBatch()) {
          static std::set<std::string> s_warned_fonts;
          if (s_warned_fonts.insert(font_name).second) {
-            ::Warning(tpfx,
-                      "SDF font '%s' is not in '%s' and is not generated in batch mode. "
-                      "Generating it needs a GL context, which needs a display. "
-                      "Run once with a display, or copy %s.png and %s.js.gz into the SDF font directory.",
-                      font_name.data(), sSdfFontDir.data(), font_name.data(), font_name.data());
+            if (split.empty())
+               ::Warning(tpfx,
+                         "SDF font '%s' is not in '%s' and is not generated in batch mode. "
+                         "Generating it needs a GL context, which needs a display. "
+                         "Run once with a display, or copy %s.png and %s.js.gz into the SDF font directory.",
+                         font_name.data(), sSdfFontDir.data(), font_name.data(), font_name.data());
+            else
+               ::Warning(tpfx, "SDF font '%s' is not used and is not generated in batch mode.%s", font_name.data(),
+                         split.data());
          }
+         return false;
+      }
+      std::string base = fonts.WritePath(font_name);
+      if (base.empty()) {
+         ::Warning(tpfx, "Cannot create SDF font directory '%s', font '%s' not generated.", fonts.GetWriteDir().data(),
+                   font_name.data());
          return false;
       }
       // Invoke through interpreter to avoid REve dependece on RGL.
@@ -255,7 +305,8 @@ bool REveText::AssertSdfFont(const std::string &font_name, const std::string &tt
       while (--cl >= 0) if (command[cl] == '\\') command[cl] = '/';
 #endif
       gROOT->ProcessLine(command);
-      if (gSystem->AccessPathName(png.data()) || gSystem->AccessPathName(js.data())) {
+      // The write directory is the first user directory, so the generated pair is found and served first.
+      if (fonts.FindPair(png, js).empty()) {
          ::Warning(tpfx, "Creation of font '%s' failed.", font_name.data());
          return false;
       }
