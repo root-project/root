@@ -3927,36 +3927,22 @@ RooJSONFactoryWSTool::Config &RooJSONFactoryWSTool::config()
 // Sanitize all names in the workspace to be HS3 compliant
 RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
 {
-   // Variables
-
    RooWorkspace tmpWS = cleanWS(ws, false);
 
-   auto sanitizeIfNeeded = [](auto const &list) {
-      for (auto *obj : list) {
-         if (!isValidName(obj->GetName())) {
-            obj->SetName(sanitizeName(obj->GetName()).c_str());
-         }
+   // Valid names stay as they are.
+   auto sanitize = [](auto const &objects) {
+      for (auto *obj : objects) {
+         obj->SetName(sanitizeName(obj->GetName()).c_str());
       }
    };
-   sanitizeIfNeeded(tmpWS.allVars());
-   sanitizeIfNeeded(tmpWS.allFunctions());
-   sanitizeIfNeeded(tmpWS.allPdfs());
-   sanitizeIfNeeded(tmpWS.allResolutionModels());
-   // Datasets
-   for (auto *data : tmpWS.allData()) {
-      // Sanitize dataset name
-      if (!isValidName(data->GetName())) {
-         data->SetName(sanitizeName(data->GetName()).c_str());
-      }
-      for (auto *obj : *data->get()) {
-         obj->SetName(sanitizeName(obj->GetName()).c_str());
-      }
-   }
-   for (auto *data : tmpWS.allEmbeddedData()) {
-      // Sanitize dataset name
-      data->SetName(sanitizeName(data->GetName()).c_str());
-      for (auto *obj : *data->get()) {
-         obj->SetName(sanitizeName(obj->GetName()).c_str());
+   sanitize(tmpWS.allVars());
+   sanitize(tmpWS.allFunctions());
+   sanitize(tmpWS.allPdfs());
+   sanitize(tmpWS.allResolutionModels());
+   for (auto const &datasets : {tmpWS.allData(), tmpWS.allEmbeddedData()}) {
+      sanitize(datasets);
+      for (RooAbsData *data : datasets) {
+         sanitize(*data->get());
       }
    }
    for (auto *snshObj : tmpWS.getSnapshots()) {
@@ -3966,62 +3952,24 @@ RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
          std::cerr << "Warning: found snapshot that is not a RooArgSet, skipping\n";
          continue;
       }
-
-      // Sanitize snapshot name
-      if (!isValidName(snsh->GetName())) {
-         snsh->setName(sanitizeName(snsh->GetName()).c_str());
-      }
-
-      // Sanitize the variables inside the snapshot
-      for (auto *arg : *snsh) {
-         if (!isValidName(arg->GetName())) {
-            arg->SetName(sanitizeName(arg->GetName()).c_str());
-         }
-      }
+      snsh->setName(sanitizeName(snsh->GetName()).c_str());
+      sanitize(*snsh);
    }
-
-   // Generic objects (ModelConfigs, attributes, etc.)
+   // Generic objects, like the ModelConfigs with their sets
    for (auto *obj : tmpWS.allGenericObjects()) {
-      if (!isValidName(obj->GetName())) {
-         if (auto *named = dynamic_cast<TNamed *>(obj)) {
-            named->SetName(sanitizeName(named->GetName()).c_str());
-         } else {
-            std::cerr << "Warning: object " << obj->GetName() << " is not TNamed, cannot rename.\n";
-         }
+      if (auto *named = dynamic_cast<TNamed *>(obj)) {
+         named->SetName(sanitizeName(named->GetName()).c_str());
+      } else if (!isValidName(obj->GetName())) {
+         std::cerr << "Warning: object " << obj->GetName() << " is not TNamed, cannot rename.\n";
       }
-
       if (auto *mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
-         // Sanitize ModelConfig name
-         if (!isValidName(mc->GetName())) {
-            mc->SetName(sanitizeName(mc->GetName()).c_str());
-         }
-
-         // Sanitize the sets inside ModelConfig
-         for (auto *obs : mc->GetObservables()->get()) {
-            if (obs) {
-               obs->SetName(sanitizeName(obs->GetName()).c_str());
-            }
-         }
-         for (auto *poi : mc->GetParametersOfInterest()->get()) {
-            if (poi) {
-               poi->SetName(sanitizeName(poi->GetName()).c_str());
-            }
-         }
-         for (auto *nuis : mc->GetNuisanceParameters()->get()) {
-            if (nuis) {
-               nuis->SetName(sanitizeName(nuis->GetName()).c_str());
-            }
-         }
-         for (auto *glob : mc->GetGlobalObservables()->get()) {
-            if (glob) {
-               glob->SetName(sanitizeName(glob->GetName()).c_str());
-            }
-         }
+         sanitize(*mc->GetObservables());
+         sanitize(*mc->GetParametersOfInterest());
+         sanitize(*mc->GetNuisanceParameters());
+         sanitize(*mc->GetGlobalObservables());
       }
    }
-   std::string wsName = std::string{ws.GetName()} + "_sanitized";
    RooWorkspace newWS = cleanWS(tmpWS, false);
-   newWS.SetName(wsName.c_str());
-
+   newWS.SetName((std::string{ws.GetName()} + "_sanitized").c_str());
    return newWS;
 }
