@@ -1,0 +1,21 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.30.04.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu_XS_VLQ",
+   "parameters": ["mu_XS_VLQ"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2936806: https://www.hepdata.net/record/resource/4309332 (HS3_likelihoods.tar.gz, file HS3_likelihoods/sigT_2700_k0.5.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2936806_r4309332_HS3_likelihoods_sigT_2700_k0.5",
+ "title": "Search for single production of vector-like quarks decaying into $W(\\ell\u03bd)b$ in $pp$ collisions at $\\sqrt{s} = 13$ TeV with the ATLAS detector"
+}

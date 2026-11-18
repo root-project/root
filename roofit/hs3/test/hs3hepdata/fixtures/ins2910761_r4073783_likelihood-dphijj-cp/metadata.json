@@ -1,0 +1,35 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.37.01.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_cHG",
+   "parameters": ["cHG"],
+   "pdf": "combPdf",
+   "points": [[-0.2], [-0.1], [0.0], [0.1], [0.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_cHGtil",
+   "parameters": ["cHGtil"],
+   "pdf": "combPdf",
+   "points": [[-0.2], [-0.1], [0.0], [0.1], [0.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_cHW",
+   "parameters": ["cHW"],
+   "pdf": "combPdf",
+   "points": [[-0.2], [-0.1], [0.0], [0.1], [0.2]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2910761: https://www.hepdata.net/record/resource/4073783 (likelihood-dphijj-cp.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2910761_r4073783_likelihood-dphijj-cp",
+ "title": "Measurements of Higgs boson production via gluon-gluon fusion and vector-boson fusion using $H\\rightarrow WW^\\ast \\rightarrow \\ell\u03bd\\ell\u03bd$ decays in $pp$ collisions with the ATLAS detector and their effective field theory interpretations"
+}

@@ -1,0 +1,93 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "Ec_0": {
+     "best_fit": 0.9385936707835318,
+     "hesse_error": 0.05499800893942347,
+     "minus_one_sigma": -0.05475390129718076,
+     "plus_one_sigma": 0.05734121277060565
+    },
+    "Ec_1": {
+     "best_fit": 0.9531037607596049,
+     "hesse_error": 0.04476711314520487,
+     "minus_one_sigma": -0.044225202612376835,
+     "plus_one_sigma": 0.04643247458946409
+    },
+    "Ec_2": {
+     "best_fit": 0.9392923659202637,
+     "hesse_error": 0.04159250317308316,
+     "minus_one_sigma": -0.04078700304283427,
+     "plus_one_sigma": 0.043092047116055306
+    },
+    "Fcb_0": {
+     "best_fit": 1.0388761578825798,
+     "hesse_error": 0.24231867247095173,
+     "minus_one_sigma": -0.24405342703705346,
+     "plus_one_sigma": 0.24380925750690696
+    },
+    "Fcb_1": {
+     "best_fit": 1.0769843668205847,
+     "hesse_error": 0.11913087971268366,
+     "minus_one_sigma": -0.11638126144874038,
+     "plus_one_sigma": 0.12534590832758036
+    },
+    "Fcb_2": {
+     "best_fit": 1.0528112247185082,
+     "hesse_error": 0.09435298830092104,
+     "minus_one_sigma": -0.09053578201451265,
+     "plus_one_sigma": 0.09963879334813174
+    },
+    "norm_B": {
+     "best_fit": 1.4485786149864608,
+     "hesse_error": 0.45232528260427324,
+     "plus_one_sigma": 0.45232528260427324
+    },
+    "norm_C": {
+     "best_fit": 1.5964327109550853,
+     "hesse_error": 0.5763076893731715,
+     "minus_one_sigma": -0.602052544190317,
+     "plus_one_sigma": 0.6421211319525055
+    },
+    "norm_Vcb": {
+     "best_fit": 1.1862643763936924,
+     "hesse_error": 0.2947494921548382,
+     "minus_one_sigma": -0.3454609223411861,
+     "plus_one_sigma": 0.2701967696130745
+    },
+    "norm_tt": {
+     "best_fit": 0.9910732593829761,
+     "hesse_error": 0.030449090933246603,
+     "minus_one_sigma": -0.03059609162774151,
+     "plus_one_sigma": 0.0316143677124911
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["Ec_0", "Ec_1", "Ec_2", "Fcb_0", "Fcb_1", "Fcb_2", "norm_B", "norm_C", "norm_tt"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["norm_Vcb"],
+   "profile_scans": {
+    "norm_Vcb": {
+     "points": [0.596765392084016, 0.8915148842388543, 1.4810138685485306, 1.775763360703369],
+     "twice_delta_nll": [2.208375796675682, 0.7672146856784821, 1.2055304162204266, 5.430459816008806]
+    }
+   },
+   "seconds_when_generated": 86.72,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins3130442_r4320048_likelihood"
+}

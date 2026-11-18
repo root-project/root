@@ -1,0 +1,61 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "SigXsecOverSM_15_N2": {
+     "best_fit": 3.276203383617591,
+     "hesse_error": 2.6850604922343915,
+     "minus_one_sigma": -3.139061004365464,
+     "plus_one_sigma": 2.723796616382409
+    },
+    "SigXsecOverSM_40_N2": {
+     "best_fit": -1.330962726198689,
+     "hesse_error": 1.0711026268422312,
+     "plus_one_sigma": 1.0711026268422312
+    },
+    "k_ttDmu": {
+     "best_fit": 0.7366477916566371,
+     "hesse_error": 0.31988776392308527,
+     "minus_one_sigma": -0.26610471679544623,
+     "plus_one_sigma": 0.3934219536287139
+    },
+    "k_ttW": {
+     "best_fit": 1.0504255675046728,
+     "hesse_error": 0.4081906542897359,
+     "minus_one_sigma": -0.35780966215364535,
+     "plus_one_sigma": 0.4883213570188839
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["k_ttDmu", "k_ttW"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["SigXsecOverSM_15_N2", "SigXsecOverSM_40_N2"],
+   "profile_scans": {
+    "SigXsecOverSM_15_N2": {
+     "points": [-2.093917600851192, 5.961263875851982],
+     "twice_delta_nll": [-16.041416151233534, 0.43986839739818606]
+    },
+    "SigXsecOverSM_40_N2": {
+     "points": [-0.2598600993564577, 0.8112425274857735],
+     "twice_delta_nll": [0.8301744840335914, 3.5350451722052867]
+    }
+   },
+   "seconds_when_generated": 2.73,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2816994_r3757761_likelihood_lowmass_mm_BONLY"
+}

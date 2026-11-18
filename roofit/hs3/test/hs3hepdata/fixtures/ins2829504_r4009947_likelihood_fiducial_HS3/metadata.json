@@ -1,0 +1,35 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.32.02.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_k_tt1c",
+   "parameters": ["k_tt1c"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_k_tt2c",
+   "parameters": ["k_tt2c"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_k_tt_1b",
+   "parameters": ["k_tt_1b"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2829504: https://www.hepdata.net/record/resource/4009947 (likelihood_fiducial_HS3.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2829504_r4009947_likelihood_fiducial_HS3",
+ "title": "Measurement of top-quark pair production in association with charm quarks in proton-proton collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+}

@@ -1,0 +1,73 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [13.010428655456053, 4.020647001219913, 0.0, 3.1378001437515195, 18.183917643720633],
+   "id": "nll_scan_obsData_ht_leptons_Bin_001_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "ht_leptons_Bin_001_mu": 1.0
+   },
+   "scan_parameters": ["ht_leptons_Bin_001_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-13.911427256643947, -15.065726253080356, 0.0, 55.6231307681046, -205.15005106588796],
+   "id": "nll_scan_obsData_ht_leptons_Bin_002_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "ht_leptons_Bin_002_mu": 1.0
+   },
+   "scan_parameters": ["ht_leptons_Bin_002_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [226.30901692713815, 292.2978247159772, 0.0, 4.818749011988984, 16.664464588240662],
+   "id": "nll_scan_obsData_ht_leptons_Bin_003_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "ht_leptons_Bin_003_mu": 1.0
+   },
+   "scan_parameters": ["ht_leptons_Bin_003_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_8bins_3L_parton_tau0_NORM"
+}

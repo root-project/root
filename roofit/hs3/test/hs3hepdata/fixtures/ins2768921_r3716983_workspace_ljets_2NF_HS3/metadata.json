@@ -1,0 +1,21 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.30.04.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_SigXsecOverSM",
+   "parameters": ["SigXsecOverSM"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2768921: https://www.hepdata.net/record/resource/3716983 (workspace_ljets_2NF_HS3.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2768921_r3716983_workspace_ljets_2NF_HS3",
+ "title": "Measurements of inclusive and differential cross-sections of $t\\bar{t}\\gamma$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+}

@@ -1,0 +1,86 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8730366592809281,
+     "hesse_error": 0.09334858927049838,
+     "minus_one_sigma": -0.09052886686314086,
+     "plus_one_sigma": 0.09695680113803419
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.1524661347110348,
+     "hesse_error": 0.3686850878391678,
+     "minus_one_sigma": -0.35704374174880293,
+     "plus_one_sigma": 0.40320848981356155
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 0.9983594626582384,
+     "hesse_error": 0.08381691810702996,
+     "minus_one_sigma": -0.08048312737748492,
+     "plus_one_sigma": 0.08795590455637525
+    },
+    "mu_WZ_b": {
+     "best_fit": 0.9588727043203874,
+     "hesse_error": 0.3937986339751077,
+     "minus_one_sigma": -0.3478679299296359,
+     "plus_one_sigma": 0.47012970091053363
+    },
+    "n_jets_Bin_001_mu": {
+     "best_fit": 1.1394611747442729,
+     "hesse_error": 0.20969088809808356,
+     "minus_one_sigma": -0.20532035427570655,
+     "plus_one_sigma": 0.2178072900593368
+    },
+    "n_jets_Bin_002_mu": {
+     "best_fit": 0.8272953642211738,
+     "hesse_error": 0.15488587217131478,
+     "minus_one_sigma": -0.15285084011626845,
+     "plus_one_sigma": 0.15853397713245246
+    },
+    "n_jets_Bin_003_mu": {
+     "best_fit": 0.9493110131728737,
+     "hesse_error": 0.21413464289693468,
+     "minus_one_sigma": -0.21112691902117978,
+     "plus_one_sigma": 0.22083834266441085
+    },
+    "n_jets_Bin_004_mu": {
+     "best_fit": 1.249392432278593,
+     "hesse_error": 0.26514036287698767,
+     "minus_one_sigma": -0.25747529385543716,
+     "plus_one_sigma": 0.28087309878655253
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_WZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["n_jets_Bin_001_mu", "n_jets_Bin_002_mu", "n_jets_Bin_003_mu", "n_jets_Bin_004_mu"],
+   "profile_scans": {
+    "n_jets_Bin_001_mu": {
+     "points": [0.7200793985481058, 0.9297702866461893, 1.3491520628423563, 1.55884295094044],
+     "twice_delta_nll": [4.437371824944421, 1.0443481384281768, 0.9290635847428348, 3.503719411422935]
+    },
+    "n_jets_Bin_002_mu": {
+     "points": [0.5175236198785442, 0.672409492049859, 0.9821812363924886, 1.1370671085638033],
+     "twice_delta_nll": [4.246717325795544, 1.0272859029973915, 0.9553986095888831, 3.6755064042317827]
+    }
+   },
+   "seconds_when_generated": 17.16,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_n_jets_4bins_3L_particle_tau0"
+}

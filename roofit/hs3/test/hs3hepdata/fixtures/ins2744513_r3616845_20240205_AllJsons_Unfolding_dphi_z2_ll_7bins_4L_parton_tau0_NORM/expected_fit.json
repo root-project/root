@@ -1,0 +1,104 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "TotalXsecOverTheory_dphi_z2_ll": {
+     "best_fit": 1.2064034844377776,
+     "hesse_error": 0.1454995524732402,
+     "minus_one_sigma": -0.14146582477037326,
+     "plus_one_sigma": 0.1508845969828451
+    },
+    "dphi_z2_ll_Bin_001_mu": {
+     "best_fit": 1.2321978913156129,
+     "hesse_error": 0.2956767305538535,
+     "minus_one_sigma": -0.2858856478828231,
+     "plus_one_sigma": 0.3131890772295754
+    },
+    "dphi_z2_ll_Bin_002_mu": {
+     "best_fit": 0.7435965429359693,
+     "hesse_error": 0.2669524636226702,
+     "minus_one_sigma": -0.2531575243891576,
+     "plus_one_sigma": 0.2869265989193833
+    },
+    "dphi_z2_ll_Bin_003_mu": {
+     "best_fit": 1.0018409606152225,
+     "hesse_error": 0.2848945749065583,
+     "minus_one_sigma": -0.27193118964815344,
+     "plus_one_sigma": 0.30465523331389593
+    },
+    "dphi_z2_ll_Bin_004_mu": {
+     "best_fit": 0.8915840738390457,
+     "hesse_error": 0.2796100910569512,
+     "minus_one_sigma": -0.2670871514098525,
+     "plus_one_sigma": 0.29914022541945523
+    },
+    "dphi_z2_ll_Bin_005_mu": {
+     "best_fit": 1.087312112000444,
+     "hesse_error": 0.29472184474602087,
+     "minus_one_sigma": -0.28110416312419195,
+     "plus_one_sigma": 0.3161129408432223
+    },
+    "dphi_z2_ll_Bin_006_mu": {
+     "best_fit": 1.3304940070780502,
+     "hesse_error": 0.32100860045296087,
+     "minus_one_sigma": -0.3092685896887884,
+     "plus_one_sigma": 0.344524017686182
+    },
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8717506838576977,
+     "hesse_error": 0.09324309747290555,
+     "minus_one_sigma": -0.09063982568770665,
+     "plus_one_sigma": 0.09690278090557727
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.1595010433355504,
+     "hesse_error": 0.36653982784328654,
+     "minus_one_sigma": -0.3568418203789834,
+     "plus_one_sigma": 0.4004329482802411
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 0.9959271365864227,
+     "hesse_error": 0.08328102696890038,
+     "minus_one_sigma": -0.08027390542177651,
+     "plus_one_sigma": 0.08713376679935582
+    },
+    "mu_ZZ_b": {
+     "best_fit": 1.4412935518149814,
+     "hesse_error": 0.6080090484039986,
+     "minus_one_sigma": -0.5457068036617398,
+     "plus_one_sigma": 0.7112859997856886
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["TotalXsecOverTheory_dphi_z2_ll", "mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_ZZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["dphi_z2_ll_Bin_001_mu", "dphi_z2_ll_Bin_002_mu", "dphi_z2_ll_Bin_003_mu", "dphi_z2_ll_Bin_004_mu", "dphi_z2_ll_Bin_005_mu", "dphi_z2_ll_Bin_006_mu"],
+   "profile_scans": {
+    "dphi_z2_ll_Bin_001_mu": {
+     "points": [0.6408444302079058, 0.9365211607617594, 1.5278746218694663, 1.82355135242332],
+     "twice_delta_nll": [4.81644064977263, 1.0733482260166056, 0.8953913424556958, 3.3354303314117715]
+    },
+    "dphi_z2_ll_Bin_002_mu": {
+     "points": [0.20969161569062889, 0.4766440793132991, 1.0105490065586396, 1.2775014701813099],
+     "twice_delta_nll": [5.3000564155827306, 1.1204233481348638, 0.8727790086759342, 3.1614527861966053]
+    }
+   },
+   "seconds_when_generated": 12.28,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z2_ll_7bins_4L_parton_tau0_NORM"
+}

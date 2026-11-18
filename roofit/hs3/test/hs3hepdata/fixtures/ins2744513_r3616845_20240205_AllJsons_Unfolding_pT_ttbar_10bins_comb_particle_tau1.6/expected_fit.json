@@ -1,0 +1,128 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8838661839647298,
+     "hesse_error": 0.0948095922070421,
+     "minus_one_sigma": -0.09255966908449027,
+     "plus_one_sigma": 0.09847611436277011
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.2272051698566484,
+     "hesse_error": 0.37391643111856104,
+     "minus_one_sigma": -0.36630971273961355,
+     "plus_one_sigma": 0.4104509894213909
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 1.018551031934644,
+     "hesse_error": 0.08492709250875863,
+     "minus_one_sigma": -0.08186409296194104,
+     "plus_one_sigma": 0.08871393200292474
+    },
+    "mu_WZ_b": {
+     "best_fit": 0.882909009799195,
+     "hesse_error": 0.37677311270500635,
+     "minus_one_sigma": -0.3335496140298959,
+     "plus_one_sigma": 0.44794207793295243
+    },
+    "mu_ZZ_b": {
+     "best_fit": 1.5738198925342464,
+     "hesse_error": 0.5941022783953329,
+     "minus_one_sigma": -0.5332502368321264,
+     "plus_one_sigma": 0.6964311233164209
+    },
+    "pT_ttbar_Bin_001_mu": {
+     "best_fit": 1.0143287556955967,
+     "hesse_error": 0.2810324969490909,
+     "minus_one_sigma": -0.2783884416752006,
+     "plus_one_sigma": 0.29184788276332463
+    },
+    "pT_ttbar_Bin_002_mu": {
+     "best_fit": 1.2832799600421034,
+     "hesse_error": 0.2176993793167784,
+     "minus_one_sigma": -0.2178818370446079,
+     "plus_one_sigma": 0.2215437830077522
+    },
+    "pT_ttbar_Bin_003_mu": {
+     "best_fit": 1.2076003186937236,
+     "hesse_error": 0.21459290209686327,
+     "minus_one_sigma": -0.21471440125178745,
+     "plus_one_sigma": 0.2181652507480335
+    },
+    "pT_ttbar_Bin_004_mu": {
+     "best_fit": 1.0671108041635595,
+     "hesse_error": 0.20805227052115588,
+     "minus_one_sigma": -0.2080988280413948,
+     "plus_one_sigma": 0.21115504968145007
+    },
+    "pT_ttbar_Bin_005_mu": {
+     "best_fit": 1.0098088882783607,
+     "hesse_error": 0.21311951585481276,
+     "minus_one_sigma": -0.21325625021641892,
+     "plus_one_sigma": 0.21631942190729073
+    },
+    "pT_ttbar_Bin_006_mu": {
+     "best_fit": 0.9659589683948332,
+     "hesse_error": 0.1950183930376475,
+     "minus_one_sigma": -0.194161720308414,
+     "plus_one_sigma": 0.19842377486409252
+    },
+    "pT_ttbar_Bin_007_mu": {
+     "best_fit": 0.742275256035359,
+     "hesse_error": 0.21101380435295697,
+     "minus_one_sigma": -0.21040023704351238,
+     "plus_one_sigma": 0.21499670596115633
+    },
+    "pT_ttbar_Bin_008_mu": {
+     "best_fit": 0.5902194743390409,
+     "hesse_error": 0.23305353903241482,
+     "minus_one_sigma": -0.23206815298968136,
+     "plus_one_sigma": 0.2391009693153471
+    },
+    "pT_ttbar_Bin_009_mu": {
+     "best_fit": 0.7392366604300453,
+     "hesse_error": 0.26531057054239837,
+     "minus_one_sigma": -0.26562204059507405,
+     "plus_one_sigma": 0.27164268223277216
+    },
+    "pT_ttbar_Bin_010_mu": {
+     "best_fit": 1.337735813397111,
+     "hesse_error": 0.22467663415889494,
+     "minus_one_sigma": -0.21932300634982613,
+     "plus_one_sigma": 0.23461398328487124
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_WZ_b", "mu_ZZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["pT_ttbar_Bin_001_mu", "pT_ttbar_Bin_002_mu", "pT_ttbar_Bin_003_mu", "pT_ttbar_Bin_004_mu", "pT_ttbar_Bin_005_mu", "pT_ttbar_Bin_006_mu", "pT_ttbar_Bin_007_mu", "pT_ttbar_Bin_008_mu", "pT_ttbar_Bin_009_mu", "pT_ttbar_Bin_010_mu"],
+   "profile_scans": {
+    "pT_ttbar_Bin_001_mu": {
+     "points": [0.4522637617974149, 0.7332962587465057, 1.2953612526446876, 1.5763937495937785],
+     "twice_delta_nll": [4.280070688619162, 1.0195663552731276, 0.9289419632623321, 3.55274891155932]
+    },
+    "pT_ttbar_Bin_002_mu": {
+     "points": [0.8478812014085466, 1.065580580725325, 1.500979339358882, 1.7186787186756602],
+     "twice_delta_nll": [4.061742667032377, 0.9983353850184358, 0.9658969518641243, 3.799723119707778]
+    }
+   },
+   "seconds_when_generated": 51.42,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_ttbar_10bins_comb_particle_tau1.6"
+}

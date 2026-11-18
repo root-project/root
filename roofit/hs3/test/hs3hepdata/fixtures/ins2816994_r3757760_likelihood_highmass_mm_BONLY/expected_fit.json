@@ -1,0 +1,61 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "SigXsecOverSM_50_N2": {
+     "best_fit": 0.8210428170521696,
+     "hesse_error": 0.0798190719330073,
+     "minus_one_sigma": -0.9879683790072966,
+     "plus_one_sigma": 0.0896273483835801
+    },
+    "SigXsecOverSM_75_N2": {
+     "best_fit": -3.9999983846325926,
+     "hesse_error": 7.12057495107498,
+     "plus_one_sigma": 7.12057495107498
+    },
+    "k_ttDmu": {
+     "best_fit": 0.743105351800555,
+     "hesse_error": 0.31715294987389386,
+     "minus_one_sigma": -0.2651853615449991,
+     "plus_one_sigma": 0.3870782971532953
+    },
+    "k_ttW": {
+     "best_fit": 1.051628791894644,
+     "hesse_error": 0.4084075370475051,
+     "minus_one_sigma": -0.3581001669948313,
+     "plus_one_sigma": 0.4866658997277628
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["k_ttDmu", "k_ttW"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["SigXsecOverSM_50_N2", "SigXsecOverSM_75_N2"],
+   "profile_scans": {
+    "SigXsecOverSM_50_N2": {
+     "points": [0.661404673186155, 0.7412237451191623, 0.9008618889851769, 0.9806809609181842],
+     "twice_delta_nll": [0.1572254610945265, 0.0776731390826626, 0.8121292286294874, 2.7097925157464715]
+    },
+    "SigXsecOverSM_75_N2": {
+     "points": [3.1205765664423875],
+     "twice_delta_nll": [1.4716972243385271]
+    }
+   },
+   "seconds_when_generated": 1.2,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2816994_r3757760_likelihood_highmass_mm_BONLY"
+}
