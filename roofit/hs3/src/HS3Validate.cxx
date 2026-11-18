@@ -763,12 +763,19 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
          error(samplePath, "the name of the sample is not unique in the channel");
       }
       checkSize(samplePath + ".data.contents", sample.contents.size(), "\"contents\"");
-      // These modifiers create objects that are named after them.
+      // These modifiers create objects that are named after them. Older versions of RooFit wrote a parameter that
+      // interpolates a sample more than once as several histosys modifiers of the same name, which are still read.
       std::set<std::string> objectNames;
-      auto checkUniqueName = [&](std::string const &where, char const *type, std::string const &modifierName) {
+      auto checkUniqueName = [&](std::string const &where, char const *type, std::string const &modifierName,
+                                 bool allowedBeforeHS3v03 = false) {
          if (!objectNames.insert(std::string(type) + " " + modifierName).second) {
-            error(where,
-                  std::string("there is another ") + type + " modifier named '" + modifierName + "' in the sample");
+            const std::string message =
+               std::string("there is another ") + type + " modifier named '" + modifierName + "' in the sample";
+            if (allowedBeforeHS3v03) {
+               strictError(where, message);
+            } else {
+               error(where, message);
+            }
          }
       };
       if (sample.errors && sample.errors->size() != sample.contents.size()) {
@@ -801,7 +808,7 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                           checkInterpolation(m.interpolation, "normsys", m.name);
                        },
                        [&](HistoSys const &m) {
-                          checkUniqueName(modifierPath, "histosys", m.name);
+                          checkUniqueName(modifierPath, "histosys", m.name, true);
                           checkSingleParameter(m);
                           checkInterpolation(m.interpolation, "histosys", m.name);
                           checkSize(modifierPath + ".data.hi.contents", m.hi.contents.size(), "\"contents\"");

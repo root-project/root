@@ -2561,6 +2561,49 @@ TEST(RooFitHS3, HistFactoryDuplicateHistoSysWithNonDefaultInterpolationFails)
    expectExportThrowsWithError(ws, "this interpolation cannot currently be combined for duplicate histosys modifiers");
 }
 
+// Older versions of RooFit wrote a parameter that interpolates a sample more than once as several histosys modifiers
+// of the same name. Documents before HS3 0.3 are still read like this, and the modifiers are combined on export.
+TEST(RooFitHS3, HistFactoryHistoSysOfTheSameNameInOlderDocuments)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   const std::string modifiers = R"(
+   {"name": "shape", "parameter": "alpha_shape", "type": "histosys",
+    "data": {"lo": {"contents": [8.0, 18.0]}, "hi": {"contents": [12.0, 22.0]}}},
+   {"name": "shape", "parameter": "alpha_shape", "type": "histosys",
+    "data": {"lo": {"contents": [9.0, 16.0]}, "hi": {"contents": [11.0, 24.0]}}})";
+
+   expectImportThrowsWithError(makeHistFactoryJSON(modifiers, "", "0.3"),
+                               "there is another histosys modifier named 'shape' in the sample");
+
+   RooWorkspace ws{"ws_histosys_same_name"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeHistFactoryJSON(modifiers, "", "0.2")));
+   auto *interp = dynamic_cast<PiecewiseInterpolation *>(ws.function("histoSys_model_channel0_sig"));
+   ASSERT_NE(interp, nullptr);
+   ASSERT_EQ(interp->paramList().size(), 2u);
+   EXPECT_EQ(interp->paramList().at(0), interp->paramList().at(1));
+   auto high = [&](int i, int bin) {
+      return static_cast<RooHistFunc *>(interp->highList().at(i))->dataHist().weight(bin);
+   };
+   EXPECT_DOUBLE_EQ(high(0, 1), 22.0);
+   EXPECT_DOUBLE_EQ(high(1, 1), 24.0);
+
+   // The export combines them into one modifier, which is valid in the current version.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(countOccurrences(exported, "\"name\":\"shape\""), 1u) << exported;
+   RooWorkspace ws2{"ws_histosys_same_name_roundtrip"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported));
+   auto *interp2 = dynamic_cast<PiecewiseInterpolation *>(ws2.function("histoSys_model_channel0_sig"));
+   ASSERT_NE(interp2, nullptr);
+   ASSERT_EQ(interp2->paramList().size(), 1u);
+   // Both functions give the same for a shifted parameter.
+   ws.var("alpha_shape")->setVal(0.7);
+   ws2.var("alpha_shape")->setVal(0.7);
+   ws.var("x")->setBin(1);
+   ws2.var("x")->setBin(1);
+   EXPECT_NEAR(interp->getVal(), interp2->getVal(), 1e-9 * interp->getVal());
+}
+
 TEST(RooFitHS3, HistFactoryConstraintKeyMigration)
 {
    const std::string jsonStr = makeHistFactoryJSON(

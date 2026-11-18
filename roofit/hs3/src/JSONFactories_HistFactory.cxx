@@ -551,6 +551,7 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
    hf.SetTitle(sampleName.c_str());
 
    SampleElements elems;
+   std::map<std::string, int> histoSysCount;
    elems.shapeElems.add(tool.wsEmplace<RooBinWidthFunction>(newName(prefixedName + "_binWidth"), hf, true));
 
    const bool hasStatError = std::any_of(sample.modifiers.begin(), sample.modifiers.end(),
@@ -601,8 +602,12 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
             [&](HS3::HistoSys const &mod) {
                RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
                elems.histNps.add(param);
+               // Documents before HS3 0.3 can have several histosys modifiers of the same name in a sample (see the
+               // validation). Their histograms are told apart by a counter.
+               const int count = ++histoSysCount[mod.name];
+               const std::string objName = count == 1 ? mod.name : mod.name + "_" + std::to_string(count);
                auto addVariation = [&](RooArgList &list, HS3::HistoSysVariation const &variation, const char *suffix) {
-                  const std::string name = newName(mod.name + suffix + prefixedName);
+                  const std::string name = newName(objName + suffix + prefixedName);
                   list.add(
                      tool.wsEmplace<RooHistFunc>(name, ctx.observables,
                                                  HS3::createDataHist(name, ctx.observables, variation.contents,
