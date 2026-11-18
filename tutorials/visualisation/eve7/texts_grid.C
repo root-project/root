@@ -46,12 +46,13 @@ using namespace ROOT::Experimental;
 //                                                 smoothstep is too wide
 const char *kRuler = "Ill1 OQ08 //\\\\ ..";
 
-// Every one of these ships in TROOT::GetDataDir()/fonts. ROOT has Liberation Mono
-// and Serif but no Liberation Sans.
+// These six faces ship with REve. The other fonts in TROOT::GetDataDir()/fonts,
+// such as verdana, georgia, comic and BlackChancery, can be used too:
+// REveText::AssertSdfFont() generates them from the TTF, which needs a display.
 // clang-format off
-const char *kFonts[] = {"LiberationSerif-Regular", "LiberationMono-Regular", "verdana",
-                        "georgia",                 "comic",                  "comicbd",
-                        "BlackChancery"};
+const char *kFonts[] = {"LiberationSans-Regular",  "LiberationSans-Bold",
+                        "LiberationSerif-Regular", "LiberationSerif-Bold",
+                        "LiberationMono-Regular",  "LiberationMono-Bold"};
 // clang-format on
 const int kNFonts = sizeof(kFonts) / sizeof(char *);
 
@@ -194,8 +195,9 @@ void texts_grid(const char *panels = "ABCDE")
    auto eveMng = REveManager::Create();
    eveMng->AllowMultipleRemoteConnections(false, false);
 
-   // Generate the SDF atlases on first use. This needs a display. Once the
-   // .png and .js.gz files exist it does nothing.
+   // The shipped faces are found and nothing is generated. Another font is
+   // generated on first use, which needs a display; once its .png and .js.gz
+   // files exist it is found too.
    std::string rf = std::string(TROOT::GetDataDir().Data()) + "/fonts/";
    for (int i = 0; i < kNFonts; ++i)
       REveText::AssertSdfFont(kFonts[i], rf + kFonts[i] + ".ttf");
