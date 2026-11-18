@@ -286,7 +286,7 @@ jobs:
               python .github/workflows/root-ci-config/build_root.py
                     --buildtype       ${{ matrix.config }}
                     --platform        windows10
-                    --incremental     $INCREMENTAL
+                    --incremental     %INCREMENTAL%
                     --base_ref        ${{ github.base_ref }}
                     --sha             ${{ github.sha }}
                     --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
