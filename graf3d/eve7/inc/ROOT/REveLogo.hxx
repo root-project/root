@@ -54,6 +54,7 @@ public:
    static bool IsRemote(const std::string &f);
 
    static bool SetImageDir(std::string_view dir);
+   static bool AddImageDir(std::string_view dir);
    static const std::string &GetImageDir() { return sImageDir; }
 
    /// Either a file name inside the registered image directory, or an absolute

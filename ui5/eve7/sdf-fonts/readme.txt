@@ -1,41 +1,55 @@
 SDF fonts for REve
 ==================
 
-This directory holds the signed-distance-field atlases REve uses to render text.
+This directory holds signed-distance-field atlases REve uses to render text.
 Each font is a pair of files:
 
     <name>.png     the distance field itself
     <name>.js.gz   the glyph metrics (advances, kerning, rectangles)
 
-Both are generated files and are not kept in git. A fresh checkout has no
-atlases until something calls REveText::AssertSdfFont().
+Both are generated files and are not kept in git. The fonts shipped with ROOT
+are in ../assets/sdf-fonts/, which the build fills from the RenderCore assets
+tarball. By default, fonts generated at run time go here.
+
+Lookup
+------
+
+The server serves the fonts under sdf-fonts/ from several directories, and
+REveText::AssertSdfFont() looks for them in the same order:
+
+ 1. The directory of REveText::SetSdfFontDir(dir, require_write_access).
+    Without that call it is this directory, eve7/sdf-fonts/ under the ui5
+    directory, when it is writable or can be created, else ./sdf-fonts/ in the
+    current working directory. The ui5 directory is $ROOTUI5SYS, else
+    WebGui.RootUi5Path, else ui5/ in ROOT's data directory, as for the
+    server's rootui5sys/. ./sdf-fonts/ is created only when a font is
+    generated into it.
+
+ 2. The directories of REveText::AddSdfFontDir(dir), in the order they were
+    added. Fonts are only read from them.
+
+ 3. eve7/assets/sdf-fonts/ under the ui5 directory, the fonts shipped with
+    ROOT. It may be read-only.
+
+A file is served from the first directory that has it. The directories can be
+set before REveManager::Create().
 
 Generating
 ----------
 
 REveText::AssertSdfFont(font_name, ttf_path) is the entry point. It does
-nothing when both files for font_name are present. Otherwise it builds them
-from the TTF with TGLSdfFontMaker from the RGL module, which it calls through
-the interpreter so that REve does not link against RGL.
+nothing when the first directory that has either file of font_name has both.
+Otherwise it builds them from the TTF with TGLSdfFontMaker from the RGL
+module, which it calls through the interpreter so that REve does not link
+against RGL. The files are written into the directory of point 1 above, which
+is searched first. Requiring both files in one directory keeps a lone file in
+a directory searched earlier from being served with the other file of a later
+directory, which would be a mismatched pair.
 
-Generation needs three things:
-
- 1. REveManager must already exist, because the font directory is registered
-    with it. Called earlier, AssertSdfFont() prints an error and returns
-    false; calling it again after REveManager::Create() works.
-
- 2. A real GL context, so generation cannot happen in batch mode. `root.exe -b`
-    fails with "TGLWidget::CreateWindow: Display is not set!". Run once with a
-    display to populate the directory; after that batch sessions are fine,
-    because AssertSdfFont() sees the files and does nothing.
-
- 3. A writable target directory. Two defaults are tried in order, and the
-    first writable one is used. A missing directory is created. The first
-    default is eve7/sdf-fonts/ under WebGui.RootUi5Path, or under
-    $ROOTSYS/ui5 when that is not set. The second is ./sdf-fonts/.
-    REveText::SetSdfFontDir(dir, require_write_access) overrides them. Pass
-    false for require_write_access when pointing at a directory that is
-    already populated.
+Generation needs a real GL context, so it cannot happen in batch mode.
+AssertSdfFont() then warns and returns false. Run once with a display to
+populate the directory; after that batch sessions are fine, because
+AssertSdfFont() finds the files and does nothing.
 
 Which fonts to ask for
 ----------------------
