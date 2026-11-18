@@ -1,0 +1,73 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [0.0, 3123.0022982135415, 10031.162401095033, 21235.205720603466, 37864.4163788259],
+   "id": "nll_scan_obsData_b",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "b": 0.543
+   },
+   "scan_parameters": ["b"],
+   "scan_points": [[0.543], [0.5973], [0.6516], [0.7059], [0.7602]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [130142.76106924564, 38808.22853112221, 0.0, 10281.566950932145, 66543.03419995308],
+   "id": "nll_scan_obsData_mu_Z",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "mu_Z": 1.0
+   },
+   "scan_parameters": ["mu_Z"],
+   "scan_points": [[0.933333333333], [0.966666666667], [1.0], [1.03333333333], [1.06666666667]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-11695.753201425076, -6432.326071627438, 0.0, 7464.25004722178, 15846.318120889366],
+   "id": "nll_scan_obsData_mu_ratio",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "mu_ratio": 1.0
+   },
+   "scan_parameters": ["mu_ratio"],
+   "scan_points": [[0.866666666667], [0.933333333333], [1.0], [1.06666666667], [1.13333333333]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2689657_r3614664_ratio_likelihood"
+}

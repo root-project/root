@@ -1,0 +1,70 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "SigXsecOverSM_50": {
+     "best_fit": 0.04186338936985102,
+     "hesse_error": 0.08166854457005536,
+     "minus_one_sigma": -0.07410725487809743,
+     "plus_one_sigma": 0.09125719717717305
+    },
+    "k_ttC": {
+     "best_fit": 0.5153585344471333,
+     "hesse_error": 0.4266115846463162,
+     "minus_one_sigma": -0.41535853444713333,
+     "plus_one_sigma": 0.5054421808929259
+    },
+    "k_ttDel": {
+     "best_fit": 1.6097341848618993,
+     "hesse_error": 0.7112018495108685,
+     "minus_one_sigma": -0.5976460539563784,
+     "plus_one_sigma": 0.8926177026796162
+    },
+    "k_ttDmu": {
+     "best_fit": 0.7336088453971815,
+     "hesse_error": 0.3154423284318598,
+     "minus_one_sigma": -0.26257002134553076,
+     "plus_one_sigma": 0.3817570824651897
+    },
+    "k_ttQ": {
+     "best_fit": 0.8172421424084448,
+     "hesse_error": 0.3959511761268962,
+     "minus_one_sigma": -0.3095306303794672,
+     "plus_one_sigma": 0.5328520712015152
+    },
+    "k_ttW": {
+     "best_fit": 1.1254849217930398,
+     "hesse_error": 0.4046412972217271,
+     "minus_one_sigma": -0.34818335724664046,
+     "plus_one_sigma": 0.4889084187103035
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["k_ttC", "k_ttDel", "k_ttDmu", "k_ttQ", "k_ttW"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["SigXsecOverSM_50"],
+   "profile_scans": {
+    "SigXsecOverSM_50": {
+     "points": [-0.12147369977025971, -0.03980515520020434, 0.12353193393990639, 0.20520047850996173],
+     "twice_delta_nll": [5.939499343263378, 1.2386987839586254, 0.8188401527277165, 2.7360148776460846]
+    }
+   },
+   "seconds_when_generated": 3.94,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2816994_r3757762_likelihood_combined_HNL50"
+}

@@ -1,0 +1,35 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.30.04.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_ht_leptons_Bin_001_mu",
+   "parameters": ["ht_leptons_Bin_001_mu"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_ht_leptons_Bin_002_mu",
+   "parameters": ["ht_leptons_Bin_002_mu"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_ht_leptons_Bin_003_mu",
+   "parameters": ["ht_leptons_Bin_003_mu"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2744513: https://www.hepdata.net/record/resource/3616845 (ttZdifferentialAllFullLikelihoods.tar.gz, file 20240205_AllJsons/Unfolding_ht_leptons_5bins_4L_parton_tau0_NORM.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_5bins_4L_parton_tau0_NORM",
+ "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+}

@@ -1,0 +1,58 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "kttbar": {
+     "best_fit": 1.091417364285916,
+     "hesse_error": 0.08681310810549303,
+     "minus_one_sigma": -0.08740627188891757,
+     "plus_one_sigma": 0.0881469436686242
+    },
+    "kwjets_HF": {
+     "best_fit": 1.1005945638943364,
+     "hesse_error": 0.246214090470592,
+     "minus_one_sigma": -0.24570745230287272,
+     "plus_one_sigma": 0.2496155742782749
+    },
+    "kwjets_light": {
+     "best_fit": 0.8696634527183894,
+     "hesse_error": 0.174074300861847,
+     "minus_one_sigma": -0.1648140277060854,
+     "plus_one_sigma": 0.1854104337983895
+    },
+    "mu_XS_VLQ": {
+     "best_fit": 0.2956738059682272,
+     "hesse_error": 0.22732747355065336,
+     "minus_one_sigma": -0.2372450567739179,
+     "plus_one_sigma": 0.22465045769395997
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["kttbar", "kwjets_HF", "kwjets_light"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["mu_XS_VLQ"],
+   "profile_scans": {
+    "mu_XS_VLQ": {
+     "points": [0.06834633241757382, 0.5230012795188805, 0.750328753069534],
+     "twice_delta_nll": [0.9216273686033674, 1.024245646491181, 4.1455132406554185]
+    }
+   },
+   "seconds_when_generated": 6.0,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2936806_r4309332_HS3_likelihoods_sigT_1700_k0.5"
+}

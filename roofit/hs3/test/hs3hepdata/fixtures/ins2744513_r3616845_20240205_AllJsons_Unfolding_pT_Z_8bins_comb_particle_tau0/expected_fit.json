@@ -1,0 +1,116 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8881905386557297,
+     "hesse_error": 0.09496236070121439,
+     "minus_one_sigma": -0.09255356280084495,
+     "plus_one_sigma": 0.09853345633400123
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.1857530296168775,
+     "hesse_error": 0.36925101465544974,
+     "minus_one_sigma": -0.3613366571102128,
+     "plus_one_sigma": 0.402473365990709
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 1.014403549245564,
+     "hesse_error": 0.08396025738285473,
+     "minus_one_sigma": -0.08111398763946095,
+     "plus_one_sigma": 0.08755500841325306
+    },
+    "mu_WZ_b": {
+     "best_fit": 0.8948320972111161,
+     "hesse_error": 0.37452840381567165,
+     "minus_one_sigma": -0.33060138141118567,
+     "plus_one_sigma": 0.44690812843711203
+    },
+    "mu_ZZ_b": {
+     "best_fit": 1.6124580031009446,
+     "hesse_error": 0.6147733147973735,
+     "minus_one_sigma": -0.5457423412426982,
+     "plus_one_sigma": 0.7263874527688895
+    },
+    "pT_Z_Bin_001_mu": {
+     "best_fit": 1.1181994326238536,
+     "hesse_error": 0.15542941341050348,
+     "minus_one_sigma": -0.15139695325447333,
+     "plus_one_sigma": 0.16092591073676862
+    },
+    "pT_Z_Bin_002_mu": {
+     "best_fit": 1.0922026734155958,
+     "hesse_error": 0.13626423157897533,
+     "minus_one_sigma": -0.13302658700732667,
+     "plus_one_sigma": 0.14047079415848954
+    },
+    "pT_Z_Bin_003_mu": {
+     "best_fit": 1.216185421008501,
+     "hesse_error": 0.1411616436742389,
+     "minus_one_sigma": -0.1378508432581584,
+     "plus_one_sigma": 0.1455820573459927
+    },
+    "pT_Z_Bin_004_mu": {
+     "best_fit": 0.9811037742200955,
+     "hesse_error": 0.1447855158010407,
+     "minus_one_sigma": -0.140699667929291,
+     "plus_one_sigma": 0.15002421348482445
+    },
+    "pT_Z_Bin_005_mu": {
+     "best_fit": 1.018573209816978,
+     "hesse_error": 0.14806963728710232,
+     "minus_one_sigma": -0.1437745809899867,
+     "plus_one_sigma": 0.15359346004874552
+    },
+    "pT_Z_Bin_006_mu": {
+     "best_fit": 0.5537028343464048,
+     "hesse_error": 0.15274169491187758,
+     "minus_one_sigma": -0.14605432136877813,
+     "plus_one_sigma": 0.16117697640224724
+    },
+    "pT_Z_Bin_007_mu": {
+     "best_fit": 0.8531185716062688,
+     "hesse_error": 0.19838189263840872,
+     "minus_one_sigma": -0.1894197391749257,
+     "plus_one_sigma": 0.2104803246753635
+    },
+    "pT_Z_Bin_008_mu": {
+     "best_fit": 1.1200675243494027,
+     "hesse_error": 0.21625742647457258,
+     "minus_one_sigma": -0.2077009300577466,
+     "plus_one_sigma": 0.22866014407256754
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_WZ_b", "mu_ZZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["pT_Z_Bin_001_mu", "pT_Z_Bin_002_mu", "pT_Z_Bin_003_mu", "pT_Z_Bin_004_mu", "pT_Z_Bin_005_mu", "pT_Z_Bin_006_mu", "pT_Z_Bin_007_mu", "pT_Z_Bin_008_mu"],
+   "profile_scans": {
+    "pT_Z_Bin_001_mu": {
+     "points": [0.8073406058028466, 0.9627700192133501, 1.273628846034357, 1.4290582594448606],
+     "twice_delta_nll": [4.549212856152735, 1.0559991304035066, 0.9350652052889927, 3.517186008652061]
+    },
+    "pT_Z_Bin_002_mu": {
+     "points": [0.8196742102576452, 0.9559384418366206, 1.2284669049945711, 1.3647311365735466],
+     "twice_delta_nll": [4.488131418409466, 1.0508999321646115, 0.9427467362729658, 3.5674996811176243]
+    }
+   },
+   "seconds_when_generated": 32.42,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_Z_8bins_comb_particle_tau0"
+}

@@ -1,0 +1,73 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [30.982577032053086, 11.625796967549832, 0.0, -1.2188526828176691, 14.439810131891136],
+   "id": "nll_scan_obsData_pt_lep_non_z_Bin_001_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "pt_lep_non_z_Bin_001_mu": 1.0
+   },
+   "scan_parameters": ["pt_lep_non_z_Bin_001_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-10.201570964352868, -11.445211851721979, 0.0, 35.23772904925863, 159.43621728363723],
+   "id": "nll_scan_obsData_pt_lep_non_z_Bin_002_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "pt_lep_non_z_Bin_002_mu": 1.0
+   },
+   "scan_parameters": ["pt_lep_non_z_Bin_002_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-140.30173215463583, -105.22335231472971, 0.0, -342.3346546328394, -333.0968922151733],
+   "id": "nll_scan_obsData_pt_lep_non_z_Bin_003_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "pt_lep_non_z_Bin_003_mu": 1.0
+   },
+   "scan_parameters": ["pt_lep_non_z_Bin_003_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pt_lep_non_z_5bins_3L_particle_tau0_NORM"
+}

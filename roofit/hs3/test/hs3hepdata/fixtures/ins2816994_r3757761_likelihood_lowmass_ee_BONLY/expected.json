@@ -1,0 +1,55 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [-5.204979194740645, -2.6114551010027753, 0.0, 2.62872246200277, 5.274087011242045],
+   "id": "nll_scan_obsData_SigXsecOverSM_15_N1",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "SigXsecOverSM_15_N1": 1.0
+   },
+   "scan_parameters": ["SigXsecOverSM_15_N1"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-15.395045826019668, -7.751388314780797, 0.0, 7.848517591893142, 15.785190592009712],
+   "id": "nll_scan_obsData_SigXsecOverSM_40_N1",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "SigXsecOverSM_40_N1": 1.0
+   },
+   "scan_parameters": ["SigXsecOverSM_40_N1"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2816994_r3757761_likelihood_lowmass_ee_BONLY"
+}

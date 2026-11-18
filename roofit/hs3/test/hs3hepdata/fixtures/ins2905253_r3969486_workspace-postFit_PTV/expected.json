@@ -1,0 +1,73 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["combPdf"]
+   }
+  },
+  {
+   "expected": [-0.31308886769693345, -0.22821560502052307, 0.0, 0.35870286589488387, 0.8371378398733214],
+   "id": "nll_scan_obsData_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "mu": 1.0
+   },
+   "scan_parameters": ["mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-1.5350552541203797, -0.7993944500340149, 0.0, 0.8608578470302746, 1.7811069211456925],
+   "id": "nll_scan_obsData_mu_PTV_150_250",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "mu_PTV_150_250": 1.0
+   },
+   "scan_parameters": ["mu_PTV_150_250"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-0.7552745179273188, -0.38950496376492083, 0.0, 0.41230239206925035, 0.8465403449954465],
+   "id": "nll_scan_obsData_mu_PTV_250_",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "mu_PTV_250_": 1.0
+   },
+   "scan_parameters": ["mu_PTV_250_"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2905253_r3969486_workspace-postFit_PTV"
+}

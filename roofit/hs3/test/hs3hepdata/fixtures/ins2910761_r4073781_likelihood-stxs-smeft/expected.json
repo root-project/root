@@ -1,0 +1,127 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["hybridData", "obsData"],
+    "functions": [],
+    "pdfs": ["combPdf"]
+   }
+  },
+  {
+   "expected": [0.9169097831472754, 0.4240049123764038, 0.0, -0.3515735357068479, -0.6270070322789252],
+   "id": "nll_scan_hybridData_cHB",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "cHB": 0.0
+   },
+   "scan_parameters": ["cHB"],
+   "scan_points": [[-0.2], [-0.1], [0.0], [0.1], [0.2]],
+   "target": {
+    "data": "hybridData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-0.1965370257385075, -0.10262081027030945, 0.0, 0.11148681817576289, 0.23200413840822875],
+   "id": "nll_scan_hybridData_cHDD",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "cHDD": 0.0
+   },
+   "scan_parameters": ["cHDD"],
+   "scan_points": [[-0.2], [-0.1], [0.0], [0.1], [0.2]],
+   "target": {
+    "data": "hybridData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-62011.31999157765, -7786.395585295744, 0.0, 2047.2898379233666, 4734.718858135864],
+   "id": "nll_scan_hybridData_cHG",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "cHG": 0.0
+   },
+   "scan_parameters": ["cHG"],
+   "scan_points": [[-0.2], [-0.1], [0.0], [0.1], [0.2]],
+   "target": {
+    "data": "hybridData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-21.675756005337462, -10.854196477914229, 0.0, 10.886959406081587, 21.80680833174847],
+   "id": "nll_scan_obsData_cHB",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "cHB": 0.2
+   },
+   "scan_parameters": ["cHB"],
+   "scan_points": [[0.16], [0.18], [0.2], [0.22], [0.24]],
+   "target": {
+    "data": "obsData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-4.403156986925751, -2.202573513844982, 0.0, 2.2045660791918635, 4.411127248313278],
+   "id": "nll_scan_obsData_cHDD",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "cHDD": 0.2
+   },
+   "scan_parameters": ["cHDD"],
+   "scan_points": [[0.16], [0.18], [0.2], [0.22], [0.24]],
+   "target": {
+    "data": "obsData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [-1013.495811280096, -497.3208322634455, 0.0, 477.3013226778712, 934.2328392846975],
+   "id": "nll_scan_obsData_cHG",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "cHG": 0.2
+   },
+   "scan_parameters": ["cHG"],
+   "scan_points": [[0.16], [0.18], [0.2], [0.22], [0.24]],
+   "target": {
+    "data": "obsData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2910761_r4073781_likelihood-stxs-smeft"
+}
