@@ -58,6 +58,13 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
+/// The name of the alternative that a variant holds, e.g. of an axis or of a modifier.
+template <class... Ts>
+std::string const &nameOf(std::variant<Ts...> const &v)
+{
+   return std::visit([](auto const &alternative) -> std::string const & { return alternative.name; }, v);
+}
+
 /// A name that says what it refers to, so that for example a DataRef can't be used as a DomainRef.
 template <class Tag>
 struct Ref {

@@ -184,7 +184,7 @@ void Validator::collectNames()
    // HistFactory modifiers, which are created on the fly.
    for (auto const &domain : _doc.domains) {
       for (auto const &axis : domain.axes) {
-         addParameter(std::visit([](auto const &a) -> std::string const & { return a.name; }, axis));
+         addParameter(nameOf(axis));
       }
    }
    for (auto const &point : _doc.parameterPoints) {
@@ -241,8 +241,7 @@ void Validator::checkFixedAxes()
       for (std::size_t i = 0; i < _doc.domains.size(); ++i) {
          for (auto const &axis : _doc.domains[i].axes) {
             // A categorical axis is passed as null.
-            fn(i, std::visit([](auto const &a) -> std::string const & { return a.name; }, axis),
-               std::get_if<DomainAxis>(&axis));
+            fn(i, nameOf(axis), std::get_if<DomainAxis>(&axis));
          }
       }
    };
@@ -643,7 +642,9 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                                         ", contents=" + std::to_string(sample.contents.size()));
       }
       for (std::size_t iModifier = 0; iModifier < sample.modifiers.size(); ++iModifier) {
-         std::string modifierPath = samplePath + ".modifiers[" + std::to_string(iModifier) + "]";
+         Modifier const &modifier = sample.modifiers[iModifier];
+         const std::string modifierPath =
+            samplePath + ".modifiers[" + std::to_string(iModifier) + "](" + nameOf(modifier) + ")";
          auto checkInterpolation = [&](std::optional<Interpolation> const &interpolation, char const *type,
                                        std::string const &modifierName) {
             if (!interpolation && !dist.defaultInterpolation) {
@@ -652,32 +653,26 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                                       "' is not given, and the channel has no \"default_interpolation\"");
             }
          };
+         // The modifiers with a single parameter, which can have a constraint.
+         auto checkSingleParameter = [&](auto const &m) {
+            checkParameter(modifierPath, m.parameter.name, m.name);
+            checkConstraint(modifierPath, m.constraint);
+            checkCorrelated(modifierPath, m.parameter.name, m.constraint);
+         };
          std::visit(overloaded{
-                       [&](NormFactor const &m) {
-                          modifierPath += "(" + m.name + ")";
-                          checkParameter(modifierPath, m.parameter.name, m.name);
-                          checkConstraint(modifierPath, m.constraint);
-                          checkCorrelated(modifierPath, m.parameter.name, m.constraint);
-                       },
+                       [&](NormFactor const &m) { checkSingleParameter(m); },
                        [&](NormSys const &m) {
-                          modifierPath += "(" + m.name + ")";
-                          checkParameter(modifierPath, m.parameter.name, m.name);
-                          checkConstraint(modifierPath, m.constraint);
-                          checkCorrelated(modifierPath, m.parameter.name, m.constraint);
+                          checkSingleParameter(m);
                           checkInterpolation(m.interpolation, "normsys", m.name);
                        },
                        [&](HistoSys const &m) {
-                          modifierPath += "(" + m.name + ")";
                           checkUniqueName(modifierPath, "histosys", m.name);
-                          checkParameter(modifierPath, m.parameter.name, m.name);
-                          checkConstraint(modifierPath, m.constraint);
-                          checkCorrelated(modifierPath, m.parameter.name, m.constraint);
+                          checkSingleParameter(m);
                           checkInterpolation(m.interpolation, "histosys", m.name);
                           checkSize(modifierPath + ".data.hi.contents", m.hi.contents.size(), "\"contents\"");
                           checkSize(modifierPath + ".data.lo.contents", m.lo.contents.size(), "\"contents\"");
                        },
                        [&](ShapeSys const &m) {
-                          modifierPath += "(" + m.name + ")";
                           checkUniqueName(modifierPath, "shapesys", m.name);
                           if (!m.vals.empty()) {
                              checkSize(modifierPath + ".data.vals", m.vals.size(), "\"vals\"");
@@ -691,7 +686,6 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                           checkGammaConstraint(modifierPath, m.constraint);
                        },
                        [&](StatError const &m) {
-                          modifierPath += "(" + m.name + ")";
                           if (!m.parameters.empty()) {
                              checkSize(modifierPath + ".parameters", m.parameters.size(), "\"parameters\"");
                           }
@@ -699,14 +693,13 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                           checkStatErrorConstraints(modifierPath, m.constraint);
                        },
                        [&](CustomModifier const &m) {
-                          modifierPath += "(" + m.name + ")";
                           if (!isDefinedIn(m.name, "functions") && !isDefinedIn(m.name, "distributions") &&
                               !isExternal(m.name)) {
                              error(modifierPath, "unable to find custom modifier '" + m.name + "'");
                           }
                        },
                     },
-                    sample.modifiers[iModifier]);
+                    modifier);
       }
    }
 }

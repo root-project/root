@@ -53,11 +53,6 @@ DomainAxis const *DomainRanges::find(std::string const &name) const
 
 namespace {
 
-std::string const &nameOf(Modifier const &modifier)
-{
-   return std::visit([](auto const &m) -> std::string const & { return m.name; }, modifier);
-}
-
 char const *typeOf(Modifier const &modifier)
 {
    return std::visit(

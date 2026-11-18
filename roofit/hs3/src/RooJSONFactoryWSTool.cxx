@@ -1387,7 +1387,7 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
             continue;
          }
          for (auto const &axis : domain.axes) {
-            inDomains.insert(std::visit([](auto const &a) -> std::string const & { return a.name; }, axis));
+            inDomains.insert(HS3::nameOf(axis));
          }
       }
    }
@@ -1692,7 +1692,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (thisDomain == doc.domains.end())
          continue;
       for (auto const &axis : thisDomain->axes) {
-         auto *wsvar = workspace.var(std::visit([](auto const &a) -> std::string const & { return a.name; }, axis));
+         auto *wsvar = workspace.var(HS3::nameOf(axis));
          if (wsvar)
             domainPars.add(*wsvar);
       }
