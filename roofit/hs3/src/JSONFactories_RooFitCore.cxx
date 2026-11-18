@@ -21,7 +21,6 @@
 #include <RooBinWidthFunction.h>
 #include <RooCBShape.h>
 #include <RooChebychev.h>
-#include <RooConstVar.h>
 #include <RooCrystalBall.h>
 #include <RooDataHist.h>
 #include <RooDecay.h>
@@ -156,6 +155,11 @@ std::set<std::string> extractArguments(std::string expr)
    return arguments;
 }
 
+bool isIdentifierChar(char c)
+{
+   return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
+}
+
 void replaceIdentifier(TString &expr, std::string_view identifier, std::string_view replacement)
 {
    std::string in(expr.Data());
@@ -164,11 +168,9 @@ void replaceIdentifier(TString &expr, std::string_view identifier, std::string_v
 
    for (std::size_t pos = 0; pos < in.size();) {
       const bool matches = in.compare(pos, identifier.size(), identifier) == 0;
-      const bool beforeIdentifier =
-         pos > 0 && (std::isalnum(static_cast<unsigned char>(in[pos - 1])) || in[pos - 1] == '_');
+      const bool beforeIdentifier = pos > 0 && isIdentifierChar(in[pos - 1]);
       const std::size_t end = pos + identifier.size();
-      const bool afterIdentifier =
-         end < in.size() && (std::isalnum(static_cast<unsigned char>(in[end])) || in[end] == '_');
+      const bool afterIdentifier = end < in.size() && isIdentifierChar(in[end]);
       if (matches && !beforeIdentifier && !afterIdentifier) {
          out.append(replacement);
          pos = end;
@@ -179,11 +181,6 @@ void replaceIdentifier(TString &expr, std::string_view identifier, std::string_v
    }
 
    expr = out.c_str();
-}
-
-bool isIdentifierChar(char c)
-{
-   return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
 }
 
 std::string trimmed(std::string const &str)
@@ -274,9 +271,7 @@ void translateImportedExpression(TString &expr)
 {
    replaceIdentifier(expr, "PI", "TMath::Pi()");
    replaceIdentifier(expr, "EULER", "TMath::E()");
-   if (std::string(expr.Data()).find("ifelse") != std::string::npos) {
-      expr = ifElseToTernary(expr.Data()).c_str();
-   }
+   expr = ifElseToTernary(expr.Data()).c_str();
 }
 
 // Give the formula the binnings of its "axes", which are read like the axes of binned data.
@@ -482,22 +477,12 @@ bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
-// One field of a component of an array distribution: a name or a number.
-using ArrayFieldValue = std::variant<std::string, double>;
-
+// A component of an array distribution, with the names or numbers of its fields.
 struct ArrayComponent {
    std::string type;
    std::string x;
-   std::vector<std::pair<std::string, ArrayFieldValue>> fields;
+   std::vector<std::pair<std::string, HS3::NameOrNumber>> fields;
 };
-
-ArrayFieldValue nameOrNumber(RooAbsReal const &arg)
-{
-   if (isLiteralConstVar(arg)) {
-      return static_cast<RooConstVar const &>(arg).getVal();
-   }
-   return std::string{arg.GetName()};
-}
 
 // The type, observable and fields of `pdf` as a component of an array distribution, with the fields of the standalone
 // exporters, or std::nullopt if `pdf` cannot be a component. A Gaussian whose mean is the recorded `observable` is
@@ -509,7 +494,7 @@ std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf, std::string
    if (auto const *poisson = dynamic_cast<RooPoisson const *>(&pdf)) {
       out.type = poisson->getNoRounding() ? "poisson_continuous_dist" : "poisson_dist";
       x = &poisson->getX();
-      out.fields = {{"mean", nameOrNumber(poisson->getMean())}};
+      out.fields = {{"mean", HS3::toNameOrNumber(poisson->getMean())}};
    } else if (auto const *gauss = dynamic_cast<RooGaussian const *>(&pdf)) {
       out.type = "gaussian_dist";
       x = &gauss->getX();
@@ -519,14 +504,15 @@ std::optional<ArrayComponent> arrayComponentOf(RooAbsPdf const &pdf, std::string
       if (observable && *observable == mean->GetName() && !isLiteralConstVar(*mean)) {
          std::swap(x, mean);
       }
-      out.fields = {{"mean", nameOrNumber(*mean)}, {"sigma", nameOrNumber(gauss->getSigma())}};
+      out.fields = {{"mean", HS3::toNameOrNumber(*mean)}, {"sigma", HS3::toNameOrNumber(gauss->getSigma())}};
    } else if (auto const *lognormal = dynamic_cast<RooLognormal const *>(&pdf)) {
       if (!lognormal->useStandardParametrization()) {
          return std::nullopt;
       }
       out.type = "lognormal_dist";
       x = &lognormal->getX();
-      out.fields = {{"mu", nameOrNumber(lognormal->getMedian())}, {"sigma", nameOrNumber(lognormal->getShapeK())}};
+      out.fields = {{"mu", HS3::toNameOrNumber(lognormal->getMedian())},
+                    {"sigma", HS3::toNameOrNumber(lognormal->getShapeK())}};
    } else {
       return std::nullopt;
    }
@@ -1519,11 +1505,7 @@ void exportFormulaArg(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &ele
          continue;
       }
 
-      auto &axes = elem["axes"];
-      if (!axes.is_seq()) {
-         axes.set_seq();
-      }
-      HS3::writeAxis(axes.append_child(), HS3::toBinnedAxis(observable->GetName(), *binning));
+      HS3::writeAxis(elem["axes"].set_seq().append_child(), HS3::toBinnedAxis(observable->GetName(), *binning));
    }
 }
 
@@ -2013,7 +1995,7 @@ void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsP
    elem["type"] << "array_dist";
    elem["component_type"] << comps.front().type;
 
-   auto write = [](JSONNode &node, ArrayFieldValue const &value) {
+   auto write = [](JSONNode &node, HS3::NameOrNumber const &value) {
       std::visit([&node](auto const &v) { node << v; }, value);
    };
 
@@ -2025,14 +2007,7 @@ void writeArrayDist(JSONNode &elem, std::string const &name, std::vector<RooAbsP
          if (std::all_of(comps.begin(), comps.end(),
                          [&](ArrayComponent const &comp) { return comp.fields[i].second == field.second; })) {
             defaultKeys.insert(field.first);
-         }
-      }
-   }
-   if (!defaultKeys.empty()) {
-      JSONNode &defaults = elem["default_parameters"].set_map();
-      for (auto const &field : comps.front().fields) {
-         if (defaultKeys.find(field.first) != defaultKeys.end()) {
-            write(defaults[field.first], field.second);
+            write(elem["default_parameters"].set_map()[field.first], field.second);
          }
       }
    }
