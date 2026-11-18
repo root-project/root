@@ -462,75 +462,46 @@ void importAttributes(RooAbsArg *arg, HS3::Attributes const &attributes)
    }
 }
 
-void addIfPresent(RooArgSet &out, RooArgSet const *args)
+// The step widths of the minimization are the errors of the parameters of the ModelConfigs, and of the parameters of
+// the top-level pdfs given the data sets. The observables are no parameters.
+void exportParameterStepWidths(RooWorkspace const &workspace, std::vector<RooAbsPdf *> const &pdfs,
+                               std::vector<RooAbsData *> const &data, std::vector<HS3::StepWidth> &out)
 {
-   if (args) {
-      out.add(*args, true);
-   }
-}
-
-void collectParameterStepWidthCandidatesFromModelConfigs(RooWorkspace const &workspace, RooArgSet &candidates,
-                                                         RooArgSet &excluded)
-{
-   for (TObject *obj : workspace.allGenericObjects()) {
-      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
-      if (!mc) {
-         continue;
+   RooArgSet candidates;
+   RooArgSet excluded;
+   auto addIfPresent = [](RooArgSet &set, RooArgSet const *args) {
+      if (args) {
+         set.add(*args, true);
       }
-
-      addIfPresent(candidates, mc->GetParametersOfInterest());
-      addIfPresent(candidates, mc->GetNuisanceParameters());
-
-      addIfPresent(excluded, mc->GetObservables());
-      addIfPresent(excluded, mc->GetGlobalObservables());
-      addIfPresent(excluded, mc->GetConditionalObservables());
+   };
+   for (TObject *obj : workspace.allGenericObjects()) {
+      if (auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj)) {
+         addIfPresent(candidates, mc->GetParametersOfInterest());
+         addIfPresent(candidates, mc->GetNuisanceParameters());
+         addIfPresent(excluded, mc->GetObservables());
+         addIfPresent(excluded, mc->GetGlobalObservables());
+         addIfPresent(excluded, mc->GetConditionalObservables());
+      }
    }
-}
-
-void collectParameterStepWidthCandidatesFromPdfs(std::vector<RooAbsPdf *> const &pdfs,
-                                                 std::vector<RooAbsData *> const &data, RooArgSet &candidates,
-                                                 RooArgSet &excluded)
-{
    for (RooAbsPdf const *pdf : pdfs) {
       RooArgSet observables;
       for (RooAbsData const *dataset : data) {
          std::unique_ptr<RooArgSet> pdfObs{pdf->getObservables(*dataset->get())};
          observables.add(*pdfObs, true);
       }
-
-      if (observables.empty()) {
-         continue;
+      if (!observables.empty()) {
+         RooArgSet params;
+         pdf->getParameters(&observables, params);
+         candidates.add(params, true);
+         excluded.add(observables, true);
       }
-
-      RooArgSet params;
-      pdf->getParameters(&observables, params);
-      candidates.add(params, true);
-      excluded.add(observables, true);
    }
-}
-
-void exportParameterStepWidths(RooWorkspace const &workspace, std::vector<RooAbsPdf *> const &pdfs,
-                               std::vector<RooAbsData *> const &data, std::vector<HS3::StepWidth> &out)
-{
-   RooArgSet candidates;
-   RooArgSet excluded;
-
-   collectParameterStepWidthCandidatesFromModelConfigs(workspace, candidates, excluded);
-   collectParameterStepWidthCandidatesFromPdfs(pdfs, data, candidates, excluded);
-
    candidates.sort();
-
    for (RooAbsArg *arg : candidates) {
-      if (excluded.find(*arg)) {
-         continue;
-      }
-
       auto *var = dynamic_cast<RooRealVar *>(arg);
-      if (!var || !var->hasError()) {
-         continue;
+      if (var && var->hasError() && !excluded.find(*arg)) {
+         out.push_back({var->GetName(), var->getError()});
       }
-
-      out.push_back({var->GetName(), var->getError()});
    }
 }
 
