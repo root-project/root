@@ -158,6 +158,8 @@ public:
 /// A name (type, identifier, ...) in the TFile binary format, serialized as by TBufferFile::WriteTString():
 /// strings with up to 254 characters are prefixed by a one byte length. Longer strings are prefixed by the byte 255
 /// followed by the length as a 32-bit big-endian integer.
+/// In contrast to other "RTF..." classes, this class itself does not correspond to the on-disk byte layout but
+/// its string member fSerialized does.
 class RTFString {
    std::string fSerialized;
 
@@ -172,7 +174,7 @@ public:
       } else {
          if (str.length() > static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()))
             throw ROOT::RException(R__FAIL("string too long for the TFile format"));
-         RUInt32BE length{static_cast<std::uint32_t>(str.length())};
+         RInt32BE length{static_cast<std::int32_t>(str.length())};
          fSerialized.push_back(static_cast<char>(kLongStringMarker));
          fSerialized.append(reinterpret_cast<const char *>(&length), sizeof(length));
       }
@@ -182,25 +184,6 @@ public:
    std::size_t GetSize() const { return fSerialized.size(); }
    const char *GetData() const { return fSerialized.data(); }
 };
-
-/// Reads the TFile string at the given offset. Returns the string and its size on disk including the length prefix.
-std::pair<std::string, std::uint64_t> ReadTFString(ROOT::Internal::RMiniFileReader &reader, std::uint64_t offset)
-{
-   unsigned char shortLength = 0;
-   reader.ReadBuffer(&shortLength, 1, offset);
-   std::uint64_t prefixSize = 1;
-   std::uint64_t length = shortLength;
-   if (shortLength == RTFString::kLongStringMarker) {
-      RUInt32BE longLength;
-      reader.ReadBuffer(&longLength, sizeof(longLength), offset + prefixSize);
-      prefixSize += sizeof(longLength);
-      length = longLength;
-   }
-   std::string str(length, '\0');
-   if (length > 0)
-      reader.ReadBuffer(str.data(), length, offset + prefixSize);
-   return {std::move(str), prefixSize + length};
-}
 
 #pragma pack(push, 1)
 /// The timestamp format used in TFile; the default constructor initializes with the current time
@@ -693,6 +676,30 @@ static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
    return nChunks;
 }
 
+/// Reads the TFile string at the given offset. Returns the number of bytes read. Writes the string content into str,
+/// if it is not null.
+static std::uint64_t ReadTFString(std::uint64_t offset, ROOT::Internal::RMiniFileReader &reader, std::string *str)
+{
+   std::size_t headerLength = 1;
+   std::size_t strLength = 0;
+   unsigned char shortLength = 0;
+   reader.ReadBuffer(&shortLength, 1, offset);
+   if (shortLength == RTFString::kLongStringMarker) {
+      RUInt32BE longLength;
+      reader.ReadBuffer(&longLength, sizeof(longLength), offset + headerLength);
+      strLength = longLength;
+      headerLength += sizeof(longLength);
+   } else {
+      strLength = shortLength;
+   }
+   if (str) {
+      str->resize(strLength);
+      if (strLength > 0)
+         reader.ReadBuffer(str->data(), strLength, offset + headerLength);
+   }
+   return headerLength + strLength;
+}
+
 ROOT::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::RRawFile *rawFile) : fRawFile(rawFile) {}
 
 ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
@@ -726,13 +733,15 @@ std::uint64_t ROOT::Internal::RMiniFileReader::SearchInDirectory(std::uint64_t &
       auto offsetNextKey = offset + key.fKeyLen;
 
       offset += key.GetHeaderSize();
-      const auto [className, classNameSize] = ReadTFString(*this, offset);
-      if (className != typeName) {
+      std::string foundClassName;
+      offset += ReadTFString(offset, *this, &foundClassName);
+      if (foundClassName != typeName) {
          offset = offsetNextKey;
          continue;
       }
-      offset += classNameSize;
-      if (ReadTFString(*this, offset).first == keyName) {
+      std::string foundKeyName;
+      ReadTFString(offset, *this, &foundKeyName);
+      if (foundKeyName == keyName) {
          return key.GetSeekKey();
       }
       offset = offsetNextKey;
@@ -798,8 +807,8 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProper(st
    // Skip over the entire key length, including the class name, object name, and title stored in it.
    std::uint64_t offset = fileHeader.fBEGIN + key.fKeyLen;
    // Skip over the name and title of the TNamed preceding the TFile (root TDirectory) entry.
-   offset += ReadTFString(*this, offset).second;
-   offset += ReadTFString(*this, offset).second;
+   offset += ReadTFString(offset, *this, nullptr);
+   offset += ReadTFString(offset, *this, nullptr);
 
    // split ntupleName by '/' character to open datasets in subdirectories.
    std::string ntuplePathTail(ntuplePath);
@@ -889,12 +898,12 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleBare(std:
    RBareFileHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
    auto offset = sizeof(fileHeader);
-   const auto [foundName, foundNameSize] = ReadTFString(*this, offset);
+   std::string foundName;
+   offset += ReadTFString(offset, *this, &foundName);
    if (foundName != ntupleName) {
       return R__FAIL("expected RNTuple named '" + std::string(ntupleName) + "' but instead found '" + foundName +
                      "' in file '" + fRawFile->GetUrl() + "'");
    }
-   offset += foundNameSize;
 
    RTFNTuple ntuple;
    ReadBuffer(&ntuple, sizeof(ntuple), offset);
