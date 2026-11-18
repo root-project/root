@@ -1,12 +1,12 @@
 #include "ROOT/TestSupport.hxx"
 
 #include "TFile.h"
-#include "TSystem.h"
 #include "TTree.h"
 #include "TTreeCacheUnzip.h"
 
 #include "gtest/gtest.h"
 
+#include <memory>
 #include <vector>
 
 namespace {
@@ -36,8 +36,11 @@ protected:
    // The size of a cache holding the baskets of a single cluster.
    static constexpr int kCacheSize = 20000;
 
+   static std::unique_ptr<ROOT::TestSupport::FileRaii> gFileGuard;
+
    static void SetUpTestSuite()
    {
+      gFileGuard = std::make_unique<ROOT::TestSupport::FileRaii>(kFileName);
       TFile f(kFileName, "RECREATE");
       TTree t("t", "t");
       int a;
@@ -53,7 +56,7 @@ protected:
       t.Write();
    }
 
-   static void TearDownTestSuite() { gSystem->Unlink(kFileName); }
+   static void TearDownTestSuite() { gFileGuard.reset(); }
 
    /// Read all entries of `t`, checking their content, and return the number of entries that could not be read.
    static int ReadAll(TTree &t)
@@ -79,6 +82,8 @@ protected:
       return nErrors;
    }
 };
+
+std::unique_ptr<ROOT::TestSupport::FileRaii> TTreeCacheReadError::gFileGuard;
 
 /// Use a TTreeCacheUnzip for the tree while in scope.
 class UnzipCacheRAII {
