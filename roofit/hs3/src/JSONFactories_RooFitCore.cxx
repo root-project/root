@@ -1377,67 +1377,55 @@ bool importCrystalBallDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p)
 // A RooCrystalBall with one tail is the single-sided "crystalball_dist" (read back as RooCBShape, which follows the
 // same convention for the sign of alpha). With two tails, it is a "crystalball_doublesided_dist", whose tails are
 // always written as "alpha_L"/"n_L"/"alpha_R"/"n_R": there is no shorthand for symmetric tails.
-bool exportCrystalBall(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportCrystalBall(RooJSONFactoryWSTool *, RooCrystalBall const &pdf, JSONNode &elem)
 {
-   auto const *pdf = static_cast<const RooCrystalBall *>(func);
-   writeReference(elem["m"], pdf->x());
-   writeReference(elem["m0"], pdf->x0());
-   if (!pdf->alphaR() || !pdf->nR()) {
+   writeReference(elem["m"], pdf.x());
+   writeReference(elem["m0"], pdf.x0());
+   if (!pdf.alphaR() || !pdf.nR()) {
       elem["type"] << "crystalball_dist";
-      writeReference(elem["sigma"], pdf->sigmaL());
-      writeReference(elem["alpha"], pdf->alphaL());
-      writeReference(elem["n"], pdf->nL());
-      return true;
+      writeReference(elem["sigma"], pdf.sigmaL());
+      writeReference(elem["alpha"], pdf.alphaL());
+      writeReference(elem["n"], pdf.nL());
+      return;
    }
-   elem["type"] << key;
-   if (&pdf->sigmaL() == &pdf->sigmaR()) {
-      writeReference(elem["sigma"], pdf->sigmaL());
+   if (&pdf.sigmaL() == &pdf.sigmaR()) {
+      writeReference(elem["sigma"], pdf.sigmaL());
    } else {
-      writeReference(elem["sigma_L"], pdf->sigmaL());
-      writeReference(elem["sigma_R"], pdf->sigmaR());
+      writeReference(elem["sigma_L"], pdf.sigmaL());
+      writeReference(elem["sigma_R"], pdf.sigmaR());
    }
-   writeReference(elem["alpha_L"], pdf->alphaL());
-   writeReference(elem["n_L"], pdf->nL());
-   writeReference(elem["alpha_R"], *pdf->alphaR());
-   writeReference(elem["n_R"], *pdf->nR());
-   return true;
+   writeReference(elem["alpha_L"], pdf.alphaL());
+   writeReference(elem["n_L"], pdf.nL());
+   writeReference(elem["alpha_R"], *pdf.alphaR());
+   writeReference(elem["n_R"], *pdf.nR());
 }
 
 template <class RooArg_t>
-bool exportAddPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportAddPdf(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &elem)
 {
-   const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["summands"], pdf->pdfList());
-   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
-   elem["extended"] << (pdf->extendMode() != RooArg_t::CanNotBeExtended);
-   return true;
+   RooJSONFactoryWSTool::fillSeq(elem["summands"], pdf.pdfList());
+   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf.coefList());
+   elem["extended"] << (pdf.extendMode() != RooArg_t::CanNotBeExtended);
 }
 
 template <class RooArg_t>
-bool exportRealSum(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportRealSum(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &elem)
 {
-   auto const *pdf = static_cast<const RooArg_t *>(func);
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
-   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
+   RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf.funcList());
+   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf.coefList());
    if constexpr (std::is_same_v<RooArg_t, RooRealSumPdf>) {
-      elem["extended"] << (pdf->extendMode() != RooAbsPdf::CanNotBeExtended);
+      elem["extended"] << (pdf.extendMode() != RooAbsPdf::CanNotBeExtended);
    }
-   return true;
 }
 
 template <class RooArg_t>
-bool exportHist(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportHist(RooJSONFactoryWSTool *tool, RooArg_t const &hf, JSONNode &elem)
 {
-   const RooArg_t *hf = static_cast<const RooArg_t *>(func);
-   elem["type"] << key;
-   RooDataHist const &dh = hf->dataHist();
+   RooDataHist const &dh = hf.dataHist();
    // The axes are named after the observables of the function, which are not necessarily the variables of the
    // histogram.
-   auto vars = histogramVariablesNamedAfterObservables(dh, hf->getHistObsList(), hf->variables());
+   auto vars = histogramVariablesNamedAfterObservables(dh, hf.getHistObsList(), hf.variables());
    tool->exportHisto(*vars, dh.numEntries(), dh.weightArray(), elem["data"].set_map());
-   return true;
 }
 
 template <class RooArg_t>
@@ -1453,22 +1441,20 @@ bool importHist(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
-bool exportBinSamplingPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportBinSamplingPdf(RooJSONFactoryWSTool *, RooBinSamplingPdf const &pdf, JSONNode &elem)
 {
-   const RooBinSamplingPdf *pdf = static_cast<const RooBinSamplingPdf *>(func);
-   elem["type"] << key;
-   elem["pdf"] << pdf->pdf().GetName();
-   elem["observable"] << pdf->observable().GetName();
-   elem["epsilon"] << pdf->epsilon();
-   return true;
+   elem["pdf"] << pdf.pdf().GetName();
+   elem["observable"] << pdf.observable().GetName();
+   elem["epsilon"] << pdf.epsilon();
 }
 
-bool exportBinWidthFunction(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &)
+void exportBinWidthFunction(RooJSONFactoryWSTool *, RooBinWidthFunction const &pdf, JSONNode &elem)
 {
-   const RooBinWidthFunction *pdf = static_cast<const RooBinWidthFunction *>(func);
-   elem["type"] << (pdf->divideByBinWidth() ? "inverse_binvolume" : "binvolume");
-   elem["histogram"] << pdf->histFunc().GetName();
-   return true;
+   // It is registered for "binvolume".
+   if (pdf.divideByBinWidth()) {
+      elem["type"] << "inverse_binvolume";
+   }
+   elem["histogram"] << pdf.histFunc().GetName();
 }
 
 void cleanExpression(TString &expr)
@@ -1621,11 +1607,9 @@ bool ternariesToIfElse(std::string const &in, std::string &out)
 }
 
 template <class RooArg_t>
-bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportFormulaArg(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &elem)
 {
-   const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
-   elem["type"] << key;
-   TString expression(pdf->expression());
+   TString expression(pdf.expression());
    cleanExpression(expression);
    // If the tokens follow the "x[#]" convention, the square braces enclosing each number
    // ensures that there is a unique mapping between the token and parameter name
@@ -1633,8 +1617,8 @@ bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
    // So there may be tokens with numbers whose lower place value forms a subset string of ones with a higher place
    // value, e.g. "@1" is a subset of "@10". So the names of these parameters must be applied descending from the
    // highest place value in order to ensure each parameter name is uniquely applied to its token.
-   for (size_t idx = pdf->nParameters(); idx--;) {
-      const RooAbsArg *par = pdf->getParameter(idx);
+   for (size_t idx = pdf.nParameters(); idx--;) {
+      const RooAbsArg *par = pdf.getParameter(idx);
       expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
       expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
    }
@@ -1645,17 +1629,17 @@ bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
       } else {
          RooJSONFactoryWSTool::warning(std::string("RooFitHS3: could not translate the ternary operators in the "
                                                    "expression of '") +
-                                       func->GetName() + "' to ifelse(), exporting the expression unchanged.");
+                                       pdf.GetName() + "' to ifelse(), exporting the expression unchanged.");
       }
    }
    elem["expression"] << expression.Data();
 
-   for (const RooAbsArg *dependent : pdf->dependents()) {
+   for (const RooAbsArg *dependent : pdf.dependents()) {
       auto const *observable = dynamic_cast<const RooAbsRealLValue *>(dependent);
       if (!observable) {
          continue;
       }
-      const RooAbsBinning *binning = pdf->getBinning(*observable);
+      const RooAbsBinning *binning = pdf.getBinning(*observable);
       if (!binning) {
          continue;
       }
@@ -1666,244 +1650,194 @@ bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
       }
       RooFit::HS3::writeAxis(axes.append_child(), RooFit::HS3::toBinnedAxis(observable->GetName(), *binning));
    }
-   return true;
 }
 
 // Write the "x" reference and the coefficient list for polynomial-like
 // pdfs/funcs, including the implicit defaults below "lowestOrder" so that the
 // output is self-documenting.
 template <class RooArg_t>
-bool exportPolynomial(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportPolynomial(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &elem)
 {
-   auto const *pdf = static_cast<const RooArg_t *>(func);
-   elem["type"] << key;
-   elem["x"] << pdf->x().GetName();
+   elem["x"] << pdf.x().GetName();
    auto &coefs = elem["coefficients"].set_seq();
-   for (int i = 0; i < pdf->lowestOrder(); ++i) {
+   for (int i = 0; i < pdf.lowestOrder(); ++i) {
       coefs.append_child() << (i == 0 ? 1.0 : 0.0);
    }
-   for (const auto &coef : pdf->coefList()) {
+   for (const auto &coef : pdf.coefList()) {
       coefs.append_child() << coef->GetName();
    }
-   return true;
 }
 
-bool exportPoisson(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportPoisson(RooJSONFactoryWSTool *, RooPoisson const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooPoisson *>(func);
-   elem["type"] << (pdf->getNoRounding() ? "poisson_continuous_dist" : key);
-   elem["x"] << pdf->getX().GetName();
-   elem["mean"] << pdf->getMean().GetName();
-   return true;
+   // It is registered for "poisson_dist", the discrete Poisson distribution.
+   if (pdf.getNoRounding()) {
+      elem["type"] << "poisson_continuous_dist";
+   }
+   elem["x"] << pdf.getX().GetName();
+   elem["mean"] << pdf.getMean().GetName();
 }
 
 // The RooDecay servers are the internal resModel-times-basis convolutions,
 // which are implementation details that should not leak into the JSON. We
 // only export the actual dependents (t, tau and the original resolution
 // model) explicitly.
-bool exportDecay(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportDecay(RooJSONFactoryWSTool *tool, RooDecay const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooDecay *>(func);
-   elem["type"] << key;
-   elem["t"] << pdf->getT().GetName();
-   elem["tau"] << pdf->getTau().GetName();
-   elem["resolutionModel"] << pdf->getModel().GetName();
-   elem["decayType"] << pdf->getDecayType();
+   elem["t"] << pdf.getT().GetName();
+   elem["tau"] << pdf.getTau().GetName();
+   elem["resolutionModel"] << pdf.getModel().GetName();
+   elem["decayType"] << pdf.getDecayType();
 
-   tool->queueExport(pdf->getT());
-   tool->queueExport(pdf->getTau());
-   tool->queueExport(pdf->getModel());
-
-   return true;
+   tool->queueExport(pdf.getT());
+   tool->queueExport(pdf.getTau());
+   tool->queueExport(pdf.getModel());
 }
 
-bool exportTruthModel(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportTruthModel(RooJSONFactoryWSTool *, RooTruthModel const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooTruthModel *>(func);
-   elem["type"] << key;
-   elem["x"] << pdf->convVar().GetName();
-
-   return true;
+   elem["x"] << pdf.convVar().GetName();
 }
 
-bool exportGaussModel(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportGaussModel(RooJSONFactoryWSTool *, RooGaussModel const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooGaussModel *>(func);
-   elem["type"] << key;
-   elem["x"] << pdf->convVar().GetName();
-   elem["mean"] << pdf->getMean().GetName();
-   elem["sigma"] << pdf->getSigma().GetName();
-   return true;
+   elem["x"] << pdf.convVar().GetName();
+   elem["mean"] << pdf.getMean().GetName();
+   elem["sigma"] << pdf.getSigma().GetName();
 }
 
 // A Gaussian constraint whose recorded observable (see RooJSONFactoryWSTool::setConstraintObservable()) is its
 // mean is written with x and mean swapped, so that the observable is x.
-bool exportGaussian(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportGaussian(RooJSONFactoryWSTool *tool, RooGaussian const &gauss, JSONNode &elem)
 {
-   auto const *gauss = static_cast<RooGaussian const *>(func);
-   std::string const *observable = tool->constraintObservable(gauss->GetName());
-   const bool swap = observable && *observable == gauss->getMean().GetName() && !isLiteralConstVar(gauss->getMean());
-   elem["type"] << key;
-   writeReference(elem["x"], swap ? gauss->getMean() : gauss->getX());
-   writeReference(elem["mean"], swap ? gauss->getX() : gauss->getMean());
-   writeReference(elem["sigma"], gauss->getSigma());
-   return true;
+   std::string const *observable = tool->constraintObservable(gauss.GetName());
+   const bool swap = observable && *observable == gauss.getMean().GetName() && !isLiteralConstVar(gauss.getMean());
+   writeReference(elem["x"], swap ? gauss.getMean() : gauss.getX());
+   writeReference(elem["mean"], swap ? gauss.getX() : gauss.getMean());
+   writeReference(elem["sigma"], gauss.getSigma());
 }
 
-bool exportLogNormal(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportLogNormal(RooJSONFactoryWSTool *tool, RooLognormal const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooLognormal *>(func);
+   elem["x"] << pdf.getX().GetName();
 
-   elem["type"] << key;
-   elem["x"] << pdf->getX().GetName();
+   auto &m0 = pdf.getMedian();
+   auto &k = pdf.getShapeK();
 
-   auto &m0 = pdf->getMedian();
-   auto &k = pdf->getShapeK();
-
-   if (pdf->useStandardParametrization()) {
+   if (pdf.useStandardParametrization()) {
       elem["mu"] << m0.GetName();
       elem["sigma"] << k.GetName();
    } else {
       elem["mu"] << tool->exportTransformed(&m0, "_lognormal_log", "log(%s)");
       elem["sigma"] << tool->exportTransformed(&k, "_lognormal_log", "log(%s)");
    }
-
-   return true;
 }
 
-bool exportExponential(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportExponential(RooJSONFactoryWSTool *tool, RooExponential const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooExponential *>(func);
-   elem["type"] << key;
-   elem["x"] << pdf->variable().GetName();
-   auto &c = pdf->coefficient();
-   if (pdf->negateCoefficient()) {
+   elem["x"] << pdf.variable().GetName();
+   auto &c = pdf.coefficient();
+   if (pdf.negateCoefficient()) {
       elem["c"] << c.GetName();
    } else {
       elem["c"] << tool->exportTransformed(&c, "_exponential_inverted", "-%s");
    }
-
-   return true;
 }
 
-bool exportMultiVarGaussian(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportMultiVarGaussian(RooJSONFactoryWSTool *, RooMultiVarGaussian const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooMultiVarGaussian *>(func);
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["x"], pdf->xVec());
-   RooJSONFactoryWSTool::fillSeq(elem["mean"], pdf->muVec());
-   elem["covariances"].fill_mat(pdf->covarianceMatrix());
-   return true;
+   RooJSONFactoryWSTool::fillSeq(elem["x"], pdf.xVec());
+   RooJSONFactoryWSTool::fillSeq(elem["mean"], pdf.muVec());
+   elem["covariances"].fill_mat(pdf.covarianceMatrix());
 }
 
-bool exportTFnBinding(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportTFnBinding(RooJSONFactoryWSTool *, RooTFnBinding const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooTFnBinding *>(func);
-   elem["type"] << key;
 
-   TString formula(pdf->function().GetExpFormula());
-   formula.ReplaceAll("x", pdf->observables()[0].GetName());
-   formula.ReplaceAll("y", pdf->observables()[1].GetName());
-   formula.ReplaceAll("z", pdf->observables()[2].GetName());
-   for (size_t i = 0; i < pdf->parameters().size(); ++i) {
+   TString formula(pdf.function().GetExpFormula());
+   formula.ReplaceAll("x", pdf.observables()[0].GetName());
+   formula.ReplaceAll("y", pdf.observables()[1].GetName());
+   formula.ReplaceAll("z", pdf.observables()[2].GetName());
+   for (size_t i = 0; i < pdf.parameters().size(); ++i) {
       TString pname(TString::Format("[%d]", (int)i));
-      formula.ReplaceAll(pname, pdf->parameters()[i].GetName());
+      formula.ReplaceAll(pname, pdf.parameters()[i].GetName());
    }
    elem["expression"] << formula.Data();
-   return true;
 }
 
-bool exportDerivative(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportDerivative(RooJSONFactoryWSTool *, RooDerivative const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooDerivative *>(func);
-   elem["type"] << key;
-   elem["x"] << pdf->getX().GetName();
-   elem["function"] << pdf->getFunc().GetName();
-   if (!pdf->getNset().empty()) {
-      RooJSONFactoryWSTool::fillSeq(elem["normalization"], pdf->getNset());
+   elem["x"] << pdf.getX().GetName();
+   elem["function"] << pdf.getFunc().GetName();
+   if (!pdf.getNset().empty()) {
+      RooJSONFactoryWSTool::fillSeq(elem["normalization"], pdf.getNset());
    }
-   elem["order"] << pdf->order();
-   elem["eps"] << pdf->eps();
-   return true;
+   elem["order"] << pdf.order();
+   elem["eps"] << pdf.eps();
 }
 
-bool exportRealIntegral(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportRealIntegral(RooJSONFactoryWSTool *, RooRealIntegral const &integral, JSONNode &elem)
 {
-   auto *integral = static_cast<const RooRealIntegral *>(func);
-   elem["type"] << key;
-   std::string integrand = integral->integrand().GetName();
+   std::string integrand = integral.integrand().GetName();
    elem["integrand"] << integrand;
-   if (integral->intRange()) {
-      elem["domain"] << integral->intRange();
+   if (integral.intRange()) {
+      elem["domain"] << integral.intRange();
    }
-   RooJSONFactoryWSTool::fillSeq(elem["variables"], integral->intVars());
-   if (RooArgSet const *funcNormSet = integral->funcNormSet()) {
+   RooJSONFactoryWSTool::fillSeq(elem["variables"], integral.intVars());
+   if (RooArgSet const *funcNormSet = integral.funcNormSet()) {
       RooJSONFactoryWSTool::fillSeq(elem["normalization"], *funcNormSet);
    }
-   return true;
 }
 
-bool exportFFTConvPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportFFTConvPdf(RooJSONFactoryWSTool *, RooFFTConvPdf const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooFFTConvPdf *>(func);
-   elem["type"] << key;
-   if (auto convFunc = pdf->getPdfConvVar()) {
+   if (auto convFunc = pdf.getPdfConvVar()) {
       elem["conv_func"] << convFunc->GetName();
    }
-   elem["conv_var"] << pdf->getConvVar().GetName();
-   elem["pdf1"] << pdf->getPdf1().GetName();
-   elem["pdf2"] << pdf->getPdf2().GetName();
-   elem["ipOrder"] << pdf->getInterpolationOrder();
-   return true;
+   elem["conv_var"] << pdf.getConvVar().GetName();
+   elem["pdf1"] << pdf.getPdf1().GetName();
+   elem["pdf2"] << pdf.getPdf2().GetName();
+   elem["ipOrder"] << pdf.getInterpolationOrder();
 }
 
-bool exportExtendPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportExtendPdf(RooJSONFactoryWSTool *, RooExtendPdf const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooExtendPdf *>(func);
-   elem["type"] << key;
-   if (auto rangeName = pdf->getRangeName()) {
+   if (auto rangeName = pdf.getRangeName()) {
       elem["range"] << rangeName->GetName();
    }
-   elem["dist"] << pdf->pdf().GetName();
-   elem["rate"] << pdf->getN().GetName();
-   return true;
+   elem["dist"] << pdf.pdf().GetName();
+   elem["rate"] << pdf.getN().GetName();
 }
 
-bool exportParamHistFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportParamHistFunc(RooJSONFactoryWSTool *, ParamHistFunc const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const ParamHistFunc *>(func);
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
+   RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf.dataVars());
    // One parameter per bin, in the order of HS3 (last axis fastest), not in ParamHistFunc's internal TH1 order.
    auto &paramsNode = elem["parameters"].set_seq();
-   for (RooAbsReal *param : paramHistFuncParamsInBinOrder(*pdf)) {
+   for (RooAbsReal *param : paramHistFuncParamsInBinOrder(pdf)) {
       paramsNode.append_child() << param->GetName();
    }
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
-   for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
+   for (auto *var : static_range_cast<RooRealVar *>(pdf.dataVars())) {
       RooFit::HS3::writeAxis(observablesNode.append_child(), RooFit::HS3::toBinnedAxis(*var));
    }
-   return true;
 }
 
-bool exportSpline(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportSpline(RooJSONFactoryWSTool *, RooSpline const &rs, JSONNode &elem)
 {
-   auto const *rs = static_cast<RooSpline const *>(func);
-
-   elem["type"] << key;
 
    // Independent variable
-   elem["x"] << rs->x().GetName();
+   elem["x"] << rs.x().GetName();
 
    // Spline configuration
    // Canonical algo for RooSpline
-   elem["interpolation"] << (rs->order() == 5 ? "poly5" : "poly3");
-   elem["logx"] << rs->logx();
-   elem["logy"] << rs->logy();
+   elem["interpolation"] << (rs.order() == 5 ? "poly5" : "poly3");
+   elem["logx"] << rs.logx();
+   elem["logy"] << rs.logy();
 
    // Serialize knots as primitive arrays
-   TSpline const &sp = rs->spline();
+   TSpline const &sp = rs.spline();
    auto &x0 = elem["x0"].set_seq();
    auto &y0 = elem["y0"].set_seq();
 
@@ -1915,139 +1849,98 @@ bool exportSpline(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem,
       x0.append_child() << xk;
       y0.append_child() << yk;
    }
-
-   return true;
 }
 
-bool exportAddition(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportAddition(RooJSONFactoryWSTool *, RooAddition const &sum, JSONNode &elem)
 {
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["summands"], static_cast<const RooAddition *>(func)->list());
-   return true;
+   RooJSONFactoryWSTool::fillSeq(elem["summands"], sum.list());
 }
 
-bool exportArgus(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportArgus(RooJSONFactoryWSTool *, RooArgusBG const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooArgusBG *>(func);
-   elem["type"] << key;
-   writeReference(elem["mass"], pdf->getM());
-   writeReference(elem["resonance"], pdf->getM0());
-   writeReference(elem["slope"], pdf->getC());
-   writeReference(elem["power"], pdf->getP());
-   return true;
+   writeReference(elem["mass"], pdf.getM());
+   writeReference(elem["resonance"], pdf.getM0());
+   writeReference(elem["slope"], pdf.getC());
+   writeReference(elem["power"], pdf.getP());
 }
 
-bool exportBernstein(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportBernstein(RooJSONFactoryWSTool *, RooBernstein const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooBernstein *>(func);
-   elem["type"] << key;
-   writeReference(elem["x"], pdf->x());
-   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
-   return true;
+   writeReference(elem["x"], pdf.x());
+   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf.coefList());
 }
 
-bool exportBifurGauss(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportBifurGauss(RooJSONFactoryWSTool *, RooBifurGauss const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooBifurGauss *>(func);
-   elem["type"] << key;
-   writeReference(elem["x"], pdf->getX());
-   writeReference(elem["mean"], pdf->getMean());
-   writeReference(elem["sigmaL"], pdf->getSigmaL());
-   writeReference(elem["sigmaR"], pdf->getSigmaR());
-   return true;
+   writeReference(elem["x"], pdf.getX());
+   writeReference(elem["mean"], pdf.getMean());
+   writeReference(elem["sigmaL"], pdf.getSigmaL());
+   writeReference(elem["sigmaR"], pdf.getSigmaR());
 }
 
-bool exportCBShape(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportCBShape(RooJSONFactoryWSTool *, RooCBShape const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooCBShape *>(func);
-   elem["type"] << key;
-   writeReference(elem["m"], pdf->getM());
-   writeReference(elem["m0"], pdf->getM0());
-   writeReference(elem["sigma"], pdf->getSigma());
-   writeReference(elem["alpha"], pdf->getAlpha());
-   writeReference(elem["n"], pdf->getN());
-   return true;
+   writeReference(elem["m"], pdf.getM());
+   writeReference(elem["m0"], pdf.getM0());
+   writeReference(elem["sigma"], pdf.getSigma());
+   writeReference(elem["alpha"], pdf.getAlpha());
+   writeReference(elem["n"], pdf.getN());
 }
 
-bool exportChebychev(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportChebychev(RooJSONFactoryWSTool *, RooChebychev const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooChebychev *>(func);
-   elem["type"] << key;
-   writeReference(elem["x"], pdf->x());
-   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
-   return true;
+   writeReference(elem["x"], pdf.x());
+   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf.coefList());
 }
 
-bool exportEffProd(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportEffProd(RooJSONFactoryWSTool *, RooEffProd const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooEffProd *>(func);
-   elem["type"] << key;
-   writeReference(elem["pdf"], pdf->pdf());
-   writeReference(elem["eff"], pdf->eff());
-   return true;
+   writeReference(elem["pdf"], pdf.pdf());
+   writeReference(elem["eff"], pdf.eff());
 }
 
-bool exportGamma(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportGamma(RooJSONFactoryWSTool *, RooGamma const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooGamma *>(func);
-   elem["type"] << key;
-   writeReference(elem["x"], pdf->getX());
-   writeReference(elem["gamma"], pdf->getGamma());
-   writeReference(elem["beta"], pdf->getBeta());
-   writeReference(elem["mu"], pdf->getMu());
-   return true;
+   writeReference(elem["x"], pdf.getX());
+   writeReference(elem["gamma"], pdf.getGamma());
+   writeReference(elem["beta"], pdf.getBeta());
+   writeReference(elem["mu"], pdf.getMu());
 }
 
-bool exportLandau(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportLandau(RooJSONFactoryWSTool *, RooLandau const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooLandau *>(func);
-   elem["type"] << key;
-   writeReference(elem["x"], pdf->getX());
-   writeReference(elem["mean"], pdf->getMean());
-   writeReference(elem["sigma"], pdf->getSigma());
-   return true;
+   writeReference(elem["x"], pdf.getX());
+   writeReference(elem["mean"], pdf.getMean());
+   writeReference(elem["sigma"], pdf.getSigma());
 }
 
-bool exportPowerSum(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportPowerSum(RooJSONFactoryWSTool *, RooPowerSum const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooPowerSum *>(func);
-   elem["type"] << key;
-   writeReference(elem["x"], pdf->base());
-   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
-   RooJSONFactoryWSTool::fillSeq(elem["exponents"], pdf->expList());
-   return true;
+   writeReference(elem["x"], pdf.base());
+   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf.coefList());
+   RooJSONFactoryWSTool::fillSeq(elem["exponents"], pdf.expList());
 }
 
-bool exportProdPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportProdPdf(RooJSONFactoryWSTool *, RooProdPdf const &pdf, JSONNode &elem)
 {
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["factors"], static_cast<const RooProdPdf *>(func)->pdfList());
-   return true;
+   RooJSONFactoryWSTool::fillSeq(elem["factors"], pdf.pdfList());
 }
 
-bool exportProduct(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportProduct(RooJSONFactoryWSTool *, RooProduct const &prod, JSONNode &elem)
 {
-   auto *prod = static_cast<const RooProduct *>(func);
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["factors"], prod->realComponents());
-   RooJSONFactoryWSTool::fillSeq(elem["factors"], prod->categoricalComponents());
-   return true;
+   RooJSONFactoryWSTool::fillSeq(elem["factors"], prod.realComponents());
+   RooJSONFactoryWSTool::fillSeq(elem["factors"], prod.categoricalComponents());
 }
 
-bool exportProjectedPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportProjectedPdf(RooJSONFactoryWSTool *, RooProjectedPdf const &pdf, JSONNode &elem)
 {
-   auto *pdf = static_cast<const RooProjectedPdf *>(func);
-   elem["type"] << key;
-   writeReference(elem["input_pdf"], pdf->intPdf());
-   RooJSONFactoryWSTool::fillSeq(elem["observables"], pdf->intObs());
-   return true;
+   writeReference(elem["input_pdf"], pdf.intPdf());
+   RooJSONFactoryWSTool::fillSeq(elem["observables"], pdf.intObs());
 }
 
-bool exportUniform(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+void exportUniform(RooJSONFactoryWSTool *, RooUniform const &pdf, JSONNode &elem)
 {
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["x"], static_cast<const RooUniform *>(func)->observables());
-   return true;
+   RooJSONFactoryWSTool::fillSeq(elem["x"], pdf.observables());
 }
 
 bool importWrapperPdf(RooJSONFactoryWSTool *tool, const JSONNode &node)
@@ -2071,25 +1964,14 @@ bool importWrapperPdf(RooJSONFactoryWSTool *tool, const JSONNode &node)
    return true;
 }
 
-bool exportWrapperPdf(RooJSONFactoryWSTool *, const RooAbsArg *arg, JSONNode &node, std::string const &key)
+void exportWrapperPdf(RooJSONFactoryWSTool *, RooWrapperPdf const &pdf, JSONNode &elem)
 {
-   auto const *pdf = dynamic_cast<RooWrapperPdf const *>(arg);
-   if (!pdf)
-      return false;
-
-   node["type"] << key;
-
-   // Proxy name in RooWrapperPdf is "_func" / "func" depending on accessor/proxy export.
-   // Prefer a public accessor if one exists; otherwise inspect proxies as below.
-   auto const *funcProxy = dynamic_cast<RooRealProxy const *>(pdf->getProxy(0));
-   if (!funcProxy || !funcProxy->absArg())
-      return false;
-
-   node["function"] << funcProxy->absArg()->GetName();
-   if (pdf->selfNormalized())
-      node["self_normalized"] << true;
-
-   return true;
+   // RooWrapperPdf has no accessor for the wrapped function, which is its only proxy.
+   auto const &funcProxy = dynamic_cast<RooRealProxy const &>(*pdf.getProxy(0));
+   elem["function"] << funcProxy.absArg()->GetName();
+   if (pdf.selfNormalized()) {
+      elem["self_normalized"] << true;
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2097,29 +1979,36 @@ bool exportWrapperPdf(RooJSONFactoryWSTool *, const RooAbsArg *arg, JSONNode &no
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Adapters that wrap the plain import/export functions above into the
-// RooFit::JSONIO::Importer/Exporter interface. The exporter also owns the HS3
-// type key, which is passed at registration time.
+// RooFit::JSONIO::Importer/Exporter interface.
 template <auto Func>
 class FuncImporter : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override { return Func(tool, p); }
 };
 
-template <auto Func>
+template <class RooArg_t>
+using ExportFunc = void (*)(RooJSONFactoryWSTool *, RooArg_t const &, JSONNode &);
+
+// The exporter of the class RooArg_t writes the HS3 type key that the export function is registered with. A function
+// overwrites it if the type depends on the object.
+template <class RooArg_t>
 class FuncExporter : public RooFit::JSONIO::Exporter {
 public:
-   FuncExporter(std::string key, bool autoExportDependants)
-      : _key{std::move(key)}, _autoExportDependants{autoExportDependants}
+   FuncExporter(ExportFunc<RooArg_t> func, std::string key, bool autoExportDependants)
+      : _func{func}, _key{std::move(key)}, _autoExportDependants{autoExportDependants}
    {
    }
    std::string const &key() const override { return _key; }
    bool autoExportDependants() const override { return _autoExportDependants; }
-   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *arg, JSONNode &elem) const override
    {
-      return Func(tool, func, elem, _key);
+      elem["type"] << _key;
+      _func(tool, static_cast<RooArg_t const &>(*arg), elem);
+      return true;
    }
 
 private:
+   const ExportFunc<RooArg_t> _func;
    const std::string _key;
    const bool _autoExportDependants;
 };
@@ -2130,11 +2019,12 @@ void registerImporter(const std::string &key, bool topPriority = true)
    RooFit::JSONIO::registerImporter(key, std::make_unique<FuncImporter<Func>>(), topPriority);
 }
 
-template <auto Func>
-void registerExporter(TClass const *cl, std::string key, bool topPriority = true, bool autoExportDependants = true)
+// The exporters are appended to the ones of their class, which are tried in the order of their registration.
+template <class RooArg_t>
+void registerExporter(std::string key, ExportFunc<RooArg_t> func, bool autoExportDependants = true)
 {
-   RooFit::JSONIO::registerExporter(cl, std::make_unique<FuncExporter<Func>>(std::move(key), autoExportDependants),
-                                    topPriority);
+   RooFit::JSONIO::registerExporter(
+      RooArg_t::Class(), std::make_unique<FuncExporter<RooArg_t>>(func, std::move(key), autoExportDependants), false);
 }
 
 STATIC_EXECUTE([]() {
@@ -2204,50 +2094,50 @@ STATIC_EXECUTE([]() {
    registerImporter<importParamHistFunc>("step", false);
    registerImporter<importSpline>("spline", false);
 
-   registerExporter<exportWrapperPdf>(RooWrapperPdf::Class(), "density_function_dist");
-   registerExporter<exportAddPdf<RooAddPdf>>(RooAddPdf::Class(), "mixture_dist", false);
-   registerExporter<exportAddPdf<RooAddModel>>(RooAddModel::Class(), "mixture_model", false);
-   registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling_dist", false);
-   registerExporter<exportCrystalBall>(RooCrystalBall::Class(), "crystalball_doublesided_dist", false);
-   registerExporter<exportBinWidthFunction>(RooBinWidthFunction::Class(), "binvolume", false);
-   registerExporter<exportPolynomial<RooLegacyExpPoly>>(RooLegacyExpPoly::Class(), "legacy_exp_poly_dist", false);
-   registerExporter<exportExponential>(RooExponential::Class(), "exponential_dist", false);
-   registerExporter<exportFormulaArg<RooFormulaVar>>(RooFormulaVar::Class(), "generic", false);
-   registerExporter<exportFormulaArg<RooGenericPdf>>(RooGenericPdf::Class(), "generic_dist", false);
-   registerExporter<exportHist<RooHistFunc>>(RooHistFunc::Class(), "step", false);
-   registerExporter<exportHist<RooHistPdf>>(RooHistPdf::Class(), "histogram_dist", false);
-   registerExporter<exportLogNormal>(RooLognormal::Class(), "lognormal_dist", false);
-   registerExporter<exportGaussian>(RooGaussian::Class(), "gaussian_dist", true);
-   registerExporter<exportMultiVarGaussian>(RooMultiVarGaussian::Class(), "multivariate_normal_dist", false);
-   registerExporter<exportPoisson>(RooPoisson::Class(), "poisson_dist", false);
-   registerExporter<exportDecay>(RooDecay::Class(), "decay_dist", false, /*autoExportDependants=*/false);
-   registerExporter<exportTruthModel>(RooTruthModel::Class(), "truth_model_function", false);
-   registerExporter<exportGaussModel>(RooGaussModel::Class(), "gauss_model_function", false);
-   registerExporter<exportPolynomial<RooPolynomial>>(RooPolynomial::Class(), "polynomial_dist", false);
-   registerExporter<exportPolynomial<RooPolyVar>>(RooPolyVar::Class(), "polynomial", false);
-   registerExporter<exportRealSum<RooRealSumFunc>>(RooRealSumFunc::Class(), "weighted_sum", false);
-   registerExporter<exportRealSum<RooRealSumPdf>>(RooRealSumPdf::Class(), "weighted_sum_dist", false);
-   registerExporter<exportTFnBinding>(RooTFnBinding::Class(), "generic", false);
-   registerExporter<exportRealIntegral>(RooRealIntegral::Class(), "integral", false);
-   registerExporter<exportDerivative>(RooDerivative::Class(), "derivative", false);
-   registerExporter<exportFFTConvPdf>(RooFFTConvPdf::Class(), "fft_convolution_dist", false);
-   registerExporter<exportExtendPdf>(RooExtendPdf::Class(), "rate_extended_dist", false);
-   registerExporter<exportParamHistFunc>(ParamHistFunc::Class(), "step", false);
-   registerExporter<exportSpline>(RooSpline::Class(), "spline", false);
-   registerExporter<exportAddition>(RooAddition::Class(), "sum", false);
-   registerExporter<exportArgus>(RooArgusBG::Class(), "argus_dist", false);
-   registerExporter<exportBernstein>(RooBernstein::Class(), "bernstein_poly_dist", false);
-   registerExporter<exportBifurGauss>(RooBifurGauss::Class(), "bifurkated_gaussian_dist", false);
-   registerExporter<exportCBShape>(RooCBShape::Class(), "crystalball_dist", false);
-   registerExporter<exportChebychev>(RooChebychev::Class(), "chebychev_dist", false);
-   registerExporter<exportEffProd>(RooEffProd::Class(), "efficiency_product_pdf_dist", false);
-   registerExporter<exportGamma>(RooGamma::Class(), "gamma_dist", false);
-   registerExporter<exportLandau>(RooLandau::Class(), "landau_dist", false);
-   registerExporter<exportPowerSum>(RooPowerSum::Class(), "power_sum_dist", false);
-   registerExporter<exportProdPdf>(RooProdPdf::Class(), "product_dist", false);
-   registerExporter<exportProduct>(RooProduct::Class(), "product", false);
-   registerExporter<exportProjectedPdf>(RooProjectedPdf::Class(), "projected_dist", false);
-   registerExporter<exportUniform>(RooUniform::Class(), "uniform_dist", false);
+   registerExporter("density_function_dist", exportWrapperPdf);
+   registerExporter("mixture_dist", exportAddPdf<RooAddPdf>);
+   registerExporter("mixture_model", exportAddPdf<RooAddModel>);
+   registerExporter("binsampling_dist", exportBinSamplingPdf);
+   registerExporter("crystalball_doublesided_dist", exportCrystalBall);
+   registerExporter("binvolume", exportBinWidthFunction);
+   registerExporter("legacy_exp_poly_dist", exportPolynomial<RooLegacyExpPoly>);
+   registerExporter("exponential_dist", exportExponential);
+   registerExporter("generic", exportFormulaArg<RooFormulaVar>);
+   registerExporter("generic_dist", exportFormulaArg<RooGenericPdf>);
+   registerExporter("step", exportHist<RooHistFunc>);
+   registerExporter("histogram_dist", exportHist<RooHistPdf>);
+   registerExporter("lognormal_dist", exportLogNormal);
+   registerExporter("gaussian_dist", exportGaussian);
+   registerExporter("multivariate_normal_dist", exportMultiVarGaussian);
+   registerExporter("poisson_dist", exportPoisson);
+   registerExporter("decay_dist", exportDecay, /*autoExportDependants=*/false);
+   registerExporter("truth_model_function", exportTruthModel);
+   registerExporter("gauss_model_function", exportGaussModel);
+   registerExporter("polynomial_dist", exportPolynomial<RooPolynomial>);
+   registerExporter("polynomial", exportPolynomial<RooPolyVar>);
+   registerExporter("weighted_sum", exportRealSum<RooRealSumFunc>);
+   registerExporter("weighted_sum_dist", exportRealSum<RooRealSumPdf>);
+   registerExporter("generic", exportTFnBinding);
+   registerExporter("integral", exportRealIntegral);
+   registerExporter("derivative", exportDerivative);
+   registerExporter("fft_convolution_dist", exportFFTConvPdf);
+   registerExporter("rate_extended_dist", exportExtendPdf);
+   registerExporter("step", exportParamHistFunc);
+   registerExporter("spline", exportSpline);
+   registerExporter("sum", exportAddition);
+   registerExporter("argus_dist", exportArgus);
+   registerExporter("bernstein_poly_dist", exportBernstein);
+   registerExporter("bifurkated_gaussian_dist", exportBifurGauss);
+   registerExporter("crystalball_dist", exportCBShape);
+   registerExporter("chebychev_dist", exportChebychev);
+   registerExporter("efficiency_product_pdf_dist", exportEffProd);
+   registerExporter("gamma_dist", exportGamma);
+   registerExporter("landau_dist", exportLandau);
+   registerExporter("power_sum_dist", exportPowerSum);
+   registerExporter("product_dist", exportProdPdf);
+   registerExporter("product", exportProduct);
+   registerExporter("projected_dist", exportProjectedPdf);
+   registerExporter("uniform_dist", exportUniform);
 });
 
 } // namespace
