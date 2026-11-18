@@ -1182,6 +1182,8 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vecto
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce image file(s) using JSON data as source
 /// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
+/// Last argument is name of batch file which is used to create images in headless mode
+/// Log information about created files printed when gDebug > 0
 
 bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
 {
@@ -1199,7 +1201,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
       fmts.emplace_back(fmt);
    }
 
-   bool is_any_image = false;
+   bool is_any_image = false, showinfo = gDebug > 0;
 
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
 
@@ -1208,7 +1210,8 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
          std::ofstream ofs(fnames[n]);
          ofs << jsons[n];
          fmts[n].clear();
-         ::Info("ProduceImages", "JSON file %s size %d bytes has been created", fnames[n].c_str(), (int) jsons[n].length());
+         if (showinfo)
+            ::Info("ProduceImages", "JSON file %s size %d bytes has been created", fnames[n].c_str(), (int) jsons[n].length());
 
       } else if (fmts[n] == "html") {
          bool is_multi_html = (num_non_empty_fmts == 1) && (num_non_empty_files == 1) && (jsons.size() > 1) && (n == 0);
@@ -1284,7 +1287,8 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
                 "</body>\n"
                 "</html>\n";
 
-         ::Info("ProduceImages", "HTML file %s size %d bytes has been created", fnames[n].c_str(), (int) ofs.tellp());
+         if (showinfo)
+            ::Info("ProduceImages", "HTML file %s size %d bytes has been created", fnames[n].c_str(), (int) ofs.tellp());
 
          fmts[n].clear();
          if (is_multi_html)
@@ -1529,12 +1533,14 @@ try_again:
          return false;
       }
 
-      if (fmts[0] == "s.pdf")
-         ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
-      else {
+      if (fmts[0] == "s.pdf") {
+         if (showinfo)
+            ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
+      } else {
          if (isFirefox)
             gSystem->Rename("screenshot.png", fnames[0].c_str());
-         ::Info("ProduceImages", "PNG file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
+         if (showinfo)
+            ::Info("ProduceImages", "PNG file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
       }
    } else {
       auto dumpcont = handle->GetContent();
@@ -1565,7 +1571,8 @@ try_again:
             if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
                if (p2 - p1 > 10) {
                   ofs << dumpcont.substr(p1 + 5, p2 - p1 + 1);
-                  ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) (p2 - p1 + 1));
+                  if (showinfo)
+                     ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) (p2 - p1 + 1));
                } else {
                   ::Error("ProduceImages", "Failure producing %s", fnames[n].c_str());
                }
@@ -1584,7 +1591,8 @@ try_again:
                   auto binary = TBase64::Decode(base64.c_str());
                   std::ofstream ofs(fnames[n], std::ios::binary);
                   ofs.write(binary.Data(), binary.Length());
-                  ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) binary.Length());
+                  if (showinfo)
+                     ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) binary.Length());
                }
             } else {
                ::Error("ProduceImages", "Failure producing %s", fnames[n].c_str());
