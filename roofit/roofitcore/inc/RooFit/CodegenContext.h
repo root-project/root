@@ -115,17 +115,6 @@ public:
    std::string
    buildFunction(RooAbsArg const &arg, std::unordered_set<RooFit::Detail::DataKey> const &dependsOnData = {});
 
-   struct ScopeRAII {
-      std::string _fn;
-      CodegenContext &_ctx;
-      RooAbsArg const *_arg;
-
-   public:
-      ScopeRAII(RooAbsArg const *arg, CodegenContext &ctx);
-      ~ScopeRAII();
-   };
-   ScopeRAII OutputScopeRangeComment(RooAbsArg const *arg) { return {arg, *this}; }
-
 private:
    void pushScope();
    void popScope();
@@ -189,8 +178,6 @@ private:
    std::unordered_set<RooFit::Detail::DataKey> _dependsOnData;
    /// @brief The code layered by lexical scopes used as a stack.
    std::vector<std::string> _code;
-   /// @brief The indentation level for pretty-printing.
-   unsigned _indent = 0;
    /// @brief Index to get unique names for temporary variables.
    mutable int _tmpVarIdx = 0;
    /// @brief A map to keep track of list names as assigned by addResult.
