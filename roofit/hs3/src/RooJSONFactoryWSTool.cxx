@@ -14,9 +14,9 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <RooConstVar.h>
-#include <RooNumber.h>
 #include <RooRealVar.h>
 #include <RooBinning.h>
+#include <RooRangeBinning.h>
 #include <RooAbsCategory.h>
 #include <RooAbsLValue.h>
 #include <RooCategory.h>
@@ -27,7 +27,6 @@
 #include <RooSimultaneous.h>
 #include <RooSuperCategory.h>
 #include <RooFit/ModelConfig.h>
-#include <RooFitImplHelpers.h>
 #include <RooAbsCollection.h>
 
 #include "JSONIOUtils.h"
@@ -202,18 +201,26 @@ HS3::Binning toBinning(RooAbsBinning const &binning)
    return edges;
 }
 
+constexpr double inf = std::numeric_limits<double>::infinity();
+constexpr int isInfinite(double x)
+{
+   return (x >= +inf) ? +1 : ((x <= -inf) ? -1 : 0);
+}
+
 // The axis of a domain for a range and binning. Infinite bounds are omitted, and only a bounded range has a binning.
+// A RooRangeBinning is a plain named range without bin structure, fully described by its bounds.
 HS3::DomainAxis toDomainAxis(std::string const &name, RooAbsBinning const &binning)
 {
    HS3::DomainAxis axis;
    axis.name = name;
-   if (!RooNumber::isInfinite(binning.lowBound())) {
+   if (!isInfinite(binning.lowBound())) {
       axis.min = binning.lowBound();
    }
-   if (!RooNumber::isInfinite(binning.highBound())) {
+   if (!isInfinite(binning.highBound())) {
       axis.max = binning.highBound();
    }
-   if (axis.min && axis.max && binning.numBins() > 0) {
+   const bool hasBins = binning.numBins() > 0 && !dynamic_cast<RooRangeBinning const *>(&binning);
+   if (axis.min && axis.max && hasBins) {
       axis.binning = toBinning(binning);
    }
    return axis;
@@ -270,14 +277,14 @@ void applyBinning(RooRealVar &var, HS3::Binning const &binning, const char *name
 void applyRange(RooRealVar &var, HS3::DomainAxis const &axis)
 {
    if (axis.min) {
-      if (RooNumber::isInfinite(*axis.min)) {
+      if (isInfinite(*axis.min)) {
          var.removeMin();
       } else {
          var.setMin(*axis.min);
       }
    }
    if (axis.max) {
-      if (RooNumber::isInfinite(*axis.max)) {
+      if (isInfinite(*axis.max)) {
          var.removeMax();
       } else {
          var.setMax(*axis.max);
@@ -301,7 +308,6 @@ void createVariables(RooWorkspace &ws, std::vector<HS3::Domain> const &domains, 
          }
       }
    };
-   const double inf = RooNumber::infinity();
    // Parameters with a single value are RooConstVars, whichever domain gives the value.
    forEachAxis([&](std::string const &, HS3::DomainAxis const &axis) {
       if (axis.fixedValue && !ws.arg(axis.name)) {
@@ -405,17 +411,6 @@ void RooFit::HS3::report(Diagnostics const &diagnostics)
 }
 
 namespace {
-
-// True if the entire string parses as a number (integer or floating-point).
-bool isNumber(const std::string &str)
-{
-   // Parse with the same mechanism as toDouble() and require that the whole string is consumed, so that isNumber(s) is
-   // true exactly when toDouble(s) can turn the entire string into a value. (std::from_chars for floating-point types
-   // is not portably available on all platforms ROOT supports, so we rely on the stream extraction instead.)
-   std::istringstream stream(str);
-   double value = 0.0;
-   return (stream >> value) && stream.eof();
-}
 
 // Configure `v` (value, error, binning, constness) from the parameter `p`.
 void configureVariable(HS3::DomainRanges const &ranges, HS3::ParameterValue const &p, RooRealVar &v)
@@ -1275,8 +1270,7 @@ std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::Unb
 }
 
 // Create a RooAbsData (binned or unbinned) from its description.
-std::unique_ptr<RooAbsData>
-loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges const *ranges)
+std::unique_ptr<RooAbsData> loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges const *ranges)
 {
    RooJSONFactoryWSTool::testValidName(input.name, true);
 
@@ -2009,12 +2003,6 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
    return dh;
 }
 
-bool isLiteralConstVar(RooAbsArg const &arg)
-{
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
-   return isRooConstVar && isNumber(arg.GetName());
-}
-
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() = default;
@@ -2027,11 +2015,7 @@ void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll,
    for (RooAbsArg const *arg : coll) {
       if (n >= nMax)
          break;
-      if (isLiteralConstVar(*arg)) {
-         node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
-      } else {
-         node.append_child() << arg->GetName();
-      }
+      writeReference(node.append_child(), *arg);
       ++n;
    }
    if (node.num_children() != old_children + coll.size()) {
@@ -2156,8 +2140,9 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
 {
    if (RooAbsReal *retval = _workspace.function(objname))
       return retval;
-   if (isNumber(objname))
-      return &RooFit::RooConst(toDouble(objname));
+   auto toNumOutput = toNumber(objname);
+   if (toNumOutput.valid)
+      return &RooFit::RooConst(toNumOutput.value);
    if (RooAbsPdf *pdf = requestImpl<RooAbsPdf>(objname))
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
@@ -2241,7 +2226,8 @@ std::string makeValidNameOrError(std::string const &in)
    if (!std::isalpha(in[0])) {
       RooJSONFactoryWSTool::error("refusing to change first character of string '" + in + "' to make a valid name!");
    }
-   std::string out = RooFit::Detail::makeValidVarName(in);
+   std::string out = in;
+   std::transform(out.begin(), out.end(), out.begin(), [](char c) { return std::isalnum(c) ? c : '_'; });
    if (out != in) {
       oocoutW(nullptr, ObjectHandling) << "RooFitHS3: changed '" << in << "' to '" << out << "' to become a valid name";
    }
@@ -2689,22 +2675,14 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    bool ok = false;
    if (it != importers.end()) {
       for (auto &imp : it->second) {
-         try {
-            // The built-in importer doesn't see the constraint terms that the document adds to the channel.
-            if (_import && HS3::isBuiltinHistFactoryImporter(*imp)) {
-               auto const &channelConstraints = _import->document.rooFit.channelConstraints;
-               auto found = channelConstraints.find(name);
-               HS3::importHistFactoryNode(*this, p, found != channelConstraints.end() ? &found->second : nullptr);
-               ok = true;
-            } else {
-               ok = imp->importArg(this, p);
-            }
-         } catch (const std::exception &e) {
-            std::stringstream ss;
-            const auto *ptr = imp.get();
-            ss << "RooJSONFactoryWSTool() failed. The importer " << typeid(*ptr).name()
-               << " emitted and error: " << e.what() << std::endl;
-            RooJSONFactoryWSTool::error(ss.str());
+         // The built-in importer doesn't see the constraint terms that the document adds to the channel.
+         if (_import && HS3::isBuiltinHistFactoryImporter(*imp)) {
+            auto const &channelConstraints = _import->document.rooFit.channelConstraints;
+            auto found = channelConstraints.find(name);
+            HS3::importHistFactoryNode(*this, p, found != channelConstraints.end() ? &found->second : nullptr);
+            ok = true;
+         } else {
+            ok = imp->importArg(this, p);
          }
          if (ok)
             break;
@@ -3274,7 +3252,8 @@ struct ChannelConstraint {
 // factors of the channels, and RooFit counts each once, also if several channels share it; in HS3, they are terms
 // of the likelihood.
 // - The channels that are written as histfactory_dist (`isHistFactoryChannel`) don't contain their constraints in
-//   the document; their modifiers refer to them.
+//   the document; their modifiers refer to them. Nested products of their constraint terms are expanded into the
+//   factors, which the HistFactory exporter writes as terms of their own.
 // - The constraints of a channel that is written as product_dist are taken out of the product by
 //   writeLikelihoodTermsOnce(). This is only done if no other object of the workspace uses the product, so the
 //   constraints of other products are not returned.
@@ -3324,9 +3303,19 @@ constraintsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet co
             continue;
          }
       }
+      std::function<void(RooAbsPdf const &)> add = [&](RooAbsPdf const &term) {
+         auto const *nested = dynamic_cast<RooProdPdf const *>(&term);
+         if (!histFactory || !nested) {
+            out.push_back({prod->GetName(), &term, histFactory});
+            return;
+         }
+         for (RooAbsArg const *factor : nested->pdfList()) {
+            add(static_cast<RooAbsPdf const &>(*factor));
+         }
+      };
       for (RooAbsArg const *factor : prod->pdfList()) {
          if (constraints->find(*factor)) {
-            out.push_back({prod->GetName(), static_cast<RooAbsPdf const *>(factor), histFactory});
+            add(static_cast<RooAbsPdf const &>(*factor));
          }
       }
    }
@@ -3505,13 +3494,14 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    auto writeProductDomain = [&](const char *suffix, RooArgSet const *args) {
       if (!args || args->empty())
          return;
-      const std::string domainName = analysisName + suffix;
-      analysis.domains.push_back({domainName});
-      std::map<std::string, HS3::DomainAxis> axes;
-      for (auto *var : static_range_cast<const RooRealVar *>(*args)) {
-         axes[var->GetName()] = toDomainAxis(var->GetName(), var->getBinning());
+      HS3::Domain &domain = doc.domains.emplace_back();
+      domain.name = analysisName + suffix;
+      analysis.domains.push_back({domain.name});
+      RooArgList sorted{*args};
+      sorted.sort();
+      for (auto *var : static_range_cast<const RooRealVar *>(sorted)) {
+         domain.axes.emplace_back(toDomainAxis(var->GetName(), var->getBinning()));
       }
-      appendDomain(doc.domains, domainName, std::move(axes));
    };
 
    writeProductDomain("_nuisance_parameters", mc.GetNuisanceParameters());

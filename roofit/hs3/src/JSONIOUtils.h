@@ -53,6 +53,13 @@ void writeArrayDist(RooFit::Detail::JSONNode &elem, std::string const &name,
                     std::vector<RooAbsPdf const *> const &components,
                     std::map<std::string, std::string> const &observableOf);
 
+struct ToNumberOutput {
+   bool valid = false;
+   double value = 0.0;
+};
+
+ToNumberOutput toNumber(const std::string &str);
+void writeReference(RooFit::Detail::JSONNode &node, RooAbsArg const &arg);
 bool startsWith(std::string_view str, std::string_view prefix);
 bool endsWith(std::string_view str, std::string_view suffix);
 std::string removeSuffix(std::string_view str, std::string_view suffix);

@@ -13,12 +13,11 @@
 #ifndef RooFit_Detail_JSONInterface_h
 #define RooFit_Detail_JSONInterface_h
 
-#include <ROOT/RSpan.hxx>
-
 #include <iostream>
 #include <map>
 #include <unordered_map>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -100,6 +99,8 @@ public:
    int val_int() const;
    double val_double() const;
    bool val_bool() const;
+   /// The value as a boolean, or std::nullopt if it is none. Like val_bool(), the integers 0 and 1 are accepted.
+   std::optional<bool> try_val_bool() const;
    template <class T>
    T val_t() const;
    bool has_key() const;
@@ -246,24 +247,6 @@ std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode const &n)
    }
    v << n.children();
    return v;
-}
-
-inline RooFit::Detail::JSONNode &operator<<(RooFit::Detail::JSONNode &n, std::span<const double> v)
-{
-   n.fill_seq(v);
-   return n;
-}
-
-inline RooFit::Detail::JSONNode &operator<<(RooFit::Detail::JSONNode &n, std::span<const float> v)
-{
-   n.fill_seq(v);
-   return n;
-}
-
-inline RooFit::Detail::JSONNode &operator<<(RooFit::Detail::JSONNode &n, std::span<const int> v)
-{
-   n.fill_seq(v);
-   return n;
 }
 
 template <class Key, class T, class Hash, class KeyEqual, class Allocator>

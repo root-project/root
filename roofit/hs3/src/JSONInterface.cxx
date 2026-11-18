@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <deque>
 #include <istream>
+#include <iterator>
 #include <memory>
 #include <sstream>
 
@@ -36,13 +37,47 @@ nlohmann::json &json(void *value)
    return *static_cast<nlohmann::json *>(value);
 }
 
-inline nlohmann::json parseWrapper(std::istream &is)
-{
-   try {
-      return nlohmann::json::parse(is);
-   } catch (const nlohmann::json::exception &ex) {
-      throw std::runtime_error(ex.what());
+// Receives the events of a parse that only looks for the syntax error, see parse().
+class SyntaxErrorRecorder : public nlohmann::json_sax<nlohmann::json> {
+public:
+   bool null() override { return true; }
+   bool boolean(bool) override { return true; }
+   bool number_integer(number_integer_t) override { return true; }
+   bool number_unsigned(number_unsigned_t) override { return true; }
+   bool number_float(number_float_t, const string_t &) override { return true; }
+   bool string(string_t &) override { return true; }
+   bool binary(binary_t &) override { return true; }
+   bool start_object(std::size_t) override { return true; }
+   bool key(string_t &) override { return true; }
+   bool end_object() override { return true; }
+   bool start_array(std::size_t) override { return true; }
+   bool end_array() override { return true; }
+   bool parse_error(std::size_t, const std::string &, const nlohmann::json::exception &ex) override
+   {
+      message = ex.what();
+      return false;
    }
+
+   std::string message;
+};
+
+// Parse without exceptions of the JSON library. For invalid input, the input is parsed again to get the message.
+nlohmann::json parse(std::string const &input)
+{
+   nlohmann::json out = nlohmann::json::parse(input, nullptr, /*allow_exceptions=*/false);
+   if (out.is_discarded()) {
+      SyntaxErrorRecorder recorder;
+      nlohmann::json::sax_parse(input, &recorder);
+      throw std::runtime_error(recorder.message);
+   }
+   return out;
+}
+
+// Reading a value with the wrong type throws an std::runtime_error, not an exception of the JSON library.
+[[noreturn]] void throwTypeError(std::string const &key, const char *expected, nlohmann::json const &value)
+{
+   throw std::runtime_error("node \"" + key + "\": expected " + expected + ", but the value is of type " +
+                            value.type_name());
 }
 
 // To check whether it's allowed to reset the type of an object. We allow
@@ -145,6 +180,9 @@ JSONNode &JSONNode::operator<<(bool b)
 
 const JSONNode &JSONNode::operator>>(std::string &v) const
 {
+   if (!json(_value).is_string()) {
+      throwTypeError(_key, "a string", json(_value));
+   }
    v = json(_value).get<std::string>();
    return *this;
 }
@@ -255,26 +293,40 @@ std::string JSONNode::val() const
 
 int JSONNode::val_int() const
 {
-   return json(_value).get<int>();
+   auto const &nd = json(_value);
+   if (!nd.is_number() && !nd.is_boolean()) {
+      throwTypeError(_key, "a number", nd);
+   }
+   return nd.get<int>();
 }
 double JSONNode::val_double() const
 {
-   return json(_value).get<double>();
+   auto const &nd = json(_value);
+   if (!nd.is_number() && !nd.is_boolean()) {
+      throwTypeError(_key, "a number", nd);
+   }
+   return nd.get<double>();
 }
 bool JSONNode::val_bool() const
 {
-   auto const &nd = json(_value);
-
-   // Attempting to convert zeroes and ones to bools.
-   if (nd.type() == nlohmann::json::value_t::number_unsigned) {
-      auto val = nd.get<unsigned int>();
-      if (val == 0)
-         return false;
-      if (val == 1)
-         return true;
+   std::optional<bool> out = try_val_bool();
+   if (!out) {
+      throwTypeError(_key, "a boolean", json(_value));
    }
+   return *out;
+}
 
-   return nd.get<bool>();
+std::optional<bool> JSONNode::try_val_bool() const
+{
+   auto const &nd = json(_value);
+   if (nd.is_boolean()) {
+      return nd.get<bool>();
+   }
+   // Attempting to convert zeroes and ones to bools.
+   if (nd.is_number_unsigned() && nd.get<nlohmann::json::number_unsigned_t>() <= 1) {
+      return nd.get<nlohmann::json::number_unsigned_t>() == 1;
+   }
+   return std::nullopt;
 }
 
 bool JSONNode::has_key() const
@@ -352,13 +404,12 @@ std::unique_ptr<JSONTree> JSONTree::create()
 
 std::unique_ptr<JSONTree> JSONTree::create(std::istream &is)
 {
-   return std::unique_ptr<JSONTree>{new JSONTree{std::make_unique<JSONNode::Storage>(parseWrapper(is))}};
+   return JSONTree::create(std::string{std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{}});
 }
 
 std::unique_ptr<JSONTree> JSONTree::create(std::string const &str)
 {
-   std::stringstream ss{str};
-   return JSONTree::create(ss);
+   return std::unique_ptr<JSONTree>{new JSONTree{std::make_unique<JSONNode::Storage>(parse(str))}};
 }
 
 // JSONReadRecorder
