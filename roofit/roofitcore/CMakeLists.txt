@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_library(RooFitCore SHARED)
+add_library(RooFitCore)
 target_sources(RooFitCore
 PRIVATE
   src/BatchModeDataHelpers.cxx

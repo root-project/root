@@ -9,7 +9,7 @@
 # @author Lorenzo Moneta, CERN
 ############################################################################
 
-add_library(RooFitMore SHARED)
+add_library(RooFitMore)
 target_sources(RooFitMore
 PRIVATE
   src/RooFitMoreLib.cxx

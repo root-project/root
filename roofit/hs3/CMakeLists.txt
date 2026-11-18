@@ -9,7 +9,7 @@
 # @author Carsten Burgard, CERN
 ############################################################################
 
-add_library(RooFitHS3 SHARED)
+add_library(RooFitHS3)
 target_sources(RooFitHS3
 PRIVATE
   src/HS3Document.cxx

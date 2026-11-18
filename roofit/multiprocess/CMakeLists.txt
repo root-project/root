@@ -3,7 +3,7 @@
 # @author Patrick Bos, Netherlands eScience Center
 ############################################################################
 
-add_library(RooFitMultiProcess SHARED)
+add_library(RooFitMultiProcess)
 target_sources(RooFitMultiProcess
 PRIVATE
   src/worker.cxx

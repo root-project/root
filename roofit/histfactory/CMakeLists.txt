@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_library(HistFactory SHARED)
+add_library(HistFactory)
 target_sources(HistFactory
 PRIVATE
   src/FlexibleInterpVar.cxx

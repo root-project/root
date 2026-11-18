@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_library(TMVA SHARED)
+add_library(TMVA)
 target_sources(TMVA
 PRIVATE
   src/BDTEventWrapper.cxx
@@ -458,7 +458,7 @@ elseif(tmva-cudnn)
 endif(tmva-gpu)
 
 if(dataframe)
-add_library(TMVAUtils SHARED)
+add_library(TMVAUtils)
 target_sources(TMVAUtils
 PRIVATE
   src/RBDT.cxx

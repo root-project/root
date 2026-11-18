@@ -9,7 +9,7 @@
 ############################################################################
 #Author: Sitong An, Lorenzo Moneta 10/03/2021
 
-add_library(ROOTTMVASofieParser SHARED)
+add_library(ROOTTMVASofieParser)
 target_sources(ROOTTMVASofieParser
 PRIVATE
   src/RModelParser_ONNX.cxx

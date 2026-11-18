@@ -987,7 +987,7 @@ endif()
 #---TMVA and its dependencies------------------------------------------------------------
 if(tmva-cpu)
   # ROOT internal BLAS target for TMVA
-  add_library(Blas INTERFACE)
+  add_library(Blas INTERFACE IMPORTED GLOBAL)
   add_library(ROOT::BLAS ALIAS Blas)
   if (NOT use_gsl_cblas AND BLAS_FOUND)
     target_link_libraries(Blas INTERFACE BLAS::BLAS)

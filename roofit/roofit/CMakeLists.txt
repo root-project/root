@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_library(RooFit SHARED)
+add_library(RooFit)
 target_sources(RooFit
 PRIVATE
   src/Roo2DKeysPdf.cxx

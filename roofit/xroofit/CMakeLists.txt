@@ -1,4 +1,4 @@
-add_library(RooFitXRooFit SHARED)
+add_library(RooFitXRooFit)
 target_sources(RooFitXRooFit
 PRIVATE
   src/Asymptotics.cxx

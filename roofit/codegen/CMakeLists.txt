@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_library(RooFitCodegen SHARED)
+add_library(RooFitCodegen)
 target_sources(RooFitCodegen
 PRIVATE
   src/CodegenImpl.cxx

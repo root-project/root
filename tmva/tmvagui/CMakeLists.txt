@@ -14,7 +14,7 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
-add_library(TMVAGui SHARED)
+add_library(TMVAGui)
 target_sources(TMVAGui
 PRIVATE
   src/BDTControlPlots.cxx

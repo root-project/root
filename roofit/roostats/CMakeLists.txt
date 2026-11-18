@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_library(RooStats SHARED)
+add_library(RooStats)
 target_sources(RooStats
 PRIVATE
   src/AsymptoticCalculator.cxx

@@ -99,7 +99,7 @@ endif()
 
 if(NOT RooBatchCompute_STANDALONE_CUDA)
 
-add_library(RooBatchCompute SHARED)
+add_library(RooBatchCompute)
 set(lib_private_headers res/RooBatchCompute.h)
 target_sources(RooBatchCompute
 PRIVATE
@@ -132,7 +132,7 @@ set(shared_object_private_headers
 )
 
 # Generic implementation for CPUs that don't support vector instruction sets.
-add_library(RooBatchCompute_GENERIC SHARED)
+add_library(RooBatchCompute_GENERIC SHARED) # cannot be static since it is dlopened
 target_sources(RooBatchCompute_GENERIC
 PRIVATE
   ${shared_object_sources}
@@ -153,7 +153,7 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
   target_compile_options(RooBatchCompute PRIVATE -DR__RF_ARCHITECTURE_SPECIFIC_LIBS)
 
   foreach(_lib IN ITEMS RooBatchCompute_SSE4.1 RooBatchCompute_AVX RooBatchCompute_AVX2 RooBatchCompute_AVX512)
-    add_library(${_lib} SHARED)
+    add_library(${_lib} SHARED) # cannot be static since it is dlopened
     target_sources(${_lib}
     PRIVATE
       ${shared_object_sources}
@@ -189,7 +189,7 @@ if (cuda)
   set(shared_object_private_headers_cu
     src/CudaInterface.h
   )
-  add_library(RooBatchCompute_CUDA SHARED)
+  add_library(RooBatchCompute_CUDA SHARED) # cannot be static since it is dlopened
   target_sources(RooBatchCompute_CUDA
   PRIVATE
     ${shared_object_sources_cu}

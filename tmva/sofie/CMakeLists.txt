@@ -9,7 +9,7 @@
 ############################################################################
 #Author: Sitong An, Lorenzo Moneta 10/03/2021
 
-add_library(ROOTTMVASofie SHARED)
+add_library(ROOTTMVASofie)
 target_sources(ROOTTMVASofie
 PRIVATE
   src/RModel.cxx
