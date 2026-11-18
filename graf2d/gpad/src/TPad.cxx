@@ -4984,41 +4984,43 @@ void TPad::Print(const char *filename, Option_t *option)
    Bool_t isweb = canv->IsWeb();
    Bool_t isbatch = gROOT->IsBatch() || canv->IsBatch();
 
-   // for a moment special handling of web canvas - check if can save directly
-   if (isweb && pp)
-      if (pp->SaveAsImage(this, psname.Data(), gtype) != TVirtualPadPainter::kSaveNotImplemented)
-         return;
-
-   // to create HTML file web-based canvas functionality is invoked
-   if (gtype == TImage::kHtml) {
-      auto cmd = TString::Format("TWebCanvas::ProduceImage((TPad *) 0x%zx, \"%s\");", (size_t) this, psname.Data());
-      Long_t res = gROOT->ProcessLine(cmd);
-      if (!res)
-         Error("Print", "Fail create HTML file %s", psname.Data());
-      return;
-   }
-
+   // web canvas support more formats
    if (((!isbatch && image) || isweb) && pp) {
-      Color_t hc = canv->GetHighLightColor();
+      Color_t hc = -1;
 
       if (!isweb) {
+         hc = canv->GetHighLightColor();
          canv->SetHighLightColor(-1);
          Modified();
       }
-      canv->Update();
+
+      // update canvas (also web) to sync it with created image
+      if (!isbatch)
+         canv->Update();
 
       auto res = pp->SaveAsImage(this, psname.Data(), gtype);
 
-      if (!isweb)
+      if (!isweb && (hc != -1))
          canv->SetHighLightColor(hc);
 
-      if (res == TVirtualPadPainter::kSaveNotImplemented)
+      if ((res == TVirtualPadPainter::kSaveNotImplemented) && image)
          Warning("Print", "Unsupported image format %s, fallback to TImageDump", psname.Data());
       else if ((res == TVirtualPadPainter::kSaveOk) && !gSystem->AccessPathName(psname.Data()))
          Info("Print", "file %s has been created", psname.Data());
 
       if (res != TVirtualPadPainter::kSaveNotImplemented)
          return;
+   }
+
+   //==============Save pad/canvas as a HTML==============================
+   if (gtype == TImage::kHtml) {
+      auto cmd = TString::Format("TWebCanvas::ProduceImage((TPad *) 0x%zx, \"%s\");", (size_t) this, psname.Data());
+      Long_t res = gROOT->ProcessLine(cmd);
+      if (!res)
+         Error("Print", "Fail create HTML file %s", psname.Data());
+      else if (!gSystem->AccessPathName(psname.Data()))
+         Info("Print", "file %s has been created", psname.Data());
+      return;
    }
 
    //==============Save pad/canvas as a C++ script==============================
