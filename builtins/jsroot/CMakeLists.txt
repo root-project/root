@@ -4,15 +4,17 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(ROOT_JSROOT_VERSION 7.12.0)
-set(ROOT_JSROOT_HASH "e5d82888750bda70090ac4bff355734000372c983a3eff11d67efa09f30d4b06")
+set(ROOT_JSROOT_VERSION 194aa4ab2)
+set(ROOT_JSROOT_HASH "fc48a14a7210929e1402cc3bcb7c9157546690f10b6c61502fe20d7280f88366")
 # The GitHub release asset is named without the dots, JsRoot7120.tar.gz
-string(REPLACE "." "" ROOT_JSROOT_VERSION_COMPACT ${ROOT_JSROOT_VERSION})
+# string(REPLACE "." "" ROOT_JSROOT_VERSION_COMPACT ${ROOT_JSROOT_VERSION})
 
 ExternalProject_Add(BUILTIN_JSROOT
   DOWNLOAD_DIR   ${ROOT_DOWNLOAD_DIR}
-  URL            ${lcgpackages}/jsroot-${ROOT_JSROOT_VERSION}.tar.gz
-                 https://github.com/root-project/jsroot/releases/download/${ROOT_JSROOT_VERSION}/JsRoot${ROOT_JSROOT_VERSION_COMPACT}.tar.gz
+  #URL            ${lcgpackages}/jsroot-${ROOT_JSROOT_VERSION}.tar.gz
+  #               https://github.com/root-project/jsroot/releases/download/${ROOT_JSROOT_VERSION}/JsRoot${ROOT_JSROOT_VERSION_COMPACT}.tar.gz
+  URL            https://root.cern/js/packages/jsroot-${ROOT_JSROOT_VERSION}.tar.gz
+                 https://jsroot.gsi.de/packages/jsroot-${ROOT_JSROOT_VERSION}.tar.gz
   URL_HASH       SHA256=${ROOT_JSROOT_HASH}
 
 #  GIT_REPOSITORY https://github.com/root-project/jsroot.git
@@ -36,4 +38,7 @@ ExternalProject_Add(BUILTIN_JSROOT
   INSTALL_COMMAND   ""
 )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/js/   DESTINATION ${CMAKE_INSTALL_JSROOTDIR} COMPONENT libraries ${DIR_PERMISSIONS})
+install(DIRECTORY ${CMAKE_BINARY_DIR}/js/
+        DESTINATION ${CMAKE_INSTALL_JSROOTDIR}
+        COMPONENT libraries
+        ${DIR_PERMISSIONS})
