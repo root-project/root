@@ -467,6 +467,35 @@ std::map<std::string, std::string> constraintSignatures(RooWorkspace &ws)
    return out;
 }
 
+// The constraint terms that are factors of each channel of the model, as text, by channel. A channel must have the
+// constraints of its own parameters, and no others: RooFit counts a constraint that several channels share once, so
+// the likelihood would not show a constraint in a channel that doesn't use it.
+std::map<std::string, std::set<std::string>> constraintsByChannel(RooWorkspace &ws, RooStats::ModelConfig &mc)
+{
+   std::map<std::string, std::set<std::string>> out;
+   auto *sim = dynamic_cast<RooSimultaneous *>(mc.GetPdf());
+   if (!sim) {
+      return out;
+   }
+   const std::map<std::string, std::string> descriptions = describeConstraints(ws);
+   for (auto const &state : sim->indexCat()) {
+      RooAbsPdf *channel = sim->getPdf(state.first);
+      if (!channel) {
+         continue;
+      }
+      auto &constraints = out[state.first];
+      if (auto *product = dynamic_cast<RooProdPdf *>(channel)) {
+         for (RooAbsArg *factor : product->pdfList()) {
+            auto found = descriptions.find(factor->GetName());
+            if (found != descriptions.end()) {
+               constraints.insert(found->second);
+            }
+         }
+      }
+   }
+   return out;
+}
+
 void setPoint(RooWorkspace &ws, RooStats::ModelConfig &mc, bool displaced)
 {
    for (auto *var : static_range_cast<RooRealVar *>(*mc.GetNuisanceParameters())) {
@@ -739,16 +768,53 @@ TEST_P(AuxMeasurements, Layout)
    ASSERT_GT(root["likelihoods"].num_children(), 0u);
    for (auto const &likelihood : root["likelihoods"].children()) {
       const std::string lhName = likelihood["name"].val();
-      const auto dists = strings(likelihood, "distributions");
-      const auto lhData = strings(likelihood, "data");
+      auto dists = strings(likelihood, "distributions");
+      auto lhData = strings(likelihood, "data");
       const auto aux = strings(likelihood, "aux_distributions");
       ASSERT_EQ(dists.size(), lhData.size());
+      // An array of constraints with its data set is a component of the combined distribution of the model, paired
+      // with the component of the combined data set that has the same key. These pairs are checked like the terms.
+      std::set<std::string> asComponents;
+      for (std::size_t i = 0, n = dists.size(); i < n; ++i) {
+         auto dist = distributions.find(dists[i]);
+         auto combined = data.find(lhData[i]);
+         if (dist == distributions.end() || typeOf(*dist->second) != "combined_dist" || combined == data.end() ||
+             typeOf(*combined->second) != "combined") {
+            continue;
+         }
+         for (auto const &component : (*dist->second)["components"].children()) {
+            const std::string term = component["dist"].val();
+            if (!allTerms.count(term)) {
+               continue;
+            }
+            for (auto const &dataComponent : (*combined->second)["components"].children()) {
+               if (strings(dataComponent, "key") == strings(component, "key")) {
+                  dists.push_back(term);
+                  lhData.push_back(dataComponent["dataset"].val());
+                  EXPECT_TRUE(asComponents.insert(term).second) << term;
+               }
+            }
+         }
+      }
       for (auto const &term : allTerms) {
          const auto inDists = std::count(dists.begin(), dists.end(), term);
          const auto inAux = std::count(aux.begin(), aux.end(), term);
          EXPECT_EQ(inDists + inAux, 1) << "term '" << term << "' in likelihood '" << lhName << "'";
          if (style.constraintData) {
             EXPECT_EQ(inDists, 1) << "term '" << term << "' should be paired with data in '" << lhName << "'";
+            // The arrays are measurements like the channels: components of the combined distribution, and marked as
+            // auxiliary for RooFit. Single constraints stay terms of the likelihood.
+            const bool isArray = typeOf(*distributions[term]) == "array_dist";
+            EXPECT_EQ(asComponents.count(term), isArray ? 1u : 0u) << "term '" << term << "' in '" << lhName << "'";
+            if (isArray) {
+               bool marked = false;
+               for (auto const &item : root["misc"]["ROOT_internal"]["auxiliary_channels"].children()) {
+                  for (auto const &name : item.children()) {
+                     marked |= name.val() == term;
+                  }
+               }
+               EXPECT_TRUE(marked) << "term '" << term << "' in misc.ROOT_internal.auxiliary_channels";
+            }
          } else {
             EXPECT_EQ(inAux, 1) << "term '" << term << "' should be in aux_distributions of '" << lhName << "'";
          }
@@ -855,6 +921,22 @@ TEST_P(AuxMeasurements, RoundTripWorkspace)
    // The names of the constraint pdfs need not survive: the components of an array have none.
    const std::string constraints = diff(constraintSignatures(*original), constraintSignatures(*imported), 6);
    EXPECT_TRUE(constraints.empty()) << "roles in the constraint pdfs differ:\n" << constraints;
+
+   // Every channel has the constraints of its own parameters, as before.
+   if (auto *mcImported = findModelConfig(*imported, modelConfig(*original)->GetName())) {
+      const auto expectedByChannel = constraintsByChannel(*original, *modelConfig(*original));
+      const auto actualByChannel = constraintsByChannel(*imported, *mcImported);
+      ASSERT_FALSE(expectedByChannel.empty());
+      std::size_t nConstraints = 0;
+      for (auto const &[channel, expectedConstraints] : expectedByChannel) {
+         nConstraints += expectedConstraints.size();
+         auto found = actualByChannel.find(channel);
+         ASSERT_NE(found, actualByChannel.end()) << "channel '" << channel << "'";
+         EXPECT_EQ(join(found->second), join(expectedConstraints)) << "constraint terms of channel '" << channel << "'";
+      }
+      EXPECT_GT(nConstraints, 0u);
+      EXPECT_EQ(actualByChannel.size(), expectedByChannel.size());
+   }
 }
 
 TEST_P(AuxMeasurements, LikelihoodScan)
@@ -1065,6 +1147,98 @@ TEST_P(AuxMeasurements, Toys)
       if (!isYield) {
          EXPECT_NEAR(actual.variance(key), expected.variance(key), 5. * variance * std::sqrt(4. / n))
             << "variance of " << key;
+      }
+   }
+}
+
+// EXPERIMENTAL: the arrays of constraints that are written as components of the combined distribution can be read
+// as such (Config::importConstraintsAsChannels): the RooSimultaneous is then the sampling distribution of all
+// measurements, and the observed values of the constraints are entries of the combined data set.
+TEST_P(AuxMeasurements, ConstraintsAsChannels)
+{
+   if (!style.arrays || !style.constraintData) {
+      return; // only this layout has such components
+   }
+   auto &config = RooJSONFactoryWSTool::config();
+   config.importConstraintsAsChannels = true;
+   std::unique_ptr<RooWorkspace> imported;
+   EXPECT_NO_THROW(imported = importJSON(json));
+   config.importConstraintsAsChannels = false;
+   ASSERT_NE(imported, nullptr);
+
+   auto *mcOrig = modelConfig(*original);
+   auto *mc = modelConfig(*imported);
+   ASSERT_NE(mc, nullptr);
+   auto *sim = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
+   ASSERT_NE(sim, nullptr);
+   RooAbsData *data = imported->data("obsData");
+   ASSERT_NE(data, nullptr);
+
+   // Every array is a channel with one entry in the combined data set, and no constraint is in a physics channel.
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   std::size_t nArrays = 0;
+   std::size_t nConstraints = 0;
+   for (auto const &dist : tree->rootnode()["distributions"].children()) {
+      if (typeOf(dist) != "array_dist") {
+         continue;
+      }
+      ++nArrays;
+      nConstraints += dist["components"].num_children();
+      const std::string name = dist["name"].val();
+      ASSERT_TRUE(sim->indexCat().hasLabel(name)) << name;
+      EXPECT_NE(sim->getPdf(name), nullptr) << name;
+      std::unique_ptr<RooAbsData> slice{data->reduce(
+         (std::string(sim->indexCat().GetName()) + "==" + sim->indexCat().GetName() + "::" + name).c_str())};
+      EXPECT_EQ(slice->numEntries(), 1) << name;
+   }
+   ASSERT_GT(nArrays, 0u);
+   for (auto const &state : sim->indexCat()) {
+      RooAbsPdf *channel = sim->getPdf(state.first);
+      if (channel && !channel->getAttribute("hs3_array_dist")) {
+         EXPECT_EQ(dynamic_cast<RooProdPdf *>(channel), nullptr)
+            << "the channel '" << state.first << "' still has constraint terms";
+      }
+   }
+   // The observed values are observables of the data now, not global observables.
+   const std::size_t nGlobals = mc->GetGlobalObservables() ? mc->GetGlobalObservables()->size() : 0;
+   EXPECT_EQ(nGlobals + nConstraints, mcOrig->GetGlobalObservables()->size());
+
+   // The likelihood is the same function of the parameters.
+   std::unique_ptr<RooAbsReal> nllOrig{mcOrig->GetPdf()->createNLL(
+      *original->data("obsData"), RooFit::GlobalObservables(*mcOrig->GetGlobalObservables()), RooFit::Offset(false))};
+   RooArgSet noGlobals;
+   std::unique_ptr<RooAbsReal> nll{sim->createNLL(
+      *data, RooFit::GlobalObservables(mc->GetGlobalObservables() ? *mc->GetGlobalObservables() : noGlobals),
+      RooFit::Offset(false))};
+   std::vector<double> expected;
+   std::vector<double> actual;
+   for (double value : muValues) {
+      for (bool displaced : {false, true}) {
+         original->var("mu")->setVal(value);
+         imported->var("mu")->setVal(value);
+         setPoint(*original, *mcOrig, displaced);
+         setPoint(*imported, *mcOrig, displaced);
+         expected.push_back(nllOrig->getVal());
+         actual.push_back(nll->getVal());
+      }
+   }
+   for (std::size_t i = 0; i < expected.size(); ++i) {
+      ASSERT_TRUE(std::isfinite(actual[i])) << i;
+      EXPECT_NEAR(actual[i] - actual[0], expected[i] - expected[0], 1e-8 * std::abs(expected[0])) << "point " << i;
+   }
+
+   // Every measurement can be sampled from its component of the model. (RooSimultaneous::generate() itself can't mix
+   // extended channels with channels of exactly one entry.)
+   for (auto const &dist : tree->rootnode()["distributions"].children()) {
+      if (typeOf(dist) == "array_dist") {
+         const std::string name = dist["name"].val();
+         RooAbsPdf *channel = sim->getPdf(name);
+         ASSERT_NE(channel, nullptr) << name;
+         std::unique_ptr<RooArgSet> channelObservables{channel->getObservables(*data->get())};
+         EXPECT_EQ(channelObservables->size(), dist["components"].num_children()) << name;
+         std::unique_ptr<RooAbsData> toy{channel->generate(*channelObservables, 1)};
+         ASSERT_NE(toy, nullptr) << name;
+         EXPECT_EQ(toy->numEntries(), 1) << "toy entries of '" << name << "'";
       }
    }
 }

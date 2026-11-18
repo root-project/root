@@ -1765,6 +1765,18 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
       }
    }
 
+   // A constraint that is a measurement of its own, as a component of a combined distribution with data, contributes
+   // there, and is not multiplied into the channel.
+   {
+      RooArgSet ownMeasurements;
+      for (auto *constraint : static_range_cast<RooAbsPdf *>(constraints)) {
+         if (tool.isConstraintReadAsChannel(*constraint)) {
+            ownMeasurements.add(*constraint);
+         }
+      }
+      constraints.remove(ownMeasurements);
+   }
+
    // With constraints, the channel is the product of the sum of the samples and the constraints.
    auto &sum = tool.wsEmplace<RooRealSumPdf>(constraints.empty() ? name : channelName + "_model", funcs, coefs, true);
    sum.SetTitle(name.c_str());

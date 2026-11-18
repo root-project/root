@@ -311,6 +311,35 @@ PartVariates componentAxes(HS3Document const &doc, CombinedData const &combined)
    return parts;
 }
 
+// The data set `name` of the document, or nullptr.
+Data const *findData(HS3Document const &doc, std::string const &name)
+{
+   auto found = std::find_if(doc.data.begin(), doc.data.end(), [&](Data const &d) { return d.name == name; });
+   return found != doc.data.end() ? &*found : nullptr;
+}
+
+// The number of entries of the data set `name` of the document, i.e. the number of factors that a distribution
+// paired with it contributes to a likelihood: one for point data and binned data, the number of entries for unbinned
+// data. Without such a data set, the document is not valid, which is reported elsewhere: one is assumed.
+int numDataEntries(HS3Document const &doc, std::string const &name)
+{
+   Data const *data = findData(doc, name);
+   auto const *unbinned = data ? std::get_if<UnbinnedData>(&data->body) : nullptr;
+   return unbinned ? static_cast<int>(unbinned->numEntries()) : 1;
+}
+
+// The labels of the key of a component of a combined distribution, like the parser reads those of combined data.
+std::vector<std::string> keyOf(JSONNode const &component)
+{
+   std::vector<std::string> key;
+   if (JSONNode const *node = component.find("key"); node && node->is_seq()) {
+      for (JSONNode const &label : node->children()) {
+         key.push_back(label.is_container() ? std::string{} : label.val());
+      }
+   }
+   return key;
+}
+
 } // namespace
 
 std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likelihood)
@@ -380,29 +409,6 @@ std::map<std::string, std::set<std::string>> bookkeepingColumns(HS3Document cons
 std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector<std::string> *warnings)
 {
    Distributions distributions{doc};
-   auto findData = [&](std::string const &name) -> Data const * {
-      auto found = std::find_if(doc.data.begin(), doc.data.end(), [&](Data const &d) { return d.name == name; });
-      return found != doc.data.end() ? &*found : nullptr;
-   };
-   // The number of factors that a distribution paired with the data set `name` contributes to a likelihood: one for
-   // point data and binned data, the number of entries for unbinned data. Without such a data set, the document is
-   // not valid, which is reported elsewhere: one is assumed.
-   auto numDataEntries = [&](std::string const &name) {
-      Data const *data = findData(name);
-      auto const *unbinned = data ? std::get_if<UnbinnedData>(&data->body) : nullptr;
-      return unbinned ? static_cast<int>(unbinned->numEntries()) : 1;
-   };
-   // The labels of the key of a component of a combined distribution, like the parser reads those of combined data.
-   auto keyOf = [](JSONNode const &component) {
-      std::vector<std::string> key;
-      if (JSONNode const *node = component.find("key"); node && node->is_seq()) {
-         for (JSONNode const &label : node->children()) {
-            key.push_back(label.is_container() ? std::string{} : label.val());
-         }
-      }
-      return key;
-   };
-
    std::vector<std::string> messages;
    for (Likelihood const &likelihood : doc.likelihoods) {
       std::map<std::string, int> contributions;
@@ -451,7 +457,7 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
                for (CombinedDataComponent const &dataComponent : combinedData->components) {
                   if (dataComponent.key == key) {
                      found = true;
-                     entries = numDataEntries(dataComponent.data.name);
+                     entries = numDataEntries(doc, dataComponent.data.name);
                   }
                }
                if (!found && warnings) {
@@ -466,13 +472,13 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
       for (LikelihoodTerm const &term : likelihood.terms) {
          // The paired data: a data set, a value given in-line, or nothing (a pure model).
          auto const *dataRef = std::get_if<DataRef>(&term.data);
-         Data const *data = dataRef ? findData(dataRef->name) : nullptr;
+         Data const *data = dataRef ? findData(doc, dataRef->name) : nullptr;
          std::string const &name = term.distribution.name;
          if (JSONNode const *combined = distributions.nodeOf(name, "combined_dist")) {
             ++contributions[name];
             contributeCombined(name, *combined, data);
          } else {
-            contribute(name, data ? numDataEntries(data->name) : 1, "");
+            contribute(name, data ? numDataEntries(doc, data->name) : 1, "");
          }
       }
       for (DistributionRef const &aux : likelihood.auxDistributions) {
@@ -501,6 +507,37 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
       }
    }
    return messages;
+}
+
+std::set<std::string> componentsWithData(HS3Document const &doc)
+{
+   Distributions distributions{doc};
+   std::set<std::string> out;
+   for (Likelihood const &likelihood : doc.likelihoods) {
+      for (LikelihoodTerm const &term : likelihood.terms) {
+         auto const *dataRef = std::get_if<DataRef>(&term.data);
+         Data const *data = dataRef ? findData(doc, dataRef->name) : nullptr;
+         auto const *combinedData = data ? std::get_if<CombinedData>(&data->body) : nullptr;
+         JSONNode const *dist = distributions.nodeOf(term.distribution.name, "combined_dist");
+         JSONNode const *components = dist ? dist->find("components") : nullptr;
+         if (!components || !combinedData) {
+            continue;
+         }
+         for (JSONNode const &component : components->children()) {
+            JSONNode const *name = component.find("dist");
+            if (!name || !isName(*name)) {
+               continue;
+            }
+            std::vector<std::string> const key = keyOf(component);
+            for (CombinedDataComponent const &dataComponent : combinedData->components) {
+               if (dataComponent.key == key && numDataEntries(doc, dataComponent.data.name) > 0) {
+                  out.insert(name->val());
+               }
+            }
+         }
+      }
+   }
+   return out;
 }
 
 std::vector<std::string> sharedVariates(HS3Document const &doc)

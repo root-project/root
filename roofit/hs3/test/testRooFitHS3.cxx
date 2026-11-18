@@ -4414,13 +4414,35 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
    lh = likelihood(withData);
    // The Gaussian of alpha_a has the parameter as x and a number as mean, so it has no global observable to pair
    // with data and stays in "aux_distributions".
-   EXPECT_EQ(lh["distributions"], (Names{"an_simPdf", "an_simPdf_poisson_continuous_constraints"})) << withData;
-   EXPECT_EQ(lh["data"], (Names{"observed", "an_simPdf_poisson_continuous_constraints_data"})) << withData;
+   // The array with its data set is a component of the combined distribution, like the channels.
+   EXPECT_EQ(lh["distributions"], Names{"an_simPdf"}) << withData;
+   EXPECT_EQ(lh["data"], Names{"observed"}) << withData;
    EXPECT_EQ(lh["aux_distributions"], Names{"an_simPdf_gaussian_constraints"}) << withData;
    {
       auto tree = RooFit::Detail::JSONTree::create(withData);
+      auto const &root = tree->rootnode();
+      auto componentOf = [&](const char *section, std::string const &name, const char *field) {
+         std::string out;
+         for (auto const &component :
+              (*RooJSONFactoryWSTool::findNamedChild(root[section], name))["components"].children()) {
+            if (component["key"].child(0).val() == "an_simPdf_poisson_continuous_constraints") {
+               out = component[field].val();
+            }
+         }
+         return out;
+      };
+      EXPECT_EQ(componentOf("distributions", "an_simPdf", "dist"), "an_simPdf_poisson_continuous_constraints")
+         << withData;
+      EXPECT_EQ(componentOf("data", "observed", "dataset"), "observed_an_simPdf_poisson_continuous_constraints")
+         << withData;
+      EXPECT_EQ(root["misc"]["ROOT_internal"]["auxiliary_channels"]["an_simPdf"].child(0).val(),
+                "an_simPdf_poisson_continuous_constraints")
+         << withData;
+   }
+   {
+      auto tree = RooFit::Detail::JSONTree::create(withData);
       const auto *data = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"],
-                                                              "an_simPdf_poisson_continuous_constraints_data");
+                                                              "observed_an_simPdf_poisson_continuous_constraints");
       ASSERT_NE(data, nullptr) << withData;
       EXPECT_EQ((*data)["type"].val(), "unbinned");
       const std::vector<std::string> gammas{"gs_0", "gs_1", "gamma_c1_0", "gamma_c1_1", "gamma_c2_0", "gamma_c2_1"};
@@ -4446,7 +4468,7 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
       auto *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
       ASSERT_NE(simPdf, nullptr);
       EXPECT_EQ(simPdf->indexCat().size(), 2);
-      EXPECT_EQ(ws3.data("an_simPdf_poisson_continuous_constraints_data"), nullptr);
+      EXPECT_EQ(ws3.data("observed_an_simPdf_poisson_continuous_constraints"), nullptr);
       EXPECT_DOUBLE_EQ(ws3.var("nom_gamma_c1_0")->getVal(), 120.0);
       EXPECT_TRUE(ws3.var("nom_gamma_c1_0")->isConstant());
       ASSERT_NE(mc->GetGlobalObservables(), nullptr);
@@ -10018,6 +10040,154 @@ TEST(RooFitHS3, HistFactoryConstraintContributionsCountData)
    expectImportThrowsWithError(makeJSON(emptyRegion, ""), "contributes 0 times to the likelihood 'likelihood', but it "
                                                           "must contribute exactly once (it is a component of the "
                                                           "combined distribution 'model' without data");
+}
+
+// An auxiliary measurement that is a region of the model, so that it is part of the sampling distribution: a
+// component of the combined distribution that consists of constraint terms, with the observed values in the global
+// observables. It is written once, as that component with a data set of the observed values, and never through its
+// factors or the components of its array (reported on ROOT PR #24201).
+TEST(RooFitHS3, AuxiliaryMeasurementAsRegionOfTheModel)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   const std::string array = R"({"name": "aux", "type": "array_dist", "component_type": "gaussian_dist",
+      "default_parameters": {"sigma": 1.0}, "components": [{"x": "g1", "mean": "theta"}, {"x": "g2", "mean": "eta"}]})";
+   const std::string product = R"({"name": "aux", "type": "product_dist", "factors": ["c1", "c2"]},
+      {"name": "c1", "type": "gaussian_dist", "x": "g1", "mean": "theta", "sigma": 1.0},
+      {"name": "c2", "type": "gaussian_dist", "x": "g2", "mean": "eta", "sigma": 1.0})";
+   auto makeJSON = [](std::string const &aux) {
+      return R"({
+         "metadata": {"hs3_version": "0.3"},
+         "distributions": [
+            {"name": "physics", "type": "gaussian_dist", "x": "x", "mean": "mean", "sigma": 1.0},
+            )" +
+             aux + R"(,
+            {"name": "model", "type": "combined_dist", "columns": ["channel"], "components": [
+               {"key": ["physics"], "dist": "physics"}, {"key": ["auxiliary"], "dist": "aux"}]}
+         ],
+         "functions": [{"name": "mean", "type": "generic_function", "expression": "mu+theta+eta"}],
+         "data": [
+            {"name": "physics_data", "type": "unbinned", "axes": [{"name": "x", "min": -5.0, "max": 5.0}],
+             "entries": [[-0.4], [0.2], [0.7]]},
+            {"name": "empty", "type": "unbinned", "axes": [], "entries": []},
+            {"name": "combData", "type": "combined", "columns": ["channel"], "components": [
+               {"key": ["physics"], "dataset": "physics_data"}, {"key": ["auxiliary"], "dataset": "empty"}]},
+            {"name": "measurement", "type": "unbinned", "axes": [{"name": "g1", "min": -8.0, "max": 8.0},
+             {"name": "g2", "min": -8.0, "max": 8.0}], "entries": [[0.2, -0.3]]}
+         ],
+         "likelihoods": [{"name": "likelihood", "distributions": ["model", "aux"],
+                          "data": ["combData", "measurement"]}],
+         "analyses": [{"name": "ModelConfig", "likelihood": "likelihood", "domains": ["domain"],
+                       "parameters_of_interest": ["mu"]}],
+         "domains": [{"name": "domain", "type": "product_domain", "axes": [
+            {"name": "channel", "categories": ["physics", "auxiliary"]}, {"name": "x", "min": -5.0, "max": 5.0},
+            {"name": "mu", "min": -3.0, "max": 3.0}, {"name": "theta", "min": -3.0, "max": 3.0},
+            {"name": "eta", "min": -3.0, "max": 3.0}, {"name": "g1", "min": -8.0, "max": 8.0},
+            {"name": "g2", "min": -8.0, "max": 8.0}]}],
+         "parameter_points": [{"name": "default_values", "parameters": [
+            {"name": "mu", "value": 1.0}, {"name": "theta", "value": 0.0}, {"name": "eta", "value": 0.0},
+            {"name": "g1", "value": 0.2, "const": true}, {"name": "g2", "value": -0.3, "const": true}]}]
+      })";
+   };
+
+   // The likelihood at three points, relative to the first one, with the constraint terms wherever they are.
+   auto scan = [](RooWorkspace &ws) {
+      auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("ModelConfig"));
+      EXPECT_NE(mc, nullptr);
+      std::vector<double> out;
+      if (!mc || !ws.data("combData")) {
+         return out;
+      }
+      RooArgSet none;
+      std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(
+         *ws.data("combData"),
+         RooFit::GlobalObservables(mc->GetGlobalObservables() ? *mc->GetGlobalObservables() : none),
+         RooFit::ExternalConstraints(mc->GetExternalConstraints() ? *mc->GetExternalConstraints() : none),
+         RooFit::Offset(false))};
+      const std::vector<std::array<double, 3>> points{{1.0, 0.0, 0.0}, {0.5, 0.4, -0.5}, {1.2, -0.4, 0.5}};
+      for (auto const &point : points) {
+         ws.var("mu")->setVal(point[0]);
+         ws.var("theta")->setVal(point[1]);
+         ws.var("eta")->setVal(point[2]);
+         out.push_back(nll->getVal());
+      }
+      const double first = out.front();
+      for (double &value : out) {
+         value -= first;
+      }
+      ws.var("mu")->setVal(1.0);
+      ws.var("theta")->setVal(0.0);
+      ws.var("eta")->setVal(0.0);
+      return out;
+   };
+   // The same from the document itself: -log of the three Gaussians of x and of the two constraints.
+   auto expected = [] {
+      std::vector<double> out;
+      const std::vector<std::array<double, 3>> points{{1.0, 0.0, 0.0}, {0.5, 0.4, -0.5}, {1.2, -0.4, 0.5}};
+      for (auto const &point : points) {
+         const double mean = point[0] + point[1] + point[2];
+         double nll = 0.5 * (0.2 - point[1]) * (0.2 - point[1]) + 0.5 * (-0.3 - point[2]) * (-0.3 - point[2]);
+         for (double x : {-0.4, 0.2, 0.7}) {
+            // Normalized over [-5, 5].
+            const double norm =
+               0.5 * (std::erf((5.0 - mean) / std::sqrt(2.0)) - std::erf((-5.0 - mean) / std::sqrt(2.0)));
+            nll += 0.5 * (x - mean) * (x - mean) + std::log(norm);
+         }
+         out.push_back(nll);
+      }
+      // The constraints are normalized over [-8, 8], which is all of the Gaussian within the precision.
+      const double first = out.front();
+      for (double &value : out) {
+         value -= first;
+      }
+      return out;
+   }();
+
+   auto &config = RooJSONFactoryWSTool::config();
+   for (std::string const &aux : {array, product}) {
+      for (bool constraintData : {false, true}) {
+         for (bool asChannels : {false, true}) {
+            SCOPED_TRACE(std::string(aux == array ? "array" : "product") + (constraintData ? ", data" : ", aux") +
+                         (asChannels ? ", read as channels" : ", read as constraints"));
+            config.exportConstraintData = constraintData;
+            config.importConstraintsAsChannels = asChannels;
+            std::string previous;
+            auto ws = std::make_unique<RooWorkspace>("ws");
+            bool ok = true;
+            try {
+               ok = RooJSONFactoryWSTool{*ws}.importJSONfromString(makeJSON(aux));
+               for (int generation = 0; ok && generation < 3; ++generation) {
+                  const std::vector<double> values = scan(*ws);
+                  ASSERT_EQ(values.size(), expected.size());
+                  for (std::size_t i = 0; i < values.size(); ++i) {
+                     EXPECT_NEAR(values[i], expected[i], 1e-9) << "generation " << generation << ", point " << i;
+                  }
+                  const std::string exported = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+                  // Read as components, the group stays one: the only term of the likelihood is the model.
+                  if (asChannels) {
+                     auto tree = RooFit::Detail::JSONTree::create(exported);
+                     for (auto const &likelihood : tree->rootnode()["likelihoods"].children()) {
+                        EXPECT_EQ(likelihood["distributions"].num_children(), 1u) << exported;
+                        EXPECT_FALSE(likelihood.has_child("aux_distributions")) << exported;
+                     }
+                  }
+                  if (!previous.empty()) {
+                     EXPECT_EQ(exported, previous) << "the document changes after the first export";
+                  }
+                  previous = exported;
+                  ws = std::make_unique<RooWorkspace>("ws");
+                  ok = RooJSONFactoryWSTool{*ws}.importJSONfromString(exported);
+                  EXPECT_TRUE(ok) << exported;
+               }
+            } catch (std::exception const &e) {
+               ADD_FAILURE() << e.what() << "\n" << previous;
+            }
+            EXPECT_TRUE(ok);
+         }
+      }
+   }
+   config.exportConstraintData = false;
+   config.importConstraintsAsChannels = false;
 }
 
 // HS3 0.3: the named constraints of a staterror are authoritative; nothing is derived from the errors of the samples.

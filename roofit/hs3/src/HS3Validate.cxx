@@ -57,6 +57,12 @@ public:
             requireDistribution(ref.name, "misc.ROOT_internal.combined_distributions." + item.first, "distribution");
          }
       }
+      for (auto const &item : _doc.rooFit.auxiliaryChannels) {
+         requireDistribution(item.first, "misc.ROOT_internal.auxiliary_channels", "distribution");
+         for (auto const &ref : item.second) {
+            requireDistribution(ref.name, "misc.ROOT_internal.auxiliary_channels." + item.first, "component");
+         }
+      }
       for (auto const &item : _doc.rooFit.channelConstraints) {
          requireDistribution(item.first, "misc.ROOT_internal.histfactory_constraints", "distribution");
          for (auto const &ref : item.second) {

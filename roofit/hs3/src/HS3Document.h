@@ -495,6 +495,9 @@ struct RooFitInternal {
    /// The constraint terms of HistFactory distributions that no modifier names, by distribution. They are
    /// also listed in the "aux_distributions" of the likelihoods, which is what other implementations use.
    std::map<std::string, std::vector<DistributionRef>> channelConstraints;
+   /// The components of a combined distribution that are auxiliary measurements (constraint terms paired with the
+   /// data set of their observed values), by combined distribution. RooFit can read them back as constraint terms.
+   std::map<std::string, std::vector<DistributionRef>> auxiliaryChannels;
    /// Axes that the components of a combined data set share, but that are no variate of any distribution, e.g. an
    /// event number, by combined data set. They have no statistical meaning, and may be shared.
    std::map<std::string, std::vector<std::string>> bookkeepingColumns;
@@ -676,6 +679,10 @@ std::vector<std::string> sharedVariates(HS3Document const &doc);
 /// since listing it in the model and again on its own is probably unintended, `warnings` gets a message. So it does
 /// for every component of a combined distribution that has no data component at all.
 std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector<std::string> *warnings = nullptr);
+
+/// The distributions that are components of a combined distribution of a likelihood, with a component of the paired
+/// combined data set that has entries: measurements of their own.
+std::set<std::string> componentsWithData(HS3Document const &doc);
 
 /// The variates of the "distributions" of a likelihood, which it pairs with data, with the columns of its combined
 /// distributions.

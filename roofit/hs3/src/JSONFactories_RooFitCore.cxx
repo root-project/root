@@ -605,6 +605,10 @@ bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
       if (!component.is_map() || !component.has_child("dist")) {
          RooJSONFactoryWSTool::error("every component of " + context + " must have a \"key\" and a \"dist\"");
       }
+      // An auxiliary measurement that is read as a constraint term of the model instead.
+      if (tool->isAuxiliaryChannelReadAsConstraint(name, component["dist"].val())) {
+         continue;
+      }
       std::vector<std::string> const key = readSelectionKey(component, columns, context);
       std::string const label = selectionLabel(key);
       if (pdfMap.find(label) != pdfMap.end()) {

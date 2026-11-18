@@ -365,6 +365,12 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
          writeRefs(constraints[item.first], item.second);
       }
    }
+   if (!internal.auxiliaryChannels.empty()) {
+      JSONNode &channels = rootInternal()["auxiliary_channels"].set_map();
+      for (auto const &item : internal.auxiliaryChannels) {
+         writeRefs(channels[item.first], item.second);
+      }
+   }
    if (!internal.bookkeepingColumns.empty()) {
       JSONNode &columns = rootInternal()["bookkeeping_columns"].set_map();
       for (auto const &item : internal.bookkeepingColumns) {

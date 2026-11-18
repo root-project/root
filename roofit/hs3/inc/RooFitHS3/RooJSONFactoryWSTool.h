@@ -84,6 +84,14 @@ public:
       // the observed values as constant parameters (false), or listed in "distributions", each paired with a data set
       // holding the observed values of its observables (true).
       bool exportConstraintData = false;
+      /// EXPERIMENTAL: how auxiliary measurements that are components of a combined distribution (a constraint term
+      /// paired with the data set of its observed values, as RooFit writes them with `exportConstraintData`) are
+      /// read. If false, they become constraint terms of the model as in HistFactory, with global observables set
+      /// to the observed values; RooFit recognizes the components that it wrote like this by a mark in the "misc"
+      /// section of the document. If true, or without that mark, they stay components of the RooSimultaneous, with
+      /// their data set of one entry in the combined data set, so that the RooSimultaneous is the sampling
+      /// distribution of all measurements. This option and the form of the resulting workspace may still change.
+      bool importConstraintsAsChannels = false;
    };
 
    static Config &config();
@@ -252,6 +260,16 @@ public:
    /// version that can't be parsed.
    RooFit::HS3::Version hs3Version() const;
 
+   /// Whether the component `component` of the combined distribution `combinedDist` of the document that is
+   /// currently being imported is read as a constraint term instead (see Config::importConstraintsAsChannels).
+   bool isAuxiliaryChannelReadAsConstraint(std::string const &combinedDist, std::string const &component) const;
+
+   /// Whether the constraint term `pdf` contributes to the likelihoods of the document that is currently being
+   /// imported as a component of a combined distribution with data, by itself or as a component of an array
+   /// distribution. It is then a measurement of its own, and must not be multiplied into the distributions that
+   /// name it as a constraint as well.
+   bool isConstraintReadAsChannel(RooAbsPdf const &pdf) const;
+
 private:
    template <class T>
    T *requestImpl(const std::string &objname);
@@ -271,7 +289,7 @@ private:
       }
    }
    void exportArrayDists();
-   bool exportConstraintData(std::string const &term, RooArgSet const *globalObservables);
+   bool exportConstraintData(std::string const &term, RooArgSet const *globalObservables, std::string const &dataName);
 
    void exportSimultaneous(RooSimultaneous const &simPdf);
    void recordCategory(RooAbsCategory const &cat);
@@ -301,6 +319,10 @@ private:
                                               std::vector<RooFit::HS3::DistributionRef> channelConstraints);
 
    // member variables
+   /// The components of combined distributions that are read as constraint terms, by combined distribution.
+   std::map<std::string, std::set<std::string>> _auxiliaryChannelsAsConstraints;
+   /// The components of combined distributions that have data, and are read as such.
+   std::set<std::string> _componentsWithData;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
