@@ -17,7 +17,6 @@
 #include <RooArgusBG.h>
 #include <RooBernstein.h>
 #include <RooBifurGauss.h>
-#include <RooBinning.h>
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
 #include <RooCBShape.h>
@@ -64,7 +63,6 @@
 #include <RooRealIntegral.h>
 #include <RooSpline.h>
 #include <RooUniform.h>
-#include <RooUniformBinning.h>
 #include <TSpline.h>
 
 #include <TF1.h>
@@ -83,8 +81,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cmath>
-#include <limits>
 #include <memory>
 #include <initializer_list>
 #include <set>
@@ -93,6 +89,8 @@
 #include <vector>
 
 using RooFit::Detail::JSONNode;
+
+namespace HS3 = RooFit::HS3;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // individually implemented importers
@@ -281,112 +279,36 @@ void translateImportedExpression(TString &expr)
    }
 }
 
-int readPositiveInteger(const JSONNode &node, const std::string &context)
-{
-   // Read through val_double() so an integer encoded as a JSON float (e.g. 1e6,
-   // whose textual form is "1e+06") is accepted like elsewhere in HS3, while
-   // fractional, non-finite, out-of-range or non-numeric values are rejected.
-   const double value = node.is_number() ? node.val_double() : std::numeric_limits<double>::quiet_NaN();
-   if (!std::isfinite(value) || value < 1.0 || value != std::floor(value) ||
-       value > static_cast<double>(std::numeric_limits<int>::max())) {
-      RooJSONFactoryWSTool::error("\"nbins\" in " + context + " must be a positive integer");
-   }
-   return static_cast<int>(value);
-}
-
-std::unique_ptr<RooAbsBinning>
-readFormulaAxisBinning(const JSONNode &axis, const std::string &axisName, const std::string &formulaName)
-{
-   const std::string context = "axis '" + axisName + "' of generic formula '" + formulaName + "'";
-   const bool hasEdges = axis.has_child("edges");
-   const bool hasMin = axis.has_child("min");
-   const bool hasMax = axis.has_child("max");
-   const bool hasNBins = axis.has_child("nbins");
-
-   if (hasEdges && hasNBins) {
-      RooJSONFactoryWSTool::error(context + " must use either \"edges\" or \"nbins\"");
-   }
-
-   if (hasEdges) {
-      const JSONNode &edgesNode = axis["edges"];
-      if (!edgesNode.is_seq()) {
-         RooJSONFactoryWSTool::error("\"edges\" in " + context + " must be a sequence");
-      }
-
-      std::vector<double> edges;
-      edges.reserve(edgesNode.num_children());
-      for (const JSONNode &edgeNode : edgesNode.children()) {
-         if (!edgeNode.is_number()) {
-            RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain only finite values");
-         }
-         const double edge = edgeNode.val_double();
-         if (!std::isfinite(edge)) {
-            RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain only finite values");
-         }
-         if (!edges.empty() && edge <= edges.back()) {
-            RooJSONFactoryWSTool::error("\"edges\" in " + context + " must be strictly increasing");
-         }
-         edges.push_back(edge);
-      }
-      if (edges.size() < 2) {
-         RooJSONFactoryWSTool::error("\"edges\" in " + context + " must contain at least two values");
-      }
-      // The HS3 standard requires "min" and "max" also for irregular binnings, which older versions of RooFit didn't
-      // write.
-      if ((hasMin && (!axis["min"].is_number() || axis["min"].val_double() != edges.front())) ||
-          (hasMax && (!axis["max"].is_number() || axis["max"].val_double() != edges.back()))) {
-         RooJSONFactoryWSTool::error("\"min\" and \"max\" in " + context + " must agree with the \"edges\"");
-      }
-      return std::make_unique<RooBinning>(static_cast<int>(edges.size() - 1), edges.data());
-   }
-
-   if (!hasMin || !hasMax || !hasNBins) {
-      RooJSONFactoryWSTool::error(context + " must define \"min\", \"max\", and \"nbins\"");
-   }
-
-   if (!axis["min"].is_number() || !axis["max"].is_number()) {
-      RooJSONFactoryWSTool::error("\"min\" and \"max\" in " + context + " must be finite and increasing");
-   }
-   const double min = axis["min"].val_double();
-   const double max = axis["max"].val_double();
-   if (!std::isfinite(min) || !std::isfinite(max) || max <= min) {
-      RooJSONFactoryWSTool::error("\"min\" and \"max\" in " + context + " must be finite and increasing");
-   }
-   return std::make_unique<RooUniformBinning>(min, max, readPositiveInteger(axis["nbins"], context));
-}
-
+// Give the formula the binnings of its "axes", which are read like the axes of binned data.
 template <class RooArg_t>
 void importFormulaBinnings(RooArg_t &arg, const JSONNode &node)
 {
    if (!node.has_child("axes")) {
       return;
    }
-
-   const JSONNode &axes = node["axes"];
-   if (!axes.is_seq()) {
-      RooJSONFactoryWSTool::error("\"axes\" in generic formula '" + std::string(arg.GetName()) +
-                                  "' must be a sequence");
-   }
+   const std::string context = "generic formula '" + std::string(arg.GetName()) + "'";
+   HS3::Diagnostics diagnostics;
+   const std::vector<HS3::BinnedAxis> axes = HS3::parseBinnedAxes(node["axes"], diagnostics);
+   HS3::report(diagnostics, std::string(arg.GetName()) + ".axes");
 
    std::set<std::string> axisNames;
-   for (const JSONNode &axis : axes.children()) {
-      if (!axis.is_map() || !axis.has_child("name")) {
-         RooJSONFactoryWSTool::error("each axis in generic formula '" + std::string(arg.GetName()) +
-                                     "' must be a map with a \"name\"");
+   for (HS3::BinnedAxis const &axis : axes) {
+      if (!axisNames.insert(axis.name).second) {
+         RooJSONFactoryWSTool::error("duplicate axis '" + axis.name + "' in " + context);
       }
-      const std::string axisName = axis["name"].val();
-      if (!axisNames.insert(axisName).second) {
-         RooJSONFactoryWSTool::error("duplicate axis '" + axisName + "' in generic formula '" + arg.GetName() + "'");
+      if (!dynamic_cast<RooAbsRealLValue *>(arg.getParameter(axis.name.c_str()))) {
+         RooJSONFactoryWSTool::error("axis '" + axis.name + "' is not a real-valued formula variable of " + context);
       }
-
-      auto *observable = dynamic_cast<RooAbsRealLValue *>(arg.getParameter(axisName.c_str()));
-      if (!observable) {
-         RooJSONFactoryWSTool::error(
-            "axis '" + axisName + "' is not a real-valued formula variable of generic formula '" + arg.GetName() + "'");
+      auto const *regular = std::get_if<HS3::RegularBinning>(&axis.binning);
+      if (regular && (regular->nbins < 1 || !(axis.min < axis.max))) {
+         RooJSONFactoryWSTool::error("axis '" + axis.name + "' of " + context +
+                                     " needs a positive \"nbins\" and \"min\" smaller than \"max\"");
       }
-
-      std::unique_ptr<RooAbsBinning> binning = readFormulaAxisBinning(axis, axisName, arg.GetName());
-      arg.setBinning(*observable, *binning, /*checkFlatness=*/false);
+   }
+   // The formula finds its variable by name, so the variables that are created for the axes can stand in for them.
+   RooArgSet vars = HS3::createObservables(axes);
+   for (auto *var : static_range_cast<RooRealVar *>(vars)) {
+      arg.setBinning(*var, var->getBinning(), /*checkFlatness=*/false);
    }
 }
 
@@ -800,7 +722,7 @@ bool importPoisson(RooJSONFactoryWSTool *tool, const JSONNode &p)
    bool noRounding = Continuous;
    if (p.has_child("integer")) {
       std::string const type = Continuous ? "poisson_continuous_dist" : "poisson_dist";
-      if (Continuous || !(tool->hs3Version() < RooFit::HS3::Version{0, 3})) {
+      if (Continuous || !(tool->hs3Version() < HS3::Version{0, 3})) {
          RooJSONFactoryWSTool::error(
             type + " '" + name +
             "' has the key \"integer\", which is not part of HS3. The discrete Poisson distribution is "
@@ -1643,7 +1565,7 @@ void exportFormulaArg(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &ele
       if (!axes.is_seq()) {
          axes.set_seq();
       }
-      RooFit::HS3::writeAxis(axes.append_child(), RooFit::HS3::toBinnedAxis(observable->GetName(), *binning));
+      HS3::writeAxis(axes.append_child(), HS3::toBinnedAxis(observable->GetName(), *binning));
    }
 }
 
@@ -1815,7 +1737,7 @@ void exportParamHistFunc(RooJSONFactoryWSTool *, ParamHistFunc const &pdf, JSONN
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(pdf.dataVars())) {
-      RooFit::HS3::writeAxis(observablesNode.append_child(), RooFit::HS3::toBinnedAxis(*var));
+      HS3::writeAxis(observablesNode.append_child(), HS3::toBinnedAxis(*var));
    }
 }
 
