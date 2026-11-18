@@ -435,33 +435,8 @@ TEST(MiniFile, ProperKeys)
 
 TEST(MiniFile, LongString)
 {
-   FileRaii fileGuard("test_ntuple_minifile_long_string.root");
-
-   static constexpr const char *LongString =
-      "This is a very long text with exactly 254 characters, which is the longest string that a TFile key stores with "
-      "a one byte length prefix. For longer strings, a length of 255 is special and means that the first length byte "
-      "is followed by an integer length.";
-   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", LongString));
-   auto writer = RNTupleFileWriter::Append("ntuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
-                                           /*isAttributesRNTuple=*/false);
-
-   char header = 'h';
-   char footer = 'f';
-   auto offHeader = writer->WriteNTupleHeader(&header, 1, 1);
-   auto offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
-   writer->Commit();
-
-   auto rawFile = RRawFile::Create(fileGuard.GetPath());
-   RMiniFileReader reader(rawFile.get());
-   auto ntuple1 = reader.GetNTuple("ntuple").Inspect();
-   EXPECT_EQ(offHeader, ntuple1.GetSeekHeader());
-   EXPECT_EQ(offFooter, ntuple1.GetSeekFooter());
-}
-
-TEST(MiniFile, LongStringTitle)
-{
    // Strings longer than 254 characters are stored as a 255 marker byte followed by a 32-bit length
-   for (std::size_t len : {255u, 256u, 2000u}) {
+   for (std::size_t len : {254u, 255u, 256u, 2000u}) {
       SCOPED_TRACE("title length " + std::to_string(len));
       FileRaii fileGuard("test_ntuple_minifile_long_string_title_" + std::to_string(len) + ".root");
       const std::string title(len, 't');
@@ -487,29 +462,9 @@ TEST(MiniFile, LongStringTitle)
    }
 }
 
-TEST(MiniFile, LongNTupleNameRaw)
+TEST(MiniFile, LongNTupleNameSimple)
 {
-   FileRaii fileGuard("test_ntuple_minifile_long_ntuple_name_raw.ntuple");
-   const std::string ntupleName(300, 'n');
-
-   RNTupleWriteOptions options;
-   auto writer = RNTupleFileWriter::Recreate(ntupleName, fileGuard.GetPath(), EContainerFormat::kBare, options);
-   char header = 'h';
-   char footer = 'f';
-   auto offHeader = writer->WriteNTupleHeader(&header, 1, 1);
-   auto offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
-   writer->Commit();
-
-   auto rawFile = RRawFile::Create(fileGuard.GetPath());
-   RMiniFileReader reader(rawFile.get());
-   auto ntuple = reader.GetNTuple(ntupleName).Inspect();
-   EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
-   EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
-}
-
-TEST(MiniFile, LongNTupleNameStream)
-{
-   FileRaii fileGuard("test_ntuple_minifile_long_ntuple_name_stream.root");
+   FileRaii fileGuard("test_ntuple_minifile_long_ntuple_name_simple.root");
    const std::string ntupleName(300, 'n');
 
    RNTupleWriteOptions options;
