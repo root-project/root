@@ -76,6 +76,17 @@ inline bool EndsWith(std::string_view string, std::string_view suffix)
    return string.size() >= suffix.size() && string.substr(string.size() - suffix.size(), suffix.size()) == suffix;
 }
 
+/**
+ * Splits the given string into multiple lines so that each line is at most `maxLen` wide.
+ * If the original string is a multi-line string, single newlines and tabs will be converted to whitespace before being
+ * wrapped, but multiple consecutive newlines will be preserved. This allows preserving paragraphs in the output string.
+ * If `indent > 0`, wrapped lines will be preceded by `indent` whitespaces (which will count in the line width). Note
+ * that this does NOT include the first line, which will instead be wrapped to a length of `firstLineMaxLen` (whose
+ * default, used if the parameter is set to 0, is `maxLen - indent`).
+ */
+[[nodiscard]] std::string
+WrapString(std::string_view string, std::size_t maxLen, std::size_t indent = 0, std::size_t firstLineMaxLen = 0);
+
 } // namespace ROOT
 
 #endif
