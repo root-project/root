@@ -669,7 +669,13 @@ std::vector<std::string> sharedVariates(HS3Document const &doc);
 /// "distributions" or "aux_distributions", or as a factor of a product_dist or a component of a combined_dist reached
 /// from them. One message for each named distribution of each likelihood that doesn't. For older documents, RooFit
 /// adds the named constraints itself (see sharedVariates()).
-std::vector<std::string> unlistedConstraints(HS3Document const &doc);
+///
+/// A distribution contributes one factor per entry of the data that it is paired with, so that being listed is not
+/// the same as contributing: a component of a combined_dist without a component of the paired combined data set, or
+/// with one that has no entries, contributes nothing. A constraint that contributes once elsewhere is then fine, but
+/// since listing it in the model and again on its own is probably unintended, `warnings` gets a message. So it does
+/// for every component of a combined distribution that has no data component at all.
+std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector<std::string> *warnings = nullptr);
 
 /// The variates of the "distributions" of a likelihood, which it pairs with data, with the columns of its combined
 /// distributions.

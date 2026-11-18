@@ -3475,9 +3475,13 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
               "version.");
    }
    if (!(doc.metadata.version < HS3::Version{0, 3})) {
-      for (std::string const &message : HS3::unlistedConstraints(doc)) {
+      std::vector<std::string> notes;
+      for (std::string const &message : HS3::unlistedConstraints(doc, &notes)) {
          error("invalid HS3: " + message +
                ". The \"constraints\" of a modifier add no term to the likelihood, which has to list them.");
+      }
+      for (std::string const &note : notes) {
+         warning("RooFitHS3: " + note + ".");
       }
    }
 

@@ -9928,6 +9928,98 @@ TEST(RooFitHS3, HistFactoryConstraintsListedOnce)
    }
 }
 
+// A constraint contributes to a likelihood through the data that it is paired with: a component of a combined
+// distribution without data is no contribution. Reported for auxiliary measurements that are a region of the model,
+// so that they are part of the sampling distribution, and also a term of their own (ROOT PR #24201).
+TEST(RooFitHS3, HistFactoryConstraintContributionsCountData)
+{
+   // The constraints of the channel "physics" are the array "aux", which is also the component "auxiliary" of the
+   // combined distribution "model".
+   auto makeJSON = [](std::string const &auxiliaryData, std::string const &measurement) {
+      return R"({
+         "metadata": {"hs3_version": "0.3"},
+         "distributions": [
+            {"name": "physics", "type": "histfactory_dist",
+             "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+             "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+             "samples": [{"name": "signal", "data": {"contents": [10.0, 15.0]}, "modifiers": [
+                {"type": "normfactor", "parameters": ["mu"]},
+                {"name": "s1", "type": "normsys", "parameters": ["theta"], "data": {"lo": 0.9, "hi": 1.1},
+                 "constraints": ["aux"]},
+                {"name": "s2", "type": "normsys", "parameters": ["eta"], "data": {"lo": 0.8, "hi": 1.2},
+                 "constraints": ["aux"]}]}]},
+            {"name": "aux", "type": "array_dist", "component_type": "gaussian_dist",
+             "default_parameters": {"sigma": 1.0},
+             "components": [{"x": "g1", "mean": "theta"}, {"x": "g2", "mean": "eta"}]},
+            {"name": "model", "type": "combined_dist", "columns": ["channel"], "components": [
+                {"key": ["physics"], "dist": "physics"}, {"key": ["auxiliary"], "dist": "aux"}]}
+         ],
+         "data": [
+            {"name": "physics_data", "type": "binned", "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+             "contents": [10.0, 15.0]},
+            {"name": "empty", "type": "unbinned", "axes": [], "entries": []},
+            {"name": "one", "type": "unbinned", "axes": [{"name": "g1", "min": -8.0, "max": 8.0},
+             {"name": "g2", "min": -8.0, "max": 8.0}], "entries": [[0.2, -0.3]]},
+            {"name": "combData", "type": "combined", "columns": ["channel"], "components": [
+                {"key": ["physics"], "dataset": "physics_data"})" +
+             auxiliaryData + R"(]},
+            {"name": "measurement", "type": "unbinned", "axes": [{"name": "g1", "min": -8.0, "max": 8.0},
+             {"name": "g2", "min": -8.0, "max": 8.0}], "entries": [[0.2, -0.3]]}
+         ],
+         "likelihoods": [{"name": "likelihood", "distributions": ["model")" +
+             (measurement.empty() ? "" : R"(, "aux")") + R"(], "data": ["combData")" + measurement + R"(]}],
+         "analyses": [{"name": "ModelConfig", "likelihood": "likelihood", "domains": ["domain"],
+                       "parameters_of_interest": ["mu"]}],
+         "domains": [{"name": "domain", "type": "product_domain", "axes": [
+            {"name": "channel", "categories": ["physics", "auxiliary"]},
+            {"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "mu", "min": 0.0, "max": 3.0},
+            {"name": "theta", "min": -3.0, "max": 3.0}, {"name": "eta", "min": -3.0, "max": 3.0},
+            {"name": "g1", "min": -8.0, "max": 8.0}, {"name": "g2", "min": -8.0, "max": 8.0}]}],
+         "parameter_points": [{"name": "default_values", "parameters": [
+            {"name": "mu", "value": 1.0}, {"name": "theta", "value": 0.0}, {"name": "eta", "value": 0.0},
+            {"name": "g1", "value": 0.2, "const": true}, {"name": "g2", "value": -0.3, "const": true}]}]
+      })";
+   };
+   const std::string emptyRegion = R"(, {"key": ["auxiliary"], "dataset": "empty"})";
+   const std::string observedRegion = R"(, {"key": ["auxiliary"], "dataset": "one"})";
+   const std::string measurement = R"(, "measurement")";
+
+   auto importWithWarnings = [&](std::string const &json) {
+      bool ok = false;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::ObjectHandling, [&] {
+         RooWorkspace ws;
+         ok = RooJSONFactoryWSTool{ws}.importJSONfromString(json);
+      });
+      EXPECT_TRUE(ok);
+      return warnings;
+   };
+
+   {
+      // A region with a data set that has no entries, and the measurement as a term of its own: one contribution.
+      // Listing the constraint twice is probably not intended, so there is a warning.
+      const std::string warnings = importWithWarnings(makeJSON(emptyRegion, measurement));
+      EXPECT_NE(warnings.find("the constraint 'aux' is a term of the likelihood 'likelihood' and also a component of "
+                              "the combined distribution 'model' without data"),
+                std::string::npos)
+         << warnings;
+   }
+   {
+      // The same without any data component for the region, which is also reported.
+      const std::string warnings = importWithWarnings(makeJSON("", measurement));
+      EXPECT_NE(warnings.find("the component 'aux' of the combined distribution 'model' has no component in the data "
+                              "set 'combData'"),
+                std::string::npos)
+         << warnings;
+   }
+   // The measurement twice: as the data of the region and as a term of its own.
+   expectImportThrowsWithError(makeJSON(observedRegion, measurement), "the constraint 'aux' named by a modifier of a "
+                                                                      "HistFactory channel contributes 2 times");
+   // No measurement at all: a region without data is no observation.
+   expectImportThrowsWithError(makeJSON(emptyRegion, ""), "contributes 0 times to the likelihood 'likelihood', but it "
+                                                          "must contribute exactly once (it is a component of the "
+                                                          "combined distribution 'model' without data");
+}
+
 // HS3 0.3: the named constraints of a staterror are authoritative; nothing is derived from the errors of the samples.
 TEST(RooFitHS3, StatErrorFromDocument)
 {

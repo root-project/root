@@ -377,46 +377,126 @@ std::map<std::string, std::set<std::string>> bookkeepingColumns(HS3Document cons
    return out;
 }
 
-std::vector<std::string> unlistedConstraints(HS3Document const &doc)
+std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector<std::string> *warnings)
 {
    Distributions distributions{doc};
+   auto findData = [&](std::string const &name) -> Data const * {
+      auto found = std::find_if(doc.data.begin(), doc.data.end(), [&](Data const &d) { return d.name == name; });
+      return found != doc.data.end() ? &*found : nullptr;
+   };
+   // The number of factors that a distribution paired with the data set `name` contributes to a likelihood: one for
+   // point data and binned data, the number of entries for unbinned data. Without such a data set, the document is
+   // not valid, which is reported elsewhere: one is assumed.
+   auto numDataEntries = [&](std::string const &name) {
+      Data const *data = findData(name);
+      auto const *unbinned = data ? std::get_if<UnbinnedData>(&data->body) : nullptr;
+      return unbinned ? static_cast<int>(unbinned->numEntries()) : 1;
+   };
+   // The labels of the key of a component of a combined distribution, like the parser reads those of combined data.
+   auto keyOf = [](JSONNode const &component) {
+      std::vector<std::string> key;
+      if (JSONNode const *node = component.find("key"); node && node->is_seq()) {
+         for (JSONNode const &label : node->children()) {
+            key.push_back(label.is_container() ? std::string{} : label.val());
+         }
+      }
+      return key;
+   };
+
    std::vector<std::string> messages;
    for (Likelihood const &likelihood : doc.likelihoods) {
       std::map<std::string, int> contributions;
+      // The combined distributions in which a distribution is a component without data.
+      std::map<std::string, std::set<std::string>> withoutData;
       std::set<std::string> named;
-      std::function<void(std::string const &)> contribute = [&](std::string const &name) {
-         ++contributions[name];
-         if (auto const *histFactory = distributions.find<HistFactoryDist>(name)) {
-            for (std::string const &constraint : namedConstraints(*histFactory)) {
-               named.insert(constraint);
+      // `combined` is the combined distribution whose component without data the distribution is reached through.
+      std::function<void(std::string const &, int, std::string const &)> contribute =
+         [&](std::string const &name, int entries, std::string const &combined) {
+            contributions[name] += entries;
+            if (entries == 0) {
+               withoutData[name].insert(combined);
             }
-         } else if (JSONNode const *generic = distributions.nodeOf(name, "histfactory_dist")) {
-            for (std::string const &constraint : namedConstraints(*generic)) {
-               named.insert(constraint);
+            if (auto const *histFactory = distributions.find<HistFactoryDist>(name)) {
+               for (std::string const &constraint : namedConstraints(*histFactory)) {
+                  named.insert(constraint);
+               }
+            } else if (JSONNode const *generic = distributions.nodeOf(name, "histfactory_dist")) {
+               for (std::string const &constraint : namedConstraints(*generic)) {
+                  named.insert(constraint);
+               }
+            } else if (JSONNode const *product = distributions.nodeOf(name, "product_dist")) {
+               for (std::string const &factor : namesIn(*product, "factors")) {
+                  contribute(factor, entries, combined);
+               }
             }
-         } else if (JSONNode const *product = distributions.nodeOf(name, "product_dist")) {
-            for (std::string const &factor : namesIn(*product, "factors")) {
-               contribute(factor);
+         };
+      // The components of a combined distribution, each with the entries of the component of the paired combined data
+      // set that has the same key. Without paired data (a pure model), every component contributes once.
+      auto contributeCombined = [&](std::string const &distName, JSONNode const &dist, Data const *data) {
+         auto const *combinedData = data ? std::get_if<CombinedData>(&data->body) : nullptr;
+         JSONNode const *components = dist.find("components");
+         if (!components) {
+            return;
+         }
+         for (JSONNode const &component : components->children()) {
+            JSONNode const *name = component.find("dist");
+            if (!name || !isName(*name)) {
+               continue;
             }
-         } else if (JSONNode const *combined = distributions.nodeOf(name, "combined_dist")) {
-            for (std::string const &component : namesIn(*combined, "components", "dist")) {
-               contribute(component);
+            int entries = 1;
+            if (combinedData) {
+               entries = 0;
+               bool found = false;
+               std::vector<std::string> const key = keyOf(component);
+               for (CombinedDataComponent const &dataComponent : combinedData->components) {
+                  if (dataComponent.key == key) {
+                     found = true;
+                     entries = numDataEntries(dataComponent.data.name);
+                  }
+               }
+               if (!found && warnings) {
+                  warnings->push_back("the component '" + name->val() + "' of the combined distribution '" + distName +
+                                      "' has no component in the data set '" + data->name + "' that the likelihood '" +
+                                      likelihood.name + "' pairs it with, so it does not contribute to the likelihood");
+               }
             }
+            contribute(name->val(), entries, distName);
          }
       };
       for (LikelihoodTerm const &term : likelihood.terms) {
-         contribute(term.distribution.name);
+         // The paired data: a data set, a value given in-line, or nothing (a pure model).
+         auto const *dataRef = std::get_if<DataRef>(&term.data);
+         Data const *data = dataRef ? findData(dataRef->name) : nullptr;
+         std::string const &name = term.distribution.name;
+         if (JSONNode const *combined = distributions.nodeOf(name, "combined_dist")) {
+            ++contributions[name];
+            contributeCombined(name, *combined, data);
+         } else {
+            contribute(name, data ? numDataEntries(data->name) : 1, "");
+         }
       }
       for (DistributionRef const &aux : likelihood.auxDistributions) {
-         contribute(aux.name);
+         contribute(aux.name, 1, "");
       }
       for (std::string const &constraint : named) {
          const int n = contributions[constraint];
+         auto const &regions = withoutData[constraint];
+         std::string inRegions;
+         for (std::string const &region : regions) {
+            inRegions += (inRegions.empty() ? "'" : ", '") + region + "'";
+         }
          if (n != 1) {
             messages.push_back("the constraint '" + constraint +
                                "' named by a modifier of a HistFactory channel contributes " + std::to_string(n) +
                                " times to the likelihood '" + likelihood.name +
-                               "', but it must contribute exactly once");
+                               "', but it must contribute exactly once" +
+                               (n == 0 && !regions.empty() ? " (it is a component of the combined distribution " +
+                                                                inRegions + " without data, which is no observation)"
+                                                           : ""));
+         } else if (!regions.empty() && warnings) {
+            warnings->push_back("the constraint '" + constraint + "' is a term of the likelihood '" + likelihood.name +
+                                "' and also a component of the combined distribution " + inRegions +
+                                " without data. It contributes once, as the term");
          }
       }
    }
