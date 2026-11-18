@@ -9554,8 +9554,10 @@ TEST(RooFitHS3, ConstraintDataOfProductConstraints)
       auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
       ASSERT_NE(mc2, nullptr);
       EXPECT_STREQ(mc2->GetPdf()->GetName(), "model");
-      ASSERT_NE(mc2->GetExternalConstraints(), nullptr) << exported;
-      EXPECT_NE(mc2->GetExternalConstraints()->find("constraint"), nullptr) << exported;
+      // The constraint is a factor of the model again, as in the original, so that the model is the sampling
+      // distribution of the auxiliary measurement as well. It is not an external constraint.
+      EXPECT_TRUE(!mc2->GetExternalConstraints() || mc2->GetExternalConstraints()->empty()) << exported;
+      EXPECT_TRUE(mc2->GetPdf()->dependsOn(*ws2.var("gobs"))) << exported;
       ASSERT_NE(mc2->GetGlobalObservables(), nullptr) << exported;
       EXPECT_NE(mc2->GetGlobalObservables()->find("gobs"), nullptr) << exported;
       EXPECT_EQ(ws2.data("constraint_data"), nullptr);
@@ -9563,8 +9565,7 @@ TEST(RooFitHS3, ConstraintDataOfProductConstraints)
       EXPECT_TRUE(ws2.var("gobs")->isConstant());
       EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
 
-      // After the first round trip, the constraint is an external constraint of the ModelConfig, which is written in
-      // the same way. From there on, the document is stable.
+      // The document is stable.
       RooJSONFactoryWSTool::config().exportConstraintData = constraintData;
       const std::string exported2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
       RooWorkspace ws3;
@@ -10188,6 +10189,120 @@ TEST(RooFitHS3, AuxiliaryMeasurementAsRegionOfTheModel)
    }
    config.exportConstraintData = false;
    config.importConstraintsAsChannels = false;
+}
+
+// A Gaussian constraint is written with its global observable as "x". Whether that is the x or the mean of the
+// RooGaussian must not depend on the order in which the pdfs are written: here, the constraint comes before the
+// channel that names it, and a product keeps it from becoming a component of an array (reported on ROOT PR #24201).
+TEST(RooFitHS3, GaussianConstraintObservableBeforeItsChannel)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   RooWorkspace ws{"ws"};
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "physics", "type": "histfactory_dist", "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+          "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
+          "samples": [{"name": "signal", "data": {"contents": [10.0, 15.0]}, "modifiers": [
+             {"type": "normfactor", "parameters": ["mu"]},
+             {"name": "s", "type": "normsys", "parameters": ["theta"], "data": {"lo": 0.9, "hi": 1.1},
+              "constraints": ["constraint"]}]}]},
+         {"name": "constraint", "type": "gaussian_dist", "x": "theta", "mean": "g", "sigma": 1.0}],
+      "data": [{"name": "data", "type": "binned", "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
+                "contents": [10.0, 15.0]}],
+      "likelihoods": [{"name": "likelihood", "distributions": ["physics"], "data": ["data"],
+                       "aux_distributions": ["constraint"]}],
+      "analyses": [{"name": "ModelConfig", "likelihood": "likelihood", "domains": ["domain"],
+                    "parameters_of_interest": ["mu"]}],
+      "domains": [{"name": "domain", "type": "product_domain", "axes": [
+         {"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "mu", "min": 0.0, "max": 3.0},
+         {"name": "theta", "min": -3.0, "max": 3.0}, {"name": "g", "min": -5.0, "max": 5.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "mu", "value": 1.0}, {"name": "theta", "value": 0.0}, {"name": "g", "value": 0.0, "const": true}]}]
+   })"));
+   ASSERT_NE(ws.factory("PROD::keep_scalar(constraint)"), nullptr);
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("ModelConfig"));
+   ASSERT_NE(mc, nullptr);
+   mc->SetGlobalObservables(RooArgSet{*ws.var("g")});
+
+   auto &config = RooJSONFactoryWSTool::config();
+   config.exportConstraintData = true;
+   std::string exported;
+   EXPECT_NO_THROW(exported = RooJSONFactoryWSTool{ws}.exportJSONtoString());
+   config.exportConstraintData = false;
+   ASSERT_FALSE(exported.empty());
+
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   auto const *constraint = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "constraint");
+   ASSERT_NE(constraint, nullptr) << exported;
+   EXPECT_EQ((*constraint)["x"].val(), "g") << exported;
+   EXPECT_EQ((*constraint)["mean"].val(), "theta") << exported;
+
+   RooWorkspace ws2{"ws2"};
+   EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+}
+
+// EXPERIMENTAL import of constraints as channels: an auxiliary observation that is a term of two likelihoods becomes
+// a component of both of their combined data sets, each of which needs a data set of its own.
+TEST(RooFitHS3, AuxiliaryObservationSharedByTwoLikelihoods)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.3"},
+      "distributions": [
+         {"name": "physics", "type": "gaussian_dist", "x": "x", "mean": "mean", "sigma": 1.0},
+         {"name": "aux", "type": "array_dist", "component_type": "gaussian_dist", "default_parameters": {"sigma": 1.0},
+          "components": [{"x": "g1", "mean": "theta"}, {"x": "g2", "mean": "eta"}]},
+         {"name": "model", "type": "combined_dist", "columns": ["channel"], "components": [
+            {"key": ["physics"], "dist": "physics"}, {"key": ["auxiliary"], "dist": "aux"}]}
+      ],
+      "functions": [{"name": "mean", "type": "generic_function", "expression": "mu+theta+eta"}],
+      "data": [
+         {"name": "observed_physics", "type": "unbinned", "axes": [{"name": "x", "min": -5.0, "max": 5.0}],
+          "entries": [[-0.4], [0.2], [0.7]]},
+         {"name": "asimov_physics", "type": "unbinned", "axes": [{"name": "x", "min": -5.0, "max": 5.0}],
+          "entries": [[1.0]]},
+         {"name": "observed", "type": "combined", "columns": ["channel"], "components": [
+            {"key": ["physics"], "dataset": "observed_physics"}]},
+         {"name": "asimov", "type": "combined", "columns": ["channel"], "components": [
+            {"key": ["physics"], "dataset": "asimov_physics"}]},
+         {"name": "measurement", "type": "unbinned", "axes": [{"name": "g1", "min": -8.0, "max": 8.0},
+          {"name": "g2", "min": -8.0, "max": 8.0}], "entries": [[0.2, -0.3]]}
+      ],
+      "likelihoods": [
+         {"name": "likelihood_observed", "distributions": ["model", "aux"], "data": ["observed", "measurement"]},
+         {"name": "likelihood_asimov", "distributions": ["model", "aux"], "data": ["asimov", "measurement"]}],
+      "analyses": [
+         {"name": "ModelConfig_observed", "likelihood": "likelihood_observed", "domains": ["domain"],
+          "parameters_of_interest": ["mu"]},
+         {"name": "ModelConfig_asimov", "likelihood": "likelihood_asimov", "domains": ["domain"],
+          "parameters_of_interest": ["mu"]}],
+      "domains": [{"name": "domain", "type": "product_domain", "axes": [
+         {"name": "channel", "categories": ["physics", "auxiliary"]}, {"name": "x", "min": -5.0, "max": 5.0},
+         {"name": "mu", "min": -3.0, "max": 3.0}, {"name": "theta", "min": -3.0, "max": 3.0},
+         {"name": "eta", "min": -3.0, "max": 3.0}, {"name": "g1", "min": -8.0, "max": 8.0},
+         {"name": "g2", "min": -8.0, "max": 8.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "mu", "value": 1.0}, {"name": "theta", "value": 0.0}, {"name": "eta", "value": 0.0},
+         {"name": "g1", "value": 0.2, "const": true}, {"name": "g2", "value": -0.3, "const": true}]}]
+   })";
+
+   auto &config = RooJSONFactoryWSTool::config();
+   config.importConstraintsAsChannels = true;
+   RooWorkspace ws{"ws"};
+   bool ok = false;
+   EXPECT_NO_THROW(ok = RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   config.importConstraintsAsChannels = false;
+   ASSERT_TRUE(ok);
+   // Both combined data sets have the observation as the entry of the auxiliary channel.
+   for (const char *name : {"observed", "asimov"}) {
+      RooAbsData *data = ws.data(name);
+      ASSERT_NE(data, nullptr) << name;
+      std::unique_ptr<RooAbsData> slice{data->reduce("channel==channel::auxiliary")};
+      EXPECT_EQ(slice->numEntries(), 1) << name;
+   }
 }
 
 // HS3 0.3: the named constraints of a staterror are authoritative; nothing is derived from the errors of the samples.

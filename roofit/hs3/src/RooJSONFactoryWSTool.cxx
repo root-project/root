@@ -21,6 +21,7 @@
 #include <RooAbsLValue.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
+#include <RooGaussian.h>
 #include <RooDataHist.h>
 #include <RooCustomizer.h>
 #include <RooProdPdf.h>
@@ -588,7 +589,11 @@ readAuxiliaryChannelsAsConstraints(HS3Document &doc, bool asChannels, std::set<s
       }
       return nullptr;
    };
-   // Components without data that are also terms with data.
+   // Components without data that are also terms with data. A data set can only be a component of one combined data
+   // set, so that the data of a term gets a copy for every further one; room for them is reserved, since the loop
+   // keeps pointers into the data sets.
+   doc.data.reserve(2 * doc.data.size() + 16);
+   std::set<std::string> dataOfComponents;
    for (HS3::Likelihood &likelihood : doc.likelihoods) {
       std::set<std::string> termsToRemove;
       for (HS3::LikelihoodTerm const &term : likelihood.terms) {
@@ -630,7 +635,17 @@ readAuxiliaryChannelsAsConstraints(HS3Document &doc, bool asChannels, std::set<s
                "' without data and a term of the likelihood '" + likelihood.name + "' with data. It is read as " +
                (asChannels ? "the component, with the data of the term." : "the term only."));
             if (asChannels) {
-               auto const &termData = std::get<HS3::DataRef>(ownTerm->data);
+               HS3::DataRef termData = std::get<HS3::DataRef>(ownTerm->data);
+               if (!dataOfComponents.insert(termData.name).second) {
+                  HS3::Data const *original = findData(termData.name);
+                  const std::string copyName = data->name + "_" + label;
+                  if (original && !findData(copyName) && doc.data.size() < doc.data.capacity()) {
+                     HS3::Data copy = *original;
+                     copy.name = copyName;
+                     doc.data.push_back(std::move(copy));
+                     termData.name = copyName;
+                  }
+               }
                if (dataComponent != combined->components.end()) {
                   dataComponent->data = termData;
                } else {
@@ -1228,6 +1243,86 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
    }
 }
 
+// In HS3, the constraint terms of a model are terms of the likelihood; in RooFit, as HistFactory builds its models, a
+// constraint is a factor of every channel whose parameters it constrains, which makes the pdf of the model the
+// sampling distribution of the auxiliary measurements as well. The export takes the constraints out of the channels
+// (writeLikelihoodTermsOnce()); this puts them back: a constraint term with a global observable (a constant variable
+// that the model itself does not depend on) becomes a factor of every channel that is a product and depends on one
+// of its other parameters. Of an array of constraints, each component goes to its channels. The constraints that
+// found a channel are removed from `constraints`; the others stay external constraints of the ModelConfig, e.g. a
+// penalty term without an observation, like the regularization of an unfolding, or a constraint of a model whose
+// channels are not products.
+void attachConstraintsToChannels(RooAbsPdf &pdf, RooArgSet &constraints)
+{
+   std::vector<RooProdPdf *> channels;
+   if (auto *simPdf = dynamic_cast<RooSimultaneous *>(&pdf)) {
+      for (auto const &state : simPdf->indexCat()) {
+         if (auto *channel = dynamic_cast<RooProdPdf *>(simPdf->getPdf(state.first))) {
+            channels.push_back(channel);
+         }
+      }
+   } else if (auto *channel = dynamic_cast<RooProdPdf *>(&pdf)) {
+      channels.push_back(channel);
+   }
+   if (channels.empty()) {
+      return;
+   }
+   RooArgSet attached;
+   for (auto *constraint : static_range_cast<RooAbsPdf *>(constraints)) {
+      // The terms that enter the channels: the constraint, or the components of an array.
+      std::vector<RooAbsPdf *> terms{constraint};
+      if (auto *array = dynamic_cast<RooProdPdf *>(constraint); array && array->getAttribute(arrayDistTag)) {
+         terms.clear();
+         for (auto *component : static_range_cast<RooAbsPdf *>(array->pdfList())) {
+            terms.push_back(component);
+         }
+      }
+      bool all = !terms.empty();
+      // Decided for all terms before anything is changed, so that a constraint is not attached in part.
+      std::vector<std::pair<RooProdPdf *, RooAbsPdf *>> factors;
+      for (RooAbsPdf *term : terms) {
+         RooArgSet leaves;
+         term->leafNodeServerList(&leaves);
+         RooArgSet parameters;
+         bool hasGlobalObservable = false;
+         for (RooAbsArg *leaf : leaves) {
+            auto *var = dynamic_cast<RooRealVar *>(leaf);
+            if (!var) {
+               continue;
+            }
+            if (var->isConstant() && !pdf.dependsOn(*var)) {
+               hasGlobalObservable = true;
+            } else if (!var->isConstant()) {
+               parameters.add(*var);
+            }
+         }
+         bool found = false;
+         if (hasGlobalObservable && !parameters.empty()) {
+            for (RooProdPdf *channel : channels) {
+               if (channel == term || channel == constraint) {
+                  continue;
+               }
+               if (channel->pdfList().find(*term)) {
+                  found = true;
+               } else if (channel->dependsOn(parameters)) {
+                  factors.emplace_back(channel, term);
+                  found = true;
+               }
+            }
+         }
+         all = all && found;
+      }
+      if (!all) {
+         continue;
+      }
+      for (auto const &[channel, term] : factors) {
+         channel->addPdfs(RooArgSet{*term});
+      }
+      attached.add(*constraint);
+   }
+   constraints.remove(attached);
+}
+
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
                     std::vector<std::unique_ptr<RooAbsData>> &datasets, std::set<std::string> const &bookkeepingColumns,
@@ -1475,6 +1570,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    mc->SetPdf(*pdf);
 
    extConstraints.add(constraintsWithData, /*silent=*/true);
+   attachConstraintsToChannels(*pdf, extConstraints);
    if (!extConstraints.empty())
       mc->SetExternalConstraints(extConstraints);
 
@@ -3397,6 +3493,23 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          auto *pdf = dynamic_cast<RooAbsPdf *>(arg);
          if (pdf && !isSkippedHelper(*pdf, _workspace)) {
             allpdfs.push_back(pdf);
+         }
+      }
+   }
+   // A Gaussian constraint is written with its global observable as "x", also if that is its mean in RooFit (see
+   // setConstraintObservable()). Which one it is must be known before any pdf is written: the pdfs are written in the
+   // order of their names, and a constraint can come before the model that uses it.
+   for (TObject *obj : _workspace.allGenericObjects()) {
+      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
+      RooArgSet const *globs = mc ? mc->GetGlobalObservables() : nullptr;
+      if (!globs) {
+         continue;
+      }
+      for (RooAbsArg const *arg : _workspace.components()) {
+         auto const *gauss = dynamic_cast<RooGaussian const *>(arg);
+         if (gauss && globs->find(gauss->getMean()) && !globs->find(gauss->getX()) &&
+             !constraintObservable(gauss->GetName())) {
+            setConstraintObservable(*gauss, gauss->getMean().GetName());
          }
       }
    }
