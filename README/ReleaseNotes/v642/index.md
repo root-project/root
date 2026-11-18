@@ -459,6 +459,23 @@ To store several canvases in single HTML file one can use:
 Produced HTML file will include canvas JSON data and JavaScript code to load and display canvas.
 Such file can be loaded locally in any web browser or send as attachment in email to colleagues.
 
+### REve
+
+* The hover tooltip is now drawn in the overlay, and it can be kept as an annotation, with or without a line to the picked point. `REveText` can now be moved, resized and used as a button, and the new `REveLogo` draws an image in the overlay. See the tutorials `overlay_drag.C` and `texts_grid.C`.
+* REve now ships its default SDF fonts, Liberation Sans, Serif and Mono, each Regular and Bold. They are downloaded at build time with RenderCore's assets, so a server without a display no longer has to generate them. Other fonts are still generated from their TTF on first use, which needs a display; in batch mode REve now warns instead of aborting. The new `REveText::AddSdfFontDir()` and `REveLogo::AddImageDir()` add directories to search.
+* The 3D axes of `REveViewer::SetAxesType()` now have ticks at round numbers, drawn as a box around the scene or as three axes through the origin, instead of three lines to the edge of the bounding box. The new `REveProjectionAxis` draws an axis in projected views. See `projection_axes.C`.
+* The new `REveTrans::SetMotion()` moves or spins an element on the client between updates from the server. See `orbits.C`, `boing.C` and `trans_update.C`.
+* The new `REveManager::GrabImages()` makes every connected client capture its viewers and send each image, tagged with an event id, by HTTP POST to a collector at `WebEve.ImageGatorUrl`. The images have straight alpha and no background, so they can be put on any backdrop. RenderCore's `util/image-gator.js` is a reference collector that writes PNG files; it is not part of ROOT.
+* The matrix of an element now moves its children, in 3D and in projections. The server now computes the bounding box of every element, and the camera fits the scene when a viewer starts.
+* `REveBoxSet::AddInstance()` and `AddInstanceScaled()` now take the center and the half size of a box, as the client already drew them. The new `AddInstanceCorner()` and `AddInstanceScaledCorner()` take the lower corner and the full size. `SetDefWidth()`, `SetDefHeight()` and `SetDefDepth()` now set the full size, so boxes of the default size are drawn half as large as before. The new `SetDefHalfWidth()` and its two siblings set the half size.
+* The two axis-aligned `REveBoxSet::AddBox()` overloads have been removed. `REveBoxSet::SetShape()` has been renamed to `SetInstanceShape()`, and its enum `EShape_e` to `EInstanceShape_e`, with the values `kBox` to `kIS_Box` and so on. `kBT_FreeBox` and `AddFreeBox()` are now called `kBT_Vertices` and `AddVertices()`, and the old names still work.
+* The new `REveGeoOverlapTable` lists the overlaps and extrusions that `TGeoVolume::CheckOverlaps()` finds in a sortable table, and draws the two volumes of the selected row in 3D. See `geom_overlaps.C`.
+* The new `REveViewer::SetCameraCenter()` makes the camera turn around the world origin, the default, or around the center of the scene's bounding box.
+* The server now keeps its copy of each viewer's camera up to date with the client's. `REveViewer::SyncCamera(false)` turns this off.
+* The new `REveRhoZProjection::SetPlaneNormal()` sets the plane that divides the upper and lower halves of the RhoZ view, which gives the sign of rho. The default normal is the y axis.
+* `REveStraightLineSet` now supports secondary selection, so single lines can be picked and selected.
+* Expanded views now work with the browser's back and forward buttons and with direct links.
+
 ### Other graphics improvements
 
 * Both vertical and horizontal `TPaletteAxis` provide now interactive zooming with mouse cursor
@@ -528,7 +545,7 @@ The version of the following packages has been updated:
  - openssl: 3.5.9
  - openui5: 1.152.0
  - pcre: now pcre2, version 10.47
- - rendercore: 2.3
+ - rendercore: 2.3.2
  - xrootd: 6.2.0
  - xxhash: 0.8.3
 
