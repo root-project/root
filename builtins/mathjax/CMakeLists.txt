@@ -1,19 +1,23 @@
-set(ROOT_MATHJAX_VERSION 3.2.0)
-set(ROOT_MATHJAX_HASH "6847f1cfdd980afbe31b466474da301a56ab859a67d8035442b052dd4ac2fa03")
+set(ROOT_MATHJAX_VERSION 4.1.3)
+set(ROOT_MATHJAX_HASH "f487c39d2913f371eb42dab078559a902da69acca38a9ebec7640a6581535ba3")
 
 ExternalProject_Add(
    BUILTIN_MATHJAX
    DOWNLOAD_DIR ${ROOT_DOWNLOAD_DIR}
    URL ${lcgpackages}/mathjax-${ROOT_MATHJAX_VERSION}.tar.gz
-       https://github.com/mathjax/MathJax/archive/refs/tags/${ROOT_MATHJAX_VERSION}.tar.gz
+       http://github.com/mathjax/MathJax/archive/${ROOT_MATHJAX_VERSION}.tar.gz
+   DOWNLOAD_NAME "mathjax-${ROOT_MATHJAX_VERSION}.tar.gz"
    URL_HASH SHA256=${ROOT_MATHJAX_HASH}
    CONFIGURE_COMMAND ""
    BUILD_COMMAND ""
    INSTALL_COMMAND ""
-   SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
+   SOURCE_DIR ${CMAKE_BINARY_DIR}/mathjax/${ROOT_MATHJAX_VERSION}
    TIMEOUT 600
    DEPENDS BUILTIN_JSROOT
 )
 
-# install no longer necessary - will be performed together with jsroot
-# install(DIRECTORY ${CMAKE_BINARY_DIR}/js/mathjax/ DESTINATION ${CMAKE_INSTALL_JSROOTDIR}/mathjax ${DIR_PERMISSIONS})
+# install directory is same as for JSROOT
+install(DIRECTORY ${CMAKE_BINARY_DIR}/mathjax/${ROOT_MATHJAX_VERSION}
+        DESTINATION ${CMAKE_INSTALL_JSROOTDIR}/../mathjax/${ROOT_MATHJAX_VERSION}
+        COMPONENT libraries
+        ${DIR_PERMISSIONS})
