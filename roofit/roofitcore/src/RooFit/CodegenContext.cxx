@@ -22,7 +22,6 @@
 #include <cctype>
 #include <charconv>
 #include <fstream>
-#include <locale>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -77,8 +76,6 @@ std::string const &CodegenContext::getResult(RooAbsArg const &arg)
    if (foundVecObs != _vecObsIndices.end()) {
       throw std::runtime_error("You requested the result of a vector observable outside a loop scope for it!");
    }
-
-   auto RAII(OutputScopeRangeComment(&arg));
 
    // Now, recursively call translate into the current argument to load the correct result.
    codegen(const_cast<RooAbsArg &>(arg), *this);
@@ -135,24 +132,20 @@ void CodegenContext::addToCodeBody(RooAbsArg const *klass, std::string const &in
 /// @param isScopeIndep The value determining if the input is scope dependent.
 void CodegenContext::addToCodeBody(std::string const &in, bool isScopeIndep /* = false */)
 {
-   TString indented = in;
-   indented = indented.Strip(TString::kBoth); // trim
-
-   std::string indent_str;
-   for (unsigned i = 0; i < _indent; ++i)
-      indent_str += "  ";
-   indented = indented.Prepend(indent_str);
-
-   // FIXME: Multiline input.
-   // indent_str += "\n";
-   // indented = indented.ReplaceAll("\n", indent_str);
+   TString trimmed = in;
+   trimmed = trimmed.Strip(TString::kBoth);
+   // Always end the line, so that the code can't affect what is added next,
+   // like a preprocessor directive that has to start a line.
+   if (!trimmed.EndsWith("\n")) {
+      trimmed += "\n";
+   }
 
    // If we are in a loop and the value is scope independent, save it at the top of the loop.
    // else, just save it in the current scope.
    if (_code.size() > 2 && isScopeIndep) {
-      _code[_code.size() - 2] += indented;
+      _code[_code.size() - 2] += trimmed;
    } else {
-      _code.back() += indented;
+      _code.back() += trimmed;
    }
 }
 
@@ -304,25 +297,6 @@ std::string CodegenContext::buildArg(std::span<const double> arr)
       _xlArr.push_back(arr[i]);
    }
    return "xlArr + " + offset;
-}
-
-CodegenContext::ScopeRAII::ScopeRAII(RooAbsArg const *arg, CodegenContext &ctx) : _ctx(ctx), _arg(arg)
-{
-   std::ostringstream os;
-   os.imbue(std::locale::classic()); // the generated code is C++, not locale-dependent text
-   Option_t *opts = nullptr;
-   arg->printStream(os, _arg->defaultPrintContents(opts), _arg->defaultPrintStyle(opts));
-   _fn = os.str();
-   const std::string info = "// Begin -- " + _fn;
-   _ctx._indent++;
-   _ctx.addToCodeBody(_arg, info);
-}
-
-CodegenContext::ScopeRAII::~ScopeRAII()
-{
-   const std::string info = "// End -- " + _fn + "\n";
-   _ctx.addToCodeBody(_arg, info);
-   _ctx._indent--;
 }
 
 void CodegenContext::pushScope()
