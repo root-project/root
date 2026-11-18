@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <algorithm>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -19,6 +20,7 @@
 #include "TSystem.h"
 #include "TCanvas.h"
 #include "TClass.h"
+#include "TClassTable.h"
 #include "TPoint.h"
 #include "TError.h"
 #include "TImage.h"
@@ -33,8 +35,11 @@ Bool_t InheritsFromLoadedClass(const char *className)
 {
    // The string overload of InheritsFrom can autoload an unused graphics backend.
    // Its dictionary is already registered if the backend is in use.
-   auto dict = TClass::GetDict(className);
-   return dict && gVirtualX->InheritsFrom(dict());
+   auto backendClass = gVirtualX->IsA();
+   if (std::strcmp(backendClass->GetName(), className) == 0)
+      return kTRUE;
+   auto dict = TClassTable::GetDictNorm(className);
+   return dict && backendClass->InheritsFrom(dict());
 }
 
 // Image helpers must not become a load-time dependency of ordinary pad painting.
