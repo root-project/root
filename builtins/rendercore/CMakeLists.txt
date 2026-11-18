@@ -24,3 +24,23 @@ ExternalProject_Add(RENDERCORE
 )
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+
+# The RenderCore assets, one directory per kind. sdf-fonts/ holds the SDF fonts
+# REve serves when a font is not in its writable font directory, so that they
+# need not be generated, which needs a display.
+set(ROOT_RENDERCORE_ASSETS_VERSION 1.0)
+set(ROOT_RENDERCORE_ASSETS_HASH "18a98fea0673ed55552c356c48c70a5fcaf6f792e334b59568427478ee151260")
+
+ExternalProject_Add(RENDERCORE_ASSETS
+  DOWNLOAD_DIR      ${ROOT_DOWNLOAD_DIR}
+  URL               ${lcgpackages}/RenderCore-assets-${ROOT_RENDERCORE_ASSETS_VERSION}.tar.gz
+                    https://github.com/UL-FRI-LGM/RenderCore/releases/download/assets-${ROOT_RENDERCORE_ASSETS_VERSION}/RenderCore-assets-${ROOT_RENDERCORE_ASSETS_VERSION}.tar.gz
+  URL_HASH          SHA256=${ROOT_RENDERCORE_ASSETS_HASH}
+  SOURCE_DIR        ${CMAKE_BINARY_DIR}/ui5/eve7/assets
+  TIMEOUT           600
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND     ""
+  INSTALL_COMMAND   ""
+)
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/assets/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/assets/ COMPONENT libraries FILES_MATCHING PATTERN "*")
