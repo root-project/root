@@ -81,8 +81,10 @@ public:
       // it; otherwise its components are written on their own.
       bool exportArrayDist = true;
       // How the constraint terms of HistFactory models enter the likelihood: listed in "aux_distributions", with
-      // the observed values as constant parameters (false), or listed in "distributions", each paired with a data set
-      // holding the observed values of its observables (true).
+      // the observed values as constant parameters (false), or paired with a data set holding the observed values
+      // of their observables (true). An array of constraints of a model that is a RooSimultaneous is then a component
+      // of the combined distribution, and its data set a component of the combined data set, so that the combined
+      // distribution is the sampling distribution of all measurements. Other constraints are terms of the likelihood.
       bool exportConstraintData = false;
       /// EXPERIMENTAL: how auxiliary measurements that are components of a combined distribution (a constraint term
       /// paired with the data set of its observed values, as RooFit writes them with `exportConstraintData`) are
