@@ -39,5 +39,7 @@ ROOT_ADD_TEST(test-genvector-coordinates3D COMMAND coordinates3D)
 ROOT_EXECUTABLE(coordinates4D coordinates4D.cxx LIBRARIES GenVector)
 ROOT_ADD_TEST(test-genvector-coordinates4D COMMAND coordinates4D)
 
+ROOT_ADD_GTEST(testGenVectorEta testEta.cxx LIBRARIES GenVector)
+
 add_library(staticTests OBJECT staticTests.cxx)
 target_link_libraries(staticTests PRIVATE GenVector)
