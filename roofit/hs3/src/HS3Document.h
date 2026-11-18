@@ -231,6 +231,8 @@ struct Analysis {
 /// its type in RooFit::JSONIO::importers().
 struct GenericObject {
    std::string type;
+   /// The object in the JSON tree that the document was read from. In a document that is exported, the distributions
+   /// refer to what the exporters wrote once all of them are written, and the functions don't have a node.
    Detail::JSONNode const *node = nullptr;
 };
 
@@ -517,7 +519,7 @@ std::optional<ValidatedHS3Document>
 validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options);
 } // namespace HS3
 
-/// An HS3 document. It is move-only, because generic objects refer to the JSON tree that the document was read from.
+/// An HS3 document. It is move-only, because generic objects refer to the JSON tree of the document.
 class HS3Document {
 public:
    HS3::Metadata metadata;

@@ -543,18 +543,19 @@ void importParameterStepWidths(RooWorkspace &workspace, HS3Document const &doc)
    }
 }
 
-template <typename... Keys_t>
-JSONNode const *findRooFitInternal(JSONNode const &node, Keys_t const &...keys)
-{
-   return node.find("misc", "ROOT_internal", keys...);
-}
+} // namespace
 
 // ---------------------------------------------------------------------------------------------------------------
 // Distinct variates. HS3 requires the terms of a likelihood, and the components of a combined distribution or data
 // set, to have distinct variates: a variate in two of them is one quantity modelled twice (e.g. a constraint that is
 // a term of the likelihood and a factor of a channel), or two quantities with one name (e.g. the observable "mass"
 // of two channels, which need their own names, "mass_SR" and "mass_CR"). All cases are checked with the same
-// function, sharedVariates(), on the document, after the export and before the import.
+// function, sharedVariates(), on the document, when it is exported and when it is imported. The generic distributions
+// are read as far as the standard says what they consist of, through the nodes that the document refers to.
+
+namespace RooFit {
+namespace HS3 {
+namespace {
 
 bool isName(JSONNode const &node)
 {
@@ -573,25 +574,15 @@ void addNames(JSONNode const &node, std::set<std::string> &out)
    }
 }
 
-// The child `name` of the section `section` of the document, or nullptr.
-JSONNode const *findInSection(JSONNode const &rootnode, const char *section, std::string const &name)
-{
-   JSONNode const *node = rootnode.find(section);
-   return node ? RooJSONFactoryWSTool::findNamedChild(*node, name) : nullptr;
-}
-
-std::string typeOf(JSONNode const &node)
-{
-   return node.has_child("type") ? node["type"].val() : "";
-}
-
-// The names of the components of a combined distribution or data set, written as {"key": ..., <field>: <name>}.
-std::vector<std::string> combinedComponents(JSONNode const &node, const char *field)
+// The names in the list `key` of a generic distribution. The entries of the list are the names, or components that
+// give the name as `field`.
+std::vector<std::string> namesIn(JSONNode const &node, const char *key, const char *field = nullptr)
 {
    std::vector<std::string> out;
-   if (JSONNode const *components = node.find("components")) {
-      for (JSONNode const &component : components->children()) {
-         if (JSONNode const *name = component.find(field); name && isName(*name)) {
+   if (JSONNode const *list = node.find(key)) {
+      for (JSONNode const &entry : list->children()) {
+         JSONNode const *name = field ? entry.find(field) : &entry;
+         if (name && isName(*name)) {
             out.push_back(name->val());
          }
       }
@@ -599,135 +590,186 @@ std::vector<std::string> combinedComponents(JSONNode const &node, const char *fi
    return out;
 }
 
-// The variates of the distribution `name` of the document: the "x" of a fundamental distribution (a name or a list)
-// and the axes of a distribution with axes (e.g. histfactory_dist), through products, mixtures and combined
-// distributions, and the "x" of the components of an array distribution. The constraint terms named by a
-// histfactory_dist are terms of their own, see likelihoodTerms().
-void collectVariates(JSONNode const &rootnode, std::string const &name, std::set<std::string> &out,
-                     std::set<std::string> &visited)
+// The constraint terms that the modifiers of a HistFactory distribution name in "constraints". The "constraint_name"
+// of older documents is not counted: it predates the requirement of distinct variates.
+std::vector<std::string> namedConstraints(HistFactoryDist const &dist)
 {
-   if (!visited.insert(name).second) {
-      return;
-   }
-   JSONNode const *node = findInSection(rootnode, "distributions", name);
-   if (!node) {
-      return;
-   }
-   std::string const type = typeOf(*node);
-   auto recurse = [&](std::vector<std::string> const &parts) {
-      for (std::string const &part : parts) {
-         collectVariates(rootnode, part, out, visited);
-      }
-   };
-   auto namesIn = [&](const char *key) {
-      std::vector<std::string> parts;
-      if (JSONNode const *list = node->find(key)) {
-         for (JSONNode const &part : list->children()) {
-            if (isName(part)) {
-               parts.push_back(part.val());
-            }
-         }
-      }
-      return parts;
-   };
-   if (type == "product_dist") {
-      recurse(namesIn("factors"));
-   } else if (type == "mixture_dist") {
-      recurse(namesIn("summands"));
-   } else if (type == "combined_dist") {
-      recurse(combinedComponents(*node, "dist"));
-   } else if (type == "array_dist") {
-      if (JSONNode const *components = node->find("components")) {
-         for (JSONNode const &component : components->children()) {
-            if (JSONNode const *x = component.find("x")) {
-               addNames(*x, out);
-            }
-         }
-      }
-   } else {
-      if (JSONNode const *x = node->find("x")) {
-         addNames(*x, out);
-      }
-      if (JSONNode const *axes = node->find("axes")) {
-         for (JSONNode const &axis : axes->children()) {
-            if (JSONNode const *axisName = axis.find("name")) {
-               addNames(*axisName, out);
-            }
-         }
+   std::vector<std::string> out;
+   auto add = overloaded{[&](ConstraintPdf const &constraint) {
+                            if (!constraint.legacyName) {
+                               out.push_back(constraint.pdf.name);
+                            }
+                         },
+                         [&](GammaConstraintPdfs const &constraints) {
+                            for (auto const &pdf : constraints.pdfs) {
+                               if (pdf) {
+                                  out.push_back(pdf->name);
+                               }
+                            }
+                         },
+                         [](auto const &) {}};
+   for (Sample const &sample : dist.samples) {
+      for (Modifier const &modifier : sample.modifiers) {
+         std::visit(overloaded{[](CustomModifier const &) {}, [&](auto const &m) { std::visit(add, m.constraint); }},
+                    modifier);
       }
    }
+   return out;
 }
 
-std::set<std::string> variatesOf(JSONNode const &rootnode, std::string const &name)
+// The same for a HistFactory distribution that the document doesn't interpret, because a user registered their own
+// importer or exporter for it.
+std::vector<std::string> namedConstraints(JSONNode const &dist)
 {
-   std::set<std::string> variates;
-   std::set<std::string> visited;
-   collectVariates(rootnode, name, variates, visited);
-   return variates;
-}
-
-// The terms of the likelihood `likelihood` of the document, each once: its distributions (the components of a
-// combined distribution, or of a RooSimultaneous written to ROOT_internal by older versions, are terms of their own),
-// its "aux_distributions", and the constraint terms named by the modifiers of its histfactory_dist terms.
-std::vector<std::string> likelihoodTerms(JSONNode const &rootnode, JSONNode const &likelihood)
-{
-   std::vector<std::string> terms;
-   for (const char *key : {"distributions", "aux_distributions"}) {
-      JSONNode const *list = likelihood.find(key);
-      if (!list) {
-         continue;
-      }
-      for (JSONNode const &item : list->children()) {
-         if (!isName(item)) {
-            continue;
-         }
-         std::string const name = item.val();
-         if (JSONNode const *node = findInSection(rootnode, "distributions", name)) {
-            if (typeOf(*node) == "combined_dist") {
-               for (std::string const &component : combinedComponents(*node, "dist")) {
-                  addUnique(terms, component);
-               }
-               continue;
-            }
-         } else if (JSONNode const *legacy = findRooFitInternal(rootnode, "combined_distributions", name)) {
-            if (JSONNode const *components = legacy->find("distributions")) {
-               for (JSONNode const &component : components->children()) {
-                  addUnique(terms, component.val());
-               }
-               continue;
-            }
-         }
-         addUnique(terms, name);
-      }
-   }
-   for (std::size_t i = 0; i < terms.size(); ++i) {
-      JSONNode const *node = findInSection(rootnode, "distributions", terms[i]);
-      if (!node || typeOf(*node) != "histfactory_dist" || !node->has_child("samples")) {
-         continue;
-      }
-      for (JSONNode const &sample : (*node)["samples"].children()) {
+   std::vector<std::string> out;
+   if (JSONNode const *samples = dist.find("samples")) {
+      for (JSONNode const &sample : samples->children()) {
          if (JSONNode const *modifiers = sample.find("modifiers")) {
             for (JSONNode const &modifier : modifiers->children()) {
-               if (JSONNode const *constraints = modifier.find("constraints")) {
-                  std::set<std::string> names;
-                  addNames(*constraints, names);
-                  for (std::string const &constraint : names) {
-                     addUnique(terms, constraint);
-                  }
+               for (std::string const &constraint : namesIn(modifier, "constraints")) {
+                  out.push_back(constraint);
                }
             }
          }
       }
    }
-   return terms;
+   return out;
 }
+
+// The node of a distribution that the document doesn't interpret, if it has one and, optionally, the type `type`.
+JSONNode const *genericNode(Distribution const &dist, const char *type = nullptr)
+{
+   auto const *generic = std::get_if<GenericObject>(&dist.body);
+   return generic && (!type || generic->type == type) ? generic->node : nullptr;
+}
+
+// The distributions of a document by name, and what they say about the variates. The document must outlive this
+// object.
+class Distributions {
+public:
+   explicit Distributions(HS3Document const &doc) : _doc{doc}
+   {
+      for (Distribution const &dist : doc.distributions) {
+         _byName.emplace(dist.name, &dist);
+      }
+   }
+
+   // The distribution `name` if the document represents it as a `Body_t`, or nullptr.
+   template <class Body_t>
+   Body_t const *find(std::string const &name) const
+   {
+      auto found = _byName.find(name);
+      return found != _byName.end() ? std::get_if<Body_t>(&found->second->body) : nullptr;
+   }
+
+   // The node of the generic distribution `name` if it has the type `type`, or nullptr.
+   JSONNode const *nodeOf(std::string const &name, const char *type) const
+   {
+      auto found = _byName.find(name);
+      return found != _byName.end() ? genericNode(*found->second, type) : nullptr;
+   }
+
+   // Add the variates of the distribution `name` to `out`: the "x" of a fundamental distribution (a name or a list)
+   // and the axes of a distribution with axes (e.g. histfactory_dist), through products, mixtures and combined
+   // distributions, and the "x" of the components of an array distribution. The constraint terms named by a
+   // histfactory_dist are terms of their own, see likelihoodTerms(). Distributions in `visited` are skipped.
+   void addVariates(std::string const &name, std::set<std::string> &out, std::set<std::string> &visited) const
+   {
+      if (!visited.insert(name).second) {
+         return;
+      }
+      if (auto const *histFactory = find<HistFactoryDist>(name)) {
+         for (BinnedAxis const &axis : histFactory->axes) {
+            out.insert(axis.name);
+         }
+      }
+      auto const *generic = find<GenericObject>(name);
+      if (!generic || !generic->node) {
+         return;
+      }
+      JSONNode const &node = *generic->node;
+      auto addVariatesOf = [&](std::vector<std::string> const &parts) {
+         for (std::string const &part : parts) {
+            addVariates(part, out, visited);
+         }
+      };
+      if (generic->type == "product_dist") {
+         addVariatesOf(namesIn(node, "factors"));
+      } else if (generic->type == "mixture_dist") {
+         addVariatesOf(namesIn(node, "summands"));
+      } else if (generic->type == "combined_dist") {
+         addVariatesOf(namesIn(node, "components", "dist"));
+      } else if (generic->type == "array_dist") {
+         if (JSONNode const *components = node.find("components")) {
+            for (JSONNode const &component : components->children()) {
+               if (JSONNode const *x = component.find("x")) {
+                  addNames(*x, out);
+               }
+            }
+         }
+      } else {
+         if (JSONNode const *x = node.find("x")) {
+            addNames(*x, out);
+         }
+         for (std::string const &axis : namesIn(node, "axes", "name")) {
+            out.insert(axis);
+         }
+      }
+   }
+
+   // The terms of a likelihood, each once: its distributions (the components of a combined distribution, or of a
+   // RooSimultaneous written to ROOT_internal by older versions, are terms of their own), its "aux_distributions",
+   // and the constraint terms named by the modifiers of its histfactory_dist terms.
+   std::vector<std::string> likelihoodTerms(Likelihood const &likelihood) const
+   {
+      std::vector<std::string> terms;
+      auto add = [&](std::string const &name) {
+         auto legacy = _doc.rooFit.combinedDistributions.find(name);
+         if (JSONNode const *combined = nodeOf(name, "combined_dist")) {
+            for (std::string const &component : namesIn(*combined, "components", "dist")) {
+               addUnique(terms, component);
+            }
+         } else if (!_byName.count(name) && legacy != _doc.rooFit.combinedDistributions.end()) {
+            for (DistributionRef const &component : legacy->second.distributions) {
+               addUnique(terms, component.name);
+            }
+         } else {
+            addUnique(terms, name);
+         }
+      };
+      for (LikelihoodTerm const &term : likelihood.terms) {
+         add(term.distribution.name);
+      }
+      for (DistributionRef const &aux : likelihood.auxDistributions) {
+         add(aux.name);
+      }
+      // The list grows by the constraint terms while it is read.
+      for (std::size_t i = 0; i < terms.size(); ++i) {
+         std::vector<std::string> constraints;
+         if (auto const *histFactory = find<HistFactoryDist>(terms[i])) {
+            constraints = namedConstraints(*histFactory);
+         } else if (JSONNode const *generic = nodeOf(terms[i], "histfactory_dist")) {
+            constraints = namedConstraints(*generic);
+         }
+         for (std::string const &constraint : constraints) {
+            addUnique(terms, constraint);
+         }
+      }
+      return terms;
+   }
+
+private:
+   HS3Document const &_doc;
+   std::map<std::string, Distribution const *> _byName;
+};
 
 // The parts (terms or components) of something that must have distinct variates, with their variates.
 using PartVariates = std::vector<std::pair<std::string, std::set<std::string>>>;
 
-// The variates that several of `parts` share, one message each. `what` names the parts and `context` the whole,
+// Append a message for each variate that several of `parts` share. `what` names the parts and `context` the whole,
 // e.g. "terms" of "the likelihood 'lh'".
-std::vector<std::string> sharedVariates(PartVariates const &parts, std::string const &what, std::string const &context)
+void addShared(PartVariates const &parts, std::string const &what, std::string const &context,
+               std::vector<std::string> &messages)
 {
    std::map<std::string, std::vector<std::string>> partsOfVariate;
    std::vector<std::string> order;
@@ -740,7 +782,6 @@ std::vector<std::string> sharedVariates(PartVariates const &parts, std::string c
          addUnique(list, part);
       }
    }
-   std::vector<std::string> messages;
    for (std::string const &variate : order) {
       auto const &list = partsOfVariate[variate];
       if (list.size() < 2) {
@@ -752,129 +793,231 @@ std::vector<std::string> sharedVariates(PartVariates const &parts, std::string c
       }
       messages.push_back("the variate '" + variate + "' is shared by the " + what + " " + names + "' of " + context);
    }
-   return messages;
 }
 
 // The axes of the components of a combined data set, by component.
-PartVariates combinedDataAxes(JSONNode const &rootnode, JSONNode const &dataset)
+PartVariates componentAxes(HS3Document const &doc, CombinedData const &combined)
 {
    PartVariates parts;
-   for (std::string const &component : combinedComponents(dataset, "dataset")) {
+   for (CombinedDataComponent const &component : combined.components) {
       std::set<std::string> axes;
-      if (JSONNode const *node = findInSection(rootnode, "data", component)) {
-         if (JSONNode const *axesNode = node->find("axes")) {
-            for (JSONNode const &axis : axesNode->children()) {
-               if (JSONNode const *axisName = axis.find("name")) {
-                  addNames(*axisName, axes);
-               }
-            }
-         }
+      auto found = std::find_if(doc.data.begin(), doc.data.end(),
+                                [&](Data const &data) { return data.name == component.data.name; });
+      if (found != doc.data.end()) {
+         std::visit(overloaded{[](CombinedData const &) {},
+                               [&](PointData const &data) {
+                                  for (ContinuousAxis const &axis : data.axes) {
+                                     axes.insert(axis.name);
+                                  }
+                               },
+                               [&](auto const &data) {
+                                  for (auto const &axis : data.axes) {
+                                     axes.insert(nameOf(axis));
+                                  }
+                               }},
+                    found->body);
       }
-      parts.emplace_back(component, axes);
+      parts.emplace_back(component.data.name, axes);
    }
    return parts;
 }
 
-// Bookkeeping columns (a RooFit extension, in misc.ROOT_internal.bookkeeping_columns as {"<combined data set>":
-// [<axis>, ...]}): axes that several components of a combined data set share, but that are no variate of any
-// distribution, e.g. an event number. They have no statistical meaning, and are exempt from the requirement of
-// distinct axes. A declared column that is a variate of a distribution is not a bookkeeping column.
-std::map<std::string, std::set<std::string>> bookkeepingColumnsOfDocument(JSONNode const &rootnode)
+// The variates of the "distributions" of a likelihood, which it pairs with data, with the columns of its combined
+// distributions.
+std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likelihood)
 {
-   std::map<std::string, std::set<std::string>> out;
-   JSONNode const *declared = findRooFitInternal(rootnode, "bookkeeping_columns");
-   if (!declared || !declared->is_map()) {
-      return out;
-   }
+   Distributions distributions{doc};
    std::set<std::string> variates;
-   if (JSONNode const *distributions = rootnode.find("distributions")) {
-      for (JSONNode const &dist : distributions->children()) {
-         std::set<std::string> const v = variatesOf(rootnode, RooJSONFactoryWSTool::name(dist));
-         variates.insert(v.begin(), v.end());
+   std::set<std::string> visited;
+   for (LikelihoodTerm const &term : likelihood.terms) {
+      distributions.addVariates(term.distribution.name, variates, visited);
+      if (JSONNode const *combined = distributions.nodeOf(term.distribution.name, "combined_dist")) {
+         for (std::string const &column : namesIn(*combined, "columns")) {
+            variates.insert(column);
+         }
       }
    }
-   for (JSONNode const &entry : declared->children()) {
-      for (JSONNode const &column : entry.children()) {
-         if (!variates.count(column.val())) {
-            out[entry.key()].insert(column.val());
+   return variates;
+}
+
+// The axes that several components of a combined data set have, by combined data set.
+std::map<std::string, std::set<std::string>> sharedAxes(HS3Document const &doc)
+{
+   std::map<std::string, std::set<std::string>> out;
+   for (Data const &data : doc.data) {
+      if (auto const *combined = std::get_if<CombinedData>(&data.body)) {
+         std::map<std::string, int> counts;
+         for (auto const &[component, axes] : componentAxes(doc, *combined)) {
+            for (std::string const &axis : axes) {
+               if (++counts[axis] == 2) {
+                  out[data.name].insert(axis);
+               }
+            }
          }
       }
    }
    return out;
 }
 
-// All shared variates of the document: of the terms of each likelihood, of the components of the combined
-// distributions that no likelihood lists (the others are checked through the likelihood), and the shared axes of the
-// components of all combined data sets, except for bookkeeping columns.
-std::vector<std::string> sharedVariatesOfDocument(JSONNode const &rootnode)
+// Bookkeeping columns (a RooFit extension, declared in misc.ROOT_internal.bookkeeping_columns as {"<combined data
+// set>": [<axis>, ...]}): axes that several components of a combined data set share, but that are no variate of any
+// distribution, e.g. an event number. They have no statistical meaning, and are exempt from the requirement of
+// distinct axes. A declared column that is a variate of a distribution is not a bookkeeping column.
+std::map<std::string, std::set<std::string>> bookkeepingColumns(HS3Document const &doc)
 {
+   std::map<std::string, std::set<std::string>> out;
+   if (doc.rooFit.bookkeepingColumns.empty()) {
+      return out;
+   }
+   Distributions distributions{doc};
+   std::set<std::string> variates;
+   std::set<std::string> visited;
+   for (Distribution const &dist : doc.distributions) {
+      distributions.addVariates(dist.name, variates, visited);
+   }
+   for (auto const &[dataset, columns] : doc.rooFit.bookkeepingColumns) {
+      for (std::string const &column : columns) {
+         if (!variates.count(column)) {
+            out[dataset].insert(column);
+         }
+      }
+   }
+   return out;
+}
+
+// All shared variates of the document, with a message each: of the terms of each likelihood, of the components of the
+// combined distributions that no likelihood lists (the others are checked through the likelihood), and the shared
+// axes of the components of all combined data sets, except for bookkeeping columns.
+std::vector<std::string> sharedVariates(HS3Document const &doc)
+{
+   Distributions distributions{doc};
    std::vector<std::string> messages;
-   auto append = [&](std::vector<std::string> const &more) {
-      messages.insert(messages.end(), more.begin(), more.end());
+   auto withVariates = [&](std::vector<std::string> const &names) {
+      PartVariates parts;
+      for (std::string const &name : names) {
+         std::set<std::string> visited;
+         distributions.addVariates(name, parts.emplace_back(name, std::set<std::string>{}).second, visited);
+      }
+      return parts;
    };
    std::set<std::string> inLikelihoods;
-   if (JSONNode const *likelihoods = rootnode.find("likelihoods")) {
-      for (JSONNode const &likelihood : likelihoods->children()) {
-         for (const char *key : {"distributions", "data", "aux_distributions"}) {
-            if (JSONNode const *list = likelihood.find(key)) {
-               for (JSONNode const &item : list->children()) {
-                  inLikelihoods.insert(item.val());
-               }
-            }
-         }
-         PartVariates parts;
-         for (std::string const &term : likelihoodTerms(rootnode, likelihood)) {
-            parts.emplace_back(term, variatesOf(rootnode, term));
-         }
-         append(sharedVariates(parts, "terms", "the likelihood '" + RooJSONFactoryWSTool::name(likelihood) + "'"));
+   for (Likelihood const &likelihood : doc.likelihoods) {
+      for (LikelihoodTerm const &term : likelihood.terms) {
+         inLikelihoods.insert(term.distribution.name);
+      }
+      for (DistributionRef const &aux : likelihood.auxDistributions) {
+         inLikelihoods.insert(aux.name);
+      }
+      addShared(withVariates(distributions.likelihoodTerms(likelihood)), "terms",
+                "the likelihood '" + likelihood.name + "'", messages);
+   }
+   for (Distribution const &dist : doc.distributions) {
+      JSONNode const *combined = genericNode(dist, "combined_dist");
+      if (combined && !inLikelihoods.count(dist.name)) {
+         addShared(withVariates(namesIn(*combined, "components", "dist")), "components",
+                   "the combined_dist '" + dist.name + "'", messages);
       }
    }
-   if (JSONNode const *distributions = rootnode.find("distributions")) {
-      for (JSONNode const &dist : distributions->children()) {
-         std::string const name = RooJSONFactoryWSTool::name(dist);
-         if (typeOf(dist) != "combined_dist" || inLikelihoods.count(name)) {
-            continue;
-         }
-         PartVariates parts;
-         for (std::string const &component : combinedComponents(dist, "dist")) {
-            parts.emplace_back(component, variatesOf(rootnode, component));
-         }
-         append(sharedVariates(parts, "components", "the combined_dist '" + name + "'"));
+   // The axes of the components of every combined data set, also of those that a likelihood lists.
+   std::map<std::string, std::set<std::string>> const bookkeeping = bookkeepingColumns(doc);
+   for (Data const &data : doc.data) {
+      auto const *combined = std::get_if<CombinedData>(&data.body);
+      if (!combined) {
+         continue;
       }
-   }
-   // The axes of the components of every combined data set, also of those that a likelihood lists, except for the
-   // bookkeeping columns.
-   std::map<std::string, std::set<std::string>> const bookkeeping = bookkeepingColumnsOfDocument(rootnode);
-   if (JSONNode const *data = rootnode.find("data")) {
-      for (JSONNode const &dataset : data->children()) {
-         std::string const name = RooJSONFactoryWSTool::name(dataset);
-         if (typeOf(dataset) != "combined") {
-            continue;
-         }
-         PartVariates parts = combinedDataAxes(rootnode, dataset);
-         if (auto found = bookkeeping.find(name); found != bookkeeping.end()) {
-            for (auto &part : parts) {
-               for (std::string const &column : found->second) {
-                  part.second.erase(column);
-               }
+      PartVariates parts = componentAxes(doc, *combined);
+      if (auto found = bookkeeping.find(data.name); found != bookkeeping.end()) {
+         for (auto &part : parts) {
+            for (std::string const &column : found->second) {
+               part.second.erase(column);
             }
          }
-         append(sharedVariates(parts, "components", "the combined data set '" + name + "'"));
       }
+      addShared(parts, "components", "the combined data set '" + data.name + "'", messages);
    }
    return messages;
 }
 
-// Declare the bookkeeping columns of the exported document `rootnode` (see bookkeepingColumnsOfDocument()): the axes
-// that several components of a combined data set share, and whose variable in the workspace `ws` is used by nothing
-// else, i.e. has no clients and is in no set of a ModelConfig. RooAbsData::split() keeps such a column (e.g. an event
-// number) in every sub-data set.
-void declareBookkeepingColumns(JSONNode &rootnode, RooWorkspace const &ws)
+// Write each term of the likelihoods once: a factor of a product that is a term of the likelihood as well would enter
+// it twice, so it is removed from the "factors" of the product in `root`, the JSON tree that the document is written
+// to. Only products that no other distribution uses are changed (being a component of a combined distribution is not
+// a use), only factors that are terms of every likelihood that has the product as a term, and a product whose factors
+// are all such terms is left as it is. Returns the removed factors by product.
+std::map<std::string, std::set<std::string>> writeLikelihoodTermsOnce(HS3Document const &doc, JSONNode &root)
 {
-   JSONNode const *data = rootnode.find("data");
-   if (!data) {
-      return;
+   std::map<std::string, std::set<std::string>> removed;
+   if (!root.has_child("distributions")) {
+      return removed;
    }
+   Distributions distributions{doc};
+   // The products that are terms, with the factors that are terms wherever the product is one.
+   std::map<std::string, std::set<std::string>> removable;
+   for (Likelihood const &likelihood : doc.likelihoods) {
+      std::vector<std::string> const terms = distributions.likelihoodTerms(likelihood);
+      for (std::string const &term : terms) {
+         JSONNode const *product = distributions.nodeOf(term, "product_dist");
+         if (!product) {
+            continue;
+         }
+         std::set<std::string> factorsThatAreTerms;
+         for (std::string const &factor : namesIn(*product, "factors")) {
+            if (factor != term && std::find(terms.begin(), terms.end(), factor) != terms.end()) {
+               factorsThatAreTerms.insert(factor);
+            }
+         }
+         auto found = removable.find(term);
+         if (found == removable.end()) {
+            removable[term] = factorsThatAreTerms;
+         } else {
+            std::set<std::string> both;
+            std::set_intersection(found->second.begin(), found->second.end(), factorsThatAreTerms.begin(),
+                                  factorsThatAreTerms.end(), std::inserter(both, both.begin()));
+            found->second = both;
+         }
+      }
+   }
+   // Products that another distribution uses are left alone.
+   for (Distribution const &dist : doc.distributions) {
+      if (JSONNode const *node = genericNode(dist)) {
+         for (const char *key : {"factors", "summands"}) {
+            for (std::string const &part : namesIn(*node, key)) {
+               removable.erase(part);
+            }
+         }
+      }
+   }
+   for (JSONNode &dist : root["distributions"].children()) {
+      auto found = removable.find(dist["name"].val());
+      if (found == removable.end() || found->second.empty()) {
+         continue;
+      }
+      std::vector<std::string> keep;
+      for (JSONNode const &factor : dist["factors"].children()) {
+         if (!found->second.count(factor.val())) {
+            keep.push_back(factor.val());
+         }
+      }
+      if (!keep.empty()) {
+         dist["factors"].clear();
+         dist["factors"].fill_seq(keep);
+         removed.insert(*found);
+      }
+   }
+   return removed;
+}
+
+} // namespace
+} // namespace HS3
+} // namespace RooFit
+
+namespace {
+
+// Declare the bookkeeping columns of the exported document (see HS3::bookkeepingColumns()): the axes that several
+// components of a combined data set share, and whose variable in the workspace `ws` is used by nothing else, i.e. has
+// no clients and is in no set of a ModelConfig. RooAbsData::split() keeps such a column (e.g. an event number) in
+// every sub-data set.
+void declareBookkeepingColumns(HS3Document &doc, RooWorkspace const &ws)
+{
    std::vector<RooArgSet const *> modelConfigSets;
    for (TObject *obj : ws.allGenericObjects()) {
       if (auto *mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
@@ -894,117 +1037,14 @@ void declareBookkeepingColumns(JSONNode &rootnode, RooWorkspace const &ws)
       return std::none_of(modelConfigSets.begin(), modelConfigSets.end(),
                           [&](RooArgSet const *set) { return set->find(name.c_str()) != nullptr; });
    };
-   std::map<std::string, std::set<std::string>> columns;
-   for (JSONNode const &dataset : data->children()) {
-      if (typeOf(dataset) != "combined") {
-         continue;
-      }
-      std::map<std::string, int> counts;
-      for (auto const &[component, axes] : combinedDataAxes(rootnode, dataset)) {
-         for (std::string const &axis : axes) {
-            ++counts[axis];
+   for (auto const &[dataset, axes] : HS3::sharedAxes(doc)) {
+      for (std::string const &axis : axes) {
+         if (usedByNothing(axis)) {
+            doc.rooFit.bookkeepingColumns[dataset].push_back(axis);
          }
       }
-      for (auto const &[axis, count] : counts) {
-         if (count > 1 && usedByNothing(axis)) {
-            columns[RooJSONFactoryWSTool::name(dataset)].insert(axis);
-         }
-      }
-   }
-   if (columns.empty()) {
-      return;
-   }
-   JSONNode &node = rootnode["misc"]["ROOT_internal"]["bookkeeping_columns"].set_map();
-   for (auto const &[dataset, names] : columns) {
-      node[dataset].fill_seq(names);
    }
 }
-
-// Write each term of the likelihoods of the exported document `rootnode` once. A RooFit model often has a constraint
-// both as a factor of the product of a channel and as a term of the likelihood (e.g. a constraint of a HistFactory
-// modifier, an external constraint of the ModelConfig, or any constraint of a channel, see
-// constraintsOfChannels()); RooFit counts it once. In HS3 it would enter twice, so the factor is removed from
-// the product. Only products that no other distribution uses are changed (being a component
-// of a combined distribution is not a use), and only factors that are terms of every likelihood that has the product
-// as a term.
-void writeLikelihoodTermsOnce(JSONNode &rootnode)
-{
-   JSONNode const *likelihoods = rootnode.find("likelihoods");
-   JSONNode const *distributions = rootnode.find("distributions");
-   if (!likelihoods || !distributions) {
-      return;
-   }
-   // The products that are terms, with the factors that are terms wherever the product is one.
-   std::map<std::string, std::set<std::string>> removable;
-   for (JSONNode const &likelihood : likelihoods->children()) {
-      std::vector<std::string> const terms = likelihoodTerms(rootnode, likelihood);
-      for (std::string const &term : terms) {
-         JSONNode const *node = findInSection(rootnode, "distributions", term);
-         if (!node || typeOf(*node) != "product_dist" || !node->has_child("factors")) {
-            continue;
-         }
-         std::set<std::string> factorsThatAreTerms;
-         for (JSONNode const &factor : (*node)["factors"].children()) {
-            if (factor.val() != term && std::find(terms.begin(), terms.end(), factor.val()) != terms.end()) {
-               factorsThatAreTerms.insert(factor.val());
-            }
-         }
-         auto found = removable.find(term);
-         if (found == removable.end()) {
-            removable[term] = factorsThatAreTerms;
-         } else {
-            std::set<std::string> both;
-            std::set_intersection(found->second.begin(), found->second.end(), factorsThatAreTerms.begin(),
-                                  factorsThatAreTerms.end(), std::inserter(both, both.begin()));
-            found->second = both;
-         }
-      }
-   }
-   // Products that another distribution uses are left alone.
-   for (JSONNode const &dist : distributions->children()) {
-      std::vector<std::string> used;
-      for (const char *key : {"factors", "summands"}) {
-         if (JSONNode const *parts = dist.find(key)) {
-            for (JSONNode const &part : parts->children()) {
-               if (isName(part)) {
-                  used.push_back(part.val());
-               }
-            }
-         }
-      }
-      if (typeOf(dist) != "combined_dist") {
-         for (std::string const &component : combinedComponents(dist, "dist")) {
-            used.push_back(component);
-         }
-      }
-      for (std::string const &name : used) {
-         removable.erase(name);
-      }
-   }
-   for (auto const &[product, remove] : removable) {
-      if (remove.empty()) {
-         continue;
-      }
-      auto &node = const_cast<JSONNode &>(*findInSection(rootnode, "distributions", product));
-      std::vector<std::string> keep;
-      for (JSONNode const &factor : node["factors"].children()) {
-         if (remove.find(factor.val()) == remove.end()) {
-            keep.push_back(factor.val());
-         }
-      }
-      if (keep.empty()) {
-         continue;
-      }
-      for (std::string const &factor : remove) {
-         oocoutI(nullptr, IO) << "RooFitHS3: '" << factor << "' is a factor of '" << product
-                              << "' and a term of its likelihood; it is written once, as a term of the likelihood"
-                              << std::endl;
-      }
-      node["factors"].clear();
-      node["factors"].fill_seq(keep);
-   }
-}
-// ---------------------------------------------------------------------------------------------------------------
 
 // Export the string attributes and tags of `arg` into the ROOT-internal attributes.
 void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attributes> &attributes)
@@ -1359,15 +1399,14 @@ void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &data
    }
 }
 
-// Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 // The observables of the analysis `analysis` if no data set of its likelihood gives them: the list that RooFit writes
 // in misc.ROOT_internal.ModelConfigs for a ModelConfig without data, or else the variables that HS3 makes
 // observables. By the standard, all parameters of the distributions of the likelihood are listed in a domain of the
-// analysis or are constant, so a variate of the distributions of the likelihood (`variates`, see collectVariates())
-// that is neither, is an observable. Requiring all three excludes the parameters, and the observed values of the
-// constraint terms, which are constant parameters.
-void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysis, HS3::ModelConfigInfo const *mcInfo,
-                            std::set<std::string> const &variates, RooWorkspace &workspace, RooArgSet &observables)
+// analysis or are constant, so a variate of the distributions of the likelihood (see HS3::variatesOf(), the columns
+// of a combined distribution are observables as well) that is neither, is an observable. Requiring all three excludes
+// the parameters, and the observed values of the constraint terms, which are constant parameters.
+void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysis, HS3::Likelihood const &likelihood,
+                            HS3::ModelConfigInfo const *mcInfo, RooWorkspace &workspace, RooArgSet &observables)
 {
    if (mcInfo && mcInfo->observables) {
       for (std::string const &name : *mcInfo->observables) {
@@ -1395,7 +1434,7 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
       inDomains.insert(poi.name);
    }
    std::string list;
-   for (std::string const &variate : variates) {
+   for (std::string const &variate : HS3::variatesOf(doc, likelihood)) {
       RooAbsArg *arg = workspace.arg(variate);
       if (!dynamic_cast<RooAbsRealLValue *>(arg) && !dynamic_cast<RooAbsCategoryLValue *>(arg)) {
          continue;
@@ -1414,9 +1453,9 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
    }
 }
 
+// Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
-                    std::vector<std::unique_ptr<RooAbsData>> &datasets, std::set<std::string> const &bookkeepingColumns,
-                    std::set<std::string> const &variates)
+                    std::vector<std::unique_ptr<RooAbsData>> &datasets, std::set<std::string> const &bookkeepingColumns)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = analysis.name;
@@ -1594,7 +1633,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       }
    }
    if (observables.empty()) {
-      observablesWithoutData(doc, analysis, mcInfo, variates, workspace, observables);
+      observablesWithoutData(doc, analysis, likelihood, mcInfo, workspace, observables);
    }
 
    // A combined distribution paired with a combined data set must have a sub-data set for every component.
@@ -2225,7 +2264,8 @@ RooSimultaneous const *findMatchingSimultaneous(RooWorkspace const &workspace, s
 
 namespace {
 
-// Record an object that was written by an exporter in the document.
+// Record an object that was written by an exporter in the document. Its node moves when the array that it is in
+// grows, so the distributions only get their nodes at the end of the export.
 void recordGenericObject(HS3Document &doc, bool isPdf, std::string const &name, JSONNode const &elem)
 {
    std::string type = elem.has_child("type") ? elem["type"].val() : "";
@@ -3451,6 +3491,33 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
 
+   // The exporters have written the generic distributions to the JSON tree. Now that the tree has all of them, the
+   // document refers to their nodes, like a document that was read.
+   if (JSONNode const *distributions = n.find("distributions")) {
+      std::map<std::string, JSONNode const *> nodes;
+      for (JSONNode const &node : distributions->children()) {
+         nodes.emplace(name(node), &node);
+      }
+      for (HS3::Distribution &dist : doc.distributions) {
+         auto found = nodes.find(dist.name);
+         if (auto *generic = std::get_if<HS3::GenericObject>(&dist.body); generic && found != nodes.end()) {
+            generic->node = found->second;
+         }
+      }
+   }
+
+   // A RooFit model often has a constraint both as a factor of the product of a channel and as a term of the
+   // likelihood (e.g. a constraint of a HistFactory modifier, an external constraint of the ModelConfig, or any
+   // constraint of a channel, see constraintsOfChannels()); RooFit counts it once. In HS3 it would enter twice.
+   for (auto const &[product, factors] : HS3::writeLikelihoodTermsOnce(doc, n)) {
+      for (std::string const &factor : factors) {
+         oocoutI(nullptr, IO) << "RooFitHS3: '" << factor << "' is a factor of '" << product
+                              << "' and a term of its likelihood; it is written once, as a term of the likelihood"
+                              << std::endl;
+      }
+   }
+   declareBookkeepingColumns(doc, _workspace);
+
    // The document that RooFit writes has to pass the same checks as the ones that it reads. Until RooFit writes
    // documents that follow the current standard, problems are only reported.
    HS3::Diagnostics diagnostics;
@@ -3465,12 +3532,9 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    HS3::report(diagnostics);
    HS3::writeDocument(n, doc);
 
-   // Each term of a likelihood once, and distinct variates (see sharedVariates()). Otherwise, the document is only
-   // written if explicitly allowed, e.g. to rename the variates in the JSON by hand. This is checked on the written
-   // document, which has the generic distributions.
-   writeLikelihoodTermsOnce(n);
-   declareBookkeepingColumns(n, _workspace);
-   if (std::vector<std::string> const shared = sharedVariatesOfDocument(n); !shared.empty()) {
+   // Without distinct variates (see HS3::sharedVariates()), the document is only written if explicitly allowed, e.g.
+   // to rename the variates in the JSON by hand.
+   if (std::vector<std::string> const shared = HS3::sharedVariates(doc); !shared.empty()) {
       if (!config().allowExportSharedVariates) {
          std::string text;
          for (std::string const &message : shared) {
@@ -3665,10 +3729,10 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
 
    // Now, read in analyses and likelihoods if there are any
 
-   // Distinct variates (see sharedVariates()). Documents of versions before 0.3, which RooFit wrote with shared
+   // Distinct variates (see HS3::sharedVariates()). Documents of versions before 0.3, which RooFit wrote with shared
    // variates itself, are read with a warning.
    std::set<std::string> bookkeepingColumns;
-   for (auto const &[dataset, columns] : bookkeepingColumnsOfDocument(n)) {
+   for (auto const &[dataset, columns] : HS3::bookkeepingColumns(doc)) {
       for (std::string const &column : columns) {
          warning("RooFitHS3: the axis '" + column + "' of the components of the combined data set '" + dataset +
                  "' is declared as a bookkeeping column without statistical meaning (misc.ROOT_internal."
@@ -3676,7 +3740,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
          bookkeepingColumns.insert(column);
       }
    }
-   for (std::string const &message : sharedVariatesOfDocument(n)) {
+   for (std::string const &message : HS3::sharedVariates(doc)) {
       if (!(doc.metadata.version < HS3::Version{0, 3})) {
          error("invalid HS3: " + message +
                ". The terms of a likelihood and the components of a combined distribution or data set must have "
@@ -3688,24 +3752,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    }
 
    for (auto const &analysis : doc.analyses) {
-      // The variates of the distributions of the likelihood, see observablesWithoutData().
-      std::set<std::string> variates;
-      for (auto const &likelihood : doc.likelihoods) {
-         if (likelihood.name == analysis.likelihood.name) {
-            for (auto const &term : likelihood.terms) {
-               std::set<std::string> const v = variatesOf(n, term.distribution.name);
-               variates.insert(v.begin(), v.end());
-               // The columns of a combined distribution are observables as well.
-               JSONNode const *dist = findInSection(n, "distributions", term.distribution.name);
-               if (dist && typeOf(*dist) == "combined_dist") {
-                  if (JSONNode const *columns = dist->find("columns")) {
-                     addNames(*columns, variates);
-                  }
-               }
-            }
-         }
-      }
-      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns, variates);
+      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns);
    }
 
    combineDatasets(doc, datasets);
