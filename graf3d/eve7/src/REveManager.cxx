@@ -43,6 +43,8 @@
 #include "TTimer.h"
 #include "TApplication.h"
 
+#include "REveAssetDir.hxx"
+
 #include <exception>
 #include <fstream>
 #include <memory>
@@ -203,6 +205,9 @@ REveManager::REveManager()
    fWebWindow = ROOT::RWebWindow::Create();
    fWebWindow->UseServerThreads();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
+
+   // Serve the SDF font and image directories, which can be set before the manager exists.
+   REX::Internal::REveAssetDir::RegisterAll();
 
    const char *gl_viewer = gEnv->GetValue("WebEve.GLViewer", "RCore");
    const char *gl_dblclick = gEnv->GetValue("WebEve.DblClick", "Off");

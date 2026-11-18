@@ -86,6 +86,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
   HEADERS
     ${ROOTEVE_HEADERS}
   SOURCES
+    src/REveAssetDir.cxx
     src/REveChunkManager.cxx
     src/REveBox.cxx
     src/REveBoxSet.cxx
