@@ -961,37 +961,23 @@ FormulaNormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *
 
    FormulaNormSys sys;
    std::smatch match;
-   if (std::regex_match(s, match, pattern)) {
-      const double sign = match[1].str() == "-" ? -1.0 : 1.0;
-
-      std::string token2 = match[2].str();
-      std::string token3 = match[4].str();
-
-      RooAbsReal *p2 = static_cast<RooAbsReal *>(formula->getParameter(token2.c_str()));
-      RooAbsReal *p3 = static_cast<RooAbsReal *>(formula->getParameter(token3.c_str()));
-      RooRealVar *v2 = dynamic_cast<RooRealVar *>(p2);
-      RooRealVar *v3 = dynamic_cast<RooRealVar *>(p3);
-
-      auto *constr2 = findConstraint(v2, channelConstraints);
-      auto *constr3 = findConstraint(v3, channelConstraints);
-
-      if (constr2 && !p3) {
-         sys.param = p2;
-         sys.variation = sign * toDouble(token3);
-      } else if (!p2 && constr3) {
-         sys.param = p3;
-         sys.variation = sign * toDouble(token2);
-      } else if (constr2 && p3 && !constr3) {
-         sys.param = v2;
-         sys.variation = sign * p3->getVal();
-      } else if (p2 && !constr2 && constr3) {
-         sys.param = v3;
-         sys.variation = sign * p2->getVal();
-      }
-
-      // A recognized formula has exactly one constrained parameter.
-      sys.constraint = constr2 ? constr2 : constr3;
+   if (!std::regex_match(s, match, pattern)) {
+      return sys;
    }
+   // The factors a and b are parameters of the formula or numbers. A recognized formula has exactly one constrained
+   // parameter, and the value of the other factor is the variation.
+   auto *a = static_cast<RooAbsReal *>(formula->getParameter(match[2].str().c_str()));
+   auto *b = static_cast<RooAbsReal *>(formula->getParameter(match[4].str().c_str()));
+   RooAbsPdf *constraintA = findConstraint(dynamic_cast<RooRealVar *>(a), channelConstraints);
+   RooAbsPdf *constraintB = findConstraint(dynamic_cast<RooRealVar *>(b), channelConstraints);
+   if (!constraintA == !constraintB) {
+      return sys;
+   }
+   RooAbsReal *other = constraintA ? b : a;
+   const double sign = match[1].str() == "-" ? -1.0 : 1.0;
+   sys.param = constraintA ? a : b;
+   sys.constraint = constraintA ? constraintA : constraintB;
+   sys.variation = sign * (other ? other->getVal() : toDouble(match[constraintA ? 4 : 2].str()));
    return sys;
 }
 
