@@ -133,15 +133,6 @@ std::vector<int> toCodes(std::vector<Interpolation> const &interpolations, Inter
    return out;
 }
 
-// Reports the problems with an object that doesn't come with a document.
-void report(std::string const &name, HS3::Diagnostics &diagnostics)
-{
-   for (auto &diagnostic : diagnostics) {
-      diagnostic.path = name + (diagnostic.path.empty() ? "" : "." + diagnostic.path);
-   }
-   HS3::report(diagnostics);
-}
-
 void erasePrefix(std::string &str, std::string_view prefix)
 {
    if (startsWith(str, prefix)) {
@@ -785,7 +776,7 @@ public:
       std::string name(RooJSONFactoryWSTool::name(p));
       HS3::Diagnostics diagnostics;
       const HS3::InterpolatedFunction in = HS3::parseInterpolatedFunction(p, diagnostics);
-      report(name, diagnostics);
+      HS3::report(diagnostics, name);
 
       auto request = [&](std::vector<HS3::NameOrNumber> const &refs) {
          RooArgList out;
@@ -813,7 +804,7 @@ public:
       std::string name(RooJSONFactoryWSTool::name(p));
       HS3::Diagnostics diagnostics;
       const HS3::InterpolatedNumber in = HS3::parseInterpolatedNumber(p, diagnostics);
-      report(name, diagnostics);
+      HS3::report(diagnostics, name);
 
       RooArgList vars;
       for (std::string const &var : in.parameters) {

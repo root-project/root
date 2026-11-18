@@ -393,12 +393,14 @@ private:
 
 } // namespace
 
-void RooFit::HS3::report(Diagnostics const &diagnostics)
+void RooFit::HS3::report(Diagnostics const &diagnostics, std::string const &object)
 {
    std::string errors;
    for (Diagnostic const &diagnostic : diagnostics) {
-      const std::string text =
-         diagnostic.path.empty() ? diagnostic.message : diagnostic.path + ": " + diagnostic.message;
+      // A path starts with the name of a component, or with the index of an entry if the object is an array.
+      const bool needsDot = !object.empty() && !diagnostic.path.empty() && diagnostic.path.front() != '[';
+      const std::string path = object + (needsDot ? "." : "") + diagnostic.path;
+      const std::string text = path.empty() ? diagnostic.message : path + ": " + diagnostic.message;
       if (diagnostic.severity == Diagnostic::Severity::Error) {
          errors += (errors.empty() ? "" : "\n") + text;
       } else {
