@@ -34,6 +34,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -331,6 +332,9 @@ void THttpServer::SetWSOnly(Bool_t on)
 ///     serv->AddLocation("mydir/", "/home/user/specials");
 ///
 /// Than files from this directory could be addressed via server like `http://localhost:8080/mydir/myfile.root`
+///
+/// The directory replaces all directories of the prefix, also those added with
+/// AppendLocation(). A null `path` removes the prefix.
 
 void THttpServer::AddLocation(const char *prefix, const char *path)
 {
@@ -338,9 +342,31 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
       return;
 
    if (!path)
-      fLocations.erase(fLocations.find(prefix));
+      fLocations.erase(prefix);
    else
-      fLocations[prefix] = path;
+      fLocations[prefix] = {path};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Append a directory to the files location of `prefix`, creating the location
+/// if there is none.
+///
+/// A file requested under a prefix with several directories is served from the
+/// first directory, in the order of AddLocation() and AppendLocation(), that has
+/// it. For example, with
+///
+///     serv->AddLocation("mydir/", "/home/user/specials");
+///     serv->AppendLocation("mydir/", "/usr/share/specials");
+///
+/// `http://localhost:8080/mydir/myfile.root` is served from `/home/user/specials`
+/// if the file is there, else from `/usr/share/specials`.
+
+void THttpServer::AppendLocation(const char *prefix, const char *path)
+{
+   if (!prefix || (*prefix == 0) || !path || (*path == 0))
+      return;
+
+   fLocations[prefix].emplace_back(path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -621,6 +647,14 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
    TString fname(uri);
 
+   auto file_in_dir = [&fname](const std::string &dir) {
+      TString path = dir.c_str();
+      if ((fname[0] == '/') && (path[path.Length() - 1] == '/'))
+         path.Resize(path.Length() - 1);
+      path.Append(fname);
+      return path;
+   };
+
    for (auto &entry : fLocations) {
       Ssiz_t pos = fname.Index(entry.first.c_str());
       if (pos == kNPOS)
@@ -628,10 +662,19 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
       fname.Remove(0, pos + (entry.first.length() - 1));
       if (!VerifyFilePath(fname.Data()))
          return kFALSE;
-      res = entry.second.c_str();
-      if ((fname[0] == '/') && (res[res.Length() - 1] == '/'))
-         res.Resize(res.Length() - 1);
-      res.Append(fname);
+      // With several directories, the first one having the file; when none has
+      // it, the first one, which then fails as a single directory would.
+      // TSystem::AccessPathName() is not used: its helper lookup is thread safe
+      // only after ROOT::EnableThreadSafety().
+      if (entry.second.size() > 1) {
+         for (auto &dir : entry.second) {
+            res = file_in_dir(dir);
+            std::error_code ec;
+            if (std::filesystem::exists(res.Data(), ec))
+               return kTRUE;
+         }
+      }
+      res = file_in_dir(entry.second.front());
       return kTRUE;
    }
 

@@ -45,7 +45,7 @@ protected:
    TString fTopName{"ROOT"}; ///<! name of top folder, default - "ROOT"
    TString fJSROOT;          ///<! location of external JSROOT files
 
-   std::map<std::string, std::string> fLocations; ///<! list of local directories, which could be accessed via server
+   std::map<std::string, std::vector<std::string>> fLocations; ///<! local directories served, per prefix
 
    std::string fDefaultPage;     ///<! file name for default page name
    std::string fDefaultPageCont; ///<! content of default html page
@@ -136,6 +136,8 @@ public:
    void SetJSROOT(const char *location);
 
    void AddLocation(const char *prefix, const char *path);
+
+   void AppendLocation(const char *prefix, const char *path);
 
    void SetDefaultPage(const std::string &filename = "");
 
