@@ -54,17 +54,23 @@ AssertSdfFont() finds the files and does nothing.
 Which fonts to ask for
 ----------------------
 
-Only faces that ship in TROOT::GetDataDir()/fonts can be relied on. They
-include LiberationMono-Regular and LiberationSerif-Regular, arial and arialbd,
-verdana, georgia, comic, comicbd and BlackChancery. ROOT ships no Liberation
-Sans in any weight. A system path such as /usr/share/fonts/liberation-sans
-ties the code to one distribution's layout.
+Six faces ship with REve, in ../assets/sdf-fonts/: LiberationSans-Regular,
+LiberationSans-Bold, LiberationSerif-Regular, LiberationSerif-Bold,
+LiberationMono-Regular and LiberationMono-Bold. They need no TTF and no
+display.
+
+Other fonts are generated from a TTF, which needs a display. Only faces that
+ship in TROOT::GetDataDir()/fonts can be relied on. They include arial and
+arialbd, verdana, georgia, comic, comicbd and BlackChancery. A system path
+such as /usr/share/fonts/liberation-sans ties the code to one distribution's
+layout.
 
 LiberationSerif-Regular is REveText's default. REveViewer::SetAxesType()
 generates it, and the client's Axis3D.js uses it for the viewer axes.
 
-For bold, prefer REveText::SetFontWeight() over a second atlas: weight is applied
-by moving the SDF threshold, so it is continuous and needs no extra font. Several
-of the faces above have no bold variant in ROOT at all.
+For real bold, use a shipped Bold face: it has wider letters and advances and
+open counters, and looks better than a thickened Regular. Use
+REveText::SetFontWeight() for fine adjustment: weight is applied by moving the
+SDF threshold, so it is continuous and needs no extra font.
 
 See also: REveText, and tutorials/visualisation/eve7/texts.C and texts_grid.C.

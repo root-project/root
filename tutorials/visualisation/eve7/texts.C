@@ -22,8 +22,16 @@ using namespace ROOT::Experimental;
 const char *blurbs[] = {"Love", "Peace", "ROOT", "Code", "Courage", "Quiche"};
 const int n_blurbs = sizeof(blurbs) / sizeof(char *);
 
-// Some ROOT fonts are supper old and will error out (arial, times, cour).
-const char *fonts[] = {"comic", "comicbd", "verdana", "BlackChancery", "georgia", "georgiai"};
+// These six faces ship with REve and need no TTF and no display.
+// The other fonts in TROOT::GetDataDir()/fonts, such as verdana, georgia, comic and
+// BlackChancery, can be used too: REveText::AssertSdfFont() generates them from the
+// TTF, which needs a display. Some ROOT fonts are super old and will error out
+// (arial, times, cour).
+// clang-format off
+const char *fonts[] = {"LiberationSans-Regular",  "LiberationSans-Bold",
+                       "LiberationSerif-Regular", "LiberationSerif-Bold",
+                       "LiberationMono-Regular",  "LiberationMono-Bold"};
+// clang-format on
 const int n_fonts = sizeof(fonts) / sizeof(char *);
 
 // 2. Fonts with diacritcis and most greek letter available through unicode.
@@ -107,12 +115,11 @@ void texts()
    eveMng->AllowMultipleRemoteConnections(false, false);
 
    // Initialize SDF fonts.
-   // REveManager needs to be already created as location redirect needs to be set up.
-   // a) When REveText::AssertSdfFont() is called one of the two default locations
-   //    will be chosen, if it is writable by the current user:
+   // a) REveText::AssertSdfFont() looks for the font in the SDF font directory and
+   //    then in the fonts shipped with REve. A missing font is generated into the
+   //    SDF font directory, by default the first of these writable by the current user:
    //    - $ROOTSYS/ui5/eve7/sdf-fonts/
    //    - sdf-fonts/ in the current working directory.
-   //    If neither location is writable, an error will be issued.
    // b) Alternatively, REveText::SetSdfFontDir(std::string_view dir, bool require_write_access)
    //    can be called to set this directory manually. If the directory is already pre-populated
    //    with fonts one can set the `require_write_access` argument to false to avoid the
