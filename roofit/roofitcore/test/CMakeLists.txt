@@ -120,6 +120,9 @@ if(clad)
   ROOT_ADD_TEST(test-stressroofit-codegen COMMAND stressRooFit -b codegen FAILREGEX "FAILED|Error in")
 endif()
 if(cuda)
+  # Hide the GPUs to check that the Evaluator fails cleanly in CUDA mode
+  ROOT_ADD_GTEST(testRooEvaluatorNoGPU testRooEvaluatorNoGPU.cxx LIBRARIES RooFitCore RooFit
+                 ENVIRONMENT CUDA_VISIBLE_DEVICES=-1)
   ROOT_ADD_TEST(test-stressroofit-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in" RESOURCE_LOCK GPU LABELS cuda)
 endif()
 if(dataframe)
