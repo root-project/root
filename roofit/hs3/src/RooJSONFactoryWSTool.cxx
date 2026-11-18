@@ -2050,32 +2050,12 @@ JSONNode const *RooJSONFactoryWSTool::findNamedChild(JSONNode const &node, std::
    return nullptr;
 }
 
-/**
- * @brief Check if a string is a valid name.
- *
- * A valid name should start with a letter or an underscore, followed by letters, digits, or underscores.
- * Only characters from the ASCII character set are allowed.
- *
- * @param str The string to be checked.
- * @return bool Returns true if the string is a valid name; otherwise, returns false.
- */
+/// Whether a string is a valid name: a letter or an underscore, followed by letters, digits or underscores. Only
+/// characters from the ASCII character set are allowed.
 bool RooJSONFactoryWSTool::isValidName(const std::string &str)
 {
-   // Check if the string is empty or starts with a non-letter/non-underscore character
-   if (str.empty() || !(std::isalpha(str[0]) || str[0] == '_')) {
-      return false;
-   }
-
-   // Check the remaining characters in the string
-   for (char c : str) {
-      // Allow letters, digits, and underscore
-      if (!(std::isalnum(c) || c == '_')) {
-         return false;
-      }
-   }
-
-   // If all characters are valid, the string is a valid name
-   return true;
+   return !str.empty() && (std::isalpha(str[0]) || str[0] == '_') &&
+          std::all_of(str.begin(), str.end(), [](char c) { return std::isalnum(c) || c == '_'; });
 }
 
 bool RooJSONFactoryWSTool::testValidName(const std::string &name, bool forceError)
@@ -2620,16 +2600,9 @@ void RooJSONFactoryWSTool::recordCategory(RooAbsCategory const &cat)
    _export->categories[axis.name] = std::move(axis);
 }
 
-/**
- * @brief Import a function from the JSONNode into the workspace.
- *
- * This function imports a function from the given JSONNode into the workspace.
- * The function's information is read from the JSONNode and added to the workspace.
- *
- * @param p The JSONNode representing the function to be imported.
- * @param importAllDependants A boolean flag indicating whether to import all dependants (servers) of the function.
- * @return void
- */
+/// Import the function or distribution `p` into the workspace, with the importers that are registered for its type.
+/// If `importAllDependants` is false, `p` is a fragment of a document, whose own "functions" and "distributions" are
+/// imported first.
 void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDependants)
 {
    // To report the components that no importer understands.
@@ -2724,16 +2697,7 @@ void RooJSONFactoryWSTool::importDistribution(HS3::Distribution const &distribut
                              found != channelConstraints.end() ? &found->second : nullptr);
 }
 
-/**
- * @brief Import a function from a JSON string into the workspace.
- *
- * This function imports a function from the provided JSON string into the workspace.
- * The function's information is read from the JSON string and added to the workspace.
- *
- * @param jsonString The JSON string containing the function information.
- * @param importAllDependants A boolean flag indicating whether to import all dependants (servers) of the function.
- * @return void
- */
+/// Import a function or distribution that is given as a JSON string, see the overload for a JSONNode.
 void RooJSONFactoryWSTool::importFunction(const std::string &jsonString, bool importAllDependants)
 {
    this->importFunction((JSONTree::create(jsonString))->rootnode(), importAllDependants);
@@ -3018,15 +2982,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    _export->doc.data.push_back(std::move(output));
 }
 
-/**
- * @brief Read axes from the JSONNode and create a RooArgSet representing them.
- *
- * This function reads axes information from the given JSONNode and
- * creates a RooArgSet with variables representing these axes.
- *
- * @param topNode The JSONNode containing the axes information to be read.
- * @return RooArgSet A RooArgSet containing the variables created from the JSONNode.
- */
+/// Create the variables for the "axes" of `topNode`, which are owned by the returned set.
 RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
 {
    HS3::Diagnostics diagnostics;
@@ -3035,17 +2991,8 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
    return HS3::createObservables(axes);
 }
 
-/**
- * @brief Read binned data from the JSONNode and create a RooDataHist object.
- *
- * This function reads binned data from the given JSONNode and creates a RooDataHist object.
- * The binned data is associated with the specified name and variables (RooArgSet) in the workspace.
- *
- * @param n The JSONNode representing the binned data to be read.
- * @param name The name to be associated with the created RooDataHist object.
- * @param vars The RooArgSet representing the variables associated with the binned data.
- * @return std::unique_ptr<RooDataHist> A unique pointer to the created RooDataHist object.
- */
+/// Create a RooDataHist with the name `name` over the variables `vars` from the "contents" of `n`, and its "errors"
+/// if it has any.
 std::unique_ptr<RooDataHist>
 RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name, RooArgSet const &vars)
 {
@@ -3613,23 +3560,14 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
 }
 
-/**
- * @brief Import the workspace from a JSON string.
- *
- * @param s The JSON string containing the workspace data.
- * @return bool Returns true on successful import, false otherwise.
- */
+/// Import an HS3 document that is given as a JSON string into the workspace. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::importJSONfromString(const std::string &s)
 {
    std::stringstream ss(s);
    return importJSON(ss);
 }
 
-/**
- * @brief Export the workspace to a JSON string.
- *
- * @return std::string The JSON string representing the exported workspace.
- */
+/// Export the workspace as an HS3 document, and return it as a JSON string.
 std::string RooJSONFactoryWSTool::exportJSONtoString()
 {
    std::stringstream ss;
@@ -3637,12 +3575,7 @@ std::string RooJSONFactoryWSTool::exportJSONtoString()
    return ss.str();
 }
 
-/**
- * @brief Export the workspace to JSON format and write to the output stream.
- *
- * @param os The output stream to write the JSON data to.
- * @return bool Returns true on successful export, false otherwise.
- */
+/// Export the workspace as an HS3 document, and write it as JSON to the stream. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
 {
    std::unique_ptr<JSONTree> tree = JSONTree::create();
@@ -3652,12 +3585,7 @@ bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
    return true;
 }
 
-/**
- * @brief Export the workspace to JSON format and write to the specified file.
- *
- * @param filename The name of the JSON file to create and write the data to.
- * @return bool Returns true on successful export, false otherwise.
- */
+/// Export the workspace as an HS3 document, and write it to a JSON file. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::exportJSON(std::string const &filename)
 {
    std::ofstream out(filename.c_str());
@@ -3870,29 +3798,17 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    importParameterStepWidths(_workspace, doc);
 }
 
-/**
- * @brief Imports a JSON file from the given input stream to the workspace.
- *
- * @param is The input stream containing the JSON data.
- * @return bool Returns true on successful import, false otherwise.
- */
+/// Import an HS3 document that is read as JSON from the stream into the workspace. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::importJSON(std::istream &is)
 {
-   // import a JSON file to the workspace
    std::unique_ptr<JSONTree> tree = JSONTree::create(is);
    this->importAllNodes(tree->rootnode());
    return true;
 }
 
-/**
- * @brief Imports a JSON file from the given filename to the workspace.
- *
- * @param filename The name of the JSON file to import.
- * @return bool Returns true on successful import, false otherwise.
- */
+/// Import the HS3 document of a JSON file into the workspace. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::importJSON(std::string const &filename)
 {
-   // import a JSON file to the workspace
    std::ifstream infile(filename.c_str());
    if (!infile.is_open())
       RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid input file '" + filename + "'.");
@@ -3980,35 +3896,21 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
    }
 }
 
-/**
- * @brief Writes a warning message to the RooFit message service.
- *
- * @param str The warning message to be logged.
- * @return std::ostream& A reference to the output stream.
- */
+/// Write a warning to the RooFit message service, and return its stream.
 std::ostream &RooJSONFactoryWSTool::warning(std::string const &str)
 {
    return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::ObjectHandling) << str << std::endl;
 }
 
-/**
- * @brief Writes an error message to the RooFit message service and throws a runtime_error.
- *
- * @param s The error message to be logged and thrown.
- * @return void
- */
+/// Write an error to the RooFit message service, and throw it as a std::runtime_error.
 void RooJSONFactoryWSTool::error(const char *s)
 {
    RooMsgService::instance().log(nullptr, RooFit::MsgLevel::ERROR, RooFit::IO) << s << std::endl;
    throw std::runtime_error(s);
 }
 
-/**
- * @brief Cleans up names to the HS3 standard
- *
- * @param str The string to be sanitized.
- * @return std::string
- */
+/// Replace some characters that are common in the names of RooFit objects, but that the HS3 standard doesn't allow in
+/// names, if config().allowSanitizeNames is set.
 std::string RooJSONFactoryWSTool::sanitizeName(const std::string str)
 {
    std::string result;
