@@ -2593,6 +2593,30 @@ def make_LinearWithLeakyRelu():
     return _model(graph, opset=9, ir_version=4, producer_name='pytorch', producer_version='1.11.0')
 
 
+def make_ThresholdedRelu():
+    """Ops: ThresholdedRelu"""
+    nodes = [
+        helper.make_node(
+            "ThresholdedRelu",
+            ["input"],
+            ["1"],
+            name="ThresholdedRelu_0",
+            alpha=1.0,
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "torch-jit-export",
+        inputs=[
+            _vi("input", FLOAT, [8]),
+        ],
+        outputs=[
+            _vi("1", FLOAT, [8]),
+        ],
+    )
+    return _model(graph, opset=10, ir_version=6, producer_name="pytorch", producer_version="1.11.0")
+
+
 def make_LinearWithSelu():
     """Ops: Gemm, Selu, Gemm, Selu"""
     nodes = [
@@ -6388,6 +6412,7 @@ MODELS = {
     "Less": make_Less,
     "LessOrEqual": make_LessOrEqual,
     "LinearWithLeakyRelu": make_LinearWithLeakyRelu,
+    "ThresholdedRelu": make_ThresholdedRelu,
     "LinearWithSelu": make_LinearWithSelu,
     "LinearWithSigmoid": make_LinearWithSigmoid,
     "Linear_16": make_Linear_16,
@@ -7318,6 +7343,7 @@ TEST_INPUTS = {
             (24,),
         )
     ],
+    "ThresholdedRelu": [f32([-2.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 3.5], (8,))],
     "LinearWithSelu": [f32(np.full(48, 1.0), (2, 24))],
     "LinearWithSigmoid": [f32(np.full(48, 1.0), (2, 24))],
     "Linear_16": [f32(np.full(1600, 1.0), (16, 100))],
