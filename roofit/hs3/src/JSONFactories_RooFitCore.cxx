@@ -780,14 +780,10 @@ bool importRealIntegral(RooJSONFactoryWSTool *tool, const JSONNode &p)
       normSet.add(tool->requestArgSet<RooAbsReal>(p, "normalization"));
       normSetPtr = &normSet;
    }
-   std::string domain;
-   bool hasDomain = p.has_child("domain");
-   if (hasDomain) {
-      domain = p["domain"].val();
-   }
+   JSONNode const *domain = p.find("domain");
    // todo: at some point, take care of integrator configurations
    tool->wsEmplace<RooRealIntegral>(name, *func, vars, normSetPtr, static_cast<RooNumIntConfig *>(nullptr),
-                                    hasDomain ? domain.c_str() : nullptr);
+                                    domain ? domain->val().c_str() : nullptr);
    return true;
 }
 
@@ -798,13 +794,11 @@ bool importDerivative(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooRealVar *x = tool->requestArg<RooRealVar>(p, "x");
    Int_t order = p["order"].val_int();
    double eps = p["eps"].val_double();
+   RooArgSet normSet;
    if (p.has_child("normalization")) {
-      RooArgSet normSet;
       normSet.add(tool->requestArgSet<RooAbsReal>(p, "normalization"));
-      tool->wsEmplace<RooDerivative>(name, *func, *x, normSet, order, eps);
-      return true;
    }
-   tool->wsEmplace<RooDerivative>(name, *func, *x, order, eps);
+   tool->wsEmplace<RooDerivative>(name, *func, *x, normSet, order, eps);
    return true;
 }
 
@@ -830,12 +824,8 @@ bool importExtendPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    // HS3 calls the fields "dist" and "rate". RooFit used to write "pdf" and "norm", which are still accepted.
    RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, p.has_child("pdf") && !p.has_child("dist") ? "pdf" : "dist");
    RooAbsReal *norm = tool->requestArg<RooAbsReal>(p, p.has_child("norm") && !p.has_child("rate") ? "norm" : "rate");
-   if (p.has_child("range")) {
-      std::string rangeName = p["range"].val();
-      tool->wsEmplace<RooExtendPdf>(name, *pdf, *norm, rangeName.c_str());
-      return true;
-   }
-   tool->wsEmplace<RooExtendPdf>(name, *pdf, *norm);
+   JSONNode const *range = p.find("range");
+   tool->wsEmplace<RooExtendPdf>(name, *pdf, *norm, range ? range->val().c_str() : nullptr);
    return true;
 }
 
@@ -907,54 +897,37 @@ bool importExponential(RooJSONFactoryWSTool *tool, const JSONNode &p)
 bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
-   bool has_cov = p.has_child("covariances");
-   bool has_corr = p.has_child("correlations") && p.has_child("standard_deviations");
-   if (!has_cov && !has_corr) {
+   const bool hasCov = p.has_child("covariances");
+   const bool hasCorr = p.has_child("correlations") && p.has_child("standard_deviations");
+   if (!hasCov && !hasCorr) {
       RooJSONFactoryWSTool::error("no covariances or correlations+standard_deviations given in '" + name + "'");
    }
-
-   TMatrixDSym covmat;
-
-   // The matrix must be square, otherwise the entries would be written out of bounds.
-   auto checkSquare = [&](const char *key, std::size_t n) {
-      if (p[key].num_children() != n) {
-         RooJSONFactoryWSTool::error("\"" + std::string(key) + "\" in '" + name + "' must have " + std::to_string(n) +
-                                     " rows");
-      }
-      for (const auto &row : p[key].children()) {
-         if (!row.is_seq() || row.num_children() != n) {
-            RooJSONFactoryWSTool::error("\"" + std::string(key) + "\" in '" + name + "' must be a square matrix");
-         }
-      }
-   };
-
-   if (has_cov) {
-      int n = p["covariances"].num_children();
-      checkSquare("covariances", n);
-      int i = 0;
-      covmat.ResizeTo(n, n);
-      for (const auto &row : p["covariances"].children()) {
-         int j = 0;
-         for (const auto &val : row.children()) {
-            covmat(i, j) = val.val_double();
-            ++j;
-         }
-         ++i;
-      }
+   // The covariances are given directly, or as correlations that are scaled with the standard deviations.
+   const std::string key = hasCov ? "covariances" : "correlations";
+   std::vector<double> sigmas;
+   if (hasCov) {
+      sigmas.assign(p[key].num_children(), 1.0);
    } else {
-      std::vector<double> variances;
-      variances << p["standard_deviations"];
-      checkSquare("correlations", variances.size());
-      covmat.ResizeTo(variances.size(), variances.size());
-      int i = 0;
-      for (const auto &row : p["correlations"].children()) {
-         int j = 0;
-         for (const auto &val : row.children()) {
-            covmat(i, j) = val.val_double() * variances[i] * variances[j];
-            ++j;
-         }
-         ++i;
+      sigmas << p["standard_deviations"];
+   }
+   const std::size_t n = sigmas.size();
+   // The matrix must be square, otherwise the entries would be written out of bounds.
+   if (p[key].num_children() != n) {
+      RooJSONFactoryWSTool::error("\"" + key + "\" in '" + name + "' must have " + std::to_string(n) + " rows");
+   }
+   TMatrixDSym covmat;
+   covmat.ResizeTo(n, n);
+   int i = 0;
+   for (const auto &row : p[key].children()) {
+      if (!row.is_seq() || row.num_children() != n) {
+         RooJSONFactoryWSTool::error("\"" + key + "\" in '" + name + "' must be a square matrix");
       }
+      int j = 0;
+      for (const auto &val : row.children()) {
+         covmat(i, j) = val.val_double() * sigmas[i] * sigmas[j];
+         ++j;
+      }
+      ++i;
    }
    tool->wsEmplace<RooMultiVarGaussian>(name, tool->requestArgList<RooAbsReal>(p, "x"),
                                         tool->requestArgList<RooAbsReal>(p, "mean"), covmat);
@@ -1003,32 +976,20 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
 bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    const std::string name(RooJSONFactoryWSTool::name(p));
-
-   // Mandatory fields
-   if (!p.has_child("x")) {
-      RooJSONFactoryWSTool::error("no x given in '" + name + "'");
-   }
+   RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
    if (!p.has_child("x0") || !p.has_child("y0")) {
       RooJSONFactoryWSTool::error("no x0/y0 given in '" + name + "'");
    }
 
-   RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-
-   // Optional fields (defaults follow RooSpline ctor defaults)
-   std::string algo = p.has_child("interpolation") ? p["interpolation"].val() : "poly3";
-   int order = 0;
-   if (algo == "poly3") {
-      order = 3;
-   } else if (algo == "poly5") {
-      order = 5;
-   } else {
+   // The optional fields have the defaults of RooSpline.
+   const std::string algo = p.has_child("interpolation") ? p["interpolation"].val() : "poly3";
+   if (algo != "poly3" && algo != "poly5") {
       RooJSONFactoryWSTool::error("unsupported algo '" + algo + "' for RooSpline in '" + name +
                                   "': allowed are 'poly3' and 'poly5'");
    }
-   const bool logx = p.has_child("logx") ? p["logx"].val_bool() : false;
-   const bool logy = p.has_child("logy") ? p["logy"].val_bool() : false;
+   const bool logx = p.has_child("logx") && p["logx"].val_bool();
+   const bool logy = p.has_child("logy") && p["logy"].val_bool();
 
-   // Read knots
    std::vector<double> x0;
    std::vector<double> y0;
    x0 << p["x0"];
@@ -1042,10 +1003,7 @@ bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
       RooJSONFactoryWSTool::error("need at least 2 knots in '" + name + "'");
    }
 
-   // Construct RooSpline(name,title, x, x0, y0, order, logx, logy)
-   tool->wsEmplace<::RooSpline>(name.c_str(), *x, std::span<const double>(x0.data(), x0.size()),
-                                std::span<const double>(y0.data(), y0.size()), order, logx, logy);
-
+   tool->wsEmplace<::RooSpline>(name.c_str(), *x, x0, y0, algo == "poly5" ? 5 : 3, logx, logy);
    return true;
 }
 
@@ -1743,23 +1701,16 @@ void exportParamHistFunc(RooJSONFactoryWSTool *, ParamHistFunc const &pdf, JSONN
 
 void exportSpline(RooJSONFactoryWSTool *, RooSpline const &rs, JSONNode &elem)
 {
-
-   // Independent variable
    elem["x"] << rs.x().GetName();
-
-   // Spline configuration
-   // Canonical algo for RooSpline
    elem["interpolation"] << (rs.order() == 5 ? "poly5" : "poly3");
    elem["logx"] << rs.logx();
    elem["logy"] << rs.logy();
 
-   // Serialize knots as primitive arrays
+   // The knots
    TSpline const &sp = rs.spline();
    auto &x0 = elem["x0"].set_seq();
    auto &y0 = elem["y0"].set_seq();
-
-   const int np = sp.GetNp();
-   for (int i = 0; i < np; ++i) {
+   for (int i = 0; i < sp.GetNp(); ++i) {
       double xk = 0.0;
       double yk = 0.0;
       sp.GetKnot(i, xk, yk);
@@ -1860,23 +1811,13 @@ void exportUniform(RooJSONFactoryWSTool *, RooUniform const &pdf, JSONNode &elem
    RooJSONFactoryWSTool::fillSeq(elem["x"], pdf.observables());
 }
 
-bool importWrapperPdf(RooJSONFactoryWSTool *tool, const JSONNode &node)
+bool importWrapperPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
-   if (node["type"].val() != "density_function_dist")
-      return false;
-
-   auto name = RooJSONFactoryWSTool::name(node);
-   auto *func = tool->requestArg<RooAbsReal>(node, "function");
-
-   bool selfNormalized = false;
-
-   auto sn = node.find("self_normalized");
+   std::string name(RooJSONFactoryWSTool::name(p));
+   RooAbsReal *func = tool->requestArg<RooAbsReal>(p, "function");
    // ROOT previously exported this key without an underscore.
-   if (!sn)
-      sn = node.find("selfnormalized");
-   if (sn)
-      selfNormalized = sn->val_bool();
-
+   const char *key = p.has_child("self_normalized") ? "self_normalized" : "selfnormalized";
+   const bool selfNormalized = p.has_child(key) && p[key].val_bool();
    tool->wsEmplace<RooWrapperPdf>(name, *func, selfNormalized);
    return true;
 }
