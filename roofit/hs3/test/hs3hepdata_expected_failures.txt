@@ -1,0 +1,13 @@
+# HS3 documents published on HEPData that are known to fail with the current
+# RooFit. See roofit/doc/developers/roofit_hs3.md, "Published HS3 documents".
+#
+# Format: one document per line, <document>  # <one-line reason>
+# A document is named <INSPIRE id>/<resource file>[/<path inside the archive>].
+#
+# These documents are run as expected failures: if one of them starts to pass,
+# or if an entry matches no document, the test fails. Remove entries in the same
+# pull request that fixes them.
+2689657/ratio_likelihood.json  # export: normfactor 'b' is applied twice to a sample, which can't be written as one modifier
+2689657/separate_likelihood.json  # export: normfactor 'b' is applied twice to a sample, which can't be written as one modifier
+2905253/workspace-postFit_PTV.json  # import: two histosys modifiers of the same name in a sample (HS3 0.2, ROOT 6.37)
+2905253/workspace-postFit_STXS.json  # import: two histosys modifiers of the same name in a sample (HS3 0.2, ROOT 6.37)

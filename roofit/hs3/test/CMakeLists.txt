@@ -42,3 +42,21 @@ if(test_roofit_hs3testsuite)
         COPY_TO_BUILDDIR hs3testsuite_roofit_backend.py
         )
 endif()
+
+if(test_roofit_hs3hepdata)
+    # Imports the HS3 documents that are published on HEPData. The test downloads them when it
+    # runs and keeps them in the cache directory, so that HEPData is not asked for them again.
+    # It is not meant for the CI: see roofit/doc/developers/roofit_hs3.md ("Published HS3
+    # documents").
+    set(HS3HEPDATA_CACHE ${CMAKE_CURRENT_BINARY_DIR}/hs3hepdata-cache CACHE PATH
+        "Directory in which the HS3 documents downloaded from HEPData are kept")
+    ROOT_ADD_PYUNITTEST(hs3-hepdata test_hs3_hepdata.py
+        PYTHON_DEPS hepdata_cli
+        ENVIRONMENT HS3HEPDATA_CACHE=${HS3HEPDATA_CACHE}
+                    HS3HEPDATA_EXPECTED_FAILURES=${CMAKE_CURRENT_SOURCE_DIR}/hs3hepdata_expected_failures.txt
+        )
+    # Importing and exporting a few hundred documents takes longer than the default timeout.
+    if(TEST pyunittests-roofit-hs3-hs3-hepdata)
+        set_tests_properties(pyunittests-roofit-hs3-hs3-hepdata PROPERTIES TIMEOUT 7200 RUN_SERIAL TRUE)
+    endif()
+endif()

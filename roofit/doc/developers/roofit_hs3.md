@@ -272,6 +272,46 @@ expected failures accordingly. Make sure the runner and the fixtures are
 compatible, and adapt the RooFit backend if the backend interface of the
 runner has changed.
 
+### Published HS3 documents
+
+Experiments publish HS3 documents on [HEPData](https://www.hepdata.net),
+where they are listed as resources of the type "HS3" (search for
+`analysis:hs3`). These are the documents that users of RooFit actually have,
+and most of them were written by older versions of ROOT, so they show whether
+RooFit still reads what it once wrote.
+
+The test `roofit/hs3/test/test_hs3_hepdata.py` asks HEPData for all records
+with HS3 resources, downloads the resources, and checks for every HS3
+document in them that RooFit can import it, export the result, and import the
+exported document again. It does not compare any values of the models.
+
+The test is enabled with the CMake option `-Dtest_roofit_hs3hepdata=ON`,
+which requires `-Dtesting=ON`, `-Dpyroot=ON` and the Python package
+`hepdata-cli`, the client of HEPData, through which the test accesses it
+(HEPData refuses requests of other scripted clients). **It is not enabled in the
+ROOT CI and should not be**: HEPData must not be queried on every build. Run
+it by hand, for example before a release or after a change to the import of
+older documents:
+
+``` {.sh}
+    ctest -R roofit-hs3-hs3-hepdata --output-on-failure
+```
+
+The test needs network access when it runs, downloads a few hundred MB and
+takes a while. Everything it downloads is kept in the directory given by the
+CMake variable `HS3HEPDATA_CACHE` (by default in the build directory) and is
+not downloaded again. With the environment variable `HS3HEPDATA_OFFLINE=1`,
+HEPData is not contacted at all and the test runs on what is in the cache;
+with `HS3HEPDATA_SELECT=<regular expression>`, only the matching documents
+are tested.
+
+Documents that are known to fail are listed in
+`roofit/hs3/test/hs3hepdata_expected_failures.txt`, one document per line
+together with a one-line reason, in the same way as for the conformance test
+suite: an expected failure that starts to pass, or an entry that matches no
+document, fails the test. Since the test is not pinned to a state of HEPData,
+a new record can also make it fail without any change in RooFit.
+
 ### Contributing
 
 If you encounter a missing importer or exporter, please consider
