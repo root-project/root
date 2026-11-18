@@ -109,13 +109,22 @@ public:
 
    static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
 
+   /// The object `objname` from the workspace, imported from the document first if needed. Throws a
+   /// DependencyMissingError if neither has it.
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
    {
-      if (T *out = requestImpl<T>(objname)) {
+      if (T *out = tryRequest<T>(objname)) {
          return out;
       }
       throw DependencyMissingError(requestAuthor, objname, T::Class()->GetName());
+   }
+
+   /// Like request(), but returns nullptr if neither the workspace nor the document has the object.
+   template <class T>
+   T *tryRequest(const std::string &objname)
+   {
+      return requestImpl<T>(objname);
    }
 
    template <class T>
