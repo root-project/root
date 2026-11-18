@@ -336,6 +336,10 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
    if (resolvedType.empty())
       return R__FORWARD_RESULT(fnFail("no type name specified for field '" + fieldName + "'"));
 
+   // Ensure that parent and child fields use the same string pool to start with. Note that if a shared string pool
+   // is already present (e.g., in a recursive call), the existing one will be used over the new one.
+   Internal::RFieldSharedStringPoolRaii stringPoolRaii;
+
    std::unique_ptr<ROOT::RFieldBase> result;
 
    const auto maybeGetChildId = [desc, fieldId](int childId) {

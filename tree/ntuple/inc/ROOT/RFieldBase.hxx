@@ -74,6 +74,10 @@ private:
    std::shared_ptr<RStringPool> fOldPool;
 
 public:
+   RFieldSharedStringPoolRaii()
+   {
+      fOldPool = CallSetSharedStringPoolOnField(std::make_shared<Internal::RStringPool>());
+   }
    explicit RFieldSharedStringPoolRaii(std::shared_ptr<Internal::RStringPool> pool)
    {
       fOldPool = CallSetSharedStringPoolOnField(pool);
