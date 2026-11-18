@@ -121,6 +121,8 @@ void REveText::ComputeBBox()
 #include "TROOT.h"
 #include "TEnv.h"
 
+#include <set>
+
 std::string REveText::sSdfFontDir;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,6 +210,7 @@ bool REveText::SetDefaultSdfFontDir()
 /// Check if font exists, otherwise try to create it.
 /// If SDF font dir is not yet set, an attempt will be made to set it to
 /// one of the default locations, in $ROOTSYS or in the current working directory.
+/// In batch mode a missing font is not generated, as that needs a display.
 /// Returns true if font files are present, false otherwise.
 /// Static function.
 
@@ -226,6 +229,18 @@ bool REveText::AssertSdfFont(const std::string &font_name, const std::string &tt
    if (gSystem->AccessPathName(png.data()) || gSystem->AccessPathName(js.data())) {
       if (gSystem->AccessPathName(ttf_font.data())) {
          ::Warning(tpfx, "Source TTF font '%s' not found.", ttf_font.data());
+         return false;
+      }
+      // Generating a font needs a GL context, and TGLWidget throws without a display.
+      if (gROOT->IsBatch()) {
+         static std::set<std::string> s_warned_fonts;
+         if (s_warned_fonts.insert(font_name).second) {
+            ::Warning(tpfx,
+                      "SDF font '%s' is not in '%s' and is not generated in batch mode. "
+                      "Generating it needs a GL context, which needs a display. "
+                      "Run once with a display, or copy %s.png and %s.js.gz into the SDF font directory.",
+                      font_name.data(), sSdfFontDir.data(), font_name.data(), font_name.data());
+         }
          return false;
       }
       // Invoke through interpreter to avoid REve dependece on RGL.
