@@ -82,8 +82,9 @@ TEST(StringUtils, Round)
    EXPECT_EQ(ROOT::Round(110., 0.24, 1, "+-"), "110.0+-0.2");
 }
 
-TEST(StringUtils, SplitAt) {
-   const auto p = [] (auto a, auto b) { return std::make_pair<std::string_view, std::string_view>(a, b); };
+TEST(StringUtils, SplitAt)
+{
+   const auto p = [](auto a, auto b) { return std::make_pair<std::string_view, std::string_view>(a, b); };
 
    EXPECT_EQ(ROOT::SplitAt("foo, bar", ','), p("foo", " bar"));
    EXPECT_EQ(ROOT::SplitAt("foo, bar,", ','), p("foo", " bar,"));
@@ -91,4 +92,126 @@ TEST(StringUtils, SplitAt) {
    EXPECT_EQ(ROOT::SplitAt("foo,bar", ' '), p("foo,bar", ""));
    EXPECT_EQ(ROOT::SplitAt("", ' '), p("", ""));
    EXPECT_EQ(ROOT::SplitAt(",,,,", ','), p("", ",,,"));
+}
+
+TEST(StringUtils, WrapString)
+{
+   const auto input = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut "
+                      "labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco "
+                      "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in "
+                      "voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat "
+                      "non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
+   EXPECT_EQ(ROOT::WrapString(input, 60),
+             R"(Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+do eiusmod tempor incididunt ut labore et dolore magna
+aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit
+esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+occaecat cupidatat non proident, sunt in culpa qui officia
+deserunt mollit anim id est laborum.)");
+   EXPECT_EQ(
+      ROOT::WrapString(input, 120),
+      R"(Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis
+aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.)");
+   EXPECT_EQ(ROOT::WrapString(input, 60, 10),
+             R"(Lorem ipsum dolor sit amet, consectetur adipiscing
+          elit, sed do eiusmod tempor incididunt ut labore
+          et dolore magna aliqua. Ut enim ad minim veniam,
+          quis nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat. Duis aute irure
+          dolor in reprehenderit in voluptate velit esse
+          cillum dolore eu fugiat nulla pariatur. Excepteur
+          sint occaecat cupidatat non proident, sunt in
+          culpa qui officia deserunt mollit anim id est
+          laborum.)");
+   EXPECT_EQ(ROOT::WrapString(input, 60, /*indent=*/10, /*firstLineMaxLen=*/20),
+             R"(Lorem ipsum dolor
+          sit amet, consectetur adipiscing elit, sed do
+          eiusmod tempor incididunt ut labore et dolore
+          magna aliqua. Ut enim ad minim veniam, quis
+          nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat. Duis aute irure
+          dolor in reprehenderit in voluptate velit esse
+          cillum dolore eu fugiat nulla pariatur. Excepteur
+          sint occaecat cupidatat non proident, sunt in
+          culpa qui officia deserunt mollit anim id est
+          laborum.)");
+   EXPECT_EQ(ROOT::WrapString("A shorter string, just to get the point across...", 1),
+             R"(A
+shorter
+string,
+just
+to
+get
+the
+point
+across...)");
+   const auto shortStr = "Another short string, not long enough to be wrapped in this case";
+   EXPECT_EQ(ROOT::WrapString(shortStr, 200), shortStr);
+}
+
+TEST(StringUtils, WrapStringNewlines)
+{
+   const auto inputWithNewlines =
+      "\n\n" // should be preserved
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"
+      "\n" // should not be preserved
+      "labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco"
+      "\n"
+      "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in"
+      "\n\n\n\n"
+      "voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur\nsint occaecat cupidatat "
+      "non proident, sunt in culpa qui officia"
+      "\n\n"
+      "deserunt mollit anim id est laborum."
+      "\n\n";
+   EXPECT_EQ(ROOT::WrapString(inputWithNewlines, 60),
+             R"(
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+do eiusmod tempor incididunt ut labore et dolore magna
+aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in
+
+
+
+voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+Excepteur sint occaecat cupidatat non proident, sunt in
+culpa qui officia
+
+deserunt mollit anim id est laborum.
+
+)");
+
+   const auto inputWithNewlines2 =
+      R"(
+word0 word1
+
+word2 word3 
+
+word4 word5 word6
+
+ word7 word8 word9 wor10 wor11 wor12 wor13 wor14 wor15 wor16 wor17 wor18 wor19 wor20
+
+
+
+)";
+   EXPECT_EQ(ROOT::WrapString(inputWithNewlines2, 80),
+             R"(word0 word1
+
+word2 word3 
+
+word4 word5 word6
+
+ word7 word8 word9 wor10 wor11 wor12 wor13 wor14 wor15 wor16 wor17 wor18 wor19
+wor20
+
+
+
+)");
 }
