@@ -120,7 +120,7 @@ if(clad)
   ROOT_ADD_TEST(test-stressroofit-codegen COMMAND stressRooFit -b codegen FAILREGEX "FAILED|Error in")
 endif()
 if(cuda)
-  ROOT_ADD_TEST(test-stressroofit-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in" RESOURCE_LOCK GPU)
+  ROOT_ADD_TEST(test-stressroofit-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in" RESOURCE_LOCK GPU LABELS cuda)
 endif()
 if(dataframe)
   ROOT_ADD_GTEST(testActionHelpers testActionHelpers.cxx LIBRARIES ROOTDataFrame RooFitCore)
@@ -131,3 +131,12 @@ ROOT_ADD_GTEST(testRooWorkspace testRooWorkspace.cxx LIBRARIES RooFit
                ${CMAKE_CURRENT_SOURCE_DIR}/data/test_workspace_01.root
                ${CMAKE_CURRENT_SOURCE_DIR}/data/workspace_with_model_config_classdef_6.root
                )
+
+# These tests also run the CUDA evaluation backend if RooFit is built with CUDA
+if(cuda)
+  foreach(t testRooFitCore testRooAbsPdf testNaNPacker testRooEfficiency testRooMinimizer
+            testRooProfileLL testRooSimultaneous)
+    set_property(TEST gtest-roofit-roofitcore-${t} APPEND PROPERTY LABELS cuda)
+    set_property(TEST gtest-roofit-roofitcore-${t} APPEND PROPERTY RESOURCE_LOCK GPU)
+  endforeach()
+endif()
