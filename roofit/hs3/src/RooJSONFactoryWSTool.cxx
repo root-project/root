@@ -1248,71 +1248,48 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
 // sampling distribution of the auxiliary measurements as well. The export takes the constraints out of the channels
 // (writeLikelihoodTermsOnce()); this puts them back: a constraint term with a global observable (a constant variable
 // that the model itself does not depend on) becomes a factor of every channel that is a product and depends on one
-// of its other parameters. Of an array of constraints, each component goes to its channels. The constraints that
+// of its other parameters. An array of constraints goes to its channels as a whole. The constraints that
 // found a channel are removed from `constraints`; the others stay external constraints of the ModelConfig, e.g. a
 // penalty term without an observation, like the regularization of an unfolding, or a constraint of a model whose
 // channels are not products.
 void attachConstraintsToChannels(RooAbsPdf &pdf, RooArgSet &constraints)
 {
-   std::vector<RooProdPdf *> channels;
+   RooArgSet channels;
    if (auto *simPdf = dynamic_cast<RooSimultaneous *>(&pdf)) {
       for (auto const &state : simPdf->indexCat()) {
-         if (auto *channel = dynamic_cast<RooProdPdf *>(simPdf->getPdf(state.first))) {
-            channels.push_back(channel);
+         if (RooAbsPdf *channel = simPdf->getPdf(state.first)) {
+            channels.add(*channel, /*silent=*/true);
          }
       }
-   } else if (auto *channel = dynamic_cast<RooProdPdf *>(&pdf)) {
-      channels.push_back(channel);
-   }
-   if (channels.empty()) {
-      return;
+   } else {
+      channels.add(pdf);
    }
    RooArgSet attached;
    for (auto *constraint : static_range_cast<RooAbsPdf *>(constraints)) {
-      // The terms that enter the channels: the constraint, or the components of an array.
+      // An array of constraints enters as a whole: its components have no names in a document, so that a channel
+      // could not be written with them as factors.
       std::vector<RooAbsPdf *> terms{constraint};
-      if (auto *array = dynamic_cast<RooProdPdf *>(constraint); array && array->getAttribute(arrayDistTag)) {
-         terms.clear();
-         for (auto *component : static_range_cast<RooAbsPdf *>(array->pdfList())) {
-            terms.push_back(component);
-         }
-      }
-      bool all = !terms.empty();
       // Decided for all terms before anything is changed, so that a constraint is not attached in part.
+      std::set<RooAbsPdf *> found;
       std::vector<std::pair<RooProdPdf *, RooAbsPdf *>> factors;
-      for (RooAbsPdf *term : terms) {
-         RooArgSet leaves;
-         term->leafNodeServerList(&leaves);
-         RooArgSet parameters;
-         bool hasGlobalObservable = false;
-         for (RooAbsArg *leaf : leaves) {
-            auto *var = dynamic_cast<RooRealVar *>(leaf);
-            if (!var) {
-               continue;
-            }
-            if (var->isConstant() && !pdf.dependsOn(*var)) {
-               hasGlobalObservable = true;
-            } else if (!var->isConstant()) {
-               parameters.add(*var);
+      for (auto *channel : static_range_cast<RooAbsPdf *>(channels)) {
+         auto *product = dynamic_cast<RooProdPdf *>(channel);
+         if (!product || channel == constraint) {
+            continue;
+         }
+         for (RooAbsPdf *term : terms) {
+            if (product->pdfList().find(*term)) {
+               found.insert(term);
             }
          }
-         bool found = false;
-         if (hasGlobalObservable && !parameters.empty()) {
-            for (RooProdPdf *channel : channels) {
-               if (channel == term || channel == constraint) {
-                  continue;
-               }
-               if (channel->pdfList().find(*term)) {
-                  found = true;
-               } else if (channel->dependsOn(parameters)) {
-                  factors.emplace_back(channel, term);
-                  found = true;
-               }
+         for (RooAbsPdf *term : constraintsOfChannel(*channel, terms, channels)) {
+            if (!product->pdfList().find(*term)) {
+               factors.emplace_back(product, term);
             }
+            found.insert(term);
          }
-         all = all && found;
       }
-      if (!all) {
+      if (terms.empty() || found.size() != terms.size()) {
          continue;
       }
       for (auto const &[channel, term] : factors) {
@@ -1913,6 +1890,56 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
    return dh;
 }
 
+std::vector<RooAbsPdf *>
+constraintsOfChannel(RooAbsPdf const &channel, std::vector<RooAbsPdf *> const &terms, RooArgSet const &channels)
+{
+   std::vector<RooAbsPdf *> out;
+   for (RooAbsPdf *candidate : terms) {
+      for (RooAbsPdf *term : {candidate}) {
+         if (term == &channel || channels.containsInstance(*term)) {
+            continue;
+         }
+         RooArgSet leaves;
+         term->leafNodeServerList(&leaves);
+         RooArgSet parameters;
+         bool hasGlobalObservable = false;
+         for (RooAbsArg *leaf : leaves) {
+            auto *var = dynamic_cast<RooRealVar *>(leaf);
+            if (!var) {
+               continue;
+            }
+            // Whether a global observable is constant yet depends on where the document has its value: as a
+            // parameter, or in the data set of the constraint, which is read later.
+            if (std::none_of(channels.begin(), channels.end(),
+                             [&](RooAbsArg const *other) { return other->dependsOn(*var); })) {
+               hasGlobalObservable = true;
+            } else {
+               parameters.add(*var);
+            }
+         }
+         if (hasGlobalObservable && !parameters.empty() && channel.dependsOn(parameters) &&
+             std::find(out.begin(), out.end(), term) == out.end()) {
+            out.push_back(term);
+         }
+      }
+   }
+   return out;
+}
+
+RooAbsPdf &
+channelWithConstraints(RooJSONFactoryWSTool &tool, RooAbsPdf &channel, std::vector<RooAbsPdf *> const &constraints)
+{
+   if (constraints.empty()) {
+      return channel;
+   }
+   RooArgList factors;
+   for (RooAbsPdf *constraint : constraints) {
+      factors.add(*constraint);
+   }
+   factors.add(channel);
+   return tool.wsEmplace<RooProdPdf>(std::string(channel.GetName()) + "_with_constraints", factors);
+}
+
 bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws)
 {
    if (!arg.getAttribute(helperObjectTag)) {
@@ -1941,6 +1968,32 @@ bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws)
 }
 
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
+
+std::vector<std::string> RooJSONFactoryWSTool::otherLikelihoodTerms(std::string const &dist) const
+{
+   std::vector<std::string> out;
+   if (!_import) {
+      return out;
+   }
+   auto add = [&](std::string const &name) {
+      if (name != dist && std::find(out.begin(), out.end(), name) == out.end()) {
+         out.push_back(name);
+      }
+   };
+   for (auto const &likelihood : _import->document.likelihoods) {
+      if (std::none_of(likelihood.terms.begin(), likelihood.terms.end(),
+                       [&](auto const &term) { return term.distribution.name == dist; })) {
+         continue;
+      }
+      for (auto const &term : likelihood.terms) {
+         add(term.distribution.name);
+      }
+      for (auto const &aux : likelihood.auxDistributions) {
+         add(aux.name);
+      }
+   }
+   return out;
+}
 
 bool RooJSONFactoryWSTool::isConstraintReadAsChannel(RooAbsPdf const &pdf) const
 {

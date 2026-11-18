@@ -272,6 +272,11 @@ public:
    /// name it as a constraint as well.
    bool isConstraintReadAsChannel(RooAbsPdf const &pdf) const;
 
+   /// The other terms of the likelihoods of the document that is currently being imported that have the distribution
+   /// `dist` as a term: their other distributions and their auxiliary distributions. These are the candidates for
+   /// constraint terms of `dist`.
+   std::vector<std::string> otherLikelihoodTerms(std::string const &dist) const;
+
 private:
    template <class T>
    T *requestImpl(const std::string &objname);

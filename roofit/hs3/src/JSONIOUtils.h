@@ -50,6 +50,18 @@ bool isLiteralConstVar(RooAbsArg const &arg);
 // if it were not in the workspace.
 bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws);
 
+// The constraint terms among `terms` that belong to the channel `channel` of a model with the channels `channels`:
+// the ones with a global observable (a variable that no channel depends on) and with another variable that the
+// channel depends on. An array of constraints is one term.
+std::vector<RooAbsPdf *>
+constraintsOfChannel(RooAbsPdf const &channel, std::vector<RooAbsPdf *> const &terms, RooArgSet const &channels);
+
+// The channel with its constraint terms as RooFit and HistFactory have them: a product of the constraints and the
+// channel, named "<channel>_with_constraints", from which RooFit takes the constraints when it builds a likelihood.
+// Returns the channel itself if it has none.
+RooAbsPdf &
+channelWithConstraints(RooJSONFactoryWSTool &tool, RooAbsPdf &channel, std::vector<RooAbsPdf *> const &constraints);
+
 // The HS3 type and the observable of `pdf` as a component of an array distribution (RooPoisson, RooGaussian or
 // RooLognormal, over a named observable), or std::nullopt if `pdf` cannot be a component.
 // If `observable` names the mean of a RooGaussian, the Gaussian is written with x and mean swapped (see

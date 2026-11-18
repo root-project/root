@@ -618,6 +618,28 @@ bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
       pdfMap[label] = tool->request<RooAbsPdf>(component["dist"].val(), name);
    }
 
+   // In RooFit, the constraint terms of a channel are factors of it. A channel that is a product gets them when the
+   // likelihood is read; the other channels are wrapped in a product here, since the components of a RooSimultaneous
+   // can't be replaced later. The candidates are the other terms of the likelihoods that have this distribution.
+   {
+      std::vector<RooAbsPdf *> terms;
+      for (std::string const &term : tool->otherLikelihoodTerms(name)) {
+         if (auto *pdf = tool->tryRequest<RooAbsPdf>(term)) {
+            terms.push_back(pdf);
+         }
+      }
+      RooArgSet channels;
+      for (auto const &item : pdfMap) {
+         channels.add(*item.second, /*silent=*/true);
+      }
+      for (auto &item : pdfMap) {
+         if (!dynamic_cast<RooProdPdf *>(item.second)) {
+            item.second =
+               &channelWithConstraints(*tool, *item.second, constraintsOfChannel(*item.second, terms, channels));
+         }
+      }
+   }
+
    if (columns.size() == 1) {
       tool->wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, *columns.front()});
       return true;

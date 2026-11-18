@@ -10191,6 +10191,104 @@ TEST(RooFitHS3, AuxiliaryMeasurementAsRegionOfTheModel)
    config.importConstraintsAsChannels = false;
 }
 
+// The pdf of a model stays the sampling distribution of its auxiliary measurements over a round trip, also if its
+// channels are no products: such a channel is wrapped in a product with its constraint terms, from which RooFit
+// takes them when it builds a likelihood (reported on ROOT PR #24201).
+TEST(RooFitHS3, ConstraintsStayInTheSamplingDistribution)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   RooWorkspace ws{"original"};
+   for (const char *definition :
+        {"sum::mean(mu[1,0,3],theta[0,-3,3],eta[0,-3,3])", "Gaussian::physics(x[0,-5,5],mean,1)",
+         "Gaussian::c1(g1[0.2,-8,8],theta,1)", "Gaussian::c2(g2[-0.3,-8,8],eta,1)", "PROD::aux(c1,c2)",
+         "SIMUL::model(channel[physics,auxiliary],physics=physics,auxiliary=aux)"}) {
+      ASSERT_NE(ws.factory(definition), nullptr) << definition;
+   }
+   ws.var("g1")->setConstant(true);
+   ws.var("g2")->setConstant(true);
+   RooArgSet columns{*ws.var("x"), *ws.cat("channel")};
+   RooDataSet data{"data", "data", columns};
+   ws.cat("channel")->setLabel("physics");
+   for (double value : {-0.4, 0.2, 0.7}) {
+      ws.var("x")->setVal(value);
+      data.add(columns);
+   }
+   ws.import(data, RooFit::Silence());
+   RooStats::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf(*ws.pdf("model"));
+   mc.SetObservables(columns);
+   mc.SetParametersOfInterest(RooArgSet{*ws.var("mu")});
+   mc.SetNuisanceParameters(RooArgSet{*ws.var("theta"), *ws.var("eta")});
+   mc.SetGlobalObservables(RooArgSet{*ws.var("g1"), *ws.var("g2")});
+   ws.import(mc);
+
+   // The likelihood as RooFit builds it from the pdf and the global observables alone, relative to the first point.
+   auto scan = [](RooWorkspace &w) {
+      auto *config = dynamic_cast<RooStats::ModelConfig *>(w.obj("ModelConfig"));
+      std::unique_ptr<RooAbsReal> nll{config->GetPdf()->createNLL(
+         *w.data("data"), RooFit::GlobalObservables(*config->GetGlobalObservables()), RooFit::Offset(false))};
+      std::vector<double> out;
+      const std::vector<std::array<double, 3>> points{{1.0, 0.0, 0.0}, {0.5, 0.4, -0.5}, {1.2, -0.4, 0.5}};
+      for (auto const &point : points) {
+         w.var("mu")->setVal(point[0]);
+         w.var("theta")->setVal(point[1]);
+         w.var("eta")->setVal(point[2]);
+         out.push_back(nll->getVal());
+      }
+      const double first = out.front();
+      for (double &value : out) {
+         value -= first;
+      }
+      return out;
+   };
+   // The same from the definition of the model, with the constraints.
+   std::vector<double> expected;
+   for (auto const &point : std::vector<std::array<double, 3>>{{1.0, 0.0, 0.0}, {0.5, 0.4, -0.5}, {1.2, -0.4, 0.5}}) {
+      const double mean = point[0] + point[1] + point[2];
+      double nll = 0.5 * (0.2 - point[1]) * (0.2 - point[1]) + 0.5 * (-0.3 - point[2]) * (-0.3 - point[2]);
+      for (double x : {-0.4, 0.2, 0.7}) {
+         const double norm = 0.5 * (std::erf((5.0 - mean) / std::sqrt(2.0)) - std::erf((-5.0 - mean) / std::sqrt(2.0)));
+         nll += 0.5 * (x - mean) * (x - mean) + std::log(norm);
+      }
+      expected.push_back(nll);
+   }
+   for (std::size_t i = expected.size(); i-- > 0;) {
+      expected[i] -= expected[0];
+   }
+
+   auto &config = RooJSONFactoryWSTool::config();
+   for (bool constraintData : {false, true}) {
+      SCOPED_TRACE(constraintData ? "with constraint data" : "without constraint data");
+      config.exportConstraintData = constraintData;
+      std::string previous;
+      std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      for (int generation = 1; generation <= 3; ++generation) {
+         RooWorkspace imported{"imported"};
+         ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(exported)) << exported;
+         auto *mc2 = dynamic_cast<RooStats::ModelConfig *>(imported.obj("ModelConfig"));
+         ASSERT_NE(mc2, nullptr);
+         // The global observables are observables of the pdf, and nothing is left outside of it.
+         ASSERT_NE(mc2->GetGlobalObservables(), nullptr);
+         EXPECT_EQ(mc2->GetGlobalObservables()->size(), 2u);
+         EXPECT_TRUE(mc2->GetPdf()->dependsOn(*imported.var("g1"))) << exported;
+         EXPECT_TRUE(mc2->GetPdf()->dependsOn(*imported.var("g2"))) << exported;
+         EXPECT_TRUE(!mc2->GetExternalConstraints() || mc2->GetExternalConstraints()->empty()) << exported;
+         // RooFit finds the constraints in the pdf.
+         const std::vector<double> values = scan(imported);
+         for (std::size_t i = 0; i < expected.size(); ++i) {
+            EXPECT_NEAR(values[i], expected[i], 1e-9) << "generation " << generation << ", point " << i;
+         }
+         previous = exported;
+         exported = RooJSONFactoryWSTool{imported}.exportJSONtoString();
+         if (generation > 1) {
+            EXPECT_EQ(exported, previous) << "the document changes after the second export";
+         }
+      }
+   }
+   config.exportConstraintData = false;
+}
+
 // A Gaussian constraint is written with its global observable as "x". Whether that is the x or the mean of the
 // RooGaussian must not depend on the order in which the pdfs are written: here, the constraint comes before the
 // channel that names it, and a product keeps it from becoming a component of an array (reported on ROOT PR #24201).
