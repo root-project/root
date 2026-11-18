@@ -4,8 +4,10 @@
 #include "TGLIncludes.h"
 #include "TASPngWriter.h"
 #include "RZip.h"
+#include "TError.h"
 
 #include <cstdio>
+#include <exception>
 
 #include "TGLSdfFontMakerLowLevel.icxx"
 
@@ -108,9 +110,20 @@ int TGLSdfFontMaker::MakeFont(const char *ttf_font, const char *output_prefix, b
 
    root_sdf_fonts::SdfCreator sc;
 
-   // Minimal gl-widget / context.
-   std::unique_ptr<TGLWidget> glw(
-      TGLWidget::Create(TGLFormat(Rgl::kNone), gClient->GetDefaultRoot(), false, false, nullptr, 1, 1));
+   // Minimal gl-widget / context. Creation throws when no GL context can be had.
+   std::unique_ptr<TGLWidget> glw;
+   if (gClient) {
+      try {
+         glw.reset(TGLWidget::Create(TGLFormat(Rgl::kNone), gClient->GetDefaultRoot(), false, false, nullptr, 1, 1));
+      } catch (const std::exception &exc) {
+         ::Error("TGLSdfFontMaker::MakeFont", "Creation of the GL widget failed: %s", exc.what());
+         return 1;
+      }
+   }
+   if (!glw) {
+      ::Error("TGLSdfFontMaker::MakeFont", "No GL widget, font '%s' not generated.", ttf_font);
+      return 1;
+   }
    glw->MakeCurrent();
 
    glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &sc.max_tex_size);
