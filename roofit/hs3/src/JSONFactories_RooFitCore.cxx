@@ -1238,8 +1238,8 @@ bool importUniform(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
-// Importer that is registered with top priority for a deprecated type key. It warns once, and then lets the importers
-// that are registered for the deprecated key do the actual work.
+// Importer that is registered first for a deprecated type key. It warns once, and then lets the importers that are
+// registered after it for the deprecated key do the actual work.
 class DeprecatedKeyImporter : public RooFit::JSONIO::Importer {
 public:
    DeprecatedKeyImporter(std::string key, std::string replacement)
@@ -1336,33 +1336,28 @@ void importDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p, std::strin
 
 // "crystalball_dist" is the single-sided Crystal Ball (RooCBShape). Before HS3 0.3, it was also the double-sided
 // Crystal Ball, recognizable by the "_L"/"_R" fields. Such documents are still read, with a deprecation warning.
-class CrystalBallImporter : public RooFit::JSONIO::Importer {
-public:
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      if (!CrystalBall::hasDoubleSidedKeys(p)) {
-         std::string name(RooJSONFactoryWSTool::name(p));
-         RooAbsReal *m = tool->requestArg<RooAbsReal>(p, "m");
-         RooAbsReal *m0 = tool->requestArg<RooAbsReal>(p, "m0");
-         RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
-         RooAbsReal *alpha = tool->requestArg<RooAbsReal>(p, "alpha");
-         RooAbsReal *n = tool->requestArg<RooAbsReal>(p, "n");
-         tool->wsEmplace<RooCBShape>(name, *m, *m0, *sigma, *alpha, *n);
-         return true;
-      }
-      if (!_warned) {
-         RooJSONFactoryWSTool::warning("RooFitHS3: \"crystalball_dist\" with the fields \"alpha_L\", \"n_L\", "
-                                       "\"alpha_R\", \"n_R\", \"sigma_L\" or \"sigma_R\" is deprecated, please use "
-                                       "\"crystalball_doublesided_dist\" for the double-sided Crystal Ball.");
-         _warned = true;
-      }
-      CrystalBall::importDoubleSided(tool, p, "crystalball_dist", /*symmetricShorthand=*/true);
+bool importCrystalBall(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   if (!CrystalBall::hasDoubleSidedKeys(p)) {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      RooAbsReal *m = tool->requestArg<RooAbsReal>(p, "m");
+      RooAbsReal *m0 = tool->requestArg<RooAbsReal>(p, "m0");
+      RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
+      RooAbsReal *alpha = tool->requestArg<RooAbsReal>(p, "alpha");
+      RooAbsReal *n = tool->requestArg<RooAbsReal>(p, "n");
+      tool->wsEmplace<RooCBShape>(name, *m, *m0, *sigma, *alpha, *n);
       return true;
    }
-
-private:
-   mutable bool _warned = false;
-};
+   static bool warned = false;
+   if (!warned) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: \"crystalball_dist\" with the fields \"alpha_L\", \"n_L\", "
+                                    "\"alpha_R\", \"n_R\", \"sigma_L\" or \"sigma_R\" is deprecated, please use "
+                                    "\"crystalball_doublesided_dist\" for the double-sided Crystal Ball.");
+      warned = true;
+   }
+   CrystalBall::importDoubleSided(tool, p, "crystalball_dist", /*symmetricShorthand=*/true);
+   return true;
+}
 
 bool importCrystalBallDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
@@ -1980,10 +1975,15 @@ void exportWrapperPdf(RooJSONFactoryWSTool *, RooWrapperPdf const &pdf, JSONNode
 
 // Adapters that wrap the plain import/export functions above into the
 // RooFit::JSONIO::Importer/Exporter interface.
-template <auto Func>
+using ImportFunc = bool (*)(RooJSONFactoryWSTool *, const JSONNode &);
+
 class FuncImporter : public RooFit::JSONIO::Importer {
 public:
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override { return Func(tool, p); }
+   explicit FuncImporter(ImportFunc func) : _func{func} {}
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override { return _func(tool, p); }
+
+private:
+   const ImportFunc _func;
 };
 
 template <class RooArg_t>
@@ -2013,13 +2013,12 @@ private:
    const bool _autoExportDependants;
 };
 
-template <auto Func>
-void registerImporter(const std::string &key, bool topPriority = true)
+// The importers of a type key and the exporters of a class are tried in the order of their registration.
+void registerImporter(const std::string &key, ImportFunc func)
 {
-   RooFit::JSONIO::registerImporter(key, std::make_unique<FuncImporter<Func>>(), topPriority);
+   RooFit::JSONIO::registerImporter(key, std::make_unique<FuncImporter>(func), false);
 }
 
-// The exporters are appended to the ones of their class, which are tried in the order of their registration.
 template <class RooArg_t>
 void registerExporter(std::string key, ExportFunc<RooArg_t> func, bool autoExportDependants = true)
 {
@@ -2027,117 +2026,85 @@ void registerExporter(std::string key, ExportFunc<RooArg_t> func, bool autoExpor
       RooArg_t::Class(), std::make_unique<FuncExporter<RooArg_t>>(func, std::move(key), autoExportDependants), false);
 }
 
-STATIC_EXECUTE([]() {
-   registerImporter<importWrapperPdf>("density_function_dist");
-   registerImporter<importExtendPdf>("rate_extended_dist");
-   RooFit::JSONIO::registerImporter("crystalball_dist", std::make_unique<CrystalBallImporter>());
-   registerImporter<importCrystalBallDoubleSided>("crystalball_doublesided_dist");
-   RooFit::JSONIO::registerImporter("ARGUS_dist", std::make_unique<DeprecatedKeyImporter>("ARGUS_dist", "argus_dist"));
-   RooFit::JSONIO::registerImporter("binsampling",
-                                    std::make_unique<DeprecatedKeyImporter>("binsampling", "binsampling_dist"));
-   RooFit::JSONIO::registerImporter(
-      "mixture_resolution_model", std::make_unique<DeprecatedKeyImporter>("mixture_resolution_model", "mixture_model"));
-   RooFit::JSONIO::registerImporter("delta_resolution_model", std::make_unique<DeprecatedKeyImporter>(
-                                                                 "delta_resolution_model", "truth_model_function"));
-   RooFit::JSONIO::registerImporter("gauss_resolution_model", std::make_unique<DeprecatedKeyImporter>(
-                                                                 "gauss_resolution_model", "gauss_model_function"));
-   registerImporter<importArgus>("argus_dist", false);
-   registerImporter<importArgus>("ARGUS_dist", false);
-   registerImporter<importBernstein>("bernstein_poly_dist", false);
-   registerImporter<importBifurGauss>("bifurkated_gaussian_dist", false);
-   registerImporter<importChebychev>("chebychev_dist", false);
-   registerImporter<importEffProd>("efficiency_product_pdf_dist", false);
-   registerImporter<importGamma>("gamma_dist", false);
-   registerImporter<importGaussian>("gaussian_dist", false);
-   registerImporter<importGaussian>("normal_dist", false);
-   registerImporter<importLandau>("landau_dist", false);
-   registerImporter<importPowerSum>("power_sum_dist", false);
-   registerImporter<importProjectedPdf>("projected_dist", false);
-   registerImporter<importUniform>("uniform_dist", false);
-   registerImporter<importProduct>("product", false);
-   registerImporter<importProdPdf>("product_dist", false);
-   registerImporter<importArrayDist>("array_dist", false);
-   registerImporter<importAddition>("sum", false);
-   registerImporter<importAddPdf>("mixture_dist", false);
-   registerImporter<importAddModel>("mixture_model", false);
-   registerImporter<importCombinedDist>("combined_dist", false);
-   registerImporter<importAddModel>("mixture_resolution_model", false);
-   registerImporter<importBinSamplingPdf>("binsampling_dist", false);
-   registerImporter<importBinSamplingPdf>("binsampling", false);
-   registerImporter<importBinWidthFunction<false>>("binvolume", false);
-   registerImporter<importBinWidthFunction<true>>("inverse_binvolume", false);
-   registerImporter<importPolynomial<RooLegacyExpPoly>>("legacy_exp_poly_dist", false);
-   registerImporter<importExponential>("exponential_dist", false);
-   registerImporter<importFormulaArg<RooFormulaVar>>("generic", false);
-   registerImporter<importFormulaArg<RooFormulaVar>>("generic_function", false);
-   registerImporter<importFormulaArg<RooGenericPdf>>("generic_dist", false);
-   registerImporter<importHist<RooHistFunc>>("histogram", false);
-   registerImporter<importHist<RooHistFunc>>("step", false);
-   registerImporter<importHist<RooHistPdf>>("histogram_dist", false);
-   registerImporter<importLogNormal>("lognormal_dist", false);
-   registerImporter<importMultiVarGaussian>("multivariate_normal_dist", false);
-   registerImporter<importPoisson<false>>("poisson_dist", false);
-   registerImporter<importPoisson<true>>("poisson_continuous_dist", false);
-   registerImporter<importDecay>("decay_dist", false);
-   registerImporter<importTruthModel>("truth_model_function", false);
-   registerImporter<importTruthModel>("delta_resolution_model", false);
-   registerImporter<importGaussModel>("gauss_model_function", false);
-   registerImporter<importGaussModel>("gauss_resolution_model", false);
-   registerImporter<importPolynomial<RooPolynomial>>("polynomial_dist", false);
-   registerImporter<importPolynomial<RooPolyVar>>("polynomial", false);
-   registerImporter<importRealSum<RooRealSumPdf>>("weighted_sum_dist", false);
-   registerImporter<importRealSum<RooRealSumFunc>>("weighted_sum", false);
-   registerImporter<importRealIntegral>("integral", false);
-   registerImporter<importDerivative>("derivative", false);
-   registerImporter<importFFTConvPdf>("fft_convolution_dist", false);
-   registerImporter<importExtendPdf>("extend_pdf", false);
-   registerImporter<importParamHistFunc>("step", false);
-   registerImporter<importSpline>("spline", false);
+// A class that is read and written with the same type key.
+template <class RooArg_t>
+void registerType(const std::string &key, ImportFunc importFunc, ExportFunc<RooArg_t> exportFunc,
+                  bool autoExportDependants = true)
+{
+   registerImporter(key, importFunc);
+   registerExporter(key, exportFunc, autoExportDependants);
+}
 
-   registerExporter("density_function_dist", exportWrapperPdf);
-   registerExporter("mixture_dist", exportAddPdf<RooAddPdf>);
-   registerExporter("mixture_model", exportAddPdf<RooAddModel>);
-   registerExporter("binsampling_dist", exportBinSamplingPdf);
-   registerExporter("crystalball_doublesided_dist", exportCrystalBall);
-   registerExporter("binvolume", exportBinWidthFunction);
-   registerExporter("legacy_exp_poly_dist", exportPolynomial<RooLegacyExpPoly>);
-   registerExporter("exponential_dist", exportExponential);
-   registerExporter("generic", exportFormulaArg<RooFormulaVar>);
-   registerExporter("generic_dist", exportFormulaArg<RooGenericPdf>);
-   registerExporter("step", exportHist<RooHistFunc>);
-   registerExporter("histogram_dist", exportHist<RooHistPdf>);
-   registerExporter("lognormal_dist", exportLogNormal);
-   registerExporter("gaussian_dist", exportGaussian);
-   registerExporter("multivariate_normal_dist", exportMultiVarGaussian);
-   registerExporter("poisson_dist", exportPoisson);
-   registerExporter("decay_dist", exportDecay, /*autoExportDependants=*/false);
-   registerExporter("truth_model_function", exportTruthModel);
-   registerExporter("gauss_model_function", exportGaussModel);
-   registerExporter("polynomial_dist", exportPolynomial<RooPolynomial>);
-   registerExporter("polynomial", exportPolynomial<RooPolyVar>);
-   registerExporter("weighted_sum", exportRealSum<RooRealSumFunc>);
-   registerExporter("weighted_sum_dist", exportRealSum<RooRealSumPdf>);
+// A deprecated type key is still read like its replacement, with a warning.
+void registerDeprecatedImporter(const std::string &key, const std::string &replacement, ImportFunc func)
+{
+   RooFit::JSONIO::registerImporter(key, std::make_unique<DeprecatedKeyImporter>(key, replacement), false);
+   registerImporter(key, func);
+}
+
+STATIC_EXECUTE([]() {
+   registerType("argus_dist", importArgus, exportArgus);
+   registerType("bernstein_poly_dist", importBernstein, exportBernstein);
+   registerType("bifurkated_gaussian_dist", importBifurGauss, exportBifurGauss);
+   registerType("binsampling_dist", importBinSamplingPdf, exportBinSamplingPdf);
+   registerType("binvolume", importBinWidthFunction<false>, exportBinWidthFunction);
+   registerType("chebychev_dist", importChebychev, exportChebychev);
+   registerType("crystalball_dist", importCrystalBall, exportCBShape);
+   registerType("crystalball_doublesided_dist", importCrystalBallDoubleSided, exportCrystalBall);
+   registerType("decay_dist", importDecay, exportDecay, /*autoExportDependants=*/false);
+   registerType("density_function_dist", importWrapperPdf, exportWrapperPdf);
+   registerType("derivative", importDerivative, exportDerivative);
+   registerType("efficiency_product_pdf_dist", importEffProd, exportEffProd);
+   registerType("exponential_dist", importExponential, exportExponential);
+   registerType("fft_convolution_dist", importFFTConvPdf, exportFFTConvPdf);
+   registerType("gamma_dist", importGamma, exportGamma);
+   registerType("gauss_model_function", importGaussModel, exportGaussModel);
+   registerType("gaussian_dist", importGaussian, exportGaussian);
+   registerType("generic", importFormulaArg<RooFormulaVar>, exportFormulaArg<RooFormulaVar>);
+   registerType("generic_dist", importFormulaArg<RooGenericPdf>, exportFormulaArg<RooGenericPdf>);
+   registerType("histogram_dist", importHist<RooHistPdf>, exportHist<RooHistPdf>);
+   registerType("integral", importRealIntegral, exportRealIntegral);
+   registerType("landau_dist", importLandau, exportLandau);
+   registerType("legacy_exp_poly_dist", importPolynomial<RooLegacyExpPoly>, exportPolynomial<RooLegacyExpPoly>);
+   registerType("lognormal_dist", importLogNormal, exportLogNormal);
+   registerType("mixture_dist", importAddPdf, exportAddPdf<RooAddPdf>);
+   registerType("mixture_model", importAddModel, exportAddPdf<RooAddModel>);
+   registerType("multivariate_normal_dist", importMultiVarGaussian, exportMultiVarGaussian);
+   registerType("poisson_dist", importPoisson<false>, exportPoisson);
+   registerType("polynomial", importPolynomial<RooPolyVar>, exportPolynomial<RooPolyVar>);
+   registerType("polynomial_dist", importPolynomial<RooPolynomial>, exportPolynomial<RooPolynomial>);
+   registerType("power_sum_dist", importPowerSum, exportPowerSum);
+   registerType("product", importProduct, exportProduct);
+   registerType("product_dist", importProdPdf, exportProdPdf);
+   registerType("projected_dist", importProjectedPdf, exportProjectedPdf);
+   registerType("rate_extended_dist", importExtendPdf, exportExtendPdf);
+   registerType("spline", importSpline, exportSpline);
+   // A "step" with "data" is a histogram, otherwise it is a ParamHistFunc.
+   registerType("step", importHist<RooHistFunc>, exportHist<RooHistFunc>);
+   registerType("step", importParamHistFunc, exportParamHistFunc);
+   registerType("sum", importAddition, exportAddition);
+   registerType("truth_model_function", importTruthModel, exportTruthModel);
+   registerType("uniform_dist", importUniform, exportUniform);
+   registerType("weighted_sum", importRealSum<RooRealSumFunc>, exportRealSum<RooRealSumFunc>);
+   registerType("weighted_sum_dist", importRealSum<RooRealSumPdf>, exportRealSum<RooRealSumPdf>);
+
+   // A RooTFnBinding is written as a generic formula.
    registerExporter("generic", exportTFnBinding);
-   registerExporter("integral", exportRealIntegral);
-   registerExporter("derivative", exportDerivative);
-   registerExporter("fft_convolution_dist", exportFFTConvPdf);
-   registerExporter("rate_extended_dist", exportExtendPdf);
-   registerExporter("step", exportParamHistFunc);
-   registerExporter("spline", exportSpline);
-   registerExporter("sum", exportAddition);
-   registerExporter("argus_dist", exportArgus);
-   registerExporter("bernstein_poly_dist", exportBernstein);
-   registerExporter("bifurkated_gaussian_dist", exportBifurGauss);
-   registerExporter("crystalball_dist", exportCBShape);
-   registerExporter("chebychev_dist", exportChebychev);
-   registerExporter("efficiency_product_pdf_dist", exportEffProd);
-   registerExporter("gamma_dist", exportGamma);
-   registerExporter("landau_dist", exportLandau);
-   registerExporter("power_sum_dist", exportPowerSum);
-   registerExporter("product_dist", exportProdPdf);
-   registerExporter("product", exportProduct);
-   registerExporter("projected_dist", exportProjectedPdf);
-   registerExporter("uniform_dist", exportUniform);
+
+   // The types that are only read: the ones that RooFit writes in another way, and other names of the types above.
+   registerImporter("array_dist", importArrayDist);
+   registerImporter("combined_dist", importCombinedDist);
+   registerImporter("extend_pdf", importExtendPdf);
+   registerImporter("generic_function", importFormulaArg<RooFormulaVar>);
+   registerImporter("histogram", importHist<RooHistFunc>);
+   registerImporter("inverse_binvolume", importBinWidthFunction<true>);
+   registerImporter("normal_dist", importGaussian);
+   registerImporter("poisson_continuous_dist", importPoisson<true>);
+   registerDeprecatedImporter("ARGUS_dist", "argus_dist", importArgus);
+   registerDeprecatedImporter("binsampling", "binsampling_dist", importBinSamplingPdf);
+   registerDeprecatedImporter("delta_resolution_model", "truth_model_function", importTruthModel);
+   registerDeprecatedImporter("gauss_resolution_model", "gauss_model_function", importGaussModel);
+   registerDeprecatedImporter("mixture_resolution_model", "mixture_model", importAddModel);
 });
 
 } // namespace
