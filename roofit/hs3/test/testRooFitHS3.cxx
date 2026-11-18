@@ -5756,6 +5756,58 @@ TEST(RooFitHS3, FormulaWithTopLevelSumIsNotSplit)
 }
 
 // The +1 and -1 sigma variations of a normsys that is encoded in a formula survive the round trip.
+// A formula among the factors of a sample is written as one modifier per factor, unless that makes the channel
+// invalid: then it stays one custom modifier.
+TEST(RooFitHS3, FormulaIsNotSplitIfThatMakesTheChannelInvalid)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+
+   const std::string domains = R"("domains": [{"name": "default_domain", "type": "product_domain", "axes": [
+         {"name": "b", "min": 0.1, "max": 2.0}, {"name": "c", "min": 0.1, "max": 2.0}]}],
+      "parameter_points": [{"name": "default_values", "parameters": [
+         {"name": "b", "value": 0.5}, {"name": "c", "value": 1.5}]}])";
+   auto roundTrip = [&](std::string const &modifiers, std::string const &function, std::string &exported) {
+      RooWorkspace ws{"ws_formula"};
+      const std::string json =
+         makeHistFactoryJSON(modifiers, "", "0.3", "", "", "", "\"functions\": [" + function + "]," + domains);
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+      exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      RooWorkspace ws2{"ws_formula_roundtrip"};
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+      // The yield depends on the parameters in the same way.
+      for (RooWorkspace *w : {&ws, &ws2}) {
+         w->var("b")->setVal(0.7);
+      }
+      RooArgSet obs{*ws.var("x")};
+      RooArgSet obs2{*ws2.var("x")};
+      EXPECT_NEAR(ws.pdf("model_channel0")->expectedEvents(obs), ws2.pdf("model_channel0")->expectedEvents(obs2), 1e-9)
+         << exported;
+   };
+
+   std::string exported;
+   {
+      // The parameter would become two normfactors of the same name.
+      roundTrip(R"({"name": "b2", "type": "custom"})",
+                R"({"name": "b2", "type": "generic_function", "expression": "b*b"})", exported);
+      EXPECT_EQ(countOccurrences(exported, "\"type\":\"custom\""), 1u) << exported;
+      EXPECT_EQ(countOccurrences(exported, "\"type\":\"normfactor\""), 0u) << exported;
+   }
+   {
+      // The sample already has a normfactor of the parameter.
+      roundTrip(R"({"name": "b", "parameter": "b", "type": "normfactor"}, {"name": "bc", "type": "custom"})",
+                R"({"name": "bc", "type": "generic_function", "expression": "b*c"})", exported);
+      EXPECT_EQ(countOccurrences(exported, "\"type\":\"custom\""), 1u) << exported;
+      EXPECT_EQ(countOccurrences(exported, "\"type\":\"normfactor\""), 1u) << exported;
+   }
+   {
+      // Without such a clash, the formula is split as before.
+      roundTrip(R"({"name": "bc", "type": "custom"})",
+                R"({"name": "bc", "type": "generic_function", "expression": "b*c"})", exported);
+      EXPECT_EQ(countOccurrences(exported, "\"type\":\"custom\""), 0u) << exported;
+      EXPECT_EQ(countOccurrences(exported, "\"type\":\"normfactor\""), 2u) << exported;
+   }
+}
+
 TEST(RooFitHS3, FormulaNormSysVariations)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);

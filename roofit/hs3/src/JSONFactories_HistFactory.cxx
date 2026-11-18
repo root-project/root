@@ -994,6 +994,8 @@ std::vector<double> contents(RooDataHist const &dataHist)
 struct ExportedChannel {
    std::string name;
    HS3::HistFactoryDist dist;
+   /// Whether a formula among the factors of a sample was written as several modifiers, see readChannel().
+   bool decomposedFormulas = false;
    // The variables of the first histogram, named after the observables of the channel.
    std::unique_ptr<RooArgSet> observables;
    std::size_t nBins = 0;
@@ -1104,8 +1106,10 @@ bool isShapeModifierFunction(ParamHistFunc const &phf, ExportedChannel const &ch
    return true;
 }
 
+// Read the channel from the RooRealSumPdf. With `decomposeFormulas`, a RooFormulaVar among the factors of a sample
+// that is a product is written as one modifier per factor; otherwise, like any other function, as one custom modifier.
 ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
-                            std::vector<RooAbsPdf *> const &channelConstraints)
+                            std::vector<RooAbsPdf *> const &channelConstraints, bool decomposeFormulas = true)
 {
    ExportedChannel channel;
 
@@ -1239,7 +1243,11 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
                   expression.ReplaceAll(("x[" + std::to_string(i) + "]").c_str(), p->GetName());
                   expression.ReplaceAll(("@" + std::to_string(i)).c_str(), p->GetName());
                }
-               auto components = splitTopLevelProduct(expression.Data());
+               std::vector<std::string> components;
+               if (decomposeFormulas) {
+                  components = splitTopLevelProduct(expression.Data());
+               }
+               channel.decomposedFormulas |= !components.empty();
                if (components.empty()) {
                   // it's not a product, let's just treat it as an unknown element
                   custom.push_back({formula->GetName()});
@@ -1397,6 +1405,23 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
 
    sortByName(channel.dist.samples);
    return channel;
+}
+
+// Whether the distribution of the channel passes the checks of a HistFactory distribution, with its duplicate
+// modifiers combined like for the export.
+bool isValidChannel(ExportedChannel const &channel, std::string const &pdfname)
+{
+   if (!channel.observables) {
+      return true; // nothing was read that could be checked
+   }
+   HS3::HistFactoryDist dist = channel.dist;
+   HS3::Diagnostics diagnostics;
+   HS3::mergeDuplicateModifiers(dist, channel.name, diagnostics);
+   for (auto *obs : static_range_cast<RooRealVar *>(*channel.observables)) {
+      dist.axes.push_back(HS3::toBinnedAxis(*obs));
+   }
+   HS3::validateHistFactoryDist(dist, pdfname, diagnostics);
+   return !HS3::hasErrors(diagnostics);
 }
 
 // The statistical uncertainties of the samples are reconstructed from the constraints of the gamma parameters, with
@@ -1562,6 +1587,15 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    }
 
    ExportedChannel channel = readChannel(tool, pdfname, sumpdf, constraints);
+   // Writing a formula as several modifiers must not be what makes the channel invalid, e.g. because a parameter that
+   // occurs twice in the formula becomes two normfactors of the same name. If it is, the formulas are written as
+   // custom modifiers instead.
+   if (channel.decomposedFormulas && !isValidChannel(channel, pdfname)) {
+      ExportedChannel plain = readChannel(tool, pdfname, sumpdf, constraints, /*decomposeFormulas=*/false);
+      if (isValidChannel(plain, pdfname)) {
+         channel = std::move(plain);
+      }
+   }
    HS3::HistFactoryDist &dist = channel.dist;
 
    // sanity checks
