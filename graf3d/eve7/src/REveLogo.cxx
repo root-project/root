@@ -13,11 +13,14 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveRenderData.hxx>
 
+#include "REveAssetDir.hxx"
+
 #include "TSystem.h"
 
 #include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
+using ROOT::Experimental::Internal::REveAssetDir;
 
 /** \class REveLogo
 \ingroup REve
@@ -29,12 +32,26 @@ in CSS pixels and does not change with the camera, and the outline comes from
 the image alpha. The logo can be moved, and resized from its corner grip, in
 the client only. Nothing is sent back, so each client places its own copy.
 
-Images are served from a directory registered with SetImageDir() and mapped
-under "eve-images/", as REveText maps its SDF fonts. ROOT does not ship any
+Images are served from the directories registered with SetImageDir() and
+AddImageDir(), mapped under "eve-images/", as REveText maps its SDF fonts. An
+image is served from the first directory that has it. ROOT does not ship any
 images.
 */
 
 std::string REveLogo::sImageDir;
+
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// The image directories, served under "eve-images/".
+
+REveAssetDir &ImageDirs()
+{
+   static REveAssetDir s_dirs("eve-images/");
+   return s_dirs;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. A `file` that IsRemote() accepts selects kRemote.
@@ -56,33 +73,52 @@ bool REveLogo::IsRemote(const std::string &f)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check that `dir` is readable and return it with a trailing slash, or an
+/// empty string with an error from `tpfx`.
+
+static std::string CheckImageDir(std::string_view dir, const char *tpfx)
+{
+   std::string sanitized = REveAssetDir::NormalizeDir(std::string(dir));
+   if (sanitized.empty()) {
+      ::Error(tpfx, "Empty directory given.");
+      return {};
+   }
+   if (gSystem->AccessPathName(sanitized.c_str(), kReadPermission)) {
+      ::Error(tpfx, "Image directory '%s' does not exist or is not readable.", sanitized.c_str());
+      return {};
+   }
+   return sanitized;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Register the directory images are served from, mapped under "eve-images/".
-/// Mirrors REveText::SetSdfFontDir; must run after REveManager::Create().
+/// It replaces the directories added with AddImageDir(). Mirrors
+/// REveText::SetSdfFontDir; can be called before REveManager::Create().
 
 bool REveLogo::SetImageDir(std::string_view dir)
 {
-   static const char *tpfx = "REveLogo::SetImageDir";
-
-   if (!gEve) {
-      ::Error(tpfx, "REveManager needs to be initialized before the image dir can be set.");
+   std::string sanitized = CheckImageDir(dir, "REveLogo::SetImageDir");
+   if (sanitized.empty())
       return false;
-   }
-
-   std::string sanitized(dir);
-   if (sanitized.empty()) {
-      ::Error(tpfx, "Empty directory given.");
-      return false;
-   }
-   if (sanitized.back() != '/')
-      sanitized += '/';
-
-   if (gSystem->AccessPathName(sanitized.c_str(), kReadPermission)) {
-      ::Error(tpfx, "Image directory '%s' does not exist or is not readable.", sanitized.c_str());
-      return false;
-   }
 
    sImageDir = sanitized;
-   gEve->AddLocation("eve-images/", sImageDir);
+   ImageDirs().SetUserDir(sImageDir);
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a directory images are served from, searched after the ones registered
+/// before it. Can be called before REveManager::Create().
+
+bool REveLogo::AddImageDir(std::string_view dir)
+{
+   std::string sanitized = CheckImageDir(dir, "REveLogo::AddImageDir");
+   if (sanitized.empty())
+      return false;
+
+   if (sImageDir.empty())
+      sImageDir = sanitized;
+   ImageDirs().AddUserDir(sanitized);
    return true;
 }
 

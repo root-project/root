@@ -126,6 +126,7 @@ public:
    // void SetTextAlpha(UChar_t c) { fTextAlpha = c; StampObjProps(); }
 
    static bool SetSdfFontDir(const std::string &dir, bool require_write_access = true);
+   static bool AddSdfFontDir(const std::string &dir);
    static bool AssertSdfFont(const std::string &font_name, const std::string &ttf_font);
 };
 
