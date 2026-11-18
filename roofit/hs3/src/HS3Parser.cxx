@@ -323,10 +323,8 @@ void describe(Reader &ar, DomainAxis &axis)
 void describe(Reader &ar, ContinuousAxis &axis)
 {
    ar("name", axis.name);
-   // A fixed axis is only allowed in domains (HS3 0.3).
-   if (ar.has("value")) {
-      ar.cursor().error("the axis '" + axis.name + "' of a data set must not have a fixed \"value\"");
-   }
+   // A fixed axis is only allowed in domains (HS3 0.3), which the validation reports.
+   axis.hasFixedValue = ar.has("value");
    readBound(ar, "min", axis.min, -infinity);
    readBound(ar, "max", axis.max, infinity);
 }

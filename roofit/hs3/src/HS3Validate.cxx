@@ -614,11 +614,29 @@ void Validator::checkData()
 {
    for (std::size_t i = 0; i < _doc.data.size(); ++i) {
       auto const &data = _doc.data[i];
+      const std::string path = at("data", i, data.name);
+      // A fixed axis is only allowed in domains (HS3 0.3). Older versions of RooFit wrote the constant observables of
+      // data sets like this.
+      auto checkNotFixed = [&](ContinuousAxis const &axis) {
+         if (axis.hasFixedValue) {
+            strictError(path, "the axis '" + axis.name + "' of a data set must not have a fixed \"value\"");
+         }
+      };
+      if (auto const *point = std::get_if<PointData>(&data.body)) {
+         for (auto const &axis : point->axes) {
+            checkNotFixed(axis);
+         }
+      } else if (auto const *unbinned = std::get_if<UnbinnedData>(&data.body)) {
+         for (auto const &axis : unbinned->axes) {
+            if (auto const *continuous = std::get_if<ContinuousAxis>(&axis)) {
+               checkNotFixed(*continuous);
+            }
+         }
+      }
       auto const *binned = std::get_if<BinnedData>(&data.body);
       if (!binned) {
          continue;
       }
-      const std::string path = at("data", i, data.name);
       std::optional<std::size_t> nBinsOrNone = numBins(binned->axes, path);
       if (!nBinsOrNone) {
          continue;

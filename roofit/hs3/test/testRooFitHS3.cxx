@@ -9730,6 +9730,21 @@ TEST(RooFitHS3, DataAxesAgainstDomains)
       "data": [{"name": "d", "type": "unbinned", "axes": [{"name": "x", "value": 1.0}], "entries": [[1.0]]}]
    })",
                                "must not have a fixed \"value\"");
+   {
+      // Older versions of RooFit wrote the constant observables of data sets with a fixed "value": the data set is
+      // read as before, without a range from the axis.
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(R"({
+         "metadata": {"hs3_version": "0.2"},
+         "domains": [{"name": "default_domain", "type": "product_domain",
+                      "axes": [{"name": "x", "min": 0.0, "max": 5.0}]}],
+         "data": [{"name": "d", "type": "unbinned", "axes": [{"name": "x", "value": 1.0}], "entries": [[2.5]]}]
+      })"));
+      RooAbsData *data = ws.data("d");
+      ASSERT_NE(data, nullptr);
+      ASSERT_EQ(data->numEntries(), 1);
+      EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(data->get(0)->find("x"))->getVal(), 2.5);
+   }
 
    auto makeJSON = [](std::string const &version, std::string const &domainAxis, std::string const &data) {
       return R"({

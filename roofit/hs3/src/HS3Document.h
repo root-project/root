@@ -110,6 +110,9 @@ struct ContinuousAxis {
    std::string name;
    std::optional<double> min;
    std::optional<double> max;
+   /// Whether the axis has a fixed "value", which is only allowed in domains. Older versions of RooFit wrote it for
+   /// the constant observables of data sets. The value is not used.
+   bool hasFixedValue = false;
 };
 
 /// The axis of binned data.
