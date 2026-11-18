@@ -37,11 +37,6 @@ void writeBound(JSONNode &node, double value)
    }
 }
 
-void writeStrings(JSONNode &node, std::vector<std::string> const &values)
-{
-   node.fill_seq(values);
-}
-
 template <class Tag>
 void writeRefs(JSONNode &node, std::vector<Ref<Tag>> const &refs)
 {
@@ -83,7 +78,7 @@ void writeAxis(JSONNode &node, CategoricalAxis const &axis)
 {
    node.set_map();
    node["name"] << axis.name;
-   writeStrings(node["categories"], axis.categories);
+   node["categories"].fill_seq(axis.categories);
 }
 
 // An infinite or missing bound of a domain axis is omitted, which means that the range is unbounded.
@@ -255,11 +250,11 @@ void writeData(JSONNode &dataArray, Data const &data)
                  },
                  [&](CombinedData const &d) {
                     node["type"] << "combined";
-                    writeStrings(node["columns"], d.columns);
+                    node["columns"].fill_seq(d.columns);
                     JSONNode &components = node["components"].set_seq();
                     for (CombinedDataComponent const &component : d.components) {
                        JSONNode &out = components.append_child().set_map();
-                       writeStrings(out["key"], component.key);
+                       out["key"].fill_seq(component.key);
                        out["dataset"] << component.data.name;
                     }
                  },
@@ -323,7 +318,7 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
             }
          }
          if (!item.second.tags.empty()) {
-            writeStrings(node["tags"], item.second.tags);
+            node["tags"].fill_seq(item.second.tags);
          }
       }
    }
@@ -332,7 +327,7 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
       for (auto const &item : internal.combinedDistributions) {
          JSONNode &node = combined[item.first].set_map();
          node["index_cat"] << item.second.indexCat;
-         writeStrings(node["labels"], item.second.labels);
+         node["labels"].fill_seq(item.second.labels);
          node["indices"].fill_seq(item.second.indices);
          writeRefs(node["distributions"], item.second.distributions);
       }
@@ -342,7 +337,7 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
       for (auto const &item : internal.combinedDatasets) {
          JSONNode &node = combined[item.first].set_map();
          node["index_cat"] << item.second.indexCat;
-         writeStrings(node["labels"], item.second.labels);
+         node["labels"].fill_seq(item.second.labels);
          node["indices"].fill_seq(item.second.indices);
       }
    }
@@ -373,7 +368,7 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
    if (!internal.bookkeepingColumns.empty()) {
       JSONNode &columns = rootInternal()["bookkeeping_columns"].set_map();
       for (auto const &item : internal.bookkeepingColumns) {
-         writeStrings(columns[item.first], item.second);
+         columns[item.first].fill_seq(item.second);
       }
    }
    if (!internal.stepWidths.empty()) {

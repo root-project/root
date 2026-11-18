@@ -12,21 +12,9 @@
 #include "HS3Document.h"
 
 class RooAbsArg;
-class RooAbsBinning;
-class RooAbsCollection;
-class RooAbsPdf;
-class RooAbsReal;
-class RooArgList;
-class ParamHistFunc;
-
-// A RooProdPdf with this attribute represents an HS3 `array_dist`: a product of one-dimensional distributions of one
-// type, each over its own observable. The factors are the components, imported as individual pdfs named after their
-// observable.
-inline constexpr const char *arrayDistTag = "hs3_array_dist";
-
-class RooAbsBinning;
 class RooAbsCategory;
 class RooAbsCollection;
+class RooAbsPdf;
 class RooAbsReal;
 class RooArgList;
 class RooArgSet;
@@ -34,6 +22,11 @@ class RooCategory;
 class RooDataHist;
 class RooWorkspace;
 class ParamHistFunc;
+
+// A RooProdPdf with this attribute represents an HS3 `array_dist`: a product of one-dimensional distributions of one
+// type, each over its own observable. The factors are the components, imported as individual pdfs named after their
+// observable.
+inline constexpr const char *arrayDistTag = "hs3_array_dist";
 
 // True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
 bool isLiteralConstVar(RooAbsArg const &arg);

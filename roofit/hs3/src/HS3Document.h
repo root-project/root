@@ -19,6 +19,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <tuple>
 #include <variant>
 #include <vector>
 
@@ -41,13 +42,7 @@ struct Version {
 
 inline bool operator<(Version const &l, Version const &r)
 {
-   if (l.major != r.major) {
-      return l.major < r.major;
-   }
-   if (l.minor != r.minor) {
-      return l.minor < r.minor;
-   }
-   return l.patch < r.patch;
+   return std::tie(l.major, l.minor, l.patch) < std::tie(r.major, r.minor, r.patch);
 }
 
 /// Combines lambdas into one visitor for std::visit(). The compiler complains about the alternatives without lambda.
@@ -268,13 +263,7 @@ inline bool operator!=(Interpolation const &l, Interpolation const &r)
 }
 inline bool operator<(Interpolation const &l, Interpolation const &r)
 {
-   if (l.type != r.type) {
-      return l.type < r.type;
-   }
-   if (l.in != r.in) {
-      return l.in < r.in;
-   }
-   return l.out < r.out;
+   return std::tie(l.type, l.in, l.out) < std::tie(r.type, r.in, r.out);
 }
 
 inline constexpr Interpolation additivePiecewiseLinear{InterpolationType::Add, InterpolationFunction::Poly1,
