@@ -319,7 +319,7 @@ def git_pull(directory: str, repository: str, branch: str):
                 cd '{targetdir}'
                 git checkout {branch}
                 git fetch
-                git reset --hard @{{u}}
+                git reset --hard '@{{u}}'
             """)
         else:
             returncode = subprocess_with_log(f"""
