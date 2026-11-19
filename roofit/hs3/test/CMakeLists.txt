@@ -1,4 +1,5 @@
 ROOT_ADD_GTEST(testRooFitHS3 testRooFitHS3.cxx LIBRARIES RooFitCore RooFit RooFitHS3 RooStats HistFactory)
+ROOT_ADD_GTEST(testHS3AuxiliaryMeasurements testHS3AuxiliaryMeasurements.cxx LIBRARIES RooFitCore RooFit RooFitHS3 RooStats HistFactory)
 
 if(test_roofit_hs3testsuite)
     include(FetchContent)

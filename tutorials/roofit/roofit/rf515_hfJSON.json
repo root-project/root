@@ -52,6 +52,13 @@
          ],
          "data": [
             "observed_channel1"
+         ],
+         "aux_distributions": [
+            "alpha_syst1_constraint",
+            "alpha_syst2_constraint",
+            "alpha_syst3_constraint",
+            "gamma_bin_0_constraint",
+            "gamma_bin_1_constraint"
          ]
       }
    ],

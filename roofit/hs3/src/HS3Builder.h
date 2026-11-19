@@ -45,6 +45,9 @@ RooArgSet createObservables(std::vector<BinnedAxis> const &axes);
 BinnedAxis toBinnedAxis(RooRealVar const &var);
 BinnedAxis toBinnedAxis(std::string const &name, RooAbsBinning const &binning);
 
+/// The axis of unbinned or point data for a variable. Infinite bounds are left out: the axis is unbounded there.
+ContinuousAxis toContinuousAxis(RooRealVar const &var);
+
 /// The name of an object, or the value of a literal constant.
 NameOrNumber toNameOrNumber(RooAbsArg const &arg);
 

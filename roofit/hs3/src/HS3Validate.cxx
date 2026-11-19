@@ -57,6 +57,12 @@ public:
             requireDistribution(ref.name, "misc.ROOT_internal.combined_distributions." + item.first, "distribution");
          }
       }
+      for (auto const &item : _doc.rooFit.auxiliaryChannels) {
+         requireDistribution(item.first, "misc.ROOT_internal.auxiliary_channels", "distribution");
+         for (auto const &ref : item.second) {
+            requireDistribution(ref.name, "misc.ROOT_internal.auxiliary_channels." + item.first, "component");
+         }
+      }
       for (auto const &item : _doc.rooFit.channelConstraints) {
          requireDistribution(item.first, "misc.ROOT_internal.histfactory_constraints", "distribution");
          for (auto const &ref : item.second) {
@@ -130,6 +136,7 @@ private:
    void checkCategoricalAxes();
    void checkLikelihoods();
    void checkAnalyses();
+   void checkNormalizationRanges(Analysis const &analysis, std::string const &path);
    void checkData();
    void checkCombinedData();
 
@@ -139,6 +146,15 @@ private:
    std::map<std::string, std::vector<char const *>> _sections; ///< The sections where a name is defined.
    std::set<std::string> _parameters;
 };
+
+// The names that the HS3 expression language reserves for itself: its literals and functions (HS3 0.3, "Identifiers").
+static bool isReservedName(std::string const &name)
+{
+   static const std::set<std::string> reserved{"PI",   "EULER", "TRUE",  "FALSE", "ifelse", "exp",  "log",
+                                               "sqrt", "abs",   "floor", "ceil",  "pow",    "min",  "max",
+                                               "sin",  "cos",   "tan",   "asin",  "acos",   "atan", "erf"};
+   return reserved.count(name) > 0;
+}
 
 // HS3 requires the names of all objects to be unique within a document, including the parameters. RooFit writes such
 // documents, e.g. for a range and a pdf of one name, so only ambiguous clashes in current documents are errors.
@@ -219,6 +235,22 @@ void Validator::collectNames()
                        modifier);
          }
       }
+   }
+   // Objects that expressions can refer to must not carry the reserved names of the expression language.
+   auto checkNotReserved = [&](char const *what, std::string const &name) {
+      if (isReservedName(name)) {
+         strictError("", "the " + std::string(what) + " '" + name +
+                            "' has a name that the HS3 expression language reserves for itself");
+      }
+   };
+   for (auto const &dist : _doc.distributions) {
+      checkNotReserved("distribution", dist.name);
+   }
+   for (auto const &func : _doc.functions) {
+      checkNotReserved("function", func.name);
+   }
+   for (std::string const &parameter : _parameters) {
+      checkNotReserved("parameter", parameter);
    }
    for (std::string const &parameter : _parameters) {
       if (char const *section = sectionOf(parameter)) {
@@ -448,11 +480,102 @@ void Validator::checkAnalyses()
       if (analysis.prior && !isDefinedIn(analysis.prior->name, "distributions") && !isExternal(analysis.prior->name)) {
          strictError(path + ".prior", "the distribution '" + analysis.prior->name + "' does not exist");
       }
+      checkNormalizationRanges(analysis, path);
+   }
+}
+
+// A variate is normalized over the axis of the paired data set, or else over its axis in the domains of the analysis.
+// If both exist, they must give the same range, where an absent bound is equal only to an absent bound (HS3 0.3).
+void Validator::checkNormalizationRanges(Analysis const &analysis, std::string const &path)
+{
+   using Range = std::pair<std::optional<double>, std::optional<double>>;
+   auto bound = [](std::optional<double> value) { return value && !std::isinf(*value) ? value : std::nullopt; };
+   auto format = [](Range const &range) {
+      auto one = [](std::optional<double> value) { return value ? std::to_string(*value) : std::string("none"); };
+      return "[" + one(range.first) + ", " + one(range.second) + "]";
+   };
+
+   std::map<std::string, Range> domainRanges;
+   for (auto const &ref : analysis.domains) {
+      for (auto const &domain : _doc.domains) {
+         if (domain.name != ref.name) {
+            continue;
+         }
+         for (auto const &axisVariant : domain.axes) {
+            auto const *axis = std::get_if<DomainAxis>(&axisVariant);
+            if (!axis || axis->fixedValue) {
+               continue; // a fixed axis gives no range
+            }
+            std::optional<double> min = axis->min;
+            std::optional<double> max = axis->max;
+            auto const *edges = axis->binning ? std::get_if<EdgesBinning>(&*axis->binning) : nullptr;
+            if (edges && !edges->edges.empty()) {
+               min = min ? min : edges->edges.front();
+               max = max ? max : edges->edges.back();
+            }
+            domainRanges[axis->name] = {bound(min), bound(max)};
+         }
+      }
+   }
+   if (domainRanges.empty()) {
+      return;
+   }
+
+   auto check = [&](std::string const &dataName, std::string const &axisName, Range const &dataRange) {
+      auto found = domainRanges.find(axisName);
+      if (found != domainRanges.end() && found->second != dataRange) {
+         strictError(path, "the axis '" + axisName + "' of the data set '" + dataName + "' has the range " +
+                              format(dataRange) + ", but the domains of the analysis '" + analysis.name +
+                              "' give it the range " + format(found->second));
+      }
+   };
+   std::function<void(std::string const &)> checkData = [&](std::string const &dataName) {
+      for (auto const &data : _doc.data) {
+         if (data.name != dataName) {
+            continue;
+         }
+         auto checkAxes = [&](auto const &axes) {
+            for (auto const &axisVariant : axes) {
+               std::visit(
+                  overloaded{[&](ContinuousAxis const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); },
+                             [&](BinnedAxis const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); },
+                             [](CategoricalAxis const &) {}},
+                  axisVariant);
+            }
+         };
+         std::visit(overloaded{[&](PointData const &d) {
+                                  for (auto const &a : d.axes) {
+                                     check(data.name, a.name, {bound(a.min), bound(a.max)});
+                                  }
+                               },
+                               [&](UnbinnedData const &d) { checkAxes(d.axes); },
+                               [&](BinnedData const &d) { checkAxes(d.axes); },
+                               [&](CombinedData const &d) {
+                                  for (auto const &component : d.components) {
+                                     checkData(component.data.name);
+                                  }
+                               }},
+                    data.body);
+      }
+   };
+   for (auto const &likelihood : _doc.likelihoods) {
+      if (likelihood.name != analysis.likelihood.name) {
+         continue;
+      }
+      for (auto const &term : likelihood.terms) {
+         if (auto const *data = std::get_if<DataRef>(&term.data)) {
+            checkData(data->name);
+         }
+      }
    }
 }
 
 std::size_t Validator::checkAxis(BinnedAxis const &axis, std::string const &path)
 {
+   // Unlike continuous axes, binned axes always have finite bounds.
+   if (std::isinf(axis.min) || std::isinf(axis.max)) {
+      error(path, "the binned axis '" + axis.name + "' needs finite bounds");
+   }
    if (auto const *regular = std::get_if<RegularBinning>(&axis.binning)) {
       if (regular->nbins <= 0) {
          error(path, "the axis '" + axis.name + "' needs a positive number of bins");
@@ -497,11 +620,29 @@ void Validator::checkData()
 {
    for (std::size_t i = 0; i < _doc.data.size(); ++i) {
       auto const &data = _doc.data[i];
+      const std::string path = at("data", i, data.name);
+      // A fixed axis is only allowed in domains (HS3 0.3). Older versions of RooFit wrote the constant observables of
+      // data sets like this.
+      auto checkNotFixed = [&](ContinuousAxis const &axis) {
+         if (axis.hasFixedValue) {
+            strictError(path, "the axis '" + axis.name + "' of a data set must not have a fixed \"value\"");
+         }
+      };
+      if (auto const *point = std::get_if<PointData>(&data.body)) {
+         for (auto const &axis : point->axes) {
+            checkNotFixed(axis);
+         }
+      } else if (auto const *unbinned = std::get_if<UnbinnedData>(&data.body)) {
+         for (auto const &axis : unbinned->axes) {
+            if (auto const *continuous = std::get_if<ContinuousAxis>(&axis)) {
+               checkNotFixed(*continuous);
+            }
+         }
+      }
       auto const *binned = std::get_if<BinnedData>(&data.body);
       if (!binned) {
          continue;
       }
-      const std::string path = at("data", i, data.name);
       std::optional<std::size_t> nBinsOrNone = numBins(binned->axes, path);
       if (!nBinsOrNone) {
          continue;
@@ -628,12 +769,19 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
          error(samplePath, "the name of the sample is not unique in the channel");
       }
       checkSize(samplePath + ".data.contents", sample.contents.size(), "\"contents\"");
-      // These modifiers create objects that are named after them.
+      // These modifiers create objects that are named after them. Older versions of RooFit wrote a parameter that
+      // interpolates a sample more than once as several histosys modifiers of the same name, which are still read.
       std::set<std::string> objectNames;
-      auto checkUniqueName = [&](std::string const &where, char const *type, std::string const &modifierName) {
+      auto checkUniqueName = [&](std::string const &where, char const *type, std::string const &modifierName,
+                                 bool allowedBeforeHS3v03 = false) {
          if (!objectNames.insert(std::string(type) + " " + modifierName).second) {
-            error(where,
-                  std::string("there is another ") + type + " modifier named '" + modifierName + "' in the sample");
+            const std::string message =
+               std::string("there is another ") + type + " modifier named '" + modifierName + "' in the sample";
+            if (allowedBeforeHS3v03) {
+               strictError(where, message);
+            } else {
+               error(where, message);
+            }
          }
       };
       if (sample.errors && sample.errors->size() != sample.contents.size()) {
@@ -666,7 +814,7 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                           checkInterpolation(m.interpolation, "normsys", m.name);
                        },
                        [&](HistoSys const &m) {
-                          checkUniqueName(modifierPath, "histosys", m.name);
+                          checkUniqueName(modifierPath, "histosys", m.name, true);
                           checkSingleParameter(m);
                           checkInterpolation(m.interpolation, "histosys", m.name);
                           checkSize(modifierPath + ".data.hi.contents", m.hi.contents.size(), "\"contents\"");
