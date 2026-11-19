@@ -562,3 +562,51 @@ TEST(TH1, GetCumulativeErrors)
          }
    }
 }
+
+
+TEST(TH1, SymmetricRangeUser1D)
+{
+   TH1F h1("h1_sym", "h1_sym", 10, -5, 5);
+   h1.SetBinContent(1, -2.5);
+   h1.SetBinContent(5, 7.5);
+
+   TAxis *yaxis = h1.GetYaxis();
+   EXPECT_FALSE(yaxis->GetSymmetricRangeUser());
+
+   // Set symmetric range on 1D Y-axis
+   yaxis->SetSymmetricRangeUser(kTRUE);
+   EXPECT_TRUE(yaxis->GetSymmetricRangeUser());
+   EXPECT_DOUBLE_EQ(h1.GetMaximum(), 7.5);
+   EXPECT_DOUBLE_EQ(h1.GetMinimum(), -7.5);
+
+   // Unzoom
+   yaxis->SetSymmetricRangeUser(kFALSE);
+   EXPECT_FALSE(yaxis->GetSymmetricRangeUser());
+   EXPECT_FALSE(h1.TestBit(TH1::kIsZoomed));
+
+   // Negative dominant value
+   h1.SetBinContent(10, -12.0);
+   yaxis->SetSymmetricRangeUser(kTRUE);
+   EXPECT_TRUE(yaxis->GetSymmetricRangeUser());
+   EXPECT_DOUBLE_EQ(h1.GetMaximum(), 12.0);
+   EXPECT_DOUBLE_EQ(h1.GetMinimum(), -12.0);
+}
+
+TEST(TH1, SymmetricRangeUser2D)
+{
+   TH2F h2("h2_sym", "h2_sym", 10, 0, 10, 10, 0, 10);
+   h2.SetBinContent(1, 1, -3.0);
+   h2.SetBinContent(5, 5, 8.0);
+
+   TAxis *zaxis = h2.GetZaxis();
+   EXPECT_FALSE(zaxis->GetSymmetricRangeUser());
+
+   zaxis->SetSymmetricRangeUser(kTRUE);
+   EXPECT_TRUE(zaxis->GetSymmetricRangeUser());
+   EXPECT_DOUBLE_EQ(h2.GetMaximum(), 8.0);
+   EXPECT_DOUBLE_EQ(h2.GetMinimum(), -8.0);
+
+   zaxis->SetSymmetricRangeUser(kFALSE);
+   EXPECT_FALSE(zaxis->GetSymmetricRangeUser());
+   EXPECT_FALSE(h2.TestBit(TH1::kIsZoomed));
+}
