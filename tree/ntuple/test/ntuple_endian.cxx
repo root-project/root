@@ -66,10 +66,16 @@ protected:
       throw ROOT::RException(R__FAIL("cannot clone sink"));
    }
 
-public:
-   RPageSinkMock(const RColumnElementBase &elt) : RPageSink("test", ROOT::RNTupleWriteOptions()), fElement(elt)
+   static ROOT::RNTupleWriteOptions MakeWriteOptsWithoutPageChecksums()
    {
-      fOptions->SetEnablePageChecksums(false);
+      ROOT::RNTupleWriteOptions opts;
+      opts.SetEnablePageChecksums(false);
+      return opts;
+   }
+
+public:
+   RPageSinkMock(const RColumnElementBase &elt) : RPageSink("test", MakeWriteOptsWithoutPageChecksums()), fElement(elt)
+   {
    }
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage &page) final
    {
