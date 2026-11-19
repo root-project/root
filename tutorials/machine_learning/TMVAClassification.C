@@ -119,17 +119,6 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-#ifdef R__HAS_TMVAGPU
-   Use["DNN_GPU"]         = 1; // CUDA-accelerated DNN training.
-#else
-   Use["DNN_GPU"]         = 0;
-#endif
-
-#ifdef R__HAS_TMVACPU
-   Use["DNN_CPU"]         = 1; // Multi-core accelerated DNN.
-#else
-   Use["DNN_CPU"]         = 0;
-#endif
    //
    // Support Vector Machine
    Use["SVM"]             = 1;
@@ -438,37 +427,6 @@ int TMVAClassification( TString myMethodList = "" )
 
    if (Use["MLPBNN"])
       factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=60:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
-
-
-   // Multi-architecture DNN implementation.
-   if (Use["DNN_CPU"] or Use["DNN_GPU"]) {
-      // General layout.
-      TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
-
-      // Define Training strategy. One could define multiple strategy string separated by the "|" delimiter
-
-      TString trainingStrategyString = ("TrainingStrategy=LearningRate=1e-2,Momentum=0.9,"
-                                        "ConvergenceSteps=20,BatchSize=100,TestRepetitions=1,"
-                                        "WeightDecay=1e-4,Regularization=None,"
-                                        "DropConfig=0.0+0.5+0.5+0.5");
-
-      // General Options.
-      TString dnnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
-                          "WeightInitialization=XAVIERUNIFORM");
-      dnnOptions.Append (":"); dnnOptions.Append (layoutString);
-      dnnOptions.Append (":"); dnnOptions.Append (trainingStrategyString);
-
-      // Cuda implementation.
-      if (Use["DNN_GPU"]) {
-         TString gpuOptions = dnnOptions + ":Architecture=GPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDL, "DNN_GPU", gpuOptions);
-      }
-      // Multi-core CPU implementation.
-      if (Use["DNN_CPU"]) {
-         TString cpuOptions = dnnOptions + ":Architecture=CPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDL, "DNN_CPU", cpuOptions);
-      }
-   }
 
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])

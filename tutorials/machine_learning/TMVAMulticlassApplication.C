@@ -41,8 +41,6 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
    std::map<std::string,int> Use;
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;
-   Use["DL_CPU"]          = 1;
-   Use["DL_GPU"]          = 1;
    Use["FDA_GA"]          = 1;
    Use["PDEFoam"]         = 1;
    //---------------------------------------------------------------
@@ -101,15 +99,10 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
    // book output histograms
    UInt_t nbin = 100;
    TH1F *histMLP_signal(0), *histBDTG_signal(0), *histFDAGA_signal(0), *histPDEFoam_signal(0);
-   TH1F *histDLCPU_signal(0), *histDLGPU_signal(0);
    if (Use["MLP"])
       histMLP_signal    = new TH1F( "MVA_MLP_signal",    "MVA_MLP_signal",    nbin, 0., 1.1 );
    if (Use["BDTG"])
       histBDTG_signal  = new TH1F( "MVA_BDTG_signal",   "MVA_BDTG_signal",   nbin, 0., 1.1 );
-   if (Use["DL_CPU"])
-      histDLCPU_signal = new TH1F("MVA_DLCPU_signal", "MVA_DLCPU_signal", nbin, 0., 1.1);
-   if (Use["DL_GPU"])
-      histDLGPU_signal = new TH1F("MVA_DLGPU_signal", "MVA_DLGPU_signal", nbin, 0., 1.1);
    if (Use["FDA_GA"])
       histFDAGA_signal = new TH1F( "MVA_FDA_GA_signal", "MVA_FDA_GA_signal", nbin, 0., 1.1 );
    if (Use["PDEFoam"])
@@ -153,10 +146,6 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
          histMLP_signal->Fill((reader->EvaluateMulticlass( "MLP method" ))[0]);
       if (Use["BDTG"])
          histBDTG_signal->Fill((reader->EvaluateMulticlass( "BDTG method" ))[0]);
-      if (Use["DL_CPU"])
-         histDLCPU_signal->Fill((reader->EvaluateMulticlass("DL_CPU method"))[0]);
-      if (Use["DL_GPU"])
-         histDLGPU_signal->Fill((reader->EvaluateMulticlass("DL_GPU method"))[0]);
       if (Use["FDA_GA"])
          histFDAGA_signal->Fill((reader->EvaluateMulticlass( "FDA_GA method" ))[0]);
       if (Use["PDEFoam"])
@@ -173,10 +162,6 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
       histMLP_signal->Write();
    if (Use["BDTG"])
       histBDTG_signal->Write();
-   if (Use["DL_CPU"])
-      histDLCPU_signal->Write();
-   if (Use["DL_GPU"])
-      histDLGPU_signal->Write();
    if (Use["FDA_GA"])
       histFDAGA_signal->Write();
    if (Use["PDEFoam"])

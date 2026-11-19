@@ -658,13 +658,6 @@ set (multithreaded_all_cores
 set (multithreaded
      ${multithreaded_all_cores}
      analysis/parallel/mp_processSelector.C
-     machine_learning/TMVAMulticlass.C
-     machine_learning/TMVA_CNN_Classification.C
-     machine_learning/TMVA_Higgs_Classification.C
-     machine_learning/TMVA_RNN_Classification.C
-     machine_learning/TMVA_CNN_Classification.py
-     machine_learning/TMVA_Higgs_Classification.py
-     machine_learning/TMVA_RNN_Classification.py
      machine_learning/ml_dataloader_TensorFlow.py
      )
 file(GLOB multithreaded_all_cores RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded_all_cores})
@@ -788,9 +781,6 @@ if(pyroot)
   # Disable tutorial showing connection to the HTCondor service at CERN
   list(APPEND pyveto analysis/dataframe/distrdf004_dask_lxbatch.py)
 
-  # disable PyTorch model file used by TMVA_CNN_Classification.C
-  list(APPEND pyveto machine_learning/PyTorch_Generate_CNN_Model.py)
-
   if(NOT geom)
     list(APPEND pyveto geom/geometry.py)
   endif()
@@ -819,8 +809,6 @@ if(pyroot)
   set(roofit-roofit-rf104_classfactory-depends tutorial-roofit-roofit-rf104_classfactory)
   set(roofit-roofit-rf512_wsfactory_oper-depends tutorial-roofit-roofit-rf512_wsfactory_oper)
   set(machine_learning-TMVA_Higgs_Classification-depends tutorial-machine_learning-TMVA_Higgs_Classification)
-  set(machine_learning-TMVA_CNN_Classification-depends tutorial-machine_learning-TMVA_CNN_Classification)
-  set(machine_learning-TMVA_RNN_Classification-depends tutorial-machine_learning-TMVA_RNN_Classification)
   set(roofit-roostats-CreateExampleFile-depends tutorial-roofit-roostats-CreateExampleFile)
 
   #----------------------------------------------------------------------
@@ -900,9 +888,6 @@ if(pyroot)
   )
   file(GLOB requires_tensorflow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/ml_dataloader_TensorFlow.py
-      machine_learning/TMVA_CNN_Classification.py
-      machine_learning/TMVA_RNN_Classification.py
-      machine_learning/TMVA_Higgs_Classification.py
   )
 
   file(GLOB requires_matplotlib RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}

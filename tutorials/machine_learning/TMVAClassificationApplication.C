@@ -83,8 +83,6 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-   Use["DNN_CPU"] = 0;         // CUDA-accelerated DNN training.
-   Use["DNN_GPU"] = 0;         // Multi-core accelerated DNN.
    //
    // Support Vector Machine
    Use["SVM"]             = 1;
@@ -208,8 +206,6 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    TH1F *histFDAGA(0);
    TH1F *histCat(0);
    TH1F *histPBdt(0);
-   TH1F *histDnnGpu(0);
-   TH1F *histDnnCpu(0);
 
    if (Use["Likelihood"])    histLk      = new TH1F( "MVA_Likelihood",    "MVA_Likelihood",    nbin, -1, 1 );
    if (Use["LikelihoodD"])   histLkD     = new TH1F( "MVA_LikelihoodD",   "MVA_LikelihoodD",   nbin, -1, 0.9999 );
@@ -230,8 +226,6 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["MLPBNN"])        histNnbnn   = new TH1F( "MVA_MLPBNN",        "MVA_MLPBNN",        nbin, -1.25, 1.5 );
    if (Use["CFMlpANN"])      histNnC     = new TH1F( "MVA_CFMlpANN",      "MVA_CFMlpANN",      nbin,  0, 1 );
    if (Use["TMlpANN"])       histNnT     = new TH1F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin, -1.3, 1.3 );
-   if (Use["DNN_GPU"]) histDnnGpu = new TH1F("MVA_DNN_GPU", "MVA_DNN_GPU", nbin, -0.1, 1.1);
-   if (Use["DNN_CPU"]) histDnnCpu = new TH1F("MVA_DNN_CPU", "MVA_DNN_CPU", nbin, -0.1, 1.1);
    if (Use["BDT"])           histBdt     = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
    if (Use["BDTG"])          histBdtG    = new TH1F( "MVA_BDTG",          "MVA_BDTG",          nbin, -1.0, 1.0 );
    if (Use["BDTB"])          histBdtB    = new TH1F( "MVA_BDTB",          "MVA_BDTB",          nbin, -1.0, 1.0 );
@@ -335,8 +329,6 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       if (Use["MLPBNN"       ])   histNnbnn  ->Fill( reader->EvaluateMVA( "MLPBNN method"        ) );
       if (Use["CFMlpANN"     ])   histNnC    ->Fill( reader->EvaluateMVA( "CFMlpANN method"      ) );
       if (Use["TMlpANN"      ])   histNnT    ->Fill( reader->EvaluateMVA( "TMlpANN method"       ) );
-      if (Use["DNN_GPU"]) histDnnGpu->Fill(reader->EvaluateMVA("DNN_GPU method"));
-      if (Use["DNN_CPU"]) histDnnCpu->Fill(reader->EvaluateMVA("DNN_CPU method"));
       if (Use["BDT"          ])   histBdt    ->Fill( reader->EvaluateMVA( "BDT method"           ) );
       if (Use["BDTG"         ])   histBdtG   ->Fill( reader->EvaluateMVA( "BDTG method"          ) );
       if (Use["BDTB"         ])   histBdtB   ->Fill( reader->EvaluateMVA( "BDTB method"          ) );
@@ -420,8 +412,6 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["MLPBNN"       ])   histNnbnn  ->Write();
    if (Use["CFMlpANN"     ])   histNnC    ->Write();
    if (Use["TMlpANN"      ])   histNnT    ->Write();
-   if (Use["DNN_GPU"]) histDnnGpu->Write();
-   if (Use["DNN_CPU"]) histDnnCpu->Write();
    if (Use["BDT"          ])   histBdt    ->Write();
    if (Use["BDTG"         ])   histBdtG   ->Write();
    if (Use["BDTB"         ])   histBdtB   ->Write();

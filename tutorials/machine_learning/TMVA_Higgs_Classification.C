@@ -38,9 +38,8 @@ void TMVA_Higgs_Classification() {
    bool useLikelihood = true;    // likelihood based discriminant
    bool useLikelihoodKDE = false;    // likelihood based discriminant
    bool useFischer = true;       // Fischer discriminant
-   bool useMLP = false;          // Multi Layer Perceptron (old TMVA NN implementation)
+   bool useMLP = false;          // Multi Layer Perceptron
    bool useBDT = true;           // Boosted Decision Tree
-   bool useDL = true;            // TMVA Deep learning ( CPU or GPU)
 
    TMVA::Tools::Instance();
 
@@ -130,7 +129,7 @@ note that you may also use variable expressions, which can be parsed by TTree::D
 /***
 ## Booking Methods
 
-Here we book the TMVA methods. We book first a Likelihood based on KDE (Kernel Density Estimation), a Fischer discriminant, a BDT
+Here we book the TMVA methods. We book a Likelihood based on KDE (Kernel Density Estimation), a Fischer discriminant, a BDT
 and a shallow neural network
 
  */
@@ -165,116 +164,6 @@ if (useMLP) {
                       "!H:!V:NeuronType=tanh:VarTransform=N:NCycles=100:HiddenLayers=N+5:TestRate=5:!UseRegulator" );
 }
 
-
-/// Here we book the new DNN of TMVA if we have support in ROOT. We will use GPU version if ROOT is enabled with GPU
-
-
-   /***
-
-## Booking Deep Neural Network
-
-Here we define the option string for building the Deep Neural network model.
-
-#### 1. Define DNN layout
-
-The DNN configuration is defined using a string. Note that whitespaces between characters are not allowed.
-
-We define first the DNN layout:
-
-- **input layout** :   this defines the input data format for the DNN as  ``input depth | height | width``.
-   In case of a dense layer as first layer the input layout should be  ``1 | 1 | number of input variables`` (features)
-- **batch layout**  : this defines how are the input batch. It is related to input layout but not the same.
-   If the first layer is dense it should be ``1 | batch size ! number of variables`` (features)
-
-   *(note the use of the character `|` as  separator of  input parameters for DNN layout)*
-
-note that in case of only dense layer the input layout could be omitted but it is required when defining more
-complex architectures
-
-- **layer layout** string defining the layer architecture. The syntax is
-   - layer type (e.g. DENSE, CONV, RNN)
-   - layer parameters (e.g. number of units)
-   - activation function (e.g  TANH, RELU,...)
-
-     *the different layers are separated by the ``","`` *
-
-#### 2. Define Training Strategy
-
-We define here the training strategy parameters for the DNN. The parameters are separated by the ``","`` separator.
-One can then concatenate different training strategy with different parameters. The training strategy are separated by
-the ``"|"`` separator.
-
- - Optimizer
- - Learning rate
- - Momentum (valid for SGD and RMSPROP)
- - Regularization and Weight Decay
- - Dropout
- - Max number of epochs
- - Convergence steps. if the test error will not decrease after that value the training will stop
- - Batch size (This value must be the same specified in the input layout)
- - Test Repetitions (the interval when the test error will be computed)
-
-
-#### 3. Define general DNN options
-
-We define the general DNN options concatenating in the final string the previously defined layout and training strategy.
-Note we use the ``":"`` separator to separate the different higher level options, as in the other TMVA methods.
-In addition to input layout, batch layout and training strategy we add now:
-
-- Type of Loss function (e.g. CROSSENTROPY)
-- Weight Initizalization (e.g XAVIER, XAVIERUNIFORM, NORMAL )
-- Variable Transformation
-- Type of Architecture (e.g. CPU, GPU, Standard)
-
-We can then book the DL method using the built option string
-
-    ***/
-
-   if (useDL) {
-
-      bool useDLGPU = false;
-#ifdef R__HAS_TMVAGPU
-      useDLGPU = true;
-#endif
-
-      // Define DNN layout
-      TString inputLayoutString = "InputLayout=1|1|7";
-      TString batchLayoutString= "BatchLayout=1|128|7";
-      TString layoutString ("Layout=DENSE|64|TANH,DENSE|64|TANH,DENSE|64|TANH,DENSE|64|TANH,DENSE|1|LINEAR");
-      // Define Training strategies
-      // one can catenate several training strategies
-      TString training1("LearningRate=1e-3,Momentum=0.9,"
-                        "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
-                        "MaxEpochs=30,WeightDecay=1e-4,Regularization=None,"
-                        "Optimizer=ADAM,ADAM_beta1=0.9,ADAM_beta2=0.999,ADAM_eps=1.E-7," // ADAM default parameters
-                        "DropConfig=0.0+0.0+0.0+0.");
-      //     TString training2("LearningRate=1e-3,Momentum=0.9"
-      //                       "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
-      //                       "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
-      //                       "Optimizer=SGD,DropConfig=0.0+0.0+0.0+0.");
-
-      TString trainingStrategyString ("TrainingStrategy=");
-      trainingStrategyString += training1; // + "|" + training2;
-
-      // General Options.
-
-      TString dnnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=G:"
-                          "WeightInitialization=XAVIER");
-      dnnOptions.Append (":"); dnnOptions.Append (inputLayoutString);
-      dnnOptions.Append (":"); dnnOptions.Append (batchLayoutString);
-      dnnOptions.Append (":"); dnnOptions.Append (layoutString);
-      dnnOptions.Append (":"); dnnOptions.Append (trainingStrategyString);
-
-      TString dnnMethodName = "DNN_CPU";
-      if (useDLGPU) {
-         dnnOptions += ":Architecture=GPU";
-         dnnMethodName = "DNN_GPU";
-      } else  {
-         dnnOptions += ":Architecture=CPU";
-      }
-
-      factory.BookMethod(loader, TMVA::Types::kDL, dnnMethodName, dnnOptions);
-   }
 
    /**
 ## Train Methods

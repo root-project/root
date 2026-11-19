@@ -9,7 +9,6 @@
 - [Cross validation](\ref cross_val)
 - [New TMVA interfaces](\ref new_interface)
    - [RBDT](\ref rbdt)
-- [Deep learning in TMVA](\ref deep_learing)
 - [TMVA Keras tutorials](\ref keras)
 - [TMVA PyTorch tutorials](\ref pytorch)
 - [Inference with SOFIE](\ref inference)
@@ -28,6 +27,7 @@
 | TMVAMinimalClassification.C |  Minimal self-contained example for setting up TMVA with binary classification. |
 | TMVAMulticlass.C | Training and testing of the TMVA multiclass classification. |
 | TMVAClassification.C |  Training and testing of the TMVA classifiers. |
+| TMVA_Higgs_Classification.C, TMVA_Higgs_Classification.py |  Classification example of TMVA based on public Higgs UCI dataset. |
 | TMVAClassificationCategory.C | Training and testing of the TMVA classifiers in categorisation mode. |
 | TMVARegression.C | Training and testing of the TMVA classifiers. |
 | classification.C | |
@@ -77,15 +77,6 @@
 | tmva101_Training.py | Train a machine learning model with any package reading the training data directly from ROOT files. |
 | tmva102_Testing.py | Test a trained BDT model using the fast tree inference engine offered by TMVA and external tools such as scikit-learn.  |
 | tmva103_Application.C | Apply BDTs in C++ using the fast tree inference engine offered by TMVA. |
-
-\anchor deep_learing
-## Deep learning in TMVA
-
-|          **Tutorial**          || **Description** |
-|---------------|-----------------|-----------------|
-| TMVA_CNN_Classification.C | TMVA_CNN_Classification.py |  TMVA Classification example using a Convolutional Neural Network. |
-| TMVA_Higgs_Classification.C | TMVA_Higgs_Classification.py |  Classification example of TMVA based on public Higgs UCI dataset. |
-| TMVA_RNN_Classification.C | TMVA_RNN_Classification.py |  TMVA Classification example using a Recurrent Neural Network. |
 
 \anchor keras
 ## TMVA Keras tutorials

@@ -83,18 +83,6 @@ void TMVARegression( TString myMethodList = "" )
    //
    // Neural Network
    Use["MLP"]             = 0;
-   // Deep neural network (with CPU or GPU)
-#ifdef R__HAS_TMVAGPU
-   Use["DNN_GPU"] = 1;
-   Use["DNN_CPU"] = 0;
-#else
-   Use["DNN_GPU"] = 0;
-#ifdef R__HAS_TMVACPU
-   Use["DNN_CPU"] = 1;
-#else
-   Use["DNN_CPU"] = 0;
-#endif
-#endif
    //
    // Support Vector Machine
    Use["SVM"]             = 0;
@@ -265,31 +253,6 @@ void TMVARegression( TString myMethodList = "" )
    // Neural network (MLP)
    if (Use["MLP"])
       factory->BookMethod( dataloader,  TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15:!UseRegulator" );
-
-   if (Use["DNN_CPU"] || Use["DNN_GPU"]) {
-
-      TString archOption =  Use["DNN_GPU"] ? "GPU" : "CPU";
-
-      TString layoutString("Layout=TANH|50,TANH|50,TANH|50,LINEAR");
-
-
-      TString trainingStrategyString("TrainingStrategy=");
-
-      trainingStrategyString +="LearningRate=1e-3,Momentum=0.3,ConvergenceSteps=20,BatchSize=50,TestRepetitions=1,WeightDecay=0.0,Regularization=None,Optimizer=Adam";
-
-      TString nnOptions("!H:V:ErrorStrategy=SUMOFSQUARES:VarTransform=G:WeightInitialization=XAVIERUNIFORM:Architecture=");
-      nnOptions.Append(archOption);
-      nnOptions.Append(":");
-      nnOptions.Append(layoutString);
-      nnOptions.Append(":");
-      nnOptions.Append(trainingStrategyString);
-
-      TString methodName = TString("DNN_") + archOption;
-
-      factory->BookMethod(dataloader, TMVA::Types::kDL, methodName, nnOptions); // NN
-   }
-
-
 
    // Support Vector Machine
    if (Use["SVM"])
