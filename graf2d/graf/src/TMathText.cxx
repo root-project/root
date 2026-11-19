@@ -45,9 +45,6 @@ Begin_Macro
 ../../../tutorials/visualisation/graphics/tmathtext2.C
 End_Macro
 
-#### Limitation:
-TMathText rendering is not implemented for the PDF output.
-PostScript output should be used instead.
 */
 
 const Double_t kPI      = TMath::Pi();
