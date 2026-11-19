@@ -101,11 +101,6 @@ public:
    static RooWorkspace sanitizeWS(const RooWorkspace &ws);
    static RooWorkspace cleanWS(const RooWorkspace &ws, bool onlyModelConfig = false);
 
-   struct CombinedData {
-      std::string name;
-      std::vector<std::string> columns;
-   };
-
    RooJSONFactoryWSTool(RooWorkspace &ws);
 
    ~RooJSONFactoryWSTool();
@@ -292,7 +287,7 @@ private:
    void exportSimultaneous(RooSimultaneous const &simPdf);
    void recordCategory(RooAbsCategory const &cat);
    void exportData(RooAbsData const &data);
-   RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
+   void exportCombinedData(RooAbsData const &data);
 
    void importAllNodes(RooFit::Detail::JSONNode &n);
    void importDistribution(RooFit::HS3::Distribution const &distribution);
@@ -301,14 +296,11 @@ private:
    void warnIfFreeWithoutDomain(RooRealVar const &var);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void exportVariable(const RooAbsArg *v, RooFit::HS3::ParameterPoint &point, bool storeConstant);
-   void exportVariables(const RooArgSet &allElems, RooFit::HS3::ParameterPoint &point, bool storeConstant);
+   void exportVariable(const RooAbsArg *v, RooFit::HS3::ParameterPoint &point);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
-   void exportModelConfig(RooStats::ModelConfig const &mc,
-                          const std::vector<RooJSONFactoryWSTool::CombinedData> &combDataSets,
-                          const std::vector<RooAbsData *> &single);
+   void exportModelConfig(RooStats::ModelConfig const &mc, const std::vector<RooAbsData *> &singleDataSets);
 
    void exportSingleModelConfig(RooStats::ModelConfig const &mc, std::string const &analysisName,
                                 std::string const *dataName);

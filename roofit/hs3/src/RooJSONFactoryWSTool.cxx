@@ -1679,14 +1679,11 @@ void sortByName(T &coll)
    std::sort(coll.begin(), coll.end(), [](auto &l, auto &r) { return strcmp(l->GetName(), r->GetName()) < 0; });
 }
 
-/// Check whether an object is a top-level object of the workspace, i.e. not a
-/// component of some other workspace object. Only clients that are part of the
-/// workspace count: RooFit also registers evaluation artifacts as clients,
-/// like the normalization integral that RooAbsPdf caches after
-/// getVal(normSet), or the integral returned by createIntegral(). These live
-/// outside the workspace and are not evidence that the object is a sub-node of
-/// a bigger model (see https://github.com/root-project/root/issues/23221).
-// Whether no object of the workspace uses `arg`. Helpers that are not written don't count as users.
+// Whether no object of the workspace uses `arg`. Only clients that are part of the workspace count: RooFit also
+// registers evaluation artifacts as clients, like the normalization integral that RooAbsPdf caches after
+// getVal(normSet), or the integral returned by createIntegral(). These live outside the workspace and are not evidence
+// that the object is a sub-node of a bigger model (see https://github.com/root-project/root/issues/23221). Helpers that
+// are not written don't count as users either.
 bool isTopLevel(RooAbsArg const &arg, RooWorkspace const &ws)
 {
    for (RooAbsArg const *client : arg.clients()) {
@@ -1695,6 +1692,21 @@ bool isTopLevel(RooAbsArg const &arg, RooWorkspace const &ws)
       }
    }
    return true;
+}
+
+// The top-level objects among `args` that are written, sorted by name.
+template <class Arg_t>
+std::vector<Arg_t *> topLevelObjects(RooArgSet const &args, RooWorkspace const &ws)
+{
+   std::vector<Arg_t *> out;
+   for (RooAbsArg *arg : args) {
+      auto *object = dynamic_cast<Arg_t *>(arg);
+      if (object && isTopLevel(*arg, ws) && !isSkippedHelper(*arg, ws)) {
+         out.push_back(object);
+      }
+   }
+   sortByName(out);
+   return out;
 }
 
 } // namespace
@@ -1967,7 +1979,7 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
 }
 
 // Export a single variable (RooRealVar or RooConstVar) `v` to the parameter point.
-void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoint &point, bool storeConstant)
+void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoint &point)
 {
    auto *cv = dynamic_cast<const RooConstVar *>(v);
    auto *rrv = dynamic_cast<const RooRealVar *>(v);
@@ -1992,17 +2004,9 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoin
    HS3::ParameterValue var;
    var.name = v->GetName();
    var.value = rrv->getVal();
-   var.isConst = storeConstant && (rrv->isConstant() || rrv->getMin() >= rrv->getMax());
+   var.isConst = rrv->isConstant() || rrv->getMin() >= rrv->getMax();
    recordDomains(_export->domains, *rrv);
    point.parameters.push_back(std::move(var));
-}
-
-// Export all variables in `allElems` to the parameter point.
-void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, HS3::ParameterPoint &point, bool storeConstant)
-{
-   for (RooAbsArg *arg : allElems) {
-      exportVariable(arg, point, storeConstant);
-   }
 }
 
 std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, const std::string &suffix,
@@ -2136,7 +2140,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
       // categorical axes of the domain that its "columns" name.
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
-      exportVariable(&func, _export->doc.parameterPoints.front(), true);
+      exportVariable(&func, _export->doc.parameterPoints.front());
       return;
    } else if (config().exportArrayDist && func.getAttribute(arrayDistTag)) {
       // An array distribution (HS3 `array_dist`): its components are registered here, and the array is written at
@@ -2632,18 +2636,18 @@ void RooJSONFactoryWSTool::prepareCombinedObservableRenaming()
  * the observables of the corresponding component, and keys without entries for which it has no component are left
  * out; otherwise, every sub-data set carries all observables.
  */
-RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooAbsData const &data)
+void RooJSONFactoryWSTool::exportCombinedData(RooAbsData const &data)
 {
    std::vector<RooCategory const *> columns = selectionColumns(*data.get());
-   CombinedData info;
-   info.name = data.GetName();
+   std::string const name = data.GetName();
+   HS3::CombinedData combined;
    for (RooCategory const *column : columns) {
-      info.columns.push_back(column->GetName());
+      combined.columns.push_back(column->GetName());
       recordCategory(*column);
    }
 
    // Split the data by the key: by the index category of a matching RooSimultaneous, or by the columns themselves.
-   RooSimultaneous const *simPdf = findMatchingSimultaneous(_workspace, info.columns);
+   RooSimultaneous const *simPdf = findMatchingSimultaneous(_workspace, combined.columns);
    std::unique_ptr<RooSuperCategory> superCat;
    RooAbsCategory const *indexCat = nullptr;
    std::vector<std::unique_ptr<RooAbsData>> parts;
@@ -2658,15 +2662,13 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
       for (RooCategory const *column : columns) {
          inputs.add(*column);
       }
-      const std::string superName = info.name + "_key";
+      const std::string superName = name + "_key";
       superCat = std::make_unique<RooSuperCategory>(superName.c_str(), superName.c_str(), inputs);
       indexCat = superCat.get();
       parts = data.split(*indexCat, true);
    }
 
    // The combined data set is written before its sub-data sets.
-   HS3::CombinedData combined;
-   combined.columns = info.columns;
    std::vector<RooAbsData *> subDataSets;
    for (std::vector<std::string> const &key : selectionKeys(columns)) {
       std::string const label = selectionLabel(*indexCat, columns, key);
@@ -2675,10 +2677,10 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
          continue;
       }
       const std::string keyName = selectionKeyName(key);
-      const std::string subName = info.name + "_" + keyName;
+      const std::string subName = name + "_" + keyName;
       (*found)->SetName(subName.c_str());
       // Config::renameCombinedObservables: give the observables of this key their own names.
-      auto renamesOfData = _combinedObservableRenames.find(info.name);
+      auto renamesOfData = _combinedObservableRenames.find(name);
       if (renamesOfData != _combinedObservableRenames.end()) {
          auto renames = renamesOfData->second.find(keyName);
          if (renames != renamesOfData->second.end()) {
@@ -2690,11 +2692,10 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
       combined.components.push_back({key, {subName}});
       subDataSets.push_back(found->get());
    }
-   _export->doc.data.push_back({info.name, std::move(combined)});
+   _export->doc.data.push_back({name, std::move(combined)});
    for (RooAbsData *subData : subDataSets) {
       exportData(*subData);
    }
-   return info;
 }
 
 // Export a single dataset `data` (binned or unbinned) to the output document.
@@ -2707,8 +2708,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       }
    }
 
-   HS3::Data output;
-   output.name = data.GetName();
+   auto write = [&](auto body) { _export->doc.data.push_back({data.GetName(), std::move(body)}); };
 
    // This works around a problem in RooStats/HistFactory that was only fixed
    // in ROOT 6.30: until then, the weight variable of the observed dataset,
@@ -2731,14 +2731,9 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       }
    }
 
-   auto exportBinned = [&](std::size_t n, double const *contents) {
-      output.body = toBinnedData(variables, n, contents);
-      _export->doc.data.push_back(std::move(output));
-   };
-
    // this is a regular binned dataset
    if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
-      return exportBinned(dh->numEntries(), dh->weightArray());
+      return write(toBinnedData(variables, dh->numEntries(), dh->weightArray()));
    }
 
    // Check if this actually represents a binned dataset, and then import it
@@ -2750,7 +2745,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    // binning, and would otherwise be written as binned once they have no entries.
    if (data.isWeighted() && variables.size() == 1 && dynamic_cast<RooRealVar const *>(variables[0]) &&
        static_cast<RooRealVar const &>(*variables[0]).getBins() > 0) {
-      bool isBinnedData = false;
       auto &x = static_cast<RooRealVar const &>(*variables[0]);
       std::vector<double> contents;
       int i = 0;
@@ -2762,10 +2756,8 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       }
       // Binned data has exactly one entry per bin, in the order of the bins. Further entries, e.g. a second one in
       // the last bin, make it unbinned data.
-      if (i == x.getBins() && data.numEntries() == x.getBins())
-         isBinnedData = true;
-      if (isBinnedData) {
-         return exportBinned(contents.size(), contents.data());
+      if (i == x.getBins() && data.numEntries() == x.getBins()) {
+         return write(toBinnedData(variables, contents.size(), contents.data()));
       }
    }
 
@@ -2774,13 +2766,10 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       data.get(0);
       auto const *var = dynamic_cast<RooRealVar const *>(variables[0]);
       if (var && (!data.isWeighted() || data.weight() == 1.)) {
-         recordDomains(_export->domains, *var);
          HS3::PointData point;
          point.value = var->getVal();
          point.axes.push_back(HS3::toContinuousAxis(*var));
-         output.body = std::move(point);
-         _export->doc.data.push_back(std::move(output));
-         return;
+         return write(std::move(point));
       }
    }
 
@@ -2796,8 +2785,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
          unbinned.axes.emplace_back(HS3::toContinuousAxis(var));
       }
    }
-   std::vector<double> weightVals;
-   bool hasNonUnityWeights = false;
+   std::vector<double> weights;
    for (int i = 0; i < data.numEntries(); ++i) {
       data.get(i);
       // The entries of a categorical axis are the positions of the labels in its "categories".
@@ -2808,17 +2796,13 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
             unbinned.entries.push_back(static_cast<RooRealVar const *>(arg)->getVal());
          }
       }
-      if (data.isWeighted()) {
-         weightVals.push_back(data.weight());
-         if (data.weight() != 1.)
-            hasNonUnityWeights = true;
-      }
+      weights.push_back(data.weight());
    }
-   if (data.isWeighted() && hasNonUnityWeights) {
-      unbinned.weights = std::move(weightVals);
+   // Weights that are all one are not written.
+   if (std::any_of(weights.begin(), weights.end(), [](double weight) { return weight != 1.; })) {
+      unbinned.weights = std::move(weights);
    }
-   output.body = std::move(unbinned);
-   _export->doc.data.push_back(std::move(output));
+   write(std::move(unbinned));
 }
 
 /// Create the variables for the "axes" of `topNode`, which are owned by the returned set.
@@ -2906,40 +2890,56 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
    }
 }
 
+// Export a ModelConfig as one analysis for every data set that goes with its pdf, or as one without data.
 void RooJSONFactoryWSTool::exportModelConfig(RooFit::ModelConfig const &mc,
-                                             const std::vector<CombinedData> &combDataSets,
                                              const std::vector<RooAbsData *> &singleDataSets)
 {
-   // The analyses are named after the ModelConfig, so that ModelConfigs sharing a pdf and a data set (like an S+B
-   // and B-only pair) get separate analyses.
-   auto pdf = mc.GetPdf();
-   auto simpdf = dynamic_cast<RooSimultaneous const *>(pdf);
-   int founddata = 0;
-   if (simpdf) {
-      // One analysis per combined data set with the same columns.
+   std::vector<std::string> dataNames;
+   if (auto simpdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf())) {
+      // The combined data sets with the same columns.
       const std::vector<std::string> columns = namesOf(selectionColumns(simpdf->indexCat()));
-      for (auto const &data : combDataSets) {
-         if (data.columns == columns) {
-            exportSingleModelConfig(mc, std::string(mc.GetName()) + "_" + data.name, &data.name);
-            ++founddata;
+      for (HS3::Data const &data : _export->doc.data) {
+         auto const *combined = std::get_if<HS3::CombinedData>(&data.body);
+         if (combined && combined->columns == columns) {
+            dataNames.push_back(data.name);
          }
       }
    } else {
-      RooArgSet observables(*mc.GetObservables());
-      for (auto *data : singleDataSets) {
-         if (observables.equals(*(data->get()))) {
-            const std::string dataName = data->GetName();
-            exportSingleModelConfig(mc, std::string(mc.GetName()) + "_" + dataName, &dataName);
-            ++founddata;
+      for (RooAbsData const *data : singleDataSets) {
+         if (mc.GetObservables()->equals(*data->get())) {
+            dataNames.push_back(data->GetName());
          }
       }
    }
-   if (founddata == 0) {
+   // The analyses are named after the ModelConfig, so that ModelConfigs sharing a pdf and a data set (like an S+B
+   // and B-only pair) get separate analyses.
+   for (std::string const &dataName : dataNames) {
+      exportSingleModelConfig(mc, std::string(mc.GetName()) + "_" + dataName, &dataName);
+   }
+   if (dataNames.empty()) {
       exportSingleModelConfig(mc, mc.GetName(), nullptr);
    }
 }
 
 namespace {
+
+// The channels of the pdf of a ModelConfig as they are written: the pdf itself, or the components of a RooSimultaneous,
+// of which those in `renamed` (by label) replace the original ones (Config::renameCombinedObservables).
+std::vector<RooAbsPdf const *> channelsOf(RooAbsPdf const &pdf, std::map<std::string, RooAbsPdf const *> const &renamed)
+{
+   auto const *simPdf = dynamic_cast<RooSimultaneous const *>(&pdf);
+   if (!simPdf) {
+      return {&pdf};
+   }
+   std::vector<RooAbsPdf const *> channels;
+   for (auto const &item : simPdf->indexCat()) {
+      auto found = renamed.find(item.first);
+      if (RooAbsPdf const *component = found != renamed.end() ? found->second : simPdf->getPdf(item.first)) {
+         channels.push_back(component);
+      }
+   }
+   return channels;
+}
 
 // A constraint term of a channel of the pdf of a ModelConfig, see constraintsOfChannels().
 struct ChannelConstraint {
@@ -2961,33 +2961,16 @@ struct ChannelConstraint {
 // - The constraints of a channel that is written as product_dist are taken out of the product by
 //   writeLikelihoodTermsOnce(). This is only done if no other object of the workspace uses the product, so the
 //   constraints of other products are not returned.
-// Constraints elsewhere, e.g. in a nested product, stay where they are. The channels are taken as they are written:
-// a component of the RooSimultaneous is replaced by the one in `renamed` (by label), if any
-// (Config::renameCombinedObservables).
+// Constraints elsewhere, e.g. in a nested product, stay where they are. The channels are taken as they are written,
+// see channelsOf().
 std::vector<ChannelConstraint>
 constraintsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet const &observables,
                       std::function<bool(std::string const &)> const &isHistFactoryChannel,
-                      std::map<std::string, RooAbsPdf const *> const *renamed)
+                      std::vector<RooAbsPdf const *> const &channels)
 {
    RooArgSet params;
    pdf.getParameters(&observables, params);
    std::unique_ptr<RooArgSet> constraints{pdf.getAllConstraints(observables, params, /*stripDisconnected=*/false)};
-   std::vector<RooAbsPdf const *> channels;
-   if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(&pdf)) {
-      for (auto const &item : simPdf->indexCat()) {
-         RooAbsPdf const *component = simPdf->getPdf(item.first);
-         if (renamed) {
-            if (auto found = renamed->find(item.first); found != renamed->end()) {
-               component = found->second;
-            }
-         }
-         if (component) {
-            channels.push_back(component);
-         }
-      }
-   } else {
-      channels.push_back(&pdf);
-   }
    std::vector<ChannelConstraint> out;
    for (RooAbsPdf const *channel : channels) {
       auto const *prod = dynamic_cast<RooProdPdf const *>(channel);
@@ -3062,26 +3045,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    // of the channels of the model, which can be the components of a combined distribution (constraintsOfChannels()).
    // They are listed in "aux_distributions" with the observed values of their observables as constant parameters, or
    // (config().exportConstraintData) in "distributions", each paired with a data set that holds the observed values.
-   // The channels as they are written: the components of a RooSimultaneous can be renamed clones
-   // (Config::renameCombinedObservables).
-   std::vector<std::string> channels;
-   for (auto const &term : likelihood.terms) {
-      channels.push_back(term.distribution.name);
-      if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(_workspace.pdf(term.distribution.name))) {
-         auto renamed = _renamedComponents.find(simPdf->GetName());
-         for (auto const &item : simPdf->indexCat()) {
-            RooAbsPdf const *component = simPdf->getPdf(item.first);
-            if (renamed != _renamedComponents.end()) {
-               if (auto found = renamed->second.find(item.first); found != renamed->second.end()) {
-                  component = found->second;
-               }
-            }
-            if (component) {
-               channels.push_back(component->GetName());
-            }
-         }
-      }
-   }
+   std::vector<RooAbsPdf const *> const channels = channelsOf(*pdf, _renamedComponents[pdf->GetName()]);
    // The channels of the model that consist of constraint terms only, see constraintsOfChannels().
    std::vector<std::string> auxiliaryChannelsOfModel;
    std::vector<std::string> constraintTerms;
@@ -3111,8 +3075,8 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    if (!observables || observables->empty()) {
       // Without observables (e.g. a ModelConfig without data), RooFit can't tell constraints from other pdfs: only the
       // constraint terms of the HistFactory channels are listed.
-      for (std::string const &channel : channels) {
-         for (std::string const &term : writtenByHistFactory(channel)) {
+      for (RooAbsPdf const *channel : channels) {
+         for (std::string const &term : writtenByHistFactory(channel->GetName())) {
             addUnique(constraintTerms, term);
          }
       }
@@ -3123,10 +3087,8 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
       // The constraint terms of the channels as RooFit finds them, under the names under which they are written:
       // the array distribution that holds a constraint of a HistFactory channel, or the name of the constraint.
       std::map<std::string, std::vector<std::string>> termsOfChannel;
-      auto renamedOfPdf = _renamedComponents.find(pdf->GetName());
       for (ChannelConstraint const &item :
-           constraintsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel,
-                                 renamedOfPdf != _renamedComponents.end() ? &renamedOfPdf->second : nullptr)) {
+           constraintsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel, channels)) {
          if (item.wholeChannel) {
             auxiliaryChannelsOfModel.push_back(item.channel);
             continue;
@@ -3138,7 +3100,8 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
          }
          addUnique(termsOfChannel[item.channel], term);
       }
-      for (std::string const &channel : channels) {
+      for (RooAbsPdf const *channelPdf : channels) {
+         std::string const channel = channelPdf->GetName();
          std::vector<std::string> const &found = termsOfChannel[channel];
          if (!isHistFactoryChannel(channel)) {
             for (std::string const &term : found) {
@@ -3331,16 +3294,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    doc.parameterPoints.push_back({"default_values", {}});
    prepareCombinedObservableRenaming();
 
-   // export all toplevel pdfs
-   std::vector<RooAbsPdf *> allpdfs;
-   for (auto &arg : _workspace.allPdfs()) {
-      if (isTopLevel(*arg, _workspace)) {
-         auto *pdf = dynamic_cast<RooAbsPdf *>(arg);
-         if (pdf && !isSkippedHelper(*pdf, _workspace)) {
-            allpdfs.push_back(pdf);
-         }
-      }
-   }
+   std::vector<RooAbsPdf *> const allpdfs = topLevelObjects<RooAbsPdf>(_workspace.allPdfs(), _workspace);
    // A Gaussian constraint is written with its global observable as "x", also if that is its mean in RooFit (see
    // setConstraintObservable()). Which one it is must be known before any pdf is written: the pdfs are written in the
    // order of their names, and a constraint can come before the model that uses it.
@@ -3358,21 +3312,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          }
       }
    }
-   sortByName(allpdfs);
    exportObjects(allpdfs);
-
-   // export all toplevel functions
-   std::vector<RooAbsReal *> allfuncs;
-   for (auto &arg : _workspace.allFunctions()) {
-      if (isTopLevel(*arg, _workspace)) {
-         auto *func = dynamic_cast<RooAbsReal *>(arg);
-         if (func && !isSkippedHelper(*func, _workspace)) {
-            allfuncs.push_back(func);
-         }
-      }
-   }
-   sortByName(allfuncs);
-   exportObjects(allfuncs);
+   exportObjects(topLevelObjects<RooAbsReal>(_workspace.allFunctions(), _workspace));
 
    // The array distributions are written after the objects that use them, see exportAsArrayComponent().
    exportArrayDists();
@@ -3390,7 +3331,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    sortByName(alldata);
    // Data sets with category observables are combined data sets.
    std::vector<RooAbsData *> singleData;
-   std::vector<RooJSONFactoryWSTool::CombinedData> combData;
    for (auto &d : alldata) {
       // Without a matching RooSimultaneous, the categories of a data set are ordinary observables, written as
       // categorical axes, unless its observables are renamed per key (Config::renameCombinedObservables).
@@ -3400,14 +3340,14 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          singleData.push_back(d);
          this->exportData(*d);
       } else {
-         combData.push_back(this->exportCombinedData(*d));
+         this->exportCombinedData(*d);
       }
    }
 
    // export all ModelConfig objects and attached Pdfs
    for (TObject *obj : _workspace.allGenericObjects()) {
       if (auto mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
-         exportModelConfig(*mc, combData, singleData);
+         exportModelConfig(*mc, singleData);
       }
    }
 
@@ -3419,13 +3359,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       // the ones that the pdfs encoded implicitly (like in the case of
       // HistFactory).
       for (RooAbsArg *arg : *snsh) {
-         bool do_export = false;
-         for (const auto &pdf : allpdfs) {
-            if (pdf->dependsOn(*arg)) {
-               do_export = true;
-            }
-         }
-         if (do_export) {
+         if (std::any_of(allpdfs.begin(), allpdfs.end(), [&](RooAbsPdf *pdf) { return pdf->dependsOn(*arg); })) {
             RooJSONFactoryWSTool::testValidName(arg->GetName(), true);
             snapshotSorted.add(*arg);
          }
@@ -3434,7 +3368,9 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       std::string name(snsh->GetName());
       if (name != "default_values") {
          doc.parameterPoints.push_back({name, {}});
-         this->exportVariables(snapshotSorted, doc.parameterPoints.back(), true);
+         for (RooAbsArg *arg : snapshotSorted) {
+            exportVariable(arg, doc.parameterPoints.back());
+         }
       }
    }
    // The constraint terms that are components of a combined distribution have a label of their own.
