@@ -788,11 +788,17 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                                       "' is not given, and the channel has no \"default_interpolation\"");
             }
          };
-         // The modifiers with a single parameter, which can have a constraint.
+         // The modifiers with a single parameter, which can have a constraint. Of the constraint types of older
+         // documents, RooFit only creates the Gaussian for them.
          auto checkSingleParameter = [&](auto const &m) {
             checkParameter(modifierPath, m.parameter.name, m.name);
             if (auto const *pdf = std::get_if<ConstraintPdf>(&m.constraint)) {
                requireDistribution(pdf->pdf.name, modifierPath, "constraint");
+            } else if (auto const *type = std::get_if<ConstraintType>(&m.constraint);
+                       type && *type != ConstraintType::Gauss) {
+               error(modifierPath, std::string("legacy constraint value '") + toString(*type) + "' for modifier '" +
+                                      m.name +
+                                      "' is a known constraint type, but it cannot be resolved in this context");
             }
             checkCorrelated(modifierPath, m.parameter.name, m.constraint);
          };
@@ -828,6 +834,13 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                           }
                           checkGammaConstraint(modifierPath, m.constraint);
                           checkStatErrorConstraints(modifierPath, m.constraint);
+                          // A lognormal constraint makes no sense for gamma parameters.
+                          if (auto const *type = std::get_if<ConstraintType>(&m.constraint);
+                              type && *type == ConstraintType::LogNormal) {
+                             error(modifierPath, std::string("unsupported constraint '") + toString(*type) +
+                                                    "' of the staterror modifier in channel '" + name +
+                                                    "', supported are \"Poisson\" and \"Gauss\"");
+                          }
                        },
                        [&](CustomModifier const &m) {
                           if (!isDefinedIn(m.name, "functions") && !isDefinedIn(m.name, "distributions") &&

@@ -290,13 +290,8 @@ void addConstraint(RooJSONFactoryWSTool &tool, HS3::Constraint const &constraint
    RooWorkspace &ws = *tool.workspace();
    std::visit(HS3::overloaded{
                  [](HS3::Unconstrained) {},
-                 [&](HS3::ConstraintType type) {
-                    if (type != HS3::ConstraintType::Gauss) {
-                       RooJSONFactoryWSTool::error(std::string("legacy constraint value '") + toString(type) +
-                                                   "' for modifier '" + modifier +
-                                                   "' is a known constraint type, but it cannot be resolved in this "
-                                                   "context");
-                    }
+                 [&](HS3::ConstraintType) {
+                    // The validation only lets a Gaussian constraint through.
                     RooRealVar &nom = createNominal(ws, param.GetName(), nominal);
                     setErrorIfVariable(param, 1.0);
                     const std::string name = constraintName(param.GetName());
@@ -685,22 +680,6 @@ HS3::GammaConstraint statErrorConstraint(HS3::HistFactoryDist const &dist)
       }
    }
    return modifierConstraint ? *modifierConstraint : dist.statError.constraint;
-}
-
-// Reject constraints of staterror modifiers that make no sense for gamma parameters.
-void checkStatErrorConstraints(HS3::HistFactoryDist const &dist, std::string const &name)
-{
-   for (auto const &sample : dist.samples) {
-      for (auto const &modifier : sample.modifiers) {
-         auto const *statError = std::get_if<HS3::StatError>(&modifier);
-         auto const *type = statError ? std::get_if<HS3::ConstraintType>(&statError->constraint) : nullptr;
-         if (type && *type == HS3::ConstraintType::LogNormal) {
-            RooJSONFactoryWSTool::error(std::string("unsupported constraint '") + toString(*type) +
-                                        "' of the staterror modifier in channel '" + name +
-                                        "', supported are \"Poisson\" and \"Gauss\"");
-         }
-      }
-   }
 }
 
 // This is only used for HistFactory distributions that the document doesn't interpret, e.g. because they don't come
@@ -1645,8 +1624,6 @@ const bool registered = []() {
 
 void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist)
 {
-   checkStatErrorConstraints(dist, name);
-
    RooArgSet observables = createObservables(dist.axes);
 
    // The yields and their variances by bin, summed over the samples with a staterror modifier.
