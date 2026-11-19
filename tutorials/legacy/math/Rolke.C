@@ -43,31 +43,6 @@ void Rolke()
    Double_t ll ; // lower limit
 
 //-----------------------------------------------
-// Model 1 assumes:
-//
-// Poisson uncertainty in the background estimate
-// Binomial uncertainty in the efficiency estimate
-//
-   cout << endl<<" ======================================================== " <<endl;
-   mid =1;
-   x = 5;     // events in the signal region
-   y = 10;    // events observed in the background region
-   tau = 2.5; // ratio between size of signal/background region
-   m = 100;   // MC events have been produced  (signal)
-   z = 50;    // MC events have been observed (signal)
-
-   alpha=0.9; //Confidence Level
-
-   tr.SetCL(alpha);
-
-   tr.SetPoissonBkgBinomEff(x,y,z,tau,m);
-   tr.GetLimits(ll,ul);
-
-   cout << "For model 1: Poisson / Binomial" << endl;
-   cout << "the Profile Likelihood interval is :" << endl;
-   cout << "[" << ll << "," << ul << "]" << endl;
-
-//-----------------------------------------------
 // Model 2 assumes:
 //
 // Poisson uncertainty in the background estimate
@@ -243,34 +218,5 @@ void Rolke()
 
    cout << "For model 7 : Known / Gaussian " << endl;
    cout <<  "the Profile Likelihood interval is :" << endl;
-   cout << "[" << ll << "," << ul << "]" << endl;
-
-//-----------------------------------------------
-// Example of bounded and unbounded likelihood
-// Example for Model 1
-
-   bm = 0.0;
-   tau = 5;
-   mid = 1;
-   m = 100;
-   z = 90;
-   y = 15;
-   x = 0;
-   alpha = 0.90;
-
-   tr.SetCL(alpha);
-   tr.SetPoissonBkgBinomEff(x,y,z,tau,m);
-   tr.SetBounding(true); //bounded
-   tr.GetLimits(ll,ul);
-
-   cout << "Example of the effect of bounded vs unbounded, For model 1" << endl;
-   cout <<  "the BOUNDED Profile Likelihood interval is :" << endl;
-   cout << "[" << ll << "," << ul << "]" << endl;
-
-
-   tr.SetBounding(false); //unbounded
-   tr.GetLimits(ll,ul);
-
-   cout <<  "the UNBOUNDED Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 }
