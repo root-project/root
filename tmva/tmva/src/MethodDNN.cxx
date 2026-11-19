@@ -28,6 +28,9 @@
 /*! \class TMVA::MethodDNN
 \ingroup TMVA
 Deep Neural Network Implementation.
+
+\deprecated MethodDNN and the classes in the TMVA::DNN namespace will be removed in ROOT 6.46. Please train neural
+networks with a dedicated machine learning library instead, and use SOFIE for inference in C++.
 */
 
 #include "TMVA/MethodDNN.h"
@@ -65,6 +68,13 @@ Deep Neural Network Implementation.
 #include <string>
 #include <iomanip>
 #include <chrono>
+
+// MethodDNN is deprecated, but still has to be registered until its removal in ROOT 6.46
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 REGISTER_METHOD(DNN)
 
@@ -127,8 +137,8 @@ Bool_t TMVA::MethodDNN::HasAnalysisType(Types::EAnalysisType type,
 
 void TMVA::MethodDNN::Init() {
       Log() << kWARNING
-            << "MethodDNN is deprecated and it will be removed in future ROOT version. "
-               "Please use MethodDL ( TMVA::kDL)"
+            << "MethodDNN is deprecated and will be removed in ROOT 6.46. Please train neural networks with a "
+               "dedicated machine learning library instead, and use SOFIE for inference in C++."
             << Endl;
 
 }
@@ -470,13 +480,11 @@ void TMVA::MethodDNN::ProcessOptions()
 
    if (fArchitectureString == "CPU") {
 #ifndef DNNCPU // Included only if DNNCPU flag is _not_ set.
-      Log() << kERROR << "Multi-core CPU backend not enabled. Please make sure "
-                         "you have a BLAS implementation and it was successfully "
-                         "detected by CMake as well that the imt CMake flag is set."
+      Log() << kERROR << "Multi-core CPU backend not enabled. Please build ROOT with the tmva-cpu "
+                         "option, which requires a BLAS implementation and the imt option."
             << Endl;
-      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                         "you have a BLAS implementation and it was successfully "
-                         "detected by CMake as well that the imt CMake flag is set."
+      Log() << kFATAL << "Multi-core CPU backend not enabled. Please build ROOT with the tmva-cpu "
+                         "option, which requires a BLAS implementation and the imt option."
             << Endl;
 #endif // DNNCPU
    }
@@ -1239,9 +1247,8 @@ void TMVA::MethodDNN::TrainCpu()
    }
 
 #else // DNNCPU flag not set.
-   Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation and it was successfully "
-                      "detected by CMake as well that the imt CMake flag is set." << Endl;
+   Log() << kFATAL << "Multi-core CPU backend not enabled. Please build ROOT with the tmva-cpu "
+                      "option, which requires a BLAS implementation and the imt option." << Endl;
 #endif // DNNCPU
 }
 

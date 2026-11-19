@@ -86,7 +86,9 @@ struct TTrainingSettings {
 };
 
 
-class MethodDL : public MethodBase {
+class R__DEPRECATED(6, 46,
+                    "Please train neural networks with a dedicated machine learning library instead, and use SOFIE "
+                    "for inference in C++.") MethodDL : public MethodBase {
 
 private:
    // Key-Value vector type, contining the values for the training options
