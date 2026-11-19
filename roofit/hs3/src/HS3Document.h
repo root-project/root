@@ -441,6 +441,9 @@ struct CustomModifier {
 
 using Modifier = std::variant<NormFactor, NormSys, HistoSys, ShapeSys, StatError, CustomModifier>;
 
+/// The type of a modifier, as the standard names it.
+char const *typeOf(Modifier const &modifier);
+
 struct Sample {
    std::string name;
    std::vector<double> contents;
@@ -505,6 +508,7 @@ struct Attributes {
    bool isConstVar = false; ///< How ROOT versions before HS3 0.3 marked named RooConstVars.
 };
 
+/// A RooSimultaneous as older versions of RooFit wrote it, before HS3 had combined distributions. It is only read.
 struct CombinedDistribution {
    std::string indexCat;
    std::vector<std::string> labels;
@@ -512,6 +516,7 @@ struct CombinedDistribution {
    std::vector<DistributionRef> distributions;
 };
 
+/// The data set of a RooSimultaneous as older versions of RooFit wrote it. It is only read.
 struct CombinedDataset {
    std::string indexCat;
    std::vector<std::string> labels;
@@ -683,9 +688,6 @@ void writeInterpolatedFunction(Detail::JSONNode &node, InterpolatedFunction cons
 void writeInterpolatedNumber(Detail::JSONNode &node, InterpolatedNumber const &function);
 
 void writeInterpolation(Detail::JSONNode &node, Interpolation const &interpolation);
-
-/// Writes a number, as an integer if it has no fractional part.
-void writeNumber(Detail::JSONNode &node, double value);
 
 /// Writes an array of numbers, each as an integer if it has no fractional part.
 void writeContents(Detail::JSONNode &node, std::vector<double> const &values);
