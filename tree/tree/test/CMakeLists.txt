@@ -45,3 +45,12 @@ ROOT_GENERATE_DICTIONARY(EvolutionStruct ${CMAKE_CURRENT_SOURCE_DIR}/EvolutionSt
                          OPTIONS -inlineInputHeader
                          DEPENDENCIES RIO)
 
+# Regression test for ROOT GitHub issue #23686:
+# I/O read rules silently skipped when first target is not the last source.
+ROOT_ADD_GTEST(testIoReadTargetOrder IoReadTargetOrder.cxx LIBRARIES RIO Tree)
+ROOT_GENERATE_DICTIONARY(IoReadTargetOrderDict ${CMAKE_CURRENT_SOURCE_DIR}/IoReadTargetOrder.hxx
+                         MODULE testIoReadTargetOrder
+                         LINKDEF IoReadTargetOrderLinkDef.h
+                         OPTIONS -inlineInputHeader
+                         DEPENDENCIES RIO)
+

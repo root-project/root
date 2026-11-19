@@ -2018,10 +2018,16 @@ TStreamerInfo *TBranchElement::FindOnfileInfo(TClass *valueClass, const TObjArra
    return static_cast<TStreamerInfo*>(localInfo);
 }
 
+
 namespace {
 void GatherArtificialElements(const TObjArray &branches, TStreamerInfoActions::TIDs &ids, TString prefix, TStreamerInfo *info, Int_t offset) {
    size_t ndata = info->GetNelement();
-   for (size_t i =0; i < ndata; ++i) {
+   // Track the sub-branch of the most-recently-seen non-artificial element.
+   // When prevBe != nullptr the preceding real element has a split sub-branch
+   // that already claimed (via InitInfo) all TStreamerArtificial elements
+   // immediately following it, so the parent branch must not duplicate them.
+   TBranchElement *prevBe = nullptr;
+   for (size_t i = 0; i < ndata; ++i) {
       TStreamerElement *nextel = info->GetElement(i);
 
       if (nextel->GetType() == TStreamerInfo::kCacheDelete
@@ -2029,10 +2035,23 @@ void GatherArtificialElements(const TObjArray &branches, TStreamerInfoActions::T
          continue;
       }
 
-      TString ename =  prefix + nextel->GetName();
+      if (nextel->IsA() == TStreamerArtificial::Class()) {
+         // Only collect this artificial element for the parent branch when the
+         // preceding real element has no split sub-branch.  If prevBe != nullptr
+         // the sub-branch of the last source already claimed this element in
+         // InitInfo (see the matching change there).
+         if (prevBe == nullptr) {
+            ids.push_back(i);
+            ids.back().fElement = nextel;
+            ids.back().fInfo = info;
+         }
+         continue;
+      }
 
-      if (ename[0]=='*')
-         ename.Remove(0,1);
+      TString ename = prefix + nextel->GetName();
+
+      if (ename[0] == '*')
+         ename.Remove(0, 1);
 
       Ssiz_t pos;
       while ((pos = ename.Last('[')) != TString::kNPOS) {
@@ -2040,13 +2059,22 @@ void GatherArtificialElements(const TObjArray &branches, TStreamerInfoActions::T
       }
 
       TBranchElement *be = static_cast<TBranchElement*>(branches.FindObject(ename));
-      if (nextel->IsA() == TStreamerArtificial::Class()
-         && be == nullptr) {
-
-         ids.push_back(i);
-         ids.back().fElement = nextel;
-         ids.back().fInfo = info;
+      if (!be) {
+         // Robust fallback for prefixed parent scopes (e.g. "wrap" layout without trailing dot):
+         // check if any sub-branch ends with the element's base name.
+         TString shortName(nextel->GetName());
+         for (Int_t bi = 0; bi < branches.GetEntriesFast(); ++bi) {
+            TBranchElement *sub = static_cast<TBranchElement*>(branches.At(bi));
+            if (sub && TString(sub->GetName()).EndsWith(shortName)) {
+               be = sub;
+               break;
+            }
+         }
       }
+
+      // Update prevBe: only count this element as "split" when it is actually
+      // present in memory (kMissing elements have no sub-branch object to fill).
+      prevBe = (nextel->GetOffset() != TStreamerInfo::kMissing) ? be : nullptr;
 
       if (nextel->CannotSplit() || nextel->IsTransient() || nextel->GetOffset() == TStreamerInfo::kMissing)
          continue;
@@ -2140,7 +2168,7 @@ void GatherArtificialElements(const TObjArray &branches, TStreamerInfoActions::T
             ids.pop_back();
       }
    }
-};
+}
 } // Anonymous namespace.
 
 
@@ -2455,8 +2483,15 @@ void TBranchElement::InitInfo()
                     ename = ename.substr(0, pos);
                   }
 
-                  if (s != ename) {
-                     // We moved on to the next set
+                  if (nextel->IsA() != TStreamerArtificial::Class() && s != ename) {
+                     // We moved on to the next set.
+                     // Note: TStreamerArtificial elements whose name is a target
+                     // (rather than the last source) must still be collected here
+                     // so that this sub-branch – which corresponds to the last
+                     // on-file source – executes the rule once all sources are
+                     // guaranteed to be in memory.  GatherArtificialElements is
+                     // kept in sync via the prevBe sentinel so the parent branch
+                     // does not duplicate them.  See ROOT GitHub issue #23686.
                      break;
                   }
                   // Add all (and only) the Artificial Elements that follows this StreamerInfo.
