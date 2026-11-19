@@ -302,8 +302,12 @@ bool cpyrt::Overload_CheckExact(PyObject* pyobject) {
 }
 
 //-----------------------------------------------------------------------------
-void cpyrt::Instance_SetReduceMethod(PyCFunction reduceMethod) {
+void cpyrt::Instance_SetReduceMethod(PyObject* reduceMethod) {
+  PythonGILRAII python_gil_raii;
+  Py_XINCREF(reduceMethod);
+  PyObject* previous = CPPInstance::ReduceMethod();
   CPPInstance::ReduceMethod() = reduceMethod;
+  Py_XDECREF(previous);
 }
 
 //- access to the python interpreter ----------------------------------------

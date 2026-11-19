@@ -86,6 +86,13 @@ class PrettyPrinting(unittest.TestCase):
         self.assertIn("TTree object at", s)
         self.assertEqual(s, r)
 
+    def test_null_object_with_str_based_repr(self):
+        # The std::vector pythonization defines __repr__ in terms of str(),
+        # so the fallback for null objects must not go through __repr__
+        x = ROOT.MakeNullPointer("std::vector<int>")
+        # Not "at 0x0": glibc prints a null pointer as "(nil)"
+        self.assertIn("vector<int> object at", str(x))
+
     def test_user_class_with_str(self):
         # ROOT-10967: Respect existing __str__ method defined in C++
         ROOT.gInterpreter.Declare('struct MyClassWithStr { std::string __str__() { return "foo"; } };')

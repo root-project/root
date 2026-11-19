@@ -75,7 +75,7 @@ class TH1FitWarning(unittest.TestCase):
 
         h = ROOT.TH1D("test", "test", 100, 0, 1)
         # Trying to fit a empty histogram will result in a warning on the C++ side which is re-raised as a Python
-        # warning by the ROOT CPython extension
+        # warning by the handler installed with ROOT::Internal::SetWarningHandler()
         with self.assertWarns(RuntimeWarning, msg="Fit data is empty"):
             h.Fit("gaus", "S")
 

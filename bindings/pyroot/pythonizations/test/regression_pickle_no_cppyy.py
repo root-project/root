@@ -12,11 +12,11 @@ class RegressionPickleNoCppyy(unittest.TestCase):
     Reading back a pickled ROOT object in a fresh interpreter, where the cppyy
     backend has not been imported yet, must not crash.
 
-    Unpickling a ROOT object only imports ``ROOT.libROOTPythonizations`` (to
-    resolve ``_CPPInstance__expand__``), which does not initialize the cppyy
-    backend. Entering CPyCppyy through the public API in that state used to
-    leave ``gThisModule`` null, so that ``CreateScopeProxy`` crashed with a
-    segmentation violation when using it as a fake scope.
+    Unpickling a ROOT object first imports the module of the function that
+    reads it back. When that was a CPython extension module, which did not
+    initialize the cppyy backend, entering CPyCppyy through the public API
+    used to leave ``gThisModule`` null, so that ``CreateScopeProxy`` crashed
+    with a segmentation violation when using it as a fake scope.
 
     See the ROOT forum report:
     https://root-forum.cern.ch/t/issue-with-new-root-version-on-lxplus

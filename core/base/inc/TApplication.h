@@ -169,4 +169,10 @@ public:
 
 R__EXTERN TApplication *gApplication;
 
+namespace ROOT::Internal {
+/// For the Python bindings: process the pending GUI events, as
+/// TApplication::Run() does between the commands of an interactive session.
+void ProcessGUIEvents();
+} // namespace ROOT::Internal
+
 #endif
