@@ -178,15 +178,6 @@ JSONNode &JSONNode::operator<<(bool b)
    return *this;
 }
 
-const JSONNode &JSONNode::operator>>(std::string &v) const
-{
-   if (!json(_value).is_string()) {
-      throwTypeError(_key, "a string", json(_value));
-   }
-   v = json(_value).get<std::string>();
-   return *this;
-}
-
 JSONNode &JSONNode::operator[](std::string const &k)
 {
    return _storage->makeNode(json(_value)[k], k);
@@ -329,11 +320,6 @@ std::optional<bool> JSONNode::try_val_bool() const
    return std::nullopt;
 }
 
-bool JSONNode::has_key() const
-{
-   return !_key.empty();
-}
-
 bool JSONNode::has_val() const
 {
    return json(_value).is_primitive();
@@ -378,12 +364,6 @@ JSONNode::const_children_view JSONNode::children() const
    _storage->recordRead(_value, nullptr);
    std::vector<JSONNode *> const &list = _storage->makeChildren(json(_value));
    return {const_child_iterator{list.data()}, const_child_iterator{list.data() + list.size()}};
-}
-
-std::ostream &operator<<(std::ostream &os, JSONNode const &s)
-{
-   s.writeJSON(os);
-   return os;
 }
 
 // JSONTree

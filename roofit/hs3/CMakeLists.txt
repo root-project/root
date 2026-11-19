@@ -16,6 +16,7 @@ add_library(hs3cpp OBJECT
   src/HS3Parser.cxx
   src/HS3Upgrade.cxx
   src/HS3Validate.cxx
+  src/HS3Variates.cxx
   src/HS3Writer.cxx
   src/JSONInterface.cxx
 )

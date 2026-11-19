@@ -35,6 +35,7 @@ struct ParameterPoint;
 struct ParameterValue;
 struct ToolExportState;
 struct ToolImportState;
+struct Version;
 template <class Tag>
 struct Ref;
 using DistributionRef = Ref<struct DistributionTag>;
@@ -47,7 +48,6 @@ class ModelConfig;
 }
 class RooRealVar;
 class RooAbsCategory;
-class RooCategory;
 class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
@@ -102,7 +102,6 @@ public:
    static bool isValidName(const std::string &str);
    static bool testValidName(const std::string &name, bool forceError);
    static std::string sanitizeName(const std::string str);
-   static void rebuildModelConfigInWorkspace(RooStats::ModelConfig *mc, RooWorkspace &ws);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
@@ -203,10 +202,6 @@ public:
    void importFunction(const RooFit::Detail::JSONNode &p, bool importAllDependants);
    void importFunction(const std::string &jsonString, bool importAllDependants);
 
-   static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
-
-   static RooFit::Detail::JSONNode &makeVariablesNode(RooFit::Detail::JSONNode &rootNode);
-
    // error handling helpers
    class DependencyMissingError : public std::runtime_error {
       std::string _parent, _child, _class;
@@ -223,15 +218,6 @@ public:
       const std::string &child() const { return _child; }
       const std::string &classname() const { return _class; }
    };
-
-   template <typename... Keys_t>
-   static RooFit::Detail::JSONNode &getRooFitInternal(RooFit::Detail::JSONNode &node, Keys_t const &...keys)
-   {
-      return node.get("misc", "ROOT_internal", keys...);
-   }
-
-   static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
-   static void exportCategoricalAxis(RooFit::Detail::JSONNode &obsNode, RooCategory const &cat);
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
@@ -260,8 +246,9 @@ public:
    std::string getStringAttribute(const std::string &obj, const std::string &attrib);
    void setStringAttribute(const std::string &obj, const std::string &attrib, const std::string &value);
 
-   /// The "hs3_version" of the document that is currently being imported, or an empty string outside of an import.
-   std::string const &hs3VersionInput() const { return _hs3VersionInput; }
+   /// The HS3 version of the document that is currently being imported. Outside of an import it is 0.0.0, like a
+   /// version that can't be parsed.
+   RooFit::HS3::Version hs3Version() const;
 
 private:
    template <class T>
@@ -312,7 +299,6 @@ private:
                                               std::vector<RooFit::HS3::DistributionRef> channelConstraints);
 
    // member variables
-   std::string _hs3VersionInput;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
