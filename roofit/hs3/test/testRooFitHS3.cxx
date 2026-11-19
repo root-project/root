@@ -1387,11 +1387,7 @@ TEST(RooFitHS3, GenericExpressionCleanup)
    EXPECT_THAT(json, Not(HasSubstr("TMath::Pi")));
    EXPECT_THAT(json, Not(HasSubstr("TMath::E")));
 
-   Imported ws2{json};
-   auto *imported = ws2.function("formula");
-   ASSERT_NE(imported, nullptr);
-   ws2.var("x")->setVal(0.5);
-   EXPECT_DOUBLE_EQ(imported->getVal(), formula.getVal());
+   expectRoundTrip(ws1);
 }
 
 // The expression cleanup must not corrupt identifiers that merely share a
@@ -1411,11 +1407,7 @@ TEST(RooFitHS3, GenericExpressionCleanupKeepsLongerIdentifiers)
       EXPECT_THAT(json, Not(HasSubstr(token)));
    }
 
-   Imported ws2{json};
-   auto *imported = ws2.function("formula");
-   ASSERT_NE(imported, nullptr);
-   ws2.var("x")->setVal(0.5);
-   EXPECT_DOUBLE_EQ(imported->getVal(), formula.getVal());
+   expectRoundTrip(ws1);
 }
 
 TEST(RooFitHS3, RooBinWidthFunctionUsesBinVolumeKeys)
@@ -1708,8 +1700,7 @@ TEST(RooFitHS3, StandaloneFlexibleInterpVarStructuredInterpolations)
    ASSERT_NE(importedMixed, nullptr);
    EXPECT_EQ(importedShared->interpolationCodes(), (std::vector<int>{4, 4}));
    EXPECT_EQ(importedMixed->interpolationCodes(), (std::vector<int>{0, 1}));
-   EXPECT_DOUBLE_EQ(importedShared->getVal(), source.function("fiv_shared")->getVal());
-   EXPECT_DOUBLE_EQ(importedMixed->getVal(), source.function("fiv_mixed")->getVal());
+   expectRoundTrip(source);
 }
 
 TEST(RooFitHS3, StandalonePiecewiseInterpolationStructuredInterpolations)
@@ -1761,8 +1752,7 @@ TEST(RooFitHS3, StandalonePiecewiseInterpolationStructuredInterpolations)
    EXPECT_STREQ(importedMixed->paramList().at(0)->GetName(), "alpha");
    EXPECT_STREQ(importedMixed->paramList().at(1)->GetName(), "alpha");
    EXPECT_TRUE(importedMixed->positiveDefinite());
-   EXPECT_DOUBLE_EQ(importedShared->getVal(), source.function("pip_shared")->getVal());
-   EXPECT_DOUBLE_EQ(importedMixed->getVal(), source.function("pip_mixed_repeated")->getVal());
+   expectRoundTrip(source);
 }
 
 TEST(RooFitHS3, StandaloneInterpolationLegacyAndDefaults)
@@ -2014,7 +2004,10 @@ TEST(RooFitHS3, HistFactoryInterpolationDefaultsAndOverrides)
    EXPECT_FALSE(noInterpolationChannel->has_child("default_interpolation"));
 }
 
-TEST(RooFitHS3, HistFactoryStructuredInterpolationRoundTrip)
+namespace {
+
+// A channel with a normsys that takes the default interpolation of the channel, and a histosys with its own one.
+std::string structuredInterpolationJSON()
 {
    const std::string modifiers = R"(
       {
@@ -2026,35 +2019,46 @@ TEST(RooFitHS3, HistFactoryStructuredInterpolationRoundTrip)
          "interpolation":{"type":"add","in":"poly2","out":"poly1"},
          "data":{"lo":{"contents":[8.0,17.0]},"hi":{"contents":[12.0,23.0]}}
       })";
-   const std::string defaultInterpolation = R"({"type":"mult","in":"poly6","out":"exp"})";
+   return makeHistFactoryJSON(modifiers, R"({"type":"mult","in":"poly6","out":"exp"})");
+}
 
-   Imported before{makeHistFactoryJSON(modifiers, defaultInterpolation)};
-   auto *normBefore = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(before.function("sig_channel0_epsilon"));
-   auto *shapeBefore = dynamic_cast<PiecewiseInterpolation *>(before.function("histoSys_model_channel0_sig"));
-   ASSERT_NE(normBefore, nullptr);
-   ASSERT_NE(shapeBefore, nullptr);
-   EXPECT_EQ(normBefore->interpolationCodes()[0], 4);
-   EXPECT_EQ(shapeBefore->interpolationCodes()[0], 2);
-
-   const std::string exported = toJSON(before);
-   Imported after{exported};
-
-   auto prediction = [](RooWorkspace &ws, int bin, double norm, double shape) {
-      ws.var("x")->setBin(bin);
-      ws.var("alpha_norm")->setVal(norm);
-      ws.var("alpha_shape")->setVal(shape);
-      RooArgSet observables{*ws.var("x")};
-      return ws.function("model_channel0_sig_shapes")->getVal(observables) *
-             ws.function("model_channel0_sig_scaleFactors")->getVal();
-   };
-
+// The yields of the sample in its bins, with the parameters inside of, at the border of and outside of the range
+// that the "in" functions interpolate in.
+std::vector<double> structuredInterpolationYields(RooWorkspace &ws)
+{
+   std::vector<double> yields;
+   RooArgSet observables{*ws.var("x")};
    for (double theta : {-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0}) {
+      ws.var("alpha_norm")->setVal(theta);
+      ws.var("alpha_shape")->setVal(theta);
       for (int bin = 0; bin < 2; ++bin) {
-         const double expected = prediction(before, bin, theta, theta);
-         EXPECT_NEAR(prediction(after, bin, theta, theta), expected, std::abs(expected) * 1e-13)
-            << "theta=" << theta << ", bin=" << bin;
+         ws.var("x")->setBin(bin);
+         yields.push_back(ws.function("model_channel0_sig_shapes")->getVal(observables) *
+                          ws.function("model_channel0_sig_scaleFactors")->getVal());
       }
    }
+   return yields;
+}
+
+} // namespace
+
+// The yields take the place of a likelihood, which the model doesn't have.
+INSTANTIATE_TEST_SUITE_P(HistFactoryStructuredInterpolation, RoundTrip,
+                         testing::Values(RoundTripModel::fromDocument("NormSysAndHistoSys",
+                                                                      structuredInterpolationJSON())
+                                            .with(constraintStyles())
+                                            .likelihoodBy(structuredInterpolationYields)),
+                         roundTripName);
+
+TEST(RooFitHS3, HistFactoryStructuredInterpolationRoundTrip)
+{
+   Imported ws{structuredInterpolationJSON()};
+   auto *norm = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(ws.function("sig_channel0_epsilon"));
+   auto *shape = dynamic_cast<PiecewiseInterpolation *>(ws.function("histoSys_model_channel0_sig"));
+   ASSERT_NE(norm, nullptr);
+   ASSERT_NE(shape, nullptr);
+   EXPECT_EQ(norm->interpolationCodes()[0], 4);
+   EXPECT_EQ(shape->interpolationCodes()[0], 2);
 }
 
 TEST(RooFitHS3, HistFactoryStructuredInterpolationValidation)
@@ -2842,17 +2846,10 @@ TEST(RooFitHS3, TernaryIsExportedAsIfElse)
    EXPECT_THAT(json1, HasSubstr(R"("expression":"2 * ifelse(x > 0,ifelse(y > 0,x * y,-x),3 * x) + 1")"));
    EXPECT_THAT(json1, Not(HasSubstr("?")));
 
-   Imported ws2{json1};
-   EXPECT_EQ(toJSON(ws2), json1);
-   for (double xVal : {-1.0, 0.5}) {
-      for (double yVal : {-1.0, 0.5}) {
-         ws1.var("x")->setVal(xVal);
-         ws1.var("y")->setVal(yVal);
-         ws2.var("x")->setVal(xVal);
-         ws2.var("y")->setVal(yVal);
-         EXPECT_DOUBLE_EQ(ws2.function("formula")->getVal(), ws1.function("formula")->getVal())
-            << "x=" << xVal << ", y=" << yVal;
-      }
+   // The values along x for both signs of y cover all branches.
+   for (double yVal : {-1.0, 0.5}) {
+      ws1.var("y")->setVal(yVal);
+      expectRoundTrip(ws1);
    }
 
    // Expressions without ternaries are not changed.
@@ -3208,21 +3205,8 @@ TEST(RooFitHS3, CrystalBallTypes)
       EXPECT_THAT(json, HasSubstr(std::string(R"("alpha":")") + alpha->GetName() + "\""));
       EXPECT_THAT(json, Not(HasSubstr("alpha_L")));
 
-      // The class changes on the way back, so expectRoundTrip() can't be used: the parameter points are written in a
-      // different order. Compare the values instead, and check that the JSON is stable from the second export on.
-      Imported ws2{json};
-      auto *cbShapeBack = dynamic_cast<RooCBShape *>(ws2.pdf("cbSingle"));
-      ASSERT_NE(cbShapeBack, nullptr);
-      RooRealVar &x2 = *ws2.var("x");
-      RooArgSet nset1{x};
-      RooArgSet nset2{x2};
-      for (int i = 0; i < x.numBins(); ++i) {
-         x.setBin(i);
-         x2.setBin(i);
-         EXPECT_NEAR(cbShapeBack->getVal(nset2), cbSingle.getVal(nset1), 1e-10) << alpha->GetName() << " bin " << i;
-      }
-      const std::string json2 = toJSON(ws2);
-      EXPECT_EQ(reexport(json2), json2);
+      EXPECT_NE(dynamic_cast<RooCBShape *>(Imported{json}.pdf("cbSingle")), nullptr);
+      expectRoundTrip(cbSingle);
    }
 
    // Double-sided RooCrystalBall shapes are crystalball_doublesided_dist, with the tails always written for both
@@ -3591,7 +3575,10 @@ TEST(RooFitHS3, ArrayDistExportOfTaggedProduct)
    ASSERT_NE(imported, nullptr);
    EXPECT_TRUE(imported->getAttribute("hs3_array_dist"));
    EXPECT_NE(dynamic_cast<RooGaussian *>(ws2.pdf("nom_a_constraint")), nullptr);
-   EXPECT_EQ(toJSON(ws2), exported);
+   expectRoundTrip(ws, RoundTripModel{"tagged product", RoundTripModel::Builder{}}
+                          .with(constraintStyles())
+                          .over({"nom_a", "nom_b"})
+                          .withOtherComponents());
 
    // Opt-out: no array_dist is written, the tagged product is an ordinary product_dist.
    const std::string plain = toJSON(ws, {exportArrayDist(false)});
@@ -3680,8 +3667,9 @@ TEST(RooFitHS3, ArrayDistLikelihood)
    }
    EXPECT_NEAR(nll->getVal(), expected, 1e-10 * std::abs(expected));
 
-   const std::string exported = toJSON(ws);
-   EXPECT_EQ(reexport(exported), exported);
+   expectRoundTrip(ws, RoundTripModel{"array distribution with data", RoundTripModel::Builder{}}
+                          .over({"nom_alpha_1", "nom_alpha_2", "nom_alpha_3"})
+                          .likelihoodOf("analysis", "global_observables"));
 }
 
 // A two-channel HistFactory model, see twoChannelHistFactoryJSON(): with one constraint per parameter or with array
@@ -4247,69 +4235,78 @@ TEST(RooFitHS3, HistFactoryUnsupportedGammaConstraint)
    }
 }
 
+namespace {
+
+// A channel over "x" with two bins, whose sample is scaled by a ParamHistFunc with `nBins` bins over `var`: "x", or
+// "y", which has a value that is not the default.
+void buildChannelWithParamHistFunc(RooWorkspace &ws, std::string const &var, int nBins)
+{
+   RooRealVar x{"x", "x", 0.0, 2.0};
+   RooRealVar y{"y", "y", 1.5, 0.0, 2.0};
+   RooRealVar &phfVar = var == "x" ? x : y;
+   phfVar.setBins(nBins);
+   RooArgList gammas;
+   for (int i = 0; i < nBins; ++i) {
+      const std::string name = "g" + std::to_string(i);
+      gammas.addOwned(std::make_unique<RooRealVar>(name.c_str(), name.c_str(), 1.0 + 0.1 * i, 0.0, 5.0));
+   }
+   ParamHistFunc phf{"myPHF", "myPHF", RooArgList{phfVar}, gammas};
+   x.setBins(2);
+   RooDataHist hist{"sig_hist", "sig_hist", x};
+   hist.set(0, 10.0, -1.0);
+   hist.set(1, 20.0, -1.0);
+   RooHistFunc nominal{"sig_nominal", "sig_nominal", x, hist};
+   RooProduct sig{"L_x_sig_channel0", "sig", RooArgList{nominal, phf}};
+   RooRealSumPdf model{"model_channel0", "model", RooArgList{sig}, RooArgList{RooFit::RooConst(1.0)}, true};
+   ws.import(model, RooFit::Silence());
+}
+
+} // namespace
+
+// The ParamHistFunc as shapefactor and as custom modifier. The import names the functions of the channel differently,
+// and the documents are stable from the second export on (the import adds the binned likelihood attributes).
+INSTANTIATE_TEST_SUITE_P(
+   HistFactoryParamHistFunc, RoundTrip,
+   testing::Values(RoundTripModel{"AsShapeFactor", [](RooWorkspace &ws) { buildChannelWithParamHistFunc(ws, "x", 2); }}
+                      .with(constraintStyles())
+                      .withOtherComponents()
+                      .stableFromSecondExport(),
+                   RoundTripModel{"OverOtherVariable",
+                                  [](RooWorkspace &ws) { buildChannelWithParamHistFunc(ws, "y", 3); }}
+                      .with(constraintStyles())
+                      .withOtherComponents()
+                      .stableFromSecondExport()),
+   roundTripName);
+
 // A ParamHistFunc of a sample is written as a shapefactor modifier if it has the structure of the ones of HistFactory's
 // ShapeSys and ShapeFactor, whatever its name: one parameter per bin of the channel, over its observables. The import
 // recreates the function like that. Over other variables, a ParamHistFunc is written as a custom modifier, which refers
 // to the function. Over the observables of the channel with another binning, it can't be written.
 TEST(RooFitHS3, HistFactoryUnknownParamHistFunc)
 {
-   // A channel over "x" with two bins, whose sample is scaled by a ParamHistFunc with `nBins` bins over `var`.
-   auto makeWorkspace = [](std::string const &var, int nBins) {
-      RooRealVar x{"x", "x", 0.0, 2.0};
-      RooRealVar y{"y", "y", 0.0, 2.0};
-      RooRealVar &phfVar = var == "x" ? x : y;
-      phfVar.setBins(nBins);
-      RooArgList gammas;
-      for (int i = 0; i < nBins; ++i) {
-         const std::string name = "g" + std::to_string(i);
-         gammas.addOwned(std::make_unique<RooRealVar>(name.c_str(), name.c_str(), 1.0 + 0.1 * i, 0.0, 5.0));
-      }
-      ParamHistFunc phf{"myPHF", "myPHF", RooArgList{phfVar}, gammas};
-      x.setBins(2);
-      RooDataHist hist{"sig_hist", "sig_hist", x};
-      hist.set(0, 10.0, -1.0);
-      hist.set(1, 20.0, -1.0);
-      RooHistFunc nominal{"sig_nominal", "sig_nominal", x, hist};
-      RooProduct sig{"L_x_sig_channel0", "sig", RooArgList{nominal, phf}};
-      RooRealSumPdf model{"model_channel0", "model", RooArgList{sig}, RooArgList{RooFit::RooConst(1.0)}, true};
-      auto ws = std::make_unique<RooWorkspace>("ws");
-      ws->import(model, RooFit::Silence());
-      return ws;
-   };
-
    // The name of the ParamHistFunc doesn't matter.
-   auto ws = makeWorkspace("x", 2);
-   const std::string exported = toJSON(*ws);
+   RooWorkspace ws;
+   buildChannelWithParamHistFunc(ws, "x", 2);
+   const std::string exported = toJSON(ws);
    EXPECT_THAT(exported, HasSubstr(R"({"name":"myPHF","parameters":["g0","g1"],"type":"shapefactor"})"));
 
    // With another binning of the observable of the channel, it can't be written.
-   auto wsOtherBinning = makeWorkspace("x", 3);
-   expectExportThrowsWithError(*wsOtherBinning, "cannot write the ParamHistFunc 'myPHF'");
+   RooWorkspace wsOtherBinning;
+   buildChannelWithParamHistFunc(wsOtherBinning, "x", 3);
+   expectExportThrowsWithError(wsOtherBinning, "cannot write the ParamHistFunc 'myPHF'");
 
-   // Over another variable, it is written as a custom modifier, and the model survives the round trip.
-   auto wsOther = makeWorkspace("y", 3);
-   wsOther->var("y")->setVal(1.5);
-   const std::string exportedOther = toJSON(*wsOther);
+   // Over another variable, it is written as a custom modifier, and the import finds the function again.
+   RooWorkspace wsOther;
+   buildChannelWithParamHistFunc(wsOther, "y", 3);
+   const std::string exportedOther = toJSON(wsOther);
    EXPECT_THAT(exportedOther, Not(HasSubstr("shapefactor")));
    EXPECT_THAT(exportedOther, HasSubstr(R"({"name":"myPHF","type":"custom"})"));
 
    Imported ws2{exportedOther};
    EXPECT_NE(dynamic_cast<ParamHistFunc *>(ws2.function("myPHF")), nullptr);
-   RooAbsPdf *model1 = wsOther->pdf("model_channel0");
-   RooAbsPdf *model2 = ws2.pdf("model_channel0");
-   ASSERT_NE(model2, nullptr);
+   ASSERT_NE(ws2.pdf("model_channel0"), nullptr);
    ASSERT_NE(ws2.var("y"), nullptr);
    EXPECT_DOUBLE_EQ(ws2.var("y")->getVal(), 1.5);
-   RooArgSet observables1{*wsOther->var("x")};
-   RooArgSet observables2{*ws2.var("x")};
-   for (double x : {0.5, 1.5}) {
-      wsOther->var("x")->setVal(x);
-      ws2.var("x")->setVal(x);
-      EXPECT_DOUBLE_EQ(model2->getVal(observables2), model1->getVal(observables1)) << "x = " << x;
-   }
-   // The document is stable from the second export on (the import adds the binned likelihood attributes).
-   const std::string reexported = toJSON(ws2);
-   EXPECT_EQ(reexport(reexported), reexported);
 }
 
 // A legacy "Gauss" constraint is centred at the nominal value of its parameter: 1 for a normfactor, and 0 for a
@@ -4966,12 +4963,7 @@ TEST(RooFitHS3, ModelConfigsSharingPdfAndData)
 {
    auto roundTrip = [](RooWorkspace &ws, const char *pdf, const char *observables) {
       for (const char *name : {"ModelConfig", "ModelConfig_with_poi_0"}) {
-         RooFit::ModelConfig mc{name, &ws};
-         mc.SetPdf(pdf);
-         mc.SetParametersOfInterest("mu");
-         mc.SetNuisanceParameters("sigma");
-         mc.SetObservables(observables);
-         ws.import(mc);
+         addModelConfig(ws, name, pdf, observables, "mu", "sigma");
       }
       Imported imported{toJSON(ws)};
       EXPECT_NE(imported.obj("ModelConfig"), nullptr);
@@ -5095,6 +5087,30 @@ void importFormulaNormSysChannel(RooWorkspace &ws)
    ws.import(prod, RooFit::Silence());
 }
 
+// The round trip of a channel with a formula among the factors of its sample, see expectRoundTrip(). The yield of the
+// channel for the given values of a parameter stands in for the likelihood: the normalized pdfs don't depend on it.
+// The import names the functions after the channel, and values agree up to rounding.
+RoundTripModel formulaChannel(std::string const &pdf, std::string const &parameter, std::vector<double> const &values)
+{
+   return RoundTripModel{pdf, RoundTripModel::Builder{}}
+      .with(constraintStyles())
+      .withOtherComponents()
+      .within(1e-12)
+      .likelihoodBy([=](RooWorkspace &ws) {
+         RooAbsPdf *channel = ws.pdf(pdf);
+         if (!channel) {
+            throw std::runtime_error("no pdf '" + pdf + "'");
+         }
+         RooArgSet nset{*ws.var("x")};
+         std::vector<double> yields;
+         for (double value : values) {
+            ws.var(parameter)->setVal(value);
+            yields.push_back(channel->expectedEvents(nset));
+         }
+         return yields;
+      });
+}
+
 } // namespace
 
 TEST(RooFitHS3, FormulaNormSysConstraint)
@@ -5134,7 +5150,8 @@ TEST(RooFitHS3, HistFactoryImportEnablesBinnedLikelihood)
 TEST(RooFitHS3, FormulaWithTopLevelSumIsNotSplit)
 {
    for (std::string expression : {"1 + 0.2 * k", "1.5 - k * 0.2", "2e-1 * k + 1"}) {
-      RooWorkspace ws1;
+      SCOPED_TRACE(expression);
+      RooWorkspace ws;
       {
          RooRealVar x{"x", "x", 0.0, 2.0};
          x.setBins(2);
@@ -5144,23 +5161,13 @@ TEST(RooFitHS3, FormulaWithTopLevelSumIsNotSplit)
          RooProduct shapes{"model_ch_sig_shapes", "", RooArgList{hist, binWidth}};
          RooFormulaVar norm{"sig_norm", expression.c_str(), RooArgList{k}};
          RooRealSumPdf sum{"model_ch", "model_ch", RooArgList{shapes}, RooArgList{norm}, true};
-         ws1.import(sum, RooFit::Silence());
+         ws.import(sum, RooFit::Silence());
       }
-      Imported ws2{toJSON(ws1)};
-      ASSERT_NE(ws2.pdf("model_ch"), nullptr);
-
-      RooArgSet nset1{*ws1.var("x")};
-      RooArgSet nset2{*ws2.var("x")};
-      for (double k : {-1.0, 0.0, 0.5}) {
-         ws1.var("k")->setVal(k);
-         ws2.var("k")->setVal(k);
-         EXPECT_NEAR(ws2.pdf("model_ch")->expectedEvents(nset2), ws1.pdf("model_ch")->expectedEvents(nset1), 1e-9)
-            << expression << " at k = " << k;
-      }
+      // The import enables the binned likelihood, which the first export doesn't have.
+      expectRoundTrip(ws, formulaChannel("model_ch", "k", {-1.0, 0.0, 0.5}).stableFromSecondExport());
    }
 }
 
-// The +1 and -1 sigma variations of a normsys that is encoded in a formula survive the round trip.
 // A formula among the factors of a sample is written as one modifier per factor, unless that makes the channel
 // invalid: then it stays one custom modifier.
 TEST(RooFitHS3, FormulaIsNotSplitIfThatMakesTheChannelInvalid)
@@ -5177,15 +5184,9 @@ TEST(RooFitHS3, FormulaIsNotSplitIfThatMakesTheChannelInvalid)
          makeHistFactoryJSON(modifiers, "", "0.3", "", "", "", "\"functions\": [" + function + "]," + domains);
       importInto(ws, json);
       exported = toJSON(ws);
-      Imported ws2{exported};
       // The yield depends on the parameters in the same way.
-      for (RooWorkspace *w : std::initializer_list<RooWorkspace *>{&ws, &ws2}) {
-         w->var("b")->setVal(0.7);
-      }
-      RooArgSet obs{*ws.var("x")};
-      RooArgSet obs2{*ws2.var("x")};
-      EXPECT_NEAR(ws.pdf("model_channel0")->expectedEvents(obs), ws2.pdf("model_channel0")->expectedEvents(obs2), 1e-9)
-         << exported;
+      SCOPED_TRACE(modifiers);
+      expectRoundTrip(ws, formulaChannel("model_channel0", "b", {0.7}));
    };
 
    std::string exported;
@@ -5212,20 +5213,14 @@ TEST(RooFitHS3, FormulaIsNotSplitIfThatMakesTheChannelInvalid)
    }
 }
 
+// The +1 and -1 sigma variations of a normsys that is encoded in a formula survive the round trip. In between, the
+// formula is linear and the normsys that it is written as interpolates exponentially.
 TEST(RooFitHS3, FormulaNormSysVariations)
 {
-   RooWorkspace ws1;
-   importFormulaNormSysChannel(ws1);
-   Imported ws2{toJSON(ws1)};
-
-   RooArgSet nset1{*ws1.var("x")};
-   RooArgSet nset2{*ws2.var("x")};
-   for (double alpha : {-1.0, 0.0, 1.0}) {
-      ws1.var("alpha_sys")->setVal(alpha);
-      ws2.var("alpha_sys")->setVal(alpha);
-      EXPECT_NEAR(ws2.pdf("ch_model")->expectedEvents(nset2), ws1.pdf("ch_model")->expectedEvents(nset1), 1e-8)
-         << "alpha=" << alpha;
-   }
+   RooWorkspace ws;
+   importFormulaNormSysChannel(ws);
+   // The import enables the binned likelihood, which the first export doesn't have.
+   expectRoundTrip(ws, formulaChannel("ch_model", "alpha_sys", {-1.0, 0.0, 1.0}).stableFromSecondExport());
 }
 
 // Exporting the snapshot of a ModelConfig doesn't change the variables in the workspace.
@@ -5413,6 +5408,24 @@ TEST(RooFitHS3, WarningsAreShownByDefault)
    EXPECT_THAT(warnings, HasSubstr("test message"));
 }
 
+namespace {
+
+// Fills the bins of a histogram for a HistFactory measurement and writes it to the file. The error of a bin is given
+// as a function of its content; without one, the bins keep their default errors.
+void writeHistogram(TFile &file, TH1D hist, std::vector<double> const &contents,
+                    std::function<double(double)> const &error = nullptr)
+{
+   for (std::size_t i = 0; i < contents.size(); ++i) {
+      hist.SetBinContent(i + 1, contents[i]);
+      if (error) {
+         hist.SetBinError(i + 1, error(contents[i]));
+      }
+   }
+   file.WriteTObject(&hist);
+}
+
+} // namespace
+
 /// What kind of model is set up. Use this to instantiate
 /// a test suite.
 enum class MakeModelMode {
@@ -5422,32 +5435,19 @@ enum class MakeModelMode {
    ShapeSyst
 };
 
-using HFTestParam = std::tuple<MakeModelMode, bool, RooFit::EvalBackend>;
+// The model, and whether its bins are non-uniform.
+using HFTestParam = std::tuple<MakeModelMode, bool>;
 
-std::string getName(HFTestParam const &param, bool ignoreBackend = false)
+std::string getName(testing::TestParamInfo<HFTestParam> const &paramInfo)
 {
-   const MakeModelMode mode = std::get<0>(param);
-   const bool customBins = std::get<1>(param);
-   auto const &evalBackend = std::get<2>(param);
-
-   std::stringstream ss;
-
-   ss << (customBins ? "CustomBins" : "EquidistantBins");
-
-   if (mode == MakeModelMode::OverallSyst)
-      ss << "_OverallSyst";
-   if (mode == MakeModelMode::HistoSyst)
-      ss << "_HistoSyst";
-   if (mode == MakeModelMode::StatSyst)
-      ss << "_StatSyst";
-   if (mode == MakeModelMode::ShapeSyst)
-      ss << "_ShapeSyst";
-
-   if (!ignoreBackend) {
-      ss << "_Backend_" << evalBackend.name();
+   const std::string bins = std::get<1>(paramInfo.param) ? "CustomBins" : "EquidistantBins";
+   switch (std::get<0>(paramInfo.param)) {
+   case MakeModelMode::OverallSyst: return bins + "_OverallSyst";
+   case MakeModelMode::HistoSyst: return bins + "_HistoSyst";
+   case MakeModelMode::StatSyst: return bins + "_StatSyst";
+   case MakeModelMode::ShapeSyst: return bins + "_ShapeSyst";
    }
-
-   return ss.str();
+   return bins;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5459,90 +5459,64 @@ std::string getName(HFTestParam const &param, bool ignoreBackend = false)
 /// - The corresponding workspace is created.
 class HFFixture : public testing::TestWithParam<HFTestParam> {
 public:
-   std::string _inputFile{"TestMakeModel.root"};
-   static constexpr bool _verbose = false;
-   double _customBins[3] = {0., 1.8, 2.};
-   const double _tgtMu = 2.;
-   const double _tgtNom[2] = {110., 120.};
-   const double _tgtSysUp[2] = {112., 140.};
-   const double _tgtSysDo[2] = {108., 100.};
-   const double _tgtShapeSystBkg1[2] = {0.15, 0.0};
-   const double _tgtShapeSystBkg2[2] = {0.0, 0.10};
    std::unique_ptr<RooWorkspace> ws;
-   std::set<std::string> _systNames; // Systematics defined during set up
-   std::unique_ptr<RooStats::HistFactory::Measurement> _measurement;
-   std::string _name;
-
-   TH1D *createHisto(const char *name, const char *title, bool customBins)
-   {
-      if (customBins)
-         return new TH1D{name, title, 2, _customBins};
-      return new TH1D{name, title, 2, 1, 2};
-   }
 
    void SetUp() override
    {
       using namespace RooStats::HistFactory;
 
-      _name = getName(GetParam());
-
       const MakeModelMode makeModelMode = std::get<0>(GetParam());
       const bool customBins = std::get<1>(GetParam());
+      const std::string inputFile = "TestMakeModel.root";
 
       {
-         TFile example(_inputFile.c_str(), "RECREATE");
-
-         TH1D *data = createHisto("data", "data", customBins);
-         TH1D *signal = createHisto("signal", "signal histogram (pb)", customBins);
-         TH1D *bkg1 = createHisto("background1", "background 1 histogram (pb)", customBins);
-         TH1D *bkg2 = createHisto("background2", "background 2 histogram (pb)", customBins);
-         TH1D *statUnc = createHisto("background1_statUncert", "statUncert", customBins);
-         TH1D *systUncUp = createHisto("histoUnc_sigUp", "signal shape uncert.", customBins);
-         TH1D *systUncDo = createHisto("histoUnc_sigDo", "signal shape uncert.", customBins);
-         TH1D *shapeSystBkg1 = createHisto("background1_shapeSyst", "background 1 shapeSyst", customBins);
-         TH1D *shapeSystBkg2 = createHisto("background2_shapeSyst", "background 2 shapeSyst", customBins);
-
-         bkg1->SetBinContent(1, 100);
-         bkg2->SetBinContent(2, 100);
-
+         const double mu = 2.;
+         const std::vector<double> sig{10., 20.};
+         const std::vector<double> sigDown{8., 0.};
+         const std::vector<double> bkg1{100., 0.};
+         const std::vector<double> bkg2{0., 100.};
+         std::vector<double> data(2);
          for (unsigned int bin = 0; bin < 2; ++bin) {
-            signal->SetBinContent(bin + 1, _tgtNom[bin] - 100.);
-            systUncUp->SetBinContent(bin + 1, _tgtSysUp[bin] - 100.);
-            systUncDo->SetBinContent(bin + 1, _tgtSysDo[bin] - 100.);
-            shapeSystBkg1->SetBinContent(bin + 1, _tgtShapeSystBkg1[bin]);
-            shapeSystBkg2->SetBinContent(bin + 1, _tgtShapeSystBkg2[bin]);
-
             if (makeModelMode == MakeModelMode::OverallSyst) {
-               data->SetBinContent(bin + 1, _tgtMu * signal->GetBinContent(bin + 1) + 100.);
+               data[bin] = mu * sig[bin] + 100.;
             } else if (makeModelMode == MakeModelMode::HistoSyst) {
                // Set data such that alpha = -1., fit should pull parameter.
-               data->SetBinContent(bin + 1, _tgtMu * systUncDo->GetBinContent(bin + 1) + 100.);
+               data[bin] = mu * sigDown[bin] + 100.;
             } else if (makeModelMode == MakeModelMode::StatSyst) {
-               // Tighten the stat. errors of the model, and kick bin 0, so the gammas have to adapt
-               signal->SetBinError(bin + 1, 0.1 * std::sqrt(signal->GetBinContent(bin + 1)));
-               bkg1->SetBinError(bin + 1, 0.1 * std::sqrt(bkg1->GetBinContent(bin + 1)));
-               bkg2->SetBinError(bin + 1, 0.1 * std::sqrt(bkg2->GetBinContent(bin + 1)));
-
-               data->SetBinContent(bin + 1, _tgtMu * signal->GetBinContent(bin + 1) + 100. + (bin == 0 ? 50. : 0.));
+               // Kick bin 0, so the gammas have to adapt
+               data[bin] = mu * sig[bin] + 100. + (bin == 0 ? 50. : 0.);
             } else if (makeModelMode == MakeModelMode::ShapeSyst) {
                // Distort data such that the shape systematics will pull gamma
                // down in one bin and up in the other.
-               data->SetBinContent(bin + 1, _tgtMu * signal->GetBinContent(bin + 1) + (bin == 0 ? 85. : 110));
+               data[bin] = mu * sig[bin] + (bin == 0 ? 85. : 110);
             }
-
-            // A small statistical uncertainty
-            statUnc->SetBinContent(bin + 1, .05); // 5% uncertainty
+         }
+         // Tighten the stat. errors of the model
+         std::function<double(double)> statError;
+         if (makeModelMode == MakeModelMode::StatSyst) {
+            statError = [](double content) { return 0.1 * std::sqrt(content); };
          }
 
-         for (auto hist : {data, signal, bkg1, bkg2, statUnc, systUncUp, systUncDo, shapeSystBkg1, shapeSystBkg2}) {
-            example.WriteTObject(hist);
-         }
+         TFile example(inputFile.c_str(), "RECREATE");
+         const double customEdges[3] = {0., 1.8, 2.};
+         auto write = [&](const char *name, std::vector<double> const &contents,
+                          std::function<double(double)> const &error = nullptr) {
+            writeHistogram(example, customBins ? TH1D{name, name, 2, customEdges} : TH1D{name, name, 2, 1, 2}, contents,
+                           error);
+         };
+         write("data", data);
+         write("signal", sig, statError);
+         write("background1", bkg1, statError);
+         write("background2", bkg2, statError);
+         write("background1_statUncert", {.05, .05}); // A small statistical uncertainty: 5%
+         write("histoUnc_sigUp", {12., 40.});
+         write("histoUnc_sigDo", sigDown);
+         write("background1_shapeSyst", {0.15, 0.0});
+         write("background2_shapeSyst", {0.0, 0.10});
       }
 
       // Create the measurement
-      _measurement = std::make_unique<RooStats::HistFactory::Measurement>("meas", "meas");
-      RooStats::HistFactory::Measurement &meas = *_measurement;
-
+      Measurement meas("meas", "meas");
       meas.SetOutputFilePrefix("example_variableBins");
       meas.SetPOI("SigXsecOverSM");
       meas.AddConstantParam("Lumi");
@@ -5550,83 +5524,51 @@ public:
          meas.AddConstantParam("gamma_stat_channel1_bin_0");
          meas.AddConstantParam("gamma_stat_channel1_bin_1");
       }
-
       meas.SetLumi(1.0);
       meas.SetLumiRelErr(0.10);
 
-      // Create a channel
-      RooStats::HistFactory::Channel chan("channel1");
-      chan.SetData("data", _inputFile);
+      Channel chan("channel1");
+      chan.SetData("data", inputFile);
       chan.SetStatErrorConfig(0.005, "Poisson");
-      _systNames.insert("gamma_stat_channel1_bin_0");
-      _systNames.insert("gamma_stat_channel1_bin_1");
 
-      // Now, create some samples
-
-      // Create the signal sample
-      RooStats::HistFactory::Sample signal("signal", "signal", _inputFile);
-
+      Sample signal("signal", "signal", inputFile);
       signal.AddNormFactor("SigXsecOverSM", 1, 0, 3);
       if (makeModelMode == MakeModelMode::HistoSyst) {
-         signal.AddHistoSys("SignalShape", "histoUnc_sigDo", _inputFile, "", "histoUnc_sigUp", _inputFile, "");
-         _systNames.insert("alpha_SignalShape");
+         signal.AddHistoSys("SignalShape", "histoUnc_sigDo", inputFile, "", "histoUnc_sigUp", inputFile, "");
       }
       chan.AddSample(signal);
 
-      // Background 1
-      RooStats::HistFactory::Sample background1("background1", "background1", _inputFile);
-      background1.ActivateStatError("background1_statUncert", _inputFile);
+      Sample background1("background1", "background1", inputFile);
+      background1.ActivateStatError("background1_statUncert", inputFile);
       if (makeModelMode == MakeModelMode::OverallSyst) {
          background1.AddOverallSys("syst2", 0.95, 1.05);
          background1.AddOverallSys("syst3", 0.99, 1.01);
-         _systNames.insert("alpha_syst2");
-         _systNames.insert("alpha_syst3");
       }
       if (makeModelMode == MakeModelMode::ShapeSyst) {
-         background1.AddShapeSys("background1Shape", Constraint::Gaussian, "background1_shapeSyst", _inputFile);
+         background1.AddShapeSys("background1Shape", Constraint::Gaussian, "background1_shapeSyst", inputFile);
          meas.AddConstantParam("gamma_background1Shape_bin_1");
-         _systNames.insert("gamma_background1Shape_bin_0");
-         _systNames.insert("gamma_background1Shape_bin_1");
       }
       chan.AddSample(background1);
 
-      // Background 2
-      RooStats::HistFactory::Sample background2("background2", "background2", _inputFile);
+      Sample background2("background2", "background2", inputFile);
       background2.ActivateStatError();
       if (makeModelMode == MakeModelMode::OverallSyst) {
          background2.AddOverallSys("syst3", 0.99, 1.01);
          background2.AddOverallSys("syst4", 0.95, 1.05);
-         _systNames.insert("alpha_syst3");
-         _systNames.insert("alpha_syst4");
       }
       if (makeModelMode == MakeModelMode::ShapeSyst) {
-         background2.AddShapeSys("background2Shape", Constraint::Poisson, "background2_shapeSyst", _inputFile);
+         background2.AddShapeSys("background2Shape", Constraint::Poisson, "background2_shapeSyst", inputFile);
          meas.AddConstantParam("gamma_background2Shape_bin_0");
-         _systNames.insert("gamma_background2Shape_bin_0");
-         _systNames.insert("gamma_background2Shape_bin_1");
       }
       chan.AddSample(background2);
-
-      // Done with this channel
-      // Add it to the measurement:
       meas.AddChannel(chan);
 
-      if (!_verbose) {
-         RooMsgService::instance().getStream(1).minLevel = RooFit::PROGRESS;
-         RooMsgService::instance().getStream(2).minLevel = RooFit::WARNING;
-      }
+      // HistFactory must not warn about the measurement.
       RooHelpers::HijackMessageStream hijackW(RooFit::WARNING, RooFit::HistFactory);
-
-      // Collect the histograms from their files,
       meas.CollectHistograms();
-
-      // Now, create the measurement
       ws = std::unique_ptr<RooWorkspace>(MakeModelAndMeasurementFast(meas));
-
       EXPECT_TRUE(hijackW.str().empty()) << "Warnings logged for HistFactory:\n" << hijackW.str();
    }
-
-   void TearDown() override {}
 };
 
 void setInitialFitParameters(RooWorkspace &ws, MakeModelMode makeModelMode)
@@ -5767,13 +5709,11 @@ TEST_P(HFFixture, HS3ClosureLoop)
    EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }
 
-INSTANTIATE_TEST_SUITE_P(
-   RooFitHS3, HFFixture,
-   testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst, MakeModelMode::StatSyst,
-                                    MakeModelMode::ShapeSyst),
-                    testing::Values(false, true),                 // non-uniform bins or not
-                    testing::Values(RooFit::EvalBackend::Cpu())), // dummy because no NLL is created
-   [](testing::TestParamInfo<HFFixture::ParamType> const &paramInfo) { return getName(paramInfo.param, true); });
+INSTANTIATE_TEST_SUITE_P(RooFitHS3, HFFixture,
+                         testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
+                                                          MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
+                                          testing::Values(false, true)), // non-uniform bins or not
+                         getName);
 
 // HS3 round trip of a free HistFactory ShapeFactor. It is written as a
 // "shapefactor" modifier without "constraints", and must survive the
@@ -5785,17 +5725,9 @@ TEST(RooFitHS3, HistFactoryImportShapeFactorModifier)
    const std::string inputFile = "TestHS3ShapeFactor.root";
    {
       TFile f(inputFile.c_str(), "RECREATE");
-      auto *data = new TH1D("data", "data", 2, 1, 2);
-      auto *signal = new TH1D("signal", "signal", 2, 1, 2);
-      auto *bkg = new TH1D("background", "background", 2, 1, 2);
-      data->SetBinContent(1, 220);
-      data->SetBinContent(2, 230);
-      signal->SetBinContent(1, 10);
-      signal->SetBinContent(2, 20);
-      bkg->SetBinContent(1, 200);
-      bkg->SetBinContent(2, 200);
-      for (auto *h : {data, signal, bkg})
-         f.WriteTObject(h);
+      writeHistogram(f, TH1D{"data", "data", 2, 1, 2}, {220, 230});
+      writeHistogram(f, TH1D{"signal", "signal", 2, 1, 2}, {10, 20});
+      writeHistogram(f, TH1D{"background", "background", 2, 1, 2}, {200, 200});
    }
 
    Measurement meas("meas", "meas");
@@ -5900,12 +5832,8 @@ TEST(RooFitHS3, HistFactoryExportDoesNotDependOnNames)
    {
       TFile f(inputFile.c_str(), "RECREATE");
       auto hist = [&](const char *name, std::vector<double> const &contents) {
-         auto *h = new TH1D(name, name, contents.size(), 0, binWidth * contents.size());
-         for (std::size_t i = 0; i < contents.size(); ++i) {
-            h->SetBinContent(i + 1, contents[i]);
-            h->SetBinError(i + 1, 0.1 * contents[i]);
-         }
-         f.WriteTObject(h);
+         writeHistogram(f, TH1D(name, name, contents.size(), 0, binWidth * contents.size()), contents,
+                        [](double content) { return 0.1 * content; });
       };
       hist("data_sr", {130, 120, 110});
       hist("sig_sr", {20, 15, 10});
@@ -6853,17 +6781,15 @@ TEST(RooFitHS3, CombinedDist)
    EXPECT_THAT(fromLegacy, Not(HasSubstr("combined_distributions")));
 }
 
-// A RooSimultaneous over a RooSuperCategory has several columns, sorted by name, and keys with one label per column.
-TEST(RooFitHS3, CombinedDistSeveralColumns)
+namespace {
+
+// A RooSimultaneous over the RooSuperCategory of (region, kind).
+void buildSuperCategorySimultaneous(RooWorkspace &ws)
 {
    // The components have their own observables: HS3 requires distinct variates of the components.
    RooRealVar xSR{"x_sr", "x_sr", 0.0, 10.0};
    RooRealVar xCR{"x_cr", "x_cr", 0.0, 10.0};
    RooRealVar xGlobal{"x_sr_global", "x_sr_global", 0.0, 10.0};
-   std::map<std::string, RooRealVar *> observableOf{{"sr", &xSR}, {"cr", &xCR}, {"sr_global", &xGlobal}};
-   for (auto &item : observableOf) {
-      item.second->setBins(5);
-   }
    RooGaussian sr{"sr", "sr", xSR, 3.0, 1.0};
    RooGaussian cr{"cr", "cr", xCR, 6.0, 1.0};
    RooGaussian srGlobal{"sr_global", "sr_global", xGlobal, 5.0, 2.0};
@@ -6874,9 +6800,28 @@ TEST(RooFitHS3, CombinedDistSeveralColumns)
    // Three of the four keys have a component.
    RooSimultaneous simPdf{
       "simPdf", "simPdf", {{"{SR;physics}", &sr}, {"{CR;physics}", &cr}, {"{SR;global}", &srGlobal}}, index};
-
-   RooWorkspace ws;
    ws.import(simPdf, RooFit::Silence());
+   // The round trip goes through the states of one category at a time: start from the key that the other two differ
+   // from in one column.
+   ws.cat("region")->setLabel("SR");
+   ws.cat("kind")->setLabel("physics");
+}
+
+} // namespace
+
+// The round trip compares each component in the bins of its observable, and the RooSimultaneous for the three keys.
+// The name of the super category is not written.
+INSTANTIATE_TEST_SUITE_P(CombinedDistSeveralColumns, RoundTrip,
+                         testing::Values(RoundTripModel{"SuperCategory", buildSuperCategorySimultaneous}
+                                            .over({"x_sr", "x_cr", "x_sr_global"})
+                                            .withOtherComponents()),
+                         roundTripName);
+
+// A RooSimultaneous over a RooSuperCategory has several columns, sorted by name, and keys with one label per column.
+TEST(RooFitHS3, CombinedDistSeveralColumns)
+{
+   RooWorkspace ws;
+   buildSuperCategorySimultaneous(ws);
    const std::string json = toJSON(ws);
    auto tree = RooFit::Detail::JSONTree::create(json);
    auto const *simPdfNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "simPdf");
@@ -6893,26 +6838,15 @@ TEST(RooFitHS3, CombinedDistSeveralColumns)
       {"sr", {"physics", "SR"}}, {"cr", {"physics", "CR"}}, {"sr_global", {"global", "SR"}}};
    EXPECT_EQ(keys, expectedKeys) << json;
 
-   // Round trip: the super category is rebuilt over the columns, and every component evaluates to the same values.
+   // The super category is rebuilt over the columns, and every key selects its component.
    Imported ws2{json};
    auto *simPdf2 = dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf"));
    ASSERT_NE(simPdf2, nullptr);
    ASSERT_NE(dynamic_cast<RooSuperCategory const *>(&simPdf2->indexCat()), nullptr);
-   EXPECT_EQ(toJSON(ws2), json);
-   RooArgSet nset{xSR, xCR, xGlobal};
-   RooArgSet nset2{*ws2.var("x_sr"), *ws2.var("x_cr"), *ws2.var("x_sr_global")};
    for (auto const &item : expectedKeys) {
-      kind.setLabel(item.second[0]);
-      region.setLabel(item.second[1]);
       ws2.cat("kind")->setLabel(item.second[0]);
       ws2.cat("region")->setLabel(item.second[1]);
       EXPECT_STREQ(simPdf2->getPdf(simPdf2->indexCat().getCurrentLabel())->GetName(), item.first.c_str());
-      RooRealVar &x = *observableOf[item.first];
-      for (int i = 0; i < x.numBins(); ++i) {
-         x.setBin(i);
-         ws2.var(x.GetName())->setBin(i);
-         EXPECT_DOUBLE_EQ(simPdf2->getVal(nset2), simPdf.getVal(nset)) << item.first << " bin " << i;
-      }
    }
 }
 
@@ -7106,33 +7040,21 @@ TEST(RooFitHS3, CombinedData)
 // written if the matching RooSimultaneous has a component for them, and left out otherwise.
 TEST(RooFitHS3, CombinedDataSeveralColumns)
 {
-   // Each component has its own observable, as HS3 requires.
-   RooRealVar xSR{"x_sr", "x_sr", 0.0, 10.0};
-   RooRealVar xCR{"x_cr", "x_cr", 0.0, 10.0};
-   RooRealVar xGlobal{"x_sr_global", "x_sr_global", 0.0, 10.0};
-   RooCategory region{"region", "region", {{"SR", 0}, {"CR", 1}}};
-   RooCategory kind{"kind", "kind", {{"physics", 0}, {"global", 1}}};
-   RooGaussian sr{"sr", "sr", xSR, 3.0, 1.0};
-   RooGaussian cr{"cr", "cr", xCR, 6.0, 1.0};
-   RooGaussian srGlobal{"sr_global", "sr_global", xGlobal, 5.0, 2.0};
-   RooSuperCategory index{"index", "index", RooArgSet{region, kind}};
-   RooSimultaneous simPdf{
-      "simPdf", "simPdf", {{"{SR;physics}", &sr}, {"{CR;physics}", &cr}, {"{SR;global}", &srGlobal}}, index};
+   RooWorkspace ws;
+   buildSuperCategorySimultaneous(ws);
    // Entries per key; none for (physics, CR), and (global, CR) has no component.
    const std::map<std::vector<std::string>, int> entries{{{"physics", "SR"}, 3}, {{"global", "SR"}, 1}};
-   RooDataSet obs{"obs", "obs", {xSR, xCR, xGlobal, region, kind}};
+   RooArgSet columns{*ws.var("x_sr"), *ws.var("x_cr"), *ws.var("x_sr_global"), *ws.cat("region"), *ws.cat("kind")};
+   RooDataSet obs{"obs", "obs", columns};
    for (auto const &item : entries) {
-      kind.setLabel(item.first[0].c_str());
-      region.setLabel(item.first[1].c_str());
-      RooRealVar &x = item.first[0] == "global" ? xGlobal : xSR;
+      ws.cat("kind")->setLabel(item.first[0].c_str());
+      ws.cat("region")->setLabel(item.first[1].c_str());
+      RooRealVar &x = *ws.var(item.first[0] == "global" ? "x_sr_global" : "x_sr");
       for (int i = 0; i < item.second; ++i) {
          x.setVal(1.0 + i);
-         obs.add({xSR, xCR, xGlobal, region, kind});
+         obs.add(columns);
       }
    }
-
-   RooWorkspace ws;
-   ws.import(simPdf, RooFit::Silence());
    ws.import(obs);
    const std::string json = toJSON(ws);
    auto tree = RooFit::Detail::JSONTree::create(json);
@@ -7814,12 +7736,10 @@ TEST(RooFitHS3, SharedVariatesInLikelihood)
    expectImportThrowsWithError(exported, message);
 }
 
-// A constraint that is both a factor of the model and an external constraint of the ModelConfig is one term of the
-// likelihood in RooFit. It is written once, as a term of the likelihood: the product keeps its other factors. The
-// document has distinct variates, reads back with the same NLL, and is stable.
-TEST(RooFitHS3, ConstraintInModelAndExternal)
+namespace {
+
+void buildConstraintInModelAndExternal(RooWorkspace &ws)
 {
-   RooWorkspace ws;
    ws.factory("Gaussian::shape(x[0, -5, 5], theta[0, -5, 5], 1.0)");
    ws.factory("Gaussian::constraint(theta_obs[0, -5, 5], theta, 1.0)");
    ws.factory("PROD::model(shape, constraint)");
@@ -7835,23 +7755,25 @@ TEST(RooFitHS3, ConstraintInModelAndExternal)
    mc.SetGlobalObservables("theta_obs");
    mc.SetExternalConstraints(RooArgSet{*ws.pdf("constraint")});
    ws.import(mc);
+}
 
-   auto nllOf = [](RooWorkspace &w) {
-      auto *modelConfig = dynamic_cast<RooFit::ModelConfig *>(w.obj("ModelConfig"));
-      if (!modelConfig) {
-         return std::numeric_limits<double>::quiet_NaN();
-      }
-      w.var("theta")->setVal(0.4);
-      RooArgSet external;
-      if (modelConfig->GetExternalConstraints()) {
-         external.add(*modelConfig->GetExternalConstraints());
-      }
-      std::unique_ptr<RooAbsReal> nll{
-         modelConfig->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external))};
-      return nll->getVal();
-   };
-   const double nll = nllOf(ws);
-   ASSERT_FALSE(std::isnan(nll));
+} // namespace
+
+// The document reads back with the same NLL, and is stable.
+INSTANTIATE_TEST_SUITE_P(ConstraintInModelAndExternal, RoundTrip,
+                         testing::Values(RoundTripModel{"Model", buildConstraintInModelAndExternal}
+                                            .with(constraintStyles())
+                                            .likelihoodOf("ModelConfig", "data")
+                                            .within(1e-10)),
+                         roundTripName);
+
+// A constraint that is both a factor of the model and an external constraint of the ModelConfig is one term of the
+// likelihood in RooFit. It is written once, as a term of the likelihood: the product keeps its other factors. The
+// document has distinct variates.
+TEST(RooFitHS3, ConstraintInModelAndExternal)
+{
+   RooWorkspace ws;
+   buildConstraintInModelAndExternal(ws);
 
    const std::string exported = toJSON(ws);
    auto tree = RooFit::Detail::JSONTree::create(exported);
@@ -7861,11 +7783,7 @@ TEST(RooFitHS3, ConstraintInModelAndExternal)
    EXPECT_EQ((*model)["factors"].child(0).val(), "shape") << exported;
    EXPECT_THAT(exported, HasSubstr(R"("aux_distributions":["constraint"])"));
 
-   Imported ws2{exported};
-   EXPECT_THAT(ws2.warnings, Not(HasSubstr("is shared by the")));
-   EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
-   const std::string exported2 = toJSON(ws2);
-   EXPECT_EQ(reexport(exported2), exported2);
+   EXPECT_THAT(Imported{exported}.warnings, Not(HasSubstr("is shared by the")));
 }
 
 // The parameters that only an external constraint of the ModelConfig depends on keep their roles through a round
@@ -7902,14 +7820,11 @@ TEST(RooFitHS3, ExternalConstraintKeepsRoles)
    EXPECT_NE(mc2->GetExternalConstraints()->find("constraint"), nullptr);
 }
 
-// Constraints that RooFit finds in the channels of a model (RooAbsPdf::getAllConstraints()) are written as terms of
-// the likelihood, not as factors of the products, also if only one channel has them. A constraint shared by two
-// channels is one term of the likelihood in RooFit, and it is written once. A product that another pdf uses keeps its
-// constraints. The document reads back with the same NLL, with the constraints as external constraints of the
-// ModelConfig, and is stable.
-TEST(RooFitHS3, ConstraintFactorsOfChannelsAreLikelihoodTerms)
+namespace {
+
+// Two channels with constraints as factors: one shared by the channels, one of the first channel only.
+void buildConstraintFactorsOfChannels(RooWorkspace &ws)
 {
-   RooWorkspace ws;
    ws.factory("Gaussian::a(xa[0, -5, 5], mu[0, -2, 2], 1.0)");
    ws.factory("Gaussian::b(xb[0, -5, 5], expr::mu_theta('mu + theta', mu, theta[0, -5, 5]), 1.0)");
    ws.factory("Gaussian::shared(gobs[0, -5, 5], theta, 1.0)");
@@ -7936,26 +7851,30 @@ TEST(RooFitHS3, ConstraintFactorsOfChannelsAreLikelihoodTerms)
    mc.SetObservables(observables);
    mc.SetGlobalObservables("gobs,gobs_eta");
    ws.import(mc);
+}
 
-   auto nllOf = [](RooWorkspace &w) {
-      auto *modelConfig = dynamic_cast<RooFit::ModelConfig *>(w.obj("ModelConfig"));
-      if (!modelConfig || !w.data("data")) {
-         return std::numeric_limits<double>::quiet_NaN();
-      }
-      w.var("theta")->setVal(0.4);
-      w.var("eta")->setVal(-0.3);
-      w.var("mu")->setVal(0.2);
-      RooArgSet external;
-      if (modelConfig->GetExternalConstraints()) {
-         external.add(*modelConfig->GetExternalConstraints());
-      }
-      std::unique_ptr<RooAbsReal> nll{
-         modelConfig->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external),
-                                          RooFit::GlobalObservables(*modelConfig->GetGlobalObservables()))};
-      return nll->getVal();
-   };
-   const double nll = nllOf(ws);
-   ASSERT_FALSE(std::isnan(nll));
+} // namespace
+
+// The document reads back with the same NLL. The import makes a constraint a factor of the channels that depend on
+// its parameter: "shared" is no factor of "channel_a" any more, so the second export lists the terms in another
+// order. From then on, the document is stable.
+INSTANTIATE_TEST_SUITE_P(ConstraintFactorsOfChannels, RoundTrip,
+                         testing::Values(RoundTripModel{"Model", buildConstraintFactorsOfChannels}
+                                            .with(constraintStyles())
+                                            .over({"xa", "xb"})
+                                            .likelihoodOf("ModelConfig", "data")
+                                            .within(1e-10)
+                                            .stableFromSecondExport()),
+                         roundTripName);
+
+// Constraints that RooFit finds in the channels of a model (RooAbsPdf::getAllConstraints()) are written as terms of
+// the likelihood, not as factors of the products, also if only one channel has them. A constraint shared by two
+// channels is one term of the likelihood in RooFit, and it is written once. A product that another pdf uses keeps its
+// constraints.
+TEST(RooFitHS3, ConstraintFactorsOfChannelsAreLikelihoodTerms)
+{
+   RooWorkspace ws;
+   buildConstraintFactorsOfChannels(ws);
 
    const std::string exported = toJSON(ws);
    auto tree = RooFit::Detail::JSONTree::create(exported);
@@ -7976,11 +7895,7 @@ TEST(RooFitHS3, ConstraintFactorsOfChannelsAreLikelihoodTerms)
    }
    EXPECT_EQ(aux, (std::set<std::string>{"shared", "own"})) << exported;
 
-   Imported ws2{exported};
-   EXPECT_THAT(ws2.warnings, Not(HasSubstr("is shared by the")));
-   EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
-   const std::string exported2 = toJSON(ws2);
-   EXPECT_EQ(reexport(exported2), exported2);
+   EXPECT_THAT(Imported{exported}.warnings, Not(HasSubstr("is shared by the")));
 
    // A product that another pdf uses keeps its constraint.
    RooWorkspace wsUsed;
@@ -8141,21 +8056,14 @@ void makeRenamedHistFactoryWorkspace(RooWorkspace &ws)
    addModelConfig(ws, "mc", "model", "x,channel", "mu", /*nuisance=*/"theta", /*globals=*/"gobs");
 }
 
-double renamedHistFactoryNLL(RooWorkspace &ws)
+// The styles with renamed observables of the combined data sets.
+std::vector<RoundTripStyle> renamed(std::vector<RoundTripStyle> styles)
 {
-   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("mc"));
-   if (!mc || !ws.data("data") || !mc->GetGlobalObservables()) {
-      return std::numeric_limits<double>::quiet_NaN();
+   for (auto &style : styles) {
+      style.name += "Renamed";
+      style.flags.push_back(renameCombinedObservables(true));
    }
-   ws.var("theta")->setVal(0.4);
-   ws.var("mu")->setVal(1.2);
-   RooArgSet external;
-   if (mc->GetExternalConstraints()) {
-      external.add(*mc->GetExternalConstraints());
-   }
-   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*ws.data("data"), RooFit::ExternalConstraints(external),
-                                                           RooFit::GlobalObservables(*mc->GetGlobalObservables()))};
-   return nll->getVal();
+   return styles;
 }
 
 // The "aux_distributions" of the only likelihood of the document `json`, or "none".
@@ -8176,24 +8084,33 @@ std::string auxDistributionsOf(std::string const &json)
 // The constraint terms of the likelihood are looked for in the channels as they are written: with
 // renameCombinedObservables, the components of the RooSimultaneous are written as renamed clones, and a HistFactory
 // channel is still recognised as one. The likelihood has the same constraint terms with and without renaming, and
-// the document reads back with the same NLL.
+// the document reads back with the same NLL, see the round trips below.
 TEST(RooFitHS3, ConstraintTermsOfRenamedChannels)
 {
    RooWorkspace ws;
    makeRenamedHistFactoryWorkspace(ws);
-   const double nll = renamedHistFactoryNLL(ws);
-   ASSERT_FALSE(std::isnan(nll));
 
    const std::string plain = toJSON(ws);
    const std::string renamed = toJSON(ws, {renameCombinedObservables(true)});
    ASSERT_THAT(renamed, HasSubstr("obs_A"));
    EXPECT_EQ(auxDistributionsOf(renamed), auxDistributionsOf(plain)) << renamed;
-
-   for (std::string const &json : {plain, renamed}) {
-      Imported ws2{json};
-      EXPECT_NEAR(renamedHistFactoryNLL(ws2), nll, 1e-10 * std::abs(nll)) << json;
-   }
 }
+
+// With and without renamed observables, for the four layouts of the constraint terms. With renamed observables, the
+// first document differs from the following ones: it has the attributes of "HF_model", a node of the original
+// channel that is not in the document, where the channel is "HF_A". The following ones have them for "HF_A_model".
+INSTANTIATE_TEST_SUITE_P(RenamedHistFactoryChannel, RoundTrip,
+                         testing::Values(RoundTripModel{"Plain", makeRenamedHistFactoryWorkspace}
+                                            .with(constraintStyles())
+                                            .likelihoodOf("mc", "data")
+                                            .within(1e-10)
+                                            .withOtherComponents(),
+                                         RoundTripModel{"Renamed", makeRenamedHistFactoryWorkspace}
+                                            .with(renamed(constraintStyles()))
+                                            .likelihoodOf("mc", "data")
+                                            .within(1e-10)
+                                            .stableFromSecondExport()),
+                         roundTripName);
 
 // A channel with the constant inverse bin width of HistFactory before ROOT 6.26, as a component of a RooSimultaneous
 // whose observables are renamed. The renamed channel is a clone, but the constant is not cloned, so the original
@@ -8393,7 +8310,25 @@ double sharedConstraintNLL(RooWorkspace &ws, std::string const &hfName, std::str
    return nll->getVal();
 }
 
+// The model of sharedConstraintJSON() as RooFit reads it from a document of version 0.2.
+RoundTripModel sharedConstraintModel(std::string const &name, std::string const &hfName, std::string const &otherName)
+{
+   return RoundTripModel::fromDocument(name, sharedConstraintJSON(hfName, otherName, "0.2"))
+      .with({{"Arrays", {}}, {"NoArrays", {exportArrayDist(false)}}})
+      .over({"x_hf", "x_other"})
+      .likelihoodBy([=](RooWorkspace &ws) { return std::vector<double>{sharedConstraintNLL(ws, hfName, otherName)}; })
+      .within(1e-10)
+      .withOtherComponents()
+      .stableFromSecondExport();
+}
+
 } // namespace
+
+// The document reads back with the same likelihood, and is stable from the second export on: see the test.
+INSTANTIATE_TEST_SUITE_P(HistFactoryConstraintSharedWithOtherPdf, RoundTrip,
+                         testing::Values(sharedConstraintModel("HistFactoryFirst", "model_hf", "model_other"),
+                                         sharedConstraintModel("HistFactoryLast", "z_model_hf", "a_model_other")),
+                         roundTripName);
 
 // A constraint shared between a HistFactory channel and another pdf is written once, as a term of the likelihood,
 // whatever the order in which the export visits them, also when the constraints of the HistFactory channels are
@@ -8444,21 +8379,15 @@ TEST(RooFitHS3, HistFactoryConstraintSharedWithOtherPdf)
             EXPECT_EQ(array, nullptr) << exported;
          }
 
-         // Valid HS3 0.3: read back without warnings, with the same NLL.
-         RooWorkspace ws2;
-         const std::string warnings2 = importInto(ws2, exported);
-         EXPECT_THAT(warnings2, Not(HasSubstr("is shared by the terms")));
-         const double nll2 = sharedConstraintNLL(ws2, hfName, otherName);
-         EXPECT_NEAR(nll2, nll, 1e-10 * std::abs(nll));
+         // Valid HS3 0.3: read back without warnings.
+         Imported ws2{exported};
+         EXPECT_THAT(ws2.warnings, Not(HasSubstr("is shared by the terms")));
          // The re-imported model has the constraint only in the HistFactory channel, so with arrays it is collected
-         // now. From there on, the document is stable.
+         // now. The model that is read from this second document still has the likelihood of the original one.
          const std::string exported2 = toJSON(ws2, {exportArrayDist(arrays)});
-         Imported ws3{exported2};
-         const std::string exported3 = toJSON(ws3, {exportArrayDist(arrays)});
-         EXPECT_EQ(exported3, exported2);
          EXPECT_EQ(exported2.find(R"("constraints":["shared_constraint"])") == std::string::npos, arrays) << exported2;
-         const double nll3 = sharedConstraintNLL(ws3, hfName, otherName);
-         EXPECT_NEAR(nll3, nll, 1e-10 * std::abs(nll));
+         Imported ws3{exported2};
+         EXPECT_NEAR(sharedConstraintNLL(ws3, hfName, otherName), nll, 1e-10 * std::abs(nll));
       }
    }
 
@@ -8515,10 +8444,11 @@ TEST(RooFitHS3, ArrayDistVariatesInLikelihood)
                                "likelihood 'lh'");
 }
 
-// A constraint of a HistFactory modifier that is also an external constraint of the ModelConfig is referred to by
-// its own name, so it is not collected into an array: the export must not leave the likelihood with a reference to
-// a distribution that is not written.
-TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
+namespace {
+
+// A HistFactory channel with data, whose constraint is a term of the likelihood. With `external`, the constraint is
+// also an external constraint of the ModelConfig, which is redundant: it is part of the pdf already.
+void importConstrainedChannel(RooWorkspace &ws, bool external)
 {
    const std::string json = R"({
   "metadata": {"hs3_version": "0.3"},
@@ -8542,30 +8472,25 @@ TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
   "likelihoods": [{"name": "lh", "distributions": ["HF"], "data": ["data"], "aux_distributions": ["constraint"]}],
   "analyses": [{"name": "mc", "likelihood": "lh", "parameters_of_interest": ["mu"], "domains": ["default_domain"]}]
 })";
+   importInto(ws, json);
+   if (external) {
+      static_cast<RooFit::ModelConfig &>(*ws.obj("mc")).SetExternalConstraints(RooArgSet{*ws.pdf("constraint")});
+   }
+}
 
-   auto nllOf = [](RooWorkspace &w) {
-      auto *mc = dynamic_cast<RooFit::ModelConfig *>(w.obj("mc"));
-      if (!mc || !w.data("data")) {
-         return std::numeric_limits<double>::quiet_NaN();
-      }
-      w.var("theta")->setVal(0.4);
-      RooArgSet external;
-      if (mc->GetExternalConstraints()) {
-         external.add(*mc->GetExternalConstraints());
-      }
-      std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external),
-                                                              RooFit::GlobalObservables(*mc->GetGlobalObservables()))};
-      return nll->getVal();
-   };
+} // namespace
 
-   Imported ws{json};
-   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("mc"));
-   ASSERT_NE(mc, nullptr);
-   const double nll = nllOf(ws);
-   ASSERT_FALSE(std::isnan(nll));
-   // Redundant: the constraint is part of the pdf already, and RooFit counts it once.
-   mc->SetExternalConstraints(RooArgSet{*ws.pdf("constraint")});
-   ASSERT_NEAR(nllOf(ws), nll, 1e-10 * std::abs(nll));
+// A constraint of a HistFactory modifier that is also an external constraint of the ModelConfig is referred to by
+// its own name, so it is not collected into an array: the export must not leave the likelihood with a reference to
+// a distribution that is not written.
+TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
+{
+   RooWorkspace ws;
+   importConstrainedChannel(ws, /*external=*/true);
+   // RooFit counts the constraint once.
+   RooWorkspace withoutExternal;
+   importConstrainedChannel(withoutExternal, /*external=*/false);
+   ASSERT_TRUE(sameNumbers(likelihoodScan(ws, "mc", "data"), likelihoodScan(withoutExternal, "mc", "data"), 0.));
 
    const std::string exported = toJSON(ws);
    auto tree = RooFit::Detail::JSONTree::create(exported);
@@ -8574,18 +8499,24 @@ TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
    EXPECT_EQ((*constraint)["type"].val(), "gaussian_dist") << exported;
    EXPECT_THAT(exported, HasSubstr(R"("constraints":["constraint"])"));
    EXPECT_THAT(exported, HasSubstr(R"("aux_distributions":["constraint"])"));
-
-   Imported ws2{exported};
-   EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
 }
 
-// With config().exportConstraintData, a constraint of an ordinary product is written as a term of the likelihood
-// paired with a data set of one entry, like the constraints of HistFactory channels. On import, it is an external
-// constraint of the ModelConfig, the data set sets the observed value of its global observable, and it is not
-// imported as a data set. The likelihood is the same with and without the option.
-TEST(RooFitHS3, ConstraintDataOfProductConstraints)
+// The document reads back with the same likelihood. The constraint is no external constraint then, so the following
+// documents differ from the first one: with arrays, it is collected.
+INSTANTIATE_TEST_SUITE_P(HistFactoryConstraintAlsoExternal, RoundTrip,
+                         testing::Values(RoundTripModel{"Model",
+                                                        [](RooWorkspace &ws) { importConstrainedChannel(ws, true); }}
+                                            .with(constraintStyles())
+                                            .likelihoodOf("mc", "data")
+                                            .within(1e-10)
+                                            .stableFromSecondExport()),
+                         roundTripName);
+
+namespace {
+
+// A product of a model for the observable `x` and a constraint, with a data set and a ModelConfig.
+void buildProductWithConstraint(RooWorkspace &ws)
 {
-   RooWorkspace ws;
    ws.factory("Gaussian::shape(x[0, -5, 5], mu[0, -2, 2], 1.0)");
    ws.factory("Gaussian::shift(x, theta[0, -5, 5], 2.0)");
    ws.factory("SUM::phys(f[0.5, 0, 1] * shape, shift)");
@@ -8597,25 +8528,18 @@ TEST(RooFitHS3, ConstraintDataOfProductConstraints)
    data.add(*ws.var("x"));
    ws.import(data, RooFit::Silence());
    addModelConfig(ws, "ModelConfig", "model", "x", "mu", /*nuisance=*/"theta,f", /*globals=*/"gobs");
+}
 
-   auto nllOf = [](RooWorkspace &w) {
-      auto *modelConfig = dynamic_cast<RooFit::ModelConfig *>(w.obj("ModelConfig"));
-      if (!modelConfig || !w.data("data") || !modelConfig->GetGlobalObservables()) {
-         return std::numeric_limits<double>::quiet_NaN();
-      }
-      w.var("theta")->setVal(0.4);
-      w.var("mu")->setVal(0.2);
-      RooArgSet external;
-      if (modelConfig->GetExternalConstraints()) {
-         external.add(*modelConfig->GetExternalConstraints());
-      }
-      std::unique_ptr<RooAbsReal> nll{
-         modelConfig->GetPdf()->createNLL(*w.data("data"), RooFit::ExternalConstraints(external),
-                                          RooFit::GlobalObservables(*modelConfig->GetGlobalObservables()))};
-      return nll->getVal();
-   };
-   const double nll = nllOf(ws);
-   ASSERT_FALSE(std::isnan(nll));
+} // namespace
+
+// With config().exportConstraintData, a constraint of an ordinary product is written as a term of the likelihood
+// paired with a data set of one entry, like the constraints of HistFactory channels. On import, it is a factor of
+// the model again, the data set sets the observed value of its global observable, and it is not imported as a data
+// set. The likelihood is the same with and without the option, see the round trips below.
+TEST(RooFitHS3, ConstraintDataOfProductConstraints)
+{
+   RooWorkspace ws;
+   buildProductWithConstraint(ws);
 
    for (bool constraintData : {false, true}) {
       SCOPED_TRACE(constraintData ? "with constraint data" : "without constraint data");
@@ -8646,30 +8570,16 @@ TEST(RooFitHS3, ConstraintDataOfProductConstraints)
       EXPECT_EQ(ws2.data("constraint_data"), nullptr);
       EXPECT_DOUBLE_EQ(ws2.var("gobs")->getVal(), 0.3);
       EXPECT_TRUE(ws2.var("gobs")->isConstant());
-      EXPECT_NEAR(nllOf(ws2), nll, 1e-10 * std::abs(nll));
-
-      // The document is stable.
-      const std::string exported2 = toJSON(ws2, {exportConstraintData(constraintData)});
-      Imported ws3{exported2};
-      const std::string exported3 = toJSON(ws3, {exportConstraintData(constraintData)});
-      EXPECT_EQ(exported3, exported2);
-      auto tree2 = RooFit::Detail::JSONTree::create(exported2);
-      auto const &likelihood = tree2->rootnode()["likelihoods"].child(0);
-      auto const &likelihood1 = tree->rootnode()["likelihoods"].child(0);
-      for (const char *key : {"distributions", "data", "aux_distributions"}) {
-         std::stringstream ss1;
-         std::stringstream ss2;
-         if (likelihood1.has_child(key)) {
-            likelihood1[key].writeJSON(ss1);
-         }
-         if (likelihood.has_child(key)) {
-            likelihood[key].writeJSON(ss2);
-         }
-         EXPECT_EQ(ss2.str(), ss1.str()) << key << ": " << exported2;
-      }
-      EXPECT_NEAR(nllOf(ws3), nll, 1e-10 * std::abs(nll));
    }
 }
+
+// The document is stable, and reads back with the same likelihood.
+INSTANTIATE_TEST_SUITE_P(ConstraintDataOfProductConstraints, RoundTrip,
+                         testing::Values(RoundTripModel{"Model", buildProductWithConstraint}
+                                            .with(constraintStyles())
+                                            .likelihoodOf("ModelConfig", "data")
+                                            .within(1e-10)),
+                         roundTripName);
 
 // As ConstraintTermsOfRenamedChannels, with and without arrays: the likelihood lists the constraint terms of the
 // renamed HistFactory channel as they are written (the array that holds a constraint), so the document has no
@@ -8678,8 +8588,6 @@ TEST(RooFitHS3, ArrayConstraintTermsOfRenamedChannels)
 {
    RooWorkspace ws;
    makeRenamedHistFactoryWorkspace(ws);
-   const double nll = renamedHistFactoryNLL(ws);
-   ASSERT_FALSE(std::isnan(nll));
 
    for (bool arrays : {true, false}) {
       SCOPED_TRACE(arrays ? "arrays" : "no arrays");
@@ -8690,10 +8598,6 @@ TEST(RooFitHS3, ArrayConstraintTermsOfRenamedChannels)
       EXPECT_EQ(auxDistributionsOf(renamed), auxDistributionsOf(plain)) << renamed;
       EXPECT_EQ(auxDistributionsOf(renamed), arrays ? R"(["model_gaussian_constraints"])" : R"(["constraint"])")
          << renamed;
-      for (std::string const &json : {plain, renamed}) {
-         Imported ws2{json};
-         EXPECT_NEAR(renamedHistFactoryNLL(ws2), nll, 1e-10 * std::abs(nll)) << json;
-      }
    }
 }
 
@@ -9500,10 +9404,10 @@ TEST(RooFitHS3, PureModelLikelihood)
    EXPECT_NE(ws4.data("gy_data"), nullptr);
 }
 
-// A RooLognormal is by default parametrized by its median and shape parameter, and written as a lognormal_dist of the
-// functions log(median) and log(shape). It can be a component of an array distribution like one in the standard
-// parametrization, and is read back in the parametrization of RooFit, by the same rule as a distribution on its own.
-TEST(RooFitHS3, ArrayDistOfLognormalsInRooFitParametrization)
+namespace {
+
+// An array distribution of two RooLognormal in the parametrization of RooFit, which share the shape parameter.
+void buildArrayOfLognormals(RooWorkspace &ws)
 {
    RooRealVar nomA{"nom_a", "nom_a", 1.0, 0.1, 10.0};
    RooRealVar nomB{"nom_b", "nom_b", 1.0, 0.1, 10.0};
@@ -9515,9 +9419,18 @@ TEST(RooFitHS3, ArrayDistOfLognormalsInRooFitParametrization)
    ASSERT_FALSE(lognormalA.useStandardParametrization());
    RooProdPdf array{"constraints", "constraints", {lognormalA, lognormalB}};
    array.setAttribute("hs3_array_dist");
-
-   RooWorkspace ws;
    ws.import(array, RooFit::Silence());
+}
+
+} // namespace
+
+// A RooLognormal is by default parametrized by its median and shape parameter, and written as a lognormal_dist of the
+// functions log(median) and log(shape). It can be a component of an array distribution like one in the standard
+// parametrization, and is read back in the parametrization of RooFit, by the same rule as a distribution on its own.
+TEST(RooFitHS3, ArrayDistOfLognormalsInRooFitParametrization)
+{
+   RooWorkspace ws;
+   buildArrayOfLognormals(ws);
 
    const std::string exported = toJSON(ws);
    auto tree = RooFit::Detail::JSONTree::create(exported);
@@ -9546,19 +9459,13 @@ TEST(RooFitHS3, ArrayDistOfLognormalsInRooFitParametrization)
    EXPECT_FALSE(imported->useStandardParametrization());
    EXPECT_STREQ(imported->getMedian().GetName(), "a");
    EXPECT_STREQ(imported->getShapeK().GetName(), "k");
-   for (RooWorkspace *w : std::initializer_list<RooWorkspace *>{&ws, &ws2}) {
-      w->var("a")->setVal(1.3);
-      w->var("nom_a")->setVal(0.8);
-   }
-   RooArgSet normSet{nomA};
-   RooArgSet normSet2{*ws2.var("nom_a")};
-   EXPECT_DOUBLE_EQ(imported->getVal(normSet2), ws.pdf("lognormal_a")->getVal(normSet));
-   for (RooWorkspace *w : std::initializer_list<RooWorkspace *>{&ws, &ws2}) {
-      w->var("a")->setVal(1.0);
-      w->var("nom_a")->setVal(1.0);
-   }
-   EXPECT_EQ(toJSON(ws2), exported);
 }
+
+// The components are named after their observables when they are read back, and have the same values.
+INSTANTIATE_TEST_SUITE_P(
+   ArrayDistOfLognormalsInRooFitParametrization, RoundTrip,
+   testing::Values(RoundTripModel{"Model", buildArrayOfLognormals}.over({"nom_a", "nom_b"}).withOtherComponents()),
+   roundTripName);
 
 // A parameter of a RooFit class that is parametrized differently than its HS3 distribution is written as a function
 // that is named after the parameter. A literal constant has no name that could be part of an identifier, so its
