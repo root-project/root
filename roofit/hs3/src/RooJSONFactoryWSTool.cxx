@@ -38,6 +38,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <iterator>
 #include <fstream>
@@ -1118,7 +1119,8 @@ bool isConstraintOfChannel(RooAbsPdf const &term, RooAbsPdf const &channel, RooA
 }
 
 // The other terms of the likelihoods of the document that have the distribution `dist` as a term: their other
-// distributions and their auxiliary distributions. These are the candidates for constraint terms of `dist`.
+// distributions that can be constraint terms, and their auxiliary distributions. These are the candidates for
+// constraint terms of `dist`.
 std::vector<std::string> otherLikelihoodTerms(HS3Document const &doc, std::string const &dist)
 {
    std::vector<std::string> out;
@@ -1127,13 +1129,35 @@ std::vector<std::string> otherLikelihoodTerms(HS3Document const &doc, std::strin
          addUnique(out, name);
       }
    };
+   // A term can be a constraint term of the channels if it is a measurement of one observation: paired with nothing,
+   // a value given in-line, point data or an unbinned data set of one entry. A combined distribution, or a term paired
+   // with a data set of several entries (e.g. the model of another document that the likelihood combines with this
+   // one), is a measurement of its own.
+   auto canBeConstraint = [&](HS3::LikelihoodTerm const &term) {
+      if (HS3::find<HS3::CombinedDist>(doc.distributions, term.distribution.name)) {
+         return false;
+      }
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
+      if (!dataRef) {
+         return true;
+      }
+      auto data =
+         std::find_if(doc.data.begin(), doc.data.end(), [&](auto const &d) { return d.name == dataRef->name; });
+      if (data == doc.data.end() || std::holds_alternative<HS3::PointData>(data->body)) {
+         return true;
+      }
+      auto const *unbinned = std::get_if<HS3::UnbinnedData>(&data->body);
+      return unbinned && unbinned->numEntries() == 1;
+   };
    for (auto const &likelihood : doc.likelihoods) {
       if (std::none_of(likelihood.terms.begin(), likelihood.terms.end(),
                        [&](auto const &term) { return term.distribution.name == dist; })) {
          continue;
       }
       for (auto const &term : likelihood.terms) {
-         add(term.distribution.name);
+         if (canBeConstraint(term)) {
+            add(term.distribution.name);
+         }
       }
       for (auto const &aux : likelihood.auxDistributions) {
          add(aux.name);
@@ -1188,6 +1212,224 @@ void attachConstraintsToChannels(RooAbsPdf &pdf, RooArgSet &constraints)
       }
    }
    constraints.remove(attached);
+}
+
+// The terms of a likelihood are composed by union (HS3), and RooFit has one pdf per ModelConfig, so several terms
+// become one RooSimultaneous `<analysis>_simPdf`. Its channels are the components of the terms that are combined
+// distributions, which are flattened, and the other terms. Its index has the columns of all combined terms, with the
+// label "" for a column that a channel doesn't have (HS3 allows relabelling), and the column
+// `<analysis>_categoryIndex`, labelled with the names of the terms, if there is a term that is not a combined
+// distribution or if the channels can't be told apart without it. Several columns are a RooSuperCategory.
+//
+// The data sets paired with the terms become one data set `<analysis>_data` with these columns, which replaces them
+// unless another likelihood or analysis uses them. The columns are added to `observables`.
+RooSimultaneous *unionOfLikelihoodTerms(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
+                                        std::vector<HS3::LikelihoodTerm const *> const &terms,
+                                        std::vector<std::unique_ptr<RooAbsData>> &datasets, RooArgSet &observables)
+{
+   std::string const &analysisName = analysis.name;
+   struct Channel {
+      std::size_t term;
+      std::map<std::string, std::string> labels; // by column
+      RooAbsPdf *pdf;
+   };
+   std::vector<Channel> channels;
+   std::set<std::string> innerColumns;
+   std::vector<std::vector<std::string>> columnsOfTerm(terms.size());
+   bool plainTerm = false;
+   for (std::size_t i = 0; i < terms.size(); ++i) {
+      RooAbsPdf *pdf = workspace.pdf(terms[i]->distribution.name);
+      auto *sim = dynamic_cast<RooSimultaneous *>(pdf);
+      if (!sim) {
+         plainTerm = true;
+         channels.push_back({i, {}, pdf});
+         continue;
+      }
+      std::vector<RooCategory const *> const columns = selectionColumns(sim->indexCat());
+      for (RooCategory const *column : columns) {
+         innerColumns.insert(column->GetName());
+         columnsOfTerm[i].push_back(column->GetName());
+      }
+      for (std::vector<std::string> const &key : selectionKeys(columns)) {
+         if (RooAbsPdf *component = sim->getPdf(selectionLabel(sim->indexCat(), columns, key))) {
+            Channel channel{i, {}, component};
+            for (std::size_t k = 0; k < columns.size(); ++k) {
+               channel.labels[columns[k]->GetName()] = key[k];
+            }
+            channels.push_back(std::move(channel));
+         }
+      }
+   }
+
+   // The column of the terms is needed if the labels of the other columns don't tell the channels apart. A term that
+   // is not combined has no labels at all; with the column of the terms, an empty label is never the only one of a
+   // key, which would be the label of a RooSimultaneous over a single RooCategory.
+   bool unique = !plainTerm;
+   std::set<std::vector<std::string>> innerKeys;
+   for (Channel const &channel : channels) {
+      std::vector<std::string> key;
+      for (std::string const &column : innerColumns) {
+         auto found = channel.labels.find(column);
+         key.push_back(found == channel.labels.end() ? "" : found->second);
+      }
+      unique = innerKeys.insert(key).second && unique;
+   }
+   std::string const termColumn = analysisName + "_categoryIndex";
+   if (!unique) {
+      RooCategory outer{termColumn.c_str(), termColumn.c_str()};
+      for (std::size_t i = 0; i < terms.size(); ++i) {
+         outer.defineType(terms[i]->distribution.name, static_cast<int>(i));
+      }
+      workspace.import(outer, RooFit::Silence());
+   }
+
+   std::vector<RooCategory *> columns;
+   for (std::string const &column : innerColumns) {
+      columns.push_back(workspace.cat(column));
+   }
+   if (!unique) {
+      columns.push_back(workspace.cat(termColumn));
+   }
+   std::sort(columns.begin(), columns.end(),
+             [](RooCategory const *l, RooCategory const *r) { return std::strcmp(l->GetName(), r->GetName()) < 0; });
+   std::vector<RooCategory const *> const constColumns(columns.begin(), columns.end());
+
+   // The key of a channel: the name of its term, its labels, and "" for the columns it doesn't have.
+   auto keyOf = [&](Channel const &channel) {
+      std::vector<std::string> key;
+      for (RooCategory *column : columns) {
+         if (column->GetName() == termColumn) {
+            key.push_back(terms[channel.term]->distribution.name);
+            continue;
+         }
+         auto found = channel.labels.find(column->GetName());
+         if (found != channel.labels.end()) {
+            key.push_back(found->second);
+            continue;
+         }
+         if (!column->hasLabel("")) {
+            column->defineType("");
+         }
+         key.push_back("");
+      }
+      return key;
+   };
+   std::vector<std::vector<std::string>> keys;
+   for (Channel const &channel : channels) {
+      keys.push_back(keyOf(channel));
+   }
+
+   std::unique_ptr<RooSuperCategory> superCat;
+   RooAbsCategoryLValue *indexCat = columns.front();
+   if (columns.size() > 1) {
+      RooArgSet inputs;
+      for (RooCategory *column : columns) {
+         inputs.add(*column);
+      }
+      std::string const indexName = analysisName + "_index";
+      superCat = std::make_unique<RooSuperCategory>(indexName.c_str(), indexName.c_str(), inputs);
+      indexCat = superCat.get();
+   }
+   std::map<std::string, RooAbsPdf *> pdfMap;
+   for (std::size_t c = 0; c < channels.size(); ++c) {
+      pdfMap[selectionLabel(*indexCat, constColumns, keys[c])] = channels[c].pdf;
+   }
+   std::string const simPdfName = analysisName + "_simPdf";
+   RooSimultaneous simPdf{simPdfName.c_str(), simPdfName.c_str(), pdfMap, *indexCat};
+   workspace.import(simPdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   for (RooCategory *column : columns) {
+      observables.add(*column, /*silent=*/true);
+   }
+
+   // The data: every term must be paired with a data set, and a combined term's data set must have its columns.
+   std::vector<std::unique_ptr<RooAbsData> *> termData;
+   for (std::size_t i = 0; i < terms.size(); ++i) {
+      auto const *dataRef = std::get_if<HS3::DataRef>(&terms[i]->data);
+      auto found = dataRef ? std::find_if(datasets.begin(), datasets.end(),
+                                          [&](auto const &d) { return d && d->GetName() == dataRef->name; })
+                           : datasets.end();
+      if (found == datasets.end()) {
+         return static_cast<RooSimultaneous *>(workspace.pdf(simPdfName));
+      }
+      for (std::string const &column : columnsOfTerm[i]) {
+         if (!(*found)->get()->find(column.c_str())) {
+            return static_cast<RooSimultaneous *>(workspace.pdf(simPdfName));
+         }
+      }
+      termData.push_back(&*found);
+   }
+   RooArgSet columnClones; // owns the clones; `vars` also lists the variables of the data sets
+   for (RooCategory const *column : columns) {
+      columnClones.addClone(*column);
+   }
+   RooArgSet vars{columnClones};
+   bool weighted = false;
+   std::string weightName = RooFit::WeightVar().getString(0);
+   for (auto const *data : termData) {
+      vars.add(*(*data)->get(), /*silent=*/true);
+      weighted |= (*data)->isWeighted();
+      if (auto *ds = dynamic_cast<RooDataSet const *>(data->get()); ds && ds->isWeighted()) {
+         weightName = ds->weightVar()->GetName();
+      }
+   }
+   std::string const dataName = analysisName + "_data";
+   std::unique_ptr<RooDataSet> merged;
+   if (weighted) {
+      RooRealVar weightVar{weightName.c_str(), weightName.c_str(), 1.0};
+      vars.add(weightVar);
+      merged = std::make_unique<RooDataSet>(dataName.c_str(), dataName.c_str(), vars, RooFit::WeightVar(weightVar));
+   } else {
+      merged = std::make_unique<RooDataSet>(dataName.c_str(), dataName.c_str(), vars);
+   }
+   RooArgSet row;
+   merged->get()->snapshot(row);
+   for (std::size_t i = 0; i < terms.size(); ++i) {
+      RooAbsData &data = **termData[i];
+      std::set<std::string> const own(columnsOfTerm[i].begin(), columnsOfTerm[i].end());
+      for (int entry = 0; entry < data.numEntries(); ++entry) {
+         RooArgSet const &values = *data.get(entry);
+         const double weight = data.weight();
+         row.assign(values);
+         for (RooCategory const *column : columns) {
+            auto &cat = static_cast<RooCategory &>(row[column->GetName()]);
+            if (column->GetName() == termColumn) {
+               cat.setLabel(terms[i]->distribution.name.c_str());
+            } else if (!own.count(column->GetName())) {
+               cat.setLabel("");
+            }
+         }
+         merged->add(row, weight);
+      }
+   }
+
+   // The observables refer to the variables of the data sets of the terms, which are replaced by the merged one.
+   RooArgSet mergedObservables;
+   for (RooAbsArg *obs : observables) {
+      RooAbsArg *inMerged = merged->get()->find(obs->GetName());
+      mergedObservables.add(inMerged ? *inMerged : *obs, /*silent=*/true);
+   }
+   observables.removeAll();
+   observables.add(mergedObservables);
+
+   // The data sets of the terms are replaced, unless something else uses them.
+   std::size_t analysesOfLikelihood = 0;
+   for (HS3::Analysis const &other : doc.analyses) {
+      analysesOfLikelihood += other.likelihood.name == analysis.likelihood.name;
+   }
+   for (auto *data : termData) {
+      std::size_t uses = 0;
+      for (HS3::Likelihood const &likelihood : doc.likelihoods) {
+         for (HS3::LikelihoodTerm const &term : likelihood.terms) {
+            auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
+            uses += dataRef && dataRef->name == (*data)->GetName();
+         }
+      }
+      if (uses == 1 && analysesOfLikelihood == 1) {
+         data->reset();
+      }
+   }
+   datasets.push_back(std::move(merged));
+   return static_cast<RooSimultaneous *>(workspace.pdf(simPdfName));
 }
 
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
@@ -1403,30 +1645,20 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       }
    }
 
-   std::string const pdfName = mcInfo && mcInfo->pdfName ? *mcInfo->pdfName : "simPdf";
-
-   RooAbsPdf *pdf = workspace.pdf(pdfName);
-
+   // The pdf of the ModelConfig is the one named in the RooFit metadata, e.g. in files of ROOT before HS3 0.3 the
+   // RooSimultaneous of the channels that the likelihood lists. Otherwise, it is the only term of the likelihood, or
+   // the union of its terms. Without terms, it is "simPdf".
+   RooAbsPdf *pdf = mcInfo && mcInfo->pdfName ? workspace.pdf(*mcInfo->pdfName) : nullptr;
+   if (!pdf && nllTerms.size() == 1) {
+      pdf = workspace.pdf(nllTerms.front()->distribution.name);
+   } else if (!pdf && nllTerms.size() > 1) {
+      pdf = unionOfLikelihoodTerms(doc, analysis, workspace, nllTerms, datasets, observables);
+   } else if (!pdf) {
+      pdf = workspace.pdf("simPdf");
+   }
    if (!pdf) {
-      // if there is no simultaneous pdf, we can check whether there is only one pdf in the list
-      if (nllTerms.size() == 1) {
-         // if so, we can use that one to populate the ModelConfig
-         pdf = workspace.pdf(nllTerms[0]->distribution.name);
-      } else {
-         // otherwise, we have no choice but to build a simPdf by hand
-         std::string simPdfName = analysisName + "_simPdf";
-         std::string indexCatName = analysisName + "_categoryIndex";
-         RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
-         std::map<std::string, RooAbsPdf *> pdfMap;
-         for (std::size_t i = 0; i < nllTerms.size(); ++i) {
-            std::string const &name = nllTerms[i]->distribution.name;
-            indexCat.defineType(name, i);
-            pdfMap[name] = workspace.pdf(name);
-         }
-         RooSimultaneous simPdf{simPdfName.c_str(), simPdfName.c_str(), pdfMap, indexCat};
-         workspace.import(simPdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-         pdf = workspace.pdf(simPdfName);
-      }
+      RooJSONFactoryWSTool::error("the likelihood '" + likelihood.name + "' of analysis '" + analysisName +
+                                  "' has no distribution");
    }
 
    mc->SetPdf(*pdf);
@@ -2099,12 +2331,13 @@ std::string makeValidNameOrError(std::string const &in)
 }
 
 // The labels of a selection key, made valid names and joined by "_". Used in the names of sub-data sets and of
-// renamed observables.
+// renamed observables. An empty label, for a column that does not apply to a component, stays empty, so that the
+// position of the other labels still tells the keys apart.
 std::string selectionKeyName(std::vector<std::string> const &key)
 {
    std::string out;
-   for (std::string const &label : key) {
-      out += (out.empty() ? "" : "_") + makeValidNameOrError(label);
+   for (std::size_t i = 0; i < key.size(); ++i) {
+      out += (i == 0 ? "" : "_") + (key[i].empty() ? std::string{} : makeValidNameOrError(key[i]));
    }
    return out;
 }
