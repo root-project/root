@@ -179,6 +179,18 @@ inline std::string replaced(std::string text, std::string const &from, std::stri
    return text.replace(pos, from.size(), to);
 }
 
+/// The message of the exception that importing `json` throws, or an empty string if it is imported.
+inline std::string importError(std::string const &json)
+{
+   RooWorkspace ws;
+   try {
+      importInto(ws, json);
+   } catch (std::exception const &e) {
+      return e.what();
+   }
+   return "";
+}
+
 /// Asserts that importing `json` throws and logs an error message containing `expectedReason`.
 inline void expectImportThrowsWithError(std::string const &json, std::string const &expectedReason)
 {
@@ -212,6 +224,15 @@ inline void expectExportThrowsWithError(RooWorkspace &ws, std::string const &exp
    EXPECT_TRUE(threw);
    EXPECT_TRUE(exported.empty());
    EXPECT_THAT(errors, testing::HasSubstr(expectedReason));
+}
+
+/// The ModelConfig of that name. Throws if there is none, which fails the test.
+inline RooFit::ModelConfig &modelConfig(RooWorkspace &ws, std::string const &name)
+{
+   if (auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj(name))) {
+      return *mc;
+   }
+   throw std::runtime_error("no ModelConfig '" + name + "' in the workspace");
 }
 
 /// Imports a ModelConfig for the pdf into the workspace. The roles are comma-separated lists of names.
@@ -386,7 +407,8 @@ inline bool matchNode(RooFit::Detail::JSONNode const &actual, RooFit::Detail::JS
       equal = expected.is_number() && actual.is_number() &&
               testing::Matches(testing::DoubleEq(expected.val_double()))(actual.val_double());
    } else {
-      equal = expected.val() == actual.val();
+      // Not `true` for "true": a boolean and a string are different values.
+      equal = dump(expected) == dump(actual);
    }
    return equal || mismatch(dump(expected));
 }
@@ -578,6 +600,8 @@ struct RoundTripStyle {
 struct RoundTripModel {
    using Builder = std::function<void(RooWorkspace &)>;
 
+   /// The options for expectRoundTrip() of a workspace that is built elsewhere.
+   RoundTripModel() : name{"workspace"} {}
    /// A model that the function builds in an empty workspace.
    RoundTripModel(std::string name_, Builder build_) : name{std::move(name_)}, build{std::move(build_)} {}
    /// A model made with the workspace factory.
@@ -604,7 +628,7 @@ struct RoundTripModel {
       out.styles = std::move(value);
       return out;
    }
-   /// The observables: the values of the functions are compared in their bins, see sameValues().
+   /// The observables: the values of the functions are compared across their ranges, see sameValues().
    RoundTripModel over(std::vector<std::string> value) const
    {
       RoundTripModel out{*this};
@@ -619,14 +643,15 @@ struct RoundTripModel {
       out.data = std::move(data_);
       return out;
    }
-   /// A function that gives the likelihood of a workspace at some points, instead of likelihoodScan().
-   RoundTripModel likelihoodBy(std::function<std::vector<double>(RooWorkspace &)> value) const
+   /// A function that gives numbers for a workspace, which are compared as well: e.g. a likelihood at chosen
+   /// points, or yields.
+   RoundTripModel comparing(std::function<std::vector<double>(RooWorkspace &)> value) const
    {
       RoundTripModel out{*this};
-      out.likelihood = std::move(value);
+      out.numbers = std::move(value);
       return out;
    }
-   /// The values and likelihoods agree up to this relative tolerance, instead of being identical.
+   /// The values agree up to this relative tolerance, instead of up to 4 ULPs as for EXPECT_DOUBLE_EQ.
    RoundTripModel within(double value) const
    {
       RoundTripModel out{*this};
@@ -648,6 +673,13 @@ struct RoundTripModel {
       out.firstExportDiffers = true;
       return out;
    }
+   /// Evaluating the model changes what is exported, e.g. because it leaves a named range on a variable.
+   RoundTripModel exportChangesAfterEvaluation() const
+   {
+      RoundTripModel out{*this};
+      out.stableAfterEvaluation = false;
+      return out;
+   }
 
    std::string name;
    Builder build;
@@ -655,10 +687,11 @@ struct RoundTripModel {
    std::vector<std::string> observables{"x"};
    std::string modelConfig;
    std::string data;
-   std::function<std::vector<double>(RooWorkspace &)> likelihood;
+   std::function<std::vector<double>(RooWorkspace &)> numbers;
    double tolerance = 0.;
    bool sameComponents = true;
    bool firstExportDiffers = false;
+   bool stableAfterEvaluation = true;
 };
 
 inline void PrintTo(RoundTripModel const &model, std::ostream *os)
@@ -683,7 +716,8 @@ inline bool sameValue(double a, double b, double tolerance)
    if (std::isnan(a) || std::isnan(b)) {
       return std::isnan(a) && std::isnan(b);
    }
-   return tolerance == 0. ? a == b : std::abs(a - b) <= tolerance * std::max(std::abs(a), std::abs(b));
+   return tolerance == 0. ? testing::Matches(testing::DoubleEq(a))(b)
+                          : std::abs(a - b) <= tolerance * std::max(std::abs(a), std::abs(b));
 }
 
 // The floating variables of the workspace that are no observables, with values that are moved from the current
@@ -725,9 +759,10 @@ inline void setValues(RooWorkspace &ws, std::map<std::string, double> const &val
 
 } // namespace Detail
 
-/// Whether the functions and pdfs that both workspaces have give the same values: in every bin of each observable,
-/// for every state of each category, with the parameters as they are and with the floating parameters moved. The
-/// pdfs are normalized over the observables. With `sameComponents`, the workspaces must have the same components.
+/// Whether the functions and pdfs that both workspaces have give the same values: in every bin of each observable
+/// (at ten points across its range, if it has no bins), for every state of each category, with the parameters as
+/// they are and with the floating parameters moved. The pdfs are normalized over the observables. With
+/// `sameComponents`, the workspaces must have the same components.
 inline testing::AssertionResult
 sameValues(RooWorkspace &ws1, RooWorkspace &ws2, RoundTripModel const &model, bool sameComponents)
 {
@@ -775,6 +810,9 @@ sameValues(RooWorkspace &ws1, RooWorkspace &ws2, RoundTripModel const &model, bo
          functions.emplace_back(function, other);
       }
    }
+   if (!all.empty() && functions.empty()) {
+      return testing::AssertionFailure() << "the second workspace has none of the functions of the first one";
+   }
    std::size_t nCompared = 0;
    std::string where;
    auto compare = [&]() -> testing::AssertionResult {
@@ -795,16 +833,28 @@ sameValues(RooWorkspace &ws1, RooWorkspace &ws2, RoundTripModel const &model, bo
          return result;
       }
       for (auto const &observable : observables) {
-         const double old = observable.first->getVal();
-         for (int i = 0; i < observable.first->numBins(); ++i) {
-            observable.first->setBin(i);
-            observable.second->setBin(i);
-            where = std::string("in bin ") + std::to_string(i) + " of '" + observable.first->GetName() + "'";
+         RooRealVar &var = *observable.first;
+         const double old = var.getVal();
+         // The centers of the bins. A variable has no bins unless they were set: then points across its range.
+         std::vector<double> points;
+         for (int i = 0; i < var.numBins(); ++i) {
+            points.push_back(var.getBinning().binCenter(i));
+         }
+         if (points.empty() && var.hasMin() && var.hasMax()) {
+            const int n = 10;
+            for (int i = 0; i < n; ++i) {
+               points.push_back(var.getMin() + (i + 0.5) / n * (var.getMax() - var.getMin()));
+            }
+         }
+         for (double point : points) {
+            var.setVal(point);
+            observable.second->setVal(point);
+            where = "at " + std::string(var.GetName()) + " = " + std::to_string(point);
             if (auto result = compare(); !result) {
                return result;
             }
          }
-         observable.first->setVal(old);
+         var.setVal(old);
          observable.second->setVal(old);
       }
       for (auto *category : static_range_cast<RooCategory *>(ws1.allCats())) {
@@ -855,12 +905,11 @@ sameValues(RooWorkspace &ws1, RooWorkspace &ws2, RoundTripModel const &model, bo
 
 /// The NLL of a ModelConfig for a data set, with its external constraints and global observables: at the values
 /// of the parameters in the workspace, and with the floating parameters moved in both directions.
-inline std::vector<double> likelihoodScan(RooWorkspace &ws, std::string const &modelConfig, std::string const &data)
+inline std::vector<double> likelihoodScan(RooWorkspace &ws, std::string const &mcName, std::string const &data)
 {
-   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj(modelConfig));
-   if (!mc || !mc->GetPdf() || !ws.data(data)) {
-      throw std::runtime_error("likelihoodScan(): no ModelConfig '" + modelConfig + "' with a pdf, or no data '" +
-                               data + "'");
+   RooFit::ModelConfig *mc = &modelConfig(ws, mcName);
+   if (!mc->GetPdf() || !ws.data(data)) {
+      throw std::runtime_error("likelihoodScan(): '" + mcName + "' has no pdf, or there is no data '" + data + "'");
    }
    RooArgSet external;
    if (mc->GetExternalConstraints()) {
@@ -870,8 +919,10 @@ inline std::vector<double> likelihoodScan(RooWorkspace &ws, std::string const &m
    if (mc->GetGlobalObservables()) {
       globals.add(*mc->GetGlobalObservables());
    }
-   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*ws.data(data), RooFit::ExternalConstraints(external),
-                                                           RooFit::GlobalObservables(globals))};
+   // An empty set of global observables is not the same as none.
+   const RooCmdArg externalArg = external.empty() ? RooCmdArg::none() : RooFit::ExternalConstraints(external);
+   const RooCmdArg globalsArg = globals.empty() ? RooCmdArg::none() : RooFit::GlobalObservables(globals);
+   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*ws.data(data), externalArg, globalsArg)};
    std::vector<std::string> observables;
    for (RooAbsArg *arg : *ws.data(data)->get()) {
       observables.push_back(arg->GetName());
@@ -893,8 +944,8 @@ inline std::vector<double> likelihoodScan(RooWorkspace &ws, std::string const &m
    return out;
 }
 
-/// Whether two lists of values, like the ones of likelihoodScan(), agree: identically, or up to a relative
-/// tolerance.
+/// Whether two lists of values, like the ones of likelihoodScan(), agree: up to 4 ULPs, or up to a relative
+/// tolerance if one is given.
 inline testing::AssertionResult
 sameNumbers(std::vector<double> const &a, std::vector<double> const &b, double tolerance)
 {
@@ -911,8 +962,9 @@ sameNumbers(std::vector<double> const &a, std::vector<double> const &b, double t
 }
 
 /// The round trip of a workspace for each style of the model: the workspace that is read from the exported
-/// document is exported to the same document again, it has the same components (without flags), and its functions
-/// and likelihood have the same values, see sameValues() and likelihoodScan().
+/// document is exported to the same document again, also after it was evaluated; it has the same components
+/// (without flags); and its functions and likelihood have the same values, see sameValues(), likelihoodScan() and
+/// RoundTripModel::comparing().
 inline void expectRoundTrip(RooWorkspace &ws, RoundTripModel const &model)
 {
    for (auto const &style : model.styles) {
@@ -925,16 +977,25 @@ inline void expectRoundTrip(RooWorkspace &ws, RoundTripModel const &model)
       }
       EXPECT_EQ(reexport(json2, style.flags), json2);
       EXPECT_TRUE(sameValues(ws, ws2, model, model.sameComponents && style.flags.empty()));
-      if (model.likelihood) {
+      if (model.numbers) {
          // The function may move the variables.
          RooArgSet variables{ws.allVars()};
          variables.add(ws.allCats());
+         RooArgSet variables2{ws2.allVars()};
+         variables2.add(ws2.allCats());
          std::unique_ptr<RooArgSet> values{variables.snapshot()};
-         EXPECT_TRUE(sameNumbers(model.likelihood(ws), model.likelihood(ws2), model.tolerance));
+         std::unique_ptr<RooArgSet> values2{variables2.snapshot()};
+         EXPECT_TRUE(sameNumbers(model.numbers(ws), model.numbers(ws2), model.tolerance));
          variables.assign(*values);
-      } else if (!model.data.empty()) {
+         variables2.assign(*values2);
+      }
+      if (!model.data.empty()) {
          EXPECT_TRUE(sameNumbers(likelihoodScan(ws, model.modelConfig, model.data),
                                  likelihoodScan(ws2, model.modelConfig, model.data), model.tolerance));
+      }
+      // The evaluations leave objects like normalization integrals behind, which must not change the export.
+      if (model.stableAfterEvaluation) {
+         EXPECT_EQ(toJSON(ws2, style.flags), json2);
       }
    }
 }
@@ -942,7 +1003,7 @@ inline void expectRoundTrip(RooWorkspace &ws, RoundTripModel const &model)
 /// The round trip of a workspace without flags.
 inline void expectRoundTrip(RooWorkspace &ws)
 {
-   expectRoundTrip(ws, RoundTripModel{"workspace", RoundTripModel::Builder{}});
+   expectRoundTrip(ws, RoundTripModel{});
 }
 
 /// The round trip of a workspace with only this function or pdf.

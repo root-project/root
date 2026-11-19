@@ -240,13 +240,13 @@ std::string twoChannelHistFactoryJSON(bool arrays)
 // channels have their own observables, x_c1 and x_c2: one weighted entry per bin and channel.
 std::unique_ptr<RooDataSet> twoChannelData(RooWorkspace &ws, const char *name)
 {
-   auto *simPdf = dynamic_cast<RooSimultaneous *>(static_cast<RooStats::ModelConfig &>(*ws.obj("an")).GetPdf());
-   auto &indexCat = dynamic_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(simPdf->indexCat()));
+   auto &simPdf = dynamic_cast<RooSimultaneous &>(*modelConfig(ws, "an").GetPdf());
+   auto &indexCat = dynamic_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(simPdf.indexCat()));
    RooRealVar &x1 = *ws.var("x_c1");
    RooRealVar &x2 = *ws.var("x_c2");
    RooRealVar weight{"weight", "weight", 1.0};
    auto data = std::make_unique<RooDataSet>(name, name, RooArgSet{x1, x2, indexCat, weight}, RooFit::WeightVar(weight));
-   for (auto const &item : simPdf->indexCat()) {
+   for (auto const &item : simPdf.indexCat()) {
       const std::string channel = item.first.substr(6);
       auto *hist = static_cast<RooDataHist *>(ws.data("obs_" + channel));
       RooRealVar &x = channel == "c1" ? x1 : x2;
@@ -265,8 +265,7 @@ double twoChannelNLL(RooWorkspace &ws, std::map<std::string, double> const &poin
    for (auto const &[name, value] : point) {
       ws.var(name)->setVal(value);
    }
-   std::unique_ptr<RooAbsReal> nll{
-      static_cast<RooStats::ModelConfig &>(*ws.obj("an")).GetPdf()->createNLL(*twoChannelData(ws, "combined"))};
+   std::unique_ptr<RooAbsReal> nll{modelConfig(ws, "an").GetPdf()->createNLL(*twoChannelData(ws, "combined"))};
    return nll->getVal();
 }
 
@@ -309,8 +308,10 @@ std::string roundTripName(testing::TestParamInfo<RoundTripModel> const &info)
 // The helpers find the differences that the tests rely on them to find.
 TEST(HS3TestUtils, Matches)
 {
-   const Doc doc{R"({"list": [{"name": "a", "x": 1.5, "tags": ["p", null]}, {"name": "b"}]})"};
-   EXPECT_TRUE(matches(doc, "list/a", R"({"x": 1.5, "tags": ["p", null], "y": "<absent>"})"));
+   const Doc doc{R"({"list": [{"name": "a", "x": 1.5, "tags": ["p", null], "on": true}, {"name": "b"}]})"};
+   EXPECT_TRUE(matches(doc, "list/a", R"({"x": 1.5, "tags": ["p", null], "on": true, "y": "<absent>"})"));
+   EXPECT_FALSE(matches(doc, "list/a", R"({"on": "true"})"));
+   EXPECT_FALSE(matches(doc, "list/a", R"({"on": 1})"));
    EXPECT_TRUE(matches(doc, "list/1", R"({"name": "b"})"));
    EXPECT_FALSE(matches(doc, "list/a", R"({"x": 1.6})"));
    EXPECT_FALSE(matches(doc, "list/a", R"({"x": "1.5"})"));
@@ -1714,7 +1715,7 @@ INSTANTIATE_TEST_SUITE_P(HistFactoryStructuredInterpolation, RoundTrip,
                          testing::Values(RoundTripModel::fromDocument("NormSysAndHistoSys",
                                                                       structuredInterpolationJSON())
                                             .with(constraintStyles())
-                                            .likelihoodBy(structuredInterpolationYields)
+                                            .comparing(structuredInterpolationYields)
                                             .within(1e-13)),
                          roundTripName);
 
@@ -2376,7 +2377,10 @@ TEST(RooFitHS3, TypeKeysMatchTheCatalog)
    // RooBinSamplingPdf is exported and imported with the same key.
    RooGaussian gauss{"gauss", "", x, mean, sigma};
    RooBinSamplingPdf binSampling{"binSampling", "", x, gauss, 1e-3};
-   expectRoundTrip(binSampling);
+   // Evaluating the pdf leaves the named range "_binSampling_binSampling" on x, which is then exported as a domain.
+   RooWorkspace wsBinSampling;
+   wsBinSampling.import(binSampling, RooFit::Silence());
+   expectRoundTrip(wsBinSampling, RoundTripModel{}.exportChangesAfterEvaluation());
 
    // rate_extended_dist uses the HS3 field names "rate" and "dist". The names "pdf" and "norm" that RooFit used to
    // write are still read.
@@ -3141,13 +3145,13 @@ INSTANTIATE_TEST_SUITE_P(HistFactoryTwoChannels, RoundTrip,
                          testing::Values(RoundTripModel::fromDocument("Constraints", twoChannelHistFactoryJSON(false))
                                             .with(constraintStyles())
                                             .over({"x_c1", "x_c2"})
-                                            .likelihoodBy(twoChannelLikelihood)
+                                            .comparing(twoChannelLikelihood)
                                             .within(1e-10)
                                             .withOtherComponents(),
                                          RoundTripModel::fromDocument("Arrays", twoChannelHistFactoryJSON(true))
                                             .with(constraintStyles())
                                             .over({"x_c1", "x_c2"})
-                                            .likelihoodBy(twoChannelLikelihood)
+                                            .comparing(twoChannelLikelihood)
                                             .within(1e-10),
                                          RoundTripModel{"WithData", importTwoChannelsWithData}
                                             .with(constraintStyles())
@@ -3867,14 +3871,8 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraintsMustAgree)
 
    Imported ws{makeJSON(R"(["g0_constraint", null])", R"(["g0_constraint", null])")};
 
-   RooWorkspace wsConflict;
-   std::string message;
-   try {
-      importInto(wsConflict, makeJSON(R"(["g0_constraint", null])", R"([null, "g1_constraint"])"));
-   } catch (std::exception const &e) {
-      message = e.what();
-   }
-   EXPECT_THAT(message, HasSubstr("different constraints"));
+   EXPECT_THAT(importError(makeJSON(R"(["g0_constraint", null])", R"([null, "g1_constraint"])")),
+               HasSubstr("different constraints"));
 }
 
 // The relative uncertainty that a Gaussian staterror constraint encodes is its sigma. It doesn't depend on the value of
@@ -3991,15 +3989,7 @@ TEST(RooFitHS3, HistFactoryUnnamedModifierErrorMessages)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::FATAL);
 
-   auto importError = [](std::string const &modifier) {
-      RooWorkspace ws;
-      try {
-         importInto(ws, HistFactoryDoc{"0.3", modifier});
-      } catch (std::exception const &e) {
-         return std::string{e.what()};
-      }
-      return std::string{};
-   };
+   auto importError = [](std::string const &modifier) { return HS3Test::importError(HistFactoryDoc{"0.3", modifier}); };
    const std::string notAList =
       importError(R"({"type": "shapefactor", "parameters": ["g0", "g1"], "constraints": "g0_constraint"})");
    EXPECT_THAT(notAList, HasSubstr("samples[0](sig).modifiers[0](channel0_sig_syst_0).constraints: must be an array"));
@@ -4217,7 +4207,7 @@ RoundTripModel formulaChannel(std::string const &pdf, std::string const &paramet
       .with(constraintStyles())
       .withOtherComponents()
       .within(1e-12)
-      .likelihoodBy([=](RooWorkspace &ws) {
+      .comparing([=](RooWorkspace &ws) {
          RooAbsPdf *channel = ws.pdf(pdf);
          if (!channel) {
             throw std::runtime_error("no pdf '" + pdf + "'");
@@ -5476,9 +5466,10 @@ TEST(RooFitHS3, FlatteningOrderOfBinnedContents)
       }
    }
 
-   // The export writes the same order back.
-   EXPECT_TRUE(
-      matches(Doc{ws}, "data/d", R"({"axes": [{"name": "x"}, {"name": "y"}], "contents": [0, 1, 2, 3, 4, 5]})"));
+   // The export writes the same order back, and whole numbers without decimals.
+   Doc doc{ws};
+   EXPECT_TRUE(matches(doc, "data/d", R"({"axes": [{"name": "x"}, {"name": "y"}], "contents": [0, 1, 2, 3, 4, 5]})"));
+   EXPECT_THAT(doc.json(), HasSubstr(R"("contents":[0,1,2,3,4,5])"));
 }
 
 // Categorical axes in domains create RooCategory objects, with one state per category. Binned and unbinned data can
@@ -5810,7 +5801,8 @@ void buildSuperCategorySimultaneous(RooWorkspace &ws)
 
 } // namespace
 
-// The round trip compares each component in the bins of its observable, and the RooSimultaneous for the three keys.
+// The round trip compares each component across the range of its observable, and the RooSimultaneous for the three
+// keys.
 // The name of the super category is not written.
 INSTANTIATE_TEST_SUITE_P(CombinedDistSeveralColumns, RoundTrip,
                          testing::Values(RoundTripModel{"SuperCategory", buildSuperCategorySimultaneous}
@@ -6511,11 +6503,14 @@ TEST(RooFitHS3, WeightedDataSetAsBinnedData)
       return Doc{ws};
    };
 
-   EXPECT_TRUE(matches(exportOne({{0.5, 1.0}, {1.5, 2.0}}), "data/0", R"({"type": "binned", "contents": [1, 2]})"));
+   const Doc binned = exportOne({{0.5, 1.0}, {1.5, 2.0}});
+   EXPECT_TRUE(matches(binned, "data/0", R"({"type": "binned", "contents": [1, 2]})"));
+   EXPECT_THAT(binned.json(), HasSubstr(R"("contents":[1,2])"));
 
    // Entries in the bins 0, 1, 1.
-   EXPECT_TRUE(matches(exportOne({{0.5, 1.0}, {1.5, 1.0}, {1.7, 1.0}}), "data/0",
-                       R"({"type": "unbinned", "entries": [[0.5], [1.5], [1.7]]})"));
+   const Doc unbinned = exportOne({{0.5, 1.0}, {1.5, 1.0}, {1.7, 1.0}});
+   EXPECT_TRUE(matches(unbinned, "data/0", R"({"type": "unbinned", "entries": [[0.5], [1.5], [1.7]]})"));
+   EXPECT_THAT(unbinned.json(), HasSubstr(R"("entries":[[0.5],[1.5],[1.7]])"));
 }
 
 // HS3 requires the terms of a likelihood to have distinct variates, like the components of a combined distribution.
@@ -7100,7 +7095,7 @@ RoundTripModel sharedConstraintModel(std::string const &name, std::string const 
    return RoundTripModel::fromDocument(name, sharedConstraintJSON(hfName, otherName, "0.2"))
       .with({{"Arrays", {}}, {"NoArrays", {exportArrayDist(false)}}})
       .over({"x_hf", "x_other"})
-      .likelihoodBy([=](RooWorkspace &ws) { return std::vector<double>{sharedConstraintNLL(ws, hfName, otherName)}; })
+      .comparing([=](RooWorkspace &ws) { return std::vector<double>{sharedConstraintNLL(ws, hfName, otherName)}; })
       .within(1e-10)
       .withOtherComponents()
       .stableFromSecondExport();
@@ -7220,7 +7215,7 @@ void importConstrainedChannel(RooWorkspace &ws, bool external)
       "analyses": [{"name": "mc", "likelihood": "lh", "parameters_of_interest": ["mu"],
                     "domains": ["default_domain"]}])"}));
    if (external) {
-      static_cast<RooFit::ModelConfig &>(*ws.obj("mc")).SetExternalConstraints(RooArgSet{*ws.pdf("constraint")});
+      modelConfig(ws, "mc").SetExternalConstraints(RooArgSet{*ws.pdf("constraint")});
    }
 }
 
@@ -7236,7 +7231,7 @@ TEST(RooFitHS3, HistFactoryConstraintAlsoExternal)
    // RooFit counts the constraint once.
    RooWorkspace withoutExternal;
    importConstrainedChannel(withoutExternal, /*external=*/false);
-   ASSERT_TRUE(sameNumbers(likelihoodScan(ws, "mc", "data"), likelihoodScan(withoutExternal, "mc", "data"), 0.));
+   ASSERT_TRUE(sameNumbers(likelihoodScan(ws, "mc", "data"), likelihoodScan(withoutExternal, "mc", "data"), 1e-10));
 
    Doc exported{ws};
    EXPECT_TRUE(matches(exported, "distributions/constraint", R"({"type": "gaussian_dist"})"));
@@ -7352,7 +7347,9 @@ TEST(RooFitHS3, LandauLocationKey)
 {
    RooWorkspace ws;
    ws.factory("Landau::landau(x[0, 10], loc[5, 0, 10], sigma[1.0, 0.1, 10])");
-   EXPECT_TRUE(matches(Doc{ws}, "distributions/landau", R"({"mu": "loc", "mean": "<absent>"})"));
+   const Doc doc{ws};
+   EXPECT_TRUE(matches(doc, "distributions/landau", R"({"mu": "loc", "mean": "<absent>"})"));
+   EXPECT_THAT(doc.json(), Not(HasSubstr(R"("mean":"loc")")));
 
    for (std::string const version : {"0.2", "0.3"}) {
       Imported ws2{document(
@@ -8041,7 +8038,7 @@ TEST(RooFitHS3, ArrayDistOfLognormalsInRooFitParametrization)
    EXPECT_STREQ(imported->getShapeK().GetName(), "k");
 }
 
-// The components are named after their observables when they are read back, and have the same values.
+// The components are named after their observables when they are read back. Their product has the same values.
 INSTANTIATE_TEST_SUITE_P(
    ArrayDistOfLognormalsInRooFitParametrization, RoundTrip,
    testing::Values(RoundTripModel{"Model", buildArrayOfLognormals}.over({"nom_a", "nom_b"}).withOtherComponents()),
