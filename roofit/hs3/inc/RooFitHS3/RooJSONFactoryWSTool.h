@@ -317,8 +317,6 @@ private:
                                               std::vector<RooFit::HS3::DistributionRef> channelConstraints);
 
    // member variables
-   /// The components of combined distributions that have data, and are read as such.
-   std::set<std::string> _componentsWithData;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information

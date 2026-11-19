@@ -573,6 +573,27 @@ namespace HS3 {
 struct ValidateOptions;
 std::optional<ValidatedHS3Document>
 validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options);
+
+/// What readAuxiliaryChannelsAsConstraints() changed.
+struct AuxiliaryConstraints {
+   std::set<std::string> terms; ///< The components that are no longer components of their combined distribution.
+   std::set<std::string> data;  ///< Their data sets, which hold the observed values of global observables.
+   std::vector<std::string> warnings;
+};
+
+/// RooFit writes an array of constraints with the data set of its observed values as a component of the combined
+/// distribution of the model (RooJSONFactoryWSTool::Config::exportConstraintData), and marks it in
+/// misc.ROOT_internal.auxiliary_channels. Unless these components are to stay components (`asChannels`), the
+/// document is changed to what RooFit wrote before: the component and its data set become a term of every likelihood
+/// that has the combined distribution, which is then read as a constraint term with global observables. The label of
+/// the component is taken out of the index category.
+///
+/// The same is done for a document that lists a distribution twice: as a component of a combined distribution whose
+/// data set has no entries for it, and as a term of its own with data. It contributes once, as the term, but a
+/// component without data is not a constraint term for RooFit, which would leave it out of the likelihood. Such a
+/// document is read like the ones above, with a warning. If the components stay components, the data of the term
+/// becomes the data of the component instead, and the term is removed.
+AuxiliaryConstraints readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &doc, bool asChannels);
 } // namespace HS3
 
 /// An HS3 document. It is move-only, because generic objects refer to the JSON tree of the document.
@@ -673,7 +694,8 @@ struct ValidateOptions {
 } // namespace HS3
 
 /// A document that passed validate(). Only validate() can create it, so the code that builds RooFit objects can rely on
-/// the checks.
+/// the checks. Afterwards, it can only be changed by the functions of this layer that adapt it to what RooFit can
+/// build, which are trusted to leave it consistent.
 class ValidatedHS3Document {
 public:
    HS3Document const &doc() const { return _doc; }
@@ -682,6 +704,7 @@ private:
    explicit ValidatedHS3Document(HS3Document doc) : _doc{std::move(doc)} {}
    friend std::optional<ValidatedHS3Document>
    HS3::validate(HS3Document doc, HS3::Diagnostics &diagnostics, HS3::ValidateOptions const &options);
+   friend HS3::AuxiliaryConstraints HS3::readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &doc, bool asChannels);
 
    HS3Document _doc;
 };

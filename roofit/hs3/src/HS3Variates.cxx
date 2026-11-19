@@ -17,6 +17,9 @@
 // their own names, "mass_SR" and "mass_CR"). All cases are checked with the same function, sharedVariates(), on the
 // document, when it is exported and when it is imported. The generic distributions are read as far as the standard
 // says what they consist of, through the nodes that the document refers to.
+//
+// This file also has what else follows from which distribution is paired with which data: how often a constraint
+// contributes to a likelihood, and how a document is changed so that RooFit can read its auxiliary measurements.
 
 #include "HS3Document.h"
 
@@ -556,6 +559,169 @@ std::vector<std::string> sharedVariates(HS3Document const &doc)
       addShared(parts, "components", "the combined data set '" + data.name + "'", messages);
    }
    return messages;
+}
+
+AuxiliaryConstraints readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &validated, bool asChannels)
+{
+   HS3Document &doc = validated._doc;
+   AuxiliaryConstraints out;
+   // The components that are taken out of their combined distribution, by combined distribution, with their labels.
+   std::map<std::string, std::map<std::string, std::string>> dropped;
+   std::set<std::string> labels;
+
+   auto hasEntries = [&](std::string const &name) {
+      Data const *data = findByName(doc.data, name);
+      return data && data->numEntries() > 0;
+   };
+   // Components without data that are also terms with data. A data set can only be a component of one combined data
+   // set, so that the data of a term gets a copy for every further one; room for them is reserved, since the loop
+   // keeps pointers into the data sets.
+   doc.data.reserve(2 * doc.data.size() + 16);
+   std::set<std::string> dataOfComponents;
+   for (Likelihood &likelihood : doc.likelihoods) {
+      std::set<std::string> termsToRemove;
+      for (LikelihoodTerm const &term : likelihood.terms) {
+         auto const *combinedDist = find<CombinedDist>(doc.distributions, term.distribution.name);
+         auto const *dataRef = std::get_if<DataRef>(&term.data);
+         auto *combined = dataRef ? find<CombinedData>(doc.data, dataRef->name) : nullptr;
+         if (!combinedDist || !combined) {
+            continue;
+         }
+         for (auto const &component : combinedDist->components) {
+            if (component.key.size() != 1) {
+               continue;
+            }
+            std::string const &label = component.key.front();
+            std::string const &dist = component.ref.name;
+            auto ownTerm =
+               std::find_if(likelihood.terms.begin(), likelihood.terms.end(), [&](LikelihoodTerm const &other) {
+                  return other.distribution.name == dist && std::holds_alternative<DataRef>(other.data);
+               });
+            if (ownTerm == likelihood.terms.end()) {
+               continue;
+            }
+            auto dataComponent = std::find_if(combined->components.begin(), combined->components.end(),
+                                              [&](auto const &c) { return c.key == component.key; });
+            if (dataComponent != combined->components.end() && hasEntries(dataComponent->ref.name)) {
+               continue; // two contributions, which is not for RooFit to resolve
+            }
+            out.warnings.push_back("the distribution '" + dist + "' is a component of '" + term.distribution.name +
+                                   "' without data and a term of the likelihood '" + likelihood.name +
+                                   "' with data. It is read as " +
+                                   (asChannels ? "the component, with the data of the term." : "the term only."));
+            if (asChannels) {
+               DataRef termData = std::get<DataRef>(ownTerm->data);
+               if (!dataOfComponents.insert(termData.name).second) {
+                  Data const *original = findByName(doc.data, termData.name);
+                  const std::string copyName = dataRef->name + "_" + label;
+                  if (original && !findByName(doc.data, copyName) && doc.data.size() < doc.data.capacity()) {
+                     Data copy = *original;
+                     copy.name = copyName;
+                     doc.data.push_back(std::move(copy));
+                     termData.name = copyName;
+                  }
+               }
+               if (dataComponent != combined->components.end()) {
+                  dataComponent->ref = termData;
+               } else {
+                  combined->components.push_back({{label}, termData});
+               }
+               termsToRemove.insert(dist);
+            } else {
+               dropped[term.distribution.name][dist] = label;
+               labels.insert(label);
+            }
+         }
+      }
+      likelihood.terms.erase(
+         std::remove_if(likelihood.terms.begin(), likelihood.terms.end(),
+                        [&](LikelihoodTerm const &term) { return termsToRemove.count(term.distribution.name) > 0; }),
+         likelihood.terms.end());
+   }
+   if (asChannels) {
+      return out;
+   }
+
+   for (auto const &item : doc.rooFit.auxiliaryChannels) {
+      auto const *combinedDist = find<CombinedDist>(doc.distributions, item.first);
+      for (auto const &ref : item.second) {
+         std::string label = ref.name;
+         if (combinedDist) {
+            for (auto const &component : combinedDist->components) {
+               if (component.ref.name == ref.name && component.key.size() == 1) {
+                  label = component.key.front();
+               }
+            }
+         }
+         dropped[item.first][ref.name] = label;
+         labels.insert(label);
+      }
+   }
+   auto isLabel = [&](std::vector<std::string> const &key) { return key.size() == 1 && labels.count(key.front()); };
+   for (Likelihood &likelihood : doc.likelihoods) {
+      std::vector<LikelihoodTerm> added;
+      for (LikelihoodTerm const &term : likelihood.terms) {
+         auto found = dropped.find(term.distribution.name);
+         if (found == dropped.end()) {
+            continue;
+         }
+         auto const *dataRef = std::get_if<DataRef>(&term.data);
+         auto const *combined = dataRef ? find<CombinedData>(doc.data, dataRef->name) : nullptr;
+         for (auto const &item : found->second) {
+            std::string const &dist = item.first;
+            std::string const &label = item.second;
+            if (std::any_of(likelihood.terms.begin(), likelihood.terms.end(),
+                            [&](auto const &other) { return other.distribution.name == dist; })) {
+               continue; // a term of its own already
+            }
+            if (auto const *component = combined ? combined->find({label}) : nullptr) {
+               added.push_back({{dist}, component->ref});
+            } else if (std::none_of(likelihood.auxDistributions.begin(), likelihood.auxDistributions.end(),
+                                    [&](auto const &ref) { return ref.name == dist; })) {
+               // Without data, the observed values are the values of the constant observables.
+               likelihood.auxDistributions.push_back({dist});
+            }
+         }
+      }
+      likelihood.terms.insert(likelihood.terms.end(), added.begin(), added.end());
+   }
+   for (Data &data : doc.data) {
+      if (auto *combined = std::get_if<CombinedData>(&data.body)) {
+         auto &components = combined->components;
+         for (auto const &component : components) {
+            // Not the data sets without entries: they hold no values, and stay data sets of the workspace.
+            if (isLabel(component.key) && hasEntries(component.ref.name)) {
+               out.data.insert(component.ref.name);
+            }
+         }
+         components.erase(std::remove_if(components.begin(), components.end(),
+                                         [&](auto const &component) { return isLabel(component.key); }),
+                          components.end());
+      }
+   }
+   for (Domain &domain : doc.domains) {
+      for (auto &axis : domain.axes) {
+         if (auto *categorical = std::get_if<CategoricalAxis>(&axis)) {
+            auto &categories = categorical->categories;
+            categories.erase(std::remove_if(categories.begin(), categories.end(),
+                                            [&](std::string const &label) { return labels.count(label) > 0; }),
+                             categories.end());
+         }
+      }
+   }
+   for (auto const &droppedFrom : dropped) {
+      std::map<std::string, std::string> const &components = droppedFrom.second;
+      for (auto const &item : components) {
+         out.terms.insert(item.first);
+      }
+      if (auto *combinedDist = find<CombinedDist>(doc.distributions, droppedFrom.first)) {
+         auto &all = combinedDist->components;
+         all.erase(std::remove_if(all.begin(), all.end(),
+                                  [&](auto const &component) { return components.count(component.ref.name) > 0; }),
+                   all.end());
+      }
+   }
+   return out;
 }
 
 std::map<std::string, std::set<std::string>> writeLikelihoodTermsOnce(HS3Document const &doc, JSONNode &root)
