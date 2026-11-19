@@ -172,6 +172,8 @@ public:
          outputSizeVar = "range_" + opName;
       }
       out << SP << "size_t " << outputSizeVar <<  " = " << outputSize << ";\n";
+      // the size is only known now the output
+      out << RModel::SizeCheckMarker(fNOutput);
       out << SP << "for (size_t i = 0; i < " << outputSizeVar << "; i++) {\n";
       out << SP << SP << "tensor_" << fNOutput << "[i] = *tensor_" << fNStart << " + i * (*tensor_" << fNDelta << ");\n";
       out << SP << "}\n";

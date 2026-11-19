@@ -4845,6 +4845,55 @@ def make_Range_ConstantFolding():
     return _model(graph, opset=19, ir_version=9)
 
 
+def _runtime_size_model(name, nodes, inputs, output):
+    graph = helper.make_graph(nodes, name, inputs=inputs, outputs=[output])
+    return _model(graph, opset=19, ir_version=9)
+
+
+def make_ReshapeRuntimeShape():
+    """Ops: Reshape. The output shape is a graph input, known only at run time."""
+    return _runtime_size_model(
+        'ReshapeRuntimeShape',
+        [helper.make_node('Reshape', ['X', 'S'], ['Y'])],
+        [_vi('X', FLOAT, [2, 3]), _vi('S', INT64, [2])],
+        _vi('Y', FLOAT, ['a', 'b']),
+    )
+
+
+def make_ExpandRuntimeShape():
+    """Ops: Expand. The target shape is a graph input, known only at run time."""
+    return _runtime_size_model(
+        'ExpandRuntimeShape',
+        [helper.make_node('Expand', ['X', 'S'], ['Y'])],
+        [_vi('X', FLOAT, [1, 3]), _vi('S', INT64, [2])],
+        _vi('Y', FLOAT, ['a', 'b']),
+    )
+
+
+def make_ConstantOfShapeRuntimeShape():
+    """Ops: ConstantOfShape. The shape is a graph input, known only at run time."""
+    return _runtime_size_model(
+        'ConstantOfShapeRuntimeShape',
+        [helper.make_node('ConstantOfShape', ['S'], ['Y'])],
+        [_vi('S', INT64, [2])],
+        _vi('Y', FLOAT, ['a', 'b']),
+    )
+
+
+def make_RangeIntermediate():
+    """Ops: Range, Neg. The Range output is an intermediate tensor whose size is known only at run time."""
+    return _runtime_size_model(
+        'RangeIntermediate',
+        [
+            helper.make_node('Range', ['start', 'limit', 'delta'], ['R']),
+            helper.make_node('Neg', ['R'], ['N']),
+            helper.make_node('Neg', ['N'], ['Y']),
+        ],
+        [_vi('start', FLOAT, [1]), _vi('limit', FLOAT, [1]), _vi('delta', FLOAT, [1])],
+        _vi('Y', FLOAT, ['n']),
+    )
+
+
 def _range_symbolic(name, start, delta):
     """Range whose limit is a symbolic dimension read via Shape and Gather."""
     nodes = [
@@ -6562,6 +6611,10 @@ MODELS = {
     "RangeCleanName": make_RangeCleanName,
     "RangeFloat": make_RangeFloat,
     "RangeInt": make_RangeInt,
+    "ReshapeRuntimeShape": make_ReshapeRuntimeShape,
+    "ExpandRuntimeShape": make_ExpandRuntimeShape,
+    "ConstantOfShapeRuntimeShape": make_ConstantOfShapeRuntimeShape,
+    "RangeIntermediate": make_RangeIntermediate,
     "RangeWithDynShapeDelta": make_RangeWithDynShapeDelta,
     "RangeWithDynShapeStart": make_RangeWithDynShapeStart,
     "RangeWithDynShapeStartDelta": make_RangeWithDynShapeStartDelta,
@@ -7822,6 +7875,10 @@ TEST_INPUTS = {
         i64([10], (1,)),
         i64([2], (1,)),
     ],
+    "ReshapeRuntimeShape": [f32([1, 2, 3, 4, 5, 6], (2, 3)), i64([3, 2], (2,))],
+    "ExpandRuntimeShape": [f32([1, 2, 3], (1, 3)), i64([4, 3], (2,))],
+    "ConstantOfShapeRuntimeShape": [i64([2, 4], (2,))],
+    "RangeIntermediate": [f32([1.0], (1,)), f32([10.0], (1,)), f32([2.0], (1,))],
     "Reciprocal": [
         f32(
             [

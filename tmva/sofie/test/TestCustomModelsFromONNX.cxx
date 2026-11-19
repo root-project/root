@@ -13,15 +13,6 @@ TEST(ONNX, Linear16)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
-/*TEST(ONNX, Linear32RootFeature)
-{
-   SofieReference ref = readReference("Linear_32");
-
-   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_32", ref.f32("input0"));
-
-   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
-}*/
-
 TEST(ONNX, Linear32)
 {
    SofieReference ref = readReference("Linear_32");
@@ -1564,6 +1555,79 @@ TEST(ONNX, RangeInt)
       ref.i64("input2"));
 
    expectEqual(output, ref.i64("output0"));
+}
+
+// The size of these outputs depends on values only known at run time (a shape given as an input). Like the
+// dynamic input shapes, the parameters are the maximum the Session is created for.
+TEST(ONNX, ReshapeRuntimeShape)
+{
+   SofieReference ref = readReference("ReshapeRuntimeShape");
+
+   // the output shape is (3, 2)
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "ReshapeRuntimeShape",
+                                       "\"ReshapeRuntimeShape_FromONNX.dat\", 3, 2", ref.f32("input0"),
+                                       ref.i64("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ExpandRuntimeShape)
+{
+   SofieReference ref = readReference("ExpandRuntimeShape");
+
+   // the target shape is (4, 3)
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "ExpandRuntimeShape",
+                                       "\"ExpandRuntimeShape_FromONNX.dat\", 4, 3", ref.f32("input0"),
+                                       ref.i64("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ConstantOfShapeRuntimeShape)
+{
+   SofieReference ref = readReference("ConstantOfShapeRuntimeShape");
+
+   // the shape is (2, 4)
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "ConstantOfShapeRuntimeShape",
+                                       "\"ConstantOfShapeRuntimeShape_FromONNX.dat\", 2, 4", ref.i64("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// An intermediate tensor whose size is only known at run time lives in the memory of the Session,
+// sized from the same parameters (here the Range size: 5 elements).
+TEST(ONNX, RangeIntermediate)
+{
+   SofieReference ref = readReference("RangeIntermediate");
+
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "RangeIntermediate", "\"RangeIntermediate_FromONNX.dat\", 5",
+                                       ref.f32("input0"), ref.f32("input1"), ref.f32("input2"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, RuntimeSizeBeyondSessionThrows)
+{
+   ASSERT_TRUE(includeModel("RangeIntermediate"));
+   ASSERT_TRUE(includeModel("RangeFloat"));
+   ASSERT_TRUE(includeModel("ReshapeRuntimeShape"));
+
+   // Returns 100 if the call threw, 0 if the snippet did not compile, 1 if it did not throw.
+   auto thrown = [](std::string const &model, const char *sessionArgs, const char *call) {
+      std::string code = "[]() { try { TMVA_SOFIE_" + model + "::Session s(" + sessionArgs + "); " + call +
+                         " return 1; } catch (std::runtime_error const &) { return 100; } }()";
+      return gInterpreter->ProcessLine(code.c_str());
+   };
+   const char *range = "float a = 1, b = 10, c = 2; s.infer(&a, &b, &c);"; // 5 elements
+   const char *reshape = "float x[6] = {}; int64_t shape[2] = {3, 2}; s.infer(x, shape);"; // 3 x 2
+
+   // the default Session is created for 0, and 4 < 5
+   EXPECT_EQ(thrown("RangeIntermediate", "\"RangeIntermediate_FromONNX.dat\"", range), 100);
+   EXPECT_EQ(thrown("RangeIntermediate", "\"RangeIntermediate_FromONNX.dat\", 4", range), 100);
+   EXPECT_EQ(thrown("RangeFloat", "\"RangeFloat_FromONNX.dat\", 4", range), 100);
+   EXPECT_EQ(thrown("ReshapeRuntimeShape", "\"ReshapeRuntimeShape_FromONNX.dat\", 3, 1", reshape), 100);
+   // a Session that is big enough does not throw
+   EXPECT_EQ(thrown("RangeFloat", "\"RangeFloat_FromONNX.dat\", 5", range), 1);
 }
 
 // constant INT64 Range(0, 5, 2) folds at generation time; the count is ceiled, not floored

@@ -152,6 +152,8 @@ public:
       // No need to broadcast A if it's an initialized tensor or shapes are the same
       auto lengthX = ConvertDimShapeToLength(fShapeX);
       auto lengthY = ConvertDimShapeToLength(fShapeY);
+      // the output size is given by the shape values read above
+      out << RModel::SizeCheckMarker(fNY);
       if (lengthX != lengthY) {
          out << SP << "if ( (" << lengthX << ") < (" << lengthY << ") ) {\n";
          out << SP << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
