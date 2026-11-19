@@ -17,9 +17,12 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <cstdlib>
 #include <deque>
+#include <iomanip>
 #include <istream>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <sstream>
 
@@ -252,11 +255,20 @@ std::string JSONNode::val() const
    switch (value.type()) {
    case nlohmann::json::value_t::string: return value.get<std::string>();
    case nlohmann::json::value_t::boolean: return value.get<bool>() ? "true" : "false";
-   case nlohmann::json::value_t::number_integer: return std::to_string(value.get<int>());
-   case nlohmann::json::value_t::number_unsigned: return std::to_string(value.get<unsigned int>());
+   case nlohmann::json::value_t::number_integer: return std::to_string(value.get<nlohmann::json::number_integer_t>());
+   case nlohmann::json::value_t::number_unsigned: return std::to_string(value.get<nlohmann::json::number_unsigned_t>());
    case nlohmann::json::value_t::number_float: {
+      // The string has to read back as the same number. Start with the default precision of the streams, so that the
+      // numbers that six digits spell exactly keep their short spelling, and add digits as long as it takes.
+      const double number = value.get<double>();
       std::stringstream ss;
-      ss << value.get<double>();
+      for (int precision = 6; precision <= std::numeric_limits<double>::max_digits10; ++precision) {
+         ss.str("");
+         ss << std::setprecision(precision) << number;
+         if (std::strtod(ss.str().c_str(), nullptr) == number) {
+            break;
+         }
+      }
       return ss.str();
    }
    default:
