@@ -1231,7 +1231,7 @@ bool ROOT::Internal::RWritePageMemoryManager::TryUpdate(RWriteColumn &column, st
 //------------------------------------------------------------------------------
 
 ROOT::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleWriteOptions &options)
-   : RPageStorage(name), fWritePageMemoryManager(options.GetPageBufferBudget()), fOptions(options.Clone())
+   : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
 }
@@ -1758,7 +1758,7 @@ void ROOT::Internal::RPagePersistentSink::CommitSealedPageV(std::span<RPageStora
       locatorIndexes.reserve(locatorIndexes.size() + rangeSize);
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         if (!fFeatures.fCanMergePages || !fOptions->GetEnableSamePageMerging()) {
+         if (!fFeatures.fCanMergePages || !GetWriteOptions().GetEnableSamePageMerging()) {
             mask.emplace_back(true);
             locatorIndexes.emplace_back(iLocator++);
             continue;
@@ -1872,7 +1872,8 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
 
       fDescriptorBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
       fPrevClusterNEntries += cluster.fNEntries;
-      if (fNPagesInGroup > fOptions->GetClusterGroupPageThreshold() && fOptions->GetClusterGroupPageThreshold() > 0) {
+      const auto &writeOpts = GetWriteOptions();
+      if (fNPagesInGroup > writeOpts.GetClusterGroupPageThreshold() && writeOpts.GetClusterGroupPageThreshold() > 0) {
          CommitClusterGroup();
       }
    }

@@ -183,7 +183,7 @@ std::vector<ROOT::RNTupleLocator>
 ROOT::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
                                                      const std::vector<bool> &mask)
 {
-   const std::uint64_t maxKeySize = fOptions->GetMaxKeySize();
+   const std::uint64_t maxKeySize = GetWriteOptions().GetMaxKeySize();
 
    CommitBatch batch{};
    std::vector<RNTupleLocator> locators;

@@ -256,13 +256,15 @@ public:
    using Callback_t = std::function<void(RPageSink &)>;
 
 private:
-   std::vector<Callback_t> fOnDatasetCommitCallbacks;
-   std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
+   /// May contain a derived class of RNTupleWriteOptions
+   std::unique_ptr<ROOT::RNTupleWriteOptions> fOptions;
    /// Used in ReservePage to maintain the page buffer budget
    RWritePageMemoryManager fWritePageMemoryManager;
 
+   std::vector<Callback_t> fOnDatasetCommitCallbacks;
+   std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
+
 protected:
-   std::unique_ptr<ROOT::RNTupleWriteOptions> fOptions;
    /// Flag if sink was initialized
    bool fIsInitialized = false;
 

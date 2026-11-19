@@ -240,7 +240,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::~RPageSinkDaos() = default;
 
 void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
 {
-   auto opts = dynamic_cast<RNTupleWriteOptionsDaos *>(fOptions.get());
+   auto opts = dynamic_cast<const RNTupleWriteOptionsDaos *>(&GetWriteOptions());
    fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();
 
    auto args = ParseDaosURI(fURI);
