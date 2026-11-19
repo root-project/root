@@ -34,45 +34,36 @@ void DynamicExec()
    // When moving the mouse in the canvas, a second canvas shows the
    // projection along X of the bin corresponding to the Y position
    // of the mouse. The resulting histogram is fitted with a gaussian.
-   // A "dynamic" line shows the current bin position in Y.
+   // A "interactive" line shows the current bin position in Y.
    // This more elaborated example can be used as a starting point
    // to develop more powerful interactive applications exploiting Cling
    // as a development engine.
 
-   static int pyold = 0;
-
-   gPad->FeedbackMode(kTRUE);
    int px = gPad->GetEventX();
    int py = gPad->GetEventY();
    TObject *select = gPad->GetSelected();
    float uxmin = gPad->GetUxmin();
    float uxmax = gPad->GetUxmax();
-   auto c2 = static_cast<TCanvas *>(gROOT->GetListOfCanvases()->FindObject("c2"));
 
    TH2 *h = dynamic_cast<TH2 *>(select);
    if (!h)
       return;
 
-   if (pyold) {
-      // erase line at old position
-      Float_t upyold = gPad->AbsPixeltoY(pyold);
-      gPad->PaintLine(uxmin, upyold, uxmax, upyold);
-      pyold = 0;
-   }
-
    Float_t upy = gPad->AbsPixeltoY(py);
    Float_t y = gPad->PadtoY(upy);
+   Double_t xpos[2] = { uxmin, uxmax };
+   Double_t ypos[2] = { upy, upy };
 
-   // draw a line at current position
-   gPad->GetPainter()->DrawLine(uxmin, upy, uxmax, upy);
-
-   // remember position of last painted line
-   pyold = py;
+   // draw an interactive line at current position
+   gPad->PaintPolyLine(2, xpos, ypos, "i_slicex");
+   gPad->Modified();
+   gPad->Update();
 
    // remember active pad and restore it when leave function
    TVirtualPad::TContext ctxt;
 
    // create or set the new canvas c2
+   auto c2 = static_cast<TCanvas *>(gROOT->GetListOfCanvases()->FindObject("c2"));
    if (c2)
       delete c2->GetPrimitive("Projection");
    else

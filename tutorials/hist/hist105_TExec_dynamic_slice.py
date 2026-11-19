@@ -18,20 +18,16 @@
 ##
 ## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen, Enric Tejedor, Sergey Linev
 
-import sys
 import ctypes
+import array
 
-from ROOT import gRandom, gPad, gROOT
-from ROOT import kTRUE, kRed
-from ROOT import TCanvas, TH2, TH2F
-
+from ROOT import gRandom, gPad, gROOT, TCanvas, TH2, TH2F, kRed
 
 class DynamicExec:
 
    def __init__( self ):
       self._cX   = None
       self._cY   = None
-      self._old  = None
 
    def __call__( self ):
 
@@ -42,8 +38,6 @@ class DynamicExec:
       if not isinstance( h, TH2 ):
          return
 
-      gPad.FeedbackMode( kTRUE )
-
       px = gPad.GetEventX()
       py = gPad.GetEventY()
       upx = gPad.AbsPixeltoX( px )
@@ -52,14 +46,14 @@ class DynamicExec:
       uxmin, uxmax = gPad.GetUxmin(), gPad.GetUxmax()
       uymin, uymax = gPad.GetUymin(), gPad.GetUymax()
 
-      # erase old position and paint lines at current position
-      if self._old != None:
-         gPad.PaintLine( uxmin, self._old[1], uxmax, self._old[1] )
-         gPad.PaintLine( self._old[0], uymin, self._old[0], uymax )
-      gPad.PaintLine( uxmin, upy, uxmax, upy )
-      gPad.PaintLine( upx, uymin, upx, uymax )
-
-      self._old = upx, upy
+      posx = array.array('d', [uxmin, uxmax])
+      posy = array.array('d', [upy, upy])
+      gPad.PaintPolyLine(2, posx, posy, 'i_slicex')
+      posx = array.array('d', [upx, upx])
+      posy = array.array('d', [uymin, uymax])
+      gPad.PaintPolyLine(2, posx, posy, 'i_slicey')
+      gPad.Modified()
+      gPad.Update()
 
       x = gPad.PadtoX( upx )
       y = gPad.PadtoY( upy )
@@ -107,8 +101,10 @@ class DynamicExec:
 
 
 if __name__ == '__main__':
- # create a new canvas.
 
+   gROOT.SetWebDisplay('off')
+
+ # create a new canvas.
    c1 = TCanvas('c1', 'Dynamic Slice Example', 10, 10, 700, 500 )
    c1.SetFillColor( 42 )
    c1.SetFrameFillColor( 33 )
