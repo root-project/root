@@ -148,6 +148,9 @@ struct RooFit::HS3::ToolImportState {
    HS3::ParameterPoint const *defaultValues = nullptr;
    std::unordered_map<std::string, HS3::ParameterValue const *> defaultValuesByName;
    HS3::DomainRanges ranges{document.domains};
+   /// The components of array distributions created in this import, by name, with their canonical form (see
+   /// arrayComponentForm()).
+   std::map<std::string, std::string> arrayComponentForms;
 };
 
 /// The document that the tool is exporting.
@@ -178,6 +181,22 @@ struct RooFit::HS3::ToolExportState {
    std::optional<HistFactoryDist> typedObject;
    std::vector<DistributionRef> channelConstraints;
 };
+
+std::string const *RooFit::HS3::importedArrayComponentForm(RooJSONFactoryWSTool &tool, std::string const &name)
+{
+   if (!tool._import) {
+      return nullptr;
+   }
+   auto found = tool._import->arrayComponentForms.find(name);
+   return found == tool._import->arrayComponentForms.end() ? nullptr : &found->second;
+}
+
+void RooFit::HS3::recordImportedArrayComponent(RooJSONFactoryWSTool &tool, std::string const &name, std::string form)
+{
+   if (tool._import) {
+      tool._import->arrayComponentForms[name] = std::move(form);
+   }
+}
 
 void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
                                     std::vector<DistributionRef> channelConstraints)
@@ -1319,6 +1338,39 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       }
       extConstraints.add(*extConstraint);
    }
+   // An array distribution enters by union composition (HS3): its components are the factors, and a component that
+   // several arrays share is one factor. RooFit multiplies the arrays as a whole, which would count such a component
+   // once per array, so an array that shares a component with another external constraint is replaced by its
+   // components, which RooFit counts once each. Arrays without shared components stay whole, so that they go to the
+   // channels as a whole (see attachConstraintsToChannels()).
+   {
+      std::map<RooAbsArg const *, int> uses;
+      auto componentsOf = [](RooAbsArg const *arg) -> RooArgList const * {
+         auto const *array = dynamic_cast<RooProdPdf const *>(arg);
+         return array && arg->getAttribute(arrayDistTag) ? &array->pdfList() : nullptr;
+      };
+      for (RooAbsArg const *constraint : extConstraints) {
+         if (RooArgList const *components = componentsOf(constraint)) {
+            for (RooAbsArg const *component : *components) {
+               ++uses[component];
+            }
+         } else {
+            ++uses[constraint];
+         }
+      }
+      RooArgSet split;
+      for (RooAbsArg *constraint : extConstraints) {
+         RooArgList const *components = componentsOf(constraint);
+         if (components && std::any_of(components->begin(), components->end(),
+                                       [&](RooAbsArg const *component) { return uses[component] > 1; })) {
+            split.add(*constraint);
+         }
+      }
+      for (RooAbsArg *array : split) {
+         extConstraints.remove(*array);
+         extConstraints.add(*componentsOf(array), /*silent=*/true);
+      }
+   }
    RooArgSet observables;
    for (HS3::LikelihoodTerm const *term : nllTerms) {
       if (auto const *dataRef = std::get_if<HS3::DataRef>(&term->data)) {
@@ -2144,10 +2196,21 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
       }
       for (RooAbsPdf *pdf : static_range_cast<RooAbsPdf *>(prod->pdfList())) {
          const std::string writtenIn = exportAsArrayComponent(*pdf, name);
-         if (writtenIn != name) {
-            error("cannot write '" + name + "' as an array distribution: its component '" + pdf->GetName() +
-                  "' is already written as '" + writtenIn + "'");
+         if (writtenIn == name) {
+            continue;
          }
+         // A component of another array distribution: HS3 composes array distributions by union, so a component
+         // written in several of them is one factor. It is written in this one as well.
+         if (writtenIn != pdf->GetName() && _export->arrayComponents.count(writtenIn)) {
+            auto &components = _export->arrayComponents[name];
+            if (components.empty()) {
+               _export->exportedObjectNames.insert(name);
+            }
+            components.push_back(pdf);
+            continue;
+         }
+         error("cannot write '" + name + "' as an array distribution: its component '" + pdf->GetName() +
+               "' is already written as '" + writtenIn + "'");
       }
       return;
    }
@@ -3025,9 +3088,23 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    // The channels of the model that consist of constraint terms only, see constraintsOfChannels().
    std::vector<std::string> auxiliaryChannelsOfModel;
    std::vector<std::string> constraintTerms;
-   if (mc.GetExternalConstraints()) {
-      for (const auto &constr : *mc.GetExternalConstraints()) {
-         addUnique(constraintTerms, constr->GetName());
+   if (RooArgSet const *external = mc.GetExternalConstraints()) {
+      // A component of an array distribution is written as part of the array, which enters the likelihood as a
+      // whole: the external constraints must contain all of its components.
+      for (const auto &constr : *external) {
+         auto array = _export->arrayOfComponent.find(constr->GetName());
+         if (array == _export->arrayOfComponent.end()) {
+            addUnique(constraintTerms, constr->GetName());
+            continue;
+         }
+         for (RooAbsPdf const *component : _export->arrayComponents[array->second]) {
+            if (!external->find(*component)) {
+               error("cannot write the external constraint '" + std::string(constr->GetName()) + "' of '" +
+                     mc.GetName() + "': it is written as a component of the array distribution '" + array->second +
+                     "', whose component '" + component->GetName() + "' is not an external constraint");
+            }
+         }
+         addUnique(constraintTerms, array->second);
       }
    }
    // The constraint terms that the HistFactory exporter wrote for the channel `channel`, in the order of the document:

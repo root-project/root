@@ -7152,7 +7152,7 @@ TEST(RooFitHS3, ArrayDistVariatesInLikelihood)
       Imported ws{json};
    }
    expectImportThrowsWithError(replaced(json, R"(["constraints"])", R"(["constraints", "other"])"),
-                               "the variate 'nom_b' is shared by the terms 'constraints' and 'other' of the "
+                               "the variate 'nom_b' is shared by the terms 'constraints[nom_b]' and 'other' of the "
                                "likelihood 'lh'");
 }
 
@@ -8159,4 +8159,122 @@ TEST(RooFitHS3, HelperObjects)
       EXPECT_EQ(types(exportTypes(ws2, true)), types(withArrays));
       EXPECT_EQ(types(withArrays).count("array_dist"), 2u);
    }
+}
+
+namespace {
+
+// A document with a Gaussian model of the observable `obs` and the array distributions `arrays` (name and list of
+// indices i of components over gobs_i with mean theta_i) as auxiliary distributions of the likelihood. The component
+// over gobs_`odd` has another width. The constant gobs_i are in the domain of the analysis, which makes them global
+// observables: without them, RooFit's normalization of the constraint terms would be ambiguous.
+std::string identicalComponentsJSON(std::vector<std::pair<std::string, std::vector<int>>> const &arrays, int odd = -1)
+{
+   std::string distributions = R"({"name": "model", "type": "gaussian_dist", "x": "obs", "mean": "mu", "sigma": 1.0})";
+   std::string aux;
+   std::set<int> indices;
+   for (auto const &[name, members] : arrays) {
+      std::string components;
+      for (int i : members) {
+         indices.insert(i);
+         const std::string n = std::to_string(i);
+         components += std::string(components.empty() ? "" : ", ") + R"({"x": "gobs_)" + n + R"(", "mean": "theta_)" +
+                       n + R"(")" + (i == odd && name != arrays.front().first ? R"(, "sigma": 2.0)" : "") + "}";
+      }
+      distributions +=
+         R"(, {"name": ")" + name +
+         R"(", "type": "array_dist", "component_type": "gaussian_dist", "default_parameters": {"sigma": 1.0}, "components": [)" +
+         components + "]}";
+      aux += std::string(aux.empty() ? "" : ", ") + "\"" + name + "\"";
+   }
+   std::string domainAxes = R"({"name": "mu", "min": -5.0, "max": 5.0})";
+   std::string values = R"({"name": "mu", "value": 0.0})";
+   for (int i : indices) {
+      const std::string n = std::to_string(i);
+      domainAxes += R"(, {"name": "theta_)" + n + R"(", "min": -5.0, "max": 5.0}, {"name": "gobs_)" + n +
+                    R"(", "min": -5.0, "max": 5.0})";
+      values += R"(, {"name": "theta_)" + n + R"(", "value": 0.0}, {"name": "gobs_)" + n + R"(", "value": )" +
+                std::to_string(0.1 * i) + R"(, "const": true})";
+   }
+   return R"({"metadata": {"hs3_version": "0.3"}, "distributions": [)" + distributions +
+          R"(], "data": [{"name": "data", "type": "unbinned", "axes": [{"name": "obs", "min": -5.0, "max": 5.0}], "entries": [[0.3]]}],
+  "domains": [{"name": "parameters", "type": "product_domain", "axes": [)" +
+          domainAxes +
+          R"(]}, {"name": "default_domain", "type": "product_domain", "axes": [{"name": "obs", "min": -5.0, "max": 5.0}]}], "parameter_points": [{"name": "default_values", "parameters": [)" +
+          values +
+          R"(]}], "likelihoods": [{"name": "lh", "distributions": ["model"], "data": ["data"], "aux_distributions": [)" +
+          aux +
+          R"(]}], "analyses": [{"name": "analysis", "likelihood": "lh", "parameters_of_interest": ["mu"], "domains": ["parameters"]}]})";
+}
+
+double identicalComponentsNLL(RooWorkspace &ws)
+{
+   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("analysis"));
+   if (!mc || !ws.data("data")) {
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+   for (int i = 1; i <= 6; ++i) {
+      if (RooRealVar *theta = ws.var(("theta_" + std::to_string(i)).c_str())) {
+         theta->setVal(0.2 * i - 0.5);
+      }
+   }
+   RooArgSet external;
+   if (mc->GetExternalConstraints()) {
+      external.add(*mc->GetExternalConstraints());
+   }
+   RooArgSet globs;
+   if (mc->GetGlobalObservables()) {
+      globs.add(*mc->GetGlobalObservables());
+   }
+   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*ws.data("data"), RooFit::ExternalConstraints(external),
+                                                           RooFit::GlobalObservables(globs))};
+   return nll->getVal();
+}
+
+} // namespace
+
+// HS3 composes array distributions by union: each component is a factor, and identical components of several arrays
+// are one factor (the example of HS3 PR #161). Two arrays over gobs_1..gobs_4 and gobs_3..gobs_6 with identical
+// components for gobs_3 and gobs_4 give the likelihood of one array over gobs_1..gobs_6. The shared components are
+// one object in RooFit, and the document is written back with both arrays. Components over the same observable that
+// are not identical are an error.
+TEST(RooFitHS3, ArrayDistIdenticalComponents)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace wsAll;
+   ASSERT_TRUE(RooJSONFactoryWSTool{wsAll}.importJSONfromString(identicalComponentsJSON({{"Z", {1, 2, 3, 4, 5, 6}}})));
+   const double nllAll = identicalComponentsNLL(wsAll);
+   ASSERT_FALSE(std::isnan(nllAll));
+
+   const std::string json = identicalComponentsJSON({{"Za", {1, 2, 3, 4}}, {"Zb", {3, 4, 5, 6}}});
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json)) << json;
+   EXPECT_NEAR(identicalComponentsNLL(ws), nllAll, 1e-10 * std::abs(nllAll));
+   auto *za = dynamic_cast<RooProdPdf *>(ws.pdf("Za"));
+   auto *zb = dynamic_cast<RooProdPdf *>(ws.pdf("Zb"));
+   ASSERT_NE(za, nullptr);
+   ASSERT_NE(zb, nullptr);
+   EXPECT_EQ(za->pdfList().find("gobs_3_constraint"), zb->pdfList().find("gobs_3_constraint"));
+   auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("analysis"));
+   ASSERT_NE(mc, nullptr);
+   ASSERT_NE(mc->GetExternalConstraints(), nullptr);
+   EXPECT_EQ(mc->GetExternalConstraints()->size(), 6u);
+
+   // Written back with both arrays, each with its four components; the document is stable.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(exported);
+   for (const char *name : {"Za", "Zb"}) {
+      const auto *array = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], name);
+      ASSERT_NE(array, nullptr) << exported;
+      EXPECT_EQ((*array)["components"].num_children(), 4u) << exported;
+   }
+   EXPECT_NE(exported.find(R"("aux_distributions":["Za","Zb"])"), std::string::npos) << exported;
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
+   EXPECT_NEAR(identicalComponentsNLL(ws2), nllAll, 1e-10 * std::abs(nllAll));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
+
+   // A component over gobs_3 with another width is not identical.
+   expectImportThrowsWithError(identicalComponentsJSON({{"Za", {1, 2, 3, 4}}, {"Zb", {3, 4, 5, 6}}}, 3),
+                               "is not identical to the component over the same observable");
 }

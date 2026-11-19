@@ -432,9 +432,22 @@ void importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
       observables.push_back(x);
 
       const std::string pdfName = x + "_constraint";
+      const std::string form = RooFit::HS3::arrayComponentForm(componentType, component, defaults);
       if (ws.arg(pdfName)) {
-         error("cannot create the component for '" + x + "' as '" + pdfName +
-               "', the workspace already has an object of that name");
+         // HS3 composes array distributions by union: an identical component of another array distribution of this
+         // document is the same factor, so the object is shared. A component over the same observable that is not
+         // identical is an error: the two would be different factors that share a variate.
+         std::string const *existing = RooFit::HS3::importedArrayComponentForm(*tool, pdfName);
+         if (!existing) {
+            error("cannot create the component for '" + x + "' as '" + pdfName +
+                  "', the workspace already has an object of that name");
+         }
+         if (*existing != form) {
+            error(context + " over '" + x +
+                  "' is not identical to the component over the same observable of another array distribution");
+         }
+         pdfs.add(*ws.pdf(pdfName));
+         continue;
       }
       JSONNode &node = nodes.append_child().set_map();
       node["name"] << pdfName;
@@ -452,6 +465,7 @@ void importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
       if (!pdf) {
          error(context + " did not produce a distribution");
       }
+      RooFit::HS3::recordImportedArrayComponent(*tool, pdfName, form);
       pdfs.add(*pdf);
    }
 

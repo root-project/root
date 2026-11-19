@@ -28,9 +28,11 @@
 
 #include <algorithm>
 #include <functional>
+#include <cstdio>
 #include <iterator>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <variant>
@@ -512,15 +514,72 @@ std::set<std::string> componentsWithData(HS3Document const &doc)
    return out;
 }
 
+std::string arrayComponentForm(std::string const &componentType, JSONNode const &component, JSONNode const *defaults)
+{
+   // A value in canonical form: numbers as the double they represent (two literals are identical if they are the same
+   // number), names as they are, anything else as written.
+   auto canonical = [](JSONNode const &value) {
+      if (value.is_number()) {
+         char buffer[32];
+         std::snprintf(buffer, sizeof(buffer), "%.17g", value.val_double());
+         return std::string{"#"} + buffer;
+      }
+      if (value.has_val()) {
+         return "$" + value.val();
+      }
+      std::stringstream ss;
+      value.writeJSON(ss);
+      return ss.str();
+   };
+   std::map<std::string, std::string> fields;
+   if (defaults) {
+      for (auto const &field : defaults->children()) {
+         fields[field.key()] = canonical(field);
+      }
+   }
+   for (auto const &field : component.children()) {
+      fields[field.key()] = canonical(field);
+   }
+   std::string form = componentType;
+   for (auto const &[key, value] : fields) {
+      form += ";" + key + "=" + value;
+   }
+   return form;
+}
+
 std::vector<std::string> sharedVariates(HS3Document const &doc)
 {
    Distributions distributions{doc};
    std::vector<std::string> messages;
+   // The parts with their variates. An array distribution uses union composition: each component is a factor of its
+   // own, and identical components of several array distributions are one factor. It contributes one part per
+   // component, and identical components (with the same canonical form, see arrayComponentForm()) are the same part,
+   // named after the first of them, "<array>[<x>]". Any other distribution is one part.
    auto withVariates = [&](std::vector<std::string> const &names) {
       PartVariates parts;
+      std::map<std::string, std::string> nameOfForm;
       for (std::string const &name : names) {
-         std::set<std::string> visited;
-         distributions.addVariates(name, parts.emplace_back(name, std::set<std::string>{}).second, visited);
+         JSONNode const *array = distributions.nodeOf(name, "array_dist");
+         JSONNode const *components = array ? array->find("components") : nullptr;
+         if (!components) {
+            std::set<std::string> visited;
+            distributions.addVariates(name, parts.emplace_back(name, std::set<std::string>{}).second, visited);
+            continue;
+         }
+         std::string const componentType = array->has_child("component_type") ? (*array)["component_type"].val() : "";
+         JSONNode const *defaults = array->find("default_parameters");
+         for (JSONNode const &component : components->children()) {
+            std::set<std::string> x;
+            if (JSONNode const *xNode = component.find("x")) {
+               addNames(*xNode, x);
+            }
+            std::string const form = arrayComponentForm(componentType, component, defaults);
+            auto found = nameOfForm.find(form);
+            if (found == nameOfForm.end()) {
+               found = nameOfForm.emplace(form, name + "[" + (x.empty() ? "" : *x.begin()) + "]").first;
+            }
+            parts.emplace_back(found->second, x);
+         }
       }
       return parts;
    };

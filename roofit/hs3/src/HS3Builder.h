@@ -65,6 +65,13 @@ void buildCombinedDist(RooJSONFactoryWSTool &tool, std::string const &name, Comb
 void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
                        std::vector<DistributionRef> channelConstraints);
 
+/// The canonical form (see arrayComponentForm()) of the component of an array distribution that this import created
+/// under the name `name`, or nullptr if it created none of that name.
+std::string const *importedArrayComponentForm(RooJSONFactoryWSTool &tool, std::string const &name);
+
+/// Record that this import created the component `name` of an array distribution, with the canonical form `form`.
+void recordImportedArrayComponent(RooJSONFactoryWSTool &tool, std::string const &name, std::string form);
+
 /// Whether this is the importer that RooFit registers for HistFactory distributions, as opposed to the one of a user.
 bool isBuiltinHistFactoryImporter(JSONIO::Importer const &importer);
 
