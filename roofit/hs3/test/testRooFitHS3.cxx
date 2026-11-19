@@ -83,9 +83,6 @@ namespace {
 
 const testing::Environment *const quietEnvironment = testing::AddGlobalTestEnvironment(new QuietEnvironment);
 
-// If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = false;
-
 RooFit::Detail::JSONNode *findMutableNamedChild(RooFit::Detail::JSONNode &node, std::string const &name)
 {
    for (RooFit::Detail::JSONNode &child : node.children()) {
@@ -101,99 +98,6 @@ std::string jsonString(RooFit::Detail::JSONTree &tree)
    std::ostringstream stream;
    tree.rootnode().writeJSON(stream);
    return stream.str();
-}
-
-// Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
-// will be written out and read back, and then the values of the old and new
-// RooAbsReal will be compared for equality in each bin of the observable that
-// is called "x" by convention.
-int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
-{
-   RooWorkspace ws2;
-
-   const std::string json1 = toJSON(ws1);
-
-   if (writeJsonFiles) {
-      RooJSONFactoryWSTool{ws1}.exportJSON(argName + "_1.json");
-   }
-
-   importInto(ws2, json1);
-   if (writeJsonFiles) {
-      RooJSONFactoryWSTool{ws2}.exportJSON(argName + "_2.json");
-   }
-
-   // Export the re-imported workspace back to JSON, and compare the first JSON
-   // with the second one. They should be identical.
-   const std::string json2 = toJSON(ws2);
-   EXPECT_EQ(json2, json1) << argName;
-
-   // It would be nice to do a similar closure check for the original and for
-   // the re-imported workspace. However, there is no way to compare workspaces
-   // for equality. But we can still check that the objects in the workspace
-   // have at least the same name.
-   RooArgSet comps1 = ws1.components();
-   RooArgSet comps2 = ws2.components();
-   EXPECT_EQ(comps2.size(), comps1.size());
-
-   comps1.sort();
-   comps2.sort();
-
-   for (std::size_t i = 0; i < comps1.size(); ++i) {
-      EXPECT_STREQ(comps1[i]->GetName(), comps2[i]->GetName());
-   }
-
-   RooRealVar *x1 = ws1.var("x");
-   RooRealVar *x2 = ws2.var("x");
-
-   if (!x1 || !x2)
-      return 1;
-
-   TObject *arg1 = ws1.obj(argName);
-   TObject *arg2 = ws2.obj(argName);
-
-   if (!arg1 || !arg2)
-      return 1;
-
-   RooArgSet nset1{*x1};
-   RooArgSet nset2{*x2};
-
-   RooAbsReal *r1 = dynamic_cast<RooAbsReal *>(arg1);
-   RooAbsReal *r2 = dynamic_cast<RooAbsReal *>(arg2);
-
-   if (r1 && !r2)
-      return 1;
-
-   if (r1 && r2) {
-      bool allGood = true;
-      for (int i = 0; i < x1->numBins(); ++i) {
-         x1->setBin(i);
-         x2->setBin(i);
-         const double val1 = r1->getVal(nset1);
-         const double val2 = r2->getVal(nset2);
-         allGood &= (exact ? (val1 == val2) : std::abs(val1 - val2) < 1e-10);
-      }
-
-      return allGood ? 0 : 1;
-   }
-
-   return 0;
-}
-
-int validate(std::vector<std::string> const &expressions, bool exact = true)
-{
-   RooWorkspace ws;
-   for (std::size_t iExpr = 0; iExpr < expressions.size() - 1; ++iExpr) {
-      ws.factory(expressions[iExpr]);
-   }
-   const std::string argName = ws.factory(expressions.back())->GetName();
-   return validate(ws, argName, exact);
-}
-
-int validate(RooAbsArg const &arg, bool exact = true)
-{
-   RooWorkspace ws;
-   ws.import(arg, RooFit::Silence());
-   return validate(ws, arg.GetName(), exact);
 }
 
 std::string parameterStepWidthsNode(std::string const &json)
@@ -461,26 +365,16 @@ std::string twoChannelHistFactoryJSON(bool arrays)
    })";
 }
 
-// The NLL of the two-channel model of twoChannelHistFactoryJSON() at a parameter point.
-double twoChannelNLL(RooWorkspace &ws, std::map<std::string, double> const &point)
+// The data of the two-channel model of twoChannelHistFactoryJSON() as one data set for its RooSimultaneous. The
+// channels have their own observables, x_c1 and x_c2: one weighted entry per bin and channel.
+std::unique_ptr<RooDataSet> twoChannelData(RooWorkspace &ws, const char *name)
 {
-   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("an"));
-   if (!mc) {
-      return std::numeric_limits<double>::quiet_NaN();
-   }
-   auto *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
-   if (!simPdf) {
-      return std::numeric_limits<double>::quiet_NaN();
-   }
-   for (auto const &[name, value] : point) {
-      ws.var(name)->setVal(value);
-   }
-   // The channels have their own observables, x_c1 and x_c2: one weighted entry per bin and channel.
+   auto *simPdf = dynamic_cast<RooSimultaneous *>(static_cast<RooStats::ModelConfig &>(*ws.obj("an")).GetPdf());
    auto &indexCat = dynamic_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(simPdf->indexCat()));
    RooRealVar &x1 = *ws.var("x_c1");
    RooRealVar &x2 = *ws.var("x_c2");
    RooRealVar weight{"weight", "weight", 1.0};
-   RooDataSet combined{"combined", "combined", {x1, x2, indexCat, weight}, RooFit::WeightVar(weight)};
+   auto data = std::make_unique<RooDataSet>(name, name, RooArgSet{x1, x2, indexCat, weight}, RooFit::WeightVar(weight));
    for (auto const &item : simPdf->indexCat()) {
       const std::string channel = item.first.substr(6);
       auto *hist = static_cast<RooDataHist *>(ws.data("obs_" + channel));
@@ -488,14 +382,275 @@ double twoChannelNLL(RooWorkspace &ws, std::map<std::string, double> const &poin
       indexCat.setLabel(item.first.c_str());
       for (int i = 0; i < hist->numEntries(); ++i) {
          x.setVal(static_cast<RooAbsReal const *>(hist->get(i)->find(x.GetName()))->getVal());
-         combined.add({x1, x2, indexCat}, hist->weight());
+         data->add({x1, x2, indexCat}, hist->weight());
       }
    }
-   std::unique_ptr<RooAbsReal> nll{simPdf->createNLL(combined)};
+   return data;
+}
+
+// The NLL of the two-channel model of twoChannelHistFactoryJSON() at a parameter point.
+double twoChannelNLL(RooWorkspace &ws, std::map<std::string, double> const &point)
+{
+   for (auto const &[name, value] : point) {
+      ws.var(name)->setVal(value);
+   }
+   std::unique_ptr<RooAbsReal> nll{
+      static_cast<RooStats::ModelConfig &>(*ws.obj("an")).GetPdf()->createNLL(*twoChannelData(ws, "combined"))};
    return nll->getVal();
 }
 
+// The two-channel model with its data as a data set of the workspace, and with an observed value of a constraint
+// that differs from the default.
+void importTwoChannelsWithData(RooWorkspace &ws)
+{
+   importInto(ws, twoChannelHistFactoryJSON(false));
+   ws.import(*twoChannelData(ws, "observed"), RooFit::Silence());
+   ws.var("nom_gamma_c1_0")->setVal(120.0);
+}
+
+const std::map<std::string, double> twoChannelPoint{
+   {"mu", 1.3}, {"alpha_a", 0.7}, {"gamma_c1_0", 0.9}, {"gamma_c2_1", 1.1}, {"gs_0", 1.2}};
+
+std::vector<double> twoChannelLikelihood(RooWorkspace &ws)
+{
+   return {twoChannelNLL(ws, twoChannelPoint)};
+}
+
 } // namespace
+
+// ---------------------------------------------------------------------------------------------------------------
+// Round trips of workspaces, see expectRoundTrip(). The suite is instantiated with the models of each topic.
+
+class RoundTrip : public testing::TestWithParam<RoundTripModel> {};
+
+TEST_P(RoundTrip, Workspace)
+{
+   RooWorkspace ws;
+   GetParam().build(ws);
+   expectRoundTrip(ws, GetParam());
+}
+
+std::string roundTripName(testing::TestParamInfo<RoundTripModel> const &info)
+{
+   return info.param.name;
+}
+
+// Pdfs and functions made with the workspace factory.
+INSTANTIATE_TEST_SUITE_P(
+   Factory, RoundTrip,
+   testing::ValuesIn(std::vector<RoundTripModel>{
+      {"AddPdf",
+       {"Gaussian::sig(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
+        "ArgusBG::bkg(x, 5.291, argpar[-20.0, -100., -1.])",
+        "SUM::model(nsig[200, 0., 10000] * sig, nbkg[800, 0., 10000] * bkg)"}},
+      {"ArgusBG", {"ArgusBG::argusBG(x[0, 20], x0[10], c[-1], p[0.5])"}},
+      {"BifurGauss", {"BifurGauss::bifurGauss(x[0, 10], mean[5], sigmaL[1.0, 0.1, 10], sigmaR[2.0, 0.1, 10])"}},
+      {"CBShape", {"CBShape::cbShape(x[-10, 10], x0[0], sigma[2.0], alpha[1.4], n[1.2])"}},
+      {"Chebychev", {"Chebychev::chebychev(x[-1, 1], {a_0[0.1], 0.2, a_2[-0.3, -1, 1]})"}},
+      {"EffProd",
+       {"Gaussian::gauss(x[0, 10], mean[5], sigma[1.0, 0.1, 10])", "expr::eff('0.5 + 0.05 * x', x)",
+        "EffProd::effProd(gauss, eff)"}},
+      {"Exponential", {"Exponential::exponential_1(x[0, 10], c[-0.1])"}},
+      // Different values for "lowestOrder"
+      {"ExpPolyLowestOrder0",
+       {"LegacyExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"}},
+      {"ExpPolyLowestOrder1", {"LegacyExpPoly::exppoly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"}},
+      {"ExpPolyLowestOrder2", {"LegacyExpPoly::exppoly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"}},
+      {"Gamma", {"Gamma::gamma_dist(x[5.0, 10.0], gamma[1.0, 0.1, 10.0], beta[1.0, 0.1, 10.0], mu[5.0])"}},
+      {"Gaussian", {"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"}},
+      {"Bernstein", {"RooBernstein::bernstein(x[0, 10], { a[1], 3, b[5, 0, 20] })"}},
+      // Only +, -, * and / are defined in the HS3 standard. The variables are given by name, by the index notation of
+      // TFormula and by ordinal notation, also with numbers in the names and extra whitespace.
+      {"GenericPdfNames", {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf1('a * x + c', {x, a, c})"}},
+      {"GenericPdfIndices",
+       {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf2('x[1] * x[0] + x[2]', {x, a, c})"}},
+      {"GenericPdfOrdinals", {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf3('@1 * @0 + @2', {x, a, c})"}},
+      {"GenericPdfWhitespace",
+       {"m_001_mu[1.0, 0.1, 10]", "x[0, 5]", "m_003_mu[5]",
+        "EXPR::genericPdf4('@0   *  2  *      @1 +   @2', {m_001_mu, x, m_003_mu})"}},
+      {"Landau", {"Landau::landau(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"}},
+      {"Lognormal", {"Lognormal::lognormal_1(x[1.0, 1.1, 10], mu_2[2.0, 1.1, 10], k_1[2.0, 1.1, 5.0])"}},
+      // Different values for "lowestOrder"
+      {"PolynomialLowestOrder0",
+       {"Polynomial::poly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"}},
+      {"PolynomialLowestOrder1", {"Polynomial::poly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"}},
+      {"PolynomialLowestOrder2", {"Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"}},
+      {"PowerSum", {"PowerSum::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"}},
+      {"Projection",
+       {"Gaussian::gx(x[0, 10], mx[5], sx[1.0, 0.1, 10])", "Gaussian::gy(y[0, 10], my[4], sy[2.0, 0.1, 10])",
+        "PROD::prod(gx, gy)", "PROJ::projected(prod, y)"}},
+      {"Uniform", {"Uniform::uniform({x[0.0, 10.0], y[0.0, 5.0]})"}},
+      // A workspace with only a function
+      {"FormulaVar", {"x[-3, 3]", "RooFormulaVar::myfunc(\"sin(x) + 0.5*x*x\",x)"}},
+   }),
+   roundTripName);
+
+// Pdfs, functions and data that are built here.
+INSTANTIATE_TEST_SUITE_P(
+   Objects, RoundTrip,
+   testing::ValuesIn(std::vector<RoundTripModel>{
+      // Closure of the coefficient normalization reference observables.
+      RoundTripModel{
+         "AddPdfWithFixedCoefNormalization",
+         [](RooWorkspace &ws) {
+            ws.factory("Gaussian::sig_1(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])");
+            ws.factory("Uniform::sig_2(x_2[0, 10])");
+            ws.factory("ArgusBG::bkg_1(x, 5.291, argpar[-20.0, -100., -1.])");
+            // Some pdf in x_2 needs to be non linear, otherwise the reference normalization set makes no
+            // difference.
+            ws.factory("Polynomial::bkg_2(x_2, {a2[1.0, 0.0, 2.0]}, 2)");
+            ws.factory("PROD::sig(sig_1, sig_2)");
+            ws.factory("PROD::bkg(bkg_1, bkg_2)");
+            ws.factory("nsig[200, 0., 10000]");
+            ws.factory("nbkg[800, 0., 10000]");
+            RooAddPdf addPdf{
+               "model_cond", "model_cond", {*ws.pdf("sig"), *ws.pdf("bkg")}, {*ws.var("nsig"), *ws.var("nbkg")}};
+            addPdf.fixCoefNormalization({*ws.var("x"), *ws.var("x_2")});
+            ws.import(addPdf, RooFit::Silence());
+         }}
+         .over({"x", "x_2"}),
+      // A pdf that contains a literal RooConstVar.
+      {"ConstVar",
+       [](RooWorkspace &ws) {
+          RooRealVar x{"x", "x", 100, 0, 1000};
+          ws.import(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, RooFit::RooConst(100.)},
+                    RooFit::Silence());
+       }},
+      {"ExponentialNegateCoefficient",
+       [](RooWorkspace &ws) {
+          RooRealVar x{"x", "x", 0, 10};
+          RooRealVar c{"c", "c", -0.1};
+          ws.import(RooExponential{"exponential_2", "exponential_2", x, c, true}, RooFit::Silence());
+       }},
+      {"HistPdf",
+       [](RooWorkspace &ws) {
+          RooRealVar x{"x", "x", 0.0, 0.02};
+          x.setBins(2);
+          RooDataHist dataHist{"myDataHist", "myDataHist", x};
+          dataHist.set(0, 23, -1);
+          dataHist.set(1, 17, -1);
+          ws.import(RooHistPdf{"histPdf", "histPdf", x, dataHist}, RooFit::Silence());
+       }},
+      {"LognormalStandardParametrization",
+       [](RooWorkspace &ws) {
+          RooRealVar x{"x", "x", 1.0, 1.1, 10};
+          RooRealVar mu{"mu_2", "mu_2", 0.7, 0.1, 2.3};
+          RooRealVar k{"k_2", "k_2", 0.7, 0.1, 1.6};
+          ws.import(RooLognormal{"lognormal_2", "lognormal_2", x, mu, k, true}, RooFit::Silence());
+       }},
+      RoundTripModel{"MultiVarGaussian",
+                     [](RooWorkspace &ws) {
+                        RooRealVar x{"x", "x", 0, 10};
+                        RooRealVar y{"y", "y", 0, 10};
+                        RooRealVar mean{"mean", "mean", 3};
+                        TMatrixDSym cov{2};
+                        cov(0, 0) = 1.0;
+                        cov(0, 1) = 0.2;
+                        cov(1, 0) = 0.2;
+                        cov(1, 1) = 1.0;
+                        ws.import(
+                           RooMultiVarGaussian{"multi_var_gauss", "", {x, y}, {mean, RooFit::RooConst(5.0)}, cov},
+                           RooFit::Silence());
+                     }}
+         .over({"x", "y"}),
+      {"Poisson",
+       [](RooWorkspace &ws) {
+          RooRealVar x{"x", "x", 0, 10};
+          RooRealVar mean{"mean", "mean", 5};
+          ws.import(RooPoisson{"poisson_false", "poisson_false", x, mean, /*noRounding=*/false}, RooFit::Silence());
+       }},
+      {"PoissonNoRounding",
+       [](RooWorkspace &ws) {
+          RooRealVar x{"x", "x", 0, 10};
+          RooRealVar mean{"mean", "mean", 5};
+          ws.import(RooPoisson{"poisson_true", "poisson_true", x, mean, /*noRounding=*/true}, RooFit::Silence());
+       }},
+      {"RealIntegral",
+       [](RooWorkspace &ws) {
+          RooRealVar v1("v1", "v1", 0.6, 0., 1.);
+          RooRealVar v2("v2", "v2", 1.0, 0., 2.);
+          RooGenericPdf formula{"formula", "2 * x[0] * x[1]", {v1, v2}};
+          RooRealIntegral integ{"integ", "integ", formula, v2};
+          RooRealVar x("x", "x", -8, 8);
+          RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
+          ws.import(RooGaussian{"pdf_containing_integral_a", "pdf_containing_integral_a", x, integ, sigma},
+                    RooFit::Silence());
+       }},
+      {"RealIntegralWithNormSet",
+       [](RooWorkspace &ws) {
+          RooRealVar v1("v1", "v1", 0.6, 0., 1.);
+          RooRealVar v2("v2", "v2", 1.0, 0., 2.);
+          RooGenericPdf formula{"formula", "2 * x[0] * x[1]", {v1, v2}};
+          RooArgSet funcNormSet{v1, v2};
+          RooRealIntegral integ{"integ_with_norm_set", "integ_with_norm_set", formula, v2, &funcNormSet};
+          RooRealVar x("x", "x", -8, 8);
+          RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
+          ws.import(RooGaussian{"pdf_containing_integral_b", "pdf_containing_integral_b", x, integ, sigma},
+                    RooFit::Silence());
+       }},
+      // A RooSimultaneous with a Gaussian in one component, and a product of two Gaussians in the other.
+      RoundTripModel{"SimultaneousGaussians",
+                     [](RooWorkspace &ws) {
+                        RooRealVar x("x", "x", -8, 8);
+                        RooRealVar mean("mean", "mean", 0, -8, 8);
+                        RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
+                        RooGaussian g1("g1", "g1", x, mean, sigma);
+                        RooGaussian g2("g2", "g2", x, mean, 0.3);
+                        RooProdPdf model("model", "model", RooArgList{g1, g2});
+                        // The components have their own observables: HS3 requires distinct variates of the
+                        // components.
+                        RooRealVar xCtl("x_ctl", "x_ctl", -8, 8);
+                        RooGaussian model_ctl("model_ctl", "model_ctl", xCtl, mean, sigma);
+                        RooCategory sample("sample", "sample", {{"physics", 0}, {"control", 1}});
+                        RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
+                        simPdf.addPdf(model, "physics");
+                        simPdf.addPdf(model_ctl, "control");
+                        ws.import(simPdf, RooFit::Silence());
+                     }}
+         .over({"x", "x_ctl"}),
+      // A workspace with only a data set.
+      {"DataHistOnly",
+       [](RooWorkspace &ws) {
+          RooRealVar x{"x", "x", 0.0, 1.0};
+          x.setBins(3);
+          RooDataHist dh{"dh", "dataset-only (hist)", RooArgList{x}};
+          dh.set(0, 10.0, 0.0);
+          dh.set(1, 20.0, 0.0);
+          dh.set(2, 15.0, 0.0);
+          ws.import(dh, RooFit::Silence());
+       }},
+      // A ModelConfig that points to a multivariate Gaussian pdf.
+      RoundTripModel{"ModelConfigWithMultiVarGaussian",
+                     [](RooWorkspace &ws) {
+                        RooRealVar x{"x", "x", -5.0, 5.0};
+                        RooRealVar y{"y", "y", -5.0, 5.0};
+                        RooRealVar mx{"mx", "mx", 0.5};
+                        RooRealVar my{"my", "my", -0.3};
+                        TMatrixDSym cov{2};
+                        cov(0, 0) = 1.2;
+                        cov(0, 1) = 0.25;
+                        cov(1, 0) = 0.25;
+                        cov(1, 1) = 0.9;
+                        RooMultiVarGaussian mv{"mvgauss", "mvgauss", RooArgList{x, y}, RooArgList{mx, my}, cov};
+                        ws.import(mv, RooFit::Silence(), RooFit::RecycleConflictNodes());
+                        RooFit::ModelConfig mc{"mc", &ws};
+                        mc.SetPdf(*ws.pdf("mvgauss"));
+                        mc.SetObservables("x,y");
+                        ws.import(mc);
+                     }}
+         .over({"x", "y"}),
+      // A nonlinear spline, with bins of the observable for the comparison of the values.
+      {"Spline",
+       [](RooWorkspace &ws) {
+          RooRealVar x{"x", "x", 0, 10};
+          x.setBins(50);
+          const std::vector<double> x0{0.0, 1.5, 3.0, 6.0, 10.0};
+          const std::vector<double> y0{1.0, 2.0, 1.0, 4.0, 3.0};
+          ws.import(RooSpline{"spline", "spline", x, x0, y0, /*order=*/3, /*logx=*/false, /*logy=*/false},
+                    RooFit::Silence());
+       }},
+   }),
+   roundTripName);
 
 // Test that the IO of attributes and string attributes works.
 TEST(RooFitHS3, AttributesIO)
@@ -576,7 +731,7 @@ TEST(RooFitHS3, TopLevelPdfExportAfterNormalizedEvaluation)
       // cleanWS() uses the same top-level criterion
       EXPECT_NE(RooJSONFactoryWSTool::cleanWS(ws).pdf("gauss"), nullptr);
       // ... and the full round trip should still work after the evaluation
-      EXPECT_EQ(validate(ws, "gauss"), 0);
+      expectRoundTrip(ws);
    }
    {
       RooWorkspace ws{"ws"};
@@ -860,91 +1015,6 @@ TEST(RooFitHS3, ParameterStepWidthsImportAfterDefaultSnapshot)
    ASSERT_NE(ws.var("mu"), nullptr);
    EXPECT_TRUE(ws.var("mu")->hasError());
    EXPECT_DOUBLE_EQ(ws.var("mu")->getError(), 0.42);
-}
-
-TEST(RooFitHS3, RooAddPdf)
-{
-   // Closure of the coefficient normalization reference observables.
-   RooWorkspace ws;
-   ws.factory("Gaussian::sig_1(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])");
-   ws.factory("Uniform::sig_2(x_2[0, 10])");
-
-   ws.factory("ArgusBG::bkg_1(x, 5.291, argpar[-20.0, -100., -1.])");
-   // Some pdf in x_2 needs to be non linear, otherwise the reference
-   // normalization set makes no difference.
-   ws.factory("Polynomial::bkg_2(x_2, {a2[1.0, 0.0, 2.0]}, 2)");
-
-   ws.factory("PROD::sig(sig_1, sig_2)");
-   ws.factory("PROD::bkg(bkg_1, bkg_2)");
-
-   ws.factory("nsig[200, 0., 10000]");
-   ws.factory("nbkg[800, 0., 10000]");
-   RooAddPdf addPdf{"model_cond", "model_cond", {*ws.pdf("sig"), *ws.pdf("bkg")}, {*ws.var("nsig"), *ws.var("nbkg")}};
-   addPdf.fixCoefNormalization({*ws.var("x"), *ws.var("x_2")});
-   EXPECT_EQ(validate(addPdf), 0);
-}
-
-// Round trip of pdfs and functions made with the workspace factory, see validate().
-TEST(RooFitHS3, FactoryExpressions)
-{
-   const std::vector<std::vector<std::string>> cases{
-      {"Gaussian::sig(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
-       "ArgusBG::bkg(x, 5.291, argpar[-20.0, -100., -1.])",
-       "SUM::model(nsig[200, 0., 10000] * sig, nbkg[800, 0., 10000] * bkg)"},
-      {"ArgusBG::argusBG(x[0, 20], x0[10], c[-1], p[0.5])"},
-      {"BifurGauss::bifurGauss(x[0, 10], mean[5], sigmaL[1.0, 0.1, 10], sigmaR[2.0, 0.1, 10])"},
-      {"CBShape::cbShape(x[-10, 10], x0[0], sigma[2.0], alpha[1.4], n[1.2])"},
-      {"Chebychev::chebychev(x[-1, 1], {a_0[0.1], 0.2, a_2[-0.3, -1, 1]})"},
-      {"Gaussian::gauss(x[0, 10], mean[5], sigma[1.0, 0.1, 10])", "expr::eff('0.5 + 0.05 * x', x)",
-       "EffProd::effProd(gauss, eff)"},
-      {"Exponential::exponential_1(x[0, 10], c[-0.1])"},
-      // Different values for "lowestOrder"
-      {"LegacyExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"},
-      {"LegacyExpPoly::exppoly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"},
-      {"LegacyExpPoly::exppoly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"},
-      {"Gamma::gamma_dist(x[5.0, 10.0], gamma[1.0, 0.1, 10.0], beta[1.0, 0.1, 10.0], mu[5.0])"},
-      {"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"},
-      {"RooBernstein::bernstein(x[0, 10], { a[1], 3, b[5, 0, 20] })"},
-      // Only +, -, * and / are defined in the HS3 standard. The variables are given by name, by the index notation of
-      // TFormula and by ordinal notation, also with numbers in the names and extra whitespace.
-      {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf1('a * x + c', {x, a, c})"},
-      {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf2('x[1] * x[0] + x[2]', {x, a, c})"},
-      {"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf3('@1 * @0 + @2', {x, a, c})"},
-      {"m_001_mu[1.0, 0.1, 10]", "x[0, 5]", "m_003_mu[5]",
-       "EXPR::genericPdf4('@0   *  2  *      @1 +   @2', {m_001_mu, x, m_003_mu})"},
-      {"Landau::landau(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"},
-      {"Lognormal::lognormal_1(x[1.0, 1.1, 10], mu_2[2.0, 1.1, 10], k_1[2.0, 1.1, 5.0])"},
-      // Different values for "lowestOrder"
-      {"Polynomial::poly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"},
-      {"Polynomial::poly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"},
-      {"Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"},
-      {"PowerSum::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"},
-      {"Gaussian::gx(x[0, 10], mx[5], sx[1.0, 0.1, 10])", "Gaussian::gy(y[0, 10], my[4], sy[2.0, 0.1, 10])",
-       "PROD::prod(gx, gy)", "PROJ::projected(prod, y)"},
-      {"Uniform::uniform({x[0.0, 10.0], y[0.0, 5.0]})"},
-      // A workspace with only a function
-      {"x[-3, 3]", "RooFormulaVar::myfunc(\"sin(x) + 0.5*x*x\",x)"},
-   };
-   for (auto const &expressions : cases) {
-      SCOPED_TRACE(expressions.back());
-      EXPECT_EQ(validate(expressions), 0);
-   }
-}
-
-/// Test that the IO of pdfs that contain literal RooConstVars works.
-TEST(RooFitHS3, RooConstVar)
-{
-   RooRealVar x{"x", "x", 100, 0, 1000};
-   EXPECT_EQ(validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, RooFit::RooConst(100.)}), 0);
-}
-
-TEST(RooFitHS3, RooExponential)
-{
-   RooWorkspace ws;
-   ws.factory("x[0, 10]");
-   ws.factory("c[-0.1]");
-   RooExponential exponential2{"exponential_2", "exponential_2", *ws.var("x"), *ws.var("c"), true};
-   EXPECT_EQ(validate(exponential2), 0);
 }
 
 TEST(RooFitHS3, RooGaussianConstVarSigmaExport)
@@ -1358,18 +1428,6 @@ TEST(RooFitHS3, GenericExpressionCleanupKeepsLongerIdentifiers)
    EXPECT_DOUBLE_EQ(imported->getVal(), formula.getVal());
 }
 
-TEST(RooFitHS3, RooHistPdf)
-{
-   RooRealVar x{"x", "x", 0.0, 0.02};
-   x.setBins(2);
-
-   RooDataHist dataHist{"myDataHist", "myDataHist", x};
-   dataHist.set(0, 23, -1);
-   dataHist.set(1, 17, -1);
-
-   EXPECT_EQ(validate(RooHistPdf{"histPdf", "histPdf", x, dataHist}), 0);
-}
-
 TEST(RooFitHS3, RooBinWidthFunctionUsesBinVolumeKeys)
 {
    RooRealVar x{"x", "x", 0.0, 2.0};
@@ -1435,46 +1493,6 @@ TEST(RooFitHS3, StepDispatchesToRooHistFuncAndParamHistFunc)
    EXPECT_NE(dynamic_cast<ParamHistFunc *>(ws2.function("paramHistFunc")), nullptr);
 }
 
-TEST(RooFitHS3, RooLognormal)
-{
-   RooWorkspace ws;
-   ws.factory("x[1.0, 1.1, 10]");
-   ws.factory("mu_2[0.7, 0.1, 2.3]");
-   ws.factory("k_2[0.7, 0.1, 1.6]");
-   RooLognormal lognormal2{"lognormal_2", "lognormal_2", *ws.var("x"), *ws.var("mu_2"), *ws.var("k_2"), true};
-   EXPECT_EQ(validate(lognormal2), 0);
-}
-
-TEST(RooFitHS3, RooMultiVarGaussian)
-{
-   using RooFit::RooConst;
-
-   RooRealVar x{"x", "x", 0, 10};
-   RooRealVar y{"y", "y", 0, 10};
-   RooRealVar mean{"mean", "mean", 3};
-   TMatrixDSym cov{2};
-   cov(0, 0) = 1.0;
-   cov(0, 1) = 0.2;
-   cov(1, 0) = 0.2;
-   cov(1, 1) = 1.0;
-   RooMultiVarGaussian multiVarGauss{"multi_var_gauss", "", {x, y}, {mean, RooConst(5.0)}, cov};
-   EXPECT_EQ(validate(multiVarGauss), 0);
-}
-
-TEST(RooFitHS3, RooPoisson)
-{
-   for (auto noRounding : {false, true}) {
-
-      std::string name = "poisson";
-      name += noRounding ? "_true" : "_false";
-
-      RooRealVar x{"x", "x", 0, 10};
-      RooRealVar mean{"mean", "mean", 5};
-      RooPoisson poisson{name.c_str(), name.c_str(), x, mean, noRounding};
-      EXPECT_EQ(validate(poisson), 0);
-   }
-}
-
 // HS3 0.3 splits the Poisson distribution into the discrete "poisson_dist" and the "poisson_continuous_dist" (HS3
 // #152), which are a RooPoisson without and with noRounding. Documents before HS3 0.3 used "poisson_dist" for both,
 // distinguished by ROOT's own key "integer", which must not be present from HS3 0.3 on.
@@ -1535,47 +1553,6 @@ TEST(RooFitHS3, RooPolynomial)
    EXPECT_THAT(json, Not(HasSubstr("\"coefficients\":[\"1.0\"")));
 }
 
-TEST(RooFitHS3, RooRealIntegral)
-{
-   RooRealVar v1("v1", "v1", 0.6, 0., 1.);
-   RooRealVar v2("v2", "v2", 1.0, 0., 2.);
-   RooGenericPdf formula{"formula", "2 * x[0] * x[1]", {v1, v2}};
-   RooArgSet funcNormSet{v1, v2};
-   RooRealIntegral integ{"integ", "integ", formula, v2};
-   RooRealIntegral integWithNormSet{"integ_with_norm_set", "integ_with_norm_set", formula, v2, &funcNormSet};
-
-   RooRealVar x("x", "x", -8, 8);
-   RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
-
-   RooGaussian pdfContainingIntegralA("pdf_containing_integral_a", "pdf_containing_integral_a", x, integ, sigma);
-   EXPECT_EQ(validate(pdfContainingIntegralA), 0);
-
-   RooGaussian pdfContainingIntegralB("pdf_containing_integral_b", "pdf_containing_integral_b", x, integWithNormSet,
-                                      sigma);
-   EXPECT_EQ(validate(pdfContainingIntegralB), 0);
-}
-
-TEST(RooFitHS3, SimultaneousGaussians)
-{
-   // Create a test model: RooSimultaneous with Gaussian in one component, and
-   // product of two Gaussians in the other.
-   RooRealVar x("x", "x", -8, 8);
-   RooRealVar mean("mean", "mean", 0, -8, 8);
-   RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
-   RooGaussian g1("g1", "g1", x, mean, sigma);
-   RooGaussian g2("g2", "g2", x, mean, 0.3);
-   RooProdPdf model("model", "model", RooArgList{g1, g2});
-   // The components have their own observables: HS3 requires distinct variates of the components.
-   RooRealVar xCtl("x_ctl", "x_ctl", -8, 8);
-   RooGaussian model_ctl("model_ctl", "model_ctl", xCtl, mean, sigma);
-   RooCategory sample("sample", "sample", {{"physics", 0}, {"control", 1}});
-   RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
-   simPdf.addPdf(model, "physics");
-   simPdf.addPdf(model_ctl, "control");
-
-   EXPECT_EQ(validate(simPdf), 0);
-}
-
 // https://github.com/root-project/root/issues/14637
 TEST(RooFitHS3, ScientificNotation)
 {
@@ -1600,90 +1577,6 @@ TEST(RooFitHS3, ScientificNotation)
    // try to import, before the fix, it threw RooJSONFactoryWSTool::DependencyMissingError because of problem reading
    // the exponential char
    Imported newws{toJSON(ws)};
-}
-
-// Workspace with ONLY a dataset (here: RooDataHist to avoid extra includes).
-// -----------------------------------------------------------------------------
-TEST(RooFitHS3, WorkspaceOnlyDataset_RooDataHist)
-{
-   RooWorkspace ws1{"ws_dataset_only"};
-
-   // Observable with explicit binning
-   RooRealVar x{"x", "x", 0.0, 1.0};
-   x.setBins(3);
-   // Build a tiny RooDataHist
-   RooDataHist dh{"dh", "dataset-only (hist)", RooArgList{x}};
-   // Fill deterministic contents
-   x.setVal(0.1666667);
-   dh.set(0, 10.0, 0.0); // bin 0
-   x.setVal(0.5000000);
-   dh.set(1, 20.0, 0.0); // bin 1
-   x.setVal(0.8333333);
-   dh.set(2, 15.0, 0.0); // bin 2
-
-   ws1.import(dh, RooFit::Silence());
-
-   // Round-trip and strict checks (no numeric comparison needed here)
-   // Use the dataset name for object tracking
-   EXPECT_EQ(validate(ws1, "dh"), 0);
-}
-
-// -----------------------------------------------------------------------------
-// Workspace with a ModelConfig that points to a multivariate Gaussian pdf.
-// -----------------------------------------------------------------------------
-TEST(RooFitHS3, ModelConfigWithMultiVarGaussian)
-{
-   using RooFit::RooConst;
-
-   // Observables
-   RooRealVar x{"x", "x", -5.0, 5.0};
-   RooRealVar y{"y", "y", -5.0, 5.0};
-
-   // Means
-   RooRealVar mx{"mx", "mx", 0.5};
-   RooRealVar my{"my", "my", -0.3};
-
-   // Covariance
-   TMatrixDSym cov{2};
-   cov(0, 0) = 1.2;
-   cov(0, 1) = 0.25;
-   cov(1, 0) = 0.25;
-   cov(1, 1) = 0.9;
-
-   RooMultiVarGaussian mv{"mvgauss", "mvgauss", RooArgList{x, y}, RooArgList{mx, my}, cov};
-
-   RooWorkspace ws1{"ws_mc"};
-   ws1.import(mv, RooFit::Silence(), RooFit::RecycleConflictNodes());
-
-   // Build a ModelConfig referencing the pdf and its observables
-   RooFit::ModelConfig mc{"mc", &ws1};
-   mc.SetPdf(*ws1.pdf("mvgauss"));
-   mc.SetObservables("x,y");
-   ws1.import(mc);
-
-   EXPECT_EQ(validate(ws1, "mc"), 0);
-}
-
-TEST(RooFitHS3, RooSpline)
-{
-   // Observable must be called "x" because validate() assumes that convention.
-   RooWorkspace ws;
-
-   // Use an observable with bins to enable the per-bin closure check.
-   auto *x = ws.factory("x[0,10]");
-   ASSERT_NE(x, nullptr);
-   ws.var("x")->setBins(50);
-
-   // Define knots. Keep it simple but nontrivial (nonlinear).
-   const std::vector<double> x0{0.0, 1.5, 3.0, 6.0, 10.0};
-   const std::vector<double> y0{1.0, 2.0, 1.0, 4.0, 3.0};
-
-   RooSpline spline{"spline", "spline", *ws.var("x"), x0, y0, /*order=*/3, /*logx=*/false, /*logy=*/false};
-
-   // Import the object into the workspace and validate JSON IO.
-   ws.import(spline, RooFit::Silence());
-
-   EXPECT_EQ(validate(ws, "spline", /*exact=*/true), 0);
 }
 
 namespace {
@@ -2936,12 +2829,12 @@ TEST(RooFitHS3, TypeKeysMatchTheCatalog)
    // RooBinSamplingPdf is exported and imported with the same key.
    RooGaussian gauss{"gauss", "", x, mean, sigma};
    RooBinSamplingPdf binSampling{"binSampling", "", x, gauss, 1e-3};
-   EXPECT_EQ(validate(binSampling), 0);
+   expectRoundTrip(binSampling);
 
    // rate_extended_dist uses the HS3 field names "rate" and "dist".
    RooRealVar nEvents{"nEvents", "nEvents", 100.0, 0.0, 1000.0};
    RooExtendPdf extended{"extended", "", gauss, nEvents};
-   EXPECT_EQ(validate(extended), 0);
+   expectRoundTrip(extended);
    {
       RooWorkspace ws;
       ws.import(extended, RooFit::Silence());
@@ -3327,7 +3220,7 @@ TEST(RooFitHS3, CrystalBallTypes)
 
    // RooCBShape is the single-sided crystalball_dist.
    RooCBShape cbShape{"cbShape", "", x, mean, sigma, alphaL, nL};
-   EXPECT_EQ(validate(cbShape), 0);
+   expectRoundTrip(cbShape);
    EXPECT_THAT(exportToString(cbShape), HasSubstr(R"("type":"crystalball_dist")"));
 
    // A single-sided RooCrystalBall is a crystalball_dist too, for both signs of alpha. It is read back as a
@@ -3339,7 +3232,7 @@ TEST(RooFitHS3, CrystalBallTypes)
       EXPECT_THAT(json, HasSubstr(std::string(R"("alpha":")") + alpha->GetName() + "\""));
       EXPECT_THAT(json, Not(HasSubstr("alpha_L")));
 
-      // The class changes on the way back, so validate() can't be used: the parameter points are written in a
+      // The class changes on the way back, so expectRoundTrip() can't be used: the parameter points are written in a
       // different order. Compare the values instead, and check that the JSON is stable from the second export on.
       Imported ws2{json};
       auto *cbShapeBack = dynamic_cast<RooCBShape *>(ws2.pdf("cbSingle"));
@@ -3360,8 +3253,8 @@ TEST(RooFitHS3, CrystalBallTypes)
    // sides, and the width written as "sigma" if both sides share it.
    RooCrystalBall cbSymmetric{"cbSymmetric", "", x, mean, sigma, alphaL, nL, /*doubleSided=*/true};
    RooCrystalBall cbAsymmetric{"cbAsymmetric", "", x, mean, sigma, sigmaR, alphaL, nL, alphaR, nR};
-   EXPECT_EQ(validate(cbSymmetric), 0);
-   EXPECT_EQ(validate(cbAsymmetric), 0);
+   expectRoundTrip(cbSymmetric);
+   expectRoundTrip(cbAsymmetric);
    {
       const std::string json = exportToString(cbSymmetric);
       EXPECT_THAT(json, HasSubstr(R"("type":"crystalball_doublesided_dist")"));
@@ -3848,6 +3741,28 @@ TEST(RooFitHS3, ArrayDistLikelihood)
    EXPECT_EQ(reexport(exported), exported);
 }
 
+// A two-channel HistFactory model, see twoChannelHistFactoryJSON(): with one constraint per parameter or with array
+// distributions, and with its data in the workspace, such that the likelihood of the ModelConfig has data.
+INSTANTIATE_TEST_SUITE_P(HistFactoryTwoChannels, RoundTrip,
+                         testing::Values(RoundTripModel::fromDocument("Constraints", twoChannelHistFactoryJSON(false))
+                                            .with(constraintStyles())
+                                            .over({"x_c1", "x_c2"})
+                                            .likelihoodBy(twoChannelLikelihood)
+                                            .within(1e-10)
+                                            .withOtherComponents(),
+                                         RoundTripModel::fromDocument("Arrays", twoChannelHistFactoryJSON(true))
+                                            .with(constraintStyles())
+                                            .over({"x_c1", "x_c2"})
+                                            .likelihoodBy(twoChannelLikelihood)
+                                            .within(1e-10),
+                                         RoundTripModel{"WithData", importTwoChannelsWithData}
+                                            .with(constraintStyles())
+                                            .over({"x_c1", "x_c2"})
+                                            .likelihoodOf("an", "observed")
+                                            .within(1e-10)
+                                            .withOtherComponents()),
+                         roundTripName);
+
 // A HistFactory modifier whose constraint is an array distribution gets the component that depends on its
 // parameter. The model built from the array form equals the model built from one constraint per parameter, also
 // for the constraint shared by both channels.
@@ -3888,10 +3803,8 @@ TEST(RooFitHS3, HistFactoryArrayDistConstraints)
    EXPECT_EQ(countConstraints(arrays), 7u);
    EXPECT_EQ(countConstraints(individual), 7u);
 
-   const std::map<std::string, double> point{
-      {"mu", 1.3}, {"alpha_a", 0.7}, {"gamma_c1_0", 0.9}, {"gamma_c2_1", 1.1}, {"gs_0", 1.2}};
-   const double nllIndividual = twoChannelNLL(individual, point);
-   const double nllArrays = twoChannelNLL(arrays, point);
+   const double nllIndividual = twoChannelNLL(individual, twoChannelPoint);
+   const double nllArrays = twoChannelNLL(arrays, twoChannelPoint);
    EXPECT_FALSE(std::isnan(nllIndividual));
    EXPECT_NEAR(nllArrays, nllIndividual, 1e-10 * std::abs(nllIndividual));
 }
@@ -3936,8 +3849,7 @@ TEST(RooFitHS3, HistFactoryArrayDistConstraintErrors)
 }
 
 // The HistFactory export collects the constraints of the modifiers into one array distribution per type and
-// top-level pdf, which the modifiers name for each constrained parameter. The shared constraint is one component, the
-// likelihood does not change under a round trip, and the second export equals the first.
+// top-level pdf, which the modifiers name for each constrained parameter. The shared constraint is one component.
 TEST(RooFitHS3, HistFactoryArrayDistExport)
 {
    Imported ws{twoChannelHistFactoryJSON(false)};
@@ -3975,34 +3887,18 @@ TEST(RooFitHS3, HistFactoryArrayDistExport)
       4u)
       << exported;
 
-   Imported ws2{exported};
-   const std::string exported2 = toJSON(ws2);
-   EXPECT_EQ(exported2, exported);
-   Imported ws3{exported2};
-   EXPECT_EQ(toJSON(ws3), exported);
-
-   // The likelihood is unchanged by the round trip (evaluated last, since this moves the parameters).
-   const std::map<std::string, double> point{
-      {"mu", 1.3}, {"alpha_a", 0.7}, {"gamma_c1_0", 0.9}, {"gamma_c2_1", 1.1}, {"gs_0", 1.2}};
-   const double nll = twoChannelNLL(ws, point);
-   EXPECT_FALSE(std::isnan(nll));
-   EXPECT_NEAR(twoChannelNLL(ws2, point), nll, 1e-10 * std::abs(nll));
-
    // Opt-out: one constraint distribution per parameter, no array_dist at all.
    const std::string plain = toJSON(ws, {exportArrayDist(false)});
-   const std::string plainFromArrays = toJSON(ws2, {exportArrayDist(false)});
    EXPECT_THAT(plain, Not(HasSubstr("array_dist")));
    EXPECT_THAT(plain, HasSubstr(R"("constraints":["alpha_a_constraint"])"));
    EXPECT_THAT(plain, HasSubstr(R"("constraints":["gamma_c1_0_constraint","gamma_c1_1_constraint"])"));
-   Imported ws4{plain};
-   EXPECT_NEAR(twoChannelNLL(ws4, point), nll, 1e-10 * std::abs(nll));
    // From the workspace with imported arrays, the components are written on their own as well, and the arrays as
    // product_dist.
+   Imported ws2{exported};
+   const std::string plainFromArrays = toJSON(ws2, {exportArrayDist(false)});
    EXPECT_THAT(plainFromArrays, Not(HasSubstr("array_dist")));
    EXPECT_THAT(plainFromArrays,
                HasSubstr(R"("constraints":["nom_gamma_c1_0_constraint","nom_gamma_c1_1_constraint"])"));
-   Imported ws5{plainFromArrays};
-   EXPECT_NEAR(twoChannelNLL(ws5, point), nll, 1e-10 * std::abs(nll));
 }
 
 // The tutorial JSON imports and exports stably. Its Poisson constraints have a number as observable, so they cannot
@@ -4051,33 +3947,10 @@ TEST(RooFitHS3, TutorialRF515RoundTrip)
 // once, through the channels, and the observed values are taken from the data sets.
 TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
 {
-   Imported ws{twoChannelHistFactoryJSON(false)};
-   {
-      // A combined data set for the RooSimultaneous of the ModelConfig, so that the likelihood has data: without
-      // data, it would be written as a pure model, which has no data sets for the constraint terms either.
-      auto *simPdf = dynamic_cast<RooSimultaneous *>(static_cast<RooStats::ModelConfig *>(ws.obj("an"))->GetPdf());
-      ASSERT_NE(simPdf, nullptr);
-      auto &indexCat = dynamic_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(simPdf->indexCat()));
-      RooRealVar &x1 = *ws.var("x_c1");
-      RooRealVar &x2 = *ws.var("x_c2");
-      RooRealVar weight{"weight", "weight", 1.0};
-      RooDataSet observed{"observed", "observed", {x1, x2, indexCat, weight}, RooFit::WeightVar(weight)};
-      for (auto const &item : simPdf->indexCat()) {
-         const std::string channel = item.first.substr(6);
-         auto *hist = static_cast<RooDataHist *>(ws.data("obs_" + channel));
-         RooRealVar &x = channel == "c1" ? x1 : x2;
-         indexCat.setLabel(item.first.c_str());
-         for (int i = 0; i < hist->numEntries(); ++i) {
-            x.setVal(static_cast<RooAbsReal const *>(hist->get(i)->find(x.GetName()))->getVal());
-            observed.add({x1, x2, indexCat}, hist->weight());
-         }
-      }
-      ws.import(observed, RooFit::Silence());
-   }
-   // An observed value that differs from the default, to see it transported.
-   ws.var("nom_gamma_c1_0")->setVal(120.0);
-   const std::map<std::string, double> point{
-      {"mu", 1.3}, {"alpha_a", 0.7}, {"gamma_c1_0", 0.9}, {"gamma_c2_1", 1.1}, {"gs_0", 1.2}};
+   // With a combined data set for the RooSimultaneous of the ModelConfig, so that the likelihood has data: without
+   // data, it would be written as a pure model, which has no data sets for the constraint terms either.
+   RooWorkspace ws;
+   importTwoChannelsWithData(ws);
 
    auto likelihood = [](std::string const &json) {
       auto tree = RooFit::Detail::JSONTree::create(json);
@@ -4120,9 +3993,6 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
       EXPECT_TRUE(!mc->GetExternalConstraints() || mc->GetExternalConstraints()->empty());
       EXPECT_DOUBLE_EQ(ws2.var("nom_gamma_c1_0")->getVal(), 120.0);
       EXPECT_TRUE(ws2.var("nom_gamma_c1_0")->isConstant());
-      EXPECT_EQ(toJSON(ws2), exported);
-      const double nll = twoChannelNLL(ws, point);
-      EXPECT_NEAR(twoChannelNLL(ws2, point), nll, 1e-10 * std::abs(nll));
    }
 
    // Data route: the terms are paired with data sets holding the observed values.
@@ -4189,19 +4059,6 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
       ASSERT_NE(mc->GetGlobalObservables(), nullptr);
       EXPECT_NE(mc->GetGlobalObservables()->find("nom_gamma_c1_0"), nullptr);
       EXPECT_TRUE(!mc->GetExternalConstraints() || mc->GetExternalConstraints()->empty());
-      const double nll = twoChannelNLL(ws, point);
-      EXPECT_NEAR(twoChannelNLL(ws3, point), nll, 1e-10 * std::abs(nll));
-      const std::string withData2 = toJSON(ws3, {exportConstraintData(true)});
-      // The parameters were moved for the NLL, so compare the model and data sections.
-      for (const char *key : {"distributions", "functions", "data", "likelihoods"}) {
-         auto section = [key](std::string const &json) {
-            auto t = RooFit::Detail::JSONTree::create(json);
-            std::stringstream ss;
-            t->rootnode()[key].writeJSON(ss);
-            return ss.str();
-         };
-         EXPECT_EQ(section(withData2), section(withData)) << key;
-      }
    }
 
    // Without arrays, every constraint is paired with its own data set.
@@ -4212,14 +4069,8 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
    EXPECT_EQ(lh["distributions"][1], "gs_0_constraint") << plainWithData;
    EXPECT_EQ(lh["data"][1], "gs_0_constraint_data") << plainWithData;
    EXPECT_EQ(lh["aux_distributions"], Names{"alpha_a_constraint"}) << plainWithData;
-   {
-      auto tree = RooFit::Detail::JSONTree::create(plainWithData);
-      // The six constraint data sets, the two channel data sets, and the combined data set with its two components.
-      EXPECT_EQ(tree->rootnode()["data"].num_children(), 11u) << plainWithData;
-      Imported ws4{plainWithData};
-      const double nll = twoChannelNLL(ws, point);
-      EXPECT_NEAR(twoChannelNLL(ws4, point), nll, 1e-10 * std::abs(nll));
-   }
+   // The six constraint data sets, the two channel data sets, and the combined data set with its two components.
+   EXPECT_EQ(RooFit::Detail::JSONTree::create(plainWithData)->rootnode()["data"].num_children(), 11u) << plainWithData;
 }
 
 // The range of an irregular binning is given by its "edges": HS3 0.3 (#126) forbids "min" and "max" alongside them, in
@@ -5164,7 +5015,7 @@ TEST(RooFitHS3, SharedTransformedParameters)
    wsExponential.factory("Exponential::exponential_2(y[0, 10], c)");
    const std::string jsonExponential = toJSON(wsExponential);
    EXPECT_EQ(countOccurrences(jsonExponential, R"("name":"c_exponential_inverted")"), 1u) << jsonExponential;
-   EXPECT_EQ(validate(wsExponential, "exponential_1"), 0);
+   expectRoundTrip(wsExponential);
 
    RooWorkspace wsLognormal;
    wsLognormal.factory("Lognormal::lognormal_1(x[2, 1.1, 10], m0[2, 1.1, 10], k[2, 1.1, 5])");
@@ -5172,7 +5023,7 @@ TEST(RooFitHS3, SharedTransformedParameters)
    const std::string jsonLognormal = toJSON(wsLognormal);
    EXPECT_EQ(countOccurrences(jsonLognormal, R"("name":"m0_lognormal_log")"), 1u) << jsonLognormal;
    EXPECT_EQ(countOccurrences(jsonLognormal, R"("name":"k_lognormal_log")"), 1u) << jsonLognormal;
-   EXPECT_EQ(validate(wsLognormal, "lognormal_1"), 0);
+   expectRoundTrip(wsLognormal);
 }
 
 // ModelConfigs that share the pdf and the dataset, like an S+B and B-only pair, are exported as separate analyses.
@@ -5285,7 +5136,7 @@ TEST(RooFitHS3, MixtureOfOneExtendedSummand)
    RooExtendPdf extended{"extended", "", gauss, nEvents};
    RooAddPdf mixture{"mixture", "", RooArgList{extended}};
    ASSERT_NE(mixture.extendMode(), RooAbsPdf::CanNotBeExtended);
-   EXPECT_EQ(validate(mixture), 0);
+   expectRoundTrip(mixture);
 }
 
 namespace {
@@ -5869,17 +5720,10 @@ TEST_P(HFFixture, HS3ClosureLoop)
    EXPECT_TRUE(pdf != nullptr);
 
    std::string const &js = toJSON(*ws);
-   if (writeJsonFiles) {
-      RooJSONFactoryWSTool{*ws}.exportJSON(_name + "_1.json");
-   }
 
    Imported wsFromJson{js};
 
    std::string const &js3 = toJSON(wsFromJson);
-
-   if (writeJsonFiles) {
-      RooJSONFactoryWSTool{wsFromJson}.exportJSON(_name + "_2.json");
-   }
 
    // Chack that JSON > WS > JSON doesn't change the JSON
    EXPECT_EQ(js, js3) << "The JSON -> WS -> JSON roundtrip did not result in the original JSON!";
@@ -6315,9 +6159,6 @@ TEST(RooFitHS3, HistFactoryExportDoesNotDependOnNames)
 
    std::string json;
    const std::string warnings = warningsOf([&] { json = toJSON(wsMod); });
-   if (writeJsonFiles) {
-      RooJSONFactoryWSTool{wsMod}.exportJSON("HS3Names.json");
-   }
    // The renamed legacy inverse bin width is identified by its value, with a warning.
    EXPECT_THAT(warnings, HasSubstr("'" + renamed("legacyInverseWidth") + "'"));
 
@@ -7043,7 +6884,7 @@ TEST(RooFitHS3, CombinedDist)
    EXPECT_EQ((*axis)["categories"].child(1).val(), "control");
 
    // Round trip: the same RooSimultaneous, with the index category from the domain (indices = positions).
-   EXPECT_EQ(validate(ws, "simPdf"), 0);
+   expectRoundTrip(ws);
    Imported ws2{json};
    auto *simPdf = dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf"));
    ASSERT_NE(simPdf, nullptr);
