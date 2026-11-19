@@ -110,6 +110,9 @@ struct ContinuousAxis {
    std::string name;
    std::optional<double> min;
    std::optional<double> max;
+   /// Whether the axis has a fixed "value", which is only allowed in domains. Older versions of RooFit wrote it for
+   /// the constant observables of data sets. The value is not used.
+   bool hasFixedValue = false;
 };
 
 /// The axis of binned data.
@@ -207,15 +210,19 @@ struct Data {
    std::variant<PointData, UnbinnedData, BinnedData, CombinedData> body;
 };
 
+/// The data of a likelihood term: a data set, a number given in-line, or none (std::monostate) in a pure model.
 struct LikelihoodTerm {
    DistributionRef distribution;
-   std::variant<DataRef, double> data;
+   std::variant<DataRef, double, std::monostate> data;
 };
 
 struct Likelihood {
    std::string name;
    std::vector<LikelihoodTerm> terms;
    std::vector<DistributionRef> auxDistributions;
+   /// Whether "data" is null: the likelihood only groups the distributions of a model without data (e.g. for toy
+   /// generation), and it can't be evaluated before a data set is created.
+   bool pureModel = false;
 };
 
 struct Analysis {
@@ -488,6 +495,9 @@ struct RooFitInternal {
    /// The constraint terms of HistFactory distributions that no modifier names, by distribution. They are
    /// also listed in the "aux_distributions" of the likelihoods, which is what other implementations use.
    std::map<std::string, std::vector<DistributionRef>> channelConstraints;
+   /// The components of a combined distribution that are auxiliary measurements (constraint terms paired with the
+   /// data set of their observed values), by combined distribution. RooFit can read them back as constraint terms.
+   std::map<std::string, std::vector<DistributionRef>> auxiliaryChannels;
    /// Axes that the components of a combined data set share, but that are no variate of any distribution, e.g. an
    /// event number, by combined data set. They have no statistical meaning, and may be shared.
    std::map<std::string, std::vector<std::string>> bookkeepingColumns;
@@ -657,9 +667,29 @@ void factorOutDefaultInterpolation(HistFactoryDist &dist);
 /// by the components of a combined data set, except for bookkeeping columns.
 std::vector<std::string> sharedVariates(HS3Document const &doc);
 
+/// In HS3 0.3 (HS3 PR #154, decision on HS3 #156), the "constraints" of a HistFactory modifier add no term to a
+/// likelihood: every likelihood that contains the channel must list each named distribution exactly once, in
+/// "distributions" or "aux_distributions", or as a factor of a product_dist or a component of a combined_dist reached
+/// from them. One message for each named distribution of each likelihood that doesn't. For older documents, RooFit
+/// adds the named constraints itself (see sharedVariates()).
+///
+/// A distribution contributes one factor per entry of the data that it is paired with, so that being listed is not
+/// the same as contributing: a component of a combined_dist without a component of the paired combined data set, or
+/// with one that has no entries, contributes nothing. A constraint that contributes once elsewhere is then fine, but
+/// since listing it in the model and again on its own is probably unintended, `warnings` gets a message. So it does
+/// for every component of a combined distribution that has no data component at all.
+std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector<std::string> *warnings = nullptr);
+
+/// The distributions that are components of a combined distribution of a likelihood, with a component of the paired
+/// combined data set that has entries: measurements of their own.
+std::set<std::string> componentsWithData(HS3Document const &doc);
+
 /// The variates of the "distributions" of a likelihood, which it pairs with data, with the columns of its combined
 /// distributions.
 std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likelihood);
+
+/// The variates of the distribution `distribution`, without the columns of a combined distribution.
+std::set<std::string> variatesOf(HS3Document const &doc, std::string const &distribution);
 
 /// The axes that several components of a combined data set have, by combined data set.
 std::map<std::string, std::set<std::string>> sharedAxes(HS3Document const &doc);

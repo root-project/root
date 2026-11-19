@@ -404,7 +404,8 @@ void configureGammasWithConstraints(RooArgList const &gammas, std::vector<double
 ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname, std::string const &sysname,
                          std::vector<HS3::ParameterRef> const &parnames, std::vector<double> const &vals,
                          HS3::GammaConstraint const &constraint, RooArgSet &constraints, RooArgSet const &observables,
-                         double gammaMax, double minSigma, std::size_t nBins, std::string const &context)
+                         double gammaMax, double minSigma, std::size_t nBins, std::string const &context,
+                         bool configureGammas = true)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -453,7 +454,9 @@ ParamHistFunc &createPHF(RooJSONFactoryWSTool &tool, std::string const &phfname,
          }
          constraintPdfs.push_back(pdf);
       }
-      configureGammasWithConstraints(gammas, vals, constraintPdfs, minSigma);
+      // Without `configureGammas`, nothing is derived from `vals`: the gammas keep their range and constness, and
+      // only get the initial error that their constraint distribution encodes.
+      configureGammasWithConstraints(gammas, configureGammas ? vals : std::vector<double>{}, constraintPdfs, minSigma);
    }
 
    if (vals.empty()) {
@@ -548,6 +551,7 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
    hf.SetTitle(sampleName.c_str());
 
    SampleElements elems;
+   std::map<std::string, int> histoSysCount;
    elems.shapeElems.add(tool.wsEmplace<RooBinWidthFunction>(newName(prefixedName + "_binWidth"), hf, true));
 
    const bool hasStatError = std::any_of(sample.modifiers.begin(), sample.modifiers.end(),
@@ -598,8 +602,12 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
             [&](HS3::HistoSys const &mod) {
                RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 0., -5, 5, mod.name);
                elems.histNps.add(param);
+               // Documents before HS3 0.3 can have several histosys modifiers of the same name in a sample (see the
+               // validation). Their histograms are told apart by a counter.
+               const int count = ++histoSysCount[mod.name];
+               const std::string objName = count == 1 ? mod.name : mod.name + "_" + std::to_string(count);
                auto addVariation = [&](RooArgList &list, HS3::HistoSysVariation const &variation, const char *suffix) {
-                  const std::string name = newName(mod.name + suffix + prefixedName);
+                  const std::string name = newName(objName + suffix + prefixedName);
                   list.add(
                      tool.wsEmplace<RooHistFunc>(name, ctx.observables,
                                                  HS3::createDataHist(name, ctx.observables, variation.contents,
@@ -986,6 +994,8 @@ std::vector<double> contents(RooDataHist const &dataHist)
 struct ExportedChannel {
    std::string name;
    HS3::HistFactoryDist dist;
+   /// Whether a formula among the factors of a sample was written as several modifiers, see readChannel().
+   bool decomposedFormulas = false;
    // The variables of the first histogram, named after the observables of the channel.
    std::unique_ptr<RooArgSet> observables;
    std::size_t nBins = 0;
@@ -1096,8 +1106,10 @@ bool isShapeModifierFunction(ParamHistFunc const &phf, ExportedChannel const &ch
    return true;
 }
 
+// Read the channel from the RooRealSumPdf. With `decomposeFormulas`, a RooFormulaVar among the factors of a sample
+// that is a product is written as one modifier per factor; otherwise, like any other function, as one custom modifier.
 ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
-                            std::vector<RooAbsPdf *> const &channelConstraints)
+                            std::vector<RooAbsPdf *> const &channelConstraints, bool decomposeFormulas = true)
 {
    ExportedChannel channel;
 
@@ -1231,7 +1243,11 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
                   expression.ReplaceAll(("x[" + std::to_string(i) + "]").c_str(), p->GetName());
                   expression.ReplaceAll(("@" + std::to_string(i)).c_str(), p->GetName());
                }
-               auto components = splitTopLevelProduct(expression.Data());
+               std::vector<std::string> components;
+               if (decomposeFormulas) {
+                  components = splitTopLevelProduct(expression.Data());
+               }
+               channel.decomposedFormulas |= !components.empty();
                if (components.empty()) {
                   // it's not a product, let's just treat it as an unknown element
                   custom.push_back({formula->GetName()});
@@ -1391,6 +1407,23 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
    return channel;
 }
 
+// Whether the distribution of the channel passes the checks of a HistFactory distribution, with its duplicate
+// modifiers combined like for the export.
+bool isValidChannel(ExportedChannel const &channel, std::string const &pdfname)
+{
+   if (!channel.observables) {
+      return true; // nothing was read that could be checked
+   }
+   HS3::HistFactoryDist dist = channel.dist;
+   HS3::Diagnostics diagnostics;
+   HS3::mergeDuplicateModifiers(dist, channel.name, diagnostics);
+   for (auto *obs : static_range_cast<RooRealVar *>(*channel.observables)) {
+      dist.axes.push_back(HS3::toBinnedAxis(*obs));
+   }
+   HS3::validateHistFactoryDist(dist, pdfname, diagnostics);
+   return !HS3::hasErrors(diagnostics);
+}
+
 // The statistical uncertainties of the samples are reconstructed from the constraints of the gamma parameters, with
 // the (arbitrary) convention that all samples have the same relative uncertainty.
 void configureStatError(ExportedChannel &channel)
@@ -1446,7 +1479,7 @@ bool usedOnlyByHistFactoryChannels(RooJSONFactoryWSTool &tool, RooAbsPdf const &
       }
    }
    for (RooAbsArg const *client : constraint.clients()) {
-      if (tool.workspace()->arg(client->GetName()) != client) {
+      if (tool.workspace()->arg(client->GetName()) != client || isSkippedHelper(*client, *tool.workspace())) {
          continue; // not part of what is exported
       }
       if (!client->getAttribute(arrayDistTag) && !channelSum(*client)) {
@@ -1554,6 +1587,15 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    }
 
    ExportedChannel channel = readChannel(tool, pdfname, sumpdf, constraints);
+   // Writing a formula as several modifiers must not be what makes the channel invalid, e.g. because a parameter that
+   // occurs twice in the formula becomes two normfactors of the same name. If it is, the formulas are written as
+   // custom modifiers instead.
+   if (channel.decomposedFormulas && !isValidChannel(channel, pdfname)) {
+      ExportedChannel plain = readChannel(tool, pdfname, sumpdf, constraints, /*decomposeFormulas=*/false);
+      if (isValidChannel(plain, pdfname)) {
+         channel = std::move(plain);
+      }
+   }
    HS3::HistFactoryDist &dist = channel.dist;
 
    // sanity checks
@@ -1696,10 +1738,14 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
          errs[i] = sumW[i] > 0. ? std::sqrt(sumW2[i]) / sumW[i] : 0.;
       }
 
-      mcStatObject =
-         &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
-                    statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
-                    dist.statError.relThreshold, errs.size(), "the staterror modifier of channel '" + name + "'");
+      // In HS3 0.3 (HS3 PR #154, decision on HS3 #156), the named constraints of a staterror are authoritative: the
+      // range, the constness and the step width of the gammas come from the document, and nothing is derived from
+      // the errors of the samples. Older documents relied on RooFit configuring the gammas from them.
+      const bool configureGammas = tool.hs3Version() < HS3::Version{0, 3};
+      mcStatObject = &createPHF(tool, "mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs,
+                                statErrorConstraint(dist), constraints, observables, defaultStatErrorGammaMax,
+                                dist.statError.relThreshold, errs.size(),
+                                "the staterror modifier of channel '" + name + "'", configureGammas);
    }
 
    ChannelContext ctx{tool, dist, observables, name, channelName, mcStatObject, constraints};
@@ -1717,6 +1763,18 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
       for (auto const &ref : *channelConstraints) {
          constraints.add(*tool.request<RooAbsPdf>(ref.name, name));
       }
+   }
+
+   // A constraint that is a measurement of its own, as a component of a combined distribution with data, contributes
+   // there, and is not multiplied into the channel.
+   {
+      RooArgSet ownMeasurements;
+      for (auto *constraint : static_range_cast<RooAbsPdf *>(constraints)) {
+         if (tool.isConstraintReadAsChannel(*constraint)) {
+            ownMeasurements.add(*constraint);
+         }
+      }
+      constraints.remove(ownMeasurements);
    }
 
    // With constraints, the channel is the product of the sum of the samples and the constraints.

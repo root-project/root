@@ -11,6 +11,9 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <set>
 #include <sstream>
@@ -63,6 +66,88 @@ std::string removeSuffix(std::string_view str, std::string_view suffix)
    out += str;
    out = out.substr(0, out.length() - suffix.length());
    return out;
+}
+
+namespace {
+
+constexpr std::string_view literalPrefix = "const_";
+
+// The shortest decimal representation of a value that is read back as the same value.
+std::string shortestNumber(double value)
+{
+   char buffer[32];
+   for (int precision = 1; precision <= 17; ++precision) {
+      std::snprintf(buffer, sizeof(buffer), "%.*g", precision, value);
+      if (std::strtod(buffer, nullptr) == value) {
+         break;
+      }
+   }
+   return buffer;
+}
+
+// The number that the identifier of a literal constant spells, or an empty string if `name` is no such identifier.
+std::string numberOfLiteralIdentifier(std::string_view name)
+{
+   if (!startsWith(name, literalPrefix) || name.size() == literalPrefix.size()) {
+      return "";
+   }
+   std::string number;
+   for (char c : name.substr(literalPrefix.size())) {
+      if (c == 'p') {
+         number += '.';
+      } else if (c == 'm') {
+         number += '-';
+      } else if (std::isdigit(static_cast<unsigned char>(c)) || c == 'e') {
+         number += c;
+      } else {
+         return "";
+      }
+   }
+   char *end = nullptr;
+   std::strtod(number.c_str(), &end);
+   return end == number.c_str() + number.size() ? number : "";
+}
+
+} // namespace
+
+std::string transformedArgument(RooAbsReal const &param)
+{
+   if (!isLiteralConstVar(param)) {
+      return param.GetName();
+   }
+   // In parentheses if negative, such that "-%s" doesn't become "--1".
+   const std::string number = shortestNumber(param.getVal());
+   return number[0] == '-' ? "(" + number + ")" : number;
+}
+
+std::string transformedBaseName(RooAbsReal const &param)
+{
+   if (!isLiteralConstVar(param)) {
+      return param.GetName();
+   }
+   std::string out{literalPrefix};
+   for (char c : shortestNumber(param.getVal())) {
+      if (c == '.') {
+         out += 'p';
+      } else if (c == '-') {
+         out += 'm';
+      } else if (c != '+') {
+         out += c;
+      }
+   }
+   return out;
+}
+
+bool isLiteralIdentifier(std::string_view name)
+{
+   return !numberOfLiteralIdentifier(name).empty();
+}
+
+std::string transformedOriginal(std::string_view name, std::string_view suffix)
+{
+   const std::string base = removeSuffix(name, suffix);
+   const std::string number = numberOfLiteralIdentifier(base);
+   return number.empty() ? base : number;
 }
 
 namespace {

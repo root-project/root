@@ -323,6 +323,8 @@ void describe(Reader &ar, DomainAxis &axis)
 void describe(Reader &ar, ContinuousAxis &axis)
 {
    ar("name", axis.name);
+   // A fixed axis is only allowed in domains (HS3 0.3), which the validation reports.
+   axis.hasFixedValue = ar.has("value");
    readBound(ar, "min", axis.min, -infinity);
    readBound(ar, "max", axis.max, infinity);
 }
@@ -618,6 +620,14 @@ void describe(Reader &ar, Likelihood &likelihood)
       return;
    }
    Cursor data = ar.child("data");
+   // A pure model, i.e. distributions without any data, which a ModelConfig can refer to.
+   if (data.node().is_null()) {
+      likelihood.pureModel = true;
+      for (auto &distribution : distributions) {
+         likelihood.terms.push_back({std::move(distribution), std::monostate{}});
+      }
+      return;
+   }
    if (!data.node().is_seq()) {
       data.error("must be an array");
       return;
@@ -1130,6 +1140,7 @@ void readMisc(Cursor const &root, RooFitInternal &out)
    readMap(ar, "combined_datasets", out.combinedDatasets);
    readMap(ar, "ModelConfigs", out.modelConfigs);
    readMap(ar, "histfactory_constraints", out.channelConstraints);
+   readMap(ar, "auxiliary_channels", out.auxiliaryChannels);
    readMap(ar, "bookkeeping_columns", out.bookkeepingColumns);
 }
 
