@@ -1075,6 +1075,9 @@ TROOT::~TROOT()
       fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);
+      if (fList) {
+         fList->Delete("slow");
+      }
       fSockets->Delete();           SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
       TSeqCollection *tl = fMappedFiles; fMappedFiles = nullptr; delete tl;
@@ -1160,6 +1163,14 @@ TROOT::~TROOT()
       // We cannot delete fCleanups because of the logic in atexit which needs it.
       SafeDelete(fCleanups);
 #endif
+
+      // Clear fCleanups before deleting fInterpreter, because ~TCling() will
+      // dlclose dynamically loaded libraries (e.g. libTree, libHistPainter)
+      // whose objects may still be registered in fCleanups, and ~TNamed() of
+      // TCling itself (as well as subsequent destructors) triggers
+      // TROOT::RecursiveRemove() -> fCleanups->RecursiveRemove().
+      if (fCleanups)
+         fCleanups->Clear();
 
 #ifdef _MSC_VER
       // usedToIdentifyRootClingByDlSym is available when TROOT is part of rootcling.
