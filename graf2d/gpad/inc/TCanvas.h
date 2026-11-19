@@ -86,7 +86,7 @@ private:
 protected:
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    //-- used by friend TThread class
-   void     Init();
+   void     Init(Bool_t init_virtualx_graphics = kTRUE);
 
 public:
    // TCanvas status bits
@@ -209,7 +209,7 @@ public:
    void              SetGrayscale(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsGrayscale
    void              SetWindowPosition(Int_t x, Int_t y);
    void              SetWindowSize(UInt_t ww, UInt_t wh);
-   void              SetCanvasImp(TCanvasImp *i);
+   void              SetCanvasImp(TCanvasImp *imp);
    void              SetCanvasSize(UInt_t ww, UInt_t wh) override; // *MENU*
    void              SetHighLightColor(Color_t col) { fHighLightColor = col; }
    void              SetSelected(TObject *obj) override;

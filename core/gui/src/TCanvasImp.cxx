@@ -22,6 +22,17 @@ and a drawing area).
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns true if gVirtualX instance used by the canvas implementation
+/// In the ROOT6 it is be default on - means all necessary libraries will be loaded and initialized
+/// In the ROOT7 it will be switched to off by default and probably completely removed
+/// from the API
+
+Bool_t TCanvasImp::IsUseVirtualX() const
+{
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Change mouse pointer, redirect to gVirtualX
 
 void TCanvasImp::Warp(Int_t ix, Int_t iy)

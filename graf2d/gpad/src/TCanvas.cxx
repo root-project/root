@@ -546,18 +546,24 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the TCanvas members. Called by all constructors.
 
-void TCanvas::Init()
+void TCanvas::Init(Bool_t init_virtualx_graphics)
 {
    // Make sure the application environment exists. It is need for graphics
    // (colors are initialized in the TApplication ctor).
-   if (!gApplication)
-      TApplication::CreateApplication();
 
-   // Load and initialize graphics libraries if
-   // TApplication::NeedGraphicsLibs() has been called by a
-   // library static initializer.
-   if (gApplication)
-      gApplication->InitializeGraphics(gROOT->IsWebDisplay());
+   if (init_virtualx_graphics) {
+      if (!gApplication)
+         TApplication::CreateApplication();
+
+      // Load and initialize graphics libraries if
+      // TApplication::NeedGraphicsLibs() has been called by a
+      // library static initializer.
+      if (gApplication)
+         gApplication->InitializeGraphics(gROOT->IsWebDisplay());
+   } else {
+      // ensure that all colors are created
+      TColor::InitializeColors();
+   }
 
    // Get some default from .rootrc. Used in fCanvasImp->InitWindow().
    fHighLightColor     = gEnv->GetValue("Canvas.HighLightColor", kRed);
@@ -602,7 +608,8 @@ void TCanvas::Build()
    // Get window identifier
    if (fCanvasID == -1 && fCanvasImp)
       fCanvasID = fCanvasImp->InitWindow();
-   if (fCanvasID == -1) return;
+   if (fCanvasID == -1)
+      return;
 
    if (fCw !=0 && fCh !=0) {
       if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
@@ -624,6 +631,7 @@ void TCanvas::Build()
    } else {
       //normal mode with a screen window
       if (auto pp = GetCanvasPainter()) {
+         // only with virtualx one allowed to paint outside of Update() method
          // Set default physical canvas attributes
          pp->SelectDrawable(fCanvasID);
          pp->SetAttFill({1, 1001});    //Set color index for fill area
@@ -631,7 +639,8 @@ void TCanvas::Build()
          pp->SetAttMarker({1, 1, 1});  //Set color index for markers
          // pp->SetAttText({22, 0., 1, 42, 12}); //Set color index for text
          // Clear workstation
-         pp->ClearWindow(fCanvasID);
+         if (fCanvasImp->IsUseVirtualX())
+            pp->ClearWindow(fCanvasID);
       }
 
       // Set Double Buffer on by default
@@ -664,13 +673,16 @@ void TCanvas::Build()
       SetRightMargin(gStyle->GetPadRightMargin());
       SetBorderSize(gStyle->GetCanvasBorderSize());
       SetBorderMode(gStyle->GetCanvasBorderMode());
-      fBorderMode=gStyle->GetCanvasBorderMode(); // do not call SetBorderMode (function redefined in TCanvas)
+      fBorderMode = gStyle->GetCanvasBorderMode(); // do not call SetBorderMode (function redefined in TCanvas)
       SetPad(0, 0, 1, 1);
       Range(0, 0, 1, 1);   //pad range is set by default to [0,1] in x and y
 
-      if (auto pp = GetCanvasPainter())
-         pp->SelectDrawable(fPixmapID);      //pixmap must be selected
-      PaintBorder(GetFillColor(), kTRUE);    //paint background
+      if (fCanvasImp->IsUseVirtualX()) {
+         // only with virtualx one allowed to paint outside of Update() method
+         if (auto pp = GetCanvasPainter())
+            pp->SelectDrawable(fPixmapID);      //pixmap must be selected
+         PaintBorder(GetFillColor(), kTRUE);    //paint background
+      }
    }
 
    // transient canvases have typically no menubar and should not get
@@ -1997,7 +2009,7 @@ void TCanvas::SetCursor(ECursor cursor)
 
 void TCanvas::SetDoubleBuffer(Int_t mode)
 {
-   if (IsBatch() || IsWeb())
+   if (IsBatch() || IsWeb() || !fPainter)
       return;
    fDoubleBuffer = mode;
    if (fCanvasID != -1)
@@ -2181,21 +2193,32 @@ void TCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set canvas implementation
-/// If web-based implementation provided, some internal fields also initialized
+/// Should be used with care!
+/// Normally invoked for not-initialized canvas created with `new TCanvas(kFALSE)` constructor.
+/// After implementation assigned canvas will be initialized
+/// @note For web-based implementation there is special handling, which will be removed in ROOT7
 
 void TCanvas::SetCanvasImp(TCanvasImp *imp)
 {
    Bool_t was_web = IsWeb();
+   Bool_t was_nox = fCanvasImp && !fCanvasImp->IsUseVirtualX();
 
    fCanvasImp = imp;
 
-   if (!was_web && IsWeb()) {
-      fCanvasID = fCanvasImp->InitWindow();
-      fPixmapID = 0;
-      fMother = this;
-      if (!fCw) fCw = 800;
-      if (!fCh) fCh = 600;
-   } else if (was_web && !imp) {
+   if (fCanvasImp) {
+      if (fCanvasImp->IsWeb()) {
+         // special handling for web canvas, need to be sync with possible apps
+         fCanvasID = fCanvasImp->InitWindow();
+         fPixmapID = 0;
+         fMother = this;
+         if (!fCw) fCw = 800;
+         if (!fCh) fCh = 600;
+      } else {
+         Init(fCanvasImp->IsUseVirtualX());
+         Build();
+         ResizePad();
+      }
+   } else if (!imp && (was_web || was_nox)) {
       fCanvasID = -1;
       fPixmapID = -1;
       fMother = nullptr;

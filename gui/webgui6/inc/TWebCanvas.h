@@ -131,6 +131,7 @@ protected:
    void Unlock() override {}
    Bool_t IsLocked() override { return kFALSE; }
 
+   Bool_t IsUseVirtualX() const override { return kFALSE; }
    Bool_t IsWeb() const override { return kTRUE; }
    Bool_t PerformUpdate(Bool_t async) override;
    TVirtualPadPainter *CreatePadPainter() override;
