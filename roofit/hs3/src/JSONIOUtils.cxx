@@ -22,22 +22,19 @@
 
 using RooFit::Detail::JSONNode;
 
-// Parse the entire string as a number (integer or floating-point). The output is only valid if that succeeds.
-ToNumberOutput toNumber(const std::string &str)
+std::optional<double> toNumber(const std::string &str)
 {
    // std::from_chars for floating-point types is not portably available on all
    // platforms ROOT supports, so we rely on the stream extraction.
    std::istringstream stream(str);
-   ToNumberOutput output;
-   output.valid = (stream >> output.value) && stream.eof();
-   return output;
+   double value = 0.0;
+   return (stream >> value) && stream.eof() ? std::optional<double>{value} : std::nullopt;
 }
 
 // True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
 bool isLiteralConstVar(RooAbsArg const &arg)
 {
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
-   return isRooConstVar && toNumber(arg.GetName()).valid;
+   return dynamic_cast<RooConstVar const *>(&arg) && toNumber(arg.GetName());
 }
 
 // Write a reference to `arg`: the value if it is a literal constant, and the name otherwise.

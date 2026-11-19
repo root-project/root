@@ -400,6 +400,14 @@ void createVariables(RooWorkspace &ws, std::vector<HS3::Domain> const &domains, 
 
 namespace {
 
+// Ends an import or an export: its state must not survive it, not even if there is an exception. The state of an
+// import refers to the document.
+template <class State_t>
+struct StateScope {
+   std::unique_ptr<State_t> &state;
+   ~StateScope() { state.reset(); }
+};
+
 // Keeps track of the objects that are being imported. Objects that depend on each other would otherwise recurse until
 // the stack overflows.
 class ImportGuard {
@@ -933,6 +941,14 @@ std::string rootVersion()
    return versionName;
 }
 
+// The data set `name` among the loaded ones that are not a component of a combined data set by now, or the data of a
+// constraint term, or nullptr.
+std::unique_ptr<RooAbsData> *findDataset(std::vector<std::unique_ptr<RooAbsData>> &datasets, std::string const &name)
+{
+   auto found = std::find_if(datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == name; });
+   return found != datasets.end() ? &*found : nullptr;
+}
+
 // A distribution of the document can be a function in RooFit, or it can be skipped.
 void requirePdf(RooAbsArg const *arg, std::string const &what)
 {
@@ -1241,11 +1257,10 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (!dataRef || (!auxiliary && (!modelTree || modelTree->find(listed.GetName())))) {
          return false;
       }
-      return std::any_of(datasets.begin(), datasets.end(),
-                         [&](auto const &d) { return d && d->GetName() == dataRef->name && d->numEntries() == 1; });
+      auto const *data = findDataset(datasets, dataRef->name);
+      return data && (*data)->numEntries() == 1;
    };
 
-   std::vector<std::string> nllDistNames;
    std::vector<HS3::LikelihoodTerm const *> nllTerms;
    RooArgSet constraintObservables;
    RooArgSet constraintsWithData;
@@ -1255,38 +1270,33 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (listed && !isConstraintTermOfOthers(*listed, i) && isConstraintTermOfModel(*listed, term)) {
          constraintsWithData.add(*listed);
       } else if (!listed || !isConstraintTermOfOthers(*listed, i)) {
-         nllDistNames.push_back(term.distribution.name);
          nllTerms.push_back(&term);
          continue;
       }
       auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
-      if (!dataRef) {
+      auto *data = dataRef ? findDataset(datasets, dataRef->name) : nullptr;
+      if (!data) {
          continue;
       }
-      for (auto &d : datasets) {
-         if (!d || d->GetName() != dataRef->name) {
+      if ((*data)->numEntries() != 1) {
+         throw std::runtime_error("the data set '" + dataRef->name + "' paired with the constraint term '" +
+                                  term.distribution.name + "' must have exactly one entry");
+      }
+      for (RooAbsArg const *obs : *(*data)->get(0)) {
+         auto *var = workspace.var(obs->GetName());
+         auto const *value = dynamic_cast<RooAbsReal const *>(obs);
+         if (!var || !value) {
+            RooJSONFactoryWSTool::warning("RooFitHS3: cannot set the observed value of '" +
+                                          std::string(obs->GetName()) + "' from the data set '" + dataRef->name +
+                                          "': it is not a variable of the workspace");
             continue;
          }
-         if (d->numEntries() != 1) {
-            throw std::runtime_error("the data set '" + dataRef->name + "' paired with the constraint term '" +
-                                     term.distribution.name + "' must have exactly one entry");
-         }
-         for (RooAbsArg const *obs : *d->get(0)) {
-            auto *var = workspace.var(obs->GetName());
-            auto const *value = dynamic_cast<RooAbsReal const *>(obs);
-            if (!var || !value) {
-               RooJSONFactoryWSTool::warning("RooFitHS3: cannot set the observed value of '" +
-                                             std::string(obs->GetName()) + "' from the data set '" + dataRef->name +
-                                             "': it is not a variable of the workspace");
-               continue;
-            }
-            var->setVal(value->getVal());
-            var->setConstant(true);
-            constraintObservables.add(*var);
-         }
-         // The values live in the variables now; the data set is not imported.
-         d.reset();
+         var->setVal(value->getVal());
+         var->setConstant(true);
+         constraintObservables.add(*var);
       }
+      // The values live in the variables now; the data set is not imported.
+      data->reset();
    }
    // The constraint terms of HistFactory distributions are listed as auxiliary distributions, but they are part of the
    // distributions in RooFit.
@@ -1305,8 +1315,8 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       checkPdf(extConstraint, aux.name, "auxiliary distribution");
       // Only if the constraint really ended up in a distribution of the likelihood.
       if (channelConstraints.count(aux.name) &&
-          std::any_of(nllDistNames.begin(), nllDistNames.end(), [&](std::string const &distName) {
-             RooAbsArg const *dist = workspace.arg(distName);
+          std::any_of(nllTerms.begin(), nllTerms.end(), [&](HS3::LikelihoodTerm const *term) {
+             RooAbsArg const *dist = workspace.arg(term->distribution.name);
              return dist && dist->dependsOn(*extConstraint);
           })) {
          continue;
@@ -1317,22 +1327,14 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       extConstraints.add(*extConstraint);
    }
    RooArgSet observables;
-   for (HS3::LikelihoodTerm const *termPtr : nllTerms) {
-      HS3::LikelihoodTerm const &term = *termPtr;
-      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
-      if (!dataRef) {
-         continue;
-      }
-      bool found = false;
-      for (const auto &d : datasets) {
-         // Components of combined data sets have been moved out of the list.
-         if (d && d->GetName() == dataRef->name) {
-            found = true;
-            observables.add(*d->get(), true);
+   for (HS3::LikelihoodTerm const *term : nllTerms) {
+      if (auto const *dataRef = std::get_if<HS3::DataRef>(&term->data)) {
+         auto const *data = findDataset(datasets, dataRef->name);
+         if (!data) {
+            throw std::runtime_error("dataset '" + dataRef->name + "' cannot be found!");
          }
+         observables.add(*(*data)->get(), true);
       }
-      if (!found)
-         throw std::runtime_error("dataset '" + dataRef->name + "' cannot be found!");
    }
    // Bookkeeping columns of the data sets are no observables of the model.
    for (std::string const &column : bookkeepingColumns) {
@@ -1362,18 +1364,19 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
 
    if (!pdf) {
       // if there is no simultaneous pdf, we can check whether there is only one pdf in the list
-      if (nllDistNames.size() == 1) {
+      if (nllTerms.size() == 1) {
          // if so, we can use that one to populate the ModelConfig
-         pdf = workspace.pdf(nllDistNames[0]);
+         pdf = workspace.pdf(nllTerms[0]->distribution.name);
       } else {
          // otherwise, we have no choice but to build a simPdf by hand
          std::string simPdfName = analysisName + "_simPdf";
          std::string indexCatName = analysisName + "_categoryIndex";
          RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
          std::map<std::string, RooAbsPdf *> pdfMap;
-         for (std::size_t i = 0; i < nllDistNames.size(); ++i) {
-            indexCat.defineType(nllDistNames[i], i);
-            pdfMap[nllDistNames[i]] = workspace.pdf(nllDistNames[i]);
+         for (std::size_t i = 0; i < nllTerms.size(); ++i) {
+            std::string const &name = nllTerms[i]->distribution.name;
+            indexCat.defineType(name, i);
+            pdfMap[name] = workspace.pdf(name);
          }
          RooSimultaneous simPdf{simPdfName.c_str(), simPdfName.c_str(), pdfMap, indexCat};
          workspace.import(simPdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
@@ -1551,9 +1554,8 @@ void combineDatasets(HS3Document const &doc, std::vector<std::unique_ptr<RooAbsD
          auto componentName = combinedName + "_" + info.labels[iChannel];
          // We move the found channel data out of the "datasets" vector, such that
          // the data components don't get imported anymore.
-         auto found =
-            std::find_if(datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == componentName; });
-         if (found == datasets.end()) {
+         auto *found = findDataset(datasets, componentName);
+         if (!found) {
             RooJSONFactoryWSTool::error("unable to obtain component matching component name '" + componentName + "'");
          }
          allVars.add(*(*found)->get(), true);
@@ -1618,9 +1620,8 @@ void assembleCombinedData(HS3Document const &doc, RooWorkspace const &workspace,
       };
       std::vector<Component> components;
       for (auto const &c : info->components) {
-         auto found =
-            std::find_if(datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == c.ref.name; });
-         if (found == datasets.end()) {
+         auto *found = findDataset(datasets, c.ref.name);
+         if (!found) {
             RooJSONFactoryWSTool::error("the component '" + c.ref.name + "' of " + context +
                                         " is not a data set of the document, or it is already a component of " +
                                         "another combined data set");
@@ -1914,43 +1915,37 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
    return n["name"].val();
 }
 
+// The specializations of requestImpl() look in the workspace first. If the object is not there, they import what the
+// document has under that name, and look again.
 template <>
 RooRealVar *RooJSONFactoryWSTool::requestImpl<RooRealVar>(const std::string &objname)
 {
-   if (RooRealVar *retval = _workspace.var(objname))
-      return retval;
-   if (_import) {
-      auto it = _import->defaultValuesByName.find(objname);
-      if (it != _import->defaultValuesByName.end()) {
-         this->importVariable(*it->second);
-         if (RooRealVar *retval = _workspace.var(objname))
-            return retval;
+   if (_import && !_workspace.var(objname)) {
+      auto found = _import->defaultValuesByName.find(objname);
+      if (found != _import->defaultValuesByName.end()) {
+         importVariable(*found->second);
       }
    }
-   return nullptr;
+   return _workspace.var(objname);
 }
 
 template <>
 RooAbsPdf *RooJSONFactoryWSTool::requestImpl<RooAbsPdf>(const std::string &objname)
 {
-   if (RooAbsPdf *retval = _workspace.pdf(objname))
-      return retval;
-   if (_import) {
-      auto it = _import->distributions.find(objname);
-      if (it != _import->distributions.end()) {
-         this->importDistribution(*it->second);
-         if (RooAbsPdf *retval = _workspace.pdf(objname))
-            return retval;
-      }
-      // HS3 lists some resolution models, which are pdfs in RooFit, as functions.
-      auto function = _import->functions.find(objname);
-      if (function != _import->functions.end()) {
-         this->importFunction(*function->second->body.node, true);
-         if (RooAbsPdf *retval = _workspace.pdf(objname))
-            return retval;
+   if (_import && !_workspace.pdf(objname)) {
+      auto found = _import->distributions.find(objname);
+      if (found != _import->distributions.end()) {
+         importDistribution(*found->second);
       }
    }
-   return nullptr;
+   // HS3 lists some resolution models, which are pdfs in RooFit, as functions.
+   if (_import && !_workspace.pdf(objname)) {
+      auto found = _import->functions.find(objname);
+      if (found != _import->functions.end()) {
+         importFunction(*found->second->body.node, true);
+      }
+   }
+   return _workspace.pdf(objname);
 }
 
 template <>
@@ -1958,24 +1953,19 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
 {
    if (RooAbsReal *retval = _workspace.function(objname))
       return retval;
-   auto toNumOutput = toNumber(objname);
-   if (toNumOutput.valid)
-      return &RooFit::RooConst(toNumOutput.value);
+   if (std::optional<double> number = toNumber(objname))
+      return &RooFit::RooConst(*number);
    if (RooAbsPdf *pdf = requestImpl<RooAbsPdf>(objname))
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
       return var;
-   if (RooAbsReal *retval = _workspace.function(objname))
-      return retval;
-   if (_import) {
-      auto it = _import->functions.find(objname);
-      if (it != _import->functions.end()) {
-         this->importFunction(*it->second->body.node, true);
-         if (RooAbsReal *retval = _workspace.function(objname))
-            return retval;
+   if (_import && !_workspace.function(objname)) {
+      auto found = _import->functions.find(objname);
+      if (found != _import->functions.end()) {
+         importFunction(*found->second->body.node, true);
       }
    }
-   return nullptr;
+   return _workspace.function(objname);
 }
 
 // Export a single variable (RooRealVar or RooConstVar) `v` to the parameter point.
@@ -3282,11 +3272,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    _export = std::make_unique<HS3::ToolExportState>();
    _export->root = &n;
-   // The state of the export must not survive it, not even if there is an exception.
-   struct ExportScope {
-      RooJSONFactoryWSTool &tool;
-      ~ExportScope() { tool._export.reset(); }
-   } exportScope{*this};
+   StateScope<HS3::ToolExportState> exportScope{_export};
 
    HS3Document &doc = _export->doc;
    doc.metadata.hs3Version = hs3VersionTag;
@@ -3570,12 +3556,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    }
    HS3Document const &doc = validated->doc();
 
-   // The state of the import refers to the document, so it must not survive it, not even if there is an exception.
-   struct ImportScope {
-      RooJSONFactoryWSTool &tool;
-      ~ImportScope() { tool._import.reset(); }
-   } importScope{*this};
-
+   StateScope<HS3::ToolImportState> importScope{_import};
    _import = std::make_unique<HS3::ToolImportState>(doc);
 
    createVariables(_workspace, _import->document.domains, _import->ranges);
@@ -3723,21 +3704,11 @@ void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std:
 
    n["name"] << name;
 
-   bool isVariable = true;
-   bool isData = false;
-   // Check for the type of object, if it doesn't contain a type, it must be a variable
-   if (n.find("type")) {
-      isVariable = false;
-      std::string elementType = n.find("type")->val();
-      if (elementType == "binned" || elementType == "unbinned") {
-         isData = true;
-      }
-   }
-
-   // Import the object to the workspace
-   if (isVariable) {
+   // Without a type, it must be a variable.
+   JSONNode const *type = n.find("type");
+   if (!type) {
       this->importVariableElement(n);
-   } else if (isData) {
+   } else if (type->val() == "binned" || type->val() == "unbinned") {
       HS3::Diagnostics diagnostics;
       HS3::Data data = HS3::parseData(n, diagnostics);
       HS3::report(diagnostics);
@@ -3770,11 +3741,8 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
    doc.domains.push_back({HS3::defaultDomainName, {std::move(axis)}});
    doc.parameterPoints.push_back({"default_values", {parameter}});
 
+   StateScope<HS3::ToolImportState> importScope{_import};
    _import = std::make_unique<HS3::ToolImportState>(doc);
-   struct ImportScope {
-      RooJSONFactoryWSTool &tool;
-      ~ImportScope() { tool._import.reset(); }
-   } importScope{*this};
 
    importVariable(parameter);
    if (RooRealVar *rrv = _workspace.var(parameter.name)) {
