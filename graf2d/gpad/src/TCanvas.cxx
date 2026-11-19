@@ -2669,10 +2669,12 @@ void TCanvas::CreatePainter()
    }
    if (!fPainter && fCanvasImp)
       fPainter = fCanvasImp->CreatePadPainter();
-   if (!fPainter)
-      fPainter = TVirtualPadPainter::PadPainter("native");
-   if (!fPainter)
-      Error("CreatePainter", "Fail to create any pad painter");
+   if (!IsBatch()) {
+      if (!fPainter)
+         fPainter = TVirtualPadPainter::PadPainter("native");
+      if (!fPainter)
+         Error("CreatePainter", "Fail to create any pad painter");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
