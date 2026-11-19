@@ -232,6 +232,339 @@ inline void addModelConfig(RooWorkspace &ws, const char *name, const char *pdf, 
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// Looking into documents
+
+/// An HS3 document with access to its nodes by path, like "distributions/model/samples/0/modifiers/lumi/data": the
+/// steps are the keys of maps and, in lists, the position of an element or its "name".
+class Doc {
+public:
+   Doc(std::string json) : _json{std::move(json)} {}
+   Doc(const char *json) : _json{json} {}
+   /// The document that the workspace is exported to, with the warnings of the export.
+   explicit Doc(RooWorkspace &ws, std::vector<ConfigFlag> const &flags = {})
+      : _warnings{recordWarningsOf([&] { _json = toJSON(ws, flags); })}
+   {
+   }
+
+   std::string const &json() const { return _json; }
+   operator std::string const &() const { return _json; }
+   std::string const &warnings() const { return _warnings; }
+
+   RooFit::Detail::JSONNode const &root() const
+   {
+      if (!_tree) {
+         _tree = RooFit::Detail::JSONTree::create(_json);
+      }
+      return _tree->rootnode();
+   }
+
+   /// The node at the path, or null if there is none.
+   RooFit::Detail::JSONNode const *find(std::string const &path) const
+   {
+      RooFit::Detail::JSONNode const *node = &root();
+      std::stringstream steps{path};
+      for (std::string step; node && std::getline(steps, step, '/');) {
+         node = child(*node, step);
+      }
+      return node;
+   }
+
+   /// The node at the path. Throws if there is none, which fails the test.
+   RooFit::Detail::JSONNode const &operator[](std::string const &path) const
+   {
+      if (auto const *node = find(path)) {
+         return *node;
+      }
+      throw std::runtime_error("no node '" + path + "' in " + _json);
+   }
+
+   /// Whether the node at the path exists. The node that should contain it must exist.
+   bool has(std::string const &path) const
+   {
+      const auto pos = path.rfind('/');
+      auto const &parent = pos == std::string::npos ? root() : (*this)[path.substr(0, pos)];
+      return child(parent, path.substr(pos == std::string::npos ? 0 : pos + 1)) != nullptr;
+   }
+
+   /// The values of the list at the path, with "null" for null.
+   std::vector<std::string> strings(std::string const &path) const
+   {
+      std::vector<std::string> out;
+      for (auto const &item : (*this)[path].children()) {
+         out.push_back(item.is_null() ? "null" : item.val());
+      }
+      return out;
+   }
+
+   /// The names of the objects in the list at the path.
+   std::vector<std::string> names(std::string const &path) const
+   {
+      std::vector<std::string> out;
+      for (auto const &item : (*this)[path].children()) {
+         out.push_back(item["name"].val());
+      }
+      return out;
+   }
+
+   /// The node at the path as JSON.
+   std::string dump(std::string const &path) const
+   {
+      std::stringstream ss;
+      (*this)[path].writeJSON(ss);
+      return ss.str();
+   }
+
+private:
+   static RooFit::Detail::JSONNode const *child(RooFit::Detail::JSONNode const &node, std::string const &step)
+   {
+      if (node.is_map()) {
+         return node.find(step);
+      }
+      if (!node.is_seq()) {
+         return nullptr;
+      }
+      if (!step.empty() && step.find_first_not_of("0123456789") == std::string::npos) {
+         const std::size_t pos = std::stoul(step);
+         return pos < node.num_children() ? &node.child(pos) : nullptr;
+      }
+      return RooJSONFactoryWSTool::findNamedChild(node, step);
+   }
+
+   std::string _json;
+   std::string _warnings;
+   mutable std::unique_ptr<RooFit::Detail::JSONTree> _tree;
+};
+
+namespace Detail {
+
+inline std::string dump(RooFit::Detail::JSONNode const &node)
+{
+   std::stringstream ss;
+   node.writeJSON(ss);
+   return ss.str();
+}
+
+// Describes in `why` the first difference between a node and the expectation, see matches().
+inline bool matchNode(RooFit::Detail::JSONNode const &actual, RooFit::Detail::JSONNode const &expected,
+                      std::string const &path, std::string &why)
+{
+   auto mismatch = [&](std::string const &what) {
+      why = "at '" + path + "': expected " + what + ", found " + dump(actual);
+      return false;
+   };
+   if (expected.is_map()) {
+      if (!actual.is_map()) {
+         return mismatch("a map");
+      }
+      for (auto const &item : expected.children()) {
+         const std::string key = item.key();
+         const bool absent = !item.is_container() && !item.is_null() && item.val() == "<absent>";
+         if (absent ? actual.has_child(key) : !actual.has_child(key)) {
+            return mismatch(absent ? "no \"" + key + "\"" : "\"" + key + "\"");
+         }
+         if (!absent && !matchNode(actual[key], item, path + "/" + key, why)) {
+            return false;
+         }
+      }
+      return true;
+   }
+   if (expected.is_seq()) {
+      if (!actual.is_seq() || actual.num_children() != expected.num_children()) {
+         return mismatch("a list of " + std::to_string(expected.num_children()) + " elements");
+      }
+      for (std::size_t i = 0; i < expected.num_children(); ++i) {
+         if (!matchNode(actual.child(i), expected.child(i), path + "/" + std::to_string(i), why)) {
+            return false;
+         }
+      }
+      return true;
+   }
+   bool equal = false;
+   if (expected.is_null() || actual.is_null() || actual.is_container()) {
+      equal = expected.is_null() && actual.is_null();
+   } else if (expected.is_number() || actual.is_number()) {
+      equal = expected.is_number() && actual.is_number() &&
+              testing::Matches(testing::DoubleEq(expected.val_double()))(actual.val_double());
+   } else {
+      equal = expected.val() == actual.val();
+   }
+   return equal || mismatch(dump(expected));
+}
+
+} // namespace Detail
+
+/// Whether the node at the path matches the JSON value `expected`. Maps match if every key of `expected` matches:
+/// other keys are ignored, and the value "<absent>" stands for a key that must not exist. Lists match element by
+/// element, and other values if they are equal.
+inline testing::AssertionResult matches(Doc const &doc, std::string const &path, std::string const &expected)
+{
+   auto const *node = doc.find(path);
+   if (!node) {
+      return testing::AssertionFailure() << "no node '" << path << "' in " << doc.json();
+   }
+   auto expectedTree = RooFit::Detail::JSONTree::create(expected);
+   std::string why;
+   if (Detail::matchNode(*node, expectedTree->rootnode(), path, why)) {
+      return testing::AssertionSuccess();
+   }
+   return testing::AssertionFailure() << why << "\nin '" << path << "': " << Detail::dump(*node);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Writing documents
+
+/// The non-empty parts, separated by commas.
+inline std::string join(std::vector<std::string> const &parts)
+{
+   std::string out;
+   for (auto const &part : parts) {
+      if (!part.empty()) {
+         out += (out.empty() ? "" : ", ") + part;
+      }
+   }
+   return out;
+}
+
+/// An HS3 document of the given version with the given top-level sections.
+inline std::string document(std::string const &version, std::vector<std::string> const &sections = {})
+{
+   return join({R"({"metadata": {"hs3_version": ")" + version + R"("})", join(sections)}) + "}";
+}
+
+/// A top-level section that is a list, like "distributions".
+inline std::string section(std::string const &name, std::vector<std::string> const &items)
+{
+   return "\"" + name + "\": [" + join(items) + "]";
+}
+
+inline std::string distributions(std::vector<std::string> const &items)
+{
+   return section("distributions", items);
+}
+
+inline std::string functions(std::vector<std::string> const &items)
+{
+   return section("functions", items);
+}
+
+/// The "domains" with the default domain of RooFit.
+inline std::string defaultDomain(std::vector<std::string> const &axes)
+{
+   return R"("domains": [{"name": "default_domain", "type": "product_domain", "axes": [)" + join(axes) + "]}]";
+}
+
+/// The "parameter_points" with the default values of RooFit.
+inline std::string defaultValues(std::vector<std::string> const &parameters)
+{
+   return R"("parameter_points": [{"name": "default_values", "parameters": [)" + join(parameters) + "]}]";
+}
+
+namespace Detail {
+
+inline std::string number(double value)
+{
+   std::stringstream ss;
+   ss.precision(15);
+   ss << value;
+   const std::string out = ss.str();
+   return out.find_first_of(".en") == std::string::npos ? out + ".0" : out;
+}
+
+} // namespace Detail
+
+/// Axes with a common range for a domain.
+inline std::string axes(std::vector<std::string> const &names, double min, double max)
+{
+   std::vector<std::string> out;
+   for (auto const &name : names) {
+      out.push_back(R"({"name": ")" + name + R"(", "min": )" + Detail::number(min) + R"(, "max": )" +
+                    Detail::number(max) + "}");
+   }
+   return join(out);
+}
+
+/// The values of parameters for a parameter point.
+inline std::string values(std::vector<std::pair<std::string, double>> const &parameters)
+{
+   std::vector<std::string> out;
+   for (auto const &parameter : parameters) {
+      out.push_back(R"({"name": ")" + parameter.first + R"(", "value": )" + Detail::number(parameter.second) + "}");
+   }
+   return join(out);
+}
+
+/// A sample of a histfactory_dist, with the JSON of its data and the list of its modifiers.
+inline std::string sample(std::string const &name, std::string const &data, std::string const &modifiers)
+{
+   return R"({"name": ")" + name + R"(", "data": )" + data + R"(, "modifiers": [)" + modifiers + "]}";
+}
+
+/// A histfactory_dist with the given samples and further keys, over the axis "x" (2 bins in [0, 2]) unless given.
+inline std::string channel(std::string const &name, std::vector<std::string> const &samples,
+                           std::string const &keys = "",
+                           std::string const &axes = R"({"name": "x", "min": 0.0, "max": 2.0, "nbins": 2})")
+{
+   return join({R"({"name": ")" + name + R"(", "type": "histfactory_dist", "axes": [)" + axes + "]", keys,
+                R"("samples": [)" + join(samples) + "]}"});
+}
+
+/// A document with the histfactory_dist "model_channel0" on the axis "x" (2 bins in [0, 2]), which has one sample
+/// "sig" with the contents [10, 20] and the given modifiers.
+class HistFactoryDoc {
+public:
+   HistFactoryDoc(std::string version, std::string modifiers)
+      : _version{std::move(version)}, _modifiers{std::move(modifiers)}
+   {
+   }
+   /// The "default_interpolation" of the channel.
+   HistFactoryDoc &interpolation(std::string const &value)
+   {
+      return channelKeys("\"default_interpolation\": " + value);
+   }
+   /// The "data" of the sample.
+   HistFactoryDoc &sampleData(std::string value)
+   {
+      _data = std::move(value);
+      return *this;
+   }
+   /// Further keys of the channel.
+   HistFactoryDoc &channelKeys(std::string const &value)
+   {
+      _keys.push_back(value);
+      return *this;
+   }
+   /// Further distributions.
+   HistFactoryDoc &distributions(std::string const &value)
+   {
+      _distributions.push_back(value);
+      return *this;
+   }
+   /// Further top-level sections, like defaultDomain().
+   HistFactoryDoc &sections(std::string const &value)
+   {
+      _sections.push_back(value);
+      return *this;
+   }
+   std::string str() const
+   {
+      std::vector<std::string> dists{channel("model_channel0", {sample("sig", _data, _modifiers)}, join(_keys))};
+      dists.insert(dists.end(), _distributions.begin(), _distributions.end());
+      std::vector<std::string> all{HS3Test::distributions(dists)};
+      all.insert(all.end(), _sections.begin(), _sections.end());
+      return document(_version, all);
+   }
+   operator std::string() const { return str(); }
+
+private:
+   std::string _version;
+   std::string _modifiers;
+   std::string _data = R"({"contents": [10.0, 20.0]})";
+   std::vector<std::string> _keys;
+   std::vector<std::string> _distributions;
+   std::vector<std::string> _sections;
+};
+
+// ---------------------------------------------------------------------------------------------------------------
 // Round trips
 
 /// Flags that a round trip is done with, see constraintStyles().
