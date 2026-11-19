@@ -46,7 +46,6 @@
 #include <sstream>
 #include <variant>
 
-#include "static_execute.h"
 #include "HS3Builder.h"
 #include "JSONIOUtils.h"
 
@@ -731,112 +730,85 @@ public:
    }
 };
 
-class FlexibleInterpVarStreamer : public RooFit::JSONIO::Exporter {
-public:
-   std::string const &key() const override
-   {
-      static const std::string keystring = "interpolation0d";
-      return keystring;
+void exportFlexibleInterpVar(RooJSONFactoryWSTool *, RooStats::HistFactory::FlexibleInterpVar const &fip,
+                             JSONNode &elem)
+{
+   const std::string context = "FlexibleInterpVar '" + std::string{fip.GetName()} + "'";
+   const std::size_t nParameters = fip.variables().size();
+   if (fip.low().size() != nParameters || fip.high().size() != nParameters ||
+       fip.interpolationCodes().size() != nParameters) {
+      RooJSONFactoryWSTool::error(context + " has non-matching parameter, variation, and interpolation lengths");
    }
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
-   {
-      auto fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar *>(func);
-      const std::string context = "FlexibleInterpVar '" + std::string{fip->GetName()} + "'";
-      const std::size_t nParameters = fip->variables().size();
-      if (fip->low().size() != nParameters || fip->high().size() != nParameters ||
-          fip->interpolationCodes().size() != nParameters) {
-         RooJSONFactoryWSTool::error(context + " has non-matching parameter, variation, and interpolation lengths");
-      }
-      HS3::InterpolatedNumber out;
-      for (RooAbsArg const *var : fip->variables()) {
-         out.parameters.push_back(var->GetName());
-      }
-      out.nominal = fip->nominal();
-      out.high = fip->high();
-      out.low = fip->low();
-      out.interpolations = toInterpolations(fip->interpolationCodes(), InterpolationClass::Flexible, context);
-      HS3::writeInterpolatedNumber(elem, out);
-      return true;
+   HS3::InterpolatedNumber out;
+   for (RooAbsArg const *var : fip.variables()) {
+      out.parameters.push_back(var->GetName());
    }
-};
+   out.nominal = fip.nominal();
+   out.high = fip.high();
+   out.low = fip.low();
+   out.interpolations = toInterpolations(fip.interpolationCodes(), InterpolationClass::Flexible, context);
+   HS3::writeInterpolatedNumber(elem, out);
+}
 
-class PiecewiseInterpolationStreamer : public RooFit::JSONIO::Exporter {
-public:
-   std::string const &key() const override
-   {
-      static const std::string keystring = "interpolation";
-      return keystring;
+void exportPiecewiseInterpolation(RooJSONFactoryWSTool *, PiecewiseInterpolation const &pip, JSONNode &elem)
+{
+   const std::string context = "PiecewiseInterpolation '" + std::string{pip.GetName()} + "'";
+   const std::size_t nParameters = pip.paramList().size();
+   if (pip.lowList().size() != nParameters || pip.highList().size() != nParameters ||
+       pip.interpolationCodes().size() != nParameters) {
+      RooJSONFactoryWSTool::error(context + " has non-matching parameter, variation, and interpolation lengths");
    }
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
-   {
-      const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);
-      const std::string context = "PiecewiseInterpolation '" + std::string{pip->GetName()} + "'";
-      const std::size_t nParameters = pip->paramList().size();
-      if (pip->lowList().size() != nParameters || pip->highList().size() != nParameters ||
-          pip->interpolationCodes().size() != nParameters) {
-         RooJSONFactoryWSTool::error(context + " has non-matching parameter, variation, and interpolation lengths");
+   HS3::InterpolatedFunction out;
+   out.nominal = pip.nominalHist()->GetName();
+   for (std::size_t i = 0; i < nParameters; ++i) {
+      out.parameters.push_back(HS3::toNameOrNumber(pip.paramList()[i]));
+      out.high.push_back(HS3::toNameOrNumber(pip.highList()[i]));
+      out.low.push_back(HS3::toNameOrNumber(pip.lowList()[i]));
+   }
+   out.interpolations = toInterpolations(pip.interpolationCodes(), InterpolationClass::Piecewise, context);
+   out.positiveDefinite = pip.positiveDefinite();
+   HS3::writeInterpolatedFunction(elem, out);
+}
+
+void importPiecewiseInterpolation(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   std::string name(RooJSONFactoryWSTool::name(p));
+   HS3::Diagnostics diagnostics;
+   const HS3::InterpolatedFunction in = HS3::parseInterpolatedFunction(p, diagnostics);
+   HS3::report(diagnostics, name);
+
+   auto request = [&](std::vector<HS3::NameOrNumber> const &refs) {
+      RooArgList out;
+      for (auto const &ref : refs) {
+         auto const *value = std::get_if<double>(&ref);
+         out.add(value ? RooFit::RooConst(*value) : *tool->request<RooAbsReal>(std::get<std::string>(ref), name));
       }
-      HS3::InterpolatedFunction out;
-      out.nominal = pip->nominalHist()->GetName();
-      for (std::size_t i = 0; i < nParameters; ++i) {
-         out.parameters.push_back(HS3::toNameOrNumber(pip->paramList()[i]));
-         out.high.push_back(HS3::toNameOrNumber(pip->highList()[i]));
-         out.low.push_back(HS3::toNameOrNumber(pip->lowList()[i]));
-      }
-      out.interpolations = toInterpolations(pip->interpolationCodes(), InterpolationClass::Piecewise, context);
-      out.positiveDefinite = pip->positiveDefinite();
-      HS3::writeInterpolatedFunction(elem, out);
-      return true;
+      return out;
+   };
+   RooArgList vars{request(in.parameters)};
+   RooArgList low{request(in.low)};
+   RooArgList high{request(in.high)};
+   auto &pip = tool->wsEmplace<PiecewiseInterpolation>(
+      name, *tool->request<RooAbsReal>(in.nominal, name), low, high, vars,
+      toCodes(in.interpolations, InterpolationClass::Piecewise, "PiecewiseInterpolation '" + name + "'"));
+   pip.setPositiveDefinite(in.positiveDefinite);
+}
+
+void importFlexibleInterpVar(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   std::string name(RooJSONFactoryWSTool::name(p));
+   HS3::Diagnostics diagnostics;
+   const HS3::InterpolatedNumber in = HS3::parseInterpolatedNumber(p, diagnostics);
+   HS3::report(diagnostics, name);
+
+   RooArgList vars;
+   for (std::string const &var : in.parameters) {
+      vars.add(*tool->request<RooRealVar>(var, name));
    }
-};
-
-class PiecewiseInterpolationFactory : public RooFit::JSONIO::Importer {
-public:
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      HS3::Diagnostics diagnostics;
-      const HS3::InterpolatedFunction in = HS3::parseInterpolatedFunction(p, diagnostics);
-      HS3::report(diagnostics, name);
-
-      auto request = [&](std::vector<HS3::NameOrNumber> const &refs) {
-         RooArgList out;
-         for (auto const &ref : refs) {
-            auto const *value = std::get_if<double>(&ref);
-            out.add(value ? RooFit::RooConst(*value) : *tool->request<RooAbsReal>(std::get<std::string>(ref), name));
-         }
-         return out;
-      };
-      RooArgList vars{request(in.parameters)};
-      RooArgList low{request(in.low)};
-      RooArgList high{request(in.high)};
-      auto &pip = tool->wsEmplace<PiecewiseInterpolation>(
-         name, *tool->request<RooAbsReal>(in.nominal, name), low, high, vars,
-         toCodes(in.interpolations, InterpolationClass::Piecewise, "PiecewiseInterpolation '" + name + "'"));
-      pip.setPositiveDefinite(in.positiveDefinite);
-      return true;
-   }
-};
-
-class FlexibleInterpVarFactory : public RooFit::JSONIO::Importer {
-public:
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      HS3::Diagnostics diagnostics;
-      const HS3::InterpolatedNumber in = HS3::parseInterpolatedNumber(p, diagnostics);
-      HS3::report(diagnostics, name);
-
-      RooArgList vars;
-      for (std::string const &var : in.parameters) {
-         vars.add(*tool->request<RooRealVar>(var, name));
-      }
-      tool->wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(
-         name, vars, in.nominal, in.low, in.high,
-         toCodes(in.interpolations, InterpolationClass::Flexible, "FlexibleInterpVar '" + name + "'"));
-      return true;
-   }
-};
+   tool->wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(
+      name, vars, in.nominal, in.low, in.high,
+      toCodes(in.interpolations, InterpolationClass::Flexible, "FlexibleInterpVar '" + name + "'"));
+}
 
 std::string stripOuterParens(const std::string &s)
 {
@@ -1659,17 +1631,15 @@ public:
    }
 };
 
-STATIC_EXECUTE([]() {
-   using namespace RooFit::JSONIO;
-
-   registerImporter<HistFactoryImporter>("histfactory_dist", true);
-   registerImporter<PiecewiseInterpolationFactory>("interpolation", true);
-   registerImporter<FlexibleInterpVarFactory>("interpolation0d", true);
-   registerExporter<FlexibleInterpVarStreamer>(RooStats::HistFactory::FlexibleInterpVar::Class(), true);
-   registerExporter<PiecewiseInterpolationStreamer>(PiecewiseInterpolation::Class(), true);
-   registerExporter<HistFactoryStreamer>(RooProdPdf::Class(), true);
-   registerExporter<HistFactoryStreamer>(RooRealSumPdf::Class(), true);
-});
+// Registers the importers and exporters when the library is loaded.
+const bool registered = []() {
+   registerType("interpolation", importPiecewiseInterpolation, exportPiecewiseInterpolation);
+   registerType("interpolation0d", importFlexibleInterpVar, exportFlexibleInterpVar);
+   RooFit::JSONIO::registerImporter<HistFactoryImporter>("histfactory_dist", true);
+   RooFit::JSONIO::registerExporter<HistFactoryStreamer>(RooProdPdf::Class(), true);
+   RooFit::JSONIO::registerExporter<HistFactoryStreamer>(RooRealSumPdf::Class(), true);
+   return true;
+}();
 
 } // namespace
 

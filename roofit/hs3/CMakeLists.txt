@@ -63,7 +63,6 @@ target_sources(
         src/HS3Schema.h
         src/JSONIOUtils.h
         src/JSONReadRecorder.h
-        src/static_execute.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

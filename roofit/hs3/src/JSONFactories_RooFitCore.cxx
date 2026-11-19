@@ -73,8 +73,6 @@
 #include <type_traits>
 #include <variant>
 
-#include "static_execute.h"
-
 #include <algorithm>
 #include <cctype>
 #include <memory>
@@ -1514,80 +1512,6 @@ void exportWrapperPdf(RooJSONFactoryWSTool *, RooWrapperPdf const &pdf, JSONNode
 // instantiate all importers and exporters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Adapters that wrap the plain import/export functions above into the
-// RooFit::JSONIO::Importer/Exporter interface.
-
-// An import function that returns nothing always reads the object. One that returns a bool can decline by returning
-// false, so that the next importer of the type key is tried.
-template <class ImportFunc>
-class FuncImporter : public RooFit::JSONIO::Importer {
-public:
-   explicit FuncImporter(ImportFunc func) : _func{func} {}
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      if constexpr (std::is_void_v<decltype(_func(tool, p))>) {
-         _func(tool, p);
-         return true;
-      } else {
-         return _func(tool, p);
-      }
-   }
-
-private:
-   const ImportFunc _func;
-};
-
-template <class RooArg_t>
-using ExportFunc = void (*)(RooJSONFactoryWSTool *, RooArg_t const &, JSONNode &);
-
-// The exporter of the class RooArg_t writes the HS3 type key that the export function is registered with. A function
-// overwrites it if the type depends on the object.
-template <class RooArg_t, class Func>
-class FuncExporter : public RooFit::JSONIO::Exporter {
-public:
-   FuncExporter(Func func, std::string key, bool autoExportDependants)
-      : _func{func}, _key{std::move(key)}, _autoExportDependants{autoExportDependants}
-   {
-   }
-   std::string const &key() const override { return _key; }
-   bool autoExportDependants() const override { return _autoExportDependants; }
-   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *arg, JSONNode &elem) const override
-   {
-      elem["type"] << _key;
-      _func(tool, static_cast<RooArg_t const &>(*arg), elem);
-      return true;
-   }
-
-private:
-   const Func _func;
-   const std::string _key;
-   const bool _autoExportDependants;
-};
-
-// The importers of a type key and the exporters of a class are tried in the order of their registration.
-template <class ImportFunc>
-void registerImporter(const std::string &key, ImportFunc func)
-{
-   RooFit::JSONIO::registerImporter(key, std::make_unique<FuncImporter<ImportFunc>>(func), false);
-}
-
-template <class RooArg_t, class Func>
-void registerExporter(std::string key, Func func, bool autoExportDependants = true)
-{
-   RooFit::JSONIO::registerExporter(
-      RooArg_t::Class(), std::make_unique<FuncExporter<RooArg_t, Func>>(func, std::move(key), autoExportDependants),
-      false);
-}
-
-// A class that is read and written with the same type key.
-template <class ImportFunc, class RooArg_t>
-void registerType(const std::string &key, ImportFunc importFunc, ExportFunc<RooArg_t> exportFunc,
-                  bool autoExportDependants = true)
-{
-   registerImporter(key, importFunc);
-   registerExporter<RooArg_t>(key, exportFunc, autoExportDependants);
-}
-
 // A class whose constructor takes nothing but objects and lists of objects, each of which it has a getter for, is
 // read and written field by field. A field describes a constructor argument: its key in the document, and the getter
 // that gives what is written.
@@ -1667,7 +1591,8 @@ void registerDeprecatedKey(const std::string &key, const std::string &replacemen
    });
 }
 
-STATIC_EXECUTE([]() {
+// Registers the importers and exporters when the library is loaded.
+const bool registered = []() {
    registerType("bernstein_poly_dist", importBernstein, exportBernstein);
    registerType("binsampling_dist", importBinSamplingPdf, exportBinSamplingPdf);
    registerType("binvolume", importBinWidthFunction<false>, exportBinWidthFunction);
@@ -1746,7 +1671,8 @@ STATIC_EXECUTE([]() {
    registerDeprecatedKey("delta_resolution_model", "truth_model_function");
    registerDeprecatedKey("gauss_resolution_model", "gauss_model_function");
    registerDeprecatedKey("mixture_resolution_model", "mixture_model");
-});
+   return true;
+}();
 
 } // namespace
 
