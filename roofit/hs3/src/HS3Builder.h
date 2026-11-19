@@ -45,9 +45,6 @@ RooArgSet createObservables(std::vector<BinnedAxis> const &axes);
 BinnedAxis toBinnedAxis(RooRealVar const &var);
 BinnedAxis toBinnedAxis(std::string const &name, RooAbsBinning const &binning);
 
-/// The axis of unbinned or point data for a variable. Infinite bounds are left out: the axis is unbounded there.
-ContinuousAxis toContinuousAxis(RooRealVar const &var);
-
 /// The name of an object, or the value of a literal constant.
 NameOrNumber toNameOrNumber(RooAbsArg const &arg);
 
@@ -55,10 +52,8 @@ NameOrNumber toNameOrNumber(RooAbsArg const &arg);
 std::unique_ptr<RooDataHist> createDataHist(std::string const &name, RooArgSet const &vars,
                                             std::vector<double> const &contents, std::vector<double> const *errors);
 
-/// Create the RooFit objects of a HistFactory distribution in the workspace of the tool. The constraint terms that no
-/// modifier names are passed separately.
-void buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist,
-                          std::vector<DistributionRef> const *channelConstraints = nullptr);
+/// Create the RooFit objects of a HistFactory distribution in the workspace of the tool.
+void buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist);
 
 /// Create the RooSimultaneous of a combined distribution in the workspace of the tool. The other terms of the
 /// likelihoods that have the distribution are the candidates for the constraint terms of its components.
@@ -72,10 +67,6 @@ void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
 
 /// Whether this is the importer that RooFit registers for HistFactory distributions, as opposed to the one of a user.
 bool isBuiltinHistFactoryImporter(JSONIO::Importer const &importer);
-
-/// What the built-in importer does with a HistFactory distribution, plus the constraint terms of the channel.
-void importHistFactoryNode(RooJSONFactoryWSTool &tool, Detail::JSONNode const &node,
-                           std::vector<DistributionRef> const *channelConstraints);
 
 } // namespace HS3
 } // namespace RooFit

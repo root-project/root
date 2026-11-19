@@ -704,12 +704,29 @@ void checkStatErrorConstraints(HS3::HistFactoryDist const &dist, std::string con
    }
 }
 
+// This is only used for HistFactory distributions that the document doesn't interpret, e.g. because they don't come
+// with a document.
 class HistFactoryImporter : public RooFit::JSONIO::Importer {
 public:
-   // This is only used for HistFactory distributions that don't come with a document.
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &node) const override
    {
-      RooFit::HS3::importHistFactoryNode(*tool, p, nullptr);
+      std::string name = RooJSONFactoryWSTool::name(node);
+      if (!node.has_child("samples")) {
+         RooJSONFactoryWSTool::error("no samples in '" + name + "', skipping.");
+      }
+      // The upgrade rewrites the JSON, so it has to work on a copy.
+      std::stringstream ss;
+      node.writeJSON(ss);
+      std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(ss.str());
+
+      HS3::Diagnostics diagnostics;
+      HS3::upgradeHistFactoryDist(tree->rootnode(), tool->hs3Version(), diagnostics);
+      HS3::HistFactoryDist dist = HS3::parseHistFactoryDist(tree->rootnode(), diagnostics);
+      if (!HS3::hasErrors(diagnostics)) {
+         HS3::validateHistFactoryDist(dist, name, diagnostics);
+      }
+      HS3::report(diagnostics);
+      HS3::buildHistFactoryDist(*tool, name, dist);
       return true;
    }
 };
@@ -1656,8 +1673,7 @@ STATIC_EXECUTE([]() {
 
 } // namespace
 
-void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist,
-                                       std::vector<DistributionRef> const *channelConstraints)
+void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist)
 {
    checkStatErrorConstraints(dist, name);
 
@@ -1721,7 +1737,7 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
       coefs.add(*tool.request<RooAbsReal>(name + "_" + sample.name + "_scaleFactors", name));
    }
 
-   if (channelConstraints) {
+   if (auto const *channelConstraints = tool.channelConstraints(name)) {
       for (auto const &ref : *channelConstraints) {
          constraints.add(*tool.request<RooAbsPdf>(ref.name, name));
       }
@@ -1755,26 +1771,4 @@ void RooFit::HS3::buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string c
 bool RooFit::HS3::isBuiltinHistFactoryImporter(RooFit::JSONIO::Importer const &importer)
 {
    return dynamic_cast<HistFactoryImporter const *>(&importer) != nullptr;
-}
-
-// The upgrade rewrites the JSON, so it has to work on a copy.
-void RooFit::HS3::importHistFactoryNode(RooJSONFactoryWSTool &tool, JSONNode const &node,
-                                        std::vector<DistributionRef> const *channelConstraints)
-{
-   std::string name = RooJSONFactoryWSTool::name(node);
-   if (!node.has_child("samples")) {
-      RooJSONFactoryWSTool::error("no samples in '" + name + "', skipping.");
-   }
-   std::stringstream ss;
-   node.writeJSON(ss);
-   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(ss.str());
-
-   HS3::Diagnostics diagnostics;
-   HS3::upgradeHistFactoryDist(tree->rootnode(), tool.hs3Version(), diagnostics);
-   HS3::HistFactoryDist dist = HS3::parseHistFactoryDist(tree->rootnode(), diagnostics);
-   if (!HS3::hasErrors(diagnostics)) {
-      HS3::validateHistFactoryDist(dist, name, diagnostics);
-   }
-   HS3::report(diagnostics);
-   HS3::buildHistFactoryDist(tool, name, dist, channelConstraints);
 }

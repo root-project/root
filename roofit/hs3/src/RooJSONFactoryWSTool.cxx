@@ -677,7 +677,18 @@ HS3::BinnedAxis RooFit::HS3::toBinnedAxis(std::string const &name, RooAbsBinning
    return {name, binning.lowBound(), binning.highBound(), toBinning(binning)};
 }
 
-HS3::ContinuousAxis RooFit::HS3::toContinuousAxis(RooRealVar const &var)
+HS3::NameOrNumber RooFit::HS3::toNameOrNumber(RooAbsArg const &arg)
+{
+   if (isLiteralConstVar(arg)) {
+      return static_cast<RooConstVar const &>(arg).getVal();
+   }
+   return std::string{arg.GetName()};
+}
+
+namespace {
+
+// The axis of unbinned or point data for a variable. Infinite bounds are left out: the axis is unbounded there.
+HS3::ContinuousAxis toContinuousAxis(RooRealVar const &var)
 {
    RooJSONFactoryWSTool::testValidName(var.GetName(), false);
    HS3::ContinuousAxis axis;
@@ -690,16 +701,6 @@ HS3::ContinuousAxis RooFit::HS3::toContinuousAxis(RooRealVar const &var)
    }
    return axis;
 }
-
-HS3::NameOrNumber RooFit::HS3::toNameOrNumber(RooAbsArg const &arg)
-{
-   if (isLiteralConstVar(arg)) {
-      return static_cast<RooConstVar const &>(arg).getVal();
-   }
-   return std::string{arg.GetName()};
-}
-
-namespace {
 
 // A categorical axis has the labels in the order of the states of the category, which is the order of the bins of a
 // RooDataHist.
@@ -1844,6 +1845,16 @@ bool RooJSONFactoryWSTool::isConstraintReadAsChannel(RooAbsPdf const &pdf) const
           });
 }
 
+std::vector<HS3::DistributionRef> const *RooJSONFactoryWSTool::channelConstraints(std::string const &dist) const
+{
+   if (!_import) {
+      return nullptr;
+   }
+   auto const &all = _import->document.rooFit.channelConstraints;
+   auto found = all.find(dist);
+   return found != all.end() ? &found->second : nullptr;
+}
+
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() = default;
 
 HS3::Version RooJSONFactoryWSTool::hs3Version() const
@@ -2328,7 +2339,7 @@ bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgS
       HS3::ContinuousAxis axis;
       axis.name = name;
       if (auto const *rrv = dynamic_cast<RooRealVar const *>(var)) {
-         axis = HS3::toContinuousAxis(*rrv);
+         axis = toContinuousAxis(*rrv);
       }
       data.axes.emplace_back(std::move(axis));
       data.entries.push_back(var->getVal());
@@ -2461,15 +2472,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    bool ok = false;
    if (it != importers.end()) {
       for (auto &imp : it->second) {
-         // The built-in importer doesn't see the constraint terms that the document adds to the channel.
-         if (_import && HS3::isBuiltinHistFactoryImporter(*imp)) {
-            auto const &channelConstraints = _import->document.rooFit.channelConstraints;
-            auto found = channelConstraints.find(name);
-            HS3::importHistFactoryNode(*this, p, found != channelConstraints.end() ? &found->second : nullptr);
-            ok = true;
-         } else {
-            ok = imp->importArg(this, p);
-         }
+         ok = imp->importArg(this, p);
          if (ok)
             break;
       }
@@ -2509,10 +2512,7 @@ void RooJSONFactoryWSTool::importDistribution(HS3::Distribution const &distribut
       HS3::buildCombinedDist(*this, name, *combined, otherLikelihoodTerms(_import->document, name));
       return;
    }
-   auto const &channelConstraints = _import->document.rooFit.channelConstraints;
-   auto found = channelConstraints.find(name);
-   HS3::buildHistFactoryDist(*this, name, std::get<HS3::HistFactoryDist>(distribution.body),
-                             found != channelConstraints.end() ? &found->second : nullptr);
+   HS3::buildHistFactoryDist(*this, name, std::get<HS3::HistFactoryDist>(distribution.body));
 }
 
 /// Import a function or distribution that is given as a JSON string, see the overload for a JSONNode.
@@ -2758,7 +2758,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       if (var && (!data.isWeighted() || data.weight() == 1.)) {
          HS3::PointData point;
          point.value = var->getVal();
-         point.axes.push_back(HS3::toContinuousAxis(*var));
+         point.axes.push_back(toContinuousAxis(*var));
          return write(std::move(point));
       }
    }
@@ -2772,7 +2772,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       } else {
          // HS3 forbids binning information on the axes of unbinned data.
          auto const &var = static_cast<RooRealVar const &>(*arg);
-         unbinned.axes.emplace_back(HS3::toContinuousAxis(var));
+         unbinned.axes.emplace_back(toContinuousAxis(var));
       }
    }
    std::vector<double> weights;
