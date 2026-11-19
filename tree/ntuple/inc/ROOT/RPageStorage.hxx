@@ -184,9 +184,6 @@ public:
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the metadata.
    /// When writing, every column can only be attached once.
    virtual ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) = 0;
-   /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
-   /// For a page sink, dropping columns is currently a no-op.
-   virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
@@ -343,8 +340,6 @@ public:
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
    /// Returns the sink's write options.
    const ROOT::RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
-
-   void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
    bool IsInitialized() const { return fIsInitialized; }
 
@@ -955,7 +950,7 @@ public:
    }
 
    ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) override;
-   void DropColumn(ColumnHandle_t columnHandle) override;
+   virtual void DropColumn(ColumnHandle_t columnHandle);
 
    /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
    /// a file in the background. The method is idempotent and it is called as a first step in `Attach()`.
