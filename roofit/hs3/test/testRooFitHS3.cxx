@@ -660,8 +660,7 @@ TEST(RooFitHS3, ProductDomainEntriesExportExplicitBounds)
    EXPECT_TRUE(matches(doc, "domains/default_domain/axes/mean", R"({"min": "<absent>", "max": "<absent>"})"));
 
    Imported imported{doc};
-   auto *importedMean = imported.var("mean");
-   ASSERT_NE(importedMean, nullptr);
+   auto *importedMean = object<RooRealVar>(imported, "mean");
    EXPECT_TRUE(std::isinf(importedMean->getMin()));
    EXPECT_LT(importedMean->getMin(), 0.0);
    EXPECT_TRUE(std::isinf(importedMean->getMax()));
@@ -700,12 +699,10 @@ TEST(RooFitHS3, ProductDomainEntriesExportBinning)
                        R"({"edges": [0.0, 1.0, 1.5, 3.0], "nbins": "<absent>"})"));
 
    Imported imported{doc};
-   auto *importedUniform = imported.var("uniform");
-   ASSERT_NE(importedUniform, nullptr);
+   auto *importedUniform = object<RooRealVar>(imported, "uniform");
    EXPECT_EQ(importedUniform->getBins(), 7);
 
-   auto *importedNonuniform = imported.var("nonuniform");
-   ASSERT_NE(importedNonuniform, nullptr);
+   auto *importedNonuniform = object<RooRealVar>(imported, "nonuniform");
    auto const &importedBinning = importedNonuniform->getBinning();
    EXPECT_FALSE(importedBinning.isUniform());
    ASSERT_EQ(importedBinning.numBins(), 3);
@@ -731,8 +728,7 @@ TEST(RooFitHS3, NamedRangesRoundTrip)
    EXPECT_THAT(json, Not(HasSubstr("\"edges\"")));
 
    Imported imported{json};
-   RooRealVar *importedX = imported.var("x");
-   ASSERT_NE(importedX, nullptr);
+   auto *importedX = object<RooRealVar>(imported, "x");
 
    ASSERT_TRUE(importedX->hasRange("tail"));
    EXPECT_DOUBLE_EQ(importedX->getMin("tail"), 1.0);
@@ -941,10 +937,8 @@ TEST(RooFitHS3, BinnedGenericPdfUniformRoundTrip)
    EXPECT_EQ(doc["distributions/binnedPdf/axes/x/nbins"].val_int(), 5);
 
    Imported imported{doc};
-   auto *importedPdf = dynamic_cast<RooGenericPdf *>(imported.pdf("binnedPdf"));
-   ASSERT_NE(importedPdf, nullptr);
-   auto *importedX = imported.var("x");
-   ASSERT_NE(importedX, nullptr);
+   auto *importedPdf = object<RooGenericPdf>(imported, "binnedPdf");
+   auto *importedX = object<RooRealVar>(imported, "x");
    ASSERT_TRUE(importedPdf->isBinnedDistribution(RooArgSet{*importedX}));
    const RooAbsBinning *binning = importedPdf->getBinning(*importedX);
    ASSERT_NE(binning, nullptr);
@@ -968,15 +962,12 @@ TEST(RooFitHS3, BinnedFormulaVarUniformRoundTripAndTypeAliases)
    ASSERT_TRUE(doc.has("functions/binnedFunction/axes"));
 
    Imported legacyImport{doc};
-   auto *legacyFormula = dynamic_cast<RooFormulaVar *>(legacyImport.function("binnedFunction"));
-   ASSERT_NE(legacyFormula, nullptr);
+   auto *legacyFormula = object<RooFormulaVar>(legacyImport, "binnedFunction");
    ASSERT_NE(legacyFormula->getBinning(*legacyImport.var("x")), nullptr);
 
    Imported standardImport{replaced(doc, R"("type":"generic")", R"("type":"generic_function")")};
-   auto *standardFormula = dynamic_cast<RooFormulaVar *>(standardImport.function("binnedFunction"));
-   ASSERT_NE(standardFormula, nullptr);
-   auto *standardX = standardImport.var("x");
-   ASSERT_NE(standardX, nullptr);
+   auto *standardFormula = object<RooFormulaVar>(standardImport, "binnedFunction");
+   auto *standardX = object<RooRealVar>(standardImport, "x");
    ASSERT_TRUE(standardFormula->isBinnedDistribution(RooArgSet{*standardX}));
    ASSERT_NE(standardFormula->getBinning(*standardX), nullptr);
    EXPECT_EQ(standardFormula->getBinning(*standardX)->numBins(), 3);
@@ -1000,8 +991,7 @@ TEST(RooFitHS3, BinnedGenericPdfMultipleAxesAndExplicitEdgesRoundTrip)
    EXPECT_TRUE(matches(doc, "distributions/binnedPdf/axes/x", R"({"edges": [1.0, 3.0, 5.0, 9.0]})"));
 
    Imported imported{doc};
-   auto *importedPdf = dynamic_cast<RooGenericPdf *>(imported.pdf("binnedPdf"));
-   ASSERT_NE(importedPdf, nullptr);
+   auto *importedPdf = object<RooGenericPdf>(imported, "binnedPdf");
    auto *importedX = imported.var("x");
    auto *importedY = imported.var("y");
    ASSERT_NE(importedX, nullptr);
@@ -1082,8 +1072,7 @@ TEST(RooFitHS3, BinnedGenericAcceptsFloatEncodedNBins)
    // Encode an integer bin count as a JSON float; its textual form is "1e+06",
    // which the previous strict integer parser wrongly rejected.
    Imported imported{replaced(toJSON(source), R"("nbins":5)", R"("nbins":1000000.0)")};
-   auto *importedPdf = dynamic_cast<RooGenericPdf *>(imported.pdf("binnedPdf"));
-   ASSERT_NE(importedPdf, nullptr);
+   auto *importedPdf = object<RooGenericPdf>(imported, "binnedPdf");
    const RooAbsBinning *binning = importedPdf->getBinning(*imported.var("x"));
    ASSERT_NE(binning, nullptr);
    EXPECT_TRUE(binning->isUniform());
@@ -1363,12 +1352,10 @@ TEST(RooFitHS3, UnbinnedDatasetAxisRange)
    Doc doc{ws1};
    Imported ws2{doc};
 
-   auto *ds2 = dynamic_cast<RooDataSet *>(ws2.data("ds"));
-   ASSERT_NE(ds2, nullptr);
+   auto *ds2 = object<RooDataSet>(ws2, "ds");
    EXPECT_EQ(ds2->numEntries(), 5);
 
-   RooRealVar *x2 = ws2.var("x");
-   ASSERT_NE(x2, nullptr);
+   auto *x2 = object<RooRealVar>(ws2, "x");
    EXPECT_DOUBLE_EQ(x2->getMin(), xMin);
    EXPECT_DOUBLE_EQ(x2->getMax(), xMax);
 
@@ -1578,14 +1565,10 @@ TEST(RooFitHS3, HistFactoryInterpolationCodeMapping)
 
       Imported roundTripped{exported};
       if (isNormSys) {
-         auto *interpolation =
-            dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(roundTripped.function("sig_channel0_epsilon"));
-         ASSERT_NE(interpolation, nullptr);
+         auto *interpolation = object<RooStats::HistFactory::FlexibleInterpVar>(roundTripped, "sig_channel0_epsilon");
          EXPECT_EQ(interpolation->interpolationCodes(), std::vector<int>{testCase.canonicalCode});
       } else {
-         auto *interpolation =
-            dynamic_cast<PiecewiseInterpolation *>(roundTripped.function("histoSys_model_channel0_sig"));
-         ASSERT_NE(interpolation, nullptr);
+         auto *interpolation = object<PiecewiseInterpolation>(roundTripped, "histoSys_model_channel0_sig");
          EXPECT_EQ(interpolation->interpolationCodes(), std::vector<int>{testCase.canonicalCode});
       }
    }
@@ -1632,9 +1615,7 @@ TEST(RooFitHS3, HistFactoryInterpolationDefaultsAndOverrides)
          {"name": "shape_quadratic", "interpolation": {"type": "add", "in": "poly2", "out": "poly1"}}]}]})"));
 
    Imported roundTripped{exported};
-   auto *shapeInterpolation =
-      dynamic_cast<PiecewiseInterpolation *>(roundTripped.function("histoSys_model_channel0_sig"));
-   ASSERT_NE(shapeInterpolation, nullptr);
+   auto *shapeInterpolation = object<PiecewiseInterpolation>(roundTripped, "histoSys_model_channel0_sig");
    ASSERT_EQ(shapeInterpolation->paramList().size(), 2u);
    for (std::size_t i = 0; i < shapeInterpolation->paramList().size(); ++i) {
       const std::string parameter = shapeInterpolation->paramList().at(i)->GetName();
@@ -1814,8 +1795,7 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
 
    Imported ws2{exported};
 
-   auto *normInterp = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(ws2.function("sig_channel0_epsilon"));
-   ASSERT_NE(normInterp, nullptr);
+   auto *normInterp = object<RooStats::HistFactory::FlexibleInterpVar>(ws2, "sig_channel0_epsilon");
    ASSERT_EQ(normInterp->variables().size(), 2u);
    for (std::size_t i = 0; i < normInterp->variables().size(); ++i) {
       const std::string parameterName = normInterp->variables().at(i)->GetName();
@@ -1832,8 +1812,7 @@ TEST(RooFitHS3, HistFactoryDuplicateModifiersAreCombined)
       }
    }
 
-   auto *shapeInterp = dynamic_cast<PiecewiseInterpolation *>(ws2.function("histoSys_model_channel0_sig"));
-   ASSERT_NE(shapeInterp, nullptr);
+   auto *shapeInterp = object<PiecewiseInterpolation>(ws2, "histoSys_model_channel0_sig");
    ASSERT_EQ(shapeInterp->paramList().size(), 1u);
    EXPECT_EQ(shapeInterp->interpolationCodes()[0], 4);
    auto *shapeLow = dynamic_cast<RooHistFunc *>(shapeInterp->lowList().at(0));
@@ -1963,8 +1942,7 @@ TEST(RooFitHS3, HistFactoryHistoSysOfTheSameNameInOlderDocuments)
                                "there is another histosys modifier named 'shape' in the sample");
 
    Imported ws{HistFactoryDoc{"0.2", modifiers}};
-   auto *interp = dynamic_cast<PiecewiseInterpolation *>(ws.function("histoSys_model_channel0_sig"));
-   ASSERT_NE(interp, nullptr);
+   auto *interp = object<PiecewiseInterpolation>(ws, "histoSys_model_channel0_sig");
    ASSERT_EQ(interp->paramList().size(), 2u);
    EXPECT_EQ(interp->paramList().at(0), interp->paramList().at(1));
    auto high = [&](int i, int bin) {
@@ -1977,8 +1955,7 @@ TEST(RooFitHS3, HistFactoryHistoSysOfTheSameNameInOlderDocuments)
    Doc exported{ws};
    EXPECT_EQ(exported.names("distributions/model_channel0/samples/sig/modifiers"), std::vector<std::string>{"shape"});
    Imported ws2{exported};
-   auto *interp2 = dynamic_cast<PiecewiseInterpolation *>(ws2.function("histoSys_model_channel0_sig"));
-   ASSERT_NE(interp2, nullptr);
+   auto *interp2 = object<PiecewiseInterpolation>(ws2, "histoSys_model_channel0_sig");
    ASSERT_EQ(interp2->paramList().size(), 1u);
    // Both functions give the same for a shifted parameter. (expectRoundTrip() cannot make this comparison: the
    // variations of the first modifier and of the combined one have the same names.)
@@ -2014,10 +1991,8 @@ TEST(RooFitHS3, HistFactoryLegacyConstraintTypeInConstraintKey)
    Imported ws{HistFactoryDoc{
       "0.1.90", R"({"name": "lumi", "type": "normsys", "constraint": "Gauss", "data": {"lo": 0.95, "hi": 1.05}})"}};
 
-   auto *constraint = dynamic_cast<RooGaussian *>(ws.pdf("alpha_lumiConstraint"));
-   ASSERT_NE(constraint, nullptr);
-   auto *alpha = ws.var("alpha_lumi");
-   ASSERT_NE(alpha, nullptr);
+   object<RooGaussian>(ws, "alpha_lumiConstraint");
+   auto *alpha = object<RooRealVar>(ws, "alpha_lumi");
    EXPECT_DOUBLE_EQ(alpha->getError(), 1.0);
 
    Doc exported{ws};
@@ -2218,8 +2193,7 @@ TEST(RooFitHS3, DefaultDomainIsOptional)
    Imported ws{document(
       "0.2", {section("domains", {myDomain}), defaultValues({values({{"mu", 0.5}})}),
               distributions({R"({"name": "pdf", "type": "gaussian_dist", "x": "mu", "mean": 0.0, "sigma": 1.0})"})})};
-   RooRealVar *mu = ws.var("mu");
-   ASSERT_NE(mu, nullptr);
+   auto *mu = object<RooRealVar>(ws, "mu");
    EXPECT_DOUBLE_EQ(mu->getMin(), -3.0);
    EXPECT_DOUBLE_EQ(mu->getMax(), 4.0);
    EXPECT_DOUBLE_EQ(mu->getVal(), 0.5);
@@ -2250,24 +2224,20 @@ TEST(RooFitHS3, ParametersOnlyInParameterPoints)
       EXPECT_THAT(warnings, HasSubstr(std::string("the parameter '") + name + "' is not listed in any domain"));
    }
 
-   RooRealVar *fixed = ws.var("fixed");
-   ASSERT_NE(fixed, nullptr);
+   auto *fixed = object<RooRealVar>(ws, "fixed");
    EXPECT_DOUBLE_EQ(fixed->getVal(), 2.5);
    EXPECT_FALSE(fixed->isConstant());
 
-   RooRealVar *free = ws.var("free");
-   ASSERT_NE(free, nullptr);
+   auto *free = object<RooRealVar>(ws, "free");
    EXPECT_DOUBLE_EQ(free->getVal(), 0.25);
    EXPECT_FALSE(free->isConstant());
 
    // "const": false is the same as no "const".
-   RooRealVar *fixedExplicitFalse = ws.var("fixedExplicitFalse");
-   ASSERT_NE(fixedExplicitFalse, nullptr);
+   auto *fixedExplicitFalse = object<RooRealVar>(ws, "fixedExplicitFalse");
    EXPECT_FALSE(fixedExplicitFalse->isConstant());
 
    // "const": true makes a parameter constant also if a domain lists it.
-   RooRealVar *freeButConst = ws.var("freeButConst");
-   ASSERT_NE(freeButConst, nullptr);
+   auto *freeButConst = object<RooRealVar>(ws, "freeButConst");
    EXPECT_TRUE(freeButConst->isConstant());
 
    const RooArgSet *snapshot = ws.getSnapshot("point");
@@ -2321,8 +2291,7 @@ TEST(RooFitHS3, AnalysisInitRoundTrip)
    EXPECT_TRUE(matches(doc1, "analyses/ModelConfig", R"({"init": "ModelConfig_POI_snapshot"})"));
 
    Imported ws2{doc1};
-   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
-   ASSERT_NE(mc2, nullptr);
+   auto *mc2 = object<RooFit::ModelConfig>(ws2, "ModelConfig");
    std::unique_ptr<const RooArgSet> snapshot{mc2->GetSnapshot()};
    ASSERT_NE(snapshot, nullptr);
    auto *mu = dynamic_cast<RooRealVar *>(snapshot->find("mu"));
@@ -2459,8 +2428,7 @@ TEST(RooFitHS3, MixtureDistExtendedFlag)
    // An explicit "extended": false with one coefficient per summand is honoured: the mixture is not extendable, and its
    // shape is the one with the normalized coefficients.
    Imported ws{mixtureDocument("0.2", yields, notExtended)};
-   RooAbsPdf *mix = ws.pdf("mix");
-   ASSERT_NE(mix, nullptr);
+   auto *mix = object<RooAbsPdf>(ws, "mix");
    EXPECT_EQ(mix->extendMode(), RooAbsPdf::CanNotBeExtended);
    RooArgSet normSet{*ws.var("x")};
    for (double xVal : {-2.0, 0.0, 1.5}) {
@@ -2610,8 +2578,7 @@ TEST(RooFitHS3, HistFactoryMissingInterpolation)
 
    Imported ws{HistFactoryDoc{"0.2", modifiers}};
    EXPECT_EQ(countOccurrences(ws.warnings, "implicit default of older RooFit versions"), 1u) << ws.warnings;
-   auto *norm = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(ws.function("sig_channel0_epsilon"));
-   ASSERT_NE(norm, nullptr);
+   auto *norm = object<RooStats::HistFactory::FlexibleInterpVar>(ws, "sig_channel0_epsilon");
    EXPECT_EQ(norm->interpolationCodes()[0], 4);
 
    // RooFit always writes a "default_interpolation" if a modifier relies on it.
@@ -2768,14 +2735,12 @@ TEST(RooFitHS3, CrystalBallTypes)
    // deprecation warning. This includes the symmetric tails given as "alpha"/"n" with asymmetric widths.
    Imported legacy{crystalBall(single, tails)};
    EXPECT_THAT(legacy.warnings, HasSubstr("please use \"crystalball_doublesided_dist\""));
-   auto *legacyCb = dynamic_cast<RooCrystalBall *>(legacy.pdf("cb"));
-   ASSERT_NE(legacyCb, nullptr);
+   auto *legacyCb = object<RooCrystalBall>(legacy, "cb");
    ASSERT_NE(legacyCb->alphaR(), nullptr);
    EXPECT_DOUBLE_EQ(legacyCb->alphaR()->getVal(), 2.0);
    EXPECT_EQ(toJSON(legacy), toJSON(standardDoubleSided));
    Imported legacySymmetric{crystalBall(single, widths + R"("alpha": 1.2, "n": 3.0)")};
-   auto *legacySymmetricCb = dynamic_cast<RooCrystalBall *>(legacySymmetric.pdf("cb"));
-   ASSERT_NE(legacySymmetricCb, nullptr);
+   auto *legacySymmetricCb = object<RooCrystalBall>(legacySymmetric, "cb");
    ASSERT_NE(legacySymmetricCb->alphaR(), nullptr);
    EXPECT_DOUBLE_EQ(legacySymmetricCb->alphaR()->getVal(), 1.2);
    EXPECT_EQ(toJSON(legacySymmetric),
@@ -2817,8 +2782,7 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
    };
 
    Imported ws{makeJSON(R"(, "constraints": ["gamma_0_constraint", null])")};
-   auto *model = dynamic_cast<RooProdPdf *>(ws.pdf("model_channel0"));
-   ASSERT_NE(model, nullptr);
+   auto *model = object<RooProdPdf>(ws, "model_channel0");
    RooArgSet constraintNames;
    for (RooAbsArg *pdf : model->pdfList()) {
       if (!dynamic_cast<RooRealSumPdf *>(pdf)) {
@@ -2846,8 +2810,7 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
 
    // In HS3 >= 0.3, a staterror without any constraint information is unconstrained.
    Imported ws3{makeJSON("")};
-   auto *model3 = dynamic_cast<RooProdPdf *>(ws3.pdf("model_channel0"));
-   ASSERT_NE(model3, nullptr);
+   auto *model3 = object<RooProdPdf>(ws3, "model_channel0");
    EXPECT_EQ(model3->pdfList().size(), 2u); // the sum and alpha_a_constraint
 }
 
@@ -2882,8 +2845,7 @@ TEST(RooFitHS3, ArrayDistImport)
                                 domain, parameterValues})};
 
    auto checkArray = [&](const char *name, std::vector<std::string> const &components) {
-      auto *array = dynamic_cast<RooProdPdf *>(ws.pdf(name));
-      ASSERT_NE(array, nullptr) << name;
+      auto *array = object<RooProdPdf>(ws, name);
       EXPECT_TRUE(array->getAttribute("hs3_array_dist")) << name;
       ASSERT_EQ(array->pdfList().size(), components.size()) << name;
       double product = 1.0;
@@ -3052,8 +3014,7 @@ TEST(RooFitHS3, ArrayDistExportOfTaggedProduct)
 
    // Round trip: the components get the names of their observables, the product is tagged again.
    Imported ws2{exported};
-   auto *imported = dynamic_cast<RooProdPdf *>(ws2.pdf("constraints"));
-   ASSERT_NE(imported, nullptr);
+   auto *imported = object<RooProdPdf>(ws2, "constraints");
    EXPECT_TRUE(imported->getAttribute("hs3_array_dist"));
    EXPECT_NE(dynamic_cast<RooGaussian *>(ws2.pdf("nom_a_constraint")), nullptr);
    expectRoundTrip(ws, RoundTripModel{"tagged product", RoundTripModel::Builder{}}
@@ -3115,19 +3076,16 @@ TEST(RooFitHS3, ArrayDistLikelihood)
        defaultValues({values({{"alpha_1", 0.2}, {"alpha_2", 0.1}, {"alpha_3", -0.3}})}),
        R"("likelihoods": [{"name": "likelihood", "distributions": ["gauss_constraints"], "data": ["global_observables"]}],
           "analyses": [{"name": "analysis", "likelihood": "likelihood", "domains": ["default_domain"]}])"})};
-   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("analysis"));
-   ASSERT_NE(mc, nullptr);
+   auto *mc = object<RooStats::ModelConfig>(ws, "analysis");
    ASSERT_NE(mc->GetPdf(), nullptr);
    EXPECT_STREQ(mc->GetPdf()->GetName(), "gauss_constraints");
-   auto *data = ws.data("global_observables");
-   ASSERT_NE(data, nullptr);
+   auto *data = object<RooAbsData>(ws, "global_observables");
    ASSERT_EQ(data->numEntries(), 1);
 
    std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*data)};
    double expected = 0.0;
    for (const char *name : {"nom_alpha_1_constraint", "nom_alpha_2_constraint", "nom_alpha_3_constraint"}) {
-      auto *component = ws.pdf(name);
-      ASSERT_NE(component, nullptr) << name;
+      auto *component = object<RooAbsPdf>(ws, name);
       RooArgSet observable;
       component->getObservables(data->get(), observable);
       expected -= std::log(component->getVal(observable));
@@ -3232,8 +3190,7 @@ TEST(RooFitHS3, HistFactoryArrayDistConstraintErrors)
    Imported ws{withArray(R"({"x": "nom_1", "mean": "alpha_a"}, {"x": "nom_2", "mean": "b"})")};
    EXPECT_THAT(ws.warnings,
                HasSubstr("the components 'nom_2_constraint' of the array distribution 'arr' are not used"));
-   auto *model = dynamic_cast<RooProdPdf *>(ws.pdf("model_channel0"));
-   ASSERT_NE(model, nullptr);
+   auto *model = object<RooProdPdf>(ws, "model_channel0");
    EXPECT_NE(model->pdfList().find("nom_1_constraint"), nullptr);
    EXPECT_EQ(model->pdfList().find("nom_2_constraint"), nullptr);
 }
@@ -3333,8 +3290,7 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
       "aux_distributions": ["an_simPdf_poisson_continuous_constraints", "an_simPdf_gaussian_constraints"]})"));
    {
       Imported ws2{exported};
-      auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws2.obj("an"));
-      ASSERT_NE(mc, nullptr);
+      auto *mc = object<RooStats::ModelConfig>(ws2, "an");
       // Not added again as external constraints: they are in the channels already.
       EXPECT_TRUE(!mc->GetExternalConstraints() || mc->GetExternalConstraints()->empty());
       EXPECT_DOUBLE_EQ(ws2.var("nom_gamma_c1_0")->getVal(), 120.0);
@@ -3366,8 +3322,7 @@ TEST(RooFitHS3, HistFactoryConstraintTermsInLikelihood)
    {
       Imported ws3{withData};
       // The terms are not channels, and their data sets are not imported: the values live in the variables.
-      auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws3.obj("an"));
-      ASSERT_NE(mc, nullptr);
+      auto *mc = object<RooStats::ModelConfig>(ws3, "an");
       auto *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
       ASSERT_NE(simPdf, nullptr);
       EXPECT_EQ(simPdf->indexCat().size(), 2);
@@ -3427,8 +3382,7 @@ TEST(RooFitHS3, BinnedDataZeroErrors)
    Imported ws{document("0.3", {section("data", {R"({"name": "d", "type": "binned",
       "axes": [{"name": "x", "min": 0.0, "max": 3.0, "nbins": 3}],
       "contents": [10.0, 20.0, 30.0], "errors": [0.0, 2.0, 0.0]})"})})};
-   auto *data = dynamic_cast<RooDataHist *>(ws.data("d"));
-   ASSERT_NE(data, nullptr);
+   auto *data = object<RooDataHist>(ws, "d");
    EXPECT_DOUBLE_EQ(data->weightSquared(0), 0.0);
    EXPECT_DOUBLE_EQ(data->weightSquared(1), 4.0);
    EXPECT_DOUBLE_EQ(data->weightSquared(2), 0.0);
@@ -3547,12 +3501,10 @@ TEST(RooFitHS3, HistFactoryShapeFactorWithoutParameters)
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    Imported ws{HistFactoryDoc{"0.3", R"({"type": "shapefactor", "name": "free", "data": {"vals": [0.1, 0.2]}})"}};
-   auto *phf = dynamic_cast<ParamHistFunc *>(ws.function("channel0_free_shapeFactor"));
-   ASSERT_NE(phf, nullptr);
+   auto *phf = object<ParamHistFunc>(ws, "channel0_free_shapeFactor");
    EXPECT_EQ(phf->paramList().size(), 2u);
    for (const char *name : {"gamma_free_bin_0", "gamma_free_bin_1"}) {
-      RooRealVar *gamma = ws.var(name);
-      ASSERT_NE(gamma, nullptr) << name;
+      auto *gamma = object<RooRealVar>(ws, name);
       EXPECT_NE(phf->paramList().find(*gamma), nullptr) << name;
       EXPECT_FALSE(gamma->isConstant()) << name;
    }
@@ -3575,8 +3527,7 @@ TEST(RooFitHS3, HistFactoryUnsupportedGammaConstraint)
       EXPECT_FALSE(exported.has("distributions/model_channel0/samples/0/modifiers/0/constraints"));
 
       Imported ws2{exported};
-      RooAbsPdf *constraint = ws2.pdf("g0_constraint");
-      ASSERT_NE(constraint, nullptr);
+      auto *constraint = object<RooAbsPdf>(ws2, "g0_constraint");
       EXPECT_TRUE(ws2.pdf("model_channel0")->dependsOn(*constraint));
    }
 }
@@ -3665,11 +3616,9 @@ TEST(RooFitHS3, HistFactoryLegacyGaussConstraintNominal)
       R"({"type": "normfactor", "name": "mu", "parameter": "mu", "constraint_type": "Gauss"},
          {"type": "normsys", "name": "lumi", "constraint_type": "Gauss", "data": {"lo": 0.95, "hi": 1.05}})";
    Imported ws{HistFactoryDoc{"0.2", modifiers}};
-   auto *muConstraint = dynamic_cast<RooGaussian *>(ws.pdf("muConstraint"));
-   ASSERT_NE(muConstraint, nullptr);
+   auto *muConstraint = object<RooGaussian>(ws, "muConstraint");
    EXPECT_DOUBLE_EQ(muConstraint->getMean().getVal(), 1.0);
-   auto *alphaConstraint = dynamic_cast<RooGaussian *>(ws.pdf("alpha_lumiConstraint"));
-   ASSERT_NE(alphaConstraint, nullptr);
+   auto *alphaConstraint = object<RooGaussian>(ws, "alpha_lumiConstraint");
    EXPECT_DOUBLE_EQ(alphaConstraint->getMean().getVal(), 0.0);
 }
 
@@ -3684,12 +3633,10 @@ TEST(RooFitHS3, HistFactoryUnconstrainedGammasStayFree)
                   .sections(defaultDomain({axes({"stat_0", "stat_1", "sf_0", "sf_1"}, 0, 5)}))};
    // The sample has no "errors", so the staterror gammas have no uncertainty. But they have no constraints either.
    for (const char *name : {"stat_0", "stat_1", "sf_1"}) {
-      RooRealVar *gamma = ws.var(name);
-      ASSERT_NE(gamma, nullptr) << name;
+      auto *gamma = object<RooRealVar>(ws, name);
       EXPECT_FALSE(gamma->isConstant()) << name;
    }
-   RooRealVar *constrained = ws.var("sf_0");
-   ASSERT_NE(constrained, nullptr);
+   auto *constrained = object<RooRealVar>(ws, "sf_0");
    EXPECT_FALSE(constrained->isConstant());
    EXPECT_DOUBLE_EQ(constrained->getError(), 0.1);
 }
@@ -3718,8 +3665,7 @@ TEST(RooFitHS3, HistFactoryLegacyNamedConstraintWithImplicitNominal)
                                          "constraint_name": "alpha_systConstraint", "data": {"lo": 0.9, "hi": 1.1}})"}
                   .distributions(R"({"name": "alpha_systConstraint", "type": "gaussian_dist", "x": "alpha_syst",
                                      "mean": "nom_alpha_syst", "sigma": 1.0})")};
-   auto *nominal = dynamic_cast<RooRealVar *>(ws.obj("nom_alpha_syst"));
-   ASSERT_NE(nominal, nullptr);
+   auto *nominal = object<RooRealVar>(ws, "nom_alpha_syst");
    EXPECT_TRUE(nominal->isConstant());
    EXPECT_DOUBLE_EQ(nominal->getVal(), 0.0);
 }
@@ -3788,8 +3734,7 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraintsWithoutSampleErrors)
                   .distributions(gammaConstraint("g1", "0.2"))
                   .sections(defaultDomain({axes({"g0", "g1"}, 0, 5)}))};
    for (auto const &[name, sigma] : {std::make_pair("g0", 0.1), std::make_pair("g1", 0.2)}) {
-      RooRealVar *gamma = ws.var(name);
-      ASSERT_NE(gamma, nullptr) << name;
+      auto *gamma = object<RooRealVar>(ws, name);
       EXPECT_FALSE(gamma->isConstant()) << name;
       EXPECT_DOUBLE_EQ(gamma->getError(), sigma) << name;
    }
@@ -3829,8 +3774,7 @@ TEST(RooFitHS3, HistFactoryFunctionGammaWithConstraint)
    Imported ws{
       functionGammaDoc(R"({"type": "staterror", "parameters": ["g0", "g1"], "constraints": ["g0_constraint", null]})")
          .distributions(gammaConstraint("g0"))};
-   auto *phf = dynamic_cast<ParamHistFunc *>(ws.function("mc_stat_channel0"));
-   ASSERT_NE(phf, nullptr);
+   auto *phf = object<ParamHistFunc>(ws, "mc_stat_channel0");
    RooAbsArg *g0 = phf->paramList().find("g0");
    ASSERT_NE(g0, nullptr);
    EXPECT_EQ(dynamic_cast<RooRealVar *>(g0), nullptr);
@@ -3848,8 +3792,7 @@ TEST(RooFitHS3, HistFactoryLegacyCustomModifierParameter)
                   .sections(defaultDomain({axes({"k0", "k1"}, 0, 5)}))};
    // The "parameter" is used, so it must not be reported as ignored.
    EXPECT_THAT(ws.warnings, Not(HasSubstr("\"parameter\"")));
-   RooAbsReal *scale = ws.function("scale");
-   ASSERT_NE(scale, nullptr);
+   auto *scale = object<RooAbsReal>(ws, "scale");
    EXPECT_TRUE(ws.pdf("model_channel0")->dependsOn(*scale));
 }
 
@@ -3898,14 +3841,12 @@ TEST(RooFitHS3, HistFactoryFunctionGammaWithLegacyConstraint)
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    Imported ws{functionGammaDoc(R"({"type": "staterror", "parameters": ["g0", "g1"], "constraint": "Poisson"})")};
-   auto *phf = dynamic_cast<ParamHistFunc *>(ws.function("mc_stat_channel0"));
-   ASSERT_NE(phf, nullptr);
+   auto *phf = object<ParamHistFunc>(ws, "mc_stat_channel0");
    RooAbsArg *g0 = phf->paramList().find("g0");
    ASSERT_NE(g0, nullptr);
    EXPECT_EQ(dynamic_cast<RooRealVar *>(g0), nullptr);
    for (const char *name : {"g0_constraint", "g1_constraint"}) {
-      RooAbsPdf *constraint = ws.pdf(name);
-      ASSERT_NE(constraint, nullptr) << name;
+      auto *constraint = object<RooAbsPdf>(ws, name);
       EXPECT_TRUE(ws.pdf("model_channel0")->dependsOn(*constraint)) << name;
    }
    EXPECT_DOUBLE_EQ(ws.var("k0")->getMax(), 5.0);
@@ -3936,8 +3877,7 @@ TEST(RooFitHS3, HistFactoryNestedConstraintTerms)
                   .distributions(gammaConstraint("g0", "0.1"))
                   .distributions(gammaConstraint("g1", "0.2"))
                   .sections(defaultDomain({axes({"g0", "g1"}, 0, 5)}))};
-   auto *model = dynamic_cast<RooProdPdf *>(ws.pdf("model_channel0"));
-   ASSERT_NE(model, nullptr);
+   auto *model = object<RooProdPdf>(ws, "model_channel0");
    RooAbsPdf *sum = nullptr;
    for (RooAbsArg *pdf : model->pdfList()) {
       if (auto *sumPdf = dynamic_cast<RooRealSumPdf *>(pdf)) {
@@ -4041,8 +3981,7 @@ TEST(RooFitHS3, ConstRooRealVarStaysDistinctFromRooConstVar)
    Imported imported{doc};
    EXPECT_NE(dynamic_cast<RooConstVar *>(imported.obj("mean_const")), nullptr);
    EXPECT_EQ(imported.var("mean_const"), nullptr);
-   RooRealVar *sigmaImported = imported.var("sigma_fixed");
-   ASSERT_NE(sigmaImported, nullptr);
+   auto *sigmaImported = object<RooRealVar>(imported, "sigma_fixed");
    EXPECT_TRUE(sigmaImported->isConstant());
    ASSERT_TRUE(imported.loadSnapshot("snapshot_b"));
    EXPECT_DOUBLE_EQ(sigmaImported->getVal(), 2.0);
@@ -4474,8 +4413,7 @@ TEST(RooFitHS3, BinnedDataAllErrorsZero)
    Imported ws{document("0.2", {section("data", {R"({
       "name": "d", "type": "binned", "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],
       "contents": [10.0, 20.0], "errors": [0.0, 0.0]})"})})};
-   auto *data = dynamic_cast<RooDataHist *>(ws.data("d"));
-   ASSERT_NE(data, nullptr);
+   auto *data = object<RooDataHist>(ws, "d");
    EXPECT_DOUBLE_EQ(data->weight(1), 20.0);
    EXPECT_DOUBLE_EQ(data->weightSquared(0), 0.0);
    EXPECT_DOUBLE_EQ(data->weightSquared(1), 0.0);
@@ -4750,8 +4688,7 @@ TEST_P(HFFixture, HS3ClosureLoop)
       }
    }
 
-   auto *newmc = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
-   ASSERT_NE(newmc, nullptr);
+   auto *newmc = object<RooStats::ModelConfig>(wsFromJson, "ModelConfig");
 
    auto *newpdf = dynamic_cast<RooSimultaneous *>(newmc->GetPdf());
    ASSERT_NE(newpdf, nullptr);
@@ -5137,8 +5074,7 @@ TEST(RooFitHS3, HistFactoryExportDoesNotDependOnNames)
    Imported wsBack{json};
    auto *mcBack = static_cast<RooStats::ModelConfig *>(wsBack.obj("ModelConfig"));
    ASSERT_NE(mcBack, nullptr);
-   RooAbsData *dataBack = wsBack.data("obsData");
-   ASSERT_NE(dataBack, nullptr);
+   auto *dataBack = object<RooAbsData>(wsBack, "obsData");
 
    // The importer enables the binned likelihood for every channel, whatever the names.
    expectBinnedSumPdfs(wsBack, 2);
@@ -5386,8 +5322,7 @@ TEST(RooFitHS3, FixedDomainAxis)
 
    Imported ws{makeJSON(mZ)};
    for (const char *name : {"mZ", "wZ"}) {
-      auto *constVar = dynamic_cast<RooConstVar *>(ws.obj(name));
-      ASSERT_NE(constVar, nullptr) << name;
+      object<RooConstVar>(ws, name);
       EXPECT_EQ(ws.var(name), nullptr) << name;
    }
    EXPECT_DOUBLE_EQ(static_cast<RooConstVar *>(ws.obj("mZ"))->getVal(), 91.188);
@@ -5454,8 +5389,7 @@ TEST(RooFitHS3, FlatteningOrderOfBinnedContents)
    Imported ws{document("0.3", {section("data", {R"({"name": "d", "type": "binned",
       "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}, {"name": "y", "min": 0.0, "max": 3.0, "nbins": 3}],
       "contents": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]})"})})};
-   auto *data = dynamic_cast<RooDataHist *>(ws.data("d"));
-   ASSERT_NE(data, nullptr);
+   auto *data = object<RooDataHist>(ws, "d");
    RooRealVar &x = *ws.var("x");
    RooRealVar &y = *ws.var("y");
    for (int ix = 0; ix < 2; ++ix) {
@@ -5493,8 +5427,7 @@ TEST(RooFitHS3, CategoricalAxesInDomainsAndData)
    Imported ws{makeJSON(binned + "," + unbinned)};
 
    // The domain defines the category, with the position in "categories" as index.
-   RooCategory *channel = ws.cat("channel");
-   ASSERT_NE(channel, nullptr);
+   auto *channel = object<RooCategory>(ws, "channel");
    EXPECT_EQ(channel->size(), 2u);
    EXPECT_EQ(channel->lookupIndex("SR"), 0);
    EXPECT_EQ(channel->lookupIndex("CR"), 1);
@@ -5507,8 +5440,7 @@ TEST(RooFitHS3, CategoricalAxesInDomainsAndData)
    EXPECT_EQ(channelInPoint->getCurrentLabel(), std::string("CR"));
 
    // Binned data: the bins follow the order of the data axis ("CR" first), and are found by label.
-   auto *binnedData = dynamic_cast<RooDataHist *>(ws.data("binned"));
-   ASSERT_NE(binnedData, nullptr);
+   auto *binnedData = object<RooDataHist>(ws, "binned");
    RooRealVar &x = *ws.var("x");
    x.setBins(2);
    const std::map<std::pair<std::string, int>, double> expected{
@@ -5521,8 +5453,7 @@ TEST(RooFitHS3, CategoricalAxesInDomainsAndData)
    }
 
    // Unbinned data: the entries of a categorical axis are the labels.
-   RooAbsData *unbinnedData = ws.data("unbinned");
-   ASSERT_NE(unbinnedData, nullptr);
+   auto *unbinnedData = object<RooAbsData>(ws, "unbinned");
    ASSERT_EQ(unbinnedData->numEntries(), 3);
    const std::vector<std::string> labels{"SR", "CR", "CR"};
    for (int i = 0; i < 3; ++i) {
@@ -5581,8 +5512,7 @@ TEST(RooFitHS3, ExportedBinOrderFollowsAxes)
    };
    // Evaluate `name` in `ws` at the center of each bin.
    auto expectValues = [&](RooWorkspace &ws, const char *name) {
-      RooAbsReal *func = ws.function(name);
-      ASSERT_NE(func, nullptr) << name;
+      auto *func = object<RooAbsReal>(ws, name);
       for (int ix = 0; ix < 2; ++ix) {
          for (int iy = 0; iy < 3; ++iy) {
             ws.var("x")->setBin(ix);
@@ -5680,8 +5610,7 @@ TEST(RooFitHS3, HistFactoryMultiDimensionalBinOrder)
    };
 
    Imported ws{makeJSON("0.3")};
-   auto *phf = dynamic_cast<ParamHistFunc *>(ws.function("mc_stat_channel0"));
-   ASSERT_NE(phf, nullptr);
+   auto *phf = object<ParamHistFunc>(ws, "mc_stat_channel0");
    for (int ix = 0; ix < 2; ++ix) {
       for (int iy = 0; iy < 3; ++iy) {
          // The constraint of each gamma has the relative uncertainty of its bin.
@@ -5746,8 +5675,7 @@ TEST(RooFitHS3, CombinedDist)
    // Round trip: the same RooSimultaneous, with the index category from the domain (indices = positions).
    expectRoundTrip(ws);
    Imported ws2{doc};
-   auto *simPdf = dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf"));
-   ASSERT_NE(simPdf, nullptr);
+   auto *simPdf = object<RooSimultaneous>(ws2, "simPdf");
    EXPECT_STREQ(simPdf->indexCat().GetName(), "sample");
    EXPECT_EQ(simPdf->indexCat().lookupIndex("physics"), 0);
    EXPECT_EQ(simPdf->indexCat().lookupIndex("control"), 1);
@@ -5763,8 +5691,7 @@ TEST(RooFitHS3, CombinedDist)
        R"("misc": {"ROOT_internal": {"combined_distributions": {"simPdf": {
             "index_cat": "sample", "labels": ["physics", "control"], "indices": [3, 7],
             "distributions": ["model", "model_ctl"]}}}})"})};
-   auto *legacySimPdf = dynamic_cast<RooSimultaneous *>(wsLegacy.pdf("simPdf"));
-   ASSERT_NE(legacySimPdf, nullptr);
+   auto *legacySimPdf = object<RooSimultaneous>(wsLegacy, "simPdf");
    EXPECT_EQ(legacySimPdf->indexCat().lookupIndex("control"), 7);
    EXPECT_STREQ(legacySimPdf->getPdf("control")->GetName(), "model_ctl");
    // Its export is in the standard form.
@@ -5822,8 +5749,7 @@ TEST(RooFitHS3, CombinedDistSeveralColumns)
 
    // The super category is rebuilt over the columns, and every key selects its component.
    Imported ws2{doc};
-   auto *simPdf2 = dynamic_cast<RooSimultaneous *>(ws2.pdf("simPdf"));
-   ASSERT_NE(simPdf2, nullptr);
+   auto *simPdf2 = object<RooSimultaneous>(ws2, "simPdf");
    ASSERT_NE(dynamic_cast<RooSuperCategory const *>(&simPdf2->indexCat()), nullptr);
    for (auto const &component : doc["distributions/simPdf/components"].children()) {
       ws2.cat("kind")->setLabel(component["key"].child(0).val());
@@ -5923,8 +5849,7 @@ TEST(RooFitHS3, CombinedData)
    // The data set of a workspace has the category column, and the entries of the two states.
    auto expectEntriesPerState = [](RooWorkspace &w) {
       EXPECT_EQ(w.allData().size(), 1u);
-      RooAbsData *data = w.data("obsData");
-      ASSERT_NE(data, nullptr);
+      auto *data = object<RooAbsData>(w, "obsData");
       EXPECT_EQ(data->numEntries(), 50);
       auto *channelCat = dynamic_cast<RooCategory *>(data->get()->find("channelCat"));
       ASSERT_NE(channelCat, nullptr);
@@ -5939,8 +5864,7 @@ TEST(RooFitHS3, CombinedData)
    // category, and the document is stable.
    Imported ws2{doc};
    expectEntriesPerState(ws2);
-   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
-   ASSERT_NE(mc2, nullptr);
+   auto *mc2 = object<RooFit::ModelConfig>(ws2, "ModelConfig");
    EXPECT_EQ(mc2->GetPdf(), ws2.pdf("simPdf"));
    EXPECT_NE(mc2->GetObservables()->find("channelCat"), nullptr);
    EXPECT_EQ(toJSON(ws2), doc.json());
@@ -5983,8 +5907,7 @@ TEST(RooFitHS3, CombinedData)
    EXPECT_EQ(wsLegacy.allData().size(), 1u);
    ASSERT_NE(wsLegacy.data("obsData"), nullptr);
    EXPECT_EQ(wsLegacy.data("obsData")->numEntries(), 3);
-   auto *mcLegacy = dynamic_cast<RooFit::ModelConfig *>(wsLegacy.obj("ModelConfig"));
-   ASSERT_NE(mcLegacy, nullptr);
+   auto *mcLegacy = object<RooFit::ModelConfig>(wsLegacy, "ModelConfig");
    EXPECT_EQ(mcLegacy->GetPdf(), wsLegacy.pdf("simPdf"));
    Doc fromLegacy{wsLegacy};
    EXPECT_TRUE(matches(fromLegacy, "data/obsData", R"({"type": "combined"})"));
@@ -6020,8 +5943,7 @@ TEST(RooFitHS3, CombinedDataSeveralColumns)
    // Round trip: one data set with both category columns and the same entries per key; stable document.
    Imported ws2{doc};
    EXPECT_EQ(ws2.allData().size(), 1u);
-   RooAbsData *obs2 = ws2.data("obs");
-   ASSERT_NE(obs2, nullptr);
+   auto *obs2 = object<RooAbsData>(ws2, "obs");
    EXPECT_EQ(toJSON(ws2), doc.json());
    std::map<std::vector<std::string>, int> entries2;
    for (int i = 0; i < obs2->numEntries(); ++i) {
@@ -6127,8 +6049,7 @@ TEST(RooFitHS3, CombinedDataPairing)
    {
       Imported ws{makeJSON(true, {"a", "b", "c"}, {"a", "b", "c"})};
       EXPECT_EQ(ws.warnings, "");
-      auto *mc = dynamic_cast<RooFit::ModelConfig *>(ws.obj("fit"));
-      ASSERT_NE(mc, nullptr);
+      auto *mc = object<RooFit::ModelConfig>(ws, "fit");
       EXPECT_EQ(mc->GetPdf(), ws.pdf("simPdf"));
    }
    // An extended component without sub-data set is an error.
@@ -6172,19 +6093,16 @@ TEST(RooFitHS3, CombinedObjectsKeepNamesWithoutMisc)
    EXPECT_THAT(withoutMisc, Not(HasSubstr("\"misc\"")));
 
    Imported ws2{withoutMisc};
-   auto *channels = dynamic_cast<RooSimultaneous *>(ws2.pdf("channels"));
-   ASSERT_NE(channels, nullptr);
+   auto *channels = object<RooSimultaneous>(ws2, "channels");
    EXPECT_STREQ(channels->indexCat().GetName(), "region");
    EXPECT_STREQ(channels->getPdf("SR")->GetName(), "model_1");
    EXPECT_STREQ(channels->getPdf("CR")->GetName(), "model_2");
    EXPECT_EQ(ws2.allData().size(), 1u);
-   RooAbsData *observed2 = ws2.data("observed");
-   ASSERT_NE(observed2, nullptr);
+   auto *observed2 = object<RooAbsData>(ws2, "observed");
    EXPECT_EQ(observed2->numEntries(), 50);
    EXPECT_NE(observed2->get()->find("region"), nullptr);
    // Without misc.ROOT_internal.ModelConfigs, the ModelConfig is named after the analysis.
-   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig_observed"));
-   ASSERT_NE(mc2, nullptr);
+   auto *mc2 = object<RooFit::ModelConfig>(ws2, "ModelConfig_observed");
    EXPECT_EQ(mc2->GetPdf(), channels);
    EXPECT_NE(mc2->GetObservables()->find("region"), nullptr);
    EXPECT_NE(mc2->GetParametersOfInterest()->find("mean"), nullptr);
@@ -6247,8 +6165,7 @@ TEST(RooFitHS3, CombinedComponentsMustNotShareObservables)
    expectImportThrowsWithError(document("0.3", {combinedDataWithSharedAxis()}), sharedAxis);
    Imported imported{document("0.2", {combinedDataWithSharedAxis()})};
    EXPECT_THAT(imported.warnings, HasSubstr(sharedAxis));
-   RooAbsData *data = imported.data("obs");
-   ASSERT_NE(data, nullptr);
+   auto *data = object<RooAbsData>(imported, "obs");
    EXPECT_EQ(data->numEntries(), 2);
 }
 
@@ -6300,8 +6217,7 @@ TEST(RooFitHS3, CombinedDataColumnWithoutDistribution)
       EXPECT_THAT(imported.warnings,
                   HasSubstr("the axis 'eventNumber' of the components of the combined data set 'obsData' is "
                             "declared as a bookkeeping column"));
-      RooAbsData *data = imported.data("obsData");
-      ASSERT_NE(data, nullptr);
+      auto *data = object<RooAbsData>(imported, "obsData");
       EXPECT_EQ(data->numEntries(), 3);
       EXPECT_NE(data->get()->find("eventNumber"), nullptr);
       // Stable.
@@ -6376,10 +6292,8 @@ TEST(RooFitHS3, RenameCombinedObservables)
 
    // Read back, the likelihood is the same.
    Imported imported{doc};
-   auto *simPdf2 = dynamic_cast<RooSimultaneous *>(imported.pdf("simPdf"));
-   ASSERT_NE(simPdf2, nullptr);
-   RooAbsData *obs2 = imported.data("data");
-   ASSERT_NE(obs2, nullptr);
+   auto *simPdf2 = object<RooSimultaneous>(imported, "simPdf");
+   auto *obs2 = object<RooAbsData>(imported, "data");
    std::unique_ptr<RooAbsReal> nll2{simPdf2->createNLL(*obs2)};
    EXPECT_NEAR(nll2->getVal(), expectedNll, 1e-10);
 
@@ -6611,8 +6525,7 @@ TEST(RooFitHS3, ExternalConstraintKeepsRoles)
 
    const std::string exported = toJSON(ws);
    Imported ws2{exported};
-   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
-   ASSERT_NE(mc2, nullptr);
+   auto *mc2 = object<RooFit::ModelConfig>(ws2, "ModelConfig");
    ASSERT_NE(mc2->GetGlobalObservables(), nullptr) << exported;
    ASSERT_NE(mc2->GetNuisanceParameters(), nullptr) << exported;
    EXPECT_EQ(mc2->GetGlobalObservables()->size(), 1u) << exported;
@@ -7293,8 +7206,7 @@ TEST(RooFitHS3, ConstraintDataOfProductConstraints)
       }
 
       Imported ws2{exported};
-      auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
-      ASSERT_NE(mc2, nullptr);
+      auto *mc2 = object<RooFit::ModelConfig>(ws2, "ModelConfig");
       EXPECT_STREQ(mc2->GetPdf()->GetName(), "model");
       // The constraint is a factor of the model again, as in the original, so that the model is the sampling
       // distribution of the auxiliary measurement as well. It is not an external constraint.
@@ -7335,8 +7247,7 @@ TEST(RooFitHS3, UnboundedDataAxes)
    ws2.factory("y[0]");
    importInto(ws2, document("0.3", {R"("data": [{"name": "d", "type": "unbinned", "axes": [{"name": "y", "max": 5.0}],
                                                  "entries": [[-100.0], [1.0]]}])"}));
-   RooRealVar *y = ws2.var("y");
-   ASSERT_NE(y, nullptr);
+   auto *y = object<RooRealVar>(ws2, "y");
    EXPECT_TRUE(RooNumber::isInfinite(y->getMin()));
    EXPECT_DOUBLE_EQ(y->getMax(), 5.0);
    EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(ws2.data("d")->get(0)->find("y"))->getVal(), -100.0);
@@ -7368,8 +7279,7 @@ TEST(RooFitHS3, ExpressionBuiltins)
    const std::string function = R"json({"name": "f", "type": "generic",
       "expression": "ifelse(x === 1 && TRUE, 2, ifelse(x !== 2 || FALSE, 3, 4))"})json";
    Imported ws{document("0.3", {domain("d", {axes({"x"}, -5, 5)}), functions({function})})};
-   RooAbsReal *f = ws.function("f");
-   ASSERT_NE(f, nullptr);
+   auto *f = object<RooAbsReal>(ws, "f");
    EXPECT_EQ(ws.arg("TRUE"), nullptr);
    EXPECT_EQ(ws.arg("FALSE"), nullptr);
    for (auto [x, expected] : {std::pair{1.0, 2.0}, std::pair{2.0, 4.0}, std::pair{3.0, 3.0}}) {
@@ -7414,8 +7324,7 @@ TEST(RooFitHS3, PointData)
    const std::string yAxis = axes({"y"}, -10, 10);
    const std::string point = R"({"name": "obs", "type": "point", "value": 1.5, "axes": [)" + yAxis + "]}";
    Imported ws{document("0.3", {domain("d", {yAxis}), section("data", {point})})};
-   auto *data = dynamic_cast<RooDataSet *>(ws.data("obs"));
-   ASSERT_NE(data, nullptr);
+   auto *data = object<RooDataSet>(ws, "obs");
    ASSERT_EQ(data->numEntries(), 1);
    ASSERT_EQ(data->get()->size(), 1u);
    EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(data->get(0)->find("y"))->getVal(), 1.5);
@@ -7453,16 +7362,14 @@ TEST(RooFitHS3, DataWithoutAxes)
    {
       // A number in-line.
       Imported ws{makeJSON("gx", "1.5", "")};
-      RooAbsData *data = ws.data("gx_data");
-      ASSERT_NE(data, nullptr);
+      auto *data = object<RooAbsData>(ws, "gx_data");
       ASSERT_EQ(data->numEntries(), 1);
       EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(data->get(0)->find("x"))->getVal(), 1.5);
    }
    {
       // Point data without axes.
       Imported ws{makeJSON("gy", R"("obs")", R"({"name": "obs", "type": "point", "value": -2.0})")};
-      RooAbsData *data = ws.data("obs");
-      ASSERT_NE(data, nullptr);
+      auto *data = object<RooAbsData>(ws, "obs");
       ASSERT_EQ(data->numEntries(), 1);
       EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(data->get(0)->find("y"))->getVal(), -2.0);
    }
@@ -7483,8 +7390,7 @@ TEST(RooFitHS3, DataAxesAgainstDomains)
       // Older versions of RooFit wrote the constant observables of data sets with a fixed "value": the data set is
       // read as before, without a range from the axis.
       Imported ws{document("0.2", {defaultDomain({axes({"x"}, 0, 5)}), fixedAxis("2.5")})};
-      RooAbsData *data = ws.data("d");
-      ASSERT_NE(data, nullptr);
+      auto *data = object<RooAbsData>(ws, "d");
       ASSERT_EQ(data->numEntries(), 1);
       EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(data->get(0)->find("x"))->getVal(), 2.5);
    }
@@ -7825,8 +7731,7 @@ TEST(RooFitHS3, ConstraintsStayInTheSamplingDistribution)
       std::string exported = toJSON(ws);
       for (int generation = 1; generation <= 3; ++generation) {
          Imported imported{exported};
-         auto *mc2 = dynamic_cast<RooStats::ModelConfig *>(imported.obj("ModelConfig"));
-         ASSERT_NE(mc2, nullptr);
+         auto *mc2 = object<RooStats::ModelConfig>(imported, "ModelConfig");
          // The global observables are observables of the pdf, and nothing is left outside of it.
          ASSERT_NE(mc2->GetGlobalObservables(), nullptr);
          EXPECT_EQ(mc2->GetGlobalObservables()->size(), 2u);
@@ -7870,8 +7775,7 @@ TEST(RooFitHS3, GaussianConstraintObservableBeforeItsChannel)
        domain("domain", {xAxis, axes({"mu"}, 0, 3), axes({"theta"}, -3, 3), axes({"g"}, -5, 5)}),
        defaultValues({values({{"mu", 1.0}, {"theta", 0.0}}), constValues({{"g", 0.0}})})})};
    ASSERT_NE(ws.factory("PROD::keep_scalar(constraint)"), nullptr);
-   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws.obj("ModelConfig"));
-   ASSERT_NE(mc, nullptr);
+   auto *mc = object<RooStats::ModelConfig>(ws, "ModelConfig");
    mc->SetGlobalObservables(RooArgSet{*ws.var("g")});
 
    std::string exported;
@@ -7914,8 +7818,7 @@ TEST(RooFitHS3, AuxiliaryObservationSharedByTwoLikelihoods)
    Imported ws{json, {importConstraintsAsChannels(true)}};
    // Both combined data sets have the observation as the entry of the auxiliary channel.
    for (const char *name : {"observed", "asimov"}) {
-      RooAbsData *data = ws.data(name);
-      ASSERT_NE(data, nullptr) << name;
+      auto *data = object<RooAbsData>(ws, name);
       std::unique_ptr<RooAbsData> slice{data->reduce("channel==channel::auxiliary")};
       EXPECT_EQ(slice->numEntries(), 1) << name;
    }
@@ -7970,8 +7873,7 @@ TEST(RooFitHS3, PureModelLikelihood)
    EXPECT_TRUE(matches(json, "likelihoods/0", R"({"data": null, "distributions": ["pdf"]})"));
 
    Imported ws2{json};
-   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
-   ASSERT_NE(mc2, nullptr);
+   auto *mc2 = object<RooFit::ModelConfig>(ws2, "ModelConfig");
    EXPECT_EQ(mc2->GetPdf(), ws2.pdf("pdf"));
    EXPECT_TRUE(ws2.allData().empty());
    EXPECT_EQ(toJSON(ws2), json.json());
@@ -8031,8 +7933,7 @@ TEST(RooFitHS3, ArrayDistOfLognormalsInRooFitParametrization)
    EXPECT_TRUE(exported.has("functions/k_lognormal_log"));
 
    Imported ws2{exported};
-   auto *imported = dynamic_cast<RooLognormal *>(ws2.pdf("nom_a_constraint"));
-   ASSERT_NE(imported, nullptr);
+   auto *imported = object<RooLognormal>(ws2, "nom_a_constraint");
    EXPECT_FALSE(imported->useStandardParametrization());
    EXPECT_STREQ(imported->getMedian().GetName(), "a");
    EXPECT_STREQ(imported->getShapeK().GetName(), "k");
@@ -8071,13 +7972,11 @@ TEST(RooFitHS3, FunctionsOfLiteralConstantsHaveValidNames)
    EXPECT_TRUE(exported.has("functions/m0_lognormal_log"));
 
    Imported ws2{exported};
-   auto *lognormal2 = dynamic_cast<RooLognormal *>(ws2.pdf("lognormal"));
-   ASSERT_NE(lognormal2, nullptr);
+   auto *lognormal2 = object<RooLognormal>(ws2, "lognormal");
    EXPECT_FALSE(lognormal2->useStandardParametrization());
    EXPECT_STREQ(lognormal2->getMedian().GetName(), "m0");
    EXPECT_EQ(lognormal2->getShapeK().getVal(), shape);
-   auto *exponential2 = dynamic_cast<RooExponential *>(ws2.pdf("exponential"));
-   ASSERT_NE(exponential2, nullptr);
+   auto *exponential2 = object<RooExponential>(ws2, "exponential");
    EXPECT_FALSE(exponential2->negateCoefficient());
    EXPECT_EQ(exponential2->coefficient().getVal(), -0.1);
    EXPECT_EQ(toJSON(ws2), exported.json());
@@ -8091,8 +7990,7 @@ TEST(RooFitHS3, FunctionsOfLiteralConstantsHaveValidNames)
               defaultDomain({axes({"x", "m0"}, 0.1, 10)}), defaultValues({values({{"x", 1.0}, {"m0", 1.0}})}),
               R"("misc": {"ROOT_internal": {"attributes": {"m0_lognormal_log": {"tags": ["roofit_skip"]},
                                                            "1.2_lognormal_log": {"tags": ["roofit_skip"]}}}})"})};
-   auto *lognormal3 = dynamic_cast<RooLognormal *>(ws3.pdf("lognormal"));
-   ASSERT_NE(lognormal3, nullptr);
+   auto *lognormal3 = object<RooLognormal>(ws3, "lognormal");
    EXPECT_FALSE(lognormal3->useStandardParametrization());
    EXPECT_EQ(lognormal3->getShapeK().getVal(), 1.2);
 

@@ -226,6 +226,16 @@ inline void expectExportThrowsWithError(RooWorkspace &ws, std::string const &exp
    EXPECT_THAT(errors, testing::HasSubstr(expectedReason));
 }
 
+/// The object of that name and class in the workspace. Throws if there is none, which fails the test.
+template <class T>
+T *object(RooWorkspace &ws, std::string const &name)
+{
+   if (auto *out = dynamic_cast<T *>(ws.obj(name))) {
+      return out;
+   }
+   throw std::runtime_error("no " + std::string{T::Class_Name()} + " '" + name + "' in the workspace");
+}
+
 /// The ModelConfig of that name. Throws if there is none, which fails the test.
 inline RooFit::ModelConfig &modelConfig(RooWorkspace &ws, std::string const &name)
 {
