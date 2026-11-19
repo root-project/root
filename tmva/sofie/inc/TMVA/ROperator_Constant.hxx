@@ -147,6 +147,8 @@ public:
          }
       }
       auto length = ConvertDimShapeToLength(fDimOutputShape);
+      // the output size is given by the shape values read above
+      out << RModel::SizeCheckMarker(fNY);
       // vector is already allocated- fill with values
       out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << length << ", " << fValues[0] << ");\n";
       return out.str();

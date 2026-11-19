@@ -123,6 +123,10 @@ private:
 
    std::string fExtraCodeForDimShapes; // extra code needed for initialization of dynamic parameters (e.g. number of non zero elements in NonZero operator)
 
+   /// Shape parameters of a dynamic tensor that an operator computes at run time and
+   /// that are Session constructor arguments
+   std::vector<std::string> RuntimeBoundParams(const std::string &name) const;
+
 public:
    /**
        Default constructor. Needed to allow serialization of ROOT objects. See
@@ -220,11 +224,13 @@ public:
    void AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape);
    // void Add a shape parameter
    void AddShapeParam(const std::string & name, size_t def_value = 0);
-   /// Declare a shape parameter as computed at run time by an operator (e.g. the number of
-   /// non-zero elements found by NonZero): the operator declares it itself, so it is never a
-   /// Session constructor argument. A later AddShapeParam for the same name has no effect.
+   /// Declare a shape parameter as computed at run time by an operator
    void AddComputedShapeParam(const std::string &name);
    bool IsComputedShapeParam(const std::string &name) const { return fComputedShapeParams.count(name) != 0; }
+   /// Line for an operator's Generate(), where its size variables are declared and before it writes the output.
+   /// It is replaced by a check that the shape parameters, computed at run time, do not exceed the maximum
+   /// values given to the Session constructor.
+   static std::string SizeCheckMarker(const std::string &name);
    void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> output_tensor_names);
    void

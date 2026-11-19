@@ -1,5 +1,6 @@
 #include <limits>
 #include <algorithm>
+#include <sstream>
 #include <cctype>
 #include <cstdint>
 #include <cstdio>
@@ -1108,6 +1109,26 @@ void RModel::GenerateDynamicTensorInfo()
    fGC += out.str();
 }
 
+std::vector<std::string> RModel::RuntimeBoundParams(const std::string &name) const
+{
+   std::vector<std::string> params;
+   // an alias has no memory of its own
+   if (fDynamicTensorInfos.count(name) == 0 || IsAliasTensor(name))
+      return params;
+   for (auto const &dim : GetDynamicTensorShape(name)) {
+      // only a parameter the user gives to the Session has a maximum to check
+      if (dim.isParam && IsIdentifier(dim.param) && fShapeParams.count(dim.param) && !IsInputTensorShapeParam(dim.param))
+         params.push_back(dim.param);
+   }
+   return params;
+}
+
+const std::string kCheckMarker = "//@check ";
+std::string RModel::SizeCheckMarker(const std::string &name)
+{
+   return "\n   " + kCheckMarker + name + "\n";
+}
+
 /// Check if a given parameter is used for the shape of an input tensor.
 bool RModel::IsInputTensorShapeParam(std::string const &paramName) const
 {
@@ -1285,17 +1306,16 @@ void RModel::GenerateOutput()
       if(!isDynamic) {
          n = std::to_string(ConvertShapeToLength(GetTensorShape(name)));
       } else {
-         std::string dimLen = ConvertDimShapeToLength(GetDynamicTensorShape(name));
-         // Use the session member (fXxx) when any dim is a runtime-computed identifier
-         // (e.g. NonZero count). For expression-type dims derived from input shapes
-         // (e.g. "((W+-3)/2+1)"), use the expression directly.
-         // for input shape parameters we don't need to use the session member since it is passed as argument to the infer function and it is not a runtime computed value
-         bool hasRuntimeParam = false;
-         for (auto const &dim : GetDynamicTensorShape(name)) {
+         // Use the session members, the maximum sizes, when any dim depends on a run-time computed
+         // parameter. For expression-type dims derived from input shapes, use the expression directly.
+         // for input shape parameters we don't need to use the session member since it is passed as 
+         // argument to the infer function and it is not a runtime computed value
+         auto dims = GetDynamicTensorShape(name);
+         for (auto &dim : dims) {
             if (dim.isParam && IsIdentifier(dim.param) && !IsInputTensorShapeParam(dim.param))
-               hasRuntimeParam = true;
+               dim.param = memberNameForDimShape(dim.param);
          }
-         n = hasRuntimeParam ? memberNameForDimShape(dimLen) : dimLen;
+         n = ConvertDimShapeToLength(dims);
       }
       std::string outputName = "output_tensor_" + name;
       fGC += SP + "std::vector<" + typeForOutput(GetTensorType(name)) + " > " + outputName + "(" + n + ");\n";
@@ -1588,7 +1608,36 @@ void RModel::GenerateSessionCode()
       if (fVerbose)
          std::cout << "Generating code for operator .... " << op_idx << std::endl;
       std::string operatorCode = fOperators[op_idx]->Generate(std::to_string(op_idx));
+      // a tensor whose size depends on parameters computed at run time is checked before the operator
+      // writes it, unless the operator asked for the check where it knows the size
+      for (auto const &outName : fOperators[op_idx]->GetOpOutputTensors()) {
+         std::string name(outName);
+         if (!RuntimeBoundParams(name).empty() && operatorCode.find(kCheckMarker + name + "\n") == std::string::npos)
+            operatorCode = SizeCheckMarker(name) + operatorCode;
+      }
       allOperatorCode += operatorCode;
+   }
+
+   // expand the markers: the tensor memory (output buffer or pool) was sized in the Session from the
+   // maximum values of the parameters, so refuse a larger size before anything is written
+   {
+      std::string expanded;
+      std::istringstream lines(allOperatorCode);
+      std::string line;
+      while (std::getline(lines, line)) {
+         auto pos = line.find(kCheckMarker);
+         if (pos == std::string::npos) {
+            expanded += line + "\n";
+            continue;
+         }
+         // like the shape parameters of the input tensors, each one is compared with its maximum
+         for (auto const &param : RuntimeBoundParams(line.substr(pos + kCheckMarker.size()))) {
+            expanded += SP + "if (" + param + " > session." + memberNameForDimShape(param) + ")\n" + SP + SP +
+                        "throw std::runtime_error(\"TMVA-SOFIE: shape parameter " + param +
+                        " exceeds the maximum allowed by the Session: pass a larger value to its constructor\");\n";
+         }
+      }
+      allOperatorCode = expanded;
    }
 
    // If the generated code users members of the session struct, use the

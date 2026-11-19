@@ -395,6 +395,8 @@ public:
       // output of reshape is same as input
       auto lengthOut = ConvertDimShapeToLength(fShapeOutput);
       auto lengthIn = ConvertDimShapeToLength(fShapeInput);
+      // the output size comes from the shape values read above
+      out << RModel::SizeCheckMarker(fNOutput);
       if (lengthOut != lengthIn) {
          // check needs to be done at run-time
          out << SP << "if (" << lengthOut << "!=" << lengthIn << ")\n";
