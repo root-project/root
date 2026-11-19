@@ -1126,7 +1126,7 @@ public:
    {
       // Since with default merging we always commit clusters at source boundary, we can simply rely on
       // the sink's internal counter.
-      return fDestination.GetNEntries();
+      return fDestination.GetNCommittedEntries();
    }
 
    void InitSource(RPageSource &source) final
@@ -1419,7 +1419,8 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
       // As an optimization, we don't do this for the first source (since we can rely on the FirstElementIndex and
       // deferred column mechanism in that case).
       // TODO: also avoid doing this if we added no real page of this column to the destination yet.
-      if (columnDesc.GetFirstElementIndex() > clusterDesc.GetFirstEntryIndex() && fDestination.GetNEntries() > 0) {
+      if (columnDesc.GetFirstElementIndex() > clusterDesc.GetFirstEntryIndex() &&
+          fDestination.GetNCommittedEntries() > 0) {
          const auto nMissingEntries = columnDesc.GetFirstElementIndex() - clusterDesc.GetFirstEntryIndex();
          auto res = GenerateZeroPagesForColumns(nMissingEntries, {&column, 1}, sealedPageData);
          if (!res)
@@ -2040,7 +2041,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    strat->BeforeCommit();
 
    // Commit the output
-   if (fDestination->GetNEntries() == 0)
+   if (fDestination->GetNCommittedEntries() == 0)
       R__LOG_WARNING(NTupleMergeLog()) << "Output RNTuple '" << fDestination->GetNTupleName() << "' has no entries.";
 
    fDestination->CommitClusterGroup();
