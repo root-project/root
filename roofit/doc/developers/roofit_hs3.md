@@ -238,6 +238,21 @@ id or test_id, each with its reason. `covariance_quality` is
 the status of the covariance matrix when the fixture was generated; unless it
 is 3 (full and accurate), the uncertainties from Hesse are not compared.
 
+A document that can't be used as it is published can be patched for the test
+with `hs3hepdata/patches/<test_id>.json`: an object with the `reason` and the
+`patch`, a [JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) of
+the document (with the operations `add`, `remove`, `replace` and `test`; a
+failed `test` is an error, so a patch can name what it changes). The patch is
+applied if the downloaded document has the hashes of `manifest.json`, which
+remain the ones of the published document. All checks, the fits and the
+generator use the patched document, and its `metadata.json` says that it is
+patched and why. An example are documents with parameters whose limits are
+±1e30, which was the value of `RooNumber::infinity()` until 2023 and is
+still found in workspaces created at the time. RooFit now reads these as
+finite limits, with which Minuit can't fit the parameter (its internal
+transformation of a parameter with limits loses all precision over such a
+range), and the patch gives these parameters a finite range.
+
 **The expected values are the ones that RooFit computed when the fixtures
 were generated. For now, they are assumed to be correct: they have not been
 compared with the published results of the analyses.** Every fixture says so

@@ -17,6 +17,9 @@ document, the generator writes
   parameters of interest and profile likelihood scans, for the fits of the
   HEPData test, which the HS3 test suite has no check kind for.
 
+A document that has a patch in hs3hepdata/patches (see hs3hepdata_common.py)
+is patched before the fixtures are generated from it.
+
 The expected values are the ones that RooFit computes when the generator runs.
 For now, they are assumed to be correct: they are not compared with the
 published results of the analyses yet. Each fixture says so.
@@ -208,11 +211,16 @@ def generate_fixture(backend, fixtures: Path, cache: Path, document: dict[str, A
     from hs3suite.manifest import canonical_sha256, extract_features, raw_sha256
 
     test_id = document["test_id"]
-    hs3_path = common.document_path(cache, document)
+    # The manifest pins the document as it is on HEPData; the checks are generated with the patched document.
+    original_path = common.document_path(cache, document)
+    hs3_path = common.staged_document(cache, fixtures, document)
+    patch = common.document_patch(fixtures, test_id)
     payload = common.load_json(hs3_path)
     fixture_dir = fixtures / "fixtures" / test_id
 
     notes = [ASSUMPTION]
+    if patch is not None:
+        notes.append(f"The document is patched with hs3hepdata/{common.PATCHES_DIR}/{test_id}.json: {patch['reason']}")
     scans: list[dict[str, Any]] = []
     targets: list[dict[str, Any]] = []
     try:
@@ -239,7 +247,7 @@ def generate_fixture(backend, fixtures: Path, cache: Path, document: dict[str, A
             + (f", written by {packages}." if packages else ".")
         ),
         "notes": notes,
-        "modified_from_source": False,
+        "modified_from_source": patch is not None,
         "reference_backend": f"roofit {root_version}",
         "tags": ["hepdata"],
         "conformance": ["published"],
@@ -269,7 +277,7 @@ def generate_fixture(backend, fixtures: Path, cache: Path, document: dict[str, A
     return {
         "test_id": test_id,
         "path": f"fixtures/{test_id}",
-        "hashes": {"sha256": raw_sha256(hs3_path), "canonical_sha256": canonical_sha256(hs3_path)},
+        "hashes": {"sha256": raw_sha256(original_path), "canonical_sha256": canonical_sha256(original_path)},
         "features": features,
         "tags": metadata["tags"],
         "conformance": metadata["conformance"],
@@ -287,7 +295,7 @@ def fit_worker(fixtures: Path, cache: Path, test_id: str) -> int:
     document = next(
         d for d in common.load_json(fixtures / common.DOCUMENTS_FILE)["documents"] if d["test_id"] == test_id
     )
-    hs3_path = common.document_path(cache, document)
+    hs3_path = common.staged_document(cache, fixtures, document)
     backend = RooFitBackend()
     workspace = backend.load_workspace(hs3_path)
     # Which parameters are free depends on the parameter point and on the parameters that the fit holds fixed.

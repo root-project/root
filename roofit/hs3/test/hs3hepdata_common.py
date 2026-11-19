@@ -6,7 +6,8 @@ ask HEPData for these resources, download them into a cache directory, and lay
 the documents out as a fixtures directory of the HS3 test suite:
 
     <root>/manifest.json
-    <root>/fixtures/<test_id>/hs3.json       the document from HEPData
+    <root>/fixtures/<test_id>/hs3.json       the document from HEPData, patched if
+                                             hs3hepdata/patches has a patch for it
     <root>/fixtures/<test_id>/metadata.json  from roofit/hs3/test/hs3hepdata
     <root>/fixtures/<test_id>/expected.json  from roofit/hs3/test/hs3hepdata
 
@@ -35,6 +36,9 @@ PAGE_SIZE = 25
 PAUSE_SECONDS = 1.0
 # The list of the documents that have fixtures, in the fixtures directory of the source tree.
 DOCUMENTS_FILE = "hepdata.json"
+# Patches of documents, <test_id>.json in this directory of the fixtures directory: {"reason": ..., "patch": [...]},
+# with a JSON Patch (RFC 6902) of the document.
+PATCHES_DIR = "patches"
 
 
 def load_json(path: Path) -> Any:
@@ -226,6 +230,70 @@ def prepare_documents(cache: Path, documents: list[dict[str, Any]], offline: boo
     return available
 
 
+def _pointer(document: Any, pointer: str) -> tuple[Any, str | int]:
+    """The container and the key of the location of a JSON Pointer (RFC 6901)."""
+    if not pointer.startswith("/"):
+        raise ValueError(f"invalid JSON pointer {pointer!r}")
+    tokens = [token.replace("~1", "/").replace("~0", "~") for token in pointer[1:].split("/")]
+    for token in tokens[:-1]:
+        document = document[int(token) if isinstance(document, list) else token]
+    key = tokens[-1]
+    if isinstance(document, list):
+        return document, (len(document) if key == "-" else int(key))
+    return document, key
+
+
+def apply_json_patch(document: Any, operations: list[dict[str, Any]]) -> None:
+    """Apply a JSON Patch (RFC 6902) to the document, in place. The operations "add", "remove", "replace" and
+    "test" are supported. A failed "test" is an error, so a patch can state what it expects to change."""
+    for i, operation in enumerate(operations):
+        op, path = operation["op"], operation["path"]
+        try:
+            container, key = _pointer(document, path)
+            if op == "test":
+                if container[key] != operation["value"]:
+                    raise ValueError(f"is {container[key]!r}, not {operation['value']!r}")
+            elif op == "replace":
+                container[key]  # the location must exist
+                container[key] = operation["value"]
+            elif op == "remove":
+                del container[key]
+            elif op == "add":
+                if isinstance(container, list):
+                    container.insert(key, operation["value"])
+                else:
+                    container[key] = operation["value"]
+            else:
+                raise ValueError(f"unsupported operation {op!r}")
+        except (KeyError, IndexError, ValueError, TypeError) as e:
+            raise ValueError(f"operation {i} ({op} {path}) of the patch failed: {e}") from None
+
+
+def document_patch(fixtures: Path, test_id: str) -> dict[str, Any] | None:
+    """The patch of a document, or None."""
+    path = fixtures / PATCHES_DIR / f"{test_id}.json"
+    return load_json(path) if path.is_file() else None
+
+
+def staged_document(cache: Path, fixtures: Path, document: dict[str, Any]) -> Path:
+    """The document as the checks and fits read it: the one in the cache, or, if the fixtures have a patch of
+    it, the patched document, which is written to <cache>/patched."""
+    original = document_path(cache, document)
+    patch = document_patch(fixtures, document["test_id"])
+    if patch is None:
+        return original
+    payload = load_json(original)
+    apply_json_patch(payload, patch["patch"])
+    target = cache / "patched" / f"{document['test_id']}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    # Written to a temporary file first, since the fits of the generator run in parallel processes.
+    temporary = target.with_name(f"{target.name}.{os.getpid()}.tmp")
+    with open(temporary, "w", encoding="utf-8") as f:
+        json.dump(payload, f)
+    os.replace(temporary, target)
+    return target
+
+
 def link_or_copy(source: Path, target: Path) -> None:
     if target.is_symlink() or target.exists():
         target.unlink()
@@ -240,16 +308,29 @@ def assemble_suite_root(root: Path, fixtures: Path, cache: Path, documents: list
 
     The manifest has the entries of the documents only, since the runner of the
     suite stops if the document of an entry is missing.
+
+    The hashes in the manifest of the fixtures pin the documents as they are on HEPData. A document with a
+    patch is patched if it has these hashes, and the manifest of the suite gets the hashes of the patched
+    document. Otherwise, the document is left as it is, and the suite reports the mismatch.
     """
+    from hs3suite.manifest import canonical_sha256, raw_sha256
+
     if root.exists():
         shutil.rmtree(root)
     manifest = load_json(fixtures / "manifest.json")
     wanted = {document["test_id"]: document for document in documents}
     entries = [entry for entry in manifest["fixtures"] if entry["test_id"] in wanted]
-    for entry in entries:
+    for i, entry in enumerate(entries):
         target = root / entry["path"]
         target.mkdir(parents=True)
-        link_or_copy(document_path(cache, wanted[entry["test_id"]]), target / "hs3.json")
+        document = wanted[entry["test_id"]]
+        source = document_path(cache, document)
+        pinned = entry["hashes"]
+        if document_patch(fixtures, entry["test_id"]) is not None and raw_sha256(source) == pinned["sha256"]:
+            source = staged_document(cache, fixtures, document)
+            hashes = {"sha256": raw_sha256(source), "canonical_sha256": canonical_sha256(source)}
+            entries[i] = dict(entry, hashes=hashes)
+        link_or_copy(source, target / "hs3.json")
         for name in ("metadata.json", "expected.json"):
             link_or_copy(fixtures / entry["path"] / name, target / name)
     manifest["fixtures"] = entries
