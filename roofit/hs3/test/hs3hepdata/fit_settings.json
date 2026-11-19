@@ -1,0 +1,63 @@
+{
+  "ins2816994_r3757760_likelihood_highmass_ee_BONLY": {
+    "reason": "A background-only likelihood: the paper's background-only fit holds the signal strengths at zero.",
+    "fixed_parameters": {
+      "SigXsecOverSM_50_N1": 0.0,
+      "SigXsecOverSM_75_N1": 0.0
+    }
+  },
+  "ins2816994_r3757760_likelihood_highmass_mm_BONLY": {
+    "reason": "A background-only likelihood: the paper's background-only fit holds the signal strengths at zero.",
+    "fixed_parameters": {
+      "SigXsecOverSM_50_N2": 0.0,
+      "SigXsecOverSM_75_N2": 0.0
+    }
+  },
+  "ins2816994_r3757761_likelihood_lowmass_ee_BONLY": {
+    "reason": "A background-only likelihood: the paper's background-only fit holds the signal strengths at zero.",
+    "fixed_parameters": {
+      "SigXsecOverSM_15_N1": 0.0,
+      "SigXsecOverSM_40_N1": 0.0
+    }
+  },
+  "ins2816994_r3757761_likelihood_lowmass_mm_BONLY": {
+    "reason": "A background-only likelihood: the paper's background-only fit holds the signal strengths at zero.",
+    "fixed_parameters": {
+      "SigXsecOverSM_15_N2": 0.0,
+      "SigXsecOverSM_40_N2": 0.0
+    }
+  },
+  "ins2936806_r4309332_HS3_likelihoods_sigT_1700_k0.5": {
+    "additional_fits": [
+      {
+        "reason": "The paper quotes the normalization factors of the backgrounds from the background-only fit, with the signal strength at zero.",
+        "id_suffix": "_background_only",
+        "fixed_parameters": {
+          "mu_XS_VLQ": 0.0
+        }
+      }
+    ]
+  },
+  "ins2936806_r4309332_HS3_likelihoods_sigT_2200_k0.5": {
+    "additional_fits": [
+      {
+        "reason": "The paper quotes the normalization factors of the backgrounds from the background-only fit, with the signal strength at zero.",
+        "id_suffix": "_background_only",
+        "fixed_parameters": {
+          "mu_XS_VLQ": 0.0
+        }
+      }
+    ]
+  },
+  "ins2936806_r4309332_HS3_likelihoods_sigT_2700_k0.5": {
+    "additional_fits": [
+      {
+        "reason": "The paper quotes the normalization factors of the backgrounds from the background-only fit, with the signal strength at zero.",
+        "id_suffix": "_background_only",
+        "fixed_parameters": {
+          "mu_XS_VLQ": 0.0
+        }
+      }
+    ]
+  }
+}

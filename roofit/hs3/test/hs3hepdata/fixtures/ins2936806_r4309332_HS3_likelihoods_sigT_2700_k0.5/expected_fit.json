@@ -5,28 +5,28 @@
    "covariance_quality": 3,
    "expected": {
     "kttbar": {
-     "best_fit": 1.1027731997118377,
-     "hesse_error": 0.08551346531058979,
-     "minus_one_sigma": -0.08604573684703051,
-     "plus_one_sigma": 0.08700668316452388
+     "best_fit": 1.1027732012880345,
+     "hesse_error": 0.08551532225561886,
+     "minus_one_sigma": -0.08604573885381138,
+     "plus_one_sigma": 0.08700668230429098
     },
     "kwjets_HF": {
-     "best_fit": 1.0853406104225822,
-     "hesse_error": 0.24259073902506723,
-     "minus_one_sigma": -0.24320637185336735,
-     "plus_one_sigma": 0.24497219301119044
+     "best_fit": 1.0853405761931711,
+     "hesse_error": 0.2426010458303255,
+     "minus_one_sigma": -0.2432062930969688,
+     "plus_one_sigma": 0.2449722288968447
     },
     "kwjets_light": {
-     "best_fit": 0.8639560346242159,
-     "hesse_error": 0.17379322543841952,
-     "minus_one_sigma": -0.16399273505240816,
-     "plus_one_sigma": 0.18558881436127217
+     "best_fit": 0.8639560402530666,
+     "hesse_error": 0.17380306634208342,
+     "minus_one_sigma": -0.16399270329162824,
+     "plus_one_sigma": 0.18558877050724906
     },
     "mu_XS_VLQ": {
-     "best_fit": 5.940708892155332e-10,
-     "hesse_error": 4.59693745712587,
-     "minus_one_sigma": -5.940708892155332e-10,
-     "plus_one_sigma": 1.20174948770301
+     "best_fit": 5.97318359054147e-10,
+     "hesse_error": 4.596937810695487,
+     "minus_one_sigma": -5.97318359054147e-10,
+     "plus_one_sigma": 1.2017494874174421
     }
    },
    "id": "fit_obsData",
@@ -35,11 +35,53 @@
    "parameters_of_interest": ["mu_XS_VLQ"],
    "profile_scans": {
     "mu_XS_VLQ": {
-     "points": [4.596937457719941],
-     "twice_delta_nll": [10.192539871437475]
+     "points": [4.596937811292806],
+     "twice_delta_nll": [10.19254117977107]
     }
    },
-   "seconds_when_generated": 4.73,
+   "seconds_when_generated": 3.95,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  },
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "kttbar": {
+     "best_fit": 1.1027727807720358,
+     "hesse_error": 0.08546657121362655,
+     "minus_one_sigma": -0.08604530784829308,
+     "plus_one_sigma": 0.08700715738277945
+    },
+    "kwjets_HF": {
+     "best_fit": 1.0853345978010118,
+     "hesse_error": 0.24255378655813314,
+     "minus_one_sigma": -0.2432004896871005,
+     "plus_one_sigma": 0.24497832628352803
+    },
+    "kwjets_light": {
+     "best_fit": 0.8639563718723211,
+     "hesse_error": 0.17384464793991888,
+     "minus_one_sigma": -0.16399287726004413,
+     "plus_one_sigma": 0.1855884640066321
+    }
+   },
+   "fixed_parameters": {
+    "mu_XS_VLQ": 0.0
+   },
+   "id": "fit_obsData_background_only",
+   "normalization_factors": ["kttbar", "kwjets_HF", "kwjets_light"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": [],
+   "profile_scans": {},
+   "seconds_when_generated": 2.5,
    "target": {
     "data": "obsData",
     "pdf": "simPdf"
@@ -52,7 +94,7 @@
    }
   }
  ],
- "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "reference_backend": "roofit 6.43.01 (v6-41-99-365-ga6d9aaec304)",
  "schema_version": 1,
  "test_id": "ins2936806_r4309332_HS3_likelihoods_sigT_2700_k0.5"
 }
