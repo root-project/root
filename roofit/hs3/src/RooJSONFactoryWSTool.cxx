@@ -23,6 +23,7 @@
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooCustomizer.h>
+#include <RooMultiPdf.h>
 #include <RooProdPdf.h>
 #include <RooSimultaneous.h>
 #include <RooSuperCategory.h>
@@ -174,6 +175,9 @@ struct RooFit::HS3::ToolExportState {
    std::set<std::string> writtenConstraintData;
    /// The observable of a constraint term, by the name of the term, see setConstraintObservable().
    std::map<std::string, std::string> constraintObservables;
+   /// The columns of the exported combined distributions: they are not parameters, and don't appear in parameter
+   /// points.
+   std::set<std::string> columnCategories;
    /// Set by the exporter of an object that is interpreted by the document.
    std::optional<HistFactoryDist> typedObject;
    std::vector<DistributionRef> channelConstraints;
@@ -633,9 +637,9 @@ std::vector<std::string> combinedComponents(JSONNode const &node, const char *fi
 }
 
 // The variates of the distribution `name` of the document: the "x" of a fundamental distribution (a name or a list)
-// and the axes of a distribution with axes (e.g. histfactory_dist), through products, mixtures and combined
-// distributions, and the "x" of the components of an array distribution. The constraint terms named by a
-// histfactory_dist are terms of their own, see likelihoodTerms().
+// and the axes of a distribution with axes (e.g. histfactory_dist), through products, mixtures, combined and
+// category-conditional distributions, and the "x" of the components of an array distribution. The constraint terms
+// named by a histfactory_dist are terms of their own, see likelihoodTerms().
 void collectVariates(JSONNode const &rootnode, std::string const &name, std::set<std::string> &out,
                      std::set<std::string> &visited)
 {
@@ -667,7 +671,8 @@ void collectVariates(JSONNode const &rootnode, std::string const &name, std::set
       recurse(namesIn("factors"));
    } else if (type == "mixture_dist") {
       recurse(namesIn("summands"));
-   } else if (type == "combined_dist") {
+   } else if (type == "combined_dist" || type == "category_conditional_dist") {
+      // The alternatives of a category_conditional_dist may share variates: only one of them is selected.
       recurse(combinedComponents(*node, "dist"));
    } else if (type == "array_dist") {
       if (JSONNode const *components = node->find("components")) {
@@ -1321,6 +1326,22 @@ void requirePdf(RooAbsArg const *arg, std::string const &what)
 // adds the expected number of events of an extended component to the likelihood. That changes the fit, so it is an
 // error (https://github.com/root-project/root/issues/24004). For a non-extended component it changes nothing, and a
 // sub-data set without component is ignored by RooFit; both are reported as warnings.
+// Whether a RooSimultaneous is a "category_conditional_dist" rather than a "combined_dist". RooFit doesn't tell the
+// two apart by the object, only by the normalization set: the index category is an observable for a combined
+// distribution and a parameter for a conditional one. A combined distribution is the top-level pdf of a model, while
+// a conditional one (e.g. a choice between alternative background shapes) is a building block of a model. A
+// RooSimultaneous that is used by another pdf is therefore taken as conditional. This is a heuristic, until RooFit
+// has a more explicit way to mark the conditional use.
+bool isCategoryConditional(RooSimultaneous const &simPdf)
+{
+   for (RooAbsArg const *client : simPdf.clients()) {
+      if (dynamic_cast<RooAbsPdf const *>(client)) {
+         return true;
+      }
+   }
+   return false;
+}
+
 void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &dataName, HS3::CombinedData const &data)
 {
    std::vector<RooCategory const *> columns = selectionColumns(simPdf.indexCat());
@@ -1623,11 +1644,21 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       observablesWithoutData(doc, analysis, mcInfo, variates, workspace, observables);
    }
 
-   // A combined distribution paired with a combined data set must have a sub-data set for every component.
+   // A combined distribution paired with a combined data set must have a sub-data set for every component. A
+   // category_conditional_dist is also a RooSimultaneous, but it is not split by the data.
+   auto isConditional = [&](std::string const &name) {
+      for (HS3::Distribution const &dist : doc.distributions) {
+         if (dist.name == name) {
+            auto const *generic = std::get_if<HS3::GenericObject>(&dist.body);
+            return generic && generic->type == "category_conditional_dist";
+         }
+      }
+      return false;
+   };
    for (auto const &term : likelihood.terms) {
       auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
       auto *simPdf = dynamic_cast<RooSimultaneous const *>(workspace.pdf(term.distribution.name));
-      if (!dataRef || !simPdf) {
+      if (!dataRef || !simPdf || isConditional(term.distribution.name)) {
          continue;
       }
       for (HS3::Data const &data : doc.data) {
@@ -2160,9 +2191,21 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
    return nullptr;
 }
 
-// Export a single variable (RooRealVar or RooConstVar) `v` to the parameter point.
+// Export a single variable (RooRealVar, RooConstVar or RooCategory) `v` to the parameter point.
 void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoint &point, bool storeConstant)
 {
+   // A categorical parameter: its value is the label. The columns of combined distributions are not parameters.
+   if (auto *cat = dynamic_cast<const RooCategory *>(v)) {
+      if (_export->columnCategories.count(cat->GetName()) > 0) {
+         return;
+      }
+      HS3::ParameterValue var;
+      var.name = cat->GetName();
+      var.value = std::string{cat->getCurrentLabel()};
+      recordCategory(*cat);
+      point.parameters.push_back(std::move(var));
+      return;
+   }
    auto *cv = dynamic_cast<const RooConstVar *>(v);
    auto *rrv = dynamic_cast<const RooRealVar *>(v);
    if (!cv && !rrv)
@@ -2328,6 +2371,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
 
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       exportSimultaneous(*simPdf);
+      return;
+   } else if (auto multiPdf = dynamic_cast<RooMultiPdf const *>(&func)) {
+      exportMultiPdf(*multiPdf);
       return;
    } else if (dynamic_cast<RooAbsCategory const *>(&func)) {
       // Categories are not objects of the document: the index category of a RooSimultaneous is declared by the
@@ -2546,24 +2592,33 @@ bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgS
 }
 
 /**
- * @brief Export a RooSimultaneous as a "combined_dist".
+ * @brief Export a RooSimultaneous as a "combined_dist", or as a "category_conditional_dist" if another pdf uses it.
  *
  * The components are selected by a key with one label per column. The columns are the index category of the
  * RooSimultaneous or, for a RooSuperCategory index, its input categories, sorted by name. They are declared as
  * categorical axes of the default domain. States without a pdf are not written: HS3 does not require a component
  * for every key.
+ *
+ * For a "category_conditional_dist" the columns are categorical parameters ("categorical_parameter") selecting
+ * the component the RooSimultaneous evaluates to, and their values are written to the parameter points. RooFit
+ * doesn't distinguish the two by the object; a RooSimultaneous used by another pdf is taken as conditional, see
+ * isCategoryConditional().
  */
 void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf)
 {
    RooAbsCategory const &indexCat = simPdf.indexCat();
    std::vector<RooCategory const *> columns = selectionColumns(indexCat);
+   const bool conditional = isCategoryConditional(simPdf);
 
    JSONNode &elem = appendNamedChild((*_export->root)["distributions"], simPdf.GetName());
-   elem["type"] << "combined_dist";
-   auto &columnsNode = elem["columns"].set_seq();
+   elem["type"] << (conditional ? "category_conditional_dist" : "combined_dist");
+   auto &columnsNode = elem[conditional ? "categorical_parameter" : "columns"].set_seq();
    for (RooCategory const *column : columns) {
       columnsNode.append_child() << column->GetName();
       recordCategory(*column);
+      if (!conditional) {
+         _export->columnCategories.insert(column->GetName());
+      }
    }
    auto &components = elem["components"].set_seq();
    // Components with renamed observables replace the original ones (Config::renameCombinedObservables).
@@ -2619,6 +2674,52 @@ void RooJSONFactoryWSTool::recordCategory(RooAbsCategory const &cat)
                                   "' is written to the domain twice, with different states");
    }
    _export->categories[axis.name] = std::move(axis);
+}
+
+/**
+ * @brief Export a RooMultiPdf as a "category_conditional_dist".
+ *
+ * A RooMultiPdf evaluates to the pdf at the list position equal to the index of its category. The key of the pdf at
+ * position i is therefore the label of the state with index i. The category is a categorical parameter, declared by a
+ * categorical axis of the default domain; its value is written to the parameter points.
+ *
+ * The penalty term that a RooMultiPdf adds to the likelihood (a correction for the number of free parameters of the
+ * selected pdf) has no HS3 representation yet, and is dropped with a warning. The category_conditional_dist is read
+ * back as a RooSimultaneous, so the class doesn't survive a round trip.
+ */
+void RooJSONFactoryWSTool::exportMultiPdf(RooMultiPdf const &multiPdf)
+{
+   std::string const name = multiPdf.GetName();
+   auto const *indexCat = dynamic_cast<RooCategory const *>(&multiPdf.indexCategory().arg());
+   if (!indexCat) {
+      error("cannot export the RooMultiPdf '" + name + "' as a category_conditional_dist: its index '" +
+            multiPdf.indexCategory().arg().GetName() + "' is not a RooCategory");
+   }
+
+   JSONNode &elem = appendNamedChild((*_export->root)["distributions"], name);
+   elem["type"] << "category_conditional_dist";
+   elem["categorical_parameter"].set_seq().append_child() << indexCat->GetName();
+   recordCategory(*indexCat);
+   auto &components = elem["components"].set_seq();
+   std::vector<RooAbsArg const *> pdfs;
+   for (int i = 0; i < multiPdf.getNumPdfs(); ++i) {
+      if (!indexCat->hasIndex(i)) {
+         error("cannot export the RooMultiPdf '" + name +
+               "' as a category_conditional_dist: it has a pdf at position " + std::to_string(i) +
+               ", but its category '" + indexCat->GetName() + "' has no state with that index");
+      }
+      RooAbsPdf const *pdf = multiPdf.getPdf(i);
+      JSONNode &component = components.append_child().set_map();
+      component["key"].set_seq().append_child() << indexCat->lookupName(i);
+      component["dist"] << pdf->GetName();
+      pdfs.push_back(pdf);
+   }
+   warning("RooFitHS3: the RooMultiPdf '" + name +
+           "' is written as a category_conditional_dist without its penalty term (the correction to the likelihood "
+           "for the number of free parameters of the selected pdf), which HS3 can't represent yet. It is read back as "
+           "a RooSimultaneous.");
+   recordGenericObject(_export->doc, true, name, elem);
+   exportObjects(pdfs);
 }
 
 /**
@@ -3210,7 +3311,7 @@ void RooJSONFactoryWSTool::exportModelConfig(RooFit::ModelConfig const &mc,
    auto pdf = mc.GetPdf();
    auto simpdf = dynamic_cast<RooSimultaneous const *>(pdf);
    int founddata = 0;
-   if (simpdf) {
+   if (simpdf && !isCategoryConditional(*simpdf)) {
       // One analysis per combined data set with the same columns.
       std::vector<std::string> columns;
       for (RooCategory const *column : selectionColumns(simpdf->indexCat())) {
@@ -3853,6 +3954,21 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
 
    // This creates the index categories, which the parameter points can refer to.
    combinePdfs(doc, _workspace);
+
+   // RooFit tells a category_conditional_dist apart from a combined_dist only by whether another pdf uses it (see
+   // isCategoryConditional()). One that no other pdf uses would be written back as a combined_dist.
+   for (auto const &dist : doc.distributions) {
+      auto const *generic = std::get_if<HS3::GenericObject>(&dist.body);
+      if (!generic || generic->type != "category_conditional_dist") {
+         continue;
+      }
+      auto *simPdf = dynamic_cast<RooSimultaneous const *>(_workspace.pdf(dist.name));
+      if (simPdf && !isCategoryConditional(*simPdf)) {
+         warning("RooFitHS3: the category_conditional_dist '" + dist.name +
+                 "' is not used by another distribution. RooFit can't tell it apart from a combined_dist, and will "
+                 "export it as a combined_dist, which fails if its components share variates.");
+      }
+   }
 
    for (auto const &point : doc.parameterPoints) {
       RooJSONFactoryWSTool::testValidName(point.name, true);
