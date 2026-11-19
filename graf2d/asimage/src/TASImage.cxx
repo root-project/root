@@ -1377,6 +1377,10 @@ void TASImage::Paint(Option_t *option)
       return;
    }
 
+   auto pp = gPad->GetPainter();
+   if (!pp)
+      return;
+
    auto vis = gVisualHolder();
 
    if (!vis) {
@@ -1540,8 +1544,6 @@ void TASImage::Paint(Option_t *option)
 
    int tox = expand  ? 0 : int(gPad->UtoPixel(1.) * gPad->GetLeftMargin());
    int toy = expand  ? 0 : int(gPad->VtoPixel(0.) * gPad->GetTopMargin());
-
-   auto pp = gPad->GetPainter();
 
    pp->DrawImage(fScaledImage ? fScaledImage : this, tox, toy, flags);
 
