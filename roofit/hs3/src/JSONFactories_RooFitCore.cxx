@@ -66,9 +66,6 @@
 
 #include <TF1.h>
 
-#include <RooCategory.h>
-#include <RooSimultaneous.h>
-#include <RooSuperCategory.h>
 #include "HS3Builder.h"
 #include "JSONIOUtils.h"
 
@@ -83,7 +80,6 @@
 #include <memory>
 #include <initializer_list>
 #include <set>
-#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -308,7 +304,7 @@ void importFormulaBinnings(RooArg_t &arg, const JSONNode &node)
 }
 
 template <class RooArg_t>
-bool importFormulaArg(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importFormulaArg(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    if (!p.has_child("expression")) {
@@ -329,21 +325,18 @@ bool importFormulaArg(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooArg_t arg{name.c_str(), formula, dependents};
    importFormulaBinnings(arg, p);
    tool->wsImport(arg);
-   return true;
 }
 
-bool importProduct(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importProduct(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    tool->wsEmplace<RooProduct>(name, tool->requestArgList<RooAbsReal>(p, "factors"));
-   return true;
 }
 
-bool importProdPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importProdPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    tool->wsEmplace<RooProdPdf>(name, tool->requestArgList<RooAbsPdf>(p, "factors"));
-   return true;
 }
 
 // RooLognormal has two parametrizations. In the standard one, its parameters are the mean "mu" and the width "sigma" of
@@ -351,7 +344,7 @@ bool importProdPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 // of x and the shape parameter k, with mu = log(m0) and sigma = log(k). Such a distribution is written with "mu" and
 // "sigma" naming the functions log(m0) and log(k), which are named after m0 and k with the suffix below. The suffix
 // is also how the parametrization is recognized when reading: the distribution is then created from m0 and k
-// themselves instead of the functions. The two functions below are the only places that know this convention, for
+// themselves instead of the functions. Only lognormalLogName() and importLogNormal() know this convention, for
 // distributions on their own and for the components of array distributions alike.
 constexpr const char *lognormalLogSuffix = "_lognormal_log";
 
@@ -364,27 +357,6 @@ std::string lognormalLogName(RooAbsReal const &param, RooJSONFactoryWSTool *tool
       return tool->exportTransformed(&param, lognormalLogSuffix, "log(%s)");
    }
    return transformedBaseName(param) + lognormalLogSuffix;
-}
-
-// The parameters to create a RooLognormal from, for the "mu" and "sigma" of a lognormal_dist.
-struct LognormalParameters {
-   std::string median;
-   std::string shape;
-   bool standardParametrization = true;
-};
-
-LognormalParameters lognormalParameters(std::string const &mu, std::string const &sigma)
-{
-   if (!endsWith(mu, lognormalLogSuffix)) {
-      return {mu, sigma, true};
-   }
-   return {transformedOriginal(mu, lognormalLogSuffix), transformedOriginal(sigma, lognormalLogSuffix), false};
-}
-
-// The name of the pdf that represents the component of an array distribution over the observable `observable`.
-std::string arrayComponentName(std::string const &observable)
-{
-   return observable + "_constraint";
 }
 
 // Copy the value of a JSON node, keeping numbers and booleans as such.
@@ -408,7 +380,7 @@ void copyValue(JSONNode &target, JSONNode const &source)
 // name of the array holds them together, so that the array can be written back as `array_dist`. HistFactory modifiers
 // that name an array as the constraint of a parameter pick their component out of it (see
 // JSONFactories_HistFactory.cxx).
-bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    const std::string name = RooJSONFactoryWSTool::name(p);
    auto error = [&name](std::string const &message) {
@@ -467,7 +439,7 @@ bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
       }
       observables.push_back(x);
 
-      const std::string pdfName = arrayComponentName(x);
+      const std::string pdfName = x + "_constraint";
       if (ws.arg(pdfName)) {
          error("cannot create the component for '" + x + "' as '" + pdfName +
                "', the workspace already has an object of that name");
@@ -517,69 +489,16 @@ bool importArrayDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
    // The product only exists to hold the components together.
    array.setAttribute(helperObjectTag);
    tool->wsImport(array);
-   return true;
 }
 
-// A component of an array distribution, with the names or numbers of its fields.
-struct ArrayComponent {
-   std::string type;
-   std::string x;
-   std::vector<std::pair<std::string, HS3::NameOrNumber>> fields;
-};
-
-// The type, observable and fields of `pdf` as a component of an array distribution, with the fields of the standalone
-// exporters, or std::nullopt if `pdf` cannot be a component. A Gaussian whose mean is the recorded `observable` is
-// written with x and mean swapped. The functions that a field names are only written if there is a `tool` (see
-// lognormalLogName()); without one, this only describes the component.
-std::optional<ArrayComponent>
-arrayComponentOf(RooAbsPdf const &pdf, std::string const *observable = nullptr, RooJSONFactoryWSTool *tool = nullptr)
-{
-   ArrayComponent out;
-   RooAbsReal const *x = nullptr;
-   if (auto const *poisson = dynamic_cast<RooPoisson const *>(&pdf)) {
-      out.type = poisson->getNoRounding() ? "poisson_continuous_dist" : "poisson_dist";
-      x = &poisson->getX();
-      out.fields = {{"mean", HS3::toNameOrNumber(poisson->getMean())}};
-   } else if (auto const *gauss = dynamic_cast<RooGaussian const *>(&pdf)) {
-      out.type = "gaussian_dist";
-      x = &gauss->getX();
-      RooAbsReal const *mean = &gauss->getMean();
-      // A Gaussian constraint built by HistFactory has the parameter as x and the global observable as mean. The
-      // Gaussian is symmetric in the two, so it is written with the observable as x where the observable is known.
-      if (observable && *observable == mean->GetName() && !isLiteralConstVar(*mean)) {
-         std::swap(x, mean);
-      }
-      out.fields = {{"mean", HS3::toNameOrNumber(*mean)}, {"sigma", HS3::toNameOrNumber(gauss->getSigma())}};
-   } else if (auto const *lognormal = dynamic_cast<RooLognormal const *>(&pdf)) {
-      out.type = "lognormal_dist";
-      x = &lognormal->getX();
-      if (lognormal->useStandardParametrization()) {
-         out.fields = {{"mu", HS3::toNameOrNumber(lognormal->getMedian())},
-                       {"sigma", HS3::toNameOrNumber(lognormal->getShapeK())}};
-      } else {
-         out.fields = {{"mu", lognormalLogName(lognormal->getMedian(), tool)},
-                       {"sigma", lognormalLogName(lognormal->getShapeK(), tool)}};
-      }
-   } else {
-      return std::nullopt;
-   }
-   // The observable of a component must be named: the observables are pairwise distinct and are paired with data.
-   if (isLiteralConstVar(*x)) {
-      return std::nullopt;
-   }
-   out.x = x->GetName();
-   return out;
-}
-
-bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    tool->wsEmplace<RooAddition>(name, tool->requestArgList<RooAbsReal>(p, "summands"));
-   return true;
 }
 
 // A "combined_dist" is interpreted by the document. This reads one that doesn't come with a document.
-bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    HS3::Diagnostics diagnostics;
    HS3::Distribution const dist = HS3::parseDistribution(p, diagnostics);
@@ -588,18 +507,18 @@ bool importCombinedDist(RooJSONFactoryWSTool *tool, const JSONNode &p)
    }
    HS3::report(diagnostics, dist.name);
    HS3::buildCombinedDist(*tool, dist.name, std::get<HS3::CombinedDist>(dist.body));
-   return true;
 }
 
-bool importAddPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importAddPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
+   const std::size_t nSummands = p.has_child("summands") ? p["summands"].num_children() : 0;
+   const std::size_t nCoefficients = p.has_child("coefficients") ? p["coefficients"].num_children() : 0;
+   const bool sinceHS3v03 = !(tool->hs3Version() < HS3::Version{0, 3});
    if (p.has_child("extended")) {
       // Check the explicit "extended" flag against the number of coefficients, which determines the extended mode of
       // the RooAddPdf.
       const bool extended = p["extended"].val_bool();
-      const std::size_t nSummands = p.has_child("summands") ? p["summands"].num_children() : 0;
-      const std::size_t nCoefficients = p.has_child("coefficients") ? p["coefficients"].num_children() : 0;
       const std::string counts =
          std::to_string(nCoefficients) + " coefficients for " + std::to_string(nSummands) + " summands";
       if (extended && nCoefficients > 0 && nCoefficients + 1 == nSummands) {
@@ -626,21 +545,15 @@ bool importAddPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
                                                          coefficients));
          }
          tool->wsEmplace<RooAddPdf>(name, summands, fractions);
-         return true;
+         return;
       }
-   } else {
-      const std::size_t nSummands = p.has_child("summands") ? p["summands"].num_children() : 0;
-      const std::size_t nCoefficients = p.has_child("coefficients") ? p["coefficients"].num_children() : 0;
+   } else if (nCoefficients == nSummands && nSummands > 0 && sinceHS3v03) {
       // HS3 0.3 requires the flag. Where it decides about the Poisson term, a document without it is invalid.
-      if (nCoefficients == nSummands && nSummands > 0 && !(tool->hs3Version() < HS3::Version{0, 3})) {
-         RooJSONFactoryWSTool::error("mixture_dist '" + name +
-                                     "' has one coefficient per summand, but no \"extended\" flag, which HS3 "
-                                     "requires to decide whether the mixture is extended");
-      }
+      RooJSONFactoryWSTool::error("mixture_dist '" + name +
+                                  "' has one coefficient per summand, but no \"extended\" flag, which HS3 "
+                                  "requires to decide whether the mixture is extended");
    }
-   if (p.has_child("summands") && p["summands"].num_children() > 0 &&
-       (!p.has_child("coefficients") || p["coefficients"].num_children() == 0) &&
-       !(tool->hs3Version() < HS3::Version{0, 3})) {
+   if (nSummands > 0 && nCoefficients == 0 && sinceHS3v03) {
       RooJSONFactoryWSTool::warning("RooFitHS3: mixture_dist '" + name +
                                     "' has no coefficients, which HS3 0.3 doesn't define. It is read as the sum of "
                                     "its extended summands.");
@@ -648,22 +561,20 @@ bool importAddPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    if (!tool->requestArgList<RooAbsReal>(p, "coefficients").empty()) {
       tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
                                  tool->requestArgList<RooAbsReal>(p, "coefficients"));
-      return true;
+   } else {
+      tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"));
    }
-   tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"));
-   return true;
 }
 
-bool importAddModel(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importAddModel(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    tool->wsEmplace<RooAddModel>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
                                 tool->requestArgList<RooAbsReal>(p, "coefficients"));
-   return true;
 }
 
 template <bool DivideByBinWidth>
-bool importBinWidthFunction(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importBinWidthFunction(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooHistFunc *hf = dynamic_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
@@ -671,10 +582,9 @@ bool importBinWidthFunction(RooJSONFactoryWSTool *tool, const JSONNode &p)
       RooJSONFactoryWSTool::error("histogram '" + p["histogram"].val() + "' of '" + name + "' is not a RooHistFunc");
    }
    tool->wsEmplace<RooBinWidthFunction>(name, *hf, DivideByBinWidth);
-   return true;
 }
 
-bool importBinSamplingPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importBinSamplingPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
 
@@ -693,12 +603,10 @@ bool importBinSamplingPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    double epsilon(p["epsilon"].val_double());
 
    tool->wsEmplace<RooBinSamplingPdf>(name, *obs, *pdf, epsilon);
-
-   return true;
 }
 
 template <class RooArg_t>
-bool importRealSum(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importRealSum(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooArgList samples = tool->requestArgList<RooAbsReal>(p, "samples");
@@ -709,11 +617,10 @@ bool importRealSum(RooJSONFactoryWSTool *tool, const JSONNode &p)
    } else {
       tool->wsEmplace<RooArg_t>(name, samples, coefs);
    }
-   return true;
 }
 
 template <class RooArg_t>
-bool importPolynomial(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importPolynomial(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    if (!p.has_child("coefficients")) {
@@ -738,7 +645,6 @@ bool importPolynomial(RooJSONFactoryWSTool *tool, const JSONNode &p)
    }
 
    tool->wsEmplace<RooArg_t>(name, *x, coefs, lowestOrder);
-   return true;
 }
 
 // HS3 0.3 distinguishes the discrete "poisson_dist" from the "poisson_continuous_dist" (HS3 #152), which are a
@@ -746,7 +652,7 @@ bool importPolynomial(RooJSONFactoryWSTool *tool, const JSONNode &p)
 // false denotes the continuous form. That key is read for documents before HS3 0.3, without it the discrete form is
 // meant. From HS3 0.3 on, it must not be present.
 template <bool Continuous>
-bool importPoisson(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importPoisson(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    bool noRounding = Continuous;
@@ -763,10 +669,9 @@ bool importPoisson(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
    RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
    tool->wsEmplace<RooPoisson>(name, *x, *mean, noRounding);
-   return true;
 }
 
-bool importDecay(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importDecay(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooRealVar *t = tool->requestArg<RooRealVar>(p, "t");
@@ -778,28 +683,25 @@ bool importDecay(RooJSONFactoryWSTool *tool, const JSONNode &p)
    }
    RooDecay::DecayType decayType = static_cast<RooDecay::DecayType>(p["decayType"].val_int());
    tool->wsEmplace<RooDecay>(name, *t, *tau, *model, decayType);
-   return true;
 }
 
-bool importTruthModel(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importTruthModel(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooRealVar *x = tool->requestArg<RooRealVar>(p, "x");
    tool->wsEmplace<RooTruthModel>(name, *x);
-   return true;
 }
 
-bool importGaussModel(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importGaussModel(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooRealVar *x = tool->requestArg<RooRealVar>(p, "x");
    RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
    RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
    tool->wsEmplace<RooGaussModel>(name, *x, *mean, *sigma);
-   return true;
 }
 
-bool importRealIntegral(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importRealIntegral(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *func = tool->requestArg<RooAbsReal>(p, "integrand");
@@ -814,10 +716,9 @@ bool importRealIntegral(RooJSONFactoryWSTool *tool, const JSONNode &p)
    // todo: at some point, take care of integrator configurations
    tool->wsEmplace<RooRealIntegral>(name, *func, vars, normSetPtr, static_cast<RooNumIntConfig *>(nullptr),
                                     domain ? domain->val().c_str() : nullptr);
-   return true;
 }
 
-bool importDerivative(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importDerivative(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *func = tool->requestArg<RooAbsReal>(p, "function");
@@ -829,10 +730,9 @@ bool importDerivative(RooJSONFactoryWSTool *tool, const JSONNode &p)
       normSet.add(tool->requestArgSet<RooAbsReal>(p, "normalization"));
    }
    tool->wsEmplace<RooDerivative>(name, *func, *x, normSet, order, eps);
-   return true;
 }
 
-bool importFFTConvPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importFFTConvPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooRealVar *convVar = tool->requestArg<RooRealVar>(p, "conv_var");
@@ -842,13 +742,12 @@ bool importFFTConvPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    if (p.has_child("conv_func")) {
       RooAbsReal *convFunc = tool->requestArg<RooAbsReal>(p, "conv_func");
       tool->wsEmplace<RooFFTConvPdf>(name, *convFunc, *convVar, *pdf1, *pdf2, order);
-      return true;
+   } else {
+      tool->wsEmplace<RooFFTConvPdf>(name, *convVar, *pdf1, *pdf2, order);
    }
-   tool->wsEmplace<RooFFTConvPdf>(name, *convVar, *pdf1, *pdf2, order);
-   return true;
 }
 
-bool importExtendPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importExtendPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    // HS3 calls the fields "dist" and "rate". RooFit used to write "pdf" and "norm", which are still accepted.
@@ -856,12 +755,11 @@ bool importExtendPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooAbsReal *norm = tool->requestArg<RooAbsReal>(p, p.has_child("norm") && !p.has_child("rate") ? "norm" : "rate");
    JSONNode const *range = p.find("range");
    tool->wsEmplace<RooExtendPdf>(name, *pdf, *norm, range ? range->val().c_str() : nullptr);
-   return true;
 }
 
 // HS3 0.3 calls the location parameter of the Landau distribution "mu", since it is neither the mean nor the most
 // probable value. Documents before 0.3 used "mean", which is still read.
-bool importLandau(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importLandau(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    const std::string name(RooJSONFactoryWSTool::name(p));
    const bool legacyKey = !p.has_child("mu") && p.has_child("mean");
@@ -873,26 +771,26 @@ bool importLandau(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooAbsReal *mu = tool->requestArg<RooAbsReal>(p, legacyKey ? "mean" : "mu");
    RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
    tool->wsEmplace<RooLandau>(name, *x, *mu, *sigma);
-   return true;
 }
 
-bool importLogNormal(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importLogNormal(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
 
    // Same mechanism to undo the parameter transformation as in the
    // importExponential() function (see comments in that function for more info).
-   const LognormalParameters params = lognormalParameters(p["mu"].val(), p["sigma"].val());
-   RooAbsReal *median = tool->request<RooAbsReal>(params.median, name);
-   RooAbsReal *shape = tool->request<RooAbsReal>(params.shape, name);
+   const std::string mu = p["mu"].val();
+   const std::string sigma = p["sigma"].val();
+   const bool isStandard = !endsWith(mu, lognormalLogSuffix);
+   RooAbsReal *median = tool->request<RooAbsReal>(isStandard ? mu : transformedOriginal(mu, lognormalLogSuffix), name);
+   RooAbsReal *shape =
+      tool->request<RooAbsReal>(isStandard ? sigma : transformedOriginal(sigma, lognormalLogSuffix), name);
 
-   tool->wsEmplace<RooLognormal>(name, *x, *median, *shape, params.standardParametrization);
-
-   return true;
+   tool->wsEmplace<RooLognormal>(name, *x, *median, *shape, isStandard);
 }
 
-bool importExponential(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importExponential(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
@@ -934,11 +832,9 @@ bool importExponential(RooJSONFactoryWSTool *tool, const JSONNode &p)
       isInverted ? transformedOriginal(constParamName, "_exponential_inverted") : constParamName, name);
 
    tool->wsEmplace<RooExponential>(name, *x, *c, !isInverted);
-
-   return true;
 }
 
-bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    const bool hasCov = p.has_child("covariances");
@@ -975,7 +871,6 @@ bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
    }
    tool->wsEmplace<RooMultiVarGaussian>(name, tool->requestArgList<RooAbsReal>(p, "x"),
                                         tool->requestArgList<RooAbsReal>(p, "mean"), covmat);
-   return true;
 }
 
 /// Read the binning variables from the "axes" node, ordered like in `varList`.
@@ -998,18 +893,14 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
    }
    std::string name(RooJSONFactoryWSTool::name(p));
    RooArgList varList = tool->requestArgList<RooRealVar>(p, "variables");
-   if (!p.has_child("axes")) {
-      std::stringstream ss;
-      ss << "No axes given in '" << name << "'"
-         << ". Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
-         << "Root version that supports custom ParamHistFunc binnings(>=6.38.00)." << std::endl;
-      RooJSONFactoryWSTool::warning(ss.str());
-      checkParamHistFuncOrderIsDefined(tool->hs3Version(), varList, "the ParamHistFunc '" + name + "'");
-      tool->wsEmplace<ParamHistFunc>(name, varList,
-                                     toParamHistFuncOrder(tool->requestArgList<RooAbsReal>(p, "parameters"), varList));
-      return true;
+   const bool hasAxes = p.has_child("axes");
+   if (!hasAxes) {
+      RooJSONFactoryWSTool::warning(
+         "No axes given in '" + name +
+         "'. Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
+         "Root version that supports custom ParamHistFunc binnings(>=6.38.00).\n");
    }
-   RooArgList binning = readBinning(p, varList);
+   RooArgList binning = hasAxes ? readBinning(p, varList) : varList;
    checkParamHistFuncOrderIsDefined(tool->hs3Version(), binning, "the ParamHistFunc '" + name + "'");
    // The parameters are given in the order of HS3 (last axis fastest); ParamHistFunc expects TH1 order.
    tool->wsEmplace<ParamHistFunc>(name, binning,
@@ -1017,7 +908,7 @@ bool importParamHistFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
-bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    const std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
@@ -1048,10 +939,9 @@ bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
    }
 
    tool->wsEmplace<::RooSpline>(name.c_str(), *x, x0, y0, algo == "poly5" ? 5 : 3, logx, logy);
-   return true;
 }
 
-bool importArgus(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importArgus(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *mass = tool->requestArg<RooAbsReal>(p, "mass");
@@ -1059,10 +949,9 @@ bool importArgus(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooAbsReal *slope = tool->requestArg<RooAbsReal>(p, "slope");
    RooAbsReal *power = tool->requestArg<RooAbsReal>(p, "power");
    tool->wsEmplace<RooArgusBG>(name, *mass, *resonance, *slope, *power);
-   return true;
 }
 
-bool importBernstein(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importBernstein(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    auto *x = dynamic_cast<RooAbsRealLValue *>(tool->requestArg<RooAbsReal>(p, "x"));
@@ -1070,10 +959,9 @@ bool importBernstein(RooJSONFactoryWSTool *tool, const JSONNode &p)
       RooJSONFactoryWSTool::error("\"x\" of '" + name + "' is not a variable");
    }
    tool->wsEmplace<RooBernstein>(name, *x, tool->requestArgList<RooAbsReal>(p, "coefficients"));
-   return true;
 }
 
-bool importBifurGauss(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importBifurGauss(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
@@ -1081,27 +969,24 @@ bool importBifurGauss(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooAbsReal *sigmaL = tool->requestArg<RooAbsReal>(p, "sigmaL");
    RooAbsReal *sigmaR = tool->requestArg<RooAbsReal>(p, "sigmaR");
    tool->wsEmplace<RooBifurGauss>(name, *x, *mean, *sigmaL, *sigmaR);
-   return true;
 }
 
-bool importChebychev(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importChebychev(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
    tool->wsEmplace<RooChebychev>(name, *x, tool->requestArgList<RooAbsReal>(p, "coefficients"));
-   return true;
 }
 
-bool importEffProd(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importEffProd(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, "pdf");
    RooAbsReal *eff = tool->requestArg<RooAbsReal>(p, "eff");
    tool->wsEmplace<RooEffProd>(name, *pdf, *eff);
-   return true;
 }
 
-bool importGamma(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importGamma(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
@@ -1109,72 +994,43 @@ bool importGamma(RooJSONFactoryWSTool *tool, const JSONNode &p)
    RooAbsReal *beta = tool->requestArg<RooAbsReal>(p, "beta");
    RooAbsReal *mu = tool->requestArg<RooAbsReal>(p, "mu");
    tool->wsEmplace<RooGamma>(name, *x, *gamma, *beta, *mu);
-   return true;
 }
 
-bool importGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
    RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
    RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
    tool->wsEmplace<RooGaussian>(name, *x, *mean, *sigma);
-   return true;
 }
 
-bool importPowerSum(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importPowerSum(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
    RooArgList coefs = tool->requestArgList<RooAbsReal>(p, "coefficients");
    RooArgList exps = tool->requestArgList<RooAbsReal>(p, "exponents");
    tool->wsEmplace<RooPowerSum>(name, *x, coefs, exps);
-   return true;
 }
 
-bool importProjectedPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importProjectedPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, "input_pdf");
    tool->wsEmplace<RooProjectedPdf>(name, *pdf, tool->requestArgSet<RooAbsReal>(p, "observables"));
-   return true;
 }
 
-bool importUniform(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importUniform(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    // A single observable may also be given by its name.
    if (p.has_child("x") && !p["x"].is_seq()) {
       tool->wsEmplace<RooUniform>(name, RooArgSet{*tool->requestArg<RooAbsReal>(p, "x")});
-      return true;
+   } else {
+      tool->wsEmplace<RooUniform>(name, tool->requestArgSet<RooAbsReal>(p, "x"));
    }
-   tool->wsEmplace<RooUniform>(name, tool->requestArgSet<RooAbsReal>(p, "x"));
-   return true;
 }
-
-// Importer that is registered first for a deprecated type key. It warns once, and then lets the importers that are
-// registered after it for the deprecated key do the actual work.
-class DeprecatedKeyImporter : public RooFit::JSONIO::Importer {
-public:
-   DeprecatedKeyImporter(std::string key, std::string replacement)
-      : _key{std::move(key)}, _replacement{std::move(replacement)}
-   {
-   }
-   bool importArg(RooJSONFactoryWSTool *, const JSONNode &) const override
-   {
-      if (!_warned) {
-         RooJSONFactoryWSTool::warning("RooFitHS3: the type \"" + _key + "\" is deprecated, please use \"" +
-                                       _replacement + "\" instead.");
-         _warned = true;
-      }
-      return false;
-   }
-
-private:
-   const std::string _key;
-   const std::string _replacement;
-   mutable bool _warned = false;
-};
 
 namespace CrystalBall {
 
@@ -1183,12 +1039,7 @@ const std::initializer_list<const char *> tailKeys = {"alpha_L", "n_L", "alpha_R
 
 bool hasAny(const JSONNode &p, std::initializer_list<const char *> keys)
 {
-   for (const char *key : keys) {
-      if (p.has_child(key)) {
-         return true;
-      }
-   }
-   return false;
+   return std::any_of(keys.begin(), keys.end(), [&p](const char *key) { return p.has_child(key); });
 }
 
 bool hasDoubleSidedKeys(const JSONNode &p)
@@ -1250,7 +1101,7 @@ void importDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p, std::strin
 
 // "crystalball_dist" is the single-sided Crystal Ball (RooCBShape). Before HS3 0.3, it was also the double-sided
 // Crystal Ball, recognizable by the "_L"/"_R" fields. Such documents are still read, with a deprecation warning.
-bool importCrystalBall(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importCrystalBall(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    if (!CrystalBall::hasDoubleSidedKeys(p)) {
       std::string name(RooJSONFactoryWSTool::name(p));
@@ -1260,7 +1111,7 @@ bool importCrystalBall(RooJSONFactoryWSTool *tool, const JSONNode &p)
       RooAbsReal *alpha = tool->requestArg<RooAbsReal>(p, "alpha");
       RooAbsReal *n = tool->requestArg<RooAbsReal>(p, "n");
       tool->wsEmplace<RooCBShape>(name, *m, *m0, *sigma, *alpha, *n);
-      return true;
+      return;
    }
    static bool warned = false;
    if (!warned) {
@@ -1270,13 +1121,11 @@ bool importCrystalBall(RooJSONFactoryWSTool *tool, const JSONNode &p)
       warned = true;
    }
    CrystalBall::importDoubleSided(tool, p, "crystalball_dist", /*symmetricShorthand=*/true);
-   return true;
 }
 
-bool importCrystalBallDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importCrystalBallDoubleSided(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    CrystalBall::importDoubleSided(tool, p, "crystalball_doublesided_dist", /*symmetricShorthand=*/false);
-   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1485,16 +1334,21 @@ std::optional<std::string> ternariesToIfElse(std::string const &in)
    return out;
 }
 
-template <class RooArg_t>
-void exportFormulaArg(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &elem)
+// HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
+void checkExpressionRefersToNoPdf(RooAbsArg const &formula, RooAbsCollection const &dependents)
 {
-   // HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
-   for (std::size_t i = 0; i < pdf.nParameters(); ++i) {
-      if (auto const *dependent = dynamic_cast<RooAbsPdf const *>(pdf.getParameter(i))) {
-         RooJSONFactoryWSTool::error(std::string("the expression of '") + pdf.GetName() + "' refers to the pdf '" +
+   for (RooAbsArg const *dependent : dependents) {
+      if (dynamic_cast<RooAbsPdf const *>(dependent)) {
+         RooJSONFactoryWSTool::error(std::string("the expression of '") + formula.GetName() + "' refers to the pdf '" +
                                      dependent->GetName() + "', which HS3 doesn't allow");
       }
    }
+}
+
+template <class RooArg_t>
+void exportFormulaArg(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &elem)
+{
+   checkExpressionRefersToNoPdf(pdf, pdf.dependents());
    TString expression(pdf.expression());
    cleanExpression(expression);
    // If the tokens follow the "x[#]" convention, the square braces enclosing each number
@@ -1634,16 +1488,8 @@ void exportMultiVarGaussian(RooJSONFactoryWSTool *, RooMultiVarGaussian const &p
 
 void exportTFnBinding(RooJSONFactoryWSTool *, RooTFnBinding const &pdf, JSONNode &elem)
 {
-   // HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
-   for (RooAbsCollection const *list : {&pdf.observables(), &pdf.parameters()}) {
-      for (RooAbsArg const *arg : *list) {
-         if (dynamic_cast<RooAbsPdf const *>(arg)) {
-            RooJSONFactoryWSTool::error(std::string("the expression of '") + pdf.GetName() + "' refers to the pdf '" +
-                                        arg->GetName() + "', which HS3 doesn't allow");
-         }
-      }
-   }
-
+   checkExpressionRefersToNoPdf(pdf, pdf.observables());
+   checkExpressionRefersToNoPdf(pdf, pdf.parameters());
    TString formula(pdf.function().GetExpFormula());
    formula.ReplaceAll("x", pdf.observables()[0].GetName());
    formula.ReplaceAll("y", pdf.observables()[1].GetName());
@@ -1826,7 +1672,7 @@ void exportUniform(RooJSONFactoryWSTool *, RooUniform const &pdf, JSONNode &elem
    RooJSONFactoryWSTool::fillSeq(elem["x"], pdf.observables());
 }
 
-bool importWrapperPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
+void importWrapperPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooAbsReal *func = tool->requestArg<RooAbsReal>(p, "function");
@@ -1834,7 +1680,6 @@ bool importWrapperPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    const char *key = p.has_child("self_normalized") ? "self_normalized" : "selfnormalized";
    const bool selfNormalized = p.has_child(key) && p[key].val_bool();
    tool->wsEmplace<RooWrapperPdf>(name, *func, selfNormalized);
-   return true;
 }
 
 void exportWrapperPdf(RooJSONFactoryWSTool *, RooWrapperPdf const &pdf, JSONNode &elem)
@@ -1853,12 +1698,22 @@ void exportWrapperPdf(RooJSONFactoryWSTool *, RooWrapperPdf const &pdf, JSONNode
 
 // Adapters that wrap the plain import/export functions above into the
 // RooFit::JSONIO::Importer/Exporter interface.
-using ImportFunc = bool (*)(RooJSONFactoryWSTool *, const JSONNode &);
 
+// An import function that returns nothing always reads the object. One that returns a bool can decline by returning
+// false, so that the next importer of the type key is tried.
+template <class ImportFunc>
 class FuncImporter : public RooFit::JSONIO::Importer {
 public:
    explicit FuncImporter(ImportFunc func) : _func{func} {}
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override { return _func(tool, p); }
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      if constexpr (std::is_void_v<decltype(_func(tool, p))>) {
+         _func(tool, p);
+         return true;
+      } else {
+         return _func(tool, p);
+      }
+   }
 
 private:
    const ImportFunc _func;
@@ -1892,9 +1747,10 @@ private:
 };
 
 // The importers of a type key and the exporters of a class are tried in the order of their registration.
+template <class ImportFunc>
 void registerImporter(const std::string &key, ImportFunc func)
 {
-   RooFit::JSONIO::registerImporter(key, std::make_unique<FuncImporter>(func), false);
+   RooFit::JSONIO::registerImporter(key, std::make_unique<FuncImporter<ImportFunc>>(func), false);
 }
 
 template <class RooArg_t>
@@ -1905,7 +1761,7 @@ void registerExporter(std::string key, ExportFunc<RooArg_t> func, bool autoExpor
 }
 
 // A class that is read and written with the same type key.
-template <class RooArg_t>
+template <class ImportFunc, class RooArg_t>
 void registerType(const std::string &key, ImportFunc importFunc, ExportFunc<RooArg_t> exportFunc,
                   bool autoExportDependants = true)
 {
@@ -1913,11 +1769,18 @@ void registerType(const std::string &key, ImportFunc importFunc, ExportFunc<RooA
    registerExporter(key, exportFunc, autoExportDependants);
 }
 
-// A deprecated type key is still read like its replacement, with a warning.
+// A deprecated type key is still read like its replacement, with a warning the first time.
+template <class ImportFunc>
 void registerDeprecatedImporter(const std::string &key, const std::string &replacement, ImportFunc func)
 {
-   RooFit::JSONIO::registerImporter(key, std::make_unique<DeprecatedKeyImporter>(key, replacement), false);
-   registerImporter(key, func);
+   registerImporter(key, [=](RooJSONFactoryWSTool *tool, const JSONNode &p) {
+      static std::set<std::string> warned;
+      if (warned.insert(key).second) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the type \"" + key + "\" is deprecated, please use \"" +
+                                       replacement + "\" instead.");
+      }
+      return func(tool, p);
+   });
 }
 
 STATIC_EXECUTE([]() {
@@ -1987,13 +1850,44 @@ STATIC_EXECUTE([]() {
 
 } // namespace
 
-std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable)
+std::optional<ArrayComponentInfo>
+arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable, RooJSONFactoryWSTool *tool)
 {
-   auto component = arrayComponentOf(pdf, observable);
-   if (!component) {
+   ArrayComponentInfo out;
+   RooAbsReal const *x = nullptr;
+   if (auto const *poisson = dynamic_cast<RooPoisson const *>(&pdf)) {
+      out.type = poisson->getNoRounding() ? "poisson_continuous_dist" : "poisson_dist";
+      x = &poisson->getX();
+      out.fields = {{"mean", HS3::toNameOrNumber(poisson->getMean())}};
+   } else if (auto const *gauss = dynamic_cast<RooGaussian const *>(&pdf)) {
+      out.type = "gaussian_dist";
+      x = &gauss->getX();
+      RooAbsReal const *mean = &gauss->getMean();
+      // A Gaussian constraint built by HistFactory has the parameter as x and the global observable as mean. The
+      // Gaussian is symmetric in the two, so it is written with the observable as x where the observable is known.
+      if (observable && *observable == mean->GetName() && !isLiteralConstVar(*mean)) {
+         std::swap(x, mean);
+      }
+      out.fields = {{"mean", HS3::toNameOrNumber(*mean)}, {"sigma", HS3::toNameOrNumber(gauss->getSigma())}};
+   } else if (auto const *lognormal = dynamic_cast<RooLognormal const *>(&pdf)) {
+      out.type = "lognormal_dist";
+      x = &lognormal->getX();
+      if (lognormal->useStandardParametrization()) {
+         out.fields = {{"mu", HS3::toNameOrNumber(lognormal->getMedian())},
+                       {"sigma", HS3::toNameOrNumber(lognormal->getShapeK())}};
+      } else {
+         out.fields = {{"mu", lognormalLogName(lognormal->getMedian(), tool)},
+                       {"sigma", lognormalLogName(lognormal->getShapeK(), tool)}};
+      }
+   } else {
       return std::nullopt;
    }
-   return ArrayComponentInfo{component->type, component->x};
+   // The observable of a component must be named: the observables are pairwise distinct and are paired with data.
+   if (isLiteralConstVar(*x)) {
+      return std::nullopt;
+   }
+   out.observable = x->GetName();
+   return out;
 }
 
 void writeArrayDist(RooJSONFactoryWSTool &tool, JSONNode &elem, std::string const &name,
@@ -2006,11 +1900,11 @@ void writeArrayDist(RooJSONFactoryWSTool &tool, JSONNode &elem, std::string cons
    if (components.empty()) {
       error("it has no components");
    }
-   std::vector<ArrayComponent> comps;
+   std::vector<ArrayComponentInfo> comps;
    std::set<std::string> observables;
    for (RooAbsPdf const *pdf : components) {
       auto recorded = observableOf.find(pdf->GetName());
-      auto comp = arrayComponentOf(*pdf, recorded != observableOf.end() ? &recorded->second : nullptr, &tool);
+      auto comp = arrayComponentInfo(*pdf, recorded != observableOf.end() ? &recorded->second : nullptr, &tool);
       if (!comp) {
          error("'" + std::string(pdf->GetName()) +
                "' cannot be a component, only RooPoisson, RooGaussian and RooLognormal over a named observable "
@@ -2020,8 +1914,8 @@ void writeArrayDist(RooJSONFactoryWSTool &tool, JSONNode &elem, std::string cons
          error("the components '" + std::string(components.front()->GetName()) + "' (" + comps.front().type +
                ") and '" + pdf->GetName() + "' (" + comp->type + ") have different types");
       }
-      if (!observables.insert(comp->x).second) {
-         error("two components have the observable '" + comp->x + "'");
+      if (!observables.insert(comp->observable).second) {
+         error("two components have the observable '" + comp->observable + "'");
       }
       comps.push_back(std::move(*comp));
    }
@@ -2039,7 +1933,7 @@ void writeArrayDist(RooJSONFactoryWSTool &tool, JSONNode &elem, std::string cons
       for (std::size_t i = 0; i < comps.front().fields.size(); ++i) {
          auto const &field = comps.front().fields[i];
          if (std::all_of(comps.begin(), comps.end(),
-                         [&](ArrayComponent const &comp) { return comp.fields[i].second == field.second; })) {
+                         [&](ArrayComponentInfo const &comp) { return comp.fields[i].second == field.second; })) {
             defaultKeys.insert(field.first);
             write(elem["default_parameters"].set_map()[field.first], field.second);
          }
@@ -2047,9 +1941,9 @@ void writeArrayDist(RooJSONFactoryWSTool &tool, JSONNode &elem, std::string cons
    }
 
    JSONNode &seq = elem["components"].set_seq();
-   for (ArrayComponent const &comp : comps) {
+   for (ArrayComponentInfo const &comp : comps) {
       JSONNode &node = seq.append_child().set_map();
-      node["x"] << comp.x;
+      node["x"] << comp.observable;
       for (auto const &field : comp.fields) {
          if (defaultKeys.find(field.first) == defaultKeys.end()) {
             write(node[field.first], field.second);

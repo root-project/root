@@ -50,15 +50,20 @@ bool isLiteralConstVar(RooAbsArg const &arg);
 // if it were not in the workspace.
 bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws);
 
-// The HS3 type and the observable of `pdf` as a component of an array distribution (RooPoisson, RooGaussian or
-// RooLognormal, over a named observable), or std::nullopt if `pdf` cannot be a component.
+// The HS3 type, the observable and the other fields of `pdf` as a component of an array distribution (RooPoisson,
+// RooGaussian or RooLognormal, over a named observable), or std::nullopt if `pdf` cannot be a component. The fields
+// are the ones of the exporter of its class.
 // If `observable` names the mean of a RooGaussian, the Gaussian is written with x and mean swapped (see
-// RooJSONFactoryWSTool::setConstraintObservable()).
+// RooJSONFactoryWSTool::setConstraintObservable()). The functions that a field names, e.g. for a RooLognormal that is
+// not in the standard parametrization, are only written if there is a `tool`; without one, this only describes the
+// component.
 struct ArrayComponentInfo {
    std::string type;
    std::string observable;
+   std::vector<std::pair<std::string, RooFit::HS3::NameOrNumber>> fields;
 };
-std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable = nullptr);
+std::optional<ArrayComponentInfo>
+arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable = nullptr, RooJSONFactoryWSTool *tool = nullptr);
 
 // Write the array distribution `name` with the given components into `elem`. `observableOf` gives the observable
 // recorded for a component by name, if any. The `tool` writes the functions that the components need besides, e.g.
