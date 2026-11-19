@@ -838,8 +838,7 @@ std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::Unb
 }
 
 // Create a RooAbsData (binned or unbinned) from its description.
-std::unique_ptr<RooAbsData> loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges const *ranges,
-                                     std::string const *soleVariate = nullptr)
+std::unique_ptr<RooAbsData> loadData(HS3::Data const &input, RooWorkspace &workspace, HS3::DomainRanges const *ranges)
 {
    RooJSONFactoryWSTool::testValidName(input.name, true);
 
@@ -872,18 +871,16 @@ std::unique_ptr<RooAbsData> loadData(HS3::Data const &input, RooWorkspace &works
       RooJSONFactoryWSTool::warning("RooFitHS3: the \"uncertainty\" of the dataset '" + input.name +
                                     "' is ignored: HS3 doesn't define how it enters a likelihood.");
    }
-   HS3::UnbinnedData unbinned;
-   if (point.axes.empty() && soleVariate) {
-      // Without an axis, the value is the one of the single variate of the paired distribution (HS3 0.3).
-      unbinned.axes.emplace_back(HS3::ContinuousAxis{*soleVariate, std::nullopt, std::nullopt});
-   } else if (point.axes.size() == 1) {
-      unbinned.axes.emplace_back(point.axes.front());
-   } else if (point.axes.empty()) {
+   // Without an axis, the value is the one of the single variate of the paired distribution, see
+   // HS3::resolvePointData().
+   if (point.axes.empty()) {
       RooJSONFactoryWSTool::error("the point data set '" + input.name +
                                   "' has no axis, and it is not paired with a distribution that has a single variate");
-   } else {
+   } else if (point.axes.size() != 1) {
       RooJSONFactoryWSTool::error("the point data set '" + input.name + "' must have exactly one axis");
    }
+   HS3::UnbinnedData unbinned;
+   unbinned.axes.emplace_back(point.axes.front());
    unbinned.entries.push_back(point.value);
    return createUnbinnedData(input.name, unbinned, workspace, ranges);
 }
@@ -1127,7 +1124,6 @@ void attachConstraintsToChannels(RooAbsPdf &pdf, RooArgSet &constraints)
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
                     std::vector<std::unique_ptr<RooAbsData>> &datasets, std::set<std::string> const &bookkeepingColumns,
-                    std::map<std::pair<std::string, std::size_t>, std::string> const &inlineData,
                     std::set<std::string> const &auxiliaryMeasurements)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
@@ -1145,22 +1141,6 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
 
    // The validation has checked that the likelihood exists.
    HS3::Likelihood const &likelihood = *HS3::findByName(doc.likelihoods, analysis.likelihood.name);
-
-   // The data set of a term: the one it refers to, or the one made from a number given in-line.
-   std::map<HS3::LikelihoodTerm const *, HS3::DataRef> inlineRefs;
-   for (std::size_t i = 0; i < likelihood.terms.size(); ++i) {
-      auto found = inlineData.find({likelihood.name, i});
-      if (found != inlineData.end()) {
-         inlineRefs[&likelihood.terms[i]] = HS3::DataRef{found->second};
-      }
-   }
-   auto dataRefOf = [&](HS3::LikelihoodTerm const &term) -> HS3::DataRef const * {
-      if (auto const *ref = std::get_if<HS3::DataRef>(&term.data)) {
-         return ref;
-      }
-      auto found = inlineRefs.find(&term);
-      return found != inlineRefs.end() ? &found->second : nullptr;
-   };
 
    auto checkPdf = [&](RooAbsArg const *arg, std::string const &name, std::string const &what) {
       requirePdf(arg, "the " + what + " '" + name + "' of analysis '" + analysisName + "'");
@@ -1216,7 +1196,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    // So is a component of a combined distribution that is read as a constraint term (`auxiliaryMeasurements`, see
    // readAuxiliaryChannelsAsConstraints()), whatever the document says about the ModelConfig.
    auto isConstraintTermOfModel = [&](RooAbsPdf const &listed, HS3::LikelihoodTerm const &term) {
-      auto const *dataRef = dataRefOf(term);
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
       const bool auxiliary = auxiliaryMeasurements.count(listed.GetName()) > 0;
       if (!dataRef || (!auxiliary && (!modelTree || modelTree->find(listed.GetName())))) {
          return false;
@@ -1239,7 +1219,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
          nllTerms.push_back(&term);
          continue;
       }
-      auto const *dataRef = dataRefOf(term);
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
       if (!dataRef) {
          continue;
       }
@@ -1299,7 +1279,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    RooArgSet observables;
    for (HS3::LikelihoodTerm const *termPtr : nllTerms) {
       HS3::LikelihoodTerm const &term = *termPtr;
-      auto const *dataRef = dataRefOf(term);
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
       if (!dataRef) {
          continue;
       }
@@ -1326,7 +1306,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
 
    // A combined distribution paired with a combined data set must have a sub-data set for every component.
    for (auto const &term : likelihood.terms) {
-      auto const *dataRef = dataRefOf(term);
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
       auto *simPdf = dynamic_cast<RooSimultaneous const *>(workspace.pdf(term.distribution.name));
       if (!dataRef || !simPdf) {
          continue;
@@ -3610,6 +3590,9 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    for (std::string const &message : auxiliary.warnings) {
       warning("RooFitHS3: " + message);
    }
+   for (std::string const &message : HS3::resolvePointData(*validated)) {
+      error(message);
+   }
    HS3Document const &doc = validated->doc();
 
    // The state of the import refers to the document, so it must not survive it, not even if there is an exception.
@@ -3684,88 +3667,12 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    // The components of combined data sets are moved out of the "datasets" vector when the combined data set is
    // assembled, so they don't get imported on their own. The ROOT-internal form of older files (combineDatasets())
    // is handled after the analyses, because their likelihoods refer to the components.
-   // A number given in-line in the "data" of a likelihood, or a point data set without axes, is the value of the single
-   // variate of the paired distribution (HS3 0.3). If that can't be determined, the document is rejected.
-   auto soleVariateOf = [&](std::string const &distribution, std::string const &what) {
-      std::set<std::string> const v = HS3::variatesOf(doc, distribution);
-      if (v.size() != 1) {
-         error("the variate of the distribution '" + distribution + "', which " + what +
-               " is paired with, can't be determined, since it doesn't have a single variate");
-      }
-      return *v.begin();
-   };
-   std::map<std::string, std::string> pointDataVariates;
-   std::map<std::pair<std::string, std::size_t>, std::string> inlineData;
-   std::vector<HS3::Data> inlineDataSets;
-   // Older versions of RooFit wrote "data": [0], with the number 0 as the only entry, for a ModelConfig without data.
-   // In this exact form, it is no observation in documents before 0.3 (HS3 PR #154). RooFit now writes "data": null.
-   auto isNoDataPlaceholder = [&](HS3::Likelihood const &likelihood, double value) {
-      return value == 0. && likelihood.terms.size() == 1 && doc.metadata.version < HS3::Version{0, 3};
-   };
-   for (auto const &likelihood : doc.likelihoods) {
-      for (std::size_t i = 0; i < likelihood.terms.size(); ++i) {
-         auto const &term = likelihood.terms[i];
-         if (auto const *value = std::get_if<double>(&term.data)) {
-            if (isNoDataPlaceholder(likelihood, *value)) {
-               continue;
-            }
-            std::string const what = "the number in the \"data\" of the likelihood '" + likelihood.name + "'";
-            HS3::PointData point;
-            point.value = *value;
-            point.axes.push_back(
-               HS3::ContinuousAxis{soleVariateOf(term.distribution.name, what), std::nullopt, std::nullopt});
-            auto isTaken = [&](std::string const &candidate) {
-               return HS3::findByName(doc.data, candidate) || HS3::findByName(inlineDataSets, candidate);
-            };
-            std::string name = term.distribution.name + "_data";
-            for (std::size_t k = 1; isTaken(name); ++k) {
-               name = term.distribution.name + "_data_" + std::to_string(k);
-            }
-            inlineData[{likelihood.name, i}] = name;
-            inlineDataSets.push_back({name, std::move(point)});
-            continue;
-         }
-         auto const *refPtr = std::get_if<HS3::DataRef>(&term.data);
-         if (!refPtr) {
-            continue; // no data in a pure model
-         }
-         std::string const &dataName = refPtr->name;
-         auto const *point = HS3::find<HS3::PointData>(doc.data, dataName);
-         if (!point) {
-            continue;
-         }
-         if (!point->axes.empty()) {
-            // The axis of point data is named like the variate of the paired distribution.
-            std::set<std::string> const v = HS3::variatesOf(doc, term.distribution.name);
-            if (v.size() == 1 && point->axes.front().name != *v.begin()) {
-               error("the axis '" + point->axes.front().name + "' of the point data set '" + dataName +
-                     "' is not the variate '" + *v.begin() + "' of the distribution '" + term.distribution.name +
-                     "' it is paired with");
-            }
-            continue;
-         }
-         std::string const variate = soleVariateOf(term.distribution.name, "the point data set '" + dataName + "'");
-         auto inserted = pointDataVariates.emplace(dataName, variate);
-         if (!inserted.second && inserted.first->second != variate) {
-            error("the point data set '" + dataName +
-                  "' without axes is paired with distributions of different variates, '" + inserted.first->second +
-                  "' and '" + variate + "'");
-         }
-      }
-   }
-
    std::vector<std::unique_ptr<RooAbsData>> datasets;
-   datasets.reserve(doc.data.size() + inlineDataSets.size());
+   datasets.reserve(doc.data.size());
    for (auto const &data : doc.data) {
-      // Combined data sets are assembled from the others once all of them are loaded.
       if (!std::holds_alternative<HS3::CombinedData>(data.body)) {
-         auto variate = pointDataVariates.find(data.name);
-         datasets.push_back(loadData(data, _workspace, &_import->ranges,
-                                     variate != pointDataVariates.end() ? &variate->second : nullptr));
+         datasets.push_back(loadData(data, _workspace, &_import->ranges));
       }
-   }
-   for (auto const &data : inlineDataSets) {
-      datasets.push_back(loadData(data, _workspace, &_import->ranges));
    }
    assembleCombinedData(doc, _workspace, datasets);
 
@@ -3803,7 +3710,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    }
 
    for (auto const &analysis : doc.analyses) {
-      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns, inlineData, auxiliary.terms);
+      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns, auxiliary.terms);
    }
 
    combineDatasets(doc, datasets);

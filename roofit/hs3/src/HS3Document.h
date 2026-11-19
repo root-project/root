@@ -594,6 +594,13 @@ struct AuxiliaryConstraints {
 /// document is read like the ones above, with a warning. If the components stay components, the data of the term
 /// becomes the data of the component instead, and the term is removed.
 AuxiliaryConstraints readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &doc, bool asChannels);
+
+/// A number given in-line in the "data" of a likelihood, or a point data set without axes, is the value of the single
+/// variate of the paired distribution (HS3 0.3). The numbers become point data sets named "<distribution>_data", and
+/// the point data sets get their axis, so that every term of a likelihood refers to a data set, or has no data.
+/// Returns the errors: a distribution without a single variate, or a point data set with an axis that is not the
+/// variate of its distribution.
+std::vector<std::string> resolvePointData(ValidatedHS3Document &doc);
 } // namespace HS3
 
 /// An HS3 document. It is move-only, because generic objects refer to the JSON tree of the document.
@@ -705,6 +712,7 @@ private:
    friend std::optional<ValidatedHS3Document>
    HS3::validate(HS3Document doc, HS3::Diagnostics &diagnostics, HS3::ValidateOptions const &options);
    friend HS3::AuxiliaryConstraints HS3::readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &doc, bool asChannels);
+   friend std::vector<std::string> HS3::resolvePointData(ValidatedHS3Document &doc);
 
    HS3Document _doc;
 };

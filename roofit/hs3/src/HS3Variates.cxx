@@ -19,7 +19,8 @@
 // says what they consist of, through the nodes that the document refers to.
 //
 // This file also has what else follows from which distribution is paired with which data: how often a constraint
-// contributes to a likelihood, and how a document is changed so that RooFit can read its auxiliary measurements.
+// contributes to a likelihood, and how a document is changed so that RooFit can read its auxiliary measurements and
+// its point data.
 
 #include "HS3Document.h"
 
@@ -722,6 +723,77 @@ AuxiliaryConstraints readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &va
       }
    }
    return out;
+}
+
+std::vector<std::string> resolvePointData(ValidatedHS3Document &validated)
+{
+   HS3Document &doc = validated._doc;
+   std::vector<std::string> errors;
+   auto soleVariateOf = [&](std::string const &distribution, std::string const &what) {
+      std::set<std::string> const variates = variatesOf(doc, distribution);
+      if (variates.size() == 1) {
+         return *variates.begin();
+      }
+      errors.push_back("the variate of the distribution '" + distribution + "', which " + what +
+                       " is paired with, can't be determined, since it doesn't have a single variate");
+      return std::string{};
+   };
+   std::vector<Data> inlineData;
+   std::map<std::string, std::string> variateOfPointData; // of the point data sets without axes
+   for (Likelihood &likelihood : doc.likelihoods) {
+      for (LikelihoodTerm &term : likelihood.terms) {
+         std::string const &distribution = term.distribution.name;
+         if (auto const *value = std::get_if<double>(&term.data)) {
+            // Older versions of RooFit wrote "data": [0], with the number 0 as the only entry, for a ModelConfig
+            // without data. In this exact form, it is no observation in documents before 0.3 (HS3 PR #154). RooFit
+            // now writes "data": null.
+            if (*value == 0. && likelihood.terms.size() == 1 && doc.metadata.version < Version{0, 3}) {
+               term.data = std::monostate{};
+               continue;
+            }
+            std::string name = distribution + "_data";
+            for (std::size_t k = 1; findByName(doc.data, name) || findByName(inlineData, name); ++k) {
+               name = distribution + "_data_" + std::to_string(k);
+            }
+            PointData point;
+            point.value = *value;
+            point.axes.push_back(
+               {soleVariateOf(distribution, "the number in the \"data\" of the likelihood '" + likelihood.name + "'"),
+                std::nullopt, std::nullopt});
+            inlineData.push_back({name, std::move(point)});
+            term.data = DataRef{name};
+            continue;
+         }
+         auto const *ref = std::get_if<DataRef>(&term.data);
+         auto const *point = ref ? find<PointData>(doc.data, ref->name) : nullptr;
+         if (!point) {
+            continue;
+         }
+         if (!point->axes.empty()) {
+            // The axis of point data is named like the variate of the paired distribution.
+            std::set<std::string> const variates = variatesOf(doc, distribution);
+            if (variates.size() == 1 && point->axes.front().name != *variates.begin()) {
+               errors.push_back("the axis '" + point->axes.front().name + "' of the point data set '" + ref->name +
+                                "' is not the variate '" + *variates.begin() + "' of the distribution '" +
+                                distribution + "' it is paired with");
+            }
+            continue;
+         }
+         std::string const variate = soleVariateOf(distribution, "the point data set '" + ref->name + "'");
+         auto inserted = variateOfPointData.emplace(ref->name, variate);
+         if (!inserted.second && inserted.first->second != variate) {
+            errors.push_back("the point data set '" + ref->name +
+                             "' without axes is paired with distributions of different variates, '" +
+                             inserted.first->second + "' and '" + variate + "'");
+         }
+      }
+   }
+   for (auto const &[name, variate] : variateOfPointData) {
+      find<PointData>(doc.data, name)->axes.push_back({variate, std::nullopt, std::nullopt});
+   }
+   doc.data.insert(doc.data.end(), std::make_move_iterator(inlineData.begin()),
+                   std::make_move_iterator(inlineData.end()));
+   return errors;
 }
 
 std::map<std::string, std::set<std::string>> writeLikelihoodTermsOnce(HS3Document const &doc, JSONNode &root)
