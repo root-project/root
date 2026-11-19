@@ -843,7 +843,12 @@ ROOT::Internal::RDF::GetClustersAndEntries(std::string_view ntupleName, std::str
    // TODO(jblomer): improve MT scheduling such that not all page lists are required right away
    source->LoadAllPageLists();
    auto descGuard = source->GetSharedDescriptorGuard();
-   return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetConstRef()), descGuard->GetNEntries());
+   ROOT::NTupleSize_t nEntries = descGuard->GetNEntries();
+   // TODO: In ROOT 6.42.00, writing an empty RNTuple with the RNTupleParallelWriter results in a RNTuple which
+   // cluster boundaries cannot be properly retrieved. Avoid that scenario for now with an early return.
+   if (nEntries == 0)
+      return {{}, nEntries};
+   return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetConstRef()), nEntries);
 }
 
 #ifdef R__USE_IMT
@@ -1120,9 +1125,15 @@ void ROOT::RDF::RNTupleDS::ScheduleTasksForFile(std::size_t fileIdx, ROOT::TThre
    source->Attach();
    // TODO: improve MT scheduling such that not all page lists are required right away
    source->LoadAllPageLists();
-   const auto clustersAndEntries = [&]() {
+   const auto clustersAndEntries =
+      [&]() -> std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t> {
       const auto descGuard = source->GetSharedDescriptorGuard();
-      return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetConstRef()), descGuard->GetNEntries());
+      ROOT::NTupleSize_t nEntries = descGuard->GetNEntries();
+      // TODO: In ROOT 6.42.00, writing an empty RNTuple with the RNTupleParallelWriter results in a RNTuple which
+      // cluster boundaries cannot be properly retrieved. Avoid that scenario for now with an early return.
+      if (nEntries == 0)
+         return {{}, nEntries};
+      return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetConstRef()), nEntries);
    }();
    const ROOT::NTupleSize_t nEntries = clustersAndEntries.second;
    if (nEntries == 0)
