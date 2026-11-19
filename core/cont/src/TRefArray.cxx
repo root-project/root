@@ -405,7 +405,10 @@ TObject *TRefArray::After(const TObject *obj) const
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == fSize-1) return nullptr;
 
-   return fPID->GetObjectWithID(fUIDs[idx+1]);
+   TObject *after = GetFromTable(idx + 1);
+   if (!after)
+      after = fPID->GetObjectWithID(fUIDs[idx + 1]);
+   return after;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -418,7 +421,10 @@ TObject *TRefArray::Before(const TObject *obj) const
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == 0) return nullptr;
 
-   return fPID->GetObjectWithID(fUIDs[idx-1]);
+   TObject *before = GetFromTable(idx - 1);
+   if (!before)
+      before = fPID->GetObjectWithID(fUIDs[idx - 1]);
+   return before;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -568,7 +574,10 @@ void TRefArray::Streamer(TBuffer &R__b)
 
 TObject *TRefArray::First() const
 {
-   return fPID->GetObjectWithID(fUIDs[0]);
+   TObject *obj = GetFromTable(0);
+   if (!obj)
+      obj = fPID->GetObjectWithID(fUIDs[0]);
+   return obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -578,8 +587,11 @@ TObject *TRefArray::Last() const
 {
    if (fLast == -1)
       return nullptr;
-   else
-      return fPID->GetObjectWithID(fUIDs[GetAbsLast()]);
+
+   TObject *obj = GetFromTable(GetAbsLast());
+   if (!obj)
+      obj = fPID->GetObjectWithID(fUIDs[GetAbsLast()]);
+   return obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
