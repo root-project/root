@@ -47,13 +47,6 @@ void TMVAMulticlass( TString myMethodList = "" )
    std::map<std::string,int> Use;
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;
-#ifdef R__HAS_TMVAGPU
-   Use["DL_CPU"]          = 1;
-   Use["DL_GPU"]          = 1;
-#else
-   Use["DL_CPU"]          = 1;
-   Use["DL_GPU"]          = 0;
-#endif
    Use["FDA_GA"]          = 0;
    Use["PDEFoam"]         = 1;
 
@@ -124,32 +117,6 @@ void TMVAMulticlass( TString myMethodList = "" )
       factory->BookMethod( dataloader,  TMVA::Types::kFDA, "FDA_GA", "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=300:Cycles=3:Steps=20:Trim=True:SaveBestGen=1" );
    if (Use["PDEFoam"]) // PDE-Foam approach
       factory->BookMethod( dataloader,  TMVA::Types::kPDEFoam, "PDEFoam", "!H:!V:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Nmin=100:Kernel=None:Compress=T" );
-
-
-   if (Use["DL_CPU"]) {
-      TString layoutString("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
-      TString trainingStrategyString("TrainingStrategy=Optimizer=ADAM,LearningRate=1e-3,"
-                                     "TestRepetitions=1,ConvergenceSteps=10,BatchSize=100,MaxEpochs=20");
-      TString nnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
-                        "WeightInitialization=XAVIERUNIFORM:Architecture=GPU");
-      nnOptions.Append(":");
-      nnOptions.Append(layoutString);
-      nnOptions.Append(":");
-      nnOptions.Append(trainingStrategyString);
-      factory->BookMethod(dataloader, TMVA::Types::kDL, "DL_CPU", nnOptions);
-   }
-   if (Use["DL_GPU"]) {
-      TString layoutString("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
-      TString trainingStrategyString("TrainingStrategy=Optimizer=ADAM,LearningRate=1e-3,"
-                                     "TestRepetitions=1,ConvergenceSteps=10,BatchSize=100,MaxEpochs=20");
-      TString nnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
-                        "WeightInitialization=XAVIERUNIFORM:Architecture=GPU");
-      nnOptions.Append(":");
-      nnOptions.Append(layoutString);
-      nnOptions.Append(":");
-      nnOptions.Append(trainingStrategyString);
-      factory->BookMethod(dataloader, TMVA::Types::kDL, "DL_GPU", nnOptions);
-   }
 
 
    // Train MVAs using the set of training events
