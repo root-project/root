@@ -1439,8 +1439,9 @@ std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constr
    if (RooJSONFactoryWSTool::config().exportArrayDist && usedOnlyByHistFactoryChannels(tool, constraint)) {
       if (auto info = arrayComponentInfo(constraint)) {
          std::string arrayName;
+         // An array that is written: one that only skipped helpers use is not (see isSkippedHelper()).
          for (RooAbsArg const *client : constraint.clients()) {
-            if (client->getAttribute(arrayDistTag)) {
+            if (client->getAttribute(arrayDistTag) && !isSkippedHelper(*client, *tool.workspace())) {
                arrayName = client->GetName();
                break;
             }
