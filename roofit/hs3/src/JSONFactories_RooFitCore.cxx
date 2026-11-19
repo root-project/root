@@ -101,16 +101,20 @@ bool isReservedExpressionIdentifier(const std::string &arg)
    return arg == "PI" || arg == "EULER" || arg == "TMath";
 }
 
+bool isIdentifierChar(char c)
+{
+   return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
+}
+
 /**
  * Extracts arguments from a mathematical expression.
  *
  * This function takes a string representing a mathematical
  * expression and extracts the arguments from it.  The arguments are
- * defined as sequences of characters that do not contain digits,
- * spaces, or parentheses, and that start with a letter. Function
- * calls such as "exp( ... )", identified as being followed by an
- * opening parenthesis, are not treated as arguments. The extracted
- * arguments are returned as a vector of strings.
+ * the identifiers: sequences of letters, digits and underscores that
+ * start with a letter. Function calls such as "exp( ... )", identified
+ * as being followed by an opening parenthesis, are not treated as
+ * arguments, and neither are the reserved identifiers.
  *
  * @param expr A string representing a mathematical expression.
  * @return A set of unique strings representing the extracted arguments.
@@ -121,43 +125,22 @@ std::set<std::string> extractArguments(std::string expr)
    expr.erase(std::remove_if(expr.begin(), expr.end(), [](unsigned char c) { return std::isspace(c); }), expr.end());
 
    std::set<std::string> arguments;
-   size_t startidx = expr.size();
-   for (size_t i = 0; i < expr.size(); ++i) {
-      if (startidx >= expr.size()) {
-         if (isalpha(expr[i])) {
-            startidx = i;
-            // check this character is not part of scientific notation, e.g. 2e-5
-            if (TFormula::IsScientificNotation(expr, i)) {
-               // if it is, we ignore this character
-               startidx = expr.size();
-            }
-         }
-      } else {
-         if (!isdigit(expr[i]) && !isalpha(expr[i]) && expr[i] != '_') {
-            if (expr[i] == '(') {
-               startidx = expr.size();
-               continue;
-            }
-            std::string arg(expr.substr(startidx, i - startidx));
-            startidx = expr.size();
-            if (!isReservedExpressionIdentifier(arg)) {
-               arguments.insert(arg);
-            }
-         }
+   for (std::size_t i = 0; i < expr.size(); ++i) {
+      // A letter starts an identifier, unless it is part of a number in scientific notation, e.g. 2e-5.
+      if (!isalpha(expr[i]) || TFormula::IsScientificNotation(expr, i)) {
+         continue;
       }
-   }
-   if (startidx < expr.size()) {
-      std::string arg(expr.substr(startidx));
-      if (!isReservedExpressionIdentifier(arg)) {
+      const std::size_t start = i;
+      while (i < expr.size() && isIdentifierChar(expr[i])) {
+         ++i;
+      }
+      const std::string arg = expr.substr(start, i - start);
+      const bool isFunctionCall = i < expr.size() && expr[i] == '(';
+      if (!isFunctionCall && !isReservedExpressionIdentifier(arg)) {
          arguments.insert(arg);
       }
    }
    return arguments;
-}
-
-bool isIdentifierChar(char c)
-{
-   return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
 }
 
 void replaceIdentifier(TString &expr, std::string_view identifier, std::string_view replacement)
@@ -206,21 +189,33 @@ std::size_t findClosingBracket(std::string const &str, std::size_t open)
    return std::string::npos;
 }
 
-// Split `str` at the commas that are not enclosed in brackets.
-std::vector<std::string> splitTopLevelCommas(std::string const &str)
+// Index of the first of the characters `chars` in `str` from `start` on that is not enclosed in brackets, or
+// std::string::npos if there is none. The scope operator "::" is skipped: a ':' is the one of a ternary operator.
+std::size_t findTopLevel(std::string const &str, std::string_view chars, std::size_t start = 0)
 {
-   std::vector<std::string> parts;
    int depth = 0;
-   std::size_t start = 0;
-   for (std::size_t i = 0; i < str.size(); ++i) {
+   for (std::size_t i = start; i < str.size(); ++i) {
       if (str[i] == '(' || str[i] == '[') {
          ++depth;
       } else if (str[i] == ')' || str[i] == ']') {
          --depth;
-      } else if (str[i] == ',' && depth == 0) {
-         parts.push_back(str.substr(start, i - start));
-         start = i + 1;
+      } else if (str[i] == ':' && i + 1 < str.size() && str[i + 1] == ':') {
+         ++i;
+      } else if (depth == 0 && chars.find(str[i]) != std::string_view::npos) {
+         return i;
       }
+   }
+   return std::string::npos;
+}
+
+// Split `str` at the commas that are not enclosed in brackets.
+std::vector<std::string> splitTopLevelCommas(std::string const &str)
+{
+   std::vector<std::string> parts;
+   std::size_t start = 0;
+   for (std::size_t comma = findTopLevel(str, ","); comma != std::string::npos; comma = findTopLevel(str, ",", start)) {
+      parts.push_back(str.substr(start, comma - start));
+      start = comma + 1;
    }
    parts.push_back(str.substr(start));
    return parts;
@@ -1409,37 +1404,23 @@ void cleanExpression(TString &expr)
    replaceIdentifier(expr, "TMath::E()", "EULER");
 }
 
-bool ternariesToIfElse(std::string const &in, std::string &out);
+std::optional<std::string> ternariesToIfElse(std::string const &in);
 
 // Rewrite one comma-free part of an expression, see ternariesToIfElse().
-bool ternaryPartToIfElse(std::string const &in, std::string &out)
+std::optional<std::string> ternaryPartToIfElse(std::string const &in)
 {
-   // Find the first '?' that is not enclosed in brackets. A ':' that is not part of "::" can only follow a '?'.
-   std::size_t question = std::string::npos;
-   int depth = 0;
-   for (std::size_t i = 0; i < in.size() && question == std::string::npos; ++i) {
-      const char c = in[i];
-      if (c == '(' || c == '[') {
-         ++depth;
-      } else if (c == ')' || c == ']') {
-         --depth;
-      } else if (c == ':' && i + 1 < in.size() && in[i + 1] == ':') {
-         ++i;
-      } else if (depth == 0 && c == ':') {
-         return false;
-      } else if (depth == 0 && c == '?') {
-         question = i;
-      } else if (depth == 0 && c == ',') {
-         return false;
-      }
+   // Find the first '?' that is not enclosed in brackets. A ':' can only follow a '?', and a part has no commas.
+   const std::size_t question = findTopLevel(in, "?:,");
+   if (question != std::string::npos && in[question] != '?') {
+      return std::nullopt;
    }
 
    if (question == std::string::npos) {
       // No ternary on this level: copy the expression and rewrite the ternaries inside of brackets.
-      out.clear();
+      std::string out;
       for (std::size_t i = 0; i < in.size(); ++i) {
          if (in[i] == ')' || in[i] == ']') {
-            return false;
+            return std::nullopt;
          }
          if (in[i] != '(' && in[i] != '[') {
             out += in[i];
@@ -1447,83 +1428,61 @@ bool ternaryPartToIfElse(std::string const &in, std::string &out)
          }
          const std::size_t close = findClosingBracket(in, i);
          if (close == std::string::npos) {
-            return false;
+            return std::nullopt;
          }
          const std::string inner = in.substr(i + 1, close - i - 1);
-         std::string innerOut;
-         if (!ternariesToIfElse(inner, innerOut)) {
-            return false;
+         const std::optional<std::string> innerOut = ternariesToIfElse(inner);
+         if (!innerOut) {
+            return std::nullopt;
          }
          // Parentheses that only group a ternary are redundant around the ifelse() function call.
          const std::string before = trimmed(in.substr(0, i));
          const bool isGrouping = in[i] == '(' && (before.empty() || !isIdentifierChar(before.back()));
-         if (isGrouping && innerOut != trimmed(inner) && startsWith(innerOut, "ifelse(") &&
-             findClosingBracket(innerOut, std::string("ifelse").size()) == innerOut.size() - 1) {
-            out += innerOut;
+         if (isGrouping && *innerOut != trimmed(inner) && startsWith(*innerOut, "ifelse(") &&
+             findClosingBracket(*innerOut, std::string("ifelse").size()) == innerOut->size() - 1) {
+            out += *innerOut;
          } else {
-            out += in[i] + innerOut + in[close];
+            out += in[i] + *innerOut + in[close];
          }
          i = close;
       }
-      return true;
+      return out;
    }
 
-   // Find the ':' that belongs to this '?', taking nested ternaries into account.
-   std::size_t colon = std::string::npos;
-   int nested = 0;
-   depth = 0;
-   for (std::size_t i = question + 1; i < in.size() && colon == std::string::npos; ++i) {
-      const char c = in[i];
-      if (c == '(' || c == '[') {
-         ++depth;
-      } else if (c == ')' || c == ']') {
-         --depth;
-      } else if (c == ':' && i + 1 < in.size() && in[i + 1] == ':') {
-         ++i;
-      } else if (depth == 0 && c == '?') {
-         ++nested;
-      } else if (depth == 0 && c == ':') {
-         if (nested == 0) {
-            colon = i;
-         } else {
-            --nested;
-         }
+   // Find the ':' that belongs to this '?': a nested '?' comes with a ':' of its own, which is skipped.
+   std::size_t colon = question;
+   for (int nQuestions = 1; nQuestions > 0;) {
+      colon = findTopLevel(in, "?:", colon + 1);
+      if (colon == std::string::npos) {
+         return std::nullopt;
       }
-   }
-   if (colon == std::string::npos) {
-      return false;
+      nQuestions += in[colon] == '?' ? 1 : -1;
    }
 
-   std::string condition;
-   std::string ifTrue;
-   std::string ifFalse;
-   if (!ternaryPartToIfElse(stripEnclosingParentheses(in.substr(0, question)), condition) ||
-       !ternaryPartToIfElse(stripEnclosingParentheses(in.substr(question + 1, colon - question - 1)), ifTrue) ||
-       !ternaryPartToIfElse(stripEnclosingParentheses(in.substr(colon + 1)), ifFalse)) {
-      return false;
+   const auto condition = ternaryPartToIfElse(stripEnclosingParentheses(in.substr(0, question)));
+   const auto ifTrue = ternaryPartToIfElse(stripEnclosingParentheses(in.substr(question + 1, colon - question - 1)));
+   const auto ifFalse = ternaryPartToIfElse(stripEnclosingParentheses(in.substr(colon + 1)));
+   if (!condition || !ifTrue || !ifFalse || condition->empty() || ifTrue->empty() || ifFalse->empty()) {
+      return std::nullopt;
    }
-   if (condition.empty() || ifTrue.empty() || ifFalse.empty()) {
-      return false;
-   }
-   out = "ifelse(" + condition + "," + ifTrue + "," + ifFalse + ")";
-   return true;
+   return "ifelse(" + *condition + "," + *ifTrue + "," + *ifFalse + ")";
 }
 
 // Rewrite the C-style ternaries "c ? a : b" in a TFormula expression into the HS3 conditional "ifelse(c,a,b)". Returns
-// false if this is not safely possible, e.g. because of unbalanced brackets.
-bool ternariesToIfElse(std::string const &in, std::string &out)
+// std::nullopt if this is not safely possible, e.g. because of unbalanced brackets.
+std::optional<std::string> ternariesToIfElse(std::string const &in)
 {
-   out.clear();
+   std::string out;
    bool first = true;
    for (std::string const &part : splitTopLevelCommas(in)) {
-      std::string partOut;
-      if (!ternaryPartToIfElse(part, partOut)) {
-         return false;
+      const std::optional<std::string> partOut = ternaryPartToIfElse(part);
+      if (!partOut) {
+         return std::nullopt;
       }
-      out += (first ? "" : ",") + partOut;
+      out += (first ? "" : ",") + *partOut;
       first = false;
    }
-   return true;
+   return out;
 }
 
 template <class RooArg_t>
@@ -1550,9 +1509,8 @@ void exportFormulaArg(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &ele
       expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
    }
    if (expression.Contains("?")) {
-      std::string rewritten;
-      if (ternariesToIfElse(expression.Data(), rewritten)) {
-         expression = rewritten.c_str();
+      if (const auto rewritten = ternariesToIfElse(expression.Data())) {
+         expression = rewritten->c_str();
       } else {
          RooJSONFactoryWSTool::warning(std::string("RooFitHS3: could not translate the ternary operators in the "
                                                    "expression of '") +
