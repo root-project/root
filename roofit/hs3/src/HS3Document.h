@@ -60,6 +60,26 @@ std::string const &nameOf(std::variant<Ts...> const &v)
    return std::visit([](auto const &alternative) -> std::string const & { return alternative.name; }, v);
 }
 
+/// The object with the name `name` among the objects of a section, e.g. `findByName(doc.data, "obsData")`, or nullptr.
+template <class Objects_t>
+auto findByName(Objects_t &objects, std::string const &name) -> decltype(&*objects.begin())
+{
+   for (auto &object : objects) {
+      if (object.name == name) {
+         return &object;
+      }
+   }
+   return nullptr;
+}
+
+/// The body of the object `name` if it is a `Body_t`, e.g. `find<CombinedData>(doc.data, "obsData")`, or nullptr.
+template <class Body_t, class Objects_t>
+auto find(Objects_t &objects, std::string const &name) -> decltype(std::get_if<Body_t>(&objects.begin()->body))
+{
+   auto *object = findByName(objects, name);
+   return object ? std::get_if<Body_t>(&object->body) : nullptr;
+}
+
 /// A name that says what it refers to, so that for example a DataRef can't be used as a DomainRef.
 template <class Tag>
 struct Ref {
@@ -225,6 +245,15 @@ using CombinedDist = Combined<DistributionRef>;
 struct Data {
    std::string name;
    std::variant<PointData, UnbinnedData, BinnedData, CombinedData> body;
+
+   /// The number of factors that a distribution paired with the data contributes to a likelihood: the number of
+   /// entries of unbinned data, and one for point data and binned data. Combined data gives one as well, although
+   /// it is its components that are paired with distributions.
+   std::size_t numEntries() const
+   {
+      auto const *unbinned = std::get_if<UnbinnedData>(&body);
+      return unbinned ? unbinned->numEntries() : 1;
+   }
 };
 
 /// The data of a likelihood term: a data set, a number given in-line, or none (std::monostate) in a pure model.

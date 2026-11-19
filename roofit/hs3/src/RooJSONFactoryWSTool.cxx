@@ -569,26 +569,9 @@ std::set<std::string> readAuxiliaryChannelsAsConstraints(HS3Document &doc, bool 
    std::map<std::string, std::map<std::string, std::string>> dropped;
    std::set<std::string> labels;
 
-   auto findCombinedDist = [&](std::string const &name) -> HS3::CombinedDist * {
-      for (HS3::Distribution &dist : doc.distributions) {
-         if (dist.name == name) {
-            return std::get_if<HS3::CombinedDist>(&dist.body);
-         }
-      }
-      return nullptr;
-   };
-   auto findData = [&](std::string const &name) -> HS3::Data * {
-      for (HS3::Data &data : doc.data) {
-         if (data.name == name) {
-            return &data;
-         }
-      }
-      return nullptr;
-   };
    auto hasEntries = [&](std::string const &name) {
-      HS3::Data const *data = findData(name);
-      auto const *unbinned = data ? std::get_if<HS3::UnbinnedData>(&data->body) : nullptr;
-      return data && (!unbinned || !unbinned->entries.empty());
+      HS3::Data const *data = HS3::findByName(doc.data, name);
+      return data && data->numEntries() > 0;
    };
    // Components without data that are also terms with data. A data set can only be a component of one combined data
    // set, so that the data of a term gets a copy for every further one; room for them is reserved, since the loop
@@ -598,10 +581,9 @@ std::set<std::string> readAuxiliaryChannelsAsConstraints(HS3Document &doc, bool 
    for (HS3::Likelihood &likelihood : doc.likelihoods) {
       std::set<std::string> termsToRemove;
       for (HS3::LikelihoodTerm const &term : likelihood.terms) {
-         HS3::CombinedDist const *combinedDist = findCombinedDist(term.distribution.name);
+         auto const *combinedDist = HS3::find<HS3::CombinedDist>(doc.distributions, term.distribution.name);
          auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
-         HS3::Data *data = dataRef ? findData(dataRef->name) : nullptr;
-         auto *combined = data ? std::get_if<HS3::CombinedData>(&data->body) : nullptr;
+         auto *combined = dataRef ? HS3::find<HS3::CombinedData>(doc.data, dataRef->name) : nullptr;
          if (!combinedDist || !combined) {
             continue;
          }
@@ -630,9 +612,9 @@ std::set<std::string> readAuxiliaryChannelsAsConstraints(HS3Document &doc, bool 
             if (asChannels) {
                HS3::DataRef termData = std::get<HS3::DataRef>(ownTerm->data);
                if (!dataOfComponents.insert(termData.name).second) {
-                  HS3::Data const *original = findData(termData.name);
-                  const std::string copyName = data->name + "_" + label;
-                  if (original && !findData(copyName) && doc.data.size() < doc.data.capacity()) {
+                  HS3::Data const *original = HS3::findByName(doc.data, termData.name);
+                  const std::string copyName = dataRef->name + "_" + label;
+                  if (original && !HS3::findByName(doc.data, copyName) && doc.data.size() < doc.data.capacity()) {
                      HS3::Data copy = *original;
                      copy.name = copyName;
                      doc.data.push_back(std::move(copy));
@@ -663,7 +645,7 @@ std::set<std::string> readAuxiliaryChannelsAsConstraints(HS3Document &doc, bool 
    }
 
    for (auto const &item : doc.rooFit.auxiliaryChannels) {
-      HS3::CombinedDist const *combinedDist = findCombinedDist(item.first);
+      auto const *combinedDist = HS3::find<HS3::CombinedDist>(doc.distributions, item.first);
       for (auto const &ref : item.second) {
          std::string label = ref.name;
          if (combinedDist) {
@@ -686,8 +668,7 @@ std::set<std::string> readAuxiliaryChannelsAsConstraints(HS3Document &doc, bool 
             continue;
          }
          auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
-         HS3::Data const *data = dataRef ? findData(dataRef->name) : nullptr;
-         auto const *combined = data ? std::get_if<HS3::CombinedData>(&data->body) : nullptr;
+         auto const *combined = dataRef ? HS3::find<HS3::CombinedData>(doc.data, dataRef->name) : nullptr;
          for (auto const &item : found->second) {
             std::string const &dist = item.first;
             std::string const &label = item.second;
@@ -736,7 +717,7 @@ std::set<std::string> readAuxiliaryChannelsAsConstraints(HS3Document &doc, bool 
       for (auto const &item : components) {
          out.insert(item.first);
       }
-      if (HS3::CombinedDist *combinedDist = findCombinedDist(droppedFrom.first)) {
+      if (auto *combinedDist = HS3::find<HS3::CombinedDist>(doc.distributions, droppedFrom.first)) {
          auto &all = combinedDist->components;
          all.erase(std::remove_if(all.begin(), all.end(),
                                   [&](auto const &component) { return components.count(component.ref.name) > 0; }),
@@ -1190,11 +1171,8 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
    }
    std::set<std::string> inDomains;
    for (auto const &domainRef : analysis.domains) {
-      for (HS3::Domain const &domain : doc.domains) {
-         if (domain.name != domainRef.name) {
-            continue;
-         }
-         for (auto const &axis : domain.axes) {
+      if (HS3::Domain const *domain = HS3::findByName(doc.domains, domainRef.name)) {
+         for (auto const &axis : domain->axes) {
             inDomains.insert(HS3::nameOf(axis));
          }
       }
@@ -1343,12 +1321,8 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    auto *mc = static_cast<RooFit::ModelConfig *>(workspace.obj(mcname));
    mc->SetWS(workspace);
 
-   auto foundLikelihood = std::find_if(doc.likelihoods.begin(), doc.likelihoods.end(),
-                                       [&](HS3::Likelihood const &l) { return l.name == analysis.likelihood.name; });
-   if (foundLikelihood == doc.likelihoods.end()) {
-      throw std::runtime_error("likelihood node not found!");
-   }
-   HS3::Likelihood const &likelihood = *foundLikelihood;
+   // The validation has checked that the likelihood exists.
+   HS3::Likelihood const &likelihood = *HS3::findByName(doc.likelihoods, analysis.likelihood.name);
 
    // The data set of a term: the one it refers to, or the one made from a number given in-line.
    std::map<HS3::LikelihoodTerm const *, HS3::DataRef> inlineRefs;
@@ -1535,11 +1509,8 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (!dataRef || !simPdf) {
          continue;
       }
-      for (HS3::Data const &data : doc.data) {
-         auto const *combined = std::get_if<HS3::CombinedData>(&data.body);
-         if (combined && data.name == dataRef->name) {
-            checkCombinedPairing(*simPdf, data.name, *combined);
-         }
+      if (auto const *combined = HS3::find<HS3::CombinedData>(doc.data, dataRef->name)) {
+         checkCombinedPairing(*simPdf, dataRef->name, *combined);
       }
    }
 
@@ -1619,14 +1590,12 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
 
    RooArgSet domainPars;
    for (auto const &domainRef : analysis.domains) {
-      auto thisDomain = std::find_if(doc.domains.begin(), doc.domains.end(),
-                                     [&](HS3::Domain const &d) { return d.name == domainRef.name; });
-      if (thisDomain == doc.domains.end())
-         continue;
-      for (auto const &axis : thisDomain->axes) {
-         auto *wsvar = workspace.var(HS3::nameOf(axis));
-         if (wsvar)
-            domainPars.add(*wsvar);
+      if (HS3::Domain const *domain = HS3::findByName(doc.domains, domainRef.name)) {
+         for (auto const &axis : domain->axes) {
+            if (RooRealVar *wsvar = workspace.var(HS3::nameOf(axis))) {
+               domainPars.add(*wsvar);
+            }
+         }
       }
    }
 
@@ -2211,8 +2180,7 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
    }
    // Another object that shares the parameter might have exported the helper already.
    auto &functions = _export->doc.functions;
-   if (std::find_if(functions.begin(), functions.end(), [&](auto const &f) { return f.name == newname; }) !=
-       functions.end()) {
+   if (HS3::findByName(functions, newname)) {
       return newname;
    }
    RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_export->root)["functions"], newname);
@@ -3309,10 +3277,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
       }
    } else {
       auto isHistFactoryChannel = [&](std::string const &name) {
-         return _export->constraintTermsOfPdf.count(name) ||
-                std::any_of(doc.distributions.begin(), doc.distributions.end(), [&](HS3::Distribution const &dist) {
-                   return dist.name == name && std::holds_alternative<HS3::HistFactoryDist>(dist.body);
-                });
+         return _export->constraintTermsOfPdf.count(name) || HS3::find<HS3::HistFactoryDist>(doc.distributions, name);
       };
       // The constraint terms of the channels as RooFit finds them, under the names under which they are written:
       // the array distribution that holds a constraint of a HistFactory channel, or the name of the constraint.
@@ -3370,14 +3335,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    // several columns.
    auto const *simPdf = dynamic_cast<RooSimultaneous const *>(pdf);
    // Looked up when needed: writing the data set of a constraint term adds to the data sets of the document.
-   auto findCombinedData = [&]() -> HS3::CombinedData * {
-      for (HS3::Data &data : doc.data) {
-         if (dataName && data.name == *dataName) {
-            return std::get_if<HS3::CombinedData>(&data.body);
-         }
-      }
-      return nullptr;
-   };
+   auto findCombinedData = [&]() { return dataName ? HS3::find<HS3::CombinedData>(doc.data, *dataName) : nullptr; };
    RooCategory const *indexColumn = nullptr;
    if (simPdf && findCombinedData()) {
       std::vector<RooCategory const *> columns = selectionColumns(simPdf->indexCat());
@@ -3391,10 +3349,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
                simPdf->GetName() + "': its index category '" + indexColumn->GetName() + "' has a state of that name");
       }
       addUnique(_export->auxiliaryLabels[indexColumn->GetName()], term);
-      auto written = std::find_if(doc.distributions.begin(), doc.distributions.end(),
-                                  [&](HS3::Distribution const &dist) { return dist.name == simPdf->GetName(); });
-      auto *combinedDist =
-         written != doc.distributions.end() ? std::get_if<HS3::CombinedDist>(&written->body) : nullptr;
+      auto *combinedDist = HS3::find<HS3::CombinedDist>(doc.distributions, simPdf->GetName());
       if (!combinedDist) {
          error("cannot write the constraint terms of '" + std::string(simPdf->GetName()) +
                "' as its components: it was not written as a combined distribution");
@@ -3403,8 +3358,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
          combinedDist->components.push_back({{term}, {term}});
          doc.rooFit.auxiliaryChannels[simPdf->GetName()].push_back({term});
       }
-      HS3::CombinedData *combinedData = findCombinedData();
-      if (!combinedData->find({term})) {
+      if (HS3::CombinedData *combinedData = findCombinedData(); !combinedData->find({term})) {
          combinedData->components.push_back({{term}, HS3::DataRef{*dataName + "_" + term}});
       }
    };
@@ -3425,28 +3379,18 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
       if (label.empty()) {
          continue;
       }
-      HS3::CombinedData *combinedData = findCombinedData();
-      auto component = std::find_if(combinedData->components.begin(), combinedData->components.end(),
-                                    [&](auto const &c) { return c.key == std::vector<std::string>{label}; });
-      const std::string observed =
-         component != combinedData->components.end() ? component->ref.name : *dataName + "_" + label;
+      auto const *component = findCombinedData()->find({label});
+      const std::string observed = component ? component->ref.name : *dataName + "_" + label;
       // A data set without entries for the channel is replaced by the observed values.
       auto written = std::find_if(doc.data.begin(), doc.data.end(), [&](auto const &d) { return d.name == observed; });
-      bool hasEntries = false;
-      if (written != doc.data.end()) {
-         auto const *unbinned = std::get_if<HS3::UnbinnedData>(&written->body);
-         hasEntries = !unbinned || !unbinned->entries.empty();
-      }
-      if (!hasEntries) {
+      if (written == doc.data.end() || written->numEntries() == 0) {
          std::optional<HS3::Data> empty;
          if (written != doc.data.end()) {
             empty = std::move(*written);
             doc.data.erase(written);
          }
          if (exportConstraintData(channel, mc.GetGlobalObservables(), observed)) {
-            combinedData = findCombinedData();
-            if (std::none_of(combinedData->components.begin(), combinedData->components.end(),
-                             [&](auto const &c) { return c.key == std::vector<std::string>{label}; })) {
+            if (HS3::CombinedData *combinedData = findCombinedData(); !combinedData->find({label})) {
                combinedData->components.push_back({{label}, HS3::DataRef{observed}});
             }
          } else {
@@ -3460,7 +3404,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
          }
       }
       auto &marked = doc.rooFit.auxiliaryChannels[simPdf->GetName()];
-      if (std::none_of(marked.begin(), marked.end(), [&](auto const &ref) { return ref.name == channel; })) {
+      if (!HS3::findByName(marked, channel)) {
          marked.push_back({channel});
       }
    }
@@ -3671,8 +3615,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
    // The domains of the analyses take precedence.
    for (auto &item : _export->domains) {
-      if (std::none_of(doc.domains.begin(), doc.domains.end(),
-                       [&](HS3::Domain const &domain) { return domain.name == item.first; })) {
+      if (!HS3::findByName(doc.domains, item.first)) {
          appendDomain(doc.domains, item.first, std::move(item.second),
                       item.first == HS3::defaultDomainName ? std::move(_export->categories)
                                                            : std::map<std::string, HS3::CategoricalAxis>{});
@@ -3960,10 +3903,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
             point.axes.push_back(
                HS3::ContinuousAxis{soleVariateOf(term.distribution.name, what), std::nullopt, std::nullopt});
             auto isTaken = [&](std::string const &candidate) {
-               return std::any_of(doc.data.begin(), doc.data.end(),
-                                  [&](HS3::Data const &d) { return d.name == candidate; }) ||
-                      std::any_of(inlineDataSets.begin(), inlineDataSets.end(),
-                                  [&](HS3::Data const &d) { return d.name == candidate; });
+               return HS3::findByName(doc.data, candidate) || HS3::findByName(inlineDataSets, candidate);
             };
             std::string name = term.distribution.name + "_data";
             for (std::size_t k = 1; isTaken(name); ++k) {
@@ -3977,29 +3917,27 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
          if (!refPtr) {
             continue; // no data in a pure model
          }
-         auto const &ref = *refPtr;
-         for (auto const &data : doc.data) {
-            auto const *point = std::get_if<HS3::PointData>(&data.body);
-            if (data.name != ref.name || !point) {
-               continue;
+         std::string const &dataName = refPtr->name;
+         auto const *point = HS3::find<HS3::PointData>(doc.data, dataName);
+         if (!point) {
+            continue;
+         }
+         if (!point->axes.empty()) {
+            // The axis of point data is named like the variate of the paired distribution.
+            std::set<std::string> const v = HS3::variatesOf(doc, term.distribution.name);
+            if (v.size() == 1 && point->axes.front().name != *v.begin()) {
+               error("the axis '" + point->axes.front().name + "' of the point data set '" + dataName +
+                     "' is not the variate '" + *v.begin() + "' of the distribution '" + term.distribution.name +
+                     "' it is paired with");
             }
-            if (!point->axes.empty()) {
-               // The axis of point data is named like the variate of the paired distribution.
-               std::set<std::string> const v = HS3::variatesOf(doc, term.distribution.name);
-               if (v.size() == 1 && point->axes.front().name != *v.begin()) {
-                  error("the axis '" + point->axes.front().name + "' of the point data set '" + data.name +
-                        "' is not the variate '" + *v.begin() + "' of the distribution '" + term.distribution.name +
-                        "' it is paired with");
-               }
-               continue;
-            }
-            std::string const variate = soleVariateOf(term.distribution.name, "the point data set '" + data.name + "'");
-            auto inserted = pointDataVariates.emplace(data.name, variate);
-            if (!inserted.second && inserted.first->second != variate) {
-               error("the point data set '" + data.name +
-                     "' without axes is paired with distributions of different variates, '" + inserted.first->second +
-                     "' and '" + variate + "'");
-            }
+            continue;
+         }
+         std::string const variate = soleVariateOf(term.distribution.name, "the point data set '" + dataName + "'");
+         auto inserted = pointDataVariates.emplace(dataName, variate);
+         if (!inserted.second && inserted.first->second != variate) {
+            error("the point data set '" + dataName +
+                  "' without axes is paired with distributions of different variates, '" + inserted.first->second +
+                  "' and '" + variate + "'");
          }
       }
    }

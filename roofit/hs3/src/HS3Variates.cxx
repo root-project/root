@@ -301,9 +301,7 @@ PartVariates componentAxes(HS3Document const &doc, CombinedData const &combined)
    PartVariates parts;
    for (auto const &component : combined.components) {
       std::set<std::string> axes;
-      auto found = std::find_if(doc.data.begin(), doc.data.end(),
-                                [&](Data const &data) { return data.name == component.ref.name; });
-      if (found != doc.data.end()) {
+      if (Data const *found = findByName(doc.data, component.ref.name)) {
          std::visit(overloaded{[](CombinedData const &) {},
                                [&](PointData const &data) {
                                   for (ContinuousAxis const &axis : data.axes) {
@@ -322,21 +320,12 @@ PartVariates componentAxes(HS3Document const &doc, CombinedData const &combined)
    return parts;
 }
 
-// The data set `name` of the document, or nullptr.
-Data const *findData(HS3Document const &doc, std::string const &name)
-{
-   auto found = std::find_if(doc.data.begin(), doc.data.end(), [&](Data const &d) { return d.name == name; });
-   return found != doc.data.end() ? &*found : nullptr;
-}
-
-// The number of entries of the data set `name` of the document, i.e. the number of factors that a distribution
-// paired with it contributes to a likelihood: one for point data and binned data, the number of entries for unbinned
-// data. Without such a data set, the document is not valid, which is reported elsewhere: one is assumed.
+// The number of entries of the data set `name` of the document (see Data::numEntries()). Without such a data set, the
+// document is not valid, which is reported elsewhere: one is assumed.
 int numDataEntries(HS3Document const &doc, std::string const &name)
 {
-   Data const *data = findData(doc, name);
-   auto const *unbinned = data ? std::get_if<UnbinnedData>(&data->body) : nullptr;
-   return unbinned ? static_cast<int>(unbinned->numEntries()) : 1;
+   Data const *data = findByName(doc.data, name);
+   return data ? static_cast<int>(data->numEntries()) : 1;
 }
 
 } // namespace
@@ -459,7 +448,7 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
       for (LikelihoodTerm const &term : likelihood.terms) {
          // The paired data: a data set, a value given in-line, or nothing (a pure model).
          auto const *dataRef = std::get_if<DataRef>(&term.data);
-         Data const *data = dataRef ? findData(doc, dataRef->name) : nullptr;
+         Data const *data = dataRef ? findByName(doc.data, dataRef->name) : nullptr;
          std::string const &name = term.distribution.name;
          if (auto const *combined = distributions.find<CombinedDist>(name)) {
             ++contributions[name];
@@ -503,8 +492,7 @@ std::set<std::string> componentsWithData(HS3Document const &doc)
    for (Likelihood const &likelihood : doc.likelihoods) {
       for (LikelihoodTerm const &term : likelihood.terms) {
          auto const *dataRef = std::get_if<DataRef>(&term.data);
-         Data const *data = dataRef ? findData(doc, dataRef->name) : nullptr;
-         auto const *combinedData = data ? std::get_if<CombinedData>(&data->body) : nullptr;
+         auto const *combinedData = dataRef ? find<CombinedData>(doc.data, dataRef->name) : nullptr;
          auto const *dist = distributions.find<CombinedDist>(term.distribution.name);
          if (!dist || !combinedData) {
             continue;
