@@ -745,8 +745,10 @@ void readValue(Cursor const &c, Interpolation &out)
       c.error("must be a struct with components 'type', 'in', and 'out'");
       return;
    }
+   // The reader reports the other components as unknown, unless there is an error.
+   Reader reader{c};
    for (const char *component : {"type", "in", "out"}) {
-      if (!node.has_child(component)) {
+      if (!reader.has(component)) {
          c.error(std::string("does not define the required '") + component + "' component");
          return;
       }
@@ -781,12 +783,7 @@ void readValue(Cursor const &c, Interpolation &out)
       out.out = interpolationFunctionFromString(outNode.val());
       if (!out.out) {
          c.error("has unknown extrapolation function '" + outNode.val() + "'");
-         return;
       }
-   }
-   Reader reader{c};
-   for (const char *component : {"type", "in", "out"}) {
-      reader.has(component);
    }
 }
 
@@ -875,25 +872,15 @@ void describe(Reader &ar, NormFactor &m)
    readConstraint(ar, m.constraint);
 }
 
-void describe(Reader &ar, NormSys &m)
-{
-   ar.optional("name", m.name);
-   readParameter(ar, m.parameter);
-   ar.nested("data", [&](Reader &data) {
-      data("hi", m.hi);
-      data("lo", m.lo);
-   });
-   readConstraint(ar, m.constraint);
-   ar("interpolation", m.interpolation);
-}
-
 void describe(Reader &ar, HistoSysVariation &variation)
 {
    ar("contents", variation.contents);
    ar("errors", variation.errors);
 }
 
-void describe(Reader &ar, HistoSys &m)
+// A normsys or histosys modifier. They have the same components, with numbers or histograms as variations.
+template <class Modifier_t>
+void describeSys(Reader &ar, Modifier_t &m)
 {
    ar.optional("name", m.name);
    readParameter(ar, m.parameter);
@@ -938,9 +925,9 @@ void describe(Reader &ar, Modifier &out)
    if (type == "normfactor") {
       describe(ar, out.emplace<NormFactor>());
    } else if (type == "normsys") {
-      describe(ar, out.emplace<NormSys>());
+      describeSys(ar, out.emplace<NormSys>());
    } else if (type == "histosys") {
-      describe(ar, out.emplace<HistoSys>());
+      describeSys(ar, out.emplace<HistoSys>());
    } else if (type == "shapesys" || type == "shapefactor") {
       describe(ar, out.emplace<ShapeSys>());
    } else if (type == "staterror") {
@@ -1006,9 +993,7 @@ void readDistribution(Cursor const &c, Distribution &out, ParseOptions const &op
    std::string type;
    ar("type", type);
    if (options.typedHistFactory && type == "histfactory_dist") {
-      HistFactoryDist body;
-      describe(ar, body);
-      out.body = std::move(body);
+      describe(ar, out.body.emplace<HistFactoryDist>());
    } else if (type == "combined_dist") {
       std::string const context = "the combined_dist '" + out.name + "'";
       auto &combined = out.body.emplace<CombinedDist>();
@@ -1038,14 +1023,7 @@ void describe(Reader &ar, Function &out)
 void describe(Reader &ar, Attributes &attributes)
 {
    if (ar.has("dict")) {
-      Cursor dict = ar.child("dict");
-      if (!dict.node().is_map()) {
-         dict.error("must be a struct");
-         return;
-      }
-      for (JSONNode const &item : dict.node().children()) {
-         readValue(Cursor{item, dict, item.key().c_str()}, attributes.dict[item.key()]);
-      }
+      ar("dict", attributes.dict);
    }
    ar.optional("tags", attributes.tags);
    if (ar.has("is_const_var")) {
@@ -1085,26 +1063,6 @@ void describe(Reader &ar, ModelConfigInfo &info)
 }
 
 namespace {
-
-template <class Map_t>
-void readMap(Reader &ar, const char *key, Map_t &out)
-{
-   if (!ar.has(key)) {
-      return;
-   }
-   Cursor c = ar.child(key);
-   if (c.node().is_null()) {
-      return;
-   }
-   if (!c.node().is_map()) {
-      c.error("must be a struct");
-      return;
-   }
-   for (JSONNode const &item : c.node().children()) {
-      const std::string itemKey = item.key();
-      readValue(Cursor{item, c, itemKey.c_str()}, out[itemKey]);
-   }
-}
 
 // The content of "misc" is not supposed to change the result of evaluating the model, so problems with the step widths
 // are only warnings.
@@ -1146,30 +1104,28 @@ void readMisc(Cursor const &root, RooFitInternal &out)
       return;
    }
    Reader ar{internal};
-   readMap(ar, "attributes", out.attributes);
-   readMap(ar, "combined_distributions", out.combinedDistributions);
-   readMap(ar, "combined_datasets", out.combinedDatasets);
-   readMap(ar, "ModelConfigs", out.modelConfigs);
-   readMap(ar, "histfactory_constraints", out.channelConstraints);
-   readMap(ar, "auxiliary_channels", out.auxiliaryChannels);
-   readMap(ar, "bookkeeping_columns", out.bookkeepingColumns);
+   ar.optional("attributes", out.attributes);
+   ar.optional("combined_distributions", out.combinedDistributions);
+   ar.optional("combined_datasets", out.combinedDatasets);
+   ar.optional("ModelConfigs", out.modelConfigs);
+   ar.optional("histfactory_constraints", out.channelConstraints);
+   ar.optional("auxiliary_channels", out.auxiliaryChannels);
+   ar.optional("bookkeeping_columns", out.bookkeepingColumns);
 }
 
-void readMetadata(Cursor const &root, Metadata &out, ParseOptions const &options)
+void readMetadata(Cursor const &root, Metadata &out)
 {
    JSONNode const *metadata = root.node().find("metadata");
    JSONNode const *versionNode = metadata ? metadata->find("hs3_version") : nullptr;
    if (!versionNode) {
-      if (options.requireMetadata) {
-         std::stringstream ss;
-         ss << "The HS3 version is missing in the JSON!\n"
-            << "Please include the HS3 version in the metadata field, e.g.:\n"
-            << "    \"metadata\" :\n"
-            << "    {\n"
-            << "        \"hs3_version\" : \"" << supportedVersion << "\"\n"
-            << "    }";
-         root.error(ss.str());
-      }
+      std::stringstream ss;
+      ss << "The HS3 version is missing in the JSON!\n"
+         << "Please include the HS3 version in the metadata field, e.g.:\n"
+         << "    \"metadata\" :\n"
+         << "    {\n"
+         << "        \"hs3_version\" : \"" << supportedVersion << "\"\n"
+         << "    }";
+      root.error(ss.str());
       return;
    }
    Cursor metadataCursor{*metadata, root, "metadata"};
@@ -1206,7 +1162,7 @@ HS3Document parseDocument(JSONNode const &root, Diagnostics &diagnostics, ParseO
 {
    HS3Document doc;
    Cursor cursor{root, diagnostics};
-   readMetadata(cursor, doc.metadata, options);
+   readMetadata(cursor, doc.metadata);
    if (hasErrors(diagnostics)) {
       return doc;
    }

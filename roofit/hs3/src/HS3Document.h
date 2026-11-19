@@ -632,8 +632,6 @@ namespace HS3 {
 
 /// Options for upgradeDocument() and parseDocument().
 struct ParseOptions {
-   /// Fragments of a document can be imported without metadata.
-   bool requireMetadata = true;
    /// If false, HistFactory distributions stay generic objects, because a user registered their own importer.
    bool typedHistFactory = true;
 };

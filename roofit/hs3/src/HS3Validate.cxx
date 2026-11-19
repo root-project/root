@@ -512,14 +512,7 @@ void Validator::checkNormalizationRanges(Analysis const &analysis, std::string c
             if (!axis || axis->fixedValue) {
                continue; // a fixed axis gives no range
             }
-            std::optional<double> min = axis->min;
-            std::optional<double> max = axis->max;
-            auto const *edges = axis->binning ? std::get_if<EdgesBinning>(&*axis->binning) : nullptr;
-            if (edges && !edges->edges.empty()) {
-               min = min ? min : edges->edges.front();
-               max = max ? max : edges->edges.back();
-            }
-            domainRanges[axis->name] = {bound(min), bound(max)};
+            domainRanges[axis->name] = {bound(axis->min), bound(axis->max)};
          }
       }
    }
@@ -540,20 +533,14 @@ void Validator::checkNormalizationRanges(Analysis const &analysis, std::string c
          if (data.name != dataName) {
             continue;
          }
+         // Continuous and binned axes have a range, categorical axes don't.
+         auto checkAxis = [&](auto const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); };
          auto checkAxes = [&](auto const &axes) {
-            for (auto const &axisVariant : axes) {
-               std::visit(
-                  overloaded{[&](ContinuousAxis const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); },
-                             [&](BinnedAxis const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); },
-                             [](CategoricalAxis const &) {}},
-                  axisVariant);
+            for (auto const &axis : axes) {
+               std::visit(overloaded{[](CategoricalAxis const &) {}, checkAxis}, axis);
             }
          };
-         std::visit(overloaded{[&](PointData const &d) {
-                                  for (auto const &a : d.axes) {
-                                     check(data.name, a.name, {bound(a.min), bound(a.max)});
-                                  }
-                               },
+         std::visit(overloaded{[&](PointData const &d) { std::for_each(d.axes.begin(), d.axes.end(), checkAxis); },
                                [&](UnbinnedData const &d) { checkAxes(d.axes); },
                                [&](BinnedData const &d) { checkAxes(d.axes); },
                                [&](CombinedData const &d) {
@@ -717,12 +704,6 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
       }
    };
 
-   auto checkConstraint = [&](std::string const &where, Constraint const &constraint) {
-      if (auto const *pdf = std::get_if<ConstraintPdf>(&constraint)) {
-         requireDistribution(pdf->pdf.name, where, "constraint");
-      }
-   };
-
    // The constraint distributions of the gamma parameters of shape modifiers.
    auto checkGammaConstraint = [&](std::string const &where, GammaConstraint const &constraint) {
       auto const *pdfs = std::get_if<GammaConstraintPdfs>(&constraint);
@@ -810,7 +791,9 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
          // The modifiers with a single parameter, which can have a constraint.
          auto checkSingleParameter = [&](auto const &m) {
             checkParameter(modifierPath, m.parameter.name, m.name);
-            checkConstraint(modifierPath, m.constraint);
+            if (auto const *pdf = std::get_if<ConstraintPdf>(&m.constraint)) {
+               requireDistribution(pdf->pdf.name, modifierPath, "constraint");
+            }
             checkCorrelated(modifierPath, m.parameter.name, m.constraint);
          };
          std::visit(overloaded{
