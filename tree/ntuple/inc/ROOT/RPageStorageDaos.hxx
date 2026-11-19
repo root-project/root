@@ -117,8 +117,7 @@ private:
    ntuple_index_t fNTupleIndex{0};
 
 protected:
-   using RPagePersistentSink::InitImpl;
-   void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
+   void CommitHeaderImpl(const unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator
    CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator>

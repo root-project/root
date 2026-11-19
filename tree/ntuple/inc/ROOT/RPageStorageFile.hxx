@@ -85,8 +85,7 @@ private:
    void CommitBatchOfPages(CommitBatch &batch, std::vector<RNTupleLocator> &locators);
 
 protected:
-   using RPagePersistentSink::InitImpl;
-   void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
+   void CommitHeaderImpl(const unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator
    CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) override;
    std::vector<RNTupleLocator>
