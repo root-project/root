@@ -27,16 +27,6 @@ namespace RooFit {
 namespace HS3 {
 namespace {
 
-// Infinite bounds are written as null.
-void writeBound(JSONNode &node, double value)
-{
-   if (std::isinf(value)) {
-      node.set_null();
-   } else {
-      node << value;
-   }
-}
-
 template <class Tag>
 void writeRefs(JSONNode &node, std::vector<Ref<Tag>> const &refs)
 {
@@ -62,15 +52,17 @@ void writeBinning(JSONNode &node, Binning const &binning)
    }
 }
 
+// An infinite or missing bound of a continuous data axis is omitted, which means that the range is unbounded. JSON null
+// is not defined for bounds.
 void writeAxis(JSONNode &node, ContinuousAxis const &axis)
 {
    node.set_map();
    node["name"] << axis.name;
-   if (axis.min) {
-      writeBound(node["min"], *axis.min);
+   if (axis.min && !std::isinf(*axis.min)) {
+      node["min"] << *axis.min;
    }
-   if (axis.max) {
-      writeBound(node["max"], *axis.max);
+   if (axis.max && !std::isinf(*axis.max)) {
+      node["max"] << *axis.max;
    }
 }
 
@@ -276,12 +268,20 @@ void writeLikelihood(JSONNode &likelihoods, Likelihood const &likelihood)
 {
    JSONNode &node = appendNamed(likelihoods, likelihood.name);
    JSONNode &distributions = node["distributions"].set_seq();
-   JSONNode &data = node["data"].set_seq();
-   for (auto const &term : likelihood.terms) {
-      distributions.append_child() << term.distribution.name;
-      std::visit(overloaded{[&](DataRef const &ref) { data.append_child() << ref.name; },
-                            [&](double value) { writeNumber(data.append_child(), value); }},
-                 term.data);
+   if (likelihood.pureModel) {
+      for (auto const &term : likelihood.terms) {
+         distributions.append_child() << term.distribution.name;
+      }
+      node["data"].set_null();
+   } else {
+      JSONNode &data = node["data"].set_seq();
+      for (auto const &term : likelihood.terms) {
+         distributions.append_child() << term.distribution.name;
+         std::visit(overloaded{[&](DataRef const &ref) { data.append_child() << ref.name; },
+                               [&](double value) { writeNumber(data.append_child(), value); },
+                               [&](std::monostate) { data.append_child().set_null(); }},
+                    term.data);
+      }
    }
    if (!likelihood.auxDistributions.empty()) {
       writeRefs(node["aux_distributions"], likelihood.auxDistributions);
@@ -363,6 +363,12 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
       JSONNode &constraints = rootInternal()["histfactory_constraints"].set_map();
       for (auto const &item : internal.channelConstraints) {
          writeRefs(constraints[item.first], item.second);
+      }
+   }
+   if (!internal.auxiliaryChannels.empty()) {
+      JSONNode &channels = rootInternal()["auxiliary_channels"].set_map();
+      for (auto const &item : internal.auxiliaryChannels) {
+         writeRefs(channels[item.first], item.second);
       }
    }
    if (!internal.bookkeepingColumns.empty()) {
