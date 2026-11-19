@@ -8,8 +8,20 @@
 
 #include "gtest/gtest.h"
 
+class TClassEditNoInterpreter : public ::testing::Test {
+protected:
+   void SetUp() override
+   {
+      // Check the premise of this file instead of relying on it: without a
+      // lookup helper, ResolveTypedef() returns its input unchanged, while
+      // TCling's helper resolves the typedef.
+      ASSERT_EQ("Int_t", TClassEdit::ResolveTypedef("Int_t"))
+         << "TClassEdit has an interpreter lookup helper, so this test can't see bugs in TClassEdit itself";
+   }
+};
+
 // Part of https://github.com/root-project/root/issues/19940
-TEST(TClassEditNoInterpreter, NormalizeConstString)
+TEST_F(TClassEditNoInterpreter, NormalizeConstString)
 {
    std::string n;
 
