@@ -54,11 +54,6 @@ class RColumn;
 class RWriteColumn;
 struct RNTupleModelChangeset;
 
-enum class EPageStorageType {
-   kSink,
-   kSource,
-};
-
 // clang-format off
 /**
 \class ROOT::Internal::RPageStorage
@@ -166,9 +161,6 @@ public:
    RPageStorage(RPageStorage &&other) = default;
    RPageStorage &operator=(RPageStorage &&other) = default;
    virtual ~RPageStorage();
-
-   /// Whether the concrete implementation is a sink or a source
-   virtual EPageStorageType GetType() = 0;
 
    struct RColumnHandle {
       ROOT::DescriptorId_t fPhysicalId = ROOT::kInvalidDescriptorId;
@@ -339,7 +331,6 @@ public:
    RPageSink &operator=(RPageSink &&) = default;
    ~RPageSink() override;
 
-   EPageStorageType GetType() final { return EPageStorageType::kSink; }
    /// Returns the sink's write options.
    const ROOT::RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
 
@@ -937,7 +928,6 @@ public:
                                                     const ROOT::Internal::RColumnElementBase &element,
                                                     ROOT::Internal::RPageAllocator &pageAlloc);
 
-   EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const ROOT::RNTupleReadOptions &GetReadOptions() const { return fOptions; }
 
    /// Takes the read lock for the descriptor. Multiple threads can take the lock concurrently.
