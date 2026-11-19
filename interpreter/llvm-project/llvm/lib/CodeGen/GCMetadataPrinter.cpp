@@ -19,3 +19,9 @@ LLVM_INSTANTIATE_REGISTRY(GCMetadataPrinterRegistry)
 GCMetadataPrinter::GCMetadataPrinter() = default;
 
 GCMetadataPrinter::~GCMetadataPrinter() = default;
+
+void GCMetadataPrinter::beginAssembly(Module &M, GCModuleInfo &Info, AsmPrinter &AP) {}
+
+void GCMetadataPrinter::finishAssembly(Module &M, GCModuleInfo &Info, AsmPrinter &AP) {}
+
+bool GCMetadataPrinter::emitStackMaps(StackMaps &SM, AsmPrinter &AP) { return false; }
