@@ -68,12 +68,11 @@ struct ArrayComponentInfo {
 std::optional<ArrayComponentInfo>
 arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable = nullptr, RooJSONFactoryWSTool *tool = nullptr);
 
-// Write the array distribution `name` with the given components into `elem`. `observableOf` gives the observable
-// recorded for a component by name, if any. The `tool` writes the functions that the components need besides, e.g.
-// for a RooLognormal that is not in the standard parametrization.
+// Write the array distribution `name` with the given components into `elem`. The `tool` knows the observables that
+// are recorded for the components, and writes the functions that they need besides, e.g. for a RooLognormal that is
+// not in the standard parametrization.
 void writeArrayDist(RooJSONFactoryWSTool &tool, RooFit::Detail::JSONNode &elem, std::string const &name,
-                    std::vector<RooAbsPdf const *> const &components,
-                    std::map<std::string, std::string> const &observableOf);
+                    std::vector<RooAbsPdf const *> const &components);
 
 // The number that a string spells as a whole, if it does.
 std::optional<double> toNumber(const std::string &str);

@@ -12,8 +12,6 @@
 
 #include <RooFitHS3/JSONIO.h>
 
-#include <RooAbsPdf.h>
-
 #include <TClass.h>
 
 #include <iostream>

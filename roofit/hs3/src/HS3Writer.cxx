@@ -10,8 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-// Writes the typed representation of HS3 documents. The keys are the same as in HS3Parser.cxx, which the round-trip
-// tests in testHS3Document.cxx check.
+// Writes the typed representation of HS3 documents, with the keys that HS3Parser.cxx reads.
 
 #include "HS3Document.h"
 
@@ -19,7 +18,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 
 using RooFit::Detail::JSONNode;
 

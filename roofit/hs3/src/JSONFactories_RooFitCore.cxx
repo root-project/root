@@ -1717,8 +1717,7 @@ arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable, RooJSONF
 }
 
 void writeArrayDist(RooJSONFactoryWSTool &tool, JSONNode &elem, std::string const &name,
-                    std::vector<RooAbsPdf const *> const &components,
-                    std::map<std::string, std::string> const &observableOf)
+                    std::vector<RooAbsPdf const *> const &components)
 {
    auto error = [&name](std::string const &message) {
       RooJSONFactoryWSTool::error("cannot write the array distribution '" + name + "': " + message);
@@ -1729,8 +1728,7 @@ void writeArrayDist(RooJSONFactoryWSTool &tool, JSONNode &elem, std::string cons
    std::vector<ArrayComponentInfo> comps;
    std::set<std::string> observables;
    for (RooAbsPdf const *pdf : components) {
-      auto recorded = observableOf.find(pdf->GetName());
-      auto comp = arrayComponentInfo(*pdf, recorded != observableOf.end() ? &recorded->second : nullptr, &tool);
+      auto comp = arrayComponentInfo(*pdf, tool.constraintObservable(pdf->GetName()), &tool);
       if (!comp) {
          error("'" + std::string(pdf->GetName()) +
                "' cannot be a component, only RooPoisson, RooGaussian and RooLognormal over a named observable "

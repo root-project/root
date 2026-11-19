@@ -17,7 +17,6 @@
 #include <charconv>
 #include <cmath>
 #include <limits>
-#include <exception>
 #include <sstream>
 
 using RooFit::Detail::JSONNode;

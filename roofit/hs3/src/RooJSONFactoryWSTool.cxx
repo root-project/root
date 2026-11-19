@@ -106,12 +106,6 @@ You can always get a list of all the available importers and exporters by callin
 ROOT.RooFit.JSONIO.printImporters()
 ROOT.RooFit.JSONIO.printExporters()
 ~~~
-
-Alternatively, you can generate a LaTeX version of the available importers and exporters by calling
-~~~ {.py}
-tool = ROOT.RooJSONFactoryWSTool(ws)
-tool.writedoc("hs3.tex")
-~~~
 */
 
 constexpr auto hs3VersionTag = "0.3";
@@ -646,7 +640,6 @@ void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attribute
       }
    };
 
-   // export all string attributes of an object
    for (const auto &it : arg->stringAttributes()) {
       // Skip some RooFit internals
       if (it.first == "factory_tag" || it.first == "PROD_TERM_TYPE")
@@ -1183,7 +1176,6 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
                     std::vector<std::unique_ptr<RooAbsData>> &datasets, std::set<std::string> const &bookkeepingColumns,
                     std::set<std::string> const &auxiliaryMeasurements)
 {
-   // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = analysis.name;
    auto foundInfo = doc.rooFit.modelConfigs.find(analysisName);
    HS3::ModelConfigInfo const *mcInfo = foundInfo != doc.rooFit.modelConfigs.end() ? &foundInfo->second : nullptr;
@@ -2108,7 +2100,6 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
    std::string name = func.GetName();
    std::set<std::string> &exportedObjectNames = _export->exportedObjectNames;
 
-   // if this element was already exported, skip
    if (exportedObjectNames.find(name) != exportedObjectNames.end()) {
       // A component of an array distribution is not written under its own name, so an object that refers to it by
       // that name would have a dangling reference.
@@ -2264,7 +2255,7 @@ void RooJSONFactoryWSTool::exportArrayDists()
       // Exporting the servers may add to the registry, so the components are copied.
       const std::vector<RooAbsPdf const *> components = next->second;
       JSONNode &elem = appendNamedChild((*_export->root)["distributions"], arrayName);
-      writeArrayDist(*this, elem, arrayName, components, _export->constraintObservables);
+      writeArrayDist(*this, elem, arrayName, components);
       recordGenericObject(_export->doc, true, arrayName, elem);
       for (RooAbsPdf const *pdf : components) {
          exportObjects(pdf->servers());
@@ -2441,15 +2432,12 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
 
    auto const &importers = RooFit::JSONIO::importers();
 
-   // some preparations: what type of function are we dealing with here?
    RooJSONFactoryWSTool::testValidName(name, true);
 
-   // if the RooAbsArg already exists, we don't need to do anything
    if (_workspace.arg(name)) {
       return;
    }
    ImportGuard importGuard{_importStack, name};
-   // if the key we found is not a map, it's an error
    if (!p.is_map()) {
       RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() function node " + name + " is not a map!");
    }
@@ -2467,7 +2455,6 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
       this->importDependants(p);
    }
 
-   // check for specific implementations
    auto it = importers.find(functype);
    bool ok = false;
    if (it != importers.end()) {
@@ -2833,7 +2820,6 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
 // Import a single variable (RooRealVar or RooConstVar) from the parameter `p` into the workspace.
 void RooJSONFactoryWSTool::importVariable(HS3::ParameterValue const &p)
 {
-   // import a RooRealVar object
    RooJSONFactoryWSTool::testValidName(p.name, true);
 
    if (_workspace.arg(p.name))
@@ -3304,12 +3290,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    // The array distributions are written after the objects that use them, see exportAsArrayComponent().
    exportArrayDists();
 
-   // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {
       exportAttributes(arg, doc.rooFit.attributes);
    }
 
-   // collect all datasets
    std::vector<RooAbsData *> alldata;
    for (auto &d : _workspace.allData()) {
       alldata.push_back(d);
@@ -3330,7 +3314,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
 
-   // export all ModelConfig objects and attached Pdfs
    for (TObject *obj : _workspace.allGenericObjects()) {
       if (auto mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
          exportModelConfig(*mc, singleData);
@@ -3614,7 +3597,6 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
       _workspace.saveSnapshot(point.name, vars);
    }
 
-   // Import attributes
    for (auto const &item : doc.rooFit.attributes) {
       if (RooAbsArg *arg = _workspace.arg(item.first))
          importAttributes(arg, item.second);
@@ -3684,7 +3666,6 @@ bool RooJSONFactoryWSTool::importJSON(std::string const &filename)
 
 void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std::string &jsonString)
 {
-   // Create the JSON Tree from the string
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(jsonString);
    JSONNode &n = tree->rootnode();
 
@@ -3794,8 +3775,6 @@ std::string RooJSONFactoryWSTool::sanitizeName(const std::string str)
 
 RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyModelConfig)
 {
-   // Variables
-
    RooWorkspace tmpWS = RooWorkspace();
    if (onlyModelConfig) {
       for (auto *obj : ws.allGenericObjects()) {
