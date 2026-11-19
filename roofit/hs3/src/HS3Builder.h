@@ -22,6 +22,7 @@
 #include <vector>
 
 class RooAbsArg;
+class RooAbsBinning;
 class RooDataHist;
 class RooJSONFactoryWSTool;
 class RooRealVar;
@@ -33,14 +34,16 @@ class Importer;
 
 namespace HS3 {
 
-/// Forward the warnings to the message service, and throw if there are errors.
-void report(Diagnostics const &diagnostics);
+/// Forward the warnings to the message service, and throw if there are errors. The paths of the diagnostics start with
+/// the name of the object, if they are about an object that doesn't come with a document.
+void report(Diagnostics const &diagnostics, std::string const &object = "");
 
 /// Create the variables for the axes of binned data.
 RooArgSet createObservables(std::vector<BinnedAxis> const &axes);
 
-/// The axis of binned data for a variable.
+/// The axis of binned data for a variable, or for a binning of a variable with the given name.
 BinnedAxis toBinnedAxis(RooRealVar const &var);
+BinnedAxis toBinnedAxis(std::string const &name, RooAbsBinning const &binning);
 
 /// The name of an object, or the value of a literal constant.
 NameOrNumber toNameOrNumber(RooAbsArg const &arg);
