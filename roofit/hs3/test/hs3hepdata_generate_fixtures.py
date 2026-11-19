@@ -106,12 +106,26 @@ def analysis_targets(document: dict[str, Any], workspace) -> list[dict[str, Any]
 FIT_PARAMETER_POINTS = ("SnSh_AllVars_Nominal",)
 
 
-# Settings of the fits that the models of a record need, by INSPIRE id. They are written to the fixtures.
-FIT_SETTINGS = {
-    # HEPData asks for a higher Minuit strategy for these likelihoods; at strategy 1, one fit stops short of
-    # the minimum.
-    "2689657": {"strategy": 2},
-}
+# Settings of the fits that the models need, in this file next to the fixtures: by INSPIRE id or by test_id (which
+# wins), the Minuit strategy ("strategy") and parameters that the fit holds at a value ("fixed_parameters", e.g. the
+# signal strength of a background-only document), each with its "reason". "additional_fits" are further fits of the
+# same targets, each with an "id_suffix" and its own settings, e.g. the background-only fit of a signal-plus-background
+# model, whose normalization factors a paper quotes. The settings are written to the fixtures, which list them
+# explicitly.
+FIT_SETTINGS_FILE = "fit_settings.json"
+
+
+def fit_settings(fixtures: Path, document: dict[str, Any]) -> dict[str, Any]:
+    path = fixtures / FIT_SETTINGS_FILE
+    if not path.is_file():
+        return {}
+    entries = common.load_json(path)
+    settings = {}
+    for key in (document["inspire_id"], document["test_id"]):
+        for name, value in entries.get(key, {}).items():
+            if name != "reason":
+                settings[name] = value
+    return settings
 
 
 def fit_parameter_point(workspace) -> str:
@@ -276,18 +290,28 @@ def fit_worker(fixtures: Path, cache: Path, test_id: str) -> int:
     hs3_path = common.document_path(cache, document)
     backend = RooFitBackend()
     workspace = backend.load_workspace(hs3_path)
-    # Which parameters are free depends on the parameter point.
+    # Which parameters are free depends on the parameter point and on the parameters that the fit holds fixed.
     parameter_point = fit_parameter_point(workspace)
     hs3hepdata_roofit.load_parameter_point(workspace, parameter_point)
+    settings = fit_settings(fixtures, document)
+    hs3hepdata_roofit.fix_parameters(workspace, settings.get("fixed_parameters"))
     fits = []
-    for target in analysis_targets(common.load_json(hs3_path), workspace):
+    variants = [{}] + [
+        {name: value for name, value in extra.items() if name != "reason"}
+        for extra in settings.pop("additional_fits", [])
+    ]
+    for target, variant in [(t, v) for t in analysis_targets(common.load_json(hs3_path), workspace) for v in variants]:
+        variant = dict(variant)
+        suffix = variant.pop("id_suffix", "")
+        fixed = variant.get("fixed_parameters", {})
         fit = {
             "parameter_point": parameter_point,
-            **FIT_SETTINGS.get(document["inspire_id"], {}),
-            "id": "fit_" + re.sub(r"[^A-Za-z0-9_.-]", "_", target["data"]),
+            **settings,
+            **variant,
+            "id": "fit_" + re.sub(r"[^A-Za-z0-9_.-]", "_", target["data"]) + suffix,
             "target": {"pdf": target["pdf"], "data": target["data"]},
-            "parameters_of_interest": target["parameters_of_interest"],
-            "normalization_factors": target["normalization_factors"],
+            "parameters_of_interest": [p for p in target["parameters_of_interest"] if p not in fixed],
+            "normalization_factors": [p for p in target["normalization_factors"] if p not in fixed],
         }
         result = run_fit(ROOT, workspace, fit)
         values = [v for p in result["parameters"].values() for v in p.values()]

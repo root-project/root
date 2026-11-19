@@ -4,45 +4,29 @@
   {
    "covariance_quality": 3,
    "expected": {
-    "SigXsecOverSM_15_N2": {
-     "best_fit": 3.276203383617591,
-     "hesse_error": 2.6850604922343915,
-     "minus_one_sigma": -3.139061004365464,
-     "plus_one_sigma": 2.723796616382409
-    },
-    "SigXsecOverSM_40_N2": {
-     "best_fit": -1.330962726198689,
-     "hesse_error": 1.0711026268422312,
-     "plus_one_sigma": 1.0711026268422312
-    },
     "k_ttDmu": {
-     "best_fit": 0.7366477916566371,
-     "hesse_error": 0.31988776392308527,
-     "minus_one_sigma": -0.26610471679544623,
-     "plus_one_sigma": 0.3934219536287139
+     "best_fit": 0.7369072074507685,
+     "hesse_error": 0.3146791891932151,
+     "minus_one_sigma": -0.2626217860448283,
+     "plus_one_sigma": 0.3865067860208823
     },
     "k_ttW": {
-     "best_fit": 1.0504255675046728,
-     "hesse_error": 0.4081906542897359,
-     "minus_one_sigma": -0.35780966215364535,
-     "plus_one_sigma": 0.4883213570188839
+     "best_fit": 1.0651732265297023,
+     "hesse_error": 0.4101886600006636,
+     "minus_one_sigma": -0.3569803942598655,
+     "plus_one_sigma": 0.4939917623568954
     }
+   },
+   "fixed_parameters": {
+    "SigXsecOverSM_15_N2": 0.0,
+    "SigXsecOverSM_40_N2": 0.0
    },
    "id": "fit_obsData",
    "normalization_factors": ["k_ttDmu", "k_ttW"],
    "parameter_point": "default_values",
-   "parameters_of_interest": ["SigXsecOverSM_15_N2", "SigXsecOverSM_40_N2"],
-   "profile_scans": {
-    "SigXsecOverSM_15_N2": {
-     "points": [-2.093917600851192, 5.961263875851982],
-     "twice_delta_nll": [-16.041416151233534, 0.43986839739818606]
-    },
-    "SigXsecOverSM_40_N2": {
-     "points": [-0.2598600993564577, 0.8112425274857735],
-     "twice_delta_nll": [0.8301744840335914, 3.5350451722052867]
-    }
-   },
-   "seconds_when_generated": 2.73,
+   "parameters_of_interest": [],
+   "profile_scans": {},
+   "seconds_when_generated": 0.45,
    "target": {
     "data": "obsData",
     "pdf": "simPdf"
@@ -55,7 +39,7 @@
    }
   }
  ],
- "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "reference_backend": "roofit 6.43.01 (v6-41-99-365-ga6d9aaec304)",
  "schema_version": 1,
  "test_id": "ins2816994_r3757761_likelihood_lowmass_mm_BONLY"
 }

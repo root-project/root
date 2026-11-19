@@ -228,7 +228,13 @@ Every fit of `expected_fit.json` says how it is run: `target` (the pdf and
 the data set), `parameter_point` (the parameter point of the document that is
 loaded before the fit: some documents keep the result of a conditional fit,
 with most parameters fixed, in `default_values`), optionally `strategy` (the
-Minuit strategy, 1 by default), and the parameters. `covariance_quality` is
+Minuit strategy, 1 by default) and `fixed_parameters` (parameters that the fit
+holds at a value, e.g. the signal strength of a background-only fit), and the
+parameters. A fixture can have several fits of the same data set, e.g. a
+signal-plus-background model with an additional background-only fit
+(`fit_<data>_background_only`), whose normalization factors papers quote. The
+generator takes these settings from `hs3hepdata/fit_settings.json`, by INSPIRE
+id or test_id, each with its reason. `covariance_quality` is
 the status of the covariance matrix when the fixture was generated; unless it
 is 3 (full and accurate), the uncertainties from Hesse are not compared.
 

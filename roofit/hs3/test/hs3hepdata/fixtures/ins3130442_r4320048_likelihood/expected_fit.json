@@ -5,63 +5,64 @@
    "covariance_quality": 3,
    "expected": {
     "Ec_0": {
-     "best_fit": 0.9385936707835318,
-     "hesse_error": 0.05499800893942347,
-     "minus_one_sigma": -0.05475390129718076,
-     "plus_one_sigma": 0.05734121277060565
+     "best_fit": 0.9386342651311221,
+     "hesse_error": 0.05503763483702595,
+     "minus_one_sigma": -0.0547944033108684,
+     "plus_one_sigma": 0.05730056412787755
     },
     "Ec_1": {
-     "best_fit": 0.9531037607596049,
-     "hesse_error": 0.04476711314520487,
-     "minus_one_sigma": -0.044225202612376835,
-     "plus_one_sigma": 0.04643247458946409
+     "best_fit": 0.9531354607151291,
+     "hesse_error": 0.04474733099864042,
+     "minus_one_sigma": -0.044256975018990355,
+     "plus_one_sigma": 0.046400851940343636
     },
     "Ec_2": {
-     "best_fit": 0.9392923659202637,
-     "hesse_error": 0.04159250317308316,
-     "minus_one_sigma": -0.04078700304283427,
-     "plus_one_sigma": 0.043092047116055306
+     "best_fit": 0.9393233294611633,
+     "hesse_error": 0.04157436025711819,
+     "minus_one_sigma": -0.04081782935145955,
+     "plus_one_sigma": 0.04306117504357243
     },
     "Fcb_0": {
-     "best_fit": 1.0388761578825798,
-     "hesse_error": 0.24231867247095173,
-     "minus_one_sigma": -0.24405342703705346,
-     "plus_one_sigma": 0.24380925750690696
+     "best_fit": 1.0389973819978513,
+     "hesse_error": 0.24267959410839718,
+     "minus_one_sigma": -0.24417517539415012,
+     "plus_one_sigma": 0.24364968662964076
     },
     "Fcb_1": {
-     "best_fit": 1.0769843668205847,
-     "hesse_error": 0.11913087971268366,
-     "minus_one_sigma": -0.11638126144874038,
-     "plus_one_sigma": 0.12534590832758036
+     "best_fit": 1.0770458910176166,
+     "hesse_error": 0.11918335824551818,
+     "minus_one_sigma": -0.1164429328416391,
+     "plus_one_sigma": 0.12528440260713047
     },
     "Fcb_2": {
-     "best_fit": 1.0528112247185082,
-     "hesse_error": 0.09435298830092104,
-     "minus_one_sigma": -0.09053578201451265,
-     "plus_one_sigma": 0.09963879334813174
+     "best_fit": 1.0528751782022634,
+     "hesse_error": 0.09436129002970273,
+     "minus_one_sigma": -0.09059986238679041,
+     "plus_one_sigma": 0.09957503551688322
     },
     "norm_B": {
-     "best_fit": 1.4485786149864608,
-     "hesse_error": 0.45232528260427324,
-     "plus_one_sigma": 0.45232528260427324
+     "best_fit": 1.448526789335391,
+     "hesse_error": 0.4533366017855046,
+     "minus_one_sigma": -0.33923866717445744,
+     "plus_one_sigma": 0.5446386158787736
     },
     "norm_C": {
-     "best_fit": 1.5964327109550853,
-     "hesse_error": 0.5763076893731715,
-     "minus_one_sigma": -0.602052544190317,
-     "plus_one_sigma": 0.6421211319525055
+     "best_fit": 1.5961330368121314,
+     "hesse_error": 0.5779574155357681,
+     "minus_one_sigma": -0.6017532903823424,
+     "plus_one_sigma": 0.6424152105725601
     },
     "norm_Vcb": {
-     "best_fit": 1.1862643763936924,
-     "hesse_error": 0.2947494921548382,
-     "minus_one_sigma": -0.3454609223411861,
-     "plus_one_sigma": 0.2701967696130745
+     "best_fit": 1.1862642660572082,
+     "hesse_error": 0.29373953483219084,
+     "minus_one_sigma": -0.34546046664563534,
+     "plus_one_sigma": 0.27019719271938647
     },
     "norm_tt": {
-     "best_fit": 0.9910732593829761,
-     "hesse_error": 0.030449090933246603,
-     "minus_one_sigma": -0.03059609162774151,
-     "plus_one_sigma": 0.0316143677124911
+     "best_fit": 0.9910477541307964,
+     "hesse_error": 0.030766363534180274,
+     "minus_one_sigma": -0.0305686711011291,
+     "plus_one_sigma": 0.03163968028468192
     }
    },
    "id": "fit_obsData",
@@ -70,11 +71,11 @@
    "parameters_of_interest": ["norm_Vcb"],
    "profile_scans": {
     "norm_Vcb": {
-     "points": [0.596765392084016, 0.8915148842388543, 1.4810138685485306, 1.775763360703369],
-     "twice_delta_nll": [2.208375796675682, 0.7672146856784821, 1.2055304162204266, 5.430459816008806]
+     "points": [0.5987851963928266, 0.8925247312250174, 1.4800038008893992, 1.77374333572159],
+     "twice_delta_nll": [2.198635533452034, 0.7627312801778316, 1.1966540403664112, 5.391003672033548]
     }
    },
-   "seconds_when_generated": 86.72,
+   "seconds_when_generated": 68.98,
    "target": {
     "data": "obsData",
     "pdf": "simPdf"
@@ -87,7 +88,7 @@
    }
   }
  ],
- "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "reference_backend": "roofit 6.43.01 (v6-41-99-365-ga6d9aaec304)",
  "schema_version": 1,
  "test_id": "ins3130442_r4320048_likelihood"
 }

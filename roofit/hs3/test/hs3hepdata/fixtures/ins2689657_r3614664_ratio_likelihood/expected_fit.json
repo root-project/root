@@ -2,19 +2,25 @@
  "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
  "fits": [
   {
-   "covariance_quality": -1,
+   "covariance_quality": 2,
    "expected": {
     "b": {
-     "best_fit": 0.5435693751664837,
-     "hesse_error": 0.0
+     "best_fit": 0.5435690387502534,
+     "hesse_error": 0.0032502223459259794,
+     "minus_one_sigma": -0.003827887304992607,
+     "plus_one_sigma": 0.004376328808608854
     },
     "mu_Z": {
-     "best_fit": 1.0098072866548424,
-     "hesse_error": 0.0
+     "best_fit": 1.0098168267910097,
+     "hesse_error": 0.0010454865930725754,
+     "minus_one_sigma": -0.02658185936637508,
+     "plus_one_sigma": 0.02776152387728763
     },
     "mu_ratio": {
-     "best_fit": 0.911307066734286,
-     "hesse_error": 0.0
+     "best_fit": 0.9113101801663555,
+     "hesse_error": 0.00997141071515606,
+     "minus_one_sigma": -0.01728373248652386,
+     "plus_one_sigma": 0.017759101725878853
     }
    },
    "id": "fit_obsData",
@@ -23,16 +29,15 @@
    "parameters_of_interest": ["b", "mu_Z", "mu_ratio"],
    "profile_scans": {
     "b": {
-     "points": [],
-     "twice_delta_nll": []
+     "points": [0.5370685940584015, 0.5403188164043274, 0.5468192610961794, 0.5500694834421054],
+     "twice_delta_nll": [2.630698651075363, 0.701554112136364, 0.5083501189947128, 2.562666140496731]
     },
     "mu_Z": {
-     "points": [],
-     "twice_delta_nll": []
+     "points": [1.0077258536048646, 1.0087713401979372, 1.0108623133840822, 1.0119077999771549],
+     "twice_delta_nll": [0.005987845361232758, 0.0015143230557441711, 0.0014737024903297424, 0.005888231098651886]
     }
    },
-   "seconds_when_generated": 18.09,
-   "strategy": 2,
+   "seconds_when_generated": 15.45,
    "target": {
     "data": "obsData",
     "pdf": "simPdf"
@@ -45,7 +50,7 @@
    }
   }
  ],
- "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "reference_backend": "roofit 6.43.01 (v6-41-99-365-ga6d9aaec304)",
  "schema_version": 1,
  "test_id": "ins2689657_r3614664_ratio_likelihood"
 }

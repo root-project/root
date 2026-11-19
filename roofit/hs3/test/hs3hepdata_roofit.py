@@ -59,6 +59,20 @@ def load_parameter_point(workspace, name: str | None) -> None:
         raise AssertionError(f"parameter point {name!r} not found")
 
 
+def fix_parameters(workspace, fixed: dict[str, float] | None) -> list[tuple[Any, bool]]:
+    """Set the parameters in `fixed` to their values and make them constant, e.g. the signal strength of a
+    background-only fit. Returns the parameters with their previous constness, to restore it."""
+    previous = []
+    for name, value in (fixed or {}).items():
+        var = workspace.var(name)
+        if not var:
+            raise AssertionError(f"fixed parameter {name!r} not found")
+        previous.append((var, bool(var.isConstant())))
+        var.setVal(float(value))
+        var.setConstant(True)
+    return previous
+
+
 def create_nll(ROOT, workspace, target: dict[str, str], offset: bool = True):
     pdf = workspace.pdf(target["pdf"])
     if not pdf:
@@ -109,8 +123,11 @@ def run_fit(ROOT, workspace, fit: dict[str, Any], scan_points: dict[str, list[fl
     snapshot = "hs3hepdata_before_fit"
     workspace.saveSnapshot(snapshot, workspace.allVars())
     seconds = {}
+    fixed = []
     try:
         load_parameter_point(workspace, fit.get("parameter_point"))
+        # Parameters that the fit holds at a value, e.g. the signal strength of a background-only fit.
+        fixed = fix_parameters(workspace, fit.get("fixed_parameters"))
         start = time.perf_counter()
         nll = create_nll(ROOT, workspace, fit["target"])
         seconds["create_nll"] = time.perf_counter() - start
@@ -200,6 +217,8 @@ def run_fit(ROOT, workspace, fit: dict[str, Any], scan_points: dict[str, list[fl
             "seconds": seconds,
         }
     finally:
+        for var, constant in fixed:
+            var.setConstant(constant)
         workspace.loadSnapshot(snapshot)
 
 
