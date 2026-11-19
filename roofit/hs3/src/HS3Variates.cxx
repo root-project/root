@@ -125,6 +125,16 @@ std::vector<std::string> namedConstraints(JSONNode const &dist)
    return out;
 }
 
+// The names of the components of a combined distribution.
+std::vector<std::string> componentsOf(CombinedDist const &dist)
+{
+   std::vector<std::string> out;
+   for (auto const &component : dist.components) {
+      out.push_back(component.ref.name);
+   }
+   return out;
+}
+
 // The node of a distribution that the document doesn't interpret, if it has one and, optionally, the type `type`.
 JSONNode const *genericNode(Distribution const &dist, const char *type = nullptr)
 {
@@ -172,22 +182,23 @@ public:
             out.insert(axis.name);
          }
       }
-      auto const *generic = find<GenericObject>(name);
-      if (!generic || !generic->node) {
-         return;
-      }
-      JSONNode const &node = *generic->node;
       auto addVariatesOf = [&](std::vector<std::string> const &parts) {
          for (std::string const &part : parts) {
             addVariates(part, out, visited);
          }
       };
+      if (auto const *combined = find<CombinedDist>(name)) {
+         addVariatesOf(componentsOf(*combined));
+      }
+      auto const *generic = find<GenericObject>(name);
+      if (!generic || !generic->node) {
+         return;
+      }
+      JSONNode const &node = *generic->node;
       if (generic->type == "product_dist") {
          addVariatesOf(namesIn(node, "factors"));
       } else if (generic->type == "mixture_dist") {
          addVariatesOf(namesIn(node, "summands"));
-      } else if (generic->type == "combined_dist") {
-         addVariatesOf(namesIn(node, "components", "dist"));
       } else if (generic->type == "array_dist") {
          if (JSONNode const *components = node.find("components")) {
             for (JSONNode const &component : components->children()) {
@@ -214,8 +225,8 @@ public:
       std::vector<std::string> terms;
       auto add = [&](std::string const &name) {
          auto legacy = _doc.rooFit.combinedDistributions.find(name);
-         if (JSONNode const *combined = nodeOf(name, "combined_dist")) {
-            for (std::string const &component : namesIn(*combined, "components", "dist")) {
+         if (auto const *combined = find<CombinedDist>(name)) {
+            for (std::string const &component : componentsOf(*combined)) {
                addUnique(terms, component);
             }
          } else if (!_byName.count(name) && legacy != _doc.rooFit.combinedDistributions.end()) {
@@ -288,10 +299,10 @@ void addShared(PartVariates const &parts, std::string const &what, std::string c
 PartVariates componentAxes(HS3Document const &doc, CombinedData const &combined)
 {
    PartVariates parts;
-   for (CombinedDataComponent const &component : combined.components) {
+   for (auto const &component : combined.components) {
       std::set<std::string> axes;
       auto found = std::find_if(doc.data.begin(), doc.data.end(),
-                                [&](Data const &data) { return data.name == component.data.name; });
+                                [&](Data const &data) { return data.name == component.ref.name; });
       if (found != doc.data.end()) {
          std::visit(overloaded{[](CombinedData const &) {},
                                [&](PointData const &data) {
@@ -306,7 +317,7 @@ PartVariates componentAxes(HS3Document const &doc, CombinedData const &combined)
                                }},
                     found->body);
       }
-      parts.emplace_back(component.data.name, axes);
+      parts.emplace_back(component.ref.name, axes);
    }
    return parts;
 }
@@ -328,18 +339,6 @@ int numDataEntries(HS3Document const &doc, std::string const &name)
    return unbinned ? static_cast<int>(unbinned->numEntries()) : 1;
 }
 
-// The labels of the key of a component of a combined distribution, like the parser reads those of combined data.
-std::vector<std::string> keyOf(JSONNode const &component)
-{
-   std::vector<std::string> key;
-   if (JSONNode const *node = component.find("key"); node && node->is_seq()) {
-      for (JSONNode const &label : node->children()) {
-         key.push_back(label.is_container() ? std::string{} : label.val());
-      }
-   }
-   return key;
-}
-
 } // namespace
 
 std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likelihood)
@@ -349,10 +348,8 @@ std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likel
    std::set<std::string> visited;
    for (LikelihoodTerm const &term : likelihood.terms) {
       distributions.addVariates(term.distribution.name, variates, visited);
-      if (JSONNode const *combined = distributions.nodeOf(term.distribution.name, "combined_dist")) {
-         for (std::string const &column : namesIn(*combined, "columns")) {
-            variates.insert(column);
-         }
+      if (auto const *combined = distributions.find<CombinedDist>(term.distribution.name)) {
+         variates.insert(combined->columns.begin(), combined->columns.end());
       }
    }
    return variates;
@@ -415,6 +412,8 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
       // The combined distributions in which a distribution is a component without data.
       std::map<std::string, std::set<std::string>> withoutData;
       std::set<std::string> named;
+      // The products that are being expanded, since a document that was not imported yet can have circular ones.
+      std::set<std::string> expanding;
       // `combined` is the combined distribution whose component without data the distribution is reached through.
       std::function<void(std::string const &, int, std::string const &)> contribute =
          [&](std::string const &name, int entries, std::string const &combined) {
@@ -430,43 +429,31 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
                for (std::string const &constraint : namedConstraints(*generic)) {
                   named.insert(constraint);
                }
-            } else if (JSONNode const *product = distributions.nodeOf(name, "product_dist")) {
+            } else if (JSONNode const *product = distributions.nodeOf(name, "product_dist");
+                       product && expanding.insert(name).second) {
                for (std::string const &factor : namesIn(*product, "factors")) {
                   contribute(factor, entries, combined);
                }
+               expanding.erase(name);
             }
          };
       // The components of a combined distribution, each with the entries of the component of the paired combined data
       // set that has the same key. Without paired data (a pure model), every component contributes once.
-      auto contributeCombined = [&](std::string const &distName, JSONNode const &dist, Data const *data) {
+      auto contributeCombined = [&](std::string const &distName, CombinedDist const &dist, Data const *data) {
          auto const *combinedData = data ? std::get_if<CombinedData>(&data->body) : nullptr;
-         JSONNode const *components = dist.find("components");
-         if (!components) {
-            return;
-         }
-         for (JSONNode const &component : components->children()) {
-            JSONNode const *name = component.find("dist");
-            if (!name || !isName(*name)) {
-               continue;
-            }
+         for (auto const &component : dist.components) {
             int entries = 1;
             if (combinedData) {
-               entries = 0;
-               bool found = false;
-               std::vector<std::string> const key = keyOf(component);
-               for (CombinedDataComponent const &dataComponent : combinedData->components) {
-                  if (dataComponent.key == key) {
-                     found = true;
-                     entries = numDataEntries(doc, dataComponent.data.name);
-                  }
-               }
-               if (!found && warnings) {
-                  warnings->push_back("the component '" + name->val() + "' of the combined distribution '" + distName +
-                                      "' has no component in the data set '" + data->name + "' that the likelihood '" +
-                                      likelihood.name + "' pairs it with, so it does not contribute to the likelihood");
+               auto const *dataComponent = combinedData->find(component.key);
+               entries = dataComponent ? numDataEntries(doc, dataComponent->ref.name) : 0;
+               if (!dataComponent && warnings) {
+                  warnings->push_back("the component '" + component.ref.name + "' of the combined distribution '" +
+                                      distName + "' has no component in the data set '" + data->name +
+                                      "' that the likelihood '" + likelihood.name +
+                                      "' pairs it with, so it does not contribute to the likelihood");
                }
             }
-            contribute(name->val(), entries, distName);
+            contribute(component.ref.name, entries, distName);
          }
       };
       for (LikelihoodTerm const &term : likelihood.terms) {
@@ -474,7 +461,7 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
          auto const *dataRef = std::get_if<DataRef>(&term.data);
          Data const *data = dataRef ? findData(doc, dataRef->name) : nullptr;
          std::string const &name = term.distribution.name;
-         if (JSONNode const *combined = distributions.nodeOf(name, "combined_dist")) {
+         if (auto const *combined = distributions.find<CombinedDist>(name)) {
             ++contributions[name];
             contributeCombined(name, *combined, data);
          } else {
@@ -518,21 +505,14 @@ std::set<std::string> componentsWithData(HS3Document const &doc)
          auto const *dataRef = std::get_if<DataRef>(&term.data);
          Data const *data = dataRef ? findData(doc, dataRef->name) : nullptr;
          auto const *combinedData = data ? std::get_if<CombinedData>(&data->body) : nullptr;
-         JSONNode const *dist = distributions.nodeOf(term.distribution.name, "combined_dist");
-         JSONNode const *components = dist ? dist->find("components") : nullptr;
-         if (!components || !combinedData) {
+         auto const *dist = distributions.find<CombinedDist>(term.distribution.name);
+         if (!dist || !combinedData) {
             continue;
          }
-         for (JSONNode const &component : components->children()) {
-            JSONNode const *name = component.find("dist");
-            if (!name || !isName(*name)) {
-               continue;
-            }
-            std::vector<std::string> const key = keyOf(component);
-            for (CombinedDataComponent const &dataComponent : combinedData->components) {
-               if (dataComponent.key == key && numDataEntries(doc, dataComponent.data.name) > 0) {
-                  out.insert(name->val());
-               }
+         for (auto const &component : dist->components) {
+            auto const *dataComponent = combinedData->find(component.key);
+            if (dataComponent && numDataEntries(doc, dataComponent->ref.name) > 0) {
+               out.insert(component.ref.name);
             }
          }
       }
@@ -564,10 +544,10 @@ std::vector<std::string> sharedVariates(HS3Document const &doc)
                 "the likelihood '" + likelihood.name + "'", messages);
    }
    for (Distribution const &dist : doc.distributions) {
-      JSONNode const *combined = genericNode(dist, "combined_dist");
+      auto const *combined = std::get_if<CombinedDist>(&dist.body);
       if (combined && !inLikelihoods.count(dist.name)) {
-         addShared(withVariates(namesIn(*combined, "components", "dist")), "components",
-                   "the combined_dist '" + dist.name + "'", messages);
+         addShared(withVariates(componentsOf(*combined)), "components", "the combined_dist '" + dist.name + "'",
+                   messages);
       }
    }
    // The axes of the components of every combined data set, also of those that a likelihood lists.

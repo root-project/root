@@ -536,16 +536,13 @@ void describe(Reader &ar, BinnedData &data)
    }
 }
 
-// A combined data set. Only the structure is checked here: the columns and keys are checked against the domains by the
-// validation, and the sub-data sets when the data set is built.
-void readCombinedData(Reader &ar, std::string const &name, CombinedData &data)
+// A combined data set or distribution, whose components name what they select in `refKey`. Only the structure is
+// checked here: the columns and keys are checked against the domains by the validation, and the components when they
+// are built.
+template <class Ref_t>
+void readCombined(Reader &ar, std::string const &context, const char *refKey, Combined<Ref_t> &out)
 {
-   std::string const context = "the combined data set '" + name + "'";
    Cursor const &c = ar.cursor();
-   if (ar.has("axes")) {
-      c.error(context + " must not have \"axes\": its columns are declared by the domains");
-      return;
-   }
    auto nonEmptyList = [&](const char *key) -> JSONNode const * {
       if (!ar.has(key) || !c.node()[key].is_seq() || c.node()[key].num_children() == 0) {
          return nullptr;
@@ -559,7 +556,7 @@ void readCombinedData(Reader &ar, std::string const &name, CombinedData &data)
          columns = nullptr;
          break;
       }
-      data.columns.push_back(column.val());
+      out.columns.push_back(column.val());
    }
    if (!columns) {
       c.error("\"columns\" of " + context + " must be a non-empty list of names of categorical axes");
@@ -570,23 +567,23 @@ void readCombinedData(Reader &ar, std::string const &name, CombinedData &data)
       c.error("\"components\" of " + context + " must be a non-empty list");
       return;
    }
-   for (JSONNode const &component : components->children()) {
-      if (!component.is_map() || !component.has_child("key") || !component.has_child("dataset")) {
-         c.error("every component of " + context + " must have a \"key\" and a \"dataset\"");
+   for (JSONNode const &node : components->children()) {
+      if (!node.is_map() || !node.has_child("key") || !node.has_child(refKey)) {
+         c.error("every component of " + context + " must have a \"key\" and a \"" + refKey + "\"");
          return;
       }
-      JSONNode const &key = component["key"];
-      CombinedDataComponent &out = data.components.emplace_back();
-      if (key.is_seq() && key.num_children() == data.columns.size()) {
+      JSONNode const &key = node["key"];
+      CombinedComponent<Ref_t> &component = out.components.emplace_back();
+      if (key.is_seq() && key.num_children() == out.columns.size()) {
          for (JSONNode const &label : key.children()) {
-            out.key.push_back(label.is_container() ? std::string{} : label.val());
+            component.key.push_back(label.is_container() ? std::string{} : label.val());
          }
       } else {
-         c.error("every component of " + context + " must have a \"key\" with " + std::to_string(data.columns.size()) +
+         c.error("every component of " + context + " must have a \"key\" with " + std::to_string(out.columns.size()) +
                  " labels, one per column");
          return;
       }
-      out.data.name = component["dataset"].val();
+      component.ref.name = node[refKey].val();
    }
 }
 
@@ -602,7 +599,13 @@ void describe(Reader &ar, Data &out)
    } else if (type == "point") {
       describe(ar, out.body.emplace<PointData>());
    } else if (type == "combined") {
-      readCombinedData(ar, out.name, out.body.emplace<CombinedData>());
+      std::string const context = "the combined data set '" + out.name + "'";
+      auto &combined = out.body.emplace<CombinedData>();
+      if (ar.has("axes")) {
+         ar.cursor().error(context + " must not have \"axes\": its columns are declared by the domains");
+      } else {
+         readCombined(ar, context, "dataset", combined);
+      }
    } else if (ar.has("type")) {
       ar.cursor().error("unknown type of dataset '" + type + "'");
    }
@@ -1006,6 +1009,14 @@ void readDistribution(Cursor const &c, Distribution &out, ParseOptions const &op
       HistFactoryDist body;
       describe(ar, body);
       out.body = std::move(body);
+   } else if (type == "combined_dist") {
+      std::string const context = "the combined_dist '" + out.name + "'";
+      auto &combined = out.body.emplace<CombinedDist>();
+      if (ar.has("extended")) {
+         c.error(context + " must not have \"extended\": whether it is extended follows from its components");
+      } else {
+         readCombined(ar, context, "dist", combined);
+      }
    } else {
       out.body = GenericObject{type, &c.node()};
       // The importers read the other components.
@@ -1349,6 +1360,13 @@ Function_t parseInterpolated(JSONNode const &node, Diagnostics &diagnostics, Int
 }
 
 } // namespace
+
+Distribution parseDistribution(JSONNode const &distribution, Diagnostics &diagnostics)
+{
+   Distribution out;
+   readDistribution(Cursor{distribution, diagnostics}, out, {});
+   return out;
+}
 
 Data parseData(JSONNode const &data, Diagnostics &diagnostics)
 {

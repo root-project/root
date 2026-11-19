@@ -193,17 +193,34 @@ struct BinnedData {
    std::optional<GaussianUncertainty> uncertainty;
 };
 
-/// The sub-data set of a combined data set for one key, which has one label per column.
-struct CombinedDataComponent {
+/// The data set or distribution that a combined data set or distribution selects for one key, which has one label per
+/// column.
+template <class Ref_t>
+struct CombinedComponent {
    std::vector<std::string> key;
-   DataRef data;
+   Ref_t ref;
 };
 
-/// Data sets that are selected by a key (HS3 #119). The columns are categorical axes of the domains.
-struct CombinedData {
+/// Data sets or distributions that are selected by a key (HS3 #119). The columns are categorical axes of the domains.
+template <class Ref_t>
+struct Combined {
    std::vector<std::string> columns;
-   std::vector<CombinedDataComponent> components;
+   std::vector<CombinedComponent<Ref_t>> components;
+
+   /// The component for a key, or nullptr.
+   CombinedComponent<Ref_t> const *find(std::vector<std::string> const &key) const
+   {
+      for (auto const &component : components) {
+         if (component.key == key) {
+            return &component;
+         }
+      }
+      return nullptr;
+   }
 };
+
+using CombinedData = Combined<DataRef>;
+using CombinedDist = Combined<DistributionRef>;
 
 struct Data {
    std::string name;
@@ -419,7 +436,7 @@ struct HistFactoryDist {
 
 struct Distribution {
    std::string name;
-   std::variant<GenericObject, HistFactoryDist> body;
+   std::variant<GenericObject, HistFactoryDist, CombinedDist> body;
 };
 
 struct Function {
@@ -571,6 +588,9 @@ void upgradeHistFactoryDist(Detail::JSONNode &distribution, Version const &versi
 /// document. Problems are reported in `diagnostics`, and if there are errors the document must not be used.
 HS3Document parseDocument(Detail::JSONNode const &root, Diagnostics &diagnostics, ParseOptions const &options = {});
 
+/// Reads a distribution that doesn't come with a document.
+Distribution parseDistribution(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
+
 /// Reads a HistFactory distribution that doesn't come with a document.
 HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
 
@@ -591,6 +611,9 @@ void writeDocument(Detail::JSONNode &root, HS3Document const &doc);
 
 /// Writes a HistFactory distribution, without its name.
 void writeHistFactoryDist(Detail::JSONNode &node, HistFactoryDist const &dist);
+
+/// Writes a combined distribution, without its name.
+void writeCombinedDist(Detail::JSONNode &node, CombinedDist const &dist);
 
 /// Writes the axes, contents and uncertainties of binned data, without its name and type.
 void writeBinnedData(Detail::JSONNode &node, BinnedData const &data);
@@ -644,8 +667,9 @@ validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &optio
 /// The checks of validate(), for a document that is still needed if it doesn't pass them.
 void checkDocument(HS3Document const &doc, Diagnostics &diagnostics, ValidateOptions const &options = {});
 
-/// Same as validate(), but for a single HistFactory distribution that doesn't come with a document.
+/// Same as validate(), but for a single HistFactory or combined distribution that doesn't come with a document.
 void validateHistFactoryDist(HistFactoryDist const &dist, std::string const &name, Diagnostics &diagnostics);
+void validateCombinedDist(CombinedDist const &dist, std::string const &name, Diagnostics &diagnostics);
 
 /// Reads the leading "MAJOR.MINOR" and the optional ".PATCH" of an HS3 version string.
 bool parseVersion(std::string const &version, Version &out);

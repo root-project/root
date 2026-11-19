@@ -198,6 +198,19 @@ void writeModifier(JSONNode &modifiers, Modifier const &modifier)
               modifier);
 }
 
+// The columns and the components of a combined data set or distribution, which name what they select in `refKey`.
+template <class Ref_t>
+void writeCombined(JSONNode &node, Combined<Ref_t> const &combined, const char *refKey)
+{
+   node["columns"].fill_seq(combined.columns);
+   JSONNode &components = node["components"].set_seq();
+   for (auto const &component : combined.components) {
+      JSONNode &out = components.append_child().set_map();
+      out["key"].fill_seq(component.key);
+      out[refKey] << component.ref.name;
+   }
+}
+
 void writeParameterPoint(JSONNode &points, ParameterPoint const &point)
 {
    JSONNode &parameters = appendNamed(points, point.name)["parameters"].set_seq();
@@ -242,13 +255,7 @@ void writeData(JSONNode &dataArray, Data const &data)
                  },
                  [&](CombinedData const &d) {
                     node["type"] << "combined";
-                    node["columns"].fill_seq(d.columns);
-                    JSONNode &components = node["components"].set_seq();
-                    for (CombinedDataComponent const &component : d.components) {
-                       JSONNode &out = components.append_child().set_map();
-                       out["key"].fill_seq(component.key);
-                       out["dataset"] << component.data.name;
-                    }
+                    writeCombined(node, d, "dataset");
                  },
                  [&](PointData const &d) {
                     node["type"] << "point";
@@ -517,6 +524,12 @@ void writeHistFactoryDist(JSONNode &node, HistFactoryDist const &dist)
          writeContents(data["errors"], *sample.errors);
       }
    }
+}
+
+void writeCombinedDist(JSONNode &node, CombinedDist const &dist)
+{
+   node["type"] << "combined_dist";
+   writeCombined(node, dist, "dist");
 }
 
 void writeDocument(JSONNode &root, HS3Document const &doc)

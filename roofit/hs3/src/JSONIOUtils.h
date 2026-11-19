@@ -50,18 +50,6 @@ bool isLiteralConstVar(RooAbsArg const &arg);
 // if it were not in the workspace.
 bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws);
 
-// The constraint terms among `terms` that belong to the channel `channel` of a model with the channels `channels`:
-// the ones with a global observable (a variable that no channel depends on) and with another variable that the
-// channel depends on. An array of constraints is one term.
-std::vector<RooAbsPdf *>
-constraintsOfChannel(RooAbsPdf const &channel, std::vector<RooAbsPdf *> const &terms, RooArgSet const &channels);
-
-// The channel with its constraint terms as RooFit and HistFactory have them: a product of the constraints and the
-// channel, named "<channel>_with_constraints", from which RooFit takes the constraints when it builds a likelihood.
-// Returns the channel itself if it has none.
-RooAbsPdf &
-channelWithConstraints(RooJSONFactoryWSTool &tool, RooAbsPdf &channel, std::vector<RooAbsPdf *> const &constraints);
-
 // The HS3 type and the observable of `pdf` as a component of an array distribution (RooPoisson, RooGaussian or
 // RooLognormal, over a named observable), or std::nullopt if `pdf` cannot be a component.
 // If `observable` names the mean of a RooGaussian, the Gaussian is written with x and mean swapped (see
@@ -141,12 +129,5 @@ std::string selectionLabel(RooAbsCategory const &indexCat, std::vector<RooCatego
                            std::vector<std::string> const &key);
 // A key as written in the document, for messages: ["a", "b"].
 std::string selectionKeyToString(std::vector<std::string> const &key);
-// Read the columns of a combined distribution or data set from the list `field` of `node`: each entry must be the
-// name of a category in the workspace, i.e. declared by a categorical axis of a domain.
-std::vector<RooCategory *> readSelectionColumns(RooWorkspace const &ws, RooFit::Detail::JSONNode const &node,
-                                                const char *field, std::string const &context);
-// Read and validate the "key" of a component: one label per column, each one of the categories of its column.
-std::vector<std::string> readSelectionKey(RooFit::Detail::JSONNode const &component,
-                                          std::vector<RooCategory *> const &columns, std::string const &context);
 
 #endif
