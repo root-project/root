@@ -1222,60 +1222,33 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
    }
 }
 
-// The constraint terms among `terms` that belong to the channel `channel` of a model with the channels `channels`:
-// the ones with a global observable (a variable that no channel depends on) and with another variable that the
+// Whether the term `term` of a likelihood is a constraint term of the channel `channel` of a model with the channels
+// `channels`: it has a global observable (a variable that no channel depends on) and another variable that the
 // channel depends on. An array of constraints is one term.
-std::vector<RooAbsPdf *>
-constraintsOfChannel(RooAbsPdf const &channel, std::vector<RooAbsPdf *> const &terms, RooArgSet const &channels)
+bool isConstraintOfChannel(RooAbsPdf const &term, RooAbsPdf const &channel, RooArgSet const &channels)
 {
-   std::vector<RooAbsPdf *> out;
-   for (RooAbsPdf *candidate : terms) {
-      for (RooAbsPdf *term : {candidate}) {
-         if (term == &channel || channels.containsInstance(*term)) {
-            continue;
-         }
-         RooArgSet leaves;
-         term->leafNodeServerList(&leaves);
-         RooArgSet parameters;
-         bool hasGlobalObservable = false;
-         for (RooAbsArg *leaf : leaves) {
-            auto *var = dynamic_cast<RooRealVar *>(leaf);
-            if (!var) {
-               continue;
-            }
-            // Whether a global observable is constant yet depends on where the document has its value: as a
-            // parameter, or in the data set of the constraint, which is read later.
-            if (std::none_of(channels.begin(), channels.end(),
-                             [&](RooAbsArg const *other) { return other->dependsOn(*var); })) {
-               hasGlobalObservable = true;
-            } else {
-               parameters.add(*var);
-            }
-         }
-         if (hasGlobalObservable && !parameters.empty() && channel.dependsOn(parameters) &&
-             std::find(out.begin(), out.end(), term) == out.end()) {
-            out.push_back(term);
-         }
+   if (&term == &channel || channels.containsInstance(term)) {
+      return false;
+   }
+   RooArgSet leaves;
+   term.leafNodeServerList(&leaves);
+   RooArgSet parameters;
+   bool hasGlobalObservable = false;
+   for (RooAbsArg *leaf : leaves) {
+      auto *var = dynamic_cast<RooRealVar *>(leaf);
+      if (!var) {
+         continue;
+      }
+      // Whether a global observable is constant yet depends on where the document has its value: as a parameter, or
+      // in the data set of the constraint, which is read later.
+      if (std::none_of(channels.begin(), channels.end(),
+                       [&](RooAbsArg const *other) { return other->dependsOn(*var); })) {
+         hasGlobalObservable = true;
+      } else {
+         parameters.add(*var);
       }
    }
-   return out;
-}
-
-// The channel with its constraint terms as RooFit and HistFactory have them: a product of the constraints and the
-// channel, named "<channel>_with_constraints", from which RooFit takes the constraints when it builds a likelihood.
-// Returns the channel itself if it has none.
-RooAbsPdf &
-channelWithConstraints(RooJSONFactoryWSTool &tool, RooAbsPdf &channel, std::vector<RooAbsPdf *> const &constraints)
-{
-   if (constraints.empty()) {
-      return channel;
-   }
-   RooArgList factors;
-   for (RooAbsPdf *constraint : constraints) {
-      factors.add(*constraint);
-   }
-   factors.add(channel);
-   return tool.wsEmplace<RooProdPdf>(std::string(channel.GetName()) + "_with_constraints", factors);
+   return hasGlobalObservable && !parameters.empty() && channel.dependsOn(parameters);
 }
 
 // The other terms of the likelihoods of the document that have the distribution `dist` as a term: their other
@@ -1326,36 +1299,27 @@ void attachConstraintsToChannels(RooAbsPdf &pdf, RooArgSet &constraints)
    }
    RooArgSet attached;
    for (auto *constraint : static_range_cast<RooAbsPdf *>(constraints)) {
-      // An array of constraints enters as a whole: its components have no names in a document, so that a channel
-      // could not be written with them as factors.
-      std::vector<RooAbsPdf *> terms{constraint};
-      // Decided for all terms before anything is changed, so that a constraint is not attached in part.
-      std::set<RooAbsPdf *> found;
-      std::vector<std::pair<RooProdPdf *, RooAbsPdf *>> factors;
+      // Decided for all channels before any is changed: a channel that has the constraint depends on its global
+      // observable, which then would not look like one anymore.
+      bool isFactor = false;
+      std::vector<RooProdPdf *> products;
       for (auto *channel : static_range_cast<RooAbsPdf *>(channels)) {
          auto *product = dynamic_cast<RooProdPdf *>(channel);
          if (!product || channel == constraint) {
             continue;
          }
-         for (RooAbsPdf *term : terms) {
-            if (product->pdfList().find(*term)) {
-               found.insert(term);
-            }
-         }
-         for (RooAbsPdf *term : constraintsOfChannel(*channel, terms, channels)) {
-            if (!product->pdfList().find(*term)) {
-               factors.emplace_back(product, term);
-            }
-            found.insert(term);
+         if (product->pdfList().find(*constraint)) {
+            isFactor = true;
+         } else if (isConstraintOfChannel(*constraint, *channel, channels)) {
+            products.push_back(product);
          }
       }
-      if (terms.empty() || found.size() != terms.size()) {
-         continue;
+      for (RooProdPdf *product : products) {
+         product->addPdfs(RooArgSet{*constraint});
       }
-      for (auto const &[channel, term] : factors) {
-         channel->addPdfs(RooArgSet{*term});
+      if (isFactor || !products.empty()) {
+         attached.add(*constraint);
       }
-      attached.add(*constraint);
    }
    constraints.remove(attached);
 }
@@ -1973,9 +1937,10 @@ void RooFit::HS3::buildCombinedDist(RooJSONFactoryWSTool &tool, std::string cons
       pdfMap[selectionLabel(component.key)] = tool.request<RooAbsPdf>(component.ref.name, name);
    }
 
-   // In RooFit, the constraint terms of a channel are factors of it. A channel that is a product gets them when the
-   // likelihood is read; the other channels are wrapped in a product here, since the components of a RooSimultaneous
-   // can't be replaced later. The candidates are the other terms of the likelihoods that have this distribution.
+   // In RooFit, the constraint terms of a channel are factors of it, which RooFit takes out of the product when it
+   // builds a likelihood. A channel that is a product gets them when the likelihood is read; the other channels are
+   // wrapped in a product "<channel>_with_constraints" here, since the components of a RooSimultaneous can't be
+   // replaced later. The candidates are the other terms of the likelihoods that have this distribution.
    std::vector<RooAbsPdf *> terms;
    for (std::string const &term : otherLikelihoodTerms) {
       if (auto *pdf = tool.tryRequest<RooAbsPdf>(term)) {
@@ -1987,8 +1952,16 @@ void RooFit::HS3::buildCombinedDist(RooJSONFactoryWSTool &tool, std::string cons
       channels.add(*item.second, /*silent=*/true);
    }
    for (auto &item : pdfMap) {
-      if (!dynamic_cast<RooProdPdf *>(item.second)) {
-         item.second = &channelWithConstraints(tool, *item.second, constraintsOfChannel(*item.second, terms, channels));
+      RooAbsPdf &channel = *item.second;
+      RooArgList factors;
+      for (RooAbsPdf *term : terms) {
+         if (!dynamic_cast<RooProdPdf *>(&channel) && isConstraintOfChannel(*term, channel, channels)) {
+            factors.add(*term);
+         }
+      }
+      if (!factors.empty()) {
+         factors.add(channel);
+         item.second = &tool.wsEmplace<RooProdPdf>(std::string(channel.GetName()) + "_with_constraints", factors);
       }
    }
 
