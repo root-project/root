@@ -93,6 +93,6 @@ foreach(_mask IN LISTS _masks)
   ROOTTEST_ADD_TEST(missingDictionaries${_mask}
                     MACRO checkMissingDictionaries.C
                     MACROARG
-                      "${_mask},\"${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}missingDictionaries${_mask}_dictrflx\""
+                      "${_mask},\"$<TARGET_FILE:${targetname_libgen}>\""
                     FIXTURES_REQUIRED ${_fixture})
 endforeach()
