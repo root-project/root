@@ -238,7 +238,8 @@ ROOT::Experimental::Internal::RPageSinkDaos::RPageSinkDaos(std::string_view ntup
 
 ROOT::Experimental::Internal::RPageSinkDaos::~RPageSinkDaos() = default;
 
-void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
+void ROOT::Experimental::Internal::RPageSinkDaos::CommitHeaderImpl(const unsigned char *serializedHeader,
+                                                                   std::uint32_t length)
 {
    auto opts = dynamic_cast<const RNTupleWriteOptionsDaos *>(&GetWriteOptions());
    fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();

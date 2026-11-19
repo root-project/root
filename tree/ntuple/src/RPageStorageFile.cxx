@@ -86,7 +86,7 @@ ROOT::Internal::RPageSinkFile::RPageSinkFile(std::unique_ptr<ROOT::Internal::RNT
 
 ROOT::Internal::RPageSinkFile::~RPageSinkFile() {}
 
-void ROOT::Internal::RPageSinkFile::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
+void ROOT::Internal::RPageSinkFile::CommitHeaderImpl(const unsigned char *serializedHeader, std::uint32_t length)
 {
    auto zipBuffer = MakeUninitArray<unsigned char>(length);
    auto szZipHeader =

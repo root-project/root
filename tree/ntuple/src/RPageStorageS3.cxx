@@ -229,7 +229,8 @@ void ROOT::Experimental::Internal::RPageSinkS3::PutObject(const std::string &url
       throw ROOT::RException(R__FAIL("S3 PUT failed for " + url + ": " + status.fStatusMsg));
 }
 
-void ROOT::Experimental::Internal::RPageSinkS3::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
+void ROOT::Experimental::Internal::RPageSinkS3::CommitHeaderImpl(const unsigned char *serializedHeader,
+                                                                 std::uint32_t length)
 {
    // fAnchor.fUrlTemplate keeps its default ("${baseurl}/${objid}").
 
