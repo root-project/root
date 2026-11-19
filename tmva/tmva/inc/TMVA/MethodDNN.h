@@ -73,7 +73,9 @@
 
 namespace TMVA {
 
-class MethodDNN : public MethodBase
+class R__DEPRECATED(6, 46,
+                    "Please train neural networks with a dedicated machine learning library instead, and use SOFIE "
+                    "for inference in C++.") MethodDNN : public MethodBase
 {
    friend struct TestMethodDNNValidationSize;
 

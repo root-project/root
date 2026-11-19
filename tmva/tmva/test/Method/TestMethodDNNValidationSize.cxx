@@ -11,6 +11,13 @@
 
 using std::runtime_error, std::unique_ptr, std::shared_ptr;
 
+// MethodDNN is deprecated, but still tested until its removal in ROOT 6.46
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 namespace TMVA {
 
 struct TestMethodDNNValidationSize {

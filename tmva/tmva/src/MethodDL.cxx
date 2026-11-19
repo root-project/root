@@ -25,6 +25,14 @@
  * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
+/*! \class TMVA::MethodDL
+\ingroup TMVA
+Deep neural network method, with dense, convolutional and recurrent layers.
+
+\deprecated MethodDL and the classes in the TMVA::DNN namespace will be removed in ROOT 6.46. Please train neural
+networks with a dedicated machine learning library instead, and use SOFIE for inference in C++.
+*/
+
 #include "TFormula.h"
 #include "TString.h"
 #include "TMath.h"
@@ -54,6 +62,13 @@
 #endif
 
 #include <chrono>
+
+// MethodDL is deprecated, but still has to be registered until its removal in ROOT 6.46
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#else
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 REGISTER_METHOD(DL)
 
@@ -262,9 +277,8 @@ void MethodDL::ProcessOptions()
 #ifdef R__HAS_TMVACPU  // TMVA has CPU BLAS and IMT support
       Log() << kINFO << "Will now use the CPU architecture with BLAS and IMT support !" << Endl;
 #else  // TMVA has no CPU BLAS or IMT support
-      Log() << kINFO << "Multi-core CPU backend not enabled. For better performances, make sure "
-                          "you have a BLAS implementation and it was successfully "
-                         "detected by CMake as well that the imt CMake flag is set."
+      Log() << kINFO << "Multi-core CPU backend not enabled. For better performance, build ROOT with the "
+                        "tmva-cpu option, which requires a BLAS implementation and the imt option."
             << Endl;
       Log() << kINFO << "Will use anyway the CPU architecture but with slower performance" << Endl;
 #endif
@@ -430,7 +444,10 @@ void MethodDL::ProcessOptions()
 /// default initializations
 void MethodDL::Init()
 {
-   // Nothing to do here
+   Log() << kWARNING
+         << "MethodDL is deprecated and will be removed in ROOT 6.46. Please train neural networks with a "
+            "dedicated machine learning library instead, and use SOFIE for inference in C++."
+         << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
