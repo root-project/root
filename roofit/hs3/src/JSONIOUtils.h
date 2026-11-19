@@ -9,22 +9,12 @@
 #include <vector>
 #include <RooFit/Detail/JSONInterface.h>
 
+#include "HS3Document.h"
+
 class RooAbsArg;
-class RooAbsBinning;
-class RooAbsCollection;
-class RooAbsPdf;
-class RooAbsReal;
-class RooArgList;
-class ParamHistFunc;
-
-// A RooProdPdf with this attribute represents an HS3 `array_dist`: a product of one-dimensional distributions of one
-// type, each over its own observable. The factors are the components, imported as individual pdfs named after their
-// observable.
-inline constexpr const char *arrayDistTag = "hs3_array_dist";
-
-class RooAbsBinning;
 class RooAbsCategory;
 class RooAbsCollection;
+class RooAbsPdf;
 class RooAbsReal;
 class RooArgList;
 class RooArgSet;
@@ -32,6 +22,11 @@ class RooCategory;
 class RooDataHist;
 class RooWorkspace;
 class ParamHistFunc;
+
+// A RooProdPdf with this attribute represents an HS3 `array_dist`: a product of one-dimensional distributions of one
+// type, each over its own observable. The factors are the components, imported as individual pdfs named after their
+// observable.
+inline constexpr const char *arrayDistTag = "hs3_array_dist";
 
 // True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
 bool isLiteralConstVar(RooAbsArg const &arg);
@@ -63,13 +58,6 @@ void writeReference(RooFit::Detail::JSONNode &node, RooAbsArg const &arg);
 bool startsWith(std::string_view str, std::string_view prefix);
 bool endsWith(std::string_view str, std::string_view suffix);
 std::string removeSuffix(std::string_view str, std::string_view suffix);
-void writeAxisBinning(RooFit::Detail::JSONNode &node, const RooAbsBinning &binning);
-
-// The key of a fixed domain axis (HS3 #131): the parameter only takes this value, and RooFit reads it as a
-// RooConstVar.
-inline constexpr const char *fixedValueKey = "value";
-bool parseHS3Version(std::string const &version, int &major, int &minor);
-bool isHS3VersionBefore(std::string const &version, int major, int minor);
 
 // A RooHistFunc or RooHistPdf is evaluated with its own observables (`funcObs`), which are mapped by position onto
 // the variables of its histogram (`histObs`) and need not have the same names, e.g. after a RooCustomizer replaced
@@ -85,7 +73,7 @@ std::vector<RooAbsReal *> paramHistFuncParamsInBinOrder(ParamHistFunc const &fun
 RooArgList toParamHistFuncOrder(RooArgList const &paramsInBinOrder, RooAbsCollection const &vars);
 // Documents before HS3 0.3 wrote the parameters of multi-dimensional ParamHistFuncs in TH1 order. No such documents
 // are known; they are rejected instead of being guessed.
-void checkParamHistFuncOrderIsDefined(std::string const &hs3Version, RooAbsCollection const &vars,
+void checkParamHistFuncOrderIsDefined(RooFit::HS3::Version const &version, RooAbsCollection const &vars,
                                       std::string const &context);
 
 // Selection keys (HS3 "combined" data sets and "combined_dist"): a key is one label per column, and the columns are

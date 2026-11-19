@@ -14,7 +14,6 @@
 // tests in testHS3Document.cxx check.
 
 #include "HS3Document.h"
-#include "JSONIOUtils.h"
 
 #include <RooFit/Detail/JSONInterface.h>
 
@@ -36,11 +35,6 @@ void writeBound(JSONNode &node, double value)
    } else {
       node << value;
    }
-}
-
-void writeStrings(JSONNode &node, std::vector<std::string> const &values)
-{
-   node.fill_seq(values);
 }
 
 template <class Tag>
@@ -68,18 +62,6 @@ void writeBinning(JSONNode &node, Binning const &binning)
    }
 }
 
-void writeAxis(JSONNode &node, BinnedAxis const &axis)
-{
-   node.set_map();
-   node["name"] << axis.name;
-   // The range of an irregular binning is given by its "edges": HS3 0.3 forbids "min" and "max" alongside them.
-   if (!std::holds_alternative<EdgesBinning>(axis.binning)) {
-      node["min"] << axis.min;
-      node["max"] << axis.max;
-   }
-   writeBinning(node, axis.binning);
-}
-
 void writeAxis(JSONNode &node, ContinuousAxis const &axis)
 {
    node.set_map();
@@ -96,7 +78,7 @@ void writeAxis(JSONNode &node, CategoricalAxis const &axis)
 {
    node.set_map();
    node["name"] << axis.name;
-   writeStrings(node["categories"], axis.categories);
+   node["categories"].fill_seq(axis.categories);
 }
 
 // An infinite or missing bound of a domain axis is omitted, which means that the range is unbounded.
@@ -105,7 +87,7 @@ void writeAxis(JSONNode &node, DomainAxis const &axis)
    node.set_map();
    node["name"] << axis.name;
    if (axis.fixedValue) {
-      node[fixedValueKey] << *axis.fixedValue;
+      node["value"] << *axis.fixedValue;
       return;
    }
    // HS3 0.3 forbids "min" and "max" alongside "edges", which give the range. They are only written if they differ from
@@ -244,13 +226,7 @@ void writeData(JSONNode &dataArray, Data const &data)
    std::visit(overloaded{
                  [&](BinnedData const &d) {
                     node["type"] << "binned";
-                    writeAxes(node["axes"], d.axes);
-                    writeContents(node["contents"], d.contents);
-                    if (d.uncertainty) {
-                       JSONNode &uncertainty = node["uncertainty"].set_map();
-                       uncertainty["type"] << "gaussian_uncertainty";
-                       uncertainty["sigma"].fill_seq(d.uncertainty->sigma);
-                    }
+                    writeBinnedData(node, d);
                  },
                  [&](UnbinnedData const &d) {
                     node["type"] << "unbinned";
@@ -274,11 +250,11 @@ void writeData(JSONNode &dataArray, Data const &data)
                  },
                  [&](CombinedData const &d) {
                     node["type"] << "combined";
-                    writeStrings(node["columns"], d.columns);
+                    node["columns"].fill_seq(d.columns);
                     JSONNode &components = node["components"].set_seq();
                     for (CombinedDataComponent const &component : d.components) {
                        JSONNode &out = components.append_child().set_map();
-                       writeStrings(out["key"], component.key);
+                       out["key"].fill_seq(component.key);
                        out["dataset"] << component.data.name;
                     }
                  },
@@ -342,7 +318,7 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
             }
          }
          if (!item.second.tags.empty()) {
-            writeStrings(node["tags"], item.second.tags);
+            node["tags"].fill_seq(item.second.tags);
          }
       }
    }
@@ -351,7 +327,7 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
       for (auto const &item : internal.combinedDistributions) {
          JSONNode &node = combined[item.first].set_map();
          node["index_cat"] << item.second.indexCat;
-         writeStrings(node["labels"], item.second.labels);
+         node["labels"].fill_seq(item.second.labels);
          node["indices"].fill_seq(item.second.indices);
          writeRefs(node["distributions"], item.second.distributions);
       }
@@ -361,7 +337,7 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
       for (auto const &item : internal.combinedDatasets) {
          JSONNode &node = combined[item.first].set_map();
          node["index_cat"] << item.second.indexCat;
-         writeStrings(node["labels"], item.second.labels);
+         node["labels"].fill_seq(item.second.labels);
          node["indices"].fill_seq(item.second.indices);
       }
    }
@@ -392,7 +368,7 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
    if (!internal.bookkeepingColumns.empty()) {
       JSONNode &columns = rootInternal()["bookkeeping_columns"].set_map();
       for (auto const &item : internal.bookkeepingColumns) {
-         writeStrings(columns[item.first], item.second);
+         columns[item.first].fill_seq(item.second);
       }
    }
    if (!internal.stepWidths.empty()) {
@@ -476,6 +452,29 @@ void writeInterpolated(JSONNode &node, Function_t const &function, char const *t
 }
 
 } // namespace
+
+void writeAxis(JSONNode &node, BinnedAxis const &axis)
+{
+   node.set_map();
+   node["name"] << axis.name;
+   // The range of an irregular binning is given by its "edges": HS3 0.3 forbids "min" and "max" alongside them.
+   if (!std::holds_alternative<EdgesBinning>(axis.binning)) {
+      node["min"] << axis.min;
+      node["max"] << axis.max;
+   }
+   writeBinning(node, axis.binning);
+}
+
+void writeBinnedData(JSONNode &node, BinnedData const &data)
+{
+   writeAxes(node["axes"], data.axes);
+   writeContents(node["contents"], data.contents);
+   if (data.uncertainty) {
+      JSONNode &uncertainty = node["uncertainty"].set_map();
+      uncertainty["type"] << "gaussian_uncertainty";
+      uncertainty["sigma"].fill_seq(data.uncertainty->sigma);
+   }
+}
 
 void writeInterpolatedFunction(JSONNode &node, InterpolatedFunction const &function)
 {

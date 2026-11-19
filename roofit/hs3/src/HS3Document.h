@@ -19,6 +19,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <tuple>
 #include <variant>
 #include <vector>
 
@@ -41,13 +42,7 @@ struct Version {
 
 inline bool operator<(Version const &l, Version const &r)
 {
-   if (l.major != r.major) {
-      return l.major < r.major;
-   }
-   if (l.minor != r.minor) {
-      return l.minor < r.minor;
-   }
-   return l.patch < r.patch;
+   return std::tie(l.major, l.minor, l.patch) < std::tie(r.major, r.minor, r.patch);
 }
 
 /// Combines lambdas into one visitor for std::visit(). The compiler complains about the alternatives without lambda.
@@ -57,6 +52,13 @@ struct overloaded : Ts... {
 };
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
+
+/// The name of the alternative that a variant holds, e.g. of an axis or of a modifier.
+template <class... Ts>
+std::string const &nameOf(std::variant<Ts...> const &v)
+{
+   return std::visit([](auto const &alternative) -> std::string const & { return alternative.name; }, v);
+}
 
 /// A name that says what it refers to, so that for example a DataRef can't be used as a DomainRef.
 template <class Tag>
@@ -229,6 +231,8 @@ struct Analysis {
 /// its type in RooFit::JSONIO::importers().
 struct GenericObject {
    std::string type;
+   /// The object in the JSON tree that the document was read from. In a document that is exported, the distributions
+   /// refer to what the exporters wrote once all of them are written, and the functions don't have a node.
    Detail::JSONNode const *node = nullptr;
 };
 
@@ -261,13 +265,7 @@ inline bool operator!=(Interpolation const &l, Interpolation const &r)
 }
 inline bool operator<(Interpolation const &l, Interpolation const &r)
 {
-   if (l.type != r.type) {
-      return l.type < r.type;
-   }
-   if (l.in != r.in) {
-      return l.in < r.in;
-   }
-   return l.out < r.out;
+   return std::tie(l.type, l.in, l.out) < std::tie(r.type, r.in, r.out);
 }
 
 inline constexpr Interpolation additivePiecewiseLinear{InterpolationType::Add, InterpolationFunction::Poly1,
@@ -521,7 +519,7 @@ std::optional<ValidatedHS3Document>
 validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options);
 } // namespace HS3
 
-/// An HS3 document. It is move-only, because generic objects refer to the JSON tree that the document was read from.
+/// An HS3 document. It is move-only, because generic objects refer to the JSON tree of the document.
 class HS3Document {
 public:
    HS3::Metadata metadata;
@@ -566,6 +564,9 @@ HS3Document parseDocument(Detail::JSONNode const &root, Diagnostics &diagnostics
 /// Reads a HistFactory distribution that doesn't come with a document.
 HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
 
+/// Reads a data set that doesn't come with a document.
+Data parseData(Detail::JSONNode const &data, Diagnostics &diagnostics);
+
 /// Reads the axes of binned data that doesn't come with a document.
 std::vector<BinnedAxis> parseBinnedAxes(Detail::JSONNode const &axes, Diagnostics &diagnostics);
 
@@ -580,6 +581,12 @@ void writeDocument(Detail::JSONNode &root, HS3Document const &doc);
 
 /// Writes a HistFactory distribution, without its name.
 void writeHistFactoryDist(Detail::JSONNode &node, HistFactoryDist const &dist);
+
+/// Writes the axes, contents and uncertainties of binned data, without its name and type.
+void writeBinnedData(Detail::JSONNode &node, BinnedData const &data);
+
+/// Writes an axis of binned data.
+void writeAxis(Detail::JSONNode &node, BinnedAxis const &axis);
 
 /// Writes the functions "interpolation" and "interpolation0d", with a single interpolation if they are all the same.
 void writeInterpolatedFunction(Detail::JSONNode &node, InterpolatedFunction const &function);
@@ -640,6 +647,33 @@ void mergeDuplicateModifiers(HistFactoryDist &dist, std::string const &channel, 
 
 /// Makes the most common interpolation of the modifiers the "default_interpolation", which they then don't repeat.
 void factorOutDefaultInterpolation(HistFactoryDist &dist);
+
+// HS3 requires the terms of a likelihood, and the components of a combined distribution or data set, to have distinct
+// variates. For this, the generic distributions are read as far as the standard says what they consist of (e.g. the
+// factors of a product), through the nodes that the document refers to.
+
+/// Describes each variate that is shared although it must be distinct: by the terms of a likelihood, by the
+/// components of a combined distribution that no likelihood lists (the others are checked through the likelihood), or
+/// by the components of a combined data set, except for bookkeeping columns.
+std::vector<std::string> sharedVariates(HS3Document const &doc);
+
+/// The variates of the "distributions" of a likelihood, which it pairs with data, with the columns of its combined
+/// distributions.
+std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likelihood);
+
+/// The axes that several components of a combined data set have, by combined data set.
+std::map<std::string, std::set<std::string>> sharedAxes(HS3Document const &doc);
+
+/// The bookkeeping columns by combined data set: the declared ones (RooFitInternal::bookkeepingColumns), except for
+/// those that are a variate of a distribution after all. They are exempt from the requirement of distinct variates.
+std::map<std::string, std::set<std::string>> bookkeepingColumns(HS3Document const &doc);
+
+/// Writes each term of the likelihoods once: a factor of a product that is a term of the likelihood as well would enter
+/// it twice, so it is removed from the "factors" of the product in `root`, the JSON tree that the document is written
+/// to. Only products that no other distribution uses are changed (being a component of a combined distribution is not
+/// a use), only factors that are terms of every likelihood that has the product as a term, and a product whose factors
+/// are all such terms is left as it is. Returns the removed factors by product.
+std::map<std::string, std::set<std::string>> writeLikelihoodTermsOnce(HS3Document const &doc, Detail::JSONNode &root);
 
 } // namespace HS3
 } // namespace RooFit
