@@ -44,7 +44,7 @@ public:
    /// together with the (up to four) RooArgSets associated with this master code.
    Output retrieve(int masterCode)
    {
-      Output out{.codes = _clArr[masterCode], .sets = {}};
+      Output out{_clArr[masterCode], {}};
       for (std::size_t iArr = 0; iArr < 4; ++iArr) {
          out.sets[iArr] = _asArr[iArr][masterCode].get();
       }
