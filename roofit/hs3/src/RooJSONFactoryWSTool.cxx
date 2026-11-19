@@ -549,6 +549,46 @@ void importParameterStepWidths(RooWorkspace &workspace, HS3Document const &doc)
    }
 }
 
+// Check that the terms of the likelihoods have distinct variates (see HS3::sharedVariates()) and list the constraints
+// of their HistFactory modifiers (see HS3::unlistedConstraints()). Documents of versions before 0.3, which RooFit
+// wrote with shared variates itself, are read with a warning. Returns the bookkeeping columns, which may be shared.
+std::set<std::string> checkVariates(HS3Document const &doc)
+{
+   const bool isLegacy = doc.metadata.version < HS3::Version{0, 3};
+   std::set<std::string> bookkeepingColumns;
+   for (auto const &[dataset, columns] : HS3::bookkeepingColumns(doc)) {
+      for (std::string const &column : columns) {
+         RooJSONFactoryWSTool::warning(
+            "RooFitHS3: the axis '" + column + "' of the components of the combined data set '" + dataset +
+            "' is declared as a bookkeeping column without statistical meaning (misc.ROOT_internal."
+            "bookkeeping_columns), so it may be shared by the components, although HS3 requires distinct axes.");
+         bookkeepingColumns.insert(column);
+      }
+   }
+   for (std::string const &message : HS3::sharedVariates(doc)) {
+      if (!isLegacy) {
+         RooJSONFactoryWSTool::error("invalid HS3: " + message +
+                                     ". The terms of a likelihood and the components of a combined distribution or "
+                                     "data set must have distinct variates.");
+      }
+      RooJSONFactoryWSTool::warning("RooFitHS3: " + message +
+                                    ". HS3 0.3 requires distinct variates; the document is read anyway, since it "
+                                    "declares an older version.");
+   }
+   if (!isLegacy) {
+      std::vector<std::string> notes;
+      for (std::string const &message : HS3::unlistedConstraints(doc, &notes)) {
+         RooJSONFactoryWSTool::error("invalid HS3: " + message +
+                                     ". The \"constraints\" of a modifier add no term to the likelihood, which has "
+                                     "to list them.");
+      }
+      for (std::string const &note : notes) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: " + note + ".");
+      }
+   }
+   return bookkeepingColumns;
+}
+
 // Declare the bookkeeping columns of the exported document (see HS3::bookkeepingColumns()): the axes that several
 // components of a combined data set share, and whose variable in the workspace `ws` is used by nothing else, i.e. has
 // no clients and is in no set of a ModelConfig. RooAbsData::split() keeps such a column (e.g. an event number) in
@@ -3581,10 +3621,9 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
       validated = HS3::validate(std::move(parsed), diagnostics, validateOptions);
    }
    HS3::report(diagnostics);
-   // Whether the likelihoods list their constraints is checked on the document as it is, before the components that
-   // are read as constraint terms are taken out of it.
-   std::vector<std::string> constraintNotes;
-   std::vector<std::string> const unlistedConstraints = HS3::unlistedConstraints(validated->doc(), &constraintNotes);
+   // What HS3 requires of the variates and the constraints is checked on the document as it is, before the components
+   // that are read as constraint terms are taken out of it.
+   std::set<std::string> const bookkeepingColumns = checkVariates(validated->doc());
    HS3::AuxiliaryConstraints const auxiliary =
       HS3::readAuxiliaryChannelsAsConstraints(*validated, config().importConstraintsAsChannels);
    for (std::string const &message : auxiliary.warnings) {
@@ -3675,39 +3714,6 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
       }
    }
    assembleCombinedData(doc, _workspace, datasets);
-
-   // Now, read in analyses and likelihoods if there are any
-
-   // Distinct variates (see HS3::sharedVariates()). Documents of versions before 0.3, which RooFit wrote with shared
-   // variates itself, are read with a warning.
-   std::set<std::string> bookkeepingColumns;
-   for (auto const &[dataset, columns] : HS3::bookkeepingColumns(doc)) {
-      for (std::string const &column : columns) {
-         warning("RooFitHS3: the axis '" + column + "' of the components of the combined data set '" + dataset +
-                 "' is declared as a bookkeeping column without statistical meaning (misc.ROOT_internal."
-                 "bookkeeping_columns), so it may be shared by the components, although HS3 requires distinct axes.");
-         bookkeepingColumns.insert(column);
-      }
-   }
-   for (std::string const &message : HS3::sharedVariates(doc)) {
-      if (!(doc.metadata.version < HS3::Version{0, 3})) {
-         error("invalid HS3: " + message +
-               ". The terms of a likelihood and the components of a combined distribution or data set must have "
-               "distinct variates.");
-      }
-      warning("RooFitHS3: " + message +
-              ". HS3 0.3 requires distinct variates; the document is read anyway, since it declares an older "
-              "version.");
-   }
-   if (!(doc.metadata.version < HS3::Version{0, 3})) {
-      for (std::string const &message : unlistedConstraints) {
-         error("invalid HS3: " + message +
-               ". The \"constraints\" of a modifier add no term to the likelihood, which has to list them.");
-      }
-      for (std::string const &note : constraintNotes) {
-         warning("RooFitHS3: " + note + ".");
-      }
-   }
 
    for (auto const &analysis : doc.analyses) {
       importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns, auxiliary.terms);
