@@ -312,8 +312,13 @@ def download_file(url: str, dest: str) -> None:
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
 
-    with open(dest, 'wb') as fout, get(url, timeout=300) as req:
-        fout.write(req.content)
+    # We need to download in chunks for 32 bits platforms and payloads 
+    # larger than 4 GB
+    with get(url, timeout=300, stream=True) as req:
+        req.raise_for_status()
+        with open(dest, 'wb') as fout:
+            for chunk in req.iter_content(chunk_size=1 << 20):
+                fout.write(chunk)
 
 
 def download_latest(url: str, prefix: str, destination: str) -> str:
