@@ -60,8 +60,6 @@ public:
       return descriptor;
    }
 
-   ROOT::NTupleSize_t GetNEntries() const final { return 0; }
-
    void ConnectFields(const std::vector<ROOT::RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry)
    {
       auto connectField = [&](ROOT::RFieldBase &f) {

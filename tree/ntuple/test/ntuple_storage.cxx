@@ -39,8 +39,6 @@ protected:
       return descriptor;
    }
 
-   ROOT::NTupleSize_t GetNEntries() const final { return 0; }
-
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &, ROOT::NTupleSize_t) final {}
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}

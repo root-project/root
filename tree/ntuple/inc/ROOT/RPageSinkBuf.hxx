@@ -135,8 +135,6 @@ public:
 
    const ROOT::RNTupleDescriptor &GetDescriptor() const final;
 
-   ROOT::NTupleSize_t GetNEntries() const final { return fInnerSink->GetNEntries(); }
-
    void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 

@@ -331,15 +331,10 @@ public:
    RPageSink &operator=(RPageSink &&) = default;
    ~RPageSink() override;
 
-   /// Returns the sink's write options.
    const ROOT::RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
-
    bool IsInitialized() const { return fIsInitialized; }
-
    /// Return the RNTupleDescriptor being constructed.
    virtual const ROOT::RNTupleDescriptor &GetDescriptor() const = 0;
-
-   virtual ROOT::NTupleSize_t GetNEntries() const = 0;
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
@@ -527,7 +522,7 @@ public:
 
    const ROOT::RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
-   ROOT::NTupleSize_t GetNEntries() const final { return fPrevClusterNEntries; }
+   ROOT::NTupleSize_t GetNCommittedEntries() const { return fPrevClusterNEntries; }
 
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) override;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
