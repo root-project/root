@@ -7,12 +7,3 @@
 # These checks are run as expected failures: if one of them starts to pass, or
 # if an entry matches no check, the test fails. Remove entries in the same pull
 # request that fixes them.
-ins2689657_r3614663_separate_likelihood::round_trip  # export: a formula b*b among the factors of a sample becomes two normfactors of the same name
-ins2689657_r3614664_ratio_likelihood::round_trip  # export: a formula b*b among the factors of a sample becomes two normfactors of the same name
-ins2905253_r3969485_workspace-postFit_STXS::structure_import  # import: two histosys modifiers of the same name in a sample
-ins2905253_r3969485_workspace-postFit_STXS::round_trip  # import: two histosys modifiers of the same name in a sample
-ins2905253_r3969486_workspace-postFit_PTV::structure_import  # import: two histosys modifiers of the same name in a sample
-ins2905253_r3969486_workspace-postFit_PTV::nll_scan_obsData_mu  # import: two histosys modifiers of the same name in a sample
-ins2905253_r3969486_workspace-postFit_PTV::nll_scan_obsData_mu_PTV_150_250  # import: two histosys modifiers of the same name in a sample
-ins2905253_r3969486_workspace-postFit_PTV::nll_scan_obsData_mu_PTV_250_  # import: two histosys modifiers of the same name in a sample
-ins2905253_r3969486_workspace-postFit_PTV::round_trip  # import: two histosys modifiers of the same name in a sample
