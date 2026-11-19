@@ -2366,6 +2366,48 @@ TEST(RooFitHS3, TypeKeysMatchTheCatalog)
    EXPECT_NE(dynamic_cast<RooExtendPdf *>(legacyExtended.pdf("ext")), nullptr);
 }
 
+// A literal constant is written as a number, not as the name of the constant: that would refer to an object that is
+// not in the document.
+TEST(RooFitHS3, LiteralConstantsAreWrittenAsNumbers)
+{
+   using RooFit::RooConst;
+
+   RooWorkspace ws;
+   ws.factory("Poisson::pois(n[0, 10], 2.5)");
+   // A number as observable, like the constraint terms of HistFactory.
+   ws.factory("Poisson::poisOfNumber(400, expr::lambda('400 * gamma', gamma[1, 0, 5]))");
+   ws.factory("Polynomial::poly(x[0, 10], {2.0, 0.5})");
+   ws.factory("ExtendPdf::extended(poly, 10.0)");
+   ws.factory("GaussModel::gm(t[-5, 5], 0.0, 1.0)");
+   ws.factory("Decay::decay(t, 1.5, gm, SingleSided)");
+   RooRealVar y{"y", "y", 1, 10};
+   ws.import(RooLognormal{"logn", "logn", y, RooConst(2.0), RooConst(1.5), /*useStandardParametrization=*/true},
+             RooFit::Silence());
+   ws.import(RooLognormal{"lognOfNumber", "lognOfNumber", RooConst(3.0), y, RooConst(1.5), true}, RooFit::Silence(),
+             RooFit::RecycleConflictNodes());
+   ws.import(RooExponential{"expo", "expo", *ws.var("x"), RooConst(0.5), /*negateCoefficient=*/true}, RooFit::Silence(),
+             RooFit::RecycleConflictNodes());
+   RooRealVar z{"z", "z", 0, 2};
+   z.setBins(2);
+   RooRealVar p0{"p0", "p0", 1.0, 0, 5};
+   ws.import(ParamHistFunc{"phf", "phf", RooArgList{z}, RooArgList{p0, RooConst(2.0)}}, RooFit::Silence());
+
+   const Doc doc{ws};
+   EXPECT_TRUE(matches(doc, "distributions/pois", R"({"mean": 2.5})"));
+   EXPECT_TRUE(matches(doc, "distributions/poisOfNumber", R"({"x": 400.0})"));
+   // The first coefficient is the implicit constant term.
+   EXPECT_TRUE(matches(doc, "distributions/poly", R"({"coefficients": [1.0, 2.0, 0.5]})"));
+   EXPECT_TRUE(matches(doc, "distributions/extended", R"({"rate": 10.0})"));
+   EXPECT_TRUE(matches(doc, "functions/gm", R"({"mean": 0.0, "sigma": 1.0})"));
+   EXPECT_TRUE(matches(doc, "distributions/decay", R"({"tau": 1.5})"));
+   EXPECT_TRUE(matches(doc, "distributions/logn", R"({"mu": 2.0, "sigma": 1.5})"));
+   EXPECT_TRUE(matches(doc, "distributions/lognOfNumber", R"({"x": 3.0})"));
+   EXPECT_TRUE(matches(doc, "distributions/expo", R"({"c": 0.5})"));
+   EXPECT_TRUE(matches(doc, "functions/phf", R"({"parameters": ["p0", 2.0]})"));
+
+   expectRoundTrip(ws, RoundTripModel{}.over({"x", "y", "t", "n", "z"}));
+}
+
 // TFormula ternaries are exported as the HS3 conditional ifelse(), and ifelse()
 // is translated back on import.
 TEST(RooFitHS3, TernaryIsExportedAsIfElse)
