@@ -54,6 +54,11 @@ namespace cling {
 
   class IncrementalExecutor {
   private:
+
+    /// Dynamic library manager object.
+    ///
+    DynamicLibraryManager m_DyLibManager;
+
     ///\brief Our JIT interface.
     ///
     std::unique_ptr<IncrementalJIT> m_JIT;
@@ -127,10 +132,6 @@ namespace cling {
     /// incremental executor.
     clang::DiagnosticsEngine& m_Diags;
 #endif
-
-    /// Dynamic library manager object.
-    ///
-    DynamicLibraryManager m_DyLibManager;
 
   public:
     enum ExecutionResult {
