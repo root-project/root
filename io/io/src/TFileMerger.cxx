@@ -536,7 +536,11 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
                  && !cl->InheritsFrom( TDirectory::Class() )) {
          R__ASSERT(cl->IsTObject());
          TDirectory::TContext ctxt(current_sourcedir);
-         obj = obj->Clone();
+         // Not obj->Clone(): that virtual method is disabled for TTree, while
+         // the streamer-based copy done by CloneObject() is what is wanted
+         // here for all types (for a TTree, the merge output is produced via
+         // TTree::MergeTrees()/CloneTree() elsewhere).
+         obj = gDirectory->CloneObject(obj);
          ownobj = kTRUE;
       }
    } else if (key) {
