@@ -20,12 +20,6 @@
 #include <cassert>
 #include <utility>
 
-ROOT::Internal::RWriteColumn::~RWriteColumn()
-{
-   if (fPageSink)
-      fPageSink->DropColumn(MakeHandle());
-}
-
 void ROOT::Internal::RWriteColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink,
                                                    ROOT::NTupleSize_t firstElementIndex)
 {

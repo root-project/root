@@ -363,7 +363,7 @@ public:
       return column;
    }
 
-   ~RWriteColumn();
+   ~RWriteColumn() = default;
 
    /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
    /// with backing storage for this column.  On read back, elements before `firstElementIndex` will cause the zero page
