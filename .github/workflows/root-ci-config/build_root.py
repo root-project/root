@@ -220,6 +220,9 @@ def main():
     print_trace()
 
 def handle_test_failure(ctest_returncode):
+    if not WINDOWS:
+        build_utils.annotate_ctest_failures(WORKDIR)
+
     logloc = os.path.join(WORKDIR, "build", "Testing", "Temporary", "LastTestsFailed.log")
     if os.path.isfile(logloc):
         with open(logloc, 'r') as logf:
