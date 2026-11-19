@@ -570,14 +570,15 @@ AuxiliaryConstraints readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &va
    std::map<std::string, std::map<std::string, std::string>> dropped;
    std::set<std::string> labels;
 
+   // Components without data that are also terms with data. A data set can only be a component of one combined data
+   // set, so that the data of a term gets a copy for every further one. The copies are added to the document after
+   // the loop, which keeps pointers into the data sets.
+   std::vector<Data> copies;
    auto hasEntries = [&](std::string const &name) {
       Data const *data = findByName(doc.data, name);
+      data = data ? data : findByName(copies, name);
       return data && data->numEntries() > 0;
    };
-   // Components without data that are also terms with data. A data set can only be a component of one combined data
-   // set, so that the data of a term gets a copy for every further one; room for them is reserved, since the loop
-   // keeps pointers into the data sets.
-   doc.data.reserve(2 * doc.data.size() + 16);
    std::set<std::string> dataOfComponents;
    for (Likelihood &likelihood : doc.likelihoods) {
       std::set<std::string> termsToRemove;
@@ -615,10 +616,9 @@ AuxiliaryConstraints readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &va
                if (!dataOfComponents.insert(termData.name).second) {
                   Data const *original = findByName(doc.data, termData.name);
                   const std::string copyName = dataRef->name + "_" + label;
-                  if (original && !findByName(doc.data, copyName) && doc.data.size() < doc.data.capacity()) {
-                     Data copy = *original;
-                     copy.name = copyName;
-                     doc.data.push_back(std::move(copy));
+                  if (original && !findByName(doc.data, copyName) && !findByName(copies, copyName)) {
+                     copies.push_back(*original);
+                     copies.back().name = copyName;
                      termData.name = copyName;
                   }
                }
@@ -639,6 +639,7 @@ AuxiliaryConstraints readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &va
                         [&](LikelihoodTerm const &term) { return termsToRemove.count(term.distribution.name) > 0; }),
          likelihood.terms.end());
    }
+   doc.data.insert(doc.data.end(), copies.begin(), copies.end());
    if (asChannels) {
       return out;
    }
