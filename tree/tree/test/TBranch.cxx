@@ -1,6 +1,8 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
+#include "TInterpreter.h"
+#include "TMemFile.h"
 #include "TRandom.h"
 
 #include "gtest/gtest.h"
@@ -234,4 +236,17 @@ TEST_F(TBranchTest, branchInheritsCompression)
 {
    for(int mode = 4; mode >= 0; --mode)
       ASSERT_TRUE(nocomp(mode)) << "Failed for mode: " << mode;
+}
+
+namespace EnumsParametersNamespace {enum class MyEnum { ZERO, ONE }; template <MyEnum T> class MyClass {};}
+TEST(TBranch, EnumsParameters)
+{
+   auto code = "namespace EnumsParametersNamespace {enum class MyEnum { ZERO, ONE }; template <MyEnum T> class MyClass {};}";
+   gInterpreter->Declare(code);
+   auto e = new EnumsParametersNamespace::MyClass<EnumsParametersNamespace::MyEnum::ZERO>();
+   auto file = std::make_unique<TMemFile>("init.root", "RECREATE");
+   auto tree = std::make_unique<TTree>("init", "init tree");
+   const auto bName = "EnumsParametersNamespace::MyClass<EnumsParametersNamespace::MyEnum::ZERO>";
+   auto branch = tree->Branch(bName, bName, &e);
+   ASSERT_NE(branch, nullptr);
 }
