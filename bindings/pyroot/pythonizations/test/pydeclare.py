@@ -14,6 +14,7 @@ requirement that anything outside the supported subset is refused loudly.
 import gc
 import importlib.util
 import os
+import platform
 import shutil
 import sys
 import tempfile
@@ -25,6 +26,11 @@ import ROOT
 from ROOT._pydeclare import PyDeclareError
 
 default_test_inputs = [-1.0, 0.0, 100.0]
+
+# C++ exceptions thrown from JIT-compiled code can't be caught reliably on
+# macOS arm64: depending on what was JIT-compiled before, the unwinder doesn't
+# find the frames and the process aborts.
+IS_MAC_ARM = platform.system() == "Darwin" and platform.machine() == "arm64"
 
 
 class NumbaDeclareSimple(unittest.TestCase):
@@ -1440,6 +1446,7 @@ class PyDeclareMixedSignedness(unittest.TestCase):
         self.check("mix_abs", myabs, ["unsigned int"], "unsigned int", (3,), 3)
 
 
+@unittest.skipIf(IS_MAC_ARM, "JIT exceptions can not be caught reliably on Mac ARM")
 class PyDeclareRaisesInsteadOfMisbehaving(unittest.TestCase):
     """Where Python raises, the translation must raise too.
 
