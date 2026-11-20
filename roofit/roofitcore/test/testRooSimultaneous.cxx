@@ -1158,3 +1158,154 @@ TEST(RooSimultaneous, NestedObservableIndexThrows)
       EXPECT_THROW(std::unique_ptr<RooAbsReal>{pdf->createNLL(data)}, std::runtime_error) << pdf->GetName();
    }
 }
+
+namespace {
+
+/// Workspace with one non-extended channel (A) and one extended channel (B),
+/// combined once partially extended (simMixed) and once fully extended (simExt).
+std::unique_ptr<RooWorkspace> makePartiallyExtendedWorkspace()
+{
+   auto ws = std::make_unique<RooWorkspace>("ws");
+   ws->factory("Gaussian::pdfA(x_a[-10, 10], mu_a[0, -10, 10], sigma_a[2.0, 0.1, 10.0])");
+   ws->factory("Gaussian::pdfB(x_b[-10, 10], mu_b[0, -10, 10], sigma_b[2.0, 0.1, 10.0])");
+   ws->factory("ExtendPdf::pdfAext(pdfA, n_a[500., 100., 10000.])");
+   ws->factory("ExtendPdf::pdfBext(pdfB, n_b[1000., 100., 10000.])");
+   ws->factory("SIMUL::simMixed(cat[A=0,B=1], A=pdfA, B=pdfBext)");
+   ws->factory("SIMUL::simExt(cat, A=pdfAext, B=pdfBext)");
+   return ws;
+}
+
+/// Prototype dataset that only carries the index category: nA entries of
+/// state "A" followed by nB entries of state "B".
+std::unique_ptr<RooDataSet> makeIndexPrototype(RooCategory &cat, int nA, int nB)
+{
+   auto proto = std::make_unique<RooDataSet>("proto", "proto", RooArgSet{cat});
+   for (int i = 0; i < nA + nB; ++i) {
+      cat.setLabel(i < nA ? "A" : "B");
+      proto->add(RooArgSet{cat});
+   }
+   return proto;
+}
+
+} // namespace
+
+/// Generating from a partially extended RooSimultaneous without prototype
+/// data cannot work, because the non-extended channel has no expected number
+/// of events. This must be reported as an error and generate() must return
+/// a nullptr instead of crashing. Covers GitHub issue #24114.
+TEST(RooSimultaneous, PartiallyExtendedGenerateWithoutPrototype)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto ws = makePartiallyExtendedWorkspace();
+   RooArgSet observables{*ws->var("x_a"), *ws->var("x_b"), *ws->cat("cat")};
+   RooAbsPdf &simPdf = *ws->pdf("simMixed");
+
+   ASSERT_TRUE(simPdf.canBeExtended()); // documented: true if any channel can be extended
+
+   {
+      RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::Generation);
+      std::unique_ptr<RooDataSet> data{simPdf.generate(observables)};
+      EXPECT_EQ(data, nullptr);
+      EXPECT_NE(hijack.str().find("extend"), std::string::npos)
+         << "error message should name the missing extension as the cause, got: " << hijack.str();
+   }
+
+   // Giving an explicit number of events does not help: the split of the
+   // events among the channels is still undefined.
+   {
+      RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::Generation);
+      std::unique_ptr<RooDataSet> data{simPdf.generate(observables, RooFit::NumEvents(300))};
+      EXPECT_EQ(data, nullptr);
+      EXPECT_NE(hijack.str().find("extend"), std::string::npos)
+         << "error message should name the missing extension as the cause, got: " << hijack.str();
+   }
+}
+
+/// With prototype data that carries the index category, the channel of each
+/// event is taken from the prototype and the partially extended pdf can be
+/// generated like any other RooSimultaneous. Covers GitHub issue #24114.
+TEST(RooSimultaneous, PartiallyExtendedGenerateWithPrototype)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRandom::randomGenerator()->SetSeed(10);
+
+   auto ws = makePartiallyExtendedWorkspace();
+   RooRealVar &xA = *ws->var("x_a");
+   RooRealVar &xB = *ws->var("x_b");
+   RooCategory &cat = *ws->cat("cat");
+   RooAbsPdf &simPdf = *ws->pdf("simMixed");
+
+   const int nA = 300;
+   const int nB = 200;
+   std::unique_ptr<RooDataSet> proto = makeIndexPrototype(cat, nA, nB);
+
+   // The index category is supplied by the prototype, so only the
+   // observables of the channels are requested from the generator.
+   std::unique_ptr<RooDataSet> data{simPdf.generate({xA, xB}, RooFit::ProtoData(*proto))};
+   ASSERT_NE(data, nullptr);
+   EXPECT_EQ(data->numEntries(), nA + nB);
+
+   std::unique_ptr<Roo1DTable> table{data->table(cat)};
+   EXPECT_EQ(table->get("A"), nA);
+   EXPECT_EQ(table->get("B"), nB);
+
+   // Each channel observable must follow its channel pdf (a Gaussian with
+   // sigma = 2), not the flat distribution used for non-dependents.
+   EXPECT_NEAR(data->mean(xA, "cat==cat::A"), 0.0, 0.5);
+   EXPECT_NEAR(data->sigma(xA, "cat==cat::A"), 2.0, 0.4);
+   EXPECT_NEAR(data->mean(xB, "cat==cat::B"), 0.0, 0.5);
+   EXPECT_NEAR(data->sigma(xB, "cat==cat::B"), 2.0, 0.4);
+}
+
+/// Reference: when all channels are extended, the expected number of events
+/// per channel is known and no prototype is needed. Covers GitHub issue #24114.
+TEST(RooSimultaneous, FullyExtendedGenerateWithoutPrototype)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRandom::randomGenerator()->SetSeed(10);
+
+   auto ws = makePartiallyExtendedWorkspace();
+   RooArgSet observables{*ws->var("x_a"), *ws->var("x_b"), *ws->cat("cat")};
+   RooAbsPdf &simPdf = *ws->pdf("simExt");
+
+   std::unique_ptr<RooDataSet> data{simPdf.generate(observables)};
+   ASSERT_NE(data, nullptr);
+
+   // Non-extended generation: exactly expectedEvents() = n_a + n_b events,
+   // split among the channels according to the expected yields.
+   EXPECT_EQ(data->numEntries(), 1500);
+   std::unique_ptr<Roo1DTable> table{data->table(*ws->cat("cat"))};
+   EXPECT_NEAR(table->get("A"), 500., 100.);
+   EXPECT_NEAR(table->get("B"), 1000., 100.);
+}
+
+/// The likelihood of a partially extended RooSimultaneous is the sum of the
+/// per-channel likelihoods, non-extended for the non-extended channel and
+/// extended for the extended one, up to the constant N * log(nChannels)
+/// from the normalization of the index category. Covers GitHub issue #24114.
+TEST(RooSimultaneous, PartiallyExtendedNLLValue)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRandom::randomGenerator()->SetSeed(10);
+
+   auto ws = makePartiallyExtendedWorkspace();
+   RooArgSet observables{*ws->var("x_a"), *ws->var("x_b"), *ws->cat("cat")};
+
+   // Toy data from the fully extended pdf, evaluated with the partially
+   // extended one.
+   std::unique_ptr<RooDataSet> data{ws->pdf("simExt")->generate(observables)};
+   ASSERT_NE(data, nullptr);
+
+   std::unique_ptr<RooAbsData> dataA{data->reduce("cat==cat::A")};
+   std::unique_ptr<RooAbsData> dataB{data->reduce("cat==cat::B")};
+   ASSERT_EQ(dataA->numEntries() + dataB->numEntries(), data->numEntries());
+
+   std::unique_ptr<RooAbsReal> nllSim{ws->pdf("simMixed")->createNLL(*data)};
+   std::unique_ptr<RooAbsReal> nllA{ws->pdf("pdfA")->createNLL(*dataA, RooFit::Extended(false))};
+   std::unique_ptr<RooAbsReal> nllB{ws->pdf("pdfBext")->createNLL(*dataB, RooFit::Extended(true))};
+
+   const double nChannels = 2.0;
+   const double expected = nllA->getVal() + nllB->getVal() + data->numEntries() * std::log(nChannels);
+   EXPECT_NEAR(nllSim->getVal(), expected, 1e-6 * std::abs(expected));
+}
