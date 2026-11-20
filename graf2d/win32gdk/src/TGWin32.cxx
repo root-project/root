@@ -1047,6 +1047,8 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    fHasTTFonts = TTFhandle::Init();
    TTFhandle::SetSmoothingPrefer(fDepth > 8);
 
+   ConfigureColorsHandler();
+
    return 0;
 }
 
