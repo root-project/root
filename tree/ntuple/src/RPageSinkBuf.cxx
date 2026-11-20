@@ -321,9 +321,9 @@ ROOT::Internal::RNTupleLink ROOT::Internal::RPageSinkBuf::CommitDatasetImpl()
    return fInnerSink->CommitDataset();
 }
 
-ROOT::Internal::RPage ROOT::Internal::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
+ROOT::Internal::RPage ROOT::Internal::RPageSinkBuf::ReservePage(RWriteColumn &column, std::size_t nElements)
 {
-   return fInnerSink->ReservePage(columnHandle, nElements);
+   return fInnerSink->ReservePage(column, nElements);
 }
 
 std::unique_ptr<ROOT::Internal::RPageSink>

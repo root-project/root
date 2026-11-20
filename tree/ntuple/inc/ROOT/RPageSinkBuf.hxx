@@ -143,7 +143,7 @@ public:
    void CommitClusterGroup() final;
    void CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo) final;
 
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
+   RPage ReservePage(RWriteColumn &column, std::size_t nElements) final;
 
    std::unique_ptr<RPageSink> CloneAsHidden(std::string_view name, const RNTupleWriteOptions &opts) const final;
 }; // RPageSinkBuf

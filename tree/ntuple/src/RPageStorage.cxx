@@ -1297,12 +1297,12 @@ ROOT::Internal::RNTupleLink ROOT::Internal::RPageSink::CommitDataset()
    return CommitDatasetImpl();
 }
 
-ROOT::Internal::RPage ROOT::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
+ROOT::Internal::RPage ROOT::Internal::RPageSink::ReservePage(RWriteColumn &column, std::size_t nElements)
 {
    R__ASSERT(nElements > 0);
-   const auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
+   const auto elementSize = column.GetElement()->GetSize();
    const auto nBytes = elementSize * nElements;
-   if (!fWritePageMemoryManager.TryUpdate(*(columnHandle.fColumn->ForWriting()), nBytes))
+   if (!fWritePageMemoryManager.TryUpdate(column, nBytes))
       return ROOT::Internal::RPage();
    return fPageAllocator->NewPage(elementSize, nElements);
 }

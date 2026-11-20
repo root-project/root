@@ -334,7 +334,7 @@ private:
          // Maximum page size reached, flush and reset
          Flush();
       } else {
-         auto expandedPage = fPageSink->ReservePage(MakeHandle(), newMaxElements);
+         auto expandedPage = fPageSink->ReservePage(*this, newMaxElements);
          if (expandedPage.IsNull()) {
             Flush();
          } else {

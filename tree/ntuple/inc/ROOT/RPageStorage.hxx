@@ -407,7 +407,7 @@ public:
 
    /// Get a new, empty page for the given column that can be filled with up to nElements;
    /// nElements must be larger than zero.
-   virtual ROOT::Internal::RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements);
+   virtual ROOT::Internal::RPage ReservePage(RWriteColumn &column, std::size_t nElements);
 
    virtual RSinkGuard GetSinkGuard()
    {
