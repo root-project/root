@@ -137,7 +137,6 @@ if (NOT dataframe)
     list(APPEND dataframe_veto machine_learning/tmva*.C)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.C)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.py)
-    list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_Inference.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_NumPy.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_TensorFlow.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_PyTorch.py)
@@ -365,44 +364,16 @@ else()
 
 
   if (NOT BLAS_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Application.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
   endif()
-  # The safetensors weight files used by this tutorial are little-endian only
-  if (CMAKE_CXX_BYTE_ORDER STREQUAL "BIG_ENDIAN")
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
-  endif()
   # These SOFIE tutorials take the ONNX HiggsModel trained with PyTorch as input
   if (NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Inference.py)
-  endif()
-  #veto this tutorial since it is added directly
-  list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Parser.py)
-  # The GNN tutorials define their model with PyTorch and export it to ONNX
-  if (NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Application.C)
-  endif()
-  if (NOT ROOT_ONNX_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.C)
-  else()
-    #generate ONNX file needed for the tutorial
-    execute_process(
-      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tmva/sofie/test/generate_input_models.py
-              --no-references --outdir ${CMAKE_BINARY_DIR}/tutorials/machine_learning Linear_16
-      RESULT_VARIABLE _sofie_onnx_gen_status)
-    if (NOT _sofie_onnx_gen_status EQUAL 0)
-      message(WARNING "Could not generate Linear_16.onnx: the TMVA_SOFIE_ONNX.C tutorial will be disabled.")
-      list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.C)
-    endif()
   endif()
 
 endif()
@@ -637,7 +608,6 @@ set (machine_learning-pytorch-ApplicationRegressionPyTorch-depends tutorial-mach
 set (machine_learning-TMVA_SOFIE_RDataFrame-depends tutorial-machine_learning-TMVA_SOFIE_PyTorch_HiggsModel-py)
 set (machine_learning-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame)
 set (machine_learning-TMVA_SOFIE_RSofieReader-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame_JIT)
-set (machine_learning-TMVA_SOFIE_Inference-depends tutorial-machine_learning-TMVA_SOFIE_RSofieReader)
 set (machine_learning-keras-RegressionKeras-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
 set (machine_learning-keras-ClassificationKeras-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
 set (machine_learning-keras-ApplicationRegressionKeras-depends tutorial-machine_learning-keras-RegressionKeras-py)
@@ -671,13 +641,6 @@ ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -n -q ${CMAKE_CURRENT
 if(geom)
   ROOT_ADD_TEST(tutorial-legacy-g3d-geometry COMMAND ${ROOT_root_CMD} -b -n -q ${CMAKE_CURRENT_SOURCE_DIR}/legacy/g3d/geometry.C
                 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
-endif()
-# define Python GNN parsing tutorial needed to run before
-if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND)
-  ROOT_ADD_TEST(tutorial-machine_learning-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
-  ${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/TMVA_SOFIE_GNN_Parser.py
-  PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
-  set (machine_learning-TMVA_SOFIE_GNN_Application-depends tutorial-machine_learning-TMVA_SOFIE_GNN_Parser)
 endif()
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -870,7 +833,6 @@ if(pyroot)
       machine_learning/ml_dataloader_PyTorch.py
       machine_learning/ml_dataloader_resampling.py
       machine_learning/ml_dataloader_Higgs_Classification.py
-      machine_learning/TMVA_SOFIE_Models.py
       machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
