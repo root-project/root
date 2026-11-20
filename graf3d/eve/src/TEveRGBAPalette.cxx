@@ -12,6 +12,7 @@
 #include "TEveRGBAPalette.h"
 
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TStyle.h"
 #include "TMath.h"
 
@@ -268,7 +269,7 @@ void TEveRGBAPalette::SetDefaultColor(Color_t ci)
 
 void TEveRGBAPalette::SetDefaultColorPixel(Pixel_t pix)
 {
-   SetDefaultColor(Color_t(TColor::GetColor(pix)));
+   SetDefaultColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +298,7 @@ void TEveRGBAPalette::SetUnderColor(Color_t ci)
 
 void TEveRGBAPalette::SetUnderColorPixel(Pixel_t pix)
 {
-   SetUnderColor(Color_t(TColor::GetColor(pix)));
+   SetUnderColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -326,7 +327,7 @@ void TEveRGBAPalette::SetOverColor(Color_t ci)
 
 void TEveRGBAPalette::SetOverColorPixel(Pixel_t pix)
 {
-   SetOverColor(Color_t(TColor::GetColor(pix)));
+   SetOverColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

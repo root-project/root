@@ -28,6 +28,7 @@
 #include "TPRegexp.h"
 #include "TROOT.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TEveBrowser.h"
 #include "TGListTree.h"
 #include "TGPicture.h"
@@ -1171,7 +1172,7 @@ void TEveElement::SetMainColor(Color_t color)
 
 void TEveElement::SetMainColorPixel(Pixel_t pixel)
 {
-   SetMainColor(TColor::GetColor(pixel));
+   SetMainColor(TVirtualX::Pixel2Number(pixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

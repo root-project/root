@@ -365,7 +365,7 @@ void TEveCaloVizEditor::DoSliceThreshold()
 void TEveCaloVizEditor::DoSliceColor(Pixel_t pixel)
 {
    TGColorSelect *cs = (TGColorSelect *) gTQSender;
-   fM->SetDataSliceColor(cs->WidgetId(), Color_t(TColor::GetColor(pixel)));
+   fM->SetDataSliceColor(cs->WidgetId(), Color_t(TVirtualX::Pixel2Number(pixel)));
    Update();
 }
 
