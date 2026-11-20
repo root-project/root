@@ -131,7 +131,7 @@ public:
    RPageSinkBuf &operator=(RPageSinkBuf &&) = delete;
    ~RPageSinkBuf() override;
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) final;
+   DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const RColumn &column) final;
 
    const ROOT::RNTupleDescriptor &GetDescriptor() const final;
 

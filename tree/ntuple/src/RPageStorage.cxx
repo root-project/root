@@ -202,15 +202,14 @@ ROOT::Internal::RPageSource::Create(std::string_view ntupleName, std::string_vie
    return std::make_unique<ROOT::Internal::RPageSourceFile>(ntupleName, location, options);
 }
 
-ROOT::Internal::RPageStorage::ColumnHandle_t
-ROOT::Internal::RPageSource::AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column)
+ROOT::DescriptorId_t ROOT::Internal::RPageSource::AddColumn(ROOT::DescriptorId_t fieldId, const RColumn &column)
 {
    R__ASSERT(fieldId != ROOT::kInvalidDescriptorId);
    auto physicalId =
       GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, column.GetIndex(), column.GetRepresentationIndex());
    R__ASSERT(physicalId != ROOT::kInvalidDescriptorId);
    fActivePhysicalColumns.Insert(physicalId, column.GetElement()->GetIdentifier());
-   return ColumnHandle_t{physicalId, &column};
+   return physicalId;
 }
 
 void ROOT::Internal::RPageSource::DropColumn(const RColumn &column)
@@ -1349,8 +1348,7 @@ ROOT::Internal::RPagePersistentSink::RPagePersistentSink(std::string_view name,
 
 ROOT::Internal::RPagePersistentSink::~RPagePersistentSink() {}
 
-ROOT::Internal::RPageStorage::ColumnHandle_t
-ROOT::Internal::RPagePersistentSink::AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column)
+ROOT::DescriptorId_t ROOT::Internal::RPagePersistentSink::AddColumn(ROOT::DescriptorId_t fieldId, const RColumn &column)
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
    RColumnDescriptorBuilder columnBuilder;
@@ -1368,7 +1366,7 @@ ROOT::Internal::RPagePersistentSink::AddColumn(ROOT::DescriptorId_t fieldId, RCo
    if (column.ForWriting()->GetFirstElementIndex() > 0 && column.GetRepresentationIndex() > 0)
       columnBuilder.SetSuppressedDeferred();
    fDescriptorBuilder.AddColumn(columnBuilder.MoveDescriptor().Unwrap());
-   return ColumnHandle_t{columnId, &column};
+   return columnId;
 }
 
 void ROOT::Internal::RPagePersistentSink::UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset,
