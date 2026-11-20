@@ -101,7 +101,7 @@ void TEveShapeEditor::DoLineWidth()
 
 void TEveShapeEditor::DoLineColor(Pixel_t pixel)
 {
-   fM->SetLineColor(TColor::GetColor(pixel));
+   fM->SetLineColor(TVirtualX::Pixel2Number(pixel));
    Update();
 }
 

@@ -27,6 +27,7 @@
 #include "TROOT.h"
 #include "TBase64.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 
 #include <cassert>
 #include <algorithm>
@@ -743,7 +744,7 @@ void REveElement::SetMainColor(Color_t color)
 
 void REveElement::SetMainColorPixel(Pixel_t pixel)
 {
-   SetMainColor(TColor::GetColor(pixel));
+   SetMainColor(TVirtualX::Pixel2Number(pixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

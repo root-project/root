@@ -11,6 +11,7 @@
 
 #include "ROOT/REveFrameBox.hxx"
 #include "TColor.h"
+#include "TVirtualX.h"
 
 using namespace ROOT::Experimental;
 
@@ -162,7 +163,7 @@ void REveFrameBox::SetFrameColor(Color_t ci)
 
 void REveFrameBox::SetFrameColorPixel(Pixel_t pix)
 {
-   SetFrameColor(Color_t(TColor::GetColor(pix)));
+   SetFrameColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +192,7 @@ void REveFrameBox::SetBackColor(Color_t ci)
 
 void REveFrameBox::SetBackColorPixel(Pixel_t pix)
 {
-   SetBackColor(Color_t(TColor::GetColor(pix)));
+   SetBackColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
