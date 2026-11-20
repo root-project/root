@@ -54,6 +54,7 @@ protected:
 
    bool _useIntegrandLimits = false; ///< If true limits of function binding are used
 
+   void updateBinBoundaries(bool warnIfNoBinning);
    void recursive_integration(const UInt_t d, const double delta, ROOT::Math::KahanSum<double>& sum);
 
    std::vector<double> _x; ///<! do not persist, store here N-dimensional evaluation point when integrating

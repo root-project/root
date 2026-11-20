@@ -374,6 +374,44 @@ TEST(RooHistPdf, ShiftedBinBoundariesKeepOutOfRangeValue)
    EXPECT_EQ(x.getVal(), 500.0);
 }
 
+// The numeric integral over a shifted RooHistPdf has to follow the shift. The
+// RooBinIntegrator used to keep the bin boundaries of its first evaluation.
+TEST(RooHistPdf, ShiftedIntegralFollowsShift)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 1000, 1500};
+   x.setBins(5);
+   RooRealVar shift{"shift", "shift", 25.0, -100, 100};
+
+   const double contents[]{1., 2., 4., 8., 16.};
+   TH1D h{"h", "", x.numBins(), x.getMin(), x.getMax()};
+   for (int i = 0; i < 5; ++i) {
+      h.SetBinContent(i + 1, contents[i]);
+   }
+   RooDataHist dh{"dh", "", x, &h};
+
+   RooFormulaVar xShifted{"x_shifted", "x - shift", {x, shift}};
+   RooHistPdf pdf{"pdf", "", xShifted, x, dh, 0};
+
+   // Overlap of each shifted bin with [1000, 1500], times the bin density.
+   auto expected = [&](double s) {
+      double sum = 0.;
+      for (int i = 0; i < 5; ++i) {
+         const double lo = std::max(1000. + 100. * i + s, 1000.);
+         const double hi = std::min(1100. + 100. * i + s, 1500.);
+         sum += std::max(hi - lo, 0.) * contents[i] / 100.;
+      }
+      return sum;
+   };
+
+   std::unique_ptr<RooAbsReal> integral{pdf.createIntegral(x)};
+   for (double s : {25., -30., 0., 60.}) {
+      shift.setVal(s);
+      EXPECT_NEAR(integral->getVal(), expected(s), 1e-10) << "shift = " << s;
+   }
+}
+
 // GitHub issue #13030: a non-linear transformation of the plot observable
 // cannot be inverted exactly by the (linear) boundary-finding algorithm. In
 // that case the boundaries are still returned, but only approximately, and the
