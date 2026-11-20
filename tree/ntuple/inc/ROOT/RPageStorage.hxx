@@ -361,7 +361,7 @@ public:
 
    /// Commits a suppressed column for the current cluster. Can be called anytime before CommitCluster().
    /// For any given column and cluster, there must be no calls to both CommitSuppressedColumn() and page commits.
-   virtual void CommitSuppressedColumn(ColumnHandle_t columnHandle) = 0;
+   virtual void CommitSuppressedColumn(DescriptorId_t physicalColumnId) = 0;
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
@@ -552,7 +552,7 @@ public:
    void AddAliasColumn(const ROOT::RNTupleDescriptor &desc, const ROOT::RFieldDescriptor &field,
                        ROOT::DescriptorId_t physicalId);
 
-   void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
+   void CommitSuppressedColumn(DescriptorId_t physicalColumnId) final;
    void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;

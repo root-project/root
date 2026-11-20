@@ -113,7 +113,7 @@ class RPageSinkBuf : public RPageSink {
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
    /// Columns committed as suppressed are stored and passed to the inner sink at cluster commit
-   std::vector<ColumnHandle_t> fSuppressedColumns;
+   std::vector<DescriptorId_t> fSuppressedColumns;
    ROOT::DescriptorId_t fNFields = 0;
    ROOT::DescriptorId_t fNColumns = 0;
 
@@ -138,7 +138,7 @@ public:
    void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
-   void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
+   void CommitSuppressedColumn(DescriptorId_t physicalColumnId) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;

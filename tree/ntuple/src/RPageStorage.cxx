@@ -1681,9 +1681,9 @@ void ROOT::Internal::RPagePersistentSink::AddAliasColumn(const ROOT::RNTupleDesc
    fDescriptorBuilder.EnsureValidDescriptor().ThrowOnError();
 }
 
-void ROOT::Internal::RPagePersistentSink::CommitSuppressedColumn(ColumnHandle_t columnHandle)
+void ROOT::Internal::RPagePersistentSink::CommitSuppressedColumn(DescriptorId_t physicalColumnId)
 {
-   fOpenColumnRanges.at(columnHandle.fPhysicalId).SetIsSuppressed(true);
+   fOpenColumnRanges.at(physicalColumnId).SetIsSuppressed(true);
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page)

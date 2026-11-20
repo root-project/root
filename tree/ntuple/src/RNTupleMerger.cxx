@@ -1513,7 +1513,6 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeSourceClusters(RPageSource
       // Note that some suppressed columns may not be in commonColumns because they might not appear at all in the
       // current source.
       FieldCollectionMap_t<ROOT::DescriptorId_t> columnsInCluster;
-      using ColumnHandle_t = ROOT::Internal::RPageStorage::ColumnHandle_t;
 
       // NOTE: `commonColumns` contains all columns that appear *somewhere* both in the src and in the dst.
       // Just because a column is in `commonColumns` it doesn't mean that each cluster in the source contains
@@ -1536,7 +1535,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeSourceClusters(RPageSource
                commonColumnSet.emplace(column.fInputId);
                return true;
             }
-            fDestination.CommitSuppressedColumn(ColumnHandle_t{column.fOutputId});
+            fDestination.CommitSuppressedColumn(column.fOutputId);
          }
          return false;
       });
@@ -1562,7 +1561,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeSourceClusters(RPageSource
             assert(colIt != fColumnIdMap.end());
             const auto colOutId = colIt->second.fColumnId;
             if (std::find(columnIds.begin(), columnIds.end(), colOutId) == columnIds.end()) {
-               fDestination.CommitSuppressedColumn(ColumnHandle_t{colOutId});
+               fDestination.CommitSuppressedColumn(colOutId);
             }
          }
       }
