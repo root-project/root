@@ -54,6 +54,9 @@ public:
    void unregisterNode(RooAbsArg const &arg);
 
 private:
+   struct InitMembersTag {};
+   Evaluator(const RooAbsReal &absReal, bool useGPU, InitMembersTag);
+
    void processVariable(NodeInfo &nodeInfo);
    void processCategory(NodeInfo &nodeInfo);
    void setClientsDirty(NodeInfo &nodeInfo);

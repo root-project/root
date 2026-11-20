@@ -23,3 +23,9 @@ endif(clad)
 ROOT_ADD_GTEST(testParamHistFunc testParamHistFunc.cxx LIBRARIES RooFitCore HistFactory)
 ROOT_ADD_GTEST(testPiecewiseInterpolation testPiecewiseInterpolation.cxx LIBRARIES RooFitCore HistFactory)
 ROOT_ADD_GTEST(testHistFactoryPlotting testHistFactoryPlotting.cxx LIBRARIES RooFitCore HistFactory)
+
+# This test also runs the CUDA evaluation backend if RooFit is built with CUDA
+if(cuda)
+  set_property(TEST gtest-roofit-histfactory-testHistFactory APPEND PROPERTY LABELS cuda)
+  set_property(TEST gtest-roofit-histfactory-testHistFactory APPEND PROPERTY RESOURCE_LOCK GPU)
+endif()
