@@ -46,10 +46,11 @@ namespace {
 
 static Int_t   gHighestColorIndex = 0;   ///< Highest color index defined
 static Float_t gColorThreshold    = -1.; ///< Color threshold used by GetColor
+static Int_t   gNColorPlanes      = 24;  ///< number of color planes, set from TVirtualX
+static void   (*gColorHandler)(TColor*) = nullptr; ///< callback for handling new colors
 static Int_t   gDefinedColors     = 0;   ///< Number of defined colors.
 static Int_t   gLastDefinedColors = 649; ///< Previous number of defined colors
 static Int_t   gPaletteType = 0;         ///< selected palete type
-
 
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()
@@ -2008,6 +2009,19 @@ Int_t TColor::GetColor(ULong_t pixel)
 void TColor::SetColorThreshold(Float_t t)
 {
    gColorThreshold = t;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This method defines number of color planes in the current graphic display
+///
+/// Normally set by TVirtualX-derived class when display is initialized
+/// and used for color precision calculations. To set user-defined precision
+/// better use TColor::SetColorThreshold() method
+
+void TColor::ConfigureColorsHandler(Int_t depth, void (*colorfuncptr)(TColor*))
+{
+   gNColorPlanes = depth;
+   gColorHandler = colorfuncptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

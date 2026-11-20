@@ -18,8 +18,10 @@
 #include <vector>
 
 class TArrayI;
+class TVirtualX;
 
 class TColor : public TNamed {
+   friend class TVirtualX; // to  let configure colors change handler
 protected:
    Int_t          fNumber;        ///< Color number identifier
 private:
@@ -33,6 +35,8 @@ private:
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
+
+   static void    ConfigureColorsHandler(Int_t depth, void (*colorfuncptr)(TColor *));
 
 public:
    TColor();
