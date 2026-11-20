@@ -856,8 +856,8 @@ bool importGaussModel(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    RooRealVar *x = tool->requestArg<RooRealVar>(p, "x");
-   RooRealVar *mean = tool->requestArg<RooRealVar>(p, "mean");
-   RooRealVar *sigma = tool->requestArg<RooRealVar>(p, "sigma");
+   RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
+   RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
    tool->wsEmplace<RooGaussModel>(name, *x, *mean, *sigma);
    return true;
 }
@@ -1645,7 +1645,7 @@ void exportPolynomial(RooJSONFactoryWSTool *, RooArg_t const &pdf, JSONNode &ele
       coefs.append_child() << (i == 0 ? 1.0 : 0.0);
    }
    for (const auto &coef : pdf.coefList()) {
-      coefs.append_child() << coef->GetName();
+      writeReference(coefs.append_child(), *coef);
    }
 }
 
@@ -1655,8 +1655,8 @@ void exportPoisson(RooJSONFactoryWSTool *, RooPoisson const &pdf, JSONNode &elem
    if (pdf.getNoRounding()) {
       elem["type"] << "poisson_continuous_dist";
    }
-   elem["x"] << pdf.getX().GetName();
-   elem["mean"] << pdf.getMean().GetName();
+   writeReference(elem["x"], pdf.getX());
+   writeReference(elem["mean"], pdf.getMean());
 }
 
 // The RooDecay servers are the internal resModel-times-basis convolutions,
@@ -1666,7 +1666,7 @@ void exportPoisson(RooJSONFactoryWSTool *, RooPoisson const &pdf, JSONNode &elem
 void exportDecay(RooJSONFactoryWSTool *tool, RooDecay const &pdf, JSONNode &elem)
 {
    elem["t"] << pdf.getT().GetName();
-   elem["tau"] << pdf.getTau().GetName();
+   writeReference(elem["tau"], pdf.getTau());
    elem["resolutionModel"] << pdf.getModel().GetName();
    elem["decayType"] << pdf.getDecayType();
 
@@ -1683,8 +1683,8 @@ void exportTruthModel(RooJSONFactoryWSTool *, RooTruthModel const &pdf, JSONNode
 void exportGaussModel(RooJSONFactoryWSTool *, RooGaussModel const &pdf, JSONNode &elem)
 {
    elem["x"] << pdf.convVar().GetName();
-   elem["mean"] << pdf.getMean().GetName();
-   elem["sigma"] << pdf.getSigma().GetName();
+   writeReference(elem["mean"], pdf.getMean());
+   writeReference(elem["sigma"], pdf.getSigma());
 }
 
 // A Gaussian constraint whose recorded observable (see RooJSONFactoryWSTool::setConstraintObservable()) is its
@@ -1700,14 +1700,14 @@ void exportGaussian(RooJSONFactoryWSTool *tool, RooGaussian const &gauss, JSONNo
 
 void exportLogNormal(RooJSONFactoryWSTool *tool, RooLognormal const &pdf, JSONNode &elem)
 {
-   elem["x"] << pdf.getX().GetName();
+   writeReference(elem["x"], pdf.getX());
 
    auto &m0 = pdf.getMedian();
    auto &k = pdf.getShapeK();
 
    if (pdf.useStandardParametrization()) {
-      elem["mu"] << m0.GetName();
-      elem["sigma"] << k.GetName();
+      writeReference(elem["mu"], m0);
+      writeReference(elem["sigma"], k);
    } else {
       elem["mu"] << lognormalLogName(m0, tool);
       elem["sigma"] << lognormalLogName(k, tool);
@@ -1719,7 +1719,7 @@ void exportExponential(RooJSONFactoryWSTool *tool, RooExponential const &pdf, JS
    elem["x"] << pdf.variable().GetName();
    auto &c = pdf.coefficient();
    if (pdf.negateCoefficient()) {
-      elem["c"] << c.GetName();
+      writeReference(elem["c"], c);
    } else {
       elem["c"] << tool->exportTransformed(&c, "_exponential_inverted", "-%s");
    }
@@ -1796,7 +1796,7 @@ void exportExtendPdf(RooJSONFactoryWSTool *, RooExtendPdf const &pdf, JSONNode &
       elem["range"] << rangeName->GetName();
    }
    elem["dist"] << pdf.pdf().GetName();
-   elem["rate"] << pdf.getN().GetName();
+   writeReference(elem["rate"], pdf.getN());
 }
 
 void exportParamHistFunc(RooJSONFactoryWSTool *, ParamHistFunc const &pdf, JSONNode &elem)
@@ -1805,7 +1805,7 @@ void exportParamHistFunc(RooJSONFactoryWSTool *, ParamHistFunc const &pdf, JSONN
    // One parameter per bin, in the order of HS3 (last axis fastest), not in ParamHistFunc's internal TH1 order.
    auto &paramsNode = elem["parameters"].set_seq();
    for (RooAbsReal *param : paramHistFuncParamsInBinOrder(pdf)) {
-      paramsNode.append_child() << param->GetName();
+      writeReference(paramsNode.append_child(), *param);
    }
    auto &observablesNode = elem["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices

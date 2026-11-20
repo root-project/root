@@ -6,6 +6,8 @@
 // the same: the same likelihood, the same toys, and the same document when it is written again, also if the layout
 // changes between the exports.
 
+#include "HS3TestUtils.h"
+
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFit/Detail/JSONInterface.h>
 
@@ -71,29 +73,13 @@ const std::vector<Style> &styles()
 
 std::string exportWith(RooWorkspace &ws, Style const &style)
 {
-   auto &config = RooJSONFactoryWSTool::config();
-   const bool oldArrays = config.exportArrayDist;
-   const bool oldData = config.exportConstraintData;
-   config.exportArrayDist = style.arrays;
-   config.exportConstraintData = style.constraintData;
-   std::string out;
-   try {
-      out = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-   } catch (...) {
-      config.exportArrayDist = oldArrays;
-      config.exportConstraintData = oldData;
-      throw;
-   }
-   config.exportArrayDist = oldArrays;
-   config.exportConstraintData = oldData;
-   return out;
+   using namespace HS3Test;
+   return toJSON(ws, {exportArrayDist(style.arrays), exportConstraintData(style.constraintData)});
 }
 
-std::unique_ptr<RooWorkspace> importJSON(std::string const &json, const char *name = "ws")
+std::unique_ptr<RooWorkspace> importJSON(std::string const &json)
 {
-   auto ws = std::make_unique<RooWorkspace>(name);
-   RooJSONFactoryWSTool{*ws}.importJSONfromString(json);
-   return ws;
+   return std::make_unique<HS3Test::Imported>(json);
 }
 
 // A classical HistFactory workspace with three channels whose sets of constrained parameters overlap partially:
@@ -228,13 +214,8 @@ RooStats::ModelConfig *modelConfig(RooWorkspace &ws)
 
 std::string section(std::string const &json, const char *key)
 {
-   auto tree = RooFit::Detail::JSONTree::create(json);
-   if (!tree->rootnode().has_child(key)) {
-      return "";
-   }
-   std::stringstream ss;
-   tree->rootnode()[key].writeJSON(ss);
-   return ss.str();
+   const HS3Test::Doc doc{json};
+   return doc.has(key) ? doc.dump(key) : "";
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1159,11 +1140,9 @@ TEST_P(AuxMeasurements, ConstraintsAsChannels)
    if (!style.arrays || !style.constraintData) {
       return; // only this layout has such components
    }
-   auto &config = RooJSONFactoryWSTool::config();
-   config.importConstraintsAsChannels = true;
    std::unique_ptr<RooWorkspace> imported;
-   EXPECT_NO_THROW(imported = importJSON(json));
-   config.importConstraintsAsChannels = false;
+   EXPECT_NO_THROW(
+      imported = std::make_unique<HS3Test::Imported>(json, std::vector{HS3Test::importConstraintsAsChannels(true)}));
    ASSERT_NE(imported, nullptr);
 
    auto *mcOrig = modelConfig(*original);
