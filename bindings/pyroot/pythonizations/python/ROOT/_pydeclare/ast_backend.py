@@ -45,9 +45,21 @@ CPP_KEYWORDS = frozenset(
 BUILTIN_CASTS = {"float", "int", "bool"}
 
 #: Builtins that are safe to run at declaration time when folding constants.
-PURE_BUILTINS = frozenset(
-    ["abs", "bool", "float", "int", "len", "max", "min", "pow", "round", "sum", "range", "list", "tuple"]
-)
+PURE_BUILTINS = frozenset([
+    "abs",
+    "bool",
+    "float",
+    "int",
+    "len",
+    "max",
+    "min",
+    "pow",
+    "round",
+    "sum",
+    "range",
+    "list",
+    "tuple",
+])
 
 
 class _ModuleRef:
@@ -175,7 +187,7 @@ class AstTranspiler:
                 "The variable '{}' is only assigned inside a nested block but is read outside it. "
                 "If the block does not run, Python raises UnboundLocalError, which cannot be "
                 "reproduced in C++.\n"
-                "  Assign it before the block, for example \"{} = 0.0\".".format(name, name)
+                '  Assign it before the block, for example "{} = 0.0".'.format(name, name)
             )
 
         # Pass 2: the real one.
@@ -1135,21 +1147,19 @@ class AstTranspiler:
 _IMPURE_NUMPY_MODULES = ("numpy.random", "numpy.random.mtrand", "numpy.testing")
 
 #: numpy functions that touch the filesystem.
-_IMPURE_NUMPY_FUNCTIONS = frozenset(
-    [
-        "load",
-        "loadtxt",
-        "save",
-        "savetxt",
-        "savez",
-        "savez_compressed",
-        "fromfile",
-        "tofile",
-        "genfromtxt",
-        "memmap",
-        "fromregex",
-    ]
-)
+_IMPURE_NUMPY_FUNCTIONS = frozenset([
+    "load",
+    "loadtxt",
+    "save",
+    "savetxt",
+    "savez",
+    "savez_compressed",
+    "fromfile",
+    "tofile",
+    "genfromtxt",
+    "memmap",
+    "fromregex",
+])
 
 
 class _BoundMethod:

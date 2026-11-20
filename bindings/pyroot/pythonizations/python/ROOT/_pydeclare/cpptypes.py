@@ -158,9 +158,14 @@ FLOATING_RANKS = {"float": 20, "double": 21, "long double": 22}
 
 INTEGRAL_TYPES = frozenset(INTEGRAL_RANKS)
 FLOATING_TYPES = frozenset(FLOATING_RANKS)
-UNSIGNED_TYPES = frozenset(
-    ["bool", "unsigned char", "unsigned short", "unsigned int", "unsigned long", "unsigned long long"]
-)
+UNSIGNED_TYPES = frozenset([
+    "bool",
+    "unsigned char",
+    "unsigned short",
+    "unsigned int",
+    "unsigned long",
+    "unsigned long long",
+])
 
 # Spellings the user may write, normalised to the canonical form above.
 _FUND_ALIASES = {

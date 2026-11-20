@@ -1031,12 +1031,8 @@ class PyDeclareRefusals(unittest.TestCase):
         )
 
     def test_sets_and_tuples(self):
-        self.assertRefused(
-            "def f(x):\n    s = {1, 2}\n    return x\n", ["double"], "double", "Set literals"
-        )
-        self.assertRefused(
-            "def f(x):\n    t = (x, x)\n    return t[0]\n", ["double"], "double", "Tuple literals"
-        )
+        self.assertRefused("def f(x):\n    s = {1, 2}\n    return x\n", ["double"], "double", "Set literals")
+        self.assertRefused("def f(x):\n    t = (x, x)\n    return t[0]\n", ["double"], "double", "Tuple literals")
 
     def test_lambda_in_the_body(self):
         self.assertRefused(
@@ -1053,9 +1049,7 @@ class PyDeclareRefusals(unittest.TestCase):
             "double",
             "'With' is not supported",
         )
-        self.assertRefused(
-            "def f(x):\n    global g\n    return x\n", ["double"], "double", "'Global' is not supported"
-        )
+        self.assertRefused("def f(x):\n    global g\n    return x\n", ["double"], "double", "'Global' is not supported")
 
     def test_f_strings_and_generators(self):
         self.assertRefused(
@@ -1066,19 +1060,13 @@ class PyDeclareRefusals(unittest.TestCase):
         )
 
     def test_star_args(self):
-        self.assertRefused(
-            "def f(*args):\n    return args[0]\n", ["double"], "double", "*args"
-        )
+        self.assertRefused("def f(*args):\n    return args[0]\n", ["double"], "double", "*args")
 
     def test_multi_dimensional_indexing(self):
-        self.assertRefused(
-            "def f(v):\n    return v[0, 1]\n", ["RVecD"], "double", "Multi-dimensional indexing"
-        )
+        self.assertRefused("def f(v):\n    return v[0, 1]\n", ["RVecD"], "double", "Multi-dimensional indexing")
 
     def test_signature_mismatch(self):
-        self.assertRefused(
-            "def f(x, y):\n    return x + y\n", ["double"], "double", "takes 2 argument"
-        )
+        self.assertRefused("def f(x, y):\n    return x + y\n", ["double"], "double", "takes 2 argument")
 
     def test_mutating_an_array_that_python_would_alias(self):
         """'w = v' aliases in Python and copies here, so writing through it
@@ -1239,20 +1227,18 @@ class PyDeclareAgreesWithPython(unittest.TestCase):
 
     def test_slices(self):
         cases = [(np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),)]
-        for i, body in enumerate(
-            [
-                "v[1:4]",
-                "v[-2:]",
-                "v[:3]",
-                "v[::2]",
-                "v[1::2]",
-                "v[10:20]",
-                "v[4:1:-1]",
-                "v[::-1]",
-                "v[-100:100]",
-                "v[3:1]",
-            ]
-        ):
+        for i, body in enumerate([
+            "v[1:4]",
+            "v[-2:]",
+            "v[:3]",
+            "v[::2]",
+            "v[1::2]",
+            "v[10:20]",
+            "v[4:1:-1]",
+            "v[::-1]",
+            "v[-100:100]",
+            "v[3:1]",
+        ]):
             namespace = {"np": np}
             exec("def sliced(v):\n    return {}\n".format(body), namespace)  # noqa: S102
             func = namespace["sliced"]
@@ -1534,9 +1520,7 @@ class PyDeclareTypeSpellings(unittest.TestCase):
 
                 name = "spelling_{}".format(i)
                 ROOT.Py.Declare([spelling], "double", name=name)(total)
-                self.assertAlmostEqual(
-                    getattr(ROOT.Py, name)(ROOT.VecOps.RVec("float")([1.0, 2.0, 3.0])), 6.0
-                )
+                self.assertAlmostEqual(getattr(ROOT.Py, name)(ROOT.VecOps.RVec("float")([1.0, 2.0, 3.0])), 6.0)
 
 
 def _as_cpp(value):

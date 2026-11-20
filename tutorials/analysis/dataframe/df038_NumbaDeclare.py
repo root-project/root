@@ -16,6 +16,7 @@
 
 import ROOT
 
+
 # To mark a Python callable to be used from C++, you have to use the decorator
 # provided by PyROOT passing the C++ types of the input arguments and the return
 # value. The generated C++ is available afterwards as pypow.__cpp_wrapper__.
