@@ -173,10 +173,6 @@ public:
    /// The column handle identifies a column with the current open page storage
    using ColumnHandle_t = RColumnHandle;
 
-   /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the metadata.
-   /// When writing, every column can only be attached once.
-   virtual DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const ROOT::Internal::RColumn &column) = 0;
-
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
    virtual ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
@@ -349,6 +345,9 @@ public:
 
    /// Seal a page using the provided info.
    static RSealedPage SealPage(const RSealPageConfig &config);
+
+   /// Add a column belonging to a certain field to the descriptor and return its on-disk ID
+   virtual DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const ROOT::Internal::RColumn &column) = 0;
 
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
@@ -937,7 +936,8 @@ public:
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
    }
 
-   DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const ROOT::Internal::RColumn &column) final;
+   // Get the on-disk of the given column and make it part of the set of active columns
+   DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const ROOT::Internal::RColumn &column);
    void DropColumn(const ROOT::Internal::RColumn &column);
 
    /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
