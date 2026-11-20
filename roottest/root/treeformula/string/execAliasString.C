@@ -5,7 +5,11 @@
    tree->SetAlias("first", "(name==\"16A\")");
    tree->SetAlias("second", "count==2");
    tree->Scan();
-   
+
+   // avoid extra message when default canvas is created
+   // while such message can appear in random place relative to script ouput
+   TCanvas c1("c0", "title", 500, 500);
+
    Long64_t res = tree->Draw("name", "first");
    if (res != 1) {
       error = true;
@@ -31,11 +35,11 @@
    tree->Scan("name:count:first:second");
    tree->Scan("name:count:first:second","first");
    tree->Scan("name:count:first:second","second");
-   
+
    // Quiet down ACLiC.
    gErrorIgnoreLevel = kWarning;
    tree->Draw("scriptAliasString.C+");
-   
+
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    bool ret = error;
 #else
