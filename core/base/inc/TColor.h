@@ -57,7 +57,7 @@ public:
    virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) const
                     { h=GetHue(); l=GetLight(); s=GetSaturation(); }
    Int_t         GetNumber() const { return fNumber; }
-   ULong_t       GetPixel() const;
+   ULong_t       R__DEPRECATED(7,00, "Use gVirtualX->GetPixel(number) instead") GetPixel() const;
    Float_t       GetRed() const { return IsGrayscale() ? GetGrayscale() : fRed; }
    Float_t       GetGreen() const { return IsGrayscale() ? GetGrayscale() : fGreen; }
    Float_t       GetBlue() const { return IsGrayscale() ? GetGrayscale() : fBlue; }

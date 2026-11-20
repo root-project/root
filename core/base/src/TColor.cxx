@@ -1571,7 +1571,9 @@ Bool_t TColor::DefinedColors(Int_t set_always_on)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pixel value corresponding to this color. This pixel value can
+/// @deprecated Use gVirtualX->GetPixel(number) instead
+///
+/// @brief Return pixel value corresponding to this color. This pixel value can
 /// be used in the GUI classes. This call does not work in batch mode since
 /// it needs to communicate with the graphics system.
 
