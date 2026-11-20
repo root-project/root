@@ -971,10 +971,12 @@ public:
    /// Allocates and fills a page that contains the index-th element. Calls into the concrete page source
    /// for loading the corresponding sealed page of cluster where necessary.
    /// Returns a default-constructed RPage for suppressed columns.
-   virtual ROOT::Internal::RPageRef LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex);
+   virtual ROOT::Internal::RPageRef
+   LoadPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem, ROOT::NTupleSize_t globalIndex);
    /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
    /// Returns a default-constructed RPage for suppressed columns.
-   virtual ROOT::Internal::RPageRef LoadPage(ColumnHandle_t columnHandle, RNTupleLocalIndex localIndex);
+   virtual ROOT::Internal::RPageRef
+   LoadPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem, RNTupleLocalIndex localIndex);
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
    /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.

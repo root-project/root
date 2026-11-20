@@ -67,14 +67,15 @@ ROOT::Internal::RReadColumn::~RReadColumn()
 bool ROOT::Internal::RReadColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
 {
    if (!fTeam) {
-      fReadPageRef = fPageSource->LoadPage(MakeHandle(), globalIndex);
+      fReadPageRef = fPageSource->LoadPage(fOnDiskId, *fElement, globalIndex);
       return fReadPageRef.Get().Contains(globalIndex);
    }
 
    const auto nTeam = fTeam->fMembers.size();
    std::size_t iTeam = 1;
    do {
-      fReadPageRef = fPageSource->LoadPage(fTeam->fMembers.at(fTeam->fLastGoodTeamIdx)->MakeHandle(), globalIndex);
+      const auto other = fTeam->fMembers.at(fTeam->fLastGoodTeamIdx);
+      fReadPageRef = fPageSource->LoadPage(other->fOnDiskId, *other->fElement, globalIndex);
       if (!fReadPageRef.Get().IsNull())
          break;
       fTeam->fLastGoodTeamIdx = (fTeam->fLastGoodTeamIdx + 1) % nTeam;
@@ -87,14 +88,15 @@ bool ROOT::Internal::RReadColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
 bool ROOT::Internal::RReadColumn::TryMapPage(RNTupleLocalIndex localIndex)
 {
    if (!fTeam) {
-      fReadPageRef = fPageSource->LoadPage(MakeHandle(), localIndex);
+      fReadPageRef = fPageSource->LoadPage(fOnDiskId, *fElement, localIndex);
       return fReadPageRef.Get().Contains(localIndex);
    }
 
    const auto nTeam = fTeam->fMembers.size();
    std::size_t iTeam = 1;
    do {
-      fReadPageRef = fPageSource->LoadPage(fTeam->fMembers.at(fTeam->fLastGoodTeamIdx)->MakeHandle(), localIndex);
+      const auto other = fTeam->fMembers.at(fTeam->fLastGoodTeamIdx);
+      fReadPageRef = fPageSource->LoadPage(other->fOnDiskId, *other->fElement, localIndex);
       if (!fReadPageRef.Get().IsNull())
          break;
       fTeam->fLastGoodTeamIdx = (fTeam->fLastGoodTeamIdx + 1) % nTeam;

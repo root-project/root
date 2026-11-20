@@ -110,13 +110,16 @@ public:
    {
    }
 
-   RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t i) final
+   RPageRef LoadPage(ROOT::DescriptorId_t colid, const ROOT::Internal::RColumnElementBase &, NTupleSize_t i) final
    {
       auto page = RPageSource::UnsealPage(fPages[i], fElement).Unwrap();
-      ROOT::Internal::RPagePool::RKey key{columnHandle.fPhysicalId, std::type_index(typeid(void))};
+      ROOT::Internal::RPagePool::RKey key{colid, std::type_index(typeid(void))};
       return fMyPagePool.RegisterPage(std::move(page), key);
    }
-   RPageRef LoadPage(ColumnHandle_t, ROOT::RNTupleLocalIndex) final { return RPageRef(); }
+   RPageRef LoadPage(ROOT::DescriptorId_t, const ROOT::Internal::RColumnElementBase &, ROOT::RNTupleLocalIndex) final
+   {
+      return RPageRef();
+   }
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
 };
 } // anonymous namespace
@@ -140,7 +143,7 @@ TEST(RColumnElementEndian, ByteCopy)
                        "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   auto page2Ref = source1.LoadPage(ROOT::kInvalidDescriptorId, element, NTupleSize_t{0});
    EXPECT_EQ(
       0, memcmp(page2Ref.Get().GetBuffer(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
 #endif
@@ -166,7 +169,7 @@ TEST(RColumnElementEndian, Cast)
                        "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   auto page2Ref = source1.LoadPage(ROOT::kInvalidDescriptorId, element, NTupleSize_t{0});
    EXPECT_EQ(0, memcmp(page2Ref.Get().GetBuffer(),
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
                        "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",
@@ -192,7 +195,7 @@ TEST(RColumnElementEndian, Split)
                        "\x07\x0f\x06\x0e\x05\x0d\x04\x0c\x03\x0b\x02\x0a\x01\x09\x00\x08", 16));
 
    RPageSourceMock source1(sink1.GetPages(), splitElement);
-   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   auto page2Ref = source1.LoadPage(ROOT::kInvalidDescriptorId, splitElement, NTupleSize_t{0});
    EXPECT_EQ(
       0, memcmp(page2Ref.Get().GetBuffer(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
 #endif
@@ -218,7 +221,7 @@ TEST(RColumnElementEndian, DeltaSplit)
                        "\x03\x04\x04\x04\x02\x04\x04\x04\x01\x04\x04\x04\x00\x04\x04\x04", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
-   auto page2Ref = source1.LoadPage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   auto page2Ref = source1.LoadPage(ROOT::kInvalidDescriptorId, element, NTupleSize_t{0});
    EXPECT_EQ(0, memcmp(page2Ref.Get().GetBuffer(),
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
                        "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",

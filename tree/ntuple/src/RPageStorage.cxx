@@ -922,13 +922,12 @@ ROOT::Internal::RPageSource::LoadPageFromSummary(const RPageSummary &pageSummary
    return fPagePool.RegisterPage(std::move(newPage), RPagePool::RKey{columnId, elemInMemoryType});
 }
 
-ROOT::Internal::RPageRef
-ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex)
+ROOT::Internal::RPageRef ROOT::Internal::RPageSource::LoadPage(DescriptorId_t physicalColumnId,
+                                                               const RColumnElementBase &elem,
+                                                               ROOT::NTupleSize_t globalIndex)
 {
-   const auto columnId = columnHandle.fPhysicalId;
-   const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
-   auto cachedPageRef =
-      fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, columnElementId.fInMemoryType}, globalIndex);
+   const ROOT::Internal::RPagePool::RKey poolKey{physicalColumnId, elem.GetIdentifier().fInMemoryType};
+   auto cachedPageRef = fPagePool.GetPage(poolKey, globalIndex);
    if (!cachedPageRef.Get().IsNull()) {
       UpdateLastUsedCluster(cachedPageRef.Get().GetClusterInfo().GetId());
       return cachedPageRef;
@@ -936,33 +935,34 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleS
 
    RPageSummary pageSummary;
    {
-      pageSummary.fPhysicalColumnId = columnId;
-      auto descriptorGuard = FindClusterId(columnId, globalIndex, pageSummary.fClusterId);
+      pageSummary.fPhysicalColumnId = physicalColumnId;
+      auto descriptorGuard = FindClusterId(physicalColumnId, globalIndex, pageSummary.fClusterId);
 
       if (pageSummary.fClusterId == ROOT::kInvalidDescriptorId)
          throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
 
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(pageSummary.fClusterId);
-      const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
+      const auto &columnRange = clusterDescriptor.GetColumnRange(physicalColumnId);
       if (columnRange.IsSuppressed())
          return ROOT::Internal::RPageRef();
 
       pageSummary.fColumnOffset = columnRange.GetFirstElementIndex();
       R__ASSERT(pageSummary.fColumnOffset <= globalIndex);
-      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(globalIndex - pageSummary.fColumnOffset);
+      pageSummary.fPageInfo =
+         clusterDescriptor.GetPageRange(physicalColumnId).Find(globalIndex - pageSummary.fColumnOffset);
    }
 
-   return LoadPageFromSummary(pageSummary, *columnHandle.fColumn->GetElement());
+   return LoadPageFromSummary(pageSummary, elem);
 }
 
-ROOT::Internal::RPageRef
-ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalIndex localIndex)
+ROOT::Internal::RPageRef ROOT::Internal::RPageSource::LoadPage(DescriptorId_t physicalColumnId,
+                                                               const RColumnElementBase &elem,
+                                                               RNTupleLocalIndex localIndex)
 {
    const auto clusterId = localIndex.GetClusterId();
-   const auto columnId = columnHandle.fPhysicalId;
-   const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
-   auto cachedPageRef =
-      fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, columnElementId.fInMemoryType}, localIndex);
+
+   const ROOT::Internal::RPagePool::RKey poolKey{physicalColumnId, elem.GetIdentifier().fInMemoryType};
+   auto cachedPageRef = fPagePool.GetPage(poolKey, localIndex);
    if (!cachedPageRef.Get().IsNull()) {
       UpdateLastUsedCluster(clusterId);
       return cachedPageRef;
@@ -975,17 +975,17 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
    {
       auto descriptorGuard = EnsureClusterDetails(FindClusterGroupId(clusterId), GetSharedDescriptorGuard());
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
-      const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
+      const auto &columnRange = clusterDescriptor.GetColumnRange(physicalColumnId);
       if (columnRange.IsSuppressed())
          return ROOT::Internal::RPageRef();
 
-      pageSummary.fPhysicalColumnId = columnId;
+      pageSummary.fPhysicalColumnId = physicalColumnId;
       pageSummary.fClusterId = clusterId;
       pageSummary.fColumnOffset = columnRange.GetFirstElementIndex();
-      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(localIndex.GetIndexInCluster());
+      pageSummary.fPageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(localIndex.GetIndexInCluster());
    }
 
-   return LoadPageFromSummary(pageSummary, *columnHandle.fColumn->GetElement());
+   return LoadPageFromSummary(pageSummary, elem);
 }
 
 void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)
