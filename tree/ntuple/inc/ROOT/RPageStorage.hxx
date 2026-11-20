@@ -24,6 +24,7 @@
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPage.hxx>
+#include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RSpan.hxx>
 #include <string_view>
@@ -49,7 +50,6 @@ class RNTupleModel;
 
 namespace Internal {
 
-class RPageAllocator;
 class RColumn;
 class RWriteColumn;
 struct RNTupleModelChangeset;
@@ -140,9 +140,6 @@ public:
    };
 
 protected:
-   /// For the time being, we will use the heap allocator for all sources and sinks. This may change in the future.
-   std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAllocator;
-
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
    void WaitForAllTasks()
@@ -237,6 +234,7 @@ private:
 
 protected:
    ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
+   RPageAllocatorHeap fPageAllocator;
    /// Flag if sink was initialized
    bool fIsInitialized = false;
 
@@ -738,6 +736,7 @@ private:
       }
    };
 
+   RPageAllocatorHeap fPageAllocator;
    ROOT::RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
    REntryRange fEntryRange;                  ///< Used by the cluster pool to prevent reading beyond the given range
