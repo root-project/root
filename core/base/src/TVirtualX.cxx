@@ -32,6 +32,7 @@ An instance of TVirtualX itself defines a batch interface to the graphics system
 #include "TColor.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TApplication.h"
 
 
 Atom_t    gWM_DELETE_WINDOW;
@@ -2843,11 +2844,20 @@ ULong_t TVirtualX::Number2Pixel(Int_t ci)
 {
    TColor::InitializeColors();
    auto color = gROOT->GetColor(ci);
-   if (color)
-      return color->GetPixel();
+   if (!color) {
+      ::Warning("TVirtualX::Number2Pixel", "color with index %d not defined", ci);
+      return 0;
+   }
 
-   ::Warning("TVirtualX::Number2Pixel", "color with index %d not defined", ci);
-   return 0;
+   if (!gVirtualX || gROOT->IsBatch())
+      return 0;
+
+   if (gApplication) {
+      TApplication::NeedGraphicsLibs();
+      gApplication->InitializeGraphics(gROOT->IsWebDisplay());
+   }
+
+   return gVirtualX->GetPixel(color->GetNumber());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
