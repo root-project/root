@@ -175,7 +175,7 @@ public:
 
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the metadata.
    /// When writing, every column can only be attached once.
-   virtual ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) = 0;
+   virtual DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const ROOT::Internal::RColumn &column) = 0;
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
@@ -518,7 +518,7 @@ public:
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
                                             const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) final;
+   DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const ROOT::Internal::RColumn &column) final;
 
    const ROOT::RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
@@ -937,7 +937,7 @@ public:
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
    }
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) override;
+   DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const ROOT::Internal::RColumn &column) final;
    void DropColumn(const ROOT::Internal::RColumn &column);
 
    /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open

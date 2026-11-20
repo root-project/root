@@ -60,10 +60,9 @@ ROOT::Internal::RPageSinkBuf::~RPageSinkBuf()
    WaitForAllTasks();
 }
 
-ROOT::Internal::RPageStorage::ColumnHandle_t
-ROOT::Internal::RPageSinkBuf::AddColumn(ROOT::DescriptorId_t /*fieldId*/, ROOT::Internal::RColumn &column)
+ROOT::DescriptorId_t ROOT::Internal::RPageSinkBuf::AddColumn(ROOT::DescriptorId_t /*fieldId*/, const RColumn &)
 {
-   return ColumnHandle_t{fNColumns++, &column};
+   return fNColumns++;
 }
 
 void ROOT::Internal::RPageSinkBuf::ConnectFields(const std::vector<ROOT::RFieldBase *> &fields,

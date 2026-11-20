@@ -79,7 +79,7 @@ public:
 
    const RNTupleDescriptor &GetDescriptor() const final { return fInnerSink->GetDescriptor(); }
 
-   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &) final { return {}; }
+   DescriptorId_t AddColumn(DescriptorId_t, const RColumn &) final { return ROOT::kInvalidDescriptorId; }
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
       throw ROOT::RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));

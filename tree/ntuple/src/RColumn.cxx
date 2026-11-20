@@ -30,7 +30,7 @@ void ROOT::Internal::RWriteColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId,
 
    fPageSink = &pageSink;
    fFirstElementIndex = firstElementIndex;
-   fOnDiskId = fPageSink->AddColumn(fieldId, *this).fPhysicalId;
+   fOnDiskId = fPageSink->AddColumn(fieldId, *this);
    fWritePage = fPageSink->ReservePage(MakeHandle(), fInitialNElements);
    if (fWritePage.IsNull())
       throw RException(R__FAIL("page buffer memory budget too small"));
@@ -55,7 +55,7 @@ void ROOT::Internal::RWriteColumn::CommitSuppressed()
 void ROOT::Internal::RReadColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)
 {
    fPageSource = &pageSource;
-   fOnDiskId = fPageSource->AddColumn(fieldId, *this).fPhysicalId;
+   fOnDiskId = fPageSource->AddColumn(fieldId, *this);
 }
 
 ROOT::Internal::RReadColumn::~RReadColumn()

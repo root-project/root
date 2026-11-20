@@ -39,7 +39,10 @@ protected:
    const RColumnElementBase &fElement;
    std::vector<RPageStorage::RSealedPage> fPages;
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, ROOT::Internal::RColumn &) final { return {}; }
+   ROOT::DescriptorId_t AddColumn(ROOT::DescriptorId_t, const ROOT::Internal::RColumn &) final
+   {
+      return ROOT::kInvalidDescriptorId;
+   }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {

@@ -49,10 +49,7 @@ public:
    {
    }
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, ROOT::Internal::RColumn &column) final
-   {
-      return {fNColumns++, &column};
-   }
+   DescriptorId_t AddColumn(ROOT::DescriptorId_t, const ROOT::Internal::RColumn &) final { return fNColumns++; }
 
    const ROOT::RNTupleDescriptor &GetDescriptor() const final
    {
