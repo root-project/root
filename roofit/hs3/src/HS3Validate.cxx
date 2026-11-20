@@ -50,6 +50,8 @@ public:
          auto const &dist = _doc.distributions[i];
          if (auto const *histFactory = std::get_if<HistFactoryDist>(&dist.body)) {
             checkHistFactory(*histFactory, dist.name, at("distributions", i, dist.name));
+         } else if (auto const *combined = std::get_if<CombinedDist>(&dist.body)) {
+            checkCombined(*combined, at("distributions", i, dist.name), "the combined_dist '" + dist.name + "'");
          }
       }
       for (auto const &item : _doc.rooFit.combinedDistributions) {
@@ -89,6 +91,8 @@ public:
    }
 
    void checkHistFactory(HistFactoryDist const &dist, std::string const &name, std::string const &path);
+   template <class Ref_t>
+   void checkCombined(Combined<Ref_t> const &combined, std::string const &path, std::string const &context);
 
 private:
    bool isExternal(std::string const &name) const { return _options.isExternal && _options.isExternal(name); }
@@ -145,6 +149,7 @@ private:
    ValidateOptions const &_options;
    std::map<std::string, std::vector<char const *>> _sections; ///< The sections where a name is defined.
    std::set<std::string> _parameters;
+   std::map<std::string, std::vector<std::string> const *> _categories; ///< Of the categorical axes of the domains.
 };
 
 // The names that the HS3 expression language reserves for itself: its literals and functions (HS3 0.3, "Identifiers").
@@ -338,6 +343,7 @@ void Validator::checkCategoricalAxes()
          if (!cat) {
             continue;
          }
+         _categories.emplace(cat->name, &cat->categories);
          auto inserted = categorical.insert({cat->name, Declaration{&cat->categories, &domain.name}});
          if (!inserted.second && *inserted.first->second.categories != cat->categories) {
             error(at("domains", i, domain.name), "the categorical axis '" + cat->name + "' is listed in the domains '" +
@@ -362,18 +368,48 @@ void Validator::checkCategoricalAxes()
    }
 }
 
-// The columns of combined data sets are categorical axes of the domains, or categories that exist already, and the keys
-// consist of their categories. Every sub-data set is a data set of the document that belongs to one combined data set.
-void Validator::checkCombinedData()
+// The columns of a combined data set or distribution are categorical axes of the domains, or categories that exist
+// already, and the keys consist of their categories.
+template <class Ref_t>
+void Validator::checkCombined(Combined<Ref_t> const &combined, std::string const &path, std::string const &context)
 {
-   std::map<std::string, std::vector<std::string> const *> categorical;
-   for (Domain const &domain : _doc.domains) {
-      for (auto const &axis : domain.axes) {
-         if (auto const *cat = std::get_if<CategoricalAxis>(&axis)) {
-            categorical.emplace(cat->name, &cat->categories);
+   std::vector<std::vector<std::string> const *> columnCategories;
+   std::set<std::string> columns;
+   for (std::string const &column : combined.columns) {
+      auto found = _categories.find(column);
+      if (found == _categories.end() && !isExternal(column)) {
+         error(path,
+               "the column '" + column + "' of " + context + " is not declared by a categorical axis of a domain");
+         return;
+      }
+      if (!columns.insert(column).second) {
+         error(path, "the column '" + column + "' of " + context + " is listed twice");
+         return;
+      }
+      columnCategories.push_back(found != _categories.end() ? found->second : nullptr);
+   }
+   std::set<std::vector<std::string>> keys;
+   for (auto const &component : combined.components) {
+      for (std::size_t k = 0; k < component.key.size(); ++k) {
+         auto const *categories = columnCategories[k];
+         if (categories && std::find(categories->begin(), categories->end(), component.key[k]) == categories->end()) {
+            error(path, "the label '" + component.key[k] + "' in position " + std::to_string(k) + " of a key of " +
+                           context + " is not one of the categories of '" + combined.columns[k] + "'");
          }
       }
+      if (!keys.insert(component.key).second) {
+         std::string key = "[";
+         for (std::size_t k = 0; k < component.key.size(); ++k) {
+            key += (k == 0 ? "\"" : ", \"") + component.key[k] + "\"";
+         }
+         error(path, "the key " + key + "] is used by two components of " + context);
+      }
    }
+}
+
+// Every sub-data set of a combined data set is a data set of the document that belongs to one combined data set.
+void Validator::checkCombinedData()
+{
    std::set<std::string> combinedNames;
    for (auto const &data : _doc.data) {
       if (std::holds_alternative<CombinedData>(data.body)) {
@@ -388,39 +424,9 @@ void Validator::checkCombinedData()
       }
       std::string const path = at("data", i, _doc.data[i].name);
       std::string const context = "the combined data set '" + _doc.data[i].name + "'";
-      std::vector<std::vector<std::string> const *> columnCategories;
-      std::set<std::string> columns;
-      for (std::string const &column : combined->columns) {
-         auto found = categorical.find(column);
-         if (found == categorical.end() && !isExternal(column)) {
-            error(path,
-                  "the column '" + column + "' of " + context + " is not declared by a categorical axis of a domain");
-            return;
-         }
-         if (!columns.insert(column).second) {
-            error(path, "the column '" + column + "' of " + context + " is listed twice");
-            return;
-         }
-         columnCategories.push_back(found != categorical.end() ? found->second : nullptr);
-      }
-      std::set<std::vector<std::string>> keys;
-      for (CombinedDataComponent const &component : combined->components) {
-         for (std::size_t k = 0; k < component.key.size(); ++k) {
-            auto const *categories = columnCategories[k];
-            if (categories &&
-                std::find(categories->begin(), categories->end(), component.key[k]) == categories->end()) {
-               error(path, "the label '" + component.key[k] + "' in position " + std::to_string(k) + " of a key of " +
-                              context + " is not one of the categories of '" + combined->columns[k] + "'");
-            }
-         }
-         if (!keys.insert(component.key).second) {
-            std::string key = "[";
-            for (std::size_t k = 0; k < component.key.size(); ++k) {
-               key += (k == 0 ? "\"" : ", \"") + component.key[k] + "\"";
-            }
-            error(path, "the key " + key + "] is used by two components of " + context);
-         }
-         std::string const &name = component.data.name;
+      checkCombined(*combined, path, context);
+      for (auto const &component : combined->components) {
+         std::string const &name = component.ref.name;
          if (!isDefinedIn(name, "data") || combinedNames.count(name) || !usedComponents.insert(name).second) {
             error(path, "the component '" + name + "' of " + context +
                            " is not a data set of the document, or it is already a component of another combined "
@@ -506,14 +512,7 @@ void Validator::checkNormalizationRanges(Analysis const &analysis, std::string c
             if (!axis || axis->fixedValue) {
                continue; // a fixed axis gives no range
             }
-            std::optional<double> min = axis->min;
-            std::optional<double> max = axis->max;
-            auto const *edges = axis->binning ? std::get_if<EdgesBinning>(&*axis->binning) : nullptr;
-            if (edges && !edges->edges.empty()) {
-               min = min ? min : edges->edges.front();
-               max = max ? max : edges->edges.back();
-            }
-            domainRanges[axis->name] = {bound(min), bound(max)};
+            domainRanges[axis->name] = {bound(axis->min), bound(axis->max)};
          }
       }
    }
@@ -534,25 +533,19 @@ void Validator::checkNormalizationRanges(Analysis const &analysis, std::string c
          if (data.name != dataName) {
             continue;
          }
+         // Continuous and binned axes have a range, categorical axes don't.
+         auto checkAxis = [&](auto const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); };
          auto checkAxes = [&](auto const &axes) {
-            for (auto const &axisVariant : axes) {
-               std::visit(
-                  overloaded{[&](ContinuousAxis const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); },
-                             [&](BinnedAxis const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); },
-                             [](CategoricalAxis const &) {}},
-                  axisVariant);
+            for (auto const &axis : axes) {
+               std::visit(overloaded{[](CategoricalAxis const &) {}, checkAxis}, axis);
             }
          };
-         std::visit(overloaded{[&](PointData const &d) {
-                                  for (auto const &a : d.axes) {
-                                     check(data.name, a.name, {bound(a.min), bound(a.max)});
-                                  }
-                               },
+         std::visit(overloaded{[&](PointData const &d) { std::for_each(d.axes.begin(), d.axes.end(), checkAxis); },
                                [&](UnbinnedData const &d) { checkAxes(d.axes); },
                                [&](BinnedData const &d) { checkAxes(d.axes); },
                                [&](CombinedData const &d) {
                                   for (auto const &component : d.components) {
-                                     checkData(component.data.name);
+                                     checkData(component.ref.name);
                                   }
                                }},
                     data.body);
@@ -711,12 +704,6 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
       }
    };
 
-   auto checkConstraint = [&](std::string const &where, Constraint const &constraint) {
-      if (auto const *pdf = std::get_if<ConstraintPdf>(&constraint)) {
-         requireDistribution(pdf->pdf.name, where, "constraint");
-      }
-   };
-
    // The constraint distributions of the gamma parameters of shape modifiers.
    auto checkGammaConstraint = [&](std::string const &where, GammaConstraint const &constraint) {
       auto const *pdfs = std::get_if<GammaConstraintPdfs>(&constraint);
@@ -801,10 +788,18 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                                       "' is not given, and the channel has no \"default_interpolation\"");
             }
          };
-         // The modifiers with a single parameter, which can have a constraint.
+         // The modifiers with a single parameter, which can have a constraint. Of the constraint types of older
+         // documents, RooFit only creates the Gaussian for them.
          auto checkSingleParameter = [&](auto const &m) {
             checkParameter(modifierPath, m.parameter.name, m.name);
-            checkConstraint(modifierPath, m.constraint);
+            if (auto const *pdf = std::get_if<ConstraintPdf>(&m.constraint)) {
+               requireDistribution(pdf->pdf.name, modifierPath, "constraint");
+            } else if (auto const *type = std::get_if<ConstraintType>(&m.constraint);
+                       type && *type != ConstraintType::Gauss) {
+               error(modifierPath, std::string("legacy constraint value '") + toString(*type) + "' for modifier '" +
+                                      m.name +
+                                      "' is a known constraint type, but it cannot be resolved in this context");
+            }
             checkCorrelated(modifierPath, m.parameter.name, m.constraint);
          };
          std::visit(overloaded{
@@ -839,6 +834,13 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                           }
                           checkGammaConstraint(modifierPath, m.constraint);
                           checkStatErrorConstraints(modifierPath, m.constraint);
+                          // A lognormal constraint makes no sense for gamma parameters.
+                          if (auto const *type = std::get_if<ConstraintType>(&m.constraint);
+                              type && *type == ConstraintType::LogNormal) {
+                             error(modifierPath, std::string("unsupported constraint '") + toString(*type) +
+                                                    "' of the staterror modifier in channel '" + name +
+                                                    "', supported are \"Poisson\" and \"Gauss\"");
+                          }
                        },
                        [&](CustomModifier const &m) {
                           if (!isDefinedIn(m.name, "functions") && !isDefinedIn(m.name, "distributions") &&
@@ -875,6 +877,15 @@ void validateHistFactoryDist(HistFactoryDist const &dist, std::string const &nam
    ValidateOptions options;
    options.isExternal = [](std::string const &) { return true; };
    Validator{empty, diagnostics, options}.checkHistFactory(dist, name, "");
+}
+
+void validateCombinedDist(CombinedDist const &dist, std::string const &name, Diagnostics &diagnostics)
+{
+   // Without a document, the columns are categories of the workspace, whose labels are checked when it is built.
+   HS3Document empty;
+   ValidateOptions options;
+   options.isExternal = [](std::string const &) { return true; };
+   Validator{empty, diagnostics, options}.checkCombined(dist, "", "the combined_dist '" + name + "'");
 }
 
 } // namespace HS3

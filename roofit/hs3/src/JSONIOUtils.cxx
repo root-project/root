@@ -22,22 +22,19 @@
 
 using RooFit::Detail::JSONNode;
 
-// Parse the entire string as a number (integer or floating-point). The output is only valid if that succeeds.
-ToNumberOutput toNumber(const std::string &str)
+std::optional<double> toNumber(const std::string &str)
 {
    // std::from_chars for floating-point types is not portably available on all
    // platforms ROOT supports, so we rely on the stream extraction.
    std::istringstream stream(str);
-   ToNumberOutput output;
-   output.valid = (stream >> output.value) && stream.eof();
-   return output;
+   double value = 0.0;
+   return (stream >> value) && stream.eof() ? std::optional<double>{value} : std::nullopt;
 }
 
 // True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
 bool isLiteralConstVar(RooAbsArg const &arg)
 {
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
-   return isRooConstVar && toNumber(arg.GetName()).valid;
+   return dynamic_cast<RooConstVar const *>(&arg) && toNumber(arg.GetName());
 }
 
 // Write a reference to `arg`: the value if it is a literal constant, and the name otherwise.
@@ -333,53 +330,4 @@ std::string selectionLabel(RooAbsCategory const &indexCat, std::vector<RooCatego
       inInputOrder.push_back(key[found - columns.begin()]);
    }
    return selectionLabel(inInputOrder);
-}
-
-std::vector<RooCategory *>
-readSelectionColumns(RooWorkspace const &ws, JSONNode const &node, const char *field, std::string const &context)
-{
-   auto const *list = node.find(field);
-   if (!list || !list->is_seq() || list->num_children() == 0) {
-      RooJSONFactoryWSTool::error("\"" + std::string(field) + "\" of " + context +
-                                  " must be a non-empty list of names of categorical axes");
-   }
-   std::vector<RooCategory *> columns;
-   for (JSONNode const &child : list->children()) {
-      if (child.is_container() || child.val().empty()) {
-         RooJSONFactoryWSTool::error("\"" + std::string(field) + "\" of " + context +
-                                     " must be a non-empty list of names of categorical axes");
-      }
-      RooCategory *cat = ws.cat(child.val());
-      if (!cat) {
-         RooJSONFactoryWSTool::error("the column '" + child.val() + "' of " + context +
-                                     " is not declared by a categorical axis of a domain");
-      }
-      if (std::find(columns.begin(), columns.end(), cat) != columns.end()) {
-         RooJSONFactoryWSTool::error("the column '" + child.val() + "' of " + context + " is listed twice");
-      }
-      columns.push_back(cat);
-   }
-   return columns;
-}
-
-std::vector<std::string>
-readSelectionKey(JSONNode const &component, std::vector<RooCategory *> const &columns, std::string const &context)
-{
-   auto const *keyNode = component.find("key");
-   if (!keyNode || !keyNode->is_seq() || keyNode->num_children() != columns.size()) {
-      RooJSONFactoryWSTool::error("every component of " + context + " must have a \"key\" with " +
-                                  std::to_string(columns.size()) + " labels, one per column");
-   }
-   std::vector<std::string> key;
-   std::size_t i = 0;
-   for (JSONNode const &label : keyNode->children()) {
-      if (label.is_container() || !columns[i]->hasLabel(label.val())) {
-         RooJSONFactoryWSTool::error("the label '" + (label.is_container() ? std::string("") : label.val()) +
-                                     "' in position " + std::to_string(i) + " of a key of " + context +
-                                     " is not one of the categories of '" + columns[i]->GetName() + "'");
-      }
-      key.push_back(label.val());
-      ++i;
-   }
-   return key;
 }

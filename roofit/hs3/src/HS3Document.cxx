@@ -51,8 +51,6 @@ DomainAxis const *DomainRanges::find(std::string const &name) const
    return found != _ranges.end() ? found->second : nullptr;
 }
 
-namespace {
-
 char const *typeOf(Modifier const &modifier)
 {
    return std::visit(
@@ -61,6 +59,8 @@ char const *typeOf(Modifier const &modifier)
                  [](StatError const &) { return "staterror"; }, [](CustomModifier const &) { return "custom"; }},
       modifier);
 }
+
+namespace {
 
 // What duplicates must have in common to be combined.
 template <class Modifier_t>
