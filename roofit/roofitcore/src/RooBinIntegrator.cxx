@@ -83,18 +83,35 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc &function, int numBins)
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     _xmin[i]= _function->getMinLimit(i);
     _xmax[i]= _function->getMaxLimit(i);
+  }
+  updateBinBoundaries(/*warnIfNoBinning=*/true);
+  checkLimits();
 
-    // Retrieve bin configuration from integrand
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the bin boundaries from the integrand. They can depend on the
+/// parameters, e.g. for a RooHistPdf whose observable is a shifted variable,
+/// so this is done for each integral.
+
+void RooBinIntegrator::updateBinBoundaries(bool warnIfNoBinning)
+{
+  _binb.resize(_function->getDimension());
+  for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     std::unique_ptr<list<double>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
-      oocoutW(nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
-          << i << " substituting default binning of " << _numBins << " bins" << std::endl ;
+      if (warnIfNoBinning) {
+        oocoutW(nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
+            << i << " substituting default binning of " << _numBins << " bins" << std::endl ;
+      }
       tmp = std::make_unique<list<double>>( );
       for (Int_t j=0 ; j<=_numBins ; j++) {
         tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
       }
     }
-    std::vector<double> binb{tmp->begin(), tmp->end()};
+    std::vector<double> &binb = _binb[i];
+    binb.assign(tmp->begin(), tmp->end());
 
     // The bin boundaries provided by the integrand only include the boundaries
     // that lie strictly inside the integration range. To integrate correctly
@@ -106,11 +123,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc &function, int numBins)
     if (binb.back() < _xmax[i]) {
       binb.push_back(_xmax[i]);
     }
-    _binb.emplace_back(std::move(binb));
-
   }
-  checkLimits();
-
 }
 
 
@@ -177,6 +190,8 @@ double RooBinIntegrator::integral(const double *)
    assert(isValid());
    if (_function->getDimension() < 1) return 0.;
    
+   updateBinBoundaries(/*warnIfNoBinning=*/false);
+
    ROOT::Math::KahanSum<double> sum;
    
    recursive_integration(0,1.,sum);
