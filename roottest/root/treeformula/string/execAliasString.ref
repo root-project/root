@@ -5,7 +5,6 @@ Processing execAliasString.C...
 *        0 *       16A *           3 *
 *        1 *       17B *           2 *
 **************************************
-Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 ***********************************
 *    Row   * first?name:"not f... *
 ***********************************
