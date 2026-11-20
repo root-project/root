@@ -19,6 +19,7 @@
 #include "TMath.h"
 #include "TAttMarker.h"
 #include "TPoint.h"
+#include "TTFhandle.h"
 
 #include <cwchar>
 #include <cstdlib>
@@ -473,12 +474,7 @@ void TText::GetControlBox(Int_t x, Int_t y, Double_t theta,
    UInt_t cBoxW = 0, cBoxH = 0;                     // control box width and heigh
    UInt_t Dx = 0, Dy = 0;                   // delta along x and y to align the box
 
-   if (gPad) {
-      Double_t tsize = GetTextSizePixels(*gPad);
-      auto pp = gPad->GetPainter();
-      if (pp)
-         pp->GetTextExtent(GetTextFont(), tsize, cBoxW, cBoxH, GetTitle());
-   }
+   GetTextExtent(cBoxW, cBoxH, GetTitle());
 
    // compute the translations (Dx, Dy) required by the alignments
    switch (halign) {
@@ -554,10 +550,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       w = x2 - x1;
       h = y2 - y1;
    } else {
-      Double_t tsize = GetTextSizePixels(*gPad);
-      auto pp = gPad->GetPainter();
-      if (pp)
-         pp->GetTextExtent(GetTextFont(), tsize, w, h, GetTitle());
+      GetTextExtent(w, h, GetTitle());
    }
 }
 
@@ -568,6 +561,8 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 {
+   a = d = 0;
+
    if (!gPad)
       return;
 
@@ -576,6 +571,15 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
    auto pp = gPad->GetPainter();
    if (pp)
       pp->GetTextAscentDescent(GetTextFont(), tsize, a, d, text);
+   else {
+      TTFhandle ttf;
+      ttf.SetTextFont(GetTextFont());
+      ttf.SetTextSize(tsize);
+      UInt_t w, h;
+      ttf.GetTextExtent(w, h, text);
+      a = ttf.GetBoxYMax();
+      d = TMath::Abs(ttf.GetBoxYMin());
+   }
 }
 
 
@@ -586,6 +590,8 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) const
 {
+   a = d = 0;
+
    if (!gPad)
       return;
 
@@ -594,6 +600,15 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) cons
    auto pp = gPad->GetPainter();
    if (pp)
       pp->GetTextAscentDescent(GetTextFont(), tsize, a, d, text);
+   else {
+      TTFhandle ttf;
+      ttf.SetTextFont(GetTextFont());
+      ttf.SetTextSize(tsize);
+      UInt_t w, h;
+      ttf.GetTextExtent(w, h, text);
+      a = ttf.GetBoxYMax();
+      d = TMath::Abs(ttf.GetBoxYMin());
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -603,14 +618,22 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) cons
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 {
-   if (!gPad)
+   if (!gPad) {
+      w = h = 0;
       return;
+   }
 
    Double_t tsize = GetTextSizePixels(*gPad);
 
    auto pp = gPad->GetPainter();
    if (pp)
       pp->GetTextExtent(GetTextFont(), tsize, w, h, text);
+   else {
+      TTFhandle ttf;
+      ttf.SetTextFont(GetTextFont());
+      ttf.SetTextSize(tsize);
+      ttf.GetTextExtent(w, h, text);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -628,6 +651,13 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
    auto pp = gPad->GetPainter();
    if (pp)
       a = pp->GetTextAdvance(GetTextFont(), tsize, text, kern);
+   else {
+      TTFhandle ttf;
+      ttf.SetTextFont(GetTextFont());
+      ttf.SetTextSize(tsize);
+      ttf.SetKerning(kern);
+      ttf.GetTextAdvance(a, text);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -637,14 +667,22 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
 {
-   if (!gPad)
+   if (!gPad) {
+      w = h = 0;
       return;
+   }
 
    Double_t tsize = GetTextSizePixels(*gPad);
 
    auto pp = gPad->GetPainter();
    if (pp)
       pp->GetTextExtent(GetTextFont(), tsize, w, h, text);
+   else {
+      TTFhandle ttf;
+      ttf.SetTextFont(GetTextFont());
+      ttf.SetTextSize(tsize);
+      ttf.GetTextExtent(w, h, text);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
