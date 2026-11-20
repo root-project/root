@@ -236,8 +236,11 @@ in order to enhance rays.
 \image html geom_random2.jpg
 */
 
+#include <algorithm>
 #include <atomic>
 #include <cstdlib>
+#include <functional>
+#include <unordered_map>
 #include <iostream>
 #include <fstream>
 
@@ -1849,33 +1852,58 @@ void TGeoManager::CountLevels()
       Error("CountLevels", "Top node not defined.");
       return;
    }
-   TGeoIterator next(fTopVolume);
    Bool_t fixrefs = fIsGeomReading && (fMasterVolume->GetRefCount() == 1);
    if (fMasterVolume->GetRefCount() > 1)
       fMasterVolume->Release();
    if (fgVerboseLevel > 1 && fixrefs)
       Info("CountLevels", "Fixing volume reference counts");
-   TGeoNode *node;
    Int_t maxlevel = 1;
    Int_t maxnodes = fTopVolume->GetNdaughters();
    Int_t maxvertices = 1;
-   while ((node = next())) {
-      if (fixrefs) {
+   if (fixrefs) {
+      // Reference counts have to be fixed for every node instance: iterate the full tree of placements
+      TGeoIterator next(fTopVolume);
+      TGeoNode *node;
+      while ((node = next())) {
          node->GetVolume()->Grab();
          for (Int_t ibit = 10; ibit < 14; ibit++) {
             node->SetBit(BIT(ibit + 4), node->TestBit(BIT(ibit)));
             //            node->ResetBit(BIT(ibit)); // cannot overwrite old crap for reproducibility
          }
+         if (node->GetNdaughters() > maxnodes)
+            maxnodes = node->GetNdaughters();
+         if (next.GetLevel() > maxlevel)
+            maxlevel = next.GetLevel();
+         if (node->GetVolume()->GetShape()->IsA() == TGeoXtru::Class()) {
+            TGeoXtru *xtru = (TGeoXtru *)node->GetVolume()->GetShape();
+            if (xtru->GetNvert() > maxvertices)
+               maxvertices = xtru->GetNvert();
+         }
       }
-      if (node->GetNdaughters() > maxnodes)
-         maxnodes = node->GetNdaughters();
-      if (next.GetLevel() > maxlevel)
-         maxlevel = next.GetLevel();
-      if (node->GetVolume()->GetShape()->IsA() == TGeoXtru::Class()) {
-         TGeoXtru *xtru = (TGeoXtru *)node->GetVolume()->GetShape();
-         if (xtru->GetNvert() > maxvertices)
-            maxvertices = xtru->GetNvert();
-      }
+   } else {
+      // The maximum depth, number of daughters and number of Xtru vertices only depend on the volumes,
+      // not on the placement path, so each volume is visited once.
+      std::unordered_map<const TGeoVolume *, Int_t> depth; // levels of daughters below a visited volume
+      std::function<Int_t(TGeoVolume *)> visit = [&](TGeoVolume *vol) -> Int_t {
+         auto it = depth.find(vol);
+         if (it != depth.end())
+            return it->second;
+         Int_t d = 0;
+         for (Int_t i = 0, nd = vol->GetNdaughters(); i < nd; ++i) {
+            TGeoVolume *dvol = vol->GetNode(i)->GetVolume();
+            if (dvol->GetNdaughters() > maxnodes)
+               maxnodes = dvol->GetNdaughters();
+            if (dvol->GetShape()->IsA() == TGeoXtru::Class()) {
+               TGeoXtru *xtru = (TGeoXtru *)dvol->GetShape();
+               if (xtru->GetNvert() > maxvertices)
+                  maxvertices = xtru->GetNvert();
+            }
+            d = std::max(d, 1 + visit(dvol));
+         }
+         depth.emplace(vol, d);
+         return d;
+      };
+      maxlevel = std::max(maxlevel, visit(fTopVolume));
    }
    fgMaxLevel = maxlevel;
    fgMaxDaughters = maxnodes;
