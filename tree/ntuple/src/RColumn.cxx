@@ -61,7 +61,7 @@ void ROOT::Internal::RReadColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId
 ROOT::Internal::RReadColumn::~RReadColumn()
 {
    if (fPageSource)
-      fPageSource->DropColumn(MakeHandle());
+      fPageSource->DropColumn(*this);
 }
 
 bool ROOT::Internal::RReadColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
