@@ -20,6 +20,7 @@
 #include "TG3DLine.h"
 #include "TGButton.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TString.h"
 #include "TGLabel.h"
 #include "TGComboBox.h"
@@ -194,7 +195,7 @@ void TGLViewerEditor::SetModel(TObject* obj)
    fClipSet->SetModel(fViewer->GetClipSet());
 
    // style tab
-   fClearColor->SetColor(TColor::Number2Pixel(fViewer->RnrCtx().ColorSet().Background().GetColorIndex()), kFALSE);
+   fClearColor->SetColor(TVirtualX::Number2Pixel(fViewer->RnrCtx().ColorSet().Background().GetColorIndex()), kFALSE);
    fClearColor->Enable(!fViewer->IsUsingDefaultColorSet());
    fIgnoreSizesOnUpdate->SetState(fViewer->GetIgnoreSizesOnUpdate() ? kButtonDown : kButtonUp);
    fResetCamerasOnUpdate->SetState(fViewer->GetResetCamerasOnUpdate() ? kButtonDown : kButtonUp);

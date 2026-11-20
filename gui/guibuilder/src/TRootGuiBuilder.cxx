@@ -695,7 +695,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddSection("User's Macros");
    TGShutterItem *item = fShutter->GetItem("User's Macros");
    TGCompositeFrame *cont = (TGCompositeFrame *)item->GetContainer();
-   cont->SetBackgroundColor(TColor::Number2Pixel(18));
+   cont->SetBackgroundColor(TVirtualX::Number2Pixel(18));
 
    TGuiBldAction *act = new TGuiBldAction("TGMainFrame", "Empty Frame",
                                           kGuiBldProj);
@@ -1003,7 +1003,7 @@ void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 
    if (!item) return;
    TGCompositeFrame *cont = (TGCompositeFrame *)item->GetContainer();
-   cont->SetBackgroundColor(TColor::Number2Pixel(18));
+   cont->SetBackgroundColor(TVirtualX::Number2Pixel(18));
 
    const TGPicture *pic = 0;
    if (!act->fPicture) {

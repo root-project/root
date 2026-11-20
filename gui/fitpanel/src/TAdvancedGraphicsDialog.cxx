@@ -25,6 +25,7 @@ confidence levels.
 #include "TAxis.h"
 #include "TVirtualPad.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 
 #include "Fit/BinData.h"
 #include "Math/IParamFunction.h"
@@ -186,7 +187,7 @@ void TAdvancedGraphicsDialog::CreateContourFrame()
    label = new TGLabel(frame, "Fill Colour: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
-   fContourColor = new TGColorSelect(frame, TColor::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
+   fContourColor = new TGColorSelect(frame, TVirtualX::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
    frame->AddFrame(fContourColor, new TGLayoutHints(kLHintsNormal, 5, 0, 5, 0));
 
    fContourOver = new TGCheckButton(frame, "Superimpose", kAGD_CONTOVER);
@@ -289,7 +290,7 @@ void TAdvancedGraphicsDialog::CreateConfFrame()
    label = new TGLabel(frame, "Fill Colour: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
-   fConfColor = new TGColorSelect(frame, TColor::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
+   fConfColor = new TGColorSelect(frame, TVirtualX::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
    frame->AddFrame(fConfColor, new TGLayoutHints(kLHintsNormal, 5, 0, 5, 0));
 
    fConfFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 5));

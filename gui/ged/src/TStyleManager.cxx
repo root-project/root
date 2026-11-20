@@ -1283,19 +1283,19 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
    Int_t tmp2;
    switch (tabNum) {
       case 0: // GENERAL
-         fFillColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetFillColor()));
+         fFillColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetFillColor()));
          fFillStyle->SetPattern(fCurSelStyle->GetFillStyle());
          fHatchesLineWidth->Select(fCurSelStyle->GetHatchesLineWidth());
          fHatchesSpacing->SetNumber(fCurSelStyle->GetHatchesSpacing());
-         fMarkerColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetMarkerColor()));
+         fMarkerColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetMarkerColor()));
          fMarkerStyle->SetMarkerStyle(fCurSelStyle->GetMarkerStyle());
          fMarkerSize->Select((Int_t) fCurSelStyle->GetMarkerSize() * 5);
          fScreenFactor->SetNumber(fCurSelStyle->GetScreenFactor());
-         fLineColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetLineColor()));
+         fLineColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetLineColor()));
          fLineWidth->Select(fCurSelStyle->GetLineWidth());
          fLineStyle->Select(fCurSelStyle->GetLineStyle());
          // Nothing to do with fLineStyleEdit.
-         fTextColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetTextColor()));
+         fTextColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetTextColor()));
          if (fCurSelStyle->GetTextFont()%10 > 2) {
             fTextSizeInPixels->SetState(kButtonDown, kFALSE);
             ModTextSizeInPixels(kTRUE);
@@ -1308,14 +1308,14 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fTextAngle->SetNumber(fCurSelStyle->GetTextAngle());
          break;
       case 1: // CANVAS
-         fCanvasColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetCanvasColor()));
+         fCanvasColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetCanvasColor()));
          fCanvasDefX->SetIntNumber(fCurSelStyle->GetCanvasDefX());
          fCanvasDefY->SetIntNumber(fCurSelStyle->GetCanvasDefY());
          fCanvasDefW->SetIntNumber(fCurSelStyle->GetCanvasDefW());
          fCanvasDefH->SetIntNumber(fCurSelStyle->GetCanvasDefH());
          fCanvasBorderMode->SetButton(fCurSelStyle->GetCanvasBorderMode() + 1 + kCanvasBorderModeSunken);
          fCanvasBorderSize->Select(fCurSelStyle->GetCanvasBorderSize());
-         fAttDateTextColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetAttDate()->GetTextColor()));
+         fAttDateTextColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetAttDate()->GetTextColor()));
          if (fCurSelStyle->GetAttDate()->GetTextFont()%10 > 2) {
             fAttDateTextSizeInPixels->SetState(kButtonDown, kFALSE);
             ModAttDateTextSizeInPixels(kTRUE);
@@ -1364,7 +1364,7 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fPadRightMargin->SetIntNumber((Int_t) (fCurSelStyle->GetPadRightMargin() * 100 + 0.5));
          fPadBorderMode->SetButton(fCurSelStyle->GetPadBorderMode() + 1 + kPadBorderModeSunken);
          fPadBorderSize->Select(fCurSelStyle->GetPadBorderSize());
-         fPadColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetPadColor()));
+         fPadColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetPadColor()));
          if (fCurSelStyle->GetPadTickX())
             fPadTickX->SetState(kButtonDown, kFALSE);
          else
@@ -1381,14 +1381,14 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fPadGridY->SetState(kButtonDown, kFALSE);
          else
             fPadGridY->SetState(kButtonUp, kFALSE);
-         fGridColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetGridColor()));
+         fGridColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetGridColor()));
          fGridWidth->Select(fCurSelStyle->GetGridWidth());
          fGridStyle->Select(fCurSelStyle->GetGridStyle());
          break;
       case 3: // HISTOS
-         fHistFillColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetHistFillColor()));
+         fHistFillColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetHistFillColor()));
          fHistFillStyle->SetPattern(fCurSelStyle->GetHistFillStyle());
-         fHistLineColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetHistLineColor()));
+         fHistLineColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetHistLineColor()));
          fHistLineWidth->Select(fCurSelStyle->GetHistLineWidth());
          fHistLineStyle->Select(fCurSelStyle->GetHistLineStyle());
          fBarWidth->SetNumber(fCurSelStyle->GetBarWidth());
@@ -1400,15 +1400,15 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fPaintTextFormat->SetText(fCurSelStyle->GetPaintTextFormat());
          fNumberContours->SetIntNumber(fCurSelStyle->GetNumberContours());
          fLegoInnerR->SetIntNumber((Int_t) (fCurSelStyle->GetLegoInnerR() * 100 + 0.5));
-         fFrameFillColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetFrameFillColor()));
+         fFrameFillColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetFrameFillColor()));
          fFrameFillStyle->SetPattern(fCurSelStyle->GetFrameFillStyle());
-         fFrameLineColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetFrameLineColor()));
+         fFrameLineColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetFrameLineColor()));
          fFrameLineWidth->Select(fCurSelStyle->GetFrameLineWidth());
          fFrameLineStyle->Select(fCurSelStyle->GetFrameLineStyle());
          // Nothing to do with fPaletteEdit;
          fFrameBorderMode->SetButton(fCurSelStyle->GetFrameBorderMode() + 1 + kFrameBorderModeSunken);
          fFrameBorderSize->Select(fCurSelStyle->GetFrameBorderSize());
-         fFuncColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetFuncColor()));
+         fFuncColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetFuncColor()));
          fFuncWidth->Select(fCurSelStyle->GetFuncWidth());
          fFuncStyle->Select(fCurSelStyle->GetFuncStyle());
          if (fCurSelStyle->GetDrawBorder())
@@ -1468,7 +1468,7 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fXTitleSizeInPixels->SetState(kButtonUp, kFALSE);
             ModXTitleSizeInPixels(kFALSE);
          }
-         fXTitleColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetTitleColor("X")));
+         fXTitleColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetTitleColor("X")));
          fXTitleOffset->SetNumber(fCurSelStyle->GetTitleOffset("X"));
          fXTitleFont->Select(fCurSelStyle->GetTitleFont("X")/10);
          fXLabelSize->SetNumber(fCurSelStyle->GetLabelSize("X"));
@@ -1479,10 +1479,10 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fXLabelSizeInPixels->SetState(kButtonUp, kFALSE);
             ModXLabelSizeInPixels(kFALSE);
          }
-         fXLabelColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetLabelColor("X")));
+         fXLabelColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetLabelColor("X")));
          fXLabelOffset->SetNumber(fCurSelStyle->GetLabelOffset("X"));
          fXLabelFont->Select(fCurSelStyle->GetLabelFont("X")/10);
-         fXAxisColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetAxisColor("X")));
+         fXAxisColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetAxisColor("X")));
          fXTickLength->SetNumber(fCurSelStyle->GetTickLength("X"));
          if (fCurSelStyle->GetOptLogx())
             fOptLogx->SetState(kButtonDown, kFALSE);
@@ -1503,7 +1503,7 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fYTitleSizeInPixels->SetState(kButtonUp, kFALSE);
             ModYTitleSizeInPixels(kFALSE);
          }
-         fYTitleColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetTitleColor("Y")));
+         fYTitleColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetTitleColor("Y")));
          fYTitleOffset->SetNumber(fCurSelStyle->GetTitleOffset("Y"));
          fYTitleFont->Select(fCurSelStyle->GetTitleFont("Y")/10);
          fYLabelSize->SetNumber(fCurSelStyle->GetLabelSize("Y"));
@@ -1514,10 +1514,10 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fYLabelSizeInPixels->SetState(kButtonUp, kFALSE);
             ModYLabelSizeInPixels(kFALSE);
          }
-         fYLabelColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetLabelColor("Y")));
+         fYLabelColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetLabelColor("Y")));
          fYLabelOffset->SetNumber(fCurSelStyle->GetLabelOffset("Y"));
          fYLabelFont->Select(fCurSelStyle->GetLabelFont("Y")/10);
-         fYAxisColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetAxisColor("Y")));
+         fYAxisColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetAxisColor("Y")));
          fYTickLength->SetNumber(fCurSelStyle->GetTickLength("Y"));
          if (fCurSelStyle->GetOptLogy())
             fOptLogy->SetState(kButtonDown, kFALSE);
@@ -1538,7 +1538,7 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fZTitleSizeInPixels->SetState(kButtonUp, kFALSE);
             ModZTitleSizeInPixels(kFALSE);
          }
-         fZTitleColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetTitleColor("Z")));
+         fZTitleColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetTitleColor("Z")));
          fZTitleOffset->SetNumber(fCurSelStyle->GetTitleOffset("Z"));
          fZTitleFont->Select(fCurSelStyle->GetTitleFont("Z")/10);
          fZLabelSize->SetNumber(fCurSelStyle->GetLabelSize("Z"));
@@ -1549,10 +1549,10 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fZLabelSizeInPixels->SetState(kButtonUp, kFALSE);
             ModZLabelSizeInPixels(kFALSE);
          }
-         fZLabelColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetLabelColor("Z")));
+         fZLabelColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetLabelColor("Z")));
          fZLabelOffset->SetNumber(fCurSelStyle->GetLabelOffset("Z"));
          fZLabelFont->Select(fCurSelStyle->GetLabelFont("Z")/10);
-         fZAxisColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetAxisColor("Z")));
+         fZAxisColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetAxisColor("Z")));
          fZTickLength->SetNumber(fCurSelStyle->GetTickLength("Z"));
 
          if (fCurSelStyle->GetOptLogz())
@@ -1569,9 +1569,9 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fZNdivisionsOptimize->SetState(kButtonUp, kFALSE);
          break;
       case 5: // TITLES
-         fTitleColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetTitleFillColor()));
+         fTitleColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetTitleFillColor()));
          fTitleStyle->SetPattern(fCurSelStyle->GetTitleStyle());
-         fTitleTextColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetTitleTextColor()));
+         fTitleTextColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetTitleTextColor()));
          fTitleFontSize->SetNumber(fCurSelStyle->GetTitleFontSize());
          if (fCurSelStyle->GetTitleFont()%10 > 2) {
             fTitleFontSizeInPixels->SetState(kButtonDown, kFALSE);
@@ -1625,9 +1625,9 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          }
          break;
       case 6: // STATS
-         fStatColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetStatColor()));
+         fStatColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetStatColor()));
          fStatStyle->SetPattern(fCurSelStyle->GetStatStyle());
-         fStatTextColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetStatTextColor()));
+         fStatTextColor->SetColor(TVirtualX::Number2Pixel(fCurSelStyle->GetStatTextColor()));
          fStatFont->Select(fCurSelStyle->GetStatFont()/10);
          if (fCurSelStyle->GetStatFont()%10 > 2) {
             fStatFontSizeInPixels->SetState(kButtonDown, kFALSE);
