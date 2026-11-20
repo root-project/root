@@ -4657,7 +4657,7 @@ void TStyleManager::CloseWindow()
 
 void TStyleManager::ModFillColor()
 {
-   fCurSelStyle->SetFillColor(TColor::GetColor(fFillColor->GetColor()));
+   fCurSelStyle->SetFillColor(TVirtualX::Pixel2Number(fFillColor->GetColor()));
    DoEditor();
 }
 
@@ -4693,7 +4693,7 @@ void TStyleManager::ModHatchesSpacing()
 
 void TStyleManager::ModMarkerColor()
 {
-   fCurSelStyle->SetMarkerColor(TColor::GetColor(fMarkerColor->GetColor()));
+   fCurSelStyle->SetMarkerColor(TVirtualX::Pixel2Number(fMarkerColor->GetColor()));
    DoEditor();
 }
 
@@ -4729,7 +4729,7 @@ void TStyleManager::ModScreenFactor()
 
 void TStyleManager::ModLineColor()
 {
-   fCurSelStyle->SetLineColor(TColor::GetColor(fLineColor->GetColor()));
+   fCurSelStyle->SetLineColor(TVirtualX::Pixel2Number(fLineColor->GetColor()));
    DoEditor();
 }
 
@@ -4764,7 +4764,7 @@ void TStyleManager::ModLineStyleEdit()
 
 void TStyleManager::ModTextColor()
 {
-   fCurSelStyle->SetTextColor(TColor::GetColor(fTextColor->GetColor()));
+   fCurSelStyle->SetTextColor(TVirtualX::Pixel2Number(fTextColor->GetColor()));
    DoEditor();
 }
 
@@ -4837,7 +4837,7 @@ void TStyleManager::ModTextAngle()
 
 void TStyleManager::ModCanvasColor()
 {
-   fCurSelStyle->SetCanvasColor(TColor::GetColor(fCanvasColor->GetColor()));
+   fCurSelStyle->SetCanvasColor(TVirtualX::Pixel2Number(fCanvasColor->GetColor()));
    DoEditor();
 }
 
@@ -4920,7 +4920,7 @@ void TStyleManager::ModOptDateBool()
 void TStyleManager::ModAttDateTextColor()
 {
    // To modify this entry, the user must have check 'Show'
-   fCurSelStyle->GetAttDate()->SetTextColor(TColor::GetColor(fAttDateTextColor->GetColor()));
+   fCurSelStyle->GetAttDate()->SetTextColor(TVirtualX::Pixel2Number(fAttDateTextColor->GetColor()));
    DoEditor();
 }
 
@@ -5082,7 +5082,7 @@ void TStyleManager::ModPadBorderSize()
 
 void TStyleManager::ModPadColor()
 {
-   fCurSelStyle->SetPadColor(TColor::GetColor(fPadColor->GetColor()));
+   fCurSelStyle->SetPadColor(TVirtualX::Pixel2Number(fPadColor->GetColor()));
    DoEditor();
 }
 
@@ -5127,7 +5127,7 @@ void TStyleManager::ModPadGridY()
 
 void TStyleManager::ModGridColor()
 {
-   fCurSelStyle->SetGridColor(TColor::GetColor(fGridColor->GetColor()));
+   fCurSelStyle->SetGridColor(TVirtualX::Pixel2Number(fGridColor->GetColor()));
    DoEditor();
 }
 
@@ -5154,7 +5154,7 @@ void TStyleManager::ModGridStyle()
 
 void TStyleManager::ModHistFillColor()
 {
-   fCurSelStyle->SetHistFillColor(TColor::GetColor(fHistFillColor->GetColor()));
+   fCurSelStyle->SetHistFillColor(TVirtualX::Pixel2Number(fHistFillColor->GetColor()));
    DoEditor();
 }
 
@@ -5172,7 +5172,7 @@ void TStyleManager::ModHistFillStyle()
 
 void TStyleManager::ModHistLineColor()
 {
-   fCurSelStyle->SetHistLineColor(TColor::GetColor(fHistLineColor->GetColor()));
+   fCurSelStyle->SetHistLineColor(TVirtualX::Pixel2Number(fHistLineColor->GetColor()));
    DoEditor();
 }
 
@@ -5254,7 +5254,7 @@ void TStyleManager::ModLegoInnerR()
 
 void TStyleManager::ModFrameFillColor()
 {
-   fCurSelStyle->SetFrameFillColor(TColor::GetColor(fFrameFillColor->GetColor()));
+   fCurSelStyle->SetFrameFillColor(TVirtualX::Pixel2Number(fFrameFillColor->GetColor()));
    DoEditor();
 }
 
@@ -5272,7 +5272,7 @@ void TStyleManager::ModFrameFillStyle()
 
 void TStyleManager::ModFrameLineColor()
 {
-   fCurSelStyle->SetFrameLineColor(TColor::GetColor(fFrameLineColor->GetColor()));
+   fCurSelStyle->SetFrameLineColor(TVirtualX::Pixel2Number(fFrameLineColor->GetColor()));
    DoEditor();
 }
 
@@ -5329,7 +5329,7 @@ void TStyleManager::ModFrameBorderSize()
 
 void TStyleManager::ModFuncColor()
 {
-   fCurSelStyle->SetFuncColor(TColor::GetColor(fFuncColor->GetColor()));
+   fCurSelStyle->SetFuncColor(TVirtualX::Pixel2Number(fFuncColor->GetColor()));
    DoEditor();
 }
 
@@ -5536,7 +5536,7 @@ void TStyleManager::ModXTitleSizeInPixels(Bool_t b)
 
 void TStyleManager::ModXTitleColor()
 {
-   fCurSelStyle->SetTitleColor(TColor::GetColor(fXTitleColor->GetColor()), "X");
+   fCurSelStyle->SetTitleColor(TVirtualX::Pixel2Number(fXTitleColor->GetColor()), "X");
    DoEditor();
 }
 
@@ -5600,7 +5600,7 @@ void TStyleManager::ModXLabelSizeInPixels(Bool_t b)
 
 void TStyleManager::ModXLabelColor()
 {
-   fCurSelStyle->SetLabelColor(TColor::GetColor(fXLabelColor->GetColor()), "X");
+   fCurSelStyle->SetLabelColor(TVirtualX::Pixel2Number(fXLabelColor->GetColor()), "X");
    DoEditor();
 }
 
@@ -5628,7 +5628,7 @@ void TStyleManager::ModXLabelFont()
 
 void TStyleManager::ModXAxisColor()
 {
-   fCurSelStyle->SetAxisColor(TColor::GetColor(fXAxisColor->GetColor()), "X");
+   fCurSelStyle->SetAxisColor(TVirtualX::Pixel2Number(fXAxisColor->GetColor()), "X");
    DoEditor();
 }
 
@@ -5706,7 +5706,7 @@ void TStyleManager::ModYTitleSizeInPixels(Bool_t b)
 
 void TStyleManager::ModYTitleColor()
 {
-   fCurSelStyle->SetTitleColor(TColor::GetColor(fYTitleColor->GetColor()), "Y");
+   fCurSelStyle->SetTitleColor(TVirtualX::Pixel2Number(fYTitleColor->GetColor()), "Y");
    DoEditor();
 }
 
@@ -5770,7 +5770,7 @@ void TStyleManager::ModYLabelSizeInPixels(Bool_t b)
 
 void TStyleManager::ModYLabelColor()
 {
-   fCurSelStyle->SetLabelColor(TColor::GetColor(fYLabelColor->GetColor()), "Y");
+   fCurSelStyle->SetLabelColor(TVirtualX::Pixel2Number(fYLabelColor->GetColor()), "Y");
    DoEditor();
 }
 
@@ -5798,7 +5798,7 @@ void TStyleManager::ModYLabelFont()
 
 void TStyleManager::ModYAxisColor()
 {
-   fCurSelStyle->SetAxisColor(TColor::GetColor(fYAxisColor->GetColor()), "Y");
+   fCurSelStyle->SetAxisColor(TVirtualX::Pixel2Number(fYAxisColor->GetColor()), "Y");
    DoEditor();
 }
 
@@ -5875,7 +5875,7 @@ void TStyleManager::ModZTitleSizeInPixels(Bool_t b)
 
 void TStyleManager::ModZTitleColor()
 {
-   fCurSelStyle->SetTitleColor(TColor::GetColor(fZTitleColor->GetColor()), "Z");
+   fCurSelStyle->SetTitleColor(TVirtualX::Pixel2Number(fZTitleColor->GetColor()), "Z");
    DoEditor();
 }
 
@@ -5939,7 +5939,7 @@ void TStyleManager::ModZLabelSizeInPixels(Bool_t b)
 
 void TStyleManager::ModZLabelColor()
 {
-   fCurSelStyle->SetLabelColor(TColor::GetColor(fZLabelColor->GetColor()), "Z");
+   fCurSelStyle->SetLabelColor(TVirtualX::Pixel2Number(fZLabelColor->GetColor()), "Z");
    DoEditor();
 }
 
@@ -5967,7 +5967,7 @@ void TStyleManager::ModZLabelFont()
 
 void TStyleManager::ModZAxisColor()
 {
-   fCurSelStyle->SetAxisColor(TColor::GetColor(fZAxisColor->GetColor()), "Z");
+   fCurSelStyle->SetAxisColor(TVirtualX::Pixel2Number(fZAxisColor->GetColor()), "Z");
    DoEditor();
 }
 
@@ -6020,7 +6020,7 @@ void TStyleManager::ModOptTitle()
 
 void TStyleManager::ModTitleFillColor()
 {
-   fCurSelStyle->SetTitleFillColor(TColor::GetColor(fTitleColor->GetColor()));
+   fCurSelStyle->SetTitleFillColor(TVirtualX::Pixel2Number(fTitleColor->GetColor()));
    DoEditor();
 }
 
@@ -6038,7 +6038,7 @@ void TStyleManager::ModTitleStyle()
 
 void TStyleManager::ModTitleTextColor()
 {
-   fCurSelStyle->SetTitleTextColor(TColor::GetColor(fTitleTextColor->GetColor()));
+   fCurSelStyle->SetTitleTextColor(TVirtualX::Pixel2Number(fTitleTextColor->GetColor()));
    DoEditor();
 }
 
@@ -6156,7 +6156,7 @@ void TStyleManager::ModTitleH()
 
 void TStyleManager::ModStatColor(Pixel_t color)
 {
-   fCurSelStyle->SetStatColor(TColor::GetColor(color));
+   fCurSelStyle->SetStatColor(TVirtualX::Pixel2Number(color));
    DoEditor();
 }
 
@@ -6174,7 +6174,7 @@ void TStyleManager::ModStatStyle(Style_t pattern)
 
 void TStyleManager::ModStatTextColor(Pixel_t color)
 {
-   fCurSelStyle->SetStatTextColor(TColor::GetColor(color));
+   fCurSelStyle->SetStatTextColor(TVirtualX::Pixel2Number(color));
    DoEditor();
 }
 
