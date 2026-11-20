@@ -1045,6 +1045,9 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
 
    TGWin32VirtualXProxy::fMaxResponseTime = 1000;
    fHasTTFonts = TTFhandle::Init();
+
+   ConfigureColorsHandler();
+
    return 0;
 }
 
