@@ -13,6 +13,7 @@
 #include "THLimitsFinder.h"
 
 #include <algorithm>
+#include <limits>
 
 THLimitsFinder *THLimitsFinder::fgLimitsFinder = nullptr;
 
@@ -222,7 +223,7 @@ void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,
 L20:
    awidth = (ah-al)/Double_t(ntemp);
    timemulti = 1;
-   if (awidth >= FLT_MAX) goto LOK;  //in float.h
+   if (awidth >= std::numeric_limits<float>::max()) goto LOK;
    if (awidth <= 0)       goto LOK;
 
 //      If time representation, bin width should be rounded to seconds

@@ -31,6 +31,7 @@ Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
 */
 
 #include <climits>
+#include <limits>
 
 #include "TROOT.h"
 #include "TColor.h"
@@ -488,7 +489,7 @@ void TSpectrum2Painter::ColorModel(unsigned ui, unsigned ui1, unsigned ui2,
       a     = fRainbow1Step;
       a     = ui*a;
       a     = ui1+a;
-      if (a >= UINT_MAX) uinc1 = UINT_MAX;
+      if (a >= std::numeric_limits<unsigned>::max()) uinc1 = std::numeric_limits<unsigned>::max();
       else               uinc1 = (unsigned)a;
       upom  = uinc1%256;
       i     = (uinc1-upom)/256;

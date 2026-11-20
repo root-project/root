@@ -8791,7 +8791,7 @@ Double_t TH1::GetMaximum(Double_t maxval) const
    Int_t ylast   = fYaxis.GetLast();
    Int_t zfirst  = fZaxis.GetFirst();
    Int_t zlast   = fZaxis.GetLast();
-   Double_t maximum = -FLT_MAX, value;
+   Double_t maximum = -std::numeric_limits<float>::max(), value;
    for (binz=zfirst;binz<=zlast;binz++) {
       for (biny=yfirst;biny<=ylast;biny++) {
          for (binx=xfirst;binx<=xlast;binx++) {
@@ -8831,7 +8831,7 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
    Int_t ylast   = fYaxis.GetLast();
    Int_t zfirst  = fZaxis.GetFirst();
    Int_t zlast   = fZaxis.GetLast();
-   Double_t maximum = -FLT_MAX, value;
+   Double_t maximum = -std::numeric_limits<float>::max(), value;
    locm = locmax = locmay = locmaz = 0;
    for (binz=zfirst;binz<=zlast;binz++) {
       for (biny=yfirst;biny<=ylast;biny++) {
@@ -8881,7 +8881,7 @@ Double_t TH1::GetMinimum(Double_t minval) const
    Int_t ylast   = fYaxis.GetLast();
    Int_t zfirst  = fZaxis.GetFirst();
    Int_t zlast   = fZaxis.GetLast();
-   Double_t minimum=FLT_MAX, value;
+   Double_t minimum=std::numeric_limits<float>::max(), value;
    for (binz=zfirst;binz<=zlast;binz++) {
       for (biny=yfirst;biny<=ylast;biny++) {
          for (binx=xfirst;binx<=xlast;binx++) {
@@ -8919,7 +8919,7 @@ Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const
    Int_t ylast   = fYaxis.GetLast();
    Int_t zfirst  = fZaxis.GetFirst();
    Int_t zlast   = fZaxis.GetLast();
-   Double_t minimum = FLT_MAX, value;
+   Double_t minimum = std::numeric_limits<float>::max(), value;
    locm = locmix = locmiy = locmiz = 0;
    for (binz=zfirst;binz<=zlast;binz++) {
       for (biny=yfirst;biny<=ylast;biny++) {
@@ -10120,7 +10120,7 @@ TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
 
 void TH1I::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < INT_MAX) fArray[bin]++;
+   if (fArray[bin] < std::numeric_limits<int>::max()) fArray[bin]++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10131,9 +10131,9 @@ void TH1I::AddBinContent(Int_t bin)
 void TH1I::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -INT_MAX && newval < INT_MAX) {fArray[bin] = Int_t(newval); return;}
-   if (newval < -INT_MAX) fArray[bin] = -INT_MAX;
-   if (newval >  INT_MAX) fArray[bin] =  INT_MAX;
+   if (newval > -std::numeric_limits<int>::max() && newval < std::numeric_limits<int>::max()) {fArray[bin] = Int_t(newval); return;}
+   if (newval < -std::numeric_limits<int>::max()) fArray[bin] = -std::numeric_limits<int>::max();
+   if (newval >  std::numeric_limits<int>::max()) fArray[bin] =  std::numeric_limits<int>::max();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10307,7 +10307,7 @@ TH1L::TH1L(const TH1L &h1l) : TH1(), TArrayL64()
 
 void TH1L::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < LLONG_MAX) fArray[bin]++;
+   if (fArray[bin] < std::numeric_limits<long long>::max()) fArray[bin]++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10318,9 +10318,9 @@ void TH1L::AddBinContent(Int_t bin)
 void TH1L::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = newval; return;}
-   if (newval < -LLONG_MAX) fArray[bin] = -LLONG_MAX;
-   if (newval >  LLONG_MAX) fArray[bin] =  LLONG_MAX;
+   if (newval > -std::numeric_limits<long long>::max() && newval < std::numeric_limits<long long>::max()) {fArray[bin] = newval; return;}
+   if (newval < -std::numeric_limits<long long>::max()) fArray[bin] = -std::numeric_limits<long long>::max();
+   if (newval >  std::numeric_limits<long long>::max()) fArray[bin] =  std::numeric_limits<long long>::max();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

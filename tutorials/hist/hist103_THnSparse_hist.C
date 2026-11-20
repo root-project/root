@@ -49,9 +49,7 @@
 #include "TStyle.h"
 #include "TSystem.h"
 
-#ifndef INT_MAX
-#define INT_MAX std::numeric_limits<int>::max()
-#endif
+#include <limits>
 
 class TTimeHists {
 public:
@@ -217,7 +215,7 @@ void TTimeHists::SetupHist(EHist hist)
          gSystem->GetMemInfo(&meminfo);
          Int_t size = 1;
          for (Int_t d = 0; d < fDim; ++d) {
-            if ((Int_t)(size * sizeof(Float_t)) > INT_MAX / (fBins + 2) ||
+            if ((Int_t)(size * sizeof(Float_t)) > std::numeric_limits<int>::max() / (fBins + 2) ||
                 (meminfo.fMemFree > 0 && meminfo.fMemFree / 2 < (Int_t)(size * sizeof(Float_t) / 1000 / 1000)))
                throw std::bad_alloc();
             size *= (fBins + 2);
