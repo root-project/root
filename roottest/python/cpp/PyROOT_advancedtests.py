@@ -26,6 +26,7 @@ __all__ = [
    'Cpp10StandardExceptions',
    'Cpp12NamespaceLazyFunctions',
    'Cpp14CopyConstructorOrdering',
+   'Cpp15StdComplex'
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -220,6 +221,27 @@ class Cpp14CopyConstructorOrdering( MyTestCase ):
       m3 = cppyy.gbl.MyCopyingClass3( m2 )
       self.assertEqual( m3.m_d1, m2.m_d1 )
       self.assertEqual( m3.m_d2, m2.m_d2 )
+
+# Tests #17157
+class Cpp15StdComplex( MyTestCase ):
+   def testSum( self ):
+      """Behaviour of std complex in operations"""
+      import cppyy
+      c = cppyy.gbl.std.complex['double'](1, 1)
+      try:
+         s = 1 + c
+      except NotImplementedError:
+         pass
+      
+      try:
+         s = 1. + c
+      except NotImplementedError:
+         pass
+      
+      try:
+         s = c + 1.
+      except NotImplementedError:
+         pass
 
 
 ## actual test run
