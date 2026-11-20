@@ -162,17 +162,6 @@ public:
    RPageStorage &operator=(RPageStorage &&other) = default;
    virtual ~RPageStorage();
 
-   struct RColumnHandle {
-      ROOT::DescriptorId_t fPhysicalId = ROOT::kInvalidDescriptorId;
-      ROOT::Internal::RColumn *fColumn = nullptr;
-
-      /// Returns true for a valid column handle; fColumn and fPhysicalId should always either both
-      /// be valid or both be invalid.
-      explicit operator bool() const { return fPhysicalId != ROOT::kInvalidDescriptorId && fColumn; }
-   };
-   /// The column handle identifies a column with the current open page storage
-   using ColumnHandle_t = RColumnHandle;
-
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
    virtual ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }

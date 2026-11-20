@@ -55,8 +55,6 @@ protected:
    {
    }
 
-   ROOT::Internal::RPageStorage::ColumnHandle_t MakeHandle() { return {fOnDiskId, this}; }
-
 public:
    enum class EColumnType {
       kRead,
