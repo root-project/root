@@ -6,6 +6,7 @@
 #include <RooFitResult.h>
 #include <RooFormulaVar.h>
 #include <RooHelpers.h>
+#include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooLinearVar.h>
 #include <RooRealIntegral.h>
@@ -21,6 +22,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <vector>
 
 // Verify that RooFit correctly uses analytic integration when having a
 // RooLinearVar as the observable of a RooHistPdf.
@@ -282,6 +284,20 @@ TEST(RooHistPdf, BinnedLikelihoodInSimultaneous)
    EXPECT_DOUBLE_EQ(nllSim->getVal(), nllA->getVal());
 }
 
+namespace {
+
+// Takes ownership of a list returned by binBoundaries() or plotSamplingHint().
+std::vector<double> toVector(std::list<double> *list)
+{
+   std::unique_ptr<std::list<double>> owned{list};
+   if (!owned) {
+      return {};
+   }
+   return {owned->begin(), owned->end()};
+}
+
+} // namespace
+
 // GitHub issue #13030: plotting a RooHistPdf whose observable is a
 // transformation of the plot variable (e.g. a shift `x_shifted = x - shift`)
 // produced visually broken curves because `binBoundaries` and
@@ -289,6 +305,8 @@ TEST(RooHistPdf, BinnedLikelihoodInSimultaneous)
 // observable coordinate instead of the plot observable coordinate.
 TEST(RooHistPdf, ShiftedBinBoundaries)
 {
+   using Vec = std::vector<double>;
+
    RooRealVar x{"x", "x", 1000, 1500};
    x.setBins(5); // bin edges in x: 1000, 1100, 1200, 1300, 1400, 1500
 
@@ -300,48 +318,39 @@ TEST(RooHistPdf, ShiftedBinBoundaries)
    }
    RooDataHist dh{"dh", "", x, &h};
 
-   // Case 1: pdfObs = x - shift as a RooFormulaVar (no l-value inverse).
-   {
-      RooFormulaVar xShifted{"x_shifted", "x - shift", {x, shift}};
-      RooHistPdf pdf{"pdf_f", "", xShifted, x, dh, 0};
-      std::unique_ptr<std::list<double>> boundaries{pdf.binBoundaries(x, 1000.0, 1600.0)};
-      ASSERT_TRUE(boundaries);
-      // Hist bin boundary `b` satisfies `x - shift = b`, so plot_x = b + shift.
-      const std::vector<double> expected{1025.0, 1125.0, 1225.0, 1325.0, 1425.0, 1525.0};
-      ASSERT_EQ(boundaries->size(), expected.size());
-      auto it = boundaries->begin();
-      for (double e : expected) {
-         EXPECT_DOUBLE_EQ(*it++, e);
-      }
-   }
+   // pdfObs = x - shift as a RooFormulaVar (no l-value inverse). Hist bin
+   // boundary `b` satisfies `x - shift = b`, so plot_x = b + shift.
+   RooFormulaVar xShifted{"x_shifted", "x - shift", {x, shift}};
+   RooHistPdf pdfF{"pdf_f", "", xShifted, x, dh, 0};
+   EXPECT_EQ(toVector(pdfF.binBoundaries(x, 1000.0, 1600.0)), (Vec{1025, 1125, 1225, 1325, 1425, 1525}));
 
-   // Case 2: pdfObs = RooLinearVar (slope=1, offset=shift -> xShifted = x + shift).
-   {
-      RooRealVar slope{"slope", "slope", 1.0};
-      RooLinearVar xShifted{"x_shifted_lv", "", x, slope, shift};
-      RooHistPdf pdf{"pdf_lv", "", RooArgList{xShifted}, RooArgList{x}, dh, 0};
-      std::unique_ptr<std::list<double>> boundaries{pdf.binBoundaries(x, 1000.0, 1500.0)};
-      ASSERT_TRUE(boundaries);
-      // xShifted = x + 25 -> plot_x = b - 25; only values inside [1000, 1500] kept.
-      const std::vector<double> expected{1075.0, 1175.0, 1275.0, 1375.0, 1475.0};
-      ASSERT_EQ(boundaries->size(), expected.size());
-      auto it = boundaries->begin();
-      for (double e : expected) {
-         EXPECT_DOUBLE_EQ(*it++, e);
-      }
-   }
+   // pdfObs = RooLinearVar x + shift -> plot_x = b - 25; only values inside [1000, 1500] kept.
+   RooRealVar slope{"slope", "slope", 1.0};
+   RooLinearVar xShiftedLV{"x_shifted_lv", "", x, slope, shift};
+   RooHistPdf pdfLV{"pdf_lv", "", RooArgList{xShiftedLV}, RooArgList{x}, dh, 0};
+   EXPECT_EQ(toVector(pdfLV.binBoundaries(x, 1000.0, 1500.0)), (Vec{1075, 1175, 1275, 1375, 1475}));
 
-   // Case 3: identity (no transformation) keeps the raw boundaries.
-   {
-      RooHistPdf pdf{"pdf_id", "", x, dh, 0};
-      std::unique_ptr<std::list<double>> boundaries{pdf.binBoundaries(x, 1000.0, 1500.0)};
-      ASSERT_TRUE(boundaries);
-      const std::vector<double> expected{1000.0, 1100.0, 1200.0, 1300.0, 1400.0, 1500.0};
-      ASSERT_EQ(boundaries->size(), expected.size());
-      auto it = boundaries->begin();
-      for (double e : expected) {
-         EXPECT_DOUBLE_EQ(*it++, e);
-      }
+   // Negative slope: plot_x = 2525 - b, still returned in increasing order.
+   RooFormulaVar xMirrored{"x_mirrored", "2525 - x", {x}};
+   RooHistPdf pdfM{"pdf_m", "", xMirrored, x, dh, 0};
+   EXPECT_EQ(toVector(pdfM.binBoundaries(x, 1000.0, 1500.0)), (Vec{1025, 1125, 1225, 1325, 1425}));
+
+   // Identity (no transformation) keeps the raw boundaries.
+   RooHistPdf pdfId{"pdf_id", "", x, dh, 0};
+   EXPECT_EQ(toVector(pdfId.binBoundaries(x, 1000.0, 1500.0)), (Vec{1000, 1100, 1200, 1300, 1400, 1500}));
+
+   // RooHistFunc uses the same mapping.
+   RooHistFunc funcF{"func_f", "", RooArgList{xShifted}, RooArgList{x}, dh, 0};
+   RooHistFunc funcLV{"func_lv", "", RooArgList{xShiftedLV}, RooArgList{x}, dh, 0};
+   EXPECT_EQ(toVector(funcF.binBoundaries(x, 1000.0, 1500.0)), (Vec{1025, 1125, 1225, 1325, 1425}));
+   EXPECT_EQ(toVector(funcLV.binBoundaries(x, 1000.0, 1500.0)), (Vec{1075, 1175, 1275, 1375, 1475}));
+
+   // The sampling hint has a point next to each plot limit and a pair of
+   // points around each boundary inside the plot range.
+   const Vec hint = toVector(pdfF.plotSamplingHint(x, 1000.0, 1500.0));
+   ASSERT_EQ(hint.size(), 12u);
+   for (std::size_t i = 0; i < 5; ++i) {
+      EXPECT_NEAR(0.5 * (hint[2 * i + 1] + hint[2 * i + 2]), 1025.0 + 100.0 * i, 1e-9);
    }
 }
 
