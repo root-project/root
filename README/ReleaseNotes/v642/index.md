@@ -152,6 +152,10 @@ Note: if you build ROOT with option `dev=ON`, the header `RConfigure.h` will alr
 * The previously vendored builtins `ftgl`, `gl2ps`, `gtest`, `nlohmann_json`, `unuran`, `civetweb`, `xxhash`, `pcre2`, should be installed in the system if possible (e.g. via `apt-get` or `homebrew` package managers). ROOT will not automatically fall-back to their builtin versions if these are not found: the user is informed of that with a helpful message. If installing these dependencies in the system is not possible, the CMake option `-Dbuiltin_XYZ=ON` has to be consciously chosen by the user.
 * For the builtin versions of `ftgl`, `gl2ps`, `gtest`, `nlohmann_json`, `unuran`, `civetweb`, `xxhash`, `pcre2`, the source tarballs are now fetched from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/), as for the vast majority of ROOT's builtins.
 
+### RenderCore
+
+RenderCore, the WebGL engine of the REve client, is fetched at build time as the tarball of its release, from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/) first and from its GitHub release second, instead of being bundled in `builtins/rendercore/`. A build without a network takes the tarball from `ROOT_DOWNLOAD_DIR`, as for every builtin. The build option `builtin_rendercore`, ON by default, controls the download. REve has no web location of RenderCore to fall back to, so the option can be OFF only when REve is not built, that is with `root7` or `webgui` OFF; otherwise the configuration stops with an error.
+
 ## Python Interface
 
 Interoperability between Python and C++ is now provided by `cppjit` (see [this talk](https://indico.cern.ch/event/1655190/contributions/7267357/)), therewith not relying any more on `cppyy`, and, most importantly, ROOT's type system, `Meta`.
@@ -174,11 +178,87 @@ resolve its symbols from the `libROOTPythonizations` Python extension module.
 Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 `obj.Connect(signal, callable)`.
 
+### Pure Python callables in RDataFrame
+
+A Python function passed to `RDataFrame.Define()` or `Filter()` now runs as it is in the Python interpreter instead of being compiled with Numba behind the scenes.
+It can therefore use any Python code, including ROOT classes and their methods, and **any Python library**.
+The function needs type annotations for its parameters and its return value, which RDataFrame reads to know their C++ types: these can be C++ type names, Python types (`bool`, `int`, `float`, `str`) or ROOT classes.
+As before, if no column list is given, the parameters are read from the columns with the same names.
+
+Usage:
+```python
+from particle import Particle
+
+def mass_difference(p: ROOT.Math.PtEtaPhiMVector, pdg: int) -> float:
+    return p.M() - Particle.from_pdgid(pdg).mass / 1000
+
+df = df.Define("dm", mass_difference)  # reads the columns `p` and `pdg`
+```
+
+Numba is now opt-in: a function decorated with `ROOT.Numba.Declare` is still JIT compiled with Numba, as before.
+
+```python
+@ROOT.Numba.Declare(["double"], "double")
+def square(x):
+    return x * x
+
+df = df.Define("x2", square, ["x"])
+```
+
+Behavior changes:
+* A Python callable without type annotations, e.g. a lambda, now raises a `TypeError`: annotate its parameters and return value, or decorate it with `ROOT.Numba.Declare`.
+
+### UHI
+
+- ROOT histograms can now be constructed directly from any object implementing the UHI serialization method `_to_uhi_`, such as [hist](https://hist.readthedocs.io) and [boost-histogram](https://boost-histogram.readthedocs.io) histograms, without an intermediate dictionary or JSON string:
+```python
+h = hist.Hist.new.Reg(10, -5, 5).Double()
+h.fill(np.random.normal(size=1000))
+
+h_root = ROOT.TH1D(h)
+```
+
+## Machine Learning integration
+
+`ROOT.Experimental.ML.RDataLoader` can now read files directly, save its training and validation datasets to disk and return batches as JAX arrays. Loading is faster and uses less memory.
+
+### File paths as input
+`RDataLoader` can now be created directly from files without building the RDataFrame first if the dataset doesn't need to be manipulated before training.
+A `(dataset_name, files)` tuple reads the TTree or RNTuple `dataset_name` from one file path or a list of them.
+
+Usage:
+```python
+dl = ROOT.Experimental.ML.RDataLoader(("events", ["data_1.root", "data_2.root"]), batch_size=1024, target="label")
+```
+
+### Saving the training and validation datasets
+The new `save()` method writes a dataset to disk as it would be loaded for training, i.e. after filtering, splitting, shuffling and padding, as a TTree (default) or an RNTuple.
+
+Usage:
+```python
+train, val = dl.train_test_split(test_size=0.2)
+
+train.save("tree", "train.root")
+val.save("tree", "val.root", output_format="rntuple")
+```
+
+### JAX output format
+Batches can now be returned as [`jax.Array`](https://docs.jax.dev/en/latest/_autosummary/jax.Array.html) objects with `as_jax()`, which takes an optional `device` parameter like `as_torch()`.
+
+### Performance improvements
+The loader no longer needs to be just-in-time compiled for the column types of each dataset, as the columns are now read by a custom RDataFrame action.
+The eager loading path avoids most copies of the dataset, and both loading modes read the data in fewer event loops.
+
+### Interface changes
+* All `RDataLoader` arguments but the inputs are now keyword-only, e.g. `RDataLoader(df, batch_size=64)` instead of `RDataLoader(df, 64)`, and the first argument is renamed from `rdataframes` to `inputs`.
+* `RDataLoader` does not support `ImplicitMT` yet: a `RuntimeError` is now raised if it is enabled when the input RDataFrames or the loader are created.
+
 ## I/O
 
 * Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
 * The LZ4 compression levels now follow those of the `lz4` command line tool. Level 1 uses the fast compressor as before. Level 2 uses the faster high-compression mode introduced in LZ4 1.10.0, or the fast compressor with older LZ4 versions. Level 3 now uses the high-compression (HC) compressor, like levels 4 to 9. Previously, levels 1 to 3 all used the fast compressor and produced identical output. Files written with levels 2 and 3 can be read by older ROOT versions, since the on-disk format is unchanged.
 * The automatic registration of `TEventList`, `TEntryList` and its derived classes to the current TDirectory can now be disabled using [`ROOT::Experimental::DisableObjectAutoRegistration()`](https://root.cern/doc/v642/namespaceROOT_1_1Experimental.html#a74fae8f88965b8c79dfbd25bebbce3a4).
+* An `RNTupleReader` will now by default not load all metadata on open. Metadata related to the on-disk location of data pages will instead be loaded during iteration. To restore the old behavior, set the metadata mode in the `RNTupleReadOptions` to `kEager`.
 
 ### RFile
 
@@ -274,6 +354,8 @@ The parameter indices in this interface always refer to the function's own full 
   of a column on a per-sample basis. This operation is supported in local and distributed mode.
 * Added `Median` action. Computes the exact median of the input column. At the moment this action is supported in local
   mode only.
+* Python callables passed to `Define` and `Filter` now run in the Python interpreter, and Numba compilation is opt-in,
+  see [Pure Python callables in RDataFrame](#pure-python-callables-in-rdataframe).
 
 ## Trees
 
@@ -491,6 +573,8 @@ The version of the following packages has been updated:
  - ftgl: 2.4.0
  - giflib: 6.1.3
  - gl2ps: 1.4.2
+ - jsroot: 7.12.0
+ - mathjax: 3.2.0
  - libmathtext: 2016
  - libpng: 1.6.59
  - libjpeg-turbo: 3.2.0
