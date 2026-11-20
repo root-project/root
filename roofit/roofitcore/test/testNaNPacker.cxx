@@ -307,8 +307,6 @@ TEST(RooNaNPacker, CudaEvalErrorParity)
 TEST_P(TestForDifferentBackends, NegativeNormIntegralBadness)
 {
    const auto prevErrorLoggingMode = RooAbsReal::evalErrorLoggingMode();
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-   RooAbsReal::clearEvalErrorLog();
 
    RooWorkspace ws;
    ws.factory("Gaussian::gauss(x[0, -10, 10], mean[0, -5, 5], sigma[1, -5, 5])");
@@ -320,6 +318,12 @@ TEST_P(TestForDifferentBackends, NegativeNormIntegralBadness)
    }
 
    std::unique_ptr<RooAbsReal> nll{ws.pdf("gauss")->createNLL(data, _evalBackend)};
+
+   // Set the logging mode only after creating the likelihood, because the
+   // legacy backend resets it to PrintErrors.
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
+   RooAbsReal::clearEvalErrorLog();
+
    ws.var("sigma")->setVal(-1.0);
    const double val = nll->getVal();
 
@@ -327,7 +331,9 @@ TEST_P(TestForDifferentBackends, NegativeNormIntegralBadness)
    EXPECT_TRUE(RooNaNPacker::isNaNWithPayload(val));
    EXPECT_NEAR(RooNaNPacker::unpackNaN(val), 3 * std::sqrt(2 * TMath::Pi()), 1e-5);
    // Each event logs one error for the integral and one for the likelihood.
-   EXPECT_EQ(RooAbsReal::numEvalErrors(), 6);
+   // The legacy likelihood also logs an error for its own NaN value.
+   const bool isLegacy = _evalBackend == RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy);
+   EXPECT_EQ(RooAbsReal::numEvalErrors(), isLegacy ? 7 : 6);
 
    RooAbsReal::clearEvalErrorLog();
    RooAbsReal::setEvalErrorLoggingMode(prevErrorLoggingMode);
