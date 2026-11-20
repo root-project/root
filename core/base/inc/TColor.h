@@ -86,7 +86,7 @@ public:
    static Int_t   GetColor(const char *hexcolor);
    static Int_t   GetColor(Float_t r, Float_t g, Float_t b, Float_t a = 1.);
    static Int_t   GetColor(Int_t r, Int_t g, Int_t b, Float_t a = 1.);
-   static Int_t   GetColor(ULong_t pixel);
+   static Int_t   R__DEPRECATED(7,00, "Use TVirtualX::Pixel2Number instead") GetColor(ULong_t pixel);
    static Int_t   GetColorBright(Int_t color);
    static Int_t   GetColorDark(Int_t color);
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
