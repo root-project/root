@@ -45,6 +45,7 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <limits>
 #include <string>
 #include <stdexcept>
 #include <type_traits>
@@ -556,11 +557,11 @@ public:
    virtual Int_t    GetDimension() const { return fDimension; }
    virtual Double_t GetKurtosis(Int_t axis=1) const;
    virtual void     GetLowEdge(Double_t *edge) const;
-   virtual Double_t GetMaximum(Double_t maxval=FLT_MAX) const;
+   virtual Double_t GetMaximum(Double_t maxval = std::numeric_limits<float>::max()) const;
    virtual Int_t    GetMaximumBin() const;
    virtual Int_t    GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const;
    virtual Double_t GetMaximumStored() const {return fMaximum;}
-   virtual Double_t GetMinimum(Double_t minval=-FLT_MAX) const;
+   virtual Double_t GetMinimum(Double_t minval = -std::numeric_limits<float>::max()) const;
    virtual Int_t    GetMinimumBin() const;
    virtual Int_t    GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const;
    virtual Double_t GetMinimumStored() const {return fMinimum;}
