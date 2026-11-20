@@ -1,0 +1,73 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [3.047446644392039, 1.4609485681721708, 0.0, -1.3412281974597136, -2.5681461846361344],
+   "id": "nll_scan_obsData_ttW_Bin_001_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "ttW_Bin_001_mu": 1.0
+   },
+   "scan_parameters": ["ttW_Bin_001_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [3.0066025454871124, 1.4128024269739399, 0.0, -1.2385128090318176, -2.3089995560367242],
+   "id": "nll_scan_obsData_ttW_Bin_002_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "ttW_Bin_002_mu": 1.0
+   },
+   "scan_parameters": ["ttW_Bin_002_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [4.221406961569301, 1.9686369411392661, 0.0, -1.696183280502737, -3.130754454774433],
+   "id": "nll_scan_obsData_ttW_Bin_003_mu",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "ttW_Bin_003_mu": 1.0
+   },
+   "scan_parameters": ["ttW_Bin_003_mu"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_Mlb_model_workspace_regularized"
+}

@@ -1,0 +1,86 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "ARC": {
+     "best_fit": 0.32594552545630884,
+     "hesse_error": 0.04936528866467482,
+     "minus_one_sigma": -0.04878061152069004,
+     "plus_one_sigma": 0.050235865753675106
+    },
+    "Norm_VV_HF": {
+     "best_fit": 0.8714813437466117,
+     "hesse_error": 0.3274409837210888,
+     "minus_one_sigma": -0.33099935914306067,
+     "plus_one_sigma": 0.33131526448060505
+    },
+    "Norm_fake_ExtConv": {
+     "best_fit": 1.1543372346494822,
+     "hesse_error": 0.30648364916885945,
+     "minus_one_sigma": -0.3016004011645443,
+     "plus_one_sigma": 0.3265686142875988
+    },
+    "Norm_fake_HF_el_TandM": {
+     "best_fit": 0.8297923698899936,
+     "hesse_error": 0.31112658977204183,
+     "minus_one_sigma": -0.29071751403194884,
+     "plus_one_sigma": 0.34723732985995426
+    },
+    "Norm_fake_HF_mu_TandM": {
+     "best_fit": 1.0094950339944664,
+     "hesse_error": 0.2112132281662749,
+     "minus_one_sigma": -0.19751181225936185,
+     "plus_one_sigma": 0.22994666054213692
+    },
+    "Norm_fake_IntConv": {
+     "best_fit": 1.0691365165226723,
+     "hesse_error": 0.24275837188578392,
+     "minus_one_sigma": -0.22216059548373968,
+     "plus_one_sigma": 0.272875272396169
+    },
+    "Norm_ttW": {
+     "best_fit": 1.4274742410427015,
+     "hesse_error": 0.1405118850523004,
+     "minus_one_sigma": -0.13743262554600622,
+     "plus_one_sigma": 0.14387794197147563
+    },
+    "Norm_ttZ_LF": {
+     "best_fit": 1.1538868311273351,
+     "hesse_error": 0.15262670117191857,
+     "minus_one_sigma": -0.14965150904854424,
+     "plus_one_sigma": 0.15755791100357025
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["Norm_VV_HF", "Norm_fake_ExtConv", "Norm_fake_HF_el_TandM", "Norm_fake_HF_mu_TandM", "Norm_fake_IntConv", "Norm_ttZ_LF"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["ARC", "Norm_ttW"],
+   "profile_scans": {
+    "ARC": {
+     "points": [0.2272149481269592, 0.276580236791634, 0.37531081412098366, 0.4246761027856585],
+     "twice_delta_nll": [4.166746898343263, 1.0243720580037916, 0.9662355876243964, 3.7206579470439465]
+    },
+    "Norm_ttW": {
+     "points": [1.1464504709381007, 1.286962355990401, 1.5679861260950019, 1.7084980111473023],
+     "twice_delta_nll": [4.4061038348700095, 1.0464539850618166, 0.9548126287190826, 3.66235715208677]
+    }
+   },
+   "seconds_when_generated": 74.15,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_ACR_model_workspace"
+}

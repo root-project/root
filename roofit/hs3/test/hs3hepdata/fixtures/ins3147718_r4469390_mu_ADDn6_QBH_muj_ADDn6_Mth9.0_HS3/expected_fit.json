@@ -1,0 +1,52 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "SigXsecOverSM": {
+     "best_fit": -0.0005434177323944044,
+     "hesse_error": 0.0031752410484597263,
+     "minus_one_sigma": -0.0026119483940412443,
+     "plus_one_sigma": 0.003838436422894511
+    },
+    "mu_Wjets": {
+     "best_fit": 0.9972294744823434,
+     "hesse_error": 0.33873881375206166,
+     "minus_one_sigma": -0.2712478540391487,
+     "plus_one_sigma": 0.4570296584386936
+    },
+    "mu_Zjets": {
+     "best_fit": 1.1262225605392884,
+     "hesse_error": 0.4372540310164602,
+     "minus_one_sigma": -0.33303228346883035,
+     "plus_one_sigma": 0.6567119692911817
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["mu_Wjets", "mu_Zjets"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["SigXsecOverSM"],
+   "profile_scans": {
+    "SigXsecOverSM": {
+     "points": [-0.006893899829313857, -0.0037186587808541306, 0.002631823316065322, 0.005807064364525048],
+     "twice_delta_nll": [-9.602556796489807, 1.6500652086760965, 0.7233887398688239, 2.273641326748475]
+    }
+   },
+   "seconds_when_generated": 4.14,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins3147718_r4469390_mu_ADDn6_QBH_muj_ADDn6_Mth9.0_HS3"
+}

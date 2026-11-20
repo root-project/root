@@ -1,0 +1,62 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "k_tt1c": {
+     "best_fit": 1.2228280444655963,
+     "hesse_error": 0.21186940225314987,
+     "minus_one_sigma": -0.18855988684307998,
+     "plus_one_sigma": 0.21064774773249606
+    },
+    "k_tt2c": {
+     "best_fit": 1.2140762715111386,
+     "hesse_error": 0.25640043056741935,
+     "minus_one_sigma": -0.2375100121225313,
+     "plus_one_sigma": 0.2683706614633325
+    },
+    "k_tt_1b": {
+     "best_fit": 1.1202508314404485,
+     "hesse_error": 0.0742055606944807,
+     "minus_one_sigma": -0.07186534426906163,
+     "plus_one_sigma": 0.07473700263077043
+    },
+    "k_tt_light": {
+     "best_fit": 0.9312180449372773,
+     "hesse_error": 0.05257995059705878,
+     "minus_one_sigma": -0.050213888262085775,
+     "plus_one_sigma": 0.05282454533042342
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": [],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["k_tt1c", "k_tt2c", "k_tt_1b", "k_tt_light"],
+   "profile_scans": {
+    "k_tt1c": {
+     "points": [0.7990892399592966, 1.0109586422124464, 1.4346974467187463, 1.646566848971896],
+     "twice_delta_nll": [5.944413269869983, 1.2817533505149186, 1.0111114336177707, 3.7224025689065456]
+    },
+    "k_tt2c": {
+     "points": [0.7012754103762999, 0.9576758409437193, 1.470476702078558, 1.7268771326459773],
+     "twice_delta_nll": [5.473350662738085, 1.1778575582429767, 0.9173909449018538, 3.317816277500242]
+    }
+   },
+   "seconds_when_generated": 38.52,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2829504_r4009948_likelihood_inclusive_HS3"
+}

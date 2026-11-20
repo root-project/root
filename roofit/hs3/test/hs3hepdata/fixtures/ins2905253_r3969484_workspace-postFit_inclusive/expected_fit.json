@@ -1,0 +1,98 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "ATLAS_norm_Top": {
+     "best_fit": 0.9794382792571408,
+     "hesse_error": 0.2446766438525303,
+     "minus_one_sigma": -0.21450664008634662,
+     "plus_one_sigma": 0.30430345915642887
+    },
+    "ATLAS_norm_WWW": {
+     "best_fit": 2.184547287580198,
+     "hesse_error": 0.6548821700981917,
+     "minus_one_sigma": -0.6001462646886786,
+     "plus_one_sigma": 0.7208718683193669
+    },
+    "ATLAS_norm_WZgammaStar_0j": {
+     "best_fit": 1.02666047212533,
+     "hesse_error": 0.06035095205581115,
+     "minus_one_sigma": -0.05816687202799097,
+     "plus_one_sigma": 0.0635576359188083
+    },
+    "ATLAS_norm_WZgammaStar_gt0j": {
+     "best_fit": 0.8764386980390897,
+     "hesse_error": 0.157450506248066,
+     "minus_one_sigma": -0.148924923420909,
+     "plus_one_sigma": 0.15930383156351438
+    },
+    "ATLAS_norm_WZgammaStar_gt0j_ss2l": {
+     "best_fit": 0.8950938632479144,
+     "hesse_error": 0.16811851453747229,
+     "minus_one_sigma": -0.15886688149488382,
+     "plus_one_sigma": 0.1726897101831819
+    },
+    "ATLAS_norm_ZZ": {
+     "best_fit": 0.9805174323265654,
+     "hesse_error": 0.07113401780900008,
+     "minus_one_sigma": -0.0687143450531384,
+     "plus_one_sigma": 0.07452109180833659
+    },
+    "ATLAS_norm_Zjets": {
+     "best_fit": 0.8617219780831818,
+     "hesse_error": 0.14266524653039342,
+     "minus_one_sigma": -0.13538080595685553,
+     "plus_one_sigma": 0.14738219881455814
+    },
+    "ATLAS_norm_qqWW": {
+     "best_fit": 0.8810757836795876,
+     "hesse_error": 0.2609237599043545,
+     "minus_one_sigma": -0.23544896698082682,
+     "plus_one_sigma": 0.26770541095796274
+    },
+    "muWH": {
+     "best_fit": 0.475674479812955,
+     "hesse_error": 0.30489847502541645,
+     "minus_one_sigma": -0.2951232646584657,
+     "plus_one_sigma": 0.3146634403147382
+    },
+    "muZH": {
+     "best_fit": 1.6061101311101587,
+     "hesse_error": 0.48505963891499837,
+     "minus_one_sigma": -0.45398719413035926,
+     "plus_one_sigma": 0.5170660529952874
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["ATLAS_norm_Top", "ATLAS_norm_WWW", "ATLAS_norm_WZgammaStar_0j", "ATLAS_norm_WZgammaStar_gt0j", "ATLAS_norm_WZgammaStar_gt0j_ss2l", "ATLAS_norm_ZZ", "ATLAS_norm_Zjets", "ATLAS_norm_qqWW"],
+   "parameter_point": "SnSh_AllVars_Nominal",
+   "parameters_of_interest": ["muWH", "muZH"],
+   "profile_scans": {
+    "muWH": {
+     "points": [-0.13412247023787788, 0.17077600478753857, 0.7805729548383715, 1.085471429863788],
+     "twice_delta_nll": [4.641106389812194, 1.0698506833286956, 0.9406097291503102, 3.567846102756448]
+    },
+    "muZH": {
+     "points": [0.6359908532801619, 1.1210504921951603, 2.0911697700251572, 2.576229408940155],
+     "twice_delta_nll": [5.509627344319597, 1.1530893879244104, 0.8866339690284804, 3.1968272094381973]
+    }
+   },
+   "seconds_when_generated": 10.95,
+   "target": {
+    "data": "obsData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2905253_r3969484_workspace-postFit_inclusive"
+}

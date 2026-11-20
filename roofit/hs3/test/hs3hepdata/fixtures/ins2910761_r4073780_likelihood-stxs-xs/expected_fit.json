@@ -1,0 +1,248 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "ATLAS_norm_WW_0jet_ptH_0_10": {
+     "best_fit": 1.1072931966827186,
+     "hesse_error": 0.13465501588812012,
+     "minus_one_sigma": -0.124464731502357,
+     "plus_one_sigma": 0.14352982754294208
+    },
+    "ATLAS_norm_WW_0jet_ptH_gt10": {
+     "best_fit": 0.9974148192922961,
+     "hesse_error": 0.14198717709109027,
+     "minus_one_sigma": -0.13269988294373963,
+     "plus_one_sigma": 0.15031041560737435
+    },
+    "ATLAS_norm_WW_1jet_ptH_000_060": {
+     "best_fit": 0.8465729579895451,
+     "hesse_error": 0.17740282670432445,
+     "minus_one_sigma": -0.16260231600930344,
+     "plus_one_sigma": 0.1798018911957173
+    },
+    "ATLAS_norm_WW_1jet_ptH_060_120": {
+     "best_fit": 0.9047390878036234,
+     "hesse_error": 0.22996164794861412,
+     "minus_one_sigma": -0.20610619942514574,
+     "plus_one_sigma": 0.23529577732533782
+    },
+    "ATLAS_norm_WW_1jet_ptH_gt120": {
+     "best_fit": 1.0267506944675626,
+     "hesse_error": 0.22150737916401564,
+     "minus_one_sigma": -0.18703310803293058,
+     "plus_one_sigma": 0.23172530955497309
+    },
+    "ATLAS_norm_WW_2jet_ggF_ptH_0_200": {
+     "best_fit": 1.0248879794091896,
+     "hesse_error": 0.4174181118169362,
+     "minus_one_sigma": -0.32990530028244164,
+     "plus_one_sigma": 0.5459686429096001
+    },
+    "ATLAS_norm_WW_2jet_ggF_ptH_gt200": {
+     "best_fit": 0.78248135651268,
+     "hesse_error": 0.31454236964822146,
+     "minus_one_sigma": -0.24019333564841253,
+     "plus_one_sigma": 0.4604274522659342
+    },
+    "ATLAS_norm_Zll_2jet_VBF_mJJ_350_700_ptH_0_200": {
+     "best_fit": 1.0563626347392716,
+     "hesse_error": 0.43566051019639573,
+     "minus_one_sigma": -0.3230642410201948,
+     "plus_one_sigma": 0.543392112617413
+    },
+    "ATLAS_norm_Zll_2jet_VBF_mJJ_700_1000_ptH_0_200": {
+     "best_fit": 0.8198940257005289,
+     "hesse_error": 0.35035875602257116,
+     "minus_one_sigma": -0.2613235569386865,
+     "plus_one_sigma": 0.4388103475097763
+    },
+    "ATLAS_norm_Zll_2jet_VBF_mJJ_gt1000_ptH_0_200": {
+     "best_fit": 0.9970422569406219,
+     "hesse_error": 0.4406636185051785,
+     "minus_one_sigma": -0.3306054531817705,
+     "plus_one_sigma": 0.552756374285089
+    },
+    "ATLAS_norm_Zll_2jet_VBF_ptH_gt200": {
+     "best_fit": 1.043662158844266,
+     "hesse_error": 0.36155810069761996,
+     "minus_one_sigma": -0.27864123170031824,
+     "plus_one_sigma": 0.46095025163500314
+    },
+    "ATLAS_norm_Zll_2jet_ggF_ptH_gt200": {
+     "best_fit": 1.0819804492245078,
+     "hesse_error": 0.48656559049274734,
+     "minus_one_sigma": -0.3434772841965829,
+     "plus_one_sigma": 0.654330933258348
+    },
+    "ATLAS_norm_Ztt_1jet_ptH_000_060": {
+     "best_fit": 0.8600578787762105,
+     "hesse_error": 0.10133469958951025,
+     "minus_one_sigma": -0.09345631729160478,
+     "plus_one_sigma": 0.10764096864000951
+    },
+    "ATLAS_norm_Ztt_1jet_ptH_060_120": {
+     "best_fit": 0.9613615970492007,
+     "hesse_error": 0.12655210650947812,
+     "minus_one_sigma": -0.11476658440951652,
+     "plus_one_sigma": 0.1379148292090532
+    },
+    "ATLAS_norm_Ztt_1jet_ptH_gt120": {
+     "best_fit": 1.046657045162853,
+     "hesse_error": 0.1295038551177063,
+     "minus_one_sigma": -0.11895838375738324,
+     "plus_one_sigma": 0.14020809793042277
+    },
+    "ATLAS_norm_Ztt_2jet_VBF_mJJ_350_700_ptH_0_200": {
+     "best_fit": 1.022049110065394,
+     "hesse_error": 0.29665555061933796,
+     "minus_one_sigma": -0.24816165073673638,
+     "plus_one_sigma": 0.355850487600826
+    },
+    "ATLAS_norm_Ztt_2jet_VBF_mJJ_gt700_ptH_0_200": {
+     "best_fit": 0.9726987876478557,
+     "hesse_error": 0.36388982428516486,
+     "minus_one_sigma": -0.3035546079612694,
+     "plus_one_sigma": 0.43457839962145234
+    },
+    "ATLAS_norm_Ztt_2jet_VBF_ptH_gt200": {
+     "best_fit": 0.9535054068107439,
+     "hesse_error": 0.29953638133505456,
+     "minus_one_sigma": -0.24602965905249738,
+     "plus_one_sigma": 0.38669479599369816
+    },
+    "ATLAS_norm_Ztt_2jet_ggF_ptH_0_200": {
+     "best_fit": 0.8821489219200136,
+     "hesse_error": 0.22821202907597565,
+     "minus_one_sigma": -0.1857714636180265,
+     "plus_one_sigma": 0.2787871244964478
+    },
+    "ATLAS_norm_Ztt_2jet_ggF_ptH_gt200": {
+     "best_fit": 1.0316730148235569,
+     "hesse_error": 0.32000287190602844,
+     "minus_one_sigma": -0.2525856129094294,
+     "plus_one_sigma": 0.4129817674709701
+    },
+    "mu_VBF_qq2Hqq_1J": {
+     "best_fit": -0.06969815934983456,
+     "hesse_error": 0.9958926029133589,
+     "minus_one_sigma": -0.9854988070609292,
+     "plus_one_sigma": 1.012109464950541
+    },
+    "mu_VBF_qq2Hqq_ge2J_mJJ_1000_1500_ptH_0_200": {
+     "best_fit": 1.167849812921281,
+     "hesse_error": 0.47812837946048425,
+     "minus_one_sigma": -0.45061549801283424,
+     "plus_one_sigma": 0.5092071673065385
+    },
+    "mu_VBF_qq2Hqq_ge2J_mJJ_1000_1500_ptH_gt200": {
+     "best_fit": 1.5705753386088723,
+     "hesse_error": 0.8702102397787393,
+     "minus_one_sigma": -0.8058420263869653,
+     "plus_one_sigma": 0.9376584638539153
+    },
+    "mu_VBF_qq2Hqq_ge2J_mJJ_350_1000_ptH_gt200": {
+     "best_fit": 1.7593620638150236,
+     "hesse_error": 0.874099798845442,
+     "minus_one_sigma": -0.8316329853124966,
+     "plus_one_sigma": 0.9203801217229329
+    },
+    "mu_VBF_qq2Hqq_ge2J_mJJ_350_700_ptH_0_200": {
+     "best_fit": 0.7845495679614941,
+     "hesse_error": 0.5229453909944771,
+     "minus_one_sigma": -0.5038136665902033,
+     "plus_one_sigma": 0.5457658291444589
+    },
+    "mu_VBF_qq2Hqq_ge2J_mJJ_700_1000_ptH_0_200": {
+     "best_fit": 0.29768405498299383,
+     "hesse_error": 0.4878230879042847,
+     "minus_one_sigma": -0.46236500002228803,
+     "plus_one_sigma": 0.5156053360487257
+    },
+    "mu_VBF_qq2Hqq_ge2J_mJJ_gt1500_ptH_0_200": {
+     "best_fit": 1.234144916981341,
+     "hesse_error": 0.39733218458874164,
+     "minus_one_sigma": -0.37155062996587623,
+     "plus_one_sigma": 0.424464356219769
+    },
+    "mu_VBF_qq2Hqq_ge2J_mJJ_gt1500_ptH_gt200": {
+     "best_fit": 0.8025529370651345,
+     "hesse_error": 0.4741152561612063,
+     "minus_one_sigma": -0.43985059454313113,
+     "plus_one_sigma": 0.5160104026031161
+    },
+    "mu_ggF_gg2H_0J": {
+     "best_fit": 1.0725350868766566,
+     "hesse_error": 0.13854985436548806,
+     "minus_one_sigma": -0.13643946257010567,
+     "plus_one_sigma": 0.14022092847480236
+    },
+    "mu_ggF_gg2H_1J_ptH_000_060": {
+     "best_fit": 1.4922049537147557,
+     "hesse_error": 0.4916367875964758,
+     "minus_one_sigma": -0.48936463730904417,
+     "plus_one_sigma": 0.4977213439699255
+    },
+    "mu_ggF_gg2H_1J_ptH_060_120": {
+     "best_fit": 1.6624054760513516,
+     "hesse_error": 0.41381140751135703,
+     "minus_one_sigma": -0.4141045552163851,
+     "plus_one_sigma": 0.4153824355481795
+    },
+    "mu_ggF_gg2H_1J_ptH_120_200": {
+     "best_fit": 1.6765498270754635,
+     "hesse_error": 0.583664542878382,
+     "minus_one_sigma": -0.5764868757034001,
+     "plus_one_sigma": 0.592545483626574
+    },
+    "mu_ggF_gg2H_ge2J_ptH_000_200": {
+     "best_fit": 0.7969615711976198,
+     "hesse_error": 0.6648199816966038,
+     "minus_one_sigma": -0.6845762505157025,
+     "plus_one_sigma": 0.6627580341775836
+    },
+    "mu_ggF_gg2H_ptH_200_300": {
+     "best_fit": 2.3457362834027884,
+     "hesse_error": 0.6679391182724227,
+     "minus_one_sigma": -0.6448113832879203,
+     "plus_one_sigma": 0.6953078649763558
+    },
+    "mu_ggF_gg2H_ptH_gt300": {
+     "best_fit": 0.0778622136951863,
+     "hesse_error": 0.9137899997479004,
+     "minus_one_sigma": -0.8858923405167095,
+     "plus_one_sigma": 0.9416174825548462
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["ATLAS_norm_WW_0jet_ptH_0_10", "ATLAS_norm_WW_0jet_ptH_gt10", "ATLAS_norm_WW_1jet_ptH_000_060", "ATLAS_norm_WW_1jet_ptH_060_120", "ATLAS_norm_WW_1jet_ptH_gt120", "ATLAS_norm_WW_2jet_ggF_ptH_0_200", "ATLAS_norm_WW_2jet_ggF_ptH_gt200", "ATLAS_norm_Zll_2jet_VBF_mJJ_350_700_ptH_0_200", "ATLAS_norm_Zll_2jet_VBF_mJJ_700_1000_ptH_0_200", "ATLAS_norm_Zll_2jet_VBF_mJJ_gt1000_ptH_0_200", "ATLAS_norm_Zll_2jet_VBF_ptH_gt200", "ATLAS_norm_Zll_2jet_ggF_ptH_gt200", "ATLAS_norm_Ztt_1jet_ptH_000_060", "ATLAS_norm_Ztt_1jet_ptH_060_120", "ATLAS_norm_Ztt_1jet_ptH_gt120", "ATLAS_norm_Ztt_2jet_VBF_mJJ_350_700_ptH_0_200", "ATLAS_norm_Ztt_2jet_VBF_mJJ_gt700_ptH_0_200", "ATLAS_norm_Ztt_2jet_VBF_ptH_gt200", "ATLAS_norm_Ztt_2jet_ggF_ptH_0_200", "ATLAS_norm_Ztt_2jet_ggF_ptH_gt200"],
+   "parameter_point": "SnSh_AllVars_Nominal",
+   "parameters_of_interest": ["mu_VBF_qq2Hqq_1J", "mu_VBF_qq2Hqq_ge2J_mJJ_1000_1500_ptH_0_200", "mu_VBF_qq2Hqq_ge2J_mJJ_1000_1500_ptH_gt200", "mu_VBF_qq2Hqq_ge2J_mJJ_350_1000_ptH_gt200", "mu_VBF_qq2Hqq_ge2J_mJJ_350_700_ptH_0_200", "mu_VBF_qq2Hqq_ge2J_mJJ_700_1000_ptH_0_200", "mu_VBF_qq2Hqq_ge2J_mJJ_gt1500_ptH_0_200", "mu_VBF_qq2Hqq_ge2J_mJJ_gt1500_ptH_gt200", "mu_ggF_gg2H_0J", "mu_ggF_gg2H_1J_ptH_000_060", "mu_ggF_gg2H_1J_ptH_060_120", "mu_ggF_gg2H_1J_ptH_120_200", "mu_ggF_gg2H_ge2J_ptH_000_200", "mu_ggF_gg2H_ptH_200_300", "mu_ggF_gg2H_ptH_gt300"],
+   "profile_scans": {
+    "mu_VBF_qq2Hqq_1J": {
+     "points": [-2.0614833651765525, -1.0655907622631935, 0.9261944435635243, 1.9220870464768833],
+     "twice_delta_nll": [4.148047983646393, 1.0214092982932925, 0.9687205643858761, 3.7436282054986805]
+    },
+    "mu_VBF_qq2Hqq_ge2J_mJJ_1000_1500_ptH_0_200": {
+     "points": [0.21159305400031259, 0.6897214334607968, 1.6459781923817653, 2.1241065718422494],
+     "twice_delta_nll": [5.150364575907588, 1.1338656803127378, 0.8883392438292503, 3.18557753181085]
+    }
+   },
+   "seconds_when_generated": 601.27,
+   "target": {
+    "data": "obsData",
+    "pdf": "combPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2910761_r4073780_likelihood-stxs-xs"
+}

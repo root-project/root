@@ -1,0 +1,28 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.1.90 document published on HEPData, written by ROOT 6.30.02.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_Ac",
+   "parameters": ["Ac"],
+   "pdf": "simPdf",
+   "points": [[-0.012], [-0.011], [-0.01], [-0.009], [-0.008]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_Unfolding_Bin_002_mu",
+   "parameters": ["Unfolding_Bin_002_mu"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2616326: https://www.hepdata.net/record/resource/3620702 (ratio_likelihood.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2616326_r3620702_ratio_likelihood",
+ "title": "Measurement of the charge asymmetry in top-quark pair production in association with a photon with the ATLAS experiment"
+}

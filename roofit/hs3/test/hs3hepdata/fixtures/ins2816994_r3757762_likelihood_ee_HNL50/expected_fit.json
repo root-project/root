@@ -1,0 +1,64 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "SigXsecOverSM_50_N1": {
+     "best_fit": 0.05165644736448032,
+     "hesse_error": 0.06641156606764013,
+     "minus_one_sigma": -0.06017049687074968,
+     "plus_one_sigma": 0.07442930265722522
+    },
+    "k_ttC": {
+     "best_fit": 0.48605935108794834,
+     "hesse_error": 0.4199950238479667,
+     "minus_one_sigma": -0.3860593510879483,
+     "plus_one_sigma": 0.48124954138937676
+    },
+    "k_ttDel": {
+     "best_fit": 1.471420969603068,
+     "hesse_error": 0.6772528403507482,
+     "minus_one_sigma": -0.5712045355692514,
+     "plus_one_sigma": 0.8543574238902895
+    },
+    "k_ttQ": {
+     "best_fit": 0.8167815151137187,
+     "hesse_error": 0.40744230192430475,
+     "minus_one_sigma": -0.31689724550192006,
+     "plus_one_sigma": 0.5555491567938586
+    },
+    "k_ttW": {
+     "best_fit": 1.0992729430437376,
+     "hesse_error": 0.3940436000391211,
+     "minus_one_sigma": -0.3429711148094339,
+     "plus_one_sigma": 0.48567177364293757
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["k_ttC", "k_ttDel", "k_ttQ", "k_ttW"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["SigXsecOverSM_50_N1"],
+   "profile_scans": {
+    "SigXsecOverSM_50_N1": {
+     "points": [-0.08116668477079994, -0.014755118703159813, 0.11806801343212045, 0.1844795794997606],
+     "twice_delta_nll": [5.70923421197017, 1.241797927788184, 0.8145845323233516, 2.7247445931582206]
+    }
+   },
+   "seconds_when_generated": 3.05,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2816994_r3757762_likelihood_ee_HNL50"
+}

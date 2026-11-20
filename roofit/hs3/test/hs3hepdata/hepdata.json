@@ -1,0 +1,2268 @@
+{
+ "documents": [
+  {
+   "filename": "ratio_likelihood.json",
+   "inspire_id": "2616326",
+   "member": "",
+   "resource_id": 3620702,
+   "test_id": "ins2616326_r3620702_ratio_likelihood",
+   "title": "Measurement of the charge asymmetry in top-quark pair production in association with a photon with the ATLAS experiment"
+  },
+  {
+   "filename": "separate_likelihood.json",
+   "inspire_id": "2689657",
+   "member": "",
+   "resource_id": 3614663,
+   "test_id": "ins2689657_r3614663_separate_likelihood",
+   "title": "Measurement of the $t\\bar{t}$ cross section and its ratio to the $Z$ production cross section using $pp$ collisions at $\\sqrt{s} = 13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ratio_likelihood.json",
+   "inspire_id": "2689657",
+   "member": "",
+   "resource_id": 3614664,
+   "test_id": "ins2689657_r3614664_ratio_likelihood",
+   "title": "Measurement of the $t\\bar{t}$ cross section and its ratio to the $Z$ production cross section using $pp$ collisions at $\\sqrt{s} = 13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ttZinclusiveCombinedFullLikelihood.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240220_InclusiveJsons/InclusiveCombination.json",
+   "resource_id": 3616844,
+   "test_id": "ins2744513_r3616844_20240220_InclusiveJsons_InclusiveCombination",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_cos_theta_star_Z_8bins_comb_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_cos_theta_star_Z_8bins_comb_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_cos_theta_star_Z_8bins_comb_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_cos_theta_star_Z_8bins_comb_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_cos_theta_star_Z_8bins_comb_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_cos_theta_star_Z_8bins_comb_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_cos_theta_star_Z_8bins_comb_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_cos_theta_star_Z_8bins_comb_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dPhi_ttbar_Z_5bins_comb_particle_tau2.4.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dPhi_ttbar_Z_5bins_comb_particle_tau2.4",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dPhi_ttbar_Z_5bins_comb_particle_tau2.4_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dPhi_ttbar_Z_5bins_comb_particle_tau2.4_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dPhi_ttbar_Z_5bins_comb_parton_tau2.1.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dPhi_ttbar_Z_5bins_comb_parton_tau2.1",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dPhi_ttbar_Z_5bins_comb_parton_tau2.1_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dPhi_ttbar_Z_5bins_comb_parton_tau2.1_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dphi_z2_ll_7bins_4L_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z2_ll_7bins_4L_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dphi_z2_ll_7bins_4L_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z2_ll_7bins_4L_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dphi_z2_ll_7bins_4L_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z2_ll_7bins_4L_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dphi_z2_ll_7bins_4L_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z2_ll_7bins_4L_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dphi_z_toplep_6bins_3L_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z_toplep_6bins_3L_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dphi_z_toplep_6bins_3L_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z_toplep_6bins_3L_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dphi_z_toplep_6bins_3L_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z_toplep_6bins_3L_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dphi_z_toplep_6bins_3L_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dphi_z_toplep_6bins_3L_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dy_z_toplep_5bins_3L_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dy_z_toplep_5bins_3L_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dy_z_toplep_5bins_3L_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dy_z_toplep_5bins_3L_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dy_z_toplep_5bins_3L_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dy_z_toplep_5bins_3L_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_dy_z_toplep_5bins_3L_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dy_z_toplep_5bins_3L_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_ht_leptons_5bins_4L_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_5bins_4L_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_ht_leptons_5bins_4L_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_5bins_4L_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_ht_leptons_5bins_4L_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_5bins_4L_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_ht_leptons_5bins_4L_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_5bins_4L_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_ht_leptons_8bins_3L_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_8bins_3L_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_ht_leptons_8bins_3L_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_8bins_3L_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_ht_leptons_8bins_3L_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_8bins_3L_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_ht_leptons_8bins_3L_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_8bins_3L_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_m_ttZ_10bins_comb_particle_tau1.5.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_m_ttZ_10bins_comb_particle_tau1.5",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_m_ttZ_10bins_comb_particle_tau1.5_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_m_ttZ_10bins_comb_particle_tau1.5_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_m_ttZ_10bins_comb_parton_tau1.6.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_m_ttZ_10bins_comb_parton_tau1.6",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_m_ttZ_10bins_comb_parton_tau1.6_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_m_ttZ_10bins_comb_parton_tau1.6_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_m_ttbar_10bins_comb_particle_tau1.5.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_m_ttbar_10bins_comb_particle_tau1.5",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_m_ttbar_10bins_comb_particle_tau1.5_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_m_ttbar_10bins_comb_particle_tau1.5_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_m_ttbar_10bins_comb_parton_tau1.4.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_m_ttbar_10bins_comb_parton_tau1.4",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_m_ttbar_10bins_comb_parton_tau1.4_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_m_ttbar_10bins_comb_parton_tau1.4_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_n_jets_3bins_4L_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_n_jets_3bins_4L_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_n_jets_3bins_4L_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_n_jets_3bins_4L_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_n_jets_4bins_3L_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_n_jets_4bins_3L_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_n_jets_4bins_3L_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_n_jets_4bins_3L_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_Z_8bins_comb_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_Z_8bins_comb_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_Z_8bins_comb_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_Z_8bins_comb_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_Z_8bins_comb_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_Z_8bins_comb_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_Z_8bins_comb_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_Z_8bins_comb_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_top_10bins_comb_particle_tau1.5.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_top_10bins_comb_particle_tau1.5",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_top_10bins_comb_particle_tau1.5_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_top_10bins_comb_particle_tau1.5_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_top_10bins_comb_parton_tau1.4.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_top_10bins_comb_parton_tau1.4",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_top_10bins_comb_parton_tau1.4_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_top_10bins_comb_parton_tau1.4_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_ttbar_10bins_comb_particle_tau1.6.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_ttbar_10bins_comb_particle_tau1.6",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_ttbar_10bins_comb_particle_tau1.6_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_ttbar_10bins_comb_particle_tau1.6_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_ttbar_10bins_comb_parton_tau1.5.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_ttbar_10bins_comb_parton_tau1.5",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pT_ttbar_10bins_comb_parton_tau1.5_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_ttbar_10bins_comb_parton_tau1.5_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pt_lep_non_z_5bins_3L_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pt_lep_non_z_5bins_3L_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pt_lep_non_z_5bins_3L_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pt_lep_non_z_5bins_3L_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pt_lep_non_z_5bins_3L_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pt_lep_non_z_5bins_3L_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_pt_lep_non_z_5bins_3L_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pt_lep_non_z_5bins_3L_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_y_Z_9bins_comb_particle_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_y_Z_9bins_comb_particle_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_y_Z_9bins_comb_particle_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_y_Z_9bins_comb_particle_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_y_Z_9bins_comb_parton_tau0.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_y_Z_9bins_comb_parton_tau0",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_y_Z_9bins_comb_parton_tau0_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_y_Z_9bins_comb_parton_tau0_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_y_ttZ_10bins_comb_particle_tau1.5.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_y_ttZ_10bins_comb_particle_tau1.5",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_y_ttZ_10bins_comb_particle_tau1.5_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_y_ttZ_10bins_comb_particle_tau1.5_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_y_ttZ_10bins_comb_parton_tau1.5.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_y_ttZ_10bins_comb_parton_tau1.5",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "ttZdifferentialAllFullLikelihoods.tar.gz",
+   "inspire_id": "2744513",
+   "member": "20240205_AllJsons/Unfolding_y_ttZ_10bins_comb_parton_tau1.5_NORM.json",
+   "resource_id": 3616845,
+   "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_y_ttZ_10bins_comb_parton_tau1.5_NORM",
+   "title": "Inclusive and differential cross-section measurements of $t\\bar{t}Z$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector, including EFT and spin-correlation interpretations"
+  },
+  {
+   "filename": "inclusive_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/inclusive_xs/2l3l_model_workspace.json",
+   "resource_id": 3809858,
+   "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_2l3l_model_workspace",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "inclusive_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/inclusive_xs/ACR_model_workspace.json",
+   "resource_id": 3809858,
+   "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_ACR_model_workspace",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "inclusive_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/inclusive_xs/fiducial_model_workspace.json",
+   "resource_id": 3809858,
+   "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_fiducial_model_workspace",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "inclusive_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/inclusive_xs/inclusive_model_workspace.json",
+   "resource_id": 3809858,
+   "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_inclusive_model_workspace",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "inclusive_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/inclusive_xs/plusminus_model_workspace.json",
+   "resource_id": 3809858,
+   "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_plusminus_model_workspace",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "inclusive_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/inclusive_xs/ratioN_model_workspace.json",
+   "resource_id": 3809858,
+   "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_ratioN_model_workspace",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "inclusive_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/inclusive_xs/ratioP_model_workspace.json",
+   "resource_id": 3809858,
+   "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_ratioP_model_workspace",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "differential_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/differential_xs/differential/DEtall_SS_model_workspace_regularized.json",
+   "resource_id": 3809859,
+   "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_DEtall_SS_model_workspace_regularized",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "differential_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/differential_xs/differential/DPhill_SS_model_workspace_regularized.json",
+   "resource_id": 3809859,
+   "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_DPhill_SS_model_workspace_regularized",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "differential_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/differential_xs/differential/DRlb_model_workspace_regularized.json",
+   "resource_id": 3809859,
+   "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_DRlb_model_workspace_regularized",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "differential_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/differential_xs/differential/HT_jet_model_workspace_regularized.json",
+   "resource_id": 3809859,
+   "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_HT_jet_model_workspace_regularized",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "differential_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/differential_xs/differential/HT_lep_model_workspace_regularized.json",
+   "resource_id": 3809859,
+   "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_HT_lep_model_workspace_regularized",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "differential_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/differential_xs/differential/Mlb_model_workspace_regularized.json",
+   "resource_id": 3809859,
+   "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_Mlb_model_workspace_regularized",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "differential_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/differential_xs/differential/Mll_SS_model_workspace_regularized.json",
+   "resource_id": 3809859,
+   "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_Mll_SS_model_workspace_regularized",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "differential_likelihoods.tar.gz",
+   "inspire_id": "2745375",
+   "member": "raw_inputs/TREx_HEPData/differential_xs/differential/nJets_model_workspace_regularized.json",
+   "resource_id": 3809859,
+   "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_nJets_model_workspace_regularized",
+   "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "workspace_ljets_2NF_HS3.json",
+   "inspire_id": "2768921",
+   "member": "",
+   "resource_id": 3716983,
+   "test_id": "ins2768921_r3716983_workspace_ljets_2NF_HS3",
+   "title": "Measurements of inclusive and differential cross-sections of $t\\bar{t}\\gamma$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "workspace_ljets_1NF_HS3.json",
+   "inspire_id": "2768921",
+   "member": "",
+   "resource_id": 3716985,
+   "test_id": "ins2768921_r3716985_workspace_ljets_1NF_HS3",
+   "title": "Measurements of inclusive and differential cross-sections of $t\\bar{t}\\gamma$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "workspace_dilep_2NF_HS3.json",
+   "inspire_id": "2768921",
+   "member": "",
+   "resource_id": 3716987,
+   "test_id": "ins2768921_r3716987_workspace_dilep_2NF_HS3",
+   "title": "Measurements of inclusive and differential cross-sections of $t\\bar{t}\\gamma$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "workspace_dilep_1NF_HS3.json",
+   "inspire_id": "2768921",
+   "member": "",
+   "resource_id": 3716989,
+   "test_id": "ins2768921_r3716989_workspace_dilep_1NF_HS3",
+   "title": "Measurements of inclusive and differential cross-sections of $t\\bar{t}\\gamma$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "workspace_combined_2NF_HS3.json",
+   "inspire_id": "2768921",
+   "member": "",
+   "resource_id": 3716991,
+   "test_id": "ins2768921_r3716991_workspace_combined_2NF_HS3",
+   "title": "Measurements of inclusive and differential cross-sections of $t\\bar{t}\\gamma$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "workspace_combined_1NF_HS3.json",
+   "inspire_id": "2768921",
+   "member": "",
+   "resource_id": 3716993,
+   "test_id": "ins2768921_r3716993_workspace_combined_1NF_HS3",
+   "title": "Measurements of inclusive and differential cross-sections of $t\\bar{t}\\gamma$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "likelihood.json",
+   "inspire_id": "2784411",
+   "member": "",
+   "resource_id": 3741768,
+   "test_id": "ins2784411_r3741768_likelihood",
+   "title": "Observation of $t\\bar{t}$ production in the lepton+jets and dilepton channels in $p$+Pb collisions at $\\sqrt{s_\\mathrm{NN}}=8.16$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_bkg_only_high_mass.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_highmass_combined_BONLY.json",
+   "resource_id": 3757760,
+   "test_id": "ins2816994_r3757760_likelihood_highmass_combined_BONLY",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_bkg_only_high_mass.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_highmass_ee_BONLY.json",
+   "resource_id": 3757760,
+   "test_id": "ins2816994_r3757760_likelihood_highmass_ee_BONLY",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_bkg_only_high_mass.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_highmass_mm_BONLY.json",
+   "resource_id": 3757760,
+   "test_id": "ins2816994_r3757760_likelihood_highmass_mm_BONLY",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_bkg_only_low_mass.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_lowmass_combined_BONLY.json",
+   "resource_id": 3757761,
+   "test_id": "ins2816994_r3757761_likelihood_lowmass_combined_BONLY",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_bkg_only_low_mass.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_lowmass_ee_BONLY.json",
+   "resource_id": 3757761,
+   "test_id": "ins2816994_r3757761_likelihood_lowmass_ee_BONLY",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_bkg_only_low_mass.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_lowmass_mm_BONLY.json",
+   "resource_id": 3757761,
+   "test_id": "ins2816994_r3757761_likelihood_lowmass_mm_BONLY",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_sig_bkg.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_combined_HNL50.json",
+   "resource_id": 3757762,
+   "test_id": "ins2816994_r3757762_likelihood_combined_HNL50",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_sig_bkg.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_ee_HNL50.json",
+   "resource_id": 3757762,
+   "test_id": "ins2816994_r3757762_likelihood_ee_HNL50",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "Likelihoods_sig_bkg.tar.gz",
+   "inspire_id": "2816994",
+   "member": "likelihood_mm_HNL50.json",
+   "resource_id": 3757762,
+   "test_id": "ins2816994_r3757762_likelihood_mm_HNL50",
+   "title": "Search for heavy right-handed Majorana neutrinos in the decay of top quarks produced in proton$-$proton collisions at $\\sqrt{s}$ = 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "likelihood_fiducial_HS3.json",
+   "inspire_id": "2829504",
+   "member": "",
+   "resource_id": 4009947,
+   "test_id": "ins2829504_r4009947_likelihood_fiducial_HS3",
+   "title": "Measurement of top-quark pair production in association with charm quarks in proton-proton collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "likelihood_inclusive_HS3.json",
+   "inspire_id": "2829504",
+   "member": "",
+   "resource_id": 4009948,
+   "test_id": "ins2829504_r4009948_likelihood_inclusive_HS3",
+   "title": "Measurement of top-quark pair production in association with charm quarks in proton-proton collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "likelihood.json",
+   "inspire_id": "2832100",
+   "member": "",
+   "resource_id": 3753433,
+   "test_id": "ins2832100_r3753433_likelihood",
+   "title": "Search for same-charge top-quark pair production in $pp$ collisions at $\\sqrt{s}=$ 13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S275_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S275_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S275_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S275_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S325_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S325_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S325_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S325_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S400_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S400_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S400_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S400_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S500_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S500_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S500_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S500_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S600_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S600_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S600_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S600_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S700_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S700_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S700_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S700_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S850_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S850_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1100_S850_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1100_S850_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S1000_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S1000_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S1000_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S1000_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S275_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S275_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S275_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S275_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S325_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S325_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S325_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S325_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S400_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S400_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S400_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S400_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S500_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S500_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S500_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S500_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S600_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S600_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S600_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S600_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S700_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S700_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S700_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S700_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S850_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S850_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1300_S850_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1300_S850_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S1000_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S1000_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S1000_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S1000_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S275_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S275_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S275_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S275_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S325_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S325_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S325_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S325_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S400_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S400_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S400_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S400_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S500_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S500_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S500_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S500_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S600_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S600_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S600_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S600_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S700_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S700_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S700_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S700_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S850_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S850_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X1500_S850_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X1500_S850_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X550_S350_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X550_S350_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X550_S350_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X550_S350_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X600_S275_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X600_S275_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X600_S275_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X600_S275_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X600_S325_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X600_S325_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X600_S325_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X600_S325_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X600_S400_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X600_S400_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X600_S400_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X600_S400_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X650_S275_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X650_S275_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X650_S275_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X650_S275_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X650_S325_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X650_S325_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X650_S325_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X650_S325_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X650_S400_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X650_S400_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X650_S400_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X650_S400_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X700_S275_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X700_S275_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X700_S275_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X700_S275_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X700_S325_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X700_S325_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X700_S325_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X700_S325_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X700_S400_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X700_S400_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X700_S400_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X700_S400_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X700_S500_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X700_S500_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X700_S500_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X700_S500_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S275_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S275_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S275_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S275_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S325_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S325_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S325_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S325_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S400_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S400_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S400_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S400_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S500_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S500_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S500_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S500_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S600_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S600_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X800_S600_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X800_S600_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S275_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S275_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S275_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S275_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S325_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S325_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S325_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S325_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S400_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S400_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S400_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S400_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S500_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S500_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S500_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S500_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S600_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S600_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S600_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S600_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S700_width0p01.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S700_width0p01",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X900_S700_width0p2.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S700_width0p2",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X325_S200.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X325_S200",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X350_S225.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X350_S225",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X375_S250.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X375_S250",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X400_S200.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X400_S200",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X400_S275.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X400_S275",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X425_S225.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X425_S225",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X425_S250.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X425_S250",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X475_S200.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X475_S200",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X475_S250.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X475_S250",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X500_S225.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X500_S225",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X525_S250.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X525_S250",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X550_S200.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X550_S200",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X550_S275.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X550_S275",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/NonResonantFits_NN/Likelihood_TRSM_X575_S225.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_NonResonantFits_NN_Likelihood_TRSM_X575_S225",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X420_S280.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X420_S280",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X425_S300.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X425_S300",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X450_S275.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X450_S275",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X450_S300.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X450_S300",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X450_S325.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X450_S325",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X475_S350.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X475_S350",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X485_S325.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X485_S325",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X500_S275.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X500_S275",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X500_S300.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X500_S300",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X500_S350.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X500_S350",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X520_S325.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X520_S325",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X540_S300.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X540_S300",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/ResonantFits_NN/Likelihood_TRSM_X550_S275.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X550_S275",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz",
+   "inspire_id": "2845789",
+   "member": "ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/SMFit/Likelihood_SM.json",
+   "resource_id": 3888824,
+   "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_SMFit_Likelihood_SM",
+   "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "2502-18216_likelihood.json",
+   "inspire_id": "2894561",
+   "member": "",
+   "resource_id": 3880335,
+   "test_id": "ins2894561_r3880335_2502-18216_likelihood",
+   "title": "Measurement of the top quark mass with the ATLAS detector using $t\\bar{t}$ events with a high transverse momentum top quark"
+  },
+  {
+   "filename": "workspace-postFit_inclusive.json",
+   "inspire_id": "2905253",
+   "member": "",
+   "resource_id": 3969484,
+   "test_id": "ins2905253_r3969484_workspace-postFit_inclusive",
+   "title": "Measurements of the production cross-sections of a Higgs boson in association with a vector boson and decaying into $WW^\\ast$ with the ATLAS detector at $\\sqrt{s} = 13$ TeV"
+  },
+  {
+   "filename": "workspace-postFit_STXS.json",
+   "inspire_id": "2905253",
+   "member": "",
+   "resource_id": 3969485,
+   "test_id": "ins2905253_r3969485_workspace-postFit_STXS",
+   "title": "Measurements of the production cross-sections of a Higgs boson in association with a vector boson and decaying into $WW^\\ast$ with the ATLAS detector at $\\sqrt{s} = 13$ TeV"
+  },
+  {
+   "filename": "workspace-postFit_PTV.json",
+   "inspire_id": "2905253",
+   "member": "",
+   "resource_id": 3969486,
+   "test_id": "ins2905253_r3969486_workspace-postFit_PTV",
+   "title": "Measurements of the production cross-sections of a Higgs boson in association with a vector boson and decaying into $WW^\\ast$ with the ATLAS detector at $\\sqrt{s} = 13$ TeV"
+  },
+  {
+   "filename": "likelihood-stxs-mu.json",
+   "inspire_id": "2910761",
+   "member": "",
+   "resource_id": 4073779,
+   "test_id": "ins2910761_r4073779_likelihood-stxs-mu",
+   "title": "Measurements of Higgs boson production via gluon-gluon fusion and vector-boson fusion using $H\\rightarrow WW^\\ast \\rightarrow \\ell\u03bd\\ell\u03bd$ decays in $pp$ collisions with the ATLAS detector and their effective field theory interpretations"
+  },
+  {
+   "filename": "likelihood-stxs-xs.json",
+   "inspire_id": "2910761",
+   "member": "",
+   "resource_id": 4073780,
+   "test_id": "ins2910761_r4073780_likelihood-stxs-xs",
+   "title": "Measurements of Higgs boson production via gluon-gluon fusion and vector-boson fusion using $H\\rightarrow WW^\\ast \\rightarrow \\ell\u03bd\\ell\u03bd$ decays in $pp$ collisions with the ATLAS detector and their effective field theory interpretations"
+  },
+  {
+   "filename": "likelihood-stxs-smeft.json",
+   "inspire_id": "2910761",
+   "member": "",
+   "resource_id": 4073781,
+   "test_id": "ins2910761_r4073781_likelihood-stxs-smeft",
+   "title": "Measurements of Higgs boson production via gluon-gluon fusion and vector-boson fusion using $H\\rightarrow WW^\\ast \\rightarrow \\ell\u03bd\\ell\u03bd$ decays in $pp$ collisions with the ATLAS detector and their effective field theory interpretations"
+  },
+  {
+   "filename": "likelihood-dphijj-mu.json",
+   "inspire_id": "2910761",
+   "member": "",
+   "resource_id": 4073782,
+   "test_id": "ins2910761_r4073782_likelihood-dphijj-mu",
+   "title": "Measurements of Higgs boson production via gluon-gluon fusion and vector-boson fusion using $H\\rightarrow WW^\\ast \\rightarrow \\ell\u03bd\\ell\u03bd$ decays in $pp$ collisions with the ATLAS detector and their effective field theory interpretations"
+  },
+  {
+   "filename": "likelihood-dphijj-cp.json",
+   "inspire_id": "2910761",
+   "member": "",
+   "resource_id": 4073783,
+   "test_id": "ins2910761_r4073783_likelihood-dphijj-cp",
+   "title": "Measurements of Higgs boson production via gluon-gluon fusion and vector-boson fusion using $H\\rightarrow WW^\\ast \\rightarrow \\ell\u03bd\\ell\u03bd$ decays in $pp$ collisions with the ATLAS detector and their effective field theory interpretations"
+  },
+  {
+   "filename": "CrossSection_ttyy_HS3.json",
+   "inspire_id": "2930296",
+   "member": "",
+   "resource_id": 4011072,
+   "test_id": "ins2930296_r4011072_CrossSection_ttyy_HS3",
+   "title": "Observation of $t\\bar{t}\\gamma\\gamma$ production at $\\sqrt{s}=$13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "ratio_ttyyTotty_HS3.json",
+   "inspire_id": "2930296",
+   "member": "",
+   "resource_id": 4011073,
+   "test_id": "ins2930296_r4011073_ratio_ttyyTotty_HS3",
+   "title": "Observation of $t\\bar{t}\\gamma\\gamma$ production at $\\sqrt{s}=$13 TeV with the ATLAS detector"
+  },
+  {
+   "filename": "HS3_likelihoods.tar.gz",
+   "inspire_id": "2936806",
+   "member": "HS3_likelihoods/sigT_1700_k0.5.json",
+   "resource_id": 4309332,
+   "test_id": "ins2936806_r4309332_HS3_likelihoods_sigT_1700_k0.5",
+   "title": "Search for single production of vector-like quarks decaying into $W(\\ell\u03bd)b$ in $pp$ collisions at $\\sqrt{s} = 13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "HS3_likelihoods.tar.gz",
+   "inspire_id": "2936806",
+   "member": "HS3_likelihoods/sigT_2200_k0.5.json",
+   "resource_id": 4309332,
+   "test_id": "ins2936806_r4309332_HS3_likelihoods_sigT_2200_k0.5",
+   "title": "Search for single production of vector-like quarks decaying into $W(\\ell\u03bd)b$ in $pp$ collisions at $\\sqrt{s} = 13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "HS3_likelihoods.tar.gz",
+   "inspire_id": "2936806",
+   "member": "HS3_likelihoods/sigT_2700_k0.5.json",
+   "resource_id": 4309332,
+   "test_id": "ins2936806_r4309332_HS3_likelihoods_sigT_2700_k0.5",
+   "title": "Search for single production of vector-like quarks decaying into $W(\\ell\u03bd)b$ in $pp$ collisions at $\\sqrt{s} = 13$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "likelihood.json",
+   "inspire_id": "3130442",
+   "member": "",
+   "resource_id": 4320048,
+   "test_id": "ins3130442_r4320048_likelihood",
+   "title": "Measurement of the $|V_{cb}|$ element of the CKM matrix in $t\\bar{t}$ decays with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn2/QBH_elj_ADDn2_Mth10.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn2_QBH_elj_ADDn2_Mth10.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn2/QBH_elj_ADDn2_Mth10.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn2_QBH_elj_ADDn2_Mth10.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn2/QBH_elj_ADDn2_Mth8.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn2_QBH_elj_ADDn2_Mth8.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn2/QBH_elj_ADDn2_Mth8.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn2_QBH_elj_ADDn2_Mth8.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn2/QBH_elj_ADDn2_Mth9.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn2_QBH_elj_ADDn2_Mth9.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn2/QBH_elj_ADDn2_Mth9.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn2_QBH_elj_ADDn2_Mth9.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn4/QBH_elj_ADDn4_Mth10.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn4_QBH_elj_ADDn4_Mth10.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn4/QBH_elj_ADDn4_Mth10.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn4_QBH_elj_ADDn4_Mth10.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn4/QBH_elj_ADDn4_Mth8.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn4_QBH_elj_ADDn4_Mth8.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn4/QBH_elj_ADDn4_Mth8.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn4_QBH_elj_ADDn4_Mth8.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn4/QBH_elj_ADDn4_Mth9.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn4_QBH_elj_ADDn4_Mth9.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn4/QBH_elj_ADDn4_Mth9.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn4_QBH_elj_ADDn4_Mth9.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn6/QBH_elj_ADDn6_Mth10.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn6_QBH_elj_ADDn6_Mth10.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn6/QBH_elj_ADDn6_Mth10.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn6_QBH_elj_ADDn6_Mth10.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn6/QBH_elj_ADDn6_Mth8.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn6_QBH_elj_ADDn6_Mth8.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn6/QBH_elj_ADDn6_Mth8.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn6_QBH_elj_ADDn6_Mth8.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn6/QBH_elj_ADDn6_Mth9.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn6_QBH_elj_ADDn6_Mth9.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/ADDn6/QBH_elj_ADDn6_Mth9.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_ADDn6_QBH_elj_ADDn6_Mth9.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/RSn1/QBH_elj_RSn1_Mth6.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_RSn1_QBH_elj_RSn1_Mth6.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/RSn1/QBH_elj_RSn1_Mth6.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_RSn1_QBH_elj_RSn1_Mth6.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/RSn1/QBH_elj_RSn1_Mth7.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_RSn1_QBH_elj_RSn1_Mth7.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/RSn1/QBH_elj_RSn1_Mth7.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_RSn1_QBH_elj_RSn1_Mth7.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/RSn1/QBH_elj_RSn1_Mth8.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_RSn1_QBH_elj_RSn1_Mth8.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "el/RSn1/QBH_elj_RSn1_Mth8.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_el_RSn1_QBH_elj_RSn1_Mth8.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn2/QBH_muj_ADDn2_Mth10.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn2_QBH_muj_ADDn2_Mth10.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn2/QBH_muj_ADDn2_Mth10.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn2_QBH_muj_ADDn2_Mth10.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn2/QBH_muj_ADDn2_Mth8.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn2_QBH_muj_ADDn2_Mth8.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn2/QBH_muj_ADDn2_Mth8.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn2_QBH_muj_ADDn2_Mth8.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn2/QBH_muj_ADDn2_Mth9.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn2_QBH_muj_ADDn2_Mth9.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn2/QBH_muj_ADDn2_Mth9.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn2_QBH_muj_ADDn2_Mth9.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn4/QBH_muj_ADDn4_Mth10.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn4_QBH_muj_ADDn4_Mth10.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn4/QBH_muj_ADDn4_Mth10.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn4_QBH_muj_ADDn4_Mth10.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn4/QBH_muj_ADDn4_Mth8.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn4_QBH_muj_ADDn4_Mth8.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn4/QBH_muj_ADDn4_Mth8.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn4_QBH_muj_ADDn4_Mth8.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn4/QBH_muj_ADDn4_Mth9.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn4_QBH_muj_ADDn4_Mth9.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn4/QBH_muj_ADDn4_Mth9.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn4_QBH_muj_ADDn4_Mth9.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn6/QBH_muj_ADDn6_Mth10.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn6_QBH_muj_ADDn6_Mth10.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn6/QBH_muj_ADDn6_Mth10.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn6_QBH_muj_ADDn6_Mth10.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn6/QBH_muj_ADDn6_Mth8.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn6_QBH_muj_ADDn6_Mth8.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn6/QBH_muj_ADDn6_Mth8.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn6_QBH_muj_ADDn6_Mth8.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn6/QBH_muj_ADDn6_Mth9.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn6_QBH_muj_ADDn6_Mth9.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/ADDn6/QBH_muj_ADDn6_Mth9.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_ADDn6_QBH_muj_ADDn6_Mth9.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/RSn1/QBH_muj_RSn1_Mth6.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_RSn1_QBH_muj_RSn1_Mth6.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/RSn1/QBH_muj_RSn1_Mth6.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_RSn1_QBH_muj_RSn1_Mth6.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/RSn1/QBH_muj_RSn1_Mth7.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_RSn1_QBH_muj_RSn1_Mth7.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/RSn1/QBH_muj_RSn1_Mth7.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_RSn1_QBH_muj_RSn1_Mth7.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/RSn1/QBH_muj_RSn1_Mth8.0_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_RSn1_QBH_muj_RSn1_Mth8.0_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  },
+  {
+   "filename": "EXOT-2024-32_HS3_likelihoods.tar.gz",
+   "inspire_id": "3147718",
+   "member": "mu/RSn1/QBH_muj_RSn1_Mth8.5_HS3.json",
+   "resource_id": 4469390,
+   "test_id": "ins3147718_r4469390_mu_RSn1_QBH_muj_RSn1_Mth8.5_HS3",
+   "title": "Search for quantum black holes in lepton+jet final states using proton-proton collisions at $\\sqrt{s}=13.6$ TeV with the ATLAS detector"
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.35.01.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_SigXsecOverSM6j",
+   "parameters": ["SigXsecOverSM6j"],
+   "pdf": "simPdf",
+   "points": [[0.0], [0.1], [0.2], [0.3], [0.4]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2845789: https://www.hepdata.net/record/resource/3888824 (ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods.tar.gz, file ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods/HeavyResonantFits_NN/Likelihood_Heavy_X550_S350_width0p01.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X550_S350_width0p01",
+ "title": "A search for triple Higgs boson production in the $6b$ final state using $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+}

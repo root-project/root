@@ -1,0 +1,35 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.35.01.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_ttW_Bin_001_mu",
+   "parameters": ["ttW_Bin_001_mu"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_ttW_Bin_002_mu",
+   "parameters": ["ttW_Bin_002_mu"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_ttW_Bin_003_mu",
+   "parameters": ["ttW_Bin_003_mu"],
+   "pdf": "simPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2745375: https://www.hepdata.net/record/resource/3809859 (differential_likelihoods.tar.gz, file raw_inputs/TREx_HEPData/differential_xs/differential/HT_jet_model_workspace_regularized.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_HT_jet_model_workspace_regularized",
+ "title": "Measurement of the total and differential cross-sections of $t\\bar{t}W$ production in $pp$ collisions at $\\sqrt{s}=13$ TeV with the ATLAS detector"
+}

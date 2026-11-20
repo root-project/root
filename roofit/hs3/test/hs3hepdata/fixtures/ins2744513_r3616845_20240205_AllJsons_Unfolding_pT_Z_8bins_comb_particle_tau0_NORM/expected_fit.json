@@ -1,0 +1,116 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "TotalXsecOverTheory_pT_Z": {
+     "best_fit": 1.0493701184680102,
+     "hesse_error": 0.07498634695954892,
+     "minus_one_sigma": -0.07353688034445247,
+     "plus_one_sigma": 0.07657476933832891
+    },
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8880783522565177,
+     "hesse_error": 0.09493704428469962,
+     "minus_one_sigma": -0.09243943595913968,
+     "plus_one_sigma": 0.09864357922767529
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.1844847217317471,
+     "hesse_error": 0.3689597142205068,
+     "minus_one_sigma": -0.3600600182719136,
+     "plus_one_sigma": 0.4037325296262709
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 1.0140954340115689,
+     "hesse_error": 0.08391558767153029,
+     "minus_one_sigma": -0.0808039767051172,
+     "plus_one_sigma": 0.08786155187891045
+    },
+    "mu_WZ_b": {
+     "best_fit": 0.8957213547928752,
+     "hesse_error": 0.37493926985634557,
+     "minus_one_sigma": -0.3314842725429977,
+     "plus_one_sigma": 0.44600784365332974
+    },
+    "mu_ZZ_b": {
+     "best_fit": 1.6125659978374771,
+     "hesse_error": 0.6153040011037045,
+     "minus_one_sigma": -0.5458399239587222,
+     "plus_one_sigma": 0.7262615069908361
+    },
+    "pT_Z_Bin_001_mu": {
+     "best_fit": 1.0656873370210465,
+     "hesse_error": 0.1142191562450331,
+     "minus_one_sigma": -0.11260387455774076,
+     "plus_one_sigma": 0.11372012709262277
+    },
+    "pT_Z_Bin_002_mu": {
+     "best_fit": 1.0405141676162348,
+     "hesse_error": 0.10367022666706677,
+     "minus_one_sigma": -0.10136245525122563,
+     "plus_one_sigma": 0.10414806922375898
+    },
+    "pT_Z_Bin_003_mu": {
+     "best_fit": 1.1587274749809644,
+     "hesse_error": 0.11371429961773205,
+     "minus_one_sigma": -0.11064745141279295,
+     "plus_one_sigma": 0.11532221632256036
+    },
+    "pT_Z_Bin_004_mu": {
+     "best_fit": 0.9349275003083427,
+     "hesse_error": 0.12540020128752377,
+     "minus_one_sigma": -0.12185253612647819,
+     "plus_one_sigma": 0.12822942373372276
+    },
+    "pT_Z_Bin_005_mu": {
+     "best_fit": 0.9705079065230265,
+     "hesse_error": 0.1326676359468153,
+     "minus_one_sigma": -0.128311234033346,
+     "plus_one_sigma": 0.1367831141884234
+    },
+    "pT_Z_Bin_006_mu": {
+     "best_fit": 0.5276217181333244,
+     "hesse_error": 0.14162220076288667,
+     "minus_one_sigma": -0.135564628559053,
+     "plus_one_sigma": 0.1486389357416798
+    },
+    "pT_Z_Bin_007_mu": {
+     "best_fit": 0.8127644819988842,
+     "hesse_error": 0.18319414231161324,
+     "minus_one_sigma": -0.17489207749780003,
+     "plus_one_sigma": 0.1935378278230689
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["TotalXsecOverTheory_pT_Z", "mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_WZ_b", "mu_ZZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["pT_Z_Bin_001_mu", "pT_Z_Bin_002_mu", "pT_Z_Bin_003_mu", "pT_Z_Bin_004_mu", "pT_Z_Bin_005_mu", "pT_Z_Bin_006_mu", "pT_Z_Bin_007_mu"],
+   "profile_scans": {
+    "pT_Z_Bin_001_mu": {
+     "points": [0.8372490245309803, 0.9514681807760134, 1.1799064932660794, 1.2941256495111126],
+     "twice_delta_nll": [4.188669674338598, 1.0291998640859674, 1.0088235762959812, 3.9607377200336487]
+    },
+    "pT_Z_Bin_002_mu": {
+     "points": [0.8331737142821013, 0.936843940949168, 1.1441843942833017, 1.2478546209503683],
+     "twice_delta_nll": [4.2770744564440975, 1.046552474697819, 0.9908804530932684, 3.872447513462248]
+    }
+   },
+   "seconds_when_generated": 33.96,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_pT_Z_8bins_comb_particle_tau0_NORM"
+}

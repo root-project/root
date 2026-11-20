@@ -1,0 +1,35 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.37.01.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu_VBF_qq2Hqq_1J",
+   "parameters": ["mu_VBF_qq2Hqq_1J"],
+   "pdf": "combPdf",
+   "points": [[-0.135077982203], [-0.123821483686], [-0.112564985169], [-0.101308486652], [-0.0900519881354]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu_VBF_qq2Hqq_ge2J_dphiJJ_0_0p5Pi_mJJ_350_700_ptH_0_200",
+   "parameters": ["mu_VBF_qq2Hqq_ge2J_dphiJJ_0_0p5Pi_mJJ_350_700_ptH_0_200"],
+   "pdf": "combPdf",
+   "points": [[-0.0315570194756], [-0.0289272678526], [-0.0262975162297], [-0.0236677646067], [-0.0210380129837]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu_VBF_qq2Hqq_ge2J_dphiJJ_0_0p5Pi_mJJ_gt350_ptH_gt200",
+   "parameters": ["mu_VBF_qq2Hqq_ge2J_dphiJJ_0_0p5Pi_mJJ_gt350_ptH_gt200"],
+   "pdf": "combPdf",
+   "points": [[0.624365977909], [0.702411725148], [0.780457472386], [0.858503219625], [0.936548966864]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2910761: https://www.hepdata.net/record/resource/4073782 (likelihood-dphijj-mu.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2910761_r4073782_likelihood-dphijj-mu",
+ "title": "Measurements of Higgs boson production via gluon-gluon fusion and vector-boson fusion using $H\\rightarrow WW^\\ast \\rightarrow \\ell\u03bd\\ell\u03bd$ decays in $pp$ collisions with the ATLAS detector and their effective field theory interpretations"
+}

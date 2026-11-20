@@ -1,0 +1,21 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.34.04.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "combData",
+   "id": "nll_scan_combData_SigXsecOverSM",
+   "parameters": ["SigXsecOverSM"],
+   "pdf": "combPdf",
+   "points": [[0.693029997726], [0.779658747442], [0.866287497158], [0.952916246873], [1.03954499659]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2894561: https://www.hepdata.net/record/resource/3880335 (2502-18216_likelihood.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2894561_r3880335_2502-18216_likelihood",
+ "title": "Measurement of the top quark mass with the ATLAS detector using $t\\bar{t}$ events with a high transverse momentum top quark"
+}
