@@ -1,10 +1,12 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TClass.h"
+#include "TClonesArray.h"
 #include "TChain.h"
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
+#include "TTreeReaderArray.h"
 #include "TROOT.h"
 #include "TH1.h"
 #include "TTreeFormula.h"
@@ -357,6 +359,32 @@ TEST(TTreeReaderRegressions, ValueFastTuple)
    for (auto it = reader.begin(); it != reader.end(); ++it)
       total += sqrt((*px) * (*px) + (*py) * (*py) + (*pz) * (*pz));
    EXPECT_NEAR(total, 866026269930.1345215, 100);
+}
+
+// https://github.com/root-project/root/issues/11769
+TEST(TTreeReaderRegressions, STLContainerNestedInTClonesArray)
+{
+   const auto fileName = "tree_11769.root";
+   const auto treeName = "tree_11769";
+   gInterpreter->AutoLoad("Track");
+   ROOT::TestSupport::FileRaii fileGuard{fileName};
+   {
+      std::unique_ptr<TFile> file{TFile::Open(fileGuard.GetPath().c_str(), "recreate")};
+      auto tree = std::make_unique<TTree>(treeName, treeName);
+      auto arr = std::make_unique<TClonesArray>("Track", 1);
+
+      tree->Branch("Tracks", arr.get());
+
+      tree->Fill();
+      tree->Write();
+      //file->Close();
+   }
+   std::unique_ptr<TFile> file{TFile::Open(fileName)};
+   TTreeReader r(treeName, file.get());
+   TTreeReaderArray<std::vector<double>> tracks(r, "Tracks.hitEnergies");
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TTreeReaderArrayBase::SetImpl", "STL Collection nested in a TClonesArray not yet supported", /*matchFullMessage=*/false); 
+   r.Next();
 }
 
 // ROOT-8000 https://its.cern.ch/jira/browse/ROOT-8000

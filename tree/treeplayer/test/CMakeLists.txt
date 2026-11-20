@@ -29,7 +29,8 @@ configure_file(data.h . COPYONLY)
 
 ROOT_ADD_GTEST(treeplayer_readerarray_iterator readerarray_iterator.cxx LIBRARIES TreePlayer)
 
-ROOT_ADD_GTEST(treeplayer_regressions regressions.cxx LIBRARIES TreePlayer Physics)
+ROOT_GENERATE_DICTIONARY(STLContInTObjDict ${CMAKE_CURRENT_SOURCE_DIR}/STLContInTObj.hxx LINKDEF STLContInTObjLinkDef.hxx DEPENDENCIES Core RIO)
+ROOT_ADD_GTEST(treeplayer_regressions regressions.cxx STLContInTObjDict.cxx LIBRARIES TreePlayer Physics)
 
 ROOT_ADD_GTEST(ttreeindex_clone ttreeindex_clone.cxx LIBRARIES TreePlayer)
 
