@@ -63,10 +63,7 @@ using ROOT::Experimental::Detail::RNTupleCalcPerf;
 using ROOT::Experimental::Detail::RNTupleMetrics;
 using ROOT::Experimental::Detail::RNTupleTickCounter;
 
-ROOT::Internal::RPageStorage::RPageStorage(std::string_view name)
-   : fPageAllocator(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()), fNTupleName(name)
-{
-}
+ROOT::Internal::RPageStorage::RPageStorage(std::string_view name) : fNTupleName(name) {}
 
 ROOT::Internal::RPageStorage::~RPageStorage() {}
 
@@ -852,7 +849,7 @@ ROOT::Internal::RPageSource::LoadZeroPage(const RPageSummary &pageSummary, const
 
    const auto elemInMemoryType = elem.GetIdentifier().fInMemoryType;
 
-   auto pageZero = fPageAllocator->NewPage(elem.GetSize(), pageInfo.GetNElements());
+   auto pageZero = fPageAllocator.NewPage(elem.GetSize(), pageInfo.GetNElements());
    pageZero.GrowUnchecked(pageInfo.GetNElements());
    std::memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
    pageZero.SetWindow(pageSummary.fColumnOffset + pageInfo.GetFirstElementIndex(),
@@ -1083,7 +1080,7 @@ void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix
 ROOT::RResult<ROOT::Internal::RPage>
 ROOT::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element)
 {
-   return UnsealPage(sealedPage, element, *fPageAllocator);
+   return UnsealPage(sealedPage, element, fPageAllocator);
 }
 
 ROOT::RResult<ROOT::Internal::RPage> ROOT::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage,
@@ -1305,7 +1302,7 @@ ROOT::Internal::RPage ROOT::Internal::RPageSink::ReservePage(RWriteColumn &colum
    const auto nBytes = elementSize * nElements;
    if (!fWritePageMemoryManager.TryUpdate(column, nBytes))
       return ROOT::Internal::RPage();
-   return fPageAllocator->NewPage(elementSize, nElements);
+   return fPageAllocator.NewPage(elementSize, nElements);
 }
 
 //------------------------------------------------------------------------------

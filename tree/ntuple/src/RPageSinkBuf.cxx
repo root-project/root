@@ -209,7 +209,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(DescriptorId_t physicalColumnId, c
    fBufferedUncompressed += page.GetNBytes();
 
    // TODO avoid frequent (de)allocations by holding on to allocated buffers in RColumnBuf
-   zipItem.fPage = fPageAllocator->NewPage(page.GetElementSize(), page.GetNElements());
+   zipItem.fPage = fPageAllocator.NewPage(page.GetElementSize(), page.GetNElements());
    // make sure the page is aware of how many elements it will have
    zipItem.fPage.GrowUnchecked(page.GetNElements());
    assert(zipItem.fPage.GetNBytes() == page.GetNBytes());
