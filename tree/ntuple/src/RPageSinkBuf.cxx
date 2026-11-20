@@ -153,17 +153,15 @@ void ROOT::Internal::RPageSinkBuf::CommitSuppressedColumn(DescriptorId_t physica
    fSuppressedColumns.emplace_back(physicalColumnId);
 }
 
-void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+void ROOT::Internal::RPageSinkBuf::CommitPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem,
+                                              const RPage &page)
 {
-   auto colId = columnHandle.fPhysicalId;
-   const auto &element = *columnHandle.fColumn->GetElement();
-
    // Safety: References are guaranteed to be valid until the element is destroyed. In other words, all buffered page
    // elements are valid until DropBufferedPages().
-   auto &zipItem = fBufferedColumns.at(colId).BufferPage();
+   auto &zipItem = fBufferedColumns.at(physicalColumnId).BufferPage();
    std::size_t maxSealedPageBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
    // Do not allocate the buffer yet, in case of IMT we only need it once the task is started.
-   auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
+   auto &sealedPage = fBufferedColumns.at(physicalColumnId).RegisterSealedPage();
 
    auto allocateBuf = [&zipItem, maxSealedPageBytes]() {
       zipItem.fBuf = MakeUninitArray<unsigned char>(maxSealedPageBytes);
@@ -192,7 +190,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
       // Seal the page right now, avoiding the allocation and copy, but making sure that the page buffer is not aliased.
       RSealPageConfig config;
       config.fPage = &page;
-      config.fElement = &element;
+      config.fElement = &elem;
       config.fCompressionSettings = GetWriteOptions().GetCompression();
       config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       config.fAllowAlias = false;
@@ -220,7 +218,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
-   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element, allocateBuf, shrinkSealedPage] {
+   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &elem, allocateBuf, shrinkSealedPage] {
       // The task will consume the uncompressed page. Decrease the atomic counter early so that more work has arrived
       // when we are done.
       fBufferedUncompressed -= zipItem.fPage.GetNBytes();
@@ -228,7 +226,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
       allocateBuf();
       RSealPageConfig config;
       config.fPage = &zipItem.fPage;
-      config.fElement = &element;
+      config.fElement = &elem;
       config.fCompressionSettings = GetWriteOptions().GetCompression();
       config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       // Make sure the page buffer is not aliased so that we can free the uncompressed page.

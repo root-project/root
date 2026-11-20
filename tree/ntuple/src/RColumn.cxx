@@ -41,7 +41,7 @@ void ROOT::Internal::RWriteColumn::Flush()
    if (fWritePage.GetNElements() == 0)
       return;
 
-   fPageSink->CommitPage(MakeHandle(), fWritePage);
+   fPageSink->CommitPage(fOnDiskId, *fElement, fWritePage);
    fWritePage = fPageSink->ReservePage(MakeHandle(), fInitialNElements);
    R__ASSERT(!fWritePage.IsNull());
    fWritePage.Reset(fNElements);
