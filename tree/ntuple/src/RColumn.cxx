@@ -49,7 +49,7 @@ void ROOT::Internal::RWriteColumn::Flush()
 
 void ROOT::Internal::RWriteColumn::CommitSuppressed()
 {
-   fPageSink->CommitSuppressedColumn(MakeHandle());
+   fPageSink->CommitSuppressedColumn(fOnDiskId);
 }
 
 void ROOT::Internal::RReadColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)

@@ -53,7 +53,7 @@ protected:
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}
-   void CommitSuppressedColumn(ColumnHandle_t) final {}
+   void CommitSuppressedColumn(ROOT::DescriptorId_t) final {}
    void CommitSealedPage(ROOT::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
    RStagedCluster StageCluster(NTupleSize_t) final { return {}; }

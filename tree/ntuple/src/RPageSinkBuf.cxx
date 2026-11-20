@@ -148,9 +148,9 @@ void ROOT::Internal::RPageSinkBuf::UpdateExtraTypeInfo(const ROOT::RExtraTypeInf
    fInnerSink->UpdateExtraTypeInfo(extraTypeInfo);
 }
 
-void ROOT::Internal::RPageSinkBuf::CommitSuppressedColumn(ColumnHandle_t columnHandle)
+void ROOT::Internal::RPageSinkBuf::CommitSuppressedColumn(DescriptorId_t physicalColumnId)
 {
-   fSuppressedColumns.emplace_back(columnHandle);
+   fSuppressedColumns.emplace_back(physicalColumnId);
 }
 
 void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
@@ -277,8 +277,8 @@ void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(const std::function<void(voi
       RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
       fInnerSink->CommitSealedPageV(toCommit);
 
-      for (auto handle : fSuppressedColumns)
-         fInnerSink->CommitSuppressedColumn(handle);
+      for (auto physicalColumnId : fSuppressedColumns)
+         fInnerSink->CommitSuppressedColumn(physicalColumnId);
       fSuppressedColumns.clear();
 
       FlushClusterFn();
