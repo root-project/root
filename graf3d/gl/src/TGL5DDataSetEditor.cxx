@@ -785,7 +785,7 @@ void TGL5DDataSetEditor::VisibleClicked()
 void TGL5DDataSetEditor::ColorChanged(Pixel_t pixel)
 {
    if (fSelectedSurface != -1) {
-      fHidden->fIterators[fSelectedSurface]->fColor = Color_t(TColor::GetColor(pixel));
+      fHidden->fIterators[fSelectedSurface]->fColor = (Color_t) TVirtualX::Pixel2Number(pixel);
       if (gPad)
          gPad->Update();
    }

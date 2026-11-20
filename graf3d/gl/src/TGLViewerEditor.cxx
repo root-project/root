@@ -264,9 +264,9 @@ void TGLViewerEditor::SetModel(TObject* obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear-color was changed.
 
-void TGLViewerEditor::DoClearColor(Pixel_t color)
+void TGLViewerEditor::DoClearColor(Pixel_t pixel)
 {
-   fViewer->RnrCtx().ColorSet().Background().SetColor(Color_t(TColor::GetColor(color)));
+   fViewer->RnrCtx().ColorSet().Background().SetColor(Color_t(TVirtualX::Pixel2Number(pixel)));
    ViewerRedraw();
 }
 
