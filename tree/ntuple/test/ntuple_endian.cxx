@@ -78,7 +78,7 @@ public:
    RPageSinkMock(const RColumnElementBase &elt) : RPageSink("test", MakeWriteOptsWithoutPageChecksums()), fElement(elt)
    {
    }
-   void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage &page) final
+   void CommitPage(ROOT::DescriptorId_t, const RColumnElementBase &, const RPage &page) final
    {
       fPages.emplace_back(SealPage(page, fElement));
    }
@@ -140,7 +140,7 @@ TEST(RColumnElementEndian, ByteCopy)
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(buf1, nullptr, 4, 4);
    page1.GrowUnchecked(4);
-   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPage(ROOT::kInvalidDescriptorId, element, page1);
 
    EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(),
                        "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
@@ -166,7 +166,7 @@ TEST(RColumnElementEndian, Cast)
                            0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(buf1, nullptr, 8, 4);
    page1.GrowUnchecked(4);
-   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPage(ROOT::kInvalidDescriptorId, element, page1);
 
    EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(),
                        "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
@@ -192,7 +192,7 @@ TEST(RColumnElementEndian, Split)
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(buf1, nullptr, 8, 2);
    page1.GrowUnchecked(2);
-   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPage(ROOT::kInvalidDescriptorId, splitElement, page1);
 
    EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(),
                        "\x07\x0f\x06\x0e\x05\x0d\x04\x0c\x03\x0b\x02\x0a\x01\x09\x00\x08", 16));
@@ -218,7 +218,7 @@ TEST(RColumnElementEndian, DeltaSplit)
                            0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(buf1, nullptr, 8, 4);
    page1.GrowUnchecked(4);
-   sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPage(ROOT::kInvalidDescriptorId, element, page1);
 
    EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(),
                        "\x03\x04\x04\x04\x02\x04\x04\x04\x01\x04\x04\x04\x00\x04\x04\x04", 16));

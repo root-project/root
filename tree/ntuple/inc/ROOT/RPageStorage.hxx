@@ -363,7 +363,8 @@ public:
    /// For any given column and cluster, there must be no calls to both CommitSuppressedColumn() and page commits.
    virtual void CommitSuppressedColumn(DescriptorId_t physicalColumnId) = 0;
    /// Write a page to the storage. The column must have been added before.
-   virtual void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) = 0;
+   virtual void
+   CommitPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem, const ROOT::Internal::RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
    virtual void
    CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
@@ -553,7 +554,8 @@ public:
                        ROOT::DescriptorId_t physicalId);
 
    void CommitSuppressedColumn(DescriptorId_t physicalColumnId) final;
-   void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
+   void
+   CommitPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem, const ROOT::Internal::RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;

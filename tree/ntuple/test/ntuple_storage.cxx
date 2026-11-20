@@ -46,7 +46,11 @@ protected:
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &, ROOT::NTupleSize_t) final {}
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}
    void CommitSuppressedColumn(ROOT::DescriptorId_t) final {}
-   void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
+   void
+   CommitPage(ROOT::DescriptorId_t, const ROOT::Internal::RColumnElementBase &, const ROOT::Internal::RPage &) final
+   {
+      fCounters.fNCommitPage++;
+   }
    void CommitSealedPage(ROOT::DescriptorId_t, const RPageStorage::RSealedPage &) final
    {
       fCounters.fNCommitSealedPage++;

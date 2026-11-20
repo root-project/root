@@ -93,7 +93,7 @@ public:
    {
       fInnerSink->CommitSuppressedColumn(physicalColumnId);
    }
-   void CommitPage(ColumnHandle_t, const RPage &) final
+   void CommitPage(DescriptorId_t, const ROOT::Internal::RColumnElementBase &, const RPage &) final
    {
       throw ROOT::RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
    }

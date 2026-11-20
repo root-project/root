@@ -1686,23 +1686,23 @@ void ROOT::Internal::RPagePersistentSink::CommitSuppressedColumn(DescriptorId_t 
    fOpenColumnRanges.at(physicalColumnId).SetIsSuppressed(true);
 }
 
-void ROOT::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page)
+void ROOT::Internal::RPagePersistentSink::CommitPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem,
+                                                     const ROOT::Internal::RPage &page)
 {
-   fOpenColumnRanges.at(columnHandle.fPhysicalId).IncrementNElements(page.GetNElements());
+   fOpenColumnRanges.at(physicalColumnId).IncrementNElements(page.GetNElements());
 
-   auto element = columnHandle.fColumn->GetElement();
    RPageStorage::RSealedPage sealedPage;
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
-      sealedPage = SealPage(page, *element);
+      sealedPage = SealPage(page, elem);
    }
    fCounters->fSzZip.Add(page.GetNBytes());
 
    ROOT::RClusterDescriptor::RPageInfo pageInfo;
    pageInfo.SetNElements(page.GetNElements());
-   pageInfo.SetLocator(CommitSealedPageImpl(columnHandle.fPhysicalId, sealedPage));
+   pageInfo.SetLocator(CommitSealedPageImpl(physicalColumnId, sealedPage));
    pageInfo.SetHasChecksum(GetWriteOptions().GetEnablePageChecksums());
-   fOpenPageRanges.at(columnHandle.fPhysicalId).GetPageInfos().emplace_back(pageInfo);
+   fOpenPageRanges.at(physicalColumnId).GetPageInfos().emplace_back(pageInfo);
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitSealedPage(ROOT::DescriptorId_t physicalColumnId,
