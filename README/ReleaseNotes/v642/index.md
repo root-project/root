@@ -4,11 +4,10 @@
 
 ## Introduction
 
-ROOT version 6.42.00 is scheduled for release in November 2026.
+Release 6.42.00 (LTS) comes with two major upgrades. LLVM version 24 is now in use as a dependency of Cling's C++ interpreter, and the Python-C++ interoperability layer has been replaced by `cppjit`, therewith directly relying on Clang's AST and Cling and not ROOT's type system. Moreover, Python ROOT wheels in alpha stage will be distributed, for the first time also for macOS and ARM Linux.
+However, far more than that has been achieved: for all the details, please see the release notes below. 
 
-For more information, see:
-
-[http://root.cern](http://root.cern)
+According to current ROOT's [Release and Support Plan](https://root.cern/install/all_releases), harmonised with the [public HL-LHC schedule](https://voisins.cern/en/high-luminosity-lhc-hl-lhc/), this is the last but one LTS release of ROOT's 6th development cycle, and support will cease in June 2027.
 
 The following people have contributed to this new version:
 
@@ -311,9 +310,10 @@ as "struct of array" (SoA) in memory. This is useful, e.g., for efficient consum
 
 * The curl based plugin is now the default on all platforms. The Davix plugin can still be used if curl is not available or if the `Curl.ReplaceDavix` is set to `no` in the rootrc configuration.
 
-## Core
+## Core and C++ Interpreter
 
 * `TClass::IsTriviallyRelocatable()` reports whether an object of a class can be moved to a new address with a raw memory copy, i.e. without running a move or copy constructor (trivial relocatability in the C++26 sense). It is backed by the new `kClassIsTriviallyRelocatable` class property, which `TInterpreter::ClassInfo_ClassProperty()` now fills in. A class the interpreter does not know about, in particular an emulated one, is conservatively reported as not relocatable.
+* The LLVM release on which Cling relies has been updated to version 24.
 
 ## Histograms
 
@@ -537,7 +537,7 @@ multiple geometries.
 For ALICE material-budget lookup-table generation on 28 cores, these changes reduced the runtime from 139 s to 72 s
 and improved scaling from 12x to 23x.
 
-## Build, Configuration and Testing
+## Build, Distribution, Configuration and Testing
 
 ### Building the CUDA backend of RooFit separately
 
@@ -560,6 +560,10 @@ installation it was configured against, which is where RooFit looks for it. See
 `roofit/batchcompute/README.md` for the details. Nothing changes for the regular
 ROOT build: `-Dcuda=ON` still builds the CUDA backend together with everything
 else.
+
+### Python Wheels
+
+Python ROOT wheels in alpha stage are distributed, for Linux (ARM and x86) and macOS. They can be installed, for example, with the command `pip install root`.
 
 ## Built-in packages
 
