@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../inc/optparse.hxx"
+#include <optparse.hxx>
 
 #include <vector>
 
@@ -814,10 +814,11 @@ TEST(OptParse, PostDashDash)
 TEST(OptParse, FlagAndArgsWithIndex)
 {
    ROOT::RCmdLineOpts opts;
-   opts.AddFlag({"--foo", "-f"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "", ROOT::RCmdLineOpts::EFlagOpt::kFlagAllowMultiple);
+   opts.AddFlag({"--foo", "-f"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "",
+                ROOT::RCmdLineOpts::EFlagOpt::kFlagAllowMultiple);
    opts.AddFlag({"--with-arg"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
 
-   const char *args[] = {"--foo", "-f", "first", "second", "--with-arg", "arg", "--",    "third" };
+   const char *args[] = {"--foo", "-f", "first", "second", "--with-arg", "arg", "--", "third"};
    opts.Parse(args, std::size(args));
 
    const auto &flags = opts.GetFlags();
@@ -838,4 +839,86 @@ TEST(OptParse, FlagAndArgsWithIndex)
    EXPECT_EQ(argsIdx[1].second, "second");
    EXPECT_EQ(argsIdx[2].first, 7);
    EXPECT_EQ(argsIdx[2].second, "third");
+}
+
+TEST(OptParse, Help)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-f", "--foo"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "Does foo.",
+                ROOT::RCmdLineOpts::kFlagAllowMultiple);
+   opts.AddFlag({"--with-arg"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
+   opts.AddFlag({"-p"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "Has prefix flag", ROOT::RCmdLineOpts::kFlagPrefixArg);
+   ROOT::RCmdLineOpts::RMakeHelpOptions helpOpts;
+   helpOpts.fPositionalArgs = "FILE1 FILE2 FILE3 FILE4 FILE5 AND_MORE_STUFF_AFTER_THIS";
+   EXPECT_EQ(opts.MakeShortHelp("test", helpOpts),
+             R"(usage: test [-f(f..)] [-p<P>] [--with-arg WITH-ARG] FILE1 FILE2 FILE3 FILE4 FILE5
+            AND_MORE_STUFF_AFTER_THIS)");
+
+   opts.AddFlag({"--very-long-flag-with-very-long-description"}, ROOT::RCmdLineOpts::EFlagType::kWithArg,
+                "Is a very long flag with a very long name and a very long description. Well, maybe not that long of a "
+                "description, but long enough for the purposes of this test.");
+
+   EXPECT_EQ(opts.MakeShortHelp("test"),
+             R"(usage: test [-f(f..)] [-p<P>]
+            [--very-long-flag-with-very-long-description VERY-LONG-FLAG-WITH-VERY-LONG-DESCRIPTION]
+            [--with-arg WITH-ARG])");
+   helpOpts.fDescription =
+      "This program does something. You could try and guess what it does, but it's more useful to give you a "
+      "description of it, so here you go. This must be long enough to test the string wrapping.";
+   helpOpts.fPositionalArgs = "ARG1 ARG2...";
+   EXPECT_EQ(opts.MakeLongHelp("test", helpOpts),
+             R"(usage: test [-f(f..)] [-p<P>]
+            [--very-long-flag-with-very-long-description VERY-LONG-FLAG-WITH-VERY-LONG-DESCRIPTION]
+            [--with-arg WITH-ARG] ARG1 ARG2...
+
+This program does something. You could try and guess what it does, but it's more useful to give you
+a description of it, so here you go. This must be long enough to test the string wrapping.
+
+  -f, --foo                                   Does foo.
+  -p                                          Has prefix flag
+  --very-long-flag-with-very-long-description Is a very long flag with a very long name and a very
+                                              long description. Well, maybe not that long of a
+                                              description, but long enough for the purposes of this
+                                              test.
+)"
+             // out of the raw string to avoid editor-related automatic whitespace stripping shenanigans.
+             "  --with-arg                                  \n");
+}
+
+TEST(OptParse, HelpMultipleFlagsShort)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-s", "--some-flag"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "Just some flag.");
+   opts.AddFlag({"-o", "--other-flag"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "");
+   opts.AddFlag({"--third-flag", "-t"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "A third flag.");
+   EXPECT_EQ(opts.MakeLongHelp("test"),
+             R"(usage: test [-o] [-s] [--third-flag]
+
+  -o, --other-flag 
+  -s, --some-flag  Just some flag.
+  -t, --third-flag A third flag.
+)");
+}
+
+TEST(OptParse, HelpNoFlags)
+{
+   ROOT::RCmdLineOpts opts;
+   ROOT::RCmdLineOpts::RMakeHelpOptions helpOpts;
+   helpOpts.fPositionalArgs = "<FILE>";
+   EXPECT_EQ(opts.MakeShortHelp("test", helpOpts), "usage: test <FILE>");
+   helpOpts.fWrapDescription = false;
+   helpOpts.fDescription =
+      R"(A description that contains:
+
+  * newlines
+  * more newlines)";
+   EXPECT_EQ(opts.MakeLongHelp("test", helpOpts),
+             R"(usage: test <FILE>
+
+A description that contains:
+
+  * newlines
+  * more newlines
+
+)");
 }
