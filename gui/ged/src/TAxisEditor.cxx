@@ -41,6 +41,7 @@ Implements GUI for axis attributes.
 #include "TGLabel.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
+#include "TVirtualX.h"
 #include "TStyle.h"
 
 
@@ -278,7 +279,7 @@ void TAxisEditor::SetModel(TObject* obj)
    fAvoidSignal = kTRUE;
 
    Color_t c = fAxis->GetAxisColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fAxisColor->SetColor(p);
 
    Float_t fl = fAxis->GetTickLength();
@@ -318,7 +319,7 @@ void TAxisEditor::SetModel(TObject* obj)
    fTitle->SetText(text);
 
    c = fAxis->GetTitleColor();
-   p = TColor::Number2Pixel(c);
+   p = TVirtualX::Number2Pixel(c);
    fTitleColor->SetColor(p);
 
    fl = fAxis->GetTitleSize();
@@ -340,7 +341,7 @@ void TAxisEditor::SetModel(TObject* obj)
    else         fRotated->SetState(kButtonUp);
 
    c = fAxis->GetLabelColor();
-   p = TColor::Number2Pixel(c);
+   p = TVirtualX::Number2Pixel(c);
    fLabelColor->SetColor(p);
 
    fl = fAxis->GetLabelSize();

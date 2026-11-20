@@ -22,6 +22,7 @@ Implements GUI for editing line attributes.
 #include "TGColorSelect.h"
 #include "TGComboBox.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TGraph.h"
 #include "TGLabel.h"
 #include "TGSlider.h"
@@ -131,7 +132,7 @@ void TAttLineEditor::SetModel(TObject* obj)
    }
 
    Color_t c = fAttLine->GetLineColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fColorSelect->SetColor(p);
 
    if (fInit) ConnectSignals2Slots();

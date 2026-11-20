@@ -21,6 +21,7 @@
 #include "TGLabel.h"
 #include "TString.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TAxis.h"
 
 #include "TGL5DDataSetEditor.h"
@@ -747,7 +748,7 @@ void TGL5DDataSetEditor::SurfaceSelected(Int_t id)
       surf->fHighlight = fHighlightCheck->IsOn();
       //Surface is visible/invisible - check/uncheck.
       fVisibleCheck->SetOn(!surf->fHide);
-      fSurfColorSelect->SetColor(TColor::Number2Pixel(surf->fColor), kFALSE);
+      fSurfColorSelect->SetColor(TVirtualX::Number2Pixel(surf->fColor), kFALSE);
       fSurfAlphaSlider->SetPosition(surf->fAlpha);
 
       if (gPad)

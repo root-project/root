@@ -1187,7 +1187,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fPalette->Associate(this);
 
    for (i = 0; i < 48; ++i)
-      fPalette->SetColor(i, TColor::Number2Pixel(i+10));  // root colors
+      fPalette->SetColor(i, TVirtualX::Number2Pixel(i+10));  // root colors
       // the basic colors were set via bcolor
       //fPalette->SetColor(i, TColor::GetPixel(bcolor[i][0], bcolor[i][1], bcolor[i][2]));
 

@@ -24,6 +24,7 @@ Implements GUI for editing text attributes.
 #include "TGColorSelect.h"
 #include "TGComboBox.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TPaveLabel.h"
 #include "TGLabel.h"
 #include "TGSlider.h"
@@ -144,7 +145,7 @@ void TAttTextEditor::SetModel(TObject* obj)
    fAlignCombo->Select(fAttText->GetTextAlign(), kFALSE);
 
    Color_t c = fAttText->GetTextColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fColorSelect->SetColor(p, kFALSE);
 
    if (fInit) ConnectSignals2Slots();

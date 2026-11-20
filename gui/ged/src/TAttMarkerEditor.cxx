@@ -24,6 +24,7 @@ Implements GUI for editing marker attributes.
 #include "TGColorSelect.h"
 #include "TGNumberEntry.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TGLabel.h"
 #include "TGSlider.h"
 #include "TCanvas.h"
@@ -141,7 +142,7 @@ void TAttMarkerEditor::SetModel(TObject* obj)
    fMarkerType->SetMarkerStyle(marker);
 
    Color_t c = fAttMarker->GetMarkerColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fColorSelect->SetColor(p);
 
    if (fInit) ConnectSignals2Slots();

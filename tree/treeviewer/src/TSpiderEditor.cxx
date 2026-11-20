@@ -22,6 +22,7 @@
 #include "TGColorSelect.h"
 #include "TGedPatternSelect.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 
 
 /** \class TSpiderEditor
@@ -275,10 +276,10 @@ void TSpiderEditor::SetModel(TObject* obj)
    fAvLineStyleCombo->Select(fSpider->GetAverageLineStyle());
    fAvLineWidthCombo->Select(fSpider->GetAverageLineWidth());
    Color_t c = fSpider->GetAverageLineColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fAvLineColorSelect->SetColor(p);
    c = fSpider->GetAverageFillColor();
-   p = TColor::Number2Pixel(c);
+   p = TVirtualX::Number2Pixel(c);
    fAvFillColorSelect->SetColor(p,false);
    fAvFillPatternSelect->SetPattern(fSpider->GetAverageFillStyle(),false);
 
