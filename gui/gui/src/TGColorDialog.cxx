@@ -1602,7 +1602,7 @@ void TGColorDialog::SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *objec
       if (n < 0) return;
       TColor *color = gROOT->GetColor(n);
       if (!color) return;
-      ULong_t pcolor = color->GetPixel();
+      ULong_t pcolor = gVirtualX->GetPixel(color->GetNumber());
       if (event == kButton1Down) {
          UpdateRGBentries(&pcolor);
          UpdateHLSentries(&pcolor);

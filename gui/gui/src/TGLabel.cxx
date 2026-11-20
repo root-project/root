@@ -383,7 +383,7 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
 void TGLabel::SetTextColor(TColor *color, Bool_t global)
 {
    if (color) {
-      SetTextColor(color->GetPixel(), global);
+      SetTextColor(gVirtualX->GetPixel(color->GetNumber()), global);
    }
 }
 
