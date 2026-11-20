@@ -2849,3 +2849,19 @@ ULong_t TVirtualX::Number2Pixel(Int_t ci)
    ::Warning("TVirtualX::Number2Pixel", "color with index %d not defined", ci);
    return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning color number for color specified by
+/// system dependent pixel value. Pixel values can be obtained, e.g.,
+/// from the GUI color picker.
+///
+/// The color retrieval is done using a threshold defined by TColor::SetColorThreshold.
+
+Int_t TVirtualX::Pixel2Number(ULong_t pixel)
+{
+   Int_t r, g, b;
+
+   Pixel2RGB(pixel, r, g, b);
+
+   return TColor::GetColor(r, g, b);
+}

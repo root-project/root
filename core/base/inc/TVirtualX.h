@@ -378,6 +378,8 @@ public:
    static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
    static TString PixelAsHexString(ULong_t pixel);
    static ULong_t Number2Pixel(Int_t ci);
+   static Int_t   Pixel2Number(ULong_t pixel);
+
 
    static TVirtualX    *&Instance();
 

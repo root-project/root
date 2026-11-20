@@ -1966,20 +1966,17 @@ Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b, Float_t a)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static method returning color number for color specified by
+/// @deprecated Use TVirtualX::Pixel2Number instead
+///
+/// @brief Static method returning color number for color specified by
 /// system dependent pixel value. Pixel values can be obtained, e.g.,
 /// from the GUI color picker.
 ///
 /// The color retrieval is done using a threshold defined by SetColorThreshold.
 
-
 Int_t TColor::GetColor(ULong_t pixel)
 {
-   Int_t r, g, b;
-
-   TVirtualX::Pixel2RGB(pixel, r, g, b);
-
-   return GetColor(r, g, b);
+   return TVirtualX::Pixel2Number(pixel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
