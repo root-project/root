@@ -580,7 +580,8 @@ class RPageSource : public RPageStorage {
 
    /// Summarizes meta-data necessary to load a certain page. Used by LoadPageFromSummary().
    struct RPageSummary {
-      ROOT::DescriptorId_t fClusterId = 0;
+      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
+      ROOT::DescriptorId_t fClusterId = ROOT::kInvalidDescriptorId;
       /// The first element number of the page's column in the given cluster
       std::uint64_t fColumnOffset = 0;
       /// Location of the page on disk
@@ -816,11 +817,11 @@ private:
    // No-op if the cluster details are already present.
    void LoadPageList(DescriptorId_t clusterGroupId, const RExclDescriptorGuard &exclGuard);
    // Common treatment of zero pages in LoadPageFromSummary()
-   ROOT::Internal::RPageRef LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
+   ROOT::Internal::RPageRef LoadZeroPage(const RPageSummary &pageSummary, const RColumnElementBase &elem);
    // Once the page is found to be missing in the page cache and all information about the page is collected,
    // either using a global or a local element index, perform the common page loading tasks using the page summary.
    // This includes zero page handling and prefetching the corresponding cluster.
-   ROOT::Internal::RPageRef LoadPageFromSummary(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
+   ROOT::Internal::RPageRef LoadPageFromSummary(const RPageSummary &pageSummary, const RColumnElementBase &elem);
 
 protected:
    /// Holds the uncompressed header and footer
