@@ -1977,7 +1977,7 @@ Int_t TColor::GetColor(ULong_t pixel)
 {
    Int_t r, g, b;
 
-   Pixel2RGB(pixel, r, g, b);
+   TVirtualX::Pixel2RGB(pixel, r, g, b);
 
    return GetColor(r, g, b);
 }
