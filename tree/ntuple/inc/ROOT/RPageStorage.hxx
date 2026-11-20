@@ -938,7 +938,7 @@ public:
    }
 
    ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) override;
-   virtual void DropColumn(ColumnHandle_t columnHandle);
+   void DropColumn(const ROOT::Internal::RColumn &column);
 
    /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
    /// a file in the background. The method is idempotent and it is called as a first step in `Attach()`.

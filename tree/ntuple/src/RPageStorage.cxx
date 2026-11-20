@@ -213,9 +213,9 @@ ROOT::Internal::RPageSource::AddColumn(ROOT::DescriptorId_t fieldId, RColumn &co
    return ColumnHandle_t{physicalId, &column};
 }
 
-void ROOT::Internal::RPageSource::DropColumn(ColumnHandle_t columnHandle)
+void ROOT::Internal::RPageSource::DropColumn(const RColumn &column)
 {
-   fActivePhysicalColumns.Erase(columnHandle.fPhysicalId, columnHandle.fColumn->GetElement()->GetIdentifier());
+   fActivePhysicalColumns.Erase(column.GetOnDiskId(), column.GetElement()->GetIdentifier());
 }
 
 void ROOT::Internal::RPageSource::SetEntryRange(const REntryRange &range)
