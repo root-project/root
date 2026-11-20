@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <limits>
 #include <stdexcept>
 
 
@@ -4167,7 +4168,8 @@ TH3I::TH3I(const TH3I &h3i) : TH3(), TArrayI()
 
 void TH3I::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < INT_MAX) fArray[bin]++;
+   if (fArray[bin] < std::numeric_limits<int>::max())
+      fArray[bin]++;
 }
 
 
@@ -4179,9 +4181,14 @@ void TH3I::AddBinContent(Int_t bin)
 void TH3I::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -INT_MAX && newval < INT_MAX) {fArray[bin] = Int_t(newval); return;}
-   if (newval < -INT_MAX) fArray[bin] = -INT_MAX;
-   if (newval >  INT_MAX) fArray[bin] =  INT_MAX;
+   if (newval > -std::numeric_limits<int>::max() && newval < std::numeric_limits<int>::max()) {
+      fArray[bin] = Int_t(newval);
+      return;
+   }
+   if (newval < -std::numeric_limits<int>::max())
+      fArray[bin] = -std::numeric_limits<int>::max();
+   if (newval > std::numeric_limits<int>::max())
+      fArray[bin] = std::numeric_limits<int>::max();
 }
 
 
@@ -4373,7 +4380,8 @@ TH3L::TH3L(const TH3L &h3l) : TH3(), TArrayL64()
 
 void TH3L::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < LLONG_MAX) fArray[bin]++;
+   if (fArray[bin] < std::numeric_limits<long long>::max())
+      fArray[bin]++;
 }
 
 
@@ -4385,9 +4393,14 @@ void TH3L::AddBinContent(Int_t bin)
 void TH3L::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = newval; return;}
-   if (newval < -LLONG_MAX) fArray[bin] = -LLONG_MAX;
-   if (newval >  LLONG_MAX) fArray[bin] =  LLONG_MAX;
+   if (newval > -std::numeric_limits<long long>::max() && newval < std::numeric_limits<long long>::max()) {
+      fArray[bin] = newval;
+      return;
+   }
+   if (newval < -std::numeric_limits<long long>::max())
+      fArray[bin] = -std::numeric_limits<long long>::max();
+   if (newval > std::numeric_limits<long long>::max())
+      fArray[bin] = std::numeric_limits<long long>::max();
 }
 
 
