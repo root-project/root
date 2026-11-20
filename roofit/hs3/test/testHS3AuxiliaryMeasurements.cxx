@@ -12,7 +12,7 @@
 #include <RooFit/Detail/JSONInterface.h>
 
 #include <RooStats/HistFactory/Measurement.h>
-#include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
+#include <RooStats/HistFactory/HistoToWorkspaceFactoryFast.h>
 #include <RooFit/ModelConfig.h>
 
 #include <RooAbsData.h>
@@ -32,7 +32,6 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
-#include <TFile.h>
 #include <TH1D.h>
 
 #include <gtest/gtest.h>
@@ -97,109 +96,100 @@ std::unique_ptr<RooWorkspace> importJSON(std::string const &json)
 //   gamma_cr1shape_*          x          Gaussian (shapesys)
 //   mu                   x         x     free
 //   k_bkg1                    x          free
-std::unique_ptr<RooWorkspace> makeHistFactoryWorkspace(std::string const &tag)
+std::unique_ptr<RooWorkspace> makeHistFactoryWorkspace()
 {
    using namespace RooStats::HistFactory;
 
-   const std::string inputFile = "TestHS3AuxiliaryMeasurements_" + tag + ".root";
-   struct Hist {
-      const char *name;
-      std::vector<double> contents;
-      std::vector<double> errors;
-   };
-   // clang-format off
-   const std::vector<Hist> hists{
-      {"SR_data",        {62., 95.},        {}},
-      {"SR_signal",      {10., 25.},        {0.5, 1.0}},
-      {"SR_signal_up",   {11., 28.},        {}},
-      {"SR_signal_dn",   {9.5, 22.},        {}},
-      {"SR_bkg1",        {30., 40.},        {2.0, 3.0}},
-      {"SR_bkg2",        {20., 25.},        {1.5, 2.5}},
-      {"SR_bkg2_shape",  {0.10, 0.20},      {}},
-      {"CR1_data",       {210., 148.},      {}},
-      {"CR1_bkg1",       {150., 100.},      {6.0, 5.0}},
-      {"CR1_bkg2",       {50., 60.},        {3.0, 4.0}},
-      {"CR1_bkg2_shape", {0.05, 0.08},      {}},
-      {"CR2_data",       {85., 71., 40.},   {}},
-      {"CR2_bkg2",       {80., 60., 30.},   {4.0, 3.5, 2.5}},
-      {"CR2_signal",     {3., 6., 9.},      {0.3, 0.4, 0.5}},
-   };
-   // clang-format on
-   {
-      TFile file(inputFile.c_str(), "RECREATE");
-      for (auto const &h : hists) {
-         const int n = h.contents.size();
-         TH1D hist{h.name, h.name, n, 0., static_cast<double>(n)};
-         for (int i = 0; i < n; ++i) {
-            hist.SetBinContent(i + 1, h.contents[i]);
-            hist.SetBinError(i + 1, h.errors.empty() ? 0. : h.errors[i]);
-         }
-         file.WriteTObject(&hist);
+   // The histograms are passed directly, so no files are read or written.
+   auto hist = [](const char *name, std::vector<double> const &contents, std::vector<double> const &errors = {}) {
+      const int n = contents.size();
+      auto *out = new TH1D{name, name, n, 0., static_cast<double>(n)};
+      out->SetDirectory(nullptr);
+      for (int i = 0; i < n; ++i) {
+         out->SetBinContent(i + 1, contents[i]);
+         out->SetBinError(i + 1, errors.empty() ? 0. : errors[i]);
       }
-   }
+      return out;
+   };
+   auto shapeSys = [](const char *name, Constraint::Type type, TH1 *errors) {
+      ShapeSys out;
+      out.SetName(name);
+      out.SetConstraintType(type);
+      out.SetErrorHist(errors);
+      return out;
+   };
 
-   Measurement meas(("meas_" + tag).c_str(), "meas");
-   meas.SetOutputFilePrefix("TestHS3AuxiliaryMeasurements_" + tag);
+   Measurement meas("meas", "meas");
    meas.SetPOI("mu");
    meas.SetLumi(1.0);
    meas.SetLumiRelErr(0.05);
 
    Channel sr("SR");
-   sr.SetData("SR_data", inputFile);
+   sr.SetData(hist("SR_data", {62., 95.}));
    sr.SetStatErrorConfig(0.005, "Poisson");
    {
-      Sample signal("signal", "SR_signal", inputFile);
+      Sample signal("signal");
+      signal.SetHisto(hist("SR_signal", {10., 25.}, {0.5, 1.0}));
       signal.AddNormFactor("mu", 1, 0, 5);
       signal.AddOverallSys("systA", 0.92, 1.08);
-      signal.AddHistoSys("shapeS", "SR_signal_dn", inputFile, "", "SR_signal_up", inputFile, "");
+      HistoSys shapeS;
+      shapeS.SetName("shapeS");
+      shapeS.SetHistoLow(hist("SR_signal_dn", {9.5, 22.}));
+      shapeS.SetHistoHigh(hist("SR_signal_up", {11., 28.}));
+      signal.AddHistoSys(shapeS);
       sr.AddSample(signal);
-      Sample bkg1("bkg1", "SR_bkg1", inputFile);
+      Sample bkg1("bkg1");
+      bkg1.SetHisto(hist("SR_bkg1", {30., 40.}, {2.0, 3.0}));
       bkg1.AddOverallSys("systA", 0.97, 1.03);
       bkg1.AddOverallSys("systB", 0.90, 1.10);
       bkg1.ActivateStatError();
       sr.AddSample(bkg1);
-      Sample bkg2("bkg2", "SR_bkg2", inputFile);
+      Sample bkg2("bkg2");
+      bkg2.SetHisto(hist("SR_bkg2", {20., 25.}, {1.5, 2.5}));
       bkg2.AddOverallSys("systC", 0.95, 1.05);
       bkg2.ActivateStatError();
-      bkg2.AddShapeSys("bkg2shape", Constraint::Poisson, "SR_bkg2_shape", inputFile);
+      bkg2.AddShapeSys(shapeSys("bkg2shape", Constraint::Poisson, hist("SR_bkg2_shape", {0.10, 0.20})));
       sr.AddSample(bkg2);
    }
    meas.AddChannel(sr);
 
    Channel cr1("CR1");
-   cr1.SetData("CR1_data", inputFile);
+   cr1.SetData(hist("CR1_data", {210., 148.}));
    cr1.SetStatErrorConfig(0.005, "Gaussian");
    {
-      Sample bkg1("bkg1", "CR1_bkg1", inputFile);
+      Sample bkg1("bkg1");
+      bkg1.SetHisto(hist("CR1_bkg1", {150., 100.}, {6.0, 5.0}));
       bkg1.AddNormFactor("k_bkg1", 1, 0, 3);
       bkg1.AddOverallSys("systB", 0.93, 1.07);
       bkg1.ActivateStatError();
       cr1.AddSample(bkg1);
-      Sample bkg2("bkg2", "CR1_bkg2", inputFile);
+      Sample bkg2("bkg2");
+      bkg2.SetHisto(hist("CR1_bkg2", {50., 60.}, {3.0, 4.0}));
       bkg2.AddOverallSys("systC", 0.96, 1.04);
-      bkg2.AddShapeSys("cr1shape", Constraint::Gaussian, "CR1_bkg2_shape", inputFile);
+      bkg2.AddShapeSys(shapeSys("cr1shape", Constraint::Gaussian, hist("CR1_bkg2_shape", {0.05, 0.08})));
       cr1.AddSample(bkg2);
    }
    meas.AddChannel(cr1);
 
    Channel cr2("CR2");
-   cr2.SetData("CR2_data", inputFile);
+   cr2.SetData(hist("CR2_data", {85., 71., 40.}));
    cr2.SetStatErrorConfig(0.005, "Poisson");
    {
-      Sample bkg2("bkg2", "CR2_bkg2", inputFile);
+      Sample bkg2("bkg2");
+      bkg2.SetHisto(hist("CR2_bkg2", {80., 60., 30.}, {4.0, 3.5, 2.5}));
       bkg2.AddOverallSys("systC", 0.94, 1.06);
       bkg2.AddOverallSys("systA", 0.98, 1.02);
       bkg2.ActivateStatError();
       cr2.AddSample(bkg2);
-      Sample signal("signal", "CR2_signal", inputFile);
+      Sample signal("signal");
+      signal.SetHisto(hist("CR2_signal", {3., 6., 9.}, {0.3, 0.4, 0.5}));
       signal.AddNormFactor("mu", 1, 0, 5);
       signal.AddOverallSys("systA", 0.92, 1.08);
       cr2.AddSample(signal);
    }
    meas.AddChannel(cr2);
 
-   meas.CollectHistograms();
-   return std::unique_ptr<RooWorkspace>(MakeModelAndMeasurementFast(meas));
+   return std::unique_ptr<RooWorkspace>{HistoToWorkspaceFactoryFast::MakeCombinedModel(meas)};
 }
 
 RooStats::ModelConfig *modelConfig(RooWorkspace &ws)
@@ -293,8 +283,7 @@ std::unique_ptr<RooWorkspace> addLogNormalConstraint(RooWorkspace &base, bool st
 
 std::unique_ptr<RooWorkspace> makeWorkspace(ModelKind kind)
 {
-   static int counter = 0;
-   auto base = makeHistFactoryWorkspace("m" + std::to_string(counter++));
+   auto base = makeHistFactoryWorkspace();
    return kind == ModelKind::Base ? std::move(base)
                                   : addLogNormalConstraint(*base, kind == ModelKind::LogNormalStandard);
 }
@@ -625,6 +614,120 @@ Toys generateToys(RooWorkspace &ws, RooStats::ModelConfig &mc, int seed)
    return out;
 }
 
+// One toy: data for the observables and values for the global observables, sampled from the model of `ws`.
+struct Toy {
+   std::unique_ptr<RooAbsData> data;
+   std::map<std::string, double> globals;
+};
+
+Toy sampleToy(RooWorkspace &ws, RooStats::ModelConfig &mc)
+{
+   Toy out;
+   ws.var("mu")->setVal(1.0);
+   setPoint(ws, mc, false);
+   auto &sim = dynamic_cast<RooSimultaneous &>(*mc.GetPdf());
+   out.data = std::unique_ptr<RooAbsData>{sim.generate(*mc.GetObservables(), RooFit::Extended())};
+   std::unique_ptr<RooAbsData> globals{sim.generateSimGlobal(*mc.GetGlobalObservables(), 1)};
+   for (RooAbsArg *arg : *globals->get(0)) {
+      out.globals[arg->GetName()] = static_cast<RooAbsReal *>(arg)->getVal();
+   }
+   return out;
+}
+
+// The NLL of the model of `ws` for a toy, at the nominal and at displaced parameters. The global observables are
+// restored afterwards.
+std::vector<double> evaluateToy(RooWorkspace &ws, RooStats::ModelConfig &mc, Toy const &toy)
+{
+   std::map<std::string, double> saved;
+   for (auto const &[name, value] : toy.globals) {
+      saved[name] = ws.var(name)->getVal();
+      ws.var(name)->setVal(value);
+   }
+   std::unique_ptr<RooAbsReal> nll{
+      mc.GetPdf()->createNLL(*toy.data, RooFit::GlobalObservables(*mc.GetGlobalObservables()), RooFit::Offset(false))};
+   std::vector<double> out;
+   for (double mu : {1.0, 1.7}) {
+      ws.var("mu")->setVal(mu);
+      setPoint(ws, mc, false);
+      out.push_back(nll->getVal());
+      setPoint(ws, mc, true);
+      out.push_back(nll->getVal());
+   }
+   ws.var("mu")->setVal(1.0);
+   setPoint(ws, mc, false);
+   for (auto const &[name, value] : saved) {
+      ws.var(name)->setVal(value);
+   }
+   return out;
+}
+
+// Mean and variance of the sampled global observables and of the yields per channel and bin, over many toys.
+struct Moments {
+   std::map<std::string, double> sum;
+   std::map<std::string, double> sum2;
+   int n = 0;
+   double mean(std::string const &key) const { return sum.at(key) / n; }
+   double variance(std::string const &key) const { return sum2.at(key) / n - mean(key) * mean(key); }
+};
+
+Moments sampleMoments(RooWorkspace &ws, RooStats::ModelConfig &mc, int nGlobals, int nData, int seed)
+{
+   Moments out;
+   ws.var("mu")->setVal(1.0);
+   setPoint(ws, mc, false);
+   auto &sim = dynamic_cast<RooSimultaneous &>(*mc.GetPdf());
+   RooRandom::randomGenerator()->SetSeed(seed);
+   // Sampled per channel, each global observable in the first channel that has it: generateSimGlobal() would set up
+   // a generator for every toy and channel, which is slow.
+   std::set<std::string> sampled;
+   for (auto const &state : sim.indexCat()) {
+      RooAbsPdf &channel = *sim.getPdf(state.first);
+      RooArgSet channelGlobals;
+      channel.getObservables(mc.GetGlobalObservables(), channelGlobals);
+      RooArgSet globals;
+      for (RooAbsArg *arg : channelGlobals) {
+         if (sampled.insert(arg->GetName()).second) {
+            globals.add(*arg);
+         }
+      }
+      if (globals.empty()) {
+         continue;
+      }
+      std::unique_ptr<RooAbsData> data{channel.generate(globals, nGlobals)};
+      for (int i = 0; i < data->numEntries(); ++i) {
+         for (RooAbsArg *arg : *data->get(i)) {
+            const double value = static_cast<RooAbsReal *>(arg)->getVal();
+            out.sum[arg->GetName()] += value;
+            out.sum2[arg->GetName()] += value * value;
+         }
+      }
+   }
+   // The yields are rescaled such that both kinds of quantities are averages over `nGlobals` toys.
+   const double scale = static_cast<double>(nGlobals) / nData;
+   std::unique_ptr<RooAbsPdf::GenSpec> spec{sim.prepareMultiGen(*mc.GetObservables(), RooFit::Extended())};
+   for (int i = 0; i < nData; ++i) {
+      std::unique_ptr<RooAbsData> data{sim.generate(*spec)};
+      std::map<std::string, double> yields;
+      for (int j = 0; j < data->numEntries(); ++j) {
+         RooArgSet const *row = data->get(j);
+         std::string channel;
+         for (RooAbsArg *arg : *row) {
+            if (auto *cat = dynamic_cast<RooAbsCategory *>(arg)) {
+               channel = cat->getCurrentLabel();
+            }
+         }
+         auto *obs = dynamic_cast<RooRealVar *>(row->find(("obs_x_" + channel).c_str()));
+         yields["yield " + channel + " bin " + std::to_string(obs ? obs->getBin() : -1)] += data->weight();
+      }
+      for (auto const &[key, value] : yields) {
+         out.sum[key] += scale * value;
+         out.sum2[key] += scale * value * value;
+      }
+   }
+   out.n = nGlobals;
+   return out;
+}
+
 std::string typeOf(JSONNode const &node)
 {
    return node.has_child("type") ? node["type"].val() : "";
@@ -665,6 +768,41 @@ std::set<std::string> namedConstraints(JSONNode const &root)
 const std::set<std::string> constraintTypes{"gaussian_dist", "poisson_dist", "poisson_continuous_dist",
                                             "lognormal_dist"};
 
+const int nGlobals = 2000; // toys of the global observables for sampleMoments()
+const int nData = 50;      // toys of the observables for sampleMoments()
+
+// What the tests compare to. It doesn't depend on the layout, so it is computed once per model kind.
+struct Reference {
+   std::map<std::string, std::string> json; // the export in each layout, by its name
+   Scan scan;                               // of the original model, with profiling
+   Moments moments;                         // of the original model
+   Toys toys;                               // of the import of the default layout
+};
+
+Reference const &reference(ModelKind kind)
+{
+   static std::map<ModelKind, Reference> cache;
+   auto found = cache.find(kind);
+   if (found != cache.end()) {
+      return found->second;
+   }
+   Reference out;
+   auto ws = makeWorkspace(kind);
+   RooStats::ModelConfig &mc = *modelConfig(*ws);
+   for (auto const &style : styles()) {
+      out.json[style.name] = exportWith(*ws, style);
+   }
+   out.scan = likelihoodScan(*ws, mc, *ws->data("obsData"), true);
+   out.moments = sampleMoments(*ws, mc, nGlobals, nData, 111);
+   auto imported = importJSON(out.json[styles()[0].name]);
+   auto *mcImported = findModelConfig(*imported, mc.GetName());
+   if (!mcImported) {
+      throw std::runtime_error("no ModelConfig after importing the default layout");
+   }
+   out.toys = generateToys(*imported, *mcImported, 4357);
+   return cache.emplace(kind, std::move(out)).first->second;
+}
+
 using Param = std::tuple<ModelKind, Style>;
 
 std::string paramName(testing::TestParamInfo<Param> const &info)
@@ -680,7 +818,7 @@ protected:
       style = std::get<1>(GetParam());
       original = makeWorkspace(kind);
       ASSERT_NE(original, nullptr);
-      ASSERT_NO_THROW(json = exportWith(*original, style));
+      ASSERT_NO_THROW(json = reference(kind).json.at(style.name));
    }
 
    RooHelpers::LocalChangeMsgLevel changeMsgLvl{RooFit::ERROR};
@@ -689,6 +827,14 @@ protected:
    std::unique_ptr<RooWorkspace> original;
    std::string json;
 };
+
+// Tests of a model in all layouts at once, or in the only one they apply to.
+class AuxMeasurementsOfModel : public testing::TestWithParam<ModelKind> {
+protected:
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl{RooFit::ERROR};
+};
+
+const std::vector<ModelKind> modelKinds{ModelKind::Base, ModelKind::LogNormalNormFactor, ModelKind::LogNormalStandard};
 
 // ---------------------------------------------------------------------------------------------------------------
 // 1. The flags select the layout of the auxiliary measurements.
@@ -934,7 +1080,7 @@ TEST_P(AuxMeasurements, LikelihoodScan)
    ASSERT_NE(mc->GetGlobalObservables(), nullptr);
    ASSERT_NE(imported->data("obsData"), nullptr);
 
-   const Scan expected = likelihoodScan(*original, *mcOrig, *original->data("obsData"), true);
+   const Scan &expected = reference(kind).scan;
    const Scan actual = likelihoodScan(*imported, *mc, *imported->data("obsData"), true);
 
    for (std::size_t i = 0; i < muValues.size(); ++i) {
@@ -956,102 +1102,6 @@ TEST_P(AuxMeasurements, LikelihoodScan)
 
 // ---------------------------------------------------------------------------------------------------------------
 // 4. Toys.
-
-// One toy: data for the observables and values for the global observables, sampled from the model of `ws`.
-struct Toy {
-   std::unique_ptr<RooAbsData> data;
-   std::map<std::string, double> globals;
-};
-
-Toy sampleToy(RooWorkspace &ws, RooStats::ModelConfig &mc)
-{
-   Toy out;
-   ws.var("mu")->setVal(1.0);
-   setPoint(ws, mc, false);
-   auto &sim = dynamic_cast<RooSimultaneous &>(*mc.GetPdf());
-   out.data = std::unique_ptr<RooAbsData>{sim.generate(*mc.GetObservables(), RooFit::Extended())};
-   std::unique_ptr<RooAbsData> globals{sim.generateSimGlobal(*mc.GetGlobalObservables(), 1)};
-   for (RooAbsArg *arg : *globals->get(0)) {
-      out.globals[arg->GetName()] = static_cast<RooAbsReal *>(arg)->getVal();
-   }
-   return out;
-}
-
-// The NLL of the model of `ws` for a toy, at the nominal and at displaced parameters. The global observables are
-// restored afterwards.
-std::vector<double> evaluateToy(RooWorkspace &ws, RooStats::ModelConfig &mc, Toy const &toy)
-{
-   std::map<std::string, double> saved;
-   for (auto const &[name, value] : toy.globals) {
-      saved[name] = ws.var(name)->getVal();
-      ws.var(name)->setVal(value);
-   }
-   std::unique_ptr<RooAbsReal> nll{
-      mc.GetPdf()->createNLL(*toy.data, RooFit::GlobalObservables(*mc.GetGlobalObservables()), RooFit::Offset(false))};
-   std::vector<double> out;
-   for (double mu : {1.0, 1.7}) {
-      ws.var("mu")->setVal(mu);
-      setPoint(ws, mc, false);
-      out.push_back(nll->getVal());
-      setPoint(ws, mc, true);
-      out.push_back(nll->getVal());
-   }
-   ws.var("mu")->setVal(1.0);
-   setPoint(ws, mc, false);
-   for (auto const &[name, value] : saved) {
-      ws.var(name)->setVal(value);
-   }
-   return out;
-}
-
-// Mean and variance of the sampled global observables and of the yields per channel and bin, over many toys.
-struct Moments {
-   std::map<std::string, double> sum;
-   std::map<std::string, double> sum2;
-   int n = 0;
-   double mean(std::string const &key) const { return sum.at(key) / n; }
-   double variance(std::string const &key) const { return sum2.at(key) / n - mean(key) * mean(key); }
-};
-
-Moments sampleMoments(RooWorkspace &ws, RooStats::ModelConfig &mc, int nGlobals, int nData, int seed)
-{
-   Moments out;
-   ws.var("mu")->setVal(1.0);
-   setPoint(ws, mc, false);
-   auto &sim = dynamic_cast<RooSimultaneous &>(*mc.GetPdf());
-   RooRandom::randomGenerator()->SetSeed(seed);
-   std::unique_ptr<RooAbsData> globals{sim.generateSimGlobal(*mc.GetGlobalObservables(), nGlobals)};
-   for (int i = 0; i < globals->numEntries(); ++i) {
-      for (RooAbsArg *arg : *globals->get(i)) {
-         const double value = static_cast<RooAbsReal *>(arg)->getVal();
-         out.sum[arg->GetName()] += value;
-         out.sum2[arg->GetName()] += value * value;
-      }
-   }
-   // The yields are rescaled such that both kinds of quantities are averages over `nGlobals` toys.
-   const double scale = static_cast<double>(nGlobals) / nData;
-   for (int i = 0; i < nData; ++i) {
-      std::unique_ptr<RooAbsData> data{sim.generate(*mc.GetObservables(), RooFit::Extended())};
-      std::map<std::string, double> yields;
-      for (int j = 0; j < data->numEntries(); ++j) {
-         RooArgSet const *row = data->get(j);
-         std::string channel;
-         for (RooAbsArg *arg : *row) {
-            if (auto *cat = dynamic_cast<RooAbsCategory *>(arg)) {
-               channel = cat->getCurrentLabel();
-            }
-         }
-         auto *obs = dynamic_cast<RooRealVar *>(row->find(("obs_x_" + channel).c_str()));
-         yields["yield " + channel + " bin " + std::to_string(obs ? obs->getBin() : -1)] += data->weight();
-      }
-      for (auto const &[key, value] : yields) {
-         out.sum[key] += scale * value;
-         out.sum2[key] += scale * value * value;
-      }
-   }
-   out.n = nGlobals;
-   return out;
-}
 
 TEST_P(AuxMeasurements, Toys)
 {
@@ -1079,17 +1129,9 @@ TEST_P(AuxMeasurements, Toys)
 
    // Identical for all representations: the documents describe the same RooFit objects, so with the same seed even
    // the random numbers are the same. Compare to the default representation.
-   {
-      auto reference = importJSON(exportWith(*original, styles()[0]));
-      auto *mcRef = findModelConfig(*reference, mcOrig->GetName());
-      if (!mcRef) {
-         mcRef = modelConfig(*reference);
-      }
-      ASSERT_NE(mcRef, nullptr);
-      const Toys ref = generateToys(*reference, *mcRef, 4357);
-      EXPECT_EQ(toys.observables, ref.observables) << "toy data differ from the " << styles()[0].name << " style";
-      EXPECT_EQ(toys.globals, ref.globals) << "toy global observables differ from the " << styles()[0].name << " style";
-   }
+   const Toys &ref = reference(kind).toys;
+   EXPECT_EQ(toys.observables, ref.observables) << "toy data differ from the " << styles()[0].name << " style";
+   EXPECT_EQ(toys.globals, ref.globals) << "toy global observables differ from the " << styles()[0].name << " style";
 
    // The same model as the original one. The order in which the random numbers are used may differ, so the toys are
    // not compared one by one. Instead:
@@ -1111,9 +1153,7 @@ TEST_P(AuxMeasurements, Toys)
    }
    // (b) In the limit of many toys, both models sample the same distributions: the means and variances of the global
    // observables and of the yields agree within their statistical uncertainties. The two samples are independent.
-   const int nGlobals = 2000;
-   const int nData = 50;
-   const Moments expected = sampleMoments(*original, *mcOrig, nGlobals, nData, 111);
+   const Moments &expected = reference(kind).moments;
    const Moments actual = sampleMoments(*imported, *mc, nGlobals, nData, 222);
    ASSERT_EQ(testing::PrintToString(namesOf(mc->GetGlobalObservables())),
              testing::PrintToString(namesOf(mcOrig->GetGlobalObservables())));
@@ -1135,11 +1175,12 @@ TEST_P(AuxMeasurements, Toys)
 // EXPERIMENTAL: the arrays of constraints that are written as components of the combined distribution can be read
 // as such (Config::importConstraintsAsChannels): the RooSimultaneous is then the sampling distribution of all
 // measurements, and the observed values of the constraints are entries of the combined data set.
-TEST_P(AuxMeasurements, ConstraintsAsChannels)
+TEST_P(AuxMeasurementsOfModel, ConstraintsAsChannels)
 {
-   if (!style.arrays || !style.constraintData) {
-      return; // only this layout has such components
-   }
+   // Only this layout has such components.
+   std::string json;
+   ASSERT_NO_THROW(json = reference(GetParam()).json.at("ArrayData"));
+   auto original = makeWorkspace(GetParam());
    std::unique_ptr<RooWorkspace> imported;
    EXPECT_NO_THROW(
       imported = std::make_unique<HS3Test::Imported>(json, std::vector{HS3Test::importConstraintsAsChannels(true)}));
@@ -1179,8 +1220,8 @@ TEST_P(AuxMeasurements, ConstraintsAsChannels)
       }
    }
    // The observed values are observables of the data now, not global observables.
-   const std::size_t nGlobals = mc->GetGlobalObservables() ? mc->GetGlobalObservables()->size() : 0;
-   EXPECT_EQ(nGlobals + nConstraints, mcOrig->GetGlobalObservables()->size());
+   const std::size_t nGlobs = mc->GetGlobalObservables() ? mc->GetGlobalObservables()->size() : 0;
+   EXPECT_EQ(nGlobs + nConstraints, mcOrig->GetGlobalObservables()->size());
 
    // The likelihood is the same function of the parameters.
    std::unique_ptr<RooAbsReal> nllOrig{mcOrig->GetPdf()->createNLL(
@@ -1223,10 +1264,7 @@ TEST_P(AuxMeasurements, ConstraintsAsChannels)
 }
 
 INSTANTIATE_TEST_SUITE_P(HS3, AuxMeasurements,
-                         testing::Combine(testing::Values(ModelKind::Base, ModelKind::LogNormalNormFactor,
-                                                          ModelKind::LogNormalStandard),
-                                          testing::ValuesIn(styles())),
-                         paramName);
+                         testing::Combine(testing::ValuesIn(modelKinds), testing::ValuesIn(styles())), paramName);
 
 // ---------------------------------------------------------------------------------------------------------------
 // 3. The nature of the global observables is stable when the representation changes between exports.
@@ -1277,11 +1315,9 @@ std::string distributionTypes(std::string const &json)
    return out;
 }
 
-class AuxMeasurementsChain : public testing::TestWithParam<ModelKind> {};
-
-TEST_P(AuxMeasurementsChain, GlobalObservablesKeepTheirNature)
+TEST_P(AuxMeasurementsOfModel, GlobalObservablesKeepTheirNature)
 {
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl{RooFit::ERROR};
+   Reference const &ref = reference(GetParam());
    auto original = makeWorkspace(GetParam());
    auto *mcOrig = modelConfig(*original);
    ASSERT_NE(mcOrig, nullptr);
@@ -1313,12 +1349,10 @@ TEST_P(AuxMeasurementsChain, GlobalObservablesKeepTheirNature)
    };
    const auto expected = natures(*original);
    const std::string expectedSet = globalSet(*original);
-   const Scan reference = likelihoodScan(*original, *mcOrig, *original->data("obsData"), false);
 
    // Every pair of representations: export as `first`, import, export as `second`, import, export as `first`.
    for (auto const &first : styles()) {
-      std::string json1;
-      ASSERT_NO_THROW(json1 = exportWith(*original, first)) << first.name;
+      const std::string &json1 = ref.json.at(first.name);
       std::unique_ptr<RooWorkspace> ws1;
       ASSERT_NO_THROW(ws1 = importJSON(json1)) << first.name;
       {
@@ -1332,8 +1366,7 @@ TEST_P(AuxMeasurementsChain, GlobalObservablesKeepTheirNature)
          std::string json2;
          ASSERT_NO_THROW(json2 = exportWith(*ws1, second));
          // The same document as a direct export of the original in the second representation.
-         std::string direct;
-         ASSERT_NO_THROW(direct = exportWith(*original, second));
+         const std::string &direct = ref.json.at(second.name);
          EXPECT_EQ(layoutSummary(json2), layoutSummary(direct))
             << "the layout differs from a direct export as " << second.name;
          // Array distributions have no names for their components, so the documents are even identical.
@@ -1355,16 +1388,15 @@ TEST_P(AuxMeasurementsChain, GlobalObservablesKeepTheirNature)
          ASSERT_NE(ws2->data("obsData"), nullptr);
          const Scan scan = likelihoodScan(*ws2, *mc2, *ws2->data("obsData"), false);
          for (std::size_t i = 0; i < muValues.size(); ++i) {
-            EXPECT_NEAR(scan.fixed[i], reference.fixed[i], 1e-9 * std::abs(reference.fixed[i])) << "mu=" << muValues[i];
-            EXPECT_NEAR(scan.displaced[i], reference.displaced[i], 1e-9 * std::abs(reference.displaced[i]))
+            EXPECT_NEAR(scan.fixed[i], ref.scan.fixed[i], 1e-9 * std::abs(ref.scan.fixed[i])) << "mu=" << muValues[i];
+            EXPECT_NEAR(scan.displaced[i], ref.scan.displaced[i], 1e-9 * std::abs(ref.scan.displaced[i]))
                << "mu=" << muValues[i];
          }
       }
    }
 }
 
-INSTANTIATE_TEST_SUITE_P(HS3, AuxMeasurementsChain,
-                         testing::Values(ModelKind::Base, ModelKind::LogNormalNormFactor, ModelKind::LogNormalStandard),
+INSTANTIATE_TEST_SUITE_P(HS3, AuxMeasurementsOfModel, testing::ValuesIn(modelKinds),
                          [](testing::TestParamInfo<ModelKind> const &paramInfo) { return toString(paramInfo.param); });
 
 } // namespace
