@@ -5795,10 +5795,10 @@ TGColorDialog *TGuiBldDragManager::GetGlobalColorDialog(Bool_t create)
                                               &retc, &color, kFALSE);
       int i = 0;
       for (i = 0; i < 10; i++) {
-         fgGlobalColorDialog->GetCustomPalette()->SetColor(i, TColor::Number2Pixel(i));
+         fgGlobalColorDialog->GetCustomPalette()->SetColor(i, TVirtualX::Number2Pixel(i));
       }
       for (i = 0; i < 10; i++) {
-         fgGlobalColorDialog->GetCustomPalette()->SetColor(10+i, TColor::Number2Pixel(180+i));
+         fgGlobalColorDialog->GetCustomPalette()->SetColor(10+i, TVirtualX::Number2Pixel(180+i));
       }
    }
    return fgGlobalColorDialog;
