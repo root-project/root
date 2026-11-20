@@ -488,14 +488,8 @@ std::vector<double> RooHistPdf::histogramBoundariesInPlotObs(RooDataHist const &
 {
    std::vector<double> result;
 
-   // Locate the histogram observable that corresponds to the plot observable.
-   // These are the scenarios we handle:
-   //   1. The plot observable `obs` has the same name as one of the p.d.f.
-   //      observables. That p.d.f. observable is the histogram observable
-   //      itself (no transformation).
-   //   2. The p.d.f. observable is a non-trivial function of `obs` (e.g. a
-   //      shift or scale). We have to invert that function to map the
-   //      histogram bin boundaries back into the plot-observable coordinate.
+   // The histogram observable for `obs` belongs to the p.d.f. observable with
+   // the same name, or else to the first one that is a function of `obs`.
    RooAbsArg *histObs = nullptr;
    RooAbsArg *pdfObs = nullptr;
    bool useTransform = false;
@@ -534,36 +528,32 @@ std::vector<double> RooHistPdf::histogramBoundariesInPlotObs(RooDataHist const &
       return result;
    }
 
-   // We need to invert the transformation `pdfObs = T(obs)` to map the
-   // histogram bin boundaries (which live in the `pdfObs` coordinate) back into
-   // the plot-observable coordinate `obs`.
-   //
-   // We deliberately do *not* invert l-values (e.g. RooLinearVar) via their
-   // setVal() member, even though that would be exact: inverting a boundary
-   // often lands outside the range of `obs` (a bin edge at the border of the
-   // plot maps beyond it), and assigning an out-of-range value to a RooRealVar
-   // throws. Instead we invert arithmetically by linearly approximating `T` on
-   // the plot range and solving for `obs` at each histogram bin boundary. This
-   // never assigns out-of-range values, is exact for linear transformations
-   // (l-value or not), and can represent boundaries outside the plot range.
+   // Invert `pdfObs = T(obs)` with a linear approximation of `T` on the plot
+   // range, which is exact for linear transformations. Inverting with the
+   // setVal() of an l-value like RooLinearVar would throw for boundaries that
+   // map outside the range of `obs`.
    auto *pdfObsReal = static_cast<RooAbsReal *>(pdfObs);
    const double probeLo = std::max(xlo, obs.getMin());
    const double probeHi = std::min(xhi, obs.getMax());
    if (probeHi > probeLo) {
-      const double obsSave = obs.getVal();
-      obs.setVal(probeLo);
-      const double plo = pdfObsReal->getVal();
-      obs.setVal(probeHi);
-      const double phi = pdfObsReal->getVal();
-      // Probe the midpoint to check whether the linear assumption actually holds.
+      // Restore `obs` with assign(), because setVal() throws if an outer
+      // integral has set it outside of its default range.
+      RooArgSet obsLeaves;
+      obs.leafNodeServerList(&obsLeaves);
+      RooArgSet obsSaved;
+      obsLeaves.snapshot(obsSaved, false);
+      auto evalAt = [&](double val) {
+         obs.setVal(val);
+         return pdfObsReal->getVal();
+      };
       const double probeMid = 0.5 * (probeLo + probeHi);
-      obs.setVal(probeMid);
-      const double pmid = pdfObsReal->getVal();
-      obs.setVal(obsSave);
+      const double plo = evalAt(probeLo);
+      const double phi = evalAt(probeHi);
+      const double pmid = evalAt(probeMid);
+      obsLeaves.assign(obsSaved);
       const double slope = (phi - plo) / (probeHi - probeLo);
 
-      // Warn if the transformation is visibly non-linear: the boundaries are
-      // then placed only approximately and the plotted curve may look wrong.
+      // The midpoint reveals non-linear transformations.
       const double pmidLinear = plo + slope * (probeMid - probeLo);
       const double scale = std::max(std::abs(plo), std::abs(phi));
       if (std::abs(pmid - pmidLinear) > 1e-7 * (scale > 0.0 ? scale : 1.0)) {
@@ -623,10 +613,8 @@ std::list<double>* RooHistPdf::plotSamplingHint(RooDataHist const& dataHist,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the histogram bin boundaries in the plot-observable coordinate.
-/// The returned list is used by RooCurve's adaptive sampler to avoid stepping
-/// over the discontinuities of a non-interpolated histogram, and by
-/// RooBinIntegrator when integrating over this p.d.f.
+/// Return the histogram bin boundaries in the plot-observable coordinate,
+/// used for example by the RooBinIntegrator and the binned likelihood.
 
 std::list<double>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {

@@ -354,6 +354,26 @@ TEST(RooHistPdf, ShiftedBinBoundaries)
    }
 }
 
+// The plot observable can hold a value outside of its default range, e.g. set
+// by an outer integral over a wider range. Mapping the bin boundaries must
+// restore that value without throwing.
+TEST(RooHistPdf, ShiftedBinBoundariesKeepOutOfRangeValue)
+{
+   RooRealVar x{"x", "x", 1000, 1500};
+   x.setBins(5);
+   x.setRange("wide", 0, 2000);
+   RooRealVar shift{"shift", "shift", 25.0, -100, 100};
+
+   RooDataHist dh{"dh", "", x};
+   RooFormulaVar xShifted{"x_shifted", "x - shift", {x, shift}};
+   RooHistPdf pdf{"pdf", "", xShifted, x, dh, 0};
+
+   x.setVal(500, "wide");
+   ASSERT_EQ(x.getVal(), 500.0);
+   EXPECT_EQ(toVector(pdf.binBoundaries(x, 1000.0, 1500.0)), (std::vector<double>{1025, 1125, 1225, 1325, 1425}));
+   EXPECT_EQ(x.getVal(), 500.0);
+}
+
 // GitHub issue #13030: a non-linear transformation of the plot observable
 // cannot be inverted exactly by the (linear) boundary-finding algorithm. In
 // that case the boundaries are still returned, but only approximately, and the
