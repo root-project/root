@@ -28,6 +28,7 @@
 #include "TVirtualHistPainter.h"
 
 #include <cstdio>
+#include <limits>
 
 #include "Rebin2DHelpers.h"
 
@@ -3450,7 +3451,8 @@ TH2I::TH2I(const TH2I &h2i) : TH2(), TArrayI()
 
 void TH2I::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < INT_MAX) fArray[bin]++;
+   if (fArray[bin] < std::numeric_limits<int>::max())
+      fArray[bin]++;
 }
 
 
@@ -3462,9 +3464,14 @@ void TH2I::AddBinContent(Int_t bin)
 void TH2I::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -INT_MAX && newval < INT_MAX) {fArray[bin] = Int_t(newval); return;}
-   if (newval < -INT_MAX) fArray[bin] = -INT_MAX;
-   if (newval >  INT_MAX) fArray[bin] =  INT_MAX;
+   if (newval > -std::numeric_limits<int>::max() && newval < std::numeric_limits<int>::max()) {
+      fArray[bin] = Int_t(newval);
+      return;
+   }
+   if (newval < -std::numeric_limits<int>::max())
+      fArray[bin] = -std::numeric_limits<int>::max();
+   if (newval > std::numeric_limits<int>::max())
+      fArray[bin] = std::numeric_limits<int>::max();
 }
 
 
@@ -3678,7 +3685,8 @@ TH2L::TH2L(const TH2L &h2l) : TH2(), TArrayL64()
 
 void TH2L::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < LLONG_MAX) fArray[bin]++;
+   if (fArray[bin] < std::numeric_limits<long long>::max())
+      fArray[bin]++;
 }
 
 
@@ -3690,9 +3698,14 @@ void TH2L::AddBinContent(Int_t bin)
 void TH2L::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = newval; return;}
-   if (newval < -LLONG_MAX) fArray[bin] = -LLONG_MAX;
-   if (newval >  LLONG_MAX) fArray[bin] =  LLONG_MAX;
+   if (newval > -std::numeric_limits<long long>::max() && newval < std::numeric_limits<long long>::max()) {
+      fArray[bin] = newval;
+      return;
+   }
+   if (newval < -std::numeric_limits<long long>::max())
+      fArray[bin] = -std::numeric_limits<long long>::max();
+   if (newval > std::numeric_limits<long long>::max())
+      fArray[bin] = std::numeric_limits<long long>::max();
 }
 
 
