@@ -143,7 +143,7 @@ TGColorPalette::TGColorPalette(const TGWindow *p, Int_t cols, Int_t rows, Int_t 
    fPixels = new ULong_t[fRows * fCols];
 
    for (Int_t i = 0; i < fRows * fCols; ++i) {
-      fPixels[i] = TColor::RGB2Pixel(255, 255, 255);
+      fPixels[i] = TVirtualX::RGB2Pixel(255, 255, 255);
    }
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
@@ -327,7 +327,7 @@ ULong_t TGColorPalette::GetCurrentColor() const
    if (fCx >= 0 && fCy >= 0)
       return GetColorByIndex(fCy * fCols + fCx);
    else
-      return TColor::RGB2Pixel(0, 0, 0);
+      return TVirtualX::RGB2Pixel(0, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -672,7 +672,7 @@ void TGColorPick::CreateDitheredImage(Pixmap_t image, Int_t which)
 
       } else if (which == kIMG_L) {
 
-         TColor::Pixel2RGB(fCurrentColor, r, g, b);
+         TVirtualX::Pixel2RGB(fCurrentColor, r, g, b);
          TColor::RGB2HLS(r, g, b, h, l, s);
 
          Int_t ll = (ih - y) * 255 / ih;
@@ -805,7 +805,7 @@ void TGColorPick::InitImages()
 
             TColor::HLS2RGB(h, l, s, r, g, b);
 
-            ULong_t pixel = TColor::RGB2Pixel(r, g, b);
+            ULong_t pixel = TVirtualX::RGB2Pixel(r, g, b);
             gVirtualX->PutPixel(fHSimage, x, y, pixel);
          }
       }
@@ -835,14 +835,14 @@ void TGColorPick::SetSliderColor()
 
       for (Int_t y = 0; y < height; ++y) {
 
-         TColor::Pixel2RGB(fCurrentColor, r, g, b);
+         TVirtualX::Pixel2RGB(fCurrentColor, r, g, b);
          TColor::RGB2HLS(r, g, b, h, l, s);
 
          l = (height - y) * 255 / height;
 
          TColor::HLS2RGB(h, l, s, r, g, b);
 
-         ULong_t pixel = TColor::RGB2Pixel(r, g, b);
+         ULong_t pixel = TVirtualX::RGB2Pixel(r, g, b);
 
          for (Int_t x = 0; x < width; ++x) {
             gVirtualX->PutPixel(fLimage, x, y, pixel);
@@ -868,7 +868,7 @@ void TGColorPick::SetColor(ULong_t color)
 
    fCurrentColor = color;
 
-   TColor::Pixel2RGB(fCurrentColor, r, g, b);
+   TVirtualX::Pixel2RGB(fCurrentColor, r, g, b);
    TColor::RGB2HLS(r, g, b, h, l, s);
 
    SetHScursor(h * (Int_t)width / 256, (255 - s) * (Int_t)height / 256);
@@ -898,7 +898,7 @@ void TGColorPick::UpdateCurrentColor()
    s = Int_t((sheight - fCy) * 255 / sheight);
 
    TColor::HLS2RGB(h, l, s, r, g, b);
-   fCurrentColor = TColor::RGB2Pixel(r, g, b);
+   fCurrentColor = TVirtualX::RGB2Pixel(r, g, b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1201,7 +1201,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    b = 222./255;
 
    // Gui Builder background
-   Pixel_t pixel = TColor::RGB2Pixel(r, g, b);
+   Pixel_t pixel = TVirtualX::RGB2Pixel(r, g, b);
    fPalette->SetColor(46, pixel);
 
    r = 230./255;
@@ -1209,7 +1209,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    b = 230./255;
 
    // a la MAC background
-   pixel = TColor::RGB2Pixel(r, g, b);
+   pixel = TVirtualX::RGB2Pixel(r, g, b);
    fPalette->SetColor(45, pixel);
 
    r = 172./255;
@@ -1217,7 +1217,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    b = 205./255;
 
    // a la CDE background
-   pixel = TColor::RGB2Pixel(r, g, b);
+   pixel = TVirtualX::RGB2Pixel(r, g, b);
    fPalette->SetColor(44, pixel);
 
    r = 205./255;
@@ -1225,7 +1225,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    b = 175./255;
 
    // a la FOX background
-   pixel = TColor::RGB2Pixel(r, g, b);
+   pixel = TVirtualX::RGB2Pixel(r, g, b);
    fPalette->SetColor(43, pixel);
 
    // custom colors
@@ -1239,7 +1239,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    if (gUcolor[0] == 0xff000000) {
       for (i = 0; i < 24; i++)
-         gUcolor[i] = TColor::RGB2Pixel(255, 255, 255);
+         gUcolor[i] = TVirtualX::RGB2Pixel(255, 255, 255);
    }
    fCpalette->SetColors(gUcolor);
 
@@ -1415,7 +1415,7 @@ void TGColorDialog::UpdateRGBentries(ULong_t *c)
    Char_t tmp[20];
 
    Int_t r, g, b;
-   TColor::Pixel2RGB(*c, r, g, b);
+   TVirtualX::Pixel2RGB(*c, r, g, b);
 
    snprintf(tmp, 20, "%d", r);
    fRtb->Clear();
@@ -1443,7 +1443,7 @@ void TGColorDialog::UpdateHLSentries(ULong_t *c)
    Int_t h, l, s;
    Int_t r, g, b;
 
-   TColor::Pixel2RGB(*c, r, g, b);
+   TVirtualX::Pixel2RGB(*c, r, g, b);
    TColor::RGB2HLS(r, g, b, h, l, s);
 
    snprintf(tmp, 20, "%d", h);
@@ -1482,7 +1482,7 @@ Bool_t TGColorDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /
 
                   case kCDLG_OK:
                      *fRetc = kMBOk;
-                     *fRetColor = TColor::RGB2Pixel(atoi(fRtb->GetString()),
+                     *fRetColor = TVirtualX::RGB2Pixel(atoi(fRtb->GetString()),
                                                     atoi(fGtb->GetString()),
                                                     atoi(fBtb->GetString()));
                      if ((fRetTColor = gROOT->GetColor(TColor::GetColor(*fRetColor)))) {
@@ -1560,7 +1560,7 @@ Bool_t TGColorDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /
                      s = atoi(fStb->GetString());
                      TColor::HLS2RGB(h, l, s, r, g, b);
 
-                     color = TColor::RGB2Pixel(r, g, b);
+                     color = TVirtualX::RGB2Pixel(r, g, b);
                      fSample->SetBackgroundColor(color);
                      ColorSelected(color);
                      gClient->NeedRedraw(fSample);
@@ -1572,7 +1572,7 @@ Bool_t TGColorDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /
                   case kCDLG_RTE:
                   case kCDLG_GTE:
                   case kCDLG_BTE:
-                     color = TColor::RGB2Pixel(atoi(fRtb->GetString()),
+                     color = TVirtualX::RGB2Pixel(atoi(fRtb->GetString()),
                                                atoi(fGtb->GetString()),
                                                atoi(fBtb->GetString()));
                      fSample->SetBackgroundColor(color);

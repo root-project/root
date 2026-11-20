@@ -413,7 +413,7 @@ void TGProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 
    if (fBarColorGC.GetForeground() != GetDefaultSelectedBackground()) {
-      out << "   " << GetName() << "->SetBarColor(\"" << TColor::PixelAsHexString(fBarColorGC.GetForeground())
+      out << "   " << GetName() << "->SetBarColor(\"" << TVirtualX::PixelAsHexString(fBarColorGC.GetForeground())
           << "\");\n";
    }
 

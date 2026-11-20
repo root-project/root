@@ -60,11 +60,11 @@ TGDockButton::TGDockButton(const TGCompositeFrame *p, int id) :
    fNormBg = fBackground;
 
    Float_t r, g, b, h, l, s;
-   TColor::Pixel2RGB(fNormBg, r, g, b);
+   TVirtualX::Pixel2RGB(fNormBg, r, g, b);
    TColor::RGB2HLS(r, g, b, h, l, s);
    l = l + (1. - l) * 45. / 100.;
    TColor::HLS2RGB(h, l, s, r, g, b);
-   fHiBg = TColor::RGB2Pixel(r, g, b);
+   fHiBg = TVirtualX::RGB2Pixel(r, g, b);
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
    SetWindowName();

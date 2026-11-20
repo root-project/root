@@ -12,6 +12,7 @@
 #include "TGLOverlayButton.h"
 #include "TColor.h"
 #include "TMath.h"
+#include "TVirtualX.h"
 
 #include <TGLRnrCtx.h>
 #include <TGLIncludes.h>
@@ -87,7 +88,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
       glPushMatrix();
       glTranslatef(fPosX, offset+fPosY, 0);
       // First the border, same color as text
-      TColor::Pixel2RGB(fTextColor, r, g, b);
+      TVirtualX::Pixel2RGB(fTextColor, r, g, b);
       (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha):TGLUtil::Color4f(r, g, b, fNormAlpha);
       TGLUtil::LineWidth(1);
       glBegin(GL_LINE_LOOP);
@@ -98,7 +99,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
       glEnd();
       // then the button itself, with its own color
       // decrease a bit the highlight, to avoid bad effects...
-      TColor::Pixel2RGB(fBackColor, r, g, b);
+      TVirtualX::Pixel2RGB(fBackColor, r, g, b);
       (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha * 0.8):TGLUtil::Color4f(r, g, b, fNormAlpha);
       glBegin(GL_QUADS);
       glVertex2f(0.0, 0.0);
@@ -114,7 +115,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
       rnrCtx.RegisterFontNoScale(TMath::Nint(fHeight*0.8), "arial",  TGLFont::kPixmap, fFont);
       fFont.PreRender(kFALSE);
 
-      TColor::Pixel2RGB(fTextColor, r, g, b);
+      TVirtualX::Pixel2RGB(fTextColor, r, g, b);
       (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha):TGLUtil::Color4f(r, g, b, fNormAlpha);
       glPushMatrix();
       glTranslatef(fPosX+(fWidth/2.0), offset+fPosY+(fHeight/2.0), 0);
