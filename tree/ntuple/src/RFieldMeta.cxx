@@ -1713,6 +1713,37 @@ void ROOT::RStreamerField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
 {
    source.RegisterStreamerInfos();
+
+   if (GetOnDiskId() != kInvalidDescriptorId) {
+      const auto descriptorGuard = source.GetSharedDescriptorGuard();
+      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetConstRef();
+      const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+
+      std::string descTypeName = desc.GetTypeNameForComparison(fieldDesc);
+      if (GetTypeName() != descTypeName) {
+         bool hasRule = false;
+         if (fClass && fClass->GetSchemaRules()) {
+            std::string normalizedName;
+            TClassEdit::GetNormalizedName(normalizedName, fieldDesc.GetTypeName());
+            if (fieldDesc.GetTypeChecksum()) {
+               hasRule = !fClass->GetSchemaRules()
+                             ->FindRules(normalizedName, fieldDesc.GetTypeVersion(), *fieldDesc.GetTypeChecksum())
+                             .empty();
+            } else {
+               hasRule =
+                  !fClass->GetSchemaRules()->FindRules(normalizedName, fieldDesc.GetTypeVersion()).empty();
+            }
+            if (!hasRule) {
+               hasRule = fClass->GetSchemaRules()->HasRuleWithSourceClass(normalizedName);
+            }
+         }
+         if (!hasRule) {
+            throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
+                                     " vs. " + descTypeName));
+         }
+      }
+   }
+
    return nullptr;
 }
 
