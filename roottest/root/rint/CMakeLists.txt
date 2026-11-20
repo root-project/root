@@ -69,3 +69,10 @@ ROOTTEST_ADD_TEST(fileBeforeCommand
                   COPY_TO_BUILDDIR t_ddsimUserPlugins.root
                   FAILREGEX "undeclared identifier 'EVENT'"
                   PASSRC 10)
+
+# issue 14198
+if(NOT (APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64"))
+  ROOTTEST_ADD_TEST(valPrinterTypeId
+                    MACRO valPrinterTypeId.C
+                    OUTREF valPrinterTypeId${ref_suffix})
+endif()
