@@ -64,7 +64,7 @@ using ROOT::Experimental::Detail::RNTupleMetrics;
 using ROOT::Experimental::Detail::RNTupleTickCounter;
 
 ROOT::Internal::RPageStorage::RPageStorage(std::string_view name)
-   : fMetrics(""), fPageAllocator(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()), fNTupleName(name)
+   : fPageAllocator(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()), fNTupleName(name)
 {
 }
 
@@ -167,7 +167,8 @@ ROOT::Internal::RPageSource::RPageSource(std::string_view name, const ROOT::RNTu
    : RPageStorage(name),
      fClusterPool(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(options)),
      fPagePool(*this),
-     fOptions(options)
+     fOptions(options),
+     fMetrics("")
 {
 }
 
@@ -1228,7 +1229,7 @@ bool ROOT::Internal::RWritePageMemoryManager::TryUpdate(RWriteColumn &column, st
 //------------------------------------------------------------------------------
 
 ROOT::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleWriteOptions &options)
-   : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
+   : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget()), fMetrics("")
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
 }

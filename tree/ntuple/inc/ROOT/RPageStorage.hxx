@@ -140,8 +140,6 @@ public:
    };
 
 protected:
-   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
-
    /// For the time being, we will use the heap allocator for all sources and sinks. This may change in the future.
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAllocator;
 
@@ -161,10 +159,6 @@ public:
    RPageStorage(RPageStorage &&other) = default;
    RPageStorage &operator=(RPageStorage &&other) = default;
    virtual ~RPageStorage();
-
-   /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
-   /// overriding this.
-   virtual ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 
    /// Returns the NTuple name.
    const std::string &GetNTupleName() const { return fNTupleName; }
@@ -242,6 +236,7 @@ private:
    std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
 
 protected:
+   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
    /// Flag if sink was initialized
    bool fIsInitialized = false;
 
@@ -318,6 +313,7 @@ public:
 
    const ROOT::RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
    bool IsInitialized() const { return fIsInitialized; }
+   ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
    /// Return the RNTupleDescriptor being constructed.
    virtual const ROOT::RNTupleDescriptor &GetDescriptor() const = 0;
 
@@ -853,6 +849,7 @@ protected:
    RStructureBuffer fStructureBuffer; ///< Populated by LoadStructureImpl(), reset at the end of Attach()
 
    ROOT::RNTupleReadOptions fOptions;
+   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
 
    /// Fills fStructureBuffer with the compressed header and footer
    virtual void LoadStructureImpl() = 0;
@@ -915,6 +912,7 @@ public:
                                                     ROOT::Internal::RPageAllocator &pageAlloc);
 
    const ROOT::RNTupleReadOptions &GetReadOptions() const { return fOptions; }
+   ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 
    /// Takes the read lock for the descriptor. Multiple threads can take the lock concurrently.
    /// The underlying `std::shared_mutex`, however, is neither read nor write recursive:
