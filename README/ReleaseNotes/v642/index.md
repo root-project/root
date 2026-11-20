@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Release 6.42.00 (LTS) comes with two major upgrades. LLVM version 24 is now in use as a dependency of Cling's C++ interpreter, and the Python-C++ interoperability layer has been replaced by `cppjit`, therewith directly relying on Clang's AST and Cling and not ROOT's type system. Moreover, Python ROOT wheels in alpha stage will be distributed, for the first time also for macOS and ARM Linux.
+Release 6.42.00 (LTS) comes with two major upgrades. LLVM version 22 is now in use as a dependency of Cling's C++ interpreter, and the Python-C++ interoperability layer has been replaced by `cppjit`, therewith directly relying on Clang's AST and Cling and not ROOT's type system. Moreover, Python ROOT wheels in alpha stage will be distributed, for the first time also for macOS and ARM Linux.
 However, far more than that has been achieved: for all the details, please see the release notes below. 
 
 According to current ROOT's [Release and Support Plan](https://root.cern/install/all_releases), harmonised with the [public HL-LHC schedule](https://voisins.cern/en/high-luminosity-lhc-hl-lhc/), this is the last but one LTS release of ROOT's 6th development cycle, and support will cease in June 2027.
@@ -313,7 +313,7 @@ as "struct of array" (SoA) in memory. This is useful, e.g., for efficient consum
 ## Core and C++ Interpreter
 
 * `TClass::IsTriviallyRelocatable()` reports whether an object of a class can be moved to a new address with a raw memory copy, i.e. without running a move or copy constructor (trivial relocatability in the C++26 sense). It is backed by the new `kClassIsTriviallyRelocatable` class property, which `TInterpreter::ClassInfo_ClassProperty()` now fills in. A class the interpreter does not know about, in particular an emulated one, is conservatively reported as not relocatable.
-* The LLVM release on which Cling relies has been updated to version 24.
+* The LLVM release on which Cling relies has been updated to version 22.
 
 ## Histograms
 
