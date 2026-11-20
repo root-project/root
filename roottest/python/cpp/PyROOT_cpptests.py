@@ -2,8 +2,9 @@
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Author: Enric Tejedor Saavedra
 # Author: Vincenzo Eduardo Padulano (CERN)
+# Author: Danilo Piparo (CERN)
 # Created: 01/03/05
-# Last: 10/08/21 (MM-DD-YY)
+# Last: 20/11/26 (MM-DD-YY)
 
 """C++ language interface unit tests for PyROOT package.
 
@@ -31,6 +32,7 @@ __all__ = [
    'Cpp2ClassNamingTestCase',
    'Cpp3UsingDeclarations',
    'Cpp4InheritanceTreeOverloadResolution',
+   'Cpp5TemplatedFunctionCorrectTemplateArguments'
 ]
 
 ### C++ language constructs test cases =======================================
@@ -267,6 +269,76 @@ class Cpp4InheritanceTreeOverloadResolution(MyTestCase):
         # error: call to 'myfunc' is ambiguous
         self.assertEqual(ROOT.Cpp4.myfunc(ROOT.Cpp4.C(), ROOT.Cpp4.Z()), 1)
 
+class Cpp5TemplatedFunctionCorrectTemplateArguments(MyTestCase):
+    """
+    Tests correct instantiation of function template
+    """
+    @classmethod
+    def setUpClass(cls):
+        ROOT.gInterpreter.Declare(
+        r"""
+struct ERDataFrame {
+    size_t rows;
+    std::vector<size_t> elements_size;
+    std::vector<std::string> column_names;
+    std::vector<void*> columns;
+    bool owned = true;
+    ERDataFrame(size_t s) : rows(s) {}
+    ~ERDataFrame() {
+        if (!owned) return;
+        for (void* i : columns) free(i);
+    }
+    template <typename R, typename... T>
+    ERDataFrame Define(std::string name, R (*f)(T...)) {
+        //std::cout << "Adding column " << columns.size() + 1 << " " << name << std::endl;
+        column_names.push_back(name);
+        columns.push_back(new R[rows]);
+        for (size_t i = 0; i < rows; i++) {
+            R* res = static_cast<R*>(columns.back()) + i;
+            size_t I = 0;
+            // Collect arguments safely in sequence
+            auto args = std::tuple{(*(static_cast<T*>(columns[I++]) + i))...};
+            *res = std::apply(f, args);
+        }
+        owned = false;
+        return *this;
+    }
+
+    template <typename C, size_t N>
+      std::string print() {
+        std::string out = column_names[N];
+        out += ": [";
+        for (size_t i = 0; i < rows; i++) {
+            out += *(static_cast<C*>(columns[N]) + i);
+            out += ", ";
+        }
+        out += "]";
+        return out;
+    }
+};
+
+template<size_t N>
+std::string print(ERDataFrame &df) {
+    return df.print<double, N>();
+}
+
+double get_one() { return 1.0; }
+double plus_one(double x) { return x + 1.0; }
+double add(double x, double y) { return x + y; }
+double add3(double x, double y, double z) { return x + y + z; }
+        """)
+    def testArguments(self):
+        df = (
+           ROOT.ERDataFrame(1)
+           .Define("one", ROOT.get_one)
+           .Define("two", ROOT.plus_one)
+           .Define("add", ROOT.add)
+           .Define("add3", ROOT.add3))
+
+        self.assertEqual(ROOT.print[0](df), "one: [\x01, ]")
+        self.assertEqual(ROOT.print[1](df), "two: [\x02, ]")
+        self.assertEqual(ROOT.print[2](df), "add: [\x03, ]")
+        self.assertEqual(ROOT.print[3](df), "add3: [\x06, ]")
 
 ## actual test run
 if __name__ == '__main__':
