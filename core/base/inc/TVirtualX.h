@@ -56,6 +56,8 @@ public:
 protected:
    EDrawMode fDrawMode;           //Drawing mode
 
+   static void ConfigureColorsHandler();
+
 public:
    TVirtualX(): fDrawMode() {}
    TVirtualX(const char *name, const char *title);
