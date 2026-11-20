@@ -349,6 +349,35 @@ TEST(SOFIEParser, InputOfUnsupportedTypeThrows)
    EXPECT_THROW(rmodel.Generate(Options::kNoWeightFile), std::runtime_error);
 }
 
+// A graph whose first node reads a tensor that nothing defines cannot be ordered.
+TEST(SOFIEParser, NodeWithUndefinedInputAsFirstNodeThrows)
+{
+   std::string node;
+   AppendBytesField(node, 1, "undefined_tensor"); // input that is neither a graph input nor an initializer
+   AppendBytesField(node, 2, "y");                // output
+   AppendBytesField(node, 3, "shape_0");          // name
+   AppendBytesField(node, 4, "Shape");            // op_type
+
+   std::string graph;
+   AppendBytesField(graph, 1, node);                                  // node
+   AppendBytesField(graph, 2, "test_graph");                          // name
+   AppendBytesField(graph, 11, FloatValueInfo({"x", {"2", "3"}}, 1)); // input: FLOAT
+   AppendBytesField(graph, 12, FloatValueInfo({"y", {"2"}}, 7));      // output: INT64
+
+   std::string opset;
+   AppendVarintField(opset, 2, 13); // version
+   std::string model;
+   AppendVarintField(model, 1, 10);   // ir_version
+   AppendBytesField(model, 7, graph); // graph
+   AppendBytesField(model, 8, opset); // opset_import
+
+   std::ofstream file("undefined_input.onnx", std::ios::binary);
+   file.write(model.data(), model.size());
+   file.close();
+
+   EXPECT_THROW(RModelParser_ONNX{}.Parse("undefined_input.onnx"), std::runtime_error);
+}
+
 // A slope that cannot be unidirectionally broadcast to the shape of X is an
 // error, not a silent out-of-bounds read in the generated code.
 TEST(SOFIEParser, PReluWithNonBroadcastableSlopeThrows)

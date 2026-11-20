@@ -880,8 +880,10 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
       }
       // no increment in nodes - something wrong
       if (nodesOrder.size() == psize) {
-         int ilast = nodesOrder.back();
-         std::cout << "cannot find a new node after " << graph.node(ilast).op_type() << " " << graph.node(ilast).name() << std::endl;
+         if (!nodesOrder.empty()) {
+            int ilast = nodesOrder.back();
+            std::cout << "cannot find a new node after " << graph.node(ilast).op_type() << " " << graph.node(ilast).name() << std::endl;
+         }
          throw std::runtime_error("TMVA::SOFIE - cannot find a new node ");
       }
    } while ((int)nodesOrder.size() < graph.node_size());
