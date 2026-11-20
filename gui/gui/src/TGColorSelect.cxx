@@ -677,8 +677,8 @@ void TGColorSelect::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TString cvar = TString::Format("ColPar%d",nn++);
 
    ULong_t color = GetColor();
-   const char *colorname = TColor::PixelAsHexString(color);
-   gClient->GetColorByName(colorname, color);
+   TString colorname = TVirtualX::PixelAsHexString(color);
+   gClient->GetColorByName(colorname.Data(), color);
 
    out << "\n   // color select widget\n";
    out << "   ULong_t " << cvar << ";\n";

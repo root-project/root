@@ -2167,7 +2167,7 @@ ULong_t TRootGuiBuilder::GetBgnd()
    g = 232./255;
    b = 222./255;
 
-   gPixel = TColor::RGB2Pixel(r, g, b);
+   gPixel = TVirtualX::RGB2Pixel(r, g, b);
    return gPixel;
 }
 
@@ -2225,7 +2225,7 @@ ULong_t TRootGuiBuilder::GetPopupBgnd()
    g = 250./255;
    b = 250./255;
 
-   gPixel = TColor::RGB2Pixel(r, g, b);
+   gPixel = TVirtualX::RGB2Pixel(r, g, b);
 
    return gPixel;
 }
@@ -2263,7 +2263,7 @@ ULong_t TRootGuiBuilder::GetPopupHlght()
    g = 120./255;
    b = 222./255;
 
-   gPixel = TColor::RGB2Pixel(r, g, b);
+   gPixel = TVirtualX::RGB2Pixel(r, g, b);
 
    return gPixel;
 }
