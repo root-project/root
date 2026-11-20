@@ -615,7 +615,7 @@ void TGuiBldDragManagerGrid::InitBgnd()
    g = 232./255;
    b = 226./255;
 
-   fgPixel = TColor::RGB2Pixel(r, g, b);
+   fgPixel = TVirtualX::RGB2Pixel(r, g, b);
    fgBgnd->SetForeground(fgPixel);
 }
 
