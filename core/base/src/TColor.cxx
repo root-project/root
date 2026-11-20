@@ -2451,103 +2451,68 @@ void TColor::ListColors(Int_t ci, Int_t nb, Bool_t showEmpty)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static method that given a color index number, returns the corresponding
+/// @deprecated Use TVirtualX::Number2Pixel instead
+///
+/// @brief Static method that given a color index number, returns the corresponding
 /// pixel value. This pixel value can be used in the GUI classes. This call
 /// does not work in batch mode since it needs to communicate with the
 /// graphics system.
 
 ULong_t TColor::Number2Pixel(Int_t ci)
 {
-   TColor::InitializeColors();
-   TColor *color = gROOT->GetColor(ci);
-   if (color)
-      return color->GetPixel();
-   else
-      ::Warning("TColor::Number2Pixel", "color with index %d not defined", ci);
-
-   return 0;
+   return TVirtualX::Number2Pixel(ci);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert r,g,b to graphics system dependent pixel value.
+/// @deprecated Use TVirtualX::RGB2Pixel instead
+///
+/// @brief Convert r,g,b to graphics system dependent pixel value.
 /// The r,g,b triplet must be [0,1].
 
 ULong_t TColor::RGB2Pixel(Float_t r, Float_t g, Float_t b)
 {
-   if (r < 0) r = 0;
-   if (g < 0) g = 0;
-   if (b < 0) b = 0;
-   if (r > 1) r = 1;
-   if (g > 1) g = 1;
-   if (b > 1) b = 1;
-
-   ColorStruct_t color;
-   color.fRed   = UShort_t(r * 65535);
-   color.fGreen = UShort_t(g * 65535);
-   color.fBlue  = UShort_t(b * 65535);
-   color.fMask  = kDoRed | kDoGreen | kDoBlue;
-   gVirtualX->AllocColor(gVirtualX->GetColormap(), color);
-   return color.fPixel;
+   return TVirtualX::RGB2Pixel(r, g, b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert r,g,b to graphics system dependent pixel value.
+/// @deprecated Use TVirtualX::RGB2Pixel instead
+///
+/// @brief Convert r,g,b to graphics system dependent pixel value.
 /// The r,g,b triplet must be [0,255].
 
 ULong_t TColor::RGB2Pixel(Int_t r, Int_t g, Int_t b)
 {
-   if (r < 0) r = 0;
-   if (g < 0) g = 0;
-   if (b < 0) b = 0;
-   if (r > 255) r = 255;
-   if (g > 255) g = 255;
-   if (b > 255) b = 255;
-
-   ColorStruct_t color;
-   color.fRed   = UShort_t(r * 256);  // 65536/256
-   color.fGreen = UShort_t(g * 256);
-   color.fBlue  = UShort_t(b * 256);
-   color.fMask  = kDoRed | kDoGreen | kDoBlue;
-   gVirtualX->AllocColor(gVirtualX->GetColormap(), color);
-   return color.fPixel;
+   return TVirtualX::RGB2Pixel(r, g, b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert machine dependent pixel value (obtained via RGB2Pixel or
+/// @deprecated Use TVirtualX::Pixel2RGB instead
+///
+/// @brief Convert machine dependent pixel value (obtained via RGB2Pixel or
 /// via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
 /// The r,g,b triplet will be [0,1].
 
 void TColor::Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b)
 {
-   ColorStruct_t color;
-   color.fPixel = pixel;
-   gVirtualX->QueryColor(gVirtualX->GetColormap(), color);
-   r = (Float_t)color.fRed / 65535.0f;
-   g = (Float_t)color.fGreen / 65535.0f;
-   b = (Float_t)color.fBlue / 65535.0f;
+   TVirtualX::Pixel2RGB(pixel, r, g, b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert machine dependent pixel value (obtained via RGB2Pixel or
+/// @deprecated Use TVirtualX::Pixel2RGB instead
+///
+/// @brief Convert machine dependent pixel value (obtained via RGB2Pixel or
 /// via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
 /// The r,g,b triplet will be [0,255].
 
 void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
 {
-   ColorStruct_t color;
-   color.fPixel = pixel;
-   gVirtualX->QueryColor(gVirtualX->GetColormap(), color);
-   // color is between 0 and 65535 inclusive.
-   // We need to move it to the 0 to 255 range (inclusive).
-   // So we need to resample the 65536 values into 256 indices.
-   // This would mean equal blocks of 256 high-res values per color index.
-   r = color.fRed / 256;
-   g = color.fGreen / 256;
-   b = color.fBlue / 256;
+   TVirtualX::Pixel2RGB(pixel, r, g, b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert machine dependent pixel value (obtained via RGB2Pixel or
+/// @deprecated Use TVirtualX::PixelAsHexString instead
+///
+/// @brief Convert machine dependent pixel value (obtained via RGB2Pixel or
 /// via Number2Pixel() or via TColor::GetPixel()) to a hexadecimal string.
 /// This string can be directly passed to, for example,
 /// TGClient::GetColorByName(). String will be reused so copy immediately
@@ -2556,10 +2521,8 @@ void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
 const char *TColor::PixelAsHexString(ULong_t pixel)
 {
    static TString tempbuf;
-   Int_t r, g, b;
-   Pixel2RGB(pixel, r, g, b);
-   tempbuf.Form("#%02x%02x%02x", r, g, b);
-   return tempbuf;
+   tempbuf = TVirtualX::PixelAsHexString(pixel);
+   return tempbuf.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
