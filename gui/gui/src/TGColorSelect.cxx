@@ -390,7 +390,7 @@ void TGColorPopup::PreviewAlphaColor(ULongptr_t color)
    if (fClient->IsEditable()) return;
 
    TColor *tcolor = (TColor *)color;
-   fCurrentColor = tcolor->GetPixel();
+   fCurrentColor = gVirtualX->GetPixel(tcolor->GetNumber());
    SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), 0, (ULongptr_t)tcolor);
 }
 

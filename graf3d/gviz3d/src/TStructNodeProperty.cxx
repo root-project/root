@@ -119,7 +119,7 @@ TColor TStructNodeProperty::GetColor() const
 
 Pixel_t TStructNodeProperty::GetPixel() const
 {
-   return fColor.GetPixel();
+   return gVirtualX->GetPixel(fColor.GetNumber());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

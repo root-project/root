@@ -1776,7 +1776,7 @@ void TGTextEntry::SetTextColor(Pixel_t color, Bool_t local)
 void TGTextEntry::SetTextColor(TColor *color, Bool_t local)
 {
    if (color) {
-      SetTextColor(color->GetPixel(), local);
+      SetTextColor(gVirtualX->GetPixel(color->GetNumber()), local);
    }
 }
 
