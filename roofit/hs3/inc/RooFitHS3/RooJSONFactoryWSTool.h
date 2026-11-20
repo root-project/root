@@ -101,11 +101,6 @@ public:
    static RooWorkspace sanitizeWS(const RooWorkspace &ws);
    static RooWorkspace cleanWS(const RooWorkspace &ws, bool onlyModelConfig = false);
 
-   struct CombinedData {
-      std::string name;
-      std::vector<std::string> columns;
-   };
-
    RooJSONFactoryWSTool(RooWorkspace &ws);
 
    ~RooJSONFactoryWSTool();
@@ -262,20 +257,15 @@ public:
    /// version that can't be parsed.
    RooFit::HS3::Version hs3Version() const;
 
-   /// Whether the component `component` of the combined distribution `combinedDist` of the document that is
-   /// currently being imported is read as a constraint term instead (see Config::importConstraintsAsChannels).
-   bool isAuxiliaryChannelReadAsConstraint(std::string const &combinedDist, std::string const &component) const;
+   /// The constraint terms that the document that is currently being imported adds to the HistFactory distribution
+   /// `dist`, besides those that its modifiers name, or nullptr if there are none.
+   std::vector<RooFit::HS3::DistributionRef> const *channelConstraints(std::string const &dist) const;
 
    /// Whether the constraint term `pdf` contributes to the likelihoods of the document that is currently being
    /// imported as a component of a combined distribution with data, by itself or as a component of an array
    /// distribution. It is then a measurement of its own, and must not be multiplied into the distributions that
    /// name it as a constraint as well.
    bool isConstraintReadAsChannel(RooAbsPdf const &pdf) const;
-
-   /// The other terms of the likelihoods of the document that is currently being imported that have the distribution
-   /// `dist` as a term: their other distributions and their auxiliary distributions. These are the candidates for
-   /// constraint terms of `dist`.
-   std::vector<std::string> otherLikelihoodTerms(std::string const &dist) const;
 
 private:
    template <class T>
@@ -301,7 +291,7 @@ private:
    void exportSimultaneous(RooSimultaneous const &simPdf);
    void recordCategory(RooAbsCategory const &cat);
    void exportData(RooAbsData const &data);
-   RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
+   void exportCombinedData(RooAbsData const &data);
 
    void importAllNodes(RooFit::Detail::JSONNode &n);
    void importDistribution(RooFit::HS3::Distribution const &distribution);
@@ -310,14 +300,11 @@ private:
    void warnIfFreeWithoutDomain(RooRealVar const &var);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void exportVariable(const RooAbsArg *v, RooFit::HS3::ParameterPoint &point, bool storeConstant);
-   void exportVariables(const RooArgSet &allElems, RooFit::HS3::ParameterPoint &point, bool storeConstant);
+   void exportVariable(const RooAbsArg *v, RooFit::HS3::ParameterPoint &point);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
-   void exportModelConfig(RooStats::ModelConfig const &mc,
-                          const std::vector<RooJSONFactoryWSTool::CombinedData> &combDataSets,
-                          const std::vector<RooAbsData *> &single);
+   void exportModelConfig(RooStats::ModelConfig const &mc, const std::vector<RooAbsData *> &singleDataSets);
 
    void exportSingleModelConfig(RooStats::ModelConfig const &mc, std::string const &analysisName,
                                 std::string const *dataName);
@@ -326,10 +313,6 @@ private:
                                               std::vector<RooFit::HS3::DistributionRef> channelConstraints);
 
    // member variables
-   /// The components of combined distributions that are read as constraint terms, by combined distribution.
-   std::map<std::string, std::set<std::string>> _auxiliaryChannelsAsConstraints;
-   /// The components of combined distributions that have data, and are read as such.
-   std::set<std::string> _componentsWithData;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information

@@ -19,7 +19,6 @@
 
 #include <cstddef>
 #include <string>
-#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -135,6 +134,20 @@ void readValue(Cursor const &c, std::vector<T> &out)
       out.emplace_back();
       readValue(Cursor{child, c, i}, out.back());
       ++i;
+   }
+}
+
+/// A struct that has a value of one type for each name.
+template <class T>
+void readValue(Cursor const &c, std::map<std::string, T> &out)
+{
+   if (!c.node().is_map()) {
+      c.error("must be a struct");
+      return;
+   }
+   for (Detail::JSONNode const &item : c.node().children()) {
+      const std::string key = item.key();
+      readValue(Cursor{item, c, key.c_str()}, out[key]);
    }
 }
 

@@ -12,8 +12,6 @@
 
 #include <RooFitHS3/JSONIO.h>
 
-#include <RooAbsPdf.h>
-
 #include <TClass.h>
 
 #include <iostream>
@@ -28,45 +26,31 @@ ImportMap &importers()
 
 namespace {
 
-auto &exportersToAdd()
-{
-   static std::map<const std::string, std::vector<std::unique_ptr<const Exporter>>> toAdd;
-   return toAdd;
-}
+// An exporter that was registered by the name of its class, for which there might have been no TClass yet.
+struct ExporterByName {
+   std::string className;
+   std::unique_ptr<const Exporter> exporter;
+   bool topPriority = true;
+};
 
-ExportMap &exportersImpl()
+std::vector<ExporterByName> &exportersByName()
 {
-   static ExportMap _exporters;
-   return _exporters;
+   static std::vector<ExporterByName> _exportersByName;
+   return _exportersByName;
 }
 
 } // namespace
 
 ExportMap &exporters()
 {
-   // If there are exporters to be added, do this now.
-   for (auto &item : exportersToAdd()) {
-      TClass *klass = TClass::GetClass(item.first.c_str());
-      auto &exporters = exportersImpl()[klass]; // registered exporters so far
-      auto &toAdd = item.second;                // exporters to add
-
-      // Find the nullptr separator
-      auto nullIt = std::find(toAdd.begin(), toAdd.end(), nullptr);
-
-      if (nullIt == toAdd.end()) {
-         throw std::runtime_error("toAdd does not contain nullptr separator");
-      }
-
-      // Move elements after nullptr to the back
-      exporters.insert(exporters.end(), std::make_move_iterator(nullIt + 1), std::make_move_iterator(toAdd.end()));
-
-      // Move elements before nullptr to the front
-      exporters.insert(exporters.begin(), std::make_move_iterator(toAdd.begin()), std::make_move_iterator(nullIt));
-
-      toAdd.clear();
+   static ExportMap _exporters;
+   // The exporters that were registered by class name are registered with their TClass now, in the same order.
+   std::vector<ExporterByName> byName;
+   byName.swap(exportersByName());
+   for (auto &item : byName) {
+      registerExporter(TClass::GetClass(item.className.c_str()), std::move(item.exporter), item.topPriority);
    }
-   exportersToAdd().clear();
-   return exportersImpl();
+   return _exporters;
 }
 
 bool registerImporter(const std::string &key, std::unique_ptr<const Importer> f, bool topPriority)
@@ -85,14 +69,7 @@ bool registerExporter(const TClass *key, std::unique_ptr<const Exporter> f, bool
 
 bool registerExporter(const std::string &key, std::unique_ptr<const Exporter> f, bool topPriority)
 {
-   auto &vec = exportersToAdd()[key];
-   // The vector starts out with just a nullptr separator. Elements before it
-   // will be added to the top of the exporter queue, and the elements after
-   // get appended to the end.
-   if (vec.empty()) {
-      vec.emplace_back(nullptr);
-   }
-   vec.insert(topPriority ? vec.begin() : vec.end(), std::move(f));
+   exportersByName().push_back({key, std::move(f), topPriority});
    return true;
 }
 
