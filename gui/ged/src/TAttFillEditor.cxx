@@ -150,9 +150,9 @@ void TAttFillEditor::DoFillAlphaColor(ULongptr_t p)
 void TAttFillEditor::DoFillColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAttFill->SetFillColor(TColor::GetColor(color));
+   fAttFill->SetFillColor(TVirtualX::Pixel2Number(color));
 
-   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+   if (TColor *tcolor = gROOT->GetColor(TVirtualX::Pixel2Number(color))) {
       fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
       fAlphaField->SetNumber(tcolor->GetAlpha());
    }

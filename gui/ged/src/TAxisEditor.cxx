@@ -372,7 +372,7 @@ void TAxisEditor::SetModel(TObject* obj)
 void TAxisEditor::DoAxisColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAxis->SetAxisColor(TColor::GetColor(color));
+   fAxis->SetAxisColor(TVirtualX::Pixel2Number(color));
    Update();
 }
 
@@ -476,7 +476,7 @@ void TAxisEditor::DoTitle(const char *text)
 void TAxisEditor::DoTitleColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAxis->SetTitleColor(TColor::GetColor(color));
+   fAxis->SetTitleColor(TVirtualX::Pixel2Number(color));
    Update();
 }
 
@@ -541,7 +541,7 @@ void TAxisEditor::DoTitleRotated()
 void TAxisEditor::DoLabelColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAxis->SetLabelColor(TColor::GetColor(color));
+   fAxis->SetLabelColor(TVirtualX::Pixel2Number(color));
    Update();
 }
 

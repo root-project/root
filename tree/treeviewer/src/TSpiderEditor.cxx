@@ -329,7 +329,7 @@ void TSpiderEditor::DoAvLineColor(Pixel_t a)
 {
    if (fAvoidSignal) return;
 
-   fSpider->SetAverageLineColor(TColor::GetColor(a));
+   fSpider->SetAverageLineColor(TVirtualX::Pixel2Number(a));
    Update();
 }
 
@@ -340,7 +340,7 @@ void TSpiderEditor::DoAvFillColor(Pixel_t a)
 {
    if (fAvoidSignal) return;
 
-   fSpider->SetAverageFillColor(TColor::GetColor(a));
+   fSpider->SetAverageFillColor(TVirtualX::Pixel2Number(a));
    Update();
 }
 

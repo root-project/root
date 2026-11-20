@@ -151,9 +151,9 @@ void TAttLineEditor::SetModel(TObject* obj)
 void TAttLineEditor::DoLineColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAttLine->SetLineColor(TColor::GetColor(color));
+   fAttLine->SetLineColor(TVirtualX::Pixel2Number(color));
 
-   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+   if (TColor *tcolor = gROOT->GetColor(TVirtualX::Pixel2Number(color))) {
       fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
       fAlphaField->SetNumber(tcolor->GetAlpha());
    }

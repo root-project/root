@@ -370,7 +370,7 @@ void TAdvancedGraphicsDialog::DrawContour()
    // contour error is actually the desired confidence level
    Double_t cl = fContourError->GetNumber();
    fFitter->Contour( par1, par2, graph, cl);
-   graph->SetFillColor( TColor::GetColor( fContourColor->GetColor() ) );
+   graph->SetFillColor( TVirtualX::Pixel2Number( fContourColor->GetColor() ) );
    graph->GetXaxis()->SetTitle( fFitter->GetParName(par1) );
    graph->GetYaxis()->SetTitle( fFitter->GetParName(par2) );
    graph->Draw( options.c_str() );
@@ -437,8 +437,8 @@ void TAdvancedGraphicsDialog::DrawConfidenceLevels()
       os << "Confidence Intervals with " << fConfLevel->GetNumber()
          << " conf. band.";
       g->SetTitle(os.str().c_str());
-      g->SetLineColor( TColor::GetColor( fConfColor->GetColor() ));
-      g->SetFillColor( TColor::GetColor( fConfColor->GetColor() ));
+      g->SetLineColor( TVirtualX::Pixel2Number( fConfColor->GetColor() ));
+      g->SetFillColor( TVirtualX::Pixel2Number( fConfColor->GetColor() ));
       g->SetFillStyle(3001);
       g->Draw("C3same");
    } else if ( data->NDim() == 2 )
@@ -455,8 +455,8 @@ void TAdvancedGraphicsDialog::DrawConfidenceLevels()
       os << "Confidence Intervals with " << fConfLevel->GetNumber()
          << " conf. band.";
       g->SetTitle(os.str().c_str());
-      g->SetLineColor( TColor::GetColor( fConfColor->GetColor() ));
-      g->SetFillColor( TColor::GetColor( fConfColor->GetColor() ));
+      g->SetLineColor( TVirtualX::Pixel2Number( fConfColor->GetColor() ));
+      g->SetFillColor( TVirtualX::Pixel2Number( fConfColor->GetColor() ));
       g->SetFillStyle(3001);
       g->Draw("C3same");
    }

@@ -161,9 +161,9 @@ void TAttMarkerEditor::SetModel(TObject* obj)
 void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAttMarker->SetMarkerColor(TColor::GetColor(color));
+   fAttMarker->SetMarkerColor(TVirtualX::Pixel2Number(color));
 
-   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+   if (TColor *tcolor = gROOT->GetColor(TVirtualX::Pixel2Number(color))) {
       fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
       fAlphaField->SetNumber(tcolor->GetAlpha());
    }

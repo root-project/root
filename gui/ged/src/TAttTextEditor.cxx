@@ -163,9 +163,9 @@ void TAttTextEditor::SetModel(TObject* obj)
 void TAttTextEditor::DoTextColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAttText->SetTextColor(TColor::GetColor(color));
+   fAttText->SetTextColor(TVirtualX::Pixel2Number(color));
 
-   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+   if (TColor *tcolor = gROOT->GetColor(TVirtualX::Pixel2Number(color))) {
       fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
       fAlphaField->SetNumber(tcolor->GetAlpha());
    }
@@ -198,7 +198,7 @@ Bool_t TAttTextEditor::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t 
    Bool_t b = kFALSE;
 
    if (GET_MSG(msg) == kC_COLORSEL && GET_SUBMSG(msg) == kCOL_SELCHANGED) {
-      if (parm1 != 0) fAttText->SetTextColor(TColor::GetColor(parm2));
+      if (parm1 != 0) fAttText->SetTextColor(TVirtualX::Pixel2Number(parm2));
       b = kTRUE;
       // SendMessage(fMsgWindow, msg, parm1, parm2);
    }

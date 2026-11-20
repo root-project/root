@@ -2681,7 +2681,7 @@ void TH2Editor::DoFillColor(Pixel_t color)
 {
    if (fAvoidSignal || !fGedEditor->GetPad()) return;
    fGedEditor->GetPad()->cd();
-   fGedEditor->GetPad()->SetFrameFillColor(TColor::GetColor(color));
+   fGedEditor->GetPad()->SetFrameFillColor(TVirtualX::Pixel2Number(color));
    Update();
 }
 
