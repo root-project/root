@@ -107,7 +107,7 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
 void TGuiBldNameFrame::DoRedraw()
 {
    //TColor *col = gROOT->GetColor(29);
-   //TRootGuiBuilder::SetBgndColor(fTitleFrame, col->GetPixel());
+   //TRootGuiBuilder::SetBgndColor(fTitleFrame, gVirtualX->GetPixel(col->GetNumber()));
    TGCompositeFrame::DoRedraw();
 }
 
