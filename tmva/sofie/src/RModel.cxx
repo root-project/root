@@ -2190,7 +2190,7 @@ void RModel::GenerateHeaderInfo(std::string& hgname) {
 void RModel::EmitHelperFunctionsCode()
 {
     HelperFunctionsCode code =
-        GenerateHelperFunctionsCode(fNeededHelperFunctions, "TMVA_SOFIE_" + fName);
+        GenerateHelperFunctionsCode(fNeededHelperFunctions, "TMVA_SOFIE_" + fName, fUseBLAS);
 
     auto replaceMarker = [this](const std::string &marker, const std::string &replacement) {
         auto pos = fGC.find(marker);

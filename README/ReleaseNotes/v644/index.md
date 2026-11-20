@@ -47,7 +47,7 @@ RenderCore, the WebGL engine of the REve client, is fetched at build time as the
 
 ### SOFIE inference code without BLAS dependency
 
-The C++ code that SOFIE generates for the inference of ONNX models doesn't call BLAS anymore: the matrix multiplications are done by functions that are emitted into the generated header itself. The generated code is therefore self-contained and doesn't need to be linked against a BLAS library. For the per-event inference that SOFIE is mostly used for, for example in RDataFrame event loops, this is as fast as BLAS, but large batches are evaluated considerably slower.
+The C++ code that SOFIE generates for the inference of ONNX models doesn't call BLAS anymore: the matrix multiplications are done by functions that are emitted into the generated header itself. The generated code is therefore self-contained and doesn't need to be linked against a BLAS library. For the per-event inference that SOFIE is mostly used for, for example in RDataFrame event loops, this is as fast as BLAS, but large batches are evaluated considerably slower. If you prefer BLAS, call `RModel::SetUseBLAS(true)` before `RModel::Generate()`: then the generated code calls BLAS like before, and it has to be linked against a BLAS library again.
 
 ## I/O
 

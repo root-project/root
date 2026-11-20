@@ -11,7 +11,8 @@ This is a new development in TMVA and is currently in early experimental stage. 
 None: the generated inference code is self-contained C++ (the matrix
 multiplications it contains are reference implementations emitted into the
 generated header itself, so no BLAS or other external library has to be
-linked to run it).
+linked to run it). Optionally, the matrix multiplications can be done with BLAS
+instead, see below.
 
 ## Installation
 
@@ -79,6 +80,25 @@ and can be inspected with the standard Python and Rust safetensors tooling:
 ```c++
 model.Generate(Options::kSafetensorsWeightFile);
 ```
+
+The matrix multiplications in the generated code are done by built-in reference
+implementations, which are as fast as BLAS for the per-event inference SOFIE is
+mostly used for, but much slower for large batches. If you prefer BLAS, request
+it before generating the code:
+
+```c++
+model.SetUseBLAS(true);
+model.Generate();
+```
+
+The generated code then calls the BLAS routines `sgemm_` and `saxpy_`, so it has
+to be linked against a BLAS library such as OpenBLAS, or one has to be loaded in
+the ROOT session (e.g. with `gSystem->Load("libopenblas")`) before the generated
+code is used. The generated code declares these routines itself, with 32-bit
+integer arguments, so the BLAS library must have this usual interface (not the
+64-bit integer one of ILP64 builds), and the generated code can't be compiled
+together with headers that declare these routines differently, like OpenBLAS's
+`f77blas.h`.
 
 SOFIE also supports generating inference code with RDataFrame as inputs, refer to the tutorials below for examples.
 

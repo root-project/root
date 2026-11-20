@@ -135,6 +135,14 @@ if (clad)
   ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core ROOTTMVASofie)
 endif()
 
+# The matrix routines of the generated code against a naive implementation. If
+# BLAS is found, that includes the ones that call BLAS (RModel::SetUseBLAS(true)).
+ROOT_ADD_GTEST(TestSofieBLAS TestSofieBLAS.cxx LIBRARIES Core ROOTTMVASofie)
+if (BLAS_FOUND)
+  target_link_libraries(TestSofieBLAS PRIVATE BLAS::BLAS)
+  target_compile_definitions(TestSofieBLAS PRIVATE SOFIE_TEST_WITH_BLAS)
+endif()
+
 # Unit tests for the ONNX parser layer: the tests write the model files
 # themselves as hand-crafted protobuf wire format, so they need no Python
 ROOT_ADD_GTEST(TestSofieParser TestSofieParser.cxx

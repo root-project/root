@@ -538,8 +538,11 @@ struct HelperFunctionsCode {
 /// `modelNamespace` (e.g. "TMVA_SOFIE_MyModel") is the generated model namespace;
 /// the Clad pullbacks are emitted into clad::custom_derivatives::<modelNamespace>
 /// so the model stays differentiable without SOFIE_common.hxx / CladDerivator.h.
+///
+/// `useBLAS`: make "Gemm" and "Axpy" call the BLAS routines sgemm_ and
+/// saxpy_ instead of being reference implementations (see RModel::SetUseBLAS).
 HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> & neededHelpers,
-                                                const std::string & modelNamespace);
+                                                const std::string & modelNamespace, bool useBLAS = false);
 
 
 } // namespace TMVA::Experimental::SOFIE

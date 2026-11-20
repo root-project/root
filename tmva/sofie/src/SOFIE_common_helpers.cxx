@@ -16,7 +16,8 @@ namespace {
 // Standalone helper snippets, each emitted verbatim inside the generated model
 // namespace. They depend only on the C++ stdlib (headers collected in
 // GenerateHelperFunctionsCode); the matrix routines below are self-contained
-// reference implementations, so the generated code has no BLAS dependency.
+// reference implementations, so the generated code has no BLAS dependency,
+// unless the model asks for BLAS (RModel::SetUseBLAS, see kGemmBlas).
 
 // Reference implementation of the BLAS sgemm contract:
 //   C := alpha * op(A) * op(B) + beta * C,   op(X) = X or X^T
@@ -105,6 +106,38 @@ inline void Axpy(const int *n, const float *alpha, const float *x, const int *in
       for (int i = 0, px = 0, py = 0; i < N; ++i, px += *incx, py += *incy)
          y[py] += alpha_ * x[px];
    }
+}
+)SOFIE";
+
+// Gemm and Axpy for models generated with RModel::SetUseBLAS(true):
+// instead of the reference implementations above, they forward to the BLAS
+// routines sgemm_ and saxpy_, which have the same calling convention. The
+// generated code then has to be linked against a BLAS library.
+constexpr const char *kGemmBlas = R"SOFIE(
+namespace BLAS {
+extern "C" void sgemm_(const char *transa, const char *transb, const int *m, const int *n, const int *k,
+                       const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
+                       const float *beta, float *C, const int *ldc);
+} // namespace BLAS
+
+// Calls BLAS, because the model was generated with RModel::SetUseBLAS(true).
+inline void Gemm(const char *transa, const char *transb, const int *m, const int *n, const int *k,
+                 const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
+                 const float *beta, float *C, const int *ldc)
+{
+   BLAS::sgemm_(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+}
+)SOFIE";
+
+constexpr const char *kAxpyBlas = R"SOFIE(
+namespace BLAS {
+extern "C" void saxpy_(const int *n, const float *alpha, const float *x, const int *incx, float *y, const int *incy);
+} // namespace BLAS
+
+// Calls BLAS, because the model was generated with RModel::SetUseBLAS(true).
+inline void Axpy(const int *n, const float *alpha, const float *x, const int *incx, float *y, const int *incy)
+{
+   BLAS::saxpy_(n, alpha, x, incx, y, incy);
 }
 )SOFIE";
 
@@ -1240,7 +1273,7 @@ inline MemoryResult OrganizeMemory(const std::vector<TensorLifeInfo> &tensorsInf
 } // anonymous namespace
 
 HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &neededHelpers,
-                                                const std::string &modelNamespace)
+                                                const std::string &modelNamespace, bool useBLAS)
 {
    auto need = [&](const char *key) { return neededHelpers.count(key) > 0; };
 
@@ -1300,9 +1333,9 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
    defs += "\n// --- Standalone SOFIE inference helper functions ---\n";
 
    if (needAxpy)
-      defs += kAxpyRef;
+      defs += useBLAS ? kAxpyBlas : kAxpyRef;
    if (needGemm)
-      defs += kGemmRef;
+      defs += useBLAS ? kGemmBlas : kGemmRef;
 
    if (needConvertLength)
       defs += kConvertShapeToLength;
