@@ -107,6 +107,16 @@ TEST(RHist, SetBinContent)
       EXPECT_TRUE(hist.GetStats().IsTainted());
       EXPECT_THROW(hist.GetNEntries(), std::logic_error);
    }
+
+   {
+      RHist<int> hist(axis);
+      ASSERT_FALSE(hist.GetStats().IsTainted());
+      const std::vector<RBinIndex> indices = {2};
+      hist.SetBinContent(indices, 42);
+      EXPECT_EQ(hist.GetBinContent(indices), 42);
+      EXPECT_TRUE(hist.GetStats().IsTainted());
+      EXPECT_THROW(hist.GetNEntries(), std::logic_error);
+   }
 }
 
 TEST(RHist, Add)
