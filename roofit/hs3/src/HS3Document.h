@@ -60,6 +60,26 @@ std::string const &nameOf(std::variant<Ts...> const &v)
    return std::visit([](auto const &alternative) -> std::string const & { return alternative.name; }, v);
 }
 
+/// The object with the name `name` among the objects of a section, e.g. `findByName(doc.data, "obsData")`, or nullptr.
+template <class Objects_t>
+auto findByName(Objects_t &objects, std::string const &name) -> decltype(&*objects.begin())
+{
+   for (auto &object : objects) {
+      if (object.name == name) {
+         return &object;
+      }
+   }
+   return nullptr;
+}
+
+/// The body of the object `name` if it is a `Body_t`, e.g. `find<CombinedData>(doc.data, "obsData")`, or nullptr.
+template <class Body_t, class Objects_t>
+auto find(Objects_t &objects, std::string const &name) -> decltype(std::get_if<Body_t>(&objects.begin()->body))
+{
+   auto *object = findByName(objects, name);
+   return object ? std::get_if<Body_t>(&object->body) : nullptr;
+}
+
 /// A name that says what it refers to, so that for example a DataRef can't be used as a DomainRef.
 template <class Tag>
 struct Ref {
@@ -193,21 +213,47 @@ struct BinnedData {
    std::optional<GaussianUncertainty> uncertainty;
 };
 
-/// The sub-data set of a combined data set for one key, which has one label per column.
-struct CombinedDataComponent {
+/// The data set or distribution that a combined data set or distribution selects for one key, which has one label per
+/// column.
+template <class Ref_t>
+struct CombinedComponent {
    std::vector<std::string> key;
-   DataRef data;
+   Ref_t ref;
 };
 
-/// Data sets that are selected by a key (HS3 #119). The columns are categorical axes of the domains.
-struct CombinedData {
+/// Data sets or distributions that are selected by a key (HS3 #119). The columns are categorical axes of the domains.
+template <class Ref_t>
+struct Combined {
    std::vector<std::string> columns;
-   std::vector<CombinedDataComponent> components;
+   std::vector<CombinedComponent<Ref_t>> components;
+
+   /// The component for a key, or nullptr.
+   CombinedComponent<Ref_t> const *find(std::vector<std::string> const &key) const
+   {
+      for (auto const &component : components) {
+         if (component.key == key) {
+            return &component;
+         }
+      }
+      return nullptr;
+   }
 };
+
+using CombinedData = Combined<DataRef>;
+using CombinedDist = Combined<DistributionRef>;
 
 struct Data {
    std::string name;
    std::variant<PointData, UnbinnedData, BinnedData, CombinedData> body;
+
+   /// The number of factors that a distribution paired with the data contributes to a likelihood: the number of
+   /// entries of unbinned data, and one for point data and binned data. Combined data gives one as well, although
+   /// it is its components that are paired with distributions.
+   std::size_t numEntries() const
+   {
+      auto const *unbinned = std::get_if<UnbinnedData>(&body);
+      return unbinned ? unbinned->numEntries() : 1;
+   }
 };
 
 /// The data of a likelihood term: a data set, a number given in-line, or none (std::monostate) in a pure model.
@@ -395,6 +441,9 @@ struct CustomModifier {
 
 using Modifier = std::variant<NormFactor, NormSys, HistoSys, ShapeSys, StatError, CustomModifier>;
 
+/// The type of a modifier, as the standard names it.
+char const *typeOf(Modifier const &modifier);
+
 struct Sample {
    std::string name;
    std::vector<double> contents;
@@ -419,7 +468,7 @@ struct HistFactoryDist {
 
 struct Distribution {
    std::string name;
-   std::variant<GenericObject, HistFactoryDist> body;
+   std::variant<GenericObject, HistFactoryDist, CombinedDist> body;
 };
 
 struct Function {
@@ -459,6 +508,7 @@ struct Attributes {
    bool isConstVar = false; ///< How ROOT versions before HS3 0.3 marked named RooConstVars.
 };
 
+/// A RooSimultaneous as older versions of RooFit wrote it, before HS3 had combined distributions. It is only read.
 struct CombinedDistribution {
    std::string indexCat;
    std::vector<std::string> labels;
@@ -466,6 +516,7 @@ struct CombinedDistribution {
    std::vector<DistributionRef> distributions;
 };
 
+/// The data set of a RooSimultaneous as older versions of RooFit wrote it. It is only read.
 struct CombinedDataset {
    std::string indexCat;
    std::vector<std::string> labels;
@@ -527,6 +578,34 @@ namespace HS3 {
 struct ValidateOptions;
 std::optional<ValidatedHS3Document>
 validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &options);
+
+/// What readAuxiliaryChannelsAsConstraints() changed.
+struct AuxiliaryConstraints {
+   std::set<std::string> terms; ///< The components that are no longer components of their combined distribution.
+   std::set<std::string> data;  ///< Their data sets, which hold the observed values of global observables.
+   std::vector<std::string> warnings;
+};
+
+/// RooFit writes an array of constraints with the data set of its observed values as a component of the combined
+/// distribution of the model (RooJSONFactoryWSTool::Config::exportConstraintData), and marks it in
+/// misc.ROOT_internal.auxiliary_channels. Unless these components are to stay components (`asChannels`), the
+/// document is changed to what RooFit wrote before: the component and its data set become a term of every likelihood
+/// that has the combined distribution, which is then read as a constraint term with global observables. The label of
+/// the component is taken out of the index category.
+///
+/// The same is done for a document that lists a distribution twice: as a component of a combined distribution whose
+/// data set has no entries for it, and as a term of its own with data. It contributes once, as the term, but a
+/// component without data is not a constraint term for RooFit, which would leave it out of the likelihood. Such a
+/// document is read like the ones above, with a warning. If the components stay components, the data of the term
+/// becomes the data of the component instead, and the term is removed.
+AuxiliaryConstraints readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &doc, bool asChannels);
+
+/// A number given in-line in the "data" of a likelihood, or a point data set without axes, is the value of the single
+/// variate of the paired distribution (HS3 0.3). The numbers become point data sets named "<distribution>_data", and
+/// the point data sets get their axis, so that every term of a likelihood refers to a data set, or has no data.
+/// Returns the errors: a distribution without a single variate, or a point data set with an axis that is not the
+/// variate of its distribution.
+std::vector<std::string> resolvePointData(ValidatedHS3Document &doc);
 } // namespace HS3
 
 /// An HS3 document. It is move-only, because generic objects refer to the JSON tree of the document.
@@ -553,8 +632,6 @@ namespace HS3 {
 
 /// Options for upgradeDocument() and parseDocument().
 struct ParseOptions {
-   /// Fragments of a document can be imported without metadata.
-   bool requireMetadata = true;
    /// If false, HistFactory distributions stay generic objects, because a user registered their own importer.
    bool typedHistFactory = true;
 };
@@ -570,6 +647,9 @@ void upgradeHistFactoryDist(Detail::JSONNode &distribution, Version const &versi
 /// Reads a document. The generic objects in the document refer to nodes of the JSON tree, so the tree must outlive the
 /// document. Problems are reported in `diagnostics`, and if there are errors the document must not be used.
 HS3Document parseDocument(Detail::JSONNode const &root, Diagnostics &diagnostics, ParseOptions const &options = {});
+
+/// Reads a distribution that doesn't come with a document.
+Distribution parseDistribution(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
 
 /// Reads a HistFactory distribution that doesn't come with a document.
 HistFactoryDist parseHistFactoryDist(Detail::JSONNode const &distribution, Diagnostics &diagnostics);
@@ -592,6 +672,9 @@ void writeDocument(Detail::JSONNode &root, HS3Document const &doc);
 /// Writes a HistFactory distribution, without its name.
 void writeHistFactoryDist(Detail::JSONNode &node, HistFactoryDist const &dist);
 
+/// Writes a combined distribution, without its name.
+void writeCombinedDist(Detail::JSONNode &node, CombinedDist const &dist);
+
 /// Writes the axes, contents and uncertainties of binned data, without its name and type.
 void writeBinnedData(Detail::JSONNode &node, BinnedData const &data);
 
@@ -603,9 +686,6 @@ void writeInterpolatedFunction(Detail::JSONNode &node, InterpolatedFunction cons
 void writeInterpolatedNumber(Detail::JSONNode &node, InterpolatedNumber const &function);
 
 void writeInterpolation(Detail::JSONNode &node, Interpolation const &interpolation);
-
-/// Writes a number, as an integer if it has no fractional part.
-void writeNumber(Detail::JSONNode &node, double value);
 
 /// Writes an array of numbers, each as an integer if it has no fractional part.
 void writeContents(Detail::JSONNode &node, std::vector<double> const &values);
@@ -621,7 +701,8 @@ struct ValidateOptions {
 } // namespace HS3
 
 /// A document that passed validate(). Only validate() can create it, so the code that builds RooFit objects can rely on
-/// the checks.
+/// the checks. Afterwards, it can only be changed by the functions of this layer that adapt it to what RooFit can
+/// build, which are trusted to leave it consistent.
 class ValidatedHS3Document {
 public:
    HS3Document const &doc() const { return _doc; }
@@ -630,6 +711,8 @@ private:
    explicit ValidatedHS3Document(HS3Document doc) : _doc{std::move(doc)} {}
    friend std::optional<ValidatedHS3Document>
    HS3::validate(HS3Document doc, HS3::Diagnostics &diagnostics, HS3::ValidateOptions const &options);
+   friend HS3::AuxiliaryConstraints HS3::readAuxiliaryChannelsAsConstraints(ValidatedHS3Document &doc, bool asChannels);
+   friend std::vector<std::string> HS3::resolvePointData(ValidatedHS3Document &doc);
 
    HS3Document _doc;
 };
@@ -644,8 +727,9 @@ validate(HS3Document doc, Diagnostics &diagnostics, ValidateOptions const &optio
 /// The checks of validate(), for a document that is still needed if it doesn't pass them.
 void checkDocument(HS3Document const &doc, Diagnostics &diagnostics, ValidateOptions const &options = {});
 
-/// Same as validate(), but for a single HistFactory distribution that doesn't come with a document.
+/// Same as validate(), but for a single HistFactory or combined distribution that doesn't come with a document.
 void validateHistFactoryDist(HistFactoryDist const &dist, std::string const &name, Diagnostics &diagnostics);
+void validateCombinedDist(CombinedDist const &dist, std::string const &name, Diagnostics &diagnostics);
 
 /// Reads the leading "MAJOR.MINOR" and the optional ".PATCH" of an HS3 version string.
 bool parseVersion(std::string const &version, Version &out);

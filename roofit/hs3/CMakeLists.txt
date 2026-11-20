@@ -64,7 +64,6 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
           src/HS3Schema.h
           src/JSONIOUtils.h
           src/JSONReadRecorder.h
-          src/static_execute.h
   )
 endif()
 

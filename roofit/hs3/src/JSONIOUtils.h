@@ -6,8 +6,11 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 #include <vector>
 #include <RooFit/Detail/JSONInterface.h>
+#include <RooFitHS3/JSONIO.h>
 
 #include "HS3Document.h"
 
@@ -50,41 +53,29 @@ bool isLiteralConstVar(RooAbsArg const &arg);
 // if it were not in the workspace.
 bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws);
 
-// The constraint terms among `terms` that belong to the channel `channel` of a model with the channels `channels`:
-// the ones with a global observable (a variable that no channel depends on) and with another variable that the
-// channel depends on. An array of constraints is one term.
-std::vector<RooAbsPdf *>
-constraintsOfChannel(RooAbsPdf const &channel, std::vector<RooAbsPdf *> const &terms, RooArgSet const &channels);
-
-// The channel with its constraint terms as RooFit and HistFactory have them: a product of the constraints and the
-// channel, named "<channel>_with_constraints", from which RooFit takes the constraints when it builds a likelihood.
-// Returns the channel itself if it has none.
-RooAbsPdf &
-channelWithConstraints(RooJSONFactoryWSTool &tool, RooAbsPdf &channel, std::vector<RooAbsPdf *> const &constraints);
-
-// The HS3 type and the observable of `pdf` as a component of an array distribution (RooPoisson, RooGaussian or
-// RooLognormal, over a named observable), or std::nullopt if `pdf` cannot be a component.
+// The HS3 type, the observable and the other fields of `pdf` as a component of an array distribution (RooPoisson,
+// RooGaussian or RooLognormal, over a named observable), or std::nullopt if `pdf` cannot be a component. The fields
+// are the ones of the exporter of its class.
 // If `observable` names the mean of a RooGaussian, the Gaussian is written with x and mean swapped (see
-// RooJSONFactoryWSTool::setConstraintObservable()).
+// RooJSONFactoryWSTool::setConstraintObservable()). The functions that a field names, e.g. for a RooLognormal that is
+// not in the standard parametrization, are only written if there is a `tool`; without one, this only describes the
+// component.
 struct ArrayComponentInfo {
    std::string type;
    std::string observable;
+   std::vector<std::pair<std::string, RooFit::HS3::NameOrNumber>> fields;
 };
-std::optional<ArrayComponentInfo> arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable = nullptr);
+std::optional<ArrayComponentInfo>
+arrayComponentInfo(RooAbsPdf const &pdf, std::string const *observable = nullptr, RooJSONFactoryWSTool *tool = nullptr);
 
-// Write the array distribution `name` with the given components into `elem`. `observableOf` gives the observable
-// recorded for a component by name, if any. The `tool` writes the functions that the components need besides, e.g.
-// for a RooLognormal that is not in the standard parametrization.
+// Write the array distribution `name` with the given components into `elem`. The `tool` knows the observables that
+// are recorded for the components, and writes the functions that they need besides, e.g. for a RooLognormal that is
+// not in the standard parametrization.
 void writeArrayDist(RooJSONFactoryWSTool &tool, RooFit::Detail::JSONNode &elem, std::string const &name,
-                    std::vector<RooAbsPdf const *> const &components,
-                    std::map<std::string, std::string> const &observableOf);
+                    std::vector<RooAbsPdf const *> const &components);
 
-struct ToNumberOutput {
-   bool valid = false;
-   double value = 0.0;
-};
-
-ToNumberOutput toNumber(const std::string &str);
+// The number that a string spells as a whole, if it does.
+std::optional<double> toNumber(const std::string &str);
 void writeReference(RooFit::Detail::JSONNode &node, RooAbsArg const &arg);
 bool startsWith(std::string_view str, std::string_view prefix);
 bool endsWith(std::string_view str, std::string_view suffix);
@@ -141,12 +132,79 @@ std::string selectionLabel(RooAbsCategory const &indexCat, std::vector<RooCatego
                            std::vector<std::string> const &key);
 // A key as written in the document, for messages: ["a", "b"].
 std::string selectionKeyToString(std::vector<std::string> const &key);
-// Read the columns of a combined distribution or data set from the list `field` of `node`: each entry must be the
-// name of a category in the workspace, i.e. declared by a categorical axis of a domain.
-std::vector<RooCategory *> readSelectionColumns(RooWorkspace const &ws, RooFit::Detail::JSONNode const &node,
-                                                const char *field, std::string const &context);
-// Read and validate the "key" of a component: one label per column, each one of the categories of its column.
-std::vector<std::string> readSelectionKey(RooFit::Detail::JSONNode const &component,
-                                          std::vector<RooCategory *> const &columns, std::string const &context);
+
+// Adapters that wrap plain import and export functions into the RooFit::JSONIO::Importer and Exporter interface, for
+// the importers and exporters that RooFit registers itself.
+
+// An import function that returns nothing always reads the object. One that returns a bool can decline by returning
+// false, so that the next importer of the type key is tried.
+template <class ImportFunc>
+class FuncImporter : public RooFit::JSONIO::Importer {
+public:
+   explicit FuncImporter(ImportFunc func) : _func{func} {}
+   bool importArg(RooJSONFactoryWSTool *tool, const RooFit::Detail::JSONNode &p) const override
+   {
+      if constexpr (std::is_void_v<decltype(_func(tool, p))>) {
+         _func(tool, p);
+         return true;
+      } else {
+         return _func(tool, p);
+      }
+   }
+
+private:
+   const ImportFunc _func;
+};
+
+template <class RooArg_t>
+using ExportFunc = void (*)(RooJSONFactoryWSTool *, RooArg_t const &, RooFit::Detail::JSONNode &);
+
+// The exporter of the class RooArg_t writes the HS3 type key that the export function is registered with. A function
+// overwrites it if the type depends on the object.
+template <class RooArg_t, class Func>
+class FuncExporter : public RooFit::JSONIO::Exporter {
+public:
+   FuncExporter(Func func, std::string key, bool autoExportDependants)
+      : _func{func}, _key{std::move(key)}, _autoExportDependants{autoExportDependants}
+   {
+   }
+   std::string const &key() const override { return _key; }
+   bool autoExportDependants() const override { return _autoExportDependants; }
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *arg, RooFit::Detail::JSONNode &elem) const override
+   {
+      elem["type"] << _key;
+      _func(tool, static_cast<RooArg_t const &>(*arg), elem);
+      return true;
+   }
+
+private:
+   const Func _func;
+   const std::string _key;
+   const bool _autoExportDependants;
+};
+
+// The importers of a type key and the exporters of a class are tried in the order of their registration.
+template <class ImportFunc>
+void registerImporter(const std::string &key, ImportFunc func)
+{
+   RooFit::JSONIO::registerImporter(key, std::make_unique<FuncImporter<ImportFunc>>(func), false);
+}
+
+template <class RooArg_t, class Func>
+void registerExporter(std::string key, Func func, bool autoExportDependants = true)
+{
+   RooFit::JSONIO::registerExporter(
+      RooArg_t::Class(), std::make_unique<FuncExporter<RooArg_t, Func>>(func, std::move(key), autoExportDependants),
+      false);
+}
+
+// A class that is read and written with the same type key.
+template <class ImportFunc, class RooArg_t>
+void registerType(const std::string &key, ImportFunc importFunc, ExportFunc<RooArg_t> exportFunc,
+                  bool autoExportDependants = true)
+{
+   registerImporter(key, importFunc);
+   registerExporter<RooArg_t>(key, exportFunc, autoExportDependants);
+}
 
 #endif

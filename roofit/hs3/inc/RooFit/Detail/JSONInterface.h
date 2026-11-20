@@ -62,10 +62,8 @@ public:
    JSONNode(JSONNode const &) = delete;
    JSONNode &operator=(JSONNode const &) = delete;
 
-public:
    void writeJSON(std::ostream &os) const;
 
-public:
    JSONNode &operator<<(std::string const &s);
    inline JSONNode &operator<<(const char *s) { return *this << std::string(s); }
    JSONNode &operator<<(int i);
@@ -129,32 +127,22 @@ public:
       }
    }
 
-   JSONNode const *find(std::string const &key) const
-   {
-      auto &n = *this;
-      return n.has_child(key) ? &n[key] : nullptr;
-   }
+   /// The component at the end of a path of keys, or nullptr if a component on the path doesn't exist.
+   JSONNode const *find(std::string const &key) const { return has_child(key) ? &(*this)[key] : nullptr; }
 
    template <typename... Keys_t>
    JSONNode const *find(std::string const &key, Keys_t const &...keys) const
    {
-      auto &n = *this;
-      return n.has_child(key) ? n[key].find(keys...) : nullptr;
+      return has_child(key) ? (*this)[key].find(keys...) : nullptr;
    }
 
-   JSONNode &get(std::string const &key)
-   {
-      auto &n = *this;
-      n.set_map();
-      return n[key];
-   }
+   /// The component at the end of a path of keys. The nodes on the path become maps.
+   JSONNode &get(std::string const &key) { return set_map()[key]; }
 
    template <typename... Keys_t>
    JSONNode &get(std::string const &key, Keys_t const &...keys)
    {
-      auto &next = get(key);
-      next.set_map();
-      return next.get(keys...);
+      return get(key).get(keys...);
    }
 
 private:
@@ -188,21 +176,14 @@ private:
 };
 
 template <class T>
-std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode::const_children_view const &cv)
-{
-   for (const auto &e : cv) {
-      v.push_back(e.val_t<T>());
-   }
-   return v;
-}
-
-template <class T>
 std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode const &n)
 {
    if (!n.is_seq()) {
       throw std::runtime_error("node " + n.key() + " is not of sequence type!");
    }
-   v << n.children();
+   for (const auto &e : n.children()) {
+      v.push_back(e.val_t<T>());
+   }
    return v;
 }
 
