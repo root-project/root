@@ -665,7 +665,7 @@ void TParallelCoordEditor::DoGlobalLineColor(Pixel_t a)
 
    if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
       color->SetAlpha(1);
-      color = gROOT->GetColor(TColor::GetColor(a));
+      color = gROOT->GetColor(TVirtualX::Pixel2Number(a));
       if (color) {
          color->SetAlpha((Float_t)fAlphaField->GetNumber());
          fParallel->SetLineColor(color->GetNumber());
@@ -719,7 +719,7 @@ void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
 {
    if (fAvoidSignal) return;
 
-   Color_t col = TColor::GetColor(p);
+   Color_t col = TVirtualX::Pixel2Number(p);
    TIter next(fParallel->GetVarList());
    TParallelCoordVar *var = nullptr;
    while ((var = (TParallelCoordVar*)next())) var->SetFillColor(col);
@@ -864,7 +864,7 @@ void TParallelCoordEditor::DoSelectLineColor(Pixel_t a)
    if (fAvoidSignal) return;
 
    TParallelCoordSelect* sel = fParallel->GetCurrentSelection();
-   if (sel) sel->SetLineColor(TColor::GetColor(a));
+   if (sel) sel->SetLineColor(TVirtualX::Pixel2Number(a));
    fSelectionSelect->GetSelectedEntry()->SetBackgroundColor(a);
    Update();
 }

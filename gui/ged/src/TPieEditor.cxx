@@ -367,7 +367,7 @@ void TPieEditor::DoTextChange()
    if (fAvoidSignal) return;
 
    // font color
-   fPie->SetTextColor(TColor::GetColor(fColorSelect->GetColor()));
+   fPie->SetTextColor(TVirtualX::Pixel2Number(fColorSelect->GetColor()));
 
    // font type
    Int_t fontPrec = fPie->GetTextFont()%10;

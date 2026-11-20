@@ -1068,7 +1068,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fInitColor = 0;
    if (color) {
       fRetColor = color;
-      fRetTColor = gROOT->GetColor(TColor::GetColor(*color));
+      fRetTColor = gROOT->GetColor(TVirtualX::Pixel2Number(*color));
       fInitColor = *fRetColor;
    }
    fWaitFor = wait;
@@ -1338,7 +1338,7 @@ void TGColorDialog::SetCurrentColor(Pixel_t col)
       return;
    }
    fInitColor = *fRetColor = col;
-   if((fRetTColor = gROOT->GetColor(TColor::GetColor(col)))) {};
+   if((fRetTColor = gROOT->GetColor(TVirtualX::Pixel2Number(col)))) {};
    fCurrentColor = col;
    fColors->SetColor(col);
    fSample->SetBackgroundColor(col);
@@ -1373,7 +1373,7 @@ void TGColorDialog::CloseWindow()
    if (*fRetc != kMBOk) {
       ColorSelected(fInitColor);
       ULongptr_t ptr;
-      if((ptr = (ULongptr_t)gROOT->GetColor(TColor::GetColor(fInitColor)))) AlphaColorSelected(ptr);
+      if((ptr = (ULongptr_t)gROOT->GetColor(TVirtualX::Pixel2Number(fInitColor)))) AlphaColorSelected(ptr);
    } else {
       ColorSelected(*fRetColor);
       AlphaColorSelected((ULongptr_t)fRetTColor);
@@ -1397,7 +1397,7 @@ void TGColorDialog::UpdateAlpha(ULong_t *c)
    Char_t tmp[20];
    Double_t alpha;
 
-   if (TColor *color = gROOT->GetColor(TColor::GetColor(*c))) {
+   if (TColor *color = gROOT->GetColor(TVirtualX::Pixel2Number(*c))) {
       alpha = color->GetAlpha();
       snprintf(tmp, 20, "%.1f", alpha);
       fAlb->Clear();
@@ -1485,7 +1485,7 @@ Bool_t TGColorDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /
                      *fRetColor = TVirtualX::RGB2Pixel(atoi(fRtb->GetString()),
                                                     atoi(fGtb->GetString()),
                                                     atoi(fBtb->GetString()));
-                     if ((fRetTColor = gROOT->GetColor(TColor::GetColor(*fRetColor)))) {
+                     if ((fRetTColor = gROOT->GetColor(TVirtualX::Pixel2Number(*fRetColor)))) {
                         fRetTColor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1,
                                              atof(fAlb->GetString()))));
                      }
@@ -1624,7 +1624,7 @@ void TGColorDialog::SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *objec
 void TGColorDialog::DoPreview()
 {
    TColor *tcolor;
-   if ((tcolor = gROOT->GetColor(TColor::GetColor(fSample->GetBackground())))) {
+   if ((tcolor = gROOT->GetColor(TVirtualX::Pixel2Number(fSample->GetBackground())))) {
       tcolor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1, atof(fAlb->GetString()))));
    }
 
