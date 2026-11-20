@@ -1881,11 +1881,10 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
    RGBtoHLS(r, g, b, fHue, fLight, fSaturation);
    SetTitle(AsHexString());
 
-   Int_t nplanes = 16;
-   if (gVirtualX) gVirtualX->GetPlanes(nplanes);
-   if (nplanes == 0) nplanes = 16;
+   Int_t nplanes = gNColorPlanes;
+   if (nplanes <= 0) nplanes = 16;
 
-   // allocate color now (can be delayed when we have a large colormap)
+   // update color now (can be delayed when we have a large colormap)
 #ifndef R__WIN32
    if (nplanes < 15)
 #endif
@@ -1925,8 +1924,8 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 
 void TColor::Allocate()
 {
-   if (gVirtualX && !gROOT->IsBatch())
-      gVirtualX->SetRGB(fNumber, GetRed(), GetGreen(), GetBlue());
+   if (gColorHandler && !gROOT->IsBatch())
+      gColorHandler(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2073,14 +2072,12 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b, Float_t a)
    TIter next(colors);
 
    Float_t thres;
-   if (gColorThreshold >= 0) {
+   if (gColorThreshold >= 0)
       thres = gColorThreshold;
-   } else {
-      Int_t nplanes = 24;
+   else if ((gNColorPlanes > 0) && (gNColorPlanes <= 16))
+      thres = 1.0f/31.0f; // 5 bits per color : 0 - 0x1F !
+   else
       thres = 1.0f/255.0f;       // 8 bits per color : 0 - 0xFF !
-      if (gVirtualX) gVirtualX->GetPlanes(nplanes);
-      if ((nplanes > 0) && (nplanes <= 16)) thres = 1.0f/31.0f; // 5 bits per color : 0 - 0x1F !
-   }
 
    // Loop over all defined colors
    while (auto color = static_cast<TColor *>(next())) {
@@ -2593,16 +2590,17 @@ Bool_t TColor::IsGrayscale()
 
 void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 {
-   if (fgGrayscaleMode == set) return;
+   if (fgGrayscaleMode == set)
+      return;
 
    fgGrayscaleMode = set;
 
-   if (!gVirtualX || gROOT->IsBatch()) return;
+   if (gROOT->IsBatch())
+      return;
 
    TColor::InitializeColors();
-   TIter iColor(gROOT->GetListOfColors());
-   TColor* color = nullptr;
-   while ((color = (TColor*) iColor()))
+   TIter iter(gROOT->GetListOfColors());
+   while (auto color = static_cast<TColor *> (iter()))
       color->Allocate();
 }
 
