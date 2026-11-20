@@ -2875,3 +2875,22 @@ Int_t TVirtualX::Pixel2Number(ULong_t pixel)
 
    return TColor::GetColor(r, g, b);
 }
+
+namespace {
+   void updateTColorInstance(TColor *color)
+   {
+      if (gVirtualX && color)
+         gVirtualX->SetRGB(color->GetNumber(), color->GetRed(), color->GetGreen(), color->GetBlue());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Protected method to configure handler when color is modified and need to be updated
+/// system dependent pixel value. Pixel values can be obtained, e.g.,
+
+void TVirtualX::ConfigureColorsHandler()
+{
+   Int_t nplanes = 0;
+   gVirtualX->GetPlanes(nplanes);
+   TColor::ConfigureColorsHandler(nplanes, updateTColorInstance);
+}
