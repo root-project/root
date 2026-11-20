@@ -48,7 +48,7 @@ class RPageSinkBuf : public RPageSink {
          RPageStorage::RSealedPage *fSealedPage = nullptr;
          bool IsSealed() const { return fSealedPage != nullptr; }
       };
-   public:
+
       RColumnBuf() = default;
       RColumnBuf(const RColumnBuf&) = delete;
       RColumnBuf& operator=(const RColumnBuf&) = delete;
@@ -58,16 +58,12 @@ class RPageSinkBuf : public RPageSink {
 
       /// Returns a reference to the newly buffered page. The reference remains
       /// valid until DropBufferedPages().
-      RPageZipItem &BufferPage(RPageStorage::ColumnHandle_t columnHandle)
+      RPageZipItem &BufferPage()
       {
-         if (!fCol) {
-            fCol = columnHandle;
-         }
          // Safety: Insertion at the end of a deque never invalidates references
          // to existing elements.
          return fBufferedPages.emplace_back();
       }
-      const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
       bool IsEmpty() const { return fBufferedPages.empty(); }
       bool HasSealedPagesOnly() const { return fBufferedPages.size() == fSealedPages.size(); }
       const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
@@ -82,7 +78,6 @@ class RPageSinkBuf : public RPageSink {
       }
 
    private:
-      RPageStorage::ColumnHandle_t fCol;
       /// Using a deque guarantees that element iterators are never invalidated
       /// by appends to the end of the iterator by BufferPage.
       std::deque<RPageZipItem> fBufferedPages;

@@ -160,7 +160,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
 
    // Safety: References are guaranteed to be valid until the element is destroyed. In other words, all buffered page
    // elements are valid until DropBufferedPages().
-   auto &zipItem = fBufferedColumns.at(colId).BufferPage(columnHandle);
+   auto &zipItem = fBufferedColumns.at(colId).BufferPage();
    std::size_t maxSealedPageBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
    // Do not allocate the buffer yet, in case of IMT we only need it once the task is started.
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
@@ -266,10 +266,10 @@ void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(const std::function<void(voi
 
    std::vector<RSealedPageGroup> toCommit;
    toCommit.reserve(fBufferedColumns.size());
-   for (auto &bufColumn : fBufferedColumns) {
-      R__ASSERT(bufColumn.HasSealedPagesOnly());
-      const auto &sealedPages = bufColumn.GetSealedPages();
-      toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
+   for (std::size_t physicalColumnId = 0; physicalColumnId < fBufferedColumns.size(); ++physicalColumnId) {
+      R__ASSERT(fBufferedColumns[physicalColumnId].HasSealedPagesOnly());
+      const auto &sealedPages = fBufferedColumns[physicalColumnId].GetSealedPages();
+      toCommit.emplace_back(physicalColumnId, sealedPages.cbegin(), sealedPages.cend());
    }
 
    {
