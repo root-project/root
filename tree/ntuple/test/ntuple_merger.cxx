@@ -75,7 +75,7 @@ TEST(RPageStorage, ReadSealedPages)
       source.FindClusterId(columnId, 0, clusterId);
    }
    RNTupleLocalIndex index(clusterId, 0);
-   RPageStorage::RSealedPage sealedPage;
+   ROOT::Internal::RSealedPage sealedPage;
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.GetNElements());
    ASSERT_EQ(4U, sealedPage.GetDataSize());
@@ -929,7 +929,7 @@ static bool VerifyPageCompression(const std::string_view fileName, std::uint32_t
    // Check that the actual compression is correct
    auto source = RPageSource::Create("ntuple", fileName);
    source->Attach();
-   RPageStorage::RSealedPage sealedPage;
+   ROOT::Internal::RSealedPage sealedPage;
    source->LoadSealedPage(0, {0, 0}, sealedPage);
    auto buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
    sealedPage.SetBuffer(buffer.get());

@@ -97,11 +97,11 @@ public:
    {
       throw ROOT::RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
    }
-   void CommitSealedPage(DescriptorId_t, const RSealedPage &) final
+   void CommitSealedPage(DescriptorId_t, const ROOT::Internal::RSealedPage &) final
    {
       throw ROOT::RException(R__FAIL("should never commit sealed pages via RPageSynchronizingSink"));
    }
-   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final
+   void CommitSealedPageV(std::span<ROOT::Internal::RSealedPageGroup> ranges) final
    {
       fInnerSink->CommitSealedPageV(ranges);
    }

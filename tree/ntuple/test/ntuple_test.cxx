@@ -43,13 +43,13 @@ void CreateCorruptedRNTuple(const std::string &uri)
    const auto clusterId = descGuard->GetActiveClusterIterable().begin()->GetId();
    RNTupleLocalIndex index{clusterId, 0};
 
-   constexpr std::size_t bufSize = sizeof(float) + RPageStorage::kNBytesPageChecksum;
+   constexpr std::size_t bufSize = sizeof(float) + ROOT::Internal::RSealedPage::kNBytesPageChecksum;
    unsigned char pxBuffer[bufSize];
    unsigned char pyBuffer[bufSize];
    unsigned char pzBuffer[bufSize];
-   RPageStorage::RSealedPage pxSealedPage;
-   RPageStorage::RSealedPage pySealedPage;
-   RPageStorage::RSealedPage pzSealedPage;
+   ROOT::Internal::RSealedPage pxSealedPage;
+   ROOT::Internal::RSealedPage pySealedPage;
+   ROOT::Internal::RSealedPage pzSealedPage;
    pxSealedPage.SetBufferSize(bufSize);
    pySealedPage.SetBufferSize(bufSize);
    pzSealedPage.SetBufferSize(bufSize);
@@ -64,7 +64,7 @@ void CreateCorruptedRNTuple(const std::string &uri)
    EXPECT_EQ(bufSize, pzSealedPage.GetBufferSize());
 
    // Corrupt px sealed page's checksum
-   memset(pxBuffer + sizeof(float), 0, RPageStorage::kNBytesPageChecksum);
+   memset(pxBuffer + sizeof(float), 0, ROOT::Internal::RSealedPage::kNBytesPageChecksum);
 
    // Corrupt py sealed page's data
    memset(pyBuffer, 0, sizeof(float));

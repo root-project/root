@@ -76,7 +76,7 @@ private:
 
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
    /// key. It is not strictly necessary to write and read the sealed page.
-   RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked);
+   RNTupleLocator WriteSealedPage(const RSealedPage &sealedPage, std::size_t bytesPacked);
 
    /// Subroutine of CommitSealedPageVImpl, used to perform a vector write of the (multi-)range of pages
    /// contained in `batch`. The locators for the written pages are appended to `locators`.
@@ -86,10 +86,9 @@ private:
 
 protected:
    void CommitHeaderImpl(const unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator
-   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) override;
+   RNTupleLocator CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) override;
    std::vector<RNTupleLocator>
-   CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
+   CommitSealedPageVImpl(std::span<RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
    std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;

@@ -80,11 +80,11 @@ public:
    {
       fNBytesCurrentCluster += page.GetNBytes();
    }
-   void CommitSealedPage(ROOT::DescriptorId_t, const RSealedPage &page) final
+   void CommitSealedPage(ROOT::DescriptorId_t, const ROOT::Internal::RSealedPage &page) final
    {
       fNBytesCurrentCluster += page.GetBufferSize();
    }
-   void CommitSealedPageV(std::span<RSealedPageGroup> ranges) final
+   void CommitSealedPageV(std::span<ROOT::Internal::RSealedPageGroup> ranges) final
    {
       for (auto &range : ranges) {
          for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {

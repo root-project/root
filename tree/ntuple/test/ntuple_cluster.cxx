@@ -91,7 +91,7 @@ protected:
    {
       memcpy(buf, fBufPageList.get(), fSzPageList);
    }
-   void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
+   void LoadSealedPageImpl(const ROOT::RNTupleLocator &, ROOT::Internal::RSealedPage &) final {}
    std::unique_ptr<ROOT::Internal::RPageSource>
    OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &, const ROOT::RNTupleReadOptions &) final
    {

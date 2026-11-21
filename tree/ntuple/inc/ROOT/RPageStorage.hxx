@@ -27,6 +27,7 @@
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RSealedPage.hxx>
 #include <ROOT/RSpan.hxx>
 #include <string_view>
 
@@ -67,68 +68,6 @@ an ntuple.  Concrete implementations can use a TFile, a raw file, an object stor
 // clang-format on
 class RPageStorage {
 public:
-   /// The page checksum is a 64bit xxhash3
-   static constexpr std::size_t kNBytesPageChecksum = sizeof(std::uint64_t);
-
-   /// A sealed page contains the bytes of a page as written to storage (packed & compressed).  It is used
-   /// as an input to UnsealPages() as well as to transfer pages between different storage media.
-   /// RSealedPage does _not_ own the buffer it is pointing to in order to not interfere with the memory management
-   /// of concrete page sink and page source implementations.
-   struct RSealedPage {
-   private:
-      const void *fBuffer = nullptr;
-      std::size_t fBufferSize = 0; ///< Size of the page payload and the trailing checksum (if available)
-      std::uint32_t fNElements = 0;
-      bool fHasChecksum = false; ///< If set, the last 8 bytes of the buffer are the xxhash of the rest of the buffer
-
-   public:
-      RSealedPage() = default;
-      RSealedPage(const void *buffer, std::size_t bufferSize, std::uint32_t nElements, bool hasChecksum = false)
-         : fBuffer(buffer), fBufferSize(bufferSize), fNElements(nElements), fHasChecksum(hasChecksum)
-      {
-      }
-      RSealedPage(const RSealedPage &other) = default;
-      RSealedPage &operator=(const RSealedPage &other) = default;
-      RSealedPage(RSealedPage &&other) = default;
-      RSealedPage &operator=(RSealedPage &&other) = default;
-
-      const void *GetBuffer() const { return fBuffer; }
-      void SetBuffer(const void *buffer) { fBuffer = buffer; }
-
-      std::size_t GetDataSize() const
-      {
-         assert(fBufferSize >= fHasChecksum * kNBytesPageChecksum);
-         return fBufferSize - fHasChecksum * kNBytesPageChecksum;
-      }
-      std::size_t GetBufferSize() const { return fBufferSize; }
-      void SetBufferSize(std::size_t bufferSize) { fBufferSize = bufferSize; }
-
-      std::uint32_t GetNElements() const { return fNElements; }
-      void SetNElements(std::uint32_t nElements) { fNElements = nElements; }
-
-      bool GetHasChecksum() const { return fHasChecksum; }
-      void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
-
-      void ChecksumIfEnabled();
-      RResult<void> VerifyChecksumIfEnabled() const;
-      /// Returns a failure if the sealed page has no checksum
-      RResult<std::uint64_t> GetChecksum() const;
-   };
-
-   using SealedPageSequence_t = std::deque<RSealedPage>;
-   /// A range of sealed pages referring to the same column that can be used for vector commit
-   struct RSealedPageGroup {
-      ROOT::DescriptorId_t fPhysicalColumnId;
-      SealedPageSequence_t::const_iterator fFirst;
-      SealedPageSequence_t::const_iterator fLast;
-
-      RSealedPageGroup() = default;
-      RSealedPageGroup(ROOT::DescriptorId_t d, const SealedPageSequence_t::const_iterator &b,
-                       const SealedPageSequence_t::const_iterator &e)
-         : fPhysicalColumnId(d), fFirst(b), fLast(e)
-      {
-      }
-   };
 
 public:
    RPageStorage() = default;
@@ -330,10 +269,9 @@ public:
    virtual void
    CommitPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem, const ROOT::Internal::RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
-   virtual void
-   CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
+   virtual void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) = 0;
    /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
-   virtual void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) = 0;
+   virtual void CommitSealedPageV(std::span<RSealedPageGroup> ranges) = 0;
    /// Stage the current cluster and create a new one for the following data.
    /// Returns the object that must be passed to CommitStagedClusters to logically append the staged cluster to the
    /// ntuple descriptor.
@@ -438,7 +376,7 @@ protected:
    void InitImpl(RNTupleModel &model) final;
 
    virtual RNTupleLocator
-   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
+   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) = 0;
    /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
    /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
    /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
@@ -448,7 +386,7 @@ protected:
    /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
    /// optimized implementation though.
    virtual std::vector<RNTupleLocator>
-   CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask);
+   CommitSealedPageVImpl(std::span<RSealedPageGroup> ranges, const std::vector<bool> &mask);
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t StageClusterImpl() = 0;
 
@@ -520,8 +458,8 @@ public:
    void CommitSuppressedColumn(DescriptorId_t physicalColumnId) final;
    void
    CommitPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem, const ROOT::Internal::RPage &page) final;
-   void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
-   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
+   void CommitSealedPageV(std::span<RSealedPageGroup> ranges) final;
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;

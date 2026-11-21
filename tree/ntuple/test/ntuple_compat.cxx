@@ -540,7 +540,7 @@ class RPageSinkTestLocator : public RPageSinkFile {
    // CommitPage() seals the page in the base class and routes it here; we return a page locator with an
    // unknown type (without writing any data, since the test never reads the page back).
    ROOT::RNTupleLocator CommitSealedPageImpl(ROOT::DescriptorId_t /* physicalColumnId */,
-                                             const RPageStorage::RSealedPage & /* sealedPage */) override
+                                             const ROOT::Internal::RSealedPage & /* sealedPage */) override
    {
       RNTupleLocator result;
       result.SetType(ROOT::Internal::kTestLocatorType);

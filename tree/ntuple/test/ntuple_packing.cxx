@@ -360,7 +360,7 @@ TEST(Packing, OnDiskEncoding)
    source->Attach();
 
    char buf[2 * kPageSize];
-   RPageStorage::RSealedPage sealedPage(buf, 2 * kPageSize, 0);
+   ROOT::Internal::RSealedPage sealedPage(buf, 2 * kPageSize, 0);
 
    auto fnGetColumnId = [&source](const std::string &fieldName) {
       auto descGuard = source->GetSharedDescriptorGuard();

@@ -804,7 +804,7 @@ void ROOT::Experimental::RNTupleInspector::PrintDiskProfile(std::ostream &output
                RDiskPageLeaf pageLeaf;
                pageLeaf.fPosition = locator.GetPosition<std::uint64_t>();
                pageLeaf.fSize = locator.GetNBytesOnStorage() +
-                                pageInfo.HasChecksum() * ROOT::Internal::RPageStorage::kNBytesPageChecksum;
+                                pageInfo.HasChecksum() * ROOT::Internal::RSealedPage::kNBytesPageChecksum;
                pageLeaf.fName = "[page @" + std::to_string(pageLeaf.fPosition) + "]";
                pageLeaf.fAncestors = {groupId, clusterId, columnId};
                pageLeaves.push_back(pageLeaf);

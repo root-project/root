@@ -63,42 +63,6 @@ using ROOT::Experimental::Detail::RNTupleCalcPerf;
 using ROOT::Experimental::Detail::RNTupleMetrics;
 using ROOT::Experimental::Detail::RNTupleTickCounter;
 
-void ROOT::Internal::RPageStorage::RSealedPage::ChecksumIfEnabled()
-{
-   if (!fHasChecksum)
-      return;
-
-   auto charBuf = reinterpret_cast<const unsigned char *>(fBuffer);
-   auto checksumBuf = const_cast<unsigned char *>(charBuf) + GetDataSize();
-   std::uint64_t xxhash3;
-   RNTupleSerializer::SerializeXxHash3(charBuf, GetDataSize(), xxhash3, checksumBuf);
-}
-
-ROOT::RResult<void> ROOT::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled() const
-{
-   if (!fHasChecksum)
-      return RResult<void>::Success();
-
-   auto success = RNTupleSerializer::VerifyXxHash3(reinterpret_cast<const unsigned char *>(fBuffer), GetDataSize());
-   if (!success)
-      return R__FAIL("page checksum verification failed, data corruption detected");
-   return RResult<void>::Success();
-}
-
-ROOT::RResult<std::uint64_t> ROOT::Internal::RPageStorage::RSealedPage::GetChecksum() const
-{
-   if (!fHasChecksum)
-      return R__FAIL("invalid attempt to extract non-existing page checksum");
-
-   assert(fBufferSize >= kNBytesPageChecksum);
-   std::uint64_t checksum;
-   RNTupleSerializer::DeserializeUInt64(
-      reinterpret_cast<const unsigned char *>(fBuffer) + fBufferSize - kNBytesPageChecksum, checksum);
-   return checksum;
-}
-
-//------------------------------------------------------------------------------
-
 void ROOT::Internal::RPageSource::RActivePhysicalColumns::Insert(ROOT::DescriptorId_t physicalColumnId,
                                                                  RColumnElementBase::RIdentifier elementId)
 {
@@ -705,7 +669,8 @@ void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
             RSealedPage sealedPage;
             sealedPage.SetNElements(pi.GetNElements());
             sealedPage.SetHasChecksum(pi.HasChecksum());
-            sealedPage.SetBufferSize(pi.GetLocator().GetNBytesOnStorage() + pi.HasChecksum() * kNBytesPageChecksum);
+            sealedPage.SetBufferSize(pi.GetLocator().GetNBytesOnStorage() +
+                                     pi.HasChecksum() * RSealedPage::kNBytesPageChecksum);
             sealedPage.SetBuffer(onDiskPage->GetAddress());
             R__ASSERT(onDiskPage->GetSize() == sealedPage.GetBufferSize());
 
@@ -826,7 +791,8 @@ void ROOT::Internal::RPageSource::LoadSealedPage(ROOT::DescriptorId_t physicalCo
 
    assert(pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero);
 
-   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
+   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() +
+                            pageInfo.HasChecksum() * RSealedPage::kNBytesPageChecksum);
    sealedPage.SetNElements(pageInfo.GetNElements());
    sealedPage.SetHasChecksum(pageInfo.HasChecksum());
 
@@ -873,7 +839,8 @@ ROOT::Internal::RPageSource::LoadPageFromSummary(const RPageSummary &pageSummary
    RSealedPage sealedPage;
    sealedPage.SetNElements(pageInfo.GetNElements());
    sealedPage.SetHasChecksum(pageInfo.HasChecksum());
-   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
+   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() +
+                            pageInfo.HasChecksum() * RSealedPage::kNBytesPageChecksum);
    std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
 
    if (fOptions.GetClusterCache() == ROOT::RNTupleReadOptions::EClusterCache::kOff) {
@@ -1229,7 +1196,7 @@ ROOT::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleW
 
 ROOT::Internal::RPageSink::~RPageSink() {}
 
-ROOT::Internal::RPageStorage::RSealedPage ROOT::Internal::RPageSink::SealPage(const RSealPageConfig &config)
+ROOT::Internal::RSealedPage ROOT::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 {
    assert(config.fPage);
    assert(config.fElement);
@@ -1238,7 +1205,7 @@ ROOT::Internal::RPageStorage::RSealedPage ROOT::Internal::RPageSink::SealPage(co
    unsigned char *pageBuf = reinterpret_cast<unsigned char *>(config.fPage->GetBuffer());
    bool isAdoptedBuffer = true;
    auto nBytesPacked = config.fPage->GetNBytes();
-   auto nBytesChecksum = config.fWriteChecksum * kNBytesPageChecksum;
+   auto nBytesChecksum = config.fWriteChecksum * RSealedPage::kNBytesPageChecksum;
 
    if (!config.fElement->IsMappable()) {
       nBytesPacked = config.fElement->GetPackedSize(config.fPage->GetNElements());
@@ -1266,10 +1233,10 @@ ROOT::Internal::RPageStorage::RSealedPage ROOT::Internal::RPageSink::SealPage(co
    return sealedPage;
 }
 
-ROOT::Internal::RPageStorage::RSealedPage
+ROOT::Internal::RSealedPage
 ROOT::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RColumnElementBase &element)
 {
-   const auto nBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
+   const auto nBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * RSealedPage::kNBytesPageChecksum;
    if (fSealPageBuffer.size() < nBytes)
       fSealPageBuffer.resize(nBytes);
 
@@ -1685,7 +1652,7 @@ void ROOT::Internal::RPagePersistentSink::CommitPage(DescriptorId_t physicalColu
 {
    fOpenColumnRanges.at(physicalColumnId).IncrementNElements(page.GetNElements());
 
-   RPageStorage::RSealedPage sealedPage;
+   RSealedPage sealedPage;
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
       sealedPage = SealPage(page, elem);
@@ -1700,7 +1667,7 @@ void ROOT::Internal::RPagePersistentSink::CommitPage(DescriptorId_t physicalColu
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitSealedPage(ROOT::DescriptorId_t physicalColumnId,
-                                                           const RPageStorage::RSealedPage &sealedPage)
+                                                           const RSealedPage &sealedPage)
 {
    fOpenColumnRanges.at(physicalColumnId).IncrementNElements(sealedPage.GetNElements());
 
@@ -1712,7 +1679,7 @@ void ROOT::Internal::RPagePersistentSink::CommitSealedPage(ROOT::DescriptorId_t 
 }
 
 std::vector<ROOT::RNTupleLocator>
-ROOT::Internal::RPagePersistentSink::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
+ROOT::Internal::RPagePersistentSink::CommitSealedPageVImpl(std::span<RSealedPageGroup> ranges,
                                                            const std::vector<bool> &mask)
 {
    std::vector<ROOT::RNTupleLocator> locators;
@@ -1728,7 +1695,7 @@ ROOT::Internal::RPagePersistentSink::CommitSealedPageVImpl(std::span<RPageStorag
    return locators;
 }
 
-void ROOT::Internal::RPagePersistentSink::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges)
+void ROOT::Internal::RPagePersistentSink::CommitSealedPageV(std::span<RSealedPageGroup> ranges)
 {
    /// Used in the `originalPages` map
    struct RSealedPageLink {

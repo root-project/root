@@ -128,7 +128,7 @@ void ROOT::Internal::RPageSinkFile::UpdateSchema(const ROOT::Internal::RNTupleMo
 }
 
 inline ROOT::RNTupleLocator
-ROOT::Internal::RPageSinkFile::WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked)
+ROOT::Internal::RPageSinkFile::WriteSealedPage(const RSealedPage &sealedPage, std::size_t bytesPacked)
 {
    std::uint64_t offsetData;
    {
@@ -146,7 +146,7 @@ ROOT::Internal::RPageSinkFile::WriteSealedPage(const RPageStorage::RSealedPage &
 }
 
 ROOT::RNTupleLocator ROOT::Internal::RPageSinkFile::CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId,
-                                                                         const RPageStorage::RSealedPage &sealedPage)
+                                                                         const RSealedPage &sealedPage)
 {
    const auto nBits = fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetBitsOnStorage();
    const auto bytesPacked = (nBits * sealedPage.GetNElements() + 7) / 8;
@@ -180,8 +180,7 @@ void ROOT::Internal::RPageSinkFile::CommitBatchOfPages(CommitBatch &batch, std::
 }
 
 std::vector<ROOT::RNTupleLocator>
-ROOT::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
-                                                     const std::vector<bool> &mask)
+ROOT::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RSealedPageGroup> ranges, const std::vector<bool> &mask)
 {
    const std::uint64_t maxKeySize = GetWriteOptions().GetMaxKeySize();
 
@@ -552,7 +551,8 @@ ROOT::Internal::RPageSourceFile::PrepareSingleCluster(const RCluster::RKey &clus
          const auto &pageLocator = pageInfo.GetLocator();
          if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)
             throw RException(R__FAIL("tried to read a page with an unknown locator"));
-         const auto nBytes = pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
+         const auto nBytes =
+            pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * RSealedPage::kNBytesPageChecksum;
          activeSize += nBytes;
          onDiskPages.push_back({physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
       });

@@ -119,9 +119,9 @@ private:
 protected:
    void CommitHeaderImpl(const unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator
-   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
+   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const ROOT::Internal::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator>
-   CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
+   CommitSealedPageVImpl(std::span<ROOT::Internal::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
    std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;
@@ -160,7 +160,7 @@ private:
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) final;
-   void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
+   void LoadSealedPageImpl(const RNTupleLocator &locator, ROOT::Internal::RSealedPage &sealedPage) final;
 
 protected:
    void LoadStructureImpl() final;

@@ -261,7 +261,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::CommitHeaderImpl(const unsigne
 
 ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::DescriptorId_t,
-                                                                  const RPageStorage::RSealedPage &sealedPage)
+                                                                  const ROOT::Internal::RSealedPage &sealedPage)
 {
    auto pageId = fPageId.fetch_add(1);
 
@@ -283,7 +283,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::Descript
 }
 
 std::vector<ROOT::RNTupleLocator>
-ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
+ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<ROOT::Internal::RSealedPageGroup> ranges,
                                                                    const std::vector<bool> &mask)
 {
    RDaosContainer::MultiObjectRWOperation_t writeRequests;
@@ -296,7 +296,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
    /// Aggregate batch of requests by object ID and distribution key, determined by the ntuple-DAOS mapping
    for (auto &range : ranges) {
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         const RPageStorage::RSealedPage &s = *sealedPageIt;
+         const ROOT::Internal::RSealedPage &s = *sealedPageIt;
 
          const auto pageId = fPageId.fetch_add(1);
 
@@ -496,7 +496,7 @@ std::string ROOT::Experimental::Internal::RPageSourceDaos::GetObjectClass() cons
 }
 
 void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNTupleLocator &locator,
-                                                                       RSealedPage &sealedPage)
+                                                                       ROOT::Internal::RSealedPage &sealedPage)
 {
    std::lock_guard lockGuard(fContainerLock);
    RDaosKey daosKey = GetPageDaosKey(fNTupleIndex, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
@@ -543,7 +543,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
              const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
             const auto &pageLocator = pageInfo.GetLocator();
             const auto pageId = pageLocator.GetPosition<RNTupleLocatorObject64>().GetLocation();
-            const auto pageBufferSize = pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
+            const auto pageBufferSize = pageLocator.GetNBytesOnStorage() +
+                                        pageInfo.HasChecksum() * ROOT::Internal::RSealedPage::kNBytesPageChecksum;
             onDiskPages.emplace_back(RDaosSealedPageLocator{clusterId, physicalColumnId, pageNo, pageId,
                                                             pageLocator.GetNBytesOnStorage(), pageBufferSize});
 
