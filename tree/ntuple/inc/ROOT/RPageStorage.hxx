@@ -258,24 +258,14 @@ class RPageSink : public RPageStorage {
 public:
    using Callback_t = std::function<void(RPageSink &)>;
 
-   /// Cluster that was staged, but not yet logically appended to the RNTuple
-   struct RStagedCluster {
-      std::uint64_t fNBytesWritten = 0;
-      ROOT::NTupleSize_t fNEntries = 0;
-
-      struct RColumnInfo {
-         ROOT::RClusterDescriptor::RPageRange fPageRange;
-         ROOT::NTupleSize_t fNElements = ROOT::kInvalidNTupleIndex;
-         std::uint32_t fCompressionSettings;
-         bool fIsSuppressed = false;
-      };
-
-      std::vector<RColumnInfo> fColumnInfos;
-   };
+private:
+   std::vector<Callback_t> fOnDatasetCommitCallbacks;
+   std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
+   /// Used in ReservePage to maintain the page buffer budget
+   RWritePageMemoryManager fWritePageMemoryManager;
 
 protected:
    std::unique_ptr<ROOT::RNTupleWriteOptions> fOptions;
-
    /// Flag if sink was initialized
    bool fIsInitialized = false;
 
@@ -285,14 +275,63 @@ protected:
    /// the buffer pointed to by the RSealedPage should never be freed.
    RSealedPage SealPage(const ROOT::Internal::RPage &page, const ROOT::Internal::RColumnElementBase &element);
 
-private:
-   std::vector<Callback_t> fOnDatasetCommitCallbacks;
-   std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
-
-   /// Used in ReservePage to maintain the page buffer budget
-   RWritePageMemoryManager fWritePageMemoryManager;
+   virtual void InitImpl(RNTupleModel &model) = 0;
+   virtual RNTupleLink CommitDatasetImpl() = 0;
 
 public:
+   /// Cluster that was staged, but not yet logically appended to the RNTuple
+   struct RStagedCluster {
+      struct RColumnInfo {
+         ROOT::RClusterDescriptor::RPageRange fPageRange;
+         ROOT::NTupleSize_t fNElements = ROOT::kInvalidNTupleIndex;
+         std::uint32_t fCompressionSettings;
+         bool fIsSuppressed = false;
+      };
+
+      std::uint64_t fNBytesWritten = 0;
+      ROOT::NTupleSize_t fNEntries = 0;
+      std::vector<RColumnInfo> fColumnInfos;
+   }; // struct RStagedCluster
+
+   /// Parameters for the SealPage() method
+   struct RSealPageConfig {
+      const ROOT::Internal::RPage *fPage = nullptr; ///< Input page to be sealed
+      const ROOT::Internal::RColumnElementBase *fElement =
+         nullptr;                             ///< Corresponds to the page's elements, for size calculation etc.
+      std::uint32_t fCompressionSettings = 0; ///< Compression algorithm and level to apply
+      /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
+      /// to store the additional 8 bytes.
+      bool fWriteChecksum = true;
+      /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
+      /// if the page is mappable and should not be compressed
+      bool fAllowAlias = false;
+      /// Location for sealed output. The memory buffer has to be large enough.
+      void *fBuffer = nullptr;
+   }; // struct RSealPageConfig
+
+   /// An RAII wrapper used to synchronize a page sink. See GetSinkGuard().
+   class RSinkGuard {
+      std::mutex *fLock;
+
+   public:
+      explicit RSinkGuard(std::mutex *lock) : fLock(lock)
+      {
+         if (fLock != nullptr) {
+            fLock->lock();
+         }
+      }
+      RSinkGuard(const RSinkGuard &) = delete;
+      RSinkGuard &operator=(const RSinkGuard &) = delete;
+      RSinkGuard(RSinkGuard &&) = delete;
+      RSinkGuard &operator=(RSinkGuard &&) = delete;
+      ~RSinkGuard()
+      {
+         if (fLock != nullptr) {
+            fLock->unlock();
+         }
+      }
+   }; // class RPageSinkGuard
+
    RPageSink(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
 
    RPageSink(const RPageSink &) = delete;
@@ -324,27 +363,6 @@ public:
       InitImpl(model);
       fIsInitialized = true;
    }
-
-protected:
-   virtual void InitImpl(RNTupleModel &model) = 0;
-   virtual RNTupleLink CommitDatasetImpl() = 0;
-
-public:
-   /// Parameters for the SealPage() method
-   struct RSealPageConfig {
-      const ROOT::Internal::RPage *fPage = nullptr; ///< Input page to be sealed
-      const ROOT::Internal::RColumnElementBase *fElement =
-         nullptr;                             ///< Corresponds to the page's elements, for size calculation etc.
-      std::uint32_t fCompressionSettings = 0; ///< Compression algorithm and level to apply
-      /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
-      /// to store the additional 8 bytes.
-      bool fWriteChecksum = true;
-      /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
-      /// if the page is mappable and should not be compressed
-      bool fAllowAlias = false;
-      /// Location for sealed output. The memory buffer has to be large enough.
-      void *fBuffer = nullptr;
-   };
 
    /// Seal a page using the provided info.
    static RSealedPage SealPage(const RSealPageConfig &config);
@@ -407,29 +425,6 @@ public:
    /// Get a new, empty page for the given column that can be filled with up to nElements;
    /// nElements must be larger than zero.
    virtual ROOT::Internal::RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements);
-
-   /// An RAII wrapper used to synchronize a page sink. See GetSinkGuard().
-   class RSinkGuard {
-      std::mutex *fLock;
-
-   public:
-      explicit RSinkGuard(std::mutex *lock) : fLock(lock)
-      {
-         if (fLock != nullptr) {
-            fLock->lock();
-         }
-      }
-      RSinkGuard(const RSinkGuard &) = delete;
-      RSinkGuard &operator=(const RSinkGuard &) = delete;
-      RSinkGuard(RSinkGuard &&) = delete;
-      RSinkGuard &operator=(RSinkGuard &&) = delete;
-      ~RSinkGuard()
-      {
-         if (fLock != nullptr) {
-            fLock->unlock();
-         }
-      }
-   };
 
    virtual RSinkGuard GetSinkGuard()
    {
