@@ -130,15 +130,6 @@ public:
       }
    };
 
-protected:
-   RNTupleTaskScheduler *fTaskScheduler = nullptr;
-   void WaitForAllTasks()
-   {
-      if (!fTaskScheduler)
-         return;
-      fTaskScheduler->Wait();
-   }
-
 public:
    RPageStorage() = default;
    RPageStorage(const RPageStorage &other) = delete;
@@ -146,8 +137,6 @@ public:
    RPageStorage(RPageStorage &&other) = default;
    RPageStorage &operator=(RPageStorage &&other) = default;
    virtual ~RPageStorage() = default;
-
-   void SetTaskScheduler(RNTupleTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
 }; // class RPageStorage
 
 // clang-format off
@@ -303,6 +292,9 @@ public:
    ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
    /// Return the RNTupleDescriptor being constructed.
    virtual const ROOT::RNTupleDescriptor &GetDescriptor() const = 0;
+
+   // Used in the buffered sink for parallel page compression
+   virtual void SetTaskScheduler(RNTupleTaskScheduler *) {}
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
@@ -732,6 +724,7 @@ private:
    bool fHasStructure = false;               ///< Set to true once `LoadStructure()` is called
    bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
    bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
+   RNTupleTaskScheduler *fTaskScheduler = nullptr; ///< For parallel page decompression
 
    /// The interpretation of page lists, set in Attach()
    Internal::RNTupleSerializer::EDescriptorDeserializeMode fDeserializationMode =
@@ -903,6 +896,8 @@ public:
    const std::string GetNTupleName() const { return fNTupleName; }
    const ROOT::RNTupleReadOptions &GetReadOptions() const { return fOptions; }
    ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
+
+   void SetTaskScheduler(RNTupleTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
 
    /// Takes the read lock for the descriptor. Multiple threads can take the lock concurrently.
    /// The underlying `std::shared_mutex`, however, is neither read nor write recursive:

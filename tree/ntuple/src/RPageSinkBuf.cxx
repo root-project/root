@@ -28,6 +28,13 @@ using ROOT::Experimental::Detail::RNTuplePlainCounter;
 using ROOT::Experimental::Detail::RNTuplePlainTimer;
 using ROOT::Experimental::Detail::RNTupleTickCounter;
 
+void ROOT::Internal::RPageSinkBuf::WaitForAllTasks()
+{
+   if (!fTaskScheduler)
+      return;
+   fTaskScheduler->Wait();
+}
+
 void ROOT::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
    fBufferedPages.clear();
@@ -55,8 +62,6 @@ ROOT::Internal::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
 ROOT::Internal::RPageSinkBuf::~RPageSinkBuf()
 {
    // Wait for unterminated tasks, if any, as they may still hold a reference to `this`.
-   // This cannot be moved to the base class destructor, given non-static members have been destroyed by the time the
-   // base class destructor is invoked.
    WaitForAllTasks();
 }
 

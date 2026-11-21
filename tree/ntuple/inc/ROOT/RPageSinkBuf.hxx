@@ -111,7 +111,9 @@ class RPageSinkBuf : public RPageSink {
    std::vector<DescriptorId_t> fSuppressedColumns;
    ROOT::DescriptorId_t fNFields = 0;
    ROOT::DescriptorId_t fNColumns = 0;
+   RNTupleTaskScheduler *fTaskScheduler = nullptr; ///< For parallel page compression
 
+   void WaitForAllTasks();
    void ConnectFields(const std::vector<ROOT::RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry);
    void FlushClusterImpl(const std::function<void(void)> &FlushClusterFn);
 
@@ -125,6 +127,8 @@ public:
    RPageSinkBuf(RPageSinkBuf &&) = delete;
    RPageSinkBuf &operator=(RPageSinkBuf &&) = delete;
    ~RPageSinkBuf() override;
+
+   void SetTaskScheduler(RNTupleTaskScheduler *taskScheduler) final { fTaskScheduler = taskScheduler; }
 
    DescriptorId_t AddColumn(ROOT::DescriptorId_t fieldId, const RColumn &column) final;
 
