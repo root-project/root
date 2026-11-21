@@ -44,6 +44,22 @@ bool HasRuntimeModulemaps() {
 }
 }
 
+namespace {
+// Interpreters do not outlive the test that created them: kept alive, they
+// pile up for the whole run and exhaust a 32-bit address space.
+class DeleteInterpretersOnTestEnd : public ::testing::EmptyTestEventListener {
+  void OnTestEnd(const ::testing::TestInfo& /*info*/) override {
+    while (Cpp::DeleteInterpreter())
+      ;
+  }
+};
+[[maybe_unused]] const bool kDeleteInterpretersOnTestEnd = [] {
+  ::testing::UnitTest::GetInstance()->listeners().Append(
+      new DeleteInterpretersOnTestEnd);
+  return true;
+}();
+} // namespace
+
 void TestUtils::GetAllTopLevelDecls(
     const std::string& code, std::vector<Decl*>& Decls,
     bool filter_implicitGenerated /* = false */,
