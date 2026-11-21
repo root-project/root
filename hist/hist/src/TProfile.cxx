@@ -1727,6 +1727,9 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TProfile::Scale(Double_t c1, Option_t * option)
 {
    TProfileHelper::Scale(this, c1, option);
+   // the y values are scaled, so are their sums used for the mean and standard deviation of y
+   fTsumwy *= c1;
+   fTsumwy2 *= c1 * c1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

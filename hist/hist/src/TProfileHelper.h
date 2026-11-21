@@ -513,6 +513,10 @@ T* TProfileHelper::ExtendAxis(T* p, Double_t x, TAxis *axis)
 template <typename T>
 void TProfileHelper::Scale(T* p, Double_t c1, Option_t *)
 {
+   // fill the bins from the buffer and delete it, otherwise the buffered entries are not scaled
+   if (p->fBuffer)
+      p->BufferEmpty(1);
+
    Double_t ac1 = TMath::Abs(c1);
 
    // Make the loop over the bins to calculate the Addition

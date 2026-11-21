@@ -1347,6 +1347,9 @@ void TProfile3D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TProfile3D::Scale(Double_t c1, Option_t *option)
 {
    TProfileHelper::Scale(this, c1, option);
+   // the t values are scaled, so are their sums used for the mean and standard deviation of t
+   fTsumwt *= c1;
+   fTsumwt2 *= c1 * c1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -58,6 +58,51 @@ TEST(TProfile, Chi2TestWithWrongErrors)
    }
 }
 
+TEST(TProfile, ScaleScalesMeanAndStdDevOfY)
+{
+   TProfile p("p", "p", 10, 0, 10);
+   p.Fill(1, 2);
+   p.Fill(2, 4);
+   p.Scale(3);
+   EXPECT_DOUBLE_EQ(p.GetBinContent(3), 12);
+   EXPECT_DOUBLE_EQ(p.GetMean(2), 9);
+   EXPECT_DOUBLE_EQ(p.GetStdDev(2), 3);
+}
+
+TEST(TProfile, ScaleScalesBufferedEntries)
+{
+   TProfile p("p", "p", 10, 0, 10);
+   p.SetBuffer(100);
+   p.Fill(1, 2);
+   p.Fill(2, 4);
+   p.Scale(3);
+   EXPECT_DOUBLE_EQ(p.GetBinContent(2), 6);
+   EXPECT_DOUBLE_EQ(p.GetBinContent(3), 12);
+   EXPECT_DOUBLE_EQ(p.GetMean(2), 9);
+}
+
+TEST(TProfile2D, ScaleScalesMeanAndStdDevOfZ)
+{
+   TProfile2D p("p", "p", 10, 0, 10, 10, 0, 10);
+   p.Fill(1, 1, 2);
+   p.Fill(2, 2, 4);
+   p.Scale(3);
+   EXPECT_DOUBLE_EQ(p.GetMean(3), 9);
+   EXPECT_DOUBLE_EQ(p.GetStdDev(3), 3);
+}
+
+TEST(TProfile3D, ScaleScalesSumsOfT)
+{
+   TProfile3D p("p", "p", 10, 0, 10, 10, 0, 10, 10, 0, 10);
+   p.Fill(1, 1, 1, 2);
+   p.Fill(2, 2, 2, 4);
+   p.Scale(3);
+   Double_t stats[TH1::kNstat];
+   p.GetStats(stats);
+   EXPECT_DOUBLE_EQ(stats[11], 18);  // 3 * (2 + 4)
+   EXPECT_DOUBLE_EQ(stats[12], 180); // 9 * (4 + 16)
+}
+
 TEST(TProfile2D, Chi2Test)
 {
    TProfile2D reference("reference", "reference", 10, 0, 10, 10, 0, 10);
