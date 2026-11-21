@@ -15,6 +15,7 @@
 #include "TGComboBox.h"
 
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TGColorSelect.h"
 #include "TGLabel.h"
 #include "TG3DLine.h"
@@ -184,10 +185,10 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
 {
    fM = dynamic_cast<TEveCaloLego*>(obj);
 
-   fGridColor->SetColor(TColor::Number2Pixel(fM->GetGridColor() < 0 ? 0 : fM->GetGridColor()), kFALSE);
-   fFontColor->SetColor(TColor::Number2Pixel(fM->GetFontColor() < 0 ? 0 : fM->GetFontColor()), kFALSE);
+   fGridColor->SetColor(TVirtualX::Number2Pixel(fM->GetGridColor() < 0 ? 0 : fM->GetGridColor()), kFALSE);
+   fFontColor->SetColor(TVirtualX::Number2Pixel(fM->GetFontColor() < 0 ? 0 : fM->GetFontColor()), kFALSE);
 
-   fPlaneColor->SetColor(TColor::Number2Pixel(fM->GetPlaneColor()), kFALSE);
+   fPlaneColor->SetColor(TVirtualX::Number2Pixel(fM->GetPlaneColor()), kFALSE);
    fTransparency->SetNumber(fM->GetPlaneTransparency());
 
    fCell2DTextMin->SetValue(fM->GetDrawNumberCellPixels());
@@ -206,7 +207,7 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
 
 void TEveCaloLegoEditor::DoGridColor(Pixel_t pixel)
 {
-   fM->SetGridColor(Color_t(TColor::GetColor(pixel)));
+   fM->SetGridColor(Color_t(TVirtualX::Pixel2Number(pixel)));
    Update();
 }
 
@@ -215,7 +216,7 @@ void TEveCaloLegoEditor::DoGridColor(Pixel_t pixel)
 
 void TEveCaloLegoEditor::DoFontColor(Pixel_t pixel)
 {
-   fM->SetFontColor(Color_t(TColor::GetColor(pixel)));
+   fM->SetFontColor(Color_t(TVirtualX::Pixel2Number(pixel)));
    Update();
 }
 
@@ -224,7 +225,7 @@ void TEveCaloLegoEditor::DoFontColor(Pixel_t pixel)
 
 void TEveCaloLegoEditor::DoPlaneColor(Pixel_t pixel)
 {
-   fM->SetPlaneColor(Color_t(TColor::GetColor(pixel)));
+   fM->SetPlaneColor(Color_t(TVirtualX::Pixel2Number(pixel)));
    Update();
 }
 

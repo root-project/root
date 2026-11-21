@@ -635,7 +635,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // Fill canvas with 256 colored frames
    for (int i=0; i < 256; ++i)
       fCanvasWindow->AddFrame(new TGFrame(fCanvasWindow->GetContainer(),
-                              32, 32, 0, TColor::RGB2Pixel(0,0,(i+1)&255)),
+                              32, 32, 0, TVirtualX::RGB2Pixel(0,0,(i+1)&255)),
                               new TGLayoutHints(kLHintsExpandY | kLHintsRight));
 
    AddFrame(fCanvasWindow, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,

@@ -56,6 +56,8 @@ public:
 protected:
    EDrawMode fDrawMode;           //Drawing mode
 
+   static void ConfigureColorsHandler();
+
 public:
    TVirtualX(): fDrawMode() {}
    TVirtualX(const char *name, const char *title);
@@ -370,6 +372,16 @@ public:
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
 
    virtual void         MapGCFont(GContext_t, FontStruct_t);
+
+   //---- Colors and pixels -----
+   static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
+   static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
+   static void    Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b);
+   static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
+   static TString PixelAsHexString(ULong_t pixel);
+   static ULong_t Number2Pixel(Int_t ci);
+   static Int_t   Pixel2Number(ULong_t pixel);
+
 
    static TVirtualX    *&Instance();
 

@@ -11,6 +11,7 @@
 
 #include "TEveFrameBox.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 
 /** \class TEveFrameBox
 \ingroup TEve
@@ -161,7 +162,7 @@ void TEveFrameBox::SetFrameColor(Color_t ci)
 
 void TEveFrameBox::SetFrameColorPixel(Pixel_t pix)
 {
-   SetFrameColor(Color_t(TColor::GetColor(pix)));
+   SetFrameColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +191,7 @@ void TEveFrameBox::SetBackColor(Color_t ci)
 
 void TEveFrameBox::SetBackColorPixel(Pixel_t pix)
 {
-   SetBackColor(Color_t(TColor::GetColor(pix)));
+   SetBackColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

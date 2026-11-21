@@ -1370,11 +1370,11 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
       }
 
       Float_t r, g, b;
-      TColor::Pixel2RGB(fBackground, r, g, b);
+      TVirtualX::Pixel2RGB(fBackground, r, g, b);
       r *= 1.12;
       g *= 1.13;
       b *= 1.12;
-      Pixel_t back = TColor::RGB2Pixel(r, g, b);
+      Pixel_t back = TVirtualX::RGB2Pixel(r, g, b);
       gVirtualX->SetWindowBackground(fId, back);
       DoRedraw();
       return kTRUE;
@@ -2481,7 +2481,7 @@ void TGFrame::SaveUserColor(std::ostream &out, Option_t *option)
    else
       ucolor = GetBackground();
    if ((ucolor != fgUserColor) || (ucolor == GetWhitePixel())) {
-      const char *ucolorname = TColor::PixelAsHexString(ucolor);
+      auto ucolorname = TVirtualX::PixelAsHexString(ucolor);
       out << "   gClient->GetColorByName(\"" << ucolorname << "\", ucolor);\n";
       fgUserColor = ucolor;
    }

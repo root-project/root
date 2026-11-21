@@ -68,10 +68,10 @@ Pixel_t TEveListTreeItem::GetActiveColor() const
 {
    switch (fElement->GetSelectedLevel())
    {
-      case 1: return TColor::Number2Pixel(kBlue - 2);
-      case 2: return TColor::Number2Pixel(kBlue - 6);
-      case 3: return TColor::Number2Pixel(kCyan - 2);
-      case 4: return TColor::Number2Pixel(kCyan - 6);
+      case 1: return TVirtualX::Number2Pixel(kBlue - 2);
+      case 2: return TVirtualX::Number2Pixel(kBlue - 6);
+      case 3: return TVirtualX::Number2Pixel(kCyan - 2);
+      case 4: return TVirtualX::Number2Pixel(kCyan - 6);
    }
    return TGFrame::GetDefaultSelectedBackground();
 }

@@ -14,6 +14,7 @@
 #include "TEveTransEditor.h"
 
 #include "TColor.h"
+#include "TVirtualX.h"
 
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
@@ -117,7 +118,7 @@ void TEveElementEditor::SetModel(TObject* obj)
    }
 
    if (fRE->CanEditMainColor()) {
-      fMainColor->SetColor(TColor::Number2Pixel(fRE->GetMainColor()), kFALSE);
+      fMainColor->SetColor(TVirtualX::Number2Pixel(fRE->GetMainColor()), kFALSE);
       fMainColor->MapWindow();
    } else {
       fMainColor->UnmapWindow();

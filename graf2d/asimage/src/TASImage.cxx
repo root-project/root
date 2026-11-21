@@ -2445,7 +2445,7 @@ TArrayL *TASImage::GetPixels(Int_t x, Int_t y, UInt_t width, UInt_t height)
             r = (Int_t)imdec->buffer.red[i];
             g = (Int_t)imdec->buffer.green[i];
             b = (Int_t)imdec->buffer.blue[i];
-            p = (Long_t)TColor::RGB2Pixel(r, g, b);
+            p = (Long_t)TVirtualX::RGB2Pixel(r, g, b);
          }
          ret->AddAt(p, k*width + i);
       }

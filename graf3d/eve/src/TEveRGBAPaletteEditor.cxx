@@ -14,6 +14,7 @@
 #include "TEveGValuators.h"
 
 #include "TColor.h"
+#include "TVirtualX.h"
 
 #include "TGLabel.h"
 #include "TGButton.h"
@@ -169,11 +170,11 @@ void TEveRGBAPaletteSubEditor::SetModel(TEveRGBAPalette* p)
 
    fInterpolate  ->SetState(fM->fInterpolate ? kButtonDown : kButtonUp);
    fShowDefValue ->SetState(fM->fShowDefValue ? kButtonDown : kButtonUp);
-   fDefaultColor ->SetColor(TColor::Number2Pixel(fM->GetDefaultColor()), kFALSE);
+   fDefaultColor ->SetColor(TVirtualX::Number2Pixel(fM->GetDefaultColor()), kFALSE);
    fFixColorRange->SetState(fM->fFixColorRange ? kButtonDown : kButtonUp);
 
-   fUnderColor->SetColor(TColor::Number2Pixel(fM->GetUnderColor()), kFALSE);
-   fOverColor ->SetColor(TColor::Number2Pixel(fM->GetOverColor()), kFALSE);
+   fUnderColor->SetColor(TVirtualX::Number2Pixel(fM->GetUnderColor()), kFALSE);
+   fOverColor ->SetColor(TVirtualX::Number2Pixel(fM->GetOverColor()), kFALSE);
 
    fUnderflowAction->Select(fM->fUnderflowAction, kFALSE);
    fOverflowAction ->Select(fM->fOverflowAction, kFALSE);

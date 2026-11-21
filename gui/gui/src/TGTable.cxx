@@ -26,6 +26,7 @@
 #include "TGTextEntry.h"
 #include "TGLabel.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 
 
 
@@ -168,9 +169,9 @@ TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
 
    // To be done: GetBackground colors for .rootrc
    SetBackgroundColor(GetWhitePixel());
-   fEvenRowBackground = TColor::RGB2Pixel(204, 255, 204);
-   fOddRowBackground  = TColor::RGB2Pixel(255, 255, 255);
-   fHeaderBackground  = TColor::RGB2Pixel(204, 204, 255);
+   fEvenRowBackground = TVirtualX::RGB2Pixel(204, 255, 204);
+   fOddRowBackground  = TVirtualX::RGB2Pixel(255, 255, 255);
+   fHeaderBackground  = TVirtualX::RGB2Pixel(204, 204, 255);
 
    fCurrentRange->fXbr = ncolumns;
    fCurrentRange->fYbr = nrows;
@@ -1307,9 +1308,9 @@ void TGTable::SetHeaderBackground(Pixel_t pixel)
 
 void TGTable::SetDefaultColors()
 {
-   SetEvenRowBackground(TColor::RGB2Pixel(204, 255, 204));
-   SetOddRowBackground(TColor::RGB2Pixel(255, 255, 255));
-   SetHeaderBackground(TColor::RGB2Pixel(204, 204, 255));
+   SetEvenRowBackground(TVirtualX::RGB2Pixel(204, 255, 204));
+   SetOddRowBackground(TVirtualX::RGB2Pixel(255, 255, 255));
+   SetHeaderBackground(TVirtualX::RGB2Pixel(204, 204, 255));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -626,7 +626,7 @@ void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    Mask_t fmask = GetMask();
 
    TString valname = TString::Format("val%s", option);
-   const char *colorname;
+   TString colorname;
    ULong_t color;
 
    out << "   // graphics context changes\n";
@@ -697,12 +697,12 @@ void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
             break;
          case kGCForeground:
             color = GetForeground();
-            colorname = TColor::PixelAsHexString(color);
+            colorname = TVirtualX::PixelAsHexString(color);
             out << "   gClient->GetColorByName(\"" << colorname << "\", " << valname << ".fForeground);\n";
             break;
          case kGCBackground:
             color = GetBackground();
-            colorname = TColor::PixelAsHexString(color);
+            colorname = TVirtualX::PixelAsHexString(color);
             out << "   gClient->GetColorByName(\"" << colorname << "\", " << valname << ".fBackground);\n";
             break;
          case kGCLineWidth:

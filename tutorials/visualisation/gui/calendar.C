@@ -21,6 +21,7 @@
 #include "TApplication.h"
 #include "TROOT.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 
 /////////////////////////// HTML calendar //////////////////////////////////////
 
@@ -407,7 +408,7 @@ void CalendarWindow::UpdateHTML()
 
    // table background
    pixel = fTableColor->GetColor();
-   color = gROOT->GetColor(TColor::GetColor(pixel));
+   color = gROOT->GetColor(TVirtualX::Pixel2Number(pixel));
 
    if (color) {
       fHtmlText->fMonthTable.fBgColor = color->AsHexString();
@@ -415,7 +416,7 @@ void CalendarWindow::UpdateHTML()
 
    // cell background
    pixel = fCellColor->GetColor();
-   color = gROOT->GetColor(TColor::GetColor(pixel));
+   color = gROOT->GetColor(TVirtualX::Pixel2Number(pixel));
 
    if (color) {
       fHtmlText->fMonthTable.fCellBgcolor = color->AsHexString();

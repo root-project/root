@@ -502,6 +502,9 @@ Int_t TGCocoa::OpenDisplay(const char * /*dpyName*/)
    // session, i.e no windows message handler etc.
    if (CGMainDisplayID() == kCGNullDirectDisplay)
       return -1;
+
+   ConfigureColorsHandler();
+
    return 0;
 }
 

@@ -29,6 +29,10 @@ An instance of TVirtualX itself defines a batch interface to the graphics system
 #include "TVirtualX.h"
 #include "TString.h"
 #include "TPoint.h"
+#include "TColor.h"
+#include "TError.h"
+#include "TROOT.h"
+#include "TApplication.h"
 
 
 Atom_t    gWM_DELETE_WINDOW;
@@ -2738,3 +2742,155 @@ void TVirtualX::MapGCFont(GContext_t, FontStruct_t)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert r,g,b to graphics system dependent pixel value.
+/// The r,g,b triplet must be [0,1].
+
+ULong_t TVirtualX::RGB2Pixel(Float_t r, Float_t g, Float_t b)
+{
+   if (r < 0) r = 0;
+   if (g < 0) g = 0;
+   if (b < 0) b = 0;
+   if (r > 1) r = 1;
+   if (g > 1) g = 1;
+   if (b > 1) b = 1;
+
+   ColorStruct_t color;
+   color.fRed   = UShort_t(r * 65535);
+   color.fGreen = UShort_t(g * 65535);
+   color.fBlue  = UShort_t(b * 65535);
+   color.fMask  = kDoRed | kDoGreen | kDoBlue;
+   gVirtualX->AllocColor(gVirtualX->GetColormap(), color);
+   return color.fPixel;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert r,g,b to graphics system dependent pixel value.
+/// The r,g,b triplet must be [0,255].
+
+ULong_t TVirtualX::RGB2Pixel(Int_t r, Int_t g, Int_t b)
+{
+   if (r < 0) r = 0;
+   if (g < 0) g = 0;
+   if (b < 0) b = 0;
+   if (r > 255) r = 255;
+   if (g > 255) g = 255;
+   if (b > 255) b = 255;
+
+   ColorStruct_t color;
+   color.fRed   = UShort_t(r * 256);  // 65536/256
+   color.fGreen = UShort_t(g * 256);
+   color.fBlue  = UShort_t(b * 256);
+   color.fMask  = kDoRed | kDoGreen | kDoBlue;
+   gVirtualX->AllocColor(gVirtualX->GetColormap(), color);
+   return color.fPixel;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert machine dependent pixel value (obtained via RGB2Pixel or
+/// via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
+/// The r,g,b triplet will be [0,1].
+
+void TVirtualX::Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b)
+{
+   ColorStruct_t color;
+   color.fPixel = pixel;
+   gVirtualX->QueryColor(gVirtualX->GetColormap(), color);
+   r = (Float_t)color.fRed / 65535.0f;
+   g = (Float_t)color.fGreen / 65535.0f;
+   b = (Float_t)color.fBlue / 65535.0f;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert machine dependent pixel value (obtained via RGB2Pixel or
+/// via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
+/// The r,g,b triplet will be [0,255].
+
+void TVirtualX::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
+{
+   ColorStruct_t color;
+   color.fPixel = pixel;
+   gVirtualX->QueryColor(gVirtualX->GetColormap(), color);
+   // color is between 0 and 65535 inclusive.
+   // We need to move it to the 0 to 255 range (inclusive).
+   // So we need to resample the 65536 values into 256 indices.
+   // This would mean equal blocks of 256 high-res values per color index.
+   r = color.fRed / 256;
+   g = color.fGreen / 256;
+   b = color.fBlue / 256;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert machine dependent pixel value (obtained via RGB2Pixel or
+/// via Number2Pixel() or via TColor::GetPixel()) to a hexadecimal string.
+/// This string can be directly passed to, for example,
+/// TGClient::GetColorByName(). String will be reused so copy immediately
+/// if needed.
+
+TString TVirtualX::PixelAsHexString(ULong_t pixel)
+{
+   Int_t r, g, b;
+   Pixel2RGB(pixel, r, g, b);
+   return TString::Format("#%02x%02x%02x", r, g, b);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static method that given a color index number, returns the corresponding
+/// pixel value. This pixel value can be used in the GUI classes. This call
+/// does not work in batch mode since it needs to communicate with the
+/// graphics system.
+
+ULong_t TVirtualX::Number2Pixel(Int_t ci)
+{
+   TColor::InitializeColors();
+   auto color = gROOT->GetColor(ci);
+   if (!color) {
+      ::Warning("TVirtualX::Number2Pixel", "color with index %d not defined", ci);
+      return 0;
+   }
+
+   if (!gVirtualX || gROOT->IsBatch())
+      return 0;
+
+   if (gApplication) {
+      TApplication::NeedGraphicsLibs();
+      gApplication->InitializeGraphics(gROOT->IsWebDisplay());
+   }
+
+   return gVirtualX->GetPixel(color->GetNumber());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning color number for color specified by
+/// system dependent pixel value. Pixel values can be obtained, e.g.,
+/// from the GUI color picker.
+///
+/// The color retrieval is done using a threshold defined by TColor::SetColorThreshold.
+
+Int_t TVirtualX::Pixel2Number(ULong_t pixel)
+{
+   Int_t r, g, b;
+
+   Pixel2RGB(pixel, r, g, b);
+
+   return TColor::GetColor(r, g, b);
+}
+
+namespace {
+   void updateTColorInstance(TColor *color)
+   {
+      if (gVirtualX && color)
+         gVirtualX->SetRGB(color->GetNumber(), color->GetRed(), color->GetGreen(), color->GetBlue());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Protected method to configure handler when color is modified and need to be updated
+/// system dependent pixel value. Pixel values can be obtained, e.g.,
+
+void TVirtualX::ConfigureColorsHandler()
+{
+   Int_t nplanes = 0;
+   gVirtualX->GetPlanes(nplanes);
+   TColor::ConfigureColorsHandler(nplanes, updateTColorInstance);
+}

@@ -18,8 +18,10 @@
 #include <vector>
 
 class TArrayI;
+class TVirtualX;
 
 class TColor : public TNamed {
+   friend class TVirtualX; // to  let configure colors change handler
 protected:
    Int_t          fNumber;        ///< Color number identifier
 private:
@@ -33,6 +35,8 @@ private:
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
+
+   static void    ConfigureColorsHandler(Int_t depth, void (*colorfuncptr)(TColor *));
 
 public:
    TColor();
@@ -57,7 +61,7 @@ public:
    virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) const
                     { h=GetHue(); l=GetLight(); s=GetSaturation(); }
    Int_t         GetNumber() const { return fNumber; }
-   ULong_t       GetPixel() const;
+   ULong_t       R__DEPRECATED(7,00, "Use gVirtualX->GetPixel(number) instead") GetPixel() const;
    Float_t       GetRed() const { return IsGrayscale() ? GetGrayscale() : fRed; }
    Float_t       GetGreen() const { return IsGrayscale() ? GetGrayscale() : fGreen; }
    Float_t       GetBlue() const { return IsGrayscale() ? GetGrayscale() : fBlue; }
@@ -86,7 +90,7 @@ public:
    static Int_t   GetColor(const char *hexcolor);
    static Int_t   GetColor(Float_t r, Float_t g, Float_t b, Float_t a = 1.);
    static Int_t   GetColor(Int_t r, Int_t g, Int_t b, Float_t a = 1.);
-   static Int_t   GetColor(ULong_t pixel);
+   static Int_t   R__DEPRECATED(7,00, "Use TVirtualX::Pixel2Number instead") GetColor(ULong_t pixel);
    static Int_t   GetColorBright(Int_t color);
    static Int_t   GetColorDark(Int_t color);
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
@@ -96,12 +100,12 @@ public:
    static const TArrayI& GetPalette();
    static Int_t   GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
    static Int_t   GetRadialGradient(Double_t r, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
-   static ULong_t Number2Pixel(Int_t ci);
-   static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
-   static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
-   static void    Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b);
-   static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
-   static const char *PixelAsHexString(ULong_t pixel);
+   static ULong_t R__DEPRECATED(7,00, "Use TVirtualX::Number2Pixel instead") Number2Pixel(Int_t ci);
+   static ULong_t R__DEPRECATED(7,00, "Use TVirtualX::RGB2Pixel instead") RGB2Pixel(Int_t r, Int_t g, Int_t b);
+   static ULong_t R__DEPRECATED(7,00, "Use TVirtualX::RGB2Pixel instead") RGB2Pixel(Float_t r, Float_t g, Float_t b);
+   static void    R__DEPRECATED(7,00, "Use TVirtualX::Pixel2RGB instead") Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b);
+   static void    R__DEPRECATED(7,00, "Use TVirtualX::Pixel2RGB instead") Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
+   static const char * R__DEPRECATED(7,00, "Use TVirtualX::PixelAsHexString instead") PixelAsHexString(ULong_t pixel);
    static TString SavePrimitiveColor(Int_t ci);
    static Bool_t  SaveColor(std::ostream &out, Int_t ci);
    static void    SaveColorsPalette(std::ostream &out);

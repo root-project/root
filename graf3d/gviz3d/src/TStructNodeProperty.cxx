@@ -12,6 +12,7 @@
 #include "TStructNodeProperty.h"
 #include <TROOT.h>
 #include <TClass.h>
+#include <TVirtualX.h>
 
 
 //________________________________________________________________________
@@ -118,7 +119,7 @@ TColor TStructNodeProperty::GetColor() const
 
 Pixel_t TStructNodeProperty::GetPixel() const
 {
-   return fColor.GetPixel();
+   return gVirtualX->GetPixel(fColor.GetNumber());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,5 +151,5 @@ void TStructNodeProperty::SetColor(Int_t color)
 
 void TStructNodeProperty::SetColor(Pixel_t pixel)
 {
-   SetColor(TColor::GetColor(pixel));
+   SetColor(TVirtualX::Pixel2Number(pixel));
 }

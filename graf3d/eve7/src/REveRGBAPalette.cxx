@@ -12,6 +12,7 @@
 #include "ROOT/REveRGBAPalette.hxx"
 
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TStyle.h"
 #include "TMath.h"
 #include <nlohmann/json.hpp>
@@ -274,7 +275,7 @@ void REveRGBAPalette::SetDefaultColor(Color_t ci)
 
 void REveRGBAPalette::SetDefaultColorPixel(Pixel_t pix)
 {
-   SetDefaultColor(Color_t(TColor::GetColor(pix)));
+   SetDefaultColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +304,7 @@ void REveRGBAPalette::SetUnderColor(Color_t ci)
 
 void REveRGBAPalette::SetUnderColorPixel(Pixel_t pix)
 {
-   SetUnderColor(Color_t(TColor::GetColor(pix)));
+   SetUnderColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,7 +335,7 @@ void REveRGBAPalette::SetOverColor(Color_t ci)
 
 void REveRGBAPalette::SetOverColorPixel(Pixel_t pix)
 {
-   SetOverColor(Color_t(TColor::GetColor(pix)));
+   SetOverColor(Color_t(TVirtualX::Pixel2Number(pix)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

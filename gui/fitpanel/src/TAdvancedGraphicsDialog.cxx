@@ -25,6 +25,7 @@ confidence levels.
 #include "TAxis.h"
 #include "TVirtualPad.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 
 #include "Fit/BinData.h"
 #include "Math/IParamFunction.h"
@@ -186,7 +187,7 @@ void TAdvancedGraphicsDialog::CreateContourFrame()
    label = new TGLabel(frame, "Fill Colour: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
-   fContourColor = new TGColorSelect(frame, TColor::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
+   fContourColor = new TGColorSelect(frame, TVirtualX::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
    frame->AddFrame(fContourColor, new TGLayoutHints(kLHintsNormal, 5, 0, 5, 0));
 
    fContourOver = new TGCheckButton(frame, "Superimpose", kAGD_CONTOVER);
@@ -289,7 +290,7 @@ void TAdvancedGraphicsDialog::CreateConfFrame()
    label = new TGLabel(frame, "Fill Colour: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
-   fConfColor = new TGColorSelect(frame, TColor::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
+   fConfColor = new TGColorSelect(frame, TVirtualX::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
    frame->AddFrame(fConfColor, new TGLayoutHints(kLHintsNormal, 5, 0, 5, 0));
 
    fConfFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 5));
@@ -369,7 +370,7 @@ void TAdvancedGraphicsDialog::DrawContour()
    // contour error is actually the desired confidence level
    Double_t cl = fContourError->GetNumber();
    fFitter->Contour( par1, par2, graph, cl);
-   graph->SetFillColor( TColor::GetColor( fContourColor->GetColor() ) );
+   graph->SetFillColor( TVirtualX::Pixel2Number( fContourColor->GetColor() ) );
    graph->GetXaxis()->SetTitle( fFitter->GetParName(par1) );
    graph->GetYaxis()->SetTitle( fFitter->GetParName(par2) );
    graph->Draw( options.c_str() );
@@ -436,8 +437,8 @@ void TAdvancedGraphicsDialog::DrawConfidenceLevels()
       os << "Confidence Intervals with " << fConfLevel->GetNumber()
          << " conf. band.";
       g->SetTitle(os.str().c_str());
-      g->SetLineColor( TColor::GetColor( fConfColor->GetColor() ));
-      g->SetFillColor( TColor::GetColor( fConfColor->GetColor() ));
+      g->SetLineColor( TVirtualX::Pixel2Number( fConfColor->GetColor() ));
+      g->SetFillColor( TVirtualX::Pixel2Number( fConfColor->GetColor() ));
       g->SetFillStyle(3001);
       g->Draw("C3same");
    } else if ( data->NDim() == 2 )
@@ -454,8 +455,8 @@ void TAdvancedGraphicsDialog::DrawConfidenceLevels()
       os << "Confidence Intervals with " << fConfLevel->GetNumber()
          << " conf. band.";
       g->SetTitle(os.str().c_str());
-      g->SetLineColor( TColor::GetColor( fConfColor->GetColor() ));
-      g->SetFillColor( TColor::GetColor( fConfColor->GetColor() ));
+      g->SetLineColor( TVirtualX::Pixel2Number( fConfColor->GetColor() ));
+      g->SetFillColor( TVirtualX::Pixel2Number( fConfColor->GetColor() ));
       g->SetFillStyle(3001);
       g->Draw("C3same");
    }
