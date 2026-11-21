@@ -347,7 +347,10 @@ public:
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
          callback(*partialResult);
       };
-      fLoopManager->RegisterCallback(everyNEvents, std::move(c));
+      if (everyNEvents == 0)
+         fLoopManager->RegisterCallbackOnce(std::move(c));
+      else
+         fActionPtr->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 
@@ -390,7 +393,10 @@ public:
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
          callback(slot, *partialResult);
       };
-      fLoopManager->RegisterCallback(everyNEvents, std::move(c));
+      if (everyNEvents == 0)
+         fLoopManager->RegisterCallbackOnce(std::move(c));
+      else
+         fActionPtr->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 

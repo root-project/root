@@ -101,11 +101,13 @@ TEST(RCsvDS, ColumnReaders)
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    std::vector<Long64_t> ages = {60, 50, 40, 30, 1, -1};
+   // Mimicking the bulk processing
    for (auto &&range : ranges) {
+      ROOT::Internal::RDF::RMaskedEntryRange mask{range.second - range.first, true, range.first};
       tds.InitSlot(slot, range.first);
+      vals[slot]->Load(mask);
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
-         tds.SetEntry(slot, i);
-         auto val = *vals[slot]->TryGet<Long64_t>(i);
+         auto val = *vals[slot]->TryGet<Long64_t>(i - range.first);
          EXPECT_EQ(ages[i], val);
       }
       slot++;
@@ -153,11 +155,13 @@ TEST(RCsvDS, ColumnReadersString)
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
+   // Mimicking the bulk processing
    for (auto &&range : ranges) {
+      ROOT::Internal::RDF::RMaskedEntryRange mask{range.second - range.first, true, range.first};
       tds.InitSlot(slot, range.first);
+      vals[slot]->Load(mask);
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
-         tds.SetEntry(slot, i);
-         auto val = *vals[slot]->TryGet<std::string>(i);
+         auto val = *vals[slot]->TryGet<std::string>(i - range.first);
          EXPECT_EQ(names[i], val);
       }
       slot++;
@@ -178,6 +182,7 @@ TEST(RCsvDS, ProgressiveReadingEntryRanges)
    tds.Initialize();
 
    std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
+   // Mimicking the bulk processing
    auto ranges = tds.GetEntryRanges();
    auto numIterations = 0U;
    while (!ranges.empty()) {
@@ -185,10 +190,11 @@ TEST(RCsvDS, ProgressiveReadingEntryRanges)
 
       auto slot = 0U;
       for (auto &&range : ranges) {
+         ROOT::Internal::RDF::RMaskedEntryRange mask{range.second - range.first, true, range.first};
          tds.InitSlot(slot, range.first);
+         vals[slot]->Load(mask);
          for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
-            tds.SetEntry(slot, i);
-            auto val = *vals[slot]->TryGet<std::string>(i);
+            auto val = *vals[slot]->TryGet<std::string>(i - range.first);
             EXPECT_EQ(names[i], val);
          }
          slot++;

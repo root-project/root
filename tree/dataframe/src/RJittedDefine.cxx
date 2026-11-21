@@ -22,7 +22,7 @@ void RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
    fConcreteDefine->InitSlot(r, slot);
 }
 
-void *RJittedDefine::GetValuePtr(unsigned int slot)
+std::pair<void *, std::size_t> RJittedDefine::GetValuePtr(unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);
    return fConcreteDefine->GetValuePtr(slot);
@@ -39,10 +39,10 @@ const std::type_info &RJittedDefine::GetTypeId() const
                                "retrieved. This should never happen, please report this as a bug.");
 }
 
-void RJittedDefine::Update(unsigned int slot, Long64_t entry)
+void RJittedDefine::Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
    assert(fConcreteDefine != nullptr);
-   fConcreteDefine->Update(slot, entry);
+   fConcreteDefine->Update(slot, mask);
 }
 
 void RJittedDefine::Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)

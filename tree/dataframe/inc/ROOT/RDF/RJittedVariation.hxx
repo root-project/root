@@ -41,9 +41,10 @@ public:
    void SetVariation(std::unique_ptr<RVariationBase> c) { fConcreteVariation = std::move(c); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final;
-   void *GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) final;
+   std::pair<void *, std::size_t>
+   GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) final;
    const std::type_info &GetTypeId() const final;
-   void Update(unsigned int slot, Long64_t entry) final;
+   void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) final;
    void FinalizeSlot(unsigned int slot) final;
 };
 

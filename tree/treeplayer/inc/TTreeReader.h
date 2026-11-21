@@ -333,6 +333,7 @@ private:
    Long64_t fBeginEntry = 0LL;                ///< This allows us to propagate the range to the TTreeCache
    bool fProxiesSet = false;                  ///< True if the proxies have been set, false otherwise
    bool fSetEntryBaseCallingLoadTree = false; ///< True if during the LoadTree execution triggered by SetEntryBase.
+   TFile *fOpenFileBeforeCallingLoadTree = nullptr;
 
    // Flag to activate or deactivate warnings in case the friend trees have
    // more entries than the main one. In some cases we may want to deactivate

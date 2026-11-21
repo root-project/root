@@ -26,3 +26,9 @@ RActionBase::RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const 
 
 // outlined to pin virtual table
 RActionBase::~RActionBase() = default;
+
+void ROOT::Internal::RDF::RActionBase::RegisterCallback(std::uint64_t everyNEntries,
+                                                        std::function<void(unsigned int)> &&fun)
+{
+   fCallbacksEveryNEntries.emplace_back(everyNEntries, std::move(fun), fNSlots);
+}

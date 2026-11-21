@@ -687,5 +687,74 @@ ROOT::RDF::RCsvDS::GetColumnReaders(unsigned int slot, std::string_view colName,
       val = &fBoolEvtValues[index][slot];
    }
 
-   return std::make_unique<ROOT::Internal::RDF::RCsvDSColumnReader>(val);
+   return std::make_unique<ROOT::Internal::RDF::RCsvDSColumnReader>(val, tid, *this, slot);
+}
+
+ROOT::Internal::RDF::RCsvDSColumnReader::RCsvDSColumnReader(void *valuePtr, const std::type_info &tid,
+                                                            ROOT::RDF::RCsvDS &ds, unsigned int slot)
+   : fValuePtr(valuePtr), fTypeInfo(tid), fDS(ds), fSlot(slot), fLastEntry(std::numeric_limits<std::uint64_t>::max())
+{
+   if (fTypeInfo == typeid(double)) {
+      fValueSize = sizeof(double);
+   } else if (fTypeInfo == typeid(Long64_t)) {
+      fValueSize = sizeof(Long64_t);
+   } else if (fTypeInfo == typeid(std::string)) {
+      fValueSize = sizeof(std::string);
+   } else if (fTypeInfo == typeid(bool)) {
+      fValueSize = sizeof(bool);
+   } else {
+      throw std::runtime_error("Could not match column reader type information with expected type information.");
+   }
+}
+
+void ROOT::Internal::RDF::RCsvDSColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
+{
+   if (fLastEntry == mask.GetFirstEntry())
+      return;
+
+   const auto validIndices = mask.GetValidIndices();
+   if (validIndices.empty())
+      return;
+
+   fLastEntry = mask.GetFirstEntry();
+
+   if (fTypeInfo == typeid(double)) {
+      auto arr = std::make_shared<ROOT::RVec<double>>(mask.GetBulkSize());
+      fCachedArrayBegin = reinterpret_cast<std::byte *>(arr->data());
+      fCachedArray = std::move(arr);
+   } else if (fTypeInfo == typeid(Long64_t)) {
+      auto arr = std::make_shared<ROOT::RVec<Long64_t>>(mask.GetBulkSize());
+      fCachedArrayBegin = reinterpret_cast<std::byte *>(arr->data());
+      fCachedArray = std::move(arr);
+   } else if (fTypeInfo == typeid(std::string)) {
+      auto arr = std::make_shared<ROOT::RVec<std::string>>(mask.GetBulkSize());
+      fCachedArrayBegin = reinterpret_cast<std::byte *>(arr->data());
+      fCachedArray = std::move(arr);
+   } else if (fTypeInfo == typeid(bool)) {
+      auto arr = std::make_shared<ROOT::RVec<bool>>(mask.GetBulkSize());
+      fCachedArrayBegin = reinterpret_cast<std::byte *>(arr->data());
+      fCachedArray = std::move(arr);
+   } else {
+      throw std::runtime_error("Could not match column reader type information with expected type information.");
+   }
+
+   for (auto idx : validIndices) {
+      fDS.SetEntry(fSlot, mask.GetFirstEntry() + idx);
+      if (fTypeInfo == typeid(double)) {
+         static_pointer_cast<ROOT::RVec<double>>(fCachedArray)->at(idx) = *static_cast<double *>(fValuePtr);
+      } else if (fTypeInfo == typeid(Long64_t)) {
+         static_pointer_cast<ROOT::RVec<Long64_t>>(fCachedArray)->at(idx) = *static_cast<Long64_t *>(fValuePtr);
+      } else if (fTypeInfo == typeid(std::string)) {
+         static_pointer_cast<ROOT::RVec<std::string>>(fCachedArray)->at(idx) = *static_cast<std::string *>(fValuePtr);
+      } else if (fTypeInfo == typeid(bool)) {
+         static_pointer_cast<ROOT::RVec<bool>>(fCachedArray)->at(idx) = *static_cast<bool *>(fValuePtr);
+      } else {
+         throw std::runtime_error("Could not match column reader type information with expected type information.");
+      }
+   }
+}
+
+void *ROOT::Internal::RDF::RCsvDSColumnReader::GetImpl(std::size_t entryInBulk)
+{
+   return fCachedArrayBegin + entryInBulk * fValueSize;
 }

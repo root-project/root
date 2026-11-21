@@ -24,13 +24,25 @@
 
 #include <TRegexp.h>
 
+namespace ROOT::RDF {
+class RCsvDS;
+}
+
 namespace ROOT::Internal::RDF {
 class R__CLING_PTRCHECK(off) RCsvDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    void *fValuePtr;
-   void *GetImpl(Long64_t) final { return fValuePtr; }
+   const std::type_info &fTypeInfo;
+   std::shared_ptr<void> fCachedArray;
+   std::byte *fCachedArrayBegin;
+   std::size_t fValueSize;
+   ROOT::RDF::RCsvDS &fDS;
+   unsigned int fSlot;
+   std::uint64_t fLastEntry;
+   void *GetImpl(std::size_t) final;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final;
 
 public:
-   RCsvDSColumnReader(void *valuePtr) : fValuePtr(valuePtr) {}
+   RCsvDSColumnReader(void *, const std::type_info &, ROOT::RDF::RCsvDS &, unsigned int);
 };
 } // namespace ROOT::Internal::RDF
 

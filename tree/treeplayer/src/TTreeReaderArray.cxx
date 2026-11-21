@@ -599,6 +599,14 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
    if (!GetBranchAndLeaf(branch, myLeaf, branchActualType, suppressErrorsForThisBranch))
       return;
 
+   if (branchActualType) {
+      // At this point we may have found a type for the branch which is different than the type stored in fDict. This
+      // may happen for example when the user explicitly requests a reader with a different type than the on-disk one
+      // hoping to read it as such. We record the information of the true on-disk type and let other code detect and use
+      // it appropriately.
+      fActualDict = branchActualType;
+   }
+
    if (!fDict) {
       Error("TTreeReaderArrayBase::CreateProxy()", "No dictionary for branch %s.", fBranchName.Data());
       return;
@@ -673,6 +681,13 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       TString branchActualTypeName;
       StreamerElementArrayInfo arrInfo;
       const char *nonCollTypeName = GetBranchContentDataType(branch, branchActualTypeName, branchActualType, arrInfo);
+      if (branchActualType) {
+         // At this point we may have found a type for the branch which is different than the type stored in fDict. This
+         // may happen for example when the user explicitly requests a reader with a different type than the on-disk one
+         // hoping to read it as such. We record the information of the true on-disk type and let other code detect and
+         // use it appropriately.
+         fActualDict = branchActualType;
+      }
       if (nonCollTypeName) {
          Error("TTreeReaderArrayBase::CreateContentProxy()",
                "The branch %s contains data of type %s, which should be accessed through a TTreeReaderValue< %s >.",

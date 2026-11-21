@@ -171,6 +171,8 @@ public:
    {
       return lhs.fProcessorEntry == rhs.fProcessorEntry && lhs.fFieldIndex == rhs.fFieldIndex;
    }
+
+   ROOT::RFieldBase::RValue CreateValue() { return fProcessorEntry->CreateValue(fFieldIndex); }
 };
 
 // clang-format off
@@ -247,6 +249,8 @@ public:
    {
       return lhs.fProcessorEntry == rhs.fProcessorEntry && lhs.fFieldIndex == rhs.fFieldIndex;
    }
+
+   ROOT::RFieldBase::RValue CreateValue() { return fProcessorEntry->CreateValue(fFieldIndex); }
 };
 
 // clang-format off

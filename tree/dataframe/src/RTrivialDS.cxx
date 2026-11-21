@@ -134,5 +134,5 @@ ROOT::RDF::RTrivialDS::GetColumnReaders(unsigned int slot, std::string_view /*co
 
    fCounterAddr[slot] = &fCounter[slot];
 
-   return std::make_unique<ROOT::Internal::RDF::RTrivialDSColumnReader>(fCounterAddr[slot]);
+   return std::make_unique<ROOT::Internal::RDF::RTrivialDSColumnReader>(fCounterAddr[slot], fSkipEvenEntries);
 }

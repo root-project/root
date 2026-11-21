@@ -5,6 +5,8 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
+#include <ROOT/RDF/RMaskedEntryRange.hxx>
+
 #include "gtest/gtest.h"
 
 using namespace ROOT;
@@ -55,11 +57,14 @@ TEST(RTrivialDS, ColumnReaders)
    tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
+   // Mimicking the bulk processing
    for (auto &&range : ranges) {
-      for (auto i : ROOT::TSeq<ULong64_t>(range.first, range.second)) {
-         tds.SetEntry(slot, i);
+      ROOT::Internal::RDF::RMaskedEntryRange mask{range.second - range.first, true, range.first};
+      tds.SetEntry(slot, range.first);
+      vals[slot]->Load(mask);
+      for (auto i : ROOT::TSeq<ULong64_t>(0, range.second - range.first)) {
          auto val = *vals[slot]->TryGet<ULong64_t>(i);
-         EXPECT_EQ(i, val);
+         EXPECT_EQ(i + range.first, val);
       }
       slot++;
    }
@@ -131,6 +136,12 @@ TEST(RTrivialDS, SkipEntries)
 
 
    auto tdfOdd = ROOT::RDF::MakeTrivialDataFrame(20ULL, true);
+   // RTrivialDS is overall badly designed and it is explicitly suggested not to use it. In this particular test
+   // instance, passing 'true' to MakeTrivialDataFrame had the side-effect of the data source acting like a Filter (or
+   // a Range). This behaviour is undocumented and there is good reason to deprecate RTrivialDS altogether. For now,
+   // we only allow running RTrivialDS with skipping of odd entries if the bulk size is equal to one.
+   ROOT::RDF::RNode node{tdfOdd};
+   ROOT::Internal::RDF::SetMaxBulkSize(node, 1);
    EXPECT_EQ(*tdfOdd.Count(), 10ULL);
    auto tdfAll = ROOT::RDF::MakeTrivialDataFrame(20ULL);
    EXPECT_EQ(*tdfAll.Count(), 20ULL);
@@ -241,6 +252,12 @@ TEST(RTrivialDS, Cache)
 TEST(RTrivialDS, SkipEntriesMT)
 {
    auto tdfOdd = ROOT::RDF::MakeTrivialDataFrame(80ULL, true);
+   // RTrivialDS is overall badly designed and it is explicitly suggested not to use it. In this particular test
+   // instance, passing 'true' to MakeTrivialDataFrame had the side-effect of the data source acting like a Filter (or
+   // a Range). This behaviour is undocumented and there is good reason to deprecate RTrivialDS altogether. For now,
+   // we only allow running RTrivialDS with skipping of odd entries if the bulk size is equal to one.
+   ROOT::RDF::RNode node{tdfOdd};
+   ROOT::Internal::RDF::SetMaxBulkSize(node, 1);
    EXPECT_EQ(*tdfOdd.Count(), 40ULL);
    auto tdfAll = ROOT::RDF::MakeTrivialDataFrame(80ULL);
    EXPECT_EQ(*tdfAll.Count(), 80ULL);

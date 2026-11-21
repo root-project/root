@@ -44,6 +44,8 @@ protected:
    RLoopManager *fLoopManager;
    const ColumnNames_t fColumnNames;
 
+   std::vector<ROOT::Internal::RDF::RCallback> fCallbacksEveryNEntries;
+
 private:
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
    bool fHasRun = false;
@@ -63,12 +65,12 @@ public:
    RColumnRegister &GetColRegister() { return fColRegister; }
    RLoopManager *GetLoopManager() { return fLoopManager; }
    unsigned int GetNSlots() const { return fNSlots; }
-   virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void Initialize() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
    virtual void FinalizeSlot(unsigned int) = 0;
    virtual void Finalize() = 0;
+   virtual void RegisterCallback(std::uint64_t everyNEntries, std::function<void(unsigned int)> &&fun);
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
@@ -92,6 +94,17 @@ public:
 
    virtual std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) = 0;
    virtual std::unique_ptr<RActionBase> CloneAction(void *newResult) = 0;
+
+   virtual void Run(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) = 0;
+
+   std::vector<ROOT::Internal::RDF::RCallback> MoveOutCallbacksEveryNEntries()
+   {
+      return std::move(fCallbacksEveryNEntries);
+   }
+   void SetCallbacksEveryNEntries(std::vector<ROOT::Internal::RDF::RCallback> &&callbacks)
+   {
+      fCallbacksEveryNEntries = std::move(callbacks);
+   }
 };
 } // namespace RDF
 } // namespace Internal

@@ -285,6 +285,8 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all field indices of this entry.
    std::unordered_set<FieldIndex_t> GetFieldIndices() const;
+
+   ROOT::RFieldBase::RValue CreateValue(FieldIndex_t fieldIdx);
 };
 } // namespace Internal
 } // namespace ROOT

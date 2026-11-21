@@ -29,6 +29,12 @@ void ROOT::Internal::RDF::ChangeBeginAndEndEntries(const ROOT::RDF::RNode &node,
    node.GetLoopManager()->ChangeBeginAndEndEntries(begin, end);
 }
 
+void ROOT::Internal::RDF::SetMaxBulkSize(ROOT::RDF::RNode &node, std::size_t maxBulkSize)
+{
+   assert(maxBulkSize > 0);
+   node.GetLoopManager()->SetMaxBulkSize(maxBulkSize);
+}
+
 /**
  * \brief Changes the input dataset specification of an RDataFrame.
  *

@@ -24,9 +24,17 @@ namespace RDFInternal = ROOT::Internal::RDF; // redundant (already present in th
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RColumnRegister &colRegister,
                          ROOT::Detail::RDF::RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columnNames,
                          const std::string &variationName)
-   : fName(name), fType(type), fLastCheckedEntry(lm.GetNSlots() * RDFInternal::CacheLineStep<Long64_t>(), -1),
-     fColRegister(colRegister), fLoopManager(&lm), fColumnNames(columnNames), fIsDefine(columnNames.size()),
-     fVariationDeps(fColRegister.GetVariationDeps(fColumnNames)), fVariation(variationName)
+   : fName(name),
+     fType(type),
+     fMaskPerSlot(lm.GetNSlots() * RDFInternal::CacheLineStep<ROOT::Internal::RDF::RMaskedEntryRange>(),
+                  ROOT::Internal::RDF::RMaskedEntryRange{lm.GetCurrentBulkSize(), false,
+                                                         std::numeric_limits<std::uint64_t>::max()}),
+     fColRegister(colRegister),
+     fLoopManager(&lm),
+     fColumnNames(columnNames),
+     fIsDefine(columnNames.size()),
+     fVariationDeps(fColRegister.GetVariationDeps(fColumnNames)),
+     fVariation(variationName)
 {
    const auto nColumns = fColumnNames.size();
    for (auto i = 0u; i < nColumns; ++i) {

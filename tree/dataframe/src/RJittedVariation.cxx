@@ -22,7 +22,8 @@ void RJittedVariation::InitSlot(TTreeReader *r, unsigned int slot)
    fConcreteVariation->InitSlot(r, slot);
 }
 
-void *RJittedVariation::GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation)
+std::pair<void *, std::size_t>
+RJittedVariation::GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation)
 {
    assert(fConcreteVariation != nullptr);
    return fConcreteVariation->GetValuePtr(slot, column, variation);
@@ -34,10 +35,10 @@ const std::type_info &RJittedVariation::GetTypeId() const
    return fConcreteVariation->GetTypeId();
 }
 
-void RJittedVariation::Update(unsigned int slot, Long64_t entry)
+void RJittedVariation::Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
    assert(fConcreteVariation != nullptr);
-   fConcreteVariation->Update(slot, entry);
+   fConcreteVariation->Update(slot, mask);
 }
 
 void RJittedVariation::FinalizeSlot(unsigned int slot)

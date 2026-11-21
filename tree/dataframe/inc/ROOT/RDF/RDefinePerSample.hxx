@@ -30,22 +30,25 @@ template <typename F>
 class R__CLING_PTRCHECK(off) RDefinePerSample final : public RDefineBase {
    using RetType_t = typename CallableTraits<F>::ret_type;
 
-   // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
-   using ValuesPerSlot_t =
-      std::conditional_t<std::is_same<RetType_t, bool>::value, std::deque<RetType_t>, std::vector<RetType_t>>;
+   using ValuesPerSlot_t = std::vector<ROOT::RVec<RetType_t>>;
 
    F fExpression;
-   ValuesPerSlot_t fLastResults;
+   // Each slot accesses a cache of values for the current bulk
+   ValuesPerSlot_t fCachedResultsPerSlot;
 
 public:
    RDefinePerSample(std::string_view name, std::string_view type, F expression, RLoopManager &lm)
       : RDefineBase(name, type, RDFInternal::RColumnRegister{&lm}, lm, /*columnNames*/ {}),
         fExpression(std::move(expression)),
-        fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<RetType_t>())
+        fCachedResultsPerSlot(lm.GetNSlots() * RDFInternal::CacheLineStep<ROOT::RVec<RetType_t>>())
    {
       fLoopManager->Register(this);
       auto callUpdate = [this](unsigned int slot, const ROOT::RDF::RSampleInfo &id) { this->Update(slot, id); };
       fLoopManager->AddSampleCallback(this, std::move(callUpdate));
+
+      for (decltype(lm.GetNSlots()) i = 0; i < lm.GetNSlots(); ++i) {
+         fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<ROOT::RVec<RetType_t>>()].resize(lm.GetCurrentBulkSize());
+      }
    }
 
    RDefinePerSample(const RDefinePerSample &) = delete;
@@ -53,13 +56,15 @@ public:
 
    ~RDefinePerSample() { fLoopManager->Deregister(this); }
 
-   /// Return the (type-erased) address of the Define'd value for the given processing slot.
-   void *GetValuePtr(unsigned int slot) final
+   /// Return the beginning of the cached results of the current bulk for the input processing slot
+   std::pair<void *, std::size_t> GetValuePtr(unsigned int slot) final
    {
-      return static_cast<void *>(&fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()]);
+      return std::make_pair(
+         static_cast<void *>(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<RetType_t>>()].data()),
+         sizeof(RetType_t));
    }
 
-   void Update(unsigned int, Long64_t) final
+   void Update(unsigned int, const ROOT::Internal::RDF::RMaskedEntryRange &) final
    {
       // no-op
    }
@@ -67,7 +72,10 @@ public:
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
    void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id) final
    {
-      fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()] = fExpression(slot, id);
+      // Call expression only once per sample
+      auto val = fExpression(slot, id);
+      for (auto &res : fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<ROOT::RVec<RetType_t>>()])
+         res = val;
    }
 
    const std::type_info &GetTypeId() const final { return typeid(RetType_t); }

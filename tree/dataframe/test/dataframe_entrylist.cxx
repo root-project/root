@@ -26,7 +26,7 @@ public:
    RMTRAII(bool isMT) : fIsMT(isMT)
    {
       if (fIsMT)
-         ROOT::EnableImplicitMT();
+         ROOT::EnableImplicitMT(2);
    }
    ~RMTRAII()
    {

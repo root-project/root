@@ -107,6 +107,7 @@ std::string GetDataSourceLabel(const ROOT::RDF::RNode &node);
 void SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
 void LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
                       const std::vector<std::size_t> &vecSizes, float vecPadding, ROOT::RVecF &dest);
+void SetMaxBulkSize(ROOT::RDF::RNode &node, std::size_t maxBulkSize);
 } // namespace RDF
 } // namespace Internal
 
@@ -145,6 +146,7 @@ class RInterface : public RInterfaceBase {
    friend void ROOT::Internal::RDF::LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
                                                      const std::vector<std::size_t> &vecSizes, float vecPadding,
                                                      ROOT::RVecF &dest);
+   friend void ROOT::Internal::RDF::SetMaxBulkSize(ROOT::RDF::RNode &node, std::size_t maxBulkSize);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 

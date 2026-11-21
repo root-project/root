@@ -325,7 +325,7 @@ bool TTreeReader::Notify()
       SetProxies();
 
    if (fSetEntryBaseCallingLoadTree) {
-      if (fLoadTreeStatus == kExternalLoadTree) {
+      if (fLoadTreeStatus == kExternalLoadTree && fOpenFileBeforeCallingLoadTree != fTree->GetCurrentFile()) {
          // This can happen if someone switched trees behind us.
          // Likely cause: a TChain::LoadTree() e.g. from TTree::Process().
          // This means that "local" should be set!
@@ -665,6 +665,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
    TTree *treeToCallLoadOn = local ? fTree->GetTree() : fTree;
 
    fSetEntryBaseCallingLoadTree = true;
+   fOpenFileBeforeCallingLoadTree = treeToCallLoadOn->GetCurrentFile();
    const Long64_t loadResult = treeToCallLoadOn->LoadTree(entryAfterList);
    fSetEntryBaseCallingLoadTree = false;
 
