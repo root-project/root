@@ -36,4 +36,7 @@ endif()
                     MACRO gh_24176.py
                     OPTS variable
                     FIXTURES_REQUIRED python-regression-gh_24176-dict-fixture)
+  
+  ROOTTEST_ADD_TEST(gh_16613
+                    MACRO gh_16613.py)
 endif()
