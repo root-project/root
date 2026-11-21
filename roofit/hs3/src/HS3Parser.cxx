@@ -375,8 +375,10 @@ void describe(Reader &ar, CategoricalAxis &axis)
       return;
    }
    for (JSONNode const &label : labels.children()) {
-      if (label.is_container() || label.is_null() || label.is_number() || label.val().empty()) {
-         ar.cursor().error("the axis '" + axis.name + "': the entries of \"categories\" must be non-empty strings");
+      // An empty label is allowed: RooFit uses it for a column that does not apply to a component of a combined
+      // distribution.
+      if (label.is_container() || label.is_null() || label.is_number()) {
+         ar.cursor().error("the axis '" + axis.name + "': the entries of \"categories\" must be strings");
          return;
       }
       if (std::find(axis.categories.begin(), axis.categories.end(), label.val()) != axis.categories.end()) {
