@@ -53,6 +53,9 @@ public:
 
   TObject *Clone(const char *newname="") const override;
 
+  Int_t Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0) const override;
+  Int_t Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0) override;
+
   bool importClassCode(const char* pat="*", bool doReplace=false) ;
   bool importClassCode(TClass* theClass, bool doReplace=false) ;
 

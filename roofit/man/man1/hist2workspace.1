@@ -1,6 +1,6 @@
 .TH hist2workspace 1 
 .SH SYNOPSIS
-usage: hist2workspace [-h] [-v] [-vv] [-disable_binned_fit_optimization]
+usage: hist2workspace [-h] [-v] [-vv] [-disable_binned_fit_optimization] [-legacy_model_structure]
 
 .SH DESCRIPTION
 hist2workspace is a utility to create RooFit/RooStats workspace from histograms
@@ -13,3 +13,5 @@ switch HistFactory message stream to INFO level
 switch HistFactory message stream to DEBUG level
 .IP -disable_binned_fit_optimization
 disable the binned fit optimization used in HistFactory since ROOT 6.28
+.IP -legacy_model_structure
+build the channels from several RooFit objects per histogram, as before ROOT 6.44

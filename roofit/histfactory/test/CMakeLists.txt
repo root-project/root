@@ -20,6 +20,11 @@ if(clad)
   target_compile_definitions(testHistFactory PUBLIC TEST_CODEGEN_AD)
 endif(clad)
 
+ROOT_ADD_GTEST(testRooHistFactoryPdf testRooHistFactoryPdf.cxx LIBRARIES RooFitCore RooFit RooStats HistFactory)
+if(clad)
+  target_compile_definitions(testRooHistFactoryPdf PUBLIC TEST_CODEGEN_AD)
+endif(clad)
+
 ROOT_ADD_GTEST(testParamHistFunc testParamHistFunc.cxx LIBRARIES RooFitCore HistFactory)
 ROOT_ADD_GTEST(testPiecewiseInterpolation testPiecewiseInterpolation.cxx LIBRARIES RooFitCore HistFactory)
 ROOT_ADD_GTEST(testHistFactoryPlotting testHistFactoryPlotting.cxx LIBRARIES RooFitCore HistFactory)

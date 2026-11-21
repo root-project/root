@@ -121,6 +121,10 @@ inline ConfigFlag importConstraintsAsChannels(bool value)
 {
    return {&RooJSONFactoryWSTool::Config::importConstraintsAsChannels, value};
 }
+inline ConfigFlag useHistFactoryPdf(bool value)
+{
+   return {&RooJSONFactoryWSTool::Config::useHistFactoryPdf, value};
+}
 
 /// Sets flags of RooJSONFactoryWSTool::config() for its lifetime.
 class ScopedConfig {

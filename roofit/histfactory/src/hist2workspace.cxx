@@ -46,11 +46,16 @@
 //         help="disable the binned fit optimization used in HistFactory since ROOT 6.28",
 //         action="store_true",
 //     )
+//     parser.add_argument(
+//         "-legacy_model_structure",
+//         help="build the channels from several RooFit objects per histogram, as before ROOT 6.44",
+//         action="store_true",
+//     )
 //     return parser
 // ```
 
 constexpr static const char kCommandLineOptionsHelp[] = R"RAW(
-usage: hist2workspace [-h] [-v] [-vv] [-disable_binned_fit_optimization]
+usage: hist2workspace [-h] [-v] [-vv] [-disable_binned_fit_optimization] [-legacy_model_structure]
 
 hist2workspace is a utility to create RooFit/RooStats workspace from histograms
 
@@ -59,6 +64,8 @@ OPTIONS:
   -v                                          switch HistFactory message stream to INFO level
   -vv                                         switch HistFactory message stream to DEBUG level
   -disable_binned_fit_optimization            disable the binned fit optimization used in HistFactory since ROOT 6.28
+  -legacy_model_structure                     build the channels from several RooFit objects per histogram, as before
+                                              ROOT 6.44
 )RAW";
 
 
@@ -102,6 +109,7 @@ namespace RooStats {
  * -v Switch HistFactory message stream to INFO level.
  * -vv Switch HistFactory message stream to DEBUG level.
  * -disable_binned_fit_optimization Disable the binned fit optimization used in HistFactory since ROOT 6.28.
+ * -legacy_model_structure Build the channels from several RooFit objects per histogram, as before ROOT 6.44.
  */
 int main(int argc, char** argv) {
 
@@ -142,6 +150,11 @@ int main(int argc, char** argv) {
 
     if(input == "-disable_binned_fit_optimization") {
       cfg.binnedFitOptimization = false;
+      continue;
+    }
+
+    if(input == "-legacy_model_structure") {
+      cfg.useHistFactoryPdf = false;
       continue;
     }
 

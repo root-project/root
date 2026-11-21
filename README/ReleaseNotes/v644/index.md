@@ -52,6 +52,51 @@ RenderCore, the WebGL engine of the REve client, is fetched at build time as the
 
 ## RooFit
 
+### HistFactory models with fewer RooFit objects
+
+HistFactory now builds each channel as a `RooHistFactoryPdf`, which corresponds
+to the `histfactory_dist` of the HS3 standard. Each sample of a channel is a
+single `RooHistFactorySample` object, which holds the nominal histogram and all
+its modifiers (NormFactor, OverallSys, HistoSys, StatError, ShapeSys and
+ShapeFactor). Before, HistFactory created several RooFit objects for each
+histogram (`RooHistFunc`, `RooDataHist`, `PiecewiseInterpolation`,
+`FlexibleInterpVar`, `ParamHistFunc` and `RooProduct`). For models with many
+systematic variations, this reduces the size of the workspaces in memory and on
+disk. The histogram data of a sample is shared between its copies, so cloning
+the model, e.g. when creating the likelihood, doesn't copy the histograms.
+
+The models have the same parameters, constraint terms, observables and datasets
+as before, and they give the same values up to floating point rounding. The
+binned likelihood optimization,
+the code generation backend and the plotting of single samples with
+`RooFit::Components("<sample>_<channel>_shapes")` work as before. Code that
+navigates the internal structure of HistFactory models, e.g. to retrieve the
+`RooHistFunc` of a sample, has to be adapted. The modifiers of a sample are
+available via `RooHistFactorySample::data()`.
+
+When a workspace is written to a ROOT file with `RooWorkspace::Write()` or
+`RooWorkspace::writeToFile()`, the histogram data of all its samples goes to an
+RNTuple next to the workspace, named after the workspace with the suffix
+`_histfactory_arrays`. Like this, HistFactory workspaces are no longer limited
+by the 1 GB size limit of single objects in ROOT files. `hist2workspace` writes
+its workspaces like this. With `TDirectory::WriteObject()`, the histograms stay
+in the workspace object.
+
+The `Measurement` that HistFactory writes next to the workspaces holds all
+histograms as well, so it is subject to the same limit. Since the workspaces
+don't need it, writing it can be disabled with the new `writeMeasurement`
+member of `RooStats::HistFactory::HistoToWorkspaceFactoryFast::Configuration`.
+
+The HS3 importer also creates `RooHistFactoryPdf` objects for the
+`histfactory_dist` distributions, and the exporter writes them with the names
+of their modifiers.
+
+To get the previous model structure, set the `useHistFactoryPdf` member of the
+`RooStats::HistFactory::HistoToWorkspaceFactoryFast::Configuration` to `false`,
+use the `-legacy_model_structure` command line argument of `hist2workspace`, or
+set `RooJSONFactoryWSTool::config().useHistFactoryPdf = false` for the HS3
+importer. Workspaces with the previous structure can still be read.
+
 ### Removal of the legacy evaluation backend
 
 The `legacy` evaluation backend for likelihood and chi-square fits is removed.
