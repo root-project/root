@@ -16,6 +16,7 @@
 #include <ROOT/RError.hxx>
 
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -71,6 +72,16 @@ public:
    /// Throws if frozen and str is not yet in the pool.
    const std::string *Intern(std::string_view str);
    void Freeze() { fFrozen = true; }
+};
+
+/// The interface of a task scheduler to schedule page (de)compression tasks
+class RNTupleTaskScheduler {
+public:
+   virtual ~RNTupleTaskScheduler() = default;
+   /// Take a callable that represents a task
+   virtual void AddTask(const std::function<void(void)> &taskFunc) = 0;
+   /// Blocks until all scheduled tasks finished
+   virtual void Wait() = 0;
 };
 
 } // namespace Internal

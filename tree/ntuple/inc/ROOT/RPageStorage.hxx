@@ -23,6 +23,7 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
@@ -68,16 +69,6 @@ class RPageStorage {
 public:
    /// The page checksum is a 64bit xxhash3
    static constexpr std::size_t kNBytesPageChecksum = sizeof(std::uint64_t);
-
-   /// The interface of a task scheduler to schedule page (de)compression tasks
-   class RTaskScheduler {
-   public:
-      virtual ~RTaskScheduler() = default;
-      /// Take a callable that represents a task
-      virtual void AddTask(const std::function<void(void)> &taskFunc) = 0;
-      /// Blocks until all scheduled tasks finished
-      virtual void Wait() = 0;
-   };
 
    /// A sealed page contains the bytes of a page as written to storage (packed & compressed).  It is used
    /// as an input to UnsealPages() as well as to transfer pages between different storage media.
@@ -140,7 +131,7 @@ public:
    };
 
 protected:
-   RTaskScheduler *fTaskScheduler = nullptr;
+   RNTupleTaskScheduler *fTaskScheduler = nullptr;
    void WaitForAllTasks()
    {
       if (!fTaskScheduler)
@@ -156,7 +147,7 @@ public:
    RPageStorage &operator=(RPageStorage &&other) = default;
    virtual ~RPageStorage() = default;
 
-   void SetTaskScheduler(RTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
+   void SetTaskScheduler(RNTupleTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
 }; // class RPageStorage
 
 // clang-format off

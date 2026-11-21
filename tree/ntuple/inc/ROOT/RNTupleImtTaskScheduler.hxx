@@ -17,7 +17,7 @@
 
 #ifdef R__USE_IMT
 
-#include <ROOT/RPageStorage.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/TTaskGroup.hxx>
 
 #include <functional>
@@ -28,7 +28,7 @@ namespace Experimental {
 
 namespace Internal {
 
-class RNTupleImtTaskScheduler : public ROOT::Internal::RPageStorage::RTaskScheduler {
+class RNTupleImtTaskScheduler : public ROOT::Internal::RNTupleTaskScheduler {
 private:
    TTaskGroup fTaskGroup;
 
