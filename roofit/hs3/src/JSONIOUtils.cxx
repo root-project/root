@@ -1,6 +1,5 @@
 #include "JSONIOUtils.h"
 
-#include <RooAbsBinning.h>
 #include <RooAbsLValue.h>
 #include <RooArgList.h>
 #include <RooCategory.h>
@@ -13,6 +12,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <set>
 #include <sstream>
@@ -21,22 +22,19 @@
 
 using RooFit::Detail::JSONNode;
 
-// Parse the entire string as a number (integer or floating-point). The output is only valid if that succeeds.
-ToNumberOutput toNumber(const std::string &str)
+std::optional<double> toNumber(const std::string &str)
 {
    // std::from_chars for floating-point types is not portably available on all
    // platforms ROOT supports, so we rely on the stream extraction.
    std::istringstream stream(str);
-   ToNumberOutput output;
-   output.valid = (stream >> output.value) && stream.eof();
-   return output;
+   double value = 0.0;
+   return (stream >> value) && stream.eof() ? std::optional<double>{value} : std::nullopt;
 }
 
 // True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
 bool isLiteralConstVar(RooAbsArg const &arg)
 {
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
-   return isRooConstVar && toNumber(arg.GetName()).valid;
+   return dynamic_cast<RooConstVar const *>(&arg) && toNumber(arg.GetName());
 }
 
 // Write a reference to `arg`: the value if it is a literal constant, and the name otherwise.
@@ -67,57 +65,86 @@ std::string removeSuffix(std::string_view str, std::string_view suffix)
    return out;
 }
 
-// Writes a regular binning with "min", "max" and "nbins", and an irregular one with its "edges" only, since HS3 0.3
-// forbids "min" and "max" alongside them.
-void writeAxisBinning(JSONNode &node, const RooAbsBinning &binning)
-{
-   if (binning.isUniform()) {
-      node["min"] << binning.lowBound();
-      node["max"] << binning.highBound();
-      node["nbins"] << binning.numBins();
-      return;
-   }
+namespace {
 
-   auto &edges = node["edges"].set_seq();
-   edges.append_child() << binning.binLow(0);
-   for (int i = 0; i < binning.numBins(); ++i) {
-      edges.append_child() << binning.binHigh(i);
+constexpr std::string_view literalPrefix = "const_";
+
+// The shortest decimal representation of a value that is read back as the same value.
+std::string shortestNumber(double value)
+{
+   char buffer[32];
+   for (int precision = 1; precision <= 17; ++precision) {
+      std::snprintf(buffer, sizeof(buffer), "%.*g", precision, value);
+      if (std::strtod(buffer, nullptr) == value) {
+         break;
+      }
    }
+   return buffer;
 }
 
-// Parse the leading "MAJOR.MINOR" of an HS3 version string like "0.2", "0.2.9" or "0.3".
-bool parseHS3Version(std::string const &version, int &major, int &minor)
+// The number that the identifier of a literal constant spells, or an empty string if `name` is no such identifier.
+std::string numberOfLiteralIdentifier(std::string_view name)
 {
-   std::size_t pos = 0;
-   auto readNumber = [&](int &out) {
-      const std::size_t begin = pos;
-      while (pos < version.size() && std::isdigit(static_cast<unsigned char>(version[pos]))) {
-         ++pos;
-      }
-      // Reject empty and absurdly long numbers, which std::stoi could not represent.
-      if (pos == begin || pos - begin > 9) {
-         return false;
-      }
-      out = std::stoi(version.substr(begin, pos - begin));
-      return true;
-   };
-   if (!readNumber(major) || pos >= version.size() || version[pos] != '.') {
-      return false;
+   if (!startsWith(name, literalPrefix) || name.size() == literalPrefix.size()) {
+      return "";
    }
-   ++pos;
-   return readNumber(minor);
+   std::string number;
+   for (char c : name.substr(literalPrefix.size())) {
+      if (c == 'p') {
+         number += '.';
+      } else if (c == 'm') {
+         number += '-';
+      } else if (std::isdigit(static_cast<unsigned char>(c)) || c == 'e') {
+         number += c;
+      } else {
+         return "";
+      }
+   }
+   char *end = nullptr;
+   std::strtod(number.c_str(), &end);
+   return end == number.c_str() + number.size() ? number : "";
 }
 
-// Whether an HS3 version predates `major.minor`. Versions that can't be parsed count as old. That includes the empty
-// version of objects that are imported without a document.
-bool isHS3VersionBefore(std::string const &version, int major, int minor)
+} // namespace
+
+std::string transformedArgument(RooAbsReal const &param)
 {
-   int versionMajor = 0;
-   int versionMinor = 0;
-   if (!parseHS3Version(version, versionMajor, versionMinor)) {
-      return true;
+   if (!isLiteralConstVar(param)) {
+      return param.GetName();
    }
-   return std::make_pair(versionMajor, versionMinor) < std::make_pair(major, minor);
+   // In parentheses if negative, such that "-%s" doesn't become "--1".
+   const std::string number = shortestNumber(param.getVal());
+   return number[0] == '-' ? "(" + number + ")" : number;
+}
+
+std::string transformedBaseName(RooAbsReal const &param)
+{
+   if (!isLiteralConstVar(param)) {
+      return param.GetName();
+   }
+   std::string out{literalPrefix};
+   for (char c : shortestNumber(param.getVal())) {
+      if (c == '.') {
+         out += 'p';
+      } else if (c == '-') {
+         out += 'm';
+      } else if (c != '+') {
+         out += c;
+      }
+   }
+   return out;
+}
+
+bool isLiteralIdentifier(std::string_view name)
+{
+   return !numberOfLiteralIdentifier(name).empty();
+}
+
+std::string transformedOriginal(std::string_view name, std::string_view suffix)
+{
+   const std::string base = removeSuffix(name, suffix);
+   const std::string number = numberOfLiteralIdentifier(base);
+   return number.empty() ? base : number;
 }
 
 namespace {
@@ -195,10 +222,10 @@ RooArgList toParamHistFuncOrder(RooArgList const &paramsInBinOrder, RooAbsCollec
    return out;
 }
 
-void checkParamHistFuncOrderIsDefined(std::string const &hs3Version, RooAbsCollection const &vars,
+void checkParamHistFuncOrderIsDefined(RooFit::HS3::Version const &version, RooAbsCollection const &vars,
                                       std::string const &context)
 {
-   if (vars.size() >= 2 && isHS3VersionBefore(hs3Version, 0, 3)) {
+   if (vars.size() >= 2 && version < RooFit::HS3::Version{0, 3}) {
       RooJSONFactoryWSTool::error(context +
                                   " has a multi-dimensional binning. Documents before HS3 0.3 don't define the order "
                                   "of its per-bin parameters (RooFit wrote them in TH1 order, while the bin "
@@ -303,53 +330,4 @@ std::string selectionLabel(RooAbsCategory const &indexCat, std::vector<RooCatego
       inInputOrder.push_back(key[found - columns.begin()]);
    }
    return selectionLabel(inInputOrder);
-}
-
-std::vector<RooCategory *>
-readSelectionColumns(RooWorkspace const &ws, JSONNode const &node, const char *field, std::string const &context)
-{
-   auto const *list = node.find(field);
-   if (!list || !list->is_seq() || list->num_children() == 0) {
-      RooJSONFactoryWSTool::error("\"" + std::string(field) + "\" of " + context +
-                                  " must be a non-empty list of names of categorical axes");
-   }
-   std::vector<RooCategory *> columns;
-   for (JSONNode const &child : list->children()) {
-      if (child.is_container() || child.val().empty()) {
-         RooJSONFactoryWSTool::error("\"" + std::string(field) + "\" of " + context +
-                                     " must be a non-empty list of names of categorical axes");
-      }
-      RooCategory *cat = ws.cat(child.val());
-      if (!cat) {
-         RooJSONFactoryWSTool::error("the column '" + child.val() + "' of " + context +
-                                     " is not declared by a categorical axis of a domain");
-      }
-      if (std::find(columns.begin(), columns.end(), cat) != columns.end()) {
-         RooJSONFactoryWSTool::error("the column '" + child.val() + "' of " + context + " is listed twice");
-      }
-      columns.push_back(cat);
-   }
-   return columns;
-}
-
-std::vector<std::string>
-readSelectionKey(JSONNode const &component, std::vector<RooCategory *> const &columns, std::string const &context)
-{
-   auto const *keyNode = component.find("key");
-   if (!keyNode || !keyNode->is_seq() || keyNode->num_children() != columns.size()) {
-      RooJSONFactoryWSTool::error("every component of " + context + " must have a \"key\" with " +
-                                  std::to_string(columns.size()) + " labels, one per column");
-   }
-   std::vector<std::string> key;
-   std::size_t i = 0;
-   for (JSONNode const &label : keyNode->children()) {
-      if (label.is_container() || !columns[i]->hasLabel(label.val())) {
-         RooJSONFactoryWSTool::error("the label '" + (label.is_container() ? std::string("") : label.val()) +
-                                     "' in position " + std::to_string(i) + " of a key of " + context +
-                                     " is not one of the categories of '" + columns[i]->GetName() + "'");
-      }
-      key.push_back(label.val());
-      ++i;
-   }
-   return key;
 }

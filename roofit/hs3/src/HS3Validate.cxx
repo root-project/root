@@ -50,11 +50,19 @@ public:
          auto const &dist = _doc.distributions[i];
          if (auto const *histFactory = std::get_if<HistFactoryDist>(&dist.body)) {
             checkHistFactory(*histFactory, dist.name, at("distributions", i, dist.name));
+         } else if (auto const *combined = std::get_if<CombinedDist>(&dist.body)) {
+            checkCombined(*combined, at("distributions", i, dist.name), "the combined_dist '" + dist.name + "'");
          }
       }
       for (auto const &item : _doc.rooFit.combinedDistributions) {
          for (auto const &ref : item.second.distributions) {
             requireDistribution(ref.name, "misc.ROOT_internal.combined_distributions." + item.first, "distribution");
+         }
+      }
+      for (auto const &item : _doc.rooFit.auxiliaryChannels) {
+         requireDistribution(item.first, "misc.ROOT_internal.auxiliary_channels", "distribution");
+         for (auto const &ref : item.second) {
+            requireDistribution(ref.name, "misc.ROOT_internal.auxiliary_channels." + item.first, "component");
          }
       }
       for (auto const &item : _doc.rooFit.channelConstraints) {
@@ -83,6 +91,8 @@ public:
    }
 
    void checkHistFactory(HistFactoryDist const &dist, std::string const &name, std::string const &path);
+   template <class Ref_t>
+   void checkCombined(Combined<Ref_t> const &combined, std::string const &path, std::string const &context);
 
 private:
    bool isExternal(std::string const &name) const { return _options.isExternal && _options.isExternal(name); }
@@ -130,6 +140,7 @@ private:
    void checkCategoricalAxes();
    void checkLikelihoods();
    void checkAnalyses();
+   void checkNormalizationRanges(Analysis const &analysis, std::string const &path);
    void checkData();
    void checkCombinedData();
 
@@ -138,7 +149,17 @@ private:
    ValidateOptions const &_options;
    std::map<std::string, std::vector<char const *>> _sections; ///< The sections where a name is defined.
    std::set<std::string> _parameters;
+   std::map<std::string, std::vector<std::string> const *> _categories; ///< Of the categorical axes of the domains.
 };
+
+// The names that the HS3 expression language reserves for itself: its literals and functions (HS3 0.3, "Identifiers").
+static bool isReservedName(std::string const &name)
+{
+   static const std::set<std::string> reserved{"PI",   "EULER", "TRUE",  "FALSE", "ifelse", "exp",  "log",
+                                               "sqrt", "abs",   "floor", "ceil",  "pow",    "min",  "max",
+                                               "sin",  "cos",   "tan",   "asin",  "acos",   "atan", "erf"};
+   return reserved.count(name) > 0;
+}
 
 // HS3 requires the names of all objects to be unique within a document, including the parameters. RooFit writes such
 // documents, e.g. for a range and a pdf of one name, so only ambiguous clashes in current documents are errors.
@@ -184,7 +205,7 @@ void Validator::collectNames()
    // HistFactory modifiers, which are created on the fly.
    for (auto const &domain : _doc.domains) {
       for (auto const &axis : domain.axes) {
-         addParameter(std::visit([](auto const &a) -> std::string const & { return a.name; }, axis));
+         addParameter(nameOf(axis));
       }
    }
    for (auto const &point : _doc.parameterPoints) {
@@ -220,6 +241,22 @@ void Validator::collectNames()
          }
       }
    }
+   // Objects that expressions can refer to must not carry the reserved names of the expression language.
+   auto checkNotReserved = [&](char const *what, std::string const &name) {
+      if (isReservedName(name)) {
+         strictError("", "the " + std::string(what) + " '" + name +
+                            "' has a name that the HS3 expression language reserves for itself");
+      }
+   };
+   for (auto const &dist : _doc.distributions) {
+      checkNotReserved("distribution", dist.name);
+   }
+   for (auto const &func : _doc.functions) {
+      checkNotReserved("function", func.name);
+   }
+   for (std::string const &parameter : _parameters) {
+      checkNotReserved("parameter", parameter);
+   }
    for (std::string const &parameter : _parameters) {
       if (char const *section = sectionOf(parameter)) {
          strictError("", "the name '" + parameter + "' is used in \"" + section +
@@ -241,8 +278,7 @@ void Validator::checkFixedAxes()
       for (std::size_t i = 0; i < _doc.domains.size(); ++i) {
          for (auto const &axis : _doc.domains[i].axes) {
             // A categorical axis is passed as null.
-            fn(i, std::visit([](auto const &a) -> std::string const & { return a.name; }, axis),
-               std::get_if<DomainAxis>(&axis));
+            fn(i, nameOf(axis), std::get_if<DomainAxis>(&axis));
          }
       }
    };
@@ -307,6 +343,7 @@ void Validator::checkCategoricalAxes()
          if (!cat) {
             continue;
          }
+         _categories.emplace(cat->name, &cat->categories);
          auto inserted = categorical.insert({cat->name, Declaration{&cat->categories, &domain.name}});
          if (!inserted.second && *inserted.first->second.categories != cat->categories) {
             error(at("domains", i, domain.name), "the categorical axis '" + cat->name + "' is listed in the domains '" +
@@ -331,24 +368,49 @@ void Validator::checkCategoricalAxes()
    }
 }
 
-// The columns of combined data sets are categorical axes of the domains, or categories that exist already, and the keys
-// consist of their categories. Every sub-data set is a data set of the document that belongs to one combined data set.
-void Validator::checkCombinedData()
+// The columns of a combined data set or distribution are categorical axes of the domains, or categories that exist
+// already, and the keys consist of their categories.
+template <class Ref_t>
+void Validator::checkCombined(Combined<Ref_t> const &combined, std::string const &path, std::string const &context)
 {
-   std::map<std::string, std::vector<std::string> const *> categorical;
-   for (Domain const &domain : _doc.domains) {
-      for (auto const &axis : domain.axes) {
-         if (auto const *cat = std::get_if<CategoricalAxis>(&axis)) {
-            categorical.emplace(cat->name, &cat->categories);
+   std::vector<std::vector<std::string> const *> columnCategories;
+   std::set<std::string> columns;
+   for (std::string const &column : combined.columns) {
+      auto found = _categories.find(column);
+      if (found == _categories.end() && !isExternal(column)) {
+         error(path,
+               "the column '" + column + "' of " + context + " is not declared by a categorical axis of a domain");
+         return;
+      }
+      if (!columns.insert(column).second) {
+         error(path, "the column '" + column + "' of " + context + " is listed twice");
+         return;
+      }
+      columnCategories.push_back(found != _categories.end() ? found->second : nullptr);
+   }
+   std::set<std::vector<std::string>> keys;
+   for (auto const &component : combined.components) {
+      for (std::size_t k = 0; k < component.key.size(); ++k) {
+         auto const *categories = columnCategories[k];
+         if (categories && std::find(categories->begin(), categories->end(), component.key[k]) == categories->end()) {
+            error(path, "the label '" + component.key[k] + "' in position " + std::to_string(k) + " of a key of " +
+                           context + " is not one of the categories of '" + combined.columns[k] + "'");
          }
       }
-   }
-   std::set<std::string> combinedNames;
-   for (auto const &data : _doc.data) {
-      if (std::holds_alternative<CombinedData>(data.body)) {
-         combinedNames.insert(data.name);
+      if (!keys.insert(component.key).second) {
+         std::string key = "[";
+         for (std::size_t k = 0; k < component.key.size(); ++k) {
+            key += (k == 0 ? "\"" : ", \"") + component.key[k] + "\"";
+         }
+         error(path, "the key " + key + "] is used by two components of " + context);
       }
    }
+}
+
+// Every sub-data set of a combined data set is a data set of the document that belongs to one combined data set. A
+// component may itself be a combined data set, paired with a component that is a combined distribution.
+void Validator::checkCombinedData()
+{
    std::set<std::string> usedComponents;
    for (std::size_t i = 0; i < _doc.data.size(); ++i) {
       auto const *combined = std::get_if<CombinedData>(&_doc.data[i].body);
@@ -357,40 +419,10 @@ void Validator::checkCombinedData()
       }
       std::string const path = at("data", i, _doc.data[i].name);
       std::string const context = "the combined data set '" + _doc.data[i].name + "'";
-      std::vector<std::vector<std::string> const *> columnCategories;
-      std::set<std::string> columns;
-      for (std::string const &column : combined->columns) {
-         auto found = categorical.find(column);
-         if (found == categorical.end() && !isExternal(column)) {
-            error(path,
-                  "the column '" + column + "' of " + context + " is not declared by a categorical axis of a domain");
-            return;
-         }
-         if (!columns.insert(column).second) {
-            error(path, "the column '" + column + "' of " + context + " is listed twice");
-            return;
-         }
-         columnCategories.push_back(found != categorical.end() ? found->second : nullptr);
-      }
-      std::set<std::vector<std::string>> keys;
-      for (CombinedDataComponent const &component : combined->components) {
-         for (std::size_t k = 0; k < component.key.size(); ++k) {
-            auto const *categories = columnCategories[k];
-            if (categories &&
-                std::find(categories->begin(), categories->end(), component.key[k]) == categories->end()) {
-               error(path, "the label '" + component.key[k] + "' in position " + std::to_string(k) + " of a key of " +
-                              context + " is not one of the categories of '" + combined->columns[k] + "'");
-            }
-         }
-         if (!keys.insert(component.key).second) {
-            std::string key = "[";
-            for (std::size_t k = 0; k < component.key.size(); ++k) {
-               key += (k == 0 ? "\"" : ", \"") + component.key[k] + "\"";
-            }
-            error(path, "the key " + key + "] is used by two components of " + context);
-         }
-         std::string const &name = component.data.name;
-         if (!isDefinedIn(name, "data") || combinedNames.count(name) || !usedComponents.insert(name).second) {
+      checkCombined(*combined, path, context);
+      for (auto const &component : combined->components) {
+         std::string const &name = component.ref.name;
+         if (!isDefinedIn(name, "data") || name == _doc.data[i].name || !usedComponents.insert(name).second) {
             error(path, "the component '" + name + "' of " + context +
                            " is not a data set of the document, or it is already a component of another combined "
                            "data set");
@@ -449,11 +481,89 @@ void Validator::checkAnalyses()
       if (analysis.prior && !isDefinedIn(analysis.prior->name, "distributions") && !isExternal(analysis.prior->name)) {
          strictError(path + ".prior", "the distribution '" + analysis.prior->name + "' does not exist");
       }
+      checkNormalizationRanges(analysis, path);
+   }
+}
+
+// A variate is normalized over the axis of the paired data set, or else over its axis in the domains of the analysis.
+// If both exist, they must give the same range, where an absent bound is equal only to an absent bound (HS3 0.3).
+void Validator::checkNormalizationRanges(Analysis const &analysis, std::string const &path)
+{
+   using Range = std::pair<std::optional<double>, std::optional<double>>;
+   auto bound = [](std::optional<double> value) { return value && !std::isinf(*value) ? value : std::nullopt; };
+   auto format = [](Range const &range) {
+      auto one = [](std::optional<double> value) { return value ? std::to_string(*value) : std::string("none"); };
+      return "[" + one(range.first) + ", " + one(range.second) + "]";
+   };
+
+   std::map<std::string, Range> domainRanges;
+   for (auto const &ref : analysis.domains) {
+      for (auto const &domain : _doc.domains) {
+         if (domain.name != ref.name) {
+            continue;
+         }
+         for (auto const &axisVariant : domain.axes) {
+            auto const *axis = std::get_if<DomainAxis>(&axisVariant);
+            if (!axis || axis->fixedValue) {
+               continue; // a fixed axis gives no range
+            }
+            domainRanges[axis->name] = {bound(axis->min), bound(axis->max)};
+         }
+      }
+   }
+   if (domainRanges.empty()) {
+      return;
+   }
+
+   auto check = [&](std::string const &dataName, std::string const &axisName, Range const &dataRange) {
+      auto found = domainRanges.find(axisName);
+      if (found != domainRanges.end() && found->second != dataRange) {
+         strictError(path, "the axis '" + axisName + "' of the data set '" + dataName + "' has the range " +
+                              format(dataRange) + ", but the domains of the analysis '" + analysis.name +
+                              "' give it the range " + format(found->second));
+      }
+   };
+   std::function<void(std::string const &)> checkData = [&](std::string const &dataName) {
+      for (auto const &data : _doc.data) {
+         if (data.name != dataName) {
+            continue;
+         }
+         // Continuous and binned axes have a range, categorical axes don't.
+         auto checkAxis = [&](auto const &a) { check(data.name, a.name, {bound(a.min), bound(a.max)}); };
+         auto checkAxes = [&](auto const &axes) {
+            for (auto const &axis : axes) {
+               std::visit(overloaded{[](CategoricalAxis const &) {}, checkAxis}, axis);
+            }
+         };
+         std::visit(overloaded{[&](PointData const &d) { std::for_each(d.axes.begin(), d.axes.end(), checkAxis); },
+                               [&](UnbinnedData const &d) { checkAxes(d.axes); },
+                               [&](BinnedData const &d) { checkAxes(d.axes); },
+                               [&](CombinedData const &d) {
+                                  for (auto const &component : d.components) {
+                                     checkData(component.ref.name);
+                                  }
+                               }},
+                    data.body);
+      }
+   };
+   for (auto const &likelihood : _doc.likelihoods) {
+      if (likelihood.name != analysis.likelihood.name) {
+         continue;
+      }
+      for (auto const &term : likelihood.terms) {
+         if (auto const *data = std::get_if<DataRef>(&term.data)) {
+            checkData(data->name);
+         }
+      }
    }
 }
 
 std::size_t Validator::checkAxis(BinnedAxis const &axis, std::string const &path)
 {
+   // Unlike continuous axes, binned axes always have finite bounds.
+   if (std::isinf(axis.min) || std::isinf(axis.max)) {
+      error(path, "the binned axis '" + axis.name + "' needs finite bounds");
+   }
    if (auto const *regular = std::get_if<RegularBinning>(&axis.binning)) {
       if (regular->nbins <= 0) {
          error(path, "the axis '" + axis.name + "' needs a positive number of bins");
@@ -498,11 +608,29 @@ void Validator::checkData()
 {
    for (std::size_t i = 0; i < _doc.data.size(); ++i) {
       auto const &data = _doc.data[i];
+      const std::string path = at("data", i, data.name);
+      // A fixed axis is only allowed in domains (HS3 0.3). Older versions of RooFit wrote the constant observables of
+      // data sets like this.
+      auto checkNotFixed = [&](ContinuousAxis const &axis) {
+         if (axis.hasFixedValue) {
+            strictError(path, "the axis '" + axis.name + "' of a data set must not have a fixed \"value\"");
+         }
+      };
+      if (auto const *point = std::get_if<PointData>(&data.body)) {
+         for (auto const &axis : point->axes) {
+            checkNotFixed(axis);
+         }
+      } else if (auto const *unbinned = std::get_if<UnbinnedData>(&data.body)) {
+         for (auto const &axis : unbinned->axes) {
+            if (auto const *continuous = std::get_if<ContinuousAxis>(&axis)) {
+               checkNotFixed(*continuous);
+            }
+         }
+      }
       auto const *binned = std::get_if<BinnedData>(&data.body);
       if (!binned) {
          continue;
       }
-      const std::string path = at("data", i, data.name);
       std::optional<std::size_t> nBinsOrNone = numBins(binned->axes, path);
       if (!nBinsOrNone) {
          continue;
@@ -571,12 +699,6 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
       }
    };
 
-   auto checkConstraint = [&](std::string const &where, Constraint const &constraint) {
-      if (auto const *pdf = std::get_if<ConstraintPdf>(&constraint)) {
-         requireDistribution(pdf->pdf.name, where, "constraint");
-      }
-   };
-
    // The constraint distributions of the gamma parameters of shape modifiers.
    auto checkGammaConstraint = [&](std::string const &where, GammaConstraint const &constraint) {
       auto const *pdfs = std::get_if<GammaConstraintPdfs>(&constraint);
@@ -629,12 +751,19 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
          error(samplePath, "the name of the sample is not unique in the channel");
       }
       checkSize(samplePath + ".data.contents", sample.contents.size(), "\"contents\"");
-      // These modifiers create objects that are named after them.
+      // These modifiers create objects that are named after them. Older versions of RooFit wrote a parameter that
+      // interpolates a sample more than once as several histosys modifiers of the same name, which are still read.
       std::set<std::string> objectNames;
-      auto checkUniqueName = [&](std::string const &where, char const *type, std::string const &modifierName) {
+      auto checkUniqueName = [&](std::string const &where, char const *type, std::string const &modifierName,
+                                 bool allowedBeforeHS3v03 = false) {
          if (!objectNames.insert(std::string(type) + " " + modifierName).second) {
-            error(where,
-                  std::string("there is another ") + type + " modifier named '" + modifierName + "' in the sample");
+            const std::string message =
+               std::string("there is another ") + type + " modifier named '" + modifierName + "' in the sample";
+            if (allowedBeforeHS3v03) {
+               strictError(where, message);
+            } else {
+               error(where, message);
+            }
          }
       };
       if (sample.errors && sample.errors->size() != sample.contents.size()) {
@@ -643,7 +772,9 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                                         ", contents=" + std::to_string(sample.contents.size()));
       }
       for (std::size_t iModifier = 0; iModifier < sample.modifiers.size(); ++iModifier) {
-         std::string modifierPath = samplePath + ".modifiers[" + std::to_string(iModifier) + "]";
+         Modifier const &modifier = sample.modifiers[iModifier];
+         const std::string modifierPath =
+            samplePath + ".modifiers[" + std::to_string(iModifier) + "](" + nameOf(modifier) + ")";
          auto checkInterpolation = [&](std::optional<Interpolation> const &interpolation, char const *type,
                                        std::string const &modifierName) {
             if (!interpolation && !dist.defaultInterpolation) {
@@ -652,32 +783,34 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                                       "' is not given, and the channel has no \"default_interpolation\"");
             }
          };
+         // The modifiers with a single parameter, which can have a constraint. Of the constraint types of older
+         // documents, RooFit only creates the Gaussian for them.
+         auto checkSingleParameter = [&](auto const &m) {
+            checkParameter(modifierPath, m.parameter.name, m.name);
+            if (auto const *pdf = std::get_if<ConstraintPdf>(&m.constraint)) {
+               requireDistribution(pdf->pdf.name, modifierPath, "constraint");
+            } else if (auto const *type = std::get_if<ConstraintType>(&m.constraint);
+                       type && *type != ConstraintType::Gauss) {
+               error(modifierPath, std::string("legacy constraint value '") + toString(*type) + "' for modifier '" +
+                                      m.name +
+                                      "' is a known constraint type, but it cannot be resolved in this context");
+            }
+            checkCorrelated(modifierPath, m.parameter.name, m.constraint);
+         };
          std::visit(overloaded{
-                       [&](NormFactor const &m) {
-                          modifierPath += "(" + m.name + ")";
-                          checkParameter(modifierPath, m.parameter.name, m.name);
-                          checkConstraint(modifierPath, m.constraint);
-                          checkCorrelated(modifierPath, m.parameter.name, m.constraint);
-                       },
+                       [&](NormFactor const &m) { checkSingleParameter(m); },
                        [&](NormSys const &m) {
-                          modifierPath += "(" + m.name + ")";
-                          checkParameter(modifierPath, m.parameter.name, m.name);
-                          checkConstraint(modifierPath, m.constraint);
-                          checkCorrelated(modifierPath, m.parameter.name, m.constraint);
+                          checkSingleParameter(m);
                           checkInterpolation(m.interpolation, "normsys", m.name);
                        },
                        [&](HistoSys const &m) {
-                          modifierPath += "(" + m.name + ")";
-                          checkUniqueName(modifierPath, "histosys", m.name);
-                          checkParameter(modifierPath, m.parameter.name, m.name);
-                          checkConstraint(modifierPath, m.constraint);
-                          checkCorrelated(modifierPath, m.parameter.name, m.constraint);
+                          checkUniqueName(modifierPath, "histosys", m.name, true);
+                          checkSingleParameter(m);
                           checkInterpolation(m.interpolation, "histosys", m.name);
                           checkSize(modifierPath + ".data.hi.contents", m.hi.contents.size(), "\"contents\"");
                           checkSize(modifierPath + ".data.lo.contents", m.lo.contents.size(), "\"contents\"");
                        },
                        [&](ShapeSys const &m) {
-                          modifierPath += "(" + m.name + ")";
                           checkUniqueName(modifierPath, "shapesys", m.name);
                           if (!m.vals.empty()) {
                              checkSize(modifierPath + ".data.vals", m.vals.size(), "\"vals\"");
@@ -691,22 +824,27 @@ void Validator::checkHistFactory(HistFactoryDist const &dist, std::string const 
                           checkGammaConstraint(modifierPath, m.constraint);
                        },
                        [&](StatError const &m) {
-                          modifierPath += "(" + m.name + ")";
                           if (!m.parameters.empty()) {
                              checkSize(modifierPath + ".parameters", m.parameters.size(), "\"parameters\"");
                           }
                           checkGammaConstraint(modifierPath, m.constraint);
                           checkStatErrorConstraints(modifierPath, m.constraint);
+                          // A lognormal constraint makes no sense for gamma parameters.
+                          if (auto const *type = std::get_if<ConstraintType>(&m.constraint);
+                              type && *type == ConstraintType::LogNormal) {
+                             error(modifierPath, std::string("unsupported constraint '") + toString(*type) +
+                                                    "' of the staterror modifier in channel '" + name +
+                                                    "', supported are \"Poisson\" and \"Gauss\"");
+                          }
                        },
                        [&](CustomModifier const &m) {
-                          modifierPath += "(" + m.name + ")";
                           if (!isDefinedIn(m.name, "functions") && !isDefinedIn(m.name, "distributions") &&
                               !isExternal(m.name)) {
                              error(modifierPath, "unable to find custom modifier '" + m.name + "'");
                           }
                        },
                     },
-                    sample.modifiers[iModifier]);
+                    modifier);
       }
    }
 }
@@ -734,6 +872,15 @@ void validateHistFactoryDist(HistFactoryDist const &dist, std::string const &nam
    ValidateOptions options;
    options.isExternal = [](std::string const &) { return true; };
    Validator{empty, diagnostics, options}.checkHistFactory(dist, name, "");
+}
+
+void validateCombinedDist(CombinedDist const &dist, std::string const &name, Diagnostics &diagnostics)
+{
+   // Without a document, the columns are categories of the workspace, whose labels are checked when it is built.
+   HS3Document empty;
+   ValidateOptions options;
+   options.isExternal = [](std::string const &) { return true; };
+   Validator{empty, diagnostics, options}.checkCombined(dist, "", "the combined_dist '" + name + "'");
 }
 
 } // namespace HS3

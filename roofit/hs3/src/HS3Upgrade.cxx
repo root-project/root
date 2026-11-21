@@ -41,6 +41,24 @@ bool isScalar(JSONNode const &node)
    return !node.is_container() && !node.is_null();
 }
 
+// Calls fn(element, cursor, index) for each struct in the array `key` of `parent`, if there is one. What is skipped is
+// reported by the parser.
+template <class Fn>
+void forEachStruct(JSONNode &parent, const char *key, Cursor const &parentCursor, Fn &&fn)
+{
+   if (!parent.is_map() || !parent.has_child(key) || !parent[key].is_seq()) {
+      return;
+   }
+   Cursor array{parent[key], parentCursor, key};
+   std::size_t index = 0;
+   for (JSONNode &element : parent[key].children()) {
+      if (element.is_map()) {
+         fn(element, Cursor{element, array, index}, index);
+      }
+      ++index;
+   }
+}
+
 bool isConstraintType(std::string const &value)
 {
    return value == "Gauss" || value == "Poisson" || value == "LogNormal";
@@ -139,23 +157,6 @@ struct ChannelState {
    bool warnedShapeSys = false;
 };
 
-// Before structured interpolations were introduced, both modifier classes used the integer code 4 as their implicit
-// default. The meaning of the code is class-dependent. HS3 forbids implementation-specific defaults.
-void upgradeMissingInterpolation(JSONNode &mod, InterpolationClass interpolationClass, Version const &version,
-                                 bool hasDefault, std::string const &context, ChannelState &state, Cursor const &c)
-{
-   if (mod.has_child("interpolation") || hasDefault || !(version < explicitInterpolationVersion)) {
-      return;
-   }
-   if (!state.warnedInterpolation) {
-      c.warning(context + " is not given, and the channel has no \"default_interpolation\". Using the implicit default "
-                          "of older RooFit versions (code 4), which is deprecated.");
-      state.warnedInterpolation = true;
-   }
-   mod["interpolation"] << 4;
-   upgradeInterpolationCode(mod, interpolationClass, c);
-}
-
 // Whether "constraints" leaves the single parameter of a modifier unconstrained.
 bool isExplicitlyUnconstrained(JSONNode const &constraints)
 {
@@ -220,11 +221,20 @@ void upgradeModifier(JSONNode &mod, std::size_t index, std::string const &sample
             state.warnedUnconstrained = true;
          }
       }
+      // Before structured interpolations were introduced, both modifier classes used the integer code 4 as their
+      // implicit default. The meaning of the code is class-dependent. HS3 forbids implementation-specific defaults.
+      if (!mod.has_child("interpolation") && !hasDefaultInterpolation && version < explicitInterpolationVersion) {
+         if (!state.warnedInterpolation) {
+            c.warning("interpolation for " + type + " modifier '" + name + "' in sample '" + sampleName +
+                      "' of channel '" + state.channelName +
+                      "' is not given, and the channel has no \"default_interpolation\". Using the implicit default "
+                      "of older RooFit versions (code 4), which is deprecated.");
+            state.warnedInterpolation = true;
+         }
+         mod["interpolation"] << 4;
+      }
       const auto interpolationClass = type == "normsys" ? InterpolationClass::Flexible : InterpolationClass::Piecewise;
-      const std::string context = "interpolation for " + type + " modifier '" + name + "' in sample '" + sampleName +
-                                  "' of channel '" + state.channelName + "'";
       upgradeInterpolationCode(mod, interpolationClass, c);
-      upgradeMissingInterpolation(mod, interpolationClass, version, hasDefaultInterpolation, context, state, c);
    } else if (type == "shapesys" || type == "shapefactor") {
       if (type == "shapesys" && !(version < namedConstraintVersion) && !state.warnedShapeSys) {
          c.warning("the modifier type \"shapesys\" is deprecated, please use \"shapefactor\" instead.");
@@ -285,105 +295,63 @@ void upgradeHistFactory(JSONNode &dist, Version const &version, IsDistribution c
       }
    }
 
-   if (!dist.has_child("samples") || !dist["samples"].is_seq()) {
-      return;
-   }
    const bool hasDefaultInterpolation = dist.has_child("default_interpolation");
-
-   Cursor samples{dist["samples"], c, "samples"};
-   std::size_t iSample = 0;
-   for (JSONNode &sample : dist["samples"].children()) {
-      Cursor sampleCursor{sample, samples, iSample++};
-      if (!sample.is_map() || !sample.has_child("modifiers") || !sample["modifiers"].is_seq()) {
-         continue;
-      }
+   forEachStruct(dist, "samples", c, [&](JSONNode &sample, Cursor const &sampleCursor, std::size_t) {
       const std::string sampleName = sample.has_child("name") && isScalar(sample["name"]) ? sample["name"].val() : "";
-      Cursor modifiers{sample["modifiers"], sampleCursor, "modifiers"};
-      std::size_t iModifier = 0;
-      for (JSONNode &mod : sample["modifiers"].children()) {
-         Cursor modCursor{mod, modifiers, iModifier};
-         if (mod.is_map()) {
-            upgradeModifier(mod, iModifier, sampleName, version, hasDefaultInterpolation, isDistribution, state,
-                            modCursor);
-         }
-         ++iModifier;
-      }
-   }
+      forEachStruct(sample, "modifiers", sampleCursor, [&](JSONNode &mod, Cursor const &modCursor, std::size_t index) {
+         upgradeModifier(mod, index, sampleName, version, hasDefaultInterpolation, isDistribution, state, modCursor);
+      });
+   });
 }
 
 // Older versions of RooFit wrote the binning of the observables also for unbinned data, which the standard forbids.
 // The edges were written without "min" and "max".
-void upgradeUnbinnedAxes(JSONNode &data)
+void upgradeUnbinnedAxis(JSONNode &axis)
 {
-   if (!data.has_child("axes") || !data["axes"].is_seq()) {
-      return;
-   }
-   for (JSONNode &axis : data["axes"].children()) {
-      if (!axis.is_map()) {
-         continue;
+   if (axis.has_child("edges") && axis["edges"].is_seq() && axis["edges"].num_children() > 0) {
+      JSONNode &edges = axis["edges"];
+      JSONNode const &first = edges.child(0);
+      JSONNode const &last = edges.child(edges.num_children() - 1);
+      if (!axis.has_child("min") && first.is_number()) {
+         axis["min"] << first.val_double();
       }
-      if (axis.has_child("edges") && axis["edges"].is_seq() && axis["edges"].num_children() > 0) {
-         JSONNode &edges = axis["edges"];
-         JSONNode const &first = edges.child(0);
-         JSONNode const &last = edges.child(edges.num_children() - 1);
-         if (!axis.has_child("min") && first.is_number()) {
-            axis["min"] << first.val_double();
-         }
-         if (!axis.has_child("max") && last.is_number()) {
-            axis["max"] << last.val_double();
-         }
+      if (!axis.has_child("max") && last.is_number()) {
+         axis["max"] << last.val_double();
       }
-      axis.erase("edges");
-      axis.erase("nbins");
    }
+   axis.erase("edges");
+   axis.erase("nbins");
 }
 
-void upgradeData(JSONNode &root, Version const &version)
+void upgradeData(JSONNode &root, Version const &version, Cursor const &rootCursor)
 {
-   if (!root.has_child("data") || !root["data"].is_seq() || !(version < explicitInterpolationVersion)) {
+   if (!(version < explicitInterpolationVersion)) {
       return;
    }
-   for (JSONNode &data : root["data"].children()) {
-      if (data.is_map() && data.has_child("type") && isScalar(data["type"]) && data["type"].val() == "unbinned") {
-         upgradeUnbinnedAxes(data);
+   forEachStruct(root, "data", rootCursor, [](JSONNode &data, Cursor const &dataCursor, std::size_t) {
+      if (data.has_child("type") && isScalar(data["type"]) && data["type"].val() == "unbinned") {
+         forEachStruct(data, "axes", dataCursor,
+                       [](JSONNode &axis, Cursor const &, std::size_t) { upgradeUnbinnedAxis(axis); });
       }
-   }
+   });
 }
 
 // HS3 0.3 forbids "min" and "max" alongside "edges" (HS3 #126), which documents before 0.3 had. Where they agree with
 // the edges, which the parser checks, they are only redundant, so they give a warning.
-void warnBoundsWithEdges(JSONNode const &axes, Cursor const &axesCursor)
-{
-   if (!axes.is_seq()) {
-      return;
-   }
-   std::size_t i = 0;
-   for (JSONNode const &axis : axes.children()) {
-      Cursor axisCursor{axis, axesCursor, i++};
-      if (axis.is_map() && axis.has_child("edges") && (axis.has_child("min") || axis.has_child("max"))) {
-         axisCursor.warning("\"min\" and \"max\" must not be given alongside \"edges\" from HS3 0.3 on, the edges "
-                            "give the range");
-      }
-   }
-}
-
-void warnBoundsWithEdges(JSONNode const &root, Version const &version, Cursor const &rootCursor)
+void warnBoundsWithEdges(JSONNode &root, Version const &version, Cursor const &rootCursor)
 {
    if (version < Version{0, 3, 0}) {
       return;
    }
    for (const char *section : {"domains", "data", "distributions"}) {
-      if (!root.has_child(section) || !root[section].is_seq()) {
-         continue;
-      }
-      Cursor sectionCursor{root[section], rootCursor, section};
-      std::size_t i = 0;
-      for (JSONNode const &object : root[section].children()) {
-         Cursor objectCursor{object, sectionCursor, i++};
-         if (object.is_map() && object.has_child("axes")) {
-            warnBoundsWithEdges(object["axes"], Cursor{object["axes"], objectCursor, "axes"});
-         }
-      }
+      forEachStruct(root, section, rootCursor, [](JSONNode &object, Cursor const &objectCursor, std::size_t) {
+         forEachStruct(object, "axes", objectCursor, [](JSONNode &axis, Cursor const &axisCursor, std::size_t) {
+            if (axis.has_child("edges") && (axis.has_child("min") || axis.has_child("max"))) {
+               axisCursor.warning("\"min\" and \"max\" must not be given alongside \"edges\" from HS3 0.3 on, the "
+                                  "edges give the range");
+            }
+         });
+      });
    }
 }
 
@@ -406,35 +374,30 @@ void upgradeDocument(JSONNode &root, Diagnostics &diagnostics, ParseOptions cons
       return;
    }
    const Version version = documentVersion(root);
-   warnBoundsWithEdges(root, version, Cursor{root, diagnostics});
-   upgradeData(root, version);
-
-   if (!root.has_child("distributions") || !root["distributions"].is_seq() || !options.typedHistFactory) {
+   Cursor rootCursor{root, diagnostics};
+   warnBoundsWithEdges(root, version, rootCursor);
+   upgradeData(root, version, rootCursor);
+   if (!options.typedHistFactory) {
       return;
    }
 
    std::set<std::string> distributionNames;
-   for (JSONNode const &dist : root["distributions"].children()) {
-      if (dist.is_map() && dist.has_child("name") && isScalar(dist["name"])) {
+   forEachStruct(root, "distributions", rootCursor, [&](JSONNode &dist, Cursor const &, std::size_t) {
+      if (dist.has_child("name") && isScalar(dist["name"])) {
          distributionNames.insert(dist["name"].val());
       }
-   }
+   });
    // The version from which on "constraint" is only a type of the standard.
    const bool constraintCanBeName = version < explicitInterpolationVersion;
    IsDistribution isDistribution = [&](std::string const &name) {
       return constraintCanBeName && distributionNames.count(name) > 0;
    };
 
-   Cursor rootCursor{root, diagnostics};
-   Cursor distributions{root["distributions"], rootCursor, "distributions"};
-   std::size_t i = 0;
-   for (JSONNode &dist : root["distributions"].children()) {
-      Cursor distCursor{dist, distributions, i++};
-      if (dist.is_map() && dist.has_child("type") && isScalar(dist["type"]) &&
-          dist["type"].val() == "histfactory_dist") {
+   forEachStruct(root, "distributions", rootCursor, [&](JSONNode &dist, Cursor const &distCursor, std::size_t) {
+      if (dist.has_child("type") && isScalar(dist["type"]) && dist["type"].val() == "histfactory_dist") {
          upgradeHistFactory(dist, version, isDistribution, distCursor);
       }
-   }
+   });
 }
 
 void upgradeHistFactoryDist(JSONNode &distribution, Version const &version, Diagnostics &diagnostics)

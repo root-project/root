@@ -22,6 +22,7 @@
 #include <vector>
 
 class RooAbsArg;
+class RooAbsBinning;
 class RooDataHist;
 class RooJSONFactoryWSTool;
 class RooRealVar;
@@ -33,14 +34,16 @@ class Importer;
 
 namespace HS3 {
 
-/// Forward the warnings to the message service, and throw if there are errors.
-void report(Diagnostics const &diagnostics);
+/// Forward the warnings to the message service, and throw if there are errors. The paths of the diagnostics start with
+/// the name of the object, if they are about an object that doesn't come with a document.
+void report(Diagnostics const &diagnostics, std::string const &object = "");
 
 /// Create the variables for the axes of binned data.
 RooArgSet createObservables(std::vector<BinnedAxis> const &axes);
 
-/// The axis of binned data for a variable.
+/// The axis of binned data for a variable, or for a binning of a variable with the given name.
 BinnedAxis toBinnedAxis(RooRealVar const &var);
+BinnedAxis toBinnedAxis(std::string const &name, RooAbsBinning const &binning);
 
 /// The name of an object, or the value of a literal constant.
 NameOrNumber toNameOrNumber(RooAbsArg const &arg);
@@ -49,22 +52,28 @@ NameOrNumber toNameOrNumber(RooAbsArg const &arg);
 std::unique_ptr<RooDataHist> createDataHist(std::string const &name, RooArgSet const &vars,
                                             std::vector<double> const &contents, std::vector<double> const *errors);
 
-/// Create the RooFit objects of a HistFactory distribution in the workspace of the tool. The constraint terms that no
-/// modifier names are passed separately.
-void buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist,
-                          std::vector<DistributionRef> const *channelConstraints = nullptr);
+/// Create the RooFit objects of a HistFactory distribution in the workspace of the tool.
+void buildHistFactoryDist(RooJSONFactoryWSTool &tool, std::string const &name, HistFactoryDist const &dist);
+
+/// Create the RooSimultaneous of a combined distribution in the workspace of the tool. The other terms of the
+/// likelihoods that have the distribution are the candidates for the constraint terms of its components.
+void buildCombinedDist(RooJSONFactoryWSTool &tool, std::string const &name, CombinedDist const &dist,
+                       std::vector<std::string> const &otherLikelihoodTerms = {});
 
 /// Called by the exporter of a HistFactory distribution, which is then written by the tool. The constraint terms that
 /// no modifier names are passed separately.
 void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
                        std::vector<DistributionRef> channelConstraints);
 
+/// The canonical form (see arrayComponentForm()) of the component of an array distribution that this import created
+/// under the name `name`, or nullptr if it created none of that name.
+std::string const *importedArrayComponentForm(RooJSONFactoryWSTool &tool, std::string const &name);
+
+/// Record that this import created the component `name` of an array distribution, with the canonical form `form`.
+void recordImportedArrayComponent(RooJSONFactoryWSTool &tool, std::string const &name, std::string form);
+
 /// Whether this is the importer that RooFit registers for HistFactory distributions, as opposed to the one of a user.
 bool isBuiltinHistFactoryImporter(JSONIO::Importer const &importer);
-
-/// What the built-in importer does with a HistFactory distribution, plus the constraint terms of the channel.
-void importHistFactoryNode(RooJSONFactoryWSTool &tool, Detail::JSONNode const &node,
-                           std::vector<DistributionRef> const *channelConstraints);
 
 } // namespace HS3
 } // namespace RooFit

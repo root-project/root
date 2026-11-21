@@ -21,6 +21,7 @@
 #include <RooAbsLValue.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
+#include <RooGaussian.h>
 #include <RooDataHist.h>
 #include <RooCustomizer.h>
 #include <RooProdPdf.h>
@@ -31,13 +32,13 @@
 
 #include "JSONIOUtils.h"
 #include "HS3Builder.h"
-#include "HS3Schema.h"
 #include "JSONReadRecorder.h"
 
 #include <TROOT.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <iterator>
 #include <fstream>
@@ -47,6 +48,7 @@
 #include <set>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_map>
 
 /** \class RooJSONFactoryWSTool
 \ingroup roofit_dev_docs_hs3
@@ -105,12 +107,6 @@ You can always get a list of all the available importers and exporters by callin
 ROOT.RooFit.JSONIO.printImporters()
 ROOT.RooFit.JSONIO.printExporters()
 ~~~
-
-Alternatively, you can generate a LaTeX version of the available importers and exporters by calling
-~~~ {.py}
-tool = ROOT.RooJSONFactoryWSTool(ws)
-tool.writedoc("hs3.tex")
-~~~
 */
 
 constexpr auto hs3VersionTag = "0.3";
@@ -146,11 +142,16 @@ struct RooFit::HS3::ToolImportState {
    }
 
    HS3Document const &document;
+   /// The components of combined distributions that have data, and are read as such.
+   std::set<std::string> componentsWithData = HS3::componentsWithData(document);
    std::unordered_map<std::string, HS3::Function const *> functions;
    std::unordered_map<std::string, HS3::Distribution const *> distributions;
    HS3::ParameterPoint const *defaultValues = nullptr;
    std::unordered_map<std::string, HS3::ParameterValue const *> defaultValuesByName;
    HS3::DomainRanges ranges{document.domains};
+   /// The components of array distributions created in this import, by name, with their canonical form (see
+   /// arrayComponentForm()).
+   std::map<std::string, std::string> arrayComponentForms;
 };
 
 /// The document that the tool is exporting.
@@ -172,12 +173,31 @@ struct RooFit::HS3::ToolExportState {
    /// The constraint terms of the exported HistFactory channels, as written, and the data sets written for them.
    std::map<std::string, std::vector<std::string>> constraintTermsOfPdf;
    std::set<std::string> writtenConstraintData;
+   /// The labels that the constraint terms that are written as components of a combined distribution add to its
+   /// index category, by category. See exportSingleModelConfig().
+   std::map<std::string, std::vector<std::string>> auxiliaryLabels;
    /// The observable of a constraint term, by the name of the term, see setConstraintObservable().
    std::map<std::string, std::string> constraintObservables;
    /// Set by the exporter of an object that is interpreted by the document.
    std::optional<HistFactoryDist> typedObject;
    std::vector<DistributionRef> channelConstraints;
 };
+
+std::string const *RooFit::HS3::importedArrayComponentForm(RooJSONFactoryWSTool &tool, std::string const &name)
+{
+   if (!tool._import) {
+      return nullptr;
+   }
+   auto found = tool._import->arrayComponentForms.find(name);
+   return found == tool._import->arrayComponentForms.end() ? nullptr : &found->second;
+}
+
+void RooFit::HS3::recordImportedArrayComponent(RooJSONFactoryWSTool &tool, std::string const &name, std::string form)
+{
+   if (tool._import) {
+      tool._import->arrayComponentForms[name] = std::move(form);
+   }
+}
 
 void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
                                     std::vector<DistributionRef> channelConstraints)
@@ -187,6 +207,34 @@ void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist 
 }
 
 namespace {
+
+// Append a name to a list that has every name once.
+void addUnique(std::vector<std::string> &names, std::string const &name)
+{
+   if (std::find(names.begin(), names.end(), name) == names.end()) {
+      names.push_back(name);
+   }
+}
+
+template <class Coll_t>
+std::vector<std::string> namesOf(Coll_t const &objects)
+{
+   std::vector<std::string> names;
+   for (auto const *object : objects) {
+      names.push_back(object->GetName());
+   }
+   return names;
+}
+
+// Whether the states of a category have these labels, in any order.
+bool hasLabels(RooCategory const &cat, std::vector<std::string> const &labels)
+{
+   std::set<std::string> states;
+   for (auto const &state : cat) {
+      states.insert(state.first);
+   }
+   return states == std::set<std::string>(labels.begin(), labels.end());
+}
 
 HS3::Binning toBinning(RooAbsBinning const &binning)
 {
@@ -338,11 +386,7 @@ void createVariables(RooWorkspace &ws, std::vector<HS3::Domain> const &domains, 
                RooJSONFactoryWSTool::error("the axis '" + axis->name + "' is categorical, but '" + axis->name +
                                            "' already exists and is not a category");
             }
-            std::set<std::string> existingLabels;
-            for (auto const &state : *cat) {
-               existingLabels.insert(state.first);
-            }
-            if (existingLabels != std::set<std::string>(axis->categories.begin(), axis->categories.end())) {
+            if (!hasLabels(*cat, axis->categories)) {
                RooJSONFactoryWSTool::error("the categories of the axis '" + axis->name +
                                            "' differ from the states of the existing category '" + axis->name + "'");
             }
@@ -370,6 +414,14 @@ void createVariables(RooWorkspace &ws, std::vector<HS3::Domain> const &domains, 
 
 namespace {
 
+// Ends an import or an export: its state must not survive it, not even if there is an exception. The state of an
+// import refers to the document.
+template <class State_t>
+struct StateScope {
+   std::unique_ptr<State_t> &state;
+   ~StateScope() { state.reset(); }
+};
+
 // Keeps track of the objects that are being imported. Objects that depend on each other would otherwise recurse until
 // the stack overflows.
 class ImportGuard {
@@ -393,12 +445,14 @@ private:
 
 } // namespace
 
-void RooFit::HS3::report(Diagnostics const &diagnostics)
+void RooFit::HS3::report(Diagnostics const &diagnostics, std::string const &object)
 {
    std::string errors;
    for (Diagnostic const &diagnostic : diagnostics) {
-      const std::string text =
-         diagnostic.path.empty() ? diagnostic.message : diagnostic.path + ": " + diagnostic.message;
+      // A path starts with the name of a component, or with the index of an entry if the object is an array.
+      const bool needsDot = !object.empty() && !diagnostic.path.empty() && diagnostic.path.front() != '[';
+      const std::string path = object + (needsDot ? "." : "") + diagnostic.path;
+      const std::string text = path.empty() ? diagnostic.message : path + ": " + diagnostic.message;
       if (diagnostic.severity == Diagnostic::Severity::Error) {
          errors += (errors.empty() ? "" : "\n") + text;
       } else {
@@ -449,21 +503,6 @@ std::string genPrefix(const JSONNode &p, bool trailing_underscore)
    return prefix;
 }
 
-// helpers for serializing / deserializing binned datasets
-void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::vector<int> &curr_comb,
-                      const std::vector<int> &vars_numbins, size_t curridx)
-{
-   if (curridx == vars_numbins.size()) {
-      // we have filled a combination. Copy it.
-      combinations.emplace_back(curr_comb);
-   } else {
-      for (int i = 0; i < vars_numbins[curridx]; ++i) {
-         curr_comb[curridx] = i;
-         ::genIndicesHelper(combinations, curr_comb, vars_numbins, curridx + 1);
-      }
-   }
-}
-
 // Import string attributes ("dict") and boolean tags ("tags") onto `arg`.
 void importAttributes(RooAbsArg *arg, HS3::Attributes const &attributes)
 {
@@ -475,75 +514,46 @@ void importAttributes(RooAbsArg *arg, HS3::Attributes const &attributes)
    }
 }
 
-void addIfPresent(RooArgSet &out, RooArgSet const *args)
+// The step widths of the minimization are the errors of the parameters of the ModelConfigs, and of the parameters of
+// the top-level pdfs given the data sets. The observables are no parameters.
+void exportParameterStepWidths(RooWorkspace const &workspace, std::vector<RooAbsPdf *> const &pdfs,
+                               std::vector<RooAbsData *> const &data, std::vector<HS3::StepWidth> &out)
 {
-   if (args) {
-      out.add(*args, true);
-   }
-}
-
-void collectParameterStepWidthCandidatesFromModelConfigs(RooWorkspace const &workspace, RooArgSet &candidates,
-                                                         RooArgSet &excluded)
-{
-   for (TObject *obj : workspace.allGenericObjects()) {
-      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
-      if (!mc) {
-         continue;
+   RooArgSet candidates;
+   RooArgSet excluded;
+   auto addIfPresent = [](RooArgSet &set, RooArgSet const *args) {
+      if (args) {
+         set.add(*args, true);
       }
-
-      addIfPresent(candidates, mc->GetParametersOfInterest());
-      addIfPresent(candidates, mc->GetNuisanceParameters());
-
-      addIfPresent(excluded, mc->GetObservables());
-      addIfPresent(excluded, mc->GetGlobalObservables());
-      addIfPresent(excluded, mc->GetConditionalObservables());
+   };
+   for (TObject *obj : workspace.allGenericObjects()) {
+      if (auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj)) {
+         addIfPresent(candidates, mc->GetParametersOfInterest());
+         addIfPresent(candidates, mc->GetNuisanceParameters());
+         addIfPresent(excluded, mc->GetObservables());
+         addIfPresent(excluded, mc->GetGlobalObservables());
+         addIfPresent(excluded, mc->GetConditionalObservables());
+      }
    }
-}
-
-void collectParameterStepWidthCandidatesFromPdfs(std::vector<RooAbsPdf *> const &pdfs,
-                                                 std::vector<RooAbsData *> const &data, RooArgSet &candidates,
-                                                 RooArgSet &excluded)
-{
    for (RooAbsPdf const *pdf : pdfs) {
       RooArgSet observables;
       for (RooAbsData const *dataset : data) {
          std::unique_ptr<RooArgSet> pdfObs{pdf->getObservables(*dataset->get())};
          observables.add(*pdfObs, true);
       }
-
-      if (observables.empty()) {
-         continue;
+      if (!observables.empty()) {
+         RooArgSet params;
+         pdf->getParameters(&observables, params);
+         candidates.add(params, true);
+         excluded.add(observables, true);
       }
-
-      RooArgSet params;
-      pdf->getParameters(&observables, params);
-      candidates.add(params, true);
-      excluded.add(observables, true);
    }
-}
-
-void exportParameterStepWidths(RooWorkspace const &workspace, std::vector<RooAbsPdf *> const &pdfs,
-                               std::vector<RooAbsData *> const &data, std::vector<HS3::StepWidth> &out)
-{
-   RooArgSet candidates;
-   RooArgSet excluded;
-
-   collectParameterStepWidthCandidatesFromModelConfigs(workspace, candidates, excluded);
-   collectParameterStepWidthCandidatesFromPdfs(pdfs, data, candidates, excluded);
-
    candidates.sort();
-
    for (RooAbsArg *arg : candidates) {
-      if (excluded.find(*arg)) {
-         continue;
-      }
-
       auto *var = dynamic_cast<RooRealVar *>(arg);
-      if (!var || !var->hasError()) {
-         continue;
+      if (var && var->hasError() && !excluded.find(*arg)) {
+         out.push_back({var->GetName(), var->getError()});
       }
-
-      out.push_back({var->GetName(), var->getError()});
    }
 }
 
@@ -561,360 +571,66 @@ void importParameterStepWidths(RooWorkspace &workspace, HS3Document const &doc)
    }
 }
 
-// Generate all combinations of bin indices for the RooRealVars in `vars`.
-std::vector<std::vector<int>> generateBinIndices(const RooArgSet &vars)
+// Check that the terms of the likelihoods have distinct variates (see HS3::sharedVariates()) and list the constraints
+// of their HistFactory modifiers (see HS3::unlistedConstraints()). Documents of versions before 0.3, which RooFit
+// wrote with shared variates itself, are read with a warning. Returns the bookkeeping columns, which may be shared.
+std::set<std::string> checkVariates(HS3Document const &doc)
 {
-   std::vector<std::vector<int>> combinations;
-   std::vector<int> vars_numbins;
-   vars_numbins.reserve(vars.size());
-   for (const RooAbsArg *arg : vars) {
-      // Continuous variables and categories (one bin per state)
-      vars_numbins.push_back(dynamic_cast<RooAbsLValue const &>(*arg).numBins());
-   }
-   std::vector<int> curr_comb(vars.size());
-   ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
-   return combinations;
-}
-
-template <typename... Keys_t>
-JSONNode const *findRooFitInternal(JSONNode const &node, Keys_t const &...keys)
-{
-   return node.find("misc", "ROOT_internal", keys...);
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// Distinct variates. HS3 requires the terms of a likelihood, and the components of a combined distribution or data
-// set, to have distinct variates: a variate in two of them is one quantity modelled twice (e.g. a constraint that is
-// a term of the likelihood and a factor of a channel), or two quantities with one name (e.g. the observable "mass"
-// of two channels, which need their own names, "mass_SR" and "mass_CR"). All cases are checked with the same
-// function, sharedVariates(), on the document, after the export and before the import.
-
-bool isName(JSONNode const &node)
-{
-   return !node.is_container() && !node.is_null() && !node.is_number();
-}
-
-// Add the names in `node` (one name or a list) to `out`.
-void addNames(JSONNode const &node, std::set<std::string> &out)
-{
-   if (node.is_seq()) {
-      for (JSONNode const &child : node.children()) {
-         addNames(child, out);
-      }
-   } else if (isName(node)) {
-      out.insert(node.val());
-   }
-}
-
-// The child `name` of the section `section` of the document, or nullptr.
-JSONNode const *findInSection(JSONNode const &rootnode, const char *section, std::string const &name)
-{
-   JSONNode const *node = rootnode.find(section);
-   return node ? RooJSONFactoryWSTool::findNamedChild(*node, name) : nullptr;
-}
-
-std::string typeOf(JSONNode const &node)
-{
-   return node.has_child("type") ? node["type"].val() : "";
-}
-
-// The names of the components of a combined distribution or data set, written as {"key": ..., <field>: <name>}.
-std::vector<std::string> combinedComponents(JSONNode const &node, const char *field)
-{
-   std::vector<std::string> out;
-   if (JSONNode const *components = node.find("components")) {
-      for (JSONNode const &component : components->children()) {
-         if (JSONNode const *name = component.find(field); name && isName(*name)) {
-            out.push_back(name->val());
-         }
+   const bool isLegacy = doc.metadata.version < HS3::Version{0, 3};
+   std::set<std::string> bookkeepingColumns;
+   for (auto const &[dataset, columns] : HS3::bookkeepingColumns(doc)) {
+      for (std::string const &column : columns) {
+         RooJSONFactoryWSTool::warning(
+            "RooFitHS3: the axis '" + column + "' of the components of the combined data set '" + dataset +
+            "' is declared as a bookkeeping column without statistical meaning (misc.ROOT_internal."
+            "bookkeeping_columns), so it may be shared by the components, although HS3 requires distinct axes.");
+         bookkeepingColumns.insert(column);
       }
    }
-   return out;
-}
-
-// The variates of the distribution `name` of the document: the "x" of a fundamental distribution (a name or a list)
-// and the axes of a distribution with axes (e.g. histfactory_dist), through products, mixtures and combined
-// distributions, and the "x" of the components of an array distribution. The constraint terms named by a
-// histfactory_dist are terms of their own, see likelihoodTerms().
-void collectVariates(JSONNode const &rootnode, std::string const &name, std::set<std::string> &out,
-                     std::set<std::string> &visited)
-{
-   if (!visited.insert(name).second) {
-      return;
-   }
-   JSONNode const *node = findInSection(rootnode, "distributions", name);
-   if (!node) {
-      return;
-   }
-   std::string const type = typeOf(*node);
-   auto recurse = [&](std::vector<std::string> const &parts) {
-      for (std::string const &part : parts) {
-         collectVariates(rootnode, part, out, visited);
-      }
-   };
-   auto namesIn = [&](const char *key) {
-      std::vector<std::string> parts;
-      if (JSONNode const *list = node->find(key)) {
-         for (JSONNode const &part : list->children()) {
-            if (isName(part)) {
-               parts.push_back(part.val());
-            }
-         }
-      }
-      return parts;
-   };
-   if (type == "product_dist") {
-      recurse(namesIn("factors"));
-   } else if (type == "mixture_dist") {
-      recurse(namesIn("summands"));
-   } else if (type == "combined_dist") {
-      recurse(combinedComponents(*node, "dist"));
-   } else if (type == "array_dist") {
-      if (JSONNode const *components = node->find("components")) {
-         for (JSONNode const &component : components->children()) {
-            if (JSONNode const *x = component.find("x")) {
-               addNames(*x, out);
-            }
-         }
-      }
-   } else {
-      if (JSONNode const *x = node->find("x")) {
-         addNames(*x, out);
-      }
-      if (JSONNode const *axes = node->find("axes")) {
-         for (JSONNode const &axis : axes->children()) {
-            if (JSONNode const *axisName = axis.find("name")) {
-               addNames(*axisName, out);
-            }
-         }
+   // The constraints named by HistFactory modifiers, and distinct variates. A document can violate both, e.g. with a
+   // constraint that is listed twice, so all violations are reported together.
+   std::vector<std::string> violations;
+   std::vector<std::string> notes;
+   if (!isLegacy) {
+      for (std::string const &message : HS3::unlistedConstraints(doc, &notes)) {
+         violations.push_back("invalid HS3: " + message +
+                              ". The \"constraints\" of a modifier add no term to the likelihood, which has to list "
+                              "them.");
       }
    }
-}
-
-std::set<std::string> variatesOf(JSONNode const &rootnode, std::string const &name)
-{
-   std::set<std::string> variates;
-   std::set<std::string> visited;
-   collectVariates(rootnode, name, variates, visited);
-   return variates;
-}
-
-// The terms of the likelihood `likelihood` of the document, each once: its distributions (the components of a
-// combined distribution, or of a RooSimultaneous written to ROOT_internal by older versions, are terms of their own),
-// its "aux_distributions", and the constraint terms named by the modifiers of its histfactory_dist terms.
-std::vector<std::string> likelihoodTerms(JSONNode const &rootnode, JSONNode const &likelihood)
-{
-   std::vector<std::string> terms;
-   auto add = [&](std::string const &term) {
-      if (std::find(terms.begin(), terms.end(), term) == terms.end()) {
-         terms.push_back(term);
-      }
-   };
-   for (const char *key : {"distributions", "aux_distributions"}) {
-      JSONNode const *list = likelihood.find(key);
-      if (!list) {
+   for (std::string const &message : HS3::sharedVariates(doc)) {
+      if (!isLegacy) {
+         violations.push_back(
+            "invalid HS3: " + message +
+            ". The terms of a likelihood and the components of a combined distribution or data set must have distinct "
+            "variates, apart from identical factors within a combined distribution. Distributions that share factors, "
+            "e.g. the models of a combination with common constraint terms, are joined in a combined distribution, "
+            "which the likelihood lists as one term.");
          continue;
       }
-      for (JSONNode const &item : list->children()) {
-         if (!isName(item)) {
-            continue;
-         }
-         std::string const name = item.val();
-         if (JSONNode const *node = findInSection(rootnode, "distributions", name)) {
-            if (typeOf(*node) == "combined_dist") {
-               for (std::string const &component : combinedComponents(*node, "dist")) {
-                  add(component);
-               }
-               continue;
-            }
-         } else if (JSONNode const *legacy = findRooFitInternal(rootnode, "combined_distributions", name)) {
-            if (JSONNode const *components = legacy->find("distributions")) {
-               for (JSONNode const &component : components->children()) {
-                  add(component.val());
-               }
-               continue;
-            }
-         }
-         add(name);
-      }
+      RooJSONFactoryWSTool::warning("RooFitHS3: " + message +
+                                    ". HS3 0.3 requires distinct variates; the document is read anyway, since it "
+                                    "declares an older version.");
    }
-   for (std::size_t i = 0; i < terms.size(); ++i) {
-      JSONNode const *node = findInSection(rootnode, "distributions", terms[i]);
-      if (!node || typeOf(*node) != "histfactory_dist" || !node->has_child("samples")) {
-         continue;
+   if (!violations.empty()) {
+      std::string all;
+      for (std::string const &violation : violations) {
+         all += (all.empty() ? "" : "\n") + violation;
       }
-      for (JSONNode const &sample : (*node)["samples"].children()) {
-         if (JSONNode const *modifiers = sample.find("modifiers")) {
-            for (JSONNode const &modifier : modifiers->children()) {
-               if (JSONNode const *constraints = modifier.find("constraints")) {
-                  std::set<std::string> names;
-                  addNames(*constraints, names);
-                  for (std::string const &constraint : names) {
-                     add(constraint);
-                  }
-               }
-            }
-         }
-      }
+      RooJSONFactoryWSTool::error(all);
    }
-   return terms;
+   for (std::string const &note : notes) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: " + note + ".");
+   }
+   return bookkeepingColumns;
 }
 
-// The parts (terms or components) of something that must have distinct variates, with their variates.
-using PartVariates = std::vector<std::pair<std::string, std::set<std::string>>>;
-
-// The variates that several of `parts` share, one message each. `what` names the parts and `context` the whole,
-// e.g. "terms" of "the likelihood 'lh'".
-std::vector<std::string> sharedVariates(PartVariates const &parts, std::string const &what, std::string const &context)
+// Declare the bookkeeping columns of the exported document (see HS3::bookkeepingColumns()): the axes that several
+// components of a combined data set share, and whose variable in the workspace `ws` is used by nothing else, i.e. has
+// no clients and is in no set of a ModelConfig. RooAbsData::split() keeps such a column (e.g. an event number) in
+// every sub-data set.
+void declareBookkeepingColumns(HS3Document &doc, RooWorkspace const &ws)
 {
-   std::map<std::string, std::vector<std::string>> partsOfVariate;
-   std::vector<std::string> order;
-   for (auto const &[part, variates] : parts) {
-      for (std::string const &variate : variates) {
-         auto &list = partsOfVariate[variate];
-         if (list.empty()) {
-            order.push_back(variate);
-         }
-         if (std::find(list.begin(), list.end(), part) == list.end()) {
-            list.push_back(part);
-         }
-      }
-   }
-   std::vector<std::string> messages;
-   for (std::string const &variate : order) {
-      auto const &list = partsOfVariate[variate];
-      if (list.size() < 2) {
-         continue;
-      }
-      std::string names;
-      for (std::size_t i = 0; i < list.size(); ++i) {
-         names += (i == 0 ? "'" : (i + 1 == list.size() ? "' and '" : "', '")) + list[i];
-      }
-      messages.push_back("the variate '" + variate + "' is shared by the " + what + " " + names + "' of " + context);
-   }
-   return messages;
-}
-
-// The axes of the components of a combined data set, by component.
-PartVariates combinedDataAxes(JSONNode const &rootnode, JSONNode const &dataset)
-{
-   PartVariates parts;
-   for (std::string const &component : combinedComponents(dataset, "dataset")) {
-      std::set<std::string> axes;
-      if (JSONNode const *node = findInSection(rootnode, "data", component)) {
-         if (JSONNode const *axesNode = node->find("axes")) {
-            for (JSONNode const &axis : axesNode->children()) {
-               if (JSONNode const *axisName = axis.find("name")) {
-                  addNames(*axisName, axes);
-               }
-            }
-         }
-      }
-      parts.emplace_back(component, axes);
-   }
-   return parts;
-}
-
-// Bookkeeping columns (a RooFit extension, in misc.ROOT_internal.bookkeeping_columns as {"<combined data set>":
-// [<axis>, ...]}): axes that several components of a combined data set share, but that are no variate of any
-// distribution, e.g. an event number. They have no statistical meaning, and are exempt from the requirement of
-// distinct axes. A declared column that is a variate of a distribution is not a bookkeeping column.
-std::map<std::string, std::set<std::string>> bookkeepingColumnsOfDocument(JSONNode const &rootnode)
-{
-   std::map<std::string, std::set<std::string>> out;
-   JSONNode const *declared = findRooFitInternal(rootnode, "bookkeeping_columns");
-   if (!declared || !declared->is_map()) {
-      return out;
-   }
-   std::set<std::string> variates;
-   if (JSONNode const *distributions = rootnode.find("distributions")) {
-      for (JSONNode const &dist : distributions->children()) {
-         std::set<std::string> const v = variatesOf(rootnode, RooJSONFactoryWSTool::name(dist));
-         variates.insert(v.begin(), v.end());
-      }
-   }
-   for (JSONNode const &entry : declared->children()) {
-      for (JSONNode const &column : entry.children()) {
-         if (!variates.count(column.val())) {
-            out[entry.key()].insert(column.val());
-         }
-      }
-   }
-   return out;
-}
-
-// All shared variates of the document: of the terms of each likelihood, of the components of the combined
-// distributions that no likelihood lists (the others are checked through the likelihood), and the shared axes of the
-// components of all combined data sets, except for bookkeeping columns.
-std::vector<std::string> sharedVariatesOfDocument(JSONNode const &rootnode)
-{
-   std::vector<std::string> messages;
-   auto append = [&](std::vector<std::string> const &more) {
-      messages.insert(messages.end(), more.begin(), more.end());
-   };
-   std::set<std::string> inLikelihoods;
-   if (JSONNode const *likelihoods = rootnode.find("likelihoods")) {
-      for (JSONNode const &likelihood : likelihoods->children()) {
-         for (const char *key : {"distributions", "data", "aux_distributions"}) {
-            if (JSONNode const *list = likelihood.find(key)) {
-               for (JSONNode const &item : list->children()) {
-                  inLikelihoods.insert(item.val());
-               }
-            }
-         }
-         PartVariates parts;
-         for (std::string const &term : likelihoodTerms(rootnode, likelihood)) {
-            parts.emplace_back(term, variatesOf(rootnode, term));
-         }
-         append(sharedVariates(parts, "terms", "the likelihood '" + RooJSONFactoryWSTool::name(likelihood) + "'"));
-      }
-   }
-   if (JSONNode const *distributions = rootnode.find("distributions")) {
-      for (JSONNode const &dist : distributions->children()) {
-         std::string const name = RooJSONFactoryWSTool::name(dist);
-         if (typeOf(dist) != "combined_dist" || inLikelihoods.count(name)) {
-            continue;
-         }
-         PartVariates parts;
-         for (std::string const &component : combinedComponents(dist, "dist")) {
-            parts.emplace_back(component, variatesOf(rootnode, component));
-         }
-         append(sharedVariates(parts, "components", "the combined_dist '" + name + "'"));
-      }
-   }
-   // The axes of the components of every combined data set, also of those that a likelihood lists, except for the
-   // bookkeeping columns.
-   std::map<std::string, std::set<std::string>> const bookkeeping = bookkeepingColumnsOfDocument(rootnode);
-   if (JSONNode const *data = rootnode.find("data")) {
-      for (JSONNode const &dataset : data->children()) {
-         std::string const name = RooJSONFactoryWSTool::name(dataset);
-         if (typeOf(dataset) != "combined") {
-            continue;
-         }
-         PartVariates parts = combinedDataAxes(rootnode, dataset);
-         if (auto found = bookkeeping.find(name); found != bookkeeping.end()) {
-            for (auto &part : parts) {
-               for (std::string const &column : found->second) {
-                  part.second.erase(column);
-               }
-            }
-         }
-         append(sharedVariates(parts, "components", "the combined data set '" + name + "'"));
-      }
-   }
-   return messages;
-}
-
-// Declare the bookkeeping columns of the exported document `rootnode` (see bookkeepingColumnsOfDocument()): the axes
-// that several components of a combined data set share, and whose variable in the workspace `ws` is used by nothing
-// else, i.e. has no clients and is in no set of a ModelConfig. RooAbsData::split() keeps such a column (e.g. an event
-// number) in every sub-data set.
-void declareBookkeepingColumns(JSONNode &rootnode, RooWorkspace const &ws)
-{
-   JSONNode const *data = rootnode.find("data");
-   if (!data) {
-      return;
-   }
    std::vector<RooArgSet const *> modelConfigSets;
    for (TObject *obj : ws.allGenericObjects()) {
       if (auto *mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
@@ -934,117 +650,14 @@ void declareBookkeepingColumns(JSONNode &rootnode, RooWorkspace const &ws)
       return std::none_of(modelConfigSets.begin(), modelConfigSets.end(),
                           [&](RooArgSet const *set) { return set->find(name.c_str()) != nullptr; });
    };
-   std::map<std::string, std::set<std::string>> columns;
-   for (JSONNode const &dataset : data->children()) {
-      if (typeOf(dataset) != "combined") {
-         continue;
-      }
-      std::map<std::string, int> counts;
-      for (auto const &[component, axes] : combinedDataAxes(rootnode, dataset)) {
-         for (std::string const &axis : axes) {
-            ++counts[axis];
+   for (auto const &[dataset, axes] : HS3::sharedAxes(doc)) {
+      for (std::string const &axis : axes) {
+         if (usedByNothing(axis)) {
+            doc.rooFit.bookkeepingColumns[dataset].push_back(axis);
          }
       }
-      for (auto const &[axis, count] : counts) {
-         if (count > 1 && usedByNothing(axis)) {
-            columns[RooJSONFactoryWSTool::name(dataset)].insert(axis);
-         }
-      }
-   }
-   if (columns.empty()) {
-      return;
-   }
-   JSONNode &node = rootnode["misc"]["ROOT_internal"]["bookkeeping_columns"].set_map();
-   for (auto const &[dataset, names] : columns) {
-      node[dataset].fill_seq(names);
    }
 }
-
-// Write each term of the likelihoods of the exported document `rootnode` once. A RooFit model often has a constraint
-// both as a factor of the product of a channel and as a term of the likelihood (e.g. a constraint of a HistFactory
-// modifier, an external constraint of the ModelConfig, or any constraint of a channel, see
-// constraintsOfChannels()); RooFit counts it once. In HS3 it would enter twice, so the factor is removed from
-// the product. Only products that no other distribution uses are changed (being a component
-// of a combined distribution is not a use), and only factors that are terms of every likelihood that has the product
-// as a term.
-void writeLikelihoodTermsOnce(JSONNode &rootnode)
-{
-   JSONNode const *likelihoods = rootnode.find("likelihoods");
-   JSONNode const *distributions = rootnode.find("distributions");
-   if (!likelihoods || !distributions) {
-      return;
-   }
-   // The products that are terms, with the factors that are terms wherever the product is one.
-   std::map<std::string, std::set<std::string>> removable;
-   for (JSONNode const &likelihood : likelihoods->children()) {
-      std::vector<std::string> const terms = likelihoodTerms(rootnode, likelihood);
-      for (std::string const &term : terms) {
-         JSONNode const *node = findInSection(rootnode, "distributions", term);
-         if (!node || typeOf(*node) != "product_dist" || !node->has_child("factors")) {
-            continue;
-         }
-         std::set<std::string> factorsThatAreTerms;
-         for (JSONNode const &factor : (*node)["factors"].children()) {
-            if (factor.val() != term && std::find(terms.begin(), terms.end(), factor.val()) != terms.end()) {
-               factorsThatAreTerms.insert(factor.val());
-            }
-         }
-         auto found = removable.find(term);
-         if (found == removable.end()) {
-            removable[term] = factorsThatAreTerms;
-         } else {
-            std::set<std::string> both;
-            std::set_intersection(found->second.begin(), found->second.end(), factorsThatAreTerms.begin(),
-                                  factorsThatAreTerms.end(), std::inserter(both, both.begin()));
-            found->second = both;
-         }
-      }
-   }
-   // Products that another distribution uses are left alone.
-   for (JSONNode const &dist : distributions->children()) {
-      std::vector<std::string> used;
-      for (const char *key : {"factors", "summands"}) {
-         if (JSONNode const *parts = dist.find(key)) {
-            for (JSONNode const &part : parts->children()) {
-               if (isName(part)) {
-                  used.push_back(part.val());
-               }
-            }
-         }
-      }
-      if (typeOf(dist) != "combined_dist") {
-         for (std::string const &component : combinedComponents(dist, "dist")) {
-            used.push_back(component);
-         }
-      }
-      for (std::string const &name : used) {
-         removable.erase(name);
-      }
-   }
-   for (auto const &[product, remove] : removable) {
-      if (remove.empty()) {
-         continue;
-      }
-      auto &node = const_cast<JSONNode &>(*findInSection(rootnode, "distributions", product));
-      std::vector<std::string> keep;
-      for (JSONNode const &factor : node["factors"].children()) {
-         if (remove.find(factor.val()) == remove.end()) {
-            keep.push_back(factor.val());
-         }
-      }
-      if (keep.empty()) {
-         continue;
-      }
-      for (std::string const &factor : remove) {
-         oocoutI(nullptr, IO) << "RooFitHS3: '" << factor << "' is a factor of '" << product
-                              << "' and a term of its likelihood; it is written once, as a term of the likelihood"
-                              << std::endl;
-      }
-      node["factors"].clear();
-      node["factors"].fill_seq(keep);
-   }
-}
-// ---------------------------------------------------------------------------------------------------------------
 
 // Export the string attributes and tags of `arg` into the ROOT-internal attributes.
 void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attributes> &attributes)
@@ -1061,7 +674,6 @@ void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attribute
       }
    };
 
-   // export all string attributes of an object
    for (const auto &it : arg->stringAttributes()) {
       // Skip some RooFit internals
       if (it.first == "factory_tag" || it.first == "PROD_TERM_TYPE")
@@ -1071,7 +683,8 @@ void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attribute
    }
    for (auto const &attr : arg->attributes()) {
       // Skip some RooFit internals. The array distribution tag is restored from the type on import.
-      if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object" || attr == arrayDistTag)
+      if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object" || attr == arrayDistTag ||
+          attr == helperObjectTag)
          continue;
       initialize();
       out->tags.push_back(attr);
@@ -1083,13 +696,12 @@ void exportAttributes(const RooAbsArg *arg, std::map<std::string, HS3::Attribute
 HS3::BinnedAxis RooFit::HS3::toBinnedAxis(RooRealVar const &var)
 {
    RooJSONFactoryWSTool::testValidName(var.GetName(), false);
-   RooAbsBinning const &binning = var.getBinning();
-   HS3::BinnedAxis axis;
-   axis.name = var.GetName();
-   axis.min = binning.lowBound();
-   axis.max = binning.highBound();
-   axis.binning = toBinning(binning);
-   return axis;
+   return toBinnedAxis(var.GetName(), var.getBinning());
+}
+
+HS3::BinnedAxis RooFit::HS3::toBinnedAxis(std::string const &name, RooAbsBinning const &binning)
+{
+   return {name, binning.lowBound(), binning.highBound(), toBinning(binning)};
 }
 
 HS3::NameOrNumber RooFit::HS3::toNameOrNumber(RooAbsArg const &arg)
@@ -1102,21 +714,54 @@ HS3::NameOrNumber RooFit::HS3::toNameOrNumber(RooAbsArg const &arg)
 
 namespace {
 
+// The axis of unbinned or point data for a variable. Infinite bounds are left out: the axis is unbounded there.
+HS3::ContinuousAxis toContinuousAxis(RooRealVar const &var)
+{
+   RooJSONFactoryWSTool::testValidName(var.GetName(), false);
+   HS3::ContinuousAxis axis;
+   axis.name = var.GetName();
+   if (!RooNumber::isInfinite(var.getMin())) {
+      axis.min = var.getMin();
+   }
+   if (!RooNumber::isInfinite(var.getMax())) {
+      axis.max = var.getMax();
+   }
+   return axis;
+}
+
+// A categorical axis has the labels in the order of the states of the category, which is the order of the bins of a
+// RooDataHist.
+HS3::CategoricalAxis toCategoricalAxis(RooAbsCategory const &cat)
+{
+   HS3::CategoricalAxis axis;
+   axis.name = cat.GetName();
+   for (unsigned int i = 0; i < cat.size(); ++i) {
+      axis.categories.push_back(cat.getOrdinal(i).first);
+   }
+   return axis;
+}
+
+// Binned data over variables that are RooRealVars or RooCategories.
+HS3::BinnedData toBinnedData(RooArgSet const &vars, std::size_t n, double const *contents)
+{
+   HS3::BinnedData data;
+   for (RooAbsArg const *var : vars) {
+      if (auto const *cat = dynamic_cast<RooCategory const *>(var)) {
+         RooJSONFactoryWSTool::testValidName(cat->GetName(), false);
+         data.axes.emplace_back(toCategoricalAxis(*cat));
+      } else {
+         data.axes.emplace_back(HS3::toBinnedAxis(static_cast<RooRealVar const &>(*var)));
+      }
+   }
+   data.contents.assign(contents, contents + n);
+   return data;
+}
+
 std::unique_ptr<RooRealVar> createObservable(HS3::BinnedAxis const &axis)
 {
    auto obs = std::make_unique<RooRealVar>(axis.name.c_str(), axis.name.c_str(), axis.min, axis.max);
    applyBinning(*obs, axis.binning);
    return obs;
-}
-
-// The labels of a category, as a set.
-std::set<std::string> labelsOf(RooCategory const &cat)
-{
-   std::set<std::string> labels;
-   for (auto const &state : cat) {
-      labels.insert(state.first);
-   }
-   return labels;
 }
 
 // Create the variables for the axes of binned data. A categorical axis is one bin per category. HS3 identifies
@@ -1143,7 +788,7 @@ RooArgSet createBinnedObservables(std::vector<std::variant<HS3::BinnedAxis, HS3:
       auto const &axis = std::get<HS3::CategoricalAxis>(axisVariant);
       auto cat = std::make_unique<RooCategory>(axis.name.c_str(), axis.name.c_str());
       if (RooCategory const *wsCat = workspace.cat(axis.name)) {
-         if (labelsOf(*wsCat) != std::set<std::string>(axis.categories.begin(), axis.categories.end())) {
+         if (!hasLabels(*wsCat, axis.categories)) {
             RooJSONFactoryWSTool::error("the categories of the axis '" + axis.name + "' of the dataset '" + dataName +
                                         "' differ from those of the category '" + axis.name + "'");
          }
@@ -1208,16 +853,15 @@ std::vector<double> permute(std::vector<double> const &values, std::vector<std::
 void applyUnbinnedAxisRange(HS3::ContinuousAxis const &axis, std::string const &dataName, RooRealVar &var,
                             HS3::DomainRanges const *ranges)
 {
-   if (!axis.min || !axis.max) {
-      return;
-   }
+   // An absent bound means that the axis is unbounded on that side.
+   const double min = axis.min.value_or(-RooNumber::infinity());
+   const double max = axis.max.value_or(RooNumber::infinity());
    if (ranges && !ranges->contains(axis.name)) {
-      var.setRange(*axis.min, *axis.max);
-   } else if (var.getMin() != *axis.min || var.getMax() != *axis.max) {
+      var.setRange(min, max);
+   } else if (var.getMin() != min || var.getMax() != max) {
       std::stringstream ss;
-      ss << "RooFitHS3: the range [" << *axis.min << ", " << *axis.max << "] of the axis '" << axis.name
-         << "' of the dataset '" << dataName << "' differs from the range [" << var.getMin() << ", " << var.getMax()
-         << "] of the variable.";
+      ss << "RooFitHS3: the range [" << min << ", " << max << "] of the axis '" << axis.name << "' of the dataset '"
+         << dataName << "' differs from the range [" << var.getMin() << ", " << var.getMax() << "] of the variable.";
       RooJSONFactoryWSTool::warning(ss.str());
    }
 }
@@ -1237,7 +881,7 @@ std::unique_ptr<RooAbsData> createUnbinnedData(std::string const &name, HS3::Unb
                                         "\" could not be found in the workspace! Categorical observables are "
                                         "declared by a categorical axis in a domain.");
          }
-         if (labelsOf(*cat) != std::set<std::string>(catAxis.categories.begin(), catAxis.categories.end())) {
+         if (!hasLabels(*cat, catAxis.categories)) {
             RooJSONFactoryWSTool::error("The categories of the axis \"" + catAxis.name +
                                         "\" differ from the states of the category \"" + catAxis.name + "\"");
          }
@@ -1296,7 +940,25 @@ std::unique_ptr<RooAbsData> loadData(HS3::Data const &input, RooWorkspace &works
       }
       return createUnbinnedData(input.name, *unbinned, workspace, ranges);
    }
-   RooJSONFactoryWSTool::error("datasets of type \"point\" like '" + input.name + "' are not supported yet");
+   // Point data is the observation of a single variable. With its axis, it is the same as unbinned data with a single
+   // entry, and becomes a RooDataSet with one entry.
+   auto const &point = std::get<HS3::PointData>(input.body);
+   if (point.uncertainty) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: the \"uncertainty\" of the dataset '" + input.name +
+                                    "' is ignored: HS3 doesn't define how it enters a likelihood.");
+   }
+   // Without an axis, the value is the one of the single variate of the paired distribution, see
+   // HS3::resolvePointData().
+   if (point.axes.empty()) {
+      RooJSONFactoryWSTool::error("the point data set '" + input.name +
+                                  "' has no axis, and it is not paired with a distribution that has a single variate");
+   } else if (point.axes.size() != 1) {
+      RooJSONFactoryWSTool::error("the point data set '" + input.name + "' must have exactly one axis");
+   }
+   HS3::UnbinnedData unbinned;
+   unbinned.axes.emplace_back(point.axes.front());
+   unbinned.entries.push_back(point.value);
+   return createUnbinnedData(input.name, unbinned, workspace, ranges);
 }
 
 // The version of ROOT that writes the document, with dots only such that it can be read automatically.
@@ -1305,6 +967,14 @@ std::string rootVersion()
    std::string versionName = gROOT->GetVersion();
    std::replace(versionName.begin(), versionName.end(), '/', '.');
    return versionName;
+}
+
+// The data set `name` among the loaded ones that are not a component of a combined data set by now, or the data of a
+// constraint term, or nullptr.
+std::unique_ptr<RooAbsData> *findDataset(std::vector<std::unique_ptr<RooAbsData>> &datasets, std::string const &name)
+{
+   auto found = std::find_if(datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == name; });
+   return found != datasets.end() ? &*found : nullptr;
 }
 
 // A distribution of the document can be a function in RooFit, or it can be skipped.
@@ -1324,10 +994,7 @@ void requirePdf(RooAbsArg const *arg, std::string const &what)
 void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &dataName, HS3::CombinedData const &data)
 {
    std::vector<RooCategory const *> columns = selectionColumns(simPdf.indexCat());
-   std::vector<std::string> columnNames;
-   for (RooCategory const *column : columns) {
-      columnNames.push_back(column->GetName());
-   }
+   const std::vector<std::string> columnNames = namesOf(columns);
    std::vector<std::string> dataColumns = data.columns;
    std::sort(dataColumns.begin(), dataColumns.end());
    if (dataColumns != columnNames) {
@@ -1336,7 +1003,7 @@ void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &data
    }
    // The keys of the data, each as a map from the column to the label.
    std::set<std::map<std::string, std::string>> dataKeys;
-   for (HS3::CombinedDataComponent const &component : data.components) {
+   for (auto const &component : data.components) {
       std::map<std::string, std::string> key;
       for (std::size_t i = 0; i < data.columns.size(); ++i) {
          key[data.columns[i]] = component.key[i];
@@ -1385,15 +1052,14 @@ void checkCombinedPairing(RooSimultaneous const &simPdf, std::string const &data
    }
 }
 
-// Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 // The observables of the analysis `analysis` if no data set of its likelihood gives them: the list that RooFit writes
 // in misc.ROOT_internal.ModelConfigs for a ModelConfig without data, or else the variables that HS3 makes
 // observables. By the standard, all parameters of the distributions of the likelihood are listed in a domain of the
-// analysis or are constant, so a variate of the distributions of the likelihood (`variates`, see collectVariates())
-// that is neither, is an observable. Requiring all three excludes the parameters, and the observed values of the
-// constraint terms, which are constant parameters.
-void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysis, HS3::ModelConfigInfo const *mcInfo,
-                            std::set<std::string> const &variates, RooWorkspace &workspace, RooArgSet &observables)
+// analysis or are constant, so a variate of the distributions of the likelihood (see HS3::variatesOf(), the columns
+// of a combined distribution are observables as well) that is neither, is an observable. Requiring all three excludes
+// the parameters, and the observed values of the constraint terms, which are constant parameters.
+void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysis, HS3::Likelihood const &likelihood,
+                            HS3::ModelConfigInfo const *mcInfo, RooWorkspace &workspace, RooArgSet &observables)
 {
    if (mcInfo && mcInfo->observables) {
       for (std::string const &name : *mcInfo->observables) {
@@ -1408,12 +1074,9 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
    }
    std::set<std::string> inDomains;
    for (auto const &domainRef : analysis.domains) {
-      for (HS3::Domain const &domain : doc.domains) {
-         if (domain.name != domainRef.name) {
-            continue;
-         }
-         for (auto const &axis : domain.axes) {
-            inDomains.insert(std::visit([](auto const &a) -> std::string const & { return a.name; }, axis));
+      if (HS3::Domain const *domain = HS3::findByName(doc.domains, domainRef.name)) {
+         for (auto const &axis : domain->axes) {
+            inDomains.insert(HS3::nameOf(axis));
          }
       }
    }
@@ -1421,7 +1084,7 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
       inDomains.insert(poi.name);
    }
    std::string list;
-   for (std::string const &variate : variates) {
+   for (std::string const &variate : HS3::variatesOf(doc, likelihood)) {
       RooAbsArg *arg = workspace.arg(variate);
       if (!dynamic_cast<RooAbsRealLValue *>(arg) && !dynamic_cast<RooAbsCategoryLValue *>(arg)) {
          continue;
@@ -1440,11 +1103,509 @@ void observablesWithoutData(HS3Document const &doc, HS3::Analysis const &analysi
    }
 }
 
+// Whether the term `term` of a likelihood is a constraint term of the channel `channel` of a model with the channels
+// `channels`: it has a global observable (a variable that no channel depends on) and another variable that the
+// channel depends on. An array of constraints is one term.
+bool isConstraintOfChannel(RooAbsPdf const &term, RooAbsPdf const &channel, RooArgSet const &channels)
+{
+   if (&term == &channel || channels.containsInstance(term)) {
+      return false;
+   }
+   RooArgSet leaves;
+   term.leafNodeServerList(&leaves);
+   RooArgSet parameters;
+   bool hasGlobalObservable = false;
+   for (RooAbsArg *leaf : leaves) {
+      auto *var = dynamic_cast<RooRealVar *>(leaf);
+      if (!var) {
+         continue;
+      }
+      // Whether a global observable is constant yet depends on where the document has its value: as a parameter, or
+      // in the data set of the constraint, which is read later.
+      if (std::none_of(channels.begin(), channels.end(),
+                       [&](RooAbsArg const *other) { return other->dependsOn(*var); })) {
+         hasGlobalObservable = true;
+      } else {
+         parameters.add(*var);
+      }
+   }
+   return hasGlobalObservable && !parameters.empty() && channel.dependsOn(parameters);
+}
+
+// The other terms of the likelihoods of the document that have the distribution `dist` as a term: their other
+// distributions that can be constraint terms, and their auxiliary distributions. These are the candidates for
+// constraint terms of `dist`.
+std::vector<std::string> otherLikelihoodTerms(HS3Document const &doc, std::string const &dist)
+{
+   std::vector<std::string> out;
+   auto add = [&](std::string const &name) {
+      if (name != dist) {
+         addUnique(out, name);
+      }
+   };
+   // A term can be a constraint term of the channels if it is a measurement of one observation: paired with nothing,
+   // a value given in-line, point data or an unbinned data set of one entry. A combined distribution, or a term paired
+   // with a data set of several entries (e.g. the model of another document that the likelihood combines with this
+   // one), is a measurement of its own.
+   auto canBeConstraint = [&](HS3::LikelihoodTerm const &term) {
+      if (HS3::find<HS3::CombinedDist>(doc.distributions, term.distribution.name)) {
+         return false;
+      }
+      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
+      if (!dataRef) {
+         return true;
+      }
+      auto data =
+         std::find_if(doc.data.begin(), doc.data.end(), [&](auto const &d) { return d.name == dataRef->name; });
+      if (data == doc.data.end() || std::holds_alternative<HS3::PointData>(data->body)) {
+         return true;
+      }
+      auto const *unbinned = std::get_if<HS3::UnbinnedData>(&data->body);
+      return unbinned && unbinned->numEntries() == 1;
+   };
+   for (auto const &likelihood : doc.likelihoods) {
+      if (std::none_of(likelihood.terms.begin(), likelihood.terms.end(),
+                       [&](auto const &term) { return term.distribution.name == dist; })) {
+         continue;
+      }
+      for (auto const &term : likelihood.terms) {
+         if (canBeConstraint(term)) {
+            add(term.distribution.name);
+         }
+      }
+      for (auto const &aux : likelihood.auxDistributions) {
+         add(aux.name);
+      }
+   }
+   return out;
+}
+
+// In HS3, the constraint terms of a model are terms of the likelihood; in RooFit, as HistFactory builds its models, a
+// constraint is a factor of every channel whose parameters it constrains, which makes the pdf of the model the
+// sampling distribution of the auxiliary measurements as well. The export takes the constraints out of the channels
+// (writeLikelihoodTermsOnce()); this puts them back: a constraint term with a global observable (a constant variable
+// that the model itself does not depend on) becomes a factor of every channel that is a product and depends on one
+// of its other parameters. An array of constraints goes to its channels as a whole. The constraints that
+// found a channel are removed from `constraints`; the others stay external constraints of the ModelConfig, e.g. a
+// penalty term without an observation, like the regularization of an unfolding, or a constraint of a model whose
+// channels are not products.
+void attachConstraintsToChannels(RooAbsPdf &pdf, RooArgSet &constraints)
+{
+   RooArgSet channels;
+   if (auto *simPdf = dynamic_cast<RooSimultaneous *>(&pdf)) {
+      for (auto const &state : simPdf->indexCat()) {
+         if (RooAbsPdf *channel = simPdf->getPdf(state.first)) {
+            channels.add(*channel, /*silent=*/true);
+         }
+      }
+   } else {
+      channels.add(pdf);
+   }
+   RooArgSet attached;
+   for (auto *constraint : static_range_cast<RooAbsPdf *>(constraints)) {
+      // Decided for all channels before any is changed: a channel that has the constraint depends on its global
+      // observable, which then would not look like one anymore.
+      bool isFactor = false;
+      std::vector<RooProdPdf *> products;
+      for (auto *channel : static_range_cast<RooAbsPdf *>(channels)) {
+         auto *product = dynamic_cast<RooProdPdf *>(channel);
+         if (!product || channel == constraint) {
+            continue;
+         }
+         if (product->pdfList().find(*constraint)) {
+            isFactor = true;
+         } else if (isConstraintOfChannel(*constraint, *channel, channels)) {
+            products.push_back(product);
+         }
+      }
+      for (RooProdPdf *product : products) {
+         product->addPdfs(RooArgSet{*constraint});
+      }
+      if (isFactor || !products.empty()) {
+         attached.add(*constraint);
+      }
+   }
+   constraints.remove(attached);
+}
+
+// RooFit has one pdf per ModelConfig: the terms of a likelihood become one RooSimultaneous `<analysis>_simPdf`. Its
+// channels are the components of the terms that are combined distributions, flattened also where a component is a
+// combined distribution itself (HS3 #161), and the other terms. Its index has the columns of all combined
+// distributions, with the label "" in a column that a channel doesn't have (HS3 allows relabelling), and the column
+// `<analysis>_categoryIndex`, labelled with the names of the terms, if there is a term that is not a combined
+// distribution or if the channels can't be told apart without it. Several columns are a RooSuperCategory.
+//
+// Within a combined distribution, identical factors enter once (union composition). RooFit finds a constraint term
+// that several channels contain once, but array distributions that are channels of their own would each be evaluated
+// on their data: the array channels of one component type are merged into one array distribution with the union of
+// their components, and their data into one entry, if each has a data set of one entry (or no data at all, in a pure
+// model). The terms of a likelihood are a plain product (HS3): the variates of different terms are distinct, which
+// the import has checked, so that the flattening adds no union across terms.
+//
+// The data sets paired with the terms become one data set `<analysis>_data` with these columns, which replaces them
+// unless another likelihood or analysis uses them. The columns are added to `observables`. The terms that the new
+// RooSimultaneous replaces are marked as helpers, which the export only writes if something else uses them.
+//
+// Returns nullptr if the likelihood has a single term that needs none of this.
+RooSimultaneous *flatModelOfLikelihood(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
+                                       std::vector<HS3::LikelihoodTerm const *> const &terms,
+                                       std::vector<std::unique_ptr<RooAbsData>> &datasets, RooArgSet &observables)
+{
+   std::string const &analysisName = analysis.name;
+   struct Channel {
+      std::size_t term;
+      std::map<std::string, std::string> labels; // by column
+      RooAbsPdf *pdf;
+   };
+   std::vector<Channel> channels;
+   std::set<std::string> innerColumns;
+   bool plainTerm = false;
+   bool nested = false;
+   std::function<void(std::size_t, RooAbsPdf *, std::map<std::string, std::string> const &)> collect =
+      [&](std::size_t term, RooAbsPdf *pdf, std::map<std::string, std::string> const &labels) {
+         auto *sim = dynamic_cast<RooSimultaneous *>(pdf);
+         if (!sim) {
+            channels.push_back({term, labels, pdf});
+            return;
+         }
+         nested |= !labels.empty();
+         std::vector<RooCategory const *> const columns = selectionColumns(sim->indexCat());
+         for (RooCategory const *column : columns) {
+            innerColumns.insert(column->GetName());
+         }
+         for (std::vector<std::string> const &key : selectionKeys(columns)) {
+            if (RooAbsPdf *component = sim->getPdf(selectionLabel(sim->indexCat(), columns, key))) {
+               std::map<std::string, std::string> inner = labels;
+               for (std::size_t k = 0; k < columns.size(); ++k) {
+                  if (!inner.emplace(columns[k]->GetName(), key[k]).second) {
+                     RooJSONFactoryWSTool::error("the combined distribution '" + std::string(sim->GetName()) +
+                                                 "' has the column '" + columns[k]->GetName() +
+                                                 "', which a combined distribution that contains it has as well");
+                  }
+               }
+               collect(term, component, inner);
+            }
+         }
+      };
+   for (std::size_t i = 0; i < terms.size(); ++i) {
+      RooAbsPdf *pdf = workspace.pdf(terms[i]->distribution.name);
+      plainTerm |= !dynamic_cast<RooSimultaneous *>(pdf);
+      collect(i, pdf, {});
+   }
+
+   // The array channels that are merged, by component type.
+   auto componentType = [](RooAbsPdf const *pdf) -> std::string {
+      auto const *array = dynamic_cast<RooProdPdf const *>(pdf);
+      if (!array || !pdf->getAttribute(arrayDistTag) || array->pdfList().empty()) {
+         return "";
+      }
+      std::string const type = array->pdfList()[0].ClassName();
+      for (RooAbsArg const *component : array->pdfList()) {
+         if (type != component->ClassName()) {
+            return "";
+         }
+      }
+      return type;
+   };
+   std::map<std::string, std::vector<std::size_t>> arraysByType;
+   for (std::size_t c = 0; c < channels.size(); ++c) {
+      if (std::string const type = componentType(channels[c].pdf); !type.empty()) {
+         arraysByType[type].push_back(c);
+      }
+   }
+
+   // The data: every term must be paired with a data set that has the columns of its channels.
+   std::vector<std::unique_ptr<RooAbsData> *> termData;
+   for (std::size_t i = 0; i < terms.size(); ++i) {
+      auto const *dataRef = std::get_if<HS3::DataRef>(&terms[i]->data);
+      auto found = dataRef ? std::find_if(datasets.begin(), datasets.end(),
+                                          [&](auto const &d) { return d && d->GetName() == dataRef->name; })
+                           : datasets.end();
+      if (found == datasets.end()) {
+         termData.clear();
+         break;
+      }
+      bool complete = true;
+      for (Channel const &channel : channels) {
+         for (auto const &item : channel.labels) {
+            complete &= channel.term != i || (*found)->get()->find(item.first.c_str()) != nullptr;
+         }
+      }
+      if (!complete) {
+         termData.clear();
+         break;
+      }
+      termData.push_back(&*found);
+   }
+   // The entries of the data of each channel, by the labels of the columns of its term.
+   auto channelOf = [&](std::size_t term, RooArgSet const &values) -> std::size_t {
+      for (std::size_t c = 0; c < channels.size(); ++c) {
+         if (channels[c].term != term) {
+            continue;
+         }
+         bool match = true;
+         for (auto const &[column, label] : channels[c].labels) {
+            auto const *cat = dynamic_cast<RooAbsCategory const *>(values.find(column.c_str()));
+            match &= cat && cat->getCurrentLabel() == label;
+         }
+         if (match) {
+            return c;
+         }
+      }
+      return channels.size();
+   };
+   std::vector<int> entries(channels.size(), 0);
+   for (std::size_t i = 0; i < termData.size(); ++i) {
+      RooAbsData &data = **termData[i];
+      for (int entry = 0; entry < data.numEntries(); ++entry) {
+         std::size_t const c = channelOf(i, *data.get(entry));
+         if (c < channels.size()) {
+            ++entries[c];
+         }
+      }
+   }
+   // The channel that each array channel is merged into, if any.
+   std::map<std::size_t, std::size_t> mergedInto;
+   std::map<std::size_t, RooArgList> mergedComponents;
+   for (auto const &[type, members] : arraysByType) {
+      std::vector<std::size_t> candidates;
+      for (std::size_t c : members) {
+         if (termData.empty() || entries[c] == 1) {
+            candidates.push_back(c);
+         }
+      }
+      if (candidates.size() < 2) {
+         continue;
+      }
+      RooArgList &components = mergedComponents[candidates.front()];
+      for (std::size_t c : candidates) {
+         mergedInto[c] = candidates.front();
+         // Identical components are one object (see importArrayDist()), which the merged array has once.
+         for (RooAbsArg *component : static_cast<RooProdPdf *>(channels[c].pdf)->pdfList()) {
+            if (!components.containsInstance(*component)) {
+               components.add(*component);
+            }
+         }
+      }
+   }
+
+   if (terms.size() == 1 && !nested && mergedInto.empty()) {
+      return nullptr;
+   }
+
+   // The column of the terms is needed if the labels of the other columns don't tell the channels apart. A term that
+   // is not combined has no labels at all; with the column of the terms, an empty label is never the only one of a
+   // key, which would be the label of a RooSimultaneous over a single RooCategory.
+   bool unique = !plainTerm;
+   std::set<std::vector<std::string>> innerKeys;
+   for (std::size_t c = 0; c < channels.size(); ++c) {
+      if (mergedInto.count(c) && mergedInto[c] != c) {
+         continue;
+      }
+      std::vector<std::string> key;
+      for (std::string const &column : innerColumns) {
+         auto found = channels[c].labels.find(column);
+         key.push_back(found == channels[c].labels.end() ? "" : found->second);
+      }
+      unique = innerKeys.insert(key).second && unique;
+   }
+   std::string const termColumn = analysisName + "_categoryIndex";
+   if (!unique) {
+      RooCategory outer{termColumn.c_str(), termColumn.c_str()};
+      for (std::size_t i = 0; i < terms.size(); ++i) {
+         outer.defineType(terms[i]->distribution.name, static_cast<int>(i));
+      }
+      workspace.import(outer, RooFit::Silence());
+   }
+
+   std::vector<RooCategory *> columns;
+   for (std::string const &column : innerColumns) {
+      columns.push_back(workspace.cat(column));
+   }
+   if (!unique) {
+      columns.push_back(workspace.cat(termColumn));
+   }
+   std::sort(columns.begin(), columns.end(),
+             [](RooCategory const *l, RooCategory const *r) { return std::strcmp(l->GetName(), r->GetName()) < 0; });
+   std::vector<RooCategory const *> const constColumns(columns.begin(), columns.end());
+
+   // The key of a channel: the name of its term, its labels, and "" for the columns it doesn't have.
+   auto keyOf = [&](Channel const &channel) {
+      std::vector<std::string> key;
+      for (RooCategory *column : columns) {
+         if (column->GetName() == termColumn) {
+            key.push_back(terms[channel.term]->distribution.name);
+            continue;
+         }
+         auto found = channel.labels.find(column->GetName());
+         if (found != channel.labels.end()) {
+            key.push_back(found->second);
+            continue;
+         }
+         if (!column->hasLabel("")) {
+            column->defineType("");
+         }
+         key.push_back("");
+      }
+      return key;
+   };
+
+   std::unique_ptr<RooSuperCategory> superCat;
+   RooAbsCategoryLValue *indexCat = columns.front();
+   if (columns.size() > 1) {
+      RooArgSet inputs;
+      for (RooCategory *column : columns) {
+         inputs.add(*column);
+      }
+      std::string const indexName = analysisName + "_index";
+      superCat = std::make_unique<RooSuperCategory>(indexName.c_str(), indexName.c_str(), inputs);
+      indexCat = superCat.get();
+   }
+   std::map<std::string, RooAbsPdf *> pdfMap;
+   for (std::size_t c = 0; c < channels.size(); ++c) {
+      RooAbsPdf *pdf = channels[c].pdf;
+      if (auto found = mergedInto.find(c); found != mergedInto.end()) {
+         if (found->second != c) {
+            continue;
+         }
+         // The merged array: the union of the components, one object each.
+         std::string const name = analysisName + "_" + pdf->GetName() + "_merged";
+         RooProdPdf merged{name.c_str(), name.c_str(), mergedComponents[c]};
+         merged.setAttribute(arrayDistTag);
+         workspace.import(merged, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+         pdf = workspace.pdf(name);
+      }
+      pdfMap[selectionLabel(*indexCat, constColumns, keyOf(channels[c]))] = pdf;
+   }
+   std::string const simPdfName = analysisName + "_simPdf";
+   RooSimultaneous simPdf{simPdfName.c_str(), simPdfName.c_str(), pdfMap, *indexCat};
+   workspace.import(simPdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   for (RooCategory *column : columns) {
+      observables.add(*column, /*silent=*/true);
+   }
+   // The terms that the RooSimultaneous replaces are written only if something else uses them.
+   for (HS3::LikelihoodTerm const *term : terms) {
+      if (auto *sim = dynamic_cast<RooSimultaneous *>(workspace.pdf(term->distribution.name))) {
+         sim->setAttribute(helperObjectTag);
+      }
+   }
+   auto *result = static_cast<RooSimultaneous *>(workspace.pdf(simPdfName));
+   if (termData.empty()) {
+      return result;
+   }
+
+   RooArgSet columnClones; // owns the clones; `vars` also lists the variables of the data sets
+   for (RooCategory const *column : columns) {
+      columnClones.addClone(*column);
+   }
+   RooArgSet vars{columnClones};
+   bool weighted = false;
+   std::string weightName = RooFit::WeightVar().getString(0);
+   for (auto const *data : termData) {
+      vars.add(*(*data)->get(), /*silent=*/true);
+      weighted |= (*data)->isWeighted();
+      if (auto *ds = dynamic_cast<RooDataSet const *>(data->get()); ds && ds->isWeighted()) {
+         weightName = ds->weightVar()->GetName();
+      }
+   }
+   std::string const dataName = analysisName + "_data";
+   std::unique_ptr<RooDataSet> merged;
+   if (weighted) {
+      RooRealVar weightVar{weightName.c_str(), weightName.c_str(), 1.0};
+      vars.add(weightVar);
+      merged = std::make_unique<RooDataSet>(dataName.c_str(), dataName.c_str(), vars, RooFit::WeightVar(weightVar));
+   } else {
+      merged = std::make_unique<RooDataSet>(dataName.c_str(), dataName.c_str(), vars);
+   }
+   // The entries of the merged array channels, combined into one per merged array.
+   std::map<std::size_t, std::unique_ptr<RooArgSet>> mergedEntries;
+   RooArgSet row;
+   merged->get()->snapshot(row);
+   for (std::size_t i = 0; i < terms.size(); ++i) {
+      RooAbsData &data = **termData[i];
+      for (int entry = 0; entry < data.numEntries(); ++entry) {
+         RooArgSet const &values = *data.get(entry);
+         const double weight = data.weight();
+         std::size_t const c = channelOf(i, values);
+         if (auto found = mergedInto.find(c); found != mergedInto.end()) {
+            std::unique_ptr<RooArgSet> &combined = mergedEntries[found->second];
+            if (!combined) {
+               combined = std::make_unique<RooArgSet>();
+               values.snapshot(*combined);
+               continue;
+            }
+            // Identical factors have the same observed values in all data sets (HS3).
+            for (RooAbsArg const *value : values) {
+               auto const *real = dynamic_cast<RooAbsReal const *>(value);
+               auto const *known = dynamic_cast<RooAbsReal const *>(combined->find(value->GetName()));
+               if (real && known && !dynamic_cast<RooAbsCategory const *>(value) &&
+                   std::abs(real->getVal() - known->getVal()) > 1e-12 * std::max(1.0, std::abs(known->getVal()))) {
+                  RooJSONFactoryWSTool::error("the observed value of '" + std::string(value->GetName()) +
+                                              "' differs between the data sets of the array distributions that " +
+                                              "share it in the likelihood of the analysis '" + analysisName + "'");
+               }
+               if (!known) {
+                  combined->addClone(*value);
+               }
+            }
+            continue;
+         }
+         row.assign(values);
+         for (RooCategory const *column : columns) {
+            auto &cat = static_cast<RooCategory &>(row[column->GetName()]);
+            if (column->GetName() == termColumn) {
+               cat.setLabel(terms[i]->distribution.name.c_str());
+            } else if (!values.find(column->GetName())) {
+               cat.setLabel("");
+            }
+         }
+         merged->add(row, weight);
+      }
+   }
+   for (auto const &[c, values] : mergedEntries) {
+      row.assign(*values);
+      std::vector<std::string> const key = keyOf(channels[c]);
+      for (std::size_t k = 0; k < columns.size(); ++k) {
+         static_cast<RooCategory &>(row[columns[k]->GetName()]).setLabel(key[k].c_str());
+      }
+      merged->add(row, 1.0);
+   }
+
+   // The observables refer to the variables of the data sets of the terms, which are replaced by the merged one.
+   RooArgSet mergedObservables;
+   for (RooAbsArg *obs : observables) {
+      RooAbsArg *inMerged = merged->get()->find(obs->GetName());
+      mergedObservables.add(inMerged ? *inMerged : *obs, /*silent=*/true);
+   }
+   observables.removeAll();
+   observables.add(mergedObservables);
+
+   // The data sets of the terms are replaced, unless something else uses them.
+   std::size_t analysesOfLikelihood = 0;
+   for (HS3::Analysis const &other : doc.analyses) {
+      analysesOfLikelihood += other.likelihood.name == analysis.likelihood.name;
+   }
+   for (auto *data : termData) {
+      std::size_t uses = 0;
+      for (HS3::Likelihood const &likelihood : doc.likelihoods) {
+         for (HS3::LikelihoodTerm const &term : likelihood.terms) {
+            auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
+            uses += dataRef && dataRef->name == (*data)->GetName();
+         }
+      }
+      if (uses == 1 && analysesOfLikelihood == 1) {
+         data->reset();
+      }
+   }
+   datasets.push_back(std::move(merged));
+   return result;
+}
+
+// Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
 void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWorkspace &workspace,
                     std::vector<std::unique_ptr<RooAbsData>> &datasets, std::set<std::string> const &bookkeepingColumns,
-                    std::set<std::string> const &variates)
+                    std::set<std::string> const &auxiliaryMeasurements)
 {
-   // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = analysis.name;
    auto foundInfo = doc.rooFit.modelConfigs.find(analysisName);
    HS3::ModelConfigInfo const *mcInfo = foundInfo != doc.rooFit.modelConfigs.end() ? &foundInfo->second : nullptr;
@@ -1457,12 +1618,8 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
    auto *mc = static_cast<RooFit::ModelConfig *>(workspace.obj(mcname));
    mc->SetWS(workspace);
 
-   auto foundLikelihood = std::find_if(doc.likelihoods.begin(), doc.likelihoods.end(),
-                                       [&](HS3::Likelihood const &l) { return l.name == analysis.likelihood.name; });
-   if (foundLikelihood == doc.likelihoods.end()) {
-      throw std::runtime_error("likelihood node not found!");
-   }
-   HS3::Likelihood const &likelihood = *foundLikelihood;
+   // The validation has checked that the likelihood exists.
+   HS3::Likelihood const &likelihood = *HS3::findByName(doc.likelihoods, analysis.likelihood.name);
 
    auto checkPdf = [&](RooAbsArg const *arg, std::string const &name, std::string const &what) {
       requirePdf(arg, "the " + what + " '" + name + "' of analysis '" + analysisName + "'");
@@ -1515,16 +1672,18 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
                                [&](auto const &term) { return term.distribution.name == modelPdfName; })) {
       modelTree.reset(modelPdf->getComponents());
    }
+   // So is a component of a combined distribution that is read as a constraint term (`auxiliaryMeasurements`, see
+   // readAuxiliaryChannelsAsConstraints()), whatever the document says about the ModelConfig.
    auto isConstraintTermOfModel = [&](RooAbsPdf const &listed, HS3::LikelihoodTerm const &term) {
       auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
-      if (!modelTree || !dataRef || modelTree->find(listed.GetName())) {
+      const bool auxiliary = auxiliaryMeasurements.count(listed.GetName()) > 0;
+      if (!dataRef || (!auxiliary && (!modelTree || modelTree->find(listed.GetName())))) {
          return false;
       }
-      return std::any_of(datasets.begin(), datasets.end(),
-                         [&](auto const &d) { return d && d->GetName() == dataRef->name && d->numEntries() == 1; });
+      auto const *data = findDataset(datasets, dataRef->name);
+      return data && (*data)->numEntries() == 1;
    };
 
-   std::vector<std::string> nllDistNames;
    std::vector<HS3::LikelihoodTerm const *> nllTerms;
    RooArgSet constraintObservables;
    RooArgSet constraintsWithData;
@@ -1534,38 +1693,33 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (listed && !isConstraintTermOfOthers(*listed, i) && isConstraintTermOfModel(*listed, term)) {
          constraintsWithData.add(*listed);
       } else if (!listed || !isConstraintTermOfOthers(*listed, i)) {
-         nllDistNames.push_back(term.distribution.name);
          nllTerms.push_back(&term);
          continue;
       }
       auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
-      if (!dataRef) {
+      auto *data = dataRef ? findDataset(datasets, dataRef->name) : nullptr;
+      if (!data) {
          continue;
       }
-      for (auto &d : datasets) {
-         if (!d || d->GetName() != dataRef->name) {
+      if ((*data)->numEntries() != 1) {
+         throw std::runtime_error("the data set '" + dataRef->name + "' paired with the constraint term '" +
+                                  term.distribution.name + "' must have exactly one entry");
+      }
+      for (RooAbsArg const *obs : *(*data)->get(0)) {
+         auto *var = workspace.var(obs->GetName());
+         auto const *value = dynamic_cast<RooAbsReal const *>(obs);
+         if (!var || !value) {
+            RooJSONFactoryWSTool::warning("RooFitHS3: cannot set the observed value of '" +
+                                          std::string(obs->GetName()) + "' from the data set '" + dataRef->name +
+                                          "': it is not a variable of the workspace");
             continue;
          }
-         if (d->numEntries() != 1) {
-            throw std::runtime_error("the data set '" + dataRef->name + "' paired with the constraint term '" +
-                                     term.distribution.name + "' must have exactly one entry");
-         }
-         for (RooAbsArg const *obs : *d->get(0)) {
-            auto *var = workspace.var(obs->GetName());
-            auto const *value = dynamic_cast<RooAbsReal const *>(obs);
-            if (!var || !value) {
-               RooJSONFactoryWSTool::warning("RooFitHS3: cannot set the observed value of '" +
-                                             std::string(obs->GetName()) + "' from the data set '" + dataRef->name +
-                                             "': it is not a variable of the workspace");
-               continue;
-            }
-            var->setVal(value->getVal());
-            var->setConstant(true);
-            constraintObservables.add(*var);
-         }
-         // The values live in the variables now; the data set is not imported.
-         d.reset();
+         var->setVal(value->getVal());
+         var->setConstant(true);
+         constraintObservables.add(*var);
       }
+      // The values live in the variables now; the data set is not imported.
+      data->reset();
    }
    // The constraint terms of HistFactory distributions are listed as auxiliary distributions, but they are part of the
    // distributions in RooFit.
@@ -1584,8 +1738,8 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       checkPdf(extConstraint, aux.name, "auxiliary distribution");
       // Only if the constraint really ended up in a distribution of the likelihood.
       if (channelConstraints.count(aux.name) &&
-          std::any_of(nllDistNames.begin(), nllDistNames.end(), [&](std::string const &distName) {
-             RooAbsArg const *dist = workspace.arg(distName);
+          std::any_of(nllTerms.begin(), nllTerms.end(), [&](HS3::LikelihoodTerm const *term) {
+             RooAbsArg const *dist = workspace.arg(term->distribution.name);
              return dist && dist->dependsOn(*extConstraint);
           })) {
          continue;
@@ -1596,22 +1750,14 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       extConstraints.add(*extConstraint);
    }
    RooArgSet observables;
-   for (HS3::LikelihoodTerm const *termPtr : nllTerms) {
-      HS3::LikelihoodTerm const &term = *termPtr;
-      auto const *dataRef = std::get_if<HS3::DataRef>(&term.data);
-      if (!dataRef) {
-         continue;
-      }
-      bool found = false;
-      for (const auto &d : datasets) {
-         // Components of combined data sets have been moved out of the list.
-         if (d && d->GetName() == dataRef->name) {
-            found = true;
-            observables.add(*d->get(), true);
+   for (HS3::LikelihoodTerm const *term : nllTerms) {
+      if (auto const *dataRef = std::get_if<HS3::DataRef>(&term->data)) {
+         auto const *data = findDataset(datasets, dataRef->name);
+         if (!data) {
+            throw std::runtime_error("dataset '" + dataRef->name + "' cannot be found!");
          }
+         observables.add(*(*data)->get(), true);
       }
-      if (!found)
-         throw std::runtime_error("dataset '" + dataRef->name + "' cannot be found!");
    }
    // Bookkeeping columns of the data sets are no observables of the model.
    for (std::string const &column : bookkeepingColumns) {
@@ -1620,7 +1766,7 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       }
    }
    if (observables.empty()) {
-      observablesWithoutData(doc, analysis, mcInfo, variates, workspace, observables);
+      observablesWithoutData(doc, analysis, likelihood, mcInfo, workspace, observables);
    }
 
    // A combined distribution paired with a combined data set must have a sub-data set for every component.
@@ -1630,42 +1776,32 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
       if (!dataRef || !simPdf) {
          continue;
       }
-      for (HS3::Data const &data : doc.data) {
-         auto const *combined = std::get_if<HS3::CombinedData>(&data.body);
-         if (combined && data.name == dataRef->name) {
-            checkCombinedPairing(*simPdf, data.name, *combined);
-         }
+      if (auto const *combined = HS3::find<HS3::CombinedData>(doc.data, dataRef->name)) {
+         checkCombinedPairing(*simPdf, dataRef->name, *combined);
       }
    }
 
-   std::string const pdfName = mcInfo && mcInfo->pdfName ? *mcInfo->pdfName : "simPdf";
-
-   RooAbsPdf *pdf = workspace.pdf(pdfName);
-
-   if (!pdf) {
-      // if there is no simultaneous pdf, we can check whether there is only one pdf in the list
-      if (nllDistNames.size() == 1) {
-         // if so, we can use that one to populate the ModelConfig
-         pdf = workspace.pdf(nllDistNames[0]);
-      } else {
-         // otherwise, we have no choice but to build a simPdf by hand
-         std::string simPdfName = analysisName + "_simPdf";
-         std::string indexCatName = analysisName + "_categoryIndex";
-         RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
-         std::map<std::string, RooAbsPdf *> pdfMap;
-         for (std::size_t i = 0; i < nllDistNames.size(); ++i) {
-            indexCat.defineType(nllDistNames[i], i);
-            pdfMap[nllDistNames[i]] = workspace.pdf(nllDistNames[i]);
-         }
-         RooSimultaneous simPdf{simPdfName.c_str(), simPdfName.c_str(), pdfMap, indexCat};
-         workspace.import(simPdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-         pdf = workspace.pdf(simPdfName);
+   // The pdf of the ModelConfig is the one named in the RooFit metadata, e.g. in files of ROOT before HS3 0.3 the
+   // RooSimultaneous of the channels that the likelihood lists. Otherwise, it is the only term of the likelihood, or
+   // the union of its terms. Without terms, it is "simPdf".
+   RooAbsPdf *pdf = mcInfo && mcInfo->pdfName ? workspace.pdf(*mcInfo->pdfName) : nullptr;
+   if (!pdf && !nllTerms.empty()) {
+      pdf = flatModelOfLikelihood(doc, analysis, workspace, nllTerms, datasets, observables);
+      if (!pdf) {
+         pdf = workspace.pdf(nllTerms.front()->distribution.name);
       }
+   } else if (!pdf) {
+      pdf = workspace.pdf("simPdf");
+   }
+   if (!pdf) {
+      RooJSONFactoryWSTool::error("the likelihood '" + likelihood.name + "' of analysis '" + analysisName +
+                                  "' has no distribution");
    }
 
    mc->SetPdf(*pdf);
 
    extConstraints.add(constraintsWithData, /*silent=*/true);
+   attachConstraintsToChannels(*pdf, extConstraints);
    if (!extConstraints.empty())
       mc->SetExternalConstraints(extConstraints);
 
@@ -1713,14 +1849,12 @@ void importAnalysis(HS3Document const &doc, HS3::Analysis const &analysis, RooWo
 
    RooArgSet domainPars;
    for (auto const &domainRef : analysis.domains) {
-      auto thisDomain = std::find_if(doc.domains.begin(), doc.domains.end(),
-                                     [&](HS3::Domain const &d) { return d.name == domainRef.name; });
-      if (thisDomain == doc.domains.end())
-         continue;
-      for (auto const &axis : thisDomain->axes) {
-         auto *wsvar = workspace.var(std::visit([](auto const &a) -> std::string const & { return a.name; }, axis));
-         if (wsvar)
-            domainPars.add(*wsvar);
+      if (HS3::Domain const *domain = HS3::findByName(doc.domains, domainRef.name)) {
+         for (auto const &axis : domain->axes) {
+            if (RooRealVar *wsvar = workspace.var(HS3::nameOf(axis))) {
+               domainPars.add(*wsvar);
+            }
+         }
       }
    }
 
@@ -1834,9 +1968,8 @@ void combineDatasets(HS3Document const &doc, std::vector<std::unique_ptr<RooAbsD
          auto componentName = combinedName + "_" + info.labels[iChannel];
          // We move the found channel data out of the "datasets" vector, such that
          // the data components don't get imported anymore.
-         auto found =
-            std::find_if(datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == componentName; });
-         if (found == datasets.end()) {
+         auto *found = findDataset(datasets, componentName);
+         if (!found) {
             RooJSONFactoryWSTool::error("unable to obtain component matching component name '" + componentName + "'");
          }
          allVars.add(*(*found)->get(), true);
@@ -1850,49 +1983,88 @@ void combineDatasets(HS3Document const &doc, std::vector<std::unique_ptr<RooAbsD
    }
 }
 
+// The categories of the workspace that are the columns of a combined data set or distribution: they are declared by
+// categorical axes of the domains, or existed before. The validation has checked the columns and the keys against the
+// domains, but not against the categories that existed before.
+template <class Ref_t>
+std::vector<RooCategory *>
+columnCategories(RooWorkspace const &workspace, HS3::Combined<Ref_t> const &combined, std::string const &context)
+{
+   std::vector<RooCategory *> columns;
+   for (std::string const &column : combined.columns) {
+      RooCategory *cat = workspace.cat(column);
+      if (!cat) {
+         RooJSONFactoryWSTool::error("the column '" + column + "' of " + context +
+                                     " is not declared by a categorical axis of a domain");
+      }
+      columns.push_back(cat);
+   }
+   for (auto const &component : combined.components) {
+      for (std::size_t i = 0; i < columns.size(); ++i) {
+         if (!columns[i]->hasLabel(component.key[i])) {
+            RooJSONFactoryWSTool::error("the label '" + component.key[i] + "' in position " + std::to_string(i) +
+                                        " of a key of " + context + " is not one of the categories of '" +
+                                        columns[i]->GetName() + "'");
+         }
+      }
+   }
+   return columns;
+}
+
 // Build the combined data sets of the document: a RooDataSet with one category column per entry of "columns" and the
 // variables of all components, filled row by row from the components, which are then no longer imported on their own.
-// The columns are categories declared by categorical axes of the domains. A key without a sub-data set is a state
-// without entries: RooFit has no notion of an absent component. The validation has checked the columns, the keys and
-// that the components are data sets of the document.
+// A key without a sub-data set is a state without entries: RooFit has no notion of an absent component. The validation
+// has checked that the components are data sets of the document.
+//
+// A component may itself be a combined data set (HS3 #161), which is then built first. Its columns become columns of
+// the outer data set, like the RooSimultaneous of a combined distribution with a combined component is flattened: the
+// rows of the other components have the label "" in them.
 void assembleCombinedData(HS3Document const &doc, RooWorkspace const &workspace,
                           std::vector<std::unique_ptr<RooAbsData>> &datasets)
 {
+   // The combined data sets in an order in which the components come first.
+   std::vector<HS3::Data const *> pending;
    for (HS3::Data const &input : doc.data) {
-      auto const *info = std::get_if<HS3::CombinedData>(&input.body);
-      if (!info) {
-         continue;
+      if (std::holds_alternative<HS3::CombinedData>(input.body)) {
+         pending.push_back(&input);
       }
+   }
+   std::vector<HS3::Data const *> ordered;
+   std::set<std::string> done;
+   while (!pending.empty()) {
+      auto ready = std::find_if(pending.begin(), pending.end(), [&](HS3::Data const *data) {
+         for (auto const &c : std::get<HS3::CombinedData>(data->body).components) {
+            if (HS3::find<HS3::CombinedData>(doc.data, c.ref.name) && !done.count(c.ref.name)) {
+               return false;
+            }
+         }
+         return true;
+      });
+      if (ready == pending.end()) {
+         RooJSONFactoryWSTool::error("the combined data set '" + pending.front()->name +
+                                     "' is a component of itself, directly or through other combined data sets");
+      }
+      ordered.push_back(*ready);
+      done.insert((*ready)->name);
+      pending.erase(ready);
+   }
+   for (HS3::Data const *inputPtr : ordered) {
+      HS3::Data const &input = *inputPtr;
+      auto const *info = std::get_if<HS3::CombinedData>(&input.body);
       std::string const &name = input.name;
       RooJSONFactoryWSTool::testValidName(name, true);
       std::string const context = "the combined data set '" + name + "'";
-      std::vector<RooCategory *> columns;
-      for (std::string const &column : info->columns) {
-         RooCategory *cat = workspace.cat(column);
-         if (!cat) {
-            RooJSONFactoryWSTool::error("the column '" + column + "' of " + context +
-                                        " is not declared by a categorical axis of a domain");
-         }
-         columns.push_back(cat);
-      }
+      std::vector<RooCategory *> columns = columnCategories(workspace, *info, context);
 
       struct Component {
          std::vector<std::string> const *key;
          std::unique_ptr<RooAbsData> data;
       };
       std::vector<Component> components;
-      for (HS3::CombinedDataComponent const &c : info->components) {
-         for (std::size_t i = 0; i < columns.size(); ++i) {
-            if (!columns[i]->hasLabel(c.key[i])) {
-               RooJSONFactoryWSTool::error("the label '" + c.key[i] + "' in position " + std::to_string(i) +
-                                           " of a key of " + context + " is not one of the categories of '" +
-                                           columns[i]->GetName() + "'");
-            }
-         }
-         auto found =
-            std::find_if(datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == c.data.name; });
-         if (found == datasets.end()) {
-            RooJSONFactoryWSTool::error("the component '" + c.data.name + "' of " + context +
+      for (auto const &c : info->components) {
+         auto *found = findDataset(datasets, c.ref.name);
+         if (!found) {
+            RooJSONFactoryWSTool::error("the component '" + c.ref.name + "' of " + context +
                                         " is not a data set of the document, or it is already a component of " +
                                         "another combined data set");
          }
@@ -1904,6 +2076,31 @@ void assembleCombinedData(HS3Document const &doc, RooWorkspace const &workspace,
       RooArgSet columnClones; // owns the clones; `vars` must not own anything, it also lists the components' variables
       for (RooCategory const *column : columns) {
          columnClones.addClone(*column);
+      }
+      // The columns of components that are combined data sets themselves, with the label "" for the other rows.
+      for (auto const &c : components) {
+         for (RooAbsArg const *arg : *c.data->get()) {
+            if (dynamic_cast<RooCategory const *>(arg) && !columnClones.find(*arg)) {
+               // The category of the domain has the labels of all components.
+               RooCategory const *declared = workspace.cat(arg->GetName());
+               columnClones.addClone(declared ? static_cast<RooAbsArg const &>(*declared) : *arg);
+            }
+         }
+      }
+      std::vector<RooCategory *> innerColumns;
+      for (RooAbsArg *arg : columnClones) {
+         auto *cat = static_cast<RooCategory *>(arg);
+         if (std::find_if(columns.begin(), columns.end(), [&](RooCategory const *c) {
+                return std::strcmp(c->GetName(), cat->GetName()) == 0;
+             }) != columns.end()) {
+            continue;
+         }
+         innerColumns.push_back(cat);
+         bool everywhere = std::all_of(components.begin(), components.end(),
+                                       [&](auto const &c) { return c.data->get()->find(*cat) != nullptr; });
+         if (!everywhere && !cat->hasLabel("")) {
+            cat->defineType("");
+         }
       }
       RooArgSet vars{columnClones};
       bool weighted = false;
@@ -1933,6 +2130,11 @@ void assembleCombinedData(HS3Document const &doc, RooWorkspace const &workspace,
          }
          for (int i = 0; i < c.data->numEntries(); ++i) {
             vars.assign(*c.data->get(i));
+            for (RooCategory *inner : innerColumns) {
+               if (!c.data->get()->find(*inner)) {
+                  static_cast<RooCategory &>(vars[inner->GetName()]).setLabel("");
+               }
+            }
             if (weighted) {
                combined->add(vars, c.data->weight(), storeErrors ? c.data->weightError(RooAbsData::SumW2) : 0.0);
             } else {
@@ -1950,21 +2152,34 @@ void sortByName(T &coll)
    std::sort(coll.begin(), coll.end(), [](auto &l, auto &r) { return strcmp(l->GetName(), r->GetName()) < 0; });
 }
 
-/// Check whether an object is a top-level object of the workspace, i.e. not a
-/// component of some other workspace object. Only clients that are part of the
-/// workspace count: RooFit also registers evaluation artifacts as clients,
-/// like the normalization integral that RooAbsPdf caches after
-/// getVal(normSet), or the integral returned by createIntegral(). These live
-/// outside the workspace and are not evidence that the object is a sub-node of
-/// a bigger model (see https://github.com/root-project/root/issues/23221).
+// Whether no object of the workspace uses `arg`. Only clients that are part of the workspace count: RooFit also
+// registers evaluation artifacts as clients, like the normalization integral that RooAbsPdf caches after
+// getVal(normSet), or the integral returned by createIntegral(). These live outside the workspace and are not evidence
+// that the object is a sub-node of a bigger model (see https://github.com/root-project/root/issues/23221). Helpers that
+// are not written don't count as users either.
 bool isTopLevel(RooAbsArg const &arg, RooWorkspace const &ws)
 {
    for (RooAbsArg const *client : arg.clients()) {
-      if (ws.components().containsInstance(*client)) {
+      if (ws.components().containsInstance(*client) && !isSkippedHelper(*client, ws)) {
          return false;
       }
    }
    return true;
+}
+
+// The top-level objects among `args` that are written, sorted by name.
+template <class Arg_t>
+std::vector<Arg_t *> topLevelObjects(RooArgSet const &args, RooWorkspace const &ws)
+{
+   std::vector<Arg_t *> out;
+   for (RooAbsArg *arg : args) {
+      auto *object = dynamic_cast<Arg_t *>(arg);
+      if (object && isTopLevel(*arg, ws) && !isSkippedHelper(*arg, ws)) {
+         out.push_back(object);
+      }
+   }
+   sortByName(out);
+   return out;
 }
 
 } // namespace
@@ -1986,10 +2201,14 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
       RooJSONFactoryWSTool::error("inconsistent number of errors and contents in '" + name + "': errors=" +
                                   std::to_string(errors->size()) + ", contents=" + std::to_string(contents.size()));
    }
-   auto bins = generateBinIndices(vars);
-   if (contents.size() != bins.size()) {
+   // A continuous variable has the bins of its binning, and a category one bin per state.
+   std::size_t nBins = 1;
+   for (RooAbsArg const *var : vars) {
+      nBins *= std::max(0, dynamic_cast<RooAbsLValue const &>(*var).numBins());
+   }
+   if (contents.size() != nBins) {
       RooJSONFactoryWSTool::error("inconsistent bin numbers: contents=" + std::to_string(contents.size()) +
-                                  ", bins=" + std::to_string(bins.size()));
+                                  ", bins=" + std::to_string(nBins));
    }
    auto dh = std::make_unique<RooDataHist>(name, name, vars);
    // RooDataHist only starts to store squared weights when it sees a positive error, and then initializes them from
@@ -1997,15 +2216,136 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
    if (errors && !errors->empty()) {
       dh->set(0, 0., 1.);
    }
-   for (std::size_t ibin = 0; ibin < bins.size(); ++ibin) {
+   for (std::size_t ibin = 0; ibin < nBins; ++ibin) {
       dh->set(ibin, contents[ibin], errors ? (*errors)[ibin] : -1);
    }
    return dh;
 }
 
+// A combined distribution is a RooSimultaneous. Its index category is the single column, or a RooSuperCategory over the
+// columns in the order of the document.
+void RooFit::HS3::buildCombinedDist(RooJSONFactoryWSTool &tool, std::string const &name, CombinedDist const &dist,
+                                    std::vector<std::string> const &otherLikelihoodTerms)
+{
+   std::vector<RooCategory *> columns = columnCategories(*tool.workspace(), dist, "the combined_dist '" + name + "'");
+   std::map<std::string, RooAbsPdf *> pdfMap;
+   for (auto const &component : dist.components) {
+      pdfMap[selectionLabel(component.key)] = tool.request<RooAbsPdf>(component.ref.name, name);
+   }
+
+   // In RooFit, the constraint terms of a channel are factors of it, which RooFit takes out of the product when it
+   // builds a likelihood. A channel that is a product gets them when the likelihood is read; the other channels are
+   // wrapped in a product "<channel>_with_constraints" here, since the components of a RooSimultaneous can't be
+   // replaced later. The candidates are the other terms of the likelihoods that have this distribution.
+   std::vector<RooAbsPdf *> terms;
+   for (std::string const &term : otherLikelihoodTerms) {
+      if (auto *pdf = tool.tryRequest<RooAbsPdf>(term)) {
+         terms.push_back(pdf);
+      }
+   }
+   RooArgSet channels;
+   for (auto const &item : pdfMap) {
+      channels.add(*item.second, /*silent=*/true);
+   }
+   for (auto &item : pdfMap) {
+      RooAbsPdf &channel = *item.second;
+      RooArgList factors;
+      for (RooAbsPdf *term : terms) {
+         // A combined distribution as a component is flattened by the import of the likelihood (HS3 #161); its
+         // channels get their constraints there.
+         if (!dynamic_cast<RooProdPdf *>(&channel) && !dynamic_cast<RooSimultaneous *>(&channel) &&
+             isConstraintOfChannel(*term, channel, channels)) {
+            factors.add(*term);
+         }
+      }
+      if (!factors.empty()) {
+         factors.add(channel);
+         item.second = &tool.wsEmplace<RooProdPdf>(std::string(channel.GetName()) + "_with_constraints", factors);
+      }
+   }
+
+   if (columns.size() == 1) {
+      tool.wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, *columns.front()});
+      return;
+   }
+   RooArgSet inputs;
+   for (RooCategory *column : columns) {
+      inputs.add(*column);
+   }
+   std::string const indexName = name + "_index";
+   RooSuperCategory indexCat{indexName.c_str(), indexName.c_str(), inputs};
+   tool.wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, indexCat});
+}
+
+bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws)
+{
+   const bool helper = arg.getAttribute(helperObjectTag);
+   // An object that nothing in the workspace uses: written, unless it is a helper. A helper that stands for an HS3
+   // object of its own, an array distribution, is written as that object.
+   bool hasClients = false;
+   for (RooAbsArg const *client : arg.clients()) {
+      if (!ws.components().containsInstance(*client)) {
+         continue;
+      }
+      const bool skipped = isSkippedHelper(*client, ws);
+      if (!skipped) {
+         return false;
+      }
+      // An array distribution that is not written dissolves into its components, which are then written on their
+      // own: it is no user of them.
+      if (!(client->getAttribute(helperObjectTag) && client->getAttribute(arrayDistTag))) {
+         hasClients = true;
+      }
+   }
+   if (!hasClients && (!helper || (arg.getAttribute(arrayDistTag) && RooJSONFactoryWSTool::config().exportArrayDist))) {
+      return false;
+   }
+   for (TObject const *obj : ws.allGenericObjects()) {
+      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
+      if (!mc) {
+         continue;
+      }
+      if (mc->GetPdf() == &arg || mc->GetPriorPdf() == &arg ||
+          (mc->GetExternalConstraints() && mc->GetExternalConstraints()->containsInstance(arg))) {
+         return false;
+      }
+   }
+   // A helper that only skipped helpers use, or nothing; and, weakly transitive, any other object that only skipped
+   // helpers use.
+   return true;
+}
+
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
+bool RooJSONFactoryWSTool::isConstraintReadAsChannel(RooAbsPdf const &pdf) const
+{
+   if (!_import) {
+      return false;
+   }
+   auto const &componentsWithData = _import->componentsWithData;
+   // Also as a component of an array distribution, which is the product of its components in RooFit.
+   return componentsWithData.count(pdf.GetName()) ||
+          std::any_of(pdf.clients().begin(), pdf.clients().end(), [&](RooAbsArg const *client) {
+             return client->getAttribute(arrayDistTag) && componentsWithData.count(client->GetName());
+          });
+}
+
+std::vector<HS3::DistributionRef> const *RooJSONFactoryWSTool::channelConstraints(std::string const &dist) const
+{
+   if (!_import) {
+      return nullptr;
+   }
+   auto const &all = _import->document.rooFit.channelConstraints;
+   auto found = all.find(dist);
+   return found != all.end() ? &found->second : nullptr;
+}
+
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() = default;
+
+HS3::Version RooJSONFactoryWSTool::hs3Version() const
+{
+   return _import ? _import->document.metadata.version : HS3::Version{};
+}
 
 void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll, size_t nMax)
 {
@@ -2042,32 +2382,12 @@ JSONNode const *RooJSONFactoryWSTool::findNamedChild(JSONNode const &node, std::
    return nullptr;
 }
 
-/**
- * @brief Check if a string is a valid name.
- *
- * A valid name should start with a letter or an underscore, followed by letters, digits, or underscores.
- * Only characters from the ASCII character set are allowed.
- *
- * @param str The string to be checked.
- * @return bool Returns true if the string is a valid name; otherwise, returns false.
- */
+/// Whether a string is a valid name: a letter or an underscore, followed by letters, digits or underscores. Only
+/// characters from the ASCII character set are allowed.
 bool RooJSONFactoryWSTool::isValidName(const std::string &str)
 {
-   // Check if the string is empty or starts with a non-letter/non-underscore character
-   if (str.empty() || !(std::isalpha(str[0]) || str[0] == '_')) {
-      return false;
-   }
-
-   // Check the remaining characters in the string
-   for (char c : str) {
-      // Allow letters, digits, and underscore
-      if (!(std::isalnum(c) || c == '_')) {
-         return false;
-      }
-   }
-
-   // If all characters are valid, the string is a valid name
-   return true;
+   return !str.empty() && (std::isalpha(str[0]) || str[0] == '_') &&
+          std::all_of(str.begin(), str.end(), [](char c) { return std::isalnum(c) || c == '_'; });
 }
 
 bool RooJSONFactoryWSTool::testValidName(const std::string &name, bool forceError)
@@ -2091,48 +2411,37 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
    return n["name"].val();
 }
 
-JSONNode &RooJSONFactoryWSTool::makeVariablesNode(JSONNode &rootNode)
-{
-   return appendNamedChild(rootNode["parameter_points"], "default_values")["parameters"];
-}
-
+// The specializations of requestImpl() look in the workspace first. If the object is not there, they import what the
+// document has under that name, and look again.
 template <>
 RooRealVar *RooJSONFactoryWSTool::requestImpl<RooRealVar>(const std::string &objname)
 {
-   if (RooRealVar *retval = _workspace.var(objname))
-      return retval;
-   if (_import) {
-      auto it = _import->defaultValuesByName.find(objname);
-      if (it != _import->defaultValuesByName.end()) {
-         this->importVariable(*it->second);
-         if (RooRealVar *retval = _workspace.var(objname))
-            return retval;
+   if (_import && !_workspace.var(objname)) {
+      auto found = _import->defaultValuesByName.find(objname);
+      if (found != _import->defaultValuesByName.end()) {
+         importVariable(*found->second);
       }
    }
-   return nullptr;
+   return _workspace.var(objname);
 }
 
 template <>
 RooAbsPdf *RooJSONFactoryWSTool::requestImpl<RooAbsPdf>(const std::string &objname)
 {
-   if (RooAbsPdf *retval = _workspace.pdf(objname))
-      return retval;
-   if (_import) {
-      auto it = _import->distributions.find(objname);
-      if (it != _import->distributions.end()) {
-         this->importDistribution(*it->second);
-         if (RooAbsPdf *retval = _workspace.pdf(objname))
-            return retval;
-      }
-      // HS3 lists some resolution models, which are pdfs in RooFit, as functions.
-      auto function = _import->functions.find(objname);
-      if (function != _import->functions.end()) {
-         this->importFunction(*function->second->body.node, true);
-         if (RooAbsPdf *retval = _workspace.pdf(objname))
-            return retval;
+   if (_import && !_workspace.pdf(objname)) {
+      auto found = _import->distributions.find(objname);
+      if (found != _import->distributions.end()) {
+         importDistribution(*found->second);
       }
    }
-   return nullptr;
+   // HS3 lists some resolution models, which are pdfs in RooFit, as functions.
+   if (_import && !_workspace.pdf(objname)) {
+      auto found = _import->functions.find(objname);
+      if (found != _import->functions.end()) {
+         importFunction(*found->second->body.node, true);
+      }
+   }
+   return _workspace.pdf(objname);
 }
 
 template <>
@@ -2140,28 +2449,23 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
 {
    if (RooAbsReal *retval = _workspace.function(objname))
       return retval;
-   auto toNumOutput = toNumber(objname);
-   if (toNumOutput.valid)
-      return &RooFit::RooConst(toNumOutput.value);
+   if (std::optional<double> number = toNumber(objname))
+      return &RooFit::RooConst(*number);
    if (RooAbsPdf *pdf = requestImpl<RooAbsPdf>(objname))
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
       return var;
-   if (RooAbsReal *retval = _workspace.function(objname))
-      return retval;
-   if (_import) {
-      auto it = _import->functions.find(objname);
-      if (it != _import->functions.end()) {
-         this->importFunction(*it->second->body.node, true);
-         if (RooAbsReal *retval = _workspace.function(objname))
-            return retval;
+   if (_import && !_workspace.function(objname)) {
+      auto found = _import->functions.find(objname);
+      if (found != _import->functions.end()) {
+         importFunction(*found->second->body.node, true);
       }
    }
-   return nullptr;
+   return _workspace.function(objname);
 }
 
 // Export a single variable (RooRealVar or RooConstVar) `v` to the parameter point.
-void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoint &point, bool storeConstant)
+void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoint &point)
 {
    auto *cv = dynamic_cast<const RooConstVar *>(v);
    auto *rrv = dynamic_cast<const RooRealVar *>(v);
@@ -2186,32 +2490,33 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, HS3::ParameterPoin
    HS3::ParameterValue var;
    var.name = v->GetName();
    var.value = rrv->getVal();
-   var.isConst = storeConstant && (rrv->isConstant() || rrv->getMin() >= rrv->getMax());
+   var.isConst = rrv->isConstant() || rrv->getMin() >= rrv->getMax();
    recordDomains(_export->domains, *rrv);
    point.parameters.push_back(std::move(var));
-}
-
-// Export all variables in `allElems` to the parameter point.
-void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, HS3::ParameterPoint &point, bool storeConstant)
-{
-   for (RooAbsArg *arg : allElems) {
-      exportVariable(arg, point, storeConstant);
-   }
 }
 
 std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, const std::string &suffix,
                                                     const std::string &formula)
 {
-   std::string newname = std::string(original->GetName()) + suffix;
+   // A literal constant is spelled as an identifier, which a parameter must not be mistaken for when reading.
+   if (!isLiteralConstVar(*original) && isLiteralIdentifier(original->GetName())) {
+      error("cannot write a function of '" + std::string(original->GetName()) +
+            "': names of the form 'const_<number>' are reserved for functions of literal constants");
+   }
+   std::string newname = transformedBaseName(*original) + suffix;
+   // HS3 0.3 (HS3 PR #154) only allows expressions to refer to parameters, variables and functions.
+   if (dynamic_cast<RooAbsPdf const *>(original)) {
+      error("the parameter '" + std::string(original->GetName()) +
+            "' would have to be written as an expression that refers to a pdf, which HS3 doesn't allow");
+   }
    // Another object that shares the parameter might have exported the helper already.
    auto &functions = _export->doc.functions;
-   if (std::find_if(functions.begin(), functions.end(), [&](auto const &f) { return f.name == newname; }) !=
-       functions.end()) {
+   if (HS3::findByName(functions, newname)) {
       return newname;
    }
    RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_export->root)["functions"], newname);
    trafo_node["type"] << "generic";
-   trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();
+   trafo_node["expression"] << TString::Format(formula.c_str(), transformedArgument(*original).c_str()).Data();
    functions.push_back({newname, {"generic", nullptr}});
    this->setAttribute(newname, "roofit_skip"); // this function should not be imported back in
    return newname;
@@ -2235,24 +2540,15 @@ std::string makeValidNameOrError(std::string const &in)
 }
 
 // The labels of a selection key, made valid names and joined by "_". Used in the names of sub-data sets and of
-// renamed observables.
+// renamed observables. An empty label, for a column that does not apply to a component, stays empty, so that the
+// position of the other labels still tells the keys apart.
 std::string selectionKeyName(std::vector<std::string> const &key)
 {
    std::string out;
-   for (std::string const &label : key) {
-      out += (out.empty() ? "" : "_") + makeValidNameOrError(label);
+   for (std::size_t i = 0; i < key.size(); ++i) {
+      out += (i == 0 ? "" : "_") + (key[i].empty() ? std::string{} : makeValidNameOrError(key[i]));
    }
    return out;
-}
-
-// The names of the category columns of `vars`.
-std::vector<std::string> selectionColumnNames(RooAbsCollection const &vars)
-{
-   std::vector<std::string> names;
-   for (RooCategory const *column : selectionColumns(vars)) {
-      names.push_back(column->GetName());
-   }
-   return names;
 }
 
 // The RooSimultaneous of the workspace (the first by name) whose columns are `columns`, or nullptr.
@@ -2266,11 +2562,7 @@ RooSimultaneous const *findMatchingSimultaneous(RooWorkspace const &workspace, s
    }
    sortByName(candidates);
    for (RooSimultaneous const *candidate : candidates) {
-      std::vector<std::string> candidateColumns;
-      for (RooCategory const *column : selectionColumns(candidate->indexCat())) {
-         candidateColumns.push_back(column->GetName());
-      }
-      if (candidateColumns == columns) {
+      if (namesOf(selectionColumns(candidate->indexCat())) == columns) {
          return candidate;
       }
    }
@@ -2281,7 +2573,8 @@ RooSimultaneous const *findMatchingSimultaneous(RooWorkspace const &workspace, s
 
 namespace {
 
-// Record an object that was written by an exporter in the document.
+// Record an object that was written by an exporter in the document. Its node moves when the array that it is in
+// grows, so the distributions only get their nodes at the end of the export.
 void recordGenericObject(HS3Document &doc, bool isPdf, std::string const &name, JSONNode const &elem)
 {
    std::string type = elem.has_child("type") ? elem["type"].val() : "";
@@ -2301,7 +2594,6 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
    std::string name = func.GetName();
    std::set<std::string> &exportedObjectNames = _export->exportedObjectNames;
 
-   // if this element was already exported, skip
    if (exportedObjectNames.find(name) != exportedObjectNames.end()) {
       // A component of an array distribution is not written under its own name, so an object that refers to it by
       // that name would have a dangling reference.
@@ -2334,7 +2626,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
       // categorical axes of the domain that its "columns" name.
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
-      exportVariable(&func, _export->doc.parameterPoints.front(), true);
+      exportVariable(&func, _export->doc.parameterPoints.front());
       return;
    } else if (config().exportArrayDist && func.getAttribute(arrayDistTag)) {
       // An array distribution (HS3 `array_dist`): its components are registered here, and the array is written at
@@ -2346,10 +2638,21 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func)
       }
       for (RooAbsPdf *pdf : static_range_cast<RooAbsPdf *>(prod->pdfList())) {
          const std::string writtenIn = exportAsArrayComponent(*pdf, name);
-         if (writtenIn != name) {
-            error("cannot write '" + name + "' as an array distribution: its component '" + pdf->GetName() +
-                  "' is already written as '" + writtenIn + "'");
+         if (writtenIn == name) {
+            continue;
          }
+         // A component of another array distribution: HS3 composes array distributions by union, so a component
+         // written in several of them is one factor. It is written in this one as well.
+         if (writtenIn != pdf->GetName() && _export->arrayComponents.count(writtenIn)) {
+            auto &components = _export->arrayComponents[name];
+            if (components.empty()) {
+               _export->exportedObjectNames.insert(name);
+            }
+            components.push_back(pdf);
+            continue;
+         }
+         error("cannot write '" + name + "' as an array distribution: its component '" + pdf->GetName() +
+               "' is already written as '" + writtenIn + "'");
       }
       return;
    }
@@ -2457,7 +2760,7 @@ void RooJSONFactoryWSTool::exportArrayDists()
       // Exporting the servers may add to the registry, so the components are copied.
       const std::vector<RooAbsPdf const *> components = next->second;
       JSONNode &elem = appendNamedChild((*_export->root)["distributions"], arrayName);
-      writeArrayDist(elem, arrayName, components, _export->constraintObservables);
+      writeArrayDist(*this, elem, arrayName, components);
       recordGenericObject(_export->doc, true, arrayName, elem);
       for (RooAbsPdf const *pdf : components) {
          exportObjects(pdf->servers());
@@ -2483,20 +2786,24 @@ void RooJSONFactoryWSTool::recordConstraintTerms(std::string const &pdfName, std
 {
    auto &out = _export->constraintTermsOfPdf[pdfName];
    for (auto const &term : terms) {
-      if (std::find(out.begin(), out.end(), term) == out.end()) {
-         out.push_back(term);
-      }
+      addUnique(out, term);
    }
 }
 
-// Write the data set "<term>_data" with the observed values of the observables of the constraint term `term` (an
+// Write the data set `dataName` with the observed values of the observables of the constraint term `term` (an
 // array distribution written in this export, or a single constraint pdf) and return true, or return false if the
 // observables of the term are not all global observables of the model.
-bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgSet const *globalObservables)
+bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgSet const *globalObservables,
+                                                std::string const &dataName)
 {
    std::vector<RooAbsPdf const *> components;
    if (auto found = _export->arrayComponents.find(term); found != _export->arrayComponents.end()) {
       components = found->second;
+   } else if (auto const *product = dynamic_cast<RooProdPdf const *>(_workspace.pdf(term))) {
+      // A product of constraint terms: its factors.
+      for (RooAbsArg const *factor : product->pdfList()) {
+         components.push_back(static_cast<RooAbsPdf const *>(factor));
+      }
    } else if (RooAbsPdf *pdf = _workspace.pdf(term)) {
       components.push_back(pdf);
    }
@@ -2511,7 +2818,6 @@ bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgS
    if (observables.empty()) {
       return false;
    }
-   const std::string dataName = term + "_data";
    if (!_export->writtenConstraintData.insert(dataName).second) {
       return true;
    }
@@ -2525,21 +2831,22 @@ bool RooJSONFactoryWSTool::exportConstraintData(std::string const &term, RooArgS
       if (!var) {
          error("the observable '" + name + "' of the constraint term '" + term + "' is not in the workspace");
       }
+      // A range without a bound leaves the bound out, which means that the axis is unbounded there.
       HS3::ContinuousAxis axis;
       axis.name = name;
-      // A range without a bound gets the largest representable value, so that other engines see a finite axis.
-      axis.min = -std::numeric_limits<double>::max();
-      axis.max = std::numeric_limits<double>::max();
       if (auto const *rrv = dynamic_cast<RooRealVar const *>(var)) {
-         if (std::isfinite(rrv->getMin())) {
-            axis.min = rrv->getMin();
-         }
-         if (std::isfinite(rrv->getMax())) {
-            axis.max = rrv->getMax();
-         }
+         axis = toContinuousAxis(*rrv);
       }
       data.axes.emplace_back(std::move(axis));
       data.entries.push_back(var->getVal());
+   }
+   // The observed value of a single observable is point data.
+   if (data.axes.size() == 1) {
+      HS3::PointData point;
+      point.value = data.entries.front();
+      point.axes.push_back(std::get<HS3::ContinuousAxis>(data.axes.front()));
+      _export->doc.data.push_back({dataName, std::move(point)});
+      return true;
    }
    _export->doc.data.push_back({dataName, std::move(data)});
    return true;
@@ -2558,14 +2865,13 @@ void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf)
    RooAbsCategory const &indexCat = simPdf.indexCat();
    std::vector<RooCategory const *> columns = selectionColumns(indexCat);
 
-   JSONNode &elem = appendNamedChild((*_export->root)["distributions"], simPdf.GetName());
-   elem["type"] << "combined_dist";
-   auto &columnsNode = elem["columns"].set_seq();
+   // The distribution takes its place among the distributions here, and is written at the end of the export.
+   appendNamedChild((*_export->root)["distributions"], simPdf.GetName());
+   HS3::CombinedDist combined;
    for (RooCategory const *column : columns) {
-      columnsNode.append_child() << column->GetName();
+      combined.columns.push_back(column->GetName());
       recordCategory(*column);
    }
-   auto &components = elem["components"].set_seq();
    // Components with renamed observables replace the original ones (Config::renameCombinedObservables).
    auto renamed = _renamedComponents.find(simPdf.GetName());
    std::set<RooAbsArg const *> replaced;
@@ -2587,11 +2893,9 @@ void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf)
             replacements.push_back(pdf);
          }
       }
-      JSONNode &component = components.append_child().set_map();
-      component["key"].fill_seq(key);
-      component["dist"] << pdf->GetName();
+      combined.components.push_back({key, {pdf->GetName()}});
    }
-   recordGenericObject(_export->doc, true, simPdf.GetName(), elem);
+   _export->doc.distributions.push_back({simPdf.GetName(), std::move(combined)});
 
    std::vector<RooAbsArg const *> servers;
    for (RooAbsArg const *server : simPdf.servers()) {
@@ -2608,11 +2912,7 @@ void RooJSONFactoryWSTool::exportSimultaneous(RooSimultaneous const &simPdf)
 // document is read back.
 void RooJSONFactoryWSTool::recordCategory(RooAbsCategory const &cat)
 {
-   HS3::CategoricalAxis axis;
-   axis.name = cat.GetName();
-   for (unsigned int i = 0; i < cat.size(); ++i) {
-      axis.categories.push_back(cat.getOrdinal(i).first);
-   }
+   HS3::CategoricalAxis axis = toCategoricalAxis(cat);
    auto found = _export->categories.find(axis.name);
    if (found != _export->categories.end() && found->second.categories != axis.categories) {
       RooJSONFactoryWSTool::error("the category '" + axis.name +
@@ -2621,16 +2921,9 @@ void RooJSONFactoryWSTool::recordCategory(RooAbsCategory const &cat)
    _export->categories[axis.name] = std::move(axis);
 }
 
-/**
- * @brief Import a function from the JSONNode into the workspace.
- *
- * This function imports a function from the given JSONNode into the workspace.
- * The function's information is read from the JSONNode and added to the workspace.
- *
- * @param p The JSONNode representing the function to be imported.
- * @param importAllDependants A boolean flag indicating whether to import all dependants (servers) of the function.
- * @return void
- */
+/// Import the function or distribution `p` into the workspace, with the importers that are registered for its type.
+/// If `importAllDependants` is false, `p` is a fragment of a document, whose own "functions" and "distributions" are
+/// imported first.
 void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDependants)
 {
    // To report the components that no importer understands.
@@ -2644,15 +2937,12 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
 
    auto const &importers = RooFit::JSONIO::importers();
 
-   // some preparations: what type of function are we dealing with here?
    RooJSONFactoryWSTool::testValidName(name, true);
 
-   // if the RooAbsArg already exists, we don't need to do anything
    if (_workspace.arg(name)) {
       return;
    }
    ImportGuard importGuard{_importStack, name};
-   // if the key we found is not a map, it's an error
    if (!p.is_map()) {
       RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() function node " + name + " is not a map!");
    }
@@ -2670,20 +2960,11 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
       this->importDependants(p);
    }
 
-   // check for specific implementations
    auto it = importers.find(functype);
    bool ok = false;
    if (it != importers.end()) {
       for (auto &imp : it->second) {
-         // The built-in importer doesn't see the constraint terms that the document adds to the channel.
-         if (_import && HS3::isBuiltinHistFactoryImporter(*imp)) {
-            auto const &channelConstraints = _import->document.rooFit.channelConstraints;
-            auto found = channelConstraints.find(name);
-            HS3::importHistFactoryNode(*this, p, found != channelConstraints.end() ? &found->second : nullptr);
-            ok = true;
-         } else {
-            ok = imp->importArg(this, p);
-         }
+         ok = imp->importArg(this, p);
          if (ok)
             break;
       }
@@ -2719,105 +3000,31 @@ void RooJSONFactoryWSTool::importDistribution(HS3::Distribution const &distribut
       return;
    }
    ImportGuard importGuard{_importStack, name};
-   auto const &channelConstraints = _import->document.rooFit.channelConstraints;
-   auto found = channelConstraints.find(name);
-   HS3::buildHistFactoryDist(*this, name, std::get<HS3::HistFactoryDist>(distribution.body),
-                             found != channelConstraints.end() ? &found->second : nullptr);
+   if (auto const *combined = std::get_if<HS3::CombinedDist>(&distribution.body)) {
+      HS3::buildCombinedDist(*this, name, *combined, otherLikelihoodTerms(_import->document, name));
+      return;
+   }
+   HS3::buildHistFactoryDist(*this, name, std::get<HS3::HistFactoryDist>(distribution.body));
 }
 
-/**
- * @brief Import a function from a JSON string into the workspace.
- *
- * This function imports a function from the provided JSON string into the workspace.
- * The function's information is read from the JSON string and added to the workspace.
- *
- * @param jsonString The JSON string containing the function information.
- * @param importAllDependants A boolean flag indicating whether to import all dependants (servers) of the function.
- * @return void
- */
+/// Import a function or distribution that is given as a JSON string, see the overload for a JSONNode.
 void RooJSONFactoryWSTool::importFunction(const std::string &jsonString, bool importAllDependants)
 {
    this->importFunction((JSONTree::create(jsonString))->rootnode(), importAllDependants);
 }
 
-/**
- * @brief Export the name and binning of a RooRealVar to a JSONNode.
- *
- * @param obsNode The JSONNode to which the axis information will be exported.
- * @param var The RooRealVar representing the axis to be exported.
- * @return void
- */
-// A categorical axis: the labels in the order of the states of the category, which is the order of the bins of a
-// RooDataHist.
-void RooJSONFactoryWSTool::exportCategoricalAxis(JSONNode &obsNode, RooCategory const &cat)
-{
-   testValidName(cat.GetName(), false);
-   obsNode["name"] << cat.GetName();
-   auto &labels = obsNode["categories"].set_seq();
-   for (unsigned int i = 0; i < cat.size(); ++i) {
-      labels.append_child() << cat.getOrdinal(i).first;
-   }
-}
-
-void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
-{
-   std::string name = var.GetName();
-   RooJSONFactoryWSTool::testValidName(name, false);
-   obsNode["name"] << name;
-
-   writeAxisBinning(obsNode, var.getBinning());
-}
-
-/**
- * @brief Export histogram data to a JSONNode.
- *
- * This function exports histogram data, represented by the provided variables and contents, to a JSONNode.
- * The histogram's axes information and bin contents are added as key-value pairs to the JSONNode.
- *
- * @param vars The RooArgSet representing the variables associated with the histogram.
- * @param n The number of bins in the histogram.
- * @param contents A pointer to the array containing the bin contents of the histogram.
- * @param output The JSONNode to which the histogram data will be exported.
- * @return void
- */
+/// Write the axes and the `n` bin contents of a histogram over the variables `vars`, which are RooRealVars or
+/// RooCategories, in the order of the variables.
 void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, JSONNode &output)
 {
-   auto &observablesNode = output["axes"].set_seq();
-   // axes have to be ordered to get consistent bin indices
-   for (RooAbsArg const *var : vars) {
-      if (auto const *cat = dynamic_cast<RooCategory const *>(var)) {
-         exportCategoricalAxis(observablesNode.append_child().set_map(), *cat);
-      } else {
-         exportAxis(observablesNode.append_child().set_map(), static_cast<RooRealVar const &>(*var));
-      }
-   }
-
-   return exportArray(n, contents, output["contents"]);
+   HS3::writeBinnedData(output, toBinnedData(vars, n, contents));
 }
 
-/**
- * @brief Export an array of doubles to a JSONNode.
- *
- * This function exports an array of doubles, represented by the provided size and contents,
- * to a JSONNode. The array elements are added to the JSONNode as a sequence of values.
- *
- * @param n The size of the array.
- * @param contents A pointer to the array containing the double values.
- * @param output The JSONNode to which the array will be exported.
- * @return void
- */
+/// Write `n` numbers as an array, each as an integer if it has no fractional part. RooFit doesn't use this function
+/// itself, but exporters outside of ROOT do.
 void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, JSONNode &output)
 {
-   output.set_seq();
-   for (std::size_t i = 0; i < n; ++i) {
-      double w = contents[i];
-      // To make sure there are no unnecessary floating points in the JSON
-      if (int(w) == w) {
-         output.append_child() << int(w);
-      } else {
-         output.append_child() << w;
-      }
-   }
+   HS3::writeContents(output, std::vector<double>(contents, contents + n));
 }
 
 // Config::renameCombinedObservables: work out, before anything is exported, the new names of the observables of
@@ -2842,7 +3049,7 @@ void RooJSONFactoryWSTool::prepareCombinedObservableRenaming()
       if (columns.empty()) {
          continue;
       }
-      RooSimultaneous const *simPdf = findMatchingSimultaneous(_workspace, selectionColumnNames(*data->get()));
+      RooSimultaneous const *simPdf = findMatchingSimultaneous(_workspace, namesOf(selectionColumns(*data->get())));
       for (std::vector<std::string> const &key : selectionKeys(columns)) {
          const std::string keyName = selectionKeyName(key);
          RooArgSet candidates;
@@ -2911,18 +3118,18 @@ void RooJSONFactoryWSTool::prepareCombinedObservableRenaming()
  * the observables of the corresponding component, and keys without entries for which it has no component are left
  * out; otherwise, every sub-data set carries all observables.
  */
-RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooAbsData const &data)
+void RooJSONFactoryWSTool::exportCombinedData(RooAbsData const &data)
 {
    std::vector<RooCategory const *> columns = selectionColumns(*data.get());
-   CombinedData info;
-   info.name = data.GetName();
+   std::string const name = data.GetName();
+   HS3::CombinedData combined;
    for (RooCategory const *column : columns) {
-      info.columns.push_back(column->GetName());
+      combined.columns.push_back(column->GetName());
       recordCategory(*column);
    }
 
    // Split the data by the key: by the index category of a matching RooSimultaneous, or by the columns themselves.
-   RooSimultaneous const *simPdf = findMatchingSimultaneous(_workspace, info.columns);
+   RooSimultaneous const *simPdf = findMatchingSimultaneous(_workspace, combined.columns);
    std::unique_ptr<RooSuperCategory> superCat;
    RooAbsCategory const *indexCat = nullptr;
    std::vector<std::unique_ptr<RooAbsData>> parts;
@@ -2937,15 +3144,13 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
       for (RooCategory const *column : columns) {
          inputs.add(*column);
       }
-      const std::string superName = info.name + "_key";
+      const std::string superName = name + "_key";
       superCat = std::make_unique<RooSuperCategory>(superName.c_str(), superName.c_str(), inputs);
       indexCat = superCat.get();
       parts = data.split(*indexCat, true);
    }
 
    // The combined data set is written before its sub-data sets.
-   HS3::CombinedData combined;
-   combined.columns = info.columns;
    std::vector<RooAbsData *> subDataSets;
    for (std::vector<std::string> const &key : selectionKeys(columns)) {
       std::string const label = selectionLabel(*indexCat, columns, key);
@@ -2954,10 +3159,10 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
          continue;
       }
       const std::string keyName = selectionKeyName(key);
-      const std::string subName = info.name + "_" + keyName;
+      const std::string subName = name + "_" + keyName;
       (*found)->SetName(subName.c_str());
       // Config::renameCombinedObservables: give the observables of this key their own names.
-      auto renamesOfData = _combinedObservableRenames.find(info.name);
+      auto renamesOfData = _combinedObservableRenames.find(name);
       if (renamesOfData != _combinedObservableRenames.end()) {
          auto renames = renamesOfData->second.find(keyName);
          if (renames != renamesOfData->second.end()) {
@@ -2969,11 +3174,10 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
       combined.components.push_back({key, {subName}});
       subDataSets.push_back(found->get());
    }
-   _export->doc.data.push_back({info.name, std::move(combined)});
+   _export->doc.data.push_back({name, std::move(combined)});
    for (RooAbsData *subData : subDataSets) {
       exportData(*subData);
    }
-   return info;
 }
 
 // Export a single dataset `data` (binned or unbinned) to the output document.
@@ -2986,8 +3190,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       }
    }
 
-   HS3::Data output;
-   output.name = data.GetName();
+   auto write = [&](auto body) { _export->doc.data.push_back({data.GetName(), std::move(body)}); };
 
    // This works around a problem in RooStats/HistFactory that was only fixed
    // in ROOT 6.30: until then, the weight variable of the observed dataset,
@@ -3000,37 +3203,19 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       variables.remove(*weightVar);
    }
 
-   // Categories are categorical axes, declared by a categorical axis of the default domain.
-   auto categoricalAxis = [&](RooCategory const &cat) {
-      recordCategory(cat);
-      HS3::CategoricalAxis axis;
-      axis.name = cat.GetName();
-      testValidName(axis.name, false);
-      for (unsigned int i = 0; i < cat.size(); ++i) {
-         axis.categories.push_back(cat.getOrdinal(i).first);
+   // The ranges of the variables are written to the domains. Categories are declared by a categorical axis of the
+   // default domain.
+   for (RooAbsArg const *arg : variables) {
+      if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
+         recordCategory(*cat);
+      } else {
+         recordDomains(_export->domains, static_cast<RooRealVar const &>(*arg));
       }
-      return axis;
-   };
-
-   auto exportBinned = [&](std::size_t n, double const *contents) {
-      HS3::BinnedData binned;
-      for (RooAbsArg const *arg : variables) {
-         if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
-            binned.axes.emplace_back(categoricalAxis(*cat));
-            continue;
-         }
-         auto const *var = static_cast<RooRealVar const *>(arg);
-         recordDomains(_export->domains, *var);
-         binned.axes.emplace_back(HS3::toBinnedAxis(*var));
-      }
-      binned.contents.assign(contents, contents + n);
-      output.body = std::move(binned);
-      _export->doc.data.push_back(std::move(output));
-   };
+   }
 
    // this is a regular binned dataset
    if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
-      return exportBinned(dh->numEntries(), dh->weightArray());
+      return write(toBinnedData(variables, dh->numEntries(), dh->weightArray()));
    }
 
    // Check if this actually represents a binned dataset, and then import it
@@ -3042,7 +3227,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    // binning, and would otherwise be written as binned once they have no entries.
    if (data.isWeighted() && variables.size() == 1 && dynamic_cast<RooRealVar const *>(variables[0]) &&
        static_cast<RooRealVar const &>(*variables[0]).getBins() > 0) {
-      bool isBinnedData = false;
       auto &x = static_cast<RooRealVar const &>(*variables[0]);
       std::vector<double> contents;
       int i = 0;
@@ -3054,28 +3238,36 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       }
       // Binned data has exactly one entry per bin, in the order of the bins. Further entries, e.g. a second one in
       // the last bin, make it unbinned data.
-      if (i == x.getBins() && data.numEntries() == x.getBins())
-         isBinnedData = true;
-      if (isBinnedData) {
-         return exportBinned(contents.size(), contents.data());
+      if (i == x.getBins() && data.numEntries() == x.getBins()) {
+         return write(toBinnedData(variables, contents.size(), contents.data()));
+      }
+   }
+
+   // A single unweighted entry of a single variable is point data.
+   if (variables.size() == 1 && data.numEntries() == 1) {
+      data.get(0);
+      auto const *var = dynamic_cast<RooRealVar const *>(variables[0]);
+      if (var && (!data.isWeighted() || data.weight() == 1.)) {
+         HS3::PointData point;
+         point.value = var->getVal();
+         point.axes.push_back(toContinuousAxis(*var));
+         return write(std::move(point));
       }
    }
 
    // this really is an unbinned dataset
    HS3::UnbinnedData unbinned;
    for (RooAbsArg const *arg : variables) {
+      testValidName(arg->GetName(), false);
       if (auto const *cat = dynamic_cast<RooCategory const *>(arg)) {
-         unbinned.axes.emplace_back(categoricalAxis(*cat));
-         continue;
+         unbinned.axes.emplace_back(toCategoricalAxis(*cat));
+      } else {
+         // HS3 forbids binning information on the axes of unbinned data.
+         auto const &var = static_cast<RooRealVar const &>(*arg);
+         unbinned.axes.emplace_back(toContinuousAxis(var));
       }
-      auto const *var = static_cast<RooRealVar const *>(arg);
-      recordDomains(_export->domains, *var);
-      // HS3 forbids binning information on the axes of unbinned data.
-      testValidName(var->GetName(), false);
-      unbinned.axes.emplace_back(HS3::ContinuousAxis{var->GetName(), var->getMin(), var->getMax()});
    }
-   std::vector<double> weightVals;
-   bool hasNonUnityWeights = false;
+   std::vector<double> weights;
    for (int i = 0; i < data.numEntries(); ++i) {
       data.get(i);
       // The entries of a categorical axis are the positions of the labels in its "categories".
@@ -3086,28 +3278,16 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
             unbinned.entries.push_back(static_cast<RooRealVar const *>(arg)->getVal());
          }
       }
-      if (data.isWeighted()) {
-         weightVals.push_back(data.weight());
-         if (data.weight() != 1.)
-            hasNonUnityWeights = true;
-      }
+      weights.push_back(data.weight());
    }
-   if (data.isWeighted() && hasNonUnityWeights) {
-      unbinned.weights = std::move(weightVals);
+   // Weights that are all one are not written.
+   if (std::any_of(weights.begin(), weights.end(), [](double weight) { return weight != 1.; })) {
+      unbinned.weights = std::move(weights);
    }
-   output.body = std::move(unbinned);
-   _export->doc.data.push_back(std::move(output));
+   write(std::move(unbinned));
 }
 
-/**
- * @brief Read axes from the JSONNode and create a RooArgSet representing them.
- *
- * This function reads axes information from the given JSONNode and
- * creates a RooArgSet with variables representing these axes.
- *
- * @param topNode The JSONNode containing the axes information to be read.
- * @return RooArgSet A RooArgSet containing the variables created from the JSONNode.
- */
+/// Create the variables for the "axes" of `topNode`, which are owned by the returned set.
 RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
 {
    HS3::Diagnostics diagnostics;
@@ -3116,17 +3296,8 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
    return HS3::createObservables(axes);
 }
 
-/**
- * @brief Read binned data from the JSONNode and create a RooDataHist object.
- *
- * This function reads binned data from the given JSONNode and creates a RooDataHist object.
- * The binned data is associated with the specified name and variables (RooArgSet) in the workspace.
- *
- * @param n The JSONNode representing the binned data to be read.
- * @param name The name to be associated with the created RooDataHist object.
- * @param vars The RooArgSet representing the variables associated with the binned data.
- * @return std::unique_ptr<RooDataHist> A unique pointer to the created RooDataHist object.
- */
+/// Create a RooDataHist with the name `name` over the variables `vars` from the "contents" of `n`, and its "errors"
+/// if it has any.
 std::unique_ptr<RooDataHist>
 RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name, RooArgSet const &vars)
 {
@@ -3154,7 +3325,6 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
 // Import a single variable (RooRealVar or RooConstVar) from the parameter `p` into the workspace.
 void RooJSONFactoryWSTool::importVariable(HS3::ParameterValue const &p)
 {
-   // import a RooRealVar object
    RooJSONFactoryWSTool::testValidName(p.name, true);
 
    if (_workspace.arg(p.name))
@@ -3201,49 +3371,64 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
    }
 }
 
+// Export a ModelConfig as one analysis for every data set that goes with its pdf, or as one without data.
 void RooJSONFactoryWSTool::exportModelConfig(RooFit::ModelConfig const &mc,
-                                             const std::vector<CombinedData> &combDataSets,
                                              const std::vector<RooAbsData *> &singleDataSets)
 {
-   // The analyses are named after the ModelConfig, so that ModelConfigs sharing a pdf and a data set (like an S+B
-   // and B-only pair) get separate analyses.
-   auto pdf = mc.GetPdf();
-   auto simpdf = dynamic_cast<RooSimultaneous const *>(pdf);
-   int founddata = 0;
-   if (simpdf) {
-      // One analysis per combined data set with the same columns.
-      std::vector<std::string> columns;
-      for (RooCategory const *column : selectionColumns(simpdf->indexCat())) {
-         columns.push_back(column->GetName());
-      }
-      for (auto const &data : combDataSets) {
-         if (data.columns == columns) {
-            exportSingleModelConfig(mc, std::string(mc.GetName()) + "_" + data.name, &data.name);
-            ++founddata;
+   std::vector<std::string> dataNames;
+   if (auto simpdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf())) {
+      // The combined data sets with the same columns.
+      const std::vector<std::string> columns = namesOf(selectionColumns(simpdf->indexCat()));
+      for (HS3::Data const &data : _export->doc.data) {
+         auto const *combined = std::get_if<HS3::CombinedData>(&data.body);
+         if (combined && combined->columns == columns) {
+            dataNames.push_back(data.name);
          }
       }
    } else {
-      RooArgSet observables(*mc.GetObservables());
-      for (auto *data : singleDataSets) {
-         if (observables.equals(*(data->get()))) {
-            const std::string dataName = data->GetName();
-            exportSingleModelConfig(mc, std::string(mc.GetName()) + "_" + dataName, &dataName);
-            ++founddata;
+      for (RooAbsData const *data : singleDataSets) {
+         if (mc.GetObservables()->equals(*data->get())) {
+            dataNames.push_back(data->GetName());
          }
       }
    }
-   if (founddata == 0) {
+   // The analyses are named after the ModelConfig, so that ModelConfigs sharing a pdf and a data set (like an S+B
+   // and B-only pair) get separate analyses.
+   for (std::string const &dataName : dataNames) {
+      exportSingleModelConfig(mc, std::string(mc.GetName()) + "_" + dataName, &dataName);
+   }
+   if (dataNames.empty()) {
       exportSingleModelConfig(mc, mc.GetName(), nullptr);
    }
 }
 
 namespace {
 
+// The channels of the pdf of a ModelConfig as they are written: the pdf itself, or the components of a RooSimultaneous,
+// of which those in `renamed` (by label) replace the original ones (Config::renameCombinedObservables).
+std::vector<RooAbsPdf const *> channelsOf(RooAbsPdf const &pdf, std::map<std::string, RooAbsPdf const *> const &renamed)
+{
+   auto const *simPdf = dynamic_cast<RooSimultaneous const *>(&pdf);
+   if (!simPdf) {
+      return {&pdf};
+   }
+   std::vector<RooAbsPdf const *> channels;
+   for (auto const &item : simPdf->indexCat()) {
+      auto found = renamed.find(item.first);
+      if (RooAbsPdf const *component = found != renamed.end() ? found->second : simPdf->getPdf(item.first)) {
+         channels.push_back(component);
+      }
+   }
+   return channels;
+}
+
 // A constraint term of a channel of the pdf of a ModelConfig, see constraintsOfChannels().
 struct ChannelConstraint {
    std::string channel;
    RooAbsPdf const *constraint = nullptr;
    bool histFactory = false; ///< Whether the channel is written as a histfactory_dist.
+   /// Whether the channel consists of constraint terms only; `constraint` is then the channel itself.
+   bool wholeChannel = false;
 };
 
 // The constraint terms of the pdf `pdf` of a ModelConfig with the observables `observables`, which are written as
@@ -3257,33 +3442,16 @@ struct ChannelConstraint {
 // - The constraints of a channel that is written as product_dist are taken out of the product by
 //   writeLikelihoodTermsOnce(). This is only done if no other object of the workspace uses the product, so the
 //   constraints of other products are not returned.
-// Constraints elsewhere, e.g. in a nested product, stay where they are. The channels are taken as they are written:
-// a component of the RooSimultaneous is replaced by the one in `renamed` (by label), if any
-// (Config::renameCombinedObservables).
+// Constraints elsewhere, e.g. in a nested product, stay where they are. The channels are taken as they are written,
+// see channelsOf().
 std::vector<ChannelConstraint>
 constraintsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet const &observables,
                       std::function<bool(std::string const &)> const &isHistFactoryChannel,
-                      std::map<std::string, RooAbsPdf const *> const *renamed)
+                      std::vector<RooAbsPdf const *> const &channels)
 {
    RooArgSet params;
    pdf.getParameters(&observables, params);
    std::unique_ptr<RooArgSet> constraints{pdf.getAllConstraints(observables, params, /*stripDisconnected=*/false)};
-   std::vector<RooAbsPdf const *> channels;
-   if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(&pdf)) {
-      for (auto const &item : simPdf->indexCat()) {
-         RooAbsPdf const *component = simPdf->getPdf(item.first);
-         if (renamed) {
-            if (auto found = renamed->find(item.first); found != renamed->end()) {
-               component = found->second;
-            }
-         }
-         if (component) {
-            channels.push_back(component);
-         }
-      }
-   } else {
-      channels.push_back(&pdf);
-   }
    std::vector<ChannelConstraint> out;
    for (RooAbsPdf const *channel : channels) {
       auto const *prod = dynamic_cast<RooProdPdf const *>(channel);
@@ -3291,6 +3459,14 @@ constraintsOfChannels(RooWorkspace const &ws, RooAbsPdf const &pdf, RooArgSet co
          continue;
       }
       const bool histFactory = isHistFactoryChannel(prod->GetName());
+      // A channel that consists of constraint terms only is an auxiliary measurement that is part of the model. It
+      // is written as that channel, once, and not as constraint terms of the likelihood.
+      if (!histFactory && !prod->pdfList().empty() &&
+          std::all_of(prod->pdfList().begin(), prod->pdfList().end(),
+                      [&](RooAbsArg const *factor) { return constraints->find(*factor) != nullptr; })) {
+         out.push_back({prod->GetName(), prod, false, true});
+         continue;
+      }
       if (!histFactory) {
          // Being a component of a RooSimultaneous, i.e. of a combined distribution, is not a use.
          bool usedElsewhere = false;
@@ -3341,48 +3517,36 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    if (dataName) {
       likelihood.terms.push_back({{pdf->GetName()}, HS3::DataRef{*dataName}});
    } else {
-      likelihood.terms.push_back({{pdf->GetName()}, 0.0});
+      // Without data, the likelihood is a pure model, which is written with "data": null.
+      likelihood.terms.push_back({{pdf->GetName()}, std::monostate{}});
+      likelihood.pureModel = true;
    }
 
-   auto addAux = [&](std::string const &name) {
-      auto &aux = likelihood.auxDistributions;
-      if (std::find_if(aux.begin(), aux.end(), [&](auto const &ref) { return ref.name == name; }) == aux.end()) {
-         aux.push_back({name});
-      }
-   };
    // The additional terms of the likelihood: the external constraints of the ModelConfig, and the constraint terms
    // of the channels of the model, which can be the components of a combined distribution (constraintsOfChannels()).
    // They are listed in "aux_distributions" with the observed values of their observables as constant parameters, or
    // (config().exportConstraintData) in "distributions", each paired with a data set that holds the observed values.
-   // The channels as they are written: the components of a RooSimultaneous can be renamed clones
-   // (Config::renameCombinedObservables).
-   std::vector<std::string> channels;
-   for (auto const &term : likelihood.terms) {
-      channels.push_back(term.distribution.name);
-      if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(_workspace.pdf(term.distribution.name))) {
-         auto renamed = _renamedComponents.find(simPdf->GetName());
-         for (auto const &item : simPdf->indexCat()) {
-            RooAbsPdf const *component = simPdf->getPdf(item.first);
-            if (renamed != _renamedComponents.end()) {
-               if (auto found = renamed->second.find(item.first); found != renamed->second.end()) {
-                  component = found->second;
-               }
-            }
-            if (component) {
-               channels.push_back(component->GetName());
+   std::vector<RooAbsPdf const *> const channels = channelsOf(*pdf, _renamedComponents[pdf->GetName()]);
+   // The channels of the model that consist of constraint terms only, see constraintsOfChannels().
+   std::vector<std::string> auxiliaryChannelsOfModel;
+   std::vector<std::string> constraintTerms;
+   if (RooArgSet const *external = mc.GetExternalConstraints()) {
+      // A component of an array distribution is written as part of the array, which enters the likelihood as a
+      // whole: the external constraints must contain all of its components.
+      for (const auto &constr : *external) {
+         auto array = _export->arrayOfComponent.find(constr->GetName());
+         if (array == _export->arrayOfComponent.end()) {
+            addUnique(constraintTerms, constr->GetName());
+            continue;
+         }
+         for (RooAbsPdf const *component : _export->arrayComponents[array->second]) {
+            if (!external->find(*component)) {
+               error("cannot write the external constraint '" + std::string(constr->GetName()) + "' of '" +
+                     mc.GetName() + "': it is written as a component of the array distribution '" + array->second +
+                     "', whose component '" + component->GetName() + "' is not an external constraint");
             }
          }
-      }
-   }
-   std::vector<std::string> constraintTerms;
-   auto addConstraintTerm = [&](std::string const &term) {
-      if (std::find(constraintTerms.begin(), constraintTerms.end(), term) == constraintTerms.end()) {
-         constraintTerms.push_back(term);
-      }
-   };
-   if (mc.GetExternalConstraints()) {
-      for (const auto &constr : *mc.GetExternalConstraints()) {
-         addConstraintTerm(constr->GetName());
+         addUnique(constraintTerms, array->second);
       }
    }
    // The constraint terms that the HistFactory exporter wrote for the channel `channel`, in the order of the document:
@@ -3390,19 +3554,14 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    // names.
    auto writtenByHistFactory = [&](std::string const &channel) {
       std::vector<std::string> out;
-      auto add = [&](std::string const &name) {
-         if (std::find(out.begin(), out.end(), name) == out.end()) {
-            out.push_back(name);
-         }
-      };
       if (auto found = _export->constraintTermsOfPdf.find(channel); found != _export->constraintTermsOfPdf.end()) {
          for (std::string const &term : found->second) {
-            add(term);
+            addUnique(out, term);
          }
       }
       if (auto found = doc.rooFit.channelConstraints.find(channel); found != doc.rooFit.channelConstraints.end()) {
          for (auto const &ref : found->second) {
-            add(ref.name);
+            addUnique(out, ref.name);
          }
       }
       return out;
@@ -3411,41 +3570,37 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    if (!observables || observables->empty()) {
       // Without observables (e.g. a ModelConfig without data), RooFit can't tell constraints from other pdfs: only the
       // constraint terms of the HistFactory channels are listed.
-      for (std::string const &channel : channels) {
-         for (std::string const &term : writtenByHistFactory(channel)) {
-            addConstraintTerm(term);
+      for (RooAbsPdf const *channel : channels) {
+         for (std::string const &term : writtenByHistFactory(channel->GetName())) {
+            addUnique(constraintTerms, term);
          }
       }
    } else {
       auto isHistFactoryChannel = [&](std::string const &name) {
-         return _export->constraintTermsOfPdf.count(name) ||
-                std::any_of(doc.distributions.begin(), doc.distributions.end(), [&](HS3::Distribution const &dist) {
-                   return dist.name == name && std::holds_alternative<HS3::HistFactoryDist>(dist.body);
-                });
+         return _export->constraintTermsOfPdf.count(name) || HS3::find<HS3::HistFactoryDist>(doc.distributions, name);
       };
       // The constraint terms of the channels as RooFit finds them, under the names under which they are written:
       // the array distribution that holds a constraint of a HistFactory channel, or the name of the constraint.
       std::map<std::string, std::vector<std::string>> termsOfChannel;
-      auto renamedOfPdf = _renamedComponents.find(pdf->GetName());
       for (ChannelConstraint const &item :
-           constraintsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel,
-                                 renamedOfPdf != _renamedComponents.end() ? &renamedOfPdf->second : nullptr)) {
+           constraintsOfChannels(_workspace, *pdf, *observables, isHistFactoryChannel, channels)) {
+         if (item.wholeChannel) {
+            auxiliaryChannelsOfModel.push_back(item.channel);
+            continue;
+         }
+         // A component of an array distribution is never referred to by itself: the array is the term.
          std::string term = item.constraint->GetName();
-         if (item.histFactory) {
-            if (auto found = _export->arrayOfComponent.find(term); found != _export->arrayOfComponent.end()) {
-               term = found->second;
-            }
+         if (auto found = _export->arrayOfComponent.find(term); found != _export->arrayOfComponent.end()) {
+            term = found->second;
          }
-         auto &terms = termsOfChannel[item.channel];
-         if (std::find(terms.begin(), terms.end(), term) == terms.end()) {
-            terms.push_back(term);
-         }
+         addUnique(termsOfChannel[item.channel], term);
       }
-      for (std::string const &channel : channels) {
+      for (RooAbsPdf const *channelPdf : channels) {
+         std::string const channel = channelPdf->GetName();
          std::vector<std::string> const &found = termsOfChannel[channel];
          if (!isHistFactoryChannel(channel)) {
             for (std::string const &term : found) {
-               addConstraintTerm(term);
+               addUnique(constraintTerms, term);
             }
             continue;
          }
@@ -3467,24 +3622,112 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
                   "': the channel writes " + join(writtenSet) + ", but RooFit finds " + join(foundSet));
          }
          for (std::string const &term : written) {
-            addConstraintTerm(term);
+            addUnique(constraintTerms, term);
          }
       }
    }
+   // An array of constraints with its data set is a measurement like the others: if the model is a combined
+   // distribution, it is written as a component of it, paired with its data set as a component of the combined data
+   // set. The combined distribution is then the sampling distribution of all measurements, auxiliary or not. Its
+   // label is the name of the array. Constraints that are written one by one stay terms of the likelihood: there
+   // can be hundreds, which is not what an index category is for. So do the constraints of models whose index has
+   // several columns.
+   auto const *simPdf = dynamic_cast<RooSimultaneous const *>(pdf);
+   // Looked up when needed: writing the data set of a constraint term adds to the data sets of the document.
+   auto findCombinedData = [&]() { return dataName ? HS3::find<HS3::CombinedData>(doc.data, *dataName) : nullptr; };
+   RooCategory const *indexColumn = nullptr;
+   if (simPdf && findCombinedData()) {
+      std::vector<RooCategory const *> columns = selectionColumns(simPdf->indexCat());
+      if (columns.size() == 1) {
+         indexColumn = columns.front();
+      }
+   }
+   auto addAuxiliaryChannel = [&](std::string const &term) {
+      if (indexColumn->hasLabel(term)) {
+         error("cannot write the constraint term '" + term + "' as a component of the combined distribution '" +
+               simPdf->GetName() + "': its index category '" + indexColumn->GetName() + "' has a state of that name");
+      }
+      addUnique(_export->auxiliaryLabels[indexColumn->GetName()], term);
+      auto *combinedDist = HS3::find<HS3::CombinedDist>(doc.distributions, simPdf->GetName());
+      if (!combinedDist) {
+         error("cannot write the constraint terms of '" + std::string(simPdf->GetName()) +
+               "' as its components: it was not written as a combined distribution");
+      }
+      if (!combinedDist->find({term})) {
+         combinedDist->components.push_back({{term}, {term}});
+         doc.rooFit.auxiliaryChannels[simPdf->GetName()].push_back({term});
+      }
+      if (HS3::CombinedData *combinedData = findCombinedData(); !combinedData->find({term})) {
+         combinedData->components.push_back({{term}, HS3::DataRef{*dataName + "_" + term}});
+      }
+   };
+   // A channel of the model that consists of constraint terms is an auxiliary measurement, whose observed values are
+   // the values of its global observables if the data set has no entries for it. It is written like the arrays
+   // above: with a data set of the observed values, and marked for RooFit, which can read it as constraint terms.
+   for (std::string const &channel : auxiliaryChannelsOfModel) {
+      if (!indexColumn || likelihood.pureModel) {
+         continue;
+      }
+      std::string label;
+      for (auto const &state : simPdf->indexCat()) {
+         RooAbsPdf const *component = simPdf->getPdf(state.first);
+         if (component && channel == component->GetName()) {
+            label = state.first;
+         }
+      }
+      if (label.empty()) {
+         continue;
+      }
+      auto const *component = findCombinedData()->find({label});
+      const std::string observed = component ? component->ref.name : *dataName + "_" + label;
+      // A data set without entries for the channel is replaced by the observed values.
+      auto written = std::find_if(doc.data.begin(), doc.data.end(), [&](auto const &d) { return d.name == observed; });
+      if (written == doc.data.end() || written->numEntries() == 0) {
+         std::optional<HS3::Data> empty;
+         if (written != doc.data.end()) {
+            empty = std::move(*written);
+            doc.data.erase(written);
+         }
+         if (exportConstraintData(channel, mc.GetGlobalObservables(), observed)) {
+            if (HS3::CombinedData *combinedData = findCombinedData(); !combinedData->find({label})) {
+               combinedData->components.push_back({{label}, HS3::DataRef{observed}});
+            }
+         } else {
+            if (empty) {
+               doc.data.push_back(std::move(*empty));
+            }
+            warning("RooFitHS3: the channel '" + channel + "' of '" + simPdf->GetName() +
+                    "' consists of constraint terms, but has no data, and its observables are not all global "
+                    "observables of the ModelConfig: it is written without an observation.");
+            continue;
+         }
+      }
+      auto &marked = doc.rooFit.auxiliaryChannels[simPdf->GetName()];
+      if (!HS3::findByName(marked, channel)) {
+         marked.push_back({channel});
+      }
+   }
    for (std::string const &term : constraintTerms) {
-      if (config().exportConstraintData && exportConstraintData(term, mc.GetGlobalObservables())) {
-         likelihood.terms.push_back({{term}, HS3::DataRef{term + "_data"}});
+      // A pure model has no data at all, so the observed values of its constraint terms are not written as data sets
+      // either: they are the constant parameters of auxiliary distributions.
+      // A component of a combined data set belongs to that data set alone, and is named after it like the others.
+      const bool asChannel = indexColumn && _export->arrayComponents.count(term);
+      const std::string constraintData = asChannel ? *dataName + "_" + term : term + "_data";
+      if (!likelihood.pureModel && config().exportConstraintData &&
+          exportConstraintData(term, mc.GetGlobalObservables(), constraintData)) {
+         if (asChannel) {
+            addAuxiliaryChannel(term);
+         } else {
+            likelihood.terms.push_back({{term}, HS3::DataRef{constraintData}});
+         }
       } else {
-         addAux(term);
+         likelihood.auxDistributions.push_back({term});
       }
    }
    doc.likelihoods.push_back(std::move(likelihood));
 
    if (RooArgSet const *pois = mc.GetParametersOfInterest()) {
-      std::vector<std::string> names;
-      names.reserve(pois->size());
-      for (RooAbsArg const *arg : *pois)
-         names.push_back(arg->GetName());
+      std::vector<std::string> names = namesOf(*pois);
       std::sort(names.begin(), names.end());
       for (auto const &name : names) {
          analysis.parametersOfInterest.push_back({name});
@@ -3523,10 +3766,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(RooFit::ModelConfig const &mc
    info.mcName = mc.GetName();
    // Without a data set, the document doesn't say what the observables are.
    if (!dataName && mc.GetObservables() && !mc.GetObservables()->empty()) {
-      std::vector<std::string> names;
-      for (RooAbsArg const *arg : *mc.GetObservables()) {
-         names.push_back(arg->GetName());
-      }
+      std::vector<std::string> names = namesOf(*mc.GetObservables());
       std::sort(names.begin(), names.end());
       info.observables = std::move(names);
    }
@@ -3537,11 +3777,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    _export = std::make_unique<HS3::ToolExportState>();
    _export->root = &n;
-   // The state of the export must not survive it, not even if there is an exception.
-   struct ExportScope {
-      RooJSONFactoryWSTool &tool;
-      ~ExportScope() { tool._export.reset(); }
-   } exportScope{*this};
+   StateScope<HS3::ToolExportState> exportScope{_export};
 
    HS3Document &doc = _export->doc;
    doc.metadata.hs3Version = hs3VersionTag;
@@ -3549,39 +3785,34 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    doc.parameterPoints.push_back({"default_values", {}});
    prepareCombinedObservableRenaming();
 
-   // export all toplevel pdfs
-   std::vector<RooAbsPdf *> allpdfs;
-   for (auto &arg : _workspace.allPdfs()) {
-      if (isTopLevel(*arg, _workspace)) {
-         if (auto *pdf = dynamic_cast<RooAbsPdf *>(arg)) {
-            allpdfs.push_back(pdf);
+   std::vector<RooAbsPdf *> const allpdfs = topLevelObjects<RooAbsPdf>(_workspace.allPdfs(), _workspace);
+   // A Gaussian constraint is written with its global observable as "x", also if that is its mean in RooFit (see
+   // setConstraintObservable()). Which one it is must be known before any pdf is written: the pdfs are written in the
+   // order of their names, and a constraint can come before the model that uses it.
+   for (TObject *obj : _workspace.allGenericObjects()) {
+      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
+      RooArgSet const *globs = mc ? mc->GetGlobalObservables() : nullptr;
+      if (!globs) {
+         continue;
+      }
+      for (RooAbsArg const *arg : _workspace.components()) {
+         auto const *gauss = dynamic_cast<RooGaussian const *>(arg);
+         if (gauss && globs->find(gauss->getMean()) && !globs->find(gauss->getX()) &&
+             !constraintObservable(gauss->GetName())) {
+            setConstraintObservable(*gauss, gauss->getMean().GetName());
          }
       }
    }
-   sortByName(allpdfs);
    exportObjects(allpdfs);
-
-   // export all toplevel functions
-   std::vector<RooAbsReal *> allfuncs;
-   for (auto &arg : _workspace.allFunctions()) {
-      if (isTopLevel(*arg, _workspace)) {
-         if (auto *func = dynamic_cast<RooAbsReal *>(arg)) {
-            allfuncs.push_back(func);
-         }
-      }
-   }
-   sortByName(allfuncs);
-   exportObjects(allfuncs);
+   exportObjects(topLevelObjects<RooAbsReal>(_workspace.allFunctions(), _workspace));
 
    // The array distributions are written after the objects that use them, see exportAsArrayComponent().
    exportArrayDists();
 
-   // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {
       exportAttributes(arg, doc.rooFit.attributes);
    }
 
-   // collect all datasets
    std::vector<RooAbsData *> alldata;
    for (auto &d : _workspace.allData()) {
       alldata.push_back(d);
@@ -3589,24 +3820,22 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    sortByName(alldata);
    // Data sets with category observables are combined data sets.
    std::vector<RooAbsData *> singleData;
-   std::vector<RooJSONFactoryWSTool::CombinedData> combData;
    for (auto &d : alldata) {
       // Without a matching RooSimultaneous, the categories of a data set are ordinary observables, written as
       // categorical axes, unless its observables are renamed per key (Config::renameCombinedObservables).
       if (selectionColumns(*d->get()).empty() ||
           (!config().renameCombinedObservables &&
-           !findMatchingSimultaneous(_workspace, selectionColumnNames(*d->get())))) {
+           !findMatchingSimultaneous(_workspace, namesOf(selectionColumns(*d->get()))))) {
          singleData.push_back(d);
          this->exportData(*d);
       } else {
-         combData.push_back(this->exportCombinedData(*d));
+         this->exportCombinedData(*d);
       }
    }
 
-   // export all ModelConfig objects and attached Pdfs
    for (TObject *obj : _workspace.allGenericObjects()) {
       if (auto mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
-         exportModelConfig(*mc, combData, singleData);
+         exportModelConfig(*mc, singleData);
       }
    }
 
@@ -3618,13 +3847,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       // the ones that the pdfs encoded implicitly (like in the case of
       // HistFactory).
       for (RooAbsArg *arg : *snsh) {
-         bool do_export = false;
-         for (const auto &pdf : allpdfs) {
-            if (pdf->dependsOn(*arg)) {
-               do_export = true;
-            }
-         }
-         if (do_export) {
+         if (std::any_of(allpdfs.begin(), allpdfs.end(), [&](RooAbsPdf *pdf) { return pdf->dependsOn(*arg); })) {
             RooJSONFactoryWSTool::testValidName(arg->GetName(), true);
             snapshotSorted.add(*arg);
          }
@@ -3633,7 +3856,18 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       std::string name(snsh->GetName());
       if (name != "default_values") {
          doc.parameterPoints.push_back({name, {}});
-         this->exportVariables(snapshotSorted, doc.parameterPoints.back(), true);
+         for (RooAbsArg *arg : snapshotSorted) {
+            exportVariable(arg, doc.parameterPoints.back());
+         }
+      }
+   }
+   // The constraint terms that are components of a combined distribution have a label of their own.
+   for (auto const &item : _export->auxiliaryLabels) {
+      auto &categories = _export->categories[item.first].categories;
+      for (std::string const &label : item.second) {
+         if (std::find(categories.begin(), categories.end(), label) == categories.end()) {
+            categories.push_back(label);
+         }
       }
    }
    // The categories are categorical axes of the "default_domain", which must not list them as continuous.
@@ -3646,13 +3880,45 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
    // The domains of the analyses take precedence.
    for (auto &item : _export->domains) {
-      if (std::none_of(doc.domains.begin(), doc.domains.end(),
-                       [&](HS3::Domain const &domain) { return domain.name == item.first; })) {
+      if (!HS3::findByName(doc.domains, item.first)) {
          appendDomain(doc.domains, item.first, std::move(item.second),
                       item.first == HS3::defaultDomainName ? std::move(_export->categories)
                                                            : std::map<std::string, HS3::CategoricalAxis>{});
       }
    }
+
+   // The exporters have written the generic distributions to the JSON tree. Now that the tree has all of them, the
+   // document refers to their nodes, like a document that was read. The combined distributions are written now, since
+   // constraint terms can become their components until here, see exportSingleModelConfig().
+   if (n.has_child("distributions")) {
+      std::map<std::string, JSONNode *> nodes;
+      for (JSONNode &node : n["distributions"].children()) {
+         nodes.emplace(name(node), &node);
+      }
+      for (HS3::Distribution &dist : doc.distributions) {
+         auto found = nodes.find(dist.name);
+         if (found == nodes.end()) {
+            continue;
+         }
+         if (auto *generic = std::get_if<HS3::GenericObject>(&dist.body)) {
+            generic->node = found->second;
+         } else if (auto const *combined = std::get_if<HS3::CombinedDist>(&dist.body)) {
+            HS3::writeCombinedDist(*found->second, *combined);
+         }
+      }
+   }
+
+   // A RooFit model often has a constraint both as a factor of the product of a channel and as a term of the
+   // likelihood (e.g. a constraint of a HistFactory modifier, an external constraint of the ModelConfig, or any
+   // constraint of a channel, see constraintsOfChannels()); RooFit counts it once. In HS3 it would enter twice.
+   for (auto const &[product, factors] : HS3::writeLikelihoodTermsOnce(doc, n)) {
+      for (std::string const &factor : factors) {
+         oocoutI(nullptr, IO) << "RooFitHS3: '" << factor << "' is a factor of '" << product
+                              << "' and a term of its likelihood; it is written once, as a term of the likelihood"
+                              << std::endl;
+      }
+   }
+   declareBookkeepingColumns(doc, _workspace);
 
    // The document that RooFit writes has to pass the same checks as the ones that it reads. Until RooFit writes
    // documents that follow the current standard, problems are only reported.
@@ -3668,12 +3934,9 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    HS3::report(diagnostics);
    HS3::writeDocument(n, doc);
 
-   // Each term of a likelihood once, and distinct variates (see sharedVariates()). Otherwise, the document is only
-   // written if explicitly allowed, e.g. to rename the variates in the JSON by hand. This is checked on the written
-   // document, which has the generic distributions.
-   writeLikelihoodTermsOnce(n);
-   declareBookkeepingColumns(n, _workspace);
-   if (std::vector<std::string> const shared = sharedVariatesOfDocument(n); !shared.empty()) {
+   // Without distinct variates (see HS3::sharedVariates()), the document is only written if explicitly allowed, e.g.
+   // to rename the variates in the JSON by hand.
+   if (std::vector<std::string> const shared = HS3::sharedVariates(doc); !shared.empty()) {
       if (!config().allowExportSharedVariates) {
          std::string text;
          for (std::string const &message : shared) {
@@ -3694,23 +3957,14 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
 }
 
-/**
- * @brief Import the workspace from a JSON string.
- *
- * @param s The JSON string containing the workspace data.
- * @return bool Returns true on successful import, false otherwise.
- */
+/// Import an HS3 document that is given as a JSON string into the workspace. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::importJSONfromString(const std::string &s)
 {
    std::stringstream ss(s);
    return importJSON(ss);
 }
 
-/**
- * @brief Export the workspace to a JSON string.
- *
- * @return std::string The JSON string representing the exported workspace.
- */
+/// Export the workspace as an HS3 document, and return it as a JSON string.
 std::string RooJSONFactoryWSTool::exportJSONtoString()
 {
    std::stringstream ss;
@@ -3718,32 +3972,7 @@ std::string RooJSONFactoryWSTool::exportJSONtoString()
    return ss.str();
 }
 
-/**
- * @brief Create a new JSON tree with version information.
- *
- * @return std::unique_ptr<JSONTree> A unique pointer to the created JSON tree.
- */
-std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
-{
-   std::unique_ptr<JSONTree> tree = JSONTree::create();
-   JSONNode &n = tree->rootnode();
-   n.set_map();
-   auto &metadata = n["metadata"].set_map();
-
-   // add the mandatory hs3 version number
-   metadata["hs3_version"] << hs3VersionTag;
-
-   appendNamedChild(metadata["packages"], "ROOT")["version"] << rootVersion();
-
-   return tree;
-}
-
-/**
- * @brief Export the workspace to JSON format and write to the output stream.
- *
- * @param os The output stream to write the JSON data to.
- * @return bool Returns true on successful export, false otherwise.
- */
+/// Export the workspace as an HS3 document, and write it as JSON to the stream. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
 {
    std::unique_ptr<JSONTree> tree = JSONTree::create();
@@ -3753,12 +3982,7 @@ bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
    return true;
 }
 
-/**
- * @brief Export the workspace to JSON format and write to the specified file.
- *
- * @param filename The name of the JSON file to create and write the data to.
- * @return bool Returns true on successful export, false otherwise.
- */
+/// Export the workspace as an HS3 document, and write it to a JSON file. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::exportJSON(std::string const &filename)
 {
    std::ofstream out(filename.c_str());
@@ -3816,25 +4040,25 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    std::optional<RooFit::ValidatedHS3Document> validated;
    if (!HS3::hasErrors(diagnostics)) {
       HS3::ValidateOptions validateOptions;
-      validateOptions.strict = !isHS3VersionBefore(parsed.metadata.hs3Version, 0, 3);
+      validateOptions.strict = !(parsed.metadata.version < HS3::Version{0, 3});
       validateOptions.isExternal = [this](std::string const &name) { return _workspace.obj(name) != nullptr; };
       validated = HS3::validate(std::move(parsed), diagnostics, validateOptions);
    }
    HS3::report(diagnostics);
+   // What HS3 requires of the variates and the constraints is checked on the document as it is, before the components
+   // that are read as constraint terms are taken out of it.
+   std::set<std::string> const bookkeepingColumns = checkVariates(validated->doc());
+   HS3::AuxiliaryConstraints const auxiliary =
+      HS3::readAuxiliaryChannelsAsConstraints(*validated, config().importConstraintsAsChannels);
+   for (std::string const &message : auxiliary.warnings) {
+      warning("RooFitHS3: " + message);
+   }
+   for (std::string const &message : HS3::resolvePointData(*validated)) {
+      error(message);
+   }
    HS3Document const &doc = validated->doc();
 
-   // The state of the import refers to the document, so it must not survive it, not even if there is an exception.
-   struct ImportScope {
-      RooJSONFactoryWSTool &tool;
-      ~ImportScope()
-      {
-         tool._import.reset();
-         tool._hs3VersionInput.clear();
-      }
-   } importScope{*this};
-
-   _hs3VersionInput = doc.metadata.hs3Version;
-
+   StateScope<HS3::ToolImportState> importScope{_import};
    _import = std::make_unique<HS3::ToolImportState>(doc);
 
    createVariables(_workspace, _import->document.domains, _import->ranges);
@@ -3892,7 +4116,6 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
       _workspace.saveSnapshot(point.name, vars);
    }
 
-   // Import attributes
    for (auto const &item : doc.rooFit.attributes) {
       if (RooAbsArg *arg = _workspace.arg(item.first))
          importAttributes(arg, item.second);
@@ -3904,59 +4127,25 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    std::vector<std::unique_ptr<RooAbsData>> datasets;
    datasets.reserve(doc.data.size());
    for (auto const &data : doc.data) {
-      // Combined data sets are assembled from the others once all of them are loaded.
       if (!std::holds_alternative<HS3::CombinedData>(data.body)) {
          datasets.push_back(loadData(data, _workspace, &_import->ranges));
       }
    }
    assembleCombinedData(doc, _workspace, datasets);
 
-   // Now, read in analyses and likelihoods if there are any
-
-   // Distinct variates (see sharedVariates()). Documents of versions before 0.3, which RooFit wrote with shared
-   // variates itself, are read with a warning.
-   std::set<std::string> bookkeepingColumns;
-   for (auto const &[dataset, columns] : bookkeepingColumnsOfDocument(n)) {
-      for (std::string const &column : columns) {
-         warning("RooFitHS3: the axis '" + column + "' of the components of the combined data set '" + dataset +
-                 "' is declared as a bookkeeping column without statistical meaning (misc.ROOT_internal."
-                 "bookkeeping_columns), so it may be shared by the components, although HS3 requires distinct axes.");
-         bookkeepingColumns.insert(column);
-      }
-   }
-   for (std::string const &message : sharedVariatesOfDocument(n)) {
-      if (!isHS3VersionBefore(_hs3VersionInput, 0, 3)) {
-         error("invalid HS3: " + message +
-               ". The terms of a likelihood and the components of a combined distribution or data set must have "
-               "distinct variates.");
-      }
-      warning("RooFitHS3: " + message +
-              ". HS3 0.3 requires distinct variates; the document is read anyway, since it declares an older "
-              "version.");
-   }
-
    for (auto const &analysis : doc.analyses) {
-      // The variates of the distributions of the likelihood, see observablesWithoutData().
-      std::set<std::string> variates;
-      for (auto const &likelihood : doc.likelihoods) {
-         if (likelihood.name == analysis.likelihood.name) {
-            for (auto const &term : likelihood.terms) {
-               std::set<std::string> const v = variatesOf(n, term.distribution.name);
-               variates.insert(v.begin(), v.end());
-               // The columns of a combined distribution are observables as well.
-               JSONNode const *dist = findInSection(n, "distributions", term.distribution.name);
-               if (dist && typeOf(*dist) == "combined_dist") {
-                  if (JSONNode const *columns = dist->find("columns")) {
-                     addNames(*columns, variates);
-                  }
-               }
-            }
-         }
-      }
-      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns, variates);
+      importAnalysis(doc, analysis, _workspace, datasets, bookkeepingColumns, auxiliary.terms);
    }
 
    combineDatasets(doc, datasets);
+   // The data sets of the components that are read as constraint terms are not data sets of the workspace: their
+   // values are in the global observables. Several analyses can share a ModelConfig, of which only the first one
+   // consumes the data of its constraint terms.
+   for (auto &d : datasets) {
+      if (d && auxiliary.data.count(d->GetName())) {
+         d.reset();
+      }
+   }
 
    for (auto const &d : datasets) {
       if (d) {
@@ -3977,29 +4166,17 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    importParameterStepWidths(_workspace, doc);
 }
 
-/**
- * @brief Imports a JSON file from the given input stream to the workspace.
- *
- * @param is The input stream containing the JSON data.
- * @return bool Returns true on successful import, false otherwise.
- */
+/// Import an HS3 document that is read as JSON from the stream into the workspace. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::importJSON(std::istream &is)
 {
-   // import a JSON file to the workspace
    std::unique_ptr<JSONTree> tree = JSONTree::create(is);
    this->importAllNodes(tree->rootnode());
    return true;
 }
 
-/**
- * @brief Imports a JSON file from the given filename to the workspace.
- *
- * @param filename The name of the JSON file to import.
- * @return bool Returns true on successful import, false otherwise.
- */
+/// Import the HS3 document of a JSON file into the workspace. Returns true; errors are exceptions.
 bool RooJSONFactoryWSTool::importJSON(std::string const &filename)
 {
-   // import a JSON file to the workspace
    std::ifstream infile(filename.c_str());
    if (!infile.is_open())
       RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() invalid input file '" + filename + "'.");
@@ -4008,7 +4185,6 @@ bool RooJSONFactoryWSTool::importJSON(std::string const &filename)
 
 void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std::string &jsonString)
 {
-   // Create the JSON Tree from the string
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(jsonString);
    JSONNode &n = tree->rootnode();
 
@@ -4028,24 +4204,13 @@ void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std:
 
    n["name"] << name;
 
-   bool isVariable = true;
-   bool isData = false;
-   // Check for the type of object, if it doesn't contain a type, it must be a variable
-   if (n.find("type")) {
-      isVariable = false;
-      std::string elementType = n.find("type")->val();
-      if (elementType == "binned" || elementType == "unbinned") {
-         isData = true;
-      }
-   }
-
-   // Import the object to the workspace
-   if (isVariable) {
+   // Without a type, it must be a variable.
+   JSONNode const *type = n.find("type");
+   if (!type) {
       this->importVariableElement(n);
-   } else if (isData) {
+   } else if (type->val() == "binned" || type->val() == "unbinned") {
       HS3::Diagnostics diagnostics;
-      HS3::Data data;
-      readValue(HS3::Cursor{n, diagnostics}, data);
+      HS3::Data data = HS3::parseData(n, diagnostics);
       HS3::report(diagnostics);
       _workspace.import(*loadData(data, _workspace, nullptr), RooFit::Silence());
    } else {
@@ -4076,11 +4241,8 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
    doc.domains.push_back({HS3::defaultDomainName, {std::move(axis)}});
    doc.parameterPoints.push_back({"default_values", {parameter}});
 
+   StateScope<HS3::ToolImportState> importScope{_import};
    _import = std::make_unique<HS3::ToolImportState>(doc);
-   struct ImportScope {
-      RooJSONFactoryWSTool &tool;
-      ~ImportScope() { tool._import.reset(); }
-   } importScope{*this};
 
    importVariable(parameter);
    if (RooRealVar *rrv = _workspace.var(parameter.name)) {
@@ -4088,35 +4250,21 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
    }
 }
 
-/**
- * @brief Writes a warning message to the RooFit message service.
- *
- * @param str The warning message to be logged.
- * @return std::ostream& A reference to the output stream.
- */
+/// Write a warning to the RooFit message service, and return its stream.
 std::ostream &RooJSONFactoryWSTool::warning(std::string const &str)
 {
    return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::ObjectHandling) << str << std::endl;
 }
 
-/**
- * @brief Writes an error message to the RooFit message service and throws a runtime_error.
- *
- * @param s The error message to be logged and thrown.
- * @return void
- */
+/// Write an error to the RooFit message service, and throw it as a std::runtime_error.
 void RooJSONFactoryWSTool::error(const char *s)
 {
    RooMsgService::instance().log(nullptr, RooFit::MsgLevel::ERROR, RooFit::IO) << s << std::endl;
    throw std::runtime_error(s);
 }
 
-/**
- * @brief Cleans up names to the HS3 standard
- *
- * @param str The string to be sanitized.
- * @return std::string
- */
+/// Replace some characters that are common in the names of RooFit objects, but that the HS3 standard doesn't allow in
+/// names, if config().allowSanitizeNames is set.
 std::string RooJSONFactoryWSTool::sanitizeName(const std::string str)
 {
    std::string result;
@@ -4146,8 +4294,6 @@ std::string RooJSONFactoryWSTool::sanitizeName(const std::string str)
 
 RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyModelConfig)
 {
-   // Variables
-
    RooWorkspace tmpWS = RooWorkspace();
    if (onlyModelConfig) {
       for (auto *obj : ws.allGenericObjects()) {
@@ -4202,36 +4348,22 @@ RooJSONFactoryWSTool::Config &RooJSONFactoryWSTool::config()
 // Sanitize all names in the workspace to be HS3 compliant
 RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
 {
-   // Variables
-
    RooWorkspace tmpWS = cleanWS(ws, false);
 
-   auto sanitizeIfNeeded = [](auto const &list) {
-      for (auto *obj : list) {
-         if (!isValidName(obj->GetName())) {
-            obj->SetName(sanitizeName(obj->GetName()).c_str());
-         }
+   // Valid names stay as they are.
+   auto sanitize = [](auto const &objects) {
+      for (auto *obj : objects) {
+         obj->SetName(sanitizeName(obj->GetName()).c_str());
       }
    };
-   sanitizeIfNeeded(tmpWS.allVars());
-   sanitizeIfNeeded(tmpWS.allFunctions());
-   sanitizeIfNeeded(tmpWS.allPdfs());
-   sanitizeIfNeeded(tmpWS.allResolutionModels());
-   // Datasets
-   for (auto *data : tmpWS.allData()) {
-      // Sanitize dataset name
-      if (!isValidName(data->GetName())) {
-         data->SetName(sanitizeName(data->GetName()).c_str());
-      }
-      for (auto *obj : *data->get()) {
-         obj->SetName(sanitizeName(obj->GetName()).c_str());
-      }
-   }
-   for (auto *data : tmpWS.allEmbeddedData()) {
-      // Sanitize dataset name
-      data->SetName(sanitizeName(data->GetName()).c_str());
-      for (auto *obj : *data->get()) {
-         obj->SetName(sanitizeName(obj->GetName()).c_str());
+   sanitize(tmpWS.allVars());
+   sanitize(tmpWS.allFunctions());
+   sanitize(tmpWS.allPdfs());
+   sanitize(tmpWS.allResolutionModels());
+   for (auto const &datasets : {tmpWS.allData(), tmpWS.allEmbeddedData()}) {
+      sanitize(datasets);
+      for (RooAbsData *data : datasets) {
+         sanitize(*data->get());
       }
    }
    for (auto *snshObj : tmpWS.getSnapshots()) {
@@ -4241,62 +4373,24 @@ RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
          std::cerr << "Warning: found snapshot that is not a RooArgSet, skipping\n";
          continue;
       }
-
-      // Sanitize snapshot name
-      if (!isValidName(snsh->GetName())) {
-         snsh->setName(sanitizeName(snsh->GetName()).c_str());
-      }
-
-      // Sanitize the variables inside the snapshot
-      for (auto *arg : *snsh) {
-         if (!isValidName(arg->GetName())) {
-            arg->SetName(sanitizeName(arg->GetName()).c_str());
-         }
-      }
+      snsh->setName(sanitizeName(snsh->GetName()).c_str());
+      sanitize(*snsh);
    }
-
-   // Generic objects (ModelConfigs, attributes, etc.)
+   // Generic objects, like the ModelConfigs with their sets
    for (auto *obj : tmpWS.allGenericObjects()) {
-      if (!isValidName(obj->GetName())) {
-         if (auto *named = dynamic_cast<TNamed *>(obj)) {
-            named->SetName(sanitizeName(named->GetName()).c_str());
-         } else {
-            std::cerr << "Warning: object " << obj->GetName() << " is not TNamed, cannot rename.\n";
-         }
+      if (auto *named = dynamic_cast<TNamed *>(obj)) {
+         named->SetName(sanitizeName(named->GetName()).c_str());
+      } else if (!isValidName(obj->GetName())) {
+         std::cerr << "Warning: object " << obj->GetName() << " is not TNamed, cannot rename.\n";
       }
-
       if (auto *mc = dynamic_cast<RooFit::ModelConfig *>(obj)) {
-         // Sanitize ModelConfig name
-         if (!isValidName(mc->GetName())) {
-            mc->SetName(sanitizeName(mc->GetName()).c_str());
-         }
-
-         // Sanitize the sets inside ModelConfig
-         for (auto *obs : mc->GetObservables()->get()) {
-            if (obs) {
-               obs->SetName(sanitizeName(obs->GetName()).c_str());
-            }
-         }
-         for (auto *poi : mc->GetParametersOfInterest()->get()) {
-            if (poi) {
-               poi->SetName(sanitizeName(poi->GetName()).c_str());
-            }
-         }
-         for (auto *nuis : mc->GetNuisanceParameters()->get()) {
-            if (nuis) {
-               nuis->SetName(sanitizeName(nuis->GetName()).c_str());
-            }
-         }
-         for (auto *glob : mc->GetGlobalObservables()->get()) {
-            if (glob) {
-               glob->SetName(sanitizeName(glob->GetName()).c_str());
-            }
-         }
+         sanitize(*mc->GetObservables());
+         sanitize(*mc->GetParametersOfInterest());
+         sanitize(*mc->GetNuisanceParameters());
+         sanitize(*mc->GetGlobalObservables());
       }
    }
-   std::string wsName = std::string{ws.GetName()} + "_sanitized";
    RooWorkspace newWS = cleanWS(tmpWS, false);
-   newWS.SetName(wsName.c_str());
-
+   newWS.SetName((std::string{ws.GetName()} + "_sanitized").c_str());
    return newWS;
 }

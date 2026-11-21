@@ -10,17 +10,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-// Writes the typed representation of HS3 documents. The keys are the same as in HS3Parser.cxx, which the round-trip
-// tests in testHS3Document.cxx check.
+// Writes the typed representation of HS3 documents, with the keys that HS3Parser.cxx reads.
 
 #include "HS3Document.h"
-#include "JSONIOUtils.h"
 
 #include <RooFit/Detail/JSONInterface.h>
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 
 using RooFit::Detail::JSONNode;
 
@@ -28,27 +25,49 @@ namespace RooFit {
 namespace HS3 {
 namespace {
 
-// Infinite bounds are written as null.
-void writeBound(JSONNode &node, double value)
+// The counterparts of the readValue() functions of the parser, for the values that are written in one way only.
+template <class T>
+void writeValue(JSONNode &node, T const &value)
 {
-   if (std::isinf(value)) {
-      node.set_null();
-   } else {
-      node << value;
-   }
-}
-
-void writeStrings(JSONNode &node, std::vector<std::string> const &values)
-{
-   node.fill_seq(values);
+   node << value;
 }
 
 template <class Tag>
-void writeRefs(JSONNode &node, std::vector<Ref<Tag>> const &refs)
+void writeValue(JSONNode &node, Ref<Tag> const &ref)
+{
+   node << ref.name;
+}
+
+void writeValue(JSONNode &node, NameOrNumber const &value)
+{
+   std::visit([&](auto const &v) { node << v; }, value);
+}
+
+template <class T>
+void writeValue(JSONNode &node, std::vector<T> const &values)
 {
    node.set_seq();
-   for (auto const &ref : refs) {
-      node.append_child() << ref.name;
+   for (auto const &value : values) {
+      writeValue(node.append_child(), value);
+   }
+}
+
+// A component that is left out if it has no value.
+template <class T>
+void writeOptional(JSONNode &node, const char *key, std::optional<T> const &value)
+{
+   if (value) {
+      writeValue(node[key], *value);
+   }
+}
+
+// Writes a number, as an integer if it has no fractional part.
+void writeNumber(JSONNode &node, double value)
+{
+   if (static_cast<int>(value) == value) {
+      node << static_cast<int>(value);
+   } else {
+      node << value;
    }
 }
 
@@ -68,27 +87,17 @@ void writeBinning(JSONNode &node, Binning const &binning)
    }
 }
 
-void writeAxis(JSONNode &node, BinnedAxis const &axis)
-{
-   node.set_map();
-   node["name"] << axis.name;
-   // The range of an irregular binning is given by its "edges": HS3 0.3 forbids "min" and "max" alongside them.
-   if (!std::holds_alternative<EdgesBinning>(axis.binning)) {
-      node["min"] << axis.min;
-      node["max"] << axis.max;
-   }
-   writeBinning(node, axis.binning);
-}
-
+// An infinite or missing bound of a continuous data axis is omitted, which means that the range is unbounded. JSON null
+// is not defined for bounds.
 void writeAxis(JSONNode &node, ContinuousAxis const &axis)
 {
    node.set_map();
    node["name"] << axis.name;
-   if (axis.min) {
-      writeBound(node["min"], *axis.min);
+   if (axis.min && !std::isinf(*axis.min)) {
+      node["min"] << *axis.min;
    }
-   if (axis.max) {
-      writeBound(node["max"], *axis.max);
+   if (axis.max && !std::isinf(*axis.max)) {
+      node["max"] << *axis.max;
    }
 }
 
@@ -96,7 +105,7 @@ void writeAxis(JSONNode &node, CategoricalAxis const &axis)
 {
    node.set_map();
    node["name"] << axis.name;
-   writeStrings(node["categories"], axis.categories);
+   node["categories"].fill_seq(axis.categories);
 }
 
 // An infinite or missing bound of a domain axis is omitted, which means that the range is unbounded.
@@ -105,7 +114,7 @@ void writeAxis(JSONNode &node, DomainAxis const &axis)
    node.set_map();
    node["name"] << axis.name;
    if (axis.fixedValue) {
-      node[fixedValueKey] << *axis.fixedValue;
+      node["value"] << *axis.fixedValue;
       return;
    }
    // HS3 0.3 forbids "min" and "max" alongside "edges", which give the range. They are only written if they differ from
@@ -170,23 +179,14 @@ void writeGammaConstraint(JSONNode &node, GammaConstraint const &constraint, con
               constraint);
 }
 
-JSONNode &appendModifier(JSONNode &modifiers, std::string const &name, const char *type)
+void writeModifier(JSONNode &mod, Modifier const &modifier)
 {
-   JSONNode &mod = modifiers.append_child().set_map();
-   mod["name"] << name;
-   mod["type"] << type;
-   return mod;
-}
-
-void writeModifier(JSONNode &modifiers, Modifier const &modifier)
-{
+   mod.set_map();
+   mod["name"] << nameOf(modifier);
+   mod["type"] << typeOf(modifier);
    std::visit(overloaded{
-                 [&](NormFactor const &m) {
-                    JSONNode &mod = appendModifier(modifiers, m.name, "normfactor");
-                    writeParameter(mod, m.parameter, m.constraint);
-                 },
+                 [&](NormFactor const &m) { writeParameter(mod, m.parameter, m.constraint); },
                  [&](NormSys const &m) {
-                    JSONNode &mod = appendModifier(modifiers, m.name, "normsys");
                     writeParameter(mod, m.parameter, m.constraint);
                     if (m.interpolation) {
                        writeInterpolation(mod["interpolation"], *m.interpolation);
@@ -196,7 +196,6 @@ void writeModifier(JSONNode &modifiers, Modifier const &modifier)
                     data["hi"] << m.hi;
                  },
                  [&](HistoSys const &m) {
-                    JSONNode &mod = appendModifier(modifiers, m.name, "histosys");
                     writeParameter(mod, m.parameter, m.constraint);
                     if (m.interpolation) {
                        writeInterpolation(mod["interpolation"], *m.interpolation);
@@ -206,8 +205,7 @@ void writeModifier(JSONNode &modifiers, Modifier const &modifier)
                     writeContents(data["hi"].set_map()["contents"], m.hi.contents);
                  },
                  [&](ShapeSys const &m) {
-                    JSONNode &mod = appendModifier(modifiers, m.name, "shapefactor");
-                    writeRefs(mod["parameters"], m.parameters);
+                    writeValue(mod["parameters"], m.parameters);
                     writeGammaConstraint(mod, m.constraint, "constraint");
                     // The values are only used by the constraint types of older documents.
                     if (!m.vals.empty()) {
@@ -215,13 +213,25 @@ void writeModifier(JSONNode &modifiers, Modifier const &modifier)
                     }
                  },
                  [&](StatError const &m) {
-                    JSONNode &mod = appendModifier(modifiers, m.name, "staterror");
-                    writeRefs(mod["parameters"], m.parameters);
+                    writeValue(mod["parameters"], m.parameters);
                     writeGammaConstraint(mod, m.constraint, "constraint");
                  },
-                 [&](CustomModifier const &m) { appendModifier(modifiers, m.name, "custom"); },
+                 [](CustomModifier const &) {},
               },
               modifier);
+}
+
+// The columns and the components of a combined data set or distribution, which name what they select in `refKey`.
+template <class Ref_t>
+void writeCombined(JSONNode &node, Combined<Ref_t> const &combined, const char *refKey)
+{
+   node["columns"].fill_seq(combined.columns);
+   JSONNode &components = node["components"].set_seq();
+   for (auto const &component : combined.components) {
+      JSONNode &out = components.append_child().set_map();
+      out["key"].fill_seq(component.key);
+      out[refKey] << component.ref.name;
+   }
 }
 
 void writeParameterPoint(JSONNode &points, ParameterPoint const &point)
@@ -244,13 +254,7 @@ void writeData(JSONNode &dataArray, Data const &data)
    std::visit(overloaded{
                  [&](BinnedData const &d) {
                     node["type"] << "binned";
-                    writeAxes(node["axes"], d.axes);
-                    writeContents(node["contents"], d.contents);
-                    if (d.uncertainty) {
-                       JSONNode &uncertainty = node["uncertainty"].set_map();
-                       uncertainty["type"] << "gaussian_uncertainty";
-                       uncertainty["sigma"].fill_seq(d.uncertainty->sigma);
-                    }
+                    writeBinnedData(node, d);
                  },
                  [&](UnbinnedData const &d) {
                     node["type"] << "unbinned";
@@ -268,26 +272,16 @@ void writeData(JSONNode &dataArray, Data const &data)
                           }
                        }
                     }
-                    if (d.weights) {
-                       node["weights"].fill_seq(*d.weights);
-                    }
+                    writeOptional(node, "weights", d.weights);
                  },
                  [&](CombinedData const &d) {
                     node["type"] << "combined";
-                    writeStrings(node["columns"], d.columns);
-                    JSONNode &components = node["components"].set_seq();
-                    for (CombinedDataComponent const &component : d.components) {
-                       JSONNode &out = components.append_child().set_map();
-                       writeStrings(out["key"], component.key);
-                       out["dataset"] << component.data.name;
-                    }
+                    writeCombined(node, d, "dataset");
                  },
                  [&](PointData const &d) {
                     node["type"] << "point";
                     node["value"] << d.value;
-                    if (d.uncertainty) {
-                       node["uncertainty"] << *d.uncertainty;
-                    }
+                    writeOptional(node, "uncertainty", d.uncertainty);
                     if (!d.axes.empty()) {
                        writeAxes(node["axes"], d.axes);
                     }
@@ -300,101 +294,80 @@ void writeLikelihood(JSONNode &likelihoods, Likelihood const &likelihood)
 {
    JSONNode &node = appendNamed(likelihoods, likelihood.name);
    JSONNode &distributions = node["distributions"].set_seq();
-   JSONNode &data = node["data"].set_seq();
-   for (auto const &term : likelihood.terms) {
-      distributions.append_child() << term.distribution.name;
-      std::visit(overloaded{[&](DataRef const &ref) { data.append_child() << ref.name; },
-                            [&](double value) { writeNumber(data.append_child(), value); }},
-                 term.data);
+   if (likelihood.pureModel) {
+      for (auto const &term : likelihood.terms) {
+         distributions.append_child() << term.distribution.name;
+      }
+      node["data"].set_null();
+   } else {
+      JSONNode &data = node["data"].set_seq();
+      for (auto const &term : likelihood.terms) {
+         distributions.append_child() << term.distribution.name;
+         std::visit(overloaded{[&](DataRef const &ref) { data.append_child() << ref.name; },
+                               [&](double value) { writeNumber(data.append_child(), value); },
+                               [&](std::monostate) { data.append_child().set_null(); }},
+                    term.data);
+      }
    }
    if (!likelihood.auxDistributions.empty()) {
-      writeRefs(node["aux_distributions"], likelihood.auxDistributions);
+      writeValue(node["aux_distributions"], likelihood.auxDistributions);
    }
 }
 
 void writeAnalysis(JSONNode &analyses, Analysis const &analysis)
 {
    JSONNode &node = appendNamed(analyses, analysis.name);
-   writeRefs(node["domains"], analysis.domains);
+   writeValue(node["domains"], analysis.domains);
    node["likelihood"] << analysis.likelihood.name;
    if (!analysis.parametersOfInterest.empty()) {
-      writeRefs(node["parameters_of_interest"], analysis.parametersOfInterest);
+      writeValue(node["parameters_of_interest"], analysis.parametersOfInterest);
    }
-   if (analysis.init) {
-      node["init"] << analysis.init->name;
+   writeOptional(node, "init", analysis.init);
+   writeOptional(node, "prior", analysis.prior);
+}
+
+void writeValue(JSONNode &node, Attributes const &attributes)
+{
+   node.set_map();
+   if (!attributes.dict.empty()) {
+      JSONNode &dict = node["dict"].set_map();
+      for (auto const &entry : attributes.dict) {
+         dict[entry.first] << entry.second;
+      }
    }
-   if (analysis.prior) {
-      node["prior"] << analysis.prior->name;
+   if (!attributes.tags.empty()) {
+      node["tags"].fill_seq(attributes.tags);
+   }
+}
+
+void writeValue(JSONNode &node, ModelConfigInfo const &info)
+{
+   node.set_map();
+   writeOptional(node, "mcName", info.mcName);
+   writeOptional(node, "pdfName", info.pdfName);
+   writeOptional(node, "observables", info.observables);
+}
+
+// A component of "misc.ROOT_internal" with one value per name, which is left out if there are no values.
+template <class T>
+void writeInternal(JSONNode &root, const char *key, std::map<std::string, T> const &values)
+{
+   if (values.empty()) {
+      return;
+   }
+   JSONNode &node = root.get("misc", "ROOT_internal")[key].set_map();
+   for (auto const &item : values) {
+      writeValue(node[item.first], item.second);
    }
 }
 
 void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
 {
-   auto rootInternal = [&]() -> JSONNode & { return root.get("misc", "ROOT_internal"); };
-   if (!internal.attributes.empty()) {
-      JSONNode &attributes = rootInternal()["attributes"].set_map();
-      for (auto const &item : internal.attributes) {
-         JSONNode &node = attributes[item.first].set_map();
-         if (!item.second.dict.empty()) {
-            JSONNode &dict = node["dict"].set_map();
-            for (auto const &entry : item.second.dict) {
-               dict[entry.first] << entry.second;
-            }
-         }
-         if (!item.second.tags.empty()) {
-            writeStrings(node["tags"], item.second.tags);
-         }
-      }
-   }
-   if (!internal.combinedDistributions.empty()) {
-      JSONNode &combined = rootInternal()["combined_distributions"].set_map();
-      for (auto const &item : internal.combinedDistributions) {
-         JSONNode &node = combined[item.first].set_map();
-         node["index_cat"] << item.second.indexCat;
-         writeStrings(node["labels"], item.second.labels);
-         node["indices"].fill_seq(item.second.indices);
-         writeRefs(node["distributions"], item.second.distributions);
-      }
-   }
-   if (!internal.combinedDatasets.empty()) {
-      JSONNode &combined = rootInternal()["combined_datasets"].set_map();
-      for (auto const &item : internal.combinedDatasets) {
-         JSONNode &node = combined[item.first].set_map();
-         node["index_cat"] << item.second.indexCat;
-         writeStrings(node["labels"], item.second.labels);
-         node["indices"].fill_seq(item.second.indices);
-      }
-   }
-   if (!internal.modelConfigs.empty()) {
-      JSONNode &modelConfigs = rootInternal()["ModelConfigs"].set_map();
-      for (auto const &item : internal.modelConfigs) {
-         JSONNode &node = modelConfigs[item.first].set_map();
-         if (item.second.mcName) {
-            node["mcName"] << *item.second.mcName;
-         }
-         if (item.second.pdfName) {
-            node["pdfName"] << *item.second.pdfName;
-         }
-         if (item.second.combinedDataName) {
-            node["combined_data_name"] << *item.second.combinedDataName;
-         }
-         if (item.second.observables) {
-            node["observables"].fill_seq(*item.second.observables);
-         }
-      }
-   }
-   if (!internal.channelConstraints.empty()) {
-      JSONNode &constraints = rootInternal()["histfactory_constraints"].set_map();
-      for (auto const &item : internal.channelConstraints) {
-         writeRefs(constraints[item.first], item.second);
-      }
-   }
-   if (!internal.bookkeepingColumns.empty()) {
-      JSONNode &columns = rootInternal()["bookkeeping_columns"].set_map();
-      for (auto const &item : internal.bookkeepingColumns) {
-         writeStrings(columns[item.first], item.second);
-      }
-   }
+   writeInternal(root, "attributes", internal.attributes);
+   writeInternal(root, "ModelConfigs", internal.modelConfigs);
+   writeInternal(root, "histfactory_constraints", internal.channelConstraints);
+   writeInternal(root, "auxiliary_channels", internal.auxiliaryChannels);
+   writeInternal(root, "bookkeeping_columns", internal.bookkeepingColumns);
    if (!internal.stepWidths.empty()) {
       JSONNode &stepWidths = root.get("misc", "minimization")["parameter_stepwidths"].set_seq();
       for (auto const &stepWidth : internal.stepWidths) {
@@ -404,16 +377,6 @@ void writeRooFitInternal(JSONNode &root, RooFitInternal const &internal)
 }
 
 } // namespace
-
-void writeNumber(JSONNode &node, double value)
-{
-   // To make sure there are no unnecessary floating points in the JSON
-   if (static_cast<int>(value) == value) {
-      node << static_cast<int>(value);
-   } else {
-      node << value;
-   }
-}
 
 void writeContents(JSONNode &node, std::vector<double> const &values)
 {
@@ -437,26 +400,6 @@ void writeInterpolation(JSONNode &node, Interpolation const &interpolation)
 
 namespace {
 
-void writeValue(JSONNode &node, NameOrNumber const &value)
-{
-   std::visit([&](auto const &v) { node << v; }, value);
-}
-
-template <class T>
-void writeValue(JSONNode &node, T const &value)
-{
-   node << value;
-}
-
-template <class T>
-void writeList(JSONNode &node, std::vector<T> const &values)
-{
-   node.set_seq();
-   for (auto const &value : values) {
-      writeValue(node.append_child(), value);
-   }
-}
-
 template <class Function_t>
 void writeInterpolated(JSONNode &node, Function_t const &function, char const *type)
 {
@@ -469,13 +412,36 @@ void writeInterpolated(JSONNode &node, Function_t const &function, char const *t
         ++i) {
       writeInterpolation(interpolationsNode.append_child(), interpolations[i]);
    }
-   writeList(node["vars"], function.parameters);
+   writeValue(node["vars"], function.parameters);
    node["nom"] << function.nominal;
-   writeList(node["high"], function.high);
-   writeList(node["low"], function.low);
+   writeValue(node["high"], function.high);
+   writeValue(node["low"], function.low);
 }
 
 } // namespace
+
+void writeAxis(JSONNode &node, BinnedAxis const &axis)
+{
+   node.set_map();
+   node["name"] << axis.name;
+   // The range of an irregular binning is given by its "edges": HS3 0.3 forbids "min" and "max" alongside them.
+   if (!std::holds_alternative<EdgesBinning>(axis.binning)) {
+      node["min"] << axis.min;
+      node["max"] << axis.max;
+   }
+   writeBinning(node, axis.binning);
+}
+
+void writeBinnedData(JSONNode &node, BinnedData const &data)
+{
+   writeAxes(node["axes"], data.axes);
+   writeContents(node["contents"], data.contents);
+   if (data.uncertainty) {
+      JSONNode &uncertainty = node["uncertainty"].set_map();
+      uncertainty["type"] << "gaussian_uncertainty";
+      uncertainty["sigma"].fill_seq(data.uncertainty->sigma);
+   }
+}
 
 void writeInterpolatedFunction(JSONNode &node, InterpolatedFunction const &function)
 {
@@ -504,7 +470,7 @@ void writeHistFactoryDist(JSONNode &node, HistFactoryDist const &dist)
       JSONNode &s = appendNamed(samples, sample.name);
       JSONNode &modifiers = s["modifiers"].set_seq();
       for (auto const &modifier : sample.modifiers) {
-         writeModifier(modifiers, modifier);
+         writeModifier(modifiers.append_child(), modifier);
       }
       JSONNode &data = s["data"].set_map();
       writeContents(data["contents"], sample.contents);
@@ -512,6 +478,12 @@ void writeHistFactoryDist(JSONNode &node, HistFactoryDist const &dist)
          writeContents(data["errors"], *sample.errors);
       }
    }
+}
+
+void writeCombinedDist(JSONNode &node, CombinedDist const &dist)
+{
+   node["type"] << "combined_dist";
+   writeCombined(node, dist, "dist");
 }
 
 void writeDocument(JSONNode &root, HS3Document const &doc)

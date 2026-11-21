@@ -17,9 +17,12 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <cstdlib>
 #include <deque>
+#include <iomanip>
 #include <istream>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <sstream>
 
@@ -80,21 +83,20 @@ nlohmann::json parse(std::string const &input)
                             value.type_name());
 }
 
-// To check whether it's allowed to reset the type of an object. We allow
-// this for nodes that have no type yet, or nodes with an empty string.
-bool isResettingPossible(nlohmann::json const &node)
+// Makes a value a map or an array. Only a value that has no type yet or is an empty string, which is what
+// append_child() creates, can change its type.
+void setContainerType(nlohmann::json &value, nlohmann::json::value_t type, std::string const &key)
 {
-
-   if (node.type() == nlohmann::json::value_t::null) {
-      return true;
+   if (value.type() == type) {
+      return;
    }
-
-   if (node.type() == nlohmann::json::value_t::string) {
-      if (node.get<std::string>().empty()) {
-         return true;
-      }
+   if (!value.is_null() && !(value.is_string() && value.get_ref<std::string const &>().empty())) {
+      throw std::runtime_error("cannot declare \"" + key + "\" to be of " +
+                               (type == nlohmann::json::value_t::object ? "map" : "seq") + " - type, already of type " +
+                               value.type_name());
    }
-   return false;
+   // Not with braces, which would create an array with one element.
+   value = nlohmann::json(type);
 }
 
 } // namespace
@@ -178,15 +180,6 @@ JSONNode &JSONNode::operator<<(bool b)
    return *this;
 }
 
-const JSONNode &JSONNode::operator>>(std::string &v) const
-{
-   if (!json(_value).is_string()) {
-      throwTypeError(_key, "a string", json(_value));
-   }
-   v = json(_value).get<std::string>();
-   return *this;
-}
-
 JSONNode &JSONNode::operator[](std::string const &k)
 {
    return _storage->makeNode(json(_value)[k], k);
@@ -225,29 +218,13 @@ bool JSONNode::is_number() const
 
 JSONNode &JSONNode::set_map()
 {
-   if (json(_value).type() == nlohmann::json::value_t::object)
-      return *this;
-
-   if (isResettingPossible(json(_value))) {
-      json(_value) = nlohmann::json::object();
-   } else {
-      throw std::runtime_error("cannot declare \"" + this->key() + "\" to be of map - type, already of type " +
-                               json(_value).type_name());
-   }
+   setContainerType(json(_value), nlohmann::json::value_t::object, _key);
    return *this;
 }
 
 JSONNode &JSONNode::set_seq()
 {
-   if (json(_value).type() == nlohmann::json::value_t::array)
-      return *this;
-
-   if (isResettingPossible(json(_value))) {
-      json(_value) = nlohmann::json::array();
-   } else {
-      throw std::runtime_error("cannot declare \"" + this->key() + "\" to be of seq - type, already of type " +
-                               json(_value).type_name());
-   }
+   setContainerType(json(_value), nlohmann::json::value_t::array, _key);
    return *this;
 }
 
@@ -278,11 +255,20 @@ std::string JSONNode::val() const
    switch (value.type()) {
    case nlohmann::json::value_t::string: return value.get<std::string>();
    case nlohmann::json::value_t::boolean: return value.get<bool>() ? "true" : "false";
-   case nlohmann::json::value_t::number_integer: return std::to_string(value.get<int>());
-   case nlohmann::json::value_t::number_unsigned: return std::to_string(value.get<unsigned int>());
+   case nlohmann::json::value_t::number_integer: return std::to_string(value.get<nlohmann::json::number_integer_t>());
+   case nlohmann::json::value_t::number_unsigned: return std::to_string(value.get<nlohmann::json::number_unsigned_t>());
    case nlohmann::json::value_t::number_float: {
+      // The string has to read back as the same number. Start with the default precision of the streams, so that the
+      // numbers that six digits spell exactly keep their short spelling, and add digits as long as it takes.
+      const double number = value.get<double>();
       std::stringstream ss;
-      ss << value.get<double>();
+      for (int precision = 6; precision <= std::numeric_limits<double>::max_digits10; ++precision) {
+         ss.str("");
+         ss << std::setprecision(precision) << number;
+         if (std::strtod(ss.str().c_str(), nullptr) == number) {
+            break;
+         }
+      }
       return ss.str();
    }
    default:
@@ -329,11 +315,6 @@ std::optional<bool> JSONNode::try_val_bool() const
    return std::nullopt;
 }
 
-bool JSONNode::has_key() const
-{
-   return !_key.empty();
-}
-
 bool JSONNode::has_val() const
 {
    return json(_value).is_primitive();
@@ -378,12 +359,6 @@ JSONNode::const_children_view JSONNode::children() const
    _storage->recordRead(_value, nullptr);
    std::vector<JSONNode *> const &list = _storage->makeChildren(json(_value));
    return {const_child_iterator{list.data()}, const_child_iterator{list.data() + list.size()}};
-}
-
-std::ostream &operator<<(std::ostream &os, JSONNode const &s)
-{
-   s.writeJSON(os);
-   return os;
 }
 
 // JSONTree

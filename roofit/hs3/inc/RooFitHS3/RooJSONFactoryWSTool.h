@@ -35,11 +35,14 @@ struct ParameterPoint;
 struct ParameterValue;
 struct ToolExportState;
 struct ToolImportState;
+struct Version;
 template <class Tag>
 struct Ref;
 using DistributionRef = Ref<struct DistributionTag>;
 void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
                        std::vector<DistributionRef> channelConstraints);
+std::string const *importedArrayComponentForm(RooJSONFactoryWSTool &tool, std::string const &name);
+void recordImportedArrayComponent(RooJSONFactoryWSTool &tool, std::string const &name, std::string form);
 } // namespace HS3
 } // namespace RooFit
 namespace RooStats {
@@ -47,7 +50,6 @@ class ModelConfig;
 }
 class RooRealVar;
 class RooAbsCategory;
-class RooCategory;
 class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
@@ -76,12 +78,24 @@ public:
       /// the JSON.
       bool allowExportSharedVariates = false;
       // Write array distributions (HS3 `array_dist`). If false, no `array_dist` is written: HistFactory constraints
-      // are named individually, and a RooProdPdf tagged as array distribution is written as `product_dist`.
+      // are named individually, and a RooProdPdf tagged as array distribution is written as `product_dist`. The
+      // RooProdPdf that RooFit created itself when it read an `array_dist` is only written if another object uses
+      // it; otherwise its components are written on their own.
       bool exportArrayDist = true;
       // How the constraint terms of HistFactory models enter the likelihood: listed in "aux_distributions", with
-      // the observed values as constant parameters (false), or listed in "distributions", each paired with a data set
-      // holding the observed values of its observables (true).
+      // the observed values as constant parameters (false), or paired with a data set holding the observed values
+      // of their observables (true). An array of constraints of a model that is a RooSimultaneous is then a component
+      // of the combined distribution, and its data set a component of the combined data set, so that the combined
+      // distribution is the sampling distribution of all measurements. Other constraints are terms of the likelihood.
       bool exportConstraintData = false;
+      /// EXPERIMENTAL: how auxiliary measurements that are components of a combined distribution (a constraint term
+      /// paired with the data set of its observed values, as RooFit writes them with `exportConstraintData`) are
+      /// read. If false, they become constraint terms of the model as in HistFactory, with global observables set
+      /// to the observed values; RooFit recognizes the components that it wrote like this by a mark in the "misc"
+      /// section of the document. If true, or without that mark, they stay components of the RooSimultaneous, with
+      /// their data set of one entry in the combined data set, so that the RooSimultaneous is the sampling
+      /// distribution of all measurements. This option and the form of the resulting workspace may still change.
+      bool importConstraintsAsChannels = false;
    };
 
    static Config &config();
@@ -89,20 +103,14 @@ public:
    static RooWorkspace sanitizeWS(const RooWorkspace &ws);
    static RooWorkspace cleanWS(const RooWorkspace &ws, bool onlyModelConfig = false);
 
-   struct CombinedData {
-      std::string name;
-      std::vector<std::string> columns;
-   };
-
    RooJSONFactoryWSTool(RooWorkspace &ws);
 
    ~RooJSONFactoryWSTool();
 
    static std::string name(const RooFit::Detail::JSONNode &n);
    static bool isValidName(const std::string &str);
-   static bool testValidName(const std::string &str, bool forcError);
+   static bool testValidName(const std::string &name, bool forceError);
    static std::string sanitizeName(const std::string str);
-   static void rebuildModelConfigInWorkspace(RooStats::ModelConfig *mc, RooWorkspace &ws);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
@@ -191,21 +199,17 @@ public:
    readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgSet const &vars);
 
    bool importJSON(std::string const &filename);
-   bool importJSON(std::istream &os);
+   bool importJSON(std::istream &is);
    bool exportJSON(std::string const &fileName);
    bool exportJSON(std::ostream &os);
 
    std::string exportJSONtoString();
    bool importJSONfromString(const std::string &s);
    void importJSONElement(const std::string &name, const std::string &jsonString);
-   void importVariableElement(const RooFit::Detail::JSONNode &n);
+   void importVariableElement(const RooFit::Detail::JSONNode &elementNode);
 
    void importFunction(const RooFit::Detail::JSONNode &p, bool importAllDependants);
    void importFunction(const std::string &jsonString, bool importAllDependants);
-
-   static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
-
-   static RooFit::Detail::JSONNode &makeVariablesNode(RooFit::Detail::JSONNode &rootNode);
 
    // error handling helpers
    class DependencyMissingError : public std::runtime_error {
@@ -223,15 +227,6 @@ public:
       const std::string &child() const { return _child; }
       const std::string &classname() const { return _class; }
    };
-
-   template <typename... Keys_t>
-   static RooFit::Detail::JSONNode &getRooFitInternal(RooFit::Detail::JSONNode &node, Keys_t const &...keys)
-   {
-      return node.get("misc", "ROOT_internal", keys...);
-   }
-
-   static void exportAxis(RooFit::Detail::JSONNode &obsNode, RooRealVar const &var);
-   static void exportCategoricalAxis(RooFit::Detail::JSONNode &obsNode, RooCategory const &cat);
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
@@ -260,8 +255,19 @@ public:
    std::string getStringAttribute(const std::string &obj, const std::string &attrib);
    void setStringAttribute(const std::string &obj, const std::string &attrib, const std::string &value);
 
-   /// The "hs3_version" of the document that is currently being imported, or an empty string outside of an import.
-   std::string const &hs3VersionInput() const { return _hs3VersionInput; }
+   /// The HS3 version of the document that is currently being imported. Outside of an import it is 0.0.0, like a
+   /// version that can't be parsed.
+   RooFit::HS3::Version hs3Version() const;
+
+   /// The constraint terms that the document that is currently being imported adds to the HistFactory distribution
+   /// `dist`, besides those that its modifiers name, or nullptr if there are none.
+   std::vector<RooFit::HS3::DistributionRef> const *channelConstraints(std::string const &dist) const;
+
+   /// Whether the constraint term `pdf` contributes to the likelihoods of the document that is currently being
+   /// imported as a component of a combined distribution with data, by itself or as a component of an array
+   /// distribution. It is then a measurement of its own, and must not be multiplied into the distributions that
+   /// name it as a constraint as well.
+   bool isConstraintReadAsChannel(RooAbsPdf const &pdf) const;
 
 private:
    template <class T>
@@ -282,12 +288,12 @@ private:
       }
    }
    void exportArrayDists();
-   bool exportConstraintData(std::string const &term, RooArgSet const *globalObservables);
+   bool exportConstraintData(std::string const &term, RooArgSet const *globalObservables, std::string const &dataName);
 
    void exportSimultaneous(RooSimultaneous const &simPdf);
    void recordCategory(RooAbsCategory const &cat);
    void exportData(RooAbsData const &data);
-   RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
+   void exportCombinedData(RooAbsData const &data);
 
    void importAllNodes(RooFit::Detail::JSONNode &n);
    void importDistribution(RooFit::HS3::Distribution const &distribution);
@@ -296,23 +302,23 @@ private:
    void warnIfFreeWithoutDomain(RooRealVar const &var);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void exportVariable(const RooAbsArg *v, RooFit::HS3::ParameterPoint &point, bool storeConstant);
-   void exportVariables(const RooArgSet &allElems, RooFit::HS3::ParameterPoint &point, bool storeConstant);
+   void exportVariable(const RooAbsArg *v, RooFit::HS3::ParameterPoint &point);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
-   void exportModelConfig(RooStats::ModelConfig const &mc,
-                          const std::vector<RooJSONFactoryWSTool::CombinedData> &combined,
-                          const std::vector<RooAbsData *> &single);
+   void exportModelConfig(RooStats::ModelConfig const &mc, const std::vector<RooAbsData *> &singleDataSets);
 
    void exportSingleModelConfig(RooStats::ModelConfig const &mc, std::string const &analysisName,
                                 std::string const *dataName);
 
    friend void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, RooFit::HS3::HistFactoryDist dist,
                                               std::vector<RooFit::HS3::DistributionRef> channelConstraints);
+   friend std::string const *
+   RooFit::HS3::importedArrayComponentForm(RooJSONFactoryWSTool &tool, std::string const &name);
+   friend void
+   RooFit::HS3::recordImportedArrayComponent(RooJSONFactoryWSTool &tool, std::string const &name, std::string form);
 
    // member variables
-   std::string _hs3VersionInput;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
