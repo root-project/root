@@ -137,8 +137,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   _dataHist(other._dataHist),
   _intOrder(other._intOrder),
   _cdfBoundaries(other._cdfBoundaries),
-  _totVolume(other._totVolume),
-  _unitNorm(other._unitNorm)
+  _totVolume(other._totVolume)
 {
 
   _histObsList.addClone(other._histObsList) ;
@@ -245,13 +244,6 @@ double RooHistFunc::maxVal(Int_t code) const
   }
 
   return max*1.05 ;
-}
-
-RooDataHist* RooHistFunc::cloneAndOwnDataHist(const char* newname) {
-   if (_ownedDataHist) return _ownedDataHist.get();
-   _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));
-   _dataHist = _ownedDataHist.get();
-   return _dataHist;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
