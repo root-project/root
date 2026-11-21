@@ -252,7 +252,7 @@ void ROOT::Experimental::Internal::RPageSinkS3::CommitHeaderImpl(const unsigned 
 
 ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkS3::CommitSealedPageImpl(ROOT::DescriptorId_t,
-                                                                const RPageStorage::RSealedPage &sealedPage)
+                                                                const ROOT::Internal::RSealedPage &sealedPage)
 {
    // Mode B: one S3 object per sealed page, located by a kTypeObject64 locator
    const auto pageObjId = fObjectId++;
@@ -538,7 +538,7 @@ void ROOT::Experimental::Internal::RPageSourceS3::LoadPageListImpl(const RNTuple
 }
 
 void ROOT::Experimental::Internal::RPageSourceS3::LoadSealedPageImpl(const RNTupleLocator &locator,
-                                                                     RSealedPage &sealedPage)
+                                                                     ROOT::Internal::RSealedPage &sealedPage)
 {
    Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
    const auto objId = locator.GetPosition<ROOT::RNTupleLocatorObject64>().GetLocation();
@@ -573,7 +573,8 @@ ROOT::Experimental::Internal::RPageSourceS3::LoadClusters(std::span<ROOT::Intern
              const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
             const auto &pageLocator = pageInfo.GetLocator();
             const auto objId = pageLocator.GetPosition<ROOT::RNTupleLocatorObject64>().GetLocation();
-            const auto pageBufferSize = pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
+            const auto pageBufferSize = pageLocator.GetNBytesOnStorage() +
+                                        pageInfo.HasChecksum() * ROOT::Internal::RSealedPage::kNBytesPageChecksum;
             onDiskPages.emplace_back(RS3SealedPageLocator{physicalColumnId, pageNo, objId, pageBufferSize});
             clusterBufSize += pageBufferSize;
          });

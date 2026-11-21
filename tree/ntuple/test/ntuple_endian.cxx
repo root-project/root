@@ -37,7 +37,7 @@ namespace {
 class RPageSinkMock : public RPageSink {
 protected:
    const RColumnElementBase &fElement;
-   std::vector<RPageStorage::RSealedPage> fPages;
+   std::vector<ROOT::Internal::RSealedPage> fPages;
 
    ROOT::DescriptorId_t AddColumn(ROOT::DescriptorId_t, const ROOT::Internal::RColumn &) final
    {
@@ -54,8 +54,8 @@ protected:
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}
    void CommitSuppressedColumn(ROOT::DescriptorId_t) final {}
-   void CommitSealedPage(ROOT::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
-   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
+   void CommitSealedPage(ROOT::DescriptorId_t, const ROOT::Internal::RSealedPage &) final {}
+   void CommitSealedPageV(std::span<ROOT::Internal::RSealedPageGroup>) final {}
    RStagedCluster StageCluster(NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
@@ -83,7 +83,7 @@ public:
       fPages.emplace_back(SealPage(page, fElement));
    }
 
-   const std::vector<RPageStorage::RSealedPage> &GetPages() const { return fPages; }
+   const std::vector<ROOT::Internal::RSealedPage> &GetPages() const { return fPages; }
 };
 
 /**
@@ -91,7 +91,7 @@ public:
  */
 class RPageSourceMock : public RPageSource {
    const RColumnElementBase &fElement;
-   const std::vector<RPageStorage::RSealedPage> &fPages;
+   const std::vector<ROOT::Internal::RSealedPage> &fPages;
    ROOT::Internal::RPagePool fMyPagePool;
 
 protected:
@@ -99,7 +99,7 @@ protected:
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
    void LoadPageListImpl(const ROOT::RNTupleLocator &, unsigned char *) final {}
-   void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
+   void LoadSealedPageImpl(const ROOT::RNTupleLocator &, ROOT::Internal::RSealedPage &) final {}
 
    std::unique_ptr<ROOT::Internal::RPageSource>
    OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &, const ROOT::RNTupleReadOptions &) final
@@ -108,7 +108,7 @@ protected:
    }
 
 public:
-   RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)
+   RPageSourceMock(const std::vector<ROOT::Internal::RSealedPage> &pages, const RColumnElementBase &elt)
       : RPageSource("test", ROOT::RNTupleReadOptions()), fElement(elt), fPages(pages), fMyPagePool(*this)
    {
    }

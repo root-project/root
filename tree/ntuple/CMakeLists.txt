@@ -73,6 +73,7 @@ set(ROOTNTuple_HEADERS
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
   ROOT/RRawPtrWriteEntry.hxx
+  ROOT/RSealedPage.hxx
 )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
@@ -118,6 +119,7 @@ SOURCES
   src/RPageSinkBuf.cxx
   src/RPageStorage.cxx
   src/RPageStorageFile.cxx
+  src/RSealedPage.cxx
   ${ROOTNTuple_EXTRA_SOURCES}
 LINKDEF
   LinkDef.h
@@ -141,7 +143,7 @@ set(ROOTNTuple_NONSTANDALONE_HEADERS
 set(RELATIVE_INC_HEADERS ${ROOTNTuple_HEADERS} ${ROOTNTuple_EXTRA_HEADERS} ${ROOTNTuple_NONSTANDALONE_HEADERS})
 if(daos_mock)
   list(APPEND RELATIVE_INC_HEADERS ROOT/libdaos_mock/daos.h ROOT/RDaos.hxx)
-endif()    
+endif()
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
 target_sources(ROOTNTuple
 PRIVATE

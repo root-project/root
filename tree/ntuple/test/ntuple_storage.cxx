@@ -51,11 +51,11 @@ protected:
    {
       fCounters.fNCommitPage++;
    }
-   void CommitSealedPage(ROOT::DescriptorId_t, const RPageStorage::RSealedPage &) final
+   void CommitSealedPage(ROOT::DescriptorId_t, const ROOT::Internal::RSealedPage &) final
    {
       fCounters.fNCommitSealedPage++;
    }
-   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) override { fCounters.fNCommitSealedPageV++; }
+   void CommitSealedPageV(std::span<ROOT::Internal::RSealedPageGroup>) override { fCounters.fNCommitSealedPageV++; }
    RStagedCluster StageCluster(ROOT::NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}

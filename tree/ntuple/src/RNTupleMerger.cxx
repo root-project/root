@@ -28,6 +28,7 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RNTupleAttrUtils.hxx>
+#include <ROOT/RSealedPage.hxx>
 #include <TROOT.h>
 #include <TFileMergeInfo.h>
 #include <TFile.h>
@@ -280,7 +281,7 @@ namespace {
 struct RChangeCompressionFunc {
    const RColumnElementBase &fSrcColElement;
    std::uint32_t fCompressionSettings;
-   RPageStorage::RSealedPage &fSealedPage;
+   RSealedPage &fSealedPage;
    ROOT::Internal::RPageAllocator &fPageAlloc;
    std::byte *fBuffer;
    std::size_t fBufSize;
@@ -394,8 +395,8 @@ struct RColumnMergeInfo {
 struct RSealedPageMergeData {
    // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are
    // never invalidated.
-   std::deque<RPageStorage::SealedPageSequence_t> fPagesV;
-   std::vector<RPageStorage::RSealedPageGroup> fGroups;
+   std::deque<SealedPageSequence_t> fPagesV;
+   std::vector<RSealedPageGroup> fGroups;
    std::vector<std::unique_ptr<std::byte[]>> fBuffers;
 };
 
@@ -1325,7 +1326,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::GenerateZeroPagesForColumns(siz
       const size_t nPages = nBytesOnStorage / kPageSizeLimit + !!(nBytesOnStorage % kPageSizeLimit);
       for (size_t i = 0; i < nPages; ++i) {
          const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : nBytesOnStorage - kPageSizeLimit * (nPages - 1);
-         const auto checksumSize = RPageStorage::kNBytesPageChecksum;
+         const auto checksumSize = RSealedPage::kNBytesPageChecksum;
          const auto bufSize = pageSize + checksumSize;
          assert(pageSize % colElement->GetSize() == 0);
          const auto nElementsPerPage = pageSize / colElement->GetSize();
@@ -1384,7 +1385,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
       // Now get the pages for this column in this cluster
       const auto &pages = clusterDesc.GetPageRange(columnId);
 
-      RPageStorage::SealedPageSequence_t sealedPages;
+      SealedPageSequence_t sealedPages;
       sealedPages.resize(pages.GetPageInfos().size());
 
       // Each column range potentially has a distinct compression settings
@@ -1443,8 +1444,8 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
             const_cast<ROOT::RNTupleWriteOptions &>(fDestination.GetWriteOptions()).SetEnableSamePageMerging(false);
          }
 
-         const auto checksumSize = pageInfo.HasChecksum() * RPageStorage::kNBytesPageChecksum;
-         RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
+         const auto checksumSize = pageInfo.HasChecksum() * RSealedPage::kNBytesPageChecksum;
+         RSealedPage &sealedPage = sealedPages[pageIdx];
          sealedPage.SetNElements(pageInfo.GetNElements());
          sealedPage.SetHasChecksum(pageInfo.HasChecksum());
          sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + checksumSize);

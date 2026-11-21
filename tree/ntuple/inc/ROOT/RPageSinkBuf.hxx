@@ -45,7 +45,7 @@ class RPageSinkBuf : public RPageSink {
          RPage fPage;
          // Compression scratch buffer for fSealedPage.
          std::unique_ptr<unsigned char[]> fBuf;
-         RPageStorage::RSealedPage *fSealedPage = nullptr;
+         RSealedPage *fSealedPage = nullptr;
          bool IsSealed() const { return fSealedPage != nullptr; }
       };
 
@@ -66,7 +66,7 @@ class RPageSinkBuf : public RPageSink {
       }
       bool IsEmpty() const { return fBufferedPages.empty(); }
       bool HasSealedPagesOnly() const { return fBufferedPages.size() == fSealedPages.size(); }
-      const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
+      const SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
 
       void DropBufferedPages();
 
@@ -85,7 +85,7 @@ class RPageSinkBuf : public RPageSink {
       /// buffered pages have been sealed.
       /// Note that each RSealedPage refers to the same buffer as `fBufferedPages[i].fBuf` for some value of `i`, and
       /// thus owned by RPageZipItem
-      RPageStorage::SealedPageSequence_t fSealedPages;
+      SealedPageSequence_t fSealedPages;
    };
 
    /// I/O performance counters that get registered in fMetrics
@@ -140,7 +140,7 @@ public:
    void CommitSuppressedColumn(DescriptorId_t physicalColumnId) final;
    void CommitPage(DescriptorId_t physicalColumnId, const RColumnElementBase &elem, const RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
-   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   void CommitSealedPageV(std::span<RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(ROOT::NTupleSize_t nNewEntries) final;
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;

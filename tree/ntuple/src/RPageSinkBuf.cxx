@@ -164,7 +164,8 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(DescriptorId_t physicalColumnId, c
    // Safety: References are guaranteed to be valid until the element is destroyed. In other words, all buffered page
    // elements are valid until DropBufferedPages().
    auto &zipItem = fBufferedColumns.at(physicalColumnId).BufferPage();
-   std::size_t maxSealedPageBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
+   std::size_t maxSealedPageBytes =
+      page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * RSealedPage::kNBytesPageChecksum;
    // Do not allocate the buffer yet, in case of IMT we only need it once the task is started.
    auto &sealedPage = fBufferedColumns.at(physicalColumnId).RegisterSealedPage();
 
@@ -253,8 +254,7 @@ void ROOT::Internal::RPageSinkBuf::CommitSealedPage(ROOT::DescriptorId_t /*physi
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }
 
-void ROOT::Internal::RPageSinkBuf::CommitSealedPageV(
-   std::span<ROOT::Internal::RPageStorage::RSealedPageGroup> /*ranges*/)
+void ROOT::Internal::RPageSinkBuf::CommitSealedPageV(std::span<ROOT::Internal::RSealedPageGroup> /*ranges*/)
 {
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }

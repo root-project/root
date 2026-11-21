@@ -196,7 +196,7 @@ TEST_F(RPageStorageDaos, LoadSealedPage)
 
    ROOT::Experimental::Internal::RPageSourceDaos source(ntupleName, daosUri, ROOT::RNTupleReadOptions());
    source.Attach();
-   RPageStorage::RSealedPage sealedPage;
+   ROOT::Internal::RSealedPage sealedPage;
    source.LoadSealedPage(0, RNTupleLocalIndex{0, 0}, sealedPage);
    EXPECT_TRUE(sealedPage.GetHasChecksum());
    ASSERT_EQ(12u, sealedPage.GetBufferSize());
@@ -336,7 +336,7 @@ TEST_F(RPageStorageDaos, Checksum)
    }
    RNTupleLocalIndex index{clusterId, 0};
 
-   RPageStorage::RSealedPage sealedPage;
+   ROOT::Internal::RSealedPage sealedPage;
    constexpr std::size_t bufSize = 12;
    unsigned char buffer[bufSize];
    sealedPage.SetBuffer(buffer);

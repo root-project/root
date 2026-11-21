@@ -1191,7 +1191,7 @@ TEST_F(RPageSourceS3Wire, CloneReadsFromItsOwnConnection)
 
    // A null buffer asks only for the size; the second call transfers and verifies the checksum, so
    // reaching the end of this block proves the clone read real bytes from the mock.
-   RPageStorage::RSealedPage sealedPage;
+   ROOT::Internal::RSealedPage sealedPage;
    clone->LoadSealedPage(columnId, ROOT::RNTupleLocalIndex(0, 0), sealedPage);
    ASSERT_GT(sealedPage.GetBufferSize(), 0u);
 

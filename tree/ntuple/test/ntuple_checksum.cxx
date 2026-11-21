@@ -56,7 +56,7 @@ TEST(RNTupleChecksum, VerifyOnLoad)
 
    CreateCorruptedRNTuple(fileGuard.GetPath());
 
-   RPageStorage::RSealedPage sealedPage;
+   ROOT::Internal::RSealedPage sealedPage;
    ROOT::DescriptorId_t pxColId;
    ROOT::DescriptorId_t pyColId;
    ROOT::DescriptorId_t pzColId;
@@ -111,7 +111,7 @@ TEST(RNTupleChecksum, OmitPageChecksum)
    EXPECT_EQ(4u, pageInfo.GetLocator().GetNBytesOnStorage());
    EXPECT_FALSE(pageInfo.HasChecksum());
 
-   RPageStorage::RSealedPage sealedPage;
+   ROOT::Internal::RSealedPage sealedPage;
    pageSource->LoadSealedPage(pxColId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
    EXPECT_FALSE(sealedPage.GetHasChecksum());
    EXPECT_EQ(4u, sealedPage.GetBufferSize());
